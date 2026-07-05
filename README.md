@@ -26,7 +26,7 @@ npm run sync:packages
 
 ## Netlify 部署
 
-四站生产环境由 **`Ken-pan/life-os` monorepo** 驱动（Deploy Key + 各 app 的 `netlify.toml`）。详见 [docs/NETLIFY.md](docs/NETLIFY.md)。
+四站生产环境由 **`Ken-pan/life-os` monorepo** 驱动（Deploy Key + 各 app 的 `netlify.toml`）。详见 [docs/NETLIFY.md](docs/NETLIFY.md) 与 [docs/CANONICAL.md](docs/CANONICAL.md)（以哪个仓库为准、该清理什么）。
 
 Push 到 `master` 后 Netlify 自动构建；PR 触发 GitHub Actions `ci.yml`。
 
