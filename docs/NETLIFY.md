@@ -45,7 +45,7 @@ git add packages && git commit -m "sync shared packages"
 
 - `PUBLIC_SUPABASE_URL`
 - `PUBLIC_SUPABASE_ANON_KEY`
-- Planner AI：`KIMI_API_KEY`（仅 Functions，在 Netlify UI 设置）
+- Planner AI：`KIMI_API_KEY`（Functions；四站中 Planner / Finance 已配置）
 
 ## 独立仓库（已归档）
 

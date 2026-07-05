@@ -70,7 +70,7 @@
 
 ## 响应式
 
-Life OS 三端共用 **`Projects/life-os-theme`**（`@life-os/theme`，各 app 通过 `file:../life-os-theme` 引用），`layout.css` 由 PostCSS `postcss-custom-media` 展开 `@media (--life-os-*)`。
+Life OS 三端共用 monorepo 内 **`packages/theme`**（`@life-os/theme`），`layout.css` 由 PostCSS `postcss-custom-media` 展开 `@media (--life-os-*)`。
 
 | Custom media | 等价 | 说明 |
 |--------------|------|------|

@@ -29,6 +29,9 @@ vendored `packages/life-os-*` 已从独立 app 仓删除。Netlify **不会**再
 | 独立仓 `netlify.toml` | ✅ 已删 |
 | GitHub archive | ✅ 六仓已归档 |
 | Netlify Git 源 | ✅ 四站指向 `life-os` |
+| `NETLIFY_AUTH_TOKEN` GitHub secret | ✅ 已配置（手动 GHA 部署可用） |
+| Planner `KIMI_API_KEY` | ✅ 已从 Finance 站同步至 Planner 站 |
+| 本地 sibling 目录 | ✅ 已删除（见 `docs/LEGACY_LOCAL.md`） |
 | Cursor 工作区 | ✅ `Projects/life-os.code-workspace` + `.cursor/rules` |
 
 ## 日常命令

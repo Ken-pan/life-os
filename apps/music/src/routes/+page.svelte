@@ -2,11 +2,15 @@
   import { onMount } from 'svelte';
   import { t } from '$lib/i18n/index.js';
   import TrackRow from '$lib/components/TrackRow.svelte';
+  import TrackArt from '$lib/components/TrackArt.svelte';
   import { getRecentTracks, getAllTracks, trackCount } from '$lib/db.js';
-  import { playTracks } from '$lib/player.svelte.js';
+  import { playTracks, getCurrentTrack, player } from '$lib/player.svelte.js';
+  import { markNowPlayingReturn } from '$lib/nav.js';
 
   let recent = $state([]);
   let total = $state(0);
+
+  const spotlight = $derived(getCurrentTrack());
 
   onMount(async () => {
     recent = await getRecentTracks(8);
@@ -36,6 +40,23 @@
       <a class="btn-secondary" href="/import">{t('common.import')}</a>
     </div>
   </section>
+
+  {#if spotlight}
+    <section class="spotlight">
+      <a
+        class="spotlight-card"
+        href="/now-playing"
+        onclick={() => markNowPlayingReturn('/')}
+      >
+        <TrackArt artUrl={spotlight.artUrl} seed={spotlight.id} class="spotlight-art" />
+        <div class="spotlight-copy">
+          <div class="spotlight-kicker">{player.playing ? '正在播放' : '已暂停'}</div>
+          <div class="spotlight-title">{spotlight.title}</div>
+          <div class="spotlight-sub">{spotlight.artist}</div>
+        </div>
+      </a>
+    </section>
+  {/if}
 
   <section class="page-section">
     <div class="page-section-head">

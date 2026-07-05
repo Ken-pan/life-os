@@ -100,6 +100,6 @@ npm run preview
 
 字体与字号规范见 [`docs/TYPOGRAPHY.md`](docs/TYPOGRAPHY.md)（与 FinanceOS 对齐）。
 
-共享主题包：`../life-os-theme`（`@life-os/theme/design-system.css`）；共享同步包：`../life-os-sync`（`@life-os/sync`）。
+共享主题与同步包在 monorepo 内 **`packages/theme`**、**`packages/sync`**（`@life-os/theme`、`@life-os/sync`）。
 
 本地数据优先存储于 `localStorage`（schema v2），登录后可选择与云端合并。

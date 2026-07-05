@@ -92,7 +92,7 @@ src/routes/
 
 - 项目：**Life OS**（与 Finance OS 共用 `auth.users` 与 `life_os_auth` 存储键）
 - 环境变量（可选，见 `.env.example`）：`VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY`
-- 共享常量包：`packages/life-os-sync`（`@life-os/sync`，避免 Netlify 构建依赖仓库外路径）
+- 共享包：`packages/sync`、`packages/theme`（`@life-os/sync`、`@life-os/theme`，npm workspace）
 
 ## 数据备份格式
 

@@ -4,13 +4,7 @@
 
 ## 安装
 
-```json
-{
-  "dependencies": {
-    "@life-os/theme": "file:../life-os-theme"
-  }
-}
-```
+在 monorepo 根目录 `npm install` 后，各 app 通过 workspace 自动链接 `@life-os/theme` / `@life-os/sync`。
 
 ## 使用
 

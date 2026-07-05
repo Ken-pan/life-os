@@ -1,5 +1,6 @@
 <script>
   import Icon from './Icon.svelte';
+  import TrackArt from './TrackArt.svelte';
   import { playTrack, playTracks } from '$lib/player.svelte.js';
   import { toggleLike } from '$lib/db.js';
 
@@ -18,11 +19,7 @@
 </script>
 
 <div class="track-row">
-  {#if track.artUrl}
-    <img class="track-row-art" src={track.artUrl} alt="" />
-  {:else}
-    <div class="track-row-art" style="display:grid;place-items:center;color:var(--accent)">♪</div>
-  {/if}
+  <TrackArt artUrl={track.artUrl} seed={track.id} class="track-row-art" />
   <button type="button" class="track-row-body" onclick={onPlay}>
     <div class="track-row-title">{track.title}</div>
     <div class="track-row-sub">{track.artist} · {track.album}</div>

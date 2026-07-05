@@ -30,6 +30,23 @@ export function isMiniPlayerHidden(pathname) {
   return pathname.startsWith('/now-playing');
 }
 
+const NOW_PLAYING_RETURN_KEY = 'music:now-playing-return';
+
+/** Remember where to go when dismissing Now Playing (avoids unreliable history.length). */
+/** @param {string} from */
+export function markNowPlayingReturn(from) {
+  if (typeof sessionStorage === 'undefined') return;
+  sessionStorage.setItem(NOW_PLAYING_RETURN_KEY, from || '/');
+}
+
+/** @param {string} [fallback='/'] */
+export function consumeNowPlayingReturn(fallback = '/') {
+  if (typeof sessionStorage === 'undefined') return fallback;
+  const value = sessionStorage.getItem(NOW_PLAYING_RETURN_KEY) ?? fallback;
+  sessionStorage.removeItem(NOW_PLAYING_RETURN_KEY);
+  return value;
+}
+
 /** @param {string} pathname @param {(k: string) => string} tr */
 export function resolvePageTitle(pathname, tr) {
   if (pathname === '/') return tr('home.title');

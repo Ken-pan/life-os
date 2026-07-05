@@ -21,3 +21,4 @@ test-results
 **/screenshots
 **/.claude
 **/supabase/.temp
+apps/**/package-lock.json

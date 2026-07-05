@@ -145,3 +145,18 @@ export function formatTime(sec) {
 export function getProgressPct() {
   return player.duration > 0 ? `${(player.currentTime / player.duration) * 100}%` : '0%';
 }
+
+/** @param {number} fromIndex @param {number} toIndex */
+export function reorderQueue(fromIndex, toIndex) {
+  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+  const q = [...player.queue];
+  if (fromIndex >= q.length || toIndex >= q.length) return;
+  const currentId = getCurrentTrack()?.id;
+  const [item] = q.splice(fromIndex, 1);
+  q.splice(toIndex, 0, item);
+  player.queue = q;
+  if (currentId) {
+    const nextIndex = q.findIndex((t) => t.id === currentId);
+    if (nextIndex >= 0) player.index = nextIndex;
+  }
+}

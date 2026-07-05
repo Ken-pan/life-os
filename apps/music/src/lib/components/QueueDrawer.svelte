@@ -1,8 +1,34 @@
 <script>
   import { queueDrawerOpen, closeQueueDrawer } from '$lib/ui.svelte.js';
-  import { player, playTracks } from '$lib/player.svelte.js';
+  import { player, playTracks, reorderQueue } from '$lib/player.svelte.js';
   import TrackRow from './TrackRow.svelte';
   import { t } from '$lib/i18n/index.js';
+
+  /** @type {number | null} */
+  let dragFrom = $state(null);
+
+  /** @param {DragEvent} e @param {number} index */
+  function onDragStart(e, index) {
+    dragFrom = index;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(index));
+    }
+  }
+
+  /** @param {DragEvent} e @param {number} index */
+  function onDrop(e, index) {
+    e.preventDefault();
+    if (dragFrom === null || dragFrom === index) return;
+    reorderQueue(dragFrom, index);
+    dragFrom = null;
+  }
+
+  /** @param {DragEvent} e */
+  function onDragOver(e) {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  }
 </script>
 
 {#if queueDrawerOpen.open}
@@ -15,7 +41,18 @@
     </div>
     <div class="queue-drawer-body">
       {#each player.queue as track, i (track.id)}
-        <TrackRow {track} tracks={player.queue} index={i} showLike={false} />
+        <div
+          class="queue-row"
+          class:queue-row--current={i === player.index}
+          draggable="true"
+          role="listitem"
+          ondragstart={(e) => onDragStart(e, i)}
+          ondragover={onDragOver}
+          ondrop={(e) => onDrop(e, i)}
+        >
+          <span class="queue-drag-handle" aria-hidden="true">⠿</span>
+          <TrackRow {track} tracks={player.queue} index={i} showLike={false} />
+        </div>
       {/each}
       {#if !player.queue.length}
         <p class="empty-state">{t('nowPlaying.queueEmpty')}</p>
@@ -38,3 +75,35 @@
     {/if}
   </div>
 {/if}
+
+<style>
+  .queue-row {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-1);
+  }
+
+  .queue-row :global(.track-row) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .queue-row--current :global(.track-row-title) {
+    color: var(--track-accent, var(--accent));
+  }
+
+  .queue-drag-handle {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    flex-shrink: 0;
+    color: var(--t3, var(--text-muted));
+    cursor: grab;
+    user-select: none;
+    font-size: var(--text-sm);
+  }
+
+  .queue-row:active .queue-drag-handle {
+    cursor: grabbing;
+  }
+</style>

@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { t } from '$lib/i18n/index.js';
+  import TrackArt from '$lib/components/TrackArt.svelte';
   import { getAlbumGroups, getArtistGroups } from '$lib/db.js';
 
   let tab = $state('albums');
@@ -24,11 +25,7 @@
     <div class="album-grid">
       {#each albums as album (album.albumKey)}
         <a class="album-card" href={`/album/${encodeURIComponent(album.albumKey)}`}>
-          {#if album.artUrl}
-            <img class="album-card-art" src={album.artUrl} alt="" />
-          {:else}
-            <div class="album-card-art" style="display:grid;place-items:center;color:var(--accent);font-size:2rem">♪</div>
-          {/if}
+          <TrackArt artUrl={album.artUrl} seed={album.albumKey} class="album-card-art" />
           <div class="album-card-title">{album.album}</div>
           <div class="album-card-sub">{album.artist} · {album.trackCount} 首</div>
         </a>

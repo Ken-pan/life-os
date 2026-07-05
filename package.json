@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "sync:packages": "bash scripts/sync-vendored-packages.sh monorepo",
+    "sync:packages": "bash scripts/sync-vendored-packages.sh",
     "build": "turbo run build",
     "check": "turbo run check",
     "build:planner": "npm run build -w planner-os",

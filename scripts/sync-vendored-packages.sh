@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# 将 canonical 共享包同步到 monorepo packages/ 或各 app 的 packages/  vendored 目录
+# Deprecated: packages/theme and packages/sync are edited in-repo.
+# Kept for one-off import from a local git clone if you still have one.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -25,24 +26,18 @@ rsync_sync() {
     "$SYNC_SRC/" "$dest/"
 }
 
-case "${1:-monorepo}" in
-  monorepo)
-    rsync_theme "$ROOT/packages/theme"
-    rsync_sync "$ROOT/packages/sync"
-    ;;
-  all-repos)
-    for app in Planner Fitness Moneymoneymoney MusicOS; do
-      base="$PROJECTS/$app"
-      [[ -d "$base" ]] || continue
-      rsync_theme "$base/packages/life-os-theme"
-      rsync_sync "$base/packages/life-os-sync"
-      echo "synced $app"
-    done
-    ;;
-  *)
-    echo "usage: $0 [monorepo|all-repos]" >&2
+if [[ "${1:-}" == "monorepo" || -z "${1:-}" ]]; then
+  if [[ ! -d "$THEME_SRC" || ! -d "$SYNC_SRC" ]]; then
+    echo "error: sibling life-os-theme / life-os-sync not found under $PROJECTS" >&2
+    echo "Edit packages/theme and packages/sync directly in this monorepo." >&2
     exit 1
-    ;;
-esac
+  fi
+  rsync_theme "$ROOT/packages/theme"
+  rsync_sync "$ROOT/packages/sync"
+  echo "done: imported from local sibling clones into packages/*"
+  exit 0
+fi
 
-echo "done: ${1:-monorepo}"
+echo "usage: $0 [monorepo]" >&2
+echo "Legacy all-repos mode removed — standalone app repos are archived." >&2
+exit 1

@@ -1,27 +1,20 @@
 # @life-os/sync
 
-Life OS 三端（Planner / Fitness / Finance）共享云同步逻辑。
+Life OS 四端（Planner / Fitness / Finance / Music）共享云同步逻辑。
 
-## 安装
+## 安装（monorepo）
+
+本包位于 `life-os/packages/sync`。各 app 通过 npm workspace 引用：
 
 ```json
 {
   "dependencies": {
-    "@life-os/sync": "file:../life-os-sync"
+    "@life-os/sync": "*"
   }
 }
 ```
 
-目录结构：
-
-```
-Projects/
-  life-os-sync/      ← 本包（唯一维护点）
-  life-os-theme/
-  Planner/
-  Fitness/
-  Moneymoneymoney/
-```
+在 monorepo 根目录运行 `npm install` 即可链接。
 
 ## 导出
 
@@ -37,12 +30,6 @@ Projects/
 ## 维护
 
 - 同步策略、cooldown、meta 键：**只改** `src/` 下模块
-- 各 app 不再保留 `packages/life-os-sync` 或 `vendor/life-os-sync` 副本
+- 勿在各 app 内 vendored 副本；GitHub 上 `life-os-sync` 独立仓已归档
 
-同目录另有共享包 **`@life-os/theme`**（`../life-os-theme`）。
-
-远程 CI 可使用：
-
-```json
-"@life-os/sync": "github:Ken-pan/life-os-sync"
-```
+同目录另有共享包 **`@life-os/theme`**（`packages/theme`）。

@@ -1,6 +1,7 @@
 <script>
   import '../app.css';
   import { onMount } from 'svelte';
+  import { onNavigate } from '$app/navigation';
   import { page } from '$app/state';
   import AppBar from '$lib/components/AppBar.svelte';
   import SideNav from '$lib/components/SideNav.svelte';
@@ -12,7 +13,8 @@
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js';
   import { applyLocale, t } from '$lib/i18n/index.js';
   import { resolvePageTitle, isNavChromeHidden } from '$lib/nav.js';
-  import { player } from '$lib/player.svelte.js';
+  import { getCurrentTrack, player } from '$lib/player.svelte.js';
+  import { applyTrackAmbience } from '$lib/trackAmbience.js';
   import { ensureBuiltinPlaylists } from '$lib/db.js';
   import { initAuth, auth } from '$lib/auth.svelte.js';
   import { bindVisibilitySync } from '@life-os/sync';
@@ -37,6 +39,20 @@
     };
   });
 
+  onNavigate((navigation) => {
+    if (!document.startViewTransition) return;
+    const from = navigation.from?.url.pathname ?? '';
+    const to = navigation.to?.url.pathname ?? '';
+    if (!from.startsWith('/now-playing') && !to.startsWith('/now-playing')) return;
+
+    return new Promise((resolve) => {
+      document.startViewTransition(async () => {
+        resolve();
+        await navigation.complete;
+      });
+    });
+  });
+
   $effect(() => {
     if (!auth.ready || !auth.user) return;
     return bindVisibilitySync(() => syncBidirectional({ silent: true }), {
@@ -47,6 +63,10 @@
   $effect(() => {
     S.settings.locale;
     applyLocale();
+  });
+
+  $effect(() => {
+    applyTrackAmbience(getCurrentTrack());
   });
 </script>
 

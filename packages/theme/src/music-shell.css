@@ -9,9 +9,10 @@
   --player-art-size: clamp(280px, 72vw, 360px);
   --player-art-radius: 20px;
   --player-glow: color-mix(in srgb, var(--accent) 42%, transparent);
+  --track-accent: var(--accent);
   --progress-h: 4px;
   --progress-bg: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
-  --progress-fill: var(--accent);
+  --progress-fill: var(--track-accent, var(--accent));
   --queue-drawer-max-h: min(52dvh, 420px);
 }
 
@@ -134,8 +135,30 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-5) var(--content-inline-pad) calc(var(--space-8) + var(--safe-bottom-effective));
+  padding: var(--space-3) var(--content-inline-pad) calc(var(--space-8) + var(--safe-bottom-effective));
+  gap: var(--space-5);
+}
+
+.now-playing-handle {
+  width: 40px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: color-mix(in srgb, var(--t3, var(--text-muted)) 55%, transparent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.now-playing-swipe-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--space-6);
+  width: 100%;
+  touch-action: pan-x;
+  transition:
+    transform var(--dur-base) var(--ease-emphasized),
+    opacity var(--dur-base) var(--ease-standard);
 }
 
 .now-playing-art-wrap {
@@ -213,28 +236,60 @@
   width: 100%;
   height: var(--progress-h);
   appearance: none;
-  background: transparent;
-  cursor: pointer;
-}
-
-.player-progress input[type='range']::-webkit-slider-runnable-track {
-  height: var(--progress-h);
+  -webkit-appearance: none;
+  border: none;
   border-radius: var(--radius-pill);
   background: linear-gradient(
     to right,
     var(--progress-fill) var(--progress-pct, 0%),
     var(--progress-bg) var(--progress-pct, 0%)
   );
+  cursor: pointer;
+}
+
+.player-progress input[type='range']::-webkit-slider-runnable-track {
+  height: var(--progress-h);
+  border-radius: var(--radius-pill);
+  background: transparent;
 }
 
 .player-progress input[type='range']::-webkit-slider-thumb {
   appearance: none;
+  -webkit-appearance: none;
   width: 14px;
   height: 14px;
   border-radius: 50%;
   background: var(--t1, var(--text));
   margin-top: -5px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.player-progress input[type='range']::-moz-range-track {
+  height: var(--progress-h);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  border: none;
+}
+
+.player-progress input[type='range']::-moz-range-progress {
+  height: var(--progress-h);
+  border-radius: var(--radius-pill);
+  background: transparent;
+}
+
+.player-progress input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--t1, var(--text));
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.player-progress input[type='range']:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus, 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent));
 }
 
 .player-progress-times {
@@ -347,6 +402,21 @@
   box-shadow: var(--shadow-card);
 }
 
+.album-card-art.placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.18);
+}
+
+.track-row-art.placeholder {
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--text-sm);
+}
+
 .album-card-title {
   font-weight: 600;
   font-size: var(--text-base);
@@ -367,7 +437,7 @@
   background:
     radial-gradient(ellipse 120% 80% at 80% -20%, var(--player-glow), transparent 55%),
     linear-gradient(145deg, color-mix(in srgb, var(--accent) 18%, var(--card)), var(--card));
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--track-accent, var(--accent)) 22%, var(--border));
 }
 
 .mood-hero-kicker {
@@ -400,6 +470,77 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-5);
+}
+
+/* ── 首页 Spotlight（正在播放）── */
+.spotlight {
+  margin-top: var(--space-5);
+}
+
+.spotlight-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--track-accent, var(--accent)) 28%, var(--border));
+  background: color-mix(in srgb, var(--track-accent, var(--accent)) 6%, var(--card));
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+
+.spotlight-art {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-soft);
+}
+
+.spotlight-art.placeholder {
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--text-xl);
+}
+
+.spotlight-copy {
+  min-width: 0;
+}
+
+.spotlight-kicker {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--track-accent, var(--accent));
+  margin-bottom: var(--space-1);
+}
+
+.spotlight-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spotlight-sub {
+  font-size: var(--text-sm);
+  color: var(--t3, var(--text-muted));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── View transition: mini ↔ now playing cover ── */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(player-art),
+  ::view-transition-new(player-art) {
+    animation-duration: 0.38s;
+    animation-timing-function: var(--ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1));
+  }
 }
 
 /* ── 队列抽屉 ── */
