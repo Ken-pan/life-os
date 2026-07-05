@@ -1,0 +1,67 @@
+/* Life OS 居中 Modal（Fitness 重量录入等） */
+
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: var(--z-sheet, 100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(24px, env(safe-area-inset-top, 0px))
+    24px
+    max(24px, env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-standard);
+}
+
+.modal-bg.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border-l, var(--border-strong, var(--border)));
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 340px;
+  margin: auto;
+  flex-shrink: 0;
+  transform: translateY(10px) scale(0.96);
+  transition: transform var(--dur-base) var(--ease-emphasized);
+}
+
+.modal-bg.show .modal {
+  transform: scale(1);
+}
+
+.modal-title {
+  font-family: var(--disp, var(--font-brand));
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.modal-sub {
+  font-size: var(--text-sm);
+  color: var(--t3, var(--text-muted));
+  margin: 3px 0 18px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--space-2-5);
+}
+
+.modal-actions button {
+  flex: 1;
+}

@@ -1,0 +1,25 @@
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+node_modules/
+.playwright-cli/
+.playwright-*.png
+test-results/
+.screenshots/
+.screenshots-review/
+output/
+
+# Supabase 本地开发产物
+supabase/.temp/
+supabase/.branches/
+
+# SvelteKit
+.svelte-kit/
+build/
+.vite/
+package-lock.json
+
+# Local Netlify folder
+.netlify

@@ -1,0 +1,410 @@
+{
+  "archivedAt": "2026-07-05T20:48:23.917Z",
+  "projectRef": "drtqnhtlpjbwrpyqlrjk",
+  "tables": {
+    "profiles": [
+      {
+        "id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "display_name": "334452284ken",
+        "created_at": "2026-07-02T19:29:41.992771+00:00",
+        "updated_at": "2026-07-02T19:29:41.992771+00:00"
+      }
+    ],
+    "user_state": [
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "settings": {
+          "unit": "lbs",
+          "sound": true,
+          "theme": "auto",
+          "accent": "auto",
+          "logDetail": "off",
+          "notifyRest": true
+        },
+        "rotation": {
+          "next": 2,
+          "history": [
+            {
+              "date": "2026-06-30",
+              "dayId": "chest"
+            },
+            {
+              "date": "2026-07-01",
+              "dayId": "back"
+            }
+          ],
+          "lastDeload": null,
+          "phaseStart": null
+        },
+        "program_overrides": {},
+        "active_program_id": "bro-split",
+        "last_day": "back",
+        "schema_version": 4,
+        "updated_at": "2026-07-02T19:33:24.481041+00:00"
+      }
+    ],
+    "exercise_weights": [
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "c_bench",
+        "weight": 225,
+        "updated_at": "2026-07-02T19:30:59.470588+00:00"
+      },
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "c_incdb",
+        "weight": 50,
+        "updated_at": "2026-07-02T19:30:59.470588+00:00"
+      },
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "c_incmc",
+        "weight": 190,
+        "updated_at": "2026-07-02T19:30:59.470588+00:00"
+      },
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "c_fly",
+        "weight": 145,
+        "updated_at": "2026-07-02T19:30:59.470588+00:00"
+      },
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_pulldown",
+        "weight": 145,
+        "updated_at": "2026-07-02T19:30:59.470588+00:00"
+      },
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_row",
+        "weight": 130,
+        "updated_at": "2026-07-02T19:30:59.470588+00:00"
+      },
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_ext",
+        "weight": 70,
+        "updated_at": "2026-07-02T19:30:59.470588+00:00"
+      },
+      {
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_chestsup",
+        "weight": 315,
+        "updated_at": "2026-07-02T19:30:59.470588+00:00"
+      }
+    ],
+    "workout_sessions": [
+      {
+        "id": "e770ee3f-f9b0-47f4-87b7-9bebcbeb87e2",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "session_date": "2026-06-30",
+        "day_id": "chest",
+        "program_id": "bro-split",
+        "started_at": "2026-06-30T01:45:40.111+00:00",
+        "ended_at": null,
+        "created_at": "2026-07-02T19:29:47.996848+00:00",
+        "updated_at": "2026-07-02T19:31:00.227786+00:00"
+      },
+      {
+        "id": "d14a30d5-516a-4c22-9500-c3d8121d31e1",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "session_date": "2026-07-01",
+        "day_id": "back",
+        "program_id": "bro-split",
+        "started_at": "2026-07-01T19:52:27.945+00:00",
+        "ended_at": "2026-07-01T20:41:12.98+00:00",
+        "created_at": "2026-07-02T19:30:26.235413+00:00",
+        "updated_at": "2026-07-02T19:33:24.481041+00:00"
+      }
+    ],
+    "exercise_logs": [
+      {
+        "id": "9dc51294-d9b0-4655-b0e8-404d8cea12be",
+        "session_id": "e770ee3f-f9b0-47f4-87b7-9bebcbeb87e2",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "c_bench",
+        "done": 3,
+        "sets": [
+          {
+            "ts": "2026-06-30T19:30:45.231Z",
+            "rir": 1,
+            "reps": 8,
+            "weight": 225
+          },
+          {
+            "ts": "2026-06-30T19:33:54.934Z",
+            "rir": 1,
+            "reps": 8,
+            "weight": 225
+          },
+          {
+            "ts": "2026-06-30T19:37:55.617Z",
+            "rir": 1,
+            "reps": 8,
+            "weight": 225
+          },
+          null
+        ],
+        "skipped": null,
+        "started_at": "2026-06-30T19:30:45.231+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "c56c900a-4a29-4378-a1e1-4b246add3c10",
+        "session_id": "e770ee3f-f9b0-47f4-87b7-9bebcbeb87e2",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "c_incdb",
+        "done": 2,
+        "sets": [
+          {
+            "ts": "2026-06-30T19:41:03.641Z",
+            "rir": 2,
+            "reps": 12,
+            "weight": 47.5
+          },
+          {
+            "ts": "2026-06-30T19:43:36.510Z",
+            "rir": 2,
+            "reps": 12,
+            "weight": 50
+          },
+          null
+        ],
+        "skipped": null,
+        "started_at": "2026-06-30T19:41:03.641+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "37526f2e-222b-40ec-a9e0-7b402247cb2c",
+        "session_id": "e770ee3f-f9b0-47f4-87b7-9bebcbeb87e2",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "c_incmc",
+        "done": 2,
+        "sets": [
+          {
+            "ts": "2026-06-30T19:46:39.679Z",
+            "rir": 2,
+            "reps": 12,
+            "weight": 130
+          },
+          {
+            "ts": "2026-06-30T19:48:35.180Z",
+            "rir": 1,
+            "reps": 12,
+            "weight": 190
+          },
+          null
+        ],
+        "skipped": null,
+        "started_at": "2026-06-30T19:46:39.679+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "978961ff-28d9-4eaf-aee2-f089026486ac",
+        "session_id": "e770ee3f-f9b0-47f4-87b7-9bebcbeb87e2",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "c_fly",
+        "done": 3,
+        "sets": [
+          {
+            "ts": "2026-06-30T19:51:42.184Z",
+            "rir": 2,
+            "reps": 14,
+            "weight": 85
+          },
+          {
+            "ts": "2026-06-30T19:55:11.821Z",
+            "rir": 2,
+            "reps": 15,
+            "weight": 115
+          },
+          {
+            "ts": "2026-06-30T19:56:27.241Z",
+            "rir": 1,
+            "reps": 12,
+            "weight": 145
+          }
+        ],
+        "skipped": null,
+        "started_at": "2026-06-30T19:51:42.184+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "d6a6e567-f34f-4c5e-b785-df541a53ca91",
+        "session_id": "d14a30d5-516a-4c22-9500-c3d8121d31e1",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_pull",
+        "done": 4,
+        "sets": [
+          {
+            "ts": "2026-07-01T19:54:10.564Z",
+            "rir": 2,
+            "reps": 6,
+            "weight": 0
+          },
+          {
+            "ts": "2026-07-01T19:59:36.350Z",
+            "rir": 2,
+            "reps": 8,
+            "weight": 0
+          },
+          {
+            "ts": "2026-07-01T20:00:54.882Z",
+            "rir": 1,
+            "reps": 8,
+            "weight": 0
+          },
+          {
+            "ts": "2026-07-01T20:03:51.405Z",
+            "rir": 1,
+            "reps": 8,
+            "weight": 0
+          }
+        ],
+        "skipped": null,
+        "started_at": "2026-07-01T19:54:10.564+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "5bc69cbb-76c4-44f9-80e5-1de97b684394",
+        "session_id": "d14a30d5-516a-4c22-9500-c3d8121d31e1",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_pulldown",
+        "done": 3,
+        "sets": [
+          {
+            "ts": "2026-07-01T20:04:39.975Z",
+            "rir": 2,
+            "reps": 15,
+            "weight": 130
+          },
+          {
+            "ts": "2026-07-01T20:06:40.648Z",
+            "rir": 2,
+            "reps": 15,
+            "weight": 130
+          },
+          {
+            "ts": "2026-07-01T20:08:42.130Z",
+            "rir": 1,
+            "reps": 15,
+            "weight": 145
+          }
+        ],
+        "skipped": null,
+        "started_at": "2026-07-01T20:04:39.975+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "e02755ee-2be8-48c7-b3c6-f294f3b03981",
+        "session_id": "d14a30d5-516a-4c22-9500-c3d8121d31e1",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_row",
+        "done": 3,
+        "sets": [
+          {
+            "ts": "2026-07-01T20:11:12.996Z",
+            "rir": 2,
+            "reps": 12,
+            "weight": 115
+          },
+          {
+            "ts": "2026-07-01T20:14:22.255Z",
+            "rir": 2,
+            "reps": 12,
+            "weight": 130
+          },
+          {
+            "ts": "2026-07-01T20:17:59.254Z",
+            "rir": 2,
+            "reps": 12,
+            "weight": 130
+          }
+        ],
+        "skipped": null,
+        "started_at": "2026-07-01T20:11:12.996+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "e970e951-4397-4e20-93cb-198c34efda0b",
+        "session_id": "d14a30d5-516a-4c22-9500-c3d8121d31e1",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_face",
+        "done": 3,
+        "sets": [
+          {
+            "ts": "2026-07-01T20:20:09.071Z",
+            "rir": 2,
+            "reps": 15,
+            "weight": 100
+          },
+          {
+            "ts": "2026-07-01T20:22:37.295Z",
+            "rir": 1,
+            "reps": 18,
+            "weight": 100
+          },
+          {
+            "ts": "2026-07-01T20:24:47.194Z",
+            "rir": 1,
+            "reps": 18,
+            "weight": 100
+          }
+        ],
+        "skipped": null,
+        "started_at": "2026-07-01T20:20:09.071+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "cd100db2-72c6-4699-905b-b8929548f9ba",
+        "session_id": "d14a30d5-516a-4c22-9500-c3d8121d31e1",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_ext",
+        "done": 2,
+        "sets": [
+          {
+            "ts": "2026-07-01T20:26:58.890Z",
+            "rir": 2,
+            "reps": 12,
+            "weight": 70
+          },
+          {
+            "ts": "2026-07-01T20:30:31.432Z",
+            "rir": 2,
+            "reps": 13,
+            "weight": 70
+          },
+          null
+        ],
+        "skipped": null,
+        "started_at": "2026-07-01T20:26:58.89+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      },
+      {
+        "id": "5524c8ac-185f-4619-afc4-e221615ba888",
+        "session_id": "d14a30d5-516a-4c22-9500-c3d8121d31e1",
+        "user_id": "a5fcb055-fff2-4e58-90de-0eeaf749793c",
+        "exercise_id": "b_chestsup",
+        "done": 2,
+        "sets": [
+          {
+            "ts": "2026-07-01T20:38:53.642Z",
+            "rir": 2,
+            "reps": 8,
+            "weight": 315
+          },
+          {
+            "ts": "2026-07-01T20:41:12.980Z",
+            "rir": 2,
+            "reps": 10,
+            "weight": 315
+          },
+          null
+        ],
+        "skipped": null,
+        "started_at": "2026-07-01T20:38:53.642+00:00",
+        "updated_at": "2026-07-02T19:31:00.678933+00:00"
+      }
+    ]
+  }
+}

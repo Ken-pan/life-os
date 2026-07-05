@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      /* Finance OS 设计系统 tokens 子集（与 src/index.css 保持同步）。
+         popup 无法引用 app 的样式表，故在此镜像一份；改主题时两处同改。 */
+      :root {
+        --bg: #f2f4f2;
+        --bg-elevated: #ffffff;
+        --surface-2: #f4f6f5;
+        --card-hover: #f0f3f1;
+        --border: #d8e0dc;
+        --border-strong: #bec9c4;
+        --text: #141c1f;
+        --text-secondary: #4a5857;
+        --text-muted: #687674;
+
+        --primary: #16191a;
+        --primary-hover: #2b3032;
+        --on-primary: #ffffff;
+        --lime: #c6f43d;
+        --on-lime: #161a05;
+        --accent: #4d7c0f;
+        --accent-subtle: #eef8d4;
+        --accent-foreground: #3f6212;
+
+        --positive: #087a5b;
+        --positive-subtle: #e6f6ef;
+        --warning: #9a5b08;
+        --warning-subtle: #fff4df;
+        --critical: #b9364f;
+        --critical-subtle: #fcedef;
+
+        --sidebar: #121413;
+        --sidebar-foreground: #f7f8f5;
+        --sidebar-muted: #9aa39a;
+        --sidebar-border: #282c28;
+
+        --radius-control: 8px;
+        --radius-md: 10px;
+        --radius-sm: 14px;
+        --radius-pill: 999px;
+
+        --space-1: 4px;
+        --space-1-5: 6px;
+        --space-2: 8px;
+        --space-2-5: 10px;
+        --space-3: 12px;
+        --space-3-5: 14px;
+        --space-4: 16px;
+        --space-5: 20px;
+
+        --text-2xs: 10px;
+        --text-xs: 11px;
+        --text-sm: 12px;
+        --text-md: 13px;
+        --text-base: 14px;
+        --text-lg: 15px;
+
+        --btn-h-md: 36px;
+
+        --shadow-card: 0 1px 2px rgba(20, 28, 31, 0.04), 0 5px 18px rgba(20, 28, 31, 0.05);
+        --shadow-focus: 0 0 0 2px rgba(166, 216, 34, 0.35);
+
+        --motion-fast: 140ms;
+        --motion-standard: 190ms;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+        --font: "Geist", -apple-system, BlinkMacSystemFont, "PingFang SC",
+          "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+
+        color-scheme: light;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b0d0c;
+          --bg-elevated: #141815;
+          --surface-2: #1a1f1b;
+          --card-hover: #181d18;
+          --border: rgba(255, 255, 255, 0.075);
+          --border-strong: rgba(255, 255, 255, 0.11);
+          --text: rgba(255, 255, 255, 0.92);
+          --text-secondary: rgba(255, 255, 255, 0.68);
+          --text-muted: rgba(255, 255, 255, 0.48);
+
+          --lime: #b2dc37;
+          --primary: var(--lime);
+          --primary-hover: #bddf4d;
+          --on-primary: #161a05;
+          --accent: var(--lime);
+          --accent-subtle: #1e2412;
+          --accent-foreground: rgba(230, 255, 170, 0.92);
+
+          --positive: #6dd6ad;
+          --positive-subtle: #17382e;
+          --warning: #f2bd6c;
+          --warning-subtle: #423116;
+          --critical: #ff8fa2;
+          --critical-subtle: #4a2028;
+
+          --sidebar: #0b0d0c;
+          --sidebar-border: rgba(255, 255, 255, 0.07);
+
+          --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.22), 0 5px 18px rgba(0, 0, 0, 0.18);
+          --shadow-focus: 0 0 0 2px rgba(178, 220, 55, 0.28);
+
+          color-scheme: dark;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        width: 340px;
+        margin: 0;
+        font-family: var(--font);
+        font-size: var(--text-md);
+        line-height: 1.55;
+        color: var(--text);
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ===== 品牌头（对齐 app 侧边栏：石墨轨 + 荧光绿点缀）===== */
+      header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2-5);
+        padding: var(--space-3-5) var(--space-4);
+        background: linear-gradient(180deg, #1a1d1b 0%, var(--sidebar) 100%);
+        color: var(--sidebar-foreground);
+        border-bottom: 1px solid var(--sidebar-border);
+      }
+
+      header img {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 auto;
+        border-radius: var(--radius-control);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+      }
+
+      .brand-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: var(--text-lg);
+        font-weight: 700;
+        letter-spacing: 0.15px;
+        line-height: 1.2;
+      }
+
+      header h1 .accent {
+        color: var(--lime);
+      }
+
+      header p {
+        margin: 0;
+        font-size: var(--text-2xs);
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        color: var(--sidebar-muted);
+      }
+
+      main {
+        padding: var(--space-3) var(--space-4) var(--space-4);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+
+      section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: var(--text-xs);
+        font-weight: 600;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      /* ===== 按钮（app .btn / .btn.ghost / .btn.outline）===== */
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: color var(--motion-standard) var(--ease),
+          background-color var(--motion-standard) var(--ease),
+          border-color var(--motion-standard) var(--ease),
+          box-shadow var(--motion-standard) var(--ease);
+      }
+
+      button:focus-visible {
+        outline: none;
+        box-shadow: var(--shadow-focus);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: var(--btn-h-md);
+        padding: 0 var(--space-4);
+        border: none;
+        border-radius: var(--radius-pill);
+        background: var(--primary);
+        color: var(--on-primary);
+        font-size: var(--text-base);
+        font-weight: 600;
+        line-height: 1.2;
+      }
+
+      .btn:hover {
+        background: var(--primary-hover);
+      }
+
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .btn:disabled:hover {
+        background: var(--primary);
+      }
+
+      .btn.ghost {
+        background: var(--surface-2);
+        color: var(--text-secondary);
+        font-size: var(--text-md);
+        font-weight: 500;
+      }
+
+      .btn.ghost:hover {
+        background: var(--card-hover);
+        color: var(--text);
+      }
+
+      .btn.ghost:disabled:hover {
+        background: var(--surface-2);
+        color: var(--text-secondary);
+      }
+
+      .btn.outline {
+        background: transparent;
+        border: 1.25px solid var(--border-strong);
+        color: var(--accent-foreground);
+        font-size: var(--text-md);
+        font-weight: 500;
+      }
+
+      .btn.outline:hover {
+        background: var(--accent-subtle);
+        border-color: var(--accent);
+      }
+
+      .btn.outline:disabled:hover {
+        background: transparent;
+        border-color: var(--border-strong);
+      }
+
+      .btn.log {
+        display: none;
+        margin-top: var(--space-2);
+        background: var(--warning-subtle);
+        color: var(--warning);
+        border: 1px solid rgba(154, 91, 8, 0.22);
+        font-size: var(--text-md);
+      }
+
+      .btn.log:hover {
+        background: var(--warning-subtle);
+        border-color: var(--warning);
+      }
+
+      /* ===== 列表行（app .item / .tag）===== */
+      .item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-2-5) var(--space-3);
+        background: var(--bg-elevated);
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow-card);
+        font-size: var(--text-md);
+        font-weight: 500;
+        min-width: 0;
+      }
+
+      .item + .item {
+        margin-top: var(--space-1-5);
+      }
+
+      .item .meta {
+        color: var(--text-muted);
+        font-size: var(--text-xs);
+        font-weight: 400;
+        margin-top: 1px;
+      }
+
+      .badge {
+        flex: 0 0 auto;
+        font-size: var(--text-xs);
+        font-weight: 500;
+        padding: 2px var(--space-2);
+        border-radius: var(--radius-pill);
+        background: var(--warning-subtle);
+        color: var(--warning);
+        white-space: nowrap;
+      }
+
+      .badge.done {
+        background: var(--positive-subtle);
+        color: var(--positive);
+      }
+
+      .empty {
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+        text-align: center;
+        padding: var(--space-3) 0;
+        border: 1px dashed var(--border-strong);
+        border-radius: var(--radius-sm);
+      }
+
+      /* ===== 抓取状态条 ===== */
+      .crawl-state {
+        display: none;
+        font-size: var(--text-sm);
+        color: var(--accent-foreground);
+        background: var(--accent-subtle);
+        border-radius: var(--radius-control);
+        padding: var(--space-2-5);
+      }
+
+      .crawl-state.error {
+        color: var(--critical);
+        background: var(--critical-subtle);
+      }
+
+      .crawl-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+        font-size: var(--text-sm);
+      }
+
+      .crawl-topline strong {
+        font-weight: 700;
+      }
+
+      .progress {
+        height: 7px;
+        margin: var(--space-2) 0;
+        overflow: hidden;
+        border-radius: var(--radius-pill);
+        background: rgba(77, 124, 15, 0.16);
+      }
+
+      .progress > div {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        transition: width var(--motion-standard) var(--ease);
+      }
+
+      .crawl-detail,
+      .crawl-meta,
+      .crawl-warning {
+        font-size: var(--text-xs);
+      }
+
+      .crawl-detail {
+        color: var(--text-secondary);
+      }
+
+      .crawl-meta {
+        margin-top: 2px;
+        color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .crawl-warning {
+        margin-top: var(--space-2);
+        color: var(--warning);
+      }
+
+      .crawl-warning.compact {
+        margin-top: 0;
+      }
+
+      .crawl-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-top: var(--space-2);
+        padding-top: var(--space-2);
+        border-top: 1px solid rgba(77, 124, 15, 0.18);
+      }
+
+      .crawl-summary-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-2);
+        color: var(--text-muted);
+        font-size: var(--text-xs);
+      }
+
+      .crawl-summary-row strong {
+        max-width: 220px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-align: right;
+      }
+
+      /* ===== 投递健康 ===== */
+      .sync-health {
+        background: var(--bg-elevated);
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow-card);
+        padding: var(--space-2-5) var(--space-3);
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        line-height: 1.55;
+      }
+
+      .sync-health.ok {
+        border-left: 3px solid var(--positive);
+      }
+
+      .sync-health.warn {
+        border-left: 3px solid var(--warning);
+      }
+
+      .sync-health.error {
+        border-left: 3px solid var(--critical);
+      }
+
+      .sync-health-row {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-2);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+      }
+
+      .sync-health-row strong {
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+
+      .sync-actions {
+        display: flex;
+        gap: var(--space-2);
+        margin-top: var(--space-2);
+      }
+
+      .sync-actions .btn {
+        min-height: 32px;
+        font-size: var(--text-sm);
+      }
+
+      /* ===== 抓取计划卡 ===== */
+      .plan-box {
+        background: var(--bg-elevated);
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow-card);
+        padding: var(--space-2-5) var(--space-3);
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+
+      .plan-box strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .plan-box.missing {
+        background: transparent;
+        box-shadow: none;
+        border: 1px dashed var(--border-strong);
+        color: var(--text-muted);
+      }
+
+      .plan-box .meta {
+        color: var(--text-muted);
+        font-size: var(--text-xs);
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      footer {
+        padding: var(--space-2-5) var(--space-4) var(--space-3-5);
+        color: var(--text-muted);
+        font-size: var(--text-xs);
+        line-height: 1.6;
+        border-top: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="brand-mark.svg" alt="" width="30" height="30" />
+      <div class="brand-copy">
+        <h1>Finance<span class="accent"> OS</span> Sync</h1>
+        <p>打开券商/记账页面自动抓取 · 打开 Finance OS 自动写入</p>
+      </div>
+    </header>
+    <main>
+      <section>
+        <h2>抓取计划（Finance OS）</h2>
+        <div id="snapshot-plan" class="plan-box missing">尚未拉取。打开 Finance OS 后会自动更新。</div>
+        <button id="refresh-plan" class="btn ghost">更新抓取计划</button>
+      </section>
+      <section>
+        <h2>同步到 Finance OS</h2>
+        <button id="open-app" class="btn">打开 Finance OS 并同步</button>
+        <div id="sync-health" class="sync-health ok">等待 Finance OS 页面响应…</div>
+      </section>
+      <section>
+        <h2>主动抓取</h2>
+        <button id="crawl-rm" class="btn outline">抓取 Rocket Money（余额 + 订阅 + 交易）</button>
+        <div id="crawl-state" class="crawl-state"></div>
+        <button id="crawl-rh-details" class="btn outline">补齐 Robinhood 持仓详情（均价/盈亏）</button>
+        <div id="rh-enrich-state" class="crawl-state"></div>
+        <button id="download-log" class="btn log">下载 debug log</button>
+      </section>
+      <section>
+        <h2>待同步</h2>
+        <div id="queue"><div class="empty">队列为空</div></div>
+        <div id="inflight" style="display:none"></div>
+      </section>
+      <section id="dlq-section" style="display:none">
+        <h2>投递失败（DLQ）</h2>
+        <div id="dlq"></div>
+        <div class="sync-actions">
+          <button id="retry-dlq" class="btn ghost">全部重新入队</button>
+          <button id="clear-dlq" class="btn outline">清空 DLQ</button>
+        </div>
+      </section>
+      <section>
+        <h2>最近同步</h2>
+        <div id="history"><div class="empty">暂无记录</div></div>
+      </section>
+    </main>
+    <footer>
+      待同步不会自动消失：须打开 Finance OS 页面（本地任意端口或 Netlify），
+      扩展 bridge 才能把数据写入。改完扩展后请「重新加载扩展」并刷新 Finance OS 标签页。
+    </footer>
+    <script src="debugLog.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

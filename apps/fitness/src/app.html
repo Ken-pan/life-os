@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FITNESS.OS</title>
+  <meta name="description" content="胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先" />
+  <meta name="application-name" content="FITNESS.OS" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#f4f4f3" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0d0d0e" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#0d0d0e" id="theme-color-meta" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="FITNESS.OS" />
+  <meta property="og:title" content="FITNESS.OS" />
+  <meta property="og:description" content="胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="FITNESS.OS" />
+  <meta name="twitter:description" content="胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FITNESS.OS" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var pref = 'dark';
+        var raw = localStorage.getItem('fitos_v2');
+        if (raw) {
+          var s = JSON.parse(raw);
+          if (s.settings && s.settings.theme) pref = s.settings.theme;
+        }
+        var light =
+          pref === 'light' ||
+          (pref === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
+        var resolved = light ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', resolved);
+        document.documentElement.style.colorScheme = resolved;
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.content = resolved === 'light' ? '#f4f4f3' : '#0d0d0e';
+      } catch (e) {}
+    })();
+  </script>
+  %sveltekit.head%
+</head>
+<body data-sveltekit-preload-data="hover">
+  <div style="display: contents">%sveltekit.body%</div>
+</body>
+</html>

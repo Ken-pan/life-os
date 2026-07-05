@@ -1,0 +1,46 @@
+/*
+  Life OS 共享响应式布局
+  在 app.css / index.css 顶部 @import '@life-os/theme/layout.css'
+  查询使用 @media (--life-os-*) — 由 PostCSS custom-media 展开
+
+  三端 tier（Planner / FinanceOS / FitnessOS 共用）：
+  - phone    ≤640px   紧凑 gutter、底栏 Primary+More
+  - tablet   641–860px  加宽 gutter、底栏同 phone（侧栏仍隐藏）
+  - desktop  ≥861px   持久侧栏、隐藏底栏
+*/
+
+@custom-media --life-os-narrow (max-width: 380px);
+@custom-media --life-os-compact (max-width: 640px);
+@custom-media --life-os-compact-up (min-width: 640px);
+@custom-media --life-os-phone (max-width: 640px);
+@custom-media --life-os-tablet (min-width: 641px) and (max-width: 860px);
+@custom-media --life-os-mobile (max-width: 860px);
+@custom-media --life-os-mobile-landscape (max-width: 860px) and (orientation: landscape);
+@custom-media --life-os-desktop (min-width: 861px);
+
+:root {
+  --bp-narrow: 380px;
+  --bp-compact: 640px;
+  --bp-phone: 640px;
+  --bp-tablet-min: 641px;
+  --bp-tablet-max: 860px;
+  --bp-mobile: 860px;
+  --bp-mobile-min: 861px;
+
+  /* 底栏（mobile/tablet 共用；desktop 不渲染） */
+  --tabbar-h: 62px;
+  --tabbar-total-h: calc(var(--tabbar-h) + max(var(--space-2, 8px), var(--safe-bottom-effective, 0px)));
+}
+
+@media (--life-os-desktop) {
+  :root {
+    --page-gutter: var(--page-gutter-desktop);
+    --content-inline-pad: max(var(--page-gutter-desktop), calc((100% - var(--content-max)) / 2));
+  }
+}
+
+@media (--life-os-tablet) {
+  :root {
+    --page-gutter: var(--page-gutter-tablet, var(--space-5));
+  }
+}

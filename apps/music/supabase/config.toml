@@ -1,0 +1,20 @@
+# MusicOS local Supabase config — API schemas only.
+# Do NOT run `supabase config push` from this repo; use Moneymoneymoney/supabase/config.toml
+# as the canonical Life OS project config (auth redirects + exposed schemas).
+project_id = "MusicOS"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public", "music", "fitness", "planner"]
+extra_search_path = ["public", "extensions", "music", "fitness", "planner"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323

@@ -1,0 +1,29 @@
+{
+  "id": "/",
+  "name": "FINANCE.OS",
+  "short_name": "FINANCE",
+  "description": "个人财务驾驶舱 · 现金流、资产与长期规划",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f4f2",
+  "theme_color": "#f2f4f2",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["finance", "utilities"],
+  "icons": [
+    {
+      "src": "/assets/brand/mark-on-dark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/brand/mark-on-dark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

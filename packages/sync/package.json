@@ -1,0 +1,22 @@
+{
+  "name": "@life-os/sync",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Life OS shared cloud sync: bidirectional pull/push, auth session, visibility hooks",
+  "type": "module",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./constants": {
+      "types": "./src/index.d.ts",
+      "import": "./src/constants.js"
+    },
+    "./bidirectional": {
+      "types": "./src/index.d.ts",
+      "import": "./src/bidirectional.js"
+    }
+  }
+}

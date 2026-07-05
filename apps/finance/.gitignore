@@ -1,0 +1,14 @@
+.DS_Store
+node_modules
+dist
+*.local
+.vite
+.env
+.env.*
+!.env.example
+scripts/.txn-sql/
+src/data/transactions.json
+supabase/.temp/
+
+# Local Netlify folder
+.netlify

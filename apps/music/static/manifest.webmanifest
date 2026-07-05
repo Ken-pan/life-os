@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "MUSIC.OS",
+  "short_name": "MUSIC",
+  "description": "本地音乐，留在心里 · 离线播放与歌单",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf5f4",
+  "theme_color": "#faf5f4",
+  "lang": "zh-CN",
+  "categories": ["music", "entertainment", "utilities"],
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

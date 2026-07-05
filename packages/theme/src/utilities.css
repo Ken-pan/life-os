@@ -1,0 +1,65 @@
+/* Life OS 原子工具类（置于 @layer life-os.utilities，可被 app 未分层 CSS 覆盖） */
+
+.life-os-scroll-x {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.life-os-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tab / chip 条：scroll-snap + safe-area padding（表格等纯滚动勿加 --snap） */
+.life-os-scroll-x--snap {
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: max(var(--space-2, 8px), env(safe-area-inset-left, 0px))
+    max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
+}
+
+.life-os-scroll-x--snap-mandatory {
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: max(var(--space-2, 8px), env(safe-area-inset-left, 0px))
+    max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
+}
+
+.life-os-scroll-x--snap > *,
+.life-os-scroll-x--snap-mandatory > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .life-os-scroll-x--snap,
+  .life-os-scroll-x--snap-mandatory {
+    scroll-behavior: smooth;
+  }
+}
+
+/* 右侧渐隐：提示可横向滚动（用于 tab / seg；表格数据区慎用） */
+.life-os-scroll-x--fade-edge {
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
+/* tablist 外层 fade（不裁切 active 下划线；渐隐叠在 scroll 容器外） */
+.life-os-scroll-fade {
+  position: relative;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.life-os-scroll-fade::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  background: linear-gradient(to right, transparent, var(--life-os-scroll-fade-bg, var(--bg)));
+  pointer-events: none;
+}

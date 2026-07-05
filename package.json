@@ -1,0 +1,24 @@
+{
+  "name": "life-os",
+  "private": true,
+  "description": "Life OS monorepo — Planner, Fitness, Finance, Music + shared theme/sync",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "sync:packages": "bash scripts/sync-vendored-packages.sh monorepo",
+    "build": "turbo run build",
+    "check": "turbo run check",
+    "build:planner": "npm run build -w planner-os",
+    "build:fitness": "npm run build -w fitness-os",
+    "build:finance": "npm run build -w finance-os",
+    "build:music": "npm run build -w music-os"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

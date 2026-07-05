@@ -1,0 +1,129 @@
+/*
+  Life OS 分段控件（Seg）
+  各 app 通过 :root token 切换视觉：
+  - Finance：pill 轨道 + lime active（默认 token）
+  - Fitness：`.seg.seg-track` 或 --seg-track-border
+  - Planner：`.seg.seg-chips` 松散 chip 模式
+*/
+
+:root {
+  --seg-display: inline-flex;
+  --seg-flex-wrap: nowrap;
+  --seg-gap: var(--space-0-5);
+  --seg-track-bg: color-mix(in srgb, var(--t1, var(--text)) 4%, var(--bg-elevated, var(--card)));
+  --seg-track-border: none;
+  --seg-track-radius: var(--radius-pill);
+  --seg-track-padding: var(--space-1);
+  --seg-btn-bg: transparent;
+  --seg-btn-border: none;
+  --seg-btn-radius: var(--radius-pill);
+  --seg-btn-color: var(--t2, var(--text-secondary));
+  --seg-active-bg: var(--seg-active-bg-token, var(--lime, var(--accent-bg, var(--accent-subtle))));
+  --seg-active-fg: var(--seg-active-fg-token, var(--on-lime, var(--accent)));
+  --seg-active-border: var(--seg-active-border-token, transparent);
+}
+
+.seg {
+  display: var(--seg-display);
+  flex-wrap: var(--seg-flex-wrap);
+  align-items: center;
+  gap: var(--seg-gap);
+  background: var(--seg-track-bg);
+  border: var(--seg-track-border);
+  border-radius: var(--seg-track-radius);
+  padding: var(--seg-track-padding);
+}
+
+.seg.wrap {
+  flex-wrap: wrap;
+}
+
+.seg.seg-chips {
+  --seg-display: flex;
+  --seg-flex-wrap: wrap;
+  --seg-gap: 8px;
+  --seg-track-bg: transparent;
+  --seg-track-border: none;
+  --seg-track-padding: 0;
+  --seg-btn-bg: var(--card);
+  --seg-btn-border: 1px solid var(--border);
+  --seg-btn-radius: var(--radius-pill);
+  --seg-active-bg: var(--accent-bg, var(--accent-subtle));
+  --seg-active-fg: var(--accent);
+  --seg-active-border-token: var(--accent);
+}
+
+.seg.seg-track {
+  --seg-display: flex;
+  --seg-flex-wrap: nowrap;
+  --seg-track-bg: var(--bg-2, var(--bg-elevated));
+  --seg-track-border: 1px solid var(--border-l, var(--border-strong, var(--border)));
+  --seg-track-radius: 9px;
+  --seg-track-padding: 0;
+  --seg-btn-radius: 0;
+  --seg-active-bg: var(--accent);
+  --seg-active-fg: var(--on-accent);
+}
+
+.seg.seg-icons {
+  padding: var(--space-0-5);
+}
+
+.seg.seg-icons button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+}
+
+.seg button {
+  background: var(--seg-btn-bg);
+  border: var(--seg-btn-border);
+  color: var(--seg-btn-color);
+  padding: var(--space-1-5, 8px) var(--space-3-5, 12px);
+  font-size: var(--text-md, var(--text-sm));
+  font-weight: 500;
+  border-radius: var(--seg-btn-radius);
+  min-height: var(--btn-h-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+
+.seg button:hover {
+  color: var(--t1, var(--text));
+}
+
+.seg button.on,
+.seg button.active {
+  background: var(--seg-active-bg);
+  border-color: var(--seg-active-border);
+  color: var(--seg-active-fg);
+  font-weight: 600;
+}
+
+.seg-scroll {
+  max-width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+@media (--life-os-mobile) {
+  .seg:not(.wrap):not(.seg-icons):not(.seg--wrap),
+  .seg-scroll {
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+  }
+}
+
+.seg--wrap {
+  flex-wrap: wrap;
+  max-width: 100%;
+}

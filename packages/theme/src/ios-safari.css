@@ -1,0 +1,126 @@
+/*
+  Life OS iOS / Safari / mobile-web 平台层
+  ───────────────────────────────────────
+  前置条件：app.html viewport 含 viewport-fit=cover（三端已配置）。
+  布局壳内需放置 .safari-chrome-tint-top / .safari-chrome-tint-bottom（见 shell 注释）。
+
+  参考：MDN env()、100dvh/100svh、overscroll-behavior（Safari 16+）
+*/
+
+/* ===== 视口高度（避免 100vh 被 Safari 工具栏撑破）===== */
+html {
+  overflow-x: clip;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+}
+
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    min-height: 100dvh;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  html,
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* ===== 滚动与橡皮筋 ===== */
+@media (--life-os-mobile) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  /* Sheet / More / Modal：Safari 16+ CSS fallback；旧版与 iOS 橡皮筋由 JS lockScroll()（@life-os/theme）负责 */
+  body:has(.sheet-bg),
+  body:has(.mobile-more-backdrop),
+  body:has(.modal-bg.show) {
+    overflow: hidden;
+  }
+}
+
+/* ===== 主内容底部留白（避开 fixed 底栏 / FAB）===== */
+@media (--life-os-mobile) {
+  .wrap,
+  .content,
+  #main-content {
+    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset));
+  }
+
+  .main-col[data-mobile-chrome='tabbar'] .wrap,
+  .main-col[data-mobile-chrome='tabbar'] .content,
+  .main-col[data-mobile-chrome='tabbar'] #main-content,
+  .main-wrap[data-mobile-chrome='tabbar'] .wrap,
+  .main-wrap[data-mobile-chrome='tabbar'] .content,
+  .main-wrap[data-mobile-chrome='tabbar'] #main-content {
+    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-tabbar));
+  }
+
+  .main-col[data-mobile-chrome='minimal'] .wrap,
+  .main-col[data-mobile-chrome='minimal'] .content,
+  .main-col[data-mobile-chrome='minimal'] #main-content,
+  .main-wrap[data-mobile-chrome='minimal'] .wrap,
+  .main-wrap[data-mobile-chrome='minimal'] .content,
+  .main-wrap[data-mobile-chrome='minimal'] #main-content {
+    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-minimal));
+  }
+}
+
+/* ===== iOS 26+ Safari 工具栏 theme-color 采样 workaround ===== */
+.safari-chrome-tint-top,
+.safari-chrome-tint-bottom {
+  display: none;
+  pointer-events: none;
+}
+
+@media (--life-os-mobile) {
+  .safari-chrome-tint-top,
+  .safari-chrome-tint-bottom {
+    display: block;
+    position: fixed;
+    left: 0;
+    width: 100%;
+  }
+
+  .safari-chrome-tint-top {
+    top: 0;
+    z-index: var(--z-safe-area-tint);
+    height: max(6px, env(safe-area-inset-top, 0px));
+    min-height: 6px;
+    background-color: var(--safari-chrome-tint-top-bg, var(--bg));
+  }
+
+  .safari-chrome-tint-bottom {
+    bottom: 0;
+    z-index: var(--z-mobile-chrome);
+    height: max(12px, env(safe-area-inset-bottom, 0px));
+    min-height: 6px;
+    background-color: var(--safari-chrome-tint-bottom-bg, var(--bg-elevated, var(--card)));
+  }
+}
+
+/* ===== 表单：防止 iOS 聚焦时自动放大（字号 ≥16px）===== */
+@media (--life-os-mobile) {
+  input,
+  select,
+  textarea {
+    font-size: max(var(--text-base), 16px);
+  }
+}
+/* ===== 细节控件 ===== */
+details > summary {
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}

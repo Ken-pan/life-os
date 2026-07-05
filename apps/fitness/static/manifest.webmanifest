@@ -1,0 +1,29 @@
+{
+  "id": "/",
+  "name": "FITNESS.OS",
+  "short_name": "FITNESS",
+  "description": "胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d0e",
+  "theme_color": "#0d0d0e",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["health", "fitness", "utilities"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

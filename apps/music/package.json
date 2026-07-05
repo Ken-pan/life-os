@@ -1,0 +1,29 @@
+{
+  "name": "music-os",
+  "version": "0.1.0",
+  "description": "MUSIC.OS — 本地音乐播放器 PWA",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 5189 --strictPort --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.68.0",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "postcss-custom-media": "^12.0.1",
+    "svelte": "^5.56.4",
+    "svelte-check": "^4.7.1",
+    "vite": "^8.1.0"
+  },
+  "dependencies": {
+    "@life-os/sync": "*",
+    "@life-os/theme": "*",
+    "@lucide/svelte": "^1.22.0",
+    "@supabase/supabase-js": "^2.110.0",
+    "dexie": "^4.0.11"
+  }
+}

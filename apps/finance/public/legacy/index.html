@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="zh-CN" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>租房 vs 买房：数据整理与分析（中文）</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg border-bottom app-toolbar" aria-label="全局控制">
+    <div class="container-fluid px-3 px-md-4 py-2 d-flex flex-wrap align-items-center gap-2">
+      <span class="navbar-brand fw-semibold mb-0 page-title">租房 vs 买房</span>
+      <div id="topControls" class="ms-lg-auto d-flex flex-wrap align-items-center gap-2">
+        <div class="toolbar-group">
+          <span class="toolbar-label d-none d-md-inline" id="horizonToolbarLabel">周期</span>
+          <div class="btn-group btn-group-sm" role="group" aria-labelledby="horizonToolbarLabel">
+            <button type="button" class="btn btn-outline-primary horizon-btn" data-horizon="5">5年</button>
+            <button type="button" class="btn btn-outline-primary horizon-btn active" data-horizon="7">7年</button>
+            <button type="button" class="btn btn-outline-primary horizon-btn" data-horizon="20">20年</button>
+          </div>
+        </div>
+        <div class="toolbar-group">
+          <span class="toolbar-label d-none d-md-inline" id="viewToolbarLabel">视角</span>
+          <div class="btn-group btn-group-sm" role="group" aria-labelledby="viewToolbarLabel">
+            <button id="viewKenBtn" type="button" class="btn btn-outline-primary view-toggle-btn active" data-view="ken">Ken</button>
+            <button id="viewKevinBtn" type="button" class="btn btn-outline-primary view-toggle-btn" data-view="kevin">Kevin</button>
+          </div>
+        </div>
+      </div>
+      <div class="toolbar-group toolbar-actions">
+        <button id="bandBtn" type="button" class="btn btn-sm btn-outline-secondary icon-toggle" aria-pressed="true" aria-label="隐藏区间带" title="隐藏 P10–P90 区间带">
+          <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 30C14 18 22 14 30 18C36 21 40 27 42 30" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M6 38C14 28 22 25 30 28C36 30 40 35 42 38" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.5" />
+            <path d="M6 22C14 10 22 6 30 10C36 13 40 19 42 22" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.5" />
+          </svg>
+        </button>
+        <button id="privacyBtn" type="button" class="btn btn-sm btn-outline-secondary icon-toggle" aria-pressed="false" aria-label="开启隐私模式" title="开启隐私模式（隐藏金额，便于分享）">
+          <span class="privacy-toggle-icon privacy-toggle-off" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 16C6.63472 17.2193 7.59646 18.3504 8.82276 19.3554C12.261 22.1733 17.779 24 24 24C30.221 24 35.739 22.1733 39.1772 19.3554C40.4035 18.3504 41.3653 17.2193 42 16" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M28.9775 24L31.048 31.7274" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M37.3535 21.3536L43.0103 27.0104" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M5.00004 27.0103L10.6569 21.3534" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M16.9278 31.7276L18.9983 24.0001" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="privacy-toggle-icon privacy-toggle-on d-none" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 36C35.0457 36 44 24 44 24C44 24 35.0457 12 24 12C12.9543 12 4 24 4 24C4 24 12.9543 36 24 36Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+              <path d="M24 29C26.7614 29 29 26.7614 29 24C29 21.2386 26.7614 19 24 19C21.2386 19 19 21.2386 19 24C19 26.7614 21.2386 29 24 29Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+            </svg>
+          </span>
+        </button>
+        <button id="taxModeBtn" type="button" class="btn btn-sm btn-outline-secondary icon-toggle tax-mode-btn" aria-pressed="false" aria-describedby="taxModeLead" aria-label="切换到税后清算口径" title="切换到税后清算口径">
+          <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="11" cy="11" r="5" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="37" cy="37" r="5" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M42 6L6 42" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button id="themeBtn" type="button" class="btn btn-sm btn-outline-secondary icon-toggle" aria-label="切换到浅色主题" title="切换到浅色主题">
+          <span class="theme-toggle-icon theme-toggle-sun" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.15039 9.15088L11.3778 11.3783" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M3 24H6.15" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M9.15039 38.8495L11.3778 36.6221" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M38.8495 38.8495L36.6221 36.6221" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M44.9996 24H41.8496" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M38.8495 9.15088L36.6221 11.3783" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M24 3V6.15" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M24 36C30.6274 36 36 30.6274 36 24C36 17.3726 30.6274 12 24 12C17.3726 12 12 17.3726 12 24C12 30.6274 17.3726 36 24 36Z" fill="currentColor" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+              <path d="M24 45.0001V41.8501" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="theme-toggle-icon theme-toggle-moon d-none" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M28.0527 4.41085C22.5828 5.83695 18.5455 10.8106 18.5455 16.7273C18.5455 23.7564 24.2436 29.4545 31.2727 29.4545C37.1894 29.4545 42.1631 25.4172 43.5891 19.9473C43.8585 21.256 44 22.6115 44 24C44 35.0457 35.0457 44 24 44C12.9543 44 4 35.0457 4 24C4 12.9543 12.9543 4 24 4C25.3885 4 26.744 4.14149 28.0527 4.41085Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-fluid px-3 px-md-4 py-3 py-md-4">
+    <div class="row g-3 g-md-4">
+      <aside class="col-12 col-xl-3">
+        <div class="card h-100">
+          <div class="card-header fw-semibold">假设与情景</div>
+          <div class="card-body p-2 p-sm-3">
+            <details id="paramDetails" class="mobile-params" open>
+              <summary class="btn btn-sm btn-outline-secondary mb-2 d-sm-none w-100">展开假设参数</summary>
+              <div class="param-sidebar">
+                <p class="param-lead">先定城市与市场，再调购房与家庭资金；投资、报税等次要项默认收起。</p>
+
+                <details class="param-section" data-section="market" open>
+                  <summary>
+                    <span class="param-section-chevron" aria-hidden="true">▸</span>
+                    <span class="param-section-title">地点与市场</span>
+                    <span class="param-section-hint" id="sectionHintMarket">—</span>
+                  </summary>
+                  <div class="param-section-body">
+                    <section class="preset-block mb-0" aria-labelledby="presetBlockLabel">
+                      <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                        <label id="presetBlockLabel" class="form-label mb-0">城市预设</label>
+                        <span id="presetCustomBadge" class="badge text-bg-warning d-none">已手动调整</span>
+                      </div>
+                      <input id="presetSearch" type="search" class="form-control form-control-sm mb-2" placeholder="筛选城市…" autocomplete="off" spellcheck="false" aria-controls="locationPresets" />
+                      <dl id="presetSummary" class="preset-summary" aria-live="polite"></dl>
+                      <div id="locationPresets" class="preset-picker" role="listbox" aria-label="城市预设"></div>
+                      <details class="preset-source-note">
+                        <summary>数据来源说明</summary>
+                        <p id="presetHint" class="mb-0 mt-1">选中城市后显示 Redfin 等参考口径。</p>
+                      </details>
+                    </section>
+
+                    <div class="param-field privacy-sensitive">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>买房价格</span>
+                        <span id="housePriceVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="housePrice" type="range" class="form-range" min="350000" max="1800000" step="10000" />
+                    </div>
+
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>房价涨幅（年）</span>
+                        <span id="houseAppVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="houseApp" type="range" class="form-range" min="0" max="0.07" step="0.005" />
+                    </div>
+
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>租金涨幅（年）</span>
+                        <span id="rentGrowthVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="rentGrowth" type="range" class="form-range" min="0.01" max="0.07" step="0.005" />
+                    </div>
+
+                    <div class="param-field param-field--tight">
+                      <div class="form-check form-switch">
+                        <input id="enableRent2B1BSwitch" class="form-check-input" type="checkbox" role="switch" />
+                        <label class="form-check-label" for="enableRent2B1BSwitch">2030 年后切换 2B1B</label>
+                      </div>
+                      <div id="rent2B1BHint" class="small text-secondary mt-1"></div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="param-section" data-section="purchase" open>
+                  <summary>
+                    <span class="param-section-chevron" aria-hidden="true">▸</span>
+                    <span class="param-section-title">购房条件</span>
+                    <span class="param-section-hint" id="sectionHintPurchase">—</span>
+                  </summary>
+                  <div class="param-section-body">
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>目标首付比例</span>
+                        <span id="downPaymentPctVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="downPaymentPct" type="range" class="form-range" min="0.1" max="1" step="0.01" />
+                    </div>
+                    <div class="param-field param-field--tight">
+                      <label for="houseScenario" class="form-label">房价情景</label>
+                      <select id="houseScenario" class="form-select form-select-sm">
+                        <option value="bear">Bear（偏弱）</option>
+                        <option value="base">Base（基线）</option>
+                        <option value="bull">Bull（偏强）</option>
+                      </select>
+                      <div class="small text-secondary mt-1">在地点涨幅基础上叠加 Bear −2.0pp / Bull +1.2pp。</div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="param-section" data-section="family" open>
+                  <summary>
+                    <span class="param-section-chevron" aria-hidden="true">▸</span>
+                    <span class="param-section-title">家庭资金</span>
+                    <span class="param-section-hint" id="sectionHintFamily">—</span>
+                  </summary>
+                  <div class="param-section-body">
+                    <div class="param-field param-field--tight privacy-sensitive">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>父母赞助</span>
+                        <span id="familySupportVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="familySupport" type="range" class="form-range" min="0" max="1000000" step="10000" />
+                      <div id="familySupportRule" class="small text-secondary mt-1">分配规则：前 1 万美元归 Ken；其余部分 Ken/Kevin 各 50%。</div>
+                      <div id="familySupport3520" class="alert alert-warning small py-2 px-2 mt-2 mb-0 d-none" role="alert">
+                        ⚠️ 单一纳税年度从非居民外籍亲属（如父母）累计收到的赠与超过 <strong>$100,000</strong> 时，需就该年向 IRS 提交 <strong>Form 3520</strong>（信息申报，本身不缴税）；逾期/漏报按未申报额每月 5%、最高 25% 罚。超额部分还需逐笔列出每笔 &gt; $5,000 的赠与，并按收款当日汇率折算判定阈值。<span class="text-secondary">仅为规划提示，非税务建议。</span>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="param-section" data-section="invest">
+                  <summary>
+                    <span class="param-section-chevron" aria-hidden="true">▸</span>
+                    <span class="param-section-title">投资与贷款</span>
+                    <span class="param-section-hint" id="sectionHintInvest">—</span>
+                  </summary>
+                  <div class="param-section-body">
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>标普年化收益</span>
+                        <span id="stockReturnVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="stockReturn" type="range" class="form-range" min="0.04" max="0.14" step="0.005" />
+                    </div>
+                    <div class="param-field param-field--tight">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>房贷利率</span>
+                        <span id="mortgageRateVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="mortgageRate" type="range" class="form-range" min="0.02" max="0.12" step="0.0001" />
+                    </div>
+                  </div>
+                </details>
+
+                <details class="param-section" data-section="risk">
+                  <summary>
+                    <span class="param-section-chevron" aria-hidden="true">▸</span>
+                    <span class="param-section-title">收入冲击（尾部风险）</span>
+                    <span class="param-section-hint" id="sectionHintRisk">—</span>
+                  </summary>
+                  <div class="param-section-body">
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" role="switch" id="incomeShockEnable" />
+                      <label class="form-check-label" for="incomeShockEnable">启用收入冲击（H-1B 断签 / 裁员）</label>
+                    </div>
+                    <div class="param-field param-field--tight">
+                      <label for="incomeShockTarget" class="form-label">影响对象</label>
+                      <select id="incomeShockTarget" class="form-select form-select-sm">
+                        <option value="ken">仅 Ken</option>
+                        <option value="kevin">仅 Kevin</option>
+                        <option value="both">两人同时</option>
+                      </select>
+                    </div>
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>冲击起始年</span>
+                        <span id="incomeShockStartYearVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="incomeShockStartYear" type="range" class="form-range" min="1" max="40" step="1" />
+                    </div>
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>持续年数</span>
+                        <span id="incomeShockDurationYearsVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="incomeShockDurationYears" type="range" class="form-range" min="1" max="10" step="1" />
+                    </div>
+                    <div class="param-field param-field--tight">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>收入损失比例</span>
+                        <span id="incomeShockSeverityVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="incomeShockSeverity" type="range" class="form-range" min="0" max="1" step="0.05" />
+                      <div id="incomeShockHint" class="small text-secondary mt-1"></div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="param-section" data-section="relocation">
+                  <summary>
+                    <span class="param-section-chevron" aria-hidden="true">▸</span>
+                    <span class="param-section-title">搬迁 / 离场（情景 fork）</span>
+                    <span class="param-section-hint" id="sectionHintRelocation">—</span>
+                  </summary>
+                  <div class="param-section-body">
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" role="switch" id="relocationEnable" />
+                      <label class="form-check-label" for="relocationEnable">启用离美 / 搬迁（H-1B 不续 / 回台北）</label>
+                    </div>
+                    <button type="button" id="relocationTemplateBtn" class="btn btn-sm btn-outline-primary mb-3">套用「离美·台北」模板</button>
+                    <div class="param-field param-field--tight">
+                      <label for="relocationMode" class="form-label">房产处理</label>
+                      <select id="relocationMode" class="form-select form-select-sm">
+                        <option value="sell">卖房清算（净额转入投资）</option>
+                        <option value="rent-out">保留出租（租金覆盖持房成本）</option>
+                      </select>
+                    </div>
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>搬迁年份</span>
+                        <span id="relocationYearVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="relocationYear" type="range" class="form-range" min="1" max="40" step="1" />
+                    </div>
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>Ken 海外年收入（USD 等值）</span>
+                        <span id="relocationKenSalaryVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="relocationKenSalary" type="range" class="form-range" min="0" max="200000" step="5000" />
+                    </div>
+                    <div class="param-field">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>Kevin 海外年收入（USD 等值）</span>
+                        <span id="relocationKevinSalaryVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="relocationKevinSalary" type="range" class="form-range" min="0" max="200000" step="5000" />
+                    </div>
+                    <div class="param-field param-field--tight">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>海外月住房支出（USD 等值）</span>
+                        <span id="relocationHousingMonthlyVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="relocationHousingMonthly" type="range" class="form-range" min="0" max="8000" step="100" />
+                      <div id="relocationHint" class="small text-secondary mt-1"></div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="param-section" data-section="ownership">
+                  <summary>
+                    <span class="param-section-chevron" aria-hidden="true">▸</span>
+                    <span class="param-section-title">报税与产权</span>
+                    <span class="param-section-hint" id="sectionHintOwnership">—</span>
+                  </summary>
+                  <div class="param-section-body">
+                    <div class="param-field">
+                      <label for="filingStatus" class="form-label">报税身份</label>
+                      <select id="filingStatus" class="form-select form-select-sm">
+                        <option value="mfj">MFJ（夫妻联合）</option>
+                        <option value="single">Single（个人）</option>
+                        <option value="mfs">MFS（夫妻分开）</option>
+                        <option value="unmarried">Unmarried partners（未婚伴侣）</option>
+                      </select>
+                    </div>
+                    <div class="param-field">
+                      <label for="ownershipModel" class="form-label">房屋权益模型</label>
+                      <select id="ownershipModel" class="form-select form-select-sm">
+                        <option value="capital">Capital account（按出资）</option>
+                        <option value="deed">Deed split（按产权约定）</option>
+                      </select>
+                      <div class="small text-secondary mt-1 param-ownership-capital-hint">按首付、本金与大修出资累计份额。</div>
+                      <div class="small text-secondary mt-1 param-ownership-deed">按 deed 约定比例拆分 Ken/Kevin 权益。</div>
+                    </div>
+                    <div class="param-field param-ownership-deed">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>Deed 下 Ken 产权比例</span>
+                        <span id="deedKenShareVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="deedKenShare" type="range" class="form-range" min="0.3" max="0.9" step="0.05" />
+                    </div>
+                    <div class="param-field param-field--tight">
+                      <label class="form-label d-flex justify-content-between">
+                        <span>Kevin buy-in 比例</span>
+                        <span id="kevinBuyInPctVal" class="small-mono text-primary"></span>
+                      </label>
+                      <input id="kevinBuyInPct" type="range" class="form-range" min="0" max="0.6" step="0.05" />
+                      <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" role="switch" id="enableKevinBuyIn" />
+                        <label class="form-check-label" for="enableKevinBuyIn">启用 Kevin buy-in 转让</label>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                <details class="param-section param-section--advanced" data-section="advanced">
+                  <summary>
+                    <span class="param-section-chevron" aria-hidden="true">▸</span>
+                    <span class="param-section-title">高级模型开关</span>
+                  </summary>
+                  <div class="param-section-body">
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" role="switch" id="applyWACGT" />
+                      <label class="form-check-label" for="applyWACGT">华州资本利得税规则</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" role="switch" id="applyTxCosts" />
+                      <label class="form-check-label" for="applyTxCosts">买卖交易成本（2.5%+6.5%）</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" role="switch" id="mortgageDeduction" />
+                      <label class="form-check-label" for="mortgageDeduction">房贷利息抵扣（MID）</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" role="switch" id="enforceHomeSaleEligibility" />
+                      <label class="form-check-label" for="enforceHomeSaleEligibility">卖房 2-of-5 exclusion 资格检查</label>
+                    </div>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="capitalTrackLargeRepairs" />
+                      <label class="form-check-label" for="capitalTrackLargeRepairs">Capital 计入大修/专项评估出资</label>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+          </div>
+        </div>
+      </aside>
+
+      <section class="col-12 col-xl-9" id="dashboardWorkspace">
+        <p class="privacy-mode-banner" role="status">隐私模式已开启：薪资、存款、赞助与净资产等金额已隐藏，可截图分享。再次点击右上角眼睛图标可恢复。</p>
+
+        <header class="decision-header mb-3" id="decisionHeader" aria-labelledby="decisionHeaderLabel">
+          <div class="decision-header-top">
+            <div>
+              <div class="decision-header-label" id="decisionHeaderLabel">10 秒读懂</div>
+              <div id="decisionHeadline" class="decision-headline" aria-live="polite">—</div>
+            </div>
+            <span id="decisionStabilityBadge" class="badge stability-badge stability-badge--stable" role="status">稳定</span>
+          </div>
+          <div id="decisionLensChips" class="decision-lens-chips" aria-label="当前分析视角"></div>
+          <p id="decisionWhyWin" class="decision-why-win"></p>
+          <ul id="decisionDrivers" class="decision-drivers"></ul>
+        </header>
+
+        <details id="taxModeExplain" class="mb-3">
+          <summary aria-describedby="taxModeLead">
+            <span class="tax-mode-chevron" aria-hidden="true">▸</span>
+            <span id="taxModeBadge" class="badge text-bg-secondary">税前</span>
+            <span id="taxModeLead">账面净资产，不含变现税</span>
+            <span class="tax-mode-hint">口径说明</span>
+          </summary>
+          <div class="tax-mode-detail">
+            <div class="tax-compare">
+              <div class="tax-compare-item tax-compare-item--pre" id="taxComparePre">
+                <span class="tax-compare-tag">税前</span>
+                <p>第 N 年末<strong>不做清算</strong>：股票按市值，房屋按估价减贷款余额。</p>
+              </div>
+              <div class="tax-compare-item tax-compare-item--aft" id="taxCompareAft">
+                <span class="tax-compare-tag">税后</span>
+                <p>假想<strong>当日全部卖出</strong>后的净额，用于方案横向可比。</p>
+              </div>
+            </div>
+            <p class="tax-mode-footnote">只改 KPI、图表与结论的展示口径；租金、买房时机与左侧参数不重算。当年卖股/提款税与期末清算税是两层概念。</p>
+          </div>
+        </details>
+
+        <div class="row g-3 mb-3 kpi-row" id="kpiRow">
+          <div class="col-12 col-md-4">
+            <div class="card metric-card rent h-100" id="metricRentCard">
+              <div class="card-body">
+                <div class="metric-label">方案 A · 租房 + 投资</div>
+                <div id="rentValue" class="kpi-number text-success mt-1"></div>
+                <div id="rentSubline" class="small text-secondary mt-2 kpi-subline"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="card metric-card buy h-100" id="metricBuyCard">
+              <div class="card-body">
+                <div class="metric-label">方案 B · 买房 + 投资</div>
+                <div id="buyValue" class="kpi-number text-primary mt-1"></div>
+                <div id="buySubline" class="small text-secondary mt-2 kpi-subline"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="card metric-card key h-100" id="metricKeyCard">
+              <div class="card-body">
+                <div class="metric-label">结论 · <span id="kpiContextLabel"></span></div>
+                <div id="winnerLine" class="kpi-number text-body mt-1"></div>
+                <div id="metaLine" class="small text-secondary mt-2 kpi-subline"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="dpAlert" class="alert alert-warning" role="alert"></div>
+
+        <div id="cashflowRunway" class="cashflow-runway mb-3" aria-live="polite">
+          <div class="cashflow-runway-head">
+            <span class="cashflow-runway-title">月度现金流 · 流动性跑道</span>
+            <span id="cashflowRunwayBadge" class="badge cashflow-runway-badge"></span>
+          </div>
+          <div id="cashflowRunwayFlows" class="cashflow-runway-flows"></div>
+          <p id="cashflowRunwayNote" class="cashflow-runway-note mb-0"></p>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="fw-semibold">净资产趋势</span>
+                <span id="curveNote" class="small text-secondary"></span>
+              </div>
+              <div class="card-body">
+                <div class="chart-panel chart-panel--trend">
+                  <canvas id="curveChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-lg-6">
+            <div class="card h-100">
+              <div class="card-header fw-semibold">关键分解</div>
+              <div class="card-body">
+                <div class="chart-panel chart-panel--split">
+                  <canvas id="splitChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="card h-100">
+              <div class="card-header fw-semibold">结论摘要</div>
+              <div class="card-body">
+                <ul id="insights" class="insight-list mb-0"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3 stability-panel">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">结论稳定性与敏感度</span>
+            <span id="stabilitySummary" class="small text-secondary"></span>
+          </div>
+          <div class="card-body table-responsive pt-2">
+            <p class="small text-secondary mb-2">若下列变量向反转阈值移动，领先方案可能改变（基于当前周期与视角）。</p>
+            <table class="table table-sm sensitivity-table mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">变量</th>
+                  <th scope="col">当前</th>
+                  <th scope="col">反转阈值</th>
+                  <th scope="col">安全边际</th>
+                  <th scope="col">解读</th>
+                </tr>
+              </thead>
+              <tbody id="sensitivityTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header fw-semibold">多周期对比</div>
+          <div class="card-body table-responsive">
+            <p class="text-secondary small mb-2 d-sm-none">← 左右滑动查看更多列</p>
+            <table class="table table-sm align-middle horizon-table mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">周期</th>
+                  <th scope="col">租房 + 投资</th>
+                  <th scope="col">买房 + 投资</th>
+                  <th scope="col">差值</th>
+                  <th scope="col">差值%</th>
+                  <th scope="col">领先</th>
+                  <th scope="col">购房年</th>
+                </tr>
+              </thead>
+              <tbody id="horizonTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">时间线事件（Book + What-if）</span>
+            <span id="timelineSummary" class="small text-secondary">0 个事件</span>
+          </div>
+          <div id="timelinePanelBody" class="card-body"></div>
+        </div>
+
+        <div class="card mb-3" id="snapshotCard">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">情景快照与对比</span>
+            <span id="snapshotSummary" class="small text-secondary">0 个快照</span>
+          </div>
+          <div class="card-body">
+            <form id="snapshotSaveForm" class="d-flex flex-wrap gap-2 align-items-end mb-3">
+              <label class="small text-secondary mb-0 d-flex flex-column flex-grow-1">
+                <span class="mb-1">快照名称</span>
+                <input id="snapshotNameInput" type="text" class="form-control form-control-sm" placeholder="如：当前方案 / 降首付到10% / 离美情景" autocomplete="off" />
+              </label>
+              <button type="submit" class="btn btn-sm btn-primary">保存当前假设为快照</button>
+            </form>
+            <div class="table-responsive mb-3">
+              <table class="table table-sm align-middle mb-0 snapshot-table">
+                <thead>
+                  <tr>
+                    <th scope="col">A</th>
+                    <th scope="col">B</th>
+                    <th scope="col">快照</th>
+                    <th scope="col">关键参数</th>
+                    <th scope="col">保存时间</th>
+                    <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="snapshotListBody"></tbody>
+              </table>
+            </div>
+            <p id="snapshotCompareEmpty" class="small text-secondary mb-0">选择两个不同快照（A / B）后自动对比参数差异与净资产分歧。</p>
+            <div id="snapshotCompareResult" class="d-none">
+              <div class="snapshot-compare-title small fw-semibold mb-2" id="snapshotCompareTitle"></div>
+              <div id="snapshotDiffParams" class="snapshot-diff-params mb-3"></div>
+              <div class="chart-panel chart-panel--trend mb-3">
+                <canvas id="snapshotCompareChart"></canvas>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col">周期</th>
+                      <th scope="col">A · 租</th>
+                      <th scope="col">A · 买</th>
+                      <th scope="col">B · 租</th>
+                      <th scope="col">B · 买</th>
+                      <th scope="col">Δ租 (B−A)</th>
+                      <th scope="col">Δ买 (B−A)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="snapshotDiffTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-disclaimer mb-3" role="note">
+          本页为个人住房决策规划模型，不构成税务、法律或投资建议。市场预设参考 Redfin（2026年3月）等公开数据并经 2026-05 核验；税后口径为假设清算快照，非实际报税结果。
+          <div class="model-disclaimer-actions">
+            <button type="button" id="exportAssumptionsBtn" class="btn btn-sm btn-outline-secondary">复制假设 JSON</button>
+          </div>
+        </div>
+
+        <details class="card model-docs">
+          <summary class="card-header fw-semibold list-unstyled">模型与税务说明</summary>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="border rounded p-3 h-100">
+                  <div class="fw-semibold mb-2">税务口径</div>
+                  <ul class="mb-0 small">
+                    <li>支持 filing status：Single / MFJ / MFS / Unmarried partners。</li>
+                    <li>Federal LTCG 采用 0%/15%/20% 分层，NIIT 采用 lesser-of 规则。</li>
+                    <li>MID 纳入 SALT cap、标准扣除与 $750k/$375k 房贷上限近似处理。</li>
+                    <li>Home sale exclusion 按 $250k/$500k 与 2-of-5 资格开关处理。</li>
+                    <li>WA CGT deduction 按年度通胀调整，按报税实体口径计税。</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="border rounded p-3 h-100">
+                  <div class="fw-semibold mb-2">模型结构</div>
+                  <ul class="mb-0 small">
+                    <li>权益模型支持 Capital account / Deed split，并支持 Kevin buy-in。</li>
+                    <li>情景支持 Bear/Base/Bull（主要作用于房价涨幅）。</li>
+                    <li>住房费用拆解为 HOA/税/维修/房屋险/地震险/水电/专项评估。</li>
+                    <li>买房时机为“满足目标首付+closing 后次年购入”。</li>
+                    <li>
+                      <strong>租/买是否“同级”：</strong>租金路径按 1BR→Kevin 入住后 2BR、可选 2030 后 2B1B 等<strong>租赁公寓类</strong>档位计租；买房价格预设多为该市<strong>全部在售住宅的中位成交价</strong>（常偏独栋/SFH、面积与产品类型与 2BR 公寓不同）。业界严谨做法（如
+                      <a href="https://www.zillow.com/research/rent-vs-buy-methodology-33621/" rel="noopener noreferrer" target="_blank">Zillow Rent vs Buy 方法论</a>）强调对<strong>同一套或同质标的</strong>配对租估与售估。若你要对比「2BR Townhouse/SFH 自住」，请把<strong>买房价格</strong>与左侧 HOA/维修/税等调到与该目标物业一致，而不是仅依赖全市中位预设。
+                    </li>
+                    <li>税后值均为快照年假设清算净额，用于可比，不等同报税实缴现金流。</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+  <script src="./assets/engine.js"></script>
+  <script src="./assets/events.js"></script>
+  <script src="./assets/state.js"></script>
+  <script src="./assets/i18n.js"></script>
+  <script src="./assets/ui.js"></script>
+  <script src="./assets/app.js"></script>
+</body>
+</html>

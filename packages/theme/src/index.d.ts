@@ -1,0 +1,104 @@
+export declare const LIFE_OS_LAYOUT: {
+  readonly bpNarrow: 380;
+  readonly bpCompact: 640;
+  readonly bpPhone: 640;
+  readonly bpTabletMin: 641;
+  readonly bpTabletMax: 860;
+  readonly bpMobile: 860;
+  readonly bpMobileMin: 861;
+  readonly contentMaxText: 820;
+  readonly contentMaxData: 1320;
+};
+
+export type LifeOsAppId = 'planner' | 'fitness' | 'finance' | 'music';
+
+export type LifeOsSiteMetaEntry = {
+  id: LifeOsAppId;
+  name: string;
+  shortName: string;
+  description: { zh: string; en: string };
+  themeColor: { light: string; dark: string };
+  defaultTheme: 'light' | 'dark' | 'auto';
+  locale: string;
+  storageKey: string;
+  storageKind: 'nested' | 'direct';
+  settingsThemePath: string[];
+  favicon: { id?: string; light: string; dark?: string };
+  manifest: string;
+  appleTouchIcon: string;
+  categories: string[];
+};
+
+export declare const LIFE_OS_SITE_META: Record<LifeOsAppId, LifeOsSiteMetaEntry>;
+export declare const LIFE_OS_ROBOTS: string;
+export declare const LIFE_OS_REFERRER: string;
+
+export declare function formatDocumentTitle(
+  pageTitle: string | null | undefined,
+  appName: string
+): string;
+export declare function getSiteDescription(
+  appId: LifeOsAppId,
+  locale?: 'zh' | 'en' | string
+): string;
+export declare function absoluteUrl(origin: string | null | undefined, path: string): string;
+export declare function getOgLocale(locale?: 'zh' | 'en' | string): string;
+
+export type ApplyDocumentMetaOptions = {
+  pageTitle: string;
+  locale?: 'zh' | 'en' | string;
+  pathname?: string;
+  imagePath?: string;
+};
+
+export declare function applyDocumentMeta(
+  appId: LifeOsAppId,
+  options: ApplyDocumentMetaOptions
+): void;
+
+export type ThemePreference = 'light' | 'dark' | 'auto';
+export type ResolvedTheme = 'light' | 'dark';
+
+export declare const THEME_PREFERENCES: ThemePreference[];
+
+export declare function isThemePreference(value: string | null | undefined): value is ThemePreference;
+export declare function resolveTheme(
+  preference: ThemePreference | string | null | undefined,
+  fallback?: ThemePreference
+): ResolvedTheme;
+
+export type ApplyThemeOptions = {
+  themeColorMetaId?: string;
+  faviconId?: string;
+  faviconLight?: string;
+  faviconDark?: string;
+  themeColorFallback?: { light: string; dark: string };
+};
+
+export declare function applyResolvedTheme(resolved: ResolvedTheme, options?: ApplyThemeOptions): void;
+export declare function applyThemeFromPreference(
+  readPreference: () => ThemePreference | string | null | undefined,
+  options: ApplyThemeOptions,
+  fallback?: ThemePreference
+): void;
+export declare function bindSystemThemeChange(
+  readPreference: () => ThemePreference | string | null | undefined,
+  onResolved: (resolved: ResolvedTheme) => void,
+  fallback?: ThemePreference
+): () => void;
+export declare function bootResolveTheme(
+  preference: ThemePreference | string | null | undefined,
+  fallback?: ThemePreference
+): ResolvedTheme;
+
+export declare function lockScroll(): void;
+export declare function unlockScroll(): void;
+
+export type ActivateFocusTrapOptions = {
+  initialFocusSelector?: string;
+};
+
+export declare function activateFocusTrap(
+  container: HTMLElement,
+  options?: ActivateFocusTrapOptions
+): () => void;

@@ -1,0 +1,48 @@
+{
+  "name": "finance-os",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "fetch-logos": "node scripts/fetch-institution-logos.mjs",
+    "guard:overflow": "vitest run src/debug/overflowGuard.test.ts",
+    "qa:screenshots": "node scripts/ui-main-flows-screenshot-qa.mjs"
+  },
+  "dependencies": {
+    "@life-os/sync": "*",
+    "@life-os/theme": "*",
+    "@phosphor-icons/react": "^2.1.10",
+    "@supabase/supabase-js": "^2.106.2",
+    "lucide-react": "^1.17.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "recharts": "^3.8.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^26.1.0",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "eslint": "^10.4.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
+    "playwright": "^1.61.1",
+    "postcss-custom-media": "^12.0.1",
+    "simple-icons": "^16.24.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.0",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
+  }
+}

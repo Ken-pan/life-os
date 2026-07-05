@@ -1,0 +1,38 @@
+{
+  "name": "fitness-os",
+  "version": "3.0.0",
+  "description": "FITNESS.OS — 胸·背·手·腿 四日循环训练管理（SvelteKit 重构）",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+    "check:exercises": "node scripts/validate-exercises.mjs",
+    "check:schemes": "node scripts/verify-schemes.mjs",
+    "check:data": "npm run check:exercises && npm run check:schemes && npm run check:delts",
+    "check:delts": "node scripts/audit-delts.mjs",
+    "test:migrate": "node scripts/test-migrate-exercises.mjs",
+    "test:sync": "node scripts/test-sync-logic.mjs",
+    "test:supabase": "node scripts/test-supabase-connectivity.mjs",
+    "test": "node scripts/plate-calculators-check.mjs && playwright test",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.68.0",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "postcss-custom-media": "^12.0.1",
+    "svelte": "^5.56.4",
+    "svelte-check": "^4.7.1",
+    "vite": "^8.1.0"
+  },
+  "dependencies": {
+    "@life-os/sync": "*",
+    "@life-os/theme": "*",
+    "@lucide/svelte": "^1.22.0",
+    "@supabase/supabase-js": "^2.110.0"
+  }
+}

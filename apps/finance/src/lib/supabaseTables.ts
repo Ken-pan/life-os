@@ -1,0 +1,46 @@
+/** Life OS Supabase 表名（模块前缀：finance_ / planner_ / core_ / fitness_） */
+export const SB = {
+  finance: {
+    accounts: "finance_accounts",
+    balanceAssertions: "finance_balance_assertions",
+    cashFlows: "finance_cash_flows",
+    decisionRecords: "finance_decision_records",
+    expectedOccurrences: "finance_expected_occurrences",
+    extensionProcessedCaptures: "finance_extension_processed_captures",
+    legacyData: "finance_data",
+    goals: "finance_goals",
+    holdingDailyCandles: "finance_holding_daily_candles",
+    holdingPositions: "finance_holding_positions",
+    holdingPriceTrails: "finance_holding_price_trails",
+    holdingsSnapshots: "finance_holdings_snapshots",
+    merchantRules: "finance_merchant_rules",
+    recurringItems: "finance_recurring_items",
+    reviewItems: "finance_review_items",
+    scenarioApplyAudits: "finance_scenario_apply_audits",
+    scenarioEvents: "finance_scenario_events",
+    scenarioSnapshots: "finance_scenario_snapshots",
+    scenarios: "finance_scenarios",
+    transactionImports: "finance_transaction_imports",
+    transactions: "finance_transactions",
+    userSettings: "finance_user_settings",
+  },
+  core: {
+    allowedDevices: "core_allowed_devices",
+  },
+  planner: {
+    lists: "planner_lists",
+    tasks: "planner_tasks",
+    userState: "planner_user_state",
+  },
+  fitness: {
+    profiles: "fitness_profiles",
+    userState: "fitness_user_state",
+    exerciseWeights: "fitness_exercise_weights",
+    workoutSessions: "fitness_workout_sessions",
+    exerciseLogs: "fitness_exercise_logs",
+  },
+  meta: {
+    modules: "life_os_modules",
+    tableCatalog: "life_os_table_catalog",
+  },
+} as const;

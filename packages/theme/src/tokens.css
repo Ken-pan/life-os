@@ -1,0 +1,194 @@
+/*
+  Life OS 设计令牌（结构层）
+  各 app 在 app.css / index.css 中覆盖色彩与 --content-max；
+  文本色兼容 --t1…--t4 与 Finance 的 --text / --text-secondary / --text-muted。
+*/
+
+:root {
+  /* ===== 间距（4px 基准）===== */
+  --space-0: 0px;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-2-5: 10px;
+  --space-3: 12px;
+  --space-3-5: 14px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-24: 96px;
+
+  /* ===== 语义间距别名 ===== */
+  --page-gutter: var(--space-4);
+  --page-gutter-desktop: var(--space-8);
+  --page-gutter-tablet: var(--space-5);
+  --page-gutter-mobile: var(--page-gutter);
+  --page-top: 8px;
+  --page-block-gap: var(--space-7);
+  --page-scroll-bottom: var(--space-24);
+  --wrap-pad-x: var(--page-gutter);
+  --stack-tight: var(--space-3);
+  --stack-section: var(--space-4);
+  --stack-block: var(--space-5);
+  --title-stack: var(--space-0-5);
+  --header-block: var(--space-5);
+  --gap: var(--space-5);
+  --back-to-content: 8px;
+
+  /* ===== 主内容列（app 可覆盖 --content-max）===== */
+  --content-max: 820px;
+  --maxw: var(--content-max);
+  --content-inline-pad: max(var(--page-gutter), calc((100% - var(--content-max)) / 2));
+
+  /* ===== 字体栈 ===== */
+  --font: "Geist", -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC",
+    "Microsoft YaHei", system-ui, sans-serif;
+  --font-brand: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
+  --mono: "Geist Mono", "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+  --body: var(--font);
+  --disp: var(--font-brand);
+  --heading: var(--font);
+  --button: var(--font);
+
+  /* ===== 字号尺度 ===== */
+  --text-3xs: 9px;
+  --text-2xs: 10px;
+  --text-mobile-tab: 10.5px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-base: 14px;
+  --text-lg: 15px;
+  --text-xl: 16px;
+  --text-title: 17px;
+  --text-2xl: 18px;
+  --text-3xl: 20px;
+  --text-4xl: 22px;
+  --text-5xl: 24px;
+  --text-display-sm: 28px;
+  --text-display: 32px;
+  --text-display-md: 34px;
+  --text-display-xl: 36px;
+  --text-display-lg: 44px;
+
+  /* ===== 圆角 / 控件尺寸 ===== */
+  --control-h: 44px;
+  --control-radius: 10px;
+  --control-pad-x: 16px;
+  --radius-control: 8px;
+  --radius-sm: 14px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  --btn-h-sm: 32px;
+  --btn-h-md: 36px;
+  --btn-h-lg: 44px;
+  --tap-min: 44px;
+  --btn-pad-x-sm: 12px;
+  --btn-pad-x-md: 14px;
+  --btn-pad-x-lg: 16px;
+  --btn-radius: var(--control-radius);
+  --btn-focus-ring: var(--shadow-focus, 0 0 0 2px color-mix(in srgb, var(--accent) 32%, transparent));
+
+  /* ===== 卡片 ===== */
+  --card-padding: var(--space-4);
+  --card-padding-compact: var(--space-3-5);
+  --card-padding-mobile: var(--space-3-5);
+  --card-radius: var(--radius-lg);
+  --card-gap: var(--space-2);
+  --card-stack-gap: var(--space-3);
+
+  /* ===== FAB / 底栏 ===== */
+  --fab-h: 48px;
+  --fab-w: 132px;
+  --fab-offset-above-tabbar: var(--space-3);
+  --fab-bg: var(--accent);
+  --fab-fg: var(--on-accent);
+  --fab-radius: var(--radius-pill);
+  --nav-h: var(--tabbar-h, 62px);
+  --mobile-tabbar-h: var(--tabbar-h, 62px);
+  --mobile-tabbar-total-h: var(
+    --tabbar-total-h,
+    calc(var(--nav-h) + max(var(--space-2), var(--safe-bottom-effective)))
+  );
+  --mobile-content-inset: calc(
+    var(--fab-h) + var(--fab-offset-above-tabbar) + var(--mobile-tabbar-total-h)
+  );
+  --mobile-content-inset-tabbar: calc(var(--mobile-tabbar-total-h) + var(--space-3));
+  --mobile-content-inset-minimal: calc(var(--space-6) + var(--safe-bottom-effective));
+  --sidebar-w: 208px;
+  --page-header-h: 68px;
+  --nav-leading: max(16px, calc(env(safe-area-inset-left, 0px) + 8px));
+  --nav-trailing: max(16px, calc(env(safe-area-inset-right, 0px) + 8px));
+
+  /* ===== Safe area ===== */
+  --ios-edge-min: 12px;
+  --ios-landscape-top-buffer: 20px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-top-effective: max(var(--ios-edge-min), var(--safe-top));
+  --safe-bottom-effective: max(var(--ios-edge-min), var(--safe-bottom));
+  --safe-left-effective: max(var(--ios-edge-min), var(--safe-left));
+  --safe-right-effective: max(var(--ios-edge-min), var(--safe-right));
+
+  /* ===== 动效 ===== */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-press: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 140ms;
+  --motion-fast: 140ms;
+  --motion-standard: 190ms;
+  --dur-base: 260ms;
+  --motion-slow: 260ms;
+  --dur-slow: 520ms;
+  --motion-distance: 14px;
+  --hover-lift: -2px;
+  --press-scale: 0.97;
+  --sel-fg: var(--on-accent);
+
+  /* ===== 视口（平台层 ios-safari.css 消费）===== */
+  --viewport-min-h: 100dvh;
+  --viewport-stable-h: 100svh;
+
+  /* ===== Safari chrome tint（ios-safari.css；Finance 可覆盖 z-index）===== */
+  --safari-chrome-tint-top-bg: var(--bg);
+  --safari-chrome-tint-bottom-bg: var(--bg-elevated, var(--card));
+  --z-safe-area-tint: 19;
+  --z-mobile-chrome: 35;
+
+  /* ===== Z-index（Life OS 基线；Finance 可扩展更高层）===== */
+  --z-nav: 30;
+  --z-more-sheet: 45;
+  --z-fab: 40;
+  --z-sheet: 100;
+  --z-banner: 110;
+  --z-toast: 120;
+  --banner-fixed-h: 48px;
+
+  /* ===== 共享语义色（浅色默认；深色由各 app [data-theme="dark"] 覆盖）===== */
+  --positive: #087a5b;
+  --positive-subtle: #e6f6ef;
+  --warning: #9a5b08;
+  --warning-subtle: #fff4df;
+  --critical: #b9364f;
+  --critical-subtle: #fcedef;
+  --info: #2b65b1;
+  --info-subtle: #eaf2fc;
+}
+
+@supports (padding: max(0px, 1px)) {
+  :root {
+    --safe-top-effective: max(var(--ios-edge-min), env(safe-area-inset-top, 0px));
+    --safe-bottom-effective: max(var(--ios-edge-min), env(safe-area-inset-bottom, 0px));
+    --safe-left-effective: max(var(--ios-edge-min), env(safe-area-inset-left, 0px));
+    --safe-right-effective: max(var(--ios-edge-min), env(safe-area-inset-right, 0px));
+  }
+}

@@ -1,0 +1,22 @@
+/*
+  Life OS Design System — 三端（Planner / Fitness / Finance）共享样式入口
+  各 app 在自身 app.css / index.css 中：
+  1. @import '@life-os/theme/design-system.css';
+  2. 定义 :root 品牌色与 app 专属组件
+
+  @layer 顺序（后声明优先于先声明；app 未分层 CSS 仍可覆盖全部 life-os.*）：
+  tokens → base → platform → layout → shell → seg → settings → modal → components → utilities
+*/
+
+@layer life-os.tokens, life-os.base, life-os.platform, life-os.layout, life-os.shell, life-os.seg, life-os.settings, life-os.modal, life-os.components, life-os.utilities;
+
+@import './tokens.css' layer(life-os.tokens);
+@import './base.css' layer(life-os.base);
+@import './ios-safari.css' layer(life-os.platform);
+@import './layout.css' layer(life-os.layout);
+@import './shell.css' layer(life-os.shell);
+@import './seg.css' layer(life-os.seg);
+@import './settings-ext.css' layer(life-os.settings);
+@import './modal.css' layer(life-os.modal);
+@import './components.css' layer(life-os.components);
+@import './utilities.css' layer(life-os.utilities);

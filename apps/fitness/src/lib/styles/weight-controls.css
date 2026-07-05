@@ -1,0 +1,245 @@
+/**
+ * 调整重量 / 凑重 Sheet 共用控件规范
+ * · 步进 48×48 · 芯片 44 高 · 圆角 12 · 间距 8/12
+ */
+:root {
+  --wc-step: 48px;
+  --wc-chip-h: 44px;
+  --wc-radius: 12px;
+  --wc-gap: 8px;
+  --wc-section-gap: 12px;
+}
+
+.wc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0 0 var(--wc-section-gap);
+}
+.wc-section:last-child {
+  margin-bottom: 0;
+}
+
+.wc-label {
+  margin: 0 0 var(--wc-gap);
+  font-size: var(--text-xs);
+  color: var(--t3);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+/* ── 步进 + 重量 ── */
+.wc-stepper {
+  display: grid;
+  grid-template-columns: var(--wc-step) minmax(0, 1fr) var(--wc-step);
+  gap: var(--wc-gap);
+  align-items: stretch;
+  margin: 0 0 var(--wc-section-gap);
+}
+
+.wc-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--wc-step);
+  min-height: var(--wc-step);
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--wc-radius);
+  background: var(--bg-2);
+  color: var(--t1);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    background var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+.wc-step:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.wc-step:active {
+  transform: scale(0.96);
+}
+
+.wc-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--wc-step);
+  min-width: 0;
+}
+
+.wc-value-input {
+  width: 100%;
+  max-width: 140px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--t1);
+  font-family: var(--mono);
+  font-size: var(--text-display-md);
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
+  -moz-appearance: textfield;
+  outline: none;
+}
+.wc-value-input:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
+}
+.wc-value-input::-webkit-outer-spin-button,
+.wc-value-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.wc-value-unit {
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--t3);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.wc-value-note {
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  color: var(--warn, #c9a227);
+  letter-spacing: 0.02em;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ── 芯片行（快速选择 / 加载方式）── */
+.wc-chips {
+  display: grid;
+  grid-template-columns: repeat(var(--wc-cols, 4), minmax(0, 1fr));
+  gap: var(--wc-gap);
+}
+
+.wc-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--wc-chip-h);
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--wc-radius);
+  background: var(--bg);
+  color: var(--t2);
+  font-family: var(--button);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    background var(--dur-fast) var(--ease-standard);
+}
+.wc-chip--num {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+.wc-chip:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  color: var(--t1);
+}
+.wc-chip.on,
+.wc-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+
+.wc-hint {
+  margin: var(--wc-gap) 0 0;
+  font-size: var(--text-xs);
+  color: var(--t3);
+  line-height: 1.35;
+}
+
+/* ── 器械设置折叠行（与 PlateBuilder 共用）── */
+.wc-settings-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: var(--wc-gap);
+  width: 100%;
+  min-height: var(--wc-chip-h);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--wc-radius);
+  background: var(--bg-2);
+  color: var(--t2);
+  font-size: var(--text-xs);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+.wc-settings-row:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  color: var(--t1);
+}
+.wc-settings-label {
+  font-weight: 600;
+  color: var(--t1);
+  white-space: nowrap;
+}
+.wc-settings-summary {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--t3);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.wc-settings-collapse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--t2);
+  font-family: var(--button);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.wc-settings-collapse:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  color: var(--accent);
+}
+
+/* ── 弹窗底部 ── */
+.wc-actions {
+  display: flex;
+  gap: var(--wc-gap);
+  margin-top: 4px;
+}
+.wc-actions--solo {
+  flex-direction: column;
+}
+.wc-actions--solo .ma-save {
+  width: 100%;
+  min-height: var(--wc-step);
+  font-size: var(--text-base);
+  font-weight: 700;
+}

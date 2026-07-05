@@ -1,0 +1,221 @@
+/*
+  Life OS 设置页扩展布局
+  与 components.css 中 .settings-block / .settings-row 配合使用
+*/
+
+.settings-page {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.settings-intro {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.settings-tabs {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
+}
+
+.settings-section {
+  display: grid;
+  gap: var(--space-2-5);
+}
+
+.settings-section-head {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.settings-stack-block {
+  display: block;
+  padding: var(--space-2) 0;
+}
+
+.settings-stack-block .sr-label,
+.settings-stack-block .pref-label {
+  margin-bottom: 4px;
+}
+
+.settings-stack-block .sr-desc,
+.settings-stack-block .pref-desc {
+  margin-bottom: 12px;
+}
+
+.set-row.settings-stack-block,
+.settings-row-stack {
+  border-top: 1px solid var(--border);
+}
+
+/* 分组卡片：mono  uppercase 标题（Fitness set-group / Planner settings-block） */
+.set-group,
+.settings-block.set-group {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  margin-top: var(--space-4);
+  overflow: hidden;
+}
+
+.set-group--edit {
+  overflow: visible;
+  scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 96px);
+}
+
+.set-group .sg-title,
+.set-group.settings-block .block-title.sg-title,
+.settings-block.set-group .block-title {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t3, var(--text-muted));
+  padding: 14px 18px 4px;
+  margin: 0;
+}
+
+.settings-block.set-group .block-desc,
+.set-group .block-desc {
+  margin: 0 0 var(--stack-tight);
+  padding: 0 18px;
+}
+
+.set-group--edit .sg-title {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 88px);
+  z-index: 9;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2-5);
+  padding: var(--space-3) 18px;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px) var(--radius-lg, 12px) 0 0;
+}
+
+.set-group--edit .sg-count {
+  font-size: var(--text-xs);
+  color: var(--t4, var(--text-muted));
+  letter-spacing: 0.06em;
+  text-transform: none;
+  font-weight: 500;
+}
+
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3-5, 14px);
+  padding: 15px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.set-row:first-of-type {
+  border-top: none;
+}
+
+.settings-btn-group > .btn,
+.settings-btn-group > .btn.ghost,
+.settings-btn-group > .btn-primary,
+.settings-btn-group > .btn-secondary,
+.settings-btn-group > .btn-danger,
+.settings-btn-group > .file-input-btn {
+  flex: 1;
+  min-width: 140px;
+}
+
+.settings-btn-group--flat {
+  margin-bottom: 0;
+  gap: var(--space-2-5);
+}
+
+.auth-link {
+  display: inline-flex;
+  width: fit-content;
+  text-decoration: none;
+}
+
+@media (--life-os-mobile) {
+  .settings-tabs {
+    width: 100%;
+  }
+
+  .set-row.settings-row,
+  .settings-row.set-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .set-row .pref-control,
+  .set-row .seg {
+    width: 100%;
+  }
+
+  .auth-link {
+    width: 100%;
+  }
+
+  .settings-row-stack {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-row-stack > .btn-primary,
+  .settings-row-stack > .btn-secondary,
+  .settings-row-stack > .btn-danger,
+  .settings-row-stack > .file-input-btn,
+  .settings-row-stack > .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Toggle 别名（Fitness 沿用 .toggle） */
+.toggle,
+.settings-toggle {
+  width: 46px;
+  height: 27px;
+  border-radius: 20px;
+  background: var(--border-l, var(--border-strong, var(--border)));
+  position: relative;
+  transition: background var(--dur-base) var(--ease-standard);
+  flex-shrink: 0;
+  cursor: pointer;
+  border: none;
+}
+
+.toggle::after,
+.settings-toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--dur-base) var(--ease-emphasized);
+}
+
+.toggle.on,
+.settings-toggle.on {
+  background: var(--toggle-on-bg, var(--accent));
+}
+
+.toggle.on::after,
+.settings-toggle.on::after {
+  transform: translateX(19px);
+}
+
+.toggle.disabled,
+.settings-toggle.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

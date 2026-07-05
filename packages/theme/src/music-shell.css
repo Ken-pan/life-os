@@ -1,0 +1,451 @@
+/*
+  Life OS Music 播放器壳层
+  供 MusicOS 引入：@import '@life-os/theme/music-shell.css';
+  依赖 design-system.css（layout / shell / components / ios-safari）
+*/
+
+:root {
+  --mini-player-h: 68px;
+  --player-art-size: clamp(280px, 72vw, 360px);
+  --player-art-radius: 20px;
+  --player-glow: color-mix(in srgb, var(--accent) 42%, transparent);
+  --progress-h: 4px;
+  --progress-bg: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
+  --progress-fill: var(--accent);
+  --queue-drawer-max-h: min(52dvh, 420px);
+}
+
+/* 有 mini player 时抬高主内容 / 底栏 */
+@media (--life-os-mobile) {
+  .main-wrap[data-player-chrome='mini'] #main-content,
+  .main-wrap[data-player-chrome='mini'] .wrap {
+    padding-bottom: calc(
+      var(--page-block-gap) + var(--mobile-content-inset-tabbar) + var(--mini-player-h)
+    );
+  }
+}
+
+/* ── Mini Player（fixed，底栏上方）── */
+.mini-player {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--mobile-tabbar-total-h);
+  z-index: calc(var(--z-fab) + 2);
+  height: var(--mini-player-h);
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: translateY(110%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dur-base) var(--ease-emphasized),
+    opacity var(--dur-base) var(--ease-standard);
+}
+
+.mini-player.show {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mini-player-link {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  padding-left: max(var(--space-3), var(--safe-left-effective));
+  text-decoration: none;
+  color: inherit;
+}
+
+.mini-player-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--accent-bg, color-mix(in srgb, var(--accent) 12%, var(--card)));
+  flex-shrink: 0;
+}
+
+.mini-player-art.placeholder {
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+}
+
+.mini-player-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.mini-player-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-player-artist {
+  font-size: var(--text-sm);
+  color: var(--t3, var(--text-muted));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-player-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-right: max(var(--space-2), var(--safe-right-effective));
+  flex-shrink: 0;
+}
+
+.mini-player-btn {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  color: var(--t1, var(--text));
+}
+
+.mini-player-btn.play {
+  background: var(--accent);
+  color: var(--on-accent);
+  width: 44px;
+  height: 44px;
+}
+
+/* ── Now Playing 全屏 ── */
+.now-playing {
+  min-height: calc(100dvh - var(--page-header-h) - var(--mobile-tabbar-total-h));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-5) var(--content-inline-pad) calc(var(--space-8) + var(--safe-bottom-effective));
+  gap: var(--space-6);
+}
+
+.now-playing-art-wrap {
+  position: relative;
+  width: var(--player-art-size);
+  aspect-ratio: 1;
+  margin-top: var(--space-4);
+}
+
+.now-playing-art-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: var(--player-glow);
+  filter: blur(36px);
+  opacity: 0.85;
+  z-index: 0;
+}
+
+.now-playing-art {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--player-art-radius);
+  box-shadow: var(--shadow-elevated, 0 24px 64px rgba(0, 0, 0, 0.28));
+  background: var(--accent-bg);
+}
+
+.now-playing-art.placeholder {
+  display: grid;
+  place-items: center;
+  font-family: var(--disp, var(--font-brand));
+  font-size: var(--text-display-sm);
+  color: var(--accent);
+}
+
+.now-playing-copy {
+  text-align: center;
+  max-width: 420px;
+}
+
+.now-playing-title {
+  font-family: var(--disp, var(--font-brand));
+  font-size: clamp(var(--text-3xl), 5vw, var(--text-display-sm));
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.now-playing-artist {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-lg);
+  color: var(--t2, var(--text-secondary));
+}
+
+.now-playing-album {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--t3, var(--text-muted));
+}
+
+/* ── 进度条 ── */
+.player-progress {
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.player-progress input[type='range'] {
+  width: 100%;
+  height: var(--progress-h);
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.player-progress input[type='range']::-webkit-slider-runnable-track {
+  height: var(--progress-h);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--progress-fill) var(--progress-pct, 0%),
+    var(--progress-bg) var(--progress-pct, 0%)
+  );
+}
+
+.player-progress input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--t1, var(--text));
+  margin-top: -5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.player-progress-times {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--t3, var(--text-muted));
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 播放控制 ── */
+.player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 360px;
+}
+
+.player-controls .ctrl {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  color: var(--t2, var(--text-secondary));
+}
+
+.player-controls .ctrl.on {
+  color: var(--accent);
+}
+
+.player-controls .ctrl-main {
+  width: 64px;
+  height: 64px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 8px 28px var(--player-glow);
+}
+
+/* ── 曲目行 / 卡片 ── */
+.track-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2-5) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.track-row:last-child {
+  border-bottom: none;
+}
+
+.track-row-art {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--accent-bg);
+  flex-shrink: 0;
+}
+
+.track-row-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.track-row-title {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-row-sub {
+  font-size: var(--text-sm);
+  color: var(--t3, var(--text-muted));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-row-actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-4);
+}
+
+.album-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: inherit;
+}
+
+.album-card-art {
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  background: var(--accent-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.album-card-title {
+  font-weight: 600;
+  font-size: var(--text-base);
+  line-height: 1.3;
+}
+
+.album-card-sub {
+  font-size: var(--text-sm);
+  color: var(--t3, var(--text-muted));
+}
+
+/* ── 情绪首页 Hero ── */
+.mood-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-5);
+  background:
+    radial-gradient(ellipse 120% 80% at 80% -20%, var(--player-glow), transparent 55%),
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 18%, var(--card)), var(--card));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+}
+
+.mood-hero-kicker {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-2);
+}
+
+.mood-hero-title {
+  font-family: var(--disp, var(--font-brand));
+  font-size: clamp(var(--text-3xl), 6vw, var(--text-display-sm));
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.12;
+}
+
+.mood-hero-desc {
+  margin: var(--space-3) 0 0;
+  color: var(--t2, var(--text-secondary));
+  line-height: 1.6;
+  max-width: 36ch;
+}
+
+.mood-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+/* ── 队列抽屉 ── */
+.queue-drawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: calc(var(--z-sheet) + 2);
+  max-height: var(--queue-drawer-max-h);
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--border);
+  transform: translateY(100%);
+  transition: transform var(--dur-base) var(--ease-emphasized);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: max(var(--space-4), var(--safe-bottom-effective));
+}
+
+.queue-drawer.open {
+  transform: translateY(0);
+}
+
+.queue-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.queue-drawer-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-2) var(--space-4);
+}
+
+@media (--life-os-desktop) {
+  .mini-player {
+    bottom: 0;
+    left: var(--sidebar-w);
+    border-left: 1px solid var(--border);
+  }
+
+  .now-playing {
+    min-height: calc(100dvh - var(--page-header-h));
+  }
+}

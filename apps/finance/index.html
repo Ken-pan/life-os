@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>FINANCE.OS</title>
+    <meta name="description" content="个人财务驾驶舱 · 现金流、资产与长期规划" />
+    <meta name="application-name" content="FINANCE.OS" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#f2f4f2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101211" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f2f4f2" id="theme-color-meta" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FINANCE.OS" />
+    <meta property="og:title" content="FINANCE.OS" />
+    <meta property="og:description" content="个人财务驾驶舱 · 现金流、资产与长期规划" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="FINANCE.OS" />
+    <meta name="twitter:description" content="个人财务驾驶舱 · 现金流、资产与长期规划" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FINANCE.OS" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/assets/brand/mark-on-dark.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/brand/mark-on-dark.svg" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("fos-theme");
+          var dark =
+            stored === "dark" ||
+            (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) {
+            document.documentElement.setAttribute("data-theme", "dark");
+            document.documentElement.style.colorScheme = "dark";
+          }
+          var meta = document.getElementById("theme-color-meta");
+          if (meta) meta.content = dark ? "#101211" : "#f2f4f2";
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Noto+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
