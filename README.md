@@ -16,13 +16,9 @@ npm run build           # turbo 并行构建全部 app
 cd apps/planner && npm run dev
 ```
 
-## 同步 canonical 包
+## 共享包
 
-若仍单独维护 `../life-os-theme` 与 `../life-os-sync` 仓库，运行：
-
-```bash
-npm run sync:packages
-```
+在 **`packages/theme`**、**`packages/sync`** 直接修改并 commit。独立 GitHub 仓 `life-os-theme` / `life-os-sync` 已归档；`npm run sync:packages` 仅在你仍保留本地 sibling 副本需要一次性导入时使用。
 
 ## Netlify 部署
 

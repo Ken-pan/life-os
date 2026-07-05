@@ -10,7 +10,10 @@ node_modules
 **/.svelte-kit
 playwright-report
 test-results
-**/.cursor
+**/.cursor/*
+!**/.cursor/rules/
+!**/.cursor/rules/**
+!**/.cursor/mcp.json
 **/.playwright-mcp
 **/*.log
 **/*.zip

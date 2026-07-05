@@ -1,6 +1,6 @@
 # Life OS 响应式规范（Planner / FinanceOS / FitnessOS）
 
-三端应用共用 canonical `../life-os-theme`（`@import '@life-os/theme/design-system.css'`）。本文档为 **走查结论 + 统一方案**，供三项目对齐实施。
+三端应用共用 monorepo 内 `packages/theme`（`@import '@life-os/theme/design-system.css'`）。本文档为 **走查结论 + 统一方案**，供三项目对齐实施。
 
 ---
 
@@ -154,7 +154,7 @@
 
 ### 5.1 维护清单
 
-1. 修改断点 / tabbar token 时，同步 canonical `../life-os-theme/src/layout.css` 与 `layout.js`
+1. 修改断点 / tabbar token 时，同步 `packages/theme/src/layout.css` 与 `layout.js`
 2. 底栏视觉以 **flex + pill active + safe-area padding** 为准（Planner / Fitness `.nav`，Finance `.mobile-tabbar`）
 3. 导航 IA：底栏 ≤4 Primary + More；Secondary 进 More Sheet 或侧栏
 
@@ -188,7 +188,7 @@ Playwright viewports 建议：`375`, `768`, `1024`, `1280`。
 
 ## 8. Planner 本次变更文件
 
-- `../life-os-theme/src/layout.css` — tablet 断点 + tabbar tokens
+- `packages/theme/src/layout.css` — tablet 断点 + tabbar tokens
 - `src/lib/nav.js` — 统一 IA 配置
 - `src/lib/components/BottomNav.svelte` — 4 Primary + More
 - `src/lib/components/MobileMoreSheet.svelte` — More Sheet

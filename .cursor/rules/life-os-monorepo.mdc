@@ -1,0 +1,36 @@
+---
+description: Life OS monorepo — canonical repo, workspaces, deploy
+alwaysApply: true
+---
+
+# Life OS Monorepo
+
+**Canonical repo:** `Ken-pan/life-os` at `/Users/kenpan/「Projects」/life-os`
+
+| App | Path | Workspace name | Netlify site |
+|-----|------|----------------|--------------|
+| Planner | `apps/planner` | `planner-os` | planneros-ken |
+| Fitness | `apps/fitness` | `fitness-os` | kens-fitnessos |
+| Finance | `apps/finance` | `finance-os` | kensfinanceos |
+| Music | `apps/music` | `music-os` | kens-musicos |
+
+Shared: `packages/theme` (`@life-os/theme`), `packages/sync` (`@life-os/sync`).
+
+## Commands (repo root)
+
+```bash
+npm install
+npm run build          # turbo — all apps
+npm run build:planner  # single app
+cd apps/planner && npm run dev
+```
+
+## Do not
+
+- Edit legacy archived repos (`planner-os`, `fitness-os`, `Moneymoneymoney`, `MusicOS`, `life-os-theme`, `life-os-sync`).
+- Add `file:../life-os-theme` or vendored `packages/life-os-*` in this monorepo.
+- Put nested `.github/workflows` under `apps/*` — CI lives at repo root.
+
+## Deploy
+
+Push `master` → Netlify Git build (path ignore per app). Docs: `docs/NETLIFY.md`, `docs/CANONICAL.md`.

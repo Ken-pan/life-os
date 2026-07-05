@@ -1,0 +1,13 @@
+---
+description: Svelte 5 Life OS app conventions (Planner, Fitness, Finance, Music)
+globs: apps/**/*.{svelte,ts,js,svelte.js}
+alwaysApply: false
+---
+
+# Life OS Svelte Apps
+
+- **Svelte 5** runes (`$state`, `$derived`, `$effect`); use official Svelte MCP for docs and autofixer before finishing edits.
+- Import design tokens via `@life-os/theme` (`design-system.css`, breakpoints `--life-os-phone`, `--life-os-mobile`, etc.).
+- Mobile nav: Finance-style **Primary tabs + More sheet** is the reference; match focus trap / scroll lock from `@life-os/theme`.
+- Persist layer stays in `src/lib/persist/`; Supabase via `@life-os/sync` patterns where applicable.
+- E2E ports differ per app — check each app's `package.json` / README before running Playwright.
