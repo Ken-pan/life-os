@@ -47,7 +47,17 @@ export default {
     importing: '正在导入 {done}/{total}…',
     done: '已导入 {count} 首'
   },
-  nowPlaying: { title: '正在播放', queue: '播放队列', queueEmpty: '队列为空', playFromCurrent: '从当前曲目播放' },
+  nowPlaying: {
+    title: '正在播放',
+    queue: '播放队列',
+    queueEmpty: '队列为空',
+    playFromCurrent: '从当前曲目播放',
+    reorder: '拖拽排序',
+    lyrics: '歌词',
+    noLyrics: '此曲目暂无内嵌歌词',
+    playing: '正在播放',
+    paused: '已暂停'
+  },
   album: { title: '专辑' },
   artist: { title: '艺术家' },
   settings: {

@@ -13,7 +13,7 @@
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js';
   import { applyLocale, t } from '$lib/i18n/index.js';
   import { resolvePageTitle, isNavChromeHidden } from '$lib/nav.js';
-  import { getCurrentTrack, player } from '$lib/player.svelte.js';
+  import { player } from '$lib/player.svelte.js';
   import { applyTrackAmbience } from '$lib/trackAmbience.js';
   import { ensureBuiltinPlaylists } from '$lib/db.js';
   import { initAuth, auth } from '$lib/auth.svelte.js';
@@ -66,7 +66,8 @@
   });
 
   $effect(() => {
-    applyTrackAmbience(getCurrentTrack());
+    const track = player.queue[player.index] ?? null;
+    applyTrackAmbience(track);
   });
 </script>
 

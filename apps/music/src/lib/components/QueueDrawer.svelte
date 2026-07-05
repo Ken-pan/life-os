@@ -29,6 +29,10 @@
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
   }
+
+  function onDragEnd() {
+    dragFrom = null;
+  }
 </script>
 
 {#if queueDrawerOpen.open}
@@ -39,18 +43,23 @@
       <strong>{t('nowPlaying.queue')}</strong>
       <button type="button" class="btn-ghost" onclick={closeQueueDrawer}>{t('common.close')}</button>
     </div>
-    <div class="queue-drawer-body">
+    <div class="queue-drawer-body" role="list">
       {#each player.queue as track, i (track.id)}
         <div
           class="queue-row"
           class:queue-row--current={i === player.index}
-          draggable="true"
           role="listitem"
-          ondragstart={(e) => onDragStart(e, i)}
           ondragover={onDragOver}
           ondrop={(e) => onDrop(e, i)}
         >
-          <span class="queue-drag-handle" aria-hidden="true">⠿</span>
+          <button
+            type="button"
+            class="queue-drag-handle"
+            draggable="true"
+            aria-label={t('nowPlaying.reorder')}
+            ondragstart={(e) => onDragStart(e, i)}
+            ondragend={onDragEnd}
+          >⠿</button>
           <TrackRow {track} tracks={player.queue} index={i} showLike={false} />
         </div>
       {/each}
@@ -101,9 +110,13 @@
     cursor: grab;
     user-select: none;
     font-size: var(--text-sm);
+    touch-action: none;
+    background: none;
+    border: none;
+    padding: 0;
   }
 
-  .queue-row:active .queue-drag-handle {
+  .queue-drag-handle:active {
     cursor: grabbing;
   }
 </style>

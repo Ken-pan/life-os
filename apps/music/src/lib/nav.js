@@ -47,6 +47,19 @@ export function consumeNowPlayingReturn(fallback = '/') {
   return value;
 }
 
+/** @returns {string | null} */
+export function peekNowPlayingReturn() {
+  if (typeof sessionStorage === 'undefined') return null;
+  return sessionStorage.getItem(NOW_PLAYING_RETURN_KEY);
+}
+
+/** Set return path only when not already recorded (e.g. deep link to Now Playing). */
+/** @param {string} from */
+export function ensureNowPlayingReturn(from) {
+  if (peekNowPlayingReturn()) return;
+  markNowPlayingReturn(from);
+}
+
 /** @param {string} pathname @param {(k: string) => string} tr */
 export function resolvePageTitle(pathname, tr) {
   if (pathname === '/') return tr('home.title');

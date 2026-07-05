@@ -45,6 +45,7 @@ export async function importAudioFiles(files, onProgress) {
       playCount: existing?.playCount || 0,
       liked: existing?.liked || 0,
       artUrl,
+      lyrics: tags.lyrics || existing?.lyrics,
       words: [],
       audioBlob: file
     };

@@ -50,7 +50,7 @@
       >
         <TrackArt artUrl={spotlight.artUrl} seed={spotlight.id} class="spotlight-art" />
         <div class="spotlight-copy">
-          <div class="spotlight-kicker">{player.playing ? '正在播放' : '已暂停'}</div>
+          <div class="spotlight-kicker">{player.playing ? t('nowPlaying.playing') : t('nowPlaying.paused')}</div>
           <div class="spotlight-title">{spotlight.title}</div>
           <div class="spotlight-sub">{spotlight.artist}</div>
         </div>

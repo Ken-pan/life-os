@@ -1,5 +1,6 @@
 import { browser } from '$app/environment';
-import { recordPlay } from './db.js';
+import { hydrateTrack, recordPlay } from './db.js';
+import { bindAudioAnalyser, resumeAudioContext } from './audioAnalyser.js';
 import { bindMediaSessionHandlers, updateMediaSession } from './mediaSession.js';
 
 /** @type {HTMLAudioElement | null} */
@@ -44,6 +45,7 @@ export function appendToQueue(tracks) {
 
 export function togglePlay() {
   if (!audio || !getCurrentTrack()) return;
+  resumeAudioContext();
   if (player.playing) audio.pause();
   else audio.play().catch(() => {});
 }
@@ -95,8 +97,10 @@ function loadAndPlay() {
   if (!track || !browser) return;
   ensureAudio();
   if (!audio) return;
-  audio.src = track.objectUrl || (track.audioBlob ? URL.createObjectURL(track.audioBlob) : '');
+  hydrateTrack(track);
+  audio.src = track.objectUrl || '';
   player.duration = track.duration || 0;
+  resumeAudioContext();
   audio.play().catch(() => {});
   recordPlay(track.id);
   updateMediaSession(track, true);
@@ -105,6 +109,7 @@ function loadAndPlay() {
 function ensureAudio() {
   if (audio || !browser) return;
   audio = new Audio();
+  bindAudioAnalyser(audio);
   audio.addEventListener('timeupdate', () => {
     player.currentTime = audio?.currentTime || 0;
     player.duration = audio?.duration || player.duration;
