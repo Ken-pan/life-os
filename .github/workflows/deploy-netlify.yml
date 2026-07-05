@@ -1,0 +1,70 @@
+name: Deploy Netlify (manual)
+
+# Optional backup: build in GitHub Actions and upload to Netlify.
+# Primary CD is Netlify Git builds from this monorepo (deploy key).
+#
+# Setup once:
+#   1. Create token: https://app.netlify.com/user/applications#personal-access-tokens
+#   2. gh secret set NETLIFY_AUTH_TOKEN -R Ken-pan/life-os
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: App to deploy
+        required: true
+        type: choice
+        options:
+          - planner
+          - fitness
+          - finance
+          - music
+          - all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: planner
+            site_id: 82a6cadc-03f9-443c-85f7-26bd4a90f83f
+            workspace: planner-os
+            dir: apps/planner/build
+            functions: apps/planner/netlify/functions
+          - app: fitness
+            site_id: 0394cf19-7fb7-4fea-81d7-d4a9d025fab3
+            workspace: fitness-os
+            dir: apps/fitness/build
+            functions: ''
+          - app: finance
+            site_id: fc92f305-8dcf-46c3-82f5-ef511597df1c
+            workspace: finance-os
+            dir: apps/finance/dist
+            functions: ''
+          - app: music
+            site_id: abf63261-ae26-46f9-ac18-d24987a44113
+            workspace: music-os
+            dir: apps/music/build
+            functions: ''
+    if: >-
+      github.event.inputs.app == 'all' ||
+      github.event.inputs.app == matrix.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w ${{ matrix.workspace }}
+      - name: Deploy to Netlify
+        run: |
+          if [ -n "${{ matrix.functions }}" ]; then
+            npx netlify deploy --prod --site=${{ matrix.site_id }} --dir=${{ matrix.dir }} --functions=${{ matrix.functions }}
+          else
+            npx netlify deploy --prod --site=${{ matrix.site_id }} --dir=${{ matrix.dir }}
+          fi
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

@@ -24,18 +24,11 @@ cd apps/planner && npm run dev
 npm run sync:packages
 ```
 
-## Netlify 部署（推荐）
+## Netlify 部署
 
-**一个 Git 仓库 → 四个 Netlify Site**。每个 Site：
+四站生产环境由 **`Ken-pan/life-os` monorepo** 驱动（Deploy Key + 各 app 的 `netlify.toml`）。详见 [docs/NETLIFY.md](docs/NETLIFY.md)。
 
-| 设置 | 值 |
-|------|-----|
-| Base directory | *留空*（repo 根） |
-| Package directory | `apps/planner` / `apps/fitness` / `apps/finance` / `apps/music` |
-| Build command | 见各 app 的 `netlify.toml`（如 `npm run build -w planner-os`） |
-| Publish directory | 见 `netlify.toml`（如 `apps/planner/build`） |
-
-各 app 的 `netlify.toml` 已含 **ignore build**：仅当该 app 或 `packages/*` 变更时才触发构建。
+Push 到 `master` 后 Netlify 自动构建；PR 触发 GitHub Actions `ci.yml`。
 
 ### 环境变量
 
@@ -44,4 +37,4 @@ npm run sync:packages
 
 ## 与独立仓库的关系
 
-历史上各 app 为独立 Git 仓库；本 monorepo 为 **Netlify 与跨端协作的推荐部署源**。独立仓库仍可通过 `scripts/sync-vendored-packages.sh all-repos`  vendoring 共享包以单独部署。
+历史上各 app 为独立 Git 仓库；**生产 Netlify Site 已指向本 monorepo**。独立仓库仍可用于开发，或通过 `scripts/sync-vendored-packages.sh all-repos` vendoring 共享包。
