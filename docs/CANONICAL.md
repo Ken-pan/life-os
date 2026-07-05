@@ -12,40 +12,24 @@
 
 四站 Netlify 均已指向本仓库（Deploy Key），**不要再依赖独立 app 仓库触发线上部署**。
 
-## ⚠️ Legacy（可逐步清理，勿再当部署源）
+## ⚠️ Legacy（已归档，勿再使用）
 
-### 独立 App 仓库（仍可用于只读 / 归档）
+以下 GitHub 仓库已 **archive**，本地 sibling 目录仅作历史参考：
 
-- `Ken-pan/planner-os`
-- `Ken-pan/fitness-os`
-- `Ken-pan/Moneymoneymoney`
-- `Ken-pan/MusicOS`
+- `Ken-pan/planner-os`、`fitness-os`、`Moneymoneymoney`、`MusicOS`
+- `Ken-pan/life-os-theme`、`life-os-sync`
 
-每个仓库内的 **`packages/life-os-theme`**、**`packages/life-os-sync`** 是 vendored 副本，与 monorepo 重复，**不应再手改**。
+vendored `packages/life-os-*` 已从独立 app 仓删除。Netlify **不会**再监听这些仓库。
 
-### 独立共享包仓库
+## 🧹 清理状态（2026-07-05）
 
-- `Ken-pan/life-os-theme`
-- `Ken-pan/life-os-sync`
-
-若你仍习惯在 sibling 目录改 theme，改完后运行：
-
-```bash
-cd life-os && npm run sync:packages && git add packages && git commit
-```
-
-**长期建议**：只在 `life-os/packages/*` 改，archive 上述两个独立包仓库。
-
-## 🧹 建议清理清单
-
-| 项 | 动作 |
+| 项 | 状态 |
 |----|------|
-| `Planner/packages/life-os-theme` 等 vendored 目录 | 独立仓可 **删除**（改 monorepo 后不再 push 独立仓则无害；删前确认无未合并改动） |
-| 独立仓 `file:packages/life-os-*` | 若归档独立仓，整仓只读即可 |
-| `life-os/apps/*/.github/workflows` 嵌套 CI | 已移除 planner 嵌套 workflow；其余 app 内勿再放 `.github` |
-| 磁盘 sibling `../life-os-theme` 依赖 | monorepo 内已用 `packages/*`；**勿**在 monorepo 改回 `file:../` |
-| Netlify 上独立仓的 Git 链接 | 已切到 `life-os`；无需再改 |
-| `Vault` 或文档里写「packages/life-os-theme 在 Planner 内」 | 更新为 `life-os/packages/theme` |
+| 独立 app 仓 vendored packages | ✅ 已删 |
+| 独立仓 `netlify.toml` | ✅ 已删 |
+| GitHub archive | ✅ 六仓已归档 |
+| Netlify Git 源 | ✅ 四站指向 `life-os` |
+| Cursor 工作区 | ✅ `Projects/life-os.code-workspace` + `.cursor/rules` |
 
 ## 日常命令
 

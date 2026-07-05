@@ -47,9 +47,9 @@ git add packages && git commit -m "sync shared packages"
 - `PUBLIC_SUPABASE_ANON_KEY`
 - Planner AI：`KIMI_API_KEY`（仅 Functions，在 Netlify UI 设置）
 
-## 独立仓库（legacy）
+## 独立仓库（已归档）
 
-`planner-os`、`fitness-os` 等仍可单独部署（vendored `packages/life-os-*`）。**生产 Site 已切到 monorepo**；独立仓库 push 不再触发 Netlify，除非改回 Site 仓库设置。
+`planner-os`、`fitness-os`、`Moneymoneymoney`、`MusicOS`、`life-os-theme`、`life-os-sync` 已在 GitHub **archive**。生产四站只构建 `Ken-pan/life-os`。
 
 ## CLI 手动发布
 

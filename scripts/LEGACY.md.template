@@ -1,0 +1,11 @@
+# Archived — use the life-os monorepo
+
+This repository is **archived** and read-only. Do not deploy or develop here.
+
+| What | Where |
+|------|--------|
+| **Canonical repo** | https://github.com/Ken-pan/life-os |
+| **Shared packages** | `packages/theme`, `packages/sync` |
+| **Netlify** | Four production sites build from `life-os` only |
+
+See `docs/CANONICAL.md` in the monorepo for day-to-day commands.
