@@ -256,6 +256,37 @@ export async function uploadTrackAudio(track, onProgress) {
  * @param {(info: { done: number, total: number, title: string }) => void} [onProgress]
  * @returns {Promise<{ uploaded: number, skipped: number, failed: number, totalBytes: number }>}
  */
+/**
+ * Upload specific local tracks by id (import pipeline).
+ * @param {string[]} trackIds
+ * @param {(info: { done: number, total: number, title: string }) => void} [onProgress]
+ */
+export async function uploadTracksByIds(trackIds, onProgress) {
+  if (!trackIds.length) {
+    return { uploaded: 0, failed: 0, totalBytes: 0 };
+  }
+  const rows = await db.tracks.bulkGet(trackIds);
+  const pending = rows.filter((tr) => tr?.audioBlob && !tr.storagePath);
+  let uploaded = 0;
+  let failed = 0;
+  let totalBytes = 0;
+
+  for (let i = 0; i < pending.length; i++) {
+    const track = pending[i];
+    onProgress?.({ done: i, total: pending.length, title: track.title });
+    try {
+      await uploadTrackAudio(track);
+      uploaded += 1;
+      totalBytes += track.size || track.audioBlob?.size || 0;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  onProgress?.({ done: pending.length, total: pending.length, title: '' });
+  return { uploaded, failed, totalBytes };
+}
+
 export async function uploadPendingAudio(onProgress) {
   const tracks = await getAllTracks();
   const pending = tracks.filter((tr) => tr.audioBlob && !tr.storagePath);

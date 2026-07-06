@@ -1,29 +1,80 @@
 <script>
   import { t } from '$lib/i18n/index.js';
-  import { importMediaFiles, ensureArtRepaired } from '$lib/import.js';
+  import { runImportPipeline } from '$lib/importPipeline.js';
   import { refreshQueueMetadata } from '$lib/player.svelte.js';
+  import { auth } from '$lib/auth.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import { goto } from '$app/navigation';
 
   let dragging = $state(false);
   let progress = $state('');
 
+  /** @param {import('$lib/importPipeline.js').ImportProgress} p */
+  function progressLabel(p) {
+    switch (p.phase) {
+      case 'import':
+        return t('import.importing', { done: p.done, total: p.total });
+      case 'art':
+        return t('import.phaseArt');
+      case 'metadata':
+        return t('import.phaseMetadata');
+      case 'upload':
+        return t('import.phaseUpload', { done: p.done, total: p.total });
+      case 'tags':
+        return t('import.phaseTags', { done: p.done, total: p.total });
+      case 'sync':
+        return t('import.phaseSync');
+      default:
+        return '';
+    }
+  }
+
   /** @param {FileList | File[]} files */
   async function handleFiles(files) {
     if (!files?.length) return;
     progress = t('import.importing', { done: 0, total: files.length });
-    const { audioCount, lrcCount, total } = await importMediaFiles(files, (done, tot) => {
-      progress = t('import.importing', { done, total: tot });
+    const result = await runImportPipeline(files, (p) => {
+      progress = progressLabel(p);
+      if (p.title && (p.phase === 'upload' || p.phase === 'tags')) {
+        progress += ` · ${p.title}`;
+      }
     });
+
+    const { audioCount, lrcCount, total, cloud, uploaded, uploadFailed, tagged } = result;
+
     if (audioCount > 0) {
-      await ensureArtRepaired();
       await refreshQueueMetadata();
     } else if (lrcCount > 0) {
       await refreshQueueMetadata();
     }
-    if (lrcCount > 0) {
+
+    if (audioCount > 0 && cloud) {
+      if (uploadFailed > 0) {
+        toast(
+          t('import.doneCloudPartial', {
+            count: audioCount,
+            uploaded,
+            failed: uploadFailed,
+            tagged,
+          }),
+        );
+      } else {
+        toast(
+          t('import.doneCloud', {
+            count: audioCount,
+            uploaded,
+            tagged,
+          }),
+        );
+      }
+    } else if (lrcCount > 0) {
       toast(t('import.doneMixed', { audio: audioCount, lrc: lrcCount }));
-    } else toast(t('import.done', { count: total }));
+    } else if (audioCount > 0) {
+      toast(t('import.doneLocal', { count: total }));
+    } else {
+      toast(t('import.done', { count: total }));
+    }
+
     progress = '';
     if (audioCount > 0) await goto('/library');
   }
@@ -43,7 +94,9 @@
 </script>
 
 <div class="wrap">
-  <p class="page-sub" style="margin-bottom:20px">{t('import.hint')}</p>
+  <p class="page-sub" style="margin-bottom:20px">
+    {auth.user ? t('import.hintCloud') : t('import.hint')}
+  </p>
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div

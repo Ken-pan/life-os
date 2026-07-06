@@ -28,7 +28,7 @@ export async function importMediaFiles(files, onProgress) {
   const total = audio.length + lrcs.length
   let done = 0
 
-  const audioCount = await importAudioFiles(audio, (d) => {
+  const { count: audioCount, trackIds } = await importAudioFiles(audio, (d) => {
     done = d
     onProgress?.(done, total || 1)
   })
@@ -39,10 +39,11 @@ export async function importMediaFiles(files, onProgress) {
   })
 
   if (audioCount > 0) {
+    scheduleAutoCloudPush()
     void ensureArtRepaired()
   }
 
-  return { audioCount, lrcCount, total: audioCount + lrcCount }
+  return { audioCount, lrcCount, total: audioCount + lrcCount, trackIds }
 }
 
 /** @param {FileList | File[]} files @param {(done: number, total: number) => void} [onProgress] */
@@ -50,6 +51,8 @@ export async function importAudioFiles(files, onProgress) {
   await ensureBuiltinPlaylists()
   const list = [...files].filter((f) => AUDIO_EXT.test(f.name))
   let done = 0
+  /** @type {string[]} */
+  const trackIds = []
 
   for (const file of list) {
     const buffer = await file.arrayBuffer()
@@ -95,6 +98,7 @@ export async function importAudioFiles(files, onProgress) {
     }
     track.words = trackWords(track)
     await db.tracks.put(track)
+    trackIds.push(id)
     if (artBlob) {
       await upsertAlbumArt({ albumKey, artist, album, artBlob })
     }
@@ -103,7 +107,7 @@ export async function importAudioFiles(files, onProgress) {
     onProgress?.(done, list.length)
   }
 
-  return done
+  return { count: done, trackIds }
 }
 
 /**
