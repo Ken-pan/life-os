@@ -1,4 +1,5 @@
 import { createToastDeduper, resolveToastDuration } from '@life-os/theme'
+import { loadUiPrefs, saveUiPrefs } from './settingsPersistence.js'
 
 export const toastState = $state({ msg: '', show: false, tone: 'success' })
 
@@ -33,7 +34,11 @@ export function toast(msg, toneOrOpts = 'success', maybeOpts = {}) {
 
   const ms =
     options.duration ??
-    resolveToastDuration(msg, { tone, min: tone === 'error' ? 4500 : 2000, max: tone === 'error' ? 6000 : 3500 })
+    resolveToastDuration(msg, {
+      tone,
+      min: tone === 'error' ? 4500 : 2000,
+      max: tone === 'error' ? 6000 : 3500,
+    })
   toastState.msg = msg
   toastState.tone = tone
   toastState.show = true
@@ -56,7 +61,7 @@ export function closeQueueDrawer() {
 /** @type {{ open: boolean; tab: 'queue' | 'lyrics'; width: number }} */
 export const utilityPane = $state({
   open: false,
-  tab: 'queue',
+  tab: loadUiPrefs().utilityPaneTab,
   width: 360,
 })
 
@@ -86,7 +91,9 @@ export function getUtilityPaneWidthLimits() {
   }
   const sidebar =
     parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'),
+      getComputedStyle(document.documentElement).getPropertyValue(
+        '--sidebar-w',
+      ),
     ) || 228
   const maxByViewport = window.innerWidth - sidebar - UTILITY_PANE_MAIN_MIN
   return {
@@ -131,6 +138,7 @@ export function nudgeUtilityPaneWidth(delta) {
 export function openUtilityPane(tab = 'queue') {
   utilityPane.open = true
   utilityPane.tab = tab
+  saveUiPrefs({ utilityPaneTab: tab })
 }
 
 export function closeUtilityPane() {
@@ -142,7 +150,8 @@ export function toggleUtilityPane(tab) {
   if (utilityPane.open && (!tab || utilityPane.tab === tab)) {
     closeUtilityPane()
   } else {
-    openUtilityPane(tab ?? utilityPane.tab)
+    const next = tab ?? utilityPane.tab
+    openUtilityPane(next)
   }
 }
 

@@ -30,7 +30,7 @@ import {
 } from './mediaSession.js'
 import { syncErrorMessage, scheduleAutoCloudPush } from './sync.js'
 import { t } from './i18n/index.js'
-import { S, save } from './state.svelte.js'
+import { S, patchLocalSettings } from './state.svelte.js'
 import { supabase } from './supabase.js'
 import { shuffleCopy } from './queueDisplay.js'
 
@@ -188,19 +188,17 @@ export function setVolume(v) {
   const next = Math.max(0, Math.min(1, v))
   player.volume = next
   applyVolumeToAll()
-  S.settings.volume = next
-  if (next > 0) {
-    player.muted = false
-    S.settings.muted = false
-  }
-  save()
+  if (next > 0) player.muted = false
+  patchLocalSettings({
+    volume: next,
+    ...(next > 0 ? { muted: false } : {}),
+  })
 }
 
 export function toggleMute() {
   player.muted = !player.muted
   applyVolumeToAll()
-  S.settings.muted = player.muted
-  save()
+  patchLocalSettings({ muted: player.muted })
 }
 
 function scheduleSaveSession() {
@@ -351,7 +349,8 @@ export function insertAfterCurrent(tracks) {
 
 /** Shuffle upcoming tracks once (industry-standard shuffle-as-preorder). */
 function reshuffleUpcomingOnly() {
-  if (player.queue.length <= 1 || player.index >= player.queue.length - 1) return
+  if (player.queue.length <= 1 || player.index >= player.queue.length - 1)
+    return
   const head = player.queue.slice(0, player.index + 1)
   const tail = shuffleCopy(player.queue.slice(player.index + 1))
   player.queue = [...head, ...tail]

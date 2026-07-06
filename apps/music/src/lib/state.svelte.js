@@ -4,39 +4,58 @@ import {
   bindSystemThemeChange,
   resolveTheme,
 } from '@life-os/theme'
+import {
+  applyCloudSettingsPatch,
+  applyLocalSettingsPatch,
+  mergeCloudIntoLocal,
+  normalizeCloudSettings,
+} from './settingsPersistence.js'
 
 const SKEY = 'musicos_v1'
 
-const defaultState = () => ({
-  settings: {
-    theme: 'auto',
-    locale: 'zh',
-    /** @deprecated Use crossfadeMs > 0 */
-    crossfade: false,
-    /** 0 = off; 500–12000 ms overlap between tracks */
-    crossfadeMs: 0,
-    gapless: true,
-    volume: 1,
-    muted: false,
-    libraryDensity: 'comfortable',
-    /** Tint player chrome from album artwork (progress, glow, spotlight). */
-    albumAmbience: true,
-    /** Now-playing panel: cover (player), lyrics, or queue. */
-    immersiveViewMode: 'player',
-    /** 队列播完时按相似 vibe 自动续播（需登录） */
-    autoContinueSimilar: true,
-  },
+/** @typedef {{
+ *   theme: string,
+ *   locale: string,
+ *   crossfade: boolean,
+ *   crossfadeMs: number,
+ *   gapless: boolean,
+ *   volume: number,
+ *   muted: boolean,
+ *   libraryDensity: string,
+ *   albumAmbience: boolean,
+ *   immersiveViewMode: 'player' | 'lyrics' | 'queue',
+ *   autoContinueSimilar: boolean,
+ *   updatedAt: number,
+ * }} MusicSettings */
+
+const defaultSettings = () => ({
+  theme: 'auto',
+  locale: 'zh',
+  /** @deprecated Use crossfadeMs > 0 */
+  crossfade: false,
+  /** 0 = off; 500–12000 ms overlap between tracks */
+  crossfadeMs: 0,
+  gapless: true,
+  volume: 1,
+  muted: false,
+  libraryDensity: 'comfortable',
+  /** Tint player chrome from album artwork (progress, glow, spotlight). */
+  albumAmbience: true,
+  /** Now-playing panel: cover (player), lyrics, or queue. */
+  immersiveViewMode: /** @type {'player'} */ ('player'),
+  /** 队列播完时按相似 vibe 自动续播（需登录） */
+  autoContinueSimilar: true,
+  /** Cloud settings LWW timestamp (ms) */
+  updatedAt: 0,
 })
 
-/** @param {'player' | 'lyrics' | 'queue'} mode */
-export function setImmersiveViewMode(mode) {
-  S.settings.immersiveViewMode = mode
-  save()
-}
+const defaultState = () => ({
+  settings: defaultSettings(),
+})
 
 /** @param {Record<string, unknown>} settings */
-function normalizeSettings(settings) {
-  const merged = { ...defaultState().settings, ...settings }
+export function normalizeSettings(settings) {
+  const merged = { ...defaultSettings(), ...settings }
   if (merged.immersiveViewMode === 'ambient') merged.immersiveViewMode = 'queue'
   if (
     merged.immersiveViewMode !== 'player' &&
@@ -45,17 +64,42 @@ function normalizeSettings(settings) {
   ) {
     merged.immersiveViewMode = 'player'
   }
-  if (merged.crossfadeMs == null || merged.crossfadeMs === false)
-    merged.crossfadeMs = 0
-  if (merged.crossfadeMs === true) merged.crossfadeMs = 3000
-  if (merged.crossfade === true && !merged.crossfadeMs)
-    merged.crossfadeMs = 3000
-  merged.crossfadeMs = Math.max(
-    0,
-    Math.min(12_000, Math.round(Number(merged.crossfadeMs) || 0)),
-  )
-  merged.crossfade = merged.crossfadeMs > 0
-  return merged
+  const cloudNorm = normalizeCloudSettings(merged)
+  return /** @type {MusicSettings} */ ({
+    ...merged,
+    ...cloudNorm,
+    updatedAt: cloudNorm.updatedAt ?? 0,
+  })
+}
+
+function settingsCtx() {
+  return {
+    assign: (patch) => {
+      S.settings = normalizeSettings({ ...S.settings, ...patch })
+    },
+    save,
+  }
+}
+
+/** @param {Partial<MusicSettings>} patch */
+export function patchCloudSettings(patch) {
+  applyCloudSettingsPatch(patch, settingsCtx())
+}
+
+/** @param {Partial<MusicSettings>} patch */
+export function patchLocalSettings(patch) {
+  applyLocalSettingsPatch(patch, settingsCtx())
+}
+
+/** @param {Record<string, unknown> | null | undefined} cloudSettings */
+export function applyCloudSettingsMerge(cloudSettings) {
+  S.settings = mergeCloudIntoLocal(S.settings, cloudSettings)
+  save()
+}
+
+/** @param {'player' | 'lyrics' | 'queue'} mode */
+export function setImmersiveViewMode(mode) {
+  patchLocalSettings({ immersiveViewMode: mode })
 }
 
 function load() {

@@ -2,9 +2,9 @@
   import { t } from '$lib/i18n/index.js'
   import {
     S,
-    save,
     applyTheme,
     setImmersiveViewMode,
+    patchCloudSettings,
   } from '$lib/state.svelte.js'
   import {
     getCurrentTrack,
@@ -29,6 +29,7 @@
     uploadPendingAudio,
   } from '$lib/cloudAudio.js'
   import { toast } from '$lib/ui.svelte.js'
+  import { setLocale } from '$lib/i18n/index.js'
 
   let count = $state(0)
   let missingLyrics = $state(0)
@@ -60,23 +61,19 @@
   })
 
   function setTheme(theme) {
-    S.settings.theme = theme
-    save()
+    patchCloudSettings({ theme })
     applyTheme()
   }
 
   /** @param {boolean} enabled */
   function setGapless(enabled) {
-    S.settings.gapless = enabled
-    save()
+    patchCloudSettings({ gapless: enabled })
     notifyPlaybackSettingsChanged()
   }
 
   /** @param {number} ms */
   function setCrossfadeMs(ms) {
-    S.settings.crossfadeMs = ms
-    S.settings.crossfade = ms > 0
-    save()
+    patchCloudSettings({ crossfadeMs: ms, crossfade: ms > 0 })
     notifyPlaybackSettingsChanged()
   }
 
@@ -93,11 +90,20 @@
 
   /** @param {boolean} enabled */
   function setAlbumAmbience(enabled) {
-    S.settings.albumAmbience = enabled
-    save()
+    patchCloudSettings({ albumAmbience: enabled })
     refreshTrackAmbience(
       getCurrentTrack() ?? player.queue[player.index] ?? null,
     )
+  }
+
+  /** @param {boolean} enabled */
+  function setAutoContinueSimilar(enabled) {
+    patchCloudSettings({ autoContinueSimilar: enabled })
+  }
+
+  /** @param {'zh' | 'en'} locale */
+  function setLanguage(locale) {
+    setLocale(locale)
   }
 
   async function exportMeta() {
@@ -305,6 +311,28 @@
   {/if}
 
   <section class="settings-block set-group">
+    <h3 class="block-title sg-title">{t('settings.language')}</h3>
+    <div class="set-row settings-row">
+      <div class="pref-copy">
+        <div class="pref-label">{t('settings.languageLabel')}</div>
+        <div class="pref-desc">{t('settings.languageDesc')}</div>
+      </div>
+      <div class="pref-control seg">
+        <button
+          type="button"
+          class:active={S.settings.locale === 'zh'}
+          onclick={() => setLanguage('zh')}>{t('settings.languageZh')}</button
+        >
+        <button
+          type="button"
+          class:active={S.settings.locale === 'en'}
+          onclick={() => setLanguage('en')}>{t('settings.languageEn')}</button
+        >
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.theme')}</h3>
     <div class="set-row settings-row">
       <div class="pref-copy">
@@ -398,6 +426,31 @@
           onclick={() => setAlbumAmbience(false)}
         >
           {t('settings.albumAmbienceOff')}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-block set-group">
+    <h3 class="block-title sg-title">{t('settings.autoContinueSimilar')}</h3>
+    <p class="block-desc" style="padding:0 18px 12px">
+      {t('settings.autoContinueSimilarDesc')}
+    </p>
+    <div class="set-row settings-row">
+      <div class="pref-control seg settings-seg-full">
+        <button
+          type="button"
+          class:active={S.settings.autoContinueSimilar !== false}
+          onclick={() => setAutoContinueSimilar(true)}
+        >
+          {t('settings.autoContinueSimilarOn')}
+        </button>
+        <button
+          type="button"
+          class:active={S.settings.autoContinueSimilar === false}
+          onclick={() => setAutoContinueSimilar(false)}
+        >
+          {t('settings.autoContinueSimilarOff')}
         </button>
       </div>
     </div>

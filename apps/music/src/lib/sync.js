@@ -12,7 +12,11 @@ import {
   getPlaylistTracks,
 } from './db.js'
 import { peekAlbumArt, setAlbumArtRemoteUrl } from './albumArtStore.js'
-import { S, save } from './state.svelte.js'
+import { S } from './state.svelte.js'
+import {
+  pickCloudSettings,
+  applyCloudSettingsMerge,
+} from './settingsPersistence.js'
 import { t } from './i18n/index.js'
 import { notifySyncError, withSyncNotify } from './syncNotify.js'
 
@@ -56,7 +60,7 @@ async function pushLocal(userId) {
 
   await supabase.from(T.userState).upsert({
     user_id: userId,
-    settings: S.settings,
+    settings: pickCloudSettings(S.settings),
     schema_version: SCHEMA_VERSION,
     updated_at: new Date().toISOString(),
   })
@@ -144,8 +148,7 @@ async function pushLocal(userId) {
 async function pullCloud(userId) {
   const snap = await fetchCloudSnapshot(userId)
   if (snap.state?.settings) {
-    S.settings = { ...S.settings, ...snap.state.settings }
-    save()
+    applyCloudSettingsMerge(snap.state.settings)
     applyThemeFromCloud()
   }
 
@@ -271,7 +274,9 @@ async function syncBidirectionalInternal(opts = {}) {
   await pushLocal(user.id)
   await pullCloud(user.id)
   if (!opts.silent) {
-    import('./ui.svelte.js').then(({ toast }) => toast(t('sync.ok'), 'success', { key: 'sync-ok' }))
+    import('./ui.svelte.js').then(({ toast }) =>
+      toast(t('sync.ok'), 'success', { key: 'sync-ok' }),
+    )
   }
 }
 

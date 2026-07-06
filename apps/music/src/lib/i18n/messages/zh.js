@@ -188,8 +188,19 @@ export default {
     drop: '拖放音频或 LRC 文件到此处',
     or: '或选择文件',
     hint: '支持 MP3、M4A、FLAC、WAV 等音频，以及同名 .lrc 歌词。文件保存在本机 IndexedDB。',
+    hintCloud:
+      '支持 MP3、M4A、FLAC、WAV 等音频及 .lrc 歌词。登录后会自动上传到 Supabase 私有云存储，并写入 genre / vibe / context 等推荐标签。',
     importing: '正在导入 {done}/{total}…',
+    phaseArt: '正在补全封面…',
+    phaseMetadata: '正在校正元数据…',
+    phaseUpload: '正在上传云端 {done}/{total}…',
+    phaseTags: '正在打标 {done}/{total}…',
+    phaseSync: '正在同步元数据…',
     done: '已导入 {count} 首',
+    doneLocal: '已导入 {count} 首（登录后可自动上传与打标）',
+    doneCloud: '已导入 {count} 首，上传 {uploaded} 首，打标 {tagged} 首',
+    doneCloudPartial:
+      '已导入 {count} 首，上传成功 {uploaded} 首（失败 {failed}），打标 {tagged} 首',
     doneMixed: '已导入 {audio} 首音频，匹配 {lrc} 首歌词',
   },
   utilityPane: {
@@ -243,6 +254,11 @@ export default {
   artist: { title: '艺术家' },
   settings: {
     title: '设置',
+    language: '语言',
+    languageLabel: '界面语言',
+    languageDesc: '跨设备同步；登录后会自动备份到云端。',
+    languageZh: '中文',
+    languageEn: 'English',
     theme: '主题',
     themeAuto: '跟随系统',
     themeLight: '浅色',
@@ -264,6 +280,11 @@ export default {
       '切歌时旧曲渐弱、新曲渐强（Web Audio 等功率曲线）；设为 0 则仅无缝硬切。云端曲目会同步预缓存下一首。',
     crossfadeOff: '关闭',
     crossfadeSeconds: '{seconds} 秒',
+    autoContinueSimilar: '相似续播',
+    autoContinueSimilarDesc:
+      '队列播完时，按当前曲目的 vibe 标签自动追加相似歌曲（需登录）。',
+    autoContinueSimilarOn: '开启',
+    autoContinueSimilarOff: '关闭',
     immersiveViewMode: '正在播放默认视图',
     immersiveViewModeDesc: '进入正在播放页时的默认视图；页内可随时切换。',
     privacy: '隐私',
