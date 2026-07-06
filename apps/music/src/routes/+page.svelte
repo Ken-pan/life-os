@@ -18,8 +18,10 @@
     HOME_FILTERS,
     shouldShowSection,
     filterTracks,
+    filterQuickPicks,
     filterSpeedDialPages
   } from '$lib/homeFilter.js';
+  import { db } from '$lib/db.js';
   import {
     playTracks,
     getCurrentTrack,
@@ -43,10 +45,15 @@
   let homeFilter = $state('all');
   /** @type {Awaited<ReturnType<typeof restoreLastSession>>} */
   let lastSession = $state(null);
+  let hasOfflineTracks = $state(false);
 
   const spotlight = $derived(getCurrentTrack());
 
+  const visibleFilters = $derived(
+    hasOfflineTracks ? HOME_FILTERS : HOME_FILTERS.filter((f) => f !== 'offline')
+  );
   const filteredSpeedDialPages = $derived(filterSpeedDialPages(speedDialPages, homeFilter));
+  const filteredQuickPicks = $derived(filterQuickPicks(quickPicks, homeFilter, recent));
   const filteredRecent = $derived(filterTracks(recent, homeFilter));
   const filteredRecentAdded = $derived(filterTracks(recentAdded, homeFilter));
 
@@ -60,6 +67,8 @@
   });
 
   onMount(async () => {
+    hasOfflineTracks =
+      (await db.tracks.filter((t) => t.audioBlob instanceof Blob).count()) > 0;
     await reloadHome();
   });
 
@@ -101,8 +110,11 @@
   }
 
   function playAllQuickPicks() {
-    if (!quickPicks.length) return;
-    playTracks(quickPicks, 0, 'quick_picks', { entityType: 'collection', entityId: 'quick_picks' });
+    if (!filteredQuickPicks.length) return;
+    playTracks(filteredQuickPicks, 0, 'quick_picks', {
+      entityType: 'collection',
+      entityId: 'quick_picks'
+    });
   }
 
   function openLyrics() {
@@ -119,7 +131,7 @@
   {#if total > 0}
     <div class="home-filters-wrap">
       <div class="seg seg-chips home-filters" role="tablist" aria-label={t('common.filter')}>
-        {#each HOME_FILTERS as filter (filter)}
+        {#each visibleFilters as filter (filter)}
           <button
             type="button"
             role="tab"
@@ -192,7 +204,7 @@
     </div>
   {/if}
 
-  {#if shouldShowSection(homeFilter, 'quickPicks') && quickPicks.length}
+  {#if shouldShowSection(homeFilter, 'quickPicks') && filteredQuickPicks.length}
     <section class="page-section quick-picks-section">
       <div class="page-section-head">
         <h3 class="page-section-title">{t('home.quickPicks')}</h3>
@@ -200,8 +212,14 @@
           {t('home.quickPicksPlayAll')}
         </button>
       </div>
-      {#each quickPicks as track, i (track.id)}
-        <TrackRow {track} tracks={quickPicks} index={i} compactActions playSource="quick_picks" />
+      {#each filteredQuickPicks as track, i (track.id)}
+        <TrackRow
+          {track}
+          tracks={filteredQuickPicks}
+          index={i}
+          compactActions
+          playSource="quick_picks"
+        />
       {/each}
     </section>
   {/if}

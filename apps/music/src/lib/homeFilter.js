@@ -14,6 +14,11 @@ export function hasCJK(text) {
   return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(text || '');
 }
 
+/** @param {import('./types.js').Track & { audioBlob?: Blob }} track */
+export function hasLocalAudio(track) {
+  return track.audioBlob instanceof Blob;
+}
+
 /** @param {HomeFilter} filter @param {'now' | 'speedDial' | 'quickPicks' | 'recentAdded' | 'recent' | 'topArtists'} section */
 export function shouldShowSection(filter, section) {
   const visibility = {
@@ -36,9 +41,26 @@ export function filterTracks(tracks, filter) {
       return tracks.filter((t) => hasCJK(t.title) || hasCJK(t.artist) || hasCJK(t.album));
     case 'lateNight':
       return tracks.filter((t) => (t.duration || 0) >= 200);
+    case 'offline':
+      return tracks.filter(hasLocalAudio);
     default:
       return tracks;
   }
+}
+
+/**
+ * Quick picks respect chip filters; "recent" narrows to the recent-play pool.
+ * @param {import('./types.js').Track[]} quickPicks
+ * @param {HomeFilter} filter
+ * @param {import('./types.js').Track[]} recentTracks
+ */
+export function filterQuickPicks(quickPicks, filter, recentTracks) {
+  let picks = filterTracks(quickPicks, filter);
+  if (filter === 'recent') {
+    const recentIds = new Set(recentTracks.map((t) => t.id));
+    picks = picks.filter((t) => recentIds.has(t.id));
+  }
+  return picks;
 }
 
 /** @param {import('./speedDial.js').SpeedDialPage[]} pages @param {HomeFilter} filter */
