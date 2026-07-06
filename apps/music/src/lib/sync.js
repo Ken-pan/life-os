@@ -19,6 +19,7 @@ export function syncErrorMessage(err) {
   const msg = err?.message || '';
   if (/rate limit|too many requests/i.test(msg)) return t('auth.errRateLimit');
   if (/network|fetch/i.test(msg)) return t('auth.errNetwork');
+  if (/schema cache|PGRST002/i.test(msg)) return t('sync.schemaCache');
   return msg || t('sync.failed');
 }
 
@@ -221,7 +222,7 @@ export async function syncBidirectionalSafe(opts = {}) {
     await syncBidirectional(opts);
   } catch (err) {
     if (!opts.silent) {
-      import('./ui.svelte.js').then(({ toast }) => toast(syncErrorMessage(err)));
+      import('./ui.svelte.js').then(({ toast }) => toast(syncErrorMessage(err), { error: true }));
     }
     throw err;
   }

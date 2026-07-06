@@ -6,8 +6,8 @@ project_id = "MusicOS"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "graphql_public", "music", "fitness", "planner"]
-extra_search_path = ["public", "extensions", "music", "fitness", "planner"]
+schemas = ["public", "graphql_public", "music", "fitness"]
+extra_search_path = ["public", "extensions", "music", "fitness"]
 max_rows = 1000
 
 [db]

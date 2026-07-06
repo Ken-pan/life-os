@@ -2,7 +2,7 @@
   "id": "/",
   "name": "MUSIC.OS",
   "short_name": "MUSIC",
-  "description": "本地音乐，留在心里 · 离线播放与歌单",
+  "description": "本地与云端音乐 · 离线播放、歌单与私有云备份",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

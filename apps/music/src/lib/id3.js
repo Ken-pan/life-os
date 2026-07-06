@@ -176,12 +176,12 @@ function readPictureFrame(frame) {
   return { mime: mime || 'image/jpeg', data };
 }
 
-/** @param {string} name */
+/** @param {string} name — expects "Title - Artist" (WeChat / common CN exports) when ID3 is missing */
 export function parseFilename(name) {
   const base = name.replace(/\.[^.]+$/, '');
   const parts = base.split(' - ');
   if (parts.length >= 2) {
-    return { artist: parts[0].trim(), title: parts.slice(1).join(' - ').trim() };
+    return { title: parts[0].trim(), artist: parts.slice(1).join(' - ').trim() };
   }
   return { artist: '未知艺术家', title: base.trim() || '未命名' };
 }
