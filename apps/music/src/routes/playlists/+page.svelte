@@ -22,8 +22,7 @@
 </script>
 
 <div class="wrap">
-  <div class="page-section-head" style="margin-top:0">
-    <h2 class="page-title">{t('playlists.title')}</h2>
+  <div class="page-toolbar">
     <button class="btn-primary" type="button" onclick={onCreate}>
       <Icon name="plus" size={16} /> {t('playlists.create')}
     </button>

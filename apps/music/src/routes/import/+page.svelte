@@ -38,7 +38,6 @@
 </script>
 
 <div class="wrap">
-  <h2 class="page-title">{t('import.title')}</h2>
   <p class="page-sub" style="margin-bottom:20px">{t('import.hint')}</p>
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->

@@ -8,9 +8,30 @@
   import LyricsPanel from '$lib/components/LyricsPanel.svelte';
   import { swipeDismiss, swipeTrack } from '$lib/gestures.js';
   import { consumeNowPlayingReturn, ensureNowPlayingReturn } from '$lib/nav.js';
-  import { player, nextTrack, prevTrack, togglePlay } from '$lib/player.svelte.js';
+  import { player, nextTrack, prevTrack, togglePlay, refreshQueueMetadata } from '$lib/player.svelte.js';
+  import { db } from '$lib/db.js';
+  import { fetchLyricsForTrack } from '$lib/lyricsFetch.js';
+  import { scheduleAutoCloudPush } from '$lib/sync.js';
 
   const track = $derived(player.queue[player.index] ?? null);
+
+  $effect(() => {
+    const tr = track;
+    if (!tr?.id || tr.lyrics?.trim()) return;
+    let cancelled = false;
+
+    void (async () => {
+      const fetched = await fetchLyricsForTrack(tr);
+      if (cancelled || !fetched?.text) return;
+      await db.tracks.update(tr.id, { lyrics: fetched.text });
+      await refreshQueueMetadata();
+      scheduleAutoCloudPush();
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  });
 
   function dismiss() {
     goto(consumeNowPlayingReturn('/'));
@@ -40,20 +61,28 @@
   {#if track}
     <button class="now-playing-handle" type="button" aria-label={t('common.back')} onclick={dismiss}></button>
 
-    <div class="now-playing-swipe-zone" use:swipeDismiss={{ onDismiss: dismiss }}>
-      <div class="now-playing-art-wrap" use:swipeTrack={{ onPrev: prevTrack, onNext: nextTrack }}>
-        <TrackArt artUrl={track.artUrl} seed={track.id} class="now-playing-art" shared />
+    <div class="now-playing-layout" use:swipeDismiss={{ onDismiss: dismiss }}>
+      <div class="now-playing-art-col">
+        <div class="now-playing-art-wrap" use:swipeTrack={{ onPrev: prevTrack, onNext: nextTrack }}>
+          <TrackArt artUrl={track.artUrl} seed={track.id} class="now-playing-art" shared />
+        </div>
       </div>
-      <div class="now-playing-copy">
-        <h1 class="now-playing-title">{track.title}</h1>
-        <p class="now-playing-artist">{track.artist}</p>
-        <p class="now-playing-album">{track.album}</p>
+
+      <div class="now-playing-main-col">
+        <div class="now-playing-copy">
+          <h1 class="now-playing-title">{track.title}</h1>
+          <p class="now-playing-artist">{track.artist}</p>
+          <p class="now-playing-album">{track.album}</p>
+        </div>
+
+        <div class="now-playing-controls-stack">
+          <AudioVisualizer />
+          <PlayerControls large />
+        </div>
+
+        <LyricsPanel lyrics={track.lyrics} currentTime={player.currentTime} />
       </div>
     </div>
-
-    <AudioVisualizer />
-    <PlayerControls large />
-    <LyricsPanel lyrics={track.lyrics} currentTime={player.currentTime} />
   {:else}
     <div class="empty-state">
       <p>{t('common.empty')}</p>

@@ -64,14 +64,60 @@ function readStr(view, offset, len) {
   return s;
 }
 
+/** @param {string} s */
+export function isValidMeta(s) {
+  const t = String(s ?? '')
+    .replace(/\0/g, '')
+    .trim();
+  if (!t || t.length > 240) return false;
+  if (t.includes('\uFFFD')) return false;
+  if (/[\u0000-\u0008\u000e-\u001f]/.test(t)) return false;
+  const highBytes = (t.match(/[\u0080-\u00ff]/g) || []).length;
+  const cjk = (t.match(/[\u4e00-\u9fff]/g) || []).length;
+  if (highBytes >= 3 && cjk === 0 && highBytes > t.length * 0.35) return false;
+  return true;
+}
+
+/** @param {Uint8Array} bytes */
+function tryDecodeGbk(bytes) {
+  try {
+    return new TextDecoder('gbk').decode(bytes);
+  } catch {
+    return '';
+  }
+}
+
+/** @param {...string} candidates */
+function pickBestDecoded(...candidates) {
+  for (const c of candidates) {
+    const cleaned = String(c).replace(/\0+$/, '').trim();
+    if (isValidMeta(cleaned)) return cleaned;
+  }
+  for (const c of candidates) {
+    const cleaned = String(c).replace(/\0+$/, '').trim();
+    if (cleaned) return cleaned;
+  }
+  return '';
+}
+
 /** @param {Uint8Array} frame */
 function readTextFrame(frame) {
   if (!frame.length) return '';
   const enc = frame[0];
   const bytes = frame.subarray(1);
-  if (enc === 0x00) return decodeLatin1(bytes).replace(/\0+$/, '');
-  if (enc === 0x03) return new TextDecoder('utf-8').decode(bytes).replace(/\0+$/, '');
-  return new TextDecoder('utf-8').decode(bytes).replace(/\0+$/, '');
+  if (enc === 0x00) {
+    return pickBestDecoded(decodeLatin1(bytes), tryDecodeGbk(bytes)).replace(/\0+$/, '');
+  }
+  if (enc === 0x01) return decodeUtf16(bytes, false).replace(/\0+$/, '');
+  if (enc === 0x02) return decodeUtf16(bytes, true).replace(/\0+$/, '');
+  if (enc === 0x03) {
+    return pickBestDecoded(new TextDecoder('utf-8').decode(bytes), tryDecodeGbk(bytes)).replace(/\0+$/, '');
+  }
+  return pickBestDecoded(
+    decodeUtf16(bytes, false),
+    new TextDecoder('utf-8').decode(bytes),
+    tryDecodeGbk(bytes)
+  ).replace(/\0+$/, '');
 }
 
 /** @param {Uint8Array} bytes */
@@ -148,13 +194,23 @@ function skipEncodedString(frame, i, enc) {
   return i + 1;
 }
 
-/** @param {Uint8Array} bytes */
-function decodeUtf16(bytes) {
+/** @param {Uint8Array} bytes @param {boolean} [forceBe] */
+function decodeUtf16(bytes, forceBe = false) {
   if (bytes.length < 2) return '';
-  const le = bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xfe;
+  let le = true;
+  let start = 0;
+  if (forceBe) {
+    le = false;
+  } else if (bytes[0] === 0xff && bytes[1] === 0xfe) {
+    le = true;
+    start = 2;
+  } else if (bytes[0] === 0xfe && bytes[1] === 0xff) {
+    le = false;
+    start = 2;
+  }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let s = '';
-  for (let i = le ? 2 : 0; i + 1 < bytes.length; i += 2) {
+  for (let i = start; i + 1 < bytes.length; i += 2) {
     s += String.fromCharCode(view.getUint16(i, le));
   }
   return s;

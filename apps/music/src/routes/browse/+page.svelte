@@ -3,20 +3,21 @@
   import { t } from '$lib/i18n/index.js';
   import TrackArt from '$lib/components/TrackArt.svelte';
   import { getAlbumGroups, getArtistGroups } from '$lib/db.js';
+  import { ensureArtRepaired } from '$lib/import.js';
 
   let tab = $state('albums');
   let albums = $state([]);
   let artists = $state([]);
 
   onMount(async () => {
+    await ensureArtRepaired();
     albums = await getAlbumGroups();
     artists = await getArtistGroups();
   });
 </script>
 
 <div class="wrap">
-  <h2 class="page-title">{t('browse.title')}</h2>
-  <div class="seg" style="margin: 16px 0">
+  <div class="seg" style="margin: 0 0 16px">
     <button type="button" class:active={tab === 'albums'} onclick={() => (tab = 'albums')}>{t('browse.albums')}</button>
     <button type="button" class:active={tab === 'artists'} onclick={() => (tab = 'artists')}>{t('browse.artists')}</button>
   </div>

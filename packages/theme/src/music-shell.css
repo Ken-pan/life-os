@@ -6,7 +6,8 @@
 
 :root {
   --mini-player-h: 68px;
-  --player-art-size: clamp(280px, 72vw, 360px);
+  --player-art-size: clamp(240px, min(72vw, 52vh), 360px);
+  --player-stage-max: min(1040px, 100%);
   --player-art-radius: 20px;
   --player-glow: color-mix(in srgb, var(--accent) 42%, transparent);
   --track-accent: var(--accent);
@@ -14,6 +15,13 @@
   --progress-bg: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
   --progress-fill: var(--track-accent, var(--accent));
   --queue-drawer-max-h: min(52dvh, 420px);
+}
+
+.main-wrap:has(.now-playing) #main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* 有 mini player 时抬高主内容 / 底栏 */
@@ -131,12 +139,15 @@
 
 /* ── Now Playing 全屏 ── */
 .now-playing {
+  flex: 1;
+  width: 100%;
   min-height: calc(100dvh - var(--page-header-h) - var(--mobile-tabbar-total-h));
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: var(--space-3) var(--content-inline-pad) calc(var(--space-8) + var(--safe-bottom-effective));
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .now-playing-handle {
@@ -149,23 +160,52 @@
   flex-shrink: 0;
 }
 
-.now-playing-swipe-zone {
+.now-playing-layout {
+  width: min(100%, var(--player-stage-max));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-6);
-  width: 100%;
+  gap: var(--space-5);
   touch-action: pan-x;
   transition:
     transform var(--dur-base) var(--ease-emphasized),
     opacity var(--dur-base) var(--ease-standard);
 }
 
+.now-playing-art-col {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.now-playing-main-col {
+  width: min(100%, 480px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.now-playing-controls-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.now-playing-controls-stack :global(.player-controls),
+.now-playing-controls-stack :global(.player-progress) {
+  width: 100%;
+  max-width: 480px;
+}
+
 .now-playing-art-wrap {
   position: relative;
   width: var(--player-art-size);
+  max-width: 100%;
   aspect-ratio: 1;
-  margin-top: var(--space-4);
+  margin-top: var(--space-2);
 }
 
 .now-playing-art-wrap::before {
@@ -280,7 +320,8 @@
 
 .now-playing-copy {
   text-align: center;
-  max-width: 420px;
+  width: 100%;
+  max-width: 480px;
 }
 
 .now-playing-title {
@@ -660,7 +701,60 @@
   padding: var(--space-2) var(--space-4);
 }
 
+@media (--life-os-tablet) {
+  :root {
+    --player-art-size: clamp(260px, min(42vw, 46vh), 380px);
+  }
+
+  .album-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+@media (--life-os-mobile-landscape) {
+  .now-playing {
+    min-height: auto;
+    padding-top: var(--space-2);
+    padding-bottom: calc(var(--space-4) + var(--safe-bottom-effective));
+  }
+
+  .now-playing-layout {
+    display: grid;
+    grid-template-columns: minmax(200px, 38vw) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-5) var(--space-6);
+  }
+
+  .now-playing-art-col {
+    justify-content: center;
+  }
+
+  .now-playing-art-wrap {
+    margin-top: 0;
+    width: min(var(--player-art-size), 100%);
+  }
+
+  .now-playing-main-col {
+    width: auto;
+    max-width: none;
+    align-self: center;
+  }
+
+  .now-playing-copy {
+    text-align: left;
+  }
+
+  .now-playing-lyrics {
+    max-height: 22dvh;
+  }
+}
+
 @media (--life-os-desktop) {
+  :root {
+    --player-art-size: clamp(300px, 28vw, 420px);
+    --player-stage-max: min(1080px, calc(100vw - var(--sidebar-w) - var(--page-gutter-desktop) * 2));
+  }
+
   .mini-player {
     bottom: 0;
     left: var(--sidebar-w);
@@ -669,5 +763,58 @@
 
   .now-playing {
     min-height: calc(100dvh - var(--page-header-h));
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-8);
+    display: grid;
+    place-items: center;
+    align-content: center;
+  }
+
+  .now-playing-handle {
+    display: none;
+  }
+
+  .now-playing-layout {
+    display: grid;
+    grid-template-columns: var(--player-art-size) minmax(360px, 520px);
+    justify-content: center;
+    width: auto;
+    max-width: var(--player-stage-max);
+    margin-inline: auto;
+    align-items: center;
+    gap: clamp(var(--space-6), 4vw, var(--space-10));
+  }
+
+  .now-playing-art-col {
+    justify-content: center;
+  }
+
+  .now-playing-art-wrap {
+    margin-top: 0;
+    width: 100%;
+  }
+
+  .now-playing-main-col {
+    width: auto;
+    max-width: min(520px, 100%);
+    gap: var(--space-5);
+  }
+
+  .now-playing-copy {
+    text-align: left;
+    max-width: none;
+  }
+
+  .now-playing-lyrics {
+    max-height: min(32dvh, 280px);
+  }
+
+  .album-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-5);
+  }
+
+  .mood-hero-desc {
+    max-width: 48ch;
   }
 }

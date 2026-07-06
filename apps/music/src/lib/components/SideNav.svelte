@@ -17,8 +17,9 @@
       <img src="/icon.svg" alt="" class="brand-mark" width="28" height="28" />
       <span class="brand-copy">
         <span class="brand-name" aria-hidden="true">
-          MUSIC<span class="brand-dot">.</span>OS
+          <span class="brand-name-base">MUSIC</span><span class="brand-name-accent">OS</span>
         </span>
+        <span class="brand-tag">{t('app.tagline')}</span>
       </span>
     </div>
 

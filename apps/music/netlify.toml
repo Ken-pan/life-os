@@ -6,6 +6,11 @@
 [build.environment]
   NODE_VERSION = "22"
 
+[functions]
+  directory = "apps/music/netlify/functions"
+
+# lyrics-fetch 通过 export const config.path 直接挂载 /api/lyrics/fetch，无需 rewrite
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

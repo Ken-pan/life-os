@@ -30,6 +30,13 @@ function load() {
 
 export const S = $state(load());
 
+/** Bumped after background cover repair so list pages can reload. */
+export const librarySignals = $state({ epoch: 0 });
+
+export function bumpLibraryEpoch() {
+  librarySignals.epoch += 1;
+}
+
 export function save() {
   if (!browser) return;
   localStorage.setItem(SKEY, JSON.stringify(S));

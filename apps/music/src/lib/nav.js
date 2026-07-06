@@ -60,6 +60,16 @@ export function ensureNowPlayingReturn(from) {
   markNowPlayingReturn(from);
 }
 
+/** @param {string} pathname */
+export function resolvePageBack(pathname) {
+  if (pathname.startsWith('/album/') || pathname.startsWith('/artist/')) return '/browse';
+  if (pathname.startsWith('/playlists/')) return '/playlists';
+  if (pathname === '/import') return '/library';
+  if (pathname === '/liked') return '/playlists';
+  if (pathname === '/auth') return '/settings';
+  return null;
+}
+
 /** @param {string} pathname @param {(k: string) => string} tr */
 export function resolvePageTitle(pathname, tr) {
   if (pathname === '/') return tr('home.title');

@@ -17,7 +17,6 @@
 </script>
 
 <div class="wrap">
-  <h2 class="page-title">{t('search.title')}</h2>
   <input class="search-input" type="search" placeholder={t('search.placeholder')} value={q} oninput={onInput} />
 
   <section class="page-section">

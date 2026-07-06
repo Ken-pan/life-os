@@ -1,9 +1,10 @@
 <script>
-  import { onMount } from 'svelte';
   import { page } from '$app/state';
+  import { t } from '$lib/i18n/index.js';
   import TrackRow from '$lib/components/TrackRow.svelte';
   import { db, getPlaylistTracks } from '$lib/db.js';
   import { playTracks } from '$lib/player.svelte.js';
+  import { setPageChrome, resetPageChrome } from '$lib/pageChrome.svelte.js';
 
   const id = $derived(page.params.id);
   let name = $state('');
@@ -17,15 +18,19 @@
       tracks = await getPlaylistTracks(id);
     })();
   });
+
+  $effect(() => {
+    setPageChrome({ title: name || null });
+    return () => resetPageChrome();
+  });
 </script>
 
 <div class="wrap">
-  <div class="page-section-head" style="margin-top:0">
-    <h2 class="page-title">{name}</h2>
-    {#if tracks.length}
-      <button class="btn-primary" type="button" onclick={() => playTracks(tracks, 0)}>播放全部</button>
-    {/if}
-  </div>
+  {#if tracks.length}
+    <div class="page-toolbar">
+      <button class="btn-primary" type="button" onclick={() => playTracks(tracks, 0)}>{t('common.playAll')}</button>
+    </div>
+  {/if}
   {#each tracks as track, i (track.id)}
     <TrackRow {track} {tracks} index={i} />
   {/each}

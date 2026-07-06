@@ -1,8 +1,10 @@
 <script>
   import { page } from '$app/state';
+  import { t } from '$lib/i18n/index.js';
   import TrackRow from '$lib/components/TrackRow.svelte';
   import { getTracksByAlbum } from '$lib/db.js';
   import { playTracks } from '$lib/player.svelte.js';
+  import { setPageChrome, resetPageChrome } from '$lib/pageChrome.svelte.js';
 
   const albumKey = $derived(decodeURIComponent(page.params.id));
   let title = $state('');
@@ -16,18 +18,19 @@
       artist = tracks[0]?.artist || '';
     })();
   });
+
+  $effect(() => {
+    setPageChrome({ title: title || null, subtitle: artist || null });
+    return () => resetPageChrome();
+  });
 </script>
 
 <div class="wrap">
-  <div class="page-section-head" style="margin-top:0">
-    <div>
-      <h2 class="page-title">{title}</h2>
-      <p class="page-sub">{artist}</p>
+  {#if tracks.length}
+    <div class="page-toolbar">
+      <button class="btn-primary" type="button" onclick={() => playTracks(tracks, 0)}>{t('common.playAlbum')}</button>
     </div>
-    {#if tracks.length}
-      <button class="btn-primary" type="button" onclick={() => playTracks(tracks, 0)}>播放专辑</button>
-    {/if}
-  </div>
+  {/if}
   {#each tracks as track, i (track.id)}
     <TrackRow {track} {tracks} index={i} />
   {/each}

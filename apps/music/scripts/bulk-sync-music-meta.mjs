@@ -8,6 +8,7 @@ import { readdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { parseId3, isValidMeta } from '../src/lib/id3.js';
 
 const userId = process.argv[2];
 const dirs = process.argv.slice(3);
@@ -30,67 +31,6 @@ function parseFilename(name) {
     return { title: parts[0].trim(), artist: parts.slice(1).join(' - ').trim() };
   }
   return { artist: '未知艺术家', title: base.trim() || '未命名' };
-}
-
-function isValidMeta(s) {
-  const t = cleanText(s);
-  if (!t || t.length > 240) return false;
-  if (/[\u0000-\u0008\u000e-\u001f\u007f-\u009f]/.test(t)) return false;
-  // Reject obvious mojibake runs from mis-decoded ID3
-  if (/^[\u0080-\u00ff]{4,}$/.test(t)) return false;
-  return true;
-}
-
-function readStr(view, offset, len) {
-  let s = '';
-  for (let i = 0; i < len; i++) s += String.fromCharCode(view.getUint8(offset + i));
-  return s;
-}
-
-function syncsafe(view, offset) {
-  return (
-    ((view.getUint8(offset) & 0x7f) << 21) |
-    ((view.getUint8(offset + 1) & 0x7f) << 14) |
-    ((view.getUint8(offset + 2) & 0x7f) << 7) |
-    (view.getUint8(offset + 3) & 0x7f)
-  );
-}
-
-function readTextFrame(frame) {
-  if (!frame.length) return '';
-  const enc = frame[0];
-  const bytes = frame.subarray(1);
-  if (enc === 0x00) {
-    let s = '';
-    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
-    return s.replace(/\0+$/, '');
-  }
-  return new TextDecoder('utf-8').decode(bytes).replace(/\0+$/, '');
-}
-
-function parseId3(buffer) {
-  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-  if (buffer.byteLength < 10) return null;
-  if (readStr(view, 0, 3) !== 'ID3') return null;
-  const version = view.getUint8(3);
-  const size = syncsafe(view, 6);
-  if (size <= 0 || 10 + size > buffer.byteLength) return null;
-  const out = {};
-  let offset = 10;
-  const end = 10 + size;
-  while (offset + 10 <= end) {
-    const frameId = readStr(view, offset, 4);
-    if (!frameId || frameId === '\0\0\0\0') break;
-    const frameSize = version === 4 ? syncsafe(view, offset + 4) : view.getUint32(offset + 4);
-    offset += 10;
-    if (offset + frameSize > end) break;
-    const frame = buffer.subarray(offset, offset + frameSize);
-    offset += frameSize;
-    if (frameId === 'TIT2') out.title = readTextFrame(frame);
-    else if (frameId === 'TPE1') out.artist = readTextFrame(frame);
-    else if (frameId === 'TALB') out.album = readTextFrame(frame);
-  }
-  return out;
 }
 
 function cleanText(v) {

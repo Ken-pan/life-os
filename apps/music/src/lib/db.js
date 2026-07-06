@@ -19,11 +19,21 @@ export function trackWords(track) {
   return `${track.title || ''} ${track.artist || ''} ${track.album || ''}`.toLowerCase().split(/\s+/).filter(Boolean);
 }
 
-/** @param {import('./types.js').Track & { audioBlob?: Blob, objectUrl?: string }} track */
+/** @param {import('./types.js').Track & { audioBlob?: Blob, artBlob?: Blob, objectUrl?: string }} track */
 export function hydrateTrack(track) {
   if (!track) return track;
   if (track.audioBlob && !track.objectUrl) {
     track.objectUrl = URL.createObjectURL(track.audioBlob);
+  }
+  if (track.artBlob instanceof Blob) {
+    if (!track.artUrl) {
+      track.artUrl = URL.createObjectURL(track.artBlob);
+    }
+  } else if (typeof track.artRemoteUrl === 'string' && track.artRemoteUrl.startsWith('https://')) {
+    track.artUrl = track.artRemoteUrl;
+  } else if (track.artUrl?.startsWith('blob:')) {
+    // blob: URLs are session-only; persisted values break after reload.
+    delete track.artUrl;
   }
   return track;
 }
@@ -154,7 +164,7 @@ export async function trackCount() {
 
 /** Tracks that have audio but no lyrics yet. */
 export async function countTracksWithoutLyrics() {
-  return db.tracks.filter((t) => !t.lyrics && Boolean(t.audioBlob)).count();
+  return db.tracks.filter((t) => !t.lyrics?.trim() && Boolean(t.audioBlob || t.storagePath)).count();
 }
 
 /** Ensure built-in playlists */

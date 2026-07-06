@@ -13,12 +13,11 @@
 </script>
 
 <div class="wrap">
-  <div class="page-section-head" style="margin-top:0">
-    <h2 class="page-title">{t('liked.title')}</h2>
-    {#if tracks.length}
-      <button class="btn-primary" type="button" onclick={() => playTracks(tracks, 0)}>播放全部</button>
-    {/if}
-  </div>
+  {#if tracks.length}
+    <div class="page-toolbar">
+      <button class="btn-primary" type="button" onclick={() => playTracks(tracks, 0)}>{t('common.playAll')}</button>
+    </div>
+  {/if}
   {#each tracks as track, i (track.id)}
     <TrackRow {track} {tracks} index={i} />
   {/each}

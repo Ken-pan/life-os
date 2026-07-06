@@ -1,9 +1,20 @@
-import { db, slugKey, trackWords, ensureBuiltinPlaylists, getAllTracks } from './db.js';
-import { parseId3, parseFilename } from './id3.js';
+import { db, slugKey, trackWords, ensureBuiltinPlaylists, getAllTracks, hydrateTrack } from './db.js';
+import { parseId3, parseFilename, isValidMeta } from './id3.js';
 import { lyricsMatchKey } from './lyrics.js';
+import {
+  artBlobFromBuffer,
+  artBlobFromCloudTrack,
+  lookupRemoteArtUrl,
+  lookupRemoteAlbumName,
+  trackNeedsArt
+} from './albumArt.js';
+import { getSignedAudioUrl } from './cloudAudio.js';
+import { fetchLyricsForTrack } from './lyricsFetch.js';
+import { scheduleAutoCloudPush } from './sync.js';
 
 const AUDIO_EXT = /\.(mp3|m4a|aac|flac|wav|ogg|opus)$/i;
 const LRC_EXT = /\.lrc$/i;
+const CLOUD_SNIFF_BYTES = 512 * 1024;
 
 /** @param {FileList | File[]} files @param {(done: number, total: number) => void} [onProgress] */
 export async function importMediaFiles(files, onProgress) {
@@ -38,21 +49,20 @@ export async function importAudioFiles(files, onProgress) {
     const fromName = parseFilename(file.name);
     const title = tags.title || fromName.title;
     const artist = tags.artist || fromName.artist;
-    const album = tags.album || '未知专辑';
+    const album = isValidMeta(tags.album) ? String(tags.album).trim() : '未知专辑';
     const duration = await readDuration(file);
 
-    let artUrl;
+    /** @type {Blob | undefined} */
+    let artBlob;
     if (tags.picture) {
-      const blob = new Blob([tags.picture.data], { type: tags.picture.mime });
-      artUrl = URL.createObjectURL(blob);
+      artBlob = new Blob([tags.picture.data], { type: tags.picture.mime });
     }
 
     const id = await hashFile(file);
     const existing = await db.tracks.get(id);
     if (existing?.objectUrl) URL.revokeObjectURL(existing.objectUrl);
-    if (existing?.artUrl && existing.artUrl !== artUrl) URL.revokeObjectURL(existing.artUrl);
+    if (existing?.artUrl) URL.revokeObjectURL(existing.artUrl);
 
-    const objectUrl = URL.createObjectURL(file);
     /** @type {import('./types.js').Track & { audioBlob: Blob }} */
     const track = {
       id,
@@ -67,7 +77,7 @@ export async function importAudioFiles(files, onProgress) {
       addedAt: existing?.addedAt || Date.now(),
       playCount: existing?.playCount || 0,
       liked: existing?.liked || 0,
-      artUrl,
+      artBlob: artBlob || existing?.artBlob,
       lyrics: tags.lyrics || existing?.lyrics,
       fileName: file.name,
       words: [],
@@ -75,6 +85,7 @@ export async function importAudioFiles(files, onProgress) {
     };
     track.words = trackWords(track);
     await db.tracks.put(track);
+    hydrateTrack(track);
     done += 1;
     onProgress?.(done, list.length);
   }
@@ -123,58 +134,285 @@ export async function importLrcFiles(files, onProgress) {
     onProgress?.(done, list.length);
   }
 
+  if (matched) scheduleAutoCloudPush();
   return matched;
 }
 
 /**
- * Re-parse ID3 tags for local blobs (fills missing lyrics / tags without full re-import).
+ * Re-parse ID3 tags for local blobs and cloud-backed tracks.
  * @param {(done: number, total: number) => void} [onProgress]
  */
 export async function rescanTrackMetadata(onProgress) {
   const tracks = await getAllTracks();
-  const withBlob = tracks.filter((t) => t.audioBlob);
+  const scannable = tracks.filter((t) => t.audioBlob || t.storagePath);
   let updated = 0;
   let done = 0;
 
-  for (const track of withBlob) {
+  for (const track of scannable) {
     try {
-      const buffer = await track.audioBlob.arrayBuffer();
-      const tags = parseId3(buffer) || {};
+      const tags = await id3FromTrack(track);
       /** @type {Partial<import('./types.js').Track>} */
-      const patch = {};
-
-      if (tags.lyrics && tags.lyrics !== track.lyrics) patch.lyrics = tags.lyrics;
-      if (tags.title && tags.title !== track.title) patch.title = tags.title;
-      if (tags.artist && tags.artist !== track.artist) {
-        patch.artist = tags.artist;
-        patch.artistKey = slugKey(tags.artist);
-        patch.albumKey = slugKey(`${tags.artist}::${tags.album || track.album}`);
-      }
-      if (tags.album && tags.album !== track.album) {
-        patch.album = tags.album;
-        patch.albumKey = slugKey(`${patch.artist || track.artist}::${tags.album}`);
-      }
-      if (tags.picture && !track.artUrl) {
-        const blob = new Blob([tags.picture.data], { type: tags.picture.mime });
-        patch.artUrl = URL.createObjectURL(blob);
-      }
+      const patch = metaPatchFromTags(track, tags);
 
       if (Object.keys(patch).length) {
-        if (patch.title || patch.artist || patch.album) {
-          patch.words = trackWords({ ...track, ...patch });
-        }
         await db.tracks.update(track.id, patch);
         updated += 1;
       }
     } catch {
-      /* skip corrupt files */
+      /* skip corrupt / unreachable files */
     }
 
     done += 1;
-    onProgress?.(done, withBlob.length);
+    onProgress?.(done, scannable.length);
   }
 
-  return { scanned: withBlob.length, updated };
+  if (updated) scheduleAutoCloudPush();
+  return { scanned: scannable.length, updated };
+}
+
+/** @param {import('./types.js').Track} track */
+function isGarbledAlbum(album) {
+  return Boolean(album && album !== '未知专辑' && !isValidMeta(album));
+}
+
+/**
+ * Fix garbled album names from ID3 or iTunes lookup (local + cloud-only tracks).
+ * @returns {Promise<number>} count of tracks repaired
+ */
+export async function repairGarbledMetadata() {
+  const tracks = await getAllTracks();
+  const targets = tracks.filter((t) => isGarbledAlbum(t.album));
+  let repaired = 0;
+
+  for (const track of targets) {
+    try {
+      const tags = await id3FromTrack(track);
+      let album = isValidMeta(tags.album) ? String(tags.album).trim() : '';
+      if (!album) {
+        album = (await lookupRemoteAlbumName(track.artist, track.title)) || '未知专辑';
+      }
+      if (!isValidMeta(album) || album === track.album) continue;
+
+      const artist = isValidMeta(tags.artist) ? String(tags.artist).trim() : track.artist;
+      /** @type {Partial<import('./types.js').Track>} */
+      const patch = {
+        album,
+        albumKey: slugKey(`${artist}::${album}`),
+        words: trackWords({ ...track, album, artist })
+      };
+      if (isValidMeta(tags.artist) && tags.artist !== track.artist) {
+        patch.artist = artist;
+        patch.artistKey = slugKey(artist);
+      }
+      await db.tracks.update(track.id, patch);
+      repaired += 1;
+    } catch {
+      /* skip */
+    }
+  }
+
+  if (repaired) scheduleAutoCloudPush();
+  return repaired;
+}
+
+/** @type {Promise<number> | null} */
+let metaRepairPromise = null;
+
+/** Idempotent; repairs garbled album names after sync / on library load. */
+export function ensureMetadataRepaired() {
+  if (!metaRepairPromise) {
+    metaRepairPromise = repairGarbledMetadata().then(async (repaired) => {
+      if (repaired > 0) {
+        const { bumpLibraryEpoch } = await import('./state.svelte.js');
+        bumpLibraryEpoch();
+      }
+      return repaired;
+    });
+  }
+  return metaRepairPromise;
+}
+
+/** @param {import('./types.js').Track} track */
+async function id3FromTrack(track) {
+  if (track.audioBlob instanceof Blob) {
+    return parseId3(await track.audioBlob.arrayBuffer()) || {};
+  }
+  if (track.storagePath) {
+    const url = await getSignedAudioUrl(track.storagePath);
+    const res = await fetch(url, { headers: { Range: `bytes=0-${CLOUD_SNIFF_BYTES - 1}` } });
+    if (res.ok || res.status === 206) {
+      return parseId3(await res.arrayBuffer()) || {};
+    }
+  }
+  return {};
+}
+
+/**
+ * @param {import('./types.js').Track} track
+ * @param {{ title?: string, artist?: string, album?: string, lyrics?: string, lyricsSynced?: boolean, picture?: { mime: string, data: Uint8Array } }} tags
+ */
+function metaPatchFromTags(track, tags) {
+  /** @type {Partial<import('./types.js').Track>} */
+  const patch = {};
+
+  if (tags.lyrics && tags.lyrics !== track.lyrics) patch.lyrics = tags.lyrics;
+  if (tags.title && isValidMeta(tags.title) && tags.title !== track.title) patch.title = tags.title;
+  if (tags.artist && isValidMeta(tags.artist) && tags.artist !== track.artist) {
+    patch.artist = tags.artist;
+    patch.artistKey = slugKey(tags.artist);
+  }
+  if (tags.album && isValidMeta(tags.album) && tags.album !== track.album) {
+    patch.album = tags.album;
+    patch.albumKey = slugKey(`${patch.artist || track.artist}::${tags.album}`);
+  }
+  if (tags.picture && !(track.artBlob instanceof Blob)) {
+    patch.artBlob = new Blob([tags.picture.data], { type: tags.picture.mime });
+  }
+
+  if (patch.title || patch.artist || patch.album) {
+    patch.words = trackWords({ ...track, ...patch });
+  }
+  return patch;
+}
+
+/**
+ * Persist cover art and strip ephemeral runtime fields.
+ * @param {import('./types.js').Track & { audioBlob?: Blob, objectUrl?: string, artUrl?: string }} track
+ * @param {{ artBlob?: Blob, artRemoteUrl?: string }} patch
+ */
+async function persistTrackArt(track, patch) {
+  const { artUrl: _a, objectUrl: _o, ...rest } = track;
+  await db.tracks.put({ ...rest, ...patch });
+}
+
+/**
+ * Backfill missing covers: local ID3 → cloud ID3 sniff → iTunes lookup.
+ * @returns {Promise<number>} count of tracks repaired
+ */
+export async function repairMissingArt() {
+  const tracks = await db.tracks.toArray();
+  let repaired = 0;
+
+  for (const track of tracks) {
+    if (!trackNeedsArt(track)) continue;
+
+    if (track.audioBlob instanceof Blob) {
+      try {
+        const artBlob = artBlobFromBuffer(await track.audioBlob.arrayBuffer());
+        if (artBlob) {
+          await persistTrackArt(track, { artBlob });
+          repaired += 1;
+          continue;
+        }
+      } catch {
+        /* skip */
+      }
+    }
+
+    if (track.storagePath) {
+      try {
+        const artBlob = await artBlobFromCloudTrack(track);
+        if (artBlob) {
+          await persistTrackArt(track, { artBlob });
+          repaired += 1;
+          continue;
+        }
+      } catch {
+        /* skip */
+      }
+    }
+  }
+
+  /** @type {Map<string, string | null>} */
+  const albumRemoteCache = new Map();
+  const remaining = await db.tracks.toArray();
+
+  for (const track of remaining) {
+    if (!trackNeedsArt(track)) continue;
+
+    if (!albumRemoteCache.has(track.albumKey)) {
+      const remote = await lookupRemoteArtUrl(track.artist, track.album, track.title);
+      albumRemoteCache.set(track.albumKey, remote);
+      await new Promise((r) => setTimeout(r, 150));
+    }
+
+    const artRemoteUrl = albumRemoteCache.get(track.albumKey);
+    if (artRemoteUrl) {
+      await persistTrackArt(track, { artRemoteUrl });
+      repaired += 1;
+    }
+  }
+
+  return repaired;
+}
+
+/**
+ * Backfill missing lyrics via remote APIs (lrclib / QQ / NetEase / lyrics.ovh).
+ * @param {(done: number, total: number) => void} [onProgress]
+ * @returns {Promise<{ total: number, repaired: number }>}
+ */
+export async function repairMissingLyrics(onProgress) {
+  const tracks = await db.tracks.toArray();
+  const targets = tracks.filter(
+    (t) => !t.lyrics?.trim() && (t.audioBlob || t.storagePath) && t.title?.trim() && t.artist?.trim()
+  );
+  let repaired = 0;
+  let done = 0;
+
+  for (const track of targets) {
+    try {
+      const fetched = await fetchLyricsForTrack(track);
+      if (fetched?.text) {
+        await db.tracks.update(track.id, { lyrics: fetched.text });
+        repaired += 1;
+      }
+    } catch {
+      /* skip */
+    }
+
+    done += 1;
+    onProgress?.(done, targets.length);
+    await new Promise((r) => setTimeout(r, 200));
+  }
+
+  if (repaired) scheduleAutoCloudPush();
+  return { total: targets.length, repaired };
+}
+
+/** @type {Promise<number> | null} */
+let lyricsRepairPromise = null;
+
+/** Idempotent; fetches remote lyrics and syncs to Supabase when logged in. */
+export function ensureLyricsRepaired() {
+  if (!lyricsRepairPromise) {
+    lyricsRepairPromise = repairMissingLyrics().then(async ({ repaired }) => {
+      if (repaired > 0) {
+        const { bumpLibraryEpoch } = await import('./state.svelte.js');
+        const { refreshQueueMetadata } = await import('./player.svelte.js');
+        bumpLibraryEpoch();
+        await refreshQueueMetadata();
+      }
+      return repaired;
+    });
+  }
+  return lyricsRepairPromise;
+}
+
+/** @type {Promise<number> | null} */
+let artRepairPromise = null;
+
+/** Idempotent; safe to call from layout and list pages. */
+export function ensureArtRepaired() {
+  if (!artRepairPromise) {
+    artRepairPromise = repairMissingArt().then(async (repaired) => {
+      if (repaired > 0) {
+        const { bumpLibraryEpoch } = await import('./state.svelte.js');
+        bumpLibraryEpoch();
+      }
+      return repaired;
+    });
+  }
+  return artRepairPromise;
 }
 
 /** @param {File} file */
@@ -208,7 +446,7 @@ export async function exportLibraryJson() {
   const playlists = await db.playlists.toArray();
   const playlistTracks = await db.playlistTracks.toArray();
   return {
-    tracks: tracks.map(({ objectUrl, artUrl, audioBlob, ...rest }) => rest),
+    tracks: tracks.map(({ objectUrl, artUrl, audioBlob, artBlob, ...rest }) => rest),
     playlists,
     playlistTracks
   };

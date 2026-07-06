@@ -7,6 +7,7 @@
 */
 
 :root {
+  --content-max: 920px;
   --bg: #faf5f4;
   --bg-2: #fff9f8;
   --bg-elevated: #ffffff;
@@ -109,6 +110,14 @@
   margin-bottom: var(--space-3);
 }
 
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
 .page-section-title {
   font-family: var(--mono);
   font-size: var(--text-xs);
@@ -122,6 +131,12 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+@media (min-width: 641px) {
+  .quick-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .quick-card {
