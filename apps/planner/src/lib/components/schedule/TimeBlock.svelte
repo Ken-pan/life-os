@@ -6,47 +6,169 @@
     taskDurationMinutes,
     formatTimeRange,
     formatDurationLabel,
+    parseTimeToMinutes,
+    formatMinutesAsTime,
+    dayBoundsMinutes,
+    snapMinutesDelta,
+    moveBlockSchedule,
+    resizeBlockTop,
+    resizeBlockBottom,
   } from '$lib/domain/schedule.js';
   import { completeTask, editTask } from '$lib/taskUi.js';
+  import { applyTaskSchedule } from '$lib/ui.svelte.js';
   import Icon from '../Icon.svelte';
 
-  /** @type {{ task: import('$lib/types.js').Task, hasConflict?: boolean, onReschedule?: () => void }} */
-  let { task, hasConflict = false, onReschedule } = $props();
+  /** @type {{
+    task: import('$lib/types.js').Task,
+    dateKey: string,
+    hasConflict?: boolean,
+    desktopInteractive?: boolean,
+    onReschedule?: () => void
+  }} */
+  let {
+    task,
+    dateKey,
+    hasConflict = false,
+    desktopInteractive = false,
+    onReschedule,
+  } = $props();
 
   const kind = $derived(getTaskKind(task));
   const duration = $derived(taskDurationMinutes(task));
   const layout = $derived(
-    task.scheduledStart
-      ? blockLayout(task.scheduledStart, duration)
-      : null,
+    task.scheduledStart ? blockLayout(task.scheduledStart, duration) : null,
   );
+
+  /** @type {{ startMinutes: number, durationMinutes: number } | null} */
+  let preview = $state(null);
+  let dragging = $state(false);
+
+  const activeLayout = $derived.by(() => {
+    if (preview) {
+      return blockLayout(
+        formatMinutesAsTime(preview.startMinutes),
+        preview.durationMinutes,
+      );
+    }
+    return layout;
+  });
+
   const rangeLabel = $derived(
-    layout
-      ? formatTimeRange(layout.startMinutes, layout.endMinutes, t)
+    activeLayout
+      ? formatTimeRange(activeLayout.startMinutes, activeLayout.endMinutes, t)
       : '',
   );
-  const compact = $derived(Boolean(layout && layout.height < 44));
+  const activeDuration = $derived(preview?.durationMinutes ?? duration);
+  const compact = $derived(Boolean(activeLayout && activeLayout.height < 44));
+  const interactive = $derived(desktopInteractive && !task.completed);
+
+  /** @param {PointerEvent} e @param {'move' | 'resize-top' | 'resize-bottom'} mode */
+  function beginPointerDrag(e, mode) {
+    if (!interactive || !task.scheduledStart) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const handle = /** @type {HTMLElement} */ (e.currentTarget);
+    handle.setPointerCapture(e.pointerId);
+
+    const originY = e.clientY;
+    const originStart = parseTimeToMinutes(task.scheduledStart);
+    const originDuration = duration;
+    const bounds = dayBoundsMinutes();
+    dragging = true;
+    preview = { startMinutes: originStart, durationMinutes: originDuration };
+
+    /** @param {PointerEvent} ev */
+    function onMove(ev) {
+      const delta = snapMinutesDelta(ev.clientY - originY);
+      if (mode === 'move') {
+        preview = moveBlockSchedule(originStart, originDuration, delta, bounds);
+      } else if (mode === 'resize-top') {
+        preview = resizeBlockTop(originStart, originDuration, delta, bounds);
+      } else {
+        preview = resizeBlockBottom(originStart, originDuration, delta, bounds);
+      }
+    }
+
+    /** @param {PointerEvent} ev */
+    function onUp(ev) {
+      handle.releasePointerCapture(ev.pointerId);
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      handle.removeEventListener('pointercancel', onUp);
+
+      const next = preview;
+      dragging = false;
+      preview = null;
+
+      if (
+        !next ||
+        (next.startMinutes === originStart && next.durationMinutes === originDuration)
+      ) {
+        return;
+      }
+
+      applyTaskSchedule(task.id, {
+        dateKey,
+        start: formatMinutesAsTime(next.startMinutes),
+        durationMinutes: next.durationMinutes,
+      });
+    }
+
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
+  }
 </script>
 
-{#if layout}
+{#if activeLayout}
   <article
     class="time-block"
     class:time-block--done={task.completed}
     class:time-block--focus={kind === 'focus'}
     class:time-block--conflict={hasConflict && !task.completed}
     class:time-block--compact={compact}
-    style:top="{layout.top}px"
-    style:height="{layout.height}px"
+    class:time-block--dragging={dragging}
+    class:time-block--interactive={interactive}
+    style:top="{activeLayout.top}px"
+    style:height="{activeLayout.height}px"
   >
-    <button type="button" class="time-block-body" onclick={() => editTask(task)}>
+    {#if interactive}
+      <button
+        type="button"
+        class="time-block-handle time-block-handle--top"
+        aria-label={t('schedule.resizeTop')}
+        onpointerdown={(e) => beginPointerDrag(e, 'resize-top')}
+      ></button>
+    {/if}
+
+    {#if interactive}
+      <button
+        type="button"
+        class="time-block-grip"
+        aria-label={t('schedule.moveBlock')}
+        onpointerdown={(e) => beginPointerDrag(e, 'move')}
+      >
+        <Icon name="grip-vertical" size={12} strokeWidth={2} />
+      </button>
+    {/if}
+
+    <button
+      type="button"
+      class="time-block-body"
+      onclick={() => {
+        if (!dragging) editTask(task);
+      }}
+    >
       <div class="time-block-title">{task.title}</div>
       {#if !compact}
         <div class="time-block-meta">
           {rangeLabel}
-          · {formatDurationLabel(duration, t)}
+          · {formatDurationLabel(activeDuration, t)}
         </div>
       {/if}
     </button>
+
     <div class="time-block-actions">
       {#if task.completed}
         <span class="time-block-check" aria-label={t('common.done')}>
@@ -63,10 +185,24 @@
         </button>
       {/if}
       {#if onReschedule && !compact}
-        <button type="button" class="time-block-reschedule" onclick={onReschedule} aria-label={t('schedule.reschedule')}>
+        <button
+          type="button"
+          class="time-block-reschedule"
+          onclick={onReschedule}
+          aria-label={t('schedule.reschedule')}
+        >
           {t('schedule.rescheduleShort')}
         </button>
       {/if}
     </div>
+
+    {#if interactive}
+      <button
+        type="button"
+        class="time-block-handle time-block-handle--bottom"
+        aria-label={t('schedule.resizeBottom')}
+        onpointerdown={(e) => beginPointerDrag(e, 'resize-bottom')}
+      ></button>
+    {/if}
   </article>
 {/if}

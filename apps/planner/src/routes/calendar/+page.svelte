@@ -1,6 +1,7 @@
 <script>
   import AppBar from '$lib/components/AppBar.svelte';
   import TaskGroup from '$lib/components/TaskGroup.svelte';
+  import CalendarContextPanel from '$lib/components/CalendarContextPanel.svelte';
   import { taskIndex } from '$lib/taskIndex.svelte.js';
   import { selectByDate } from '$lib/domain/selectors.js';
   import { startOfWeek, weekDates } from '$lib/domain/views.js';
@@ -45,26 +46,32 @@
 
 <AppBar title={t('calendar.title')} />
 
-<div class="wrap">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <button type="button" class="btn-ghost" onclick={() => shiftWeek(-1)}>←</button>
-    <button type="button" class="btn-ghost" onclick={jumpToday}>{t('home.today')}</button>
-    <button type="button" class="btn-ghost" onclick={() => shiftWeek(1)}>→</button>
+<div class="desktop-split-layout calendar-page">
+  <div class="desktop-split-main">
+    <div class="wrap">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <button type="button" class="btn-ghost" onclick={() => shiftWeek(-1)}>←</button>
+        <button type="button" class="btn-ghost" onclick={jumpToday}>{t('home.today')}</button>
+        <button type="button" class="btn-ghost" onclick={() => shiftWeek(1)}>→</button>
+      </div>
+
+      <div class="calendar-grid">
+        {#each days as day}
+          <button
+            type="button"
+            class="cal-day"
+            class:on={day === selected}
+            class:has-tasks={countOn(day) > 0}
+            onclick={() => (selected = day)}
+          >
+            {label(day)}
+          </button>
+        {/each}
+      </div>
+
+      <TaskGroup title={label(selected)} {tasks} compactRows empty={t('common.empty')} onToggle={completeTask} onEdit={editTask} />
+    </div>
   </div>
 
-  <div class="calendar-grid">
-    {#each days as day}
-      <button
-        type="button"
-        class="cal-day"
-        class:on={day === selected}
-        class:has-tasks={countOn(day) > 0}
-        onclick={() => (selected = day)}
-      >
-        {label(day)}
-      </button>
-    {/each}
-  </div>
-
-  <TaskGroup title={label(selected)} {tasks} compactRows empty={t('common.empty')} onToggle={completeTask} onEdit={editTask} />
+  <CalendarContextPanel {selected} {countOn} />
 </div>

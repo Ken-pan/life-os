@@ -7,7 +7,7 @@ const OUT_DIR = path.join(
   process.cwd(),
   'tests',
   'screenshots',
-  'achievement-schedule-jul2026',
+  'planner-core-latest',
 )
 
 function localDateOffset(days = 0) {
@@ -257,7 +257,10 @@ async function seedState(page, state) {
     { key: STORAGE_KEY, data: state },
   )
   await page.reload()
-  await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 })
+  await page.waitForSelector('[data-testid="fab-add"], .quick-add--mobile', {
+    timeout: 15_000,
+    state: 'attached',
+  })
 }
 
 async function snap(page, name) {
@@ -281,7 +284,8 @@ test.describe('成就感 + 日程截图', () => {
 
     await page.goto('/')
     await page.waitForSelector('.today-progress', { timeout: 10_000 })
-    await snap(page, '01-today-progress')
+    await page.waitForSelector('.today-view-toggle', { timeout: 5000 })
+    await snap(page, '01-today-list-progress')
 
     const doneSection = page.locator('#done-today, [id="done-today"]')
     if (await doneSection.count()) {
@@ -290,8 +294,9 @@ test.describe('成就感 + 日程截图', () => {
     }
 
     await page.goto('/?view=timeline')
+    await page.waitForSelector('.today-view-toggle', { timeout: 5000 })
     await page.waitForSelector('.schedule-summary', { timeout: 10_000 })
-    await snap(page, '03-schedule-day-plan')
+    await snap(page, '03-today-timeline')
 
     await page
       .getByRole('button', { name: '安排', exact: true })
@@ -312,7 +317,12 @@ test.describe('成就感 + 日程截图', () => {
     await snap(page, '06-calendar')
 
     await page.goto('/completed')
-    await page.waitForSelector('.completed-rhythm', { timeout: 10_000 })
+    await page.waitForSelector(
+      '.completed-log, .today-recap.completed-context',
+      {
+        timeout: 10_000,
+      },
+    )
     await snap(page, '07-completed-rhythm')
 
     await page.goto('/settings')

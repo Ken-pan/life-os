@@ -71,6 +71,10 @@ export default {
   },
   calendar: {
     title: 'Calendar',
+    contextTitle: 'Week overview',
+    weekStrip: 'Tasks this week',
+    dueCount: '{count} due this day',
+    openTimeline: 'Open timeline',
   },
   schedule: {
     title: 'Schedule',
@@ -98,8 +102,14 @@ export default {
     preset_afternoon: 'Afternoon',
     preset_evening: 'Evening',
     conflictHint: 'Overlaps {count} block(s) — you can still save',
+    conflictItem: '{title} ({start}–{end})',
     clear: 'Clear schedule',
     jumpNow: 'Jump to now',
+    moveBlock: 'Drag to move block',
+    resizeTop: 'Drag to adjust start',
+    resizeBottom: 'Drag to adjust end',
+    desktopHint:
+      'Drag tasks from the left onto the timeline, or drag blocks to adjust',
     summaryScheduled: 'Scheduled',
     summaryPlanned: 'Planned time',
     summaryUnscheduled: 'Unscheduled',
@@ -113,6 +123,7 @@ export default {
     title: 'Completed',
     empty: 'No completed tasks yet',
     logTitle: 'Done log',
+    recapTitle: 'Rhythm recap',
   },
   search: {
     title: 'Search',
@@ -296,7 +307,8 @@ export default {
     title: 'Rhythm & wins',
     settingsTitle: 'Rhythm & wins',
     enabled: 'Track rhythm',
-    enabledDesc: 'Show streaks, weekly rhythm, and quiet milestones — turn off anytime',
+    enabledDesc:
+      'Show streaks, weekly rhythm, and quiet milestones — turn off anytime',
     dailyGoal: 'Daily goal',
     dailyGoalDesc: 'Plan tasks to complete per day for a good rhythm (1–7)',
     pause: 'Vacation mode',

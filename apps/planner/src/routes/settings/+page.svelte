@@ -132,7 +132,7 @@
 
 <AppBar title={t('settings.title')} />
 
-<div class="wrap settings-page">
+<div class="wrap settings-page settings-page--planner">
   <SettingsSection title={t('settings.appearance')} testId="settings-appearance">
     <SettingsAppearanceRows />
   </SettingsSection>

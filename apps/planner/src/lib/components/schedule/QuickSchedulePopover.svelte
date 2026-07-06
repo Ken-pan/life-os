@@ -15,6 +15,7 @@
     defaultDurationMinutes,
     formatDurationLabel,
     findScheduleConflicts,
+    formatConflictLabel,
   } from '$lib/domain/schedule.js';
   import { selectScheduledForDate } from '$lib/domain/selectors.js';
   import { taskIndex } from '$lib/taskIndex.svelte.js';
@@ -49,8 +50,13 @@
       start = task.scheduledStart || '09:00';
       duration = task.durationMinutes || defaultDurationMinutes(task);
       lockScroll();
-      return () => unlockScroll();
+      document.documentElement.classList.add('planner-schedule-modal-open');
+      return () => {
+        unlockScroll();
+        document.documentElement.classList.remove('planner-schedule-modal-open');
+      };
     }
+    document.documentElement.classList.remove('planner-schedule-modal-open');
   });
 
   function save() {
@@ -135,10 +141,17 @@
       </div>
 
       {#if conflicts.length}
-        <p class="schedule-popover-conflict" role="status">
-          <Icon name="alert-triangle" size={16} strokeWidth={2} />
-          <span>{t('schedule.conflictHint', { count: conflicts.length })}</span>
-        </p>
+        <div class="schedule-popover-conflict" role="status">
+          <p class="schedule-popover-conflict-head">
+            <Icon name="alert-triangle" size={16} strokeWidth={2} />
+            <span>{t('schedule.conflictHint', { count: conflicts.length })}</span>
+          </p>
+          <ul class="schedule-popover-conflict-list">
+            {#each conflicts as conflict (conflict.id)}
+              <li>{formatConflictLabel(conflict, t)}</li>
+            {/each}
+          </ul>
+        </div>
       {/if}
 
       <div class="schedule-popover-actions">

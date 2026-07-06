@@ -61,9 +61,9 @@
   const documentLocale = $derived(S.settings.locale === 'en' ? 'en' : 'zh')
 
   const mobileChromeInset = $derived(
-    resolveMobileChromeInset(page.url.pathname),
+    resolveMobileChromeInset(page.url.pathname, page.url.search),
   )
-  const fabVisible = $derived(isFabVisible(page.url.pathname))
+  const fabVisible = $derived(isFabVisible(page.url.pathname, page.url.search))
 
   onMount(() => {
     const cachedUserId = peekSessionUserId()

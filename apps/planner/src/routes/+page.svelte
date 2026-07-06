@@ -74,12 +74,16 @@
 
 <AppBar title={t('home.title')} subtitle={t('app.tagline')} />
 
-<div class="today-layout">
+<div
+  class="today-layout"
+  class:today-layout--timeline={viewMode === 'timeline'}
+  class:today-layout--with-recap={viewMode !== 'timeline' && !showClosed}
+>
   <div class="today-main">
     <div class="wrap">
       <QuickAddBar dueDate={todayKey()} />
 
-      {#if showProgress}
+      {#if showProgress && !showClosed}
         <TodayProgressCard
           done={progress.done}
           total={progress.total}
@@ -164,12 +168,14 @@
     </div>
   </div>
 
-  <TodayRecapPanel
-    summary={rhythm}
-    progress={{ done: progress.done, total: progress.total, remaining: progress.remaining }}
-    doneToday={progress.doneToday}
-    {nextTask}
-    unscheduledCount={unscheduledToday.length}
-    onOpenTimeline={() => setViewMode('timeline')}
-  />
+  {#if viewMode !== 'timeline' && !showClosed}
+    <TodayRecapPanel
+      summary={rhythm}
+      progress={{ done: progress.done, total: progress.total, remaining: progress.remaining }}
+      doneToday={progress.doneToday}
+      {nextTask}
+      unscheduledCount={unscheduledToday.length}
+      onOpenTimeline={() => setViewMode('timeline')}
+    />
+  {/if}
 </div>

@@ -62,6 +62,8 @@
     unscheduled={unscheduled.length}
   />
 
+  <p class="schedule-desktop-hint">{t('schedule.desktopHint')}</p>
+
   <div class="schedule-layout">
     <UnscheduledPanel dateKey={selected} tasks={unscheduled} />
     <DayTimeline dateKey={selected} tasks={scheduled} />

@@ -6,6 +6,14 @@ import {
   findScheduleConflicts,
   overlappingTaskIds,
   computeDayScheduleStats,
+  snapMinutesFromTimelineTop,
+  formatMinutesAsTime,
+  HOUR_HEIGHT_PX,
+  dayBoundsMinutes,
+  moveBlockSchedule,
+  resizeBlockBottom,
+  resizeBlockTop,
+  formatConflictLabel,
 } from './schedule.js'
 
 const task = (overrides = {}) => ({
@@ -53,5 +61,46 @@ describe('schedule', () => {
     expect(stats.scheduled).toBe(2)
     expect(stats.completed).toBe(1)
     expect(stats.plannedMinutes).toBe(90)
+  })
+
+  it('snaps timeline drop position to 15-minute grid', () => {
+    const topPx = HOUR_HEIGHT_PX * 1.25
+    const minutes = snapMinutesFromTimelineTop(topPx)
+    expect(formatMinutesAsTime(minutes)).toBe('09:15')
+  })
+
+  it('moves and resizes blocks within day bounds', () => {
+    const bounds = dayBoundsMinutes()
+    expect(moveBlockSchedule(540, 60, 30, bounds)).toEqual({
+      startMinutes: 570,
+      durationMinutes: 60,
+    })
+    expect(resizeBlockBottom(540, 60, 30, bounds)).toEqual({
+      startMinutes: 540,
+      durationMinutes: 90,
+    })
+    expect(resizeBlockTop(540, 60, 30, bounds)).toEqual({
+      startMinutes: 570,
+      durationMinutes: 30,
+    })
+  })
+
+  it('formats conflict labels', () => {
+    const tr = (key, params = {}) => {
+      if (key === 'schedule.conflictItem') {
+        return `${params.title} (${params.start}-${params.end})`
+      }
+      return key
+    }
+    expect(
+      formatConflictLabel(
+        task({
+          title: 'Standup',
+          scheduledStart: '09:00',
+          durationMinutes: 30,
+        }),
+        tr,
+      ),
+    ).toBe('Standup (09:00-09:30)')
   })
 })

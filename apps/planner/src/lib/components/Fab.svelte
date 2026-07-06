@@ -7,9 +7,14 @@
 
   const hideFabRoutes = ['/settings', '/auth', '/search', '/completed'];
 
+  const onTimelineView = $derived(
+    page.url.pathname === '/' && page.url.searchParams.get('view') === 'timeline',
+  );
+
   const hidden = $derived(
     taskEditor.open ||
       schedulePopover.open ||
+      onTimelineView ||
       hideFabRoutes.some((p) => page.url.pathname.startsWith(p))
   );
 

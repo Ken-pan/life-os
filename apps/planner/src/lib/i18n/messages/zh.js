@@ -71,6 +71,10 @@ export default {
   },
   calendar: {
     title: '日历',
+    contextTitle: '本周概览',
+    weekStrip: '本周任务分布',
+    dueCount: '当日到期 {count} 项',
+    openTimeline: '打开时间轴',
   },
   schedule: {
     title: '日程',
@@ -98,8 +102,13 @@ export default {
     preset_afternoon: '下午',
     preset_evening: '晚上',
     conflictHint: '与 {count} 个时间块重叠，仍可保存',
+    conflictItem: '{title}（{start}–{end}）',
     clear: '清除安排',
     jumpNow: '回到当前时间',
+    moveBlock: '拖动移动时间块',
+    resizeTop: '拖动调整开始时间',
+    resizeBottom: '拖动调整结束时间',
+    desktopHint: '将左侧任务拖入时间轴，或拖动时间块调整安排',
     summaryScheduled: '已安排',
     summaryPlanned: '计划时长',
     summaryUnscheduled: '待排程',
@@ -113,6 +122,7 @@ export default {
     title: '已完成',
     empty: '还没有已完成的任务',
     logTitle: '完成记录',
+    recapTitle: '节奏回顾',
   },
   search: {
     title: '搜索',
