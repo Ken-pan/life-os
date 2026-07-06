@@ -487,9 +487,15 @@
 </div>
 
 <style>
-  .now-playing-queue-wrap :global(.queue-list) {
+  .now-playing-queue-wrap :global(.queue-list-wrap) {
     flex: 1 1 auto;
     min-height: min(52dvh, 520px);
+    min-width: 0;
+  }
+
+  .now-playing-queue-wrap :global(.queue-list) {
+    flex: 1 1 auto;
+    min-height: 0;
     padding: var(--space-1) 0;
     max-width: none;
   }
@@ -505,7 +511,7 @@
   }
 
   @media (min-width: 900px) {
-    .now-playing-queue-wrap :global(.queue-list) {
+    .now-playing-queue-wrap :global(.queue-list-wrap) {
       min-height: min(58dvh, 640px);
     }
   }

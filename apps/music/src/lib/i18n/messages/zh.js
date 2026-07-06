@@ -223,6 +223,7 @@ export default {
     modeCover: '封面',
     modeLyrics: '歌词',
     modeQueue: '播放清单',
+    queueNowPlaying: '正在播放',
     queueUpNext: '接下来',
     queueUpNextEmpty: '暂无后续曲目',
   },

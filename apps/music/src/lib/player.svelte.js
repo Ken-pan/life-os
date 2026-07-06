@@ -1112,6 +1112,22 @@ export async function refreshQueueMetadata() {
   void preloadNextTrack()
 }
 
+/** @param {import('$lib/types.js').Track[]} tracks */
+export function setQueueOrder(tracks) {
+  if (!tracks.length) {
+    clearQueue()
+    return
+  }
+  const currentId = getCurrentTrack()?.id
+  player.queue = tracks
+  if (currentId) {
+    const nextIndex = tracks.findIndex((t) => t.id === currentId)
+    if (nextIndex >= 0) player.index = nextIndex
+  }
+  invalidatePreload()
+  void preloadNextTrack()
+}
+
 /** @param {number} fromIndex @param {number} toIndex */
 export function reorderQueue(fromIndex, toIndex) {
   if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return

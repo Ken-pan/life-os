@@ -6,13 +6,14 @@
   import { playTrack, playTracks, appendToQueue } from '$lib/player.svelte.js'
   import { t } from '$lib/i18n/index.js'
 
-  /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, richActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
+  /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, queueMode?: boolean, richActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
   let {
     track,
     tracks = [],
     index = 0,
     showLike = true,
     compactActions = false,
+    queueMode = false,
     richActions = false,
     selected = false,
     playSource = 'home',
@@ -57,6 +58,7 @@
   class="track-row"
   class:track-row--selected={selected}
   class:track-row--compact-actions={compactActions}
+  class:track-row--queue={queueMode}
   class:track-row--rich-actions={richActions}
 >
   <button
@@ -85,6 +87,7 @@
     <div class="track-row-title">{track.title}</div>
     <div class="track-row-sub">{track.artist} · {track.album}</div>
   </button>
+  {#if !queueMode}
   <div class="track-row-actions">
     {#if showLike}
       <LikeButton
@@ -114,6 +117,7 @@
       </button>
     {/if}
   </div>
+  {/if}
 </div>
 
 {#if menu}

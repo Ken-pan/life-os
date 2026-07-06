@@ -2441,8 +2441,48 @@
 }
 
 .utility-pane-body .queue-list-foot {
-  padding: var(--space-3) var(--space-3) var(--space-4);
+  padding: var(--space-3) 0 var(--space-2);
   gap: var(--space-2);
+  border-top-color: var(--border);
+}
+
+.utility-pane-body .queue-list-wrap {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.utility-pane-body .queue-list {
+  padding-inline: 0;
+}
+
+.utility-pane .queue-row {
+  padding-right: var(--space-1);
+}
+
+.utility-pane .queue-row :global(.track-row-art) {
+  width: 40px;
+  height: 40px;
+}
+
+.utility-pane .queue-row--current {
+  background: color-mix(in srgb, var(--track-accent, var(--accent)) 14%, transparent);
+  box-shadow: inset 3px 0 0 var(--track-accent, var(--accent));
+}
+
+.utility-pane .queue-section-label {
+  padding-inline: 0;
+}
+
+.utility-pane-body .queue-list-foot .queue-play-btn,
+.utility-pane-body .queue-list-foot .queue-continue-btn,
+.utility-pane-body .queue-list-foot .queue-clear-btn {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.utility-pane-body .queue-list-foot .queue-clear-btn {
+  width: 100%;
 }
 
 .utility-pane-body .queue-list-foot .queue-play-btn {
@@ -3122,7 +3162,7 @@
 
 /* ── Music AppBar / Global Search ── */
 :root {
-  --utility-pane-w: 320px;
+  --utility-pane-w: 360px;
   --mini-player-h-desktop: 79px;
 }
 
@@ -4044,6 +4084,10 @@ body.search-typeahead-open .music-appbar {
 .track-row--compact-actions .track-row-actions {
   opacity: 1;
   transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.track-row--queue .track-row-actions {
+  display: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
