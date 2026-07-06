@@ -6,6 +6,7 @@
   import { t } from '$lib/i18n/index.js';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsAppearanceRows from '$lib/components/settings/SettingsAppearanceRows.svelte';
+  import SettingsRhythmRows from '$lib/components/settings/SettingsRhythmRows.svelte';
   import SettingsNotificationsBlock from '$lib/components/settings/SettingsNotificationsBlock.svelte';
   import SettingsSyncBlock from '$lib/components/settings/SettingsSyncBlock.svelte';
   import SettingsBackupBlock from '$lib/components/settings/SettingsBackupBlock.svelte';
@@ -134,6 +135,10 @@
 <div class="wrap settings-page">
   <SettingsSection title={t('settings.appearance')} testId="settings-appearance">
     <SettingsAppearanceRows />
+  </SettingsSection>
+
+  <SettingsSection title={t('rhythm.settingsTitle')} testId="settings-rhythm">
+    <SettingsRhythmRows />
   </SettingsSection>
 
   <SettingsSyncBlock

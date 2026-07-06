@@ -1,4 +1,4 @@
-export { LIFE_OS_LAYOUT } from './layout.js';
+export { LIFE_OS_LAYOUT } from './layout.js'
 
 export {
   LIFE_OS_SITE_META,
@@ -7,15 +7,15 @@ export {
   formatDocumentTitle,
   getSiteDescription,
   absoluteUrl,
-  getOgLocale
-} from './siteMeta.js';
+  getOgLocale,
+} from './siteMeta.js'
 
-export { applyDocumentMeta } from './documentMeta.js';
+export { applyDocumentMeta } from './documentMeta.js'
 
-export { lockScroll, unlockScroll } from './scrollLock.js';
-export { activateFocusTrap } from './focusTrap.js';
-export { createImeGuard } from './createImeGuard.js';
-export { createToastDeduper, resolveToastDuration } from './toastPolicy.js';
+export { lockScroll, unlockScroll } from './scrollLock.js'
+export { activateFocusTrap } from './focusTrap.js'
+export { createImeGuard } from './createImeGuard.js'
+export { createToastDeduper, resolveToastDuration } from './toastPolicy.js'
 
 export {
   bindViewportHeight,
@@ -24,21 +24,48 @@ export {
   getVisualViewportHeight,
   getViewportRect,
   isStandalonePwa,
-  needsViewportHeightSync
-} from './viewportSync.js';
+  needsViewportHeightSync,
+} from './viewportSync.js'
+
+export {
+  DEFAULT_PWA_SETTINGS,
+  normalizePwaSettings,
+  mergePwaSettings,
+} from './pwaSettings.js'
+
+export {
+  PWA_FOREGROUND_DEFER_MS,
+  flushViewportHeight,
+  bindPwaForegroundResume,
+} from './pwaResume.js'
+
+export { syncPortraitLockEnabled } from './portraitGate.js'
+
+export {
+  configureAudioLeaseDebugTag,
+  getAudioSession,
+  safeSetAudioSessionType,
+  getAudioLeaseContext,
+  primeAudioLease,
+  withAudioCuePlayback,
+  cancelAudioLeaseCues,
+  closeAudioLease,
+  bindAudioLeaseCleanup,
+  logAudioLeaseDebug,
+} from './audioLease.js'
 
 /** @typedef {'light' | 'dark' | 'auto'} ThemePreference */
 /** @typedef {'light' | 'dark'} ResolvedTheme */
 
 /** @type {ThemePreference[]} */
-export const THEME_PREFERENCES = ['light', 'dark', 'auto'];
+export const THEME_PREFERENCES = ['light', 'dark', 'auto']
 
 /**
  * @param {string | null | undefined} value
  * @returns {value is ThemePreference}
  */
 export function isThemePreference(value) {
-  return value === 'light' || value === 'dark' || value === 'auto';
+  return value === 'light' || value === 'dark' || value === 'auto'
 }
 
 /**
@@ -47,12 +74,14 @@ export function isThemePreference(value) {
  * @returns {ResolvedTheme}
  */
 export function resolveTheme(preference, fallback = 'auto') {
-  const pref = isThemePreference(preference) ? preference : fallback;
+  const pref = isThemePreference(preference) ? preference : fallback
   if (pref === 'auto') {
-    if (typeof window === 'undefined') return 'light';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if (typeof window === 'undefined') return 'light'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light'
   }
-  return pref;
+  return pref
 }
 
 /**
@@ -70,31 +99,37 @@ export function resolveTheme(preference, fallback = 'auto') {
  * @param {ApplyThemeOptions} [options]
  */
 export function applyResolvedTheme(resolved, options = {}) {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') return
 
-  const root = document.documentElement;
-  root.setAttribute('data-theme', resolved);
-  root.style.colorScheme = resolved;
+  const root = document.documentElement
+  root.setAttribute('data-theme', resolved)
+  root.style.colorScheme = resolved
 
   const {
     themeColorMetaId = 'theme-color-meta',
     faviconId,
     faviconLight,
     faviconDark,
-    themeColorFallback = { light: '#ffffff', dark: '#0d0d0e' }
-  } = options;
+    themeColorFallback = { light: '#ffffff', dark: '#0d0d0e' },
+  } = options
 
-  const fromCss = getComputedStyle(root).getPropertyValue('--theme-color').trim();
-  const themeColor = fromCss || themeColorFallback[resolved];
+  const fromCss = getComputedStyle(root)
+    .getPropertyValue('--theme-color')
+    .trim()
+  const themeColor = fromCss || themeColorFallback[resolved]
 
   const meta =
     (themeColorMetaId && document.getElementById(themeColorMetaId)) ||
-    document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', themeColor);
+    document.querySelector('meta[name="theme-color"]')
+  if (meta) meta.setAttribute('content', themeColor)
 
   if (faviconId && faviconLight && faviconDark) {
-    const favicon = document.getElementById(faviconId);
-    if (favicon) favicon.setAttribute('href', resolved === 'dark' ? faviconDark : faviconLight);
+    const favicon = document.getElementById(faviconId)
+    if (favicon)
+      favicon.setAttribute(
+        'href',
+        resolved === 'dark' ? faviconDark : faviconLight,
+      )
   }
 }
 
@@ -103,8 +138,12 @@ export function applyResolvedTheme(resolved, options = {}) {
  * @param {ApplyThemeOptions} options
  * @param {ThemePreference} [fallback='auto']
  */
-export function applyThemeFromPreference(readPreference, options, fallback = 'auto') {
-  applyResolvedTheme(resolveTheme(readPreference(), fallback), options);
+export function applyThemeFromPreference(
+  readPreference,
+  options,
+  fallback = 'auto',
+) {
+  applyResolvedTheme(resolveTheme(readPreference(), fallback), options)
 }
 
 /**
@@ -114,15 +153,19 @@ export function applyThemeFromPreference(readPreference, options, fallback = 'au
  * @param {ThemePreference} [fallback='auto']
  * @returns {() => void}
  */
-export function bindSystemThemeChange(readPreference, onResolved, fallback = 'auto') {
-  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+export function bindSystemThemeChange(
+  readPreference,
+  onResolved,
+  fallback = 'auto',
+) {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)')
   const handler = () => {
-    const pref = readPreference();
-    const effective = isThemePreference(pref) ? pref : fallback;
-    if (effective === 'auto') onResolved(resolveTheme('auto'));
-  };
-  mq.addEventListener('change', handler);
-  return () => mq.removeEventListener('change', handler);
+    const pref = readPreference()
+    const effective = isThemePreference(pref) ? pref : fallback
+    if (effective === 'auto') onResolved(resolveTheme('auto'))
+  }
+  mq.addEventListener('change', handler)
+  return () => mq.removeEventListener('change', handler)
 }
 
 /**
@@ -132,5 +175,5 @@ export function bindSystemThemeChange(readPreference, onResolved, fallback = 'au
  * @returns {ResolvedTheme}
  */
 export function bootResolveTheme(preference, fallback = 'auto') {
-  return resolveTheme(preference, fallback);
+  return resolveTheme(preference, fallback)
 }

@@ -22,6 +22,7 @@
  * @property {string[]} [aiHints]
  * @property {string} [suggestedDueDate]
  * @property {number} [confidence]
+ * @property {'micro'|'standard'|'focus'|'habit'} [kind]
  */
 
 /**
@@ -65,7 +66,12 @@
  * @property {string} defaultListId
  * @property {boolean} notificationsEnabled
  * @property {boolean} syncAuto
+ * @property {boolean} [lockPortraitOnPhone]
  * @property {number} [updatedAt] 设置最后修改时间（毫秒），用于跨设备 LWW 合并
+ * @property {boolean} [rhythmEnabled] 节奏 / 成就追踪（可关闭）
+ * @property {number} [dailyGoal] 每日目标完成数（1–7，默认 3）
+ * @property {boolean} [rhythmPaused] 休假模式：暂停 streak 压力
+ * @property {string[]} [rhythmRestDays] 休息日（YYYY-MM-DD，每周最多 2 天）
  */
 
 /**
@@ -82,25 +88,31 @@ export const PRIORITY_COLORS = {
   1: '#E34432',
   2: '#F5A623',
   3: '#0F66AE',
-  4: '#A8A5A0'
-};
+  4: '#A8A5A0',
+}
 
-export const SYSTEM_LIST_INBOX = 'inbox';
-export const SYSTEM_LIST_COMPLETED = 'completed';
+export const SYSTEM_LIST_INBOX = 'inbox'
+export const SYSTEM_LIST_COMPLETED = 'completed'
 
-export const RECURRENCE_RULES = /** @type {const} */ (['none', 'daily', 'weekly', 'monthly', 'yearly']);
+export const RECURRENCE_RULES = /** @type {const} */ ([
+  'none',
+  'daily',
+  'weekly',
+  'monthly',
+  'yearly',
+])
 
-export const REMINDER_PRESETS = /** @type {const} */ ([0, 5, 15, 30, 60, 1440]);
+export const REMINDER_PRESETS = /** @type {const} */ ([0, 5, 15, 30, 60, 1440])
 
 /** @returns {TaskRecurrence|null} */
 export function normalizeRecurrence(raw) {
-  if (!raw || typeof raw !== 'object') return null;
-  const rule = RECURRENCE_RULES.includes(raw.rule) ? raw.rule : 'none';
-  if (rule === 'none') return null;
+  if (!raw || typeof raw !== 'object') return null
+  const rule = RECURRENCE_RULES.includes(raw.rule) ? raw.rule : 'none'
+  if (rule === 'none') return null
   return {
     rule,
     interval: Math.max(1, Number(raw.interval) || 1),
     until: raw.until || null,
-    seriesId: raw.seriesId || null
-  };
+    seriesId: raw.seriesId || null,
+  }
 }

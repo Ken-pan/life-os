@@ -1,7 +1,7 @@
 export default {
   app: {
     name: 'PLANNER.OS',
-    tagline: '阳光清单，轻松规划'
+    tagline: '阳光清单，轻松规划',
   },
   nav: {
     today: '今天',
@@ -15,7 +15,7 @@ export default {
     groupTasks: '任务',
     groupBrowse: '浏览',
     groupAccount: '账户',
-    mainAria: '主导航'
+    mainAria: '主导航',
   },
   common: {
     back: '返回',
@@ -30,37 +30,54 @@ export default {
     close: '关闭',
     more: '更多',
     empty: '暂无任务',
-    tasks: '{count} 项'
+    tasks: '{count} 项',
   },
   home: {
     title: '今天',
     overdue: '已过期',
     today: '今天',
     nodate: '待安排',
-    quickAdd: '添加任务…'
+    quickAdd: '添加任务…',
+    progressTitle: '今日进度',
+    progressCount: '{done} / {total} 已完成',
+    progressRemaining: '还差 {count} 个任务清空今天',
+    progressAllDone: '今天收得很干净',
+    progressDoneOnly: '今天已完成 {count} 项',
+    doneToday: '今日完成',
+    planTomorrow: '安排明天',
+    scrollDoneToday: '查看今日完成',
+    recapTitle: '今日回顾',
+    nextAction: '下一步建议',
+    viewAllDone: '查看全部 {count} 项',
+    viewDoneLog: '完成记录',
+    closedTitle: '今天收得很干净',
+    closedTasks: '{count} 项任务完成',
+    closedHabits: '{count} 个习惯保持',
+    closedFocus: '{count} 个关键任务关闭',
   },
   inbox: {
-    title: '收件箱'
+    title: '收件箱',
   },
   upcoming: {
     title: '即将',
     tomorrow: '明天',
     week: '未来 7 天',
     later: '更晚',
-    nodate: '无日期'
+    nodate: '无日期',
   },
   calendar: {
-    title: '日历'
+    title: '日历',
   },
   completed: {
     title: '已完成',
-    empty: '还没有已完成的任务'
+    empty: '还没有已完成的任务',
+    logTitle: '完成记录',
   },
   search: {
     title: '搜索',
     placeholder: '搜索任务、标签…',
     all: '全部',
-    moreTags: '还有 {count} 个标签'
+    moreTags: '还有 {count} 个标签',
   },
   settings: {
     title: '设置',
@@ -74,6 +91,10 @@ export default {
     themeLight: '浅色',
     themeDark: '深色',
     themeAuto: '跟随系统',
+    lockPortraitOnPhone: '手机锁定竖屏',
+    lockPortraitOnPhoneDesc: '在手机上横屏时提示旋转回竖屏（PWA 推荐开启）',
+    rotatePortrait: '请旋转至竖屏',
+    rotatePortraitHint: '手机请使用竖屏模式',
     locale: '语言',
     export: '导出备份',
     import: '导入备份',
@@ -98,7 +119,7 @@ export default {
     syncAuto: '登录后自动同步',
     syncUnavailable: '未配置 Supabase，云同步不可用',
     data: '数据与备份',
-    dataDesc: '导出 JSON 备份到本地，或从文件合并导入。'
+    dataDesc: '导出 JSON 备份到本地，或从文件合并导入。',
   },
   task: {
     title: '标题',
@@ -121,7 +142,12 @@ export default {
     p2: '中',
     p3: '低',
     p4: '最低',
-    moreOptions: '更多选项'
+    moreOptions: '更多选项',
+    kind: '任务类型',
+    kindMicro: '小推进',
+    kindStandard: '标准',
+    kindFocus: '关键',
+    kindHabit: '习惯',
   },
   recurrence: {
     none: '不重复',
@@ -130,7 +156,7 @@ export default {
     monthly: '每月',
     yearly: '每年',
     until: '结束日期（可选）',
-    untilHint: '留空表示无限重复'
+    untilHint: '留空表示无限重复',
   },
   reminder: {
     off: '不提醒',
@@ -138,7 +164,7 @@ export default {
     before: '提前 {min} 分钟',
     beforeDay: '提前 1 天',
     needDueDate: '请先设置截止日期',
-    defaultTime: '未设具体时间时，默认按 9:00 提醒'
+    defaultTime: '未设具体时间时，默认按 9:00 提醒',
   },
   auth: {
     title: '账号',
@@ -161,7 +187,7 @@ export default {
     errInvalidEmail: '邮箱格式无效',
     errRateLimit: '请求过于频繁，请稍后再试',
     errNetwork: '网络错误，请检查连接',
-    errGeneric: '操作失败，请重试'
+    errGeneric: '操作失败，请重试',
   },
   sync: {
     now: '立即同步',
@@ -184,7 +210,7 @@ export default {
     defaultError: '同步失败',
     banner: '云同步失败：{reason}',
     bannerPrefix: '云同步失败：',
-    bannerSuffix: ''
+    bannerSuffix: '',
   },
   insight: {
     overdue_title: '有逾期任务',
@@ -202,7 +228,7 @@ export default {
     actionWelcome: '添加第一个任务',
     actionFocus: '查看今天',
     moreSuggestions: '还有 {count} 条建议',
-    summary: '{count} 条智能建议'
+    summary: '{count} 条智能建议',
   },
   toast: {
     saved: '已保存',
@@ -213,6 +239,38 @@ export default {
     aiUnavailable: 'AI 暂不可用',
     aiSplitDone: 'AI 已生成子任务',
     scheduled: '已将「{title}」安排到 {date}',
-    scheduledBatch: '已为 {count} 项任务安排日期'
-  }
-};
+    scheduledBatch: '已为 {count} 项任务安排日期',
+    completed: '完成了一个小推进',
+    completedMicro: '小推进完成',
+    completedFocus: '关键任务已关闭',
+    completedHabit: '今日节奏已保持',
+    restored: '已恢复',
+  },
+  rhythm: {
+    title: '节奏与成就',
+    settingsTitle: '节奏与成就',
+    enabled: '开启节奏追踪',
+    enabledDesc: '显示 streak、周节奏与温和成就，可随时关闭',
+    dailyGoal: '每日目标',
+    dailyGoalDesc: '每天完成几个今日任务算达成节奏（1–7）',
+    pause: '休假模式',
+    pauseDesc: '暂停 streak 计数，适合旅行或休息',
+    restToday: '今日休息',
+    restTodayDesc: '本周已用 {used}/{max} 次休息日',
+    restMarkAction: '标记为休息日',
+    restRemoveAction: '取消休息',
+    restMarked: '已标记为休息日',
+    restRemoved: '已取消休息',
+    restLimit: '本周休息日已用完',
+    streak: '当前节奏',
+    streakShort: '{count} 天节奏',
+    days: '天',
+    weekly: '本周节奏',
+    weeklyShort: '本周 {active}/7',
+    focusWins: '关键任务',
+    doneWeek: '本周完成',
+    milestone: '{count} 项里程碑',
+    pausedHint: '休假模式中，streak 已暂停',
+    disabledHint: '节奏追踪已关闭，可在设置中重新开启',
+  },
+}

@@ -12,6 +12,7 @@
 
 @import './tokens.css' layer(life-os.tokens);
 @import './base.css' layer(life-os.base);
+@import './portrait-gate.css' layer(life-os.platform);
 @import './ios-safari.css' layer(life-os.platform);
 @import './layout.css' layer(life-os.layout);
 @import './shell.css' layer(life-os.shell);

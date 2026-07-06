@@ -1,33 +1,34 @@
 <script>
-  import { S, updateSettings, applyTheme } from '$lib/state.svelte.js';
-  import { setLocale, t } from '$lib/i18n/index.js';
-  import SettingsRow from './SettingsRow.svelte';
-  import SettingsSegment from './SettingsSegment.svelte';
+  import { S, updateSettings, applyTheme } from '$lib/state.svelte.js'
+  import { setLocale, t } from '$lib/i18n/index.js'
+  import SettingsRow from './SettingsRow.svelte'
+  import SettingsSegment from './SettingsSegment.svelte'
+  import SettingsToggle from './SettingsToggle.svelte'
 
   /** @type {{ onThemeChange?: (theme: string) => void, onLocaleChange?: (locale: string) => void }} */
-  let { onThemeChange, onLocaleChange } = $props();
+  let { onThemeChange, onLocaleChange } = $props()
 
   const themeOptions = $derived([
     { value: 'light', label: t('settings.themeLight') },
     { value: 'dark', label: t('settings.themeDark') },
-    { value: 'auto', label: t('settings.themeAuto') }
-  ]);
+    { value: 'auto', label: t('settings.themeAuto') },
+  ])
 
   const localeOptions = $derived([
     { value: 'zh', label: t('settings.langZh') },
-    { value: 'en', label: t('settings.langEn') }
-  ]);
+    { value: 'en', label: t('settings.langEn') },
+  ])
 
   function setTheme(theme) {
-    updateSettings({ theme });
-    applyTheme();
-    onThemeChange?.(theme);
+    updateSettings({ theme })
+    applyTheme()
+    onThemeChange?.(theme)
   }
 
   function onSetLocale(locale) {
-    if (S.settings.locale === locale) return;
-    setLocale(locale);
-    onLocaleChange?.(locale);
+    if (S.settings.locale === locale) return
+    setLocale(locale)
+    onLocaleChange?.(locale)
   }
 </script>
 
@@ -47,6 +48,17 @@
       value={S.settings.theme || 'auto'}
       onchange={setTheme}
       ariaLabel={t('settings.theme')}
+    />
+  </SettingsRow>
+
+  <SettingsRow
+    label={t('settings.lockPortraitOnPhone')}
+    desc={t('settings.lockPortraitOnPhoneDesc')}
+  >
+    <SettingsToggle
+      checked={S.settings.lockPortraitOnPhone !== false}
+      ariaLabel={t('settings.lockPortraitOnPhone')}
+      onchange={(checked) => updateSettings({ lockPortraitOnPhone: checked })}
     />
   </SettingsRow>
 </div>

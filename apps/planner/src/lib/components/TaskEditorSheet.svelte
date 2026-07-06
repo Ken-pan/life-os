@@ -5,6 +5,7 @@
   import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
   import { t, listLabel } from '$lib/i18n/index.js';
   import { SYSTEM_LIST_INBOX, RECURRENCE_RULES, REMINDER_PRESETS } from '$lib/types.js';
+  import { TASK_KINDS, normalizeTaskKind } from '$lib/domain/taskKind.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
   import { createImeGuard } from '@life-os/theme';
   import DateField from './DateField.svelte';
@@ -30,7 +31,8 @@
       Boolean(draft.recurrence) ||
       (draft.priority ?? 0) > 0 ||
       draft.tags.length > 0 ||
-      draft.subtasks.length > 0
+      draft.subtasks.length > 0 ||
+      normalizeTaskKind(draft.meta?.kind) !== 'standard'
     );
   });
 
@@ -73,7 +75,11 @@
       reminderMinutes: draft.reminderMinutes ?? null,
       recurrence: draft.recurrence,
       tags: [...draft.tags],
-      subtasks: JSON.parse(JSON.stringify(draft.subtasks))
+      subtasks: JSON.parse(JSON.stringify(draft.subtasks)),
+      meta: {
+        ...(draft.meta || {}),
+        kind: normalizeTaskKind(draft.meta?.kind),
+      },
     };
     if (isNew) {
       createTask({
@@ -283,6 +289,23 @@
                 <p class="field-hint">{t('recurrence.untilHint')}</p>
               {/if}
             {/if}
+          </div>
+
+          <div class="field">
+            <span class="field-label">{t('task.kind')}</span>
+            <div class="seg seg-scroll">
+              {#each TASK_KINDS as kind}
+                <button
+                  type="button"
+                  class:on={normalizeTaskKind(draft.meta?.kind) === kind}
+                  onclick={() => {
+                    draft.meta = { ...(draft.meta || {}), kind };
+                  }}
+                >
+                  {t(`task.kind${kind[0].toUpperCase()}${kind.slice(1)}`)}
+                </button>
+              {/each}
+            </div>
           </div>
 
           <div class="field">

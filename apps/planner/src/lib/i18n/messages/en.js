@@ -1,7 +1,7 @@
 export default {
   app: {
     name: 'PLANNER.OS',
-    tagline: 'Sunny tasks, calm planning'
+    tagline: 'Sunny tasks, calm planning',
   },
   nav: {
     today: 'Today',
@@ -15,7 +15,7 @@ export default {
     groupTasks: 'Tasks',
     groupBrowse: 'Browse',
     groupAccount: 'Account',
-    mainAria: 'Main navigation'
+    mainAria: 'Main navigation',
   },
   common: {
     back: 'Back',
@@ -30,37 +30,54 @@ export default {
     close: 'Close',
     more: 'More',
     empty: 'No tasks yet',
-    tasks: '{count} tasks'
+    tasks: '{count} tasks',
   },
   home: {
     title: 'Today',
     overdue: 'Overdue',
     today: 'Today',
     nodate: 'To schedule',
-    quickAdd: 'Add a task…'
+    quickAdd: 'Add a task…',
+    progressTitle: 'Today progress',
+    progressCount: '{done} / {total} completed',
+    progressRemaining: '{count} left to clear today',
+    progressAllDone: 'Today is wrapped up',
+    progressDoneOnly: '{count} completed today',
+    doneToday: 'Done today',
+    planTomorrow: 'Plan tomorrow',
+    scrollDoneToday: 'View done today',
+    recapTitle: 'Today recap',
+    nextAction: 'Next best action',
+    viewAllDone: 'View all {count}',
+    viewDoneLog: 'Done log',
+    closedTitle: 'Today is wrapped up',
+    closedTasks: '{count} tasks completed',
+    closedHabits: '{count} habits kept',
+    closedFocus: '{count} focus wins',
   },
   inbox: {
-    title: 'Inbox'
+    title: 'Inbox',
   },
   upcoming: {
     title: 'Upcoming',
     tomorrow: 'Tomorrow',
     week: 'Next 7 days',
     later: 'Later',
-    nodate: 'No date'
+    nodate: 'No date',
   },
   calendar: {
-    title: 'Calendar'
+    title: 'Calendar',
   },
   completed: {
     title: 'Completed',
-    empty: 'No completed tasks yet'
+    empty: 'No completed tasks yet',
+    logTitle: 'Done log',
   },
   search: {
     title: 'Search',
     placeholder: 'Search tasks, tags…',
     all: 'All',
-    moreTags: '{count} more tags'
+    moreTags: '{count} more tags',
   },
   settings: {
     title: 'Settings',
@@ -74,6 +91,11 @@ export default {
     themeLight: 'Light',
     themeDark: 'Dark',
     themeAuto: 'System',
+    lockPortraitOnPhone: 'Lock portrait on phone',
+    lockPortraitOnPhoneDesc:
+      'Prompt to rotate back when the phone is landscape (recommended for PWA)',
+    rotatePortrait: 'Rotate to portrait',
+    rotatePortraitHint: 'Use portrait mode on your phone',
     locale: 'Language',
     export: 'Export backup',
     import: 'Import backup',
@@ -81,7 +103,8 @@ export default {
     newList: 'New list',
     listName: 'List name',
     notifications: 'Reminders',
-    notificationsDesc: 'Get browser notifications before tasks are due (permission required).',
+    notificationsDesc:
+      'Get browser notifications before tasks are due (permission required).',
     notificationsEnabled: 'Reminders enabled',
     notifyStatus: 'Permission: {status}',
     permissionGranted: 'Allowed',
@@ -91,14 +114,15 @@ export default {
     notifyOn: 'Notifications enabled',
     notifyDenied: 'Notifications blocked — allow them in browser settings',
     notifyDeniedAction: 'How to enable notifications',
-    notifyDeniedHelp: 'Open the site icon in your address bar and allow Notifications for this site.',
+    notifyDeniedHelp:
+      'Open the site icon in your address bar and allow Notifications for this site.',
     notifyUnsupported: 'Notifications not supported in this browser',
     sync: 'Cloud sync',
     syncDesc: 'Sign in to back up tasks and sync across devices.',
     syncAuto: 'Auto-sync after sign-in',
     syncUnavailable: 'Supabase is not configured; cloud sync is unavailable',
     data: 'Data & backup',
-    dataDesc: 'Export a JSON backup locally, or merge data from a backup file.'
+    dataDesc: 'Export a JSON backup locally, or merge data from a backup file.',
   },
   task: {
     title: 'Title',
@@ -121,7 +145,12 @@ export default {
     p2: 'Medium',
     p3: 'Low',
     p4: 'Lowest',
-    moreOptions: 'More options'
+    moreOptions: 'More options',
+    kind: 'Task type',
+    kindMicro: 'Micro',
+    kindStandard: 'Standard',
+    kindFocus: 'Focus',
+    kindHabit: 'Habit',
   },
   recurrence: {
     none: 'Never',
@@ -130,7 +159,7 @@ export default {
     monthly: 'Monthly',
     yearly: 'Yearly',
     until: 'End date (optional)',
-    untilHint: 'Leave blank to repeat indefinitely'
+    untilHint: 'Leave blank to repeat indefinitely',
   },
   reminder: {
     off: 'Off',
@@ -138,7 +167,7 @@ export default {
     before: '{min} min before',
     beforeDay: '1 day before',
     needDueDate: 'Set a due date first',
-    defaultTime: 'Defaults to 9:00 AM when no time is set'
+    defaultTime: 'Defaults to 9:00 AM when no time is set',
   },
   auth: {
     title: 'Account',
@@ -161,7 +190,7 @@ export default {
     errInvalidEmail: 'Invalid email address',
     errRateLimit: 'Too many attempts — try again later',
     errNetwork: 'Network error — check your connection',
-    errGeneric: 'Something went wrong'
+    errGeneric: 'Something went wrong',
   },
   sync: {
     now: 'Sync now',
@@ -184,7 +213,7 @@ export default {
     defaultError: 'Sync failed',
     banner: 'Cloud sync failed: {reason}',
     bannerPrefix: 'Cloud sync failed: ',
-    bannerSuffix: ''
+    bannerSuffix: '',
   },
   insight: {
     overdue_title: 'Overdue tasks',
@@ -196,12 +225,13 @@ export default {
     ai_title: 'AI daily brief',
     ai_loading: 'Generating today’s suggestions…',
     welcome_title: 'Plan your day',
-    welcome_body: 'Add tasks with due dates — Planner will remind and organize them for you.',
+    welcome_body:
+      'Add tasks with due dates — Planner will remind and organize them for you.',
     actionOverdue: 'View overdue task',
     actionSchedule: 'Schedule up to 3',
     actionWelcome: 'Add your first task',
     actionFocus: 'View today',
-    moreSuggestions: '{count} more suggestions'
+    moreSuggestions: '{count} more suggestions',
   },
   toast: {
     saved: 'Saved',
@@ -212,6 +242,38 @@ export default {
     aiUnavailable: 'AI unavailable',
     aiSplitDone: 'AI subtasks added',
     scheduled: 'Scheduled “{title}” for {date}',
-    scheduledBatch: 'Scheduled dates for {count} tasks'
-  }
-};
+    scheduledBatch: 'Scheduled dates for {count} tasks',
+    completed: 'Nice progress',
+    completedMicro: 'Small win done',
+    completedFocus: 'Key task closed',
+    completedHabit: 'Rhythm kept today',
+    restored: 'Restored',
+  },
+  rhythm: {
+    title: 'Rhythm & wins',
+    settingsTitle: 'Rhythm & wins',
+    enabled: 'Track rhythm',
+    enabledDesc: 'Show streaks, weekly rhythm, and quiet milestones — turn off anytime',
+    dailyGoal: 'Daily goal',
+    dailyGoalDesc: 'Plan tasks to complete per day for a good rhythm (1–7)',
+    pause: 'Vacation mode',
+    pauseDesc: 'Pause streak counting while you rest or travel',
+    restToday: 'Rest today',
+    restTodayDesc: '{used}/{max} rest days used this week',
+    restMarkAction: 'Mark rest day',
+    restRemoveAction: 'Remove rest day',
+    restMarked: 'Rest day marked',
+    restRemoved: 'Rest day removed',
+    restLimit: 'No rest days left this week',
+    streak: 'Current rhythm',
+    streakShort: '{count}-day rhythm',
+    days: 'days',
+    weekly: 'Weekly rhythm',
+    weeklyShort: '{active}/7 this week',
+    focusWins: 'Focus wins',
+    doneWeek: 'Done this week',
+    milestone: '{count} milestone',
+    pausedHint: 'Vacation mode — streak paused',
+    disabledHint: 'Rhythm tracking is off. Enable it in Settings.',
+  },
+}

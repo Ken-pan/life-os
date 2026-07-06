@@ -41,7 +41,7 @@ export function createTask(input = {}) {
     updatedAt: now,
     deletedAt: null,
     sortOrder: maxOrder + 1,
-    meta: input.meta ? { ...input.meta } : {}
+    meta: input.meta ? { kind: 'standard', ...input.meta } : { kind: 'standard' }
   };
   S.tasks = [...S.tasks, task];
   afterMutation();

@@ -1,0 +1,44 @@
+/* 手机横屏竖屏提示（需 html[data-portrait-lock="on"] + .life-os-portrait-gate） */
+.life-os-portrait-gate {
+  display: none;
+}
+
+@media (max-width: 860px) and (orientation: landscape) {
+  html[data-portrait-lock='on'] .life-os-portrait-gate {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+    background: var(--bg, #0d0d0e);
+    color: var(--t1, #f2f2f2);
+    text-align: center;
+  }
+
+  html[data-portrait-lock='on'] .life-os-portrait-gate-inner {
+    max-width: 320px;
+  }
+
+  html[data-portrait-lock='on'] .life-os-portrait-gate-icon {
+    display: block;
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 16px;
+    opacity: 0.85;
+  }
+
+  html[data-portrait-lock='on'] .life-os-portrait-gate-title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  html[data-portrait-lock='on'] .life-os-portrait-gate-hint {
+    margin: 0;
+    font-size: 14px;
+    color: var(--t2, #b8b8ba);
+    line-height: 1.5;
+  }
+}

@@ -11,15 +11,28 @@
   import { formatDateShort } from '$lib/domain/dateFormat.js';
   import { listLabel, t } from '$lib/i18n/index.js';
   import { getListById, dateKeyOf } from '$lib/state.svelte.js';
+  import { getTaskKind } from '$lib/domain/taskKind.js';
   import { toast } from '$lib/ui.svelte.js';
   import Icon from './Icon.svelte';
 
-  /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
-  let { task, compact = false, onToggle, onEdit } = $props();
+  /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, ritualComplete?: boolean, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
+  let { task, compact = false, ritualComplete = false, onToggle, onEdit } = $props();
+
+  const COMPLETE_RITUAL_MS = 520;
+  const reduceMotion =
+    typeof matchMedia !== 'undefined' &&
+    matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let completing = $state(false);
+  let completeTimer = /** @type {ReturnType<typeof setTimeout> | null} */ (null);
+
+  const showAsCompleted = $derived(task.completed || completing);
 
   const overdue = $derived(isOverdue(task));
+  const kind = $derived(getTaskKind(task));
   const list = $derived(getListById(task.listId));
   const hasRecurrence = $derived(task.recurrence?.rule && task.recurrence.rule !== 'none');
+  const showHabitChip = $derived(kind === 'habit' || hasRecurrence);
   const showMeta = $derived(
     !compact ||
       overdue ||
@@ -91,7 +104,33 @@
 
   onDestroy(() => {
     if (activeClose === closeActions) activeClose = null;
+    if (completeTimer) clearTimeout(completeTimer);
   });
+
+  function requestComplete() {
+    if (task.completed || completing) return;
+
+    if (!ritualComplete || reduceMotion) {
+      onToggle?.(task.id);
+      return;
+    }
+
+    completing = true;
+    navigator.vibrate?.(8);
+    completeTimer = setTimeout(() => {
+      completing = false;
+      completeTimer = null;
+      onToggle?.(task.id);
+    }, COMPLETE_RITUAL_MS);
+  }
+
+  function handleCheckToggle() {
+    if (task.completed) {
+      onToggle?.(task.id);
+      return;
+    }
+    requestComplete();
+  }
 
   function onPointerDown(e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -163,7 +202,7 @@
 
     if (dx >= COMPLETE_THRESHOLD) {
       closeActions();
-      onToggle?.(task.id);
+      requestComplete();
       return;
     }
     if (dx < -fullDeleteThreshold) {
@@ -273,19 +312,26 @@
     style:transform={`translateX(${dx}px)`}
     ontransitionend={onSettleEnd}
   >
-    <div class="task-row" class:done={task.completed} class:overdue={overdue} class:task-row--compact={compact}>
+    <div class="task-row" class:done={showAsCompleted} class:completing class:overdue={overdue} class:task-row--compact={compact} class:task-row--focus={kind === 'focus'} class:task-row--micro={kind === 'micro'}>
       <button
         type="button"
         class="task-check"
-        class:on={task.completed}
+        class:on={showAsCompleted}
+        class:completing
+        class:task-check--focus={kind === 'focus'}
         aria-label="toggle"
-        onclick={() => onToggle?.(task.id)}
+        onclick={handleCheckToggle}
       >
-        {#if task.completed}<Icon name="check" size={14} strokeWidth={3} />{/if}
+        {#if showAsCompleted}<Icon name="check" size={14} strokeWidth={3} />{/if}
       </button>
 
       <button type="button" class="task-body" style="text-align:left;background:none;border:none;padding:0;width:100%" onclick={() => onEdit?.(task)}>
-        <div class="task-title" class:done-text={task.completed}>{task.title}</div>
+        <div class="task-title-row">
+          {#if kind === 'micro'}
+            <span class="task-kind-dot" aria-hidden="true"></span>
+          {/if}
+          <div class="task-title" class:done-text={showAsCompleted}>{task.title}</div>
+        </div>
         {#if showMeta && (task.dueDate || task.dueTime || hasRecurrence || task.reminderMinutes != null || (showSecondaryMeta && (task.tags.length || list)))}
           <div class="task-meta">
             {#if task.dueDate}
@@ -295,6 +341,11 @@
             {/if}
             {#if hasRecurrence}
               <span class="chip tag">{recurrenceLabel(task.recurrence, t)}</span>
+            {:else if showHabitChip}
+              <span class="chip tag">{t('task.kindHabit')}</span>
+            {/if}
+            {#if kind === 'focus'}
+              <span class="chip chip--focus">{t('task.kindFocus')}</span>
             {/if}
             {#if task.reminderMinutes != null}
               <span class="chip">🔔</span>

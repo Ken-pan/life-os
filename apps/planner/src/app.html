@@ -51,7 +51,15 @@
         if (meta) meta.content = resolved === 'dark' ? '#121110' : '#f5f3f0';
         var icon = document.getElementById('app-favicon');
         if (icon) icon.href = resolved === 'dark' ? '/icon-dark.svg' : '/icon.svg';
-      } catch (e) {}
+      } catch (e) { }
+    })();
+    (function () {
+      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      document.documentElement.style.setProperty('--app-vh', h + 'px');
+      var standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator && window.navigator.standalone === true);
+      document.documentElement.classList.toggle('standalone-pwa', standalone);
     })();
   </script>
   %sveltekit.head%

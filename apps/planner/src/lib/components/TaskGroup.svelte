@@ -13,6 +13,8 @@
     collapsible?: boolean,
     defaultExpanded?: boolean,
     compactRows?: boolean,
+    ritualComplete?: boolean,
+    sectionId?: string,
     onToggle?: (id: string) => void,
     onEdit?: (task: import('$lib/types.js').Task) => void
   }} */
@@ -24,6 +26,8 @@
     collapsible = false,
     defaultExpanded = true,
     compactRows = false,
+    ritualComplete = false,
+    sectionId,
     onToggle,
     onEdit
   } = $props();
@@ -32,7 +36,7 @@
   let expanded = $state(untrack(() => defaultExpanded));
 </script>
 
-<section class:task-group--compact={compactRows}>
+<section class:task-group--compact={compactRows} id={sectionId}>
   {#if !hideHeader}
     {#if collapsible}
       <button
@@ -58,7 +62,7 @@
     {#if sorted.length}
       <div class="task-list">
         {#each sorted as task (task.id)}
-          <TaskRow {task} compact={compactRows} {onToggle} {onEdit} />
+          <TaskRow {task} compact={compactRows} {ritualComplete} {onToggle} {onEdit} />
         {/each}
       </div>
     {:else if empty}

@@ -69,7 +69,8 @@ export function openTaskEditor(task = null, defaults = {}) {
         reminderMinutes: null,
         recurrence: null,
         tags: [],
-        subtasks: []
+        subtasks: [],
+        meta: { kind: 'standard' }
       };
   taskEditor.open = true;
 }
