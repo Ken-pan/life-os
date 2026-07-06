@@ -72,7 +72,7 @@
 
     let cancelled = false
     void enqueueArtResolve(resolve).then((url) => {
-      if (!cancelled && url && !artUrl) resolvedUrl = url
+      if (!cancelled && url && (!artUrl || inputArtFailed)) resolvedUrl = url
     })
 
     return () => {

@@ -3248,16 +3248,15 @@ html:has(.np-ambient-back) .bottom-shell {
 
 /* Toast: stay above mini-player + tab bar (Material bottom-center + safe-area). */
 .music-app .toast {
-  bottom: calc(var(--mobile-tabbar-total-h) + var(--mini-player-h, 68px) + var(--space-4) + var(--safe-bottom-effective));
   max-width: min(calc(100vw - var(--space-6)), 420px);
 }
 
-.music-app .main-wrap[data-player-chrome='mini'] .toast {
+.music-app:not([data-page-route='now-playing']) .toast:not(.toast--error) {
   bottom: calc(var(--mobile-tabbar-total-h) + var(--mini-player-h, 68px) + var(--space-4) + var(--safe-bottom-effective));
 }
 
 @media (--life-os-desktop) {
-  .music-app .toast {
+  .music-app:not([data-page-route='now-playing']) .toast:not(.toast--error) {
     left: auto;
     right: calc(var(--space-5) + var(--safe-right-effective));
     bottom: calc(var(--space-5) + var(--safe-bottom-effective));
@@ -3265,7 +3264,7 @@ html:has(.np-ambient-back) .bottom-shell {
     max-width: min(360px, calc(100vw - var(--sidebar-w) - var(--space-8)));
   }
 
-  .music-app .toast.show {
+  .music-app:not([data-page-route='now-playing']) .toast:not(.toast--error).show {
     transform: translateY(0);
   }
 }

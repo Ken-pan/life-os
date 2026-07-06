@@ -48,7 +48,7 @@
 
   const track = $derived(player.queue[player.index] ?? null)
   const artResolve = $derived(
-    track && !track.artUrl
+    track
       ? {
           albumKey: track.albumKey,
           artist: track.artist,

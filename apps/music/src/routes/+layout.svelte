@@ -218,6 +218,7 @@
   </div>
 
   <UtilityPane />
+  <Toast />
 </div>
 
 <div
@@ -228,4 +229,3 @@
   <BottomNav />
 </div>
 <QueueDrawer />
-<Toast />
