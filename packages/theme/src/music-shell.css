@@ -936,6 +936,18 @@
   transform: translateX(-50%) translateY(0);
 }
 
+/* Now-playing: keep success/info toasts above lyrics too. */
+.music-app[data-page-route='now-playing'] .toast:not(.toast--error) {
+  top: calc(var(--page-header-h, 52px) + var(--space-3) + var(--safe-top-effective, env(safe-area-inset-top, 0px)));
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+.music-app[data-page-route='now-playing'] .toast:not(.toast--error).show {
+  transform: translateX(-50%) translateY(0);
+}
+
 @media (--life-os-desktop) {
   .music-app .toast--error {
     left: auto;
@@ -944,6 +956,16 @@
   }
 
   .music-app .toast--error.show {
+    transform: translateY(0);
+  }
+
+  .music-app[data-page-route='now-playing'] .toast:not(.toast--error) {
+    left: auto;
+    right: calc(var(--space-5) + var(--safe-right-effective));
+    transform: translateY(-10px);
+  }
+
+  .music-app[data-page-route='now-playing'] .toast:not(.toast--error).show {
     transform: translateY(0);
   }
 }

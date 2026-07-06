@@ -33,6 +33,7 @@
   const appBarBackHref = $derived(pageChrome.backHref ?? resolvePageBack(page.url.pathname) ?? undefined);
   const appBarBackLabel = $derived(pageChrome.backLabel ?? undefined);
   const playerChrome = $derived((player.queue[player.index] ?? null) ? 'mini' : 'none');
+  const pageRoute = $derived(page.url.pathname.startsWith('/now-playing') ? 'now-playing' : undefined);
 
   onMount(() => {
     applyTheme();
@@ -91,7 +92,7 @@
 
 <DocumentHead appId="music" pageTitle={pageTitle} />
 
-<div class="app-shell music-app">
+<div class="app-shell music-app" data-page-route={pageRoute}>
   <SideNav />
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>

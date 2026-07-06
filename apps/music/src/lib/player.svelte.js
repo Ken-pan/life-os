@@ -314,6 +314,7 @@ export async function refreshQueueMetadata() {
         albumKey: row.albumKey,
         artistKey: row.artistKey,
         lyrics: row.lyrics,
+        artRemoteUrl: row.artRemoteUrl || track.artRemoteUrl,
         artUrl: row.artUrl || track.artUrl,
         fileName: row.fileName,
         storagePath: row.storagePath || track.storagePath,

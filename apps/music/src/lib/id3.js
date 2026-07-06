@@ -232,12 +232,66 @@ function readPictureFrame(frame) {
   return { mime: mime || 'image/jpeg', data };
 }
 
-/** @param {string} name — expects "Title - Artist" (WeChat / common CN exports) when ID3 is missing */
+const FEAT_RE = /\b(feat\.?|ft\.?|featuring|with|vs\.?|x)\b/i;
+const LEADING_TRACK_RE = /^\d{1,3}[.)]\s*/;
+
+/** @param {string} part */
+function stripFilenameNoise(part) {
+  return part
+    .replace(LEADING_TRACK_RE, '')
+    .replace(/\s*[\[(].*[\])]\s*$/g, '')
+    .trim();
+}
+
+/** @param {string} part */
+function looksLikeArtistSegment(part) {
+  const s = stripFilenameNoise(part);
+  if (!s) return false;
+  if (FEAT_RE.test(s)) return true;
+  if (s.includes(' & ') || s.includes('、') || s.includes('，')) return true;
+  if (/^(the|a|an)\s+/i.test(s)) return true;
+  // Band / duo names often shorter than song titles in Western exports.
+  if (/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}$/.test(s) && s.length <= 32) return true;
+  return false;
+}
+
+/**
+ * Parse "A - B" into artist/title.
+ * Heuristic pipeline (ByeTunes / filename-fixer style): feat./band cues, then locale defaults.
+ * @param {string} left
+ * @param {string} right
+ */
+function splitArtistTitle(left, right) {
+  const a = stripFilenameNoise(left);
+  const b = stripFilenameNoise(right);
+  if (!a || !b) return { artist: a || b || '未知艺术家', title: b || a || '未命名' };
+
+  const leftArtist = looksLikeArtistSegment(a);
+  const rightArtist = looksLikeArtistSegment(b);
+
+  if (leftArtist && !rightArtist) return { artist: a, title: b };
+  if (rightArtist && !leftArtist) return { artist: b, title: a };
+
+  const aCjk = (a.match(/[\u4e00-\u9fff]/g) || []).length;
+  const bCjk = (b.match(/[\u4e00-\u9fff]/g) || []).length;
+  const aLatin = /^[\x00-\x7F\s'.-]+$/.test(a);
+  const bLatin = /^[\x00-\x7F\s'.-]+$/.test(b);
+
+  // WeChat / CN exports: Title - Artist (title often longer or mixed CJK+Latin).
+  if (aCjk > 0 && bCjk > 0 && a.length >= b.length) return { title: a, artist: b };
+  if (aCjk > 0 && bLatin) return { title: a, artist: b };
+  if (bCjk > 0 && aLatin) return { title: b, artist: a };
+
+  // Western default: Artist - Title.
+  return { artist: a, title: b };
+}
+
+/** @param {string} name — fallback when ID3 is missing */
 export function parseFilename(name) {
-  const base = name.replace(/\.[^.]+$/, '');
-  const parts = base.split(' - ');
+  const base = name.replace(/\.[^.]+$/, '').trim();
+  const parts = base.split(/\s+-\s+/);
   if (parts.length >= 2) {
-    return { title: parts[0].trim(), artist: parts.slice(1).join(' - ').trim() };
+    return splitArtistTitle(parts[0], parts.slice(1).join(' - '));
   }
-  return { artist: '未知艺术家', title: base.trim() || '未命名' };
+  return { artist: '未知艺术家', title: base || '未命名' };
 }

@@ -8,7 +8,7 @@ import { S, save } from './state.svelte.js';
 import { t } from './i18n/index.js';
 
 const APP_ID = 'music';
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 async function requireUser() {
   const { data, error } = await supabase.auth.getUser();
@@ -69,13 +69,21 @@ async function pushLocal(userId) {
       lyrics: tr.lyrics || '',
       storage_path: tr.storagePath || '',
       mime_type: tr.mime || '',
-      size_bytes: tr.size || 0
+      size_bytes: tr.size || 0,
+      art_remote_url: typeof tr.artRemoteUrl === 'string' ? tr.artRemoteUrl : ''
     }));
     let { error } = await supabase.from(T.trackMeta).upsert(rows);
     // Remote may lag behind local migrations — drop new columns and retry.
-    if (error && /lyrics|storage_path|mime_type|size_bytes|column/i.test(error.message || '')) {
+    if (error && /lyrics|storage_path|mime_type|size_bytes|art_remote_url|column/i.test(error.message || '')) {
       const slim = rows.map(
-        ({ lyrics: _l, storage_path: _s, mime_type: _m, size_bytes: _b, ...rest }) => rest
+        ({
+          lyrics: _l,
+          storage_path: _s,
+          mime_type: _m,
+          size_bytes: _b,
+          art_remote_url: _a,
+          ...rest
+        }) => rest
       );
       ({ error } = await supabase.from(T.trackMeta).upsert(slim));
     }
@@ -147,6 +155,9 @@ async function pullCloud(userId) {
     if (typeof row.storage_path === 'string' && row.storage_path) patch.storagePath = row.storage_path;
     if (typeof row.mime_type === 'string' && row.mime_type) patch.mime = row.mime_type;
     if (row.size_bytes) patch.size = Number(row.size_bytes);
+    if (typeof row.art_remote_url === 'string' && row.art_remote_url.startsWith('https://')) {
+      patch.artRemoteUrl = row.art_remote_url;
+    }
 
     if (existing) {
       await db.tracks.update(row.track_id, patch);
@@ -167,6 +178,10 @@ async function pullCloud(userId) {
         liked: /** @type {0|1} */ (row.liked ? 1 : 0),
         lyrics: typeof row.lyrics === 'string' ? row.lyrics : '',
         storagePath: row.storage_path,
+        artRemoteUrl:
+          typeof row.art_remote_url === 'string' && row.art_remote_url.startsWith('https://')
+            ? row.art_remote_url
+            : undefined,
         words: trackWords({
           title: row.title || '',
           artist: row.artist || '',
@@ -193,7 +208,11 @@ async function pullCloud(userId) {
 
   if (snap.tracks.length) {
     import('./import.js')
-      .then(({ repairGarbledMetadata }) => repairGarbledMetadata())
+      .then(({ repairFilenameMetadata, repairGarbledMetadata, ensureArtRepaired }) => {
+        void repairFilenameMetadata();
+        void repairGarbledMetadata();
+        void ensureArtRepaired();
+      })
       .catch(() => {});
     const cloudPaths = snap.tracks
       .map((row) => (typeof row.storage_path === 'string' ? row.storage_path : ''))

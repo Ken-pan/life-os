@@ -81,8 +81,8 @@
     </section>
   {:else}
     <section class="empty-state">
-      <p>{t('common.empty')}</p>
-      <p>{t('common.emptyHint')}</p>
+      <p class="empty-state-title">{t('common.empty')}</p>
+      <p class="empty-state-hint">{t('common.emptyHint')}</p>
       <a class="btn-primary" href="/import">{t('common.import')}</a>
     </section>
   {/if}

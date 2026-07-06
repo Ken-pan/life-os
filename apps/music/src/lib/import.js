@@ -170,6 +170,50 @@ export async function rescanTrackMetadata(onProgress) {
   return { scanned: scannable.length, updated };
 }
 
+/**
+ * Re-parse filenames with updated heuristics (Title-Artist vs Artist-Title).
+ * @returns {Promise<number>}
+ */
+export async function repairFilenameMetadata() {
+  const tracks = await getAllTracks();
+  let repaired = 0;
+
+  for (const track of tracks) {
+    if (!track.fileName) continue;
+    const parsed = parseFilename(track.fileName);
+    if (!isValidMeta(parsed.title) || !isValidMeta(parsed.artist)) continue;
+
+    const symmetricSwap =
+      track.title === parsed.artist &&
+      track.artist === parsed.title &&
+      parsed.title !== parsed.artist;
+    const needsFix =
+      symmetricSwap ||
+      ((!isValidMeta(track.title) || track.title === '未命名') &&
+        parsed.title !== track.title) ||
+      ((!isValidMeta(track.artist) || track.artist === '未知艺术家') &&
+        parsed.artist !== track.artist);
+
+    if (!needsFix) continue;
+
+    /** @type {Partial<import('./types.js').Track>} */
+    const patch = {
+      title: parsed.title,
+      artist: parsed.artist,
+      artistKey: slugKey(parsed.artist),
+      words: trackWords({ ...track, title: parsed.title, artist: parsed.artist })
+    };
+    if (track.album && track.album !== '未知专辑') {
+      patch.albumKey = slugKey(`${parsed.artist}::${track.album}`);
+    }
+    await db.tracks.update(track.id, patch);
+    repaired += 1;
+  }
+
+  if (repaired) scheduleAutoCloudPush();
+  return repaired;
+}
+
 /** @param {import('./types.js').Track} track */
 function isGarbledAlbum(album) {
   return Boolean(album && album !== '未知专辑' && !isValidMeta(album));
@@ -221,13 +265,15 @@ let metaRepairPromise = null;
 /** Idempotent; repairs garbled album names after sync / on library load. */
 export function ensureMetadataRepaired() {
   if (!metaRepairPromise) {
-    metaRepairPromise = repairGarbledMetadata().then(async (repaired) => {
-      if (repaired > 0) {
-        const { bumpLibraryEpoch } = await import('./state.svelte.js');
-        bumpLibraryEpoch();
-      }
-      return repaired;
-    });
+    metaRepairPromise = repairFilenameMetadata()
+      .then(() => repairGarbledMetadata())
+      .then(async (repaired) => {
+        if (repaired > 0) {
+          const { bumpLibraryEpoch } = await import('./state.svelte.js');
+          bumpLibraryEpoch();
+        }
+        return repaired;
+      });
   }
   return metaRepairPromise;
 }
@@ -343,6 +389,7 @@ export async function repairMissingArt() {
     }
   }
 
+  if (repaired) scheduleAutoCloudPush();
   return repaired;
 }
 

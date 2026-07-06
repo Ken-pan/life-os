@@ -45,7 +45,7 @@
   <section class="now-playing-lyrics now-playing-lyrics--loading" aria-label={t('nowPlaying.lyrics')} aria-busy="true">
     <div class="now-playing-lyrics-head">{t('nowPlaying.lyrics')}</div>
     <div class="now-playing-lyrics-skeleton" aria-hidden="true">
-      {#each Array(5) as _, i}
+      {#each Array(5) as _, i (i)}
         <span class="now-playing-lyrics-skeleton-line" style:width="{55 + (i % 3) * 12}%"></span>
       {/each}
     </div>
@@ -62,7 +62,7 @@
       {/if}
     </div>
     <div class="now-playing-lyrics-body" class:timed={model.timed} class:seekable={canSeek} bind:this={scrollEl}>
-      {#each model.lines as line, i}
+      {#each model.lines as line, i (i)}
         {#if canSeek}
           <button
             type="button"

@@ -164,7 +164,9 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('sync.title')}</h3>
-    <p class="block-desc" style="padding:0 18px 16px">{t('sync.desc')}</p>
+    <p class="block-desc" style="padding:0 18px 16px">
+      {cloudStored > 0 ? t('sync.descCloud') : t('sync.desc')}
+    </p>
   </section>
 
   {#if auth.user}
