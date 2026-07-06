@@ -69,15 +69,16 @@
 }
 
 :root[data-theme='dark'] {
-  --bg: #121110;
-  --bg-2: #1a1816;
-  --card: #1f1d1a;
-  --card-h: #272420;
-  --border: rgba(255, 255, 255, 0.075);
-  --border-l: rgba(255, 255, 255, 0.11);
-  --accent: #f0b84d;
+  --bg: #0f0f0e;
+  --bg-2: #171612;
+  --card: #171612;
+  --card-h: #201d17;
+  --surface-elevated: #181612;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-l: rgba(255, 255, 255, 0.1);
+  --accent: #f5b83d;
   --accent-2: #ffc966;
-  --accent-bg: rgba(240, 184, 77, 0.14);
+  --accent-bg: rgba(245, 184, 61, 0.14);
   --on-accent: #1a1408;
   --link: #8db8f4;
   --done: var(--positive);
@@ -90,27 +91,32 @@
   --critical-subtle: #4a2028;
   --info: #8db8f4;
   --info-subtle: #1a2d42;
-  --t1: rgba(245, 240, 234, 0.92);
-  --t2: rgba(245, 240, 234, 0.68);
-  --t3: rgba(245, 240, 234, 0.48);
-  --t4: rgba(245, 240, 234, 0.32);
-  --appbar-bg: rgba(18, 17, 16, 0.9);
-  --nav-bg: rgba(26, 24, 22, 0.92);
-  --sidebar: #121110;
-  --sidebar-foreground: rgba(245, 240, 234, 0.92);
-  --sidebar-muted: rgba(245, 240, 234, 0.55);
-  --sidebar-accent: #1f1d1a;
+  --t1: #f1eee8;
+  --t2: #a7a29a;
+  --t3: #6f6a62;
+  --t4: rgba(241, 238, 232, 0.38);
+  --appbar-bg: rgba(15, 15, 14, 0.92);
+  --nav-bg: rgba(15, 15, 14, 0.94);
+  --sidebar: #0f0f0e;
+  --sidebar-foreground: #f1eee8;
+  --sidebar-muted: #a7a29a;
+  --sidebar-accent: #171612;
   --sidebar-primary: var(--accent);
   --sidebar-primary-foreground: var(--on-accent);
   --sidebar-border: rgba(255, 255, 255, 0.07);
   --shadow: rgba(0, 0, 0, 0.35);
-  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.32);
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.2);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.22), 0 4px 14px rgba(0, 0, 0, 0.16);
-  --shadow-focus: 0 0 0 2px rgba(240, 184, 77, 0.28);
-  --theme-color: #121110;
+  --shadow-focus: 0 0 0 2px rgba(245, 184, 61, 0.28);
+  --theme-color: #0f0f0e;
   --task-check-stroke: #46443f;
   color-scheme: dark;
+}
+
+:root[data-theme='dark'] html,
+:root[data-theme='dark'] body {
+  background-image: none;
 }
 
 html, body {
@@ -588,9 +594,9 @@ html, body {
 @media (--life-os-mobile) {
   .auth-link { width: 100%; }
 
-  /* 无 FAB 的路由（设置/搜索/已完成）去掉多余 FAB 留白 */
+  /* 无 FAB 的路由：底栏留白由 .wrap 的 mobile-content-inset-tabbar 承担，避免与 main-col 叠加 */
   .main-col[data-fab-visible='false'] {
-    padding-bottom: calc(var(--mobile-tabbar-total-h) + var(--space-4));
+    padding-bottom: 0;
   }
 
   /* 认证页无底栏 */
@@ -689,6 +695,9 @@ html, body {
   line-height: 1.3;
   text-align: left;
   -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
 }
 
 .insight-summary:active {
@@ -702,7 +711,7 @@ html, body {
 
 .task-group--compact .sec-header {
   min-height: 36px;
-  margin: var(--space-3) 0 var(--space-1);
+  margin: var(--space-2) 0 var(--space-1);
   align-items: center;
 }
 
@@ -719,23 +728,28 @@ html, body {
   font-family: var(--font);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--t3);
+  color: var(--t2);
+  opacity: 0.72;
 }
 
 .task-group--compact .task-list {
-  gap: var(--space-0-5);
+  gap: 0;
+}
+
+.task-group--compact .swipe-item + .swipe-item {
+  border-top: 1px solid var(--border);
 }
 
 .task-row--compact {
   min-height: 64px;
   padding-block: var(--space-2);
-  padding-inline: var(--space-3-5);
+  padding-inline: 0;
   align-items: center;
   gap: var(--space-5);
 }
 
 .task-row--compact .task-title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-title);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -746,8 +760,11 @@ html, body {
 
 @media (--life-os-mobile) {
   .appbar-inner {
-    padding-top: max(var(--space-4), var(--safe-top-effective));
-    padding-bottom: var(--space-2);
+    padding:
+      max(var(--space-4), var(--safe-top-effective))
+      max(var(--space-6), var(--safe-right-effective))
+      var(--space-2)
+      max(var(--space-6), var(--safe-left-effective));
   }
 
   .appbar-brand-name {
@@ -769,24 +786,75 @@ html, body {
   }
 
   .page-title {
-    margin-top: var(--space-2);
+    margin-top: 18px;
     font-size: var(--text-display-md);
     font-weight: 700;
   }
 
   .wrap {
+    padding:
+      var(--space-2)
+      max(var(--space-6), var(--safe-right-effective))
+      var(--page-block-gap)
+      max(var(--space-6), var(--safe-left-effective));
+  }
+
+  .insight-summary {
+    padding: var(--space-3) var(--space-3-5);
+    margin-bottom: var(--space-3);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface-elevated, var(--card-h));
+    color: var(--t2);
+  }
+
+  .insight-summary:active {
+    background: var(--card-h);
+    color: var(--t1);
+  }
+
+  .insight-stack {
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .insight-banner {
+    border-radius: 12px;
+    padding: var(--space-3) var(--space-3-5);
+    background: var(--surface-elevated, var(--card));
+    box-shadow: none;
+  }
+
+  .task-row--compact:hover {
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .nav {
+    --nav-h: 56px;
     padding-top: var(--space-2);
+    padding-bottom: max(var(--space-3), var(--safe-bottom-effective));
   }
 
   .nav .nav-item,
   .nav .nav-item-more {
+    position: relative;
+    gap: var(--space-1);
     color: var(--t2);
   }
 
   .nav .nav-item.on,
   .nav .nav-item-more.on {
     color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    background: transparent;
+  }
+
+  .nav .nav-item.on svg,
+  .nav .nav-item-more.on svg {
+    padding: 7px;
+    border-radius: 12px;
+    background: var(--accent-bg);
+    box-sizing: content-box;
   }
 
   .nav .nav-lbl {
@@ -797,9 +865,17 @@ html, body {
   }
 
   .fab {
-    --fab-h: 48px;
+    --fab-h: 44px;
+    height: var(--fab-h);
     right: var(--space-6);
-    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-4));
-    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 22%, transparent);
+    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-5));
+    padding: 0 var(--space-3-5);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .fab-label {
+    font-size: var(--text-sm);
   }
 }
