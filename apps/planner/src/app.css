@@ -1289,12 +1289,12 @@ html, body {
     align-items: start;
   }
 
-  .settings-page--planner :global(> .settings-block:nth-child(3)),
-  .settings-page--planner :global(> .settings-block:nth-child(6)) {
+  .settings-page--planner > .settings-block:nth-child(3),
+  .settings-page--planner > .settings-block:nth-child(6) {
     grid-column: 1 / -1;
   }
 
-  .settings-page--planner :global(> .settings-block) {
+  .settings-page--planner > .settings-block {
     overflow: visible;
   }
 
