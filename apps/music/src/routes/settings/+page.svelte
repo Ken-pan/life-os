@@ -44,6 +44,8 @@
     syncing = true;
     try {
       await syncBidirectionalSafe();
+      await refreshQueueMetadata();
+      await refreshCounts();
     } finally {
       syncing = false;
     }

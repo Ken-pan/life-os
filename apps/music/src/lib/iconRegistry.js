@@ -4,6 +4,9 @@ import Compass from '@lucide/svelte/icons/compass';
 import ListMusic from '@lucide/svelte/icons/list-music';
 import Settings from '@lucide/svelte/icons/settings';
 import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+import ChevronUp from '@lucide/svelte/icons/chevron-up';
+import ChevronDown from '@lucide/svelte/icons/chevron-down';
+import X from '@lucide/svelte/icons/x';
 import Play from '@lucide/svelte/icons/play';
 import Pause from '@lucide/svelte/icons/pause';
 import SkipBack from '@lucide/svelte/icons/skip-back';
@@ -26,6 +29,9 @@ export const ICONS = {
   list: ListMusic,
   settings: Settings,
   'chevron-left': ChevronLeft,
+  'chevron-up': ChevronUp,
+  'chevron-down': ChevronDown,
+  x: X,
   play: Play,
   pause: Pause,
   'skip-back': SkipBack,

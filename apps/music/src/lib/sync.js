@@ -7,7 +7,7 @@ import { S, save } from './state.svelte.js';
 import { t } from './i18n/index.js';
 
 const APP_ID = 'music';
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 async function requireUser() {
   const { data, error } = await supabase.auth.getUser();
@@ -63,9 +63,15 @@ async function pushLocal(userId) {
       duration: tr.duration,
       liked: tr.liked,
       play_count: tr.playCount,
-      added_at: tr.addedAt
+      added_at: tr.addedAt,
+      lyrics: tr.lyrics || ''
     }));
-    const { error } = await supabase.from(T.trackMeta).upsert(rows);
+    let { error } = await supabase.from(T.trackMeta).upsert(rows);
+    // Remote may not have lyrics column yet — fall back to metadata-only upsert.
+    if (error && /lyrics|column/i.test(error.message || '')) {
+      const slim = rows.map(({ lyrics: _lyrics, ...rest }) => rest);
+      ({ error } = await supabase.from(T.trackMeta).upsert(slim));
+    }
     if (error) throw error;
   }
 
@@ -119,7 +125,8 @@ async function pullCloud(userId) {
   for (const row of snap.tracks) {
     const existing = await db.tracks.get(row.track_id);
     if (existing) {
-      await db.tracks.update(row.track_id, {
+      /** @type {Partial<import('./types.js').Track>} */
+      const patch = {
         title: row.title,
         artist: row.artist,
         album: row.album,
@@ -129,7 +136,9 @@ async function pullCloud(userId) {
         liked: /** @type {0|1} */ (row.liked ? 1 : 0),
         playCount: row.play_count,
         addedAt: Number(row.added_at)
-      });
+      };
+      if (typeof row.lyrics === 'string' && row.lyrics) patch.lyrics = row.lyrics;
+      await db.tracks.update(row.track_id, patch);
     }
   }
 

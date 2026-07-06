@@ -190,3 +190,45 @@ export function reorderQueue(fromIndex, toIndex) {
     if (nextIndex >= 0) player.index = nextIndex;
   }
 }
+
+/** @param {number} index @param {-1 | 1} delta */
+export function moveQueueItem(index, delta) {
+  reorderQueue(index, index + delta);
+}
+
+function stopAudio() {
+  if (audio) {
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+  }
+  player.playing = false;
+  player.currentTime = 0;
+  player.duration = 0;
+  updateMediaSession(null, false);
+}
+
+/** @param {number} index */
+export function removeFromQueue(index) {
+  if (index < 0 || index >= player.queue.length) return;
+  const wasCurrent = index === player.index;
+  const q = player.queue.filter((_, i) => i !== index);
+  player.queue = q;
+  if (!q.length) {
+    player.index = 0;
+    stopAudio();
+    return;
+  }
+  if (wasCurrent) {
+    player.index = Math.min(index, q.length - 1);
+    loadAndPlay();
+  } else if (index < player.index) {
+    player.index -= 1;
+  }
+}
+
+export function clearQueue() {
+  player.queue = [];
+  player.index = 0;
+  stopAudio();
+}

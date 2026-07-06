@@ -12,7 +12,7 @@ export function parseId3(buffer) {
   const size = syncsafe(view, 6);
   if (size <= 0 || 10 + size > buffer.byteLength) return null;
 
-  /** @type {{ title?: string, artist?: string, album?: string, lyrics?: string, picture?: { mime: string, data: Uint8Array } }} */
+  /** @type {{ title?: string, artist?: string, album?: string, lyrics?: string, lyricsSynced?: boolean, picture?: { mime: string, data: Uint8Array } }} */
   const out = {};
   let offset = 10;
   const end = 10 + size;
@@ -30,8 +30,15 @@ export function parseId3(buffer) {
     if (frameId === 'TIT2') out.title = readTextFrame(frame);
     else if (frameId === 'TPE1') out.artist = readTextFrame(frame);
     else if (frameId === 'TALB') out.album = readTextFrame(frame);
-    else if (frameId === 'USLT') out.lyrics = readLyricsFrame(frame);
-    else if (frameId === 'APIC' || frameId === 'PIC') {
+    else if (frameId === 'SYLT') {
+      const synced = readSyncedLyricsFrame(frame);
+      if (synced) {
+        out.lyrics = synced;
+        out.lyricsSynced = true;
+      }
+    } else if (frameId === 'USLT' && !out.lyricsSynced) {
+      out.lyrics = readLyricsFrame(frame);
+    } else if (frameId === 'APIC' || frameId === 'PIC') {
       const pic = readPictureFrame(frame);
       if (pic) out.picture = pic;
     }
@@ -79,12 +86,66 @@ function readLyricsFrame(frame) {
   if (frame.length < 5) return '';
   const enc = frame[0];
   let i = 4; /* language code */
-  while (i < frame.length && frame[i] !== 0) i++;
-  i++;
+  i = skipEncodedString(frame, i, enc);
   const bytes = frame.subarray(i);
   if (enc === 0x00) return decodeLatin1(bytes).replace(/\0+$/, '').trim();
-  if (enc === 0x01) return decodeUtf16(bytes).replace(/\0+$/, '').trim();
+  if (enc === 0x01 || enc === 0x02) return decodeUtf16(bytes).replace(/\0+$/, '').trim();
   return new TextDecoder('utf-8').decode(bytes).replace(/\0+$/, '').trim();
+}
+
+/** SYLT → LRC text for timed highlighting in LyricsPanel. */
+/** @param {Uint8Array} frame */
+function readSyncedLyricsFrame(frame) {
+  if (frame.length < 6) return '';
+  const enc = frame[0];
+  const timeFormat = frame[4];
+  let i = 6;
+  i = skipEncodedString(frame, i, enc);
+
+  /** @type {{ time: number, text: string }[]} */
+  const lines = [];
+  while (i < frame.length) {
+    let text = '';
+    if (enc === 0x00 || enc === 0x03) {
+      const start = i;
+      while (i < frame.length && frame[i] !== 0) i++;
+      const bytes = frame.subarray(start, i);
+      text = enc === 0x00 ? decodeLatin1(bytes) : new TextDecoder('utf-8').decode(bytes);
+      i += 1;
+    } else {
+      const start = i;
+      while (i + 1 < frame.length && !(frame[i] === 0 && frame[i + 1] === 0)) i += 2;
+      text = decodeUtf16(frame.subarray(start, i));
+      i += 2;
+    }
+    if (i + 4 > frame.length) break;
+    const stamp = ((frame[i] << 24) | (frame[i + 1] << 16) | (frame[i + 2] << 8) | frame[i + 3]) >>> 0;
+    i += 4;
+    const seconds = timeFormat === 2 ? stamp / 1000 : stamp / 1000;
+    text = text.replace(/\0/g, '').trim();
+    if (text) lines.push({ time: seconds, text });
+  }
+
+  if (lines.length < 2) return '';
+  return lines
+    .map(({ time, text }) => {
+      const m = Math.floor(time / 60);
+      const s = time - m * 60;
+      const whole = Math.floor(s);
+      const cs = Math.min(99, Math.floor((s - whole) * 100));
+      return `[${String(m).padStart(2, '0')}:${String(whole).padStart(2, '0')}.${String(cs).padStart(2, '0')}]${text}`;
+    })
+    .join('\n');
+}
+
+/** @param {Uint8Array} frame @param {number} i @param {number} enc */
+function skipEncodedString(frame, i, enc) {
+  if (enc === 0x01 || enc === 0x02) {
+    while (i + 1 < frame.length && !(frame[i] === 0 && frame[i + 1] === 0)) i += 2;
+    return i + 2;
+  }
+  while (i < frame.length && frame[i] !== 0) i++;
+  return i + 1;
 }
 
 /** @param {Uint8Array} bytes */
