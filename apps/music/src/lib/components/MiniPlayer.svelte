@@ -4,6 +4,7 @@
   import { page } from '$app/state';
   import Icon from './Icon.svelte';
   import TrackArt from './TrackArt.svelte';
+  import LikeButton from './LikeButton.svelte';
   import {
     player,
     togglePlay,
@@ -40,6 +41,12 @@
     return () => mq.removeEventListener('change', onChange);
   });
 
+  /** @param {0 | 1} next */
+  function onLikeChange(next) {
+    if (track) track.liked = next;
+  }
+
+  /** @param {'player' | 'lyrics' | 'queue'} [mode] */
   function openNowPlaying(mode) {
     markNowPlayingReturn(page.url.pathname);
     if (mode) setImmersiveViewMode(mode);
@@ -122,6 +129,15 @@
     </div>
 
   <div class="mini-player-actions">
+    {#if track}
+      <LikeButton
+        trackId={track.id}
+        liked={track.liked}
+        variant="mini"
+        size={18}
+        onChange={onLikeChange}
+      />
+    {/if}
     <button
       type="button"
       class="mini-player-btn mini-player-btn--lyrics-desktop"

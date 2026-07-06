@@ -366,16 +366,19 @@ export async function getRecentTracks(limit = 12) {
   return tracks.filter(Boolean).map(hydrateTrack)
 }
 
-/** @param {string} trackId */
+/** @param {string} trackId @returns {Promise<0 | 1 | undefined>} */
 export async function toggleLike(trackId) {
   const track = await db.tracks.get(trackId)
-  if (!track) return
-  const nextLiked = track.liked ? 0 : 1
+  if (!track) return undefined
+  const nextLiked = /** @type {0 | 1} */ (track.liked ? 0 : 1)
   await db.tracks.update(trackId, { liked: nextLiked })
   if (nextLiked) {
     const { recordPlayEvent } = await import('./playEvents.js')
     void recordPlayEvent({ trackId, eventType: 'like', context: 'library' })
   }
+  const { bumpLibraryEpoch } = await import('./state.svelte.js')
+  bumpLibraryEpoch()
+  return nextLiked
 }
 
 /** @returns {Promise<import('./types.js').Playlist[]>} */

@@ -5,8 +5,8 @@
   import { clampPopoverPosition } from '@life-os/theme';
   import { tick } from 'svelte';
 
-  /** @type {{ x: number; y: number; track: import('$lib/types.js').Track; onClose: () => void; onPlay?: () => void; onPlayNext?: () => void; onAddQueue?: () => void }} */
-  let { x, y, track, onClose, onPlay, onPlayNext, onAddQueue } = $props();
+  /** @type {{ x: number; y: number; track: import('$lib/types.js').Track; onClose: () => void; onPlay?: () => void; onPlayNext?: () => void; onAddQueue?: () => void; onLikeChange?: (next: 0 | 1) => void }} */
+  let { x, y, track, onClose, onPlay, onPlayNext, onAddQueue, onLikeChange } = $props();
 
   /** @type {HTMLDivElement | null} */
   let el = $state(null);
@@ -44,6 +44,15 @@
     await db.tracks.delete(track.id);
     onClose();
   }
+
+  async function onToggleLike() {
+    const next = await toggleLike(track.id);
+    if (next === 0 || next === 1) {
+      track.liked = next;
+      onLikeChange?.(next);
+    }
+    onClose();
+  }
 </script>
 
 <div bind:this={el} class="context-menu" style:left="{x}px" style:top="{y}px" role="menu">
@@ -53,8 +62,8 @@
   <button type="button" class="context-menu-item" role="menuitem" onclick={() => { (onAddQueue ?? (() => appendToQueue([track])))(); onClose(); }}>
     {t('common.addToQueue')}
   </button>
-  <button type="button" class="context-menu-item" role="menuitem" onclick={async () => { await toggleLike(track.id); onClose(); }}>
-    {track.liked ? '取消喜欢' : '喜欢'}
+  <button type="button" class="context-menu-item" role="menuitem" onclick={onToggleLike}>
+    {track.liked ? t('liked.remove') : t('liked.add')}
   </button>
   <button type="button" class="context-menu-item context-menu-item--danger" role="menuitem" onclick={onDelete}>
     {t('common.delete')}

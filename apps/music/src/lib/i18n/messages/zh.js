@@ -113,7 +113,7 @@ export default {
     colAlbum: '专辑',
     colAdded: '添加时间',
     colDuration: '时长',
-    colLike: '收藏',
+    colLike: '喜欢',
     sortAdded: '添加时间',
     sortTitle: '标题',
     sortArtist: '艺人',
@@ -179,6 +179,9 @@ export default {
     title: '我喜欢的',
     empty: '还没有红心歌曲',
     emptyHint: '在曲目旁点红心，它们会出现在这里。',
+    ariaLabel: '喜欢歌曲',
+    add: '喜欢',
+    remove: '取消喜欢',
   },
   import: {
     title: '导入',

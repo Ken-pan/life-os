@@ -3,8 +3,8 @@
   import Icon from './Icon.svelte';
   import TrackArt from './TrackArt.svelte';
   import ContextMenu from './ContextMenu.svelte';
+  import LikeButton from './LikeButton.svelte';
   import { playTrack, playTracks, appendToQueue } from '$lib/player.svelte.js';
-  import { toggleLike } from '$lib/db.js';
   import { formatTime } from '$lib/player.svelte.js';
   import { t } from '$lib/i18n/index.js';
 
@@ -131,16 +131,13 @@
       <span class="track-table-col track-table-col--added">{formatAdded(track.addedAt)}</span>
       <span class="track-table-col track-table-col--duration">{track.duration ? formatTime(track.duration) : '—'}</span>
       <span class="track-table-col track-table-col--like">
-        <button
-          type="button"
-          class="track-table-icon-btn"
-          class:is-liked={track.liked === 1}
-          aria-label="喜欢"
-          aria-pressed={track.liked === 1}
-          onclick={() => toggleLike(track.id).then(() => (track.liked = track.liked ? 0 : 1))}
-        >
-          <Icon name="heart" size={16} strokeWidth={track.liked ? 2.5 : 1.75} />
-        </button>
+        <LikeButton
+          trackId={track.id}
+          liked={track.liked}
+          variant="table"
+          size={16}
+          onChange={(next) => (track.liked = next)}
+        />
       </span>
       <span class="track-table-col track-table-col--actions">
         <button type="button" class="track-table-icon-btn play" aria-label={t('common.playNow')} onclick={() => playTrack(track)}>

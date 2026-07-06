@@ -2,8 +2,8 @@
   import Icon from './Icon.svelte'
   import TrackArt from './TrackArt.svelte'
   import ContextMenu from './ContextMenu.svelte'
+  import LikeButton from './LikeButton.svelte'
   import { playTrack, playTracks, appendToQueue } from '$lib/player.svelte.js'
-  import { toggleLike } from '$lib/db.js'
   import { t } from '$lib/i18n/index.js'
 
   /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, richActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
@@ -31,9 +31,9 @@
     else playTrack(track, playSource)
   }
 
-  async function onLike() {
-    await toggleLike(track.id)
-    track.liked = track.liked ? 0 : 1
+  /** @param {0 | 1} next */
+  function onLikeChange(next) {
+    track.liked = next
   }
 
   /** @param {MouseEvent} e */
@@ -87,18 +87,17 @@
   </button>
   <div class="track-row-actions">
     {#if showLike}
-      <button
-        type="button"
-        class="mini-player-btn track-row-action track-row-action--like"
-        aria-label={track.liked ? '取消喜欢' : '喜欢'}
-        onclick={onLike}
-      >
-        <Icon name="heart" size={18} strokeWidth={track.liked ? 2.5 : 1.75} />
-      </button>
+      <LikeButton
+        trackId={track.id}
+        liked={track.liked}
+        variant="row"
+        class="track-row-action track-row-action--like"
+        onChange={onLikeChange}
+      />
     {/if}
     <button
       type="button"
-      class="mini-player-btn play track-row-action"
+      class="track-action-btn play track-row-action"
       aria-label={t('common.playNow')}
       onclick={onPlay}
     >
@@ -107,7 +106,7 @@
     {#if richActions}
       <button
         type="button"
-        class="mini-player-btn track-row-action track-row-action--more"
+        class="track-action-btn track-row-action track-row-action--more"
         aria-label={t('common.more')}
         onclick={openMenu}
       >
@@ -125,6 +124,7 @@
     onClose={closeMenu}
     onPlay={() => onPlay()}
     onAddQueue={() => appendToQueue([menu.track])}
+    onLikeChange={onLikeChange}
   />
 {/if}
 

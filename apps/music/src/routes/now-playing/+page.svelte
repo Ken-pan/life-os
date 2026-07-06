@@ -1,141 +1,197 @@
 <script>
-  import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
-  import { t } from '$lib/i18n/index.js';
-  import Icon from '$lib/components/Icon.svelte';
-  import PlayerControls from '$lib/components/PlayerControls.svelte';
-  import NowPlayingMobileChrome from '$lib/components/NowPlayingMobileChrome.svelte';
-  import NowPlayingAmbientBack from '$lib/components/NowPlayingAmbientBack.svelte';
-  import TrackArt from '$lib/components/TrackArt.svelte';
-  import LyricsPanel from '$lib/components/LyricsPanel.svelte';
-  import QueueList from '$lib/components/QueueList.svelte';
-  import { swipeDismiss, swipeTrack } from '$lib/gestures.js';
-  import { consumeNowPlayingReturn, ensureNowPlayingReturn } from '$lib/nav.js';
-  import { player, nextTrack, prevTrack, togglePlay, refreshQueueMetadata, seek, restoreLastSession, resumeSession } from '$lib/player.svelte.js';
-  import { hasPlayableSource } from '$lib/cloudAudio.js';
-  import { db, toggleLike } from '$lib/db.js';
-  import { fetchLyricsForTrack } from '$lib/lyricsFetch.js';
-  import { scheduleAutoCloudPush } from '$lib/sync.js';
-  import { S, setImmersiveViewMode } from '$lib/state.svelte.js';
+  import { onMount } from 'svelte'
+  import { goto } from '$app/navigation'
+  import { t } from '$lib/i18n/index.js'
+  import Icon from '$lib/components/Icon.svelte'
+  import PlayerControls from '$lib/components/PlayerControls.svelte'
+  import NowPlayingMobileChrome from '$lib/components/NowPlayingMobileChrome.svelte'
+  import NowPlayingAmbientBack from '$lib/components/NowPlayingAmbientBack.svelte'
+  import TrackArt from '$lib/components/TrackArt.svelte'
+  import LyricsPanel from '$lib/components/LyricsPanel.svelte'
+  import QueueList from '$lib/components/QueueList.svelte'
+  import LikeButton from '$lib/components/LikeButton.svelte'
+  import { swipeDismiss, swipeTrack } from '$lib/gestures.js'
+  import { consumeNowPlayingReturn, ensureNowPlayingReturn } from '$lib/nav.js'
+  import {
+    player,
+    nextTrack,
+    prevTrack,
+    togglePlay,
+    refreshQueueMetadata,
+    seek,
+    restoreLastSession,
+    resumeSession,
+    getProgressPct,
+  } from '$lib/player.svelte.js'
+  import { hasPlayableSource } from '$lib/cloudAudio.js'
+  import { db } from '$lib/db.js'
+  import { fetchLyricsForTrack } from '$lib/lyricsFetch.js'
+  import { scheduleAutoCloudPush } from '$lib/sync.js'
+  import { S, setImmersiveViewMode, librarySignals } from '$lib/state.svelte.js'
+  import { auth } from '$lib/auth.svelte.js'
 
-  const track = $derived(player.queue[player.index] ?? null);
-  const viewMode = $derived(S.settings.immersiveViewMode);
+  /** @param {string} hint */
+  function isAuthGateHint(hint) {
+    return (
+      hint === t('sync.notSignedIn') ||
+      hint === t('player.lyricsOnlyHint') ||
+      hint === t('player.noSource')
+    )
+  }
+
+  const inlineStatusHint = $derived(
+    player.statusHint && !isAuthGateHint(player.statusHint)
+      ? player.statusHint
+      : '',
+  )
+  const showSignInCue = $derived(auth.ready && !auth.user)
+
+  const track = $derived(player.queue[player.index] ?? null)
+  const artResolve = $derived(
+    track && !track.artUrl
+      ? {
+          albumKey: track.albumKey,
+          artist: track.artist,
+          album: track.album,
+          title: track.title,
+        }
+      : undefined,
+  )
+  const viewMode = $derived(S.settings.immersiveViewMode)
   const panelMode = $derived(
-    viewMode === 'queue' ? 'queue' : viewMode === 'player' ? 'player' : 'lyrics'
-  );
-  const desktopPanelMode = $derived(panelMode === 'queue' ? 'queue' : 'lyrics');
+    viewMode === 'queue'
+      ? 'queue'
+      : viewMode === 'player'
+        ? 'player'
+        : 'lyrics',
+  )
+  const desktopPanelMode = $derived(
+    panelMode === 'queue'
+      ? 'queue'
+      : panelMode === 'player'
+        ? 'player'
+        : 'lyrics',
+  )
+  const desktopCompactHero = $derived(
+    !isMobile && desktopPanelMode !== 'player',
+  )
 
-  let lyricsFetching = $state(false);
-  let controlsRevealed = $state(true);
-  let isMobile = $state(false);
+  let lyricsFetching = $state(false)
+  let controlsRevealed = $state(true)
+  let isMobile = $state(false)
   /** @type {ReturnType<typeof setTimeout> | undefined} */
-  let controlsIdleTimer;
+  let controlsIdleTimer
 
-  const singAlong = $derived(desktopPanelMode === 'lyrics' && player.playing);
-  const mobileSingAlong = $derived(panelMode === 'lyrics' && player.playing);
+  const singAlong = $derived(desktopPanelMode === 'lyrics' && player.playing)
+  const mobileSingAlong = $derived(panelMode === 'lyrics' && player.playing)
 
   $effect(() => {
-    const tr = track;
+    void librarySignals.epoch
+    if (!track?.id) return
+    void refreshQueueMetadata()
+  })
+
+  $effect(() => {
+    const tr = track
     if (!tr?.id || tr.lyrics?.trim()) {
-      lyricsFetching = false;
-      return;
+      lyricsFetching = false
+      return
     }
 
-    let cancelled = false;
-    lyricsFetching = true;
+    let cancelled = false
+    lyricsFetching = true
 
     void (async () => {
-      const fetched = await fetchLyricsForTrack(tr);
-      if (cancelled) return;
-      lyricsFetching = false;
-      if (!fetched?.text) return;
-      await db.tracks.update(tr.id, { lyrics: fetched.text });
-      await refreshQueueMetadata();
-      scheduleAutoCloudPush();
-    })();
+      const fetched = await fetchLyricsForTrack(tr)
+      if (cancelled) return
+      lyricsFetching = false
+      if (!fetched?.text) return
+      await db.tracks.update(tr.id, { lyrics: fetched.text })
+      await refreshQueueMetadata()
+      scheduleAutoCloudPush()
+    })()
 
     return () => {
-      cancelled = true;
-      lyricsFetching = false;
-    };
-  });
+      cancelled = true
+      lyricsFetching = false
+    }
+  })
 
-  const seekable = $derived(Boolean(track && hasPlayableSource(track)));
+  const seekable = $derived(Boolean(track && hasPlayableSource(track)))
 
   function dismiss() {
-    goto(consumeNowPlayingReturn('/'));
+    goto(consumeNowPlayingReturn('/'))
   }
 
   function scheduleControlsHide() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      controlsRevealed = true;
-      return;
+      controlsRevealed = true
+      return
     }
-    clearTimeout(controlsIdleTimer);
+    clearTimeout(controlsIdleTimer)
     controlsIdleTimer = setTimeout(() => {
-      controlsRevealed = false;
-    }, 2800);
+      controlsRevealed = false
+    }, 2800)
   }
 
   function revealControls() {
-    controlsRevealed = true;
-    scheduleControlsHide();
+    controlsRevealed = true
+    scheduleControlsHide()
   }
 
   /** @param {'player' | 'lyrics' | 'queue'} mode */
   function setMode(mode) {
-    setImmersiveViewMode(mode);
-    revealControls();
+    setImmersiveViewMode(mode)
+    revealControls()
   }
 
-  async function onToggleLike() {
-    if (!track) return;
-    await toggleLike(track.id);
-    track.liked = track.liked ? 0 : 1;
+  /** @param {0 | 1} next */
+  function onLikeChange(next) {
+    if (track) track.liked = next
   }
 
   /** @param {KeyboardEvent} e */
   function onKeydown(e) {
-    revealControls();
-    const tag = /** @type {HTMLElement} */ (e.target)?.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-    if (e.key === 'Escape') dismiss();
-    if (e.key === 'ArrowLeft') prevTrack();
-    if (e.key === 'ArrowRight') nextTrack();
+    revealControls()
+    const tag = /** @type {HTMLElement} */ (e.target)?.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+    if (e.key === 'Escape') dismiss()
+    if (e.key === 'ArrowLeft') prevTrack()
+    if (e.key === 'ArrowRight') nextTrack()
     if (e.key === ' ' || e.code === 'Space') {
-      e.preventDefault();
-      togglePlay();
+      e.preventDefault()
+      togglePlay()
     }
   }
 
   onMount(() => {
-    ensureNowPlayingReturn('/');
-    scheduleControlsHide();
+    ensureNowPlayingReturn('/')
+    scheduleControlsHide()
     void (async () => {
       if (!player.queue.length) {
-        const session = await restoreLastSession();
+        const session = await restoreLastSession()
         if (session?.tracks.length) {
           await resumeSession({
             tracks: session.tracks,
             index: session.index,
             currentTime: session.currentTime,
-            autoplay: false
-          });
+            autoplay: false,
+          })
         }
       }
-    })();
-    const mq = window.matchMedia('(max-width: 860px)');
-    isMobile = mq.matches;
+    })()
+    const mq = window.matchMedia('(max-width: 860px)')
+    isMobile = mq.matches
     const onChange = () => {
-      isMobile = mq.matches;
-    };
-    mq.addEventListener('change', onChange);
+      isMobile = mq.matches
+    }
+    mq.addEventListener('change', onChange)
     return () => {
-      clearTimeout(controlsIdleTimer);
-      mq.removeEventListener('change', onChange);
-    };
-  });
+      clearTimeout(controlsIdleTimer)
+      mq.removeEventListener('change', onChange)
+    }
+  })
 </script>
 
 <svelte:window onkeydown={onKeydown} />
@@ -144,11 +200,15 @@
   class="now-playing now-playing--immersive"
   class:now-playing--apple-mobile={isMobile}
   class:now-playing--player={isMobile && panelMode === 'player'}
-  class:now-playing--queue={isMobile ? panelMode === 'queue' : desktopPanelMode === 'queue'}
+  class:now-playing--queue={isMobile
+    ? panelMode === 'queue'
+    : desktopPanelMode === 'queue'}
   class:now-playing--lyrics-mode={!isMobile && desktopPanelMode === 'lyrics'}
+  class:now-playing--player-mode={!isMobile && desktopPanelMode === 'player'}
   class:now-playing--desktop={!isMobile}
   class:now-playing--sing-along={isMobile ? mobileSingAlong : singAlong}
-  class:now-playing--listen-idle={(isMobile ? panelMode : desktopPanelMode) === 'lyrics' && !player.playing}
+  class:now-playing--listen-idle={(isMobile ? panelMode : desktopPanelMode) ===
+    'lyrics' && !player.playing}
   class:now-playing--controls-revealed={controlsRevealed}
   role="region"
   aria-label={t('nowPlaying.title')}
@@ -156,9 +216,14 @@
   onpointerdown={revealControls}
 >
   {#if track}
-    <NowPlayingAmbientBack artUrl={track.artUrl} />
+    <NowPlayingAmbientBack artUrl={track.artUrl} resolve={artResolve} />
 
-    <button class="now-playing-handle" type="button" aria-label={t('common.back')} onclick={dismiss}></button>
+    <button
+      class="now-playing-handle"
+      type="button"
+      aria-label={t('common.back')}
+      onclick={dismiss}
+    ></button>
 
     {#if isMobile}
       <div class="np-mobile-shell" use:swipeDismiss={{ onDismiss: dismiss }}>
@@ -175,6 +240,7 @@
                 class="now-playing-art np-mobile-art"
                 shared
                 priority="high"
+                resolve={artResolve}
               />
             </div>
 
@@ -184,16 +250,21 @@
                 <p class="now-playing-artist">{track.artist}</p>
               </div>
               <div class="np-mobile-meta-actions">
-                <button
-                  type="button"
-                  class="np-mobile-action-btn"
-                  class:is-liked={track.liked === 1}
-                  aria-label={track.liked === 1 ? t('liked.title') : t('nav.liked')}
-                  aria-pressed={track.liked === 1}
-                  onclick={onToggleLike}
-                >
-                  <Icon name="heart" size={18} strokeWidth={track.liked ? 2.5 : 1.75} />
-                </button>
+                {#if showSignInCue}
+                  <a
+                    class="now-playing-sign-in-cue"
+                    href="/auth"
+                    aria-label={t('sync.signInFirst')}
+                  >
+                    <Icon name="circle-user" size={18} strokeWidth={1.75} />
+                  </a>
+                {/if}
+                <LikeButton
+                  trackId={track.id}
+                  liked={track.liked}
+                  variant="np-mobile"
+                  onChange={onLikeChange}
+                />
               </div>
             </div>
           </div>
@@ -211,6 +282,7 @@
                 class="np-mobile-compact-art"
                 shared
                 priority="high"
+                resolve={artResolve}
               />
               <div class="np-mobile-compact-copy">
                 <div class="now-playing-title">{track.title}</div>
@@ -218,23 +290,30 @@
               </div>
             </button>
             <div class="np-mobile-meta-actions">
-              <button
-                type="button"
-                class="np-mobile-action-btn"
-                class:is-liked={track.liked === 1}
-                aria-label={track.liked === 1 ? t('liked.title') : t('nav.liked')}
-                aria-pressed={track.liked === 1}
-                onclick={onToggleLike}
-              >
-                <Icon name="heart" size={18} strokeWidth={track.liked ? 2.5 : 1.75} />
-              </button>
+              {#if showSignInCue}
+                <a
+                  class="now-playing-sign-in-cue"
+                  href="/auth"
+                  aria-label={t('sync.signInFirst')}
+                >
+                  <Icon name="circle-user" size={18} strokeWidth={1.75} />
+                </a>
+              {/if}
+              <LikeButton
+                trackId={track.id}
+                liked={track.liked}
+                variant="np-mobile"
+                onChange={onLikeChange}
+              />
             </div>
           </header>
 
           <section
             class="np-mobile-stage"
             class:np-mobile-stage--queue={panelMode === 'queue'}
-            aria-label={panelMode === 'lyrics' ? t('nowPlaying.lyrics') : t('nowPlaying.queue')}
+            aria-label={panelMode === 'lyrics'
+              ? t('nowPlaying.lyrics')
+              : t('nowPlaying.queue')}
           >
             {#if panelMode === 'lyrics'}
               <LyricsPanel
@@ -243,7 +322,7 @@
                 lyrics={track.lyrics}
                 currentTime={player.currentTime}
                 fetching={lyricsFetching}
-                seekable={seekable}
+                {seekable}
                 onSeek={seek}
               />
             {:else}
@@ -254,8 +333,13 @@
           </section>
         {/if}
 
-        {#if player.statusHint}
-          <p class="now-playing-status-hint np-mobile-status-hint" role="status">{player.statusHint}</p>
+        {#if inlineStatusHint}
+          <p
+            class="now-playing-status-hint np-mobile-status-hint"
+            role="status"
+          >
+            {inlineStatusHint}
+          </p>
         {/if}
 
         <NowPlayingMobileChrome viewMode={panelMode} onMode={setMode} />
@@ -270,31 +354,51 @@
         <Icon name="chevron-down" size={18} />
       </button>
 
-      <div class="now-playing-mode-toggle" role="tablist" aria-label={t('nowPlaying.modeLabel')}>
-        <button
-          type="button"
-          role="tab"
-          class="now-playing-mode-btn"
-          class:active={desktopPanelMode === 'lyrics'}
-          aria-selected={desktopPanelMode === 'lyrics'}
-          onclick={() => setMode('lyrics')}
+      <div class="now-playing-top-actions">
+        {#if showSignInCue}
+          <a
+            class="now-playing-sign-in-cue now-playing-sign-in-cue--desktop"
+            href="/auth"
+            aria-label={t('sync.signInFirst')}
+          >
+            <Icon name="circle-user" size={18} strokeWidth={1.75} />
+            <span>{t('auth.signIn')}</span>
+          </a>
+        {/if}
+
+        <div
+          class="now-playing-mode-toggle"
+          role="tablist"
+          aria-label={t('nowPlaying.modeLabel')}
         >
-          {t('nowPlaying.modeLyrics')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="now-playing-mode-btn"
-          class:active={desktopPanelMode === 'queue'}
-          aria-selected={desktopPanelMode === 'queue'}
-          onclick={() => setMode('queue')}
-        >
-          {t('nowPlaying.modeQueue')}
-        </button>
+          <button
+            type="button"
+            role="tab"
+            class="now-playing-mode-btn"
+            class:active={desktopPanelMode === 'lyrics'}
+            aria-selected={desktopPanelMode === 'lyrics'}
+            onclick={() => setMode('lyrics')}
+          >
+            {t('nowPlaying.modeLyrics')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="now-playing-mode-btn"
+            class:active={desktopPanelMode === 'queue'}
+            aria-selected={desktopPanelMode === 'queue'}
+            onclick={() => setMode('queue')}
+          >
+            {t('nowPlaying.modeQueue')}
+          </button>
+        </div>
       </div>
 
       <div class="now-playing-layout" use:swipeDismiss={{ onDismiss: dismiss }}>
-        <header class="now-playing-hero">
+        <header
+          class="now-playing-hero"
+          class:now-playing-hero--compact={desktopCompactHero}
+        >
           <div
             class="now-playing-hero-art"
             use:swipeTrack={{ onPrev: prevTrack, onNext: nextTrack }}
@@ -307,40 +411,71 @@
                 class="now-playing-art"
                 shared
                 priority="high"
+                resolve={artResolve}
               />
             </div>
           </div>
 
           <div class="now-playing-hero-meta">
             <div class="now-playing-copy">
-              <h1 class="now-playing-title">{track.title}</h1>
+              <div class="now-playing-title-row">
+                <h1 class="now-playing-title">{track.title}</h1>
+                <LikeButton
+                  trackId={track.id}
+                  liked={track.liked}
+                  variant="np-desktop"
+                  onChange={onLikeChange}
+                />
+              </div>
               <p class="now-playing-artist">{track.artist}</p>
               <p class="now-playing-album">{track.album}</p>
             </div>
 
             <div class="now-playing-dock">
-              <PlayerControls quiet minimal />
+              <PlayerControls quiet minimal hideProgress={desktopCompactHero} />
             </div>
-
-            {#if player.statusHint}
-              <p class="now-playing-status-hint" role="status">{player.statusHint}</p>
-            {/if}
           </div>
         </header>
+
+        {#if desktopCompactHero}
+          <div
+            class="np-desktop-hero-rail"
+            role="progressbar"
+            aria-label="进度"
+            aria-valuemin="0"
+            aria-valuemax={player.duration || 0}
+            aria-valuenow={player.currentTime}
+            style={`--progress-pct: ${getProgressPct()}`}
+          >
+            <div class="np-desktop-hero-rail-fill" aria-hidden="true"></div>
+          </div>
+        {/if}
+
+        {#if inlineStatusHint}
+          <p
+            class="now-playing-status-hint now-playing-status-hint--desktop"
+            role="status"
+          >
+            {inlineStatusHint}
+          </p>
+        {/if}
 
         <section
           class="now-playing-lyrics-stage"
           class:now-playing-queue-stage={desktopPanelMode === 'queue'}
-          aria-label={desktopPanelMode === 'lyrics' ? t('nowPlaying.lyrics') : t('nowPlaying.queue')}
+          aria-label={desktopPanelMode === 'lyrics'
+            ? t('nowPlaying.lyrics')
+            : t('nowPlaying.queue')}
+          class:now-playing-lyrics-stage--hidden={desktopPanelMode === 'player'}
         >
           {#if desktopPanelMode === 'lyrics'}
             <LyricsPanel
               stage
-              singAlong={singAlong}
+              {singAlong}
               lyrics={track.lyrics}
               currentTime={player.currentTime}
               fetching={lyricsFetching}
-              seekable={seekable}
+              {seekable}
               onSeek={seek}
             />
           {:else}
