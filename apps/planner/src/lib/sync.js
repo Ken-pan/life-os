@@ -7,58 +7,116 @@ import {
   exportPayload,
   SCHEMA_VERSION,
   flushSave,
-  applyTheme
+  applyTheme,
+  onStateMutation
 } from './state.svelte.js';
+import { splitExpiredTombstones } from './persist/migrate.js';
 import { loadPlannerState, upsertPlannerState, stateHasData, requireUserId } from './repo.js';
 import { CACHE_SCOPES, writeCache } from './localCache.js';
 import { syncRemindersToServiceWorker } from './services/reminders.js';
 import { withSyncNotify } from './syncNotify.js';
+import {
+  markSyncing,
+  markSynced,
+  markSyncError,
+  markOffline,
+  markPendingChanges,
+  syncState
+} from './syncStatus.svelte.js';
 import { toast } from './ui.svelte.js';
 import { t } from './i18n/index.js';
 
 const APP_ID = 'planner';
 
+/** 编辑后自动上云的 debounce（比包内 800ms 更宽，避免连续输入频繁请求） */
+const AUTO_SYNC_DEBOUNCE_MS = 2500;
+
+// 墓碑也算数据：全部删光后仍需 merge + push 才能把删除传播到云端
 export function localHasData() {
   return S.tasks.length > 0 || S.lists.length > 1;
+}
+
+function isOffline() {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
 }
 
 function cachePayload(userId) {
   writeCache(CACHE_SCOPES.state, userId, exportPayload());
 }
 
+/** 正在应用云端数据时，本地 mutation 监听不应再触发自动上云 */
+let applyingCloud = false;
+
 /** @param {object} state @param {'replace'|'merge'} mode @param {string} userId */
 function applyCloudState(state, mode, userId) {
-  applyState(state, mode);
-  save();
+  applyingCloud = true;
+  try {
+    applyState(state, mode);
+    save();
+  } finally {
+    applyingCloud = false;
+  }
   cachePayload(userId);
 }
 
+/**
+ * 物理清理过期墓碑：本地移除，并返回需要从云端删除的 id。
+ * @returns {{ taskIds: string[], listIds: string[] }}
+ */
+function pruneExpiredTombstones() {
+  const now = Date.now();
+  const tasks = splitExpiredTombstones(S.tasks, now);
+  if (tasks.expiredIds.length) S.tasks = tasks.live;
+  const lists = splitExpiredTombstones(S.lists, now);
+  if (lists.expiredIds.length) S.lists = lists.live;
+  return { taskIds: tasks.expiredIds, listIds: lists.expiredIds };
+}
+
 async function pushToCloudInternal() {
+  const expiredTombstones = pruneExpiredTombstones();
   flushSave();
   const userId = await requireUserId();
   const payload = exportPayload();
-  await upsertPlannerState(userId, payload, SCHEMA_VERSION);
+  await upsertPlannerState(userId, payload, SCHEMA_VERSION, expiredTombstones);
   writeSyncMeta(APP_ID, userId);
   cachePayload(userId);
   return { pushed: true };
 }
 
+/**
+ * @template T
+ * @param {() => Promise<T>} fn
+ */
+async function withSyncStatus(fn) {
+  markSyncing();
+  try {
+    const result = await fn();
+    markSynced();
+    return result;
+  } catch (e) {
+    markSyncError(e);
+    throw e;
+  }
+}
+
 export function pushToCloud() {
-  return withSyncNotify(() => pushToCloudInternal());
+  return withSyncNotify(() => withSyncStatus(() => pushToCloudInternal()));
 }
 
 export function pullFromCloud(mode = 'replace') {
-  return withSyncNotify(async () => {
-    const userId = await requireUserId();
-    const state = await loadPlannerState(userId);
-    if (!state || !stateHasData(state)) {
-      throw new Error(t('sync.cloudEmpty'));
-    }
-    applyCloudState(state, mode, userId);
-    await syncRemindersToServiceWorker();
-    writeSyncMeta(APP_ID, userId);
-    return { pulled: true };
-  });
+  return withSyncNotify(() =>
+    withSyncStatus(async () => {
+      const userId = await requireUserId();
+      const state = await loadPlannerState(userId);
+      if (!state || !stateHasData(state)) {
+        throw new Error(t('sync.cloudEmpty'));
+      }
+      applyCloudState(state, mode, userId);
+      await syncRemindersToServiceWorker();
+      writeSyncMeta(APP_ID, userId);
+      return { pulled: true };
+    })
+  );
 }
 
 async function syncNowInternal(mode = 'merge') {
@@ -86,22 +144,20 @@ async function syncNowInternal(mode = 'merge') {
 }
 
 export function syncNow(mode = 'merge') {
-  return withSyncNotify(() => syncNowInternal(mode));
+  return withSyncNotify(() => withSyncStatus(() => syncNowInternal(mode)));
 }
 
 function reportSyncResult(result) {
   applyTheme();
-  const { pulled, pushed, switchedAccount } = result;
-  if (switchedAccount) {
-    if (pushed && pulled) toast(t('sync.merged'));
-    else if (pushed) toast(t('sync.uploaded'));
-    else if (pulled) toast(t('sync.downloaded'));
-    return;
-  }
+  const { pulled, pushed } = result;
   if (pushed && pulled) toast(t('sync.merged'));
   else if (pushed) toast(t('sync.uploaded'));
   else if (pulled) toast(t('sync.downloaded'));
 }
+
+/** 记录本地最后一次改动 / 最近一次已成功上云的改动时间，用于补同步 */
+let lastMutationAt = 0;
+let lastPushedMutationAt = 0;
 
 /** Pull → Merge → Push（local-first 双向收敛） */
 async function performBidirectionalSync() {
@@ -110,43 +166,37 @@ async function performBidirectionalSync() {
     writeSyncMeta(APP_ID, userId);
     return { pushed: false, pulled: false, switchedAccount: false, userId };
   }
+  if (isOffline()) {
+    markOffline();
+    return { pushed: false, pulled: false, switchedAccount: false, userId, offline: true };
+  }
 
-  const meta = readSyncMeta(APP_ID);
-  const sameUser = !meta?.userId || meta.userId === userId;
-  const switchedAccount = !sameUser;
+  return withSyncStatus(async () => {
+    const mutationAtStart = lastMutationAt;
+    const meta = readSyncMeta(APP_ID);
+    const sameUser = !meta?.userId || meta.userId === userId;
+    const switchedAccount = !sameUser;
 
-  const state = await loadPlannerState(userId);
-  let pulled = false;
-  let pushed = false;
+    const state = await loadPlannerState(userId);
+    let pulled = false;
+    let pushed = false;
 
-  if (!sameUser) {
     if (state && stateHasData(state)) {
-      applyCloudState(state, 'merge', userId);
+      const mode = localHasData() ? 'merge' : 'replace';
+      applyCloudState(state, mode, userId);
       pulled = true;
       await syncRemindersToServiceWorker();
     }
+
     if (localHasData() || pulled) {
       await pushToCloudInternal();
       pushed = true;
+      lastPushedMutationAt = mutationAtStart;
     }
+
     writeSyncMeta(APP_ID, userId);
-    return { pulled, pushed, switchedAccount: true, userId, notify: reportSyncResult };
-  }
-
-  if (state && stateHasData(state)) {
-    const mode = sameUser && localHasData() ? 'merge' : 'replace';
-    applyCloudState(state, mode, userId);
-    pulled = true;
-    await syncRemindersToServiceWorker();
-  }
-
-  if (localHasData() || pulled) {
-    await pushToCloudInternal();
-    pushed = true;
-  }
-
-  writeSyncMeta(APP_ID, userId);
-  return { pulled, pushed, switchedAccount, userId, notify: reportSyncResult };
+    return { pulled, pushed, switchedAccount, userId, notify: reportSyncResult };
+  });
 }
 
 const { syncBidirectional, scheduleBidirectionalSync, resetCooldown: resetSyncCooldown } =
@@ -155,14 +205,105 @@ const { syncBidirectional, scheduleBidirectionalSync, resetCooldown: resetSyncCo
     onError: () => toast(t('sync.failed'), 'error'),
     onSilentPull: () => {
       applyTheme();
-      toast(t('sync.pulledFromCloud'));
     }
   });
 
 export { syncBidirectional, scheduleBidirectionalSync, resetSyncCooldown };
 
-export function autoSyncOnLogin() {
-  return syncBidirectional({ force: true });
+/* ------------------------------------------------------------------ */
+/* 编辑后自动上云 + 离线恢复补同步                                        */
+/* ------------------------------------------------------------------ */
+
+/** @type {() => boolean} */
+let signedInCheck = () => false;
+/** @type {ReturnType<typeof setTimeout> | null} */
+let autoSyncTimer = null;
+
+function scheduleAutoSync() {
+  if (autoSyncTimer) clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(() => {
+    autoSyncTimer = null;
+    runAutoSync();
+  }, AUTO_SYNC_DEBOUNCE_MS);
+}
+
+async function runAutoSync() {
+  if (!signedInCheck() || !S.settings.syncAuto) return;
+  if (isOffline()) {
+    markOffline();
+    return;
+  }
+  try {
+    // force：绕过 4s cooldown，否则「同步后立即编辑」的改动会被跳过
+    await syncBidirectional({ silent: true, force: true });
+  } catch {
+    /* 失败已由 withSyncStatus 记录，等待下次触发（回前台/恢复在线/再次编辑） */
+  }
+  // 同步进行中又有新改动 → 追加一轮，保证收敛
+  if (lastMutationAt > lastPushedMutationAt) {
+    markPendingChanges();
+    scheduleAutoSync();
+  }
+}
+
+function handleLocalMutation() {
+  if (applyingCloud) return;
+  lastMutationAt = Date.now();
+  markPendingChanges();
+  if (!signedInCheck() || !S.settings.syncAuto) return;
+  if (isOffline()) {
+    markOffline();
+    return;
+  }
+  scheduleAutoSync();
+}
+
+/**
+ * 初始化自动同步：本地编辑 → debounce 上云；恢复在线/切后台 → 补同步。
+ * @param {{ isSignedIn: () => boolean }} options
+ * @returns {() => void} cleanup
+ */
+export function initAutoSync({ isSignedIn }) {
+  if (!browser) return () => {};
+  signedInCheck = isSignedIn;
+
+  const offMutation = onStateMutation(handleLocalMutation);
+
+  const onOnline = () => {
+    if (!signedInCheck()) return;
+    if (syncState.phase === 'offline') syncState.phase = 'idle';
+    // 恢复在线：无论有无待传改动都做一次双向同步，顺带拉取云端新数据
+    scheduleBidirectionalSync();
+  };
+  window.addEventListener('online', onOnline);
+
+  const onOffline = () => {
+    if (syncState.pendingChanges) markOffline();
+  };
+  window.addEventListener('offline', onOffline);
+
+  // 切后台（移动端切 app / 关标签前）：立即冲刷待传改动，不等 debounce
+  const onVisibilityHidden = () => {
+    if (document.visibilityState !== 'hidden') return;
+    if (!syncState.pendingChanges || !signedInCheck() || isOffline()) return;
+    if (autoSyncTimer) {
+      clearTimeout(autoSyncTimer);
+      autoSyncTimer = null;
+    }
+    runAutoSync();
+  };
+  document.addEventListener('visibilitychange', onVisibilityHidden);
+
+  return () => {
+    offMutation();
+    window.removeEventListener('online', onOnline);
+    window.removeEventListener('offline', onOffline);
+    document.removeEventListener('visibilitychange', onVisibilityHidden);
+    if (autoSyncTimer) {
+      clearTimeout(autoSyncTimer);
+      autoSyncTimer = null;
+    }
+  };
 }
 
 export function lastSyncLabel() {

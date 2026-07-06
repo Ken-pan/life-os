@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { S, save } from '$lib/state.svelte.js';
+import { S, updateSettings } from '$lib/state.svelte.js';
 import { messages } from './messages/index.js';
 
 const LOCALES = /** @type {const} */ (['zh', 'en']);
@@ -40,8 +40,7 @@ export function applyLocale() {
 
 /** @param {'zh' | 'en'} locale */
 export function setLocale(locale) {
-  S.settings.locale = resolveLocale(locale);
-  save();
+  updateSettings({ locale: resolveLocale(locale) });
   applyLocale();
 }
 

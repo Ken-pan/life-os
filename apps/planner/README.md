@@ -40,7 +40,7 @@ npm run test:e2e
 | Repo | `src/lib/repo.js` | Supabase 结构化 + legacy blob 读写 |
 | Cache | `src/lib/localCache.js` | 登录用户 SWR 本地快照 |
 | Reminders | `src/lib/persist/reminderStore.js` + `static/sw.js` | IndexedDB 持久化 + SW 重装 |
-| Sync | `src/lib/sync.js` + `syncNotify.js` | 云同步编排与错误 banner |
+| Sync | `src/lib/sync.js` + `syncNotify.js` + `syncStatus.svelte.js` | 云同步编排、错误 banner、同步状态 |
 
 ## 测试
 
@@ -103,3 +103,10 @@ npm run preview
 共享主题与同步包在 monorepo 内 **`packages/theme`**、**`packages/sync`**（`@life-os/theme`、`@life-os/sync`）。
 
 本地数据优先存储于 `localStorage`（schema v2），登录后可选择与云端合并。
+
+## 云同步机制（跨设备）
+
+- **触发时机**：登录 / 回到前台 / **本地编辑后 2.5s 自动上云** / 恢复在线补同步 / 切后台立即冲刷 / 设置页手动。
+- **合并策略**：任务、清单、设置均按 `updatedAt` 做 LWW（较新者胜），旧设备的过期数据不会覆盖新改动。
+- **删除传播**：删除写**墓碑**（`deletedAt`）而非物理删除，跨设备同步后再物理清理（保留 30 天），避免删除被其他设备「复活」。
+- **状态可见**：设置页实时显示「正在同步 / 有改动待同步 / 离线 / 失败原因 / 上次同步时间」（`syncStatus.svelte.js`）。

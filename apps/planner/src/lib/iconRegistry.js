@@ -17,6 +17,7 @@ import Sparkles from '@lucide/svelte/icons/sparkles';
 import Trash2 from '@lucide/svelte/icons/trash-2';
 import Pencil from '@lucide/svelte/icons/pencil';
 import Ellipsis from '@lucide/svelte/icons/ellipsis';
+import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 
 /** @type {Record<string, import('svelte').Component>} */
 export const ICONS = {
@@ -38,5 +39,6 @@ export const ICONS = {
   sparkles: Sparkles,
   trash: Trash2,
   pencil: Pencil,
-  ellipsis: Ellipsis
+  ellipsis: Ellipsis,
+  'rotate-ccw': RotateCcw
 };

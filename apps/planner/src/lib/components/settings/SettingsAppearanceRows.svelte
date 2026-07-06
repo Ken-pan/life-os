@@ -1,5 +1,5 @@
 <script>
-  import { S, save, applyTheme } from '$lib/state.svelte.js';
+  import { S, updateSettings, applyTheme } from '$lib/state.svelte.js';
   import { setLocale, t } from '$lib/i18n/index.js';
   import SettingsRow from './SettingsRow.svelte';
   import SettingsSegment from './SettingsSegment.svelte';
@@ -19,8 +19,7 @@
   ]);
 
   function setTheme(theme) {
-    S.settings.theme = theme;
-    save();
+    updateSettings({ theme });
     applyTheme();
     onThemeChange?.(theme);
   }

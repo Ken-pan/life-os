@@ -1,6 +1,6 @@
 <script>
   import AppBar from '$lib/components/AppBar.svelte';
-  import { S, save } from '$lib/state.svelte.js';
+  import { S, updateSettings } from '$lib/state.svelte.js';
   import { createList } from '$lib/domain/lists.js';
   import { exportBackup, importBackup } from '$lib/backup.js';
   import { t } from '$lib/i18n/index.js';
@@ -15,6 +15,7 @@
   import { auth, signOut } from '$lib/auth.svelte.js';
   import { isSupabaseConfigured } from '$lib/supabase.js';
   import { pushToCloud, pullFromCloud, syncNow, lastSyncLabel } from '$lib/sync.js';
+  import { syncState } from '$lib/syncStatus.svelte.js';
   import {
     notificationPermission,
     requestNotificationPermission,
@@ -24,6 +25,21 @@
   let listName = $state('');
   let syncBusy = $state(false);
   let importFileName = $state('');
+
+  /** 同步状态描述：同步中 / 离线 / 失败原因 / 上次同步时间（+ 待同步改动） */
+  const syncDesc = $derived.by(() => {
+    if (syncState.phase === 'syncing') return t('sync.syncing');
+    if (syncState.phase === 'offline') return t('sync.offlinePending');
+    if (syncState.phase === 'error') return t('sync.bannerPrefix') + syncState.message;
+    const last = syncState.lastSyncAt
+      ? new Date(syncState.lastSyncAt).toLocaleString()
+      : lastSyncLabel();
+    const base = last ? t('sync.last', { time: last }) : '';
+    if (syncState.pendingChanges) {
+      return base ? `${base} · ${t('sync.pending')}` : t('sync.pending');
+    }
+    return base;
+  });
 
   function permissionStatusLabel() {
     const perm = notificationPermission();
@@ -56,8 +72,7 @@
 
   async function enableNotifications() {
     const perm = await requestNotificationPermission();
-    S.settings.notificationsEnabled = perm === 'granted';
-    save();
+    updateSettings({ notificationsEnabled: perm === 'granted' });
     await syncRemindersToServiceWorker();
     toast(
       perm === 'granted'
@@ -128,7 +143,7 @@
     unavailableDesc={t('settings.syncUnavailable')}
     signedOutDesc={t('settings.syncDesc')}
     email={auth.user?.email}
-    signedInDesc={lastSyncLabel() ? t('sync.last', { time: lastSyncLabel() }) : ''}
+    signedInDesc={syncDesc}
     configured={isSupabaseConfigured}
     signedIn={!!auth.user}
     busy={syncBusy}
@@ -136,8 +151,7 @@
     autoSyncLabel={t('settings.syncAuto')}
     signInLabel={t('auth.signIn')}
     onAutoSyncChange={(checked) => {
-      S.settings.syncAuto = checked;
-      save();
+      updateSettings({ syncAuto: checked });
     }}
   >
     {#snippet actions()}
@@ -162,8 +176,7 @@
         await enableNotifications();
         return;
       }
-      S.settings.notificationsEnabled = checked;
-      save();
+      updateSettings({ notificationsEnabled: checked });
       await syncRemindersToServiceWorker();
     }}
   />

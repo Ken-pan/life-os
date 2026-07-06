@@ -53,11 +53,6 @@ export function structuredHasData(state) {
   return Boolean(state && (state.tasks?.length || state.lists?.length > 1));
 }
 
-/** @param {string[]} remoteIds @param {string[]} localIds */
-export function remoteIdsToDelete(remoteIds, localIds) {
-  const local = new Set(localIds);
-  return remoteIds.filter((id) => !local.has(id));
-}
 
 /** @param {string} userId @param {object[]} tasks */
 export function buildTaskSyncRows(userId, tasks) {
@@ -77,7 +72,7 @@ export function buildListSyncRows(userId, lists) {
     user_id: userId,
     id: list.id,
     data: list,
-    updated_at: now
+    updated_at: list.updatedAt ? new Date(list.updatedAt).toISOString() : now
   }));
 }
 
@@ -105,62 +100,38 @@ async function loadStructuredRows(userId) {
   };
 }
 
+/** @param {'planner_tasks'|'planner_lists'} table @param {string} userId @param {string[]} ids */
+async function deleteRows(table, userId, ids) {
+  if (!ids.length) return;
+  const { error } = await supabase.from(table).delete().eq('user_id', userId).in('id', ids);
+  if (error) throw error;
+}
+
 /**
+ * 上传结构化行。删除通过墓碑行传播（软删除），这里只物理清理
+ * 明确过期的墓碑 id —— 不再按「云端有而本地没有」推断删除，
+ * 避免旧设备直接上传时误删其他设备新建的数据。
+ *
  * @param {string} userId
  * @param {{ tasks?: unknown[], lists?: unknown[], settings?: object, schemaVersion?: number }} payload
  * @param {number} schemaVersion
+ * @param {{ taskIds?: string[], listIds?: string[] }} [expiredTombstones]
  */
-async function upsertStructuredRows(userId, payload, schemaVersion) {
+async function upsertStructuredRows(userId, payload, schemaVersion, expiredTombstones = {}) {
   const tasks = payload.tasks ?? [];
   const lists = payload.lists ?? [];
 
   if (tasks.length) {
-    const rows = buildTaskSyncRows(userId, tasks);
-    const { error } = await supabase.from('planner_tasks').upsert(rows);
+    const { error } = await supabase.from('planner_tasks').upsert(buildTaskSyncRows(userId, tasks));
     if (error) throw error;
-
-    const { data: remoteTasks, error: remoteTasksErr } = await supabase
-      .from('planner_tasks')
-      .select('id')
-      .eq('user_id', userId);
-    if (remoteTasksErr) throw remoteTasksErr;
-    const deleteTaskIds = remoteIdsToDelete(
-      (remoteTasks ?? []).map((r) => r.id),
-      tasks.map((t) => t.id)
-    );
-    if (deleteTaskIds.length) {
-      const { error: delErr } = await supabase
-        .from('planner_tasks')
-        .delete()
-        .eq('user_id', userId)
-        .in('id', deleteTaskIds);
-      if (delErr) throw delErr;
-    }
   }
+  await deleteRows('planner_tasks', userId, expiredTombstones.taskIds ?? []);
 
   if (lists.length) {
-    const rows = buildListSyncRows(userId, lists);
-    const { error } = await supabase.from('planner_lists').upsert(rows);
+    const { error } = await supabase.from('planner_lists').upsert(buildListSyncRows(userId, lists));
     if (error) throw error;
-
-    const { data: remoteLists, error: remoteListsErr } = await supabase
-      .from('planner_lists')
-      .select('id')
-      .eq('user_id', userId);
-    if (remoteListsErr) throw remoteListsErr;
-    const deleteListIds = remoteIdsToDelete(
-      (remoteLists ?? []).map((r) => r.id),
-      lists.map((l) => l.id)
-    );
-    if (deleteListIds.length) {
-      const { error: delErr } = await supabase
-        .from('planner_lists')
-        .delete()
-        .eq('user_id', userId)
-        .in('id', deleteListIds);
-      if (delErr) throw delErr;
-    }
   }
+  await deleteRows('planner_lists', userId, expiredTombstones.listIds ?? []);
 
   await upsertPlannerPayload(userId, { ...payload, schemaVersion }, schemaVersion);
 }
@@ -193,10 +164,11 @@ export async function loadPlannerState(userId) {
  * @param {string} userId
  * @param {{ tasks?: unknown[], lists?: unknown[], settings?: object, schemaVersion?: number }} payload
  * @param {number} schemaVersion
+ * @param {{ taskIds?: string[], listIds?: string[] }} [expiredTombstones] 需从云端物理清理的过期墓碑 id
  */
-export async function upsertPlannerState(userId, payload, schemaVersion) {
+export async function upsertPlannerState(userId, payload, schemaVersion, expiredTombstones) {
   try {
-    await upsertStructuredRows(userId, payload, schemaVersion);
+    await upsertStructuredRows(userId, payload, schemaVersion, expiredTombstones);
   } catch (e) {
     if (/planner_tasks|planner_lists|relation.*does not exist/i.test(String(e?.message || e))) {
       await upsertPlannerPayload(userId, payload, schemaVersion);

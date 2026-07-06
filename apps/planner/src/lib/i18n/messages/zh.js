@@ -22,6 +22,7 @@ export default {
     save: '保存',
     cancel: '取消',
     delete: '删除',
+    undo: '撤销',
     add: '添加',
     addTask: '添加任务',
     edit: '编辑',
@@ -175,6 +176,9 @@ export default {
     notSignedIn: '请先登录',
     cloudEmpty: '云端暂无备份',
     pulledFromCloud: '已从云端同步最新任务',
+    syncing: '正在同步…',
+    pending: '有改动待同步',
+    offlinePending: '当前离线，恢复网络后将自动同步',
     defaultError: '同步失败',
     bannerPrefix: '云同步失败：',
     bannerSuffix: ''

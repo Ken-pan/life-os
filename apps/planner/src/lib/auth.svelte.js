@@ -1,8 +1,8 @@
 import { browser } from '$app/environment';
-import { createAuthSyncHandler, bindVisibilitySync } from '@life-os/sync';
+import { createAuthSyncHandler } from '@life-os/sync';
 import { supabase } from './supabase.js';
 import { clearAllCache } from './localCache.js';
-import { syncBidirectional, scheduleBidirectionalSync, resetSyncCooldown } from './sync.js';
+import { syncBidirectional, resetSyncCooldown } from './sync.js';
 import { t } from './i18n/index.js';
 
 export const auth = $state({
@@ -36,14 +36,6 @@ export function initAuth() {
   });
 
   return () => data.subscription.unsubscribe();
-}
-
-/** App 回到前台时 debounce 双向同步 */
-export function initVisibilitySync() {
-  if (!browser) return () => {};
-  return bindVisibilitySync(() => scheduleBidirectionalSync(), {
-    when: () => Boolean(auth.user)
-  });
 }
 
 export async function signUp(email, password) {

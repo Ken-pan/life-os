@@ -11,13 +11,26 @@ import {
   uid,
   migrate,
   migrateTask,
-  mergeTasksByUpdatedAt
+  mergeTasksByUpdatedAt,
+  mergeListsByUpdatedAt,
+  mergeSettingsByUpdatedAt
 } from './persist/migrate.js';
 import { loadState, saveState } from './persist/localStore.js';
 
 export { SCHEMA_VERSION, dateKeyOf, todayKey, uid, migrate, migrateTask, mergeTasksByUpdatedAt };
 
 export const S = $state(loadState());
+
+/** @type {(() => void) | null} 本地数据变更监听（sync 层注册，用于自动上云） */
+let mutationListener = null;
+
+/** @param {() => void} fn */
+export function onStateMutation(fn) {
+  mutationListener = fn;
+  return () => {
+    if (mutationListener === fn) mutationListener = null;
+  };
+}
 
 export function save() {
   scheduleSave();
@@ -28,6 +41,7 @@ let saveTimer = null;
 export function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(flushSave, 300);
+  mutationListener?.();
 }
 
 export function flushSave() {
@@ -78,19 +92,33 @@ export function applyState(data, mode = 'replace') {
     S.tasks = mergeTasksByUpdatedAt(S.tasks, data.tasks);
   }
   if (Array.isArray(data.lists)) {
-    const byId = new Map(S.lists.map((l) => [l.id, l]));
-    for (const l of data.lists) byId.set(l.id, l);
-    S.lists = [...byId.values()];
+    S.lists = mergeListsByUpdatedAt(S.lists, data.lists);
   }
-  if (data.settings) S.settings = { ...S.settings, ...data.settings };
+  if (data.settings) {
+    S.settings = mergeSettingsByUpdatedAt(S.settings, data.settings);
+  }
+}
+
+/** 修改设置的统一入口：打上 updatedAt，跨设备 LWW 才能正确收敛 */
+/** @param {Partial<import('./types.js').AppSettings>} patch */
+export function updateSettings(patch) {
+  S.settings = { ...S.settings, ...patch, updatedAt: Date.now() };
+  save();
 }
 
 export function getListById(id) {
-  return S.lists.find((l) => l.id === id);
+  return S.lists.find((l) => l.id === id && !l.deletedAt);
 }
 
 export function userLists() {
-  return S.lists.filter((l) => !l.system).sort((a, b) => a.sortOrder - b.sortOrder);
+  return S.lists
+    .filter((l) => !l.system && !l.deletedAt)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/** 未删除的清单（含系统清单），供选择器/侧边栏使用 */
+export function visibleLists() {
+  return S.lists.filter((l) => !l.deletedAt);
 }
 
 export function exportPayload() {

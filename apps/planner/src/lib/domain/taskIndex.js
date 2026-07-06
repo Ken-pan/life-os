@@ -23,6 +23,7 @@ export function buildTaskIndex(tasks) {
   };
 
   for (const task of tasks) {
+    if (task.deletedAt) continue;
     index.byId.set(task.id, task);
     for (const tag of task.tags) index.tagSet.add(tag);
 

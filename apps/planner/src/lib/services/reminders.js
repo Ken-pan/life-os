@@ -24,7 +24,7 @@ export function reminderFireAt(task) {
 export function buildReminderJobs() {
   if (!browser || !S.settings.notificationsEnabled) return [];
   return S.tasks
-    .filter((t) => !t.completed)
+    .filter((t) => !t.completed && !t.deletedAt)
     .map((t) => {
       const fireAt = reminderFireAt(t);
       if (!fireAt) return null;

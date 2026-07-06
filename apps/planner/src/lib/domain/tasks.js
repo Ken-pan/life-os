@@ -39,6 +39,7 @@ export function createTask(input = {}) {
     completedAt: null,
     createdAt: now,
     updatedAt: now,
+    deletedAt: null,
     sortOrder: maxOrder + 1,
     meta: input.meta ? { ...input.meta } : {}
   };
@@ -74,7 +75,7 @@ function spawnNextRecurrence(task) {
   if (!nextDate || !task.recurrence) return null;
   const seriesId = task.recurrence.seriesId || task.id;
   const duplicate = S.tasks.some(
-    (t) => !t.completed && t.recurrence?.seriesId === seriesId && t.dueDate === nextDate
+    (t) => !t.completed && !t.deletedAt && t.recurrence?.seriesId === seriesId && t.dueDate === nextDate
   );
   if (duplicate) return null;
   const tpl = taskTemplateFrom(task);
@@ -96,15 +97,19 @@ export function toggleComplete(id) {
   return updated;
 }
 
-/** @param {string} id */
+/**
+ * 删除任务：写墓碑而非物理删除，保证跨设备删除可传播、不会被旧设备数据复活。
+ * @param {string} id
+ */
 export function deleteTask(id) {
-  S.tasks = S.tasks.filter((t) => t.id !== id);
+  const now = Date.now();
+  S.tasks = S.tasks.map((t) => (t.id === id ? { ...t, deletedAt: now, updatedAt: now } : t));
   afterMutation();
 }
 
 /** @param {string} id @param {number} direction -1 up, 1 down */
 export function moveTask(id, direction) {
-  const active = S.tasks.filter((t) => !t.completed).sort((a, b) => a.sortOrder - b.sortOrder);
+  const active = activeTasks().sort((a, b) => a.sortOrder - b.sortOrder);
   const idx = active.findIndex((t) => t.id === id);
   const swapIdx = idx + direction;
   if (idx < 0 || swapIdx < 0 || swapIdx >= active.length) return;
@@ -134,12 +139,12 @@ export function toggleSubtask(taskId, subtaskId) {
 
 /** @param {import('../types.js').Task[]} tasks */
 export function activeTasks(tasks = S.tasks) {
-  return tasks.filter((t) => !t.completed);
+  return tasks.filter((t) => !t.completed && !t.deletedAt);
 }
 
 /** @param {import('../types.js').Task[]} tasks */
 export function completedTasks(tasks = S.tasks) {
-  return tasks.filter((t) => t.completed);
+  return tasks.filter((t) => t.completed && !t.deletedAt);
 }
 
 export function isOverdue(task) {

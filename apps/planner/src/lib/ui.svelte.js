@@ -6,18 +6,37 @@ function cloneTask(task) {
   return JSON.parse(JSON.stringify(task));
 }
 
-export const toastState = $state({ msg: '', show: false, tone: 'success' });
+export const toastState = $state({
+  msg: '',
+  show: false,
+  tone: 'success',
+  /** @type {string} 可选操作按钮文案（如「撤销」） */
+  actionLabel: '',
+  /** @type {(() => void) | null} */
+  onAction: null
+});
 
 let toastTimer = null;
-/** @param {string} msg @param {'success'|'error'|'warn'} [tone] */
-export function toast(msg, tone = 'success') {
+/**
+ * @param {string} msg
+ * @param {'success'|'error'|'warn'} [tone]
+ * @param {{ actionLabel?: string, onAction?: () => void, duration?: number }} [options]
+ */
+export function toast(msg, tone = 'success', options = {}) {
   toastState.msg = msg;
   toastState.tone = tone;
+  toastState.actionLabel = options.actionLabel ?? '';
+  toastState.onAction = options.onAction ?? null;
   toastState.show = true;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toastState.show = false;
-  }, 1800);
+  }, options.duration ?? (options.actionLabel ? 4000 : 1800));
+}
+
+export function dismissToast() {
+  clearTimeout(toastTimer);
+  toastState.show = false;
 }
 
 export const taskEditor = $state({

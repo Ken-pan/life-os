@@ -22,6 +22,7 @@ export default {
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',
+    undo: 'Undo',
     add: 'Add',
     addTask: 'Add task',
     edit: 'Edit',
@@ -175,6 +176,9 @@ export default {
     notSignedIn: 'Please sign in first',
     cloudEmpty: 'No cloud backup yet',
     pulledFromCloud: 'Latest tasks synced from cloud',
+    syncing: 'Syncing…',
+    pending: 'Changes pending sync',
+    offlinePending: 'Offline — will sync when back online',
     defaultError: 'Sync failed',
     bannerPrefix: 'Cloud sync failed: ',
     bannerSuffix: ''

@@ -5,11 +5,6 @@ export const SCHEMA_VERSION = 2;
 /** 墓碑（已删除标记）保留时长，超过后本地与云端都会被物理清理 */
 export const TOMBSTONE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-/** @param {{ deletedAt?: number|null } | null | undefined} item */
-export function isDeleted(item) {
-  return Boolean(item?.deletedAt);
-}
-
 /** @param {{ deletedAt?: number|null }} item @param {number} [now] */
 export function isExpiredTombstone(item, now = Date.now()) {
   return Boolean(item?.deletedAt && now - item.deletedAt > TOMBSTONE_TTL_MS);
