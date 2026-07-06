@@ -8,7 +8,14 @@ const RUNTIME_CACHE_LIMIT = 128
 const AUDIO_CACHE_LIMIT = 8
 const ART_CACHE_LIMIT = 320
 
-const PRECACHE = ['/', '/manifest.webmanifest', '/icon.svg']
+const PRECACHE = [
+  '/',
+  '/manifest.webmanifest',
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
+]
 
 /** @param {string} cacheName @param {number} limit */
 async function trimCache(cacheName, limit) {

@@ -20,6 +20,24 @@ let elementB = null
 let activeSlot = 'a'
 let graphReady = false
 
+function isStandalonePwa() {
+  return (
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    navigator.standalone === true
+  )
+}
+
+function isIosWebKit() {
+  const ua = navigator.userAgent || ''
+  const iPadDesktopMode =
+    navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+  return /iPad|iPhone|iPod/.test(ua) || iPadDesktopMode
+}
+
+function shouldPreferNativeMediaOutput() {
+  return isStandalonePwa() && isIosWebKit()
+}
+
 /** @param {HTMLAudioElement} a @param {HTMLAudioElement} b */
 export function registerAudioPool(a, b) {
   if (!browser) return
@@ -44,6 +62,7 @@ function fadeForSlot(slot) {
  */
 export async function ensurePlaybackGraph() {
   if (!browser || !elementA || graphReady) return graphReady
+  if (shouldPreferNativeMediaOutput()) return false
   if (!audioContext) {
     const Ctx = window.AudioContext || window.webkitAudioContext
     if (!Ctx) return false

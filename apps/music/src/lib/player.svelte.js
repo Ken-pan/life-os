@@ -220,6 +220,21 @@ function saveSession() {
   )
 }
 
+export function persistPlayerSessionNow() {
+  if (!browser) return
+  clearTimeout(sessionTimer)
+  saveSession()
+}
+
+function emitPlaybackState() {
+  if (!browser) return
+  window.dispatchEvent(
+    new CustomEvent('musicos:playback-state', {
+      detail: { playing: player.playing },
+    }),
+  )
+}
+
 /** @returns {Promise<{ tracks: import('./types.js').Track[]; index: number; currentTime: number; playing: boolean } | null>} */
 export async function restoreLastSession() {
   if (!browser) return null
@@ -271,7 +286,6 @@ export function getAudioElement() {
 export function primeAudioPlayback() {
   ensureAudio()
   declarePlaybackSession()
-  void ensurePlaybackGraph()
   void resumeAudioContext()
 }
 
@@ -1001,6 +1015,7 @@ function wireAudioElement(el, slot) {
     const d = el.duration
     if (!d || !Number.isFinite(d) || d <= 0) return
     player.duration = d
+    updatePositionState(el)
     const track = getCurrentTrack()
     if (!track || (track.duration && track.duration > 0)) return
     void db.tracks.update(track.id, { duration: d }).then(() => {
@@ -1014,11 +1029,16 @@ function wireAudioElement(el, slot) {
     if (slot !== activeSlot) return
     player.playing = true
     updateMediaSession(getCurrentTrack(), true)
+    updatePositionState(el)
+    emitPlaybackState()
   })
   el.addEventListener('pause', () => {
     if (slot !== activeSlot) return
     player.playing = false
     updateMediaSession(getCurrentTrack(), false)
+    updatePositionState(el)
+    persistPlayerSessionNow()
+    emitPlaybackState()
   })
   el.addEventListener('ended', () => onAudioEnded(slot))
 }
@@ -1055,11 +1075,23 @@ function ensureAudio() {
   bindMediaSessionHandlers({
     play: () => {
       primeAudioPlayback()
-      void getActiveAudio()?.play()
+      const audio = getActiveAudio()
+      const track = getCurrentTrack()
+      if (!audio || !track) return
+      if (!audio.src) {
+        void loadAndPlay({ fromToggle: true })
+        return
+      }
+      void audio.play()
     },
     pause: () => getActiveAudio()?.pause(),
     next: nextTrack,
     prev: prevTrack,
+    seekTo: (time) => {
+      seek(time)
+      const audio = getActiveAudio()
+      if (audio) updatePositionState(audio)
+    },
     seekBy: (delta) => {
       const audio = getActiveAudio()
       if (!audio) return

@@ -31,6 +31,18 @@ const MOCK_AUDIO_BODY = Buffer.from(
   'binary',
 )
 
+function readBuiltSwSource() {
+  const swPath = join(appRoot, 'build', 'sw.js')
+  if (!existsSync(swPath)) return ''
+  return readFileSync(swPath, 'utf8')
+}
+
+function readAudioCacheLimit() {
+  const src = readBuiltSwSource()
+  const match = src.match(/const\s+AUDIO_CACHE_LIMIT\s*=\s*(\d+)/)
+  return match ? Number(match[1]) : 4
+}
+
 const INTEGRATION_TRACKS = [
   {
     id: 'qa-sw-player-1',
@@ -340,7 +352,7 @@ function staticSwChecks() {
     )
     return
   }
-  const src = readFileSync(swPath, 'utf8')
+  const src = readBuiltSwSource()
   const checks = [
     [
       'no-placeholder',
@@ -596,8 +608,9 @@ async function runBrowserTests() {
       `B removed=${removedB} C removed=${removedC}`,
     )
 
-    // --- trim limit (4) ---
+    // --- trim limit ---
     route.reset()
+    const audioCacheLimit = readAudioCacheLimit()
     const trimIds = [
       'qa-sw-limit-1',
       'qa-sw-limit-2',
@@ -609,12 +622,12 @@ async function runBrowserTests() {
       await postPrecache(page, mockUrl(id), id)
     }
     const afterTrim = await getAudioCacheInfo(page)
-    const withinLimit = afterTrim.entries.length <= 4
+    const withinLimit = afterTrim.entries.length <= audioCacheLimit
     record(
       'trim',
       'audio-cache-limit',
       withinLimit ? 'pass' : 'fail',
-      `预缓存 5 首后 cache entries=${afterTrim.entries.length}（上限 4）`,
+      `预缓存 5 首后 cache entries=${afterTrim.entries.length}（上限 ${audioCacheLimit}）`,
     )
   } finally {
     await browser.close()

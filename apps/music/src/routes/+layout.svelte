@@ -118,7 +118,9 @@
     const cleanupConnectivity = bindConnectivity(() => {
       if (auth.user) flushPendingSync()
     })
-    const cleanupServiceWorker = registerServiceWorker()
+    const cleanupServiceWorker = registerServiceWorker({
+      shouldDeferUpdate: () => player.playing,
+    })
     const cleanupBackground = bindBackgroundPlayback()
     return () => {
       cleanupShortcuts()

@@ -65,27 +65,40 @@ export function updatePositionState(audio) {
  *   pause: () => void,
  *   next: () => void,
  *   prev: () => void,
+ *   seekTo?: (time: number) => void,
  *   seekBy?: (delta: number) => void
  * }} handlers
  */
 export function bindMediaSessionHandlers(handlers) {
   if (!('mediaSession' in navigator)) return;
-  navigator.mediaSession.setActionHandler('play', handlers.play);
-  navigator.mediaSession.setActionHandler('pause', handlers.pause);
-  navigator.mediaSession.setActionHandler('nexttrack', handlers.next);
-  navigator.mediaSession.setActionHandler('previoustrack', handlers.prev);
+
+  const bind = (action, handler) => {
+    try {
+      navigator.mediaSession.setActionHandler(action, handler);
+    } catch {
+      /* optional on older Safari/iOS */
+    }
+  };
+
+  bind('play', handlers.play);
+  bind('pause', handlers.pause);
+  bind('nexttrack', handlers.next);
+  bind('previoustrack', handlers.prev);
+
+  if (handlers.seekTo) {
+    bind('seekto', (details) => {
+      const seekTime = Number(details?.seekTime);
+      if (Number.isFinite(seekTime)) handlers.seekTo(seekTime);
+    });
+  }
 
   const seekBy = handlers.seekBy;
   if (seekBy) {
-    try {
-      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-        seekBy(-(details?.seekOffset ?? 10));
-      });
-      navigator.mediaSession.setActionHandler('seekforward', (details) => {
-        seekBy(details?.seekOffset ?? 10);
-      });
-    } catch {
-      /* optional on older iOS */
-    }
+    bind('seekbackward', (details) => {
+      seekBy(-(details?.seekOffset ?? 10));
+    });
+    bind('seekforward', (details) => {
+      seekBy(details?.seekOffset ?? 10);
+    });
   }
 }
