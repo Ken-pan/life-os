@@ -1,6 +1,7 @@
 <script>
   import { t } from '$lib/i18n/index.js';
-  import { importAudioFiles } from '$lib/import.js';
+  import { importMediaFiles } from '$lib/import.js';
+  import { refreshQueueMetadata } from '$lib/player.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import { goto } from '$app/navigation';
 
@@ -11,12 +12,15 @@
   async function handleFiles(files) {
     if (!files?.length) return;
     progress = t('import.importing', { done: 0, total: files.length });
-    const count = await importAudioFiles(files, (done, total) => {
-      progress = t('import.importing', { done, total });
+    const { audioCount, lrcCount, total } = await importMediaFiles(files, (done, tot) => {
+      progress = t('import.importing', { done, total: tot });
     });
-    toast(t('import.done', { count }));
+    if (lrcCount > 0) {
+      await refreshQueueMetadata();
+      toast(t('import.doneMixed', { audio: audioCount, lrc: lrcCount }));
+    } else toast(t('import.done', { count: total }));
     progress = '';
-    await goto('/library');
+    if (audioCount > 0) await goto('/library');
   }
 
   /** @param {Event} e */
@@ -49,7 +53,7 @@
     <p style="color:var(--t3);margin-bottom:16px">{t('import.or')}</p>
     <label class="btn-primary file-input-btn">
       {t('common.import')}
-      <input type="file" accept="audio/*,.mp3,.m4a,.flac,.wav,.ogg" multiple onchange={onFileChange} />
+      <input type="file" accept="audio/*,.mp3,.m4a,.flac,.wav,.ogg,.lrc,text/plain" multiple onchange={onFileChange} />
     </label>
   </div>
 

@@ -8,7 +8,7 @@
   import LyricsPanel from '$lib/components/LyricsPanel.svelte';
   import { swipeDismiss, swipeTrack } from '$lib/gestures.js';
   import { consumeNowPlayingReturn, ensureNowPlayingReturn } from '$lib/nav.js';
-  import { player, nextTrack, prevTrack } from '$lib/player.svelte.js';
+  import { player, nextTrack, prevTrack, togglePlay } from '$lib/player.svelte.js';
 
   const track = $derived(player.queue[player.index] ?? null);
 
@@ -18,9 +18,15 @@
 
   /** @param {KeyboardEvent} e */
   function onKeydown(e) {
+    const tag = /** @type {HTMLElement} */ (e.target)?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if (e.key === 'Escape') dismiss();
     if (e.key === 'ArrowLeft') prevTrack();
     if (e.key === 'ArrowRight') nextTrack();
+    if (e.key === ' ' || e.code === 'Space') {
+      e.preventDefault();
+      togglePlay();
+    }
   }
 
   onMount(() => {
@@ -47,7 +53,7 @@
 
     <AudioVisualizer />
     <PlayerControls large />
-    <LyricsPanel lyrics={track.lyrics} />
+    <LyricsPanel lyrics={track.lyrics} currentTime={player.currentTime} />
   {:else}
     <div class="empty-state">
       <p>{t('common.empty')}</p>

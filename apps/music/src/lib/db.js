@@ -152,6 +152,11 @@ export async function trackCount() {
   return db.tracks.count();
 }
 
+/** Tracks that have audio but no lyrics yet. */
+export async function countTracksWithoutLyrics() {
+  return db.tracks.filter((t) => !t.lyrics && Boolean(t.audioBlob)).count();
+}
+
 /** Ensure built-in playlists */
 export async function ensureBuiltinPlaylists() {
   const liked = await db.playlists.where('kind').equals('liked').first();

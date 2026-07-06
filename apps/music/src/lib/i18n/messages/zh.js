@@ -41,11 +41,12 @@ export default {
   liked: { title: '我喜欢的' },
   import: {
     title: '导入',
-    drop: '拖放音频文件到此处',
+    drop: '拖放音频或 LRC 文件到此处',
     or: '或选择文件',
-    hint: '支持 MP3、M4A、FLAC、WAV 等。文件保存在本机 IndexedDB。',
+    hint: '支持 MP3、M4A、FLAC、WAV 等音频，以及同名 .lrc 歌词。文件保存在本机 IndexedDB。',
     importing: '正在导入 {done}/{total}…',
-    done: '已导入 {count} 首'
+    done: '已导入 {count} 首',
+    doneMixed: '已导入 {audio} 首音频，匹配 {lrc} 首歌词'
   },
   nowPlaying: {
     title: '正在播放',
@@ -54,7 +55,8 @@ export default {
     playFromCurrent: '从当前曲目播放',
     reorder: '拖拽排序',
     lyrics: '歌词',
-    noLyrics: '此曲目暂无内嵌歌词',
+    synced: '同步',
+    noLyrics: '此曲目暂无歌词 · 可在导入页添加 .lrc，或在设置中补扫元数据',
     playing: '正在播放',
     paused: '已暂停'
   },
@@ -68,6 +70,13 @@ export default {
     themeDark: '深色',
     privacy: '隐私',
     privacyDesc: '音乐文件保存在本机；登录后仅同步歌单元数据，不上传音频。',
+    library: '曲库',
+    libraryCount: '{count} 首歌曲保存在本机',
+    missingLyrics: '{count} 首有音频文件但尚未提取歌词',
+    rescanMeta: '补扫元数据与歌词',
+    rescanning: '正在补扫 {done}/{total}…',
+    rescanDone: '已扫描 {scanned} 首，更新 {updated} 首',
+    rescanEmpty: '没有可扫描的本地音频',
     export: '导出库信息',
     account: '账号',
     signIn: '登录 / 注册',

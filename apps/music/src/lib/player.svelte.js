@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { hydrateTrack, recordPlay } from './db.js';
+import { db, hydrateTrack, recordPlay } from './db.js';
 import { bindAudioAnalyser, resumeAudioContext } from './audioAnalyser.js';
 import { bindMediaSessionHandlers, updateMediaSession } from './mediaSession.js';
 
@@ -149,6 +149,31 @@ export function formatTime(sec) {
 
 export function getProgressPct() {
   return player.duration > 0 ? `${(player.currentTime / player.duration) * 100}%` : '0%';
+}
+
+/** Refresh metadata (lyrics/tags) on queued tracks after a library rescan. */
+export async function refreshQueueMetadata() {
+  if (!player.queue.length) return;
+  const next = await Promise.all(
+    player.queue.map(async (track) => {
+      const row = await db.tracks.get(track.id);
+      if (!row) return track;
+      return hydrateTrack({
+        ...track,
+        title: row.title,
+        artist: row.artist,
+        album: row.album,
+        albumKey: row.albumKey,
+        artistKey: row.artistKey,
+        lyrics: row.lyrics,
+        artUrl: row.artUrl || track.artUrl,
+        fileName: row.fileName,
+        liked: row.liked,
+        playCount: row.playCount
+      });
+    })
+  );
+  player.queue = next;
 }
 
 /** @param {number} fromIndex @param {number} toIndex */

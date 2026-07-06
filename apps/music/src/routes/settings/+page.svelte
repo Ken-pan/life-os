@@ -1,17 +1,26 @@
 <script>
   import { t } from '$lib/i18n/index.js';
   import { S, save, applyTheme } from '$lib/state.svelte.js';
-  import { exportLibraryJson } from '$lib/import.js';
-  import { trackCount } from '$lib/db.js';
+  import { exportLibraryJson, rescanTrackMetadata } from '$lib/import.js';
+  import { trackCount, countTracksWithoutLyrics } from '$lib/db.js';
+  import { refreshQueueMetadata } from '$lib/player.svelte.js';
   import { auth, signOut } from '$lib/auth.svelte.js';
   import { syncBidirectionalSafe } from '$lib/sync.js';
   import { toast } from '$lib/ui.svelte.js';
 
   let count = $state(0);
+  let missingLyrics = $state(0);
   let syncing = $state(false);
+  let rescanning = $state(false);
+  let rescanProgress = $state('');
+
+  async function refreshCounts() {
+    count = await trackCount();
+    missingLyrics = await countTracksWithoutLyrics();
+  }
 
   $effect(() => {
-    trackCount().then((n) => (count = n));
+    refreshCounts();
   });
 
   function setTheme(theme) {
@@ -43,6 +52,24 @@
   async function onSignOut() {
     await signOut();
     toast(t('settings.signOut'));
+  }
+
+  async function onRescan() {
+    if (rescanning) return;
+    rescanning = true;
+    rescanProgress = t('settings.rescanning', { done: 0, total: count });
+    try {
+      const result = await rescanTrackMetadata((done, total) => {
+        rescanProgress = t('settings.rescanning', { done, total });
+      });
+      if (!result.scanned) toast(t('settings.rescanEmpty'));
+      else toast(t('settings.rescanDone', { scanned: result.scanned, updated: result.updated }));
+      await refreshQueueMetadata();
+      await refreshCounts();
+    } finally {
+      rescanning = false;
+      rescanProgress = '';
+    }
   }
 </script>
 
@@ -96,12 +123,25 @@
     <p class="block-desc" style="padding:0 18px 16px">{t('settings.privacyDesc')}</p>
     <div class="set-row settings-row">
       <div class="pref-copy">
-        <div class="pref-label">曲库</div>
-        <div class="pref-desc">{count} 首歌曲保存在本机</div>
+        <div class="pref-label">{t('settings.library')}</div>
+        <div class="pref-desc">{t('settings.libraryCount', { count })}</div>
+        {#if missingLyrics > 0}
+          <div class="pref-desc" style="margin-top:4px;color:var(--track-accent, var(--accent))">
+            {t('settings.missingLyrics', { count: missingLyrics })}
+          </div>
+        {/if}
       </div>
     </div>
     <div class="settings-stack-block" style="padding:0 18px 16px">
-      <button class="btn-secondary" type="button" onclick={exportMeta}>{t('settings.export')}</button>
+      <div class="settings-btn-group">
+        <button class="btn-primary" type="button" disabled={rescanning || count === 0} onclick={onRescan}>
+          {rescanning ? t('auth.pleaseWait') : t('settings.rescanMeta')}
+        </button>
+        <button class="btn-secondary" type="button" onclick={exportMeta}>{t('settings.export')}</button>
+      </div>
+      {#if rescanProgress}
+        <p class="pref-desc" style="margin-top:12px">{rescanProgress}</p>
+      {/if}
     </div>
   </section>
 
