@@ -1,7 +1,7 @@
-import { toggleComplete } from '$lib/domain/tasks.js'
+import { toggleComplete, updateTask } from '$lib/domain/tasks.js'
 import { getTaskKind } from '$lib/domain/taskKind.js'
-import { openTaskEditor, toast } from '$lib/ui.svelte.js'
-import { S } from '$lib/state.svelte.js'
+import { openTaskEditor, toast, openSchedulePopover } from '$lib/ui.svelte.js'
+import { S, todayKey } from '$lib/state.svelte.js'
 import { t } from '$lib/i18n/index.js'
 
 /** @param {import('$lib/types.js').Task} task */
@@ -45,4 +45,9 @@ export function completeTask(id) {
 
 export function tasksRef() {
   return S.tasks
+}
+
+/** @param {import('$lib/types.js').Task} task @param {string} [dateKey] */
+export function openScheduleForTask(task, dateKey = todayKey()) {
+  openSchedulePopover(task.id, dateKey)
 }

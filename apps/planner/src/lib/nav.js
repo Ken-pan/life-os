@@ -32,11 +32,11 @@ export function buildPrimaryNavItems(tr) {
       match: (p) => p.startsWith('/upcoming')
     },
     {
-      tab: 'calendar',
-      href: '/calendar',
-      label: tr('nav.calendar'),
-      icon: 'calendar',
-      match: (p) => p.startsWith('/calendar')
+      tab: 'schedule',
+      href: '/schedule',
+      label: tr('nav.schedule'),
+      icon: 'clock',
+      match: (p) => p.startsWith('/schedule')
     }
   ];
 }
@@ -44,6 +44,13 @@ export function buildPrimaryNavItems(tr) {
 /** @param {(key: string, params?: Record<string, unknown>) => string} tr */
 export function buildBrowseNavItems(tr) {
   return [
+    {
+      tab: 'calendar',
+      href: '/calendar',
+      label: tr('nav.calendar'),
+      icon: 'calendar',
+      match: (p) => p.startsWith('/calendar')
+    },
     {
       tab: 'search',
       href: '/search',
@@ -122,6 +129,7 @@ export function resolvePrimaryNavTab(pathname) {
   if (pathname === '/') return 'today';
   if (pathname.startsWith('/inbox')) return 'inbox';
   if (pathname.startsWith('/upcoming')) return 'upcoming';
+  if (pathname.startsWith('/schedule')) return 'schedule';
   if (pathname.startsWith('/calendar')) return 'calendar';
   return '';
 }
@@ -130,6 +138,7 @@ export function resolvePrimaryNavTab(pathname) {
 export function isMoreNavActive(pathname) {
   if (pathname.startsWith('/search')) return true;
   if (pathname.startsWith('/completed')) return true;
+  if (pathname.startsWith('/calendar')) return true;
   if (pathname.startsWith('/lists/')) return true;
   if (pathname.startsWith('/settings')) return true;
   if (pathname.startsWith('/auth')) return true;

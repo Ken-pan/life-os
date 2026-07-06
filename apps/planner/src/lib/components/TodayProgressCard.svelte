@@ -10,6 +10,7 @@
     streak?: number,
     weeklyActive?: number,
     rhythmEnabled?: boolean,
+    unscheduledCount?: number,
     onScrollDone?: () => void
   }} */
   let {
@@ -20,6 +21,7 @@
     streak = 0,
     weeklyActive = 0,
     rhythmEnabled = true,
+    unscheduledCount = 0,
     onScrollDone,
   } = $props();
 
@@ -85,6 +87,15 @@
     {#if done > 0}
       <button type="button" class="today-progress-chip" onclick={scrollToDone}>
         {t('home.doneToday')}
+      </button>
+    {/if}
+    {#if unscheduledCount > 0}
+      <button type="button" class="today-progress-chip" onclick={() => goto('/schedule')}>
+        {t('schedule.summaryUnscheduled')} · {unscheduledCount}
+      </button>
+    {:else}
+      <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => goto('/schedule')}>
+        {t('nav.schedule')}
       </button>
     {/if}
     <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => goto('/upcoming')}>

@@ -7,6 +7,7 @@
   import BottomNav from '$lib/components/BottomNav.svelte'
   import Toast from '$lib/components/Toast.svelte'
   import TaskEditorSheet from '$lib/components/TaskEditorSheet.svelte'
+  import QuickSchedulePopover from '$lib/components/schedule/QuickSchedulePopover.svelte'
   import Fab from '$lib/components/Fab.svelte'
   import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte'
   import DocumentHead from '$lib/components/DocumentHead.svelte'
@@ -41,6 +42,7 @@
     if (p === '/') return t('home.title')
     if (p === '/inbox') return t('inbox.title')
     if (p === '/upcoming') return t('upcoming.title')
+    if (p === '/schedule') return t('schedule.title')
     if (p === '/calendar') return t('calendar.title')
     if (p === '/search') return t('search.title')
     if (p === '/completed') return t('completed.title')
@@ -146,3 +148,4 @@
 
 <Toast />
 <TaskEditorSheet />
+<QuickSchedulePopover />

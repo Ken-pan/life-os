@@ -29,6 +29,9 @@ export function createTask(input = {}) {
     priority: /** @type {import('../types.js').TaskPriority} */ (input.priority ?? 0),
     dueDate: input.dueDate ?? null,
     dueTime: input.dueTime ?? null,
+    scheduledDate: input.scheduledDate ?? null,
+    scheduledStart: input.scheduledStart ?? null,
+    durationMinutes: input.durationMinutes ?? null,
     reminderMinutes: input.reminderMinutes ?? null,
     recurrence: recurrence
       ? { ...recurrence, seriesId: recurrence.seriesId || uid() }

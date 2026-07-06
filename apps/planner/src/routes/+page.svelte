@@ -8,7 +8,7 @@
   import TodayRecapPanel from '$lib/components/TodayRecapPanel.svelte';
   import TodayClosedCelebration from '$lib/components/TodayClosedCelebration.svelte';
   import { taskIndex } from '$lib/taskIndex.svelte.js';
-  import { selectTodayGroups, selectTodayProgress, selectNextBestAction } from '$lib/domain/selectors.js';
+  import { selectTodayGroups, selectTodayProgress, selectNextBestAction, selectUnscheduledForDate } from '$lib/domain/selectors.js';
   import { computeRhythmSummary, computeTodayClosedStats } from '$lib/domain/rhythm.js';
   import { completeTask, editTask } from '$lib/taskUi.js';
   import { t } from '$lib/i18n/index.js';
@@ -19,6 +19,7 @@
   const progress = $derived(selectTodayProgress(index));
   const rhythm = $derived(computeRhythmSummary(S.tasks, S.settings, progress));
   const nextTask = $derived(selectNextBestAction(index));
+  const unscheduledToday = $derived(selectUnscheduledForDate(index, todayKey()));
   const total = $derived(groups.overdue.length + groups.today.length);
   const fullyEmpty = $derived(!total && !groups.noDate.length && !progress.doneToday.length);
   const showProgress = $derived(progress.total > 0 || progress.doneToday.length > 0);
@@ -58,6 +59,7 @@
           streak={rhythm.streak}
           weeklyActive={rhythm.weekly.active}
           rhythmEnabled={rhythm.enabled && !rhythm.paused}
+          unscheduledCount={unscheduledToday.length}
         />
       {/if}
 
@@ -76,6 +78,8 @@
             tasks={groups.overdue}
             compactRows
             ritualComplete
+            showScheduleAction
+            scheduleDate={todayKey()}
             onToggle={completeTask}
             onEdit={editTask}
           />
@@ -86,6 +90,8 @@
             tasks={groups.today}
             compactRows
             ritualComplete
+            showScheduleAction
+            scheduleDate={todayKey()}
             onToggle={completeTask}
             onEdit={editTask}
           />
@@ -95,6 +101,8 @@
             title={t('home.nodate')}
             tasks={groups.noDate.slice(0, 5)}
             compactRows
+            showScheduleAction
+            scheduleDate={todayKey()}
             onToggle={completeTask}
             onEdit={editTask}
           />
@@ -121,5 +129,6 @@
     progress={{ done: progress.done, total: progress.total, remaining: progress.remaining }}
     doneToday={progress.doneToday}
     {nextTask}
+    unscheduledCount={unscheduledToday.length}
   />
 </div>

@@ -9,9 +9,10 @@
     summary: ReturnType<import('$lib/domain/rhythm.js').computeRhythmSummary>,
     progress: { done: number, total: number, remaining: number },
     doneToday: import('$lib/types.js').Task[],
-    nextTask: import('$lib/types.js').Task | null
+    nextTask: import('$lib/types.js').Task | null,
+    unscheduledCount?: number
   }} */
-  let { summary, progress, doneToday, nextTask } = $props();
+  let { summary, progress, doneToday, nextTask, unscheduledCount = 0 } = $props();
 
   const previewDone = $derived(doneToday.slice(0, 5));
 </script>
@@ -62,6 +63,11 @@
   {/if}
 
   <div class="today-recap-foot">
+    {#if unscheduledCount > 0}
+      <button type="button" class="today-progress-chip" onclick={() => goto('/schedule')}>
+        {t('schedule.planToday', { count: unscheduledCount })}
+      </button>
+    {/if}
     <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => goto('/completed')}>
       {t('home.viewDoneLog')}
     </button>

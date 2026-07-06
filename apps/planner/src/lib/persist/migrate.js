@@ -79,6 +79,10 @@ export function migrateTask(task) {
   return {
     ...t,
     reminderMinutes: t.reminderMinutes ?? null,
+    scheduledDate: typeof t.scheduledDate === 'string' ? t.scheduledDate : null,
+    scheduledStart: typeof t.scheduledStart === 'string' ? t.scheduledStart : null,
+    durationMinutes:
+      typeof t.durationMinutes === 'number' ? t.durationMinutes : null,
     recurrence: normalizeRecurrence(t.recurrence),
     deletedAt: typeof t.deletedAt === 'number' ? t.deletedAt : null,
     meta: t.meta && typeof t.meta === 'object'

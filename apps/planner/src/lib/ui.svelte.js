@@ -1,6 +1,7 @@
 import { S } from './state.svelte.js';
 import { SYSTEM_LIST_INBOX } from './types.js';
 import { createToastDeduper, resolveToastDuration } from '@life-os/theme';
+import { updateTask } from './domain/tasks.js';
 
 /** @param {import('./types.js').Task} task */
 function cloneTask(task) {
@@ -66,6 +67,9 @@ export function openTaskEditor(task = null, defaults = {}) {
         priority: 0,
         dueDate: defaults.dueDate ?? null,
         dueTime: null,
+        scheduledDate: null,
+        scheduledStart: null,
+        durationMinutes: null,
         reminderMinutes: null,
         recurrence: null,
         tags: [],
@@ -94,4 +98,46 @@ export function openQuickAdd() {
 export function closeQuickAdd() {
   quickAdd.open = false;
   quickAdd.text = '';
+}
+
+export const schedulePopover = $state({
+  open: false,
+  taskId: /** @type {string | null} */ (null),
+  dateKey: /** @type {string | null} */ (null),
+});
+
+/** @param {string} taskId @param {string} dateKey */
+export function openSchedulePopover(taskId, dateKey) {
+  schedulePopover.taskId = taskId;
+  schedulePopover.dateKey = dateKey;
+  schedulePopover.open = true;
+}
+
+export function closeSchedulePopover() {
+  schedulePopover.open = false;
+  schedulePopover.taskId = null;
+  schedulePopover.dateKey = null;
+}
+
+/**
+ * @param {string} taskId
+ * @param {{ dateKey: string, start: string, durationMinutes: number }} payload
+ */
+export function applyTaskSchedule(taskId, payload) {
+  updateTask(taskId, {
+    scheduledDate: payload.dateKey,
+    scheduledStart: payload.start,
+    durationMinutes: payload.durationMinutes,
+  });
+  closeSchedulePopover();
+}
+
+/** @param {string} taskId */
+export function clearTaskSchedule(taskId) {
+  updateTask(taskId, {
+    scheduledDate: null,
+    scheduledStart: null,
+    durationMinutes: null,
+  });
+  closeSchedulePopover();
 }

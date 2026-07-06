@@ -34,6 +34,9 @@
  * @property {TaskPriority} priority
  * @property {string|null} dueDate
  * @property {string|null} dueTime
+ * @property {string|null} scheduledDate YYYY-MM-DD 计划在哪天做
+ * @property {string|null} scheduledStart HH:mm 计划开始时间
+ * @property {number|null} durationMinutes 计划时长（分钟）
  * @property {number|null} reminderMinutes
  * @property {TaskRecurrence|null} recurrence
  * @property {string[]} tags

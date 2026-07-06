@@ -138,6 +138,49 @@ export function selectDoneLogGroups(index) {
   return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]))
 }
 
+/** @param {import('./taskIndex.js').TaskIndex} index @param {string} dateKey */
+export function selectScheduledForDate(index, dateKey) {
+  return index.active
+    .concat(index.completed)
+    .filter(
+      (t) =>
+        t.scheduledDate === dateKey &&
+        t.scheduledStart &&
+        !t.deletedAt,
+    )
+    .sort((a, b) => {
+      const am = a.scheduledStart || ''
+      const bm = b.scheduledStart || ''
+      return am.localeCompare(bm) || a.title.localeCompare(b.title)
+    })
+}
+
+/**
+ * 选定日期下可排程的任务：due 在该日或更早、或无日期，且尚未安排时间块。
+ * @param {import('./taskIndex.js').TaskIndex} index @param {string} dateKey
+ */
+export function selectUnscheduledForDate(index, dateKey) {
+  const today = todayKey()
+  return index.active
+    .filter((t) => {
+      if (t.deletedAt) return false
+      if (t.scheduledDate === dateKey && t.scheduledStart) return false
+      if (t.scheduledDate && t.scheduledDate !== dateKey && t.scheduledStart) {
+        return false
+      }
+      if (t.dueDate === dateKey) return true
+      if (t.dueDate && t.dueDate < dateKey) return true
+      if (!t.dueDate && dateKey === today) return true
+      if (t.scheduledDate === dateKey && !t.scheduledStart) return true
+      return false
+    })
+    .sort(
+      (a, b) =>
+        (a.dueDate || '').localeCompare(b.dueDate || '') ||
+        a.title.localeCompare(b.title),
+    )
+}
+
 /** @param {import('./taskIndex.js').TaskIndex} index */
 export function selectNextBestAction(index) {
   const groups = selectTodayGroups(index)

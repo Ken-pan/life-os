@@ -14,6 +14,8 @@
     defaultExpanded?: boolean,
     compactRows?: boolean,
     ritualComplete?: boolean,
+    showScheduleAction?: boolean,
+    scheduleDate?: string,
     sectionId?: string,
     onToggle?: (id: string) => void,
     onEdit?: (task: import('$lib/types.js').Task) => void
@@ -27,6 +29,8 @@
     defaultExpanded = true,
     compactRows = false,
     ritualComplete = false,
+    showScheduleAction = false,
+    scheduleDate,
     sectionId,
     onToggle,
     onEdit
@@ -62,7 +66,15 @@
     {#if sorted.length}
       <div class="task-list">
         {#each sorted as task (task.id)}
-          <TaskRow {task} compact={compactRows} {ritualComplete} {onToggle} {onEdit} />
+          <TaskRow
+            {task}
+            compact={compactRows}
+            {ritualComplete}
+            {showScheduleAction}
+            scheduleDate={scheduleDate}
+            {onToggle}
+            {onEdit}
+          />
         {/each}
       </div>
     {:else if empty}

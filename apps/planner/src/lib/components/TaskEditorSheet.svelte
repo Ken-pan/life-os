@@ -6,6 +6,7 @@
   import { t, listLabel } from '$lib/i18n/index.js';
   import { SYSTEM_LIST_INBOX, RECURRENCE_RULES, REMINDER_PRESETS } from '$lib/types.js';
   import { TASK_KINDS, normalizeTaskKind } from '$lib/domain/taskKind.js';
+  import { SCHEDULE_DURATIONS, formatDurationLabel } from '$lib/domain/schedule.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
   import { createImeGuard } from '@life-os/theme';
   import DateField from './DateField.svelte';
@@ -32,7 +33,10 @@
       (draft.priority ?? 0) > 0 ||
       draft.tags.length > 0 ||
       draft.subtasks.length > 0 ||
-      normalizeTaskKind(draft.meta?.kind) !== 'standard'
+      normalizeTaskKind(draft.meta?.kind) !== 'standard' ||
+      draft.scheduledDate ||
+      draft.scheduledStart ||
+      draft.durationMinutes
     );
   });
 
@@ -72,6 +76,9 @@
       priority: draft.priority,
       dueDate: draft.dueDate,
       dueTime: draft.dueTime || null,
+      scheduledDate: draft.scheduledDate || null,
+      scheduledStart: draft.scheduledStart || null,
+      durationMinutes: draft.durationMinutes ?? null,
       reminderMinutes: draft.reminderMinutes ?? null,
       recurrence: draft.recurrence,
       tags: [...draft.tags],
@@ -289,6 +296,46 @@
                 <p class="field-hint">{t('recurrence.untilHint')}</p>
               {/if}
             {/if}
+          </div>
+
+          <div class="field">
+            <span class="field-label">{t('schedule.sectionTitle')}</span>
+            <p class="field-hint">{t('schedule.sectionHint')}</p>
+            <label for="task-scheduled-date" class="field-label">{t('schedule.planDate')}</label>
+            <DateField
+              id="task-scheduled-date"
+              value={draft.scheduledDate}
+              onchange={(next) => {
+                draft.scheduledDate = next;
+                if (!next) {
+                  draft.scheduledStart = null;
+                  draft.durationMinutes = null;
+                }
+              }}
+            />
+            <label for="task-scheduled-start" class="field-label">{t('schedule.startTime')}</label>
+            <input
+              id="task-scheduled-start"
+              type="time"
+              value={draft.scheduledStart || ''}
+              disabled={!draft.scheduledDate}
+              oninput={(e) => {
+                draft.scheduledStart = e.currentTarget.value || null;
+              }}
+            />
+            <span class="field-label">{t('schedule.duration')}</span>
+            <div class="seg seg-scroll">
+              {#each SCHEDULE_DURATIONS as mins}
+                <button
+                  type="button"
+                  class:on={draft.durationMinutes === mins}
+                  disabled={!draft.scheduledDate}
+                  onclick={() => (draft.durationMinutes = mins)}
+                >
+                  {formatDurationLabel(mins, t)}
+                </button>
+              {/each}
+            </div>
           </div>
 
           <div class="field">

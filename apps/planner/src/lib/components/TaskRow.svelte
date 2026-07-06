@@ -12,11 +12,20 @@
   import { listLabel, t } from '$lib/i18n/index.js';
   import { getListById, dateKeyOf } from '$lib/state.svelte.js';
   import { getTaskKind } from '$lib/domain/taskKind.js';
+  import { openSchedulePopover } from '$lib/ui.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import Icon from './Icon.svelte';
 
-  /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, ritualComplete?: boolean, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
-  let { task, compact = false, ritualComplete = false, onToggle, onEdit } = $props();
+  /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
+  let {
+    task,
+    compact = false,
+    ritualComplete = false,
+    showScheduleAction = false,
+    scheduleDate,
+    onToggle,
+    onEdit,
+  } = $props();
 
   const COMPLETE_RITUAL_MS = 520;
   const reduceMotion =
@@ -39,6 +48,7 @@
       hasRecurrence ||
       task.dueDate ||
       task.dueTime ||
+      task.scheduledStart ||
       task.reminderMinutes != null
   );
   const showSecondaryMeta = $derived(!compact);
@@ -339,6 +349,9 @@
                 {fmtDate(task.dueDate)}{task.dueTime ? ` ${task.dueTime}` : ''}
               </span>
             {/if}
+            {#if task.scheduledStart}
+              <span class="chip chip--schedule">{task.scheduledStart}</span>
+            {/if}
             {#if hasRecurrence}
               <span class="chip tag">{recurrenceLabel(task.recurrence, t)}</span>
             {:else if showHabitChip}
@@ -358,16 +371,28 @@
         {/if}
       </button>
 
-      {#if task.priority > 0}
-        <span
-          class="priority-dot"
-          style:background={PRIORITY_COLORS[task.priority]}
-          title={t(`task.p${task.priority}`)}
-          aria-label={`${t('task.priority')}: ${t(`task.p${task.priority}`)}`}
-        ></span>
-      {:else}
-        <span></span>
-      {/if}
+      <div class="task-row-trailing">
+        {#if showScheduleAction && !task.completed && scheduleDate}
+          <button
+            type="button"
+            class="task-schedule-btn"
+            onclick={(e) => {
+              e.stopPropagation();
+              openSchedulePopover(task.id, scheduleDate);
+            }}
+          >
+            {t('schedule.scheduleActionShort')}
+          </button>
+        {/if}
+        {#if task.priority > 0}
+          <span
+            class="priority-dot"
+            style:background={PRIORITY_COLORS[task.priority]}
+            title={t(`task.p${task.priority}`)}
+            aria-label={`${t('task.priority')}: ${t(`task.p${task.priority}`)}`}
+          ></span>
+        {/if}
+      </div>
     </div>
   </div>
 </div>
