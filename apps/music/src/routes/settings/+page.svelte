@@ -170,7 +170,7 @@
     if (syncing) return
     syncing = true
     try {
-      await syncBidirectionalSafe()
+      await syncBidirectionalSafe({ force: true })
       await refreshQueueMetadata()
       await refreshCounts()
     } finally {
@@ -230,9 +230,13 @@
       total: missingLyrics,
     })
     try {
-      const result = await repairMissingLyrics((done, total) => {
-        lyricsProgress = t('settings.fetchLyricsProgress', { done, total })
-      })
+      const result = await repairMissingLyrics(
+        (done, total) => {
+          lyricsProgress = t('settings.fetchLyricsProgress', { done, total })
+        },
+        undefined,
+        { force: true },
+      )
       if (!result.total) toast(t('settings.fetchLyricsEmpty'))
       else
         toast(

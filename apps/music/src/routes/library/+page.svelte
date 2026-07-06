@@ -4,7 +4,7 @@
   import TrackRow from '$lib/components/TrackRow.svelte'
   import TrackTable from '$lib/components/TrackTable.svelte'
   import { getAllTracks } from '$lib/db.js'
-  import { ensureArtRepaired } from '$lib/import.js'
+  import { scheduleLibraryMaintenance } from '$lib/import.js'
   import { librarySignals, S, patchLocalSettings } from '$lib/state.svelte.js'
   import { setPageChrome } from '$lib/pageChrome.svelte.js'
   import { appendToQueue } from '$lib/player.svelte.js'
@@ -17,7 +17,7 @@
   let isDesktop = $state(false)
 
   async function loadTracks() {
-    await ensureArtRepaired()
+    scheduleLibraryMaintenance({ lyrics: false })
     tracks = await getAllTracks()
   }
 

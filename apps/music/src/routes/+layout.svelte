@@ -26,14 +26,13 @@
   import { applyTrackAmbience, refreshImmersiveChrome } from '$lib/trackAmbience.js'
   import { ensureBuiltinPlaylists, ensureAlbumArtCache } from '$lib/db.js'
   import {
-    ensureArtRepaired,
-    ensureMetadataRepaired,
-    ensureLyricsRepaired,
+    scheduleLibraryMaintenance,
   } from '$lib/import.js'
   import { initAuth, auth } from '$lib/auth.svelte.js'
   import { bindVisibilitySync } from '@life-os/sync'
   import { bindViewportHeight } from '@life-os/theme'
-  import { syncBidirectional } from '$lib/sync.js'
+  import { flushPendingSync, syncBidirectional } from '$lib/sync.js'
+  import { bindConnectivity } from '$lib/connectivity.svelte.js'
   import { bindBackgroundPlayback } from '$lib/backgroundAudio.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
   import {
@@ -97,7 +96,7 @@
     applyLocale()
     ensureBuiltinPlaylists()
     ensureAlbumArtCache()
-      .then(() => ensureArtRepaired())
+      .then(() => scheduleLibraryMaintenance({ lyrics: false }))
       .catch(() => {})
     registerShortcutHandlers({
       searchInput,
@@ -116,6 +115,9 @@
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupAuth = initAuth()
     const cleanupViewport = bindViewportHeight()
+    const cleanupConnectivity = bindConnectivity(() => {
+      if (auth.user) flushPendingSync()
+    })
     const cleanupServiceWorker = registerServiceWorker()
     const cleanupBackground = bindBackgroundPlayback()
     return () => {
@@ -123,6 +125,7 @@
       cleanupTheme()
       cleanupAuth()
       cleanupViewport()
+      cleanupConnectivity()
       cleanupServiceWorker()
       cleanupBackground()
     }
@@ -166,8 +169,7 @@
 
   $effect(() => {
     if (!auth.ready || !auth.user) return
-    ensureMetadataRepaired().catch(() => {})
-    ensureLyricsRepaired().catch(() => {})
+    scheduleLibraryMaintenance({ art: false })
     return bindVisibilitySync(() => syncBidirectional({ silent: true }), {
       when: () => Boolean(auth.user),
     })

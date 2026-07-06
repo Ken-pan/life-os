@@ -19,9 +19,12 @@ import { scheduleAutoCloudPush } from './sync.js'
 const AUDIO_EXT = /\.(mp3|m4a|aac|flac|wav|ogg|opus)$/i
 const LRC_EXT = /\.lrc$/i
 const CLOUD_SNIFF_BYTES = 512 * 1024
+const AUTO_LYRICS_BATCH_LIMIT = 24
+const AUTO_LYRICS_DELAY_MS = 350
+const METADATA_REPAIR_MIN_GAP_MS = 10 * 60 * 1000
 
-/** @param {FileList | File[]} files @param {(done: number, total: number) => void} [onProgress] */
-export async function importMediaFiles(files, onProgress) {
+/** @param {FileList | File[]} files @param {(done: number, total: number) => void} [onProgress] @param {{ autoMaintain?: boolean }} [opts] */
+export async function importMediaFiles(files, onProgress, opts = {}) {
   const list = [...files]
   const audio = list.filter((f) => AUDIO_EXT.test(f.name))
   const lrcs = list.filter((f) => LRC_EXT.test(f.name))
@@ -38,9 +41,9 @@ export async function importMediaFiles(files, onProgress) {
     onProgress?.(done, total || 1)
   })
 
-  if (audioCount > 0) {
+  if (audioCount > 0 && opts.autoMaintain !== false) {
     scheduleAutoCloudPush()
-    void ensureArtRepaired()
+    scheduleLibraryMaintenance({ trackIds, delayMs: 1800 })
   }
 
   return { audioCount, lrcCount, total: audioCount + lrcCount, trackIds }
@@ -290,18 +293,25 @@ export async function repairGarbledMetadata() {
 
 /** @type {Promise<number> | null} */
 let metaRepairPromise = null
+let lastMetadataRepairAt = 0
 
 /** Idempotent; repairs garbled album names after sync / on library load. */
-export function ensureMetadataRepaired() {
+export function ensureMetadataRepaired(opts = {}) {
+  if (!opts.force && Date.now() - lastMetadataRepairAt < METADATA_REPAIR_MIN_GAP_MS)
+    return Promise.resolve(0)
   if (!metaRepairPromise) {
     metaRepairPromise = repairFilenameMetadata()
       .then(() => repairGarbledMetadata())
       .then(async (repaired) => {
+        lastMetadataRepairAt = Date.now()
         if (repaired > 0) {
           const { bumpLibraryEpoch } = await import('./state.svelte.js')
           bumpLibraryEpoch()
         }
         return repaired
+      })
+      .finally(() => {
+        metaRepairPromise = null
       })
   }
   return metaRepairPromise
@@ -373,20 +383,22 @@ export async function repairMissingArt() {
  * Backfill missing lyrics via remote APIs (lrclib / QQ / NetEase / lyrics.ovh).
  * @param {(done: number, total: number) => void} [onProgress]
  * @param {string[]} [trackIds] optional scope
+ * @param {{ force?: boolean, limit?: number, delayMs?: number }} [opts]
  * @returns {Promise<{ total: number, repaired: number }>}
  */
-export async function repairMissingLyrics(onProgress, trackIds) {
+export async function repairMissingLyrics(onProgress, trackIds, opts = {}) {
   const all = await db.tracks.toArray()
   const scope = trackIds?.length ? new Set(trackIds) : null
-  const targets = all.filter(
+  let targets = all.filter(
     (t) => trackNeedsLyrics(t) && (!scope || scope.has(t.id)),
   )
+  if (opts.limit && opts.limit > 0) targets = targets.slice(0, opts.limit)
   let repaired = 0
   let done = 0
 
   for (const track of targets) {
     try {
-      const fetched = await fetchLyricsForTrack(track)
+      const fetched = await fetchLyricsForTrack(track, { force: opts.force })
       if (fetched?.text) {
         await db.tracks.update(track.id, { lyrics: fetched.text })
         repaired += 1
@@ -397,7 +409,7 @@ export async function repairMissingLyrics(onProgress, trackIds) {
 
     done += 1
     onProgress?.(done, targets.length)
-    await new Promise((r) => setTimeout(r, 200))
+    await new Promise((r) => setTimeout(r, opts.delayMs ?? AUTO_LYRICS_DELAY_MS))
   }
 
   if (repaired) scheduleAutoCloudPush()
@@ -408,19 +420,53 @@ export async function repairMissingLyrics(onProgress, trackIds) {
 let lyricsRepairPromise = null
 
 /** Idempotent; fetches remote lyrics and syncs to Supabase when logged in. */
-export function ensureLyricsRepaired() {
+export function ensureLyricsRepaired(opts = {}) {
   if (!lyricsRepairPromise) {
-    lyricsRepairPromise = repairMissingLyrics().then(async ({ repaired }) => {
-      if (repaired > 0) {
-        const { bumpLibraryEpoch } = await import('./state.svelte.js')
-        const { refreshQueueMetadata } = await import('./player.svelte.js')
-        bumpLibraryEpoch()
-        await refreshQueueMetadata()
-      }
-      return repaired
+    lyricsRepairPromise = repairMissingLyrics(undefined, undefined, {
+      limit: AUTO_LYRICS_BATCH_LIMIT,
+      ...opts,
     })
+      .then(async ({ repaired }) => {
+        if (repaired > 0) {
+          const { bumpLibraryEpoch } = await import('./state.svelte.js')
+          const { refreshQueueMetadata } = await import('./player.svelte.js')
+          bumpLibraryEpoch()
+          await refreshQueueMetadata()
+        }
+        return repaired
+      })
+      .finally(() => {
+        lyricsRepairPromise = null
+      })
   }
   return lyricsRepairPromise
+}
+
+/** @type {ReturnType<typeof setTimeout> | null} */
+let maintenanceTimer = null
+
+/**
+ * Queue light background cleanup after imports/sync without stacking duplicate jobs.
+ * @param {{ trackIds?: string[], lyrics?: boolean, art?: boolean, metadata?: boolean, delayMs?: number }} [opts]
+ */
+export function scheduleLibraryMaintenance(opts = {}) {
+  if (maintenanceTimer) clearTimeout(maintenanceTimer)
+  maintenanceTimer = setTimeout(() => {
+    maintenanceTimer = null
+    void (async () => {
+      if (opts.metadata ?? true) await ensureMetadataRepaired().catch(() => 0)
+      if (opts.art ?? true) await ensureArtRepaired().catch(() => 0)
+      if (opts.lyrics ?? true) {
+        if (opts.trackIds?.length) {
+          await repairMissingLyrics(undefined, opts.trackIds, {
+            limit: opts.trackIds.length,
+          }).catch(() => ({ total: 0, repaired: 0 }))
+        } else {
+          await ensureLyricsRepaired().catch(() => 0)
+        }
+      }
+    })()
+  }, opts.delayMs ?? 1200)
 }
 
 /** @type {Promise<number> | null} */

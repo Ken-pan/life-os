@@ -12,9 +12,15 @@ export const MUSIC_COVERS_BUCKET = 'music-covers';
 const RESUMABLE_THRESHOLD = 6 * 1024 * 1024;
 
 const SIGNED_TTL_SEC = 3600;
+const AUDIO_UPLOAD_CONCURRENCY = 2;
+const RETRY_DELAYS_MS = [350, 1000];
 
 /** @type {Map<string, { url: string, expiresAt: number }>} */
 const signedUrlCache = new Map();
+/** @type {Map<string, Promise<string>>} */
+const coverUploadInflight = new Map();
+/** @type {Promise<typeof import('./albumArtStore.js')> | null} */
+let albumArtModulePromise = null;
 
 async function requireUser() {
   const { data, error } = await supabase.auth.getUser();
@@ -60,6 +66,69 @@ function extForImageBlob(blob) {
   if (type.includes('webp')) return 'webp';
   if (type.includes('jpg') || type.includes('jpeg')) return 'jpg';
   return 'jpg';
+}
+
+/** @param {string} value */
+function hashPathPart(value) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+/** @param {number} ms */
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** @param {unknown} err */
+function isRetryableError(err) {
+  const status = Number(
+    err && typeof err === 'object' && 'statusCode' in err
+      ? /** @type {{ statusCode?: number }} */ (err).statusCode
+      : err && typeof err === 'object' && 'status' in err
+        ? /** @type {{ status?: number }} */ (err).status
+        : 0
+  );
+  const message =
+    err instanceof Error
+      ? err.message
+      : err && typeof err === 'object' && 'message' in err
+        ? String(/** @type {{ message?: unknown }} */ (err).message || '')
+        : '';
+  return (
+    status === 408 ||
+    status === 429 ||
+    status >= 500 ||
+    /timeout|network|fetch|rate|temporar/i.test(message)
+  );
+}
+
+/**
+ * @template T
+ * @param {() => Promise<T>} work
+ * @returns {Promise<T>}
+ */
+async function withRetry(work) {
+  /** @type {unknown} */
+  let lastError;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      return await work();
+    } catch (err) {
+      lastError = err;
+      if (!isRetryableError(err) || attempt >= RETRY_DELAYS_MS.length) throw err;
+      await sleep(RETRY_DELAYS_MS[attempt]);
+    }
+  }
+  throw lastError;
+}
+
+async function albumArtStore() {
+  albumArtModulePromise ||= import('./albumArtStore.js');
+  return albumArtModulePromise;
 }
 
 /**
@@ -161,12 +230,14 @@ async function uploadBlob(blob, path, contentType, onProgress) {
     return;
   }
 
-  const { error } = await supabase.storage.from(MUSIC_BUCKET).upload(path, blob, {
-    cacheControl: '3600',
-    upsert: true,
-    contentType: contentType || 'application/octet-stream'
+  await withRetry(async () => {
+    const { error } = await supabase.storage.from(MUSIC_BUCKET).upload(path, blob, {
+      cacheControl: '3600',
+      upsert: true,
+      contentType: contentType || 'application/octet-stream'
+    });
+    if (error) throw error;
   });
-  if (error) throw error;
   onProgress?.(1);
 }
 
@@ -174,30 +245,46 @@ async function uploadBlob(blob, path, contentType, onProgress) {
  * Upload the locally cached album cover to the public cover bucket and return its URL.
  * Best-effort by design: audio upload must not fail just because art sync is unavailable.
  * @param {import('./types.js').Track} track
+ * @param {{ id: string }} [user]
  * @returns {Promise<string>}
  */
-export async function uploadTrackAlbumArt(track) {
-  const user = await requireUser();
-  const { peekAlbumArt, setAlbumArtRemoteUrl } = await import('./albumArtStore.js');
+export async function uploadTrackAlbumArt(track, user) {
+  const currentUser = user || await requireUser();
+  const { peekAlbumArt, setAlbumArtRemoteUrl } = await albumArtStore();
   const row = peekAlbumArt(track.albumKey);
   if (row?.artRemoteUrl?.startsWith('https://')) return row.artRemoteUrl;
   if (!(row?.artBlob instanceof Blob)) return '';
 
-  const contentType = row.artBlob.type || 'image/jpeg';
-  const path = `${user.id}/${track.id}.${extForImageBlob(row.artBlob)}`;
-  const { error } = await supabase.storage.from(MUSIC_COVERS_BUCKET).upload(path, row.artBlob, {
-    cacheControl: '31536000',
-    upsert: true,
-    contentType
-  });
-  if (error) throw error;
+  const key = `${currentUser.id}:${track.albumKey}`;
+  const inflight = coverUploadInflight.get(key);
+  if (inflight) return inflight;
 
-  const { data } = supabase.storage.from(MUSIC_COVERS_BUCKET).getPublicUrl(path);
-  const publicUrl = data?.publicUrl || '';
-  if (publicUrl) {
-    await setAlbumArtRemoteUrl(track.albumKey, track.artist, track.album, publicUrl);
-  }
-  return publicUrl;
+  const job = (async () => {
+    const contentType = row.artBlob.type || 'image/jpeg';
+    const albumHash = hashPathPart(track.albumKey || `${track.artist}::${track.album}`);
+    const version = Number(row.updatedAt) || hashPathPart(track.id);
+    const path = `${currentUser.id}/albums/${albumHash}-${version}.${extForImageBlob(row.artBlob)}`;
+    await withRetry(async () => {
+      const { error } = await supabase.storage.from(MUSIC_COVERS_BUCKET).upload(path, row.artBlob, {
+        cacheControl: '31536000',
+        upsert: true,
+        contentType
+      });
+      if (error) throw error;
+    });
+
+    const { data } = supabase.storage.from(MUSIC_COVERS_BUCKET).getPublicUrl(path);
+    const publicUrl = data?.publicUrl || '';
+    if (publicUrl) {
+      await setAlbumArtRemoteUrl(track.albumKey, track.artist, track.album, publicUrl);
+    }
+    return publicUrl;
+  })().finally(() => {
+    coverUploadInflight.delete(key);
+  });
+
+  coverUploadInflight.set(key, job);
+  return job;
 }
 
 /**
@@ -253,24 +340,25 @@ async function uploadResumable(blob, path, contentType, onProgress) {
  * Upload one local track's audio to private Storage and persist storage_path.
  * @param {import('./types.js').Track & { audioBlob?: Blob }} track
  * @param {(ratio: number) => void} [onProgress]
+ * @param {{ id: string }} [user]
  */
-export async function uploadTrackAudio(track, onProgress) {
-  const user = await requireUser();
+export async function uploadTrackAudio(track, onProgress, user) {
+  const currentUser = user || await requireUser();
   const blob = track.audioBlob;
   if (!blob) throw new Error(t('cloudAudio.noLocalAudio'));
 
-  const path = storagePathForTrack(user.id, track);
+  const path = storagePathForTrack(currentUser.id, track);
   const contentType = track.mime || blob.type || 'application/octet-stream';
   await uploadBlob(blob, path, contentType, onProgress);
   let artRemoteUrl = '';
   try {
-    artRemoteUrl = await uploadTrackAlbumArt(track);
+    artRemoteUrl = await uploadTrackAlbumArt(track, currentUser);
   } catch {
     artRemoteUrl = '';
   }
 
-  const { error } = await supabase.from(T.trackMeta).upsert({
-    user_id: user.id,
+  const payload = {
+    user_id: currentUser.id,
     track_id: track.id,
     title: track.title,
     artist: track.artist,
@@ -284,10 +372,14 @@ export async function uploadTrackAudio(track, onProgress) {
     lyrics: track.lyrics || '',
     storage_path: path,
     mime_type: contentType,
-    size_bytes: blob.size,
-    art_remote_url: artRemoteUrl
+    size_bytes: blob.size
+  };
+  if (artRemoteUrl) payload.art_remote_url = artRemoteUrl;
+
+  await withRetry(async () => {
+    const { error } = await supabase.from(T.trackMeta).upsert(payload);
+    if (error) throw error;
   });
-  if (error) throw error;
 
   await db.tracks.update(track.id, {
     storagePath: path,
@@ -296,6 +388,44 @@ export async function uploadTrackAudio(track, onProgress) {
   });
 
   return path;
+}
+
+/**
+ * @param {(import('./types.js').Track & { audioBlob?: Blob })[]} tracks
+ * @param {{ id: string }} user
+ * @param {(info: { done: number, total: number, title: string }) => void} [onProgress]
+ */
+async function uploadTrackPool(tracks, user, onProgress) {
+  let index = 0;
+  let done = 0;
+  let uploaded = 0;
+  let failed = 0;
+  let totalBytes = 0;
+
+  async function next() {
+    while (index < tracks.length) {
+      const track = tracks[index++];
+      onProgress?.({ done, total: tracks.length, title: track.title });
+      try {
+        await uploadTrackAudio(track, undefined, user);
+        uploaded += 1;
+        totalBytes += track.size || track.audioBlob?.size || 0;
+      } catch {
+        failed += 1;
+      } finally {
+        done += 1;
+        onProgress?.({ done, total: tracks.length, title: track.title });
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(AUDIO_UPLOAD_CONCURRENCY, tracks.length) }, () =>
+      next()
+    )
+  );
+  onProgress?.({ done: tracks.length, total: tracks.length, title: '' });
+  return { uploaded, failed, totalBytes };
 }
 
 /**
@@ -314,51 +444,22 @@ export async function uploadTracksByIds(trackIds, onProgress) {
   }
   const rows = await db.tracks.bulkGet(trackIds);
   const pending = rows.filter((tr) => tr?.audioBlob && !tr.storagePath);
-  let uploaded = 0;
-  let failed = 0;
-  let totalBytes = 0;
-
-  for (let i = 0; i < pending.length; i++) {
-    const track = pending[i];
-    onProgress?.({ done: i, total: pending.length, title: track.title });
-    try {
-      await uploadTrackAudio(track);
-      uploaded += 1;
-      totalBytes += track.size || track.audioBlob?.size || 0;
-    } catch {
-      failed += 1;
-    }
-  }
-
-  onProgress?.({ done: pending.length, total: pending.length, title: '' });
-  return { uploaded, failed, totalBytes };
+  if (!pending.length) return { uploaded: 0, failed: 0, totalBytes: 0 };
+  const user = await requireUser();
+  return uploadTrackPool(pending, user, onProgress);
 }
 
 export async function uploadPendingAudio(onProgress) {
   const tracks = await getAllTracks();
   const pending = tracks.filter((tr) => tr.audioBlob && !tr.storagePath);
-  let uploaded = 0;
-  let failed = 0;
-  let totalBytes = 0;
-
-  for (let i = 0; i < pending.length; i++) {
-    const track = pending[i];
-    onProgress?.({ done: i, total: pending.length, title: track.title });
-    try {
-      await uploadTrackAudio(track);
-      uploaded += 1;
-      totalBytes += track.size || track.audioBlob?.size || 0;
-    } catch {
-      failed += 1;
-    }
-  }
-
-  onProgress?.({ done: pending.length, total: pending.length, title: '' });
+  const result = pending.length
+    ? await uploadTrackPool(pending, await requireUser(), onProgress)
+    : { uploaded: 0, failed: 0, totalBytes: 0 };
   return {
-    uploaded,
+    uploaded: result.uploaded,
     skipped: tracks.length - pending.length,
-    failed,
-    totalBytes
+    failed: result.failed,
+    totalBytes: result.totalBytes
   };
 }
 

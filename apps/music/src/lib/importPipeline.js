@@ -57,6 +57,7 @@ export async function runImportPipeline(files, onProgress) {
   const { audioCount, lrcCount, total, trackIds } = await importMediaFiles(
     files,
     (done, tot) => emit('import', done, tot),
+    { autoMaintain: false },
   )
 
   if (audioCount === 0) {
@@ -108,7 +109,7 @@ export async function runImportPipeline(files, onProgress) {
 
     emit('sync', 0, 1)
     try {
-      await syncBidirectional({ silent: true })
+      await syncBidirectional({ silent: true, force: true })
     } catch {
       syncFailed = true
     }
@@ -124,14 +125,16 @@ export async function runImportPipeline(files, onProgress) {
     emit('enrich', 1, 1)
 
     emit('lyrics', 0, trackIds.length)
-    await repairMissingLyrics(
+    const lyricsResult = await repairMissingLyrics(
       (done, total) => emit('lyrics', done, total),
       trackIds,
     )
-    try {
-      await syncBidirectional({ silent: true })
-    } catch {
-      syncFailed = true
+    if (lyricsResult.repaired > 0) {
+      try {
+        await syncBidirectional({ silent: true, force: true })
+      } catch {
+        syncFailed = true
+      }
     }
   }
 

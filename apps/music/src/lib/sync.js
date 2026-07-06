@@ -17,9 +17,83 @@ import { pickCloudSettings } from './settingsPersistence.js'
 import { mergeTrackMetaForPush } from './trackMetaMerge.js'
 import { t } from './i18n/index.js'
 import { notifySyncError, withSyncNotify } from './syncNotify.js'
+import {
+  clearSyncPending,
+  isOnline,
+  markSyncPending,
+  markSynced,
+  markSyncing,
+} from './connectivity.svelte.js'
 
 const APP_ID = 'music'
 const SCHEMA_VERSION = 4
+const SYNC_TIMEOUT_MS = 14_000
+const RETRY_DELAYS_MS = [450, 1200]
+const AUTO_SYNC_MIN_GAP_MS = 60_000
+
+class OfflineSyncError extends Error {
+  constructor() {
+    super(t('sync.offline'))
+    this.name = 'OfflineSyncError'
+  }
+}
+
+/** @param {number} ms */
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** @param {unknown} err */
+function isRetryableSyncError(err) {
+  if (err instanceof OfflineSyncError) return false
+  const status = Number(
+    err && typeof err === 'object' && 'statusCode' in err
+      ? /** @type {{ statusCode?: number }} */ (err).statusCode
+      : err && typeof err === 'object' && 'status' in err
+        ? /** @type {{ status?: number }} */ (err).status
+        : 0,
+  )
+  const message =
+    err instanceof Error
+      ? err.message
+      : err && typeof err === 'object' && 'message' in err
+        ? String(/** @type {{ message?: unknown }} */ (err).message || '')
+        : ''
+  return (
+    status === 408 ||
+    status === 429 ||
+    status >= 500 ||
+    /abort|timeout|network|fetch|temporar|failed to fetch/i.test(message)
+  )
+}
+
+/**
+ * @template T
+ * @param {() => Promise<T>} work
+ * @returns {Promise<T>}
+ */
+async function withSyncRetry(work) {
+  /** @type {unknown} */
+  let lastError
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      return await work()
+    } catch (err) {
+      lastError = err
+      if (!isRetryableSyncError(err) || attempt >= RETRY_DELAYS_MS.length)
+        throw err
+      await sleep(RETRY_DELAYS_MS[attempt])
+    }
+  }
+  throw lastError
+}
+
+function syncSignal() {
+  if (typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal) {
+    return AbortSignal.timeout(SYNC_TIMEOUT_MS)
+  }
+  return undefined
+}
 
 async function requireUser() {
   const { data, error } = await supabase.auth.getUser()
@@ -30,11 +104,21 @@ async function requireUser() {
 export { syncErrorMessage } from './syncNotify.js'
 
 async function fetchCloudSnapshot(userId) {
+  const signal = syncSignal()
   const [stateRes, tracksRes, playlistsRes, ptRes] = await Promise.all([
-    supabase.from(T.userState).select('*').eq('user_id', userId).maybeSingle(),
-    supabase.from(T.trackMeta).select('*').eq('user_id', userId),
-    supabase.from(T.playlists).select('*').eq('user_id', userId),
-    supabase.from(T.playlistTracks).select('*').eq('user_id', userId),
+    supabase
+      .from(T.userState)
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle()
+      .abortSignal(signal),
+    supabase.from(T.trackMeta).select('*').eq('user_id', userId).abortSignal(signal),
+    supabase.from(T.playlists).select('*').eq('user_id', userId).abortSignal(signal),
+    supabase
+      .from(T.playlistTracks)
+      .select('*')
+      .eq('user_id', userId)
+      .abortSignal(signal),
   ])
   for (const res of [stateRes, tracksRes, playlistsRes, ptRes]) {
     if (res.error) throw res.error
@@ -47,16 +131,18 @@ async function fetchCloudSnapshot(userId) {
   }
 }
 
-async function pushLocal(userId) {
+async function pushLocal(userId, snap) {
   const tracks = await getAllTracks()
   const playlists = await getPlaylists()
-  const snap = await fetchCloudSnapshot(userId)
 
-  await supabase.from(T.userState).upsert({
-    user_id: userId,
-    settings: pickCloudSettings(S.settings),
-    schema_version: SCHEMA_VERSION,
-    updated_at: new Date().toISOString(),
+  await withSyncRetry(async () => {
+    const { error } = await supabase.from(T.userState).upsert({
+      user_id: userId,
+      settings: pickCloudSettings(S.settings),
+      schema_version: SCHEMA_VERSION,
+      updated_at: new Date().toISOString(),
+    })
+    if (error) throw error
   })
 
   if (tracks.length) {
@@ -98,27 +184,29 @@ async function pushLocal(userId) {
         art_remote_url: artRemote,
       }
     })
-    let { error } = await supabase.from(T.trackMeta).upsert(rows)
-    // Remote may lag behind local migrations — drop new columns and retry.
-    if (
-      error &&
-      /lyrics|storage_path|mime_type|size_bytes|art_remote_url|column/i.test(
-        error.message || '',
-      )
-    ) {
-      const slim = rows.map(
-        ({
-          lyrics: _l,
-          storage_path: _s,
-          mime_type: _m,
-          size_bytes: _b,
-          art_remote_url: _a,
-          ...rest
-        }) => rest,
-      )
-      ;({ error } = await supabase.from(T.trackMeta).upsert(slim))
-    }
-    if (error) throw error
+    await withSyncRetry(async () => {
+      let { error } = await supabase.from(T.trackMeta).upsert(rows)
+      // Remote may lag behind local migrations — drop new columns and retry.
+      if (
+        error &&
+        /lyrics|storage_path|mime_type|size_bytes|art_remote_url|column/i.test(
+          error.message || '',
+        )
+      ) {
+        const slim = rows.map(
+          ({
+            lyrics: _l,
+            storage_path: _s,
+            mime_type: _m,
+            size_bytes: _b,
+            art_remote_url: _a,
+            ...rest
+          }) => rest,
+        )
+        ;({ error } = await supabase.from(T.trackMeta).upsert(slim))
+      }
+      if (error) throw error
+    })
   }
 
   const plRows = playlists
@@ -132,8 +220,10 @@ async function pushLocal(userId) {
       updated_at: p.updatedAt,
     }))
   if (plRows.length) {
-    const { error } = await supabase.from(T.playlists).upsert(plRows)
-    if (error) throw error
+    await withSyncRetry(async () => {
+      const { error } = await supabase.from(T.playlists).upsert(plRows)
+      if (error) throw error
+    })
   }
 
   /** @type {{ user_id: string, playlist_id: string, track_id: string, position: number }[]} */
@@ -150,13 +240,15 @@ async function pushLocal(userId) {
     })
   }
   if (ptRows.length) {
-    const { error } = await supabase.from(T.playlistTracks).upsert(ptRows)
-    if (error) throw error
+    await withSyncRetry(async () => {
+      const { error } = await supabase.from(T.playlistTracks).upsert(ptRows)
+      if (error) throw error
+    })
   }
 }
 
-async function pullCloud(userId) {
-  const snap = await fetchCloudSnapshot(userId)
+async function pullCloud(userId, existingSnap = null) {
+  const snap = existingSnap || (await withSyncRetry(() => fetchCloudSnapshot(userId)))
   if (snap.state?.settings) {
     applyCloudSettingsMerge(snap.state.settings)
     applyThemeFromCloud()
@@ -252,17 +344,9 @@ async function pullCloud(userId) {
 
   if (snap.tracks.length) {
     import('./import.js')
-      .then(
-        ({
-          repairFilenameMetadata,
-          repairGarbledMetadata,
-          ensureArtRepaired,
-        }) => {
-          void repairFilenameMetadata()
-          void repairGarbledMetadata()
-          void ensureArtRepaired()
-        },
-      )
+      .then(({ scheduleLibraryMaintenance }) => {
+        scheduleLibraryMaintenance({ lyrics: false })
+      })
       .catch(() => {})
     const cloudPaths = snap.tracks
       .map((row) =>
@@ -280,13 +364,27 @@ function applyThemeFromCloud() {
 /** @param {{ silent?: boolean, force?: boolean }} [opts] */
 async function syncBidirectionalInternal(opts = {}) {
   if (!browser) return
+  if (opts.silent && !opts.force && Date.now() - lastSync < AUTO_SYNC_MIN_GAP_MS)
+    return
+  if (!isOnline()) {
+    markSyncPending()
+    throw new OfflineSyncError()
+  }
+  markSyncing(true)
   const user = await requireUser()
-  await pushLocal(user.id)
-  await pullCloud(user.id)
-  if (!opts.silent) {
-    import('./ui.svelte.js').then(({ toast }) =>
-      toast(t('sync.ok'), 'success', { key: 'sync-ok' }),
-    )
+  try {
+    const snap = await withSyncRetry(() => fetchCloudSnapshot(user.id))
+    await pushLocal(user.id, snap)
+    await pullCloud(user.id, snap)
+    lastSync = Date.now()
+    markSynced()
+    if (!opts.silent) {
+      import('./ui.svelte.js').then(({ toast }) =>
+        toast(t('sync.ok'), 'success', { key: 'sync-ok' }),
+      )
+    }
+  } finally {
+    markSyncing(false)
   }
 }
 
@@ -298,22 +396,44 @@ export async function syncBidirectional(opts = {}) {
 let lastSync = 0
 export function resetSyncCooldown() {
   lastSync = 0
+  clearSyncPending()
 }
 
-const debouncedSync = createDebouncedTask(async () => {
+const debouncedSync = createDebouncedTask(async (opts = {}) => {
+  if (!isOnline()) {
+    markSyncPending()
+    return
+  }
   try {
-    await syncBidirectionalInternal({ silent: true })
+    await syncBidirectionalInternal({
+      silent: true,
+      force: Boolean(opts.force),
+    })
   } catch (err) {
+    if (!isOnline() || err instanceof OfflineSyncError) {
+      markSyncPending()
+      return
+    }
     notifySyncError(err)
   }
 }, 4000)
 
 export function scheduleAutoCloudPush() {
-  debouncedSync.schedule()
+  if (!isOnline()) {
+    markSyncPending()
+    return
+  }
+  debouncedSync.schedule({ force: true })
 }
 
 export async function syncBidirectionalSafe(opts = {}) {
   return withSyncNotify(() => syncBidirectionalInternal(opts))
 }
 
+export function flushPendingSync() {
+  if (!browser || !isOnline()) return
+  debouncedSync.schedule({ immediate: true })
+}
+
 void APP_ID
+void lastSync

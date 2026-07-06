@@ -23,7 +23,7 @@
     filterSpeedDialPages
   } from '$lib/homeFilter.js';
   import { db } from '$lib/db.js';
-  import { ensureArtRepaired } from '$lib/import.js';
+  import { scheduleLibraryMaintenance } from '$lib/import.js';
   import { librarySignals } from '$lib/state.svelte.js';
   import {
     playTracks,
@@ -74,7 +74,7 @@
   onMount(async () => {
     hasOfflineTracks =
       (await db.tracks.filter((t) => t.audioBlob instanceof Blob).count()) > 0;
-    await ensureArtRepaired();
+    scheduleLibraryMaintenance({ lyrics: false });
     await reloadHome();
   });
 

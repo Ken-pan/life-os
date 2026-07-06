@@ -4,7 +4,7 @@
   import TrackArt from '$lib/components/TrackArt.svelte';
   import TrackRow from '$lib/components/TrackRow.svelte';
   import { getAlbumGroups, getArtistGroups, getAllTracks, getPlaylists } from '$lib/db.js';
-  import { ensureArtRepaired } from '$lib/import.js';
+  import { scheduleLibraryMaintenance } from '$lib/import.js';
   import { librarySignals } from '$lib/state.svelte.js';
   import { setPageChrome } from '$lib/pageChrome.svelte.js';
 
@@ -16,7 +16,7 @@
   let playlists = $state([]);
 
   async function loadBrowse() {
-    await ensureArtRepaired();
+    scheduleLibraryMaintenance({ lyrics: false });
     [albums, artists, tracks, playlists] = await Promise.all([
       getAlbumGroups(),
       getArtistGroups(),
