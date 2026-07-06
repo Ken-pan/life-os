@@ -1,5 +1,6 @@
 <script>
   import Icon from './Icon.svelte';
+  import SeekBar from './SeekBar.svelte';
   import {
     player,
     togglePlay,
@@ -7,9 +8,6 @@
     prevTrack,
     toggleShuffle,
     cycleRepeat,
-    seek,
-    formatTime,
-    getProgressPct
   } from '$lib/player.svelte.js';
   import { openQueueDrawer } from '$lib/ui.svelte.js';
 
@@ -47,22 +45,7 @@
 </div>
 
 {#if !hideProgress}
-  <div class="player-progress" class:player-progress--quiet={quiet}>
-    <input
-      type="range"
-      min="0"
-      max={player.duration || 1}
-      step="0.1"
-      value={player.currentTime}
-      style={`--progress-pct: ${getProgressPct()}`}
-      aria-label="进度"
-      oninput={(e) => seek(Number(e.currentTarget.value))}
-    />
-    <div class="player-progress-times">
-      <span>{formatTime(player.currentTime)}</span>
-      <span>{formatTime(player.duration)}</span>
-    </div>
-  </div>
+  <SeekBar {quiet} showTimes />
 {/if}
 
 {#if large && !minimal}

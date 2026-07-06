@@ -1,13 +1,7 @@
 <script>
   import Icon from './Icon.svelte'
   import PlayerControls from './PlayerControls.svelte'
-  import {
-    player,
-    seek,
-    formatTime,
-    formatTimeRemaining,
-    getProgressPct,
-  } from '$lib/player.svelte.js'
+  import SeekBar from './SeekBar.svelte'
   import { t } from '$lib/i18n/index.js'
 
   /** @type {{ viewMode: 'player' | 'lyrics' | 'queue', onMode: (mode: 'player' | 'lyrics' | 'queue') => void }} */
@@ -15,22 +9,7 @@
 </script>
 
 <footer class="np-mobile-chrome">
-  <div class="np-mobile-progress">
-    <input
-      type="range"
-      min="0"
-      max={player.duration || 1}
-      step="0.1"
-      value={player.currentTime}
-      style={`--progress-pct: ${getProgressPct()}`}
-      aria-label="进度"
-      oninput={(e) => seek(Number(e.currentTarget.value))}
-    />
-    <div class="np-mobile-progress-times">
-      <span>{formatTime(player.currentTime)}</span>
-      <span>{formatTimeRemaining(player.currentTime, player.duration)}</span>
-    </div>
-  </div>
+  <SeekBar variant="mobile" showTimes />
 
   <div class="np-mobile-transport" aria-label={t('nowPlaying.title')}>
     <PlayerControls quiet minimal hideProgress apple />

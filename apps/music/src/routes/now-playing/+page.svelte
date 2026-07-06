@@ -10,6 +10,7 @@
   import LyricsPanel from '$lib/components/LyricsPanel.svelte'
   import QueueList from '$lib/components/QueueList.svelte'
   import LikeButton from '$lib/components/LikeButton.svelte'
+  import SeekBar from '$lib/components/SeekBar.svelte'
   import { swipeDismiss, swipeTrack } from '$lib/gestures.js'
   import { consumeNowPlayingReturn, ensureNowPlayingReturn } from '$lib/nav.js'
   import {
@@ -21,7 +22,6 @@
     seek,
     restoreLastSession,
     resumeSession,
-    getProgressPct,
   } from '$lib/player.svelte.js'
   import { hasPlayableSource } from '$lib/cloudAudio.js'
   import { db } from '$lib/db.js'
@@ -440,17 +440,7 @@
         </header>
 
         {#if desktopCompactHero}
-          <div
-            class="np-desktop-hero-rail"
-            role="progressbar"
-            aria-label="进度"
-            aria-valuemin="0"
-            aria-valuemax={player.duration || 0}
-            aria-valuenow={player.currentTime}
-            style={`--progress-pct: ${getProgressPct()}`}
-          >
-            <div class="np-desktop-hero-rail-fill" aria-hidden="true"></div>
-          </div>
+          <SeekBar variant="hero" showTimes />
         {/if}
 
         {#if inlineStatusHint}

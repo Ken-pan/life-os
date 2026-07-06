@@ -1,10 +1,12 @@
 <script>
+  import { browser } from '$app/environment';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import Icon from './Icon.svelte';
   import TrackArt from './TrackArt.svelte';
   import LikeButton from './LikeButton.svelte';
+  import SeekBar from './SeekBar.svelte';
   import {
     player,
     togglePlay,
@@ -12,9 +14,6 @@
     prevTrack,
     toggleShuffle,
     cycleRepeat,
-    seek,
-    formatTime,
-    getProgressPct,
     setVolume,
     toggleMute
   } from '$lib/player.svelte.js';
@@ -29,7 +28,7 @@
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
   const volumeIcon = $derived(player.muted || player.volume === 0 ? 'volume-x' : 'volume-2');
 
-  let isDesktop = $state(false);
+  let isDesktop = $state(browser && window.matchMedia('(min-width: 861px)').matches);
 
   onMount(() => {
     const mq = window.matchMedia('(min-width: 861px)');
@@ -60,18 +59,9 @@
   class:mini-player--expanded={visible && isDesktop}
   aria-hidden={!visible}
 >
-  <div class="mini-player-top-progress">
-    <input
-      type="range"
-      min="0"
-      max={player.duration || 1}
-      step="0.1"
-      value={player.currentTime}
-      style={`--progress-pct: ${getProgressPct()}`}
-      aria-label="进度"
-      oninput={(e) => seek(Number(e.currentTarget.value))}
-    />
-  </div>
+  {#if !isDesktop}
+    <SeekBar variant="mini-top" />
+  {/if}
 
   <div class="mini-player-body">
     <a
@@ -112,20 +102,7 @@
           <Icon name={repeatIcon} size={16} />
         </button>
       </div>
-      <div class="mini-player-progress mini-player-progress--inline">
-        <span class="mini-player-time">{formatTime(player.currentTime)}</span>
-        <input
-          type="range"
-          min="0"
-          max={player.duration || 1}
-          step="0.1"
-          value={player.currentTime}
-          style={`--progress-pct: ${getProgressPct()}`}
-          aria-label="进度"
-          oninput={(e) => seek(Number(e.currentTarget.value))}
-        />
-        <span class="mini-player-time">{formatTime(player.duration)}</span>
-      </div>
+      <SeekBar variant="mini-inline" showTimes />
     </div>
 
   <div class="mini-player-actions">

@@ -1071,6 +1071,22 @@ export function formatTimeRemaining(current, duration) {
   return `-${formatTime(rem)}`
 }
 
+/** Max value for seek sliders; 0 when duration unknown. */
+export function getSeekMax() {
+  return player.duration > 0 ? player.duration : 0
+}
+
+/** Whether the current track supports scrubbing. */
+export function isSeekable() {
+  return player.duration > 0
+}
+
+/** Screen-reader friendly position (WAI-ARIA slider-valuetext). */
+export function formatSeekAriaText(current, duration) {
+  if (!duration || duration <= 0) return t('player.seekUnavailable')
+  return `${formatTime(current)}，共 ${formatTime(duration)}`
+}
+
 export function getProgressPct() {
   return player.duration > 0
     ? `${(player.currentTime / player.duration) * 100}%`

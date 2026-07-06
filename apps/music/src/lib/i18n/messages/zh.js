@@ -230,6 +230,8 @@ export default {
     playFailed: '无法播放，请确认已登录并完成云同步',
     noSource: '找不到音频：云端曲目需先登录并同步资料库',
     lyricsOnlyHint: '当前仅可浏览歌词；上传或同步音频文件后即可播放',
+    seek: '播放进度',
+    seekUnavailable: '暂无时长信息',
   },
   album: { title: '专辑' },
   artist: { title: '艺术家' },
