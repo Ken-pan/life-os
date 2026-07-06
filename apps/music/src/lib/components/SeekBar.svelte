@@ -17,15 +17,13 @@
    *   showTimes?: boolean,
    * }}
    */
-  let {
-    variant = 'quiet',
-    quiet = false,
-    showTimes = false,
-  } = $props()
+  let { variant = 'quiet', quiet = false, showTimes = false } = $props()
 
   const seekable = $derived(isSeekable())
   const max = $derived(getSeekMax())
-  const ariaText = $derived(formatSeekAriaText(player.currentTime, player.duration))
+  const ariaText = $derived(
+    formatSeekAriaText(player.currentTime, player.duration),
+  )
 
   const rangeMax = $derived(seekable ? max : 0)
   const rangeValue = $derived(seekable ? player.currentTime : 0)
@@ -41,7 +39,9 @@
       case 'hero':
         return 'np-desktop-hero-seek'
       default:
-        return quiet ? 'player-progress player-progress--quiet' : 'player-progress'
+        return quiet
+          ? 'player-progress player-progress--quiet'
+          : 'player-progress'
     }
   })
 
@@ -57,7 +57,9 @@
 </script>
 
 {#if variant === 'mini-top'}
-  <div class="{wrapperClass} mini-player-top-progress--mobile-only">
+  <div
+    class="{wrapperClass} mini-player-top-progress--mobile-only seek-bar seek-bar--mini-top"
+  >
     <input
       type="range"
       class="seek-bar-input"
@@ -76,7 +78,10 @@
     />
   </div>
 {:else}
-  <div class="{wrapperClass} seek-bar" class:seek-bar--disabled={!seekable}>
+  <div
+    class="{wrapperClass} seek-bar seek-bar--{variant}"
+    class:seek-bar--disabled={!seekable}
+  >
     {#if showTimes && variant === 'mini-inline'}
       <span class="mini-player-time">{formatTime(player.currentTime)}</span>
     {/if}

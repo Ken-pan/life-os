@@ -95,7 +95,7 @@
 
 @media (pointer: coarse) {
   :root {
-    --mini-player-track-h: 12px;
+    --mini-player-track-h: 44px;
   }
 
   .mini-player-top-progress {
@@ -105,9 +105,21 @@
     align-items: center;
   }
 
+  .mini-player-top-progress .seek-bar-input {
+    position: relative;
+    inset: auto;
+    height: var(--mini-player-track-h);
+    --seek-hit-h: var(--mini-player-track-h);
+    --progress-h: 5px;
+    --seek-thumb: 12px;
+    padding-block: calc((var(--mini-player-track-h) - var(--progress-h)) / 2);
+    background-clip: content-box;
+    box-sizing: border-box;
+  }
+
   .mini-player-top-progress input[type='range'] {
     height: var(--mini-player-track-h);
-    padding-block: calc((var(--mini-player-track-h) - 2px) / 2);
+    padding-block: calc((var(--mini-player-track-h) - var(--progress-h, 5px)) / 2);
     box-sizing: border-box;
     background-clip: content-box;
   }
@@ -2112,7 +2124,10 @@
     width: 100%;
     box-sizing: border-box;
     height: 44px;
-    padding-block: 16px;
+    --progress-h: 6px;
+    --seek-hit-h: 44px;
+    --seek-thumb: 12px;
+    padding-block: calc((44px - var(--progress-h)) / 2);
     appearance: none;
     -webkit-appearance: none;
     border: none;
@@ -2123,6 +2138,21 @@
     background-clip: content-box;
     accent-color: rgba(255, 255, 255, 0.92);
     touch-action: pan-x;
+  }
+
+  .np-mobile-progress input[type='range']::-webkit-slider-runnable-track,
+  .np-mobile-progress .seek-bar-input::-webkit-slider-runnable-track {
+    height: var(--progress-h);
+    border-radius: var(--radius-pill);
+    background: transparent;
+  }
+
+  .np-mobile-progress input[type='range']:active,
+  .np-mobile-progress input[type='range']:focus-visible,
+  .np-mobile-progress .seek-bar-input:active,
+  .np-mobile-progress .seek-bar-input:focus-visible {
+    --progress-h: 8px;
+    padding-block: calc((44px - var(--progress-h)) / 2);
   }
 
   .np-mobile-progress input[type='range']::-webkit-slider-thumb,
@@ -2438,36 +2468,44 @@
 
 .player-progress--quiet input[type='range'],
 .player-progress--quiet .seek-bar-input {
-  --progress-h-local: 4px;
-  --progress-h: 4px;
-  --seek-thumb: 8px;
+  --progress-h-local: 6px;
+  --progress-h: 6px;
+  --seek-thumb: 10px;
+  --seek-hit-h: 28px;
   --seek-thumb-color: var(--np-text-primary, var(--t1, var(--text)));
-  height: var(--seek-hit-h, var(--progress-h-local));
+  height: var(--seek-hit-h);
+  padding-block: calc((var(--seek-hit-h) - var(--progress-h-local)) / 2);
+  background-clip: content-box;
   background: linear-gradient(to right,
       var(--progress-fill) var(--progress-pct, 0%),
       var(--progress-bg) var(--progress-pct, 0%));
-  transition: height 160ms var(--ease-standard, ease);
+  transition:
+    height 160ms var(--ease-standard, ease),
+    padding 160ms var(--ease-standard, ease);
 }
 
 .player-progress--quiet:focus-within input[type='range'],
 .player-progress--quiet:focus-within .seek-bar-input {
-  --progress-h-local: 5px;
-  --progress-h: 5px;
-  --seek-thumb: 10px;
+  --progress-h-local: 8px;
+  --progress-h: 8px;
+  --seek-thumb: 12px;
+  --seek-hit-h: 32px;
 }
 
 @media (hover: hover) and (pointer: fine) {
+
   .player-progress--quiet:hover input[type='range'],
   .player-progress--quiet:hover .seek-bar-input {
-    --progress-h-local: 5px;
-    --progress-h: 5px;
-    --seek-thumb: 10px;
+    --progress-h-local: 8px;
+    --progress-h: 8px;
+    --seek-thumb: 12px;
+    --seek-hit-h: 32px;
   }
 }
 
 .player-progress--quiet input[type='range']::-webkit-slider-runnable-track,
 .player-progress--quiet .seek-bar-input::-webkit-slider-runnable-track {
-  height: var(--progress-h-local, 4px);
+  height: var(--progress-h-local, 6px);
 }
 
 .player-progress--quiet input[type='range']::-webkit-slider-thumb,
@@ -3613,9 +3651,23 @@ body.search-typeahead-open .music-appbar {
     width: 100%;
   }
 
+  .mini-player--expanded .mini-player-progress .seek-bar-input {
+    flex: 1;
+    --progress-h: 5px;
+    --seek-thumb: 10px;
+    --seek-hit-h: 24px;
+    height: var(--seek-hit-h);
+    padding-block: calc((var(--seek-hit-h) - var(--progress-h)) / 2);
+    background-clip: content-box;
+    background: linear-gradient(to right,
+        var(--progress-fill) var(--progress-pct, 0%),
+        var(--progress-bg) var(--progress-pct, 0%));
+  }
+
   .mini-player--expanded .mini-player-progress input[type='range'] {
     flex: 1;
-    height: var(--progress-h);
+    height: var(--seek-hit-h, 24px);
+    --progress-h: 5px;
     background: linear-gradient(to right,
         var(--progress-fill) var(--progress-pct, 0%),
         var(--progress-bg) var(--progress-pct, 0%));
@@ -4934,11 +4986,15 @@ body.search-typeahead-open .music-appbar {
   }
 
   .np-desktop-hero-seek .seek-bar-input {
-    --progress-h: 4px;
-    --seek-thumb: 8px;
+    --progress-h: 6px;
+    --seek-thumb: 10px;
+    --seek-hit-h: 28px;
     --seek-thumb-color: rgba(255, 255, 255, 0.92);
     --progress-fill: rgba(255, 255, 255, 0.72);
     --progress-bg: rgba(255, 255, 255, 0.14);
+    height: var(--seek-hit-h);
+    padding-block: calc((var(--seek-hit-h) - var(--progress-h)) / 2);
+    background-clip: content-box;
   }
 
   .np-desktop-hero-seek .player-progress-times {
