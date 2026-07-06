@@ -36,7 +36,7 @@ export default {
     title: 'Today',
     overdue: 'Overdue',
     today: 'Today',
-    nodate: 'No date',
+    nodate: 'To schedule',
     quickAdd: 'Add a task…'
   },
   inbox: {

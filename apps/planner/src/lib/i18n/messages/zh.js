@@ -36,7 +36,7 @@ export default {
     title: '今天',
     overdue: '已过期',
     today: '今天',
-    nodate: '无日期',
+    nodate: '待安排',
     quickAdd: '添加任务…'
   },
   inbox: {

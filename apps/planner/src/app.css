@@ -109,6 +109,7 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.22), 0 4px 14px rgba(0, 0, 0, 0.16);
   --shadow-focus: 0 0 0 2px rgba(240, 184, 77, 0.28);
   --theme-color: #121110;
+  --task-check-stroke: #46443f;
   color-scheme: dark;
 }
 
@@ -126,16 +127,23 @@ html, body {
 
 .appbar-search,
 .appbar-settings {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--t2);
   transition:
     background-color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease),
     color var(--dur-fast) var(--ease);
 }
 
 .appbar-search:hover,
 .appbar-settings:hover {
-  background: var(--card-h);
-  border-color: var(--border-l);
+  background: color-mix(in srgb, var(--t1) 6%, transparent);
   color: var(--t1);
 }
 
@@ -292,17 +300,22 @@ html, body {
 
 .task-check {
   position: relative;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  border: 2px solid var(--border-l);
+  border: 2px solid var(--task-check-stroke, var(--border-l));
   display: grid;
   place-items: center;
-  margin-top: 2px;
+  margin-top: 0;
   flex-shrink: 0;
   transition: border-color var(--dur-fast), background var(--dur-fast);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+.task-check:active:not(.on) {
+  background: var(--accent-bg);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--task-check-stroke, var(--border-l)));
 }
 
 /* 扩大触控热区到 44px（视觉尺寸不变） */
@@ -313,8 +326,8 @@ html, body {
 }
 
 .task-check.on {
-  background: var(--done);
-  border-color: var(--done);
+  background: var(--accent);
+  border-color: var(--accent);
   color: var(--on-accent);
 }
 
@@ -656,4 +669,137 @@ html, body {
 
 .toast {
   backdrop-filter: blur(10px);
+}
+
+/* ===== iOS 首页密度与层级优化 ===== */
+.insight-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--t2);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.insight-summary:active {
+  color: var(--t1);
+}
+
+.insight-summary span {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-group--compact .sec-header {
+  min-height: 36px;
+  margin: var(--space-3) 0 var(--space-1);
+  align-items: center;
+}
+
+.task-group--compact .sec-title {
+  font-family: var(--font);
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--t2);
+}
+
+.task-group--compact .sec-count {
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--t3);
+}
+
+.task-group--compact .task-list {
+  gap: var(--space-0-5);
+}
+
+.task-row--compact {
+  min-height: 64px;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3-5);
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.task-row--compact .task-title {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.task-row--compact .priority-dot {
+  margin-top: 0;
+}
+
+@media (--life-os-mobile) {
+  .appbar-inner {
+    padding-top: max(var(--space-4), var(--safe-top-effective));
+    padding-bottom: var(--space-2);
+  }
+
+  .appbar-brand-name {
+    font-size: var(--text-base);
+    opacity: 0.88;
+  }
+
+  .appbar-search {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    color: var(--t2);
+  }
+
+  .appbar-settings {
+    width: 44px;
+    height: 44px;
+  }
+
+  .page-title {
+    margin-top: var(--space-2);
+    font-size: var(--text-display-md);
+    font-weight: 700;
+  }
+
+  .wrap {
+    padding-top: var(--space-2);
+  }
+
+  .nav .nav-item,
+  .nav .nav-item-more {
+    color: var(--t2);
+  }
+
+  .nav .nav-item.on,
+  .nav .nav-item-more.on {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  .nav .nav-lbl {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+
+  .fab {
+    --fab-h: 48px;
+    right: var(--space-6);
+    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-4));
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
 }
