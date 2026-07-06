@@ -1006,28 +1006,6 @@
   background: transparent;
 }
 
-.seek-bar-input::-webkit-slider-thumb {
-  appearance: none;
-  -webkit-appearance: none;
-  width: var(--seek-thumb, 10px);
-  height: var(--seek-thumb, 10px);
-  border-radius: 50%;
-  background: var(--seek-thumb-color, var(--t1, var(--text)));
-  margin-top: calc((var(--progress-h) - var(--seek-thumb, 10px)) / 2);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22),
-    0 0 0 3px color-mix(in srgb, var(--seek-thumb-color, var(--track-accent, var(--accent))) 16%, transparent);
-  transition:
-    transform 160ms var(--ease-standard, ease),
-    box-shadow 160ms var(--ease-standard, ease);
-}
-
-.seek-bar-input:active::-webkit-slider-thumb,
-.seek-bar-input:focus-visible::-webkit-slider-thumb {
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28),
-    0 0 0 6px color-mix(in srgb, var(--seek-thumb-color, var(--track-accent, var(--accent))) 14%, transparent);
-}
-
 .seek-bar-input::-moz-range-track {
   height: var(--progress-h);
   border-radius: var(--radius-pill);
@@ -1035,20 +1013,58 @@
   border: none;
 }
 
-.seek-bar-input::-moz-range-thumb {
-  width: var(--seek-thumb, 10px);
-  height: var(--seek-thumb, 10px);
-  border: none;
+.seek-bar-input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
   border-radius: 50%;
-  background: var(--seek-thumb-color, var(--t1, var(--text)));
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22),
-    0 0 0 3px color-mix(in srgb, var(--seek-thumb-color, var(--track-accent, var(--accent))) 16%, transparent);
-  cursor: pointer;
+  transition:
+    transform 160ms var(--ease-standard, ease),
+    box-shadow 160ms var(--ease-standard, ease),
+    width 160ms var(--ease-standard, ease),
+    height 160ms var(--ease-standard, ease),
+    opacity 160ms var(--ease-standard, ease);
 }
 
-.seek-bar-input:active::-moz-range-thumb,
-.seek-bar-input:focus-visible::-moz-range-thumb {
-  transform: scale(1.1);
+.seek-bar-input::-moz-range-thumb {
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    transform 160ms var(--ease-standard, ease),
+    width 160ms var(--ease-standard, ease),
+    height 160ms var(--ease-standard, ease),
+    opacity 160ms var(--ease-standard, ease);
+}
+
+@media (pointer: coarse) {
+  .seek-bar-input::-webkit-slider-thumb {
+    width: var(--seek-thumb, 14px);
+    height: var(--seek-thumb, 14px);
+    background: var(--seek-thumb-color, var(--t1, var(--text)));
+    margin-top: calc((var(--progress-h) - var(--seek-thumb, 14px)) / 2);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22),
+      0 0 0 3px color-mix(in srgb, var(--seek-thumb-color, var(--track-accent, var(--accent))) 16%, transparent);
+  }
+
+  .seek-bar-input:active::-webkit-slider-thumb,
+  .seek-bar-input:focus-visible::-webkit-slider-thumb {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28),
+      0 0 0 6px color-mix(in srgb, var(--seek-thumb-color, var(--track-accent, var(--accent))) 14%, transparent);
+  }
+
+  .seek-bar-input::-moz-range-thumb {
+    width: var(--seek-thumb, 14px);
+    height: var(--seek-thumb, 14px);
+    background: var(--seek-thumb-color, var(--t1, var(--text)));
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22),
+      0 0 0 3px color-mix(in srgb, var(--seek-thumb-color, var(--track-accent, var(--accent))) 16%, transparent);
+  }
+
+  .seek-bar-input:active::-moz-range-thumb,
+  .seek-bar-input:focus-visible::-moz-range-thumb {
+    transform: scale(1.1);
+  }
 }
 
 @media (pointer: coarse) {
@@ -1057,6 +1073,64 @@
     --seek-thumb: 14px;
     padding-block: calc((var(--seek-hit-h) - var(--progress-h)) / 2);
     background-clip: content-box;
+  }
+}
+
+/* 桌面精细指针：Spotify 类 4px 细轨 + hover 显示 thumb（热区由 thumb 扩展，非加厚轨道） */
+@media (pointer: fine) {
+  .seek-bar-input {
+    --progress-h: 4px;
+    --seek-thumb: 12px;
+    height: var(--progress-h);
+    padding: 0;
+    background-clip: border-box;
+  }
+
+  .seek-bar-input::-webkit-slider-runnable-track {
+    height: var(--progress-h);
+  }
+
+  .seek-bar-input::-webkit-slider-thumb {
+    width: 0;
+    height: 0;
+    margin-top: calc((var(--progress-h) - 0px) / 2);
+    opacity: 0;
+    box-shadow: none;
+    transition:
+      width 160ms var(--ease-standard, ease),
+      height 160ms var(--ease-standard, ease),
+      margin 160ms var(--ease-standard, ease),
+      opacity 160ms var(--ease-standard, ease),
+      box-shadow 160ms var(--ease-standard, ease);
+  }
+
+  .seek-bar-input:hover::-webkit-slider-thumb,
+  .seek-bar-input:focus-visible::-webkit-slider-thumb,
+  .seek-bar-input:active::-webkit-slider-thumb {
+    width: var(--seek-thumb);
+    height: var(--seek-thumb);
+    margin-top: calc((var(--progress-h) - var(--seek-thumb)) / 2);
+    opacity: 1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  }
+
+  .seek-bar-input::-moz-range-track {
+    height: var(--progress-h);
+  }
+
+  .seek-bar-input::-moz-range-thumb {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    box-shadow: none;
+  }
+
+  .seek-bar-input:hover::-moz-range-thumb,
+  .seek-bar-input:focus-visible::-moz-range-thumb,
+  .seek-bar-input:active::-moz-range-thumb {
+    width: var(--seek-thumb);
+    height: var(--seek-thumb);
+    opacity: 1;
   }
 }
 
@@ -2508,53 +2582,63 @@
 
 .player-progress--quiet input[type='range'],
 .player-progress--quiet .seek-bar-input {
-  --progress-h-local: 6px;
-  --progress-h: 6px;
-  --seek-thumb: 10px;
-  --seek-hit-h: 28px;
+  --progress-h-local: 4px;
+  --progress-h: 4px;
+  --seek-thumb: 12px;
   --seek-thumb-color: var(--np-text-primary, var(--t1, var(--text)));
-  height: var(--seek-hit-h);
-  padding-block: calc((var(--seek-hit-h) - var(--progress-h-local)) / 2);
-  background-clip: content-box;
+  height: var(--progress-h-local);
+  padding: 0;
+  background-clip: border-box;
   background: linear-gradient(to right,
       var(--progress-fill) var(--progress-pct, 0%),
       var(--progress-bg) var(--progress-pct, 0%));
-  transition:
-    height 160ms var(--ease-standard, ease),
-    padding 160ms var(--ease-standard, ease);
+  transition: height 160ms var(--ease-standard, ease);
 }
 
 .player-progress--quiet:focus-within input[type='range'],
 .player-progress--quiet:focus-within .seek-bar-input {
-  --progress-h-local: 8px;
-  --progress-h: 8px;
-  --seek-thumb: 12px;
-  --seek-hit-h: 32px;
+  --progress-h-local: 5px;
+  --progress-h: 5px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-
   .player-progress--quiet:hover input[type='range'],
   .player-progress--quiet:hover .seek-bar-input {
-    --progress-h-local: 8px;
-    --progress-h: 8px;
-    --seek-thumb: 12px;
-    --seek-hit-h: 32px;
+    --progress-h-local: 5px;
+    --progress-h: 5px;
   }
 }
 
 .player-progress--quiet input[type='range']::-webkit-slider-runnable-track,
 .player-progress--quiet .seek-bar-input::-webkit-slider-runnable-track {
-  height: var(--progress-h-local, 6px);
+  height: var(--progress-h-local, 4px);
 }
 
 .player-progress--quiet input[type='range']::-webkit-slider-thumb,
 .player-progress--quiet .seek-bar-input::-webkit-slider-thumb {
-  width: var(--seek-thumb, 8px);
-  height: var(--seek-thumb, 8px);
-  margin-top: calc((var(--progress-h-local, 4px) - var(--seek-thumb, 8px)) / 2);
   background: var(--seek-thumb-color, var(--np-text-primary, var(--t1, var(--text))));
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--np-accent-main, var(--track-accent, var(--accent))) 16%, transparent);
+}
+
+@media (pointer: fine) {
+  .player-progress--quiet input[type='range']::-webkit-slider-thumb,
+  .player-progress--quiet .seek-bar-input::-webkit-slider-thumb {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin-top: 0;
+    box-shadow: none;
+  }
+
+  .player-progress--quiet:hover input[type='range']::-webkit-slider-thumb,
+  .player-progress--quiet:hover .seek-bar-input::-webkit-slider-thumb,
+  .player-progress--quiet:focus-within input[type='range']::-webkit-slider-thumb,
+  .player-progress--quiet:focus-within .seek-bar-input::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    margin-top: calc((var(--progress-h-local, 4px) - 12px) / 2);
+    opacity: 1;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--np-accent-main, var(--track-accent, var(--accent))) 16%, transparent);
+  }
 }
 
 .player-progress--quiet input[type='range']::-moz-range-track,
@@ -3689,16 +3773,18 @@ body.search-typeahead-open .music-appbar {
     align-items: center;
     gap: var(--space-2);
     width: 100%;
+    /* 扩大点击区域但不撑高视觉轨道 */
+    padding-block: var(--space-2);
+    margin-block: calc(var(--space-2) * -1);
   }
 
   .mini-player--expanded .mini-player-progress .seek-bar-input {
     flex: 1;
-    --progress-h: 5px;
-    --seek-thumb: 10px;
-    --seek-hit-h: 24px;
-    height: var(--seek-hit-h);
-    padding-block: calc((var(--seek-hit-h) - var(--progress-h)) / 2);
-    background-clip: content-box;
+    --progress-h: 4px;
+    --seek-thumb: 12px;
+    height: var(--progress-h);
+    padding: 0;
+    background-clip: border-box;
     background: linear-gradient(to right,
         var(--progress-fill) var(--progress-pct, 0%),
         var(--progress-bg) var(--progress-pct, 0%));
@@ -3706,11 +3792,46 @@ body.search-typeahead-open .music-appbar {
 
   .mini-player--expanded .mini-player-progress input[type='range'] {
     flex: 1;
-    height: var(--seek-hit-h, 24px);
-    --progress-h: 5px;
+    height: var(--progress-h, 4px);
+    padding: 0;
     background: linear-gradient(to right,
         var(--progress-fill) var(--progress-pct, 0%),
         var(--progress-bg) var(--progress-pct, 0%));
+  }
+
+  .mini-player--expanded .mini-player-progress input[type='range']::-webkit-slider-runnable-track,
+  .mini-player--expanded .mini-player-progress .seek-bar-input::-webkit-slider-runnable-track {
+    height: 4px;
+  }
+
+  .mini-player--expanded .mini-player-progress input[type='range']::-webkit-slider-thumb,
+  .mini-player--expanded .mini-player-progress .seek-bar-input::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin-top: 0;
+    box-shadow: none;
+    background: var(--t1, var(--text));
+    transition:
+      width 160ms var(--ease-standard, ease),
+      height 160ms var(--ease-standard, ease),
+      opacity 160ms var(--ease-standard, ease),
+      margin 160ms var(--ease-standard, ease);
+  }
+
+  .mini-player--expanded .mini-player-progress:hover input[type='range']::-webkit-slider-thumb,
+  .mini-player--expanded .mini-player-progress:hover .seek-bar-input::-webkit-slider-thumb,
+  .mini-player--expanded .mini-player-progress input[type='range']:focus-visible::-webkit-slider-thumb,
+  .mini-player--expanded .mini-player-progress .seek-bar-input:focus-visible::-webkit-slider-thumb,
+  .mini-player--expanded .mini-player-progress input[type='range']:active::-webkit-slider-thumb,
+  .mini-player--expanded .mini-player-progress .seek-bar-input:active::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    margin-top: -4px;
+    opacity: 1;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--progress-fill) 18%, transparent);
   }
 
   .mini-player--expanded .mini-player-volume input[type='range'] {
@@ -3721,25 +3842,52 @@ body.search-typeahead-open .music-appbar {
         var(--progress-bg) var(--volume-pct, 50%));
   }
 
-  .mini-player--expanded .mini-player-progress input[type='range']::-webkit-slider-thumb,
-  .mini-player--expanded .mini-player-volume input[type='range']::-webkit-slider-thumb {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+  .mini-player--expanded .mini-player-progress input[type='range']::-moz-range-thumb,
+  .mini-player--expanded .mini-player-progress .seek-bar-input::-moz-range-thumb,
+  .mini-player--expanded .mini-player-volume input[type='range']::-moz-range-thumb {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    border: none;
     background: var(--t1, var(--text));
-    margin-top: -4px;
+    box-shadow: none;
+  }
+
+  .mini-player--expanded .mini-player-progress:hover input[type='range']::-moz-range-thumb,
+  .mini-player--expanded .mini-player-progress:hover .seek-bar-input::-moz-range-thumb,
+  .mini-player--expanded .mini-player-progress input[type='range']:focus-visible::-moz-range-thumb,
+  .mini-player--expanded .mini-player-progress .seek-bar-input:focus-visible::-moz-range-thumb,
+  .mini-player--expanded .mini-player-volume input[type='range']:hover::-moz-range-thumb,
+  .mini-player--expanded .mini-player-volume input[type='range']:focus-visible::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    opacity: 1;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--progress-fill) 18%, transparent);
   }
 
-  .mini-player--expanded .mini-player-progress input[type='range']::-moz-range-thumb,
-  .mini-player--expanded .mini-player-volume input[type='range']::-moz-range-thumb {
-    width: 10px;
-    height: 10px;
+  .mini-player--expanded .mini-player-volume input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    margin-top: 0;
     border-radius: 50%;
     background: var(--t1, var(--text));
-    border: none;
+    box-shadow: none;
+    transition:
+      width 160ms var(--ease-standard, ease),
+      height 160ms var(--ease-standard, ease),
+      opacity 160ms var(--ease-standard, ease),
+      margin 160ms var(--ease-standard, ease);
+  }
+
+  .mini-player--expanded .mini-player-volume:hover input[type='range']::-webkit-slider-thumb,
+  .mini-player--expanded .mini-player-volume input[type='range']:focus-visible::-webkit-slider-thumb {
+    width: 10px;
+    height: 10px;
+    margin-top: -3px;
+    opacity: 1;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--progress-fill) 18%, transparent);
   }
 
@@ -5030,15 +5178,14 @@ body.search-typeahead-open .music-appbar {
   }
 
   .np-desktop-hero-seek .seek-bar-input {
-    --progress-h: 6px;
-    --seek-thumb: 10px;
-    --seek-hit-h: 28px;
+    --progress-h: 4px;
+    --seek-thumb: 12px;
     --seek-thumb-color: rgba(255, 255, 255, 0.92);
     --progress-fill: rgba(255, 255, 255, 0.72);
     --progress-bg: rgba(255, 255, 255, 0.14);
-    height: var(--seek-hit-h);
-    padding-block: calc((var(--seek-hit-h) - var(--progress-h)) / 2);
-    background-clip: content-box;
+    height: var(--progress-h);
+    padding: 0;
+    background-clip: border-box;
   }
 
   .np-desktop-hero-seek .player-progress-times {
