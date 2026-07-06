@@ -1,7 +1,7 @@
 [build]
   command = "npm run build -w fitness-os"
   publish = "apps/fitness/build"
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- apps/fitness packages/theme packages/sync"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/fitness packages/theme packages/sync"
 
 [build.environment]
   NODE_VERSION = "22"

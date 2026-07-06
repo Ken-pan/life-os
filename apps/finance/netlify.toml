@@ -1,7 +1,7 @@
 [build]
   command = "npm run build -w finance-os"
   publish = "apps/finance/dist"
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- apps/finance packages/theme packages/sync"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/finance packages/theme packages/sync"
 
 [build.environment]
   NODE_VERSION = "22"

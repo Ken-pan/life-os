@@ -1,7 +1,7 @@
 [build]
   command = "npm run build -w music-os"
   publish = "apps/music/build"
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- apps/music packages/theme packages/sync"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/music packages/theme packages/sync"
 
 [build.environment]
   NODE_VERSION = "22"
