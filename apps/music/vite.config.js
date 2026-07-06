@@ -1,6 +1,36 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { handleLyricsFetch } from './server/handleLyricsFetch.mjs';
+
+/** Inject deploy/build id into sw.js so PWA cache busts on each release. */
+function musicPwaCacheVersionPlugin() {
+  const buildId =
+    process.env.COMMIT_REF ||
+    process.env.DEPLOY_ID ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    `dev-${Date.now().toString(36)}`;
+
+  return {
+    name: 'music-pwa-cache-version',
+    apply: 'build',
+    closeBundle() {
+      const sw = readFileSync(join(process.cwd(), 'static/sw.js'), 'utf8').replaceAll(
+        '__MUSICOS_BUILD_ID__',
+        buildId
+      );
+      for (const outDir of [
+        join(process.cwd(), '.svelte-kit/output/client'),
+        join(process.cwd(), 'build')
+      ]) {
+        const swPath = join(outDir, 'sw.js');
+        if (!existsSync(swPath)) continue;
+        writeFileSync(swPath, sw);
+      }
+    }
+  };
+}
 
 /** 开发环境歌词 API（生产由 netlify/functions/lyrics-fetch.mjs 承接同一路径）。 */
 function lyricsFetchPlugin() {
@@ -43,5 +73,5 @@ function lyricsFetchPlugin() {
 }
 
 export default defineConfig({
-  plugins: [sveltekit(), lyricsFetchPlugin()]
+  plugins: [sveltekit(), lyricsFetchPlugin(), musicPwaCacheVersionPlugin()]
 });

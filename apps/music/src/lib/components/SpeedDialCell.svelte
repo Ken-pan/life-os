@@ -6,6 +6,8 @@
   import { playTracks } from '$lib/player.svelte.js';
   import { pinSpeedDialItem, unpinSpeedDialItem, hideSpeedDialItem } from '$lib/speedDialStore.js';
   import { speedDialReasonKey } from '$lib/speedDial.js';
+  import { clampPopoverPosition } from '@life-os/theme';
+  import { tick } from 'svelte';
 
   /** @type {{ cell: import('$lib/speedDial.js').SpeedDialCell, active?: boolean, slotIndex?: number, onChange?: () => void }} */
   let { cell, active = false, slotIndex = 0, onChange } = $props();
@@ -13,6 +15,8 @@
   let menuOpen = $state(false);
   let menuX = $state(0);
   let menuY = $state(0);
+  /** @type {HTMLDivElement | null} */
+  let menuEl = $state(null);
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let longPressTimer;
   let longPressTriggered = $state(false);
@@ -92,6 +96,19 @@
     menuOpen = false;
     onChange?.();
   }
+
+  $effect(() => {
+    if (!menuOpen) return;
+    menuX;
+    menuY;
+    tick().then(() => {
+      if (!menuEl) return;
+      const rect = menuEl.getBoundingClientRect();
+      const { left, top } = clampPopoverPosition(menuX, menuY, rect.width, rect.height);
+      menuEl.style.left = `${left}px`;
+      menuEl.style.top = `${top}px`;
+    });
+  });
 </script>
 
 {#if cell.variant === 'add'}
@@ -135,6 +152,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div class="speed-dial-menu-backdrop" onclick={() => (menuOpen = false)}></div>
   <div
+    bind:this={menuEl}
     class="speed-dial-menu"
     style:left="{menuX}px"
     style:top="{menuY}px"

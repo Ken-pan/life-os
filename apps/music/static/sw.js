@@ -2,8 +2,23 @@
 const CACHE_VERSION = '__MUSICOS_BUILD_ID__';
 const STATIC_CACHE = `musicos-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `musicos-runtime-${CACHE_VERSION}`;
+const RUNTIME_CACHE_LIMIT = 96;
 
-const PRECACHE = ['/', '/manifest.webmanifest', '/icon.svg'];
+const PRECACHE = ['/manifest.webmanifest', '/icon.svg'];
+
+/** @param {string} cacheName @param {number} limit */
+async function trimCache(cacheName, limit) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length <= limit) return;
+  await Promise.all(keys.slice(0, keys.length - limit).map((key) => cache.delete(key)));
+}
+
+/** @param {Cache} cache @param {Request} request @param {Response} response */
+async function putRuntime(cache, request, response) {
+  await cache.put(request, response);
+  await trimCache(RUNTIME_CACHE, RUNTIME_CACHE_LIMIT);
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -44,14 +59,13 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Apple CDN artwork — stale-while-revalidate (PWA image caching best practice)
   if (/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(url.href)) {
     event.respondWith(
       caches.open(RUNTIME_CACHE).then(async (cache) => {
         const cached = await cache.match(request);
         const network = fetch(request)
           .then((response) => {
-            if (response.ok) cache.put(request, response.clone());
+            if (response.ok) void putRuntime(cache, request, response.clone());
             return response;
           })
           .catch(() => cached);
@@ -66,15 +80,9 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+      fetch(request).catch(() =>
+        caches.match(request).then((cached) => cached || caches.match('/'))
+      )
     );
     return;
   }
@@ -86,7 +94,7 @@ self.addEventListener('fetch', (event) => {
           cached ||
           fetch(request).then((response) => {
             if (response.ok) {
-              caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone()));
+              void caches.open(RUNTIME_CACHE).then((cache) => putRuntime(cache, request, response.clone()));
             }
             return response;
           })
@@ -100,7 +108,7 @@ self.addEventListener('fetch', (event) => {
       const network = fetch(request)
         .then((response) => {
           if (response.ok) {
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone()));
+            void caches.open(RUNTIME_CACHE).then((cache) => putRuntime(cache, request, response.clone()));
           }
           return response;
         })

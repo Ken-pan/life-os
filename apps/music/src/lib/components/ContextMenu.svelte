@@ -2,6 +2,7 @@
   import { t } from '$lib/i18n/index.js';
   import { appendToQueue, playTrack } from '$lib/player.svelte.js';
   import { toggleLike, db } from '$lib/db.js';
+  import { clampPopoverPosition } from '@life-os/theme';
   import { tick } from 'svelte';
 
   /** @type {{ x: number; y: number; track: import('$lib/types.js').Track; onClose: () => void; onPlay?: () => void; onPlayNext?: () => void; onAddQueue?: () => void }} */
@@ -11,15 +12,14 @@
   let el = $state(null);
 
   $effect(() => {
+    x;
+    y;
     tick().then(() => {
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      if (rect.right > window.innerWidth) {
-        el.style.left = `${Math.max(8, window.innerWidth - rect.width - 8)}px`;
-      }
-      if (rect.bottom > window.innerHeight) {
-        el.style.top = `${Math.max(8, window.innerHeight - rect.height - 8)}px`;
-      }
+      const { left, top } = clampPopoverPosition(x, y, rect.width, rect.height);
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
     });
 
     /** @param {MouseEvent | TouchEvent} e */
@@ -64,7 +64,7 @@
 <style>
   .context-menu {
     position: fixed;
-    z-index: calc(var(--z-modal) + 2);
+    z-index: calc(var(--z-sheet) + 4);
     min-width: 180px;
     padding: var(--space-1);
     border-radius: var(--radius-md);

@@ -15,6 +15,16 @@ export { applyDocumentMeta } from './documentMeta.js';
 export { lockScroll, unlockScroll } from './scrollLock.js';
 export { activateFocusTrap } from './focusTrap.js';
 
+export {
+  bindViewportHeight,
+  clampPopoverPosition,
+  getBottomChromeHeight,
+  getVisualViewportHeight,
+  getViewportRect,
+  isStandalonePwa,
+  needsViewportHeightSync
+} from './viewportSync.js';
+
 /** @typedef {'light' | 'dark' | 'auto'} ThemePreference */
 /** @typedef {'light' | 'dark'} ResolvedTheme */
 

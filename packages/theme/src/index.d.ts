@@ -94,6 +94,25 @@ export declare function bootResolveTheme(
 export declare function lockScroll(): void;
 export declare function unlockScroll(): void;
 
+export declare function isStandalonePwa(): boolean;
+export declare function needsViewportHeightSync(): boolean;
+export declare function getVisualViewportHeight(): number;
+export declare function getViewportRect(): {
+  height: number;
+  width: number;
+  offsetTop: number;
+  offsetLeft: number;
+};
+export declare function getBottomChromeHeight(): number;
+export declare function clampPopoverPosition(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  opts?: { padding?: number; bottomInset?: number }
+): { left: number; top: number };
+export declare function bindViewportHeight(): () => void;
+
 export type ActivateFocusTrapOptions = {
   initialFocusSelector?: string;
 };

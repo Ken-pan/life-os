@@ -48,6 +48,14 @@
         if (meta) meta.content = resolved === 'dark' ? '#100a0c' : '#faf5f4';
       } catch (e) {}
     })();
+    (function () {
+      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      document.documentElement.style.setProperty('--app-vh', h + 'px');
+      var standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator && window.navigator.standalone === true);
+      document.documentElement.classList.toggle('standalone-pwa', standalone);
+    })();
   </script>
   %sveltekit.head%
 </head>

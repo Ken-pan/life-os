@@ -22,7 +22,41 @@ body,
   html,
   body,
   #root {
-    min-height: 100dvh;
+    min-height: var(--app-vh, 100dvh);
+  }
+}
+
+/* PWA standalone: constrain shell to visual viewport (iOS home-screen app) */
+@media (--life-os-mobile) {
+  html.standalone-pwa,
+  html.standalone-pwa body {
+    height: var(--app-vh, 100dvh);
+    overflow: hidden;
+  }
+
+  html.standalone-pwa .app-shell {
+    height: var(--app-vh, 100dvh);
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  html.standalone-pwa .main-wrap,
+  html.standalone-pwa .main-col {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html.standalone-pwa #main-content,
+  html.standalone-pwa .main-wrap .wrap,
+  html.standalone-pwa .main-wrap .content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 }
 

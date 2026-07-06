@@ -2,7 +2,7 @@
 
 .app-shell,
 .app {
-  min-height: 100dvh;
+  min-height: var(--app-vh, 100dvh);
   display: grid;
   grid-template-columns: 1fr;
 }
@@ -521,6 +521,78 @@
   }
 
   .page-title { font-size: var(--text-2xl); }
+}
+
+/* ===== Mobile bottom chrome stack (Music mini player + tab bar) ===== */
+@media (--life-os-mobile) {
+  .bottom-shell {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: calc(var(--z-fab) + 2);
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    contain: layout style;
+    --bottom-chrome-h: var(--mobile-tabbar-total-h);
+  }
+
+  .bottom-shell[data-player-chrome='mini'] {
+    --bottom-chrome-h: calc(var(--mobile-tabbar-total-h) + var(--mini-player-h));
+  }
+
+  .bottom-shell:not(:has(.nav, .bottom-nav, .mobile-tabbar))[data-player-chrome='mini'] {
+    --bottom-chrome-h: var(--mini-player-h);
+  }
+
+  .bottom-shell:not(:has(.mini-player.show)):not(:has(.nav, .bottom-nav, .mobile-tabbar)) {
+    display: none;
+  }
+
+  .bottom-shell > * {
+    pointer-events: auto;
+  }
+
+  .bottom-shell .mini-player {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    flex-shrink: 0;
+  }
+
+  .bottom-shell .mini-player:not(.show) {
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    border-top: none;
+    transform: none;
+    opacity: 0;
+  }
+
+  .bottom-shell .nav,
+  .bottom-shell .bottom-nav,
+  .bottom-shell .mobile-tabbar {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    flex-shrink: 0;
+  }
+}
+
+@media (--life-os-mobile) {
+  @media (display-mode: standalone) {
+    .bottom-shell .nav,
+    .bottom-shell .bottom-nav,
+    .bottom-shell .mobile-tabbar {
+      padding-bottom: max(
+        var(--space-2),
+        min(env(safe-area-inset-bottom, 0px), 0.75rem)
+      );
+    }
+  }
 }
 
 /* ===== 底栏（Planner/Fitness .nav · Finance .mobile-tabbar）===== */
