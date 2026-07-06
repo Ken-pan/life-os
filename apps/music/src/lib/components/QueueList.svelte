@@ -31,12 +31,24 @@
   /** @type {Array<{ id: string, track: import('$lib/types.js').Track, i: number }>} */
   let dndItems = $state([])
 
-  const queueEntries = $derived(
-    upNextOnly
-      ? player.queue
-          .map((track, i) => ({ track, i }))
-          .filter(({ i }) => i > player.index)
-      : player.queue.map((track, i) => ({ track, i })),
+  const queueEntries = $derived.by(() => {
+    if (!upNextOnly) {
+      return player.queue.map((track, i) => ({ track, i }))
+    }
+    const future = player.queue
+      .map((track, i) => ({ track, i }))
+      .filter(({ i }) => i > player.index)
+    if (future.length > 0) return future
+    // 列表播放到末尾且 repeat=all 时，下一首会回到队首
+    if (player.repeat === 'all' && player.queue.length > 1) {
+      return [{ track: player.queue[0], i: 0 }]
+    }
+    return []
+  })
+
+  /** upNextOnly 下是否允许拖拽重排（仅当「接下来」仍是当前曲之后的真实队列时） */
+  const canReorderUpNext = $derived(
+    !upNextOnly || queueEntries.some(({ i }) => i > player.index),
   )
 
   $effect(() => {
@@ -65,6 +77,20 @@
     dndDragging = false
     const items = e.detail.items
     dndItems = items
+    if (upNextOnly) {
+      if (!canReorderUpNext) {
+        dndItems = queueEntries.map(({ track, i }) => ({
+          id: `${track.id}:${i}`,
+          track,
+          i,
+        }))
+        return
+      }
+      const prefix = player.queue.slice(0, player.index + 1)
+      const tail = items.map((item) => item.track)
+      setQueueOrder([...prefix, ...tail])
+      return
+    }
     setQueueOrder(items.map((item) => item.track))
   }
 
@@ -138,14 +164,18 @@
           data-queue-index={item.i}
           role="listitem"
         >
-          <button
-            type="button"
-            class="queue-drag-handle"
-            use:dragHandle
-            aria-label={t('nowPlaying.reorder')}
-          >
-            <Icon name="grip-vertical" size={16} />
-          </button>
+          {#if !upNextOnly || canReorderUpNext}
+            <button
+              type="button"
+              class="queue-drag-handle"
+              use:dragHandle
+              aria-label={t('nowPlaying.reorder')}
+            >
+              <Icon name="grip-vertical" size={16} />
+            </button>
+          {:else}
+            <span class="queue-drag-spacer" aria-hidden="true"></span>
+          {/if}
 
           <TrackRow
             track={item.track}
@@ -245,7 +275,8 @@
               >{pick.track.title} — {pick.track.artist}</span
             >
             {#if pick.reasons?.length}
-              <span class="rec-preview-reasons">{pick.reasons.join(' · ')}</span>
+              <span class="rec-preview-reasons">{pick.reasons.join(' · ')}</span
+              >
             {/if}
             {#if formatRecommendationTags(pick.matchedTags).length}
               <span class="rec-preview-tags"
@@ -342,7 +373,11 @@
   }
 
   .queue-row--current {
-    background: color-mix(in srgb, var(--track-accent, var(--accent)) 10%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--track-accent, var(--accent)) 10%,
+      transparent
+    );
   }
 
   .queue-row :global(.track-row) {
@@ -374,6 +409,11 @@
     transition: opacity 160ms ease;
   }
 
+  .queue-drag-spacer {
+    width: 28px;
+    flex-shrink: 0;
+  }
+
   .queue-row:hover .queue-drag-handle,
   .queue-row:focus-within .queue-drag-handle {
     opacity: 0.88;
@@ -387,13 +427,7 @@
     display: flex;
     align-items: center;
     gap: 2px;
-    padding-left: var(--space-6);
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, var(--card) 72%, transparent) 28%,
-      var(--card) 52%
-    );
+    background: none;
     opacity: 0;
     pointer-events: none;
     transition: opacity 160ms ease;

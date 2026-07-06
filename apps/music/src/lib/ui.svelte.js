@@ -53,8 +53,79 @@ export function closeQueueDrawer() {
   queueDrawerOpen.open = false
 }
 
-/** @type {{ open: boolean; tab: 'queue' | 'lyrics' }} */
-export const utilityPane = $state({ open: false, tab: 'queue' })
+/** @type {{ open: boolean; tab: 'queue' | 'lyrics'; width: number }} */
+export const utilityPane = $state({
+  open: false,
+  tab: 'queue',
+  width: 360,
+})
+
+const UTILITY_PANE_WIDTH_KEY = 'musicos:utility-pane-width'
+export const UTILITY_PANE_WIDTH_DEFAULT = 360
+export const UTILITY_PANE_WIDTH_MIN = 280
+export const UTILITY_PANE_WIDTH_MAX = 560
+const UTILITY_PANE_MAIN_MIN = 480
+
+/** @returns {number} */
+function readStoredUtilityPaneWidth() {
+  if (typeof localStorage === 'undefined') return UTILITY_PANE_WIDTH_DEFAULT
+  try {
+    const raw = localStorage.getItem(UTILITY_PANE_WIDTH_KEY)
+    const n = raw ? Number(raw) : NaN
+    if (!Number.isFinite(n)) return UTILITY_PANE_WIDTH_DEFAULT
+    return Math.round(n)
+  } catch {
+    return UTILITY_PANE_WIDTH_DEFAULT
+  }
+}
+
+/** @returns {{ min: number, max: number }} */
+export function getUtilityPaneWidthLimits() {
+  if (typeof window === 'undefined') {
+    return { min: UTILITY_PANE_WIDTH_MIN, max: UTILITY_PANE_WIDTH_MAX }
+  }
+  const sidebar =
+    parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'),
+    ) || 228
+  const maxByViewport = window.innerWidth - sidebar - UTILITY_PANE_MAIN_MIN
+  return {
+    min: UTILITY_PANE_WIDTH_MIN,
+    max: Math.max(
+      UTILITY_PANE_WIDTH_MIN,
+      Math.min(UTILITY_PANE_WIDTH_MAX, maxByViewport),
+    ),
+  }
+}
+
+/** @param {number} width */
+export function clampUtilityPaneWidth(width) {
+  const { min, max } = getUtilityPaneWidthLimits()
+  return Math.min(max, Math.max(min, Math.round(width)))
+}
+
+export function initUtilityPaneWidth() {
+  utilityPane.width = clampUtilityPaneWidth(readStoredUtilityPaneWidth())
+}
+
+/** @param {number} width @param {{ persist?: boolean }} [opts] */
+export function setUtilityPaneWidth(width, opts = {}) {
+  const { persist = true } = opts
+  const clamped = clampUtilityPaneWidth(width)
+  utilityPane.width = clamped
+  if (persist && typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(UTILITY_PANE_WIDTH_KEY, String(clamped))
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** @param {number} delta */
+export function nudgeUtilityPaneWidth(delta) {
+  setUtilityPaneWidth(utilityPane.width + delta)
+}
 
 /** @param {'queue' | 'lyrics'} [tab='queue'] */
 export function openUtilityPane(tab = 'queue') {

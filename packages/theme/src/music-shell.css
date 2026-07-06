@@ -2604,6 +2604,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+
   .player-progress--quiet:hover input[type='range'],
   .player-progress--quiet:hover .seek-bar-input {
     --progress-h-local: 5px;
@@ -2622,6 +2623,7 @@
 }
 
 @media (pointer: fine) {
+
   .player-progress--quiet input[type='range']::-webkit-slider-thumb,
   .player-progress--quiet .seek-bar-input::-webkit-slider-thumb {
     width: 0;
@@ -3376,6 +3378,7 @@
 
   .music-app[data-page-route='now-playing'] .main-wrap {
     grid-column: 1 / -1;
+    margin-right: 0;
   }
 
   .music-app[data-page-route='now-playing'] .mini-player {
@@ -3987,6 +3990,69 @@ body.search-typeahead-open .music-appbar {
   background: var(--card);
 }
 
+.utility-pane-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 9px;
+  transform: translateX(-50%);
+  cursor: col-resize;
+  touch-action: none;
+  margin: 0;
+  border: none;
+  padding: 0;
+  appearance: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}
+
+.utility-pane-resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  transition: background 160ms var(--ease-standard, ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .utility-pane-resize-handle:hover::after,
+  .utility-pane-resize-handle:focus-visible::after {
+    background: color-mix(in srgb, var(--accent) 42%, transparent);
+  }
+}
+
+.utility-pane-resize-handle:focus-visible {
+  outline: none;
+}
+
+.utility-pane-resize-handle:focus-visible::after {
+  background: color-mix(in srgb, var(--accent) 52%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.utility-pane--resizing .utility-pane-resize-handle::after {
+  background: color-mix(in srgb, var(--accent) 58%, transparent);
+  transition: none;
+}
+
+.utility-pane--resizing .utility-pane-body {
+  pointer-events: none;
+  user-select: none;
+}
+
+html.utility-pane-resizing {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
 .utility-pane-head {
   display: flex;
   align-items: center;
@@ -4043,6 +4109,10 @@ body.search-typeahead-open .music-appbar {
 @media (--life-os-desktop) {
   .music-app[data-utility-open='true'] .main-wrap {
     margin-right: var(--utility-pane-w);
+  }
+
+  .music-app[data-page-route='now-playing'] .main-wrap {
+    margin-right: 0;
   }
 }
 

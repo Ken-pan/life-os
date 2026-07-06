@@ -42,8 +42,10 @@
   } from '$lib/shortcuts.js'
   import {
     utilityPane,
+    closeUtilityPane,
     initRecDebug,
     installRecDebugConsole,
+    initUtilityPaneWidth,
   } from '$lib/ui.svelte.js'
 
   let { children } = $props()
@@ -71,10 +73,17 @@
     pageRoute === 'now-playing' ? S.settings.immersiveViewMode : undefined,
   )
   const wideContent = $derived(isWideContentRoute(page.url.pathname))
-  const utilityOpen = $derived(utilityPane.open)
+  const onNowPlaying = $derived(page.url.pathname.startsWith('/now-playing'))
+  const utilityOpen = $derived(utilityPane.open && !onNowPlaying)
+  const utilityPaneStyle = $derived(`--utility-pane-w: ${utilityPane.width}px`)
+
+  $effect(() => {
+    if (onNowPlaying && utilityPane.open) closeUtilityPane()
+  })
 
   onMount(() => {
     initRecDebug()
+    initUtilityPaneWidth()
     installRecDebugConsole()
     applyTheme()
     applyLocale()
@@ -173,6 +182,7 @@
 
 <div
   class="app-shell music-app"
+  style={utilityPaneStyle}
   data-page-route={pageRoute}
   data-immersive-mode={immersiveMode}
   data-wide-content={wideContent ? 'true' : undefined}

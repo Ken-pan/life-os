@@ -192,6 +192,9 @@ export default {
     done: '已导入 {count} 首',
     doneMixed: '已导入 {audio} 首音频，匹配 {lrc} 首歌词',
   },
+  utilityPane: {
+    resize: '拖拽调整面板宽度',
+  },
   nowPlaying: {
     title: '正在播放',
     volume: '音量',

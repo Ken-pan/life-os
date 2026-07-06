@@ -327,7 +327,7 @@
               />
             {:else}
               <div class="now-playing-queue-wrap np-mobile-queue-wrap">
-                <QueueList compact />
+                <QueueList compact upNextOnly />
               </div>
             {/if}
           </section>
