@@ -1,5 +1,5 @@
 <script>
-  import { S, uid } from '$lib/state.svelte.js';
+  import { S, uid, visibleLists } from '$lib/state.svelte.js';
   import { createTask, updateTask, deleteTask, addSubtask } from '$lib/domain/tasks.js';
   import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js';
   import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
@@ -27,8 +27,7 @@
       Boolean(draft.recurrence) ||
       (draft.priority ?? 0) > 0 ||
       draft.tags.length > 0 ||
-      draft.subtasks.length > 0 ||
-      !isNew
+      draft.subtasks.length > 0
     );
   });
 
@@ -292,7 +291,7 @@
           <div class="field">
             <label for="task-list">{t('task.list')}</label>
             <select id="task-list" bind:value={draft.listId}>
-              {#each S.lists as list}
+              {#each visibleLists() as list}
                 <option value={list.id}>{listLabel(list)}</option>
               {/each}
             </select>
@@ -410,5 +409,17 @@
   .sheet-advanced {
     display: flex;
     flex-direction: column;
+  }
+
+  @media (--life-os-mobile) {
+    .sheet-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+      margin-top: 8px;
+      padding-top: 12px;
+      padding-bottom: max(4px, env(safe-area-inset-bottom));
+      background: linear-gradient(to top, var(--card) 75%, transparent);
+    }
   }
 </style>

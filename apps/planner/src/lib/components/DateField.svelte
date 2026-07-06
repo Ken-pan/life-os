@@ -71,8 +71,8 @@
     opacity: 0;
     width: 100%;
     height: 100%;
-    cursor: pointer;
     border: 0;
     padding: 0;
+    pointer-events: none;
   }
 </style>

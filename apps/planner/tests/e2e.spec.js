@@ -82,6 +82,7 @@ test.describe('PlannerOS E2E', () => {
     await quickAddTask(page, '旧标题');
     await page.locator('.task-title', { hasText: '旧标题' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('button', { name: '更多选项' })).toHaveAttribute('aria-expanded', 'false');
     await page.locator('#task-title').fill('新标题');
     await page.getByRole('dialog').getByRole('button', { name: '保存' }).click();
     await expect(page.locator('.task-title', { hasText: '新标题' })).toBeVisible();
@@ -215,6 +216,7 @@ test.describe('PlannerOS E2E', () => {
     await quickAddTask(page, '带子任务');
     await page.locator('.task-title', { hasText: '带子任务' }).click();
     const dialog = page.getByRole('dialog');
+    await openAdvancedOptions(dialog);
     await dialog.getByPlaceholder('添加子任务').fill('子项一');
     await dialog.getByRole('button', { name: '添加', exact: true }).click();
     await expect(dialog.locator('.subtask-row', { hasText: '子项一' })).toBeVisible();

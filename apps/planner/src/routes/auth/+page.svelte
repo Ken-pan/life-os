@@ -1,4 +1,5 @@
 <script>
+  import { afterNavigate } from '$app/navigation';
   import { goto } from '$app/navigation';
   import AppBar from '$lib/components/AppBar.svelte';
   import { auth, signIn, signUp, signOut, authErrorMessage } from '$lib/auth.svelte.js';
@@ -13,6 +14,14 @@
   let busy = $state(false);
   let error = $state('');
   let confirmSent = $state(false);
+  /** @type {HTMLInputElement | null} */
+  let emailInput = $state(null);
+
+  afterNavigate(() => {
+    if (!auth.user && isSupabaseConfigured && !confirmSent) {
+      emailInput?.focus();
+    }
+  });
 
   async function syncAfterLogin() {
     try {
@@ -75,7 +84,17 @@
       </div>
       <div class="field">
         <label for="email">{t('auth.email')}</label>
-        <input id="email" type="email" bind:value={email} required autocomplete="email" placeholder={t('auth.emailPlaceholder')} />
+        <input
+          id="email"
+          bind:this={emailInput}
+          type="email"
+          bind:value={email}
+          required
+          autocomplete="email"
+          inputmode="email"
+          enterkeyhint="next"
+          placeholder={t('auth.emailPlaceholder')}
+        />
       </div>
       <div class="field">
         <label for="password">{t('auth.password')}</label>

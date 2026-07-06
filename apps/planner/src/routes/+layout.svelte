@@ -14,12 +14,12 @@
   import { applyLocale, listLabel, t } from '$lib/i18n/index.js';
   import { auth, initAuth } from '$lib/auth.svelte.js';
   import { bindVisibilitySync } from '@life-os/sync';
-  import { scheduleBidirectionalSync } from '$lib/sync.js';
+  import { scheduleBidirectionalSync, initAutoSync } from '$lib/sync.js';
   import { registerServiceWorker } from '$lib/swRegister.js';
   import { syncRemindersToServiceWorker } from '$lib/services/reminders.js';
   import { peekSessionUserId, readCache, CACHE_SCOPES } from '$lib/localCache.js';
   import { openTaskEditor } from '$lib/ui.svelte.js';
-  import { resolveMobileChromeInset } from '$lib/nav.js';
+  import { resolveMobileChromeInset, isFabVisible } from '$lib/nav.js';
 
   let { children } = $props();
 
@@ -46,6 +46,7 @@
   const documentLocale = $derived(S.settings.locale === 'en' ? 'en' : 'zh');
 
   const mobileChromeInset = $derived(resolveMobileChromeInset(page.url.pathname));
+  const fabVisible = $derived(isFabVisible(page.url.pathname));
 
   onMount(() => {
     const cachedUserId = peekSessionUserId();
@@ -66,7 +67,7 @@
     const params = new URLSearchParams(window.location.search);
     const taskId = params.get('task');
     if (taskId) {
-      const task = S.tasks.find((t) => t.id === taskId);
+      const task = S.tasks.find((t) => t.id === taskId && !t.deletedAt);
       if (task) openTaskEditor(task);
       history.replaceState({}, '', window.location.pathname);
     }
@@ -85,12 +86,17 @@
     };
   });
 
-  /** 已登录时回到前台：debounce 双向同步（与 FitnessOS 一致） */
+  /** 已登录时：回到前台 debounce 双向同步 + 编辑后自动上云 / 离线恢复补同步 */
   $effect(() => {
     if (!auth.ready || !auth.user) return;
-    return bindVisibilitySync(() => scheduleBidirectionalSync(), {
+    const cleanupVisibility = bindVisibilitySync(() => scheduleBidirectionalSync(), {
       when: () => Boolean(auth.user)
     });
+    const cleanupAutoSync = initAutoSync({ isSignedIn: () => Boolean(auth.user) });
+    return () => {
+      cleanupVisibility();
+      cleanupAutoSync();
+    };
   });
 </script>
 
@@ -101,7 +107,7 @@
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
   <SyncErrorBanner />
   <ListSidebar />
-  <div class="main-col" data-mobile-chrome={mobileChromeInset}>
+  <div class="main-col" data-mobile-chrome={mobileChromeInset} data-fab-visible={fabVisible ? 'true' : 'false'}>
     {@render children()}
     <Fab />
     <BottomNav />

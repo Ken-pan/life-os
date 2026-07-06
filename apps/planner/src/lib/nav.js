@@ -137,6 +137,15 @@ export function isMoreNavActive(pathname) {
 }
 
 /** @param {string} pathname */
+export function isFabVisible(pathname) {
+  if (pathname.startsWith('/settings')) return false;
+  if (pathname.startsWith('/auth')) return false;
+  if (pathname.startsWith('/search')) return false;
+  if (pathname.startsWith('/completed')) return false;
+  return true;
+}
+
+/** @param {string} pathname */
 export function isNavChromeHidden(pathname) {
   return pathname.startsWith('/auth');
 }
