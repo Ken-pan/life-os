@@ -1,5 +1,5 @@
 <script>
-  import { S, uid, visibleLists } from '$lib/state.svelte.js';
+  import { S, uid } from '$lib/state.svelte.js';
   import { createTask, updateTask, deleteTask, addSubtask } from '$lib/domain/tasks.js';
   import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js';
   import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
@@ -291,7 +291,7 @@
           <div class="field">
             <label for="task-list">{t('task.list')}</label>
             <select id="task-list" bind:value={draft.listId}>
-              {#each visibleLists() as list}
+              {#each S.lists.filter((l) => !l.deletedAt) as list (list.id)}
                 <option value={list.id}>{listLabel(list)}</option>
               {/each}
             </select>
