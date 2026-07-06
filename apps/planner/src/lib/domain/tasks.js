@@ -107,6 +107,14 @@ export function deleteTask(id) {
   afterMutation();
 }
 
+/** 撤销删除（清除墓碑，任务重新出现在列表中） */
+/** @param {string} id */
+export function restoreTask(id) {
+  const task = S.tasks.find((t) => t.id === id);
+  if (!task?.deletedAt) return null;
+  return updateTask(id, { deletedAt: null });
+}
+
 /** @param {string} id @param {number} direction -1 up, 1 down */
 export function moveTask(id, direction) {
   const active = activeTasks().sort((a, b) => a.sortOrder - b.sortOrder);

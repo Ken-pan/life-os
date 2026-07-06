@@ -6,7 +6,7 @@
 <script>
   import { onDestroy } from 'svelte';
   import { PRIORITY_COLORS } from '$lib/types.js';
-  import { isOverdue, updateTask, deleteTask } from '$lib/domain/tasks.js';
+  import { isOverdue, updateTask, deleteTask, restoreTask } from '$lib/domain/tasks.js';
   import { recurrenceLabel } from '$lib/domain/recurrence.js';
   import { formatDateShort } from '$lib/domain/dateFormat.js';
   import { listLabel, t } from '$lib/i18n/index.js';
@@ -212,7 +212,7 @@
     closeActions();
     toast(t('toast.deleted'), 'success', {
       actionLabel: t('common.undo'),
-      onAction: () => updateTask(id, { deletedAt: null })
+      onAction: () => restoreTask(id)
     });
   }
 </script>

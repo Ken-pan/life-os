@@ -249,7 +249,7 @@ test.describe('PlannerOS E2E', () => {
     await expect(deleteBtn).toBeVisible();
     await deleteBtn.click();
     await expect(page.locator('.toast')).toContainText(/已删除|deleted/i);
-    await page.locator('.toast-action').click();
+    await page.getByRole('button', { name: /撤销|Undo/i }).click();
     await expect(page.locator('.task-title', { hasText: '左滑删除' })).toBeVisible();
   });
 
@@ -263,10 +263,6 @@ test.describe('PlannerOS E2E', () => {
       .click();
     await expect(page.locator('.toast')).toContainText(/安排|Scheduled/i);
     await page.goto('/upcoming');
-    const tomorrowGroup = page.getByRole('button', { name: /明天|Tomorrow/ });
-    if ((await tomorrowGroup.getAttribute('aria-expanded')) === 'false') {
-      await tomorrowGroup.click();
-    }
     await expect(page.locator('.task-title', { hasText: '改期任务' })).toBeVisible();
   });
 

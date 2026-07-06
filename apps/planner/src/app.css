@@ -264,6 +264,13 @@ html, body {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* 带操作按钮的 toast 需高于 FAB，避免移动端被遮挡 */
+.toast--action {
+  z-index: calc(var(--z-toast, 120) + 20);
+  pointer-events: auto;
 }
 
 .task-list {
