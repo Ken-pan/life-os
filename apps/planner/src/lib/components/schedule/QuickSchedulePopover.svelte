@@ -46,17 +46,20 @@
   const hasExisting = $derived(Boolean(task?.scheduledStart));
 
   $effect(() => {
-    if (schedulePopover.open && task) {
-      start = task.scheduledStart || '09:00';
-      duration = task.durationMinutes || defaultDurationMinutes(task);
-      lockScroll();
-      document.documentElement.classList.add('planner-schedule-modal-open');
-      return () => {
-        unlockScroll();
-        document.documentElement.classList.remove('planner-schedule-modal-open');
-      };
+    const open = schedulePopover.open && !!task;
+    if (!open) {
+      document.documentElement.classList.remove('planner-schedule-modal-open');
+      return;
     }
-    document.documentElement.classList.remove('planner-schedule-modal-open');
+
+    start = task.scheduledStart || '09:00';
+    duration = task.durationMinutes || defaultDurationMinutes(task);
+    lockScroll();
+    document.documentElement.classList.add('planner-schedule-modal-open');
+    return () => {
+      unlockScroll();
+      document.documentElement.classList.remove('planner-schedule-modal-open');
+    };
   });
 
   function save() {

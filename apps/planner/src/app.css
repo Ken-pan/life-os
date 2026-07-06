@@ -2078,8 +2078,10 @@ html.planner-schedule-modal-open .sidebar {
   filter: saturate(0.85);
 }
 
-html.planner-schedule-modal-open .main-col {
-  pointer-events: none;
+@media (--life-os-desktop) {
+  html.planner-schedule-modal-open .main-col {
+    pointer-events: none;
+  }
 }
 
 html.planner-schedule-modal-open .schedule-popover-bg,

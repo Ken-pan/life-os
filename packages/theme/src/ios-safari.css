@@ -42,8 +42,9 @@ body,
     flex-direction: column;
   }
 
+  /* Finance / Fitness / Music：main-wrap 内滚动 */
   html.standalone-pwa .main-wrap,
-  html.standalone-pwa .main-col {
+  html.standalone-pwa .main-col:has(.main-wrap) {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
@@ -54,6 +55,16 @@ body,
   html.standalone-pwa .main-wrap .content {
     flex: 1 1 auto;
     min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Planner 等直接用 .main-col 壳的应用：主列自身滚动 */
+  html.standalone-pwa .main-col:not(:has(.main-wrap)) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
@@ -77,7 +88,8 @@ body,
   /* Sheet / More / Modal：Safari 16+ CSS fallback；旧版与 iOS 橡皮筋由 JS lockScroll()（@life-os/theme）负责 */
   body:has(.sheet-bg),
   body:has(.mobile-more-backdrop),
-  body:has(.modal-bg.show) {
+  body:has(.modal-bg.show),
+  body:has(.schedule-popover-bg) {
     overflow: hidden;
   }
 }

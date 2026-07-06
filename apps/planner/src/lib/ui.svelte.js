@@ -117,6 +117,9 @@ export function closeSchedulePopover() {
   schedulePopover.open = false;
   schedulePopover.taskId = null;
   schedulePopover.dateKey = null;
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.remove('planner-schedule-modal-open');
+  }
 }
 
 /**
