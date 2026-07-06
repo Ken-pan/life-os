@@ -71,11 +71,25 @@
   initial-value: #a81830;
 }
 
+@property --album-glow-1 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(180, 48, 78, 0.18);
+}
+
+@property --album-glow-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(120, 40, 88, 0.1);
+}
+
 html {
   transition:
     --track-accent 680ms var(--ease-standard, ease),
     --track-accent-muted 680ms var(--ease-standard, ease),
-    --player-glow 680ms var(--ease-standard, ease);
+    --player-glow 680ms var(--ease-standard, ease),
+    --album-glow-1 680ms var(--ease-standard, ease),
+    --album-glow-2 680ms var(--ease-standard, ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -130,6 +144,26 @@ html {
   justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--space-3);
+}
+
+.page-section-head a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: var(--space-1) var(--space-3);
+  margin-block: calc((var(--tap-min) - 1.5em) / -2);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.page-section-head a:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .appbar-action {
@@ -247,6 +281,7 @@ html {
 
 .search-input {
   width: 100%;
+  min-height: var(--tap-min);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
@@ -262,6 +297,7 @@ html {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  min-height: var(--tap-min);
   padding: var(--space-3) 0;
   border-bottom: 1px solid var(--border);
   text-decoration: none;
@@ -308,4 +344,15 @@ html {
   font-family: var(--disp);
   font-weight: 600;
   letter-spacing: 0.04em;
+}
+
+/* Segmented controls — meet tap target on all viewports */
+.music-app .seg:not(.seg-icons) button {
+  min-height: var(--tap-min);
+  padding-block: var(--space-2);
+}
+
+.music-app .btn-secondary,
+.music-app .btn-ghost {
+  min-height: var(--tap-min);
 }

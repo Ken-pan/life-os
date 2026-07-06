@@ -13,27 +13,31 @@
   } from '$lib/player.svelte.js';
   import { openQueueDrawer } from '$lib/ui.svelte.js';
 
-  let { large = false, quiet = false } = $props();
+  let { large = false, quiet = false, minimal = false } = $props();
 
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
 </script>
 
-<div class="player-controls" class:player-controls--large={large} class:player-controls--quiet={quiet}>
-  <button class="ctrl" class:on={player.shuffle} type="button" aria-label="随机" onclick={toggleShuffle}>
-    <Icon name="shuffle" size={18} />
-  </button>
+<div class="player-controls" class:player-controls--large={large} class:player-controls--quiet={quiet} class:player-controls--minimal={minimal}>
+  {#if !minimal}
+    <button class="ctrl" class:on={player.shuffle} type="button" aria-label="随机" onclick={toggleShuffle}>
+      <Icon name="shuffle" size={18} />
+    </button>
+  {/if}
   <button class="ctrl" type="button" aria-label="上一首" onclick={prevTrack}>
-    <Icon name="skip-back" size={22} />
+    <Icon name="skip-back" size={minimal ? 20 : 22} />
   </button>
   <button class="ctrl ctrl-main" type="button" aria-label={player.playing ? '暂停' : '播放'} onclick={togglePlay}>
-    <Icon name={player.playing ? 'pause' : 'play'} size={28} strokeWidth={2} />
+    <Icon name={player.playing ? 'pause' : 'play'} size={minimal ? 24 : 28} strokeWidth={2} />
   </button>
   <button class="ctrl" type="button" aria-label="下一首" onclick={nextTrack}>
-    <Icon name="skip-forward" size={22} />
+    <Icon name="skip-forward" size={minimal ? 20 : 22} />
   </button>
-  <button class="ctrl" class:on={player.repeat !== 'off'} type="button" aria-label="循环" onclick={cycleRepeat}>
-    <Icon name={repeatIcon} size={18} />
-  </button>
+  {#if !minimal}
+    <button class="ctrl" class:on={player.repeat !== 'off'} type="button" aria-label="循环" onclick={cycleRepeat}>
+      <Icon name={repeatIcon} size={18} />
+    </button>
+  {/if}
 </div>
 
 <div class="player-progress" class:player-progress--quiet={quiet}>
@@ -53,7 +57,7 @@
   </div>
 </div>
 
-{#if large}
+{#if large && !minimal}
   <button class="now-playing-queue-btn" type="button" onclick={openQueueDrawer}>
     播放队列 · {player.queue.length} 首
   </button>

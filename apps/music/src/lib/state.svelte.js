@@ -17,9 +17,17 @@ const defaultState = () => ({
     muted: false,
     libraryDensity: 'comfortable',
     /** Tint player chrome from album artwork (progress, glow, spotlight). */
-    albumAmbience: true
+    albumAmbience: true,
+    /** Now-playing immersive view: lyrics (sing-along) or ambient (cover-first). */
+    immersiveViewMode: 'lyrics'
   }
 });
+
+/** @param {'lyrics' | 'ambient'} mode */
+export function setImmersiveViewMode(mode) {
+  S.settings.immersiveViewMode = mode;
+  save();
+}
 
 function load() {
   if (!browser) return defaultState();

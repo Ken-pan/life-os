@@ -1,6 +1,6 @@
 <script>
   import { t } from '$lib/i18n/index.js';
-  import { S, save, applyTheme } from '$lib/state.svelte.js';
+  import { S, save, applyTheme, setImmersiveViewMode } from '$lib/state.svelte.js';
   import { getCurrentTrack, player, refreshQueueMetadata } from '$lib/player.svelte.js';
   import { refreshTrackAmbience } from '$lib/trackAmbience.js';
   import { exportLibraryJson, rescanTrackMetadata, ensureArtRepaired, ensureMetadataRepaired, repairMissingLyrics } from '$lib/import.js';
@@ -244,6 +244,29 @@
           onclick={() => setAlbumAmbience(false)}
         >
           {t('settings.albumAmbienceOff')}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-block set-group">
+    <h3 class="block-title sg-title">{t('settings.immersiveViewMode')}</h3>
+    <p class="block-desc" style="padding:0 18px 12px">{t('settings.immersiveViewModeDesc')}</p>
+    <div class="set-row settings-row">
+      <div class="pref-control seg settings-seg-full">
+        <button
+          type="button"
+          class:active={S.settings.immersiveViewMode !== 'ambient'}
+          onclick={() => setImmersiveViewMode('lyrics')}
+        >
+          {t('nowPlaying.modeLyrics')}
+        </button>
+        <button
+          type="button"
+          class:active={S.settings.immersiveViewMode === 'ambient'}
+          onclick={() => setImmersiveViewMode('ambient')}
+        >
+          {t('nowPlaying.modeAmbient')}
         </button>
       </div>
     </div>

@@ -108,6 +108,13 @@
   font-weight: 600;
 }
 
+@media (pointer: coarse) {
+  .seg:not(.seg-icons) button {
+    min-height: var(--tap-min);
+    padding-block: var(--space-2);
+  }
+}
+
 .seg-scroll {
   max-width: 100%;
   min-width: 0;

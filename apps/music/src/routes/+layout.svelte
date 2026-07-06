@@ -40,6 +40,9 @@
   const appBarBackLabel = $derived(pageChrome.backLabel ?? undefined);
   const playerChrome = $derived((player.queue[player.index] ?? null) ? 'mini' : 'none');
   const pageRoute = $derived(page.url.pathname.startsWith('/now-playing') ? 'now-playing' : undefined);
+  const immersiveMode = $derived(
+    pageRoute === 'now-playing' ? (S.settings.immersiveViewMode === 'ambient' ? 'ambient' : 'lyrics') : undefined
+  );
   const wideContent = $derived(isWideContentRoute(page.url.pathname));
   const utilityOpen = $derived(utilityPane.open);
 
@@ -118,6 +121,7 @@
 <div
   class="app-shell music-app"
   data-page-route={pageRoute}
+  data-immersive-mode={immersiveMode}
   data-wide-content={wideContent ? 'true' : undefined}
   data-utility-open={utilityOpen ? 'true' : undefined}
 >

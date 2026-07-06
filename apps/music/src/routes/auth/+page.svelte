@@ -105,5 +105,11 @@
   .auth-form { display: flex; flex-direction: column; gap: 14px; padding: 14px 18px 18px; }
   .auth-error { color: var(--accent); font-size: var(--text-sm); }
   .auth-switch { text-align: center; font-size: var(--text-sm); color: var(--t3); }
-  .auth-switch button { color: var(--accent); font-weight: 600; }
+  .auth-switch button {
+    color: var(--accent);
+    font-weight: 600;
+    min-height: var(--tap-min);
+    padding-inline: var(--space-1);
+    touch-action: manipulation;
+  }
 </style>

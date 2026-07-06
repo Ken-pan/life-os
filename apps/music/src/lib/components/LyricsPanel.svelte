@@ -3,8 +3,8 @@
   import { t } from '$lib/i18n/index.js';
   import { parseLyrics, activeLyricIndex } from '$lib/lyrics.js';
 
-  /** @type {{ lyrics?: string, currentTime?: number, fetching?: boolean, seekable?: boolean, onSeek?: (time: number) => void }} */
-  let { lyrics = '', currentTime = 0, fetching = false, seekable = false, onSeek } = $props();
+  /** @type {{ lyrics?: string, currentTime?: number, fetching?: boolean, seekable?: boolean, stage?: boolean, singAlong?: boolean, onSeek?: (time: number) => void }} */
+  let { lyrics = '', currentTime = 0, fetching = false, seekable = false, stage = false, singAlong = false, onSeek } = $props();
 
   const model = $derived(parseLyrics(lyrics));
   const active = $derived(activeLyricIndex(model, currentTime));
@@ -27,9 +27,33 @@
     if (idx < 0 || !scrollEl) return;
     const node = scrollEl.querySelector(`[data-lyric-idx="${idx}"]`);
     if (!(node instanceof HTMLElement)) return;
-    const anchor = scrollEl.clientHeight * 0.38;
-    const top = node.offsetTop - anchor;
-    scrollEl.scrollTo({ top: Math.max(0, top), behavior });
+    const anchor = scrollEl.clientHeight * (stage ? 0.44 : 0.38);
+    const top = Math.max(0, node.offsetTop - anchor);
+    const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || behavior === 'auto') {
+      scrollEl.scrollTop = top;
+      return;
+    }
+    smoothScrollTo(scrollEl, top, 420);
+  }
+
+  /** @param {HTMLElement} el @param {number} top @param {number} duration */
+  function smoothScrollTo(el, top, duration) {
+    const start = el.scrollTop;
+    const diff = top - start;
+    if (Math.abs(diff) < 2) {
+      el.scrollTop = top;
+      return;
+    }
+    const t0 = performance.now();
+    /** @param {number} t */
+    function frame(t) {
+      const p = Math.min(1, (t - t0) / duration);
+      const eased = 1 - (1 - p) ** 3;
+      el.scrollTop = start + diff * eased;
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   }
 
   /** @param {number} idx */
@@ -53,22 +77,29 @@
     <p class="now-playing-lyrics-loading-copy">{t('nowPlaying.fetchingLyrics')}</p>
   </section>
 {:else if model.lines.length}
-  <section class="now-playing-lyrics" aria-label={t('nowPlaying.lyrics')}>
-    <div class="now-playing-lyrics-head">
-      {t('nowPlaying.lyrics')}
-      {#if model.timed}
-        <span class="now-playing-lyrics-tag">{t('nowPlaying.synced')}</span>
-      {:else}
-        <span class="now-playing-lyrics-tag now-playing-lyrics-tag--plain">{t('nowPlaying.plain')}</span>
-      {/if}
-    </div>
+  <section class="now-playing-lyrics" class:now-playing-lyrics--stage={stage} class:now-playing-lyrics--sing-along={singAlong} aria-label={t('nowPlaying.lyrics')}>
+    {#if !stage}
+      <div class="now-playing-lyrics-head">
+        {t('nowPlaying.lyrics')}
+        {#if model.timed}
+          <span class="now-playing-lyrics-tag">{t('nowPlaying.synced')}</span>
+        {:else}
+          <span class="now-playing-lyrics-tag now-playing-lyrics-tag--plain">{t('nowPlaying.plain')}</span>
+        {/if}
+      </div>
+    {/if}
     <div class="now-playing-lyrics-body" class:timed={model.timed} class:seekable={canSeek} bind:this={scrollEl}>
       {#each model.lines as line, i (i)}
+        {@const isActive = model.timed && i === active}
+        {@const isNear = model.timed && active >= 0 && Math.abs(i - active) <= 2 && !isActive}
+        {@const isFar = model.timed && active >= 0 && !isActive && !isNear}
         {#if canSeek}
           <button
             type="button"
             class="now-playing-lyrics-line"
-            class:active={model.timed && i === active}
+            class:active={isActive}
+            class:near={isNear}
+            class:far={isFar}
             class:passed={model.timed && i < active}
             data-lyric-idx={i}
             onclick={() => onLineClick(i)}
@@ -78,7 +109,9 @@
         {:else}
           <p
             class="now-playing-lyrics-line"
-            class:active={model.timed && i === active}
+            class:active={isActive}
+            class:near={isNear}
+            class:far={isFar}
             class:passed={model.timed && i < active}
             data-lyric-idx={i}
           >

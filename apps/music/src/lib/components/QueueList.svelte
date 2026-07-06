@@ -158,7 +158,8 @@
   .queue-drag-handle {
     display: grid;
     place-items: center;
-    width: 28px;
+    width: var(--tap-min);
+    height: var(--tap-min);
     flex-shrink: 0;
     color: var(--t3, var(--text-muted));
     cursor: grab;
@@ -172,23 +173,24 @@
 
   .queue-move-controls {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--tap-spacing);
     flex-shrink: 0;
     padding-right: 2px;
   }
 
   .queue-move-btn {
-    width: 28px;
-    height: 24px;
+    width: var(--tap-min);
+    height: var(--tap-min);
     display: grid;
     place-items: center;
     background: none;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-pill);
     color: var(--t3, var(--text-muted));
     padding: 0;
+    touch-action: manipulation;
   }
 
   .queue-move-btn:disabled {

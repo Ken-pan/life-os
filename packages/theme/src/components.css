@@ -117,6 +117,27 @@ a.btn-danger {
   }
 }
 
+/* Icon-only control — visual glyph may be smaller; hit box meets --tap-min */
+.tap-target-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: var(--radius-pill);
+  touch-action: manipulation;
+}
+
+/* Range scrubbers — expand vertical hit area on touch devices */
+@media (pointer: coarse) {
+  .range-hit-expand input[type='range'] {
+    box-sizing: border-box;
+    height: var(--tap-min);
+    padding-block: calc((var(--tap-min) - var(--range-track-h, var(--progress-h, 4px))) / 2);
+    background-clip: content-box;
+  }
+}
+
 /* ===== FAB ===== */
 .fab {
   position: fixed;

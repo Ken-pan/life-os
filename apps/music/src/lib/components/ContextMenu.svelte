@@ -72,13 +72,15 @@
   }
 
   .context-menu-item {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
     text-align: left;
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-sm);
     font-size: var(--text-sm);
     color: var(--t1, var(--text));
+    min-height: var(--tap-min);
   }
 
   .context-menu-item:hover,

@@ -88,7 +88,8 @@
   --btn-h-sm: 32px;
   --btn-h-md: 36px;
   --btn-h-lg: 44px;
-  --tap-min: 44px;
+  --tap-min: 44px; /* WCAG 2.5.5 / Apple HIG — primary pointer targets */
+  --tap-spacing: 8px; /* min gap between adjacent targets (Material) */
   --btn-pad-x-sm: 12px;
   --btn-pad-x-md: 14px;
   --btn-pad-x-lg: 16px;

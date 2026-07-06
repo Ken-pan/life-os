@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { getAnalyser, attachAnalyserWhenReady } from '$lib/audioAnalyser.js';
-  import { player } from '$lib/player.svelte.js';
+  import { player, getProgressPct } from '$lib/player.svelte.js';
 
   let { quiet = false } = $props();
 
@@ -26,7 +26,7 @@
     const ctx = canvas?.getContext('2d');
     if (!ctx || !canvas) return;
 
-    const barCount = quiet ? 24 : 32;
+    const barCount = quiet ? 36 : 32;
     const data = new Uint8Array(barCount);
     let smoothed = new Float32Array(barCount);
 
@@ -39,32 +39,38 @@
       if (canvas.height !== h) canvas.height = h;
 
       ctx.clearRect(0, 0, w, h);
-      const gap = quiet ? 4 : 3;
-      const barW = Math.max(quiet ? 3 : 2, (w - gap * (barCount - 1)) / barCount);
-      const fill = quiet ? 'rgba(180, 160, 200, 0.88)' : getAccentColor();
-      const maxAlpha = quiet ? 0.34 : 0.72;
-      const minAlpha = quiet ? 0.12 : 0.22;
+      const gap = quiet ? 5 : 3;
+      const barW = quiet ? 4 : Math.max(2, (w - gap * (barCount - 1)) / barCount);
+      const playedPct = quiet ? getProgressPct() / 100 : 0;
+      const idleFill = quiet ? 'rgba(218, 184, 198, 0.24)' : getAccentColor();
+      const playedFill = quiet ? 'rgba(226, 120, 146, 0.48)' : getAccentColor();
+      const maxAlpha = quiet ? 0.32 : 0.72;
+      const minAlpha = quiet ? 0.14 : 0.22;
+      const minBarH = quiet ? 8 : 4;
+      const maxBarScale = quiet ? 0.68 : 0.92;
 
       if (analyser && player.playing) {
         analyser.getByteFrequencyData(data);
         for (let i = 0; i < barCount; i++) {
           const norm = data[i] / 255;
           smoothed[i] = smoothed[i] * 0.72 + norm * 0.28;
-          const barH = Math.max(quiet ? 3 : 4, smoothed[i] * h * (quiet ? 0.72 : 0.92));
+          const barH = Math.max(minBarH * 0.35, smoothed[i] * h * maxBarScale);
           const x = i * (barW + gap);
           const y = (h - barH) / 2;
-          ctx.fillStyle = fill;
+          const played = quiet && i / barCount <= playedPct;
+          ctx.fillStyle = played ? playedFill : idleFill;
           ctx.globalAlpha = minAlpha + smoothed[i] * (maxAlpha - minAlpha);
           roundBar(ctx, x, y, barW, barH, barW / 2);
           ctx.fill();
         }
         ctx.globalAlpha = 1;
       } else {
-        const idleH = quiet ? 3 : 4;
-        ctx.fillStyle = fill;
-        ctx.globalAlpha = quiet ? 0.14 : minAlpha;
+        const idleH = quiet ? minBarH * 0.35 : 4;
         for (let i = 0; i < barCount; i++) {
           const x = i * (barW + gap);
+          const played = quiet && i / barCount <= playedPct;
+          ctx.fillStyle = played ? playedFill : idleFill;
+          ctx.globalAlpha = quiet ? (played ? 0.42 : 0.18) : minAlpha;
           roundBar(ctx, x, (h - idleH) / 2, barW, idleH, barW / 2);
           ctx.fill();
         }

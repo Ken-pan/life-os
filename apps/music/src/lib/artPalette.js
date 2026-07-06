@@ -1,6 +1,6 @@
 import { trackAccent } from './trackArt.js';
 
-/** @typedef {{ accent: string, accentMuted: string, glow: string }} ArtPalette */
+/** @typedef {{ accent: string, accentMuted: string, glow: string, glow1: string, glow2: string }} ArtPalette */
 
 /** @type {Map<string, ArtPalette>} */
 const CACHE = new Map();
@@ -183,6 +183,16 @@ function kMeans(samples, k = 4) {
   }));
 }
 
+/** @param {number} h @param {number} s @param {number} l */
+function ambientGlowPair(h, s, l) {
+  const a = hslToRgb(h, Math.min(s * 0.82, 70), Math.min(l + 6, 52));
+  const b = hslToRgb((h + 28) % 360, Math.min(s * 0.62, 58), Math.max(l - 14, 22));
+  return {
+    glow1: `rgba(${a.r}, ${a.g}, ${a.b}, 0.18)`,
+    glow2: `rgba(${b.r}, ${b.g}, ${b.b}, 0.1)`
+  };
+}
+
 /** @param {{ r: number, g: number, b: number, score: number }[]} clusters @param {number} bgLum */
 function clustersToPalette(clusters, bgLum) {
   const ranked = clusters
@@ -202,10 +212,13 @@ function clustersToPalette(clusters, bgLum) {
 
   const accentCss = hslCss(blended.h, blended.s, blended.l);
   const mutedCss = hslCss(blendedMuted.h, blendedMuted.s, blendedMuted.l);
+  const glows = ambientGlowPair(blended.h, blended.s, blended.l);
   return {
     accent: accentCss,
     accentMuted: mutedCss,
-    glow: `color-mix(in srgb, ${accentCss} 42%, transparent)`
+    glow: `color-mix(in srgb, ${accentCss} 42%, transparent)`,
+    glow1: glows.glow1,
+    glow2: glows.glow2
   };
 }
 
@@ -296,10 +309,15 @@ export async function extractArtPalette(source, cacheKey) {
 /** @param {string} seed */
 export function paletteFromHash(seed) {
   const accent = trackAccent(seed);
+  const match = accent.match(/hsl\((\d+)/);
+  const h = match ? Number(match[1]) : 350;
+  const glows = ambientGlowPair(h, 62, 42);
   return {
     accent,
     accentMuted: accent.replace(/(\d+)%\)$/, (_, l) => `${Math.max(+l - 12, 28)}%)`),
-    glow: `color-mix(in srgb, ${accent} 42%, transparent)`
+    glow: `color-mix(in srgb, ${accent} 42%, transparent)`,
+    glow1: glows.glow1,
+    glow2: glows.glow2
   };
 }
 

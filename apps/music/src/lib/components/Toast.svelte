@@ -35,9 +35,9 @@
 
   .toast-dismiss {
     flex-shrink: 0;
-    width: 1.75rem;
-    height: 1.75rem;
-    margin: -0.15rem -0.25rem 0 0;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    margin: calc((var(--tap-min) - 1.75rem) / -2) calc((var(--tap-min) - 1.75rem) / -2) 0 0;
     border: none;
     border-radius: var(--radius-pill);
     background: transparent;
@@ -46,6 +46,7 @@
     line-height: 1;
     cursor: pointer;
     opacity: 0.72;
+    touch-action: manipulation;
   }
 
   .toast-dismiss:hover {

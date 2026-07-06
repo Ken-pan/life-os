@@ -148,6 +148,7 @@
     width: 100%;
     max-width: 360px;
     margin-bottom: var(--space-4);
+    min-height: var(--tap-min);
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-md);
     border: 1px solid var(--border);

@@ -58,6 +58,10 @@
   .track-row-body {
     flex: 1;
     min-width: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     background: none;
     border: none;
     text-align: left;

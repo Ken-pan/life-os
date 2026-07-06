@@ -142,7 +142,12 @@ export default {
     fetchingLyrics: '正在从网络获取歌词…',
     plain: '文本',
     playing: '正在播放',
-    paused: '已暂停'
+    paused: '已暂停',
+    modeLabel: '播放视图',
+    modeLyrics: '沉浸歌词',
+    modeAmbient: '封面氛围',
+    modeLyricsDesc: '歌词跟唱优先，当前句高亮引导阅读。',
+    modeAmbientDesc: '封面氛围优先，控件与歌词更弱，适合纯听。'
   },
   player: {
     playFailed: '无法播放，请确认已登录并完成云同步',
@@ -162,6 +167,8 @@ export default {
     albumAmbienceDesc: '从封面取色，用于进度条、光晕与播放卡片；导航与按钮仍使用品牌色。',
     albumAmbienceOn: '跟随',
     albumAmbienceOff: '关闭',
+    immersiveViewMode: '全屏播放默认视图',
+    immersiveViewModeDesc: '进入正在播放页时的默认模式；页内可随时切换。',
     privacy: '隐私',
     privacyDesc: '默认保存在本机。登录后可选择将音频备份到私有 Supabase Storage（private bucket，播放时用 signed URL）。',
     iosBackground: 'iPhone 后台播放：请用 Safari「添加到主屏幕」安装本应用，锁屏后可通过控制中心/耳机控制。',
