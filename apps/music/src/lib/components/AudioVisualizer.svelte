@@ -3,14 +3,11 @@
   import { getAnalyser, attachAnalyserWhenReady } from '$lib/audioAnalyser.js';
   import { player } from '$lib/player.svelte.js';
 
+  let { quiet = false } = $props();
+
   let canvas = $state(null);
   /** @type {number | undefined} */
   let rafId;
-
-  function accentColor() {
-    const root = getComputedStyle(document.documentElement);
-    return root.getPropertyValue('--track-accent').trim() || root.getPropertyValue('--accent').trim() || '#c41e3a';
-  }
 
   /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
   function roundBar(ctx, x, y, w, h, r) {
@@ -27,8 +24,9 @@
     const ctx = canvas?.getContext('2d');
     if (!ctx || !canvas) return;
 
-    const barCount = 32;
+    const barCount = quiet ? 24 : 32;
     const data = new Uint8Array(barCount);
+    let smoothed = new Float32Array(barCount);
 
     function draw() {
       if (player.playing) void attachAnalyserWhenReady();
@@ -39,27 +37,30 @@
       if (canvas.height !== h) canvas.height = h;
 
       ctx.clearRect(0, 0, w, h);
-      const fill = accentColor();
-      const gap = 3;
-      const barW = Math.max(2, (w - gap * (barCount - 1)) / barCount);
+      const gap = quiet ? 4 : 3;
+      const barW = Math.max(quiet ? 3 : 2, (w - gap * (barCount - 1)) / barCount);
+      const fill = quiet ? 'rgba(180, 160, 200, 0.88)' : getAccentColor();
+      const maxAlpha = quiet ? 0.34 : 0.72;
+      const minAlpha = quiet ? 0.12 : 0.22;
 
       if (analyser && player.playing) {
         analyser.getByteFrequencyData(data);
         for (let i = 0; i < barCount; i++) {
           const norm = data[i] / 255;
-          const barH = Math.max(4, norm * h * 0.92);
+          smoothed[i] = smoothed[i] * 0.72 + norm * 0.28;
+          const barH = Math.max(quiet ? 3 : 4, smoothed[i] * h * (quiet ? 0.72 : 0.92));
           const x = i * (barW + gap);
           const y = (h - barH) / 2;
           ctx.fillStyle = fill;
-          ctx.globalAlpha = 0.28 + norm * 0.72;
+          ctx.globalAlpha = minAlpha + smoothed[i] * (maxAlpha - minAlpha);
           roundBar(ctx, x, y, barW, barH, barW / 2);
           ctx.fill();
         }
         ctx.globalAlpha = 1;
       } else {
-        const idleH = 4;
+        const idleH = quiet ? 3 : 4;
         ctx.fillStyle = fill;
-        ctx.globalAlpha = 0.22;
+        ctx.globalAlpha = quiet ? 0.14 : minAlpha;
         for (let i = 0; i < barCount; i++) {
           const x = i * (barW + gap);
           roundBar(ctx, x, (h - idleH) / 2, barW, idleH, barW / 2);
@@ -76,9 +77,14 @@
       if (rafId) cancelAnimationFrame(rafId);
     };
   });
+
+  function getAccentColor() {
+    const root = getComputedStyle(document.documentElement);
+    return root.getPropertyValue('--track-accent').trim() || root.getPropertyValue('--accent').trim() || '#c41e3a';
+  }
 </script>
 
-<canvas class="audio-visualizer" bind:this={canvas} aria-hidden="true"></canvas>
+<canvas class="audio-visualizer" class:audio-visualizer--quiet={quiet} bind:this={canvas} aria-hidden="true"></canvas>
 
 <style>
   .audio-visualizer {
@@ -86,5 +92,11 @@
     height: 48px;
     display: block;
     margin: 0 auto;
+  }
+
+  .audio-visualizer--quiet {
+    width: min(100%, 520px);
+    height: 32px;
+    opacity: 0.88;
   }
 </style>

@@ -38,6 +38,25 @@ function localDateOffset(days = 0) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** 模拟任务行水平滑动（pointer 手势，多步 move 才能越过 10px 阈值） */
+async function swipeTaskRow(page, title, deltaX) {
+  const row = page.locator('.swipe-item', {
+    has: page.locator('.task-title', { hasText: title })
+  });
+  await expect(row).toBeVisible();
+  const box = await row.boundingBox();
+  if (!box) throw new Error(`swipe row not found: ${title}`);
+  const startX = box.x + box.width * 0.5;
+  const startY = box.y + box.height * 0.5;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  const steps = 12;
+  for (let i = 1; i <= steps; i++) {
+    await page.mouse.move(startX + (deltaX * i) / steps, startY, { steps: 2 });
+  }
+  await page.mouse.up();
+}
+
 test.describe('PlannerOS E2E', () => {
   test.beforeEach(async ({ page }) => {
     await clearAppState(page);
@@ -209,6 +228,46 @@ test.describe('PlannerOS E2E', () => {
     await page.locator('.task-title', { hasText: '将被删除' }).click();
     await page.getByRole('dialog').getByRole('button', { name: '删除' }).click();
     await expect(page.locator('.task-title', { hasText: '将被删除' })).toHaveCount(0);
+  });
+
+  test('右滑完成任务', async ({ page }) => {
+    await page.goto('/inbox');
+    await quickAddTask(page, '右滑完成');
+    await swipeTaskRow(page, '右滑完成', 120);
+    await expect(page.locator('.task-title', { hasText: '右滑完成' })).toHaveCount(0);
+    await page.goto('/completed');
+    await expect(page.locator('.task-title', { hasText: '右滑完成' })).toBeVisible();
+  });
+
+  test('左滑展开操作并删除可撤销', async ({ page }) => {
+    await page.goto('/inbox');
+    await quickAddTask(page, '左滑删除');
+    await swipeTaskRow(page, '左滑删除', -140);
+    const deleteBtn = page.locator('.swipe-item', {
+      has: page.locator('.task-title', { hasText: '左滑删除' })
+    }).locator('.swipe-action--delete');
+    await expect(deleteBtn).toBeVisible();
+    await deleteBtn.click();
+    await expect(page.locator('.toast')).toContainText(/已删除|deleted/i);
+    await page.locator('.toast-action').click();
+    await expect(page.locator('.task-title', { hasText: '左滑删除' })).toBeVisible();
+  });
+
+  test('左滑改期到明天', async ({ page }) => {
+    await page.goto('/inbox');
+    await quickAddTask(page, '改期任务');
+    await swipeTaskRow(page, '改期任务', -140);
+    await page
+      .locator('.swipe-item', { has: page.locator('.task-title', { hasText: '改期任务' }) })
+      .locator('.swipe-action--tomorrow')
+      .click();
+    await expect(page.locator('.toast')).toContainText(/安排|Scheduled/i);
+    await page.goto('/upcoming');
+    const tomorrowGroup = page.getByRole('button', { name: /明天|Tomorrow/ });
+    if ((await tomorrowGroup.getAttribute('aria-expanded')) === 'false') {
+      await tomorrowGroup.click();
+    }
+    await expect(page.locator('.task-title', { hasText: '改期任务' })).toBeVisible();
   });
 
   test('编辑已有任务添加子任务', async ({ page }) => {

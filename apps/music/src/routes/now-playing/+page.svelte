@@ -74,36 +74,39 @@
     <button class="now-playing-handle" type="button" aria-label={t('common.back')} onclick={dismiss}></button>
 
     <div class="now-playing-layout" use:swipeDismiss={{ onDismiss: dismiss }}>
-      <div class="now-playing-art-col">
-        <div class="now-playing-art-wrap" use:swipeTrack={{ onPrev: prevTrack, onNext: nextTrack }}>
-          <TrackArt artUrl={track.artUrl} seed={track.id} class="now-playing-art" shared />
+      <div class="now-playing-stage">
+        <div class="now-playing-art-col">
+          <div class="now-playing-art-wrap" use:swipeTrack={{ onPrev: prevTrack, onNext: nextTrack }}>
+            <div class="now-playing-art-aura" aria-hidden="true"></div>
+            <TrackArt artUrl={track.artUrl} seed={track.id} class="now-playing-art" shared />
+          </div>
+        </div>
+
+        <div class="now-playing-main-col">
+          <div class="now-playing-copy">
+            <h1 class="now-playing-title">{track.title}</h1>
+            <p class="now-playing-artist">{track.artist}</p>
+            <p class="now-playing-album">{track.album}</p>
+          </div>
+
+          <div class="now-playing-controls-stack">
+            <AudioVisualizer quiet />
+            <PlayerControls large quiet />
+          </div>
+
+          {#if player.statusHint}
+            <p class="now-playing-status-hint" role="status">{player.statusHint}</p>
+          {/if}
         </div>
       </div>
 
-      <div class="now-playing-main-col">
-        <div class="now-playing-copy">
-          <h1 class="now-playing-title">{track.title}</h1>
-          <p class="now-playing-artist">{track.artist}</p>
-          <p class="now-playing-album">{track.album}</p>
-        </div>
-
-        <div class="now-playing-controls-stack">
-          <AudioVisualizer />
-          <PlayerControls large />
-        </div>
-
-        {#if player.statusHint}
-          <p class="now-playing-status-hint" role="status">{player.statusHint}</p>
-        {/if}
-
-        <LyricsPanel
-          lyrics={track.lyrics}
-          currentTime={player.currentTime}
-          fetching={lyricsFetching}
-          seekable={seekable}
-          onSeek={seek}
-        />
-      </div>
+      <LyricsPanel
+        lyrics={track.lyrics}
+        currentTime={player.currentTime}
+        fetching={lyricsFetching}
+        seekable={seekable}
+        onSeek={seek}
+      />
     </div>
   {:else}
     <div class="empty-state">

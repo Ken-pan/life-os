@@ -13,12 +13,12 @@
   } from '$lib/player.svelte.js';
   import { openQueueDrawer } from '$lib/ui.svelte.js';
 
-  let { large = false } = $props();
+  let { large = false, quiet = false } = $props();
 
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
 </script>
 
-<div class="player-controls" class:player-controls--large={large}>
+<div class="player-controls" class:player-controls--large={large} class:player-controls--quiet={quiet}>
   <button class="ctrl" class:on={player.shuffle} type="button" aria-label="随机" onclick={toggleShuffle}>
     <Icon name="shuffle" size={18} />
   </button>
@@ -36,7 +36,7 @@
   </button>
 </div>
 
-<div class="player-progress">
+<div class="player-progress" class:player-progress--quiet={quiet}>
   <input
     type="range"
     min="0"
@@ -54,7 +54,7 @@
 </div>
 
 {#if large}
-  <button class="btn-secondary" type="button" style="margin-top: 12px" onclick={openQueueDrawer}>
+  <button class="now-playing-queue-btn" type="button" onclick={openQueueDrawer}>
     播放队列 · {player.queue.length} 首
   </button>
 {/if}

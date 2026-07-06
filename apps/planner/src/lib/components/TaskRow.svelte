@@ -95,11 +95,16 @@
 
   function onPointerDown(e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // 动画进行中再次拖拽：以当前视觉位置为起点，避免跳变
+    if (settling) {
+      settling = false;
+      settleSide = 0;
+      openOffset = dx;
+    }
     startX = e.clientX;
     startY = e.clientY;
     tracking = true;
     captured = false;
-    settling = false;
     armedHaptic = false;
   }
 
