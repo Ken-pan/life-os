@@ -93,6 +93,15 @@ export async function getSignedAudioUrl(path, ttlSec = SIGNED_TTL_SEC) {
  * @param {import('./types.js').Track} track
  * @returns {string}
  */
+/** @param {import('./types.js').Track | null | undefined} track */
+export function hasPlayableSource(track) {
+  if (!track) return false;
+  if (track.audioBlob instanceof Blob) return true;
+  if (typeof track.objectUrl === 'string' && track.objectUrl) return true;
+  if (typeof track.storagePath === 'string' && track.storagePath) return true;
+  return false;
+}
+
 export function resolvePlayUrlSync(track) {
   if (!track) return '';
   if (track.objectUrl) return track.objectUrl;

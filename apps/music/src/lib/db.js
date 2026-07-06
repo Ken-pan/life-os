@@ -162,9 +162,15 @@ export async function trackCount() {
   return db.tracks.count();
 }
 
-/** Tracks that have audio but no lyrics yet. */
+/** @param {import('./types.js').Track} track */
+export function trackNeedsLyrics(track) {
+  if (track.lyrics?.trim()) return false;
+  return Boolean(track.title?.trim() && track.artist?.trim());
+}
+
+/** Tracks missing lyrics (any library row with title + artist). */
 export async function countTracksWithoutLyrics() {
-  return db.tracks.filter((t) => !t.lyrics?.trim() && Boolean(t.audioBlob || t.storagePath)).count();
+  return db.tracks.filter((t) => trackNeedsLyrics(t)).count();
 }
 
 /** Ensure built-in playlists */

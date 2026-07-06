@@ -8,21 +8,30 @@
   import LyricsPanel from '$lib/components/LyricsPanel.svelte';
   import { swipeDismiss, swipeTrack } from '$lib/gestures.js';
   import { consumeNowPlayingReturn, ensureNowPlayingReturn } from '$lib/nav.js';
-  import { player, nextTrack, prevTrack, togglePlay, refreshQueueMetadata } from '$lib/player.svelte.js';
+  import { player, nextTrack, prevTrack, togglePlay, refreshQueueMetadata, seek } from '$lib/player.svelte.js';
+  import { hasPlayableSource } from '$lib/cloudAudio.js';
   import { db } from '$lib/db.js';
   import { fetchLyricsForTrack } from '$lib/lyricsFetch.js';
   import { scheduleAutoCloudPush } from '$lib/sync.js';
 
   const track = $derived(player.queue[player.index] ?? null);
+  let lyricsFetching = $state(false);
 
   $effect(() => {
     const tr = track;
-    if (!tr?.id || tr.lyrics?.trim()) return;
+    if (!tr?.id || tr.lyrics?.trim()) {
+      lyricsFetching = false;
+      return;
+    }
+
     let cancelled = false;
+    lyricsFetching = true;
 
     void (async () => {
       const fetched = await fetchLyricsForTrack(tr);
-      if (cancelled || !fetched?.text) return;
+      if (cancelled) return;
+      lyricsFetching = false;
+      if (!fetched?.text) return;
       await db.tracks.update(tr.id, { lyrics: fetched.text });
       await refreshQueueMetadata();
       scheduleAutoCloudPush();
@@ -30,8 +39,11 @@
 
     return () => {
       cancelled = true;
+      lyricsFetching = false;
     };
   });
+
+  const seekable = $derived(Boolean(track && hasPlayableSource(track)));
 
   function dismiss() {
     goto(consumeNowPlayingReturn('/'));
@@ -80,7 +92,17 @@
           <PlayerControls large />
         </div>
 
-        <LyricsPanel lyrics={track.lyrics} currentTime={player.currentTime} />
+        {#if player.statusHint}
+          <p class="now-playing-status-hint" role="status">{player.statusHint}</p>
+        {/if}
+
+        <LyricsPanel
+          lyrics={track.lyrics}
+          currentTime={player.currentTime}
+          fetching={lyricsFetching}
+          seekable={seekable}
+          onSeek={seek}
+        />
       </div>
     </div>
   {:else}

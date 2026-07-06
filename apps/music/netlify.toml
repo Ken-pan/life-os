@@ -11,6 +11,13 @@
 
 # lyrics-fetch 通过 export const config.path 直接挂载 /api/lyrics/fetch，无需 rewrite
 
+[dev]
+  command = "npm run dev -w music-os"
+  targetPort = 5189
+  port = 8888
+  publish = "apps/music/build"
+  autoLaunch = false
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

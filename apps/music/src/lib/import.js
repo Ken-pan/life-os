@@ -1,4 +1,4 @@
-import { db, slugKey, trackWords, ensureBuiltinPlaylists, getAllTracks, hydrateTrack } from './db.js';
+import { db, slugKey, trackWords, ensureBuiltinPlaylists, getAllTracks, hydrateTrack, trackNeedsLyrics } from './db.js';
 import { parseId3, parseFilename, isValidMeta } from './id3.js';
 import { lyricsMatchKey } from './lyrics.js';
 import {
@@ -353,9 +353,7 @@ export async function repairMissingArt() {
  */
 export async function repairMissingLyrics(onProgress) {
   const tracks = await db.tracks.toArray();
-  const targets = tracks.filter(
-    (t) => !t.lyrics?.trim() && (t.audioBlob || t.storagePath) && t.title?.trim() && t.artist?.trim()
-  );
+  const targets = tracks.filter((t) => trackNeedsLyrics(t));
   let repaired = 0;
   let done = 0;
 

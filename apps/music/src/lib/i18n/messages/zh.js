@@ -40,10 +40,20 @@ export default {
   },
   library: { title: '资料库' },
   browse: { title: '浏览', albums: '专辑', artists: '艺术家' },
-  playlists: { title: '歌单', create: '新建歌单', empty: '还没有歌单' },
+  playlists: {
+    title: '歌单',
+    create: '新建歌单',
+    namePrompt: '歌单名称',
+    created: '已创建歌单',
+    emptyUserHint: '点右上角「新建歌单」，把喜欢的曲目收进来。'
+  },
   playlist: { title: '歌单' },
   search: { title: '搜索', placeholder: '歌曲、艺术家、专辑…' },
-  liked: { title: '我喜欢的' },
+  liked: {
+    title: '我喜欢的',
+    empty: '还没有红心歌曲',
+    emptyHint: '在曲目旁点红心，它们会出现在这里。'
+  },
   import: {
     title: '导入',
     drop: '拖放音频或 LRC 文件到此处',
@@ -65,13 +75,16 @@ export default {
     clearQueue: '清空队列',
     lyrics: '歌词',
     synced: '同步',
-    noLyrics: '此曲目暂无歌词 · 正在尝试从网络获取，或在设置中批量补抓',
+    noLyrics: '暂无歌词',
+    fetchingLyrics: '正在从网络获取歌词…',
+    plain: '文本',
     playing: '正在播放',
     paused: '已暂停'
   },
   player: {
     playFailed: '无法播放，请确认已登录并完成云同步',
-    noSource: '找不到音频：云端曲目需先登录并同步资料库'
+    noSource: '找不到音频：云端曲目需先登录并同步资料库',
+    lyricsOnlyHint: '当前仅可浏览歌词；上传或同步音频文件后即可播放'
   },
   album: { title: '专辑' },
   artist: { title: '艺术家' },
@@ -86,12 +99,14 @@ export default {
     iosBackground: 'iPhone 后台播放：请用 Safari「添加到主屏幕」安装本应用，锁屏后可通过控制中心/耳机控制。',
     library: '曲库',
     libraryCount: '{count} 首歌曲保存在本机',
-    missingLyrics: '{count} 首有音频但尚未获取歌词',
-    fetchLyrics: '补抓歌词',
+    missingLyrics: '{count} 首曲目尚未获取歌词',
+    fetchLyrics: '远程补抓歌词',
+    fetchLyricsDesc: '从 lrclib / QQ音乐 / 网易云 等源批量获取缺失歌词并同步云端',
     fetchLyricsProgress: '正在补抓歌词 {done}/{total}…',
     fetchLyricsDone: '已处理 {total} 首，成功获取 {repaired} 首（已同步云端）',
     fetchLyricsEmpty: '没有需要补抓歌词的曲目',
-    rescanMeta: '补扫元数据与歌词',
+    rescanMeta: '补扫 ID3 元数据',
+    rescanMetaDesc: '从本地音频文件重新读取标签、封面与内嵌歌词',
     rescanning: '正在补扫 {done}/{total}…',
     rescanDone: '已扫描 {scanned} 首，更新 {updated} 首',
     rescanEmpty: '没有可扫描的本地音频',

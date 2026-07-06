@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { db, hydrateTrack, recordPlay } from './db.js';
-import { resolvePlayUrl, resolvePlayUrlSync } from './cloudAudio.js';
+import { resolvePlayUrl, resolvePlayUrlSync, hasPlayableSource } from './cloudAudio.js';
 import { registerAudioElement, resumeAudioContext } from './audioAnalyser.js';
 import {
   bindMediaSessionHandlers,
@@ -23,7 +23,9 @@ export const player = $state({
   repeat: /** @type {import('./types.js').RepeatMode} */ ('off'),
   currentTime: 0,
   duration: 0,
-  ready: false
+  ready: false,
+  /** Inline hint on now-playing (non-blocking; avoids toast over lyrics). */
+  statusHint: ''
 });
 
 export function getCurrentTrack() {
@@ -69,7 +71,14 @@ export function togglePlay() {
   if (!audio || !getCurrentTrack()) return;
   primeAudioPlayback();
   if (player.playing) audio.pause();
-  else void startPlayback(audio.src, loadToken, getCurrentTrack());
+  else {
+    const track = getCurrentTrack();
+    if (!audio.src && track && !hasPlayableSource(track)) {
+      void loadAndPlay({ fromToggle: true });
+      return;
+    }
+    void startPlayback(audio.src, loadToken, track, { fromToggle: true });
+  }
 }
 
 export function nextTrack() {
@@ -141,22 +150,29 @@ function waitCanPlay(el, timeoutMs = 12_000) {
 }
 
 /** @param {string} msg */
-async function playbackToast(msg) {
+async function playbackToast(msg, opts = {}) {
   const { toast } = await import('./ui.svelte.js');
-  toast(msg, { error: true });
+  toast(msg, opts);
 }
 
 /**
  * @param {string} src
  * @param {number} token
  * @param {import('./types.js').Track} track
+ * @param {{ fromToggle?: boolean }} [opts]
  */
-async function startPlayback(src, token, track) {
+async function startPlayback(src, token, track, opts = {}) {
   if (!audio || token !== loadToken || getCurrentTrack()?.id !== track.id) return false;
   if (!src) {
-    await playbackToast(t('player.noSource'));
+    if (opts.fromToggle) {
+      await playbackToast(t('player.noSource'), { error: true });
+    } else {
+      player.statusHint = hasPlayableSource(track) ? '' : t('player.lyricsOnlyHint');
+    }
     return false;
   }
+
+  player.statusHint = '';
 
   if (audio.src !== src) {
     audio.src = src;
@@ -174,26 +190,35 @@ async function startPlayback(src, token, track) {
       await audio.play();
       return true;
     } catch {
-      await playbackToast(t('player.playFailed'));
+      if (opts.fromToggle) {
+        await playbackToast(t('player.playFailed'), { error: true });
+      } else {
+        player.statusHint = t('player.playFailed');
+      }
       return false;
     }
   }
 }
 
-async function loadAndPlay() {
+async function loadAndPlay(opts = {}) {
   const track = getCurrentTrack();
   if (!track || !browser) return;
   ensureAudio();
   if (!audio) return;
   const token = ++loadToken;
   hydrateTrack(track);
+  player.statusHint = '';
 
   let src = resolvePlayUrlSync(track);
   if (!src) {
     try {
       src = await resolvePlayUrl(track);
     } catch (err) {
-      await playbackToast(syncErrorMessage(err));
+      if (opts.fromToggle) {
+        await playbackToast(syncErrorMessage(err), { error: true });
+      } else {
+        player.statusHint = syncErrorMessage(err);
+      }
       return;
     }
   }
@@ -202,7 +227,7 @@ async function loadAndPlay() {
   player.duration = track.duration || 0;
   updateMediaSession(track, false);
 
-  const ok = await startPlayback(src, token, track);
+  const ok = await startPlayback(src, token, track, opts);
   if (!ok || token !== loadToken) return;
 
   recordPlay(track.id);
@@ -329,6 +354,7 @@ function stopAudio() {
   player.playing = false;
   player.currentTime = 0;
   player.duration = 0;
+  player.statusHint = '';
   updateMediaSession(null, false);
 }
 

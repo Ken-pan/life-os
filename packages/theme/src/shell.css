@@ -194,8 +194,7 @@
     background-color var(--motion-fast, var(--dur-fast)) var(--ease);
 }
 
-.sidebar .nav-item svg,
-.sidebar .nav-item :global(svg) {
+.sidebar .nav-item svg {
   flex: 0 0 auto;
   width: 18px;
   height: 18px;

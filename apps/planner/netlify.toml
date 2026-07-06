@@ -9,11 +9,7 @@
 [functions]
   directory = "apps/planner/netlify/functions"
 
-[[redirects]]
-  from = "/api/ai/plan"
-  to = "/.netlify/functions/ai-plan"
-  status = 200
-  force = true
+# ai-plan 通过 export const config.path 直接挂载 /api/ai/plan，无需 rewrite
 
 [[redirects]]
   from = "/*"

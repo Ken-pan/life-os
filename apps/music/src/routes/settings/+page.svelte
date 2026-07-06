@@ -231,11 +231,19 @@
         {/if}
       </div>
     </div>
-    <div class="settings-stack-block" style="padding:0 18px 16px">
+    <div class="settings-stack-block settings-library-actions">
+      <p class="pref-desc settings-action-hint">{t('settings.rescanMetaDesc')}</p>
       <div class="settings-btn-group">
         <button class="btn-primary" type="button" disabled={rescanning || count === 0} onclick={onRescan}>
           {rescanning ? t('auth.pleaseWait') : t('settings.rescanMeta')}
         </button>
+      </div>
+      {#if rescanProgress}
+        <p class="pref-desc" style="margin-top:12px">{rescanProgress}</p>
+      {/if}
+
+      <p class="pref-desc settings-action-hint" style="margin-top:16px">{t('settings.fetchLyricsDesc')}</p>
+      <div class="settings-btn-group">
         <button
           class="btn-secondary"
           type="button"
@@ -246,9 +254,6 @@
         </button>
         <button class="btn-secondary" type="button" onclick={exportMeta}>{t('settings.export')}</button>
       </div>
-      {#if rescanProgress}
-        <p class="pref-desc" style="margin-top:12px">{rescanProgress}</p>
-      {/if}
       {#if lyricsProgress}
         <p class="pref-desc" style="margin-top:12px">{lyricsProgress}</p>
       {/if}

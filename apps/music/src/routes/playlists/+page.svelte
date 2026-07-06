@@ -5,29 +5,37 @@
   import { createPlaylist, getPlaylists } from '$lib/db.js';
   import { goto } from '$app/navigation';
   import { toast } from '$lib/ui.svelte.js';
+  import { setPageChrome } from '$lib/pageChrome.svelte.js';
 
   let playlists = $state([]);
+
+  const userPlaylists = $derived(playlists.filter((p) => p.kind === 'user'));
 
   onMount(async () => {
     playlists = await getPlaylists();
   });
 
   async function onCreate() {
-    const name = prompt('歌单名称');
+    const name = prompt(t('playlists.namePrompt'));
     if (!name?.trim()) return;
     const id = await createPlaylist(name.trim());
-    toast('已创建歌单');
+    toast(t('playlists.created'));
     await goto(`/playlists/${id}`);
   }
+
+  $effect(() => {
+    setPageChrome({
+      action: {
+        label: t('playlists.create'),
+        onClick: onCreate,
+        variant: 'primary',
+        icon: 'plus'
+      }
+    });
+  });
 </script>
 
 <div class="wrap">
-  <div class="page-toolbar">
-    <button class="btn-primary" type="button" onclick={onCreate}>
-      <Icon name="plus" size={16} /> {t('playlists.create')}
-    </button>
-  </div>
-
   <a class="playlist-card" href="/liked" style="margin-bottom:12px">
     <div class="playlist-card-art"><Icon name="heart" size={22} /></div>
     <div>
@@ -36,7 +44,7 @@
     </div>
   </a>
 
-  {#each playlists.filter((p) => p.kind === 'user') as pl (pl.id)}
+  {#each userPlaylists as pl (pl.id)}
     <a class="playlist-card" href={`/playlists/${pl.id}`} style="margin-bottom:12px">
       <div class="playlist-card-art"><Icon name="list" size={22} /></div>
       <div>
@@ -44,7 +52,11 @@
         <div class="track-row-sub">用户歌单</div>
       </div>
     </a>
-  {:else}
-    <p class="empty-state">{t('playlists.empty')}</p>
   {/each}
+
+  {#if userPlaylists.length === 0}
+    <div class="empty-hint-card" aria-live="polite">
+      <p>{t('playlists.emptyUserHint')}</p>
+    </div>
+  {/if}
 </div>

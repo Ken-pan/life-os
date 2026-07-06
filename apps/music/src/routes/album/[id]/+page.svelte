@@ -20,17 +20,19 @@
   });
 
   $effect(() => {
-    setPageChrome({ title: title || null, subtitle: artist || null });
+    setPageChrome({
+      title: title || null,
+      subtitle: artist || null,
+      action:
+        tracks.length > 0
+          ? { label: t('common.playAlbum'), onClick: () => playTracks(tracks, 0), variant: 'primary' }
+          : null
+    });
     return () => resetPageChrome();
   });
 </script>
 
 <div class="wrap">
-  {#if tracks.length}
-    <div class="page-toolbar">
-      <button class="btn-primary" type="button" onclick={() => playTracks(tracks, 0)}>{t('common.playAlbum')}</button>
-    </div>
-  {/if}
   {#each tracks as track, i (track.id)}
     <TrackRow {track} {tracks} index={i} />
   {/each}

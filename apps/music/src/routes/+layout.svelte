@@ -64,7 +64,7 @@
     });
   });
 
-  $effect(() => {
+  $effect.pre(() => {
     page.url.pathname;
     resetPageChrome();
   });
@@ -91,7 +91,7 @@
 
 <DocumentHead appId="music" pageTitle={pageTitle} />
 
-<div class="app-shell">
+<div class="app-shell music-app">
   <SideNav />
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
@@ -103,6 +103,7 @@
       subtitle={appBarSubtitle}
       backHref={appBarBackHref}
       backLabel={appBarBackLabel}
+      action={pageChrome.action}
     />
     <main id="main-content">{@render children()}</main>
   </div>
