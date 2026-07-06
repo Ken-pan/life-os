@@ -1083,6 +1083,8 @@
     --seek-thumb: 12px;
     height: var(--progress-h);
     padding: 0;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
     background-clip: border-box;
   }
 
@@ -3784,6 +3786,8 @@ body.search-typeahead-open .music-appbar {
     --seek-thumb: 12px;
     height: var(--progress-h);
     padding: 0;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
     background-clip: border-box;
     background: linear-gradient(to right,
         var(--progress-fill) var(--progress-pct, 0%),
@@ -3794,6 +3798,8 @@ body.search-typeahead-open .music-appbar {
     flex: 1;
     height: var(--progress-h, 4px);
     padding: 0;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
     background: linear-gradient(to right,
         var(--progress-fill) var(--progress-pct, 0%),
         var(--progress-bg) var(--progress-pct, 0%));
@@ -3836,7 +3842,9 @@ body.search-typeahead-open .music-appbar {
 
   .mini-player--expanded .mini-player-volume input[type='range'] {
     width: 80px;
-    height: var(--progress-h);
+    height: 4px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
     background: linear-gradient(to right,
         var(--progress-fill) var(--volume-pct, 50%),
         var(--progress-bg) var(--volume-pct, 50%));
