@@ -23,6 +23,8 @@
     filterSpeedDialPages
   } from '$lib/homeFilter.js';
   import { db } from '$lib/db.js';
+  import { ensureArtRepaired } from '$lib/import.js';
+  import { librarySignals } from '$lib/state.svelte.js';
   import {
     playTracks,
     playTrack,
@@ -72,7 +74,13 @@
   onMount(async () => {
     hasOfflineTracks =
       (await db.tracks.filter((t) => t.audioBlob instanceof Blob).count()) > 0;
+    await ensureArtRepaired();
     await reloadHome();
+  });
+
+  $effect(() => {
+    void librarySignals.epoch;
+    if (librarySignals.epoch > 0) reloadHome();
   });
 
   async function reloadHome() {
@@ -244,7 +252,18 @@
               class="quick-pick-card"
               onclick={() => playTrack(track, 'quick_picks')}
             >
-              <TrackArt artUrl={track.artUrl} seed={track.id} class="quick-pick-art" />
+              <TrackArt
+                artUrl={track.artUrl}
+                seed={track.id}
+                class="quick-pick-art"
+                lazy
+                resolve={{
+                  albumKey: track.albumKey,
+                  artist: track.artist,
+                  album: track.album,
+                  title: track.title
+                }}
+              />
               <span class="quick-pick-copy">
                 <span class="quick-pick-title">{track.title}</span>
                 <span class="quick-pick-artist">{track.artist}</span>

@@ -4,12 +4,22 @@
   import TrackRow from '$lib/components/TrackRow.svelte';
   import { getLikedTracks } from '$lib/db.js';
   import { playTracks } from '$lib/player.svelte.js';
+  import { librarySignals } from '$lib/state.svelte.js';
   import { setPageChrome } from '$lib/pageChrome.svelte.js';
 
   let tracks = $state([]);
 
-  onMount(async () => {
+  async function loadLiked() {
     tracks = await getLikedTracks();
+  }
+
+  onMount(() => {
+    loadLiked();
+  });
+
+  $effect(() => {
+    void librarySignals.epoch;
+    if (librarySignals.epoch > 0) loadLiked();
   });
 
   $effect(() => {

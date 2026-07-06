@@ -1,4 +1,5 @@
 import Dexie from 'dexie';
+import { objectUrlForBlob, scheduleArtMaterialize } from './artResolver.js';
 
 export const db = new Dexie('musicos_library');
 
@@ -36,10 +37,11 @@ export function hydrateTrack(track) {
   }
   if (track.artBlob instanceof Blob) {
     if (!track.artUrl) {
-      track.artUrl = URL.createObjectURL(track.artBlob);
+      track.artUrl = objectUrlForBlob(`art:${track.id}`, track.artBlob);
     }
   } else if (typeof track.artRemoteUrl === 'string' && track.artRemoteUrl.startsWith('https://')) {
     track.artUrl = track.artRemoteUrl;
+    scheduleArtMaterialize(track.id);
   } else if (track.artUrl?.startsWith('blob:')) {
     // blob: URLs are session-only; persisted values break after reload.
     delete track.artUrl;
@@ -104,6 +106,11 @@ export function addRecentSearch(q) {
     RECENT_SEARCH_KEY,
     JSON.stringify([term, ...prev].slice(0, RECENT_SEARCH_MAX))
   );
+}
+
+export function clearRecentSearches() {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.removeItem(RECENT_SEARCH_KEY);
 }
 
 /**

@@ -38,7 +38,18 @@
   class:track-row--selected={selected}
   class:track-row--compact-actions={compactActions}
 >
-  <TrackArt artUrl={track.artUrl} seed={track.id} class="track-row-art" />
+  <TrackArt
+    artUrl={track.artUrl}
+    seed={track.id}
+    class="track-row-art"
+    lazy
+    resolve={{
+      albumKey: track.albumKey,
+      artist: track.artist,
+      album: track.album,
+      title: track.title
+    }}
+  />
   <button type="button" class="track-row-body" onclick={onRowClick}>
     <div class="track-row-title">{track.title}</div>
     <div class="track-row-sub">{track.artist} · {track.album}</div>

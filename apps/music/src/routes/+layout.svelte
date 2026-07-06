@@ -1,5 +1,6 @@
 <script>
   import '../app.css';
+  import { browser } from '$app/environment';
   import { onMount } from 'svelte';
   import { onNavigate } from '$app/navigation';
   import { page } from '$app/state';
@@ -21,8 +22,10 @@
   import { ensureArtRepaired, ensureMetadataRepaired, ensureLyricsRepaired } from '$lib/import.js';
   import { initAuth, auth } from '$lib/auth.svelte.js';
   import { bindVisibilitySync } from '@life-os/sync';
+  import { bindViewportHeight } from '@life-os/theme';
   import { syncBidirectional } from '$lib/sync.js';
   import { bindBackgroundPlayback } from '$lib/backgroundAudio.js';
+  import { registerServiceWorker } from '$lib/serviceWorker.js';
   import { bindGlobalShortcuts, registerShortcutHandlers } from '$lib/shortcuts.js';
   import { utilityPane } from '$lib/ui.svelte.js';
 
@@ -53,17 +56,28 @@
     ensureArtRepaired().catch(() => {});
     registerShortcutHandlers({
       searchInput,
-      focusSearch: () => searchInput?.focus()
+      focusSearch: () => {
+        const onSearchPage = page.url.pathname === '/search';
+        const mobile = browser && window.matchMedia('(max-width: 860px)').matches;
+        if (onSearchPage && mobile) {
+          document.querySelector('.search-page-input')?.focus();
+        } else {
+          searchInput?.focus();
+        }
+      }
     });
     const cleanupShortcuts = bindGlobalShortcuts(t);
     const cleanupTheme = bindAppThemeSystemChange();
     const cleanupAuth = initAuth();
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+    const cleanupViewport = bindViewportHeight();
+    const cleanupServiceWorker = registerServiceWorker();
     const cleanupBackground = bindBackgroundPlayback();
     return () => {
       cleanupShortcuts();
       cleanupTheme();
       cleanupAuth();
+      cleanupViewport();
+      cleanupServiceWorker();
       cleanupBackground();
     };
   });
@@ -71,7 +85,15 @@
   $effect(() => {
     registerShortcutHandlers({
       searchInput,
-      focusSearch: () => searchInput?.focus()
+      focusSearch: () => {
+        const onSearchPage = page.url.pathname === '/search';
+        const mobile = browser && window.matchMedia('(max-width: 860px)').matches;
+        if (onSearchPage && mobile) {
+          document.querySelector('.search-page-input')?.focus();
+        } else {
+          searchInput?.focus();
+        }
+      }
     });
   });
 
@@ -148,7 +170,12 @@
   <UtilityPane />
 </div>
 
-<MiniPlayer />
+<div
+  class="bottom-shell"
+  data-player-chrome={playerChrome === 'mini' ? 'mini' : undefined}
+>
+  <MiniPlayer />
+  <BottomNav />
+</div>
 <QueueDrawer />
-<BottomNav />
 <Toast />

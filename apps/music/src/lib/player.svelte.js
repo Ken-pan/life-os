@@ -578,18 +578,9 @@ export async function refreshQueueMetadata() {
       if (!row) return track
       return hydrateTrack({
         ...track,
-        title: row.title,
-        artist: row.artist,
-        album: row.album,
-        albumKey: row.albumKey,
-        artistKey: row.artistKey,
-        lyrics: row.lyrics,
-        artRemoteUrl: row.artRemoteUrl || track.artRemoteUrl,
-        artUrl: row.artUrl || track.artUrl,
-        fileName: row.fileName,
-        storagePath: row.storagePath || track.storagePath,
-        liked: row.liked,
-        playCount: row.playCount,
+        ...row,
+        objectUrl: track.objectUrl,
+        audioBlob: track.audioBlob ?? row.audioBlob,
       })
     }),
   )

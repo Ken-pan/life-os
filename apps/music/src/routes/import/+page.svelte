@@ -1,6 +1,6 @@
 <script>
   import { t } from '$lib/i18n/index.js';
-  import { importMediaFiles } from '$lib/import.js';
+  import { importMediaFiles, ensureArtRepaired } from '$lib/import.js';
   import { refreshQueueMetadata } from '$lib/player.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import { goto } from '$app/navigation';
@@ -15,8 +15,13 @@
     const { audioCount, lrcCount, total } = await importMediaFiles(files, (done, tot) => {
       progress = t('import.importing', { done, total: tot });
     });
-    if (lrcCount > 0) {
+    if (audioCount > 0) {
+      await ensureArtRepaired();
       await refreshQueueMetadata();
+    } else if (lrcCount > 0) {
+      await refreshQueueMetadata();
+    }
+    if (lrcCount > 0) {
       toast(t('import.doneMixed', { audio: audioCount, lrc: lrcCount }));
     } else toast(t('import.done', { count: total }));
     progress = '';

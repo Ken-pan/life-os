@@ -66,8 +66,16 @@ export const S = $state(load());
 /** Bumped after background cover repair so list pages can reload. */
 export const librarySignals = $state({ epoch: 0 });
 
+/** @type {ReturnType<typeof setTimeout> | null} */
+let bumpTimer = null;
+
 export function bumpLibraryEpoch() {
-  librarySignals.epoch += 1;
+  if (!browser) return;
+  if (bumpTimer) clearTimeout(bumpTimer);
+  bumpTimer = setTimeout(() => {
+    librarySignals.epoch += 1;
+    bumpTimer = null;
+  }, 250);
 }
 
 export function save() {

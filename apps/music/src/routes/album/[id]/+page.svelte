@@ -4,6 +4,7 @@
   import TrackRow from '$lib/components/TrackRow.svelte';
   import { getTracksByAlbum } from '$lib/db.js';
   import { playTracks } from '$lib/player.svelte.js';
+  import { librarySignals } from '$lib/state.svelte.js';
   import { setPageChrome, resetPageChrome } from '$lib/pageChrome.svelte.js';
 
   const albumKey = $derived(decodeURIComponent(page.params.id));
@@ -11,12 +12,20 @@
   let artist = $state('');
   let tracks = $state([]);
 
+  async function loadAlbum() {
+    tracks = await getTracksByAlbum(albumKey);
+    title = tracks[0]?.album || '专辑';
+    artist = tracks[0]?.artist || '';
+  }
+
   $effect(() => {
-    (async () => {
-      tracks = await getTracksByAlbum(albumKey);
-      title = tracks[0]?.album || '专辑';
-      artist = tracks[0]?.artist || '';
-    })();
+    albumKey;
+    void loadAlbum();
+  });
+
+  $effect(() => {
+    void librarySignals.epoch;
+    if (librarySignals.epoch > 0) void loadAlbum();
   });
 
   $effect(() => {

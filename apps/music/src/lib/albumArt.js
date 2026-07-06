@@ -1,8 +1,10 @@
 import { parseId3 } from './id3.js';
 import { getSignedAudioUrl } from './cloudAudio.js';
+import { fetchWithRetry } from './fetchUtils.js';
 
 const CLOUD_SNIFF_BYTES = 512 * 1024;
 const LOOKUP_CACHE = new Map();
+const LOOKUP_TIMEOUT_MS = 10_000;
 
 /** @param {ArrayBuffer} buffer */
 export function artBlobFromBuffer(buffer) {
@@ -53,7 +55,7 @@ export async function lookupRemoteArtUrl(artist, album, title = '') {
       country: 'CN'
     })}`;
     try {
-      const res = await fetch(url);
+      const res = await fetchWithRetry(url, { timeoutMs: LOOKUP_TIMEOUT_MS, retries: 1 });
       if (!res.ok) continue;
       const data = await res.json();
       const results = /** @type {{ artistName?: string, collectionName?: string, trackName?: string, artworkUrl100?: string }[]} */ (
@@ -99,7 +101,7 @@ export async function lookupRemoteAlbumName(artist, title) {
       country: 'CN'
     })}`;
     try {
-      const res = await fetch(url);
+      const res = await fetchWithRetry(url, { timeoutMs: LOOKUP_TIMEOUT_MS, retries: 1 });
       if (res.ok) {
         const data = await res.json();
         const results = /** @type {{ artistName?: string, trackName?: string, collectionName?: string }[]} */ (

@@ -5,6 +5,7 @@
   import TrackRow from '$lib/components/TrackRow.svelte';
   import { getAlbumGroups, getArtistGroups, getAllTracks, getPlaylists } from '$lib/db.js';
   import { ensureArtRepaired } from '$lib/import.js';
+  import { librarySignals } from '$lib/state.svelte.js';
   import { setPageChrome } from '$lib/pageChrome.svelte.js';
 
   let tab = $state('albums');
@@ -14,7 +15,7 @@
   let tracks = $state([]);
   let playlists = $state([]);
 
-  onMount(async () => {
+  async function loadBrowse() {
     await ensureArtRepaired();
     [albums, artists, tracks, playlists] = await Promise.all([
       getAlbumGroups(),
@@ -22,6 +23,15 @@
       getAllTracks(),
       getPlaylists()
     ]);
+  }
+
+  onMount(() => {
+    loadBrowse();
+  });
+
+  $effect(() => {
+    void librarySignals.epoch;
+    if (librarySignals.epoch > 0) loadBrowse();
   });
 
   const sortedAlbums = $derived.by(() => {
@@ -72,7 +82,13 @@
       <div class="album-grid browse-grid">
         {#each sortedAlbums as album (album.albumKey)}
           <a class="album-card" href={`/album/${encodeURIComponent(album.albumKey)}`}>
-            <TrackArt artUrl={album.artUrl} seed={album.albumKey} class="album-card-art" />
+            <TrackArt
+              artUrl={album.artUrl}
+              seed={album.albumKey}
+              class="album-card-art"
+              lazy
+              resolve={{ albumKey: album.albumKey, artist: album.artist, album: album.album }}
+            />
             <div class="album-card-title">{album.album}</div>
             <div class="album-card-sub">{album.artist} · {album.trackCount} 首</div>
           </a>

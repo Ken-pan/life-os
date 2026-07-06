@@ -1,13 +1,8 @@
 import { db, slugKey, trackWords, ensureBuiltinPlaylists, getAllTracks, hydrateTrack, trackNeedsLyrics } from './db.js';
 import { parseId3, parseFilename, isValidMeta } from './id3.js';
 import { lyricsMatchKey } from './lyrics.js';
-import {
-  artBlobFromBuffer,
-  artBlobFromCloudTrack,
-  lookupRemoteArtUrl,
-  lookupRemoteAlbumName,
-  trackNeedsArt
-} from './albumArt.js';
+import { lookupRemoteAlbumName } from './albumArt.js';
+import { repairMissingArtModern } from './artResolver.js';
 import { getSignedAudioUrl } from './cloudAudio.js';
 import { fetchLyricsForTrack } from './lyricsFetch.js';
 import { scheduleAutoCloudPush } from './sync.js';
@@ -33,6 +28,10 @@ export async function importMediaFiles(files, onProgress) {
     done = audio.length + d;
     onProgress?.(done, total || 1);
   });
+
+  if (audioCount > 0) {
+    void ensureArtRepaired();
+  }
 
   return { audioCount, lrcCount, total: audioCount + lrcCount };
 }
@@ -322,73 +321,12 @@ function metaPatchFromTags(track, tags) {
 }
 
 /**
- * Persist cover art and strip ephemeral runtime fields.
- * @param {import('./types.js').Track & { audioBlob?: Blob, objectUrl?: string, artUrl?: string }} track
- * @param {{ artBlob?: Blob, artRemoteUrl?: string }} patch
- */
-async function persistTrackArt(track, patch) {
-  const { artUrl: _a, objectUrl: _o, ...rest } = track;
-  await db.tracks.put({ ...rest, ...patch });
-}
-
-/**
- * Backfill missing covers: local ID3 → cloud ID3 sniff → iTunes lookup.
+ * Backfill missing covers: local ID3 → cloud sniff → iTunes lookup (concurrent, blob materialized).
  * @returns {Promise<number>} count of tracks repaired
  */
 export async function repairMissingArt() {
   const tracks = await db.tracks.toArray();
-  let repaired = 0;
-
-  for (const track of tracks) {
-    if (!trackNeedsArt(track)) continue;
-
-    if (track.audioBlob instanceof Blob) {
-      try {
-        const artBlob = artBlobFromBuffer(await track.audioBlob.arrayBuffer());
-        if (artBlob) {
-          await persistTrackArt(track, { artBlob });
-          repaired += 1;
-          continue;
-        }
-      } catch {
-        /* skip */
-      }
-    }
-
-    if (track.storagePath) {
-      try {
-        const artBlob = await artBlobFromCloudTrack(track);
-        if (artBlob) {
-          await persistTrackArt(track, { artBlob });
-          repaired += 1;
-          continue;
-        }
-      } catch {
-        /* skip */
-      }
-    }
-  }
-
-  /** @type {Map<string, string | null>} */
-  const albumRemoteCache = new Map();
-  const remaining = await db.tracks.toArray();
-
-  for (const track of remaining) {
-    if (!trackNeedsArt(track)) continue;
-
-    if (!albumRemoteCache.has(track.albumKey)) {
-      const remote = await lookupRemoteArtUrl(track.artist, track.album, track.title);
-      albumRemoteCache.set(track.albumKey, remote);
-      await new Promise((r) => setTimeout(r, 150));
-    }
-
-    const artRemoteUrl = albumRemoteCache.get(track.albumKey);
-    if (artRemoteUrl) {
-      await persistTrackArt(track, { artRemoteUrl });
-      repaired += 1;
-    }
-  }
-
+  const repaired = await repairMissingArtModern(tracks);
   if (repaired) scheduleAutoCloudPush();
   return repaired;
 }
@@ -446,17 +384,24 @@ export function ensureLyricsRepaired() {
 /** @type {Promise<number> | null} */
 let artRepairPromise = null;
 
-/** Idempotent; safe to call from layout and list pages. */
+/** Idempotent while in-flight; re-runs after completion when new tracks need covers. */
 export function ensureArtRepaired() {
-  if (!artRepairPromise) {
-    artRepairPromise = repairMissingArt().then(async (repaired) => {
+  if (artRepairPromise) return artRepairPromise;
+
+  artRepairPromise = repairMissingArt()
+    .then(async (repaired) => {
       if (repaired > 0) {
         const { bumpLibraryEpoch } = await import('./state.svelte.js');
+        const { refreshQueueMetadata } = await import('./player.svelte.js');
         bumpLibraryEpoch();
+        await refreshQueueMetadata();
       }
       return repaired;
+    })
+    .finally(() => {
+      artRepairPromise = null;
     });
-  }
+
   return artRepairPromise;
 }
 
