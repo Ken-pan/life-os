@@ -73,7 +73,7 @@ export default {
     themeLight: '浅色',
     themeDark: '深色',
     privacy: '隐私',
-    privacyDesc: '音乐文件保存在本机；登录后仅同步歌单元数据，不上传音频。',
+    privacyDesc: '默认保存在本机。登录后可选择将音频备份到私有 Supabase Storage（private bucket，播放时用 signed URL）。',
     library: '曲库',
     libraryCount: '{count} 首歌曲保存在本机',
     missingLyrics: '{count} 首有音频文件但尚未提取歌词',
@@ -93,7 +93,7 @@ export default {
     signIn: '登录',
     signUp: '注册',
     signedIn: '已登录',
-    signedInDesc: '歌单元数据可与 Life OS 账号同步（音频仍在本机）。',
+    signedInDesc: '可与 Life OS 账号同步元数据；可在设置中将本地音频备份到私有云存储。',
     goSettings: '前往设置',
     email: '邮箱',
     password: '密码',
@@ -121,11 +121,24 @@ export default {
   },
   sync: {
     title: '云同步',
-    desc: '同步设置、歌单与曲目元数据。音频文件不会上传。',
+    desc: '同步设置、歌单与曲目元数据。音频需单独在下方「云备份」上传。',
     now: '立即同步',
     ok: '同步完成',
     failed: '同步失败',
     notSignedIn: '请先登录',
     signInFirst: '登录 Life OS 账号'
+  },
+  cloudAudio: {
+    title: '云备份',
+    desc: '将本地音频上传到 Supabase 私有 bucket。超过 6MB 自动使用断点续传。播放时通过临时 signed URL 访问，不会公开外链。',
+    stats: '本机音频 {localAudio} 首 · 待上传 {pending}（{size}）· 已在云端 {cloud} 首',
+    upload: '上传待备份音频',
+    uploading: '正在上传 {done}/{total}…',
+    current: '当前：{title}',
+    done: '已上传 {uploaded} 首（{size}）',
+    doneWithFail: '已上传 {uploaded} 首，失败 {failed} 首',
+    empty: '没有待上传的本地音频',
+    noPath: '缺少云存储路径',
+    signedFailed: '无法获取播放链接'
   }
 };

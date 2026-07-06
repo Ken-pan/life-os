@@ -6,17 +6,30 @@
   import { refreshQueueMetadata } from '$lib/player.svelte.js';
   import { auth, signOut } from '$lib/auth.svelte.js';
   import { syncBidirectionalSafe } from '$lib/sync.js';
+  import { cloudAudioStats, formatBytes, uploadPendingAudio } from '$lib/cloudAudio.js';
   import { toast } from '$lib/ui.svelte.js';
 
   let count = $state(0);
   let missingLyrics = $state(0);
+  let cloudPending = $state(0);
+  let cloudStored = $state(0);
+  let cloudLocalAudio = $state(0);
+  let cloudPendingBytes = $state(0);
   let syncing = $state(false);
   let rescanning = $state(false);
   let rescanProgress = $state('');
+  let uploading = $state(false);
+  let uploadProgress = $state('');
+  let uploadCurrent = $state('');
 
   async function refreshCounts() {
     count = await trackCount();
     missingLyrics = await countTracksWithoutLyrics();
+    const stats = await cloudAudioStats();
+    cloudPending = stats.pending;
+    cloudStored = stats.cloud;
+    cloudLocalAudio = stats.localAudio;
+    cloudPendingBytes = stats.pendingBytes;
   }
 
   $effect(() => {
@@ -54,6 +67,34 @@
   async function onSignOut() {
     await signOut();
     toast(t('settings.signOut'));
+  }
+
+  async function onUploadAudio() {
+    if (uploading || !auth.user) return;
+    if (cloudPending === 0) {
+      toast(t('cloudAudio.empty'));
+      return;
+    }
+    uploading = true;
+    uploadProgress = t('cloudAudio.uploading', { done: 0, total: cloudPending });
+    uploadCurrent = '';
+    try {
+      const result = await uploadPendingAudio(({ done, total, title }) => {
+        uploadProgress = t('cloudAudio.uploading', { done, total });
+        uploadCurrent = title ? t('cloudAudio.current', { title }) : '';
+      });
+      if (result.uploaded === 0 && result.failed === 0) toast(t('cloudAudio.empty'));
+      else if (result.failed > 0) {
+        toast(t('cloudAudio.doneWithFail', { uploaded: result.uploaded, failed: result.failed }));
+      } else {
+        toast(t('cloudAudio.done', { uploaded: result.uploaded, size: formatBytes(result.totalBytes) }));
+      }
+      await refreshCounts();
+    } finally {
+      uploading = false;
+      uploadProgress = '';
+      uploadCurrent = '';
+    }
   }
 
   async function onRescan() {
@@ -105,6 +146,41 @@
     <h3 class="block-title sg-title">{t('sync.title')}</h3>
     <p class="block-desc" style="padding:0 18px 16px">{t('sync.desc')}</p>
   </section>
+
+  {#if auth.user}
+    <section class="settings-block set-group">
+      <h3 class="block-title sg-title">{t('cloudAudio.title')}</h3>
+      <p class="block-desc" style="padding:0 18px 12px">{t('cloudAudio.desc')}</p>
+      <div class="set-row settings-row">
+        <div class="pref-copy">
+          <div class="pref-desc">
+            {t('cloudAudio.stats', {
+              localAudio: cloudLocalAudio,
+              pending: cloudPending,
+              size: formatBytes(cloudPendingBytes),
+              cloud: cloudStored
+            })}
+          </div>
+        </div>
+      </div>
+      <div class="settings-stack-block" style="padding:0 18px 16px">
+        <button
+          class="btn-primary"
+          type="button"
+          disabled={uploading || cloudPending === 0}
+          onclick={onUploadAudio}
+        >
+          {uploading ? t('auth.pleaseWait') : t('cloudAudio.upload')}
+        </button>
+        {#if uploadProgress}
+          <p class="pref-desc" style="margin-top:12px">{uploadProgress}</p>
+        {/if}
+        {#if uploadCurrent}
+          <p class="pref-desc" style="margin-top:4px;color:var(--t3)">{uploadCurrent}</p>
+        {/if}
+      </div>
+    </section>
+  {/if}
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.theme')}</h3>

@@ -1,10 +1,12 @@
 import { browser } from '$app/environment';
 import { db, hydrateTrack, recordPlay } from './db.js';
+import { resolvePlayUrl } from './cloudAudio.js';
 import { bindAudioAnalyser, resumeAudioContext } from './audioAnalyser.js';
 import { bindMediaSessionHandlers, updateMediaSession } from './mediaSession.js';
 
 /** @type {HTMLAudioElement | null} */
 let audio = null;
+let loadToken = 0;
 
 export const player = $state({
   queue: /** @type {import('./types.js').Track[]} */ ([]),
@@ -92,16 +94,24 @@ export function seek(t) {
   player.currentTime = t;
 }
 
-function loadAndPlay() {
+async function loadAndPlay() {
   const track = getCurrentTrack();
   if (!track || !browser) return;
   ensureAudio();
   if (!audio) return;
+  const token = ++loadToken;
   hydrateTrack(track);
-  audio.src = track.objectUrl || '';
+  let src = '';
+  try {
+    src = await resolvePlayUrl(track);
+  } catch {
+    src = track.objectUrl || '';
+  }
+  if (token !== loadToken || getCurrentTrack()?.id !== track.id) return;
+  audio.src = src;
   player.duration = track.duration || 0;
   resumeAudioContext();
-  audio.play().catch(() => {});
+  if (src) audio.play().catch(() => {});
   recordPlay(track.id);
   updateMediaSession(track, true);
 }
@@ -168,6 +178,7 @@ export async function refreshQueueMetadata() {
         lyrics: row.lyrics,
         artUrl: row.artUrl || track.artUrl,
         fileName: row.fileName,
+        storagePath: row.storagePath || track.storagePath,
         liked: row.liked,
         playCount: row.playCount
       });

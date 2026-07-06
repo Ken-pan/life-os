@@ -2,12 +2,12 @@ import { browser } from '$app/environment';
 import { createDebouncedTask } from '@life-os/sync';
 import { supabase } from './supabase.js';
 import { MUSIC_TABLES as T } from './supabaseTables.js';
-import { db, getAllTracks, getPlaylists, getPlaylistTracks } from './db.js';
+import { db, slugKey, trackWords, getAllTracks, getPlaylists, getPlaylistTracks } from './db.js';
 import { S, save } from './state.svelte.js';
 import { t } from './i18n/index.js';
 
 const APP_ID = 'music';
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 async function requireUser() {
   const { data, error } = await supabase.auth.getUser();
@@ -64,12 +64,17 @@ async function pushLocal(userId) {
       liked: tr.liked,
       play_count: tr.playCount,
       added_at: tr.addedAt,
-      lyrics: tr.lyrics || ''
+      lyrics: tr.lyrics || '',
+      storage_path: tr.storagePath || '',
+      mime_type: tr.mime || '',
+      size_bytes: tr.size || 0
     }));
     let { error } = await supabase.from(T.trackMeta).upsert(rows);
-    // Remote may not have lyrics column yet — fall back to metadata-only upsert.
-    if (error && /lyrics|column/i.test(error.message || '')) {
-      const slim = rows.map(({ lyrics: _lyrics, ...rest }) => rest);
+    // Remote may lag behind local migrations — drop new columns and retry.
+    if (error && /lyrics|storage_path|mime_type|size_bytes|column/i.test(error.message || '')) {
+      const slim = rows.map(
+        ({ lyrics: _l, storage_path: _s, mime_type: _m, size_bytes: _b, ...rest }) => rest
+      );
       ({ error } = await supabase.from(T.trackMeta).upsert(slim));
     }
     if (error) throw error;
@@ -124,21 +129,48 @@ async function pullCloud(userId) {
 
   for (const row of snap.tracks) {
     const existing = await db.tracks.get(row.track_id);
+    /** @type {Partial<import('./types.js').Track>} */
+    const patch = {
+      title: row.title,
+      artist: row.artist,
+      album: row.album,
+      albumKey: row.album_key,
+      artistKey: row.artist_key,
+      duration: Number(row.duration),
+      liked: /** @type {0|1} */ (row.liked ? 1 : 0),
+      playCount: row.play_count,
+      addedAt: Number(row.added_at)
+    };
+    if (typeof row.lyrics === 'string' && row.lyrics) patch.lyrics = row.lyrics;
+    if (typeof row.storage_path === 'string' && row.storage_path) patch.storagePath = row.storage_path;
+    if (typeof row.mime_type === 'string' && row.mime_type) patch.mime = row.mime_type;
+    if (row.size_bytes) patch.size = Number(row.size_bytes);
+
     if (existing) {
-      /** @type {Partial<import('./types.js').Track>} */
-      const patch = {
-        title: row.title,
-        artist: row.artist,
-        album: row.album,
-        albumKey: row.album_key,
-        artistKey: row.artist_key,
-        duration: Number(row.duration),
-        liked: /** @type {0|1} */ (row.liked ? 1 : 0),
-        playCount: row.play_count,
-        addedAt: Number(row.added_at)
-      };
-      if (typeof row.lyrics === 'string' && row.lyrics) patch.lyrics = row.lyrics;
       await db.tracks.update(row.track_id, patch);
+    } else if (row.storage_path) {
+      // Cloud-only track (no local blob yet) — playable via signed URL.
+      await db.tracks.put({
+        id: row.track_id,
+        title: row.title || '',
+        artist: row.artist || '',
+        album: row.album || '',
+        albumKey: row.album_key || '',
+        artistKey: row.artist_key || '',
+        duration: Number(row.duration) || 0,
+        mime: row.mime_type || 'audio/mpeg',
+        size: Number(row.size_bytes) || 0,
+        addedAt: Number(row.added_at) || Date.now(),
+        playCount: row.play_count || 0,
+        liked: /** @type {0|1} */ (row.liked ? 1 : 0),
+        lyrics: typeof row.lyrics === 'string' ? row.lyrics : '',
+        storagePath: row.storage_path,
+        words: trackWords({
+          title: row.title || '',
+          artist: row.artist || '',
+          album: row.album || ''
+        })
+      });
     }
   }
 

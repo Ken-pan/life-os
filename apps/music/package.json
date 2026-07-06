@@ -24,6 +24,7 @@
     "@life-os/theme": "*",
     "@lucide/svelte": "^1.22.0",
     "@supabase/supabase-js": "^2.110.0",
-    "dexie": "^4.0.11"
+    "dexie": "^4.0.11",
+    "tus-js-client": "^4.3.1"
   }
 }

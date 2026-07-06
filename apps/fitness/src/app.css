@@ -117,13 +117,17 @@
   color-scheme: light;
 }
 
-*, *::before, *::after { margin: 0; padding: 0; }
+/* Do not universal-reset margin/padding here: unlayered * beats
+   @layer life-os.* rules from @life-os/theme and strips shell/wrap spacing. */
 html {
   scroll-behavior: smooth;
   background: var(--bg);
 }
 body {
   min-height: 100vh;
+}
+p {
+  margin: 0;
 }
 .nav-item, .wr-day, .prog-day, .set-chip, .badge.rest, .badge.work, .w-panel, .seg button, .sw, .toggle, .stepper button, .appbar-back { touch-action: manipulation; }
 
