@@ -32,6 +32,7 @@ multiple workspaces and hangs forever waiting for interactive project selection.
 - `packages/{theme,sync}` — `@life-os/theme`, `@life-os/sync`
 - `docs/CANONICAL.md` — source of truth vs archived repos
 - `docs/NETLIFY.md` — four-site deploy matrix
+- `docs/INPUT_IME.md` — CJK IME guard for inputs (search, Enter-to-submit)
 
 ## Git / Netlify
 

@@ -249,6 +249,98 @@ async function run() {
     )
   }
 
+  // ── Mobile /search page toolbar input ──
+  const mobileCtx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+  })
+  const mobilePage = await mobileCtx.newPage()
+  await seedLibrary(mobilePage)
+  await mobilePage.goto(`${BASE}/search`)
+  await mobilePage.waitForTimeout(600)
+
+  const pageInput = mobilePage.locator('.search-page-input').first()
+  await pageInput.waitFor({ state: 'visible', timeout: 8000 })
+
+  // T6: partial pinyin during composition must not land in URL
+  await dispatchCompositionInput(mobilePage, pageInput, 'zhoujie')
+  await mobilePage.waitForTimeout(350)
+  const q6 = new URL(mobilePage.url()).searchParams.get('q') ?? ''
+  if (/zhou/i.test(q6)) {
+    issue(
+      'IME-T6',
+      'Search page URL updated with partial pinyin during composition',
+      mobilePage.url(),
+    )
+  }
+
+  // T7: Safari-order confirm Enter on /search must not leave partial query
+  await mobilePage.goto(`${BASE}/search`)
+  await mobilePage.waitForTimeout(400)
+  const pageInput7 = mobilePage.locator('.search-page-input').first()
+  await dispatchCompositionInput(mobilePage, pageInput7, 'zhoujielun')
+  await pageInput7.evaluate((el) => {
+    el.dispatchEvent(
+      new CompositionEvent('compositionend', { bubbles: true, data: '周杰伦' }),
+    )
+    el.value = '周杰伦'
+    el.dispatchEvent(
+      new InputEvent('input', {
+        bubbles: true,
+        data: '周杰伦',
+        isComposing: false,
+      }),
+    )
+    el.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        bubbles: true,
+        isComposing: false,
+        keyCode: 13,
+      }),
+    )
+  })
+  await mobilePage.waitForTimeout(500)
+  const q7 = new URL(mobilePage.url()).searchParams.get('q') ?? ''
+  if (/zhou/i.test(q7)) {
+    issue(
+      'IME-T7',
+      'Search page Safari-order IME left partial pinyin in URL',
+      mobilePage.url(),
+    )
+  }
+
+  // T8: full search should not run mid-composition on /search
+  await mobilePage.goto(`${BASE}/search`)
+  await mobilePage.waitForTimeout(400)
+  const pageInput8 = mobilePage.locator('.search-page-input').first()
+  await pageInput8.evaluate((el) => {
+    el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+  })
+  for (const ch of ['z', 'h', 'o']) {
+    await pageInput8.evaluate((el, ch) => {
+      el.value += ch
+      el.dispatchEvent(
+        new InputEvent('input', { bubbles: true, data: ch, isComposing: true }),
+      )
+    }, ch)
+  }
+  await mobilePage.waitForTimeout(350)
+  const pendingMidCompose = await mobilePage
+    .locator('.search-page-summary')
+    .textContent()
+    .then((t) => (t ?? '').includes('搜索中'))
+    .catch(() => false)
+  if (pendingMidCompose) {
+    issue(
+      'IME-T8',
+      'Search page full search pending during IME composition',
+      'search-page-summary showed loading',
+    )
+  }
+
+  await mobileCtx.close()
+
   await page.screenshot({ path: join(OUT, 'ime-audit-final.png') })
   await browser.close()
 

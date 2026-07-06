@@ -20,6 +20,14 @@ export function createImeGuard() {
     composing = true
   }
 
+  function compositioncancel() {
+    if (clearTimer !== undefined) {
+      clearTimeout(clearTimer)
+      clearTimer = undefined
+    }
+    composing = false
+  }
+
   /**
    * @param {CompositionEvent} event
    * @param {ImeCommitHandler} [onCommit]
@@ -48,6 +56,7 @@ export function createImeGuard() {
 
   return {
     compositionstart,
+    compositioncancel,
     compositionend,
     isComposing,
   }

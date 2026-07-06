@@ -15,12 +15,16 @@
   import {
     searchState,
     syncSearchFromUrl,
+    setSearchDraft,
     setSearchQuery,
     setSearchScope,
     setSearchSort,
     clearSearchQuery,
     sortTracks,
   } from '$lib/search.svelte.js'
+  import { createImeGuard } from '@life-os/theme'
+
+  const ime = createImeGuard()
 
   const PREVIEW_LIMIT = 5
 
@@ -171,7 +175,24 @@
 
   /** @param {Event & { currentTarget: HTMLInputElement }} e */
   function onInput(e) {
-    setSearchQuery(e.currentTarget.value, { debounce: true, navigate: true })
+    const value = e.currentTarget.value
+    if (ime.isComposing(/** @type {InputEvent} */ (e))) {
+      setSearchDraft(value)
+      return
+    }
+    setSearchQuery(value, { debounce: true, navigate: true })
+  }
+
+  /** @param {CompositionEvent} e */
+  function onCompositionEnd(e) {
+    ime.compositionend(e, (value) => {
+      setSearchQuery(value, { debounce: false, navigate: true })
+    })
+  }
+
+  /** @param {KeyboardEvent} e */
+  function onKeydown(e) {
+    if (e.key === 'Enter' && ime.isComposing(e)) return
   }
 
   /** @param {string} term */
@@ -200,6 +221,10 @@
           aria-label={t('search.title')}
           value={q}
           oninput={onInput}
+          oncompositionstart={ime.compositionstart}
+          oncompositionend={onCompositionEnd}
+          oncompositioncancel={ime.compositioncancel}
+          onkeydown={onKeydown}
         />
         {#if hasQuery}
           <button

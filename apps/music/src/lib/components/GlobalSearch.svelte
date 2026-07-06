@@ -20,7 +20,7 @@
     typeaheadCharsRemaining,
     searchShortcutLabel,
   } from '$lib/search.svelte.js'
-  import { createImeGuard } from '$lib/utils/createImeGuard.js'
+  import { createImeGuard } from '@life-os/theme'
 
   /** @type {{ onNavigate?: () => void; inputRef?: HTMLInputElement | null }} */
   let { onNavigate, inputRef = $bindable(null) } = $props()
@@ -303,8 +303,9 @@
       aria-activedescendant={activeOptionId}
       autocomplete="off"
       oninput={onInput}
-      oncompositionstart={ime.compositionstart}
-      oncompositionend={onCompositionEnd}
+  oncompositionstart={ime.compositionstart}
+  oncompositionend={onCompositionEnd}
+  oncompositioncancel={ime.compositioncancel}
       onfocus={onFocus}
       onblur={onBlur}
       onkeydown={onKeydown}

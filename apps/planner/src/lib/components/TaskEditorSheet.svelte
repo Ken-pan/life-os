@@ -187,6 +187,7 @@
           enterkeyhint="done"
           oncompositionstart={ime.compositionstart}
           oncompositionend={(e) => ime.compositionend(e)}
+          oncompositioncancel={ime.compositioncancel}
           onkeydown={(e) => {
             if (e.key === 'Enter') {
               if (ime.isComposing(e)) return;

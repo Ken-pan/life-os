@@ -126,6 +126,7 @@ export type ImeCommitHandler = (value: string) => void;
 
 export declare function createImeGuard(): {
   compositionstart: () => void;
+  compositioncancel: () => void;
   compositionend: (event: CompositionEvent, onCommit?: ImeCommitHandler) => void;
   isComposing: (event?: KeyboardEvent | InputEvent) => boolean;
 };
