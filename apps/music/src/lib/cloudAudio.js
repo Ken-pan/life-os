@@ -6,6 +6,7 @@ import { db, getAllTracks } from './db.js';
 import { t } from './i18n/index.js';
 
 export const MUSIC_BUCKET = 'music';
+export const MUSIC_COVERS_BUCKET = 'music-covers';
 
 /** Files above this use TUS resumable upload (Supabase recommendation). */
 const RESUMABLE_THRESHOLD = 6 * 1024 * 1024;
@@ -50,6 +51,15 @@ function extForTrack(track) {
     'audio/webm': 'webm'
   };
   return mimeMap[track.mime || ''] || 'mp3';
+}
+
+/** @param {Blob} blob */
+function extForImageBlob(blob) {
+  const type = (blob.type || '').toLowerCase();
+  if (type.includes('png')) return 'png';
+  if (type.includes('webp')) return 'webp';
+  if (type.includes('jpg') || type.includes('jpeg')) return 'jpg';
+  return 'jpg';
 }
 
 /**
@@ -161,6 +171,36 @@ async function uploadBlob(blob, path, contentType, onProgress) {
 }
 
 /**
+ * Upload the locally cached album cover to the public cover bucket and return its URL.
+ * Best-effort by design: audio upload must not fail just because art sync is unavailable.
+ * @param {import('./types.js').Track} track
+ * @returns {Promise<string>}
+ */
+export async function uploadTrackAlbumArt(track) {
+  const user = await requireUser();
+  const { peekAlbumArt, setAlbumArtRemoteUrl } = await import('./albumArtStore.js');
+  const row = peekAlbumArt(track.albumKey);
+  if (row?.artRemoteUrl?.startsWith('https://')) return row.artRemoteUrl;
+  if (!(row?.artBlob instanceof Blob)) return '';
+
+  const contentType = row.artBlob.type || 'image/jpeg';
+  const path = `${user.id}/${track.id}.${extForImageBlob(row.artBlob)}`;
+  const { error } = await supabase.storage.from(MUSIC_COVERS_BUCKET).upload(path, row.artBlob, {
+    cacheControl: '31536000',
+    upsert: true,
+    contentType
+  });
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(MUSIC_COVERS_BUCKET).getPublicUrl(path);
+  const publicUrl = data?.publicUrl || '';
+  if (publicUrl) {
+    await setAlbumArtRemoteUrl(track.albumKey, track.artist, track.album, publicUrl);
+  }
+  return publicUrl;
+}
+
+/**
  * @param {Blob | File} blob
  * @param {string} path
  * @param {string} contentType
@@ -222,6 +262,12 @@ export async function uploadTrackAudio(track, onProgress) {
   const path = storagePathForTrack(user.id, track);
   const contentType = track.mime || blob.type || 'application/octet-stream';
   await uploadBlob(blob, path, contentType, onProgress);
+  let artRemoteUrl = '';
+  try {
+    artRemoteUrl = await uploadTrackAlbumArt(track);
+  } catch {
+    artRemoteUrl = '';
+  }
 
   const { error } = await supabase.from(T.trackMeta).upsert({
     user_id: user.id,
@@ -238,7 +284,8 @@ export async function uploadTrackAudio(track, onProgress) {
     lyrics: track.lyrics || '',
     storage_path: path,
     mime_type: contentType,
-    size_bytes: blob.size
+    size_bytes: blob.size,
+    art_remote_url: artRemoteUrl
   });
   if (error) throw error;
 
