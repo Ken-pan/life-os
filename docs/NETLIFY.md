@@ -68,11 +68,15 @@ npm run build
 ./scripts/deploy-all-netlify.sh   # 或单站 --no-build 上传
 ```
 
+**⚠️ Monorepo 必须带 `CI=1` + `--filter <workspace>`**：新版 Netlify CLI 在检测到多个
+workspace（planner-os / fitness-os / finance-os / music-os / @life-os/*）时会交互式询问
+"要操作哪个项目"，脚本或 agent 场景下会**无输出永久挂起**。`deploy-all-netlify.sh` 已内置。
+
 单站示例：
 
 ```bash
 npm run build:planner
-npx netlify deploy --prod --no-build --dir=apps/planner/build --functions=apps/planner/netlify/functions --site=82a6cadc-03f9-443c-85f7-26bd4a90f83f
+CI=1 npx netlify deploy --prod --no-build --filter planner-os --dir=apps/planner/build --functions=apps/planner/netlify/functions --site=82a6cadc-03f9-443c-85f7-26bd4a90f83f
 ```
 
 Site ID 见 [Netlify team projects](https://app.netlify.com/teams/jpan28/projects).
