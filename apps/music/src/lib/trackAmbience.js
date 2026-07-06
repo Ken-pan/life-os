@@ -1,6 +1,6 @@
 import { browser } from '$app/environment'
 import { resolveTheme } from '@life-os/theme'
-import { peekAlbumArt } from './albumArtStore.js'
+import { peekAlbumArt, artUrlForAlbumKey } from './albumArtStore.js'
 import { extractArtPalette, paletteFromHash } from './artPalette.js'
 import { S } from './state.svelte.js'
 
@@ -41,10 +41,11 @@ export function applyTrackAmbience(track) {
   if (!browser) return
 
   const root = document.documentElement
-  const key = track?.id ?? track?.albumKey ?? ''
   const albumAmbience = S.settings.albumAmbience !== false
   const theme = resolveTheme(S.settings.theme, 'auto')
-  const stateKey = `${key}:${albumAmbience ? 'on' : 'off'}:${theme}`
+  const key = track?.id ?? track?.albumKey ?? ''
+  const coverUrl = track?.artUrl || (track ? artUrlForAlbumKey(track.albumKey) : '') || ''
+  const stateKey = `${key}:${coverUrl}:${albumAmbience ? 'on' : 'off'}:${theme}`
 
   if (!track || !albumAmbience) {
     if (stateKey === lastKey) return
@@ -63,9 +64,9 @@ export function applyTrackAmbience(track) {
     /** @type {{ accent: string, accentMuted: string, glow: string }} */
     let palette
 
-    if (track.artUrl) {
+    if (coverUrl) {
       try {
-        palette = await extractArtPalette(track.artUrl, cacheKey)
+        palette = await extractArtPalette(coverUrl, cacheKey)
         if (seq !== extractSeq) return
         applyPalette(root, palette, 'art')
         return

@@ -1,5 +1,5 @@
 import { browser } from '$app/environment'
-import { db, hydrateTrack, recordPlay } from './db.js'
+import { db, hydrateTrack, recordPlay, ensureAlbumArtCache } from './db.js'
 import {
   recordMusicInteraction,
   SKIP_THRESHOLD_MS,
@@ -225,6 +225,7 @@ function saveSession() {
 export async function restoreLastSession() {
   if (!browser) return null
   try {
+    await ensureAlbumArtCache()
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const data = JSON.parse(raw)
@@ -868,6 +869,10 @@ async function loadAndPlay(opts = {}) {
   const token = ++loadToken
   hydrateTrack(track)
   player.statusHint = ''
+  player.duration = track.duration || 0
+  if (typeof opts.seekTo === 'number' && opts.seekTo > 0) {
+    player.currentTime = opts.seekTo
+  }
 
   let src = resolvePlayUrlSync(track)
   if (!src) {
@@ -1061,6 +1066,7 @@ export function formatTime(sec) {
 
 /** @param {number} current @param {number} duration */
 export function formatTimeRemaining(current, duration) {
+  if (!duration || duration <= 0) return '--:--'
   const rem = Math.max(0, (duration || 0) - (current || 0))
   return `-${formatTime(rem)}`
 }
