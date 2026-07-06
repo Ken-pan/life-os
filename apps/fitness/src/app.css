@@ -1422,7 +1422,6 @@ p {
 body:has(.focus-view) .toast {
   bottom: calc(170px + env(safe-area-inset-bottom));
   max-width: min(calc(100vw - 48px), 360px);
-  text-align: center;
 }
 
 /* ─────────── DISCOVER HUB ─────────── */

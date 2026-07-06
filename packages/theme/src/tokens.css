@@ -175,6 +175,16 @@
   --z-toast: 120;
   --banner-fixed-h: 48px;
 
+  /* ===== Toast（Material snackbar 基线）===== */
+  --toast-pad-y: 12px;
+  --toast-pad-x: 16px;
+  --toast-min-h: 40px;
+  --toast-gap: var(--space-2);
+  --toast-font-size: var(--text-md);
+  --toast-line-height: 1.45;
+  --toast-max-width: min(calc(100vw - var(--space-8)), 360px);
+  --toast-max-width-desktop: min(calc(100vw - var(--space-8)), 420px);
+
   /* ===== 共享语义色（浅色默认；深色由各 app [data-theme="dark"] 覆盖）===== */
   --positive: #087a5b;
   --positive-subtle: #e6f6ef;

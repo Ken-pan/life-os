@@ -551,22 +551,25 @@ body:has(.banner--fixed) .main-col {
   left: 50%;
   bottom: calc(var(--nav-h, var(--mobile-tabbar-h)) + var(--space-5) + var(--safe-bottom-effective));
   transform: translateX(-50%) translateY(12px);
-  max-width: min(calc(100vw - var(--space-8)), 360px);
-  min-height: 48px;
-  display: flex;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: var(--toast-max-width);
+  min-height: var(--toast-min-h);
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-2-5) var(--space-3-5);
-  border-radius: var(--toast-radius, var(--radius-lg));
-  background: var(--toast-bg, color-mix(in srgb, var(--positive) 12%, var(--card)));
-  border: 1px solid var(--toast-border, color-mix(in srgb, var(--positive) 35%, var(--border)));
+  justify-content: flex-start;
+  gap: var(--toast-gap);
+  padding: var(--toast-pad-y) var(--toast-pad-x);
+  border-radius: var(--toast-radius, var(--radius-pill));
+  background: var(--toast-bg, var(--positive-subtle));
+  border: 1px solid var(--toast-border, color-mix(in srgb, var(--positive) 32%, var(--border)));
   color: var(--t1, var(--text));
-  font-family: var(--toast-font, var(--mono));
-  font-size: var(--text-sm);
+  font-family: var(--toast-font, var(--font));
+  font-size: var(--toast-font-size);
   font-weight: 500;
-  line-height: 1.45;
-  text-align: center;
-  box-shadow: var(--shadow-elevated, 0 8px 28px rgba(0, 0, 0, 0.1));
+  line-height: var(--toast-line-height);
+  text-align: left;
+  box-shadow: var(--shadow-elevated, 0 10px 32px rgba(0, 0, 0, 0.12));
   backdrop-filter: blur(10px);
   z-index: var(--z-toast);
   opacity: 0;
@@ -576,44 +579,118 @@ body:has(.banner--fixed) .main-col {
     transform var(--dur-base) var(--ease-standard);
 }
 
+.toast-msg {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast--action {
+  gap: var(--space-2);
+  max-width: min(calc(100vw - var(--space-6)), 400px);
+  z-index: calc(var(--z-toast, 120) + 20);
+}
+
+.toast-action {
+  flex: 0 0 auto;
+  align-self: center;
+  border: none;
+  background: transparent;
+  margin: calc((var(--toast-pad-y) - 10px) * -1) -6px calc((var(--toast-pad-y) - 10px) * -1) 0;
+  padding: 10px 8px;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+
+.toast-action:focus-visible {
+  outline: none;
+  box-shadow: var(--btn-focus-ring);
+  border-radius: var(--radius-control);
+}
+
+.toast-dismiss {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin: calc((var(--toast-pad-y) + 1px) * -1) calc((var(--toast-pad-x) - 6px) * -1) 0 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.72;
+  touch-action: manipulation;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toast-dismiss:hover {
+    opacity: 1;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+}
+
 .toast--error {
-  background: color-mix(in srgb, var(--critical) 12%, var(--card));
-  border-color: color-mix(in srgb, var(--critical) 35%, var(--border));
+  background: var(--critical-subtle);
+  border-color: color-mix(in srgb, var(--critical) 32%, var(--border));
 }
 
 .toast--warn {
   background: var(--warning-subtle);
-  border-color: color-mix(in srgb, var(--warning) 35%, var(--border));
+  border-color: color-mix(in srgb, var(--warning) 38%, var(--border));
   color: var(--t1, var(--text));
 }
 
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
 }
 
 /* 深色模式：用语义 subtle 底，避免 success toast 过绿/过暗 */
 :root[data-theme='dark'] .toast:not(.toast--error):not(.toast--warn) {
   background: var(--positive-subtle);
-  border-color: color-mix(in srgb, var(--positive) 42%, var(--border));
+  border-color: color-mix(in srgb, var(--positive) 44%, var(--border));
 }
 
 :root[data-theme='dark'] .toast--error {
   background: var(--critical-subtle);
-  border-color: color-mix(in srgb, var(--critical) 42%, var(--border));
+  border-color: color-mix(in srgb, var(--critical) 44%, var(--border));
 }
 
 @media (--life-os-mobile) {
   /* 有 FAB 时 toast 抬到 FAB 上方，避免与「添加任务」抢位置 */
   body:has([data-fab-visible='true']) .toast {
     bottom: calc(var(--mobile-content-inset) + var(--space-3) + var(--safe-bottom-effective));
+    max-width: min(
+      var(--toast-max-width),
+      calc(100vw - var(--fab-w, 132px) - var(--space-8) - var(--space-3))
+    );
   }
 }
 
 @media (--life-os-desktop) {
   .toast {
-    bottom: var(--space-5);
-    max-width: min(calc(100vw - var(--space-8)), 568px);
+    bottom: calc(var(--space-5) + var(--safe-bottom-effective));
+    max-width: var(--toast-max-width-desktop);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.14),
+      0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent);
   }
 }
 

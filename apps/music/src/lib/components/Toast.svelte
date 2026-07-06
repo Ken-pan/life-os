@@ -1,5 +1,6 @@
 <script>
   import { toastState, dismissToast } from '$lib/ui.svelte.js';
+  import { t } from '$lib/i18n/index.js';
 </script>
 
 <div
@@ -7,51 +8,10 @@
   class:show={toastState.show}
   role={toastState.tone === 'error' || toastState.tone === 'warn' ? 'alert' : 'status'}
   aria-live={toastState.tone === 'error' || toastState.tone === 'warn' ? 'assertive' : 'polite'}
+  aria-atomic="true"
 >
   <span class="toast-msg">{toastState.msg}</span>
   {#if toastState.show}
-    <button class="toast-dismiss" type="button" aria-label="关闭" onclick={dismissToast}>×</button>
+    <button class="toast-dismiss" type="button" aria-label={t('common.close')} onclick={dismissToast}>×</button>
   {/if}
 </div>
-
-<style>
-  .toast {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-2);
-    text-align: left;
-    pointer-events: none;
-  }
-
-  .toast.show {
-    pointer-events: auto;
-  }
-
-  .toast-msg {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .toast-dismiss {
-    flex-shrink: 0;
-    width: var(--tap-min);
-    height: var(--tap-min);
-    margin: calc((var(--tap-min) - 1.75rem) / -2) calc((var(--tap-min) - 1.75rem) / -2) 0 0;
-    border: none;
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: inherit;
-    font-size: 1.25rem;
-    line-height: 1;
-    cursor: pointer;
-    opacity: 0.72;
-    touch-action: manipulation;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .toast-dismiss:hover {
-      opacity: 1;
-      background: color-mix(in srgb, currentColor 10%, transparent);
-    }
-  }
-</style>
