@@ -1,3 +1,6 @@
+import { formatSyncErrorMessage } from '@life-os/sync';
+import { t } from './i18n/index.js';
+
 /** @typedef {(message: string) => void} SyncErrorListener */
 
 /** @type {Set<SyncErrorListener>} */
@@ -9,9 +12,18 @@ export function subscribeSyncError(listener) {
   return () => listeners.delete(listener);
 }
 
-/** @param {string} message */
-export function notifySyncError(message) {
-  const text = message?.trim() || 'sync failed';
+/** @param {unknown} err */
+export function syncErrorMessage(err) {
+  return formatSyncErrorMessage(err, {
+    network: t('auth.errNetwork'),
+    rateLimit: t('auth.errRateLimit'),
+    fallback: t('sync.defaultError')
+  });
+}
+
+/** @param {unknown} err */
+export function notifySyncError(err) {
+  const text = syncErrorMessage(err);
   for (const fn of listeners) fn(text);
 }
 
@@ -23,7 +35,7 @@ export async function withSyncNotify(fn) {
   try {
     return await fn();
   } catch (e) {
-    notifySyncError(e?.message || String(e));
+    notifySyncError(e);
     throw e;
   }
 }

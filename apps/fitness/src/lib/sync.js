@@ -2,6 +2,7 @@ import { browser } from '$app/environment';
 import {
   createBidirectionalSync,
   createDebouncedTask,
+  formatSyncErrorMessage,
   readSyncMeta,
   writeSyncMeta
 } from '@life-os/sync';
@@ -32,10 +33,11 @@ const nonEmpty = (obj) =>
 
 /** 设置页手动同步等场景的错误文案 */
 export function syncErrorMessage(err) {
-  const msg = err?.message || '';
-  if (/rate limit|too many requests/i.test(msg)) return t('auth.errRateLimit');
-  if (/network|fetch/i.test(msg)) return t('auth.errNetwork');
-  return msg || t('auth.syncFailed');
+  return formatSyncErrorMessage(err, {
+    network: t('auth.errNetwork'),
+    rateLimit: t('auth.errRateLimit'),
+    fallback: t('auth.syncFailed')
+  });
 }
 
 /** 本机是否有值得上传的数据 */

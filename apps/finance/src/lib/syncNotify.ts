@@ -1,5 +1,6 @@
 /** 云端同步失败时的轻量 pub/sub，供 AppShell 展示 banner。 */
 
+import { formatSyncErrorMessage } from "@life-os/sync";
 import { t } from "../i18n/translate";
 
 type SyncErrorListener = (message: string) => void;
@@ -11,7 +12,15 @@ export function subscribeSyncError(listener: SyncErrorListener): () => void {
   return () => listeners.delete(listener);
 }
 
-export function notifySyncError(message: string): void {
-  const text = message.trim() || t("sync.defaultError");
+export function syncErrorMessage(err: unknown): string {
+  return formatSyncErrorMessage(err, {
+    network: t("sync.errNetwork"),
+    rateLimit: t("sync.errRateLimit"),
+    fallback: t("sync.defaultError"),
+  });
+}
+
+export function notifySyncError(err: unknown): void {
+  const text = syncErrorMessage(err);
   for (const fn of listeners) fn(text);
 }

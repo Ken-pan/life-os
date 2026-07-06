@@ -38,3 +38,8 @@ export function createAuthSyncHandler(handlers: {
   onSignedOut?: () => void;
   onSyncSession?: (ctx: { event: string; silent: boolean; force: boolean }) => void | Promise<void>;
 }): (event: string, session: { user?: { id?: string } } | null) => void;
+
+export function formatSyncErrorMessage(
+  err: unknown,
+  labels: { network: string; rateLimit: string; fallback: string; schemaCache?: string }
+): string;

@@ -16,7 +16,7 @@
 
 {#if message}
   <div class="banner critical banner--row banner--fixed" role="alert" aria-live="assertive">
-    <span class="banner__text">{t('sync.bannerPrefix')}{message}{t('sync.bannerSuffix')}</span>
+    <span class="banner__text">{t('sync.banner', { reason: message })}</span>
     <button type="button" class="btn-ghost banner-close" onclick={dismiss}>{t('common.close')}</button>
   </div>
 {/if}

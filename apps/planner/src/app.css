@@ -266,7 +266,15 @@ html, body {
 .toast--action {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-3);
+  text-align: left;
+  max-width: min(calc(100vw - var(--space-6)), 400px);
+}
+
+.toast--action .toast-msg {
+  flex: 1;
+  min-width: 0;
 }
 
 .toast-action {

@@ -152,9 +152,13 @@ export const zhCN: MessageTree = {
     verifyingDevice: "校验设备中…",
     loginFailed: "登录失败：邮箱或密码不正确。",
     initFailed: "初始化失败，请重试。",
+    errNetwork: "网络错误，请检查连接",
+    errRateLimit: "请求过于频繁，请稍后再试",
   },
   sync: {
     defaultError: "同步到 Supabase 失败",
+    errNetwork: "网络错误，请检查连接",
+    errRateLimit: "请求过于频繁，请稍后再试",
     bannerPrefix: "云端同步失败：",
     bannerSuffix: "。本地已保存修改，但其他设备可能看不到；请检查网络或重新登录后重试。",
   },
@@ -1540,9 +1544,13 @@ export const enUS: MessageTree = {
     verifyingDevice: "Verifying device…",
     loginFailed: "Sign-in failed: incorrect email or password.",
     initFailed: "Initialization failed. Please try again.",
+    errNetwork: "Network error — check your connection",
+    errRateLimit: "Too many attempts — try again later",
   },
   sync: {
     defaultError: "Failed to sync to Supabase",
+    errNetwork: "Network error — check your connection",
+    errRateLimit: "Too many attempts — try again later",
     bannerPrefix: "Cloud sync failed: ",
     bannerSuffix:
       ". Changes are saved locally but other devices may not see them. Check your network or sign in again.",

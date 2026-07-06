@@ -59,7 +59,7 @@ const scenarios = [
         banner.className = 'banner critical banner--row banner--fixed';
         banner.setAttribute('role', 'alert');
         banner.innerHTML =
-          '<span class="banner__text">云同步失败：Network request failed</span>' +
+          '<span class="banner__text">云同步失败：网络错误，请检查连接</span>' +
           '<button type="button" class="btn-ghost banner-close">关闭</button>';
         document.body.prepend(banner);
         document.body.classList.add('has-banner-fixed');
@@ -118,7 +118,7 @@ const scenarios = [
         banner.className = 'banner critical banner--row banner--fixed';
         banner.setAttribute('role', 'alert');
         banner.innerHTML =
-          '<span class="banner__text">云同步失败：Network request failed</span>' +
+          '<span class="banner__text">云同步失败：网络错误，请检查连接</span>' +
           '<button type="button" class="btn-ghost banner-close">关闭</button>';
         document.body.prepend(banner);
       });

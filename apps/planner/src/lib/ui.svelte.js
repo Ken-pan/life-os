@@ -29,9 +29,11 @@ export function toast(msg, tone = 'success', options = {}) {
   toastState.onAction = options.onAction ?? null;
   toastState.show = true;
   clearTimeout(toastTimer);
+  const defaultDuration =
+    tone === 'error' ? 4500 : tone === 'warn' ? 4000 : options.actionLabel ? 4000 : 2200;
   toastTimer = setTimeout(() => {
     toastState.show = false;
-  }, options.duration ?? (options.actionLabel ? 4000 : 1800));
+  }, options.duration ?? defaultDuration);
 }
 
 export function dismissToast() {

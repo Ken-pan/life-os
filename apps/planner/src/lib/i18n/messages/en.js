@@ -182,6 +182,7 @@ export default {
     accountSwitched: 'Switched account',
     accountLoaded: 'Loaded cloud data for this account',
     defaultError: 'Sync failed',
+    banner: 'Cloud sync failed: {reason}',
     bannerPrefix: 'Cloud sync failed: ',
     bannerSuffix: ''
   },

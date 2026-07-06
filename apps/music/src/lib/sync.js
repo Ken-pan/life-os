@@ -1,5 +1,5 @@
 import { browser } from '$app/environment'
-import { createDebouncedTask } from '@life-os/sync'
+import { createDebouncedTask, formatSyncErrorMessage } from '@life-os/sync'
 import { supabase } from './supabase.js'
 import { MUSIC_TABLES as T } from './supabaseTables.js'
 import { prefetchSignedUrls } from './cloudAudio.js'
@@ -25,11 +25,12 @@ async function requireUser() {
 }
 
 export function syncErrorMessage(err) {
-  const msg = err?.message || ''
-  if (/rate limit|too many requests/i.test(msg)) return t('auth.errRateLimit')
-  if (/network|fetch/i.test(msg)) return t('auth.errNetwork')
-  if (/schema cache|PGRST002/i.test(msg)) return t('sync.schemaCache')
-  return msg || t('sync.failed')
+  return formatSyncErrorMessage(err, {
+    network: t('auth.errNetwork'),
+    rateLimit: t('auth.errRateLimit'),
+    fallback: t('sync.failed'),
+    schemaCache: t('sync.schemaCache'),
+  })
 }
 
 async function fetchCloudSnapshot(userId) {

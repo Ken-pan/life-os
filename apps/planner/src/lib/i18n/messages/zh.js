@@ -182,6 +182,7 @@ export default {
     accountSwitched: '已切换账号',
     accountLoaded: '已加载该账号的云端数据',
     defaultError: '同步失败',
+    banner: '云同步失败：{reason}',
     bannerPrefix: '云同步失败：',
     bannerSuffix: ''
   },

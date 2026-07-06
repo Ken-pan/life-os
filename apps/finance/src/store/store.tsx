@@ -53,7 +53,7 @@ function persist(p: Promise<void>): void {
   p.catch((e) => {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[finance] 同步到 Supabase 失败：", e);
-    notifySyncError(msg);
+    notifySyncError(e);
   });
 }
 

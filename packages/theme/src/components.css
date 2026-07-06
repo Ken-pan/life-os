@@ -491,12 +491,17 @@ input[type='number'].no-spin::-webkit-inner-spin-button {
 
 .banner--row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
-.banner__text { flex: 1; min-width: 0; line-height: 1.5; }
+.banner__text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 
 .banner--fixed {
   position: fixed;
@@ -522,11 +527,14 @@ body:has(.banner--fixed) .main-col {
 
 .banner-close {
   flex-shrink: 0;
-  min-height: var(--btn-h-md);
+  min-width: var(--tap-min, 44px);
+  min-height: var(--tap-min, 44px);
+  margin: calc((var(--tap-min, 44px) - var(--btn-h-md)) / -2);
   padding-inline: var(--btn-pad-x-sm);
   font-size: var(--text-sm);
   color: inherit;
   opacity: 0.85;
+  touch-action: manipulation;
 }
 
 .banner-close:hover:not(:disabled) {
@@ -544,6 +552,10 @@ body:has(.banner--fixed) .main-col {
   bottom: calc(var(--nav-h, var(--mobile-tabbar-h)) + var(--space-5) + var(--safe-bottom-effective));
   transform: translateX(-50%) translateY(12px);
   max-width: min(calc(100vw - var(--space-8)), 360px);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-2-5) var(--space-3-5);
   border-radius: var(--toast-radius, var(--radius-lg));
   background: var(--toast-bg, color-mix(in srgb, var(--positive) 12%, var(--card)));
@@ -572,7 +584,7 @@ body:has(.banner--fixed) .main-col {
 .toast--warn {
   background: var(--warning-subtle);
   border-color: color-mix(in srgb, var(--warning) 35%, var(--border));
-  color: var(--warning);
+  color: var(--t1, var(--text));
 }
 
 .toast.show {
@@ -580,8 +592,33 @@ body:has(.banner--fixed) .main-col {
   transform: translateX(-50%) translateY(0);
 }
 
+/* 深色模式：用语义 subtle 底，避免 success toast 过绿/过暗 */
+:root[data-theme='dark'] .toast:not(.toast--error):not(.toast--warn) {
+  background: var(--positive-subtle);
+  border-color: color-mix(in srgb, var(--positive) 42%, var(--border));
+}
+
+:root[data-theme='dark'] .toast--error {
+  background: var(--critical-subtle);
+  border-color: color-mix(in srgb, var(--critical) 42%, var(--border));
+}
+
+@media (--life-os-mobile) {
+  /* 有 FAB 时 toast 抬到 FAB 上方，避免与「添加任务」抢位置 */
+  body:has([data-fab-visible='true']) .toast {
+    bottom: calc(var(--mobile-content-inset) + var(--space-3) + var(--safe-bottom-effective));
+  }
+}
+
 @media (--life-os-desktop) {
   .toast {
     bottom: var(--space-5);
+    max-width: min(calc(100vw - var(--space-8)), 568px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: none;
   }
 }
