@@ -14,22 +14,23 @@
   let scrollEl = $state();
   let lastActive = -2;
 
-  /** @param {number} idx */
-  function scrollActiveIntoView(idx) {
-    if (idx < 0 || !scrollEl) return;
-    const node = scrollEl.querySelector(`[data-lyric-idx="${idx}"]`);
-    if (!(node instanceof HTMLElement)) return;
-    const anchor = scrollEl.clientHeight * 0.33;
-    const top = node.offsetTop - anchor;
-    scrollEl.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-  }
-
   $effect(() => {
     const idx = active;
     if (idx < 0 || idx === lastActive || !scrollEl || !model.timed) return;
     lastActive = idx;
-    tick().then(() => scrollActiveIntoView(idx));
+    const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    tick().then(() => scrollActiveIntoView(idx, reduced ? 'auto' : 'smooth'));
   });
+
+  /** @param {number} idx @param {ScrollBehavior} behavior */
+  function scrollActiveIntoView(idx, behavior = 'smooth') {
+    if (idx < 0 || !scrollEl) return;
+    const node = scrollEl.querySelector(`[data-lyric-idx="${idx}"]`);
+    if (!(node instanceof HTMLElement)) return;
+    const anchor = scrollEl.clientHeight * 0.38;
+    const top = node.offsetTop - anchor;
+    scrollEl.scrollTo({ top: Math.max(0, top), behavior });
+  }
 
   /** @param {number} idx */
   function onLineClick(idx) {
