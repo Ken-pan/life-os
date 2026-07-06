@@ -1,5 +1,6 @@
 <script>
   import { enqueueArtResolve } from '$lib/artResolveQueue.js';
+  import { portalToBody } from '$lib/portal.js';
 
   /** @type {{ artUrl?: string, resolve?: { albumKey: string, artist: string, album: string, title?: string } }} */
   let { artUrl = '', resolve = undefined } = $props();
@@ -30,7 +31,7 @@
   });
 </script>
 
-<div class="np-ambient-back" aria-hidden="true">
+<div class="np-ambient-back" aria-hidden="true" use:portalToBody>
   {#if displayUrl && !artFailed}
     <img
       class="np-ambient-back-art"

@@ -30,6 +30,39 @@ function applyPalette(root, palette, kind) {
   if (palette.ambientBase)
     root.style.setProperty('--album-ambient-base', palette.ambientBase)
   root.dataset.trackAmbience = kind
+  syncImmersiveThemeColor(palette.ambientBase)
+}
+
+/** Match iOS status bar / Dynamic Island chrome to album ambience on Now Playing. */
+function syncImmersiveThemeColor(ambientBase) {
+  const meta = document.getElementById('theme-color-meta')
+  if (!(meta instanceof HTMLMetaElement)) return
+  const onNowPlaying = document.querySelector(
+    '.music-app[data-page-route="now-playing"]',
+  )
+  if (onNowPlaying && ambientBase) {
+    meta.content = ambientBase
+    meta.dataset.immersiveOverride = '1'
+    return
+  }
+  if (meta.dataset.immersiveOverride) {
+    delete meta.dataset.immersiveOverride
+    import('./state.svelte.js').then(({ applyTheme }) => applyTheme())
+  }
+}
+
+/** Re-sync theme-color when entering Now Playing (route change may skip palette re-extract). */
+export function refreshImmersiveChrome() {
+  if (!browser) return
+  const onNowPlaying = document.querySelector(
+    '.music-app[data-page-route="now-playing"]',
+  )
+  if (!onNowPlaying) return
+  const base =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue('--album-ambient-base')
+      .trim() || '#0a0809'
+  syncImmersiveThemeColor(base)
 }
 
 /**
@@ -52,6 +85,7 @@ export function applyTrackAmbience(track) {
     lastKey = stateKey
     extractSeq += 1
     clearAmbience(root)
+    syncImmersiveThemeColor(null)
     return
   }
 

@@ -23,7 +23,7 @@
   } from '$lib/nav.js'
   import { pageChrome, resetPageChrome } from '$lib/pageChrome.svelte.js'
   import { player } from '$lib/player.svelte.js'
-  import { applyTrackAmbience } from '$lib/trackAmbience.js'
+  import { applyTrackAmbience, refreshImmersiveChrome } from '$lib/trackAmbience.js'
   import { ensureBuiltinPlaylists, ensureAlbumArtCache } from '$lib/db.js'
   import {
     ensureArtRepaired,
@@ -79,6 +79,14 @@
 
   $effect(() => {
     if (onNowPlaying && utilityPane.open) closeUtilityPane()
+  })
+
+  $effect(() => {
+    if (onNowPlaying) {
+      refreshImmersiveChrome()
+    } else {
+      applyTheme()
+    }
   })
 
   onMount(() => {

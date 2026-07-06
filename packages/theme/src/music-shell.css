@@ -1756,6 +1756,29 @@
 }
 
 /* ── Apple Music 风移动端 Now Playing ── */
+/* Now Playing：氛围背景延伸至灵动岛 / 刘海（需 app.html viewport-fit=cover + black-translucent） */
+html:has(.music-app[data-page-route='now-playing']),
+html:has(.music-app[data-page-route='now-playing']) body {
+  background-color: var(--album-ambient-base, #0a0809);
+}
+
+html:has(.np-ambient-back) .bottom-shell {
+  display: none;
+}
+
+.music-app[data-page-route='now-playing'] {
+  position: relative;
+  z-index: 1;
+  --safari-chrome-tint-top-bg: var(--album-ambient-base, #0a0809);
+  --safari-chrome-tint-bottom-bg: var(--album-ambient-base, #0a0809);
+}
+
+.music-app[data-page-route='now-playing'] .safari-chrome-tint-top,
+.music-app[data-page-route='now-playing'] .safari-chrome-tint-bottom {
+  background-color: transparent;
+  opacity: 0;
+}
+
 @media (--life-os-mobile) {
   .music-app[data-page-route='now-playing']:has(.now-playing--apple-mobile) {
     background: var(--album-ambient-base, #0a0809);
@@ -1771,15 +1794,18 @@
 
   .music-app[data-page-route='now-playing']:has(.now-playing--apple-mobile) .safari-chrome-tint-top,
   .music-app[data-page-route='now-playing']:has(.now-playing--apple-mobile) .safari-chrome-tint-bottom {
-    opacity: 0;
+    display: none;
   }
 
   .np-ambient-back {
     position: fixed;
-    inset: 0;
     z-index: 0;
     pointer-events: none;
     overflow: hidden;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
   }
 
   .np-ambient-back-art {
@@ -1815,14 +1841,15 @@
     position: absolute;
     inset: 0;
     background:
+      linear-gradient(180deg, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.12) 14%, transparent 32%),
       linear-gradient(180deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.56) 100%),
       radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.18) 58%, transparent 100%);
   }
 
   .now-playing--apple-mobile {
     box-sizing: border-box;
-    height: 100dvh;
-    min-height: 100dvh;
+    height: var(--app-vh, 100dvh);
+    min-height: var(--app-vh, 100dvh);
     padding:
       calc(var(--space-2) + var(--safe-top-effective, 0px)) max(var(--space-4), var(--safe-inline-effective, 16px)) var(--safe-bottom-effective, 0px);
     justify-content: flex-start;
@@ -2421,12 +2448,23 @@
 
   @media (display-mode: standalone) {
 
+    html:has(.music-app[data-page-route='now-playing']),
+    html.standalone-pwa:has(.music-app[data-page-route='now-playing']) body {
+      min-height: var(--app-vh, 100dvh);
+      background-color: var(--album-ambient-base, #0a0809);
+    }
+
     .music-app[data-page-route='now-playing']:has(.now-playing--apple-mobile),
     .music-app[data-page-route='now-playing']:has(.now-playing--apple-mobile) .main-wrap,
     .music-app[data-page-route='now-playing']:has(.now-playing--apple-mobile) #main-content {
-      min-height: 100dvh;
-      height: 100dvh;
+      min-height: var(--app-vh, 100dvh);
+      height: var(--app-vh, 100dvh);
       overflow: hidden;
+    }
+
+    .now-playing--apple-mobile {
+      min-height: var(--app-vh, 100dvh);
+      height: var(--app-vh, 100dvh);
     }
 
     .now-playing--apple-mobile {
@@ -3245,6 +3283,48 @@
 @media (--life-os-desktop) {
   .settings-library-actions {
     padding-bottom: 16px;
+  }
+}
+
+.tag-review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tag-review-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.tag-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (--life-os-desktop) {
+  .tag-review-item {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .tag-review-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tag-review-actions {
+    flex-shrink: 0;
   }
 }
 
@@ -4970,10 +5050,13 @@ html.utility-pane-resizing {
 
 .np-ambient-back {
   position: fixed;
-  inset: 0;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  top: calc(-1 * env(safe-area-inset-top, 0px));
+  right: calc(-1 * env(safe-area-inset-right, 0px));
+  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+  left: calc(-1 * env(safe-area-inset-left, 0px));
 }
 
 .np-ambient-back-art {
@@ -5003,6 +5086,7 @@ html.utility-pane-resizing {
   position: absolute;
   inset: 0;
   background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.12) 14%, transparent 32%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.56) 100%),
     radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.18) 58%, transparent 100%);
 }
