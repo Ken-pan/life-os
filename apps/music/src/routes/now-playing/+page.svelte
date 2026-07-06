@@ -19,16 +19,6 @@
   import { S, setImmersiveViewMode } from '$lib/state.svelte.js';
 
   const track = $derived(player.queue[player.index] ?? null);
-  const artResolveMeta = $derived(
-    track
-      ? {
-          albumKey: track.albumKey,
-          artist: track.artist,
-          album: track.album,
-          title: track.title
-        }
-      : undefined
-  );
   const viewMode = $derived(S.settings.immersiveViewMode);
   const panelMode = $derived(
     viewMode === 'queue' ? 'queue' : viewMode === 'player' ? 'player' : 'lyrics'
@@ -155,6 +145,8 @@
   class:now-playing--apple-mobile={isMobile}
   class:now-playing--player={isMobile && panelMode === 'player'}
   class:now-playing--queue={isMobile ? panelMode === 'queue' : desktopPanelMode === 'queue'}
+  class:now-playing--lyrics-mode={!isMobile && desktopPanelMode === 'lyrics'}
+  class:now-playing--desktop={!isMobile}
   class:now-playing--sing-along={isMobile ? mobileSingAlong : singAlong}
   class:now-playing--listen-idle={(isMobile ? panelMode : desktopPanelMode) === 'lyrics' && !player.playing}
   class:now-playing--controls-revealed={controlsRevealed}
@@ -164,9 +156,7 @@
   onpointerdown={revealControls}
 >
   {#if track}
-    {#if isMobile}
-      <NowPlayingAmbientBack artUrl={track.artUrl} resolve={artResolveMeta} />
-    {/if}
+    <NowPlayingAmbientBack artUrl={track.artUrl} />
 
     <button class="now-playing-handle" type="button" aria-label={t('common.back')} onclick={dismiss}></button>
 
@@ -185,7 +175,6 @@
                 class="now-playing-art np-mobile-art"
                 shared
                 priority="high"
-                resolve={artResolveMeta}
               />
             </div>
 
@@ -222,7 +211,6 @@
                 class="np-mobile-compact-art"
                 shared
                 priority="high"
-                resolve={artResolveMeta}
               />
               <div class="np-mobile-compact-copy">
                 <div class="now-playing-title">{track.title}</div>
@@ -319,7 +307,6 @@
                 class="now-playing-art"
                 shared
                 priority="high"
-                resolve={artResolveMeta}
               />
             </div>
           </div>

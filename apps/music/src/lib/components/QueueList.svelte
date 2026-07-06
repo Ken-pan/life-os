@@ -200,6 +200,7 @@
     display: flex;
     align-items: stretch;
     gap: var(--space-1);
+    position: relative;
   }
 
   .queue-row--dragging {
@@ -229,6 +230,13 @@
     background: none;
     border: none;
     padding: 0;
+    opacity: 0.35;
+    transition: opacity 160ms ease;
+  }
+
+  .queue-row:hover .queue-drag-handle,
+  .queue-row:focus-within .queue-drag-handle {
+    opacity: 0.72;
   }
 
   .queue-move-controls {
@@ -238,6 +246,13 @@
     gap: var(--tap-spacing);
     flex-shrink: 0;
     padding-right: 2px;
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+
+  .queue-row:hover .queue-move-controls,
+  .queue-row:focus-within .queue-move-controls {
+    opacity: 1;
   }
 
   .queue-move-btn {
