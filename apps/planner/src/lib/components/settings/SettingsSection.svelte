@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Icon from '../Icon.svelte';
   import { t } from '$lib/i18n/index.js';
 
@@ -24,7 +24,7 @@
     children
   } = $props();
 
-  let expanded = $state(defaultExpanded);
+  let expanded = $state(untrack(() => defaultExpanded));
 
   onMount(() => {
     if (collapseOnMobile && window.matchMedia(MOBILE_MQ).matches) {

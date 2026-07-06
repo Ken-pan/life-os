@@ -62,6 +62,7 @@
   --seg-active-fg: var(--accent);
   --seg-active-border-token: var(--accent);
   color-scheme: light;
+  --safari-chrome-tint-bottom-bg: var(--nav-bg);
 }
 
 :root[data-theme='light'] {
@@ -111,6 +112,7 @@
   --shadow-focus: 0 0 0 2px rgba(245, 184, 61, 0.28);
   --theme-color: #0f0f0e;
   --task-check-stroke: #46443f;
+  --safari-chrome-tint-bottom-bg: var(--nav-bg);
   color-scheme: dark;
 }
 
@@ -594,14 +596,20 @@ html, body {
 @media (--life-os-mobile) {
   .auth-link { width: 100%; }
 
-  /* 无 FAB 的路由：底栏留白由 .wrap 的 mobile-content-inset-tabbar 承担，避免与 main-col 叠加 */
-  .main-col[data-fab-visible='false'] {
+  /*
+   * 底部留白只由 .wrap 的 mobile-content-inset* 承担（ios-safari.css）。
+   * shell.css 的 main-col padding-bottom 与之叠加会导致内容少时底栏上方/下方出现大块空白。
+   */
+  .main-col {
     padding-bottom: 0;
+    align-self: start;
+    width: 100%;
   }
 
-  /* 认证页无底栏 */
-  .main-col[data-mobile-chrome='minimal'] {
-    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  /* 内容不足一屏时不要把 main-col 撑到 100dvh，避免 flex 列内出现死区 */
+  .app-shell {
+    align-content: start;
+    min-height: 100svh;
   }
 
   .settings-row.set-row,
@@ -700,6 +708,11 @@ html, body {
     border-color var(--dur-fast) var(--ease);
 }
 
+.insight-summary svg:first-child {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--accent) 82%, var(--t2));
+}
+
 .insight-summary:active {
   color: var(--t1);
 }
@@ -717,11 +730,11 @@ html, body {
 
 .task-group--compact .sec-title {
   font-family: var(--font);
-  font-size: var(--text-base);
+  font-size: 17px;
   font-weight: 600;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
   text-transform: none;
-  color: var(--t2);
+  color: color-mix(in srgb, var(--t2) 88%, var(--t3));
 }
 
 .task-group--compact .sec-count {
@@ -733,25 +746,33 @@ html, body {
 }
 
 .task-group--compact .task-list {
-  gap: 0;
+  gap: var(--space-1);
 }
 
 .task-group--compact .swipe-item + .swipe-item {
-  border-top: 1px solid var(--border);
+  border-top: none;
 }
 
 .task-row--compact {
-  min-height: 64px;
-  padding-block: var(--space-2);
+  min-height: 76px;
+  padding-block: var(--space-2-5);
   padding-inline: 0;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-4);
+}
+
+.task-row--compact .task-check {
+  width: 30px;
+  height: 30px;
+  border-color: color-mix(in srgb, var(--t1) 22%, transparent);
 }
 
 .task-row--compact .task-title {
-  font-size: var(--text-title);
+  font-size: 21px;
   font-weight: 600;
-  line-height: 1.3;
+  letter-spacing: -0.015em;
+  line-height: 1.28;
+  color: var(--t1);
 }
 
 .task-row--compact .priority-dot {
@@ -786,43 +807,67 @@ html, body {
   }
 
   .page-title {
-    margin-top: 18px;
-    font-size: var(--text-display-md);
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-1);
+    font-size: 44px;
+    line-height: 1.08;
     font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+
+  .appbar-titles {
+    margin-bottom: var(--space-1);
   }
 
   .wrap {
     padding:
-      var(--space-2)
+      var(--space-1)
       max(var(--space-6), var(--safe-right-effective))
       var(--page-block-gap)
       max(var(--space-6), var(--safe-left-effective));
   }
 
   .insight-summary {
-    padding: var(--space-3) var(--space-3-5);
-    margin-bottom: var(--space-3);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: var(--surface-elevated, var(--card-h));
+    min-height: 46px;
+    height: 46px;
+    padding: 0 var(--space-3-5);
+    margin-bottom: var(--space-2);
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--t1) 6%, transparent);
+    background: color-mix(in srgb, var(--t1) 3.5%, transparent);
     color: var(--t2);
+    font-size: var(--text-lg);
+    font-weight: 500;
   }
 
   .insight-summary:active {
-    background: var(--card-h);
+    background: color-mix(in srgb, var(--t1) 5.5%, transparent);
     color: var(--t1);
   }
 
   .insight-stack {
     gap: var(--space-2);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
   }
 
   .insight-banner {
-    border-radius: 12px;
-    padding: var(--space-3) var(--space-3-5);
-    background: var(--surface-elevated, var(--card));
+    border-radius: 16px;
+    padding: var(--space-2-5) var(--space-3-5);
+    min-height: 46px;
+    background: color-mix(in srgb, var(--t1) 3.5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--t1) 6%, transparent);
     box-shadow: none;
+  }
+
+  .insight-banner-title {
+    font-size: var(--text-lg);
+    font-weight: 500;
+  }
+
+  .insight-banner--ai {
+    border-color: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-left-width: 1px;
+    background: color-mix(in srgb, var(--accent) 5%, var(--t1) 3%);
   }
 
   .task-row--compact:hover {
@@ -832,15 +877,21 @@ html, body {
 
   .nav {
     --nav-h: 56px;
+    --tabbar-h: 56px;
     padding-top: var(--space-2);
-    padding-bottom: max(var(--space-3), var(--safe-bottom-effective));
+    padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, 0px));
+  }
+
+  :root[data-theme='dark'] .nav .nav-item,
+  :root[data-theme='dark'] .nav .nav-item-more {
+    color: #8f8a82;
   }
 
   .nav .nav-item,
   .nav .nav-item-more {
     position: relative;
-    gap: var(--space-1);
-    color: var(--t2);
+    gap: 6px;
+    color: #8f8a82;
   }
 
   .nav .nav-item.on,
@@ -851,28 +902,31 @@ html, body {
 
   .nav .nav-item.on svg,
   .nav .nav-item-more.on svg {
-    padding: 7px;
-    border-radius: 12px;
-    background: var(--accent-bg);
+    padding: 11px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
     box-sizing: content-box;
   }
 
   .nav .nav-lbl {
-    font-size: var(--text-xs);
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.02em;
     text-transform: none;
   }
 
   .fab {
-    --fab-h: 44px;
+    --fab-h: 54px;
+    --fab-w: 144px;
     height: var(--fab-h);
+    min-width: var(--fab-w);
+    border-radius: 27px;
     right: var(--space-6);
-    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-5));
-    padding: 0 var(--space-3-5);
+    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-6));
+    padding: 0 var(--space-4);
     font-size: var(--text-sm);
     font-weight: 600;
-    box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent);
   }
 
   .fab-label {

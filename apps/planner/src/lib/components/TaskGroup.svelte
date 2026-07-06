@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte';
   import TaskRow from './TaskRow.svelte';
   import EmptyState from './EmptyState.svelte';
   import Icon from './Icon.svelte';
@@ -28,7 +29,7 @@
   } = $props();
 
   const sorted = $derived(sortTasks(tasks, 'smart'));
-  let expanded = $state(defaultExpanded);
+  let expanded = $state(untrack(() => defaultExpanded));
 </script>
 
 <section class:task-group--compact={compactRows}>

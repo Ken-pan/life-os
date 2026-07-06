@@ -14,12 +14,7 @@
   );
 
   const showMobileSettings = $derived(
-    !page.url.pathname.startsWith('/settings') &&
-      !page.url.pathname.startsWith('/auth') &&
-      (page.url.pathname === '/' ||
-        page.url.pathname.startsWith('/inbox') ||
-        page.url.pathname.startsWith('/upcoming') ||
-        page.url.pathname.startsWith('/calendar'))
+    !page.url.pathname.startsWith('/settings') && !page.url.pathname.startsWith('/auth')
   );
 
   const resolvedBackLabel = $derived(backLabel ?? t('common.back'));

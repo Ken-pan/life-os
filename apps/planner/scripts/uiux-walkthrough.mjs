@@ -278,10 +278,15 @@ async function flow2BrowseNav(browser) {
     note(flow, '05', '自定义清单页 AppBar 缺少返回按钮', 'medium');
   }
 
-  // More active state on settings route
+  await page.goto(BASE + '/search');
+  await page.waitForLoadState('networkidle');
+  const searchShortcut = await page.locator('.appbar-settings').count();
+  if (searchShortcut === 0) {
+    note(flow, '06', '搜索页缺少 AppBar 设置快捷入口', 'medium');
+  }
+
   await page.goto(BASE + '/settings');
   shots.push(await snap(page, flow, '06-settings-from-more-ia', 'mobile'));
-  note(flow, '06', '设置页无 FAB，底栏 More 高亮 — IA 正确但设置入口较深（2 tap）', 'low');
 
   await page.close();
   return { flow, shots };

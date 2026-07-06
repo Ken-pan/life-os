@@ -44,15 +44,17 @@ async function swipeTaskRow(page, title, deltaX) {
     has: page.locator('.task-title', { hasText: title })
   });
   await expect(row).toBeVisible();
+  await row.scrollIntoViewIfNeeded();
   const box = await row.boundingBox();
   if (!box) throw new Error(`swipe row not found: ${title}`);
   const startX = box.x + box.width * 0.5;
   const startY = box.y + box.height * 0.5;
+  const endX = startX + deltaX;
   await page.mouse.move(startX, startY);
   await page.mouse.down();
-  const steps = 12;
+  const steps = 16;
   for (let i = 1; i <= steps; i++) {
-    await page.mouse.move(startX + (deltaX * i) / steps, startY, { steps: 2 });
+    await page.mouse.move(startX + ((endX - startX) * i) / steps, startY);
   }
   await page.mouse.up();
 }
@@ -246,7 +248,7 @@ test.describe('PlannerOS E2E', () => {
     const deleteBtn = page.locator('.swipe-item', {
       has: page.locator('.task-title', { hasText: '左滑删除' })
     }).locator('.swipe-action--delete');
-    await expect(deleteBtn).toBeVisible();
+    await expect(deleteBtn).toBeVisible({ timeout: 5000 });
     await deleteBtn.click();
     await expect(page.locator('.toast')).toContainText(/已删除|deleted/i);
     await page.getByRole('button', { name: /撤销|Undo/i }).click();
@@ -286,6 +288,14 @@ test.describe('PlannerOS E2E', () => {
     await page.goto('/');
     await page.locator('.appbar-search').click();
     await expect(page).toHaveURL(/\/search/);
+  });
+
+  test('移动端 AppBar 设置入口（搜索/已完成/清单）', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', '仅移动端');
+    for (const path of ['/search', '/completed']) {
+      await page.goto(path);
+      await expect(page.locator('.appbar-settings')).toBeVisible();
+    }
   });
 
   test('已完成任务页展示', async ({ page }) => {

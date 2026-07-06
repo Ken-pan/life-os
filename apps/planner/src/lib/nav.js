@@ -157,6 +157,13 @@ export function isNavChromeHidden(pathname) {
  */
 export function resolveMobileChromeInset(pathname) {
   if (pathname.startsWith('/auth')) return 'minimal';
-  if (pathname.startsWith('/settings')) return 'tabbar';
+  // 无 FAB 的路由只需避开底栏，勿预留 FAB 高度（搜索/已完成/设置）
+  if (
+    pathname.startsWith('/settings') ||
+    pathname.startsWith('/search') ||
+    pathname.startsWith('/completed')
+  ) {
+    return 'tabbar';
+  }
   return 'full';
 }
