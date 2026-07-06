@@ -12,11 +12,8 @@ import {
   getPlaylistTracks,
 } from './db.js'
 import { peekAlbumArt, setAlbumArtRemoteUrl } from './albumArtStore.js'
-import { S } from './state.svelte.js'
-import {
-  pickCloudSettings,
-  applyCloudSettingsMerge,
-} from './settingsPersistence.js'
+import { S, applyCloudSettingsMerge } from './state.svelte.js'
+import { pickCloudSettings } from './settingsPersistence.js'
 import { t } from './i18n/index.js'
 import { notifySyncError, withSyncNotify } from './syncNotify.js'
 
