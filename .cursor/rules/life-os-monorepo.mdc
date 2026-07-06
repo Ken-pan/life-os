@@ -12,7 +12,7 @@ alwaysApply: true
 | Planner | `apps/planner` | `planner-os` | planneros-ken |
 | Fitness | `apps/fitness` | `fitness-os` | kens-fitnessos |
 | Finance | `apps/finance` | `finance-os` | kensfinanceos |
-| Music | `apps/music` | `music-os` | kens-musicos |
+| Music | `apps/music` | `music-os` | musicos-ken |
 
 Shared: `packages/theme` (`@life-os/theme`), `packages/sync` (`@life-os/sync`).
 

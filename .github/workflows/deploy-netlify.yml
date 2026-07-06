@@ -76,6 +76,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build -w music-os
-      - run: npx netlify deploy --prod --site=abf63261-ae26-46f9-ac18-d24987a44113 --dir=apps/music/build
+      - run: npx netlify deploy --prod --no-build --site=83dfdf84-095a-4b8a-955d-106d046a314b --dir=apps/music/build
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
