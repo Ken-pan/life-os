@@ -24,6 +24,8 @@
         return t('import.phaseTags', { done: p.done, total: p.total });
       case 'sync':
         return t('import.phaseSync');
+      case 'lyrics':
+        return t('import.phaseLyrics', { done: p.done, total: p.total });
       default:
         return '';
     }

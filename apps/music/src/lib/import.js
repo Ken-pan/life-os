@@ -367,11 +367,15 @@ export async function repairMissingArt() {
 /**
  * Backfill missing lyrics via remote APIs (lrclib / QQ / NetEase / lyrics.ovh).
  * @param {(done: number, total: number) => void} [onProgress]
+ * @param {string[]} [trackIds] optional scope
  * @returns {Promise<{ total: number, repaired: number }>}
  */
-export async function repairMissingLyrics(onProgress) {
-  const tracks = await db.tracks.toArray()
-  const targets = tracks.filter((t) => trackNeedsLyrics(t))
+export async function repairMissingLyrics(onProgress, trackIds) {
+  const all = await db.tracks.toArray()
+  const scope = trackIds?.length ? new Set(trackIds) : null
+  const targets = all.filter(
+    (t) => trackNeedsLyrics(t) && (!scope || scope.has(t.id)),
+  )
   let repaired = 0
   let done = 0
 

@@ -14,6 +14,7 @@ import {
 import { peekAlbumArt, setAlbumArtRemoteUrl } from './albumArtStore.js'
 import { S, applyCloudSettingsMerge } from './state.svelte.js'
 import { pickCloudSettings } from './settingsPersistence.js'
+import { mergeTrackMetaForPush } from './trackMetaMerge.js'
 import { t } from './i18n/index.js'
 import { notifySyncError, withSyncNotify } from './syncNotify.js'
 
@@ -50,10 +51,6 @@ async function pushLocal(userId) {
   const tracks = await getAllTracks()
   const playlists = await getPlaylists()
   const snap = await fetchCloudSnapshot(userId)
-  /** @type {Map<string, number>} */
-  const cloudDurationById = new Map(
-    (snap.tracks ?? []).map((row) => [row.track_id, Number(row.duration) || 0]),
-  )
 
   await supabase.from(T.userState).upsert({
     user_id: userId,
@@ -63,28 +60,44 @@ async function pushLocal(userId) {
   })
 
   if (tracks.length) {
-    const rows = tracks.map((tr) => ({
-      user_id: userId,
-      track_id: tr.id,
-      title: tr.title,
-      artist: tr.artist,
-      album: tr.album,
-      album_key: tr.albumKey,
-      artist_key: tr.artistKey,
-      duration: (() => {
-        const local = Number(tr.duration) || 0
-        const cloud = cloudDurationById.get(tr.id) || 0
-        return local > 0 ? local : cloud
-      })(),
-      liked: tr.liked,
-      play_count: tr.playCount,
-      added_at: tr.addedAt,
-      lyrics: tr.lyrics || '',
-      storage_path: tr.storagePath || '',
-      mime_type: tr.mime || '',
-      size_bytes: tr.size || 0,
-      art_remote_url: peekAlbumArt(tr.albumKey)?.artRemoteUrl || '',
-    }))
+    /** @type {Map<string, Record<string, unknown>>} */
+    const cloudById = new Map(
+      (snap.tracks ?? []).map((row) => [row.track_id, row]),
+    )
+    const rows = tracks.map((tr) => {
+      const cloud = cloudById.get(tr.id)
+      const { merged, cloudArt } = mergeTrackMetaForPush(tr, cloud, {
+        slugKey,
+        trackWords,
+      })
+      const localArt = peekAlbumArt(merged.albumKey)?.artRemoteUrl || ''
+      const artRemote =
+        localArt ||
+        (cloudArt.startsWith('https://') ? cloudArt : '') ||
+        ''
+      return {
+        user_id: userId,
+        track_id: merged.id,
+        title: merged.title,
+        artist: merged.artist,
+        album: merged.album,
+        album_key: merged.albumKey,
+        artist_key: merged.artistKey,
+        duration: (() => {
+          const local = Number(merged.duration) || 0
+          const cloudDur = Number(cloud?.duration) || 0
+          return local > 0 ? local : cloudDur
+        })(),
+        liked: merged.liked,
+        play_count: merged.playCount,
+        added_at: merged.addedAt,
+        lyrics: merged.lyrics || '',
+        storage_path: merged.storagePath || '',
+        mime_type: merged.mime || '',
+        size_bytes: merged.size || 0,
+        art_remote_url: artRemote,
+      }
+    })
     let { error } = await supabase.from(T.trackMeta).upsert(rows)
     // Remote may lag behind local migrations — drop new columns and retry.
     if (

@@ -3,15 +3,16 @@ import {
   importMediaFiles,
   ensureArtRepaired,
   repairFilenameMetadata,
-  ensureLyricsRepaired,
+  repairMissingLyrics,
 } from './import.js'
+import { enrichImportedTracksFromItunes } from './externalMetadata.js'
 import { db } from './db.js'
 import { uploadTracksByIds } from './cloudAudio.js'
 import { enrichTracksHeuristic } from './trackEnrichmentClient.js'
 import { syncBidirectional } from './sync.js'
 import { bumpLibraryEpoch } from './state.svelte.js'
 
-/** @typedef {'import' | 'art' | 'metadata' | 'upload' | 'tags' | 'sync'} ImportPhase */
+/** @typedef {'import' | 'art' | 'metadata' | 'upload' | 'tags' | 'sync' | 'lyrics'} ImportPhase */
 
 /**
  * @typedef {Object} ImportProgress
@@ -54,13 +55,14 @@ export async function runImportPipeline(files, onProgress) {
     }
   }
 
+  emit('metadata', 0, 1)
+  await repairFilenameMetadata()
+  await enrichImportedTracksFromItunes(trackIds)
+  emit('metadata', 1, 1)
+
   emit('art', 0, 1)
   await ensureArtRepaired()
   emit('art', 1, 1)
-
-  emit('metadata', 0, 1)
-  await repairFilenameMetadata()
-  emit('metadata', 1, 1)
 
   const user = auth.user
   let uploaded = 0
@@ -99,10 +101,20 @@ export async function runImportPipeline(files, onProgress) {
       /* metadata already upserted during upload; sync is best-effort */
     }
     emit('sync', 1, 1)
+
+    emit('lyrics', 0, trackIds.length)
+    await repairMissingLyrics(
+      (done, total) => emit('lyrics', done, total),
+      trackIds,
+    )
+    try {
+      await syncBidirectional({ silent: true })
+    } catch {
+      /* best-effort lyrics sync */
+    }
   }
 
   bumpLibraryEpoch()
-  void ensureLyricsRepaired()
 
   return {
     audioCount,

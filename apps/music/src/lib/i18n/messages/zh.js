@@ -196,6 +196,7 @@ export default {
     phaseUpload: '正在上传云端 {done}/{total}…',
     phaseTags: '正在打标 {done}/{total}…',
     phaseSync: '正在同步元数据…',
+    phaseLyrics: '正在补抓歌词 {done}/{total}…',
     done: '已导入 {count} 首',
     doneLocal: '已导入 {count} 首（登录后可自动上传与打标）',
     doneCloud: '已导入 {count} 首，上传 {uploaded} 首，打标 {tagged} 首',
