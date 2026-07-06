@@ -664,13 +664,21 @@ body:has(.banner--fixed) .main-col {
 
 /* 深色模式：用语义 subtle 底，避免 success toast 过绿/过暗 */
 :root[data-theme='dark'] .toast:not(.toast--error):not(.toast--warn) {
-  background: var(--positive-subtle);
+  background: var(--toast-bg, var(--positive-subtle));
   border-color: color-mix(in srgb, var(--positive) 44%, var(--border));
+  color: var(--t1, var(--text));
 }
 
 :root[data-theme='dark'] .toast--error {
   background: var(--critical-subtle);
   border-color: color-mix(in srgb, var(--critical) 44%, var(--border));
+  color: var(--t1, var(--text));
+}
+
+:root[data-theme='dark'] .toast--warn {
+  background: var(--warning-subtle);
+  border-color: color-mix(in srgb, var(--warning) 44%, var(--border));
+  color: var(--t1, var(--text));
 }
 
 @media (--life-os-mobile) {

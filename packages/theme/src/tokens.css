@@ -196,6 +196,17 @@
   --info-subtle: #eaf2fc;
 }
 
+:root[data-theme='dark'] {
+  --positive: #6dd6ad;
+  --positive-subtle: #17382e;
+  --warning: #f2bd6c;
+  --warning-subtle: #423116;
+  --critical: #ff8fa2;
+  --critical-subtle: #4a2028;
+  --info: #8db8f4;
+  --info-subtle: #1a2d42;
+}
+
 @supports (padding: max(0px, 1px)) {
   :root {
     --safe-top-effective: max(var(--ios-edge-min), env(safe-area-inset-top, 0px));

@@ -31,6 +31,7 @@ export function toast(msg, toneOrOpts = 'success', maybeOpts = {}) {
 
   const key = options.key ?? (tone === 'success' ? msg : `${tone}:${msg}`)
   if (!shouldShowToast(key, options.dedupeMs ?? 3000)) return
+  if (!String(msg ?? '').trim()) return
 
   const ms =
     options.duration ??

@@ -130,6 +130,17 @@ html {
   --safari-chrome-tint-top-bg: var(--bg);
   --safari-chrome-tint-bottom-bg: var(--bg-2);
 
+  --positive: #7ee0b8;
+  --positive-subtle: #1a2e28;
+  --warning: #f2bd6c;
+  --warning-subtle: #3d2e14;
+  --critical: #ff8fa2;
+  --critical-subtle: #3d1820;
+  --info: #9ec5ff;
+  --info-subtle: #1a2438;
+  --toast-bg: color-mix(in srgb, var(--card-h) 88%, var(--positive) 12%);
+  --toast-border: color-mix(in srgb, var(--positive) 28%, var(--border-l));
+
   color-scheme: dark;
 }
 
