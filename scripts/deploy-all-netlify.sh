@@ -19,6 +19,7 @@ deploy_one() {
 deploy_one 82a6cadc-03f9-443c-85f7-26bd4a90f83f planner-os apps/planner/build netlify/functions
 deploy_one 0394cf19-7fb7-4fea-81d7-d4a9d025fab3 fitness-os apps/fitness/build
 deploy_one fc92f305-8dcf-46c3-82f5-ef511597df1c finance-os apps/finance/dist
+# Music: use --filter music-os; functions path is relative to apps/music (not repo root).
 deploy_one 83dfdf84-095a-4b8a-955d-106d046a314b music-os apps/music/build netlify/functions
 
 echo "All four Life OS sites deployed."

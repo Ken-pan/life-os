@@ -189,13 +189,18 @@ export async function rescanTrackMetadata(onProgress) {
 
 /**
  * Re-parse filenames with updated heuristics (Title-Artist vs Artist-Title).
+ * @param {string[]} [trackIds] optional scope — only these tracks
  * @returns {Promise<number>}
  */
-export async function repairFilenameMetadata() {
-  const tracks = await getAllTracks()
+export async function repairFilenameMetadata(trackIds) {
+  const scope = trackIds?.length ? new Set(trackIds) : null
+  const tracks = scope
+    ? (await db.tracks.bulkGet(trackIds)).filter(Boolean)
+    : await getAllTracks()
   let repaired = 0
 
   for (const track of tracks) {
+    if (scope && !scope.has(track.id)) continue
     if (!track.fileName) continue
     const parsed = parseFilename(track.fileName)
     if (!isValidMeta(parsed.title) || !isValidMeta(parsed.artist)) continue

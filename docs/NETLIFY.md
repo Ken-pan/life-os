@@ -57,8 +57,11 @@ cd life-os && npm install && npm run build
 CLI 兜底（已构建 `apps/music/build`）：
 
 ```bash
+# --filter 会把 cwd 切到 apps/music，functions 用 netlify/functions（勿写 apps/music/... 否则会路径翻倍）
 CI=1 npx netlify deploy --prod --no-build --filter music-os --dir=apps/music/build --functions=netlify/functions --site=83dfdf84-095a-4b8a-955d-106d046a314b
 ```
+
+Git 自动构建走 `apps/music/netlify.toml` 里的 `[functions] directory = "apps/music/netlify/functions"`（相对 repo 根）。
 
 ## CLI 手动发布
 

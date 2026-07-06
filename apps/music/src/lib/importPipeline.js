@@ -9,10 +9,11 @@ import { enrichImportedTracksFromItunes } from './externalMetadata.js'
 import { db } from './db.js'
 import { uploadTracksByIds } from './cloudAudio.js'
 import { enrichTracksHeuristic } from './trackEnrichmentClient.js'
+import { postImportServerEnrich } from './postImportEnrich.js'
 import { syncBidirectional } from './sync.js'
 import { bumpLibraryEpoch } from './state.svelte.js'
 
-/** @typedef {'import' | 'art' | 'metadata' | 'upload' | 'tags' | 'sync' | 'lyrics'} ImportPhase */
+/** @typedef {'import' | 'art' | 'metadata' | 'upload' | 'tags' | 'enrich' | 'sync' | 'lyrics'} ImportPhase */
 
 /**
  * @typedef {Object} ImportProgress
@@ -23,9 +24,26 @@ import { bumpLibraryEpoch } from './state.svelte.js'
  */
 
 /**
- * Full import pipeline: local IndexedDB → cover repair → cloud upload → heuristic tags → sync.
+ * @typedef {Object} ImportPipelineResult
+ * @property {number} audioCount
+ * @property {number} lrcCount
+ * @property {number} total
+ * @property {string[]} trackIds
+ * @property {number} uploaded
+ * @property {number} uploadFailed
+ * @property {number} tagged
+ * @property {number} tagFailed
+ * @property {boolean} cloud
+ * @property {boolean} syncFailed
+ * @property {boolean} enrichFailed
+ * @property {number} enriched
+ */
+
+/**
+ * Full import pipeline: local IndexedDB → metadata → cloud upload → tags → sync → server enrich → lyrics → sync.
  * @param {FileList | File[]} files
  * @param {(progress: ImportProgress) => void} [onProgress]
+ * @returns {Promise<ImportPipelineResult>}
  */
 export async function runImportPipeline(files, onProgress) {
   /** @param {ImportPhase} phase @param {number} done @param {number} total @param {string} [title] */
@@ -42,23 +60,13 @@ export async function runImportPipeline(files, onProgress) {
   )
 
   if (audioCount === 0) {
-    return {
-      audioCount,
-      lrcCount,
-      total,
-      trackIds,
-      uploaded: 0,
-      uploadFailed: 0,
-      tagged: 0,
-      tagFailed: 0,
-      cloud: false,
-    }
+    return emptyResult(audioCount, lrcCount, total, trackIds)
   }
 
-  emit('metadata', 0, 1)
-  await repairFilenameMetadata()
+  emit('metadata', 0, trackIds.length || 1)
+  await repairFilenameMetadata(trackIds)
   await enrichImportedTracksFromItunes(trackIds)
-  emit('metadata', 1, 1)
+  emit('metadata', trackIds.length || 1, trackIds.length || 1)
 
   emit('art', 0, 1)
   await ensureArtRepaired()
@@ -69,6 +77,9 @@ export async function runImportPipeline(files, onProgress) {
   let uploadFailed = 0
   let tagged = 0
   let tagFailed = 0
+  let syncFailed = false
+  let enrichFailed = false
+  let enriched = 0
 
   if (user) {
     const freshTracks = await loadTracksByIds(trackIds)
@@ -77,8 +88,7 @@ export async function runImportPipeline(files, onProgress) {
     if (pending.length) {
       const uploadResult = await uploadTracksByIds(
         pending.map((t) => t.id),
-        ({ done, total: tot, title }) =>
-          emit('upload', done, tot, title),
+        ({ done, total: tot, title }) => emit('upload', done, tot, title),
       )
       uploaded = uploadResult.uploaded
       uploadFailed = uploadResult.failed
@@ -87,8 +97,10 @@ export async function runImportPipeline(files, onProgress) {
     const forTags = await loadTracksByIds(trackIds)
     const tagTargets = forTags.filter((t) => t.storagePath)
     if (tagTargets.length) {
-      const tagResult = await enrichTracksHeuristic(user.id, tagTargets, ({ done, total: tot, title }) =>
-        emit('tags', done, tot, title),
+      const tagResult = await enrichTracksHeuristic(
+        user.id,
+        tagTargets,
+        ({ done, total: tot, title }) => emit('tags', done, tot, title),
       )
       tagged = tagResult.tagged
       tagFailed = tagResult.failed
@@ -98,9 +110,18 @@ export async function runImportPipeline(files, onProgress) {
     try {
       await syncBidirectional({ silent: true })
     } catch {
-      /* metadata already upserted during upload; sync is best-effort */
+      syncFailed = true
     }
     emit('sync', 1, 1)
+
+    emit('enrich', 0, 1)
+    const enrichRes = await postImportServerEnrich(trackIds)
+    if (enrichRes?.ok) {
+      enriched = enrichRes.processed ?? trackIds.length
+    } else if (enrichRes && !enrichRes.ok) {
+      enrichFailed = true
+    }
+    emit('enrich', 1, 1)
 
     emit('lyrics', 0, trackIds.length)
     await repairMissingLyrics(
@@ -110,7 +131,7 @@ export async function runImportPipeline(files, onProgress) {
     try {
       await syncBidirectional({ silent: true })
     } catch {
-      /* best-effort lyrics sync */
+      syncFailed = true
     }
   }
 
@@ -126,6 +147,27 @@ export async function runImportPipeline(files, onProgress) {
     tagged,
     tagFailed,
     cloud: Boolean(user),
+    syncFailed,
+    enrichFailed,
+    enriched,
+  }
+}
+
+/** @param {number} audioCount @param {number} lrcCount @param {number} total @param {string[]} trackIds */
+function emptyResult(audioCount, lrcCount, total, trackIds) {
+  return {
+    audioCount,
+    lrcCount,
+    total,
+    trackIds,
+    uploaded: 0,
+    uploadFailed: 0,
+    tagged: 0,
+    tagFailed: 0,
+    cloud: false,
+    syncFailed: false,
+    enrichFailed: false,
+    enriched: 0,
   }
 }
 

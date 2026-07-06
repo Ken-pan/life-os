@@ -28,6 +28,11 @@
     formatBytes,
     uploadPendingAudio,
   } from '$lib/cloudAudio.js'
+  import {
+    fetchPendingTagReviews,
+    fetchRecommendationHealth,
+    resolveTagReview,
+  } from '$lib/tagReview.js'
   import { toast } from '$lib/ui.svelte.js'
   import { setLocale } from '$lib/i18n/index.js'
 
@@ -45,6 +50,25 @@
   let uploading = $state(false)
   let uploadProgress = $state('')
   let uploadCurrent = $state('')
+  /** @type {import('$lib/tagReview.js').TagReviewRow[]} */
+  let tagReviews = $state([])
+  let health = $state({ playEvents: 0, embeddings: 0, pendingReviews: 0 })
+  let resolvingReviewId = $state('')
+
+  /** @param {unknown} proposed */
+  function formatProposedTags(proposed) {
+    if (!Array.isArray(proposed)) return ''
+    return proposed
+      .map((t) => (typeof t === 'string' ? t : t?.slug))
+      .filter(Boolean)
+      .join(', ')
+  }
+
+  /** @param {string} reason */
+  function tagReviewReasonLabel(reason) {
+    if (reason === 'llm_low_confidence') return t('settings.tagReviewReasonLlm')
+    return t('settings.tagReviewReasonLow')
+  }
 
   async function refreshCounts() {
     count = await trackCount()
@@ -54,6 +78,30 @@
     cloudStored = stats.cloud
     cloudLocalAudio = stats.localAudio
     cloudPendingBytes = stats.pendingBytes
+    if (auth.user) {
+      ;[tagReviews, health] = await Promise.all([
+        fetchPendingTagReviews(12),
+        fetchRecommendationHealth(),
+      ])
+    } else {
+      tagReviews = []
+      health = { playEvents: 0, embeddings: 0, pendingReviews: 0 }
+    }
+  }
+
+  /** @param {string} id @param {'approved' | 'rejected'} status */
+  async function onResolveReview(id, status) {
+    if (resolvingReviewId) return
+    resolvingReviewId = id
+    try {
+      const ok = await resolveTagReview(id, status)
+      if (ok) {
+        tagReviews = tagReviews.filter((r) => r.id !== id)
+        health = { ...health, pendingReviews: Math.max(0, health.pendingReviews - 1) }
+      }
+    } finally {
+      resolvingReviewId = ''
+    }
   }
 
   $effect(() => {
@@ -307,6 +355,79 @@
           </p>
         {/if}
       </div>
+    </section>
+
+    <section class="settings-block set-group">
+      <h3 class="block-title sg-title">{t('settings.recommendationHealth')}</h3>
+      <p class="block-desc" style="padding:0 18px 12px">
+        {t('settings.recommendationHealthDesc')}
+      </p>
+      <div class="set-row settings-row">
+        <div class="pref-copy">
+          <div class="pref-desc">
+            {t('settings.healthPlayEvents', { count: health.playEvents })}
+          </div>
+          <div class="pref-desc" style="margin-top:4px">
+            {t('settings.healthEmbeddings', { count: health.embeddings })}
+          </div>
+          <div class="pref-desc" style="margin-top:4px">
+            {t('settings.healthPendingReviews', { count: health.pendingReviews })}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-block set-group">
+      <h3 class="block-title sg-title">{t('settings.tagReview')}</h3>
+      <p class="block-desc" style="padding:0 18px 12px">
+        {t('settings.tagReviewDesc')}
+      </p>
+      {#if tagReviews.length === 0}
+        <p class="block-desc" style="padding:0 18px 16px;color:var(--t3)">
+          {t('settings.tagReviewEmpty')}
+        </p>
+      {:else}
+        <ul class="tag-review-list">
+          {#each tagReviews as row (row.id)}
+            <li class="tag-review-item">
+              <div class="tag-review-main">
+                <div class="pref-label">{row.title}</div>
+                {#if row.artist}
+                  <div class="pref-desc">{row.artist}</div>
+                {/if}
+                <div class="pref-desc" style="margin-top:4px;color:var(--t3)">
+                  {tagReviewReasonLabel(row.reason)}
+                </div>
+                {#if formatProposedTags(row.proposed_tags)}
+                  <div class="pref-desc" style="margin-top:4px">
+                    {t('settings.tagReviewTags', {
+                      tags: formatProposedTags(row.proposed_tags),
+                    })}
+                  </div>
+                {/if}
+              </div>
+              <div class="tag-review-actions">
+                <button
+                  class="btn-primary"
+                  type="button"
+                  disabled={resolvingReviewId === row.id}
+                  onclick={() => onResolveReview(row.id, 'approved')}
+                >
+                  {t('settings.tagReviewApprove')}
+                </button>
+                <button
+                  class="btn-secondary"
+                  type="button"
+                  disabled={resolvingReviewId === row.id}
+                  onclick={() => onResolveReview(row.id, 'rejected')}
+                >
+                  {t('settings.tagReviewReject')}
+                </button>
+              </div>
+            </li>
+          {/each}
+        </ul>
+      {/if}
     </section>
   {/if}
 

@@ -22,6 +22,8 @@
         return t('import.phaseUpload', { done: p.done, total: p.total });
       case 'tags':
         return t('import.phaseTags', { done: p.done, total: p.total });
+      case 'enrich':
+        return t('import.phaseEnrich');
       case 'sync':
         return t('import.phaseSync');
       case 'lyrics':
@@ -42,7 +44,7 @@
       }
     });
 
-    const { audioCount, lrcCount, total, cloud, uploaded, uploadFailed, tagged } = result;
+    const { audioCount, lrcCount, total, cloud, uploaded, uploadFailed, tagged, tagFailed, syncFailed, enrichFailed } = result;
 
     if (audioCount > 0) {
       await refreshQueueMetadata();
@@ -69,6 +71,9 @@
           }),
         );
       }
+      if (tagFailed > 0) toast(t('import.tagFailed', { count: tagFailed }));
+      if (syncFailed) toast(t('import.syncFailed'));
+      if (enrichFailed) toast(t('import.enrichFailed'));
     } else if (lrcCount > 0) {
       toast(t('import.doneMixed', { audio: audioCount, lrc: lrcCount }));
     } else if (audioCount > 0) {
