@@ -186,6 +186,7 @@ export function resolvePageBack(pathname) {
   if (pathname.startsWith('/album/') || pathname.startsWith('/artist/')) return '/browse';
   if (pathname.startsWith('/playlists/')) return '/playlists';
   if (pathname === '/import') return '/library';
+  if (pathname === '/speed-dial') return '/';
   if (pathname === '/liked') return '/playlists';
   if (pathname === '/auth') return '/settings';
   return null;
@@ -194,6 +195,7 @@ export function resolvePageBack(pathname) {
 /** @param {string} pathname @param {(k: string) => string} tr */
 export function resolvePageTitle(pathname, tr) {
   if (pathname === '/') return tr('home.title');
+  if (pathname === '/speed-dial') return tr('home.speedDial');
   if (pathname === '/library') return tr('library.title');
   if (pathname === '/browse') return tr('browse.title');
   if (pathname === '/playlists') return tr('playlists.title');

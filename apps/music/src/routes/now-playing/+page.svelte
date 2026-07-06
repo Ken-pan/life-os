@@ -5,6 +5,7 @@
   import PlayerControls from '$lib/components/PlayerControls.svelte';
   import TrackArt from '$lib/components/TrackArt.svelte';
   import LyricsPanel from '$lib/components/LyricsPanel.svelte';
+  import QueueList from '$lib/components/QueueList.svelte';
   import { swipeDismiss, swipeTrack } from '$lib/gestures.js';
   import { consumeNowPlayingReturn, ensureNowPlayingReturn } from '$lib/nav.js';
   import { player, nextTrack, prevTrack, togglePlay, refreshQueueMetadata, seek } from '$lib/player.svelte.js';
@@ -15,15 +16,14 @@
   import { S, setImmersiveViewMode } from '$lib/state.svelte.js';
 
   const track = $derived(player.queue[player.index] ?? null);
-  const immersiveMode = $derived(S.settings.immersiveViewMode === 'ambient' ? 'ambient' : 'lyrics');
+  const panelMode = $derived(S.settings.immersiveViewMode === 'queue' ? 'queue' : 'lyrics');
 
   let lyricsFetching = $state(false);
   let controlsRevealed = $state(true);
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let controlsIdleTimer;
 
-  const singAlong = $derived(immersiveMode === 'lyrics' && player.playing);
-  const ambientIdle = $derived(immersiveMode === 'ambient' && !controlsRevealed);
+  const singAlong = $derived(panelMode === 'lyrics' && player.playing);
 
   $effect(() => {
     const tr = track;
@@ -66,7 +66,7 @@
     clearTimeout(controlsIdleTimer);
     controlsIdleTimer = setTimeout(() => {
       controlsRevealed = false;
-    }, immersiveMode === 'ambient' ? 2200 : 2800);
+    }, 2800);
   }
 
   function revealControls() {
@@ -74,7 +74,7 @@
     scheduleControlsHide();
   }
 
-  /** @param {'lyrics' | 'ambient'} mode */
+  /** @param {'lyrics' | 'queue'} mode */
   function setMode(mode) {
     setImmersiveViewMode(mode);
     revealControls();
@@ -105,11 +105,10 @@
 
 <div
   class="now-playing now-playing--immersive"
-  class:now-playing--ambient={immersiveMode === 'ambient'}
+  class:now-playing--queue={panelMode === 'queue'}
   class:now-playing--sing-along={singAlong}
-  class:now-playing--listen-idle={immersiveMode === 'lyrics' && !player.playing}
+  class:now-playing--listen-idle={panelMode === 'lyrics' && !player.playing}
   class:now-playing--controls-revealed={controlsRevealed}
-  class:now-playing--ambient-idle={ambientIdle}
   role="region"
   aria-label={t('nowPlaying.title')}
   onpointermove={revealControls}
@@ -123,8 +122,8 @@
         type="button"
         role="tab"
         class="now-playing-mode-btn"
-        class:active={immersiveMode === 'lyrics'}
-        aria-selected={immersiveMode === 'lyrics'}
+        class:active={panelMode === 'lyrics'}
+        aria-selected={panelMode === 'lyrics'}
         onclick={() => setMode('lyrics')}
       >
         {t('nowPlaying.modeLyrics')}
@@ -133,11 +132,11 @@
         type="button"
         role="tab"
         class="now-playing-mode-btn"
-        class:active={immersiveMode === 'ambient'}
-        aria-selected={immersiveMode === 'ambient'}
-        onclick={() => setMode('ambient')}
+        class:active={panelMode === 'queue'}
+        aria-selected={panelMode === 'queue'}
+        onclick={() => setMode('queue')}
       >
-        {t('nowPlaying.modeAmbient')}
+        {t('nowPlaying.modeQueue')}
       </button>
     </div>
 
@@ -170,16 +169,26 @@
         </div>
       </header>
 
-      <section class="now-playing-lyrics-stage" aria-label={t('nowPlaying.lyrics')}>
-        <LyricsPanel
-          stage
-          singAlong={singAlong}
-          lyrics={track.lyrics}
-          currentTime={player.currentTime}
-          fetching={lyricsFetching}
-          seekable={seekable}
-          onSeek={seek}
-        />
+      <section
+        class="now-playing-lyrics-stage"
+        class:now-playing-queue-stage={panelMode === 'queue'}
+        aria-label={panelMode === 'lyrics' ? t('nowPlaying.lyrics') : t('nowPlaying.queue')}
+      >
+        {#if panelMode === 'lyrics'}
+          <LyricsPanel
+            stage
+            singAlong={singAlong}
+            lyrics={track.lyrics}
+            currentTime={player.currentTime}
+            fetching={lyricsFetching}
+            seekable={seekable}
+            onSeek={seek}
+          />
+        {:else}
+          <div class="now-playing-queue-wrap">
+            <QueueList />
+          </div>
+        {/if}
       </section>
     </div>
   {:else}
@@ -189,3 +198,23 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .now-playing-queue-wrap :global(.queue-list) {
+    flex: 1 1 auto;
+    min-height: min(52dvh, 520px);
+    padding: var(--space-1) 0;
+    max-width: none;
+  }
+
+  .now-playing-queue-wrap :global(.queue-list-foot) {
+    flex-shrink: 0;
+    padding-bottom: var(--space-2);
+  }
+
+  @media (min-width: 900px) {
+    .now-playing-queue-wrap :global(.queue-list) {
+      min-height: min(58dvh, 640px);
+    }
+  }
+</style>

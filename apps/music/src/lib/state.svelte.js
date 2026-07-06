@@ -18,15 +18,25 @@ const defaultState = () => ({
     libraryDensity: 'comfortable',
     /** Tint player chrome from album artwork (progress, glow, spotlight). */
     albumAmbience: true,
-    /** Now-playing immersive view: lyrics (sing-along) or ambient (cover-first). */
+    /** Now-playing panel: lyrics or queue. */
     immersiveViewMode: 'lyrics'
   }
 });
 
-/** @param {'lyrics' | 'ambient'} mode */
+/** @param {'lyrics' | 'queue'} mode */
 export function setImmersiveViewMode(mode) {
   S.settings.immersiveViewMode = mode;
   save();
+}
+
+/** @param {Record<string, unknown>} settings */
+function normalizeSettings(settings) {
+  const merged = { ...defaultState().settings, ...settings };
+  if (merged.immersiveViewMode === 'ambient') merged.immersiveViewMode = 'queue';
+  if (merged.immersiveViewMode !== 'lyrics' && merged.immersiveViewMode !== 'queue') {
+    merged.immersiveViewMode = 'lyrics';
+  }
+  return merged;
 }
 
 function load() {
@@ -35,7 +45,11 @@ function load() {
     const raw = localStorage.getItem(SKEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
-    return { ...defaultState(), ...parsed, settings: { ...defaultState().settings, ...parsed.settings } };
+    return {
+      ...defaultState(),
+      ...parsed,
+      settings: normalizeSettings(parsed.settings ?? {})
+    };
   } catch {
     return defaultState();
   }

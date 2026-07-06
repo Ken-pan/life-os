@@ -162,8 +162,14 @@ html {
   touch-action: manipulation;
 }
 
-.page-section-head a:hover {
+.page-section-head a:focus-visible {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .page-section-head a:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
 }
 
 .appbar-action {
@@ -252,9 +258,11 @@ html {
   transition: border-color var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
 }
 
-.quick-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .quick-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+    transform: translateY(-1px);
+  }
 }
 
 .quick-card-label {

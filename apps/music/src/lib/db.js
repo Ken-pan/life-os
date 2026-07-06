@@ -9,6 +9,15 @@ db.version(1).stores({
   recent: 'trackId, playedAt'
 });
 
+db.version(2).stores({
+  tracks: 'id, title, artist, album, albumKey, artistKey, duration, addedAt, playCount, liked, *words',
+  playlists: 'id, name, createdAt, updatedAt, kind',
+  playlistTracks: '++rowId, playlistId, trackId, position',
+  recent: 'trackId, playedAt',
+  interactions: '++id, entityType, entityId, action, source, createdAt, passive',
+  speedDialSlots: 'id, entityType, entityId, source, position, pinned, hidden, updatedAt'
+});
+
 /** @param {string} s */
 export function slugKey(s) {
   return (s || 'unknown').trim().toLowerCase() || 'unknown';
@@ -176,6 +185,17 @@ export async function getTracksByAlbum(albumKey) {
 /** @param {string} artistKey */
 export async function getTracksByArtist(artistKey) {
   const rows = await db.tracks.where('artistKey').equals(artistKey).sortBy('album');
+  return rows.map(hydrateTrack);
+}
+
+/** @returns {Promise<import('./types.js').Track[]>} */
+export async function getTopTracksByPlayCount(limit = 6) {
+  const rows = await db.tracks
+    .orderBy('playCount')
+    .reverse()
+    .filter((t) => (t.playCount || 0) > 0)
+    .limit(limit)
+    .toArray();
   return rows.map(hydrateTrack);
 }
 

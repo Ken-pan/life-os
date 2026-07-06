@@ -1,5 +1,6 @@
 import { browser } from '$app/environment';
 import { db, hydrateTrack, recordPlay } from './db.js';
+import { recordMusicInteraction, SKIP_THRESHOLD_MS } from './musicInteractions.js';
 import { resolvePlayUrl, resolvePlayUrlSync, hasPlayableSource } from './cloudAudio.js';
 import { registerAudioElement, resumeAudioContext } from './audioAnalyser.js';
 import {
@@ -17,6 +18,59 @@ let audio = null;
 let loadToken = 0;
 const SESSION_KEY = 'musicos_player_session';
 let sessionTimer = /** @type {ReturnType<typeof setTimeout> | null} */ (null);
+
+/** @type {{ source: import('./musicInteractions.js').PlaySource, passive: boolean, entityType: import('./musicInteractions.js').EntityType, entityId: string | null }} */
+let launchContext = {
+  source: 'unknown',
+  passive: true,
+  entityType: 'track',
+  entityId: null
+};
+
+/** @type {{ trackId: string | null, passive: boolean }} */
+let playSession = { trackId: null, passive: true };
+
+function markPassiveAdvance() {
+  launchContext = {
+    ...launchContext,
+    source: 'queue',
+    passive: true
+  };
+}
+
+/** Records skip/complete for the outgoing track before changing queue index. */
+function finalizePlaySession() {
+  const track = getCurrentTrack();
+  if (!track || !audio || playSession.trackId !== track.id) return;
+
+  const playedMs = Math.round((audio.currentTime || 0) * 1000);
+  const durationMs = Math.round((track.duration || player.duration || 0) * 1000);
+  const passive = playSession.passive;
+
+  if (!passive && playedMs > 0 && playedMs < SKIP_THRESHOLD_MS) {
+    void recordMusicInteraction({
+      entityType: 'track',
+      entityId: track.id,
+      action: 'skip',
+      source: launchContext.source,
+      passive: false,
+      playedMs,
+      durationMs: durationMs || undefined
+    });
+  } else if (durationMs > 0 && playedMs >= durationMs * 0.85) {
+    void recordMusicInteraction({
+      entityType: 'track',
+      entityId: track.id,
+      action: 'complete',
+      source: launchContext.source,
+      passive,
+      playedMs,
+      durationMs
+    });
+  }
+
+  playSession = { trackId: null, passive: true };
+}
 
 export const player = $state({
   queue: /** @type {import('./types.js').Track[]} */ ([]),
@@ -129,18 +183,25 @@ export function primeAudioPlayback() {
   void resumeAudioContext();
 }
 
-/** @param {import('./types.js').Track[]} tracks @param {number} [startIndex] */
-export function playTracks(tracks, startIndex = 0) {
+/** @param {import('./types.js').Track[]} tracks @param {number} [startIndex] @param {import('./musicInteractions.js').PlaySource} [source] @param {{ entityType?: import('./musicInteractions.js').EntityType, entityId?: string, passive?: boolean }} [meta] */
+export function playTracks(tracks, startIndex = 0, source = 'unknown', meta = {}) {
   if (!tracks.length) return;
+  const index = Math.max(0, Math.min(startIndex, tracks.length - 1));
+  launchContext = {
+    source,
+    passive: Boolean(meta.passive),
+    entityType: meta.entityType ?? 'track',
+    entityId: meta.entityId ?? tracks[index]?.id ?? null
+  };
   primeAudioPlayback();
   player.queue = tracks;
-  player.index = Math.max(0, Math.min(startIndex, tracks.length - 1));
+  player.index = index;
   void loadAndPlay();
 }
 
-/** @param {import('./types.js').Track} track */
-export function playTrack(track) {
-  playTracks([track], 0);
+/** @param {import('./types.js').Track} track @param {import('./musicInteractions.js').PlaySource} [source] */
+export function playTrack(track, source = 'unknown') {
+  playTracks([track], 0, source, { entityType: 'track', entityId: track.id });
 }
 
 /** @param {import('./types.js').Track[]} tracks */
@@ -168,6 +229,8 @@ export function togglePlay() {
 
 export function nextTrack() {
   if (!player.queue.length) return;
+  finalizePlaySession();
+  markPassiveAdvance();
   if (player.shuffle) {
     player.index = Math.floor(Math.random() * player.queue.length);
   } else if (player.index < player.queue.length - 1) {
@@ -180,6 +243,8 @@ export function nextTrack() {
 
 export function prevTrack() {
   if (!player.queue.length) return;
+  finalizePlaySession();
+  markPassiveAdvance();
   if (player.currentTime > 3) {
     seek(0);
     return;
@@ -334,6 +399,15 @@ async function loadAndPlay(opts = {}) {
   if (!ok || token !== loadToken) return;
 
   recordPlay(track.id);
+  void recordMusicInteraction({
+    entityType: launchContext.entityType,
+    entityId: launchContext.entityId || track.id,
+    action: 'play',
+    source: launchContext.source,
+    passive: launchContext.passive,
+    durationMs: track.duration ? track.duration * 1000 : undefined
+  });
+  playSession = { trackId: track.id, passive: launchContext.passive };
   updateMediaSession(track, true);
   scheduleSaveSession();
 }

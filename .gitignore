@@ -18,6 +18,7 @@ test-results
 **/*.log
 **/*.zip
 **/docs/ui-qa-screenshots
+**/.qa-screenshots
 **/screenshots
 **/.claude
 **/supabase/.temp

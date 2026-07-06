@@ -155,6 +155,12 @@
     background: var(--card);
   }
 
+  .library-filter:focus-visible {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
   .batch-bar {
     display: flex;
     align-items: center;

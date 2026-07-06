@@ -146,7 +146,7 @@
   }
 </script>
 
-<div class="wrap">
+<div class="wrap settings-page">
   <section class="settings-block set-group" style="margin-top:0">
     <h3 class="block-title sg-title">{t('settings.account')}</h3>
     {#if auth.user}
@@ -256,17 +256,17 @@
       <div class="pref-control seg settings-seg-full">
         <button
           type="button"
-          class:active={S.settings.immersiveViewMode !== 'ambient'}
+          class:active={S.settings.immersiveViewMode !== 'queue'}
           onclick={() => setImmersiveViewMode('lyrics')}
         >
           {t('nowPlaying.modeLyrics')}
         </button>
         <button
           type="button"
-          class:active={S.settings.immersiveViewMode === 'ambient'}
-          onclick={() => setImmersiveViewMode('ambient')}
+          class:active={S.settings.immersiveViewMode === 'queue'}
+          onclick={() => setImmersiveViewMode('queue')}
         >
-          {t('nowPlaying.modeAmbient')}
+          {t('nowPlaying.modeQueue')}
         </button>
       </div>
     </div>

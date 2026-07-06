@@ -226,15 +226,10 @@ async function desktopFlow(browser) {
     }
 
     // Queue utility pane
-    const btns = page.locator('.mini-player-actions button, .mini-player-actions a');
-    const n = await btns.count();
-    for (let i = 0; i < n; i++) {
-      const label = await btns.nth(i).getAttribute('aria-label');
-      if (label?.includes('队列')) {
-        await btns.nth(i).click();
-        break;
-      }
-    }
+    await page.locator('.mini-player.show').waitFor({ state: 'visible', timeout: 5000 });
+    const queueOpen = page.getByRole('button', { name: /播放队列|队列/ }).first();
+    await queueOpen.scrollIntoViewIfNeeded();
+    await queueOpen.click({ force: true });
     await wait(page);
     s = await shot(page, '09-desktop-utility-pane');
     if ((await page.locator('.utility-pane').count()) === 0) {
@@ -243,7 +238,51 @@ async function desktopFlow(browser) {
 
     await page.locator('.mini-player-link').click();
     await wait(page, 800);
-    await shot(page, '10-desktop-now-playing');
+    s = await shot(page, '10-desktop-now-playing-lyrics');
+
+    const modeToggle = page.locator('.now-playing-mode-toggle');
+    if ((await modeToggle.count()) === 0) {
+      issue('D-14', 'high', '正在播放', '缺少歌词/播放清单切换', '', s);
+    } else {
+      const tabs = await modeToggle.locator('.now-playing-mode-btn').allTextContents();
+      if (!tabs.some((t) => t.includes('歌词'))) {
+        issue('D-15', 'medium', '正在播放', '切换缺少「歌词」标签', tabs.join(' / '), s);
+      }
+      if (!tabs.some((t) => t.includes('播放清单') || t.includes('队列'))) {
+        issue('D-16', 'medium', '正在播放', '切换缺少「播放清单」标签', tabs.join(' / '), s);
+      }
+      if (tabs.some((t) => t.includes('封面') || t.includes('氛围'))) {
+        issue('D-17', 'high', '正在播放', '仍显示已移除的封面氛围选项', tabs.join(' / '), s);
+      }
+
+      const queueBtn = modeToggle.locator('.now-playing-mode-btn').filter({ hasText: /播放清单|队列/ });
+      if ((await queueBtn.count()) > 0) {
+        await queueBtn.click();
+        await wait(page, 600);
+        s = await shot(page, '10b-desktop-now-playing-queue');
+        if ((await page.locator('.now-playing-queue-wrap .queue-list').count()) === 0) {
+          issue('D-18', 'high', '正在播放', '播放清单面板未渲染', '', s);
+        }
+        const heroH = await page.evaluate(() => {
+          const el = document.querySelector('.now-playing--queue .now-playing-hero');
+          return el ? el.getBoundingClientRect().height : 0;
+        });
+        const queueH = await page.evaluate(() => {
+          const el = document.querySelector('.now-playing-queue-wrap .queue-list');
+          return el ? el.getBoundingClientRect().height : 0;
+        });
+        if (queueH > 0 && heroH > queueH * 1.2) {
+          issue(
+            'D-19',
+            'medium',
+            '正在播放',
+            '播放清单模式下 Hero 占用过高',
+            `hero=${Math.round(heroH)}px queue=${Math.round(queueH)}px`,
+            s
+          );
+        }
+      }
+    }
   }
 
   await page.goto(`${BASE}/import`);
@@ -251,7 +290,11 @@ async function desktopFlow(browser) {
   await shot(page, '12-desktop-import');
   await page.goto(`${BASE}/settings`);
   await wait(page);
-  await shot(page, '11-desktop-settings');
+  s = await shot(page, '11-desktop-settings');
+  const settingsSeg = await page.locator('.settings-block .pref-control.seg button').allTextContents();
+  if (settingsSeg.some((t) => t.includes('封面') || t.includes('氛围'))) {
+    issue('D-20', 'high', '设置', '设置页仍显示封面氛围选项', settingsSeg.join(' / '), s);
+  }
 
   // Sidebar active
   await page.goto(`${BASE}/library`);
@@ -317,9 +360,18 @@ async function mobileFlow(browser) {
     await row.click();
     await wait(page, 800);
     s = await shot(page, '25-mobile-mini-player');
-    await page.locator('.mini-player-link').click();
-    await wait(page, 800);
-    await shot(page, '27-mobile-now-playing');
+    await page.locator('a.mini-player-link').click();
+    await wait(page, 1200);
+    s = await shot(page, '27-mobile-now-playing-lyrics');
+
+    const queueBtn = page.locator('.now-playing-mode-btn').filter({ hasText: /播放清单|队列/ });
+    if ((await queueBtn.count()) > 0) {
+      await queueBtn.click();
+      await wait(page, 600);
+      await shot(page, '27b-mobile-now-playing-queue');
+    } else {
+      issue('M-06', 'high', '正在播放', '移动端缺少播放清单切换', '', s);
+    }
   } else {
     issue('M-05', 'high', '播放', '移动端资料库无曲目行', 'seed 后仍无 track-row', s);
   }

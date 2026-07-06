@@ -4,7 +4,7 @@
   import { playTrack, playTracks } from '$lib/player.svelte.js';
   import { toggleLike } from '$lib/db.js';
 
-  /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, selected?: boolean, onSelect?: (e: MouseEvent) => void }} */
+  /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
   let {
     track,
     tracks = [],
@@ -12,12 +12,13 @@
     showLike = true,
     compactActions = false,
     selected = false,
+    playSource = 'home',
     onSelect
   } = $props();
 
   function onPlay() {
-    if (tracks.length) playTracks(tracks, index);
-    else playTrack(track);
+    if (tracks.length) playTracks(tracks, index, playSource, { entityType: 'track', entityId: track.id });
+    else playTrack(track, playSource);
   }
 
   async function onLike() {

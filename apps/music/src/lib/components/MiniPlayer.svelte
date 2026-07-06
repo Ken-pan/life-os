@@ -1,4 +1,6 @@
 <script>
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import Icon from './Icon.svelte';
   import TrackArt from './TrackArt.svelte';
@@ -24,9 +26,31 @@
   const visible = $derived(Boolean(track) && !hidden);
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
   const volumeIcon = $derived(player.muted || player.volume === 0 ? 'volume-x' : 'volume-2');
+
+  let isDesktop = $state(false);
+
+  onMount(() => {
+    const mq = window.matchMedia('(min-width: 861px)');
+    isDesktop = mq.matches;
+    const onChange = () => {
+      isDesktop = mq.matches;
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  });
+
+  function openNowPlaying() {
+    markNowPlayingReturn(page.url.pathname);
+    void goto('/now-playing');
+  }
 </script>
 
-<div class="mini-player" class:show={visible} class:mini-player--expanded={visible} aria-hidden={!visible}>
+<div
+  class="mini-player"
+  class:show={visible}
+  class:mini-player--expanded={visible && isDesktop}
+  aria-hidden={!visible}
+>
   <div class="mini-player-top-progress">
     <input
       type="range"
@@ -44,7 +68,10 @@
     <a
       class="mini-player-link"
       href="/now-playing"
-      onclick={() => markNowPlayingReturn(page.url.pathname)}
+      onclick={(e) => {
+        e.preventDefault();
+        openNowPlaying();
+      }}
     >
       {#if track}
         <TrackArt artUrl={track.artUrl} seed={track.id} class="mini-player-art" shared />
@@ -53,6 +80,9 @@
         <div class="mini-player-title">{track?.title}</div>
         <div class="mini-player-artist">{track?.artist}</div>
       </div>
+      {#if !isDesktop}
+        <Icon name="chevron-up" size={16} class="mini-player-expand" />
+      {/if}
     </a>
 
     <div class="mini-player-center">
@@ -102,7 +132,10 @@
       class="mini-player-btn mini-player-btn--lyrics-mobile"
       href="/now-playing"
       aria-label={t('nowPlaying.lyrics')}
-      onclick={() => markNowPlayingReturn(page.url.pathname)}
+      onclick={(e) => {
+        e.preventDefault();
+        openNowPlaying();
+      }}
     >
       <Icon name="mic" size={18} />
     </a>
