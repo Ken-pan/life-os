@@ -64,6 +64,10 @@ export default {
     playing: '正在播放',
     paused: '已暂停'
   },
+  player: {
+    playFailed: '无法播放，请确认已登录并完成云同步',
+    noSource: '找不到音频：云端曲目需先登录并同步资料库'
+  },
   album: { title: '专辑' },
   artist: { title: '艺术家' },
   settings: {

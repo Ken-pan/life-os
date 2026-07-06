@@ -2,6 +2,7 @@ import { browser } from '$app/environment';
 import { createDebouncedTask } from '@life-os/sync';
 import { supabase } from './supabase.js';
 import { MUSIC_TABLES as T } from './supabaseTables.js';
+import { prefetchSignedUrls } from './cloudAudio.js';
 import { db, slugKey, trackWords, getAllTracks, getPlaylists, getPlaylistTracks } from './db.js';
 import { S, save } from './state.svelte.js';
 import { t } from './i18n/index.js';
@@ -188,6 +189,16 @@ async function pullCloud(userId) {
         position: row.position
       });
     }
+  }
+
+  if (snap.tracks.length) {
+    import('./import.js')
+      .then(({ repairGarbledMetadata }) => repairGarbledMetadata())
+      .catch(() => {});
+    const cloudPaths = snap.tracks
+      .map((row) => (typeof row.storage_path === 'string' ? row.storage_path : ''))
+      .filter(Boolean);
+    void prefetchSignedUrls(cloudPaths, 32);
   }
 }
 

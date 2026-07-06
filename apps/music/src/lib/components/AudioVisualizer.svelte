@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { getAnalyser } from '$lib/audioAnalyser.js';
+  import { getAnalyser, attachAnalyserWhenReady } from '$lib/audioAnalyser.js';
   import { player } from '$lib/player.svelte.js';
 
   let canvas = $state(null);
@@ -31,6 +31,7 @@
     const data = new Uint8Array(barCount);
 
     function draw() {
+      if (player.playing) void attachAnalyserWhenReady();
       const analyser = getAnalyser();
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;

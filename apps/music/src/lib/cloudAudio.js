@@ -54,18 +54,33 @@ function extForTrack(track) {
 
 /**
  * @param {string} path
+ * @returns {string | null}
+ */
+export function peekSignedAudioUrl(path) {
+  if (!path) return null;
+  const cached = signedUrlCache.get(path);
+  const now = Date.now();
+  if (cached && cached.expiresAt > now + 60_000) return cached.url;
+  return null;
+}
+
+/**
+ * @param {string} path
  * @param {number} [ttlSec]
  * @returns {Promise<string>}
  */
 export async function getSignedAudioUrl(path, ttlSec = SIGNED_TTL_SEC) {
   if (!path) throw new Error(t('cloudAudio.noPath'));
-  const cached = signedUrlCache.get(path);
-  const now = Date.now();
-  if (cached && cached.expiresAt > now + 60_000) return cached.url;
+  const hit = peekSignedAudioUrl(path);
+  if (hit) return hit;
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session) throw new Error(t('sync.notSignedIn'));
 
   const { data, error } = await supabase.storage.from(MUSIC_BUCKET).createSignedUrl(path, ttlSec);
   if (error || !data?.signedUrl) throw error || new Error(t('cloudAudio.signedFailed'));
 
+  const now = Date.now();
   signedUrlCache.set(path, {
     url: data.signedUrl,
     expiresAt: now + ttlSec * 1000
@@ -74,21 +89,45 @@ export async function getSignedAudioUrl(path, ttlSec = SIGNED_TTL_SEC) {
 }
 
 /**
- * Resolve a playable URL: prefer local blob, else signed cloud URL.
+ * Synchronous URL when already cached or local — keeps iOS user-gesture chain when possible.
  * @param {import('./types.js').Track} track
- * @returns {Promise<string>}
+ * @returns {string}
  */
-export async function resolvePlayUrl(track) {
+export function resolvePlayUrlSync(track) {
   if (!track) return '';
   if (track.objectUrl) return track.objectUrl;
   if (track.audioBlob && browser) {
     track.objectUrl = URL.createObjectURL(track.audioBlob);
     return track.objectUrl;
   }
-  if (track.storagePath) {
-    return getSignedAudioUrl(track.storagePath);
-  }
+  if (track.storagePath) return peekSignedAudioUrl(track.storagePath) || '';
   return '';
+}
+
+/**
+ * Resolve a playable URL: prefer local blob, else signed cloud URL.
+ * @param {import('./types.js').Track} track
+ * @returns {Promise<string>}
+ */
+export async function resolvePlayUrl(track) {
+  const sync = resolvePlayUrlSync(track);
+  if (sync) return sync;
+  if (track?.storagePath) return getSignedAudioUrl(track.storagePath);
+  return '';
+}
+
+/**
+ * Warm signed URL cache for cloud tracks (call after sync).
+ * @param {string[]} paths
+ * @param {number} [limit]
+ */
+export async function prefetchSignedUrls(paths, limit = 24) {
+  const unique = [...new Set(paths.filter(Boolean))];
+  const pending = unique.filter((p) => !peekSignedAudioUrl(p)).slice(0, limit);
+  if (!pending.length) return;
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return;
+  await Promise.all(pending.map((p) => getSignedAudioUrl(p).catch(() => {})));
 }
 
 /**

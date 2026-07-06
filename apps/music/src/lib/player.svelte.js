@@ -1,8 +1,10 @@
 import { browser } from '$app/environment';
 import { db, hydrateTrack, recordPlay } from './db.js';
-import { resolvePlayUrl } from './cloudAudio.js';
-import { bindAudioAnalyser, resumeAudioContext } from './audioAnalyser.js';
+import { resolvePlayUrl, resolvePlayUrlSync } from './cloudAudio.js';
+import { registerAudioElement, resumeAudioContext } from './audioAnalyser.js';
 import { bindMediaSessionHandlers, updateMediaSession } from './mediaSession.js';
+import { syncErrorMessage } from './sync.js';
+import { t } from './i18n/index.js';
 
 /** @type {HTMLAudioElement | null} */
 let audio = null;
@@ -23,12 +25,24 @@ export function getCurrentTrack() {
   return player.queue[player.index] ?? null;
 }
 
+/** @returns {HTMLAudioElement | null} */
+export function getAudioElement() {
+  return audio;
+}
+
+/** Prime output in the same user-gesture stack before async signed URL work. */
+export function primeAudioPlayback() {
+  ensureAudio();
+  void resumeAudioContext();
+}
+
 /** @param {import('./types.js').Track[]} tracks @param {number} [startIndex] */
 export function playTracks(tracks, startIndex = 0) {
   if (!tracks.length) return;
+  primeAudioPlayback();
   player.queue = tracks;
   player.index = Math.max(0, Math.min(startIndex, tracks.length - 1));
-  loadAndPlay();
+  void loadAndPlay();
 }
 
 /** @param {import('./types.js').Track} track */
@@ -41,15 +55,15 @@ export function appendToQueue(tracks) {
   player.queue = [...player.queue, ...tracks];
   if (!getCurrentTrack()) {
     player.index = 0;
-    loadAndPlay();
+    void loadAndPlay();
   }
 }
 
 export function togglePlay() {
   if (!audio || !getCurrentTrack()) return;
-  resumeAudioContext();
+  primeAudioPlayback();
   if (player.playing) audio.pause();
-  else audio.play().catch(() => {});
+  else void startPlayback(audio.src, loadToken, getCurrentTrack());
 }
 
 export function nextTrack() {
@@ -61,7 +75,7 @@ export function nextTrack() {
   } else if (player.repeat === 'all') {
     player.index = 0;
   } else return;
-  loadAndPlay();
+  void loadAndPlay();
 }
 
 export function prevTrack() {
@@ -76,7 +90,7 @@ export function prevTrack() {
     seek(0);
     return;
   }
-  loadAndPlay();
+  void loadAndPlay();
 }
 
 export function toggleShuffle() {
@@ -94,6 +108,72 @@ export function seek(t) {
   player.currentTime = t;
 }
 
+/** @param {HTMLAudioElement} el @param {number} [timeoutMs] */
+function waitCanPlay(el, timeoutMs = 12_000) {
+  if (el.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('timeout'));
+    }, timeoutMs);
+    const onReady = () => {
+      cleanup();
+      resolve();
+    };
+    const onErr = () => {
+      cleanup();
+      reject(el.error || new Error('media-error'));
+    };
+    const cleanup = () => {
+      clearTimeout(timer);
+      el.removeEventListener('canplay', onReady);
+      el.removeEventListener('error', onErr);
+    };
+    el.addEventListener('canplay', onReady, { once: true });
+    el.addEventListener('error', onErr, { once: true });
+  });
+}
+
+/** @param {string} msg */
+async function playbackToast(msg) {
+  const { toast } = await import('./ui.svelte.js');
+  toast(msg, { error: true });
+}
+
+/**
+ * @param {string} src
+ * @param {number} token
+ * @param {import('./types.js').Track} track
+ */
+async function startPlayback(src, token, track) {
+  if (!audio || token !== loadToken || getCurrentTrack()?.id !== track.id) return false;
+  if (!src) {
+    await playbackToast(t('player.noSource'));
+    return false;
+  }
+
+  if (audio.src !== src) {
+    audio.src = src;
+    audio.load();
+  }
+
+  await resumeAudioContext();
+
+  try {
+    await audio.play();
+    return true;
+  } catch {
+    try {
+      await waitCanPlay(audio);
+      await audio.play();
+      return true;
+    } catch {
+      await playbackToast(t('player.playFailed'));
+      return false;
+    }
+  }
+}
+
 async function loadAndPlay() {
   const track = getCurrentTrack();
   if (!track || !browser) return;
@@ -101,17 +181,24 @@ async function loadAndPlay() {
   if (!audio) return;
   const token = ++loadToken;
   hydrateTrack(track);
-  let src = '';
-  try {
-    src = await resolvePlayUrl(track);
-  } catch {
-    src = track.objectUrl || '';
+
+  let src = resolvePlayUrlSync(track);
+  if (!src) {
+    try {
+      src = await resolvePlayUrl(track);
+    } catch (err) {
+      await playbackToast(syncErrorMessage(err));
+      return;
+    }
   }
+
   if (token !== loadToken || getCurrentTrack()?.id !== track.id) return;
-  audio.src = src;
   player.duration = track.duration || 0;
-  resumeAudioContext();
-  if (src) audio.play().catch(() => {});
+  updateMediaSession(track, false);
+
+  const ok = await startPlayback(src, token, track);
+  if (!ok || token !== loadToken) return;
+
   recordPlay(track.id);
   updateMediaSession(track, true);
 }
@@ -119,7 +206,13 @@ async function loadAndPlay() {
 function ensureAudio() {
   if (audio || !browser) return;
   audio = new Audio();
-  bindAudioAnalyser(audio);
+  audio.preload = 'auto';
+  audio.playsInline = true;
+  audio.crossOrigin = 'anonymous';
+  audio.setAttribute('playsinline', '');
+  audio.setAttribute('webkit-playsinline', 'true');
+  registerAudioElement(audio);
+
   audio.addEventListener('timeupdate', () => {
     player.currentTime = audio?.currentTime || 0;
     player.duration = audio?.duration || player.duration;
@@ -135,13 +228,16 @@ function ensureAudio() {
   audio.addEventListener('ended', () => {
     if (player.repeat === 'one') {
       seek(0);
-      audio?.play();
+      void audio?.play();
       return;
     }
     nextTrack();
   });
   bindMediaSessionHandlers({
-    play: () => audio?.play(),
+    play: () => {
+      primeAudioPlayback();
+      void audio?.play();
+    },
     pause: () => audio?.pause(),
     next: nextTrack,
     prev: prevTrack
@@ -232,7 +328,7 @@ export function removeFromQueue(index) {
   }
   if (wasCurrent) {
     player.index = Math.min(index, q.length - 1);
-    loadAndPlay();
+    void loadAndPlay();
   } else if (index < player.index) {
     player.index -= 1;
   }
