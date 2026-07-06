@@ -1,144 +1,148 @@
 <script>
-  import '../app.css';
-  import '$lib/styles/weight-controls.css';
-  import { onMount } from 'svelte';
-  import { page } from '$app/state';
-  import AppBar from '$lib/components/AppBar.svelte';
-  import SideNav from '$lib/components/SideNav.svelte';
-  import BottomNav from '$lib/components/BottomNav.svelte';
-  import TimerWidget from '$lib/components/TimerWidget.svelte';
-  import WeightModal from '$lib/components/WeightModal.svelte';
-  import SetLogSheet from '$lib/components/SetLogSheet.svelte';
-  import SkipModal from '$lib/components/SkipModal.svelte';
-  import KnowledgeSheet from '$lib/components/KnowledgeSheet.svelte';
-  import FitnessToolSheet from '$lib/components/FitnessToolSheet.svelte';
-  import Toast from '$lib/components/Toast.svelte';
-  import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte';
-  import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js';
-  import { auth, initAuth } from '$lib/auth.svelte.js';
-  import { bindVisibilitySync } from '@life-os/sync';
-  import { scheduleAutoCloudPush, scheduleBidirectionalSync } from '$lib/sync.js';
-  import { initTimer } from '$lib/timer.svelte.js';
-  import { hookAudioUnlock } from '$lib/audio.js';
-  import { getProgram } from '$lib/programRuntime.js';
-  import { finalizeStaleSessions } from '$lib/session.js';
-  import { todayDayId } from '$lib/state.svelte.js';
-  import { toast } from '$lib/ui.svelte.js';
-  import { t, applyLocale } from '$lib/i18n/index.js';
-  import DocumentHead from '$lib/components/DocumentHead.svelte';
+  import '../app.css'
+  import '$lib/styles/weight-controls.css'
+  import { onMount } from 'svelte'
+  import { page } from '$app/state'
+  import AppBar from '$lib/components/AppBar.svelte'
+  import SideNav from '$lib/components/SideNav.svelte'
+  import BottomNav from '$lib/components/BottomNav.svelte'
+  import TimerWidget from '$lib/components/TimerWidget.svelte'
+  import WeightModal from '$lib/components/WeightModal.svelte'
+  import SetLogSheet from '$lib/components/SetLogSheet.svelte'
+  import SkipModal from '$lib/components/SkipModal.svelte'
+  import KnowledgeSheet from '$lib/components/KnowledgeSheet.svelte'
+  import FitnessToolSheet from '$lib/components/FitnessToolSheet.svelte'
+  import Toast from '$lib/components/Toast.svelte'
+  import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte'
+  import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
+  import { auth, initAuth } from '$lib/auth.svelte.js'
+  import { bindVisibilitySync } from '@life-os/sync'
+  import {
+    scheduleAutoCloudPush,
+    scheduleBidirectionalSync,
+  } from '$lib/sync.js'
+  import { initTimer } from '$lib/timer.svelte.js'
+  import { getProgram } from '$lib/programRuntime.js'
+  import { finalizeStaleSessions } from '$lib/session.js'
+  import { todayDayId } from '$lib/state.svelte.js'
+  import { toast } from '$lib/ui.svelte.js'
+  import { t, applyLocale } from '$lib/i18n/index.js'
+  import DocumentHead from '$lib/components/DocumentHead.svelte'
 
-  let { children } = $props();
+  let { children } = $props()
 
   const pageTitle = $derived.by(() => {
-    const p = page.url.pathname;
-    if (p === '/') return t('layout.titleToday');
-    if (p === '/program') return t('layout.titleProgram');
-    if (p === '/program/edit') return t('layout.titleProgramEdit');
-    if (p === '/discover') return t('layout.titleDiscover');
-    if (p === '/discover/tools') return t('layout.titleTools');
-    if (p === '/discover/records') return t('layout.titleRecords');
-    if (p === '/discover/stats') return t('layout.titleStats');
-    if (p === '/library') return t('layout.titleLibrary');
-    if (p === '/settings') return t('layout.titleSettings');
-    if (p === '/auth') return t('layout.titleAuth');
+    const p = page.url.pathname
+    if (p === '/') return t('layout.titleToday')
+    if (p === '/program') return t('layout.titleProgram')
+    if (p === '/program/edit') return t('layout.titleProgramEdit')
+    if (p === '/discover') return t('layout.titleDiscover')
+    if (p === '/discover/tools') return t('layout.titleTools')
+    if (p === '/discover/records') return t('layout.titleRecords')
+    if (p === '/discover/stats') return t('layout.titleStats')
+    if (p === '/library') return t('layout.titleLibrary')
+    if (p === '/settings') return t('layout.titleSettings')
+    if (p === '/auth') return t('layout.titleAuth')
 
-    const dayMatch = p.match(/^\/day\/([^/]+)(?:\/(focus|summary))?$/);
+    const dayMatch = p.match(/^\/day\/([^/]+)(?:\/(focus|summary))?$/)
     if (dayMatch) {
-      const day = getProgram().days[dayMatch[1]];
-      const cn = day?.cn ?? '';
-      if (dayMatch[2] === 'focus') return t('layout.titleFocus', { day: cn });
-      if (dayMatch[2] === 'summary') return t('layout.titleSummary', { day: cn });
-      if (day) return t('layout.titleDayOverview', { day: cn });
+      const day = getProgram().days[dayMatch[1]]
+      const cn = day?.cn ?? ''
+      if (dayMatch[2] === 'focus') return t('layout.titleFocus', { day: cn })
+      if (dayMatch[2] === 'summary')
+        return t('layout.titleSummary', { day: cn })
+      if (day) return t('layout.titleDayOverview', { day: cn })
     }
 
-    return t('layout.titleDefault');
-  });
+    return t('layout.titleDefault')
+  })
 
-  const documentLocale = $derived(S.settings.locale === 'en' ? 'en' : 'zh');
+  const documentLocale = $derived(S.settings.locale === 'en' ? 'en' : 'zh')
 
   const appBarHidden = $derived(
     /\/focus$|\/summary$|^\/day\/[^/]+$|^\/program\/edit$|^\/discover\/|^\/library$/.test(
-      page.url.pathname
-    )
-  );
+      page.url.pathname,
+    ),
+  )
 
   const appBarTitle = $derived.by(() => {
-    const p = page.url.pathname;
-    if (p === '/') return t('nav.today');
-    if (p === '/program') return t('program.title');
-    if (p === '/discover') return t('nav.discover');
-    if (p === '/settings') return t('settings.title');
-    if (p === '/auth') return t('auth.title');
-    return '';
-  });
+    const p = page.url.pathname
+    if (p === '/') return t('nav.today')
+    if (p === '/program') return t('program.title')
+    if (p === '/discover') return t('nav.discover')
+    if (p === '/settings') return t('settings.title')
+    if (p === '/auth') return t('auth.title')
+    return ''
+  })
 
   const appBarSubtitle = $derived.by(() => {
-    if (page.url.pathname === '/program') return getProgram().meta.name;
-    return '';
-  });
+    if (page.url.pathname === '/program') return getProgram().meta.name
+    return ''
+  })
 
   const appBarMeta = $derived.by(() => {
-    if (page.url.pathname !== '/') return '';
-    const day = getProgram().days[todayDayId()];
-    return t('home.appBarToday', { day: day?.cn ?? '' });
-  });
+    if (page.url.pathname !== '/') return ''
+    const day = getProgram().days[todayDayId()]
+    return t('home.appBarToday', { day: day?.cn ?? '' })
+  })
 
   const appBarBack = $derived.by(() => {
     if (page.url.pathname === '/auth') {
-      return { href: '/settings', label: t('nav.settings') };
+      return { href: '/settings', label: t('nav.settings') }
     }
-    return null;
-  });
+    return null
+  })
 
   onMount(() => {
-    applyTheme();
-    applyLocale();
+    applyTheme()
+    applyLocale()
 
-    const { finalized } = finalizeStaleSessions();
+    const { finalized } = finalizeStaleSessions()
     if (finalized) {
-      const msg = t('layout.autoFinalize', { count: finalized });
-      setTimeout(() => toast(msg), 1400);
-      scheduleAutoCloudPush();
+      const msg = t('layout.autoFinalize', { count: finalized })
+      setTimeout(() => toast(msg), 1400)
+      scheduleAutoCloudPush()
     }
-    const cleanupTheme = bindAppThemeSystemChange();
+    const cleanupTheme = bindAppThemeSystemChange()
 
-    let cleanupTimer = () => {};
-    const cleanupAudio = hookAudioUnlock();
-    const cleanupAuth = initAuth();
+    let cleanupTimer = () => {}
+    const cleanupAuth = initAuth()
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(() => {
-        cleanupTimer = initTimer();
-      }).catch(() => {
-        cleanupTimer = initTimer();
-      });
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then(() => {
+          cleanupTimer = initTimer()
+        })
+        .catch(() => {
+          cleanupTimer = initTimer()
+        })
     } else {
-      cleanupTimer = initTimer();
+      cleanupTimer = initTimer()
     }
 
     return () => {
-      cleanupTheme();
-      cleanupTimer();
-      cleanupAudio();
-      cleanupAuth();
-    };
-  });
+      cleanupTheme()
+      cleanupTimer()
+      cleanupAuth()
+    }
+  })
 
   $effect(() => {
-    S.settings.locale;
-    applyLocale();
-  });
+    S.settings.locale
+    applyLocale()
+  })
 
   /** 已登录时回到前台:双向同步(拉云端 + 推本机),适配多端 */
   $effect(() => {
-    if (!auth.ready || !auth.user) return;
+    if (!auth.ready || !auth.user) return
     return bindVisibilitySync(() => scheduleBidirectionalSync(), {
-      when: () => Boolean(auth.user)
-    });
-  });
+      when: () => Boolean(auth.user),
+    })
+  })
 </script>
 
-<DocumentHead appId="fitness" pageTitle={pageTitle} locale={documentLocale} />
+<DocumentHead appId="fitness" {pageTitle} locale={documentLocale} />
 
 <a class="skip-link" href="#main-content">{t('common.skipToContent')}</a>
 
