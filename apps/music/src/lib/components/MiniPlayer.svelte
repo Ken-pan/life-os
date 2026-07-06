@@ -19,6 +19,7 @@
   } from '$lib/player.svelte.js';
   import { openUtilityPane, toggleUtilityPane, openQueueDrawer } from '$lib/ui.svelte.js';
   import { isMiniPlayerHidden, markNowPlayingReturn } from '$lib/nav.js';
+  import { setImmersiveViewMode } from '$lib/state.svelte.js';
   import { t } from '$lib/i18n/index.js';
 
   const hidden = $derived(isMiniPlayerHidden(page.url.pathname));
@@ -39,8 +40,9 @@
     return () => mq.removeEventListener('change', onChange);
   });
 
-  function openNowPlaying() {
+  function openNowPlaying(mode) {
     markNowPlayingReturn(page.url.pathname);
+    if (mode) setImmersiveViewMode(mode);
     void goto('/now-playing');
   }
 </script>
@@ -70,7 +72,7 @@
       href="/now-playing"
       onclick={(e) => {
         e.preventDefault();
-        openNowPlaying();
+        openNowPlaying('player');
       }}
     >
       {#if track}
@@ -134,7 +136,7 @@
       aria-label={t('nowPlaying.lyrics')}
       onclick={(e) => {
         e.preventDefault();
-        openNowPlaying();
+        openNowPlaying('lyrics');
       }}
     >
       <Icon name="mic" size={18} />
@@ -145,7 +147,7 @@
       aria-label={t('nowPlaying.queue')}
       onclick={() => {
         if (window.matchMedia('(min-width: 861px)').matches) toggleUtilityPane('queue');
-        else openQueueDrawer();
+        else openNowPlaying('queue');
       }}
     >
       <Icon name="queue" size={18} />

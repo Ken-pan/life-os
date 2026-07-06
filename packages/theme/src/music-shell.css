@@ -1274,6 +1274,375 @@
   opacity: 0.88;
 }
 
+/* ── Apple Music 风移动端 Now Playing ── */
+@media (--life-os-mobile) {
+  .now-playing--apple-mobile {
+    min-height: 100dvh;
+    padding:
+      calc(var(--space-2) + var(--safe-top-effective, 0px))
+      max(var(--space-4), var(--safe-inline-effective, 16px))
+      var(--safe-bottom-effective, 0px);
+    justify-content: flex-start;
+    gap: var(--space-2);
+  }
+
+  .now-playing--apple-mobile .now-playing-mode-toggle {
+    display: none;
+  }
+
+  .np-mobile-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .np-mobile-cover-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(var(--space-5), 4vh, var(--space-8));
+    padding: var(--space-2) 0;
+  }
+
+  .np-mobile-art-wrap {
+    position: relative;
+    width: min(82vw, 340px);
+    max-width: 100%;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+  }
+
+  .np-mobile-art-wrap .now-playing-art-aura {
+    inset: -10%;
+    filter: blur(48px);
+    opacity: 0.62;
+  }
+
+  .np-mobile-art,
+  .np-mobile-art-wrap .now-playing-art {
+    width: 100%;
+    height: 100%;
+    border-radius: clamp(12px, 3vw, 18px);
+    box-shadow:
+      0 24px 64px rgba(0, 0, 0, 0.28),
+      0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .np-mobile-meta-row {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0 var(--space-1);
+  }
+
+  .np-mobile-meta-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .np-mobile-meta-copy .now-playing-title {
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
+    font-weight: 650;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .np-mobile-meta-copy .now-playing-artist {
+    margin-top: 4px;
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .np-mobile-meta-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .np-mobile-action-btn {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--t1) 8%, transparent);
+    color: var(--np-text-secondary, var(--t2));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .np-mobile-action-btn.is-liked {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+
+  .np-mobile-compact-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    flex-shrink: 0;
+    padding: var(--space-1) 0;
+  }
+
+  .np-mobile-compact-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .np-mobile-compact-art {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  .np-mobile-compact-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .np-mobile-compact-copy .now-playing-title {
+    font-size: var(--text-sm);
+    font-weight: 650;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .np-mobile-compact-copy .now-playing-artist {
+    font-size: var(--text-xs);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .np-mobile-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .np-mobile-stage .now-playing-lyrics,
+  .np-mobile-stage .now-playing-lyrics-empty {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .now-playing--apple-mobile .now-playing-lyrics-head {
+    display: none;
+  }
+
+  .np-mobile-stage .now-playing-lyrics--stage .now-playing-lyrics-body {
+    min-height: 0;
+    max-height: none;
+    font-size: clamp(1.375rem, 5.5vw, 1.75rem);
+    line-height: 1.35;
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 88%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 88%, transparent 100%);
+  }
+
+  .np-mobile-stage--queue {
+    padding-top: var(--space-1);
+  }
+
+  .np-mobile-queue-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .np-mobile-chrome {
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+  }
+
+  .np-mobile-progress input[type='range'] {
+    width: 100%;
+    height: 4px;
+    appearance: none;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(
+      to right,
+      var(--progress-fill, var(--t1)) var(--progress-pct, 0%),
+      color-mix(in srgb, var(--t1) 22%, transparent) var(--progress-pct, 0%)
+    );
+    accent-color: var(--track-accent, var(--accent));
+  }
+
+  .np-mobile-progress input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--t1, #fff);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+
+  .np-mobile-progress-times {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--np-text-tertiary, var(--t3));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .np-mobile-chrome .player-controls--apple {
+    max-width: none;
+    gap: clamp(var(--space-5), 8vw, var(--space-8));
+  }
+
+  .np-mobile-chrome .player-controls--apple .ctrl {
+    width: 44px;
+    height: 44px;
+    color: var(--np-text-primary, var(--t1));
+  }
+
+  .np-mobile-chrome .player-controls--apple .ctrl-main {
+    width: 56px;
+    height: 56px;
+    background: transparent;
+    color: var(--np-text-primary, var(--t1));
+    box-shadow: none;
+  }
+
+  .np-mobile-chrome .player-controls--apple .ctrl-main svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .np-mobile-volume {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+  }
+
+  .np-mobile-volume-icon {
+    flex-shrink: 0;
+    color: var(--np-text-secondary, var(--t2));
+    opacity: 0.72;
+  }
+
+  .np-mobile-volume input[type='range'] {
+    flex: 1 1 auto;
+    height: 4px;
+    appearance: none;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(
+      to right,
+      var(--t1, #fff) var(--volume-pct, 0%),
+      color-mix(in srgb, var(--t1) 22%, transparent) var(--volume-pct, 0%)
+    );
+  }
+
+  .np-mobile-volume input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    width: 0;
+    height: 0;
+  }
+
+  .np-mobile-volume-btn {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: none;
+    background: none;
+    color: var(--np-text-secondary, var(--t2));
+    padding: 0;
+    touch-action: manipulation;
+  }
+
+  .np-mobile-dock {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--space-1) var(--space-6) 0;
+  }
+
+  .np-mobile-dock-spacer {
+    flex: 1 1 auto;
+  }
+
+  .np-mobile-dock-btn {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--np-text-secondary, var(--t2));
+    touch-action: manipulation;
+    transition: background 160ms ease, color 160ms ease;
+  }
+
+  .np-mobile-dock-btn.active {
+    color: var(--np-text-primary, var(--t1));
+    background: color-mix(in srgb, var(--t1) 10%, transparent);
+  }
+
+  .np-mobile-status-hint {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--safe-bottom-effective, 0px) + var(--space-3));
+    transform: translateX(-50%);
+    z-index: 3;
+    max-width: min(92vw, 360px);
+    margin: 0;
+  }
+
+  .now-playing--apple-mobile.now-playing--player .np-mobile-chrome {
+    margin-top: auto;
+  }
+}
+
 .now-playing--queue .now-playing-queue-stage {
   flex: 1 1 auto;
   min-height: 0;
@@ -2173,6 +2542,14 @@
     );
   }
 
+  .music-app[data-wide-content='true'] .home-page {
+    --content-max: min(1400px, calc(100vw - var(--sidebar-w) - var(--page-gutter-desktop) * 2));
+  }
+
+  .music-app[data-wide-content='true'] .home-page .speed-dial-section {
+    margin-top: 0;
+  }
+
   .search-page .search-page-input {
     display: none;
   }
@@ -2212,6 +2589,14 @@
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
   background: var(--card);
+  color: var(--t2, var(--text-secondary));
+}
+
+.music-appbar .appbar-search {
+  background: color-mix(in srgb, var(--card) 78%, var(--t1) 10%);
+  border-color: color-mix(in srgb, var(--t1) 16%, var(--border));
+  color: var(--t2, var(--text-secondary));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--t1) 6%, transparent);
 }
 
 .appbar-search-input {
@@ -2229,6 +2614,11 @@
   opacity: 1;
 }
 
+.music-appbar .appbar-search-input::placeholder {
+  color: color-mix(in srgb, var(--t2, var(--text-secondary)) 72%, var(--t1, var(--text)));
+  opacity: 1;
+}
+
 .appbar-search-kbd {
   font-family: var(--mono);
   font-size: var(--text-2xs);
@@ -2237,6 +2627,12 @@
   border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--bg-2);
+}
+
+.music-appbar .appbar-search-kbd {
+  color: var(--t2, var(--text-secondary));
+  border-color: color-mix(in srgb, var(--t1) 14%, var(--border));
+  background: color-mix(in srgb, var(--t1) 5%, var(--bg-2, var(--card)));
 }
 
 .search-suggestions {

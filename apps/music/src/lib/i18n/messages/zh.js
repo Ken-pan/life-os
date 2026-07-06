@@ -177,6 +177,7 @@ export default {
     playing: '正在播放',
     paused: '已暂停',
     modeLabel: '播放视图',
+    modeCover: '封面',
     modeLyrics: '歌词',
     modeQueue: '播放清单'
   },
@@ -198,8 +199,8 @@ export default {
     albumAmbienceDesc: '从封面取色，用于进度条、光晕与播放卡片；导航与按钮仍使用品牌色。',
     albumAmbienceOn: '跟随',
     albumAmbienceOff: '关闭',
-    immersiveViewMode: '正在播放默认面板',
-    immersiveViewModeDesc: '进入正在播放页时默认显示歌词或播放清单；页内可随时切换。',
+    immersiveViewMode: '正在播放默认视图',
+    immersiveViewModeDesc: '进入正在播放页时的默认视图；页内可随时切换。',
     privacy: '隐私',
     privacyDesc: '默认保存在本机。登录后可选择将音频备份到私有 Supabase Storage（private bucket，播放时用 signed URL）。',
     iosBackground: 'iPhone 后台播放：请用 Safari「添加到主屏幕」安装本应用，锁屏后可通过控制中心/耳机控制。',

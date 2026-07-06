@@ -253,10 +253,17 @@
     <h3 class="block-title sg-title">{t('settings.immersiveViewMode')}</h3>
     <p class="block-desc" style="padding:0 18px 12px">{t('settings.immersiveViewModeDesc')}</p>
     <div class="set-row settings-row">
-      <div class="pref-control seg settings-seg-full">
+      <div class="pref-control seg settings-seg-full settings-seg-immersive">
         <button
           type="button"
-          class:active={S.settings.immersiveViewMode !== 'queue'}
+          class:active={S.settings.immersiveViewMode === 'player'}
+          onclick={() => setImmersiveViewMode('player')}
+        >
+          {t('nowPlaying.modeCover')}
+        </button>
+        <button
+          type="button"
+          class:active={S.settings.immersiveViewMode === 'lyrics'}
           onclick={() => setImmersiveViewMode('lyrics')}
         >
           {t('nowPlaying.modeLyrics')}

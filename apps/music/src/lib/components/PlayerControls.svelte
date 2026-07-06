@@ -13,12 +13,18 @@
   } from '$lib/player.svelte.js';
   import { openQueueDrawer } from '$lib/ui.svelte.js';
 
-  let { large = false, quiet = false, minimal = false } = $props();
+  let { large = false, quiet = false, minimal = false, hideProgress = false, apple = false } = $props();
 
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
 </script>
 
-<div class="player-controls" class:player-controls--large={large} class:player-controls--quiet={quiet} class:player-controls--minimal={minimal}>
+<div
+  class="player-controls"
+  class:player-controls--large={large}
+  class:player-controls--quiet={quiet}
+  class:player-controls--minimal={minimal}
+  class:player-controls--apple={apple}
+>
   {#if !minimal}
     <button class="ctrl" class:on={player.shuffle} type="button" aria-label="随机" onclick={toggleShuffle}>
       <Icon name="shuffle" size={18} />
@@ -40,22 +46,24 @@
   {/if}
 </div>
 
-<div class="player-progress" class:player-progress--quiet={quiet}>
-  <input
-    type="range"
-    min="0"
-    max={player.duration || 1}
-    step="0.1"
-    value={player.currentTime}
-    style={`--progress-pct: ${getProgressPct()}`}
-    aria-label="进度"
-    oninput={(e) => seek(Number(e.currentTarget.value))}
-  />
-  <div class="player-progress-times">
-    <span>{formatTime(player.currentTime)}</span>
-    <span>{formatTime(player.duration)}</span>
+{#if !hideProgress}
+  <div class="player-progress" class:player-progress--quiet={quiet}>
+    <input
+      type="range"
+      min="0"
+      max={player.duration || 1}
+      step="0.1"
+      value={player.currentTime}
+      style={`--progress-pct: ${getProgressPct()}`}
+      aria-label="进度"
+      oninput={(e) => seek(Number(e.currentTarget.value))}
+    />
+    <div class="player-progress-times">
+      <span>{formatTime(player.currentTime)}</span>
+      <span>{formatTime(player.duration)}</span>
+    </div>
   </div>
-</div>
+{/if}
 
 {#if large && !minimal}
   <button class="now-playing-queue-btn" type="button" onclick={openQueueDrawer}>

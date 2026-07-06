@@ -475,6 +475,12 @@ export function formatTime(sec) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+/** @param {number} current @param {number} duration */
+export function formatTimeRemaining(current, duration) {
+  const rem = Math.max(0, (duration || 0) - (current || 0));
+  return `-${formatTime(rem)}`;
+}
+
 export function getProgressPct() {
   return player.duration > 0 ? `${(player.currentTime / player.duration) * 100}%` : '0%';
 }

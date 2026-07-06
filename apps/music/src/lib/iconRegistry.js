@@ -22,8 +22,9 @@ import Plus from '@lucide/svelte/icons/plus';
 import Music from '@lucide/svelte/icons/music';
 import Ellipsis from '@lucide/svelte/icons/ellipsis';
 import ChevronRight from '@lucide/svelte/icons/chevron-right';
-import Volume2 from '@lucide/svelte/icons/volume-2';
-import VolumeX from '@lucide/svelte/icons/volume-x';
+  import Volume2 from '@lucide/svelte/icons/volume-2';
+  import Volume1 from '@lucide/svelte/icons/volume-1';
+  import VolumeX from '@lucide/svelte/icons/volume-x';
 import Mic from '@lucide/svelte/icons/mic-vocal';
 import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
 import Filter from '@lucide/svelte/icons/filter';
@@ -58,6 +59,7 @@ export const ICONS = {
   ellipsis: Ellipsis,
   'chevron-right': ChevronRight,
   'volume-2': Volume2,
+  'volume-1': Volume1,
   'volume-x': VolumeX,
   mic: Mic,
   'arrow-up-down': ArrowUpDown,

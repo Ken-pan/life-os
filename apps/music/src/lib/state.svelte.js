@@ -18,12 +18,12 @@ const defaultState = () => ({
     libraryDensity: 'comfortable',
     /** Tint player chrome from album artwork (progress, glow, spotlight). */
     albumAmbience: true,
-    /** Now-playing panel: lyrics or queue. */
-    immersiveViewMode: 'lyrics'
+    /** Now-playing panel: cover (player), lyrics, or queue. */
+    immersiveViewMode: 'player'
   }
 });
 
-/** @param {'lyrics' | 'queue'} mode */
+/** @param {'player' | 'lyrics' | 'queue'} mode */
 export function setImmersiveViewMode(mode) {
   S.settings.immersiveViewMode = mode;
   save();
@@ -33,8 +33,12 @@ export function setImmersiveViewMode(mode) {
 function normalizeSettings(settings) {
   const merged = { ...defaultState().settings, ...settings };
   if (merged.immersiveViewMode === 'ambient') merged.immersiveViewMode = 'queue';
-  if (merged.immersiveViewMode !== 'lyrics' && merged.immersiveViewMode !== 'queue') {
-    merged.immersiveViewMode = 'lyrics';
+  if (
+    merged.immersiveViewMode !== 'player' &&
+    merged.immersiveViewMode !== 'lyrics' &&
+    merged.immersiveViewMode !== 'queue'
+  ) {
+    merged.immersiveViewMode = 'player';
   }
   return merged;
 }

@@ -11,7 +11,7 @@
   import Icon from './Icon.svelte';
   import { t } from '$lib/i18n/index.js';
 
-  /** @type {number | null} */
+  let { compact = false } = $props();
   let dragFrom = $state(null);
   /** @type {number | null} */
   let touchFrom = $state(null);
@@ -62,7 +62,7 @@
   }
 </script>
 
-<div class="queue-list" role="list">
+<div class="queue-list" class:queue-list--compact={compact} role="list">
   {#each player.queue as track, i (track.id)}
     <div
       class="queue-row"
@@ -104,7 +104,7 @@
   {/if}
 </div>
 
-{#if player.queue.length}
+{#if player.queue.length && !compact}
   <div class="queue-list-foot">
     <button class="btn-ghost" type="button" onclick={clearQueue}>{t('nowPlaying.clearQueue')}</button>
     <button
@@ -193,7 +193,12 @@
     touch-action: manipulation;
   }
 
-  .queue-move-btn:disabled {
-    opacity: 0.28;
+  .queue-list--compact + .queue-list-foot,
+  .queue-list--compact ~ .queue-list-foot {
+    display: none;
+  }
+
+  .queue-list--compact .queue-move-controls {
+    display: none;
   }
 </style>
