@@ -11,6 +11,10 @@ import { execFileSync } from 'node:child_process'
 import { mkdir, writeFile, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  canonicalTrackKey,
+  findSeedTrack as resolveSeedTrack,
+} from './lib/trackIdentity.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const MUSIC_ROOT = join(__dirname, '..')
@@ -162,35 +166,20 @@ const SEED_SPECS = [
   { artist: 'Dua Lipa', title: 'Hallucinate' },
   { artist: 'Dua Lipa', title: 'Houdini' },
   { artist: 'RAYE', title: 'Escapism.' },
-  { artist: 'Tate McRae', title: 'greedy' },
-  { artist: 'Madison Beer', title: 'make you mine' },
+  { artist: 'Tate McRae', title: 'exes' },
+  { artist: 'Madison Beer', title: '15 MINUTES' },
   { artist: 'Connor Price', title: 'Spinnin' },
-  { artist: 'bbno$', title: 'edamame' },
+  { artist: 'bbno$', title: 'Lalala' },
   { artist: 'aespa', title: 'Whiplash' },
   { artist: 'XG', title: 'WOKE UP' },
-  { artist: 'Anyma', title: 'Syren' },
-  { artist: 'Megan Thee Stallion', title: 'Mamushi' },
+  { artist: 'Megan Thee Stallion', title: 'Sweetest Pie' },
   { artist: 'Halsey', title: 'I am not a woman' },
+  { artist: 'Charli xcx', title: 'Apple' },
 ]
 
 /** @param {object[]} tracks @param {string} artist @param {string} title */
 function findSeedTrack(tracks, artist, title) {
-  const na = norm(artist)
-  const nt = norm(title)
-  return (
-    tracks.find(
-      (t) => norm(t.artist).includes(na) && norm(t.title).includes(nt),
-    ) ??
-    tracks.find(
-      (t) =>
-        norm(t.artist).includes(na) &&
-        norm(t.title).startsWith(nt.split(' ')[0]),
-    ) ??
-    tracks.find(
-      (t) =>
-        norm(t.title).includes(nt) && norm(t.artist).includes(na.split(' ')[0]),
-    )
-  )
+  return resolveSeedTrack(tracks, artist, title)
 }
 
 /** @param {string} trackId */
@@ -293,6 +282,7 @@ async function main() {
     dictRows,
     tagRows,
     playRows,
+    recEventRows,
     reviewRows,
     embedRows
   try {
@@ -303,6 +293,7 @@ async function main() {
       dictRows,
       tagRows,
       playRows,
+      recEventRows,
       reviewRows,
       embedRows,
     ] = await Promise.all([
@@ -312,6 +303,7 @@ async function main() {
       fetchAllGlobal('tag_dictionary'),
       fetchAll('track_tags', 'track_id'),
       fetchAll('play_events', 'created_at'),
+      fetchAll('recommendation_events', 'created_at'),
       fetchAll('tag_review_queue', 'created_at'),
       fetchAll('track_embeddings', 'track_id'),
     ])
@@ -368,7 +360,7 @@ async function main() {
   /** @type {Map<string, number>} */
   const titleArtistCount = new Map()
   for (const m of meta) {
-    const k = `${norm(m.artist)}::${norm(m.title)}`
+    const k = canonicalTrackKey(m.title, m.artist)
     titleArtistCount.set(k, (titleArtistCount.get(k) || 0) + 1)
   }
 
@@ -403,7 +395,7 @@ async function main() {
     const contextSlugs = contextRows.map((t) => t.tag_slug)
 
     const hasNeedsReviewTag = tags.some((t) => t.tag_slug === 'needs-review')
-    const dupKey = `${norm(m.artist)}::${norm(m.title)}`
+    const dupKey = canonicalTrackKey(m.title, m.artist)
     const suspiciousArtist =
       norm(m.artist).length <= 3 &&
       genreSlugs.some((g) => ['k-pop', 'k-pop-solo', 'lang-ko'].includes(g)) &&
@@ -422,11 +414,12 @@ async function main() {
       has_embedding: Boolean(emb),
       bitrate_kbps: e.bitrate_kbps,
       source_quality: e.source_quality,
-      duplicateSuspect: (titleArtistCount.get(dupKey) || 0) > 1,
+      duplicateSuspect: Boolean(e.is_duplicate || e.duplicate_of),
       suspiciousArtist,
     })
 
-    const durationSec = Number(m.duration) || null
+    const durationSec =
+      m.duration != null && Number(m.duration) > 0 ? Number(m.duration) : null
     const sizeMb = m.size_bytes
       ? Number((Number(m.size_bytes) / (1024 * 1024)).toFixed(2))
       : null
@@ -438,6 +431,9 @@ async function main() {
       artist: m.artist,
       album: m.album,
       duration_sec: durationSec,
+      canonical_track_id: e.canonical_track_id ?? m.track_id,
+      duplicate_of: e.duplicate_of ?? '',
+      is_primary_version: e.is_duplicate ? 'no' : 'yes',
       storage_path: m.storage_path ?? '',
       file_size_mb: sizeMb,
       codec: e.codec ?? '',
@@ -657,25 +653,36 @@ async function main() {
   let smokeSkip = 0
 
   for (const spec of SEED_SPECS) {
-    const seed = findSeedTrack(meta, spec.artist, spec.title)
-    if (!seed) {
+    const seedResult = findSeedTrack(meta, spec.artist, spec.title)
+    if (!seedResult.track) {
       smokeSkip += 1
       smokeJson.push({
         seed: { track_id: null, title: spec.title, artist: spec.artist },
         mode: 'same_vibe',
         skipped: true,
-        skip_reason: 'Track not found in library',
+        skip_reason: seedResult.reason ?? 'seed_not_found',
+        near_candidates: seedResult.candidates ?? [],
         results: [],
-        issues: ['seed_not_found'],
+        issues: [seedResult.reason ?? 'seed_not_found'],
       })
       continue
     }
+
+    const seed = seedResult.track
 
     try {
       const results = await callGetRecommendations(seed.track_id)
       /** @type {string[]} */
       const issues = []
       if (!results.length) issues.push('empty_results')
+      if (seedResult.match === 'fuzzy') issues.push('seed_fuzzy_match')
+
+      const seenKeys = new Set()
+      for (const r of results) {
+        const k = canonicalTrackKey(r.title, r.artist)
+        if (seenKeys.has(k)) issues.push('duplicate_in_results')
+        seenKeys.add(k)
+      }
 
       const enrichedResults = results.map((r, i) => {
         const rt = tagsByTrack.get(r.track_id) || []
@@ -710,6 +717,7 @@ async function main() {
           track_id: seed.track_id,
           title: seed.title,
           artist: seed.artist,
+          match: seedResult.match,
         },
         mode: 'same_vibe',
         results: enrichedResults,
@@ -783,6 +791,9 @@ async function main() {
   const withBpm = (audioRows || []).filter(
     (a) => a.bpm != null && Number(a.bpm) > 0,
   ).length
+  const withDuration = meta.filter(
+    (m) => m.duration != null && Number(m.duration) > 0,
+  ).length
   const withEmbed = (embedRows || []).length
   const withVibe = flatTracks.filter(
     (t) => String(t.vibe_tags).length > 0,
@@ -812,6 +823,7 @@ async function main() {
       tag_dictionary: dictRows?.length || 0,
       audio_features: audioRows?.length || 0,
       play_events: playRows?.length || 0,
+      recommendation_events: recEventRows?.length || 0,
       review_queue_pending: (reviewRows || []).filter(
         (r) => r.status === 'pending',
       ).length,
@@ -832,6 +844,9 @@ async function main() {
         : 0,
       context_coverage_pct: meta.length
         ? Math.round((withContext / meta.length) * 1000) / 10
+        : 0,
+      duration_coverage_pct: meta.length
+        ? Math.round((withDuration / meta.length) * 1000) / 10
         : 0,
     },
     top_tags: {
@@ -857,6 +872,9 @@ async function main() {
     'artist',
     'album',
     'duration_sec',
+    'canonical_track_id',
+    'duplicate_of',
+    'is_primary_version',
     'storage_path',
     'file_size_mb',
     'codec',
@@ -1109,6 +1127,7 @@ async function main() {
     position_sec: p.position_sec ?? '',
     played_ratio: p.played_ratio ?? '',
     context: p.context ?? '',
+    metadata: p.metadata ? JSON.stringify(p.metadata) : '',
     created_at: p.created_at,
   }))
   await writeFile(
@@ -1124,9 +1143,50 @@ async function main() {
         'position_sec',
         'played_ratio',
         'context',
+        'metadata',
         'created_at',
       ],
       playCsv,
+    ),
+    'utf8',
+  )
+
+  const recEventCsv = (recEventRows || []).map((r) => ({
+    id: r.id,
+    user_id: r.user_id,
+    source_track_id: r.source_track_id ?? '',
+    source_title: metaById.get(r.source_track_id)?.title ?? '',
+    recommended_track_id: r.recommended_track_id,
+    recommended_title: metaById.get(r.recommended_track_id)?.title ?? '',
+    event_type: r.event_type,
+    recommendation_mode: r.recommendation_mode ?? '',
+    recommendation_rank: r.recommendation_rank ?? '',
+    recommendation_score: r.recommendation_score ?? '',
+    matched_tags: (r.matched_tags || []).join('; '),
+    request_id: r.request_id ?? '',
+    context: r.context ?? '',
+    created_at: r.created_at,
+  }))
+  await writeFile(
+    join(outDir, '07b_recommendation_events.csv'),
+    toCsv(
+      [
+        'id',
+        'user_id',
+        'source_track_id',
+        'source_title',
+        'recommended_track_id',
+        'recommended_title',
+        'event_type',
+        'recommendation_mode',
+        'recommendation_rank',
+        'recommendation_score',
+        'matched_tags',
+        'request_id',
+        'context',
+        'created_at',
+      ],
+      recEventCsv,
     ),
     'utf8',
   )
@@ -1296,6 +1356,7 @@ ${topTags.map((t, i) => `${i + 1}. \`${t.slug}\` (${t.namespace}) — ${t.count}
 | 维度 | 覆盖率 |
 |------|--------|
 | BPM | ${summary.coverage.bpm_coverage_pct}% |
+| Duration | ${summary.coverage.duration_coverage_pct}% |
 | Embedding | ${summary.coverage.embedding_coverage_pct}% |
 | Vibe tags | ${summary.coverage.vibe_coverage_pct}% |
 | Context tags | ${summary.coverage.context_coverage_pct}% |

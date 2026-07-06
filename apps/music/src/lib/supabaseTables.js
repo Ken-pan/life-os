@@ -11,5 +11,6 @@ export const MUSIC_TABLES = {
   trackAudioFeatures: 'track_audio_features',
   trackEmbeddings: 'track_embeddings',
   playEvents: 'play_events',
-  tagReviewQueue: 'tag_review_queue'
-};
+  recommendationEvents: 'recommendation_events',
+  tagReviewQueue: 'tag_review_queue',
+}
