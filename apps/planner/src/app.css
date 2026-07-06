@@ -559,17 +559,81 @@ html, body {
 }
 
 .today-closed-orb {
-  width: 56px;
-  height: 56px;
+  position: relative;
+  width: 72px;
+  height: 72px;
   margin: 0 auto var(--space-3);
+}
+
+.today-closed-orb-ring {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  border: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.today-closed-orb-ring--outer {
+  animation: today-closed-breathe 2.8s ease-in-out infinite;
+}
+
+.today-closed-orb-ring--inner {
+  inset: 8px;
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
   background: radial-gradient(
-    circle at 50% 42%,
-    color-mix(in srgb, var(--accent) 35%, transparent),
-    transparent 68%
+    circle at 50% 38%,
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    transparent 72%
   );
-  animation: today-closed-breathe 2.4s ease-in-out infinite;
+}
+
+.today-closed-orb-core {
+  position: absolute;
+  inset: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.today-view-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin-bottom: var(--stack-section);
+  padding: 3px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+}
+
+.today-view-toggle-btn {
+  min-height: var(--tap-min, 40px);
+  padding: var(--space-2);
+  border-radius: calc(var(--radius-control) - 3px);
+  color: var(--t2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
+}
+
+.today-view-toggle-btn.on {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.day-schedule-panel {
+  margin-bottom: var(--stack-section);
+}
+
+.schedule-toolbar-date {
+  min-width: 88px;
+  color: var(--t1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
 }
 
 @keyframes today-closed-breathe {
@@ -718,7 +782,7 @@ html, body {
   height: 6px;
   margin-top: 8px;
   border-radius: 50%;
-  background: var(--t3);
+  background: color-mix(in srgb, var(--t2) 45%, var(--t3));
   flex-shrink: 0;
 }
 
@@ -771,7 +835,7 @@ html, body {
 
 .task-title.done-text {
   text-decoration: line-through;
-  color: var(--t3);
+  color: color-mix(in srgb, var(--t2) 78%, var(--t3));
 }
 
 .task-meta {
@@ -1727,11 +1791,11 @@ html, body {
 .schedule-popover-bg {
   position: fixed;
   inset: 0;
-  z-index: var(--z-sheet, 80);
+  z-index: var(--z-sheet, 100);
   display: grid;
   place-items: center;
   padding: var(--space-4);
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.52);
 }
 
 .schedule-popover {
@@ -1822,14 +1886,23 @@ html, body {
 }
 
 .schedule-popover-conflict {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
   margin: 0 0 var(--space-3);
   padding: var(--space-2) var(--space-2-5);
   border-radius: var(--radius-control);
-  border: 1px solid color-mix(in srgb, var(--warning) 35%, var(--border));
-  background: color-mix(in srgb, var(--warning) 10%, transparent);
-  color: var(--t2);
+  border: 1px solid color-mix(in srgb, var(--warning) 55%, var(--border));
+  background: color-mix(in srgb, var(--warning) 16%, var(--card));
+  color: var(--t1);
   font-size: var(--text-xs);
   line-height: 1.45;
+}
+
+.schedule-popover-conflict .icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: color-mix(in srgb, var(--warning) 85%, var(--t1));
 }
 
 .schedule-chip--preset {

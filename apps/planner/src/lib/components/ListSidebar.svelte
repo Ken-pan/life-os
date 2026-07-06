@@ -10,6 +10,7 @@
   const settingsLink = $derived(buildSettingsNavItem(t));
   const lists = $derived(userLists());
   const path = $derived(page.url.pathname);
+  const search = $derived(page.url.search);
 </script>
 
 <aside class="sidebar" aria-label={t('nav.mainAria')}>
@@ -29,9 +30,9 @@
         {#each group.items as link (link.href)}
           <a
             class="nav-item"
-            class:active={link.match(path)}
+            class:active={link.match(path, search)}
             href={link.href}
-            aria-current={link.match(path) ? 'page' : undefined}
+            aria-current={link.match(path, search) ? 'page' : undefined}
           >
             <Icon name={link.icon} size={18} strokeWidth={1.75} />
             <span>{link.label}</span>

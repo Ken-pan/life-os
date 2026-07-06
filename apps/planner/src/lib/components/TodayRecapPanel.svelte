@@ -10,9 +10,10 @@
     progress: { done: number, total: number, remaining: number },
     doneToday: import('$lib/types.js').Task[],
     nextTask: import('$lib/types.js').Task | null,
-    unscheduledCount?: number
+    unscheduledCount?: number,
+    onOpenTimeline?: () => void
   }} */
-  let { summary, progress, doneToday, nextTask, unscheduledCount = 0 } = $props();
+  let { summary, progress, doneToday, nextTask, unscheduledCount = 0, onOpenTimeline } = $props();
 
   const previewDone = $derived(doneToday.slice(0, 5));
 </script>
@@ -64,7 +65,7 @@
 
   <div class="today-recap-foot">
     {#if unscheduledCount > 0}
-      <button type="button" class="today-progress-chip" onclick={() => goto('/schedule')}>
+      <button type="button" class="today-progress-chip" onclick={() => onOpenTimeline?.()}>
         {t('schedule.planToday', { count: unscheduledCount })}
       </button>
     {/if}

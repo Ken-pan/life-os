@@ -20,8 +20,9 @@
   const primaryItems = $derived(buildPrimaryNavItems(t));
   const moreGroups = $derived(buildMoreNavGroups(t, userLists(), listLabel));
   const pathname = $derived(page.url.pathname);
+  const search = $derived(page.url.search);
   const primaryTab = $derived(resolvePrimaryNavTab(pathname));
-  const moreActive = $derived(isMoreNavActive(pathname));
+  const moreActive = $derived(isMoreNavActive(pathname, search));
   const hidden = $derived(taskEditor.open || isNavChromeHidden(pathname));
 
   $effect(() => {
@@ -75,6 +76,7 @@
     title={t('common.more')}
     groups={moreGroups}
     {pathname}
+    search={search}
     onClose={() => {
       moreOpen = false;
     }}

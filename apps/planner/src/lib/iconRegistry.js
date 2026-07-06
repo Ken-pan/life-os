@@ -18,6 +18,7 @@ import Trash2 from '@lucide/svelte/icons/trash-2';
 import Pencil from '@lucide/svelte/icons/pencil';
 import Ellipsis from '@lucide/svelte/icons/ellipsis';
 import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
 /** @type {Record<string, import('svelte').Component>} */
 export const ICONS = {
@@ -40,5 +41,6 @@ export const ICONS = {
   trash: Trash2,
   pencil: Pencil,
   ellipsis: Ellipsis,
-  'rotate-ccw': RotateCcw
+  'rotate-ccw': RotateCcw,
+  'alert-triangle': TriangleAlert,
 };

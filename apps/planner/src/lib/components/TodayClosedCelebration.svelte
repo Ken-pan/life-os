@@ -1,15 +1,15 @@
 <script>
-  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { t } from '$lib/i18n/index.js';
   import { todayKey } from '$lib/state.svelte.js';
+  import Icon from './Icon.svelte';
 
   /** @type {{ stats: { tasks: number, habits: number, focus: number, points: number }, onDismiss?: () => void }} */
   let { stats, onDismiss } = $props();
 
   const DISMISS_KEY = 'planner_today_closed';
 
-  onMount(() => {
+  $effect(() => {
     try {
       sessionStorage.setItem(DISMISS_KEY, todayKey());
     } catch {
@@ -23,7 +23,13 @@
 </script>
 
 <div class="today-closed" role="status" aria-live="polite">
-  <div class="today-closed-orb" aria-hidden="true"></div>
+  <div class="today-closed-orb" aria-hidden="true">
+    <span class="today-closed-orb-ring today-closed-orb-ring--outer"></span>
+    <span class="today-closed-orb-ring today-closed-orb-ring--inner"></span>
+    <span class="today-closed-orb-core">
+      <Icon name="sparkles" size={22} strokeWidth={2} />
+    </span>
+  </div>
   <h2 class="today-closed-title">{t('home.closedTitle')}</h2>
   <p class="today-closed-stats">
     {t('home.closedTasks', { count: stats.tasks })}

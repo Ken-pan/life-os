@@ -4,15 +4,15 @@
   import { t } from '$lib/i18n/index.js';
   import { activateFocusTrap } from '@life-os/theme';
 
-  /** @type {{ open: boolean; title: string; groups: import('$lib/nav.js').NavGroup[]; pathname: string; onClose: () => void }} */
-  let { open, title, groups, pathname, onClose } = $props();
+  /** @type {{ open: boolean; title: string; groups: import('$lib/nav.js').NavGroup[]; pathname: string; search?: string; onClose: () => void }} */
+  let { open, title, groups, pathname, search = '', onClose } = $props();
 
   /** @type {HTMLDivElement | null} */
   let sheetEl = $state(null);
 
   /** @param {import('$lib/nav.js').NavItem} item */
   function isActive(item) {
-    return item.match(pathname);
+    return item.match(pathname, search);
   }
 
   $effect(() => {

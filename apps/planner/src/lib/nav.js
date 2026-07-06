@@ -4,7 +4,7 @@
  * desktop：完整侧栏分组
  */
 
-/** @typedef {{ tab: string; href: string; label: string; icon: string; match: (pathname: string) => boolean; dotColor?: string }} NavItem */
+/** @typedef {{ tab: string; href: string; label: string; icon: string; match: (pathname: string, search?: string) => boolean; dotColor?: string }} NavItem */
 /** @typedef {{ label: string; items: NavItem[] }} NavGroup */
 
 /** @param {(key: string, params?: Record<string, unknown>) => string} tr */
@@ -32,11 +32,11 @@ export function buildPrimaryNavItems(tr) {
       match: (p) => p.startsWith('/upcoming')
     },
     {
-      tab: 'schedule',
-      href: '/schedule',
-      label: tr('nav.schedule'),
-      icon: 'clock',
-      match: (p) => p.startsWith('/schedule')
+      tab: 'completed',
+      href: '/completed',
+      label: tr('nav.completed'),
+      icon: 'check',
+      match: (p) => p.startsWith('/completed')
     }
   ];
 }
@@ -45,26 +45,27 @@ export function buildPrimaryNavItems(tr) {
 export function buildBrowseNavItems(tr) {
   return [
     {
+      tab: 'schedule',
+      href: '/schedule',
+      label: tr('nav.schedule'),
+      icon: 'clock',
+      match: (p, search = '') =>
+        p === '/' && new URLSearchParams(search).get('view') === 'timeline',
+    },
+    {
       tab: 'calendar',
       href: '/calendar',
       label: tr('nav.calendar'),
       icon: 'calendar',
-      match: (p) => p.startsWith('/calendar')
+      match: (p) => p.startsWith('/calendar'),
     },
     {
       tab: 'search',
       href: '/search',
       label: tr('nav.search'),
       icon: 'search',
-      match: (p) => p.startsWith('/search')
+      match: (p) => p.startsWith('/search'),
     },
-    {
-      tab: 'completed',
-      href: '/completed',
-      label: tr('nav.completed'),
-      icon: 'check',
-      match: (p) => p.startsWith('/completed')
-    }
   ];
 }
 
@@ -129,15 +130,15 @@ export function resolvePrimaryNavTab(pathname) {
   if (pathname === '/') return 'today';
   if (pathname.startsWith('/inbox')) return 'inbox';
   if (pathname.startsWith('/upcoming')) return 'upcoming';
-  if (pathname.startsWith('/schedule')) return 'schedule';
+  if (pathname.startsWith('/completed')) return 'completed';
   if (pathname.startsWith('/calendar')) return 'calendar';
   return '';
 }
 
-/** @param {string} pathname */
-export function isMoreNavActive(pathname) {
+/** @param {string} pathname @param {string} [search] */
+export function isMoreNavActive(pathname, search = '') {
+  if (pathname === '/' && new URLSearchParams(search).get('view') === 'timeline') return false;
   if (pathname.startsWith('/search')) return true;
-  if (pathname.startsWith('/completed')) return true;
   if (pathname.startsWith('/calendar')) return true;
   if (pathname.startsWith('/lists/')) return true;
   if (pathname.startsWith('/settings')) return true;

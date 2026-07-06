@@ -16,6 +16,7 @@
     ritualComplete?: boolean,
     showScheduleAction?: boolean,
     scheduleDate?: string,
+    contextDate?: string,
     sectionId?: string,
     onToggle?: (id: string) => void,
     onEdit?: (task: import('$lib/types.js').Task) => void
@@ -31,6 +32,7 @@
     ritualComplete = false,
     showScheduleAction = false,
     scheduleDate,
+    contextDate,
     sectionId,
     onToggle,
     onEdit
@@ -72,6 +74,7 @@
             {ritualComplete}
             {showScheduleAction}
             scheduleDate={scheduleDate}
+            {contextDate}
             {onToggle}
             {onEdit}
           />

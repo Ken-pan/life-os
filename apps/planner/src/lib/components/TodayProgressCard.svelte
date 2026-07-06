@@ -11,7 +11,8 @@
     weeklyActive?: number,
     rhythmEnabled?: boolean,
     unscheduledCount?: number,
-    onScrollDone?: () => void
+    onScrollDone?: () => void,
+    onOpenTimeline?: () => void
   }} */
   let {
     done,
@@ -23,6 +24,7 @@
     rhythmEnabled = true,
     unscheduledCount = 0,
     onScrollDone,
+    onOpenTimeline,
   } = $props();
 
   const pct = $derived(total > 0 ? Math.min(100, (done / total) * 100) : 0);
@@ -90,12 +92,12 @@
       </button>
     {/if}
     {#if unscheduledCount > 0}
-      <button type="button" class="today-progress-chip" onclick={() => goto('/schedule')}>
+      <button type="button" class="today-progress-chip" onclick={() => onOpenTimeline?.()}>
         {t('schedule.summaryUnscheduled')} · {unscheduledCount}
       </button>
     {:else}
-      <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => goto('/schedule')}>
-        {t('nav.schedule')}
+      <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => onOpenTimeline?.()}>
+        {t('home.viewTimeline')}
       </button>
     {/if}
     <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => goto('/upcoming')}>

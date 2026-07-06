@@ -16,13 +16,14 @@
   import { toast } from '$lib/ui.svelte.js';
   import Icon from './Icon.svelte';
 
-  /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
+  /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, contextDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
   let {
     task,
     compact = false,
     ritualComplete = false,
     showScheduleAction = false,
     scheduleDate,
+    contextDate,
     onToggle,
     onEdit,
   } = $props();
@@ -42,6 +43,14 @@
   const list = $derived(getListById(task.listId));
   const hasRecurrence = $derived(task.recurrence?.rule && task.recurrence.rule !== 'none');
   const showHabitChip = $derived(kind === 'habit' || hasRecurrence);
+  const hideDateChip = $derived(
+    Boolean(contextDate && task.dueDate === contextDate && !overdue),
+  );
+  const timeChip = $derived.by(() => {
+    if (task.scheduledStart) return task.scheduledStart;
+    if (hideDateChip && task.dueTime) return task.dueTime;
+    return null;
+  });
   const showMeta = $derived(
     !compact ||
       overdue ||
@@ -342,14 +351,16 @@
           {/if}
           <div class="task-title" class:done-text={showAsCompleted}>{task.title}</div>
         </div>
-        {#if showMeta && (task.dueDate || task.dueTime || hasRecurrence || task.reminderMinutes != null || (showSecondaryMeta && (task.tags.length || list)))}
+        {#if showMeta && (task.dueDate || task.dueTime || hasRecurrence || task.reminderMinutes != null || timeChip || (showSecondaryMeta && (task.tags.length || list)))}
           <div class="task-meta">
-            {#if task.dueDate}
+            {#if task.dueDate && !hideDateChip}
               <span class="chip" class:overdue={overdue}>
                 {fmtDate(task.dueDate)}{task.dueTime ? ` ${task.dueTime}` : ''}
               </span>
+            {:else if timeChip}
+              <span class="chip chip--schedule">{timeChip}</span>
             {/if}
-            {#if task.scheduledStart}
+            {#if task.scheduledStart && task.scheduledStart !== timeChip}
               <span class="chip chip--schedule">{task.scheduledStart}</span>
             {/if}
             {#if hasRecurrence}

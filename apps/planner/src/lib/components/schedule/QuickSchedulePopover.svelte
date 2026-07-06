@@ -136,7 +136,8 @@
 
       {#if conflicts.length}
         <p class="schedule-popover-conflict" role="status">
-          {t('schedule.conflictHint', { count: conflicts.length })}
+          <Icon name="alert-triangle" size={16} strokeWidth={2} />
+          <span>{t('schedule.conflictHint', { count: conflicts.length })}</span>
         </p>
       {/if}
 
