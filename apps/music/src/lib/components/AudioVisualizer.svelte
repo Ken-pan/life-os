@@ -9,6 +9,8 @@
   /** @type {number | undefined} */
   let rafId;
 
+  const showVisualizer = $derived(!quiet || player.playing);
+
   /** @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} w @param {number} h @param {number} r */
   function roundBar(ctx, x, y, w, h, r) {
     if (typeof ctx.roundRect === 'function') {
@@ -84,7 +86,13 @@
   }
 </script>
 
-<canvas class="audio-visualizer" class:audio-visualizer--quiet={quiet} bind:this={canvas} aria-hidden="true"></canvas>
+<canvas
+  class="audio-visualizer"
+  class:audio-visualizer--quiet={quiet}
+  class:audio-visualizer--hidden={quiet && !showVisualizer}
+  bind:this={canvas}
+  aria-hidden="true"
+></canvas>
 
 <style>
   .audio-visualizer {
@@ -98,5 +106,12 @@
     width: min(100%, 520px);
     height: 32px;
     opacity: 0.88;
+  }
+
+  .audio-visualizer--hidden {
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin: 0;
   }
 </style>

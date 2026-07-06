@@ -271,7 +271,9 @@ async function mobileFlow(browser) {
   });
   const page = await ctx.newPage();
   await page.goto(BASE);
-  await wait(page, 1000);
+  await seedLibrary(page);
+  await page.reload();
+  await wait(page, 1200);
   let s = await shot(page, '20-mobile-home');
 
   const tabs = await page.locator('.nav .nav-item, .bottom-nav .nav-item').count();
@@ -310,10 +312,25 @@ async function mobileFlow(browser) {
 
   await page.goto(`${BASE}/library`);
   await wait(page);
-  // hover to reveal play on mobile - use force click on row body
-  await page.locator('.track-row-body').first().click();
-  await wait(page, 800);
-  s = await shot(page, '25-mobile-mini-player');
+  const row = page.locator('.track-row-body').first();
+  if ((await row.count()) > 0) {
+    await row.click();
+    await wait(page, 800);
+    s = await shot(page, '25-mobile-mini-player');
+    await page.locator('.mini-player-link').click();
+    await wait(page, 800);
+    await shot(page, '27-mobile-now-playing');
+  } else {
+    issue('M-05', 'high', '播放', '移动端资料库无曲目行', 'seed 后仍无 track-row', s);
+  }
+
+  await page.goto(`${BASE}/settings`);
+  await wait(page);
+  await shot(page, '28-mobile-settings');
+
+  await page.goto(`${BASE}/import`);
+  await wait(page);
+  await shot(page, '29-mobile-import');
 
   await page.goto(`${BASE}/playlists`);
   await wait(page);

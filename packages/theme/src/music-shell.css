@@ -320,6 +320,16 @@
   animation: lyrics-shimmer 1.4s ease-in-out infinite;
 }
 
+.music-app[data-page-route='now-playing'] .now-playing-lyrics-skeleton-line {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  background-size: 200% 100%;
+}
+
 @keyframes lyrics-shimmer {
   0% {
     background-position: 100% 0;
@@ -337,7 +347,7 @@
 }
 
 .now-playing-status-hint {
-  width: min(100%, 480px);
+  width: min(100%, 520px);
   margin: 0;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
@@ -347,6 +357,15 @@
   font-size: var(--text-sm);
   line-height: 1.5;
   text-align: center;
+}
+
+.music-app[data-page-route='now-playing'] .now-playing-status-hint {
+  padding: var(--space-1-5) var(--space-2-5);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--np-text-tertiary, var(--t3, var(--text-muted)));
+  background: var(--np-surface-subtle, rgba(255, 255, 255, 0.035));
+  border: 1px solid var(--np-border-subtle, rgba(255, 255, 255, 0.08));
 }
 
 .now-playing-lyrics-head {
@@ -1370,6 +1389,12 @@
   background: transparent;
   outline: none;
   font-size: var(--text-sm);
+  color: var(--t1, var(--text));
+}
+
+.appbar-search-input::placeholder {
+  color: var(--t3, var(--text-muted));
+  opacity: 1;
 }
 
 .appbar-search-kbd {
@@ -1543,7 +1568,43 @@
   .mini-player--expanded .mini-player-progress input[type='range'] {
     flex: 1;
     height: var(--progress-h);
-    accent-color: var(--track-accent, var(--accent));
+    background: linear-gradient(
+      to right,
+      var(--progress-fill) var(--progress-pct, 0%),
+      var(--progress-bg) var(--progress-pct, 0%)
+    );
+  }
+
+  .mini-player--expanded .mini-player-volume input[type='range'] {
+    width: 80px;
+    height: var(--progress-h);
+    background: linear-gradient(
+      to right,
+      var(--progress-fill) var(--volume-pct, 50%),
+      var(--progress-bg) var(--volume-pct, 50%)
+    );
+  }
+
+  .mini-player--expanded .mini-player-progress input[type='range']::-webkit-slider-thumb,
+  .mini-player--expanded .mini-player-volume input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--t1, var(--text));
+    margin-top: -4px;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--progress-fill) 18%, transparent);
+  }
+
+  .mini-player--expanded .mini-player-progress input[type='range']::-moz-range-thumb,
+  .mini-player--expanded .mini-player-volume input[type='range']::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--t1, var(--text));
+    border: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--progress-fill) 18%, transparent);
   }
 
   .mini-player-time {
@@ -1558,11 +1619,6 @@
     display: flex;
     align-items: center;
     gap: var(--space-1);
-  }
-
-  .mini-player--expanded .mini-player-volume input[type='range'] {
-    width: 80px;
-    accent-color: var(--track-accent, var(--accent));
   }
 
   .mini-player-btn--mobile-only {
@@ -1789,8 +1845,16 @@
 }
 
 .track-table-icon-btn.play {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: color-mix(in srgb, var(--track-accent, var(--accent)) 14%, var(--card));
+  color: var(--track-accent, var(--accent));
+  border: 1px solid color-mix(in srgb, var(--track-accent, var(--accent)) 28%, var(--border));
+}
+
+.track-table-row:hover .track-table-icon-btn.play,
+.track-table-row--selected .track-table-icon-btn.play {
+  background: color-mix(in srgb, var(--track-accent, var(--accent)) 88%, var(--card));
+  color: var(--on-accent, #fff);
+  border-color: transparent;
 }
 
 /* ── Track row hover actions ── */
@@ -1814,14 +1878,25 @@
 
 .track-row--compact-actions:hover .mini-player-btn.play,
 .track-row--selected .mini-player-btn.play {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: color-mix(in srgb, var(--track-accent, var(--accent)) 88%, var(--card));
+  color: var(--on-accent, #fff);
 }
 
 /* ── Compact home hero ── */
 .mood-hero--compact {
   padding: var(--space-4) var(--space-5);
   max-height: 35vh;
+}
+
+@media (--life-os-mobile) {
+  .mood-hero--compact {
+    padding: var(--space-3) var(--space-4);
+    max-height: 28vh;
+  }
+
+  .mood-hero--compact .mood-hero-title--compact {
+    font-size: var(--text-2xl);
+  }
 }
 
 .mood-hero-title--compact {
@@ -1910,9 +1985,45 @@
 }
 
 .music-app[data-page-route='now-playing'] .now-playing-status-hint {
-  background: var(--np-accent-soft);
-  border-color: var(--np-border-subtle);
-  color: var(--np-text-secondary);
+  background: var(--np-surface-subtle, rgba(255, 255, 255, 0.035));
+  border-color: var(--np-border-subtle, rgba(255, 255, 255, 0.08));
+  color: var(--np-text-tertiary, var(--t3, var(--text-muted)));
+}
+
+@media (--life-os-mobile) {
+  .music-app[data-page-route='now-playing'] {
+    --player-art-size: min(76vw, 300px);
+  }
+
+  .music-app[data-page-route='now-playing'] .now-playing {
+    padding-top: var(--space-2);
+    justify-content: flex-start;
+  }
+
+  .music-app[data-page-route='now-playing'] .now-playing-layout {
+    gap: var(--space-4);
+  }
+
+  .music-app[data-page-route='now-playing'] .now-playing-stage {
+    gap: var(--space-3);
+  }
+
+  .music-app[data-page-route='now-playing'] .now-playing-controls-stack {
+    gap: var(--space-2);
+  }
+
+  .music-app[data-page-route='now-playing'] .now-playing-lyrics {
+    max-height: min(36dvh, 300px);
+  }
+
+  .music-app[data-page-route='now-playing'] .now-playing-lyrics-body.timed {
+    max-height: min(34dvh, 280px);
+  }
+}
+
+.settings-seg-full {
+  width: 100%;
+  justify-content: flex-end;
 }
 
 /* Scoped track accent — player chrome only */
@@ -1927,6 +2038,15 @@
 .player-progress input[type='range'],
 .mini-player-progress input[type='range'] {
   accent-color: var(--track-accent, var(--accent));
+}
+
+.mini-player-progress input[type='range'] {
+  accent-color: unset;
+  background: linear-gradient(
+    to right,
+    var(--progress-fill) var(--progress-pct, 0%),
+    var(--progress-bg) var(--progress-pct, 0%)
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {

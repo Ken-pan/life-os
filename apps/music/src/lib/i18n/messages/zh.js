@@ -157,6 +157,7 @@ export default {
     themeAuto: '跟随系统',
     themeLight: '浅色',
     themeDark: '深色',
+    appearance: '外观',
     albumAmbience: '氛围色跟随专辑',
     albumAmbienceDesc: '从封面取色，用于进度条、光晕与播放卡片；导航与按钮仍使用品牌色。',
     albumAmbienceOn: '跟随',

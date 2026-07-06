@@ -216,7 +216,7 @@
     <h3 class="block-title sg-title">{t('settings.theme')}</h3>
     <div class="set-row settings-row">
       <div class="pref-copy">
-        <div class="pref-label">外观</div>
+        <div class="pref-label">{t('settings.appearance')}</div>
       </div>
       <div class="pref-control seg">
         <button type="button" class:active={S.settings.theme === 'auto'} onclick={() => setTheme('auto')}>{t('settings.themeAuto')}</button>
@@ -230,10 +230,7 @@
     <h3 class="block-title sg-title">{t('settings.albumAmbience')}</h3>
     <p class="block-desc" style="padding:0 18px 12px">{t('settings.albumAmbienceDesc')}</p>
     <div class="set-row settings-row">
-      <div class="pref-copy">
-        <div class="pref-label">{t('settings.albumAmbience')}</div>
-      </div>
-      <div class="pref-control seg">
+      <div class="pref-control seg settings-seg-full">
         <button
           type="button"
           class:active={S.settings.albumAmbience !== false}

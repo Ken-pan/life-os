@@ -108,7 +108,7 @@
   <div class="queue-list-foot">
     <button class="btn-ghost" type="button" onclick={clearQueue}>{t('nowPlaying.clearQueue')}</button>
     <button
-      class="btn-primary"
+      class="btn-secondary queue-play-btn"
       type="button"
       onclick={() => playTracks(player.queue, player.index)}
     >
@@ -132,7 +132,7 @@
     border-top: 1px solid var(--border);
   }
 
-  .queue-list-foot .btn-primary {
+  .queue-list-foot .queue-play-btn {
     flex: 1;
   }
 

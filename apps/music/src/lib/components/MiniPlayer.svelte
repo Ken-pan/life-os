@@ -113,6 +113,7 @@
         max="1"
         step="0.01"
         value={player.muted ? 0 : player.volume}
+        style={`--volume-pct: ${(player.muted ? 0 : player.volume) * 100}%`}
         aria-label={t('nowPlaying.volume')}
         oninput={(e) => setVolume(Number(e.currentTarget.value))}
       />
