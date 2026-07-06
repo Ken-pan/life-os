@@ -4,6 +4,7 @@
   import { t } from '$lib/i18n/index.js';
   import TrackRow from '$lib/components/TrackRow.svelte';
   import TrackArt from '$lib/components/TrackArt.svelte';
+  import Icon from '$lib/components/Icon.svelte';
   import SpeedDial from '$lib/components/SpeedDial.svelte';
   import {
     getRecentTracks,
@@ -24,6 +25,8 @@
   import { db } from '$lib/db.js';
   import {
     playTracks,
+    playTrack,
+    togglePlay,
     getCurrentTrack,
     player,
     restoreLastSession,
@@ -128,8 +131,9 @@
 </script>
 
 <div class="wrap home-page">
+  <div class="home-stack">
   {#if total > 0}
-    <div class="home-filters-wrap">
+    <div class="home-section home-filters-wrap">
       <div class="seg seg-chips home-filters" role="tablist" aria-label={t('common.filter')}>
         {#each visibleFilters as filter (filter)}
           <button
@@ -144,128 +148,161 @@
         {/each}
       </div>
     </div>
-  {/if}
 
-  {#if shouldShowSection(homeFilter, 'now')}
-    <section class="now-card" class:now-card--playing={Boolean(spotlight)}>
+    {#if shouldShowSection(homeFilter, 'now')}
+      <section class="home-section now-card" class:now-card--playing={Boolean(spotlight)}>
       {#if spotlight}
-        <div class="now-card-kicker">{t('home.title')}</div>
-        <div class="now-card-main">
+        <div class="now-card-body">
           <TrackArt artUrl={spotlight.artUrl} seed={spotlight.id} class="now-card-art" />
           <div class="now-card-copy">
+            <span class="now-card-kicker">{t('home.title')}</span>
             <div class="now-card-status">
               {player.playing ? t('nowPlaying.playing') : t('nowPlaying.paused')}
             </div>
             <h2 class="now-card-title">{spotlight.title}</h2>
             <p class="now-card-sub">{spotlight.artist}</p>
           </div>
+          <button
+            type="button"
+            class="now-card-play"
+            aria-label={player.playing ? t('common.pause') : t('common.play')}
+            onclick={() => togglePlay()}
+          >
+            <Icon name={player.playing ? 'pause' : 'play'} size={22} />
+          </button>
         </div>
-        <div class="now-card-actions">
-          <a class="btn-primary" href="/now-playing" onclick={() => markNowPlayingReturn('/')}>
+        <div class="now-card-foot">
+          <a class="btn-secondary now-card-foot-btn" href="/now-playing" onclick={() => markNowPlayingReturn('/')}>
             {t('home.continueImmersion')}
           </a>
-          <button type="button" class="btn-secondary" onclick={openLyrics}>
+          <button type="button" class="btn-ghost now-card-foot-btn" onclick={openLyrics}>
             {t('home.openLyrics')}
           </button>
         </div>
       {:else if lastSession?.tracks.length}
-        <div class="now-card-kicker">{t('home.title')}</div>
-        <button type="button" class="now-card-resume" onclick={continuePlaying}>
-          <TrackArt
-            artUrl={lastSession.tracks[lastSession.index]?.artUrl}
-            seed={lastSession.tracks[lastSession.index]?.id}
-            class="now-card-art"
-          />
-          <div class="now-card-copy">
-            <div class="now-card-status">{t('home.continuePlaying')}</div>
-            <h2 class="now-card-title">{lastSession.tracks[lastSession.index]?.title}</h2>
-            <p class="now-card-sub">{t('home.continueHint')}</p>
-          </div>
-        </button>
+        <div class="now-card-body">
+          <button type="button" class="now-card-resume-hit" onclick={continuePlaying}>
+            <TrackArt
+              artUrl={lastSession.tracks[lastSession.index]?.artUrl}
+              seed={lastSession.tracks[lastSession.index]?.id}
+              class="now-card-art"
+            />
+            <div class="now-card-copy">
+              <span class="now-card-kicker">{t('home.title')}</span>
+              <div class="now-card-status">{t('home.continuePlaying')}</div>
+              <h2 class="now-card-title">{lastSession.tracks[lastSession.index]?.title}</h2>
+              <p class="now-card-sub">{t('home.continueHint')}</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            class="now-card-play"
+            aria-label={t('home.continuePlaying')}
+            onclick={continuePlaying}
+          >
+            <Icon name="play" size={22} />
+          </button>
+        </div>
       {:else}
-        <div class="now-card-kicker">{t('home.title')}</div>
-        <h2 class="now-card-title now-card-title--solo">{t('home.greeting')}</h2>
-        <p class="now-card-sub now-card-sub--solo">{t('home.greetingHint')}</p>
-        <div class="now-card-actions">
+        <div class="now-card-body now-card-body--solo">
+          <div class="now-card-copy">
+            <span class="now-card-kicker">{t('home.title')}</span>
+            <h2 class="now-card-title now-card-title--solo">{t('home.greeting')}</h2>
+            <p class="now-card-sub now-card-sub--solo">{t('home.greetingHint')}</p>
+          </div>
+        </div>
+        <div class="now-card-foot">
           {#if likedTracks.length}
-            <button type="button" class="btn-primary" onclick={shuffleLiked}>
+            <button type="button" class="btn-primary now-card-foot-btn" onclick={shuffleLiked}>
               {t('home.shuffleLiked')}
             </button>
           {/if}
-          <a class="btn-secondary" href="/import">{t('home.import')}</a>
+          <a class="btn-secondary now-card-foot-btn" href="/import">{t('home.import')}</a>
         </div>
       {/if}
-    </section>
-  {/if}
+      </section>
+    {/if}
 
-  {#if shouldShowSection(homeFilter, 'speedDial') && filteredSpeedDialPages.length}
-    <div class="page-section speed-dial-section">
-      <SpeedDial pages={filteredSpeedDialPages} onChange={onSpeedDialChange} />
-    </div>
-  {/if}
-
-  {#if shouldShowSection(homeFilter, 'quickPicks') && filteredQuickPicks.length}
-    <section class="page-section quick-picks-section">
-      <div class="page-section-head">
-        <h3 class="page-section-title">{t('home.quickPicks')}</h3>
-        <button type="button" class="quick-picks-play-all" onclick={playAllQuickPicks}>
-          {t('home.quickPicksPlayAll')}
-        </button>
+    {#if shouldShowSection(homeFilter, 'speedDial') && filteredSpeedDialPages.length}
+      <div class="home-section home-speed-dial">
+        <SpeedDial pages={filteredSpeedDialPages} onChange={onSpeedDialChange} />
       </div>
-      {#each filteredQuickPicks as track, i (track.id)}
-        <TrackRow
-          {track}
-          tracks={filteredQuickPicks}
-          index={i}
-          compactActions
-          playSource="quick_picks"
-        />
-      {/each}
-    </section>
-  {/if}
+    {/if}
 
-  {#if shouldShowSection(homeFilter, 'recentAdded') && filteredRecentAdded.length}
-    <section class="page-section">
-      <div class="page-section-head">
-        <h3 class="page-section-title">{t('home.recentAdded')}</h3>
-        <a href="/library">{t('nav.library')}</a>
-      </div>
-      {#each filteredRecentAdded as track, i (track.id)}
-        <TrackRow {track} tracks={filteredRecentAdded} index={i} compactActions />
-      {/each}
-    </section>
-  {/if}
+    {#if shouldShowSection(homeFilter, 'quickPicks') && filteredQuickPicks.length}
+      <section class="page-section home-section quick-picks-section">
+        <div class="page-section-head">
+          <h3 class="page-section-title">{t('home.quickPicks')}</h3>
+          <button type="button" class="section-action" onclick={playAllQuickPicks}>
+            {t('home.quickPicksPlayAll')}
+          </button>
+        </div>
+        <div class="quick-picks-grid">
+          {#each filteredQuickPicks as track (track.id)}
+            <button
+              type="button"
+              class="quick-pick-card"
+              onclick={() => playTrack(track, 'quick_picks')}
+            >
+              <TrackArt artUrl={track.artUrl} seed={track.id} class="quick-pick-art" />
+              <span class="quick-pick-copy">
+                <span class="quick-pick-title">{track.title}</span>
+                <span class="quick-pick-artist">{track.artist}</span>
+              </span>
+              <span class="quick-pick-play" aria-hidden="true">
+                <Icon name="play" size={16} />
+              </span>
+            </button>
+          {/each}
+        </div>
+      </section>
+    {/if}
 
-  {#if shouldShowSection(homeFilter, 'recent') && filteredRecent.length}
-    <section class="page-section">
-      <div class="page-section-head">
-        <h3 class="page-section-title">{t('home.continueListening')}</h3>
-      </div>
-      {#each filteredRecent as track, i (track.id)}
-        <TrackRow {track} tracks={filteredRecent} index={i} compactActions playSource="home" />
-      {/each}
-    </section>
-  {/if}
+    {#if shouldShowSection(homeFilter, 'recentAdded') && filteredRecentAdded.length}
+      <section class="page-section home-section">
+        <div class="page-section-head">
+          <h3 class="page-section-title">{t('home.recentAdded')}</h3>
+          <a class="section-action section-action--link" href="/library">{t('nav.library')}</a>
+        </div>
+        <div class="home-track-list">
+          {#each filteredRecentAdded as track, i (track.id)}
+            <TrackRow {track} tracks={filteredRecentAdded} index={i} compactActions />
+          {/each}
+        </div>
+      </section>
+    {/if}
 
-  {#if shouldShowSection(homeFilter, 'topArtists') && topArtists.length}
-    <section class="page-section">
-      <div class="page-section-head">
-        <h3 class="page-section-title">{t('home.topArtists')}</h3>
-        <a href="/browse">{t('nav.browse')}</a>
-      </div>
-      <div class="artist-grid home-artist-grid">
-        {#each topArtists as artist (artist.artistKey)}
-          <a class="artist-grid-item" href={`/artist/${encodeURIComponent(artist.artistKey)}`}>
-            <div class="artist-avatar artist-avatar--lg">{artist.artist.slice(0, 1)}</div>
-            <div class="album-card-title">{artist.artist}</div>
-            <div class="album-card-sub">{t('common.songs', { count: artist.trackCount })}</div>
-          </a>
-        {/each}
-      </div>
-    </section>
-  {/if}
+    {#if shouldShowSection(homeFilter, 'recent') && filteredRecent.length}
+      <section class="page-section home-section">
+        <div class="page-section-head">
+          <h3 class="page-section-title">{t('home.continueListening')}</h3>
+        </div>
+        <div class="home-track-list">
+          {#each filteredRecent as track, i (track.id)}
+            <TrackRow {track} tracks={filteredRecent} index={i} compactActions playSource="home" />
+          {/each}
+        </div>
+      </section>
+    {/if}
 
-  {#if !total}
+    {#if shouldShowSection(homeFilter, 'topArtists') && topArtists.length}
+      <section class="page-section home-section">
+        <div class="page-section-head">
+          <h3 class="page-section-title">{t('home.topArtists')}</h3>
+          <a class="section-action section-action--link" href="/browse">{t('nav.browse')}</a>
+        </div>
+        <div class="artist-grid home-artist-grid">
+          {#each topArtists as artist (artist.artistKey)}
+            <a class="artist-grid-item" href={`/artist/${encodeURIComponent(artist.artistKey)}`}>
+              <div class="artist-avatar artist-avatar--lg">{artist.artist.slice(0, 1)}</div>
+              <div class="album-card-title">{artist.artist}</div>
+              <div class="album-card-sub">{t('common.songs', { count: artist.trackCount })}</div>
+            </a>
+          {/each}
+        </div>
+      </section>
+    {/if}
+  {:else}
     <section class="empty-state empty-state--rich">
       <p class="empty-state-title">{t('common.empty')}</p>
       <p class="empty-state-hint">{t('common.emptyHint')}</p>
@@ -275,11 +312,45 @@
       </div>
     </section>
   {/if}
+  </div>
 </div>
 
 <style>
+  .home-stack {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .home-section {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .home-section + .home-section,
+  .home-section + .page-section.home-section {
+    margin-top: var(--space-5);
+  }
+
+  .home-stack > .page-section.home-section {
+    margin-top: var(--space-5);
+  }
+
+  .home-stack > .page-section {
+    margin-top: var(--space-5);
+  }
+
   .home-filters-wrap {
-    margin-bottom: var(--space-4);
+    margin-bottom: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-filters-wrap::-webkit-scrollbar {
+    display: none;
   }
 
   .home-filters {
@@ -290,90 +361,110 @@
     --seg-btn-bg: color-mix(in srgb, var(--t1) 4%, var(--card));
     --seg-btn-border: 1px solid var(--border);
     --seg-btn-color: var(--t2, var(--text-secondary));
-    --seg-active-bg-token: color-mix(in srgb, var(--accent) 14%, var(--card));
+    --seg-active-bg-token: color-mix(in srgb, var(--accent) 12%, var(--card));
     --seg-active-fg-token: var(--accent);
-    --seg-active-border-token: color-mix(in srgb, var(--accent) 28%, var(--border));
-    flex-wrap: wrap;
-    row-gap: var(--space-2);
+    --seg-active-border-token: color-mix(in srgb, var(--accent) 24%, var(--border));
+    flex-wrap: nowrap;
+    width: max-content;
+    min-width: 100%;
   }
 
   .home-filters button {
-    min-height: 36px;
-    padding-inline: 16px;
+    min-height: 32px;
+    padding-inline: 14px;
     font-size: var(--text-sm);
+    font-weight: 500;
   }
 
   .now-card {
     position: relative;
     overflow: hidden;
-    border-radius: var(--radius-lg);
-    padding: var(--space-4) var(--space-5);
-    min-height: 120px;
-    max-width: min(760px, 100%);
+    border-radius: 18px;
+    padding: var(--space-4);
+    width: 100%;
     border: 1px solid var(--border);
     background:
       radial-gradient(
-        ellipse 120% 80% at 80% -20%,
-        color-mix(in srgb, var(--player-glow) 28%, transparent),
-        transparent 55%
+        ellipse 100% 90% at 100% 0%,
+        color-mix(in srgb, var(--player-glow) 12%, transparent),
+        transparent 58%
       ),
-      linear-gradient(180deg, color-mix(in srgb, var(--card) 94%, var(--bg)), var(--card));
+      linear-gradient(180deg, color-mix(in srgb, var(--card) 96%, var(--bg)), var(--card));
+    transition:
+      border-color var(--dur-fast) var(--ease-standard),
+      transform var(--dur-fast) var(--ease-standard);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .now-card:hover {
+      border-color: color-mix(in srgb, var(--t1) 12%, var(--border));
+      transform: translateY(-1px);
+    }
   }
 
   .now-card--playing {
     border-color: color-mix(in srgb, var(--track-accent, var(--accent)) 22%, var(--border));
   }
 
-  .now-card-kicker {
-    font-family: var(--mono);
-    font-size: var(--text-xs);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--track-accent, var(--accent));
-    margin-bottom: var(--space-3);
-  }
-
-  .now-card-main,
-  .now-card-resume {
+  .now-card-body {
     display: flex;
     align-items: center;
     gap: var(--space-4);
     width: 100%;
-    text-align: left;
-    color: inherit;
+    min-height: 80px;
   }
 
-  .now-card-resume {
+  .now-card-body--solo {
+    min-height: 0;
+  }
+
+  .now-card-resume-hit {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex: 1;
+    min-width: 0;
     padding: 0;
     border: none;
     background: transparent;
+    color: inherit;
+    text-align: left;
     cursor: pointer;
   }
 
   .now-card :global(.now-card-art) {
-    width: 64px;
-    height: 64px;
-    border-radius: 12px;
+    width: 80px;
+    height: 80px;
+    border-radius: 14px;
     flex-shrink: 0;
     box-shadow: var(--shadow-soft);
   }
 
   .now-card-copy {
+    flex: 1;
     min-width: 0;
   }
 
-  .now-card-status {
+  .now-card-kicker {
+    display: block;
     font-family: var(--mono);
     font-size: var(--text-xs);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--track-accent, var(--accent));
+    color: var(--t2, var(--text-secondary));
+    margin-bottom: var(--space-1);
+  }
+
+  .now-card-status {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--t2, var(--text-secondary));
     margin-bottom: var(--space-1);
   }
 
   .now-card-title {
     margin: 0;
-    font-size: clamp(22px, 2.4vw, 28px);
+    font-size: clamp(22px, 2.2vw, 26px);
     font-weight: 600;
     line-height: 1.15;
     white-space: nowrap;
@@ -387,8 +478,8 @@
 
   .now-card-sub {
     margin: var(--space-1) 0 0;
-    font-size: var(--text-sm);
-    color: var(--t2, var(--text-secondary));
+    font-size: var(--text-md);
+    color: color-mix(in srgb, var(--t2, var(--text-secondary)) 88%, var(--t1));
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -400,39 +491,177 @@
     line-height: 1.5;
   }
 
-  .now-card-actions {
+  .now-card-play {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: var(--on-accent);
+    cursor: pointer;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 32%, transparent);
+    touch-action: manipulation;
+  }
+
+  .now-card-foot {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin-top: var(--space-4);
+    margin-top: var(--space-3);
+    padding-left: calc(80px + var(--space-4));
   }
 
-  .speed-dial-section {
-    padding-top: 0;
+  .now-card-body--solo + .now-card-foot {
+    padding-left: 0;
   }
 
-  .quick-picks-play-all {
+  .now-card-foot-btn {
+    min-height: 36px;
+    padding-inline: 14px;
+    font-size: var(--text-sm);
+  }
+
+  .home-speed-dial {
+    width: 100%;
+  }
+
+  .quick-picks-section.page-section {
+    margin-top: var(--space-5);
+  }
+
+  .home-track-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .home-track-list :global(.track-row) {
+    border-bottom-color: color-mix(in srgb, var(--border) 65%, transparent);
+  }
+
+  .section-action--link {
+    text-decoration: none;
+    color: var(--accent);
+  }
+
+  .section-action {
     border: none;
     background: transparent;
     color: var(--t2, var(--text-secondary));
     font-size: var(--text-sm);
+    font-weight: 500;
     cursor: pointer;
-    padding: 0;
+    padding: 6px 10px;
+    border-radius: var(--radius-pill);
+    touch-action: manipulation;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .quick-picks-play-all:hover {
+    .section-action:hover {
       color: var(--t1, var(--text));
+      background: color-mix(in srgb, var(--t1) 6%, transparent);
     }
   }
 
-  @media (--life-os-mobile) {
-    .now-card {
-      padding: var(--space-3) var(--space-4);
+  .quick-picks-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .quick-pick-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 68px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition:
+      border-color var(--dur-fast) var(--ease-standard),
+      background var(--dur-fast) var(--ease-standard);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .quick-pick-card:hover {
+      border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+      background: color-mix(in srgb, var(--card) 92%, var(--accent) 8%);
     }
 
+    .quick-pick-card:hover .quick-pick-play {
+      opacity: 1;
+    }
+  }
+
+  .quick-pick-card :global(.quick-pick-art) {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .quick-pick-copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .quick-pick-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .quick-pick-artist {
+    font-size: var(--text-sm);
+    color: var(--t2, var(--text-secondary));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .quick-pick-play {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--t1) 8%, transparent);
+    color: var(--t1, var(--text));
+    opacity: 0.72;
+  }
+
+  @media (--life-os-mobile) {
     .home-filters button {
       min-height: var(--tap-min);
+    }
+
+    .now-card-foot {
+      padding-left: 0;
+    }
+
+    .quick-picks-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (--life-os-narrow) {
+    .home-filters button {
+      padding-inline: 12px;
+      font-size: var(--text-xs);
     }
   }
 

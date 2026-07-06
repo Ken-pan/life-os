@@ -6,16 +6,12 @@
     seek,
     formatTime,
     formatTimeRemaining,
-    getProgressPct,
-    setVolume,
-    toggleMute
+    getProgressPct
   } from '$lib/player.svelte.js';
   import { t } from '$lib/i18n/index.js';
 
   /** @type {{ viewMode: 'player' | 'lyrics' | 'queue', onMode: (mode: 'player' | 'lyrics' | 'queue') => void }} */
   let { viewMode, onMode } = $props();
-
-  const volumeIcon = $derived(player.muted || player.volume === 0 ? 'volume-x' : 'volume-2');
 </script>
 
 <footer class="np-mobile-chrome">
@@ -38,28 +34,6 @@
 
   <PlayerControls quiet minimal hideProgress apple />
 
-  <div class="np-mobile-volume">
-    <Icon name="volume-1" size={16} class="np-mobile-volume-icon np-mobile-volume-icon--low" />
-    <input
-      type="range"
-      min="0"
-      max="1"
-      step="0.01"
-      value={player.muted ? 0 : player.volume}
-      style={`--volume-pct: ${(player.muted ? 0 : player.volume) * 100}%`}
-      aria-label={t('nowPlaying.volume')}
-      oninput={(e) => setVolume(Number(e.currentTarget.value))}
-    />
-    <button
-      type="button"
-      class="np-mobile-volume-btn"
-      aria-label={player.muted ? t('nowPlaying.unmute') : t('nowPlaying.mute')}
-      onclick={toggleMute}
-    >
-      <Icon name={volumeIcon} size={18} />
-    </button>
-  </div>
-
   <nav class="np-mobile-dock" aria-label={t('nowPlaying.modeLabel')}>
     <button
       type="button"
@@ -69,9 +43,18 @@
       aria-pressed={viewMode === 'lyrics'}
       onclick={() => onMode('lyrics')}
     >
-      <Icon name="mic" size={22} strokeWidth={1.75} />
+      <Icon name="mic" size={22} strokeWidth={2.25} />
     </button>
-    <span class="np-mobile-dock-spacer" aria-hidden="true"></span>
+    <button
+      type="button"
+      class="np-mobile-dock-btn np-mobile-dock-btn--center"
+      class:active={viewMode === 'player'}
+      aria-label={t('nowPlaying.modeCover')}
+      aria-pressed={viewMode === 'player'}
+      onclick={() => onMode('player')}
+    >
+      <Icon name="headphones" size={23} strokeWidth={2.25} />
+    </button>
     <button
       type="button"
       class="np-mobile-dock-btn"
@@ -80,7 +63,7 @@
       aria-pressed={viewMode === 'queue'}
       onclick={() => onMode('queue')}
     >
-      <Icon name="layout-list" size={22} strokeWidth={1.75} />
+      <Icon name="layout-list" size={22} strokeWidth={2.25} />
     </button>
   </nav>
 </footer>

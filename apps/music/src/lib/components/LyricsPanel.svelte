@@ -8,6 +8,7 @@
 
   const model = $derived(parseLyrics(lyrics));
   const active = $derived(activeLyricIndex(model, currentTime));
+  const visualActive = $derived(model.timed && model.lines.length ? Math.max(active, 0) : -1);
   const canSeek = $derived(seekable && model.timed && typeof onSeek === 'function');
 
   /** @type {HTMLElement | undefined} */
@@ -90,9 +91,9 @@
     {/if}
     <div class="now-playing-lyrics-body" class:timed={model.timed} class:seekable={canSeek} bind:this={scrollEl}>
       {#each model.lines as line, i (i)}
-        {@const isActive = model.timed && i === active}
-        {@const isNear = model.timed && active >= 0 && Math.abs(i - active) <= 2 && !isActive}
-        {@const isFar = model.timed && active >= 0 && !isActive && !isNear}
+        {@const isActive = model.timed && i === visualActive}
+        {@const isNear = model.timed && visualActive >= 0 && Math.abs(i - visualActive) <= 2 && !isActive}
+        {@const isFar = model.timed && visualActive >= 0 && !isActive && !isNear}
         {#if canSeek}
           <button
             type="button"

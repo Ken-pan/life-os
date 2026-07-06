@@ -1,4 +1,9 @@
 import { db } from './db.js';
+import {
+  interactionToPlayEvent,
+  playSourceToContext,
+  recordPlayEvent
+} from './playEvents.js';
 
 /** @typedef {'track' | 'artist' | 'album' | 'playlist' | 'collection' | 'mix'} EntityType */
 
@@ -30,6 +35,7 @@ import { db } from './db.js';
  * @property {boolean} [passive]
  * @property {number} [playedMs]
  * @property {number} [durationMs]
+ * @property {string} [trackId] — 用于 Supabase play_events（默认 entityId）
  */
 
 /** @typedef {{ activeLaunches: number, passivePlays: number, skips: number, completes: number, timeMatches: number }} EntityPlaybackStats */
@@ -73,6 +79,24 @@ export async function recordMusicInteraction(input) {
     const excess = count - INTERACTION_CAP;
     const stale = await db.interactions.orderBy('createdAt').limit(excess).primaryKeys();
     await db.interactions.bulkDelete(stale);
+  }
+
+  if (input.entityType === 'track' || input.trackId) {
+    const eventType = interactionToPlayEvent(input.action);
+    if (eventType) {
+      const durationMs = input.durationMs ?? 0;
+      const playedMs = input.playedMs ?? 0;
+      const trackId = input.trackId ?? (input.entityType === 'track' ? input.entityId : null);
+      if (trackId) {
+        void recordPlayEvent({
+          trackId,
+          eventType,
+          positionSec: playedMs > 0 ? Math.round(playedMs / 1000) : undefined,
+          playedRatio: durationMs > 0 && playedMs > 0 ? playedMs / durationMs : undefined,
+          context: playSourceToContext(input.source)
+        });
+      }
+    }
   }
 }
 

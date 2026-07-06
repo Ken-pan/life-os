@@ -31,6 +31,7 @@ import Filter from '@lucide/svelte/icons/filter';
 import LayoutList from '@lucide/svelte/icons/layout-list';
 import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
+import Headphones from '@lucide/svelte/icons/headphones';
 
 /** @type {Record<string, import('svelte').Component>} */
 export const ICONS = {
@@ -66,5 +67,6 @@ export const ICONS = {
   filter: Filter,
   'layout-list': LayoutList,
   'layout-grid': LayoutGrid,
-  'more-horizontal': MoreHorizontal
+  'more-horizontal': MoreHorizontal,
+  headphones: Headphones
 };

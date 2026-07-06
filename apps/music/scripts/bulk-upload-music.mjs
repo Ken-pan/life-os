@@ -62,25 +62,36 @@ async function hashFile(buf) {
 }
 
 function collectFiles() {
-  /** @type {string[]} */
+  /** @type {{ path: string, album: string }[]} */
   const files = [];
   for (const dir of dirs) {
+    const album = basename(dir);
     for (const name of readdirSync(dir)) {
       const full = join(dir, name);
-      if (statSync(full).isFile() && AUDIO_RE.test(name)) files.push(full);
+      if (statSync(full).isFile() && AUDIO_RE.test(name)) files.push({ path: full, album });
     }
   }
-  return files.sort((a, b) => a.localeCompare(b));
+  return files.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-async function processFile(filePath) {
+function bufferToArrayBuffer(buf) {
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+}
+
+async function processFile(entry) {
+  const filePath = entry.path;
   const fileName = basename(filePath);
   const buf = await readFile(filePath);
-  const tags = parseId3(buf) || {};
+  let tags = {};
+  try {
+    tags = parseId3(bufferToArrayBuffer(buf)) || {};
+  } catch {
+    tags = {};
+  }
   const fromName = parseFilename(fileName);
   const title = tags.title || fromName.title;
   const artist = tags.artist || fromName.artist;
-  const album = isValidMeta(tags.album) ? cleanText(tags.album) : '未知专辑';
+  const album = isValidMeta(tags.album) ? cleanText(tags.album) : entry.album || '未知专辑';
   const trackId = await hashFile(buf);
   const storagePath = `${userId}/${trackId}.mp3`;
   const mime = 'audio/mpeg';
@@ -162,7 +173,7 @@ async function runPool(items, worker, concurrency) {
         fail += 1;
         done += 1;
         errors.push(/** @type {Error} */ (err));
-        console.error(`[${done}/${items.length}] FAIL ${basename(item)}: ${err.message || err}`);
+        console.error(`[${done}/${items.length}] FAIL ${basename(item.path)}: ${err.message || err}`);
       }
     }
   }

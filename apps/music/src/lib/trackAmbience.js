@@ -13,16 +13,20 @@ function clearAmbience(root) {
   root.style.removeProperty('--player-glow');
   root.style.removeProperty('--album-glow-1');
   root.style.removeProperty('--album-glow-2');
+  root.style.removeProperty('--album-glow-3');
+  root.style.removeProperty('--album-ambient-base');
   root.dataset.trackAmbience = 'off';
 }
 
-/** @param {HTMLElement} root @param {{ accent: string, accentMuted: string, glow: string, glow1?: string, glow2?: string }} palette @param {'art' | 'hash'} kind */
+/** @param {HTMLElement} root @param {{ accent: string, accentMuted: string, glow: string, glow1?: string, glow2?: string, glow3?: string, ambientBase?: string }} palette @param {'art' | 'hash'} kind */
 function applyPalette(root, palette, kind) {
   root.style.setProperty('--track-accent', palette.accent);
   root.style.setProperty('--track-accent-muted', palette.accentMuted);
   root.style.setProperty('--player-glow', palette.glow);
   if (palette.glow1) root.style.setProperty('--album-glow-1', palette.glow1);
   if (palette.glow2) root.style.setProperty('--album-glow-2', palette.glow2);
+  if (palette.glow3) root.style.setProperty('--album-glow-3', palette.glow3);
+  if (palette.ambientBase) root.style.setProperty('--album-ambient-base', palette.ambientBase);
   root.dataset.trackAmbience = kind;
 }
 

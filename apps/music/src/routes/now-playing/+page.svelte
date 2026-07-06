@@ -5,12 +5,13 @@
   import Icon from '$lib/components/Icon.svelte';
   import PlayerControls from '$lib/components/PlayerControls.svelte';
   import NowPlayingMobileChrome from '$lib/components/NowPlayingMobileChrome.svelte';
+  import NowPlayingAmbientBack from '$lib/components/NowPlayingAmbientBack.svelte';
   import TrackArt from '$lib/components/TrackArt.svelte';
   import LyricsPanel from '$lib/components/LyricsPanel.svelte';
   import QueueList from '$lib/components/QueueList.svelte';
   import { swipeDismiss, swipeTrack } from '$lib/gestures.js';
   import { consumeNowPlayingReturn, ensureNowPlayingReturn } from '$lib/nav.js';
-  import { player, nextTrack, prevTrack, togglePlay, refreshQueueMetadata, seek } from '$lib/player.svelte.js';
+  import { player, nextTrack, prevTrack, togglePlay, refreshQueueMetadata, seek, restoreLastSession, resumeSession } from '$lib/player.svelte.js';
   import { hasPlayableSource } from '$lib/cloudAudio.js';
   import { db, toggleLike } from '$lib/db.js';
   import { fetchLyricsForTrack } from '$lib/lyricsFetch.js';
@@ -111,6 +112,19 @@
   onMount(() => {
     ensureNowPlayingReturn('/');
     scheduleControlsHide();
+    void (async () => {
+      if (!player.queue.length) {
+        const session = await restoreLastSession();
+        if (session?.tracks.length) {
+          await resumeSession({
+            tracks: session.tracks,
+            index: session.index,
+            currentTime: session.currentTime,
+            autoplay: false
+          });
+        }
+      }
+    })();
     const mq = window.matchMedia('(max-width: 860px)');
     isMobile = mq.matches;
     const onChange = () => {
@@ -140,6 +154,10 @@
   onpointerdown={revealControls}
 >
   {#if track}
+    {#if isMobile}
+      <NowPlayingAmbientBack artUrl={track.artUrl} />
+    {/if}
+
     <button class="now-playing-handle" type="button" aria-label={t('common.back')} onclick={dismiss}></button>
 
     {#if isMobile}
@@ -224,13 +242,22 @@
           </section>
         {/if}
 
+        {#if player.statusHint}
+          <p class="now-playing-status-hint np-mobile-status-hint" role="status">{player.statusHint}</p>
+        {/if}
+
         <NowPlayingMobileChrome viewMode={panelMode} onMode={setMode} />
       </div>
-
-      {#if player.statusHint}
-        <p class="now-playing-status-hint np-mobile-status-hint" role="status">{player.statusHint}</p>
-      {/if}
     {:else}
+      <button
+        type="button"
+        class="now-playing-close"
+        aria-label={t('common.back')}
+        onclick={dismiss}
+      >
+        <Icon name="chevron-down" size={18} />
+      </button>
+
       <div class="now-playing-mode-toggle" role="tablist" aria-label={t('nowPlaying.modeLabel')}>
         <button
           type="button"

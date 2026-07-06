@@ -12,6 +12,7 @@ import {
 import { syncErrorMessage } from './sync.js';
 import { t } from './i18n/index.js';
 import { S, save } from './state.svelte.js';
+import { supabase } from './supabase.js';
 
 /** @type {HTMLAudioElement | null} */
 let audio = null;
@@ -51,6 +52,7 @@ function finalizePlaySession() {
     void recordMusicInteraction({
       entityType: 'track',
       entityId: track.id,
+      trackId: track.id,
       action: 'skip',
       source: launchContext.source,
       passive: false,
@@ -61,6 +63,7 @@ function finalizePlaySession() {
     void recordMusicInteraction({
       entityType: 'track',
       entityId: track.id,
+      trackId: track.id,
       action: 'complete',
       source: launchContext.source,
       passive,
@@ -237,8 +240,32 @@ export function nextTrack() {
     player.index += 1;
   } else if (player.repeat === 'all') {
     player.index = 0;
-  } else return;
+  } else {
+    void tryAutoContinueAtQueueEnd();
+    return;
+  }
   void loadAndPlay();
+}
+
+async function tryAutoContinueAtQueueEnd() {
+  if (S.settings.autoContinueSimilar === false) return;
+  try {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { tryAutoContinueQueue } = await import('./recommendations.js');
+    const { added, shouldAdvance } = await tryAutoContinueQueue();
+    if (shouldAdvance && player.index < player.queue.length - 1) {
+      player.index += 1;
+      void loadAndPlay();
+    } else if (added > 0) {
+      player.statusHint = t('nowPlaying.continueSimilarAdded', { count: added });
+    }
+  } catch {
+    /* silent */
+  }
 }
 
 export function prevTrack() {
@@ -402,6 +429,7 @@ async function loadAndPlay(opts = {}) {
   void recordMusicInteraction({
     entityType: launchContext.entityType,
     entityId: launchContext.entityId || track.id,
+    trackId: track.id,
     action: 'play',
     source: launchContext.source,
     passive: launchContext.passive,

@@ -1,6 +1,6 @@
 import { trackAccent } from './trackArt.js';
 
-/** @typedef {{ accent: string, accentMuted: string, glow: string, glow1: string, glow2: string }} ArtPalette */
+/** @typedef {{ accent: string, accentMuted: string, glow: string, glow1: string, glow2: string, glow3: string, ambientBase: string }} ArtPalette */
 
 /** @type {Map<string, ArtPalette>} */
 const CACHE = new Map();
@@ -183,6 +183,30 @@ function kMeans(samples, k = 4) {
   }));
 }
 
+/** @param {{ r: number, g: number, b: number, score: number }} c @param {number} l */
+function clusterAmbientCss(c, l) {
+  const { h, s } = rgbToHsl(c.r, c.g, c.b);
+  return hslCss(h, Math.min(Math.max(s, 22), 78), l);
+}
+
+/** @param {{ r: number, g: number, b: number, score: number }[]} clusters */
+function ambientFromClusters(clusters) {
+  const ranked = clusters
+    .slice()
+    .sort((a, b) => b.score - a.score)
+    .filter((c) => c.r + c.g + c.b > 0);
+  const a = ranked[0] ?? { r: 48, g: 36, b: 32, score: 1 };
+  const b = ranked[1] ?? a;
+  const c = ranked[2] ?? b;
+  const { h, s } = rgbToHsl(a.r, a.g, a.b);
+  return {
+    ambientBase: hslCss(h, Math.min(s * 0.62, 52), 11),
+    glow1: clusterAmbientCss(a, 34),
+    glow2: clusterAmbientCss(b, 26),
+    glow3: clusterAmbientCss(c, 18)
+  };
+}
+
 /** @param {number} h @param {number} s @param {number} l */
 function ambientGlowPair(h, s, l) {
   const a = hslToRgb(h, Math.min(s * 0.82, 70), Math.min(l + 6, 52));
@@ -212,13 +236,15 @@ function clustersToPalette(clusters, bgLum) {
 
   const accentCss = hslCss(blended.h, blended.s, blended.l);
   const mutedCss = hslCss(blendedMuted.h, blendedMuted.s, blendedMuted.l);
-  const glows = ambientGlowPair(blended.h, blended.s, blended.l);
+  const ambient = ambientFromClusters(ranked);
   return {
     accent: accentCss,
     accentMuted: mutedCss,
     glow: `color-mix(in srgb, ${accentCss} 42%, transparent)`,
-    glow1: glows.glow1,
-    glow2: glows.glow2
+    glow1: ambient.glow1,
+    glow2: ambient.glow2,
+    glow3: ambient.glow3,
+    ambientBase: ambient.ambientBase
   };
 }
 
@@ -311,13 +337,14 @@ export function paletteFromHash(seed) {
   const accent = trackAccent(seed);
   const match = accent.match(/hsl\((\d+)/);
   const h = match ? Number(match[1]) : 350;
-  const glows = ambientGlowPair(h, 62, 42);
   return {
     accent,
     accentMuted: accent.replace(/(\d+)%\)$/, (_, l) => `${Math.max(+l - 12, 28)}%)`),
     glow: `color-mix(in srgb, ${accent} 42%, transparent)`,
-    glow1: glows.glow1,
-    glow2: glows.glow2
+    glow1: hslCss(h, 58, 34),
+    glow2: hslCss((h + 32) % 360, 48, 26),
+    glow3: hslCss((h + 64) % 360, 40, 18),
+    ambientBase: hslCss(h, 42, 11)
   };
 }
 

@@ -22,7 +22,7 @@
       }
     });
 
-    /** @param {MouseEvent} e */
+    /** @param {MouseEvent | TouchEvent} e */
     const onDoc = (e) => {
       if (el && !el.contains(/** @type {Node} */ (e.target))) onClose();
     };
@@ -31,9 +31,11 @@
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('mousedown', onDoc);
+    window.addEventListener('touchstart', onDoc, { passive: true });
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('mousedown', onDoc);
+      window.removeEventListener('touchstart', onDoc);
       window.removeEventListener('keydown', onKey);
     };
   });
@@ -83,9 +85,14 @@
     min-height: var(--tap-min);
   }
 
-  .context-menu-item:hover,
   .context-menu-item:focus-visible {
     background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .context-menu-item:hover {
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
   }
 
   .context-menu-item--danger {

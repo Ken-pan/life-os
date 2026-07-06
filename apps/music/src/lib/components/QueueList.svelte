@@ -5,16 +5,45 @@
     reorderQueue,
     moveQueueItem,
     removeFromQueue,
-    clearQueue
+    clearQueue,
+    getCurrentTrack
   } from '$lib/player.svelte.js';
+  import { appendSimilarToQueue, formatRecommendationTags } from '$lib/recommendations.js';
+  import { recommendationPreview } from '$lib/ui.svelte.js';
+  import { auth } from '$lib/auth.svelte.js';
   import TrackRow from './TrackRow.svelte';
   import Icon from './Icon.svelte';
+  import { toast } from '$lib/ui.svelte.js';
   import { t } from '$lib/i18n/index.js';
 
   let { compact = false } = $props();
   let dragFrom = $state(null);
   /** @type {number | null} */
   let touchFrom = $state(null);
+  let continueLoading = $state(false);
+
+  /** @param {'same_vibe' | 'discovery'} mode */
+  async function onContinueSimilar(mode = 'same_vibe') {
+    if (continueLoading || !getCurrentTrack()) return;
+    if (!auth.user) {
+      toast(t('nowPlaying.continueSimilarEmpty'), { error: true });
+      return;
+    }
+    continueLoading = true;
+    try {
+      const { added } = await appendSimilarToQueue({ mode, limit: 15 });
+      if (added > 0) {
+        toast(t('nowPlaying.continueSimilarAdded', { count: added }));
+      } else {
+        recommendationPreview.length = 0;
+        toast(t('nowPlaying.continueSimilarEmpty'));
+      }
+    } catch {
+      toast(t('nowPlaying.continueSimilarFailed'), { error: true });
+    } finally {
+      continueLoading = false;
+    }
+  }
 
   /** @param {DragEvent} e @param {number} index */
   function onDragStart(e, index) {
@@ -108,6 +137,15 @@
   <div class="queue-list-foot">
     <button class="btn-ghost" type="button" onclick={clearQueue}>{t('nowPlaying.clearQueue')}</button>
     <button
+      class="btn-secondary queue-continue-btn"
+      type="button"
+      disabled={continueLoading || !getCurrentTrack()}
+      onclick={() => onContinueSimilar('same_vibe')}
+      title={t('nowPlaying.continueSimilarHint')}
+    >
+      {continueLoading ? t('nowPlaying.continueSimilarLoading') : t('nowPlaying.continueSimilar')}
+    </button>
+    <button
       class="btn-secondary queue-play-btn"
       type="button"
       onclick={() => playTracks(player.queue, player.index)}
@@ -115,6 +153,25 @@
       {t('nowPlaying.playFromCurrent')}
     </button>
   </div>
+{/if}
+
+{#if recommendationPreview.length && !compact}
+  <section class="rec-preview" aria-label={t('nowPlaying.recPreviewTitle')}>
+    <h3 class="rec-preview-title">{t('nowPlaying.recPreviewTitle')}</h3>
+    <ul class="rec-preview-list">
+      {#each recommendationPreview as pick (pick.track.id)}
+        <li class="rec-preview-item">
+          <span class="rec-preview-track">{pick.track.title} — {pick.track.artist}</span>
+          {#if pick.reasons?.length}
+            <span class="rec-preview-reasons">{pick.reasons.join(' · ')}</span>
+          {/if}
+          {#if formatRecommendationTags(pick.matchedTags).length}
+            <span class="rec-preview-tags">{formatRecommendationTags(pick.matchedTags).join(' · ')}</span>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
 {/if}
 
 <style>
@@ -127,13 +184,16 @@
 
   .queue-list-foot {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
     padding: var(--space-3) 0 0;
     border-top: 1px solid var(--border);
   }
 
-  .queue-list-foot .queue-play-btn {
+  .queue-list-foot .queue-play-btn,
+  .queue-list-foot .queue-continue-btn {
     flex: 1;
+    min-width: 7rem;
   }
 
   .queue-row {
@@ -200,5 +260,49 @@
 
   .queue-list--compact .queue-move-controls {
     display: none;
+  }
+
+  .rec-preview {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+  }
+
+  .rec-preview-title {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--t2, var(--text-muted));
+  }
+
+  .rec-preview-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .rec-preview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--text-sm);
+  }
+
+  .rec-preview-track {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .rec-preview-reasons {
+    color: var(--track-accent, var(--accent));
+    font-size: var(--text-xs);
+  }
+
+  .rec-preview-tags {
+    color: var(--t3, var(--text-muted));
+    font-size: var(--text-xs);
   }
 </style>

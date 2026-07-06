@@ -78,6 +78,8 @@
   .music-sidebar .nav-item.active {
     position: relative;
     font-weight: 600;
+    background: color-mix(in srgb, var(--sidebar-foreground) 6%, transparent);
+    color: var(--sidebar-foreground);
   }
 
   .music-sidebar .nav-item.active::before {
@@ -86,8 +88,8 @@
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 3px;
-    height: 60%;
+    width: 2px;
+    height: 55%;
     border-radius: 0 2px 2px 0;
     background: var(--sidebar-primary);
   }

@@ -49,8 +49,10 @@
     touch-action: manipulation;
   }
 
-  .toast-dismiss:hover {
-    opacity: 1;
-    background: color-mix(in srgb, currentColor 10%, transparent);
+  @media (hover: hover) and (pointer: fine) {
+    .toast-dismiss:hover {
+      opacity: 1;
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
   }
 </style>

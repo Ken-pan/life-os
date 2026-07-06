@@ -396,6 +396,24 @@ export async function getSpeedDialEditCells() {
 }
 
 /** @param {SpeedDialPage[]} pages */
+export function speedDialAllTracks(pages) {
+  const seen = new Set();
+  /** @type {import('./types.js').Track[]} */
+  const tracks = [];
+  for (const page of pages) {
+    for (const cell of page.cells) {
+      if (cell.variant === 'add') continue;
+      for (const track of cell.tracks) {
+        if (seen.has(track.id)) continue;
+        seen.add(track.id);
+        tracks.push(track);
+      }
+    }
+  }
+  return tracks;
+}
+
+/** @param {SpeedDialPage[]} pages */
 export function speedDialTrackIds(pages) {
   const ids = new Set();
   for (const page of pages) {

@@ -1,4 +1,16 @@
 /**
+ * @param {EventTarget | null} target
+ */
+function isInteractiveGestureTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(
+    target.closest(
+      'button, a, input, textarea, select, label, [role="slider"], [role="tab"], .np-mobile-chrome'
+    )
+  );
+}
+
+/**
  * Vertical swipe-to-dismiss (art / header zone only — avoids progress scrub conflicts).
  * Supports touch + pointer for mobile and desktop trackpads.
  * @param {HTMLElement} node
@@ -50,6 +62,7 @@ export function swipeDismiss(node, opts) {
   /** @param {TouchEvent} e */
   function onTouchStart(e) {
     if (e.touches.length !== 1) return;
+    if (isInteractiveGestureTarget(e.target)) return;
     begin(e.touches[0].clientX, e.touches[0].clientY);
   }
 
@@ -67,6 +80,7 @@ export function swipeDismiss(node, opts) {
   /** @param {PointerEvent} e */
   function onPointerDown(e) {
     if (e.pointerType === 'touch' || pointerId !== null) return;
+    if (isInteractiveGestureTarget(e.target)) return;
     pointerId = e.pointerId;
     node.setPointerCapture(e.pointerId);
     begin(e.clientX, e.clientY);

@@ -215,6 +215,8 @@ export function resolvePageTitle(pathname, tr) {
 /** @param {string} pathname */
 export function isWideContentRoute(pathname) {
   return (
+    pathname === '/' ||
+    pathname === '/speed-dial' ||
     pathname === '/library' ||
     pathname.startsWith('/browse') ||
     pathname.startsWith('/search') ||

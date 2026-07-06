@@ -4,5 +4,12 @@ export const MUSIC_TABLES = {
   userState: 'music_user_state',
   trackMeta: 'music_track_meta',
   playlists: 'music_playlists',
-  playlistTracks: 'music_playlist_tracks'
+  playlistTracks: 'music_playlist_tracks',
+  tagDictionary: 'tag_dictionary',
+  trackEnrichment: 'track_enrichment',
+  trackTags: 'track_tags',
+  trackAudioFeatures: 'track_audio_features',
+  trackEmbeddings: 'track_embeddings',
+  playEvents: 'play_events',
+  tagReviewQueue: 'tag_review_queue'
 };

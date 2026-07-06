@@ -3,8 +3,9 @@
   import { t } from '$lib/i18n/index.js';
   import SpeedDialCell from './SpeedDialCell.svelte';
   import Icon from './Icon.svelte';
-  import { auth } from '$lib/auth.svelte.js';
   import { getCurrentTrack } from '$lib/player.svelte.js';
+  import { playTracks } from '$lib/player.svelte.js';
+  import { speedDialAllTracks } from '$lib/speedDial.js';
 
   /** @type {{ pages: import('$lib/speedDial.js').SpeedDialPage[], onChange?: () => void }} */
   let { pages = [], onChange } = $props();
@@ -13,12 +14,7 @@
   let activePage = $state(0);
 
   const spotlight = $derived(getCurrentTrack());
-  const personalLabel = $derived.by(() => {
-    const email = auth.user?.email;
-    if (!email) return t('home.speedDialKicker');
-    const name = email.split('@')[0];
-    return name ? name.toUpperCase() : t('home.speedDialKicker');
-  });
+  const playableTracks = $derived(speedDialAllTracks(pages));
 
   onMount(() => {
     if (!carouselEl) return;
@@ -45,15 +41,27 @@
     if (!spotlight || cell.variant === 'add') return false;
     return cell.tracks.some((track) => track.id === spotlight.id);
   }
+
+  function playAll() {
+    if (!playableTracks.length) return;
+    playTracks(playableTracks, 0, 'speed_dial', {
+      entityType: 'collection',
+      entityId: 'speed_dial_all'
+    });
+  }
 </script>
 
 <section class="speed-dial" aria-label={t('home.speedDial')}>
   <header class="speed-dial-head">
-    <p class="speed-dial-kicker">{personalLabel} · {t('home.speedDialPersonal')}</p>
     <a class="speed-dial-title-link" href="/speed-dial">
       <h3 class="speed-dial-title">{t('home.speedDial')}</h3>
       <Icon name="chevron-right" size={18} class="speed-dial-chevron" />
     </a>
+    {#if playableTracks.length}
+      <button type="button" class="speed-dial-play-all" onclick={playAll}>
+        {t('home.speedDialPlayAll')}
+      </button>
+    {/if}
   </header>
 
   <div class="speed-dial-carousel" bind:this={carouselEl}>
@@ -89,22 +97,16 @@
   .speed-dial {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
+    width: 100%;
   }
 
   .speed-dial-head {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .speed-dial-kicker {
-    margin: 0;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--t3, var(--text-muted));
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 32px;
   }
 
   .speed-dial-title-link {
@@ -113,6 +115,7 @@
     gap: 4px;
     color: inherit;
     text-decoration: none;
+    min-width: 0;
   }
 
   .speed-dial-title-link:focus-visible .speed-dial-title {
@@ -127,15 +130,35 @@
 
   .speed-dial-title {
     margin: 0;
-    font-size: 22px;
+    font-size: var(--text-lg);
     font-weight: 700;
     letter-spacing: -0.02em;
-    line-height: 1.1;
+    line-height: 1.2;
   }
 
   .speed-dial-title-link :global(.speed-dial-chevron) {
     color: var(--t3, var(--text-muted));
-    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .speed-dial-play-all {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: var(--t2, var(--text-secondary));
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: var(--radius-pill);
+    touch-action: manipulation;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .speed-dial-play-all:hover {
+      color: var(--t1, var(--text));
+      background: color-mix(in srgb, var(--t1) 6%, transparent);
+    }
   }
 
   .speed-dial-carousel {
@@ -159,37 +182,26 @@
   .speed-dial-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    gap: 11px;
     width: 100%;
-  }
-
-  @media (--life-os-mobile) {
-    .speed-dial-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .speed-dial-title {
-      font-size: var(--text-xl);
-    }
   }
 
   .speed-dial-dots {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    min-height: 10px;
+    gap: 8px;
+    min-height: 12px;
   }
 
   .speed-dial-dot {
     position: relative;
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     border: none;
     padding: 0;
-    background: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.22);
     transition:
       transform var(--dur-fast) var(--ease-standard),
       background var(--dur-fast) var(--ease-standard);
@@ -202,12 +214,8 @@
     inset: -12px;
   }
 
-  .speed-dial-dots {
-    position: relative;
-  }
-
   .speed-dial-dot.active {
-    background: rgba(255, 255, 255, 0.92);
-    transform: scale(1.15);
+    background: rgba(255, 255, 255, 0.88);
+    transform: scale(1.2);
   }
 </style>

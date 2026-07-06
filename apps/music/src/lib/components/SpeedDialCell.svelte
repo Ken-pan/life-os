@@ -97,8 +97,9 @@
 {#if cell.variant === 'add'}
   <a class="speed-dial-cell speed-dial-cell--add" href="/search" aria-label={t('home.speedDialAdd')}>
     <span class="speed-dial-add-icon" aria-hidden="true">
-      <Icon name="plus" size={24} strokeWidth={2} />
+      <Icon name="plus" size={22} strokeWidth={2} />
     </span>
+    <span class="speed-dial-add-label">{t('home.speedDialAddShort')}</span>
   </a>
 {:else}
   <button
@@ -157,7 +158,7 @@
     aspect-ratio: 1;
     padding: 0;
     border: 2.5px solid transparent;
-    border-radius: 12px;
+    border-radius: 13px;
     background: #1a1214;
     color: #fff;
     font: inherit;
@@ -168,24 +169,47 @@
   }
 
   .speed-dial-cell--active {
-    border-color: rgba(255, 255, 255, 0.92);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
   }
 
   .speed-dial-cell--add {
-    background: #242024;
-    display: grid;
-    place-items: center;
-    color: rgba(255, 255, 255, 0.72);
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+    border: 1.5px dashed color-mix(in srgb, var(--t1) 18%, var(--border));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--t2, var(--text-secondary));
     text-decoration: none;
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .speed-dial-cell:not(.speed-dial-cell--add):hover {
+      border-color: rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .speed-dial-cell--add:hover {
+      border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+      color: var(--t1, var(--text));
+    }
+  }
+
   .speed-dial-add-icon {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: grid;
     place-items: center;
-    background: rgba(255, 255, 255, 0.08);
+    background: color-mix(in srgb, var(--t1) 6%, transparent);
+  }
+
+  .speed-dial-add-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
   .speed-dial-cell :global(.speed-dial-cover) {
@@ -237,9 +261,9 @@
 
   .speed-dial-label {
     position: absolute;
-    inset: auto 8px 8px;
+    inset: auto clamp(6px, 2vw, 8px) clamp(6px, 2vw, 8px);
     z-index: 1;
-    font-size: 12px;
+    font-size: clamp(11px, 2.8vw, 13px);
     font-weight: 600;
     line-height: 1.25;
     color: #fff;

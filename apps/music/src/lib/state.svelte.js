@@ -19,7 +19,9 @@ const defaultState = () => ({
     /** Tint player chrome from album artwork (progress, glow, spotlight). */
     albumAmbience: true,
     /** Now-playing panel: cover (player), lyrics, or queue. */
-    immersiveViewMode: 'player'
+    immersiveViewMode: 'player',
+    /** 队列播完时按相似 vibe 自动续播（需登录） */
+    autoContinueSimilar: true
   }
 });
 

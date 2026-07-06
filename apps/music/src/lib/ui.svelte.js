@@ -53,3 +53,8 @@ export function toggleUtilityPane(tab) {
     openUtilityPane(tab ?? utilityPane.tab);
   }
 }
+
+/** 最近一次「相似续播」推荐（含 reason / tags，供队列 UI debug） */
+export const recommendationPreview = $state(
+  /** @type {Array<{ track: import('./types.js').Track, score: number, reasons: string[], matchedTags: string[] }>} */ ([])
+);

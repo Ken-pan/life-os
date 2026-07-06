@@ -31,13 +31,13 @@
     </button>
   {/if}
   <button class="ctrl" type="button" aria-label="上一首" onclick={prevTrack}>
-    <Icon name="skip-back" size={minimal ? 20 : 22} />
+    <Icon name="skip-back" size={minimal ? 20 : 22} strokeWidth={apple ? 2.25 : 1.75} />
   </button>
   <button class="ctrl ctrl-main" type="button" aria-label={player.playing ? '暂停' : '播放'} onclick={togglePlay}>
-    <Icon name={player.playing ? 'pause' : 'play'} size={minimal ? 24 : 28} strokeWidth={2} />
+    <Icon name={player.playing ? 'pause' : 'play'} size={minimal ? 24 : 28} strokeWidth={apple ? 2.5 : 2} />
   </button>
   <button class="ctrl" type="button" aria-label="下一首" onclick={nextTrack}>
-    <Icon name="skip-forward" size={minimal ? 20 : 22} />
+    <Icon name="skip-forward" size={minimal ? 20 : 22} strokeWidth={apple ? 2.25 : 1.75} />
   </button>
   {#if !minimal}
     <button class="ctrl" class:on={player.repeat !== 'off'} type="button" aria-label="循环" onclick={cycleRepeat}>

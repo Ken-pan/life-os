@@ -191,4 +191,16 @@
     color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
   }
+  @media (--life-os-mobile) {
+    .speed-dial-edit-row {
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .speed-dial-edit-actions {
+      width: 100%;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+  }
 </style>

@@ -218,7 +218,12 @@ export async function getRecentTracks(limit = 12) {
 export async function toggleLike(trackId) {
   const track = await db.tracks.get(trackId);
   if (!track) return;
-  await db.tracks.update(trackId, { liked: track.liked ? 0 : 1 });
+  const nextLiked = track.liked ? 0 : 1;
+  await db.tracks.update(trackId, { liked: nextLiked });
+  if (nextLiked) {
+    const { recordPlayEvent } = await import('./playEvents.js');
+    void recordPlayEvent({ trackId, eventType: 'like', context: 'library' });
+  }
 }
 
 /** @returns {Promise<import('./types.js').Playlist[]>} */
