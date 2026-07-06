@@ -32,6 +32,7 @@ import {
 } from "../store/defaults";
 import type { FlowType, Txn } from "../engine/transactions";
 import type { ExpectedOccurrence, OccurrenceState } from "../engine/timeline";
+import { purchaseEnrichmentFromRow } from "../engine/purchaseEnrichment";
 import { supabase } from "./supabase";
 import { SB } from "./supabaseTables";
 
@@ -1400,6 +1401,7 @@ function txnFromRow(r: Row): Txn {
     inCashFlow,
     excludeReason: ostr(r.exclude_reason),
     source: (ostr(r.source) as Txn["source"]) ?? "import",
+    purchaseEnrichment: purchaseEnrichmentFromRow(r.purchase_enrichment),
   };
 }
 
@@ -1457,6 +1459,7 @@ function txnToRow(userId: string, t: Partial<Txn> & { date: string }): Row {
     platform_id: (t as { platformId?: string }).platformId ?? null,
     review_status: "resolved",
     review_flags: [],
+    purchase_enrichment: t.purchaseEnrichment ?? null,
   };
 }
 

@@ -20,6 +20,25 @@ export function signedMoney(n: number, privacy = false): string {
   return `${sign}$${Math.abs(v).toLocaleString("en-US")}`;
 }
 
+/** 账本等需要对齐合计的场景：保留两位小数。 */
+export function moneyPrecise(n: number, privacy = false): string {
+  if (privacy) return MASK;
+  const sign = n < 0 ? "-" : "";
+  return `${sign}$${Math.abs(n).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+export function signedMoneyPrecise(n: number, privacy = false): string {
+  if (privacy) return MASK;
+  const sign = n > 0 ? "+" : n < 0 ? "-" : "";
+  return `${sign}$${Math.abs(n).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
 /** 紧凑金额，例如 $1.2M / $640k。 */
 export function moneyCompact(n: number, privacy = false): string {
   if (privacy) return MASK;

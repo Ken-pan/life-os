@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FinanceData } from "../types";
 import { useLocale } from "../i18n/context";
 import { t } from "../i18n/translate";
-import { money, signedMoney, depositDeltaClass } from "../format";
+import { money, signedMoney, signedMoneyPrecise, moneyPrecise, depositDeltaClass } from "../format";
 import { SpendingTrendChart } from "./SpendingTrendChart";
 import { BudgetPulseCard } from "./BudgetPulseCard";
 import { toTxnPayload } from "./txnPayload";
@@ -20,6 +20,8 @@ import {
   type Txn,
 } from "../engine/transactions";
 import { useTransactions } from "../store/transactions";
+import { PurchaseEnrichmentBlock } from "./PurchaseEnrichmentBlock";
+import { hasPurchaseEnrichment } from "../engine/purchaseEnrichment";
 
 type Window = "month" | "3m" | "12m" | "all";
 
@@ -88,6 +90,12 @@ export function HistoryView({
     [txns, catRange.from, catRange.to]
   );
   const maxCat = categories[0]?.amount ?? 1;
+  const enrichedAmazonCount = useMemo(
+    () => txns.filter((t) => hasPurchaseEnrichment(t) && t.purchaseEnrichment?.source === "amazon").length,
+    [txns],
+  );
+  const ledgerRef = useRef<HTMLDivElement>(null);
+  const [jumpLedgerSearch, setJumpLedgerSearch] = useState<string | undefined>();
 
   const latest = summary.latestMonth;
   if (loading) return <div className="card">{tl("history.loading")}</div>;
@@ -102,6 +110,25 @@ export function HistoryView({
           count: meta.rowCount.toLocaleString(),
         })}
       </p>
+
+      {enrichedAmazonCount > 0 && (
+        <div className="card amazon-enrichment-banner">
+          <div className="amazon-enrichment-banner-text">
+            <strong>{tl("history.amazonBannerTitle", { count: enrichedAmazonCount })}</strong>
+            <p className="muted-note text-sm mb-0">{tl("history.amazonBannerHint")}</p>
+          </div>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => {
+              setJumpLedgerSearch("Amazon");
+              ledgerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          >
+            {tl("history.amazonBannerAction")}
+          </button>
+        </div>
+      )}
 
       {/* 预算脉搏：本月进度 + 今日已花 + 近 7 日 */}
       <BudgetPulseCard data={data} onQuickAdd={onQuickAdd} />
@@ -255,16 +282,21 @@ export function HistoryView({
       </div>
 
       {/* 账本 */}
-      <Ledger
-        privacy={privacy}
-        txns={txns}
-        categoryList={categoryList}
-        accountList={accountList}
-        onEdit={editTxn}
-        onDelete={removeTxn}
-        initialSearch={initialLedgerSearch}
-        onInitialSearchConsumed={onLedgerSearchConsumed}
-      />
+      <div ref={ledgerRef} id="history-ledger">
+        <Ledger
+          privacy={privacy}
+          txns={txns}
+          categoryList={categoryList}
+          accountList={accountList}
+          onEdit={editTxn}
+          onDelete={removeTxn}
+          initialSearch={jumpLedgerSearch ?? initialLedgerSearch}
+          onInitialSearchConsumed={() => {
+            setJumpLedgerSearch(undefined);
+            onLedgerSearchConsumed?.();
+          }}
+        />
+      </div>
 
       <p className="muted-note">
         {tl("history.footnote", {
@@ -446,12 +478,12 @@ function Ledger({
   };
 
   return (
-    <div className="card">
+    <div className="card ledger-card">
       <div className="card-head">
         <h3>{tl("history.ledgerTitle", { count: results.length.toLocaleString() })}</h3>
         <div className="section-head-actions">
           <span className="text-muted text-sm">
-            {tl("history.ledgerSpendingTotal", { amount: money(totalSpending, privacy) })}
+            {tl("history.ledgerSpendingTotal", { amount: moneyPrecise(totalSpending, privacy) })}
           </span>
           <button className="icon-btn ledger-filter-toggle" onClick={() => setShowFilters((v) => !v)}>
             {showFilters ? tl("history.hideFilters") : tl("history.showFilters")}
@@ -599,6 +631,7 @@ function LedgerRow({
   const income = t.flow === "income" ? Math.abs(t.amount) : 0;
   const signed = income !== 0 ? income : -spend;
   const dim = !t.inSpending && t.flow !== "income";
+  const enriched = hasPurchaseEnrichment(t);
   const submitEdit = async () => {
     const payload = toTxnPayload({
       date,
@@ -615,7 +648,7 @@ function LedgerRow({
     });
   };
   return (
-    <div className={`ledger-row${dim ? " is-dim" : ""}`}>
+    <div className={`ledger-row${dim ? " is-dim" : ""}${enriched ? " has-enrichment" : ""}`}>
       {editing ? (
         <div className="grid" style={{ gridTemplateColumns: "1fr 2fr 1.3fr 1.3fr 1fr 0.9fr auto", gap: 6, width: "100%" }}>
           <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -643,13 +676,26 @@ function LedgerRow({
         <>
           <span className="lr-date">{t.date.slice(5)}</span>
           <div className="lr-main">
-            <span className="lr-merchant">{t.merchant}</span>
+            <div className="lr-main-head">
+              <span className="lr-merchant">{t.merchant}</span>
+              <span className={`lr-amt lr-amt--inline ${depositDeltaClass(signed)}`}>
+                {signed === 0 ? "—" : signedMoneyPrecise(signed, privacy)}
+              </span>
+            </div>
             <span className="lr-cat">{t.category}</span>
+            {enriched && (
+              <PurchaseEnrichmentBlock
+                enrichment={t.purchaseEnrichment}
+                privacy={privacy}
+                chargeDate={t.date}
+                compact
+              />
+            )}
           </div>
           <span className="lr-acct text-muted">{t.account}</span>
           <div className="lr-right">
-            <span className={`lr-amt ${depositDeltaClass(signed)}`}>
-              {signed === 0 ? "—" : signedMoney(signed, privacy)}
+            <span className={`lr-amt lr-amt--stacked ${depositDeltaClass(signed)}`}>
+              {signed === 0 ? "—" : signedMoneyPrecise(signed, privacy)}
             </span>
             {t.id && (
               <span className="lr-actions">

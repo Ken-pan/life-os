@@ -7,6 +7,8 @@
 //   收入 income   = -amount，仅 flow === "income" 的行
 // 仅 inSpending 的行计入花销分析；内部转账、信用卡还款、镜像重复等被排除。
 
+import type { PurchaseEnrichment } from "./purchaseEnrichment";
+
 export type FlowType =
   | "expense"
   | "credit_card_payment"
@@ -39,6 +41,8 @@ export interface Txn {
   excludeReason?: string;
   /** 来源：导入 vs 手动记账。 */
   source?: "import" | "manual";
+  /** 外部购买上下文（如 Amazon 订单明细）。 */
+  purchaseEnrichment?: PurchaseEnrichment;
 }
 
 /** 单笔交易计入花销分析的「净花销额」（支出为正、退款为负）。 */
@@ -345,7 +349,17 @@ export function searchTxns(txns: Txn[], q: LedgerQuery): Txn[] {
     if (q.from && t.date < q.from) return false;
     if (q.to && t.date > q.to) return false;
     if (needle) {
-      const hay = `${t.merchant} ${t.category}`.toLowerCase();
+      const itemHay = (t.purchaseEnrichment?.lineItems ?? [])
+        .map((li) => li.title)
+        .join(" ");
+      const enrichHay = [
+        t.purchaseEnrichment?.orderId,
+        t.purchaseEnrichment?.status,
+        itemHay,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const hay = `${t.merchant} ${t.category} ${enrichHay}`.toLowerCase();
       if (!hay.includes(needle)) return false;
     }
     return true;

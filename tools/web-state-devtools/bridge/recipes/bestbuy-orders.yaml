@@ -1,0 +1,53 @@
+# Best Buy purchase history — scroll + capture harvest (past year filter in script)
+# Run: WEB_STATE_ALLOW_BESTBUY=1 node scripts/bestbuy-harvest-past-year.mjs
+
+id: bestbuy-orders
+match:
+  urlPattern: 'bestbuy.*/purchasehistory|bestbuy.*/profile/ss/orders'
+
+vars:
+  year: '2025'
+  targetCount: 9999
+  scrollRounds: 35
+
+capture:
+  action: capture
+  fast: true
+  minItemsPerPage: 0
+  captureTimeoutMs: 45000
+  navigateTimeoutMs: 90000
+  wait:
+    selectors:
+      - 'main'
+      - 'a[href*="purchasehistory"]'
+      - 'a[href*="/profile/ss/orders"]'
+      - '[data-testid*="order"]'
+      - '[class*="order"]'
+    minCount: 1
+    stableMs: 300
+    timeoutMs: 12000
+
+entities:
+  kind: list
+  source: adapter
+  mergeKey: ['detailUrl:orders/([^/?#]+)', 'orderId']
+
+export:
+  outDir: bestbuy-export
+  basename: 'bestbuy-orders-past-year'
+  formats: [json, csv]
+  redact: [shipTo, address]
+
+follow:
+  enabled: true
+  field: detailUrl
+  max: 40
+  whenMissing: [orderTotal, lineItems]
+  wait:
+    selectors:
+      - 'a[href*="/site/"]'
+      - '[data-testid*="product"]'
+      - '[class*="item"]'
+    minCount: 1
+    stableMs: 250
+    timeoutMs: 10000

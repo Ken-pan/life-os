@@ -1,0 +1,26 @@
+---
+description: Use Web State DevTools MCP when debugging UI in the browser
+globs: apps/**/*
+alwaysApply: false
+---
+
+# Web State DevTools + Cursor
+
+1. `npm run bridge` in `tools/web-state-devtools/bridge`
+2. Extension → **Dev Agent Mode ON** → Capture page
+
+**Explore loop (v0.6)**
+
+```txt
+get_web_snapshot_summary
+  → browser_explore_deep(maxSteps=10, skipNavigate=false)
+  → get_explore_trace / get_web_page_model
+```
+
+Or single step: `browser_explore` / `get_exploration_candidates`
+
+**Read:** `get_web_page_model`, `get_web_selectors`, `get_interaction_graph`
+
+**Act:** `browser_*`, prefer scoped selectors from page model regions
+
+Use `skipNavigate: true` to only scroll/expand on current page without opening detail URLs.
