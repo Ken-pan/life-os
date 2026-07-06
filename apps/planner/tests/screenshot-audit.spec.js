@@ -187,14 +187,14 @@ async function seedState(page, state) {
     { key: STORAGE_KEY, data: state }
   );
   await page.reload();
-  await page.waitForSelector('.quick-add input', { timeout: 15_000 });
+  await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 });
 }
 
 async function clearAppState(page) {
   await page.goto('/');
   await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY);
   await page.reload();
-  await page.waitForSelector('.quick-add input', { timeout: 15_000 });
+  await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 });
 }
 
 async function snap(page, name) {

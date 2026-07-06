@@ -6,13 +6,30 @@ async function clearAppState(page) {
   await page.goto('/');
   await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY);
   await page.reload();
-  await page.waitForSelector('.quick-add input', { timeout: 15_000 });
+  await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 });
 }
 
+// 桌面端走快速添加栏；移动端快速添加栏隐藏，走 FAB + 编辑器
 async function quickAddTask(page, title) {
   const input = page.locator('.quick-add input').first();
-  await input.fill(title);
-  await page.locator('.quick-add button[type="submit"]').first().click();
+  if (await input.isVisible()) {
+    await input.fill(title);
+    await page.locator('.quick-add button[type="submit"]').first().click();
+  } else {
+    await page.getByTestId('fab-add').click();
+    const dialog = page.getByRole('dialog');
+    await dialog.locator('#task-title').fill(title);
+    await dialog.getByRole('button', { name: '保存' }).click();
+    await expect(dialog).toHaveCount(0);
+  }
+}
+
+// 新建任务的编辑器默认折叠高级选项，需要先展开
+async function openAdvancedOptions(dialog) {
+  const toggle = dialog.locator('.sheet-advanced-toggle');
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+    await toggle.click();
+  }
 }
 
 function localDateOffset(days = 0) {
@@ -45,7 +62,8 @@ test.describe('PlannerOS E2E', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await page.locator('#task-title').fill('会议准备');
     await page.locator('#task-due').fill(localDateOffset(0));
-    await page.getByRole('dialog').getByRole('button', { name: '高', exact: true }).click();
+    await openAdvancedOptions(page.getByRole('dialog'));
+    await page.locator('#task-priority').selectOption({ label: '高' });
     await page.getByRole('dialog').getByRole('button', { name: '保存' }).click();
     await expect(page.locator('.task-title', { hasText: '会议准备' })).toBeVisible();
     await expect(page.locator('.priority-dot')).toBeVisible();
@@ -72,8 +90,7 @@ test.describe('PlannerOS E2E', () => {
   test('收件箱页面添加无日期任务', async ({ page }) => {
     await page.goto('/inbox');
     await expect(page.locator('h1.page-title')).toHaveText('收件箱');
-    await page.locator('.quick-add input').first().fill('收件箱任务');
-    await page.locator('.quick-add button[type="submit"]').first().click();
+    await quickAddTask(page, '收件箱任务');
     await expect(page.locator('.task-title', { hasText: '收件箱任务' })).toBeVisible();
   });
 
@@ -102,6 +119,7 @@ test.describe('PlannerOS E2E', () => {
     await page.goto('/');
     await page.getByTestId('fab-add').click();
     await page.locator('#task-title').fill('搜索目标');
+    await openAdvancedOptions(page.getByRole('dialog'));
     await page.locator('#task-tags').fill('work, urgent');
     await page.getByRole('dialog').getByRole('button', { name: '保存' }).click();
 
@@ -141,7 +159,7 @@ test.describe('PlannerOS E2E', () => {
     await page.goto('/');
     await quickAddTask(page, '持久化测试');
     await page.reload();
-    await page.waitForSelector('.quick-add input', { timeout: 15_000 });
+    await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 });
     await expect(page.locator('.task-title', { hasText: '持久化测试' })).toBeVisible();
   });
 
@@ -160,6 +178,7 @@ test.describe('PlannerOS E2E', () => {
     const dialog = page.getByRole('dialog');
     await dialog.locator('#task-title').fill('每日晨跑');
     await dialog.locator('#task-due').fill(localDateOffset(0));
+    await openAdvancedOptions(dialog);
     await dialog.getByRole('button', { name: '每天', exact: true }).click();
     await dialog.getByRole('button', { name: '保存' }).click();
     await expect(page.locator('.task-title', { hasText: '每日晨跑' })).toBeVisible();
@@ -231,11 +250,23 @@ test.describe('PlannerOS E2E', () => {
     await quickAddTask(page, '排期B');
     await quickAddTask(page, '排期C');
     await page.goto('/');
-    const scheduleBtn = page.locator('.insight-action', { hasText: /安排最近|Schedule up to/i });
+    // 有任务时 Insight 默认折叠为摘要，等待加载后展开
+    const summary = page.locator('.insight-summary');
+    await summary.waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {});
+    if (await summary.isVisible()) {
+      await summary.click();
+    }
+    const scheduleBtn = page.locator('.insight-banner-cta', { hasText: /安排最近|Schedule up to/i });
     await expect(scheduleBtn).toBeVisible({ timeout: 10_000 });
     await scheduleBtn.click();
     await expect(page.locator('.toast')).toContainText(/3|安排|Scheduled/i);
     await page.goto('/upcoming');
+    // 「未来 7 天」分组默认折叠，先展开再断言
+    const weekGroup = page.getByRole('button', { name: /未来|Next/ });
+    await weekGroup.waitFor({ state: 'visible', timeout: 10_000 });
+    if ((await weekGroup.getAttribute('aria-expanded')) === 'false') {
+      await weekGroup.click();
+    }
     await expect(page.locator('.task-title', { hasText: '排期A' })).toBeVisible();
     await expect(page.locator('.task-title', { hasText: '排期B' })).toBeVisible();
     await expect(page.locator('.task-title', { hasText: '排期C' })).toBeVisible();

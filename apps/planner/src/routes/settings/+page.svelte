@@ -169,7 +169,7 @@
   />
 
   <SettingsSection title={t('settings.newList')} testId="settings-lists">
-    <div class="quick-add">
+    <div class="quick-add quick-add--mobile">
       <input bind:value={listName} placeholder={t('settings.listName')} />
       <button type="button" class="btn-primary" onclick={addList}>{t('common.add')}</button>
     </div>
