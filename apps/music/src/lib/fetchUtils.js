@@ -1,5 +1,5 @@
-const DEFAULT_TIMEOUT_MS = 12_000;
-const MAX_RETRIES = 2;
+const DEFAULT_TIMEOUT_MS = 12_000
+const MAX_RETRIES = 2
 
 /**
  * Resilient GET with AbortSignal.timeout + selective retry (timeouts, 5xx, 429).
@@ -7,34 +7,47 @@ const MAX_RETRIES = 2;
  * @param {{ timeoutMs?: number, retries?: number, init?: RequestInit }} [opts]
  */
 export async function fetchWithRetry(url, opts = {}) {
-  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const retries = opts.retries ?? MAX_RETRIES;
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  const retries = opts.retries ?? MAX_RETRIES
   /** @type {unknown} */
-  let lastError;
+  let lastError
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
       const res = await fetch(url, {
         ...opts.init,
-        signal: AbortSignal.timeout(timeoutMs)
-      });
+        signal: AbortSignal.timeout(timeoutMs),
+      })
       if (!res.ok) {
-        const retryable = res.status >= 500 || res.status === 429 || res.status === 408;
+        const retryable =
+          res.status >= 500 || res.status === 429 || res.status === 408
         if (!retryable || attempt >= retries) {
-          throw new Error(`HTTP ${res.status}`);
+          throw new Error(`HTTP ${res.status}`)
         }
       } else {
-        return res;
+        return res
       }
     } catch (err) {
-      lastError = err;
+      lastError = err
       const retryable =
         err instanceof Error &&
-        (err.name === 'TimeoutError' || err.name === 'TypeError' || err.message.startsWith('HTTP 5'));
-      if (!retryable || attempt >= retries) throw err;
+        (err.name === 'TimeoutError' ||
+          err.name === 'TypeError' ||
+          err.message.startsWith('HTTP 5'))
+      if (!retryable || attempt >= retries) throw err
     }
-    await new Promise((r) => setTimeout(r, 150 * 2 ** attempt));
+    await new Promise((r) => setTimeout(r, 150 * 2 ** attempt))
   }
 
-  throw lastError;
+  throw lastError
+}
+
+/** @param {string} url */
+export async function fetchRemoteArtBlob(url) {
+  const res = await fetchWithRetry(url, { timeoutMs: 15_000 })
+  const blob = await res.blob()
+  if (!blob.size) return null
+  return blob.type.startsWith('image/')
+    ? blob
+    : new Blob([blob], { type: 'image/jpeg' })
 }

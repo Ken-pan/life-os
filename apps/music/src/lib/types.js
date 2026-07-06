@@ -1,5 +1,7 @@
 /** @typedef {{ id: string, title: string, artist: string, album: string, albumKey: string, artistKey: string, duration: number, mime: string, size: number, addedAt: number, playCount: number, liked: 0 | 1, artBlob?: Blob, artRemoteUrl?: string, artUrl?: string, objectUrl?: string, lyrics?: string, fileName?: string, storagePath?: string, words: string[] }} Track */
 
+/** @typedef {{ albumKey: string, artist: string, album: string, artBlob?: Blob, artRemoteUrl?: string, updatedAt: number }} AlbumArtRow */
+
 /** @typedef {{ id: string, name: string, kind: 'user' | 'liked' | 'system', createdAt: number, updatedAt: number }} Playlist */
 
 /** @typedef {{ playlistId: string, trackId: string, position: number, rowId?: number }} PlaylistTrackRow */
@@ -8,4 +10,4 @@
 
 /** @typedef {'off' | 'one' | 'all'} RepeatMode */
 
-export {};
+export {}

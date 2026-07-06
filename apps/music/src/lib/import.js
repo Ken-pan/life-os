@@ -1,66 +1,78 @@
-import { db, slugKey, trackWords, ensureBuiltinPlaylists, getAllTracks, hydrateTrack, trackNeedsLyrics } from './db.js';
-import { parseId3, parseFilename, isValidMeta } from './id3.js';
-import { lyricsMatchKey } from './lyrics.js';
-import { lookupRemoteAlbumName } from './albumArt.js';
-import { repairMissingArtModern } from './artResolver.js';
-import { getSignedAudioUrl } from './cloudAudio.js';
-import { fetchLyricsForTrack } from './lyricsFetch.js';
-import { scheduleAutoCloudPush } from './sync.js';
+import {
+  db,
+  slugKey,
+  trackWords,
+  ensureBuiltinPlaylists,
+  getAllTracks,
+  hydrateTrack,
+  trackNeedsLyrics,
+} from './db.js'
+import { upsertAlbumArt, albumHasArt } from './albumArtStore.js'
+import { parseId3, parseFilename, isValidMeta } from './id3.js'
+import { lyricsMatchKey } from './lyrics.js'
+import { lookupRemoteAlbumName } from './albumArt.js'
+import { repairMissingArtModern } from './artResolver.js'
+import { getSignedAudioUrl } from './cloudAudio.js'
+import { fetchLyricsForTrack } from './lyricsFetch.js'
+import { scheduleAutoCloudPush } from './sync.js'
 
-const AUDIO_EXT = /\.(mp3|m4a|aac|flac|wav|ogg|opus)$/i;
-const LRC_EXT = /\.lrc$/i;
-const CLOUD_SNIFF_BYTES = 512 * 1024;
+const AUDIO_EXT = /\.(mp3|m4a|aac|flac|wav|ogg|opus)$/i
+const LRC_EXT = /\.lrc$/i
+const CLOUD_SNIFF_BYTES = 512 * 1024
 
 /** @param {FileList | File[]} files @param {(done: number, total: number) => void} [onProgress] */
 export async function importMediaFiles(files, onProgress) {
-  const list = [...files];
-  const audio = list.filter((f) => AUDIO_EXT.test(f.name));
-  const lrcs = list.filter((f) => LRC_EXT.test(f.name));
-  const total = audio.length + lrcs.length;
-  let done = 0;
+  const list = [...files]
+  const audio = list.filter((f) => AUDIO_EXT.test(f.name))
+  const lrcs = list.filter((f) => LRC_EXT.test(f.name))
+  const total = audio.length + lrcs.length
+  let done = 0
 
   const audioCount = await importAudioFiles(audio, (d) => {
-    done = d;
-    onProgress?.(done, total || 1);
-  });
+    done = d
+    onProgress?.(done, total || 1)
+  })
 
   const lrcCount = await importLrcFiles(lrcs, (d) => {
-    done = audio.length + d;
-    onProgress?.(done, total || 1);
-  });
+    done = audio.length + d
+    onProgress?.(done, total || 1)
+  })
 
   if (audioCount > 0) {
-    void ensureArtRepaired();
+    void ensureArtRepaired()
   }
 
-  return { audioCount, lrcCount, total: audioCount + lrcCount };
+  return { audioCount, lrcCount, total: audioCount + lrcCount }
 }
 
 /** @param {FileList | File[]} files @param {(done: number, total: number) => void} [onProgress] */
 export async function importAudioFiles(files, onProgress) {
-  await ensureBuiltinPlaylists();
-  const list = [...files].filter((f) => AUDIO_EXT.test(f.name));
-  let done = 0;
+  await ensureBuiltinPlaylists()
+  const list = [...files].filter((f) => AUDIO_EXT.test(f.name))
+  let done = 0
 
   for (const file of list) {
-    const buffer = await file.arrayBuffer();
-    const tags = parseId3(buffer) || {};
-    const fromName = parseFilename(file.name);
-    const title = tags.title || fromName.title;
-    const artist = tags.artist || fromName.artist;
-    const album = isValidMeta(tags.album) ? String(tags.album).trim() : '未知专辑';
-    const duration = await readDuration(file);
+    const buffer = await file.arrayBuffer()
+    const tags = parseId3(buffer) || {}
+    const fromName = parseFilename(file.name)
+    const title = tags.title || fromName.title
+    const artist = tags.artist || fromName.artist
+    const album = isValidMeta(tags.album)
+      ? String(tags.album).trim()
+      : '未知专辑'
+    const duration = await readDuration(file)
 
     /** @type {Blob | undefined} */
-    let artBlob;
+    let artBlob
     if (tags.picture) {
-      artBlob = new Blob([tags.picture.data], { type: tags.picture.mime });
+      artBlob = new Blob([tags.picture.data], { type: tags.picture.mime })
     }
 
-    const id = await hashFile(file);
-    const existing = await db.tracks.get(id);
-    if (existing?.objectUrl) URL.revokeObjectURL(existing.objectUrl);
-    if (existing?.artUrl) URL.revokeObjectURL(existing.artUrl);
+    const albumKey = slugKey(`${artist}::${album}`)
+
+    const id = await hashFile(file)
+    const existing = await db.tracks.get(id)
+    if (existing?.objectUrl) URL.revokeObjectURL(existing.objectUrl)
 
     /** @type {import('./types.js').Track & { audioBlob: Blob }} */
     const track = {
@@ -68,7 +80,7 @@ export async function importAudioFiles(files, onProgress) {
       title,
       artist,
       album,
-      albumKey: slugKey(`${artist}::${album}`),
+      albumKey,
       artistKey: slugKey(artist),
       duration,
       mime: file.type || 'audio/mpeg',
@@ -76,20 +88,22 @@ export async function importAudioFiles(files, onProgress) {
       addedAt: existing?.addedAt || Date.now(),
       playCount: existing?.playCount || 0,
       liked: existing?.liked || 0,
-      artBlob: artBlob || existing?.artBlob,
       lyrics: tags.lyrics || existing?.lyrics,
       fileName: file.name,
       words: [],
-      audioBlob: file
-    };
-    track.words = trackWords(track);
-    await db.tracks.put(track);
-    hydrateTrack(track);
-    done += 1;
-    onProgress?.(done, list.length);
+      audioBlob: file,
+    }
+    track.words = trackWords(track)
+    await db.tracks.put(track)
+    if (artBlob) {
+      await upsertAlbumArt({ albumKey, artist, album, artBlob })
+    }
+    hydrateTrack(track)
+    done += 1
+    onProgress?.(done, list.length)
   }
 
-  return done;
+  return done
 }
 
 /**
@@ -97,44 +111,44 @@ export async function importAudioFiles(files, onProgress) {
  * @param {FileList | File[]} files @param {(done: number, total: number) => void} [onProgress]
  */
 export async function importLrcFiles(files, onProgress) {
-  const list = [...files].filter((f) => LRC_EXT.test(f.name));
-  if (!list.length) return 0;
+  const list = [...files].filter((f) => LRC_EXT.test(f.name))
+  if (!list.length) return 0
 
-  const tracks = await getAllTracks();
-  let matched = 0;
-  let done = 0;
+  const tracks = await getAllTracks()
+  let matched = 0
+  let done = 0
 
   for (const file of list) {
-    const text = await file.text();
+    const text = await file.text()
     if (!text.trim()) {
-      done += 1;
-      onProgress?.(done, list.length);
-      continue;
+      done += 1
+      onProgress?.(done, list.length)
+      continue
     }
 
-    const key = lyricsMatchKey(file.name);
+    const key = lyricsMatchKey(file.name)
     const track = tracks.find((tr) => {
       const candidates = [
         lyricsMatchKey(tr.title),
         lyricsMatchKey(`${tr.artist} - ${tr.title}`),
         lyricsMatchKey(`${tr.artist}-${tr.title}`),
-        lyricsMatchKey(tr.fileName || '')
-      ];
-      return candidates.includes(key);
-    });
+        lyricsMatchKey(tr.fileName || ''),
+      ]
+      return candidates.includes(key)
+    })
 
     if (track) {
-      await db.tracks.update(track.id, { lyrics: text });
-      track.lyrics = text;
-      matched += 1;
+      await db.tracks.update(track.id, { lyrics: text })
+      track.lyrics = text
+      matched += 1
     }
 
-    done += 1;
-    onProgress?.(done, list.length);
+    done += 1
+    onProgress?.(done, list.length)
   }
 
-  if (matched) scheduleAutoCloudPush();
-  return matched;
+  if (matched) scheduleAutoCloudPush()
+  return matched
 }
 
 /**
@@ -142,31 +156,31 @@ export async function importLrcFiles(files, onProgress) {
  * @param {(done: number, total: number) => void} [onProgress]
  */
 export async function rescanTrackMetadata(onProgress) {
-  const tracks = await getAllTracks();
-  const scannable = tracks.filter((t) => t.audioBlob || t.storagePath);
-  let updated = 0;
-  let done = 0;
+  const tracks = await getAllTracks()
+  const scannable = tracks.filter((t) => t.audioBlob || t.storagePath)
+  let updated = 0
+  let done = 0
 
   for (const track of scannable) {
     try {
-      const tags = await id3FromTrack(track);
+      const tags = await id3FromTrack(track)
       /** @type {Partial<import('./types.js').Track>} */
-      const patch = metaPatchFromTags(track, tags);
+      const patch = metaPatchFromTags(track, tags)
 
       if (Object.keys(patch).length) {
-        await db.tracks.update(track.id, patch);
-        updated += 1;
+        await db.tracks.update(track.id, patch)
+        updated += 1
       }
     } catch {
       /* skip corrupt / unreachable files */
     }
 
-    done += 1;
-    onProgress?.(done, scannable.length);
+    done += 1
+    onProgress?.(done, scannable.length)
   }
 
-  if (updated) scheduleAutoCloudPush();
-  return { scanned: scannable.length, updated };
+  if (updated) scheduleAutoCloudPush()
+  return { scanned: scannable.length, updated }
 }
 
 /**
@@ -174,48 +188,52 @@ export async function rescanTrackMetadata(onProgress) {
  * @returns {Promise<number>}
  */
 export async function repairFilenameMetadata() {
-  const tracks = await getAllTracks();
-  let repaired = 0;
+  const tracks = await getAllTracks()
+  let repaired = 0
 
   for (const track of tracks) {
-    if (!track.fileName) continue;
-    const parsed = parseFilename(track.fileName);
-    if (!isValidMeta(parsed.title) || !isValidMeta(parsed.artist)) continue;
+    if (!track.fileName) continue
+    const parsed = parseFilename(track.fileName)
+    if (!isValidMeta(parsed.title) || !isValidMeta(parsed.artist)) continue
 
     const symmetricSwap =
       track.title === parsed.artist &&
       track.artist === parsed.title &&
-      parsed.title !== parsed.artist;
+      parsed.title !== parsed.artist
     const needsFix =
       symmetricSwap ||
       ((!isValidMeta(track.title) || track.title === '未命名') &&
         parsed.title !== track.title) ||
       ((!isValidMeta(track.artist) || track.artist === '未知艺术家') &&
-        parsed.artist !== track.artist);
+        parsed.artist !== track.artist)
 
-    if (!needsFix) continue;
+    if (!needsFix) continue
 
     /** @type {Partial<import('./types.js').Track>} */
     const patch = {
       title: parsed.title,
       artist: parsed.artist,
       artistKey: slugKey(parsed.artist),
-      words: trackWords({ ...track, title: parsed.title, artist: parsed.artist })
-    };
-    if (track.album && track.album !== '未知专辑') {
-      patch.albumKey = slugKey(`${parsed.artist}::${track.album}`);
+      words: trackWords({
+        ...track,
+        title: parsed.title,
+        artist: parsed.artist,
+      }),
     }
-    await db.tracks.update(track.id, patch);
-    repaired += 1;
+    if (track.album && track.album !== '未知专辑') {
+      patch.albumKey = slugKey(`${parsed.artist}::${track.album}`)
+    }
+    await db.tracks.update(track.id, patch)
+    repaired += 1
   }
 
-  if (repaired) scheduleAutoCloudPush();
-  return repaired;
+  if (repaired) scheduleAutoCloudPush()
+  return repaired
 }
 
 /** @param {import('./types.js').Track} track */
 function isGarbledAlbum(album) {
-  return Boolean(album && album !== '未知专辑' && !isValidMeta(album));
+  return Boolean(album && album !== '未知专辑' && !isValidMeta(album))
 }
 
 /**
@@ -223,43 +241,46 @@ function isGarbledAlbum(album) {
  * @returns {Promise<number>} count of tracks repaired
  */
 export async function repairGarbledMetadata() {
-  const tracks = await getAllTracks();
-  const targets = tracks.filter((t) => isGarbledAlbum(t.album));
-  let repaired = 0;
+  const tracks = await getAllTracks()
+  const targets = tracks.filter((t) => isGarbledAlbum(t.album))
+  let repaired = 0
 
   for (const track of targets) {
     try {
-      const tags = await id3FromTrack(track);
-      let album = isValidMeta(tags.album) ? String(tags.album).trim() : '';
+      const tags = await id3FromTrack(track)
+      let album = isValidMeta(tags.album) ? String(tags.album).trim() : ''
       if (!album) {
-        album = (await lookupRemoteAlbumName(track.artist, track.title)) || '未知专辑';
+        album =
+          (await lookupRemoteAlbumName(track.artist, track.title)) || '未知专辑'
       }
-      if (!isValidMeta(album) || album === track.album) continue;
+      if (!isValidMeta(album) || album === track.album) continue
 
-      const artist = isValidMeta(tags.artist) ? String(tags.artist).trim() : track.artist;
+      const artist = isValidMeta(tags.artist)
+        ? String(tags.artist).trim()
+        : track.artist
       /** @type {Partial<import('./types.js').Track>} */
       const patch = {
         album,
         albumKey: slugKey(`${artist}::${album}`),
-        words: trackWords({ ...track, album, artist })
-      };
-      if (isValidMeta(tags.artist) && tags.artist !== track.artist) {
-        patch.artist = artist;
-        patch.artistKey = slugKey(artist);
+        words: trackWords({ ...track, album, artist }),
       }
-      await db.tracks.update(track.id, patch);
-      repaired += 1;
+      if (isValidMeta(tags.artist) && tags.artist !== track.artist) {
+        patch.artist = artist
+        patch.artistKey = slugKey(artist)
+      }
+      await db.tracks.update(track.id, patch)
+      repaired += 1
     } catch {
       /* skip */
     }
   }
 
-  if (repaired) scheduleAutoCloudPush();
-  return repaired;
+  if (repaired) scheduleAutoCloudPush()
+  return repaired
 }
 
 /** @type {Promise<number> | null} */
-let metaRepairPromise = null;
+let metaRepairPromise = null
 
 /** Idempotent; repairs garbled album names after sync / on library load. */
 export function ensureMetadataRepaired() {
@@ -268,28 +289,30 @@ export function ensureMetadataRepaired() {
       .then(() => repairGarbledMetadata())
       .then(async (repaired) => {
         if (repaired > 0) {
-          const { bumpLibraryEpoch } = await import('./state.svelte.js');
-          bumpLibraryEpoch();
+          const { bumpLibraryEpoch } = await import('./state.svelte.js')
+          bumpLibraryEpoch()
         }
-        return repaired;
-      });
+        return repaired
+      })
   }
-  return metaRepairPromise;
+  return metaRepairPromise
 }
 
 /** @param {import('./types.js').Track} track */
 async function id3FromTrack(track) {
   if (track.audioBlob instanceof Blob) {
-    return parseId3(await track.audioBlob.arrayBuffer()) || {};
+    return parseId3(await track.audioBlob.arrayBuffer()) || {}
   }
   if (track.storagePath) {
-    const url = await getSignedAudioUrl(track.storagePath);
-    const res = await fetch(url, { headers: { Range: `bytes=0-${CLOUD_SNIFF_BYTES - 1}` } });
+    const url = await getSignedAudioUrl(track.storagePath)
+    const res = await fetch(url, {
+      headers: { Range: `bytes=0-${CLOUD_SNIFF_BYTES - 1}` },
+    })
     if (res.ok || res.status === 206) {
-      return parseId3(await res.arrayBuffer()) || {};
+      return parseId3(await res.arrayBuffer()) || {}
     }
   }
-  return {};
+  return {}
 }
 
 /**
@@ -298,26 +321,32 @@ async function id3FromTrack(track) {
  */
 function metaPatchFromTags(track, tags) {
   /** @type {Partial<import('./types.js').Track>} */
-  const patch = {};
+  const patch = {}
 
-  if (tags.lyrics && tags.lyrics !== track.lyrics) patch.lyrics = tags.lyrics;
-  if (tags.title && isValidMeta(tags.title) && tags.title !== track.title) patch.title = tags.title;
+  if (tags.lyrics && tags.lyrics !== track.lyrics) patch.lyrics = tags.lyrics
+  if (tags.title && isValidMeta(tags.title) && tags.title !== track.title)
+    patch.title = tags.title
   if (tags.artist && isValidMeta(tags.artist) && tags.artist !== track.artist) {
-    patch.artist = tags.artist;
-    patch.artistKey = slugKey(tags.artist);
+    patch.artist = tags.artist
+    patch.artistKey = slugKey(tags.artist)
   }
   if (tags.album && isValidMeta(tags.album) && tags.album !== track.album) {
-    patch.album = tags.album;
-    patch.albumKey = slugKey(`${patch.artist || track.artist}::${tags.album}`);
+    patch.album = tags.album
+    patch.albumKey = slugKey(`${patch.artist || track.artist}::${tags.album}`)
   }
-  if (tags.picture && !(track.artBlob instanceof Blob)) {
-    patch.artBlob = new Blob([tags.picture.data], { type: tags.picture.mime });
+  if (tags.picture && !albumHasArt(track.albumKey)) {
+    void upsertAlbumArt({
+      albumKey: track.albumKey,
+      artist: track.artist,
+      album: track.album,
+      artBlob: new Blob([tags.picture.data], { type: tags.picture.mime }),
+    })
   }
 
   if (patch.title || patch.artist || patch.album) {
-    patch.words = trackWords({ ...track, ...patch });
+    patch.words = trackWords({ ...track, ...patch })
   }
-  return patch;
+  return patch
 }
 
 /**
@@ -325,10 +354,10 @@ function metaPatchFromTags(track, tags) {
  * @returns {Promise<number>} count of tracks repaired
  */
 export async function repairMissingArt() {
-  const tracks = await db.tracks.toArray();
-  const repaired = await repairMissingArtModern(tracks);
-  if (repaired) scheduleAutoCloudPush();
-  return repaired;
+  const tracks = await db.tracks.toArray()
+  const repaired = await repairMissingArtModern(tracks)
+  if (repaired) scheduleAutoCloudPush()
+  return repaired
 }
 
 /**
@@ -337,107 +366,111 @@ export async function repairMissingArt() {
  * @returns {Promise<{ total: number, repaired: number }>}
  */
 export async function repairMissingLyrics(onProgress) {
-  const tracks = await db.tracks.toArray();
-  const targets = tracks.filter((t) => trackNeedsLyrics(t));
-  let repaired = 0;
-  let done = 0;
+  const tracks = await db.tracks.toArray()
+  const targets = tracks.filter((t) => trackNeedsLyrics(t))
+  let repaired = 0
+  let done = 0
 
   for (const track of targets) {
     try {
-      const fetched = await fetchLyricsForTrack(track);
+      const fetched = await fetchLyricsForTrack(track)
       if (fetched?.text) {
-        await db.tracks.update(track.id, { lyrics: fetched.text });
-        repaired += 1;
+        await db.tracks.update(track.id, { lyrics: fetched.text })
+        repaired += 1
       }
     } catch {
       /* skip */
     }
 
-    done += 1;
-    onProgress?.(done, targets.length);
-    await new Promise((r) => setTimeout(r, 200));
+    done += 1
+    onProgress?.(done, targets.length)
+    await new Promise((r) => setTimeout(r, 200))
   }
 
-  if (repaired) scheduleAutoCloudPush();
-  return { total: targets.length, repaired };
+  if (repaired) scheduleAutoCloudPush()
+  return { total: targets.length, repaired }
 }
 
 /** @type {Promise<number> | null} */
-let lyricsRepairPromise = null;
+let lyricsRepairPromise = null
 
 /** Idempotent; fetches remote lyrics and syncs to Supabase when logged in. */
 export function ensureLyricsRepaired() {
   if (!lyricsRepairPromise) {
     lyricsRepairPromise = repairMissingLyrics().then(async ({ repaired }) => {
       if (repaired > 0) {
-        const { bumpLibraryEpoch } = await import('./state.svelte.js');
-        const { refreshQueueMetadata } = await import('./player.svelte.js');
-        bumpLibraryEpoch();
-        await refreshQueueMetadata();
+        const { bumpLibraryEpoch } = await import('./state.svelte.js')
+        const { refreshQueueMetadata } = await import('./player.svelte.js')
+        bumpLibraryEpoch()
+        await refreshQueueMetadata()
       }
-      return repaired;
-    });
+      return repaired
+    })
   }
-  return lyricsRepairPromise;
+  return lyricsRepairPromise
 }
 
 /** @type {Promise<number> | null} */
-let artRepairPromise = null;
+let artRepairPromise = null
 
 /** Idempotent while in-flight; re-runs after completion when new tracks need covers. */
 export function ensureArtRepaired() {
-  if (artRepairPromise) return artRepairPromise;
+  if (artRepairPromise) return artRepairPromise
 
   artRepairPromise = repairMissingArt()
     .then(async (repaired) => {
       if (repaired > 0) {
-        const { bumpLibraryEpoch } = await import('./state.svelte.js');
-        const { refreshQueueMetadata } = await import('./player.svelte.js');
-        bumpLibraryEpoch();
-        await refreshQueueMetadata();
+        const { bumpLibraryEpoch } = await import('./state.svelte.js')
+        const { refreshQueueMetadata } = await import('./player.svelte.js')
+        bumpLibraryEpoch()
+        await refreshQueueMetadata()
       }
-      return repaired;
+      return repaired
     })
     .finally(() => {
-      artRepairPromise = null;
-    });
+      artRepairPromise = null
+    })
 
-  return artRepairPromise;
+  return artRepairPromise
 }
 
 /** @param {File} file */
 async function readDuration(file) {
   return new Promise((resolve) => {
-    const audio = new Audio();
-    const url = URL.createObjectURL(file);
-    audio.preload = 'metadata';
+    const audio = new Audio()
+    const url = URL.createObjectURL(file)
+    audio.preload = 'metadata'
     audio.onloadedmetadata = () => {
-      resolve(Number.isFinite(audio.duration) ? audio.duration : 0);
-      URL.revokeObjectURL(url);
-    };
+      resolve(Number.isFinite(audio.duration) ? audio.duration : 0)
+      URL.revokeObjectURL(url)
+    }
     audio.onerror = () => {
-      resolve(0);
-      URL.revokeObjectURL(url);
-    };
-    audio.src = url;
-  });
+      resolve(0)
+      URL.revokeObjectURL(url)
+    }
+    audio.src = url
+  })
 }
 
 /** @param {File} file */
 async function hashFile(file) {
-  const buf = await file.arrayBuffer();
-  const digest = await crypto.subtle.digest('SHA-256', buf);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const buf = await file.arrayBuffer()
+  const digest = await crypto.subtle.digest('SHA-256', buf)
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
 }
 
 /** @returns {Promise<{ tracks: import('./types.js').Track[], playlists: import('./types.js').Playlist[], playlistTracks: import('./types.js').PlaylistTrackRow[] }>} */
 export async function exportLibraryJson() {
-  const tracks = await db.tracks.toArray();
-  const playlists = await db.playlists.toArray();
-  const playlistTracks = await db.playlistTracks.toArray();
+  const tracks = await db.tracks.toArray()
+  const playlists = await db.playlists.toArray()
+  const playlistTracks = await db.playlistTracks.toArray()
   return {
-    tracks: tracks.map(({ objectUrl, artUrl, audioBlob, artBlob, ...rest }) => rest),
+    tracks: tracks.map(
+      ({ objectUrl, artUrl, audioBlob, artBlob, ...rest }) => rest,
+    ),
     playlists,
-    playlistTracks
-  };
+    playlistTracks,
+  }
 }

@@ -11,6 +11,7 @@ import {
   getPlaylists,
   getPlaylistTracks,
 } from './db.js'
+import { peekAlbumArt, setAlbumArtRemoteUrl } from './albumArtStore.js'
 import { S, save } from './state.svelte.js'
 import { t } from './i18n/index.js'
 
@@ -86,8 +87,7 @@ async function pushLocal(userId) {
       storage_path: tr.storagePath || '',
       mime_type: tr.mime || '',
       size_bytes: tr.size || 0,
-      art_remote_url:
-        typeof tr.artRemoteUrl === 'string' ? tr.artRemoteUrl : '',
+      art_remote_url: peekAlbumArt(tr.albumKey)?.artRemoteUrl || '',
     }))
     let { error } = await supabase.from(T.trackMeta).upsert(rows)
     // Remote may lag behind local migrations — drop new columns and retry.
@@ -191,7 +191,12 @@ async function pullCloud(userId) {
       typeof row.art_remote_url === 'string' &&
       row.art_remote_url.startsWith('https://')
     ) {
-      patch.artRemoteUrl = row.art_remote_url
+      await setAlbumArtRemoteUrl(
+        row.album_key || patch.albumKey || '',
+        row.artist || '',
+        row.album || '',
+        row.art_remote_url,
+      )
     }
 
     if (existing) {
@@ -213,11 +218,6 @@ async function pullCloud(userId) {
         liked: /** @type {0|1} */ (row.liked ? 1 : 0),
         lyrics: typeof row.lyrics === 'string' ? row.lyrics : '',
         storagePath: row.storage_path,
-        artRemoteUrl:
-          typeof row.art_remote_url === 'string' &&
-          row.art_remote_url.startsWith('https://')
-            ? row.art_remote_url
-            : undefined,
         words: trackWords({
           title: row.title || '',
           artist: row.artist || '',

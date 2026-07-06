@@ -1,33 +1,35 @@
-import { browser } from '$app/environment';
-import { resolveTheme } from '@life-os/theme';
-import { extractArtPalette, paletteFromHash } from './artPalette.js';
-import { S } from './state.svelte.js';
+import { browser } from '$app/environment'
+import { resolveTheme } from '@life-os/theme'
+import { peekAlbumArt } from './albumArtStore.js'
+import { extractArtPalette, paletteFromHash } from './artPalette.js'
+import { S } from './state.svelte.js'
 
-let lastKey = '';
-let extractSeq = 0;
+let lastKey = ''
+let extractSeq = 0
 
 /** @param {HTMLElement} root */
 function clearAmbience(root) {
-  root.style.removeProperty('--track-accent');
-  root.style.removeProperty('--track-accent-muted');
-  root.style.removeProperty('--player-glow');
-  root.style.removeProperty('--album-glow-1');
-  root.style.removeProperty('--album-glow-2');
-  root.style.removeProperty('--album-glow-3');
-  root.style.removeProperty('--album-ambient-base');
-  root.dataset.trackAmbience = 'off';
+  root.style.removeProperty('--track-accent')
+  root.style.removeProperty('--track-accent-muted')
+  root.style.removeProperty('--player-glow')
+  root.style.removeProperty('--album-glow-1')
+  root.style.removeProperty('--album-glow-2')
+  root.style.removeProperty('--album-glow-3')
+  root.style.removeProperty('--album-ambient-base')
+  root.dataset.trackAmbience = 'off'
 }
 
 /** @param {HTMLElement} root @param {{ accent: string, accentMuted: string, glow: string, glow1?: string, glow2?: string, glow3?: string, ambientBase?: string }} palette @param {'art' | 'hash'} kind */
 function applyPalette(root, palette, kind) {
-  root.style.setProperty('--track-accent', palette.accent);
-  root.style.setProperty('--track-accent-muted', palette.accentMuted);
-  root.style.setProperty('--player-glow', palette.glow);
-  if (palette.glow1) root.style.setProperty('--album-glow-1', palette.glow1);
-  if (palette.glow2) root.style.setProperty('--album-glow-2', palette.glow2);
-  if (palette.glow3) root.style.setProperty('--album-glow-3', palette.glow3);
-  if (palette.ambientBase) root.style.setProperty('--album-ambient-base', palette.ambientBase);
-  root.dataset.trackAmbience = kind;
+  root.style.setProperty('--track-accent', palette.accent)
+  root.style.setProperty('--track-accent-muted', palette.accentMuted)
+  root.style.setProperty('--player-glow', palette.glow)
+  if (palette.glow1) root.style.setProperty('--album-glow-1', palette.glow1)
+  if (palette.glow2) root.style.setProperty('--album-glow-2', palette.glow2)
+  if (palette.glow3) root.style.setProperty('--album-glow-3', palette.glow3)
+  if (palette.ambientBase)
+    root.style.setProperty('--album-ambient-base', palette.ambientBase)
+  root.dataset.trackAmbience = kind
 }
 
 /**
@@ -36,60 +38,74 @@ function applyPalette(root, palette, kind) {
  * @param {import('./types.js').Track | null} track
  */
 export function applyTrackAmbience(track) {
-  if (!browser) return;
+  if (!browser) return
 
-  const root = document.documentElement;
-  const key = track?.id ?? track?.albumKey ?? '';
-  const albumAmbience = S.settings.albumAmbience !== false;
-  const theme = resolveTheme(S.settings.theme, 'auto');
-  const stateKey = `${key}:${albumAmbience ? 'on' : 'off'}:${theme}`;
+  const root = document.documentElement
+  const key = track?.id ?? track?.albumKey ?? ''
+  const albumAmbience = S.settings.albumAmbience !== false
+  const theme = resolveTheme(S.settings.theme, 'auto')
+  const stateKey = `${key}:${albumAmbience ? 'on' : 'off'}:${theme}`
 
   if (!track || !albumAmbience) {
-    if (stateKey === lastKey) return;
-    lastKey = stateKey;
-    extractSeq += 1;
-    clearAmbience(root);
-    return;
+    if (stateKey === lastKey) return
+    lastKey = stateKey
+    extractSeq += 1
+    clearAmbience(root)
+    return
   }
 
-  if (stateKey === lastKey) return;
-  lastKey = stateKey;
-  const seq = ++extractSeq;
+  if (stateKey === lastKey) return
+  lastKey = stateKey
+  const seq = ++extractSeq
 
   void (async () => {
-    const cacheKey = track.albumKey || track.id;
+    const cacheKey = track.albumKey || track.id
     /** @type {{ accent: string, accentMuted: string, glow: string }} */
-    let palette;
+    let palette
 
     if (track.artUrl) {
       try {
-        palette = await extractArtPalette(track.artUrl, cacheKey);
-        if (seq !== extractSeq) return;
-        applyPalette(root, palette, 'art');
-        return;
+        palette = await extractArtPalette(track.artUrl, cacheKey)
+        if (seq !== extractSeq) return
+        applyPalette(root, palette, 'art')
+        return
       } catch {
         /* CORS / decode — fall through to hash */
       }
     }
 
-    if (track.artBlob instanceof Blob) {
+    const albumArt = peekAlbumArt(track.albumKey)
+    if (albumArt?.artBlob instanceof Blob) {
       try {
-        palette = await extractArtPalette(track.artBlob, cacheKey);
-        if (seq !== extractSeq) return;
-        applyPalette(root, palette, 'art');
-        return;
+        palette = await extractArtPalette(albumArt.artBlob, cacheKey)
+        if (seq !== extractSeq) return
+        applyPalette(root, palette, 'art')
+        return
       } catch {
         /* fall through */
       }
     }
 
-    if (seq !== extractSeq) return;
-    applyPalette(root, paletteFromHash(track.id || track.albumKey), 'hash');
-  })();
+    if (track.artBlob instanceof Blob) {
+      try {
+        palette = await extractArtPalette(track.artBlob, cacheKey)
+        if (seq !== extractSeq) return
+        applyPalette(root, palette, 'art')
+        return
+      } catch {
+        /* fall through */
+      }
+    }
+
+    if (seq !== extractSeq) return
+    applyPalette(root, paletteFromHash(track.id || track.albumKey), 'hash')
+  })()
 }
 
 /** Re-apply after settings change (same track, force refresh). */
-export function refreshTrackAmbience(/** @type {import('./types.js').Track | null} */ track) {
-  lastKey = '';
-  applyTrackAmbience(track);
+export function refreshTrackAmbience(
+  /** @type {import('./types.js').Track | null} */ track,
+) {
+  lastKey = ''
+  applyTrackAmbience(track)
 }
