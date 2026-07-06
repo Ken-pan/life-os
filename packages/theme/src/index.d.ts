@@ -121,3 +121,11 @@ export declare function activateFocusTrap(
   container: HTMLElement,
   options?: ActivateFocusTrapOptions
 ): () => void;
+
+export type ImeCommitHandler = (value: string) => void;
+
+export declare function createImeGuard(): {
+  compositionstart: () => void;
+  compositionend: (event: CompositionEvent, onCommit?: ImeCommitHandler) => void;
+  isComposing: (event?: KeyboardEvent | InputEvent) => boolean;
+};

@@ -6,8 +6,11 @@
   import { t, listLabel } from '$lib/i18n/index.js';
   import { SYSTEM_LIST_INBOX, RECURRENCE_RULES, REMINDER_PRESETS } from '$lib/types.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
+  import { createImeGuard } from '@life-os/theme';
   import DateField from './DateField.svelte';
   import Icon from './Icon.svelte';
+
+  const ime = createImeGuard();
 
   let subtaskDraft = $state('');
   let aiBusy = $state(false);
@@ -182,8 +185,11 @@
           bind:this={titleInput}
           bind:value={draft.title}
           enterkeyhint="done"
+          oncompositionstart={ime.compositionstart}
+          oncompositionend={(e) => ime.compositionend(e)}
           onkeydown={(e) => {
-            if (e.key === 'Enter' && !e.isComposing) {
+            if (e.key === 'Enter') {
+              if (ime.isComposing(e)) return;
               e.preventDefault();
               save();
             }

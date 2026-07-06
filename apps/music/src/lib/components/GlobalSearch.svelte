@@ -20,9 +20,12 @@
     typeaheadCharsRemaining,
     searchShortcutLabel,
   } from '$lib/search.svelte.js'
+  import { createImeGuard } from '$lib/utils/createImeGuard.js'
 
   /** @type {{ onNavigate?: () => void; inputRef?: HTMLInputElement | null }} */
   let { onNavigate, inputRef = $bindable(null) } = $props()
+
+  const ime = createImeGuard()
 
   let open = $state(false)
   let activeIndex = $state(-1)
@@ -160,7 +163,16 @@
     setSearchDraft(value)
     open = true
     activeIndex = -1
+    if (ime.isComposing(/** @type {InputEvent} */ (e))) return
     fetchSuggestions(value)
+  }
+
+  /** @param {CompositionEvent} e */
+  function onCompositionEnd(e) {
+    ime.compositionend(e, (value) => {
+      setSearchDraft(value)
+      fetchSuggestions(value)
+    })
   }
 
   function onFocus() {
@@ -170,6 +182,7 @@
 
   function onBlur() {
     setTimeout(() => {
+      if (ime.isComposing()) return
       open = false
       activeIndex = -1
     }, 180)
@@ -178,6 +191,7 @@
   /** @param {KeyboardEvent} e */
   function onKeydown(e) {
     if (e.key === 'ArrowDown') {
+      if (ime.isComposing(e)) return
       e.preventDefault()
       if (!open) open = true
       if (flatItems.length === 0) return
@@ -185,6 +199,7 @@
       return
     }
     if (e.key === 'ArrowUp') {
+      if (ime.isComposing(e)) return
       e.preventDefault()
       if (!open) open = true
       if (flatItems.length === 0) return
@@ -192,6 +207,7 @@
       return
     }
     if (e.key === 'Enter') {
+      if (ime.isComposing(e)) return
       e.preventDefault()
       if (activeIndex >= 0 && flatItems[activeIndex]) {
         pickItem(flatItems[activeIndex])
@@ -287,6 +303,8 @@
       aria-activedescendant={activeOptionId}
       autocomplete="off"
       oninput={onInput}
+      oncompositionstart={ime.compositionstart}
+      oncompositionend={onCompositionEnd}
       onfocus={onFocus}
       onblur={onBlur}
       onkeydown={onKeydown}
