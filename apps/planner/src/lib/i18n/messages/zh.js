@@ -197,7 +197,7 @@ export default {
     moreSuggestions: '还有 {count} 条建议',
     summary: '{count} 条智能建议'
   },
-  search: {
+  toast: {
     saved: '已保存',
     deleted: '已删除',
     imported: '导入成功',

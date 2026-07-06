@@ -26,17 +26,20 @@ export const taskEditor = $state({
   draft: null
 });
 
-/** @param {import('./types.js').Task|null} task */
-export function openTaskEditor(task = null) {
+/**
+ * @param {import('./types.js').Task|null} task
+ * @param {{ dueDate?: string | null, listId?: string }} [defaults] 新建任务时的默认值（如当前页面对应的日期）
+ */
+export function openTaskEditor(task = null, defaults = {}) {
   taskEditor.taskId = task?.id ?? null;
   taskEditor.draft = task
     ? cloneTask(task)
     : {
         title: '',
         notes: '',
-        listId: S.settings.defaultListId || SYSTEM_LIST_INBOX,
+        listId: defaults.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
         priority: 0,
-        dueDate: null,
+        dueDate: defaults.dueDate ?? null,
         dueTime: null,
         reminderMinutes: null,
         recurrence: null,
@@ -45,6 +48,9 @@ export function openTaskEditor(task = null) {
       };
   taskEditor.open = true;
 }
+
+/** 日历页当前选中的日期，供 FAB 新建任务时作为默认截止日期 */
+export const calendarView = $state({ selected: /** @type {string | null} */ (null) });
 
 export function closeTaskEditor() {
   taskEditor.open = false;

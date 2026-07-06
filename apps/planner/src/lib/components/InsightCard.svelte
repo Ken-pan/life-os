@@ -142,7 +142,7 @@
       dismiss(rec.kind);
       return;
     }
-    if (rec.kind === 'welcome') openTaskEditor();
+    if (rec.kind === 'welcome') openTaskEditor(null, { dueDate: todayKey() });
     if (rec.kind === 'focus') goto('/');
   }
 

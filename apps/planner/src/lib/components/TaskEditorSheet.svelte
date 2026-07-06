@@ -12,6 +12,8 @@
   let subtaskDraft = $state('');
   let aiBusy = $state(false);
   let showAdvanced = $state(false);
+  /** @type {HTMLInputElement | null} */
+  let titleInput = $state(null);
 
   const draft = $derived(taskEditor.draft);
   const isNew = $derived(!taskEditor.taskId);
@@ -34,6 +36,10 @@
     if (taskEditor.open) {
       showAdvanced = needsAdvancedOpen;
       lockScroll();
+      if (!taskEditor.taskId) {
+        // 新建任务：自动聚焦标题，移动端直接弹出键盘
+        requestAnimationFrame(() => titleInput?.focus());
+      }
       return () => unlockScroll();
     }
     showAdvanced = false;
@@ -172,7 +178,18 @@
 
       <div class="field">
         <label for="task-title">{t('task.title')}</label>
-        <input id="task-title" bind:value={draft.title} />
+        <input
+          id="task-title"
+          bind:this={titleInput}
+          bind:value={draft.title}
+          enterkeyhint="done"
+          onkeydown={(e) => {
+            if (e.key === 'Enter' && !e.isComposing) {
+              e.preventDefault();
+              save();
+            }
+          }}
+        />
       </div>
 
       <div class="field-row">

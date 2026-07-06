@@ -41,6 +41,7 @@
  * @property {number|null} completedAt
  * @property {number} createdAt
  * @property {number} updatedAt
+ * @property {number|null} [deletedAt] 墓碑标记：非空表示已删除（跨设备传播后再物理清理）
  * @property {number} sortOrder
  * @property {TaskMeta} meta
  */
@@ -52,6 +53,8 @@
  * @property {string} icon
  * @property {string} color
  * @property {number} sortOrder
+ * @property {number} [updatedAt] 最后修改时间（毫秒），用于跨设备 LWW 合并
+ * @property {number|null} [deletedAt] 墓碑标记
  * @property {'inbox'|'completed'|undefined} [system]
  */
 
@@ -62,6 +65,7 @@
  * @property {string} defaultListId
  * @property {boolean} notificationsEnabled
  * @property {boolean} syncAuto
+ * @property {number} [updatedAt] 设置最后修改时间（毫秒），用于跨设备 LWW 合并
  */
 
 /**

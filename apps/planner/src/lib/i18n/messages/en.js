@@ -58,7 +58,8 @@ export default {
   search: {
     title: 'Search',
     placeholder: 'Search tasks, tags…',
-    all: 'All'
+    all: 'All',
+    moreTags: '{count} more tags'
   },
   settings: {
     title: 'Settings',

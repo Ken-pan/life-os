@@ -7,9 +7,17 @@
   import { completeTask, editTask } from '$lib/taskUi.js';
   import { t, localeTag } from '$lib/i18n/index.js';
   import { todayKey } from '$lib/state.svelte.js';
+  import { calendarView } from '$lib/ui.svelte.js';
 
   let weekStart = $state(startOfWeek());
   let selected = $state(todayKey());
+
+  $effect(() => {
+    calendarView.selected = selected;
+    return () => {
+      calendarView.selected = null;
+    };
+  });
 
   const days = $derived(weekDates(weekStart));
   const tasks = $derived(selectByDate(taskIndex(), selected));

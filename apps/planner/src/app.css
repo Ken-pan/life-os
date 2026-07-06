@@ -170,6 +170,7 @@ html, body {
 }
 
 .task-check {
+  position: relative;
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -181,6 +182,13 @@ html, body {
   transition: border-color var(--dur-fast), background var(--dur-fast);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+/* 扩大触控热区到 44px（视觉尺寸不变） */
+.task-check::after {
+  content: '';
+  position: absolute;
+  inset: -11px;
 }
 
 .task-check.on {
@@ -445,15 +453,6 @@ html, body {
 
 @media (--life-os-mobile) {
   .auth-link { width: 100%; }
-
-  .settings-page .settings-block .block-title {
-    position: sticky;
-    top: calc(var(--page-header-h, 88px) - 1px);
-    z-index: 2;
-    margin-bottom: var(--space-2);
-    padding: var(--space-2) 0;
-    background: linear-gradient(to bottom, var(--bg) 70%, transparent);
-  }
 
   .settings-row.set-row,
   .set-row.settings-row,
