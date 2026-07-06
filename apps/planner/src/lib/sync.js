@@ -10,9 +10,10 @@ import {
   applyTheme,
   onStateMutation
 } from './state.svelte.js';
-import { splitExpiredTombstones } from './persist/migrate.js';
+import { splitExpiredTombstones, defaultState } from './persist/migrate.js';
 import { loadPlannerState, upsertPlannerState, stateHasData, requireUserId } from './repo.js';
-import { CACHE_SCOPES, writeCache } from './localCache.js';
+import { CACHE_SCOPES, writeCache, readCache } from './localCache.js';
+import { planAccountSwitchHydration } from './syncAccount.js';
 import { syncRemindersToServiceWorker } from './services/reminders.js';
 import { withSyncNotify } from './syncNotify.js';
 import {
@@ -124,6 +125,13 @@ async function syncNowInternal(mode = 'merge') {
   const meta = readSyncMeta(APP_ID);
   const sameUser = !meta?.userId || meta.userId === userId;
 
+  if (!sameUser) {
+    const state = await loadPlannerState(userId);
+    const { pulled } = await hydrateForAccountSwitch(userId, state);
+    writeSyncMeta(APP_ID, userId);
+    return { pushed: false, pulled, switchedAccount: true };
+  }
+
   const state = await loadPlannerState(userId);
   let pushed = false;
   let pulled = false;
@@ -134,7 +142,7 @@ async function syncNowInternal(mode = 'merge') {
     await syncRemindersToServiceWorker();
   }
 
-  if (localHasData() && sameUser) {
+  if (localHasData()) {
     await pushToCloudInternal();
     pushed = true;
   }
@@ -149,10 +157,43 @@ export function syncNow(mode = 'merge') {
 
 function reportSyncResult(result) {
   applyTheme();
-  const { pulled, pushed } = result;
+  const { pulled, pushed, switchedAccount } = result;
+  if (switchedAccount) {
+    if (pulled) toast(t('sync.accountLoaded'));
+    else toast(t('sync.accountSwitched'));
+    return;
+  }
   if (pushed && pulled) toast(t('sync.merged'));
   else if (pushed) toast(t('sync.uploaded'));
   else if (pulled) toast(t('sync.downloaded'));
+}
+
+/**
+ * 换账号：优先该用户 cache → 云端 replace → 空默认态；不 push 旧账号本地数据。
+ * @param {string} userId
+ * @param {object|null|undefined} cloudState
+ * @returns {Promise<{ pulled: boolean }>}
+ */
+async function hydrateForAccountSwitch(userId, cloudState) {
+  const cached = readCache(CACHE_SCOPES.state, userId);
+  const plan = planAccountSwitchHydration({
+    cached,
+    cloud: cloudState,
+    cloudHasData: Boolean(cloudState && stateHasData(cloudState))
+  });
+
+  if (plan.source === 'cache') {
+    applyCloudState(cached, 'replace', userId);
+  } else if (plan.source === 'cloud') {
+    applyCloudState(cloudState, 'replace', userId);
+  } else {
+    applyCloudState(defaultState(), 'replace', userId);
+    save();
+    cachePayload(userId);
+  }
+
+  await syncRemindersToServiceWorker();
+  return { pulled: plan.pulled };
 }
 
 /** 记录本地最后一次改动 / 最近一次已成功上云的改动时间，用于补同步 */
@@ -181,6 +222,13 @@ async function performBidirectionalSync() {
     let pulled = false;
     let pushed = false;
 
+    if (switchedAccount) {
+      ({ pulled } = await hydrateForAccountSwitch(userId, state));
+      writeSyncMeta(APP_ID, userId);
+      lastPushedMutationAt = mutationAtStart;
+      return { pulled, pushed: false, switchedAccount: true, userId, notify: reportSyncResult };
+    }
+
     if (state && stateHasData(state)) {
       const mode = localHasData() ? 'merge' : 'replace';
       applyCloudState(state, mode, userId);
@@ -195,7 +243,7 @@ async function performBidirectionalSync() {
     }
 
     writeSyncMeta(APP_ID, userId);
-    return { pulled, pushed, switchedAccount, userId, notify: reportSyncResult };
+    return { pulled, pushed, switchedAccount: false, userId, notify: reportSyncResult };
   });
 }
 
@@ -237,7 +285,8 @@ async function runAutoSync() {
     // force：绕过 4s cooldown，否则「同步后立即编辑」的改动会被跳过
     await syncBidirectional({ silent: true, force: true });
   } catch {
-    /* 失败已由 withSyncStatus 记录，等待下次触发（回前台/恢复在线/再次编辑） */
+    /* 失败已由 withSyncStatus 记录；有待传改动时轻量提示 */
+    if (syncState.pendingChanges) toast(t('sync.failed'), 'error');
   }
   // 同步进行中又有新改动 → 追加一轮，保证收敛
   if (lastMutationAt > lastPushedMutationAt) {

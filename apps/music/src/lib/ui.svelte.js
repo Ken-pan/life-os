@@ -54,7 +54,56 @@ export function toggleUtilityPane(tab) {
   }
 }
 
-/** 最近一次「相似续播」推荐（含 reason / tags，供队列 UI debug） */
+const REC_DEBUG_STORAGE_KEY = 'musicos:debug-rec';
+
+/** Dev / audit only — never shown to normal users in production. */
+export const recDebug = $state({ enabled: false });
+
+/** @returns {boolean} */
+function readRecDebugFlag() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const v = localStorage.getItem(REC_DEBUG_STORAGE_KEY);
+    if (v === '1') return true;
+    if (v === '0') return false;
+  } catch {
+    /* ignore */
+  }
+  return import.meta.env.DEV;
+}
+
+export function initRecDebug() {
+  recDebug.enabled = readRecDebugFlag();
+}
+
+/** @param {boolean} on */
+export function setRecDebugEnabled(on) {
+  recDebug.enabled = on;
+  if (!on) recommendationPreview.length = 0;
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(REC_DEBUG_STORAGE_KEY, on ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
+
+export function toggleRecDebug() {
+  setRecDebugEnabled(!recDebug.enabled);
+}
+
+export function installRecDebugConsole() {
+  if (typeof window === 'undefined') return;
+  window.toggleMusicosRecDebug = () => {
+    toggleRecDebug();
+    console.info(
+      `[musicos] recommendation debug ${recDebug.enabled ? 'enabled' : 'disabled'}`,
+    );
+    return recDebug.enabled;
+  };
+}
+
+/** Last similar-continue picks — dev/audit queue panel only. */
 export const recommendationPreview = $state(
-  /** @type {Array<{ track: import('./types.js').Track, score: number, reasons: string[], matchedTags: string[] }>} */ ([])
+  /** @type {Array<{ track: import('./types.js').Track, score: number, reasons: string[], matchedTags: string[] }>} */ ([]),
 );

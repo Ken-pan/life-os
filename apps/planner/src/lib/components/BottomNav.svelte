@@ -49,7 +49,7 @@
           aria-current={primaryTab === item.tab ? 'page' : undefined}
           aria-label={item.label}
         >
-          <Icon name={item.icon} size={26} strokeWidth={1.5} />
+          <Icon name={item.icon} size={21} strokeWidth={1.5} />
           <span class="nav-lbl">{item.label}</span>
         </a>
       {/each}
@@ -64,7 +64,7 @@
           moreOpen = !moreOpen;
         }}
       >
-        <Icon name="ellipsis" size={26} strokeWidth={1.5} />
+        <Icon name="ellipsis" size={21} strokeWidth={1.5} />
         <span class="nav-lbl">{t('common.more')}</span>
       </button>
     </div>

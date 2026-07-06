@@ -15,7 +15,7 @@
 | Commit + deploy 推荐/play_events 代码 | ✅ `4c946d5` → Netlify 生产 |
 | LLM 批量补标 partial | ✅ 121 首 → **243 ready / 25 partial** |
 | RPC v2：降低 pop 权重 + play_events 行为分 | ✅ migration `20260707010200` |
-| UI 展示 reasons / matched_tags | ✅ 队列「相似续播」下方推荐原因区 |
+| UI 展示 reasons / matched_tags | ⏸ 生产隐藏；`import.meta.env.DEV` 或 `localStorage musicos:debug-rec=1` + DevTools `toggleMusicosRecDebug()` |
 | 生产 play_events 验证 | ⏳ **需你登录生产站播放后验收**（当前云端 0 条） |
 | track_id 本地/云端一致性 | ⏳ 需 sync 后点「相似续播」实测 |
 
@@ -80,7 +80,7 @@ identity metadata
 | play_events 行为闭环 | ✅ | DB + 前端 insert；**推荐未消费** | **40%** |
 | 人工 review 队列 | ✅ | 表已建；脚本逻辑有；当前 pending **0**（needs-review 进了 tags 未进 queue） | **30%** |
 | 前端相似续播 | ✅ | 队列「相似续播」按钮 + 队列结束自动续播 | **70%** |
-| 可解释 reason 展示 | 期望 | RPC 返回 `reasons` / `matched_tags`，**UI 未展示** | **20%** |
+| 可解释 reason 展示 | 期望 | RPC 返回 `reasons` / `matched_tags`；**生产 UI 不展示**，dev/audit gate 可开 | **35%** |
 
 ---
 
@@ -242,7 +242,7 @@ score ≈
 | 推荐客户端 | `recommendations.js` | ✅ 已写 |
 | 相似续播按钮 | `QueueList.svelte` | ✅ 已写 |
 | 队列结束自动续播 | `player.svelte.js` + `autoContinueSimilar` 设置 | ✅ 默认开 |
-| reason / matched_tags UI | — | ❌ |
+| reason / matched_tags UI | `QueueList.svelte`（dev gate） | ⏸ 生产 off / dev+localStorage on |
 | 设置页自动续播开关 | — | ❌（仅有 localStorage 字段） |
 | 首页 / Quick picks 用推荐 | — | ❌ |
 | `continue_playlist` RPC 前端封装 | — | ❌ |
@@ -450,7 +450,7 @@ cd apps/music && npm run dev
 6. Essentia / librosa 本地批处理 → 真 BPM + energy
 7. embedding 生成 + pgvector 索引 + RPC 混合召回
 8. play_events 加权进 `get_recommendations`
-9. UI 展示 `reasons` / `matched_tags`
+9. ~~UI 展示 `reasons` / `matched_tags`~~ → dev-only audit panel（`toggleMusicosRecDebug()`）
 
 ### P3 — 产品化
 

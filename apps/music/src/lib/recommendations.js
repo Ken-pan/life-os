@@ -6,7 +6,7 @@ import {
   appendToQueue,
   playTracks,
 } from './player.svelte.js'
-import { recommendationPreview } from './ui.svelte.js'
+import { recDebug, recommendationPreview } from './ui.svelte.js'
 import { setRecommendationAttribution } from './recommendationContext.js'
 import { recordRecommendationQueueAdd } from './playEvents.js'
 import {
@@ -29,6 +29,13 @@ export function formatRecommendationTags(tags) {
     'homepage-safe',
   ])
   return (tags || []).filter((t) => !hide.has(t))
+}
+
+/** @param {ResolvedPick[]} picks */
+function syncRecommendationPreview(picks) {
+  recommendationPreview.length = 0
+  if (!recDebug.enabled || !picks.length) return
+  recommendationPreview.push(...picks)
 }
 
 /**
@@ -112,9 +119,8 @@ export async function appendSimilarToQueue(opts = {}) {
   })
 
   const picks = await resolveRecommendedTracks(rows)
-  recommendationPreview.length = 0
+  syncRecommendationPreview(picks)
   if (picks.length) {
-    recommendationPreview.push(...picks)
     const requestId = crypto.randomUUID()
     const context =
       opts.context ??

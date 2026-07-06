@@ -39,7 +39,11 @@
     bindGlobalShortcuts,
     registerShortcutHandlers,
   } from '$lib/shortcuts.js'
-  import { utilityPane } from '$lib/ui.svelte.js'
+  import {
+    utilityPane,
+    initRecDebug,
+    installRecDebugConsole,
+  } from '$lib/ui.svelte.js'
 
   let { children } = $props()
 
@@ -69,6 +73,8 @@
   const utilityOpen = $derived(utilityPane.open)
 
   onMount(() => {
+    initRecDebug()
+    installRecDebugConsole()
     applyTheme()
     applyLocale()
     ensureBuiltinPlaylists()

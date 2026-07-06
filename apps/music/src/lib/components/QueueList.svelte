@@ -12,11 +12,10 @@
     appendSimilarToQueue,
     formatRecommendationTags,
   } from '$lib/recommendations.js'
-  import { recommendationPreview } from '$lib/ui.svelte.js'
   import { auth } from '$lib/auth.svelte.js'
   import TrackRow from './TrackRow.svelte'
   import Icon from './Icon.svelte'
-  import { toast } from '$lib/ui.svelte.js'
+  import { toast, recDebug, recommendationPreview } from '$lib/ui.svelte.js'
   import { t } from '$lib/i18n/index.js'
 
   let { compact = false, upNextOnly = false } = $props()
@@ -211,9 +210,12 @@
   </div>
 {/if}
 
-{#if recommendationPreview.length && !compact}
-  <section class="rec-preview" aria-label={t('nowPlaying.recPreviewTitle')}>
-    <h3 class="rec-preview-title">{t('nowPlaying.recPreviewTitle')}</h3>
+{#if recDebug.enabled && recommendationPreview.length && !compact}
+  <section
+    class="rec-preview"
+    aria-label={t('nowPlaying.recDebugPreviewTitle')}
+  >
+    <h3 class="rec-preview-title">{t('nowPlaying.recDebugPreviewTitle')}</h3>
     <ul class="rec-preview-list">
       {#each recommendationPreview as pick (pick.track.id)}
         <li class="rec-preview-item">
@@ -379,14 +381,16 @@
   .rec-preview {
     margin-top: var(--space-3);
     padding-top: var(--space-3);
-    border-top: 1px solid var(--border);
+    border-top: 1px dashed var(--border);
   }
 
   .rec-preview-title {
     margin: 0 0 var(--space-2);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     font-weight: 600;
-    color: var(--t2, var(--text-muted));
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--t3, var(--text-muted));
   }
 
   .rec-preview-list {

@@ -179,6 +179,8 @@ export default {
     syncing: '正在同步…',
     pending: '有改动待同步',
     offlinePending: '当前离线，恢复网络后将自动同步',
+    accountSwitched: '已切换账号',
+    accountLoaded: '已加载该账号的云端数据',
     defaultError: '同步失败',
     bannerPrefix: '云同步失败：',
     bannerSuffix: ''

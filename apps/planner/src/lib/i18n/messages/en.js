@@ -179,6 +179,8 @@ export default {
     syncing: 'Syncing…',
     pending: 'Changes pending sync',
     offlinePending: 'Offline — will sync when back online',
+    accountSwitched: 'Switched account',
+    accountLoaded: 'Loaded cloud data for this account',
     defaultError: 'Sync failed',
     bannerPrefix: 'Cloud sync failed: ',
     bannerSuffix: ''
