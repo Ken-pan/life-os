@@ -10,10 +10,13 @@ import {
 } from './mediaSession.js';
 import { syncErrorMessage } from './sync.js';
 import { t } from './i18n/index.js';
+import { S, save } from './state.svelte.js';
 
 /** @type {HTMLAudioElement | null} */
 let audio = null;
 let loadToken = 0;
+const SESSION_KEY = 'musicos_player_session';
+let sessionTimer = /** @type {ReturnType<typeof setTimeout> | null} */ (null);
 
 export const player = $state({
   queue: /** @type {import('./types.js').Track[]} */ ([]),
@@ -24,9 +27,91 @@ export const player = $state({
   currentTime: 0,
   duration: 0,
   ready: false,
+  volume: 1,
+  muted: false,
   /** Inline hint on now-playing (non-blocking; avoids toast over lyrics). */
   statusHint: ''
 });
+
+/** Restore volume from settings on first audio init. */
+function applyVolumeSettings() {
+  if (!audio) return;
+  player.volume = S.settings.volume ?? 1;
+  player.muted = S.settings.muted ?? false;
+  audio.volume = player.muted ? 0 : player.volume;
+  audio.muted = player.muted;
+}
+
+/** @param {number} v */
+export function setVolume(v) {
+  const next = Math.max(0, Math.min(1, v));
+  player.volume = next;
+  if (audio) {
+    audio.volume = player.muted ? 0 : next;
+  }
+  S.settings.volume = next;
+  if (next > 0) {
+    player.muted = false;
+    S.settings.muted = false;
+    if (audio) audio.muted = false;
+  }
+  save();
+}
+
+export function toggleMute() {
+  player.muted = !player.muted;
+  if (audio) {
+    audio.muted = player.muted;
+    audio.volume = player.muted ? 0 : player.volume;
+  }
+  S.settings.muted = player.muted;
+  save();
+}
+
+function scheduleSaveSession() {
+  if (!browser) return;
+  clearTimeout(sessionTimer);
+  sessionTimer = setTimeout(saveSession, 400);
+}
+
+function saveSession() {
+  if (!browser || !player.queue.length) return;
+  localStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify({
+      queueIds: player.queue.map((t) => t.id),
+      index: player.index,
+      currentTime: player.currentTime,
+      playing: player.playing
+    })
+  );
+}
+
+/** @returns {Promise<{ tracks: import('./types.js').Track[]; index: number; currentTime: number; playing: boolean } | null>} */
+export async function restoreLastSession() {
+  if (!browser) return null;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data.queueIds) || !data.queueIds.length) return null;
+    const rows = await db.tracks.bulkGet(data.queueIds);
+    const tracks = data.queueIds.map((id) => rows.find((r) => r?.id === id)).filter(Boolean).map(hydrateTrack);
+    if (!tracks.length) return null;
+    const index = Math.max(0, Math.min(data.index ?? 0, tracks.length - 1));
+    return { tracks, index, currentTime: data.currentTime ?? 0, playing: Boolean(data.playing) };
+  } catch {
+    return null;
+  }
+}
+
+/** @param {{ tracks: import('./types.js').Track[]; index: number; currentTime?: number; autoplay?: boolean }} opts */
+export async function resumeSession(opts) {
+  if (!opts.tracks.length) return;
+  player.queue = opts.tracks;
+  player.index = opts.index;
+  await loadAndPlay({ seekTo: opts.currentTime ?? 0, autoplay: opts.autoplay ?? false });
+}
 
 export function getCurrentTrack() {
   return player.queue[player.index] ?? null;
@@ -227,11 +312,30 @@ async function loadAndPlay(opts = {}) {
   player.duration = track.duration || 0;
   updateMediaSession(track, false);
 
+  if (typeof opts.seekTo === 'number' && opts.seekTo > 0) {
+    const seekTarget = opts.seekTo;
+    const once = () => {
+      seek(seekTarget);
+      audio?.removeEventListener('loadedmetadata', once);
+    };
+    audio?.addEventListener('loadedmetadata', once, { once: true });
+  }
+
+  if (opts.autoplay === false) {
+    if (audio.src !== src) {
+      audio.src = src;
+      audio.load();
+    }
+    scheduleSaveSession();
+    return;
+  }
+
   const ok = await startPlayback(src, token, track, opts);
   if (!ok || token !== loadToken) return;
 
   recordPlay(track.id);
   updateMediaSession(track, true);
+  scheduleSaveSession();
 }
 
 function ensureAudio() {
@@ -252,6 +356,7 @@ function ensureAudio() {
     player.currentTime = audio?.currentTime || 0;
     player.duration = audio?.duration || player.duration;
     updatePositionState(audio);
+    scheduleSaveSession();
   });
   audio.addEventListener('play', () => {
     player.playing = true;
@@ -285,6 +390,7 @@ function ensureAudio() {
     }
   });
   player.ready = true;
+  applyVolumeSettings();
 }
 
 /** @param {number} sec */

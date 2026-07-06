@@ -31,3 +31,25 @@ export function openQueueDrawer() {
 export function closeQueueDrawer() {
   queueDrawerOpen.open = false;
 }
+
+/** @type {{ open: boolean; tab: 'queue' | 'lyrics' }} */
+export const utilityPane = $state({ open: false, tab: 'queue' });
+
+/** @param {'queue' | 'lyrics'} [tab='queue'] */
+export function openUtilityPane(tab = 'queue') {
+  utilityPane.open = true;
+  utilityPane.tab = tab;
+}
+
+export function closeUtilityPane() {
+  utilityPane.open = false;
+}
+
+/** @param {'queue' | 'lyrics'} [tab] */
+export function toggleUtilityPane(tab) {
+  if (utilityPane.open && (!tab || utilityPane.tab === tab)) {
+    closeUtilityPane();
+  } else {
+    openUtilityPane(tab ?? utilityPane.tab);
+  }
+}

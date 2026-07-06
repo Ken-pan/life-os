@@ -20,6 +20,16 @@ import Upload from '@lucide/svelte/icons/upload';
 import List from '@lucide/svelte/icons/list';
 import Plus from '@lucide/svelte/icons/plus';
 import Music from '@lucide/svelte/icons/music';
+import Ellipsis from '@lucide/svelte/icons/ellipsis';
+import ChevronRight from '@lucide/svelte/icons/chevron-right';
+import Volume2 from '@lucide/svelte/icons/volume-2';
+import VolumeX from '@lucide/svelte/icons/volume-x';
+import Mic from '@lucide/svelte/icons/mic-vocal';
+import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
+import Filter from '@lucide/svelte/icons/filter';
+import LayoutList from '@lucide/svelte/icons/layout-list';
+import LayoutGrid from '@lucide/svelte/icons/layout-grid';
+import MoreHorizontal from '@lucide/svelte/icons/more-horizontal';
 
 /** @type {Record<string, import('svelte').Component>} */
 export const ICONS = {
@@ -44,5 +54,15 @@ export const ICONS = {
   upload: Upload,
   queue: List,
   plus: Plus,
-  music: Music
+  music: Music,
+  ellipsis: Ellipsis,
+  'chevron-right': ChevronRight,
+  'volume-2': Volume2,
+  'volume-x': VolumeX,
+  mic: Mic,
+  'arrow-up-down': ArrowUpDown,
+  filter: Filter,
+  'layout-list': LayoutList,
+  'layout-grid': LayoutGrid,
+  'more-horizontal': MoreHorizontal
 };

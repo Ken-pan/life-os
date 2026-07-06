@@ -1,0 +1,92 @@
+<script>
+  import { t } from '$lib/i18n/index.js';
+  import { appendToQueue, playTrack } from '$lib/player.svelte.js';
+  import { toggleLike, db } from '$lib/db.js';
+  import { tick } from 'svelte';
+
+  /** @type {{ x: number; y: number; track: import('$lib/types.js').Track; onClose: () => void; onPlay?: () => void; onPlayNext?: () => void; onAddQueue?: () => void }} */
+  let { x, y, track, onClose, onPlay, onPlayNext, onAddQueue } = $props();
+
+  /** @type {HTMLDivElement | null} */
+  let el = $state(null);
+
+  $effect(() => {
+    tick().then(() => {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.right > window.innerWidth) {
+        el.style.left = `${Math.max(8, window.innerWidth - rect.width - 8)}px`;
+      }
+      if (rect.bottom > window.innerHeight) {
+        el.style.top = `${Math.max(8, window.innerHeight - rect.height - 8)}px`;
+      }
+    });
+
+    /** @param {MouseEvent} e */
+    const onDoc = (e) => {
+      if (el && !el.contains(/** @type {Node} */ (e.target))) onClose();
+    };
+    /** @param {KeyboardEvent} e */
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('mousedown', onDoc);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('mousedown', onDoc);
+      window.removeEventListener('keydown', onKey);
+    };
+  });
+
+  async function onDelete() {
+    await db.tracks.delete(track.id);
+    onClose();
+  }
+</script>
+
+<div bind:this={el} class="context-menu" style:left="{x}px" style:top="{y}px" role="menu">
+  <button type="button" class="context-menu-item" role="menuitem" onclick={() => { (onPlay ?? (() => playTrack(track)))(); onClose(); }}>
+    {t('common.playNow')}
+  </button>
+  <button type="button" class="context-menu-item" role="menuitem" onclick={() => { (onAddQueue ?? (() => appendToQueue([track])))(); onClose(); }}>
+    {t('common.addToQueue')}
+  </button>
+  <button type="button" class="context-menu-item" role="menuitem" onclick={async () => { await toggleLike(track.id); onClose(); }}>
+    {track.liked ? '取消喜欢' : '喜欢'}
+  </button>
+  <button type="button" class="context-menu-item context-menu-item--danger" role="menuitem" onclick={onDelete}>
+    {t('common.delete')}
+  </button>
+</div>
+
+<style>
+  .context-menu {
+    position: fixed;
+    z-index: calc(var(--z-modal) + 2);
+    min-width: 180px;
+    padding: var(--space-1);
+    border-radius: var(--radius-md);
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .context-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--t1, var(--text));
+  }
+
+  .context-menu-item:hover,
+  .context-menu-item:focus-visible {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .context-menu-item--danger {
+    color: var(--accent);
+  }
+</style>

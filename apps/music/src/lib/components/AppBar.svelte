@@ -1,16 +1,28 @@
 <script>
   import Icon from './Icon.svelte';
   import { t } from '$lib/i18n/index.js';
+  import GlobalSearch from './GlobalSearch.svelte';
+  import { getPageActions } from '$lib/pageChrome.svelte.js';
 
-  /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, hidden?: boolean, action?: import('$lib/pageChrome.svelte.js').PageChromeAction | null }} */
-  let { title, subtitle, backHref, backLabel, hidden = false, action = null } = $props();
+  /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, hidden?: boolean, searchRef?: HTMLInputElement | null }} */
+  let {
+    title,
+    subtitle,
+    backHref,
+    backLabel,
+    hidden = false,
+    searchRef = $bindable(null)
+  } = $props();
+
+  let searchQuery = $state('');
   const resolvedBackLabel = $derived(backLabel ?? t('common.back'));
   const hasBack = $derived(Boolean(backHref));
-  const hasTools = $derived(Boolean(action));
+  const actions = $derived(getPageActions());
+  const hasTools = $derived(actions.length > 0);
 </script>
 
 {#if !hidden}
-  <header class="appbar" class:appbar--back={hasBack} class:appbar--tools={hasTools}>
+  <header class="appbar music-appbar" class:appbar--back={hasBack} class:appbar--tools={hasTools}>
     <div class="appbar-inner">
       <div class="appbar-leading">
         {#if backHref}
@@ -28,34 +40,42 @@
         {/if}
       </div>
 
-      {#if title}
-        <div class="appbar-titles">
-          <h1 class="page-title">{title}</h1>
-          {#if subtitle}<p class="page-sub">{subtitle}</p>{/if}
+      <div class="appbar-center">
+        <div class="appbar-search-desktop">
+          <GlobalSearch bind:query={searchQuery} bind:inputRef={searchRef} />
         </div>
-      {/if}
+        {#if title}
+          <div class="appbar-titles appbar-titles--mobile">
+            <h1 class="page-title">{title}</h1>
+            {#if subtitle}<p class="page-sub">{subtitle}</p>{/if}
+          </div>
+        {/if}
+      </div>
 
       <div class="appbar-trailing">
-        {#if action}
+        <a class="appbar-search-mobile" href="/search" aria-label={t('search.title')}>
+          <Icon name="search" size={20} strokeWidth={1.75} />
+        </a>
+        {#each actions as action, i (action.label + i)}
           {#if action.href}
             <a
-              class={action.variant === 'primary' ? 'btn-primary appbar-action' : 'btn-secondary appbar-action'}
+              class={action.variant === 'primary' ? 'btn-primary appbar-action' : action.variant === 'ghost' ? 'btn-ghost appbar-action' : 'btn-secondary appbar-action'}
               href={action.href}
             >
               {#if action.icon}<Icon name={action.icon} size={16} />{/if}
-              {action.label}
+              <span class="appbar-action-label">{action.label}</span>
             </a>
           {:else if action.onClick}
             <button
               type="button"
-              class={action.variant === 'primary' ? 'btn-primary appbar-action' : 'btn-secondary appbar-action'}
+              class={action.variant === 'primary' ? 'btn-primary appbar-action' : action.variant === 'ghost' ? 'btn-ghost appbar-action' : 'btn-secondary appbar-action'}
               onclick={action.onClick}
             >
               {#if action.icon}<Icon name={action.icon} size={16} />{/if}
-              {action.label}
+              <span class="appbar-action-label">{action.label}</span>
             </button>
           {/if}
-        {/if}
+        {/each}
       </div>
     </div>
   </header>

@@ -1,10 +1,7 @@
 @import '@life-os/theme/design-system.css';
 @import '@life-os/theme/music-shell.css';
 
-/*
-  MUSIC.OS 品牌层
-  感性深红 · 留声机般的温暖暗色；结构/播放器壳见 @life-os/theme
-*/
+/* MUSIC.OS 品牌层 — 感性深红；播放器氛围色见 trackAmbience + artPalette */
 
 :root {
   --content-max: 920px;
@@ -60,6 +57,31 @@
   --toast-border: var(--border-l);
 
   color-scheme: light;
+}
+
+@property --track-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #c41e3a;
+}
+
+@property --track-accent-muted {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #a81830;
+}
+
+html {
+  transition:
+    --track-accent 680ms var(--ease-standard, ease),
+    --track-accent-muted 680ms var(--ease-standard, ease),
+    --player-glow 680ms var(--ease-standard, ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
 }
 
 :root[data-theme='dark'] {

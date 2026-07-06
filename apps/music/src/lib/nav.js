@@ -1,23 +1,146 @@
+/**
+ * Life OS 导航 IA — MUSIC.OS
+ * mobile/tablet：4 个 Primary Tab + More Sheet（与 Planner/Finance 对齐）
+ * desktop：完整侧栏分组
+ */
+
+/** @typedef {{ tab: string; href: string; label: string; icon: string; match: (pathname: string) => boolean }} NavItem */
+/** @typedef {{ label: string; items: NavItem[] }} NavGroup */
+
+/** @param {(key: string, params?: Record<string, unknown>) => string} tr */
+export function buildPrimaryNavItems(tr) {
+  return [
+    {
+      tab: 'home',
+      href: '/',
+      label: tr('nav.home'),
+      icon: 'home',
+      match: (p) => p === '/'
+    },
+    {
+      tab: 'library',
+      href: '/library',
+      label: tr('nav.library'),
+      icon: 'library',
+      match: (p) => p.startsWith('/library') || p.startsWith('/import')
+    },
+    {
+      tab: 'browse',
+      href: '/browse',
+      label: tr('nav.browse'),
+      icon: 'discover',
+      match: (p) =>
+        p.startsWith('/browse') || p.startsWith('/album') || p.startsWith('/artist')
+    },
+    {
+      tab: 'playlists',
+      href: '/playlists',
+      label: tr('nav.playlists'),
+      icon: 'list',
+      match: (p) => p.startsWith('/playlists') || p.startsWith('/liked')
+    }
+  ];
+}
+
+/** @param {(key: string, params?: Record<string, unknown>) => string} tr */
+export function buildMoreNavItems(tr) {
+  return [
+    {
+      tab: 'search',
+      href: '/search',
+      label: tr('nav.search'),
+      icon: 'search',
+      match: (p) => p.startsWith('/search')
+    },
+    {
+      tab: 'liked',
+      href: '/liked',
+      label: tr('nav.liked'),
+      icon: 'heart',
+      match: (p) => p.startsWith('/liked')
+    },
+    {
+      tab: 'import',
+      href: '/import',
+      label: tr('nav.import'),
+      icon: 'upload',
+      match: (p) => p.startsWith('/import')
+    }
+  ];
+}
+
+/** @param {(key: string, params?: Record<string, unknown>) => string} tr */
+export function buildSettingsNavItem(tr) {
+  return {
+    tab: 'settings',
+    href: '/settings',
+    label: tr('nav.settings'),
+    icon: 'settings',
+    match: (p) => p.startsWith('/settings') || p.startsWith('/auth')
+  };
+}
+
+/**
+ * 侧栏分组（desktop）
+ * @param {(key: string, params?: Record<string, unknown>) => string} tr
+ * @returns {NavGroup[]}
+ */
+export function buildSidebarNavGroups(tr) {
+  return [
+    { label: tr('nav.groupMain'), items: buildPrimaryNavItems(tr) },
+    { label: tr('nav.groupMore'), items: buildMoreNavItems(tr) }
+  ];
+}
+
+/**
+ * More Sheet 分组（mobile / tablet）
+ * @param {(key: string, params?: Record<string, unknown>) => string} tr
+ * @returns {NavGroup[]}
+ */
+export function buildMoreNavGroups(tr) {
+  return [
+    { label: tr('nav.groupQuick'), items: buildMoreNavItems(tr) },
+    { label: tr('nav.groupAccount'), items: [buildSettingsNavItem(tr)] }
+  ];
+}
+
+/** @deprecated Use buildPrimaryNavItems + buildMoreNavGroups */
 /** @param {(key: string, params?: Record<string, unknown>) => string} tr */
 export function buildNavItems(tr) {
-  return [
-    { tab: 'home', href: '/', label: tr('nav.home'), icon: 'home' },
-    { tab: 'library', href: '/library', label: tr('nav.library'), icon: 'library' },
-    { tab: 'browse', href: '/browse', label: tr('nav.browse'), icon: 'discover' },
-    { tab: 'playlists', href: '/playlists', label: tr('nav.playlists'), icon: 'list' },
-    { tab: 'settings', href: '/settings', label: tr('nav.settings'), icon: 'settings' }
-  ];
+  return [...buildPrimaryNavItems(tr), buildSettingsNavItem(tr)];
+}
+
+/** @param {string} pathname */
+export function resolvePrimaryNavTab(pathname) {
+  if (pathname === '/') return 'home';
+  if (pathname.startsWith('/library') || pathname.startsWith('/import')) return 'library';
+  if (
+    pathname.startsWith('/browse') ||
+    pathname.startsWith('/album') ||
+    pathname.startsWith('/artist')
+  )
+    return 'browse';
+  if (pathname.startsWith('/playlists') || pathname.startsWith('/liked')) return 'playlists';
+  return '';
 }
 
 /** @param {string} pathname */
 export function resolveNavTab(pathname) {
-  if (pathname === '/') return 'home';
-  if (pathname.startsWith('/library') || pathname.startsWith('/liked') || pathname.startsWith('/import')) return 'library';
-  if (pathname.startsWith('/browse') || pathname.startsWith('/album') || pathname.startsWith('/artist')) return 'browse';
-  if (pathname.startsWith('/playlists')) return 'playlists';
-  if (pathname.startsWith('/settings')) return 'settings';
+  const primary = resolvePrimaryNavTab(pathname);
+  if (primary) return primary;
   if (pathname.startsWith('/search')) return 'library';
+  if (pathname.startsWith('/settings')) return 'settings';
   return 'home';
+}
+
+/** @param {string} pathname */
+export function isMoreNavActive(pathname) {
+  if (pathname.startsWith('/search')) return true;
+  if (pathname.startsWith('/liked')) return true;
+  if (pathname.startsWith('/import')) return true;
+  if (pathname.startsWith('/settings')) return true;
+  if (pathname.startsWith('/auth')) return true;
+  return false;
 }
 
 /** @param {string} pathname */
@@ -32,7 +155,6 @@ export function isMiniPlayerHidden(pathname) {
 
 const NOW_PLAYING_RETURN_KEY = 'music:now-playing-return';
 
-/** Remember where to go when dismissing Now Playing (avoids unreliable history.length). */
 /** @param {string} from */
 export function markNowPlayingReturn(from) {
   if (typeof sessionStorage === 'undefined') return;
@@ -53,7 +175,6 @@ export function peekNowPlayingReturn() {
   return sessionStorage.getItem(NOW_PLAYING_RETURN_KEY);
 }
 
-/** Set return path only when not already recorded (e.g. deep link to Now Playing). */
 /** @param {string} from */
 export function ensureNowPlayingReturn(from) {
   if (peekNowPlayingReturn()) return;
@@ -86,4 +207,17 @@ export function resolvePageTitle(pathname, tr) {
   if (pathname.startsWith('/artist/')) return tr('artist.title');
   if (pathname.startsWith('/playlists/')) return tr('playlist.title');
   return tr('app.name');
+}
+
+/** Wide-layout routes use full content width on desktop. */
+/** @param {string} pathname */
+export function isWideContentRoute(pathname) {
+  return (
+    pathname === '/library' ||
+    pathname.startsWith('/browse') ||
+    pathname.startsWith('/search') ||
+    pathname.startsWith('/album') ||
+    pathname.startsWith('/artist') ||
+    pathname.startsWith('/playlists')
+  );
 }

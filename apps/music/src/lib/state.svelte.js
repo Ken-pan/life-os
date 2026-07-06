@@ -12,7 +12,12 @@ const defaultState = () => ({
     theme: 'auto',
     locale: 'zh',
     crossfade: false,
-    gapless: true
+    gapless: true,
+    volume: 1,
+    muted: false,
+    libraryDensity: 'comfortable',
+    /** Tint player chrome from album artwork (progress, glow, spotlight). */
+    albumAmbience: true
   }
 });
 

@@ -44,6 +44,87 @@ export async function getAllTracks() {
   return rows.map(hydrateTrack);
 }
 
+/** @returns {Promise<import('./types.js').Track[]>} */
+export async function getRecentlyAdded(limit = 8) {
+  const rows = await db.tracks.orderBy('addedAt').reverse().limit(limit).toArray();
+  return rows.map(hydrateTrack);
+}
+
+/** @returns {Promise<{ artist: string, artistKey: string, trackCount: number, playCount: number }[]>} */
+export async function getTopArtists(limit = 6) {
+  const tracks = await getAllTracks();
+  /** @type {Map<string, { artist: string, artistKey: string, trackCount: number, playCount: number }>} */
+  const map = new Map();
+  for (const t of tracks) {
+    const key = t.artistKey;
+    const cur = map.get(key) || {
+      artist: t.artist,
+      artistKey: key,
+      trackCount: 0,
+      playCount: 0
+    };
+    cur.trackCount += 1;
+    cur.playCount += t.playCount || 0;
+    map.set(key, cur);
+  }
+  return [...map.values()]
+    .sort((a, b) => b.playCount - a.playCount || b.trackCount - a.trackCount)
+    .slice(0, limit);
+}
+
+const RECENT_SEARCH_KEY = 'musicos_recent_searches';
+const RECENT_SEARCH_MAX = 8;
+
+/** @returns {string[]} */
+export function getRecentSearches() {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(RECENT_SEARCH_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** @param {string} q */
+export function addRecentSearch(q) {
+  const term = q.trim();
+  if (!term || typeof localStorage === 'undefined') return;
+  const prev = getRecentSearches().filter((s) => s !== term);
+  localStorage.setItem(
+    RECENT_SEARCH_KEY,
+    JSON.stringify([term, ...prev].slice(0, RECENT_SEARCH_MAX))
+  );
+}
+
+/**
+ * @param {string} q
+ * @param {{ limit?: number }} [opts]
+ */
+export async function searchAll(q, opts = {}) {
+  const limit = opts.limit ?? 20;
+  const query = q.trim().toLowerCase();
+  if (!query) {
+    return { tracks: [], albums: [], artists: [], playlists: [] };
+  }
+
+  const tracks = (await searchTracks(q)).slice(0, limit);
+  const albums = (await getAlbumGroups())
+    .filter(
+      (a) =>
+        a.album.toLowerCase().includes(query) || a.artist.toLowerCase().includes(query)
+    )
+    .slice(0, limit);
+  const artists = (await getArtistGroups())
+    .filter((a) => a.artist.toLowerCase().includes(query))
+    .slice(0, limit);
+  const playlists = (await getPlaylists())
+    .filter((p) => p.name.toLowerCase().includes(query))
+    .slice(0, limit);
+
+  return { tracks, albums, artists, playlists };
+}
+
 /** @param {string} q */
 export async function searchTracks(q) {
   const query = q.trim().toLowerCase();

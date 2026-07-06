@@ -1,9 +1,10 @@
 <script>
   import { t } from '$lib/i18n/index.js';
   import { S, save, applyTheme } from '$lib/state.svelte.js';
+  import { getCurrentTrack, player, refreshQueueMetadata } from '$lib/player.svelte.js';
+  import { refreshTrackAmbience } from '$lib/trackAmbience.js';
   import { exportLibraryJson, rescanTrackMetadata, ensureArtRepaired, ensureMetadataRepaired, repairMissingLyrics } from '$lib/import.js';
   import { trackCount, countTracksWithoutLyrics } from '$lib/db.js';
-  import { refreshQueueMetadata } from '$lib/player.svelte.js';
   import { auth, signOut } from '$lib/auth.svelte.js';
   import { syncBidirectionalSafe } from '$lib/sync.js';
   import { cloudAudioStats, formatBytes, uploadPendingAudio } from '$lib/cloudAudio.js';
@@ -42,6 +43,13 @@
     S.settings.theme = theme;
     save();
     applyTheme();
+  }
+
+  /** @param {boolean} enabled */
+  function setAlbumAmbience(enabled) {
+    S.settings.albumAmbience = enabled;
+    save();
+    refreshTrackAmbience(getCurrentTrack() ?? player.queue[player.index] ?? null);
   }
 
   async function exportMeta() {
@@ -214,6 +222,32 @@
         <button type="button" class:active={S.settings.theme === 'auto'} onclick={() => setTheme('auto')}>{t('settings.themeAuto')}</button>
         <button type="button" class:active={S.settings.theme === 'light'} onclick={() => setTheme('light')}>{t('settings.themeLight')}</button>
         <button type="button" class:active={S.settings.theme === 'dark'} onclick={() => setTheme('dark')}>{t('settings.themeDark')}</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-block set-group">
+    <h3 class="block-title sg-title">{t('settings.albumAmbience')}</h3>
+    <p class="block-desc" style="padding:0 18px 12px">{t('settings.albumAmbienceDesc')}</p>
+    <div class="set-row settings-row">
+      <div class="pref-copy">
+        <div class="pref-label">{t('settings.albumAmbience')}</div>
+      </div>
+      <div class="pref-control seg">
+        <button
+          type="button"
+          class:active={S.settings.albumAmbience !== false}
+          onclick={() => setAlbumAmbience(true)}
+        >
+          {t('settings.albumAmbienceOn')}
+        </button>
+        <button
+          type="button"
+          class:active={S.settings.albumAmbience === false}
+          onclick={() => setAlbumAmbience(false)}
+        >
+          {t('settings.albumAmbienceOff')}
+        </button>
       </div>
     </div>
   </section>

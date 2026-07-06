@@ -2,17 +2,25 @@
   import { page } from '$app/state';
   import { t } from '$lib/i18n/index.js';
   import Icon from '$lib/components/Icon.svelte';
-  import { buildNavItems, resolveNavTab, isNavChromeHidden } from '$lib/nav.js';
+  import {
+    buildSidebarNavGroups,
+    buildSettingsNavItem,
+    isNavChromeHidden
+  } from '$lib/nav.js';
 
-  const items = $derived(buildNavItems(t));
-  const settingsItem = $derived(items.find((item) => item.tab === 'settings'));
-  const primaryItems = $derived(items.filter((item) => item.tab !== 'settings'));
-  const current = $derived(resolveNavTab(page.url.pathname));
+  const groups = $derived(buildSidebarNavGroups(t));
+  const settingsItem = $derived(buildSettingsNavItem(t));
+  const pathname = $derived(page.url.pathname);
   const hidden = $derived(isNavChromeHidden(page.url.pathname));
+
+  /** @param {import('$lib/nav.js').NavItem} item */
+  function isActive(item) {
+    return item.match(pathname);
+  }
 </script>
 
 {#if !hidden}
-  <aside class="sidebar" aria-label={t('nav.mainAria')}>
+  <aside class="sidebar music-sidebar" aria-label={t('nav.mainAria')}>
     <div class="brand" aria-label={t('common.brand')}>
       <img src="/icon.svg" alt="" class="brand-mark" width="28" height="28" />
       <span class="brand-copy">
@@ -24,33 +32,63 @@
     </div>
 
     <div class="sidebar-body">
-      <div class="nav-group">
-        {#each primaryItems as item (item.tab)}
-          <a
-            class="nav-item"
-            class:active={current === item.tab}
-            href={item.href}
-            data-sveltekit-noscroll
-            aria-current={current === item.tab ? 'page' : undefined}
-          >
-            <Icon name={item.icon} size={18} strokeWidth={1.75} />
-            <span class="nav-lbl">{item.label}</span>
-          </a>
-        {/each}
-      </div>
+      {#each groups as group (group.label)}
+        <div class="nav-group">
+          <p class="nav-group-label">{group.label}</p>
+          {#each group.items as item (item.tab)}
+            <a
+              class="nav-item"
+              class:active={isActive(item)}
+              href={item.href}
+              data-sveltekit-noscroll
+              aria-current={isActive(item) ? 'page' : undefined}
+            >
+              <Icon name={item.icon} size={18} strokeWidth={1.75} />
+              <span class="nav-lbl">{item.label}</span>
+            </a>
+          {/each}
+        </div>
+      {/each}
     </div>
 
-    {#if settingsItem}
-      <a
-        class="nav-item sidebar-foot-item"
-        class:active={current === settingsItem.tab}
-        href={settingsItem.href}
-        data-sveltekit-noscroll
-        aria-current={current === settingsItem.tab ? 'page' : undefined}
-      >
-        <Icon name={settingsItem.icon} size={18} strokeWidth={1.75} />
-        <span class="nav-lbl">{settingsItem.label}</span>
-      </a>
-    {/if}
+    <a
+      class="nav-item sidebar-foot-item"
+      class:active={isActive(settingsItem)}
+      href={settingsItem.href}
+      data-sveltekit-noscroll
+      aria-current={isActive(settingsItem) ? 'page' : undefined}
+    >
+      <Icon name={settingsItem.icon} size={18} strokeWidth={1.75} />
+      <span class="nav-lbl">{settingsItem.label}</span>
+    </a>
   </aside>
 {/if}
+
+<style>
+  .music-sidebar .nav-group-label {
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sidebar-muted);
+    padding: var(--space-3) var(--space-2-5) var(--space-1);
+    margin: 0;
+  }
+
+  .music-sidebar .nav-item.active {
+    position: relative;
+    font-weight: 600;
+  }
+
+  .music-sidebar .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    border-radius: 0 2px 2px 0;
+    background: var(--sidebar-primary);
+  }
+</style>

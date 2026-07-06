@@ -8,11 +8,12 @@
   import BottomNav from '$lib/components/BottomNav.svelte';
   import MiniPlayer from '$lib/components/MiniPlayer.svelte';
   import QueueDrawer from '$lib/components/QueueDrawer.svelte';
+  import UtilityPane from '$lib/components/UtilityPane.svelte';
   import Toast from '$lib/components/Toast.svelte';
   import DocumentHead from '$lib/components/DocumentHead.svelte';
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js';
   import { applyLocale, t } from '$lib/i18n/index.js';
-  import { resolvePageTitle, resolvePageBack, isNavChromeHidden } from '$lib/nav.js';
+  import { resolvePageTitle, resolvePageBack, isNavChromeHidden, isWideContentRoute } from '$lib/nav.js';
   import { pageChrome, resetPageChrome } from '$lib/pageChrome.svelte.js';
   import { player } from '$lib/player.svelte.js';
   import { applyTrackAmbience } from '$lib/trackAmbience.js';
@@ -22,8 +23,13 @@
   import { bindVisibilitySync } from '@life-os/sync';
   import { syncBidirectional } from '$lib/sync.js';
   import { bindBackgroundPlayback } from '$lib/backgroundAudio.js';
+  import { bindGlobalShortcuts, registerShortcutHandlers } from '$lib/shortcuts.js';
+  import { utilityPane } from '$lib/ui.svelte.js';
 
   let { children } = $props();
+
+  /** @type {HTMLInputElement | null} */
+  let searchInput = $state(null);
 
   const appBarHidden = $derived(isNavChromeHidden(page.url.pathname));
   const pageTitle = $derived(
@@ -34,21 +40,36 @@
   const appBarBackLabel = $derived(pageChrome.backLabel ?? undefined);
   const playerChrome = $derived((player.queue[player.index] ?? null) ? 'mini' : 'none');
   const pageRoute = $derived(page.url.pathname.startsWith('/now-playing') ? 'now-playing' : undefined);
+  const wideContent = $derived(isWideContentRoute(page.url.pathname));
+  const utilityOpen = $derived(utilityPane.open);
 
   onMount(() => {
     applyTheme();
     applyLocale();
     ensureBuiltinPlaylists();
     ensureArtRepaired().catch(() => {});
+    registerShortcutHandlers({
+      searchInput,
+      focusSearch: () => searchInput?.focus()
+    });
+    const cleanupShortcuts = bindGlobalShortcuts(t);
     const cleanupTheme = bindAppThemeSystemChange();
     const cleanupAuth = initAuth();
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
     const cleanupBackground = bindBackgroundPlayback();
     return () => {
+      cleanupShortcuts();
       cleanupTheme();
       cleanupAuth();
       cleanupBackground();
     };
+  });
+
+  $effect(() => {
+    registerShortcutHandlers({
+      searchInput,
+      focusSearch: () => searchInput?.focus()
+    });
   });
 
   onNavigate((navigation) => {
@@ -85,6 +106,8 @@
   });
 
   $effect(() => {
+    S.settings.albumAmbience;
+    S.settings.theme;
     const track = player.queue[player.index] ?? null;
     applyTrackAmbience(track);
   });
@@ -92,22 +115,33 @@
 
 <DocumentHead appId="music" pageTitle={pageTitle} />
 
-<div class="app-shell music-app" data-page-route={pageRoute}>
+<div
+  class="app-shell music-app"
+  data-page-route={pageRoute}
+  data-wide-content={wideContent ? 'true' : undefined}
+  data-utility-open={utilityOpen ? 'true' : undefined}
+>
   <SideNav />
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
 
-  <div class="main-wrap" data-mobile-chrome="tabbar" data-player-chrome={playerChrome === 'mini' ? 'mini' : undefined}>
+  <div
+    class="main-wrap"
+    data-mobile-chrome="tabbar"
+    data-player-chrome={playerChrome === 'mini' ? 'mini' : undefined}
+  >
     <AppBar
       hidden={appBarHidden}
       title={appBarHidden ? undefined : pageTitle}
       subtitle={appBarSubtitle}
       backHref={appBarBackHref}
       backLabel={appBarBackLabel}
-      action={pageChrome.action}
+      bind:searchRef={searchInput}
     />
     <main id="main-content">{@render children()}</main>
   </div>
+
+  <UtilityPane />
 </div>
 
 <MiniPlayer />
