@@ -1,9 +1,14 @@
 export default {
-  app: { name: 'MUSIC.OS' },
+  app: {
+    name: 'MUSIC.OS',
+    tagline: '本地音乐，留在心里'
+  },
   common: {
     back: '返回',
     brand: 'MUSIC.OS',
     play: '播放',
+    playAll: '播放全部',
+    playAlbum: '播放专辑',
     pause: '暂停',
     import: '导入音乐',
     search: '搜索',
@@ -60,7 +65,7 @@ export default {
     clearQueue: '清空队列',
     lyrics: '歌词',
     synced: '同步',
-    noLyrics: '此曲目暂无歌词 · 可在导入页添加 .lrc，或在设置中补扫元数据',
+    noLyrics: '此曲目暂无歌词 · 正在尝试从网络获取，或在设置中批量补抓',
     playing: '正在播放',
     paused: '已暂停'
   },
@@ -78,9 +83,14 @@ export default {
     themeDark: '深色',
     privacy: '隐私',
     privacyDesc: '默认保存在本机。登录后可选择将音频备份到私有 Supabase Storage（private bucket，播放时用 signed URL）。',
+    iosBackground: 'iPhone 后台播放：请用 Safari「添加到主屏幕」安装本应用，锁屏后可通过控制中心/耳机控制。',
     library: '曲库',
     libraryCount: '{count} 首歌曲保存在本机',
-    missingLyrics: '{count} 首有音频文件但尚未提取歌词',
+    missingLyrics: '{count} 首有音频但尚未获取歌词',
+    fetchLyrics: '补抓歌词',
+    fetchLyricsProgress: '正在补抓歌词 {done}/{total}…',
+    fetchLyricsDone: '已处理 {total} 首，成功获取 {repaired} 首（已同步云端）',
+    fetchLyricsEmpty: '没有需要补抓歌词的曲目',
     rescanMeta: '补扫元数据与歌词',
     rescanning: '正在补扫 {done}/{total}…',
     rescanDone: '已扫描 {scanned} 首，更新 {updated} 首',

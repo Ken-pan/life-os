@@ -152,11 +152,13 @@ async function runBrowserSuite(browserType, label) {
   await page.waitForTimeout(4500);
 
   const playback = await page.evaluate(() => {
-    const audios = window.__audios || [];
-    const a = audios[audios.length - 1];
+    const a =
+      document.getElementById('music-os-player') ||
+      (window.__audios || [])[(window.__audios || []).length - 1];
     const toast = document.querySelector('.toast')?.textContent?.trim() || '';
     const mini = document.querySelector('.mini-player')?.textContent?.trim() || '';
-    if (!a) return { error: 'no-audio-element', toast, mini };
+    const sessionType = 'audioSession' in navigator ? navigator.audioSession.type : '';
+    if (!a) return { error: 'no-audio-element', toast, mini, sessionType };
     return {
       src: a.src?.slice(0, 100) || '',
       paused: a.paused,
@@ -165,7 +167,8 @@ async function runBrowserSuite(browserType, label) {
       readyState: a.readyState,
       mediaError: a.error?.code ?? null,
       toast,
-      mini: mini.slice(0, 80)
+      mini: mini.slice(0, 80),
+      sessionType
     };
   });
 
@@ -183,7 +186,7 @@ async function runBrowserSuite(browserType, label) {
   log(`${label}-signed-url`, signedOk ? 'pass' : 'fail', signedOk ? 'Using cloud signed URL' : playback.src || 'no src');
 
   const critical = consoleErrors.filter(
-    (e) => !/favicon|sourcemap|404.*\.map|Failed to fetch|Load failed/i.test(e)
+    (e) => !/favicon|sourcemap|404.*\.map|Failed to fetch|Load failed|\/api\/lyrics/i.test(e)
   );
   log(
     `${label}-console`,

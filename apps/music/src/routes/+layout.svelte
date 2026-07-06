@@ -12,30 +12,41 @@
   import DocumentHead from '$lib/components/DocumentHead.svelte';
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js';
   import { applyLocale, t } from '$lib/i18n/index.js';
-  import { resolvePageTitle, isNavChromeHidden } from '$lib/nav.js';
+  import { resolvePageTitle, resolvePageBack, isNavChromeHidden } from '$lib/nav.js';
+  import { pageChrome, resetPageChrome } from '$lib/pageChrome.svelte.js';
   import { player } from '$lib/player.svelte.js';
   import { applyTrackAmbience } from '$lib/trackAmbience.js';
   import { ensureBuiltinPlaylists } from '$lib/db.js';
+  import { ensureArtRepaired, ensureMetadataRepaired, ensureLyricsRepaired } from '$lib/import.js';
   import { initAuth, auth } from '$lib/auth.svelte.js';
   import { bindVisibilitySync } from '@life-os/sync';
   import { syncBidirectional } from '$lib/sync.js';
+  import { bindBackgroundPlayback } from '$lib/backgroundAudio.js';
 
   let { children } = $props();
 
-  const pageTitle = $derived(resolvePageTitle(page.url.pathname, t));
   const appBarHidden = $derived(isNavChromeHidden(page.url.pathname));
+  const pageTitle = $derived(
+    pageChrome.title ?? (appBarHidden ? undefined : resolvePageTitle(page.url.pathname, t))
+  );
+  const appBarSubtitle = $derived(pageChrome.subtitle ?? undefined);
+  const appBarBackHref = $derived(pageChrome.backHref ?? resolvePageBack(page.url.pathname) ?? undefined);
+  const appBarBackLabel = $derived(pageChrome.backLabel ?? undefined);
   const playerChrome = $derived((player.queue[player.index] ?? null) ? 'mini' : 'none');
 
   onMount(() => {
     applyTheme();
     applyLocale();
     ensureBuiltinPlaylists();
+    ensureArtRepaired().catch(() => {});
     const cleanupTheme = bindAppThemeSystemChange();
     const cleanupAuth = initAuth();
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+    const cleanupBackground = bindBackgroundPlayback();
     return () => {
       cleanupTheme();
       cleanupAuth();
+      cleanupBackground();
     };
   });
 
@@ -54,7 +65,14 @@
   });
 
   $effect(() => {
+    page.url.pathname;
+    resetPageChrome();
+  });
+
+  $effect(() => {
     if (!auth.ready || !auth.user) return;
+    ensureMetadataRepaired().catch(() => {});
+    ensureLyricsRepaired().catch(() => {});
     return bindVisibilitySync(() => syncBidirectional({ silent: true }), {
       when: () => Boolean(auth.user)
     });
@@ -79,7 +97,13 @@
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
 
   <div class="main-wrap" data-mobile-chrome="tabbar" data-player-chrome={playerChrome === 'mini' ? 'mini' : undefined}>
-    <AppBar hidden={appBarHidden} title={appBarHidden ? undefined : pageTitle} />
+    <AppBar
+      hidden={appBarHidden}
+      title={appBarHidden ? undefined : pageTitle}
+      subtitle={appBarSubtitle}
+      backHref={appBarBackHref}
+      backLabel={appBarBackLabel}
+    />
     <main id="main-content">{@render children()}</main>
   </div>
 </div>

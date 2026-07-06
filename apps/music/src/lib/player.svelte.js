@@ -2,7 +2,12 @@ import { browser } from '$app/environment';
 import { db, hydrateTrack, recordPlay } from './db.js';
 import { resolvePlayUrl, resolvePlayUrlSync } from './cloudAudio.js';
 import { registerAudioElement, resumeAudioContext } from './audioAnalyser.js';
-import { bindMediaSessionHandlers, updateMediaSession } from './mediaSession.js';
+import {
+  bindMediaSessionHandlers,
+  declarePlaybackSession,
+  updateMediaSession,
+  updatePositionState
+} from './mediaSession.js';
 import { syncErrorMessage } from './sync.js';
 import { t } from './i18n/index.js';
 
@@ -33,6 +38,7 @@ export function getAudioElement() {
 /** Prime output in the same user-gesture stack before async signed URL work. */
 export function primeAudioPlayback() {
   ensureAudio();
+  declarePlaybackSession();
   void resumeAudioContext();
 }
 
@@ -205,17 +211,22 @@ async function loadAndPlay() {
 
 function ensureAudio() {
   if (audio || !browser) return;
-  audio = new Audio();
+  audio = document.createElement('audio');
+  audio.id = 'music-os-player';
   audio.preload = 'auto';
   audio.playsInline = true;
   audio.crossOrigin = 'anonymous';
   audio.setAttribute('playsinline', '');
   audio.setAttribute('webkit-playsinline', 'true');
+  audio.setAttribute('aria-hidden', 'true');
+  audio.style.cssText = 'position:fixed;width:0;height:0;opacity:0;pointer-events:none';
+  document.body.appendChild(audio);
   registerAudioElement(audio);
 
   audio.addEventListener('timeupdate', () => {
     player.currentTime = audio?.currentTime || 0;
     player.duration = audio?.duration || player.duration;
+    updatePositionState(audio);
   });
   audio.addEventListener('play', () => {
     player.playing = true;
@@ -240,7 +251,13 @@ function ensureAudio() {
     },
     pause: () => audio?.pause(),
     next: nextTrack,
-    prev: prevTrack
+    prev: prevTrack,
+    seekBy: (delta) => {
+      if (!audio) return;
+      const next = Math.max(0, Math.min(audio.currentTime + delta, audio.duration || Infinity));
+      seek(next);
+      updatePositionState(audio);
+    }
   });
   player.ready = true;
 }

@@ -1,7 +1,7 @@
 <script>
   import { t } from '$lib/i18n/index.js';
   import { S, save, applyTheme } from '$lib/state.svelte.js';
-  import { exportLibraryJson, rescanTrackMetadata } from '$lib/import.js';
+  import { exportLibraryJson, rescanTrackMetadata, ensureArtRepaired, ensureMetadataRepaired, repairMissingLyrics } from '$lib/import.js';
   import { trackCount, countTracksWithoutLyrics } from '$lib/db.js';
   import { refreshQueueMetadata } from '$lib/player.svelte.js';
   import { auth, signOut } from '$lib/auth.svelte.js';
@@ -18,6 +18,8 @@
   let syncing = $state(false);
   let rescanning = $state(false);
   let rescanProgress = $state('');
+  let fetchingLyrics = $state(false);
+  let lyricsProgress = $state('');
   let uploading = $state(false);
   let uploadProgress = $state('');
   let uploadCurrent = $state('');
@@ -97,6 +99,24 @@
     }
   }
 
+  async function onFetchLyrics() {
+    if (fetchingLyrics) return;
+    fetchingLyrics = true;
+    lyricsProgress = t('settings.fetchLyricsProgress', { done: 0, total: missingLyrics });
+    try {
+      const result = await repairMissingLyrics((done, total) => {
+        lyricsProgress = t('settings.fetchLyricsProgress', { done, total });
+      });
+      if (!result.total) toast(t('settings.fetchLyricsEmpty'));
+      else toast(t('settings.fetchLyricsDone', { total: result.total, repaired: result.repaired }));
+      await refreshQueueMetadata();
+      await refreshCounts();
+    } finally {
+      fetchingLyrics = false;
+      lyricsProgress = '';
+    }
+  }
+
   async function onRescan() {
     if (rescanning) return;
     rescanning = true;
@@ -107,6 +127,8 @@
       });
       if (!result.scanned) toast(t('settings.rescanEmpty'));
       else toast(t('settings.rescanDone', { scanned: result.scanned, updated: result.updated }));
+      await ensureArtRepaired();
+      await ensureMetadataRepaired();
       await refreshQueueMetadata();
       await refreshCounts();
     } finally {
@@ -117,9 +139,7 @@
 </script>
 
 <div class="wrap">
-  <h2 class="page-title">{t('settings.title')}</h2>
-
-  <section class="settings-block set-group" style="margin-top:24px">
+  <section class="settings-block set-group" style="margin-top:0">
     <h3 class="block-title sg-title">{t('settings.account')}</h3>
     {#if auth.user}
       <div class="set-row settings-row">
@@ -198,7 +218,8 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.privacy')}</h3>
-    <p class="block-desc" style="padding:0 18px 16px">{t('settings.privacyDesc')}</p>
+    <p class="block-desc" style="padding:0 18px 8px">{t('settings.privacyDesc')}</p>
+    <p class="block-desc" style="padding:0 18px 16px;color:var(--text-2)">{t('settings.iosBackground')}</p>
     <div class="set-row settings-row">
       <div class="pref-copy">
         <div class="pref-label">{t('settings.library')}</div>
@@ -215,10 +236,21 @@
         <button class="btn-primary" type="button" disabled={rescanning || count === 0} onclick={onRescan}>
           {rescanning ? t('auth.pleaseWait') : t('settings.rescanMeta')}
         </button>
+        <button
+          class="btn-secondary"
+          type="button"
+          disabled={fetchingLyrics || missingLyrics === 0}
+          onclick={onFetchLyrics}
+        >
+          {fetchingLyrics ? t('auth.pleaseWait') : t('settings.fetchLyrics')}
+        </button>
         <button class="btn-secondary" type="button" onclick={exportMeta}>{t('settings.export')}</button>
       </div>
       {#if rescanProgress}
         <p class="pref-desc" style="margin-top:12px">{rescanProgress}</p>
+      {/if}
+      {#if lyricsProgress}
+        <p class="pref-desc" style="margin-top:12px">{lyricsProgress}</p>
       {/if}
     </div>
   </section>
