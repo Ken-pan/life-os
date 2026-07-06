@@ -227,8 +227,16 @@ export async function searchAll(q, opts = {}) {
     .filter((a) => a._score >= 18)
     .sort((a, b) => b._score - a._score)
     .map(({ _score, ...a }) => a)
-  const allPlaylists = (await getPlaylists())
-    .map((p) => ({ ...p, _score: scoreField(p.name, query, 2) }))
+  const allPlaylists = await Promise.all(
+    (await getPlaylists()).map(async (p) => {
+      const trackCount = await db.playlistTracks
+        .where('playlistId')
+        .equals(p.id)
+        .count()
+      return { ...p, trackCount, _score: scoreField(p.name, query, 2) }
+    }),
+  )
+  const playlistsRanked = allPlaylists
     .filter((p) => p._score >= 18)
     .sort((a, b) => b._score - a._score)
     .map(({ _score, ...p }) => p)
@@ -237,14 +245,14 @@ export async function searchAll(q, opts = {}) {
     tracks: allTracks.length,
     albums: allAlbums.length,
     artists: allArtists.length,
-    playlists: allPlaylists.length,
+    playlists: playlistsRanked.length,
   }
 
   return {
     tracks: allTracks.slice(0, limit),
     albums: allAlbums.slice(0, limit),
     artists: allArtists.slice(0, limit),
-    playlists: allPlaylists.slice(0, limit),
+    playlists: playlistsRanked.slice(0, limit),
     counts,
     total: counts.tracks + counts.albums + counts.artists + counts.playlists,
   }

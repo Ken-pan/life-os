@@ -1,123 +1,168 @@
 <script>
-  import TrackArt from './TrackArt.svelte';
-  import Icon from './Icon.svelte';
-  import { t } from '$lib/i18n/index.js';
-  import { artGradient } from '$lib/trackArt.js';
-  import { playTracks } from '$lib/player.svelte.js';
-  import { pinSpeedDialItem, unpinSpeedDialItem, hideSpeedDialItem } from '$lib/speedDialStore.js';
-  import { speedDialReasonKey } from '$lib/speedDial.js';
-  import { clampPopoverPosition } from '@life-os/theme';
-  import { tick } from 'svelte';
+  import TrackArt from './TrackArt.svelte'
+  import Icon from './Icon.svelte'
+  import { t } from '$lib/i18n/index.js'
+  import { artGradient } from '$lib/trackArt.js'
+  import { playTracks } from '$lib/player.svelte.js'
+  import {
+    pinSpeedDialItem,
+    unpinSpeedDialItem,
+    hideSpeedDialItem,
+  } from '$lib/speedDialStore.js'
+  import { speedDialReasonKey } from '$lib/speedDial.js'
+  import { playSurpriseMe } from '$lib/recommendations.js'
+  import { toast } from '$lib/ui.svelte.js'
+  import { clampPopoverPosition } from '@life-os/theme'
+  import { tick } from 'svelte'
 
   /** @type {{ cell: import('$lib/speedDial.js').SpeedDialCell, active?: boolean, slotIndex?: number, onChange?: () => void }} */
-  let { cell, active = false, slotIndex = 0, onChange } = $props();
+  let { cell, active = false, slotIndex = 0, onChange } = $props()
 
-  let menuOpen = $state(false);
-  let menuX = $state(0);
-  let menuY = $state(0);
+  let menuOpen = $state(false)
+  let menuX = $state(0)
+  let menuY = $state(0)
+  let surpriseLoading = $state(false)
   /** @type {HTMLDivElement | null} */
-  let menuEl = $state(null);
+  let menuEl = $state(null)
   /** @type {ReturnType<typeof setTimeout> | undefined} */
-  let longPressTimer;
-  let longPressTriggered = $state(false);
+  let longPressTimer
+  let longPressTriggered = $state(false)
 
-  const coverSeed = $derived(cell.coverSeeds[0] || cell.id);
-  const coverUrl = $derived(cell.coverUrls[0]);
+  const coverSeed = $derived(cell.coverSeeds[0] || cell.id)
+  const coverUrl = $derived(cell.coverUrls[0])
   const reasonLabel = $derived.by(() => {
-    const key = speedDialReasonKey(cell.reason);
-    return key && !cell.pinned ? t(key) : '';
-  });
+    const key = speedDialReasonKey(cell.reason)
+    return key && !cell.pinned ? t(key) : ''
+  })
 
   function activate() {
-    if (cell.variant === 'add') return;
-    if (!cell.tracks.length) return;
+    if (cell.variant === 'surprise') return
+    if (!cell.tracks.length) return
     playTracks(cell.tracks, 0, 'speed_dial', {
-      entityType: cell.entityType === 'add' ? 'track' : /** @type {import('$lib/musicInteractions.js').EntityType} */ (cell.entityType),
-      entityId: cell.entityId
-    });
+      entityType:
+        /** @type {import('$lib/musicInteractions.js').EntityType} */ (
+          cell.entityType
+        ),
+      entityId: cell.entityId,
+    })
+  }
+
+  async function onSurprise() {
+    if (surpriseLoading) return
+    surpriseLoading = true
+    try {
+      const { count } = await playSurpriseMe()
+      if (count > 0) return
+      toast(t('home.speedDialSurpriseEmpty'))
+    } catch {
+      toast(t('home.speedDialSurpriseFailed'), { error: true })
+    } finally {
+      surpriseLoading = false
+    }
   }
 
   /** @param {MouseEvent} e */
   function onContextMenu(e) {
-    if (cell.variant === 'add') return;
-    e.preventDefault();
-    openMenuAt(e.clientX, e.clientY);
+    if (cell.variant === 'surprise') return
+    e.preventDefault()
+    openMenuAt(e.clientX, e.clientY)
   }
 
   /** @param {number} x @param {number} y */
   function openMenuAt(x, y) {
-    menuX = x;
-    menuY = y;
-    menuOpen = true;
+    menuX = x
+    menuY = y
+    menuOpen = true
   }
 
   /** @param {TouchEvent} e */
   function onTouchStart(e) {
-    if (cell.variant === 'add') return;
-    longPressTriggered = false;
-    const touch = e.touches[0];
-    if (!touch) return;
-    clearTimeout(longPressTimer);
+    if (cell.variant === 'surprise') return
+    longPressTriggered = false
+    const touch = e.touches[0]
+    if (!touch) return
+    clearTimeout(longPressTimer)
     longPressTimer = setTimeout(() => {
-      longPressTriggered = true;
-      openMenuAt(touch.clientX, touch.clientY);
-    }, 480);
+      longPressTriggered = true
+      openMenuAt(touch.clientX, touch.clientY)
+    }, 480)
   }
 
   function onTouchEnd() {
-    clearTimeout(longPressTimer);
+    clearTimeout(longPressTimer)
   }
 
   /** @param {MouseEvent} e */
   function onActivate(e) {
     if (longPressTriggered) {
-      e.preventDefault();
-      longPressTriggered = false;
-      return;
+      e.preventDefault()
+      longPressTriggered = false
+      return
     }
-    activate();
+    activate()
   }
 
   async function onPin() {
-    if (cell.variant === 'add') return;
-    await pinSpeedDialItem(cell.entityType, cell.entityId, slotIndex);
-    menuOpen = false;
-    onChange?.();
+    if (cell.variant === 'surprise') return
+    await pinSpeedDialItem(cell.entityType, cell.entityId, slotIndex)
+    menuOpen = false
+    onChange?.()
   }
 
   async function onUnpin() {
-    await unpinSpeedDialItem(cell.id);
-    menuOpen = false;
-    onChange?.();
+    await unpinSpeedDialItem(cell.id)
+    menuOpen = false
+    onChange?.()
   }
 
   async function onHide() {
-    await hideSpeedDialItem(cell.id);
-    menuOpen = false;
-    onChange?.();
+    await hideSpeedDialItem(cell.id)
+    menuOpen = false
+    onChange?.()
   }
 
   $effect(() => {
-    if (!menuOpen) return;
-    menuX;
-    menuY;
+    if (!menuOpen) return
+    menuX
+    menuY
     tick().then(() => {
-      if (!menuEl) return;
-      const rect = menuEl.getBoundingClientRect();
-      const { left, top } = clampPopoverPosition(menuX, menuY, rect.width, rect.height);
-      menuEl.style.left = `${left}px`;
-      menuEl.style.top = `${top}px`;
-    });
-  });
+      if (!menuEl) return
+      const rect = menuEl.getBoundingClientRect()
+      const { left, top } = clampPopoverPosition(
+        menuX,
+        menuY,
+        rect.width,
+        rect.height,
+      )
+      menuEl.style.left = `${left}px`
+      menuEl.style.top = `${top}px`
+    })
+  })
 </script>
 
-{#if cell.variant === 'add'}
-  <a class="speed-dial-cell speed-dial-cell--add" href="/search" aria-label={t('home.speedDialAdd')}>
-    <span class="speed-dial-add-icon" aria-hidden="true">
-      <Icon name="plus" size={22} strokeWidth={2} />
+{#if cell.variant === 'surprise'}
+  <button
+    type="button"
+    class="speed-dial-cell speed-dial-cell--surprise"
+    class:speed-dial-cell--loading={surpriseLoading}
+    aria-label={t('home.speedDialSurpriseMe')}
+    aria-busy={surpriseLoading}
+    disabled={surpriseLoading}
+    onclick={onSurprise}
+  >
+    <div class="speed-dial-surprise-bg" aria-hidden="true"></div>
+    <span class="speed-dial-surprise-icon" aria-hidden="true">
+      <Icon name="sparkles" size={22} strokeWidth={2} />
     </span>
-    <span class="speed-dial-add-label">{t('home.speedDialAddShort')}</span>
-  </a>
+    <span class="speed-dial-surprise-label"
+      >{surpriseLoading
+        ? t('home.speedDialSurpriseLoading')
+        : t('home.speedDialSurpriseMe')}</span
+    >
+    <span class="speed-dial-surprise-hint"
+      >{t('home.speedDialSurpriseHint')}</span
+    >
+  </button>
 {:else}
   <button
     type="button"
@@ -135,7 +180,10 @@
     {#if coverUrl}
       <TrackArt artUrl={coverUrl} seed={coverSeed} class="speed-dial-cover" />
     {:else}
-      <div class="speed-dial-cover speed-dial-cover--gradient" style:background={artGradient(coverSeed)}></div>
+      <div
+        class="speed-dial-cover speed-dial-cover--gradient"
+        style:background={artGradient(coverSeed)}
+      ></div>
     {/if}
     <div class="speed-dial-shade" aria-hidden="true"></div>
     {#if reasonLabel}
@@ -150,7 +198,10 @@
 
 {#if menuOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="speed-dial-menu-backdrop" onclick={() => (menuOpen = false)}></div>
+  <div
+    class="speed-dial-menu-backdrop"
+    onclick={() => (menuOpen = false)}
+  ></div>
   <div
     bind:this={menuEl}
     class="speed-dial-menu"
@@ -159,12 +210,20 @@
     role="menu"
   >
     {#if cell.pinned}
-      <button type="button" role="menuitem" onclick={onUnpin}>{t('home.speedDialUnpin')}</button>
+      <button type="button" role="menuitem" onclick={onUnpin}
+        >{t('home.speedDialUnpin')}</button
+      >
     {:else}
-      <button type="button" role="menuitem" onclick={onPin}>{t('home.speedDialPin')}</button>
+      <button type="button" role="menuitem" onclick={onPin}
+        >{t('home.speedDialPin')}</button
+      >
     {/if}
-    <button type="button" role="menuitem" onclick={onHide}>{t('home.speedDialHide')}</button>
-    <button type="button" role="menuitem" onclick={() => (menuOpen = false)}>{t('common.cancel')}</button>
+    <button type="button" role="menuitem" onclick={onHide}
+      >{t('home.speedDialHide')}</button
+    >
+    <button type="button" role="menuitem" onclick={() => (menuOpen = false)}
+      >{t('common.cancel')}</button
+    >
   </div>
 {/if}
 
@@ -191,43 +250,100 @@
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
   }
 
-  .speed-dial-cell--add {
-    background: color-mix(in srgb, var(--card) 88%, transparent);
-    border: 1.5px dashed color-mix(in srgb, var(--t1) 18%, var(--border));
+  .speed-dial-cell--surprise {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    color: var(--t2, var(--text-secondary));
-    text-decoration: none;
+    gap: 4px;
+    border: 1.5px solid color-mix(in srgb, var(--accent) 28%, transparent);
+    background: #120d18;
+    color: #fff;
+    overflow: hidden;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .speed-dial-cell:not(.speed-dial-cell--add):hover {
-      border-color: rgba(255, 255, 255, 0.35);
-      transform: translateY(-1px);
-    }
+  .speed-dial-cell--surprise:disabled {
+    cursor: wait;
+    opacity: 0.92;
+  }
 
-    .speed-dial-cell--add:hover {
-      border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-      color: var(--t1, var(--text));
+  .speed-dial-surprise-bg {
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(
+        circle at 20% 20%,
+        rgba(255, 120, 180, 0.55),
+        transparent 52%
+      ),
+      radial-gradient(
+        circle at 78% 72%,
+        rgba(96, 165, 250, 0.48),
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 52% 48%,
+        rgba(167, 139, 250, 0.42),
+        transparent 58%
+      ),
+      linear-gradient(145deg, #1a1024 0%, #0f1524 100%);
+    animation: speed-dial-surprise-shift 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes speed-dial-surprise-shift {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    100% {
+      transform: scale(1.08) rotate(6deg);
     }
   }
 
-  .speed-dial-add-icon {
-    width: 40px;
-    height: 40px;
+  .speed-dial-surprise-icon {
+    position: relative;
+    z-index: 1;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     display: grid;
     place-items: center;
-    background: color-mix(in srgb, var(--t1) 6%, transparent);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   }
 
-  .speed-dial-add-label {
+  .speed-dial-surprise-label {
+    position: relative;
+    z-index: 1;
     font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    line-height: 1.2;
+    text-align: center;
+    padding: 0 8px;
+  }
+
+  .speed-dial-surprise-hint {
+    position: relative;
+    z-index: 1;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.72);
+    text-align: center;
+    padding: 0 8px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .speed-dial-cell--surprise:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+      transform: translateY(-1px);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .speed-dial-cell:not(.speed-dial-cell--surprise):hover {
+      border-color: rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
+    }
   }
 
   .speed-dial-cell :global(.speed-dial-cover) {
@@ -247,7 +363,12 @@
     position: absolute;
     inset: auto 0 0;
     height: 58%;
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.88) 100%);
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.72) 68%,
+      rgba(0, 0, 0, 0.88) 100%
+    );
     pointer-events: none;
   }
 

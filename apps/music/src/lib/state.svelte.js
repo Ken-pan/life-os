@@ -11,7 +11,10 @@ const defaultState = () => ({
   settings: {
     theme: 'auto',
     locale: 'zh',
+    /** @deprecated Use crossfadeMs > 0 */
     crossfade: false,
+    /** 0 = off; 500–12000 ms overlap between tracks */
+    crossfadeMs: 0,
     gapless: true,
     volume: 1,
     muted: false,
@@ -42,6 +45,16 @@ function normalizeSettings(settings) {
   ) {
     merged.immersiveViewMode = 'player'
   }
+  if (merged.crossfadeMs == null || merged.crossfadeMs === false)
+    merged.crossfadeMs = 0
+  if (merged.crossfadeMs === true) merged.crossfadeMs = 3000
+  if (merged.crossfade === true && !merged.crossfadeMs)
+    merged.crossfadeMs = 3000
+  merged.crossfadeMs = Math.max(
+    0,
+    Math.min(12_000, Math.round(Number(merged.crossfadeMs) || 0)),
+  )
+  merged.crossfade = merged.crossfadeMs > 0
   return merged
 }
 

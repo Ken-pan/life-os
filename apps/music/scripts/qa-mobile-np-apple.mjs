@@ -131,7 +131,9 @@ async function auditContrast(page) {
     return {
       mode: document.querySelector('.np-mobile-compact-head') ? 'lyrics|queue' : document.querySelector('.np-mobile-cover-stage') ? 'player' : 'unknown',
       artLoaded: (() => {
-        const img = document.querySelector('.np-mobile-art, .now-playing-art');
+        const img = document.querySelector(
+          '.np-mobile-art .track-art-img, .now-playing-art .track-art-img, .np-mobile-compact-art .track-art-img'
+        );
         return img instanceof HTMLImageElement ? img.naturalWidth > 0 : Boolean(document.querySelector('.np-mobile-art.placeholder, .now-playing-art.placeholder'));
       })(),
       ambientArtLoaded: (() => {

@@ -1,4 +1,5 @@
 <script>
+  import { page } from '$app/state';
   import Icon from './Icon.svelte';
   import { t } from '$lib/i18n/index.js';
   import GlobalSearch from './GlobalSearch.svelte';
@@ -14,11 +15,12 @@
     searchRef = $bindable(null)
   } = $props();
 
-  let searchQuery = $state('');
   const resolvedBackLabel = $derived(backLabel ?? t('common.back'));
   const hasBack = $derived(Boolean(backHref));
   const actions = $derived(getPageActions());
   const hasTools = $derived(actions.length > 0);
+  const onSearchPage = $derived(page.url.pathname === '/search');
+  const showMobileTitle = $derived(Boolean(title) && !onSearchPage);
 </script>
 
 {#if !hidden}
@@ -42,9 +44,9 @@
 
       <div class="appbar-center">
         <div class="appbar-search-desktop">
-          <GlobalSearch bind:query={searchQuery} bind:inputRef={searchRef} />
+          <GlobalSearch bind:inputRef={searchRef} />
         </div>
-        {#if title}
+        {#if showMobileTitle}
           <div class="appbar-titles appbar-titles--mobile">
             <h1 class="page-title">{title}</h1>
             {#if subtitle}<p class="page-sub">{subtitle}</p>{/if}
@@ -53,9 +55,11 @@
       </div>
 
       <div class="appbar-trailing">
-        <a class="appbar-search-mobile" href="/search" aria-label={t('search.title')}>
-          <Icon name="search" size={20} strokeWidth={1.75} />
-        </a>
+        {#if !onSearchPage}
+          <a class="appbar-search-mobile" href="/search" aria-label={t('search.title')}>
+            <Icon name="search" size={20} strokeWidth={1.75} />
+          </a>
+        {/if}
         {#each actions as action, i (action.label + i)}
           {#if action.href}
             <a

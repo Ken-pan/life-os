@@ -1,147 +1,223 @@
 <script>
-  import { t } from '$lib/i18n/index.js';
-  import { S, save, applyTheme, setImmersiveViewMode } from '$lib/state.svelte.js';
-  import { getCurrentTrack, player, refreshQueueMetadata } from '$lib/player.svelte.js';
-  import { refreshTrackAmbience } from '$lib/trackAmbience.js';
-  import { exportLibraryJson, rescanTrackMetadata, ensureArtRepaired, ensureMetadataRepaired, repairMissingLyrics } from '$lib/import.js';
-  import { trackCount, countTracksWithoutLyrics } from '$lib/db.js';
-  import { auth, signOut } from '$lib/auth.svelte.js';
-  import { syncBidirectionalSafe } from '$lib/sync.js';
-  import { cloudAudioStats, formatBytes, uploadPendingAudio } from '$lib/cloudAudio.js';
-  import { toast } from '$lib/ui.svelte.js';
+  import { t } from '$lib/i18n/index.js'
+  import {
+    S,
+    save,
+    applyTheme,
+    setImmersiveViewMode,
+  } from '$lib/state.svelte.js'
+  import {
+    getCurrentTrack,
+    player,
+    refreshQueueMetadata,
+    notifyPlaybackSettingsChanged,
+  } from '$lib/player.svelte.js'
+  import { refreshTrackAmbience } from '$lib/trackAmbience.js'
+  import {
+    exportLibraryJson,
+    rescanTrackMetadata,
+    ensureArtRepaired,
+    ensureMetadataRepaired,
+    repairMissingLyrics,
+  } from '$lib/import.js'
+  import { trackCount, countTracksWithoutLyrics } from '$lib/db.js'
+  import { auth, signOut } from '$lib/auth.svelte.js'
+  import { syncBidirectionalSafe } from '$lib/sync.js'
+  import {
+    cloudAudioStats,
+    formatBytes,
+    uploadPendingAudio,
+  } from '$lib/cloudAudio.js'
+  import { toast } from '$lib/ui.svelte.js'
 
-  let count = $state(0);
-  let missingLyrics = $state(0);
-  let cloudPending = $state(0);
-  let cloudStored = $state(0);
-  let cloudLocalAudio = $state(0);
-  let cloudPendingBytes = $state(0);
-  let syncing = $state(false);
-  let rescanning = $state(false);
-  let rescanProgress = $state('');
-  let fetchingLyrics = $state(false);
-  let lyricsProgress = $state('');
-  let uploading = $state(false);
-  let uploadProgress = $state('');
-  let uploadCurrent = $state('');
+  let count = $state(0)
+  let missingLyrics = $state(0)
+  let cloudPending = $state(0)
+  let cloudStored = $state(0)
+  let cloudLocalAudio = $state(0)
+  let cloudPendingBytes = $state(0)
+  let syncing = $state(false)
+  let rescanning = $state(false)
+  let rescanProgress = $state('')
+  let fetchingLyrics = $state(false)
+  let lyricsProgress = $state('')
+  let uploading = $state(false)
+  let uploadProgress = $state('')
+  let uploadCurrent = $state('')
 
   async function refreshCounts() {
-    count = await trackCount();
-    missingLyrics = await countTracksWithoutLyrics();
-    const stats = await cloudAudioStats();
-    cloudPending = stats.pending;
-    cloudStored = stats.cloud;
-    cloudLocalAudio = stats.localAudio;
-    cloudPendingBytes = stats.pendingBytes;
+    count = await trackCount()
+    missingLyrics = await countTracksWithoutLyrics()
+    const stats = await cloudAudioStats()
+    cloudPending = stats.pending
+    cloudStored = stats.cloud
+    cloudLocalAudio = stats.localAudio
+    cloudPendingBytes = stats.pendingBytes
   }
 
   $effect(() => {
-    refreshCounts();
-  });
+    refreshCounts()
+  })
 
   function setTheme(theme) {
-    S.settings.theme = theme;
-    save();
-    applyTheme();
+    S.settings.theme = theme
+    save()
+    applyTheme()
   }
 
   /** @param {boolean} enabled */
+  function setGapless(enabled) {
+    S.settings.gapless = enabled
+    save()
+    notifyPlaybackSettingsChanged()
+  }
+
+  /** @param {number} ms */
+  function setCrossfadeMs(ms) {
+    S.settings.crossfadeMs = ms
+    S.settings.crossfade = ms > 0
+    save()
+    notifyPlaybackSettingsChanged()
+  }
+
+  /** @param {number} ms */
+  function formatCrossfadeLabel(ms) {
+    if (ms <= 0) return t('settings.crossfadeOff')
+    if (ms < 1000) return `${ms} ms`
+    return t('settings.crossfadeSeconds', {
+      seconds: (ms / 1000).toFixed(1).replace(/\.0$/, ''),
+    })
+  }
+
+  const crossfadeSteps = [0, 500, 1000, 2000, 3000, 5000, 8000, 12000]
+
+  /** @param {boolean} enabled */
   function setAlbumAmbience(enabled) {
-    S.settings.albumAmbience = enabled;
-    save();
-    refreshTrackAmbience(getCurrentTrack() ?? player.queue[player.index] ?? null);
+    S.settings.albumAmbience = enabled
+    save()
+    refreshTrackAmbience(
+      getCurrentTrack() ?? player.queue[player.index] ?? null,
+    )
   }
 
   async function exportMeta() {
-    const data = await exportLibraryJson();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'musicos-library-meta.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
+    const data = await exportLibraryJson()
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'musicos-library-meta.json'
+    a.click()
+    URL.revokeObjectURL(a.href)
   }
 
   async function onSync() {
-    if (syncing) return;
-    syncing = true;
+    if (syncing) return
+    syncing = true
     try {
-      await syncBidirectionalSafe();
-      await refreshQueueMetadata();
-      await refreshCounts();
+      await syncBidirectionalSafe()
+      await refreshQueueMetadata()
+      await refreshCounts()
     } finally {
-      syncing = false;
+      syncing = false
     }
   }
 
   async function onSignOut() {
-    await signOut();
-    toast(t('settings.signOut'));
+    await signOut()
+    toast(t('settings.signOut'))
   }
 
   async function onUploadAudio() {
-    if (uploading || !auth.user) return;
+    if (uploading || !auth.user) return
     if (cloudPending === 0) {
-      toast(t('cloudAudio.empty'));
-      return;
+      toast(t('cloudAudio.empty'))
+      return
     }
-    uploading = true;
-    uploadProgress = t('cloudAudio.uploading', { done: 0, total: cloudPending });
-    uploadCurrent = '';
+    uploading = true
+    uploadProgress = t('cloudAudio.uploading', { done: 0, total: cloudPending })
+    uploadCurrent = ''
     try {
       const result = await uploadPendingAudio(({ done, total, title }) => {
-        uploadProgress = t('cloudAudio.uploading', { done, total });
-        uploadCurrent = title ? t('cloudAudio.current', { title }) : '';
-      });
-      if (result.uploaded === 0 && result.failed === 0) toast(t('cloudAudio.empty'));
+        uploadProgress = t('cloudAudio.uploading', { done, total })
+        uploadCurrent = title ? t('cloudAudio.current', { title }) : ''
+      })
+      if (result.uploaded === 0 && result.failed === 0)
+        toast(t('cloudAudio.empty'))
       else if (result.failed > 0) {
-        toast(t('cloudAudio.doneWithFail', { uploaded: result.uploaded, failed: result.failed }));
+        toast(
+          t('cloudAudio.doneWithFail', {
+            uploaded: result.uploaded,
+            failed: result.failed,
+          }),
+        )
       } else {
-        toast(t('cloudAudio.done', { uploaded: result.uploaded, size: formatBytes(result.totalBytes) }));
+        toast(
+          t('cloudAudio.done', {
+            uploaded: result.uploaded,
+            size: formatBytes(result.totalBytes),
+          }),
+        )
       }
-      await refreshCounts();
+      await refreshCounts()
     } finally {
-      uploading = false;
-      uploadProgress = '';
-      uploadCurrent = '';
+      uploading = false
+      uploadProgress = ''
+      uploadCurrent = ''
     }
   }
 
   async function onFetchLyrics() {
-    if (fetchingLyrics) return;
-    fetchingLyrics = true;
-    lyricsProgress = t('settings.fetchLyricsProgress', { done: 0, total: missingLyrics });
+    if (fetchingLyrics) return
+    fetchingLyrics = true
+    lyricsProgress = t('settings.fetchLyricsProgress', {
+      done: 0,
+      total: missingLyrics,
+    })
     try {
       const result = await repairMissingLyrics((done, total) => {
-        lyricsProgress = t('settings.fetchLyricsProgress', { done, total });
-      });
-      if (!result.total) toast(t('settings.fetchLyricsEmpty'));
-      else toast(t('settings.fetchLyricsDone', { total: result.total, repaired: result.repaired }));
-      await refreshQueueMetadata();
-      await refreshCounts();
+        lyricsProgress = t('settings.fetchLyricsProgress', { done, total })
+      })
+      if (!result.total) toast(t('settings.fetchLyricsEmpty'))
+      else
+        toast(
+          t('settings.fetchLyricsDone', {
+            total: result.total,
+            repaired: result.repaired,
+          }),
+        )
+      await refreshQueueMetadata()
+      await refreshCounts()
     } finally {
-      fetchingLyrics = false;
-      lyricsProgress = '';
+      fetchingLyrics = false
+      lyricsProgress = ''
     }
   }
 
   async function onRescan() {
-    if (rescanning) return;
-    rescanning = true;
-    rescanProgress = t('settings.rescanning', { done: 0, total: count });
+    if (rescanning) return
+    rescanning = true
+    rescanProgress = t('settings.rescanning', { done: 0, total: count })
     try {
       const result = await rescanTrackMetadata((done, total) => {
-        rescanProgress = t('settings.rescanning', { done, total });
-      });
-      if (!result.scanned) toast(t('settings.rescanEmpty'));
-      else toast(t('settings.rescanDone', { scanned: result.scanned, updated: result.updated }));
-      await ensureArtRepaired();
-      await ensureMetadataRepaired();
-      await refreshQueueMetadata();
-      await refreshCounts();
+        rescanProgress = t('settings.rescanning', { done, total })
+      })
+      if (!result.scanned) toast(t('settings.rescanEmpty'))
+      else
+        toast(
+          t('settings.rescanDone', {
+            scanned: result.scanned,
+            updated: result.updated,
+          }),
+        )
+      await ensureArtRepaired()
+      await ensureMetadataRepaired()
+      await refreshQueueMetadata()
+      await refreshCounts()
     } finally {
-      rescanning = false;
-      rescanProgress = '';
+      rescanning = false
+      rescanProgress = ''
     }
   }
 </script>
@@ -158,14 +234,26 @@
       </div>
       <div class="settings-stack-block" style="padding:0 18px 16px">
         <div class="settings-btn-group">
-          <button class="btn-primary" type="button" disabled={syncing} onclick={onSync}>{syncing ? t('auth.pleaseWait') : t('sync.now')}</button>
-          <button class="btn-secondary" type="button" onclick={onSignOut}>{t('settings.signOut')}</button>
+          <button
+            class="btn-primary"
+            type="button"
+            disabled={syncing}
+            onclick={onSync}
+            >{syncing ? t('auth.pleaseWait') : t('sync.now')}</button
+          >
+          <button class="btn-secondary" type="button" onclick={onSignOut}
+            >{t('settings.signOut')}</button
+          >
         </div>
       </div>
     {:else}
       <div class="settings-stack-block" style="padding:0 18px 16px">
-        <p class="pref-desc" style="margin-bottom:12px">{t('sync.signInFirst')}</p>
-        <a class="btn-primary" href="/auth" style="display:inline-flex">{t('settings.signIn')}</a>
+        <p class="pref-desc" style="margin-bottom:12px">
+          {t('sync.signInFirst')}
+        </p>
+        <a class="btn-primary" href="/auth" style="display:inline-flex"
+          >{t('settings.signIn')}</a
+        >
       </div>
     {/if}
   </section>
@@ -180,7 +268,9 @@
   {#if auth.user}
     <section class="settings-block set-group">
       <h3 class="block-title sg-title">{t('cloudAudio.title')}</h3>
-      <p class="block-desc" style="padding:0 18px 12px">{t('cloudAudio.desc')}</p>
+      <p class="block-desc" style="padding:0 18px 12px">
+        {t('cloudAudio.desc')}
+      </p>
       <div class="set-row settings-row">
         <div class="pref-copy">
           <div class="pref-desc">
@@ -188,7 +278,7 @@
               localAudio: cloudLocalAudio,
               pending: cloudPending,
               size: formatBytes(cloudPendingBytes),
-              cloud: cloudStored
+              cloud: cloudStored,
             })}
           </div>
         </div>
@@ -206,7 +296,9 @@
           <p class="pref-desc" style="margin-top:12px">{uploadProgress}</p>
         {/if}
         {#if uploadCurrent}
-          <p class="pref-desc" style="margin-top:4px;color:var(--t3)">{uploadCurrent}</p>
+          <p class="pref-desc" style="margin-top:4px;color:var(--t3)">
+            {uploadCurrent}
+          </p>
         {/if}
       </div>
     </section>
@@ -219,16 +311,78 @@
         <div class="pref-label">{t('settings.appearance')}</div>
       </div>
       <div class="pref-control seg">
-        <button type="button" class:active={S.settings.theme === 'auto'} onclick={() => setTheme('auto')}>{t('settings.themeAuto')}</button>
-        <button type="button" class:active={S.settings.theme === 'light'} onclick={() => setTheme('light')}>{t('settings.themeLight')}</button>
-        <button type="button" class:active={S.settings.theme === 'dark'} onclick={() => setTheme('dark')}>{t('settings.themeDark')}</button>
+        <button
+          type="button"
+          class:active={S.settings.theme === 'auto'}
+          onclick={() => setTheme('auto')}>{t('settings.themeAuto')}</button
+        >
+        <button
+          type="button"
+          class:active={S.settings.theme === 'light'}
+          onclick={() => setTheme('light')}>{t('settings.themeLight')}</button
+        >
+        <button
+          type="button"
+          class:active={S.settings.theme === 'dark'}
+          onclick={() => setTheme('dark')}>{t('settings.themeDark')}</button
+        >
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-block set-group">
+    <h3 class="block-title sg-title">{t('settings.playback')}</h3>
+    <p class="block-desc" style="padding:0 18px 12px">
+      {t('settings.gaplessDesc')}
+    </p>
+    <div class="set-row settings-row">
+      <div class="pref-copy">
+        <div class="pref-label">{t('settings.gapless')}</div>
+      </div>
+      <div class="pref-control seg">
+        <button
+          type="button"
+          class:active={S.settings.gapless !== false}
+          onclick={() => setGapless(true)}
+        >
+          {t('settings.gaplessOn')}
+        </button>
+        <button
+          type="button"
+          class:active={S.settings.gapless === false}
+          onclick={() => setGapless(false)}
+        >
+          {t('settings.gaplessOff')}
+        </button>
+      </div>
+    </div>
+    <div class="set-row settings-row">
+      <div class="pref-copy">
+        <div class="pref-label">{t('settings.crossfade')}</div>
+        <div class="pref-desc">{t('settings.crossfadeDesc')}</div>
+      </div>
+    </div>
+    <div class="set-row settings-row" style="padding-top:0">
+      <div class="pref-control seg settings-seg-full settings-seg-crossfade">
+        {#each crossfadeSteps as ms (ms)}
+          <button
+            type="button"
+            class:active={(S.settings.crossfadeMs ?? 0) === ms}
+            disabled={S.settings.gapless === false && ms > 0}
+            onclick={() => setCrossfadeMs(ms)}
+          >
+            {formatCrossfadeLabel(ms)}
+          </button>
+        {/each}
       </div>
     </div>
   </section>
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.albumAmbience')}</h3>
-    <p class="block-desc" style="padding:0 18px 12px">{t('settings.albumAmbienceDesc')}</p>
+    <p class="block-desc" style="padding:0 18px 12px">
+      {t('settings.albumAmbienceDesc')}
+    </p>
     <div class="set-row settings-row">
       <div class="pref-control seg settings-seg-full">
         <button
@@ -251,7 +405,9 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.immersiveViewMode')}</h3>
-    <p class="block-desc" style="padding:0 18px 12px">{t('settings.immersiveViewModeDesc')}</p>
+    <p class="block-desc" style="padding:0 18px 12px">
+      {t('settings.immersiveViewModeDesc')}
+    </p>
     <div class="set-row settings-row">
       <div class="pref-control seg settings-seg-full settings-seg-immersive">
         <button
@@ -281,23 +437,37 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.privacy')}</h3>
-    <p class="block-desc" style="padding:0 18px 8px">{t('settings.privacyDesc')}</p>
-    <p class="block-desc" style="padding:0 18px 16px;color:var(--text-2)">{t('settings.iosBackground')}</p>
+    <p class="block-desc" style="padding:0 18px 8px">
+      {t('settings.privacyDesc')}
+    </p>
+    <p class="block-desc" style="padding:0 18px 16px;color:var(--text-2)">
+      {t('settings.iosBackground')}
+    </p>
     <div class="set-row settings-row">
       <div class="pref-copy">
         <div class="pref-label">{t('settings.library')}</div>
         <div class="pref-desc">{t('settings.libraryCount', { count })}</div>
         {#if missingLyrics > 0}
-          <div class="pref-desc" style="margin-top:4px;color:var(--track-accent, var(--accent))">
+          <div
+            class="pref-desc"
+            style="margin-top:4px;color:var(--track-accent, var(--accent))"
+          >
             {t('settings.missingLyrics', { count: missingLyrics })}
           </div>
         {/if}
       </div>
     </div>
     <div class="settings-stack-block settings-library-actions">
-      <p class="pref-desc settings-action-hint">{t('settings.rescanMetaDesc')}</p>
+      <p class="pref-desc settings-action-hint">
+        {t('settings.rescanMetaDesc')}
+      </p>
       <div class="settings-btn-group">
-        <button class="btn-primary" type="button" disabled={rescanning || count === 0} onclick={onRescan}>
+        <button
+          class="btn-primary"
+          type="button"
+          disabled={rescanning || count === 0}
+          onclick={onRescan}
+        >
           {rescanning ? t('auth.pleaseWait') : t('settings.rescanMeta')}
         </button>
       </div>
@@ -305,7 +475,9 @@
         <p class="pref-desc" style="margin-top:12px">{rescanProgress}</p>
       {/if}
 
-      <p class="pref-desc settings-action-hint" style="margin-top:16px">{t('settings.fetchLyricsDesc')}</p>
+      <p class="pref-desc settings-action-hint" style="margin-top:16px">
+        {t('settings.fetchLyricsDesc')}
+      </p>
       <div class="settings-btn-group">
         <button
           class="btn-secondary"
@@ -315,7 +487,9 @@
         >
           {fetchingLyrics ? t('auth.pleaseWait') : t('settings.fetchLyrics')}
         </button>
-        <button class="btn-secondary" type="button" onclick={exportMeta}>{t('settings.export')}</button>
+        <button class="btn-secondary" type="button" onclick={exportMeta}
+          >{t('settings.export')}</button
+        >
       </div>
       {#if lyricsProgress}
         <p class="pref-desc" style="margin-top:12px">{lyricsProgress}</p>

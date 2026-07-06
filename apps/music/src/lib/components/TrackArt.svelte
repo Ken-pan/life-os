@@ -24,12 +24,13 @@
 
   const gradient = $derived(artGradient(seed))
   let artFailed = $state(false)
+  let inputArtFailed = $state(false)
   let resolvedUrl = $state('')
   /** @type {HTMLElement | null} */
   let root = $state(null)
   let inView = $state(false)
 
-  const displayUrl = $derived(artUrl || resolvedUrl)
+  const displayUrl = $derived((artUrl && !inputArtFailed) ? artUrl : resolvedUrl)
   const fetchPriority = $derived(
     priority === 'auto' ? (shared ? 'high' : 'low') : priority,
   )
@@ -41,12 +42,13 @@
 
   $effect(() => {
     artUrl
+    inputArtFailed = false
     artFailed = false
   })
 
   $effect(() => {
     void librarySignals.epoch
-    if (artUrl) resolvedUrl = ''
+    if (artUrl && !inputArtFailed) resolvedUrl = ''
   })
 
   $effect(() => {
@@ -90,6 +92,10 @@
       fetchpriority={fetchPriority}
       style:view-transition-name={shared ? 'player-art' : undefined}
       onerror={() => {
+        if (artUrl && displayUrl === artUrl && resolve) {
+          inputArtFailed = true
+          return
+        }
         artFailed = true
       }}
     />

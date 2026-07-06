@@ -35,15 +35,12 @@ export function enqueueArtResolve(meta) {
   const existing = inflightByAlbum.get(key)
   if (existing) return existing
 
-  const promise =
-    (new Promise() < string) |
-    (null >
-      ((resolve, reject) => {
-        pending.push({ meta, resolve, reject })
-        drainQueue()
-      }).finally(() => {
-        inflightByAlbum.delete(key)
-      }))
+  const promise = new Promise((resolve, reject) => {
+    pending.push({ meta, resolve, reject })
+    drainQueue()
+  }).finally(() => {
+    inflightByAlbum.delete(key)
+  })
 
   inflightByAlbum.set(key, promise)
   return promise

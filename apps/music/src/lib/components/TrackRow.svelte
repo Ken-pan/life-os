@@ -1,35 +1,55 @@
 <script>
-  import Icon from './Icon.svelte';
-  import TrackArt from './TrackArt.svelte';
-  import { playTrack, playTracks } from '$lib/player.svelte.js';
-  import { toggleLike } from '$lib/db.js';
+  import Icon from './Icon.svelte'
+  import TrackArt from './TrackArt.svelte'
+  import ContextMenu from './ContextMenu.svelte'
+  import { playTrack, playTracks, appendToQueue } from '$lib/player.svelte.js'
+  import { toggleLike } from '$lib/db.js'
+  import { t } from '$lib/i18n/index.js'
 
-  /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
+  /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, richActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
   let {
     track,
     tracks = [],
     index = 0,
     showLike = true,
     compactActions = false,
+    richActions = false,
     selected = false,
     playSource = 'home',
-    onSelect
-  } = $props();
+    onSelect,
+  } = $props()
+
+  /** @type {{ track: import('$lib/types.js').Track; x: number; y: number } | null} */
+  let menu = $state(null)
 
   function onPlay() {
-    if (tracks.length) playTracks(tracks, index, playSource, { entityType: 'track', entityId: track.id });
-    else playTrack(track, playSource);
+    if (tracks.length)
+      playTracks(tracks, index, playSource, {
+        entityType: 'track',
+        entityId: track.id,
+      })
+    else playTrack(track, playSource)
   }
 
   async function onLike() {
-    await toggleLike(track.id);
-    track.liked = track.liked ? 0 : 1;
+    await toggleLike(track.id)
+    track.liked = track.liked ? 0 : 1
   }
 
   /** @param {MouseEvent} e */
   function onRowClick(e) {
-    if (onSelect) onSelect(e);
-    else onPlay();
+    if (onSelect) onSelect(e)
+    else onPlay()
+  }
+
+  /** @param {MouseEvent} e */
+  function openMenu(e) {
+    e.stopPropagation()
+    menu = { track, x: e.clientX, y: e.clientY }
+  }
+
+  function closeMenu() {
+    menu = null
   }
 </script>
 
@@ -37,34 +57,76 @@
   class="track-row"
   class:track-row--selected={selected}
   class:track-row--compact-actions={compactActions}
+  class:track-row--rich-actions={richActions}
 >
-  <TrackArt
-    artUrl={track.artUrl}
-    seed={track.id}
-    class="track-row-art"
-    lazy
-    resolve={{
-      albumKey: track.albumKey,
-      artist: track.artist,
-      album: track.album,
-      title: track.title
-    }}
-  />
+  <button
+    type="button"
+    class="track-row-art-btn"
+    aria-label={t('common.playNow')}
+    onclick={onPlay}
+  >
+    <TrackArt
+      artUrl={track.artUrl}
+      seed={track.id}
+      class="track-row-art"
+      lazy
+      resolve={{
+        albumKey: track.albumKey,
+        artist: track.artist,
+        album: track.album,
+        title: track.title,
+      }}
+    />
+    <span class="track-row-art-play" aria-hidden="true">
+      <Icon name="play" size={14} strokeWidth={2} />
+    </span>
+  </button>
   <button type="button" class="track-row-body" onclick={onRowClick}>
     <div class="track-row-title">{track.title}</div>
     <div class="track-row-sub">{track.artist} · {track.album}</div>
   </button>
   <div class="track-row-actions">
     {#if showLike}
-      <button type="button" class="mini-player-btn track-row-action" aria-label="喜欢" onclick={onLike}>
+      <button
+        type="button"
+        class="mini-player-btn track-row-action track-row-action--like"
+        aria-label={track.liked ? '取消喜欢' : '喜欢'}
+        onclick={onLike}
+      >
         <Icon name="heart" size={18} strokeWidth={track.liked ? 2.5 : 1.75} />
       </button>
     {/if}
-    <button type="button" class="mini-player-btn play track-row-action" aria-label="播放" onclick={onPlay}>
+    <button
+      type="button"
+      class="mini-player-btn play track-row-action"
+      aria-label={t('common.playNow')}
+      onclick={onPlay}
+    >
       <Icon name="play" size={16} strokeWidth={2} />
     </button>
+    {#if richActions}
+      <button
+        type="button"
+        class="mini-player-btn track-row-action track-row-action--more"
+        aria-label={t('common.more')}
+        onclick={openMenu}
+      >
+        <Icon name="more-horizontal" size={16} />
+      </button>
+    {/if}
   </div>
 </div>
+
+{#if menu}
+  <ContextMenu
+    x={menu.x}
+    y={menu.y}
+    track={menu.track}
+    onClose={closeMenu}
+    onPlay={() => onPlay()}
+    onAddQueue={() => appendToQueue([menu.track])}
+  />
+{/if}
 
 <style>
   .track-row-body {
@@ -80,5 +142,40 @@
     cursor: pointer;
     padding: 0;
     color: inherit;
+  }
+
+  .track-row-art-btn {
+    position: relative;
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+
+  .track-row-art-play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--t1, var(--text)) 42%, transparent);
+    color: #fff;
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-standard);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .track-row--rich-actions:hover .track-row-art-play,
+    .track-row--rich-actions:focus-within .track-row-art-play {
+      opacity: 1;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .track-row--rich-actions .track-row-art-play {
+      opacity: 0;
+    }
   }
 </style>

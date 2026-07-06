@@ -1,7 +1,7 @@
 export default {
   app: {
     name: 'MUSIC.OS',
-    tagline: '本地音乐，留在心里'
+    tagline: '本地音乐，留在心里',
   },
   common: {
     back: '返回',
@@ -29,7 +29,7 @@ export default {
     selected: '已选 {count} 项',
     addToQueue: '加入队列',
     playNext: '下一首播',
-    playNow: '立即播放'
+    playNow: '立即播放',
   },
   nav: {
     mainAria: '主导航',
@@ -44,7 +44,7 @@ export default {
     groupMain: '主导航',
     groupMore: '更多',
     groupQuick: '快捷',
-    groupAccount: '账号'
+    groupAccount: '账号',
   },
   home: {
     title: '此刻',
@@ -69,17 +69,24 @@ export default {
     speedDialPersonal: 'PERSONAL',
     speedDialAdd: '添加到速拨',
     speedDialAddShort: '新建速拨',
+    speedDialSurpriseMe: '惊喜一下',
+    speedDialSurpriseHint: '智能随机推荐',
+    speedDialSurpriseLoading: '正在挑选…',
+    speedDialSurpriseEmpty: '暂无可推荐曲目',
+    speedDialSurpriseFailed: '推荐失败，请稍后重试',
     speedDialPlayAll: '播放全部',
     speedDialPin: '固定到速拨',
     speedDialUnpin: '取消固定',
     speedDialHide: '不再显示',
     speedDialRemove: '移除',
-    speedDialEditHint: '拖动排序会固定布局。从搜索添加新入口，右键首页卡片可快速固定。',
+    speedDialEditHint:
+      '拖动排序会固定布局。右键首页卡片可快速固定，右下角可一键惊喜播放。',
     speedDialReasonPinned: '已固定',
     speedDialReasonFrequent: '常点',
     speedDialReasonRecent: '最近常听',
     speedDialReasonImport: '最近导入',
     speedDialReasonTime: '此时段常听',
+    speedDialReasonExplore: '试试看',
     quickPicks: '快速精选',
     quickPicksPlayAll: '播放全部',
     speedDialPrev: '上一页速拨',
@@ -96,7 +103,7 @@ export default {
     filterLiked: '收藏',
     filterChinese: '中文',
     filterLateNight: '深夜模式',
-    filterOffline: '离线'
+    filterOffline: '离线',
   },
   library: {
     title: '资料库',
@@ -111,7 +118,7 @@ export default {
     sortTitle: '标题',
     sortArtist: '艺人',
     sortAlbum: '专辑',
-    sortDuration: '时长'
+    sortDuration: '时长',
   },
   browse: {
     title: '浏览',
@@ -121,14 +128,14 @@ export default {
     playlists: '歌单',
     sortRecent: '最近添加',
     sortAlpha: '字母',
-    sortPlayed: '最近播放'
+    sortPlayed: '最近播放',
   },
   playlists: {
     title: '歌单',
     create: '新建歌单',
     namePrompt: '歌单名称',
     created: '已创建歌单',
-    emptyUserHint: '点右上角「新建歌单」，把喜欢的曲目收进来。'
+    emptyUserHint: '点右上角「新建歌单」，把喜欢的曲目收进来。',
   },
   playlist: { title: '歌单' },
   search: {
@@ -142,12 +149,36 @@ export default {
     scopeArtists: '艺人',
     scopePlaylists: '歌单',
     noResults: '没有找到结果',
-    shortcut: '⌘K 搜索'
+    noResultsFor: '没有找到 “{query}”',
+    noResultsInScope: '「{scope}」下没有找到结果',
+    noResultsInScopeFor: '「{scope}」下没有找到 “{query}”',
+    closeSuggestions: '关闭搜索建议',
+    emptyHint: '输入关键词，或从最近搜索、热门艺人开始',
+    minCharsHint: '再输入 {count} 个字符',
+    clearRecent: '清除',
+    clearQuery: '清除搜索',
+    viewAll: '查看全部结果',
+    viewAllForQuery: '查看全部「{query}」结果',
+    viewAllInScope: '查看全部 {count} 条{scope}',
+    loading: '搜索中…',
+    resultSummary: '「{query}」· 共 {count} 条结果',
+    resultSummaryScoped: '「{query}」· {scope} {count} 条',
+    resultSummaryAllHint: '（全部 {total} 条）',
+    resultSummaryPending: '「{query}」· 搜索中…',
+    sortRelevance: '相关度',
+    sortTitle: '标题',
+    sortRecent: '最近添加',
+    sortLabel: '排序',
+    tryInstead: '试试这些',
+    broadenScope: '查看全部分类',
+    popularArtists: '热门艺人',
+    playlistTrackCount: '{count} 首',
+    shortcut: '⌘K 搜索',
   },
   liked: {
     title: '我喜欢的',
     empty: '还没有红心歌曲',
-    emptyHint: '在曲目旁点红心，它们会出现在这里。'
+    emptyHint: '在曲目旁点红心，它们会出现在这里。',
   },
   import: {
     title: '导入',
@@ -156,7 +187,7 @@ export default {
     hint: '支持 MP3、M4A、FLAC、WAV 等音频，以及同名 .lrc 歌词。文件保存在本机 IndexedDB。',
     importing: '正在导入 {done}/{total}…',
     done: '已导入 {count} 首',
-    doneMixed: '已导入 {audio} 首音频，匹配 {lrc} 首歌词'
+    doneMixed: '已导入 {audio} 首音频，匹配 {lrc} 首歌词',
   },
   nowPlaying: {
     title: '正在播放',
@@ -188,12 +219,12 @@ export default {
     modeLabel: '播放视图',
     modeCover: '封面',
     modeLyrics: '歌词',
-    modeQueue: '播放清单'
+    modeQueue: '播放清单',
   },
   player: {
     playFailed: '无法播放，请确认已登录并完成云同步',
     noSource: '找不到音频：云端曲目需先登录并同步资料库',
-    lyricsOnlyHint: '当前仅可浏览歌词；上传或同步音频文件后即可播放'
+    lyricsOnlyHint: '当前仅可浏览歌词；上传或同步音频文件后即可播放',
   },
   album: { title: '专辑' },
   artist: { title: '艺术家' },
@@ -205,19 +236,34 @@ export default {
     themeDark: '深色',
     appearance: '外观',
     albumAmbience: '氛围色跟随专辑',
-    albumAmbienceDesc: '从封面取色，用于进度条、光晕与播放卡片；导航与按钮仍使用品牌色。',
+    albumAmbienceDesc:
+      '从封面取色，用于进度条、光晕与播放卡片；导航与按钮仍使用品牌色。',
     albumAmbienceOn: '跟随',
     albumAmbienceOff: '关闭',
+    playback: '播放',
+    gapless: '无缝衔接',
+    gaplessDesc:
+      '预加载下一首并在切换时交换音频通道；Supabase 云音频会写入 Service Worker 缓存（最多 4 首）。',
+    gaplessOn: '开启',
+    gaplessOff: '关闭',
+    crossfade: '交叉淡入淡出',
+    crossfadeDesc:
+      '切歌时旧曲渐弱、新曲渐强（Web Audio 等功率曲线）；设为 0 则仅无缝硬切。云端曲目会同步预缓存下一首。',
+    crossfadeOff: '关闭',
+    crossfadeSeconds: '{seconds} 秒',
     immersiveViewMode: '正在播放默认视图',
     immersiveViewModeDesc: '进入正在播放页时的默认视图；页内可随时切换。',
     privacy: '隐私',
-    privacyDesc: '默认保存在本机。登录后可选择将音频备份到私有 Supabase Storage（private bucket，播放时用 signed URL）。',
-    iosBackground: 'iPhone 后台播放：请用 Safari「添加到主屏幕」安装本应用，锁屏后可通过控制中心/耳机控制。',
+    privacyDesc:
+      '默认保存在本机。登录后可选择将音频备份到私有 Supabase Storage（private bucket，播放时用 signed URL）。',
+    iosBackground:
+      'iPhone 后台播放：请用 Safari「添加到主屏幕」安装本应用，锁屏后可通过控制中心/耳机控制。',
     library: '曲库',
     libraryCount: '{count} 首歌曲保存在本机',
     missingLyrics: '{count} 首曲目尚未获取歌词',
     fetchLyrics: '远程补抓歌词',
-    fetchLyricsDesc: '从 lrclib / QQ音乐 / 网易云 等源批量获取缺失歌词并同步云端',
+    fetchLyricsDesc:
+      '从 lrclib / QQ音乐 / 网易云 等源批量获取缺失歌词并同步云端',
     fetchLyricsProgress: '正在补抓歌词 {done}/{total}…',
     fetchLyricsDone: '已处理 {total} 首，成功获取 {repaired} 首（已同步云端）',
     fetchLyricsEmpty: '没有需要补抓歌词的曲目',
@@ -231,14 +277,15 @@ export default {
     signIn: '登录 / 注册',
     signOut: '退出登录',
     about: '关于',
-    version: 'MUSIC.OS 0.1'
+    version: 'MUSIC.OS 0.1',
   },
   auth: {
     title: '账号',
     signIn: '登录',
     signUp: '注册',
     signedIn: '已登录',
-    signedInDesc: '可与 Life OS 账号同步元数据；可在设置中将本地音频备份到私有云存储。',
+    signedInDesc:
+      '可与 Life OS 账号同步元数据；可在设置中将本地音频备份到私有云存储。',
     goSettings: '前往设置',
     email: '邮箱',
     password: '密码',
@@ -262,23 +309,25 @@ export default {
     errInvalidEmail: '邮箱格式不正确',
     errRateLimit: '请求过于频繁，请稍后再试',
     errNetwork: '网络异常，请检查连接',
-    errGeneric: '操作失败'
+    errGeneric: '操作失败',
   },
   sync: {
     title: '云同步',
     desc: '同步设置、歌单与曲目元数据（含歌词与封面链接）。音频需单独在下方「云备份」上传。',
-    descCloud: '已启用云端播放：同步会合并歌单、歌词、封面链接与播放统计；新设备登录后可直接播放已上传曲目。',
+    descCloud:
+      '已启用云端播放：同步会合并歌单、歌词、封面链接与播放统计；新设备登录后可直接播放已上传曲目。',
     now: '立即同步',
     ok: '同步完成',
     failed: '同步失败',
     schemaCache: '云端 API 暂时不可用，请稍后在设置中重试同步',
     notSignedIn: '请先登录',
-    signInFirst: '登录 Life OS 账号'
+    signInFirst: '登录 Life OS 账号',
   },
   cloudAudio: {
     title: '云备份',
     desc: '将本地音频上传到 Supabase 私有 bucket。超过 6MB 自动使用断点续传。播放时通过临时 signed URL 访问，不会公开外链。',
-    stats: '本机音频 {localAudio} 首 · 待上传 {pending}（{size}）· 已在云端 {cloud} 首',
+    stats:
+      '本机音频 {localAudio} 首 · 待上传 {pending}（{size}）· 已在云端 {cloud} 首',
     upload: '上传待备份音频',
     uploading: '正在上传 {done}/{total}…',
     current: '当前：{title}',
@@ -286,6 +335,6 @@ export default {
     doneWithFail: '已上传 {uploaded} 首，失败 {failed} 首',
     empty: '没有待上传的本地音频',
     noPath: '缺少云存储路径',
-    signedFailed: '无法获取播放链接'
-  }
-};
+    signedFailed: '无法获取播放链接',
+  },
+}

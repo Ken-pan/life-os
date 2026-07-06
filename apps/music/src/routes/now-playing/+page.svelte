@@ -19,6 +19,16 @@
   import { S, setImmersiveViewMode } from '$lib/state.svelte.js';
 
   const track = $derived(player.queue[player.index] ?? null);
+  const artResolveMeta = $derived(
+    track
+      ? {
+          albumKey: track.albumKey,
+          artist: track.artist,
+          album: track.album,
+          title: track.title
+        }
+      : undefined
+  );
   const viewMode = $derived(S.settings.immersiveViewMode);
   const panelMode = $derived(
     viewMode === 'queue' ? 'queue' : viewMode === 'player' ? 'player' : 'lyrics'
@@ -155,7 +165,7 @@
 >
   {#if track}
     {#if isMobile}
-      <NowPlayingAmbientBack artUrl={track.artUrl} />
+      <NowPlayingAmbientBack artUrl={track.artUrl} resolve={artResolveMeta} />
     {/if}
 
     <button class="now-playing-handle" type="button" aria-label={t('common.back')} onclick={dismiss}></button>
@@ -169,7 +179,14 @@
           >
             <div class="np-mobile-art-wrap">
               <div class="now-playing-art-aura" aria-hidden="true"></div>
-              <TrackArt artUrl={track.artUrl} seed={track.id} class="now-playing-art np-mobile-art" shared />
+              <TrackArt
+                artUrl={track.artUrl}
+                seed={track.id}
+                class="now-playing-art np-mobile-art"
+                shared
+                priority="high"
+                resolve={artResolveMeta}
+              />
             </div>
 
             <div class="np-mobile-meta-row">
@@ -199,7 +216,14 @@
               aria-label={t('nowPlaying.modeCover')}
               onclick={() => setMode('player')}
             >
-              <TrackArt artUrl={track.artUrl} seed={track.id} class="np-mobile-compact-art" shared />
+              <TrackArt
+                artUrl={track.artUrl}
+                seed={track.id}
+                class="np-mobile-compact-art"
+                shared
+                priority="high"
+                resolve={artResolveMeta}
+              />
               <div class="np-mobile-compact-copy">
                 <div class="now-playing-title">{track.title}</div>
                 <div class="now-playing-artist">{track.artist}</div>
@@ -289,7 +313,14 @@
           >
             <div class="now-playing-art-aura" aria-hidden="true"></div>
             <div class="now-playing-art-wrap">
-              <TrackArt artUrl={track.artUrl} seed={track.id} class="now-playing-art" shared />
+              <TrackArt
+                artUrl={track.artUrl}
+                seed={track.id}
+                class="now-playing-art"
+                shared
+                priority="high"
+                resolve={artResolveMeta}
+              />
             </div>
           </div>
 

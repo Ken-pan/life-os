@@ -1,53 +1,56 @@
 <script>
-  import { onMount } from 'svelte';
-  import { t } from '$lib/i18n/index.js';
-  import SpeedDialCell from './SpeedDialCell.svelte';
-  import Icon from './Icon.svelte';
-  import { getCurrentTrack } from '$lib/player.svelte.js';
-  import { playTracks } from '$lib/player.svelte.js';
-  import { speedDialAllTracks } from '$lib/speedDial.js';
+  import { onMount } from 'svelte'
+  import { t } from '$lib/i18n/index.js'
+  import SpeedDialCell from './SpeedDialCell.svelte'
+  import Icon from './Icon.svelte'
+  import { getCurrentTrack } from '$lib/player.svelte.js'
+  import { playTracks } from '$lib/player.svelte.js'
+  import { speedDialAllTracks } from '$lib/speedDial.js'
 
   /** @type {{ pages: import('$lib/speedDial.js').SpeedDialPage[], onChange?: () => void }} */
-  let { pages = [], onChange } = $props();
+  let { pages = [], onChange } = $props()
 
-  let carouselEl = $state(null);
-  let activePage = $state(0);
+  let carouselEl = $state(null)
+  let activePage = $state(0)
 
-  const spotlight = $derived(getCurrentTrack());
-  const playableTracks = $derived(speedDialAllTracks(pages));
+  const spotlight = $derived(getCurrentTrack())
+  const playableTracks = $derived(speedDialAllTracks(pages))
 
   onMount(() => {
-    if (!carouselEl) return;
+    if (!carouselEl) return
     const onScroll = () => {
-      if (!carouselEl) return;
-      const width = carouselEl.clientWidth;
-      if (!width) return;
-      activePage = Math.round(carouselEl.scrollLeft / width);
-    };
-    carouselEl.addEventListener('scroll', onScroll, { passive: true });
-    return () => carouselEl?.removeEventListener('scroll', onScroll);
-  });
+      if (!carouselEl) return
+      const width = carouselEl.clientWidth
+      if (!width) return
+      activePage = Math.round(carouselEl.scrollLeft / width)
+    }
+    carouselEl.addEventListener('scroll', onScroll, { passive: true })
+    return () => carouselEl?.removeEventListener('scroll', onScroll)
+  })
 
   /** @param {number} index */
   function goToPage(index) {
-    if (!carouselEl) return;
-    const clamped = Math.max(0, Math.min(index, pages.length - 1));
-    carouselEl.scrollTo({ left: clamped * carouselEl.clientWidth, behavior: 'smooth' });
-    activePage = clamped;
+    if (!carouselEl) return
+    const clamped = Math.max(0, Math.min(index, pages.length - 1))
+    carouselEl.scrollTo({
+      left: clamped * carouselEl.clientWidth,
+      behavior: 'smooth',
+    })
+    activePage = clamped
   }
 
   /** @param {import('$lib/speedDial.js').SpeedDialCell} cell */
   function isCellActive(cell) {
-    if (!spotlight || cell.variant === 'add') return false;
-    return cell.tracks.some((track) => track.id === spotlight.id);
+    if (!spotlight || cell.variant === 'surprise') return false
+    return cell.tracks.some((track) => track.id === spotlight.id)
   }
 
   function playAll() {
-    if (!playableTracks.length) return;
+    if (!playableTracks.length) return
     playTracks(playableTracks, 0, 'speed_dial', {
       entityType: 'collection',
-      entityId: 'speed_dial_all'
-    });
+      entityId: 'speed_dial_all',
+    })
   }
 </script>
 
@@ -69,7 +72,12 @@
       <div class="speed-dial-page" aria-label={page.label}>
         <div class="speed-dial-grid">
           {#each page.cells as cell, index (cell.id)}
-            <SpeedDialCell {cell} active={isCellActive(cell)} slotIndex={index} {onChange} />
+            <SpeedDialCell
+              {cell}
+              active={isCellActive(cell)}
+              slotIndex={index}
+              {onChange}
+            />
           {/each}
         </div>
       </div>
@@ -77,7 +85,11 @@
   </div>
 
   {#if pages.length > 1}
-    <div class="speed-dial-dots" role="tablist" aria-label={t('home.speedDialPages')}>
+    <div
+      class="speed-dial-dots"
+      role="tablist"
+      aria-label={t('home.speedDialPages')}
+    >
       {#each pages as page, index (page.id)}
         <button
           type="button"

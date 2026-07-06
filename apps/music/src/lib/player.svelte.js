@@ -9,7 +9,19 @@ import {
   resolvePlayUrlSync,
   hasPlayableSource,
 } from './cloudAudio.js'
-import { registerAudioElement, resumeAudioContext } from './audioAnalyser.js'
+import {
+  registerAudioPool,
+  resumeAudioContext,
+  ensurePlaybackGraph,
+  isPlaybackGraphReady,
+  syncElementGains,
+  rampCrossfade,
+  setSlotGainImmediate,
+} from './audioAnalyser.js'
+import {
+  precacheAudioInServiceWorker,
+  purgeAudioCacheInServiceWorker,
+} from './audioPrecache.js'
 import {
   bindMediaSessionHandlers,
   declarePlaybackSession,
@@ -22,10 +34,22 @@ import { S, save } from './state.svelte.js'
 import { supabase } from './supabase.js'
 
 /** @type {HTMLAudioElement | null} */
-let audio = null
+let audioA = null
+/** @type {HTMLAudioElement | null} */
+let audioB = null
+/** @type {'a' | 'b'} */
+let activeSlot = 'a'
 let loadToken = 0
 const SESSION_KEY = 'musicos_player_session'
 let sessionTimer = /** @type {ReturnType<typeof setTimeout> | null} */ (null)
+
+/** @type {{ trackId: string | null, token: number, ready: boolean }} */
+let preloadState = { trackId: null, token: 0, ready: false }
+let gaplessHandoff = false
+/** @type {number | null} */
+let shufflePreloadIndex = null
+let crossfadeToken = 0
+let crossfadeInProgress = false
 
 /** @type {{ source: import('./musicInteractions.js').PlaySource, passive: boolean, entityType: import('./musicInteractions.js').EntityType, entityId: string | null }} */
 let launchContext = {
@@ -37,6 +61,41 @@ let launchContext = {
 
 /** @type {{ trackId: string | null, passive: boolean }} */
 let playSession = { trackId: null, passive: true }
+
+function getActiveAudio() {
+  return activeSlot === 'a' ? audioA : audioB
+}
+
+function getStandbyAudio() {
+  return activeSlot === 'a' ? audioB : audioA
+}
+
+function getStandbySlot() {
+  return activeSlot === 'a' ? 'b' : 'a'
+}
+
+function swapActiveSlot() {
+  activeSlot = getStandbySlot()
+  syncOutputGains()
+}
+
+/** Apply user volume to active slot (Web Audio fade or element.volume). */
+function syncOutputGains() {
+  if (isPlaybackGraphReady()) {
+    if (audioA) audioA.volume = 1
+    if (audioB) audioB.volume = 1
+    syncElementGains(activeSlot, player.volume, player.muted)
+    return
+  }
+  if (audioA) {
+    audioA.volume = activeSlot === 'a' && !player.muted ? player.volume : 0
+    audioA.muted = player.muted
+  }
+  if (audioB) {
+    audioB.volume = activeSlot === 'b' && !player.muted ? player.volume : 0
+    audioB.muted = player.muted
+  }
+}
 
 function markPassiveAdvance() {
   launchContext = {
@@ -51,6 +110,7 @@ function markPassiveAdvance() {
  */
 function finalizePlaySession(opts = {}) {
   const track = getCurrentTrack()
+  const audio = getActiveAudio()
   if (!track || !audio || playSession.trackId !== track.id) return
 
   const playedMs = Math.round((audio.currentTime || 0) * 1000)
@@ -109,35 +169,35 @@ export const player = $state({
 
 /** Restore volume from settings on first audio init. */
 function applyVolumeSettings() {
-  if (!audio) return
   player.volume = S.settings.volume ?? 1
   player.muted = S.settings.muted ?? false
-  audio.volume = player.muted ? 0 : player.volume
-  audio.muted = player.muted
+  syncOutputGains()
+}
+
+function applyVolumeToElement(_el) {
+  syncOutputGains()
+}
+
+function applyVolumeToAll() {
+  syncOutputGains()
 }
 
 /** @param {number} v */
 export function setVolume(v) {
   const next = Math.max(0, Math.min(1, v))
   player.volume = next
-  if (audio) {
-    audio.volume = player.muted ? 0 : next
-  }
+  applyVolumeToAll()
   S.settings.volume = next
   if (next > 0) {
     player.muted = false
     S.settings.muted = false
-    if (audio) audio.muted = false
   }
   save()
 }
 
 export function toggleMute() {
   player.muted = !player.muted
-  if (audio) {
-    audio.muted = player.muted
-    audio.volume = player.muted ? 0 : player.volume
-  }
+  applyVolumeToAll()
   S.settings.muted = player.muted
   save()
 }
@@ -204,13 +264,14 @@ export function getCurrentTrack() {
 
 /** @returns {HTMLAudioElement | null} */
 export function getAudioElement() {
-  return audio
+  return getActiveAudio()
 }
 
 /** Prime output in the same user-gesture stack before async signed URL work. */
 export function primeAudioPlayback() {
   ensureAudio()
   declarePlaybackSession()
+  void ensurePlaybackGraph()
   void resumeAudioContext()
 }
 
@@ -230,6 +291,8 @@ export function playTracks(
     entityId: meta.entityId ?? tracks[index]?.id ?? null,
   }
   primeAudioPlayback()
+  crossfadeToken++
+  invalidatePreload()
   player.queue = tracks
   player.index = index
   void loadAndPlay()
@@ -246,10 +309,13 @@ export function appendToQueue(tracks) {
   if (!getCurrentTrack()) {
     player.index = 0
     void loadAndPlay()
+  } else {
+    void preloadNextTrack()
   }
 }
 
 export function togglePlay() {
+  const audio = getActiveAudio()
   if (!audio || !getCurrentTrack()) return
   primeAudioPlayback()
   if (player.playing) audio.pause()
@@ -263,21 +329,386 @@ export function togglePlay() {
   }
 }
 
-export function nextTrack({ fromEnded = false } = {}) {
-  if (!player.queue.length) return
-  finalizePlaySession({ reason: fromEnded ? 'natural_end' : 'explicit_skip' })
-  markPassiveAdvance()
+/** @returns {number | null} Queue index of the upcoming track, or null if unknown/end. */
+function predictNextIndex() {
+  if (!player.queue.length) return null
+  if (player.queue.length === 1 && player.repeat !== 'all') return null
+
   if (player.shuffle) {
-    player.index = Math.floor(Math.random() * player.queue.length)
-  } else if (player.index < player.queue.length - 1) {
-    player.index += 1
-  } else if (player.repeat === 'all') {
-    player.index = 0
-  } else {
-    void tryAutoContinueAtQueueEnd()
+    if (player.queue.length <= 1) return null
+    if (
+      shufflePreloadIndex != null &&
+      shufflePreloadIndex >= 0 &&
+      shufflePreloadIndex < player.queue.length &&
+      shufflePreloadIndex !== player.index
+    ) {
+      return shufflePreloadIndex
+    }
+    let idx = player.index
+    let guard = 0
+    while (idx === player.index && guard++ < 8) {
+      idx = Math.floor(Math.random() * player.queue.length)
+    }
+    shufflePreloadIndex = idx === player.index ? null : idx
+    return shufflePreloadIndex
+  }
+
+  shufflePreloadIndex = null
+  if (player.index < player.queue.length - 1) return player.index + 1
+  if (player.repeat === 'all') return 0
+  return null
+}
+
+/** @returns {number} Crossfade duration in ms (0 = disabled). */
+function getCrossfadeMs() {
+  return Math.max(0, Math.min(12_000, Number(S.settings.crossfadeMs) || 0))
+}
+
+/** Seconds before track end to begin transition (gapless handoff or crossfade). */
+function getHandoffSec() {
+  const duration = player.duration || 0
+  const crossfadeSec = getCrossfadeMs() / 1000
+  if (crossfadeSec > 0) {
+    if (duration > 0) return Math.min(crossfadeSec, duration * 0.5)
+    return crossfadeSec
+  }
+  return 0.08
+}
+
+function invalidatePreload() {
+  preloadState = {
+    trackId: null,
+    token: preloadState.token + 1,
+    ready: false,
+  }
+  shufflePreloadIndex = null
+  const standby = getStandbyAudio()
+  if (standby) {
+    standby.pause()
+    standby.removeAttribute('src')
+    standby.load()
+  }
+}
+
+/** Warm signed-URL cache for the next queue item. */
+async function prefetchNextTrackUrl() {
+  if (!S.settings.gapless || !browser) return
+  const nextIndex = predictNextIndex()
+  if (nextIndex == null) return
+  const track = player.queue[nextIndex]
+  if (!track || resolvePlayUrlSync(track)) return
+  try {
+    await resolvePlayUrl(track)
+  } catch {
+    /* ignore */
+  }
+}
+
+/** @param {import('./types.js').Track} track @returns {Promise<string>} */
+async function resolveTrackSrc(track) {
+  let src = resolvePlayUrlSync(track)
+  if (!src) src = await resolvePlayUrl(track)
+  return src
+}
+
+/** Preload the next track into the standby audio element (gapless queue). */
+async function preloadNextTrack() {
+  if (!S.settings.gapless || !browser) return
+  ensureAudio()
+  const standby = getStandbyAudio()
+  if (!standby) return
+
+  const nextIndex = predictNextIndex()
+  if (nextIndex == null) {
+    invalidatePreload()
     return
   }
-  void loadAndPlay()
+
+  const track = player.queue[nextIndex]
+  if (!track) return
+  if (preloadState.trackId === track.id && preloadState.ready) return
+
+  void prefetchNextTrackUrl()
+
+  const token = ++preloadState.token
+  preloadState.ready = false
+  hydrateTrack(track)
+
+  let src = resolvePlayUrlSync(track)
+  if (!src) {
+    try {
+      src = await resolveTrackSrc(track)
+    } catch {
+      return
+    }
+  }
+
+  if (token !== preloadState.token) return
+  preloadState.trackId = track.id
+  precacheAudioInServiceWorker(src, track.id)
+
+  const markReady = () => {
+    if (token !== preloadState.token || preloadState.trackId !== track.id)
+      return
+    preloadState.ready = true
+  }
+
+  standby.addEventListener('canplaythrough', markReady, { once: true })
+  standby.addEventListener(
+    'canplay',
+    () => {
+      if (standby.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) markReady()
+    },
+    { once: true },
+  )
+
+  if (standby.src !== src) {
+    standby.src = src
+    standby.load()
+  } else if (standby.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+    markReady()
+  }
+}
+
+/** @param {import('./types.js').Track} track */
+function isStandbyReadyFor(track) {
+  if (!S.settings.gapless) return false
+  const standby = getStandbyAudio()
+  if (!standby || preloadState.trackId !== track.id) return false
+  if (preloadState.ready) return true
+  return standby.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA
+}
+
+/** @param {import('./types.js').Track} track */
+function beginTrackSession(track) {
+  recordPlay(track.id)
+  void recordMusicInteraction({
+    entityType: launchContext.entityType,
+    entityId: launchContext.entityId || track.id,
+    trackId: track.id,
+    action: 'play',
+    source: launchContext.source,
+    passive: launchContext.passive,
+    durationMs: track.duration ? track.duration * 1000 : undefined,
+  })
+  playSession = { trackId: track.id, passive: launchContext.passive }
+  updateMediaSession(track, true)
+  scheduleSaveSession()
+  gaplessHandoff = false
+  shufflePreloadIndex = null
+  const keepIds = [track.id]
+  const nextIdx = predictNextIndex()
+  if (nextIdx != null && player.queue[nextIdx]?.id) {
+    keepIds.push(player.queue[nextIdx].id)
+  }
+  purgeAudioCacheInServiceWorker(keepIds)
+  void preloadNextTrack()
+}
+
+/** @param {HTMLAudioElement} el */
+function audibleVolume(_el) {
+  return player.muted ? 0 : player.volume
+}
+
+/** Crossfade active → standby (Web Audio equal-power when graph ready, else element volume). */
+async function crossfadeToPreloadedTrack(track) {
+  const outgoing = getActiveAudio()
+  const incoming = getStandbyAudio()
+  if (!outgoing || !incoming || !isStandbyReadyFor(track)) return false
+
+  const ms = getCrossfadeMs()
+  if (ms <= 0) return false
+
+  const token = ++crossfadeToken
+  crossfadeInProgress = true
+  const targetVol = audibleVolume(outgoing)
+  const outSlot = activeSlot
+  const inSlot = getStandbySlot()
+
+  incoming.currentTime = 0
+  updateMediaSession(track, false)
+
+  await ensurePlaybackGraph()
+  const useWebAudio = isPlaybackGraphReady()
+
+  if (useWebAudio) {
+    outgoing.volume = 1
+    incoming.volume = 1
+    setSlotGainImmediate(outSlot, targetVol)
+    setSlotGainImmediate(inSlot, 0)
+  } else {
+    incoming.volume = 0
+  }
+
+  await resumeAudioContext()
+
+  try {
+    await incoming.play()
+  } catch {
+    try {
+      await waitCanPlay(incoming)
+      await incoming.play()
+    } catch {
+      crossfadeInProgress = false
+      syncOutputGains()
+      return false
+    }
+  }
+
+  if (token !== crossfadeToken) {
+    incoming.pause()
+    crossfadeInProgress = false
+    syncOutputGains()
+    return false
+  }
+
+  if (useWebAudio) {
+    const ok = await rampCrossfade({
+      outSlot,
+      inSlot,
+      ms,
+      volume: targetVol,
+      token,
+      getToken: () => crossfadeToken,
+    })
+    if (!ok || token !== crossfadeToken) {
+      incoming.pause()
+      crossfadeInProgress = false
+      syncOutputGains()
+      return false
+    }
+  } else {
+    const started = performance.now()
+    await new Promise((resolve) => {
+      /** @type {number | null} */
+      let frame = null
+      const step = (now) => {
+        if (token !== crossfadeToken) {
+          if (frame != null) cancelAnimationFrame(frame)
+          resolve(undefined)
+          return
+        }
+        const t = Math.min(1, (now - started) / ms)
+        const angle = t * Math.PI * 0.5
+        outgoing.volume = targetVol * Math.cos(angle)
+        incoming.volume = targetVol * Math.sin(angle)
+        if (t < 1) frame = requestAnimationFrame(step)
+        else resolve(undefined)
+      }
+      frame = requestAnimationFrame(step)
+    })
+
+    if (token !== crossfadeToken) {
+      crossfadeInProgress = false
+      syncOutputGains()
+      return false
+    }
+  }
+
+  outgoing.pause()
+  outgoing.currentTime = 0
+
+  swapActiveSlot()
+  preloadState = { trackId: null, token: preloadState.token, ready: false }
+  player.duration = track.duration || incoming.duration || 0
+  player.statusHint = ''
+  player.currentTime = incoming.currentTime || 0
+  crossfadeInProgress = false
+  syncOutputGains()
+  beginTrackSession(track)
+  return true
+}
+
+/** Instant swap to a preloaded standby element — no src reload gap. */
+async function activatePreloadedTrack(track) {
+  const standby = getStandbyAudio()
+  const active = getActiveAudio()
+  if (!standby || !active || !isStandbyReadyFor(track)) return false
+
+  active.pause()
+  standby.currentTime = 0
+  swapActiveSlot()
+  preloadState = { trackId: null, token: preloadState.token, ready: false }
+
+  player.duration = track.duration || standby.duration || 0
+  player.statusHint = ''
+  player.currentTime = 0
+  updateMediaSession(track, false)
+  syncOutputGains()
+
+  await ensurePlaybackGraph()
+  await resumeAudioContext()
+
+  try {
+    await standby.play()
+  } catch {
+    try {
+      await waitCanPlay(standby)
+      await standby.play()
+    } catch {
+      swapActiveSlot()
+      return false
+    }
+  }
+
+  beginTrackSession(track)
+  return true
+}
+
+/** Crossfade when configured, otherwise hard gapless swap. */
+async function transitionToPreloadedTrack(track) {
+  if (getCrossfadeMs() > 0) {
+    if (await crossfadeToPreloadedTrack(track)) return true
+  }
+  return activatePreloadedTrack(track)
+}
+
+/** Re-run preload after playback settings change. */
+export function notifyPlaybackSettingsChanged() {
+  invalidatePreload()
+  void preloadNextTrack()
+}
+
+/** @param {{ fromEnded?: boolean }} [opts] */
+async function advanceQueueIndex(opts = {}) {
+  if (!player.queue.length) return false
+  finalizePlaySession({
+    reason: opts.fromEnded ? 'natural_end' : 'explicit_skip',
+  })
+  markPassiveAdvance()
+
+  if (player.shuffle) {
+    shufflePreloadIndex = null
+    player.index = Math.floor(Math.random() * player.queue.length)
+    return true
+  }
+  if (player.index < player.queue.length - 1) {
+    player.index += 1
+    return true
+  }
+  if (player.repeat === 'all') {
+    player.index = 0
+    return true
+  }
+
+  await tryAutoContinueAtQueueEnd()
+  return false
+}
+
+/** @param {{ fromEnded?: boolean }} [opts] */
+async function performTrackAdvance(opts = {}) {
+  const advanced = await advanceQueueIndex(opts)
+  if (!advanced) return
+  const track = getCurrentTrack()
+  if (!track) return
+  if (await transitionToPreloadedTrack(track)) return
+  await loadAndPlay()
+}
+
+export function nextTrack({ fromEnded = false } = {}) {
+  if (!player.queue.length) return
+  if (crossfadeInProgress) crossfadeToken++
+  void performTrackAdvance({ fromEnded })
 }
 
 async function tryAutoContinueAtQueueEnd() {
@@ -292,9 +723,12 @@ async function tryAutoContinueAtQueueEnd() {
     const { added, shouldAdvance } = await tryAutoContinueQueue()
     if (shouldAdvance && player.index < player.queue.length - 1) {
       player.index += 1
+      const track = getCurrentTrack()
+      if (track && (await transitionToPreloadedTrack(track))) return
       void loadAndPlay()
     } else if (added > 0) {
       player.statusHint = t('nowPlaying.continueSimilarAdded', { count: added })
+      void preloadNextTrack()
     }
   } catch {
     /* silent */
@@ -303,12 +737,15 @@ async function tryAutoContinueAtQueueEnd() {
 
 export function prevTrack() {
   if (!player.queue.length) return
-  if (player.currentTime > 3) {
+  if (crossfadeInProgress) crossfadeToken++
+  const audio = getActiveAudio()
+  if (audio && player.currentTime > 3) {
     seek(0)
     return
   }
   finalizePlaySession({ reason: 'explicit_skip' })
   markPassiveAdvance()
+  invalidatePreload()
   if (player.index > 0) player.index -= 1
   else if (player.repeat === 'all') player.index = player.queue.length - 1
   else {
@@ -320,15 +757,18 @@ export function prevTrack() {
 
 export function toggleShuffle() {
   player.shuffle = !player.shuffle
+  void preloadNextTrack()
 }
 
 export function cycleRepeat() {
   player.repeat =
     player.repeat === 'off' ? 'all' : player.repeat === 'all' ? 'one' : 'off'
+  void preloadNextTrack()
 }
 
 /** @param {number} t */
 export function seek(t) {
+  const audio = getActiveAudio()
   if (!audio) return
   audio.currentTime = t
   player.currentTime = t
@@ -374,6 +814,7 @@ async function playbackToast(msg, opts = {}) {
  * @param {{ fromToggle?: boolean }} [opts]
  */
 async function startPlayback(src, token, track, opts = {}) {
+  const audio = getActiveAudio()
   if (!audio || token !== loadToken || getCurrentTrack()?.id !== track.id)
     return false
   if (!src) {
@@ -395,6 +836,7 @@ async function startPlayback(src, token, track, opts = {}) {
   }
 
   await resumeAudioContext()
+  syncOutputGains()
 
   try {
     await audio.play()
@@ -419,7 +861,10 @@ async function loadAndPlay(opts = {}) {
   const track = getCurrentTrack()
   if (!track || !browser) return
   ensureAudio()
+  const audio = getActiveAudio()
   if (!audio) return
+
+  invalidatePreload()
   const token = ++loadToken
   hydrateTrack(track)
   player.statusHint = ''
@@ -446,9 +891,9 @@ async function loadAndPlay(opts = {}) {
     const seekTarget = opts.seekTo
     const once = () => {
       seek(seekTarget)
-      audio?.removeEventListener('loadedmetadata', once)
+      audio.removeEventListener('loadedmetadata', once)
     }
-    audio?.addEventListener('loadedmetadata', once, { once: true })
+    audio.addEventListener('loadedmetadata', once, { once: true })
   }
 
   if (opts.autoplay === false) {
@@ -457,44 +902,79 @@ async function loadAndPlay(opts = {}) {
       audio.load()
     }
     scheduleSaveSession()
+    void preloadNextTrack()
     return
   }
 
   const ok = await startPlayback(src, token, track, opts)
   if (!ok || token !== loadToken) return
 
-  recordPlay(track.id)
-  void recordMusicInteraction({
-    entityType: launchContext.entityType,
-    entityId: launchContext.entityId || track.id,
-    trackId: track.id,
-    action: 'play',
-    source: launchContext.source,
-    passive: launchContext.passive,
-    durationMs: track.duration ? track.duration * 1000 : undefined,
-  })
-  playSession = { trackId: track.id, passive: launchContext.passive }
-  updateMediaSession(track, true)
-  scheduleSaveSession()
+  beginTrackSession(track)
+  void prefetchNextTrackUrl()
+  precacheAudioInServiceWorker(src, track.id)
 }
 
-function ensureAudio() {
-  if (audio || !browser) return
-  audio = document.createElement('audio')
-  audio.id = 'music-os-player'
-  audio.preload = 'auto'
-  audio.playsInline = true
-  audio.crossOrigin = 'anonymous'
-  audio.setAttribute('playsinline', '')
-  audio.setAttribute('webkit-playsinline', 'true')
-  audio.setAttribute('aria-hidden', 'true')
-  audio.style.cssText =
-    'position:fixed;width:0;height:0;opacity:0;pointer-events:none'
-  document.body.appendChild(audio)
-  registerAudioElement(audio)
+/** @param {'a' | 'b'} slot */
+function onAudioEnded(slot) {
+  if (slot !== activeSlot) return
+  const audio = getActiveAudio()
+  if (!audio) return
 
-  audio.addEventListener('loadedmetadata', () => {
-    const d = audio?.duration
+  if (player.repeat === 'one') {
+    seek(0)
+    void audio.play()
+    return
+  }
+
+  if (gaplessHandoff) {
+    gaplessHandoff = false
+    return
+  }
+
+  if (crossfadeInProgress) return
+
+  void performTrackAdvance({ fromEnded: true })
+}
+
+/** @param {'a' | 'b'} slot */
+function onTimeUpdate(slot) {
+  if (slot !== activeSlot) return
+  const audio = getActiveAudio()
+  if (!audio) return
+
+  player.currentTime = audio.currentTime || 0
+  player.duration = audio.duration || player.duration
+  updatePositionState(audio)
+  scheduleSaveSession()
+
+  if (
+    S.settings.gapless &&
+    !gaplessHandoff &&
+    !crossfadeInProgress &&
+    player.repeat !== 'one' &&
+    player.duration > 0
+  ) {
+    const remaining = player.duration - player.currentTime
+    const handoffSec = getHandoffSec()
+    const nextIndex = predictNextIndex()
+    const next = nextIndex != null ? player.queue[nextIndex] : null
+    if (
+      remaining > 0 &&
+      remaining <= handoffSec &&
+      next &&
+      isStandbyReadyFor(next)
+    ) {
+      gaplessHandoff = true
+      void performTrackAdvance({ fromEnded: true })
+    }
+  }
+}
+
+/** @param {HTMLAudioElement} el @param {'a' | 'b'} slot */
+function wireAudioElement(el, slot) {
+  el.addEventListener('loadedmetadata', () => {
+    if (slot !== activeSlot) return
+    const d = el.duration
     if (!d || !Number.isFinite(d) || d <= 0) return
     player.duration = d
     const track = getCurrentTrack()
@@ -505,37 +985,59 @@ function ensureAudio() {
     })
   })
 
-  audio.addEventListener('timeupdate', () => {
-    player.currentTime = audio?.currentTime || 0
-    player.duration = audio?.duration || player.duration
-    updatePositionState(audio)
-    scheduleSaveSession()
-  })
-  audio.addEventListener('play', () => {
+  el.addEventListener('timeupdate', () => onTimeUpdate(slot))
+  el.addEventListener('play', () => {
+    if (slot !== activeSlot) return
     player.playing = true
     updateMediaSession(getCurrentTrack(), true)
   })
-  audio.addEventListener('pause', () => {
+  el.addEventListener('pause', () => {
+    if (slot !== activeSlot) return
     player.playing = false
     updateMediaSession(getCurrentTrack(), false)
   })
-  audio.addEventListener('ended', () => {
-    if (player.repeat === 'one') {
-      seek(0)
-      void audio?.play()
-      return
-    }
-    nextTrack({ fromEnded: true })
-  })
+  el.addEventListener('ended', () => onAudioEnded(slot))
+}
+
+/** @returns {HTMLAudioElement} */
+function createHiddenAudio() {
+  const el = document.createElement('audio')
+  el.preload = 'auto'
+  el.playsInline = true
+  el.crossOrigin = 'anonymous'
+  el.setAttribute('playsinline', '')
+  el.setAttribute('webkit-playsinline', 'true')
+  el.setAttribute('aria-hidden', 'true')
+  el.style.cssText =
+    'position:fixed;width:0;height:0;opacity:0;pointer-events:none'
+  return el
+}
+
+function ensureAudio() {
+  if (audioA || !browser) return
+
+  audioA = createHiddenAudio()
+  audioB = createHiddenAudio()
+  audioA.id = 'music-os-player-a'
+  audioB.id = 'music-os-player-b'
+  document.body.appendChild(audioA)
+  document.body.appendChild(audioB)
+
+  wireAudioElement(audioA, 'a')
+  wireAudioElement(audioB, 'b')
+  registerAudioPool(audioA, audioB)
+  syncOutputGains()
+
   bindMediaSessionHandlers({
     play: () => {
       primeAudioPlayback()
-      void audio?.play()
+      void getActiveAudio()?.play()
     },
-    pause: () => audio?.pause(),
+    pause: () => getActiveAudio()?.pause(),
     next: nextTrack,
     prev: prevTrack,
     seekBy: (delta) => {
+      const audio = getActiveAudio()
       if (!audio) return
       const next = Math.max(
         0,
@@ -585,6 +1087,7 @@ export async function refreshQueueMetadata() {
     }),
   )
   player.queue = next
+  void preloadNextTrack()
 }
 
 /** @param {number} fromIndex @param {number} toIndex */
@@ -600,6 +1103,8 @@ export function reorderQueue(fromIndex, toIndex) {
     const nextIndex = q.findIndex((t) => t.id === currentId)
     if (nextIndex >= 0) player.index = nextIndex
   }
+  invalidatePreload()
+  void preloadNextTrack()
 }
 
 /** @param {number} index @param {-1 | 1} delta */
@@ -608,11 +1113,17 @@ export function moveQueueItem(index, delta) {
 }
 
 function stopAudio() {
-  if (audio) {
-    audio.pause()
-    audio.removeAttribute('src')
-    audio.load()
+  if (audioA) {
+    audioA.pause()
+    audioA.removeAttribute('src')
+    audioA.load()
   }
+  if (audioB) {
+    audioB.pause()
+    audioB.removeAttribute('src')
+    audioB.load()
+  }
+  invalidatePreload()
   player.playing = false
   player.currentTime = 0
   player.duration = 0
@@ -633,9 +1144,11 @@ export function removeFromQueue(index) {
   }
   if (wasCurrent) {
     player.index = Math.min(index, q.length - 1)
+    invalidatePreload()
     void loadAndPlay()
   } else if (index < player.index) {
     player.index -= 1
+    void preloadNextTrack()
   }
 }
 

@@ -8,6 +8,9 @@
     "dev": "vite dev --port 5189 --strictPort --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview",
+    "preview:static": "npx --yes serve build -s -l 5193",
+    "test:sw": "node scripts/qa-service-worker.mjs",
+    "test:sw:full": "npm run build && node scripts/qa-service-worker.mjs",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json"
   },
   "devDependencies": {
