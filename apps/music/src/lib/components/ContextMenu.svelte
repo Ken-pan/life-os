@@ -1,12 +1,14 @@
 <script>
   import { t } from '$lib/i18n/index.js';
-  import { appendToQueue, playTrack } from '$lib/player.svelte.js';
+  import { appendToQueue, insertAfterCurrent, playTrack, getCurrentTrack } from '$lib/player.svelte.js';
   import { toggleLike, db } from '$lib/db.js';
   import { clampPopoverPosition } from '@life-os/theme';
   import { tick } from 'svelte';
 
   /** @type {{ x: number; y: number; track: import('$lib/types.js').Track; onClose: () => void; onPlay?: () => void; onPlayNext?: () => void; onAddQueue?: () => void; onLikeChange?: (next: 0 | 1) => void }} */
   let { x, y, track, onClose, onPlay, onPlayNext, onAddQueue, onLikeChange } = $props();
+
+  const canPlayNext = $derived(Boolean(getCurrentTrack()));
 
   /** @type {HTMLDivElement | null} */
   let el = $state(null);
@@ -59,6 +61,11 @@
   <button type="button" class="context-menu-item" role="menuitem" onclick={() => { (onPlay ?? (() => playTrack(track)))(); onClose(); }}>
     {t('common.playNow')}
   </button>
+  {#if canPlayNext}
+    <button type="button" class="context-menu-item" role="menuitem" onclick={() => { (onPlayNext ?? (() => insertAfterCurrent([track])))(); onClose(); }}>
+      {t('common.playNext')}
+    </button>
+  {/if}
   <button type="button" class="context-menu-item" role="menuitem" onclick={() => { (onAddQueue ?? (() => appendToQueue([track])))(); onClose(); }}>
     {t('common.addToQueue')}
   </button>

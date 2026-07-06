@@ -20,6 +20,13 @@
   import { toast, recDebug, recommendationPreview } from '$lib/ui.svelte.js'
   import { t } from '$lib/i18n/index.js'
 
+  import {
+    buildQueueDisplayEntries,
+    canReorderUpNextEntries,
+    isFirstHistoryRow,
+    isFirstUpNextRow,
+  } from '$lib/queueDisplay.js'
+
   let { compact = false, upNextOnly = false } = $props()
 
   const flipDurationMs = 200
@@ -28,27 +35,17 @@
   /** @type {HTMLDivElement | null} */
   let listEl = $state(null)
 
-  /** @type {Array<{ id: string, track: import('$lib/types.js').Track, i: number }>} */
+  /** @type {Array<{ id: string, track: import('$lib/types.js').Track, i: number, wrapAround?: boolean }>} */
   let dndItems = $state([])
 
-  const queueEntries = $derived.by(() => {
-    if (!upNextOnly) {
-      return player.queue.map((track, i) => ({ track, i }))
-    }
-    const future = player.queue
-      .map((track, i) => ({ track, i }))
-      .filter(({ i }) => i > player.index)
-    if (future.length > 0) return future
-    // 列表播放到末尾且 repeat=all 时，下一首会回到队首
-    if (player.repeat === 'all' && player.queue.length > 1) {
-      return [{ track: player.queue[0], i: 0 }]
-    }
-    return []
-  })
+  const queueEntries = $derived(
+    buildQueueDisplayEntries(player.queue, player.index, player.repeat, {
+      upNextOnly,
+    }),
+  )
 
-  /** upNextOnly 下是否允许拖拽重排（仅当「接下来」仍是当前曲之后的真实队列时） */
   const canReorderUpNext = $derived(
-    !upNextOnly || queueEntries.some(({ i }) => i > player.index),
+    canReorderUpNextEntries(queueEntries, player.index),
   )
 
   $effect(() => {
@@ -147,14 +144,20 @@
   >
     {#if upNextOnly}
       <h3 class="queue-section-label">{t('nowPlaying.queueUpNext')}</h3>
+      {#if player.shuffle && queueEntries.length}
+        <p class="queue-shuffle-hint">{t('nowPlaying.queueShuffleHint')}</p>
+      {/if}
     {/if}
 
     {#each dndItems as item (item.id)}
       <div class="queue-list-entry" animate:flip={{ duration: flipDurationMs }}>
+        {#if !upNextOnly && isFirstHistoryRow(item.i, player.index)}
+          <h3 class="queue-section-label">{t('nowPlaying.queueHistory')}</h3>
+        {/if}
         {#if !upNextOnly && item.i === player.index}
           <h3 class="queue-section-label">{t('nowPlaying.queueNowPlaying')}</h3>
         {/if}
-        {#if !upNextOnly && item.i === player.index + 1 && player.index < player.queue.length - 1}
+        {#if !upNextOnly && isFirstUpNextRow(item.i, player.index, player.repeat, player.queue.length)}
           <h3 class="queue-section-label">{t('nowPlaying.queueUpNext')}</h3>
         {/if}
 
@@ -327,6 +330,13 @@
     font-size: var(--text-sm);
     color: var(--np-text-tertiary, var(--t3, var(--text-muted)));
     text-align: center;
+  }
+
+  .queue-shuffle-hint {
+    margin: 0 0 var(--space-2);
+    padding: 0 var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--np-text-tertiary, var(--t3, var(--text-muted)));
   }
 
   .queue-list-foot {

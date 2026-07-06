@@ -32,6 +32,7 @@ import { syncErrorMessage, scheduleAutoCloudPush } from './sync.js'
 import { t } from './i18n/index.js'
 import { S, save } from './state.svelte.js'
 import { supabase } from './supabase.js'
+import { shuffleCopy } from './queueDisplay.js'
 
 /** @type {HTMLAudioElement | null} */
 let audioA = null
@@ -284,7 +285,14 @@ export function playTracks(
   meta = {},
 ) {
   if (!tracks.length) return
-  const index = Math.max(0, Math.min(startIndex, tracks.length - 1))
+  let index = Math.max(0, Math.min(startIndex, tracks.length - 1))
+  let queue = tracks
+  if (player.shuffle && tracks.length > 1) {
+    const current = tracks[index]
+    const rest = tracks.filter((_, i) => i !== index)
+    queue = [current, ...shuffleCopy(rest)]
+    index = 0
+  }
   launchContext = {
     source,
     passive: Boolean(meta.passive),
@@ -294,7 +302,7 @@ export function playTracks(
   primeAudioPlayback()
   crossfadeToken++
   invalidatePreload()
-  player.queue = tracks
+  player.queue = queue
   player.index = index
   void loadAndPlay()
 }
@@ -304,8 +312,9 @@ export function playTrack(track, source = 'unknown') {
   playTracks([track], 0, source, { entityType: 'track', entityId: track.id })
 }
 
-/** @param {import('./types.js').Track[]} tracks */
+/** @param {import('./types.js').Track[]} tracks Append to queue tail (Play After). */
 export function appendToQueue(tracks) {
+  if (!tracks.length) return
   player.queue = [...player.queue, ...tracks]
   if (!getCurrentTrack()) {
     player.index = 0
@@ -313,6 +322,40 @@ export function appendToQueue(tracks) {
   } else {
     void preloadNextTrack()
   }
+}
+
+/**
+ * Insert after the current track (Play Next). Duplicates elsewhere in the queue are moved here.
+ * @param {import('./types.js').Track[]} tracks
+ */
+export function insertAfterCurrent(tracks) {
+  if (!tracks.length) return
+  const current = getCurrentTrack()
+  if (!current) {
+    playTracks(tracks, 0)
+    return
+  }
+  const insertIds = new Set(tracks.map((t) => t.id))
+  const withoutDupes = player.queue.filter(
+    (t, i) => i === player.index || !insertIds.has(t.id),
+  )
+  const curIdx = withoutDupes.findIndex((t) => t.id === current.id)
+  const toInsert = tracks.filter((t) => t.id !== current.id)
+  if (!toInsert.length) return
+  withoutDupes.splice(curIdx + 1, 0, ...toInsert)
+  player.queue = withoutDupes
+  player.index = curIdx
+  invalidatePreload()
+  void preloadNextTrack()
+}
+
+/** Shuffle upcoming tracks once (industry-standard shuffle-as-preorder). */
+function reshuffleUpcomingOnly() {
+  if (player.queue.length <= 1 || player.index >= player.queue.length - 1) return
+  const head = player.queue.slice(0, player.index + 1)
+  const tail = shuffleCopy(player.queue.slice(player.index + 1))
+  player.queue = [...head, ...tail]
+  invalidatePreload()
 }
 
 export function togglePlay() {
@@ -331,28 +374,9 @@ export function togglePlay() {
 }
 
 /** @returns {number | null} Queue index of the upcoming track, or null if unknown/end. */
-function predictNextIndex() {
+export function getUpcomingIndex() {
   if (!player.queue.length) return null
   if (player.queue.length === 1 && player.repeat !== 'all') return null
-
-  if (player.shuffle) {
-    if (player.queue.length <= 1) return null
-    if (
-      shufflePreloadIndex != null &&
-      shufflePreloadIndex >= 0 &&
-      shufflePreloadIndex < player.queue.length &&
-      shufflePreloadIndex !== player.index
-    ) {
-      return shufflePreloadIndex
-    }
-    let idx = player.index
-    let guard = 0
-    while (idx === player.index && guard++ < 8) {
-      idx = Math.floor(Math.random() * player.queue.length)
-    }
-    shufflePreloadIndex = idx === player.index ? null : idx
-    return shufflePreloadIndex
-  }
 
   shufflePreloadIndex = null
   if (player.index < player.queue.length - 1) return player.index + 1
@@ -394,7 +418,7 @@ function invalidatePreload() {
 /** Warm signed-URL cache for the next queue item. */
 async function prefetchNextTrackUrl() {
   if (!S.settings.gapless || !browser) return
-  const nextIndex = predictNextIndex()
+  const nextIndex = getUpcomingIndex()
   if (nextIndex == null) return
   const track = player.queue[nextIndex]
   if (!track || resolvePlayUrlSync(track)) return
@@ -419,7 +443,7 @@ async function preloadNextTrack() {
   const standby = getStandbyAudio()
   if (!standby) return
 
-  const nextIndex = predictNextIndex()
+  const nextIndex = getUpcomingIndex()
   if (nextIndex == null) {
     invalidatePreload()
     return
@@ -498,7 +522,7 @@ function beginTrackSession(track) {
   gaplessHandoff = false
   shufflePreloadIndex = null
   const keepIds = [track.id]
-  const nextIdx = predictNextIndex()
+  const nextIdx = getUpcomingIndex()
   if (nextIdx != null && player.queue[nextIdx]?.id) {
     keepIds.push(player.queue[nextIdx].id)
   }
@@ -678,11 +702,6 @@ async function advanceQueueIndex(opts = {}) {
   })
   markPassiveAdvance()
 
-  if (player.shuffle) {
-    shufflePreloadIndex = null
-    player.index = Math.floor(Math.random() * player.queue.length)
-    return true
-  }
   if (player.index < player.queue.length - 1) {
     player.index += 1
     return true
@@ -758,6 +777,7 @@ export function prevTrack() {
 
 export function toggleShuffle() {
   player.shuffle = !player.shuffle
+  if (player.shuffle) reshuffleUpcomingOnly()
   void preloadNextTrack()
 }
 
@@ -961,7 +981,7 @@ function onTimeUpdate(slot) {
   ) {
     const remaining = player.duration - player.currentTime
     const handoffSec = getHandoffSec()
-    const nextIndex = predictNextIndex()
+    const nextIndex = getUpcomingIndex()
     const next = nextIndex != null ? player.queue[nextIndex] : null
     if (
       remaining > 0 &&

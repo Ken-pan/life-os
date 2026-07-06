@@ -4,7 +4,7 @@
   import TrackArt from './TrackArt.svelte';
   import ContextMenu from './ContextMenu.svelte';
   import LikeButton from './LikeButton.svelte';
-  import { playTrack, playTracks, appendToQueue } from '$lib/player.svelte.js';
+  import { playTrack, playTracks, appendToQueue, insertAfterCurrent } from '$lib/player.svelte.js';
   import { formatTime } from '$lib/player.svelte.js';
   import { t } from '$lib/i18n/index.js';
 
@@ -158,6 +158,7 @@
     track={menu.track}
     onClose={closeMenu}
     onPlay={() => playTrack(menu.track)}
+    onPlayNext={() => insertAfterCurrent([menu.track])}
     onAddQueue={() => appendToQueue([menu.track])}
   />
 {/if}
