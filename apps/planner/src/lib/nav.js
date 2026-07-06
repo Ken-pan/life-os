@@ -143,7 +143,7 @@ export function isMoreNavActive(pathname, search = '') {
     pathname === '/' &&
     new URLSearchParams(search).get('view') === 'timeline'
   )
-    return false
+    return true
   if (pathname.startsWith('/search')) return true
   if (pathname.startsWith('/calendar')) return true
   if (pathname.startsWith('/lists/')) return true

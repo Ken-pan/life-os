@@ -24,7 +24,13 @@
     <div class="wrap completed-page">
       <section class="completed-rhythm completed-rhythm--inline">
         <h2 class="completed-section-title">{t('rhythm.title')}</h2>
-        <RhythmSummaryCard summary={rhythm} progress={progress} doneToday={progress.doneToday} nextTask={null} />
+        <RhythmSummaryCard
+          summary={rhythm}
+          progress={progress}
+          doneToday={progress.doneToday}
+          nextTask={null}
+          focusMetric="week"
+        />
       </section>
 
       <section class="completed-log">

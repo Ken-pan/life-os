@@ -12,7 +12,10 @@
   import { toast } from '$lib/ui.svelte.js';
 
   const today = todayKey();
-  const goalOptions = [1, 2, 3, 4, 5, 6, 7];
+  const goalOptions = [1, 2, 3, 4, 5, 6, 7].map((goal) => ({
+    value: String(goal),
+    label: String(goal),
+  }));
 
   const restToday = $derived(isRestDay(today, S.settings));
   const restUsed = $derived(restDaysUsedThisWeek(S.settings, today));
@@ -54,17 +57,12 @@
 
 {#if S.settings.rhythmEnabled !== false}
   <SettingsRow label={t('rhythm.dailyGoal')} desc={t('rhythm.dailyGoalDesc')}>
-    <SettingsSegment ariaLabel={t('rhythm.dailyGoal')}>
-      {#each goalOptions as goal}
-        <button
-          type="button"
-          class:on={(S.settings.dailyGoal ?? 3) === goal}
-          onclick={() => setDailyGoal(goal)}
-        >
-          {goal}
-        </button>
-      {/each}
-    </SettingsSegment>
+    <SettingsSegment
+      options={goalOptions}
+      value={String(S.settings.dailyGoal ?? 3)}
+      onchange={(value) => setDailyGoal(Number(value))}
+      ariaLabel={t('rhythm.dailyGoal')}
+    />
   </SettingsRow>
 
   <SettingsToggleRow

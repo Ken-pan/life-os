@@ -376,7 +376,7 @@
             {/if}
             {#if showSecondaryMeta}
               {#if list}<span class="chip">{listLabel(list)}</span>{/if}
-              {#each task.tags as tag}<span class="chip tag">{tag}</span>{/each}
+              {#each task.tags.filter((tag) => String(tag || '').trim()) as tag}<span class="chip tag">{tag}</span>{/each}
             {/if}
           </div>
         {/if}

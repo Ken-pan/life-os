@@ -1122,8 +1122,23 @@ html, body {
    */
   :root {
     --mobile-content-inset: calc(
-      var(--fab-h) + var(--fab-offset-above-tabbar) + var(--space-2)
+      var(--fab-h) + var(--fab-offset-above-tabbar) + var(--space-4)
     );
+  }
+
+  .today-layout--timeline .today-progress-actions {
+    display: none;
+  }
+
+  body:has([data-fab-visible='true']) .toast {
+    left: max(var(--page-gutter), var(--safe-left-effective));
+    right: auto;
+    max-width: min(calc(100vw - var(--space-8)), 320px);
+    transform: translateY(12px);
+  }
+
+  body:has([data-fab-visible='true']) .toast.show {
+    transform: translateY(0);
   }
 
   /* 安全区 tint 在底栏之下，避免 Home Indicator 条带“浮”在 nav 上方 */

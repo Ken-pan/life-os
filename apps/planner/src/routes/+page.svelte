@@ -157,7 +157,7 @@
               tasks={progress.doneToday}
               compactRows
               collapsible
-              defaultExpanded={progress.doneToday.length <= 3}
+              defaultExpanded={showClosed || progress.doneToday.length <= 3}
               {contextDate}
               onToggle={completeTask}
               onEdit={editTask}

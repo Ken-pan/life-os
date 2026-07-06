@@ -1,8 +1,22 @@
 <script>
   import { t } from '$lib/i18n/index.js';
 
-  /** @type {{ summary: ReturnType<import('$lib/domain/rhythm.js').computeRhythmSummary>, progress: { done: number, total: number, remaining: number }, doneToday: import('$lib/types.js').Task[], nextTask: import('$lib/types.js').Task | null, compact?: boolean }} */
-  let { summary, progress, doneToday, nextTask, compact = false } = $props();
+  /** @type {{
+    summary: ReturnType<import('$lib/domain/rhythm.js').computeRhythmSummary>,
+    progress: { done: number, total: number, remaining: number },
+    doneToday: import('$lib/types.js').Task[],
+    nextTask: import('$lib/types.js').Task | null,
+    compact?: boolean,
+    focusMetric?: 'today' | 'week'
+  }} */
+  let { summary, progress, doneToday, nextTask, compact = false, focusMetric = 'today' } = $props();
+
+  const focusCount = $derived(
+    focusMetric === 'week' ? summary.focusWinsWeek : summary.focusWinsToday,
+  );
+  const focusLabel = $derived(
+    focusMetric === 'week' ? t('rhythm.focusWinsWeek') : t('rhythm.focusWins'),
+  );
 </script>
 
 <section class="rhythm-summary" class:rhythm-summary--compact={compact} aria-label={t('rhythm.title')}>
@@ -17,8 +31,8 @@
         <strong class="rhythm-stat-value">{summary.weekly.active}<span class="rhythm-stat-unit">/ {summary.weekly.total}</span></strong>
       </div>
       <div class="rhythm-stat">
-        <span class="rhythm-stat-label">{t('rhythm.focusWins')}</span>
-        <strong class="rhythm-stat-value">{summary.focusWinsToday}</strong>
+        <span class="rhythm-stat-label">{focusLabel}</span>
+        <strong class="rhythm-stat-value">{focusCount}</strong>
       </div>
       <div class="rhythm-stat">
         <span class="rhythm-stat-label">{t('rhythm.doneWeek')}</span>

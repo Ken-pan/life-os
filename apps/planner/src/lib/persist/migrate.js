@@ -96,8 +96,15 @@ export function migrateList(list) {
   if (!list || typeof list !== 'object') return null
   const l = /** @type {Record<string, unknown>} */ (list)
   if (typeof l.id !== 'string' || !l.id) return null
+  const title =
+    typeof l.title === 'string' && l.title.trim()
+      ? l.title.trim()
+      : typeof l.name === 'string' && l.name.trim()
+        ? l.name.trim()
+        : ''
   return {
     ...l,
+    title,
     updatedAt: typeof l.updatedAt === 'number' ? l.updatedAt : 0,
     deletedAt: typeof l.deletedAt === 'number' ? l.deletedAt : null,
   }

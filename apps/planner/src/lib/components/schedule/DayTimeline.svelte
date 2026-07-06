@@ -11,6 +11,8 @@
     snapMinutesFromTimelineTop,
     formatMinutesAsTime,
     defaultDurationMinutes,
+    blockLayout,
+    taskDurationMinutes,
   } from '$lib/domain/schedule.js';
   import { todayKey } from '$lib/state.svelte.js';
   import { t } from '$lib/i18n/index.js';
@@ -82,9 +84,22 @@
   }
 
   onMount(() => {
-    if (nowTop == null || !scrollEl) return;
-    const target = Math.max(0, nowTop - scrollEl.clientHeight * 0.25);
-    scrollEl.scrollTop = target;
+    if (!scrollEl) return;
+
+    let anchor = 0;
+    let earliestTop = null;
+    for (const task of tasks) {
+      if (!task.scheduledStart) continue;
+      const layout = blockLayout(task.scheduledStart, taskDurationMinutes(task));
+      earliestTop =
+        earliestTop == null ? layout.top : Math.min(earliestTop, layout.top);
+    }
+    if (earliestTop != null) anchor = earliestTop;
+    if (nowTop != null) {
+      anchor = earliestTop != null ? Math.min(earliestTop, nowTop) : nowTop;
+    }
+
+    scrollEl.scrollTop = Math.max(0, anchor - scrollEl.clientHeight * 0.12);
   });
 
   onMount(() => {

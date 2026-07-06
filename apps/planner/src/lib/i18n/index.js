@@ -48,5 +48,6 @@ export function setLocale(locale) {
 export function listLabel(list) {
   if (!list) return '';
   if (list.system === 'inbox') return t('nav.inbox');
-  return list.title;
+  const label = String(list.title || list.name || '').trim();
+  return label || t('nav.lists');
 }

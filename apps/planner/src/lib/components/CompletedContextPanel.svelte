@@ -16,5 +16,5 @@
     <p class="today-recap-sub">{t('home.progressDoneOnly', { count: doneToday.length })}</p>
   </header>
 
-  <RhythmSummaryCard {summary} {progress} {doneToday} nextTask={null} compact />
+  <RhythmSummaryCard {summary} {progress} {doneToday} nextTask={null} compact focusMetric="week" />
 </aside>
