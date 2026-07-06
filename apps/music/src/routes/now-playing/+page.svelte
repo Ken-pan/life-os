@@ -379,7 +379,8 @@
             aria-selected={desktopPanelMode === 'lyrics'}
             onclick={() => setMode('lyrics')}
           >
-            {t('nowPlaying.modeLyrics')}
+            <Icon name="mic" size={14} strokeWidth={2} />
+            <span>{t('nowPlaying.modeLyrics')}</span>
           </button>
           <button
             type="button"
@@ -389,7 +390,8 @@
             aria-selected={desktopPanelMode === 'queue'}
             onclick={() => setMode('queue')}
           >
-            {t('nowPlaying.modeQueue')}
+            <Icon name="layout-list" size={14} strokeWidth={2} />
+            <span>{t('nowPlaying.modeQueue')}</span>
           </button>
         </div>
       </div>
@@ -480,7 +482,7 @@
             />
           {:else}
             <div class="now-playing-queue-wrap">
-              <QueueList />
+              <QueueList upNextOnly />
             </div>
           {/if}
         </section>

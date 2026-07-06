@@ -223,6 +223,8 @@ export default {
     modeCover: '封面',
     modeLyrics: '歌词',
     modeQueue: '播放清单',
+    queueUpNext: '接下来',
+    queueUpNextEmpty: '暂无后续曲目',
   },
   player: {
     playFailed: '无法播放，请确认已登录并完成云同步',

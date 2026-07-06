@@ -6,96 +6,116 @@
     moveQueueItem,
     removeFromQueue,
     clearQueue,
-    getCurrentTrack
-  } from '$lib/player.svelte.js';
-  import { appendSimilarToQueue, formatRecommendationTags } from '$lib/recommendations.js';
-  import { recommendationPreview } from '$lib/ui.svelte.js';
-  import { auth } from '$lib/auth.svelte.js';
-  import TrackRow from './TrackRow.svelte';
-  import Icon from './Icon.svelte';
-  import { toast } from '$lib/ui.svelte.js';
-  import { t } from '$lib/i18n/index.js';
+    getCurrentTrack,
+  } from '$lib/player.svelte.js'
+  import {
+    appendSimilarToQueue,
+    formatRecommendationTags,
+  } from '$lib/recommendations.js'
+  import { recommendationPreview } from '$lib/ui.svelte.js'
+  import { auth } from '$lib/auth.svelte.js'
+  import TrackRow from './TrackRow.svelte'
+  import Icon from './Icon.svelte'
+  import { toast } from '$lib/ui.svelte.js'
+  import { t } from '$lib/i18n/index.js'
 
-  let { compact = false } = $props();
-  let dragFrom = $state(null);
+  let { compact = false, upNextOnly = false } = $props()
+  let dragFrom = $state(null)
   /** @type {number | null} */
-  let touchFrom = $state(null);
-  let continueLoading = $state(false);
+  let touchFrom = $state(null)
+  let continueLoading = $state(false)
+
+  const queueEntries = $derived(
+    upNextOnly
+      ? player.queue
+          .map((track, i) => ({ track, i }))
+          .filter(({ i }) => i > player.index)
+      : player.queue.map((track, i) => ({ track, i })),
+  )
 
   /** @param {'same_vibe' | 'discovery'} mode */
   async function onContinueSimilar(mode = 'same_vibe') {
-    if (continueLoading || !getCurrentTrack()) return;
+    if (continueLoading || !getCurrentTrack()) return
     if (!auth.user) {
-      toast(t('nowPlaying.continueSimilarEmpty'), { error: true });
-      return;
+      toast(t('nowPlaying.continueSimilarEmpty'), { error: true })
+      return
     }
-    continueLoading = true;
+    continueLoading = true
     try {
-      const { added } = await appendSimilarToQueue({ mode, limit: 15 });
+      const { added } = await appendSimilarToQueue({ mode, limit: 15 })
       if (added > 0) {
-        toast(t('nowPlaying.continueSimilarAdded', { count: added }));
+        toast(t('nowPlaying.continueSimilarAdded', { count: added }))
       } else {
-        recommendationPreview.length = 0;
-        toast(t('nowPlaying.continueSimilarEmpty'));
+        recommendationPreview.length = 0
+        toast(t('nowPlaying.continueSimilarEmpty'))
       }
     } catch {
-      toast(t('nowPlaying.continueSimilarFailed'), { error: true });
+      toast(t('nowPlaying.continueSimilarFailed'), { error: true })
     } finally {
-      continueLoading = false;
+      continueLoading = false
     }
   }
 
   /** @param {DragEvent} e @param {number} index */
   function onDragStart(e, index) {
-    dragFrom = index;
+    dragFrom = index
     if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', String(index));
+      e.dataTransfer.effectAllowed = 'move'
+      e.dataTransfer.setData('text/plain', String(index))
     }
   }
 
   /** @param {DragEvent} e @param {number} index */
   function onDrop(e, index) {
-    e.preventDefault();
-    if (dragFrom === null || dragFrom === index) return;
-    reorderQueue(dragFrom, index);
-    dragFrom = null;
+    e.preventDefault()
+    if (dragFrom === null || dragFrom === index) return
+    reorderQueue(dragFrom, index)
+    dragFrom = null
   }
 
   /** @param {DragEvent} e */
   function onDragOver(e) {
-    e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    e.preventDefault()
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
   }
 
   function onDragEnd() {
-    dragFrom = null;
+    dragFrom = null
   }
 
   /** @param {TouchEvent} e @param {number} index */
   function onTouchStart(_e, index) {
-    touchFrom = index;
+    touchFrom = index
   }
 
   /** @param {TouchEvent} e */
   function onTouchEnd(e) {
-    if (touchFrom === null) return;
-    const touch = e.changedTouches[0];
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    const row = el?.closest?.('[data-queue-index]');
+    if (touchFrom === null) return
+    const touch = e.changedTouches[0]
+    const el = document.elementFromPoint(touch.clientX, touch.clientY)
+    const row = el?.closest?.('[data-queue-index]')
     if (row instanceof HTMLElement) {
-      const to = Number(row.dataset.queueIndex);
-      if (Number.isFinite(to)) reorderQueue(touchFrom, to);
+      const to = Number(row.dataset.queueIndex)
+      if (Number.isFinite(to)) reorderQueue(touchFrom, to)
     }
-    touchFrom = null;
+    touchFrom = null
   }
 </script>
 
-<div class="queue-list" class:queue-list--compact={compact} role="list">
-  {#each player.queue as track, i (track.id)}
+<div
+  class="queue-list"
+  class:queue-list--compact={compact}
+  class:queue-list--up-next={upNextOnly}
+  role="list"
+>
+  {#if upNextOnly}
+    <h3 class="queue-section-label">{t('nowPlaying.queueUpNext')}</h3>
+  {/if}
+
+  {#each queueEntries as { track, i } (track.id)}
     <div
       class="queue-row"
-      class:queue-row--current={i === player.index}
+      class:queue-row--current={!upNextOnly && i === player.index}
       class:queue-row--dragging={touchFrom === i || dragFrom === i}
       data-queue-index={i}
       role="listitem"
@@ -110,48 +130,84 @@
         ondragstart={(e) => onDragStart(e, i)}
         ondragend={onDragEnd}
         ontouchstart={(e) => onTouchStart(e, i)}
-        ontouchend={onTouchEnd}
-      >⠿</button>
+        ontouchend={onTouchEnd}>⠿</button
+      >
 
-      <TrackRow {track} tracks={player.queue} index={i} showLike={false} compactActions />
+      <TrackRow
+        {track}
+        tracks={player.queue}
+        index={i}
+        showLike={false}
+        compactActions
+      />
 
       <div class="queue-move-controls">
-        <button type="button" class="queue-move-btn" aria-label={t('nowPlaying.moveUp')} disabled={i === 0} onclick={() => moveQueueItem(i, -1)}>
+        <button
+          type="button"
+          class="queue-move-btn"
+          aria-label={t('nowPlaying.moveUp')}
+          disabled={i === 0}
+          onclick={() => moveQueueItem(i, -1)}
+        >
           <Icon name="chevron-up" size={16} />
         </button>
-        <button type="button" class="queue-move-btn" aria-label={t('nowPlaying.moveDown')} disabled={i === player.queue.length - 1} onclick={() => moveQueueItem(i, 1)}>
+        <button
+          type="button"
+          class="queue-move-btn"
+          aria-label={t('nowPlaying.moveDown')}
+          disabled={i === player.queue.length - 1}
+          onclick={() => moveQueueItem(i, 1)}
+        >
           <Icon name="chevron-down" size={16} />
         </button>
-        <button type="button" class="queue-move-btn" aria-label={t('nowPlaying.remove')} onclick={() => removeFromQueue(i)}>
+        <button
+          type="button"
+          class="queue-move-btn"
+          aria-label={t('nowPlaying.remove')}
+          onclick={() => removeFromQueue(i)}
+        >
           <Icon name="x" size={16} />
         </button>
       </div>
     </div>
   {/each}
-  {#if !player.queue.length}
+
+  {#if upNextOnly && !queueEntries.length}
+    <p class="queue-up-next-empty">{t('nowPlaying.queueUpNextEmpty')}</p>
+  {:else if !player.queue.length}
     <p class="empty-state">{t('nowPlaying.queueEmpty')}</p>
   {/if}
 </div>
 
 {#if player.queue.length && !compact}
   <div class="queue-list-foot">
-    <button class="btn-ghost" type="button" onclick={clearQueue}>{t('nowPlaying.clearQueue')}</button>
     <button
-      class="btn-secondary queue-continue-btn"
+      class="btn-secondary queue-clear-btn"
       type="button"
-      disabled={continueLoading || !getCurrentTrack()}
-      onclick={() => onContinueSimilar('same_vibe')}
-      title={t('nowPlaying.continueSimilarHint')}
+      onclick={clearQueue}
     >
-      {continueLoading ? t('nowPlaying.continueSimilarLoading') : t('nowPlaying.continueSimilar')}
+      {t('nowPlaying.clearQueue')}
     </button>
-    <button
-      class="btn-secondary queue-play-btn"
-      type="button"
-      onclick={() => playTracks(player.queue, player.index)}
-    >
-      {t('nowPlaying.playFromCurrent')}
-    </button>
+    <div class="queue-list-foot-actions">
+      <button
+        class="btn-secondary queue-continue-btn"
+        type="button"
+        disabled={continueLoading || !getCurrentTrack()}
+        onclick={() => onContinueSimilar('same_vibe')}
+        title={t('nowPlaying.continueSimilarHint')}
+      >
+        {continueLoading
+          ? t('nowPlaying.continueSimilarLoading')
+          : t('nowPlaying.continueSimilar')}
+      </button>
+      <button
+        class="btn-secondary queue-play-btn"
+        type="button"
+        onclick={() => playTracks(player.queue, player.index)}
+      >
+        {t('nowPlaying.playFromCurrent')}
+      </button>
+    </div>
   </div>
 {/if}
 
@@ -161,12 +217,16 @@
     <ul class="rec-preview-list">
       {#each recommendationPreview as pick (pick.track.id)}
         <li class="rec-preview-item">
-          <span class="rec-preview-track">{pick.track.title} — {pick.track.artist}</span>
+          <span class="rec-preview-track"
+            >{pick.track.title} — {pick.track.artist}</span
+          >
           {#if pick.reasons?.length}
             <span class="rec-preview-reasons">{pick.reasons.join(' · ')}</span>
           {/if}
           {#if formatRecommendationTags(pick.matchedTags).length}
-            <span class="rec-preview-tags">{formatRecommendationTags(pick.matchedTags).join(' · ')}</span>
+            <span class="rec-preview-tags"
+              >{formatRecommendationTags(pick.matchedTags).join(' · ')}</span
+            >
           {/if}
         </li>
       {/each}
@@ -182,18 +242,57 @@
     padding: var(--space-2) 0;
   }
 
+  .queue-section-label {
+    margin: 0 0 var(--space-3);
+    padding: 0 var(--space-1);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--np-text-tertiary, var(--t3, var(--text-muted)));
+  }
+
+  .queue-up-next-empty {
+    margin: var(--space-4) 0 0;
+    padding: var(--space-3) var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--np-text-tertiary, var(--t3, var(--text-muted)));
+    text-align: center;
+  }
+
   .queue-list-foot {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    padding: var(--space-3) 0 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) 0 0;
     border-top: 1px solid var(--border);
+  }
+
+  .queue-list-foot-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .queue-list-foot .queue-play-btn,
+  .queue-list-foot .queue-continue-btn,
+  .queue-list-foot .queue-clear-btn {
+    min-height: var(--tap-min);
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .queue-list-foot .queue-clear-btn {
+    flex-shrink: 0;
   }
 
   .queue-list-foot .queue-play-btn,
   .queue-list-foot .queue-continue-btn {
-    flex: 1;
-    min-width: 7rem;
+    min-width: 7.5rem;
   }
 
   .queue-row {

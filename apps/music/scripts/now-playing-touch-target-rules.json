@@ -1,0 +1,80 @@
+{
+  "$schema": "music-now-playing-touch-target-rules/v1",
+  "description": "WCAG 2.5.8 + iOS HIG 44×44pt rules for Now Playing mobile chrome. Feed into design-qa-inspector or Playwright audits.",
+  "minTouchTargetPt": 44,
+  "minCenterDistancePt": 44,
+  "rules": [
+    {
+      "id": "NP-TOUCH-MIN-SIZE",
+      "severity": "error",
+      "wcag": "2.5.8",
+      "selectors": [
+        ".np-mobile-dock-btn",
+        ".np-mobile-chrome .player-controls--apple .ctrl",
+        ".np-mobile-progress input[type='range']"
+      ],
+      "assert": {
+        "minWidthPx": 44,
+        "minHeightPx": 44
+      },
+      "message": "可点击节点触控热区不得小于 44×44px"
+    },
+    {
+      "id": "NP-TRANSPORT-DOCK-GAP",
+      "severity": "error",
+      "selectors": {
+        "a": ".np-mobile-transport",
+        "b": ".np-mobile-dock-capsule"
+      },
+      "assert": {
+        "minVerticalGapPx": 32,
+        "maxVerticalGapPx": 48
+      },
+      "message": "主播放控件与模式 Dock 胶囊之间垂直间距应为 32–48px"
+    },
+    {
+      "id": "NP-DOCK-SIBLING-OVERLAP",
+      "severity": "warning",
+      "selectors": ".np-mobile-dock-btn",
+      "assert": {
+        "siblingMinCenterDistancePx": 44,
+        "sameParentRequired": true
+      },
+      "message": "同级 Dock 按钮中心距小于 44px 时触发误触风险"
+    },
+    {
+      "id": "NP-DOCK-CAPSULE",
+      "severity": "info",
+      "selectors": ".np-mobile-dock-capsule",
+      "assert": {
+        "borderRadiusMinPx": 9999,
+        "backgroundAlphaRange": [0.1, 0.15]
+      },
+      "message": "模式 Dock 应收纳于低对比胶囊底座内"
+    },
+    {
+      "id": "NP-DOCK-ICON-VISUAL",
+      "severity": "info",
+      "selectors": ".np-mobile-dock-btn svg",
+      "assert": {
+        "maxWidthPx": 24,
+        "maxHeightPx": 24
+      },
+      "message": "Dock 图标视觉尺寸建议 20–24px，热区由 padding/按钮尺寸保证"
+    }
+  ],
+  "figmaAutoLayout": {
+    "npMobileChrome": {
+      "direction": "vertical",
+      "gapProgressToTransport": 8,
+      "gapTransportToDockCapsule": 32,
+      "dockCapsule": {
+        "padding": 4,
+        "cornerRadius": 9999,
+        "fill": "rgba(255,255,255,0.12)",
+        "dockButtonSize": 44,
+        "iconSize": 20
+      }
+    }
+  }
+}
