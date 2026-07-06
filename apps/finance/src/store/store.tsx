@@ -51,7 +51,6 @@ function now(): string {
 /** 把定点写入的 Promise 兜底，失败时通知用户（本地状态已乐观更新）。 */
 function persist(p: Promise<void>): void {
   p.catch((e) => {
-    const msg = e instanceof Error ? e.message : String(e);
     console.error("[finance] 同步到 Supabase 失败：", e);
     notifySyncError(e);
   });

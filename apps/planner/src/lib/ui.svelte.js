@@ -1,5 +1,6 @@
 import { S } from './state.svelte.js';
 import { SYSTEM_LIST_INBOX } from './types.js';
+import { createToastDeduper, resolveToastDuration } from '@life-os/theme';
 
 /** @param {import('./types.js').Task} task */
 function cloneTask(task) {
@@ -17,23 +18,26 @@ export const toastState = $state({
 });
 
 let toastTimer = null;
+const shouldShowToast = createToastDeduper();
+
 /**
  * @param {string} msg
  * @param {'success'|'error'|'warn'} [tone]
- * @param {{ actionLabel?: string, onAction?: () => void, duration?: number }} [options]
+ * @param {{ actionLabel?: string, onAction?: () => void, duration?: number, key?: string, dedupeMs?: number }} [options]
  */
 export function toast(msg, tone = 'success', options = {}) {
+  const key = options.key ?? (tone === 'success' ? msg : `${tone}:${msg}`);
+  if (!shouldShowToast(key, options.dedupeMs ?? 3000)) return;
+
   toastState.msg = msg;
   toastState.tone = tone;
   toastState.actionLabel = options.actionLabel ?? '';
   toastState.onAction = options.onAction ?? null;
   toastState.show = true;
   clearTimeout(toastTimer);
-  const defaultDuration =
-    tone === 'error' ? 4500 : tone === 'warn' ? 4000 : options.actionLabel ? 4000 : 2200;
   toastTimer = setTimeout(() => {
     toastState.show = false;
-  }, options.duration ?? defaultDuration);
+  }, options.duration ?? resolveToastDuration(msg, { tone, actionLabel: options.actionLabel }));
 }
 
 export function dismissToast() {

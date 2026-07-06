@@ -130,3 +130,10 @@ export declare function createImeGuard(): {
   compositionend: (event: CompositionEvent, onCommit?: ImeCommitHandler) => void;
   isComposing: (event?: KeyboardEvent | InputEvent) => boolean;
 };
+
+export declare function resolveToastDuration(
+  msg: string,
+  opts?: { tone?: string; actionLabel?: string; min?: number; max?: number; perCharMs?: number }
+): number;
+
+export declare function createToastDeduper(): (key: string | undefined, dedupeMs?: number) => boolean;

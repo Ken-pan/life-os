@@ -2,7 +2,7 @@ import { browser } from '$app/environment';
 import {
   createBidirectionalSync,
   createDebouncedTask,
-  formatSyncErrorMessage,
+  notifyManualSyncResult,
   readSyncMeta,
   writeSyncMeta
 } from '@life-os/sync';
@@ -12,6 +12,8 @@ import { resolveExerciseId } from './data/exercises.js';
 import { S, save, applyState, activeProgramId, SCHEMA_VERSION } from './state.svelte.js';
 import { sessionHasActivity, exLogHasActivity } from './session.js';
 import { t } from './i18n/index.js';
+import { toast } from './ui.svelte.js';
+import { notifySyncError, withSyncNotify } from './syncNotify.js';
 
 const APP_ID = 'fitness';
 
@@ -31,14 +33,8 @@ async function requireUser() {
 const nonEmpty = (obj) =>
   obj && typeof obj === 'object' && Object.keys(obj).length ? obj : null;
 
-/** 设置页手动同步等场景的错误文案 */
-export function syncErrorMessage(err) {
-  return formatSyncErrorMessage(err, {
-    network: t('auth.errNetwork'),
-    rateLimit: t('auth.errRateLimit'),
-    fallback: t('auth.syncFailed')
-  });
-}
+/** 设置页手动同步等场景的错误文案（SyncErrorBanner 订阅源） */
+export { syncErrorMessage } from './syncNotify.js';
 
 /** 本机是否有值得上传的数据 */
 export function localHasData() {
@@ -250,13 +246,15 @@ const cloudPush = createDebouncedTask(async (options = {}) => {
     const result = await pushToCloud();
     if (toastOnResult) {
       const { toast } = await import('./ui.svelte.js');
-      toast(t('sync.workoutUploaded', result));
+      toast(t('sync.workoutUploaded', result), 'success', { key: 'sync-workout-uploaded' });
     }
     return { ok: true, ...result };
   } catch (err) {
     if (toastOnResult) {
       const { toast } = await import('./ui.svelte.js');
-      toast(t('sync.workoutFailed'));
+      toast(t('sync.workoutFailed'), 'error', { key: 'sync-workout-failed' });
+    } else {
+      notifySyncError(err);
     }
     return { ok: false, error: err };
   }
@@ -279,26 +277,6 @@ export function scheduleAutoCloudPush(options = {}) {
 }
 
 /* ───────── 登录 / 多端双向同步 ───────── */
-
-async function reportSyncResult(result) {
-  const { toast } = await import('./ui.svelte.js');
-  const { applyTheme } = await import('./state.svelte.js');
-  applyTheme();
-
-  const { pulled, pushed, switchedAccount } = result;
-  if (switchedAccount) {
-    if (pushed && pulled) toast(t('auth.syncMerged'));
-    else if (pushed) toast(t('auth.syncUploaded'));
-    else if (pulled) toast(t('auth.syncSwitchedLoaded'));
-    else toast(t('auth.syncSwitched'));
-  } else if (pushed && pulled) {
-    toast(t('auth.syncMerged'));
-  } else if (pushed) {
-    toast(t('auth.syncUploaded'));
-  } else if (pulled) {
-    toast(t('auth.syncLoaded'));
-  }
-}
 
 async function performBidirectionalSync() {
   const user = await requireUser();
@@ -323,7 +301,7 @@ async function performBidirectionalSync() {
       pushed = true;
     }
     writeSyncMeta(APP_ID, user.id);
-    return { pulled, pushed, switchedAccount, userId: user.id, notify: reportSyncResult };
+    return { pulled, pushed, switchedAccount, userId: user.id };
   }
 
   if (hasCloud) {
@@ -335,25 +313,42 @@ async function performBidirectionalSync() {
     pushed = true;
   }
   writeSyncMeta(APP_ID, user.id);
-  return { pulled, pushed, switchedAccount, userId: user.id, notify: reportSyncResult };
+  return { pulled, pushed, switchedAccount, userId: user.id };
+}
+
+/** 设置页等用户主动触发的同步结果 Toast（背景同步不调用） */
+export async function toastManualSyncResult(result) {
+  const { applyTheme } = await import('./state.svelte.js');
+  await notifyManualSyncResult(result, {
+    toast,
+    onBeforeNotify: applyTheme,
+    labels: {
+      merged: t('auth.syncMerged'),
+      uploaded: t('auth.syncUploaded'),
+      downloaded: t('auth.syncLoaded'),
+      accountLoaded: t('auth.syncSwitchedLoaded'),
+      accountSwitched: t('auth.syncSwitched')
+    }
+  });
 }
 
 const { syncBidirectional, scheduleBidirectionalSync, resetCooldown: resetSyncCooldown } =
   createBidirectionalSync({
-    performSync: performBidirectionalSync,
-    onError: async () => {
-      const { toast } = await import('./ui.svelte.js');
-      toast(t('auth.syncFailed'));
+    performSync: async () => {
+      try {
+        return await performBidirectionalSync();
+      } catch (err) {
+        notifySyncError(err);
+        throw err;
+      }
     },
     onSilentPull: async () => {
-      const { toast } = await import('./ui.svelte.js');
       const { applyTheme } = await import('./state.svelte.js');
       applyTheme();
-      toast(t('sync.pulledFromCloud'));
     }
   });
 
-export { syncBidirectional, scheduleBidirectionalSync, resetSyncCooldown };
+export { syncBidirectional, scheduleBidirectionalSync, resetSyncCooldown, withSyncNotify };
 
 /** @deprecated 使用 syncBidirectional */
 export async function autoSyncOnLogin() {

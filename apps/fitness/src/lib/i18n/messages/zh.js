@@ -437,7 +437,9 @@ export default {
     cloudEmpty: '云端暂无数据，请先上传一次',
     workoutUploaded: '训练记录已同步到云端（{sessions} 次 / {logs} 条）',
     workoutFailed: '云端同步失败，可在设置页手动上传',
-    pulledFromCloud: '已从云端同步最新训练记录'
+    pulledFromCloud: '已从云端同步最新训练记录',
+    defaultError: '同步失败',
+    banner: '云同步失败：{reason}'
   },
   calc: {
     perSide: '每侧',

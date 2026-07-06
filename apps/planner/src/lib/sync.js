@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { createBidirectionalSync, readSyncMeta, writeSyncMeta } from '@life-os/sync';
+import { createBidirectionalSync, readSyncMeta, writeSyncMeta, notifyManualSyncResult } from '@life-os/sync';
 import {
   S,
   save,
@@ -155,17 +155,19 @@ export function syncNow(mode = 'merge') {
   return withSyncNotify(() => withSyncStatus(() => syncNowInternal(mode)));
 }
 
-function reportSyncResult(result) {
-  applyTheme();
-  const { pulled, pushed, switchedAccount } = result;
-  if (switchedAccount) {
-    if (pulled) toast(t('sync.accountLoaded'));
-    else toast(t('sync.accountSwitched'));
-    return;
-  }
-  if (pushed && pulled) toast(t('sync.merged'));
-  else if (pushed) toast(t('sync.uploaded'));
-  else if (pulled) toast(t('sync.downloaded'));
+/** 设置页等用户主动触发的同步结果 Toast（背景同步不调用） */
+export function toastManualSyncResult(result) {
+  void notifyManualSyncResult(result, {
+    toast,
+    onBeforeNotify: applyTheme,
+    labels: {
+      merged: t('sync.merged'),
+      uploaded: t('sync.uploaded'),
+      downloaded: t('sync.downloaded'),
+      accountLoaded: t('sync.accountLoaded'),
+      accountSwitched: t('sync.accountSwitched')
+    }
+  });
 }
 
 /**
@@ -226,7 +228,7 @@ async function performBidirectionalSync() {
       ({ pulled } = await hydrateForAccountSwitch(userId, state));
       writeSyncMeta(APP_ID, userId);
       lastPushedMutationAt = mutationAtStart;
-      return { pulled, pushed: false, switchedAccount: true, userId, notify: reportSyncResult };
+      return { pulled, pushed: false, switchedAccount: true, userId };
     }
 
     if (state && stateHasData(state)) {
@@ -243,14 +245,13 @@ async function performBidirectionalSync() {
     }
 
     writeSyncMeta(APP_ID, userId);
-    return { pulled, pushed, switchedAccount: false, userId, notify: reportSyncResult };
+    return { pulled, pushed, switchedAccount: false, userId };
   });
 }
 
 const { syncBidirectional, scheduleBidirectionalSync, resetCooldown: resetSyncCooldown } =
   createBidirectionalSync({
     performSync: performBidirectionalSync,
-    onError: () => toast(t('sync.failed'), 'error'),
     onSilentPull: () => {
       applyTheme();
     }
@@ -285,8 +286,7 @@ async function runAutoSync() {
     // force：绕过 4s cooldown，否则「同步后立即编辑」的改动会被跳过
     await syncBidirectional({ silent: true, force: true });
   } catch {
-    /* 失败已由 withSyncStatus 记录；有待传改动时轻量提示 */
-    if (syncState.pendingChanges) toast(t('sync.failed'), 'error');
+    /* markSyncError 已写入 syncState；设置页可见 pending/offline 状态 */
   }
   // 同步进行中又有新改动 → 追加一轮，保证收敛
   if (lastMutationAt > lastPushedMutationAt) {

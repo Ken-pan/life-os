@@ -83,7 +83,6 @@
     } else {
       updateTask(taskEditor.taskId, payload);
     }
-    toast(t('toast.saved'));
     closeTaskEditor();
   }
 

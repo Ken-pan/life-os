@@ -1,5 +1,5 @@
 import { browser } from '$app/environment'
-import { createDebouncedTask, formatSyncErrorMessage } from '@life-os/sync'
+import { createDebouncedTask } from '@life-os/sync'
 import { supabase } from './supabase.js'
 import { MUSIC_TABLES as T } from './supabaseTables.js'
 import { prefetchSignedUrls } from './cloudAudio.js'
@@ -14,6 +14,7 @@ import {
 import { peekAlbumArt, setAlbumArtRemoteUrl } from './albumArtStore.js'
 import { S, save } from './state.svelte.js'
 import { t } from './i18n/index.js'
+import { notifySyncError, withSyncNotify } from './syncNotify.js'
 
 const APP_ID = 'music'
 const SCHEMA_VERSION = 4
@@ -24,14 +25,7 @@ async function requireUser() {
   return data.user
 }
 
-export function syncErrorMessage(err) {
-  return formatSyncErrorMessage(err, {
-    network: t('auth.errNetwork'),
-    rateLimit: t('auth.errRateLimit'),
-    fallback: t('sync.failed'),
-    schemaCache: t('sync.schemaCache'),
-  })
-}
+export { syncErrorMessage } from './syncNotify.js'
 
 async function fetchCloudSnapshot(userId) {
   const [stateRes, tracksRes, playlistsRes, ptRes] = await Promise.all([
@@ -271,14 +265,19 @@ function applyThemeFromCloud() {
 }
 
 /** @param {{ silent?: boolean, force?: boolean }} [opts] */
-export async function syncBidirectional(opts = {}) {
+async function syncBidirectionalInternal(opts = {}) {
   if (!browser) return
   const user = await requireUser()
   await pushLocal(user.id)
   await pullCloud(user.id)
   if (!opts.silent) {
-    import('./ui.svelte.js').then(({ toast }) => toast(t('sync.ok')))
+    import('./ui.svelte.js').then(({ toast }) => toast(t('sync.ok'), 'success', { key: 'sync-ok' }))
   }
+}
+
+/** @param {{ silent?: boolean, force?: boolean }} [opts] */
+export async function syncBidirectional(opts = {}) {
+  return syncBidirectionalInternal(opts)
 }
 
 let lastSync = 0
@@ -286,26 +285,20 @@ export function resetSyncCooldown() {
   lastSync = 0
 }
 
-const debouncedSync = createDebouncedTask(
-  () => syncBidirectional({ silent: true }),
-  4000,
-)
+const debouncedSync = createDebouncedTask(async () => {
+  try {
+    await syncBidirectionalInternal({ silent: true })
+  } catch (err) {
+    notifySyncError(err)
+  }
+}, 4000)
 
 export function scheduleAutoCloudPush() {
   debouncedSync.schedule()
 }
 
 export async function syncBidirectionalSafe(opts = {}) {
-  try {
-    await syncBidirectional(opts)
-  } catch (err) {
-    if (!opts.silent) {
-      import('./ui.svelte.js').then(({ toast }) =>
-        toast(syncErrorMessage(err), { error: true }),
-      )
-    }
-    throw err
-  }
+  return withSyncNotify(() => syncBidirectionalInternal(opts))
 }
 
 void APP_ID

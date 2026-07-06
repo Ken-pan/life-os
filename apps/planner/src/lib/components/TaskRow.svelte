@@ -203,7 +203,10 @@
     const date = tomorrowKey();
     updateTask(task.id, { dueDate: date });
     closeActions();
-    toast(t('toast.scheduled', { title: task.title, date: fmtDate(date) }));
+    toast(t('toast.scheduled', { title: task.title, date: fmtDate(date) }), 'success', {
+      key: 'task-scheduled-tomorrow',
+      dedupeMs: 4000
+    });
   }
 
   function doDelete() {

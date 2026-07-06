@@ -13,6 +13,7 @@
   import KnowledgeSheet from '$lib/components/KnowledgeSheet.svelte';
   import FitnessToolSheet from '$lib/components/FitnessToolSheet.svelte';
   import Toast from '$lib/components/Toast.svelte';
+  import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte';
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js';
   import { auth, initAuth } from '$lib/auth.svelte.js';
   import { bindVisibilitySync } from '@life-os/sync';
@@ -144,6 +145,7 @@
 <div class="app-shell">
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
+  <SyncErrorBanner />
   <SideNav />
 
   <div class="main-wrap" data-mobile-chrome="tabbar">

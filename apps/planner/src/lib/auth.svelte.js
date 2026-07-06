@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { createAuthSyncHandler } from '@life-os/sync';
+import { createAuthSyncHandler, mapAuthErrorMessage } from '@life-os/sync';
 import { supabase } from './supabase.js';
 import { clearAllCache } from './localCache.js';
 import { syncBidirectional, resetSyncCooldown } from './sync.js';
@@ -25,7 +25,7 @@ export function initAuth() {
       resetSyncCooldown();
       clearAllCache();
     },
-    onSyncSession: ({ silent, force }) => syncBidirectional({ silent, force })
+    onSyncSession: ({ force }) => syncBidirectional({ silent: true, force })
   });
 
   const { data } = supabase.auth.onAuthStateChange((event, session) => {
@@ -56,14 +56,17 @@ export async function signOut() {
   clearAllCache();
 }
 
+const authErrorLabels = () => ({
+  invalidCredentials: t('auth.errInvalidCredentials'),
+  emailNotConfirmed: t('auth.errEmailNotConfirmed'),
+  alreadyRegistered: t('auth.errAlreadyRegistered'),
+  passwordShort: t('auth.errPasswordShort'),
+  invalidEmail: t('auth.errInvalidEmail'),
+  rateLimit: t('auth.errRateLimit'),
+  network: t('auth.errNetwork'),
+  generic: t('auth.errGeneric')
+});
+
 export function authErrorMessage(err) {
-  const msg = err?.message || '';
-  if (/invalid login credentials/i.test(msg)) return t('auth.errInvalidCredentials');
-  if (/email not confirmed/i.test(msg)) return t('auth.errEmailNotConfirmed');
-  if (/user already registered/i.test(msg)) return t('auth.errAlreadyRegistered');
-  if (/password should be at least/i.test(msg)) return t('auth.errPasswordShort');
-  if (/unable to validate email|invalid email/i.test(msg)) return t('auth.errInvalidEmail');
-  if (/rate limit|too many requests/i.test(msg)) return t('auth.errRateLimit');
-  if (/network|fetch/i.test(msg)) return t('auth.errNetwork');
-  return msg || t('auth.errGeneric');
+  return mapAuthErrorMessage(err, authErrorLabels());
 }

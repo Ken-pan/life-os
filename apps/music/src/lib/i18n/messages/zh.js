@@ -327,6 +327,8 @@ export default {
     now: '立即同步',
     ok: '同步完成',
     failed: '同步失败',
+    defaultError: '同步失败',
+    banner: '云同步失败：{reason}',
     schemaCache: '云端 API 暂时不可用，请稍后在设置中重试同步',
     notSignedIn: '请先登录',
     signInFirst: '登录 Life OS 账号',

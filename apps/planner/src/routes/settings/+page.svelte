@@ -14,7 +14,7 @@
   import { listLabel } from '$lib/i18n/index.js';
   import { auth, signOut } from '$lib/auth.svelte.js';
   import { isSupabaseConfigured } from '$lib/supabase.js';
-  import { pushToCloud, pullFromCloud, syncNow, lastSyncLabel } from '$lib/sync.js';
+  import { pushToCloud, pullFromCloud, syncNow, toastManualSyncResult, lastSyncLabel } from '$lib/sync.js';
   import { syncState } from '$lib/syncStatus.svelte.js';
   import {
     notificationPermission,
@@ -87,13 +87,11 @@
     if (!auth.user || syncBusy) return;
     syncBusy = true;
     try {
-      const { pushed, pulled } = await syncNow(mode);
-      if (pushed && pulled) toast(t('sync.merged'));
-      else if (pushed) toast(t('sync.uploaded'));
-      else if (pulled) toast(t('sync.downloaded'));
-      else toast(t('sync.upToDate'));
-    } catch (e) {
-      toast(e?.message || t('sync.failed'), 'error');
+      const result = await syncNow(mode);
+      if (result.pushed || result.pulled) toastManualSyncResult(result);
+      else toast(t('sync.upToDate'), 'success', { key: 'sync-up-to-date' });
+    } catch {
+      /* withSyncNotify → SyncErrorBanner */
     } finally {
       syncBusy = false;
     }
@@ -104,9 +102,9 @@
     syncBusy = true;
     try {
       await pushToCloud();
-      toast(t('sync.uploaded'));
-    } catch (e) {
-      toast(e?.message || t('sync.failed'), 'error');
+      toast(t('sync.uploaded'), 'success', { key: 'sync-uploaded' });
+    } catch {
+      /* withSyncNotify → SyncErrorBanner */
     } finally {
       syncBusy = false;
     }
@@ -117,9 +115,9 @@
     syncBusy = true;
     try {
       await pullFromCloud('merge');
-      toast(t('sync.downloaded'));
-    } catch (e) {
-      toast(e?.message || t('sync.failed'), 'error');
+      toast(t('sync.downloaded'), 'success', { key: 'sync-downloaded' });
+    } catch {
+      /* withSyncNotify → SyncErrorBanner */
     } finally {
       syncBusy = false;
     }

@@ -11,6 +11,7 @@
   import QueueDrawer from '$lib/components/QueueDrawer.svelte'
   import UtilityPane from '$lib/components/UtilityPane.svelte'
   import Toast from '$lib/components/Toast.svelte'
+  import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte'
   import DocumentHead from '$lib/components/DocumentHead.svelte'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { applyLocale, t } from '$lib/i18n/index.js'
@@ -180,6 +181,7 @@
   <SideNav />
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
+  <SyncErrorBanner />
 
   <div
     class="main-wrap"

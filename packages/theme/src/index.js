@@ -15,6 +15,7 @@ export { applyDocumentMeta } from './documentMeta.js';
 export { lockScroll, unlockScroll } from './scrollLock.js';
 export { activateFocusTrap } from './focusTrap.js';
 export { createImeGuard } from './createImeGuard.js';
+export { createToastDeduper, resolveToastDuration } from './toastPolicy.js';
 
 export {
   bindViewportHeight,

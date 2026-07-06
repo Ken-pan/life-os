@@ -43,3 +43,41 @@ export function formatSyncErrorMessage(
   err: unknown,
   labels: { network: string; rateLimit: string; fallback: string; schemaCache?: string }
 ): string;
+
+export function createSyncNotify(options: {
+  formatError: (err: unknown) => string;
+}): {
+  subscribeSyncError: (listener: (message: string) => void) => () => void;
+  syncErrorMessage: (err: unknown) => string;
+  notifySyncError: (err: unknown) => void;
+  withSyncNotify: <T>(fn: () => Promise<T>) => Promise<T>;
+};
+
+export function mapAuthErrorMessage(
+  err: unknown,
+  labels: {
+    invalidCredentials: string;
+    emailNotConfirmed: string;
+    alreadyRegistered: string;
+    passwordShort: string;
+    invalidEmail: string;
+    rateLimit: string;
+    network: string;
+    generic: string;
+  }
+): string;
+
+export function notifyManualSyncResult(
+  result: { pulled?: boolean; pushed?: boolean; switchedAccount?: boolean },
+  options: {
+    toast: (msg: string, tone?: string, options?: { key?: string }) => void;
+    labels: {
+      merged: string;
+      uploaded: string;
+      downloaded: string;
+      accountLoaded: string;
+      accountSwitched: string;
+    };
+    onBeforeNotify?: () => void | Promise<void>;
+  }
+): Promise<void>;

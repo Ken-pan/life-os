@@ -3,11 +3,10 @@
 </script>
 
 <div
-  class="toast"
+  class="toast toast--{toastState.tone}"
   class:show={toastState.show}
-  class:toast--error={toastState.error}
-  role={toastState.error ? 'alert' : 'status'}
-  aria-live={toastState.error ? 'assertive' : 'polite'}
+  role={toastState.tone === 'error' || toastState.tone === 'warn' ? 'alert' : 'status'}
+  aria-live={toastState.tone === 'error' || toastState.tone === 'warn' ? 'assertive' : 'polite'}
 >
   <span class="toast-msg">{toastState.msg}</span>
   {#if toastState.show}

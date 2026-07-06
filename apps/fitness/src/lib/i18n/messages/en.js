@@ -437,7 +437,9 @@ export default {
     cloudEmpty: 'No cloud data yet — upload first',
     workoutUploaded: 'Workout synced to cloud ({sessions} sessions / {logs} logs)',
     workoutFailed: 'Cloud sync failed — upload manually in Settings',
-    pulledFromCloud: 'Latest workouts synced from cloud'
+    pulledFromCloud: 'Latest workouts synced from cloud',
+    defaultError: 'Sync failed',
+    banner: 'Cloud sync failed: {reason}'
   },
   calc: {
     perSide: 'per side',

@@ -6,7 +6,8 @@ const syncNotify = createSyncNotify({
     formatSyncErrorMessage(err, {
       network: t('auth.errNetwork'),
       rateLimit: t('auth.errRateLimit'),
-      fallback: t('sync.defaultError')
+      fallback: t('sync.defaultError'),
+      schemaCache: t('sync.schemaCache')
     })
 });
 

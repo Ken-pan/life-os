@@ -16,7 +16,7 @@
   import { unlockAudio } from '$lib/audio.js';
   import { exportBackup, importBackup } from '$lib/backup.js';
   import { auth, signOut, authErrorMessage } from '$lib/auth.svelte.js';
-  import { pushToCloud, pullFromCloud, syncErrorMessage } from '$lib/sync.js';
+  import { pushToCloud, pullFromCloud, withSyncNotify } from '$lib/sync.js';
   import { reveal } from '$lib/actions/reveal.js';
   import { t } from '$lib/i18n/index.js';
   import Icon from '$lib/components/Icon.svelte';
@@ -125,10 +125,10 @@
     if (syncing) return;
     syncing = true;
     try {
-      const { sessions, logs } = await pushToCloud();
-      toast(t('settings.toastUploaded', { sessions, logs }));
-    } catch (err) {
-      toast(syncErrorMessage(err));
+      const { sessions, logs } = await withSyncNotify(() => pushToCloud());
+      toast(t('settings.toastUploaded', { sessions, logs }), 'success', { key: 'sync-uploaded' });
+    } catch {
+      /* withSyncNotify → SyncErrorBanner */
     } finally {
       syncing = false;
     }
@@ -139,15 +139,17 @@
     if (mode === 'replace' && !confirm(t('settings.confirmCloudReplace'))) return;
     syncing = true;
     try {
-      const { sessions } = await pullFromCloud(mode);
+      const { sessions } = await withSyncNotify(() => pullFromCloud(mode));
       applyTheme();
       toast(
         mode === 'merge'
           ? t('settings.toastCloudMerge', { sessions })
-          : t('settings.toastCloudRestore', { sessions })
+          : t('settings.toastCloudRestore', { sessions }),
+        'success',
+        { key: mode === 'merge' ? 'sync-merged' : 'sync-downloaded' }
       );
-    } catch (err) {
-      toast(syncErrorMessage(err));
+    } catch {
+      /* withSyncNotify → SyncErrorBanner */
     } finally {
       syncing = false;
     }
@@ -174,7 +176,7 @@
         applyTheme();
         toast(mode === 'merge' ? t('settings.toastImportMerge') : t('settings.toastImportReplace'));
       } catch (err) {
-        toast(err.message || t('settings.importFailed'));
+        toast(err.message || t('settings.importFailed'), 'error');
       }
     };
     reader.readAsText(file);
