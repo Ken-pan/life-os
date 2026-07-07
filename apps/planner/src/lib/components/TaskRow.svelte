@@ -42,7 +42,7 @@
   const kind = $derived(getTaskKind(task));
   const list = $derived(getListById(task.listId));
   const hasRecurrence = $derived(task.recurrence?.rule && task.recurrence.rule !== 'none');
-  const hasTimedPlan = $derived(Boolean(task.scheduledStart || task.dueTime));
+  const hasScheduledBlock = $derived(Boolean(task.scheduledStart));
   const metaLine = $derived(
     buildTaskMetaLine(task, t, { contextDate, minimal: metaMinimal, overdue }),
   );
@@ -362,14 +362,14 @@
           <button
             type="button"
             class="task-schedule-btn"
-            class:task-schedule-btn--plan={!hasTimedPlan}
-            class:task-schedule-btn--adjust={hasTimedPlan}
+            class:task-schedule-btn--plan={!hasScheduledBlock}
+            class:task-schedule-btn--adjust={hasScheduledBlock}
             onclick={(e) => {
               e.stopPropagation();
               openSchedulePopover(task.id, scheduleDate);
             }}
           >
-            {hasTimedPlan ? t('schedule.scheduleAdjustShort') : t('schedule.scheduleActionShort')}
+            {hasScheduledBlock ? t('schedule.scheduleAdjustShort') : t('schedule.scheduleActionShort')}
           </button>
         {/if}
       </div>

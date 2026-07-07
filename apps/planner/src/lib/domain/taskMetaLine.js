@@ -1,5 +1,10 @@
 import { getTaskKind } from './taskKind.js'
-import { taskDurationMinutes, formatDurationCompact } from './schedule.js'
+import {
+  taskDurationMinutes,
+  formatDurationCompact,
+  parseTimeToMinutes,
+  formatMinutesAsTime,
+} from './schedule.js'
 import { formatDateShort } from './dateFormat.js'
 import { recurrenceLabel } from './recurrence.js'
 
@@ -15,33 +20,16 @@ import { recurrenceLabel } from './recurrence.js'
 export function buildTaskMetaLine(task, t, opts = {}) {
   const { contextDate, minimal = false, overdue = false } = opts
   const kind = getTaskKind(task)
-  const hasTime = Boolean(task.scheduledStart || task.dueTime)
   const onContextDay = Boolean(
     contextDate && task.dueDate === contextDate && !overdue,
   )
 
   if (minimal) {
-    const time = task.scheduledStart || task.dueTime
-    return time || ''
-  }
-
-  if (!hasTime) {
-    /** @type {string[]} */
-    const parts = []
-    if (onContextDay || (!task.dueDate && contextDate)) {
-      parts.push(t('task.unscheduledLine'))
-    } else if (task.dueDate) {
-      parts.push(formatDateShort(task.dueDate), t('task.unscheduledOnly'))
-    } else {
-      parts.push(t('task.unscheduledOnly'))
+    if (task.scheduledStart) {
+      return t('schedule.scheduledShort', { start: task.scheduledStart })
     }
-    if (task.priority > 0 && task.priority <= 2) {
-      parts.push(t(`task.p${task.priority}`))
-    }
-    if (task.recurrence?.rule && task.recurrence.rule !== 'none') {
-      parts.push(recurrenceLabel(task.recurrence, t))
-    }
-    return parts.join(' · ')
+    if (task.dueTime) return t('schedule.dueShort', { time: task.dueTime })
+    return ''
   }
 
   /** @type {string[]} */
@@ -51,12 +39,39 @@ export function buildTaskMetaLine(task, t, opts = {}) {
     parts.push(formatDateShort(task.dueDate))
   }
 
-  const time = task.scheduledStart || task.dueTime
-  if (time) parts.push(time)
-
-  if (onContextDay || task.scheduledStart || task.dueTime) {
-    parts.push(formatDurationCompact(taskDurationMinutes(task), t))
+  if (task.scheduledStart) {
+    const startMinutes = parseTimeToMinutes(task.scheduledStart)
+    const duration = taskDurationMinutes(task)
+    parts.push(
+      t('schedule.scheduledRange', {
+        start: task.scheduledStart,
+        end: formatMinutesAsTime(startMinutes + duration),
+      }),
+    )
+    parts.push(
+      t('schedule.estimatedDuration', {
+        duration: formatDurationCompact(duration, t),
+      }),
+    )
+  } else {
+    if (task.dueTime) parts.push(t('schedule.dueAt', { time: task.dueTime }))
+    if (onContextDay || (!task.dueDate && contextDate)) {
+      parts.push(t('task.unscheduledLine'))
+    } else if (task.dueDate) {
+      parts.push(formatDateShort(task.dueDate), t('task.unscheduledOnly'))
+    } else {
+      parts.push(t('task.unscheduledOnly'))
+    }
+    if (task.dueTime && (onContextDay || task.durationMinutes)) {
+      parts.push(
+        t('schedule.estimatedDuration', {
+          duration: formatDurationCompact(taskDurationMinutes(task), t),
+        }),
+      )
+    }
   }
+
+  if (task.scheduledStart && task.dueTime) parts.push(t('schedule.dueAt', { time: task.dueTime }))
 
   if (kind === 'focus') parts.push(t('task.kindFocus'))
 

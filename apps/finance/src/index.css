@@ -4051,6 +4051,15 @@ div.input {
 
   html:not(.standalone-pwa) body {
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .main-wrap > .page-header {
+    flex-shrink: 0;
+  }
+
+  .main-wrap > .content {
+    min-height: 0;
   }
 
   .sidebar {

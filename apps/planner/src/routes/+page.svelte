@@ -68,6 +68,23 @@
       url.searchParams.delete('view');
       url.searchParams.delete('date');
     }
+    gotoTimelineUrl(url);
+  }
+
+  /** @param {string} dateKey */
+  function setScheduleDate(dateKey) {
+    const url = new URL(page.url);
+    url.searchParams.set('view', 'timeline');
+    if (dateKey === todayKey()) {
+      url.searchParams.delete('date');
+    } else {
+      url.searchParams.set('date', dateKey);
+    }
+    gotoTimelineUrl(url);
+  }
+
+  /** @param {URL} url */
+  function gotoTimelineUrl(url) {
     const target = `${url.pathname}${url.search}${url.hash}`;
     goto(target, { replaceState: true, keepFocus: true, noScroll: true });
   }
@@ -108,7 +125,11 @@
       <TodayViewToggle mode={viewMode} onChange={setViewMode} />
 
       {#if viewMode === 'timeline'}
-        <DaySchedulePanel dateKey={scheduleDate} showToolbar={scheduleDate !== todayKey()} />
+        <DaySchedulePanel
+          dateKey={scheduleDate}
+          showToolbar={scheduleDate !== todayKey()}
+          onDateChange={setScheduleDate}
+        />
       {:else}
         {#if !allPlanDone}
           <InsightCard />

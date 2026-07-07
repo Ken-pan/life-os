@@ -329,6 +329,25 @@ const results = []
       pwaMetrics.ok,
       JSON.stringify(pwaMetrics),
     )
+
+    // More sheet must not leave body scroll-locked after close
+    await page.evaluate(() => document.documentElement.classList.remove('standalone-pwa'))
+    await page.locator('.mobile-tabbar .mobile-tab').filter({ hasText: '更多' }).click()
+    await page.waitForTimeout(120)
+    await page.locator('.mobile-more-close').click()
+    await page.waitForTimeout(120)
+    const afterMoreScroll = await page.evaluate(() => {
+      const bodyPos = getComputedStyle(document.body).position
+      window.scrollTo(0, 900)
+      return { bodyPos, scrollY: window.scrollY }
+    })
+    record(
+      results,
+      'mobile',
+      'scroll:after-more-sheet',
+      afterMoreScroll.bodyPos !== 'fixed' && afterMoreScroll.scrollY > 200,
+      JSON.stringify(afterMoreScroll),
+    )
   } catch (e) {
     record(results, 'mobile', 'setup', false, e.message)
   } finally {

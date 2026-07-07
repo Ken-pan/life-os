@@ -1,4 +1,7 @@
-import { purchaseEnrichmentFromRow, type PurchaseEnrichment } from '../engine/purchaseEnrichment'
+import {
+  purchaseEnrichmentFromRow,
+  type PurchaseEnrichment,
+} from '../engine/purchaseEnrichment'
 import { PurchaseEnrichmentBlock } from './PurchaseEnrichmentBlock'
 import type { MerchantOrderCatalog } from '../types'
 

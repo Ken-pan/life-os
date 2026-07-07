@@ -40,6 +40,11 @@ describe('schedule', () => {
     expect(layout?.height).toBe(104)
   })
 
+  it('returns null for blocks outside the visible day window', () => {
+    expect(blockLayout('07:00', 30)).toBeNull()
+    expect(blockLayout('23:30', 30)).toBeNull()
+  })
+
   it('defaults duration by task kind', () => {
     expect(defaultDurationMinutes({ meta: { kind: 'focus' } })).toBe(60)
     expect(defaultDurationMinutes({ meta: { kind: 'micro' } })).toBe(15)

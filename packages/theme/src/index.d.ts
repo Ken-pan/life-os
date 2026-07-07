@@ -101,6 +101,7 @@ export declare function bootResolveTheme(
 
 export declare function lockScroll(): void
 export declare function unlockScroll(): void
+export declare function resetScrollLock(): void
 
 export declare function isStandalonePwa(): boolean
 export declare function needsViewportHeightSync(): boolean

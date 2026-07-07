@@ -2092,6 +2092,22 @@ html, body {
   position: relative;
 }
 
+.day-timeline-slot-hitbox {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  min-height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: copy;
+}
+
+.day-timeline-grid {
+  pointer-events: none;
+}
+
 .day-timeline-canvas--drop-target {
   outline: 2px dashed color-mix(in srgb, var(--accent) 45%, transparent);
   outline-offset: -2px;
@@ -2137,6 +2153,7 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 1;
+  pointer-events: none;
 }
 
 .day-timeline-empty {
@@ -2149,6 +2166,7 @@ html, body {
   color: var(--t3);
   font-size: var(--text-sm);
   text-align: center;
+  pointer-events: none;
 }
 
 .time-block {
@@ -2162,6 +2180,8 @@ html, body {
   border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
   background: color-mix(in srgb, var(--card) 92%, transparent);
   overflow: hidden;
+  cursor: default;
+  pointer-events: auto;
 }
 
 .time-block--interactive {
@@ -2521,6 +2541,54 @@ html.planner-schedule-modal-open .schedule-popover {
   gap: var(--space-2);
 }
 
+.schedule-slot-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--control-h);
+  margin: 0 0 var(--space-3);
+  border-radius: var(--radius-control);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.schedule-slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.schedule-slot-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-2-5);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  color: var(--t1);
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.schedule-slot-task span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .schedule-popover-clear {
   margin-right: auto;
   color: var(--t3);
@@ -2764,8 +2832,16 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
   }
 
   .unscheduled-panel {
-    order: 1;
+    position: fixed;
+    left: max(var(--page-gutter), var(--safe-left-effective));
+    right: max(var(--page-gutter), var(--safe-right-effective));
+    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-2));
+    z-index: calc(var(--z-nav, 30) + 1);
+    max-height: min(48dvh, 420px);
     padding: var(--space-2) var(--space-2-5);
+    overflow: hidden;
+    border-radius: 24px 24px var(--radius-control) var(--radius-control);
+    box-shadow: var(--shadow-elevated);
   }
 
   .unscheduled-panel-head {
@@ -2774,8 +2850,15 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     align-items: center;
   }
 
+  .unscheduled-panel .unscheduled-list {
+    max-height: calc(min(48dvh, 420px) - 72px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: var(--space-1);
+  }
+
   .day-timeline-shell {
-    order: 2;
+    order: 1;
   }
 
   .main-col[data-mobile-chrome='tabbar'] .wrap:has(.day-timeline-shell) {

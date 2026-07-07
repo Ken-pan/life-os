@@ -53,6 +53,7 @@ import {
   activateFocusTrap,
   lockScroll,
   unlockScroll,
+  resetScrollLock,
   bindViewportHeight,
   bindPwaForegroundResume,
 } from '@life-os/theme'
@@ -311,6 +312,7 @@ export function AppShell() {
     return () => {
       cleanupViewport()
       cleanupForeground()
+      resetScrollLock()
     }
   }, [])
 
@@ -576,12 +578,13 @@ export function AppShell() {
   }
 
   return (
-    <div className="app-shell">
+    <>
       <PortraitGate
         enabled={pwaSettings.lockPortraitOnPhone}
         title={t('settings.rotatePortrait')}
         hint={t('settings.rotatePortraitHint')}
       />
+      <div className="app-shell">
       <div className="safari-chrome-tint-top" aria-hidden="true" />
       <div className="safari-chrome-tint-bottom" aria-hidden="true" />
       <ExtensionSyncBridge />
@@ -639,7 +642,7 @@ export function AppShell() {
         </button>
       </aside>
 
-      <div className="main-wrap">
+      <div className="main-wrap" data-mobile-chrome="tabbar">
         <header className="page-header">
           <div className="page-header-brand" aria-label="Finance OS">
             <img
@@ -955,5 +958,6 @@ export function AppShell() {
         </>
       )}
     </div>
+    </>
   )
 }

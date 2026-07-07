@@ -8,6 +8,7 @@
   import Toast from '$lib/components/Toast.svelte'
   import TaskEditorSheet from '$lib/components/TaskEditorSheet.svelte'
   import QuickSchedulePopover from '$lib/components/schedule/QuickSchedulePopover.svelte'
+  import ScheduleSlotSheet from '$lib/components/schedule/ScheduleSlotSheet.svelte'
   import Fab from '$lib/components/Fab.svelte'
   import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte'
   import DocumentHead from '$lib/components/DocumentHead.svelte'
@@ -149,3 +150,4 @@
 <Toast />
 <TaskEditorSheet />
 <QuickSchedulePopover />
+<ScheduleSlotSheet />

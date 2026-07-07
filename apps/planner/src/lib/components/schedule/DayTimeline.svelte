@@ -18,7 +18,7 @@
   import { todayKey } from '$lib/state.svelte.js';
   import { t } from '$lib/i18n/index.js';
   import TimeBlock from './TimeBlock.svelte';
-  import { openSchedulePopover, applyTaskSchedule, toast } from '$lib/ui.svelte.js';
+  import { openSchedulePopover, openScheduleSlot, applyTaskSchedule, toast } from '$lib/ui.svelte.js';
   import { S } from '$lib/state.svelte.js';
 
   /** @type {{ dateKey: string, tasks: import('$lib/types.js').Task[] }} */
@@ -31,13 +31,16 @@
 
   let dragOver = $state(false);
   let desktopDnD = $state(false);
+  let nowMs = $state(Date.now());
+  /** @type {string | null} */
+  let lastScrollKey = $state(null);
 
   const hours = $derived(
     Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, i) => DAY_START_HOUR + i),
   );
   const height = $derived(timelineHeightPx());
   const nowTop = $derived(
-    isTodayDate(dateKey, todayKey()) ? currentTimeMarkerTop() : null,
+    isTodayDate(dateKey, todayKey()) ? currentTimeMarkerTop(nowMs) : null,
   );
   const overlapIds = $derived(overlappingTaskIds(tasks));
   const overlapColumns = $derived(overlapBlockColumns(tasks));
@@ -85,33 +88,67 @@
     });
   }
 
-  onMount(() => {
-    if (!scrollEl) return;
+  /** @param {MouseEvent} e */
+  function onCanvasClick(e) {
+    if (!canvasEl) return;
+    const target = /** @type {Element | null} */ (e.target instanceof Element ? e.target : null);
+    if (target?.closest('.time-block')) return;
 
-    let anchor = 0;
+    const rect = canvasEl.getBoundingClientRect();
+    const topPx = e.clientY - rect.top;
+    const startMinutes = snapMinutesFromTimelineTop(topPx);
+    const start = formatMinutesAsTime(startMinutes);
+    openScheduleSlot(dateKey, start, 30);
+  }
+
+  /** @param {import('$lib/types.js').Task[]} scheduledTasks */
+  function scrollAnchorTop(scheduledTasks) {
     let earliestTop = null;
-    for (const task of tasks) {
+    for (const task of scheduledTasks) {
       if (!task.scheduledStart) continue;
       const layout = blockLayout(task.scheduledStart, taskDurationMinutes(task));
+      if (!layout) continue;
       earliestTop =
         earliestTop == null ? layout.top : Math.min(earliestTop, layout.top);
     }
-    if (earliestTop != null) anchor = earliestTop;
-    if (nowTop != null) {
-      anchor = earliestTop != null ? Math.min(earliestTop, nowTop) : nowTop;
-    }
 
+    const markerTop = isTodayDate(dateKey, todayKey())
+      ? currentTimeMarkerTop(nowMs)
+      : null;
+    if (markerTop != null) {
+      return earliestTop != null ? Math.min(earliestTop, markerTop) : markerTop;
+    }
+    return earliestTop ?? 0;
+  }
+
+  $effect(() => {
+    if (!scrollEl) return;
+
+    const scrollKey = `${dateKey}:${tasks.map((task) => `${task.id}:${task.scheduledStart}:${task.durationMinutes}`).join('|')}`;
+    if (scrollKey === lastScrollKey) return;
+    lastScrollKey = scrollKey;
+
+    const anchor = scrollAnchorTop(tasks);
     scrollEl.scrollTop = Math.max(0, anchor - scrollEl.clientHeight * 0.12);
   });
 
   onMount(() => {
+    const tickNow = () => {
+      nowMs = Date.now();
+    };
+    tickNow();
+    const nowTimer = window.setInterval(tickNow, 60_000);
+
     const mq = window.matchMedia('(min-width: 861px) and (pointer: fine)');
     const sync = () => {
       desktopDnD = mq.matches;
     };
     sync();
     mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
+    return () => {
+      window.clearInterval(nowTimer);
+      mq.removeEventListener('change', sync);
+    };
   });
 </script>
 
@@ -137,6 +174,12 @@
         ondragleave={() => (dragOver = false)}
         ondrop={onDrop}
       >
+        <button
+          type="button"
+          class="day-timeline-slot-hitbox"
+          aria-label={t('schedule.createAtSlot')}
+          onclick={onCanvasClick}
+        ></button>
         <div class="day-timeline-grid" aria-hidden="true">
           {#each hours as hour}
             <div class="day-timeline-grid-line" style:height="{HOUR_HEIGHT_PX}px"></div>

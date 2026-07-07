@@ -54,7 +54,13 @@ export const taskEditor = $state({
 
 /**
  * @param {import('./types.js').Task|null} task
- * @param {{ dueDate?: string | null, listId?: string }} [defaults] 新建任务时的默认值（如当前页面对应的日期）
+ * @param {{
+ *   dueDate?: string | null,
+ *   listId?: string,
+ *   scheduledDate?: string | null,
+ *   scheduledStart?: string | null,
+ *   durationMinutes?: number | null,
+ * }} [defaults] 新建任务时的默认值（如当前页面对应的日期）
  */
 export function openTaskEditor(task = null, defaults = {}) {
   taskEditor.taskId = task?.id ?? null;
@@ -67,9 +73,9 @@ export function openTaskEditor(task = null, defaults = {}) {
         priority: 0,
         dueDate: defaults.dueDate ?? null,
         dueTime: null,
-        scheduledDate: null,
-        scheduledStart: null,
-        durationMinutes: null,
+        scheduledDate: defaults.scheduledDate ?? null,
+        scheduledStart: defaults.scheduledStart ?? null,
+        durationMinutes: defaults.durationMinutes ?? null,
         reminderMinutes: null,
         recurrence: null,
         tags: [],
@@ -117,6 +123,35 @@ export function closeSchedulePopover() {
   schedulePopover.open = false;
   schedulePopover.taskId = null;
   schedulePopover.dateKey = null;
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.remove('planner-schedule-modal-open');
+  }
+}
+
+export const scheduleSlot = $state({
+  open: false,
+  dateKey: /** @type {string | null} */ (null),
+  start: /** @type {string | null} */ (null),
+  durationMinutes: 30,
+});
+
+/**
+ * @param {string} dateKey
+ * @param {string} start
+ * @param {number} [durationMinutes]
+ */
+export function openScheduleSlot(dateKey, start, durationMinutes = 30) {
+  scheduleSlot.dateKey = dateKey;
+  scheduleSlot.start = start;
+  scheduleSlot.durationMinutes = durationMinutes;
+  scheduleSlot.open = true;
+}
+
+export function closeScheduleSlot() {
+  scheduleSlot.open = false;
+  scheduleSlot.dateKey = null;
+  scheduleSlot.start = null;
+  scheduleSlot.durationMinutes = 30;
   if (typeof document !== 'undefined') {
     document.documentElement.classList.remove('planner-schedule-modal-open');
   }

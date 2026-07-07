@@ -29,14 +29,22 @@ body,
 /* PWA standalone: constrain shell to visual viewport (iOS home-screen app) */
 @media (--life-os-mobile) {
   html.standalone-pwa,
-  html.standalone-pwa body {
+  html.standalone-pwa body,
+  html.standalone-pwa #root {
     height: var(--app-vh, 100dvh);
     overflow: hidden;
   }
 
+  html.standalone-pwa #root {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
   html.standalone-pwa .app-shell,
   html.standalone-pwa .app {
-    height: var(--app-vh, 100dvh);
+    flex: 1 1 auto;
+    height: auto;
     min-height: 0;
     overflow: hidden;
     display: flex;
@@ -49,6 +57,13 @@ body,
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  html.standalone-pwa .main-wrap > .page-header,
+  html.standalone-pwa .main-wrap > .appbar {
+    flex-shrink: 0;
   }
 
   html.standalone-pwa #main-content,
@@ -59,6 +74,7 @@ body,
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    touch-action: pan-y;
   }
 
   /* Planner 等直接用 .main-col 壳的应用：主列自身滚动 */

@@ -33,3 +33,18 @@ export function unlockScroll() {
     window.scrollTo(0, scrollY);
   }
 }
+
+/** 强制清除滚动锁（路由卸载 / Sheet 异常关闭时兜底） */
+export function resetScrollLock() {
+  if (typeof document === 'undefined') return;
+  if (locks === 0) return;
+  locks = 0;
+  const body = document.body;
+  body.style.position = '';
+  body.style.top = '';
+  body.style.left = '';
+  body.style.right = '';
+  body.style.width = '';
+  body.style.overflow = '';
+  window.scrollTo(0, scrollY);
+}

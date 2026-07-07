@@ -11,8 +11,8 @@
   import { t, localeTag } from '$lib/i18n/index.js';
   import { todayKey, dateKeyOf } from '$lib/state.svelte.js';
 
-  /** @type {{ dateKey?: string, showToolbar?: boolean }} */
-  let { dateKey = todayKey(), showToolbar = true } = $props();
+  /** @type {{ dateKey?: string, showToolbar?: boolean, onDateChange?: (dateKey: string) => void }} */
+  let { dateKey = todayKey(), showToolbar = true, onDateChange } = $props();
 
   let selected = $state(todayKey());
 
@@ -37,11 +37,15 @@
   function shiftDay(n) {
     const [y, m, d] = selected.split('-').map(Number);
     const dt = new Date(y, m - 1, d + n);
-    selected = dateKeyOf(dt);
+    const next = dateKeyOf(dt);
+    selected = next;
+    onDateChange?.(next);
   }
 
   function jumpToday() {
-    selected = todayKey();
+    const next = todayKey();
+    selected = next;
+    onDateChange?.(next);
   }
 </script>
 
