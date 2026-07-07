@@ -25,7 +25,9 @@ export function buildTaskIndex(tasks) {
   for (const task of tasks) {
     if (task.deletedAt) continue;
     index.byId.set(task.id, task);
-    for (const tag of task.tags) index.tagSet.add(tag);
+    for (const tag of task.tags) {
+      if (tag && String(tag).trim()) index.tagSet.add(tag);
+    }
 
     if (task.completed) continue;
 

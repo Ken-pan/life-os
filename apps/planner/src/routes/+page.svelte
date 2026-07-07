@@ -83,7 +83,7 @@
     <div class="wrap">
       <QuickAddBar dueDate={todayKey()} />
 
-      {#if showProgress && !showClosed}
+      {#if showProgress && !showClosed && viewMode !== 'timeline'}
         <TodayProgressCard
           done={progress.done}
           total={progress.total}
@@ -106,7 +106,9 @@
       {#if viewMode === 'timeline'}
         <DaySchedulePanel dateKey={scheduleDate} showToolbar={scheduleDate !== todayKey()} />
       {:else}
-        <InsightCard />
+        {#if !allPlanDone}
+          <InsightCard />
+        {/if}
 
         {#if fullyEmpty}
           <EmptyState message={t('common.empty')} />
@@ -151,17 +153,19 @@
           {/if}
 
           {#if progress.doneToday.length}
-            <TaskGroup
-              sectionId="done-today"
-              title={t('home.doneToday')}
-              tasks={progress.doneToday}
-              compactRows
-              collapsible
-              defaultExpanded={showClosed || progress.doneToday.length <= 3}
-              {contextDate}
-              onToggle={completeTask}
-              onEdit={editTask}
-            />
+            {#key showClosed}
+              <TaskGroup
+                sectionId="done-today"
+                title={t('home.doneToday')}
+                tasks={progress.doneToday}
+                compactRows
+                collapsible
+                defaultExpanded={showClosed || progress.doneToday.length <= 3}
+                {contextDate}
+                onToggle={completeTask}
+                onEdit={editTask}
+              />
+            {/key}
           {/if}
         {/if}
       {/if}

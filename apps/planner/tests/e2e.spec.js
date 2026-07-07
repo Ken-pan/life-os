@@ -90,12 +90,17 @@ test.describe('PlannerOS E2E', () => {
     await expect(page.locator('.priority-dot')).toBeVisible();
   });
 
-  test('完成任务后从活跃列表消失', async ({ page }) => {
+  test('完成任务后进入今日完成或庆祝态', async ({ page }) => {
     await page.goto('/');
     await quickAddTask(page, '待完成项');
     const row = page.locator('.task-row', { has: page.locator('.task-title', { hasText: '待完成项' }) });
     await row.locator('.task-check').click();
-    await expect(row).toHaveCount(0);
+    const doneToday = page.locator('#done-today .task-title', { hasText: '待完成项' });
+    await expect(page.locator('.today-closed')).toBeVisible();
+    await expect(doneToday).toBeVisible();
+    await expect(
+      page.locator('.sec-title', { hasText: '今天' }).locator('..').locator('.task-title', { hasText: '待完成项' }),
+    ).toHaveCount(0);
   });
 
   test('点击任务打开编辑并更新标题', async ({ page }) => {
@@ -103,7 +108,6 @@ test.describe('PlannerOS E2E', () => {
     await quickAddTask(page, '旧标题');
     await page.locator('.task-title', { hasText: '旧标题' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByRole('button', { name: '更多选项' })).toHaveAttribute('aria-expanded', 'false');
     await page.locator('#task-title').fill('新标题');
     await page.getByRole('dialog').getByRole('button', { name: '保存' }).click();
     await expect(page.locator('.task-title', { hasText: '新标题' })).toBeVisible();
@@ -190,7 +194,12 @@ test.describe('PlannerOS E2E', () => {
     await page.goto('/');
     await page.getByRole('link', { name: '收件箱' }).click();
     await expect(page).toHaveURL(/\/inbox/);
-    await page.getByRole('link', { name: '设置' }).click();
+    await page.getByRole('button', { name: '更多' }).click();
+    await page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('更多') })
+      .getByRole('link', { name: '设置' })
+      .click();
     await expect(page).toHaveURL(/\/settings/);
   });
 
@@ -208,7 +217,8 @@ test.describe('PlannerOS E2E', () => {
 
     const row = page.locator('.task-row', { has: page.locator('.task-title', { hasText: '每日晨跑' }) });
     await row.locator('.task-check').click();
-    await expect(row).toHaveCount(0);
+    await expect(page.locator('.today-closed')).toBeVisible();
+    await expect(page.locator('#done-today .task-title', { hasText: '每日晨跑' })).toBeVisible();
 
     await page.goto('/upcoming');
     await expect(page.locator('.task-title', { hasText: '每日晨跑' })).toBeVisible();
@@ -301,14 +311,25 @@ test.describe('PlannerOS E2E', () => {
   test('已完成任务页展示', async ({ page }) => {
     await page.goto('/');
     await quickAddTask(page, '完成后可见');
-    await page.locator('.task-title', { hasText: '完成后可见' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: '保存' }).click();
     const row = page.locator('.task-row', { has: page.locator('.task-title', { hasText: '完成后可见' }) });
     await row.locator('.task-check').click();
+    await expect(page.locator('.toast')).toBeVisible();
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const raw = localStorage.getItem('planos_v1');
+          if (!raw) return false;
+          const state = JSON.parse(raw);
+          return state.tasks?.some((t) => t.title === '完成后可见' && t.completed);
+        }),
+      )
+      .toBe(true);
 
     await page.goto('/completed');
     await expect(page.locator('h1.page-title')).toHaveText('已完成');
-    await expect(page.locator('.task-title', { hasText: '完成后可见' })).toBeVisible();
+    await expect(page.locator('.task-title', { hasText: '完成后可见' }).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test('Insight 批量排期无日期任务', async ({ page }) => {

@@ -5,6 +5,7 @@ import {
   defaultDurationMinutes,
   findScheduleConflicts,
   overlappingTaskIds,
+  overlapBlockColumns,
   computeDayScheduleStats,
   snapMinutesFromTimelineTop,
   formatMinutesAsTime,
@@ -51,6 +52,26 @@ describe('schedule', () => {
     ]
     expect(findScheduleConflicts(tasks, '09:45', 30, 'c')).toHaveLength(2)
     expect(overlappingTaskIds(tasks).size).toBe(2)
+  })
+
+  it('assigns side-by-side columns for overlapping blocks', () => {
+    const tasks = [
+      task({ id: 'a', scheduledStart: '09:00', durationMinutes: 90 }),
+      task({ id: 'b', scheduledStart: '09:30', durationMinutes: 30 }),
+    ]
+    const columns = overlapBlockColumns(tasks)
+    expect(columns.get('a')).toEqual({ column: 0, columns: 2 })
+    expect(columns.get('b')).toEqual({ column: 1, columns: 2 })
+  })
+
+  it('keeps single column for non-overlapping blocks', () => {
+    const tasks = [
+      task({ id: 'a', scheduledStart: '09:00', durationMinutes: 30 }),
+      task({ id: 'b', scheduledStart: '10:00', durationMinutes: 30 }),
+    ]
+    const columns = overlapBlockColumns(tasks)
+    expect(columns.get('a')).toEqual({ column: 0, columns: 1 })
+    expect(columns.get('b')).toEqual({ column: 0, columns: 1 })
   })
 
   it('summarizes planned day stats', () => {

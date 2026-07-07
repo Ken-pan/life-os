@@ -8,6 +8,7 @@
     currentTimeMarkerTop,
     isTodayDate,
     overlappingTaskIds,
+    overlapBlockColumns,
     snapMinutesFromTimelineTop,
     formatMinutesAsTime,
     defaultDurationMinutes,
@@ -39,6 +40,7 @@
     isTodayDate(dateKey, todayKey()) ? currentTimeMarkerTop() : null,
   );
   const overlapIds = $derived(overlappingTaskIds(tasks));
+  const overlapColumns = $derived(overlapBlockColumns(tasks));
   const showJumpNow = $derived(isTodayDate(dateKey, todayKey()) && nowTop != null);
 
   function formatHour(h) {
@@ -149,11 +151,14 @@
 
         <div class="day-timeline-blocks">
           {#each tasks as task (task.id)}
+            {@const columnLayout = overlapColumns.get(task.id)}
             <TimeBlock
               {task}
               {dateKey}
               desktopInteractive={desktopDnD}
               hasConflict={overlapIds.has(task.id)}
+              column={columnLayout?.column ?? 0}
+              columns={columnLayout?.columns ?? 1}
               onReschedule={() => reschedule(task)}
             />
           {/each}

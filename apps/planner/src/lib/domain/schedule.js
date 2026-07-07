@@ -318,6 +318,60 @@ export function overlappingTaskIds(tasks) {
   return ids
 }
 
+/**
+ * Assign side-by-side columns for overlapping scheduled blocks.
+ * @param {import('../types.js').Task[]} tasks
+ * @returns {Map<string, { column: number, columns: number }>}
+ */
+export function overlapBlockColumns(tasks) {
+  /** @type {Map<string, { column: number, columns: number }>} */
+  const result = new Map()
+  const scheduled = tasks.filter((t) => t.scheduledStart).sort(compareScheduledTasks)
+  if (!scheduled.length) return result
+
+  /** @type {Array<{ id: string, interval: { start: number, end: number }, column: number }>} */
+  let cluster = []
+
+  /** @param {typeof cluster} items */
+  function flushCluster(items) {
+    if (!items.length) return
+    const columns = Math.max(...items.map((item) => item.column)) + 1
+    for (const item of items) {
+      result.set(item.id, { column: item.column, columns })
+    }
+  }
+
+  /** @param {typeof cluster} items @param {{ start: number, end: number }} interval */
+  function pickColumn(items, interval) {
+    const used = new Set()
+    for (const item of items) {
+      if (intervalsOverlap(interval, item.interval)) used.add(item.column)
+    }
+    let col = 0
+    while (used.has(col)) col += 1
+    return col
+  }
+
+  for (const task of scheduled) {
+    const interval = blockInterval(task.scheduledStart, taskDurationMinutes(task))
+    if (!cluster.length) {
+      cluster.push({ id: task.id, interval, column: 0 })
+      continue
+    }
+
+    const overlapsCluster = cluster.some((item) => intervalsOverlap(interval, item.interval))
+    if (!overlapsCluster) {
+      flushCluster(cluster)
+      cluster = [{ id: task.id, interval, column: 0 }]
+    } else {
+      cluster.push({ id: task.id, interval, column: pickColumn(cluster, interval) })
+    }
+  }
+
+  flushCluster(cluster)
+  return result
+}
+
 /** @param {import('../types.js').Task} task @param {(key: string, params?: Record<string, unknown>) => string} t */
 export function formatConflictLabel(task, t) {
   const start = task.scheduledStart || '00:00'

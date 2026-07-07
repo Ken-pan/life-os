@@ -133,7 +133,6 @@ export function resolvePrimaryNavTab(pathname) {
   if (pathname.startsWith('/inbox')) return 'inbox'
   if (pathname.startsWith('/upcoming')) return 'upcoming'
   if (pathname.startsWith('/completed')) return 'completed'
-  if (pathname.startsWith('/calendar')) return 'calendar'
   return ''
 }
 

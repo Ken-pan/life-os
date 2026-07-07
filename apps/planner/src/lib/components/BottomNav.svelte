@@ -44,7 +44,7 @@
       {#each primaryItems as item (item.tab)}
         <a
           class="nav-item"
-          class:on={primaryTab === item.tab}
+          class:on={primaryTab === item.tab && !(moreActive && pathname !== '/')}
           href={item.href}
           data-sveltekit-noscroll
           aria-current={primaryTab === item.tab ? 'page' : undefined}

@@ -11,14 +11,9 @@
   let expanded = $state(true);
   let desktopDnD = $state(false);
 
-  /** @param {DragEvent} e @param {string} taskId */
-  function onDragStart(e, taskId) {
-    if (!desktopDnD || !e.dataTransfer) return;
-    e.dataTransfer.setData('application/x-planner-task-id', taskId);
-    e.dataTransfer.effectAllowed = 'move';
-  }
-
   onMount(() => {
+    if (window.matchMedia('(max-width: 860px)').matches) expanded = false;
+
     const mq = window.matchMedia('(min-width: 861px) and (pointer: fine)');
     const sync = () => {
       desktopDnD = mq.matches;
@@ -27,6 +22,13 @@
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
   });
+
+  /** @param {DragEvent} e @param {string} taskId */
+  function onDragStart(e, taskId) {
+    if (!desktopDnD || !e.dataTransfer) return;
+    e.dataTransfer.setData('application/x-planner-task-id', taskId);
+    e.dataTransfer.effectAllowed = 'move';
+  }
 </script>
 
 <section class="unscheduled-panel" aria-label={t('schedule.unscheduled')}>

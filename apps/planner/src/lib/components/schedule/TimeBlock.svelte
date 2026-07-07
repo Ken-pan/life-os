@@ -22,6 +22,8 @@
     task: import('$lib/types.js').Task,
     dateKey: string,
     hasConflict?: boolean,
+    column?: number,
+    columns?: number,
     desktopInteractive?: boolean,
     onReschedule?: () => void
   }} */
@@ -29,6 +31,8 @@
     task,
     dateKey,
     hasConflict = false,
+    column = 0,
+    columns = 1,
     desktopInteractive = false,
     onReschedule,
   } = $props();
@@ -60,6 +64,7 @@
   );
   const activeDuration = $derived(preview?.durationMinutes ?? duration);
   const compact = $derived(Boolean(activeLayout && activeLayout.height < 44));
+  const columned = $derived(columns > 1);
   const interactive = $derived(desktopInteractive && !task.completed);
 
   /** @param {PointerEvent} e @param {'move' | 'resize-top' | 'resize-bottom'} mode */
@@ -128,10 +133,13 @@
     class:time-block--focus={kind === 'focus'}
     class:time-block--conflict={hasConflict && !task.completed}
     class:time-block--compact={compact}
+    class:time-block--columned={columned}
     class:time-block--dragging={dragging}
     class:time-block--interactive={interactive}
     style:top="{activeLayout.top}px"
     style:height="{activeLayout.height}px"
+    style:--block-column={column}
+    style:--block-columns={columns}
   >
     {#if interactive}
       <button
@@ -161,11 +169,13 @@
       }}
     >
       <div class="time-block-title">{task.title}</div>
-      {#if !compact}
+      {#if !compact && !columned}
         <div class="time-block-meta">
           {rangeLabel}
           · {formatDurationLabel(activeDuration, t)}
         </div>
+      {:else if columned && !compact}
+        <div class="time-block-meta">{rangeLabel}</div>
       {/if}
     </button>
 
@@ -188,10 +198,15 @@
         <button
           type="button"
           class="time-block-reschedule"
+          class:time-block-reschedule--icon={columned}
           onclick={onReschedule}
           aria-label={t('schedule.reschedule')}
         >
-          {t('schedule.rescheduleShort')}
+          {#if columned}
+            <Icon name="clock" size={12} strokeWidth={2} />
+          {:else}
+            {t('schedule.rescheduleShort')}
+          {/if}
         </button>
       {/if}
     </div>

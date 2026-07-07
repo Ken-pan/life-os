@@ -51,7 +51,7 @@ export function selectSearch(index, query) {
 
 /** @param {import('./taskIndex.js').TaskIndex} index */
 export function selectAllTags(index) {
-  return [...index.tagSet].sort()
+  return [...index.tagSet].filter((tag) => tag && String(tag).trim()).sort()
 }
 
 /** @param {import('./taskIndex.js').TaskIndex} index */

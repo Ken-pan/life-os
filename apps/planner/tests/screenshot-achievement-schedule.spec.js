@@ -298,6 +298,11 @@ test.describe('成就感 + 日程截图', () => {
     await page.waitForSelector('.schedule-summary', { timeout: 10_000 })
     await snap(page, '03-today-timeline')
 
+    const unscheduledHead = page.locator('.unscheduled-panel-head--toggle')
+    if ((await unscheduledHead.getAttribute('aria-expanded')) === 'false') {
+      await unscheduledHead.click()
+    }
+
     await page
       .getByRole('button', { name: '安排', exact: true })
       .first()

@@ -87,6 +87,11 @@ describe('taskIndex + selectors', () => {
 
   it('collects tags', () => {
     expect(selectAllTags(index)).toEqual(['work'])
+    const withEmpty = buildTaskIndex([
+      ...tasks,
+      { ...tasks[0], id: 'empty-tag', tags: ['', '  ', 'valid'] },
+    ])
+    expect(selectAllTags(withEmpty)).toEqual(['valid', 'work'])
   })
 
   it('lists completed tasks by completedAt desc', () => {
