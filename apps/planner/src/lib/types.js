@@ -2,6 +2,8 @@
 
 /** @typedef {'none'|'daily'|'weekly'|'monthly'|'yearly'} RecurrenceRule */
 
+/** @typedef {import('@life-os/contracts/appearance').ColorSchemePreference} ColorSchemePreference */
+
 /**
  * @typedef {Object} TaskRecurrence
  * @property {RecurrenceRule} rule
@@ -64,7 +66,7 @@
 
 /**
  * @typedef {Object} AppSettings
- * @property {'light'|'dark'|'auto'} theme
+ * @property {'light'|'dark'|'auto'} theme Web runtime storage uses `auto`; contracts `ColorSchemePreference` uses `system` for the same semantics.
  * @property {'zh'|'en'} locale
  * @property {string} defaultListId
  * @property {boolean} notificationsEnabled

@@ -14,6 +14,7 @@
 - Supabase（Auth + Postgres + RLS）
 - Recharts 图表
 - Vitest 单元测试
+- `@life-os/finance-enrichment-contract`：purchase-enrichment display classification 与 web-state read model 的规则对齐
 
 ## 开发
 
@@ -56,3 +57,5 @@ src/
 - 当前账户余额以**手动刷新快照**为准；历史交易用于分析和计划偏差检查，不会在后台静默重建余额。
 - 所有表都启用了 RLS，仅允许 `auth.uid() = user_id` 访问自己的数据。
 - `finance_data` 旧 jsonb 表保留为历史备份，不再作为主读写路径。
+
+Monorepo 文档入口见 [`../../docs/README.md`](../../docs/README.md)。Finance IA 见 [`docs/INFORMATION_ARCHITECTURE.md`](docs/INFORMATION_ARCHITECTURE.md)。

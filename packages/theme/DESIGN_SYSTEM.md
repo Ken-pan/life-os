@@ -1,6 +1,8 @@
 # Life OS Design System
 
-`@life-os/theme` 是三端应用（Planner / Fitness / Finance）的共享设计系统包。
+`@life-os/theme` 是四端 Web 应用（Planner / Fitness / Finance / Music）的 **Web CSS 与设计 token** 包。
+
+> **边界**：theme 是 **web-only** 层，**不依赖** `@life-os/contracts`。跨 Surface 产品语义见 [`../../docs/LIFEOS_SHARED_BOUNDARIES.md`](../../docs/LIFEOS_SHARED_BOUNDARIES.md) 与 [`../../docs/LIFEOS_CONTRACTS_P0.md`](../../docs/LIFEOS_CONTRACTS_P0.md)。Future iOS native 使用 SwiftUI DesignTokens（映射 token 命名，不 import 本包 CSS）。
 
 ## 安装
 
@@ -24,18 +26,18 @@
 
 ## 模块结构
 
-| 文件 | 内容 |
-|------|------|
-| `layout.css` | Custom media 断点、`--tabbar-h` |
-| `tokens.css` | 间距、字号、动效、safe-area、语义色、mobile-content-inset |
-| `ios-safari.css` | **iOS/Safari 平台层**：100dvh、overscroll、scroll lock、chrome tint、表单防缩放 |
-| `base.css` | Reset、tap 优化、`.page-title`、`.wrap`、工具类 |
-| `shell.css` | App shell、侧栏、AppBar、底栏、More Sheet |
-| `seg.css` | 分段控件 `.seg`（Finance pill / Planner chips / Fitness track，经 `:root` token 切换） |
-| `settings-ext.css` | 设置页布局、`.set-group`、`.toggle` / `.settings-toggle` |
-| `modal.css` | 居中 Modal 壳（`.modal-bg` / `.modal`） |
-| `music-shell.css` | MusicOS 播放器壳：Mini Player、Now Playing、进度条、专辑网格 |
-| `design-system.css` | 上述全部 `@import` |
+| 文件                | 内容                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `layout.css`        | Custom media 断点、`--tabbar-h`                                                        |
+| `tokens.css`        | 间距、字号、动效、safe-area、语义色、mobile-content-inset                              |
+| `ios-safari.css`    | **iOS/Safari 平台层**：100dvh、overscroll、scroll lock、chrome tint、表单防缩放        |
+| `base.css`          | Reset、tap 优化、`.page-title`、`.wrap`、工具类                                        |
+| `shell.css`         | App shell、侧栏、AppBar、底栏、More Sheet                                              |
+| `seg.css`           | 分段控件 `.seg`（Finance pill / Planner chips / Fitness track，经 `:root` token 切换） |
+| `settings-ext.css`  | 设置页布局、`.set-group`、`.toggle` / `.settings-toggle`                               |
+| `modal.css`         | 居中 Modal 壳（`.modal-bg` / `.modal`）                                                |
+| `music-shell.css`   | MusicOS 播放器壳：Mini Player、Now Playing、进度条、专辑网格                           |
+| `design-system.css` | 上述全部 `@import`                                                                     |
 
 ## 各 App 职责
 
@@ -45,17 +47,17 @@
 
 ### Token 分层
 
-| 层 | 文件 | 内容 |
-|----|------|------|
-| 结构 | `tokens.css` | 间距、字号、safe-area、FAB/按钮尺寸、共享语义色 |
-| 平台 | `ios-safari.css` | 视口高度、橡皮筋、Sheet 滚动锁、Safari 26 chrome tint |
-| 布局 | `layout.css` | 断点、tabbar 高度 |
-| 壳层 | `shell.css` | 侧栏、AppBar/PageHeader、底栏、More Sheet |
-| 分段 | `seg.css` | `.seg`、`.seg-scroll`、`.seg-chips` / `.seg-track` 修饰符 |
-| 设置 | `settings-ext.css` + `components.css` | 设置页网格、分组卡片、toggle |
-| Modal | `modal.css` | 居中对话框壳；领域内容（如 Fitness 重量 stepper）留各 app |
-| 组件 | `components.css` | 按钮、Sheet、Toast（`--toast-*` token）、Banner |
-| 品牌 | 各 app `:root` | 色板、图表色、Finance `--primary` / Fitness `--text-hero` 等 |
+| 层    | 文件                                  | 内容                                                         |
+| ----- | ------------------------------------- | ------------------------------------------------------------ |
+| 结构  | `tokens.css`                          | 间距、字号、safe-area、FAB/按钮尺寸、共享语义色              |
+| 平台  | `ios-safari.css`                      | 视口高度、橡皮筋、Sheet 滚动锁、Safari 26 chrome tint        |
+| 布局  | `layout.css`                          | 断点、tabbar 高度                                            |
+| 壳层  | `shell.css`                           | 侧栏、AppBar/PageHeader、底栏、More Sheet                    |
+| 分段  | `seg.css`                             | `.seg`、`.seg-scroll`、`.seg-chips` / `.seg-track` 修饰符    |
+| 设置  | `settings-ext.css` + `components.css` | 设置页网格、分组卡片、toggle                                 |
+| Modal | `modal.css`                           | 居中对话框壳；领域内容（如 Fitness 重量 stepper）留各 app    |
+| 组件  | `components.css`                      | 按钮、Sheet、Toast（`--toast-*` token）、Banner              |
+| 品牌  | 各 app `:root`                        | 色板、图表色、Finance `--primary` / Fitness `--text-hero` 等 |
 
 ### 文本色兼容
 
@@ -64,13 +66,13 @@
 
 共享 CSS 使用 `var(--t1, var(--text))` 等形式，无需在 Finance 重复定义 `--t1`。
 
-### Seg 三端 token 示例
+### Seg app token 示例
 
-| App | 关键 token |
-|-----|------------|
-| Finance | `--seg-active-bg-token: var(--lime)` |
+| App     | 关键 token                                                                 |
+| ------- | -------------------------------------------------------------------------- |
+| Finance | `--seg-active-bg-token: var(--lime)`                                       |
 | Planner | `--seg-track-bg: transparent`、`--seg-btn-border: 1px solid var(--border)` |
-| Fitness | `--seg-track-border`、`--seg-track-radius: 9px`、`--toggle-on-bg` |
+| Fitness | `--seg-track-border`、`--seg-track-radius: 9px`、`--toggle-on-bg`          |
 
 ### Toast token
 
@@ -79,7 +81,7 @@
 ### iOS / Safari 集成清单
 
 1. **Viewport**（各 app `app.html` / `index.html`）：`viewport-fit=cover` + `apple-mobile-web-app-*`
-2. **Chrome tint 节点**：在 `.app-shell` 内放置（三端 layout 已加）：
+2. **Chrome tint 节点**：在 `.app-shell` 内放置（各 app layout 按需接入）：
    ```html
    <div class="safari-chrome-tint-top" aria-hidden="true"></div>
    <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
@@ -113,8 +115,8 @@ import {
   LIFE_OS_LAYOUT,
   applyDocumentMeta,
   resolveTheme,
-  applyResolvedTheme
-} from '@life-os/theme';
+  applyResolvedTheme,
+} from '@life-os/theme'
 ```
 
 ## 维护规则
@@ -122,16 +124,17 @@ import {
 1. 断点 / gutter：**只改** `layout.css` + `layout.js`
 2. 共享组件视觉：**只改** `design-system.css` 子模块
 3. 品牌色 / 领域 UI：**只改** 各 app 的 `app.css` / `index.css`
-4. 三端不再保留 `packages/life-os-theme` 副本
+4. 四端不再保留 legacy theme 副本
+5. **依赖方向**：`@life-os/theme` **不依赖** `@life-os/contracts` 或 `@life-os/platform-web`。Browser runtime 组合逻辑目标迁入 `platform-web`（P1+）。详见 [`../../docs/LIFEOS_SHARED_BOUNDARIES.md`](../../docs/LIFEOS_SHARED_BOUNDARIES.md)
 
-同目录另有 `@life-os/sync`（`../life-os-sync`）。
+同目录另有 `@life-os/sync`（`packages/sync`）。产品契约见 [`../../docs/LIFEOS_CONTRACTS_P0.md`](../../docs/LIFEOS_CONTRACTS_P0.md)。
 
 ## Custom Media 速查
 
-| 名称 | 范围 |
-|------|------|
-| `--life-os-narrow` | ≤380px |
-| `--life-os-phone` / `--life-os-compact` | ≤640px |
-| `--life-os-tablet` | 641–860px |
-| `--life-os-mobile` | ≤860px |
-| `--life-os-desktop` | ≥861px |
+| 名称                                    | 范围      |
+| --------------------------------------- | --------- |
+| `--life-os-narrow`                      | ≤380px    |
+| `--life-os-phone` / `--life-os-compact` | ≤640px    |
+| `--life-os-tablet`                      | 641–860px |
+| `--life-os-mobile`                      | ≤860px    |
+| `--life-os-desktop`                     | ≥861px    |

@@ -1,22 +1,30 @@
 <script>
-  import { onMount } from 'svelte';
-  import { subscribeSyncError } from '$lib/syncNotify.js';
-  import { t } from '$lib/i18n/index.js';
+  import { onMount } from 'svelte'
+  import { createPlannerSyncErrorPresentation } from '$lib/syncErrorPresentation.js'
+  import { subscribeSyncError } from '$lib/syncNotify.js'
+  import { t } from '$lib/i18n/index.js'
 
-  let message = $state(null);
+  let reason = $state(null)
+
+  const presentation = $derived(
+    createPlannerSyncErrorPresentation(reason, {
+      message: t('sync.banner', { reason }),
+      dismissLabel: t('common.close'),
+    }),
+  )
 
   onMount(() => subscribeSyncError((msg) => {
-    message = msg;
-  }));
+    reason = msg
+  }))
 
   function dismiss() {
-    message = null;
+    reason = null
   }
 </script>
 
-{#if message}
+{#if presentation}
   <div class="banner critical banner--row banner--fixed" role="alert" aria-live="assertive">
-    <span class="banner__text">{t('sync.banner', { reason: message })}</span>
-    <button type="button" class="btn-ghost banner-close" onclick={dismiss}>{t('common.close')}</button>
+    <span class="banner__text">{presentation.message}</span>
+    <button type="button" class="btn-ghost banner-close" onclick={dismiss}>{presentation.dismissAction?.label}</button>
   </div>
 {/if}

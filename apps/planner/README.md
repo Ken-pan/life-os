@@ -102,7 +102,16 @@ npm run preview
 
 共享主题与同步包在 monorepo 内 **`packages/theme`**、**`packages/sync`**（`@life-os/theme`、`@life-os/sync`）。
 
+Planner is also the first LifeOS shared-platform P1 pilot:
+
+- `DocumentHead.svelte` uses `@life-os/platform-web/applyDocumentMetaWeb` for one metadata adapter path.
+- contracts are consumed only through JSDoc type mirrors from `@life-os/contracts`.
+- `syncErrorPresentation.js` maps the existing sync error reason to `SyncErrorPresentation`.
+- `SyncErrorBanner`, settings UI, storage keys, and app state remain Planner-owned.
+
 本地数据优先存储于 `localStorage`（schema v2），登录后可选择与云端合并。
+
+Monorepo 文档入口见 [`../../docs/README.md`](../../docs/README.md)。
 
 ## 云同步机制（跨设备）
 

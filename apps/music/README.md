@@ -13,7 +13,7 @@
 ## 开发
 
 ```bash
-cd "/Users/kenpan/「Projects」/MusicOS"
+cd "/Users/kenpan/「Projects」/life-os/apps/music"
 npm install
 npm run dev
 ```
@@ -26,3 +26,5 @@ npm run dev
 ```
 
 品牌 token 见 `src/app.css`。
+
+Monorepo 文档入口见 [`../../docs/README.md`](../../docs/README.md)；旧独立 `MusicOS` 仓库已归档。

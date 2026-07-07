@@ -47,7 +47,7 @@ FITNESS.OS 是一个面向个人训练管理的 Web 应用。基于 **SvelteKit 
 ## 快速开始
 
 ```bash
-cd Fitness
+cd "/Users/kenpan/「Projects」/life-os/apps/fitness"
 npm install
 cp .env.example .env   # 可选，覆盖 Supabase URL / publishable key
 npm run dev            # http://localhost:5173
@@ -93,6 +93,12 @@ src/routes/
 - 项目：**Life OS**（与 Finance OS 共用 `auth.users` 与 `life_os_auth` 存储键）
 - 环境变量（可选，见 `.env.example`）：`VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY`
 - 共享包：`packages/sync`、`packages/theme`（`@life-os/sync`、`@life-os/theme`，npm workspace）
+- LifeOS shared-platform P1 pilot:
+  - `DocumentHead.svelte` uses `@life-os/platform-web/applyDocumentMetaWeb` for one metadata adapter path.
+  - contracts are consumed only through JSDoc type mirrors from `@life-os/contracts`.
+  - `syncErrorPresentation.js` maps the existing sync error reason to `SyncErrorPresentation`.
+  - `SyncErrorBanner`, settings UI, storage keys, and app state remain Fitness-owned.
+- Monorepo 文档入口：[`../../docs/README.md`](../../docs/README.md)
 
 ## 数据备份格式
 

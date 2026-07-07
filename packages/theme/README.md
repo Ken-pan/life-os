@@ -55,11 +55,11 @@ import {
   resolveTheme,
   lockScroll,
   unlockScroll,
-  trapFocus,
-  releaseFocusTrap
-} from '@life-os/theme';
+  activateFocusTrap,
+  createImeGuard,
+} from '@life-os/theme'
 
-applyDocumentMeta('finance', { pageTitle: '今日', locale: 'zh' });
+applyDocumentMeta('finance', { pageTitle: '今日', locale: 'zh' })
 ```
 
 ## 维护
@@ -69,5 +69,6 @@ applyDocumentMeta('finance', { pageTitle: '今日', locale: 'zh' });
 - 勿在各 app 内 vendored 副本；GitHub 上 `life-os-theme` 独立仓已归档
 - 样式分层：`design-system.css` 通过 `@layer life-os.*` 导入；**utilities 层最后**，app 未分层 CSS 可覆盖主题
 - 横向 tab / chip 滚动：`.life-os-scroll-x` + 按需 `--snap`；勿重复写 overflow/scrollbar
+- `@life-os/theme` 是 web-only CSS/runtime 包，不依赖 `@life-os/contracts`。Shared platform boundaries 见 [`../../docs/LIFEOS_SHARED_BOUNDARIES.md`](../../docs/LIFEOS_SHARED_BOUNDARIES.md)。
 
 同目录另有共享包 **`@life-os/sync`**（`packages/sync`）。

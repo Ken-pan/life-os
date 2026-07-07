@@ -1,6 +1,6 @@
 # Life OS 响应式规范（Planner / FinanceOS / FitnessOS）
 
-三端应用共用 monorepo 内 `packages/theme`（`@import '@life-os/theme/layout.css'` 等）。本文档为 **走查结论 + 统一方案**，供三项目对齐实施。
+Planner / FinanceOS / FitnessOS 共用 monorepo 内 `packages/theme`（`@import '@life-os/theme/layout.css'` 等）。本文档为早期三端 **走查结论 + 统一方案**；四端 canonical shared docs 见 [`../../../docs/README.md`](../../../docs/README.md)。
 
 ---
 
@@ -10,7 +10,7 @@
 
 | 层级 | 宽度 | 改前问题 | 统一方案 |
 |------|------|----------|----------|
-| **Narrow** | ≤380px | 三端均有，仅微调 gutter | 保留，极窄屏 label 缩小 |
+| **Narrow** | ≤380px | 三端走查均有，仅微调 gutter | 保留，极窄屏 label 缩小 |
 | **Phone** | ≤640px | 称 `--life-os-compact`，语义不清 | 新增 `--life-os-phone` 别名；compact 仍可用 |
 | **Tablet** | 641–860px | **缺失** — iPad 竖屏与 phone 同待遇 | 新增 `--life-os-tablet`：加宽 gutter、More Sheet 居中留白 |
 | **Mobile chrome** | ≤860px | 侧栏隐藏、底栏出现 | 保留 `--life-os-mobile` |
@@ -67,7 +67,7 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 2.1 三端 Primary Tab 定义
+### 2.1 Primary Tab 定义（三端走查）
 
 | 应用 | Primary (底栏 4 格) | More Sheet |
 |------|---------------------|------------|

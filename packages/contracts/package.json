@@ -1,0 +1,31 @@
+{
+  "name": "@life-os/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Life OS cross-surface product contracts (type-only)",
+  "type": "module",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts"
+    },
+    "./appearance": {
+      "types": "./src/appearance.d.ts"
+    },
+    "./meta": {
+      "types": "./src/meta.d.ts"
+    },
+    "./nav": {
+      "types": "./src/nav.d.ts"
+    },
+    "./content": {
+      "types": "./src/content.d.ts"
+    },
+    "./sync": {
+      "types": "./src/sync.d.ts"
+    },
+    "./feedback": {
+      "types": "./src/feedback.d.ts"
+    }
+  }
+}

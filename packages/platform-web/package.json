@@ -1,0 +1,21 @@
+{
+  "name": "@life-os/platform-web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Life OS web-only platform adapters",
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/appearance.test.mjs"
+  },
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "dependencies": {
+    "@life-os/contracts": "*",
+    "@life-os/theme": "*"
+  }
+}

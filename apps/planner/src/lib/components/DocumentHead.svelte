@@ -1,24 +1,41 @@
 <script>
-  import { page } from '$app/state';
+  import { page } from '$app/state'
+  import { applyDocumentMetaWeb } from '@life-os/platform-web'
   import {
     LIFE_OS_SITE_META,
     LIFE_OS_ROBOTS,
     formatDocumentTitle,
     getSiteDescription,
     getOgLocale,
-    absoluteUrl
-  } from '@life-os/theme';
+    absoluteUrl,
+  } from '@life-os/theme'
+
+  /** @typedef {import('@life-os/contracts/meta').PageMetadata} PageMetadata */
 
   /** @type {{ appId: 'planner' | 'fitness', pageTitle: string, locale?: string, imagePath?: string }} */
-  let { appId, pageTitle, locale = 'zh', imagePath = '/icon.svg' } = $props();
+  let { appId, pageTitle, locale = 'zh', imagePath = '/icon.svg' } = $props()
 
-  const app = $derived(LIFE_OS_SITE_META[appId]);
-  const documentTitle = $derived(formatDocumentTitle(pageTitle, app.name));
-  const description = $derived(getSiteDescription(appId, locale));
-  const canonical = $derived(absoluteUrl(page.url.origin, page.url.pathname));
-  const ogImage = $derived(absoluteUrl(page.url.origin, imagePath));
-  const ogLocale = $derived(getOgLocale(locale));
-  const ogLocaleAlt = $derived(ogLocale === 'zh_CN' ? 'en_US' : 'zh_CN');
+  /** @type {PageMetadata} */
+  const pageMetadata = $derived({
+    appId,
+    title: pageTitle,
+    locale,
+  })
+
+  const app = $derived(LIFE_OS_SITE_META[appId])
+  const documentTitle = $derived(formatDocumentTitle(pageTitle, app.name))
+  const description = $derived(getSiteDescription(appId, locale))
+  const canonical = $derived(absoluteUrl(page.url.origin, page.url.pathname))
+  const ogImage = $derived(absoluteUrl(page.url.origin, imagePath))
+  const ogLocale = $derived(getOgLocale(locale))
+  const ogLocaleAlt = $derived(ogLocale === 'zh_CN' ? 'en_US' : 'zh_CN')
+
+  $effect(() => {
+    applyDocumentMetaWeb(pageMetadata, {
+      pathname: page.url.pathname,
+      imagePath,
+    })
+  })
 </script>
 
 <svelte:head>

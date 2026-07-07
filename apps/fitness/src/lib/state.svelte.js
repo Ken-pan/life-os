@@ -17,6 +17,9 @@ import {
 } from './tools/calculators.js'
 import { t } from './i18n/index.js'
 
+/** @typedef {import('@life-os/contracts/appearance').ColorSchemePreference} ColorSchemePreference */
+/** @typedef {import('@life-os/contracts/appearance').ThemePreferenceModel} ThemePreferenceModel */
+
 /* ═══════════════ STATE (Svelte 5 runes + localStorage) ═══════════════ */
 const SKEY = 'fitos_v2'
 export const SCHEMA_VERSION = 6
@@ -473,7 +476,9 @@ export function clearToday() {
   save()
 }
 
-/* ═══════════════ THEME (Life OS 统一) ═══════════════ */
+/* ═══════════════ THEME (Life OS 统一) ═══════════════
+ * Fitness persists only `settings.theme`; implicit brand `fitness`, ambient `coverMedia`.
+ */
 const THEME_APPLY_OPTIONS = {
   themeColorFallback: { light: '#f4f4f3', dark: '#0d0d0e' },
 }
