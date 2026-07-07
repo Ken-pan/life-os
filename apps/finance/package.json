@@ -19,7 +19,8 @@
     "qa:records-tab": "node scripts/records-tab-ux-audit.mjs",
     "guard:overflow": "vitest run src/debug/overflowGuard.test.ts",
     "qa:screenshots": "node scripts/ui-main-flows-screenshot-qa.mjs",
-    "qa:ia-routes": "node scripts/ia-route-smoke.mjs"
+    "qa:ia-routes": "node scripts/ia-route-smoke.mjs",
+    "qa:ia-nav": "node scripts/ia-nav-qa.mjs"
   },
   "dependencies": {
     "@life-os/sync": "*",

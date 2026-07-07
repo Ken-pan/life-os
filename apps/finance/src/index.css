@@ -4167,6 +4167,7 @@ div.input {
   }
 
   .mobile-tabbar {
+    display: block;
     position: fixed;
     left: 0;
     right: 0;
