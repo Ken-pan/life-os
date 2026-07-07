@@ -1,4 +1,4 @@
-import type { PurchaseEnrichment } from '../engine/purchaseEnrichment'
+import { purchaseEnrichmentFromRow, type PurchaseEnrichment } from '../engine/purchaseEnrichment'
 import { PurchaseEnrichmentBlock } from './PurchaseEnrichmentBlock'
 import type { MerchantOrderCatalog } from '../types'
 
@@ -22,10 +22,9 @@ export function MerchantOrderCatalogSection({
     if (!bucket?.length) continue
     sections.push({
       source,
-      orders: bucket.filter(
-        (o): o is PurchaseEnrichment =>
-          !!o && typeof o === 'object' && typeof (o as PurchaseEnrichment).source === 'string',
-      ),
+      orders: bucket
+        .map((o) => purchaseEnrichmentFromRow(o))
+        .filter((o): o is PurchaseEnrichment => o != null),
     })
   }
 
