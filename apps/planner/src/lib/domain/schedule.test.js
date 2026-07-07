@@ -36,8 +36,8 @@ describe('schedule', () => {
   it('calculates block layout from start and duration', () => {
     const layout = blockLayout('09:30', 60)
     expect(layout).not.toBeNull()
-    expect(layout?.top).toBe(96)
-    expect(layout?.height).toBe(64)
+    expect(layout?.top).toBe(144)
+    expect(layout?.height).toBe(96)
   })
 
   it('defaults duration by task kind', () => {

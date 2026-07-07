@@ -4,8 +4,8 @@ import { getTaskKind } from './taskKind.js'
 
 export const DAY_START_HOUR = 8
 export const DAY_END_HOUR = 23
-export const HOUR_HEIGHT_PX = 64
-export const MIN_BLOCK_HEIGHT_PX = 32
+export const HOUR_HEIGHT_PX = 96
+export const MIN_BLOCK_HEIGHT_PX = 48
 
 export const SCHEDULE_START_TIMES = [
   '09:00',
@@ -326,7 +326,9 @@ export function overlappingTaskIds(tasks) {
 export function overlapBlockColumns(tasks) {
   /** @type {Map<string, { column: number, columns: number }>} */
   const result = new Map()
-  const scheduled = tasks.filter((t) => t.scheduledStart).sort(compareScheduledTasks)
+  const scheduled = tasks
+    .filter((t) => t.scheduledStart)
+    .sort(compareScheduledTasks)
   if (!scheduled.length) return result
 
   /** @type {Array<{ id: string, interval: { start: number, end: number }, column: number }>} */
@@ -353,18 +355,27 @@ export function overlapBlockColumns(tasks) {
   }
 
   for (const task of scheduled) {
-    const interval = blockInterval(task.scheduledStart, taskDurationMinutes(task))
+    const interval = blockInterval(
+      task.scheduledStart,
+      taskDurationMinutes(task),
+    )
     if (!cluster.length) {
       cluster.push({ id: task.id, interval, column: 0 })
       continue
     }
 
-    const overlapsCluster = cluster.some((item) => intervalsOverlap(interval, item.interval))
+    const overlapsCluster = cluster.some((item) =>
+      intervalsOverlap(interval, item.interval),
+    )
     if (!overlapsCluster) {
       flushCluster(cluster)
       cluster = [{ id: task.id, interval, column: 0 }]
     } else {
-      cluster.push({ id: task.id, interval, column: pickColumn(cluster, interval) })
+      cluster.push({
+        id: task.id,
+        interval,
+        column: pickColumn(cluster, interval),
+      })
     }
   }
 

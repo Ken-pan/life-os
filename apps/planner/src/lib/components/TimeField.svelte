@@ -1,18 +1,16 @@
 <script>
-  import { t, localeTag } from '$lib/i18n/index.js';
-  import { formatDateDisplay, formatDateCompact } from '$lib/domain/dateFormat.js';
-  import { todayKey } from '$lib/state.svelte.js';
+  import { t } from '$lib/i18n/index.js';
   import Icon from './Icon.svelte';
 
   /** @type {{
     id?: string,
     value?: string | null,
     placeholder?: string,
-    compact?: boolean,
     onchange?: (value: string | null) => void
   }} */
-  let { id, value = null, placeholder = '', compact = false, onchange } = $props();
+  let { id, value = null, placeholder = '', onchange } = $props();
 
+  /** @type {HTMLInputElement | null} */
   let inputEl = $state(null);
 
   function openPicker() {
@@ -24,27 +22,20 @@
     const next = e.currentTarget.value || null;
     onchange?.(next);
   }
-
-  const displayLabel = $derived.by(() => {
-    if (!value) return placeholder || t('task.pickDate');
-    if (!compact) return formatDateDisplay(value);
-    const datePart = formatDateCompact(value);
-    if (value === todayKey()) return `${t('nav.today')} ${datePart}`;
-    return datePart;
-  });
 </script>
 
-<div class="date-field" class:date-field--compact={compact}>
-  <button type="button" class="date-display" onclick={openPicker}>
-    <span class:placeholder={!value}>{displayLabel}</span>
-    <Icon name="calendar" size={18} strokeWidth={1.5} />
+<div class="time-field">
+  <button type="button" class="time-display" onclick={openPicker}>
+    <span class:placeholder={!value}>
+      {value || placeholder || t('task.pickTime')}
+    </span>
+    <Icon name="clock" size={18} strokeWidth={1.5} />
   </button>
   <input
     bind:this={inputEl}
     {id}
-    type="date"
-    class="date-native"
-    lang={localeTag()}
+    type="time"
+    class="time-native"
     value={value || ''}
     oninput={handleInput}
     tabindex="-1"
@@ -53,10 +44,10 @@
 </div>
 
 <style>
-  .date-field {
+  .time-field {
     position: relative;
   }
-  .date-display {
+  .time-display {
     width: 100%;
     min-height: var(--control-h);
     display: flex;
@@ -69,15 +60,12 @@
     background: var(--card);
     color: var(--t1);
     text-align: left;
+    font-variant-numeric: tabular-nums;
   }
-  .date-display .placeholder {
+  .time-display .placeholder {
     color: var(--t3);
   }
-  .date-field--compact .date-display {
-    white-space: nowrap;
-    font-size: var(--text-sm);
-  }
-  .date-native {
+  .time-native {
     position: absolute;
     inset: 0;
     opacity: 0;

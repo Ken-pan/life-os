@@ -27,7 +27,7 @@ export function completeTask(id) {
   toggleComplete(id)
 
   if (!wasCompleted) {
-    toast(completionToastMessage(task), 'success', {
+    toast(t('toast.completedNamed', { title: task.title }), 'success', {
       actionLabel: t('common.undo'),
       onAction: () => {
         toggleComplete(id)
@@ -38,7 +38,7 @@ export function completeTask(id) {
       },
       key: `complete-${id}`,
       dedupeMs: 400,
-      duration: 5000,
+      duration: 4000,
     })
   }
 }

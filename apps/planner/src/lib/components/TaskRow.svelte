@@ -5,13 +5,13 @@
 
 <script>
   import { onDestroy } from 'svelte';
-  import { PRIORITY_COLORS } from '$lib/types.js';
   import { isOverdue, updateTask, deleteTask, restoreTask } from '$lib/domain/tasks.js';
   import { recurrenceLabel } from '$lib/domain/recurrence.js';
   import { formatDateShort } from '$lib/domain/dateFormat.js';
   import { listLabel, t } from '$lib/i18n/index.js';
   import { getListById, dateKeyOf } from '$lib/state.svelte.js';
   import { getTaskKind } from '$lib/domain/taskKind.js';
+  import { taskDurationMinutes, formatDurationLabel } from '$lib/domain/schedule.js';
   import { openSchedulePopover } from '$lib/ui.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import Icon from './Icon.svelte';
@@ -28,7 +28,7 @@
     onEdit,
   } = $props();
 
-  const COMPLETE_RITUAL_MS = 520;
+  const COMPLETE_RITUAL_MS = 300;
   const reduceMotion =
     typeof matchMedia !== 'undefined' &&
     matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -60,7 +60,16 @@
       task.scheduledStart ||
       task.reminderMinutes != null
   );
+  const hasTimedPlan = $derived(Boolean(task.scheduledStart || task.dueTime));
+  const durationLabel = $derived(formatDurationLabel(taskDurationMinutes(task), t));
+  const showTodayCompactMeta = $derived(
+    compact && Boolean(contextDate && task.dueDate === contextDate && !overdue),
+  );
   const showSecondaryMeta = $derived(!compact);
+  const showScheduleBtn = $derived(
+    showScheduleAction && !task.completed && !completing && Boolean(scheduleDate),
+  );
+  const priorityLabel = $derived(task.priority > 0 ? t(`task.p${task.priority}`) : null);
 
   function fmtDate(dateKey) {
     return formatDateShort(dateKey);
@@ -281,6 +290,7 @@
 <!-- 滑动手势容器：内部的按钮才是可交互元素，这里仅承载手势 -->
 <div
   class="swipe-item"
+  class:is-completing={completing}
   role="presentation"
   bind:clientWidth={rowWidth}
   onpointerdown={onPointerDown}
@@ -351,7 +361,29 @@
           {/if}
           <div class="task-title" class:done-text={showAsCompleted}>{task.title}</div>
         </div>
-        {#if showMeta && (task.dueDate || task.dueTime || hasRecurrence || task.reminderMinutes != null || timeChip || (showSecondaryMeta && (task.tags.length || list)))}
+        {#if showTodayCompactMeta}
+          <div class="task-meta">
+            {#if hasTimedPlan}
+              {#if timeChip}
+                <span class="chip chip--schedule">{timeChip}</span>
+              {/if}
+              {#if kind === 'focus'}
+                <span class="chip chip--focus">{t('task.kindFocus')}</span>
+              {/if}
+              <span class="chip">{durationLabel}</span>
+            {:else}
+              <span class="chip chip--unscheduled">{t('task.unscheduledLine')}</span>
+            {/if}
+            {#if priorityLabel}
+              <span class="chip chip--priority">{priorityLabel}</span>
+            {/if}
+            {#if hasRecurrence}
+              <span class="chip tag">{recurrenceLabel(task.recurrence, t)}</span>
+            {:else if showHabitChip}
+              <span class="chip tag">{t('task.kindHabit')}</span>
+            {/if}
+          </div>
+        {:else if showMeta && (task.dueDate || task.dueTime || hasRecurrence || task.reminderMinutes != null || timeChip || (showSecondaryMeta && (task.tags.length || list)))}
           <div class="task-meta">
             {#if task.dueDate && !hideDateChip}
               <span class="chip" class:overdue={overdue}>
@@ -371,6 +403,9 @@
             {#if kind === 'focus'}
               <span class="chip chip--focus">{t('task.kindFocus')}</span>
             {/if}
+            {#if priorityLabel}
+              <span class="chip chip--priority">{priorityLabel}</span>
+            {/if}
             {#if task.reminderMinutes != null}
               <span class="chip">🔔</span>
             {/if}
@@ -383,25 +418,19 @@
       </button>
 
       <div class="task-row-trailing">
-        {#if showScheduleAction && !task.completed && scheduleDate}
+        {#if showScheduleBtn}
           <button
             type="button"
             class="task-schedule-btn"
+            class:task-schedule-btn--plan={!hasTimedPlan}
+            class:task-schedule-btn--adjust={hasTimedPlan}
             onclick={(e) => {
               e.stopPropagation();
               openSchedulePopover(task.id, scheduleDate);
             }}
           >
-            {t('schedule.scheduleActionShort')}
+            {hasTimedPlan ? t('schedule.scheduleAdjustShort') : t('schedule.scheduleActionShort')}
           </button>
-        {/if}
-        {#if task.priority > 0}
-          <span
-            class="priority-dot"
-            style:background={PRIORITY_COLORS[task.priority]}
-            title={t(`task.p${task.priority}`)}
-            aria-label={`${t('task.priority')}: ${t(`task.p${task.priority}`)}`}
-          ></span>
         {/if}
       </div>
     </div>

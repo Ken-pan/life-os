@@ -10,6 +10,7 @@
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
   import { createImeGuard } from '@life-os/theme';
   import DateField from './DateField.svelte';
+  import TimeField from './TimeField.svelte';
   import Icon from './Icon.svelte';
 
   const ime = createImeGuard();
@@ -181,7 +182,7 @@
 {#if taskEditor.open && draft}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div class="sheet-bg" role="presentation" onclick={(e) => e.target === e.currentTarget && closeTaskEditor()}>
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="task-editor-title">
+    <div class="sheet task-editor-sheet" role="dialog" aria-modal="true" aria-labelledby="task-editor-title">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
         <h2 id="task-editor-title" class="sheet-title">{isNew ? t('common.add') : t('common.edit')}</h2>
@@ -190,10 +191,11 @@
         </button>
       </div>
 
-      <div class="field">
+      <div class="field field--title">
         <label for="task-title">{t('task.title')}</label>
         <input
           id="task-title"
+          class="task-editor-title-input"
           bind:this={titleInput}
           bind:value={draft.title}
           enterkeyhint="done"
@@ -215,6 +217,7 @@
           <label for="task-due">{t('task.dueDate')}</label>
           <DateField
             id="task-due"
+            compact
             value={draft.dueDate}
             onchange={(next) => {
               draft.dueDate = next;
@@ -224,12 +227,11 @@
         </div>
         <div class="field">
           <label for="task-time">{t('task.dueTime')}</label>
-          <input
+          <TimeField
             id="task-time"
-            type="time"
-            value={draft.dueTime || ''}
-            oninput={(e) => {
-              draft.dueTime = e.currentTarget.value || null;
+            value={draft.dueTime}
+            onchange={(next) => {
+              draft.dueTime = next;
             }}
           />
         </div>
@@ -488,14 +490,60 @@
   }
 
   @media (--life-os-mobile) {
-    .sheet-actions {
+    :global(.task-editor-sheet) {
+      border-radius: 28px 28px 0 0;
+      padding: 12px 24px calc(16px + env(safe-area-inset-bottom));
+      max-height: 80dvh;
+      scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    }
+
+    :global(.task-editor-sheet) .sheet-handle {
+      width: 36px;
+      height: 5px;
+      margin-bottom: 12px;
+    }
+
+    :global(.task-editor-sheet) .field--title {
+      margin-bottom: 12px;
+    }
+
+    :global(.task-editor-sheet) .task-editor-title-input {
+      min-height: 56px;
+      height: 56px;
+      padding: 0 14px;
+      line-height: 1.35;
+    }
+
+    :global(.task-editor-sheet) .field-row {
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    :global(.task-editor-sheet) .sheet-advanced-toggle {
+      min-height: 56px;
+      height: 56px;
+      margin-bottom: 8px;
+      padding: 0 12px;
+      border-radius: var(--radius-control);
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--card) 92%, var(--bg));
+    }
+
+    :global(.task-editor-sheet) .sheet-actions {
       position: sticky;
       bottom: 0;
       z-index: 1;
-      margin-top: 8px;
+      gap: 12px;
+      margin-top: 12px;
       padding-top: 12px;
       padding-bottom: max(4px, env(safe-area-inset-bottom));
-      background: linear-gradient(to top, var(--card) 75%, transparent);
+      background: linear-gradient(to top, var(--card) 80%, transparent);
+    }
+
+    :global(.task-editor-sheet) .sheet-actions .btn-primary,
+    :global(.task-editor-sheet) .sheet-actions .btn-secondary {
+      min-height: 56px;
+      height: 56px;
     }
   }
 </style>

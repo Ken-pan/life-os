@@ -3,7 +3,15 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const STORAGE_KEY = 'planos_v1'
-const OUT_DIR = path.join(process.cwd(), 'tests', 'screenshots', 'mobile-flow-walkthrough')
+const OUT_DIR = path.join(
+  process.cwd(),
+  'tests',
+  'screenshots',
+  'mobile-flow-walkthrough',
+)
+
+/** @type {Array<{ file: string, flow: string, note: string }>} */
+const SNAP_INDEX = []
 
 function localDateOffset(days = 0) {
   const d = new Date()
@@ -185,12 +193,39 @@ async function seedState(page, state) {
   })
 }
 
-async function snap(page, name) {
+async function snap(page, name, meta = { flow: '', note: '' }) {
   fs.mkdirSync(OUT_DIR, { recursive: true })
+  await page.evaluate(() => document.fonts?.ready)
+  await page.waitForTimeout(250)
   const file = path.join(OUT_DIR, `${name}.png`)
-  await page.waitForTimeout(350)
-  await page.screenshot({ path: file, fullPage: false })
+  await page.screenshot({ path: file, fullPage: false, animations: 'disabled' })
+  SNAP_INDEX.push({ file: `${name}.png`, flow: meta.flow, note: meta.note })
   return file
+}
+
+function writeSnapReadme() {
+  const generated = new Date().toISOString()
+  const lines = [
+    '# Planner 移动端主流程走查截图',
+    '',
+    `生成时间：${generated}`,
+    '',
+    '视口：390×844（Pixel 7）。`fullPage: false`，仅截取当前视口。',
+    '',
+    '重新生成：',
+    '',
+    '```bash',
+    'cd apps/planner && npm run screenshot:mobile-flow',
+    '```',
+    '',
+    '| 文件 | 流程 | 说明 |',
+    '|------|------|------|',
+    ...SNAP_INDEX.map(
+      ({ file, flow, note }) => `| ${file} | ${flow} | ${note} |`,
+    ),
+    '',
+  ]
+  fs.writeFileSync(path.join(OUT_DIR, '00_README.md'), lines.join('\n'))
 }
 
 function moreSheet(page) {
@@ -204,7 +239,10 @@ async function openMore(page) {
 
 async function expandUnscheduledIfNeeded(page) {
   const head = page.locator('.unscheduled-panel-head--toggle')
-  if ((await head.count()) && (await head.getAttribute('aria-expanded')) === 'false') {
+  if (
+    (await head.count()) &&
+    (await head.getAttribute('aria-expanded')) === 'false'
+  ) {
     await head.click()
   }
 }
@@ -233,6 +271,11 @@ test.describe.configure({ timeout: 90_000, mode: 'serial' })
 test.describe('移动端主流程走查', () => {
   test.beforeAll(() => {
     fs.mkdirSync(OUT_DIR, { recursive: true })
+    SNAP_INDEX.length = 0
+  })
+
+  test.afterAll(() => {
+    writeSnapReadme()
   })
 
   test('Flow 1 — Today 列表浏览与完成任务', async ({ page }, testInfo) => {
@@ -242,17 +285,29 @@ test.describe('移动端主流程走查', () => {
     await page.goto('/')
     await expect(page.locator('h1.page-title')).toHaveText('今天')
     await expect(page.locator('.today-progress')).toBeVisible()
-    await expect(page.locator('.task-title', { hasText: '深度写作 · 产品方案' })).toBeVisible()
-    await snap(page, '01-today-list')
+    await expect(
+      page.locator('.task-title', { hasText: '深度写作 · 产品方案' }),
+    ).toBeVisible()
+    await snap(page, '01-today-list', {
+      flow: 'Flow 1',
+      note: 'Today 列表 + 进度卡',
+    })
 
     const row = page.locator('.task-row', {
       has: page.locator('.task-title', { hasText: '深度写作 · 产品方案' }),
     })
     await row.locator('.task-check').click()
     await expect(page.locator('.toast')).toBeVisible()
-    await snap(page, '02-complete-toast')
+    await expect(page.locator('.toast')).toContainText('深度写作 · 产品方案')
+    await snap(page, '02-complete-toast', {
+      flow: 'Flow 1',
+      note: '完成任务 Toast + 撤销',
+    })
 
-    await page.getByRole('button', { name: /撤销|Undo/i }).click({ timeout: 3000 }).catch(() => {})
+    await page
+      .getByRole('button', { name: /撤销|Undo/i })
+      .click({ timeout: 3000 })
+      .catch(() => {})
     await expect(
       page.locator('.task-title', { hasText: '深度写作 · 产品方案' }),
     ).toBeVisible()
@@ -266,13 +321,21 @@ test.describe('移动端主流程走查', () => {
     await page.getByTestId('fab-add').click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
-    await snap(page, '03-fab-editor')
+    await snap(page, '03-fab-editor', {
+      flow: 'Flow 2',
+      note: 'FAB 新建任务编辑器',
+    })
 
     await dialog.locator('#task-title').fill('走查新建任务')
     await dialog.getByRole('button', { name: '保存' }).click()
     await expect(dialog).toHaveCount(0)
-    await expect(page.locator('.task-title', { hasText: '走查新建任务' })).toBeVisible()
-    await snap(page, '04-after-create')
+    await expect(
+      page.locator('.task-title', { hasText: '走查新建任务' }),
+    ).toBeVisible()
+    await snap(page, '04-after-create', {
+      flow: 'Flow 2',
+      note: '保存后回到 Today 列表',
+    })
   })
 
   test('Flow 3 — 时间轴与安排弹窗', async ({ page }, testInfo) => {
@@ -281,6 +344,8 @@ test.describe('移动端主流程走查', () => {
 
     await page.goto('/?view=timeline')
     await expect(page.getByRole('tab', { name: '时间轴' })).toHaveClass(/on/)
+    await expect(page.getByRole('link', { name: '今天' })).toHaveClass(/on/)
+    await expect(page.locator('.nav-item-more')).not.toHaveClass(/on/)
     await page.waitForSelector('.time-block', { timeout: 10_000 })
 
     const blocks = page.locator('.time-block')
@@ -296,20 +361,36 @@ test.describe('移动端主流程走查', () => {
         expect(Math.abs(first.x - second.x)).toBeGreaterThan(4)
       }
     }
-    await snap(page, '05-timeline')
+    await snap(page, '05-timeline', {
+      flow: 'Flow 3',
+      note: '时间轴并排重叠块 + 紧凑统计',
+    })
 
     await page.getByRole('button', { name: '更多' }).click()
     await expect(page.getByRole('dialog')).toBeVisible()
-    await expect(page.locator('.nav-item-more.on, .nav-item-more')).toBeVisible()
-    await snap(page, '06-more-on-timeline')
+    await expect(page.locator('.nav-item-more.on')).toBeVisible()
+    await snap(page, '06-more-sheet-on-timeline', {
+      flow: 'Flow 3',
+      note: '时间轴页打开 More 菜单',
+    })
 
     await page.keyboard.press('Escape')
+    await expect(page.getByRole('link', { name: '今天' })).toHaveClass(/on/)
+    await expect(page.locator('.nav-item-more')).not.toHaveClass(/on/)
     await expandUnscheduledIfNeeded(page)
-    await page.getByRole('button', { name: '安排', exact: true }).first().click()
+    await page
+      .getByRole('button', { name: '安排', exact: true })
+      .first()
+      .click()
     await expect(page.locator('.schedule-popover')).toBeVisible()
     await page.getByRole('button', { name: '下午', exact: true }).click()
-    await expect(page.getByRole('button', { name: '14:00', exact: true })).toHaveClass(/on/)
-    await snap(page, '07-schedule-popover')
+    await expect(
+      page.getByRole('button', { name: '14:00', exact: true }),
+    ).toHaveClass(/on/)
+    await snap(page, '07-schedule-popover', {
+      flow: 'Flow 3',
+      note: '安排弹窗下午预设 → 14:00',
+    })
     await page.getByRole('button', { name: '取消' }).click()
   })
 
@@ -320,24 +401,33 @@ test.describe('移动端主流程走查', () => {
     await page.goto('/')
     await page.getByRole('link', { name: '收件箱' }).click()
     await expect(page).toHaveURL(/\/inbox/)
-    await expect(page.locator('.task-title', { hasText: '收件箱灵感' })).toBeVisible()
-    await snap(page, '08-inbox')
+    await expect(
+      page.locator('.task-title', { hasText: '收件箱灵感' }),
+    ).toBeVisible()
+    await snap(page, '08-inbox', { flow: 'Flow 4', note: '底栏 → 收件箱' })
 
     await page.getByRole('link', { name: '即将' }).click()
     await expect(page).toHaveURL(/\/upcoming/)
-    await expect(page.locator('.task-title', { hasText: '明日站会准备' })).toBeVisible()
-    await snap(page, '09-upcoming')
+    await expect(
+      page.locator('.task-title', { hasText: '明日站会准备' }),
+    ).toBeVisible()
+    await snap(page, '09-upcoming', { flow: 'Flow 4', note: '底栏 → 即将' })
 
     await page.getByRole('link', { name: '已完成' }).click()
     await expect(page).toHaveURL(/\/completed/)
-    await snap(page, '10-completed')
+    await snap(page, '10-completed', { flow: 'Flow 4', note: '底栏 → 已完成' })
 
     await page.getByRole('link', { name: '今天' }).click()
     await expect(page).toHaveURL(/\/(\?.*)?$/)
-    await snap(page, '11-back-today')
+    await snap(page, '11-back-today', {
+      flow: 'Flow 4',
+      note: '底栏 → 回到今天',
+    })
   })
 
-  test('Flow 5 — More 菜单：日历 / 搜索 / 设置 / 清单', async ({ page }, testInfo) => {
+  test('Flow 5 — More 菜单：日历 / 搜索 / 设置 / 清单', async ({
+    page,
+  }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', '仅移动端')
     await seedState(page, flowSeedState())
 
@@ -346,11 +436,17 @@ test.describe('移动端主流程走查', () => {
     const todayNav = page.getByRole('link', { name: '今天' })
     await expect(todayNav).not.toHaveClass(/on/)
     await expect(page.locator('.nav-item-more.on')).toBeVisible()
-    await snap(page, '12-calendar-nav')
+    await snap(page, '12-calendar-nav', {
+      flow: 'Flow 5',
+      note: '日历页仅 More 高亮',
+    })
 
     await openMore(page)
     await expect(page.getByTestId('fab-add')).toBeHidden()
-    await snap(page, '12b-calendar-more-no-fab')
+    await snap(page, '12b-calendar-more-no-fab', {
+      flow: 'Flow 5',
+      note: 'More 打开时 FAB 隐藏',
+    })
     await page.keyboard.press('Escape')
     await expect(moreSheet(page)).toHaveCount(0)
 
@@ -358,7 +454,9 @@ test.describe('移动端主流程走查', () => {
     await moreSheet(page).getByRole('link', { name: '搜索' }).click()
     await expect(page).toHaveURL(/\/search/)
     await page.locator('.field input').fill('发布')
-    await expect(page.locator('.task-title', { hasText: '版本发布' })).toBeVisible()
+    await expect(
+      page.locator('.task-title', { hasText: '版本发布' }),
+    ).toBeVisible()
 
     const tagButtons = page.locator('.search-tags .seg button')
     const tagCount = await tagButtons.count()
@@ -366,18 +464,23 @@ test.describe('移动端主流程走查', () => {
       const text = (await tagButtons.nth(i).innerText()).trim()
       expect(text.length).toBeGreaterThan(0)
     }
-    await snap(page, '13-search')
+    await snap(page, '13-search', { flow: 'Flow 5', note: '搜索 + tag 筛选' })
 
     await openMore(page)
     await moreSheet(page).getByRole('link', { name: '设置' }).click()
     await expect(page).toHaveURL(/\/settings/)
-    await snap(page, '14-settings')
+    await snap(page, '14-settings', { flow: 'Flow 5', note: 'More → 设置' })
 
     await openMore(page)
     await moreSheet(page).getByRole('link', { name: '工作项目' }).click()
     await expect(page).toHaveURL(/\/lists\/list_flow_work/)
-    await expect(page.locator('.task-title', { hasText: '版本发布' })).toBeVisible()
-    await snap(page, '15-list-detail')
+    await expect(
+      page.locator('.task-title', { hasText: '版本发布' }),
+    ).toBeVisible()
+    await snap(page, '15-list-detail', {
+      flow: 'Flow 5',
+      note: 'More → 工作项目清单',
+    })
   })
 
   test('Flow 6 — 手势：右滑完成 / 左滑改期', async ({ page }, testInfo) => {
@@ -386,10 +489,17 @@ test.describe('移动端主流程走查', () => {
 
     await page.goto('/inbox')
     await swipeTaskRow(page, '收件箱灵感', 120)
-    await expect(page.locator('.task-title', { hasText: '收件箱灵感' })).toHaveCount(0)
+    await expect(
+      page.locator('.task-title', { hasText: '收件箱灵感' }),
+    ).toHaveCount(0)
     await page.goto('/completed')
-    await expect(page.locator('.task-title', { hasText: '收件箱灵感' })).toBeVisible()
-    await snap(page, '16-swipe-complete')
+    await expect(
+      page.locator('.task-title', { hasText: '收件箱灵感' }),
+    ).toBeVisible()
+    await snap(page, '16-swipe-complete', {
+      flow: 'Flow 6',
+      note: '右滑完成 → 已完成页',
+    })
 
     await page.goto('/inbox')
     await page.getByTestId('fab-add').click()
@@ -405,8 +515,13 @@ test.describe('移动端主流程走查', () => {
       .click()
     await expect(page.locator('.toast')).toContainText(/安排|Scheduled/i)
     await page.goto('/upcoming')
-    await expect(page.locator('.task-title', { hasText: '左滑改期测试' })).toBeVisible()
-    await snap(page, '17-swipe-reschedule')
+    await expect(
+      page.locator('.task-title', { hasText: '左滑改期测试' }),
+    ).toBeVisible()
+    await snap(page, '17-swipe-reschedule', {
+      flow: 'Flow 6',
+      note: '左滑改期 → 即将页',
+    })
   })
 
   test('Flow 7 — 庆祝态（全部完成）', async ({ page }, testInfo) => {
@@ -417,14 +532,19 @@ test.describe('移动端主流程走查', () => {
 
     await expect(page.locator('.today-closed')).toBeVisible()
     await expect(page.locator('.insight-card')).toHaveCount(0)
-    const doneHeader = page.locator('#done-today .sec-header--collapsible, #done-today')
+    const doneHeader = page.locator(
+      '#done-today .sec-header--collapsible, #done-today',
+    )
     await expect(doneHeader.first()).toBeVisible()
     const expanded = await page
       .locator('#done-today .sec-header--collapsible')
       .getAttribute('aria-expanded')
       .catch(() => 'true')
     expect(expanded).not.toBe('false')
-    await snap(page, '18-celebration')
+    await snap(page, '18-celebration', {
+      flow: 'Flow 7',
+      note: '庆祝态无 Insight/FAB，今日完成展开',
+    })
   })
 
   test('Flow 8 — AppBar 搜索入口与滚动', async ({ page }, testInfo) => {
@@ -451,6 +571,9 @@ test.describe('移动端主流程走查', () => {
       })
       expect(scrollTop).toBeGreaterThan(0)
     }
-    await snap(page, '19-scroll-check')
+    await snap(page, '19-scroll-check', {
+      flow: 'Flow 8',
+      note: 'AppBar 搜索 + 列表滚动',
+    })
   })
 })

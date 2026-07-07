@@ -11,7 +11,8 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "screenshot:mobile-flow": "playwright test tests/mobile-flow-walkthrough.spec.js --project=mobile"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

@@ -138,11 +138,6 @@ export function resolvePrimaryNavTab(pathname) {
 
 /** @param {string} pathname @param {string} [search] */
 export function isMoreNavActive(pathname, search = '') {
-  if (
-    pathname === '/' &&
-    new URLSearchParams(search).get('view') === 'timeline'
-  )
-    return true
   if (pathname.startsWith('/search')) return true
   if (pathname.startsWith('/calendar')) return true
   if (pathname.startsWith('/lists/')) return true
