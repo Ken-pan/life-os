@@ -43,6 +43,20 @@ const DRAIN_RETRY_MS = 1500
 const HELLO_MAX_ATTEMPTS = 6
 const FINALIZE_ATTEMPTS = 3
 
+function rpcErrorCode(e: unknown): string | undefined {
+  if (e && typeof e === 'object' && 'code' in e) {
+    const code = (e as { code?: unknown }).code
+    return typeof code === 'string' ? code : undefined
+  }
+  return undefined
+}
+
+/** Postgres cast / datetime parse failures won't heal on retry. */
+function isPermanentRpcError(e: unknown): boolean {
+  const code = rpcErrorCode(e)
+  return code === '22P02' || code === '22007' || code === '22008'
+}
+
 interface ApplyResult {
   report: SyncReport
   updatedAccountIds: string[]
@@ -59,6 +73,7 @@ async function finalizeCaptureWithRetry(
       return await finalizeExtensionSync(input)
     } catch (e) {
       lastErr = e
+      if (isPermanentRpcError(e)) break
       if (i < FINALIZE_ATTEMPTS - 1) {
         await new Promise((r) => setTimeout(r, 400 * (i + 1)))
       }
@@ -257,6 +272,7 @@ export function ExtensionSyncBridge() {
       const applied: Array<{ env: CaptureEnvelope; result: ApplyResult }> = []
       const batchReports: SyncReport[] = []
       let applyFailed = false
+      let stopRetry = false
       const failedEnvelopeIds: string[] = []
 
       while (queueRef.current.length > 0) {
@@ -271,8 +287,10 @@ export function ExtensionSyncBridge() {
           applied.push({ env, result })
         } catch (e) {
           console.error('[ext-sync] 应用 capture 失败：', env, e)
-          queueRef.current.unshift(env)
+          const permanent = isPermanentRpcError(e)
+          if (!permanent) queueRef.current.unshift(env)
           applyFailed = true
+          stopRetry = stopRetry || permanent
           failedEnvelopeIds.push(env.id)
           setSyncError(
             e instanceof Error ? e.message : t('extension.applyFailed'),
@@ -296,10 +314,12 @@ export function ExtensionSyncBridge() {
           batchReports.push(item.result.report)
         } catch (e) {
           console.error('[ext-sync] 扩展 capture 落库失败：', item.env, e)
+          const permanent = isPermanentRpcError(e)
           setSyncError(
             e instanceof Error ? e.message : t('extension.finalizeFailed'),
           )
-          queueRef.current.unshift(item.env)
+          if (!permanent) queueRef.current.unshift(item.env)
+          stopRetry = stopRetry || permanent
           failedEnvelopeIds.push(item.env.id)
         }
       }
@@ -330,7 +350,7 @@ export function ExtensionSyncBridge() {
         })
       }
 
-      if (applyFailed || queueRef.current.length > 0) {
+      if (!stopRetry && (applyFailed || queueRef.current.length > 0)) {
         scheduleDrainRetry()
       }
     }

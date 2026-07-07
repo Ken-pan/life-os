@@ -990,10 +990,23 @@ export async function computeEnvelopePayloadHash(
   return computeEnvelopePayloadHashSync(env)
 }
 
+/** Drop empty strings before RPC so Postgres never sees `""` for typed JSON fields. */
+export function sanitizeExtensionSyncTxnPayload(
+  payload: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(payload)) {
+    if (value === undefined) continue
+    if (typeof value === 'string' && value.trim() === '') continue
+    out[key] = value
+  }
+  return out
+}
+
 export function newTxnToExtensionSyncPayload(
   t: NewTxn,
 ): Record<string, unknown> {
-  const payload: Record<string, unknown> = {
+  return sanitizeExtensionSyncTxnPayload({
     date: t.date,
     merchant: t.merchant,
     category: t.category,
@@ -1004,10 +1017,9 @@ export function newTxnToExtensionSyncPayload(
     include_in_spending_analytics: t.inSpending,
     include_in_cash_flow_history: t.inCashFlow,
     source: t.source ?? 'import',
-  }
-  if (t.excludeReason) payload.exclude_reason = t.excludeReason
-  if (t.platformId) payload.platform_id = t.platformId
-  return payload
+    ...(t.excludeReason ? { exclude_reason: t.excludeReason } : {}),
+    ...(t.platformId ? { platform_id: t.platformId } : {}),
+  })
 }
 
 export function loadProcessedIds(): Set<string> {
