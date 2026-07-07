@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Finance OS Sync",
-  "version": "0.2.0",
+  "version": "0.2.6",
   "description": "从 Robinhood / Rocket Money / Fidelity 页面抓取持仓、余额与交易，同步到 Finance OS（Life OS / Supabase public schema）。",
   "permissions": ["storage", "activeTab", "tabs"],
   "icons": {
@@ -26,12 +26,22 @@
   "content_scripts": [
     {
       "matches": ["https://robinhood.com/*"],
-      "js": ["content/common.js", "rhDetailsShared.js", "content/robinhood.js"],
+      "js": [
+        "content/common.js",
+        "rhDetailsShared.js",
+        "rhFinanceProbes.js",
+        "content/robinhood.js"
+      ],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://app.rocketmoney.com/*"],
-      "js": ["content/common.js", "content/syncPlan.js", "content/rocketmoney.js"],
+      "js": [
+        "content/common.js",
+        "rmFinanceProbes.js",
+        "content/syncPlan.js",
+        "content/rocketmoney.js"
+      ],
       "run_at": "document_idle"
     },
     {

@@ -20,10 +20,20 @@
     )
     if (typeof el.click === 'function') el.click()
     return {
+      ok: true,
       selector,
       tag: el.tagName.toLowerCase(),
       name: el.getAttribute('aria-label') || undefined,
     }
+  }
+
+  /** Same as clickSelector but never throws — for optional UI (e.g. Load More). */
+  function clickSelectorIfPresent(selector) {
+    const el = query(selector)
+    if (!el) {
+      return { ok: false, selector, reason: 'not_found' }
+    }
+    return clickSelector(selector)
   }
 
   function fillSelector(selector, text, clear = true) {
@@ -99,6 +109,7 @@
 
   window.__WSD_ACTIONS__ = {
     clickSelector,
+    clickSelectorIfPresent,
     fillSelector,
     scrollPage,
     scrollToBottom,

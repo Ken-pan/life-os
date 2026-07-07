@@ -14,6 +14,7 @@ import type {
   Goal,
   HoldingPosition,
   HoldingsSnapshot,
+  MerchantOrderCatalog,
   PortfolioAllocationTarget,
   AccountFundAllocation,
   Scenario,
@@ -776,6 +777,10 @@ export async function loadFinanceData(): Promise<FinanceData | null> {
   const portfolioAllocationTarget = sanitizePortfolioAllocationTarget(
     settings.portfolio_allocation_target as PortfolioAllocationTarget | null | undefined
   );
+  const merchantOrderCatalog = settings.merchant_order_catalog as
+    | MerchantOrderCatalog
+    | null
+    | undefined;
 
   return {
     version: settings.data_version != null ? Number(settings.data_version) : DATA_VERSION,
@@ -788,6 +793,7 @@ export async function loadFinanceData(): Promise<FinanceData | null> {
     goals: ((gl.data as Row[]) ?? []).map(goalFromRow),
     assumptions,
     portfolioAllocationTarget,
+    merchantOrderCatalog: merchantOrderCatalog ?? undefined,
     updatedAt: ostr(settings.updated_at) ?? new Date().toISOString(),
     privacy: Boolean(settings.privacy),
     locale: isAppLocale(ostr(settings.locale)) ? (ostr(settings.locale) as AppLocale) : "zh-CN",

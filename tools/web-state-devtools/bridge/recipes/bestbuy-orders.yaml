@@ -37,7 +37,7 @@ export:
 follow:
   enabled: true
   field: detailUrl
-  max: 40
+  max: 60
   whenMissing: [lineItems]
   wait:
     selectors:

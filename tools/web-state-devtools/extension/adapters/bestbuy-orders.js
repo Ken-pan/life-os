@@ -16,8 +16,10 @@
     orderHeader: '[data-testid="OrderItemHeader"]',
     statusTitle: '[data-testid="OrderStatusTitle-None-TestID"]',
     statusDesc: '[data-testid="OrderStatusDescription-None-TestID"]',
-    detailRoot: '.order-details-page',
-    lineItemLink: 'a[id^="line-item-header-"]',
+    detailRoot:
+      '.order-details-page, [data-testid="order-details-page"], [class*="OrderDetailsPage"]',
+    lineItemLink:
+      'a[id^="line-item-header-"], a[data-testid*="line-item"], [data-testid*="LineItem"] a',
     productImage: 'img[src*="bbystatic.com"], img[src*="bestbuy.com/"]',
   }
 
@@ -27,7 +29,7 @@
       if (!/bestbuy\./i.test(u.hostname)) return false
       const p = u.pathname + u.search
       return (
-        /purchasehistory|profile\/ss\/orders|order-details|order-details/i.test(
+        /purchasehistory|profile\/ss\/(?:marketplace\/)?orders|order-details/i.test(
           p,
         ) || u.searchParams.has('orderId')
       )
@@ -42,7 +44,11 @@
 
   function detailUrlFor(orderId) {
     if (!orderId) return undefined
-    return `${location.origin}/profile/ss/orders/order-details/${encodeURIComponent(orderId)}/view`
+    const id = encodeURIComponent(orderId)
+    if (/^BBY03-/i.test(orderId)) {
+      return `${location.origin}/profile/ss/marketplace/orders/order-details/${id}/view`
+    }
+    return `${location.origin}/profile/ss/orders/order-details/${id}/view`
   }
 
   function extractProductImageUrl(scope) {
@@ -195,13 +201,21 @@
   }
 
   function parseOrderDetail() {
-    const root = document.querySelector(SEL.detailRoot)
+    const root =
+      document.querySelector(SEL.detailRoot) ||
+      document.querySelector('main[class*="order"]') ||
+      document.querySelector('main')
     if (!root) return null
 
     const bodyText = text(root)
+    const pathId =
+      location.pathname.match(
+        /order-details\/([^/]+)/i,
+      )?.[1]?.toUpperCase()
     const orderId =
-      location.pathname.match(/order-details\/([^/]+)/i)?.[1]?.toUpperCase() ||
-      bodyText.match(ORDER_ID_RE)?.[1]?.toUpperCase()
+      pathId ||
+      bodyText.match(ORDER_ID_RE)?.[1]?.toUpperCase() ||
+      bodyText.match(STORE_TXN_RE)?.[1]?.replace(/\s+/g, '-')
     if (!orderId) return null
 
     const lineItems = []
@@ -209,6 +223,7 @@
     for (const a of root.querySelectorAll(SEL.lineItemLink)) {
       const title = text(a) || a.getAttribute('aria-label') || ''
       if (!title || title.length < 4) continue
+      if (/^(item details for|view product)/i.test(title)) continue
       const href = a.href || a.getAttribute('href') || ''
       const key = a.id || href || title
       if (seen.has(key)) continue
@@ -216,6 +231,7 @@
       const row =
         a.closest('li') ||
         a.closest('[id^="lineId__"]') ||
+        a.closest('[data-testid*="line-item"]') ||
         a.parentElement?.parentElement?.parentElement
       const price = text(row).match(PRICE_RE)?.[0]
       const imageUrl = extractProductImageUrl(row || a.closest('div'))
@@ -226,6 +242,31 @@
         imageUrl,
         quantity: 1,
       })
+    }
+
+    // Marketplace / sparse layouts: product image + adjacent title
+    if (!lineItems.length) {
+      for (const img of root.querySelectorAll(SEL.productImage)) {
+        const row =
+          img.closest('[data-testid*="line"]') ||
+          img.closest('li') ||
+          img.closest('article') ||
+          img.parentElement?.parentElement
+        if (!row) continue
+        const rowText = text(row)
+        const title =
+          row.querySelector('h2,h3,h4,a')?.textContent?.trim() ||
+          rowText.split(PRICE_RE)[0]?.trim()
+        if (!title || title.length < 4 || seen.has(title)) continue
+        if (/order (placed|total)|purchased in store/i.test(title)) continue
+        seen.add(title)
+        lineItems.push({
+          title: title.replace(/\s+/g, ' ').slice(0, 300),
+          price: rowText.match(PRICE_RE)?.[0],
+          imageUrl: extractProductImageUrl(row),
+          quantity: 1,
+        })
+      }
     }
 
     const orderTotal =

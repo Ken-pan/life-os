@@ -10,9 +10,13 @@ const CAPTURE_FILES = [
   'lib/framework-hints.js',
   'lib/region-scoper.js',
   'lib/action-runner.js',
+  'lib/rm-finance-probes.js',
+  'lib/rh-finance-probes.js',
   'adapters/amazon-orders.js',
   'adapters/bestbuy-orders.js',
   'adapters/target-orders.js',
+  'adapters/rocketmoney-finance.js',
+  'adapters/robinhood-finance.js',
   'adapters/life-os.js',
   'capture.js',
 ]
@@ -147,7 +151,7 @@ async function executeAction(action, params = {}) {
     case 'ping':
       return {
         agent: 'web-state-devtools',
-        version: '0.8.0',
+        version: '0.8.4',
         bridge: BRIDGE_URL,
       }
 
@@ -165,14 +169,18 @@ async function executeAction(action, params = {}) {
     case 'navigate': {
       const { url, tabId, active = true } = params
       if (!url) throw new Error('url required')
+      let resolvedTabId
       if (tabId) {
         await chrome.tabs.update(tabId, { url, active })
-        await waitForTabComplete(tabId)
-        return { tabId, url }
+        resolvedTabId = tabId
+      } else {
+        const tab = await chrome.tabs.create({ url, active })
+        resolvedTabId = tab.id
       }
-      const tab = await chrome.tabs.create({ url, active })
-      await waitForTabComplete(tab.id)
-      return { tabId: tab.id, url }
+      await waitForTabComplete(resolvedTabId)
+      await waitThroughAuthRedirect(resolvedTabId, url)
+      const finalTab = await chrome.tabs.get(resolvedTabId)
+      return { tabId: resolvedTabId, url: finalTab.url || url }
     }
 
     case 'navigate_and_capture': {
@@ -188,11 +196,22 @@ async function executeAction(action, params = {}) {
     case 'click': {
       const tabId = await resolveTabId(params)
       await injectActions(tabId)
+      const optional = params.optional === true
       const [{ result }] = await chrome.scripting.executeScript({
         target: { tabId },
-        func: (sel) => window.__WSD_ACTIONS__.clickSelector(sel),
-        args: [params.selector],
+        func: (sel, soft) => {
+          if (soft && window.__WSD_ACTIONS__.clickSelectorIfPresent) {
+            return window.__WSD_ACTIONS__.clickSelectorIfPresent(sel)
+          }
+          return window.__WSD_ACTIONS__.clickSelector(sel)
+        },
+        args: [params.selector, optional],
       })
+      if (!optional && result?.ok === false) {
+        throw new Error(
+          result.reason || `Element not found: ${params.selector}`,
+        )
+      }
       return { tabId, ...result }
     }
 
@@ -593,6 +612,33 @@ function waitForTabComplete(tabId, timeoutMs = 30000) {
       })
       .catch(reject)
   })
+}
+
+/** Best Buy / Target token refresh hops — wait for redirect, not a login failure. */
+async function waitThroughAuthRedirect(tabId, targetUrl, timeoutMs = 45000) {
+  const authHop = /signin\/refresh|identity\/signin\/refresh/i
+  const hardSignIn = (u) =>
+    u && !authHop.test(u) && /signin|identity\/signin|\/login(?:\?|$)/i.test(u)
+  let targetPath = ''
+  try {
+    targetPath = new URL(targetUrl).pathname
+  } catch {
+    targetPath = ''
+  }
+
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    const tab = await chrome.tabs.get(tabId)
+    const u = tab.url || ''
+    if (hardSignIn(u)) return
+    if (authHop.test(u)) {
+      await sleep(500)
+      continue
+    }
+    if (targetPath && u.includes(targetPath)) return
+    if (u && !authHop.test(u)) return
+    await sleep(500)
+  }
 }
 
 function sleep(ms) {

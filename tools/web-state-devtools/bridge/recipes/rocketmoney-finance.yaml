@@ -1,0 +1,38 @@
+# Rocket Money finance capture — used with Finance OS Sync + WSD verify scripts
+# Live verify: WEB_STATE_ALLOW_ROCKETMONEY=1 node scripts/verify-rocketmoney-sample.mjs
+
+id: rocketmoney-finance
+match:
+  urlPattern: 'rocketmoney\\.com'
+
+vars:
+  pages:
+    - path: /dashboard
+      sidebar: sidebar-Dashboard
+      entity: accounts
+    - path: /net-worth
+      sidebar: sidebar-NetWorth
+      entity: accounts
+    - path: /recurring
+      sidebar: sidebar-Recurring
+      entity: recurring
+    - path: /transactions
+      sidebar: sidebar-Transactions
+      entity: transactions
+
+capture:
+  action: capture
+  fast: false
+  wait:
+    selectors:
+      - '[data-testid="transaction-table-row"]'
+      - '[data-testid="subscription-section-card"]'
+      - '[role="row"]'
+      - 'h6'
+    minCount: 1
+    stableMs: 600
+    timeoutMs: 20000
+
+entities:
+  kind: page
+  source: adapter

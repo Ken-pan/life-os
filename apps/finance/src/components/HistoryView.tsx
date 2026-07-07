@@ -23,6 +23,7 @@ import {
 import { useTransactions } from "../store/transactions";
 import { PurchaseEnrichmentBlock } from "./PurchaseEnrichmentBlock";
 import { LedgerProductStrip } from "./LedgerProductStrip";
+import { MerchantOrderCatalogSection } from "./MerchantOrderCatalogSection";
 import { hasPurchaseEnrichment } from "../engine/purchaseEnrichment";
 import {
   ledgerAccountColumn,
@@ -172,6 +173,11 @@ export function HistoryView({
           </div>
           );
         })}
+
+        <MerchantOrderCatalogSection
+          catalog={data.merchantOrderCatalog}
+          privacy={privacy}
+        />
 
         <BudgetPulseCard data={data} onQuickAdd={onQuickAdd} compact />
       </section>

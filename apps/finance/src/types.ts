@@ -368,4 +368,19 @@ export interface FinanceData {
   privacy: boolean;
   /** 界面语言（BCP 47）。 */
   locale?: "zh-CN" | "en-US";
+  /** 未能自动关联银行流水的商户订单（如 Target RedCard 月结）。 */
+  merchantOrderCatalog?: MerchantOrderCatalog;
+}
+
+/** @see finance_user_settings.merchant_order_catalog */
+export interface MerchantOrderCatalog {
+  updatedAt?: string;
+  bestbuy?: {
+    orders: Array<Record<string, unknown>>;
+    syncedAt?: string;
+  };
+  target?: {
+    orders: Array<Record<string, unknown>>;
+    syncedAt?: string;
+  };
 }

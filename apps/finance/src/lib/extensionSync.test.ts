@@ -228,6 +228,50 @@ describe("planAccountsBalanceUpdate", () => {
     expect(plan.updates[0].balance).toBe(0.77);
   });
 
+  it("401(k) 长名与信用卡产品名可用 token 匹配多张同类型账户", () => {
+    const many: Account[] = [
+      { id: "acct-401k", name: "Ingram Micro 401k", type: "retirement", balance: 57000 },
+      { id: "acct-hsa", name: "Health Savings Account (Fidelity 1152)", type: "hsa", balance: 1800 },
+      { id: "cc-prime", name: "Chase Prime Visa", type: "credit-card", balance: 1200 },
+      { id: "cc-ur", name: "Chase Ultimate Rewards", type: "credit-card", balance: 800 },
+      { id: "cc-target", name: "Target Circle Card", type: "credit-card", balance: 300 },
+      ...Array.from({ length: 8 }, (_, i) => ({
+        id: `cc-other-${i}`,
+        name: `Other Card ${i}`,
+        type: "credit-card" as const,
+        balance: 100 + i,
+      })),
+    ];
+    const envRm: CaptureEnvelope = {
+      ...env,
+      data: {
+        accounts: [
+          {
+            name: "INGRAM MICRO 401(K) INVESTMENT SAVINGS PLAN",
+            balance: 57572.08,
+            institution: "Fidelity",
+          },
+          {
+            name: "Health Savings Account",
+            balance: 1890,
+            kindHint: "hsa",
+            institution: "Fidelity",
+          },
+          { name: "Prime Visa", balance: 2100, kindHint: "credit", institution: "Chase" },
+          { name: "Ultimate Rewards®", balance: 950, kindHint: "credit", institution: "Chase" },
+          { name: "Target Circle Card", balance: 410, kindHint: "credit", institution: "Target" },
+        ],
+      },
+    };
+    const plan = planAccountsBalanceUpdate(envRm, many);
+    const byId = Object.fromEntries(plan.updates.map((a) => [a.id, a.balance]));
+    expect(byId["acct-401k"]).toBe(57572.08);
+    expect(byId["acct-hsa"]).toBe(1890);
+    expect(byId["cc-prime"]).toBe(2100);
+    expect(byId["cc-ur"]).toBe(950);
+    expect(byId["cc-target"]).toBe(410);
+  });
+
   it("Fidelity 账户列表：retirement/hsa kindHint 唯一匹配", () => {
     const fidAccounts: Account[] = [
       ...accounts,

@@ -12,11 +12,15 @@ import { fileURLToPath } from 'node:url'
 import { loadRecipe } from '../lib/recipe.mjs'
 import { extractMergeKey } from '../lib/store.mjs'
 import { redactForExport } from '../lib/privacy.mjs'
+import {
+  isHardSignInUrl,
+  resolveHarvestTabId,
+  waitForHarvestReady,
+} from '../lib/harvest-tab.mjs'
 
 const RECIPE_ID = 'target-orders'
 const BRIDGE = process.env.WEB_STATE_BRIDGE_URL || 'http://127.0.0.1:17321'
-const ORDERS_URL =
-  'https://www.target.com/orders?lnk=acct_nav_my_account'
+const ORDERS_URL = 'https://www.target.com/orders?lnk=acct_nav_my_account'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const LOG = '[target]'
 
@@ -64,6 +68,28 @@ function writeExport(recipe, summary, rawItems, exportItems) {
   )
   fs.mkdirSync(outDir, { recursive: true })
   const base = String(recipe.export?.basename || 'target-orders-past-year')
+  const rawPath = path.join(outDir, `${base}-raw.json`)
+  const prevCount = fs.existsSync(rawPath)
+    ? (JSON.parse(fs.readFileSync(rawPath, 'utf8')).orders?.length ?? 0)
+    : 0
+  const stuckOnSignIn = (summary.scrollSteps ?? []).some((s) =>
+    isHardSignInUrl(String(s.url ?? '')),
+  )
+  if (exportItems.length === 0 && (prevCount > 0 || stuckOnSignIn)) {
+    console.warn(
+      `${LOG} 0 orders harvested`,
+      stuckOnSignIn
+        ? '(still on sign-in page)'
+        : `(previous export had ${prevCount})`,
+      '— keeping existing export',
+    )
+    return {
+      json: path.join(outDir, `${base}.json`),
+      jsonRaw: rawPath,
+      csv: path.join(outDir, `${base}.csv`),
+      skipped: true,
+    }
+  }
   const jsonPath = path.join(outDir, `${base}.json`)
   fs.writeFileSync(
     jsonPath,
@@ -196,11 +222,23 @@ async function main() {
   const deps = { runAction, getLatestSnapshot, writeExport }
   const t0 = Date.now()
 
-  const nav = await runAction('navigate', { url: ORDERS_URL }, 90000)
-  const tabId = nav?.tabId
-  if (!tabId) throw new Error('Navigate did not return tabId')
+  const tabId = await resolveHarvestTabId(runAction, {
+    hostRe: /target\.com/i,
+    pathRe: /target\.com\/orders/i,
+    targetUrl: ORDERS_URL,
+    log: (msg) => console.log(LOG, msg),
+  })
+  await waitForHarvestReady(
+    runAction,
+    tabId,
+    {
+      readyRe: /target\.com\/orders/i,
+      log: (msg) => console.log(LOG, msg),
+    },
+    60000,
+  )
 
-  await new Promise((r) => setTimeout(r, 2500))
+  await new Promise((r) => setTimeout(r, 1500))
 
   const { merged, steps: scrollSteps } = await scrollHarvest(
     deps,

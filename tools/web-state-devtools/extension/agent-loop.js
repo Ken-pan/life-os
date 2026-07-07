@@ -133,9 +133,11 @@ function connectAgentWs() {
     try {
       socket = new WebSocket(wsUrl())
       ws = socket
-    } catch {
+    } catch (err) {
       wsConnecting = false
-      scheduleReconnect()
+      wsSupported = false
+      wsDisabledReason = 'WebSocket constructor failed — using poll fallback'
+      console.warn('[wsd]', wsDisabledReason, err?.message || err)
       return
     }
 
@@ -145,7 +147,7 @@ function connectAgentWs() {
       safeWsSend(socket, {
         type: 'hello',
         agent: 'web-state-devtools',
-        version: '0.8.0',
+        version: '0.8.4',
       })
       console.log('[wsd] agent WS connected')
     }
@@ -182,7 +184,13 @@ function connectAgentWs() {
 
     socket.onerror = () => {
       wsConnecting = false
-      if (socket === ws) teardownSocket(socket)
+      if (socket === ws) {
+        wsSupported = false
+        wsDisabledReason =
+          'WebSocket /agent unreachable (is bridge running?) — using poll fallback'
+        teardownSocket(socket)
+        ws = null
+      }
     }
   })
 }

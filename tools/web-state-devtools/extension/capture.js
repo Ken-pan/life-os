@@ -66,6 +66,15 @@
   for (const adapter of adapters) {
     try {
       if (adapter.matches?.(location.href)) {
+        if (adapter.prepare) {
+          const prep = await Promise.resolve(adapter.prepare())
+          if (prep && typeof prep === 'object') {
+            snapshot.captureMeta = {
+              ...(snapshot.captureMeta || {}),
+              adapterPrepare: { id: adapter.id, ...prep },
+            }
+          }
+        }
         const result = adapter.run?.()
         if (result) snapshot.adapter = result
       }

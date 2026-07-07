@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Web State DevTools",
-  "version": "0.8.2",
+  "version": "0.8.4",
   "description": "Capture page structure and let Cursor control Chrome tabs via localhost bridge + MCP.",
   "permissions": ["activeTab", "scripting", "storage", "tabs", "debugger"],
   "host_permissions": [
@@ -12,7 +12,9 @@
     "https://*.netlify.app/*",
     "https://*.amazon.com/*",
     "https://*.bestbuy.com/*",
-    "https://*.target.com/*"
+    "https://*.target.com/*",
+    "https://*.rocketmoney.com/*",
+    "https://robinhood.com/*"
   ],
   "background": {
     "service_worker": "service_worker.js"

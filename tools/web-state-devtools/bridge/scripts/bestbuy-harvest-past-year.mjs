@@ -12,6 +12,16 @@ import { fileURLToPath } from 'node:url'
 import { loadRecipe } from '../lib/recipe.mjs'
 import { extractMergeKey } from '../lib/store.mjs'
 import { redactForExport } from '../lib/privacy.mjs'
+import {
+  ensureHarvestListPage,
+  getTabUrl,
+  isAuthIntermediateUrl,
+  isHardSignInUrl,
+  resolveHarvestTabId,
+  waitForHarvestReady,
+} from '../lib/harvest-tab.mjs'
+
+const PURCHASES_READY_RE = /bestbuy\.com\/purchasehistory\/purchases/i
 
 const RECIPE_ID = 'bestbuy-orders'
 const BRIDGE = process.env.WEB_STATE_BRIDGE_URL || 'http://127.0.0.1:17321'
@@ -62,6 +72,28 @@ function writeExport(recipe, summary, rawItems, exportItems) {
   )
   fs.mkdirSync(outDir, { recursive: true })
   const base = String(recipe.export?.basename || 'bestbuy-orders-past-year')
+  const rawPath = path.join(outDir, `${base}-raw.json`)
+  const prevCount = fs.existsSync(rawPath)
+    ? (JSON.parse(fs.readFileSync(rawPath, 'utf8')).orders?.length ?? 0)
+    : 0
+  const stuckOnSignIn = (summary.scrollSteps ?? []).some((s) =>
+    isHardSignInUrl(String(s.url ?? '')),
+  )
+  if (exportItems.length === 0 && (prevCount > 0 || stuckOnSignIn)) {
+    console.warn(
+      '[bestbuy] 0 orders harvested',
+      stuckOnSignIn
+        ? '(still on sign-in page — not auth refresh hop)'
+        : `(previous export had ${prevCount})`,
+      '— keeping existing export',
+    )
+    return {
+      json: path.join(outDir, `${base}.json`),
+      jsonRaw: rawPath,
+      csv: path.join(outDir, `${base}.csv`),
+      skipped: true,
+    }
+  }
   const jsonPath = path.join(outDir, `${base}.json`)
   fs.writeFileSync(
     jsonPath,
@@ -109,18 +141,32 @@ function writeExport(recipe, summary, rawItems, exportItems) {
   }
 }
 
-async function scrollHarvest(deps, recipe, tabId, purchasesUrl) {
+async function scrollHarvest(deps, recipe, tabId, purchasesUrl, runAction) {
   const mergeKeyRules = recipe.entities?.mergeKey || ['orderId']
   /** @type {Map<string, Record<string, unknown>>} */
   const merged = new Map()
   const steps = []
   const maxRounds = Number(recipe.vars?.scrollRounds) || 35
+  const log = (msg) => console.log('[bestbuy]', msg)
 
-  await deps.runAction('navigate', { url: purchasesUrl, tabId }, 90000)
+  await ensureHarvestListPage(runAction, tabId, {
+    targetUrl: purchasesUrl,
+    readyRe: PURCHASES_READY_RE,
+    log,
+  })
 
   let zeroAddRounds = 0
 
   for (let round = 0; round < maxRounds; round++) {
+    const tabUrl = await getTabUrl(runAction, tabId)
+    if (!PURCHASES_READY_RE.test(tabUrl) || isAuthIntermediateUrl(tabUrl)) {
+      await ensureHarvestListPage(runAction, tabId, {
+        targetUrl: purchasesUrl,
+        readyRe: PURCHASES_READY_RE,
+        log,
+      })
+    }
+
     const t0 = Date.now()
     await deps.runAction(
       'capture',
@@ -160,18 +206,19 @@ async function scrollHarvest(deps, recipe, tabId, purchasesUrl) {
       zeroAddRounds = 0
     }
 
-    // Best Buy: prefer Load More button (from page model) before blind scroll
-    try {
-      await deps.runAction(
-        'click',
-        {
-          tabId,
-          selector: '[data-testid="OrderList-LoadMore-TestID"]',
-        },
-        8000,
-      )
+    // Best Buy: prefer Load More when present; never throw on auth/list edge pages
+    const loadMore = await deps.runAction(
+      'click',
+      {
+        tabId,
+        selector: '[data-testid="OrderList-LoadMore-TestID"]',
+        optional: true,
+      },
+      8000,
+    )
+    if (loadMore?.ok) {
       await new Promise((r) => setTimeout(r, 1500))
-    } catch {
+    } else {
       await deps.runAction('scroll', { preset: 'bottom', tabId }, 30000)
       await new Promise((r) => setTimeout(r, 1200))
     }
@@ -206,15 +253,24 @@ async function main() {
   const deps = { runAction, getLatestSnapshot, writeExport }
   const t0 = Date.now()
 
-  const nav = await runAction('navigate', { url: PURCHASES_URL }, 90000)
-  const tabId = nav?.tabId
-  if (!tabId) throw new Error('Navigate did not return tabId')
+  const tabId = await resolveHarvestTabId(runAction, {
+    hostRe: /bestbuy\.com/i,
+    pathRe: /purchasehistory\/purchases/i,
+    targetUrl: PURCHASES_URL,
+    log: (msg) => console.log('[bestbuy]', msg),
+  })
+  await ensureHarvestListPage(runAction, tabId, {
+    targetUrl: PURCHASES_URL,
+    readyRe: PURCHASES_READY_RE,
+    log: (msg) => console.log('[bestbuy]', msg),
+  })
 
   const { merged, steps: scrollSteps } = await scrollHarvest(
     deps,
     recipe,
     tabId,
     PURCHASES_URL,
+    runAction,
   )
 
   const allItems = [...merged.values()].sort((a, b) => {

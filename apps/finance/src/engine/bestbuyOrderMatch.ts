@@ -1,4 +1,5 @@
 import type { PurchaseEnrichment } from './purchaseEnrichment.ts'
+import { isDirectMerchantPurchaseTxn } from './merchantChargeFilters.ts'
 import {
   enrichmentFromOrder as buildEnrichment,
   matchOrdersToPurchaseTxns,
@@ -44,6 +45,7 @@ export function matchBestBuyOrdersToTxns(
     maxDayDiff: options?.maxDayDiff ?? 21,
     maxAmountDiff: options?.maxAmountDiff,
     minConfidence: options?.minConfidence,
+    isPurchaseTxn: (t) => isDirectMerchantPurchaseTxn('bestbuy', t),
   })
 }
 

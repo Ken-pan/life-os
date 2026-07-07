@@ -533,12 +533,16 @@
       <section>
         <h2>同步到 Finance OS</h2>
         <button id="open-app" class="btn">打开 Finance OS 并同步</button>
+        <button id="release-inflight" class="btn ghost" style="display:none">
+          重置投递中并重试
+        </button>
         <div id="sync-health" class="sync-health ok">等待 Finance OS 页面响应…</div>
       </section>
       <section>
         <h2>主动抓取</h2>
         <button id="crawl-rm" class="btn outline">抓取 Rocket Money（余额 + 订阅 + 交易）</button>
         <div id="crawl-state" class="crawl-state"></div>
+        <button id="crawl-rh" class="btn outline">打开 Robinhood 抓取持仓</button>
         <button id="crawl-rh-details" class="btn outline">补齐 Robinhood 持仓详情（均价/盈亏）</button>
         <div id="rh-enrich-state" class="crawl-state"></div>
         <button id="download-log" class="btn log">下载 debug log</button>

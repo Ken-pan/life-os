@@ -1,18 +1,18 @@
 // 三个平台抓取脚本共享的工具函数（content script 全局命名空间）。
 // 注意：这里不用 ES module（MV3 content_scripts 不支持），统一挂到 window.FOS。
 
-(() => {
-  if (window.FOS) return;
+;(() => {
+  if (window.FOS) return
 
   /** "$1,234.56" / "-$7,104" / "+$5.60" → 数值；解析失败返回 null。 */
   function parseMoney(text) {
-    if (!text) return null;
-    const cleaned = String(text).replace(/[,\s]/g, "");
-    const m = cleaned.match(/^([+-]?)\$?([+-]?)([\d.]+)$/);
-    if (!m) return null;
-    const sign = m[1] === "-" || m[2] === "-" ? -1 : 1;
-    const v = Number(m[3]);
-    return Number.isFinite(v) ? sign * v : null;
+    if (!text) return null
+    const cleaned = String(text).replace(/[,\s]/g, '')
+    const m = cleaned.match(/^([+-]?)\$?([+-]?)([\d.]+)$/)
+    if (!m) return null
+    const sign = m[1] === '-' || m[2] === '-' ? -1 : 1
+    const v = Number(m[3])
+    return Number.isFinite(v) ? sign * v : null
   }
 
   /**
@@ -21,34 +21,35 @@
    * （Rocket Money Net Worth 页），下游更新余额时应放宽容差。
    */
   function parseAbbrevMoney(text) {
-    if (!text) return null;
-    const cleaned = String(text).replace(/[,\s]/g, "");
-    const m = cleaned.match(/^([+-]?)\$?([\d.]+)([kKmM]?)$/);
-    if (!m) return null;
-    const v = Number(m[2]);
-    if (!Number.isFinite(v)) return null;
-    const mult = m[3].toLowerCase() === "k" ? 1e3 : m[3].toLowerCase() === "m" ? 1e6 : 1;
+    if (!text) return null
+    const cleaned = String(text).replace(/[,\s]/g, '')
+    const m = cleaned.match(/^([+-]?)\$?([\d.]+)([kKmM]?)$/)
+    if (!m) return null
+    const v = Number(m[2])
+    if (!Number.isFinite(v)) return null
+    const mult =
+      m[3].toLowerCase() === 'k' ? 1e3 : m[3].toLowerCase() === 'm' ? 1e6 : 1
     return {
       // 乘法会带浮点尾巴（4.03*1000 = 4030.0000000000005），归整到分。
-      value: Math.round((m[1] === "-" ? -1 : 1) * v * mult * 100) / 100,
-      approximate: m[3] !== "",
-    };
+      value: Math.round((m[1] === '-' ? -1 : 1) * v * mult * 100) / 100,
+      approximate: m[3] !== '',
+    }
   }
 
   /** "65.55 shares" → 65.55 */
   function parseShares(text) {
-    const m = String(text ?? "").match(/([\d,.]+)\s*shares?/i);
-    if (!m) return null;
-    const v = Number(m[1].replace(/,/g, ""));
-    return Number.isFinite(v) ? v : null;
+    const m = String(text ?? '').match(/([\d,.]+)\s*shares?/i)
+    if (!m) return null
+    const v = Number(m[1].replace(/,/g, ''))
+    return Number.isFinite(v) ? v : null
   }
 
   /** "-0.70%" → -0.7 */
   function parsePct(text) {
-    const m = String(text ?? "").match(/([+-]?[\d,.]+)\s*%/);
-    if (!m) return null;
-    const v = Number(m[1].replace(/,/g, ""));
-    return Number.isFinite(v) ? v : null;
+    const m = String(text ?? '').match(/([+-]?[\d,.]+)\s*%/)
+    if (!m) return null
+    const v = Number(m[1].replace(/,/g, ''))
+    return Number.isFinite(v) ? v : null
   }
 
   /**
@@ -57,58 +58,60 @@
    * 更久远的行 RocketMoney 会带年份显示，走显式分支）。
    */
   function monthDayToISO(text, today = new Date()) {
-    const m = String(text ?? "").trim().match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/);
-    if (!m) return null;
-    const month = Number(m[1]);
-    const day = Number(m[2]);
-    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-    let year;
+    const m = String(text ?? '')
+      .trim()
+      .match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/)
+    if (!m) return null
+    const month = Number(m[1])
+    const day = Number(m[2])
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null
+    let year
     if (m[3]) {
-      year = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+      year = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3])
     } else {
-      year = today.getFullYear();
-      const candidate = new Date(year, month - 1, day);
-      if (candidate.getTime() > today.getTime() + 24 * 3600 * 1000) year -= 1;
+      year = today.getFullYear()
+      const candidate = new Date(year, month - 1, day)
+      if (candidate.getTime() > today.getTime() + 24 * 3600 * 1000) year -= 1
     }
-    const mm = String(month).padStart(2, "0");
-    const dd = String(day).padStart(2, "0");
-    return `${year}-${mm}-${dd}`;
+    const mm = String(month).padStart(2, '0')
+    const dd = String(day).padStart(2, '0')
+    return `${year}-${mm}-${dd}`
   }
 
   function todayISO() {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
   function localTime() {
-    const d = new Date();
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const d = new Date()
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   }
 
   /** FNV-1a：用于 envelope 内容指纹（确定性 id）。 */
   function contentHash(text) {
-    let h = 2166136261;
-    const s = String(text);
+    let h = 2166136261
+    const s = String(text)
     for (let i = 0; i < s.length; i += 1) {
-      h ^= s.charCodeAt(i);
-      h = Math.imul(h, 16777619);
+      h ^= s.charCodeAt(i)
+      h = Math.imul(h, 16777619)
     }
-    return (h >>> 0).toString(36);
+    return (h >>> 0).toString(36)
   }
 
   function capturePathname() {
     try {
-      return new URL(location.href).pathname;
+      return new URL(location.href).pathname
     } catch {
-      return "";
+      return ''
     }
   }
 
   function makeEnvelope(source, kind, data) {
-    const pathname = capturePathname();
+    const pathname = capturePathname()
     const fingerprint = contentHash(
-      JSON.stringify({ source, kind, pathname, asOfDate: todayISO(), data })
-    );
+      JSON.stringify({ source, kind, pathname, asOfDate: todayISO(), data }),
+    )
     return {
       v: 1,
       id: `${source}_${kind}_${fingerprint}`,
@@ -120,11 +123,14 @@
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       pageUrl: location.href,
       data,
-    };
+    }
   }
 
   function enqueue(envelope) {
-    return chrome.runtime.sendMessage({ type: "FOS_ENQUEUE", capture: envelope });
+    return chrome.runtime.sendMessage({
+      type: 'FOS_ENQUEUE',
+      capture: envelope,
+    })
   }
 
   /**
@@ -149,77 +155,77 @@
     maxWaitMs = 2000,
     maxConfirmAttempts = 5,
   }) {
-    let cancelled = false;
-    let quietTimer = null;
-    let confirmTimer = null;
-    let lastEvalAt = 0;
-    let pendingSig = null;
-    let confirmAttempts = 0;
-    let lastCapturedSig = null;
+    let cancelled = false
+    let quietTimer = null
+    let confirmTimer = null
+    let lastEvalAt = 0
+    let pendingSig = null
+    let confirmAttempts = 0
+    let lastCapturedSig = null
 
     const commit = (result, sig) => {
-      if (sig === lastCapturedSig) return;
-      lastCapturedSig = sig;
+      if (sig === lastCapturedSig) return
+      lastCapturedSig = sig
       try {
-        capture(result);
+        capture(result)
       } catch (e) {
-        console.warn("[FOS] capture failed", e);
+        console.warn('[FOS] capture failed', e)
       }
-    };
+    }
 
     const evaluate = () => {
-      if (cancelled) return;
-      lastEvalAt = Date.now();
-      let result;
+      if (cancelled) return
+      lastEvalAt = Date.now()
+      let result
       try {
-        result = probe();
+        result = probe()
       } catch {
-        return; // 渲染中途容错
+        return // 渲染中途容错
       }
       if (!result) {
-        pendingSig = null;
-        confirmAttempts = 0;
-        return;
+        pendingSig = null
+        confirmAttempts = 0
+        return
       }
-      const sig = JSON.stringify(result);
+      const sig = JSON.stringify(result)
       if (sig === pendingSig || confirmAttempts >= maxConfirmAttempts) {
-        commit(result, sig);
-        pendingSig = null;
-        confirmAttempts = 0;
-        return;
+        commit(result, sig)
+        pendingSig = null
+        confirmAttempts = 0
+        return
       }
       // 首见此结果：confirmMs 后再验一次，两次一致才提交。
-      pendingSig = sig;
-      confirmAttempts += 1;
-      clearTimeout(confirmTimer);
-      confirmTimer = setTimeout(evaluate, confirmMs);
-    };
+      pendingSig = sig
+      confirmAttempts += 1
+      clearTimeout(confirmTimer)
+      confirmTimer = setTimeout(evaluate, confirmMs)
+    }
 
     // 去抖 + 最大等待：静默 quietMs 触发；持续变更的页面至少每 maxWaitMs 评估一次。
     const schedule = () => {
-      if (cancelled) return;
-      clearTimeout(quietTimer);
-      const overdue = Date.now() - lastEvalAt >= maxWaitMs;
-      quietTimer = setTimeout(evaluate, overdue ? 0 : quietMs);
-    };
+      if (cancelled) return
+      clearTimeout(quietTimer)
+      const overdue = Date.now() - lastEvalAt >= maxWaitMs
+      quietTimer = setTimeout(evaluate, overdue ? 0 : quietMs)
+    }
 
-    const observer = new MutationObserver(schedule);
+    const observer = new MutationObserver(schedule)
     observer.observe(document.body ?? document.documentElement, {
       childList: true,
       subtree: true,
-    });
+    })
     // 静态/已渲染完成的页面没有后续 mutation：主动评估一次。
-    quietTimer = setTimeout(evaluate, quietMs);
+    quietTimer = setTimeout(evaluate, quietMs)
 
     const cancel = () => {
-      if (cancelled) return;
-      cancelled = true;
-      observer.disconnect();
-      clearTimeout(quietTimer);
-      clearTimeout(confirmTimer);
-    };
-    window.addEventListener("pagehide", cancel, { once: true });
-    return cancel;
+      if (cancelled) return
+      cancelled = true
+      observer.disconnect()
+      clearTimeout(quietTimer)
+      clearTimeout(confirmTimer)
+    }
+    window.addEventListener('pagehide', cancel, { once: true })
+    return cancel
   }
 
   /**
@@ -228,36 +234,89 @@
    */
   function waitForMutationOrTimeout(target, timeoutMs = 900, settleMs = 150) {
     return new Promise((resolve) => {
-      let settleTimer = null;
+      let settleTimer = null
       const finish = () => {
-        observer.disconnect();
-        clearTimeout(settleTimer);
-        clearTimeout(hardTimer);
-        resolve();
-      };
+        observer.disconnect()
+        clearTimeout(settleTimer)
+        clearTimeout(hardTimer)
+        resolve()
+      }
       const observer = new MutationObserver(() => {
-        clearTimeout(settleTimer);
-        settleTimer = setTimeout(finish, settleMs);
-      });
-      observer.observe(target, { childList: true, subtree: true });
-      const hardTimer = setTimeout(finish, timeoutMs);
-    });
+        clearTimeout(settleTimer)
+        settleTimer = setTimeout(finish, settleMs)
+      })
+      observer.observe(target, { childList: true, subtree: true })
+      const hardTimer = setTimeout(finish, timeoutMs)
+    })
   }
 
   /** SPA 路由变化时重新触发抓取（History API 无事件，靠 mutation 时比对 href）。 */
   function onUrlChange(handler) {
-    let href = location.href;
+    let href = location.href
     const observer = new MutationObserver(() => {
       if (location.href !== href) {
-        href = location.href;
-        handler(href);
+        href = location.href
+        handler(href)
       }
-    });
+    })
     observer.observe(document.body ?? document.documentElement, {
       childList: true,
       subtree: true,
-    });
-    window.addEventListener("pagehide", () => observer.disconnect(), { once: true });
+    })
+    window.addEventListener('pagehide', () => observer.disconnect(), {
+      once: true,
+    })
+  }
+
+  /** 模拟完整指针/点击序列（Rocket Money 折叠行等需要）。 */
+  function clickLikeUser(el) {
+    if (!el) return false
+    for (const type of ['pointerdown', 'mousedown', 'mouseup', 'click']) {
+      el.dispatchEvent(
+        new MouseEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        }),
+      )
+    }
+    return true
+  }
+
+  /** 元素不存在或 disabled 时不抛错（对齐 WSD clickSelectorIfPresent）。 */
+  function clickOptional(el) {
+    if (!el || el.disabled) return false
+    try {
+      return clickLikeUser(el)
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * 轮询直到路由匹配或超时（SPA 侧栏点击后比固定 sleep 更稳）。
+   * @param {(href?: string) => boolean} matchFn
+   */
+  function waitForRoute(matchFn, timeoutMs = 10000, intervalMs = 120) {
+    return new Promise((resolve) => {
+      const start = Date.now()
+      const tick = () => {
+        try {
+          if (matchFn(location.href)) {
+            resolve(true)
+            return
+          }
+        } catch {
+          /* ignore */
+        }
+        if (Date.now() - start >= timeoutMs) {
+          resolve(false)
+          return
+        }
+        setTimeout(tick, intervalMs)
+      }
+      tick()
+    })
   }
 
   window.FOS = {
@@ -272,5 +331,8 @@
     captureWhenStable,
     waitForMutationOrTimeout,
     onUrlChange,
-  };
-})();
+    clickLikeUser,
+    clickOptional,
+    waitForRoute,
+  }
+})()

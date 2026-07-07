@@ -146,6 +146,19 @@ function confidenceFor(
 
 const CONF_RANK = { high: 3, medium: 2, low: 1 } as const
 
+function decodeHtmlEntities(raw: string): string {
+  return raw
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) =>
+      String.fromCharCode(parseInt(h, 16)),
+    )
+}
+
 export function enrichmentFromOrder(
   source: PurchaseEnrichment['source'],
   order: MerchantOrderRecord,
@@ -161,7 +174,7 @@ export function enrichmentFromOrder(
           ),
       )
       .map((li) => ({
-        title: String(li.title).slice(0, 300),
+        title: decodeHtmlEntities(String(li.title)).slice(0, 300),
         price: parseMoney(li.price) ?? undefined,
         quantity: li.quantity,
         detailUrl: li.detailUrl,

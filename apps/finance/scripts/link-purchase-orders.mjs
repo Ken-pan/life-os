@@ -14,14 +14,19 @@ import {
   matchAmazonRefundsToOrders,
 } from '../src/engine/amazonOrderMatch.ts'
 import {
-  matchBestBuyOrdersToTxns,
-  matchBestBuyRefundsToOrders,
-} from '../src/engine/bestbuyOrderMatch.ts'
-import {
   matchTargetOrdersToTxns,
   matchTargetRefundsToOrders,
+  enrichmentFromOrder as targetEnrichmentFromOrder,
 } from '../src/engine/targetOrderMatch.ts'
-import { uploadPurchaseEnrichmentImages } from './lib/purchaseImageStorage.mjs'
+import {
+  matchBestBuyOrdersToTxns,
+  matchBestBuyRefundsToOrders,
+  enrichmentFromOrder as bestbuyEnrichmentFromOrder,
+} from '../src/engine/bestbuyOrderMatch.ts'
+import {
+  uploadPurchaseEnrichmentImages,
+  resolveServiceRoleKey,
+} from './lib/purchaseImageStorage.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'iueozzuctstwvzbcxcyh'
@@ -120,6 +125,67 @@ function mergeEnrichment(existing, incoming) {
   }
 }
 
+const ENRICHMENT_FROM_ORDER = {
+  bestbuy: bestbuyEnrichmentFromOrder,
+  target: targetEnrichmentFromOrder,
+}
+
+async function resolveCatalogUserId(explicit) {
+  if (explicit) return explicit
+  const rows = await runSql(
+    `select user_id from finance_user_settings order by updated_at desc limit 1`,
+  )
+  return rows?.[0]?.user_id ? String(rows[0].user_id) : null
+}
+
+async function syncMerchantOrderCatalog(
+  sourceKey,
+  orders,
+  purchaseMatches,
+  userId,
+  tag,
+) {
+  const build = ENRICHMENT_FROM_ORDER[sourceKey]
+  if (!build || !userId) return 0
+
+  const matchedIds = new Set(purchaseMatches.map((m) => m.orderId))
+  const unlinked = orders.filter(
+    (o) =>
+      o.orderId &&
+      !matchedIds.has(o.orderId) &&
+      (o.lineItems?.length || o.orderTotal),
+  )
+  if (!unlinked.length) {
+    console.log(tag, 'catalog: no unlinked orders to sync')
+    return 0
+  }
+
+  const entries = unlinked.map((o) => ({
+    ...build(o, 'low'),
+    unlinked: true,
+    unlinkedReason:
+      sourceKey === 'target' ? 'redcard_or_no_bank_match' : 'no_bank_match',
+  }))
+
+  const patch = escSql(
+    JSON.stringify({
+      [sourceKey]: { orders: entries, syncedAt: new Date().toISOString() },
+    }),
+  )
+
+  await runSql(`
+    update finance_user_settings
+    set merchant_order_catalog = coalesce(merchant_order_catalog, '{}'::jsonb)
+      || '${patch}'::jsonb
+      || jsonb_build_object('updatedAt', to_jsonb(now()::text)),
+        updated_at = now()
+    where user_id = '${escSql(userId)}';
+  `)
+
+  console.log(tag, 'catalog: synced', entries.length, 'unlinked orders')
+  return entries.length
+}
+
 async function main() {
   const sourceKey = arg('--source', 'amazon')
   const cfg = SOURCE_CONFIG[sourceKey]
@@ -149,6 +215,7 @@ async function main() {
   const uploadImages =
     hasFlag('--upload-images') ||
     (hasFlag('--apply') && !hasFlag('--no-upload-images'))
+  const refreshImages = hasFlag('--refresh-images')
   const tag = `[link-${cfg.label}]`
 
   if (!userId) {
@@ -169,7 +236,9 @@ async function main() {
     raw.summary?.pastYearCutoff || arg('--since', null) || `${year}-01-01`
   const txnSince = arg(
     '--since',
-    sourceKey === 'bestbuy' ? exportSince : `${year}-01-01`,
+    sourceKey === 'bestbuy' || sourceKey === 'target'
+      ? exportSince
+      : `${year}-01-01`,
   )
   const txnUntil = arg('--until', `${year}-12-31`)
   console.log(tag, 'loaded', orders.length, 'orders from', ordersPath)
@@ -205,6 +274,13 @@ async function main() {
 
   const purchaseMatches = cfg.matchOrders(orders, txns, matchOpts)
   const refundLinks = cfg.matchRefunds(orders, txns, purchaseMatches)
+  const orderById = new Map(
+    orders.filter((o) => o.orderId).map((o) => [o.orderId, o]),
+  )
+  const syncCatalog =
+    (hasFlag('--sync-catalog') || hasFlag('--apply')) &&
+    !hasFlag('--no-sync-catalog') &&
+    (sourceKey === 'bestbuy' || sourceKey === 'target')
 
   const already = txns.filter(
     (t) => t.purchaseEnrichment?.source === cfg.label,
@@ -263,6 +339,13 @@ async function main() {
       '\n' + tag,
       'dry-run — pass --apply to write purchase_enrichment',
     )
+    if (syncCatalog) {
+      const matchedIds = new Set(purchaseMatches.map((m) => m.orderId))
+      const unlinked = orders.filter(
+        (o) => o.orderId && !matchedIds.has(o.orderId),
+      ).length
+      console.log(tag, 'would sync', unlinked, 'unlinked orders to catalog')
+    }
     if (uploadImages)
       console.log(tag, 'would upload line-item thumbnails to Supabase Storage')
     if (clearStale)
@@ -287,21 +370,28 @@ async function main() {
         and purchase_enrichment is not null
         and purchase_enrichment->>'source' = '${escSql(cfg.label)}';
     `)
-    console.log(tag, 'cleared stale enrichment rows in window', cleared?.length ?? '')
+    console.log(
+      tag,
+      'cleared stale enrichment rows in window',
+      cleared?.length ?? '',
+    )
   }
 
   let skippedImageUpload = 0
-  if (uploadImages && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  const serviceRoleKey = uploadImages ? resolveServiceRoleKey() : null
+  if (uploadImages && !serviceRoleKey) {
     console.warn(
       tag,
-      'SUPABASE_SERVICE_ROLE_KEY missing — skipping image upload',
+      'SUPABASE_SERVICE_ROLE_KEY missing — skipping image upload (run: supabase login)',
     )
     skippedImageUpload = purchaseMatches.length + refundLinks.length
+  } else if (serviceRoleKey && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    process.env.SUPABASE_SERVICE_ROLE_KEY = serviceRoleKey
   }
 
   async function finalizeEnrichment(txnId, enrichment) {
     const txn = txns.find((t) => t.id === txnId)
-    if (uploadImages && process.env.SUPABASE_SERVICE_ROLE_KEY && txn?.userId) {
+    if (uploadImages && serviceRoleKey && txn?.userId) {
       return uploadPurchaseEnrichmentImages(enrichment, {
         userId: txn.userId,
         source: cfg.label,
@@ -317,10 +407,12 @@ async function main() {
 
   for (const m of purchaseMatches) {
     const existing = txns.find((t) => t.id === m.txnId)?.purchaseEnrichment
-    if (existing?.source === cfg.label && !replace) continue
+    if (existing?.source === cfg.label && !replace && !refreshImages) continue
     let enrichment = replace
       ? m.enrichment
-      : mergeEnrichment(existing, m.enrichment)
+      : refreshImages && existing?.source === cfg.label
+        ? existing
+        : mergeEnrichment(existing, m.enrichment)
     enrichment = await finalizeEnrichment(m.txnId, enrichment)
     if (enrichment.lineItems?.some((li) => li.imageStoragePath))
       uploadedImages++
@@ -338,7 +430,19 @@ async function main() {
     const existingRefund = txns.find(
       (t) => t.id === r.refundTxnId,
     )?.purchaseEnrichment
-    let refundPayload = mergeEnrichment(existingRefund, r.refundEnrichment)
+    const exportOrder = orderById.get(r.orderId)
+    const purchaseLineItems = r.purchaseTxnId
+      ? txns.find((t) => t.id === r.purchaseTxnId)?.purchaseEnrichment
+          ?.lineItems
+      : undefined
+    const lineItems =
+      exportOrder?.lineItems?.length
+        ? exportOrder.lineItems
+        : purchaseLineItems
+    let refundPayload = mergeEnrichment(existingRefund, {
+      ...r.refundEnrichment,
+      ...(lineItems?.length ? { lineItems } : {}),
+    })
     refundPayload = await finalizeEnrichment(r.refundTxnId, refundPayload)
     const json = escSql(JSON.stringify(refundPayload))
     await runSql(`
@@ -386,6 +490,21 @@ async function main() {
       ? `| image uploads skipped (no service role): ${skippedImageUpload}`
       : '',
   )
+
+  if (syncCatalog) {
+    const catalogUser = await resolveCatalogUserId(userId)
+    if (!catalogUser) {
+      console.warn(tag, 'catalog: no user_id — skip sync')
+    } else {
+      await syncMerchantOrderCatalog(
+        sourceKey,
+        orders,
+        purchaseMatches,
+        catalogUser,
+        tag,
+      )
+    }
+  }
 }
 
 main().catch((e) => {

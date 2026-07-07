@@ -1,4 +1,5 @@
 import type { PurchaseEnrichment } from './purchaseEnrichment.ts'
+import { isDirectMerchantPurchaseTxn } from './merchantChargeFilters.ts'
 import {
   enrichmentFromOrder as buildEnrichment,
   matchOrdersToPurchaseTxns,
@@ -41,9 +42,10 @@ export function matchTargetOrdersToTxns(
 ): TargetMatchResult[] {
   return matchOrdersToPurchaseTxns('target', orders, txns, {
     merchantRe: TARGET_MERCHANT_RE,
-    maxDayDiff: options?.maxDayDiff ?? 14,
+    maxDayDiff: options?.maxDayDiff ?? 21,
     maxAmountDiff: options?.maxAmountDiff,
     minConfidence: options?.minConfidence,
+    isPurchaseTxn: (t) => isDirectMerchantPurchaseTxn('target', t),
   })
 }
 
