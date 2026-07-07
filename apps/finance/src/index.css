@@ -3467,6 +3467,83 @@ div.input {
   min-width: 0;
 }
 
+.purchase-coverage-card {
+  margin-bottom: var(--space-3);
+}
+
+.purchase-coverage-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-md);
+}
+
+.purchase-coverage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-2);
+}
+
+.purchase-coverage-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.purchase-coverage-row dt {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.purchase-coverage-row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.purchase-coverage-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.purchase-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.purchase-state-badge--matched_review {
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  color: var(--warning);
+}
+
+.purchase-state-badge--return_refund {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+
+.purchase-state-badge--unsupported_source {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.purchase-state-confidence {
+  opacity: 0.85;
+  font-weight: 500;
+}
+
 .ledger-row-edit {
   display: grid;
   grid-template-columns: 1fr 2fr 1.3fr 1.3fr 1fr 0.9fr auto;

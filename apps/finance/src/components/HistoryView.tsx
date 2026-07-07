@@ -24,7 +24,14 @@ import { useTransactions } from "../store/transactions";
 import { PurchaseEnrichmentBlock } from "./PurchaseEnrichmentBlock";
 import { LedgerProductStrip } from "./LedgerProductStrip";
 import { MerchantOrderCatalogSection } from "./MerchantOrderCatalogSection";
-import { hasPurchaseEnrichment } from "../engine/purchaseEnrichment";
+import { PurchaseCoverageCard } from "./PurchaseCoverageCard";
+import { purchaseSourceLabel } from "./purchaseSourceLabel";
+import {
+  buildPurchaseDisplayContext,
+  classifyPurchaseDisplayState,
+  computePurchaseCoverage,
+  type PurchaseDisplayContext,
+} from "../engine/purchaseEnrichmentDisplay";
 import {
   ledgerAccountColumn,
   ledgerMetaLine,
@@ -102,24 +109,20 @@ export function HistoryView({
   const merchantLimit = catWindow === "month" ? 8 : 12;
   const latest = summary.latestMonth;
   const thisMonthSpending = latest?.spending ?? 0;
-  const enrichedBySource = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const t of txns) {
-      if (!hasPurchaseEnrichment(t)) continue;
-      const source = t.purchaseEnrichment.source;
-      counts.set(source, (counts.get(source) ?? 0) + 1);
-    }
-    return counts;
-  }, [txns]);
+  const purchaseDisplayContext = useMemo(
+    () => buildPurchaseDisplayContext(txns),
+    [txns],
+  );
+  const purchaseCoverage = useMemo(
+    () => computePurchaseCoverage(txns, purchaseDisplayContext),
+    [txns, purchaseDisplayContext],
+  );
+  const cleanBySource = purchaseCoverage.cleanBySource;
   const enrichmentSourceOrder = ["amazon", "bestbuy", "target"] as const;
-  const sortedEnrichmentSources = useMemo(
+  const sortedCleanSources = useMemo(
     () =>
-      [...enrichedBySource.entries()].sort(([a], [b]) => {
-        const ai = enrichmentSourceOrder.indexOf(a as (typeof enrichmentSourceOrder)[number]);
-        const bi = enrichmentSourceOrder.indexOf(b as (typeof enrichmentSourceOrder)[number]);
-        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-      }),
-    [enrichedBySource],
+      enrichmentSourceOrder.filter((s) => (cleanBySource[s] ?? 0) > 0),
+    [cleanBySource],
   );
   const enrichmentSearchBySource: Record<string, string> = {
     amazon: "Amazon",
@@ -128,6 +131,9 @@ export function HistoryView({
   };
   const ledgerRef = useRef<HTMLDivElement>(null);
   const [jumpLedgerSearch, setJumpLedgerSearch] = useState<string | undefined>();
+  const [purchaseStateFilter, setPurchaseStateFilter] = useState<
+    "all" | "clean" | "review" | "return"
+  >("all");
 
   if (loading) return <div className="card">{tl("history.loading")}</div>;
   if (error) return <div className="card">{tl("history.loadFailed", { error })}</div>;
@@ -152,18 +158,30 @@ export function HistoryView({
       </details>
 
       <section className="history-summary">
-        {sortedEnrichmentSources.map(([source, count]) => {
+        <PurchaseCoverageCard
+          stats={purchaseCoverage}
+          onFilter={(preset) => {
+            if (preset === "purchase:clean") setPurchaseStateFilter("clean");
+            else if (preset === "purchase:review") setPurchaseStateFilter("review");
+            else if (preset === "purchase:return") setPurchaseStateFilter("return");
+            ledgerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+        />
+
+        {sortedCleanSources.map((source) => {
+          const count = cleanBySource[source] ?? 0;
           const sourceLabel = purchaseSourceLabel(source, tl);
           return (
           <div className="card purchase-enrichment-banner" key={source}>
             <div className="purchase-enrichment-banner-text">
-              <strong>{tl("history.purchaseBannerTitle", { source: sourceLabel, count })}</strong>
-              <p className="muted-note text-sm mb-0">{tl("history.purchaseBannerHint")}</p>
+              <strong>{tl("history.purchaseBannerCleanTitle", { source: sourceLabel, count })}</strong>
+              <p className="muted-note text-sm mb-0">{tl("history.purchaseBannerCleanHint")}</p>
             </div>
             <button
               type="button"
               className="btn ghost"
               onClick={() => {
+                setPurchaseStateFilter("clean");
                 setJumpLedgerSearch(enrichmentSearchBySource[source] ?? source);
                 ledgerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
@@ -189,6 +207,9 @@ export function HistoryView({
           txns={txns}
           categoryList={categoryList}
           accountList={accountList}
+          purchaseDisplayContext={purchaseDisplayContext}
+          purchaseStateFilter={purchaseStateFilter}
+          onPurchaseStateFilterChange={setPurchaseStateFilter}
           onEdit={editTxn}
           onDelete={removeTxn}
           initialSearch={jumpLedgerSearch ?? initialLedgerSearch}
@@ -363,16 +384,6 @@ export function HistoryView({
   );
 }
 
-function purchaseSourceLabel(
-  source: string,
-  tl: (key: string) => string,
-): string {
-  if (source === "amazon") return tl("history.purchaseSourceAmazon");
-  if (source === "bestbuy") return tl("history.purchaseSourceBestbuy");
-  if (source === "target") return tl("history.purchaseSourceTarget");
-  return source;
-}
-
 /** 月度等额化某条现金流（年度→/12）。 */
 function toMonthly(amount: number, frequency: "monthly" | "annual"): number {
   return frequency === "annual" ? amount / 12 : amount;
@@ -488,11 +499,29 @@ function flowOptions(tl: (key: string) => string): { id: FlowType | "all"; label
   ];
 }
 
+function matchesPurchaseStateFilter(
+  t: Txn,
+  filter: "all" | "clean" | "review" | "return",
+  ctx: PurchaseDisplayContext,
+): boolean {
+  if (filter === "all") return true;
+  const { state } = classifyPurchaseDisplayState(t, ctx);
+  if (filter === "clean") return state === "clean_enriched";
+  if (filter === "review") {
+    return state === "matched_review" || state === "unsupported_source";
+  }
+  if (filter === "return") return state === "return_refund";
+  return true;
+}
+
 function Ledger({
   privacy,
   txns,
   categoryList,
   accountList,
+  purchaseDisplayContext,
+  purchaseStateFilter,
+  onPurchaseStateFilterChange,
   onEdit,
   onDelete,
   initialSearch,
@@ -502,6 +531,9 @@ function Ledger({
   txns: Txn[];
   categoryList: string[];
   accountList: string[];
+  purchaseDisplayContext: PurchaseDisplayContext;
+  purchaseStateFilter: "all" | "clean" | "review" | "return";
+  onPurchaseStateFilterChange: (f: "all" | "clean" | "review" | "return") => void;
   onEdit: (t: Txn) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   initialSearch?: string;
@@ -527,14 +559,17 @@ function Ledger({
   }, [initialSearch, onInitialSearchConsumed]);
 
   const results = useMemo(() => {
-    return searchTxns(txns, {
+    const searched = searchTxns(txns, {
       search: search || undefined,
       category: category || undefined,
       account: account || undefined,
       flow,
       spendingOnly,
     });
-  }, [txns, search, category, account, flow, spendingOnly]);
+    return searched.filter((t) =>
+      matchesPurchaseStateFilter(t, purchaseStateFilter, purchaseDisplayContext),
+    );
+  }, [txns, search, category, account, flow, spendingOnly, purchaseStateFilter, purchaseDisplayContext]);
 
   const totalSpending = useMemo(
     () => results.reduce((a, t) => a + (t.inSpending ? -t.budgetImpact : 0), 0),
@@ -555,6 +590,15 @@ function Ledger({
       <div className="card-head">
         <h3>{tl("history.ledgerTitle", { count: results.length.toLocaleString() })}</h3>
         <div className="section-head-actions">
+          {purchaseStateFilter !== "all" && (
+            <button
+              type="button"
+              className="btn ghost text-sm"
+              onClick={() => onPurchaseStateFilterChange("all")}
+            >
+              {tl("history.purchaseFilterClear")}
+            </button>
+          )}
           <span className="text-muted text-sm">
             {tl("history.ledgerSpendingTotal", { amount: moneyPrecise(totalSpending, privacy) })}
           </span>
@@ -622,6 +666,7 @@ function Ledger({
             key={t.id ?? `${t.date}-${i}-${t.merchant}`}
             t={t}
             privacy={privacy}
+            purchaseDisplayContext={purchaseDisplayContext}
             editing={editingId === t.id}
             busy={busyId === t.id}
             onStartEdit={() => setEditingId(t.id ?? null)}
@@ -674,6 +719,7 @@ function Ledger({
 function LedgerRow({
   t,
   privacy,
+  purchaseDisplayContext,
   editing,
   busy,
   onStartEdit,
@@ -683,6 +729,7 @@ function LedgerRow({
 }: {
   t: Txn;
   privacy: boolean;
+  purchaseDisplayContext: PurchaseDisplayContext;
   editing: boolean;
   busy: boolean;
   onStartEdit: () => void;
@@ -706,7 +753,10 @@ function LedgerRow({
   const income = t.flow === "income" ? Math.abs(t.amount) : 0;
   const signed = income !== 0 ? income : -spend;
   const dim = !t.inSpending && t.flow !== "income";
-  const enriched = hasPurchaseEnrichment(t);
+  const display = classifyPurchaseDisplayState(t, purchaseDisplayContext);
+  const purchaseState = display.state;
+  const showEnrichmentUi = purchaseState !== "merchant_only";
+  const showProductStrip = purchaseState === "clean_enriched";
   const title = ledgerTitle(t);
   const metaLine = ledgerMetaLine(t, {
     viaImport: (source) => tl("history.ledgerViaImport", { source }),
@@ -728,7 +778,11 @@ function LedgerRow({
     });
   };
   return (
-    <div className={`ledger-row${dim ? " is-dim" : ""}${enriched ? " has-enrichment" : ""}`} role="listitem">
+    <div
+      className={`ledger-row${dim ? " is-dim" : ""}${showEnrichmentUi ? " has-enrichment" : ""}`}
+      role="listitem"
+      data-purchase-state={purchaseState}
+    >
       {editing ? (
         <div className="ledger-row-edit">
           <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -763,9 +817,20 @@ function LedgerRow({
               </span>
             </div>
             {metaLine && <span className="lr-meta">{metaLine}</span>}
-            {enriched && (
+            {showEnrichmentUi && t.purchaseEnrichment && (
               <>
-                {!enrichmentOpen && (
+                {purchaseState !== "clean_enriched" && (
+                  <span className={`purchase-state-badge purchase-state-badge--${purchaseState}`}>
+                    {tl(`history.purchaseState.${purchaseState}`)}
+                    {purchaseState === "matched_review" &&
+                      t.purchaseEnrichment.matchConfidence && (
+                        <span className="purchase-state-confidence">
+                          {t.purchaseEnrichment.matchConfidence}
+                        </span>
+                      )}
+                  </span>
+                )}
+                {showProductStrip && !enrichmentOpen && (
                   <LedgerProductStrip enrichment={t.purchaseEnrichment} privacy={privacy} />
                 )}
                 <PurchaseEnrichmentBlock
@@ -773,6 +838,7 @@ function LedgerRow({
                   privacy={privacy}
                   chargeDate={t.date}
                   compact
+                  displayState={purchaseState}
                   showLineItemsInBody={false}
                   onOpenChange={setEnrichmentOpen}
                 />

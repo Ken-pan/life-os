@@ -30,6 +30,11 @@ import {
   enrichmentFromOrder as bestbuyEnrichmentFromOrder,
 } from '../src/engine/bestbuyOrderMatch.ts'
 import {
+  startApplyRun,
+  logApplyRunItem,
+  finishApplyRun,
+} from './lib/purchaseEnrichmentApplyLedger.mjs'
+import {
   uploadPurchaseEnrichmentImages,
   resolveServiceRoleKey,
 } from './lib/purchaseImageStorage.mjs'
@@ -1630,6 +1635,26 @@ async function main() {
   let updatedPurchaseReturn = 0
   let uploadedImages = 0
 
+  let gitHead = ''
+  try {
+    gitHead = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim()
+  } catch {
+    gitHead = ''
+  }
+
+  const applyRunId = await startApplyRun(runSql, escSql, {
+    userId,
+    mode: onlyTxnIds?.length ? 'scoped' : 'broad',
+    scope: {
+      source: cfg.label,
+      onlyTxnIds: onlyTxnIds ?? null,
+      insertsOnly,
+      updatesOnly,
+      ordersFile: ordersPath,
+    },
+    gitHead,
+  })
+
   for (const m of effectivePurchaseMatches) {
     const existing = txns.find((t) => t.id === m.txnId)?.purchaseEnrichment
     if (onlyTxnIds && !onlyTxnIds.includes(m.txnId)) continue
@@ -1661,6 +1686,12 @@ async function main() {
           updated_at = now()
       where id = '${escSql(m.txnId)}';
     `)
+    await logApplyRunItem(runSql, escSql, applyRunId, {
+      transactionId: m.txnId,
+      action: existing?.source ? 'update' : 'insert',
+      before: existing ?? null,
+      after: enrichment,
+    })
     updatedPurchase++
   }
 
@@ -1713,6 +1744,14 @@ async function main() {
       updatedPurchaseReturn++
     }
   }
+
+  await finishApplyRun(runSql, escSql, applyRunId, {
+    updatedPurchase,
+    updatedRefund,
+    updatedPurchaseReturn,
+    uploadedImages,
+    skippedImageUpload,
+  })
 
   console.log(
     '\n' + tag,

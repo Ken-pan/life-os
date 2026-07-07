@@ -15,17 +15,31 @@ export interface PurchaseLineItem {
 }
 
 export type PurchaseEnrichmentSource = 'amazon' | 'bestbuy' | 'target'
+export type PurchaseEnrichmentSourceView =
+  | 'data_export'
+  | 'in_store'
+  | 'online'
+  | 'receipt'
+  | 'unknown'
 
 /** Link-time Amazon returnInfo merge signal; not persisted to DB. */
 export type ReturnInfoDecision = 'present' | 'absent_verified' | 'unknown'
 
 export interface PurchaseEnrichment {
+  /** JSONB contract version; missing in legacy rows. */
+  schemaVersion?: 1
   source: PurchaseEnrichmentSource
   orderId?: string
   orderDate?: string
   orderTotal?: number
   status?: string
   detailUrl?: string
+  /** Merchant/source-specific view used by display classification. */
+  sourceView?: PurchaseEnrichmentSourceView
+  /** Merchant channel hint, currently used by Best Buy records. */
+  channel?: string
+  /** Amazon data-export marker for source coverage classification. */
+  dataExport?: boolean
   lineItems?: PurchaseLineItem[]
   /** Return / refund linkage parsed from merchant order or matched from card credit. */
   returnInfo?: PurchaseReturnInfo
@@ -40,7 +54,7 @@ export function stripLinkMetadata(
   enrichment: PurchaseEnrichment,
 ): PurchaseEnrichment {
   const { returnInfoDecision: _d, ...rest } = enrichment
-  return rest
+  return { ...rest, schemaVersion: 1 }
 }
 
 /**

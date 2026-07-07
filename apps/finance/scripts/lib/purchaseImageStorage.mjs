@@ -85,11 +85,14 @@ function itemKey(item) {
 }
 
 function buildStoragePath(userId, source, orderId, item, ext) {
-  const id = createHash('sha1')
+  const contentHash = createHash('sha1')
     .update(`${source}:${orderId}:${itemKey(item)}`)
     .digest('hex')
-    .slice(0, 16)
-  return `${userId}/${source}/${orderId}/${id}.${ext}`
+  const pathMode = process.env.FINANCE_IMAGE_PATH_MODE || 'legacy'
+  if (pathMode === 'hash') {
+    return `${userId}/${contentHash}.${ext}`
+  }
+  return `${userId}/${source}/${orderId}/${contentHash.slice(0, 16)}.${ext}`
 }
 
 function extFromContentType(ct) {

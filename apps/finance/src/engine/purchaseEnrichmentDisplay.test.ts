@@ -54,8 +54,7 @@ describe('classifyPurchaseDisplayState', () => {
         orderDate: '2026-01-30',
         orderTotal: 5.22,
         status: 'purchased',
-        detailUrl:
-          'https://www.target.com/orders/stores/6030-1284-0161-7280',
+        detailUrl: 'https://www.target.com/orders/stores/6030-1284-0161-7280',
         matchConfidence: 'high',
         lineItems: [
           {
@@ -99,7 +98,6 @@ describe('computePurchaseCoverage', () => {
       amount: 5,
       purchaseEnrichment: {
         source: 'target',
-        sourceView: 'online',
         orderId: '91234567890',
         orderTotal: 5,
         status: 'purchased',

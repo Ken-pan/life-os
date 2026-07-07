@@ -1,8 +1,18 @@
 # Merchant Order Audit v1.1 — Freeze Record
 
 > Frozen: 2026-07-07  
-> Code tag: `merchant-order-audit-v1.1-code` @ `172baa8a807e8d0ea8c56da05e3e1a44d4146d96`  
+> Code tag: `merchant-order-audit-v1.1-code` @ `172baa8a807e8d0ea8c56da05e3e1a44d4146d96` (pipeline only)  
+> Handoff tag: `merchant-order-audit-v1.1-handoff` @ docs + product-loop commit (after merge)  
 > Bundle (gitignored): `tools/web-state-devtools/bridge/data/merchant-order-audit-20260707-1620-after-target-final/`
+
+## Git tags
+
+| Tag | Points to | Contents |
+|-----|-----------|----------|
+| `merchant-order-audit-v1.1-code` | `172baa8` | Harvest/match/read-model engine only |
+| `merchant-order-audit-v1.1-handoff` | handoff commit | + `apps/finance/docs/merchant-order-audit/*`, UI classifier, contract package |
+
+Before tagging either: `git rev-parse HEAD` and confirm the intended commit.
 
 ## SHA256 checksums
 

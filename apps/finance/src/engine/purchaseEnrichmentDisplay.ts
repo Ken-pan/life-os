@@ -8,7 +8,6 @@ import {
   inferSourceView,
   mergeKeyFor,
   resolveDisplayState,
-  SUPPORTED_SOURCES,
 } from '@life-os/finance-enrichment-contract'
 import type { PurchaseEnrichment, PurchaseEnrichmentSource } from './purchaseEnrichment'
 import { isReturnLikeEnrichment } from './purchaseReturnStatus'
@@ -81,7 +80,7 @@ function txnToNormalizedOrder(t: Txn) {
     orderTotalCents != null && txnAmountCents != null
       ? orderTotalCents - txnAmountCents
       : null
-  const sourceView = inferSourceView(source, e)
+  const sourceView = inferSourceView(source, e as PurchaseEnrichment & Record<string, unknown>)
   const isInstore =
     source === 'target' &&
     (sourceView === 'in_store' ||
@@ -94,7 +93,7 @@ function txnToNormalizedOrder(t: Txn) {
     merchantAccount: t.account || 'Unknown',
     sourceOrderId: isInstore ? null : e.orderId || null,
     sourceReceiptId: isInstore ? e.orderId || null : null,
-    mergeKey: mergeKeyFor(source, e),
+    mergeKey: mergeKeyFor(source, e as PurchaseEnrichment & Record<string, unknown>),
     status: e.status || 'unknown',
     matchConfidence: e.matchConfidence || 'unknown',
     qualityPass:

@@ -3,6 +3,7 @@ import { useLocale } from '../i18n/context'
 import { moneyPrecise } from '../format'
 import type { PurchaseEnrichment } from '../engine/purchaseEnrichment'
 import { lineItemImageSrc, uniqueLineItems } from '../engine/purchaseEnrichment'
+import type { PurchaseDisplayState } from '../engine/purchaseEnrichmentDisplay'
 import {
   isReturnLikeEnrichment,
   returnStatusLabelKey,
@@ -14,6 +15,7 @@ export function PurchaseEnrichmentBlock({
   chargeDate,
   compact = false,
   showLineItemsInBody = true,
+  displayState = 'clean_enriched',
   onOpenChange,
 }: {
   enrichment: PurchaseEnrichment
@@ -23,6 +25,7 @@ export function PurchaseEnrichmentBlock({
   compact?: boolean
   /** 为 false 时展开区只显示订单元数据（商品由 LedgerProductStrip 展示）。 */
   showLineItemsInBody?: boolean
+  displayState?: PurchaseDisplayState
   onOpenChange?: (open: boolean) => void
 }) {
   const { t: tl } = useLocale()
@@ -35,6 +38,14 @@ export function PurchaseEnrichmentBlock({
   const returnInfo = enrichment.returnInfo
   const showReturnBadge =
     isReturnLikeEnrichment(returnInfo) || returnInfo?.isRefundCredit
+  const allowLineItems =
+    displayState === 'clean_enriched' && showLineItemsInBody
+  const noItemsMessage =
+    displayState === 'matched_review'
+      ? tl('history.purchaseStateReviewHint')
+      : displayState === 'unsupported_source'
+        ? tl('history.purchaseState.unsupported_source')
+        : tl('history.purchaseNoItems')
   const orderLabel =
     enrichment.source === 'amazon'
       ? tl('history.amazonOrder')
@@ -137,7 +148,7 @@ export function PurchaseEnrichmentBlock({
             )}
           </dl>
           {items.length > 0 ? (
-            showLineItemsInBody ? (
+            allowLineItems ? (
               <>
                 {!hasItemPrices && (
                   <p className="purchase-enrichment-note text-sm">
@@ -194,7 +205,7 @@ export function PurchaseEnrichmentBlock({
             )
           ) : (
             <p className="muted-note text-sm">
-              {tl('history.purchaseNoItems')}
+              {noItemsMessage}
             </p>
           )}
         </div>
