@@ -27,6 +27,11 @@ import {
   uploadPurchaseEnrichmentImages,
   resolveServiceRoleKey,
 } from './lib/purchaseImageStorage.mjs'
+import {
+  resolveOrdersRawPath,
+  summaryHarvestSince,
+  summaryHarvestUntil,
+} from '../../../tools/web-state-devtools/bridge/lib/orders-export.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'iueozzuctstwvzbcxcyh'
@@ -199,8 +204,15 @@ async function main() {
   }
 
   const userId = arg('--user-id', process.env.FINANCE_OS_USER_ID ?? null)
+  const accountFilter = arg('--account', null)
+  const sourceAccountLabel = arg('--source-account-label', null)
+  const allowUnscoped = hasFlag('--allow-unscoped')
 
-  const ordersPath = arg('--orders', cfg.defaultOrders)
+  const exportDir = path.dirname(cfg.defaultOrders)
+  const ordersPath = arg(
+    '--orders',
+    resolveOrdersRawPath(exportDir, sourceKey) || cfg.defaultOrders,
+  )
   const year = arg('--year', '2026')
   const dryRun = hasFlag('--dry-run') || !hasFlag('--apply')
   const replace = hasFlag('--replace')
@@ -233,16 +245,25 @@ async function main() {
   const raw = JSON.parse(fs.readFileSync(ordersPath, 'utf8'))
   const orders = raw.orders ?? raw.items ?? []
   const exportSince =
-    raw.summary?.pastYearCutoff || arg('--since', null) || `${year}-01-01`
+    summaryHarvestSince(raw.summary) || arg('--since', null) || `${year}-01-01`
+  const exportUntil = summaryHarvestUntil(raw.summary)
   const txnSince = arg(
     '--since',
     sourceKey === 'bestbuy' || sourceKey === 'target'
       ? exportSince
       : `${year}-01-01`,
   )
-  const txnUntil = arg('--until', `${year}-12-31`)
+  const txnUntil = arg('--until', exportUntil || `${year}-12-31`)
   console.log(tag, 'loaded', orders.length, 'orders from', ordersPath)
   console.log(tag, 'txn window', txnSince, '→', txnUntil)
+  if (accountFilter || sourceAccountLabel) {
+    console.log(
+      tag,
+      'account scope:',
+      accountFilter ? `account=${accountFilter}` : '',
+      sourceAccountLabel ? `source_account_label=${sourceAccountLabel}` : '',
+    )
+  }
 
   const returned = orders.filter(
     (o) =>
@@ -250,13 +271,45 @@ async function main() {
   ).length
   console.log(tag, 'return/cancel flagged orders:', returned)
 
+  // Guardrails: never write across all users, and never let a branded-card
+  // reconciliation silently pull in Unknown / other-account transactions.
+  const needsAccountScope = sourceKey === 'bestbuy' || sourceKey === 'target'
+  const hasAccountScope = Boolean(accountFilter || sourceAccountLabel)
+  if (!dryRun) {
+    if (!userId) {
+      console.error(
+        tag,
+        '--apply requires --user-id (refusing to write across all users)',
+      )
+      process.exit(1)
+    }
+    if (needsAccountScope && !hasAccountScope && !allowUnscoped) {
+      console.error(
+        tag,
+        `--apply for ${cfg.label} requires --account or --source-account-label ` +
+          '(prevents Unknown-account pollution). Pass --allow-unscoped to override.',
+      )
+      process.exit(1)
+    }
+  } else if (needsAccountScope && !hasAccountScope) {
+    console.warn(
+      tag,
+      `no account scope — matching any '${cfg.label}' merchant txn across accounts ` +
+        '(incl. Unknown). Use --account / --source-account-label before --apply.',
+    )
+  }
+
+  const accountScopeSql = `
+      ${accountFilter ? `and account = '${escSql(accountFilter)}'` : ''}
+      ${sourceAccountLabel ? `and source_account_label = '${escSql(sourceAccountLabel)}'` : ''}`
+
   const txnRows = await runSql(`
-    select id, user_id, txn_date, coalesce(source_amount, amount) as amount, merchant_name, merchant, flow, purchase_enrichment
+    select id, user_id, txn_date, coalesce(source_amount, amount) as amount, merchant_name, merchant, flow, account, purchase_enrichment
     from finance_transactions
     where ${cfg.merchantSql}
       and txn_date >= '${escSql(txnSince)}'
       and txn_date <= '${escSql(txnUntil)}'
-      ${userId ? `and user_id = '${escSql(userId)}'` : ''}
+      ${userId ? `and user_id = '${escSql(userId)}'` : ''}${accountScopeSql}
     order by txn_date desc;
   `)
 
@@ -267,10 +320,17 @@ async function main() {
     amount: Number(r.amount),
     merchant: String(r.merchant_name ?? r.merchant ?? ''),
     flow: r.flow ? String(r.flow) : undefined,
+    account: r.account ? String(r.account) : '',
     purchaseEnrichment: r.purchase_enrichment,
   }))
 
   console.log(tag, cfg.label, 'txns in window:', txns.length)
+  const acctDist = txns.reduce((acc, t) => {
+    const key = t.account || '(blank)'
+    acc[key] = (acc[key] ?? 0) + 1
+    return acc
+  }, /** @type {Record<string, number>} */ ({}))
+  console.log(tag, 'txns by account:', acctDist)
 
   const purchaseMatches = cfg.matchOrders(orders, txns, matchOpts)
   const refundLinks = cfg.matchRefunds(orders, txns, purchaseMatches)
@@ -366,7 +426,7 @@ async function main() {
       where ${cfg.merchantSql}
         and txn_date >= '${escSql(txnSince)}'
         and txn_date <= '${escSql(txnUntil)}'
-        ${userId ? `and user_id = '${escSql(userId)}'` : ''}
+        ${userId ? `and user_id = '${escSql(userId)}'` : ''}${accountScopeSql}
         and purchase_enrichment is not null
         and purchase_enrichment->>'source' = '${escSql(cfg.label)}';
     `)

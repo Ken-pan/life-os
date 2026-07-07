@@ -1,5 +1,7 @@
-# Best Buy purchase history — scroll + capture harvest (past year filter in script)
-# Run: WEB_STATE_ALLOW_BESTBUY=1 node scripts/bestbuy-harvest-past-year.mjs
+# Best Buy purchase history — scroll + capture harvest over a configurable date range.
+# The harvest window (--since/--until/--days, default past 365 days) is set in the script,
+# which also writes a dated basename: bestbuy-orders-<since>_to_<until>-raw.json.
+# Run: WEB_STATE_ALLOW_BESTBUY=1 node scripts/bestbuy-harvest-past-year.mjs [--since YYYY-MM-DD] [--until YYYY-MM-DD]
 
 id: bestbuy-orders
 match:
@@ -30,7 +32,9 @@ entities:
 
 export:
   outDir: bestbuy-export
-  basename: 'bestbuy-orders-past-year'
+  # Fallback basename only; the harvest script writes a dated basename
+  # (bestbuy-orders-<since>_to_<until>) and consumers resolve the newest raw file.
+  basename: 'bestbuy-orders'
   formats: [json, csv]
   redact: [shipTo, address]
 

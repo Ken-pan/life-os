@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadRecipe } from '../lib/recipe.mjs'
 import { redactForExport } from '../lib/privacy.mjs'
+import { resolveOrdersRawPath } from '../lib/orders-export.mjs'
 import {
   ensureHarvestListPage,
   getTabUrl,
@@ -17,17 +18,19 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BRIDGE = process.env.WEB_STATE_BRIDGE_URL || 'http://127.0.0.1:17321'
 
+function exportPathFor(source) {
+  const dir = path.join(__dirname, '..', 'data', `${source}-export`)
+  return (
+    resolveOrdersRawPath(dir, source) ||
+    path.join(dir, `${source}-orders-past-year-raw.json`)
+  )
+}
+
 const CONFIG = {
   bestbuy: {
     allowEnv: 'WEB_STATE_ALLOW_BESTBUY',
     recipeId: 'bestbuy-orders',
-    exportPath: path.join(
-      __dirname,
-      '..',
-      'data',
-      'bestbuy-export',
-      'bestbuy-orders-past-year-raw.json',
-    ),
+    exportPath: exportPathFor('bestbuy'),
     listUrl: 'https://www.bestbuy.com/purchasehistory/purchases',
     readyRe: /bestbuy\.com\/purchasehistory\/purchases/i,
     hostRe: /bestbuy\.com/i,
@@ -54,13 +57,7 @@ const CONFIG = {
   target: {
     allowEnv: 'WEB_STATE_ALLOW_TARGET',
     recipeId: 'target-orders',
-    exportPath: path.join(
-      __dirname,
-      '..',
-      'data',
-      'target-export',
-      'target-orders-past-year-raw.json',
-    ),
+    exportPath: exportPathFor('target'),
     listUrl: 'https://www.target.com/orders?lnk=acct_nav_my_account',
     readyRe: /target\.com\/orders/i,
     hostRe: /target\.com/i,

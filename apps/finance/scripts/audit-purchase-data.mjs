@@ -16,26 +16,37 @@ import {
   matchTargetRefundsToOrders,
 } from '../src/engine/targetOrderMatch.ts'
 import { isTargetAggregatePayment } from '../src/engine/merchantChargeFilters.ts'
+import {
+  resolveOrdersRawPath,
+  summaryHarvestSince,
+  summaryHarvestUntil,
+} from '../../../tools/web-state-devtools/bridge/lib/orders-export.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'iueozzuctstwvzbcxcyh'
 
+const EXPORT_ROOT = path.resolve(
+  __dirname,
+  '../../../tools/web-state-devtools/bridge/data',
+)
+function exportPathFor(source) {
+  const dir = path.join(EXPORT_ROOT, `${source}-export`)
+  return (
+    resolveOrdersRawPath(dir, source) ||
+    path.join(dir, `${source}-orders-past-year-raw.json`)
+  )
+}
+
 const SOURCES = {
   bestbuy: {
-    exportPath: path.resolve(
-      __dirname,
-      '../../../tools/web-state-devtools/bridge/data/bestbuy-export/bestbuy-orders-past-year-raw.json',
-    ),
+    exportPath: exportPathFor('bestbuy'),
     merchantSql: `(merchant_name ilike '%best buy%' or merchant_name ilike '%bestbuy%' or merchant ilike '%best buy%' or merchant ilike '%bestbuy%')`,
     matchOrders: matchBestBuyOrdersToTxns,
     matchRefunds: matchBestBuyRefundsToOrders,
     txnSinceFromExport: true,
   },
   target: {
-    exportPath: path.resolve(
-      __dirname,
-      '../../../tools/web-state-devtools/bridge/data/target-export/target-orders-past-year-raw.json',
-    ),
+    exportPath: exportPathFor('target'),
     merchantSql: `(merchant_name ilike '%target%' or merchant ilike '%target%')`,
     matchOrders: matchTargetOrdersToTxns,
     matchRefunds: matchTargetRefundsToOrders,
@@ -221,9 +232,9 @@ async function main() {
     const raw = JSON.parse(fs.readFileSync(cfg.exportPath, 'utf8'))
     const orders = raw.orders ?? []
     const txnSince = cfg.txnSinceFromExport
-      ? raw.summary?.pastYearCutoff || '2025-07-07'
+      ? summaryHarvestSince(raw.summary) || '2025-07-07'
       : `${cfg.year ?? new Date().getFullYear()}-01-01`
-    const txnUntil = arg('--until', '2026-12-31')
+    const txnUntil = arg('--until', summaryHarvestUntil(raw.summary) || '2026-12-31')
 
     const { stats, issues } = auditExport(source, orders)
     console.log('### Export quality')

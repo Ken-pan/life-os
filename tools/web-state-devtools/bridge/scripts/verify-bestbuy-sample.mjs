@@ -6,11 +6,19 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveOrdersRawPath } from '../lib/orders-export.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA = path.join(__dirname, '..', 'data')
 const LATEST = path.join(DATA, 'latest-snapshot.json')
 const BRIDGE = process.env.WEB_STATE_BRIDGE_URL || 'http://127.0.0.1:17321'
+const BESTBUY_EXPORT_DIR = path.join(DATA, 'bestbuy-export')
+function bestbuyExportPath() {
+  return (
+    resolveOrdersRawPath(BESTBUY_EXPORT_DIR, 'bestbuy') ||
+    path.join(BESTBUY_EXPORT_DIR, 'bestbuy-orders-past-year-raw.json')
+  )
+}
 
 const args = process.argv.slice(2)
 const doCapture = args.includes('--capture')
@@ -60,11 +68,7 @@ function expectedFromSnapshot(snapshot) {
 
   // Fallback: parse from export if list sensor is sparse
   if (expected.size === 0) {
-    const exportPath = path.join(
-      DATA,
-      'bestbuy-export',
-      'bestbuy-orders-past-year-raw.json',
-    )
+    const exportPath = bestbuyExportPath()
     if (fs.existsSync(exportPath)) {
       for (const o of JSON.parse(fs.readFileSync(exportPath, 'utf8')).orders ||
         []) {
@@ -233,11 +237,7 @@ async function main() {
     for (const issue of listIssues.slice(0, 10)) console.log(`  - ${issue}`)
   }
 
-  const exportPath = path.join(
-    DATA,
-    'bestbuy-export',
-    'bestbuy-orders-past-year-raw.json',
-  )
+  const exportPath = bestbuyExportPath()
   const exportOrders = fs.existsSync(exportPath)
     ? JSON.parse(fs.readFileSync(exportPath, 'utf8')).orders || []
     : actual

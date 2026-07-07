@@ -1,5 +1,8 @@
-# Target account orders — scroll + capture harvest (past year filter in script)
-# Run: WEB_STATE_ALLOW_TARGET=1 node scripts/target-harvest-past-year.mjs
+# Target account orders — scroll + capture harvest over a configurable date range.
+# The harvest window (--since/--until/--days, default past 365 days) is set in the script,
+# which also writes a dated basename: target-orders-<since>_to_<until>-raw.json.
+# NOTE: online Orders view only; Target in-store purchase history is not captured yet.
+# Run: WEB_STATE_ALLOW_TARGET=1 node scripts/target-harvest-past-year.mjs [--since YYYY-MM-DD] [--until YYYY-MM-DD]
 
 id: target-orders
 match:
@@ -31,7 +34,9 @@ entities:
 
 export:
   outDir: target-export
-  basename: 'target-orders-past-year'
+  # Fallback basename only; the harvest script writes a dated basename
+  # (target-orders-<since>_to_<until>) and consumers resolve the newest raw file.
+  basename: 'target-orders'
   formats: [json, csv]
   redact: [shipTo, address]
 

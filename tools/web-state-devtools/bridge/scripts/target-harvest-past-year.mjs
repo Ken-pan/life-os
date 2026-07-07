@@ -1,8 +1,21 @@
 #!/usr/bin/env node
 /**
- * Harvest Target order history (scroll + capture), keep orders from the past year.
+ * Harvest Target order history (scroll + capture) over a configurable date range.
  *
- * Usage: WEB_STATE_ALLOW_TARGET=1 node scripts/target-harvest-past-year.mjs
+ * Usage:
+ *   WEB_STATE_ALLOW_TARGET=1 node scripts/target-harvest-past-year.mjs
+ *   WEB_STATE_ALLOW_TARGET=1 node scripts/target-harvest-past-year.mjs --since 2025-03-01
+ *   WEB_STATE_ALLOW_TARGET=1 node scripts/target-harvest-past-year.mjs --since 2025-03-01 --until 2026-01-30
+ *
+ * Window flags (default = past 365 days):
+ *   --since YYYY-MM-DD | HARVEST_SINCE   earliest order date to keep
+ *   --until YYYY-MM-DD | HARVEST_UNTIL   latest order date to keep (default: now)
+ *   --days N           | HARVEST_DAYS    look back N days (ignored when --since is set)
+ *
+ * NOTE: this currently harvests the default (online) Orders view only. Target
+ * in-store purchase history lives behind a separate In-store view/toggle and is
+ * NOT captured yet (tracked separately). An empty online result is therefore a
+ * source-coverage limitation, not proof that no receipt exists.
  *
  * Requires: bridge running, extension Dev Agent Mode ON, logged into Target in Chrome.
  */
@@ -12,6 +25,10 @@ import { fileURLToPath } from 'node:url'
 import { loadRecipe } from '../lib/recipe.mjs'
 import { extractMergeKey } from '../lib/store.mjs'
 import { redactForExport } from '../lib/privacy.mjs'
+import {
+  datedOrdersBasename,
+  resolveOrdersRawPath,
+} from '../lib/orders-export.mjs'
 import {
   isHardSignInUrl,
   resolveHarvestTabId,
@@ -53,13 +70,45 @@ function parseOrderDate(raw) {
   return Date.parse(`${year}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`)
 }
 
-function withinPastYear(orderDate, cutoffMs) {
+function withinRange(orderDate, sinceMs, untilMs) {
   const t = parseOrderDate(orderDate)
   if (Number.isNaN(t)) return true
-  return t >= cutoffMs
+  return t >= sinceMs && t <= untilMs
 }
 
-function writeExport(recipe, summary, rawItems, exportItems) {
+function argVal(name) {
+  const i = process.argv.indexOf(name)
+  return i >= 0 ? process.argv[i + 1] : undefined
+}
+
+/**
+ * Resolve the harvest window [sinceMs, untilMs]. Defaults to the past 365 days
+ * but can be widened to cover the full bank-flow history via --since/--until/--days.
+ */
+function resolveHarvestWindow() {
+  const since = argVal('--since') || process.env.HARVEST_SINCE
+  const until = argVal('--until') || process.env.HARVEST_UNTIL
+  let sinceMs
+  if (since) {
+    const t = Date.parse(since)
+    if (!Number.isNaN(t)) sinceMs = t
+    else console.warn('[target] ignoring invalid --since/HARVEST_SINCE:', since)
+  }
+  if (sinceMs == null) {
+    const daysRaw = argVal('--days') || process.env.HARVEST_DAYS
+    const days = Number(daysRaw) > 0 ? Number(daysRaw) : 365
+    sinceMs = Date.now() - days * 24 * 60 * 60 * 1000
+  }
+  let untilMs = Date.now()
+  if (until) {
+    const t = Date.parse(until)
+    if (!Number.isNaN(t)) untilMs = t + 24 * 60 * 60 * 1000 - 1
+    else console.warn('[target] ignoring invalid --until/HARVEST_UNTIL:', until)
+  }
+  return { sinceMs, untilMs }
+}
+
+function writeExport(recipe, summary, rawItems, exportItems, base) {
   const outDir = path.join(
     __dirname,
     '..',
@@ -67,10 +116,12 @@ function writeExport(recipe, summary, rawItems, exportItems) {
     recipe.export?.outDir || 'target-export',
   )
   fs.mkdirSync(outDir, { recursive: true })
-  const base = String(recipe.export?.basename || 'target-orders-past-year')
   const rawPath = path.join(outDir, `${base}-raw.json`)
-  const prevCount = fs.existsSync(rawPath)
-    ? (JSON.parse(fs.readFileSync(rawPath, 'utf8')).orders?.length ?? 0)
+  // Guard against clobbering a good export with an empty one: compare against
+  // the newest existing raw file for this source (any basename), not just base.
+  const prevRawPath = resolveOrdersRawPath(outDir, 'target')
+  const prevCount = prevRawPath
+    ? (JSON.parse(fs.readFileSync(prevRawPath, 'utf8')).orders?.length ?? 0)
     : 0
   const stuckOnSignIn = (summary.scrollSteps ?? []).some((s) =>
     isHardSignInUrl(String(s.url ?? '')),
@@ -215,9 +266,10 @@ async function main() {
   }
 
   const recipe = loadRecipe(RECIPE_ID)
-  const cutoffMs = Date.now() - 365 * 24 * 60 * 60 * 1000
-  const cutoffLabel = new Date(cutoffMs).toISOString().slice(0, 10)
-  console.log(LOG, 'keeping orders on/after', cutoffLabel)
+  const { sinceMs, untilMs } = resolveHarvestWindow()
+  const sinceLabel = new Date(sinceMs).toISOString().slice(0, 10)
+  const untilLabel = new Date(untilMs).toISOString().slice(0, 10)
+  console.log(LOG, 'keeping orders in range', sinceLabel, '→', untilLabel)
 
   const deps = { runAction, getLatestSnapshot, writeExport }
   const t0 = Date.now()
@@ -253,16 +305,16 @@ async function main() {
     return db - da
   })
 
-  const yearItems = allItems.filter((o) =>
-    withinPastYear(o.orderDate, cutoffMs),
+  const rangeItems = allItems.filter((o) =>
+    withinRange(o.orderDate, sinceMs, untilMs),
   )
   console.log(
-    `${LOG} scroll harvest: ${allItems.length} total, ${yearItems.length} within past year`,
+    `${LOG} scroll harvest: ${allItems.length} total, ${rangeItems.length} within ${sinceLabel}..${untilLabel}`,
   )
 
   /** @type {Map<string, Record<string, unknown>>} */
   const enriched = new Map(
-    yearItems.map((o) => [
+    rangeItems.map((o) => [
       extractMergeKey(o, recipe.entities?.mergeKey) || o.orderId,
       o,
     ]),
@@ -331,17 +383,32 @@ async function main() {
   })
 
   const exportItems = list.map((o) => redactForExport(o))
+  const coverageWarnings = []
+  if (list.length === 0) {
+    coverageWarnings.push(
+      'target_online_empty_in_store_view_not_captured_yet',
+    )
+  }
   const summary = {
+    source: 'target',
     recipeId: RECIPE_ID,
-    harvestedAt: new Date().toISOString(),
-    pastYearCutoff: cutoffLabel,
+    generatedAt: new Date().toISOString(),
+    harvestSince: sinceLabel,
+    harvestUntil: untilLabel,
+    harvestDays: Math.round((untilMs - sinceMs) / 86_400_000),
     harvestedCount: list.length,
+    viewsCaptured: ['online'],
+    coverageWarnings,
+    // Legacy fields for backward compatibility with older consumers.
+    harvestedAt: new Date().toISOString(),
+    legacyPastYearCutoff: sinceLabel,
     scrollSteps,
     followSteps,
     complete: true,
   }
 
-  const outPaths = writeExport(recipe, summary, list, exportItems)
+  const base = datedOrdersBasename('target', sinceLabel, untilLabel)
+  const outPaths = writeExport(recipe, summary, list, exportItems, base)
 
   console.log(`\n${LOG} DONE in`, Math.round((Date.now() - t0) / 1000), 's')
   console.log(JSON.stringify(summary, null, 2))
