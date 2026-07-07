@@ -1,6 +1,7 @@
 import type {
   PurchaseEnrichment,
   PurchaseLineItem,
+  ReturnInfoDecision,
 } from './purchaseEnrichment.ts'
 import { uniqueLineItems } from './purchaseEnrichment.ts'
 import type { PurchaseReturnInfo } from './purchaseReturnStatus.ts'
@@ -10,14 +11,27 @@ import {
   parseReturnInfoFromMerchantStatus,
   isRefundCreditTxn,
 } from './purchaseReturnStatus.ts'
+import { deriveAmazonReturnInfoDecision } from '../../../../tools/web-state-devtools/bridge/lib/amazon-orders-parser.mjs'
+import {
+  bestBuyReceiptIdEncodedDate,
+  isPollutedInStoreReturnDate,
+  parseVisibleDateText,
+} from '../../../../tools/web-state-devtools/bridge/lib/bestbuy-orders-parser.mjs'
 
 export interface MerchantOrderRecord {
   orderId?: string
   orderDate?: string
+  /** ISO purchase date from normalized export (`YYYY-MM-DD`). */
+  orderDateIso?: string
+  orderDateRaw?: string
+  orderDateSource?: 'visible_text' | 'receipt_id' | 'inferred' | 'unknown'
   orderTotal?: string | number
   status?: string
   statusDate?: string
   channel?: string
+  /** Harvest view: `online` | `in_store` (legacy exports may use `instore`). */
+  sourceView?: string
+  storeName?: string
   detailUrl?: string
   lineItems?: Array<{
     title?: string
@@ -28,6 +42,9 @@ export interface MerchantOrderRecord {
     asin?: string
   }>
   returnInfo?: PurchaseReturnInfo
+  /** Amazon export: explicit returnInfo merge decision. */
+  returnInfoDecision?: ReturnInfoDecision
+  returnEvidenceText?: string
 }
 
 export interface PurchaseMatchTxn {
@@ -68,6 +85,40 @@ function dayDiff(a: string, b: string): number {
   return Math.abs(new Date(a).getTime() - new Date(b).getTime()) / 86_400_000
 }
 
+/**
+ * Best Buy in-store order ids encode the purchase date in the tail as `-MMDDYY`
+ * (e.g. `470-70-6673-041526` → 2026-04-15). The scraped orderDate/statusDate for
+ * these are unreliable (they fall back to the harvest day), so this is the most
+ * trustworthy anchor for matching in-store charges. Online ids (`BBY01-807…`) do
+ * not match this shape and are left alone.
+ */
+/** @deprecated alias — prefer bestBuyReceiptIdEncodedDate from parser. */
+export function bestBuyInStoreOrderDate(
+  orderId: string | undefined,
+): string | undefined {
+  return bestBuyReceiptIdEncodedDate(orderId)
+}
+
+function bestBuyCanonicalOrderDate(
+  order: MerchantOrderRecord,
+): string | undefined {
+  if (order.orderDateIso) return order.orderDateIso
+  const polluted = isPollutedInStoreReturnDate(order)
+  if (!polluted && order.orderDate) {
+    const visible = parseVisibleDateText(order.orderDate)
+    if (visible) return visible
+  }
+  return bestBuyReceiptIdEncodedDate(order.orderId)
+}
+
+function isTargetInStoreView(order: MerchantOrderRecord): boolean {
+  return (
+    /in store/i.test(order.channel ?? '') ||
+    order.sourceView === 'in_store' ||
+    order.sourceView === 'instore'
+  )
+}
+
 /** Best date anchor for card charge ↔ merchant order (charge usually on/after fulfillment). */
 export function effectiveOrderDate(
   source: PurchaseEnrichment['source'],
@@ -78,6 +129,27 @@ export function effectiveOrderDate(
   const status = order.status ?? ''
 
   if (source === 'bestbuy') {
+    const isInStore =
+      /in store/i.test(order.channel ?? '') ||
+      /purchased in store/i.test(status)
+
+    if (isInStore) {
+      if (isPollutedInStoreReturnDate(order)) {
+        const encoded = bestBuyReceiptIdEncodedDate(order.orderId)
+        if (encoded) return encoded
+      } else if (/purchased in store/i.test(status) && statusDate) {
+        // Charge posts on pickup/purchase day, not the earlier "order placed" line.
+        return statusDate
+      }
+    }
+
+    const canonical = bestBuyCanonicalOrderDate(order)
+    if (canonical) return canonical
+
+    if (isInStore) {
+      const encoded = bestBuyReceiptIdEncodedDate(order.orderId)
+      if (encoded) return encoded
+    }
     if (
       /in store|purchased in store|picked up|delivered|returned/i.test(
         status,
@@ -90,6 +162,9 @@ export function effectiveOrderDate(
   }
 
   if (source === 'target') {
+    if (isTargetInStoreView(order)) {
+      return orderDate ?? statusDate
+    }
     if (/delivered|picked up|shipped|ready for pickup|returned/i.test(status)) {
       return statusDate ?? orderDate
     }
@@ -170,7 +245,7 @@ export function enrichmentFromOrder(
       .filter(
         (li) =>
           !/^(delivered|returned|canceled|cancelled|picked up|purchased in store)$/i.test(
-            String(li.title ?? "").trim(),
+            String(li.title ?? '').trim(),
           ),
       )
       .map((li) => ({
@@ -183,22 +258,40 @@ export function enrichmentFromOrder(
       })),
   )
 
-  const returnInfo =
+  let returnInfo =
     order.returnInfo ??
     parseReturnInfoFromMerchantStatus(order.status, {
       statusDate: order.statusDate,
       orderTotal: order.orderTotal,
     })
 
+  let returnInfoDecision: ReturnInfoDecision | undefined
+  if (source === 'amazon') {
+    returnInfoDecision =
+      order.returnInfoDecision ??
+      deriveAmazonReturnInfoDecision({
+        status: order.status,
+        returnInfo,
+        returnEvidenceText: order.returnEvidenceText,
+      })
+    if (returnInfoDecision === 'absent_verified') {
+      returnInfo = undefined
+    }
+  }
+
   return {
     source,
     orderId: order.orderId,
-    orderDate: parseMerchantDate(order.orderDate) ?? undefined,
+    orderDate:
+      (source === 'bestbuy' ? bestBuyCanonicalOrderDate(order) : undefined) ??
+      parseMerchantDate(order.orderDate) ??
+      undefined,
     orderTotal: parseMoney(order.orderTotal) ?? undefined,
     status: order.status,
     detailUrl: order.detailUrl,
     lineItems,
     returnInfo,
+    returnInfoDecision,
     matchConfidence: confidence,
     matchedAt: new Date().toISOString(),
   }
@@ -384,7 +477,10 @@ export function matchRefundCreditsToOrders(
     const refundEnrichment: PurchaseEnrichment = {
       source,
       orderId: best.orderId,
-      orderDate: parseMerchantDate(best.order.orderDate),
+      orderDate:
+        (source === 'bestbuy'
+          ? bestBuyCanonicalOrderDate(best.order)
+          : undefined) ?? parseMerchantDate(best.order.orderDate),
       orderTotal: parseMoney(best.order.orderTotal) ?? undefined,
       detailUrl: best.order.detailUrl,
       returnInfo: {

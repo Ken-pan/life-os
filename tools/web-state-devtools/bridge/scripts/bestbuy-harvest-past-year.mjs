@@ -24,6 +24,7 @@ import {
   datedOrdersBasename,
   resolveOrdersRawPath,
 } from '../lib/orders-export.mjs'
+import { applyBestBuyOrderDateNormalization } from '../lib/bestbuy-orders-parser.mjs'
 import {
   ensureHarvestListPage,
   getTabUrl,
@@ -91,7 +92,8 @@ function resolveHarvestWindow() {
   if (since) {
     const t = Date.parse(since)
     if (!Number.isNaN(t)) sinceMs = t
-    else console.warn('[bestbuy] ignoring invalid --since/HARVEST_SINCE:', since)
+    else
+      console.warn('[bestbuy] ignoring invalid --since/HARVEST_SINCE:', since)
   }
   if (sinceMs == null) {
     const daysRaw = argVal('--days') || process.env.HARVEST_DAYS
@@ -102,7 +104,8 @@ function resolveHarvestWindow() {
   if (until) {
     const t = Date.parse(until)
     if (!Number.isNaN(t)) untilMs = t + 24 * 60 * 60 * 1000 - 1
-    else console.warn('[bestbuy] ignoring invalid --until/HARVEST_UNTIL:', until)
+    else
+      console.warn('[bestbuy] ignoring invalid --until/HARVEST_UNTIL:', until)
   }
   return { sinceMs, untilMs }
 }
@@ -397,11 +400,13 @@ async function main() {
     }
   }
 
-  const list = [...enriched.values()].sort((a, b) => {
-    const da = parseOrderDate(a.orderDate) || 0
-    const db = parseOrderDate(b.orderDate) || 0
-    return db - da
-  })
+  const list = [...enriched.values()]
+    .map((o) => applyBestBuyOrderDateNormalization(o))
+    .sort((a, b) => {
+      const da = parseOrderDate(a.orderDate) || 0
+      const db = parseOrderDate(b.orderDate) || 0
+      return db - da
+    })
 
   const exportItems = list.map((o) => redactForExport(o))
   const coverageWarnings = []

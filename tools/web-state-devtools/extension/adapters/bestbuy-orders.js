@@ -109,6 +109,124 @@
     return Number.isFinite(n) ? n : undefined
   }
 
+  const INSTORE_ORDER_ID_RE = /^\d{3}-\d{2}-\d{4}-\d{6}$/
+
+  function bestBuyReceiptIdEncodedDate(orderId) {
+    if (!orderId || ORDER_ID_RE.test(orderId)) return undefined
+    const m = String(orderId).match(/-(\d{2})(\d{2})(\d{2})$/)
+    if (!m) return undefined
+    const [, mm, dd, yy] = m
+    const month = Number(mm)
+    const day = Number(dd)
+    if (month < 1 || month > 12 || day < 1 || day > 31) return undefined
+    const iso = `20${yy}-${mm}-${dd}`
+    const t = Date.parse(iso)
+    if (Number.isNaN(t)) return undefined
+    if (t > Date.now() + 2 * 86_400_000) return undefined
+    return iso
+  }
+
+  function parseVisibleDateText(raw) {
+    if (!raw) return undefined
+    const trimmed = String(raw).trim()
+    const t = Date.parse(trimmed)
+    if (!Number.isNaN(t)) return new Date(t).toISOString().slice(0, 10)
+    const m = trimmed.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s*(\d{4})$/i)
+    if (m) {
+      const parsed = Date.parse(`${m[1]} ${m[2]}, ${m[3]}`)
+      if (!Number.isNaN(parsed))
+        return new Date(parsed).toISOString().slice(0, 10)
+    }
+    return undefined
+  }
+
+  function isoToDisplayDate(iso) {
+    const d = new Date(`${iso}T12:00:00`)
+    return d.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  }
+
+  function isBestBuyInStoreOrder(order) {
+    return (
+      /in store/i.test(order.channel ?? '') ||
+      INSTORE_ORDER_ID_RE.test(order.orderId ?? '')
+    )
+  }
+
+  function normalizeBestBuyOrderDate(order) {
+    const warnings = []
+    const visibleRaw = order.orderDate
+    const statusDateRaw = order.statusDate
+    const orderDateRaw = visibleRaw ?? statusDateRaw ?? undefined
+    const isInStore = isBestBuyInStoreOrder(order)
+    const polluted =
+      isInStore &&
+      /return/i.test(order.status ?? '') &&
+      visibleRaw &&
+      statusDateRaw &&
+      String(visibleRaw).trim() === String(statusDateRaw).trim()
+
+    if (visibleRaw && !polluted) {
+      const iso = parseVisibleDateText(visibleRaw)
+      if (iso) {
+        return {
+          orderDate: String(visibleRaw).trim(),
+          orderDateIso: iso,
+          orderDateRaw,
+          orderDateSource: 'visible_text',
+          parserWarnings: warnings.length ? warnings : undefined,
+        }
+      }
+      warnings.push('bestbuy_visible_date_unparseable')
+    }
+
+    if (isInStore) {
+      const encoded = bestBuyReceiptIdEncodedDate(order.orderId)
+      if (encoded) {
+        const extra = polluted
+          ? ['bestbuy_order_date_from_status_date_replaced_by_receipt_id']
+          : []
+        return {
+          orderDate: isoToDisplayDate(encoded),
+          orderDateIso: encoded,
+          orderDateRaw,
+          orderDateSource: 'receipt_id',
+          parserWarnings: [...warnings, ...extra].length
+            ? [...warnings, ...extra]
+            : undefined,
+        }
+      }
+    }
+
+    return {
+      orderDate: undefined,
+      orderDateIso: undefined,
+      orderDateRaw,
+      orderDateSource: 'unknown',
+      parserWarnings: [
+        ...warnings,
+        polluted
+          ? 'bestbuy_rejected_status_date_as_order_date'
+          : 'bestbuy_order_date_unknown',
+      ],
+    }
+  }
+
+  function applyOrderDateFields(order) {
+    const normalized = normalizeBestBuyOrderDate(order)
+    return {
+      ...order,
+      orderDate: normalized.orderDate,
+      orderDateIso: normalized.orderDateIso,
+      orderDateRaw: normalized.orderDateRaw,
+      orderDateSource: normalized.orderDateSource,
+      parserWarnings: normalized.parserWarnings,
+    }
+  }
+
   function parseReturnInfo(status, statusDate, orderTotal) {
     const label = (status || '').trim()
     if (!label) return undefined
@@ -167,10 +285,9 @@
 
     const status = text(el.querySelector(SEL.statusTitle)) || undefined
     const statusDate = text(el.querySelector(SEL.statusDesc)) || undefined
-    if (!fields.orderDate && statusDate) fields.orderDate = statusDate
     const returnInfo = parseReturnInfo(status, statusDate, fields.orderTotal)
 
-    return {
+    return applyOrderDateFields({
       orderId: fields.orderId,
       orderDate: fields.orderDate,
       orderTotal: fields.orderTotal,
@@ -183,7 +300,7 @@
         fields.orderId.match(ORDER_ID_RE) ? fields.orderId : fields.orderId,
       ),
       lineItems: [],
-    }
+    })
   }
 
   function parseOrderList() {
@@ -208,10 +325,9 @@
     if (!root) return null
 
     const bodyText = text(root)
-    const pathId =
-      location.pathname.match(
-        /order-details\/([^/]+)/i,
-      )?.[1]?.toUpperCase()
+    const pathId = location.pathname
+      .match(/order-details\/([^/]+)/i)?.[1]
+      ?.toUpperCase()
     const orderId =
       pathId ||
       bodyText.match(ORDER_ID_RE)?.[1]?.toUpperCase() ||
@@ -277,19 +393,22 @@
     const status = text(root.querySelector(SEL.statusTitle)) || undefined
     const statusDate = text(root.querySelector(SEL.statusDesc)) || undefined
 
-    return {
+    return applyOrderDateFields({
       orderId,
       orderDate:
         bodyText.match(
           /(?:Order placed|Placed on|Purchased)\s*[:\s]*([A-Za-z]+\s+\d{1,2},\s+\d{4})/i,
         )?.[1] || undefined,
       orderTotal,
+      channel: bodyText.match(/Purchased in store|In store/i)
+        ? 'In store'
+        : undefined,
       status,
       statusDate,
       returnInfo: parseReturnInfo(status, statusDate, orderTotal),
       detailUrl: location.href,
       lineItems: lineItems.slice(0, 30),
-    }
+    })
   }
 
   window.__WSD_ADAPTERS__.push({
