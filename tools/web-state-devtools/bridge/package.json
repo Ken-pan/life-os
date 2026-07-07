@@ -9,7 +9,10 @@
     "mcp": "node mcp-server.mjs",
     "start": "node server.mjs",
     "smoke": "node scripts/smoke-enrich.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "test:target-parser": "node --test scripts/target-orders-parser.test.mjs",
+    "test:amazon-parser": "node --test scripts/amazon-orders-parser.test.mjs",
+    "test:bestbuy-parser": "node --test scripts/bestbuy-orders-parser.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
