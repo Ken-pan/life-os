@@ -31,6 +31,7 @@
           nextTask={null}
           focusMetric="week"
           showWeeklyHint
+          showFocusMetric={false}
         />
       </section>
 

@@ -508,6 +508,22 @@ html, body {
   gap: var(--space-2);
 }
 
+.today-progress-foot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.today-progress-stats--link {
+  cursor: pointer;
+  text-align: left;
+}
+
+.today-progress-stats--link:hover {
+  color: var(--accent);
+}
+
 .today-progress-stats {
   margin: 0;
   padding: 0;
@@ -605,6 +621,10 @@ html, body {
   gap: var(--space-1-5);
 }
 
+.today-progress--compact .today-progress-foot-row {
+  align-items: center;
+}
+
 .today-progress--compact .today-progress-stats {
   font-size: var(--text-xs);
   font-weight: 500;
@@ -649,15 +669,21 @@ html, body {
 }
 
 .calendar-week-nav-btn {
-  min-width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--card) 92%, transparent);
+  background: color-mix(in srgb, var(--card) 96%, transparent);
   color: var(--t2);
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1;
+}
+
+:root[data-theme='light'] .calendar-week-nav-btn {
+  border-color: #e8e2d8;
+  background: #fefdfc;
 }
 
 .calendar-week-nav-today {
@@ -940,6 +966,11 @@ html, body {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
+.task-check:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
 .chip--focus {
   color: var(--t2);
   border-color: transparent;
@@ -1004,6 +1035,7 @@ html, body {
 .task-title.done-text {
   text-decoration: line-through;
   color: #8a837a;
+  font-weight: 600;
 }
 
 .task-meta {
@@ -1025,7 +1057,7 @@ html, body {
 }
 
 .task-meta-line--done {
-  color: var(--t3);
+  color: #b1aaa2;
 }
 
 .chip.overdue {
@@ -1065,6 +1097,14 @@ html, body {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.quick-add .btn-primary:disabled {
+  background: #e8e2d8;
+  color: #9a9188;
+  border-color: #e8e2d8;
+  cursor: not-allowed;
+  opacity: 1;
 }
 
 .back-btn {
@@ -1217,11 +1257,11 @@ html, body {
   background: var(--card);
   display: grid;
   place-items: center;
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 10px;
+  line-height: 1.25;
   color: var(--t2);
   position: relative;
-  padding: 4px;
+  padding: 6px 4px;
 }
 
 .cal-day.on {
@@ -1347,6 +1387,12 @@ html, body {
 
   .quick-add--mobile {
     display: flex;
+  }
+
+  .quick-add--mobile input,
+  .quick-add--mobile .btn-primary {
+    height: 56px;
+    min-height: 56px;
   }
 
   .quick-add:not(.quick-add--mobile) {
@@ -1894,8 +1940,8 @@ html, body {
   }
 
   .fab {
-    right: 24px;
-    bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+    right: 28px;
+    bottom: calc(112px + env(safe-area-inset-bottom, 0px));
     min-width: auto;
     max-width: 260px;
     height: 64px;
@@ -1906,12 +1952,13 @@ html, body {
   }
 
   .fab--compact {
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
     max-width: none;
     padding: 0;
     border-radius: 50%;
     justify-content: center;
+    box-shadow: 0 2px 10px rgba(31, 28, 24, 0.1);
   }
 
   .fab--compact .fab-label {

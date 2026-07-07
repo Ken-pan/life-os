@@ -60,22 +60,19 @@
   </p>
 
   <div class="today-progress-foot">
-    <p class="today-progress-stats">
-      {t('home.progressStats', { done: statsDone, unscheduled: unscheduledCount })}
-    </p>
-    {#if unscheduledCount > 0}
-      <div class="today-progress-actions">
-        <button type="button" class="today-progress-chip" onclick={() => onOpenTimeline?.()}>
-          {t('home.viewUnscheduled')}
+    <div class="today-progress-foot-row">
+      {#if unscheduledCount > 0}
+        <button type="button" class="today-progress-stats today-progress-stats--link" onclick={() => onOpenTimeline?.()}>
+          {t('home.progressStats', { done: statsDone, unscheduled: unscheduledCount })}
         </button>
-        <button type="button" class="today-progress-chip today-progress-chip--action" onclick={() => goto('/upcoming')}>
-          {t('home.planTomorrow')}
-        </button>
-      </div>
-    {:else}
-      <button type="button" class="today-progress-chip today-progress-chip--action today-progress-chip--solo" onclick={() => goto('/upcoming')}>
+      {:else}
+        <p class="today-progress-stats">
+          {t('home.progressStats', { done: statsDone, unscheduled: unscheduledCount })}
+        </p>
+      {/if}
+      <button type="button" class="today-progress-chip today-progress-chip--action" onclick={() => goto('/upcoming')}>
         {t('home.planTomorrow')}
       </button>
-    {/if}
+    </div>
   </div>
 </section>

@@ -22,7 +22,7 @@
   {:else}
     {#if groups.tomorrow.length}
       <TaskGroup
-        title={t('upcoming.tomorrowCount', { count: groups.tomorrow.length })}
+        title={`${t('upcoming.tomorrow')} ${groups.tomorrow.length}`}
         hideCount
         tasks={groups.tomorrow}
         compactRows
@@ -32,7 +32,7 @@
     {/if}
     {#if groups.week.length}
       <TaskGroup
-        title={t('upcoming.weekCount', { count: groups.week.length })}
+        title={`${t('upcoming.week')} ${groups.week.length}`}
         hideCount
         tasks={groups.week}
         collapsible
@@ -44,7 +44,7 @@
     {/if}
     {#if groups.later.length}
       <TaskGroup
-        title={t('upcoming.laterCount', { count: groups.later.length })}
+        title={`${t('upcoming.later')} ${groups.later.length}`}
         hideCount
         tasks={groups.later}
         collapsible

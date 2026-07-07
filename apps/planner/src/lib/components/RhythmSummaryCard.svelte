@@ -8,7 +8,8 @@
     nextTask: import('$lib/types.js').Task | null,
     compact?: boolean,
     focusMetric?: 'today' | 'week',
-    showWeeklyHint?: boolean
+    showWeeklyHint?: boolean,
+    showFocusMetric?: boolean
   }} */
   let {
     summary,
@@ -18,16 +19,21 @@
     compact = false,
     focusMetric = 'today',
     showWeeklyHint = false,
+    showFocusMetric = true,
   } = $props();
 
   const focusCount = $derived(
     focusMetric === 'week' ? summary.focusWinsWeek : summary.focusWinsToday,
   );
 
-  const showStreakHint = $derived(
+  const showCombinedWeeklyHint = $derived(
     showWeeklyHint &&
       summary.enabled &&
-      !summary.paused &&
+      !summary.paused,
+  );
+
+  const showStreakRemaining = $derived(
+    showCombinedWeeklyHint &&
       summary.doneThisWeek > 0 &&
       summary.streak === 0 &&
       progress.remaining > 0,
@@ -36,7 +42,7 @@
 
 <section class="rhythm-summary" class:rhythm-summary--compact={compact} aria-label={t('rhythm.title')}>
   {#if summary.enabled && !summary.paused}
-    <div class="rhythm-summary-grid">
+    <div class="rhythm-summary-grid" class:rhythm-summary-grid--three={!showFocusMetric}>
       <div class="rhythm-stat">
         <span class="rhythm-stat-label">{t('rhythm.streak')}</span>
         <strong class="rhythm-stat-value">{summary.streak}<span class="rhythm-stat-unit">{t('rhythm.days')}</span></strong>
@@ -49,10 +55,12 @@
         <span class="rhythm-stat-label">{t('rhythm.weekly')}</span>
         <strong class="rhythm-stat-value">{summary.weekly.active}<span class="rhythm-stat-unit">/ {summary.weekly.total}</span></strong>
       </div>
-      <div class="rhythm-stat">
-        <span class="rhythm-stat-label">{t('rhythm.focusTasks')}</span>
-        <strong class="rhythm-stat-value">{focusCount}</strong>
-      </div>
+      {#if showFocusMetric}
+        <div class="rhythm-stat">
+          <span class="rhythm-stat-label">{t('rhythm.focusTasks')}</span>
+          <strong class="rhythm-stat-value">{focusCount}</strong>
+        </div>
+      {/if}
     </div>
 
     <div class="rhythm-heatmap" aria-label={t('rhythm.weekly')}>
@@ -65,11 +73,14 @@
         >{day.label}</span>
       {/each}
     </div>
-    {#if showStreakHint}
-      <p class="rhythm-streak-hint">{t('rhythm.streakClearHint', { count: progress.remaining })}</p>
-    {/if}
-    {#if showWeeklyHint}
-      <p class="rhythm-weekly-hint">{t('rhythm.weeklyGoalHint')}</p>
+    {#if showCombinedWeeklyHint}
+      <p class="rhythm-streak-hint">
+        {#if showStreakRemaining}
+          {t('rhythm.weeklyStreakCombined', { count: progress.remaining })}
+        {:else}
+          {t('rhythm.weeklyGoalHint')}
+        {/if}
+      </p>
     {/if}
   {:else if summary.paused}
     <p class="rhythm-muted">{t('rhythm.pausedHint')}</p>

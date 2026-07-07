@@ -17,7 +17,13 @@
 <AppBar title={t('inbox.title')} />
 
 <div class="wrap">
-  <QuickAddBar listId={SYSTEM_LIST_INBOX} dueDate={null} showOnMobile placeholder={t('inbox.quickAdd')} />
+  <QuickAddBar
+    listId={SYSTEM_LIST_INBOX}
+    dueDate={null}
+    showOnMobile
+    placeholder={t('inbox.quickAdd')}
+    toastOnAdd={t('toast.inboxAdded')}
+  />
   {#if tasks.length}
     <TaskGroup
       title={t('inbox.pendingTitle', { count: tasks.length })}
