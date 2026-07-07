@@ -31,6 +31,74 @@ let rhEnrichChain = null
 
 const FINANCE_OS_PRODUCTION_URL = 'https://kensfinanceos.netlify.app/#/today'
 const FINANCE_OS_NETLIFY_HOST = 'kensfinanceos.netlify.app'
+const TAB_EDIT_RETRY_ATTEMPTS = 8
+const TAB_EDIT_RETRY_MS = 250
+
+function isTabEditBlockedError(err) {
+  const msg = err instanceof Error ? err.message : String(err ?? '')
+  return /tabs cannot be edited/i.test(msg) || /dragging a tab/i.test(msg)
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
+/** Chrome 在用户拖拽标签页时会 transient 拒绝 tabs/windows 变更。 */
+async function withTabEditRetry(
+  fn,
+  { attempts = TAB_EDIT_RETRY_ATTEMPTS, delayMs = TAB_EDIT_RETRY_MS } = {},
+) {
+  let lastErr
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastErr = err
+      if (!isTabEditBlockedError(err) || i >= attempts - 1) throw err
+      await sleep(delayMs * (i + 1))
+    }
+  }
+  throw lastErr
+}
+
+function safeTabsUpdate(tabId, updateProperties) {
+  return withTabEditRetry(() => chrome.tabs.update(tabId, updateProperties))
+}
+
+function safeTabsCreate(createProperties) {
+  return withTabEditRetry(() => chrome.tabs.create(createProperties))
+}
+
+function safeTabsReload(tabId, reloadProperties) {
+  return withTabEditRetry(() => chrome.tabs.reload(tabId, reloadProperties))
+}
+
+function safeTabsRemove(tabIds) {
+  return withTabEditRetry(() => chrome.tabs.remove(tabIds))
+}
+
+function safeWindowsUpdate(windowId, updateProperties) {
+  return withTabEditRetry(() =>
+    chrome.windows.update(windowId, updateProperties),
+  )
+}
+
+async function tryFocusTab(tab) {
+  if (tab?.id == null) return false
+  try {
+    await safeTabsUpdate(tab.id, { active: true })
+    if (tab.windowId != null) {
+      await safeWindowsUpdate(tab.windowId, { focused: true })
+    }
+    return true
+  } catch (err) {
+    if (isTabEditBlockedError(err)) {
+      console.warn('[FOS] tab focus skipped (user may be dragging a tab)')
+      return false
+    }
+    throw err
+  }
+}
 
 // match pattern 无法限定端口，localhost/netlify 通配会命中其它 Life OS 应用，
 // 因此逐个验证：生产域名 / 标题 / bridge 握手。
@@ -79,10 +147,7 @@ async function focusFinanceOsTab() {
   })
   for (const tab of ranked) {
     if (!(await isFinanceOsTab(tab))) continue
-    await chrome.tabs.update(tab.id, { active: true })
-    if (tab.windowId != null) {
-      await chrome.windows.update(tab.windowId, { focused: true })
-    }
+    await tryFocusTab(tab)
     if (tab.url) {
       await chrome.storage.local.set({ fos_preferred_app_url: tab.url })
     }
@@ -92,7 +157,17 @@ async function focusFinanceOsTab() {
   const fallback =
     (await chrome.storage.local.get('fos_preferred_app_url'))
       .fos_preferred_app_url ?? FINANCE_OS_PRODUCTION_URL
-  return chrome.tabs.create({ url: fallback })
+  try {
+    return await safeTabsCreate({ url: fallback })
+  } catch (err) {
+    if (isTabEditBlockedError(err)) {
+      console.warn(
+        '[FOS] Finance OS tab create skipped (user may be dragging a tab)',
+      )
+      return null
+    }
+    throw err
+  }
 }
 
 async function getQueue() {
@@ -306,7 +381,7 @@ async function resolveRobinhoodEnrichTab() {
   const anyTab = tabs.find((t) => /robinhood\.com/i.test(t.url ?? ''))
   if (listTab?.id != null) return { tabId: listTab.id, created: false }
   if (anyTab?.id != null) return { tabId: anyTab.id, created: false }
-  const tab = await chrome.tabs.create({
+  const tab = await safeTabsCreate({
     url: 'https://robinhood.com/',
     active: false,
   })
@@ -319,7 +394,7 @@ async function captureDetailInTab(tabId, ticker) {
   const url = `https://robinhood.com/stocks/${encodeURIComponent(ticker)}`
   let waitPromise = waitForDetailSaved(ticker, tabId, RH_DETAIL_TAB_TIMEOUT_MS)
   try {
-    await chrome.tabs.update(tabId, { url, active: false })
+    await safeTabsUpdate(tabId, { url, active: false })
     await new Promise((r) => setTimeout(r, 2000))
     try {
       await chrome.tabs.sendMessage(tabId, {
@@ -331,7 +406,7 @@ async function captureDetailInTab(tabId, ticker) {
     let result = await waitPromise
     if (!result.ok) {
       waitPromise = waitForDetailSaved(ticker, tabId, 12_000)
-      await chrome.tabs.reload(tabId)
+      await safeTabsReload(tabId)
       await new Promise((r) => setTimeout(r, 2500))
       try {
         await chrome.tabs.sendMessage(tabId, {
@@ -398,13 +473,13 @@ async function runRhDetailEnrichment(tickers, holdings) {
 
   if (enrichTab.created) {
     try {
-      await chrome.tabs.remove(enrichTab.tabId)
+      await safeTabsRemove(enrichTab.tabId)
     } catch {
       // ignore
     }
   } else {
     try {
-      await chrome.tabs.update(enrichTab.tabId, {
+      await safeTabsUpdate(enrichTab.tabId, {
         url: 'https://robinhood.com/',
         active: false,
       })
@@ -511,7 +586,14 @@ async function nudgeFinanceOsTab(tab) {
   try {
     await chrome.tabs.sendMessage(tab.id, { type: 'FOS_FORCE_DELIVER' })
   } catch {
-    await chrome.tabs.reload(tab.id)
+    try {
+      await safeTabsReload(tab.id)
+    } catch (err) {
+      if (!isTabEditBlockedError(err)) throw err
+      console.warn(
+        '[FOS] Finance OS reload skipped (user may be dragging a tab)',
+      )
+    }
   }
 }
 
@@ -634,10 +716,7 @@ async function sendTabMessageWithRetry(
 
 async function focusRobinhoodTab(tab) {
   if (tab?.id == null) return tab
-  await chrome.tabs.update(tab.id, { active: true })
-  if (tab.windowId != null) {
-    await chrome.windows.update(tab.windowId, { focused: true })
-  }
+  await tryFocusTab(tab)
   return tab
 }
 
@@ -649,249 +728,274 @@ async function openRobinhoodListTab() {
     let navigated = false
     if (!isRobinhoodListUrl(tab.url ?? '')) {
       navigated = true
-      await chrome.tabs.update(tab.id, { url: RH_LIST_URL, active: true })
+      await safeTabsUpdate(tab.id, { url: RH_LIST_URL, active: true })
     } else {
       await focusRobinhoodTab(tab)
     }
     if (tab.windowId != null) {
-      await chrome.windows.update(tab.windowId, { focused: true })
+      try {
+        await safeWindowsUpdate(tab.windowId, { focused: true })
+      } catch (err) {
+        if (!isTabEditBlockedError(err)) throw err
+      }
     }
     return { tab: await chrome.tabs.get(tab.id), navigated }
   }
-  const created = await chrome.tabs.create({ url: RH_LIST_URL, active: true })
+  const created = await safeTabsCreate({ url: RH_LIST_URL, active: true })
   return { tab: created, navigated: true }
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   ;(async () => {
-    switch (msg?.type) {
-      case 'FOS_ENQUEUE': {
-        const capture = msg.capture
-        if (!capture?.id) {
-          sendResponse({ ok: false, error: 'missing capture' })
-          break
-        }
-        const newKey = captureQueueKey(capture)
-        const queued = await mutateQueue((queue) => {
-          const filtered = queue.filter((c) => captureQueueKey(c) !== newKey)
-          filtered.push(capture)
-          return filtered
-        })
-        if (capture.source === 'robinhood' && capture.kind === 'holdings') {
-          await saveLastRhHoldings(capture.data)
-        }
-        sendResponse({ ok: true, queued: queued.length })
-        break
-      }
-      case 'FOS_RH_START_ENRICH': {
-        const tickers = Array.isArray(msg.tickers) ? msg.tickers : []
-        const holdings = msg.holdings ?? null
-        if (holdings) await saveLastRhHoldings(holdings)
-        void scheduleRhDetailEnrichment(tickers, holdings)
-        sendResponse({ ok: true, scheduled: tickers.length })
-        break
-      }
-      case 'FOS_RH_ENRICH_MANUAL': {
-        sendResponse(await enrichFromLatestQueueHoldings())
-        break
-      }
-      case 'FOS_CAPTURE_ROBINHOOD': {
-        const { tab, navigated } = await openRobinhoodListTab()
-        if (tab?.id == null) {
-          sendResponse({ ok: false, error: 'no_tab' })
-          break
-        }
-        if (navigated) {
-          await new Promise((r) => setTimeout(r, 1200))
-        }
-        try {
-          const res = await sendTabMessageWithRetry(tab.id, {
-            type: 'FOS_RH_FORCE_LIST_CAPTURE',
-            waitForReady: true,
-          })
-          await chrome.storage.local.remove('fos_pending_crawl')
-          sendResponse({
-            ok: true,
-            tabId: tab.id,
-            positions: res?.positions ?? 0,
-            isListPage: res?.isListPage ?? false,
-          })
-        } catch {
-          const { fos_pending_crawl } =
-            await chrome.storage.local.get('fos_pending_crawl')
-          if (fos_pending_crawl !== 'robinhood') {
-            await chrome.storage.local.set({ fos_pending_crawl: 'robinhood' })
-            await chrome.tabs.reload(tab.id)
-            sendResponse({ ok: true, tabId: tab.id, pendingReload: true })
-          } else {
-            sendResponse({
-              ok: false,
-              error: 'content_script_unreachable',
-              tabId: tab.id,
-            })
+    try {
+      switch (msg?.type) {
+        case 'FOS_ENQUEUE': {
+          const capture = msg.capture
+          if (!capture?.id) {
+            sendResponse({ ok: false, error: 'missing capture' })
+            break
           }
-        }
-        break
-      }
-      case 'FOS_PULL': {
-        sendResponse({ ok: true, captures: await getQueue() })
-        break
-      }
-      case 'FOS_MARK_INFLIGHT': {
-        sendResponse(await markInflight(msg.ids))
-        break
-      }
-      case 'FOS_GET_INFLIGHT': {
-        const inflight = await getInflightMap()
-        sendResponse({ ok: true, ids: Object.keys(inflight) })
-        break
-      }
-      case 'FOS_ACK': {
-        const queue = await getQueue()
-        const done = queue.find((c) => c.id === msg.id)
-        await setQueue(queue.filter((c) => c.id !== msg.id))
-        const inflight = await getInflightMap()
-        delete inflight[msg.id]
-        await setInflightMap(inflight)
-        if (done) {
-          await appendHistory({
-            id: done.id,
-            source: done.source,
-            kind: done.kind,
-            capturedAt: done.capturedAt,
-            syncedAt: new Date().toISOString(),
+          const newKey = captureQueueKey(capture)
+          const queued = await mutateQueue((queue) => {
+            const filtered = queue.filter((c) => captureQueueKey(c) !== newKey)
+            filtered.push(capture)
+            return filtered
           })
-          if (done.kind === 'transactions' && done.data?.complete === true) {
-            const dates = (done.data?.rows ?? [])
-              .filter((r) => !r.pending)
-              .map((r) => r.date)
-              .sort()
-            const max = dates[dates.length - 1]
-            if (max) {
-              const { fos_txn_watermark: cur } =
-                await chrome.storage.local.get('fos_txn_watermark')
-              if (!cur || max > cur) {
-                await chrome.storage.local.set({ fos_txn_watermark: max })
+          if (capture.source === 'robinhood' && capture.kind === 'holdings') {
+            await saveLastRhHoldings(capture.data)
+          }
+          sendResponse({ ok: true, queued: queued.length })
+          break
+        }
+        case 'FOS_RH_START_ENRICH': {
+          const tickers = Array.isArray(msg.tickers) ? msg.tickers : []
+          const holdings = msg.holdings ?? null
+          if (holdings) await saveLastRhHoldings(holdings)
+          void scheduleRhDetailEnrichment(tickers, holdings)
+          sendResponse({ ok: true, scheduled: tickers.length })
+          break
+        }
+        case 'FOS_RH_ENRICH_MANUAL': {
+          sendResponse(await enrichFromLatestQueueHoldings())
+          break
+        }
+        case 'FOS_CAPTURE_ROBINHOOD': {
+          const { tab, navigated } = await openRobinhoodListTab()
+          if (tab?.id == null) {
+            sendResponse({ ok: false, error: 'no_tab' })
+            break
+          }
+          if (navigated) {
+            await new Promise((r) => setTimeout(r, 1200))
+          }
+          try {
+            const res = await sendTabMessageWithRetry(tab.id, {
+              type: 'FOS_RH_FORCE_LIST_CAPTURE',
+              waitForReady: true,
+            })
+            await chrome.storage.local.remove('fos_pending_crawl')
+            sendResponse({
+              ok: true,
+              tabId: tab.id,
+              positions: res?.positions ?? 0,
+              isListPage: res?.isListPage ?? false,
+            })
+          } catch {
+            const { fos_pending_crawl } =
+              await chrome.storage.local.get('fos_pending_crawl')
+            if (fos_pending_crawl !== 'robinhood') {
+              await chrome.storage.local.set({ fos_pending_crawl: 'robinhood' })
+              try {
+                await safeTabsReload(tab.id)
+              } catch (err) {
+                if (!isTabEditBlockedError(err)) throw err
+              }
+              sendResponse({ ok: true, tabId: tab.id, pendingReload: true })
+            } else {
+              sendResponse({
+                ok: false,
+                error: 'content_script_unreachable',
+                tabId: tab.id,
+              })
+            }
+          }
+          break
+        }
+        case 'FOS_PULL': {
+          sendResponse({ ok: true, captures: await getQueue() })
+          break
+        }
+        case 'FOS_MARK_INFLIGHT': {
+          sendResponse(await markInflight(msg.ids))
+          break
+        }
+        case 'FOS_GET_INFLIGHT': {
+          const inflight = await getInflightMap()
+          sendResponse({ ok: true, ids: Object.keys(inflight) })
+          break
+        }
+        case 'FOS_ACK': {
+          const queue = await getQueue()
+          const done = queue.find((c) => c.id === msg.id)
+          await setQueue(queue.filter((c) => c.id !== msg.id))
+          const inflight = await getInflightMap()
+          delete inflight[msg.id]
+          await setInflightMap(inflight)
+          if (done) {
+            await appendHistory({
+              id: done.id,
+              source: done.source,
+              kind: done.kind,
+              capturedAt: done.capturedAt,
+              syncedAt: new Date().toISOString(),
+            })
+            if (done.kind === 'transactions' && done.data?.complete === true) {
+              const dates = (done.data?.rows ?? [])
+                .filter((r) => !r.pending)
+                .map((r) => r.date)
+                .sort()
+              const max = dates[dates.length - 1]
+              if (max) {
+                const { fos_txn_watermark: cur } =
+                  await chrome.storage.local.get('fos_txn_watermark')
+                if (!cur || max > cur) {
+                  await chrome.storage.local.set({ fos_txn_watermark: max })
+                }
               }
             }
           }
-        }
-        sendResponse({ ok: true })
-        break
-      }
-      case 'FOS_SYNC_RESULT': {
-        const result = msg.result
-        if (result && typeof result === 'object') {
-          await chrome.storage.local.set({
-            [SYNC_STATE_KEY]: {
-              ...result,
-              at: result.at ?? new Date().toISOString(),
-            },
-          })
-          if (result.failed > 0) {
-            if (Array.isArray(result.failedEnvelopeIds)) {
-              await releaseInflightIds(result.failedEnvelopeIds)
-            } else {
-              await releaseInflightForQueue()
-            }
-            const tab = await focusFinanceOsTab()
-            await nudgeFinanceOsTab(tab)
-          }
-        }
-        sendResponse({ ok: true })
-        break
-      }
-      case 'FOS_RETRY_DLQ': {
-        const dlq = await getDlq()
-        if (dlq.length === 0) {
-          sendResponse({ ok: true, retried: 0 })
+          sendResponse({ ok: true })
           break
         }
-        const queue = await getQueue()
-        const existingKeys = new Set(queue.map(captureQueueKey))
-        const toRequeue = dlq
-          .map((d) => d.capture)
-          .filter((c) => c?.id && !existingKeys.has(captureQueueKey(c)))
-        await setDlq([])
-        if (toRequeue.length > 0) {
-          await mutateQueue((q) => [...q, ...toRequeue])
+        case 'FOS_SYNC_RESULT': {
+          const result = msg.result
+          if (result && typeof result === 'object') {
+            await chrome.storage.local.set({
+              [SYNC_STATE_KEY]: {
+                ...result,
+                at: result.at ?? new Date().toISOString(),
+              },
+            })
+            if (result.failed > 0) {
+              if (Array.isArray(result.failedEnvelopeIds)) {
+                await releaseInflightIds(result.failedEnvelopeIds)
+              } else {
+                await releaseInflightForQueue()
+              }
+              const tab = await focusFinanceOsTab()
+              await nudgeFinanceOsTab(tab)
+            }
+          }
+          sendResponse({ ok: true })
+          break
         }
-        const inflight = await getInflightMap()
-        for (const c of toRequeue) delete inflight[c.id]
-        await setInflightMap(inflight)
-        sendResponse({ ok: true, retried: toRequeue.length })
-        break
-      }
-      case 'FOS_CLEAR_DLQ': {
-        await setDlq([])
-        sendResponse({ ok: true })
-        break
-      }
-      case 'FOS_CRAWL_ROCKETMONEY': {
-        const tabs = await chrome.tabs.query({
-          url: 'https://app.rocketmoney.com/*',
-        })
-        if (tabs.length > 0) {
-          const tab = tabs[0]
-          await chrome.tabs.update(tab.id, { active: true })
-          if (tab.windowId != null) {
-            await chrome.windows.update(tab.windowId, { focused: true })
+        case 'FOS_RETRY_DLQ': {
+          const dlq = await getDlq()
+          if (dlq.length === 0) {
+            sendResponse({ ok: true, retried: 0 })
+            break
           }
-          try {
-            await chrome.tabs.sendMessage(tab.id, { type: 'FOS_START_CRAWL' })
-          } catch {
-            await chrome.storage.local.set({ fos_pending_crawl: 'rocketmoney' })
-            await chrome.tabs.reload(tab.id)
+          const queue = await getQueue()
+          const existingKeys = new Set(queue.map(captureQueueKey))
+          const toRequeue = dlq
+            .map((d) => d.capture)
+            .filter((c) => c?.id && !existingKeys.has(captureQueueKey(c)))
+          await setDlq([])
+          if (toRequeue.length > 0) {
+            await mutateQueue((q) => [...q, ...toRequeue])
           }
-        } else {
-          await chrome.storage.local.set({ fos_pending_crawl: 'rocketmoney' })
-          await chrome.tabs.create({
-            url: 'https://app.rocketmoney.com/dashboard',
+          const inflight = await getInflightMap()
+          for (const c of toRequeue) delete inflight[c.id]
+          await setInflightMap(inflight)
+          sendResponse({ ok: true, retried: toRequeue.length })
+          break
+        }
+        case 'FOS_CLEAR_DLQ': {
+          await setDlq([])
+          sendResponse({ ok: true })
+          break
+        }
+        case 'FOS_CRAWL_ROCKETMONEY': {
+          const tabs = await chrome.tabs.query({
+            url: 'https://app.rocketmoney.com/*',
           })
+          if (tabs.length > 0) {
+            const tab = tabs[0]
+            await tryFocusTab(tab)
+            try {
+              await chrome.tabs.sendMessage(tab.id, { type: 'FOS_START_CRAWL' })
+            } catch {
+              await chrome.storage.local.set({
+                fos_pending_crawl: 'rocketmoney',
+              })
+              try {
+                await safeTabsReload(tab.id)
+              } catch (err) {
+                if (!isTabEditBlockedError(err)) throw err
+              }
+            }
+          } else {
+            await chrome.storage.local.set({ fos_pending_crawl: 'rocketmoney' })
+            await safeTabsCreate({
+              url: 'https://app.rocketmoney.com/dashboard',
+            })
+          }
+          sendResponse({ ok: true })
+          break
         }
-        sendResponse({ ok: true })
-        break
-      }
-      case 'FOS_STORE_SNAPSHOT': {
-        const snap = msg.snapshot
-        if (
-          snap?.v === 1 &&
-          typeof snap.exportedAt === 'string' &&
-          Array.isArray(snap.accounts) &&
-          Array.isArray(snap.txnKeys)
-        ) {
-          await chrome.storage.local.set({ [SNAPSHOT_KEY]: snap })
+        case 'FOS_STORE_SNAPSHOT': {
+          const snap = msg.snapshot
+          if (
+            snap?.v === 1 &&
+            typeof snap.exportedAt === 'string' &&
+            Array.isArray(snap.accounts) &&
+            Array.isArray(snap.txnKeys)
+          ) {
+            await chrome.storage.local.set({ [SNAPSHOT_KEY]: snap })
+          }
+          sendResponse({ ok: true })
+          break
         }
-        sendResponse({ ok: true })
-        break
+        case 'FOS_OPEN_APP': {
+          await clearAllInflight()
+          const tab = await focusFinanceOsTab()
+          await nudgeFinanceOsTab(tab)
+          sendResponse({ ok: true, releasedInflight: true })
+          break
+        }
+        case 'FOS_RELEASE_INFLIGHT': {
+          await clearAllInflight()
+          const tab = await focusFinanceOsTab()
+          await nudgeFinanceOsTab(tab)
+          sendResponse({ ok: true })
+          break
+        }
+        case 'FOS_REQUEST_SNAPSHOT': {
+          const tab = await focusFinanceOsTab()
+          await nudgeFinanceOsTab(tab)
+          sendResponse({ ok: true })
+          break
+        }
+        case 'FOS_STATUS': {
+          sendResponse(await buildStatusPayload())
+          break
+        }
+        default:
+          sendResponse({ ok: false, error: 'unknown message' })
       }
-      case 'FOS_OPEN_APP': {
-        await clearAllInflight()
-        const tab = await focusFinanceOsTab()
-        await nudgeFinanceOsTab(tab)
-        sendResponse({ ok: true, releasedInflight: true })
-        break
+    } catch (err) {
+      console.warn('[FOS] background handler error:', msg?.type, err)
+      try {
+        sendResponse({
+          ok: false,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      } catch {
+        // response channel may already be closed
       }
-      case 'FOS_RELEASE_INFLIGHT': {
-        await clearAllInflight()
-        const tab = await focusFinanceOsTab()
-        await nudgeFinanceOsTab(tab)
-        sendResponse({ ok: true })
-        break
-      }
-      case 'FOS_REQUEST_SNAPSHOT': {
-        const tab = await focusFinanceOsTab()
-        await nudgeFinanceOsTab(tab)
-        sendResponse({ ok: true })
-        break
-      }
-      case 'FOS_STATUS': {
-        sendResponse(await buildStatusPayload())
-        break
-      }
-      default:
-        sendResponse({ ok: false, error: 'unknown message' })
     }
-  })()
+  })().catch((err) => {
+    console.warn('[FOS] background unhandled:', err)
+  })
   return true
 })

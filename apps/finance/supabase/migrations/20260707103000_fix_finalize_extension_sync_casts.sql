@@ -194,7 +194,9 @@ begin
           'resolved',
           '[]'::jsonb
         )
-        on conflict (user_id, capture_source, platform_id) do nothing
+        on conflict (user_id, capture_source, platform_id)
+        where platform_id is not null and platform_id <> ''
+        do nothing
         returning id into v_inserted;
 
         if v_inserted is null then

@@ -45,6 +45,11 @@ begin
     'import'
   );
 
+  -- Regression for partial unique index + ON CONFLICT (42P10).
+  perform 1 from pg_indexes
+  where schemaname = 'public'
+    and indexname = 'transactions_user_capture_platform_uidx';
+
   raise notice 'extension sync RPC regression helpers OK';
 end;
 $$;
