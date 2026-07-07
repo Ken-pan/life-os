@@ -3,30 +3,15 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import {
+  AMOUNT_TOLERANCE_CENTS,
+  classifyCleanReasons,
+  inferSourceView,
+  mergeKeyFor,
+} from '../../../../packages/finance-enrichment-contract/src/index.mjs'
 
 const CANONICAL_USER = 'c2831538-94b0-4a57-b034-5e873a53c42e'
 const PLACEHOLDER_USER = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
-const AMOUNT_TOLERANCE_CENTS = 1
-
-const CLEAN_STATUSES = new Set([
-  'purchased',
-  'delivered',
-  'shipped',
-  'completed',
-  'picked_up',
-  'ready_for_pickup',
-])
-
-const RETURN_STATUSES = /return|refund|cancel/i
-
-function isCleanPurchaseStatus(status) {
-  const s = String(status || '').toLowerCase().trim()
-  if (!s) return true // legacy rows often omit normalized status
-  if (RETURN_STATUSES.test(s)) return false
-  if (CLEAN_STATUSES.has(s)) return true
-  if (/deliver|shipped|ship|purchas|arrived|complete/.test(s) && !RETURN_STATUSES.test(s)) return true
-  return false
-}
 
 function centsFromDollars(v) {
   if (v == null || v === '') return null
@@ -35,29 +20,39 @@ function centsFromDollars(v) {
   return Math.round(n * 100)
 }
 
-function inferSourceView(source, e) {
-  if (e.sourceView) return e.sourceView
-  const url = e.detailUrl || ''
-  if (source === 'target' && /\/orders\/stores\//.test(url)) return 'in_store'
-  if (source === 'target' && e.orderId && /^\d{3}-\d{2}-\d{4}-\d{6}$/.test(e.orderId)) return 'in_store'
-  if (source === 'bestbuy' && /in store/i.test(e.channel || '')) return 'in_store'
-  if (source === 'bestbuy' && e.orderId && /^\d{3}-\d{2}-\d{4}-\d{6}$/.test(e.orderId)) return 'receipt'
-  if (source === 'bestbuy' && e.orderId && /^BBY/i.test(e.orderId)) return 'online'
-  if (source === 'amazon' && e.dataExport) return 'data_export'
-  if (source === 'amazon') return 'online'
-  return 'unknown'
-}
-
-function mergeKeyFor(source, e) {
-  return e.detailUrl || (source === 'target' && e.orderId?.match(/^\d{3}-\d{2}-\d{4}-\d{6}$/)
-    ? `target:in_store:${e.orderId}`
-    : `${source}:${e.orderId}`)
-}
-
-function isReturnedOrCancelled(e) {
-  if (e.returnInfo) return true
-  if (RETURN_STATUSES.test(e.status || '')) return true
-  return false
+function classifyClean(order, dupTxn, dupOrderId, dupMergeKey) {
+  const normalized = {
+    userId: order.userId,
+    transactionId: order.transactionId,
+    source: order.source,
+    sourceView: order.sourceView,
+    merchantAccount: order.merchantAccount,
+    sourceOrderId: order.sourceOrderId,
+    sourceReceiptId: order.sourceReceiptId,
+    mergeKey: order.mergeKey,
+    status: order.status,
+    matchConfidence: order.matchConfidence,
+    qualityPass: order._qualityPass === true,
+    itemCount: order.itemCount,
+    missingTitles: order._missingTitles ?? 0,
+    missingQty: order._missingQty ?? 0,
+    totalCents: order.totalCents,
+    amountDiffCents: order.amountDiffCents,
+    hasReturnInfo: order.hasReturnInfo,
+  }
+  return classifyCleanReasons(
+    normalized,
+    {
+      dupTxnIds: dupTxn,
+      dupOrderIdCounts: dupOrderId,
+      dupMergeKeyCounts: dupMergeKey,
+    },
+    {
+      checkCrossUser: true,
+      canonicalUserId: CANONICAL_USER,
+      placeholderUserId: PLACEHOLDER_USER,
+    },
+  )
 }
 
 function dbRowToOrder(dbRow, rawBySource) {
@@ -151,40 +146,6 @@ function findRawMatch(order, rawBySource) {
     raw.orders.find((o) => o.mergeKey === order.mergeKey) ||
     null
   )
-}
-
-function classifyClean(order, dupTxn, dupOrderId, dupMergeKey) {
-  const reasons = []
-  if (order.userId !== CANONICAL_USER) reasons.push('cross_user_or_placeholder')
-  if (order.userId === PLACEHOLDER_USER) reasons.push('cross_user_or_placeholder')
-  if (!order.source || !['amazon', 'bestbuy', 'target'].includes(order.source)) reasons.push('invalid_source')
-  if (order.merchantAccount === 'Unknown') reasons.push('unknown_account')
-  if (isReturnedOrCancelled(order)) reasons.push('returned_or_refund_excluded')
-  if (order.hasReturnInfo) reasons.push('returned_or_refund_excluded')
-  if (!isCleanPurchaseStatus(order.status)) {
-    if (RETURN_STATUSES.test(order.status || '')) reasons.push('returned_or_refund_excluded')
-    else reasons.push('non_clean_status')
-  }
-  const conf = order.matchConfidence
-  if (conf !== 'high' && !order._qualityPass) reasons.push('low_or_medium_confidence')
-  if (dupTxn.has(order.transactionId)) reasons.push('duplicate_risk')
-  const oidKey = `${order.source}:${order.sourceOrderId || order.sourceReceiptId}`
-  if (order.sourceOrderId || order.sourceReceiptId) {
-    if (dupOrderId.get(oidKey) > 1) reasons.push('duplicate_risk')
-  }
-  if (dupMergeKey.get(order.mergeKey) > 1) reasons.push('duplicate_risk')
-  if (order.itemCount <= 0) reasons.push('missing_items')
-  if (order._missingTitles > 0) reasons.push('missing_items')
-  if (order._missingQty > 0) reasons.push('missing_items')
-  if (order.totalCents == null) reasons.push('missing_total')
-  if (
-    order.amountDiffCents != null &&
-    Math.abs(order.amountDiffCents) > AMOUNT_TOLERANCE_CENTS
-  ) {
-    reasons.push('amount_mismatch')
-  }
-  if (order.sourceView === 'unknown') reasons.push('source_coverage_gap')
-  return reasons
 }
 
 function suggestedAction(reason) {

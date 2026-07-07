@@ -1,0 +1,12 @@
+{
+  "name": "@life-os/finance-enrichment-contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared purchase enrichment display / read-model classification rules (single source of truth)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./classify": "./src/classify.mjs",
+    "./fixtures/display-state.json": "./fixtures/display-state.json"
+  }
+}

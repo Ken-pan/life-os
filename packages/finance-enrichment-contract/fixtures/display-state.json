@@ -1,0 +1,103 @@
+{
+  "version": "v1.1",
+  "description": "Shared fixtures for UI classifier and read-model builder tests",
+  "cases": [
+    {
+      "id": "target-clean-in-store",
+      "expectedState": "clean_enriched",
+      "expectedReasons": [],
+      "order": {
+        "transactionId": "e02b527f-0da1-4543-9098-60f3466a06db",
+        "source": "target",
+        "sourceView": "in_store",
+        "merchantAccount": "Target Circle Card",
+        "sourceOrderId": null,
+        "sourceReceiptId": "6030-1284-0161-7280",
+        "mergeKey": "https://www.target.com/orders/stores/6030-1284-0161-7280",
+        "status": "purchased",
+        "matchConfidence": "high",
+        "qualityPass": false,
+        "itemCount": 1,
+        "missingTitles": 0,
+        "missingQty": 0,
+        "totalCents": 522,
+        "amountDiffCents": 0,
+        "hasReturnInfo": false
+      }
+    },
+    {
+      "id": "amazon-return",
+      "expectedState": "return_refund",
+      "order": {
+        "transactionId": "amazon-return-1",
+        "source": "amazon",
+        "sourceView": "online",
+        "merchantAccount": "Chase Sapphire",
+        "sourceOrderId": "123-4567890-1234567",
+        "mergeKey": "amazon:123-4567890-1234567",
+        "status": "Returned",
+        "matchConfidence": "high",
+        "qualityPass": false,
+        "itemCount": 1,
+        "missingTitles": 0,
+        "missingQty": 0,
+        "totalCents": 2999,
+        "amountDiffCents": 0,
+        "hasReturnInfo": true
+      }
+    },
+    {
+      "id": "amazon-medium-confidence",
+      "expectedState": "matched_review",
+      "expectedReasons": ["low_or_medium_confidence"],
+      "order": {
+        "transactionId": "amazon-review-1",
+        "source": "amazon",
+        "sourceView": "online",
+        "merchantAccount": "Chase Sapphire",
+        "sourceOrderId": "123-4567890-1234567",
+        "mergeKey": "amazon:123-4567890-1234567",
+        "status": "Delivered",
+        "matchConfidence": "medium",
+        "qualityPass": false,
+        "itemCount": 1,
+        "missingTitles": 0,
+        "missingQty": 0,
+        "totalCents": 2999,
+        "amountDiffCents": 0,
+        "hasReturnInfo": false
+      }
+    },
+    {
+      "id": "unknown-account",
+      "expectedState": "matched_review",
+      "expectedReasons": ["unknown_account"],
+      "order": {
+        "transactionId": "target-unknown-acct",
+        "source": "target",
+        "sourceView": "online",
+        "merchantAccount": "Unknown",
+        "sourceOrderId": "5167-1284-0074-6745",
+        "mergeKey": "target:5167-1284-0074-6745",
+        "status": "purchased",
+        "matchConfidence": "high",
+        "qualityPass": false,
+        "itemCount": 1,
+        "missingTitles": 0,
+        "missingQty": 0,
+        "totalCents": 2956,
+        "amountDiffCents": 0,
+        "hasReturnInfo": false
+      }
+    },
+    {
+      "id": "merchant-only",
+      "expectedState": "merchant_only",
+      "order": {
+        "transactionId": "plain-txn",
+        "source": null,
+        "merchantAccount": "Rent Payment"
+      }
+    }
+  ]
+}

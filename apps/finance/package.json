@@ -23,6 +23,7 @@
     "qa:ia-nav": "node scripts/ia-nav-qa.mjs"
   },
   "dependencies": {
+    "@life-os/finance-enrichment-contract": "*",
     "@life-os/sync": "*",
     "@life-os/theme": "*",
     "@phosphor-icons/react": "^2.1.10",
