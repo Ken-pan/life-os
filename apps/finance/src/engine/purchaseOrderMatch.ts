@@ -89,6 +89,13 @@ export function effectiveOrderDate(
     return orderDate ?? statusDate
   }
 
+  if (source === 'target') {
+    if (/delivered|picked up|shipped|ready for pickup|returned/i.test(status)) {
+      return statusDate ?? orderDate
+    }
+    return orderDate ?? statusDate
+  }
+
   return orderDate ?? statusDate
 }
 
@@ -97,8 +104,8 @@ export function amountTolerance(
   amount: number,
   source: PurchaseEnrichment['source'],
 ): number {
-  const pct = source === 'amazon' ? 0.008 : 0.012
-  const cap = source === 'amazon' ? 0.85 : 2.5
+  const pct = source === 'amazon' ? 0.008 : source === 'target' ? 0.01 : 0.012
+  const cap = source === 'amazon' ? 0.85 : source === 'target' ? 1.5 : 2.5
   return Math.max(0.02, Math.min(amount * pct, cap))
 }
 

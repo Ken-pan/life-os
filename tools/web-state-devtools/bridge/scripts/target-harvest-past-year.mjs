@@ -15,7 +15,8 @@ import { redactForExport } from '../lib/privacy.mjs'
 
 const RECIPE_ID = 'target-orders'
 const BRIDGE = process.env.WEB_STATE_BRIDGE_URL || 'http://127.0.0.1:17321'
-const ORDERS_URL = 'https://www.target.com/orders?lnk=acct_nav_my_account'
+const ORDERS_URL =
+  'https://www.target.com/orders?lnk=acct_nav_my_account'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const LOG = '[target]'
 
@@ -119,6 +120,8 @@ async function scrollHarvest(deps, recipe, tabId, purchasesUrl) {
 
   await deps.runAction('navigate', { url: purchasesUrl, tabId }, 90000)
 
+  let zeroAddRounds = 0
+
   for (let round = 0; round < maxRounds; round++) {
     const t0 = Date.now()
     await deps.runAction(
@@ -150,12 +153,17 @@ async function scrollHarvest(deps, recipe, tabId, purchasesUrl) {
     })
 
     if (round > 0 && added === 0) {
-      steps.push({ step: 'scroll-stop', reason: 'no new items', round })
-      break
+      zeroAddRounds++
+      if (zeroAddRounds >= 3) {
+        steps.push({ step: 'scroll-stop', reason: 'no new items', round })
+        break
+      }
+    } else {
+      zeroAddRounds = 0
     }
 
     await deps.runAction('scroll', { preset: 'bottom', tabId }, 30000)
-    await new Promise((r) => setTimeout(r, 1200))
+    await new Promise((r) => setTimeout(r, 1500))
   }
 
   return { merged, steps }
@@ -191,6 +199,8 @@ async function main() {
   const nav = await runAction('navigate', { url: ORDERS_URL }, 90000)
   const tabId = nav?.tabId
   if (!tabId) throw new Error('Navigate did not return tabId')
+
+  await new Promise((r) => setTimeout(r, 2500))
 
   const { merged, steps: scrollSteps } = await scrollHarvest(
     deps,
@@ -244,9 +254,10 @@ async function main() {
       if (!needFollow(item)) continue
       const t1 = Date.now()
       await runAction('navigate', { url: item.detailUrl, tabId }, 90000)
+      await new Promise((r) => setTimeout(r, 2000))
       await runAction(
         'capture',
-        { send: true, tabId, fast: true, wait: follow.wait },
+        { send: true, tabId, fast: false, wait: follow.wait },
         45000,
       )
       const snap = await getLatestSnapshot()

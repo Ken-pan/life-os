@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "../i18n/context";
 import { moneyPrecise } from "../format";
 import type { PurchaseEnrichment } from "../engine/purchaseEnrichment";
@@ -13,15 +13,23 @@ export function PurchaseEnrichmentBlock({
   privacy,
   chargeDate,
   compact = false,
+  showLineItemsInBody = true,
+  onOpenChange,
 }: {
   enrichment: PurchaseEnrichment;
   privacy: boolean;
   /** 卡/账户扣款日期（流水 date） */
   chargeDate?: string;
   compact?: boolean;
+  /** 为 false 时展开区只显示订单元数据（商品由 LedgerProductStrip 展示）。 */
+  showLineItemsInBody?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const { t: tl } = useLocale();
   const [open, setOpen] = useState(!compact);
+  useEffect(() => {
+    onOpenChange?.(open);
+  }, [open, onOpenChange]);
   const items = uniqueLineItems(enrichment.lineItems);
   const hasItemPrices = items.some((li) => li.price != null);
   const returnInfo = enrichment.returnInfo;
@@ -31,7 +39,9 @@ export function PurchaseEnrichmentBlock({
       ? tl("history.amazonOrder")
       : enrichment.source === "bestbuy"
         ? tl("history.bestBuyOrder")
-        : tl("history.purchaseOrder");
+        : enrichment.source === "target"
+          ? tl("history.targetOrder")
+          : tl("history.purchaseOrder");
 
   return (
     <div className="purchase-enrichment">
@@ -54,7 +64,7 @@ export function PurchaseEnrichmentBlock({
           )}
           {items.length > 0 && (
             <span className="text-muted text-sm">
-              {tl("history.amazonItemCount", { count: items.length })}
+              {tl("history.purchaseItemCount", { count: items.length })}
             </span>
           )}
           <span className="purchase-enrichment-chevron">{open ? "▾" : "▸"}</span>
@@ -67,7 +77,7 @@ export function PurchaseEnrichmentBlock({
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
           >
-            {tl("history.amazonViewOrder")} ↗
+            {tl("history.purchaseViewOrder")} ↗
           </a>
         )}
       </div>
@@ -76,19 +86,19 @@ export function PurchaseEnrichmentBlock({
           <dl className="purchase-enrichment-meta-list">
             {chargeDate && (
               <div className="purchase-enrichment-meta-row">
-                <dt>{tl("history.amazonChargeDate")}</dt>
+                <dt>{tl("history.purchaseChargeDate")}</dt>
                 <dd>{chargeDate}</dd>
               </div>
             )}
             {enrichment.orderDate && (
               <div className="purchase-enrichment-meta-row">
-                <dt>{tl("history.amazonOrderDate")}</dt>
+                <dt>{tl("history.purchaseOrderDate")}</dt>
                 <dd>{enrichment.orderDate}</dd>
               </div>
             )}
             {enrichment.status && (
               <div className="purchase-enrichment-meta-row">
-                <dt>{tl("history.amazonOrderStatus")}</dt>
+                <dt>{tl("history.purchaseOrderStatus")}</dt>
                 <dd>{enrichment.status}</dd>
               </div>
             )}
@@ -112,22 +122,23 @@ export function PurchaseEnrichmentBlock({
             )}
             {enrichment.orderId && (
               <div className="purchase-enrichment-meta-row">
-                <dt>{tl("history.amazonOrderId")}</dt>
+                <dt>{tl("history.purchaseOrderId")}</dt>
                 <dd>{enrichment.orderId}</dd>
               </div>
             )}
             {enrichment.orderTotal != null && (
               <div className="purchase-enrichment-meta-row">
-                <dt>{tl("history.amazonOrderTotal")}</dt>
+                <dt>{tl("history.purchaseOrderTotal")}</dt>
                 <dd>{moneyPrecise(enrichment.orderTotal, privacy)}</dd>
               </div>
             )}
           </dl>
           {items.length > 0 ? (
+            showLineItemsInBody ? (
             <>
               {!hasItemPrices && (
                 <p className="purchase-enrichment-note text-sm">
-                  {tl("history.amazonNoItemPrices")}
+                  {tl("history.purchaseNoItemPrices")}
                 </p>
               )}
               <ul className="purchase-enrichment-items">
@@ -166,8 +177,11 @@ export function PurchaseEnrichmentBlock({
                 ))}
               </ul>
             </>
+            ) : (
+              <p className="muted-note text-sm mb-0">{tl("history.purchaseItemsAbove")}</p>
+            )
           ) : (
-            <p className="muted-note text-sm">{tl("history.amazonNoItems")}</p>
+            <p className="muted-note text-sm">{tl("history.purchaseNoItems")}</p>
           )}
         </div>
       )}

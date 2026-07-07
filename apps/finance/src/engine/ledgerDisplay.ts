@@ -1,5 +1,5 @@
 import type { Txn } from "./transactions";
-import { hasPurchaseEnrichment, uniqueLineItems } from "./purchaseEnrichment";
+import { hasPurchaseEnrichment, uniqueLineItems, type PurchaseEnrichmentSource } from "./purchaseEnrichment";
 
 /** 扩展导入时误写入 account 的数据源名称（不是真实付款账户）。 */
 export const IMPORT_PIPELINE_ACCOUNTS = ["Rocket Money", "Robinhood", "Fidelity"] as const;
@@ -55,28 +55,57 @@ export function resolveCaptureAccount(row: { account?: string }): string {
   return "Unknown";
 }
 
+/** 银行描述里的冗长商户名 → 简短店名（避免移动端截断）。 */
+export function normalizeMerchantDisplayName(
+  merchant: string,
+  source?: PurchaseEnrichmentSource,
+): string {
+  const m = merchant.trim();
+  if (!m) return m;
+  if (source === "amazon" || /^amazon\b/i.test(m)) {
+    if (/^amazon\s+(purchase|order|pay|mktplace|marketplace|digital|retail)/i.test(m)) {
+      return "Amazon";
+    }
+    if (/^amazon\b/i.test(m) && m.length > 14) return "Amazon";
+  }
+  if (source === "bestbuy" || /^best\s*buy/i.test(m)) {
+    return m.length > 12 ? "Best Buy" : m;
+  }
+  if (source === "target" || /^target\b/i.test(m)) {
+    return m.length > 10 ? "Target" : m;
+  }
+  return m;
+}
+
 /** 账本主标题：商家 / 账单描述，不显示类别。 */
 export function ledgerTitle(txn: Txn): string {
   const merchant = txn.merchant?.trim() ?? "";
   const category = txn.category?.trim() ?? "";
+  const source = txn.purchaseEnrichment?.source;
 
   if (merchant && !merchantMatchesCategory(merchant, category)) {
-    return merchant;
+    return normalizeMerchantDisplayName(merchant, source);
   }
 
   if (hasPurchaseEnrichment(txn)) {
-    const source = txn.purchaseEnrichment.source;
     if (source === "amazon") {
-      return /amazon/i.test(merchant) ? merchant : "Amazon";
+      return /amazon/i.test(merchant) ? normalizeMerchantDisplayName(merchant, source) : "Amazon";
     }
     if (source === "bestbuy") {
-      return /best\s*buy/i.test(merchant) ? merchant : "Best Buy";
+      return /best\s*buy/i.test(merchant) ? normalizeMerchantDisplayName(merchant, source) : "Best Buy";
+    }
+    if (source === "target") {
+      return /target/i.test(merchant) ? normalizeMerchantDisplayName(merchant, source) : "Target";
     }
     const items = uniqueLineItems(txn.purchaseEnrichment.lineItems);
     if (items[0]?.title) return items[0].title;
   }
 
-  return merchant || category || "—";
+  if (merchant && merchantMatchesCategory(merchant, category)) {
+    return "—";
+  }
+
+  return normalizeMerchantDisplayName(merchant, source) || category || "—";
 }
 
 /** 副标题：类别 · 付款账户 · 同步来源。 */

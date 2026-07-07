@@ -55,11 +55,23 @@ describe("resolveCaptureAccount", () => {
 });
 
 describe("ledgerTitle", () => {
+  it("shortens Amazon Purchase merchant label", () => {
+    expect(ledgerTitle(baseTxn({ merchant: "Amazon Purchase", category: "Shopping" }))).toBe(
+      "Amazon",
+    );
+  });
+
   it("shows merchant not category", () => {
     expect(ledgerTitle(baseTxn({ merchant: "Target", category: "Shopping" }))).toBe("Target");
   });
 
-  it("uses store name when merchant equals category but enriched", () => {
+  it("shows dash when merchant equals category without enrichment", () => {
+    expect(
+      ledgerTitle(baseTxn({ merchant: "Shopping", category: "Shopping" })),
+    ).toBe("—");
+  });
+
+  it("uses Amazon label when merchant equals category but enriched", () => {
     expect(
       ledgerTitle(
         baseTxn({
@@ -72,6 +84,36 @@ describe("ledgerTitle", () => {
         }),
       ),
     ).toBe("Amazon");
+  });
+
+  it("uses Best Buy label when enriched", () => {
+    expect(
+      ledgerTitle(
+        baseTxn({
+          merchant: "Shopping",
+          category: "Shopping",
+          purchaseEnrichment: {
+            source: "bestbuy",
+            lineItems: [{ title: "TV Mount" }],
+          },
+        }),
+      ),
+    ).toBe("Best Buy");
+  });
+
+  it("uses Target label when enriched", () => {
+    expect(
+      ledgerTitle(
+        baseTxn({
+          merchant: "Shopping",
+          category: "Shopping",
+          purchaseEnrichment: {
+            source: "target",
+            lineItems: [{ title: "Paper Towels" }],
+          },
+        }),
+      ),
+    ).toBe("Target");
   });
 });
 

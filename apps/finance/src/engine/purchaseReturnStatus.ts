@@ -120,7 +120,7 @@ export function isRefundCreditTxn(txn: {
 }): boolean {
   if (txn.flow === "refund_or_reversal") return true;
   const m = txn.merchant ?? "";
-  if (!/amazon|best\s*buy|bestbuy/i.test(m)) return false;
+  if (!/amazon|best\s*buy|bestbuy|target/i.test(m)) return false;
   return txn.amount < 0;
 }
 

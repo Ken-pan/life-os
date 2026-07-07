@@ -18,13 +18,11 @@ capture:
   navigateTimeoutMs: 90000
   wait:
     selectors:
+      - 'a[aria-label^="View purchase made on"]'
       - 'main'
-      - 'a[href*="/orders"]'
-      - '[data-test*="order"]'
-      - '[class*="order"]'
     minCount: 1
-    stableMs: 300
-    timeoutMs: 12000
+    stableMs: 400
+    timeoutMs: 15000
 
 entities:
   kind: list
@@ -41,12 +39,11 @@ follow:
   enabled: true
   field: detailUrl
   max: 40
-  whenMissing: [orderTotal, lineItems]
+  whenMissing: [lineItems]
   wait:
     selectors:
-      - 'a[href*="/p/"]'
-      - '[data-test*="productTitle"]'
-      - '[data-test*="orderItem"]'
+      - 'button[aria-label^="item details for "]'
+      - 'main h3'
     minCount: 1
-    stableMs: 250
-    timeoutMs: 10000
+    stableMs: 400
+    timeoutMs: 15000

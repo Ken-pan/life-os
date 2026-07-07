@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import type { FinanceData } from "../types";
 import { useLocale } from "../i18n/context";
 import { t } from "../i18n/translate";
@@ -77,9 +77,9 @@ export function HistoryView({
   const categoryList = useMemo(() => categoriesOf(txns), [txns]);
   const accountList = useMemo(() => accountNamesOf(txns), [txns]);
 
-  const [trendWindow, setTrendWindow] = useState<Window>("12m");
-  const [catWindow, setCatWindow] = useState<Window>("12m");
-  const [showMobileInsights, setShowMobileInsights] = useState(false);
+  const [trendWindow, setTrendWindow] = useState<Window>("month");
+  const [catWindow, setCatWindow] = useState<Window>("month");
+  const [showInsights, setShowInsights] = useState(false);
 
   const trendSeries = useMemo(() => {
     if (trendWindow === "all") return series;
@@ -97,51 +97,116 @@ export function HistoryView({
     [txns, catRange.from, catRange.to]
   );
   const maxCat = categories[0]?.amount ?? 1;
-  const enrichedAmazonCount = useMemo(
-    () => txns.filter((t) => hasPurchaseEnrichment(t) && t.purchaseEnrichment?.source === "amazon").length,
-    [txns],
+  const categoryLimit = catWindow === "month" ? 8 : 14;
+  const merchantLimit = catWindow === "month" ? 8 : 12;
+  const latest = summary.latestMonth;
+  const thisMonthSpending = latest?.spending ?? 0;
+  const enrichedBySource = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const t of txns) {
+      if (!hasPurchaseEnrichment(t)) continue;
+      const source = t.purchaseEnrichment.source;
+      counts.set(source, (counts.get(source) ?? 0) + 1);
+    }
+    return counts;
+  }, [txns]);
+  const enrichmentSourceOrder = ["amazon", "bestbuy", "target"] as const;
+  const sortedEnrichmentSources = useMemo(
+    () =>
+      [...enrichedBySource.entries()].sort(([a], [b]) => {
+        const ai = enrichmentSourceOrder.indexOf(a as (typeof enrichmentSourceOrder)[number]);
+        const bi = enrichmentSourceOrder.indexOf(b as (typeof enrichmentSourceOrder)[number]);
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      }),
+    [enrichedBySource],
   );
+  const enrichmentSearchBySource: Record<string, string> = {
+    amazon: "Amazon",
+    bestbuy: "Best Buy",
+    target: "Target",
+  };
   const ledgerRef = useRef<HTMLDivElement>(null);
   const [jumpLedgerSearch, setJumpLedgerSearch] = useState<string | undefined>();
 
-  const latest = summary.latestMonth;
   if (loading) return <div className="card">{tl("history.loading")}</div>;
   if (error) return <div className="card">{tl("history.loadFailed", { error })}</div>;
 
   return (
     <div className="history-view">
-      <p className="muted-note history-intro mb-1">
-        {tl("history.intro", {
-          start: meta.dateRange.start,
-          end: meta.dateRange.end,
-          count: meta.rowCount.toLocaleString(),
-        })}
-      </p>
+      <details className="history-intro-details">
+        <summary className="history-intro-summary">
+          {tl("history.introSummary", {
+            start: meta.dateRange.start,
+            end: meta.dateRange.end,
+            count: meta.rowCount.toLocaleString(),
+          })}
+        </summary>
+        <p className="muted-note history-intro mb-0 mt-1">
+          {tl("history.intro", {
+            start: meta.dateRange.start,
+            end: meta.dateRange.end,
+            count: meta.rowCount.toLocaleString(),
+          })}
+        </p>
+      </details>
 
       <section className="history-summary">
-        {enrichedAmazonCount > 0 && (
-          <div className="card amazon-enrichment-banner">
-            <div className="amazon-enrichment-banner-text">
-              <strong>{tl("history.amazonBannerTitle", { count: enrichedAmazonCount })}</strong>
-              <p className="muted-note text-sm mb-0">{tl("history.amazonBannerHint")}</p>
+        {sortedEnrichmentSources.map(([source, count]) => {
+          const sourceLabel = purchaseSourceLabel(source, tl);
+          return (
+          <div className="card purchase-enrichment-banner" key={source}>
+            <div className="purchase-enrichment-banner-text">
+              <strong>{tl("history.purchaseBannerTitle", { source: sourceLabel, count })}</strong>
+              <p className="muted-note text-sm mb-0">{tl("history.purchaseBannerHint")}</p>
             </div>
             <button
               type="button"
               className="btn ghost"
               onClick={() => {
-                setJumpLedgerSearch("Amazon");
+                setJumpLedgerSearch(enrichmentSearchBySource[source] ?? source);
                 ledgerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
             >
-              {tl("history.amazonBannerAction")}
+              {tl("history.purchaseBannerAction", { source: sourceLabel })}
             </button>
           </div>
-        )}
+          );
+        })}
 
-        <BudgetPulseCard data={data} onQuickAdd={onQuickAdd} />
+        <BudgetPulseCard data={data} onQuickAdd={onQuickAdd} compact />
+      </section>
 
+      {/* 账本 — 主任务优先 */}
+      <div ref={ledgerRef} id="history-ledger">
+        <Ledger
+          privacy={privacy}
+          txns={txns}
+          categoryList={categoryList}
+          accountList={accountList}
+          onEdit={editTxn}
+          onDelete={removeTxn}
+          initialSearch={jumpLedgerSearch ?? initialLedgerSearch}
+          onInitialSearchConsumed={() => {
+            setJumpLedgerSearch(undefined);
+            onLedgerSearchConsumed?.();
+          }}
+        />
+      </div>
+
+      <div className="history-insights-toggle">
+        <button
+          className="btn ghost"
+          onClick={() => setShowInsights((v) => !v)}
+          aria-expanded={showInsights}
+        >
+          {showInsights ? tl("history.collapseInsights") : tl("history.expandInsights")}
+        </button>
+      </div>
+
+      <div className={`history-insights${showInsights ? " open" : ""}`}>
         <div className="card history-kpi-card">
-          <div className="grid history-kpi-grid">
+          <h3>{tl("history.extendedKpiTitle")}</h3>
+          <div className="grid history-kpi-grid mt-2-5">
             <Kpi
               label={tl("history.kpiAvgSpending")}
               value={summary.avgMonthlySpending}
@@ -178,21 +243,8 @@ export function HistoryView({
             />
           </div>
         </div>
-      </section>
 
-      <div className="history-mobile-insights-toggle">
-        <button
-          className="btn ghost"
-          onClick={() => setShowMobileInsights((v) => !v)}
-          aria-expanded={showMobileInsights}
-        >
-          {showMobileInsights ? tl("history.collapseInsights") : tl("history.expandInsights")}
-        </button>
-      </div>
-
-      <div className={`history-insights${showMobileInsights ? " open" : ""}`}>
-        {/* 实际 vs 计划假设 */}
-        <PlanReality data={data} actualMonthly={summary.avgMonthlySpending} />
+        <PlanReality data={data} actualMonthly={thisMonthSpending} thisMonth />
 
         {/* 月度趋势 */}
         <div className="card">
@@ -215,7 +267,7 @@ export function HistoryView({
               <p className="muted-note">{tl("history.noSpendingInRange")}</p>
             ) : (
               <div className="cat-list">
-                {categories.slice(0, 14).map((c) => (
+                {categories.slice(0, categoryLimit).map((c) => (
                   <div className="cat-row" key={c.category}>
                     <div className="cat-top">
                       <span className="cat-name">{c.category}</span>
@@ -275,7 +327,7 @@ export function HistoryView({
             <p className="muted-note">{tl("history.noSpendingInRange")}</p>
           ) : (
             <div className="grid merchant-grid">
-              {merchants.map((m, i) => (
+              {merchants.slice(0, merchantLimit).map((m, i) => (
                 <div className="merchant-cell" key={m.merchant}>
                   <span className="merchant-rank">{i + 1}</span>
                   <div className="grow">
@@ -290,23 +342,6 @@ export function HistoryView({
         </div>
       </div>
 
-      {/* 账本 */}
-      <div ref={ledgerRef} id="history-ledger">
-        <Ledger
-          privacy={privacy}
-          txns={txns}
-          categoryList={categoryList}
-          accountList={accountList}
-          onEdit={editTxn}
-          onDelete={removeTxn}
-          initialSearch={jumpLedgerSearch ?? initialLedgerSearch}
-          onInitialSearchConsumed={() => {
-            setJumpLedgerSearch(undefined);
-            onLedgerSearchConsumed?.();
-          }}
-        />
-      </div>
-
       <p className="muted-note">
         {tl("history.footnote", {
           ccPayments: txnStatistics.creditCardPaymentRows,
@@ -318,13 +353,31 @@ export function HistoryView({
   );
 }
 
+function purchaseSourceLabel(
+  source: string,
+  tl: (key: string) => string,
+): string {
+  if (source === "amazon") return tl("history.purchaseSourceAmazon");
+  if (source === "bestbuy") return tl("history.purchaseSourceBestbuy");
+  if (source === "target") return tl("history.purchaseSourceTarget");
+  return source;
+}
+
 /** 月度等额化某条现金流（年度→/12）。 */
 function toMonthly(amount: number, frequency: "monthly" | "annual"): number {
   return frequency === "annual" ? amount / 12 : amount;
 }
 
 /** 把「预测里假设的月度支出」与「历史真实月均花销」并排对照。 */
-function PlanReality({ data, actualMonthly }: { data: FinanceData; actualMonthly: number }) {
+function PlanReality({
+  data,
+  actualMonthly,
+  thisMonth = false,
+}: {
+  data: FinanceData;
+  actualMonthly: number;
+  thisMonth?: boolean;
+}) {
   const { t: tl } = useLocale();
   const privacy = data.privacy;
   const plannedMonthly = data.cashFlows
@@ -336,6 +389,7 @@ function PlanReality({ data, actualMonthly }: { data: FinanceData; actualMonthly
   const overspend = diff > 0;
   const ratio = plannedMonthly > 0 ? diff / plannedMonthly : 0;
   const meaningful = Math.abs(ratio) >= 0.05;
+  const actualLabel = thisMonth ? tl("history.actualThisMonth") : tl("history.actualMonthly");
 
   return (
     <div className="card">
@@ -346,7 +400,7 @@ function PlanReality({ data, actualMonthly }: { data: FinanceData; actualMonthly
           <span className="pr-value records-metric">{money(plannedMonthly, privacy)}</span>
         </div>
         <div className="kv-stack">
-          <span className="text-secondary">{tl("history.actualMonthly")}</span>
+          <span className="text-secondary">{actualLabel}</span>
           <span className="pr-value records-metric">{money(actualMonthly, privacy)}</span>
         </div>
         <div className="kv-stack">
@@ -552,7 +606,7 @@ function Ledger({
         </div>
       </div>
 
-      <div className="ledger">
+      <div className="ledger" role="list">
         {shown.map((t, i) => (
           <LedgerRow
             key={t.id ?? `${t.date}-${i}-${t.merchant}`}
@@ -634,6 +688,8 @@ function LedgerRow({
   const [flow, setFlow] = useState<FlowType>(t.flow);
   const [amount, setAmount] = useState(String(Math.abs(t.amount)));
   const [date, setDate] = useState(t.date);
+  const [enrichmentOpen, setEnrichmentOpen] = useState(false);
+  const actionSheetRef = useRef<HTMLDialogElement>(null);
 
   const spend = t.inSpending ? -t.budgetImpact : 0;
   // 收入符号容错：无论导入源用什么符号约定，收入一律显示为绿色正数。
@@ -662,9 +718,9 @@ function LedgerRow({
     });
   };
   return (
-    <div className={`ledger-row${dim ? " is-dim" : ""}${enriched ? " has-enrichment" : ""}`}>
+    <div className={`ledger-row${dim ? " is-dim" : ""}${enriched ? " has-enrichment" : ""}`} role="listitem">
       {editing ? (
-        <div className="grid" style={{ gridTemplateColumns: "1fr 2fr 1.3fr 1.3fr 1fr 0.9fr auto", gap: 6, width: "100%" }}>
+        <div className="ledger-row-edit">
           <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           <input className="input" value={merchant} onChange={(e) => setMerchant(e.target.value)} />
           <input className="input" value={category} onChange={(e) => setCategory(e.target.value)} />
@@ -699,12 +755,16 @@ function LedgerRow({
             {metaLine && <span className="lr-meta">{metaLine}</span>}
             {enriched && (
               <>
-                <LedgerProductStrip enrichment={t.purchaseEnrichment} privacy={privacy} />
+                {!enrichmentOpen && (
+                  <LedgerProductStrip enrichment={t.purchaseEnrichment} privacy={privacy} />
+                )}
                 <PurchaseEnrichmentBlock
                   enrichment={t.purchaseEnrichment}
                   privacy={privacy}
                   chargeDate={t.date}
                   compact
+                  showLineItemsInBody={false}
+                  onOpenChange={setEnrichmentOpen}
                 />
               </>
             )}
@@ -716,26 +776,77 @@ function LedgerRow({
               {signed === 0 ? "—" : signedMoneyPrecise(signed, privacy)}
             </span>
             {t.id && (
-              <span className="lr-actions">
+              <>
+                <span className="lr-actions lr-actions--desktop">
+                  <button
+                    type="button"
+                    className="icon-btn ledger-icon-btn"
+                    disabled={busy}
+                    onClick={onStartEdit}
+                    aria-label={tl("history.edit")}
+                  >
+                    <Pencil size={15} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn ledger-icon-btn ledger-icon-btn--danger"
+                    disabled={busy}
+                    onClick={() => void onDelete()}
+                    aria-label={tl("history.delete")}
+                  >
+                    <Trash2 size={15} aria-hidden />
+                  </button>
+                </span>
                 <button
                   type="button"
-                  className="icon-btn ledger-icon-btn"
+                  className="icon-btn ledger-icon-btn lr-actions-trigger"
                   disabled={busy}
-                  onClick={onStartEdit}
-                  aria-label={tl("history.edit")}
+                  aria-label={tl("history.rowActions")}
+                  aria-haspopup="dialog"
+                  onClick={() => actionSheetRef.current?.showModal()}
                 >
-                  <Pencil size={15} aria-hidden />
+                  <MoreHorizontal size={18} aria-hidden />
                 </button>
-                <button
-                  type="button"
-                  className="icon-btn ledger-icon-btn ledger-icon-btn--danger"
-                  disabled={busy}
-                  onClick={() => void onDelete()}
-                  aria-label={tl("history.delete")}
+                <dialog
+                  ref={actionSheetRef}
+                  className="ledger-action-sheet"
+                  onClick={(e) => {
+                    if (e.target === actionSheetRef.current) actionSheetRef.current.close();
+                  }}
                 >
-                  <Trash2 size={15} aria-hidden />
-                </button>
-              </span>
+                  <div className="ledger-action-sheet-panel" role="document">
+                    <button
+                      type="button"
+                      className="ledger-action-sheet-item"
+                      disabled={busy}
+                      onClick={() => {
+                        actionSheetRef.current?.close();
+                        onStartEdit();
+                      }}
+                    >
+                      {tl("history.edit")}
+                    </button>
+                    <button
+                      type="button"
+                      className="ledger-action-sheet-item ledger-action-sheet-item--danger"
+                      disabled={busy}
+                      onClick={() => {
+                        actionSheetRef.current?.close();
+                        void onDelete();
+                      }}
+                    >
+                      {tl("history.delete")}
+                    </button>
+                    <button
+                      type="button"
+                      className="ledger-action-sheet-item ledger-action-sheet-item--cancel"
+                      onClick={() => actionSheetRef.current?.close()}
+                    >
+                      {tl("history.cancel")}
+                    </button>
+                  </div>
+                </dialog>
+              </>
             )}
           </div>
         </>

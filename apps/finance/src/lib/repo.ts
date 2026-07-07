@@ -69,6 +69,10 @@ function isUnderlyingAllocationColumnMissing(error: { message?: string } | null 
   return (error?.message ?? "").includes("underlying_allocation");
 }
 
+function isPurchaseEnrichmentColumnMissing(error: { message?: string } | null | undefined): boolean {
+  return /purchase_enrichment|column.*does not exist/i.test(error?.message ?? "");
+}
+
 function isHoldingPriceTrailTableMissing(
   error: { message?: string } | null | undefined
 ): boolean {
@@ -1405,6 +1409,63 @@ function txnFromRow(r: Row): Txn {
   };
 }
 
+function txnRowWithoutEnrichment(row: Row): Row {
+  const copy = { ...row };
+  delete copy.purchase_enrichment;
+  return copy;
+}
+
+async function writeTxnInsert(userId: string, t: Partial<Txn> & { date: string }): Promise<Txn> {
+  const row = txnToRow(userId, t);
+  const { data, error } = await supabase
+    .from(SB.finance.transactions)
+    .insert(row)
+    .select()
+    .single();
+  if (error && isPurchaseEnrichmentColumnMissing(error) && row.purchase_enrichment != null) {
+    console.warn(
+      "[finance] purchase_enrichment 列尚未迁移，订单明细无法写入。请执行 supabase/migrations/20260706230000_purchase_enrichment.sql"
+    );
+    const retry = await supabase
+      .from(SB.finance.transactions)
+      .insert(txnRowWithoutEnrichment(row))
+      .select()
+      .single();
+    if (retry.error) throw retry.error;
+    return txnFromRow(retry.data as Row);
+  }
+  if (error) throw error;
+  return txnFromRow(data as Row);
+}
+
+async function writeTxnUpdate(userId: string, t: Txn): Promise<Txn> {
+  const baseRow = txnToRow(userId, t);
+  const row: Row = { ...baseRow, updated_at: new Date().toISOString() };
+  const { data, error } = await supabase
+    .from(SB.finance.transactions)
+    .update(row)
+    .eq("user_id", userId)
+    .eq("id", t.id!)
+    .select()
+    .single();
+  if (error && isPurchaseEnrichmentColumnMissing(error) && row.purchase_enrichment != null) {
+    console.warn(
+      "[finance] purchase_enrichment 列尚未迁移，订单明细无法写入。请执行 supabase/migrations/20260706230000_purchase_enrichment.sql"
+    );
+    const retry = await supabase
+      .from(SB.finance.transactions)
+      .update(txnRowWithoutEnrichment(row))
+      .eq("user_id", userId)
+      .eq("id", t.id!)
+      .select()
+      .single();
+    if (retry.error) throw retry.error;
+    return txnFromRow(retry.data as Row);
+  }
+  if (error) throw error;
+  return txnFromRow(data as Row);
+}
+
 function txnFromExtensionRpcRow(r: Row): Txn {
   const date = str(r.date ?? r.occurred_on ?? r.txn_date);
   const flow = str(r.flow_type ?? r.flow) as FlowType;
@@ -1424,6 +1485,7 @@ function txnFromExtensionRpcRow(r: Row): Txn {
     inCashFlow,
     excludeReason: ostr(r.exclude_reason),
     source: (ostr(r.source) as Txn["source"]) ?? "import",
+    purchaseEnrichment: purchaseEnrichmentFromRow(r.purchase_enrichment),
   };
 }
 
@@ -1492,13 +1554,7 @@ export async function loadTransactions(): Promise<Txn[]> {
 /** 记一笔（手动）。返回写入后的完整行（含数据库生成的 id）。 */
 export async function insertTxn(t: Omit<Txn, "id" | "month">): Promise<Txn> {
   const userId = await requireUserId();
-  const { data, error } = await supabase
-    .from(SB.finance.transactions)
-    .insert(txnToRow(userId, t))
-    .select()
-    .single();
-  if (error) throw error;
-  return txnFromRow(data as Row);
+  return writeTxnInsert(userId, t);
 }
 
 const TXN_INSERT_CHUNK = 100;
@@ -1510,10 +1566,23 @@ export async function insertTxns(items: Omit<Txn, "id" | "month">[]): Promise<Tx
   const out: Txn[] = [];
   for (let i = 0; i < items.length; i += TXN_INSERT_CHUNK) {
     const chunk = items.slice(i, i + TXN_INSERT_CHUNK);
+    const rows = chunk.map((t) => txnToRow(userId, t));
     const { data, error } = await supabase
       .from(SB.finance.transactions)
-      .insert(chunk.map((t) => txnToRow(userId, t)))
+      .insert(rows)
       .select();
+    if (error && isPurchaseEnrichmentColumnMissing(error) && rows.some((r) => r.purchase_enrichment != null)) {
+      console.warn(
+        "[finance] purchase_enrichment 列尚未迁移，批量写入已跳过订单明细。请执行 supabase/migrations/20260706230000_purchase_enrichment.sql"
+      );
+      const retry = await supabase
+        .from(SB.finance.transactions)
+        .insert(rows.map((r) => txnRowWithoutEnrichment(r)))
+        .select();
+      if (retry.error) throw retry.error;
+      out.push(...((retry.data as Row[]) ?? []).map(txnFromRow));
+      continue;
+    }
     if (error) throw error;
     out.push(...((data as Row[]) ?? []).map(txnFromRow));
   }
@@ -1524,16 +1593,7 @@ export async function insertTxns(items: Omit<Txn, "id" | "month">[]): Promise<Tx
 export async function updateTxn(t: Txn): Promise<Txn> {
   const userId = await requireUserId();
   if (!t.id) throw new Error("缺少交易 id");
-  const row = { ...txnToRow(userId, t), updated_at: new Date().toISOString() };
-  const { data, error } = await supabase
-    .from(SB.finance.transactions)
-    .update(row)
-    .eq("user_id", userId)
-    .eq("id", t.id)
-    .select()
-    .single();
-  if (error) throw error;
-  return txnFromRow(data as Row);
+  return writeTxnUpdate(userId, t);
 }
 
 /** 删除一笔。 */

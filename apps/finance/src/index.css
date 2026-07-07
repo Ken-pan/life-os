@@ -2943,8 +2943,26 @@ div.input {
   border-bottom: none;
 }
 
-.history-mobile-insights-toggle {
+.history-insights-toggle {
+  display: block;
+}
+
+.history-insights-toggle .btn {
+  width: 100%;
+}
+
+.history-insights {
   display: none;
+}
+
+.history-insights.open {
+  display: grid;
+  gap: var(--records-section-gap);
+}
+
+.budget-pulse-week-toggle {
+  margin-top: var(--space-2);
+  width: 100%;
 }
 
 /* ============================================================
@@ -3050,7 +3068,6 @@ div.input {
 }
 
 .records-panel .history-insights {
-  display: grid;
   gap: var(--records-section-gap);
 }
 
@@ -3348,7 +3365,93 @@ div.input {
   font-variant-numeric: tabular-nums;
 }
 
-.amazon-enrichment-banner {
+.history-intro-details {
+  margin-bottom: var(--space-1);
+}
+
+.history-intro-summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  list-style: none;
+}
+
+.history-intro-summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-intro-summary::before {
+  content: "▸ ";
+}
+
+.history-intro-details[open] .history-intro-summary::before {
+  content: "▾ ";
+}
+
+.lr-actions-trigger {
+  display: none;
+}
+
+.ledger-action-sheet {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.ledger-action-sheet::backdrop {
+  background: rgb(0 0 0 / 0.35);
+}
+
+.ledger-action-sheet-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: var(--space-2) var(--space-3) calc(var(--space-3) + var(--safe-bottom-effective));
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-lg);
+  display: grid;
+  gap: var(--space-1);
+}
+
+.ledger-action-sheet-item {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle);
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ledger-action-sheet-item--danger {
+  color: var(--danger);
+}
+
+.ledger-action-sheet-item--cancel {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+@media (max-width: 720px) {
+  .budget-pulse-log-btn {
+    display: none;
+  }
+
+  .lr-actions-trigger {
+    display: inline-flex;
+  }
+}
+
+.amazon-enrichment-banner,
+.purchase-enrichment-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3358,10 +3461,29 @@ div.input {
   background: var(--bg-elevated);
 }
 
-.amazon-enrichment-banner-text {
+.amazon-enrichment-banner-text,
+.purchase-enrichment-banner-text {
   display: grid;
   gap: var(--space-1);
   min-width: 0;
+}
+
+.ledger-row-edit {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1.3fr 1.3fr 1fr 0.9fr auto;
+  gap: 6px;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .ledger-row-edit {
+    grid-template-columns: 1fr;
+  }
+
+  .ledger-icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .ledger-card {
@@ -3569,7 +3691,7 @@ div.input {
   }
 
   .ledger-card {
-    padding-bottom: calc(var(--fab-h) + var(--space-4));
+    padding-bottom: calc(var(--fab-h) + var(--fab-offset-above-tabbar) + var(--space-5));
   }
 
   .amazon-enrichment-banner {
@@ -3640,6 +3762,18 @@ div.input {
   .lr-right {
     flex-direction: column;
     align-items: flex-end;
+  }
+
+  .lr-actions--desktop {
+    display: none !important;
+  }
+
+  .lr-actions-trigger {
+    display: inline-flex !important;
+  }
+
+  .budget-pulse-log-btn {
+    display: none;
   }
 }
 
@@ -4272,10 +4406,6 @@ div.input {
     grid-template-columns: 1fr;
   }
 
-  .history-mobile-insights-toggle {
-    display: block;
-  }
-
   .review-table,
   .review-table thead,
   .review-table tbody,
@@ -4302,19 +4432,6 @@ div.input {
     border-bottom: none;
     padding: var(--space-1-5);
     white-space: normal;
-  }
-
-  .history-mobile-insights-toggle .btn {
-    width: 100%;
-  }
-
-  .history-insights {
-    display: none;
-  }
-
-  .history-insights.open {
-    display: grid;
-    gap: var(--records-section-gap);
   }
 
   .kpi .label {

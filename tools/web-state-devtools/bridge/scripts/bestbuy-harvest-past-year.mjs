@@ -260,7 +260,6 @@ async function main() {
     for (const item of [...enriched.values()]) {
       if (followed >= maxFollow) break
       if (!needFollow(item)) continue
-      if (!/^BBY\d{2}-/i.test(String(item.orderId || ''))) continue
       const t1 = Date.now()
       await runAction('navigate', { url: item.detailUrl, tabId }, 90000)
       await new Promise((r) => setTimeout(r, 2500))

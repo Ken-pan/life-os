@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { FinanceData } from "../types";
 import { useTransactions } from "../store/transactions";
 import { budgetProgress, dailySpendSeries, plannedMonthlyBudget } from "../engine/budget";
@@ -19,14 +19,18 @@ function localToday(): string {
 export function BudgetPulseCard({
   data,
   onQuickAdd,
+  compact = false,
 }: {
   data: FinanceData;
   onQuickAdd?: () => void;
+  /** 默认收起近 7 日柱图，首屏只保留本月/今日指标。 */
+  compact?: boolean;
 }) {
   const { t } = useLocale();
   const privacy = data.privacy;
   const { txns } = useTransactions();
   const today = localToday();
+  const [showWeekChart, setShowWeekChart] = useState(!compact);
 
   const budget = useMemo(() => plannedMonthlyBudget(data.cashFlows), [data.cashFlows]);
   const progress = useMemo(() => budgetProgress(txns, budget, today), [txns, budget, today]);
@@ -53,7 +57,7 @@ export function BudgetPulseCard({
       <div className="card-head">
         <h3>{t("budget.title")}</h3>
         {onQuickAdd && (
-          <button className="icon-btn primary" onClick={onQuickAdd}>
+          <button className="icon-btn primary budget-pulse-log-btn" onClick={onQuickAdd}>
             {t("budget.logTxn")}
           </button>
         )}
@@ -104,26 +108,49 @@ export function BudgetPulseCard({
         <p className="muted-note mt-1">{t("budget.emptyHint")}</p>
       )}
 
-      <div className="budget-pulse-days" aria-label={t("budget.last7DaysAria")}>
-        {days.map((d) => {
-          const h = Math.max(3, (Math.abs(d.amount) / maxDay) * 40);
-          const isToday = d.date === today;
-          return (
-            <div key={d.date} className="budget-pulse-day">
-              <span className="budget-pulse-day-amt">
-                {d.amount !== 0 ? money(d.amount, privacy) : ""}
-              </span>
-              <div
-                className={`budget-pulse-day-bar${isToday ? " today" : ""}${d.amount < 0 ? " refund" : ""}`}
-                style={{ height: h }}
-              />
-              <span className="budget-pulse-day-label">
-                {isToday ? t("budget.today") : d.date.slice(8)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      {showWeekChart ? (
+        <>
+          <div className="budget-pulse-days" aria-label={t("budget.last7DaysAria")}>
+            {days.map((d) => {
+              const h = Math.max(3, (Math.abs(d.amount) / maxDay) * 40);
+              const isToday = d.date === today;
+              return (
+                <div key={d.date} className="budget-pulse-day">
+                  <span className="budget-pulse-day-amt">
+                    {d.amount !== 0 ? money(d.amount, privacy) : ""}
+                  </span>
+                  <div
+                    className={`budget-pulse-day-bar${isToday ? " today" : ""}${d.amount < 0 ? " refund" : ""}`}
+                    style={{ height: h }}
+                  />
+                  <span className="budget-pulse-day-label">
+                    {isToday ? t("budget.today") : d.date.slice(8)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {compact && (
+            <button
+              type="button"
+              className="btn ghost budget-pulse-week-toggle"
+              onClick={() => setShowWeekChart(false)}
+            >
+              {t("budget.hideLast7Days")}
+            </button>
+          )}
+        </>
+      ) : (
+        compact && (
+          <button
+            type="button"
+            className="btn ghost budget-pulse-week-toggle"
+            onClick={() => setShowWeekChart(true)}
+          >
+            {t("budget.showLast7Days")}
+          </button>
+        )
+      )}
     </div>
   );
 }

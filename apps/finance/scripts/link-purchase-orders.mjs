@@ -3,8 +3,7 @@
  * Match merchant order exports to finance_transactions (purchase + refund credits).
  *
  * Usage:
- *   node scripts/link-purchase-orders.mjs --source amazon [--orders path] [--dry-run] [--apply] [--replace] [--year 2026]
- *   node scripts/link-purchase-orders.mjs --source bestbuy [--orders path] [--dry-run] [--apply] [--replace] [--upload-images] [--year 2026]
+ *   node scripts/link-purchase-orders.mjs --source amazon|bestbuy|target [--user-id UUID] [--orders path] [--dry-run] [--apply]
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -18,6 +17,10 @@ import {
   matchBestBuyOrdersToTxns,
   matchBestBuyRefundsToOrders,
 } from '../src/engine/bestbuyOrderMatch.ts'
+import {
+  matchTargetOrdersToTxns,
+  matchTargetRefundsToOrders,
+} from '../src/engine/targetOrderMatch.ts'
 import { uploadPurchaseEnrichmentImages } from './lib/purchaseImageStorage.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -43,6 +46,16 @@ const SOURCE_CONFIG = {
     ),
     matchOrders: matchBestBuyOrdersToTxns,
     matchRefunds: matchBestBuyRefundsToOrders,
+  },
+  target: {
+    label: 'target',
+    merchantSql: `(merchant_name ilike '%target%' or merchant ilike '%target%')`,
+    defaultOrders: path.resolve(
+      __dirname,
+      '../../../tools/web-state-devtools/bridge/data/target-export/target-orders-past-year-raw.json',
+    ),
+    matchOrders: matchTargetOrdersToTxns,
+    matchRefunds: matchTargetRefundsToOrders,
   },
 }
 
@@ -114,10 +127,12 @@ async function main() {
     console.error(
       '[link-purchase] unknown --source:',
       sourceKey,
-      '(amazon|bestbuy)',
+      '(amazon|bestbuy|target)',
     )
     process.exit(1)
   }
+
+  const userId = arg('--user-id', process.env.FINANCE_OS_USER_ID ?? null)
 
   const ordersPath = arg('--orders', cfg.defaultOrders)
   const year = arg('--year', '2026')
@@ -135,6 +150,13 @@ async function main() {
     hasFlag('--upload-images') ||
     (hasFlag('--apply') && !hasFlag('--no-upload-images'))
   const tag = `[link-${cfg.label}]`
+
+  if (!userId) {
+    console.warn(
+      tag,
+      'no --user-id / FINANCE_OS_USER_ID — matching across all users (unsafe on multi-tenant DB)',
+    )
+  }
 
   if (!fs.existsSync(ordersPath)) {
     console.error(tag, 'orders file not found:', ordersPath)
@@ -165,6 +187,7 @@ async function main() {
     where ${cfg.merchantSql}
       and txn_date >= '${escSql(txnSince)}'
       and txn_date <= '${escSql(txnUntil)}'
+      ${userId ? `and user_id = '${escSql(userId)}'` : ''}
     order by txn_date desc;
   `)
 
@@ -260,17 +283,20 @@ async function main() {
       where ${cfg.merchantSql}
         and txn_date >= '${escSql(txnSince)}'
         and txn_date <= '${escSql(txnUntil)}'
+        ${userId ? `and user_id = '${escSql(userId)}'` : ''}
         and purchase_enrichment is not null
         and purchase_enrichment->>'source' = '${escSql(cfg.label)}';
     `)
-    console.log(tag, 'cleared stale enrichment rows in window')
+    console.log(tag, 'cleared stale enrichment rows in window', cleared?.length ?? '')
   }
 
+  let skippedImageUpload = 0
   if (uploadImages && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.warn(
       tag,
       'SUPABASE_SERVICE_ROLE_KEY missing — skipping image upload',
     )
+    skippedImageUpload = purchaseMatches.length + refundLinks.length
   }
 
   async function finalizeEnrichment(txnId, enrichment) {
@@ -356,6 +382,9 @@ async function main() {
     updatedPurchaseReturn,
     '| rows with stored images:',
     uploadedImages,
+    skippedImageUpload > 0
+      ? `| image uploads skipped (no service role): ${skippedImageUpload}`
+      : '',
   )
 }
 

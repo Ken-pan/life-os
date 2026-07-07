@@ -14,8 +14,10 @@ export interface PurchaseLineItem {
   asin?: string;
 }
 
+export type PurchaseEnrichmentSource = "amazon" | "bestbuy" | "target";
+
 export interface PurchaseEnrichment {
-  source: "amazon" | string;
+  source: PurchaseEnrichmentSource;
   orderId?: string;
   orderDate?: string;
   orderTotal?: number;
