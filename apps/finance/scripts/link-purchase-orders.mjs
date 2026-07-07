@@ -4,6 +4,12 @@
  *
  * Usage:
  *   node scripts/link-purchase-orders.mjs --source amazon|bestbuy|target [--user-id UUID] [--orders path] [--dry-run] [--apply]
+ *   Batch insert controls (dry-run + apply):
+ *     --max-inserts <n> --only-high-confidence --exclude-returned --inserts-only
+ *     --only-transaction-ids id1,id2,...
+ *   Targeted stale returnInfo repair (Amazon):
+ *     --updates-only --clear-stale-return-info-only --only-transaction-ids id1,id2,...
+ *   Dangerous override (requires both flags): --allow-cross-user-explicit-repair
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -27,6 +33,18 @@ import {
   uploadPurchaseEnrichmentImages,
   resolveServiceRoleKey,
 } from './lib/purchaseImageStorage.mjs'
+import {
+  mergePurchaseEnrichment,
+  stripLinkMetadata,
+  classifyReturnInfoMerge,
+  buildTargetedStaleReturnInfoRepairPlan,
+  repairStaleReturnInfoOnly,
+  wouldWriteEnrichmentUpdate,
+  enrichmentFieldChanges,
+} from '../src/engine/purchaseEnrichment.ts'
+import { deriveAmazonReturnInfoDecision } from '../../../tools/web-state-devtools/bridge/lib/amazon-orders-parser.mjs'
+import { parseVisibleDateText } from '../../../tools/web-state-devtools/bridge/lib/bestbuy-orders-parser.mjs'
+import { isRefundCreditTxn } from '../src/engine/purchaseReturnStatus.ts'
 import {
   resolveOrdersRawPath,
   summaryHarvestSince,
@@ -118,15 +136,956 @@ function escSql(s) {
   return String(s).replace(/'/g, "''")
 }
 
-function mergeEnrichment(existing, incoming) {
-  if (!existing?.source) return incoming
+function parseOnlyTxnIds(raw) {
+  if (!raw) return null
+  const ids = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  return ids.length ? ids : null
+}
+
+function parseMaxInserts(raw) {
+  if (raw == null || raw === '') return null
+  const n = Number.parseInt(String(raw), 10)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+function isReturnedOrCancelledOrder(order) {
+  if (!order) return false
+  const s = (order.status || '').toLowerCase()
+  const ri = order.returnInfo?.status
+  if (ri === 'returned' || ri === 'refunded' || ri === 'cancelled') return true
+  return /return complete|returned|refunded|cancelled|canceled|partial_return/i.test(
+    s,
+  )
+}
+
+function hasBatchInsertFilters(opts) {
+  return Boolean(
+    opts.onlyHighConfidence ||
+    opts.excludeReturned ||
+    opts.insertsOnly ||
+    opts.maxInserts != null ||
+    opts.onlyTxnIds?.length,
+  )
+}
+
+function filterPurchaseMatchesForBatch(
+  purchaseMatches,
+  txns,
+  orders,
+  refundLinks,
+  opts,
+) {
+  const {
+    onlyHighConfidence,
+    excludeReturned,
+    insertsOnly,
+    maxInserts,
+    onlyTxnIds,
+  } = opts
+
+  const orderById = new Map(
+    orders.filter((o) => o.orderId).map((o) => [o.orderId, o]),
+  )
+  const refundLinkedOrderIds = new Set(
+    (refundLinks ?? []).map((r) => r.orderId),
+  )
+  const refundLinkedTxnIds = new Set(
+    (refundLinks ?? []).flatMap((r) =>
+      [r.purchaseTxnId, r.refundTxnId].filter(Boolean),
+    ),
+  )
+
+  const dbOrderIdCounts = txns.reduce((acc, t) => {
+    const oid = t.purchaseEnrichment?.orderId
+    if (oid) acc[oid] = (acc[oid] ?? 0) + 1
+    return acc
+  }, /** @type {Record<string, number>} */ ({}))
+
+  const skipped = {
+    skippedDueToMaxInserts: 0,
+    skippedDueToReturned: 0,
+    skippedDueToConfidence: 0,
+    skippedDueToExistingEnrichment: 0,
+    skippedDueToDuplicateRisk: 0,
+    skippedDueToOnlyTxnIds: 0,
+  }
+
+  const confRank = { high: 3, medium: 2, low: 1 }
+  const sorted = [...purchaseMatches].sort((a, b) => {
+    if (confRank[b.confidence] !== confRank[a.confidence]) {
+      return confRank[b.confidence] - confRank[a.confidence]
+    }
+    const txnA = txns.find((t) => t.id === a.txnId)
+    const txnB = txns.find((t) => t.id === b.txnId)
+    if (txnA?.date !== txnB?.date) {
+      return (txnB?.date || '').localeCompare(txnA?.date || '')
+    }
+    return a.dayDiff - b.dayDiff || a.amountDiff - b.amountDiff
+  })
+
+  let insertCount = 0
+  const allowed = []
+  const usedOrderIds = new Set()
+  const usedTxnIds = new Set()
+
+  for (const m of sorted) {
+    if (onlyTxnIds?.length && !onlyTxnIds.includes(m.txnId)) {
+      skipped.skippedDueToOnlyTxnIds++
+      continue
+    }
+
+    if (onlyHighConfidence && m.confidence !== 'high') {
+      skipped.skippedDueToConfidence++
+      continue
+    }
+
+    const order = orderById.get(m.orderId)
+    if (excludeReturned) {
+      if (
+        isReturnedOrCancelledOrder(order) ||
+        m.enrichment.returnInfo ||
+        refundLinkedOrderIds.has(m.orderId) ||
+        refundLinkedTxnIds.has(m.txnId)
+      ) {
+        skipped.skippedDueToReturned++
+        continue
+      }
+    }
+
+    const existing = txns.find((t) => t.id === m.txnId)?.purchaseEnrichment
+    const isNewInsert = !existing?.source
+
+    if (insertsOnly && !isNewInsert) {
+      skipped.skippedDueToExistingEnrichment++
+      continue
+    }
+
+    if (isNewInsert && (dbOrderIdCounts[m.orderId] ?? 0) >= 1) {
+      skipped.skippedDueToDuplicateRisk++
+      continue
+    }
+
+    if (usedOrderIds.has(m.orderId) || usedTxnIds.has(m.txnId)) {
+      skipped.skippedDueToDuplicateRisk++
+      continue
+    }
+
+    if (isNewInsert) {
+      if (maxInserts != null && insertCount >= maxInserts) {
+        skipped.skippedDueToMaxInserts++
+        continue
+      }
+      insertCount++
+    }
+
+    usedOrderIds.add(m.orderId)
+    usedTxnIds.add(m.txnId)
+    allowed.push(m)
+  }
+
+  return { allowed, skipped, proposedNewEnrichmentRows: insertCount }
+}
+
+function reportBatchFilterSkips(tag, skipped) {
+  if (!skipped) return
+  console.log('\n' + tag, 'batch filter skips:')
+  for (const [key, count] of Object.entries(skipped)) {
+    if (count > 0) console.log(' ', key + ':', count)
+  }
+}
+
+async function fetchTxnsByIds(ids, userId, { scopedToUser = true } = {}) {
+  if (!ids.length) return []
+  const inClause = ids.map((id) => `'${escSql(id)}'`).join(', ')
+  const rows = await runSql(`
+    select id, user_id, txn_date, coalesce(source_amount, amount) as amount, merchant_name, merchant, flow, account, purchase_enrichment
+    from finance_transactions
+    where id in (${inClause})
+      ${scopedToUser && userId ? `and user_id = '${escSql(userId)}'` : ''}
+    order by txn_date desc;
+  `)
+  return (rows ?? []).map((r) => ({
+    id: String(r.id),
+    userId: String(r.user_id),
+    date: String(r.txn_date).slice(0, 10),
+    amount: Number(r.amount),
+    merchant: String(r.merchant_name ?? r.merchant ?? ''),
+    flow: r.flow ? String(r.flow) : undefined,
+    account: r.account ? String(r.account) : '',
+    purchaseEnrichment: r.purchase_enrichment,
+  }))
+}
+
+function mergeTxnLists(primary, extra) {
+  const byId = new Map(primary.map((t) => [t.id, t]))
+  for (const t of extra) byId.set(t.id, t)
+  return [...byId.values()]
+}
+
+function buildOrderDecisionMap(orders) {
+  const map = new Map()
+  for (const o of orders) {
+    if (!o.orderId) continue
+    map.set(
+      o.orderId,
+      o.returnInfoDecision ?? deriveAmazonReturnInfoDecision(o),
+    )
+  }
+  return map
+}
+
+function reportTargetedRepairDryRun(plan, tag, updatesOnly) {
+  const clears = plan.filter((p) => p.action === 'clear')
+  const crossUserSkipped = plan.filter((p) => p.action === 'skip_cross_user')
+  const userScopedIds = plan.filter((p) => p.action !== 'skip_cross_user')
+  const skipInserts = plan.filter((p) => p.action === 'skip_insert')
+  const staleStillPresent = userScopedIds.filter(
+    (p) =>
+      p.action !== 'clear' &&
+      p.before?.returnInfo &&
+      /deliver|arriv|ship|purchas/i.test(p.before.status || ''),
+  )
+
+  console.log(tag, 'targeted stale returnInfo repair:')
+  console.log(' ', 'targetedTransactionIds:', plan.length)
+  console.log(' ', 'userScopedTargetedTransactionIds:', userScopedIds.length)
+  console.log(' ', 'crossUserSkipped:', crossUserSkipped.length)
+  console.log(' ', 'proposedReturnInfoClears:', clears.length)
+  console.log(' ', 'staleReturnInfoStillPresent:', staleStillPresent.length)
+  console.log(' ', 'proposedNewEnrichmentRows: 0')
+  console.log(
+    ' ',
+    'skippedNewEnrichmentRowsDueToUpdatesOnly:',
+    skipInserts.length,
+  )
+  console.log(' ', 'proposedDuplicateOrderIdCreates: 0')
+  console.log(' ', 'insertsBlocked: yes (updates-only repair mode)')
+
+  if (clears.length) {
+    console.log(' ', 'affected rows:')
+    for (const row of clears) {
+      console.log(
+        '   ',
+        row.orderId,
+        row.txnId,
+        '| fieldsChanged:',
+        (row.fieldsChanged || []).join(', ') || '(none)',
+        '| returnInfo:',
+        row.before?.returnInfo?.status,
+        '→',
+        row.after?.returnInfo?.status ?? 'cleared',
+      )
+    }
+  }
+
+  if (crossUserSkipped.length) {
+    console.log(' ', 'cross-user skipped:')
+    for (const row of crossUserSkipped) {
+      console.log(
+        '   ',
+        row.txnId,
+        row.orderId || '(no orderId)',
+        '| actual user_id:',
+        row.actualUserId ?? '(unknown)',
+      )
+    }
+  }
+
+  if (staleStillPresent.length) {
+    console.log(' ', 'stale still present (not cleared):')
+    for (const row of staleStillPresent) {
+      console.log('   ', row.orderId, row.txnId, row.action)
+    }
+  }
+
   return {
-    ...existing,
-    ...incoming,
-    lineItems: incoming.lineItems?.length
-      ? incoming.lineItems
-      : existing.lineItems,
-    returnInfo: incoming.returnInfo ?? existing.returnInfo,
+    targetedTransactionIds: plan.length,
+    userScopedTargetedTransactionIds: userScopedIds.length,
+    crossUserSkipped: crossUserSkipped.length,
+    proposedReturnInfoClears: clears.length,
+    staleReturnInfoStillPresent: staleStillPresent.length,
+    proposedNewEnrichmentRows: 0,
+    skippedNewEnrichmentRowsDueToUpdatesOnly: skipInserts.length,
+    proposedDuplicateOrderIdCreates: 0,
+    clears,
+    crossUserSkippedRows: crossUserSkipped,
+  }
+}
+
+function mergeEnrichment(existing, incoming) {
+  return mergePurchaseEnrichment(existing, incoming)
+}
+
+function wouldUpdateEnrichment(
+  existing,
+  incoming,
+  replace,
+  refreshImages,
+  sourceLabel,
+) {
+  if (replace) return true
+  if (refreshImages && existing?.source === sourceLabel) return true
+  if (existing?.source !== sourceLabel) return true
+  const action = classifyReturnInfoMerge(existing, incoming, false)
+  return action === 'clear' || action === 'update'
+}
+
+function buildScopedPurchaseWritePlan(
+  purchaseMatches,
+  txns,
+  { onlyTxnIds, userId, updatesOnly, replace, refreshImages, sourceLabel },
+) {
+  const targetedSet = new Set(onlyTxnIds)
+  const plan = []
+  let crossUserSkipped = 0
+
+  for (const m of purchaseMatches) {
+    if (!targetedSet.has(m.txnId)) continue
+    const txn = txns.find((t) => t.id === m.txnId)
+    if (userId && txn?.userId && txn.userId !== userId) {
+      crossUserSkipped++
+      continue
+    }
+    const existing = txn?.purchaseEnrichment
+    if (!wouldWriteEnrichmentUpdate(existing, updatesOnly)) {
+      plan.push({
+        txnId: m.txnId,
+        orderId: m.orderId,
+        action: 'skip_insert',
+        userId: txn?.userId,
+        account: txn?.account,
+      })
+      continue
+    }
+    if (
+      !wouldUpdateEnrichment(
+        existing,
+        m.enrichment,
+        replace,
+        refreshImages,
+        sourceLabel,
+      )
+    ) {
+      plan.push({
+        txnId: m.txnId,
+        orderId: m.orderId,
+        action: 'skip_no_change',
+        userId: txn?.userId,
+        account: txn?.account,
+      })
+      continue
+    }
+    const merged = replace
+      ? m.enrichment
+      : mergePurchaseEnrichment(existing, m.enrichment)
+    plan.push({
+      txnId: m.txnId,
+      orderId: m.orderId,
+      action: 'update',
+      userId: txn?.userId,
+      account: txn?.account,
+      confidence: m.confidence,
+      dayDiff: m.dayDiff,
+      amountDiff: m.amountDiff,
+      before: existing,
+      after: merged,
+      returnInfoAction: classifyReturnInfoMerge(
+        existing,
+        m.enrichment,
+        replace,
+      ),
+      fieldsChanged: enrichmentFieldChanges(existing ?? {}, merged),
+    })
+  }
+
+  for (const id of onlyTxnIds) {
+    if (!plan.some((p) => p.txnId === id)) {
+      const txn = txns.find((t) => t.id === id)
+      if (userId && txn?.userId && txn.userId !== userId) {
+        crossUserSkipped++
+      }
+      plan.push({
+        txnId: id,
+        orderId: txn?.purchaseEnrichment?.orderId,
+        action: txn ? 'skip_not_matched' : 'skip_not_in_txns',
+        userId: txn?.userId,
+        account: txn?.account,
+      })
+    }
+  }
+
+  return { plan, crossUserSkipped }
+}
+
+function reportScopedUpdatesOnlyDryRun({
+  tag,
+  onlyTxnIds,
+  userId,
+  purchaseMatches,
+  txns,
+  sourceLabel,
+  replace,
+  refreshImages,
+}) {
+  const { plan, crossUserSkipped } = buildScopedPurchaseWritePlan(
+    purchaseMatches,
+    txns,
+    {
+      onlyTxnIds,
+      userId,
+      updatesOnly: true,
+      replace,
+      refreshImages,
+      sourceLabel,
+    },
+  )
+  const writes = plan.filter((p) => p.action === 'update')
+  const returnInfoUpdates = writes.filter(
+    (p) => p.returnInfoAction === 'update',
+  ).length
+  const userScoped = onlyTxnIds.filter((id) => {
+    const txn = txns.find((t) => t.id === id)
+    return !userId || !txn?.userId || txn.userId === userId
+  }).length
+
+  console.log(tag, 'scoped updates-only dry-run:')
+  console.log(' ', 'targetedTransactionIds:', onlyTxnIds.length)
+  console.log(' ', 'userScopedTargetedTransactionIds:', userScoped)
+  console.log(' ', 'crossUserSkipped:', crossUserSkipped)
+  console.log(' ', 'affectedRows:', writes.length)
+  console.log(' ', 'proposedReturnInfoUpdates:', returnInfoUpdates)
+  console.log(' ', 'proposedNewEnrichmentRows: 0')
+  console.log(' ', 'proposedDuplicateOrderIdCreates: 0')
+  console.log(' ', 'refundLinksSkipped: yes (scoped txn repair)')
+  console.log(' ', 'insertsBlocked: yes (updates-only mode)')
+
+  if (writes.length) {
+    console.log(' ', 'affected rows:')
+    for (const row of writes) {
+      console.log(
+        '   ',
+        row.txnId,
+        row.orderId,
+        '| fieldsChanged:',
+        (row.fieldsChanged || []).join(', ') || '(none)',
+        '| returnInfo:',
+        row.before?.returnInfo?.status ?? '(absent)',
+        '→',
+        row.after?.returnInfo?.status ?? '(absent)',
+        '| confidence:',
+        row.confidence,
+        '| dayDiff:',
+        row.dayDiff,
+        '| lowConfidence:',
+        row.confidence === 'low',
+        '| dateMismatchGt3d:',
+        row.dayDiff > 3,
+      )
+    }
+  }
+
+  const skipped = plan.filter((p) => p.action !== 'update')
+  if (skipped.length) {
+    console.log(' ', 'skipped targeted ids:')
+    for (const row of skipped) {
+      console.log('   ', row.txnId, row.action, row.orderId || '')
+    }
+  }
+
+  return {
+    targetedTransactionIds: onlyTxnIds.length,
+    userScopedTargetedTransactionIds: userScoped,
+    crossUserSkipped,
+    affectedRows: writes.length,
+    proposedReturnInfoUpdates: returnInfoUpdates,
+    proposedNewEnrichmentRows: 0,
+    proposedDuplicateOrderIdCreates: 0,
+    writes,
+    plan,
+  }
+}
+
+function reportDryRunMergeImpact(
+  purchaseMatches,
+  txns,
+  replace,
+  tag,
+  updatesOnly = false,
+  orders = [],
+  insertsOnly = false,
+) {
+  let proposedReturnInfoClears = 0
+  let proposedReturnInfoUpdates = 0
+  let proposedReturnInfoPreserves = 0
+  const clearDetails = []
+  const updateDetails = []
+  const staleReturnInfoStillPresent = []
+  let skippedNewEnrichmentRowsDueToUpdatesOnly = 0
+  let skippedUpdatesDueToInsertsOnly = 0
+  const orderById = new Map(
+    orders.filter((o) => o.orderId).map((o) => [o.orderId, o]),
+  )
+
+  for (const m of purchaseMatches) {
+    const txn = txns.find((t) => t.id === m.txnId)
+    const existing = txn?.purchaseEnrichment
+    if (!wouldWriteEnrichmentUpdate(existing, updatesOnly)) {
+      skippedNewEnrichmentRowsDueToUpdatesOnly++
+      continue
+    }
+    if (insertsOnly && existing?.source) {
+      skippedUpdatesDueToInsertsOnly++
+      continue
+    }
+    if (
+      existing?.source &&
+      existing.source !== m.enrichment.source &&
+      !replace
+    ) {
+      continue
+    }
+
+    const action = classifyReturnInfoMerge(existing, m.enrichment, replace)
+    if (action === 'clear') {
+      proposedReturnInfoClears++
+      clearDetails.push({
+        orderId: m.orderId,
+        txnId: m.txnId,
+        previousReturnInfo: existing?.returnInfo,
+      })
+    } else if (action === 'update') {
+      proposedReturnInfoUpdates++
+      const merged = replace
+        ? m.enrichment
+        : mergePurchaseEnrichment(existing, m.enrichment)
+      const exportOrder = orderById.get(m.orderId)
+      updateDetails.push({
+        matchKind: 'purchase',
+        txnId: m.txnId,
+        userId: txn?.userId,
+        account: txn?.account,
+        orderId: m.orderId,
+        receiptId: exportOrder?.storeTransactionId || exportOrder?.orderId,
+        mergeKey: exportOrder?.detailUrl || m.orderId,
+        orderDate:
+          exportOrder?.orderDateIso ||
+          parseVisibleDateText(exportOrder?.orderDate) ||
+          exportOrder?.orderDate,
+        orderDateSource: exportOrder?.orderDateSource,
+        txnDate: txn?.date,
+        dateDiff: m.dayDiff,
+        orderTotal: exportOrder?.orderTotal ?? m.enrichment.orderTotal,
+        txnAmount: txn?.amount,
+        confidence: m.confidence,
+        amountDiff: m.amountDiff,
+        returnInfoBefore: existing?.returnInfo,
+        returnInfoAfter: merged.returnInfo,
+        status: exportOrder?.status ?? m.enrichment.status,
+        statusRaw: exportOrder?.statusDate ?? exportOrder?.status,
+        fieldsChanged: enrichmentFieldChanges(existing ?? {}, merged),
+        lowConfidence: m.confidence === 'low',
+        dateMismatchGt3d: m.dayDiff > 3,
+      })
+    } else if (action === 'preserve') {
+      proposedReturnInfoPreserves++
+    }
+
+    const merged = replace
+      ? m.enrichment
+      : mergePurchaseEnrichment(existing, m.enrichment)
+    const hadFalseStale =
+      existing?.returnInfo &&
+      /deliver|arriv|ship|purchas/i.test(existing?.status || '') &&
+      merged.returnInfo
+    if (hadFalseStale) {
+      staleReturnInfoStillPresent.push({
+        orderId: m.orderId,
+        txnId: m.txnId,
+        returnInfo: merged.returnInfo,
+      })
+    }
+  }
+
+  const dbOrderIdCounts = txns.reduce((acc, t) => {
+    const oid = t.purchaseEnrichment?.orderId
+    if (oid) acc[oid] = (acc[oid] ?? 0) + 1
+    return acc
+  }, /** @type {Record<string, number>} */ ({}))
+
+  const proposedNewOrderIds = purchaseMatches
+    .filter((m) => {
+      const existing = txns.find((t) => t.id === m.txnId)?.purchaseEnrichment
+      if (updatesOnly && !existing?.source) return false
+      return !existing?.source
+    })
+    .map((m) => m.orderId)
+
+  let proposedDuplicateCreates = 0
+  for (const oid of proposedNewOrderIds) {
+    if ((dbOrderIdCounts[oid] ?? 0) >= 1) proposedDuplicateCreates++
+  }
+
+  console.log(tag, 'dry-run returnInfo merge:')
+  console.log(
+    ' ',
+    'proposedReturnInfoClears:',
+    proposedReturnInfoClears,
+    '| proposedReturnInfoUpdates:',
+    proposedReturnInfoUpdates,
+    '| proposedReturnInfoPreserves:',
+    proposedReturnInfoPreserves,
+  )
+  console.log(
+    ' ',
+    'staleReturnInfoStillPresent:',
+    staleReturnInfoStillPresent.length,
+  )
+  if (clearDetails.length) {
+    console.log(' ', 'returnInfo clears:')
+    for (const row of clearDetails.slice(0, 20)) {
+      console.log(
+        '   ',
+        row.orderId,
+        row.txnId.slice(0, 8) + '…',
+        'was',
+        row.previousReturnInfo?.status,
+      )
+    }
+    if (clearDetails.length > 20)
+      console.log('   …', clearDetails.length - 20, 'more clears')
+  }
+  if (updateDetails.length) {
+    console.log(' ', 'proposed returnInfo updates:')
+    for (const row of updateDetails) {
+      console.log(
+        JSON.stringify(
+          {
+            matchKind: row.matchKind,
+            txnId: row.txnId,
+            userId: row.userId,
+            account: row.account,
+            orderId: row.orderId,
+            receiptId: row.receiptId,
+            mergeKey: row.mergeKey,
+            orderDate: row.orderDate,
+            orderDateSource: row.orderDateSource,
+            txnDate: row.txnDate,
+            dateDiff: row.dateDiff,
+            orderTotal: row.orderTotal,
+            txnAmount: row.txnAmount,
+            confidence: row.confidence,
+            amountDiff: row.amountDiff,
+            returnInfoBefore: row.returnInfoBefore,
+            returnInfoAfter: row.returnInfoAfter,
+            status: row.status,
+            statusRaw: row.statusRaw,
+            fieldsChanged: row.fieldsChanged,
+            lowConfidence: row.lowConfidence,
+            dateMismatchGt3d: row.dateMismatchGt3d,
+          },
+          null,
+          2,
+        ),
+      )
+    }
+  }
+  if (staleReturnInfoStillPresent.length) {
+    console.log(' ', 'stale still present:')
+    for (const row of staleReturnInfoStillPresent) {
+      console.log('   ', row.orderId, row.txnId.slice(0, 8) + '…')
+    }
+  }
+  console.log(
+    ' ',
+    'proposedNewEnrichmentRows:',
+    proposedNewOrderIds.length,
+    '| proposedDuplicateOrderIdCreates:',
+    proposedDuplicateCreates,
+  )
+  if (updatesOnly) {
+    console.log(
+      ' ',
+      'skippedNewEnrichmentRowsDueToUpdatesOnly:',
+      skippedNewEnrichmentRowsDueToUpdatesOnly,
+    )
+  }
+  if (insertsOnly) {
+    console.log(
+      ' ',
+      'skippedUpdatesDueToInsertsOnly:',
+      skippedUpdatesDueToInsertsOnly,
+    )
+  }
+
+  return {
+    proposedReturnInfoClears,
+    proposedReturnInfoUpdates,
+    proposedReturnInfoPreserves,
+    staleReturnInfoStillPresent,
+    clearDetails,
+    updateDetails,
+    proposedDuplicateCreates,
+    skippedNewEnrichmentRowsDueToUpdatesOnly,
+    skippedUpdatesDueToInsertsOnly,
+    proposedNewOrderIds,
+  }
+}
+
+function reportBestBuyDryRunSummary({
+  tag,
+  orders,
+  txns,
+  purchaseMatches,
+  refundLinks,
+  mergeImpact,
+}) {
+  const matchedOrderIds = new Set(purchaseMatches.map((m) => m.orderId))
+  const matchedTxnIds = new Set(purchaseMatches.map((m) => m.txnId))
+  const purchaseTxns = txns.filter((t) => t.amount > 0 && !isRefundCreditTxn(t))
+  const unmatchedOrders = orders.filter(
+    (o) => o.orderId && !matchedOrderIds.has(o.orderId),
+  )
+  const unmatchedPurchaseTxns = purchaseTxns.filter(
+    (t) => !matchedTxnIds.has(t.id),
+  )
+  const lowConfidence = purchaseMatches.filter((m) => m.confidence === 'low')
+  const dateMismatchGt3d = purchaseMatches.filter((m) => m.dayDiff > 3)
+  const unknownAccountTxns = txns.filter(
+    (t) => !t.account || t.account === 'Unknown',
+  )
+
+  console.log('\n' + tag, 'Best Buy dry-run summary:')
+  console.log(' ', 'orders read:', orders.length)
+  console.log(' ', 'candidate txns:', txns.length)
+  console.log(' ', 'matched purchases:', purchaseMatches.length)
+  console.log(' ', 'matched refunds:', refundLinks.length)
+  console.log(' ', 'unmatched orders:', unmatchedOrders.length)
+  console.log(' ', 'unmatched transactions:', unmatchedPurchaseTxns.length)
+  console.log(
+    ' ',
+    'Unknown account candidate count:',
+    unknownAccountTxns.length,
+  )
+  console.log(' ', 'low confidence matches:', lowConfidence.length)
+  console.log(' ', 'date mismatch >3d:', dateMismatchGt3d.length)
+  console.log(
+    ' ',
+    'proposedNewEnrichmentRows:',
+    mergeImpact.proposedNewOrderIds?.length ?? 0,
+  )
+  console.log(
+    ' ',
+    'proposedUpdates:',
+    (mergeImpact.proposedReturnInfoUpdates ?? 0) +
+      (mergeImpact.proposedReturnInfoClears ?? 0),
+  )
+  console.log(
+    ' ',
+    'proposedDuplicateOrderIdCreates:',
+    mergeImpact.proposedDuplicateCreates ?? 0,
+  )
+  console.log(
+    ' ',
+    'returnInfo updates/preserves/clears:',
+    mergeImpact.proposedReturnInfoUpdates ?? 0,
+    '/',
+    mergeImpact.proposedReturnInfoPreserves ?? 0,
+    '/',
+    mergeImpact.proposedReturnInfoClears ?? 0,
+  )
+
+  console.log('\n' + tag, 'top 20 proposed matches:')
+  for (const m of purchaseMatches.slice(0, 20)) {
+    const txn = txns.find((t) => t.id === m.txnId)
+    const order = orders.find((o) => o.orderId === m.orderId)
+    console.log(
+      ' ',
+      txn?.date,
+      '$' + txn?.amount,
+      '→',
+      m.orderId,
+      order?.orderDate,
+      order?.orderDateSource ? `(${order.orderDateSource})` : '',
+      `(${m.confidence}, Δ${m.dayDiff.toFixed(1)}d)`,
+    )
+  }
+
+  console.log('\n' + tag, 'top 20 unmatched orders:')
+  for (const o of unmatchedOrders.slice(0, 20)) {
+    console.log(
+      ' ',
+      o.orderId,
+      o.orderDate,
+      o.orderDateSource ? `(${o.orderDateSource})` : '',
+      o.orderTotal,
+      o.status,
+    )
+  }
+
+  console.log('\n' + tag, 'top 20 unmatched txns:')
+  for (const t of unmatchedPurchaseTxns.slice(0, 20)) {
+    console.log(' ', t.date, '$' + t.amount, t.account || '(blank)', t.merchant)
+  }
+
+  if (lowConfidence.length) {
+    console.log('\n' + tag, 'low confidence detail:')
+    for (const m of lowConfidence) {
+      const txn = txns.find((t) => t.id === m.txnId)
+      const order = orders.find((o) => o.orderId === m.orderId)
+      console.log(
+        ' ',
+        m.orderId,
+        'txn',
+        txn?.date,
+        'order',
+        order?.orderDateIso || parseVisibleDateText(order?.orderDate),
+        'Δ$' + m.amountDiff.toFixed(2),
+        'Δ' + m.dayDiff.toFixed(1) + 'd',
+      )
+    }
+  }
+}
+
+function summarizeLineItems(order) {
+  const items = (order?.lineItems ?? []).filter(
+    (li) => li.title && li.title.length > 2,
+  )
+  const titles = items.slice(0, 3).map((li) => String(li.title).slice(0, 60))
+  const qtySum = items.reduce((acc, li) => acc + (li.quantity ?? 1), 0)
+  const withImage = items.filter((li) => li.imageUrl).length
+  const missingTitle = items.filter((li) => !li.title).length
+  const missingQty = items.filter(
+    (li) => li.quantity == null || li.quantity <= 0,
+  ).length
+  return {
+    itemCount: items.length,
+    titles,
+    qtySum,
+    imageCoverage: items.length ? `${withImage}/${items.length}` : '0/0',
+    missingTitle,
+    missingQty,
+  }
+}
+
+function reportTargetDryRunSummary({
+  tag,
+  orders,
+  txns,
+  purchaseMatches,
+  refundLinks,
+  mergeImpact,
+  batchFilter,
+}) {
+  const matchedOrderIds = new Set(purchaseMatches.map((m) => m.orderId))
+  const matchedTxnIds = new Set(purchaseMatches.map((m) => m.txnId))
+  const purchaseTxns = txns.filter((t) => t.amount > 0 && !isRefundCreditTxn(t))
+  const unmatchedOrders = orders.filter(
+    (o) => o.orderId && !matchedOrderIds.has(o.orderId),
+  )
+  const unmatchedPurchaseTxns = purchaseTxns.filter(
+    (t) => !matchedTxnIds.has(t.id),
+  )
+  const lowConfidence = purchaseMatches.filter((m) => m.confidence === 'low')
+  const mediumConfidence = purchaseMatches.filter(
+    (m) => m.confidence === 'medium',
+  )
+  const returnedMatched = purchaseMatches.filter((m) => {
+    const order = orders.find((o) => o.orderId === m.orderId)
+    return isReturnedOrCancelledOrder(order) || m.enrichment.returnInfo
+  })
+  const unknownAccountTxns = txns.filter(
+    (t) => !t.account || t.account === 'Unknown',
+  )
+
+  const proposedInserts = purchaseMatches.filter((m) => {
+    const existing = txns.find((t) => t.id === m.txnId)?.purchaseEnrichment
+    return !existing?.source
+  })
+
+  console.log('\n' + tag, 'Target dry-run summary:')
+  console.log(' ', 'orders read:', orders.length)
+  console.log(
+    ' ',
+    'online / in_store:',
+    orders.filter((o) => o.sourceView === 'online').length,
+    '/',
+    orders.filter(
+      (o) => o.sourceView === 'in_store' || o.sourceView === 'instore',
+    ).length,
+  )
+  console.log(' ', 'candidate txns:', txns.length)
+  console.log(' ', 'matched purchases:', purchaseMatches.length)
+  console.log(' ', 'matched refunds:', refundLinks.length)
+  console.log(' ', 'unmatched orders:', unmatchedOrders.length)
+  console.log(' ', 'unmatched transactions:', unmatchedPurchaseTxns.length)
+  console.log(
+    ' ',
+    'Unknown account candidate count:',
+    unknownAccountTxns.length,
+  )
+  console.log(' ', 'low confidence matches:', lowConfidence.length)
+  console.log(' ', 'medium confidence matches:', mediumConfidence.length)
+  console.log(' ', 'returned matched as purchase:', returnedMatched.length)
+  console.log(' ', 'proposedNewEnrichmentRows:', proposedInserts.length)
+  console.log(
+    ' ',
+    'proposedUpdates:',
+    (mergeImpact.proposedReturnInfoUpdates ?? 0) +
+      (mergeImpact.proposedReturnInfoClears ?? 0),
+  )
+  console.log(
+    ' ',
+    'proposedDuplicateOrderIdCreates:',
+    mergeImpact.proposedDuplicateCreates ?? 0,
+  )
+  if (batchFilter) {
+    reportBatchFilterSkips(tag, batchFilter.skipped)
+    console.log(
+      ' ',
+      'batch allowed inserts:',
+      batchFilter.proposedNewEnrichmentRows,
+    )
+  }
+
+  console.log('\n' + tag, 'top 30 proposed insert rows:')
+  for (const m of proposedInserts.slice(0, 30)) {
+    const txn = txns.find((t) => t.id === m.txnId)
+    const order = orders.find((o) => o.orderId === m.orderId)
+    const li = summarizeLineItems(order)
+    const returned =
+      isReturnedOrCancelledOrder(order) || m.enrichment.returnInfo
+    const existing = txn?.purchaseEnrichment?.source
+    console.log(
+      JSON.stringify(
+        {
+          txnId: m.txnId,
+          orderId: m.orderId,
+          receiptId: order?.storeTransactionId || order?.orderId,
+          mergeKey: order?.detailUrl || m.orderId,
+          sourceView: order?.sourceView,
+          orderDate: order?.orderDateIso || order?.orderDate,
+          txnDate: txn?.date,
+          dateDiff: m.dayDiff,
+          total: order?.orderTotal,
+          txnAmount: txn?.amount,
+          confidence: m.confidence,
+          status: order?.status,
+          statusRaw: order?.statusDate ?? order?.status,
+          itemCount: li.itemCount,
+          firstItems: li.titles,
+          quantitySummary: li.qtySum,
+          imageCoverage: li.imageCoverage,
+          returnedOrRefunded: returned,
+          existingEnrichment: existing ?? null,
+          account: txn?.account,
+        },
+        null,
+        2,
+      ),
+    )
   }
 }
 
@@ -228,7 +1187,48 @@ async function main() {
     hasFlag('--upload-images') ||
     (hasFlag('--apply') && !hasFlag('--no-upload-images'))
   const refreshImages = hasFlag('--refresh-images')
+  const updatesOnly = hasFlag('--updates-only')
+  const insertsOnly = hasFlag('--inserts-only')
+  const onlyHighConfidence = hasFlag('--only-high-confidence')
+  const excludeReturned = hasFlag('--exclude-returned')
+  const maxInserts = parseMaxInserts(arg('--max-inserts', null))
+  const clearStaleReturnInfoOnly = hasFlag('--clear-stale-return-info-only')
+  const allowCrossUserExplicitRepair =
+    hasFlag('--allow-cross-user-explicit-repair') && clearStaleReturnInfoOnly
+  const onlyTxnIds = parseOnlyTxnIds(arg('--only-transaction-ids', null))
+  const scopedTxnRepair =
+    updatesOnly && Boolean(onlyTxnIds?.length) && !clearStaleReturnInfoOnly
+  const targetedRepairMode =
+    sourceKey === 'amazon' &&
+    clearStaleReturnInfoOnly &&
+    Boolean(onlyTxnIds?.length)
   const tag = `[link-${cfg.label}]`
+
+  if (
+    hasFlag('--allow-cross-user-explicit-repair') &&
+    !clearStaleReturnInfoOnly
+  ) {
+    console.error(
+      tag,
+      '--allow-cross-user-explicit-repair requires --clear-stale-return-info-only',
+    )
+    process.exit(1)
+  }
+
+  if (targetedRepairMode && !userId) {
+    console.error(
+      tag,
+      'targeted repair requires --user-id (explicit txn ids must be user-scoped)',
+    )
+    process.exit(1)
+  }
+
+  if (allowCrossUserExplicitRepair) {
+    console.warn(
+      tag,
+      'DANGEROUS: --allow-cross-user-explicit-repair — explicit txn ids may bypass --user-id',
+    )
+  }
 
   if (!userId) {
     console.warn(
@@ -303,6 +1303,17 @@ async function main() {
       ${accountFilter ? `and account = '${escSql(accountFilter)}'` : ''}
       ${sourceAccountLabel ? `and source_account_label = '${escSql(sourceAccountLabel)}'` : ''}`
 
+  if (targetedRepairMode) {
+    console.log(
+      tag,
+      'targeted repair mode:',
+      'updates-only=',
+      updatesOnly,
+      '| clear-stale-return-info-only | txnIds=',
+      onlyTxnIds.length,
+    )
+  }
+
   const txnRows = await runSql(`
     select id, user_id, txn_date, coalesce(source_amount, amount) as amount, merchant_name, merchant, flow, account, purchase_enrichment
     from finance_transactions
@@ -313,7 +1324,7 @@ async function main() {
     order by txn_date desc;
   `)
 
-  const txns = (txnRows ?? []).map((r) => ({
+  let txns = (txnRows ?? []).map((r) => ({
     id: String(r.id),
     userId: String(r.user_id),
     date: String(r.txn_date).slice(0, 10),
@@ -323,6 +1334,42 @@ async function main() {
     account: r.account ? String(r.account) : '',
     purchaseEnrichment: r.purchase_enrichment,
   }))
+
+  if (onlyTxnIds?.length) {
+    const extraTxns = await fetchTxnsByIds(onlyTxnIds, userId, {
+      scopedToUser: !allowCrossUserExplicitRepair,
+    })
+    txns = mergeTxnLists(txns, extraTxns)
+  }
+
+  let crossUserLookup = new Map()
+  let crossUserOrderLookup = new Map()
+  if (targetedRepairMode && onlyTxnIds?.length && userId) {
+    const unscopedLookup = await fetchTxnsByIds(onlyTxnIds, null, {
+      scopedToUser: false,
+    })
+    crossUserLookup = new Map(unscopedLookup.map((t) => [t.id, t.userId]))
+    crossUserOrderLookup = new Map(
+      unscopedLookup.map((t) => [t.id, t.purchaseEnrichment?.orderId || '']),
+    )
+  }
+
+  const orderDecisionByOrderId = buildOrderDecisionMap(orders)
+  const targetedRepairPlan = targetedRepairMode
+    ? buildTargetedStaleReturnInfoRepairPlan(
+        txns,
+        orderDecisionByOrderId,
+        {
+          updatesOnly,
+          clearStaleReturnInfoOnly,
+          onlyTxnIds,
+          scopedUserId: userId,
+          allowCrossUserExplicitRepair,
+        },
+        crossUserLookup,
+        crossUserOrderLookup,
+      )
+    : []
 
   console.log(tag, cfg.label, 'txns in window:', txns.length)
   const acctDist = txns.reduce((acc, t) => {
@@ -334,6 +1381,44 @@ async function main() {
 
   const purchaseMatches = cfg.matchOrders(orders, txns, matchOpts)
   const refundLinks = cfg.matchRefunds(orders, txns, purchaseMatches)
+  const batchFilterOpts = {
+    onlyHighConfidence,
+    excludeReturned,
+    insertsOnly,
+    maxInserts,
+    onlyTxnIds,
+  }
+  const batchFiltersActive =
+    hasBatchInsertFilters(batchFilterOpts) &&
+    !targetedRepairMode &&
+    !scopedTxnRepair
+  const batchFilter = batchFiltersActive
+    ? filterPurchaseMatchesForBatch(
+        purchaseMatches,
+        txns,
+        orders,
+        refundLinks,
+        batchFilterOpts,
+      )
+    : null
+  const effectivePurchaseMatches = batchFilter?.allowed ?? purchaseMatches
+  const effectiveRefundLinks =
+    insertsOnly || batchFiltersActive ? [] : refundLinks
+  if (batchFiltersActive) {
+    console.log(
+      tag,
+      'batch filters:',
+      [
+        onlyHighConfidence ? 'only-high-confidence' : null,
+        excludeReturned ? 'exclude-returned' : null,
+        insertsOnly ? 'inserts-only' : null,
+        maxInserts != null ? `max-inserts=${maxInserts}` : null,
+        onlyTxnIds?.length ? `only-transaction-ids=${onlyTxnIds.length}` : null,
+      ]
+        .filter(Boolean)
+        .join(' | ') || '(none)',
+    )
+  }
   const orderById = new Map(
     orders.filter((o) => o.orderId).map((o) => [o.orderId, o]),
   )
@@ -350,10 +1435,20 @@ async function main() {
     tag,
     'purchase matches:',
     purchaseMatches.length,
+    batchFiltersActive
+      ? `(batch-filtered: ${effectivePurchaseMatches.length})`
+      : '',
     '(already enriched:',
     already + ')',
   )
-  console.log(tag, 'refund links:', refundLinks.length)
+  console.log(
+    tag,
+    'refund links:',
+    refundLinks.length,
+    insertsOnly || batchFiltersActive
+      ? `(skipped in batch/inserts-only: ${effectiveRefundLinks.length})`
+      : '',
+  )
   console.log(
     tag,
     'purchase confidence:',
@@ -399,6 +1494,53 @@ async function main() {
       '\n' + tag,
       'dry-run — pass --apply to write purchase_enrichment',
     )
+    if (targetedRepairMode) {
+      reportTargetedRepairDryRun(targetedRepairPlan, tag, updatesOnly)
+      return
+    }
+    if (scopedTxnRepair) {
+      reportScopedUpdatesOnlyDryRun({
+        tag,
+        onlyTxnIds,
+        userId,
+        purchaseMatches,
+        txns,
+        sourceLabel: cfg.label,
+        replace,
+        refreshImages,
+      })
+      return
+    }
+    const mergeImpact = reportDryRunMergeImpact(
+      effectivePurchaseMatches,
+      txns,
+      replace,
+      tag,
+      updatesOnly,
+      orders,
+      insertsOnly,
+    )
+    if (sourceKey === 'bestbuy') {
+      reportBestBuyDryRunSummary({
+        tag,
+        orders,
+        txns,
+        purchaseMatches: effectivePurchaseMatches,
+        refundLinks: effectiveRefundLinks,
+        mergeImpact,
+      })
+    }
+    if (sourceKey === 'target') {
+      reportTargetDryRunSummary({
+        tag,
+        orders,
+        txns,
+        purchaseMatches: effectivePurchaseMatches,
+        refundLinks: effectiveRefundLinks,
+        mergeImpact,
+        batchFilter,
+      })
+    }
     if (syncCatalog) {
       const matchedIds = new Set(purchaseMatches.map((m) => m.orderId))
       const unlinked = orders.filter(
@@ -415,6 +1557,29 @@ async function main() {
         cfg.label,
         'enrichment in txn window',
       )
+    return
+  }
+
+  if (targetedRepairMode) {
+    let repaired = 0
+    for (const item of targetedRepairPlan) {
+      if (item.action !== 'clear' || !item.after) continue
+      const json = escSql(JSON.stringify(stripLinkMetadata(item.after)))
+      await runSql(`
+        update finance_transactions
+        set purchase_enrichment = '${json}'::jsonb,
+            updated_at = now()
+        where id = '${escSql(item.txnId)}'
+          ${userId && !allowCrossUserExplicitRepair ? `and user_id = '${escSql(userId)}'` : ''};
+      `)
+      repaired++
+    }
+    console.log(
+      '\n' + tag,
+      'targeted repair applied:',
+      repaired,
+      'returnInfo clears | inserts: 0',
+    )
     return
   }
 
@@ -465,9 +1630,22 @@ async function main() {
   let updatedPurchaseReturn = 0
   let uploadedImages = 0
 
-  for (const m of purchaseMatches) {
+  for (const m of effectivePurchaseMatches) {
     const existing = txns.find((t) => t.id === m.txnId)?.purchaseEnrichment
-    if (existing?.source === cfg.label && !replace && !refreshImages) continue
+    if (onlyTxnIds && !onlyTxnIds.includes(m.txnId)) continue
+    if (!wouldWriteEnrichmentUpdate(existing, updatesOnly)) continue
+    if (insertsOnly && existing?.source) continue
+    if (
+      !wouldUpdateEnrichment(
+        existing,
+        m.enrichment,
+        replace,
+        refreshImages,
+        cfg.label,
+      )
+    ) {
+      continue
+    }
     let enrichment = replace
       ? m.enrichment
       : refreshImages && existing?.source === cfg.label
@@ -476,7 +1654,7 @@ async function main() {
     enrichment = await finalizeEnrichment(m.txnId, enrichment)
     if (enrichment.lineItems?.some((li) => li.imageStoragePath))
       uploadedImages++
-    const json = escSql(JSON.stringify(enrichment))
+    const json = escSql(JSON.stringify(stripLinkMetadata(enrichment)))
     await runSql(`
       update finance_transactions
       set purchase_enrichment = '${json}'::jsonb,
@@ -486,7 +1664,8 @@ async function main() {
     updatedPurchase++
   }
 
-  for (const r of refundLinks) {
+  for (const r of effectiveRefundLinks) {
+    if (onlyTxnIds?.length) continue
     const existingRefund = txns.find(
       (t) => t.id === r.refundTxnId,
     )?.purchaseEnrichment
@@ -495,16 +1674,15 @@ async function main() {
       ? txns.find((t) => t.id === r.purchaseTxnId)?.purchaseEnrichment
           ?.lineItems
       : undefined
-    const lineItems =
-      exportOrder?.lineItems?.length
-        ? exportOrder.lineItems
-        : purchaseLineItems
+    const lineItems = exportOrder?.lineItems?.length
+      ? exportOrder.lineItems
+      : purchaseLineItems
     let refundPayload = mergeEnrichment(existingRefund, {
       ...r.refundEnrichment,
       ...(lineItems?.length ? { lineItems } : {}),
     })
     refundPayload = await finalizeEnrichment(r.refundTxnId, refundPayload)
-    const json = escSql(JSON.stringify(refundPayload))
+    const json = escSql(JSON.stringify(stripLinkMetadata(refundPayload)))
     await runSql(`
       update finance_transactions
       set purchase_enrichment = '${json}'::jsonb,
@@ -525,7 +1703,7 @@ async function main() {
         r.purchaseTxnId,
         purchasePayload,
       )
-      const pjson = escSql(JSON.stringify(purchasePayload))
+      const pjson = escSql(JSON.stringify(stripLinkMetadata(purchasePayload)))
       await runSql(`
         update finance_transactions
         set purchase_enrichment = '${pjson}'::jsonb,
@@ -551,7 +1729,20 @@ async function main() {
       : '',
   )
 
-  if (syncCatalog) {
+  if (onlyTxnIds?.length) {
+    console.log(
+      tag,
+      'scoped txn repair complete:',
+      updatedPurchase,
+      'purchase row(s) updated | refund credits:',
+      updatedRefund,
+      '(skipped) | purchase return marks:',
+      updatedPurchaseReturn,
+      '(skipped)',
+    )
+  }
+
+  if (syncCatalog && !onlyTxnIds?.length) {
     const catalogUser = await resolveCatalogUserId(userId)
     if (!catalogUser) {
       console.warn(tag, 'catalog: no user_id — skip sync')

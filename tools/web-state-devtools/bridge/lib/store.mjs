@@ -122,7 +122,11 @@ export function extractMergeKey(
 ) {
   for (const rule of rules) {
     if (rule.includes(':')) {
-      const [field, pattern] = rule.split(':')
+      // Split on the FIRST colon only, so regex patterns may contain ':'
+      // (e.g. non-capturing groups like /orders/(?:stores/)?([^/?#]+)).
+      const idx = rule.indexOf(':')
+      const field = rule.slice(0, idx)
+      const pattern = rule.slice(idx + 1)
       const val = item[field]
       if (typeof val === 'string') {
         const m = val.match(new RegExp(pattern, 'i'))

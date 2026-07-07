@@ -12,10 +12,9 @@
  *   --until YYYY-MM-DD | HARVEST_UNTIL   latest order date to keep (default: now)
  *   --days N           | HARVEST_DAYS    look back N days (ignored when --since is set)
  *
- * NOTE: this currently harvests the default (online) Orders view only. Target
- * in-store purchase history lives behind a separate In-store view/toggle and is
- * NOT captured yet (tracked separately). An empty online result is therefore a
- * source-coverage limitation, not proof that no receipt exists.
+ * NOTE: harvests both Online and In-store tabs on /orders. In-store uses
+ * `/orders/stores/{id}` cards (`data-test=tabInstore`). An empty result on one
+ * view is a source-coverage signal, not proof that no receipt exists.
  *
  * Requires: bridge running, extension Dev Agent Mode ON, logged into Target in Chrome.
  */
@@ -29,6 +28,7 @@ import {
   datedOrdersBasename,
   resolveOrdersRawPath,
 } from '../lib/orders-export.mjs'
+import { isInStoreSourceView } from '../lib/target-orders-parser.mjs'
 import {
   isHardSignInUrl,
   resolveHarvestTabId,
@@ -246,6 +246,83 @@ async function scrollHarvest(deps, recipe, tabId, purchasesUrl) {
   return { merged, steps }
 }
 
+/**
+ * Harvest the In-store tab on the same /orders page. In-store history is not a
+ * virtual list — it renders 10 rows and appends 10 more each time the
+ * "Load more purchases" button (which has no id/aria-label/data-test, only text)
+ * is clicked. We locate it via the text= selector and click until it's gone.
+ * In-store order ids (xxxx-xxxx-xxxx-xxxx) never collide with online numeric ids,
+ * so results merge safely into the same map.
+ */
+async function harvestInstoreView(deps, recipe, tabId, merged) {
+  const mergeKeyRules = recipe.entities?.mergeKey || ['orderId']
+  const steps = []
+  const maxRounds = Number(recipe.vars?.instoreRounds) || 60
+
+  const tab = await deps.runAction(
+    'click',
+    { selector: '[data-test="tabInstore"]', tabId, optional: true },
+    15000,
+  )
+  if (!tab?.ok) {
+    steps.push({ step: 'instore-tab', reason: 'tab_not_found' })
+    return steps
+  }
+  await new Promise((r) => setTimeout(r, 2500))
+
+  let stableRounds = 0
+  for (let round = 0; round < maxRounds; round++) {
+    const t0 = Date.now()
+    const beforeCount = merged.size
+    await deps.runAction('scroll', { preset: 'bottom', tabId }, 30000)
+    await new Promise((r) => setTimeout(r, 600))
+    const loadMore = await deps.runAction(
+      'click',
+      { selector: 'text=Load more purchases', tabId, optional: true },
+      8000,
+    )
+    await new Promise((r) => setTimeout(r, loadMore?.ok ? 1300 : 400))
+    await deps.runAction(
+      'capture',
+      { send: true, tabId, fast: true, wait: recipe.capture?.wait },
+      45000,
+    )
+    const snap = await deps.getLatestSnapshot()
+    const items = (snap?.adapter?.items || []).filter(
+      (it) => isInStoreSourceView(it.sourceView) || /^\d{4}-\d{4}-/.test(it.orderId),
+    )
+    let added = 0
+    for (const item of items) {
+      const key = extractMergeKey(item, mergeKeyRules) || item.orderId
+      if (!key) continue
+      if (!merged.has(key)) added++
+      merged.set(key, { ...merged.get(key), ...item })
+    }
+    steps.push({
+      step: `instore-round-${round}`,
+      beforeCount,
+      pageItems: items.length,
+      merged: merged.size,
+      afterCount: merged.size,
+      added,
+      loadMore: !!loadMore?.ok,
+      captureMs: Date.now() - t0,
+    })
+
+    if (added === 0) {
+      stableRounds++
+      if (!loadMore?.ok && stableRounds >= 2) {
+        steps.push({ step: 'instore-stop', reason: 'button_gone', round })
+        break
+      }
+    } else {
+      stableRounds = 0
+    }
+  }
+
+  return steps
+}
+
 async function main() {
   const health = await fetch(`${BRIDGE}/health`).then((r) => r.json())
   console.log(
@@ -298,6 +375,10 @@ async function main() {
     tabId,
     ORDERS_URL,
   )
+
+  // In-store tab on the same page (separate "Load more purchases" pager).
+  const instoreSteps = await harvestInstoreView(deps, recipe, tabId, merged)
+  scrollSteps.push(...instoreSteps)
 
   const allItems = [...merged.values()].sort((a, b) => {
     const da = parseOrderDate(a.orderDate) || 0
@@ -355,6 +436,17 @@ async function main() {
       if (detail) {
         const key =
           extractMergeKey(item, recipe.entities?.mergeKey) || item.orderId
+        const detailItems = (detail.lineItems || []).filter(
+          (li) =>
+            li.title &&
+            li.title.length >= 4 &&
+            !/^(View|Track|Help|Buy again|Add to cart|View details|Details)$/i.test(
+              li.title.trim(),
+            ) &&
+            !/Common Questions|Get top deals|About Us|Help|Stores|Services|Footer/i.test(
+              li.title,
+            ),
+        )
         enriched.set(key, {
           ...item,
           ...detail,
@@ -362,9 +454,7 @@ async function main() {
           detailUrl: item.detailUrl || detail.detailUrl,
           orderTotal: detail.orderTotal || item.orderTotal,
           orderDate: detail.orderDate || item.orderDate,
-          lineItems: detail.lineItems?.length
-            ? detail.lineItems
-            : item.lineItems,
+          lineItems: detailItems.length ? detailItems : item.lineItems,
         })
       }
       followed++
@@ -383,11 +473,15 @@ async function main() {
   })
 
   const exportItems = list.map((o) => redactForExport(o))
+  const onlineCount = list.filter(
+    (o) => o.sourceView === 'online' || !/^\d{4}-\d{4}-/.test(o.orderId || ''),
+  ).length
+  const instoreCount = list.length - onlineCount
   const coverageWarnings = []
   if (list.length === 0) {
-    coverageWarnings.push(
-      'target_online_empty_in_store_view_not_captured_yet',
-    )
+    coverageWarnings.push('target_orders_empty_check_sign_in_and_tabs')
+  } else if (instoreCount === 0) {
+    coverageWarnings.push('target_instore_view_returned_no_orders')
   }
   const summary = {
     source: 'target',
@@ -397,7 +491,9 @@ async function main() {
     harvestUntil: untilLabel,
     harvestDays: Math.round((untilMs - sinceMs) / 86_400_000),
     harvestedCount: list.length,
-    viewsCaptured: ['online'],
+    onlineCount,
+    instoreCount,
+    viewsCaptured: ['online', 'in_store'],
     coverageWarnings,
     // Legacy fields for backward compatibility with older consumers.
     harvestedAt: new Date().toISOString(),

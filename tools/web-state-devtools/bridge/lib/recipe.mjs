@@ -8,6 +8,7 @@ import { extractEntities, mergeEntityItems } from './entity-extractor.mjs'
 import { redactForExport } from './privacy.mjs'
 import { extractMergeKey } from './store.mjs'
 import { resolveCaptureConfig } from './wait-strategy.mjs'
+import { reparseReturnInfoFromStatusOnly } from './amazon-orders-parser.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const RECIPES_DIR = path.join(__dirname, '..', 'recipes')
@@ -329,21 +330,39 @@ export async function runRecipe(deps, recipeId, options = {}) {
           !/[{;=]|uet\(|function|Continue shopping/i.test(String(s))
             ? s
             : undefined
-        merged.set(key, {
+        const mergedStatus =
+          cleanStatus(detail.status) ||
+          cleanStatus(item.status) ||
+          item.status
+        const mergedItem = {
           ...item,
           ...detail,
           orderId: item.orderId || detail.orderId,
           detailUrl: detailUrl || item.detailUrl,
           orderTotal: detail.orderTotal || item.orderTotal,
           orderDate: detail.orderDate || item.orderDate,
-          status:
-            cleanStatus(detail.status) ||
-            cleanStatus(item.status) ||
-            item.status,
+          status: mergedStatus,
           lineItems: detail.lineItems?.length
             ? detail.lineItems
             : item.lineItems,
-        })
+        }
+        if (recipe.id === 'amazon-orders') {
+          const { returnInfo, warnings } = reparseReturnInfoFromStatusOnly({
+            ...mergedItem,
+            status: mergedStatus,
+            returnEvidenceText:
+              detail.returnEvidenceText || item.returnEvidenceText,
+          })
+          mergedItem.returnInfo = returnInfo
+          if (warnings.length) {
+            mergedItem.parserWarnings = [
+              ...(item.parserWarnings || []),
+              ...(detail.parserWarnings || []),
+              ...warnings,
+            ]
+          }
+        }
+        merged.set(key, mergedItem)
       }
       followed++
       steps.push({

@@ -2,7 +2,48 @@
  * In-page actions executed via chrome.scripting.executeScript.
  */
 ;(function initWsdActionRunner() {
+  function isVisible(el) {
+    if (!el) return false
+    const rect = el.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return false
+    const style = window.getComputedStyle(el)
+    return style.visibility !== 'hidden' && style.display !== 'none'
+  }
+
+  /**
+   * Find a clickable element by visible text. Prefers an exact (trimmed,
+   * whitespace-collapsed, case-insensitive) match over a substring match, and
+   * only considers visible elements. Handy for buttons that lack a stable
+   * selector (no id / aria-label / data-test), e.g. Target's "Load more
+   * purchases".
+   */
+  function queryByText(raw) {
+    const target = String(raw || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
+    if (!target) return null
+    const nodes = document.querySelectorAll(
+      'button, a, [role="button"], [role="link"], input[type="button"], input[type="submit"]',
+    )
+    let partial = null
+    for (const el of nodes) {
+      const label = el.getAttribute('aria-label') || ''
+      const t = (el.textContent || label || '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase()
+      if (!t || !isVisible(el)) continue
+      if (t === target) return el
+      if (!partial && t.includes(target)) partial = el
+    }
+    return partial
+  }
+
   function query(selector) {
+    if (typeof selector === 'string' && selector.startsWith('text=')) {
+      return queryByText(selector.slice(5))
+    }
     const deep = window.__WSD_DEEP_DOM__
     return deep?.deepQuerySelector(selector) || document.querySelector(selector)
   }
@@ -23,7 +64,10 @@
       ok: true,
       selector,
       tag: el.tagName.toLowerCase(),
-      name: el.getAttribute('aria-label') || undefined,
+      name:
+        el.getAttribute('aria-label') ||
+        (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60) ||
+        undefined,
     }
   }
 
