@@ -210,6 +210,8 @@ export function HistoryView({
       </div>
 
       <div className={`history-insights${showInsights ? " open" : ""}`}>
+        {showInsights && (
+        <>
         <div className="card history-kpi-card">
           <h3>{tl("history.extendedKpiTitle")}</h3>
           <div className="grid history-kpi-grid mt-2-5">
@@ -346,6 +348,8 @@ export function HistoryView({
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
 
       <p className="muted-note">
