@@ -6,7 +6,7 @@ export default {
     discover: 'Discover',
     settings: 'Settings',
     mainAria: 'Main navigation',
-    brandTag: 'Training companion'
+    brandTag: 'Training companion',
   },
   common: {
     save: 'Save',
@@ -23,7 +23,7 @@ export default {
     today: 'Today',
     daysAgo: '{n}d ago',
     noRecord: 'No history yet',
-    perSide: '/side'
+    perSide: '/side',
   },
   layout: {
     titleToday: 'Today',
@@ -40,7 +40,7 @@ export default {
     titleSummary: '{day} · Summary',
     titleDayOverview: '{day} Overview',
     titleDefault: 'FITNESS.OS',
-    autoFinalize: 'Auto-logged {count} unfinished workout(s)'
+    autoFinalize: 'Auto-logged {count} unfinished workout(s)',
   },
   home: {
     todayPick: "Today's pick",
@@ -86,7 +86,7 @@ export default {
       'Starting with <b>{todayDay}</b>. Tap "Finish workout" on the summary page to advance the rotation.',
     lastLabel: '{day} · {when}',
     trainingCoverAlt: '{day} workout',
-    appBarToday: 'Today · {day}'
+    appBarToday: 'Today · {day}',
   },
   focus: {
     adoptedWeight: 'Suggested weight applied',
@@ -116,7 +116,8 @@ export default {
     skip: 'Skip',
     nextEx: 'Next',
     exitConfirmTitle: 'Leave workout?',
-    exitConfirmSub: 'Progress is saved. Return to overview to continue, or end to open summary.',
+    exitConfirmSub:
+      'Progress is saved. Return to overview to continue, or end to open summary.',
     backOverview: 'Back to overview',
     endWorkout: 'End workout',
     exitAria: 'Exit focus mode',
@@ -127,7 +128,7 @@ export default {
     setProgressAria: 'Set progress: {total} total, {done} done',
     completeSetAria: 'Complete set {set} of {total}, {done} done',
     nextTimer: 'Next · {name}',
-    elapsedAria: 'Elapsed time'
+    elapsedAria: 'Elapsed time',
   },
   setLog: {
     aria: 'Log reps and RIR for this set',
@@ -139,7 +140,7 @@ export default {
     decReps: 'Decrease reps',
     incReps: 'Increase reps',
     estimate1rm: 'Est. 1RM ≈ {weight} lbs',
-    skipLog: 'Skip logging'
+    skipLog: 'Skip logging',
   },
   skip: {
     aria: 'Skip exercise',
@@ -150,7 +151,7 @@ export default {
     discomfort: 'Not feeling it',
     other: 'Other',
     alternatives: 'Substitute',
-    confirm: 'Confirm skip'
+    confirm: 'Confirm skip',
   },
   summary: {
     title: '{day} · Summary',
@@ -173,7 +174,7 @@ export default {
     continueWorkout: 'Continue workout',
     toastSupp: '{day} · Accessory logged',
     toastDone: '{day} done · Next: {next}',
-    adoptAllToast: 'All suggestions applied'
+    adoptAllToast: 'All suggestions applied',
   },
   weight: {
     title: 'Adjust weight',
@@ -197,7 +198,7 @@ export default {
     heavier: 'Heavier {n}',
     decStep: '−{step} {unit}',
     incStep: '+{step} {unit}',
-    updated: 'Weight updated'
+    updated: 'Weight updated',
   },
   settings: {
     tag: 'Settings',
@@ -209,7 +210,8 @@ export default {
     replaceCloud: 'Cloud overwrites device',
     signOut: 'Sign out',
     notSignedIn: 'Not signed in',
-    signInDesc: 'Sign in to back up data and avoid losing it after clearing cache or switching phones.',
+    signInDesc:
+      'Sign in to back up data and avoid losing it after clearing cache or switching phones.',
     signInLink: 'Sign in / Sign up',
     programTemplate: 'Program template',
     currentProgram: 'Current: {name}',
@@ -223,14 +225,18 @@ export default {
     timerSoundDesc: 'Countdown and chime when rest ends',
     timerSoundAria: 'Timer sounds',
     notifications: 'Background alerts',
-    notifyGranted: 'Alerts when you switch apps or lock screen; sound only while page is open',
-    notifyDenied: 'Notifications blocked — enable in browser or system settings',
+    notifyGranted:
+      'Alerts when you switch apps or lock screen; sound only while page is open',
+    notifyDenied:
+      'Notifications blocked — enable in browser or system settings',
     notifyIos:
       'Safari tabs on iPhone/iPad cannot receive background alerts. Open in Safari → Share → Add to Home Screen, then open from home screen',
     notifyInApp:
       'In-app browsers (WeChat, QQ, etc.) do not support notifications. Open in Safari or Chrome, or add to home screen',
-    notifyUnsupported: 'This browser does not support notifications; timer sounds still work in foreground',
-    notifyDefault: 'Allow alerts when you leave the page (on iPhone, add to home screen first)',
+    notifyUnsupported:
+      'This browser does not support notifications; timer sounds still work in foreground',
+    notifyDefault:
+      'Allow alerts when you leave the page (on iPhone, add to home screen first)',
     notifyAria: 'Background alerts',
     enableNotify: 'Enable notifications',
     appearance: 'Appearance',
@@ -243,6 +249,11 @@ export default {
     themeDark: 'Dark',
     themeLight: 'Light',
     themeAuto: 'System',
+    lockPortraitOnPhone: 'Lock portrait on phone',
+    lockPortraitOnPhoneDesc:
+      'Prompt to rotate back when the phone is landscape (recommended for PWA)',
+    rotatePortrait: 'Rotate to portrait',
+    rotatePortraitHint: 'Use portrait mode on your phone',
     logging: 'Set logging',
     logDetail: 'Reps / RIR per set',
     logDetailDesc: 'In focus mode, log reps and RIR after each set',
@@ -251,16 +262,19 @@ export default {
     logAlways: 'Required',
     data: 'Data',
     customProgram: 'Program',
-    customProgramDesc: 'Edit sets, rest, reps, or remove exercises you are not training.',
+    customProgramDesc:
+      'Edit sets, rest, reps, or remove exercises you are not training.',
     customProgramLink: 'Customize program',
     backup: 'Backup & restore',
-    backupDesc: 'Export a JSON backup and import after switching phones or clearing cache.',
+    backupDesc:
+      'Export a JSON backup and import after switching phones or clearing cache.',
     exportJson: 'Export JSON',
     importReplace: 'Import (replace)',
     importMerge: 'Import (merge)',
     clearToday: "Clear today's workout log",
     resetAll: 'Reset all data',
-    footnote: 'Data stays on this device by default; sign in to back up to your private cloud.',
+    footnote:
+      'Data stays on this device by default; sign in to back up to your private cloud.',
     toastProgram: 'Switched: {name}',
     toastRotation: 'Suggested today: {day}',
     toastNotifyOn: 'Rest-end notifications enabled',
@@ -274,60 +288,77 @@ export default {
     toastThemeDark: 'Switched to dark',
     toastLocaleZh: '语言：中文',
     toastLocaleEn: 'Language: English',
-    confirmClearToday: "Clear today's workout log? Weights and settings are kept.",
+    confirmClearToday:
+      "Clear today's workout log? Weights and settings are kept.",
     toastClearToday: "Today's log cleared",
-    confirmResetAll: 'Reset all data? Custom weights, logs, and settings will be lost permanently.',
+    confirmResetAll:
+      'Reset all data? Custom weights, logs, and settings will be lost permanently.',
     toastResetAll: 'All data reset',
     toastUploaded: 'Uploaded: {sessions} workouts / {logs} exercise logs',
-    confirmCloudReplace: 'Replace local data with cloud? Unsynced local changes will be lost.',
+    confirmCloudReplace:
+      'Replace local data with cloud? Unsynced local changes will be lost.',
     toastCloudMerge: 'Merged from cloud ({sessions} workouts)',
     toastCloudRestore: 'Restored from cloud ({sessions} workouts)',
     toastSignOut: 'Signed out — local data kept',
     toastImportMerge: 'Backup merged',
     toastImportReplace: 'Backup imported (replaced)',
-    importFailed: 'Import failed'
+    importFailed: 'Import failed',
   },
   coach: {
     deloadTitle: 'Deload reminder',
-    deloadBody: '{reason}. Cut sets in half, leave 3+ RIR, and prioritize form.',
+    deloadBody:
+      '{reason}. Cut sets in half, leave 3+ RIR, and prioritize form.',
     fatigueTitle: 'High fatigue',
     fatigueBody:
       'Last 7 days avg RIR is {avgRir} ({failurePct}% of sets to failure). Recovery is lagging — leave 1–2 RIR on most sets{extra}.',
     fatigueExtra: ', or schedule a deload early',
     intensityLowTitle: 'Intensity too easy',
-    intensityLowBody: 'Last 7 days avg RIR is {avgRir} — too far from failure for growth. Aim for RIR 0–3 on working sets.',
+    intensityLowBody:
+      'Last 7 days avg RIR is {avgRir} — too far from failure for growth. Aim for RIR 0–3 on working sets.',
     gapTitle: 'Long break',
     gapBodyLong:
       '{days} days since last workout. Drop weight 5–10% today, leave 2–3 RIR — you will be back in a session or two.',
-    gapBodyShort: '{days} days since last workout. Leave 2–3 RIR on early sets — do not jump to max weight.',
+    gapBodyShort:
+      '{days} days since last workout. Leave 2–3 RIR on early sets — do not jump to max weight.',
     freqHighTitle: 'High weekly frequency',
-    freqHighBody: '{count} sessions in the last 7 days. Prioritize sleep and protein; avoid grinding to failure every day.',
+    freqHighBody:
+      '{count} sessions in the last 7 days. Prioritize sleep and protein; avoid grinding to failure every day.',
     freqLowTitle: 'Low weekly volume',
-    freqLowBody: 'For muscle gain, aim for {daysPerWeek} sessions/week on {program}. Log each workout when done.',
+    freqLowBody:
+      'For muscle gain, aim for {daysPerWeek} sessions/week on {program}. Log each workout when done.',
     resumeTitle: 'Workout in progress',
-    resumeBody: 'Today {day}: {done}/{total} sets done ({pct}%). Tap below to continue.',
+    resumeBody:
+      'Today {day}: {done}/{total} sets done ({pct}%). Tap below to continue.',
     progressionTitle: 'Load increase',
-    progressionBody: 'Suggested increases today: {names}{suffix}. Apply in focus mode.',
+    progressionBody:
+      'Suggested increases today: {names}{suffix}. Apply in focus mode.',
     progressionSuffix: ' and more',
     deloadWeightsTitle: 'Deload loads',
-    deloadWeightsBody: '{names}. Deload week: ~10% lighter, half the sets, form first.',
+    deloadWeightsBody:
+      '{names}. Deload week: ~10% lighter, half the sets, form first.',
     regressionTitle: 'Reduce weight',
-    regressionBody: '{names}. Missed rep targets twice — drop weight and rebuild reps and form.',
+    regressionBody:
+      '{names}. Missed rep targets twice — drop weight and rebuild reps and form.',
     plateauTitle: 'Plateau signal',
-    plateauBody: '{name} stuck at {weight} {unit} for {sessions} sessions with no rep progress. {extra}',
+    plateauBody:
+      '{name} stuck at {weight} {unit} for {sessions} sessions with no rep progress. {extra}',
     plateauAlt: 'Try {alt} for a new stimulus, or temporarily use higher reps.',
-    plateauNoAlt: 'Try higher reps temporarily, or shorter rest for a different stimulus.',
+    plateauNoAlt:
+      'Try higher reps temporarily, or shorter rest for a different stimulus.',
     volumeTitle: 'Volume adherence',
     volumeBody:
       'Last 7 days: {group} planned {planned} sets, completed {sets}. Growth follows volume — avoid skipping {group} work.',
     skipTitle: 'Frequently skipped',
     skipBody: '{name} skipped {count} times in 3 weeks. {extra}',
     skipAlt: 'If equipment is always taken, swap to {alt} in your program.',
-    skipNoAlt: 'Swap for another exercise targeting the same muscles in program edit.',
+    skipNoAlt:
+      'Swap for another exercise targeting the same muscles in program edit.',
     postureTitle: 'Posture focus',
-    postureBody: 'Do not rush face pulls and rows — retract scapula for rear delts; back extensions for posterior chain.',
+    postureBody:
+      'Do not rush face pulls and rows — retract scapula for rear delts; back extensions for posterior chain.',
     armsTitle: 'Arm day focus',
-    armsBody: 'No swinging on curls; keep upper arms pinned on pushdowns. Quality over load.'
+    armsBody:
+      'No swinging on curls; keep upper arms pinned on pushdowns. Quality over load.',
   },
   progression: {
     lineIncrease: '{name} → {weight} (+{delta} {unit})',
@@ -335,24 +366,34 @@ export default {
     unknownEx: 'Unknown exercise',
     notEligible: 'This set scheme is not eligible for auto progression',
     noData: 'Log reps a few times so the coach can suggest loads',
-    longGap: 'Long time since this exercise — use last weight to find your groove',
+    longGap:
+      'Long time since this exercise — use last weight to find your groove',
     deloadDecrease: 'Deload week — drop ~10% and prioritize form',
-    gapHoldLong: 'Long break since last workout — hold weight today, find your rhythm first',
-    gapHoldShort: 'A few days off — hold weight today, leave 2–3 RIR before increasing',
-    toppedIncrease: 'Maxed {max} reps with room — add {delta}, restart at range bottom',
+    gapHoldLong:
+      'Long break since last workout — hold weight today, find your rhythm first',
+    gapHoldShort:
+      'A few days off — hold weight today, leave 2–3 RIR before increasing',
+    toppedIncrease:
+      'Maxed {max} reps with room — add {delta}, restart at range bottom',
     bothSolidIncrease: 'Two solid sessions — add {delta}',
-    failedDecrease: 'Missed rep floor twice — drop ~7% and rebuild reps and form',
+    failedDecrease:
+      'Missed rep floor twice — drop ~7% and rebuild reps and form',
     lastFailed: 'Missed rep target last time — hold weight, rebuild reps',
-    lastGrinding: 'Last session avg RIR < 1 — too close to failure; hold weight until recovered',
-    defaultRepPush: 'Hold weight — push reps toward {max}; increase load when you hit the top',
-    e1rmCap: 'Suggested load exceeds estimated strength — hold weight and stabilize reps'
+    lastGrinding:
+      'Last session avg RIR < 1 — too close to failure; hold weight until recovered',
+    defaultRepPush:
+      'Hold weight — push reps toward {max}; increase load when you hit the top',
+    e1rmCap:
+      'Suggested load exceeds estimated strength — hold weight and stabilize reps',
   },
   phase: {
-    deloadSessions: '{sessions} sessions since deload — schedule a deload (half sets)',
+    deloadSessions:
+      '{sessions} sessions since deload — schedule a deload (half sets)',
     deloadWeeks: '{weeks} weeks since last deload — time to recover',
-    deloadHighLoad: '{sessions} sessions this block — load is high, deload this week',
+    deloadHighLoad:
+      '{sessions} sessions this block — load is high, deload this week',
     cycleProgress: 'Block {sessions}/{threshold} · last deload {date}',
-    cycleNoDeload: 'Block {sessions}/{threshold} · no deload yet'
+    cycleNoDeload: 'Block {sessions}/{threshold} · no deload yet',
   },
   day: {
     notFound: 'Workout day not found',
@@ -371,22 +412,24 @@ export default {
     platesAria: '{name} plate calculator',
     setsGroupAria: '{name} sets',
     timedBadge: 'Timer {time}',
-    restBadge: 'Rest {time}'
+    restBadge: 'Rest {time}',
   },
   program: {
     tag: 'Program',
     title: 'Training program',
-    intro: '{rotation} rotation — finish a day to advance. Tap any day for details.',
+    intro:
+      '{rotation} rotation — finish a day to advance. Tap any day for details.',
     customEdit: 'Customize program',
     todayPick: "Today's pick",
     ariaToday: "Today's pick: {cn} {name}, ~{min} min, {count} exercises{last}",
-    ariaLast: ', last {date}'
+    ariaLast: ', last {date}',
   },
   discover: {
     tag: 'Discover',
     title: 'Discover',
     subtitle: 'Library · Log · Tools · Stats',
-    intro: 'Training knowledge, history, trends, and calculators — all in one place.',
+    intro:
+      'Training knowledge, history, trends, and calculators — all in one place.',
     libraryTitle: 'Library',
     libraryDesc: 'Volume, RIR, recovery, and progression principles',
     recordsTitle: 'Workout log',
@@ -394,7 +437,7 @@ export default {
     toolsTitle: 'Tools',
     toolsDesc: '1RM, plate math, BMI, and more',
     statsTitle: 'Stats',
-    statsDesc: 'Calendar heatmap, volume trends, and PRs'
+    statsDesc: 'Calendar heatmap, volume trends, and PRs',
   },
   auth: {
     title: 'Account',
@@ -403,7 +446,8 @@ export default {
     goSettings: 'Go to settings',
     confirmSent: 'Confirmation email sent',
     checkInbox: 'Check inbox for {email}',
-    confirmHint: 'Click the link in the email to finish signup, then sign in here.',
+    confirmHint:
+      'Click the link in the email to finish signup, then sign in here.',
     backSignIn: 'Back to sign in',
     signIn: 'Sign in',
     signUp: 'Sign up',
@@ -414,7 +458,8 @@ export default {
     createAccount: 'Create account',
     noAccount: 'No account yet?',
     hasAccount: 'Already have an account?',
-    footnote: 'Sign in to back up workouts and restore on another device. Data is private to you.',
+    footnote:
+      'Sign in to back up workouts and restore on another device. Data is private to you.',
     signUpSuccess: 'Account created — signed in',
     signInSuccess: 'Signed in',
     syncSwitchedLoaded: 'Account switched — cloud data loaded',
@@ -430,16 +475,17 @@ export default {
     errInvalidEmail: 'Invalid email address',
     errRateLimit: 'Too many attempts — try again later',
     errNetwork: 'Network error — check connection and retry',
-    errGeneric: 'Something went wrong — try again'
+    errGeneric: 'Something went wrong — try again',
   },
   sync: {
     notSignedIn: 'Not signed in — cannot sync',
     cloudEmpty: 'No cloud data yet — upload first',
-    workoutUploaded: 'Workout synced to cloud ({sessions} sessions / {logs} logs)',
+    workoutUploaded:
+      'Workout synced to cloud ({sessions} sessions / {logs} logs)',
     workoutFailed: 'Cloud sync failed — upload manually in Settings',
     pulledFromCloud: 'Latest workouts synced from cloud',
     defaultError: 'Sync failed',
-    banner: 'Cloud sync failed: {reason}'
+    banner: 'Cloud sync failed: {reason}',
   },
   calc: {
     perSide: 'per side',
@@ -476,14 +522,17 @@ export default {
       barbell: { label: 'Barbell', hint: 'Total incl. bar' },
       ezbar: { label: 'EZ bar', hint: 'Total incl. bar' },
       smith: { label: 'Smith', hint: 'Loaded weight · adjustable bar' },
-      plateloaded: { label: 'Single-side load', hint: 'Loaded weight · no bar' },
+      plateloaded: {
+        label: 'Single-side load',
+        hint: 'Loaded weight · no bar',
+      },
       dumbbell: { label: 'Dumbbell', hint: 'Per dumbbell' },
       single: { label: 'Single bell', hint: 'Single implement weight' },
       machine: { label: 'Machine', hint: 'Stack weight' },
       cable: { label: 'Cable', hint: 'Stack weight' },
       plate: { label: 'Plate load', hint: 'Held weight total' },
-      bodyweight: { label: 'Bodyweight', hint: 'Added weight (0 = BW only)' }
-    }
+      bodyweight: { label: 'Bodyweight', hint: 'Added weight (0 = BW only)' },
+    },
   },
   plates: {
     perSide: 'Per side',
@@ -527,13 +576,14 @@ export default {
     inventorySettings: 'Plate inventory',
     inventoryTitle: 'Inventory',
     inventoryAria: 'Plate inventory toggles',
-    equipSettings: 'Equipment settings'
+    equipSettings: 'Equipment settings',
   },
   tools: {
     backDiscover: 'Discover',
     title: 'Tools',
     offline: 'Local only · no network needed',
-    contextNote: 'Also available from the calculator icon next to weight in focus mode',
+    contextNote:
+      'Also available from the calculator icon next to weight in focus mode',
     rmTitle: '1RM estimate',
     rmHint: 'Epley + Brzycki',
     weightLbs: 'Weight (lbs)',
@@ -575,7 +625,7 @@ export default {
     quickBumpAria: 'Quick adjust',
     unitAria: 'Weight unit',
     presets: 'Presets',
-    presetsAria: 'Weight presets'
+    presetsAria: 'Weight presets',
   },
   stats: {
     tag: 'Stats',
@@ -590,7 +640,8 @@ export default {
     weekLast: 'Last week',
     weekAgo: '{n}w ago',
     calendar: '{label} calendar',
-    calendarEmpty: 'No workouts yet. Complete a session to see it on the calendar.',
+    calendarEmpty:
+      'No workouts yet. Complete a session to see it on the calendar.',
     volumeByDay: 'Working sets by day (4 weeks)',
     setsCount: '{n} sets',
     exerciseTrend: 'Exercise completion & trends',
@@ -598,9 +649,10 @@ export default {
     trendAria: '{name} weight trend',
     customWeights: 'Custom weights',
     daySuffix: '',
-    footnote: 'Working sets = logged completed sets. Tap an exercise for weight/rep history.',
+    footnote:
+      'Working sets = logged completed sets. Tap an exercise for weight/rep history.',
     viewRecords: 'View workout log',
-    dow: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    dow: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
   },
   records: {
     title: 'Workout log',
@@ -610,7 +662,7 @@ export default {
     skipped: 'Skipped',
     repsChip: '{n} reps',
     footnote: 'Want calendar, volume trends, and PRs?',
-    viewStats: 'View stats'
+    viewStats: 'View stats',
   },
   schemes: {
     groupBasic: 'Basic',
@@ -621,23 +673,62 @@ export default {
     pair: 'Pair with',
     pairAria: '{name} superset pair',
     pickPair: 'Choose pair exercise',
-    straight: { label: 'Straight sets', short: 'Straight', description: 'Rest between sets, similar load', hint: '' },
-    ascending: { label: 'Ascending', short: 'Asc', description: 'Add weight each set', hint: 'Ascend weight each set; reps may drop slightly' },
-    descending: { label: 'Descending', short: 'Desc', description: 'Drop weight for metabolic stress', hint: 'Heaviest first, then drop weight and optionally add reps' },
-    pyramid: { label: 'Pyramid', short: 'Pyramid', description: 'Heaviest in the middle', hint: 'Weight up then down (e.g. 12→10→8→10→12)' },
-    reverse_pyramid: { label: 'Reverse pyramid', short: 'Rev pyr', description: 'Heaviest first set', hint: 'Heaviest first, lighter each set — good for main lifts' },
-    drop: { label: 'Drop set', short: 'Drop', description: 'Reduce load after failure', hint: 'Near failure, drop 20–30% and continue with minimal rest' },
-    superset: { label: 'Superset', short: 'Superset', description: 'Alternate two exercises', hint: '' },
-    supersetNoPair: 'Superset: alternate with a paired exercise — set the pair in program edit',
-    supersetMissing: 'Superset: paired exercise removed from this day — pick again in program edit',
-    supersetWith: 'Superset: alternate with "{name}" — finish both before resting'
+    straight: {
+      label: 'Straight sets',
+      short: 'Straight',
+      description: 'Rest between sets, similar load',
+      hint: '',
+    },
+    ascending: {
+      label: 'Ascending',
+      short: 'Asc',
+      description: 'Add weight each set',
+      hint: 'Ascend weight each set; reps may drop slightly',
+    },
+    descending: {
+      label: 'Descending',
+      short: 'Desc',
+      description: 'Drop weight for metabolic stress',
+      hint: 'Heaviest first, then drop weight and optionally add reps',
+    },
+    pyramid: {
+      label: 'Pyramid',
+      short: 'Pyramid',
+      description: 'Heaviest in the middle',
+      hint: 'Weight up then down (e.g. 12→10→8→10→12)',
+    },
+    reverse_pyramid: {
+      label: 'Reverse pyramid',
+      short: 'Rev pyr',
+      description: 'Heaviest first set',
+      hint: 'Heaviest first, lighter each set — good for main lifts',
+    },
+    drop: {
+      label: 'Drop set',
+      short: 'Drop',
+      description: 'Reduce load after failure',
+      hint: 'Near failure, drop 20–30% and continue with minimal rest',
+    },
+    superset: {
+      label: 'Superset',
+      short: 'Superset',
+      description: 'Alternate two exercises',
+      hint: '',
+    },
+    supersetNoPair:
+      'Superset: alternate with a paired exercise — set the pair in program edit',
+    supersetMissing:
+      'Superset: paired exercise removed from this day — pick again in program edit',
+    supersetWith:
+      'Superset: alternate with "{name}" — finish both before resting',
   },
   programEdit: {
     backProgram: 'Program',
     tag: 'Edit',
     title: 'Customize program',
     modified: '{n} changes',
-    intro: 'Edit sets, rest, reps, and schemes (ascending, pyramid, drop set, superset, etc.). Reorder with ↑↓ or remove exercises. Saved locally and included in backup export.',
+    intro:
+      'Edit sets, rest, reps, and schemes (ascending, pyramid, drop set, superset, etc.). Reorder with ↑↓ or remove exercises. Saved locally and included in backup export.',
     export: 'Export program config',
     import: 'Import program config',
     resetDefault: 'Restore defaults',
@@ -665,9 +756,11 @@ export default {
     toastExported: 'Program config exported',
     toastImported: 'Program config imported',
     importFailed: 'Import failed',
-    confirmReset: 'Restore all exercises to defaults? Custom sets and rest will be cleared.',
+    confirmReset:
+      'Restore all exercises to defaults? Custom sets and rest will be cleared.',
     toastReset: 'Defaults restored',
-    confirmDelete: 'Remove "{name}" from the program? Use Restore defaults to undo all edits.'
+    confirmDelete:
+      'Remove "{name}" from the program? Use Restore defaults to undo all edits.',
   },
   timer: {
     complete: 'Done',
@@ -680,11 +773,11 @@ export default {
     cancelWork: 'Cancel timer',
     cancelRest: 'Cancel rest',
     dec15: 'Subtract 15 seconds',
-    inc15: 'Add 15 seconds'
+    inc15: 'Add 15 seconds',
   },
   units: {
     lbsPerSide: 'LBS/side',
-    kgPerSide: 'KG/side'
+    kgPerSide: 'KG/side',
   },
   knowledge: {
     learnAbout: 'About {title}',
@@ -692,13 +785,13 @@ export default {
     learnPrefix: '{label}: about {title}',
     carouselAria: 'Recommended reading',
     carouselLabel: 'Read today',
-    carouselHint: 'Related to today\'s workout · swipe for more',
+    carouselHint: "Related to today's workout · swipe for more",
     shuffle: 'Shuffle picks',
     dismiss: 'Hide for this session',
     cardAria: '{title} — open article',
     viewFull: 'Read full article in library',
     ruleSep: ': ',
-    previewRef: 'Reference: {cols} (see full table in library)'
+    previewRef: 'Reference: {cols} (see full table in library)',
   },
   library: {
     title: 'Training library',
@@ -720,7 +813,7 @@ export default {
       rotation: 'Rotation',
       frequency: 'Frequency',
       'volume-landmarks': 'Volume landmarks',
-      mesocycle: 'Mesocycle'
+      mesocycle: 'Mesocycle',
     },
     categories: {
       volume: 'Volume',
@@ -731,7 +824,7 @@ export default {
       movement: 'Movement',
       periodization: 'Periodization',
       principles: 'Principles',
-      personal: 'Review'
-    }
-  }
-};
+      personal: 'Review',
+    },
+  },
+}

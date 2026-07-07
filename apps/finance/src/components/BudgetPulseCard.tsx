@@ -62,7 +62,7 @@ export function BudgetPulseCard({
       <div className="budget-pulse-top">
         <div className="budget-pulse-spent">
           <span className="label">{t("budget.spentMonth")}</span>
-          <span className="value">{money(progress.spent, privacy)}</span>
+          <span className="value records-metric">{money(progress.spent, privacy)}</span>
           {budget > 0 && (
             <span className="sub">
               {t("budget.budgetLine", { amount: money(budget, privacy), pace: paceLabel })}
@@ -71,7 +71,7 @@ export function BudgetPulseCard({
         </div>
         <div className="budget-pulse-today">
           <span className="label">{t("budget.todaySpent")}</span>
-          <span className="value">{money(progress.todaySpend, privacy)}</span>
+          <span className="value records-metric">{money(progress.todaySpend, privacy)}</span>
           {budget > 0 && progress.daysLeft > 0 && (
             <span className="sub">
               {t("budget.daysLeftDaily", {

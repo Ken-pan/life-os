@@ -7,6 +7,7 @@
 
   const isAmazon = /amazon\./i.test(location.hostname)
   const isBestBuy = /bestbuy\./i.test(location.hostname)
+  const isTarget = /target\./i.test(location.hostname)
   const opts = window.__WSD_CAPTURE_OPTS__ || {}
 
   /** @type {Record<string, unknown>} */
@@ -28,8 +29,10 @@
     skipped: !!opts.skipQuiescence,
   }
   if (!opts.skipQuiescence) {
-    const quietMs = opts.quietMs ?? (isAmazon || isBestBuy ? 120 : 400)
-    const timeoutMs = opts.timeoutMs ?? (isAmazon || isBestBuy ? 800 : 1500)
+    const quietMs =
+      opts.quietMs ?? (isAmazon || isBestBuy || isTarget ? 120 : 400)
+    const timeoutMs =
+      opts.timeoutMs ?? (isAmazon || isBestBuy || isTarget ? 800 : 1500)
     try {
       quiescence = {
         ...(await core.waitForQuiescence(timeoutMs, quietMs)),

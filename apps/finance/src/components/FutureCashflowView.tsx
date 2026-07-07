@@ -441,7 +441,7 @@ export function FutureCashflowView({
   ];
 
   return (
-    <div className="grid gap-5">
+    <div className="records-oneoff-panel">
       <p className="muted-note">{t("futureCashflow.intro")}</p>
 
       <section className="oneoff-section">

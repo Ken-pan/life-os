@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import type { FinanceData } from "../types";
 import { useLocale } from "../i18n/context";
 import { t } from "../i18n/translate";
@@ -21,7 +22,13 @@ import {
 } from "../engine/transactions";
 import { useTransactions } from "../store/transactions";
 import { PurchaseEnrichmentBlock } from "./PurchaseEnrichmentBlock";
+import { LedgerProductStrip } from "./LedgerProductStrip";
 import { hasPurchaseEnrichment } from "../engine/purchaseEnrichment";
+import {
+  ledgerAccountColumn,
+  ledgerMetaLine,
+  ledgerTitle,
+} from "../engine/ledgerDisplay";
 
 type Window = "month" | "3m" | "12m" | "all";
 
@@ -102,8 +109,8 @@ export function HistoryView({
   if (error) return <div className="card">{tl("history.loadFailed", { error })}</div>;
 
   return (
-    <div className="grid gap-4">
-      <p className="muted-note mb-1">
+    <div className="history-view">
+      <p className="muted-note history-intro mb-1">
         {tl("history.intro", {
           start: meta.dateRange.start,
           end: meta.dateRange.end,
@@ -111,65 +118,67 @@ export function HistoryView({
         })}
       </p>
 
-      {enrichedAmazonCount > 0 && (
-        <div className="card amazon-enrichment-banner">
-          <div className="amazon-enrichment-banner-text">
-            <strong>{tl("history.amazonBannerTitle", { count: enrichedAmazonCount })}</strong>
-            <p className="muted-note text-sm mb-0">{tl("history.amazonBannerHint")}</p>
+      <section className="history-summary">
+        {enrichedAmazonCount > 0 && (
+          <div className="card amazon-enrichment-banner">
+            <div className="amazon-enrichment-banner-text">
+              <strong>{tl("history.amazonBannerTitle", { count: enrichedAmazonCount })}</strong>
+              <p className="muted-note text-sm mb-0">{tl("history.amazonBannerHint")}</p>
+            </div>
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={() => {
+                setJumpLedgerSearch("Amazon");
+                ledgerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              {tl("history.amazonBannerAction")}
+            </button>
           </div>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={() => {
-              setJumpLedgerSearch("Amazon");
-              ledgerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-          >
-            {tl("history.amazonBannerAction")}
-          </button>
+        )}
+
+        <BudgetPulseCard data={data} onQuickAdd={onQuickAdd} />
+
+        <div className="card history-kpi-card">
+          <div className="grid history-kpi-grid">
+            <Kpi
+              label={tl("history.kpiAvgSpending")}
+              value={summary.avgMonthlySpending}
+              sub={
+                summary.monthsCounted === 1
+                  ? tl("history.kpiAvgSpendingSubOne")
+                  : tl("history.kpiAvgSpendingSub", { months: summary.monthsCounted })
+              }
+              privacy={privacy}
+            />
+            <Kpi
+              label={tl("history.kpiAvgIncome")}
+              value={summary.avgMonthlyIncome}
+              sub={tl("history.kpiAvgIncomeSub")}
+              privacy={privacy}
+            />
+            <Kpi
+              label={tl("history.kpiThisMonth", { month: latest?.month ?? "—" })}
+              value={latest?.spending ?? 0}
+              sub={
+                latest
+                  ? tl("history.kpiNetSub", { amount: signedMoney(latest.net, privacy) })
+                  : tl("history.kpiNoData")
+              }
+              privacy={privacy}
+            />
+            <Kpi
+              label={tl("history.kpiTrailing12")}
+              value={summary.trailing12mSpending}
+              sub={tl("history.kpiHighestMonth", {
+                amount: money(summary.highestMonth?.spending ?? 0, privacy),
+              })}
+              privacy={privacy}
+            />
+          </div>
         </div>
-      )}
-
-      {/* 预算脉搏：本月进度 + 今日已花 + 近 7 日 */}
-      <BudgetPulseCard data={data} onQuickAdd={onQuickAdd} />
-
-      {/* KPI 行 */}
-      <div className="grid kpi-row-4">
-        <Kpi
-          label={tl("history.kpiAvgSpending")}
-          value={summary.avgMonthlySpending}
-          sub={
-            summary.monthsCounted === 1
-              ? tl("history.kpiAvgSpendingSubOne")
-              : tl("history.kpiAvgSpendingSub", { months: summary.monthsCounted })
-          }
-          privacy={privacy}
-        />
-        <Kpi
-          label={tl("history.kpiAvgIncome")}
-          value={summary.avgMonthlyIncome}
-          sub={tl("history.kpiAvgIncomeSub")}
-          privacy={privacy}
-        />
-        <Kpi
-          label={tl("history.kpiThisMonth", { month: latest?.month ?? "—" })}
-          value={latest?.spending ?? 0}
-          sub={
-            latest
-              ? tl("history.kpiNetSub", { amount: signedMoney(latest.net, privacy) })
-              : tl("history.kpiNoData")
-          }
-          privacy={privacy}
-        />
-        <Kpi
-          label={tl("history.kpiTrailing12")}
-          value={summary.trailing12mSpending}
-          sub={tl("history.kpiHighestMonth", {
-            amount: money(summary.highestMonth?.spending ?? 0, privacy),
-          })}
-          privacy={privacy}
-        />
-      </div>
+      </section>
 
       <div className="history-mobile-insights-toggle">
         <button
@@ -334,15 +343,15 @@ function PlanReality({ data, actualMonthly }: { data: FinanceData; actualMonthly
       <div className="grid plan-reality-grid gap-3">
         <div className="kv-stack">
           <span className="text-secondary">{tl("history.plannedMonthly")}</span>
-          <span className="pr-value">{money(plannedMonthly, privacy)}</span>
+          <span className="pr-value records-metric">{money(plannedMonthly, privacy)}</span>
         </div>
         <div className="kv-stack">
           <span className="text-secondary">{tl("history.actualMonthly")}</span>
-          <span className="pr-value">{money(actualMonthly, privacy)}</span>
+          <span className="pr-value records-metric">{money(actualMonthly, privacy)}</span>
         </div>
         <div className="kv-stack">
           <span className="text-secondary">{tl("history.diff")}</span>
-          <span className={`pr-value ${depositDeltaClass(-diff)}`}>
+          <span className={`pr-value records-metric ${depositDeltaClass(-diff)}`}>
             {signedMoney(diff, privacy)}
           </span>
         </div>
@@ -370,9 +379,9 @@ function Kpi({
   privacy: boolean;
 }) {
   return (
-    <div className="card kpi">
+    <div className="history-kpi-cell">
       <span className="label">{label}</span>
-      <span className="value">{money(value, privacy)}</span>
+      <span className="value records-metric">{money(value, privacy)}</span>
       {sub && <span className="sub">{sub}</span>}
     </div>
   );
@@ -632,6 +641,11 @@ function LedgerRow({
   const signed = income !== 0 ? income : -spend;
   const dim = !t.inSpending && t.flow !== "income";
   const enriched = hasPurchaseEnrichment(t);
+  const title = ledgerTitle(t);
+  const metaLine = ledgerMetaLine(t, {
+    viaImport: (source) => tl("history.ledgerViaImport", { source }),
+  });
+  const accountCol = ledgerAccountColumn(t);
   const submitEdit = async () => {
     const payload = toTxnPayload({
       date,
@@ -677,33 +691,49 @@ function LedgerRow({
           <span className="lr-date">{t.date.slice(5)}</span>
           <div className="lr-main">
             <div className="lr-main-head">
-              <span className="lr-merchant">{t.merchant}</span>
+              <span className="lr-title">{title}</span>
               <span className={`lr-amt lr-amt--inline ${depositDeltaClass(signed)}`}>
                 {signed === 0 ? "—" : signedMoneyPrecise(signed, privacy)}
               </span>
             </div>
-            <span className="lr-cat">{t.category}</span>
+            {metaLine && <span className="lr-meta">{metaLine}</span>}
             {enriched && (
-              <PurchaseEnrichmentBlock
-                enrichment={t.purchaseEnrichment}
-                privacy={privacy}
-                chargeDate={t.date}
-                compact
-              />
+              <>
+                <LedgerProductStrip enrichment={t.purchaseEnrichment} privacy={privacy} />
+                <PurchaseEnrichmentBlock
+                  enrichment={t.purchaseEnrichment}
+                  privacy={privacy}
+                  chargeDate={t.date}
+                  compact
+                />
+              </>
             )}
           </div>
-          <span className="lr-acct text-muted">{t.account}</span>
+          {accountCol && <span className="lr-acct text-muted">{accountCol}</span>}
+          {!accountCol && <span className="lr-acct lr-acct--empty" aria-hidden />}
           <div className="lr-right">
             <span className={`lr-amt lr-amt--stacked ${depositDeltaClass(signed)}`}>
               {signed === 0 ? "—" : signedMoneyPrecise(signed, privacy)}
             </span>
             {t.id && (
               <span className="lr-actions">
-                <button className="btn ghost" disabled={busy} onClick={onStartEdit}>
-                  {tl("history.edit")}
+                <button
+                  type="button"
+                  className="icon-btn ledger-icon-btn"
+                  disabled={busy}
+                  onClick={onStartEdit}
+                  aria-label={tl("history.edit")}
+                >
+                  <Pencil size={15} aria-hidden />
                 </button>
-                <button className="btn ghost" disabled={busy} onClick={() => void onDelete()}>
-                  {tl("history.delete")}
+                <button
+                  type="button"
+                  className="icon-btn ledger-icon-btn ledger-icon-btn--danger"
+                  disabled={busy}
+                  onClick={() => void onDelete()}
+                  aria-label={tl("history.delete")}
+                >
+                  <Trash2 size={15} aria-hidden />
                 </button>
               </span>
             )}

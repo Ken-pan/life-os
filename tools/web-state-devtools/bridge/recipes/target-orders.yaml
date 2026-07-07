@@ -1,0 +1,52 @@
+# Target account orders — scroll + capture harvest (past year filter in script)
+# Run: WEB_STATE_ALLOW_TARGET=1 node scripts/target-harvest-past-year.mjs
+
+id: target-orders
+match:
+  urlPattern: 'target.*/orders|target.*/account/orders'
+
+vars:
+  year: '2025'
+  targetCount: 9999
+  scrollRounds: 35
+
+capture:
+  action: capture
+  fast: true
+  minItemsPerPage: 0
+  captureTimeoutMs: 45000
+  navigateTimeoutMs: 90000
+  wait:
+    selectors:
+      - 'main'
+      - 'a[href*="/orders"]'
+      - '[data-test*="order"]'
+      - '[class*="order"]'
+    minCount: 1
+    stableMs: 300
+    timeoutMs: 12000
+
+entities:
+  kind: list
+  source: adapter
+  mergeKey: ['detailUrl:/orders/([^/?#]+)', 'orderId']
+
+export:
+  outDir: target-export
+  basename: 'target-orders-past-year'
+  formats: [json, csv]
+  redact: [shipTo, address]
+
+follow:
+  enabled: true
+  field: detailUrl
+  max: 40
+  whenMissing: [orderTotal, lineItems]
+  wait:
+    selectors:
+      - 'a[href*="/p/"]'
+      - '[data-test*="productTitle"]'
+      - '[data-test*="orderItem"]'
+    minCount: 1
+    stableMs: 250
+    timeoutMs: 10000

@@ -370,6 +370,37 @@ describe("planNewTransactions", () => {
     expect(transfer.amount).toBe(-5.6);
     expect(transfer.inSpending).toBe(false);
   });
+
+  it("uses statement as merchant and real payment account, not import source label", () => {
+    const stmtEnv: CaptureEnvelope = {
+      ...env,
+      data: {
+        rows: [
+          {
+            date: "2026-07-03",
+            merchant: "Shopping",
+            category: "Shopping",
+            statement: "TARGET STORE T-1234",
+            account: "Chase ••4242",
+            amount: 42.1,
+            credit: false,
+            pending: false,
+            platformId: "tgt-1",
+          },
+        ],
+      },
+    };
+    const plan = planNewTransactions(stmtEnv, []);
+    expect(plan.txns).toHaveLength(1);
+    expect(plan.txns[0].merchant).toBe("TARGET STORE T-1234");
+    expect(plan.txns[0].account).toBe("Chase ••4242");
+  });
+
+  it("falls back to Unknown account when capture has no card", () => {
+    const plan = planNewTransactions(env, []);
+    const expense = plan.txns.find((t) => t.merchant === "Paris Baguette")!;
+    expect(expense.account).toBe("Unknown");
+  });
 });
 
 describe("flowForCaptureRow", () => {

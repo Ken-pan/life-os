@@ -44,8 +44,8 @@ const EXPLORATION_PATH = STORE_PATHS.latestExploration
 const EXPLORE_TRACE_PATH = STORE_PATHS.latestExploreTrace
 const ALLOW_ANY = process.env.WEB_STATE_ALLOW_ANY === '1'
 const ALLOW_AMAZON = process.env.WEB_STATE_ALLOW_AMAZON === '1' || ALLOW_ANY
-const ALLOW_BESTBUY =
-  process.env.WEB_STATE_ALLOW_BESTBUY === '1' || ALLOW_ANY
+const ALLOW_BESTBUY = process.env.WEB_STATE_ALLOW_BESTBUY === '1' || ALLOW_ANY
+const ALLOW_TARGET = process.env.WEB_STATE_ALLOW_TARGET === '1' || ALLOW_ANY
 
 fs.mkdirSync(DATA_DIR, { recursive: true })
 
@@ -89,6 +89,8 @@ function isUrlAllowed(urlString) {
     ALLOW_BESTBUY &&
     (host === 'bestbuy.com' || host.endsWith('.bestbuy.com'))
   )
+    return { ok: true }
+  if (ALLOW_TARGET && (host === 'target.com' || host.endsWith('.target.com')))
     return { ok: true }
   return {
     ok: false,
@@ -648,6 +650,6 @@ httpServer.listen(PORT, HOST, () => {
   console.log(`Web State Bridge v0.8 listening on http://${HOST}:${PORT}`)
   console.log(`WebSocket agent: ws://${HOST}:${PORT}/agent`)
   console.log(
-    `Dev whitelist: localhost, 127.0.0.1, *.netlify.app (ALLOW_ANY=${ALLOW_ANY}, ALLOW_AMAZON=${ALLOW_AMAZON}, ALLOW_BESTBUY=${ALLOW_BESTBUY})`,
+    `Dev whitelist: localhost, 127.0.0.1, *.netlify.app (ALLOW_ANY=${ALLOW_ANY}, ALLOW_AMAZON=${ALLOW_AMAZON}, ALLOW_BESTBUY=${ALLOW_BESTBUY}, ALLOW_TARGET=${ALLOW_TARGET})`,
   )
 })

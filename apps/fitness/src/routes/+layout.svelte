@@ -14,14 +14,17 @@
   import FitnessToolSheet from '$lib/components/FitnessToolSheet.svelte'
   import Toast from '$lib/components/Toast.svelte'
   import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte'
+  import PortraitGate from '$lib/components/PortraitGate.svelte'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
-  import { bindVisibilitySync } from '@life-os/sync'
+  import { bindViewportHeight, bindPwaForegroundResume } from '@life-os/theme'
+  import { shouldDeferFitnessForegroundSync } from '$lib/pwaResume.js'
   import {
     scheduleAutoCloudPush,
     scheduleBidirectionalSync,
   } from '$lib/sync.js'
-  import { initTimer } from '$lib/timer.svelte.js'
+  import { initTimer, timer } from '$lib/timer.svelte.js'
+  import { bindFitnessAudioCleanup } from '$lib/audio.js'
   import { getProgram } from '$lib/programRuntime.js'
   import { finalizeStaleSessions } from '$lib/session.js'
   import { todayDayId } from '$lib/state.svelte.js'
@@ -103,28 +106,24 @@
       setTimeout(() => toast(msg), 1400)
       scheduleAutoCloudPush()
     }
-    const cleanupTheme = bindAppThemeSystemChange()
-
     let cleanupTimer = () => {}
+    const cleanupTheme = bindAppThemeSystemChange()
+    const cleanupViewport = bindViewportHeight()
+
+    cleanupTimer = initTimer()
     const cleanupAuth = initAuth()
+    const cleanupAudio = bindFitnessAudioCleanup()
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then(() => {
-          cleanupTimer = initTimer()
-        })
-        .catch(() => {
-          cleanupTimer = initTimer()
-        })
-    } else {
-      cleanupTimer = initTimer()
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
     }
 
     return () => {
       cleanupTheme()
+      cleanupViewport()
       cleanupTimer()
       cleanupAuth()
+      cleanupAudio()
     }
   })
 
@@ -133,16 +132,20 @@
     applyLocale()
   })
 
-  /** 已登录时回到前台:双向同步(拉云端 + 推本机),适配多端 */
+  /** 已登录时回到前台：视口立刻校正；专注/计时中延后云同步 */
   $effect(() => {
     if (!auth.ready || !auth.user) return
-    return bindVisibilitySync(() => scheduleBidirectionalSync(), {
-      when: () => Boolean(auth.user),
+    return bindPwaForegroundResume({
+      onForeground: () => scheduleBidirectionalSync(),
+      shouldDefer: () =>
+        shouldDeferFitnessForegroundSync(page.url.pathname, timer),
     })
   })
 </script>
 
 <DocumentHead appId="fitness" {pageTitle} locale={documentLocale} />
+
+<PortraitGate enabled={S.settings.lockPortraitOnPhone !== false} />
 
 <a class="skip-link" href="#main-content">{t('common.skipToContent')}</a>
 

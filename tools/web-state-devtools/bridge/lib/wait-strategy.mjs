@@ -9,12 +9,12 @@ export const RECIPE_WAIT_PRESETS = {
       selectors: [
         'a[href*="order-details"]',
         'a[href*="orderID="]',
-        '.order-card',
-        '[class*="order-card"]',
+        '.order-card.js-order-card',
+        'img[src*="media-amazon.com/images/I/"]',
       ],
       minCount: 1,
-      stableMs: 200,
-      timeoutMs: 8000,
+      stableMs: 300,
+      timeoutMs: 12000,
       pollMs: 40,
       requirePrice: true,
     },
@@ -23,10 +23,22 @@ export const RECIPE_WAIT_PRESETS = {
   'bestbuy-orders': {
     wait: {
       selectors: [
+        '[data-testid="order-item"]',
+        '[data-testid="virtuoso-item-list"]',
         'main',
-        'a[href*="/profile/ss/orders"]',
-        'a[href*="purchasehistory"]',
-        '[data-testid*="order"]',
+      ],
+      minCount: 1,
+      stableMs: 400,
+      timeoutMs: 15000,
+    },
+    fast: true,
+  },
+  'target-orders': {
+    wait: {
+      selectors: [
+        'main',
+        'a[href*="/orders"]',
+        '[data-test*="order"]',
         '[class*="order"]',
       ],
       minCount: 1,

@@ -2,6 +2,18 @@
   "mcpServers": {
     "supabase": {
       "url": "https://mcp.supabase.com/mcp?project_ref=iueozzuctstwvzbcxcyh&features=docs%2Cdatabase%2Caccount%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
+    },
+    "web-state-devtools": {
+      "command": "node",
+      "args": [
+        "/Users/kenpan/「Projects」/life-os/tools/web-state-devtools/bridge/mcp-server.mjs"
+      ],
+      "env": {
+        "WEB_STATE_BRIDGE_URL": "http://127.0.0.1:17321",
+        "WEB_STATE_ALLOW_AMAZON": "1",
+        "WEB_STATE_ALLOW_BESTBUY": "1",
+        "WEB_STATE_ALLOW_TARGET": "1"
+      }
     }
   }
 }

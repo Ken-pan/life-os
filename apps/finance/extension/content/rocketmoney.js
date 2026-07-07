@@ -452,6 +452,23 @@
       }
     }
 
+    // 付款账户：••4242 或 "Chase ••4242" 等形式（非 Rocket Money 数据源名）。
+    let account;
+    for (const c of cells) {
+      const text = c.textContent.trim();
+      if (!text || parseMoney(text) != null) continue;
+      const compact = text.replace(/\s+/g, "");
+      if (/^••\d{4}$/.test(compact)) {
+        account = text.trim();
+        break;
+      }
+      const inst = text.match(/^(.+?)\s+[•·]{2}\s*(\d{4})$/);
+      if (inst) {
+        account = `${inst[1].trim()} ••${inst[2]}`;
+        break;
+      }
+    }
+
     const idMatch = rowEl.getAttribute("aria-label")?.match(/\(([A-Za-z0-9+/=]+)\)\s*$/);
     return {
       date,
@@ -461,6 +478,7 @@
       credit,
       pending,
       statement,
+      account,
       platformId: idMatch?.[1],
     };
   }

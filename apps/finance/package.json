@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "fetch-logos": "node scripts/fetch-institution-logos.mjs",
     "link:amazon": "node --experimental-strip-types scripts/link-amazon-orders.mjs",
+    "link:purchase": "node --experimental-strip-types scripts/link-purchase-orders.mjs",
     "qa:amazon-enrichment": "node scripts/amazon-enrichment-screenshot-qa.mjs",
     "guard:overflow": "vitest run src/debug/overflowGuard.test.ts",
     "qa:screenshots": "node scripts/ui-main-flows-screenshot-qa.mjs"

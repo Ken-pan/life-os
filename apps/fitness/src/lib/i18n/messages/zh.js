@@ -6,7 +6,7 @@ export default {
     discover: '发现',
     settings: '设置',
     mainAria: '主导航',
-    brandTag: '训练 Companion'
+    brandTag: '训练 Companion',
   },
   common: {
     save: '保存',
@@ -23,7 +23,7 @@ export default {
     today: '今天',
     daysAgo: '{n} 天前',
     noRecord: '暂无记录',
-    perSide: '/侧'
+    perSide: '/侧',
   },
   layout: {
     titleToday: '今日',
@@ -40,7 +40,7 @@ export default {
     titleSummary: '{day} · 训练总结',
     titleDayOverview: '{day} 训练概览',
     titleDefault: 'FITNESS.OS',
-    autoFinalize: '已自动补记 {count} 次未完成的训练'
+    autoFinalize: '已自动补记 {count} 次未完成的训练',
   },
   home: {
     todayPick: '今日推荐',
@@ -86,7 +86,7 @@ export default {
       '从 <b>{todayDay}</b> 日开始。练完后在总结页点「完成训练」，下次会自动推荐下一天。',
     lastLabel: '{day} · {when}',
     trainingCoverAlt: '{day}训练',
-    appBarToday: '今天 · {day}'
+    appBarToday: '今天 · {day}',
   },
   focus: {
     adoptedWeight: '已采纳建议重量',
@@ -127,7 +127,7 @@ export default {
     setProgressAria: '组进度：共 {total} 组，已完成 {done} 组',
     completeSetAria: '完成第 {set} 组，共 {total} 组，已完成 {done} 组',
     nextTimer: '下一个 · {name}',
-    elapsedAria: '本次训练用时'
+    elapsedAria: '本次训练用时',
   },
   setLog: {
     aria: '记录本组 reps 与 RIR',
@@ -139,7 +139,7 @@ export default {
     decReps: '减少 reps',
     incReps: '增加 reps',
     estimate1rm: '估算 1RM ≈ {weight} lbs',
-    skipLog: '跳过记录'
+    skipLog: '跳过记录',
   },
   skip: {
     aria: '跳过动作',
@@ -150,7 +150,7 @@ export default {
     discomfort: '身体不适',
     other: '其他',
     alternatives: '替代动作',
-    confirm: '确认跳过'
+    confirm: '确认跳过',
   },
   summary: {
     title: '{day} · 训练总结',
@@ -173,7 +173,7 @@ export default {
     continueWorkout: '继续训练',
     toastSupp: '{day} · 补充训练已记录',
     toastDone: '{day} 练完了 · 下次建议练 {next}',
-    adoptAllToast: '已采纳全部建议'
+    adoptAllToast: '已采纳全部建议',
   },
   weight: {
     title: '调整重量',
@@ -197,7 +197,7 @@ export default {
     heavier: '较重 {n}',
     decStep: '减 {step} {unit}',
     incStep: '加 {step} {unit}',
-    updated: '重量已更新'
+    updated: '重量已更新',
   },
   settings: {
     tag: '设置',
@@ -227,9 +227,11 @@ export default {
     notifyDenied: '通知权限已被拒绝，请在浏览器 / 系统设置中重新开启',
     notifyIos:
       'iPhone / iPad 在 Safari 标签页里收不到后台通知。请用 Safari 打开本站 → 分享 →「添加到主屏幕」→ 从主屏幕打开后再开启',
-    notifyInApp: '微信 / QQ 内置浏览器不支持通知。请点右上角用 Safari 或 Chrome 打开，或添加到主屏幕',
+    notifyInApp:
+      '微信 / QQ 内置浏览器不支持通知。请点右上角用 Safari 或 Chrome 打开，或添加到主屏幕',
     notifyUnsupported: '当前浏览器不支持通知；计时提示音在前台仍可用',
-    notifyDefault: '允许后，离开网页也能收到休息结束提醒（iPhone 需先添加到主屏幕）',
+    notifyDefault:
+      '允许后，离开网页也能收到休息结束提醒（iPhone 需先添加到主屏幕）',
     notifyAria: '后台通知',
     enableNotify: '开启通知',
     appearance: '外观',
@@ -242,6 +244,10 @@ export default {
     themeDark: '深色',
     themeLight: '浅色',
     themeAuto: '系统',
+    lockPortraitOnPhone: '手机锁定竖屏',
+    lockPortraitOnPhoneDesc: '在手机上横屏时提示旋转回竖屏（PWA 推荐开启）',
+    rotatePortrait: '请旋转至竖屏',
+    rotatePortraitHint: '手机请使用竖屏模式',
     logging: '训练记录',
     logDetail: '每组次数 / RIR',
     logDetailDesc: '专注模式下，完成一组后是否记录次数和 RIR',
@@ -275,7 +281,8 @@ export default {
     toastLocaleEn: 'Language: English',
     confirmClearToday: '确定清空今天的训练记录？重量和设置不会动。',
     toastClearToday: '今日记录已清空',
-    confirmResetAll: '确定重置全部数据？自定义重量、训练记录和设置都会清空，且无法恢复。',
+    confirmResetAll:
+      '确定重置全部数据？自定义重量、训练记录和设置都会清空，且无法恢复。',
     toastResetAll: '已全部重置',
     toastUploaded: '已上传：{sessions} 次训练 / {logs} 条动作记录',
     confirmCloudReplace: '用云端数据覆盖本机？本机未上传的改动会丢失。',
@@ -284,7 +291,7 @@ export default {
     toastSignOut: '已退出登录，本机数据保留',
     toastImportMerge: '备份已合并导入',
     toastImportReplace: '备份已覆盖导入',
-    importFailed: '导入失败'
+    importFailed: '导入失败',
   },
   coach: {
     deloadTitle: '减载提醒',
@@ -294,24 +301,29 @@ export default {
       '近 7 天平均 RIR 只有 {avgRir}（{failurePct}% 的组练到力竭）。恢复跟不上会影响增长，接下来几天多数组留 1–2 RIR{extra}。',
     fatigueExtra: '，或考虑提前安排减载',
     intensityLowTitle: '强度偏保守',
-    intensityLowBody: '近 7 天平均 RIR 有 {avgRir}，离力竭太远刺激不足。正式组建议练到 RIR 0–3 区间。',
+    intensityLowBody:
+      '近 7 天平均 RIR 有 {avgRir}，离力竭太远刺激不足。正式组建议练到 RIR 0–3 区间。',
     gapTitle: '休息间隔较长',
     gapBodyLong:
       '距上次训练 {days} 天了。今天重量先减 5–10%，每组留 2–3 RIR，一两次就能找回状态。',
-    gapBodyShort: '距上次训练 {days} 天了。今天前几组留 2–3 RIR，别一上来就冲大重量。',
+    gapBodyShort:
+      '距上次训练 {days} 天了。今天前几组留 2–3 RIR，别一上来就冲大重量。',
     freqHighTitle: '本周频率偏高',
     freqHighBody: '近 7 天已练 {count} 次。注意睡眠与蛋白质，避免连续力竭。',
     freqLowTitle: '本周训练偏少',
-    freqLowBody: '想增肌的话，{program} 最好每周练满 {daysPerWeek} 次。完成后记得记录。',
+    freqLowBody:
+      '想增肌的话，{program} 最好每周练满 {daysPerWeek} 次。完成后记得记录。',
     resumeTitle: '训练尚未完成',
     resumeBody: '今天 {day} 已完成 {done}/{total} 组（{pct}%），点击下方继续。',
     progressionTitle: '加重建议',
     progressionBody: '今天 {names}{suffix}有加重建议，可在训练中一键采纳。',
     progressionSuffix: ' 等动作',
     deloadWeightsTitle: '减载配重',
-    deloadWeightsBody: '{names}。减载周建议重量降约 10%，组数减半，优先保证动作质量。',
+    deloadWeightsBody:
+      '{names}。减载周建议重量降约 10%，组数减半，优先保证动作质量。',
     regressionTitle: '建议降重',
-    regressionBody: '{names}。连续两次没做到目标下限，降重把每组次数和动作质量找回来。',
+    regressionBody:
+      '{names}。连续两次没做到目标下限，降重把每组次数和动作质量找回来。',
     plateauTitle: '平台期信号',
     plateauBody:
       '{name} 已连续 {sessions} 次停在 {weight} {unit} 且次数没涨。{extra}',
@@ -325,9 +337,10 @@ export default {
     skipAlt: '器材总被占的话，直接在计划里换成 {alt} 更实际。',
     skipNoAlt: '不合适就在计划编辑里换一个练同部位的动作，别空着。',
     postureTitle: '体态重点',
-    postureBody: '面拉和划船别敷衍——圆肩改善靠肩胛后缩与后束质量；山羊挺身专注后链。',
+    postureBody:
+      '面拉和划船别敷衍——圆肩改善靠肩胛后缩与后束质量；山羊挺身专注后链。',
     armsTitle: '上肢专项',
-    armsBody: '弯举避免借力甩腰，下压时上臂贴紧。质量优先于盲目加重。'
+    armsBody: '弯举避免借力甩腰，下压时上臂贴紧。质量优先于盲目加重。',
   },
   progression: {
     lineIncrease: '{name} 建议 {weight} (+{delta} {unit})',
@@ -339,20 +352,22 @@ export default {
     deloadDecrease: '处于减载期，建议重量降 10% 优先恢复动作质量',
     gapHoldLong: '距上次训练较久，今天先用原重量找回状态，别急着加重',
     gapHoldShort: '距上次训练几天了，今天先稳原重量，留 2–3 RIR 再考虑加重',
-    toppedIncrease: '上次每组都打满 {max} 次还有余力，加 {delta} 重新从区间下限开始',
+    toppedIncrease:
+      '上次每组都打满 {max} 次还有余力，加 {delta} 重新从区间下限开始',
     bothSolidIncrease: '连续两次做满目标次数且留有余力，建议加 {delta}',
-    failedDecrease: '连续两次没做到目标下限，建议先降 ~7% 把每组次数和动作质量找回来',
+    failedDecrease:
+      '连续两次没做到目标下限，建议先降 ~7% 把每组次数和动作质量找回来',
     lastFailed: '上次没做满目标下限，重量不变，先把次数补回来',
     lastGrinding: '上次平均 RIR 不足 1，太接近力竭，重量不变，恢复好再冲',
     defaultRepPush: '重量不变，把每组次数往 {max} 推，打满上限就加重',
-    e1rmCap: '新重量超出历史力量水平估算，先保持重量把次数推稳'
+    e1rmCap: '新重量超出历史力量水平估算，先保持重量把次数推稳',
   },
   phase: {
     deloadSessions: '已连续训练 {sessions} 次，建议安排一次减载（组数减半）',
     deloadWeeks: '距上次减载已过 {weeks} 周，建议安排减载恢复',
     deloadHighLoad: '本周期已训练 {sessions} 次，负荷偏高，建议减载一周',
     cycleProgress: '本周期 {sessions}/{threshold} 次 · 上次减载 {date}',
-    cycleNoDeload: '本周期 {sessions}/{threshold} 次 · 尚未安排减载'
+    cycleNoDeload: '本周期 {sessions}/{threshold} 次 · 尚未安排减载',
   },
   day: {
     notFound: '找不到这一天的训练',
@@ -371,7 +386,7 @@ export default {
     platesAria: '{name} 杠铃片凑重',
     setsGroupAria: '{name} 组数',
     timedBadge: '计时 {time}',
-    restBadge: '休息 {time}'
+    restBadge: '休息 {time}',
   },
   program: {
     tag: '计划',
@@ -380,7 +395,7 @@ export default {
     customEdit: '自定义计划',
     todayPick: '今日推荐',
     ariaToday: '今日推荐：{cn} {name}，约 {min} 分钟，{count} 个动作{last}',
-    ariaLast: '，上次 {date}'
+    ariaLast: '，上次 {date}',
   },
   discover: {
     tag: '发现',
@@ -394,7 +409,7 @@ export default {
     toolsTitle: '健身工具',
     toolsDesc: '1RM、凑重、BMI 等计算器',
     statsTitle: '训练统计',
-    statsDesc: '日历热力、容量趋势与动作 PR'
+    statsDesc: '日历热力、容量趋势与动作 PR',
   },
   auth: {
     title: '账号',
@@ -414,7 +429,8 @@ export default {
     createAccount: '创建账号',
     noAccount: '还没有账号？',
     hasAccount: '已有账号？',
-    footnote: '登录后可将训练记录备份到云端，换设备也能恢复。数据仅你本人可见。',
+    footnote:
+      '登录后可将训练记录备份到云端，换设备也能恢复。数据仅你本人可见。',
     signUpSuccess: '注册成功，已登录',
     signInSuccess: '登录成功',
     syncSwitchedLoaded: '已切换账号，并载入该账号的云端数据',
@@ -430,7 +446,7 @@ export default {
     errInvalidEmail: '邮箱格式不正确',
     errRateLimit: '操作太频繁，请稍后再试',
     errNetwork: '网络异常，请检查网络后重试',
-    errGeneric: '操作失败，请重试'
+    errGeneric: '操作失败，请重试',
   },
   sync: {
     notSignedIn: '尚未登录，无法同步',
@@ -439,7 +455,7 @@ export default {
     workoutFailed: '云端同步失败，可在设置页手动上传',
     pulledFromCloud: '已从云端同步最新训练记录',
     defaultError: '同步失败',
-    banner: '云同步失败：{reason}'
+    banner: '云同步失败：{reason}',
   },
   calc: {
     perSide: '每侧',
@@ -482,8 +498,8 @@ export default {
       machine: { label: '器械', hint: '配重片总重' },
       cable: { label: '绳索', hint: '配重片总重' },
       plate: { label: '负重片', hint: '手持负重总重' },
-      bodyweight: { label: '自重', hint: '附加负重（0 = 纯自重）' }
-    }
+      bodyweight: { label: '自重', hint: '附加负重（0 = 纯自重）' },
+    },
   },
   plates: {
     perSide: '每侧',
@@ -527,7 +543,7 @@ export default {
     inventorySettings: '铃片库存设置',
     inventoryTitle: '片库',
     inventoryAria: '铃片库存开关',
-    equipSettings: '器械设置'
+    equipSettings: '器械设置',
   },
   tools: {
     backDiscover: '发现',
@@ -575,7 +591,7 @@ export default {
     quickBumpAria: '快捷加减',
     unitAria: '重量单位',
     presets: '常用重量',
-    presetsAria: '常用重量'
+    presetsAria: '常用重量',
   },
   stats: {
     tag: '统计',
@@ -600,7 +616,7 @@ export default {
     daySuffix: '日',
     footnote: '有效组 = 你记录里完成的组数。点击动作名可查看重量与次数变化。',
     viewRecords: '查看训练记录',
-    dow: ['日', '一', '二', '三', '四', '五', '六']
+    dow: ['日', '一', '二', '三', '四', '五', '六'],
   },
   records: {
     title: '训练记录',
@@ -610,7 +626,7 @@ export default {
     skipped: '跳过',
     repsChip: '{n} 次',
     footnote: '需要日历、容量趋势和 PR？',
-    viewStats: '查看训练统计'
+    viewStats: '查看训练统计',
   },
   schemes: {
     groupBasic: '基础',
@@ -621,23 +637,60 @@ export default {
     pair: '配对',
     pairAria: '{name} 超级组配对',
     pickPair: '选择配对动作',
-    straight: { label: '直组', short: '直组', description: '组间休息，重量组组相近', hint: '' },
-    ascending: { label: '递增组', short: '递增', description: '每组加重，前几组热身', hint: '递增：每组加重，次数可略减，组间休息照常' },
-    descending: { label: '递减组', short: '递减', description: '重量递减，代谢压力', hint: '递减：首组最重，逐组减重量、可加次数，保持动作质量' },
-    pyramid: { label: '金字塔', short: '金字塔', description: '中间最重', hint: '金字塔：重量先升后降（如 12→10→8→10→12），控制离心' },
-    reverse_pyramid: { label: '逆金字塔', short: '逆金字塔', description: '第一组最重', hint: '逆金字塔：首组最重，逐组减重加次，适合主项复合动作' },
-    drop: { label: 'Drop Set', short: 'Drop', description: '力竭后减重量续做', hint: 'Drop Set：接近力竭后立即降重 20–30% 连续做，组间几乎不休' },
-    superset: { label: '超级组', short: '超级组', description: '两个动作交替，组间几乎无休', hint: '' },
-    supersetNoPair: '超级组：与配对动作交替做，两组间几乎不休；可在计划编辑里指定配对动作',
+    straight: {
+      label: '直组',
+      short: '直组',
+      description: '组间休息，重量组组相近',
+      hint: '',
+    },
+    ascending: {
+      label: '递增组',
+      short: '递增',
+      description: '每组加重，前几组热身',
+      hint: '递增：每组加重，次数可略减，组间休息照常',
+    },
+    descending: {
+      label: '递减组',
+      short: '递减',
+      description: '重量递减，代谢压力',
+      hint: '递减：首组最重，逐组减重量、可加次数，保持动作质量',
+    },
+    pyramid: {
+      label: '金字塔',
+      short: '金字塔',
+      description: '中间最重',
+      hint: '金字塔：重量先升后降（如 12→10→8→10→12），控制离心',
+    },
+    reverse_pyramid: {
+      label: '逆金字塔',
+      short: '逆金字塔',
+      description: '第一组最重',
+      hint: '逆金字塔：首组最重，逐组减重加次，适合主项复合动作',
+    },
+    drop: {
+      label: 'Drop Set',
+      short: 'Drop',
+      description: '力竭后减重量续做',
+      hint: 'Drop Set：接近力竭后立即降重 20–30% 连续做，组间几乎不休',
+    },
+    superset: {
+      label: '超级组',
+      short: '超级组',
+      description: '两个动作交替，组间几乎无休',
+      hint: '',
+    },
+    supersetNoPair:
+      '超级组：与配对动作交替做，两组间几乎不休；可在计划编辑里指定配对动作',
     supersetMissing: '超级组：配对动作已不在本日计划中，请在计划编辑里重新选择',
-    supersetWith: '超级组：与「{name}」交替，一组接一组，全部做完再休息'
+    supersetWith: '超级组：与「{name}」交替，一组接一组，全部做完再休息',
   },
   programEdit: {
     backProgram: '计划',
     tag: '编辑',
     title: '自定义计划',
     modified: '{n} 项已修改',
-    intro: '可以修改组数、休息时间、目标次数，以及组次方案（递增、金字塔、Drop Set、超级组等）。用 ↑↓ 调整动作顺序，不需要的动作可删除。修改保存在本机，导出备份时会一并带走。',
+    intro:
+      '可以修改组数、休息时间、目标次数，以及组次方案（递增、金字塔、Drop Set、超级组等）。用 ↑↓ 调整动作顺序，不需要的动作可删除。修改保存在本机，导出备份时会一并带走。',
     export: '导出计划配置',
     import: '导入计划配置',
     resetDefault: '恢复默认',
@@ -660,14 +713,15 @@ export default {
     incRest: '增加休息',
     resetExercise: '重置此动作',
     poolTitle: '可选动作库 · {n} 项',
-    poolHint: '主流替代动作，添加后会在专注模式中出现。默认计划未包含的动作用此补充。',
+    poolHint:
+      '主流替代动作，添加后会在专注模式中出现。默认计划未包含的动作用此补充。',
     add: '添加',
     toastExported: '计划配置已导出',
     toastImported: '计划配置已导入',
     importFailed: '导入失败',
     confirmReset: '恢复全部动作为默认计划？自定义的组数和休息会被清除。',
     toastReset: '已恢复默认计划',
-    confirmDelete: '从计划中删除「{name}」？可在「恢复默认」中还原整份计划。'
+    confirmDelete: '从计划中删除「{name}」？可在「恢复默认」中还原整份计划。',
   },
   timer: {
     complete: '完成',
@@ -680,11 +734,11 @@ export default {
     cancelWork: '取消计时',
     cancelRest: '取消休息',
     dec15: '减少 15 秒',
-    inc15: '增加 15 秒'
+    inc15: '增加 15 秒',
   },
   units: {
     lbsPerSide: 'LBS/侧',
-    kgPerSide: 'KG/侧'
+    kgPerSide: 'KG/侧',
   },
   knowledge: {
     learnAbout: '了解{title}',
@@ -698,7 +752,7 @@ export default {
     cardAria: '{title}，点击查看详情',
     viewFull: '在资料库查看全文',
     ruleSep: '：',
-    previewRef: '参考：{cols}（见资料库完整表格）'
+    previewRef: '参考：{cols}（见资料库完整表格）',
   },
   library: {
     title: '训练资料',
@@ -720,7 +774,7 @@ export default {
       rotation: '训练轮换',
       frequency: '训练频率',
       'volume-landmarks': '容量地标',
-      mesocycle: '增肌周期'
+      mesocycle: '增肌周期',
     },
     categories: {
       volume: '容量',
@@ -731,7 +785,7 @@ export default {
       movement: '动作',
       periodization: '周期',
       principles: '原则',
-      personal: '复盘'
-    }
-  }
-};
+      personal: '复盘',
+    },
+  },
+}

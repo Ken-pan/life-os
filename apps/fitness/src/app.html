@@ -51,6 +51,14 @@
         if (meta) meta.content = resolved === 'light' ? '#f4f4f3' : '#0d0d0e';
       } catch (e) {}
     })();
+    (function () {
+      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      document.documentElement.style.setProperty('--app-vh', h + 'px');
+      var standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator && window.navigator.standalone === true);
+      document.documentElement.classList.toggle('standalone-pwa', standalone);
+    })();
   </script>
   %sveltekit.head%
 </head>

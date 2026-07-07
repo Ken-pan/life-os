@@ -1,10 +1,11 @@
 import { S } from './state.svelte.js'
 import {
   playTimerChime,
-  unlockAudio,
-  releaseAudio,
+  primeFitnessAudio,
+  closeFitnessAudio,
   cancelScheduledCues,
-  scheduleRestCues,
+  playTenSecondWarning,
+  playCountdownTick,
   previewRestCountdown,
 } from './audio.js'
 
@@ -76,7 +77,7 @@ function finishTimer(fromSw = false) {
     timer.showDone = true
     doneShowTimeout = null
   }, 200)
-  playChime()
+  void playChime()
   if (!fromSw) notifyRestComplete()
   if (
     S.settings.sound &&
@@ -101,6 +102,7 @@ function finishTimer(fromSw = false) {
       setTimeout(() => {
         timer.readyPulse = false
       }, 1200)
+      void closeFitnessAudio()
     }, 1800)
     return
   }
@@ -112,6 +114,7 @@ function finishTimer(fromSw = false) {
       timer.showDone = false
       timer.status = ''
       timer.context = null
+      void closeFitnessAudio()
     }, 400)
   }, 2800)
 }
@@ -159,13 +162,6 @@ export function restPhase() {
   return 'normal'
 }
 
-function rescheduleRestCues() {
-  cancelScheduledCues()
-  if (timer.mode === 'rest' && S.settings.sound && timer.remain > 0) {
-    scheduleRestCues(timer.remain)
-  }
-}
-
 /**
  * @param {string | number} cue 'warn10' | 5..1
  */
@@ -176,6 +172,7 @@ function fireRestCue(cue) {
 
   if (cue === 'warn10') {
     timer.status = 'urgent'
+    if (S.settings.sound) void playTenSecondWarning()
     if (
       S.settings.sound &&
       typeof navigator !== 'undefined' &&
@@ -188,6 +185,7 @@ function fireRestCue(cue) {
 
   if (typeof cue === 'number' && cue >= 1 && cue <= 5) {
     timer.status = 'urgent'
+    if (S.settings.sound) void playCountdownTick(cue)
     if (
       cue === 1 &&
       S.settings.sound &&
@@ -213,7 +211,6 @@ function refreshStatus() {
 }
 
 export function startTimer(secs, name, context = null, options = {}) {
-  if (S.settings.sound) unlockAudio()
   clearTimers()
   cancelSwTimer()
   cancelScheduledCues()
@@ -231,7 +228,11 @@ export function startTimer(secs, name, context = null, options = {}) {
   timer.inline = options.inline ?? false
   timer.visible = true
   onCompleteCallback = options.onComplete ?? null
-  rescheduleRestCues()
+
+  if (S.settings.sound) {
+    void primeFitnessAudio()
+  }
+
   ticker = setInterval(tick, TICK_MS)
   scheduleSwTimer()
 }
@@ -355,7 +356,7 @@ export function cancelTimer() {
   clearTimers()
   cancelSwTimer()
   cancelScheduledCues()
-  releaseAudio()
+  void closeFitnessAudio()
   playedCues = new Set()
   onCompleteCallback = null
   endAt = 0
@@ -381,7 +382,6 @@ export function addTime(delta) {
   timer.remain += delta
   playedCues = new Set()
   refreshStatus()
-  rescheduleRestCues()
   scheduleSwTimer()
 }
 
@@ -392,7 +392,6 @@ export function subTime(delta) {
   if (timer.remain > timer.total) timer.total = timer.remain
   playedCues = new Set()
   refreshStatus()
-  rescheduleRestCues()
   scheduleSwTimer()
 }
 
@@ -437,16 +436,16 @@ export function initTimer() {
   }
 }
 
-function playChime() {
+async function playChime() {
   if (!S.settings.sound) {
-    releaseAudio()
+    await closeFitnessAudio()
     return
   }
-  playTimerChime(timer.mode === 'work' ? 'work' : 'rest')
+  await playTimerChime(timer.mode === 'work' ? 'work' : 'rest')
 }
 
 /** 设置页试听提示音 */
-export function previewTimerChime() {
-  unlockAudio()
-  previewRestCountdown()
+export async function previewTimerChime() {
+  await primeFitnessAudio()
+  await previewRestCountdown()
 }

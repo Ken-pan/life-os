@@ -198,7 +198,7 @@ export function CashFlowsView() {
     });
 
   return (
-    <div className="accounts-section">
+    <div className="accounts-section records-flow-panel">
       <div className="section-head">
         <h2 className="section-title">{t("cashFlows.sectionTitle")}</h2>
         <button className="icon-btn" onClick={() => setAddFlowOpen((v) => !v)}>

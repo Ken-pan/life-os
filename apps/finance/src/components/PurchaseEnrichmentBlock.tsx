@@ -3,6 +3,10 @@ import { useLocale } from "../i18n/context";
 import { moneyPrecise } from "../format";
 import type { PurchaseEnrichment } from "../engine/purchaseEnrichment";
 import { uniqueLineItems } from "../engine/purchaseEnrichment";
+import {
+  isReturnLikeEnrichment,
+  returnStatusLabelKey,
+} from "../engine/purchaseReturnStatus";
 
 export function PurchaseEnrichmentBlock({
   enrichment,
@@ -20,10 +24,14 @@ export function PurchaseEnrichmentBlock({
   const [open, setOpen] = useState(!compact);
   const items = uniqueLineItems(enrichment.lineItems);
   const hasItemPrices = items.some((li) => li.price != null);
+  const returnInfo = enrichment.returnInfo;
+  const showReturnBadge = isReturnLikeEnrichment(returnInfo) || returnInfo?.isRefundCredit;
   const orderLabel =
     enrichment.source === "amazon"
       ? tl("history.amazonOrder")
-      : tl("history.purchaseOrder");
+      : enrichment.source === "bestbuy"
+        ? tl("history.bestBuyOrder")
+        : tl("history.purchaseOrder");
 
   return (
     <div className="purchase-enrichment">
@@ -35,6 +43,15 @@ export function PurchaseEnrichmentBlock({
           aria-expanded={open}
         >
           <span className="purchase-enrichment-badge">{orderLabel}</span>
+          {showReturnBadge && returnInfo && (
+            <span
+              className={`purchase-enrichment-return-badge purchase-enrichment-return-badge--${returnInfo.status}${returnInfo.isRefundCredit ? " is-refund-credit" : ""}`}
+            >
+              {returnInfo.isRefundCredit
+                ? tl("history.purchaseRefundCredit")
+                : tl(returnStatusLabelKey(returnInfo.status))}
+            </span>
+          )}
           {items.length > 0 && (
             <span className="text-muted text-sm">
               {tl("history.amazonItemCount", { count: items.length })}
@@ -75,6 +92,24 @@ export function PurchaseEnrichmentBlock({
                 <dd>{enrichment.status}</dd>
               </div>
             )}
+            {returnInfo?.eventDate && (
+              <div className="purchase-enrichment-meta-row">
+                <dt>{tl("history.purchaseReturnDate")}</dt>
+                <dd>{returnInfo.eventDate}</dd>
+              </div>
+            )}
+            {returnInfo?.refundAmount != null && (
+              <div className="purchase-enrichment-meta-row">
+                <dt>{tl("history.purchaseRefundAmount")}</dt>
+                <dd>{moneyPrecise(returnInfo.refundAmount, privacy)}</dd>
+              </div>
+            )}
+            {returnInfo?.relatedOrderId && (
+              <div className="purchase-enrichment-meta-row">
+                <dt>{tl("history.purchaseRelatedOrder")}</dt>
+                <dd>{returnInfo.relatedOrderId}</dd>
+              </div>
+            )}
             {enrichment.orderId && (
               <div className="purchase-enrichment-meta-row">
                 <dt>{tl("history.amazonOrderId")}</dt>
@@ -97,14 +132,31 @@ export function PurchaseEnrichmentBlock({
               )}
               <ul className="purchase-enrichment-items">
                 {items.map((item) => (
-                  <li key={item.detailUrl || item.title}>
-                    {item.detailUrl ? (
-                      <a href={item.detailUrl} target="_blank" rel="noopener noreferrer">
-                        {item.title}
-                      </a>
-                    ) : (
-                      <span>{item.title}</span>
+                  <li key={item.asin || item.detailUrl || item.title}>
+                    {item.imageUrl && !privacy && (
+                      <img
+                        className="purchase-enrichment-item-img"
+                        src={item.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                      />
                     )}
+                    <div className="purchase-enrichment-item-main">
+                      {item.detailUrl ? (
+                        <a href={item.detailUrl} target="_blank" rel="noopener noreferrer">
+                          {item.title}
+                        </a>
+                      ) : (
+                        <span>{item.title}</span>
+                      )}
+                      {(item.quantity ?? 1) > 1 && (
+                        <span className="purchase-enrichment-item-qty">
+                          ×{item.quantity}
+                        </span>
+                      )}
+                    </div>
                     {item.price != null && (
                       <span className="purchase-enrichment-item-price">
                         {moneyPrecise(item.price, privacy)}

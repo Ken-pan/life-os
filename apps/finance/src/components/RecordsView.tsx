@@ -38,14 +38,14 @@ export function RecordsView({
   ];
 
   return (
-    <div className="grid gap-6">
+    <div className="records-view">
       <HorizontalTabs
         items={sections}
         activeId={active}
         onChange={onChange}
         ariaLabel={t("records.sectionAria")}
       >
-        <TabPanel tabId="insights" active={active === "insights"}>
+        <TabPanel tabId="insights" active={active === "insights"} className="records-panel">
           <HistoryView
             data={data}
             initialLedgerSearch={ledgerSearch}
@@ -53,10 +53,10 @@ export function RecordsView({
             onQuickAdd={onQuickAdd}
           />
         </TabPanel>
-        <TabPanel tabId="fixed" active={active === "fixed"}>
+        <TabPanel tabId="fixed" active={active === "fixed"} className="records-panel">
           <CashFlowsView />
         </TabPanel>
-        <TabPanel tabId="oneoff" active={active === "oneoff"}>
+        <TabPanel tabId="oneoff" active={active === "oneoff"} className="records-panel">
           <FutureCashflowView
             onGoTab={onGoTab}
             focusEventId={focusEventId}

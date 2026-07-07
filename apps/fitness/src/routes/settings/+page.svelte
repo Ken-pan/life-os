@@ -13,7 +13,6 @@
   } from '$lib/state.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import { notificationCapability, requestNotificationPermission, previewTimerChime } from '$lib/timer.svelte.js';
-  import { unlockAudio } from '$lib/audio.js';
   import { exportBackup, importBackup } from '$lib/backup.js';
   import { auth, signOut, authErrorMessage } from '$lib/auth.svelte.js';
   import { pushToCloud, pullFromCloud, withSyncNotify } from '$lib/sync.js';
@@ -65,7 +64,6 @@
   }
 
   async function enableNotifications() {
-    unlockAudio();
     const result = await requestNotificationPermission();
     if (result === true || result === 'granted') {
       S.settings.notifyRest = true;

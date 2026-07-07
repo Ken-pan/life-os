@@ -12,6 +12,7 @@ const CAPTURE_FILES = [
   'lib/action-runner.js',
   'adapters/amazon-orders.js',
   'adapters/bestbuy-orders.js',
+  'adapters/target-orders.js',
   'adapters/life-os.js',
   'capture.js',
 ]

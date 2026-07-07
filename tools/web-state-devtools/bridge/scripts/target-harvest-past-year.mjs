@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Harvest Best Buy purchase history (scroll + capture), keep orders from the past year.
+ * Harvest Target order history (scroll + capture), keep orders from the past year.
  *
- * Usage: WEB_STATE_ALLOW_BESTBUY=1 node scripts/bestbuy-harvest-past-year.mjs
+ * Usage: WEB_STATE_ALLOW_TARGET=1 node scripts/target-harvest-past-year.mjs
  *
- * Requires: bridge running, extension Dev Agent Mode ON, logged into Best Buy in Chrome.
+ * Requires: bridge running, extension Dev Agent Mode ON, logged into Target in Chrome.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -13,10 +13,11 @@ import { loadRecipe } from '../lib/recipe.mjs'
 import { extractMergeKey } from '../lib/store.mjs'
 import { redactForExport } from '../lib/privacy.mjs'
 
-const RECIPE_ID = 'bestbuy-orders'
+const RECIPE_ID = 'target-orders'
 const BRIDGE = process.env.WEB_STATE_BRIDGE_URL || 'http://127.0.0.1:17321'
-const PURCHASES_URL = 'https://www.bestbuy.com/purchasehistory/purchases'
+const ORDERS_URL = 'https://www.target.com/orders?lnk=acct_nav_my_account'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const LOG = '[target]'
 
 async function runAction(action, params = {}, timeoutMs = 60000) {
   const res = await fetch(`${BRIDGE}/actions/run`, {
@@ -58,10 +59,10 @@ function writeExport(recipe, summary, rawItems, exportItems) {
     __dirname,
     '..',
     'data',
-    recipe.export?.outDir || 'bestbuy-export',
+    recipe.export?.outDir || 'target-export',
   )
   fs.mkdirSync(outDir, { recursive: true })
-  const base = String(recipe.export?.basename || 'bestbuy-orders-past-year')
+  const base = String(recipe.export?.basename || 'target-orders-past-year')
   const jsonPath = path.join(outDir, `${base}.json`)
   fs.writeFileSync(
     jsonPath,
@@ -118,8 +119,6 @@ async function scrollHarvest(deps, recipe, tabId, purchasesUrl) {
 
   await deps.runAction('navigate', { url: purchasesUrl, tabId }, 90000)
 
-  let zeroAddRounds = 0
-
   for (let round = 0; round < maxRounds; round++) {
     const t0 = Date.now()
     await deps.runAction(
@@ -151,30 +150,12 @@ async function scrollHarvest(deps, recipe, tabId, purchasesUrl) {
     })
 
     if (round > 0 && added === 0) {
-      zeroAddRounds++
-      if (zeroAddRounds >= 3) {
-        steps.push({ step: 'scroll-stop', reason: 'no new items', round })
-        break
-      }
-    } else {
-      zeroAddRounds = 0
+      steps.push({ step: 'scroll-stop', reason: 'no new items', round })
+      break
     }
 
-    // Best Buy: prefer Load More button (from page model) before blind scroll
-    try {
-      await deps.runAction(
-        'click',
-        {
-          tabId,
-          selector: '[data-testid="OrderList-LoadMore-TestID"]',
-        },
-        8000,
-      )
-      await new Promise((r) => setTimeout(r, 1500))
-    } catch {
-      await deps.runAction('scroll', { preset: 'bottom', tabId }, 30000)
-      await new Promise((r) => setTimeout(r, 1200))
-    }
+    await deps.runAction('scroll', { preset: 'bottom', tabId }, 30000)
+    await new Promise((r) => setTimeout(r, 1200))
   }
 
   return { merged, steps }
@@ -183,7 +164,8 @@ async function scrollHarvest(deps, recipe, tabId, purchasesUrl) {
 async function main() {
   const health = await fetch(`${BRIDGE}/health`).then((r) => r.json())
   console.log(
-    '[bestbuy] bridge',
+    LOG,
+    'bridge',
     health.version,
     'agent',
     health.agent?.extensionConnected,
@@ -193,7 +175,7 @@ async function main() {
     await runAction('ping', {}, 15000)
   } catch {
     console.error(
-      'Extension not ready — open Chrome, reload Web State DevTools extension, enable Dev Agent Mode',
+      `${LOG} Extension not ready — reload Web State DevTools extension, enable Dev Agent Mode`,
     )
     process.exit(1)
   }
@@ -201,12 +183,12 @@ async function main() {
   const recipe = loadRecipe(RECIPE_ID)
   const cutoffMs = Date.now() - 365 * 24 * 60 * 60 * 1000
   const cutoffLabel = new Date(cutoffMs).toISOString().slice(0, 10)
-  console.log('[bestbuy] keeping orders on/after', cutoffLabel)
+  console.log(LOG, 'keeping orders on/after', cutoffLabel)
 
   const deps = { runAction, getLatestSnapshot, writeExport }
   const t0 = Date.now()
 
-  const nav = await runAction('navigate', { url: PURCHASES_URL }, 90000)
+  const nav = await runAction('navigate', { url: ORDERS_URL }, 90000)
   const tabId = nav?.tabId
   if (!tabId) throw new Error('Navigate did not return tabId')
 
@@ -214,7 +196,7 @@ async function main() {
     deps,
     recipe,
     tabId,
-    PURCHASES_URL,
+    ORDERS_URL,
   )
 
   const allItems = [...merged.values()].sort((a, b) => {
@@ -227,7 +209,7 @@ async function main() {
     withinPastYear(o.orderDate, cutoffMs),
   )
   console.log(
-    `[bestbuy] scroll harvest: ${allItems.length} total, ${yearItems.length} within past year`,
+    `${LOG} scroll harvest: ${allItems.length} total, ${yearItems.length} within past year`,
   )
 
   /** @type {Map<string, Record<string, unknown>>} */
@@ -260,10 +242,8 @@ async function main() {
     for (const item of [...enriched.values()]) {
       if (followed >= maxFollow) break
       if (!needFollow(item)) continue
-      if (!/^BBY\d{2}-/i.test(String(item.orderId || ''))) continue
       const t1 = Date.now()
       await runAction('navigate', { url: item.detailUrl, tabId }, 90000)
-      await new Promise((r) => setTimeout(r, 2500))
       await runAction(
         'capture',
         { send: true, tabId, fast: true, wait: follow.wait },
@@ -314,12 +294,12 @@ async function main() {
 
   const outPaths = writeExport(recipe, summary, list, exportItems)
 
-  console.log('\n[bestbuy] DONE in', Math.round((Date.now() - t0) / 1000), 's')
+  console.log(`\n${LOG} DONE in`, Math.round((Date.now() - t0) / 1000), 's')
   console.log(JSON.stringify(summary, null, 2))
-  console.log('[bestbuy] outputs', outPaths)
+  console.log(`${LOG} outputs`, outPaths)
 }
 
 main().catch((e) => {
-  console.error('[bestbuy] FATAL', e.message)
+  console.error(`${LOG} FATAL`, e.message)
   process.exit(1)
 })

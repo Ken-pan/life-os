@@ -1,98 +1,82 @@
-# Amazon Orders — Visible Page Adapter（Recipe）
+# Amazon Your Orders — Structure-Based Recipe
 
-> **状态**：设计备忘，未实现  
-> **原则**：只读用户已登录、已可见的订单页 DOM；不绕过登录、CAPTCHA 或 hidden API。
+> **状态**：基于 Web State DevTools capture（2026-07-06）  
+> **列表页**：`https://www.amazon.com/your-orders/orders?timeFilter=year-{year}`
 
----
+## 页面结构（来自 extension capture）
 
-## 数据来源优先级
+| 区域 | selector | 用途 |
+|------|----------|------|
+| 订单卡片 | `.order-card.js-order-card` | **每笔订单唯一容器** — 必须在此 scope 内解析 |
+| 订单头 | `.order-header` | Order placed / Total / Ship to / Order # |
+| 配送块 | `.delivery-box` | 商品缩略图 + 状态；**line items 只从此处取** |
+| 详情链接 | `a[href*="order-details"][href*="orderID="]` | View order details |
+| 商品链接 | `.delivery-box a[href*="/dp/"][href*="fed_asin_title"]` | 列表页可见商品 |
+| 商品图 | 同行 `img` — 优先 `data-a-hires`，其次 `data-src`/`src`；CDN 统一升到 `._SL500_.` | Finance OS 缩略图 |
+| 分页 | `ul.a-pagination` + `startIndex` query | recipe 用 `startIndex` 步进 10 |
 
-| 优先级 | 路径 | 说明 |
-|--------|------|------|
-| 1 | [Amazon Request Your Data](https://www.amazon.com/gp/help/customer/display.html?nodeId=TP1zlemejtTn6pwYKS) | 官方个人数据导出，基线来源 |
-| 2 | **amazon-orders adapter** | 官方字段不够细时，读可见订单列表/详情页 DOM |
-| 3 | 手动 | 用户复制 / CSV |
+## 商品图片（最佳实践）
 
-**不做**：绕过登录、抓 hidden API、高频自动翻页、规避风控。
+Amazon 2024 起订单 HTML 有客户端解密，**必须在浏览器 DOM 里读**（本扩展已满足）。参考社区做法（如 amazon-orders 库、`item-view-left-col-inner img`）：
 
----
+1. 在同一商品行/缩略图列找 `img`
+2. URL 优先级：`data-a-hires` > `data-src` > `currentSrc` > `src`
+3. 过滤 nav sprite / pixel / logo
+4. 缩略图 `_SS130_` / `_SX###_` 替换为 `._SL500_.` 供 Finance UI 显示
+5. 存入 `lineItems[].imageUrl`，经 `purchase_enrichment` JSON 写入 Supabase
 
-## 目标输出格式
+**注意**：Amazon CDN 外链需 `<img referrerPolicy="no-referrer">`；隐私模式下 Finance 不渲染图片。
 
-```json
-{
-  "site": "amazon",
-  "entity": "orders",
-  "capturedAt": "2026-07-06T…",
-  "items": [
-    {
-      "orderId": "123-4567890-1234567",
-      "orderDate": "2026-06-15",
-      "orderTotal": "$42.99",
-      "status": "Delivered",
-      "detailUrl": "https://www.amazon.com/gp/your-account/order-details?orderID=…",
-      "items": [
-        {
-          "title": "Product name",
-          "price": "$21.49",
-          "quantity": 1,
-          "detailUrl": "https://www.amazon.com/dp/…"
-        }
-      ]
-    }
-  ]
-}
+## 常见错误（v2 已修复）
+
+| 问题 | 原因 | 修复 |
+|------|------|------|
+| 每单都出现 6 个相同商品 | 在 `section` 级别扫 `/dp/` 链接 | 限定 `.delivery-box` |
+| 状态全是 Cancelled | `section` 级 status 串单 | 只在 card / delivery-box 内取 status |
+| 金额误匹配 | 全局 `[aria-label*="Total"]` | 只从 `.order-header` 解析 `Total $X.XX` |
+
+## 详情页
+
+- **URL**：`/your-orders/order-details?orderID={id}`
+- **根容器**：`#orderDetails`（商品链接必须在此内）
+- **商品链接**：`#orderDetails a[href*="fed_asin_title"]`（`hzod_title_dt_b_fed_asin_title` ref）
+- **总额**：`#od-subtotals` → `Grand Total: $X.XX`
+- **数量**：行内 `Qty: N`；或缩略图角标数字（列表 `.delivery-box li`、详情 `#orderDetails` 双列布局）；兜底用 `Subtotal ÷ unitPrice` 推算
+- **例外**：已取消/无 Total 的订单，详情页可能无商品块 — 以列表页 `.delivery-box` 为准
+
+## 退货 / 退款识别
+
+| 信号 | 位置 | Finance 映射 |
+|------|------|--------------|
+| `Return window closed on …` | delivery-box 文案 | **忽略**（退货资格，非已退货） |
+| `Return complete` / `Refund issued` | delivery-box status 或详情 status | `returnInfo.status = returned/refunded` |
+| `Refund Total: $X.XX` | 详情 `#od-subtotals` | `returnInfo.refundAmount` |
+| `Cancelled` | delivery-box status | `returnInfo.status = cancelled` |
+| 卡上负向 Amazon 流水 | Supabase `finance_transactions` | `returnInfo.isRefundCredit = true`，并 `relatedOrderId` ↔ 原购买 |
+
+Adapter 输出字段：`returnInfo: { status, label, eventDate, refundAmount }`  
+关联脚本：`apps/finance/scripts/link-purchase-orders.mjs --source amazon`
+
+## Supabase 缩略图
+
+关联时加 `--upload-images`（默认随 `--apply` 开启）：从 `lineItems[].imageUrl` 拉取 `_SL96_` 小图，写入 Storage bucket `finance-purchase-images`，并把 `imageUrl` 换成公开 URL、`imageStoragePath` 存路径。
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY=... node apps/finance/scripts/link-purchase-orders.mjs --source amazon --apply --replace
 ```
 
----
+## Harvest 流程
 
-## Adapter 架构（与 generic snapshot 分离）
+1. 打开 `timeFilter=year-{year}` 列表
+2. 等待 `.order-card.js-order-card` + 价格
+3. 分页 `startIndex=0,10,20…` capture + merge
+4. 对缺 lineItems / 多商品订单：`follow` 进 detailUrl
+5. 导出 `bridge/data/amazon-export/`
 
+## 运行
+
+```bash
+cd tools/web-state-devtools/bridge
+WEB_STATE_ALLOW_AMAZON=1 node scripts/run-recipe.mjs amazon-orders
+WEB_STATE_ALLOW_AMAZON=1 node scripts/verify-amazon-sample.mjs
 ```
-adapters/
-  generic.js          ← 现有 content.js（任意页）
-  amazon-orders.js    ← 仅匹配 amazon.* 订单相关 URL
-```
-
-触发方式：
-
-1. 用户在 Amazon 订单页点击 **Capture** → generic snapshot 照常生成  
-2. Popup 可选 **Run Amazon adapter** → 额外写入 `latest-snapshot.json` 的 `adapter` 字段  
-3. 或 Cursor 调用 MCP：`get_latest_web_snapshot` 后由 Agent 解析 generic JSON；adapter 成熟后增加 `get_amazon_orders` tool
-
----
-
-## 页面识别
-
-| 页面 | URL 特征 | 提取目标 |
-|------|----------|----------|
-| 订单列表 | `/gp/your-account/order-history` 或 `/your-orders` | orderId、date、total、status、详情链接 |
-| 订单详情 | `order-details?orderID=` | line items：title、price、qty |
-
-选择器应写在 adapter 顶部常量区，**不要**写进 generic `content.js`。
-
----
-
-## 安全与合规
-
-- 默认 **localhost only**，snapshot 含订单信息时不在日志打印全文  
-- 敏感输入已在 generic capture 中 `[redacted]`  
-- 站点白名单：Amazon adapter 仅在用户显式启用时运行  
-- 翻页导出（如 100 单）：低频、用户确认、只读可见页；建议单次上限 + 间隔
-
----
-
-## MVP 验证步骤（adapter v0 实现后）
-
-1. 登录 Amazon，打开订单历史页  
-2. Capture → Send to localhost  
-3. Cursor: `get_latest_web_snapshot`  
-4. 检查 `adapter.items` 是否与页面可见订单一致  
-
----
-
-## 与 Web State DevTools 主线的关系
-
-Generic snapshot（headings / links / controls / domTree）**已足够**让 Cursor 理解订单页结构并辅助写 adapter。
-
-Amazon adapter 是 **P1 站点插件**，不影响 Extension → Bridge → MCP 主链路。

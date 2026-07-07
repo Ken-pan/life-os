@@ -23,10 +23,13 @@ capture:
   captureTimeoutMs: 45000
   navigateTimeoutMs: 60000
   wait:
-    selectors: ['a[href*="order-details"]', 'a[href*="orderID="]']
+    selectors:
+      - '.order-card.js-order-card'
+      - 'a[href*="order-details"][href*="orderID="]'
+      - 'img[src*="media-amazon.com/images/I/"]'
     minCount: 1
-    stableMs: 200
-    timeoutMs: 8000
+    stableMs: 300
+    timeoutMs: 12000
     requirePrice: true
 
 entities:
@@ -46,7 +49,10 @@ follow:
   max: 30
   whenMissing: [orderTotal, lineItems]
   wait:
-    selectors: ['a[href*="/dp/"]', '.yohtmlc-item', '.item-view']
-    minCount: 1
-    stableMs: 200
-    timeoutMs: 8000
+    selectors:
+      - '#orderDetails a[href*="fed_asin_title"]'
+      - '#od-subtotals'
+      - 'img[src*="media-amazon.com/images/I/"]'
+    minCount: 2
+    stableMs: 300
+    timeoutMs: 12000

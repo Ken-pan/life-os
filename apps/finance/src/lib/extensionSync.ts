@@ -15,6 +15,10 @@ import {
   deriveTodayReturnAmount,
   deriveTotalReturnAmount,
 } from "../engine/holdingsEnrich";
+import {
+  resolveCaptureAccount,
+  resolveCaptureMerchant,
+} from "../engine/ledgerDisplay";
 
 // ===================== 消息协议 =====================
 
@@ -113,6 +117,8 @@ export interface CapturedTxnRow {
   credit: boolean;
   pending: boolean;
   statement?: string;
+  /** 付款账户（如 Chase ••4242）；来自 Rocket Money 交易行，不是数据源名称。 */
+  account?: string;
   /** 平台侧稳定 ID（如 RocketMoney base64 transaction id），用于 capture 内去重。 */
   platformId?: string;
 }
@@ -727,14 +733,14 @@ export function planNewTransactions(
   return { txns: out, skippedPending, skippedDuplicate };
 }
 
-function captureRowToTxn(row: CapturedTxnRow, source: CaptureSource): NewTxn {
+function captureRowToTxn(row: CapturedTxnRow, _source: CaptureSource): NewTxn {
   const abs = Math.abs(row.amount);
   const flow = flowForCaptureRow(row);
   const base = {
     date: row.date,
-    merchant: row.merchant,
+    merchant: resolveCaptureMerchant(row),
     category: row.category || "Uncategorized",
-    account: sourceAccountLabel(source),
+    account: resolveCaptureAccount(row),
     source: "import" as const,
     platformId: row.platformId,
   };
@@ -757,12 +763,6 @@ function captureRowToTxn(row: CapturedTxnRow, source: CaptureSource): NewTxn {
         inSpending: false, inCashFlow: true,
       };
   }
-}
-
-function sourceAccountLabel(source: CaptureSource): string {
-  if (source === "rocketmoney") return "Rocket Money";
-  if (source === "robinhood") return "Robinhood";
-  return "Fidelity";
 }
 
 // ===================== 订阅 / 周期账单对账 =====================

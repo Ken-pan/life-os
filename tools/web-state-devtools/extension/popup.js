@@ -72,7 +72,7 @@ function formatError(msg) {
   if (/Bridge error|fetch|Failed to fetch|ECONNREFUSED/i.test(msg))
     return 'Bridge 未运行 — 终端执行: cd tools/web-state-devtools/bridge && npm run bridge'
   if (/Cannot access|permission|scripting/i.test(msg))
-    return '无法注入页面 — 请在 Amazon/Best Buy 标签页打开扩展，或 reload 扩展后重试 Capture'
+    return '无法注入页面 — 请在 Amazon/Best Buy/Target 标签页打开扩展，或 reload 扩展后重试 Capture'
   return msg
 }
 
@@ -80,11 +80,18 @@ devModeEl.addEventListener('change', async () => {
   if (devModeEl.checked) {
     try {
       const granted = await chrome.permissions.request({
-        origins: ['https://*.amazon.com/*', 'https://*.bestbuy.com/*'],
+        origins: [
+          'https://*.amazon.com/*',
+          'https://*.bestbuy.com/*',
+          'https://*.target.com/*',
+        ],
       })
       if (!granted) {
         devModeEl.checked = false
-        setStatus('Amazon / Best Buy 权限未授予 — Agent 模式已关闭', 'error')
+        setStatus(
+          'Amazon / Best Buy / Target 权限未授予 — Agent 模式已关闭',
+          'error',
+        )
         return
       }
     } catch {

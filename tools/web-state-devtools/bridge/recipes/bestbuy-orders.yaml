@@ -18,19 +18,15 @@ capture:
   navigateTimeoutMs: 90000
   wait:
     selectors:
-      - 'main'
-      - 'a[href*="purchasehistory"]'
-      - 'a[href*="/profile/ss/orders"]'
-      - '[data-testid*="order"]'
-      - '[class*="order"]'
+      ['[data-testid="order-item"]', '[data-testid="virtuoso-item-list"]']
     minCount: 1
-    stableMs: 300
-    timeoutMs: 12000
+    stableMs: 400
+    timeoutMs: 15000
 
 entities:
   kind: list
   source: adapter
-  mergeKey: ['detailUrl:orders/([^/?#]+)', 'orderId']
+  mergeKey: ['orderId', 'detailUrl:order-details/([^/]+)/view']
 
 export:
   outDir: bestbuy-export
@@ -42,12 +38,12 @@ follow:
   enabled: true
   field: detailUrl
   max: 40
-  whenMissing: [orderTotal, lineItems]
+  whenMissing: [lineItems]
   wait:
     selectors:
-      - 'a[href*="/site/"]'
-      - '[data-testid*="product"]'
-      - '[class*="item"]'
+      - 'a[id^="line-item-header-"]'
+      - '.order-details-page'
+      - 'img[src*="bbystatic.com"]'
     minCount: 1
-    stableMs: 250
-    timeoutMs: 10000
+    stableMs: 500
+    timeoutMs: 18000

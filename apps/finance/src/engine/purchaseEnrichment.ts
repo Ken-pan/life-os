@@ -1,10 +1,17 @@
 /** External purchase context attached to a bank/card transaction (e.g. Amazon order). */
 
+import type { PurchaseReturnInfo } from "./purchaseReturnStatus.ts";
+
 export interface PurchaseLineItem {
   title: string;
   price?: number;
   quantity?: number;
   detailUrl?: string;
+  /** Product thumbnail from merchant order page (Amazon media CDN, etc.) */
+  imageUrl?: string;
+  /** Supabase Storage object path (finance-purchase-images bucket). */
+  imageStoragePath?: string;
+  asin?: string;
 }
 
 export interface PurchaseEnrichment {
@@ -15,6 +22,8 @@ export interface PurchaseEnrichment {
   status?: string;
   detailUrl?: string;
   lineItems?: PurchaseLineItem[];
+  /** Return / refund linkage parsed from merchant order or matched from card credit. */
+  returnInfo?: PurchaseReturnInfo;
   matchConfidence?: "high" | "medium" | "low";
   matchedAt?: string;
 }
@@ -37,7 +46,7 @@ export function uniqueLineItems(items: PurchaseLineItem[] | undefined): Purchase
   const seen = new Set<string>();
   const out: PurchaseLineItem[] = [];
   for (const item of items) {
-    const key = item.detailUrl || item.title;
+    const key = item.asin || item.detailUrl || item.title;
     if (!key || seen.has(key)) continue;
     seen.add(key);
     out.push(item);
