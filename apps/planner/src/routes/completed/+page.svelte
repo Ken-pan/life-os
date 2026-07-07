@@ -9,12 +9,12 @@
   import { computeRhythmSummary } from '$lib/domain/rhythm.js';
   import { completeTask, editTask } from '$lib/taskUi.js';
   import { S } from '$lib/state.svelte.js';
-  import { t } from '$lib/i18n/index.js';
+  import { t, localeTag } from '$lib/i18n/index.js';
 
   const index = $derived(taskIndex());
   const groups = $derived(selectDoneLogGroups(index));
   const progress = $derived(selectTodayProgress(index));
-  const rhythm = $derived(computeRhythmSummary(S.tasks, S.settings, progress));
+  const rhythm = $derived(computeRhythmSummary(S.tasks, S.settings, progress, localeTag()));
 </script>
 
 <AppBar title={t('completed.title')} />
@@ -30,6 +30,7 @@
           doneToday={progress.doneToday}
           nextTask={null}
           focusMetric="week"
+          showWeeklyHint
         />
       </section>
 

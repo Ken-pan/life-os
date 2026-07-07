@@ -42,16 +42,8 @@ export function buildPrimaryNavItems(tr) {
 }
 
 /** @param {(key: string, params?: Record<string, unknown>) => string} tr */
-export function buildBrowseNavItems(tr) {
+export function buildMoreBrowseNavItems(tr) {
   return [
-    {
-      tab: 'schedule',
-      href: '/schedule',
-      label: tr('nav.schedule'),
-      icon: 'clock',
-      match: (p, search = '') =>
-        p === '/' && new URLSearchParams(search).get('view') === 'timeline',
-    },
     {
       tab: 'calendar',
       href: '/calendar',
@@ -66,6 +58,21 @@ export function buildBrowseNavItems(tr) {
       icon: 'search',
       match: (p) => p.startsWith('/search'),
     },
+  ]
+}
+
+/** @param {(key: string, params?: Record<string, unknown>) => string} tr */
+export function buildBrowseNavItems(tr) {
+  return [
+    {
+      tab: 'schedule',
+      href: '/schedule',
+      label: tr('nav.schedule'),
+      icon: 'clock',
+      match: (p, search = '') =>
+        p === '/' && new URLSearchParams(search).get('view') === 'timeline',
+    },
+    ...buildMoreBrowseNavItems(tr),
   ]
 }
 
@@ -102,7 +109,7 @@ export function buildSidebarNavGroups(tr) {
 export function buildMoreNavGroups(tr, lists, listLabelFn) {
   /** @type {NavGroup[]} */
   const groups = [
-    { label: tr('nav.groupBrowse'), items: buildBrowseNavItems(tr) },
+    { label: tr('nav.groupBrowse'), items: buildMoreBrowseNavItems(tr) },
   ]
 
   if (lists.length) {
@@ -146,18 +153,35 @@ export function isMoreNavActive(pathname, search = '') {
   return false
 }
 
+/** @typedef {'large' | 'compact' | 'none'} FabMode */
+
 /** @param {string} pathname @param {string} [search] */
-export function isFabVisible(pathname, search = '') {
-  if (pathname.startsWith('/settings')) return false
-  if (pathname.startsWith('/auth')) return false
-  if (pathname.startsWith('/search')) return false
-  if (pathname.startsWith('/completed')) return false
+export function resolveFabMode(pathname, search = '') {
+  if (pathname.startsWith('/settings')) return 'none'
+  if (pathname.startsWith('/auth')) return 'none'
+  if (pathname.startsWith('/search')) return 'none'
+  if (pathname.startsWith('/completed')) return 'none'
+  if (pathname.startsWith('/inbox')) return 'none'
   if (
     pathname === '/' &&
     new URLSearchParams(search).get('view') === 'timeline'
-  )
-    return false
-  return true
+  ) {
+    return 'none'
+  }
+  if (pathname === '/') return 'large'
+  if (
+    pathname.startsWith('/upcoming') ||
+    pathname.startsWith('/calendar') ||
+    pathname.startsWith('/lists/')
+  ) {
+    return 'compact'
+  }
+  return 'none'
+}
+
+/** @param {string} pathname @param {string} [search] */
+export function isFabVisible(pathname, search = '') {
+  return resolveFabMode(pathname, search) !== 'none'
 }
 
 /** @param {string} pathname */
@@ -175,7 +199,8 @@ export function resolveMobileChromeInset(pathname, search = '') {
   if (
     pathname.startsWith('/settings') ||
     pathname.startsWith('/search') ||
-    pathname.startsWith('/completed')
+    pathname.startsWith('/completed') ||
+    pathname.startsWith('/inbox')
   ) {
     return 'tabbar'
   }

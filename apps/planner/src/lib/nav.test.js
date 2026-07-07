@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isMoreNavActive, resolvePrimaryNavTab } from './nav.js'
+import { isMoreNavActive, resolvePrimaryNavTab, resolveFabMode } from './nav.js'
 
 describe('nav', () => {
   it('keeps today as primary tab on timeline view', () => {
@@ -11,5 +11,17 @@ describe('nav', () => {
     expect(isMoreNavActive('/calendar')).toBe(true)
     expect(isMoreNavActive('/settings')).toBe(true)
     expect(isMoreNavActive('/search')).toBe(true)
+  })
+
+  it('assigns FAB modes by route', () => {
+    expect(resolveFabMode('/')).toBe('large')
+    expect(resolveFabMode('/', '?view=timeline')).toBe('none')
+    expect(resolveFabMode('/inbox')).toBe('none')
+    expect(resolveFabMode('/upcoming')).toBe('compact')
+    expect(resolveFabMode('/calendar')).toBe('compact')
+    expect(resolveFabMode('/lists/work')).toBe('compact')
+    expect(resolveFabMode('/completed')).toBe('none')
+    expect(resolveFabMode('/search')).toBe('none')
+    expect(resolveFabMode('/settings')).toBe('none')
   })
 })

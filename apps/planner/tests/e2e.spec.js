@@ -9,19 +9,22 @@ async function clearAppState(page) {
   await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 })
 }
 
-// 桌面端走快速添加栏；移动端快速添加栏隐藏，走 FAB + 编辑器
+// Inbox 走页面内快速添加；其余页面走 FAB + 编辑器
 async function quickAddTask(page, title) {
-  const input = page.locator('.quick-add input').first()
-  if (await input.isVisible()) {
+  const pathname = new URL(page.url()).pathname
+  if (pathname.startsWith('/inbox')) {
+    const input = page.getByRole('textbox').first()
+    await expect(input).toBeVisible()
     await input.fill(title)
-    await page.locator('.quick-add button[type="submit"]').first().click()
-  } else {
-    await page.getByTestId('fab-add').click()
-    const dialog = page.getByRole('dialog')
-    await dialog.locator('#task-title').fill(title)
-    await dialog.getByRole('button', { name: '保存' }).click()
-    await expect(dialog).toHaveCount(0)
+    await page.getByRole('button', { name: '添加', exact: true }).click()
+    return
   }
+
+  await page.getByTestId('fab-add').click()
+  const dialog = page.getByRole('dialog')
+  await dialog.locator('#task-title').fill(title)
+  await dialog.getByRole('button', { name: '保存' }).click()
+  await expect(dialog).toHaveCount(0)
 }
 
 // 新建任务的编辑器默认折叠高级选项，需要先展开
@@ -131,6 +134,7 @@ test.describe('PlannerOS E2E', () => {
   test('收件箱页面添加无日期任务', async ({ page }) => {
     await page.goto('/inbox')
     await expect(page.locator('h1.page-title')).toHaveText('收件箱')
+    await expect(page.getByTestId('fab-add')).toHaveCount(0)
     await quickAddTask(page, '收件箱任务')
     await expect(
       page.locator('.task-title', { hasText: '收件箱任务' }),

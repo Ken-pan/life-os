@@ -32,7 +32,7 @@
   });
 </script>
 
-<AppBar title={t('search.title')} />
+<AppBar title={t('search.title')} historyBack />
 
 <div class="wrap search-field">
   <div class="field">

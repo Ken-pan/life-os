@@ -15,19 +15,20 @@
   import { selectTodayGroups, selectTodayProgress, selectNextBestAction, selectUnscheduledForDate } from '$lib/domain/selectors.js';
   import { computeRhythmSummary, computeTodayClosedStats } from '$lib/domain/rhythm.js';
   import { completeTask, editTask } from '$lib/taskUi.js';
-  import { t } from '$lib/i18n/index.js';
+  import { t, localeTag } from '$lib/i18n/index.js';
   import { S, todayKey } from '$lib/state.svelte.js';
 
   const index = $derived(taskIndex());
   const groups = $derived(selectTodayGroups(index));
   const progress = $derived(selectTodayProgress(index));
-  const rhythm = $derived(computeRhythmSummary(S.tasks, S.settings, progress));
+  const rhythm = $derived(computeRhythmSummary(S.tasks, S.settings, progress, localeTag()));
   const nextTask = $derived(selectNextBestAction(index));
   const unscheduledToday = $derived(selectUnscheduledForDate(index, todayKey()));
   const total = $derived(groups.overdue.length + groups.today.length);
   const fullyEmpty = $derived(!total && !groups.noDate.length && !progress.doneToday.length);
   const showProgress = $derived(progress.total > 0 || progress.doneToday.length > 0);
   const allPlanDone = $derived(progress.total > 0 && progress.remaining === 0);
+  const trulyClean = $derived(allPlanDone && unscheduledToday.length === 0);
 
   const viewMode = $derived(
     page.url.searchParams.get('view') === 'timeline' ? 'timeline' : 'list',
@@ -89,16 +90,19 @@
           total={progress.total}
           remaining={progress.remaining}
           doneTodayCount={progress.doneToday.length}
-          streak={rhythm.streak}
-          weeklyActive={rhythm.weekly.active}
-          rhythmEnabled={rhythm.enabled && !rhythm.paused}
           unscheduledCount={unscheduledToday.length}
           onOpenTimeline={() => setViewMode('timeline')}
         />
       {/if}
 
       {#if showClosed}
-        <TodayClosedCelebration stats={closedStats} onDismiss={() => (showClosed = false)} />
+        <TodayClosedCelebration
+          stats={closedStats}
+          variant={trulyClean ? 'clean' : 'partial'}
+          unscheduledCount={unscheduledToday.length}
+          onDismiss={() => (showClosed = false)}
+          onOpenTimeline={() => setViewMode('timeline')}
+        />
       {/if}
 
       <TodayViewToggle mode={viewMode} onChange={setViewMode} />

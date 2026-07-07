@@ -2,40 +2,52 @@
   import { page } from '$app/state';
   import Icon from './Icon.svelte';
   import { openTaskEditor, taskEditor, calendarView, schedulePopover } from '$lib/ui.svelte.js';
+  import { resolveFabMode } from '$lib/nav.js';
   import { t } from '$lib/i18n/index.js';
   import { todayKey } from '$lib/state.svelte.js';
 
-  const hideFabRoutes = ['/settings', '/auth', '/search', '/completed'];
+  const pathname = $derived(page.url.pathname);
+  const search = $derived(page.url.search);
 
-  const onTimelineView = $derived(
-    page.url.pathname === '/' && page.url.searchParams.get('view') === 'timeline',
-  );
-
+  const mode = $derived(resolveFabMode(pathname, search));
   const hidden = $derived(
-    taskEditor.open ||
-      schedulePopover.open ||
-      onTimelineView ||
-      hideFabRoutes.some((p) => page.url.pathname.startsWith(p))
+    taskEditor.open || schedulePopover.open || mode === 'none',
   );
 
-  // 按页面上下文预填默认截止日期：今天页 → 今天；日历页 → 选中的日期
   function defaults() {
-    const path = page.url.pathname;
+    const path = pathname;
     if (path === '/') return { dueDate: todayKey() };
     if (path.startsWith('/calendar')) return { dueDate: calendarView.selected || todayKey() };
+    if (path.startsWith('/lists/')) {
+      const listId = path.split('/')[2];
+      return listId ? { listId, dueDate: null } : {};
+    }
+    if (path.startsWith('/upcoming')) return { dueDate: null };
     return {};
   }
+
+  const label = $derived(
+    pathname.startsWith('/lists/')
+      ? t('lists.addToProject')
+      : mode === 'compact'
+        ? t('common.add')
+        : t('common.addTask'),
+  );
 </script>
 
 {#if !hidden}
   <button
     type="button"
     class="fab"
+    class:fab--compact={mode === 'compact'}
     data-testid="fab-add"
-    aria-label={t('common.addTask')}
+    data-fab-mode={mode}
+    aria-label={label}
     onclick={() => openTaskEditor(null, defaults())}
   >
-    <Icon name="plus" size={18} strokeWidth={2} />
-    <span class="fab-label">{t('common.addTask')}</span>
+    <Icon name="plus" size={mode === 'compact' ? 22 : 18} strokeWidth={2} />
+    {#if mode === 'large'}
+      <span class="fab-label">{label}</span>
+    {/if}
   </button>
 {/if}

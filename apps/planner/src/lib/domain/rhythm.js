@@ -8,6 +8,15 @@ export function addDays(dateKey, n) {
   return dateKeyOf(dt)
 }
 
+/** @param {string} dateKey */
+function startOfWeekMonday(dateKey) {
+  const dt = new Date(dateKey.replace(/-/g, '/'))
+  const dow = dt.getDay()
+  const offset = dow === 0 ? -6 : 1 - dow
+  dt.setDate(dt.getDate() + offset)
+  return dateKeyOf(dt)
+}
+
 /** @param {import('../types.js').Task[]} tasks @param {string} dateKey */
 export function completedOnDate(tasks, dateKey) {
   return tasks.filter(
@@ -119,31 +128,43 @@ export function computeStreak(
   return streak
 }
 
+/** @param {number} index @param {string} localeTag */
+function calendarWeekdayLabel(index, localeTag) {
+  if (localeTag.startsWith('zh')) {
+    return ['一', '二', '三', '四', '五', '六', '日'][index]
+  }
+  return ['M', 'T', 'W', 'T', 'F', 'S', 'S'][index]
+}
+
 /**
  * @param {import('../types.js').Task[]} tasks
  * @param {Partial<import('../types.js').AppSettings>} settings
  * @param {{ remaining?: number, total?: number } | null} [todayProgress]
  * @param {string} [today]
+ * @param {string} [localeTag]
  */
 export function computeWeeklyRhythm(
   tasks,
   settings,
   todayProgress = null,
   today = todayKey(),
+  localeTag = 'zh-CN',
 ) {
   const rhythm = normalizeRhythmSettings(settings)
+  const weekStart = startOfWeekMonday(today)
   /** @type {{ dateKey: string, good: boolean | null, label: string }[]} */
   const days = []
 
-  for (let i = 6; i >= 0; i--) {
-    const dateKey = addDays(today, -i)
-    const dt = new Date(dateKey.replace(/-/g, '/'))
-    const label = dt.toLocaleDateString(undefined, { weekday: 'narrow' })
+  for (let i = 0; i < 7; i++) {
+    const dateKey = addDays(weekStart, i)
+    const isFuture = dateKey > today
     days.push({
       dateKey,
-      label,
+      label: calendarWeekdayLabel(i, localeTag),
       good: rhythm.enabled
-        ? isGoodRhythmDay(tasks, dateKey, settings, todayProgress, today)
+        ? isFuture
+          ? null
+          : isGoodRhythmDay(tasks, dateKey, settings, todayProgress, today)
         : null,
     })
   }
@@ -208,8 +229,14 @@ export function computeTodayClosedStats(tasks, dateKey) {
  * @param {import('../types.js').Task[]} tasks
  * @param {Partial<import('../types.js').AppSettings>} settings
  * @param {{ remaining?: number, total?: number, doneToday?: import('../types.js').Task[] } | null} [todayProgress]
+ * @param {string} [localeTag]
  */
-export function computeRhythmSummary(tasks, settings, todayProgress = null) {
+export function computeRhythmSummary(
+  tasks,
+  settings,
+  todayProgress = null,
+  localeTag = 'zh-CN',
+) {
   const today = todayKey()
   const completedCount = tasks.filter((t) => t.completed && !t.deletedAt).length
   const planDoneToday = planCompletionsOnDate(tasks, today).length
@@ -225,7 +252,13 @@ export function computeRhythmSummary(tasks, settings, todayProgress = null) {
       (planDoneToday >= rhythm.dailyGoal ||
         (todayProgress?.total > 0 && todayProgress.remaining === 0)),
     streak: computeStreak(tasks, settings, todayProgress, today),
-    weekly: computeWeeklyRhythm(tasks, settings, todayProgress, today),
+    weekly: computeWeeklyRhythm(
+      tasks,
+      settings,
+      todayProgress,
+      today,
+      localeTag,
+    ),
     focusWinsToday: computeFocusWins(tasks, today),
     focusWinsWeek: computeFocusWinsWeek(tasks, today),
     doneThisWeek: computeDoneThisWeek(tasks, today),

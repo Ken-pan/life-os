@@ -29,11 +29,31 @@ export function selectToday(index) {
   return index.active.filter((t) => isDueToday(t) || isOverdue(t))
 }
 
+/** @param {import('../types.js').Task} task */
+export function isInboxCaptureTask(task) {
+  if (task.completed || task.deletedAt) return false
+  if (task.scheduledStart) return false
+  if (task.dueTime) return false
+  if (task.dueDate) return false
+  return true
+}
+
+/** @param {import('./taskIndex.js').TaskIndex} index @param {string} listId */
+export function selectInboxTasks(index, listId) {
+  return (index.byListId.get(listId) ?? [])
+    .filter(isInboxCaptureTask)
+    .sort(
+      (a, b) =>
+        (b.updatedAt ?? 0) - (a.updatedAt ?? 0) ||
+        a.title.localeCompare(b.title),
+    )
+}
+
 /** @param {import('./taskIndex.js').TaskIndex} index */
 export function selectUpcoming(index) {
   const today = todayKey()
   return index.active
-    .filter((t) => t.dueDate && t.dueDate >= today)
+    .filter((t) => t.dueDate && t.dueDate > today)
     .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
 }
 
@@ -115,13 +135,11 @@ export function selectUpcomingGroups(index) {
   const upcoming = selectUpcoming(index)
 
   return {
-    today: upcoming.filter((t) => t.dueDate === today),
     tomorrow: upcoming.filter((t) => t.dueDate === tomorrow),
     week: upcoming.filter(
       (t) => t.dueDate && t.dueDate > tomorrow && t.dueDate <= weekEnd,
     ),
     later: upcoming.filter((t) => t.dueDate && t.dueDate > weekEnd),
-    nodate: index.active.filter((t) => !t.dueDate),
   }
 }
 
@@ -143,10 +161,7 @@ export function selectScheduledForDate(index, dateKey) {
   return index.active
     .concat(index.completed)
     .filter(
-      (t) =>
-        t.scheduledDate === dateKey &&
-        t.scheduledStart &&
-        !t.deletedAt,
+      (t) => t.scheduledDate === dateKey && t.scheduledStart && !t.deletedAt,
     )
     .sort((a, b) => {
       const am = a.scheduledStart || ''
@@ -184,9 +199,6 @@ export function selectUnscheduledForDate(index, dateKey) {
 /** @param {import('./taskIndex.js').TaskIndex} index */
 export function selectNextBestAction(index) {
   const groups = selectTodayGroups(index)
-  const candidates = sortTasks(
-    [...groups.overdue, ...groups.today],
-    'smart',
-  )
+  const candidates = sortTasks([...groups.overdue, ...groups.today], 'smart')
   return candidates[0] ?? null
 }

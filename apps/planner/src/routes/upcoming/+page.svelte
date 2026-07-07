@@ -8,30 +8,32 @@
   import { t } from '$lib/i18n/index.js';
 
   const groups = $derived(selectUpcomingGroups(taskIndex()));
-  const isEmpty = $derived(
-    !groups.today.length &&
-      !groups.tomorrow.length &&
-      !groups.week.length &&
-      !groups.later.length &&
-      !groups.nodate.length
+  const totalCount = $derived(
+    groups.tomorrow.length + groups.week.length + groups.later.length,
   );
+  const isEmpty = $derived(totalCount === 0);
 </script>
 
 <AppBar title={t('upcoming.title')} />
 
 <div class="wrap">
   {#if isEmpty}
-    <EmptyState message={t('common.empty')} />
+    <EmptyState message={t('upcoming.emptyTitle')} hint={t('upcoming.emptyHint')} />
   {:else}
-    {#if groups.today.length}
-      <TaskGroup title={t('home.today')} tasks={groups.today} compactRows onToggle={completeTask} onEdit={editTask} />
-    {/if}
     {#if groups.tomorrow.length}
-      <TaskGroup title={t('upcoming.tomorrow')} tasks={groups.tomorrow} compactRows onToggle={completeTask} onEdit={editTask} />
+      <TaskGroup
+        title={t('upcoming.tomorrowCount', { count: groups.tomorrow.length })}
+        hideCount
+        tasks={groups.tomorrow}
+        compactRows
+        onToggle={completeTask}
+        onEdit={editTask}
+      />
     {/if}
     {#if groups.week.length}
       <TaskGroup
-        title={t('upcoming.week')}
+        title={t('upcoming.weekCount', { count: groups.week.length })}
+        hideCount
         tasks={groups.week}
         collapsible
         defaultExpanded={false}
@@ -42,7 +44,8 @@
     {/if}
     {#if groups.later.length}
       <TaskGroup
-        title={t('upcoming.later')}
+        title={t('upcoming.laterCount', { count: groups.later.length })}
+        hideCount
         tasks={groups.later}
         collapsible
         defaultExpanded={false}
@@ -51,16 +54,8 @@
         onEdit={editTask}
       />
     {/if}
-    {#if groups.nodate.length}
-      <TaskGroup
-        title={t('upcoming.nodate')}
-        tasks={groups.nodate}
-        collapsible
-        defaultExpanded={false}
-        compactRows
-        onToggle={completeTask}
-        onEdit={editTask}
-      />
+    {#if totalCount <= 3}
+      <p class="page-hint">{t('upcoming.sparseHint')}</p>
     {/if}
   {/if}
 </div>

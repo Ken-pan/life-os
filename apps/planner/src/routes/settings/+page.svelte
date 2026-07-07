@@ -130,7 +130,7 @@
   }
 </script>
 
-<AppBar title={t('settings.title')} />
+<AppBar title={t('settings.title')} historyBack />
 
 <div class="wrap settings-page settings-page--planner">
   <SettingsSection title={t('settings.appearance')} testId="settings-appearance">

@@ -81,12 +81,19 @@ describe('rhythm', () => {
     vi.useRealTimers()
   })
 
-  it('builds weekly rhythm grid', () => {
+  it('builds calendar week grid with locale labels', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 6, 5, 12, 0, 0))
-    const weekly = computeWeeklyRhythm([], { rhythmEnabled: true, dailyGoal: 3 })
+    const weekly = computeWeeklyRhythm(
+      [],
+      { rhythmEnabled: true, dailyGoal: 3 },
+      null,
+      '2026-07-05',
+      'zh-CN',
+    )
     expect(weekly.days).toHaveLength(7)
     expect(weekly.total).toBe(7)
+    expect(weekly.days.map((d) => d.label)).toEqual(['一', '二', '三', '四', '五', '六', '日'])
     vi.useRealTimers()
   })
 })

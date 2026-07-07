@@ -7,15 +7,30 @@
     doneToday: import('$lib/types.js').Task[],
     nextTask: import('$lib/types.js').Task | null,
     compact?: boolean,
-    focusMetric?: 'today' | 'week'
+    focusMetric?: 'today' | 'week',
+    showWeeklyHint?: boolean
   }} */
-  let { summary, progress, doneToday, nextTask, compact = false, focusMetric = 'today' } = $props();
+  let {
+    summary,
+    progress,
+    doneToday,
+    nextTask,
+    compact = false,
+    focusMetric = 'today',
+    showWeeklyHint = false,
+  } = $props();
 
   const focusCount = $derived(
     focusMetric === 'week' ? summary.focusWinsWeek : summary.focusWinsToday,
   );
-  const focusLabel = $derived(
-    focusMetric === 'week' ? t('rhythm.focusWinsWeek') : t('rhythm.focusWins'),
+
+  const showStreakHint = $derived(
+    showWeeklyHint &&
+      summary.enabled &&
+      !summary.paused &&
+      summary.doneThisWeek > 0 &&
+      summary.streak === 0 &&
+      progress.remaining > 0,
   );
 </script>
 
@@ -27,16 +42,16 @@
         <strong class="rhythm-stat-value">{summary.streak}<span class="rhythm-stat-unit">{t('rhythm.days')}</span></strong>
       </div>
       <div class="rhythm-stat">
+        <span class="rhythm-stat-label">{t('rhythm.doneWeek')}</span>
+        <strong class="rhythm-stat-value">{summary.doneThisWeek}</strong>
+      </div>
+      <div class="rhythm-stat">
         <span class="rhythm-stat-label">{t('rhythm.weekly')}</span>
         <strong class="rhythm-stat-value">{summary.weekly.active}<span class="rhythm-stat-unit">/ {summary.weekly.total}</span></strong>
       </div>
       <div class="rhythm-stat">
-        <span class="rhythm-stat-label">{focusLabel}</span>
+        <span class="rhythm-stat-label">{t('rhythm.focusTasks')}</span>
         <strong class="rhythm-stat-value">{focusCount}</strong>
-      </div>
-      <div class="rhythm-stat">
-        <span class="rhythm-stat-label">{t('rhythm.doneWeek')}</span>
-        <strong class="rhythm-stat-value">{summary.doneThisWeek}</strong>
       </div>
     </div>
 
@@ -50,6 +65,12 @@
         >{day.label}</span>
       {/each}
     </div>
+    {#if showStreakHint}
+      <p class="rhythm-streak-hint">{t('rhythm.streakClearHint', { count: progress.remaining })}</p>
+    {/if}
+    {#if showWeeklyHint}
+      <p class="rhythm-weekly-hint">{t('rhythm.weeklyGoalHint')}</p>
+    {/if}
   {:else if summary.paused}
     <p class="rhythm-muted">{t('rhythm.pausedHint')}</p>
   {:else}

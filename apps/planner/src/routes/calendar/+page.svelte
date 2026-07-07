@@ -27,9 +27,18 @@
     return (taskIndex().byDueDate.get(day) ?? []).length;
   }
 
-  function label(day) {
+  function chipLabel(day) {
     const [y, m, d] = day.split('-').map(Number);
     return new Intl.DateTimeFormat(localeTag(), { weekday: 'short', day: 'numeric' }).format(new Date(y, m - 1, d));
+  }
+
+  function sectionTitle(day) {
+    const [y, m, d] = day.split('-').map(Number);
+    if (localeTag().startsWith('zh')) {
+      const weekday = new Intl.DateTimeFormat(localeTag(), { weekday: 'short' }).format(new Date(y, m - 1, d));
+      return `${d}日${weekday}`;
+    }
+    return chipLabel(day);
   }
 
   function shiftWeek(n) {
@@ -44,15 +53,15 @@
   }
 </script>
 
-<AppBar title={t('calendar.title')} />
+<AppBar title={t('calendar.title')} historyBack />
 
 <div class="desktop-split-layout calendar-page">
   <div class="desktop-split-main">
     <div class="wrap">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <button type="button" class="btn-ghost" onclick={() => shiftWeek(-1)}>←</button>
-        <button type="button" class="btn-ghost" onclick={jumpToday}>{t('home.today')}</button>
-        <button type="button" class="btn-ghost" onclick={() => shiftWeek(1)}>→</button>
+      <div class="calendar-week-nav">
+        <button type="button" class="calendar-week-nav-btn" onclick={() => shiftWeek(-1)} aria-label={t('calendar.prevWeek')}>‹</button>
+        <button type="button" class="calendar-week-nav-today" onclick={jumpToday}>{t('home.today')}</button>
+        <button type="button" class="calendar-week-nav-btn" onclick={() => shiftWeek(1)} aria-label={t('calendar.nextWeek')}>›</button>
       </div>
 
       <div class="calendar-grid">
@@ -64,12 +73,24 @@
             class:has-tasks={countOn(day) > 0}
             onclick={() => (selected = day)}
           >
-            {label(day)}
+            {chipLabel(day)}
           </button>
         {/each}
       </div>
 
-      <TaskGroup title={label(selected)} {tasks} compactRows empty={t('common.empty')} onToggle={completeTask} onEdit={editTask} />
+      {#if tasks.length <= 3}
+        <p class="page-hint">{t('calendar.sparseHint', { count: tasks.length, label: sectionTitle(selected) })}</p>
+      {/if}
+
+      <TaskGroup
+        title={sectionTitle(selected)}
+        hideCount
+        {tasks}
+        compactRows
+        empty={t('common.empty')}
+        onToggle={completeTask}
+        onEdit={editTask}
+      />
     </div>
   </div>
 

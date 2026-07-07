@@ -24,6 +24,7 @@
 
   let start = $state('09:00');
   let duration = $state(30);
+  let showCustomTime = $state(false);
 
   const task = $derived(
     schedulePopover.taskId
@@ -44,16 +45,20 @@
   );
 
   const hasExisting = $derived(Boolean(task?.scheduledStart));
+  const presetTimes = $derived(new Set(SCHEDULE_START_TIMES));
+  const usingCustomTime = $derived(showCustomTime || !presetTimes.has(start));
 
   $effect(() => {
     const open = schedulePopover.open && !!task;
     if (!open) {
       document.documentElement.classList.remove('planner-schedule-modal-open');
+      showCustomTime = false;
       return;
     }
 
     start = task.scheduledStart || '09:00';
     duration = task.durationMinutes || defaultDurationMinutes(task);
+    showCustomTime = !presetTimes.has(start);
     lockScroll();
     document.documentElement.classList.add('planner-schedule-modal-open');
     return () => {
@@ -82,6 +87,10 @@
       key: `schedule-clear-${task.id}`,
     });
   }
+
+  function openCustomTime() {
+    showCustomTime = true;
+  }
 </script>
 
 {#if schedulePopover.open && task}
@@ -92,6 +101,7 @@
     onclick={(e) => e.target === e.currentTarget && closeSchedulePopover()}
   >
     <div class="schedule-popover" role="dialog" aria-modal="true" aria-labelledby="schedule-popover-title">
+      <div class="schedule-popover-handle" aria-hidden="true"></div>
       <div class="schedule-popover-head">
         <h2 id="schedule-popover-title" class="schedule-popover-title">{t('schedule.popoverTitle')}</h2>
         <button type="button" class="schedule-popover-close" onclick={closeSchedulePopover} aria-label={t('common.close')}>
@@ -102,13 +112,16 @@
 
       <div class="schedule-popover-section">
         <span class="schedule-popover-label">{t('schedule.presets')}</span>
-        <div class="schedule-popover-chips">
+        <div class="schedule-popover-chips schedule-popover-chips--scroll">
           {#each SCHEDULE_TIME_PRESETS as preset}
             <button
               type="button"
               class="schedule-chip schedule-chip--preset"
               class:on={start === preset.time}
-              onclick={() => (start = preset.time)}
+              onclick={() => {
+                start = preset.time;
+                showCustomTime = false;
+              }}
             >
               {t(`schedule.preset_${preset.key}`)}
             </button>
@@ -118,18 +131,40 @@
 
       <div class="schedule-popover-section">
         <span class="schedule-popover-label">{t('schedule.startTime')}</span>
-        <div class="schedule-popover-chips">
+        <div class="schedule-popover-chips schedule-popover-chips--scroll">
           {#each SCHEDULE_START_TIMES as time}
-            <button type="button" class="schedule-chip" class:on={start === time} onclick={() => (start = time)}>
+            <button
+              type="button"
+              class="schedule-chip"
+              class:on={start === time && !usingCustomTime}
+              onclick={() => {
+                start = time;
+                showCustomTime = false;
+              }}
+            >
               {time}
             </button>
           {/each}
+          <button
+            type="button"
+            class="schedule-chip schedule-chip--custom"
+            class:on={usingCustomTime}
+            onclick={openCustomTime}
+          >
+            {t('schedule.customTime')}
+          </button>
         </div>
+        {#if usingCustomTime}
+          <label class="schedule-popover-custom">
+            <span class="sr-only">{t('schedule.customTime')}</span>
+            <input type="time" bind:value={start} step="900" />
+          </label>
+        {/if}
       </div>
 
       <div class="schedule-popover-section">
         <span class="schedule-popover-label">{t('schedule.duration')}</span>
-        <div class="schedule-popover-chips">
+        <div class="schedule-popover-chips schedule-popover-chips--scroll">
           {#each SCHEDULE_DURATIONS as mins}
             <button
               type="button"
@@ -154,6 +189,7 @@
               <li>{formatConflictLabel(conflict, t)}</li>
             {/each}
           </ul>
+          <p class="schedule-popover-conflict-foot">{t('schedule.conflictSaveHint')}</p>
         </div>
       {/if}
 

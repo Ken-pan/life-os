@@ -411,10 +411,10 @@ html, body {
 .today-progress {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1-5);
   margin-bottom: var(--stack-section);
-  padding: var(--space-3) var(--space-3-5);
-  min-height: 56px;
+  padding: var(--space-2-5) var(--space-3);
+  min-height: 48px;
   border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--border);
@@ -596,6 +596,77 @@ html, body {
   background: color-mix(in srgb, var(--surface-2, var(--bg-2)) 88%, transparent);
   color: var(--t2);
   font-size: 11px;
+  font-weight: 600;
+}
+
+.today-progress--compact .today-progress-foot {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1-5);
+}
+
+.today-progress--compact .today-progress-stats {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  margin: 0;
+}
+
+.today-progress--compact .today-progress-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+  justify-content: flex-end;
+}
+
+.today-progress-chip--solo {
+  align-self: flex-end;
+}
+
+.today-progress--compact .today-progress-copy {
+  margin-bottom: 0;
+}
+
+.page-hint {
+  margin: var(--space-2) 0 var(--stack-section);
+  color: var(--t3);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.rhythm-streak-hint {
+  margin: var(--space-1-5) 0 0;
+  color: var(--t2);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+.calendar-week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.calendar-week-nav-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  color: var(--t2);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.calendar-week-nav-today {
+  min-width: 72px;
+  padding: var(--space-1-5) var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--t1);
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
@@ -842,6 +913,13 @@ html, body {
   font-size: var(--text-sm);
 }
 
+.rhythm-weekly-hint {
+  margin: var(--space-2) 0 0;
+  color: var(--t3);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
 .task-title-row {
   display: flex;
   align-items: flex-start;
@@ -858,7 +936,7 @@ html, body {
   flex-shrink: 0;
 }
 
-.task-check--focus {
+.task-check--accent {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
@@ -925,7 +1003,7 @@ html, body {
 
 .task-title.done-text {
   text-decoration: line-through;
-  color: color-mix(in srgb, var(--t2) 78%, var(--t3));
+  color: #8a837a;
 }
 
 .task-meta {
@@ -1139,9 +1217,11 @@ html, body {
   background: var(--card);
   display: grid;
   place-items: center;
-  font-size: var(--text-sm);
+  font-size: 11px;
+  line-height: 1.2;
   color: var(--t2);
   position: relative;
+  padding: 4px;
 }
 
 .cal-day.on {
@@ -1215,7 +1295,7 @@ html, body {
    * 勿把 tabbar-total-h 叠进 padding（真机会出现任务与 FAB 之间大块空黑）。
    */
   :root {
-    --mobile-content-inset: calc(148px + env(safe-area-inset-bottom, 0px));
+    --mobile-content-inset: calc(176px + env(safe-area-inset-bottom, 0px));
   }
 
   body:has(.mobile-more-backdrop) .fab {
@@ -1263,6 +1343,10 @@ html, body {
   .settings-row-stack > .file-input-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .quick-add--mobile {
+    display: flex;
   }
 
   .quick-add:not(.quick-add--mobile) {
@@ -1811,13 +1895,27 @@ html, body {
 
   .fab {
     right: 24px;
-    bottom: calc(var(--mobile-tabbar-total-h) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(104px + env(safe-area-inset-bottom, 0px));
     min-width: auto;
+    max-width: 260px;
     height: 64px;
     padding: 0 28px;
     font-size: var(--text-md);
     font-weight: 600;
     box-shadow: var(--shadow-soft);
+  }
+
+  .fab--compact {
+    width: 56px;
+    height: 56px;
+    max-width: none;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+  }
+
+  .fab--compact .fab-label {
+    display: none;
   }
 
   .fab-label {
@@ -2212,12 +2310,79 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: calc(var(--z-sheet, 100) + 2);
-  display: grid;
-  place-items: center;
-  padding: var(--space-4);
-  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+}
+
+@media (--life-os-desktop) {
+  .schedule-popover-bg {
+    display: grid;
+    place-items: center;
+    padding: var(--space-4);
+  }
+}
+
+.schedule-popover-handle {
+  display: none;
+}
+
+.schedule-popover {
+  position: relative;
+  z-index: calc(var(--z-sheet, 100) + 3);
+  width: min(100%, 420px);
+  padding: var(--space-3-5);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow-elevated);
+}
+
+@media (--life-os-mobile) {
+  .schedule-popover {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(85dvh, 760px);
+    overflow-y: auto;
+    border-radius: 28px 28px 0 0;
+    padding: 12px 24px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .schedule-popover-handle {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 0 auto var(--space-3);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--t1) 18%, transparent);
+  }
+
+  .schedule-popover-chips--scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .schedule-popover-chips--scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .schedule-popover-custom input[type='time'] {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--t1);
+    font-size: var(--text-md);
+  }
 }
 
 html.planner-schedule-modal-open .sidebar {
@@ -2235,17 +2400,6 @@ html.planner-schedule-modal-open .sidebar {
 html.planner-schedule-modal-open .schedule-popover-bg,
 html.planner-schedule-modal-open .schedule-popover {
   pointer-events: auto;
-}
-
-.schedule-popover {
-  position: relative;
-  z-index: calc(var(--z-sheet, 100) + 3);
-  width: min(100%, 420px);
-  padding: var(--space-3-5);
-  border-radius: var(--radius-control);
-  border: 1px solid var(--border);
-  background: var(--card);
-  box-shadow: var(--shadow-elevated);
 }
 
 .schedule-popover-head {
@@ -2330,8 +2484,8 @@ html.planner-schedule-modal-open .schedule-popover {
   margin: 0 0 var(--space-3);
   padding: var(--space-2-5);
   border-radius: var(--radius-control);
-  border: 1px solid color-mix(in srgb, var(--warning) 55%, var(--border));
-  background: color-mix(in srgb, var(--warning) 16%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--warning) 32%, var(--border));
+  background: color-mix(in srgb, var(--warning) 10%, var(--card));
 }
 
 .schedule-popover-conflict-head {
@@ -2347,6 +2501,13 @@ html.planner-schedule-modal-open .schedule-popover {
 .schedule-popover-conflict-list {
   margin: var(--space-2) 0 0;
   padding-left: 1.25rem;
+  color: var(--t2);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+.schedule-popover-conflict-foot {
+  margin: var(--space-2) 0 0;
   color: var(--t2);
   font-size: var(--text-xs);
   line-height: 1.45;

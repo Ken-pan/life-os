@@ -327,7 +327,7 @@
         class="task-check"
         class:on={showAsCompleted}
         class:completing
-        class:task-check--focus={kind === 'focus'}
+        class:task-check--accent={kind === 'focus' || task.priority === 1}
         aria-label="toggle"
         onclick={handleCheckToggle}
       >

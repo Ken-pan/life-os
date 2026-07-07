@@ -18,6 +18,7 @@
     scheduleDate?: string,
     contextDate?: string,
     sectionId?: string,
+    hideCount?: boolean,
     onToggle?: (id: string) => void,
     onEdit?: (task: import('$lib/types.js').Task) => void
   }} */
@@ -26,6 +27,7 @@
     tasks,
     empty,
     hideHeader = false,
+    hideCount = false,
     collapsible = false,
     defaultExpanded = true,
     compactRows = false,
@@ -53,14 +55,18 @@
       >
         <h2 class="sec-title">{title}</h2>
         <span class="sec-header-trailing">
-          <span class="sec-count">{tasks.length}</span>
+          {#if !hideCount}
+            <span class="sec-count">{tasks.length}</span>
+          {/if}
           <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={16} strokeWidth={2} />
         </span>
       </button>
     {:else}
       <div class="sec-header">
         <h2 class="sec-title">{title}</h2>
-        <span class="sec-count">{tasks.length}</span>
+        {#if !hideCount}
+          <span class="sec-count">{tasks.length}</span>
+        {/if}
       </div>
     {/if}
   {/if}

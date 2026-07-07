@@ -6,6 +6,7 @@ import {
   selectSearch,
   selectTodayGroups,
   selectUpcomingGroups,
+  selectInboxTasks,
   selectAllTags,
   selectCompleted,
   selectCompletedToday,
@@ -145,13 +146,33 @@ describe('selectCompletedToday + selectTodayProgress', () => {
 })
 
 describe('selectUpcomingGroups', () => {
-  it('places tasks in tomorrow bucket', () => {
+  it('places tasks in tomorrow bucket without today or nodate groups', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 6, 5, 12, 0, 0))
     const groups = selectUpcomingGroups(buildTaskIndex(tasks))
-    expect(groups.today).toHaveLength(1)
     expect(groups.tomorrow).toHaveLength(1)
-    expect(groups.nodate).toHaveLength(1)
+    expect(groups.week).toHaveLength(0)
+    expect(groups.later).toHaveLength(0)
+    vi.useRealTimers()
+  })
+})
+
+describe('selectInboxTasks', () => {
+  it('only returns unprocessed capture items', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 5, 12, 0, 0))
+    const index = buildTaskIndex([
+      ...tasks,
+      {
+        ...tasks[0],
+        id: 'scheduled-inbox',
+        title: 'Scheduled inbox',
+        dueDate: '2026-07-05',
+        scheduledStart: '09:00',
+      },
+    ])
+    const inbox = selectInboxTasks(index, 'inbox')
+    expect(inbox.map((t) => t.title)).toEqual(['No date'])
     vi.useRealTimers()
   })
 })
