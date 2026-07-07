@@ -1,0 +1,10 @@
+event_name,trigger,props,KPI
+nav.home.today,路由进入 /home/today,path,首击/导航成功率
+nav.money.accounts,路由进入 /accounts,path,账户更新路径深度
+nav.review.import,路由进入 /review/import,path,审查闭环率
+nav.plan.decision.compare,路由进入 /decision/compare,path,决策深链使用率
+funnel.onboarding.step.click,GettingStarted 步骤点击,step,Onboarding 完成率
+funnel.review.import.started,CSV 映射完成进入 step 2,,导入完成率
+funnel.review.import.finalized,导入 finalize 成功,"accepted, review",审查闭环率
+funnel.review.calibrate.applied,计划校准应用,rows; mode,审查闭环率
+funnel.review.reconcile.completed,账户对账完成,accountId; balanced,审查闭环率

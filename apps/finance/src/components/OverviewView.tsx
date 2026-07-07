@@ -1,15 +1,12 @@
-import type { ReactNode } from "react";
-import type { FinanceData } from "../types";
-import type { Projection } from "../hooks/useProjection";
-import type { Dashboard } from "../hooks/useDashboard";
-import type { GoTab } from "./AppShell";
-import { HoldingsOverviewCard } from "./stocks/HoldingsOverviewCard";
-import { goalReachMonth } from "../engine/metrics";
-import { signedMonthOffset } from "../engine/calendar";
-import {
-  safeToSpendLabel,
-  safeToSpendExplainTitle,
-} from "../copy/metrics";
+import type { ReactNode } from 'react'
+import type { FinanceData } from '../types'
+import type { Projection } from '../hooks/useProjection'
+import type { Dashboard } from '../hooks/useDashboard'
+import type { GoTab } from './AppShell'
+import { HoldingsOverviewCard } from './stocks/HoldingsOverviewCard'
+import { goalReachMonth } from '../engine/metrics'
+import { signedMonthOffset } from '../engine/calendar'
+import { safeToSpendLabel, safeToSpendExplainTitle } from '../copy/metrics'
 import {
   accessibleLabel,
   lockedLabel,
@@ -17,8 +14,8 @@ import {
   stsBreakdown,
   welcomeTitle,
   netWorthLabel,
-} from "../copy/terminology";
-import { useLocale } from "../i18n/context";
+} from '../copy/terminology'
+import { useLocale } from '../i18n/context'
 import {
   money,
   signedMoney,
@@ -26,7 +23,7 @@ import {
   isoToCalendarLabel,
   monthOffsetToCalendarLabel,
   depositDeltaClass,
-} from "../format";
+} from '../format'
 
 function Kpi({
   label,
@@ -35,19 +32,19 @@ function Kpi({
   lead,
   privacy,
 }: {
-  label: string;
-  value: number;
-  sub?: ReactNode;
-  lead?: boolean;
-  privacy: boolean;
+  label: string
+  value: number
+  sub?: ReactNode
+  lead?: boolean
+  privacy: boolean
 }) {
   return (
-    <div className={`card kpi${lead ? " kpi-lead" : ""}`}>
+    <div className={`card kpi${lead ? ' kpi-lead' : ''}`}>
       <span className="label">{label}</span>
       <span className="value">{money(value, privacy)}</span>
       {sub && <span className="sub">{sub}</span>}
     </div>
-  );
+  )
 }
 
 export function OverviewView({
@@ -59,55 +56,60 @@ export function OverviewView({
   onGoStocks,
   tabActive = true,
 }: {
-  data: FinanceData;
-  projection: Projection;
-  dashboard: Dashboard;
-  onOpenSpend: () => void;
-  onGoTab: GoTab;
-  onGoStocks: (snapshotId?: string) => void;
-  tabActive?: boolean;
+  data: FinanceData
+  projection: Projection
+  dashboard: Dashboard
+  onOpenSpend: () => void
+  onGoTab: GoTab
+  onGoStocks: (snapshotId?: string) => void
+  tabActive?: boolean
 }) {
-  const { summary, baseline } = projection;
-  const { derived } = dashboard;
-  const { t } = useLocale();
-  const sts = stsBreakdown();
-  const liquidCash = liquidCashLabel();
-  const safeToSpend = safeToSpendLabel();
-  const netWorth = netWorthLabel();
-  const privacy = data.privacy;
-  const now = baseline[0];
-  const m1 = baseline[1] ?? now;
+  const { summary, baseline } = projection
+  const { derived } = dashboard
+  const { t } = useLocale()
+  const sts = stsBreakdown()
+  const liquidCash = liquidCashLabel()
+  const safeToSpend = safeToSpendLabel()
+  const netWorth = netWorthLabel()
+  const privacy = data.privacy
+  const now = baseline[0]
+  const m1 = baseline[1] ?? now
 
   if (data.accounts.length === 0 && data.cashFlows.length === 0) {
     return (
       <div className="empty">
         <h2 className="mb-2">{welcomeTitle()}</h2>
-        <p className="text-secondary">{t("overview.emptyHint")}</p>
+        <p className="text-secondary">{t('overview.emptyHint')}</p>
         <div className="flex-row-center mt-4">
-          <button className="btn" onClick={() => onGoTab("settings")}>
-            {t("today.addAccounts")}
+          <button className="btn" onClick={() => onGoTab('accounts')}>
+            {t('today.addAccounts')}
           </button>
-          <button className="btn ghost" onClick={() => onGoTab("history", "fixed")}>
-            {t("today.addCashflows")}
+          <button
+            className="btn ghost"
+            onClick={() => onGoTab('history', 'fixed')}
+          >
+            {t('today.addCashflows')}
           </button>
         </div>
       </div>
-    );
+    )
   }
 
-  const runway = summary.emergencyRunwayMonths;
+  const runway = summary.emergencyRunwayMonths
 
   return (
     <div className="grid gap-4">
-      <p className="muted-note mb-1">{t("overview.intro")}</p>
+      <p className="muted-note mb-1">{t('overview.intro')}</p>
       <div className="grid kpi-row-4">
         <Kpi
           label={netWorth}
           value={summary.netWorth}
           sub={
             <>
-              {t("overview.netWorthSubPrefix")}{" "}
-              <span className={depositDeltaClass(summary.netWorthChangeThisYear)}>
+              {t('overview.netWorthSubPrefix')}{' '}
+              <span
+                className={depositDeltaClass(summary.netWorthChangeThisYear)}
+              >
                 {signedMoney(summary.netWorthChangeThisYear, privacy)}
               </span>
             </>
@@ -119,29 +121,33 @@ export function OverviewView({
           value={derived.liquidCash}
           sub={
             derived.cashAnchors.hasAnchoredAccounts
-              ? t("overview.liquidAnchored")
+              ? t('overview.liquidAnchored')
               : runway != null
-                ? t("overview.liquidRunway", { months: runway.toFixed(1) })
-                : t("overview.liquidCheckingSavings")
+                ? t('overview.liquidRunway', { months: runway.toFixed(1) })
+                : t('overview.liquidCheckingSavings')
           }
           privacy={privacy}
         />
         <Kpi
-          label={t("terminology.invested")}
+          label={t('terminology.invested')}
           value={summary.invested}
-          sub={t("overview.investedSub", { pct: pct(summary.investedPct) })}
+          sub={t('overview.investedSub', { pct: pct(summary.investedPct) })}
           privacy={privacy}
         />
         <Kpi
           label={safeToSpend}
           value={derived.safeToSpend}
-          sub={t("overview.safeToSpendSub")}
+          sub={t('overview.safeToSpendSub')}
           privacy={privacy}
         />
       </div>
 
       {(data.holdingsSnapshots?.length ?? 0) > 0 && (
-        <HoldingsOverviewCard data={data} tabActive={tabActive} onGoStocks={onGoStocks} />
+        <HoldingsOverviewCard
+          data={data}
+          tabActive={tabActive}
+          onGoStocks={onGoStocks}
+        />
       )}
 
       <div className="card">
@@ -149,34 +155,51 @@ export function OverviewView({
         <div className="list">
           <div className="kv">
             <span className="k">{sts.lowest30d}</span>
-            <span>{money(derived.safeToSpendBreakdown.lowestProjectedOperatingCash30d, privacy)}</span>
+            <span>
+              {money(
+                derived.safeToSpendBreakdown.lowestProjectedOperatingCash30d,
+                privacy,
+              )}
+            </span>
           </div>
           <div className="kv">
             <span className="k">{sts.buffer}</span>
-            <span>{money(derived.safeToSpendBreakdown.operatingCashBuffer, privacy)}</span>
+            <span>
+              {money(derived.safeToSpendBreakdown.operatingCashBuffer, privacy)}
+            </span>
           </div>
           <div className="kv">
             <span className="k">{sts.goalReserve}</span>
-            <span>{money(derived.safeToSpendBreakdown.earmarkedOperatingGoalCash, privacy)}</span>
+            <span>
+              {money(
+                derived.safeToSpendBreakdown.earmarkedOperatingGoalCash,
+                privacy,
+              )}
+            </span>
           </div>
           <div className="kv">
             <span className="k">{sts.protectedReserve}</span>
-            <span>{money(derived.safeToSpendBreakdown.protectedReserveExcludedUpstream, privacy)}</span>
+            <span>
+              {money(
+                derived.safeToSpendBreakdown.protectedReserveExcludedUpstream,
+                privacy,
+              )}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="card">
-        <h3>{t("overview.driversTitle")}</h3>
+        <h3>{t('overview.driversTitle')}</h3>
         <ChangeDrivers now={now} m1={m1} privacy={privacy} />
       </div>
 
       <div className="grid cols-2">
         <div className="card">
           <div className="section-head">
-            <h3>{t("overview.whereMoneyGoes")}</h3>
-            <button className="text-btn" onClick={() => onGoTab("forecast")}>
-              {t("overview.viewForecast")}
+            <h3>{t('overview.whereMoneyGoes')}</h3>
+            <button className="text-btn" onClick={() => onGoTab('forecast')}>
+              {t('overview.viewForecast')}
             </button>
           </div>
           <CashflowWaterfall
@@ -187,11 +210,13 @@ export function OverviewView({
         </div>
 
         <div className="card">
-          <h3>{t("overview.goalsTitle")}</h3>
-          {data.goals.length === 0 && <p className="text-muted">{t("overview.noGoals")}</p>}
+          <h3>{t('overview.goalsTitle')}</h3>
+          {data.goals.length === 0 && (
+            <p className="text-muted">{t('overview.noGoals')}</p>
+          )}
           <div className="list">
             {data.goals.map((g) => {
-              const m = goalReachMonth(baseline, g);
+              const m = goalReachMonth(baseline, g)
               return (
                 <div className="item" key={g.id}>
                   <div className="grow">
@@ -200,11 +225,13 @@ export function OverviewView({
                   </div>
                   <div className="amount text-secondary">
                     {m == null
-                      ? t("overview.goalUnreachable")
-                      : t("overview.goalEta", { when: monthOffsetToCalendarLabel(m) })}
+                      ? t('overview.goalUnreachable')
+                      : t('overview.goalEta', {
+                          when: monthOffsetToCalendarLabel(m),
+                        })}
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
@@ -214,15 +241,15 @@ export function OverviewView({
 
       <div className="card">
         <div className="section-head">
-          <h3>{t("overview.spendImpactTitle")}</h3>
+          <h3>{t('overview.spendImpactTitle')}</h3>
           <button className="btn" onClick={onOpenSpend}>
-            {t("overview.trySpend")}
+            {t('overview.trySpend')}
           </button>
         </div>
-        <p className="muted-note">{t("overview.spendImpactHint")}</p>
+        <p className="muted-note">{t('overview.spendImpactHint')}</p>
       </div>
     </div>
-  );
+  )
 }
 
 function ChangeDrivers({
@@ -230,24 +257,36 @@ function ChangeDrivers({
   m1,
   privacy,
 }: {
-  now: Projection["baseline"][number];
-  m1: Projection["baseline"][number];
-  privacy: boolean;
+  now: Projection['baseline'][number]
+  m1: Projection['baseline'][number]
+  privacy: boolean
 }) {
-  const { t } = useLocale();
-  const liquidCash = liquidCashLabel();
+  const { t } = useLocale()
+  const liquidCash = liquidCashLabel()
   const drivers = [
-    { label: t("overview.driverMonthlySurplus"), delta: m1.surplus },
-    { label: t("overview.driverOneTime"), delta: m1.oneTimeIncome - m1.oneTimeExpense },
-    { label: t("overview.driverInvestedChange"), delta: m1.invested - now.invested },
-    { label: t("overview.driverLiquidChange", { liquidCash }), delta: m1.liquidCash - now.liquidCash },
-    { label: t("overview.driverLiabilitiesChange"), delta: now.liabilities - m1.liabilities },
+    { label: t('overview.driverMonthlySurplus'), delta: m1.surplus },
+    {
+      label: t('overview.driverOneTime'),
+      delta: m1.oneTimeIncome - m1.oneTimeExpense,
+    },
+    {
+      label: t('overview.driverInvestedChange'),
+      delta: m1.invested - now.invested,
+    },
+    {
+      label: t('overview.driverLiquidChange', { liquidCash }),
+      delta: m1.liquidCash - now.liquidCash,
+    },
+    {
+      label: t('overview.driverLiabilitiesChange'),
+      delta: now.liabilities - m1.liabilities,
+    },
   ]
     .filter((x) => Math.abs(x.delta) >= 1)
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
-    .slice(0, 3);
+    .slice(0, 3)
   if (drivers.length === 0) {
-    return <p className="muted-note">{t("overview.noDrivers")}</p>;
+    return <p className="muted-note">{t('overview.noDrivers')}</p>
   }
   return (
     <div className="list">
@@ -259,52 +298,64 @@ function ChangeDrivers({
           </span>
         </div>
       ))}
-      <p className="muted-note">{t("overview.driversNote")}</p>
+      <p className="muted-note">{t('overview.driversNote')}</p>
     </div>
-  );
+  )
 }
 
 interface UpcomingItem {
-  id: string;
-  name: string;
-  month: number;
-  whenLabel: string;
-  signed: number;
+  id: string
+  name: string
+  month: number
+  whenLabel: string
+  signed: number
 }
 
-function UpcomingFlows({ data, onGoTab }: { data: FinanceData; onGoTab: GoTab }) {
-  const { t } = useLocale();
-  const now = new Date();
-  const items: UpcomingItem[] = [];
+function UpcomingFlows({
+  data,
+  onGoTab,
+}: {
+  data: FinanceData
+  onGoTab: GoTab
+}) {
+  const { t } = useLocale()
+  const now = new Date()
+  const items: UpcomingItem[] = []
 
   for (const e of data.events) {
-    if (!e.enabled) continue;
-    if (e.eventType !== "windfall" && e.eventType !== "one-time-purchase") continue;
-    const month = e.date ? signedMonthOffset(now, e.date) : Math.round(e.monthOffset);
-    const amt = e.amount ?? 0;
+    if (!e.enabled) continue
+    if (e.eventType !== 'windfall' && e.eventType !== 'one-time-purchase')
+      continue
+    const month = e.date
+      ? signedMonthOffset(now, e.date)
+      : Math.round(e.monthOffset)
+    const amt = e.amount ?? 0
     items.push({
       id: e.id,
       name: e.name,
       month,
-      whenLabel: e.date ? isoToCalendarLabel(e.date) : monthOffsetToCalendarLabel(month),
-      signed: e.eventType === "windfall" ? amt : -amt,
-    });
+      whenLabel: e.date
+        ? isoToCalendarLabel(e.date)
+        : monthOffsetToCalendarLabel(month),
+      signed: e.eventType === 'windfall' ? amt : -amt,
+    })
   }
-  items.sort((a, b) => a.month - b.month);
-  const upcoming = items.filter((i) => i.month >= 0).slice(0, 8);
+  items.sort((a, b) => a.month - b.month)
+  const upcoming = items.filter((i) => i.month >= 0).slice(0, 8)
 
   return (
     <div className="card">
       <div className="card-head">
-        <h3>{t("overview.upcomingTitle")}</h3>
-        <button className="icon-btn" onClick={() => onGoTab("history", "oneoff")}>
-          {t("overview.upcomingAdd")}
+        <h3>{t('overview.upcomingTitle')}</h3>
+        <button
+          className="icon-btn"
+          onClick={() => onGoTab('history', 'oneoff')}
+        >
+          {t('overview.upcomingAdd')}
         </button>
       </div>
       {upcoming.length === 0 ? (
-        <p className="muted-note">
-          {t("overview.upcomingEmpty")}
-        </p>
+        <p className="muted-note">{t('overview.upcomingEmpty')}</p>
       ) : (
         <div className="list">
           {upcoming.map((i) => (
@@ -321,7 +372,7 @@ function UpcomingFlows({ data, onGoTab }: { data: FinanceData; onGoTab: GoTab })
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function CashflowWaterfall({
@@ -329,79 +380,85 @@ function CashflowWaterfall({
   displayLiquidCash,
   privacy,
 }: {
-  summary: Projection["summary"];
-  displayLiquidCash: number;
-  privacy: boolean;
+  summary: Projection['summary']
+  displayLiquidCash: number
+  privacy: boolean
 }) {
-  const { t } = useLocale();
-  const accessible = accessibleLabel();
-  const liquidCash = liquidCashLabel();
-  const locked = lockedLabel();
+  const { t } = useLocale()
+  const accessible = accessibleLabel()
+  const liquidCash = liquidCashLabel()
+  const locked = lockedLabel()
   return (
     <div className="list">
       <div className="kv">
-        <span className="k">{t("overview.accessibleAfterTax", { accessible })}</span>
+        <span className="k">
+          {t('overview.accessibleAfterTax', { accessible })}
+        </span>
         <span>{money(summary.accessible, privacy)}</span>
       </div>
       <div className="kv">
-        <span className="k">{t("overview.locked401k", { locked })}</span>
+        <span className="k">{t('overview.locked401k', { locked })}</span>
         <span>{money(summary.locked, privacy)}</span>
       </div>
       <p className="muted-note mb-1-5">
-        {t("overview.waterfallFormula", { accessible, liquidCash, locked })}
+        {t('overview.waterfallFormula', { accessible, liquidCash, locked })}
       </p>
       <div className="kv">
-        <span className="k">{t("overview.liquidBreakdown", { liquidCash })}</span>
+        <span className="k">
+          {t('overview.liquidBreakdown', { liquidCash })}
+        </span>
         <span>{money(displayLiquidCash, privacy)}</span>
       </div>
       {summary.investedTaxable > 0 && (
         <>
           <div className="kv">
-            <span className="k">{t("overview.brokerageMarket")}</span>
+            <span className="k">{t('overview.brokerageMarket')}</span>
             <span>{money(summary.investedTaxable, privacy)}</span>
           </div>
           {summary.taxBasisKnown ? (
             <>
               <div className="kv">
-                <span className="k">{t("overview.brokerageBasis")}</span>
+                <span className="k">{t('overview.brokerageBasis')}</span>
                 <span>{money(summary.investedTaxableBasis, privacy)}</span>
               </div>
               <div className="kv">
-                <span className="k">{t("overview.brokerageUnrealized")}</span>
+                <span className="k">{t('overview.brokerageUnrealized')}</span>
                 <span>{money(summary.unrealizedGainEstimate, privacy)}</span>
               </div>
               <div className="kv">
-                <span className="k">{t("overview.brokerageTaxIfSell")}</span>
+                <span className="k">{t('overview.brokerageTaxIfSell')}</span>
                 <span>{money(summary.capitalGainsTaxEstimate, privacy)}</span>
               </div>
               <div className="kv">
-                <span className="k">{t("overview.brokerageAfterTax", { accessible })}</span>
+                <span className="k">
+                  {t('overview.brokerageAfterTax', { accessible })}
+                </span>
                 <span>{money(summary.investedTaxableAfterTax, privacy)}</span>
               </div>
             </>
           ) : (
             <p className="muted-note mb-1-5">
-              {t("overview.brokerageNoBasis", { accessible })}
+              {t('overview.brokerageNoBasis', { accessible })}
             </p>
           )}
         </>
       )}
       {summary.reserve > 0 && (
         <div className="kv">
-          <span className="k">{t("overview.reserveBreakdown")}</span>
+          <span className="k">{t('overview.reserveBreakdown')}</span>
           <span>{money(summary.reserve, privacy)}</span>
         </div>
       )}
       <div className="kv">
-        <span className="k">{t("overview.investedTotal")}</span>
+        <span className="k">{t('overview.investedTotal')}</span>
         <span>{money(summary.invested, privacy)}</span>
       </div>
       <div className="kv">
-        <span className="k">{t("overview.monthlySurplusAvg")}</span>
+        <span className="k">{t('overview.monthlySurplusAvg')}</span>
         <span className={depositDeltaClass(summary.monthlySurplus)}>
           {signedMoney(summary.monthlySurplus, privacy)}
         </span>
       </div>
     </div>
-  );
+  )
 }

@@ -1,34 +1,76 @@
-import { describe, expect, it } from "vitest";
-import { buildAppHash, parseAppHash } from "./appRoute";
+import { describe, expect, it } from 'vitest'
+import {
+  buildAppHash,
+  buildAppPath,
+  migrateLegacyRouteUrl,
+  parseAppHash,
+  parseAppPath,
+  resolveGoTabTarget,
+  routeDepth,
+} from './appRoute'
 
-describe("appRoute", () => {
-  it("parses tab-only hash", () => {
-    expect(parseAppHash("#/overview")).toEqual({ tab: "overview" });
-    expect(parseAppHash("#overview")).toEqual({ tab: "overview" });
-  });
+describe('appRoute', () => {
+  it('parses pathname routes with default section', () => {
+    expect(parseAppPath('/')).toEqual({ tab: 'home', section: 'today' })
+    expect(parseAppPath('/accounts')).toEqual({ tab: 'accounts' })
+    expect(parseAppPath('/home')).toEqual({ tab: 'home', section: 'today' })
+  })
 
-  it("parses tab with section", () => {
-    expect(parseAppHash("#/history/insights")).toEqual({
-      tab: "history",
-      section: "insights",
-    });
-    expect(parseAppHash("#/forecast/scenarios")).toEqual({
-      tab: "forecast",
-      section: "scenarios",
-    });
-  });
+  it('parses pathname with section', () => {
+    expect(parseAppPath('/home/overview')).toEqual({
+      tab: 'home',
+      section: 'overview',
+    })
+    expect(parseAppPath('/decision/compare')).toEqual({
+      tab: 'decision',
+      section: 'compare',
+    })
+  })
 
-  it("rejects invalid tab or section", () => {
-    expect(parseAppHash("#/nope")).toBeNull();
-    expect(parseAppHash("#/history/nope")).toBeNull();
-  });
+  it('parses legacy hash routes', () => {
+    expect(parseAppHash('#/today')).toEqual({ tab: 'home', section: 'today' })
+    expect(parseAppHash('#/settings/accounts')).toEqual({ tab: 'accounts' })
+  })
 
-  it("builds hash round-trip", () => {
-    const route = { tab: "review" as const, section: "baseline" };
-    expect(parseAppHash(buildAppHash(route))).toEqual(route);
-  });
+  it('rejects invalid routes', () => {
+    expect(parseAppPath('/nope')).toBeNull()
+    expect(parseAppPath('/history/nope')).toBeNull()
+    expect(parseAppPath('/api/stooq')).toBeNull()
+  })
 
-  it("empty hash defaults to today", () => {
-    expect(parseAppHash("")).toEqual({ tab: "today" });
-  });
-});
+  it('builds pathname round-trip', () => {
+    const route = { tab: 'review' as const, section: 'baseline' }
+    expect(parseAppPath(buildAppPath(route))).toEqual(route)
+  })
+
+  it('buildAppHash mirrors pathname as hash', () => {
+    expect(buildAppHash({ tab: 'accounts' })).toBe('#/accounts')
+    expect(buildAppHash({ tab: 'decision', section: 'log' })).toBe(
+      '#/decision/log',
+    )
+  })
+
+  it('resolveGoTabTarget supports legacy go-tab calls', () => {
+    expect(resolveGoTabTarget('today')).toEqual({
+      tab: 'home',
+      section: 'today',
+    })
+    expect(resolveGoTabTarget('settings', 'accounts')).toEqual({
+      tab: 'accounts',
+    })
+  })
+
+  it('routeDepth for breadcrumbs', () => {
+    expect(routeDepth({ tab: 'home', section: 'today' })).toBe(1)
+    expect(routeDepth({ tab: 'history', section: 'insights' })).toBe(2)
+    expect(routeDepth({ tab: 'accounts' })).toBe(1)
+  })
+
+  it('migrateLegacyRouteUrl normalizes hash to pathname', () => {
+    window.history.replaceState(null, '', '/?keep=1#/decision/saved')
+    migrateLegacyRouteUrl()
+    expect(window.location.pathname).toBe('/decision/saved')
+    expect(window.location.hash).toBe('')
+    expect(window.location.search).toBe('?keep=1')
+  })
+})

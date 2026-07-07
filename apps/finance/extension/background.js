@@ -29,7 +29,7 @@ const RH_ENRICH_TAB_GAP_MS = 400
 /** @type {Promise<void> | null} */
 let rhEnrichChain = null
 
-const FINANCE_OS_PRODUCTION_URL = 'https://kensfinanceos.netlify.app/#/today'
+const FINANCE_OS_PRODUCTION_URL = 'https://kensfinanceos.netlify.app/home/today'
 const FINANCE_OS_NETLIFY_HOST = 'kensfinanceos.netlify.app'
 const TAB_EDIT_RETRY_ATTEMPTS = 8
 const TAB_EDIT_RETRY_MS = 250

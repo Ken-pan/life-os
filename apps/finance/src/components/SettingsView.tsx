@@ -4,7 +4,6 @@ import { useFinance } from '../store/store'
 import { defaultAssumptions } from '../store/defaults'
 import { NumberField, PercentField } from './fields'
 import { DeviceManager } from '../auth/DeviceManager'
-import { AccountsView } from './AccountsView'
 import { HorizontalTabs, TabPanel } from './HorizontalTabs'
 import {
   clearLegacyLocalFinanceKeys,
@@ -32,12 +31,14 @@ import { useTransactions } from '../store/transactions'
 import { useLocale } from '../i18n/context'
 import { formatDateTimeForIntl } from '../format'
 import { SettingsAppearanceSection } from './settings/SettingsAppearanceSection'
-import { SettingsSection } from './settings/SettingsSection'
+import { SettingsSection as SettingsSectionCard } from './settings/SettingsSection'
 import { SettingsPrefRow } from './settings/SettingsPrefRow'
 import { SettingsButtonGroup } from './settings/SettingsButtonGroup'
 import type { ThemePreference } from '../lib/themePreference'
-
-export type SettingsSection = 'accounts' | 'assumptions' | 'app'
+import type { SettingsSection } from '../lib/appRoute'
+import type { GoTab } from './AppShell'
+import { HelpCenterView } from './HelpCenterView'
+import { AnalyticsPanel } from './settings/AnalyticsPanel'
 
 export function SettingsView({
   themePreference,
@@ -46,7 +47,7 @@ export function SettingsView({
   onLockPortraitOnPhoneChange,
   section,
   onSectionChange,
-  onGoStocks,
+  onGoTab,
 }: {
   themePreference: ThemePreference
   onThemePreferenceChange: (preference: ThemePreference) => void
@@ -54,7 +55,7 @@ export function SettingsView({
   onLockPortraitOnPhoneChange?: (enabled: boolean) => void
   section?: SettingsSection
   onSectionChange?: (section: SettingsSection) => void
-  onGoStocks?: () => void
+  onGoTab?: GoTab
 }) {
   const store = useFinance()
   const a = store.data.assumptions
@@ -74,7 +75,7 @@ export function SettingsView({
     }
   })
   const [internalSection, setInternalSection] =
-    useState<SettingsSection>('accounts')
+    useState<SettingsSection>('assumptions')
   const [legacyConfirmText, setLegacyConfirmText] = useState('')
   const [legacyBlobPresent, setLegacyBlobPresent] = useState(
     () => readLegacyLocalFinance() != null,
@@ -262,9 +263,9 @@ export function SettingsView({
   }
 
   const sections: { id: SettingsSection; label: string }[] = [
-    { id: 'accounts', label: t('settings.sectionAccounts') },
     { id: 'assumptions', label: t('settings.sectionAssumptions') },
     { id: 'app', label: t('settings.sectionApp') },
+    { id: 'help', label: t('settings.sectionHelp') },
   ]
 
   return (
@@ -280,14 +281,6 @@ export function SettingsView({
           if (!onSectionChange) setInternalSection(next)
         }}
       >
-        <TabPanel
-          tabId="accounts"
-          active={activeSection === 'accounts'}
-          className="settings-section"
-        >
-          <AccountsView onGoStocks={onGoStocks} />
-        </TabPanel>
-
         <TabPanel tabId="assumptions" active={activeSection === 'assumptions'}>
           <div className="card">
             <div className="section-head">
@@ -472,7 +465,7 @@ export function SettingsView({
             lockPortraitOnPhone={lockPortraitOnPhone}
             onLockPortraitOnPhoneChange={onLockPortraitOnPhoneChange}
           />
-          <SettingsSection title={t('settings.uiPrefs')}>
+          <SettingsSectionCard title={t('settings.uiPrefs')}>
             <SettingsPrefRow
               label={t('settings.amountDisplay')}
               desc={t('settings.amountDisplayDesc')}
@@ -501,8 +494,8 @@ export function SettingsView({
                   : t('settings.hideAmounts')}
               </button>
             </SettingsPrefRow>
-          </SettingsSection>
-          <SettingsSection
+          </SettingsSectionCard>
+          <SettingsSectionCard
             title={t('settings.dataTitle')}
             testId="settings-backup"
           >
@@ -691,8 +684,19 @@ export function SettingsView({
             {dataActionResult && (
               <p className="muted-note mb-0">{dataActionResult}</p>
             )}
-          </SettingsSection>
+          </SettingsSectionCard>
+          <AnalyticsPanel />
           <DeviceManager />
+        </TabPanel>
+
+        <TabPanel tabId="help" active={activeSection === 'help'}>
+          {onGoTab ? (
+            <HelpCenterView onGoTab={onGoTab} />
+          ) : (
+            <div className="card">
+              <p className="muted-note">{t('help.centerIntro')}</p>
+            </div>
+          )}
         </TabPanel>
       </HorizontalTabs>
     </div>

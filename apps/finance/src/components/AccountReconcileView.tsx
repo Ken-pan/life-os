@@ -15,6 +15,7 @@ import {
 } from "../lib/repo";
 import { useTimeline } from "../store/timeline";
 import { useLocale } from "../i18n/context";
+import { trackFunnel, FUNNEL_EVENTS } from "../lib/analytics";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -119,6 +120,11 @@ export function AccountReconcileView({ data }: { data: FinanceData }) {
       await timeline.reload();
       setStatedBalance("");
       setNote("");
+      trackFunnel(FUNNEL_EVENTS.reviewReconcileCompleted, {
+        accountId: selected.id,
+        withAdjustment: withAdjustment && !preview.isBalanced,
+        balanced: preview.isBalanced,
+      });
     } catch (e) {
       setError(errorMessage(e, t("reconcile.reconcileFailed")));
     } finally {

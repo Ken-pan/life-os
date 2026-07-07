@@ -17,13 +17,14 @@ import { useFinance } from '../store/store'
 import { useDashboard } from '../hooks/useDashboard'
 import { daysSince } from '../format'
 import { SyncErrorBanner } from './SyncErrorBanner'
-import { TodayView } from './TodayView'
-import { OverviewView } from './OverviewView'
+import { HomeHubView } from './HomeHubView'
+import { AccountsView } from './AccountsView'
 import { RecordsView, type RecordsSection } from './RecordsView'
 import { ForecastHubView, type ForecastSection } from './ForecastHubView'
 import { ReviewView, type ReviewTab } from './ReviewView'
 import { DecisionStudioView } from './DecisionStudioView'
-import { SettingsView, type SettingsSection } from './SettingsView'
+import { SettingsView } from './SettingsView'
+import type { SettingsSection } from '../lib/appRoute'
 import { SpendImpactDrawer } from './SpendImpactDrawer'
 import { TxnEntryDrawer } from './TxnEntryDrawer'
 import { CashflowQuickAddDrawer } from './CashflowQuickAddDrawer'
@@ -34,14 +35,19 @@ import { useLocale } from '../i18n/context'
 import { formatDateForIntl } from '../format'
 import { liquidCashLabel, netWorthLabel } from '../copy/terminology'
 import {
-  buildAppHash,
-  parseAppHash,
+  buildAppPath,
   readAppRouteFromWindow,
-  writeAppHash,
+  resolveGoTabTarget,
+  writeAppRoute,
   type AppRoute,
+  type AppTabId,
+  type DecisionSection,
+  type HomeSection,
+  type LegacyTabId,
 } from '../lib/appRoute'
 import { useThemePreference } from '../hooks/useThemePreference'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
+import { trackNavView } from '../lib/analytics'
 import { isMoreNavActive, MOBILE_PRIMARY_TAB_IDS } from '../lib/nav'
 import {
   activateFocusTrap,
@@ -50,25 +56,18 @@ import {
   bindViewportHeight,
   bindPwaForegroundResume,
 } from '@life-os/theme'
+import { AppBreadcrumb, shellRouteFromState } from './AppBreadcrumb'
 import { PortraitGate } from './PortraitGate'
 import { usePwaSettings } from '../hooks/usePwaSettings'
 
-export type Tab =
-  | 'today'
-  | 'overview'
-  | 'stocks'
-  | 'history'
-  | 'review'
-  | 'forecast'
-  | 'decision'
-  | 'settings'
+export type Tab = AppTabId | LegacyTabId
 
 /** 跨页跳转：section 直达 hub 子页；ledgerSearch 预填流水搜索；focusEventId 高亮大额收支条目。 */
 export type GoTabOptions = { ledgerSearch?: string; focusEventId?: string }
 export type GoTab = (tab: Tab, section?: string, opts?: GoTabOptions) => void
 
 type NavTab = {
-  id: Tab
+  id: AppTabId
   label: string
   icon: PhosphorIcon
   title: string
@@ -83,32 +82,37 @@ function useNavConfig(): {
   mobileMoreGroups: { label: string; items: NavTab[] }[]
 } {
   const { t } = useLocale()
-  const liquidCash = liquidCashLabel()
-  const netWorth = netWorthLabel()
 
   return useMemo(() => {
     const navGroups: { label: string; items: NavTab[] }[] = [
       {
-        label: t('nav.groupDaily'),
+        label: t('nav.groupHome'),
         items: [
           {
-            id: 'today',
-            label: t('nav.today'),
+            id: 'home',
+            label: t('nav.home'),
             icon: SquaresFour,
-            title: t('nav.todayTitle'),
-            subtitle: t('nav.todaySubtitle'),
+            title: t('nav.homeTitle'),
+            subtitle: t('nav.homeSubtitle'),
           },
         ],
       },
       {
-        label: t('nav.groupAssets'),
+        label: t('nav.groupMoney'),
         items: [
           {
-            id: 'overview',
-            label: t('nav.overview'),
+            id: 'accounts',
+            label: t('nav.accounts'),
             icon: ChartPie,
-            title: t('nav.overviewTitle'),
-            subtitle: t('nav.overviewSubtitle', { netWorth, liquidCash }),
+            title: t('nav.accountsTitle'),
+            subtitle: t('nav.accountsSubtitle'),
+          },
+          {
+            id: 'history',
+            label: t('nav.history'),
+            icon: Receipt,
+            title: t('nav.historyTitle'),
+            subtitle: t('nav.historySubtitle'),
           },
           {
             id: 'stocks',
@@ -120,26 +124,7 @@ function useNavConfig(): {
         ],
       },
       {
-        label: t('nav.groupCashflow'),
-        items: [
-          {
-            id: 'history',
-            label: t('nav.history'),
-            icon: Receipt,
-            title: t('nav.historyTitle'),
-            subtitle: t('nav.historySubtitle'),
-          },
-          {
-            id: 'review',
-            label: t('nav.review'),
-            icon: ClipboardText,
-            title: t('nav.reviewTitle'),
-            subtitle: t('nav.reviewSubtitle'),
-          },
-        ],
-      },
-      {
-        label: t('nav.groupForward'),
+        label: t('nav.groupPlan'),
         items: [
           {
             id: 'forecast',
@@ -157,6 +142,18 @@ function useNavConfig(): {
           },
         ],
       },
+      {
+        label: t('nav.groupReview'),
+        items: [
+          {
+            id: 'review',
+            label: t('nav.review'),
+            icon: ClipboardText,
+            title: t('nav.reviewTitle'),
+            subtitle: t('nav.reviewSubtitle'),
+          },
+        ],
+      },
     ]
 
     const settingsNavTab: NavTab = {
@@ -169,7 +166,7 @@ function useNavConfig(): {
 
     const mainTabs = navGroups.flatMap((group) => group.items)
     const tabs = [...mainTabs, settingsNavTab]
-    const mobilePrimaryIds: Tab[] = [...MOBILE_PRIMARY_TAB_IDS]
+    const mobilePrimaryIds: AppTabId[] = [...MOBILE_PRIMARY_TAB_IDS]
     const mobilePrimaryTabs = mobilePrimaryIds.map(
       (id) => tabs.find((tab) => tab.id === id)!,
     )
@@ -182,7 +179,7 @@ function useNavConfig(): {
           ),
         }))
         .filter((group) => group.items.length > 0),
-      { label: t('nav.groupAccount'), items: [settingsNavTab] },
+      { label: t('nav.groupSettings'), items: [settingsNavTab] },
     ]
 
     return {
@@ -192,36 +189,46 @@ function useNavConfig(): {
       mobilePrimaryTabs,
       mobileMoreGroups,
     }
-  }, [t, liquidCash, netWorth])
+  }, [t])
 }
 
 const ICON = { size: 18 } as const
 const MOBILE_ICON = { size: 17 } as const
 
 function shellRoute(
-  tab: Tab,
+  tab: AppTabId,
+  homeSection: HomeSection,
   recordsTab: RecordsSection,
   forecastTab: ForecastSection,
   reviewTab: ReviewTab,
+  decisionTab: DecisionSection,
   settingsTab: SettingsSection,
 ): AppRoute {
+  if (tab === 'home') return { tab, section: homeSection }
   if (tab === 'history') return { tab, section: recordsTab }
   if (tab === 'forecast') return { tab, section: forecastTab }
   if (tab === 'review') return { tab, section: reviewTab }
+  if (tab === 'decision') return { tab, section: decisionTab }
   if (tab === 'settings') return { tab, section: settingsTab }
   return { tab }
 }
 
 function initialShellFromUrl(): {
-  tab: Tab
+  tab: AppTabId
+  homeSection: HomeSection
   recordsTab: RecordsSection
   forecastTab: ForecastSection
   reviewTab: ReviewTab
+  decisionTab: DecisionSection
   settingsTab: SettingsSection
 } {
   const route = readAppRouteFromWindow()
   return {
-    tab: route.tab as Tab,
+    tab: route.tab,
+    homeSection:
+      route.tab === 'home' && route.section
+        ? (route.section as HomeSection)
+        : 'today',
     recordsTab:
       route.tab === 'history' && route.section
         ? (route.section as RecordsSection)
@@ -234,10 +241,14 @@ function initialShellFromUrl(): {
       route.tab === 'review' && route.section
         ? (route.section as ReviewTab)
         : 'import',
+    decisionTab:
+      route.tab === 'decision' && route.section
+        ? (route.section as DecisionSection)
+        : 'compare',
     settingsTab:
       route.tab === 'settings' && route.section
         ? (route.section as SettingsSection)
-        : 'accounts',
+        : 'assumptions',
   }
 }
 
@@ -254,7 +265,10 @@ export function AppShell() {
   const dashboard = useDashboard(store.data)
   const projection = dashboard.projection
   const initial = initialShellFromUrl()
-  const [tab, setTab] = useState<Tab>(initial.tab)
+  const [tab, setTab] = useState<AppTabId>(initial.tab)
+  const [homeSection, setHomeSection] = useState<HomeSection>(
+    initial.homeSection,
+  )
   const [recordsTab, setRecordsTab] = useState<RecordsSection>(
     initial.recordsTab,
   )
@@ -262,6 +276,9 @@ export function AppShell() {
     initial.forecastTab,
   )
   const [reviewTab, setReviewTab] = useState<ReviewTab>(initial.reviewTab)
+  const [decisionTab, setDecisionTab] = useState<DecisionSection>(
+    initial.decisionTab,
+  )
   const [settingsTab, setSettingsTab] = useState<SettingsSection>(
     initial.settingsTab,
   )
@@ -278,9 +295,14 @@ export function AppShell() {
   const skipHashSync = useRef(false)
 
   const documentPageTitle = useMemo(() => {
+    if (tab === 'home') {
+      return homeSection === 'overview'
+        ? t('nav.overviewTitle')
+        : t('nav.todayTitle')
+    }
     const activeTab = tabs.find((tabItem) => tabItem.id === tab) ?? tabs[0]
     return activeTab?.title ?? t('nav.todayTitle')
-  }, [tab, tabs, t])
+  }, [homeSection, tab, tabs, t])
 
   useDocumentMeta(documentPageTitle, locale)
 
@@ -294,24 +316,45 @@ export function AppShell() {
   }, [])
 
   const syncHash = (
-    nextTab: Tab,
+    nextTab: AppTabId,
+    nextHome: HomeSection,
     nextRecords: RecordsSection,
     nextForecast: ForecastSection,
     nextReview: ReviewTab,
+    nextDecision: DecisionSection,
     nextSettings: SettingsSection,
     mode: 'push' | 'replace' = 'push',
   ) => {
     skipHashSync.current = true
-    writeAppHash(
-      shellRoute(nextTab, nextRecords, nextForecast, nextReview, nextSettings),
+    writeAppRoute(
+      shellRoute(
+        nextTab,
+        nextHome,
+        nextRecords,
+        nextForecast,
+        nextReview,
+        nextDecision,
+        nextSettings,
+      ),
       mode,
     )
   }
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!window.location.hash) {
-      syncHash(tab, recordsTab, forecastTab, reviewTab, settingsTab, 'replace')
+
+    const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
+    if (pathname === '/') {
+      syncHash(
+        tab,
+        homeSection,
+        recordsTab,
+        forecastTab,
+        reviewTab,
+        decisionTab,
+        settingsTab,
+        'replace',
+      )
     }
 
     const onRouteChange = () => {
@@ -319,13 +362,16 @@ export function AppShell() {
         skipHashSync.current = false
         return
       }
-      const route = parseAppHash(window.location.hash)
+      const route = readAppRouteFromWindow()
       if (!route) return
-      setTab(route.tab as Tab)
+      setTab(route.tab)
       setMoreSheet(false)
       setDrawer(false)
       setTxnDrawer(false)
       setPlanDrawer(false)
+      if (route.tab === 'home') {
+        setHomeSection((route.section as HomeSection) ?? 'today')
+      }
       if (route.tab === 'history') {
         setRecordsTab((route.section as RecordsSection) ?? 'insights')
       }
@@ -335,8 +381,11 @@ export function AppShell() {
       if (route.tab === 'review') {
         setReviewTab((route.section as ReviewTab) ?? 'import')
       }
+      if (route.tab === 'decision') {
+        setDecisionTab((route.section as DecisionSection) ?? 'compare')
+      }
       if (route.tab === 'settings') {
-        setSettingsTab((route.section as SettingsSection) ?? 'accounts')
+        setSettingsTab((route.section as SettingsSection) ?? 'assumptions')
       }
       window.scrollTo(0, 0)
     }
@@ -371,42 +420,65 @@ export function AppShell() {
   }, [moreSheet])
 
   const switchTab: GoTab = (next, section, opts) => {
+    const target = resolveGoTabTarget(next, section)
+    if (!target) return
+
+    let nextHome = homeSection
     let nextRecords = recordsTab
     let nextForecast = forecastTab
     let nextReview = reviewTab
+    let nextDecision = decisionTab
     let nextSettings = settingsTab
 
-    setTab(next)
+    setTab(target.tab)
     setDrawer(false)
     setTxnDrawer(false)
     setPlanDrawer(false)
     if (typeof window !== 'undefined') {
       window.scrollTo(0, 0)
     }
-    if (next === 'history' && section) {
-      nextRecords = section as RecordsSection
+
+    if (target.tab === 'home') {
+      nextHome = (target.section as HomeSection) ?? 'today'
+      setHomeSection(nextHome)
+    }
+    if (target.tab === 'history') {
+      nextRecords = (target.section as RecordsSection) ?? nextRecords
       setRecordsTab(nextRecords)
     }
-    if (next === 'forecast' && section) {
-      nextForecast = section as ForecastSection
+    if (target.tab === 'forecast') {
+      nextForecast = (target.section as ForecastSection) ?? nextForecast
       setForecastTab(nextForecast)
     }
-    if (next === 'review' && section) {
-      nextReview = section as ReviewTab
+    if (target.tab === 'review') {
+      nextReview = (target.section as ReviewTab) ?? nextReview
       setReviewTab(nextReview)
     }
-    if (next === 'settings' && section) {
-      nextSettings = section as SettingsSection
+    if (target.tab === 'decision') {
+      nextDecision = (target.section as DecisionSection) ?? nextDecision
+      setDecisionTab(nextDecision)
+    }
+    if (target.tab === 'settings') {
+      nextSettings = (target.section as SettingsSection) ?? nextSettings
       setSettingsTab(nextSettings)
     }
+
     if (opts?.ledgerSearch) setLedgerSearch(opts.ledgerSearch)
-    else if (next !== 'history' || section !== 'insights')
+    else if (target.tab !== 'history' || target.section !== 'insights')
       setLedgerSearch(undefined)
     if (opts?.focusEventId) setFocusEventId(opts.focusEventId)
-    else if (next !== 'history' || section !== 'oneoff')
+    else if (target.tab !== 'history' || target.section !== 'oneoff')
       setFocusEventId(undefined)
 
-    syncHash(next, nextRecords, nextForecast, nextReview, nextSettings)
+    syncHash(
+      target.tab,
+      nextHome,
+      nextRecords,
+      nextForecast,
+      nextReview,
+      nextDecision,
+      nextSettings,
+    )
   }
 
   const goStocks = (snapshotId?: string) => {
@@ -414,13 +486,10 @@ export function AppShell() {
       const url = new URL(window.location.href)
       if (snapshotId) url.searchParams.set('snapshot', snapshotId)
       else url.searchParams.delete('snapshot')
-      url.hash = buildAppHash({ tab: 'stocks' })
+      url.pathname = buildAppPath({ tab: 'stocks' })
+      url.hash = ''
       skipHashSync.current = true
-      window.history.pushState(
-        null,
-        '',
-        `${url.pathname}${url.search}${url.hash}`,
-      )
+      window.history.pushState(null, '', `${url.pathname}${url.search}`)
     }
     setTab('stocks')
     setMoreSheet(false)
@@ -432,7 +501,53 @@ export function AppShell() {
 
   const stale =
     daysSince(store.data.updatedAt) > 30 && store.data.accounts.length > 0
-  const active = tabs.find((tabItem) => tabItem.id === tab) ?? tabs[0]
+  const liquidCash = liquidCashLabel()
+  const netWorth = netWorthLabel()
+  const currentRoute = useMemo(
+    () =>
+      shellRouteFromState({
+        tab,
+        homeSection,
+        recordsTab,
+        forecastTab,
+        reviewTab,
+        decisionTab,
+        settingsTab,
+      }),
+    [
+      tab,
+      homeSection,
+      recordsTab,
+      forecastTab,
+      reviewTab,
+      decisionTab,
+      settingsTab,
+    ],
+  )
+
+  useEffect(() => {
+    trackNavView(currentRoute)
+  }, [currentRoute])
+
+  const pageHeader = useMemo(() => {
+    if (tab === 'home' && homeSection === 'overview') {
+      return {
+        title: t('nav.overviewTitle'),
+        subtitle: t('nav.overviewSubtitle', { netWorth, liquidCash }),
+      }
+    }
+    if (tab === 'home') {
+      return {
+        title: t('nav.todayTitle'),
+        subtitle: t('nav.todaySubtitle'),
+      }
+    }
+    const activeTab = tabs.find((tabItem) => tabItem.id === tab) ?? tabs[0]
+    return {
+      title: activeTab?.title ?? t('nav.todayTitle'),
+      subtitle: activeTab?.subtitle ?? '',
+    }
+  }, [homeSection, liquidCash, netWorth, tab, tabs, t])
   const updatedLabel =
     store.data.accounts.length === 0
       ? t('nav.noAccountsYet')
@@ -453,7 +568,7 @@ export function AppShell() {
       icon: Plus,
       onClick: () => setPlanDrawer(true),
     }
-  } else if (tab === 'today' || tab === 'overview' || tab === 'history') {
+  } else if (tab === 'home' || tab === 'history') {
     activeFab = {
       label: t('nav.fabLogTxn'),
       icon: Plus,
@@ -540,8 +655,9 @@ export function AppShell() {
             </span>
           </div>
           <div className="titles">
-            <h1>{active.title}</h1>
-            <span className="subtitle">{active.subtitle}</span>
+            <AppBreadcrumb route={currentRoute} />
+            <h1>{pageHeader.title}</h1>
+            <span className="subtitle">{pageHeader.subtitle}</span>
           </div>
           <span className="spacer" />
           <span className="updated">{updatedLabel}</span>
@@ -550,32 +666,45 @@ export function AppShell() {
         <main className="content">
           <SyncErrorBanner />
           {stale && <div className="banner">{t('nav.staleBanner')}</div>}
-          {tab === 'today' && (
-            <TodayView
+          {tab === 'home' && (
+            <HomeHubView
               data={store.data}
               dashboard={dashboard}
-              onOpenSpend={() => setDrawer(true)}
-              onGoTab={switchTab}
-            />
-          )}
-          {tab === 'overview' && (
-            <OverviewView
-              data={store.data}
               projection={projection}
-              dashboard={dashboard}
+              active={homeSection}
+              onChange={(section) => {
+                setHomeSection(section)
+                syncHash(
+                  tab,
+                  section,
+                  recordsTab,
+                  forecastTab,
+                  reviewTab,
+                  decisionTab,
+                  settingsTab,
+                )
+              }}
               onOpenSpend={() => setDrawer(true)}
               onGoTab={switchTab}
               onGoStocks={goStocks}
-              tabActive
             />
           )}
+          {tab === 'accounts' && <AccountsView onGoStocks={() => goStocks()} />}
           {tab === 'history' && (
             <RecordsView
               data={store.data}
               active={recordsTab}
               onChange={(section) => {
                 setRecordsTab(section)
-                syncHash(tab, section, forecastTab, reviewTab, settingsTab)
+                syncHash(
+                  tab,
+                  homeSection,
+                  section,
+                  forecastTab,
+                  reviewTab,
+                  decisionTab,
+                  settingsTab,
+                )
               }}
               onGoTab={switchTab}
               ledgerSearch={ledgerSearch}
@@ -591,7 +720,15 @@ export function AppShell() {
               active={reviewTab}
               onChange={(section) => {
                 setReviewTab(section)
-                syncHash(tab, recordsTab, forecastTab, section, settingsTab)
+                syncHash(
+                  tab,
+                  homeSection,
+                  recordsTab,
+                  forecastTab,
+                  section,
+                  decisionTab,
+                  settingsTab,
+                )
               }}
             />
           )}
@@ -605,16 +742,40 @@ export function AppShell() {
               active={forecastTab}
               onChange={(section) => {
                 setForecastTab(section)
-                syncHash(tab, recordsTab, section, reviewTab, settingsTab)
+                syncHash(
+                  tab,
+                  homeSection,
+                  recordsTab,
+                  section,
+                  reviewTab,
+                  decisionTab,
+                  settingsTab,
+                )
               }}
             />
           )}
-          {tab === 'decision' && <DecisionStudioView />}
+          {tab === 'decision' && (
+            <DecisionStudioView
+              active={decisionTab}
+              onChange={(section) => {
+                setDecisionTab(section)
+                syncHash(
+                  tab,
+                  homeSection,
+                  recordsTab,
+                  forecastTab,
+                  reviewTab,
+                  section,
+                  settingsTab,
+                )
+              }}
+            />
+          )}
           <div hidden={tab !== 'stocks'} aria-hidden={tab !== 'stocks'}>
             <StocksView
               data={store.data}
               tabActive={tab === 'stocks'}
-              onGoSettings={() => switchTab('settings')}
+              onGoSettings={() => switchTab('accounts')}
               savingCapacity={dashboard.derived.savingCapacity}
             />
           </div>
@@ -624,12 +785,20 @@ export function AppShell() {
               onThemePreferenceChange={setThemePreference}
               lockPortraitOnPhone={pwaSettings.lockPortraitOnPhone}
               onLockPortraitOnPhoneChange={setLockPortraitOnPhone}
-              onGoStocks={() => goStocks()}
               section={settingsTab}
               onSectionChange={(section) => {
                 setSettingsTab(section)
-                syncHash(tab, recordsTab, forecastTab, reviewTab, section)
+                syncHash(
+                  tab,
+                  homeSection,
+                  recordsTab,
+                  forecastTab,
+                  reviewTab,
+                  decisionTab,
+                  section,
+                )
               }}
+              onGoTab={switchTab}
             />
           )}
         </main>

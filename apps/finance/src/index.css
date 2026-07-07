@@ -6785,3 +6785,114 @@ div.input {
   .ai-signal-brief .ai-signal-reason { grid-area: reason; }
   .ai-signal-brief .ai-signal-action { grid-area: action; }
 }
+
+.app-breadcrumb {
+  margin-bottom: var(--space-1);
+}
+
+.app-breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.app-breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-breadcrumb-sep {
+  margin: 0 var(--space-1);
+  opacity: 0.6;
+}
+
+.app-breadcrumb-label[aria-current='page'] {
+  color: var(--text-secondary);
+}
+
+.getting-started-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.getting-started-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.getting-started-step:hover {
+  border-color: var(--accent);
+}
+
+.getting-started-step-index {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: var(--bg-subtle, var(--bg));
+  color: var(--text-secondary);
+}
+
+.analytics-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+}
+
+.analytics-stats dt {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.analytics-stats dd {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.help-route-table-wrap {
+  overflow-x: auto;
+  margin-top: var(--space-3);
+}
+
+.help-route-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.help-route-table th,
+.help-route-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.help-task-list {
+  margin: var(--space-2) 0 0;
+  padding-left: 1.25rem;
+}

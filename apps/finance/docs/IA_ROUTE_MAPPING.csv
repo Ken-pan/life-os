@@ -1,0 +1,21 @@
+nav_domain,nav_label_zh,tab_id,section_id,canonical_path,legacy_hash_aliases,page_component,analytics_event
+首页,首页,home,today,/home/today,"#/today, #/home/today",HomeHubView > TodayView,nav.home.today
+首页,总览,home,overview,/home/overview,"#/overview, #/home/overview",HomeHubView > OverviewView,nav.home.overview
+资金,账户,accounts,,/accounts,"#/accounts, #/settings/accounts",AccountsView,nav.money.accounts
+资金,记录·洞察,history,insights,/history/insights,#/history/insights,RecordsView > HistoryView,nav.money.history.insights
+资金,记录·固定,history,fixed,/history/fixed,#/history/fixed,RecordsView > CashFlowsView,nav.money.history.fixed
+资金,记录·大额,history,oneoff,/history/oneoff,#/history/oneoff,RecordsView > FutureCashflowView,nav.money.history.oneoff
+资金,资产配置,stocks,,/stocks,#/stocks,StocksView,nav.money.stocks
+规划,预测,forecast,forecast,/forecast/forecast,#/forecast/forecast,ForecastHubView > ForecastView,nav.plan.forecast
+规划,长期规划,forecast,scenarios,/forecast/scenarios,#/forecast/scenarios,ForecastHubView > ScenariosView,nav.plan.scenarios
+规划,决策·对比,decision,compare,/decision/compare,#/decision/compare,DecisionStudioView,nav.plan.decision.compare
+规划,决策·已存,decision,saved,/decision/saved,#/decision/saved,DecisionStudioView,nav.plan.decision.saved
+规划,决策·日志,decision,log,/decision/log,#/decision/log,DecisionStudioView,nav.plan.decision.log
+审查,导入,review,import,/review/import,#/review/import,ReviewView,nav.review.import
+审查,队列,review,queue,/review/queue,#/review/queue,ReviewView,nav.review.queue
+审查,基线,review,baseline,/review/baseline,#/review/baseline,ReviewView,nav.review.baseline
+审查,校准,review,calibrate,/review/calibrate,#/review/calibrate,ReviewView,nav.review.calibrate
+审查,对账,review,reconcile,/review/reconcile,#/review/reconcile,ReviewView,nav.review.reconcile
+设置,预测参数,settings,assumptions,/settings/assumptions,#/settings/assumptions,SettingsView,nav.settings.assumptions
+设置,应用偏好,settings,app,/settings/app,#/settings/app,SettingsView,nav.settings.app
+设置,帮助中心,settings,help,/settings/help,,HelpCenterView,nav.settings.help

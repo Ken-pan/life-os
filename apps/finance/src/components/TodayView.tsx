@@ -28,6 +28,7 @@ import {
 import { resolveCardPortalFromBillLabel } from '../lib/cardPortals'
 import { CardPortalLink } from './CardPortalLink'
 import { InstitutionLogo } from './InstitutionLogo'
+import { GettingStartedChecklist } from './GettingStartedChecklist'
 import type { GoTab } from './AppShell'
 import { money, signedMoney, depositDeltaClass } from '../format'
 import {
@@ -165,9 +166,11 @@ export function TodayView({
     return (
       <div className="empty">
         <h2 className="mb-2">{welcomeTitle()}</h2>
-        <p className="text-secondary">{t('today.emptyHint', { safeToSpend })}</p>
+        <p className="text-secondary">
+          {t('today.emptyHint', { safeToSpend })}
+        </p>
         <div className="flex-row-center mt-4">
-          <button className="btn" onClick={() => onGoTab('settings')}>
+          <button className="btn" onClick={() => onGoTab('accounts')}>
             {t('today.addAccounts')}
           </button>
           <button
@@ -177,6 +180,18 @@ export function TodayView({
             {t('today.addCashflows')}
           </button>
         </div>
+        <div className="mt-4">
+          <GettingStartedChecklist onGoTab={onGoTab} />
+        </div>
+        <p className="muted-note text-sm mt-3 mb-0">
+          <button
+            type="button"
+            className="text-btn"
+            onClick={() => onGoTab('settings', 'help')}
+          >
+            {t('help.centerTitle')}
+          </button>
+        </p>
       </div>
     )
   }
@@ -211,9 +226,7 @@ export function TodayView({
 
   return (
     <div className="grid gap-4">
-      <p className="muted-note mb-1">
-        {t('today.intro', { safeToSpend })}
-      </p>
+      <p className="muted-note mb-1">{t('today.intro', { safeToSpend })}</p>
       <div className="grid today-headline">
         <div className="card kpi kpi-accent today-hero">
           <span className="label">
@@ -335,7 +348,7 @@ export function TodayView({
                 </button>
                 <button
                   className="icon-btn"
-                  onClick={() => onGoTab('settings')}
+                  onClick={() => onGoTab('accounts')}
                 >
                   {t('today.manageAccounts')}
                 </button>
@@ -458,7 +471,7 @@ function CashPositionCard({
             <button
               type="button"
               className="btn outline compact"
-              onClick={() => onGoTab('settings')}
+              onClick={() => onGoTab('accounts')}
             >
               {t('today.viewAccounts')}
             </button>
@@ -630,7 +643,9 @@ function SavingPlanCard({
               buffer: breakdown.buffer,
               goalPart:
                 cap.earmarkedOperatingGoalCash > 0
-                  ? t('today.savingNoneGoalPart', { goalReserve: breakdown.goalReserve })
+                  ? t('today.savingNoneGoalPart', {
+                      goalReserve: breakdown.goalReserve,
+                    })
                   : '',
             })}
           </span>
@@ -641,7 +656,9 @@ function SavingPlanCard({
 
   const whenText =
     cap.rationale === 'after-payday' && cap.bestDay
-      ? t('today.savingWhenAfterPayday', { date: dayLabelWithWeekday(cap.bestDay) })
+      ? t('today.savingWhenAfterPayday', {
+          date: dayLabelWithWeekday(cap.bestDay),
+        })
       : cap.rationale === 'timed' && cap.bestDay
         ? dayLabelWithWeekday(cap.bestDay)
         : t('today.savingWhenNow')
@@ -651,7 +668,9 @@ function SavingPlanCard({
     amount: money(cap.capacity, privacy),
     inflowPart:
       cap.rationale === 'after-payday' && cap.bestDayInflow > 0
-        ? t('today.savingWhyInflow', { amount: money(cap.bestDayInflow, privacy) })
+        ? t('today.savingWhyInflow', {
+            amount: money(cap.bestDayInflow, privacy),
+          })
         : '',
     lowPart: cap.lowestDateMonth
       ? t('today.savingWhyLow', {
@@ -714,7 +733,9 @@ function SavingPlanCard({
                   ? t('today.bestDayAfterPayday')
                   : cap.rationale === 'timed'
                     ? t('today.bestDayTimed')
-                    : t('today.bestDayAnytime', { liquidCash: liquidCashLabel() })
+                    : t('today.bestDayAnytime', {
+                        liquidCash: liquidCashLabel(),
+                      })
               }
             />
           </span>
@@ -813,7 +834,9 @@ function PendingConfirmationsCard({
         {t('today.pendingIntro', {
           outflowPart:
             outflowTotal > 0
-              ? t('today.pendingOutflow', { amount: money(outflowTotal, privacy) })
+              ? t('today.pendingOutflow', {
+                  amount: money(outflowTotal, privacy),
+                })
               : '',
           inflowPart:
             inflowTotal > 0
@@ -1112,7 +1135,7 @@ function ProtectedReserveFallbackCard({
         >
           {t('today.adjustExpensePlan')}
         </button>
-        <button className="btn ghost" onClick={() => onGoTab('settings')}>
+        <button className="btn ghost" onClick={() => onGoTab('accounts')}>
           {t('today.transferFunds')}
         </button>
       </div>
@@ -1133,7 +1156,9 @@ function ProtectedReserveFallbackCard({
             <span className="text-warn">
               {runwayLossMonths == null
                 ? t('today.runwayNotConfigured')
-                : t('today.runwayLoss', { months: runwayLossMonths.toFixed(1) })}
+                : t('today.runwayLoss', {
+                    months: runwayLossMonths.toFixed(1),
+                  })}
             </span>
           </div>
         </div>
@@ -1150,7 +1175,9 @@ function safeToSpendText(
   const breakdown = stsBreakdown()
   const b = derived.safeToSpendBreakdown
   const a = derived.cashAnchors
-  const lowDate = outlook.lowestDate ? `（${dayLabel(outlook.lowestDate)}）` : ''
+  const lowDate = outlook.lowestDate
+    ? `（${dayLabel(outlook.lowestDate)}）`
+    : ''
   const goalPart =
     b.earmarkedOperatingGoalCash > 0
       ? translate('today.stsExplainGoalPart', {
@@ -1223,15 +1250,11 @@ function CashCalendar({
   }, [events, monthStartTs, monthEndTs])
 
   if (view === 'agenda' && filtered.length === 0) {
-    return (
-      <p className="muted-note">{t('today.calendarEmptySetup')}</p>
-    )
+    return <p className="muted-note">{t('today.calendarEmptySetup')}</p>
   }
 
   if (view === 'calendar' && balancesInWindow.length === 0) {
-    return (
-      <p className="muted-note">{t('today.calendarEmpty')}</p>
-    )
+    return <p className="muted-note">{t('today.calendarEmpty')}</p>
   }
 
   const firstDay = new Date(balancesInWindow[0]?.ts ?? startTs).getDay()
@@ -1266,7 +1289,9 @@ function CashCalendar({
           <span>
             {dayLabel(p.date)} · {weekdayLabel(p.date)}
           </span>
-          {hasRisk && <span className="tag critical">{t('today.riskTag')}</span>}
+          {hasRisk && (
+            <span className="tag critical">{t('today.riskTag')}</span>
+          )}
         </div>
         {hasEvents && (
           <div className="cash-day-flow">
@@ -1348,7 +1373,9 @@ function CashCalendar({
                       className={`cal-bal${!settled && e.balanceAfter < buffer ? ' text-neg' : ''}`}
                     >
                       {e.fundedFromReserve
-                        ? t('today.notInLiquid', { liquidCash: liquidCashLabel() })
+                        ? t('today.notInLiquid', {
+                            liquidCash: liquidCashLabel(),
+                          })
                         : settled
                           ? t('today.includedInBalance')
                           : t('today.balanceAfter', {
