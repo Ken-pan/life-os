@@ -34,7 +34,8 @@ body,
     overflow: hidden;
   }
 
-  html.standalone-pwa .app-shell {
+  html.standalone-pwa .app-shell,
+  html.standalone-pwa .app {
     height: var(--app-vh, 100dvh);
     min-height: 0;
     overflow: hidden;

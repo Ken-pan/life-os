@@ -200,7 +200,6 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
 }
 
 button {
@@ -4013,9 +4012,45 @@ div.input {
 }
 
 /* ===== 响应式：侧边栏 → 底部导航 ===== */
+/* ===== 桌面：侧栏钉住视口（对齐 Planner/Fitness/Music 的 app-shell grid）===== */
+@media (--life-os-desktop) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    min-height: var(--app-vh, 100dvh);
+  }
+
+  .app-shell .sidebar {
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: var(--app-vh, 100dvh);
+    max-height: var(--app-vh, 100dvh);
+  }
+
+  .app-shell .main-wrap {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    overflow-x: clip;
+  }
+}
+
 @media (--life-os-mobile) {
-  .app {
+  .app-shell {
+    display: flex;
     flex-direction: column;
+    min-height: auto;
+  }
+
+  html:not(.standalone-pwa) .app-shell {
+    min-height: auto;
+  }
+
+  html:not(.standalone-pwa) body {
+    overflow-y: auto;
   }
 
   .sidebar {
@@ -6785,36 +6820,6 @@ div.input {
   .ai-signal-brief .ai-signal-chip { grid-area: chip; }
   .ai-signal-brief .ai-signal-reason { grid-area: reason; }
   .ai-signal-brief .ai-signal-action { grid-area: action; }
-}
-
-.app-breadcrumb {
-  margin-bottom: var(--space-1);
-}
-
-.app-breadcrumb-list {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.app-breadcrumb-item {
-  display: inline-flex;
-  align-items: center;
-}
-
-.app-breadcrumb-sep {
-  margin: 0 var(--space-1);
-  opacity: 0.6;
-}
-
-.app-breadcrumb-label[aria-current='page'] {
-  color: var(--text-secondary);
 }
 
 .getting-started-steps {

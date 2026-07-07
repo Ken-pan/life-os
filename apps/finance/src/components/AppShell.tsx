@@ -56,7 +56,6 @@ import {
   bindViewportHeight,
   bindPwaForegroundResume,
 } from '@life-os/theme'
-import { AppBreadcrumb, shellRouteFromState } from './AppBreadcrumb'
 import { PortraitGate } from './PortraitGate'
 import { usePwaSettings } from '../hooks/usePwaSettings'
 
@@ -505,7 +504,7 @@ export function AppShell() {
   const netWorth = netWorthLabel()
   const currentRoute = useMemo(
     () =>
-      shellRouteFromState({
+      shellRoute(
         tab,
         homeSection,
         recordsTab,
@@ -513,7 +512,7 @@ export function AppShell() {
         reviewTab,
         decisionTab,
         settingsTab,
-      }),
+      ),
     [
       tab,
       homeSection,
@@ -577,7 +576,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="app">
+    <div className="app-shell">
       <PortraitGate
         enabled={pwaSettings.lockPortraitOnPhone}
         title={t('settings.rotatePortrait')}
@@ -603,31 +602,32 @@ export function AppShell() {
             <span className="brand-tag">{t('nav.brandTag')}</span>
           </span>
         </div>
-        {navGroups.map((group, index) => (
-          <div
-            key={group.label}
-            className={`nav-group${index > 0 ? ' nav-group-divider' : ''}`}
-          >
-            {group.items.map((t) => {
-              const Icon = t.icon
-              const activeTab = tab === t.id
-              return (
-                <button
-                  key={t.id}
-                  className={`nav-item${activeTab ? ' active' : ''}`}
-                  onClick={() => switchTab(t.id)}
-                  aria-current={activeTab ? 'page' : undefined}
-                >
-                  <Icon {...ICON} weight={activeTab ? 'fill' : 'regular'} />
-                  {t.label}
-                </button>
-              )
-            })}
-          </div>
-        ))}
-        <span className="nav-spacer" />
+        <div className="sidebar-body">
+          {navGroups.map((group, index) => (
+            <div
+              key={group.label}
+              className={`nav-group${index > 0 ? ' nav-group-divider' : ''}`}
+            >
+              {group.items.map((t) => {
+                const Icon = t.icon
+                const activeTab = tab === t.id
+                return (
+                  <button
+                    key={t.id}
+                    className={`nav-item${activeTab ? ' active' : ''}`}
+                    onClick={() => switchTab(t.id)}
+                    aria-current={activeTab ? 'page' : undefined}
+                  >
+                    <Icon {...ICON} weight={activeTab ? 'fill' : 'regular'} />
+                    {t.label}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+        </div>
         <button
-          className={`nav-item${tab === settingsNavTab.id ? ' active' : ''}`}
+          className={`nav-item sidebar-foot-item${tab === settingsNavTab.id ? ' active' : ''}`}
           onClick={() => switchTab(settingsNavTab.id)}
           aria-current={tab === settingsNavTab.id ? 'page' : undefined}
         >
@@ -655,7 +655,6 @@ export function AppShell() {
             </span>
           </div>
           <div className="titles">
-            <AppBreadcrumb route={currentRoute} />
             <h1>{pageHeader.title}</h1>
             <span className="subtitle">{pageHeader.subtitle}</span>
           </div>

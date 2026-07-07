@@ -47,7 +47,7 @@ for (const route of ROUTES) {
       failures.push({ route, error: `HTTP ${res?.status() ?? 'unknown'}` })
       continue
     }
-    await page.waitForSelector('.app', { timeout: 15000 })
+    await page.waitForSelector('.app-shell', { timeout: 15000 })
     const title = await page.locator('h1').first().textContent()
     if (!title?.trim()) {
       failures.push({ route, error: 'missing h1' })

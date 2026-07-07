@@ -216,13 +216,6 @@ export function isRoutableSection(tab: AppTabId, section: string): boolean {
   return SECTIONS[tab]?.has(section) ?? false
 }
 
-export function routeDepth(route: AppRoute): number {
-  if (route.tab === 'accounts' || route.tab === 'stocks') return 1
-  if (!route.section) return 1
-  if (route.tab === 'home') return 1
-  return 2
-}
-
 export function isDefaultSection(route: AppRoute): boolean {
   const def = DEFAULT_SECTION[route.tab]
   return !route.section || route.section === def

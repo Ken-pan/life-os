@@ -6,7 +6,6 @@ import {
   parseAppHash,
   parseAppPath,
   resolveGoTabTarget,
-  routeDepth,
 } from './appRoute'
 
 describe('appRoute', () => {
@@ -58,12 +57,6 @@ describe('appRoute', () => {
     expect(resolveGoTabTarget('settings', 'accounts')).toEqual({
       tab: 'accounts',
     })
-  })
-
-  it('routeDepth for breadcrumbs', () => {
-    expect(routeDepth({ tab: 'home', section: 'today' })).toBe(1)
-    expect(routeDepth({ tab: 'history', section: 'insights' })).toBe(2)
-    expect(routeDepth({ tab: 'accounts' })).toBe(1)
   })
 
   it('migrateLegacyRouteUrl normalizes hash to pathname', () => {

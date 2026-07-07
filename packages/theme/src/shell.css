@@ -10,6 +10,7 @@
 .app {
   min-height: 100%;
   width: 100%;
+  /* Prefer .app-shell for app layouts — overflow-x: clip breaks position: sticky on .sidebar */
   overflow-x: clip;
 }
 

@@ -59,7 +59,6 @@ export const zhCN: MessageTree = {
     noAccountsYet: '尚未录入账户',
     dataUpdated: '数据更新于 {date}',
     staleBanner: '部分余额可能已过期。做出重大决策前，请先更新账户。',
-    breadcrumbAria: '页面路径',
   },
   onboarding: {
     title: '开始使用 Finance OS',
@@ -1586,7 +1585,6 @@ export const enUS: MessageTree = {
     dataUpdated: 'Updated {date}',
     staleBanner:
       'Some balances may be stale. Update accounts before major decisions.',
-    breadcrumbAria: 'Page path',
   },
   onboarding: {
     title: 'Get started with Finance OS',

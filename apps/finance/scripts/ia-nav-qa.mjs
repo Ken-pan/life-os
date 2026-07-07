@@ -80,7 +80,7 @@ async function injectSession(page, session) {
     { key: storageKey, session },
   )
   await page.reload({ waitUntil: 'networkidle' })
-  await page.waitForSelector('.app', { timeout: 30000 })
+  await page.waitForSelector('.app-shell', { timeout: 30000 })
 }
 
 async function assertAppReady(page) {
@@ -285,6 +285,50 @@ const results = []
       .filter({ hasText: '更多' })
       .count()
     record(results, 'mobile', 'more-highlight:stocks', moreActive > 0)
+
+    // Mobile document scroll (Safari browser)
+    await clickMobileMore(page, '资产配置')
+    const docScrollable = await page.evaluate(() => {
+      return document.documentElement.scrollHeight - window.innerHeight > 200
+    })
+    await page.evaluate(() => window.scrollTo(0, 1200))
+    await page.waitForTimeout(150)
+    const docScrollY = await page.evaluate(() => window.scrollY)
+    record(
+      results,
+      'mobile',
+      'scroll:document',
+      !docScrollable || docScrollY > 400,
+      `scrollY=${docScrollY}`,
+    )
+
+    // PWA standalone: content region must scroll when body is locked
+    await page.evaluate(() => {
+      document.documentElement.classList.add('standalone-pwa')
+    })
+    const pwaMetrics = await page.evaluate(() => {
+      const content = document.querySelector('.content')
+      const shell = document.querySelector('.app-shell')
+      if (!content || !shell) return { ok: false, reason: 'missing nodes' }
+      const canScroll = content.scrollHeight - content.clientHeight > 200
+      content.scrollTop = 1500
+      return {
+        ok:
+          getComputedStyle(document.body).overflowY === 'hidden' &&
+          getComputedStyle(shell).height !== 'auto' &&
+          (!canScroll || content.scrollTop > 400),
+        bodyOverflow: getComputedStyle(document.body).overflowY,
+        contentScrollTop: content.scrollTop,
+        shellHeight: getComputedStyle(shell).height,
+      }
+    })
+    record(
+      results,
+      'mobile',
+      'scroll:pwa-content',
+      pwaMetrics.ok,
+      JSON.stringify(pwaMetrics),
+    )
   } catch (e) {
     record(results, 'mobile', 'setup', false, e.message)
   } finally {
