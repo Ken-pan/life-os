@@ -1,4 +1,5 @@
 import { handleAiPlan } from '../../server/aiPlan.mjs';
+import { readKimiApiKey } from '../../server/runtimeEnv.mjs';
 
 export default async (req) => {
   if (req.method !== 'POST') {
@@ -16,7 +17,7 @@ export default async (req) => {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-  const result = await handleAiPlan(process.env.KIMI_API_KEY, payload, {
+  const result = await handleAiPlan(readKimiApiKey(), payload, {
     origin: req.headers.get('origin'),
     referer: req.headers.get('referer')
   });

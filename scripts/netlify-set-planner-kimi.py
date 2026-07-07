@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy KIMI_API_KEY from finance site to planner site if missing."""
+"""Ensure planner KIMI_API_KEY matches finance (force overwrite via Netlify API)."""
 import json
 import os
 import urllib.error
@@ -25,65 +25,39 @@ def env_list(site_id, auth):
     return json.loads(urllib.request.urlopen(req).read())
 
 
-def env_value(envs, key):
-    for e in envs:
-        if e.get("key") == key:
-            values = e.get("values") or []
-            if values:
-                return values[0].get("value")
-    return None
-
-
-def create_site_env(auth, site_id, key, value):
-    body = [
-        {
-            "key": key,
-            "scopes": ["builds", "functions", "runtime"],
-            "is_secret": True,
-            "values": [
-                {"context": "production", "value": value},
-                {"context": "deploy-preview", "value": value},
-                {"context": "branch-deploy", "value": value},
-            ],
-        }
-    ]
-    url = f"https://api.netlify.com/api/v1/accounts/{ACCOUNT}/env?site_id={site_id}"
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(body).encode(),
-        headers={
-            "Authorization": f"Bearer {auth}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-    urllib.request.urlopen(req)
+def delete_planner_kimi(auth):
+    url = f"https://api.netlify.com/api/v1/accounts/{ACCOUNT}/env/KIMI_API_KEY?site_id={PLANNER}"
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {auth}"}, method="DELETE")
+    try:
+        urllib.request.urlopen(req)
+        print("deleted planner KIMI_API_KEY")
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            raise
 
 
 def main():
     auth = token()
     planner_env = env_list(PLANNER, auth)
-    if "KIMI_API_KEY" in {e.get("key") for e in planner_env}:
-        print("planner KIMI_API_KEY already set")
-        return
+    has_kimi = "KIMI_API_KEY" in {e.get("key") for e in planner_env}
+    if has_kimi:
+        print("planner KIMI_API_KEY exists — deleting before clone")
+        delete_planner_kimi(auth)
 
-    kimi = env_value(env_list(FINANCE, auth), "KIMI_API_KEY")
-    if not kimi:
-        env_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "apps", "planner", ".env")
-        )
-        if os.path.isfile(env_path):
-            for line in open(env_path):
-                if line.startswith("KIMI_API_KEY="):
-                    kimi = line.split("=", 1)[1].strip().strip("\"'")
-                    break
-
-    if not kimi:
-        print("WARN: no KIMI_API_KEY source found")
-        return
-
-    create_site_env(auth, PLANNER, "KIMI_API_KEY", kimi)
-    print("planner KIMI_API_KEY set")
+    print("Run:")
+    print(
+        "  cd apps/planner && CI=1 NETLIFY_SITE_ID=%s"
+        % PLANNER
+    )
+    print(
+        "  npx netlify env:clone --from %s --to %s --force"
+        % (FINANCE, PLANNER)
+    )
+    print(
+        "  cd ../.. && CI=1 npx netlify deploy --prod --no-build --filter planner-os "
+        "--dir=apps/planner/build --functions=netlify/functions --site=%s"
+        % PLANNER
+    )
 
 
 if __name__ == "__main__":
