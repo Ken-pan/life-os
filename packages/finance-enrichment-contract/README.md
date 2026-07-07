@@ -15,6 +15,12 @@ Single source of truth for purchase enrichment **clean vs review** classificatio
 node packages/finance-enrichment-contract/scripts/test-contract.mjs
 ```
 
+## TypeScript
+
+The package exports `src/index.d.ts` for TypeScript consumers. Keep the
+runtime implementation in `.mjs`; update declarations when adding exported
+rules or fixture-facing shapes.
+
 ## Rules
 
 Do not duplicate `classifyCleanReasons` logic elsewhere. Extend this package first, then update consumers.
