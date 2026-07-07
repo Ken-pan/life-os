@@ -6,20 +6,20 @@
 <script>
   import { onDestroy } from 'svelte';
   import { isOverdue, updateTask, deleteTask, restoreTask } from '$lib/domain/tasks.js';
-  import { recurrenceLabel } from '$lib/domain/recurrence.js';
   import { formatDateShort } from '$lib/domain/dateFormat.js';
   import { listLabel, t } from '$lib/i18n/index.js';
   import { getListById, dateKeyOf } from '$lib/state.svelte.js';
   import { getTaskKind } from '$lib/domain/taskKind.js';
-  import { taskDurationMinutes, formatDurationLabel } from '$lib/domain/schedule.js';
+  import { buildTaskMetaLine } from '$lib/domain/taskMetaLine.js';
   import { openSchedulePopover } from '$lib/ui.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import Icon from './Icon.svelte';
 
-  /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, contextDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
+  /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, metaMinimal?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, contextDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
   let {
     task,
     compact = false,
+    metaMinimal = false,
     ritualComplete = false,
     showScheduleAction = false,
     scheduleDate,
@@ -42,34 +42,14 @@
   const kind = $derived(getTaskKind(task));
   const list = $derived(getListById(task.listId));
   const hasRecurrence = $derived(task.recurrence?.rule && task.recurrence.rule !== 'none');
-  const showHabitChip = $derived(kind === 'habit' || hasRecurrence);
-  const hideDateChip = $derived(
-    Boolean(contextDate && task.dueDate === contextDate && !overdue),
-  );
-  const timeChip = $derived.by(() => {
-    if (task.scheduledStart) return task.scheduledStart;
-    if (hideDateChip && task.dueTime) return task.dueTime;
-    return null;
-  });
-  const showMeta = $derived(
-    !compact ||
-      overdue ||
-      hasRecurrence ||
-      task.dueDate ||
-      task.dueTime ||
-      task.scheduledStart ||
-      task.reminderMinutes != null
-  );
   const hasTimedPlan = $derived(Boolean(task.scheduledStart || task.dueTime));
-  const durationLabel = $derived(formatDurationLabel(taskDurationMinutes(task), t));
-  const showTodayCompactMeta = $derived(
-    compact && Boolean(contextDate && task.dueDate === contextDate && !overdue),
+  const metaLine = $derived(
+    buildTaskMetaLine(task, t, { contextDate, minimal: metaMinimal, overdue }),
   );
-  const showSecondaryMeta = $derived(!compact);
+  const showSecondaryMeta = $derived(!compact && !metaMinimal);
   const showScheduleBtn = $derived(
     showScheduleAction && !task.completed && !completing && Boolean(scheduleDate),
   );
-  const priorityLabel = $derived(task.priority > 0 ? t(`task.p${task.priority}`) : null);
 
   function fmtDate(dateKey) {
     return formatDateShort(dateKey);
@@ -361,58 +341,18 @@
           {/if}
           <div class="task-title" class:done-text={showAsCompleted}>{task.title}</div>
         </div>
-        {#if showTodayCompactMeta}
+        {#if metaLine}
+          <p class="task-meta-line" class:task-meta-line--done={showAsCompleted} class:overdue={overdue}>
+            {metaLine}
+          </p>
+        {/if}
+        {#if showSecondaryMeta && (task.reminderMinutes != null || list || task.tags.length)}
           <div class="task-meta">
-            {#if hasTimedPlan}
-              {#if timeChip}
-                <span class="chip chip--schedule">{timeChip}</span>
-              {/if}
-              {#if kind === 'focus'}
-                <span class="chip chip--focus">{t('task.kindFocus')}</span>
-              {/if}
-              <span class="chip">{durationLabel}</span>
-            {:else}
-              <span class="chip chip--unscheduled">{t('task.unscheduledLine')}</span>
-            {/if}
-            {#if priorityLabel}
-              <span class="chip chip--priority">{priorityLabel}</span>
-            {/if}
-            {#if hasRecurrence}
-              <span class="chip tag">{recurrenceLabel(task.recurrence, t)}</span>
-            {:else if showHabitChip}
-              <span class="chip tag">{t('task.kindHabit')}</span>
-            {/if}
-          </div>
-        {:else if showMeta && (task.dueDate || task.dueTime || hasRecurrence || task.reminderMinutes != null || timeChip || (showSecondaryMeta && (task.tags.length || list)))}
-          <div class="task-meta">
-            {#if task.dueDate && !hideDateChip}
-              <span class="chip" class:overdue={overdue}>
-                {fmtDate(task.dueDate)}{task.dueTime ? ` ${task.dueTime}` : ''}
-              </span>
-            {:else if timeChip}
-              <span class="chip chip--schedule">{timeChip}</span>
-            {/if}
-            {#if task.scheduledStart && task.scheduledStart !== timeChip}
-              <span class="chip chip--schedule">{task.scheduledStart}</span>
-            {/if}
-            {#if hasRecurrence}
-              <span class="chip tag">{recurrenceLabel(task.recurrence, t)}</span>
-            {:else if showHabitChip}
-              <span class="chip tag">{t('task.kindHabit')}</span>
-            {/if}
-            {#if kind === 'focus'}
-              <span class="chip chip--focus">{t('task.kindFocus')}</span>
-            {/if}
-            {#if priorityLabel}
-              <span class="chip chip--priority">{priorityLabel}</span>
-            {/if}
             {#if task.reminderMinutes != null}
               <span class="chip">🔔</span>
             {/if}
-            {#if showSecondaryMeta}
-              {#if list}<span class="chip">{listLabel(list)}</span>{/if}
-              {#each task.tags.filter((tag) => String(tag || '').trim()) as tag}<span class="chip tag">{tag}</span>{/each}
-            {/if}
+            {#if list}<span class="chip">{listLabel(list)}</span>{/if}
+            {#each task.tags.filter((tag) => String(tag || '').trim()) as tag}<span class="chip tag">{tag}</span>{/each}
           </div>
         {/if}
       </button>

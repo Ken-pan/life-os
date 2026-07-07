@@ -297,20 +297,21 @@ test.describe('移动端主流程走查', () => {
       has: page.locator('.task-title', { hasText: '深度写作 · 产品方案' }),
     })
     await row.locator('.task-check').click()
-    await expect(page.locator('.toast')).toBeVisible()
-    await expect(page.locator('.toast')).toContainText('深度写作 · 产品方案')
-    await snap(page, '02-complete-toast', {
-      flow: 'Flow 1',
-      note: '完成任务 Toast + 撤销',
-    })
-
-    await page
-      .getByRole('button', { name: /撤销|Undo/i })
-      .click({ timeout: 3000 })
-      .catch(() => {})
     await expect(
-      page.locator('.task-title', { hasText: '深度写作 · 产品方案' }),
+      page.locator('#done-today .task-title', {
+        hasText: '深度写作 · 产品方案',
+      }),
     ).toBeVisible()
+    await expect(
+      page
+        .locator('.sec-title', { hasText: '今天' })
+        .locator('..')
+        .locator('.task-title', { hasText: '深度写作 · 产品方案' }),
+    ).toHaveCount(0)
+    await snap(page, '02-after-complete', {
+      flow: 'Flow 1',
+      note: '完成任务后移入今日完成',
+    })
   })
 
   test('Flow 2 — FAB 新建任务', async ({ page }, testInfo) => {

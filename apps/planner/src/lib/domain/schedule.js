@@ -4,7 +4,7 @@ import { getTaskKind } from './taskKind.js'
 
 export const DAY_START_HOUR = 8
 export const DAY_END_HOUR = 23
-export const HOUR_HEIGHT_PX = 96
+export const HOUR_HEIGHT_PX = 104
 export const MIN_BLOCK_HEIGHT_PX = 48
 
 export const SCHEDULE_START_TIMES = [
@@ -36,6 +36,17 @@ export function formatMinutesAsTime(minutes) {
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/** @param {number} minutes */
+export function formatDurationCompact(minutes, t) {
+  if (minutes >= 60) {
+    const h = Math.floor(minutes / 60)
+    const m = minutes % 60
+    if (m === 0) return t('schedule.durationCompactHours', { hours: h })
+    return t('schedule.durationCompactMixed', { hours: h, minutes: m })
+  }
+  return t('schedule.durationCompactMinutes', { minutes })
 }
 
 /** @param {number} minutes */

@@ -30,6 +30,7 @@
   const pct = $derived(total > 0 ? Math.min(100, (done / total) * 100) : 0);
   const allDone = $derived(total > 0 && remaining === 0);
   const dots = $derived(Math.min(total, 8));
+  const statsDone = $derived(total > 0 ? done : doneTodayCount);
 
   function scrollToDone() {
     onScrollDone?.();
@@ -45,8 +46,8 @@
     {/if}
   </div>
 
-  {#if rhythmEnabled && (streak > 0 || weeklyActive > 0)}
-    <div class="today-progress-rhythm">
+  {#if rhythmEnabled}
+    <div class="today-progress-rhythm" aria-hidden={!(streak > 0 || weeklyActive > 0)}>
       {#if streak > 0}
         <span class="today-progress-rhythm-pill">{t('rhythm.streakShort', { count: streak })}</span>
       {/if}
@@ -85,23 +86,24 @@
     {/if}
   </p>
 
-  <div class="today-progress-actions">
-    {#if done > 0}
-      <button type="button" class="today-progress-chip" onclick={scrollToDone}>
-        {t('home.doneToday')}
-      </button>
-    {/if}
-    {#if unscheduledCount > 0}
-      <button type="button" class="today-progress-chip" onclick={() => onOpenTimeline?.()}>
-        {t('schedule.summaryUnscheduled')} · {unscheduledCount}
-      </button>
-    {:else}
-      <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => onOpenTimeline?.()}>
-        {t('home.viewTimeline')}
-      </button>
-    {/if}
-    <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => goto('/upcoming')}>
-      {t('home.planTomorrow')}
+  <div class="today-progress-foot">
+    <button
+      type="button"
+      class="today-progress-stats"
+      onclick={scrollToDone}
+      disabled={statsDone <= 0}
+    >
+      {t('home.progressStats', { done: statsDone, unscheduled: unscheduledCount })}
     </button>
+    <div class="today-progress-actions">
+      {#if unscheduledCount > 0}
+        <button type="button" class="today-progress-chip" onclick={() => onOpenTimeline?.()}>
+          {t('schedule.summaryUnscheduled')}
+        </button>
+      {/if}
+      <button type="button" class="today-progress-chip today-progress-chip--action" onclick={() => goto('/upcoming')}>
+        {t('home.planTomorrow')}
+      </button>
+    </div>
   </div>
 </section>

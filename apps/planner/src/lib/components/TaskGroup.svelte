@@ -71,6 +71,7 @@
           <TaskRow
             {task}
             compact={compactRows}
+            metaMinimal={sectionId === 'done-today'}
             {ritualComplete}
             {showScheduleAction}
             scheduleDate={scheduleDate}

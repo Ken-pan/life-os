@@ -5,7 +5,6 @@
     blockLayout,
     taskDurationMinutes,
     formatTimeRange,
-    formatDurationLabel,
     parseTimeToMinutes,
     formatMinutesAsTime,
     dayBoundsMinutes,
@@ -62,9 +61,9 @@
       ? formatTimeRange(activeLayout.startMinutes, activeLayout.endMinutes, t)
       : '',
   );
-  const activeDuration = $derived(preview?.durationMinutes ?? duration);
-  const compact = $derived(Boolean(activeLayout && activeLayout.height < 44));
   const columned = $derived(columns > 1);
+  const compact = $derived(Boolean(activeLayout && activeLayout.height <= 56));
+  const showRangeMeta = $derived(Boolean(rangeLabel));
   const interactive = $derived(desktopInteractive && !task.completed);
 
   /** @param {PointerEvent} e @param {'move' | 'resize-top' | 'resize-bottom'} mode */
@@ -169,47 +168,36 @@
       }}
     >
       <div class="time-block-title">{task.title}</div>
-      {#if !compact && !columned}
-        <div class="time-block-meta">
-          {rangeLabel}
-          · {formatDurationLabel(activeDuration, t)}
-        </div>
-      {:else if columned && !compact}
+      {#if showRangeMeta}
         <div class="time-block-meta">{rangeLabel}</div>
       {/if}
     </button>
 
-    <div class="time-block-actions">
-      {#if task.completed}
-        <span class="time-block-check" aria-label={t('common.done')}>
-          <Icon name="check" size={14} strokeWidth={3} />
-        </span>
-      {:else}
-        <button
-          type="button"
-          class="time-block-check time-block-check--toggle"
-          aria-label={t('common.done')}
-          onclick={() => completeTask(task.id)}
-        >
-          <span class="time-block-check-ring"></span>
-        </button>
-      {/if}
-      {#if onReschedule && !compact}
-        <button
-          type="button"
-          class="time-block-reschedule"
-          class:time-block-reschedule--icon={columned}
-          onclick={onReschedule}
-          aria-label={t('schedule.reschedule')}
-        >
-          {#if columned}
-            <Icon name="clock" size={12} strokeWidth={2} />
-          {:else}
-            {t('schedule.rescheduleShort')}
-          {/if}
-        </button>
-      {/if}
-    </div>
+    {#if task.completed}
+      <span class="time-block-check time-block-check--done" aria-label={t('common.done')}>
+        <Icon name="check" size={12} strokeWidth={3} />
+      </span>
+    {:else}
+      <button
+        type="button"
+        class="time-block-check time-block-check--toggle"
+        aria-label={t('common.done')}
+        onclick={() => completeTask(task.id)}
+      >
+        <span class="time-block-check-ring"></span>
+      </button>
+    {/if}
+
+    {#if onReschedule && !compact && !columned && interactive}
+      <button
+        type="button"
+        class="time-block-reschedule"
+        onclick={onReschedule}
+        aria-label={t('schedule.reschedule')}
+      >
+        {t('schedule.rescheduleShort')}
+      </button>
+    {/if}
 
     {#if interactive}
       <button

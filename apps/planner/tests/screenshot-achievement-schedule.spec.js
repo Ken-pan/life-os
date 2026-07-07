@@ -357,13 +357,14 @@ test.describe('成就感 + 日程截图', () => {
     })
   })
 
-  test('完成动效与撤销 Toast', async ({ page }, testInfo) => {
+  test('完成动效', async ({ page }, testInfo) => {
     await seedState(page, featureSeedState())
     await page.goto('/')
     const row = page.locator('.task-row', { hasText: '深度写作' }).first()
     await row.locator('.task-check').first().click({ force: true })
-    await page.waitForTimeout(600)
-    await snap(page, '10-complete-ritual-toast')
+    await page.waitForTimeout(400)
+    await expect(page.locator('#done-today .task-title', { hasText: '深度写作' })).toBeVisible()
+    await snap(page, '10-complete-ritual')
 
     testInfo.annotations.push({
       type: 'screenshots',

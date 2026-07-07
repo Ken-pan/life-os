@@ -91,7 +91,9 @@ test.describe('PlannerOS E2E', () => {
     await expect(
       page.locator('.task-title', { hasText: '会议准备' }),
     ).toBeVisible()
-    await expect(page.locator('.chip--priority')).toBeVisible()
+    await expect(
+      page.locator('.task-meta-line', { hasText: '高' }),
+    ).toBeVisible()
   })
 
   test('完成任务后进入今日完成或庆祝态', async ({ page }) => {
@@ -245,7 +247,9 @@ test.describe('PlannerOS E2E', () => {
     await expect(
       page.locator('.task-title', { hasText: '每日晨跑' }),
     ).toBeVisible()
-    await expect(page.locator('.task-meta', { hasText: '每天' })).toBeVisible()
+    await expect(
+      page.locator('.task-meta-line', { hasText: '每天' }),
+    ).toBeVisible()
 
     const row = page.locator('.task-row', {
       has: page.locator('.task-title', { hasText: '每日晨跑' }),
@@ -373,7 +377,9 @@ test.describe('PlannerOS E2E', () => {
       has: page.locator('.task-title', { hasText: '完成后可见' }),
     })
     await row.locator('.task-check').click()
-    await expect(page.locator('.toast')).toBeVisible()
+    await expect(
+      page.locator('#done-today .task-title', { hasText: '完成后可见' }),
+    ).toBeVisible()
     await expect
       .poll(async () =>
         page.evaluate(() => {

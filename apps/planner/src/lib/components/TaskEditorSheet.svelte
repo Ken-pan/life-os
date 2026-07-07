@@ -508,10 +508,27 @@
     }
 
     :global(.task-editor-sheet) .task-editor-title-input {
-      min-height: 56px;
-      height: 56px;
+      min-height: 60px;
+      height: 60px;
       padding: 0 14px;
       line-height: 1.35;
+    }
+
+    :global(.task-editor-sheet .date-display),
+    :global(.task-editor-sheet .time-display) {
+      min-height: 60px;
+      height: 60px;
+    }
+
+    :global(.task-editor-sheet) .field {
+      margin-bottom: 14px;
+    }
+
+    :global(.task-editor-sheet) input:focus,
+    :global(.task-editor-sheet) textarea:focus,
+    :global(.task-editor-sheet) select:focus {
+      outline: 2px solid color-mix(in srgb, var(--accent) 42%, transparent);
+      outline-offset: 1px;
     }
 
     :global(.task-editor-sheet) .field-row {
@@ -526,7 +543,7 @@
       padding: 0 12px;
       border-radius: var(--radius-control);
       border: 1px solid var(--border);
-      background: color-mix(in srgb, var(--card) 92%, var(--bg));
+      background: color-mix(in srgb, var(--surface-2, var(--bg-2)) 70%, var(--card));
     }
 
     :global(.task-editor-sheet) .sheet-actions {
