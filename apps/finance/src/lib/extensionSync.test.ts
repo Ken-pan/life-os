@@ -623,21 +623,39 @@ describe("computeEnvelopePayloadHashSync", () => {
 });
 
 describe("newTxnToExtensionSyncPayload", () => {
-  it("maps platformId to platform_id", () => {
+  it('maps platformId to platform_id', () => {
     const payload = newTxnToExtensionSyncPayload({
-      date: "2026-06-01",
-      merchant: "Coffee",
-      category: "Dining",
-      account: "Rocket Money",
-      flow: "expense",
+      date: '2026-06-01',
+      merchant: 'Coffee',
+      category: 'Dining',
+      account: 'Rocket Money',
+      flow: 'expense',
       amount: 5.5,
       budgetImpact: -5.5,
       inSpending: true,
       inCashFlow: true,
-      source: "import",
-      platformId: "rm-abc",
-    });
-    expect(payload.platform_id).toBe("rm-abc");
-    expect(payload.flow_type).toBe("expense");
-  });
+      source: 'import',
+      platformId: 'rm-abc',
+    })
+    expect(payload.platform_id).toBe('rm-abc')
+    expect(payload.flow_type).toBe('expense')
+  })
+
+  it('omits empty platform_id and exclude_reason', () => {
+    const payload = newTxnToExtensionSyncPayload({
+      date: '2026-06-01',
+      merchant: 'Coffee',
+      category: 'Dining',
+      account: 'Rocket Money',
+      flow: 'expense',
+      amount: 5.5,
+      budgetImpact: -5.5,
+      inSpending: false,
+      inCashFlow: true,
+      source: 'import',
+      platformId: '',
+    })
+    expect(payload.platform_id).toBeUndefined()
+    expect(payload.exclude_reason).toBeUndefined()
+  })
 });

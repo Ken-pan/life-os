@@ -993,7 +993,7 @@ export async function computeEnvelopePayloadHash(
 export function newTxnToExtensionSyncPayload(
   t: NewTxn,
 ): Record<string, unknown> {
-  return {
+  const payload: Record<string, unknown> = {
     date: t.date,
     merchant: t.merchant,
     category: t.category,
@@ -1003,10 +1003,11 @@ export function newTxnToExtensionSyncPayload(
     budget_impact: t.budgetImpact,
     include_in_spending_analytics: t.inSpending,
     include_in_cash_flow_history: t.inCashFlow,
-    exclude_reason: t.excludeReason,
     source: t.source ?? 'import',
-    platform_id: t.platformId,
   }
+  if (t.excludeReason) payload.exclude_reason = t.excludeReason
+  if (t.platformId) payload.platform_id = t.platformId
+  return payload
 }
 
 export function loadProcessedIds(): Set<string> {
