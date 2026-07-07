@@ -38,6 +38,13 @@ begin
   if public.fos_ext_json_bigint(v_elem, 'installment_number') is not null then
     raise exception 'fos_ext_json_bigint empty string should null';
   end if;
+
+  -- Regression for left(source, '') typo: must not 22P02 when source is present.
+  perform coalesce(
+    nullif(left(coalesce(v_elem ->> 'source', ''), 32), ''),
+    'import'
+  );
+
   raise notice 'extension sync RPC regression helpers OK';
 end;
 $$;

@@ -188,7 +188,7 @@ begin
           public.fos_ext_json_bool(v_txn_elem, 'include_in_cash_flow_history', false),
           public.fos_ext_json_bool(v_txn_elem, 'include_in_cash_flow_history', false),
           nullif(left(coalesce(v_txn_elem ->> 'exclude_reason', ''), 200), ''),
-          coalesce(nullif(left(v_txn_elem ->> 'source', ''), 32), 'import'),
+          coalesce(nullif(left(coalesce(v_txn_elem ->> 'source', ''), 32), ''), 'import'),
           v_platform_id,
           p_capture_source,
           'resolved',
@@ -266,7 +266,7 @@ begin
           public.fos_ext_json_bool(v_txn_elem, 'include_in_cash_flow_history', false),
           public.fos_ext_json_bool(v_txn_elem, 'include_in_cash_flow_history', false),
           nullif(left(coalesce(v_txn_elem ->> 'exclude_reason', ''), 200), ''),
-          coalesce(nullif(left(v_txn_elem ->> 'source', ''), 32), 'import'),
+          coalesce(nullif(left(coalesce(v_txn_elem ->> 'source', ''), 32), ''), 'import'),
           p_capture_source,
           'resolved',
           '[]'::jsonb
