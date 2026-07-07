@@ -2,7 +2,7 @@
 
 > Frozen: 2026-07-07  
 > Code tag: `merchant-order-audit-v1.1-code` @ `172baa8a807e8d0ea8c56da05e3e1a44d4146d96` (pipeline only)  
-> Handoff tag: `merchant-order-audit-v1.1-handoff` @ `0e9c2fe9895c288998639733baa5b3d7eac6c9c7`  
+> Handoff tag: `merchant-order-audit-v1.1-handoff` — resolve with `git rev-parse merchant-order-audit-v1.1-handoff^{}`  
 > Bundle (gitignored): `tools/web-state-devtools/bridge/data/merchant-order-audit-20260707-1620-after-target-final/`
 
 ## Git tags
@@ -10,7 +10,7 @@
 | Tag | Points to | Contents |
 |-----|-----------|----------|
 | `merchant-order-audit-v1.1-code` | `172baa8` | Harvest/match/read-model engine only |
-| `merchant-order-audit-v1.1-handoff` | `0e9c2fe9` | + governance docs, UI states, apply ledger, contract TS types |
+| `merchant-order-audit-v1.1-handoff` | `git rev-parse merchant-order-audit-v1.1-handoff^{}` | + governance docs, UI states, apply ledger, FREEZE record |
 
 Before tagging either: `git rev-parse HEAD` and confirm the intended commit.
 
