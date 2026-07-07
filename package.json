@@ -14,7 +14,8 @@
     "build:fitness": "npm run build -w fitness-os",
     "build:finance": "npm run build -w finance-os",
     "build:music": "npm run build -w music-os",
-    "verify:web-state": "npm run verify --prefix tools/web-state-devtools/bridge"
+    "verify:web-state": "npm run verify --prefix tools/web-state-devtools/bridge",
+    "qa:mobile-scroll": "node scripts/life-os-mobile-scroll-qa.mjs"
   },
   "devDependencies": {
     "turbo": "^2.5.4"

@@ -1330,6 +1330,10 @@ html, body {
     min-height: calc(100svh - env(safe-area-inset-top, 0px));
   }
 
+  html.standalone-pwa .main-col {
+    min-height: 0;
+  }
+
   /*
    * 短页只需为 FAB 预留滚动余量；底栏 position:fixed 不在文档流，
    * 勿把 tabbar-total-h 叠进 padding（真机会出现任务与 FAB 之间大块空黑）。

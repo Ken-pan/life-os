@@ -123,6 +123,32 @@ async function clickHubTab(page, label) {
   return true
 }
 
+async function touchScrollY(page, selector, deltaY) {
+  const box = await page.locator(selector).first().boundingBox()
+  if (!box) return false
+  const x = Math.round(box.x + box.width / 2)
+  const y1 = Math.round(box.y + Math.min(box.height * 0.65, box.height - 12))
+  const y2 = Math.round(y1 - deltaY)
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x, y: y1 }],
+  })
+  for (let i = 1; i <= 10; i++) {
+    const y = Math.round(y1 + (y2 - y1) * (i / 10))
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{ x, y }],
+    })
+  }
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  })
+  await page.waitForTimeout(250)
+  return true
+}
+
 async function waitForMobileTabbar(page) {
   await page.waitForFunction(() => {
     const el = document.querySelector('.mobile-tabbar')
@@ -332,21 +358,86 @@ const results = []
 
     // More sheet must not leave body scroll-locked after close
     await page.evaluate(() => document.documentElement.classList.remove('standalone-pwa'))
+    const beforeMoreTouch = await page.evaluate(() => window.scrollY)
+    await touchScrollY(page, 'body', 350)
+    const afterTouchDoc = await page.evaluate(() => window.scrollY)
+    record(
+      results,
+      'mobile',
+      'scroll:touch-document',
+      afterTouchDoc > beforeMoreTouch + 80,
+      `before=${beforeMoreTouch} after=${afterTouchDoc}`,
+    )
+
     await page.locator('.mobile-tabbar .mobile-tab').filter({ hasText: '更多' }).click()
     await page.waitForTimeout(120)
     await page.locator('.mobile-more-close').click()
     await page.waitForTimeout(120)
     const afterMoreScroll = await page.evaluate(() => {
       const bodyPos = getComputedStyle(document.body).position
+      const bodyInlinePos = document.body.style.position
       window.scrollTo(0, 900)
-      return { bodyPos, scrollY: window.scrollY }
+      return {
+        bodyPos,
+        bodyInlinePos,
+        scrollY: window.scrollY,
+        bodyH: document.body.scrollHeight,
+        innerH: window.innerHeight,
+      }
     })
     record(
       results,
       'mobile',
       'scroll:after-more-sheet',
-      afterMoreScroll.bodyPos !== 'fixed' && afterMoreScroll.scrollY > 200,
+      afterMoreScroll.bodyPos !== 'fixed' &&
+        afterMoreScroll.bodyInlinePos !== 'fixed' &&
+        afterMoreScroll.scrollY > 200 &&
+        afterMoreScroll.bodyH > afterMoreScroll.innerH + 100,
       JSON.stringify(afterMoreScroll),
+    )
+
+    // PWA touch scroll on .content (real standalone init)
+    await page.addInitScript(() => {
+      const original = window.matchMedia.bind(window)
+      window.matchMedia = (query) => {
+        const result = original(query)
+        if (query === '(display-mode: standalone)') {
+          return {
+            ...result,
+            matches: true,
+            media: query,
+            addEventListener: (type, cb) => result.addEventListener(type, cb),
+            removeEventListener: (type, cb) => result.removeEventListener(type, cb),
+          }
+        }
+        return result
+      }
+      Object.defineProperty(navigator, 'standalone', {
+        value: true,
+        configurable: true,
+      })
+    })
+    await page.goto(`${baseUrl}/stocks`, { waitUntil: 'networkidle' })
+    await page.waitForSelector('.content')
+    const pwaTouchBefore = await page.evaluate(
+      () => document.querySelector('.content')?.scrollTop ?? 0,
+    )
+    await touchScrollY(page, '.content', 420)
+    const pwaTouchAfter = await page.evaluate(() => {
+      const content = document.querySelector('.content')
+      return {
+        scrollTop: content?.scrollTop ?? 0,
+        overflow: content ? getComputedStyle(content).overflowY : '',
+        height: content ? getComputedStyle(content).height : '',
+        flex: content ? getComputedStyle(content).flex : '',
+      }
+    })
+    record(
+      results,
+      'mobile',
+      'scroll:touch-pwa-content',
+      pwaTouchAfter.scrollTop > pwaTouchBefore + 120,
+      JSON.stringify(pwaTouchAfter),
     )
   } catch (e) {
     record(results, 'mobile', 'setup', false, e.message)

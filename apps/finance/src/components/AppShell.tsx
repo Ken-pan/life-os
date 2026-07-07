@@ -51,8 +51,6 @@ import { trackNavView } from '../lib/analytics'
 import { isMoreNavActive, MOBILE_PRIMARY_TAB_IDS } from '../lib/nav'
 import {
   activateFocusTrap,
-  lockScroll,
-  unlockScroll,
   resetScrollLock,
   bindViewportHeight,
   bindPwaForegroundResume,
@@ -401,7 +399,6 @@ export function AppShell() {
 
   useEffect(() => {
     if (!moreSheet) return
-    lockScroll()
     let releaseFocus: (() => void) | undefined
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setMoreSheet(false)
@@ -414,7 +411,6 @@ export function AppShell() {
     })
     return () => {
       cancelAnimationFrame(frame)
-      unlockScroll()
       window.removeEventListener('keydown', onKey)
       releaseFocus?.()
     }

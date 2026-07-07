@@ -2,6 +2,7 @@
   import '../app.css'
   import '$lib/styles/weight-controls.css'
   import { onMount } from 'svelte'
+  import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import AppBar from '$lib/components/AppBar.svelte'
   import SideNav from '$lib/components/SideNav.svelte'
@@ -17,7 +18,7 @@
   import PortraitGate from '$lib/components/PortraitGate.svelte'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
-  import { bindViewportHeight, bindPwaForegroundResume } from '@life-os/theme'
+  import { bindViewportHeight, bindPwaForegroundResume, resetScrollLock } from '@life-os/theme'
   import { shouldDeferFitnessForegroundSync } from '$lib/pwaResume.js'
   import {
     scheduleAutoCloudPush,
@@ -140,6 +141,10 @@
       shouldDefer: () =>
         shouldDeferFitnessForegroundSync(page.url.pathname, timer),
     })
+  })
+
+  afterNavigate(() => {
+    resetScrollLock()
   })
 </script>
 

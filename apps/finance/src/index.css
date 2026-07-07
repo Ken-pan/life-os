@@ -4039,29 +4039,6 @@ div.input {
 }
 
 @media (--life-os-mobile) {
-  .app-shell {
-    display: flex;
-    flex-direction: column;
-    min-height: auto;
-  }
-
-  html:not(.standalone-pwa) .app-shell {
-    min-height: auto;
-  }
-
-  html:not(.standalone-pwa) body {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .main-wrap > .page-header {
-    flex-shrink: 0;
-  }
-
-  .main-wrap > .content {
-    min-height: 0;
-  }
-
   .sidebar {
     display: none;
   }

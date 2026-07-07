@@ -1,6 +1,7 @@
 <script>
   import '../app.css'
   import { onMount } from 'svelte'
+  import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import ListSidebar from '$lib/components/ListSidebar.svelte'
   import AppBar from '$lib/components/AppBar.svelte'
@@ -23,7 +24,7 @@
   } from '$lib/state.svelte.js'
   import { applyLocale, listLabel, t } from '$lib/i18n/index.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
-  import { bindViewportHeight, bindPwaForegroundResume } from '@life-os/theme'
+  import { bindViewportHeight, bindPwaForegroundResume, resetScrollLock } from '@life-os/theme'
   import PortraitGate from '$lib/components/PortraitGate.svelte'
   import { scheduleBidirectionalSync, initAutoSync } from '$lib/sync.js'
   import { registerServiceWorker } from '$lib/swRegister.js'
@@ -120,6 +121,10 @@
       cleanupVisibility()
       cleanupAutoSync()
     }
+  })
+
+  afterNavigate(() => {
+    resetScrollLock()
   })
 </script>
 

@@ -2,7 +2,7 @@
   import '../app.css'
   import { browser } from '$app/environment'
   import { onMount } from 'svelte'
-  import { onNavigate } from '$app/navigation'
+  import { onNavigate, afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import AppBar from '$lib/components/AppBar.svelte'
   import SideNav from '$lib/components/SideNav.svelte'
@@ -30,7 +30,7 @@
   } from '$lib/import.js'
   import { initAuth, auth } from '$lib/auth.svelte.js'
   import { bindVisibilitySync } from '@life-os/sync'
-  import { bindViewportHeight } from '@life-os/theme'
+  import { bindViewportHeight, resetScrollLock } from '@life-os/theme'
   import { flushPendingSync, syncBidirectional } from '$lib/sync.js'
   import { bindConnectivity } from '$lib/connectivity.svelte.js'
   import { bindBackgroundPlayback } from '$lib/backgroundAudio.js'
@@ -162,6 +162,10 @@
         await navigation.complete
       })
     })
+  })
+
+  afterNavigate(() => {
+    resetScrollLock()
   })
 
   $effect.pre(() => {

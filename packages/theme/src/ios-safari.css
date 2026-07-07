@@ -41,6 +41,12 @@ body,
     min-height: 0;
   }
 
+  html.standalone-pwa #root > .app-shell,
+  html.standalone-pwa #root > .app {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
   html.standalone-pwa .app-shell,
   html.standalone-pwa .app {
     flex: 1 1 auto;
@@ -64,27 +70,51 @@ body,
   html.standalone-pwa .main-wrap > .page-header,
   html.standalone-pwa .main-wrap > .appbar {
     flex-shrink: 0;
+    position: relative;
+    top: auto;
   }
 
   html.standalone-pwa #main-content,
   html.standalone-pwa .main-wrap .wrap,
   html.standalone-pwa .main-wrap .content {
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    height: 0;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
   }
 
-  /* Planner 等直接用 .main-col 壳的应用：主列自身滚动 */
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap .content,
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap .wrap,
+  html.standalone-pwa body:has(.mobile-more-backdrop) #main-content,
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col > .wrap,
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col > .auth-wrap {
+    overflow: hidden;
+  }
+
+  /* Planner：main-col 为 flex 壳，页面 .wrap / .auth-wrap 内滚动（Fab/底栏 fixed 不参与） */
   html.standalone-pwa .main-col:not(:has(.main-wrap)) {
     flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+  }
+
+  html.standalone-pwa .main-col:not(:has(.main-wrap)) > .wrap,
+  html.standalone-pwa .main-col:not(:has(.main-wrap)) > .auth-wrap {
+    flex: 1 1 0;
+    height: 0;
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    touch-action: pan-y;
   }
 }
 
@@ -100,6 +130,32 @@ body,
   html,
   body {
     overscroll-behavior-y: none;
+  }
+
+  html:not(.standalone-pwa) .app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  html:not(.standalone-pwa),
+  html:not(.standalone-pwa) body {
+    touch-action: pan-y;
+  }
+
+  html:not(.standalone-pwa) body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .main-wrap > .page-header,
+  .main-wrap > .appbar {
+    flex-shrink: 0;
+  }
+
+  .main-wrap > .content,
+  .main-wrap > #main-content {
+    min-height: 0;
   }
 
   /* Sheet / More / Modal：Safari 16+ CSS fallback；旧版与 iOS 橡皮筋由 JS lockScroll()（@life-os/theme）负责 */
