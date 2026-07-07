@@ -23,11 +23,31 @@ export interface PurchaseReturnInfo {
   isRefundCredit?: boolean;
 }
 
-const RETURN_WINDOW_RE = /return window closed|return or replace|start a return/i;
-const RETURN_DONE_RE =
-  /return complete|return received|\breturned\b|refund issued|refund credited|refund total/i;
+const RETURN_WINDOW_RE =
+  /return window closed|return or replace|eligible for return|start a return|view return\/refund status|buy it again/i;
+const EXPLICIT_RETURN_EVIDENCE_RE =
+  /(?:refund issued|refund credited|refund total|replacement sent|return complete|return received|\breturned\b|\brefunded\b)/i;
+const EXPLICIT_RETURN_STATUS_LABEL_RE =
+  /^(?:Return complete|Refund issued|Refunded|Returned|Cancelled|Canceled)$/i;
+const ACTIVE_DELIVERY_STATUS_RE =
+  /^(?:Arriving|Delivered|Shipped|Out for delivery|Estimated delivery|Payment|Pending|Purchased)/i;
 const RETURN_PROGRESS_RE =
   /return initiated|drop off|return started|return in progress/i;
+
+function hasExplicitReturnEvidence(text: string | undefined, statusLabel: string): boolean {
+  const label = statusLabel.trim();
+  const blob = `${label} ${text || ""}`.trim();
+  if (!blob) return false;
+  if (RETURN_WINDOW_RE.test(blob) && !EXPLICIT_RETURN_EVIDENCE_RE.test(blob)) {
+    return false;
+  }
+  if (EXPLICIT_RETURN_STATUS_LABEL_RE.test(label)) return true;
+  if (/^returned$/i.test(label)) return true;
+  if (/Refund(?:\s+Total)?:?\s*(\$[\d,]+\.\d{2})/i.test(blob)) return true;
+  if (EXPLICIT_RETURN_EVIDENCE_RE.test(blob)) return true;
+  if (RETURN_PROGRESS_RE.test(blob)) return true;
+  return false;
+}
 
 export function parseMoney(value: string | number | undefined | null): number | null {
   if (value == null || value === "") return null;
@@ -57,10 +77,15 @@ export function parseReturnInfoFromMerchantStatus(
   } = {}
 ): PurchaseReturnInfo | undefined {
   const label = status?.trim() || "";
-  const blob = `${label} ${options.detailText || ""}`.trim();
-  if (!label && !options.detailText) return undefined;
+  const evidence = (options.detailText || "").trim();
+  const blob = `${label} ${evidence}`.trim();
+  if (!label && !evidence) return undefined;
 
-  if (RETURN_WINDOW_RE.test(blob) && !RETURN_DONE_RE.test(blob)) {
+  if (
+    RETURN_WINDOW_RE.test(blob) &&
+    !EXPLICIT_RETURN_EVIDENCE_RE.test(blob) &&
+    !EXPLICIT_RETURN_STATUS_LABEL_RE.test(label)
+  ) {
     return undefined;
   }
 
@@ -68,32 +93,45 @@ export function parseReturnInfoFromMerchantStatus(
 
   if (/^refund issued$|^refund credited$|^refunded$/i.test(label)) {
     parsed = "refunded";
-  } else if (RETURN_DONE_RE.test(blob) || /^returned$/i.test(label)) {
+  } else if (/^return complete$/i.test(label) || /^returned$/i.test(label)) {
     parsed = /refund/i.test(blob) ? "refunded" : "returned";
-  } else if (RETURN_PROGRESS_RE.test(blob)) {
-    parsed = "return_in_progress";
   } else if (/^cancelled$|^canceled$/i.test(label)) {
     parsed = "cancelled";
-  } else if (/^returned$/i.test(label)) {
-    parsed = "returned";
+  } else if (RETURN_PROGRESS_RE.test(blob)) {
+    parsed = "return_in_progress";
+  } else if (EXPLICIT_RETURN_EVIDENCE_RE.test(evidence)) {
+    if (/refund issued|refund credited|refund total|\brefunded\b/i.test(evidence)) {
+      parsed = "refunded";
+    } else if (
+      /return complete|return received|\breturned\b|replacement sent/i.test(evidence)
+    ) {
+      parsed = /refund/i.test(evidence) ? "refunded" : "returned";
+    }
   }
 
-  if (!parsed) {
-    const refundAmt = options.detailText?.match(
-      /Refund(?:\s+Total)?:?\s*(\$[\d,]+\.\d{2})/i
-    )?.[1];
-    if (refundAmt) parsed = "refunded";
-  }
+  const refundLine = evidence.match(/Refund(?:\s+Total)?:?\s*(\$[\d,]+\.\d{2})/i);
+  if (!parsed && refundLine) parsed = "refunded";
 
   if (!parsed) return undefined;
+
+  if (!hasExplicitReturnEvidence(evidence, label)) return undefined;
+
+  if (
+    ACTIVE_DELIVERY_STATUS_RE.test(label) &&
+    !EXPLICIT_RETURN_STATUS_LABEL_RE.test(label) &&
+    !refundLine
+  ) {
+    return undefined;
+  }
 
   const refundAmount =
     parsed === "cancelled"
       ? undefined
-      : parseMoney(
-          options.detailText?.match(/Refund(?:\s+Total)?:?\s*(\$[\d,]+\.\d{2})/i)?.[1] ??
-            options.orderTotal
-        ) ?? undefined;
+      : parseMoney(refundLine?.[1]) ??
+        (EXPLICIT_RETURN_STATUS_LABEL_RE.test(label)
+          ? parseMoney(options.orderTotal)
+          : null) ??
+        undefined;
 
   return {
     status: parsed,

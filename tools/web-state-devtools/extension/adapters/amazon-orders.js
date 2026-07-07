@@ -71,49 +71,142 @@
     ) || /^Refund issued$|^Return complete$/i.test(t)
   }
 
-  function parseReturnInfo(status, statusDate, orderTotal, detailText) {
-    const label = (status || '').trim()
-    const blob = `${label} ${detailText || ''}`.trim()
-    if (!label && !detailText) return undefined
+  const GENERIC_RETURN_UI_RE =
+    /return window closed|return or replace|eligible for return|start a return|view return\/refund status|buy it again/i
+  const EXPLICIT_RETURN_EVIDENCE_RE =
+    /(?:refund issued|refund credited|refund total|replacement sent|return complete|return received|\breturned\b|\brefunded\b)/i
+  const EXPLICIT_REFUND_AMOUNT_RE =
+    /Refund(?:\s+Total)?:?\s*(\$[\d,]+\.\d{2})/i
+  const ACTIVE_DELIVERY_STATUS_RE =
+    /^(?:Arriving|Delivered|Shipped|Out for delivery|Estimated delivery|Payment|Pending|Purchased)/i
+  const EXPLICIT_RETURN_STATUS_LABEL_RE =
+    /^(?:Return complete|Refund issued|Refunded|Returned|Cancelled|Canceled)$/i
+
+  function hasExplicitReturnEvidence(text, statusLabel) {
+    const label = (statusLabel || '').trim()
+    const blob = `${label} ${text || ''}`.trim()
+    if (!blob) return false
     if (
-      /return window closed|return or replace|start a return/i.test(blob) &&
-      !/return complete|returned|refund/i.test(blob)
+      GENERIC_RETURN_UI_RE.test(blob) &&
+      !EXPLICIT_RETURN_EVIDENCE_RE.test(blob)
     ) {
-      return undefined
+      return false
+    }
+    if (EXPLICIT_RETURN_STATUS_LABEL_RE.test(label)) return true
+    if (/^returned$/i.test(label)) return true
+    if (EXPLICIT_REFUND_AMOUNT_RE.test(blob)) return true
+    if (EXPLICIT_RETURN_EVIDENCE_RE.test(blob)) return true
+    if (/return initiated|drop off|return started|return in progress/i.test(blob))
+      return true
+    return false
+  }
+
+  function extractReturnEvidenceFromCard(card) {
+    if (!card) return ''
+    const parts = []
+    const delivery = card.querySelector(SEL.deliveryBox)
+    if (delivery) {
+      for (const el of delivery.querySelectorAll(
+        'h4, h5, h6, .a-text-bold, .delivery-box__primary-text, span',
+      )) {
+        const t = text(el)
+        if (isCleanStatus(t)) parts.push(t)
+      }
+    }
+    for (const el of card.querySelectorAll(
+      '[class*="return"], [class*="refund"], [data-component*="return"]',
+    )) {
+      const t = text(el)
+      if (t && t.length < 200 && !GENERIC_RETURN_UI_RE.test(t)) parts.push(t)
+    }
+    return [...new Set(parts)].join(' ').trim()
+  }
+
+  function extractReturnEvidenceFromDetail(root, subtotalText) {
+    const parts = [subtotalText || '']
+    const status = extractStatusFromCard(root)
+    if (status) parts.push(status)
+    for (const el of root.querySelectorAll(
+      '#od-subtotals, [class*="return"], [class*="refund"]',
+    )) {
+      const t = text(el)
+      if (t && t.length < 500) parts.push(t)
+    }
+    return parts.join(' ').trim()
+  }
+
+  function parseReturnInfo(status, statusDate, orderTotal, evidenceText) {
+    const label = (status || '').trim()
+    const evidence = (evidenceText || '').trim()
+    const blob = `${label} ${evidence}`.trim()
+    const warnings = []
+    if (!label && !evidence) return { returnInfo: undefined, warnings }
+
+    if (
+      GENERIC_RETURN_UI_RE.test(blob) &&
+      !EXPLICIT_RETURN_EVIDENCE_RE.test(blob) &&
+      !EXPLICIT_RETURN_STATUS_LABEL_RE.test(label)
+    ) {
+      return { returnInfo: undefined, warnings }
     }
 
     let returnStatus = null
-    if (/refund issued|refund credited|refund total|^refund/i.test(blob)) {
+    if (/^refund issued$|^refund credited$|^refunded$/i.test(label)) {
       returnStatus = 'refunded'
-    } else if (
-      /return complete|return received|\breturned\b/i.test(blob) ||
-      /^returned$/i.test(label)
-    ) {
+    } else if (/^return complete$/i.test(label) || /^returned$/i.test(label)) {
       returnStatus = /refund/i.test(blob) ? 'refunded' : 'returned'
-    } else if (/return initiated|drop off|return started/i.test(blob)) {
-      returnStatus = 'return_in_progress'
     } else if (/^cancelled$|^canceled$/i.test(label)) {
       returnStatus = 'cancelled'
+    } else if (/return initiated|drop off|return started/i.test(blob)) {
+      returnStatus = 'return_in_progress'
+    } else if (EXPLICIT_RETURN_EVIDENCE_RE.test(evidence)) {
+      if (/refund issued|refund credited|refund total|\brefunded\b/i.test(evidence)) {
+        returnStatus = 'refunded'
+      } else if (
+        /return complete|return received|\breturned\b|replacement sent/i.test(
+          evidence,
+        )
+      ) {
+        returnStatus = /refund/i.test(evidence) ? 'refunded' : 'returned'
+      }
     }
 
-    const refundLine = (detailText || '').match(
-      /Refund(?:\s+Total)?:?\s*(\$[\d,]+\.\d{2})/i,
-    )
+    const refundLine = evidence.match(EXPLICIT_REFUND_AMOUNT_RE)
     if (!returnStatus && refundLine) returnStatus = 'refunded'
-    if (!returnStatus) return undefined
+    if (!returnStatus) return { returnInfo: undefined, warnings }
+
+    if (!hasExplicitReturnEvidence(evidence, label)) {
+      warnings.push('amazon_return_info_suppressed_no_explicit_evidence')
+      return { returnInfo: undefined, warnings }
+    }
+
+    if (
+      ACTIVE_DELIVERY_STATUS_RE.test(label) &&
+      !EXPLICIT_RETURN_STATUS_LABEL_RE.test(label) &&
+      !EXPLICIT_REFUND_AMOUNT_RE.test(evidence)
+    ) {
+      warnings.push('amazon_return_info_suppressed_no_explicit_evidence')
+      return { returnInfo: undefined, warnings }
+    }
 
     const refundAmount =
       returnStatus === 'cancelled'
         ? undefined
-        : parseMoney(refundLine?.[1]) ??
-          parseMoney(orderTotal) ??
+        : (refundLine ? parseMoney(refundLine[1]) : null) ??
+          (EXPLICIT_RETURN_STATUS_LABEL_RE.test(label)
+            ? parseMoney(orderTotal)
+            : null) ??
           undefined
 
     return {
-      status: returnStatus,
-      label: label || undefined,
-      eventDate: statusDate || undefined,
-      refundAmount,
+      returnInfo: {
+        status: returnStatus,
+        label: label || undefined,
+        eventDate: statusDate || undefined,
+        refundAmount,
+      },
+      warnings,
+      returnEvidenceText: evidence || undefined,
     }
   }
 
@@ -376,6 +469,27 @@
     return isCleanStatus(candidate) ? candidate : undefined
   }
 
+  function deriveReturnInfoDecision(status, returnInfo, returnEvidenceText) {
+    if (returnInfo) return 'present'
+    const label = (status || '').trim()
+    const evidence = returnEvidenceText || ''
+    if (
+      EXPLICIT_RETURN_STATUS_LABEL_RE.test(label) ||
+      /^returned$/i.test(label) ||
+      /return initiated|drop off|return started|return in progress/i.test(
+        `${label} ${evidence}`,
+      )
+    ) {
+      return 'present'
+    }
+    if (hasExplicitReturnEvidence(evidence, label)) return 'present'
+    if (ACTIVE_DELIVERY_STATUS_RE.test(label) || /^(?:deliver|arriv|ship|purchas)/i.test(label)) {
+      return 'absent_verified'
+    }
+    if (!label) return 'unknown'
+    return 'unknown'
+  }
+
   function parseOrderCard(card) {
     const headerEl = card.querySelector(SEL.orderHeader) || card
     const header = parseHeaderBlock(text(headerEl))
@@ -387,11 +501,12 @@
     const deliveryBox = card.querySelector(SEL.deliveryBox)
     const lineItems = extractLineItemsFromDeliveryBox(deliveryBox)
     const status = extractStatusFromCard(card)
-    const returnInfo = parseReturnInfo(
+    const evidenceText = extractReturnEvidenceFromCard(card)
+    const parsedReturn = parseReturnInfo(
       status,
       undefined,
       header.orderTotal,
-      text(card),
+      evidenceText,
     )
 
     return {
@@ -400,7 +515,16 @@
       orderTotal: header.orderTotal,
       shipTo: header.shipTo,
       status,
-      returnInfo,
+      returnInfo: parsedReturn.returnInfo,
+      returnEvidenceText: parsedReturn.returnEvidenceText,
+      returnInfoDecision: deriveReturnInfoDecision(
+        status,
+        parsedReturn.returnInfo,
+        parsedReturn.returnEvidenceText,
+      ),
+      parserWarnings: parsedReturn.warnings?.length
+        ? parsedReturn.warnings
+        : undefined,
       detailUrl,
       lineItems,
     }
@@ -550,11 +674,12 @@
     }
 
     const status = extractStatusFromCard(root) || undefined
-    const returnInfo = parseReturnInfo(
+    const evidenceText = extractReturnEvidenceFromDetail(root, subtotalText)
+    const parsedReturn = parseReturnInfo(
       status,
       undefined,
       orderTotal,
-      `${subtotalText} ${text(root)}`,
+      evidenceText,
     )
 
     return {
@@ -563,7 +688,16 @@
       orderTotal,
       shipTo: header.shipTo,
       status,
-      returnInfo,
+      returnInfo: parsedReturn.returnInfo,
+      returnEvidenceText: parsedReturn.returnEvidenceText,
+      returnInfoDecision: deriveReturnInfoDecision(
+        status,
+        parsedReturn.returnInfo,
+        parsedReturn.returnEvidenceText,
+      ),
+      parserWarnings: parsedReturn.warnings?.length
+        ? parsedReturn.warnings
+        : undefined,
       detailUrl: location.href,
       lineItems: lineItems.slice(0, 30),
     }
