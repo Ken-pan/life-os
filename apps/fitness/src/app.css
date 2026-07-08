@@ -3389,8 +3389,8 @@ body:has(.focus-view) .toast {
   border-top: 1px solid var(--border);
 }
 
-.coach-head + .coach-tip,
-.coach-panel > .coach-tip:first-child {
+.coach-head+.coach-tip,
+.coach-panel>.coach-tip:first-child {
   border-top: none;
   padding-top: 0;
 }
