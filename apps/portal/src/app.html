@@ -1,12 +1,58 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="text-scale" content="scale" />
-		%sveltekit.head%
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
-	</body>
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HOME.OS</title>
+  <meta name="description" content="Life OS 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music" />
+  <meta name="application-name" content="HOME.OS" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#f5f3f0" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f5f3f0" id="theme-color-meta" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="HOME.OS" />
+  <link rel="icon" id="app-favicon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var pref = 'auto';
+        var raw = localStorage.getItem('homeos_v1');
+        if (raw) {
+          var s = JSON.parse(raw);
+          if (s.settings && s.settings.theme) pref = s.settings.theme;
+        }
+        var dark =
+          pref === 'dark' ||
+          (pref === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var resolved = dark ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', resolved);
+        document.documentElement.style.colorScheme = resolved;
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.content = resolved === 'dark' ? '#121110' : '#f5f3f0';
+      } catch (e) { }
+    })();
+    (function () {
+      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      document.documentElement.style.setProperty('--app-vh', h + 'px');
+      var standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator && window.navigator.standalone === true);
+      document.documentElement.classList.toggle('standalone-pwa', standalone);
+    })();
+  </script>
+  %sveltekit.head%
+</head>
+<body data-sveltekit-preload-data="hover">
+  <div style="display: contents">%sveltekit.body%</div>
+</body>
 </html>

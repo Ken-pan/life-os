@@ -17,6 +17,12 @@ export { mapAuthErrorMessage } from './authErrorMessage.js'
 export { notifyManualSyncResult } from './manualSyncResult.js'
 export { resolveSupabaseEnv, createSupabaseAuthOptions } from './supabaseEnv.js'
 export {
+  LIFE_OS_SUPABASE_URL,
+  LIFE_OS_SUPABASE_PUBLISHABLE_KEY,
+  createLifeOsSupabaseClient,
+} from './supabaseClient.js'
+export { createLifeOsAuth } from './authController.js'
+export {
   ensureCoreProfile,
   touchAppLastOpened,
   createCoreIdentityHandler,

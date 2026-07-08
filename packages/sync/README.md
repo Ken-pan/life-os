@@ -20,6 +20,9 @@ Monorepo 根目录 `npm install` 链接 workspace。
 | --------------------------------------------- | ---------------------------------------------------------- |
 | `LIFE_OS_AUTH_STORAGE_KEY`                    | 四站统一 localStorage 键 `life_os_auth`                    |
 | `LIFE_OS_APP_IDS`                             | `finance` \| `fitness` \| `planner` \| `music` \| `portal` |
+| `createLifeOsSupabaseClient`                  | 五端统一 client 工厂：env + auth 选项 + SSO + 可选 schema  |
+| `LIFE_OS_SUPABASE_URL` / `…_PUBLISHABLE_KEY`  | 生产项目 URL / key 唯一定义处（换 key 只改本包）           |
+| `createLifeOsAuth`                            | auth 生命周期工厂：getSession 引导 + authSync/coreIdentity 接线 + sign in/up/out |
 | `resolveSupabaseEnv`                          | 读 `PUBLIC_SUPABASE_*` 或 `VITE_SUPABASE_*`                |
 | `createSupabaseAuthOptions`                   | persistSession + autoRefreshToken + storageKey             |
 | `setupCrossDomainSSO`                         | 跨 `*.kenos.space` 子域 Cookie SSO（见 `src/sso.js`）      |

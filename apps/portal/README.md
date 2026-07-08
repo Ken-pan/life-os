@@ -1,16 +1,18 @@
-# Portal OS（Life OS 统一入口）
+# HOME.OS（Life OS 统一入口）
 
 > **阶段：** I-P1 · **状态：** 🟡 本地 WIP，未上线
 > **计划 URL：** https://home.kenos.space
 > **路线图：** [`docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) §I-P1
 
-轻量 Launcher：Glassmorphism 四端入口卡片 + CommandPalette，复用 `@life-os/sync` 身份与跨域 SSO。
+Life OS 应用切换器：复用 `@life-os/theme` shell / `settings-block` 卡片与各端真实品牌 icon，接入 `@life-os/sync` 身份与跨域 SSO。
 
 ## 当前能力
 
 | 能力                                   | 状态                       |
 | -------------------------------------- | -------------------------- |
-| 四 App 入口卡片                        | ✅                         |
+| 四 App 入口（真实 icon + 品牌色左边框） | ✅                         |
+| `app-shell` + `HOME.OS` 顶栏品牌       | ✅                         |
+| `LIFE_OS_SITE_META.portal`             | ✅                         |
 | `setupCrossDomainSSO`                  | ✅                         |
 | `createCoreIdentityHandler('portal')`  | ✅                         |
 | `@life-os/platform-web` CommandPalette | ✅                         |

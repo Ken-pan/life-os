@@ -5,13 +5,17 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
       "import": "./src/index.js"
+    },
+    "./CommandPalette.svelte": {
+      "svelte": "./src/CommandPalette.svelte",
+      "default": "./src/CommandPalette.svelte"
     }
   },
   "dependencies": {

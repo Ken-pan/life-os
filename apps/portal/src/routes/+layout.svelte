@@ -3,7 +3,11 @@
   import { onMount } from 'svelte'
   import { supabase } from '$lib/supabase.js'
   import { createCoreIdentityHandler } from '@life-os/sync'
-  import { CommandPalette } from '@life-os/platform-web'
+  import CommandPalette from '@life-os/platform-web/CommandPalette.svelte'
+  import { bindViewportHeight } from '@life-os/theme'
+  import DocumentHead from '$lib/components/DocumentHead.svelte'
+  import PortalAppBar from '$lib/components/PortalAppBar.svelte'
+  import { PORTAL_APPS, getLauncherMeta } from '$lib/apps.js'
 
   let { children } = $props()
 
@@ -13,41 +17,31 @@
   let session = $state(null)
   let cpOpen = $state(false)
 
-  const cpActions = [
+  const cpActions = $derived([
+    ...PORTAL_APPS.map((app) => ({
+      id: app.id,
+      title: `打开 ${getLauncherMeta(app.id).name}`,
+      icon: app.id === 'finance' ? 'wallet' : app.id === 'planner' ? 'check-square' : app.id === 'fitness' ? 'activity' : 'music',
+      onSelect: () => {
+        window.location.href = app.url
+      },
+    })),
     {
-      id: '1',
-      title: 'Open Finance OS',
-      icon: 'wallet',
-      onSelect: () => (window.location.href = 'https://finance.kenos.space'),
-    },
-    {
-      id: '2',
-      title: 'Open Planner OS',
-      icon: 'check-square',
-      onSelect: () => (window.location.href = 'https://planner.kenos.space'),
-    },
-    {
-      id: '3',
-      title: 'Open Fitness OS',
-      icon: 'activity',
-      onSelect: () => (window.location.href = 'https://fitness.kenos.space'),
-    },
-    {
-      id: '4',
-      title: 'Open Music OS',
-      icon: 'music',
-      onSelect: () => (window.location.href = 'https://music.kenos.space'),
-    },
-    {
-      id: '5',
-      title: 'Sign Out',
+      id: 'sign-out',
+      title: '退出登录',
       icon: 'log-out',
-      onSelect: () =>
-        supabase.auth.signOut().then(() => window.location.reload()),
+      onSelect: () => supabase.auth.signOut().then(() => window.location.reload()),
     },
-  ]
+  ])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    window.location.reload()
+  }
 
   onMount(() => {
+    const cleanupViewport = bindViewportHeight()
+
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         session = newSession
@@ -65,81 +59,55 @@
 
     return () => {
       authListener.subscription.unsubscribe()
+      cleanupViewport()
     }
   })
 </script>
 
-<svelte:head>
-  <title>Life OS Portal</title>
-</svelte:head>
+<DocumentHead pageTitle={session ? '选择应用' : '登录'} />
 
 {#if !isReady}
-  <div class="portal-loading">Initializing Life OS...</div>
+  <div class="portal-loading">正在初始化 Life OS…</div>
 {:else if !session}
-  <div class="portal-unauth">
-    <h1 class="portal-unauth-title">Welcome to Life OS</h1>
-    <p class="portal-unauth-desc">You are not logged in.</p>
-    <a
-      href="https://finance.kenos.space"
-      class="btn-secondary portal-login-link"
-    >
-      Go to Finance to Login
-    </a>
+  <div class="app app-shell portal-shell">
+    <div class="safari-chrome-tint-top" aria-hidden="true"></div>
+    <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
+    <div class="main-col" data-mobile-chrome="minimal">
+      <PortalAppBar />
+      <div class="wrap portal-wrap">
+        <div class="portal-unauth-wrap">
+          <div class="settings-block">
+            <h1 class="portal-unauth-title">欢迎使用 Life OS</h1>
+            <p class="portal-unauth-desc">你尚未登录。请先在 Finance 完成登录，再返回此页切换应用。</p>
+            <a href="https://finance.kenos.space" class="btn-primary portal-login-link">
+              前往 Finance 登录
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 {:else}
-  <main class="portal-layout">
-    {@render children()}
-  </main>
+  <div class="app app-shell portal-shell">
+    <div class="safari-chrome-tint-top" aria-hidden="true"></div>
+    <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
+    <div class="main-col" data-mobile-chrome="minimal">
+      <PortalAppBar onSignOut={handleSignOut} />
+      <div class="wrap portal-wrap">
+        {@render children()}
+      </div>
+    </div>
+  </div>
   <CommandPalette
     bind:open={cpOpen}
     actions={cpActions}
-    placeholder="Jump to an app or action..."
+    placeholder="跳转到应用或操作…"
   />
 {/if}
 
 <style>
-  .portal-layout {
-    min-height: 100vh;
-    background-color: var(--bg);
-    color: var(--t1, var(--text));
-    font-family: var(--font);
-  }
-
-  .portal-loading {
-    display: flex;
-    height: 100vh;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--text-xl);
-    color: var(--t2, var(--text-secondary));
-    background-color: var(--bg);
-    font-family: var(--font);
-  }
-
-  .portal-unauth {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
-    background-color: var(--bg);
-    font-family: var(--font);
-  }
-
-  .portal-unauth-title {
-    color: var(--t1, var(--text));
-    font-size: var(--text-4xl);
-    margin: 0;
-  }
-
-  .portal-unauth-desc {
-    color: var(--t2, var(--text-secondary));
-    margin: 0;
-    font-size: var(--text-lg);
-  }
-
   .portal-login-link {
+    display: inline-flex;
     text-decoration: none;
   }
 </style>

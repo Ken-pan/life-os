@@ -20,6 +20,7 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `./scripts/verify-life-os-identity-p0.sh`             | I-P0 身份 + Supabase migration 验收                           |
 | `./scripts/test-outbox-trigger.sh [--smoke]`          | I-P1.5 Outbox 结构检查 / 端到端 smoke                         |
 | `npm run verify:outbox`                               | 同上（`test-outbox-trigger.sh --smoke` 快捷方式）             |
+| E2E 问题记录                                          | [`docs/E2E_ISSUES.md`](docs/E2E_ISSUES.md)                    |
 | `./scripts/supabase-sql.sh "<sql>"` / `-f <file.sql>` | 远程 Supabase SQL（Management API；直连 5432 在本网络不可用） |
 | `./scripts/deploy-all-netlify.sh`                     | CLI prod deploy 四站（Portal 未上线）                         |
 | `npm run sync:packages`                               | Copy sibling theme/sync into `packages/*` (legacy)            |

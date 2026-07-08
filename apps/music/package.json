@@ -23,6 +23,8 @@
     "vite": "^8.1.0"
   },
   "dependencies": {
+    "@life-os/contracts": "*",
+    "@life-os/platform-web": "*",
     "@life-os/sync": "*",
     "@life-os/theme": "*",
     "@lucide/svelte": "^1.22.0",

@@ -51,4 +51,19 @@ export declare function createThemePreferenceStoreWeb(
   options: ThemePreferenceStoreWebOptions,
 ): ThemePreferenceStoreWeb
 
-export { default as CommandPalette } from './CommandPalette.svelte'
+export type LifeOsLocale = 'zh' | 'en'
+
+export type LifeOsI18n = {
+  resolveLocale(locale?: string): LifeOsLocale
+  localeTag(): 'zh-CN' | 'en-US'
+  t(key: string, params?: Record<string, string | number>): string
+  applyLocale(): void
+  setLocale(locale: LifeOsLocale): void
+}
+
+export declare function createI18n(options: {
+  messages: Partial<Record<LifeOsLocale, Record<string, unknown>>>
+  getLocale: () => string | undefined
+  persistLocale: (locale: LifeOsLocale) => void
+}): LifeOsI18n
+

@@ -1,8 +1,8 @@
 @import '@life-os/theme/design-system.css';
 
 /*
-  Life OS Portal 品牌层
-  中性暖灰 + 蓝色 accent；结构 token 见 @life-os/theme
+  HOME.OS（Portal）品牌层
+  与 Planner 同系暖矿物中性 + 琥珀母品牌；结构 token 见 @life-os/theme
 */
 
 :root {
@@ -19,15 +19,16 @@
   --text: var(--t1);
   --text-secondary: var(--t2);
   --text-muted: var(--t3);
-  --accent: #3b82f6;
-  --accent-2: #2563eb;
-  --accent-bg: rgba(59, 130, 246, 0.1);
+  --accent: #c47a08;
+  --accent-2: #e19312;
+  --accent-bg: rgba(196, 122, 8, 0.1);
   --on-accent: #ffffff;
   --shadow-card: 0 1px 2px rgba(31, 28, 24, 0.04), 0 4px 14px rgba(31, 28, 24, 0.06);
   --shadow-elevated: 0 8px 28px rgba(31, 28, 24, 0.1), 0 2px 8px rgba(31, 28, 24, 0.05);
-  --shadow-focus: 0 0 0 2px rgba(59, 130, 246, 0.32);
+  --shadow-focus: 0 0 0 2px rgba(196, 122, 8, 0.32);
   --btn-focus-ring: var(--shadow-focus);
   --theme-color: #f5f3f0;
+  --appbar-bg: rgba(245, 243, 240, 0.88);
   color-scheme: light;
 }
 
@@ -42,13 +43,146 @@
   --t2: #b8b4ae;
   --t3: #9a9690;
   --t4: #78746e;
-  --accent: #60a5fa;
-  --accent-2: #93c5fd;
-  --accent-bg: rgba(96, 165, 250, 0.14);
-  --on-accent: #0a1628;
+  --accent: #f5b83d;
+  --accent-2: #ffc966;
+  --accent-bg: rgba(245, 184, 61, 0.14);
+  --on-accent: #1a1408;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 14px rgba(0, 0, 0, 0.24);
   --shadow-elevated: 0 8px 28px rgba(0, 0, 0, 0.32), 0 2px 8px rgba(0, 0, 0, 0.16);
-  --shadow-focus: 0 0 0 2px rgba(96, 165, 250, 0.32);
-  --theme-color: #0f0f0e;
+  --shadow-focus: 0 0 0 2px rgba(245, 184, 61, 0.32);
+  --theme-color: #121110;
+  --appbar-bg: rgba(15, 15, 14, 0.88);
   color-scheme: dark;
+}
+
+/* Portal 无侧栏：主列始终全宽，顶栏保留 HOME.OS 品牌 */
+.portal-shell.app-shell {
+  grid-template-columns: 1fr;
+}
+
+@media (--life-os-desktop) {
+  .portal-shell.app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-shell .appbar-brand,
+  .portal-shell .appbar-leading {
+    display: inline-flex;
+  }
+
+  .portal-shell .appbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--stack-section);
+    padding-top: var(--header-block);
+    padding-bottom: var(--header-block);
+    padding-inline: var(--content-inline-pad);
+  }
+}
+
+.portal-wrap {
+  padding-top: 0;
+}
+
+.portal-app-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--card-padding);
+  margin-bottom: var(--card-stack-gap);
+  text-decoration: none;
+  color: inherit;
+  border-left: 3px solid var(--portal-app-accent, var(--accent));
+}
+
+.portal-app-card:last-child {
+  margin-bottom: 0;
+}
+
+.portal-app-card:hover {
+  border-color: color-mix(in srgb, var(--portal-app-accent, var(--accent)) 55%, var(--border));
+  box-shadow: var(--shadow-elevated);
+}
+
+.portal-app-mark {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--control-radius);
+  box-shadow: 0 4px 12px rgba(31, 28, 24, 0.12);
+}
+
+.portal-app-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.portal-app-name {
+  margin: 0;
+  font-family: var(--font-brand);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--t1, var(--text));
+}
+
+.portal-app-desc {
+  margin: var(--space-0-5) 0 0;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--t3, var(--text-muted));
+}
+
+.portal-hint {
+  margin: var(--space-6) 0 0;
+  font-size: var(--text-sm);
+  color: var(--t3, var(--text-muted));
+  text-align: center;
+}
+
+.portal-hint kbd {
+  display: inline-block;
+  margin: 0 var(--space-0-5);
+  padding: var(--space-0-5) var(--space-1-5);
+  border: 1px solid var(--border);
+  border-radius: var(--space-1);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  background: var(--card);
+}
+
+.portal-unauth-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.portal-unauth-wrap .settings-block {
+  padding: var(--card-padding);
+}
+
+.portal-unauth-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  color: var(--t1, var(--text));
+}
+
+.portal-unauth-desc {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-md);
+  color: var(--t2, var(--text-secondary));
+}
+
+.portal-loading {
+  display: flex;
+  min-height: var(--app-vh, 100dvh);
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-md);
+  color: var(--t2, var(--text-secondary));
 }

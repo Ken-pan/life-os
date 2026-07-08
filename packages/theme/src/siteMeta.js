@@ -1,4 +1,4 @@
-/** @typedef {'planner' | 'fitness' | 'finance' | 'music'} LifeOsAppId */
+/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'portal'} LifeOsAppId */
 
 /**
  * Life OS 三端统一的浏览器 / PWA / 社交分享 metadata
@@ -95,6 +95,25 @@ export const LIFE_OS_SITE_META = {
     manifest: '/manifest.webmanifest',
     appleTouchIcon: '/icon.svg',
     categories: ['music', 'entertainment', 'utilities']
+  },
+  portal: {
+    id: 'portal',
+    name: 'HOME.OS',
+    shortName: 'HOME',
+    description: {
+      zh: 'Life OS 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music',
+      en: 'Life OS home · switch between Planner, Finance, Fitness, and Music'
+    },
+    themeColor: { light: '#f5f3f0', dark: '#121110' },
+    defaultTheme: 'auto',
+    locale: 'zh-CN',
+    storageKey: 'homeos_v1',
+    storageKind: 'nested',
+    settingsThemePath: ['settings', 'theme'],
+    favicon: { id: 'app-favicon', light: '/icon.svg' },
+    manifest: '/manifest.webmanifest',
+    appleTouchIcon: '/icon.svg',
+    categories: ['productivity', 'utilities']
   }
 };
 

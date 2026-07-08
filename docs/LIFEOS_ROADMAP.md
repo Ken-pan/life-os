@@ -74,7 +74,7 @@ _CI 执行守卫：_ `npm run check:lifeos-boundaries` ✅
 
 | 子项                        | 状态    | 证据                                                          |
 | --------------------------- | ------- | ------------------------------------------------------------- |
-| `apps/portal` SvelteKit App | 🟡 WIP  | Launcher UI + Glassmorphism 卡片 + CommandPalette             |
+| `apps/portal` SvelteKit App | 🟡 WIP  | Launcher UI + shell/settings-block 卡片 + CommandPalette |
 | SSO / coreIdentity 集成     | ✅ 代码 | `setupCrossDomainSSO` + `createCoreIdentityHandler('portal')` |
 | Git / monorepo 纳入         | ❌      | `apps/portal/` 当前 **untracked**                             |
 | Netlify 部署                | ❌      | 无 `netlify.toml`；[`NETLIFY.md`](./NETLIFY.md) 仍仅四站      |
@@ -120,18 +120,42 @@ _CI 执行守卫：_ `npm run check:lifeos-boundaries` ✅
 
 ### 🟡 C-P1+: 平台全面扩容 — _进行中_
 
-| App          | contracts        | platform-web              | 备注                                                               |
-| ------------ | ---------------- | ------------------------- | ------------------------------------------------------------------ |
-| Planner      | ✅ JSDoc mirrors | ✅ `applyDocumentMetaWeb` | 试点完成                                                           |
-| Fitness      | ✅ JSDoc mirrors | ✅ `applyDocumentMetaWeb` | 试点完成                                                           |
-| Finance      | ❌               | ❌                        | 使用 `@life-os/finance-enrichment-contract`（purchase enrichment） |
-| Music        | ❌               | ❌                        | 仅 `@life-os/sync` + `@life-os/theme`                              |
-| Portal (WIP) | ✅ dep           | ✅ `CommandPalette`       | 未纳入 CI build matrix                                             |
+| App          | contracts        | platform-web                             | 备注                                                               |
+| ------------ | ---------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| Planner      | ✅ JSDoc mirrors | ✅ `applyDocumentMetaWeb` + `createI18n` | 试点完成                                                           |
+| Fitness      | ✅ JSDoc mirrors | ✅ `applyDocumentMetaWeb` + `createI18n` | 试点完成                                                           |
+| Finance      | ❌               | ❌                                       | 使用 `@life-os/finance-enrichment-contract`（purchase enrichment） |
+| Music        | 🟡 dep           | ✅ `createI18n`                          | 2026-07-07 接入；nav / feedback 契约仍待规划                       |
+| Portal (WIP) | ✅ dep           | ✅ `CommandPalette`                      | 未纳入 CI build matrix                                             |
 
 **待办：**
 
 - Finance：将业务事件定义迁入 `@life-os/contracts/events`（Zod），与 I-P1.5 对齐
 - Music：规划 nav / feedback / sync error 契约接入
+
+### ✅ C-P2 Wave 1: 运行时去重 — _2026-07-07 完成_
+
+依据"3+ app 重复才提取"原则，将逐字节/近逐字节重复的运行时代码收进共享包：
+
+| 提取项                       | 收编前                                        | 现在                                                                |
+| ---------------------------- | --------------------------------------------- | ------------------------------------------------------------------- |
+| Supabase client 创建         | 5 份（4×`supabase.js` + finance `.ts`）       | `@life-os/sync` `createLifeOsSupabaseClient`；生产 URL/key 唯一定义 |
+| Auth 生命周期                | 3 份 `auth.svelte.js`（仅差 appId + 回调）    | `@life-os/sync` `createLifeOsAuth`；`$state` 留 app                 |
+| i18n 机制（t/lookup/locale） | 3 份 `i18n/index.js`                          | `@life-os/platform-web` `createI18n`；messages 留 app               |
+| CommandPalette 出口          | `index.js` re-export `.svelte`（Node 跑不动） | 子路径出口 `@life-os/platform-web/CommandPalette.svelte`            |
+
+注：Finance 保持 env 门禁语义（`productionFallback: false`，缺配置时 AuthGate 显示 config-missing）。
+
+### 🟡 C-P2 Wave 2: 组件层候选 — _未开始_
+
+按重复证据排序（planner/fitness `DocumentHead.svelte`、`Icon.svelte` 已字节级相同）：
+
+1. `DocumentHead.svelte` / `Icon.svelte` → platform-web 子路径出口（沿用 CommandPalette 模式）
+2. `Toast.svelte`（planner 版含 action，为超集）+ `SyncErrorBanner.svelte` + `syncErrorPresentation.js`（现 2 份，Music 接入后满足规则三）
+3. Finance `themePreference.ts` → 评估复用 `createThemePreferenceStoreWeb`（框架无关）
+4. `backup.js`（planner/fitness 相似）→ 评估导出/导入骨架进 `@life-os/sync`
+
+**不提取（do-not-abstract）：** 各 app `sync.js` 引擎（表语义不同）、`nav.js`、`state.svelte.js`、`iconRegistry.js`（icon 集不同）、`supabaseTables.js`（表名即业务边界）。
 
 ---
 

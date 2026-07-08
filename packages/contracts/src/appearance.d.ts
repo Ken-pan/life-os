@@ -9,7 +9,7 @@
 export type ColorSchemePreference = 'light' | 'dark' | 'system'
 
 /** cross-surface -> Swift: enum BrandThemeID: String, Codable */
-export type BrandThemeID = 'planner' | 'fitness' | 'finance' | 'music'
+export type BrandThemeID = 'planner' | 'fitness' | 'finance' | 'music' | 'portal'
 
 /** cross-surface -> Swift: enum AmbientThemeSource: String, Codable */
 export type AmbientThemeSource =

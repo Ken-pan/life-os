@@ -1,8 +1,4 @@
-import {
-  createAuthSyncHandler,
-  createCoreIdentityHandler,
-  mapAuthErrorMessage,
-} from '@life-os/sync'
+import { createLifeOsAuth, mapAuthErrorMessage } from '@life-os/sync'
 import { supabase } from './supabase.js'
 import { syncBidirectional, resetSyncCooldown } from './sync.js'
 import { t } from './i18n/index.js'
@@ -13,52 +9,19 @@ export const auth = $state({
   ready: false,
 })
 
-export function initAuth() {
-  if (typeof window === 'undefined') return () => {}
-
-  supabase.auth.getSession().then(({ data }) => {
-    auth.session = data.session
-    auth.user = data.session?.user ?? null
-    auth.ready = true
-  })
-
-  const handleAuthSync = createAuthSyncHandler({
-    onSignedOut: resetSyncCooldown,
-    onSyncSession: ({ force }) => syncBidirectional({ silent: true, force }),
-  })
-
-  const handleCoreIdentity = createCoreIdentityHandler(supabase, 'music')
-
-  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+const lifeOsAuth = createLifeOsAuth(supabase, {
+  appId: 'music',
+  onSession: (session) => {
     auth.session = session
     auth.user = session?.user ?? null
     auth.ready = true
-    handleAuthSync(event, session)
-    handleCoreIdentity(event, session)
-  })
+  },
+  onSignedOut: resetSyncCooldown,
+  onSyncSession: ({ force }) => syncBidirectional({ silent: true, force }),
+})
 
-  return () => data.subscription.unsubscribe()
-}
-
-export async function signUp(email, password) {
-  const { data, error } = await supabase.auth.signUp({ email, password })
-  if (error) throw error
-  return { needsConfirm: !data.session, user: data.user }
-}
-
-export async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-  if (error) throw error
-  return data
-}
-
-export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
-}
+export const initAuth = lifeOsAuth.init
+export const { signUp, signIn, signOut } = lifeOsAuth
 
 const authErrorLabels = () => ({
   invalidCredentials: t('auth.errInvalidCredentials'),

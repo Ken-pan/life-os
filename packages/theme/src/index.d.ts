@@ -10,7 +10,7 @@ export declare const LIFE_OS_LAYOUT: {
   readonly contentMaxData: 1320
 }
 
-export type LifeOsAppId = 'planner' | 'fitness' | 'finance' | 'music'
+export type LifeOsAppId = 'planner' | 'fitness' | 'finance' | 'music' | 'portal'
 
 export type LifeOsSiteMetaEntry = {
   id: LifeOsAppId

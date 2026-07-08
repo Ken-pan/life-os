@@ -231,4 +231,7 @@ export function createThemePreferenceStoreWeb(options) {
   }
 }
 
-export { default as CommandPalette } from './CommandPalette.svelte'
+export { createI18n } from './i18n.js'
+
+// Svelte 组件走子路径出口（@life-os/platform-web/CommandPalette.svelte），
+// 保持本入口纯 JS，可被 Node 直接 import（包测试、脚本）。

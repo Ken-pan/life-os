@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MUSIC.OS">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff4d6d"/>
+      <stop offset="100%" stop-color="#c41e3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#100a0c"/>
+  <circle cx="256" cy="256" r="168" fill="url(#g)" opacity="0.22"/>
+  <path fill="url(#g)" d="M196 148v216l152-88L196 148z"/>
+  <circle cx="332" cy="332" r="28" fill="#faf5f4" opacity="0.9"/>
+</svg>

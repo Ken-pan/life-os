@@ -1,19 +1,8 @@
-import { createSupabaseAuthOptions, resolveSupabaseEnv, setupCrossDomainSSO } from '@life-os/sync'
+import { createLifeOsSupabaseClient } from '@life-os/sync'
 import { createClient } from '@supabase/supabase-js'
 
-const { url, anonKey, configured } = resolveSupabaseEnv(import.meta.env, {
-  url: 'https://iueozzuctstwvzbcxcyh.supabase.co',
-  anonKey: 'sb_publishable_V_BnCiRU9vozOl3VLL8AAg_KsUfDEcL'
-})
-
-export const supabase = createClient(
-  url,
-  anonKey,
-  {
-    auth: createSupabaseAuthOptions(),
-  }
+// Life OS 统一 Supabase 项目（Portal 只读 core_* 与各 app 概览）
+export const { supabase, isSupabaseConfigured } = createLifeOsSupabaseClient(
+  createClient,
+  { env: import.meta.env },
 )
-
-setupCrossDomainSSO(supabase)
-
-export const isSupabaseConfigured = configured

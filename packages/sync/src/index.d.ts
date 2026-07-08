@@ -36,6 +36,49 @@ export function createSupabaseAuthOptions(): {
   storageKey: string
 }
 
+export const LIFE_OS_SUPABASE_URL: string
+export const LIFE_OS_SUPABASE_PUBLISHABLE_KEY: string
+
+export function createLifeOsSupabaseClient(
+  createClient: (
+    url: string,
+    key: string,
+    options?: Record<string, unknown>,
+  ) => import('@supabase/supabase-js').SupabaseClient,
+  options: {
+    env: Record<string, string | undefined>
+    schema?: string
+    productionFallback?: boolean
+  },
+): {
+  supabase: import('@supabase/supabase-js').SupabaseClient
+  url: string
+  anonKey: string
+  isSupabaseConfigured: boolean
+}
+
+export function createLifeOsAuth(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+  options: {
+    appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal'
+    onSession: (
+      session: import('@supabase/supabase-js').Session | null,
+    ) => void
+    onSignedOut?: () => void
+    onSyncSession?: (options: {
+      force?: boolean
+    }) => void | Promise<unknown>
+  },
+): {
+  init: () => () => void
+  signUp: (
+    email: string,
+    password: string,
+  ) => Promise<{ needsConfirm: boolean; user: unknown }>
+  signIn: (email: string, password: string) => Promise<unknown>
+  signOut: () => Promise<void>
+}
+
 export function ensureCoreProfile(
   supabase: import('@supabase/supabase-js').SupabaseClient,
   user: {

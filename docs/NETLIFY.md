@@ -4,7 +4,7 @@
 
 ## 当前模式（推荐）：`Ken-pan/life-os` Monorepo + Deploy Key
 
-**生产四站**均已指向 **同一 monorepo**，通过 **Deploy Key** 拉取代码（无需 GitHub App 单独授权 `life-os`）：
+**生产五站**均已指向 **同一 monorepo**，通过 **Deploy Key** 拉取代码（无需 GitHub App 单独授权 `life-os`）：
 
 | Site          | Package directory | Build                         | Publish              | Production URL              |
 | ------------- | ----------------- | ----------------------------- | -------------------- | --------------------------- |
@@ -12,6 +12,7 @@
 | fitnessos-ken | `apps/fitness`    | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space |
 | financeos-ken | `apps/finance`    | `npm run build -w finance-os` | `apps/finance/dist`  | https://finance.kenos.space |
 | musicos-ken   | `apps/music`      | `npm run build -w music-os`   | `apps/music/build`   | https://music.kenos.space   |
+| homeos-ken    | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://home.kenos.space（DNS 待配） |
 
 **Base directory 留空**（repo 根目录 `npm install`）。
 
@@ -60,16 +61,24 @@ cd life-os && npm install && npm run build
 
 修改 `packages/sync` 或 `packages/theme` 会触发四站 rebuild（各 app `netlify.toml` 的 ignore 规则包含 `packages/*`）。
 
-## Portal（I-P1，🟡 未上线）
+## Portal（I-P1，🟡 Netlify 已建，DNS 待配）
 
 | 项            | 状态                                                                                |
 | ------------- | ----------------------------------------------------------------------------------- |
-| 代码          | `apps/portal`（SvelteKit + adapter-netlify，本地可 build）                          |
-| Netlify site  | ❌ 尚未创建 `homeos-ken`                                                            |
-| 生产 URL      | 计划 `https://home.kenos.space`                                                     |
+| 代码          | `apps/portal`（SvelteKit + adapter-netlify）                                        |
+| Netlify site  | ✅ `homeos-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）                           |
+| 回滚 URL      | https://homeos-ken.netlify.app                                                      |
+| 生产 URL      | 计划 `https://home.kenos.space`（GoDaddy CNAME 待你配置）                           |
 | Auth redirect | ❌ Supabase allow list 尚无 `home.kenos.space`（见 [`SUPABASE.md`](./SUPABASE.md)） |
 
+**GoDaddy DNS：** `home.kenos.space` → CNAME → `homeos-ken.netlify.app`
+
 上线步骤见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §I-P1。CLI 部署时需 `--filter portal`（与四站相同 `CI=1` 规则）。
+
+```bash
+npm run build:portal
+CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/build --functions=apps/portal/.netlify/functions-internal --site=a5df5c3e-0e42-4f82-aca8-8d6802da357f
+```
 
 其他：
 
@@ -85,10 +94,11 @@ cd life-os && npm install && npm run build
 
 ## Netlify 子域命名（统一）
 
-四站 Netlify site name 统一为 **`{app}os-ken`** → `{app}os-ken.netlify.app`：
+五站 Netlify site name 统一为 **`{app}os-ken`** → `{app}os-ken.netlify.app`（Portal 为 `homeos-ken`）：
 
 | App     | Netlify site    | GoDaddy CNAME 目标          |
 | ------- | --------------- | --------------------------- |
+| Portal  | `homeos-ken`    | `homeos-ken.netlify.app`    |
 | Finance | `financeos-ken` | `financeos-ken.netlify.app` |
 | Music   | `musicos-ken`   | `musicos-ken.netlify.app`   |
 | Planner | `planneros-ken` | `planneros-ken.netlify.app` |

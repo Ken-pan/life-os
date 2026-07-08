@@ -20,7 +20,7 @@ Canonical documentation index for the Life OS monorepo.
 
 详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) 完成度总览与各阶段 checklist。
 
-验收：`./scripts/verify-life-os-identity-p0.sh` · `./scripts/test-outbox-trigger.sh` · `npm run check:lifeos-boundaries`
+验收：`./scripts/verify-life-os-identity-p0.sh` · `./scripts/test-outbox-trigger.sh --smoke` · `npm run check:lifeos-boundaries` · E2E 见 [`E2E_ISSUES.md`](./E2E_ISSUES.md)
 
 ## 计划文档（两条主线）
 
@@ -43,6 +43,7 @@ Canonical documentation index for the Life OS monorepo.
 | `[CANONICAL.md](./CANONICAL.md)`                   | Source-of-truth repo vs archived legacy |
 | `[NETLIFY.md](./NETLIFY.md)`                       | 四站 deploy + Portal 计划 + env vars    |
 | `[SUPABASE.md](./SUPABASE.md)`                     | 远程 SQL、平台 migration、Auth redirect |
+| `[E2E_ISSUES.md](./E2E_ISSUES.md)`                 | 四 App E2E/QA 跑批问题记录（2026-07-08） |
 | `[INPUT_IME.md](./INPUT_IME.md)`                   | CJK IME guard                           |
 | `[CURSOR_PAGE_BRIDGE.md](./CURSOR_PAGE_BRIDGE.md)` | Web State DevTools                      |
 | `[LEGACY_LOCAL.md](./LEGACY_LOCAL.md)`             | Removed sibling repo paths              |
