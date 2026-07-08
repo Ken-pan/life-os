@@ -2,7 +2,7 @@
   import { page } from '$app/state';
   import { t } from '$lib/i18n/index.js';
   import Icon from '@life-os/platform-web/svelte/icon';
-  import MobileMoreSheet from '$lib/components/MobileMoreSheet.svelte';
+  import MobileMoreSheet from '@life-os/platform-web/svelte/navigation/MobileMoreSheet';
   import {
     buildPrimaryNavItems,
     buildMoreNavGroups,
@@ -72,6 +72,7 @@
     title={t('common.more')}
     groups={moreGroups}
     {pathname}
+    closeLabel={t('common.close')}
     onClose={() => {
       moreOpen = false;
     }}

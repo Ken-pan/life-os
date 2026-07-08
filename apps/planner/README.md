@@ -119,7 +119,7 @@ Monorepo 文档入口见 [`../../docs/README.md`](../../docs/README.md)。
 | ----------------------- | ---- | -------------------------------------------------------------------------------------- |
 | **I-P0** 身份           | ✅   | `@life-os/sync`：`createCoreIdentityHandler('planner')` + SSO                          |
 | **C-P1** contracts 试点 | ✅   | JSDoc mirrors + `@life-os/platform-web/applyDocumentMetaWeb` + `SyncErrorPresentation` |
-| **I-P1.5** 事件消费     | ❌   | 待 `life_events` 远程落地后，从此 App 消费 `finance.bill_due` → 生成任务               |
+| **I-P1.5** 事件消费     | ✅   | `lifeEventsInbox.js` 消费 `finance.bill_due` → inbox 任务（`meta.lifeEventRef` 幂等）   |
 
 路线图：[`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) · Supabase：[`../../docs/SUPABASE.md`](../../docs/SUPABASE.md)
 

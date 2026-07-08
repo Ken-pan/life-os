@@ -2,8 +2,13 @@
  * Life OS 导航 IA — MUSIC.OS
  * mobile/tablet：4 个 Primary Tab + More Sheet（与 Planner/Finance 对齐）
  * desktop：完整侧栏分组
+ *
+ * Contracts mirror: @life-os/contracts/nav NavItemModel / NavGroupModel
+ * Web routing: @life-os/platform-web/navigation WebNavItem / WebNavGroup
  */
 
+/** @typedef {import('@life-os/contracts/nav').NavItemModel} NavItemModel */
+/** @typedef {import('@life-os/contracts/nav').NavGroupModel} NavGroupModel */
 /** @typedef {import('@life-os/platform-web/navigation').WebNavItem} NavItem */
 /** @typedef {import('@life-os/platform-web/navigation').WebNavGroup} NavGroup */
 

@@ -43,9 +43,9 @@
 
 - 表：`public.life_events`（`status`: pending / processed / failed）
 - 触发器：`finance_expected_occurrences` insert（`source_type = 'card_bill'`）→ `finance.bill_due` 事件
-- 契约：`@life-os/contracts/events`（Zod `FinanceBillDueSchema`）
-- 验收：`./scripts/test-outbox-trigger.sh`（结构检查）；`./scripts/test-outbox-trigger.sh --smoke`（插入 + 断言 + 清理）
-- **待办：** Planner 消费端
+- 契约：`@life-os/contracts/events`（Zod `FinanceBillDueSchema` + `parseLifeEvent`）
+- 验收：`./scripts/test-outbox-trigger.sh`（结构检查）；`./scripts/test-outbox-trigger.sh --smoke`（插入 + Zod 断言 + 清理）
+- **Planner 消费端：** `src/lib/services/lifeEventsInbox.js` — poll pending → 幂等任务 → mark processed
 
 `schema.sql` 已含 I-P1.5 DDL（本地 canonical 快照）；远程需单独 apply migration。
 

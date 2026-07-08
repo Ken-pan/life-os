@@ -1,18 +1,25 @@
 <script>
   import { tick } from 'svelte';
-  import Icon from '@life-os/platform-web/svelte/icon';
-  import { t } from '$lib/i18n/index.js';
+  import Icon from '../icon/Icon.svelte';
   import { activateFocusTrap } from '@life-os/theme';
 
-  /** @type {{ open: boolean; title: string; groups: import('$lib/nav.js').NavGroup[]; pathname: string; onClose: () => void }} */
-  let { open, title, groups, pathname, onClose } = $props();
+  /** @type {{
+   *   open: boolean;
+   *   title: string;
+   *   groups: import('../../navigation.d.ts').WebNavGroup[];
+   *   pathname: string;
+   *   search?: string;
+   *   closeLabel: string;
+   *   onClose: () => void;
+   * }} */
+  let { open, title, groups, pathname, search = '', closeLabel, onClose } = $props();
 
   /** @type {HTMLDivElement | null} */
   let sheetEl = $state(null);
 
-  /** @param {import('$lib/nav.js').NavItem} item */
+  /** @param {import('../../navigation.d.ts').WebNavItem} item */
   function isActive(item) {
-    return item.match(pathname);
+    return item.match(pathname, search);
   }
 
   $effect(() => {
@@ -53,7 +60,7 @@
     <div class="mobile-more-handle" aria-hidden="true"></div>
     <div class="mobile-more-header">
       <h2 id="mobile-more-title" class="mobile-more-title">{title}</h2>
-      <button type="button" class="mobile-more-close" onclick={onClose} aria-label={t('common.close')}>
+      <button type="button" class="mobile-more-close" onclick={onClose} aria-label={closeLabel}>
         <Icon name="x" size={20} strokeWidth={1.75} />
       </button>
     </div>
@@ -71,7 +78,11 @@
               onclick={onClose}
             >
               <span class="mobile-more-row-icon" aria-hidden="true">
-                <Icon name={item.icon} size={20} strokeWidth={1.75} />
+                {#if item.dotColor}
+                  <span class="sidebar-dot" style:background={item.dotColor}></span>
+                {:else}
+                  <Icon name={item.icon} size={20} strokeWidth={1.75} />
+                {/if}
               </span>
               <span class="mobile-more-row-label">{item.label}</span>
               {#if isActive(item)}

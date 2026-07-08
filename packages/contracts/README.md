@@ -7,7 +7,7 @@ Life OS **cross-surface** product contracts — data shapes, state enums, and us
 | 模块                                           | 文件        | 消费方式                                             |
 | ---------------------------------------------- | ----------- | ---------------------------------------------------- |
 | appearance, meta, nav, content, sync, feedback | `*.d.ts`    | **type-only**（JSDoc 或 `import type`）              |
-| **events**                                     | `events.ts` | **Zod runtime**（I-P1.5 WIP；`finance.bill_due` 等） |
+| **events**                                     | `events.ts` | **Zod runtime**（I-P1.5 ✅；envelope + `finance.bill_due`） |
 
 见 [`../../docs/LIFEOS_CONTRACTS.md`](../../docs/LIFEOS_CONTRACTS.md) export 白名单；边界规则见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)。
 
@@ -28,7 +28,7 @@ Life OS **cross-surface** product contracts — data shapes, state enums, and us
 | Fitness | ✅ P1A/B/C | 同上                                        |
 | Portal  | 🟡 WIP     | dep 已声明；未纳入 turbo CI                 |
 | Finance | ❌         | 使用 `@life-os/finance-enrichment-contract` |
-| Music   | ❌         | 仅 sync + theme                             |
+| Music   | ✅ P1A/B/C | JSDoc nav/feedback/sync + `createI18n` + `AppBrand` |
 
 ## Dependency direction
 

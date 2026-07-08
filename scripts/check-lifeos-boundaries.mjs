@@ -341,6 +341,8 @@ function checkContractsValueImports(file, content) {
     /\bimport\s+(?!type\s)([\s\S]*?)\sfrom\s+(['"])@life-os\/contracts([^'"]*)\2/g
   let match
   while ((match = importRe.exec(stripped)) !== null) {
+    const subpath = match[3] ?? ''
+    if (subpath === '/events') continue
     if (!isTypeOnlyImportClause(match[1])) {
       fail(
         'contracts-type-only',
@@ -353,6 +355,8 @@ function checkContractsValueImports(file, content) {
   const exportRe =
     /\bexport\s+(?!type\s)([\s\S]*?)\sfrom\s+(['"])@life-os\/contracts([^'"]*)\2/g
   while ((match = exportRe.exec(stripped)) !== null) {
+    const subpath = match[3] ?? ''
+    if (subpath === '/events') continue
     if (!isTypeOnlyExportClause(match[1])) {
       fail(
         'contracts-type-only',

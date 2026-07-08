@@ -11,7 +11,7 @@
     isNavChromeHidden
   } from '$lib/nav.js';
   import Icon from '@life-os/platform-web/svelte/icon';
-  import MobileMoreSheet from './MobileMoreSheet.svelte';
+  import MobileMoreSheet from '@life-os/platform-web/svelte/navigation/MobileMoreSheet';
 
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
 
@@ -77,6 +77,7 @@
     groups={moreGroups}
     {pathname}
     search={search}
+    closeLabel={t('common.close')}
     onClose={() => {
       moreOpen = false;
     }}

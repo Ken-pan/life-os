@@ -2,6 +2,8 @@ import { resolveToastDuration } from '@life-os/theme'
 import { createToastStore } from '@life-os/platform-web/svelte/toast-store'
 import { loadUiPrefs, saveUiPrefs } from './settingsPersistence.js'
 
+/** @typedef {import('@life-os/contracts/feedback').FeedbackMessage} FeedbackMessage */
+
 // Music 专属时长策略：整体更紧凑（error 4500–6000 / 其他 2000–3500）
 const toastStore = createToastStore({
   resolveDuration: (msg, { tone }) =>
@@ -17,7 +19,7 @@ export const dismissToast = toastStore.dismissToast
 
 /**
  * @param {string} msg
- * @param {'success'|'error'|'warn' | { duration?: number, error?: boolean, warn?: boolean, key?: string, dedupeMs?: number }} [toneOrOpts]
+ * @param {'success'|'error'|'warn' | FeedbackMessage['severity'] | { duration?: number, error?: boolean, warn?: boolean, key?: string, dedupeMs?: number }} [toneOrOpts]
  * @param {{ duration?: number, key?: string, dedupeMs?: number }} [maybeOpts]
  */
 export function toast(msg, toneOrOpts = 'success', maybeOpts = {}) {

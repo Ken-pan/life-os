@@ -1,6 +1,5 @@
 <script>
-  import LogoMark from './LogoMark.svelte'
-  import AppBrandWordmark from '@life-os/platform-web/svelte/brand/wordmark'
+  import AppBrand from '@life-os/platform-web/svelte/brand'
 
   /** @type {{ onSignOut?: () => void }} */
   let { onSignOut } = $props()
@@ -9,12 +8,7 @@
 <header class="appbar portal-appbar">
   <div class="appbar-inner">
     <div class="appbar-leading">
-      <div class="brand appbar-brand" aria-label="HOME.OS">
-        <LogoMark size={24} class="appbar-brand-mark" />
-        <span class="appbar-brand-copy">
-          <AppBrandWordmark base="HOME" class="appbar-brand-name" />
-        </span>
-      </div>
+      <AppBrand appId="portal" variant="appbar" ariaLabel="HOME.OS" />
     </div>
     <div class="appbar-trailing">
       {#if onSignOut}

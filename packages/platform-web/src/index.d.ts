@@ -1,9 +1,7 @@
 /**
  * @life-os/platform-web — web-only adapters.
  */
-import type {
-  ColorSchemePreference,
-} from '@life-os/contracts/appearance'
+import type { ColorSchemePreference } from '@life-os/contracts/appearance'
 import type { PageMetadata } from '@life-os/contracts/meta'
 import type { ApplyThemeOptions, ResolvedTheme } from '@life-os/theme'
 
@@ -67,3 +65,19 @@ export declare function createI18n(options: {
   persistLocale: (locale: LifeOsLocale) => void
 }): LifeOsI18n
 
+export type LocalCacheOptions = {
+  prefix: string
+  schemaVersion?: number
+  authStorageKey?: string
+}
+
+export type LocalCache = {
+  prefix: string
+  schemaVersion: number
+  readCache<T = unknown>(scope: string, userId: string): T | null
+  writeCache<T = unknown>(scope: string, userId: string, data: T): void
+  clearAllCache(): void
+  peekSessionUserId(): string | null
+}
+
+export declare function createLocalCache(options: LocalCacheOptions): LocalCache

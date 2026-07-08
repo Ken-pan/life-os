@@ -189,6 +189,33 @@ print(row['id'])
 
 pass "finance.bill_due event created (id=${EVENT_ID}, status=pending)"
 
+# Zod contract check — trigger SQL ↔ @life-os/contracts/events
+if ! node --input-type=module -e "
+import { parseLifeEvent } from '${ROOT}/packages/contracts/src/events.ts';
+const row = {
+  id: '${EVENT_ID}',
+  user_id: '${USER_ID}',
+  type: 'finance.bill_due',
+  payload: {
+    occurrence_id: '${TEST_OCC_ID}',
+    label: 'Life OS Outbox Smoke Test',
+    expected_amount: 500,
+    occurrence_date: '${TEST_DATE}',
+  },
+  status: 'pending',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+const result = parseLifeEvent(row);
+if (!result.ok) process.exit(1);
+if (result.event.type !== 'finance.bill_due') process.exit(2);
+if (result.event.payload.occurrence_id !== '${TEST_OCC_ID}') process.exit(3);
+" 2>/dev/null; then
+  fail "Zod parseLifeEvent failed for smoke event payload"
+fi
+
+pass "finance.bill_due payload passes parseLifeEvent (contracts/events)"
+
 # Non-card_bill control: should NOT create another event for same occurrence id pattern
 CONTROL_ID="lifeos-outbox-control-${STAMP}"
 sql "insert into public.${OCCURRENCES_TABLE} (

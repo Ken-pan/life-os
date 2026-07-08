@@ -27,11 +27,16 @@
   } from '$lib/state.svelte.js'
   import { applyLocale, listLabel, t } from '$lib/i18n/index.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
-  import { bindViewportHeight, bindPwaForegroundResume, resetScrollLock } from '@life-os/theme'
-  import PortraitGate from '$lib/components/PortraitGate.svelte'
+  import {
+    bindViewportHeight,
+    bindPwaForegroundResume,
+    resetScrollLock,
+  } from '@life-os/theme'
+  import PortraitGate from '@life-os/platform-web/svelte/portrait-gate'
   import { scheduleBidirectionalSync, initAutoSync } from '$lib/sync.js'
   import { registerServiceWorker } from '$lib/swRegister.js'
   import { syncRemindersToServiceWorker } from '$lib/services/reminders.js'
+  import { consumePendingLifeEvents } from '$lib/services/lifeEventsInbox.js'
   import {
     peekSessionUserId,
     readCache,
@@ -113,11 +118,17 @@
     }
   })
 
-  /** 已登录时：回到前台 debounce 双向同步 + 编辑后自动上云 / 离线恢复补同步 */
+  /** 已登录时：回到前台 debounce 双向同步 + life_events 消费 + 编辑后自动上云 */
   $effect(() => {
     if (!auth.ready || !auth.user) return
+
+    consumePendingLifeEvents().catch(() => {})
+
     const cleanupVisibility = bindPwaForegroundResume({
-      onForeground: () => scheduleBidirectionalSync(),
+      onForeground: () => {
+        scheduleBidirectionalSync()
+        consumePendingLifeEvents().catch(() => {})
+      },
     })
     const cleanupAutoSync = initAutoSync({
       isSignedIn: () => Boolean(auth.user),

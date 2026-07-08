@@ -15,14 +15,19 @@
   import FitnessToolSheet from '$lib/components/FitnessToolSheet.svelte'
   import Toast from '$lib/components/Toast.svelte'
   import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
-  import PortraitGate from '$lib/components/PortraitGate.svelte'
+  import PortraitGate from '@life-os/platform-web/svelte/portrait-gate'
+  import { t } from '$lib/i18n/index.js'
   import DocumentHead from '@life-os/platform-web/svelte/head'
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { ICONS } from '$lib/iconRegistry.js'
   import { subscribeSyncError } from '$lib/syncNotify.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
-  import { bindViewportHeight, bindPwaForegroundResume, resetScrollLock } from '@life-os/theme'
+  import {
+    bindViewportHeight,
+    bindPwaForegroundResume,
+    resetScrollLock,
+  } from '@life-os/theme'
   import { shouldDeferFitnessForegroundSync } from '$lib/pwaResume.js'
   import {
     scheduleAutoCloudPush,
@@ -155,7 +160,12 @@
 
 <DocumentHead appId="fitness" {pageTitle} locale={documentLocale} />
 
-<PortraitGate enabled={S.settings.lockPortraitOnPhone !== false} />
+<PortraitGate
+  enabled={S.settings.lockPortraitOnPhone !== false}
+  title={t('settings.rotatePortrait')}
+  hint={t('settings.rotatePortraitHint')}
+  ariaLabel={t('settings.rotatePortrait')}
+/>
 
 <a class="skip-link" href="#main-content">{t('common.skipToContent')}</a>
 

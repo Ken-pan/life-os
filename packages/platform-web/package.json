@@ -5,7 +5,7 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
@@ -41,9 +41,9 @@
       "svelte": "./src/svelte/sync-error/SyncErrorBanner.svelte",
       "default": "./src/svelte/sync-error/SyncErrorBanner.svelte"
     },
-    "./svelte/navigation": {
-      "svelte": "./src/svelte/navigation/BackButton.svelte",
-      "default": "./src/svelte/navigation/BackButton.svelte"
+    "./svelte/portrait-gate": {
+      "svelte": "./src/svelte/portrait-gate/PortraitGate.svelte",
+      "default": "./src/svelte/portrait-gate/PortraitGate.svelte"
     },
     "./svelte/settings/row": {
       "svelte": "./src/svelte/settings/SettingsRow.svelte",
@@ -100,6 +100,10 @@
     "./backup": {
       "import": "./src/backup.js"
     },
+    "./local-cache": {
+      "types": "./src/index.d.ts",
+      "import": "./src/localCache.js"
+    },
     "./sync-error": {
       "import": "./src/syncErrorPresentation.js"
     },
@@ -108,6 +112,10 @@
     },
     "./navigation": {
       "types": "./src/navigation.d.ts"
+    },
+    "./svelte/navigation/MobileMoreSheet": {
+      "svelte": "./src/svelte/navigation/MobileMoreSheet.svelte",
+      "default": "./src/svelte/navigation/MobileMoreSheet.svelte"
     }
   },
   "dependencies": {

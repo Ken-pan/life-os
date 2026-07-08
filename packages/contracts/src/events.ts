@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+const dateYmd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+
 /**
  * Finance 账单生成事件契约
  * 触发条件: 当预期的信用卡账单 (source_type = 'card_bill') 插入到 expected_occurrences
@@ -9,8 +11,8 @@ export const FinanceBillDueSchema = z.object({
   payload: z.object({
     occurrence_id: z.string().describe('expected_occurrences 的主键ID'),
     label: z.string(),
-    expected_amount: z.number(),
-    occurrence_date: z.string().describe('YYYY-MM-DD 格式'),
+    expected_amount: z.coerce.number(),
+    occurrence_date: dateYmd.describe('YYYY-MM-DD 格式'),
   }),
 })
 
@@ -26,3 +28,53 @@ export const LifeEventSchema = z.discriminatedUnion('type', [
 ])
 
 export type LifeEvent = z.infer<typeof LifeEventSchema>
+
+// -----------------------------------------------------------------------------
+// Row-level envelope — 对齐 life_events 表 (migration 20260708000000)
+// -----------------------------------------------------------------------------
+
+export const LifeEventStatusSchema = z.enum(['pending', 'processed', 'failed'])
+
+/** life_events 表行信封；payload 由各 type 的 schema 二次校验 */
+export const LifeEventEnvelopeSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  type: z.string(),
+  payload: z.unknown(),
+  status: LifeEventStatusSchema,
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+export type LifeEventEnvelope = z.infer<typeof LifeEventEnvelopeSchema>
+
+export type ParseLifeEventResult =
+  | { ok: true; event: LifeEvent; envelope: LifeEventEnvelope }
+  | { ok: false; reason: 'bad-envelope' | 'unknown-type' | 'bad-payload' }
+
+function isKnownLifeEventType(type: string): boolean {
+  return LifeEventSchema.options.some((option) => {
+    const shape = option.shape as { type?: z.ZodLiteral<string> }
+    return shape.type?._def?.value === type
+  })
+}
+
+/** 先解析信封，再按 type 分发 payload 校验；未知 type 不报错（向前兼容） */
+export function parseLifeEvent(row: unknown): ParseLifeEventResult {
+  const env = LifeEventEnvelopeSchema.safeParse(row)
+  if (!env.success) return { ok: false, reason: 'bad-envelope' }
+
+  const parsed = LifeEventSchema.safeParse({
+    type: env.data.type,
+    payload: env.data.payload,
+  })
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      reason: isKnownLifeEventType(env.data.type) ? 'bad-payload' : 'unknown-type',
+    }
+  }
+
+  return { ok: true, event: parsed.data, envelope: env.data }
+}
