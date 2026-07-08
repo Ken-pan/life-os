@@ -146,16 +146,40 @@ _CI 执行守卫：_ `npm run check:lifeos-boundaries` ✅
 
 注：Finance 保持 env 门禁语义（`productionFallback: false`，缺配置时 AuthGate 显示 config-missing）。
 
-### 🟡 C-P2 Wave 2: 组件层候选 — _未开始_
+### ✅ C-P2 Wave 1.5: 高风险共享层 — _2026-07-07 完成_
 
-按重复证据排序（planner/fitness `DocumentHead.svelte`、`Icon.svelte` 已字节级相同）：
+| 项                                        | 结果                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Finance AuthGate → `createLifeOsAuth`     | lifecycle effect 收编；相位机/乐观缓存/device-limit 语义不变；新增 `@life-os/sync` 包测试 |
+| Toast store + 组件                        | `platform-web` `./svelte/toast`（组件）+ `./svelte/toast-store`（runes store）；Music 自定义时长策略经 `resolveDuration` 注入 |
+| 事件契约 RFC                              | [`LIFEOS_EVENTS_RFC.md`](./LIFEOS_EVENTS_RFC.md)（taxonomy/版本策略/outbox 兼容/消费示例）；**未接 runtime** |
+| Finance `themePreference` → 共享 store    | `useThemePreference` 改用 `createThemePreferenceStoreWeb`；`fos-theme` 存储键不迁移        |
+| backup 骨架                               | `platform-web` `./backup`（envelope/下载/解析）+ fixtures + 回归测试；`applyState` 留 app  |
 
-1. `DocumentHead.svelte` / `Icon.svelte` → platform-web 子路径出口（沿用 CommandPalette 模式）
-2. `Toast.svelte`（planner 版含 action，为超集）+ `SyncErrorBanner.svelte` + `syncErrorPresentation.js`（现 2 份，Music 接入后满足规则三）
-3. Finance `themePreference.ts` → 评估复用 `createThemePreferenceStoreWeb`（框架无关）
-4. `backup.js`（planner/fitness 相似）→ 评估导出/导入骨架进 `@life-os/sync`
+### ✅ C-P2 Wave 2: 组件层 — _2026-07-07 完成_
 
-**不提取（do-not-abstract）：** 各 app `sync.js` 引擎（表语义不同）、`nav.js`、`state.svelte.js`、`iconRegistry.js`（icon 集不同）、`supabaseTables.js`（表名即业务边界）。
+`platform-web` `./svelte/*` 子路径出口（组件源码直发，Vite 编译）：
+
+| 出口                          | 内容                                                         | 消费方                              |
+| ----------------------------- | ------------------------------------------------------------ | ----------------------------------- |
+| `./svelte/head`               | `DocumentHead.svelte`（4 份收 1）                            | planner / fitness / music / portal  |
+| `./svelte/icon`               | `Icon.svelte` — registry 走 context 注入，**图标集留 app**   | planner / fitness / music           |
+| `./svelte/sync-error`         | `SyncErrorBanner.svelte` + `./sync-error` presentation       | planner / fitness / music           |
+| `./svelte/navigation`         | `BackButton.svelte`（label 由 app 注入）                     | fitness（wrapper）                  |
+| `./svelte/settings/*`         | 11 个叶子组件（Row/Toggle/Segment/Section/SyncBlock…）      | planner / fitness（组合组件留 app） |
+| `./svelte/toast{,-store}`     | Toast 组件 + runes store（Wave 1.5）                         | planner / fitness / music           |
+| `./navigation`（types）       | `WebNavItem` / `WebNavGroup` — 只对齐类型，**nav 内容留 app**| planner / fitness / music           |
+| `./backup`                    | 备份 envelope/下载/解析骨架（Wave 1.5）                      | planner / fitness                   |
+
+### 🟡 C-P2 Wave 3: 剩余候选 — _未开始_
+
+1. `PortraitGate.svelte`（planner/fitness 2 份，逻辑样式已全在 theme，仅剩壳）
+2. `MobileMoreSheet.svelte`（planner/music diff 仅 12 行）
+3. `localCache`（planner js / finance ts 同概念异实现）
+4. Music nav / feedback **contracts** 类型接入（C-P1+ 待办）
+5. `swRegister` / `serviceWorker` — 分化大，**暂缓**
+
+**不提取（do-not-abstract）：** 各 app `sync.js` 引擎（表语义不同）、`nav.js` 内容、`state.svelte.js`、`iconRegistry.js` 图标集（仅共享 context key）、`supabaseTables.js`（表名即业务边界）。
 
 ---
 
