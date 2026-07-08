@@ -18,8 +18,9 @@
   let error = $state('')
   let confirmSent = $state(false)
 
-  async function submit(e) {
-    e.preventDefault()
+  /** @param {SubmitEvent} event */
+  async function submit(event) {
+    event.preventDefault()
     if (busy) return
     error = ''
     busy = true
@@ -87,7 +88,7 @@
           required
           autocomplete="email"
           inputmode="email"
-          placeholder="you@example.com"
+          placeholder="name@example.com"
         />
       </div>
       <div class="field">

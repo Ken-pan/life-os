@@ -18,20 +18,21 @@
 </script>
 
 <div class="app app-shell portal-shell">
+  <a class="portal-skip-link" href="#portal-main">跳到主内容</a>
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
   <div class="main-col" data-mobile-chrome="minimal" class:portal-main-col--center={centerContent}>
     <PortalAppBar {userEmail} {onSignOut} {onOpenCommandPalette} />
     {#if centerContent}
       <div class="portal-unauth-stage">
-        <div class="wrap portal-wrap portal-wrap--center">
+        <main id="portal-main" class="wrap portal-wrap portal-wrap--center">
           {@render children()}
-        </div>
+        </main>
       </div>
     {:else}
-      <div class="wrap portal-wrap">
+      <main id="portal-main" class="wrap portal-wrap">
         {@render children()}
-      </div>
+      </main>
     {/if}
   </div>
 </div>

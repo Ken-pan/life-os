@@ -112,13 +112,7 @@
   onclose={closePalette}
   onclick={(e) => e.target === dialogRef && closePalette()}
 >
-  <div
-    class="cp-container"
-    role="combobox"
-    aria-expanded={open}
-    aria-haspopup="listbox"
-    onclick={(e) => e.stopPropagation()}
-  >
+  <div class="cp-container" onclick={(e) => e.stopPropagation()}>
     <div class="cp-header">
       <Icon name="search" size={20} class="cp-search-icon" />
       <input
@@ -127,8 +121,11 @@
         onkeydown={handleKeydown}
         class="cp-input"
         {placeholder}
-        aria-autocomplete="list"
+        role="combobox"
+        aria-expanded={open}
         aria-controls="cp-listbox"
+        aria-haspopup="listbox"
+        aria-autocomplete="list"
       />
       {#if query}
         <button

@@ -5,9 +5,12 @@
   import { bindViewportHeight } from '@life-os/theme'
   import DocumentHead from '@life-os/platform-web/svelte/head'
   import PortalShell from '$lib/components/PortalShell.svelte'
+  import PortalLoading from '$lib/components/PortalLoading.svelte'
   import PortalUnauth from '$lib/components/PortalUnauth.svelte'
   import { PORTAL_APPS, getLauncherMeta } from '$lib/apps.js'
   import { auth, initAuth, signOut } from '$lib/auth.svelte.js'
+  import { initRecentApp } from '$lib/recentApp.svelte.js'
+  import { initPortalTheme } from '$lib/theme.svelte.js'
 
   let { children } = $props()
 
@@ -49,9 +52,13 @@
   onMount(() => {
     const cleanupViewport = bindViewportHeight()
     const cleanupAuth = initAuth()
+    const cleanupTheme = initPortalTheme()
+    const cleanupRecent = initRecentApp()
     return () => {
       cleanupAuth()
       cleanupViewport()
+      cleanupTheme()
+      cleanupRecent()
     }
   })
 </script>
@@ -59,7 +66,7 @@
 <DocumentHead appId="portal" pageTitle={auth.session ? '选择应用' : '登录'} />
 
 {#if !auth.ready}
-  <div class="portal-loading">正在初始化 Life OS…</div>
+  <PortalLoading />
 {:else if !auth.session}
   <PortalShell centerContent>
     <PortalUnauth />

@@ -4,8 +4,13 @@ const STORAGE_KEY = 'portalos_last_app_v1'
 
 /** @typedef {import('./apps.js').LauncherAppId} LauncherAppId */
 
+/** @type {{ id: LauncherAppId | null }} */
+export const recentAppState = $state({
+  id: null,
+})
+
 /** @returns {LauncherAppId | null} */
-export function getLastAppId() {
+function readLastAppId() {
   if (typeof localStorage === 'undefined') return null
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -16,6 +21,12 @@ export function getLastAppId() {
   }
 }
 
+/** @returns {() => void} */
+export function initRecentApp() {
+  recentAppState.id = readLastAppId()
+  return () => {}
+}
+
 /** @param {LauncherAppId} id */
 export function rememberApp(id) {
   if (typeof localStorage === 'undefined') return
@@ -24,11 +35,12 @@ export function rememberApp(id) {
   } catch {
     /* ignore quota */
   }
+  recentAppState.id = id
 }
 
-/** @returns {import('./apps.js').typeof PORTAL_APPS[number] | null} */
+/** @returns {(typeof PORTAL_APPS)[number] | null} */
 export function getLastApp() {
-  const id = getLastAppId()
+  const id = recentAppState.id
   if (!id) return null
   return PORTAL_APPS.find((app) => app.id === id) ?? null
 }
