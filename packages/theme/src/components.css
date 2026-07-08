@@ -28,8 +28,8 @@
   min-height: var(--btn-h-lg);
   padding: 0 var(--btn-pad-x-lg);
   border-radius: var(--btn-radius);
-  background: var(--button-primary-bg);
-  color: var(--button-primary-text);
+  background: var(--button-primary-bg, var(--accent));
+  color: var(--button-primary-text, var(--on-accent));
   font-size: var(--text-base);
   font-weight: 600;
 }
@@ -41,9 +41,9 @@
   min-height: var(--btn-h-md);
   padding: 0 var(--btn-pad-x-md);
   border-radius: var(--btn-radius);
-  background: var(--button-secondary-bg);
-  border: 1px solid var(--button-secondary-border);
-  color: var(--button-secondary-text);
+  background: var(--button-secondary-bg, var(--card-h, var(--card-hover, var(--surface-2))));
+  border: 1px solid var(--button-secondary-border, var(--border-l, var(--border-strong, var(--border))));
+  color: var(--button-secondary-text, var(--t1, var(--text)));
   font-size: var(--text-md);
   font-weight: 500;
 }
@@ -58,13 +58,13 @@
   padding: 0 var(--btn-pad-x-md);
   border-radius: var(--btn-radius);
   background: transparent;
-  color: var(--button-ghost-text);
+  color: var(--button-ghost-text, var(--t2, var(--text-secondary)));
   font-size: var(--text-md);
   font-weight: 500;
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--button-ghost-bg-hover);
+  background: var(--button-ghost-bg-hover, color-mix(in srgb, var(--t1, var(--text)) 5%, transparent));
   color: var(--control-text);
 }
 
@@ -72,11 +72,20 @@
   min-height: var(--btn-h-md);
   padding: 0 var(--btn-pad-x-md);
   border-radius: var(--btn-radius);
-  background: var(--button-danger-bg);
-  border: 1px solid var(--button-danger-border);
-  color: var(--button-danger-text);
+  background: var(--button-danger-bg, var(--critical-subtle, var(--feedback-danger-bg)));
+  border: 1px solid var(--button-danger-border, color-mix(in srgb, var(--critical, var(--feedback-danger)) 32%, var(--border)));
+  color: var(--button-danger-text, var(--critical, var(--feedback-danger)));
   font-size: var(--text-md);
   font-weight: 500;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--critical, var(--feedback-danger)) 10%,
+    var(--button-danger-bg, var(--critical-subtle))
+  );
+  border-color: color-mix(in srgb, var(--critical, var(--feedback-danger)) 42%, var(--border));
 }
 
 .btn-secondary:active:not(:disabled),
@@ -89,7 +98,7 @@
 .btn-secondary:disabled,
 .btn-ghost:disabled,
 .btn-danger:disabled {
-  opacity: var(--button-disabled-opacity);
+  opacity: var(--button-disabled-opacity, 0.42);
   cursor: not-allowed;
   transform: none;
   filter: none;
@@ -106,7 +115,7 @@ a.btn-danger {
 .btn-ghost:focus-visible,
 .btn-danger:focus-visible {
   outline: none;
-  box-shadow: var(--button-focus-ring);
+  box-shadow: var(--button-focus-ring, var(--focus-ring, var(--btn-focus-ring)));
 }
 
 @media (pointer: coarse) {
@@ -322,6 +331,19 @@ a.btn-danger {
 .pref-copy { min-width: 0; flex: 1; }
 .pref-control { flex-shrink: 0; }
 
+.settings-row .pref-control > .btn-secondary,
+.settings-row .pref-control > .file-input-btn,
+.settings-row .pref-control > .btn-danger {
+  min-width: 5.25rem;
+  font-weight: 600;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
+}
+
+.settings-row .pref-control > .btn-secondary:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--button-secondary-border, var(--border)));
+  background: var(--control-bg-hover, var(--card-h));
+}
+
 .sr-label,
 .pref-label { font-size: var(--text-base); }
 
@@ -498,7 +520,7 @@ input[type='number'].no-spin::-webkit-inner-spin-button {
 
 .banner.info {
   background: var(--feedback-info-bg);
-  border-color: var(--feedback-info-border);
+  border: 1px solid var(--feedback-info-border);
   color: var(--feedback-info);
 }
 
@@ -599,7 +621,7 @@ body:has(.banner--fixed) .main-col {
 }
 
 .toast--action {
-  gap: var(--space-2);
+  gap: var(--toast-action-gap, var(--space-3));
   max-width: min(calc(100vw - var(--space-6)), 400px);
   z-index: calc(var(--z-toast, 120) + 20);
 }
@@ -609,7 +631,7 @@ body:has(.banner--fixed) .main-col {
   align-self: center;
   border: none;
   background: transparent;
-  margin: calc((var(--toast-pad-y) - 10px) * -1) -6px calc((var(--toast-pad-y) - 10px) * -1) 0;
+  margin: 0;
   padding: 10px 8px;
   min-height: var(--tap-min);
   display: inline-flex;
@@ -635,10 +657,10 @@ body:has(.banner--fixed) .main-col {
 
 .toast-dismiss {
   flex: 0 0 auto;
-  align-self: flex-start;
+  align-self: center;
   width: var(--tap-min);
   height: var(--tap-min);
-  margin: calc((var(--toast-pad-y) + 1px) * -1) calc((var(--toast-pad-x) - 6px) * -1) 0 0;
+  margin: 0 calc((var(--toast-pad-x) - 6px) * -1) 0 0;
   padding: 0;
   border: none;
   border-radius: var(--radius-pill);
@@ -661,6 +683,10 @@ body:has(.banner--fixed) .main-col {
 .toast--error {
   background: var(--feedback-danger-bg);
   border-color: var(--feedback-danger-border);
+}
+
+.toast--error .toast-action {
+  color: var(--feedback-danger, var(--critical));
 }
 
 .toast--warn {

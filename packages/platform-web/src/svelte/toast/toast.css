@@ -9,5 +9,9 @@
 }
 
 .toast-action {
-  color: var(--feedback-info, var(--accent));
+  color: var(--accent);
+}
+
+.toast--error .toast-action {
+  color: var(--feedback-danger, var(--critical));
 }

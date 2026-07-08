@@ -60,6 +60,27 @@
       </SettingsSection>
     </div>
     <div class="catalog-state-block">
+      <p class="catalog-state-label">Destructive action</p>
+      <SettingsSection title="Account">
+        <SettingsActionRow
+          label="Sign out"
+          desc="End session on this device"
+          buttonLabel="Sign out"
+          variant="danger"
+          onclick={() => {}}
+        />
+        <div class="settings-row set-row">
+          <div class="pref-copy">
+            <div class="sr-label pref-label">Reset data</div>
+            <div class="sr-desc pref-desc">Cannot be undone</div>
+          </div>
+          <div class="pref-control">
+            <button type="button" class="btn-danger">Reset</button>
+          </div>
+        </div>
+      </SettingsSection>
+    </div>
+    <div class="catalog-state-block">
       <p class="catalog-state-label">Custom slot</p>
       <SettingsRow label="Slot" desc="Children in control column">
         {#snippet children()}

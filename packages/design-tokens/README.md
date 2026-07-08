@@ -21,28 +21,38 @@ packages/theme/src/generated/component.css
 
 ## component.json 域 → 消费方（P3）
 
-| Token 域 | CSS 变量前缀 | 主要消费方 | P3 状态 |
-| -------- | ------------ | ---------- | ------- |
-| `focus` | `--focus-ring` | Card, buttons focus-visible | ✅ |
-| `overlay` | `--overlay-backdrop` | CommandPalette, mobile-more | ✅ |
-| `card` | `--card-*` | `@life-os/platform-web/svelte/card` | ✅ |
-| `control` | `--control-*` | Settings block/row/toggle | ✅ P3b/P3c |
-| `button` | `--button-*` | `.btn-primary` … `.btn-danger` | ✅ P3c |
-| `segment` | `--segment-*` | `.seg` segmented control | ✅ P3c |
-| `feedback` | `--feedback-*` | Toast, Banner, SyncErrorBanner | ✅ |
-| `navigation` | `--navigation-*` | nav tab, mobile-more, BackButton | ✅ |
+| Token 域     | CSS 变量前缀         | 主要消费方                                              | P3 状态    |
+| ------------ | -------------------- | ------------------------------------------------------- | ---------- |
+| `focus`      | `--focus-ring`       | Card, buttons focus-visible                             | ✅         |
+| `overlay`    | `--overlay-backdrop` | CommandPalette, mobile-more                             | ✅         |
+| `card`       | `--card-*`           | `@life-os/platform-web/svelte/card`                     | ✅         |
+| `control`    | `--control-*`        | Settings block/row/toggle                               | ✅ P3b/P3c |
+| `button`     | `--button-*`         | `.btn-primary` … `.btn-danger`（danger → `--critical`） | ✅ P3c     |
+| `segment`    | `--segment-*`        | `.seg` segmented control                                | ✅ P3c     |
+| `feedback`   | `--feedback-*`       | Toast, Banner, SyncErrorBanner                          | ✅         |
+| `navigation` | `--navigation-*`     | nav tab, mobile-more, BackButton                        | ✅         |
 
 Theme-only primitives（buttons `.btn-*`、segments `.seg`）已接入 `component.json` — 见 **D-P3c** ✅。
 
-## P3 截图审计（ad-hoc，非 baseline）
+## P3 截图 / 视觉审计（ad-hoc，非 baseline）
 
 ```bash
 npm run build -w design-catalog
 npm run preview -w design-catalog -- --host 127.0.0.1 --port 5190
-node scripts/design-catalog-p3-screenshot-audit.mjs
+node scripts/design-catalog-p3-screenshot-audit.mjs   # 8 showcase × 4 app × 2 mode = 64 张
+node scripts/design-catalog-p3-visual-verify.mjs      # html 主题同步 + 触控/间距/语义色断言
 ```
 
+| 脚本                                     | 断言内容                                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `design-catalog-p3-screenshot-audit.mjs` | 元素截图 + console error + btn 填充 + danger 语义色                                              |
+| `design-catalog-p3-visual-verify.mjs`    | `<html data-app>` 同步、toast inline、segments 变体、sheet preview、toast lh≥1.5、action gap≥8px |
+
 输出：`screenshots/design-catalog/p3-audit-YYYYMMDD/`（本地，不提交）
+
+## Toast 结构 token（authored，非 component.json）
+
+位于 `packages/theme/src/tokens.css`：`--toast-pad-*`、`--toast-min-h`、`--toast-line-height`、`--toast-action-gap` 等。语义色仍走 `component.json` → `feedback.*`。
 
 ## 命令
 

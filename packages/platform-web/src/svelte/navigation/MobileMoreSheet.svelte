@@ -11,8 +11,18 @@
    *   search?: string;
    *   closeLabel: string;
    *   onClose: () => void;
+   *   manageFocus?: boolean;
    * }} */
-  let { open, title, groups, pathname, search = '', closeLabel, onClose } = $props();
+  let {
+    open,
+    title,
+    groups,
+    pathname,
+    search = '',
+    closeLabel,
+    onClose,
+    manageFocus = true,
+  } = $props();
 
   /** @type {HTMLDivElement | null} */
   let sheetEl = $state(null);
@@ -35,7 +45,7 @@
     window.addEventListener('keydown', onKey);
 
     tick().then(() => {
-      if (cancelled || !sheetEl) return;
+      if (cancelled || !sheetEl || !manageFocus) return;
       releaseFocus = activateFocusTrap(sheetEl);
     });
 

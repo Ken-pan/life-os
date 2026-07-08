@@ -97,8 +97,8 @@
           <p>Card root stays non-interactive.</p>
         </CardContent>
         <CardActions>
-          <button type="button" class="btn outline">Dismiss</button>
-          <button type="button" class="btn">Open</button>
+          <button type="button" class="btn-secondary">Dismiss</button>
+          <button type="button" class="btn-primary">Open</button>
         </CardActions>
       </Card>
     </div>
@@ -130,7 +130,7 @@
           <CardTitle>Compact density</CardTitle>
         </CardHeader>
         <CardActions>
-          <button type="button" class="btn outline">Action</button>
+          <button type="button" class="btn-secondary">Action</button>
         </CardActions>
       </Card>
     </div>

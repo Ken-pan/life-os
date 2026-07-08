@@ -179,13 +179,14 @@
   --z-toast: 120;
   --banner-fixed-h: 48px;
 
-  /* ===== Toast（Material snackbar 基线）===== */
+  /* ===== Toast（Material snackbar 基线：48dp min-h, 16dp inline, WCAG 1.4.12 lh 1.5）===== */
   --toast-pad-y: 12px;
   --toast-pad-x: 16px;
-  --toast-min-h: 40px;
+  --toast-min-h: 48px;
   --toast-gap: var(--space-2);
+  --toast-action-gap: var(--space-3);
   --toast-font-size: var(--text-md);
-  --toast-line-height: 1.45;
+  --toast-line-height: 1.5;
   --toast-max-width: min(calc(100vw - var(--space-8)), 360px);
   --toast-max-width-desktop: min(calc(100vw - var(--space-8)), 420px);
 

@@ -40,6 +40,53 @@ function catalogUrl(showcase, app, mode, viewport = 'desktop') {
   return `${BASE_URL}/?showcase=${showcase}&app=${app}&mode=${mode}&viewport=${viewport}`
 }
 
+/** @param {import('@playwright/test').Page} page */
+async function assertCatalogTheme(page, app, mode, errors) {
+  const { htmlApp, htmlMode } = await page.evaluate(() => ({
+    htmlApp: document.documentElement.dataset.app ?? '',
+    htmlMode: document.documentElement.dataset.mode ?? '',
+  }))
+  if (htmlApp !== app) errors.push(`html data-app=${htmlApp} expected ${app}`)
+  if (htmlMode !== mode) errors.push(`html data-mode=${htmlMode} expected ${mode}`)
+}
+
+/** @param {import('@playwright/test').Page} page */
+async function assertShowcaseVisuals(page, showcase, errors) {
+  if (showcase === 'buttons') {
+    const primaryBg = await page
+      .locator('.btn-primary')
+      .first()
+      .evaluate((el) => getComputedStyle(el).backgroundColor)
+    if (!primaryBg || primaryBg === 'rgba(0, 0, 0, 0)') {
+      errors.push('btn-primary background is transparent')
+    }
+    const dangerUsesCritical = await page.evaluate(() => {
+      const danger = document.querySelector('.btn-danger')
+      if (!danger) return false
+      const probe = document.createElement('span')
+      probe.style.color = 'var(--critical)'
+      document.body.appendChild(probe)
+      const criticalRgb = getComputedStyle(probe).color
+      document.body.removeChild(probe)
+      return getComputedStyle(danger).color === criticalRgb
+    })
+    if (!dangerUsesCritical) {
+      errors.push('btn-danger color does not match --critical')
+    }
+  }
+
+  if (showcase === 'toast' || showcase === 'feedback') {
+    const box = await page.locator('.toast').first().boundingBox()
+    if (!box || box.height < 12) errors.push('toast has no visible height in showcase')
+  }
+
+  if (showcase === 'feedback') {
+    const banner = page.locator('.banner.critical').first()
+    const box = await banner.boundingBox()
+    if (!box || box.height < 12) errors.push('critical banner has no visible height')
+  }
+}
+
 /** @type {{ showcase: string, app: string, mode: string, ok: boolean, testId?: string, errors: string[] }[]} */
 const report = []
 
@@ -71,6 +118,8 @@ async function main() {
           await el.waitFor({ state: 'visible', timeout: 10_000 })
           const appAttr = await page.getByTestId('catalog-shell').getAttribute('data-app')
           const modeAttr = await page.getByTestId('catalog-shell').getAttribute('data-mode')
+          await assertCatalogTheme(page, app, mode, errors)
+          await assertShowcaseVisuals(page, showcase, errors)
           ok =
             appAttr === app &&
             modeAttr === mode &&

@@ -14,7 +14,21 @@
       <BackButton href="/" label="Back" />
     </div>
     <div class="catalog-state-block">
-      <p class="catalog-state-label">MobileMoreSheet</p>
+      <p class="catalog-state-label">MobileMoreSheet (open preview)</p>
+      <div class="catalog-doc-preview catalog-doc-preview--sheet">
+        <MobileMoreSheet
+          open={true}
+          title="More"
+          groups={NAV_GROUPS}
+          pathname="/"
+          closeLabel="Close"
+          manageFocus={false}
+          onClose={() => {}}
+        />
+      </div>
+    </div>
+    <div class="catalog-state-block">
+      <p class="catalog-state-label">MobileMoreSheet (interactive)</p>
       <button
         type="button"
         class="btn-secondary"

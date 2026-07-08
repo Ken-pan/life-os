@@ -76,12 +76,12 @@
       "$type": "color",
       "$value": "color-mix(in srgb, var(--t1, var(--text)) 5%, transparent)"
     },
-    "dangerBg": { "$type": "color", "$value": "var(--accent-bg, var(--accent-subtle))" },
+    "dangerBg": { "$type": "color", "$value": "var(--critical-subtle)" },
     "dangerBorder": {
       "$type": "color",
-      "$value": "color-mix(in srgb, var(--accent) 32%, transparent)"
+      "$value": "color-mix(in srgb, var(--critical) 32%, var(--border))"
     },
-    "dangerText": { "$type": "color", "$value": "var(--accent)" },
+    "dangerText": { "$type": "color", "$value": "var(--critical)" },
     "disabledOpacity": { "$type": "number", "$value": "0.42" },
     "focusRing": { "$type": "cssValue", "$value": "var(--focus-ring)" }
   },
@@ -121,11 +121,11 @@
     "info": { "$type": "color", "$value": "var(--info, var(--accent))" },
     "infoBg": {
       "$type": "color",
-      "$value": "color-mix(in srgb, var(--feedback-info) 10%, var(--card))"
+      "$value": "color-mix(in srgb, var(--feedback-info) 16%, var(--card))"
     },
     "infoBorder": {
       "$type": "color",
-      "$value": "color-mix(in srgb, var(--feedback-info) 28%, var(--border))"
+      "$value": "color-mix(in srgb, var(--feedback-info) 40%, var(--border))"
     }
   },
   "navigation": {

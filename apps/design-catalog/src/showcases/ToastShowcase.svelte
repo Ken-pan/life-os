@@ -4,7 +4,7 @@
 
 <section class="catalog-section" data-testid="showcase-toast">
   <h2 class="catalog-section__title">Toast component</h2>
-  <div class="catalog-panel catalog-grid">
+  <div class="catalog-panel catalog-grid catalog-doc-preview">
     <div class="catalog-state-block">
       <p class="catalog-state-label">Success + action</p>
       <Toast

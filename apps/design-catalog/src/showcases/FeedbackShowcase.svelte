@@ -14,7 +14,7 @@
 
 <section class="catalog-section" data-testid="showcase-feedback">
   <h2 class="catalog-section__title">Feedback</h2>
-  <div class="catalog-panel catalog-grid">
+  <div class="catalog-panel catalog-grid catalog-doc-preview">
     <div class="catalog-state-block">
       <p class="catalog-state-label">Error — SyncErrorBanner</p>
       <SyncErrorBanner {subscribe} {formatMessage} dismissLabel="Dismiss" />

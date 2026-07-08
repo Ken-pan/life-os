@@ -60,3 +60,176 @@
   border: 1px dashed var(--border);
   border-radius: var(--radius-md, 8px);
 }
+
+/*
+  Catalog doc-preview mode — inline overlays for inspection.
+  Production apps keep position:fixed toasts/banners; see UI Anatomy / WAI-ARIA toast viewport patterns.
+*/
+.catalog-doc-preview .toast,
+.catalog-doc-preview .toast.show {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+  width: 100%;
+  max-width: 100%;
+  margin-top: var(--space-2);
+}
+
+.catalog-doc-preview .banner--fixed {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  margin-bottom: var(--space-3);
+  min-height: 0;
+  box-shadow: none;
+}
+
+/* Inline mobile sheet fixture for catalog screenshots */
+.catalog-doc-preview--sheet {
+  position: relative;
+  min-height: 280px;
+  overflow: hidden;
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg, var(--surface-1));
+}
+
+.catalog-doc-preview--sheet .mobile-more-backdrop {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  animation: none;
+  background: var(--overlay-backdrop);
+  -webkit-backdrop-filter: blur(1px);
+  backdrop-filter: blur(1px);
+}
+
+.catalog-doc-preview--sheet .mobile-more-sheet {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  max-height: 78%;
+  animation: none;
+  transform: none;
+  opacity: 1;
+  background: var(--navigation-sheet-bg);
+  border-top: 1px solid var(--control-border, var(--border));
+  border-radius: var(--navigation-sheet-radius) var(--navigation-sheet-radius) 0 0;
+  box-shadow: var(--shadow-elevated, 0 12px 40px rgba(31, 28, 24, 0.1));
+  padding-bottom: var(--space-2);
+}
+
+.catalog-doc-preview--sheet .mobile-more-handle {
+  flex-shrink: 0;
+  width: 36px;
+  height: 4px;
+  margin: var(--space-2-5) auto var(--space-1);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--t3, var(--text-muted)) 42%, transparent);
+}
+
+.catalog-doc-preview--sheet .mobile-more-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-4) var(--space-2-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.catalog-doc-preview--sheet .mobile-more-title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.catalog-doc-preview--sheet .mobile-more-close {
+  display: grid;
+  place-items: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: var(--radius-control);
+  color: var(--t2, var(--text-secondary));
+}
+
+.catalog-doc-preview--sheet .mobile-more-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-1) 0 var(--space-2);
+}
+
+.catalog-doc-preview--sheet .mobile-more-section + .mobile-more-section {
+  margin-top: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--border);
+}
+
+.catalog-doc-preview--sheet .mobile-more-section-label {
+  padding: var(--space-2) var(--space-4) var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--t3, var(--text-muted));
+}
+
+.catalog-doc-preview--sheet .mobile-more-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-2-5) var(--space-4);
+  color: var(--t1, var(--text));
+  text-decoration: none;
+}
+
+.catalog-doc-preview--sheet .mobile-more-row-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--t1, var(--text)) 6%, var(--card));
+  color: var(--t2, var(--text-secondary));
+}
+
+.catalog-doc-preview--sheet .mobile-more-row-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--text-lg);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.catalog-doc-preview--sheet .mobile-more-row-check {
+  flex-shrink: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.catalog-doc-preview--sheet .mobile-more-row.active {
+  background: var(--navigation-item-bg-active);
+  box-shadow: inset 3px 0 0 var(--navigation-item-text-active);
+}
+
+.catalog-doc-preview--sheet .mobile-more-row.active .mobile-more-row-icon {
+  background: color-mix(in srgb, var(--accent) 16%, var(--card));
+  color: var(--t1, var(--text));
+}
+
+.catalog-doc-preview--sheet .mobile-more-row.active .mobile-more-row-label {
+  font-weight: 600;
+}

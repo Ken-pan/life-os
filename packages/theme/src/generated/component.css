@@ -43,9 +43,9 @@
   --button-secondary-text: var(--t1, var(--text));
   --button-ghost-text: var(--t2, var(--text-secondary));
   --button-ghost-bg-hover: color-mix(in srgb, var(--t1, var(--text)) 5%, transparent);
-  --button-danger-bg: var(--accent-bg, var(--accent-subtle));
-  --button-danger-border: color-mix(in srgb, var(--accent) 32%, transparent);
-  --button-danger-text: var(--accent);
+  --button-danger-bg: var(--critical-subtle);
+  --button-danger-border: color-mix(in srgb, var(--critical) 32%, var(--border));
+  --button-danger-text: var(--critical);
   --button-disabled-opacity: 0.42;
   --button-focus-ring: var(--focus-ring);
   --segment-track-bg: color-mix(in srgb, var(--t1, var(--text)) 4%, var(--bg-elevated, var(--card)));
@@ -64,8 +64,8 @@
   --feedback-danger-bg: var(--critical-subtle);
   --feedback-danger-border: color-mix(in srgb, var(--feedback-danger) 32%, var(--border));
   --feedback-info: var(--info, var(--accent));
-  --feedback-info-bg: color-mix(in srgb, var(--feedback-info) 10%, var(--card));
-  --feedback-info-border: color-mix(in srgb, var(--feedback-info) 28%, var(--border));
+  --feedback-info-bg: color-mix(in srgb, var(--feedback-info) 16%, var(--card));
+  --feedback-info-border: color-mix(in srgb, var(--feedback-info) 40%, var(--border));
   --navigation-item-bg: transparent;
   --navigation-item-bg-active: color-mix(in srgb, var(--accent) 10%, var(--card));
   --navigation-item-text: var(--t2, var(--text-secondary, var(--text-muted)));
