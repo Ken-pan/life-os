@@ -1030,15 +1030,6 @@ html, body {
   opacity: 1;
 }
 
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--t2);
-  font-size: var(--text-sm);
-  margin-bottom: 8px;
-}
-
 .insight-action {
   margin-top: var(--space-2-5);
   padding: var(--space-2) var(--space-3);

@@ -112,7 +112,12 @@
   onclose={closePalette}
   onclick={(e) => e.target === dialogRef && closePalette()}
 >
-  <div class="cp-container" role="group" aria-label="Command palette" onclick={(e) => e.stopPropagation()}>
+  <div
+    class="cp-container"
+    role="group"
+    aria-label="Command palette"
+    onclick={(e) => e.stopPropagation()}
+  >
     <div class="cp-header">
       <Icon name="search" size={20} class="cp-search-icon" />
       <input
@@ -210,10 +215,10 @@
   .cp-container {
     width: 100%;
     max-width: 600px;
-    background: var(--card);
-    border-radius: 16px;
-    box-shadow: var(--shadow-elevated, var(--card-shadow-hover));
-    border: 1px solid var(--border-l, var(--border-strong, var(--border)));
+    background: var(--command-palette-container-bg);
+    border-radius: var(--command-palette-container-radius);
+    box-shadow: var(--command-palette-container-shadow);
+    border: 1px solid var(--command-palette-container-border);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -224,13 +229,13 @@
     display: flex;
     align-items: center;
     padding: 0 var(--space-4);
-    height: 56px;
-    border-bottom: 1px solid var(--border);
+    height: var(--command-palette-header-height);
+    border-bottom: 1px solid var(--command-palette-header-border);
     gap: var(--space-3);
   }
 
   :global(.cp-search-icon) {
-    color: var(--t3, var(--text-muted));
+    color: var(--command-palette-input-placeholder);
   }
 
   .cp-input {
@@ -240,19 +245,19 @@
     border: none;
     outline: none;
     font-size: var(--text-lg);
-    color: var(--t1, var(--text));
+    color: var(--command-palette-input-text);
     font-family: inherit;
   }
 
   .cp-input::placeholder {
-    color: var(--t3, var(--text-muted));
+    color: var(--command-palette-input-placeholder);
   }
 
   .cp-shortcut-hint,
   .cp-clear {
     font-size: var(--text-xs);
-    color: var(--t3, var(--text-muted));
-    background: color-mix(in srgb, var(--t1, var(--text)) 5%, transparent);
+    color: var(--command-palette-hint-text);
+    background: var(--command-palette-hint-bg);
     padding: var(--space-1) var(--space-2);
     border-radius: var(--space-1);
     font-weight: 500;
@@ -270,12 +275,12 @@
   }
 
   .cp-clear:hover {
-    color: var(--t1, var(--text));
-    background: color-mix(in srgb, var(--t1, var(--text)) 5%, transparent);
+    color: var(--command-palette-input-text);
+    background: var(--command-palette-hint-bg);
   }
 
   .cp-content {
-    max-height: 400px;
+    max-height: var(--command-palette-content-max-height);
     overflow-y: auto;
     padding: var(--space-2);
     display: flex;
@@ -286,7 +291,7 @@
   .cp-empty {
     padding: var(--space-8);
     text-align: center;
-    color: var(--t3, var(--text-muted));
+    color: var(--command-palette-empty-text);
     font-size: var(--text-sm);
   }
 
@@ -305,7 +310,7 @@
   }
 
   .cp-item[aria-selected='true'] {
-    background: color-mix(in srgb, var(--t1, var(--text)) 5%, transparent);
+    background: var(--command-palette-item-selected-bg);
   }
 
   .cp-item:focus-visible {
@@ -314,12 +319,12 @@
   }
 
   .cp-item-icon {
-    color: var(--t2, var(--text-secondary));
+    color: var(--command-palette-item-icon);
     display: flex;
   }
 
   .cp-item[aria-selected='true'] .cp-item-icon {
-    color: var(--accent);
+    color: var(--command-palette-item-icon-active);
   }
 
   .cp-item-text {
@@ -331,23 +336,23 @@
 
   .cp-item-title {
     font-size: var(--text-md);
-    color: var(--t1, var(--text));
+    color: var(--command-palette-item-title);
     font-weight: 500;
   }
 
   .cp-item-subtitle {
     font-size: var(--text-xs);
-    color: var(--t3, var(--text-muted));
+    color: var(--command-palette-item-subtitle);
   }
 
   .cp-item-shortcut {
     font-size: var(--text-xs);
-    color: var(--t3, var(--text-muted));
+    color: var(--command-palette-hint-text);
     font-family: var(--mono);
-    background: var(--bg, var(--card));
+    background: var(--command-palette-item-shortcut-bg);
     padding: var(--space-0-5) var(--space-1-5);
     border-radius: var(--space-1);
-    border: 1px solid var(--border);
+    border: 1px solid var(--command-palette-item-shortcut-border);
   }
 
   @keyframes cp-fade-in {
@@ -378,12 +383,12 @@
 
     .cp-container {
       max-width: 100%;
-      border-radius: 20px 20px 0 0;
+      border-radius: var(--command-palette-mobile-sheet-radius);
       animation: life-os-mobile-more-in var(--dur-base) var(--ease-standard);
     }
 
     .cp-content {
-      max-height: 60vh;
+      max-height: var(--command-palette-mobile-content-max-height);
     }
   }
 </style>

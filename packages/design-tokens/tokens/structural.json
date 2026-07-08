@@ -1,0 +1,189 @@
+{
+  "$description": "Layout / motion / chrome structural tokens — flat keys map 1:1 to --css-var names.",
+  "page-gutter-reflow": { "$type": "cssValue", "$value": "var(--space-3)" },
+  "page-gutter-mobile": { "$type": "cssValue", "$value": "var(--space-4)" },
+  "page-gutter-tablet": { "$type": "cssValue", "$value": "var(--space-5)" },
+  "page-gutter-desktop": { "$type": "cssValue", "$value": "var(--space-8)" },
+  "page-gutter": { "$type": "cssValue", "$value": "var(--page-gutter-mobile)" },
+  "page-top": { "$type": "dimension", "$value": "8px" },
+  "page-block-gap": { "$type": "cssValue", "$value": "var(--space-7)" },
+  "page-scroll-bottom": { "$type": "cssValue", "$value": "var(--space-24)" },
+  "wrap-pad-x": { "$type": "cssValue", "$value": "var(--page-gutter)" },
+  "inset-inline": { "$type": "cssValue", "$value": "var(--page-gutter)" },
+  "inset-inline-start": {
+    "$type": "cssValue",
+    "$value": "max(var(--inset-inline), var(--safe-left-effective))"
+  },
+  "inset-inline-end": {
+    "$type": "cssValue",
+    "$value": "max(var(--inset-inline), var(--safe-right-effective))"
+  },
+  "stack-tight": { "$type": "cssValue", "$value": "var(--space-3)" },
+  "stack-section": { "$type": "cssValue", "$value": "var(--space-4)" },
+  "stack-block": { "$type": "cssValue", "$value": "var(--space-5)" },
+  "title-stack": { "$type": "cssValue", "$value": "var(--space-0-5)" },
+  "header-block": { "$type": "cssValue", "$value": "var(--space-5)" },
+  "gap": { "$type": "cssValue", "$value": "var(--space-5)" },
+  "back-to-content": { "$type": "dimension", "$value": "8px" },
+  "content-max": { "$type": "dimension", "$value": "820px" },
+  "maxw": { "$type": "cssValue", "$value": "var(--content-max)" },
+  "content-inline-pad": {
+    "$type": "cssValue",
+    "$value": "max(var(--page-gutter), calc((100% - var(--content-max)) / 2))"
+  },
+  "body": { "$type": "cssValue", "$value": "var(--font)" },
+  "disp": { "$type": "cssValue", "$value": "var(--font-brand)" },
+  "heading": { "$type": "cssValue", "$value": "var(--font)" },
+  "button": { "$type": "cssValue", "$value": "var(--font)" },
+  "control-h": { "$type": "dimension", "$value": "44px" },
+  "control-radius": { "$type": "dimension", "$value": "10px" },
+  "control-pad-x": { "$type": "dimension", "$value": "16px" },
+  "btn-h-sm": { "$type": "dimension", "$value": "32px" },
+  "btn-h-md": { "$type": "dimension", "$value": "36px" },
+  "btn-h-lg": { "$type": "dimension", "$value": "44px" },
+  "tap-min": { "$type": "dimension", "$value": "44px" },
+  "tap-spacing": { "$type": "dimension", "$value": "8px" },
+  "btn-pad-x-sm": { "$type": "dimension", "$value": "12px" },
+  "btn-pad-x-md": { "$type": "dimension", "$value": "14px" },
+  "btn-pad-x-lg": { "$type": "dimension", "$value": "16px" },
+  "btn-radius": { "$type": "cssValue", "$value": "var(--control-radius)" },
+  "btn-focus-ring": {
+    "$type": "cssValue",
+    "$value": "var(--shadow-focus, 0 0 0 2px color-mix(in srgb, var(--accent) 32%, transparent))"
+  },
+  "card-padding": { "$type": "cssValue", "$value": "var(--space-4)" },
+  "card-padding-compact": { "$type": "cssValue", "$value": "var(--space-3-5)" },
+  "card-padding-mobile": { "$type": "cssValue", "$value": "var(--space-3-5)" },
+  "card-radius": { "$type": "cssValue", "$value": "var(--radius-lg)" },
+  "card-gap": { "$type": "cssValue", "$value": "var(--space-2)" },
+  "card-stack-gap": { "$type": "cssValue", "$value": "var(--space-3)" },
+  "fab-h": { "$type": "dimension", "$value": "48px" },
+  "fab-w": { "$type": "dimension", "$value": "132px" },
+  "fab-offset-above-tabbar": {
+    "$type": "cssValue",
+    "$value": "var(--space-3)"
+  },
+  "fab-bg": { "$type": "cssValue", "$value": "var(--accent)" },
+  "fab-fg": { "$type": "cssValue", "$value": "var(--on-accent)" },
+  "fab-radius": { "$type": "cssValue", "$value": "var(--radius-pill)" },
+  "nav-h": { "$type": "cssValue", "$value": "var(--tabbar-h, 62px)" },
+  "mobile-tabbar-h": { "$type": "cssValue", "$value": "var(--tabbar-h, 62px)" },
+  "mobile-tabbar-total-h": {
+    "$type": "cssValue",
+    "$value": "var(--tabbar-total-h, calc(var(--nav-h) + max(var(--space-2), var(--safe-bottom-effective))))"
+  },
+  "mobile-content-inset": {
+    "$type": "cssValue",
+    "$value": "calc(var(--fab-h) + var(--fab-offset-above-tabbar) + var(--mobile-tabbar-total-h))"
+  },
+  "mobile-content-inset-tabbar": {
+    "$type": "cssValue",
+    "$value": "calc(var(--mobile-tabbar-total-h) + var(--space-3))"
+  },
+  "mobile-content-inset-minimal": {
+    "$type": "cssValue",
+    "$value": "calc(var(--space-6) + var(--safe-bottom-effective))"
+  },
+  "sidebar-w": { "$type": "dimension", "$value": "228px" },
+  "page-header-h": { "$type": "dimension", "$value": "68px" },
+  "nav-leading": {
+    "$type": "cssValue",
+    "$value": "max(16px, calc(env(safe-area-inset-left, 0px) + 8px))"
+  },
+  "nav-trailing": {
+    "$type": "cssValue",
+    "$value": "max(16px, calc(env(safe-area-inset-right, 0px) + 8px))"
+  },
+  "ios-edge-min": { "$type": "dimension", "$value": "12px" },
+  "ios-landscape-top-buffer": { "$type": "dimension", "$value": "20px" },
+  "safe-top": {
+    "$type": "cssValue",
+    "$value": "env(safe-area-inset-top, 0px)"
+  },
+  "safe-right": {
+    "$type": "cssValue",
+    "$value": "env(safe-area-inset-right, 0px)"
+  },
+  "safe-bottom": {
+    "$type": "cssValue",
+    "$value": "env(safe-area-inset-bottom, 0px)"
+  },
+  "safe-left": {
+    "$type": "cssValue",
+    "$value": "env(safe-area-inset-left, 0px)"
+  },
+  "safe-top-effective": {
+    "$type": "cssValue",
+    "$value": "max(var(--ios-edge-min), var(--safe-top))"
+  },
+  "safe-bottom-effective": {
+    "$type": "cssValue",
+    "$value": "max(var(--ios-edge-min), var(--safe-bottom))"
+  },
+  "safe-left-effective": {
+    "$type": "cssValue",
+    "$value": "max(var(--ios-edge-min), var(--safe-left))"
+  },
+  "safe-right-effective": {
+    "$type": "cssValue",
+    "$value": "max(var(--ios-edge-min), var(--safe-right))"
+  },
+  "ease-standard": {
+    "$type": "cssValue",
+    "$value": "cubic-bezier(0.2, 0, 0, 1)"
+  },
+  "ease-emphasized": {
+    "$type": "cssValue",
+    "$value": "cubic-bezier(0.22, 1, 0.36, 1)"
+  },
+  "ease-press": {
+    "$type": "cssValue",
+    "$value": "cubic-bezier(0.3, 0, 0.8, 0.15)"
+  },
+  "ease": { "$type": "cssValue", "$value": "cubic-bezier(0.2, 0.8, 0.2, 1)" },
+  "dur-fast": { "$type": "duration", "$value": "140ms" },
+  "motion-fast": { "$type": "duration", "$value": "140ms" },
+  "motion-standard": { "$type": "duration", "$value": "190ms" },
+  "dur-base": { "$type": "duration", "$value": "260ms" },
+  "motion-slow": { "$type": "duration", "$value": "260ms" },
+  "dur-slow": { "$type": "duration", "$value": "520ms" },
+  "motion-distance": { "$type": "dimension", "$value": "14px" },
+  "hover-lift": { "$type": "dimension", "$value": "-2px" },
+  "press-scale": { "$type": "number", "$value": "0.97" },
+  "sel-fg": { "$type": "cssValue", "$value": "var(--on-accent)" },
+  "viewport-min-h": { "$type": "cssValue", "$value": "100dvh" },
+  "viewport-stable-h": { "$type": "cssValue", "$value": "100svh" },
+  "bottom-chrome-h": {
+    "$type": "cssValue",
+    "$value": "var(--mobile-tabbar-total-h)"
+  },
+  "safari-chrome-tint-top-bg": { "$type": "cssValue", "$value": "var(--bg)" },
+  "safari-chrome-tint-bottom-bg": {
+    "$type": "cssValue",
+    "$value": "var(--bg-elevated, var(--card))"
+  },
+  "z-safe-area-tint": { "$type": "number", "$value": "19" },
+  "z-mobile-chrome": { "$type": "number", "$value": "35" },
+  "z-nav": { "$type": "number", "$value": "30" },
+  "z-more-sheet": { "$type": "number", "$value": "45" },
+  "z-fab": { "$type": "number", "$value": "40" },
+  "z-sheet": { "$type": "number", "$value": "100" },
+  "z-banner": { "$type": "number", "$value": "110" },
+  "z-toast": { "$type": "number", "$value": "120" },
+  "banner-fixed-h": { "$type": "dimension", "$value": "48px" },
+  "toast-pad-y": { "$type": "dimension", "$value": "12px" },
+  "toast-pad-x": { "$type": "dimension", "$value": "16px" },
+  "toast-min-h": { "$type": "dimension", "$value": "48px" },
+  "toast-gap": { "$type": "cssValue", "$value": "var(--space-2)" },
+  "toast-action-gap": { "$type": "cssValue", "$value": "var(--space-3)" },
+  "toast-font-size": { "$type": "cssValue", "$value": "var(--text-md)" },
+  "toast-line-height": { "$type": "number", "$value": "1.5" },
+  "toast-max-width": {
+    "$type": "cssValue",
+    "$value": "min(calc(100vw - var(--space-8)), 360px)"
+  },
+  "toast-max-width-desktop": {
+    "$type": "cssValue",
+    "$value": "min(calc(100vw - var(--space-8)), 420px)"
+  }
+}

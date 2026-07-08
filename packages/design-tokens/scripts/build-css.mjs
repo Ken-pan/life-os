@@ -1,10 +1,24 @@
 // Build: tokens/brands/*.json → packages/theme/src/generated/brands/*.css + app-themes.css
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { BRAND_APPS, GENERATED_DIR, loadComponent, loadPrimitive } from './lib/tokens.mjs'
-import { aggregateCss, brandCss, componentCss } from './lib/generate.mjs'
+import {
+  BRAND_APPS,
+  GENERATED_DIR,
+  loadComponent,
+  loadPrimitive,
+  loadSemantic,
+  loadStructural,
+} from './lib/tokens.mjs'
+import {
+  aggregateCss,
+  brandCss,
+  componentCss,
+  tokensCss,
+} from './lib/generate.mjs'
 
 const primitive = loadPrimitive()
+const semantic = loadSemantic()
+const structural = loadStructural()
 const component = loadComponent()
 const errors = []
 
@@ -22,6 +36,10 @@ const componentResult = componentCss(component, primitive)
 errors.push(...componentResult.errors)
 writeFileSync(join(GENERATED_DIR, 'component.css'), componentResult.css)
 
+const tokensResult = tokensCss(primitive, semantic, structural)
+errors.push(...tokensResult.errors)
+writeFileSync(join(GENERATED_DIR, 'tokens.css'), tokensResult.css)
+
 writeFileSync(
   join(GENERATED_DIR, 'README.md'),
   [
@@ -30,7 +48,7 @@ writeFileSync(
     'Everything in this directory is generated from `packages/design-tokens/tokens/`.',
     'Do not edit by hand — change the token JSON and run `npm run build:tokens`.',
     '',
-  ].join('\n')
+  ].join('\n'),
 )
 
 if (errors.length > 0) {
@@ -38,4 +56,6 @@ if (errors.length > 0) {
   for (const e of errors) console.error(`  - ${e}`)
   process.exit(1)
 }
-console.log(`build:tokens OK → packages/theme/src/generated/ (${BRAND_APPS.length} brands + app-themes.css + component.css)`)
+console.log(
+  `build:tokens OK → packages/theme/src/generated/ (${BRAND_APPS.length} brands + app-themes.css + component.css + tokens.css)`,
+)

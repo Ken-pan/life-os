@@ -28,6 +28,10 @@ export function loadComponent() {
   return loadJson(join(TOKENS_DIR, 'component.json'))
 }
 
+export function loadStructural() {
+  return loadJson(join(TOKENS_DIR, 'structural.json'))
+}
+
 /** card.bgHover → card-bg-hover */
 export function tokenVarName(path) {
   return path
@@ -42,7 +46,8 @@ export function loadBrand(app) {
 export function lookupPath(tree, dotPath) {
   let node = tree
   for (const part of dotPath.split('.')) {
-    if (node == null || typeof node !== 'object' || !(part in node)) return undefined
+    if (node == null || typeof node !== 'object' || !(part in node))
+      return undefined
     node = node[part]
   }
   return node

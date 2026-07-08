@@ -20,7 +20,10 @@
       "$value": "color-mix(in srgb, var(--accent) 8%, var(--card))"
     },
     "border": { "$type": "color", "$value": "var(--border)" },
-    "borderHover": { "$type": "color", "$value": "var(--border-l, var(--border))" },
+    "borderHover": {
+      "$type": "color",
+      "$value": "var(--border-l, var(--border))"
+    },
     "radius": { "$type": "dimension", "$value": "var(--radius-sm, 14px)" },
     "padding": { "$type": "dimension", "$value": "var(--space-4)" },
     "paddingCompact": { "$type": "dimension", "$value": "var(--space-3)" },
@@ -38,7 +41,10 @@
       "$type": "color",
       "$value": "var(--t2, var(--text-secondary, var(--text-muted)))"
     },
-    "mediaRadius": { "$type": "dimension", "$value": "var(--radius-control, 8px)" },
+    "mediaRadius": {
+      "$type": "dimension",
+      "$value": "var(--radius-control, 8px)"
+    },
     "footerBorder": { "$type": "color", "$value": "var(--border)" },
     "focusRing": { "$type": "cssValue", "$value": "var(--focus-ring)" },
     "disabledOpacity": { "$type": "number", "$value": "0.55" }
@@ -49,14 +55,23 @@
     "border": { "$type": "color", "$value": "var(--border)" },
     "text": { "$type": "color", "$value": "var(--t1, var(--text))" },
     "textMuted": { "$type": "color", "$value": "var(--t3, var(--text-muted))" },
-    "sectionRadius": { "$type": "dimension", "$value": "var(--radius-lg, 12px)" },
+    "sectionRadius": {
+      "$type": "dimension",
+      "$value": "var(--radius-lg, 12px)"
+    },
     "sectionPadding": { "$type": "dimension", "$value": "var(--card-padding)" },
     "toggleTrack": {
       "$type": "color",
       "$value": "var(--border-l, var(--border-strong, var(--border)))"
     },
-    "toggleThumb": { "$type": "color", "$value": "var(--bg-elevated, #ffffff)" },
-    "toggleOn": { "$type": "color", "$value": "var(--toggle-on-bg, var(--accent))" },
+    "toggleThumb": {
+      "$type": "color",
+      "$value": "var(--bg-elevated, #ffffff)"
+    },
+    "toggleOn": {
+      "$type": "color",
+      "$value": "var(--toggle-on-bg, var(--accent))"
+    },
     "toggleDisabledOpacity": { "$type": "number", "$value": "0.45" }
   },
   "button": {
@@ -71,7 +86,10 @@
       "$value": "var(--border-l, var(--border-strong, var(--border)))"
     },
     "secondaryText": { "$type": "color", "$value": "var(--t1, var(--text))" },
-    "ghostText": { "$type": "color", "$value": "var(--t2, var(--text-secondary))" },
+    "ghostText": {
+      "$type": "color",
+      "$value": "var(--t2, var(--text-secondary))"
+    },
     "ghostBgHover": {
       "$type": "color",
       "$value": "color-mix(in srgb, var(--t1, var(--text)) 5%, transparent)"
@@ -92,7 +110,10 @@
     },
     "trackRadius": { "$type": "dimension", "$value": "var(--radius-pill)" },
     "btnBg": { "$type": "color", "$value": "transparent" },
-    "btnColor": { "$type": "color", "$value": "var(--t2, var(--text-secondary))" },
+    "btnColor": {
+      "$type": "color",
+      "$value": "var(--t2, var(--text-secondary))"
+    },
     "activeBg": {
       "$type": "color",
       "$value": "var(--lime, var(--accent-bg, var(--accent-subtle)))"
@@ -134,11 +155,81 @@
       "$type": "color",
       "$value": "color-mix(in srgb, var(--accent) 10%, var(--card))"
     },
-    "itemText": { "$type": "color", "$value": "var(--t2, var(--text-secondary, var(--text-muted)))" },
+    "itemText": {
+      "$type": "color",
+      "$value": "var(--t2, var(--text-secondary, var(--text-muted)))"
+    },
     "itemTextActive": { "$type": "color", "$value": "var(--accent)" },
-    "backText": { "$type": "color", "$value": "var(--t2, var(--text-secondary))" },
+    "backText": {
+      "$type": "color",
+      "$value": "var(--t2, var(--text-secondary))"
+    },
     "backTextHover": { "$type": "color", "$value": "var(--t1, var(--text))" },
+    "backTextActive": {
+      "$type": "color",
+      "$value": "var(--t3, var(--text-muted))"
+    },
+    "backMarginBottom": { "$type": "cssValue", "$value": "0" },
+    "backMarginInlineStart": { "$type": "cssValue", "$value": "0" },
+    "backPaddingInlineEnd": { "$type": "cssValue", "$value": "0" },
+    "backIconSize": { "$type": "dimension", "$value": "13px" },
     "sheetBg": { "$type": "color", "$value": "var(--card)" },
     "sheetRadius": { "$type": "dimension", "$value": "20px" }
+  },
+  "commandPalette": {
+    "containerBg": { "$type": "color", "$value": "var(--card)" },
+    "containerRadius": { "$type": "dimension", "$value": "16px" },
+    "containerBorder": {
+      "$type": "color",
+      "$value": "var(--border-l, var(--border-strong, var(--border)))"
+    },
+    "containerShadow": {
+      "$type": "cssValue",
+      "$value": "var(--shadow-elevated, var(--card-shadow-hover))"
+    },
+    "headerHeight": { "$type": "dimension", "$value": "56px" },
+    "headerBorder": { "$type": "color", "$value": "var(--border)" },
+    "inputText": { "$type": "color", "$value": "var(--t1, var(--text))" },
+    "inputPlaceholder": {
+      "$type": "color",
+      "$value": "var(--t3, var(--text-muted))"
+    },
+    "itemSelectedBg": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--t1, var(--text)) 5%, transparent)"
+    },
+    "itemIcon": {
+      "$type": "color",
+      "$value": "var(--t2, var(--text-secondary))"
+    },
+    "itemIconActive": { "$type": "color", "$value": "var(--accent)" },
+    "itemTitle": { "$type": "color", "$value": "var(--t1, var(--text))" },
+    "itemSubtitle": {
+      "$type": "color",
+      "$value": "var(--t3, var(--text-muted))"
+    },
+    "itemShortcutBg": { "$type": "color", "$value": "var(--bg, var(--card))" },
+    "itemShortcutBorder": { "$type": "color", "$value": "var(--border)" },
+    "hintBg": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--t1, var(--text)) 5%, transparent)"
+    },
+    "hintText": { "$type": "color", "$value": "var(--t3, var(--text-muted))" },
+    "emptyText": { "$type": "color", "$value": "var(--t3, var(--text-muted))" },
+    "contentMaxHeight": { "$type": "cssValue", "$value": "400px" },
+    "mobileContentMaxHeight": { "$type": "cssValue", "$value": "60vh" },
+    "mobileSheetRadius": { "$type": "cssValue", "$value": "20px 20px 0 0" }
+  },
+  "portraitGate": {
+    "overlayBg": { "$type": "color", "$value": "var(--bg)" },
+    "overlayText": { "$type": "color", "$value": "var(--t1, var(--text))" },
+    "hintText": {
+      "$type": "color",
+      "$value": "var(--t2, var(--text-secondary))"
+    },
+    "titleSize": { "$type": "dimension", "$value": "18px" },
+    "hintSize": { "$type": "dimension", "$value": "14px" },
+    "iconSize": { "$type": "dimension", "$value": "48px" },
+    "innerMaxWidth": { "$type": "dimension", "$value": "320px" }
   }
 }

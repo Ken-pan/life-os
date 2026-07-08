@@ -15,6 +15,7 @@ export const SHOWCASE_STATE_REGISTRY = {
     { id: 'positive', label: 'Success' },
     { id: 'warn', label: 'Warning' },
     { id: 'critical', label: 'Critical' },
+    { id: 'portrait-gate', label: 'Portrait gate' },
   ],
   settings: [
     { id: 'default', label: 'Default' },
@@ -51,9 +52,7 @@ export const SHOWCASE_STATE_REGISTRY = {
  */
 export function getShowcaseStates(showcaseId) {
   return (
-    SHOWCASE_STATE_REGISTRY[showcaseId] ?? [
-      { id: 'default', label: 'Default' },
-    ]
+    SHOWCASE_STATE_REGISTRY[showcaseId] ?? [{ id: 'default', label: 'Default' }]
   )
 }
 
@@ -69,7 +68,7 @@ export function isValidShowcaseState(showcaseId, stateId) {
 const MATRIX_IFRAME_HEIGHTS = {
   buttons: 168,
   segments: 196,
-  utilities: 168,
+  utilities: { default: 168, 'portrait-gate': 220 },
   settings: { default: 268, disabled: 228, destructive: 248 },
   navigation: { default: 132, 'sheet-open': 300 },
   feedback: 196,

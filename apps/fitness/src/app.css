@@ -12,6 +12,9 @@
   --nav-leading: max(16px, calc(env(safe-area-inset-left, 0px) + 8px));
   --nav-trailing: max(16px, calc(env(safe-area-inset-right, 0px) + 8px));
   --back-to-content: 8px;
+  --navigation-back-margin-bottom: var(--back-to-content);
+  --navigation-back-margin-inline-start: calc(var(--nav-leading) - var(--wrap-pad-x));
+  --navigation-back-padding-inline-end: 10px;
   --gold: var(--accent);
   --gold-bg: var(--accent-bg);
   --green: var(--accent);
@@ -1128,52 +1131,19 @@ p {
 }
 
 .back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: var(--control-h);
-  padding: 0 10px 0 0;
-  margin: 0 0 var(--back-to-content) calc(var(--nav-leading) - var(--wrap-pad-x));
-  font-family: var(--body);
   font-size: var(--text-base);
   font-weight: 400;
   letter-spacing: -0.024em;
   line-height: 1.2;
-  color: var(--t2);
   text-transform: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: color var(--dur-fast) var(--ease-standard);
-}
-
-.back-btn:hover {
-  color: var(--t1);
-}
-
-.back-btn:active {
-  color: var(--t3);
-}
-
-.back-btn :global(.icon) {
-  flex-shrink: 0;
-  width: 13px;
-  height: 13px;
-  margin-top: 1px;
-}
-
-.back-label {
-  white-space: nowrap;
 }
 
 .page-foot-nav {
   display: flex;
   justify-content: flex-start;
   margin-top: 18px;
-}
-
-.page-foot-nav .back-btn {
-  margin-bottom: 0;
-  margin-left: calc(var(--nav-leading) - var(--wrap-pad-x));
 }
 
 .day-title {

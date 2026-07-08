@@ -20,4 +20,19 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
+      - run: npm run validate:tokens
       - run: npm run build
+
+  design-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - run: npm run build -w design-catalog
+      - run: npm run test:design-catalog
+      - run: npm run test:design-catalog:snapshots
