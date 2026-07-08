@@ -16,11 +16,27 @@ This package contains thin web-only adapters. P0 PR 3 adds appearance and page-m
 
 ## P1 pilot status
 
+`planner-os`, `fitness-os`, `music-os`, and `portal` consume shared Svelte components via
+`@life-os/platform-web/svelte/*` subpath exports (C-P2 Wave 2A PR 1).
+
+| Subpath export                             | Component / module                                                                |
+| ------------------------------------------ | --------------------------------------------------------------------------------- |
+| `@life-os/platform-web/svelte/head`        | `DocumentHead.svelte`                                                             |
+| `@life-os/platform-web/svelte/icon`        | `Icon.svelte` (registry via `setContext` + `@life-os/platform-web/icon-registry`) |
+| `@life-os/platform-web/svelte/sync-error`  | `SyncErrorBanner.svelte`                                                          |
+| `@life-os/platform-web/svelte/navigation`  | `BackButton.svelte`                                                               |
+| `@life-os/platform-web/svelte/settings/*`  | Settings 叶子 + `section` + `sync-block`（见下）                                  |
+| `@life-os/platform-web/svelte/toast`       | `Toast.svelte`                                                                    |
+| `@life-os/platform-web/svelte/toast-store` | `createToastStore`                                                                |
+| `@life-os/platform-web/sync-error`         | `createSyncErrorPresentation`                                                     |
+| `@life-os/platform-web/icon-registry`      | `ICON_REGISTRY_CONTEXT_KEY`                                                       |
+| `@life-os/platform-web/navigation`         | `WebNavItem` / `WebNavGroup` types                                                |
+
+Settings 子路径：`row`、`action-row`、`toggle`、`toggle-row`、`segment`、`button-group`、`file-button`、`stack-block`、`backup-rows`、`section`、`sync-block`。各 app 保留 `*Rows` / `*Block` 业务组合件。
+
 `planner-os` and `fitness-os` are the current pilot consumers. They use
-`applyDocumentMetaWeb` from `DocumentHead.svelte` while preserving the existing
-SSR/static `<svelte:head>` output. Sync error presentation mappings stay local
-to each app; P1 does not move `SyncErrorBanner`, settings UI, or app-owned state
-into this package.
+`applyDocumentMetaWeb` from shared `DocumentHead.svelte` while preserving the existing
+SSR/static `<svelte:head>` output.
 
 See [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)（C-P0/C-P1） and [`../../docs/LIFEOS_CONTRACTS.md`](../../docs/LIFEOS_CONTRACTS.md)（Web 映射附录）.
 

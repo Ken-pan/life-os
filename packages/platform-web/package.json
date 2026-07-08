@@ -5,7 +5,7 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
@@ -16,6 +16,86 @@
     "./CommandPalette.svelte": {
       "svelte": "./src/CommandPalette.svelte",
       "default": "./src/CommandPalette.svelte"
+    },
+    "./svelte/head": {
+      "svelte": "./src/svelte/head/DocumentHead.svelte",
+      "default": "./src/svelte/head/DocumentHead.svelte"
+    },
+    "./svelte/icon": {
+      "svelte": "./src/svelte/icon/Icon.svelte",
+      "default": "./src/svelte/icon/Icon.svelte"
+    },
+    "./svelte/sync-error": {
+      "svelte": "./src/svelte/sync-error/SyncErrorBanner.svelte",
+      "default": "./src/svelte/sync-error/SyncErrorBanner.svelte"
+    },
+    "./svelte/navigation": {
+      "svelte": "./src/svelte/navigation/BackButton.svelte",
+      "default": "./src/svelte/navigation/BackButton.svelte"
+    },
+    "./svelte/settings/row": {
+      "svelte": "./src/svelte/settings/SettingsRow.svelte",
+      "default": "./src/svelte/settings/SettingsRow.svelte"
+    },
+    "./svelte/settings/action-row": {
+      "svelte": "./src/svelte/settings/SettingsActionRow.svelte",
+      "default": "./src/svelte/settings/SettingsActionRow.svelte"
+    },
+    "./svelte/settings/toggle": {
+      "svelte": "./src/svelte/settings/SettingsToggle.svelte",
+      "default": "./src/svelte/settings/SettingsToggle.svelte"
+    },
+    "./svelte/settings/toggle-row": {
+      "svelte": "./src/svelte/settings/SettingsToggleRow.svelte",
+      "default": "./src/svelte/settings/SettingsToggleRow.svelte"
+    },
+    "./svelte/settings/segment": {
+      "svelte": "./src/svelte/settings/SettingsSegment.svelte",
+      "default": "./src/svelte/settings/SettingsSegment.svelte"
+    },
+    "./svelte/settings/button-group": {
+      "svelte": "./src/svelte/settings/SettingsButtonGroup.svelte",
+      "default": "./src/svelte/settings/SettingsButtonGroup.svelte"
+    },
+    "./svelte/settings/file-button": {
+      "svelte": "./src/svelte/settings/SettingsFileButton.svelte",
+      "default": "./src/svelte/settings/SettingsFileButton.svelte"
+    },
+    "./svelte/settings/stack-block": {
+      "svelte": "./src/svelte/settings/SettingsStackBlock.svelte",
+      "default": "./src/svelte/settings/SettingsStackBlock.svelte"
+    },
+    "./svelte/settings/backup-rows": {
+      "svelte": "./src/svelte/settings/SettingsBackupRows.svelte",
+      "default": "./src/svelte/settings/SettingsBackupRows.svelte"
+    },
+    "./svelte/settings/section": {
+      "svelte": "./src/svelte/settings/SettingsSection.svelte",
+      "default": "./src/svelte/settings/SettingsSection.svelte"
+    },
+    "./svelte/settings/sync-block": {
+      "svelte": "./src/svelte/settings/SettingsSyncBlock.svelte",
+      "default": "./src/svelte/settings/SettingsSyncBlock.svelte"
+    },
+    "./svelte/toast": {
+      "svelte": "./src/svelte/toast/Toast.svelte",
+      "default": "./src/svelte/toast/Toast.svelte"
+    },
+    "./svelte/toast-store": {
+      "svelte": "./src/svelte/toast/store.svelte.js",
+      "default": "./src/svelte/toast/store.svelte.js"
+    },
+    "./backup": {
+      "import": "./src/backup.js"
+    },
+    "./sync-error": {
+      "import": "./src/syncErrorPresentation.js"
+    },
+    "./icon-registry": {
+      "import": "./src/iconRegistry.js"
+    },
+    "./navigation": {
+      "types": "./src/navigation.d.ts"
     }
   },
   "dependencies": {

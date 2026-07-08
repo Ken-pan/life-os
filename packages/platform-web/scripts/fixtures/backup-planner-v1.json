@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 7,
+  "exportedAt": "2026-07-01T08:00:00.000Z",
+  "app": "planner-os",
+  "data": {
+    "tasks": [{ "id": "t1", "title": "交房租", "listId": "inbox", "priority": 0 }],
+    "lists": [{ "id": "inbox", "title": "收件箱", "system": "inbox" }],
+    "settings": { "locale": "zh", "defaultListId": "inbox" }
+  }
+}

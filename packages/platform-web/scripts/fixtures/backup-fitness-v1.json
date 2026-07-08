@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 4,
+  "exportedAt": "2026-07-01T08:00:00.000Z",
+  "app": "fitness-os",
+  "data": {
+    "settings": { "locale": "zh", "unit": "kg" },
+    "weights": { "squat": 100 },
+    "logs": [{ "day": "2026-06-30", "exId": "squat", "sets": [{ "reps": 5, "weight": 100 }] }],
+    "rotation": ["push", "pull", "legs"],
+    "lastDay": "2026-06-30",
+    "sessionMeta": {},
+    "programOverrides": {},
+    "activeProgramId": "ppl"
+  }
+}
