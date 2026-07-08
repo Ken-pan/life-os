@@ -34,6 +34,10 @@
   --page-block-gap: var(--space-7);
   --page-scroll-bottom: var(--space-24);
   --wrap-pad-x: var(--page-gutter);
+  /* 卡片/设置行等嵌套内容水平 inset（与 page-gutter 同 tier，含 safe-area） */
+  --inset-inline: var(--page-gutter);
+  --inset-inline-start: max(var(--inset-inline), var(--safe-left-effective));
+  --inset-inline-end: max(var(--inset-inline), var(--safe-right-effective));
   --stack-tight: var(--space-3);
   --stack-section: var(--space-4);
   --stack-block: var(--space-5);

@@ -45,6 +45,21 @@
   margin-bottom: 12px;
 }
 
+.settings-stack-block--pad-x {
+  padding-inline: var(--inset-inline);
+  padding-bottom: var(--space-4);
+}
+
+.settings-stack-block--pad-x-tight {
+  padding-inline: var(--inset-inline);
+  padding-bottom: var(--space-3);
+}
+
+.settings-stack-block--pad-x-loose {
+  padding-inline: var(--inset-inline);
+  padding-bottom: var(--space-2);
+}
+
 .set-row.settings-stack-block,
 .settings-row-stack {
   border-top: 1px solid var(--border);
@@ -74,14 +89,26 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--t3, var(--text-muted));
-  padding: 14px 18px 4px;
+  padding: var(--space-3-5) var(--inset-inline) var(--space-1);
   margin: 0;
 }
 
 .settings-block.set-group .block-desc,
 .set-group .block-desc {
   margin: 0 0 var(--stack-tight);
-  padding: 0 18px;
+  padding-inline: var(--inset-inline);
+}
+
+.set-group .block-desc--pad-bottom-xs {
+  padding-bottom: var(--space-2);
+}
+
+.set-group .block-desc--pad-bottom-sm {
+  padding-bottom: var(--space-3);
+}
+
+.set-group .block-desc--pad-bottom {
+  padding-bottom: var(--space-4);
 }
 
 .set-group--edit .sg-title {
@@ -92,7 +119,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-2-5);
-  padding: var(--space-3) 18px;
+  padding: var(--space-3) var(--inset-inline);
   background: color-mix(in srgb, var(--card) 92%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -113,7 +140,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3-5, 14px);
-  padding: 15px 18px;
+  padding: var(--space-4) var(--inset-inline);
   border-top: 1px solid var(--border);
 }
 
@@ -121,12 +148,12 @@
   border-top: none;
 }
 
-.settings-btn-group > .btn,
-.settings-btn-group > .btn.ghost,
-.settings-btn-group > .btn-primary,
-.settings-btn-group > .btn-secondary,
-.settings-btn-group > .btn-danger,
-.settings-btn-group > .file-input-btn {
+.settings-btn-group>.btn,
+.settings-btn-group>.btn.ghost,
+.settings-btn-group>.btn-primary,
+.settings-btn-group>.btn-secondary,
+.settings-btn-group>.btn-danger,
+.settings-btn-group>.file-input-btn {
   flex: 1;
   min-width: 140px;
 }
@@ -167,11 +194,11 @@
     align-items: stretch;
   }
 
-  .settings-row-stack > .btn-primary,
-  .settings-row-stack > .btn-secondary,
-  .settings-row-stack > .btn-danger,
-  .settings-row-stack > .file-input-btn,
-  .settings-row-stack > .btn {
+  .settings-row-stack>.btn-primary,
+  .settings-row-stack>.btn-secondary,
+  .settings-row-stack>.btn-danger,
+  .settings-row-stack>.file-input-btn,
+  .settings-row-stack>.btn {
     width: 100%;
     justify-content: center;
   }

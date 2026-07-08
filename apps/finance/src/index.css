@@ -4775,11 +4775,6 @@ div.input {
     gap: var(--space-2-5);
   }
 
-  .mobile-tabbar {
-    padding-left: max(8px, var(--safe-left-effective));
-    padding-right: max(8px, var(--safe-right-effective));
-  }
-
   .mobile-tabbar-inner {
     gap: var(--space-1);
   }

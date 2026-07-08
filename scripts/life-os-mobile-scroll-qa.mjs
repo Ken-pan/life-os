@@ -1,65 +1,38 @@
 /**
- * Life OS 四端移动端滚动 QA（浏览器 + PWA standalone）
+ * Life OS 移动端滚动 QA（浏览器 + PWA standalone）
+ * Config: scripts/pwa/apps.config.mjs
  *
  * Usage:
- *   npm run build -w @life-os/theme && npm run build:planner && ...
- *   npm run preview -w planner-os -- --port 5188 &
- *   node scripts/life-os-mobile-scroll-qa.mjs
+ *   npm run pwa:build
+ *   npm run pwa:preview:all &   # or per-app preview
+ *   npm run qa:mobile-scroll
  *
- * Env (optional):
- *   SCROLL_QA_PLANNER_URL  default http://127.0.0.1:5188
- *   SCROLL_QA_FITNESS_URL  default http://127.0.0.1:5173
- *   SCROLL_QA_MUSIC_URL    default http://127.0.0.1:5191
- *   SCROLL_QA_FINANCE_URL  default http://127.0.0.1:5180
- *   SCROLL_QA_APPS         comma list e.g. planner,finance
+ * Env:
+ *   SCROLL_QA_APPS=planner,fitness
+ *   SCROLL_QA_<APP>_URL=http://127.0.0.1:PORT  (override per app, uppercase id)
  */
 import { chromium, devices } from 'playwright'
+import { appBaseUrl, resolveAppFilter } from './pwa/apps.config.mjs'
 
-const APPS = [
-  {
-    id: 'planner',
-    url: process.env.SCROLL_QA_PLANNER_URL ?? 'http://127.0.0.1:5188',
-    path: '/settings',
-    waitSelector: '.app-shell',
-    scrollSelector: '.main-col > .wrap, .main-col > .auth-wrap',
-    moreButton: '.nav button[aria-label="更多"], .mobile-tabbar button[aria-label="更多"]',
-    moreClose: '.mobile-more-close, .sheet-bg',
-  },
-  {
-    id: 'fitness',
-    url: process.env.SCROLL_QA_FITNESS_URL ?? 'http://127.0.0.1:5173',
-    path: '/settings',
-    waitSelector: '.app-shell',
-    scrollSelector: '#main-content',
-    moreButton: '.mobile-tabbar button[aria-label="更多"]',
-    moreClose: '.mobile-more-close',
-    clipPaths: ['/discover', '/program', '/'],
-  },
-  {
-    id: 'music',
-    url: process.env.SCROLL_QA_MUSIC_URL ?? 'http://127.0.0.1:5191',
-    path: '/settings',
-    waitSelector: '.app-shell',
-    scrollSelector: '#main-content',
-    moreButton: '.mobile-tabbar button[aria-label="更多"]',
-    moreClose: '.mobile-more-close',
-    clipPaths: ['/'],
-  },
-  {
-    id: 'finance',
-    url: process.env.SCROLL_QA_FINANCE_URL ?? 'http://127.0.0.1:5180',
-    path: '/stocks',
-    waitSelector: '.app-shell',
-    scrollSelector: '.main-wrap > .content',
-    moreButton: '.mobile-tabbar button[aria-label="更多"]',
-    moreClose: '.mobile-more-close',
-  },
-]
+/** @param {import('./pwa/apps.config.mjs').PwaAppConfig} app */
+function toScrollQaApp(app) {
+  const envKey = `SCROLL_QA_${app.id.toUpperCase()}_URL`
+  return {
+    id: app.id,
+    url: process.env[envKey] ?? appBaseUrl(app),
+    path: app.scrollQaPath,
+    waitSelector: app.waitSelector,
+    scrollSelector: app.scrollSelector,
+    moreButton: app.moreButton,
+    moreClose: app.moreClose,
+    clipPaths: app.nestedWrapInMain ? app.clipPaths : undefined,
+    authGate: app.authGate,
+  }
+}
 
-const filter = process.env.SCROLL_QA_APPS?.split(',').map((s) => s.trim()).filter(Boolean)
-const targets = filter?.length
-  ? APPS.filter((a) => filter.includes(a.id))
-  : APPS
+const targets = resolveAppFilter(process.env.SCROLL_QA_APPS)
+  .filter((a) => a.production)
+  .map(toScrollQaApp)
 
 /** @type {{ app: string, case: string, ok: boolean, detail?: string }[]} */
 const results = []
@@ -74,7 +47,10 @@ async function wheelScrollY(page, selector, deltaY) {
   const loc = page.locator(selector).first()
   const box = await loc.boundingBox()
   if (!box) return false
-  await page.mouse.move(box.x + box.width / 2, box.y + Math.min(box.height * 0.35, box.height - 8))
+  await page.mouse.move(
+    box.x + box.width / 2,
+    box.y + Math.min(box.height * 0.35, box.height - 8),
+  )
   await page.mouse.wheel(0, deltaY)
   await page.waitForTimeout(180)
   return true
@@ -117,11 +93,15 @@ async function queryScrollRoot(page, scrollSelector) {
   }, scrollSelector)
 }
 
-/** PWA: nested .wrap inside #main-content must not be height:0 clipped */
 async function checkPwaNestedWrap(page, appId, clipPath, baseUrl) {
-  await page.goto(`${baseUrl}${clipPath}`, { waitUntil: 'domcontentloaded', timeout: 45000 })
+  await page.goto(`${baseUrl}${clipPath}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 45000,
+  })
   await page.waitForSelector('.app-shell', { timeout: 30000 })
-  await page.evaluate(() => document.documentElement.classList.add('standalone-pwa'))
+  await page.evaluate(() =>
+    document.documentElement.classList.add('standalone-pwa'),
+  )
 
   const metrics = await page.evaluate(() => {
     const main = document.getElementById('main-content')
@@ -131,7 +111,8 @@ async function checkPwaNestedWrap(page, appId, clipPath, baseUrl) {
     const wrapCs = wrap ? getComputedStyle(wrap) : null
 
     if (!main) return { ok: false, reason: 'missing #main-content' }
-    if (!wrap) return { ok: true, skip: true, reason: 'no nested .wrap on page' }
+    if (!wrap)
+      return { ok: true, skip: true, reason: 'no nested .wrap on page' }
 
     const wrapOk =
       wrapCs.height !== '0px' &&
@@ -155,12 +136,11 @@ async function checkPwaNestedWrap(page, appId, clipPath, baseUrl) {
       wrapOffsetHeight: wrap.offsetHeight,
       wrapScrollHeight: wrap.scrollHeight,
     }
-  }, clipPath)
+  })
 
-  const label = `pwa:clip${clipPath}`
   record(
     appId,
-    label,
+    `pwa:clip${clipPath}`,
     metrics.ok,
     metrics.skip ? metrics.reason : JSON.stringify(metrics),
   )
@@ -180,12 +160,28 @@ async function runApp(browser, app) {
     })
     await page.waitForSelector(app.waitSelector, { timeout: 30000 })
 
-    await page.evaluate(() => document.documentElement.classList.add('standalone-pwa'))
+    const hasShell = await page.evaluate(
+      () => !!document.querySelector('.app-shell'),
+    )
+    if (!hasShell && app.authGate) {
+      record(
+        app.id,
+        'prep:auth-gate',
+        true,
+        'auth screen — shell tests skipped',
+      )
+      return
+    }
+
+    await page.evaluate(() =>
+      document.documentElement.classList.add('standalone-pwa'),
+    )
     const prep = await ensureScrollable(page, app.scrollSelector)
     record(app.id, 'prep:scroll-root', prep.ok, JSON.stringify(prep))
 
-    // Browser mode — document scroll
-    await page.evaluate(() => document.documentElement.classList.remove('standalone-pwa'))
+    await page.evaluate(() =>
+      document.documentElement.classList.remove('standalone-pwa'),
+    )
     const docBefore = await page.evaluate(() => window.scrollY)
     await page.evaluate(() => window.scrollTo(0, 1400))
     await page.waitForTimeout(120)
@@ -201,8 +197,9 @@ async function runApp(browser, app) {
       JSON.stringify(docAfter),
     )
 
-    // PWA touch scroll on inner root (before programmatic scrollTop assignment)
-    await page.evaluate(() => document.documentElement.classList.add('standalone-pwa'))
+    await page.evaluate(() =>
+      document.documentElement.classList.add('standalone-pwa'),
+    )
     const scrollSel = await queryScrollRoot(page, app.scrollSelector)
     if (scrollSel) {
       await page.evaluate((sel) => {
@@ -215,7 +212,8 @@ async function runApp(browser, app) {
         }
       }, app.scrollSelector)
       const before = await page.evaluate(
-        (sel) => document.querySelector(sel.split(',')[0].trim())?.scrollTop ?? 0,
+        (sel) =>
+          document.querySelector(sel.split(',')[0].trim())?.scrollTop ?? 0,
         app.scrollSelector,
       )
       await wheelScrollY(page, scrollSel, 420)
@@ -237,8 +235,9 @@ async function runApp(browser, app) {
       record(app.id, 'scroll:pwa-wheel', false, 'scroll root not found')
     }
 
-    // PWA — inner content scroll, body locked
-    await page.evaluate(() => document.documentElement.classList.add('standalone-pwa'))
+    await page.evaluate(() =>
+      document.documentElement.classList.add('standalone-pwa'),
+    )
     const pwa = await page.evaluate((sel) => {
       const pick = () => {
         for (const part of sel.split(',').map((s) => s.trim())) {
@@ -263,38 +262,53 @@ async function runApp(browser, app) {
     }, app.scrollSelector)
     record(app.id, 'scroll:pwa-content', pwa.ok, JSON.stringify(pwa))
 
-    // More sheet must not leave body position:fixed (browser mode)
-    await page.evaluate(() => document.documentElement.classList.remove('standalone-pwa'))
-    const moreBtn = page.locator(app.moreButton).first()
-    if ((await moreBtn.count()) > 0) {
-      await moreBtn.click()
-      await page.waitForTimeout(200)
-      const close = page.locator(app.moreClose).first()
-      if ((await close.count()) > 0) {
-        await close.click()
+    await page.evaluate(() =>
+      document.documentElement.classList.remove('standalone-pwa'),
+    )
+    if (app.moreButton) {
+      const moreBtn = page.locator(app.moreButton).first()
+      if ((await moreBtn.count()) > 0) {
+        await moreBtn.click()
         await page.waitForTimeout(200)
-      } else {
-        await page.keyboard.press('Escape')
-        await page.waitForTimeout(200)
-      }
-      const afterMore = await page.evaluate(() => {
-        window.scrollTo(0, 900)
-        return {
-          bodyPos: getComputedStyle(document.body).position,
-          bodyInlinePos: document.body.style.position,
-          scrollY: window.scrollY,
+        const close = app.moreClose ? page.locator(app.moreClose).first() : null
+        if (close && (await close.count()) > 0) {
+          await close.click()
+          await page.waitForTimeout(200)
+        } else {
+          await page.keyboard.press('Escape')
+          await page.waitForTimeout(200)
         }
-      })
+        const afterMore = await page.evaluate(() => {
+          window.scrollTo(0, 900)
+          return {
+            bodyPos: getComputedStyle(document.body).position,
+            bodyInlinePos: document.body.style.position,
+            scrollY: window.scrollY,
+          }
+        })
+        record(
+          app.id,
+          'scroll:after-more-sheet',
+          afterMore.bodyPos !== 'fixed' &&
+            afterMore.bodyInlinePos !== 'fixed' &&
+            afterMore.scrollY > 200,
+          JSON.stringify(afterMore),
+        )
+      } else {
+        record(
+          app.id,
+          'scroll:after-more-sheet',
+          true,
+          'skipped — no more button',
+        )
+      }
+    } else {
       record(
         app.id,
         'scroll:after-more-sheet',
-        afterMore.bodyPos !== 'fixed' &&
-          afterMore.bodyInlinePos !== 'fixed' &&
-          afterMore.scrollY > 200,
-        JSON.stringify(afterMore),
+        true,
+        'skipped — no more button',
       )
-    } else {
-      record(app.id, 'scroll:after-more-sheet', true, 'skipped — no more button')
     }
 
     if (app.clipPaths?.length) {
@@ -303,7 +317,12 @@ async function runApp(browser, app) {
       }
     }
   } catch (err) {
-    record(app.id, 'fatal', false, err instanceof Error ? err.message : String(err))
+    record(
+      app.id,
+      'fatal',
+      false,
+      err instanceof Error ? err.message : String(err),
+    )
   } finally {
     await context.close()
   }

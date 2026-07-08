@@ -90,12 +90,41 @@
    - `--safari-chrome-tint-top-bg` / `--safari-chrome-tint-bottom-bg`
    - `--mobile-content-inset*`（FAB + 底栏留白公式）
 4. **工具类**（`utilities.css`，`@layer life-os.utilities`）：
+   - `.life-os-pad-inline` — 页面级水平 inset（与 `.wrap` / `.content` 同款 safe-area 公式）
+   - `.life-os-inset-inline` — 嵌套块水平 inset（设置行、卡片内文案）
+   - `.life-os-bleed-x` — full-bleed 横向滚动（负边距 + gutter 对齐）
    - `.life-os-scroll-x` — 横向滚动（`overscroll-behavior-x: contain`，隐藏 scrollbar）
-   - `.life-os-scroll-x--snap` — tab/chip 条（proximity snap + safe-area scroll-padding）
+   - `.life-os-scroll-x--snap` — tab/chip 条（proximity snap + `--inset-inline-*` scroll-padding）
    - `.life-os-scroll-x--snap-mandatory` — 卡片 carousel（mandatory snap）
    - `.life-os-scroll-x--fade-edge` — 容器内缘 mask 渐隐（seg 等）
    - `.life-os-scroll-fade` — tablist 外层渐隐（不裁切 active 下划线）
    - 表格等数据区只用 `.life-os-scroll-x`，勿加 `--snap`
+
+### 移动端水平 Inset 契约（四端统一）
+
+Modern mobile-first 实践（16px 最小 lateral padding + `env(safe-area-inset-*)` + design token 分层）已沉淀为以下 token：
+
+| Token                  | 手机默认            | reflow ≤320 | narrow ≤380 | tablet 600–839 | desktop ≥840 |
+| ---------------------- | ------------------- | ----------- | ----------- | -------------- | ------------ |
+| `--page-gutter`        | 16px                | 12px        | 14px        | 20px           | 32px         |
+| `--inset-inline`       | = `--page-gutter`   | 同左        | 同左        | 同左           | 同左         |
+| `--content-inline-pad` | `max(gutter, 居中)` | 同左        | 同左        | 同左           | 同左         |
+
+**页面级**（Planner / Fitness / Music 用 `.wrap`，Finance 用 `main.content`）：
+
+```css
+padding-inline-start: max(
+  var(--content-inline-pad),
+  var(--safe-left-effective)
+);
+padding-inline-end: max(var(--content-inline-pad), var(--safe-right-effective));
+```
+
+**嵌套级**（设置行 `.set-row`、`.block-desc`、卡片内文案）：只用 `--inset-inline`，不再硬编码 `14px` / `18px`。
+
+**full-bleed 横向滚动**（filter chip 条、表格）：`.life-os-bleed-x` 或 `margin-inline: calc(-1 * var(--wrap-pad-x)); padding-inline: var(--wrap-pad-x)`。
+
+**禁止**：在页面/设置层写裸 `padding: 0 18px`；组件内 chip/button 用 `--btn-pad-x-*` 或 `--space-*`。
 
 ### 架构原则（对齐现代 token 分层）
 
@@ -131,10 +160,12 @@ import {
 
 ## Custom Media 速查
 
-| 名称                                    | 范围      |
-| --------------------------------------- | --------- |
-| `--life-os-narrow`                      | ≤380px    |
-| `--life-os-phone` / `--life-os-compact` | ≤640px    |
-| `--life-os-tablet`                      | 641–860px |
-| `--life-os-mobile`                      | ≤860px    |
-| `--life-os-desktop`                     | ≥861px    |
+| 名称                | 范围      |
+| ------------------- | --------- |
+| `--life-os-reflow`  | ≤320px    |
+| `--life-os-narrow`  | ≤380px    |
+| `--life-os-phone`   | ≤599px    |
+| `--life-os-compact` | ≤640px    |
+| `--life-os-tablet`  | 600–839px |
+| `--life-os-mobile`  | ≤839px    |
+| `--life-os-desktop` | ≥840px    |

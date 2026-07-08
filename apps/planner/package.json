@@ -8,6 +8,7 @@
     "dev": "vite dev",
     "build": "vite build && node scripts/patch-sw-cache-hash.mjs",
     "preview": "vite preview",
+    "pwa:preview": "vite preview -- --host 0.0.0.0 --port 5188",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",

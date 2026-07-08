@@ -1,0 +1,90 @@
+---
+description: iOS PWA viewport and shell debugging rules for Life OS apps
+globs:
+  - 'apps/**/src/**/*.{svelte,ts,tsx,js,css}'
+  - 'packages/theme/src/**/*.css'
+  - 'apps/**/src/routes/**/+layout.svelte'
+  - 'apps/**/src/app.html'
+  - 'apps/**/index.html'
+alwaysApply: false
+---
+
+# iOS PWA Debug Rules
+
+When debugging **Planner / Fitness / Music / Finance / Portal** PWA layout issues, treat **iOS standalone PWA** as a first-class acceptance target.
+
+**Config SSOT:** `scripts/pwa/apps.config.mjs` (ports, shell types, routes, selectors).
+
+## Mandatory diagnosis flow
+
+1. Inspect **shell / layout / global CSS** (`packages/theme/src/ios-safari.css`, `shell.css`, `+layout.svelte`) before editing page-specific components.
+2. Search for risky patterns:
+   - `height: 100vh` / `height: 100dvh` / `height: calc(100vh`
+   - `max-height` on route wrappers
+   - `overflow: hidden` on `body`, `main`, or nested `.wrap`
+   - `position: fixed` + missing main `padding-bottom`
+   - `inset: 0` on scroll containers
+   - duplicated `env(safe-area-inset-bottom)` deductions
+   - **nested scroll containers** (more than one `overflow-y: auto`)
+   - descendant selectors like `.main-wrap .wrap` with `height: 0` (clips nested route `.wrap`)
+3. Confirm exactly **one primary scroll container** per app (see `PWA_SHELL_REFERENCE` in `apps.config.mjs`):
+   - Fitness / Music: `.main-wrap > #main-content`
+   - Finance: `.main-wrap > .content`
+   - Planner / Portal: `.main-col > .wrap`
+4. Do **not** fix clipping by adding margins to individual cards.
+5. Do **not** redesign UI unless explicitly requested.
+6. Do **not** touch Supabase, data models, migrations, or business logic for viewport bugs.
+
+## Required PWA checks
+
+- `app.html` / `index.html` must include:
+  `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`
+- App root uses flex column in `standalone-pwa` mode.
+- Main scroll container prefers:
+  - `flex: 1 1 auto`
+  - `min-height: 0`
+  - `overflow-y: auto`
+  - `-webkit-overflow-scrolling: touch`
+- Route pages: `height: auto`, `overflow: visible` — no fixed viewport height on `.wrap`.
+- Bottom tabbar must not cover the last content item.
+- Fixed tabbar → main content `padding-bottom` via theme tokens (`--mobile-content-inset-tabbar`).
+
+## Verification layers (in order)
+
+| Layer | Tool                                        | Catches                           |
+| ----- | ------------------------------------------- | --------------------------------- |
+| 1     | Playwright mobile + `standalone-pwa` class  | Scroll container CSS regressions  |
+| 2     | `npm run qa:mobile-scroll`                  | Cross-app shell scroll            |
+| 3     | `scripts/pwa/ios-sim-open.sh` + screenshots | iOS Safari layout                 |
+| 4     | Manual Add to Home Screen + standalone open | Real `display-mode: standalone`   |
+| 5     | Safari Web Inspector on device/simulator    | viewport metrics, computed styles |
+| 6     | Real iPhone PWA                             | Final acceptance                  |
+
+**Playwright mobile emulation is not iOS standalone PWA.** Do not treat it as final sign-off.
+
+## Evidence required before claiming "fixed"
+
+Every PWA layout fix must output:
+
+- Files changed
+- Root cause (which selector / container)
+- Before/after screenshots if available
+- Viewport metrics from `scripts/pwa/collect-viewport-metrics.mjs`:
+  - `innerHeight`, `documentElement.clientHeight`, `visualViewport.height`
+  - `displayModeStandalone`, `navigatorStandalone`
+  - main container `overflowY`, `clientHeight`, `scrollHeight`
+- Verification status per layer above
+
+## Repo debug commands
+
+```bash
+npm run pwa:build
+npm run pwa:preview:fitness          # or planner/music/finance/portal
+npm run pwa:sim:open -- fitness /discover
+npm run pwa:sim:shot -- fitness-discover
+npm run test:pwa                     # all apps; PWA_APP=fitness for one
+npm run qa:mobile-scroll             # production apps
+npm run qa:pwa                       # full automated pipeline
+```
+
+See `docs/DEBUG_PWA_IOS.md` and `docs/PWA_VIEWPORT_CHECKLIST.md`.

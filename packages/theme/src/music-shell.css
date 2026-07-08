@@ -3270,7 +3270,7 @@ html:has(.np-ambient-back) .bottom-shell {
 }
 
 .settings-library-actions {
-  padding: 0 18px calc(var(--space-6) + var(--mobile-content-inset-tabbar, 0px)) 18px;
+  padding: 0 var(--inset-inline) calc(var(--space-6) + var(--mobile-content-inset-tabbar, 0px));
 }
 
 .settings-action-hint {
@@ -3288,7 +3288,7 @@ html:has(.np-ambient-back) .bottom-shell {
 .tag-review-list {
   list-style: none;
   margin: 0;
-  padding: 0 18px 16px;
+  padding: 0 var(--inset-inline) var(--space-4);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -3298,7 +3298,7 @@ html:has(.np-ambient-back) .bottom-shell {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 14px 16px;
+  padding: var(--space-3-5) var(--space-4);
   border-radius: var(--radius-lg, 12px);
   background: var(--surface-2, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
@@ -4118,6 +4118,7 @@ body.search-typeahead-open .music-appbar {
 }
 
 @media (hover: hover) and (pointer: fine) {
+
   .utility-pane-resize-handle:hover::after,
   .utility-pane-resize-handle:focus-visible::after {
     background: color-mix(in srgb, var(--accent) 42%, transparent);

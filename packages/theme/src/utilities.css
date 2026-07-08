@@ -1,5 +1,21 @@
 /* Life OS 原子工具类（置于 @layer life-os.utilities，可被 app 未分层 CSS 覆盖） */
 
+/* 页面级水平 inset（.wrap / .content 同款公式） */
+.life-os-pad-inline {
+  padding-inline: var(--inset-inline-start) var(--inset-inline-end);
+}
+
+/* 嵌套块水平 inset（设置行、卡片内文案等） */
+.life-os-inset-inline {
+  padding-inline: var(--inset-inline);
+}
+
+/* full-bleed 横向滚动：负边距拉回 + 与 gutter 对齐的 scroll padding */
+.life-os-bleed-x {
+  margin-inline: calc(-1 * var(--wrap-pad-x));
+  padding-inline: var(--wrap-pad-x);
+}
+
 .life-os-scroll-x {
   max-width: 100%;
   min-width: 0;
@@ -17,23 +33,22 @@
 /* Tab / chip 条：scroll-snap + safe-area padding（表格等纯滚动勿加 --snap） */
 .life-os-scroll-x--snap {
   scroll-snap-type: x proximity;
-  scroll-padding-inline: max(var(--space-2, 8px), env(safe-area-inset-left, 0px))
-    max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
+  scroll-padding-inline: var(--inset-inline-start) var(--inset-inline-end);
 }
 
 .life-os-scroll-x--snap-mandatory {
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: max(var(--space-2, 8px), env(safe-area-inset-left, 0px))
-    max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
+  scroll-padding-inline: var(--inset-inline-start) var(--inset-inline-end);
 }
 
-.life-os-scroll-x--snap > *,
-.life-os-scroll-x--snap-mandatory > * {
+.life-os-scroll-x--snap>*,
+.life-os-scroll-x--snap-mandatory>* {
   scroll-snap-align: start;
   flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
+
   .life-os-scroll-x--snap,
   .life-os-scroll-x--snap-mandatory {
     scroll-behavior: smooth;

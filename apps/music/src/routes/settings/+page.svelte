@@ -97,7 +97,10 @@
       const ok = await resolveTagReview(id, status)
       if (ok) {
         tagReviews = tagReviews.filter((r) => r.id !== id)
-        health = { ...health, pendingReviews: Math.max(0, health.pendingReviews - 1) }
+        health = {
+          ...health,
+          pendingReviews: Math.max(0, health.pendingReviews - 1),
+        }
       }
     } finally {
       resolvingReviewId = ''
@@ -290,7 +293,7 @@
           <div class="pref-desc">{t('auth.signedInDesc')}</div>
         </div>
       </div>
-      <div class="settings-stack-block" style="padding:0 18px 16px">
+      <div class="settings-stack-block settings-stack-block--pad-x">
         <div class="settings-btn-group">
           <button
             class="btn-primary"
@@ -305,7 +308,7 @@
         </div>
       </div>
     {:else}
-      <div class="settings-stack-block" style="padding:0 18px 16px">
+      <div class="settings-stack-block settings-stack-block--pad-x">
         <p class="pref-desc" style="margin-bottom:12px">
           {t('sync.signInFirst')}
         </p>
@@ -318,7 +321,7 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('sync.title')}</h3>
-    <p class="block-desc" style="padding:0 18px 16px">
+    <p class="block-desc block-desc--pad-bottom">
       {cloudStored > 0 ? t('sync.descCloud') : t('sync.desc')}
     </p>
   </section>
@@ -326,7 +329,7 @@
   {#if auth.user}
     <section class="settings-block set-group">
       <h3 class="block-title sg-title">{t('cloudAudio.title')}</h3>
-      <p class="block-desc" style="padding:0 18px 12px">
+      <p class="block-desc block-desc--pad-bottom-sm">
         {t('cloudAudio.desc')}
       </p>
       <div class="set-row settings-row">
@@ -341,7 +344,7 @@
           </div>
         </div>
       </div>
-      <div class="settings-stack-block" style="padding:0 18px 16px">
+      <div class="settings-stack-block settings-stack-block--pad-x">
         <button
           class="btn-primary"
           type="button"
@@ -363,7 +366,7 @@
 
     <section class="settings-block set-group">
       <h3 class="block-title sg-title">{t('settings.recommendationHealth')}</h3>
-      <p class="block-desc" style="padding:0 18px 12px">
+      <p class="block-desc block-desc--pad-bottom-sm">
         {t('settings.recommendationHealthDesc')}
       </p>
       <div class="set-row settings-row">
@@ -375,7 +378,9 @@
             {t('settings.healthEmbeddings', { count: health.embeddings })}
           </div>
           <div class="pref-desc" style="margin-top:4px">
-            {t('settings.healthPendingReviews', { count: health.pendingReviews })}
+            {t('settings.healthPendingReviews', {
+              count: health.pendingReviews,
+            })}
           </div>
         </div>
       </div>
@@ -383,11 +388,11 @@
 
     <section class="settings-block set-group">
       <h3 class="block-title sg-title">{t('settings.tagReview')}</h3>
-      <p class="block-desc" style="padding:0 18px 12px">
+      <p class="block-desc block-desc--pad-bottom-sm">
         {t('settings.tagReviewDesc')}
       </p>
       {#if tagReviews.length === 0}
-        <p class="block-desc" style="padding:0 18px 16px;color:var(--t3)">
+        <p class="block-desc block-desc--pad-bottom" style="color:var(--t3)">
           {t('settings.tagReviewEmpty')}
         </p>
       {:else}
@@ -485,7 +490,7 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.playback')}</h3>
-    <p class="block-desc" style="padding:0 18px 12px">
+    <p class="block-desc block-desc--pad-bottom-sm">
       {t('settings.gaplessDesc')}
     </p>
     <div class="set-row settings-row">
@@ -533,7 +538,7 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.albumAmbience')}</h3>
-    <p class="block-desc" style="padding:0 18px 12px">
+    <p class="block-desc block-desc--pad-bottom-sm">
       {t('settings.albumAmbienceDesc')}
     </p>
     <div class="set-row settings-row">
@@ -558,7 +563,7 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.autoContinueSimilar')}</h3>
-    <p class="block-desc" style="padding:0 18px 12px">
+    <p class="block-desc block-desc--pad-bottom-sm">
       {t('settings.autoContinueSimilarDesc')}
     </p>
     <div class="set-row settings-row">
@@ -583,7 +588,7 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.immersiveViewMode')}</h3>
-    <p class="block-desc" style="padding:0 18px 12px">
+    <p class="block-desc block-desc--pad-bottom-sm">
       {t('settings.immersiveViewModeDesc')}
     </p>
     <div class="set-row settings-row">
@@ -615,10 +620,10 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.privacy')}</h3>
-    <p class="block-desc" style="padding:0 18px 8px">
+    <p class="block-desc block-desc--pad-bottom-xs">
       {t('settings.privacyDesc')}
     </p>
-    <p class="block-desc" style="padding:0 18px 16px;color:var(--text-2)">
+    <p class="block-desc block-desc--pad-bottom" style="color:var(--text-2)">
       {t('settings.iosBackground')}
     </p>
     <div class="set-row settings-row">

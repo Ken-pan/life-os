@@ -8,6 +8,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
+    "pwa:preview": "vite preview -- --host 0.0.0.0 --port 4173",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "check:exercises": "node scripts/validate-exercises.mjs",
     "check:schemes": "node scripts/verify-schemes.mjs",

@@ -54,6 +54,12 @@
   }
 }
 
+@media (--life-os-narrow) {
+  :root {
+    --page-gutter: var(--space-3-5);
+  }
+}
+
 /* ===== Modern Container Queries (Component-Driven) ===== */
 /* usage: .card-grid { container-type: inline-size; container-name: grid; } */
 .life-os-container {
@@ -75,6 +81,7 @@
 }
 
 @supports not (width: 100cqw) {
+
   .main-col,
   .main-wrap {
     --content-inline-pad: max(var(--page-gutter), calc((100% - var(--content-max)) / 2));
