@@ -14,7 +14,7 @@ export async function handleAiPlan(apiKey, payload, meta = {}) {
     return { status: 501, body: { error: 'not_configured' } };
   }
 
-  const allowed = (process.env.AI_ALLOWED_ORIGINS || 'localhost,127.0.0.1,netlify.app')
+  const allowed = (process.env.AI_ALLOWED_ORIGINS || 'localhost,127.0.0.1,netlify.app,kenos.space')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);

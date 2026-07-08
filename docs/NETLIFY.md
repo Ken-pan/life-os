@@ -4,12 +4,12 @@
 
 四站均已指向 **同一 monorepo**，通过 **Deploy Key** 拉取代码（无需 GitHub App 单独授权 `life-os`）：
 
-| Site | Package directory | Build | Publish |
-|------|-------------------|-------|---------|
-| planneros-ken | `apps/planner` | `npm run build -w planner-os` | `apps/planner/build` |
-| kens-fitnessos | `apps/fitness` | `npm run build -w fitness-os` | `apps/fitness/build` |
-| kensfinanceos | `apps/finance` | `npm run build -w finance-os` | `apps/finance/dist` |
-| musicos-ken | `apps/music` | `npm run build -w music-os` | `apps/music/build` |
+| Site | Package directory | Build | Publish | Production URL |
+|------|-------------------|-------|---------|------------------|
+| planneros-ken | `apps/planner` | `npm run build -w planner-os` | `apps/planner/build` | https://planner.kenos.space |
+| kens-fitnessos | `apps/fitness` | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space |
+| kensfinanceos | `apps/finance` | `npm run build -w finance-os` | `apps/finance/dist` | https://finance.kenos.space |
+| musicos-ken | `apps/music` | `npm run build -w music-os` | `apps/music/build` | https://music.kenos.space |
 
 **Base directory 留空**（repo 根目录 `npm install`）。
 
@@ -50,7 +50,7 @@ cd life-os && npm install && npm run build
 
 ## Music 站 Git 链接
 
-生产 URL：**https://musicos-ken.netlify.app**（Site ID `83dfdf84-095a-4b8a-955d-106d046a314b`）。
+生产 URL：**https://music.kenos.space**（custom domain；Netlify 默认 https://musicos-ken.netlify.app 仍保留作 rollback）
 
 若 Build settings 仍指向已 archive 的 `MusicOS` 仓库，在 Netlify UI 将 **Repository** 改为 `Ken-pan/life-os`、分支 `master`、Package directory `apps/music`。Deploy Key 与另外三站相同。
 

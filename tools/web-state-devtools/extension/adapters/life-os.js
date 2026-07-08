@@ -16,6 +16,7 @@
       const u = new URL(url)
       if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return true
       if (u.hostname.endsWith('.netlify.app')) return true
+      if (u.hostname.endsWith('.kenos.space')) return true
       return false
     } catch {
       return false

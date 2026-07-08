@@ -10,6 +10,7 @@
     "http://localhost/*",
     "http://127.0.0.1/*",
     "https://*.netlify.app/*",
+    "https://*.kenos.space/*",
     "https://*.amazon.com/*",
     "https://*.bestbuy.com/*",
     "https://*.target.com/*",

@@ -29,8 +29,11 @@ const RH_ENRICH_TAB_GAP_MS = 400
 /** @type {Promise<void> | null} */
 let rhEnrichChain = null
 
-const FINANCE_OS_PRODUCTION_URL = 'https://kensfinanceos.netlify.app/home/today'
-const FINANCE_OS_NETLIFY_HOST = 'kensfinanceos.netlify.app'
+const FINANCE_OS_PRODUCTION_URL = 'https://finance.kenos.space/home/today'
+const FINANCE_OS_PRODUCTION_HOSTS = [
+  'finance.kenos.space',
+  'kensfinanceos.netlify.app',
+]
 const TAB_EDIT_RETRY_ATTEMPTS = 8
 const TAB_EDIT_RETRY_MS = 250
 
@@ -110,7 +113,7 @@ function isFinanceOsTitle(title) {
 
 function isFinanceOsProductionUrl(url) {
   try {
-    return new URL(url).hostname === FINANCE_OS_NETLIFY_HOST
+    return FINANCE_OS_PRODUCTION_HOSTS.includes(new URL(url).hostname)
   } catch {
     return false
   }
@@ -134,6 +137,7 @@ async function focusFinanceOsTab() {
     url: [
       'http://localhost/*',
       'http://127.0.0.1/*',
+      'https://finance.kenos.space/*',
       'https://*.netlify.app/*',
     ],
   })
