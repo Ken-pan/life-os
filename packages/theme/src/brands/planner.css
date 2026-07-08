@@ -1,0 +1,63 @@
+/* Planner brand — light (default) */
+[data-app='planner'] {
+  --bg: #f5f3f0;
+  --bg-2: #ffffff;
+  --card: #ffffff;
+  --card-h: #f0ece6;
+  --border: #e4e0da;
+  --border-l: #d4cfc8;
+  --t1: #1f1c18;
+  --t2: #5c5650;
+  --t3: #78736d;
+  --t4: #9a9590;
+  --accent: #c47a08;
+  --accent-2: #e19312;
+  --accent-bg: rgba(196, 122, 8, 0.1);
+  --on-accent: #ffffff;
+  --sidebar: #161412;
+  --sidebar-foreground: #f5f0ea;
+  --sidebar-muted: rgba(245, 240, 234, 0.55);
+  --sidebar-accent: #221f1c;
+  --sidebar-primary: #e9a832;
+  --sidebar-primary-foreground: #1a1408;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --appbar-bg: rgba(245, 243, 240, 0.88);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --seg-display: flex;
+  --seg-flex-wrap: wrap;
+  --seg-gap: 8px;
+  --seg-track-bg: transparent;
+  --seg-track-border: none;
+  --seg-track-padding: 0;
+  --seg-btn-bg: var(--card);
+  --seg-btn-border: 1px solid var(--border);
+  --seg-active-bg: var(--accent-bg);
+  --seg-active-fg: var(--accent);
+  --seg-active-border-token: var(--accent);
+  color-scheme: light;
+}
+
+[data-app='planner'][data-mode='dark'] {
+  --bg: #0f0f0e;
+  --bg-2: #171612;
+  --card: #171612;
+  --card-h: #201d17;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-l: rgba(255, 255, 255, 0.1);
+  --accent: #f5b83d;
+  --accent-2: #ffc966;
+  --accent-bg: rgba(245, 184, 61, 0.14);
+  --on-accent: #1a1408;
+  --t1: #f1eee8;
+  --t2: #a7a29a;
+  --t3: #6f6a62;
+  --t4: rgba(241, 238, 232, 0.38);
+  --appbar-bg: rgba(15, 15, 14, 0.92);
+  --nav-bg: rgba(15, 15, 14, 0.94);
+  --sidebar: #0f0f0e;
+  --sidebar-foreground: #f1eee8;
+  --sidebar-muted: #a7a29a;
+  --sidebar-accent: #171612;
+  --sidebar-primary: var(--accent);
+  color-scheme: dark;
+}

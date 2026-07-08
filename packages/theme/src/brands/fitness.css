@@ -1,0 +1,40 @@
+/* Fitness brand — dark-first (light uses same surface stack for preview) */
+[data-app='fitness'] {
+  --bg: #0d0d0e;
+  --bg-2: #141415;
+  --card: #19191b;
+  --card-h: #202022;
+  --border: #262628;
+  --border-l: #303032;
+  --accent: #ff4d2e;
+  --accent-2: #ff6a4d;
+  --accent-bg: rgba(255, 77, 46, 0.12);
+  --t1: #f2f2f2;
+  --t2: #b8b8ba;
+  --t3: #9a9a9c;
+  --t4: #848486;
+  --text: var(--t1);
+  --text-secondary: var(--t2);
+  --text-muted: var(--t3);
+  --on-accent: #190804;
+  --sidebar: #121214;
+  --sidebar-foreground: var(--t1);
+  --sidebar-muted: var(--t3);
+  --sidebar-accent: var(--card-h);
+  --sidebar-primary: var(--accent);
+  --sidebar-border: var(--border);
+  --appbar-bg: rgba(13, 13, 14, 0.85);
+  --nav-bg: rgba(13, 13, 14, 0.92);
+  --seg-display: flex;
+  --seg-track-bg: var(--bg-2);
+  --seg-track-border: 1px solid var(--border-l);
+  --seg-track-radius: 9px;
+  --seg-track-padding: 0;
+  --seg-active-bg-token: var(--accent);
+  --seg-active-fg-token: var(--on-accent);
+  color-scheme: dark;
+}
+
+[data-app='fitness'][data-mode='light'] {
+  color-scheme: light;
+}

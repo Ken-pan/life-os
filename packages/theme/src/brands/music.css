@@ -1,0 +1,60 @@
+[data-app='music'] {
+  --bg: #faf5f4;
+  --bg-2: #fff9f8;
+  --bg-elevated: #ffffff;
+  --card: #ffffff;
+  --card-h: #fff0ee;
+  --border: #ecd8d4;
+  --border-l: #dfc4bf;
+  --t1: #1f1214;
+  --t2: #6b4f52;
+  --t3: #8a6d70;
+  --t4: #a89295;
+  --accent: #c41e3a;
+  --accent-2: #e8394f;
+  --accent-bg: rgba(196, 30, 58, 0.1);
+  --on-accent: #ffffff;
+  --sidebar: #1a1012;
+  --sidebar-foreground: #faf0ee;
+  --sidebar-muted: rgba(250, 240, 238, 0.55);
+  --sidebar-accent: #2a1619;
+  --sidebar-primary: #ff4d6d;
+  --sidebar-primary-foreground: #1a080c;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --appbar-bg: rgba(250, 245, 244, 0.88);
+  --nav-bg: rgba(255, 255, 255, 0.94);
+  --seg-display: flex;
+  --seg-track-bg: color-mix(in srgb, var(--accent) 6%, var(--card));
+  --seg-track-border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  --seg-track-radius: var(--radius-pill);
+  --seg-active-bg-token: var(--accent);
+  --seg-active-fg-token: var(--on-accent);
+  --toast-radius: 22px;
+  --toast-bg: var(--card-h);
+  --toast-border: var(--border-l);
+  color-scheme: light;
+}
+
+[data-app='music'][data-mode='dark'] {
+  --bg: #100a0c;
+  --bg-2: #161012;
+  --bg-elevated: #1a1214;
+  --card: #1a1214;
+  --card-h: #241619;
+  --border: rgba(255, 220, 215, 0.08);
+  --border-l: rgba(255, 220, 215, 0.12);
+  --t1: #faf0ee;
+  --t2: #c4a8aa;
+  --t3: #9a8083;
+  --t4: #80686b;
+  --accent: #ff4d6d;
+  --accent-2: #ff758f;
+  --accent-bg: rgba(255, 77, 109, 0.14);
+  --on-accent: #1a080c;
+  --sidebar: #0c0708;
+  --sidebar-accent: #1a1012;
+  --sidebar-primary: #ff4d6d;
+  --appbar-bg: rgba(16, 10, 12, 0.88);
+  --nav-bg: rgba(22, 16, 18, 0.94);
+  color-scheme: dark;
+}

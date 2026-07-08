@@ -17,6 +17,11 @@
     "./music-shell.css": "./src/music-shell.css",
     "./tokens.css": "./src/tokens.css",
     "./seg.css": "./src/seg.css",
+    "./app-themes.css": "./src/app-themes.css",
+    "./brands/planner.css": "./src/brands/planner.css",
+    "./brands/fitness.css": "./src/brands/fitness.css",
+    "./brands/finance.css": "./src/brands/finance.css",
+    "./brands/music.css": "./src/brands/music.css",
     "./brand": {
       "types": "./src/index.d.ts",
       "import": "./src/brand.js"
