@@ -4,9 +4,13 @@
   import CommandPalette from '@life-os/platform-web/CommandPalette.svelte'
   import { bindViewportHeight } from '@life-os/theme'
   import DocumentHead from '@life-os/platform-web/svelte/head'
+  import BrandMark from '@life-os/platform-web/svelte/brand/mark'
   import PortalAppBar from '$lib/components/PortalAppBar.svelte'
   import { PORTAL_APPS, getLauncherMeta } from '$lib/apps.js'
+  import { getLifeOsBrand } from '@life-os/theme/brand'
   import { auth, initAuth, signOut } from '$lib/auth.svelte.js'
+
+  const portalBrand = getLifeOsBrand('portal')
 
   let { children } = $props()
 
@@ -16,7 +20,14 @@
     ...PORTAL_APPS.map((app) => ({
       id: app.id,
       title: `打开 ${getLauncherMeta(app.id).name}`,
-      icon: app.id === 'finance' ? 'wallet' : app.id === 'planner' ? 'check-square' : app.id === 'fitness' ? 'activity' : 'music',
+      icon:
+        app.id === 'finance'
+          ? 'wallet'
+          : app.id === 'planner'
+            ? 'check-square'
+            : app.id === 'fitness'
+              ? 'activity'
+              : 'music',
       onSelect: () => {
         window.location.href = app.url
       },
@@ -56,10 +67,24 @@
       <PortalAppBar />
       <div class="wrap portal-wrap">
         <div class="portal-unauth-wrap">
+          <div class="portal-unauth-hero" aria-hidden="true">
+            <BrandMark
+              size={72}
+              lightSrc={portalBrand.light}
+              darkSrc={portalBrand.dark}
+              lightSrcSet={portalBrand.lightSrcSet}
+              darkSrcSet={portalBrand.darkSrcSet}
+            />
+          </div>
           <div class="settings-block">
             <h1 class="portal-unauth-title">欢迎使用 Life OS</h1>
-            <p class="portal-unauth-desc">你尚未登录。请先在 Finance 完成登录，再返回此页切换应用。</p>
-            <a href="https://finance.kenos.space" class="btn-primary portal-login-link">
+            <p class="portal-unauth-desc">
+              你尚未登录。请先在 Finance 完成登录，再返回此页切换应用。
+            </p>
+            <a
+              href="https://finance.kenos.space"
+              class="btn-primary portal-login-link"
+            >
               前往 Finance 登录
             </a>
           </div>

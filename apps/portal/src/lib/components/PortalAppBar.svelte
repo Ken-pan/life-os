@@ -8,7 +8,7 @@
 <header class="appbar portal-appbar">
   <div class="appbar-inner">
     <div class="appbar-leading">
-      <AppBrand appId="portal" variant="appbar" ariaLabel="HOME.OS" />
+      <AppBrand appId="portal" variant="appbar" ariaLabel="PORTAL.OS" />
     </div>
     <div class="appbar-trailing">
       {#if onSignOut}

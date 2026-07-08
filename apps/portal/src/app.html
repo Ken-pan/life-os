@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HOME.OS</title>
+  <title>PORTAL.OS</title>
   <meta name="description" content="Life OS 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music" />
-  <meta name="application-name" content="HOME.OS" />
+  <meta name="application-name" content="PORTAL.OS" />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="color-scheme" content="light dark" />
   <meta name="format-detection" content="telephone=no" />
-  <meta name="theme-color" content="#f5f3f0" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#f5f3f0" id="theme-color-meta" />
+  <meta name="theme-color" content="#f3f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f3f6f8" id="theme-color-meta" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="HOME.OS" />
-  <link rel="icon" id="app-favicon" href="/icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="/icon.svg" />
+  <meta name="apple-mobile-web-app-title" content="PORTAL.OS" />
+  <link rel="icon" id="app-favicon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -38,7 +38,7 @@
         document.documentElement.setAttribute('data-theme', resolved);
         document.documentElement.style.colorScheme = resolved;
         var meta = document.getElementById('theme-color-meta');
-        if (meta) meta.content = resolved === 'dark' ? '#121110' : '#f5f3f0';
+        if (meta) meta.content = resolved === 'dark' ? '#14161a' : '#f3f6f8';
       } catch (e) { }
     })();
     (function () {

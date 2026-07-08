@@ -17,7 +17,7 @@ export const LIFE_OS_BRAND_MARK_SIZE = {
  */
 const WORDMARK_BASE = {
   finance: 'Finance',
-  portal: 'HOME',
+  portal: 'PORTAL',
 }
 
 /** @type {Partial<Record<LifeOsAppId, string>>} */

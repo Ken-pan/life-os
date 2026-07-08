@@ -26,7 +26,7 @@ export const LIFE_OS_SITE_META = {
     shortName: 'PLANNER',
     description: {
       zh: '阳光感任务清单 · 轻松规划每一天',
-      en: 'Sunny tasks, calm planning'
+      en: 'Sunny tasks, calm planning',
     },
     themeColor: { light: '#f5f3f0', dark: '#121110' },
     defaultTheme: 'auto',
@@ -34,10 +34,14 @@ export const LIFE_OS_SITE_META = {
     storageKey: 'planos_v1',
     storageKind: 'nested',
     settingsThemePath: ['settings', 'theme'],
-    favicon: { id: 'app-favicon', light: '/favicon-32.png', dark: '/favicon-32.png' },
+    favicon: {
+      id: 'app-favicon',
+      light: '/favicon-32.png',
+      dark: '/favicon-32.png',
+    },
     manifest: '/manifest.webmanifest',
     appleTouchIcon: '/apple-touch-icon.png',
-    categories: ['productivity', 'utilities']
+    categories: ['productivity', 'utilities'],
   },
   fitness: {
     id: 'fitness',
@@ -45,7 +49,7 @@ export const LIFE_OS_SITE_META = {
     shortName: 'FITNESS',
     description: {
       zh: '胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先',
-      en: 'Four-day split training · arm circumference first'
+      en: 'Four-day split training · arm circumference first',
     },
     themeColor: { light: '#f4f4f3', dark: '#0d0d0e' },
     defaultTheme: 'dark',
@@ -56,7 +60,7 @@ export const LIFE_OS_SITE_META = {
     favicon: { light: '/favicon-32.png' },
     manifest: '/manifest.webmanifest',
     appleTouchIcon: '/apple-touch-icon.png',
-    categories: ['health', 'fitness', 'utilities']
+    categories: ['health', 'fitness', 'utilities'],
   },
   finance: {
     id: 'finance',
@@ -64,7 +68,7 @@ export const LIFE_OS_SITE_META = {
     shortName: 'FINANCE',
     description: {
       zh: '个人财务驾驶舱 · 现金流、资产与长期规划',
-      en: 'Personal finance cockpit · cash flow, assets & long-range planning'
+      en: 'Personal finance cockpit · cash flow, assets & long-range planning',
     },
     themeColor: { light: '#f2f4f2', dark: '#101211' },
     defaultTheme: 'auto',
@@ -75,7 +79,7 @@ export const LIFE_OS_SITE_META = {
     favicon: { light: '/assets/brand/favicon-32.png' },
     manifest: '/manifest.webmanifest',
     appleTouchIcon: '/assets/brand/apple-touch-icon.png',
-    categories: ['finance', 'utilities']
+    categories: ['finance', 'utilities'],
   },
   music: {
     id: 'music',
@@ -83,7 +87,7 @@ export const LIFE_OS_SITE_META = {
     shortName: 'MUSIC',
     description: {
       zh: '本地音乐，留在心里 · 离线播放与歌单',
-      en: 'Local music that stays with you · offline playback & playlists'
+      en: 'Local music that stays with you · offline playback & playlists',
     },
     themeColor: { light: '#faf5f4', dark: '#100a0c' },
     defaultTheme: 'auto',
@@ -91,45 +95,53 @@ export const LIFE_OS_SITE_META = {
     storageKey: 'musicos_v1',
     storageKind: 'nested',
     settingsThemePath: ['settings', 'theme'],
-    favicon: { id: 'app-favicon', light: '/favicon-32.png', dark: '/favicon-32.png' },
+    favicon: {
+      id: 'app-favicon',
+      light: '/favicon-32.png',
+      dark: '/favicon-32.png',
+    },
     manifest: '/manifest.webmanifest',
     appleTouchIcon: '/apple-touch-icon.png',
-    categories: ['music', 'entertainment', 'utilities']
+    categories: ['music', 'entertainment', 'utilities'],
   },
   portal: {
     id: 'portal',
-    name: 'HOME.OS',
-    shortName: 'HOME',
+    name: 'PORTAL.OS',
+    shortName: 'PORTAL',
     description: {
       zh: 'Life OS 统一入口 · 在同一账号下切换 Planner / Finance / Fitness / Music',
-      en: 'Life OS home · switch between Planner, Finance, Fitness, and Music'
+      en: 'Life OS portal · switch between Planner, Finance, Fitness, and Music',
     },
-    themeColor: { light: '#f5f3f0', dark: '#121110' },
+    themeColor: { light: '#f3f6f8', dark: '#14161a' },
     defaultTheme: 'auto',
     locale: 'zh-CN',
     storageKey: 'homeos_v1',
     storageKind: 'nested',
     settingsThemePath: ['settings', 'theme'],
-    favicon: { id: 'app-favicon', light: '/icon.svg' },
+    favicon: {
+      id: 'app-favicon',
+      light: '/favicon-32.png',
+      dark: '/favicon-32.png',
+    },
     manifest: '/manifest.webmanifest',
-    appleTouchIcon: '/icon.svg',
-    categories: ['productivity', 'utilities']
-  }
-};
+    appleTouchIcon: '/apple-touch-icon.png',
+    categories: ['productivity', 'utilities'],
+  },
+}
 
 /** 个人工具类 PWA：默认不对搜索引擎索引 */
-export const LIFE_OS_ROBOTS = 'noindex, nofollow';
+export const LIFE_OS_ROBOTS = 'noindex, nofollow'
 
-export const LIFE_OS_REFERRER = 'strict-origin-when-cross-origin';
+export const LIFE_OS_REFERRER = 'strict-origin-when-cross-origin'
 
 /**
  * @param {string | null | undefined} pageTitle
  * @param {string} appName
  */
 export function formatDocumentTitle(pageTitle, appName) {
-  const page = pageTitle?.trim();
-  if (!page || page === appName) return appName;
-  return `${page} · ${appName}`;
+  const page = pageTitle?.trim()
+  if (!page || page === appName) return appName
+  return `${page} · ${appName}`
 }
 
 /**
@@ -137,8 +149,8 @@ export function formatDocumentTitle(pageTitle, appName) {
  * @param {'zh' | 'en' | string} [locale]
  */
 export function getSiteDescription(appId, locale = 'zh') {
-  const meta = LIFE_OS_SITE_META[appId];
-  return locale === 'en' ? meta.description.en : meta.description.zh;
+  const meta = LIFE_OS_SITE_META[appId]
+  return locale === 'en' ? meta.description.en : meta.description.zh
 }
 
 /**
@@ -146,9 +158,9 @@ export function getSiteDescription(appId, locale = 'zh') {
  * @param {string} path
  */
 export function absoluteUrl(origin, path) {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  if (!origin) return normalizedPath;
-  return `${origin.replace(/\/$/, '')}${normalizedPath}`;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  if (!origin) return normalizedPath
+  return `${origin.replace(/\/$/, '')}${normalizedPath}`
 }
 
 /**
@@ -156,5 +168,5 @@ export function absoluteUrl(origin, path) {
  * @param {'zh' | 'en' | string} [locale]
  */
 export function getOgLocale(locale = 'zh') {
-  return locale === 'en' ? 'en_US' : 'zh_CN';
+  return locale === 'en' ? 'en_US' : 'zh_CN'
 }
