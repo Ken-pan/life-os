@@ -41,7 +41,7 @@ Any manual `netlify deploy` **must** include `CI=1` and `--filter <workspace>`
 ## Layout
 
 - `apps/{planner,fitness,finance,music}` — 生产四站 SvelteKit apps
-- `apps/portal` — I-P1 WIP（未部署 `home.kenos.space`）
+- `apps/portal` — I-P1 WIP（未部署 `portal.kenos.space`）
 - `packages/{theme,sync,contracts,platform-web}` — 共享包
 - `docs/LIFEOS_ROADMAP.md` — Integration + Platform 路线图与完成度
 - `docs/SUPABASE.md` — 共享 DB 迁移与 `supabase-sql.sh` 运维

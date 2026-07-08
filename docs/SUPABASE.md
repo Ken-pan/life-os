@@ -67,7 +67,7 @@ Finance 仓内的 `apps/finance/supabase/migrations/` 是 **Life OS 全项目** 
 - `https://{finance,planner,fitness,music}.kenos.space/**`
 - `https://{finance,planner,fitness,music}os-ken.netlify.app/**`
 
-**Portal（I-P1）：** `https://osportal-ken.netlify.app/**`（已由 `https://*.netlify.app/**` 覆盖）；可选自定义域 `https://home.kenos.space/**`
+**Portal（I-P1）：** `https://portal-ken.netlify.app/**`（已由 `https://*.netlify.app/**` 覆盖）；可选自定义域 `https://portal.kenos.space/**`
 
 ## 相关脚本
 

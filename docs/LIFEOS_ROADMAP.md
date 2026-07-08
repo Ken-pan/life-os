@@ -8,11 +8,11 @@
 | 阶段                   | 状态                                | 摘要                                                                                        |
 | ---------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------- |
 | **I-P0** 统一身份      | 🟡 **已落地，SSO 待验收**           | 远程 DB 已有 `core_profiles`；四站 + Portal 代码均接 `coreIdentity` + `setupCrossDomainSSO` |
-| **I-P1** Portal        | 🟡 **Netlify 已部署，自定义域待配** | `osportal-ken` 已链 `Ken-pan/life-os`；`home.kenos.space` DNS 可选        |
-| **I-P1.5** 事件中心    | 🟡 **Outbox 已 deploy，消费端已做** | 远程 `life_events` ✅ + 触发器 smoke ✅；Planner inbox processor ✅ |
+| **I-P1** Portal        | 🟡 **Netlify 已部署，DNS 配置中** | `portal-ken` 已链 `Ken-pan/life-os`；`portal.kenos.space` CNAME → `portal-ken.netlify.app` |
+| **I-P1.5** 事件中心    | 🟡 **Outbox 已 deploy，消费端已做** | 远程 `life_events` ✅ + 触发器 smoke ✅；Planner inbox processor ✅                         |
 | **I-P2** 跨应用智能    | ⏸️ **搁置**                         | —                                                                                           |
 | **C-P0/C-P1** 契约试点 | ✅ **已完成**                       | `contracts` + `platform-web` + boundary guard；Planner/Fitness P1A/B/C                      |
-| **C-P1+** 平台扩容     | 🟡 **进行中**                       | Finance enrichment-contract 保持 Finance-owned；Music contracts 已接；Wave 3 P1+ ✅ |
+| **C-P1+** 平台扩容     | 🟡 **进行中**                       | Finance enrichment-contract 保持 Finance-owned；Music contracts 已接；Wave 3 P1+ ✅         |
 
 **图例：** ✅ 已完成 · 🟡 部分完成 / WIP · ❌ 未开始 · ⏸️ 搁置
 
@@ -70,30 +70,30 @@ _CI 执行守卫：_ `npm run check:lifeos-boundaries` ✅
 
 ### 🟡 I-P1: 统一入口 (Portal) — _Netlify 已建，DNS 待配_
 
-**URL 规划：** `https://osportal-ken.netlify.app`（可选自定义域：`https://home.kenos.space`）
+**URL 规划：** `https://portal.kenos.space`（Netlify：`https://portal-ken.netlify.app`）
 
-| 子项                        | 状态    | 证据                                                                             |
-| --------------------------- | ------- | -------------------------------------------------------------------------------- |
-| `apps/portal` SvelteKit App | 🟡 WIP  | Launcher UI + shell/settings-block 卡片 + CommandPalette                         |
-| SSO / coreIdentity 集成     | ✅ 代码 | `setupCrossDomainSSO` + `createCoreIdentityHandler('portal')`                    |
-| Git / monorepo 纳入         | ✅      | `3aa963b0` 已 push `master`；Git 构建应已触发                                    |
-| Netlify 部署                | 🟡      | ✅ `osportal-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）；env 已从 fitness 克隆 |
-| Auth redirect               | ❌      | Supabase allow list **无** `home.kenos.space`                                    |
-| Portal 内登录               | ❌      | 未登录时跳转 Finance 登录（无独立 Auth UI）                                      |
+| 子项                        | 状态    | 证据                                                                               |
+| --------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `apps/portal` SvelteKit App | 🟡 WIP  | Launcher UI + shell/settings-block 卡片 + CommandPalette                           |
+| SSO / coreIdentity 集成     | ✅ 代码 | `setupCrossDomainSSO` + `createCoreIdentityHandler('portal')`                      |
+| Git / monorepo 纳入         | ✅      | `3aa963b0` 已 push `master`；Git 构建应已触发                                      |
+| Netlify 部署                | 🟡      | ✅ `portal-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）；env 已从 fitness 克隆 |
+| Auth redirect               | ❌      | Supabase allow list **无** `portal.kenos.space`                                      |
+| Portal 内登录               | ❌      | 未登录时跳转 Finance 登录（无独立 Auth UI）                                        |
 
-**上线 checklist：** ~~commit + push portal~~ → （可选）GoDaddy `home` CNAME → `osportal-ken.netlify.app` → 扩 `core_user_app_settings.app_id` check 含 `portal`
+**上线 checklist：** ~~commit + push portal~~ → GoDaddy `portal` CNAME → `portal-ken.netlify.app` → Supabase 加 `portal.kenos.space/**` redirect → 扩 `core_user_app_settings.app_id` check 含 `portal`
 
 ### 🟡 I-P1.5: 跨应用事件中心 (`life_events`) — _Outbox 已 deploy，Planner 消费端已落地_
 
 **目标：** Finance 账单到期 → Planner 任务（示例链路）
 
-| 子项                  | 状态 | 证据                                                                                |
-| --------------------- | ---- | ----------------------------------------------------------------------------------- |
+| 子项                  | 状态 | 证据                                                                                       |
+| --------------------- | ---- | ------------------------------------------------------------------------------------------ |
 | Zod 事件契约          | ✅   | `packages/contracts/src/events.ts`（envelope + `parseLifeEvent` + `FinanceBillDueSchema`） |
-| DB 表 + Outbox 触发器 | ✅   | 远程 `life_events` + `finance_bill_event_trigger` on `finance_expected_occurrences` |
-| 远程 migration        | ✅   | `20260708000000` 已写入 `schema_migrations`                                         |
-| App 消费端            | ✅   | `apps/planner/src/lib/services/lifeEventsInbox.js`（poll + mark processed）         |
-| 集成测试              | ✅   | `./scripts/test-outbox-trigger.sh --smoke`（含 Zod `parseLifeEvent` 断言）          |
+| DB 表 + Outbox 触发器 | ✅   | 远程 `life_events` + `finance_bill_event_trigger` on `finance_expected_occurrences`        |
+| 远程 migration        | ✅   | `20260708000000` 已写入 `schema_migrations`                                                |
+| App 消费端            | ✅   | `apps/planner/src/lib/services/lifeEventsInbox.js`（poll + mark processed）                |
+| 集成测试              | ✅   | `./scripts/test-outbox-trigger.sh --smoke`（含 Zod `parseLifeEvent` 断言）                 |
 
 **架构方案（Outbox + consume）：**
 
@@ -126,7 +126,7 @@ _CI 执行守卫：_ `npm run check:lifeos-boundaries` ✅
 | Planner      | ✅ JSDoc mirrors | ✅ `applyDocumentMetaWeb` + `createI18n` | 试点完成                                                           |
 | Fitness      | ✅ JSDoc mirrors | ✅ `applyDocumentMetaWeb` + `createI18n` | 试点完成                                                           |
 | Finance      | ❌               | ❌                                       | 使用 `@life-os/finance-enrichment-contract`（purchase enrichment） |
-| Music        | ✅ JSDoc mirrors | ✅ `createI18n` + `AppBrand`             | nav/feedback/sync 契约已 mirror；nav 内容仍 app-owned         |
+| Music        | ✅ JSDoc mirrors | ✅ `createI18n` + `AppBrand`             | nav/feedback/sync 契约已 mirror；nav 内容仍 app-owned              |
 | Portal (WIP) | ✅ dep           | ✅ `CommandPalette`                      | 未纳入 CI build matrix                                             |
 
 **待办：**
@@ -192,14 +192,14 @@ _CI 执行守卫：_ `npm run check:lifeos-boundaries` ✅
 
 ### ✅ C-P2 Wave 3 P1+ — _2026-07-08 完成_
 
-| 提取项 / 任务                  | 落点                                                                 | 消费方 / 备注                                      |
-| ------------------------------ | -------------------------------------------------------------------- | -------------------------------------------------- |
-| **MobileMoreSheet**            | `platform-web/svelte/navigation/MobileMoreSheet`                     | planner / music；`nav.js` 内容仍留 app             |
-| **Portal auth 生命周期**       | `apps/portal/src/lib/auth.svelte.js` → `createLifeOsAuth`            | portal `+layout.svelte`                            |
-| **Music contracts 接入**       | JSDoc mirror `@life-os/contracts/nav` + `feedback` + `sync`          | `nav.js` / `ui.svelte.js` / `syncNotify.js`        |
-| **events RFC envelope**        | `packages/contracts/src/events.ts`                                   | `LifeEventEnvelopeSchema` + `parseLifeEvent`       |
-| **Finance → contracts/events** | smoke Zod 校验 + README 对齐                                         | enrichment 包保持 Finance-owned                    |
-| **Planner 消费 life_events**   | `apps/planner/src/lib/services/lifeEventsInbox.js`                   | poll + 幂等任务 + mark processed                   |
+| 提取项 / 任务                  | 落点                                                        | 消费方 / 备注                                |
+| ------------------------------ | ----------------------------------------------------------- | -------------------------------------------- |
+| **MobileMoreSheet**            | `platform-web/svelte/navigation/MobileMoreSheet`            | planner / music；`nav.js` 内容仍留 app       |
+| **Portal auth 生命周期**       | `apps/portal/src/lib/auth.svelte.js` → `createLifeOsAuth`   | portal `+layout.svelte`                      |
+| **Music contracts 接入**       | JSDoc mirror `@life-os/contracts/nav` + `feedback` + `sync` | `nav.js` / `ui.svelte.js` / `syncNotify.js`  |
+| **events RFC envelope**        | `packages/contracts/src/events.ts`                          | `LifeEventEnvelopeSchema` + `parseLifeEvent` |
+| **Finance → contracts/events** | smoke Zod 校验 + README 对齐                                | enrichment 包保持 Finance-owned              |
+| **Planner 消费 life_events**   | `apps/planner/src/lib/services/lifeEventsInbox.js`          | poll + 幂等任务 + mark processed             |
 
 ### 🟡 C-P2 Wave 3 P2+ — _剩余候选_
 

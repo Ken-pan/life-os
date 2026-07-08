@@ -6,13 +6,13 @@
 
 **生产五站**均已指向 **同一 monorepo**，通过 **Deploy Key** 拉取代码（无需 GitHub App 单独授权 `life-os`）：
 
-| Site          | Package directory | Build                         | Publish              | Production URL              |
-| ------------- | ----------------- | ----------------------------- | -------------------- | --------------------------- |
-| planneros-ken | `apps/planner`    | `npm run build -w planner-os` | `apps/planner/build` | https://planner.kenos.space |
-| fitnessos-ken | `apps/fitness`    | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space |
-| financeos-ken | `apps/finance`    | `npm run build -w finance-os` | `apps/finance/dist`  | https://finance.kenos.space |
-| musicos-ken   | `apps/music`      | `npm run build -w music-os`   | `apps/music/build`   | https://music.kenos.space   |
-| osportal-ken  | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://osportal-ken.netlify.app |
+| Site          | Package directory | Build                         | Publish              | Production URL                   |
+| ------------- | ----------------- | ----------------------------- | -------------------- | -------------------------------- |
+| planneros-ken | `apps/planner`    | `npm run build -w planner-os` | `apps/planner/build` | https://planner.kenos.space      |
+| fitnessos-ken | `apps/fitness`    | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space      |
+| financeos-ken | `apps/finance`    | `npm run build -w finance-os` | `apps/finance/dist`  | https://finance.kenos.space      |
+| musicos-ken   | `apps/music`      | `npm run build -w music-os`   | `apps/music/build`   | https://music.kenos.space        |
+| portal-ken    | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://portal.kenos.space |
 
 **Base directory 留空**（repo 根目录 `npm install`）。
 
@@ -63,15 +63,15 @@ cd life-os && npm install && npm run build
 
 ## Portal（I-P1，🟡 Netlify 已建，DNS 待配）
 
-| 项            | 状态                                                                                |
-| ------------- | ----------------------------------------------------------------------------------- |
-| 代码          | `apps/portal`（SvelteKit + adapter-netlify）                                        |
-| Netlify site  | ✅ `osportal-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）                           |
-| 生产 URL      | https://osportal-ken.netlify.app                                                      |
-| 自定义域（可选） | 计划 `https://home.kenos.space`（GoDaddy CNAME 待配）                                 |
-| Auth redirect | 🟡 `*.netlify.app/**` 已覆盖；若收紧 allow list 需显式加 `osportal-ken.netlify.app/**` |
+| 项               | 状态                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| 代码             | `apps/portal`（SvelteKit + adapter-netlify）                                           |
+| Netlify site     | ✅ `portal-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）                            |
+| 生产 URL         | https://portal.kenos.space（CNAME → `portal-ken.netlify.app`）                         |
+| Netlify 默认域   | https://portal-ken.netlify.app                                                       |
+| Auth redirect    | 🟡 `*.netlify.app/**` 已覆盖；若收紧 allow list 需显式加 `portal-ken.netlify.app/**` |
 
-**GoDaddy DNS（可选）：** `home.kenos.space` → CNAME → `osportal-ken.netlify.app`
+**GoDaddy DNS：** `portal.kenos.space` → CNAME → `portal-ken.netlify.app`
 
 上线步骤见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §I-P1。CLI 部署时需 `--filter portal`（与四站相同 `CI=1` 规则）。
 
@@ -94,11 +94,11 @@ CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/buil
 
 ## Netlify 子域命名（统一）
 
-五站 Netlify site name 统一为 **`{app}os-ken`** → `{app}os-ken.netlify.app`（Portal 为 `osportal-ken`）：
+五站 Netlify site name 统一为 **`{app}os-ken`** → `{app}os-ken.netlify.app`（Portal 为 `portal-ken`）：
 
-| App     | Netlify site    | GoDaddy CNAME 目标            |
-| ------- | --------------- | ----------------------------- |
-| Portal  | `osportal-ken`  | `osportal-ken.netlify.app`    |
+| App     | Netlify site    | GoDaddy CNAME 目标          |
+| ------- | --------------- | --------------------------- |
+| Portal  | `portal-ken`  | `portal-ken.netlify.app`  |
 | Finance | `financeos-ken` | `financeos-ken.netlify.app` |
 | Music   | `musicos-ken`   | `musicos-ken.netlify.app`   |
 | Planner | `planneros-ken` | `planneros-ken.netlify.app` |
