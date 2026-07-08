@@ -13,7 +13,7 @@ export function declarePlaybackSession() {
 /** @param {import('./types.js').Track | null | undefined} track */
 function artworkForTrack(track) {
   const origin = typeof location !== 'undefined' ? location.origin : '';
-  const icon = `${origin}/icon.svg`;
+  const icon = `${origin}/notify-192.png`;
   /** @type {MediaImage[]} */
   const artwork = [];
   if (track?.artUrl) {

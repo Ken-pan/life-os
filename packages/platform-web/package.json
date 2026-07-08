@@ -21,6 +21,10 @@
       "svelte": "./src/svelte/head/DocumentHead.svelte",
       "default": "./src/svelte/head/DocumentHead.svelte"
     },
+    "./svelte/brand": {
+      "svelte": "./src/svelte/brand/BrandMark.svelte",
+      "default": "./src/svelte/brand/BrandMark.svelte"
+    },
     "./svelte/icon": {
       "svelte": "./src/svelte/icon/Icon.svelte",
       "default": "./src/svelte/icon/Icon.svelte"

@@ -6615,7 +6615,8 @@ div.input {
 
 .auth-card__logo {
   align-self: center;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
+  object-fit: cover;
   box-shadow: var(--shadow-card);
 }
 

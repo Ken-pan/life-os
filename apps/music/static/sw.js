@@ -11,10 +11,17 @@ const ART_CACHE_LIMIT = 320
 const PRECACHE = [
   '/',
   '/manifest.webmanifest',
-  '/icon.svg',
+  '/favicon-16.png',
+  '/favicon-32.png',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon-512-maskable.png',
   '/apple-touch-icon.png',
+  '/notify-192.png',
+  '/brand-circle-dark-48.png',
+  '/brand-circle-dark-96.png',
+  '/brand-circle-light-48.png',
+  '/brand-circle-light-96.png',
 ]
 
 /** @param {string} cacheName @param {number} limit */

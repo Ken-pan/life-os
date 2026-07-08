@@ -1,5 +1,6 @@
 <script>
   import { page } from '$app/state';
+  import BrandMark from '@life-os/platform-web/svelte/brand';
   import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
   import GlobalSearch from './GlobalSearch.svelte';
@@ -34,7 +35,7 @@
           </a>
         {:else}
           <div class="brand appbar-brand" aria-label={t('common.brand')}>
-            <img src="/icon.svg" alt="" class="appbar-brand-mark" width="24" height="24" />
+            <BrandMark size={24} class="appbar-brand-mark" />
             <span class="appbar-brand-name">
               MUSIC<span class="brand-dot">.</span>OS
             </span>

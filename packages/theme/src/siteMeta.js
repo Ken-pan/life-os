@@ -34,9 +34,9 @@ export const LIFE_OS_SITE_META = {
     storageKey: 'planos_v1',
     storageKind: 'nested',
     settingsThemePath: ['settings', 'theme'],
-    favicon: { id: 'app-favicon', light: '/icon.svg', dark: '/icon-dark.svg' },
+    favicon: { id: 'app-favicon', light: '/favicon-32.png', dark: '/favicon-32.png' },
     manifest: '/manifest.webmanifest',
-    appleTouchIcon: '/icon.svg',
+    appleTouchIcon: '/apple-touch-icon.png',
     categories: ['productivity', 'utilities']
   },
   fitness: {
@@ -53,9 +53,9 @@ export const LIFE_OS_SITE_META = {
     storageKey: 'fitos_v2',
     storageKind: 'nested',
     settingsThemePath: ['settings', 'theme'],
-    favicon: { light: '/icon.svg' },
+    favicon: { light: '/favicon-32.png' },
     manifest: '/manifest.webmanifest',
-    appleTouchIcon: '/icon.svg',
+    appleTouchIcon: '/apple-touch-icon.png',
     categories: ['health', 'fitness', 'utilities']
   },
   finance: {
@@ -72,9 +72,9 @@ export const LIFE_OS_SITE_META = {
     storageKey: 'fos-theme',
     storageKind: 'direct',
     settingsThemePath: [],
-    favicon: { light: '/assets/brand/mark-on-dark.svg' },
+    favicon: { light: '/assets/brand/favicon-32.png' },
     manifest: '/manifest.webmanifest',
-    appleTouchIcon: '/assets/brand/mark-on-dark.svg',
+    appleTouchIcon: '/assets/brand/apple-touch-icon.png',
     categories: ['finance', 'utilities']
   },
   music: {
@@ -91,9 +91,9 @@ export const LIFE_OS_SITE_META = {
     storageKey: 'musicos_v1',
     storageKind: 'nested',
     settingsThemePath: ['settings', 'theme'],
-    favicon: { id: 'app-favicon', light: '/icon.svg', dark: '/icon.svg' },
+    favicon: { id: 'app-favicon', light: '/favicon-32.png', dark: '/favicon-32.png' },
     manifest: '/manifest.webmanifest',
-    appleTouchIcon: '/icon.svg',
+    appleTouchIcon: '/apple-touch-icon.png',
     categories: ['music', 'entertainment', 'utilities']
   },
   portal: {

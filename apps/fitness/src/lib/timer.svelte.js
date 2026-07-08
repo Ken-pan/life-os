@@ -278,8 +278,8 @@ async function notifyRestComplete() {
   const { title, body, tag } = notificationPayload()
   const opts = {
     body,
-    icon: '/icon.svg',
-    badge: '/icon.svg',
+    icon: '/notify-192.png',
+    badge: '/notify-192.png',
     tag,
     renotify: true,
     silent: !S.settings.sound,

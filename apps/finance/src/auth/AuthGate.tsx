@@ -8,6 +8,7 @@ import {
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import { BrandMark } from '../components/BrandMark'
 import { ensureDeviceAuthorized } from '../lib/devices'
 import {
   loadFinanceData,
@@ -297,13 +298,7 @@ function LoginScreen({
   return (
     <Centered>
       <form className="auth-card" onSubmit={submit}>
-        <img
-          src="/assets/brand/mark.svg"
-          alt=""
-          width={48}
-          height={48}
-          className="auth-card__logo"
-        />
+        <BrandMark size={48} className="auth-card__logo" />
         <h1 className="auth-card__title brand-wordmark">
           Finance<span className="brand-name-accent"> OS</span>
         </h1>

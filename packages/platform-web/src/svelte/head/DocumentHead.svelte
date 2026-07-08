@@ -14,7 +14,7 @@
   /** @typedef {import('@life-os/contracts/appearance').BrandThemeID} BrandThemeID */
 
   /** @type {{ appId: BrandThemeID, pageTitle: string, locale?: string, imagePath?: string }} */
-  let { appId, pageTitle, locale = 'zh', imagePath = '/icon.svg' } = $props()
+  let { appId, pageTitle, locale = 'zh', imagePath = '/icon-512.png' } = $props()
 
   /** @type {PageMetadata} */
   const pageMetadata = $derived({

@@ -1,5 +1,19 @@
 const CACHE = 'planos-__BUILD_ID__';
-const PRECACHE = ['/', '/manifest.webmanifest', '/icon.svg', '/icon-dark.svg', '/logo-mark.svg'];
+const PRECACHE = [
+  '/',
+  '/manifest.webmanifest',
+  '/favicon-16.png',
+  '/favicon-32.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-512-maskable.png',
+  '/apple-touch-icon.png',
+  '/notify-192.png',
+  '/brand-circle-dark-48.png',
+  '/brand-circle-dark-96.png',
+  '/brand-circle-light-48.png',
+  '/brand-circle-light-96.png',
+];
 const REMINDER_DB = 'planos_reminders';
 const REMINDER_STORE = 'jobs';
 const MISSED_WINDOW_MS = 60 * 60 * 1000;
@@ -28,8 +42,8 @@ function scheduleJob(id, delay, handler) {
 async function showReminderNotification(title, taskId) {
   await self.registration.showNotification('PLANNER.OS 提醒', {
     body: title,
-    icon: '/icon.svg',
-    badge: '/icon.svg',
+    icon: '/notify-192.png',
+    badge: '/notify-192.png',
     tag: `planos-reminder-${taskId}`,
     renotify: true,
     vibrate: [100, 50, 100],

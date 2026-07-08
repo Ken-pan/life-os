@@ -78,12 +78,12 @@ export async function showLocalNotification(task) {
   if (reg?.showNotification) {
     await reg.showNotification('PLANNER.OS', {
       body: task.title,
-      icon: '/icon.svg',
-      badge: '/icon.svg',
+      icon: '/notify-192.png',
+      badge: '/notify-192.png',
       tag: `planos-${task.id}`,
       data: { url: '/', taskId: task.id }
     });
   } else {
-    new Notification('PLANNER.OS', { body: task.title, icon: '/icon.svg' });
+    new Notification('PLANNER.OS', { body: task.title, icon: '/notify-192.png' });
   }
 }

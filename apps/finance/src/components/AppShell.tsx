@@ -17,6 +17,7 @@ import { useFinance } from '../store/store'
 import { useDashboard } from '../hooks/useDashboard'
 import { daysSince } from '../format'
 import { SyncErrorBanner } from './SyncErrorBanner'
+import { BrandMark } from './BrandMark'
 import { HomeHubView } from './HomeHubView'
 import { AccountsView } from './AccountsView'
 import { RecordsView, type RecordsSection } from './RecordsView'
@@ -586,13 +587,7 @@ export function AppShell() {
       <ExtensionSyncBridge />
       <aside className="sidebar">
         <div className="brand">
-          <img
-            src="/assets/brand/mark-on-dark.svg"
-            alt=""
-            className="brand-mark"
-            width={28}
-            height={28}
-          />
+          <BrandMark className="brand-mark" size={28} />
           <span className="brand-copy">
             <span className="brand-name">
               <span className="brand-name-base">Finance</span>
@@ -641,13 +636,7 @@ export function AppShell() {
       <div className="main-wrap" data-mobile-chrome="tabbar">
         <header className="page-header">
           <div className="page-header-brand" aria-label="Finance OS">
-            <img
-              src="/assets/brand/mark.svg"
-              alt=""
-              className="page-header-brand-mark"
-              width={24}
-              height={24}
-            />
+            <BrandMark className="page-header-brand-mark" size={24} />
             <span className="page-header-brand-name">
               <span className="brand-name-base">Finance</span>
               <span className="brand-name-accent">OS</span>

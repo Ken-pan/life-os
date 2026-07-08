@@ -127,8 +127,38 @@
   flex: 0 0 auto;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-control);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.brand-icon-pair {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  width: var(--brand-icon-size, 28px);
+  height: var(--brand-icon-size, 28px);
+}
+
+.brand-icon-pair img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.brand-icon-pair .brand-icon-dark {
+  display: none;
+}
+
+[data-theme='dark'] .brand-icon-pair .brand-icon-light {
+  display: none;
+}
+
+[data-theme='dark'] .brand-icon-pair .brand-icon-dark {
+  display: block;
 }
 
 .sidebar .brand-copy {
@@ -315,7 +345,8 @@
 .appbar-brand-mark,
 .page-header-brand-mark {
   flex: 0 0 auto;
-  border-radius: var(--radius-control);
+  border-radius: 50%;
+  object-fit: cover;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 

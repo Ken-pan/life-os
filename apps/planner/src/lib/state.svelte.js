@@ -65,9 +65,6 @@ export function flushSave() {
  */
 export const THEME_APPLY_OPTIONS = {
   themeColorMetaId: 'theme-color-meta',
-  faviconId: 'app-favicon',
-  faviconLight: '/icon.svg',
-  faviconDark: '/icon-dark.svg',
   themeColorFallback: { light: '#f5f3f0', dark: '#121110' },
 }
 
