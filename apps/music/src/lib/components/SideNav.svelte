@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/state';
   import { t } from '$lib/i18n/index.js';
-  import BrandMark from '@life-os/platform-web/svelte/brand';
+  import AppBrand from '@life-os/platform-web/svelte/brand';
   import Icon from '@life-os/platform-web/svelte/icon';
   import {
     buildSidebarNavGroups,
@@ -22,15 +22,7 @@
 
 {#if !hidden}
   <aside class="sidebar music-sidebar" aria-label={t('nav.mainAria')}>
-    <div class="brand" aria-label={t('common.brand')}>
-      <BrandMark size={28} class="brand-mark" />
-      <span class="brand-copy">
-        <span class="brand-name" aria-hidden="true">
-          <span class="brand-name-base">MUSIC</span><span class="brand-name-accent">OS</span>
-        </span>
-        <span class="brand-tag">{t('app.tagline')}</span>
-      </span>
-    </div>
+    <AppBrand appId="music" tagline={t('app.tagline')} ariaLabel={t('common.brand')} />
 
     <div class="sidebar-body">
       {#each groups as group (group.label)}

@@ -48,6 +48,34 @@ export declare function absoluteUrl(
 ): string
 export declare function getOgLocale(locale?: 'zh' | 'en' | string): string
 
+export type LifeOsBrandVariant = 'sidebar' | 'appbar' | 'header' | 'auth'
+
+export declare const LIFE_OS_BRAND_MARK_SIZE: Record<LifeOsBrandVariant, number>
+
+export declare function getBrandIconPaths(assetPrefix?: string): {
+  light: string
+  dark: string
+  lightSrcSet: string
+  darkSrcSet: string
+}
+
+export declare function getLifeOsBrand(appId: LifeOsAppId): {
+  appId: LifeOsAppId
+  wordmarkBase: string
+  wordmarkAccent: string
+  fullName: string
+  assetPrefix: string
+  light: string
+  dark: string
+  lightSrcSet: string
+  darkSrcSet: string
+}
+
+export declare function getLifeOsBrandMarkSize(
+  appId: LifeOsAppId,
+  variant?: LifeOsBrandVariant,
+): number
+
 export type ApplyDocumentMetaOptions = {
   pageTitle: string
   locale?: 'zh' | 'en' | string

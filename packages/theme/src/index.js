@@ -10,6 +10,13 @@ export {
   getOgLocale,
 } from './siteMeta.js'
 
+export {
+  LIFE_OS_BRAND_MARK_SIZE,
+  getBrandIconPaths,
+  getLifeOsBrand,
+  getLifeOsBrandMarkSize,
+} from './brand.js'
+
 export { applyDocumentMeta } from './documentMeta.js'
 
 export { lockScroll, unlockScroll, resetScrollLock } from './scrollLock.js'

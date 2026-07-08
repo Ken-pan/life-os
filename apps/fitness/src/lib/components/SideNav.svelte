@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/state';
   import { t } from '$lib/i18n/index.js';
-  import BrandMark from '@life-os/platform-web/svelte/brand';
+  import AppBrand from '@life-os/platform-web/svelte/brand';
   import Icon from '@life-os/platform-web/svelte/icon';
   import {
     buildPrimaryNavItems,
@@ -18,15 +18,7 @@
 
 {#if !hidden}
 <aside class="sidebar" aria-label={t('nav.mainAria')}>
-  <div class="brand" aria-label="FITNESS OS">
-    <BrandMark size={28} class="brand-mark" />
-    <span class="brand-copy">
-      <span class="brand-name" aria-hidden="true">
-        <span class="brand-name-base">FITNESS</span><span class="brand-name-accent">OS</span>
-      </span>
-      <span class="brand-tag" data-ui-decor="nav-label">{t('nav.brandTag')}</span>
-    </span>
-  </div>
+  <AppBrand appId="fitness" tagline={t('nav.brandTag')} ariaLabel="FITNESS OS" />
 
   <div class="sidebar-body">
     <div class="nav-group">

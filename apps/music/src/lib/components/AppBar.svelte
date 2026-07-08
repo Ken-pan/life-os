@@ -1,6 +1,6 @@
 <script>
   import { page } from '$app/state';
-  import BrandMark from '@life-os/platform-web/svelte/brand';
+  import AppBrand from '@life-os/platform-web/svelte/brand';
   import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
   import GlobalSearch from './GlobalSearch.svelte';
@@ -34,12 +34,7 @@
             <span class="appbar-back-label">{resolvedBackLabel}</span>
           </a>
         {:else}
-          <div class="brand appbar-brand" aria-label={t('common.brand')}>
-            <BrandMark size={24} class="appbar-brand-mark" />
-            <span class="appbar-brand-name">
-              MUSIC<span class="brand-dot">.</span>OS
-            </span>
-          </div>
+          <AppBrand appId="music" variant="appbar" ariaLabel={t('common.brand')} />
         {/if}
       </div>
 

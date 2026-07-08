@@ -1,5 +1,5 @@
 <script>
-  import BrandMark from '@life-os/platform-web/svelte/brand';
+  import AppBrand from '@life-os/platform-web/svelte/brand';
   import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
 
@@ -20,12 +20,7 @@
             <span class="appbar-back-label">{resolvedBackLabel}</span>
           </a>
         {:else}
-          <div class="brand appbar-brand" aria-label={t('common.brand')}>
-            <BrandMark size={24} class="appbar-brand-mark" />
-            <span class="appbar-brand-name">
-              FITNESS<span class="brand-dot">.</span>OS
-            </span>
-          </div>
+          <AppBrand appId="fitness" variant="appbar" ariaLabel={t('common.brand')} />
         {/if}
       </div>
 
@@ -36,11 +31,11 @@
         </div>
       {/if}
 
-      <div class="appbar-trailing">
-        {#if meta}
-          <div class="appbar-meta" data-ui-decor="meta-strip">{meta}</div>
-        {/if}
-      </div>
+      {#if meta}
+        <div class="appbar-trailing">
+          <span class="appbar-meta">{meta}</span>
+        </div>
+      {/if}
     </div>
   </header>
 {/if}

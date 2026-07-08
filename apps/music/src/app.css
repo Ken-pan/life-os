@@ -359,12 +359,6 @@ html {
   flex-shrink: 0;
 }
 
-.appbar-brand-name {
-  font-family: var(--disp);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
 /* Segmented controls — meet tap target on all viewports */
 .music-app .seg:not(.seg-icons) button {
   min-height: var(--tap-min);

@@ -1,5 +1,6 @@
 <script>
   import LogoMark from './LogoMark.svelte'
+  import AppBrandWordmark from '@life-os/platform-web/svelte/brand/wordmark'
 
   /** @type {{ onSignOut?: () => void }} */
   let { onSignOut } = $props()
@@ -11,9 +12,7 @@
       <div class="brand appbar-brand" aria-label="HOME.OS">
         <LogoMark size={24} class="appbar-brand-mark" />
         <span class="appbar-brand-copy">
-          <span class="appbar-brand-name">
-            HOME<span class="brand-dot">.</span>OS
-          </span>
+          <AppBrandWordmark base="HOME" class="appbar-brand-name" />
         </span>
       </div>
     </div>

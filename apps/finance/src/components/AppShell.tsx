@@ -17,7 +17,7 @@ import { useFinance } from '../store/store'
 import { useDashboard } from '../hooks/useDashboard'
 import { daysSince } from '../format'
 import { SyncErrorBanner } from './SyncErrorBanner'
-import { BrandMark } from './BrandMark'
+import { AppBrand } from './AppBrand'
 import { HomeHubView } from './HomeHubView'
 import { AccountsView } from './AccountsView'
 import { RecordsView, type RecordsSection } from './RecordsView'
@@ -586,16 +586,7 @@ export function AppShell() {
       <div className="safari-chrome-tint-bottom" aria-hidden="true" />
       <ExtensionSyncBridge />
       <aside className="sidebar">
-        <div className="brand">
-          <BrandMark className="brand-mark" size={28} />
-          <span className="brand-copy">
-            <span className="brand-name">
-              <span className="brand-name-base">Finance</span>
-              <span className="brand-name-accent">OS</span>
-            </span>
-            <span className="brand-tag">{t('nav.brandTag')}</span>
-          </span>
-        </div>
+        <AppBrand tagline={t('nav.brandTag')} />
         <div className="sidebar-body">
           {navGroups.map((group, index) => (
             <div
@@ -635,13 +626,7 @@ export function AppShell() {
 
       <div className="main-wrap" data-mobile-chrome="tabbar">
         <header className="page-header">
-          <div className="page-header-brand" aria-label="Finance OS">
-            <BrandMark className="page-header-brand-mark" size={24} />
-            <span className="page-header-brand-name">
-              <span className="brand-name-base">Finance</span>
-              <span className="brand-name-accent">OS</span>
-            </span>
-          </div>
+          <AppBrand variant="header" />
           <div className="titles">
             <h1>{pageHeader.title}</h1>
             <span className="subtitle">{pageHeader.subtitle}</span>

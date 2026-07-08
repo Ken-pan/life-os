@@ -352,12 +352,25 @@
 
 .appbar-brand-name,
 .page-header-brand-name {
+  display: inline-flex;
+  align-items: baseline;
+  column-gap: 0.5em;
   font-family: var(--font-brand);
   font-size: var(--text-lg);
   font-weight: 700;
   letter-spacing: 0.15px;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.appbar-brand-name .brand-name-base,
+.page-header-brand-name .brand-name-base {
+  color: inherit;
+}
+
+.appbar-brand-name .brand-name-accent,
+.page-header-brand-name .brand-name-accent {
+  color: var(--accent, var(--sidebar-primary));
 }
 
 .appbar-back,
@@ -416,10 +429,6 @@
 
 .page-header-brand {
   display: none;
-}
-
-.page-header-brand-name .brand-name-accent {
-  color: var(--accent);
 }
 
 .appbar-brand {

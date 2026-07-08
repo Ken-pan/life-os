@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/state';
   import Icon from '@life-os/platform-web/svelte/icon';
-  import LogoMark from './LogoMark.svelte';
+  import AppBrand from '@life-os/platform-web/svelte/brand';
   import { t } from '$lib/i18n/index.js';
 
   /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, historyBack?: boolean }} */
@@ -36,14 +36,7 @@
           <span class="appbar-back-label">{resolvedBackLabel}</span>
         </a>
       {:else}
-        <div class="brand appbar-brand" aria-label={t('app.name')}>
-          <LogoMark size={24} class="appbar-brand-mark" />
-          <span class="appbar-brand-copy">
-            <span class="appbar-brand-name">
-              PLANNER<span class="brand-dot">.</span>OS
-            </span>
-          </span>
-        </div>
+        <AppBrand appId="planner" variant="appbar" ariaLabel={t('app.name')} />
       {/if}
     </div>
 

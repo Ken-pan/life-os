@@ -3,8 +3,8 @@
   import { userLists } from '$lib/state.svelte.js';
   import { t, listLabel } from '$lib/i18n/index.js';
   import { buildSidebarNavGroups, buildSettingsNavItem } from '$lib/nav.js';
+  import AppBrand from '@life-os/platform-web/svelte/brand';
   import Icon from '@life-os/platform-web/svelte/icon';
-  import LogoMark from './LogoMark.svelte';
 
   const navGroups = $derived(buildSidebarNavGroups(t));
   const settingsLink = $derived(buildSettingsNavItem(t));
@@ -14,15 +14,7 @@
 </script>
 
 <aside class="sidebar" aria-label={t('nav.mainAria')}>
-  <div class="brand">
-    <LogoMark size={28} class="brand-mark" />
-    <span class="brand-copy">
-      <span class="brand-name">
-        <span class="brand-name-base">PLANNER</span><span class="brand-name-accent">OS</span>
-      </span>
-      <span class="brand-tag">{t('app.tagline')}</span>
-    </span>
-  </div>
+  <AppBrand appId="planner" tagline={t('app.tagline')} />
 
   <div class="sidebar-body">
     {#each navGroups as group, index (group.label)}

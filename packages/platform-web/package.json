@@ -22,6 +22,14 @@
       "default": "./src/svelte/head/DocumentHead.svelte"
     },
     "./svelte/brand": {
+      "svelte": "./src/svelte/brand/AppBrand.svelte",
+      "default": "./src/svelte/brand/AppBrand.svelte"
+    },
+    "./svelte/brand/wordmark": {
+      "svelte": "./src/svelte/brand/AppBrandWordmark.svelte",
+      "default": "./src/svelte/brand/AppBrandWordmark.svelte"
+    },
+    "./svelte/brand/mark": {
       "svelte": "./src/svelte/brand/BrandMark.svelte",
       "default": "./src/svelte/brand/BrandMark.svelte"
     },

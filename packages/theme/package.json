@@ -16,6 +16,10 @@
     "./ios-safari.css": "./src/ios-safari.css",
     "./music-shell.css": "./src/music-shell.css",
     "./tokens.css": "./src/tokens.css",
-    "./seg.css": "./src/seg.css"
+    "./seg.css": "./src/seg.css",
+    "./brand": {
+      "types": "./src/index.d.ts",
+      "import": "./src/brand.js"
+    }
   }
 }
