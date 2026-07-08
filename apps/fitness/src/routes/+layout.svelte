@@ -16,7 +16,6 @@
   import Toast from '$lib/components/Toast.svelte'
   import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
   import PortraitGate from '@life-os/platform-web/svelte/portrait-gate'
-  import { t } from '$lib/i18n/index.js'
   import DocumentHead from '@life-os/platform-web/svelte/head'
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { ICONS } from '$lib/iconRegistry.js'

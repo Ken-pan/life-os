@@ -113,6 +113,10 @@
     "./navigation": {
       "types": "./src/navigation.d.ts"
     },
+    "./svelte/navigation": {
+      "svelte": "./src/svelte/navigation/BackButton.svelte",
+      "default": "./src/svelte/navigation/BackButton.svelte"
+    },
     "./svelte/navigation/MobileMoreSheet": {
       "svelte": "./src/svelte/navigation/MobileMoreSheet.svelte",
       "default": "./src/svelte/navigation/MobileMoreSheet.svelte"
