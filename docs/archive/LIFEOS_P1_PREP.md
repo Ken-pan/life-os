@@ -3,14 +3,16 @@
 > First app pilot after P0. This document records the current pilot status,
 > scope, guardrails, and validation gates.
 
+**Track naming:** 本文 **C-P1** = Shared Platform contracts 试点。四站互通（Portal / 事件层）见 [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md) **I-P1**，两条主线并行。
+
 ---
 
 ## Current status
 
 As of 2026-07-07, the Planner and Fitness pilots remain within P1 scope.
 
-| App | P1A — type-only pilot | P1B — metadata adapter pilot | P1C — sync error presentation model |
-| --- | --- | --- | --- |
+| App     | P1A — type-only pilot                                                                             | P1B — metadata adapter pilot                                                                                           | P1C — sync error presentation model                                                                   |
+| ------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Planner | **Done** — JSDoc typedefs for `PageMetadata`, `ColorSchemePreference`, and `ThemePreferenceModel` | **Done** — `DocumentHead.svelte` routes one metadata path through `applyDocumentMetaWeb` while keeping `<svelte:head>` | **Done** — local `syncErrorPresentation.js` maps existing sync error state to `SyncErrorPresentation` |
 | Fitness | **Done** — JSDoc typedefs for `PageMetadata`, `ColorSchemePreference`, and `ThemePreferenceModel` | **Done** — `DocumentHead.svelte` routes one metadata path through `applyDocumentMetaWeb` while keeping `<svelte:head>` | **Done** — local `syncErrorPresentation.js` maps existing sync error state to `SyncErrorPresentation` |
 
@@ -54,12 +56,12 @@ P1 is intentionally narrow:
 
 ## Recommended pilot
 
-| Candidate | Recommendation | Rationale |
-| --- | --- | --- |
-| Planner | **First** | Mature Svelte app, clear page metadata, representative settings/theme usage, lower domain coupling than Finance/Music |
-| Fitness | Second | Similar Svelte surface and SyncErrorBanner shape; useful follow-up after Planner proves the path |
-| Finance | Later | TypeScript-heavy and has active purchase/order work in the tree; avoid mixing with shared-platform pilot |
-| Music | Later | Player, ambience, and media-specific state make it a poor first proof |
+| Candidate | Recommendation | Rationale                                                                                                             |
+| --------- | -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Planner   | **First**      | Mature Svelte app, clear page metadata, representative settings/theme usage, lower domain coupling than Finance/Music |
+| Fitness   | Second         | Similar Svelte surface and SyncErrorBanner shape; useful follow-up after Planner proves the path                      |
+| Finance   | Later          | TypeScript-heavy and has active purchase/order work in the tree; avoid mixing with shared-platform pilot              |
+| Music     | Later          | Player, ambience, and media-specific state make it a poor first proof                                                 |
 
 Pilot order: **Planner first, Fitness second**.
 

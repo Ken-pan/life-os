@@ -1,49 +1,71 @@
 # Life OS Docs
 
-This folder is the canonical documentation index for the Life OS monorepo.
+Canonical documentation index for the Life OS monorepo.
 
-## Start here
+**最后与代码同步：** 2026-07-08（对照远程 Supabase + 工作区核实）
 
-| Doc | Purpose |
-| --- | --- |
-| [`CANONICAL.md`](./CANONICAL.md) | Source-of-truth repo and archived legacy repos |
-| [`NETLIFY.md`](./NETLIFY.md) | Four-site Netlify deploy matrix and CLI caveats |
-| [`INPUT_IME.md`](./INPUT_IME.md) | CJK IME guard rules for search and Enter-to-submit inputs |
-| [`CURSOR_PAGE_BRIDGE.md`](./CURSOR_PAGE_BRIDGE.md) | Web State DevTools / Cursor page bridge overview |
-| [`LEGACY_LOCAL.md`](./LEGACY_LOCAL.md) | Removed local sibling repo paths |
+## 当前状态速览
 
-## Shared platform P0 / P1 pilot
+图例：✅ 完成 · 🟡 部分 / WIP · ❌ 未做 · ⏸️ 搁置
 
-These docs replace the earlier read-only shared-system audit exports. P0 is conservative: docs, package scaffold, contracts, adapter signatures, and boundary guard only. P1 has started with Planner and Fitness pilots. No shared UI package, no Swift/Xcode, no Supabase changes, and no four-app migration.
+| 主线        | 阶段                 | 状态 | 说明                                                           |
+| ----------- | -------------------- | ---- | -------------------------------------------------------------- |
+| Integration | I-P0 身份            | 🟡   | 远程 `core_profiles` ✅；四站 hooks ✅；SSO 跨域待 E2E 验收    |
+| Integration | I-P1 Portal          | 🟡   | `apps/portal` 本地 WIP（untracked）；未部署 `home.kenos.space` |
+| Integration | I-P1.5 events        | 🟡   | 远程 `life_events` + Outbox ✅；Zod 契约 WIP；无 App 消费端    |
+| Integration | I-P2 智能            | ⏸️   | 搁置                                                           |
+| Platform    | C-P0 边界/契约包     | ✅   | `check:lifeos-boundaries` 通过                                 |
+| Platform    | C-P1 Planner/Fitness | ✅   | P1A/B/C 完成                                                   |
+| Platform    | C-P1+ Finance/Music  | 🟡   | Finance 用 enrichment-contract；Music 未接 contracts           |
 
-| Doc | Purpose |
-| --- | --- |
-| [`LIFEOS_SHARED_BOUNDARIES.md`](./LIFEOS_SHARED_BOUNDARIES.md) | Package boundaries, dependency direction, do-not-abstract list |
-| [`LIFEOS_CONTRACTS_P0.md`](./LIFEOS_CONTRACTS_P0.md) | P0 contracts whitelist and type source of truth |
-| [`LIFEOS_NATIVE_READINESS.md`](./LIFEOS_NATIVE_READINESS.md) | Future iOS readiness matrix and docs-only native types |
-| [`LIFEOS_P0_PR_PLAN.md`](./LIFEOS_P0_PR_PLAN.md) | PR 1-4 implementation plan and acceptance criteria |
-| [`LIFEOS_UI_CONTRACTS.md`](./LIFEOS_UI_CONTRACTS.md) | Web presentation map for cross-surface contracts |
-| [`LIFEOS_P1_PREP.md`](./LIFEOS_P1_PREP.md) | First app pilot status, scope, guardrails, validation gates |
+详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) 完成度总览与各阶段 checklist。
 
-## Package docs
+验收：`./scripts/verify-life-os-identity-p0.sh` · `./scripts/test-outbox-trigger.sh` · `npm run check:lifeos-boundaries`
 
-| Package | Doc |
-| --- | --- |
-| `@life-os/contracts` | [`../packages/contracts/README.md`](../packages/contracts/README.md) — type-only contracts; Planner/Fitness P1 pilot consumers |
-| `@life-os/platform-web` | [`../packages/platform-web/README.md`](../packages/platform-web/README.md) — web adapters; Planner/Fitness P1 metadata pilots |
-| `@life-os/finance-enrichment-contract` | [`../packages/finance-enrichment-contract/README.md`](../packages/finance-enrichment-contract/README.md) — Finance purchase-enrichment UI/read-model parity rules |
-| `@life-os/theme` | [`../packages/theme/README.md`](../packages/theme/README.md), [`../packages/theme/DESIGN_SYSTEM.md`](../packages/theme/DESIGN_SYSTEM.md) |
-| `@life-os/sync` | [`../packages/sync/README.md`](../packages/sync/README.md) |
+## 计划文档（两条主线）
 
-Boundary guard: `npm run check:lifeos-boundaries` (see [`LIFEOS_SHARED_BOUNDARIES.md`](./LIFEOS_SHARED_BOUNDARIES.md)).
+| 主线       | 文档                                       | 说明                                                      |
+| ---------- | ------------------------------------------ | --------------------------------------------------------- |
+| **Global** | `[LIFEOS_ROADMAP.md](./LIFEOS_ROADMAP.md)` | 融合了 Integration 与 Platform 的最新架构路线图与阶段规划 |
 
-## App docs
+**命名：** `I-*` = Integration；`C-*` = Contracts/Platform。
 
-App-specific architecture, IA, audits, QA reports, and generated exports live under each app:
+| 参考                                                         | 用途                                         |
+| ------------------------------------------------------------ | -------------------------------------------- |
+| `[LIFEOS_CONTRACTS.md](./LIFEOS_CONTRACTS.md)`               | 契约白名单（源码 `packages/contracts/src/`） |
+| `[LIFEOS_NATIVE_READINESS.md](./LIFEOS_NATIVE_READINESS.md)` | Future iOS 矩阵                              |
+| `[SUPABASE.md](./SUPABASE.md)`                               | 共享 DB 迁移、SQL 运维、平台 migration 状态  |
 
-- [`../apps/planner/README.md`](../apps/planner/README.md)
-- [`../apps/fitness/README.md`](../apps/fitness/README.md)
-- [`../apps/finance/README.md`](../apps/finance/README.md)
-- [`../apps/music/README.md`](../apps/music/README.md)
+## 运维与开发
 
-Generated QA screenshots, export bundles, and historical audit packs under `apps/*/docs`, `apps/*/.qa-screenshots`, or `apps/*/exports` are app-owned evidence. Do not treat them as canonical shared-platform planning docs.
+| Doc                                                | Purpose                                 |
+| -------------------------------------------------- | --------------------------------------- |
+| `[CANONICAL.md](./CANONICAL.md)`                   | Source-of-truth repo vs archived legacy |
+| `[NETLIFY.md](./NETLIFY.md)`                       | 四站 deploy + Portal 计划 + env vars    |
+| `[SUPABASE.md](./SUPABASE.md)`                     | 远程 SQL、平台 migration、Auth redirect |
+| `[INPUT_IME.md](./INPUT_IME.md)`                   | CJK IME guard                           |
+| `[CURSOR_PAGE_BRIDGE.md](./CURSOR_PAGE_BRIDGE.md)` | Web State DevTools                      |
+| `[LEGACY_LOCAL.md](./LEGACY_LOCAL.md)`             | Removed sibling repo paths              |
+
+## Packages
+
+| Package                 | Doc                                                                        |
+| ----------------------- | -------------------------------------------------------------------------- |
+| `@life-os/contracts`    | `[../packages/contracts/README.md](../packages/contracts/README.md)`       |
+| `@life-os/platform-web` | `[../packages/platform-web/README.md](../packages/platform-web/README.md)` |
+| `@life-os/sync`         | `[../packages/sync/README.md](../packages/sync/README.md)`                 |
+| `@life-os/theme`        | `[../packages/theme/README.md](../packages/theme/README.md)`               |
+
+## Apps
+
+- `[../apps/planner/README.md](../apps/planner/README.md)` — contracts 试点 + I-P0
+- `[../apps/fitness/README.md](../apps/fitness/README.md)` — contracts 试点 + I-P0
+- `[../apps/finance/README.md](../apps/finance/README.md)` — I-P0 + Supabase canonical 源（见 [`docs/SUPABASE.md`](./SUPABASE.md)）
+- `[../apps/music/README.md](../apps/music/README.md)` — I-P0；无 contracts
+- `[../apps/portal/README.md](../apps/portal/README.md)` — I-P1 WIP（未部署）
+
+`apps/*/docs`、exports、QA 截图为 app 证据，非计划真源。
+
+## Archive
+
+`[archive/README.md](./archive/README.md)` — 已合并的旧规划文档

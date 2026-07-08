@@ -11,28 +11,33 @@ npm run build
 cd apps/planner && npm run dev   # 5188 for planner e2e
 ```
 
-| Script | Purpose |
-|--------|---------|
-| `npm run build` | Turbo build all apps |
-| `npm run check` | Typecheck all apps |
-| `npm run build:planner` | Single-app production build |
-| `npm run sync:packages` | Copy sibling theme/sync into `packages/*` (legacy; prefer editing `packages/` directly) |
-| `./scripts/deploy-all-netlify.sh` | CLI prod deploy all four sites |
-| `./scripts/supabase-sql.sh "<sql>"` / `-f <file.sql>` | Run SQL on the Life OS Supabase project via Management API (direct 5432 connect fails on this network; `supabase migration list/up --linked` will error — use this instead, and record applied migrations in `supabase_migrations.schema_migrations`) |
+| Script                                                | Purpose                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------- |
+| `npm run build`                                       | Turbo build all apps                                          |
+| `npm run check`                                       | Typecheck all apps                                            |
+| `npm run check:lifeos-boundaries`                     | Package/app 依赖边界守卫                                      |
+| `npm run build:planner`                               | Single-app production build                                   |
+| `./scripts/verify-life-os-identity-p0.sh`             | I-P0 身份 + Supabase migration 验收                           |
+| `./scripts/test-outbox-trigger.sh [--smoke]`          | I-P1.5 Outbox 结构检查 / 端到端 smoke                         |
+| `npm run verify:outbox`                               | 同上（`test-outbox-trigger.sh --smoke` 快捷方式）             |
+| `./scripts/supabase-sql.sh "<sql>"` / `-f <file.sql>` | 远程 Supabase SQL（Management API；直连 5432 在本网络不可用） |
+| `./scripts/deploy-all-netlify.sh`                     | CLI prod deploy 四站（Portal 未上线）                         |
+| `npm run sync:packages`                               | Copy sibling theme/sync into `packages/*` (legacy)            |
 
 ## Netlify CLI（monorepo 陷阱）
 
 Any manual `netlify deploy` **must** include `CI=1` and `--filter <workspace>`
-(`planner-os` / `fitness-os` / `finance-os` / `music-os`), otherwise the CLI detects
-multiple workspaces and hangs forever waiting for interactive project selection.
+(`planner-os` / `fitness-os` / `finance-os` / `music-os` / `portal`)，否则 CLI 会交互式询问项目并挂起。
 
 ## Layout
 
-- `apps/{planner,fitness,finance,music}` — SvelteKit apps
-- `packages/{theme,sync}` — `@life-os/theme`, `@life-os/sync`
+- `apps/{planner,fitness,finance,music}` — 生产四站 SvelteKit apps
+- `apps/portal` — I-P1 WIP（未部署 `home.kenos.space`）
+- `packages/{theme,sync,contracts,platform-web}` — 共享包
+- `docs/LIFEOS_ROADMAP.md` — Integration + Platform 路线图与完成度
+- `docs/SUPABASE.md` — 共享 DB 迁移与 `supabase-sql.sh` 运维
 - `docs/CANONICAL.md` — source of truth vs archived repos
-- `docs/NETLIFY.md` — four-site deploy matrix
-- `docs/INPUT_IME.md` — CJK IME guard for inputs (search, Enter-to-submit)
+- `docs/NETLIFY.md` — 四站 deploy + Portal 计划
 
 ## Git / Netlify
 

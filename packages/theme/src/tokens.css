@@ -24,10 +24,11 @@
   --space-24: 96px;
 
   /* ===== 语义间距别名 ===== */
-  --page-gutter: var(--space-4);
-  --page-gutter-desktop: var(--space-8);
+  --page-gutter-mobile: var(--space-4);
   --page-gutter-tablet: var(--space-5);
-  --page-gutter-mobile: var(--page-gutter);
+  --page-gutter-desktop: var(--space-8);
+  /* phone 默认；tablet/desktop 由 layout.css 断点覆盖 */
+  --page-gutter: var(--page-gutter-mobile);
   --page-top: 8px;
   --page-block-gap: var(--space-7);
   --page-scroll-bottom: var(--space-24);
@@ -67,15 +68,15 @@
   --text-lg: 15px;
   --text-xl: 16px;
   --text-title: 17px;
-  --text-2xl: 18px;
-  --text-3xl: 20px;
-  --text-4xl: 22px;
-  --text-5xl: 24px;
-  --text-display-sm: 28px;
-  --text-display: 32px;
-  --text-display-md: 34px;
-  --text-display-xl: 36px;
-  --text-display-lg: 44px;
+  --text-2xl: clamp(18px, 1.5vw + 12px, 20px);
+  --text-3xl: clamp(20px, 2vw + 12px, 24px);
+  --text-4xl: clamp(22px, 2.5vw + 12px, 28px);
+  --text-5xl: clamp(24px, 3vw + 12px, 32px);
+  --text-display-sm: clamp(28px, 3.5vw + 12px, 36px);
+  --text-display: clamp(32px, 4vw + 12px, 44px);
+  --text-display-md: clamp(34px, 4.5vw + 12px, 48px);
+  --text-display-xl: clamp(36px, 5vw + 12px, 56px);
+  --text-display-lg: clamp(44px, 6vw + 12px, 64px);
 
   /* ===== 圆角 / 控件尺寸 ===== */
   --control-h: 44px;
@@ -88,8 +89,10 @@
   --btn-h-sm: 32px;
   --btn-h-md: 36px;
   --btn-h-lg: 44px;
-  --tap-min: 44px; /* WCAG 2.5.5 / Apple HIG — primary pointer targets */
-  --tap-spacing: 8px; /* min gap between adjacent targets (Material) */
+  --tap-min: 44px;
+  /* WCAG 2.5.5 / Apple HIG — primary pointer targets */
+  --tap-spacing: 8px;
+  /* min gap between adjacent targets (Material) */
   --btn-pad-x-sm: 12px;
   --btn-pad-x-md: 14px;
   --btn-pad-x-lg: 16px;
@@ -113,13 +116,9 @@
   --fab-radius: var(--radius-pill);
   --nav-h: var(--tabbar-h, 62px);
   --mobile-tabbar-h: var(--tabbar-h, 62px);
-  --mobile-tabbar-total-h: var(
-    --tabbar-total-h,
-    calc(var(--nav-h) + max(var(--space-2), var(--safe-bottom-effective)))
-  );
-  --mobile-content-inset: calc(
-    var(--fab-h) + var(--fab-offset-above-tabbar) + var(--mobile-tabbar-total-h)
-  );
+  --mobile-tabbar-total-h: var(--tabbar-total-h,
+      calc(var(--nav-h) + max(var(--space-2), var(--safe-bottom-effective))));
+  --mobile-content-inset: calc(var(--fab-h) + var(--fab-offset-above-tabbar) + var(--mobile-tabbar-total-h));
   --mobile-content-inset-tabbar: calc(var(--mobile-tabbar-total-h) + var(--space-3));
   --mobile-content-inset-minimal: calc(var(--space-6) + var(--safe-bottom-effective));
   --sidebar-w: 228px;

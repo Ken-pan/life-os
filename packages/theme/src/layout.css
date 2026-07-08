@@ -41,6 +41,19 @@
 
 @media (--life-os-tablet) {
   :root {
-    --page-gutter: var(--page-gutter-tablet, var(--space-5));
+    --page-gutter: var(--page-gutter-tablet);
   }
+}
+
+/* ===== Modern Container Queries (Component-Driven) ===== */
+/* usage: .card-grid { container-type: inline-size; container-name: grid; } */
+.life-os-container {
+  container-type: inline-size;
+}
+
+:root {
+  --cq-xs: 320px;
+  --cq-sm: 480px;
+  --cq-md: 640px;
+  --cq-lg: 860px;
 }

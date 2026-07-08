@@ -230,3 +230,5 @@ export function createThemePreferenceStoreWeb(options) {
     },
   }
 }
+
+export { default as CommandPalette } from './CommandPalette.svelte'

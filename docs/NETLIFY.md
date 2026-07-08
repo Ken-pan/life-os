@@ -1,15 +1,17 @@
 # Netlify 部署说明
 
+**最后与代码同步：** 2026-07-08
+
 ## 当前模式（推荐）：`Ken-pan/life-os` Monorepo + Deploy Key
 
-四站均已指向 **同一 monorepo**，通过 **Deploy Key** 拉取代码（无需 GitHub App 单独授权 `life-os`）：
+**生产四站**均已指向 **同一 monorepo**，通过 **Deploy Key** 拉取代码（无需 GitHub App 单独授权 `life-os`）：
 
-| Site | Package directory | Build | Publish | Production URL |
-|------|-------------------|-------|---------|------------------|
-| planneros-ken | `apps/planner` | `npm run build -w planner-os` | `apps/planner/build` | https://planner.kenos.space |
-| kens-fitnessos | `apps/fitness` | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space |
-| kensfinanceos | `apps/finance` | `npm run build -w finance-os` | `apps/finance/dist` | https://finance.kenos.space |
-| musicos-ken | `apps/music` | `npm run build -w music-os` | `apps/music/build` | https://music.kenos.space |
+| Site          | Package directory | Build                         | Publish              | Production URL              |
+| ------------- | ----------------- | ----------------------------- | -------------------- | --------------------------- |
+| planneros-ken | `apps/planner`    | `npm run build -w planner-os` | `apps/planner/build` | https://planner.kenos.space |
+| fitnessos-ken | `apps/fitness`    | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space |
+| financeos-ken | `apps/finance`    | `npm run build -w finance-os` | `apps/finance/dist`  | https://finance.kenos.space |
+| musicos-ken   | `apps/music`      | `npm run build -w music-os`   | `apps/music/build`   | https://music.kenos.space   |
 
 **Base directory 留空**（repo 根目录 `npm install`）。
 
@@ -29,20 +31,49 @@ cd life-os && npm install && npm run build
 
 ## GitHub Actions
 
-| Workflow | 作用 |
-|----------|------|
-| `.github/workflows/ci.yml` | PR / push 全量 `npm run build` |
+| Workflow                               | 作用                                                    |
+| -------------------------------------- | ------------------------------------------------------- |
+| `.github/workflows/ci.yml`             | PR / push 全量 `npm run build`                          |
 | `.github/workflows/deploy-netlify.yml` | **手动** CLI 上传兜底（需 `NETLIFY_AUTH_TOKEN` secret） |
 
 主路径是 Netlify Git 构建；GHA 部署仅在需要时使用。
 
 ## 环境变量（四站）
 
-已在 Netlify 配置：
+四站 Netlify 均已配置（各 **4/4**）：
 
-- `PUBLIC_SUPABASE_URL`
-- `PUBLIC_SUPABASE_ANON_KEY`
-- Planner AI：`KIMI_API_KEY`（Functions；四站中 Planner / Finance 已配置）
+| 变量                       | 用途                               |
+| -------------------------- | ---------------------------------- |
+| `PUBLIC_SUPABASE_URL`      | SvelteKit / Netlify 生产           |
+| `PUBLIC_SUPABASE_ANON_KEY` | 同上                               |
+| `VITE_SUPABASE_URL`        | Vite / 本地 `.env` 与 Finance 构建 |
+| `VITE_SUPABASE_ANON_KEY`   | 同上                               |
+
+代码通过 `@life-os/sync` 的 `resolveSupabaseEnv()` 同时读取 `PUBLIC_*` 与 `VITE_*`（见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) I-P0）。
+
+**本地 `.env.example` 前缀：**
+
+| App                       | 示例前缀            |
+| ------------------------- | ------------------- |
+| Planner                   | `PUBLIC_SUPABASE_*` |
+| Fitness / Finance / Music | `VITE_SUPABASE_*`   |
+
+修改 `packages/sync` 或 `packages/theme` 会触发四站 rebuild（各 app `netlify.toml` 的 ignore 规则包含 `packages/*`）。
+
+## Portal（I-P1，🟡 未上线）
+
+| 项            | 状态                                                                                |
+| ------------- | ----------------------------------------------------------------------------------- |
+| 代码          | `apps/portal`（SvelteKit + adapter-netlify，本地可 build）                          |
+| Netlify site  | ❌ 尚未创建 `homeos-ken`                                                            |
+| 生产 URL      | 计划 `https://home.kenos.space`                                                     |
+| Auth redirect | ❌ Supabase allow list 尚无 `home.kenos.space`（见 [`SUPABASE.md`](./SUPABASE.md)） |
+
+上线步骤见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §I-P1。CLI 部署时需 `--filter portal`（与四站相同 `CI=1` 规则）。
+
+其他：
+
+- Planner / Finance AI：`KIMI_API_KEY`（Netlify Functions）
 
 ## 独立仓库（已归档）
 
@@ -50,7 +81,18 @@ cd life-os && npm install && npm run build
 
 ## Music 站 Git 链接
 
-生产 URL：**https://music.kenos.space**（custom domain；Netlify 默认 https://musicos-ken.netlify.app 仍保留作 rollback）
+生产 URL：**https://music.kenos.space**（custom domain；Netlify rollback：`https://musicos-ken.netlify.app`）
+
+## Netlify 子域命名（统一）
+
+四站 Netlify site name 统一为 **`{app}os-ken`** → `{app}os-ken.netlify.app`：
+
+| App     | Netlify site    | GoDaddy CNAME 目标          |
+| ------- | --------------- | --------------------------- |
+| Finance | `financeos-ken` | `financeos-ken.netlify.app` |
+| Music   | `musicos-ken`   | `musicos-ken.netlify.app`   |
+| Planner | `planneros-ken` | `planneros-ken.netlify.app` |
+| Fitness | `fitnessos-ken` | `fitnessos-ken.netlify.app` |
 
 若 Build settings 仍指向已 archive 的 `MusicOS` 仓库，在 Netlify UI 将 **Repository** 改为 `Ken-pan/life-os`、分支 `master`、Package directory `apps/music`。Deploy Key 与另外三站相同。
 
@@ -72,7 +114,7 @@ npm run build
 ```
 
 **⚠️ Monorepo 必须带 `CI=1` + `--filter <workspace>`**：新版 Netlify CLI 在检测到多个
-workspace（planner-os / fitness-os / finance-os / music-os / @life-os/*）时会交互式询问
+workspace（planner-os / fitness-os / finance-os / music-os / @life-os/\*）时会交互式询问
 "要操作哪个项目"，脚本或 agent 场景下会**无输出永久挂起**。`deploy-all-netlify.sh` 已内置。
 
 单站示例：

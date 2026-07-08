@@ -21,6 +21,7 @@ FITNESS.OS 是一个面向个人训练管理的 Web 应用。基于 **SvelteKit 
 ## 当前功能（v3.0）
 
 ### 训练体验（P0）
+
 - **Focus Mode**（`/day/[id]/focus`）：Sticky 当前动作、52px 完成组 CTA、内联休息计时、撤销/跳过
 - **概览模式**（`/day/[id]`）：动作列表 + 组数芯片（兼容旧习惯）
 - **每组记录**：SetLogSheet 录 reps/RIR（设置：关 / 快速 / 必录）
@@ -28,6 +29,7 @@ FITNESS.OS 是一个面向个人训练管理的 Web 应用。基于 **SvelteKit 
 - **训练 Summary**（`/day/[id]/summary`）：组数、耗时、对比上次、加重建议、完成轮换
 
 ### 训练反馈（P1）
+
 - **PR 检测**：破纪录 toast + Summary/Stats 绿色 PR 标
 - **动作趋势**：Stats 页点击动作展开重量柱状图
 - **跳过/替代**：器械占用 / 身体不适 / 其他 + 可选替代动作
@@ -35,12 +37,14 @@ FITNESS.OS 是一个面向个人训练管理的 Web 应用。基于 **SvelteKit 
 - **统计面板**（`/stats`）：周频次、月历、容量、完成率、趋势
 
 ### 周期与计划（P2）
+
 - **减载提醒**：每 12 次主训练或 4 周未 deload → 首页/Summary 提示
 - **标记减载**：一键记录 `rotation.lastDeload`
 - **计划可配置**（`/program/edit`）：自定义组数/休息/reps、隐藏动作、导入导出 overrides
 - **Coach Lite**：本地规则引擎（周期、频率、加重、体态）→ 首页 / Focus / Summary
 
 ### 基础能力
+
 - 四日轮换推荐、重量微调、资料库、JSON 备份、PWA 离线、亮暗主题
 - **云同步（Supabase）**：登录后与 Finance OS 共享账号；设置页手动上传/拉取；练完自动上传；回到前台双向 merge
 
@@ -100,13 +104,26 @@ src/routes/
   - `SyncErrorBanner`, settings UI, storage keys, and app state remain Fitness-owned.
 - Monorepo 文档入口：[`../../docs/README.md`](../../docs/README.md)
 
-## 数据备份格式
+## Life OS 集成
+
+| 主线                    | 状态 | 说明                                                         |
+| ----------------------- | ---- | ------------------------------------------------------------ |
+| **I-P0** 身份           | ✅   | `@life-os/sync` + `fitness` schema RLS                       |
+| **C-P1** contracts 试点 | ✅   | 同 Planner：`applyDocumentMetaWeb` + `SyncErrorPresentation` |
+| **C-P1+**               | 🟡   | Music/Finance 模式未扩到 Fitness nav/feedback 契约           |
+
+路线图：[`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)
 
 ```json
 {
   "schemaVersion": 3,
   "data": {
-    "settings": { "unit": "lbs", "logDetail": "quick", "notifyRest": true, "theme": "dark" },
+    "settings": {
+      "unit": "lbs",
+      "logDetail": "quick",
+      "notifyRest": true,
+      "theme": "dark"
+    },
     "logs": {
       "2026-06-28|chest": {
         "c_bench": {
@@ -116,21 +133,23 @@ src/routes/
       }
     },
     "rotation": { "next": 0, "history": [], "lastDeload": null },
-    "sessionMeta": { "2026-06-28|chest": { "startedAt": "...", "endedAt": "..." } }
+    "sessionMeta": {
+      "2026-06-28|chest": { "startedAt": "...", "endedAt": "..." }
+    }
   }
 }
 ```
 
 ## 后续方向（P2 剩余）
 
-| 项 | 状态 |
-| --- | --- |
-| 减载 / 周期提醒 | ✅ 基础版 |
-| 训练计划可配置 | ✅ `/program/edit`（组数/休息/隐藏/导入导出） |
-| Coach Lite | ✅ 首页 / Focus / Summary |
-| 多设备云同步（Supabase） | ✅ 登录双向 merge + 设置页手动同步 |
-| 多模板 / 完整周期化 UI | 待做 |
-| 动作参考图 / 视频 | 待做（`static/assets/images/exercises/{exId}.jpg`） |
+| 项                       | 状态                                                |
+| ------------------------ | --------------------------------------------------- |
+| 减载 / 周期提醒          | ✅ 基础版                                           |
+| 训练计划可配置           | ✅ `/program/edit`（组数/休息/隐藏/导入导出）       |
+| Coach Lite               | ✅ 首页 / Focus / Summary                           |
+| 多设备云同步（Supabase） | ✅ 登录双向 merge + 设置页手动同步                  |
+| 多模板 / 完整周期化 UI   | 待做                                                |
+| 动作参考图 / 视频        | 待做（`static/assets/images/exercises/{exId}.jpg`） |
 
 ## 部署
 

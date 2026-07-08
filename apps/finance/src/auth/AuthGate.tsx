@@ -35,6 +35,7 @@ import {
   readCache,
   writeCache,
 } from '../lib/localCache'
+import { createCoreIdentityHandler } from '@life-os/sync'
 import { AUTH_SYNC_EVENTS, createFinanceCloudSync } from '../lib/cloudSync'
 import { bindPwaForegroundResume } from '@life-os/theme'
 import { useLocale } from '../i18n/context'
@@ -201,6 +202,7 @@ export function AuthGate() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
+    const handleCoreIdentity = createCoreIdentityHandler(supabase, 'finance')
     const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
       setSession(sess)
       if (!sess) {
@@ -213,6 +215,7 @@ export function AuthGate() {
       }
       if (AUTH_SYNC_EVENTS.includes(event)) {
         void sync(phaseRef.current === 'ready')
+        void handleCoreIdentity(event, sess)
       }
     })
     return () => sub.subscription.unsubscribe()

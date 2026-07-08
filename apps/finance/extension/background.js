@@ -32,7 +32,7 @@ let rhEnrichChain = null
 const FINANCE_OS_PRODUCTION_URL = 'https://finance.kenos.space/home/today'
 const FINANCE_OS_PRODUCTION_HOSTS = [
   'finance.kenos.space',
-  'kensfinanceos.netlify.app',
+  'financeos-ken.netlify.app',
 ]
 const TAB_EDIT_RETRY_ATTEMPTS = 8
 const TAB_EDIT_RETRY_MS = 250

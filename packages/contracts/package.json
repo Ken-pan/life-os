@@ -4,6 +4,9 @@
   "private": true,
   "description": "Life OS cross-surface product contracts (type-only)",
   "type": "module",
+  "dependencies": {
+    "zod": "^3.23.0"
+  },
   "types": "./src/index.d.ts",
   "exports": {
     ".": {
@@ -26,6 +29,10 @@
     },
     "./feedback": {
       "types": "./src/feedback.d.ts"
+    },
+    "./events": {
+      "types": "./src/events.ts",
+      "default": "./src/events.ts"
     }
   }
 }

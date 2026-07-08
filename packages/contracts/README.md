@@ -2,32 +2,37 @@
 
 Life OS **cross-surface** product contracts — data shapes, state enums, and user-visible capability semantics with no DOM, CSS, or browser APIs.
 
-## P0 status
+## 模块
 
-This package is **type-only**. P0 PR 3 defines appearance and metadata contracts; PR 4 defines nav, feedback, sync presentation, and content contracts.
+| 模块                                           | 文件        | 消费方式                                             |
+| ---------------------------------------------- | ----------- | ---------------------------------------------------- |
+| appearance, meta, nav, content, sync, feedback | `*.d.ts`    | **type-only**（JSDoc 或 `import type`）              |
+| **events**                                     | `events.ts` | **Zod runtime**（I-P1.5 WIP；`finance.bill_due` 等） |
 
-| PR | Adds |
-| --- | --- |
-| **PR 3** | `@life-os/contracts/appearance` and `@life-os/contracts/meta` |
-| **PR 4** | `@life-os/contracts/nav`, `@life-os/contracts/content`, `@life-os/contracts/sync`, `@life-os/contracts/feedback` |
+见 [`../../docs/LIFEOS_CONTRACTS.md`](../../docs/LIFEOS_CONTRACTS.md) export 白名单；边界规则见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)。
 
-See [`../../docs/LIFEOS_CONTRACTS_P0.md`](../../docs/LIFEOS_CONTRACTS_P0.md) for the P0 export whitelist and [`../../docs/LIFEOS_SHARED_BOUNDARIES.md`](../../docs/LIFEOS_SHARED_BOUNDARIES.md) for dependency rules.
+## Type-only consumption（7 个 `.d.ts` 模块）
 
-## Type-only consumption (required)
+| Consumer            | Allowed                                         | Forbidden                                 |
+| ------------------- | ----------------------------------------------- | ----------------------------------------- |
+| TypeScript          | `import type { … } from '@life-os/contracts/…'` | value import from `.d.ts` modules         |
+| JavaScript / Svelte | JSDoc `@typedef {import('…').Type}`             | runtime value import from `.d.ts` modules |
 
-`@life-os/contracts` ships **`.d.ts` only** — no runtime JavaScript implementation.
+**Runtime value imports** 仅允许 `@life-os/contracts/events`（Zod schema 校验）；其余模块用 `@life-os/platform-web` 做 web adapter。
 
-| Consumer | Allowed | Forbidden |
-| --- | --- | --- |
-| TypeScript | `import type { … } from '@life-os/contracts/…'` | `import { … }`, `import * as …`, `require(…)` |
-| TypeScript | `export type { … } from '@life-os/contracts/…'` | `export { … } from '@life-os/contracts/…'` |
-| JavaScript / Svelte | JSDoc mirror: `/** @typedef {import('@life-os/contracts/…').SomeType} SomeType */` | Runtime value imports from `@life-os/contracts` |
+## 试点状态（C-P1 / C-P1+）
 
-**Runtime value imports from `@life-os/contracts` are forbidden.** Use `@life-os/platform-web` for browser adapters (PR 3+).
+| App     | contracts  | 备注                                        |
+| ------- | ---------- | ------------------------------------------- |
+| Planner | ✅ P1A/B/C | JSDoc + `applyDocumentMetaWeb`              |
+| Fitness | ✅ P1A/B/C | 同上                                        |
+| Portal  | 🟡 WIP     | dep 已声明；未纳入 turbo CI                 |
+| Finance | ❌         | 使用 `@life-os/finance-enrichment-contract` |
+| Music   | ❌         | 仅 sync + theme                             |
 
 ## Dependency direction
 
-- `@life-os/contracts` depends on **nothing** (no `@life-os/theme`, `@life-os/sync`, apps, or other workspace packages).
+- `@life-os/contracts` 的 `.d.ts` 模块 **不依赖** 任何 workspace 包；`events.ts` 仅依赖 `zod`。
 - Enforced by `npm run check:lifeos-boundaries`.
 
 ## Install (monorepo)
@@ -41,5 +46,3 @@ See [`../../docs/LIFEOS_CONTRACTS_P0.md`](../../docs/LIFEOS_CONTRACTS_P0.md) for
 ```
 
 Run `npm install` at the monorepo root.
-
-P1 pilot status: `planner-os` and `fitness-os` may consume this package through JSDoc type mirrors only. Other apps should not consume contracts until their own pilot step is approved.

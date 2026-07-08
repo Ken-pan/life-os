@@ -592,8 +592,10 @@ document.getElementById('download-log').addEventListener('click', async () => {
         isRobinhood: /robinhood\.com/i.test(t.url ?? ''),
         isFinanceOs:
           /finance\.kenos\.space/i.test(t.url ?? '') ||
-          /kensfinanceos\.netlify\.app/i.test(t.url ?? '') ||
-          (/localhost|127\.0\.0\.1|netlify\.app|kenos\.space/i.test(t.url ?? '') &&
+          /financeos-ken\.netlify\.app/i.test(t.url ?? '') ||
+          (/localhost|127\.0\.0\.1|netlify\.app|kenos\.space/i.test(
+            t.url ?? '',
+          ) &&
             /finance\.os|finance os/i.test(t.title ?? '')),
       })),
     )
@@ -643,7 +645,7 @@ document.getElementById('refresh-plan').addEventListener('click', async () => {
   }, 2000)
 })
 
-/** 打开已有 Finance OS 标签页（finance.kenos.space / kensfinanceos.netlify.app / 本地 dev），或新开生产站。 */
+/** 打开已有 Finance OS 标签页（finance.kenos.space / financeos-ken.netlify.app / 本地 dev），或新开生产站。 */
 document.getElementById('open-app').addEventListener('click', async () => {
   const btn = document.getElementById('open-app')
   if (btn) btn.disabled = true
@@ -652,13 +654,15 @@ document.getElementById('open-app').addEventListener('click', async () => {
   if (btn) btn.disabled = false
 })
 
-document.getElementById('release-inflight')?.addEventListener('click', async () => {
-  const btn = document.getElementById('release-inflight')
-  if (btn) btn.disabled = true
-  await chrome.runtime.sendMessage({ type: 'FOS_RELEASE_INFLIGHT' })
-  await refresh()
-  if (btn) btn.disabled = false
-})
+document
+  .getElementById('release-inflight')
+  ?.addEventListener('click', async () => {
+    const btn = document.getElementById('release-inflight')
+    if (btn) btn.disabled = true
+    await chrome.runtime.sendMessage({ type: 'FOS_RELEASE_INFLIGHT' })
+    await refresh()
+    if (btn) btn.disabled = false
+  })
 
 document.getElementById('retry-dlq')?.addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ type: 'FOS_RETRY_DLQ' })

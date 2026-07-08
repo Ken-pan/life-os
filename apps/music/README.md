@@ -28,3 +28,13 @@ npm run dev
 品牌 token 见 `src/app.css`。
 
 Monorepo 文档入口见 [`../../docs/README.md`](../../docs/README.md)；旧独立 `MusicOS` 仓库已归档。
+
+## Life OS 集成
+
+| 主线                | 状态 | 说明                                                                                                                |
+| ------------------- | ---- | ------------------------------------------------------------------------------------------------------------------- |
+| **I-P0** 身份       | ✅   | `@life-os/sync`：`createCoreIdentityHandler('music')` + SSO                                                         |
+| **C-P1+** contracts | ❌   | 仅 `@life-os/theme`；nav / sync error 契约未接                                                                      |
+| Supabase            | 🟡   | `music` schema + 标签/推荐 RPC；见 [`docs/TAGGING-RECOMMENDATION-STATUS.md`](docs/TAGGING-RECOMMENDATION-STATUS.md) |
+
+路线图：[`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) · Supabase：[`../../docs/SUPABASE.md`](../../docs/SUPABASE.md)

@@ -59,3 +59,21 @@ src/
 - `finance_data` 旧 jsonb 表保留为历史备份，不再作为主读写路径。
 
 Monorepo 文档入口见 [`../../docs/README.md`](../../docs/README.md)。Finance IA 见 [`docs/INFORMATION_ARCHITECTURE.md`](docs/INFORMATION_ARCHITECTURE.md)。
+
+## Life OS 集成
+
+| 主线                | 状态 | 说明                                                                              |
+| ------------------- | ---- | --------------------------------------------------------------------------------- |
+| **I-P0** 身份       | ✅   | `createCoreIdentityHandler('finance')` + `setupCrossDomainSSO`                    |
+| **I-P1.5** 事件     | 🟡   | Outbox 远程 ✅（`test-outbox-trigger.sh --smoke`）；Planner 消费端仍缺            |
+| **C-P1+** contracts | 🟡   | 使用 `@life-os/finance-enrichment-contract`；尚未接入 `@life-os/contracts/events` |
+
+Supabase 迁移 canonical 源：**本目录** `supabase/`（全 Life OS 共享 public 表亦在此维护）。运维见 [`../../docs/SUPABASE.md`](../../docs/SUPABASE.md)。
+
+```bash
+# I-P0 验收
+../../scripts/verify-life-os-identity-p0.sh
+
+# I-P1.5 Outbox（结构 + smoke）
+../../scripts/test-outbox-trigger.sh --smoke
+```

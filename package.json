@@ -16,7 +16,9 @@
     "build:music": "npm run build -w music-os",
     "verify:web-state": "npm run verify --prefix tools/web-state-devtools/bridge",
     "qa:mobile-scroll": "node scripts/life-os-mobile-scroll-qa.mjs",
-    "check:lifeos-boundaries": "node scripts/check-lifeos-boundaries.mjs"
+    "check:lifeos-boundaries": "node scripts/check-lifeos-boundaries.mjs",
+    "verify:identity-p0": "./scripts/verify-life-os-identity-p0.sh",
+    "verify:outbox": "./scripts/test-outbox-trigger.sh --smoke"
   },
   "devDependencies": {
     "turbo": "^2.5.4"

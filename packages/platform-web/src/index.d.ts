@@ -50,3 +50,5 @@ export declare function applyDocumentMetaWeb(
 export declare function createThemePreferenceStoreWeb(
   options: ThemePreferenceStoreWebOptions,
 ): ThemePreferenceStoreWeb
+
+export { default as CommandPalette } from './CommandPalette.svelte'
