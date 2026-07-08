@@ -210,7 +210,7 @@
   width: 46px;
   height: 27px;
   border-radius: 20px;
-  background: var(--border-l, var(--border-strong, var(--border)));
+  background: var(--control-toggle-track);
   position: relative;
   transition: background var(--dur-base) var(--ease-standard);
   flex-shrink: 0;
@@ -227,13 +227,13 @@
   width: 21px;
   height: 21px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--control-toggle-thumb);
   transition: transform var(--dur-base) var(--ease-emphasized);
 }
 
 .toggle.on,
 .settings-toggle.on {
-  background: var(--toggle-on-bg, var(--accent));
+  background: var(--control-toggle-on);
 }
 
 .toggle.on::after,
@@ -243,7 +243,7 @@
 
 .toggle.disabled,
 .settings-toggle.disabled {
-  opacity: 0.45;
+  opacity: var(--control-toggle-disabled-opacity);
   cursor: not-allowed;
 }
 

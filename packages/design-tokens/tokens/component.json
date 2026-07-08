@@ -50,7 +50,54 @@
     "text": { "$type": "color", "$value": "var(--t1, var(--text))" },
     "textMuted": { "$type": "color", "$value": "var(--t3, var(--text-muted))" },
     "sectionRadius": { "$type": "dimension", "$value": "var(--radius-lg, 12px)" },
-    "sectionPadding": { "$type": "dimension", "$value": "var(--card-padding)" }
+    "sectionPadding": { "$type": "dimension", "$value": "var(--card-padding)" },
+    "toggleTrack": {
+      "$type": "color",
+      "$value": "var(--border-l, var(--border-strong, var(--border)))"
+    },
+    "toggleThumb": { "$type": "color", "$value": "var(--bg-elevated, #ffffff)" },
+    "toggleOn": { "$type": "color", "$value": "var(--toggle-on-bg, var(--accent))" },
+    "toggleDisabledOpacity": { "$type": "number", "$value": "0.45" }
+  },
+  "button": {
+    "primaryBg": { "$type": "color", "$value": "var(--accent)" },
+    "primaryText": { "$type": "color", "$value": "var(--on-accent)" },
+    "secondaryBg": {
+      "$type": "color",
+      "$value": "var(--card-h, var(--card-hover, var(--surface-2)))"
+    },
+    "secondaryBorder": {
+      "$type": "color",
+      "$value": "var(--border-l, var(--border-strong, var(--border)))"
+    },
+    "secondaryText": { "$type": "color", "$value": "var(--t1, var(--text))" },
+    "ghostText": { "$type": "color", "$value": "var(--t2, var(--text-secondary))" },
+    "ghostBgHover": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--t1, var(--text)) 5%, transparent)"
+    },
+    "dangerBg": { "$type": "color", "$value": "var(--accent-bg, var(--accent-subtle))" },
+    "dangerBorder": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--accent) 32%, transparent)"
+    },
+    "dangerText": { "$type": "color", "$value": "var(--accent)" },
+    "disabledOpacity": { "$type": "number", "$value": "0.42" },
+    "focusRing": { "$type": "cssValue", "$value": "var(--focus-ring)" }
+  },
+  "segment": {
+    "trackBg": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--t1, var(--text)) 4%, var(--bg-elevated, var(--card)))"
+    },
+    "trackRadius": { "$type": "dimension", "$value": "var(--radius-pill)" },
+    "btnBg": { "$type": "color", "$value": "transparent" },
+    "btnColor": { "$type": "color", "$value": "var(--t2, var(--text-secondary))" },
+    "activeBg": {
+      "$type": "color",
+      "$value": "var(--lime, var(--accent-bg, var(--accent-subtle)))"
+    },
+    "activeFg": { "$type": "color", "$value": "var(--on-lime, var(--accent))" }
   },
   "feedback": {
     "success": { "$type": "color", "$value": "var(--positive)" },

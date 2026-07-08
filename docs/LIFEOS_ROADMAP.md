@@ -305,29 +305,67 @@ Storybook-first / Figma-first 已明确否决（现阶段）。
 **注意：** app 品牌色只能改 `packages/design-tokens/tokens/brands/*.json`，app CSS 只留 app 专属扩展。
 **遗留（并入 D-P3 前置）：** `packages/theme/src/tokens.css` 结构层仍 authored（validate 有 drift 守卫），待切 generated。
 
-### ✅ D-P3: Component tokenization + Card primitive — _2026-07-08 完成（P3a）_
+### ✅ D-P3: Shared component tokenization — _2026-07-08 完成（P3a + P3b）_
+
+**范围：** 所有适合共享的 platform-web 组件 + 对应 theme CSS primitive（不是 production app 页面迁移）。
+
+#### P3a — Card primitive
 
 | 子项 | 状态 |
 | ---- | ---- |
 | `tokens/component.json` → `generated/component.css` | ✅ |
-| `validate:tokens` staleness guard for component.css | ✅ |
-| `@life-os/platform-web/svelte/card` Card primitive | ✅ |
-| `apps/design-catalog` Cards showcase + smoke tests | ✅ |
-| Production app 页面迁移使用 Card | ❌ 刻意不做（P3 范围外） |
+| `@life-os/platform-web/svelte/card` + co-located `card.css` | ✅ |
+| design-catalog Cards showcase + smoke（4 app × 2 mode） | ✅ |
 
-### 🟡 D-P3b: Settings / Toast / Navigation 深 token 化 — _进行中_
+#### P3b — Settings / Toast / Navigation / Banner
 
 | 子项 | 状态 |
 | ---- | ---- |
-| 扩展 `component.json`（control / feedback / navigation） | ✅ |
-| Settings CSS 改读 `--control-*`；补齐 `settings-block-toggle` | ✅ |
-| Toast 改读 `--feedback-*`；补 `.toast--info` | ✅ |
-| Navigation / mobile-more 改读 `--navigation-*` + `--overlay-backdrop` | ✅ |
-| `BackButton` + `navigation.css`（shared back link tokens） | ✅ |
-| Production app 页面迁移 | ❌ 刻意不做 |
+| 扩展 `control.*` / `feedback.*` / `navigation.*` component tokens | ✅ |
+| Settings block/row → `--control-*`；补齐 `settings-block-toggle` | ✅ |
+| Toast + Banner → `--feedback-*`（含 `.toast--info`、`.banner.info`） | ✅ |
+| Nav tab / mobile-more → `--navigation-*`；backdrop → `--overlay-backdrop` | ✅ |
+| `BackButton` + `navigation.css`；`Toast` + `toast.css` | ✅ |
+| `CommandPalette` backdrop → `--overlay-backdrop` | ✅ |
 
-**D-P3 范围：** shared component system hardening，不是 app UI migration。
-**遗留：** `tokens.css` 结构层仍 authored；Settings toggle/segment 仍部分用 theme 专用变量；app 层 `.back-btn` 边距 override 仍保留在各 app CSS。
+#### P3 组件覆盖矩阵（platform-web + theme 支撑）
+
+| 组件域 | platform-web | component tokens | co-located CSS | catalog | smoke |
+| ------ | ------------ | ---------------- | -------------- | ------- | ----- |
+| **Card** | ✅ primitive | ✅ `card.*` | ✅ `card.css` | ✅ cards | ✅ 全矩阵 |
+| **Settings**（11 个 Svelte） | ✅ | 🟡 `control.*` 部分 | theme CSS | ✅ settings | 🟡 单点 |
+| **Toast** | ✅ | ✅ `feedback.*` | ✅ `toast.css` | ✅ toast | 🟡 单点 |
+| **Banner**（SyncErrorBanner） | ✅ | ✅ `feedback.*` | theme CSS | ✅ feedback/utilities | 🟡 单点 |
+| **Navigation**（Back + MoreSheet） | ✅ | ✅ `navigation.*` | ✅ `navigation.css` | ✅ navigation | 🟡 单点 |
+| **Icon / Brand / DocumentHead** | ✅ | N/A（继承 semantic） | — | ✅ | — |
+| **CommandPalette** | ✅（root） | 🟡 overlay only | scoped in Svelte | ❌ | ❌ |
+| **PortraitGate** | ✅ | ❌ 仍 `--bg`/`--t1` fallback | theme `portrait-gate.css` | 🟡 utilities | ❌ |
+
+#### Theme-only primitives（P3c ✅）
+
+| 域 | CSS 位置 | component tokens | 状态 |
+| -- | -------- | ---------------- | ---- |
+| **Buttons**（`.btn-*`） | `components.css` | ✅ `button.*` | ✅ |
+| **Segments**（`.seg`） | `seg.css` | ✅ `segment.*` | ✅ |
+| **Toggle**（`.settings-toggle`） | `settings-ext.css` | ✅ `control.toggle*` | ✅ |
+
+**D-P3 刻意不做：** production app 页面迁移；MusicCard / TaskCard 等业务 card；Storybook；screenshot baseline commit（D-P5）。
+
+**遗留 → 后续：**
+
+- `tokens.css` 结构层仍 authored
+- CommandPalette 面板未抽 component tokens（仅 backdrop ✅）；无 catalog showcase
+- PortraitGate 仍用 structural `--bg`/`--t1` fallback
+- app 层 `.back-btn` 边距 override（planner/fitness）仍保留
+- catalog smoke 对 toast/settings 未做 4×2 矩阵（Cards 已有）；ad-hoc 截图见 `scripts/design-catalog-p3-screenshot-audit.mjs`
+
+### ✅ D-P3c: Button / Segment / Toggle token 化 — _2026-07-08 完成_
+
+| 子项 | 状态 |
+| ---- | ---- |
+| `button.*` / `segment.*` / `control.toggle*` in `component.json` | ✅ |
+| `.btn-*` / `.seg` / `.settings-toggle` 改读 component tokens | ✅ |
+| ad-hoc screenshot audit script | ✅ `scripts/design-catalog-p3-screenshot-audit.mjs` |
 
 ### ⏳ D-P4+: 后续阶段（按序）
 

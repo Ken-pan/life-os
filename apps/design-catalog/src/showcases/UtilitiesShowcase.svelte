@@ -2,7 +2,7 @@
   <h2 class="catalog-section__title">Banners & utilities</h2>
   <div class="catalog-panel catalog-grid">
     <div class="banner info" role="status">Info banner</div>
-    <div class="banner success" role="status">Success banner</div>
+    <div class="banner positive" role="status">Success banner</div>
     <div class="banner warn" role="alert">Warning banner</div>
     <div class="banner critical banner--row" role="alert">
       <span class="banner__text">Critical banner with action</span>

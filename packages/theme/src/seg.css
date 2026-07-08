@@ -10,16 +10,16 @@
   --seg-display: inline-flex;
   --seg-flex-wrap: nowrap;
   --seg-gap: var(--space-0-5);
-  --seg-track-bg: color-mix(in srgb, var(--t1, var(--text)) 4%, var(--bg-elevated, var(--card)));
+  --seg-track-bg: var(--segment-track-bg);
   --seg-track-border: none;
-  --seg-track-radius: var(--radius-pill);
+  --seg-track-radius: var(--segment-track-radius);
   --seg-track-padding: var(--space-1);
-  --seg-btn-bg: transparent;
+  --seg-btn-bg: var(--segment-btn-bg);
   --seg-btn-border: none;
-  --seg-btn-radius: var(--radius-pill);
-  --seg-btn-color: var(--t2, var(--text-secondary));
-  --seg-active-bg: var(--seg-active-bg-token, var(--lime, var(--accent-bg, var(--accent-subtle))));
-  --seg-active-fg: var(--seg-active-fg-token, var(--on-lime, var(--accent)));
+  --seg-btn-radius: var(--segment-track-radius);
+  --seg-btn-color: var(--segment-btn-color);
+  --seg-active-bg: var(--seg-active-bg-token, var(--segment-active-bg));
+  --seg-active-fg: var(--seg-active-fg-token, var(--segment-active-fg));
   --seg-active-border: var(--seg-active-border-token, transparent);
 }
 

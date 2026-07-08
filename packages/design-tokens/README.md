@@ -8,14 +8,41 @@ Life OS design token **source of truth**（DTCG-like JSON）。品牌 CSS 不再
 tokens/primitive.json          原始值：色板 / spacing / radius / type scale / font stacks
 tokens/semantic.json           共享状态色（positive/warning/critical/info）+ 品牌语义契约
 tokens/brands/{app}.json       每个 app 的品牌 token（modes: light/dark）
-tokens/component.json          共享 component tokens（card / control / feedback / navigation / focus）
+tokens/component.json          共享 component tokens（见下表）
         ↓ npm run build:tokens
 packages/theme/src/generated/brands/{app}.css
 packages/theme/src/generated/app-themes.css
 packages/theme/src/generated/component.css
         ↓ import
 @life-os/theme/design-system.css  （含 generated/component.css）
+        ↓
+@life-os/platform-web/svelte/*    co-located CSS where applicable（card / toast / navigation）
 ```
+
+## component.json 域 → 消费方（P3）
+
+| Token 域 | CSS 变量前缀 | 主要消费方 | P3 状态 |
+| -------- | ------------ | ---------- | ------- |
+| `focus` | `--focus-ring` | Card, buttons focus-visible | ✅ |
+| `overlay` | `--overlay-backdrop` | CommandPalette, mobile-more | ✅ |
+| `card` | `--card-*` | `@life-os/platform-web/svelte/card` | ✅ |
+| `control` | `--control-*` | Settings block/row/toggle | ✅ P3b/P3c |
+| `button` | `--button-*` | `.btn-primary` … `.btn-danger` | ✅ P3c |
+| `segment` | `--segment-*` | `.seg` segmented control | ✅ P3c |
+| `feedback` | `--feedback-*` | Toast, Banner, SyncErrorBanner | ✅ |
+| `navigation` | `--navigation-*` | nav tab, mobile-more, BackButton | ✅ |
+
+Theme-only primitives（buttons `.btn-*`、segments `.seg`）已接入 `component.json` — 见 **D-P3c** ✅。
+
+## P3 截图审计（ad-hoc，非 baseline）
+
+```bash
+npm run build -w design-catalog
+npm run preview -w design-catalog -- --host 127.0.0.1 --port 5190
+node scripts/design-catalog-p3-screenshot-audit.mjs
+```
+
+输出：`screenshots/design-catalog/p3-audit-YYYYMMDD/`（本地，不提交）
 
 ## 命令
 
@@ -33,7 +60,6 @@ npm run validate:tokens   # refs / 契约 / 重复 key / tokens.css drift 检查
   只保留 app 专属扩展（shadows / 领域语义 / 图表色 / z-index / chrome）。
 - 生成的非默认 mode 同时输出 `[data-mode]`（catalog 用）与 `[data-theme]`（apps 用）双选择器。
 - `packages/theme/src/tokens.css`（结构层）目前仍是 authored；`validate:tokens` 会做 drift 校验，后续阶段再切 generated。
-- Component tokens（`tokens/component.json`）生成 `--card-*` / `--focus-*` 等变量，供 `@life-os/platform-web` Card primitive 消费。
 - 新增品牌变量需满足 `semantic.json` 里的 contract（bg / card / border / accent / on-accent / sidebar + 一套文本层级）。
 
 ## Token 引用格式

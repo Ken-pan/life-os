@@ -28,8 +28,8 @@
   min-height: var(--btn-h-lg);
   padding: 0 var(--btn-pad-x-lg);
   border-radius: var(--btn-radius);
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
   font-size: var(--text-base);
   font-weight: 600;
 }
@@ -41,16 +41,16 @@
   min-height: var(--btn-h-md);
   padding: 0 var(--btn-pad-x-md);
   border-radius: var(--btn-radius);
-  background: var(--card-h, var(--card-hover, var(--surface-2)));
-  border: 1px solid var(--border-l, var(--border-strong, var(--border)));
-  color: var(--t1, var(--text));
+  background: var(--button-secondary-bg);
+  border: 1px solid var(--button-secondary-border);
+  color: var(--button-secondary-text);
   font-size: var(--text-md);
   font-weight: 500;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--card);
-  color: var(--t1, var(--text));
+  background: var(--control-bg);
+  color: var(--button-secondary-text);
 }
 
 .btn-ghost {
@@ -58,23 +58,23 @@
   padding: 0 var(--btn-pad-x-md);
   border-radius: var(--btn-radius);
   background: transparent;
-  color: var(--t2, var(--text-secondary));
+  color: var(--button-ghost-text);
   font-size: var(--text-md);
   font-weight: 500;
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--t1, var(--text)) 5%, transparent);
-  color: var(--t1, var(--text));
+  background: var(--button-ghost-bg-hover);
+  color: var(--control-text);
 }
 
 .btn-danger {
   min-height: var(--btn-h-md);
   padding: 0 var(--btn-pad-x-md);
   border-radius: var(--btn-radius);
-  background: var(--accent-bg, var(--accent-subtle));
-  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
-  color: var(--accent);
+  background: var(--button-danger-bg);
+  border: 1px solid var(--button-danger-border);
+  color: var(--button-danger-text);
   font-size: var(--text-md);
   font-weight: 500;
 }
@@ -89,7 +89,7 @@
 .btn-secondary:disabled,
 .btn-ghost:disabled,
 .btn-danger:disabled {
-  opacity: 0.42;
+  opacity: var(--button-disabled-opacity);
   cursor: not-allowed;
   transform: none;
   filter: none;
@@ -106,7 +106,7 @@ a.btn-danger {
 .btn-ghost:focus-visible,
 .btn-danger:focus-visible {
   outline: none;
-  box-shadow: var(--btn-focus-ring);
+  box-shadow: var(--button-focus-ring);
 }
 
 @media (pointer: coarse) {
@@ -467,9 +467,9 @@ input[type='number'].no-spin::-webkit-inner-spin-button {
 
 /* ===== Banner / Toast ===== */
 .banner {
-  background: var(--warning-subtle);
-  border: 1px solid color-mix(in srgb, var(--warning) 32%, transparent);
-  color: var(--warning);
+  background: var(--feedback-warning-bg);
+  border: 1px solid var(--feedback-warning-border);
+  color: var(--feedback-warning);
   border-radius: var(--radius-sm);
   padding: var(--stack-tight) var(--stack-section);
   font-size: var(--text-md);
@@ -478,15 +478,28 @@ input[type='number'].no-spin::-webkit-inner-spin-button {
 }
 
 .banner.critical {
-  background: var(--critical-subtle);
-  border-color: color-mix(in srgb, var(--critical) 32%, transparent);
-  color: var(--critical);
+  background: var(--feedback-danger-bg);
+  border-color: var(--feedback-danger-border);
+  color: var(--feedback-danger);
 }
 
-.banner.positive {
-  background: var(--positive-subtle);
-  border-color: color-mix(in srgb, var(--positive) 32%, transparent);
-  color: var(--positive);
+.banner.positive,
+.banner.success {
+  background: var(--feedback-success-bg);
+  border-color: var(--feedback-success-border);
+  color: var(--feedback-success);
+}
+
+.banner.warn {
+  background: var(--feedback-warning-bg);
+  border-color: var(--feedback-warning-border);
+  color: var(--feedback-warning);
+}
+
+.banner.info {
+  background: var(--feedback-info-bg);
+  border-color: var(--feedback-info-border);
+  color: var(--feedback-info);
 }
 
 .banner--row {
@@ -518,7 +531,7 @@ input[type='number'].no-spin::-webkit-inner-spin-button {
   padding-bottom: var(--stack-tight);
   padding-inline: max(var(--page-gutter), var(--safe-left-effective)) max(var(--page-gutter), var(--safe-right-effective));
   min-height: calc(var(--banner-fixed-h) + var(--safe-top-effective));
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--critical) 8%, transparent);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--feedback-danger) 8%, transparent);
 }
 
 body:has(.banner--fixed) .main-col {
