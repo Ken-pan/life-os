@@ -24,6 +24,17 @@ export function loadSemantic() {
   return loadJson(join(TOKENS_DIR, 'semantic.json'))
 }
 
+export function loadComponent() {
+  return loadJson(join(TOKENS_DIR, 'component.json'))
+}
+
+/** card.bgHover → card-bg-hover */
+export function tokenVarName(path) {
+  return path
+    .map((seg) => seg.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase())
+    .join('-')
+}
+
 export function loadBrand(app) {
   return loadJson(join(TOKENS_DIR, 'brands', `${app}.json`))
 }

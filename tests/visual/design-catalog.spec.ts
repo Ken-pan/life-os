@@ -53,4 +53,27 @@ test.describe('design-catalog visual smoke', () => {
     await page.goto(catalogUrl('feedback', 'music', 'light', 'desktop'))
     await expect(page.getByTestId('showcase-feedback')).toBeVisible()
   })
+
+  for (const app of APPS) {
+    for (const mode of MODES) {
+      test(`cards — ${app} / ${mode}`, async ({ page }) => {
+        const errors = []
+        page.on('console', (msg) => {
+          if (msg.type() === 'error') errors.push(msg.text())
+        })
+        await page.goto(catalogUrl('cards', app, mode, 'desktop'))
+        await expect(page.getByTestId('showcase-cards')).toBeVisible()
+        expect(errors).toEqual([])
+      })
+    }
+  }
+
+  test('cards — planner light mobile', async ({ page }) => {
+    await page.goto(catalogUrl('cards', 'planner', 'light', 'mobile'))
+    await expect(page.getByTestId('showcase-cards')).toBeVisible()
+    await expect(page.getByTestId('responsive-frame')).toHaveAttribute(
+      'data-viewport',
+      'mobile',
+    )
+  })
 })

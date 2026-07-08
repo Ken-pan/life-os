@@ -15,6 +15,7 @@
   import IconShowcase from './showcases/IconShowcase.svelte'
   import FeedbackShowcase from './showcases/FeedbackShowcase.svelte'
   import ToastShowcase from './showcases/ToastShowcase.svelte'
+  import CardsShowcase from './showcases/CardsShowcase.svelte'
 
   const pages = {
     tokens: TokensShowcase,
@@ -27,6 +28,7 @@
     icon: IconShowcase,
     feedback: FeedbackShowcase,
     toast: ToastShowcase,
+    cards: CardsShowcase,
   }
 
   let showcase = $state('tokens')

@@ -1,0 +1,41 @@
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/component.json
+  Rebuild: npm run build:tokens
+*/
+
+:root {
+  --focus-ring: var(--btn-focus-ring, 0 0 0 2px color-mix(in srgb, var(--accent) 32%, transparent));
+  --focus-offset: 2px;
+  --overlay-backdrop: color-mix(in srgb, var(--t1, var(--text)) 40%, transparent);
+  --card-bg: var(--card);
+  --card-bg-hover: var(--card-h);
+  --card-bg-selected: color-mix(in srgb, var(--accent) 8%, var(--card));
+  --card-border: var(--border);
+  --card-border-hover: var(--border-l, var(--border));
+  --card-radius: var(--radius-sm, 14px);
+  --card-padding: var(--space-4);
+  --card-padding-compact: var(--space-3);
+  --card-gap: var(--space-3);
+  --card-shadow: var(--shadow-soft, 0 1px 2px color-mix(in srgb, var(--t1, var(--text)) 4%, transparent));
+  --card-shadow-hover: var(--shadow-card, var(--shadow-soft));
+  --card-title-color: var(--t1, var(--text));
+  --card-description-color: var(--t2, var(--text-secondary, var(--text-muted)));
+  --card-media-radius: var(--radius-control, 8px);
+  --card-footer-border: var(--border);
+  --card-focus-ring: var(--focus-ring);
+  --card-disabled-opacity: 0.55;
+  --control-bg: var(--card);
+  --control-bg-hover: var(--card-h);
+  --control-border: var(--border);
+  --control-text: var(--t1, var(--text));
+  --control-text-muted: var(--t3, var(--text-muted));
+  --feedback-success: var(--positive);
+  --feedback-warning: var(--warning);
+  --feedback-danger: var(--critical);
+  --feedback-info: var(--info);
+  --navigation-item-bg: transparent;
+  --navigation-item-bg-active: color-mix(in srgb, var(--accent) 10%, var(--card));
+  --navigation-item-text: var(--t2, var(--text-secondary));
+  --navigation-item-text-active: var(--accent);
+}

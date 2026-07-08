@@ -305,16 +305,26 @@ Storybook-first / Figma-first 已明确否决（现阶段）。
 **注意：** app 品牌色只能改 `packages/design-tokens/tokens/brands/*.json`，app CSS 只留 app 专属扩展。
 **遗留（并入 D-P3 前置）：** `packages/theme/src/tokens.css` 结构层仍 authored（validate 有 drift 守卫），待切 generated。
 
-### ⏳ D-P3+: 后续阶段（按序）
+### ✅ D-P3: Component tokenization + Card primitive — _2026-07-08 完成（P3a）_
 
-### ⏳ D-P3+: 后续阶段（按序）
+| 子项 | 状态 |
+| ---- | ---- |
+| `tokens/component.json` → `generated/component.css` | ✅ |
+| `validate:tokens` staleness guard for component.css | ✅ |
+| `@life-os/platform-web/svelte/card` Card primitive | ✅ |
+| `apps/design-catalog` Cards showcase + smoke tests | ✅ |
+| Production app 页面迁移使用 Card | ❌ 刻意不做（P3 范围外） |
 
-| 阶段 | 内容                                                                        | 触发条件             |
-| ---- | --------------------------------------------------------------------------- | -------------------- |
-| D-P3 | platform-web 组件 tokenization（component tokens）+ tokens.css 切 generated | D-P2 完成 ✅         |
-| D-P4 | Catalog 2.0 matrix view（state × app × mode × viewport）                    | D-P3 完成            |
-| D-P5 | Playwright `toHaveScreenshot` visual regression baseline                    | D-P4 完成            |
-| D-P6 | a11y gates（contrast / focus / target size / reduced motion）               | D-P5 完成            |
+**D-P3 范围：** shared component system hardening，不是 app UI migration。
+**遗留：** `tokens.css` 结构层仍 authored；Settings/Toast/Navigation 仍主要消费 `@life-os/theme` CSS 类（component tokens 已生成，Card/overlay 已接入，其余组件 P3b 再深 token 化）。
+
+### ⏳ D-P4+: 后续阶段（按序）
+
+| 阶段 | 内容 | 触发条件 |
+| ---- | ---- | -------- |
+| D-P4 | Catalog 2.0 matrix view（state × app × mode × viewport） | D-P3 完成 ✅ |
+| D-P5 | Playwright `toHaveScreenshot` visual regression baseline | D-P4 完成 |
+| D-P6 | a11y gates（contrast / focus / target size / reduced motion） | D-P5 完成 |
 | D-P7 | Figma variables mirror（code JSON 仍为真源）                                | 需要设计侧协作       |
 | D-P8 | Storybook / Chromatic                                                       | 仅当团队协作压力出现 |
 

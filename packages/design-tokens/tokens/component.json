@@ -1,0 +1,68 @@
+{
+  "focus": {
+    "ring": {
+      "$type": "cssValue",
+      "$value": "var(--btn-focus-ring, 0 0 0 2px color-mix(in srgb, var(--accent) 32%, transparent))"
+    },
+    "offset": { "$type": "dimension", "$value": "2px" }
+  },
+  "overlay": {
+    "backdrop": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--t1, var(--text)) 40%, transparent)"
+    }
+  },
+  "card": {
+    "bg": { "$type": "color", "$value": "var(--card)" },
+    "bgHover": { "$type": "color", "$value": "var(--card-h)" },
+    "bgSelected": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--accent) 8%, var(--card))"
+    },
+    "border": { "$type": "color", "$value": "var(--border)" },
+    "borderHover": { "$type": "color", "$value": "var(--border-l, var(--border))" },
+    "radius": { "$type": "dimension", "$value": "var(--radius-sm, 14px)" },
+    "padding": { "$type": "dimension", "$value": "var(--space-4)" },
+    "paddingCompact": { "$type": "dimension", "$value": "var(--space-3)" },
+    "gap": { "$type": "dimension", "$value": "var(--space-3)" },
+    "shadow": {
+      "$type": "cssValue",
+      "$value": "var(--shadow-soft, 0 1px 2px color-mix(in srgb, var(--t1, var(--text)) 4%, transparent))"
+    },
+    "shadowHover": {
+      "$type": "cssValue",
+      "$value": "var(--shadow-card, var(--shadow-soft))"
+    },
+    "titleColor": { "$type": "color", "$value": "var(--t1, var(--text))" },
+    "descriptionColor": {
+      "$type": "color",
+      "$value": "var(--t2, var(--text-secondary, var(--text-muted)))"
+    },
+    "mediaRadius": { "$type": "dimension", "$value": "var(--radius-control, 8px)" },
+    "footerBorder": { "$type": "color", "$value": "var(--border)" },
+    "focusRing": { "$type": "cssValue", "$value": "var(--focus-ring)" },
+    "disabledOpacity": { "$type": "number", "$value": "0.55" }
+  },
+  "control": {
+    "bg": { "$type": "color", "$value": "var(--card)" },
+    "bgHover": { "$type": "color", "$value": "var(--card-h)" },
+    "border": { "$type": "color", "$value": "var(--border)" },
+    "text": { "$type": "color", "$value": "var(--t1, var(--text))" },
+    "textMuted": { "$type": "color", "$value": "var(--t3, var(--text-muted))" }
+  },
+  "feedback": {
+    "success": { "$type": "color", "$value": "var(--positive)" },
+    "warning": { "$type": "color", "$value": "var(--warning)" },
+    "danger": { "$type": "color", "$value": "var(--critical)" },
+    "info": { "$type": "color", "$value": "var(--info)" }
+  },
+  "navigation": {
+    "itemBg": { "$type": "color", "$value": "transparent" },
+    "itemBgActive": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--accent) 10%, var(--card))"
+    },
+    "itemText": { "$type": "color", "$value": "var(--t2, var(--text-secondary))" },
+    "itemTextActive": { "$type": "color", "$value": "var(--accent)" }
+  }
+}

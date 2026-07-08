@@ -1,10 +1,11 @@
 // Build: tokens/brands/*.json → packages/theme/src/generated/brands/*.css + app-themes.css
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { BRAND_APPS, GENERATED_DIR, loadPrimitive } from './lib/tokens.mjs'
-import { aggregateCss, brandCss } from './lib/generate.mjs'
+import { BRAND_APPS, GENERATED_DIR, loadComponent, loadPrimitive } from './lib/tokens.mjs'
+import { aggregateCss, brandCss, componentCss } from './lib/generate.mjs'
 
 const primitive = loadPrimitive()
+const component = loadComponent()
 const errors = []
 
 mkdirSync(join(GENERATED_DIR, 'brands'), { recursive: true })
@@ -16,6 +17,10 @@ for (const app of BRAND_APPS) {
 }
 
 writeFileSync(join(GENERATED_DIR, 'app-themes.css'), aggregateCss())
+
+const componentResult = componentCss(component, primitive)
+errors.push(...componentResult.errors)
+writeFileSync(join(GENERATED_DIR, 'component.css'), componentResult.css)
 
 writeFileSync(
   join(GENERATED_DIR, 'README.md'),
@@ -33,4 +38,4 @@ if (errors.length > 0) {
   for (const e of errors) console.error(`  - ${e}`)
   process.exit(1)
 }
-console.log(`build:tokens OK → packages/theme/src/generated/ (${BRAND_APPS.length} brands + app-themes.css)`)
+console.log(`build:tokens OK → packages/theme/src/generated/ (${BRAND_APPS.length} brands + app-themes.css + component.css)`)

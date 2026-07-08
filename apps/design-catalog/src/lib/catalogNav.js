@@ -55,6 +55,12 @@ export const CATALOG_SECTIONS = [
     group: 'components',
     testId: 'showcase-toast',
   },
+  {
+    id: 'cards',
+    label: 'Cards',
+    group: 'components',
+    testId: 'showcase-cards',
+  },
 ]
 
 export const SHOWCASE_IDS = CATALOG_SECTIONS.map((s) => s.id)

@@ -8,11 +8,13 @@ Life OS design token **source of truth**（DTCG-like JSON）。品牌 CSS 不再
 tokens/primitive.json          原始值：色板 / spacing / radius / type scale / font stacks
 tokens/semantic.json           共享状态色（positive/warning/critical/info）+ 品牌语义契约
 tokens/brands/{app}.json       每个 app 的品牌 token（modes: light/dark）
+tokens/component.json          共享 component tokens（card / control / feedback / navigation / focus）
         ↓ npm run build:tokens
 packages/theme/src/generated/brands/{app}.css
 packages/theme/src/generated/app-themes.css
+packages/theme/src/generated/component.css
         ↓ import
-@life-os/theme/app-themes.css  （apps / design-catalog 消费入口，保持不变）
+@life-os/theme/design-system.css  （含 generated/component.css）
 ```
 
 ## 命令
@@ -30,7 +32,8 @@ npm run validate:tokens   # refs / 契约 / 重复 key / tokens.css drift 检查
   `@import '@life-os/theme/brands/<app>.css'` 消费品牌 token；app CSS 不得再手写品牌色，
   只保留 app 专属扩展（shadows / 领域语义 / 图表色 / z-index / chrome）。
 - 生成的非默认 mode 同时输出 `[data-mode]`（catalog 用）与 `[data-theme]`（apps 用）双选择器。
-- `packages/theme/src/tokens.css`（结构层）目前仍是 authored；`validate:tokens` 会做 drift 校验，D-P3 再切换为 generated。
+- `packages/theme/src/tokens.css`（结构层）目前仍是 authored；`validate:tokens` 会做 drift 校验，后续阶段再切 generated。
+- Component tokens（`tokens/component.json`）生成 `--card-*` / `--focus-*` 等变量，供 `@life-os/platform-web` Card primitive 消费。
 - 新增品牌变量需满足 `semantic.json` 里的 contract（bg / card / border / accent / on-accent / sidebar + 一套文本层级）。
 
 ## Token 引用格式

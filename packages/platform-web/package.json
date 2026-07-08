@@ -120,6 +120,10 @@
     "./svelte/navigation/MobileMoreSheet": {
       "svelte": "./src/svelte/navigation/MobileMoreSheet.svelte",
       "default": "./src/svelte/navigation/MobileMoreSheet.svelte"
+    },
+    "./svelte/card": {
+      "import": "./src/svelte/card/index.js",
+      "svelte": "./src/svelte/card/index.js"
     }
   },
   "dependencies": {

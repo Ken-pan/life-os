@@ -201,7 +201,7 @@
   }
 
   .command-palette-modal::backdrop {
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--overlay-backdrop);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     animation: cp-fade-in var(--dur-fast) var(--ease-standard);
@@ -212,7 +212,7 @@
     max-width: 600px;
     background: var(--card);
     border-radius: 16px;
-    box-shadow: var(--shadow-elevated, 0 16px 40px rgba(0, 0, 0, 0.2));
+    box-shadow: var(--shadow-elevated, var(--card-shadow-hover));
     border: 1px solid var(--border-l, var(--border-strong, var(--border)));
     display: flex;
     flex-direction: column;

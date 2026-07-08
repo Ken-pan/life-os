@@ -12,8 +12,9 @@ packages/design-tokens             ← token JSON source of truth（P1）
 apps/design-catalog                ← 仅导航 + matrix + fixtures + layout chrome
 ```
 
-P1 已完成：`packages/design-tokens` JSON → `npm run build:tokens` 生成 `packages/theme/src/generated/*.css`。
-P3 可选：Storybook / Histoire（Svelte 5 稳定后）或 Playwright visual regression 扩展。
+P2 已完成：四端 app 消费 `@life-os/theme/brands/<app>.css`。
+P3 已完成：`tokens/component.json` + `@life-os/platform-web/svelte/card` + Cards showcase。
+P5 计划：Playwright screenshot baseline（非 P3 范围）。
 
 ## 启动
 
@@ -35,7 +36,7 @@ npm run test:design-catalog    # Playwright visual smoke
 
 | 参数       | 值                                                                                       |
 | ---------- | ---------------------------------------------------------------------------------------- |
-| `showcase` | tokens, buttons, segments, utilities, settings, brand, navigation, icon, feedback, toast |
+| `showcase` | tokens, buttons, segments, utilities, settings, brand, navigation, icon, feedback, toast, cards |
 | `app`      | planner, fitness, finance, music                                                         |
 | `mode`     | light, dark                                                                              |
 | `viewport` | desktop (1440), tablet (768), mobile (390)                                               |

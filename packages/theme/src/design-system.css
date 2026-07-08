@@ -11,6 +11,7 @@
 @layer life-os.tokens, life-os.base, life-os.platform, life-os.layout, life-os.shell, life-os.seg, life-os.settings, life-os.modal, life-os.components, life-os.utilities;
 
 @import './tokens.css' layer(life-os.tokens);
+@import './generated/component.css' layer(life-os.tokens);
 @import './base.css' layer(life-os.base);
 @import './portrait-gate.css' layer(life-os.platform);
 @import './ios-safari.css' layer(life-os.platform);

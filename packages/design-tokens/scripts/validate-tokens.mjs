@@ -14,18 +14,20 @@ import {
   THEME_SRC,
   TOKENS_DIR,
   loadBrand,
+  loadComponent,
   loadPrimitive,
   loadSemantic,
   resolveValue,
   walkTokens,
 } from './lib/tokens.mjs'
-import { aggregateCss, brandCss } from './lib/generate.mjs'
+import { aggregateCss, brandCss, componentCss } from './lib/generate.mjs'
 
 const primitive = loadPrimitive()
 const semantic = loadSemantic()
+const component = loadComponent()
 const errors = []
 
-const COLOR_RE = /^(#[0-9a-fA-F]{3,8}\b|rgba?\(|color-mix\(|var\(--)/
+const COLOR_RE = /^(#[0-9a-fA-F]{3,8}\b|rgba?\(|color-mix\(|var\(--|transparent\b|currentColor\b|inherit\b)/
 
 function checkTree(label, tree) {
   walkTokens(tree, (path, token) => {
@@ -43,6 +45,7 @@ function checkTree(label, tree) {
 // 1+2 — refs and color formats
 checkTree('primitive', primitive)
 checkTree('semantic', semantic.status)
+checkTree('component', component)
 for (const app of BRAND_APPS) checkTree(app, loadBrand(app).modes)
 
 // 3 — duplicate var keys per "vars" block in the raw brand JSON
@@ -134,6 +137,7 @@ for (const app of BRAND_APPS) {
   checkGenerated(`brands/${app}.css`, brandCss(app, primitive).css)
 }
 checkGenerated('app-themes.css', aggregateCss())
+checkGenerated('component.css', componentCss(component, primitive).css)
 
 if (errors.length > 0) {
   console.error(`validate:tokens FAILED (${errors.length}):`)

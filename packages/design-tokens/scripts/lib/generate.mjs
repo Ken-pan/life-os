@@ -1,6 +1,6 @@
 // Pure generation of brand CSS from token JSON — shared by build-css.mjs and
 // validate-tokens.mjs (staleness check).
-import { BRAND_APPS, loadBrand, resolveValue } from './tokens.mjs'
+import { BRAND_APPS, loadBrand, resolveValue, tokenVarName, walkTokens } from './tokens.mjs'
 
 export function header(sourceFile) {
   return [
@@ -49,4 +49,20 @@ export function aggregateCss() {
     BRAND_APPS.map((app) => `@import './brands/${app}.css';`).join('\n') +
     '\n'
   )
+}
+
+/** component.json → :root { --card-bg: … } */
+export function componentCss(componentTree, primitive) {
+  const errors = []
+  const lines = [header('component.json'), ':root {']
+  walkTokens(componentTree, (path, token) => {
+    const { value, error } = resolveValue(token.$value, primitive)
+    if (error) {
+      errors.push(`component.${path}: ${error}`)
+      return
+    }
+    lines.push(`  --${tokenVarName(path.split('.'))}: ${value};`)
+  })
+  lines.push('}', '')
+  return { css: lines.join('\n'), errors }
 }
