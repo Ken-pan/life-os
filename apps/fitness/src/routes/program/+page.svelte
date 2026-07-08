@@ -4,7 +4,7 @@
   import CoverMedia from '$lib/components/CoverMedia.svelte';
   import { todayDayId, lastSessionForDay, estMinutes, ORDER } from '$lib/state.svelte.js';
   import { reveal } from '$lib/actions/reveal.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import KnowledgeTrigger from '$lib/components/KnowledgeTrigger.svelte';
   import { t } from '$lib/i18n/index.js';
   import { dayDisplayFull } from '$lib/i18n/programLabels.js';

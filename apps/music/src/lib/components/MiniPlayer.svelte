@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import TrackArt from './TrackArt.svelte';
   import LikeButton from './LikeButton.svelte';
   import SeekBar from './SeekBar.svelte';

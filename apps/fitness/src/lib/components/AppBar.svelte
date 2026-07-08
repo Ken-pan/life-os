@@ -1,5 +1,5 @@
 <script>
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
 
   /** @type {{ title?: string, subtitle?: string, meta?: string, backHref?: string, backLabel?: string, hidden?: boolean }} */

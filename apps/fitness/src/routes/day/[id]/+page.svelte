@@ -21,7 +21,7 @@
   import { isBarbellExercise, plateConfigFor } from '$lib/tools/calculators.js';
   import { goto } from '$app/navigation';
   import { reveal } from '$lib/actions/reveal.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import BackButton from '$lib/components/BackButton.svelte';
   import { t } from '$lib/i18n/index.js';
 

@@ -16,7 +16,7 @@
   } from '$lib/recommendations.js'
   import { auth } from '$lib/auth.svelte.js'
   import TrackRow from './TrackRow.svelte'
-  import Icon from './Icon.svelte'
+  import Icon from '@life-os/platform-web/svelte/icon'
   import { toast, recDebug, recommendationPreview } from '$lib/ui.svelte.js'
   import { t } from '$lib/i18n/index.js'
 

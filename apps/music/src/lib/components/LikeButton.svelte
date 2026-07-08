@@ -1,5 +1,5 @@
 <script>
-  import Icon from './Icon.svelte'
+  import Icon from '@life-os/platform-web/svelte/icon'
   import { toggleLike } from '$lib/db.js'
   import { t } from '$lib/i18n/index.js'
 

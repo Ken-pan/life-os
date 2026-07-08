@@ -1,9 +1,9 @@
 <script>
   import { S, save, applyTheme } from '$lib/state.svelte.js'
   import { setLocale, t } from '$lib/i18n/index.js'
-  import SettingsRow from './SettingsRow.svelte'
-  import SettingsSegment from './SettingsSegment.svelte'
-  import SettingsToggle from './SettingsToggle.svelte'
+  import SettingsRow from '@life-os/platform-web/svelte/settings/row'
+  import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
+  import SettingsToggle from '@life-os/platform-web/svelte/settings/toggle'
 
   /** @type {{ onThemeChange?: (theme: string) => void, onLocaleChange?: (locale: string) => void }} */
   let { onThemeChange, onLocaleChange } = $props()

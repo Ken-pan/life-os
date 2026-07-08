@@ -2,7 +2,7 @@
   import { untrack } from 'svelte';
   import TaskRow from './TaskRow.svelte';
   import EmptyState from './EmptyState.svelte';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { sortTasks } from '$lib/engine/prioritizer.js';
 
   /** @type {{

@@ -3,7 +3,7 @@
   import { userLists } from '$lib/state.svelte.js';
   import { t, listLabel } from '$lib/i18n/index.js';
   import { buildSidebarNavGroups, buildSettingsNavItem } from '$lib/nav.js';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import LogoMark from './LogoMark.svelte';
 
   const navGroups = $derived(buildSidebarNavGroups(t));

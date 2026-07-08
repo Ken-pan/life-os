@@ -1,6 +1,6 @@
 <script>
   import '../app.css'
-  import { onMount } from 'svelte'
+  import { onMount, setContext } from 'svelte'
   import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import ListSidebar from '$lib/components/ListSidebar.svelte'
@@ -11,8 +11,11 @@
   import QuickSchedulePopover from '$lib/components/schedule/QuickSchedulePopover.svelte'
   import ScheduleSlotSheet from '$lib/components/schedule/ScheduleSlotSheet.svelte'
   import Fab from '$lib/components/Fab.svelte'
-  import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte'
-  import DocumentHead from '$lib/components/DocumentHead.svelte'
+  import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
+  import DocumentHead from '@life-os/platform-web/svelte/head'
+  import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
+  import { ICONS } from '$lib/iconRegistry.js'
+  import { subscribeSyncError } from '$lib/syncNotify.js'
   import {
     applyTheme,
     applyState,
@@ -38,6 +41,8 @@
   import { resolveMobileChromeInset, isFabVisible } from '$lib/nav.js'
 
   let { children } = $props()
+
+  setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
@@ -139,7 +144,11 @@
 <div class="app-shell">
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
-  <SyncErrorBanner />
+  <SyncErrorBanner
+    subscribe={subscribeSyncError}
+    formatMessage={(reason) => t('sync.banner', { reason })}
+    dismissLabel={t('common.close')}
+  />
   <ListSidebar />
   <div
     class="main-col"

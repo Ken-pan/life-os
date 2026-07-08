@@ -35,7 +35,7 @@
   import { startTimer, timer, cancelTimer } from '$lib/timer.svelte.js';
   import { toast, openWeightModal, openSetLogSheet, openSkipModal, openFitnessToolSheet } from '$lib/ui.svelte.js';
   import TimerWidget from '$lib/components/TimerWidget.svelte';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import CoverMedia from '$lib/components/CoverMedia.svelte';
   import { focusHeroImage } from '$lib/data/program.js';
   import { schemeCoachHint, schemeLabel } from '$lib/data/setSchemes.js';

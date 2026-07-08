@@ -1,5 +1,5 @@
 <script>
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import SeekBar from './SeekBar.svelte';
   import {
     player,

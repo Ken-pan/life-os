@@ -1,6 +1,6 @@
 <script>
   import { tick } from 'svelte';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
   import { activateFocusTrap } from '@life-os/theme';
 

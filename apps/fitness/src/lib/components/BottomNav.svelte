@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/state';
   import { t } from '$lib/i18n/index.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { buildNavItems, resolveNavTab, isNavChromeHidden } from '$lib/nav.js';
 
   const items = $derived(buildNavItems(t));

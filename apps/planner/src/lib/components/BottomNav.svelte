@@ -10,7 +10,7 @@
     isMoreNavActive,
     isNavChromeHidden
   } from '$lib/nav.js';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import MobileMoreSheet from './MobileMoreSheet.svelte';
 
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';

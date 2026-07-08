@@ -4,7 +4,7 @@
   import { effectiveDone } from '$lib/logs.js';
   import { recordedSessionMinutes } from '$lib/session.js';
   import { reveal } from '$lib/actions/reveal.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import BackButton from '$lib/components/BackButton.svelte';
   import { t, localeTag } from '$lib/i18n/index.js';
   import { dayDisplayFull } from '$lib/i18n/programLabels.js';

@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { page } from '$app/state';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import QueueList from './QueueList.svelte';
   import LyricsPanel from './LyricsPanel.svelte';
   import {

@@ -3,7 +3,7 @@
    * 独立凑重工具面板：单位切换、快捷步进、常用 preset、双模式、片库/卡箍。
    * variant="focus" 时默认精简视图，渐进展开装片选项。
    */
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import PlateBuilder from '$lib/components/PlateBuilder.svelte';
   import {
     platePresetsAround,

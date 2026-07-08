@@ -1,5 +1,5 @@
 <script>
-  import Icon from './Icon.svelte'
+  import Icon from '@life-os/platform-web/svelte/icon'
   import TrackArt from './TrackArt.svelte'
   import ContextMenu from './ContextMenu.svelte'
   import LikeButton from './LikeButton.svelte'

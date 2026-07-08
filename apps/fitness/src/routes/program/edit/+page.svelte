@@ -22,7 +22,7 @@
   import { reveal } from '$lib/actions/reveal.js';
   import BackButton from '$lib/components/BackButton.svelte';
   import ExerciseThumb from '$lib/components/ExerciseThumb.svelte';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
   import { dayDisplayName, dayDecorEn } from '$lib/i18n/programLabels.js';
 

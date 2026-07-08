@@ -1,5 +1,5 @@
 <script>
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import PlateBuilder from '$lib/components/PlateBuilder.svelte';
   import { weightModal, closeWeightModal, toast } from '$lib/ui.svelte.js';
   import {

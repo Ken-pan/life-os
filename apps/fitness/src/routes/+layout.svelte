@@ -1,7 +1,7 @@
 <script>
   import '../app.css'
   import '$lib/styles/weight-controls.css'
-  import { onMount } from 'svelte'
+  import { onMount, setContext } from 'svelte'
   import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import AppBar from '$lib/components/AppBar.svelte'
@@ -14,8 +14,12 @@
   import KnowledgeSheet from '$lib/components/KnowledgeSheet.svelte'
   import FitnessToolSheet from '$lib/components/FitnessToolSheet.svelte'
   import Toast from '$lib/components/Toast.svelte'
-  import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte'
+  import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
   import PortraitGate from '$lib/components/PortraitGate.svelte'
+  import DocumentHead from '@life-os/platform-web/svelte/head'
+  import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
+  import { ICONS } from '$lib/iconRegistry.js'
+  import { subscribeSyncError } from '$lib/syncNotify.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { auth, initAuth } from '$lib/auth.svelte.js'
   import { bindViewportHeight, bindPwaForegroundResume, resetScrollLock } from '@life-os/theme'
@@ -31,9 +35,10 @@
   import { todayDayId } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
-  import DocumentHead from '$lib/components/DocumentHead.svelte'
 
   let { children } = $props()
+
+  setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
@@ -157,7 +162,11 @@
 <div class="app-shell">
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
-  <SyncErrorBanner />
+  <SyncErrorBanner
+    subscribe={subscribeSyncError}
+    formatMessage={(reason) => t('sync.banner', { reason })}
+    dismissLabel={t('common.close')}
+  />
   <SideNav />
 
   <div class="main-wrap" data-mobile-chrome="tabbar">

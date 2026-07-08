@@ -8,7 +8,7 @@
   } from '$lib/domain/selectors.js';
   import { computeDayScheduleStats } from '$lib/domain/schedule.js';
   import ScheduleSummary from './schedule/ScheduleSummary.svelte';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   /** @type {{ selected: string, countOn: (day: string) => number }} */
   let { selected, countOn } = $props();

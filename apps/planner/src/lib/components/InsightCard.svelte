@@ -12,7 +12,7 @@
   import { todayKey } from '$lib/state.svelte.js';
   import { openTaskEditor, toast } from '$lib/ui.svelte.js';
   import { editTask } from '$lib/taskUi.js';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   const DISMISS_KEY = 'planner_insight_dismissed';
 

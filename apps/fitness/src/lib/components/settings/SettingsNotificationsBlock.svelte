@@ -1,5 +1,5 @@
 <script>
-  import SettingsSection from './SettingsSection.svelte';
+  import SettingsSection from '@life-os/platform-web/svelte/settings/section';
   import SettingsNotificationsRows from './SettingsNotificationsRows.svelte';
 
   /**

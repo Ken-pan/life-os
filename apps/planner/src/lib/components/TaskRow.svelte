@@ -13,7 +13,7 @@
   import { buildTaskMetaLine } from '$lib/domain/taskMetaLine.js';
   import { openSchedulePopover } from '$lib/ui.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, metaMinimal?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, contextDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
   let {

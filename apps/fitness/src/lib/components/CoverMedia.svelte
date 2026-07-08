@@ -1,5 +1,5 @@
 <script>
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   /** @type {{ src?: string | null; alt?: string; loading?: 'lazy' | 'eager'; size?: 'sm' | 'lg' }} */
   let { src = null, alt = '', loading = 'lazy', size = 'sm' } = $props();

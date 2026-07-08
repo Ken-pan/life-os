@@ -13,7 +13,7 @@
   import { progressionAdvice, formatProgressionWeight } from '$lib/progression.js';
   import { findExercise } from '$lib/programRuntime.js';
   import { reveal } from '$lib/actions/reveal.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import BackButton from '$lib/components/BackButton.svelte';
   import { t, resolveLocale } from '$lib/i18n/index.js';
   import { dayDisplayFull } from '$lib/i18n/programLabels.js';

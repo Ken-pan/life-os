@@ -3,7 +3,7 @@
   import { t } from '$lib/i18n/index.js';
   import { openSchedulePopover } from '$lib/ui.svelte.js';
   import { editTask } from '$lib/taskUi.js';
-  import Icon from '../Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   /** @type {{ dateKey: string, tasks: import('$lib/types.js').Task[] }} */
   let { dateKey, tasks } = $props();

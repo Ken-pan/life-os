@@ -1,6 +1,6 @@
 <script>
-  import SettingsRow from './SettingsRow.svelte';
-  import SettingsToggleRow from './SettingsToggleRow.svelte';
+  import SettingsRow from '@life-os/platform-web/svelte/settings/row';
+  import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row';
 
   /**
    * @type {{

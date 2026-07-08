@@ -3,7 +3,7 @@
   import { t } from '$lib/i18n/index.js';
   import { editTask } from '$lib/taskUi.js';
   import RhythmSummaryCard from './RhythmSummaryCard.svelte';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   /** @type {{
     summary: ReturnType<import('$lib/domain/rhythm.js').computeRhythmSummary>,

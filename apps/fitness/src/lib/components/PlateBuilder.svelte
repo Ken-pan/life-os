@@ -15,7 +15,7 @@
     plateSettingsSummary,
     allPlatesFor
   } from '$lib/tools/calculators.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import Dumbbell from '$lib/dumbbell-kit/Dumbbell.svelte';
   import { plateSpecsFor, plateSwatch } from '$lib/dumbbell-kit/weightMap.js';
   import {

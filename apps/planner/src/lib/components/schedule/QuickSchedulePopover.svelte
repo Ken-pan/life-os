@@ -20,7 +20,7 @@
   import { selectScheduledForDate } from '$lib/domain/selectors.js';
   import { taskIndex } from '$lib/taskIndex.svelte.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
-  import Icon from '../Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   let start = $state('09:00');
   let duration = $state(30);

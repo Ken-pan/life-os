@@ -1,6 +1,6 @@
 <script>
-  import SettingsSection from './SettingsSection.svelte';
-  import SettingsBackupRows from './SettingsBackupRows.svelte';
+  import SettingsSection from '@life-os/platform-web/svelte/settings/section';
+  import SettingsBackupRows from '@life-os/platform-web/svelte/settings/backup-rows';
 
   /**
    * @type {{

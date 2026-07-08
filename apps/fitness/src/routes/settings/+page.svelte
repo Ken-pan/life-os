@@ -18,13 +18,13 @@
   import { pushToCloud, pullFromCloud, withSyncNotify } from '$lib/sync.js';
   import { reveal } from '$lib/actions/reveal.js';
   import { t } from '$lib/i18n/index.js';
-  import Icon from '$lib/components/Icon.svelte';
-  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
+  import SettingsSection from '@life-os/platform-web/svelte/settings/section';
   import SettingsAppearanceRows from '$lib/components/settings/SettingsAppearanceRows.svelte';
-  import SettingsRow from '$lib/components/settings/SettingsRow.svelte';
-  import SettingsToggle from '$lib/components/settings/SettingsToggle.svelte';
-  import SettingsStackBlock from '$lib/components/settings/SettingsStackBlock.svelte';
-  import SettingsButtonGroup from '$lib/components/settings/SettingsButtonGroup.svelte';
+  import SettingsRow from '@life-os/platform-web/svelte/settings/row';
+  import SettingsToggle from '@life-os/platform-web/svelte/settings/toggle';
+  import SettingsStackBlock from '@life-os/platform-web/svelte/settings/stack-block';
+  import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group';
 
   let importInput;
   let syncing = $state(false);

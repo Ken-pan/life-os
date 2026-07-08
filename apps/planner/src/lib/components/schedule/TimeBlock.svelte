@@ -15,7 +15,7 @@
   } from '$lib/domain/schedule.js';
   import { completeTask, editTask } from '$lib/taskUi.js';
   import { applyTaskSchedule } from '$lib/ui.svelte.js';
-  import Icon from '../Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   /** @type {{
     task: import('$lib/types.js').Task,

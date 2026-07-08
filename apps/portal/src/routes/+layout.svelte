@@ -5,7 +5,7 @@
   import { createCoreIdentityHandler } from '@life-os/sync'
   import CommandPalette from '@life-os/platform-web/CommandPalette.svelte'
   import { bindViewportHeight } from '@life-os/theme'
-  import DocumentHead from '$lib/components/DocumentHead.svelte'
+  import DocumentHead from '@life-os/platform-web/svelte/head'
   import PortalAppBar from '$lib/components/PortalAppBar.svelte'
   import { PORTAL_APPS, getLauncherMeta } from '$lib/apps.js'
 
@@ -64,7 +64,7 @@
   })
 </script>
 
-<DocumentHead pageTitle={session ? '选择应用' : '登录'} />
+<DocumentHead appId="portal" pageTitle={session ? '选择应用' : '登录'} />
 
 {#if !isReady}
   <div class="portal-loading">正在初始化 Life OS…</div>

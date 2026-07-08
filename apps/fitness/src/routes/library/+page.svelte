@@ -12,7 +12,7 @@
   import { localizeLibraryEntry } from '$lib/i18n/libraryLabels.js';
   import libraryEn from '$lib/i18n/messages/library-en.js';
   import { reveal } from '$lib/actions/reveal.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import BackButton from '$lib/components/BackButton.svelte';
   import { t } from '$lib/i18n/index.js';
 

@@ -9,7 +9,7 @@
     restSuggestion,
     volumeTotal
   } from '$lib/tools/calculators.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import PlateToolPanel from '$lib/components/PlateToolPanel.svelte';
   import { t } from '$lib/i18n/index.js';
 

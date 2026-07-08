@@ -1,6 +1,6 @@
 <script>
   import TrackArt from './TrackArt.svelte'
-  import Icon from './Icon.svelte'
+  import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
   import { artGradient } from '$lib/trackArt.js'
   import { playTracks } from '$lib/player.svelte.js'

@@ -4,8 +4,8 @@
  * desktop：完整侧栏分组
  */
 
-/** @typedef {{ tab: string; href: string; label: string; icon: string; match: (pathname: string) => boolean }} NavItem */
-/** @typedef {{ label: string; items: NavItem[] }} NavGroup */
+/** @typedef {import('@life-os/platform-web/navigation').WebNavItem} NavItem */
+/** @typedef {import('@life-os/platform-web/navigation').WebNavGroup} NavGroup */
 
 /** @param {(key: string, params?: Record<string, unknown>) => string} tr */
 export function buildPrimaryNavItems(tr) {

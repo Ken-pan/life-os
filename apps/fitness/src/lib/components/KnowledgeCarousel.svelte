@@ -3,7 +3,7 @@
   import { reveal } from '$lib/actions/reveal.js';
   import { openKnowledgeSheet } from '$lib/ui.svelte.js';
   import { getRecommendedEntries, getKnowledgeTeaser } from '$lib/data/libraryHelpers.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
 
   const DISMISS_KEY = 'fitness:knowledge-carousel-dismissed';

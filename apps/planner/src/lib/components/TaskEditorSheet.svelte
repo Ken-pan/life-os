@@ -11,7 +11,7 @@
   import { createImeGuard } from '@life-os/theme';
   import DateField from './DateField.svelte';
   import TimeField from './TimeField.svelte';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   const ime = createImeGuard();
 

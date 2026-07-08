@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { t } from '$lib/i18n/index.js';
   import TrackArt from '$lib/components/TrackArt.svelte';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { getSpeedDialEditCells, speedDialReasonKey } from '$lib/speedDial.js';
   import {
     saveSpeedDialBoardOrder,

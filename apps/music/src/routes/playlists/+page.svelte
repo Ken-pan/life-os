@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { t } from '$lib/i18n/index.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { createPlaylist, getPlaylists } from '$lib/db.js';
   import { goto } from '$app/navigation';
   import { toast } from '$lib/ui.svelte.js';

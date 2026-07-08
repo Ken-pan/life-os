@@ -1,7 +1,7 @@
 <script>
   import '../app.css'
   import { browser } from '$app/environment'
-  import { onMount } from 'svelte'
+  import { onMount, setContext } from 'svelte'
   import { onNavigate, afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import AppBar from '$lib/components/AppBar.svelte'
@@ -11,8 +11,12 @@
   import QueueDrawer from '$lib/components/QueueDrawer.svelte'
   import UtilityPane from '$lib/components/UtilityPane.svelte'
   import Toast from '$lib/components/Toast.svelte'
-  import SyncErrorBanner from '$lib/components/SyncErrorBanner.svelte'
-  import DocumentHead from '$lib/components/DocumentHead.svelte'
+  import ConnectivitySyncStatus from '$lib/components/ConnectivitySyncStatus.svelte'
+  import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
+  import DocumentHead from '@life-os/platform-web/svelte/head'
+  import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
+  import { ICONS } from '$lib/iconRegistry.js'
+  import { subscribeSyncError } from '$lib/syncNotify.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { applyLocale, t } from '$lib/i18n/index.js'
   import {
@@ -48,6 +52,8 @@
   } from '$lib/ui.svelte.js'
 
   let { children } = $props()
+
+  setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   /** @type {HTMLInputElement | null} */
   let searchInput = $state(null)
@@ -207,7 +213,12 @@
   <SideNav />
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
-  <SyncErrorBanner />
+  <ConnectivitySyncStatus />
+  <SyncErrorBanner
+    subscribe={subscribeSyncError}
+    formatMessage={(reason) => t('sync.banner', { reason })}
+    dismissLabel={t('common.close')}
+  />
 
   <div
     class="main-wrap"

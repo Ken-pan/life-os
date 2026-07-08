@@ -1,7 +1,7 @@
 <script>
   import { openKnowledgeSheet } from '$lib/ui.svelte.js';
   import { getLibraryEntry } from '$lib/data/libraryHelpers.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
 
   /** @type {{ entryId: string; label?: string; iconOnly?: boolean; class?: string }} */

@@ -2,7 +2,7 @@
   import { t, localeTag } from '$lib/i18n/index.js';
   import { formatDateDisplay, formatDateCompact } from '$lib/domain/dateFormat.js';
   import { todayKey } from '$lib/state.svelte.js';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   /** @type {{
     id?: string,

@@ -17,7 +17,7 @@
   import { deloadAdvice, markDeloadDone } from '$lib/phase.js';
 
   import { coachBrief } from '$lib/coach.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import KnowledgeTrigger from '$lib/components/KnowledgeTrigger.svelte';
   import KnowledgeCarousel from '$lib/components/KnowledgeCarousel.svelte';
   import { t, localeTag } from '$lib/i18n/index.js';

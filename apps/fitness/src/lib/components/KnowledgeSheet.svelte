@@ -3,7 +3,7 @@
   import { resolve } from '$app/paths';
   import { knowledgeSheet, closeKnowledgeSheet } from '$lib/ui.svelte.js';
   import { getLibraryEntry, getKnowledgePreview, libraryHref } from '$lib/data/libraryHelpers.js';
-  import Icon from '$lib/components/Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
 
   let closeBtn = $state(null);

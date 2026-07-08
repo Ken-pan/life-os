@@ -1,9 +1,9 @@
 <script>
   import { S, updateSettings, todayKey } from '$lib/state.svelte.js';
   import { t } from '$lib/i18n/index.js';
-  import SettingsToggleRow from './SettingsToggleRow.svelte';
-  import SettingsSegment from './SettingsSegment.svelte';
-  import SettingsRow from './SettingsRow.svelte';
+  import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row';
+  import SettingsSegment from '@life-os/platform-web/svelte/settings/segment';
+  import SettingsRow from '@life-os/platform-web/svelte/settings/row';
   import {
     canMarkRestDay,
     isRestDay,

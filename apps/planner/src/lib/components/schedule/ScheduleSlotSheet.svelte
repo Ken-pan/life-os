@@ -16,7 +16,7 @@
     toast,
   } from '$lib/ui.svelte.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
-  import Icon from '../Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   const index = $derived(taskIndex());
   const unscheduled = $derived(

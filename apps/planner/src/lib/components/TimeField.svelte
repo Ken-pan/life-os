@@ -1,6 +1,6 @@
 <script>
   import { t } from '$lib/i18n/index.js';
-  import Icon from './Icon.svelte';
+  import Icon from '@life-os/platform-web/svelte/icon';
 
   /** @type {{
     id?: string,
