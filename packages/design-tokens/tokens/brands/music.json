@@ -1,0 +1,236 @@
+{
+  "app": "music",
+  "defaultMode": "light",
+  "modes": {
+    "light": {
+      "colorScheme": "light",
+      "vars": {
+        "bg": {
+          "$type": "color",
+          "$value": "#faf5f4"
+        },
+        "bg-2": {
+          "$type": "color",
+          "$value": "#fff9f8"
+        },
+        "bg-elevated": {
+          "$type": "color",
+          "$value": "#ffffff"
+        },
+        "card": {
+          "$type": "color",
+          "$value": "#ffffff"
+        },
+        "card-h": {
+          "$type": "color",
+          "$value": "#fff0ee"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#ecd8d4"
+        },
+        "border-l": {
+          "$type": "color",
+          "$value": "#dfc4bf"
+        },
+        "t1": {
+          "$type": "color",
+          "$value": "#1f1214"
+        },
+        "t2": {
+          "$type": "color",
+          "$value": "#6b4f52"
+        },
+        "t3": {
+          "$type": "color",
+          "$value": "#8a6d70"
+        },
+        "t4": {
+          "$type": "color",
+          "$value": "#a89295"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{color.music.crimson.600}"
+        },
+        "accent-2": {
+          "$type": "color",
+          "$value": "{color.music.crimson.500}"
+        },
+        "accent-bg": {
+          "$type": "color",
+          "$value": "rgba(196, 30, 58, 0.1)"
+        },
+        "on-accent": {
+          "$type": "color",
+          "$value": "#ffffff"
+        },
+        "sidebar": {
+          "$type": "color",
+          "$value": "#1a1012"
+        },
+        "sidebar-foreground": {
+          "$type": "color",
+          "$value": "#faf0ee"
+        },
+        "sidebar-muted": {
+          "$type": "color",
+          "$value": "rgba(250, 240, 238, 0.55)"
+        },
+        "sidebar-accent": {
+          "$type": "color",
+          "$value": "#2a1619"
+        },
+        "sidebar-primary": {
+          "$type": "color",
+          "$value": "{color.music.crimson.400}"
+        },
+        "sidebar-primary-foreground": {
+          "$type": "color",
+          "$value": "#1a080c"
+        },
+        "sidebar-border": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.08)"
+        },
+        "appbar-bg": {
+          "$type": "color",
+          "$value": "rgba(250, 245, 244, 0.88)"
+        },
+        "nav-bg": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.94)"
+        },
+        "seg-display": {
+          "$type": "cssValue",
+          "$value": "flex"
+        },
+        "seg-track-bg": {
+          "$type": "color",
+          "$value": "color-mix(in srgb, var(--accent) 6%, var(--card))"
+        },
+        "seg-track-border": {
+          "$type": "cssValue",
+          "$value": "1px solid color-mix(in srgb, var(--accent) 18%, var(--border))"
+        },
+        "seg-track-radius": {
+          "$type": "cssValue",
+          "$value": "var(--radius-pill)"
+        },
+        "seg-active-bg-token": {
+          "$type": "cssValue",
+          "$value": "var(--accent)"
+        },
+        "seg-active-fg-token": {
+          "$type": "cssValue",
+          "$value": "var(--on-accent)"
+        },
+        "toast-radius": {
+          "$type": "dimension",
+          "$value": "22px"
+        },
+        "toast-bg": {
+          "$type": "cssValue",
+          "$value": "var(--card-h)"
+        },
+        "toast-border": {
+          "$type": "cssValue",
+          "$value": "var(--border-l)"
+        }
+      }
+    },
+    "dark": {
+      "colorScheme": "dark",
+      "vars": {
+        "bg": {
+          "$type": "color",
+          "$value": "#100a0c"
+        },
+        "bg-2": {
+          "$type": "color",
+          "$value": "#161012"
+        },
+        "bg-elevated": {
+          "$type": "color",
+          "$value": "#1a1214"
+        },
+        "card": {
+          "$type": "color",
+          "$value": "#1a1214"
+        },
+        "card-h": {
+          "$type": "color",
+          "$value": "#241619"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "rgba(255, 220, 215, 0.08)"
+        },
+        "border-l": {
+          "$type": "color",
+          "$value": "rgba(255, 220, 215, 0.12)"
+        },
+        "t1": {
+          "$type": "color",
+          "$value": "#faf0ee"
+        },
+        "t2": {
+          "$type": "color",
+          "$value": "#c4a8aa"
+        },
+        "t3": {
+          "$type": "color",
+          "$value": "#9a8083"
+        },
+        "t4": {
+          "$type": "color",
+          "$value": "#80686b"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{color.music.crimson.400}"
+        },
+        "accent-2": {
+          "$type": "color",
+          "$value": "{color.music.crimson.300}"
+        },
+        "accent-bg": {
+          "$type": "color",
+          "$value": "rgba(255, 77, 109, 0.14)"
+        },
+        "on-accent": {
+          "$type": "color",
+          "$value": "#1a080c"
+        },
+        "sidebar": {
+          "$type": "color",
+          "$value": "#0c0708"
+        },
+        "sidebar-foreground": {
+          "$type": "color",
+          "$value": "#faf0ee"
+        },
+        "sidebar-accent": {
+          "$type": "color",
+          "$value": "#1a1012"
+        },
+        "sidebar-primary": {
+          "$type": "color",
+          "$value": "{color.music.crimson.400}"
+        },
+        "sidebar-primary-foreground": {
+          "$type": "color",
+          "$value": "#1a080c"
+        },
+        "appbar-bg": {
+          "$type": "color",
+          "$value": "rgba(16, 10, 12, 0.88)"
+        },
+        "nav-bg": {
+          "$type": "color",
+          "$value": "rgba(22, 16, 18, 0.94)"
+        }
+      }
+    }
+  }
+}

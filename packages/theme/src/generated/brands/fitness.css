@@ -1,4 +1,9 @@
-/* Fitness brand — dark-first (light uses same surface stack for preview) */
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/brands/fitness.json
+  Rebuild: npm run build:tokens
+*/
+
 [data-app='fitness'] {
   --bg: #0d0d0e;
   --bg-2: #141415;
@@ -35,6 +40,29 @@
   color-scheme: dark;
 }
 
-[data-app='fitness'][data-mode='light'] {
+[data-app='fitness'][data-mode='light'],
+[data-app='fitness'][data-theme='light'] {
+  --bg: #f4f4f3;
+  --bg-2: #ffffff;
+  --card: #ffffff;
+  --card-h: #efefed;
+  --border: #e6e6e3;
+  --border-l: #d8d8d4;
+  --accent: #c42f0a;
+  --accent-2: #e5380f;
+  --accent-bg: rgba(229, 56, 15, 0.10);
+  --t1: #1a1a1a;
+  --t2: #5a5a5a;
+  --t3: #6e6e6e;
+  --t4: #707070;
+  --on-accent: #ffffff;
+  --appbar-bg: rgba(244, 244, 243, 0.85);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --sidebar: #1c1c1e;
+  --sidebar-foreground: #f2f2f2;
+  --sidebar-muted: rgba(242, 242, 242, 0.55);
+  --sidebar-accent: #262628;
+  --sidebar-primary: var(--accent);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
   color-scheme: light;
 }

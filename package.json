@@ -34,7 +34,9 @@
     "test:pwa": "playwright test",
     "qa:pwa": "npm run pwa:healthcheck && npm run test:pwa && npm run qa:mobile-scroll",
     "dev:design-catalog": "npm run dev -w design-catalog",
-    "test:design-catalog": "playwright test -c playwright.design-catalog.config.ts"
+    "test:design-catalog": "playwright test -c playwright.design-catalog.config.ts",
+    "build:tokens": "node packages/design-tokens/scripts/build-css.mjs",
+    "validate:tokens": "node packages/design-tokens/scripts/validate-tokens.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

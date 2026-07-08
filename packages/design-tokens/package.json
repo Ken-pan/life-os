@@ -1,0 +1,11 @@
+{
+  "name": "@life-os/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Life OS design token source of truth (DTCG-like JSON) → generates packages/theme/src/generated/*.css",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-css.mjs",
+    "validate": "node scripts/validate-tokens.mjs"
+  }
+}

@@ -1,3 +1,9 @@
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/brands/finance.json
+  Rebuild: npm run build:tokens
+*/
+
 [data-app='finance'] {
   --bg: #f2f4f2;
   --bg-elevated: #ffffff;
@@ -21,11 +27,14 @@
   --sidebar-primary: #c6f43d;
   --sidebar-primary-foreground: #161a05;
   --sidebar-border: #282c28;
+  --seg-track-bg: color-mix(in srgb, var(--text) 4%, var(--bg-elevated));
   --seg-active-bg-token: var(--lime);
+  --seg-active-fg-token: var(--on-lime);
   color-scheme: light;
 }
 
-[data-app='finance'][data-mode='dark'] {
+[data-app='finance'][data-mode='dark'],
+[data-app='finance'][data-theme='dark'] {
   --bg: #0b0d0c;
   --bg-elevated: #141815;
   --card: #141815;
@@ -41,6 +50,12 @@
   --accent: var(--lime);
   --accent-subtle: #1e2412;
   --on-accent: #161a05;
+  --sidebar: #0b0d0c;
+  --sidebar-foreground: rgba(255, 255, 255, 0.92);
+  --sidebar-muted: rgba(255, 255, 255, 0.55);
+  --sidebar-accent: #181d18;
   --sidebar-primary: var(--lime);
+  --sidebar-primary-foreground: #161a05;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
   color-scheme: dark;
 }

@@ -1,37 +1,16 @@
 @import '@life-os/theme/design-system.css';
 @import '@life-os/theme/music-shell.css';
+@import '@life-os/theme/brands/music.css';
 
-/* MUSIC.OS 品牌层 — 感性深红；播放器氛围色见 trackAmbience + artPalette */
+/*
+  MUSIC.OS 品牌层 — 感性深红；播放器氛围色见 trackAmbience + artPalette
+  品牌 token（表面/文本/深红标志色/侧栏/seg/toast）由 @life-os/theme/brands/music.css 提供，
+  真源在 packages/design-tokens/tokens/brands/music.json（勿在此复写）。
+*/
 
 :root {
   --content-max: 920px;
-  --bg: #faf5f4;
-  --bg-2: #fff9f8;
-  --bg-elevated: #ffffff;
-  --card: #ffffff;
-  --card-h: #fff0ee;
-  --border: #ecd8d4;
-  --border-l: #dfc4bf;
-  --t1: #1f1214;
-  --t2: #6b4f52;
-  --t3: #8a6d70;
-  --t4: #a89295;
 
-  --accent: #c41e3a;
-  --accent-2: #e8394f;
-  --accent-bg: rgba(196, 30, 58, 0.1);
-  --on-accent: #ffffff;
-
-  --sidebar: #1a1012;
-  --sidebar-foreground: #faf0ee;
-  --sidebar-muted: rgba(250, 240, 238, 0.55);
-  --sidebar-accent: #2a1619;
-  --sidebar-primary: #ff4d6d;
-  --sidebar-primary-foreground: #1a080c;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-
-  --appbar-bg: rgba(250, 245, 244, 0.88);
-  --nav-bg: rgba(255, 255, 255, 0.94);
   --shadow: rgba(31, 18, 20, 0.08);
   --shadow-elevated: 0 12px 40px rgba(196, 30, 58, 0.12), 0 4px 16px rgba(31, 18, 20, 0.06);
   --shadow-card: 0 1px 2px rgba(31, 18, 20, 0.04), 0 6px 20px rgba(196, 30, 58, 0.06);
@@ -44,19 +23,6 @@
   --player-glow: rgba(232, 57, 79, 0.38);
   --safari-chrome-tint-top-bg: var(--bg);
   --safari-chrome-tint-bottom-bg: var(--bg-2);
-
-  --seg-display: flex;
-  --seg-track-bg: color-mix(in srgb, var(--accent) 6%, var(--card));
-  --seg-track-border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
-  --seg-track-radius: var(--radius-pill);
-  --seg-active-bg-token: var(--accent);
-  --seg-active-fg-token: var(--on-accent);
-
-  --toast-radius: 22px;
-  --toast-bg: var(--card-h);
-  --toast-border: var(--border-l);
-
-  color-scheme: light;
 }
 
 @property --track-accent {
@@ -99,37 +65,13 @@ html {
 }
 
 :root[data-theme='dark'] {
-  --bg: #100a0c;
-  --bg-2: #161012;
-  --bg-elevated: #1a1214;
-  --card: #1a1214;
-  --card-h: #241619;
-  --border: rgba(255, 220, 215, 0.08);
-  --border-l: rgba(255, 220, 215, 0.12);
-  --t1: #faf0ee;
-  --t2: #c4a8aa;
-  --t3: #9a8083;
-  --t4: #80686b;
-
-  --accent: #ff4d6d;
-  --accent-2: #ff758f;
-  --accent-bg: rgba(255, 77, 109, 0.14);
-  --on-accent: #1a080c;
-
-  --sidebar: #0c0708;
-  --sidebar-foreground: #faf0ee;
-  --sidebar-accent: #1a1012;
-  --sidebar-primary: #ff4d6d;
-  --sidebar-primary-foreground: #1a080c;
-
-  --appbar-bg: rgba(16, 10, 12, 0.88);
-  --nav-bg: rgba(22, 16, 18, 0.94);
   --shadow-elevated: 0 16px 48px rgba(0, 0, 0, 0.45);
   --theme-color: #100a0c;
   --player-glow: rgba(255, 77, 109, 0.32);
   --safari-chrome-tint-top-bg: var(--bg);
   --safari-chrome-tint-bottom-bg: var(--bg-2);
 
+  /* Music 专属状态色调（与共享 tokens.css 深色基线不同，刻意保留） */
   --positive: #7ee0b8;
   --positive-subtle: #1a2e28;
   --warning: #f2bd6c;
@@ -140,8 +82,6 @@ html {
   --info-subtle: #1a2438;
   --toast-bg: color-mix(in srgb, var(--card-h) 88%, var(--positive) 12%);
   --toast-border: color-mix(in srgb, var(--positive) 28%, var(--border-l));
-
-  color-scheme: dark;
 }
 
 /* Music 领域 UI */

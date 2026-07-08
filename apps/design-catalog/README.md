@@ -5,13 +5,14 @@
 ## 架构
 
 ```txt
+packages/design-tokens             ← token JSON source of truth（P1）
 @life-os/theme/design-system.css   ← 共享 CSS（canonical）
-@life-os/theme/app-themes.css      ← 四端品牌 token（canonical，[data-app] / [data-mode]）
+@life-os/theme/app-themes.css      ← 四端品牌 token（generated，[data-app] / [data-mode]，勿手改）
 @life-os/platform-web/svelte/*     ← 真实组件
 apps/design-catalog                ← 仅导航 + matrix + fixtures + layout chrome
 ```
 
-P1 目标：`packages/design-tokens` JSON → 生成 `app-themes.css`。
+P1 已完成：`packages/design-tokens` JSON → `npm run build:tokens` 生成 `packages/theme/src/generated/*.css`。
 P3 可选：Storybook / Histoire（Svelte 5 稳定后）或 Playwright visual regression 扩展。
 
 ## 启动

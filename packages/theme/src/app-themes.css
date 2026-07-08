@@ -1,9 +1,6 @@
 /*
-  Life OS app brand themes — canonical CSS for preview and future app migration.
-  Source: app brand layers. Next: packages/design-tokens (P1).
+  Life OS app brand themes — generated from packages/design-tokens (P1 SSOT).
+  Do not add brand values here; edit tokens/brands/*.json and run `npm run build:tokens`.
 */
 
-@import './brands/planner.css';
-@import './brands/fitness.css';
-@import './brands/finance.css';
-@import './brands/music.css';
+@import './generated/app-themes.css';

@@ -18,10 +18,10 @@
     "./tokens.css": "./src/tokens.css",
     "./seg.css": "./src/seg.css",
     "./app-themes.css": "./src/app-themes.css",
-    "./brands/planner.css": "./src/brands/planner.css",
-    "./brands/fitness.css": "./src/brands/fitness.css",
-    "./brands/finance.css": "./src/brands/finance.css",
-    "./brands/music.css": "./src/brands/music.css",
+    "./brands/planner.css": "./src/generated/brands/planner.css",
+    "./brands/fitness.css": "./src/generated/brands/fitness.css",
+    "./brands/finance.css": "./src/generated/brands/finance.css",
+    "./brands/music.css": "./src/generated/brands/music.css",
     "./brand": {
       "types": "./src/index.d.ts",
       "import": "./src/brand.js"

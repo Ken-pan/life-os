@@ -1,0 +1,34 @@
+{
+  "status": {
+    "light": {
+      "positive": { "$type": "color", "$value": "#087a5b" },
+      "positive-subtle": { "$type": "color", "$value": "#e6f6ef" },
+      "warning": { "$type": "color", "$value": "#9a5b08" },
+      "warning-subtle": { "$type": "color", "$value": "#fff4df" },
+      "critical": { "$type": "color", "$value": "#b9364f" },
+      "critical-subtle": { "$type": "color", "$value": "#fcedef" },
+      "info": { "$type": "color", "$value": "#2b65b1" },
+      "info-subtle": { "$type": "color", "$value": "#eaf2fc" }
+    },
+    "dark": {
+      "positive": { "$type": "color", "$value": "#6dd6ad" },
+      "positive-subtle": { "$type": "color", "$value": "#17382e" },
+      "warning": { "$type": "color", "$value": "#f2bd6c" },
+      "warning-subtle": { "$type": "color", "$value": "#423116" },
+      "critical": { "$type": "color", "$value": "#ff8fa2" },
+      "critical-subtle": { "$type": "color", "$value": "#4a2028" },
+      "info": { "$type": "color", "$value": "#8db8f4" },
+      "info-subtle": { "$type": "color", "$value": "#1a2d42" }
+    }
+  },
+  "contract": {
+    "$description": "Semantic vars every brand's default mode must define. Text tiers accept either the t1..t4 stack (planner/fitness/music) or the text/text-secondary/text-muted stack (finance/fitness).",
+    "requiredBrandVars": ["bg", "card", "border", "accent", "on-accent", "sidebar"],
+    "requiredTextVars": {
+      "anyOf": [
+        ["t1", "t2", "t3"],
+        ["text", "text-secondary", "text-muted"]
+      ]
+    }
+  }
+}

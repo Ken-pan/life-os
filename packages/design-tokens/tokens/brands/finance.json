@@ -1,0 +1,204 @@
+{
+  "app": "finance",
+  "defaultMode": "light",
+  "modes": {
+    "light": {
+      "colorScheme": "light",
+      "vars": {
+        "bg": {
+          "$type": "color",
+          "$value": "#f2f4f2"
+        },
+        "bg-elevated": {
+          "$type": "color",
+          "$value": "#ffffff"
+        },
+        "card": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.94)"
+        },
+        "card-hover": {
+          "$type": "color",
+          "$value": "#f0f3f1"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "#d8e0dc"
+        },
+        "border-strong": {
+          "$type": "color",
+          "$value": "#bec9c4"
+        },
+        "text": {
+          "$type": "color",
+          "$value": "#141c1f"
+        },
+        "text-secondary": {
+          "$type": "color",
+          "$value": "#4a5857"
+        },
+        "text-muted": {
+          "$type": "color",
+          "$value": "#687674"
+        },
+        "primary": {
+          "$type": "color",
+          "$value": "#16191a"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{color.finance.olive.600}"
+        },
+        "accent-subtle": {
+          "$type": "color",
+          "$value": "#eef8d4"
+        },
+        "on-accent": {
+          "$type": "color",
+          "$value": "#ffffff"
+        },
+        "lime": {
+          "$type": "color",
+          "$value": "{color.finance.lime.400}"
+        },
+        "on-lime": {
+          "$type": "color",
+          "$value": "#161a05"
+        },
+        "sidebar": {
+          "$type": "color",
+          "$value": "#121413"
+        },
+        "sidebar-foreground": {
+          "$type": "color",
+          "$value": "#f7f8f5"
+        },
+        "sidebar-muted": {
+          "$type": "color",
+          "$value": "#9aa39a"
+        },
+        "sidebar-accent": {
+          "$type": "color",
+          "$value": "#1f2320"
+        },
+        "sidebar-primary": {
+          "$type": "color",
+          "$value": "{color.finance.lime.400}"
+        },
+        "sidebar-primary-foreground": {
+          "$type": "color",
+          "$value": "#161a05"
+        },
+        "sidebar-border": {
+          "$type": "color",
+          "$value": "#282c28"
+        },
+        "seg-track-bg": {
+          "$type": "cssValue",
+          "$value": "color-mix(in srgb, var(--text) 4%, var(--bg-elevated))"
+        },
+        "seg-active-bg-token": {
+          "$type": "cssValue",
+          "$value": "var(--lime)"
+        },
+        "seg-active-fg-token": {
+          "$type": "cssValue",
+          "$value": "var(--on-lime)"
+        }
+      }
+    },
+    "dark": {
+      "colorScheme": "dark",
+      "vars": {
+        "bg": {
+          "$type": "color",
+          "$value": "#0b0d0c"
+        },
+        "bg-elevated": {
+          "$type": "color",
+          "$value": "#141815"
+        },
+        "card": {
+          "$type": "color",
+          "$value": "#141815"
+        },
+        "card-hover": {
+          "$type": "color",
+          "$value": "#181d18"
+        },
+        "border": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.075)"
+        },
+        "border-strong": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.11)"
+        },
+        "text": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.92)"
+        },
+        "text-secondary": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.68)"
+        },
+        "text-muted": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.48)"
+        },
+        "lime": {
+          "$type": "color",
+          "$value": "{color.finance.lime.500}"
+        },
+        "on-lime": {
+          "$type": "color",
+          "$value": "#161a05"
+        },
+        "primary": {
+          "$type": "cssValue",
+          "$value": "var(--lime)"
+        },
+        "accent": {
+          "$type": "cssValue",
+          "$value": "var(--lime)"
+        },
+        "accent-subtle": {
+          "$type": "color",
+          "$value": "#1e2412"
+        },
+        "on-accent": {
+          "$type": "color",
+          "$value": "#161a05"
+        },
+        "sidebar": {
+          "$type": "color",
+          "$value": "#0b0d0c"
+        },
+        "sidebar-foreground": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.92)"
+        },
+        "sidebar-muted": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.55)"
+        },
+        "sidebar-accent": {
+          "$type": "color",
+          "$value": "#181d18"
+        },
+        "sidebar-primary": {
+          "$type": "cssValue",
+          "$value": "var(--lime)"
+        },
+        "sidebar-primary-foreground": {
+          "$type": "color",
+          "$value": "#161a05"
+        },
+        "sidebar-border": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.07)"
+        }
+      }
+    }
+  }
+}

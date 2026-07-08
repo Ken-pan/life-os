@@ -12,7 +12,7 @@
 <section class="catalog-section" data-testid="showcase-tokens">
   <h2 class="catalog-section__title">Brand tokens</h2>
   <p class="catalog-section__desc">
-    来自 <code>@life-os/theme/app-themes.css</code>（canonical brand layer）
+    来自 <code>@life-os/theme/app-themes.css</code>（由 <code>@life-os/design-tokens</code> 生成）
   </p>
   <div class="catalog-panel catalog-row">
     {#each swatches as swatch}

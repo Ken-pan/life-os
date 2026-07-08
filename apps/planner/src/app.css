@@ -1,47 +1,21 @@
 @import '@life-os/theme/design-system.css';
+@import '@life-os/theme/brands/planner.css';
 
 /*
   PLANNER.OS 品牌层
-  暖矿物中性 + 琥珀标志色；默认 Paper（浅色），Night 见 [data-theme="dark"]。
+  品牌 token（表面/文本/琥珀标志色/侧栏/seg）由 @life-os/theme/brands/planner.css 提供，
+  真源在 packages/design-tokens/tokens/brands/planner.json（勿在此复写）。
+  下面只保留 app 专属扩展：领域语义、阴影、chrome。
   布局 / 侧栏 / 按钮 / 设置等通用样式见 @life-os/theme/design-system.css
 */
 
 :root {
-  /* ===== 表面 / 文本 ===== */
-  --bg: #f5f3f0;
-  --bg-2: #ffffff;
-  --card: #ffffff;
-  --card-h: #f0ece6;
-  --border: #e4e0da;
-  --border-l: #d4cfc8;
-  --t1: #1f1c18;
-  --t2: #5c5650;
-  --t3: #78736d;
-  --t4: #9a9590;
-
-  /* ===== 品牌 / 标志色（琥珀；浅色下加深） ===== */
-  --accent: #c47a08;
-  --accent-2: #e19312;
-  --accent-bg: rgba(196, 122, 8, 0.1);
-  --on-accent: #ffffff;
-
   /* ===== 领域语义（任务 UI） ===== */
   --done: var(--positive);
   --deadline: var(--critical);
   --link: var(--info);
 
-  /* ===== 侧栏（石墨暖黑导航轨 + 琥珀高亮） ===== */
-  --sidebar: #161412;
-  --sidebar-foreground: #f5f0ea;
-  --sidebar-muted: rgba(245, 240, 234, 0.55);
-  --sidebar-accent: #221f1c;
-  --sidebar-primary: #e9a832;
-  --sidebar-primary-foreground: #1a1408;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-
-  /* ===== 主题 chrome ===== */
-  --appbar-bg: rgba(245, 243, 240, 0.88);
-  --nav-bg: rgba(255, 255, 255, 0.92);
+  /* ===== 主题 chrome / 阴影 ===== */
   --shadow: rgba(31, 28, 24, 0.08);
   --shadow-elevated: 0 8px 28px rgba(31, 28, 24, 0.1), 0 2px 8px rgba(31, 28, 24, 0.05);
   --shadow-card: 0 1px 2px rgba(31, 28, 24, 0.04), 0 4px 14px rgba(31, 28, 24, 0.06);
@@ -49,62 +23,12 @@
   --shadow-focus: 0 0 0 2px rgba(196, 122, 8, 0.32);
   --btn-focus-ring: var(--shadow-focus);
   --theme-color: #f5f3f0;
-  /* Seg：松散 chip 模式（与 Finance pill / Fitness track 区分） */
-  --seg-display: flex;
-  --seg-flex-wrap: wrap;
-  --seg-gap: 8px;
-  --seg-track-bg: transparent;
-  --seg-track-border: none;
-  --seg-track-padding: 0;
-  --seg-btn-bg: var(--card);
-  --seg-btn-border: 1px solid var(--border);
-  --seg-active-bg: var(--accent-bg);
-  --seg-active-fg: var(--accent);
-  --seg-active-border-token: var(--accent);
-  color-scheme: light;
   --safari-chrome-tint-bottom-bg: var(--nav-bg);
 }
 
-:root[data-theme='light'] {
-  color-scheme: light;
-}
-
 :root[data-theme='dark'] {
-  --bg: #0f0f0e;
-  --bg-2: #171612;
-  --card: #171612;
-  --card-h: #201d17;
   --surface-elevated: #181612;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-l: rgba(255, 255, 255, 0.1);
-  --accent: #f5b83d;
-  --accent-2: #ffc966;
-  --accent-bg: rgba(245, 184, 61, 0.14);
-  --on-accent: #1a1408;
   --link: #8db8f4;
-  --done: var(--positive);
-  --deadline: var(--critical);
-  --positive: #6dd6ad;
-  --positive-subtle: #17382e;
-  --warning: #f2bd6c;
-  --warning-subtle: #423116;
-  --critical: #ff8fa2;
-  --critical-subtle: #4a2028;
-  --info: #8db8f4;
-  --info-subtle: #1a2d42;
-  --t1: #f1eee8;
-  --t2: #a7a29a;
-  --t3: #6f6a62;
-  --t4: rgba(241, 238, 232, 0.38);
-  --appbar-bg: rgba(15, 15, 14, 0.92);
-  --nav-bg: rgba(15, 15, 14, 0.94);
-  --sidebar: #0f0f0e;
-  --sidebar-foreground: #f1eee8;
-  --sidebar-muted: #a7a29a;
-  --sidebar-accent: #171612;
-  --sidebar-primary: var(--accent);
-  --sidebar-primary-foreground: var(--on-accent);
-  --sidebar-border: rgba(255, 255, 255, 0.07);
   --shadow: rgba(0, 0, 0, 0.35);
   --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.32);
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -113,7 +37,6 @@
   --theme-color: #0f0f0e;
   --task-check-stroke: #46443f;
   --safari-chrome-tint-bottom-bg: var(--nav-bg);
-  color-scheme: dark;
 }
 
 :root[data-theme='dark'] html,

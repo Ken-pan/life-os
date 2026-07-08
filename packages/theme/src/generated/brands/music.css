@@ -1,3 +1,9 @@
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/brands/music.json
+  Rebuild: npm run build:tokens
+*/
+
 [data-app='music'] {
   --bg: #faf5f4;
   --bg-2: #fff9f8;
@@ -35,7 +41,8 @@
   color-scheme: light;
 }
 
-[data-app='music'][data-mode='dark'] {
+[data-app='music'][data-mode='dark'],
+[data-app='music'][data-theme='dark'] {
   --bg: #100a0c;
   --bg-2: #161012;
   --bg-elevated: #1a1214;
@@ -52,8 +59,10 @@
   --accent-bg: rgba(255, 77, 109, 0.14);
   --on-accent: #1a080c;
   --sidebar: #0c0708;
+  --sidebar-foreground: #faf0ee;
   --sidebar-accent: #1a1012;
   --sidebar-primary: #ff4d6d;
+  --sidebar-primary-foreground: #1a080c;
   --appbar-bg: rgba(16, 10, 12, 0.88);
   --nav-bg: rgba(22, 16, 18, 0.94);
   color-scheme: dark;

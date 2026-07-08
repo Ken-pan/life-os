@@ -1,46 +1,22 @@
 @import '@life-os/theme/design-system.css';
+@import '@life-os/theme/brands/finance.css';
 
 /*
   Finance OS 品牌层
   矿物中性 + 石油青绿 + 海玻璃高光；默认 Paper（浅色），可切换 Night（夜间）。
+  品牌 token（表面/文本/lime 强调/侧栏/seg）由 @life-os/theme/brands/finance.css 提供，
+  真源在 packages/design-tokens/tokens/brands/finance.json（勿在此复写）。
   布局壳 / 侧栏 / 底栏 / More Sheet / 通用按钮见 @life-os/theme/design-system.css
 */
 
 :root {
-  /* ===== 表面 / 文本 ===== */
-  --bg: #f2f4f2;
-  --bg-elevated: #ffffff;
-  --card: rgba(255, 255, 255, 0.94);
+  /* ===== 表面 / 强调派生（引用品牌 token）===== */
   --surface-2: color-mix(in srgb, var(--text) 3%, var(--bg-elevated));
-  --card-hover: #f0f3f1;
-  --border: #d8e0dc;
-  --border-strong: #bec9c4;
-  --text: #141c1f;
-  --text-secondary: #4a5857;
-  --text-muted: #687674;
-
-  /* ===== 品牌 / 强调（Pesse 式：黑主按钮 + 荧光绿点缀）===== */
-  --primary: #16191a;
   --primary-hover: #2b3032;
-  --accent: #4d7c0f;
   --accent-dim: #4d7c0f;
-  --accent-subtle: #eef8d4;
   --accent-surface: color-mix(in srgb, var(--lime) 12%, var(--bg-elevated));
   --accent-foreground: #3f6212;
-  --on-accent: #ffffff;
-  --lime: #c6f43d;
   --lime-hover: #d2f95f;
-  --on-lime: #161a05;
-
-
-  /* ===== 侧边栏（石墨黑导航轨 + 荧光绿高亮）===== */
-  --sidebar: #121413;
-  --sidebar-foreground: #f7f8f5;
-  --sidebar-muted: #9aa39a;
-  --sidebar-accent: #1f2320;
-  --sidebar-primary: #c6f43d;
-  --sidebar-primary-foreground: #161a05;
-  --sidebar-border: #282c28;
 
   /* ===== 图表（被组件内联引用，保留变量名）===== */
   --baseline-line: #4d7c0f;
@@ -102,13 +78,6 @@
   --shadow-elevated: 0 12px 40px rgba(14, 20, 22, 0.1);
   --shadow-focus: 0 0 0 2px rgba(166, 216, 34, 0.35);
   --surface-highlight: none;
-
-  /* Seg：Finance pill + lime active */
-  --seg-track-bg: color-mix(in srgb, var(--text) 4%, var(--bg-elevated));
-  --seg-active-bg-token: var(--lime);
-  --seg-active-fg-token: var(--on-lime);
-
-  color-scheme: light;
 }
 
 html {
@@ -117,52 +86,21 @@ html {
 }
 
 [data-theme="dark"] {
-  /* near-black surfaces */
-  --bg: #0b0d0c;
-  --bg-elevated: #141815;
-  --card: #141815;
+  /* 品牌 token（surfaces / text / lime / sidebar）见 brands/finance.css；此处仅 app 扩展 */
   --surface-2: color-mix(in srgb, var(--text) 6%, var(--bg-elevated));
-  --card-hover: #181d18;
-  --border: rgba(255, 255, 255, 0.075);
-  --border-strong: rgba(255, 255, 255, 0.11);
   --border-card: rgba(255, 255, 255, 0.075);
   --border-divider: rgba(255, 255, 255, 0.055);
   --border-accent: rgba(178, 220, 55, 0.45);
-  --text: rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.68);
-  --text-muted: rgba(255, 255, 255, 0.48);
   --text-disabled: rgba(255, 255, 255, 0.32);
 
-  /* lime −10% brightness */
-  --lime: #b2dc37;
   --lime-hover: #bddf4d;
-  --on-lime: #161a05;
-
-  --primary: var(--lime);
   --primary-hover: var(--lime-hover);
-  --accent: var(--lime);
   --accent-dim: #3a4514;
-  --accent-subtle: #1e2412;
   --accent-surface: color-mix(in srgb, var(--lime) 8%, var(--bg-elevated));
   --accent-foreground: rgba(230, 255, 170, 0.92);
-  --on-accent: #161a05;
 
-  --positive: #6dd6ad;
-  --positive-subtle: #17382e;
-  --warning: #f2bd6c;
-  --warning-subtle: #423116;
-  --critical: #ff8fa2;
-  --critical-subtle: #4a2028;
-  --info: #8db8f4;
+  /* Finance 深色 info-subtle 比共享基线更深（图表底色需要），刻意保留 */
   --info-subtle: #1d365a;
-
-  --sidebar: #0b0d0c;
-  --sidebar-foreground: rgba(255, 255, 255, 0.92);
-  --sidebar-muted: rgba(255, 255, 255, 0.55);
-  --sidebar-accent: #181d18;
-  --sidebar-primary: var(--lime);
-  --sidebar-primary-foreground: #161a05;
-  --sidebar-border: rgba(255, 255, 255, 0.07);
 
   --baseline-line: #a8d42f;
   --sim-line: rgba(109, 214, 173, 0.72);
@@ -181,8 +119,6 @@ html {
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.38);
   --shadow-focus: 0 0 0 2px rgba(178, 220, 55, 0.28);
   --surface-highlight: none;
-
-  color-scheme: dark;
 }
 
 * {

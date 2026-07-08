@@ -1,19 +1,17 @@
 @import '@life-os/theme/design-system.css';
+@import '@life-os/theme/brands/fitness.css';
+
+/*
+  FITNESS.OS 品牌层
+  品牌 token（表面/文本/ember 标志色/侧栏/seg，dark 默认 + light 覆盖）由
+  @life-os/theme/brands/fitness.css 提供，真源在 packages/design-tokens/tokens/brands/fitness.json。
+  下面只保留 app 专属扩展（领域别名 / overlay / 训练周 / chrome / z-index）。
+*/
 
 :root {
-  /* ── Fitness 品牌色（结构 token 见 @life-os/theme）── */
   --nav-leading: max(16px, calc(env(safe-area-inset-left, 0px) + 8px));
   --nav-trailing: max(16px, calc(env(safe-area-inset-right, 0px) + 8px));
   --back-to-content: 8px;
-  --bg: #0d0d0e;
-  --bg-2: #141415;
-  --card: #19191b;
-  --card-h: #202022;
-  --border: #262628;
-  --border-l: #303032;
-  --accent: #FF4D2E;
-  --accent-2: #FF6A4D;
-  --accent-bg: rgba(255, 77, 46, 0.12);
   --gold: var(--accent);
   --gold-bg: var(--accent-bg);
   --green: var(--accent);
@@ -21,31 +19,15 @@
   --violet: var(--t2);
   --bi: var(--accent);
   --bi-bg: var(--accent-bg);
-  --t1: #F2F2F2;
-  --t2: #b8b8ba;
-  --t3: #9a9a9c;
-  --t4: #848486;
-  --text: var(--t1);
-  --text-secondary: var(--t2);
-  --text-muted: var(--t3);
   --overlay-title: #ffffff;
   --overlay-strong: rgba(255, 255, 255, .88);
   --overlay-muted: rgba(255, 255, 255, .72);
   --overlay-subtle: rgba(255, 255, 255, .55);
   --overlay-faint: rgba(255, 255, 255, .50);
-  --on-accent: #190804;
   --btn-focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
   --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.28);
   --page-block-gap: 60px;
   --text-hero: clamp(36px, 8vw, 56px);
-  --sidebar: #121214;
-  --sidebar-foreground: var(--t1);
-  --sidebar-muted: var(--t3);
-  --sidebar-accent: var(--card-h);
-  --sidebar-primary: var(--accent);
-  --sidebar-border: var(--border);
-  --appbar-bg: rgba(13, 13, 14, .85);
-  --nav-bg: rgba(13, 13, 14, .92);
   --chip-bg: rgba(255, 255, 255, .05);
   --tw-bg: #1B1B1D;
   --tw-border: #303032;
@@ -53,68 +35,23 @@
   --shadow: rgba(0, 0, 0, .7);
   --theme-color: #0d0d0e;
   --sel-fg: #fff;
-  --seg-display: flex;
-  --seg-track-bg: var(--bg-2);
-  --seg-track-border: 1px solid var(--border-l);
-  --seg-track-radius: 9px;
-  --seg-track-padding: 0;
   --seg-btn-radius: 0;
-  --seg-active-bg-token: var(--accent);
-  --seg-active-fg-token: var(--on-accent);
   --toggle-on-bg: var(--green);
   --toast-radius: 22px;
   --toast-bg: var(--card-h);
   --toast-border: var(--border-l);
   --z-sheet: 300;
   --z-toast: 250;
-  color-scheme: dark;
 }
 
-/* ─────────── 亮色模式 ─────────── */
+/* ─────────── 亮色模式（app 专属扩展；品牌 token 覆盖见 brands/fitness.css）─────────── */
 :root[data-theme="light"] {
-  --bg: #f4f4f3;
-  --bg-2: #ffffff;
-  --card: #ffffff;
-  --card-h: #efefed;
-  --border: #e6e6e3;
-  --border-l: #d8d8d4;
-  /* 浅色下加深标志色以保证对比度（含 accent-bg 上的文字） */
-  --accent: #C42F0A;
-  --accent-2: #E5380F;
-  --accent-bg: rgba(229, 56, 15, 0.10);
-  --gold: var(--accent);
-  --gold-bg: var(--accent-bg);
-  --green: var(--accent);
-  --green-bg: var(--accent-bg);
-  --violet: var(--t2);
-  --bi: var(--accent);
-  --bi-bg: var(--accent-bg);
-  --t1: #1a1a1a;
-  --t2: #5a5a5a;
-  --t3: #6e6e6e;
-  --t4: #707070;
-  --on-accent: #ffffff;
-  --overlay-title: #ffffff;
-  --overlay-strong: rgba(255, 255, 255, .88);
-  --overlay-muted: rgba(255, 255, 255, .72);
-  --overlay-subtle: rgba(255, 255, 255, .55);
-  --overlay-faint: rgba(255, 255, 255, .50);
-  --appbar-bg: rgba(244, 244, 243, .85);
-  --nav-bg: rgba(255, 255, 255, .92);
   --chip-bg: rgba(0, 0, 0, .045);
   --tw-bg: #ffffff;
   --tw-border: #e6e6e3;
   --tw-track: #e6e6e3;
   --shadow: rgba(0, 0, 0, .18);
   --theme-color: #f4f4f3;
-  --sel-fg: #fff;
-  --sidebar: #1c1c1e;
-  --sidebar-foreground: #f2f2f2;
-  --sidebar-muted: rgba(242, 242, 242, 0.55);
-  --sidebar-accent: #262628;
-  --sidebar-primary: var(--accent);
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  color-scheme: light;
 }
 
 /* Do not universal-reset margin/padding here: unlayered * beats
