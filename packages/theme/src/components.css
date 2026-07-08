@@ -193,9 +193,9 @@ a.btn-danger {
 /* ===== Card base ===== */
 .settings-block,
 .insight-card:not(.insight-ai) {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--card-radius);
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-section-radius, var(--card-radius));
   box-shadow: var(--shadow-card, 0 1px 2px rgba(31, 28, 24, 0.04));
   transition:
     border-color var(--dur-fast) var(--ease-standard),
@@ -274,7 +274,7 @@ a.btn-danger {
 
 /* ===== Settings ===== */
 .settings-block {
-  padding: var(--card-padding);
+  padding: var(--control-section-padding, var(--card-padding));
   margin-bottom: var(--card-stack-gap);
 }
 
@@ -285,13 +285,13 @@ a.btn-danger {
   font-size: var(--text-md);
   font-weight: 600;
   line-height: 1.35;
-  color: var(--t1, var(--text));
+  color: var(--control-text);
 }
 
 .settings-block .block-desc {
   margin: 0 0 var(--stack-tight);
   font-size: var(--text-sm);
-  color: var(--t3, var(--text-muted));
+  color: var(--control-text-muted);
   line-height: 1.45;
 }
 
@@ -306,13 +306,13 @@ a.btn-danger {
 
 .settings-row + .settings-row,
 .pref-row + .pref-row {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--control-border);
 }
 
 .pref-label {
   font-size: var(--text-base);
   font-weight: 500;
-  color: var(--t1, var(--text));
+  color: var(--control-text);
 }
 
 .pref-desc {
@@ -561,8 +561,8 @@ body:has(.banner--fixed) .main-col {
   gap: var(--toast-gap);
   padding: var(--toast-pad-y) var(--toast-pad-x);
   border-radius: var(--toast-radius, var(--radius-pill));
-  background: var(--toast-bg, var(--positive-subtle));
-  border: 1px solid var(--toast-border, color-mix(in srgb, var(--positive) 32%, var(--border)));
+  background: var(--toast-bg, var(--feedback-success-bg));
+  border: 1px solid var(--toast-border, var(--feedback-success-border));
   color: var(--t1, var(--text));
   font-family: var(--toast-font, var(--font));
   font-size: var(--toast-font-size);
@@ -646,14 +646,19 @@ body:has(.banner--fixed) .main-col {
 }
 
 .toast--error {
-  background: var(--critical-subtle);
-  border-color: color-mix(in srgb, var(--critical) 32%, var(--border));
+  background: var(--feedback-danger-bg);
+  border-color: var(--feedback-danger-border);
 }
 
 .toast--warn {
-  background: var(--warning-subtle);
-  border-color: color-mix(in srgb, var(--warning) 38%, var(--border));
+  background: var(--feedback-warning-bg);
+  border-color: var(--feedback-warning-border);
   color: var(--t1, var(--text));
+}
+
+.toast--info {
+  background: var(--feedback-info-bg);
+  border-color: var(--feedback-info-border);
 }
 
 .toast.show {
@@ -663,21 +668,27 @@ body:has(.banner--fixed) .main-col {
 }
 
 /* 深色模式：用语义 subtle 底，避免 success toast 过绿/过暗 */
-:root[data-theme='dark'] .toast:not(.toast--error):not(.toast--warn) {
-  background: var(--toast-bg, var(--positive-subtle));
-  border-color: color-mix(in srgb, var(--positive) 44%, var(--border));
+:root[data-theme='dark'] .toast:not(.toast--error):not(.toast--warn):not(.toast--info) {
+  background: var(--toast-bg, var(--feedback-success-bg));
+  border-color: color-mix(in srgb, var(--feedback-success) 44%, var(--border));
   color: var(--t1, var(--text));
 }
 
 :root[data-theme='dark'] .toast--error {
-  background: var(--critical-subtle);
-  border-color: color-mix(in srgb, var(--critical) 44%, var(--border));
+  background: var(--feedback-danger-bg);
+  border-color: color-mix(in srgb, var(--feedback-danger) 44%, var(--border));
   color: var(--t1, var(--text));
 }
 
 :root[data-theme='dark'] .toast--warn {
-  background: var(--warning-subtle);
-  border-color: color-mix(in srgb, var(--warning) 44%, var(--border));
+  background: var(--feedback-warning-bg);
+  border-color: color-mix(in srgb, var(--feedback-warning) 44%, var(--border));
+  color: var(--t1, var(--text));
+}
+
+:root[data-theme='dark'] .toast--info {
+  background: var(--feedback-info-bg);
+  border-color: color-mix(in srgb, var(--feedback-info) 44%, var(--border));
   color: var(--t1, var(--text));
 }
 

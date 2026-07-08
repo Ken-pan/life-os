@@ -1,0 +1,26 @@
+/* Shared navigation primitives — consumes @life-os/theme generated component tokens. */
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  min-height: var(--control-h, var(--tap-min));
+  color: var(--navigation-back-text);
+  font-size: var(--text-sm, 14px);
+  text-decoration: none;
+  transition: color var(--dur-fast, 150ms) var(--ease-standard, ease);
+}
+
+.back-btn:hover {
+  color: var(--navigation-back-text-hover);
+}
+
+.back-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-control, 8px);
+}
+
+.back-label {
+  white-space: nowrap;
+}

@@ -30,12 +30,26 @@
   --control-border: var(--border);
   --control-text: var(--t1, var(--text));
   --control-text-muted: var(--t3, var(--text-muted));
+  --control-section-radius: var(--radius-lg, 12px);
+  --control-section-padding: var(--card-padding);
   --feedback-success: var(--positive);
+  --feedback-success-bg: var(--positive-subtle);
+  --feedback-success-border: color-mix(in srgb, var(--feedback-success) 32%, var(--border));
   --feedback-warning: var(--warning);
+  --feedback-warning-bg: var(--warning-subtle);
+  --feedback-warning-border: color-mix(in srgb, var(--feedback-warning) 38%, var(--border));
   --feedback-danger: var(--critical);
-  --feedback-info: var(--info);
+  --feedback-danger-bg: var(--critical-subtle);
+  --feedback-danger-border: color-mix(in srgb, var(--feedback-danger) 32%, var(--border));
+  --feedback-info: var(--info, var(--accent));
+  --feedback-info-bg: color-mix(in srgb, var(--feedback-info) 10%, var(--card));
+  --feedback-info-border: color-mix(in srgb, var(--feedback-info) 28%, var(--border));
   --navigation-item-bg: transparent;
   --navigation-item-bg-active: color-mix(in srgb, var(--accent) 10%, var(--card));
-  --navigation-item-text: var(--t2, var(--text-secondary));
+  --navigation-item-text: var(--t2, var(--text-secondary, var(--text-muted)));
   --navigation-item-text-active: var(--accent);
+  --navigation-back-text: var(--t2, var(--text-secondary));
+  --navigation-back-text-hover: var(--t1, var(--text));
+  --navigation-sheet-bg: var(--card);
+  --navigation-sheet-radius: 20px;
 }

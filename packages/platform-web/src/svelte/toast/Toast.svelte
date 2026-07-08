@@ -1,4 +1,6 @@
 <script>
+  import './toast.css'
+
   /**
    * Life OS 统一 Toast 组件（superset）：
    * - state：createToastStore() 的 toastState

@@ -1,5 +1,6 @@
 <script>
   import Icon from '../icon/Icon.svelte'
+  import './navigation.css'
 
   /** @type {{ href: string; label?: string; class?: string; resolveLabel?: () => string }} */
   let { href, label, class: className = '', resolveLabel = () => '' } = $props()

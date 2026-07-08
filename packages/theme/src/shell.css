@@ -695,8 +695,8 @@
   min-height: var(--nav-h, var(--mobile-tabbar-h));
   border: none;
   border-radius: var(--radius-lg);
-  background: transparent;
-  color: var(--t3, var(--text-muted));
+  background: var(--navigation-item-bg);
+  color: var(--navigation-item-text);
   transition:
     color var(--dur-fast) var(--ease-standard),
     background-color var(--dur-fast) var(--ease-standard),
@@ -712,8 +712,8 @@
 .nav .nav-item.on,
 .nav .nav-item.active,
 .mobile-tabbar .mobile-tab.active {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+  color: var(--navigation-item-text-active);
+  background: var(--navigation-item-bg-active);
 }
 
 .nav .nav-lbl,
@@ -744,14 +744,10 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-more-sheet);
-    background: rgba(31, 28, 24, 0.28);
+    background: var(--overlay-backdrop);
     -webkit-backdrop-filter: blur(1px);
     backdrop-filter: blur(1px);
     animation: life-os-fade-in var(--dur-fast) var(--ease-standard);
-  }
-
-  :root[data-theme='dark'] .mobile-more-backdrop {
-    background: rgba(0, 0, 0, 0.42);
   }
 
   .mobile-more-sheet {
@@ -763,9 +759,9 @@
     bottom: 0;
     z-index: calc(var(--z-more-sheet) + 1);
     max-height: min(72dvh, 560px);
-    background: var(--card);
-    border-top: 1px solid var(--border);
-    border-radius: 20px 20px 0 0;
+    background: var(--navigation-sheet-bg);
+    border-top: 1px solid var(--control-border, var(--border));
+    border-radius: var(--navigation-sheet-radius) var(--navigation-sheet-radius) 0 0;
     box-shadow: var(--shadow-elevated, 0 12px 40px rgba(31, 28, 24, 0.1));
     padding-bottom: max(var(--space-2), var(--safe-bottom-effective));
     animation: life-os-mobile-more-in var(--dur-base) var(--ease-standard);
@@ -902,8 +898,8 @@
   }
 
   .mobile-more-row.active {
-    background: color-mix(in srgb, var(--accent) 10%, var(--card));
-    box-shadow: inset 3px 0 0 var(--accent);
+    background: var(--navigation-item-bg-active);
+    box-shadow: inset 3px 0 0 var(--navigation-item-text-active);
   }
 
   .mobile-more-row.active .mobile-more-row-icon {

@@ -48,13 +48,38 @@
     "bgHover": { "$type": "color", "$value": "var(--card-h)" },
     "border": { "$type": "color", "$value": "var(--border)" },
     "text": { "$type": "color", "$value": "var(--t1, var(--text))" },
-    "textMuted": { "$type": "color", "$value": "var(--t3, var(--text-muted))" }
+    "textMuted": { "$type": "color", "$value": "var(--t3, var(--text-muted))" },
+    "sectionRadius": { "$type": "dimension", "$value": "var(--radius-lg, 12px)" },
+    "sectionPadding": { "$type": "dimension", "$value": "var(--card-padding)" }
   },
   "feedback": {
     "success": { "$type": "color", "$value": "var(--positive)" },
+    "successBg": { "$type": "color", "$value": "var(--positive-subtle)" },
+    "successBorder": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--feedback-success) 32%, var(--border))"
+    },
     "warning": { "$type": "color", "$value": "var(--warning)" },
+    "warningBg": { "$type": "color", "$value": "var(--warning-subtle)" },
+    "warningBorder": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--feedback-warning) 38%, var(--border))"
+    },
     "danger": { "$type": "color", "$value": "var(--critical)" },
-    "info": { "$type": "color", "$value": "var(--info)" }
+    "dangerBg": { "$type": "color", "$value": "var(--critical-subtle)" },
+    "dangerBorder": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--feedback-danger) 32%, var(--border))"
+    },
+    "info": { "$type": "color", "$value": "var(--info, var(--accent))" },
+    "infoBg": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--feedback-info) 10%, var(--card))"
+    },
+    "infoBorder": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--feedback-info) 28%, var(--border))"
+    }
   },
   "navigation": {
     "itemBg": { "$type": "color", "$value": "transparent" },
@@ -62,7 +87,11 @@
       "$type": "color",
       "$value": "color-mix(in srgb, var(--accent) 10%, var(--card))"
     },
-    "itemText": { "$type": "color", "$value": "var(--t2, var(--text-secondary))" },
-    "itemTextActive": { "$type": "color", "$value": "var(--accent)" }
+    "itemText": { "$type": "color", "$value": "var(--t2, var(--text-secondary, var(--text-muted)))" },
+    "itemTextActive": { "$type": "color", "$value": "var(--accent)" },
+    "backText": { "$type": "color", "$value": "var(--t2, var(--text-secondary))" },
+    "backTextHover": { "$type": "color", "$value": "var(--t1, var(--text))" },
+    "sheetBg": { "$type": "color", "$value": "var(--card)" },
+    "sheetRadius": { "$type": "dimension", "$value": "20px" }
   }
 }

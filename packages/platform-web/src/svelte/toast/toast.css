@@ -1,0 +1,13 @@
+/*
+  Toast tone hooks — reasserts component feedback tokens when Toast mounts.
+  Layout and animation remain in @life-os/theme components.css.
+*/
+
+.toast:not(.toast--error):not(.toast--warn):not(.toast--info) {
+  background: var(--toast-bg, var(--feedback-success-bg));
+  border-color: var(--toast-border, var(--feedback-success-border));
+}
+
+.toast-action {
+  color: var(--feedback-info, var(--accent));
+}

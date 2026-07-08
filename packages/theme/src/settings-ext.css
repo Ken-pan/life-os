@@ -68,9 +68,9 @@
 /* 分组卡片：mono  uppercase 标题（Fitness set-group / Planner settings-block） */
 .set-group,
 .settings-block.set-group {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg, 12px);
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-section-radius, var(--radius-lg, 12px));
   margin-top: var(--space-4);
   overflow: hidden;
 }
@@ -245,4 +245,43 @@
 .settings-toggle.disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Collapsible settings section header (SettingsSection collapsible) */
+.settings-block-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0 0 var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--control-text);
+  cursor: pointer;
+  text-align: start;
+  font: inherit;
+}
+
+.settings-block-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-control);
+}
+
+.settings-block-toggle-copy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.settings-block-toggle-hint {
+  font-size: var(--text-sm);
+  color: var(--control-text-muted);
+  line-height: 1.4;
+}
+
+.settings-block--collapsed .settings-block-toggle {
+  margin-bottom: 0;
 }

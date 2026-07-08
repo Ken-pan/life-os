@@ -315,8 +315,19 @@ Storybook-first / Figma-first 已明确否决（现阶段）。
 | `apps/design-catalog` Cards showcase + smoke tests | ✅ |
 | Production app 页面迁移使用 Card | ❌ 刻意不做（P3 范围外） |
 
+### 🟡 D-P3b: Settings / Toast / Navigation 深 token 化 — _进行中_
+
+| 子项 | 状态 |
+| ---- | ---- |
+| 扩展 `component.json`（control / feedback / navigation） | ✅ |
+| Settings CSS 改读 `--control-*`；补齐 `settings-block-toggle` | ✅ |
+| Toast 改读 `--feedback-*`；补 `.toast--info` | ✅ |
+| Navigation / mobile-more 改读 `--navigation-*` + `--overlay-backdrop` | ✅ |
+| `BackButton` + `navigation.css`（shared back link tokens） | ✅ |
+| Production app 页面迁移 | ❌ 刻意不做 |
+
 **D-P3 范围：** shared component system hardening，不是 app UI migration。
-**遗留：** `tokens.css` 结构层仍 authored；Settings/Toast/Navigation 仍主要消费 `@life-os/theme` CSS 类（component tokens 已生成，Card/overlay 已接入，其余组件 P3b 再深 token 化）。
+**遗留：** `tokens.css` 结构层仍 authored；Settings toggle/segment 仍部分用 theme 专用变量；app 层 `.back-btn` 边距 override 仍保留在各 app CSS。
 
 ### ⏳ D-P4+: 后续阶段（按序）
 
