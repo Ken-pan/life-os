@@ -7,40 +7,8 @@ export function isThemePreference(value: string | null | undefined): value is Th
   return value === "light" || value === "dark" || value === "auto";
 }
 
-export function readThemePreference(): ThemePreference {
-  if (typeof localStorage === "undefined") return "auto";
-  try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return isThemePreference(stored) ? stored : "auto";
-  } catch {
-    return "auto";
-  }
-}
-
-export function resolveTheme(preference: ThemePreference): ResolvedTheme {
-  if (preference === "auto") {
-    if (typeof window === "undefined") return "light";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-  return preference;
-}
-
-export function applyResolvedTheme(resolved: ResolvedTheme): void {
-  document.documentElement.setAttribute("data-theme", resolved);
-  document.documentElement.style.colorScheme = resolved;
-  const themeMeta = document.getElementById("theme-color-meta");
-  if (themeMeta) {
-    themeMeta.setAttribute("content", resolved === "dark" ? "#101211" : "#f2f4f2");
-  }
-}
-
-export function persistThemePreference(preference: ThemePreference): void {
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, preference);
-  } catch {
-    /* ignore */
-  }
-}
+// 读取/解析/应用/持久化逻辑已迁移至 @life-os/platform-web 的
+// createThemePreferenceStoreWeb（见 hooks/useThemePreference.ts）。
 
 export function themePreferenceLabel(
   preference: ThemePreference,

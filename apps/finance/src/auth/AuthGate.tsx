@@ -35,8 +35,8 @@ import {
   readCache,
   writeCache,
 } from '../lib/localCache'
-import { createCoreIdentityHandler } from '@life-os/sync'
-import { AUTH_SYNC_EVENTS, createFinanceCloudSync } from '../lib/cloudSync'
+import { createLifeOsAuth } from '@life-os/sync'
+import { createFinanceCloudSync } from '../lib/cloudSync'
 import { bindPwaForegroundResume } from '@life-os/theme'
 import { useLocale } from '../i18n/context'
 import { DEFAULT_LOCALE, readStoredLocale, type AppLocale } from '../i18n/types'
@@ -202,23 +202,23 @@ export function AuthGate() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
-    const handleCoreIdentity = createCoreIdentityHandler(supabase, 'finance')
-    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
-      setSession(sess)
-      if (!sess) {
-        resetCooldown()
-        clearAllCache()
-        dataSigRef.current = ''
-        setInitialData(null)
-        setPhase('signed-out')
-        return
-      }
-      if (AUTH_SYNC_EVENTS.includes(event)) {
-        void sync(phaseRef.current === 'ready')
-        void handleCoreIdentity(event, sess)
-      }
+    const lifeOsAuth = createLifeOsAuth(supabase, {
+      appId: 'finance',
+      onSession: (sess) => {
+        setSession(sess)
+        // 任意事件下 session 为空即清理（含冷启动未登录），与 SIGNED_OUT 同路径
+        if (!sess) {
+          resetCooldown()
+          clearAllCache()
+          dataSigRef.current = ''
+          setInitialData(null)
+          setPhase('signed-out')
+        }
+      },
+      // silent 依据本地缓存相位（乐观启动），不采用 handler 按事件推导的 silent/force
+      onSyncSession: () => sync(phaseRef.current === 'ready'),
     })
-    return () => sub.subscription.unsubscribe()
+    return lifeOsAuth.init()
   }, [resetCooldown, sync])
 
   if (phase === 'loading') return <Centered>{t('common.loading')}</Centered>

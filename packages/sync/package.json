@@ -4,6 +4,9 @@
   "private": true,
   "description": "Life OS shared cloud sync: bidirectional pull/push, auth session, visibility hooks",
   "type": "module",
+  "scripts": {
+    "test": "node scripts/authController.test.mjs"
+  },
   "types": "./src/index.d.ts",
   "exports": {
     ".": {
