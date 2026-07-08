@@ -2,7 +2,7 @@
   import { onMount, untrack } from 'svelte'
   import Icon from '../icon/Icon.svelte'
 
-  const MOBILE_MQ = '(max-width: 860px)'
+  const MOBILE_MQ = '(max-width: 839px)'
 
   /** @type {{
     title: string,

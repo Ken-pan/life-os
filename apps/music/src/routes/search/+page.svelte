@@ -43,7 +43,7 @@
 
   onMount(async () => {
     topArtists = await getTopArtists(6)
-    if (window.matchMedia('(max-width: 860px)').matches) {
+    if (window.matchMedia('(max-width: 839px)').matches) {
       pageInput?.focus()
     }
   })
@@ -602,7 +602,7 @@
     margin-right: auto;
   }
 
-  @media (min-width: 861px) {
+  @media (min-width: 840px) {
     .search-page-shell {
       margin-left: 64px;
     }
@@ -661,7 +661,7 @@
     overflow: hidden;
   }
 
-  @media (max-width: 860px) {
+  @media (max-width: 839px) {
     .search-scopes-wrap {
       margin-inline: calc(-1 * var(--page-gutter, var(--space-4)));
     }
@@ -687,7 +687,7 @@
     );
   }
 
-  @media (max-width: 860px) {
+  @media (max-width: 839px) {
     .search-scopes {
       padding: 4px var(--page-gutter, var(--space-4));
       scroll-padding-inline: var(--page-gutter, var(--space-4));

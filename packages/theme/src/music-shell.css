@@ -3480,7 +3480,17 @@ html:has(.np-ambient-back) .bottom-shell {
 
   .music-app[data-wide-content='true'] {
     --content-inline-pad: var(--page-gutter-desktop);
-    --content-max: min(1240px, calc(100vw - var(--sidebar-w) - var(--page-gutter-desktop) * 2));
+  }
+
+  .music-app[data-wide-content='true'] .main-wrap {
+    --content-inline-pad: var(--page-gutter-desktop);
+    --content-max: min(1240px, calc(100cqw - var(--page-gutter-desktop) * 2));
+  }
+
+  @supports not (width: 100cqw) {
+    .music-app[data-wide-content='true'] .main-wrap {
+      --content-max: min(1240px, calc(100vw - var(--sidebar-w) - var(--page-gutter-desktop) * 2));
+    }
   }
 
   .music-app[data-wide-content='true'] .wrap {
@@ -3496,7 +3506,13 @@ html:has(.np-ambient-back) .bottom-shell {
   }
 
   .music-app[data-wide-content='true'] .home-page {
-    --content-max: min(1240px, calc(100vw - var(--sidebar-w) - var(--page-gutter-desktop) * 2));
+    --content-max: min(1240px, calc(100cqw - var(--page-gutter-desktop) * 2));
+  }
+
+  @supports not (width: 100cqw) {
+    .music-app[data-wide-content='true'] .home-page {
+      --content-max: min(1240px, calc(100vw - var(--sidebar-w) - var(--page-gutter-desktop) * 2));
+    }
   }
 
   .music-app[data-wide-content='true'] .home-page .speed-dial-section {

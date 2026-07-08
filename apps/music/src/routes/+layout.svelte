@@ -109,7 +109,7 @@
       focusSearch: () => {
         const onSearchPage = page.url.pathname === '/search'
         const mobile =
-          browser && window.matchMedia('(max-width: 860px)').matches
+          browser && window.matchMedia('(max-width: 839px)').matches
         if (onSearchPage && mobile) {
           document.querySelector('.search-page-input')?.focus()
         } else {
@@ -145,7 +145,7 @@
       focusSearch: () => {
         const onSearchPage = page.url.pathname === '/search'
         const mobile =
-          browser && window.matchMedia('(max-width: 860px)').matches
+          browser && window.matchMedia('(max-width: 839px)').matches
         if (onSearchPage && mobile) {
           document.querySelector('.search-page-input')?.focus()
         } else {

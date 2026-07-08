@@ -3,7 +3,7 @@
   display: none;
 }
 
-@media (max-width: 860px) and (orientation: landscape) {
+@media (max-width: 839px) and (orientation: landscape) {
   html[data-portrait-lock='on'] .life-os-portrait-gate {
     display: flex;
     position: fixed;

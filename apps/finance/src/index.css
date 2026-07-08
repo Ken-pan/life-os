@@ -79,7 +79,6 @@
   --content-max: 1320px;
   --maxw: var(--content-max);
   --content-inline-pad: max(var(--page-gutter), calc((100% - var(--content-max)) / 2));
-  --content-bottom-inset: calc(var(--fab-h) + var(--space-6) + var(--mobile-tabbar-h) + var(--safe-bottom-effective));
   --btn-radius: var(--radius-pill);
   --btn-focus-ring: var(--shadow-focus);
   --fab-bg: var(--primary);
@@ -243,23 +242,6 @@ a {
 .cal-row,
 .input {
   font-variant-numeric: tabular-nums;
-}
-
-.main-wrap {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.content {
-  flex: 1;
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding-top: var(--page-block-gap);
-  padding-bottom: var(--page-scroll-bottom);
-  padding-inline: var(--content-inline-pad);
 }
 
 .mobile-tabbar {
@@ -4207,18 +4189,8 @@ div.input {
     display: none;
   }
 
-  .content {
-    padding-left: max(var(--content-inline-pad), var(--safe-left-effective));
-    padding-right: max(var(--content-inline-pad), var(--safe-right-effective));
-  }
-
   .page-tools .page-tool-label {
     display: none;
-  }
-
-  .content {
-    padding-top: var(--stack-section);
-    padding-bottom: var(--content-bottom-inset);
   }
 
   /* 移动端统一区块间距：默认 grid 20px 收敛为 16px，hub 页 gap-6 同步 */
@@ -4287,7 +4259,7 @@ div.input {
   :root {
     --page-header-h: calc(88px + var(--safe-top-effective));
     --ios-landscape-top-buffer: 20px;
-    --content-bottom-inset: calc(var(--fab-h) + var(--fab-offset-above-tabbar) + var(--mobile-tabbar-total-h));
+    --mobile-content-inset-tabbar: calc(var(--fab-h) + var(--fab-offset-above-tabbar) + var(--mobile-tabbar-total-h));
   }
 
   html {

@@ -16,7 +16,7 @@ export function isStandalonePwa() {
 export function needsViewportHeightSync() {
   if (typeof window === 'undefined') return false;
   if (isStandalonePwa()) return true;
-  return window.matchMedia('(max-width: 860px)').matches;
+  return window.matchMedia('(max-width: 839px)').matches;
 }
 
 /** @returns {ViewportRect} */

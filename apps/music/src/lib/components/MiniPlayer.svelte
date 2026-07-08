@@ -28,10 +28,10 @@
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
   const volumeIcon = $derived(player.muted || player.volume === 0 ? 'volume-x' : 'volume-2');
 
-  let isDesktop = $state(browser && window.matchMedia('(min-width: 861px)').matches);
+  let isDesktop = $state(browser && window.matchMedia('(min-width: 840px)').matches);
 
   onMount(() => {
-    const mq = window.matchMedia('(min-width: 861px)');
+    const mq = window.matchMedia('(min-width: 840px)');
     isDesktop = mq.matches;
     const onChange = () => {
       isDesktop = mq.matches;
@@ -139,7 +139,7 @@
       class="mini-player-btn"
       aria-label={t('nowPlaying.queue')}
       onclick={() => {
-        if (window.matchMedia('(min-width: 861px)').matches) toggleUtilityPane('queue');
+        if (window.matchMedia('(min-width: 840px)').matches) toggleUtilityPane('queue');
         else openNowPlaying('queue');
       }}
     >

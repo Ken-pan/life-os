@@ -1,11 +1,12 @@
 export declare const LIFE_OS_LAYOUT: {
+  readonly bpReflow: 320
   readonly bpNarrow: 380
   readonly bpCompact: 640
-  readonly bpPhone: 640
-  readonly bpTabletMin: 641
-  readonly bpTabletMax: 860
-  readonly bpMobile: 860
-  readonly bpMobileMin: 861
+  readonly bpPhone: 599
+  readonly bpTabletMin: 600
+  readonly bpTabletMax: 839
+  readonly bpMobile: 839
+  readonly bpMobileMin: 840
   readonly contentMaxText: 820
   readonly contentMaxData: 1320
 }

@@ -77,7 +77,9 @@
     gap: var(--stack-section);
     padding-top: var(--header-block);
     padding-bottom: var(--header-block);
-    padding-inline: var(--content-inline-pad);
+    padding-inline:
+      max(var(--content-inline-pad), var(--safe-left-effective))
+      max(var(--content-inline-pad), var(--safe-right-effective));
   }
 }
 

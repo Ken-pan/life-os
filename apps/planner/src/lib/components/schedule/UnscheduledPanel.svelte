@@ -12,9 +12,9 @@
   let desktopDnD = $state(false);
 
   onMount(() => {
-    if (window.matchMedia('(max-width: 860px)').matches) expanded = false;
+    if (window.matchMedia('(max-width: 839px)').matches) expanded = false;
 
-    const mq = window.matchMedia('(min-width: 861px) and (pointer: fine)');
+    const mq = window.matchMedia('(min-width: 840px) and (pointer: fine)');
     const sync = () => {
       desktopDnD = mq.matches;
     };

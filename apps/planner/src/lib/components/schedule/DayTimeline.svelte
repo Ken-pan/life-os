@@ -139,7 +139,7 @@
     tickNow();
     const nowTimer = window.setInterval(tickNow, 60_000);
 
-    const mq = window.matchMedia('(min-width: 861px) and (pointer: fine)');
+    const mq = window.matchMedia('(min-width: 840px) and (pointer: fine)');
     const sync = () => {
       desktopDnD = mq.matches;
     };

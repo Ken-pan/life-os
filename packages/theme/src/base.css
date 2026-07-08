@@ -125,8 +125,26 @@ button,
 
 .wrap {
   width: 100%;
+  min-width: 0;
   margin: 0;
-  padding: var(--page-top) var(--content-inline-pad) var(--page-block-gap);
+  padding:
+    var(--page-top)
+    max(var(--content-inline-pad), var(--safe-right-effective))
+    var(--page-block-gap)
+    max(var(--content-inline-pad), var(--safe-left-effective));
+}
+
+.content,
+.life-os-content {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding:
+    var(--page-block-gap)
+    max(var(--content-inline-pad), var(--safe-right-effective))
+    var(--page-scroll-bottom)
+    max(var(--content-inline-pad), var(--safe-left-effective));
 }
 
 @media (--life-os-mobile) {

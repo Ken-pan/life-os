@@ -3421,7 +3421,6 @@ body:has(.focus-view) { padding-bottom: 0; }
 /* responsive */
 @media (--life-os-compact) {
   :root { --page-block-gap: 56px; }
-  .wrap { padding-bottom: var(--page-block-gap); }
   .hero { padding: 20px 0 2px; grid-template-columns: 1fr; gap: 14px; }
   .hero-media { aspect-ratio: 3 / 2; }
   .eyebrow { font-size: var(--text-xs); letter-spacing: .12em; line-height: 1.7; }
@@ -3488,7 +3487,6 @@ body:has(.focus-view) { padding-bottom: 0; }
 }
 @media (--life-os-narrow) {
   :root { --page-gutter: var(--space-3-5); }
-  .wrap { padding-bottom: var(--page-block-gap); }
   .hero-title { font-size: var(--text-hero); }
   .week-rail { gap: 4px; }
   .wr-day { min-height: 72px; }

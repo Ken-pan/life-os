@@ -34,6 +34,13 @@
   flex-direction: column;
 }
 
+#main-content {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
 @media (--life-os-desktop) {
   .app-shell {
     grid-template-columns: var(--sidebar-w) 1fr;
@@ -261,9 +268,9 @@
   margin: 0;
   padding:
     max(var(--header-block), var(--safe-top-effective))
-    max(var(--content-inline-pad), var(--safe-left-effective))
+    max(var(--content-inline-pad), var(--safe-right-effective))
     var(--header-block)
-    max(var(--content-inline-pad), var(--safe-right-effective));
+    max(var(--content-inline-pad), var(--safe-left-effective));
   display: grid;
   align-items: center;
   column-gap: var(--stack-section);
@@ -347,7 +354,9 @@
   gap: var(--stack-section);
   padding-top: var(--header-block);
   padding-bottom: var(--header-block);
-  padding-inline: var(--content-inline-pad);
+  padding-inline:
+    max(var(--content-inline-pad), var(--safe-left-effective))
+    max(var(--content-inline-pad), var(--safe-right-effective));
 }
 
 .page-header h1,

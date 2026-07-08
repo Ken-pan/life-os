@@ -43,7 +43,7 @@ export function bindGlobalShortcuts(tr = t) {
 
     if (mod && e.shiftKey && e.key.toLowerCase() === 'p') {
       e.preventDefault();
-      if (window.matchMedia('(min-width: 861px)').matches) toggleUtilityPane('queue');
+      if (window.matchMedia('(min-width: 840px)').matches) toggleUtilityPane('queue');
       else openQueueDrawer();
       return;
     }

@@ -1405,10 +1405,16 @@ html, body {
 }
 
 @media (--life-os-desktop) {
-  :root {
-    --planner-desktop-span: calc(
-      100vw - var(--sidebar-w, 208px) - var(--page-gutter-desktop, 24px) * 2
-    );
+  .main-col {
+    --planner-desktop-span: calc(100cqw - var(--page-gutter-desktop, 24px) * 2);
+  }
+
+  @supports not (width: 100cqw) {
+    .main-col {
+      --planner-desktop-span: calc(
+        100vw - var(--sidebar-w, 208px) - var(--page-gutter-desktop, 24px) * 2
+      );
+    }
   }
 
   .quick-add--mobile {

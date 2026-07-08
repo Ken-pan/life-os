@@ -23,7 +23,7 @@
 
   onMount(() => {
     loadTracks()
-    const mq = window.matchMedia('(min-width: 861px)')
+    const mq = window.matchMedia('(min-width: 840px)')
     isDesktop = mq.matches
     const onChange = () => {
       isDesktop = mq.matches

@@ -181,7 +181,7 @@
         }
       }
     })()
-    const mq = window.matchMedia('(max-width: 860px)')
+    const mq = window.matchMedia('(max-width: 839px)')
     isMobile = mq.matches
     const onChange = () => {
       isMobile = mq.matches

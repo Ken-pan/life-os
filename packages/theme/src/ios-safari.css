@@ -74,7 +74,7 @@ body,
     top: auto;
   }
 
-  html.standalone-pwa #main-content,
+  html.standalone-pwa #main-content:not(:has(> .wrap, > .content)),
   html.standalone-pwa .main-wrap .wrap,
   html.standalone-pwa .main-wrap .content {
     flex: 1 1 0;
@@ -89,7 +89,7 @@ body,
 
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap .content,
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap .wrap,
-  html.standalone-pwa body:has(.mobile-more-backdrop) #main-content,
+  html.standalone-pwa body:has(.mobile-more-backdrop) #main-content:not(:has(> .wrap, > .content)),
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-col > .wrap,
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-col > .auth-wrap {
     overflow: hidden;
@@ -171,25 +171,25 @@ body,
 @media (--life-os-mobile) {
   .wrap,
   .content,
-  #main-content {
+  #main-content:not(:has(> .wrap, > .content)) {
     padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset));
   }
 
   .main-col[data-mobile-chrome='tabbar'] .wrap,
   .main-col[data-mobile-chrome='tabbar'] .content,
-  .main-col[data-mobile-chrome='tabbar'] #main-content,
+  .main-col[data-mobile-chrome='tabbar'] #main-content:not(:has(> .wrap, > .content)),
   .main-wrap[data-mobile-chrome='tabbar'] .wrap,
   .main-wrap[data-mobile-chrome='tabbar'] .content,
-  .main-wrap[data-mobile-chrome='tabbar'] #main-content {
+  .main-wrap[data-mobile-chrome='tabbar'] #main-content:not(:has(> .wrap, > .content)) {
     padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-tabbar));
   }
 
   .main-col[data-mobile-chrome='minimal'] .wrap,
   .main-col[data-mobile-chrome='minimal'] .content,
-  .main-col[data-mobile-chrome='minimal'] #main-content,
+  .main-col[data-mobile-chrome='minimal'] #main-content:not(:has(> .wrap, > .content)),
   .main-wrap[data-mobile-chrome='minimal'] .wrap,
   .main-wrap[data-mobile-chrome='minimal'] .content,
-  .main-wrap[data-mobile-chrome='minimal'] #main-content {
+  .main-wrap[data-mobile-chrome='minimal'] #main-content:not(:has(> .wrap, > .content)) {
     padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-minimal));
   }
 }

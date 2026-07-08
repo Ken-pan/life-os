@@ -24,6 +24,7 @@
   --space-24: 96px;
 
   /* ===== 语义间距别名 ===== */
+  --page-gutter-reflow: var(--space-3);
   --page-gutter-mobile: var(--space-4);
   --page-gutter-tablet: var(--space-5);
   --page-gutter-desktop: var(--space-8);
