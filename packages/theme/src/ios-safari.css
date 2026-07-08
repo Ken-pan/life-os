@@ -19,6 +19,7 @@ body,
 }
 
 @supports (height: 100dvh) {
+
   html,
   body,
   #root {
@@ -28,11 +29,19 @@ body,
 
 /* PWA standalone: constrain shell to visual viewport (iOS home-screen app) */
 @media (--life-os-mobile) {
+
   html.standalone-pwa,
   html.standalone-pwa body,
   html.standalone-pwa #root {
     height: var(--app-vh, 100dvh);
     overflow: hidden;
+  }
+
+  /* SvelteKit uses display:contents wrapper — body must be the flex shell */
+  html.standalone-pwa body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
   html.standalone-pwa #root {
@@ -41,8 +50,9 @@ body,
     min-height: 0;
   }
 
-  html.standalone-pwa #root > .app-shell,
-  html.standalone-pwa #root > .app {
+  html.standalone-pwa body>.app-shell,
+  html.standalone-pwa #root>.app-shell,
+  html.standalone-pwa #root>.app {
     flex: 1 1 auto;
     min-height: 0;
   }
@@ -67,18 +77,23 @@ body,
     flex-direction: column;
   }
 
-  html.standalone-pwa .main-wrap > .page-header,
-  html.standalone-pwa .main-wrap > .appbar {
+  html.standalone-pwa .main-wrap>.page-header,
+  html.standalone-pwa .main-wrap>.appbar {
     flex-shrink: 0;
     position: relative;
     top: auto;
   }
 
-  html.standalone-pwa #main-content:not(:has(> .wrap, > .content)),
-  html.standalone-pwa .main-wrap .wrap,
-  html.standalone-pwa .main-wrap .content {
-    flex: 1 1 0;
-    height: 0;
+  /*
+    Single scroll surface per app shell:
+    - Fitness/Music: .main-wrap > #main-content (pages nest .view > .wrap inside)
+    - Finance: .main-wrap > .content
+    Do NOT target descendant .wrap — height:0 on nested .wrap clips page content in PWA.
+  */
+  html.standalone-pwa .main-wrap>#main-content,
+  html.standalone-pwa .main-wrap>.content,
+  html.standalone-pwa .main-wrap>.wrap {
+    flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -87,11 +102,20 @@ body,
     touch-action: pan-y;
   }
 
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap .content,
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap .wrap,
-  html.standalone-pwa body:has(.mobile-more-backdrop) #main-content:not(:has(> .wrap, > .content)),
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col > .wrap,
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col > .auth-wrap {
+  html.standalone-pwa #main-content>.view,
+  html.standalone-pwa #main-content .wrap,
+  html.standalone-pwa #main-content .content {
+    flex: none;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>#main-content,
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>.content,
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>.wrap,
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col>.wrap,
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col>.auth-wrap {
     overflow: hidden;
   }
 
@@ -105,8 +129,8 @@ body,
     padding-bottom: 0;
   }
 
-  html.standalone-pwa .main-col:not(:has(.main-wrap)) > .wrap,
-  html.standalone-pwa .main-col:not(:has(.main-wrap)) > .auth-wrap {
+  html.standalone-pwa .main-col:not(:has(.main-wrap))>.wrap,
+  html.standalone-pwa .main-col:not(:has(.main-wrap))>.auth-wrap {
     flex: 1 1 0;
     height: 0;
     min-height: 0;
@@ -119,6 +143,7 @@ body,
 }
 
 @supports (-webkit-touch-callout: none) {
+
   html,
   body {
     min-height: -webkit-fill-available;
@@ -127,6 +152,7 @@ body,
 
 /* ===== 滚动与橡皮筋 ===== */
 @media (--life-os-mobile) {
+
   html,
   body {
     overscroll-behavior-y: none;
@@ -148,13 +174,13 @@ body,
     -webkit-overflow-scrolling: touch;
   }
 
-  .main-wrap > .page-header,
-  .main-wrap > .appbar {
+  .main-wrap>.page-header,
+  .main-wrap>.appbar {
     flex-shrink: 0;
   }
 
-  .main-wrap > .content,
-  .main-wrap > #main-content {
+  .main-wrap>.content,
+  .main-wrap>#main-content {
     min-height: 0;
   }
 
@@ -169,6 +195,7 @@ body,
 
 /* ===== 主内容底部留白（避开 fixed 底栏 / FAB）===== */
 @media (--life-os-mobile) {
+
   .wrap,
   .content,
   #main-content:not(:has(> .wrap, > .content)) {
@@ -202,6 +229,7 @@ body,
 }
 
 @media (--life-os-mobile) {
+
   .safari-chrome-tint-top,
   .safari-chrome-tint-bottom {
     display: block;
@@ -229,17 +257,19 @@ body,
 
 /* ===== 表单：防止 iOS 聚焦时自动放大（字号 ≥16px）===== */
 @media (--life-os-mobile) {
+
   input,
   select,
   textarea {
     font-size: max(var(--text-base), 16px);
   }
 }
+
 /* ===== 细节控件 ===== */
-details > summary {
+details>summary {
   list-style: none;
 }
 
-details > summary::-webkit-details-marker {
+details>summary::-webkit-details-marker {
   display: none;
 }

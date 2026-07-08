@@ -33,6 +33,7 @@ const APPS = [
     scrollSelector: '#main-content',
     moreButton: '.mobile-tabbar button[aria-label="更多"]',
     moreClose: '.mobile-more-close',
+    clipPaths: ['/discover', '/program', '/'],
   },
   {
     id: 'music',
@@ -42,6 +43,7 @@ const APPS = [
     scrollSelector: '#main-content',
     moreButton: '.mobile-tabbar button[aria-label="更多"]',
     moreClose: '.mobile-more-close',
+    clipPaths: ['/'],
   },
   {
     id: 'finance',
@@ -113,6 +115,55 @@ async function queryScrollRoot(page, scrollSelector) {
     }
     return null
   }, scrollSelector)
+}
+
+/** PWA: nested .wrap inside #main-content must not be height:0 clipped */
+async function checkPwaNestedWrap(page, appId, clipPath, baseUrl) {
+  await page.goto(`${baseUrl}${clipPath}`, { waitUntil: 'domcontentloaded', timeout: 45000 })
+  await page.waitForSelector('.app-shell', { timeout: 30000 })
+  await page.evaluate(() => document.documentElement.classList.add('standalone-pwa'))
+
+  const metrics = await page.evaluate(() => {
+    const main = document.getElementById('main-content')
+    const wrap = main?.querySelector('.wrap')
+    const body = getComputedStyle(document.body)
+    const mainCs = main ? getComputedStyle(main) : null
+    const wrapCs = wrap ? getComputedStyle(wrap) : null
+
+    if (!main) return { ok: false, reason: 'missing #main-content' }
+    if (!wrap) return { ok: true, skip: true, reason: 'no nested .wrap on page' }
+
+    const wrapOk =
+      wrapCs.height !== '0px' &&
+      wrapCs.overflowY === 'visible' &&
+      wrap.offsetHeight > 80 &&
+      wrap.scrollHeight >= wrap.offsetHeight - 4
+
+    const shellOk =
+      body.display === 'flex' &&
+      mainCs.overflowY === 'auto' &&
+      main.scrollHeight >= wrap.offsetHeight - 8
+
+    return {
+      ok: wrapOk && shellOk,
+      bodyDisplay: body.display,
+      mainOverflowY: mainCs.overflowY,
+      mainClientHeight: main.clientHeight,
+      mainScrollHeight: main.scrollHeight,
+      wrapHeight: wrapCs.height,
+      wrapOverflowY: wrapCs.overflowY,
+      wrapOffsetHeight: wrap.offsetHeight,
+      wrapScrollHeight: wrap.scrollHeight,
+    }
+  }, clipPath)
+
+  const label = `pwa:clip${clipPath}`
+  record(
+    appId,
+    label,
+    metrics.ok,
+    metrics.skip ? metrics.reason : JSON.stringify(metrics),
+  )
 }
 
 async function runApp(browser, app) {
@@ -244,6 +295,12 @@ async function runApp(browser, app) {
       )
     } else {
       record(app.id, 'scroll:after-more-sheet', true, 'skipped — no more button')
+    }
+
+    if (app.clipPaths?.length) {
+      for (const clipPath of app.clipPaths) {
+        await checkPwaNestedWrap(page, app.id, clipPath, app.url)
+      }
     }
   } catch (err) {
     record(app.id, 'fatal', false, err instanceof Error ? err.message : String(err))
