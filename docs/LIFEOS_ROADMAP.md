@@ -74,12 +74,12 @@ _CI 执行守卫：_ `npm run check:lifeos-boundaries` ✅
 
 | 子项                        | 状态    | 证据                                                                             |
 | --------------------------- | ------- | -------------------------------------------------------------------------------- |
-| `apps/portal` SvelteKit App | 🟡 WIP  | Launcher UI + shell/settings-block 卡片 + CommandPalette                         |
+| `apps/portal` SvelteKit App | 🟡 WIP  | Launcher 2×2 网格 + PortalLauncherCard + CommandPalette + PWA manifest           |
 | SSO / coreIdentity 集成     | ✅ 代码 | `setupCrossDomainSSO` + `createCoreIdentityHandler('portal')`                    |
 | Git / monorepo 纳入         | ✅      | `3aa963b0` 已 push `master`；Git 构建应已触发                                    |
-| Netlify 部署                | 🟡      | ✅ `portal-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）；env 已从 fitness 克隆 |
-| Auth redirect               | ❌      | Supabase allow list **无** `portal.kenos.space`                                  |
-| Portal 内登录               | ❌      | 未登录时跳转 Finance 登录（无独立 Auth UI）                                      |
+| Netlify 部署                | ✅      | `portal-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）→ `portal.kenos.space`    |
+| Auth redirect               | 🟡      | Supabase allow list 需含 `portal.kenos.space/**`（Dashboard 手动）               |
+| Portal 内登录               | ✅      | `PortalUnauth` 内嵌 sign in/up（`createLifeOsAuth`）                             |
 
 **上线 checklist：** ~~commit + push portal~~ → GoDaddy `portal` CNAME → `portal-ken.netlify.app` → Supabase 加 `portal.kenos.space/**` redirect → 扩 `core_user_app_settings.app_id` check 含 `portal`
 

@@ -4,13 +4,10 @@
   import CommandPalette from '@life-os/platform-web/CommandPalette.svelte'
   import { bindViewportHeight } from '@life-os/theme'
   import DocumentHead from '@life-os/platform-web/svelte/head'
-  import BrandMark from '@life-os/platform-web/svelte/brand/mark'
-  import PortalAppBar from '$lib/components/PortalAppBar.svelte'
+  import PortalShell from '$lib/components/PortalShell.svelte'
+  import PortalUnauth from '$lib/components/PortalUnauth.svelte'
   import { PORTAL_APPS, getLauncherMeta } from '$lib/apps.js'
-  import { getLifeOsBrand } from '@life-os/theme/brand'
   import { auth, initAuth, signOut } from '$lib/auth.svelte.js'
-
-  const portalBrand = getLifeOsBrand('portal')
 
   let { children } = $props()
 
@@ -45,6 +42,10 @@
     window.location.reload()
   }
 
+  function openCommandPalette() {
+    cpOpen = true
+  }
+
   onMount(() => {
     const cleanupViewport = bindViewportHeight()
     const cleanupAuth = initAuth()
@@ -60,59 +61,20 @@
 {#if !auth.ready}
   <div class="portal-loading">正在初始化 Life OS…</div>
 {:else if !auth.session}
-  <div class="app app-shell portal-shell">
-    <div class="safari-chrome-tint-top" aria-hidden="true"></div>
-    <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
-    <div class="main-col" data-mobile-chrome="minimal">
-      <PortalAppBar />
-      <div class="wrap portal-wrap">
-        <div class="portal-unauth-wrap">
-          <div class="portal-unauth-hero" aria-hidden="true">
-            <BrandMark
-              size={72}
-              lightSrc={portalBrand.light}
-              darkSrc={portalBrand.dark}
-              lightSrcSet={portalBrand.lightSrcSet}
-              darkSrcSet={portalBrand.darkSrcSet}
-            />
-          </div>
-          <div class="settings-block">
-            <h1 class="portal-unauth-title">欢迎使用 Life OS</h1>
-            <p class="portal-unauth-desc">
-              你尚未登录。请先在 Finance 完成登录，再返回此页切换应用。
-            </p>
-            <a
-              href="https://finance.kenos.space"
-              class="btn-primary portal-login-link"
-            >
-              前往 Finance 登录
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <PortalShell centerContent>
+    <PortalUnauth />
+  </PortalShell>
 {:else}
-  <div class="app app-shell portal-shell">
-    <div class="safari-chrome-tint-top" aria-hidden="true"></div>
-    <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
-    <div class="main-col" data-mobile-chrome="minimal">
-      <PortalAppBar onSignOut={handleSignOut} />
-      <div class="wrap portal-wrap">
-        {@render children()}
-      </div>
-    </div>
-  </div>
+  <PortalShell
+    userEmail={auth.user?.email}
+    onSignOut={handleSignOut}
+    onOpenCommandPalette={openCommandPalette}
+  >
+    {@render children()}
+  </PortalShell>
   <CommandPalette
     bind:open={cpOpen}
     actions={cpActions}
     placeholder="跳转到应用或操作…"
   />
 {/if}
-
-<style>
-  .portal-login-link {
-    display: inline-flex;
-    text-decoration: none;
-  }
-</style>
