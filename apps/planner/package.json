@@ -26,6 +26,8 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@life-os/contracts": "*",
+    "@life-os/platform-web": "*",
     "@life-os/sync": "*",
     "@life-os/theme": "*",
     "@lucide/svelte": "^1.22.0",

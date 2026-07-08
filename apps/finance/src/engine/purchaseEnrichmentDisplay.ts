@@ -9,7 +9,11 @@ import {
   mergeKeyFor,
   resolveDisplayState,
 } from '@life-os/finance-enrichment-contract'
-import type { PurchaseEnrichment, PurchaseEnrichmentSource } from './purchaseEnrichment'
+import {
+  uniqueLineItems,
+  type PurchaseEnrichment,
+  type PurchaseEnrichmentSource,
+} from './purchaseEnrichment'
 import { isReturnLikeEnrichment } from './purchaseReturnStatus'
 import type { Txn } from './transactions'
 
@@ -47,6 +51,7 @@ export interface PurchaseCoverageStats {
   total: number
   enrichedAny: number
   cleanEnriched: number
+  cleanItemCount: number
   matchedReview: number
   returnRefund: number
   merchantOnly: number
@@ -80,7 +85,10 @@ function txnToNormalizedOrder(t: Txn) {
     orderTotalCents != null && txnAmountCents != null
       ? orderTotalCents - txnAmountCents
       : null
-  const sourceView = inferSourceView(source, e as PurchaseEnrichment & Record<string, unknown>)
+  const sourceView = inferSourceView(
+    source,
+    e as PurchaseEnrichment & Record<string, unknown>,
+  )
   const isInstore =
     source === 'target' &&
     (sourceView === 'in_store' ||
@@ -93,7 +101,10 @@ function txnToNormalizedOrder(t: Txn) {
     merchantAccount: t.account || 'Unknown',
     sourceOrderId: isInstore ? null : e.orderId || null,
     sourceReceiptId: isInstore ? e.orderId || null : null,
-    mergeKey: mergeKeyFor(source, e as PurchaseEnrichment & Record<string, unknown>),
+    mergeKey: mergeKeyFor(
+      source,
+      e as PurchaseEnrichment & Record<string, unknown>,
+    ),
     status: e.status || 'unknown',
     matchConfidence: e.matchConfidence || 'unknown',
     qualityPass:
@@ -101,22 +112,29 @@ function txnToNormalizedOrder(t: Txn) {
         ?.pass === true,
     itemCount: lineItems.length,
     missingTitles: lineItems.filter((li) => !li.title).length,
-    missingQty: lineItems.filter((li) => !li.quantity || li.quantity < 1).length,
+    missingQty: lineItems.filter((li) => !li.quantity || li.quantity < 1)
+      .length,
     totalCents: orderTotalCents,
     amountDiffCents,
-    hasReturnInfo: Boolean(e.returnInfo && isReturnLikeEnrichment(e.returnInfo)),
+    hasReturnInfo: Boolean(
+      e.returnInfo && isReturnLikeEnrichment(e.returnInfo),
+    ),
   }
 }
 
 /** Build duplicate-detection maps from all loaded transactions. */
-export function buildEnrichmentDuplicateMaps(txns: Txn[]): EnrichmentDuplicateMaps {
+export function buildEnrichmentDuplicateMaps(
+  txns: Txn[],
+): EnrichmentDuplicateMaps {
   const orders = txns
     .filter((t) => t.purchaseEnrichment?.source)
     .map(txnToNormalizedOrder)
   return buildDuplicateMaps(orders) as EnrichmentDuplicateMaps
 }
 
-export function buildPurchaseDisplayContext(txns: Txn[]): PurchaseDisplayContext {
+export function buildPurchaseDisplayContext(
+  txns: Txn[],
+): PurchaseDisplayContext {
   return { dupMaps: buildEnrichmentDuplicateMaps(txns) }
 }
 
@@ -162,6 +180,7 @@ export function computePurchaseCoverage(
     total: txns.length,
     enrichedAny: 0,
     cleanEnriched: 0,
+    cleanItemCount: 0,
     matchedReview: 0,
     returnRefund: 0,
     merchantOnly: 0,
@@ -173,8 +192,13 @@ export function computePurchaseCoverage(
     switch (state) {
       case 'clean_enriched':
         stats.cleanEnriched++
-        if (t.purchaseEnrichment?.source) {
-          stats.cleanBySource[t.purchaseEnrichment.source]++
+        if (t.purchaseEnrichment) {
+          stats.cleanItemCount += uniqueLineItems(
+            t.purchaseEnrichment.lineItems,
+          ).length
+          if (t.purchaseEnrichment.source) {
+            stats.cleanBySource[t.purchaseEnrichment.source]++
+          }
         }
         break
       case 'matched_review':

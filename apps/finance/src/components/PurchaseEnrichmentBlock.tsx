@@ -16,6 +16,7 @@ export function PurchaseEnrichmentBlock({
   compact = false,
   showLineItemsInBody = true,
   displayState = 'clean_enriched',
+  debugMode = false,
   onOpenChange,
 }: {
   enrichment: PurchaseEnrichment
@@ -26,6 +27,7 @@ export function PurchaseEnrichmentBlock({
   /** 为 false 时展开区只显示订单元数据（商品由 LedgerProductStrip 展示）。 */
   showLineItemsInBody?: boolean
   displayState?: PurchaseDisplayState
+  debugMode?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
   const { t: tl } = useLocale()
@@ -40,6 +42,8 @@ export function PurchaseEnrichmentBlock({
     isReturnLikeEnrichment(returnInfo) || returnInfo?.isRefundCredit
   const allowLineItems =
     displayState === 'clean_enriched' && showLineItemsInBody
+  const showItemCount =
+    items.length > 0 && (displayState === 'clean_enriched' || debugMode)
   const noItemsMessage =
     displayState === 'matched_review'
       ? tl('history.purchaseStateReviewHint')
@@ -74,7 +78,7 @@ export function PurchaseEnrichmentBlock({
                 : tl(returnStatusLabelKey(returnInfo.status))}
             </span>
           )}
-          {items.length > 0 && (
+          {showItemCount && (
             <span className="text-muted text-sm">
               {tl('history.purchaseItemCount', { count: items.length })}
             </span>
@@ -204,9 +208,7 @@ export function PurchaseEnrichmentBlock({
               </p>
             )
           ) : (
-            <p className="muted-note text-sm">
-              {noItemsMessage}
-            </p>
+            <p className="muted-note text-sm">{noItemsMessage}</p>
           )}
         </div>
       )}

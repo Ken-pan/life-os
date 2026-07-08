@@ -2202,9 +2202,9 @@ div.input {
 }
 
 /* 标题旁的 tag 紧跟标题；操作区/合计等仍靠右对齐 */
-.today-card-head > .icon-btn,
-.today-card-head > .today-card-actions,
-.today-card-head > .text-secondary {
+.today-card-head>.icon-btn,
+.today-card-head>.today-card-actions,
+.today-card-head>.text-secondary {
   margin-left: auto;
 }
 
@@ -2767,12 +2767,12 @@ div.input {
   flex-wrap: wrap;
 }
 
-.card.settings-section > .pref-row + .pref-row,
-.card.settings-section > .list {
+.card.settings-section>.pref-row+.pref-row,
+.card.settings-section>.list {
   margin-top: var(--space-1);
 }
 
-.card.settings-section > .pref-row + .list {
+.card.settings-section>.pref-row+.list {
   margin-top: var(--space-3);
 }
 
@@ -2791,27 +2791,27 @@ div.input {
 }
 
 /* 标题行操作区靠右，避免 space-between 把中间徽章/标签撑到正中 */
-.card-head > .icon-btn,
-.card-head > .btn,
-.card-head > .section-head-actions,
-.card-head > .text-secondary,
-.card-head > .text-muted,
-.card-head > .ai-brief-meta,
-.card-head > .flex-row-tight,
-.card-head > .seg,
-.card-head > .seg-scroll,
-.section-head > .icon-btn,
-.section-head > .btn,
-.section-head > .text-secondary,
-.section-head > .text-muted,
-.section-head > .seg,
-.section-head > .seg-scroll,
-.section-head-inline > .icon-btn,
-.section-head-inline > .btn,
-.section-head-inline > .section-head-actions,
-.section-head-inline > .text-secondary,
-.section-head-inline > .sort-select,
-.section-head-inline > .field.sort-select {
+.card-head>.icon-btn,
+.card-head>.btn,
+.card-head>.section-head-actions,
+.card-head>.text-secondary,
+.card-head>.text-muted,
+.card-head>.ai-brief-meta,
+.card-head>.flex-row-tight,
+.card-head>.seg,
+.card-head>.seg-scroll,
+.section-head>.icon-btn,
+.section-head>.btn,
+.section-head>.text-secondary,
+.section-head>.text-muted,
+.section-head>.seg,
+.section-head>.seg-scroll,
+.section-head-inline>.icon-btn,
+.section-head-inline>.btn,
+.section-head-inline>.section-head-actions,
+.section-head-inline>.text-secondary,
+.section-head-inline>.sort-select,
+.section-head-inline>.field.sort-select {
   margin-left: auto;
 }
 
@@ -3467,6 +3467,11 @@ div.input {
   min-width: 0;
 }
 
+.lr-merchant-only-hint {
+  display: block;
+  margin-top: var(--space-1);
+}
+
 .purchase-coverage-card {
   margin-bottom: var(--space-3);
 }
@@ -3474,6 +3479,88 @@ div.input {
 .purchase-coverage-title {
   margin: 0 0 var(--space-1);
   font-size: var(--text-md);
+}
+
+.purchase-coverage-headline {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.purchase-coverage-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-2);
+}
+
+.purchase-coverage-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.purchase-coverage-stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.purchase-coverage-stat-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.purchase-coverage-cta {
+  margin-bottom: var(--space-2);
+}
+
+.purchase-source-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.purchase-source-chip {
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.purchase-source-chip.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.purchase-coverage-debug {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.history-summary-secondary {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.merchant-order-catalog-collapsed {
+  border: 1px dashed var(--border);
+  background: var(--bg-elevated);
+}
+
+.merchant-order-catalog-collapsed-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.merchant-order-catalog-collapse {
+  margin-bottom: var(--space-2);
 }
 
 .purchase-coverage-grid {
@@ -4347,17 +4434,17 @@ div.input {
 
   /* iOS Safari：输入框 ≥16px 避免聚焦时自动放大 */
   .input,
-.field select,
-.field textarea,
-.sort-select .input {
-  font-size: max(16px, 1rem);
-}
+  .field select,
+  .field textarea,
+  .sort-select .input {
+    font-size: max(16px, 1rem);
+  }
 
-.date-field-zh {
-  display: block;
-  margin-top: var(--space-1);
-  font-size: var(--text-sm);
-}
+  .date-field-zh {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+  }
 
   .row {
     flex-direction: column;
@@ -4610,8 +4697,7 @@ div.input {
     overscroll-behavior-x: contain;
     scrollbar-width: none;
     scroll-snap-type: x proximity;
-    scroll-padding-inline: max(var(--space-2, 8px), env(safe-area-inset-left, 0px))
-      max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
+    scroll-padding-inline: max(var(--space-2, 8px), env(safe-area-inset-left, 0px)) max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
     mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
   }
@@ -4621,8 +4707,8 @@ div.input {
     display: none;
   }
 
-  .seg:not(.wrap):not(.seg-icons):not(.seg--wrap) > button,
-  .seg-scroll > button {
+  .seg:not(.wrap):not(.seg-icons):not(.seg--wrap)>button,
+  .seg-scroll>button {
     scroll-snap-align: start;
     flex-shrink: 0;
   }
@@ -5400,7 +5486,7 @@ div.input {
   min-width: 0;
 }
 
-.portfolio-retirement-fund-list li > * {
+.portfolio-retirement-fund-list li>* {
   min-width: 0;
 }
 
@@ -6618,12 +6704,10 @@ div.input {
   left: var(--card-padding);
   right: var(--card-padding);
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--accent) 40%, transparent),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      color-mix(in srgb, var(--accent) 40%, transparent),
+      transparent);
 }
 
 .ai-signal-brief .ai-header {
@@ -6879,10 +6963,21 @@ div.input {
     padding: var(--space-3) var(--space-4);
   }
 
-  .ai-signal-brief .ai-ticker { grid-area: ticker; }
-  .ai-signal-brief .ai-signal-chip { grid-area: chip; }
-  .ai-signal-brief .ai-signal-reason { grid-area: reason; }
-  .ai-signal-brief .ai-signal-action { grid-area: action; }
+  .ai-signal-brief .ai-ticker {
+    grid-area: ticker;
+  }
+
+  .ai-signal-brief .ai-signal-chip {
+    grid-area: chip;
+  }
+
+  .ai-signal-brief .ai-signal-reason {
+    grid-area: reason;
+  }
+
+  .ai-signal-brief .ai-signal-action {
+    grid-area: action;
+  }
 }
 
 .getting-started-steps {

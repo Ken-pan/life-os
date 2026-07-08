@@ -120,6 +120,7 @@ describe('computePurchaseCoverage', () => {
     const plain = txn({ id: 'm1', merchant: 'Payroll' })
     const stats = computePurchaseCoverage([clean, review, plain])
     expect(stats.cleanEnriched).toBe(1)
+    expect(stats.cleanItemCount).toBe(1)
     expect(stats.matchedReview).toBe(1)
     expect(stats.merchantOnly).toBe(1)
   })

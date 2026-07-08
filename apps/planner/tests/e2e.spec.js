@@ -6,7 +6,7 @@ async function clearAppState(page) {
   await page.goto('/')
   await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY)
   await page.reload()
-  await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 })
+  await page.waitForSelector('.app-shell', { timeout: 15_000 })
 }
 
 // Inbox 走页面内快速添加；其余页面走 FAB + 编辑器
@@ -424,6 +424,12 @@ test.describe('PlannerOS E2E', () => {
     await expect(scheduleBtn).toBeVisible({ timeout: 10_000 })
     await scheduleBtn.click()
     await expect(page.locator('.toast')).toContainText(/3|安排|Scheduled/i)
+
+    await page.goto('/')
+    await expect(
+      page.locator('.task-title', { hasText: '排期A' }),
+    ).toBeVisible()
+
     await page.goto('/upcoming')
     // 「未来 7 天」分组默认折叠，先展开再断言
     const weekGroup = page.getByRole('button', { name: /未来|Next/ })
@@ -431,9 +437,6 @@ test.describe('PlannerOS E2E', () => {
     if ((await weekGroup.getAttribute('aria-expanded')) === 'false') {
       await weekGroup.click()
     }
-    await expect(
-      page.locator('.task-title', { hasText: '排期A' }),
-    ).toBeVisible()
     await expect(
       page.locator('.task-title', { hasText: '排期B' }),
     ).toBeVisible()

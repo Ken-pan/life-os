@@ -8,19 +8,19 @@ test.describe('首页与导航', () => {
     await expect(page.locator('.hero-title')).toContainText('胸');
     await expect(page.locator('.btn-start')).toBeVisible();
 
-    await page.locator('.nav-item', { hasText: '计划' }).click();
+    await page.getByRole('link', { name: '计划', exact: true }).filter({ visible: true }).click();
     await expect(page).toHaveURL('/program');
-    await expect(page.locator('.sec-title', { hasText: '训练计划' })).toBeVisible();
+    await expect(page.locator('.prog-list').first()).toBeVisible();
 
-    await page.locator('.nav-item', { hasText: '发现' }).click();
+    await page.getByRole('link', { name: '发现', exact: true }).filter({ visible: true }).click();
     await expect(page).toHaveURL('/discover');
     await expect(page.locator('.discover-grid')).toBeVisible();
 
-    await page.locator('.nav-item', { hasText: '设置' }).click();
+    await page.getByRole('link', { name: '设置', exact: true }).filter({ visible: true }).click();
     await expect(page).toHaveURL('/settings');
-    await expect(page.locator('.sec-title', { hasText: '设置' })).toBeVisible();
+    await expect(page.locator('.sg-title', { hasText: '账号与云同步' })).toBeVisible();
 
-    await page.locator('.nav-item', { hasText: '今日' }).click();
+    await page.getByRole('link', { name: '今日', exact: true }).filter({ visible: true }).click();
     await expect(page.locator('.hero-title')).toContainText('胸');
   });
 
