@@ -35,4 +35,5 @@ jobs:
       - run: npx playwright install chromium --with-deps
       - run: npm run build -w design-catalog
       - run: npm run test:design-catalog
+      - run: npm run test:design-catalog:a11y
       - run: npm run test:design-catalog:snapshots

@@ -85,7 +85,7 @@
   font-size: var(--text-md, var(--text-sm));
   font-weight: 500;
   border-radius: var(--seg-btn-radius);
-  min-height: var(--btn-h-md);
+  min-height: var(--tap-min);
   display: inline-flex;
   align-items: center;
   justify-content: center;
