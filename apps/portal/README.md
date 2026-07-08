@@ -31,4 +31,6 @@ cd apps/portal && npm run dev
 
 ## 上线 checklist
 
-见 [`docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) I-P1 表格：commit → `homeos-ken` Netlify 站 → DNS → auth redirect（[`SUPABASE.md`](../../docs/SUPABASE.md)）→ 扩 `core_user_app_settings.app_id` 含 `portal`。
+见 [`docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) I-P1：commit + push → GoDaddy `home` CNAME → `homeos-ken.netlify.app` → auth redirect（[`SUPABASE.md`](../../docs/SUPABASE.md)）→ 扩 `core_user_app_settings.app_id` 含 `portal`。
+
+**Netlify：** `homeos-ken` · Site ID `a5df5c3e-0e42-4f82-aca8-8d6802da357f` · https://homeos-ken.netlify.app

@@ -77,7 +77,7 @@ cd life-os && npm install && npm run build
 
 ```bash
 npm run build:portal
-CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/build --functions=apps/portal/.netlify/functions-internal --site=a5df5c3e-0e42-4f82-aca8-8d6802da357f
+CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/build --functions=.netlify/functions-internal --site=a5df5c3e-0e42-4f82-aca8-8d6802da357f
 ```
 
 其他：
