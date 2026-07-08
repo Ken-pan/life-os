@@ -289,11 +289,6 @@ p {
   display: none !important;
 }
 
-/* Coach panel header was tag + subtitle only — both hidden */
-.coach-head {
-  display: none;
-}
-
 [data-ui-decor="en-accent"],
 .decor-en {
   text-transform: uppercase;
@@ -611,12 +606,12 @@ p {
 }
 
 .today-card .tc-label {
-  font-family: var(--mono);
-  font-size: var(--text-xs);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--t3);
-  margin-bottom: 10px;
+  font-family: var(--disp);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--t1);
+  margin-bottom: 12px;
 }
 
 .today-card .tc-name {
@@ -635,13 +630,24 @@ p {
 
 .today-card .tc-meta {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-  gap: 12px 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
   margin-top: 16px;
   font-family: var(--mono);
   font-size: var(--text-sm);
   color: var(--t2);
   line-height: 1.45;
+}
+
+.today-card .tc-meta span:last-child {
+  grid-column: 1 / -1;
+}
+
+@media (--life-os-compact-up) {
+  .today-card .tc-meta {
+    grid-template-columns: repeat(3, minmax(0, max-content));
+    gap: 12px 28px;
+  }
 }
 
 .today-card .tc-meta span {
@@ -683,35 +689,8 @@ p {
   margin-top: 8px;
 }
 
-.btn-start {
+.today-card .btn-start {
   margin-top: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-family: var(--disp);
-  font-weight: 600;
-  letter-spacing: .06em;
-  padding: 12px 26px;
-  border-radius: 10px;
-  transition: transform var(--dur-fast) var(--ease-standard), filter var(--dur-fast) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard);
-}
-
-.btn-start:hover {
-  filter: brightness(1.08);
-  transform: translateY(var(--hover-lift));
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.btn-start:active {
-  transform: scale(var(--press-scale));
-}
-
-.btn-start.rest-day {
-  background: var(--card-h);
-  color: var(--t2);
-  border: 1px solid var(--border-l);
 }
 
 .btn-complete {
@@ -3378,7 +3357,33 @@ body:has(.focus-view) .toast {
 }
 
 .coach-head {
-  display: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.coach-head-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.coach-label {
+  font-family: var(--disp);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--t1);
+}
+
+.coach-sub {
+  font-size: var(--text-xs);
+  color: var(--t3);
+  line-height: 1.35;
 }
 
 .coach-tip {
@@ -3392,16 +3397,16 @@ body:has(.focus-view) .toast {
 }
 
 .coach-tip-title {
-  font-family: var(--disp);
-  font-size: var(--text-3xl);
+  font-family: var(--heading);
+  font-size: var(--text-lg);
   font-weight: 600;
-  margin-bottom: 6px;
-  line-height: 1.2;
+  margin-bottom: 4px;
+  line-height: 1.35;
 }
 
 .coach-tip-body {
-  font-size: var(--text-base);
-  color: color-mix(in srgb, var(--t1) 82%, var(--t2));
+  font-size: var(--text-md);
+  color: var(--t2);
   line-height: 1.55;
 }
 
@@ -6014,7 +6019,6 @@ body:has(.focus-view) {
   }
 
   .today-card .tc-meta {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px 14px;
   }
 
