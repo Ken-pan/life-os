@@ -12,7 +12,7 @@
 | fitnessos-ken | `apps/fitness`    | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space |
 | financeos-ken | `apps/finance`    | `npm run build -w finance-os` | `apps/finance/dist`  | https://finance.kenos.space |
 | musicos-ken   | `apps/music`      | `npm run build -w music-os`   | `apps/music/build`   | https://music.kenos.space   |
-| homeos-ken    | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://home.kenos.space（DNS 待配） |
+| osportal-ken  | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://osportal-ken.netlify.app |
 
 **Base directory 留空**（repo 根目录 `npm install`）。
 
@@ -66,12 +66,12 @@ cd life-os && npm install && npm run build
 | 项            | 状态                                                                                |
 | ------------- | ----------------------------------------------------------------------------------- |
 | 代码          | `apps/portal`（SvelteKit + adapter-netlify）                                        |
-| Netlify site  | ✅ `homeos-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）                           |
-| 回滚 URL      | https://homeos-ken.netlify.app                                                      |
-| 生产 URL      | 计划 `https://home.kenos.space`（GoDaddy CNAME 待你配置）                           |
-| Auth redirect | ❌ Supabase allow list 尚无 `home.kenos.space`（见 [`SUPABASE.md`](./SUPABASE.md)） |
+| Netlify site  | ✅ `osportal-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）                           |
+| 生产 URL      | https://osportal-ken.netlify.app                                                      |
+| 自定义域（可选） | 计划 `https://home.kenos.space`（GoDaddy CNAME 待配）                                 |
+| Auth redirect | 🟡 `*.netlify.app/**` 已覆盖；若收紧 allow list 需显式加 `osportal-ken.netlify.app/**` |
 
-**GoDaddy DNS：** `home.kenos.space` → CNAME → `homeos-ken.netlify.app`
+**GoDaddy DNS（可选）：** `home.kenos.space` → CNAME → `osportal-ken.netlify.app`
 
 上线步骤见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §I-P1。CLI 部署时需 `--filter portal`（与四站相同 `CI=1` 规则）。
 
@@ -94,11 +94,11 @@ CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/buil
 
 ## Netlify 子域命名（统一）
 
-五站 Netlify site name 统一为 **`{app}os-ken`** → `{app}os-ken.netlify.app`（Portal 为 `homeos-ken`）：
+五站 Netlify site name 统一为 **`{app}os-ken`** → `{app}os-ken.netlify.app`（Portal 为 `osportal-ken`）：
 
-| App     | Netlify site    | GoDaddy CNAME 目标          |
-| ------- | --------------- | --------------------------- |
-| Portal  | `homeos-ken`    | `homeos-ken.netlify.app`    |
+| App     | Netlify site    | GoDaddy CNAME 目标            |
+| ------- | --------------- | ----------------------------- |
+| Portal  | `osportal-ken`  | `osportal-ken.netlify.app`    |
 | Finance | `financeos-ken` | `financeos-ken.netlify.app` |
 | Music   | `musicos-ken`   | `musicos-ken.netlify.app`   |
 | Planner | `planneros-ken` | `planneros-ken.netlify.app` |

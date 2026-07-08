@@ -11,7 +11,7 @@ Canonical documentation index for the Life OS monorepo.
 | 主线        | 阶段                 | 状态 | 说明                                                        |
 | ----------- | -------------------- | ---- | ----------------------------------------------------------- |
 | Integration | I-P0 身份            | 🟡   | 远程 `core_profiles` ✅；四站 hooks ✅；SSO 跨域待 E2E 验收 |
-| Integration | I-P1 Portal          | 🟡   | `apps/portal` WIP；Netlify `homeos-ken` 已链；DNS 待配      |
+| Integration | I-P1 Portal          | 🟡   | `apps/portal` WIP；Netlify `osportal-ken` 已部署      |
 | Integration | I-P1.5 events        | 🟡   | 远程 `life_events` + Outbox ✅；Planner inbox processor ✅；Zod envelope ✅ |
 | Integration | I-P2 智能            | ⏸️   | 搁置                                                        |
 | Platform    | C-P0 边界/契约包     | ✅   | `check:lifeos-boundaries` 通过                              |

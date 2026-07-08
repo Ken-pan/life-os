@@ -34,7 +34,7 @@ vendored `packages/life-os-*` 已从独立 app 仓删除。Netlify **不会**再
 | Planner `KIMI_API_KEY`             | ✅ 已配置                                                                 |
 | Music 生产 URL                     | ✅ https://music.kenos.space（rollback: musicos-ken.netlify.app）         |
 | Netlify 命名                       | ✅ 四站统一 `{app}os-ken.netlify.app`                                     |
-| Portal `home.kenos.space`          | 🟡 Netlify `homeos-ken` 已链；DNS + auth redirect 待配（见 roadmap I-P1） |
+| Portal `osportal-ken.netlify.app` | 🟡 Netlify `osportal-ken` 已部署；`home.kenos.space` 自定义域可选（见 roadmap I-P1） |
 | 本地 sibling 目录                  | ✅ 已删除（见 `docs/LEGACY_LOCAL.md`）                                    |
 | Cursor 工作区                      | ✅ `Projects/life-os.code-workspace` + `.cursor/rules`                    |
 | 平台 Supabase 文档                 | ✅ `docs/SUPABASE.md`（迁移状态 + `supabase-sql.sh`）                     |

@@ -8,7 +8,7 @@
 | 阶段                   | 状态                                | 摘要                                                                                        |
 | ---------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------- |
 | **I-P0** 统一身份      | 🟡 **已落地，SSO 待验收**           | 远程 DB 已有 `core_profiles`；四站 + Portal 代码均接 `coreIdentity` + `setupCrossDomainSSO` |
-| **I-P1** Portal        | 🟡 **Netlify 已建，DNS 待配**       | `homeos-ken` 已链 `Ken-pan/life-os`；`home.kenos.space` DNS + auth redirect 待你配置        |
+| **I-P1** Portal        | 🟡 **Netlify 已部署，自定义域待配** | `osportal-ken` 已链 `Ken-pan/life-os`；`home.kenos.space` DNS 可选        |
 | **I-P1.5** 事件中心    | 🟡 **Outbox 已 deploy，消费端已做** | 远程 `life_events` ✅ + 触发器 smoke ✅；Planner inbox processor ✅ |
 | **I-P2** 跨应用智能    | ⏸️ **搁置**                         | —                                                                                           |
 | **C-P0/C-P1** 契约试点 | ✅ **已完成**                       | `contracts` + `platform-web` + boundary guard；Planner/Fitness P1A/B/C                      |
@@ -70,18 +70,18 @@ _CI 执行守卫：_ `npm run check:lifeos-boundaries` ✅
 
 ### 🟡 I-P1: 统一入口 (Portal) — _Netlify 已建，DNS 待配_
 
-**URL 规划：** `https://home.kenos.space`（回滚：`https://homeos-ken.netlify.app`）
+**URL 规划：** `https://osportal-ken.netlify.app`（可选自定义域：`https://home.kenos.space`）
 
 | 子项                        | 状态    | 证据                                                                             |
 | --------------------------- | ------- | -------------------------------------------------------------------------------- |
 | `apps/portal` SvelteKit App | 🟡 WIP  | Launcher UI + shell/settings-block 卡片 + CommandPalette                         |
 | SSO / coreIdentity 集成     | ✅ 代码 | `setupCrossDomainSSO` + `createCoreIdentityHandler('portal')`                    |
 | Git / monorepo 纳入         | ✅      | `3aa963b0` 已 push `master`；Git 构建应已触发                                    |
-| Netlify 部署                | 🟡      | ✅ `homeos-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）；env 已从 fitness 克隆 |
+| Netlify 部署                | 🟡      | ✅ `osportal-ken`（`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）；env 已从 fitness 克隆 |
 | Auth redirect               | ❌      | Supabase allow list **无** `home.kenos.space`                                    |
 | Portal 内登录               | ❌      | 未登录时跳转 Finance 登录（无独立 Auth UI）                                      |
 
-**上线 checklist：** ~~commit + push portal~~ → GoDaddy `home` CNAME → `homeos-ken.netlify.app` → 追加 auth redirect → 扩 `core_user_app_settings.app_id` check 含 `portal`
+**上线 checklist：** ~~commit + push portal~~ → （可选）GoDaddy `home` CNAME → `osportal-ken.netlify.app` → 扩 `core_user_app_settings.app_id` check 含 `portal`
 
 ### 🟡 I-P1.5: 跨应用事件中心 (`life_events`) — _Outbox 已 deploy，Planner 消费端已落地_
 

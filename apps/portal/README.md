@@ -1,7 +1,8 @@
 # HOME.OS（Life OS 统一入口）
 
 > **阶段：** I-P1 · **状态：** 🟡 本地 WIP，未上线
-> **计划 URL：** https://home.kenos.space
+> **生产 URL：** https://osportal-ken.netlify.app  
+> **计划自定义域（可选）：** https://home.kenos.space
 > **路线图：** [`docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) §I-P1
 
 Life OS 应用切换器：复用 `@life-os/theme` shell / `settings-block` 卡片与各端真实品牌 icon，接入 `@life-os/sync` 身份与跨域 SSO。
@@ -31,6 +32,6 @@ cd apps/portal && npm run dev
 
 ## 上线 checklist
 
-见 [`docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) I-P1：commit + push → GoDaddy `home` CNAME → `homeos-ken.netlify.app` → auth redirect（[`SUPABASE.md`](../../docs/SUPABASE.md)）→ 扩 `core_user_app_settings.app_id` 含 `portal`。
+见 [`docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) I-P1：commit + push → （可选）GoDaddy `home` CNAME → `osportal-ken.netlify.app` → 扩 `core_user_app_settings.app_id` 含 `portal`。
 
-**Netlify：** `homeos-ken` · Site ID `a5df5c3e-0e42-4f82-aca8-8d6802da357f` · https://homeos-ken.netlify.app
+**Netlify：** `osportal-ken` · Site ID `a5df5c3e-0e42-4f82-aca8-8d6802da357f` · https://osportal-ken.netlify.app
