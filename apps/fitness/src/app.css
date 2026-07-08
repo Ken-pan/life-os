@@ -3361,8 +3361,6 @@ body:has(.focus-view) .toast {
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
 }
 
 .coach-head-copy {
@@ -3391,7 +3389,8 @@ body:has(.focus-view) .toast {
   border-top: 1px solid var(--border);
 }
 
-.coach-tip:first-of-type {
+.coach-head + .coach-tip,
+.coach-panel > .coach-tip:first-child {
   border-top: none;
   padding-top: 0;
 }
