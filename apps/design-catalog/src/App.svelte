@@ -5,6 +5,7 @@
   import ThemeMatrix from '$lib/ThemeMatrix.svelte'
   import ResponsiveFrame from '$lib/ResponsiveFrame.svelte'
   import CatalogShell from '$lib/CatalogShell.svelte'
+  import CatalogMatrixView from '$lib/CatalogMatrixView.svelte'
   import TokensShowcase from './showcases/TokensShowcase.svelte'
   import ButtonsShowcase from './showcases/ButtonsShowcase.svelte'
   import SegmentsShowcase from './showcases/SegmentsShowcase.svelte'
@@ -35,6 +36,8 @@
   let app = $state('planner')
   let mode = $state('light')
   let viewport = $state('desktop')
+  let view = $state('detail')
+  let embed = $state(false)
 
   const ActivePage = $derived(pages[showcase])
 
@@ -44,15 +47,38 @@
     app = state.app
     mode = state.mode
     viewport = state.viewport
+    view = state.view
+    embed = state.embed
   }
 
-  function pushUrl() {
-    writeCatalogParams({ showcase, app, mode, viewport })
+  function pushUrl(overrides = {}) {
+    writeCatalogParams({
+      showcase,
+      app,
+      mode,
+      viewport,
+      view,
+      embed,
+      ...overrides,
+    })
   }
 
   function setShowcase(id) {
     showcase = id
-    pushUrl()
+    pushUrl({ view: 'detail' })
+  }
+
+  function openMatrix(currentShowcase = showcase) {
+    showcase = currentShowcase
+    view = 'matrix'
+    pushUrl({ view: 'matrix', embed: false })
+  }
+
+  function openDetailFromMatrix(nextApp, nextMode) {
+    app = nextApp
+    mode = nextMode
+    view = 'detail'
+    pushUrl({ view: 'detail', embed: false })
   }
 
   onMount(() => {
@@ -63,72 +89,108 @@
   })
 </script>
 
-<div class="catalog-app">
-  <aside class="catalog-nav">
-    <header class="catalog-nav__head">
-      <h1>Life OS</h1>
-      <p>Design Catalog</p>
-    </header>
-    <nav>
-      <p class="catalog-nav__group">@life-os/theme</p>
-      {#each CATALOG_SECTIONS.filter((s) => s.group === 'theme') as section}
-        <button
-          type="button"
-          class="catalog-nav__link"
-          class:catalog-nav__link--active={showcase === section.id}
-          onclick={() => setShowcase(section.id)}
-        >
-          {section.label}
-        </button>
-      {/each}
-      <p class="catalog-nav__group">@life-os/platform-web</p>
-      {#each CATALOG_SECTIONS.filter((s) => s.group === 'components') as section}
-        <button
-          type="button"
-          class="catalog-nav__link"
-          class:catalog-nav__link--active={showcase === section.id}
-          onclick={() => setShowcase(section.id)}
-        >
-          {section.label}
-        </button>
-      {/each}
-    </nav>
-  </aside>
-
-  <div class="catalog-workspace">
-    <ThemeMatrix
-      {app}
-      {mode}
-      {viewport}
-      onApp={(v) => {
-        app = v
-        pushUrl()
-      }}
-      onMode={(v) => {
-        mode = v
-        pushUrl()
-      }}
-      onViewport={(v) => {
-        viewport = v
-        pushUrl()
-      }}
-    />
-    <main class="catalog-main">
-      <ResponsiveFrame {viewport}>
-        <CatalogShell {app} {mode}>
-          {#if ActivePage}
-            <ActivePage />
-          {/if}
-        </CatalogShell>
-      </ResponsiveFrame>
-    </main>
+{#if embed}
+  <div class="catalog-embed" data-testid="catalog-embed">
+    <CatalogShell {app} {mode}>
+      {#if ActivePage}
+        <ActivePage />
+      {/if}
+    </CatalogShell>
   </div>
-</div>
+{:else}
+  <div class="catalog-app">
+    <aside class="catalog-nav">
+      <header class="catalog-nav__head">
+        <h1>Life OS</h1>
+        <p>Design Catalog</p>
+      </header>
+      <nav>
+        <button
+          type="button"
+          class="catalog-nav__link"
+          class:catalog-nav__link--active={view === 'matrix'}
+          onclick={() => openMatrix(showcase)}
+        >
+          Matrix (4×2)
+        </button>
+        <p class="catalog-nav__group">@life-os/theme</p>
+        {#each CATALOG_SECTIONS.filter((s) => s.group === 'theme') as section}
+          <button
+            type="button"
+            class="catalog-nav__link"
+            class:catalog-nav__link--active={view === 'detail' && showcase === section.id}
+            onclick={() => setShowcase(section.id)}
+          >
+            {section.label}
+          </button>
+        {/each}
+        <p class="catalog-nav__group">@life-os/platform-web</p>
+        {#each CATALOG_SECTIONS.filter((s) => s.group === 'components') as section}
+          <button
+            type="button"
+            class="catalog-nav__link"
+            class:catalog-nav__link--active={view === 'detail' && showcase === section.id}
+            onclick={() => setShowcase(section.id)}
+          >
+            {section.label}
+          </button>
+        {/each}
+      </nav>
+    </aside>
+
+    <div class="catalog-workspace">
+      {#if view === 'detail'}
+        <ThemeMatrix
+          {app}
+          {mode}
+          {viewport}
+          onApp={(v) => {
+            app = v
+            pushUrl()
+          }}
+          onMode={(v) => {
+            mode = v
+            pushUrl()
+          }}
+          onViewport={(v) => {
+            viewport = v
+            pushUrl()
+          }}
+        />
+      {/if}
+      <main class="catalog-main">
+        {#if view === 'matrix'}
+          <CatalogMatrixView
+            {showcase}
+            onShowcase={(id) => {
+              showcase = id
+              pushUrl({ view: 'matrix' })
+            }}
+            onOpenDetail={openDetailFromMatrix}
+          />
+        {:else}
+          <ResponsiveFrame {viewport}>
+            <CatalogShell {app} {mode}>
+              {#if ActivePage}
+                <ActivePage />
+              {/if}
+            </CatalogShell>
+          </ResponsiveFrame>
+        {/if}
+      </main>
+    </div>
+  </div>
+{/if}
 
 <style>
   :global(body) {
     margin: 0;
     background: #111;
+  }
+
+  .catalog-embed {
+    min-height: 100vh;
+    background: var(--bg, #eceae6);
   }
 
   .catalog-app {

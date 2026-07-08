@@ -65,6 +65,20 @@ export const CATALOG_SECTIONS = [
 
 export const SHOWCASE_IDS = CATALOG_SECTIONS.map((s) => s.id)
 
+/** P3 component showcases — full 4×2 matrix in catalog + smoke tests */
+export const MATRIX_SHOWCASES = CATALOG_SECTIONS.filter((s) =>
+  [
+    'buttons',
+    'segments',
+    'utilities',
+    'settings',
+    'navigation',
+    'feedback',
+    'toast',
+    'cards',
+  ].includes(s.id),
+)
+
 export const APPS = /** @type {const} */ ([
   'planner',
   'fitness',

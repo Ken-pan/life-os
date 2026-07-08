@@ -20,8 +20,10 @@ apps/design-catalog                ← 仅导航 + matrix + fixtures + layout ch
 | P3a Card primitive + component tokens 骨架             | ✅ 已推送                  |
 | P3b Settings / Toast / Navigation / Banner 深 token 化 | ✅ 已推送                  |
 | P3c Button / Segment / Toggle token 化                 | ✅ 已推送                  |
-| P3 catalog UX + spacing 修复                           | ✅ 本地完成，**待 commit** |
-| P4 Catalog matrix view                                 | ⏳ 下一步                  |
+| P3 catalog UX + spacing 修复                           | ✅ `ff37d401`              |
+| P4a Matrix 4×2 grid + embed mode                       | ✅ 本地完成，**待 commit** |
+| P4c Playwright smoke 扩展                              | ✅ **152 tests**           |
+| P4b/P4d/P4e（state、CommandPalette、ThemeMatrix）    | ⏳                         |
 | P5 Playwright screenshot baseline                      | ⏳                         |
 
 ## 启动
@@ -37,8 +39,17 @@ npm run dev:design-catalog
 ```bash
 npm run dev:design-catalog
 npm run build -w design-catalog
-npm run test:design-catalog    # Playwright visual smoke（42 tests）
+npm run test:design-catalog    # Playwright visual smoke（152 tests）
 ```
+
+### Matrix view（P4a）
+
+```txt
+/?view=matrix&showcase=buttons     # 4 app × 2 mode iframe grid
+/?showcase=toast&app=planner&mode=light&embed=1   # iframe cell / 无 chrome
+```
+
+侧栏 **Matrix (4×2)** 入口；点击 cell 跳转 detail view。
 
 ### Ad-hoc 视觉审计（不提交 baseline）
 
@@ -77,15 +88,17 @@ node scripts/design-catalog-p3-visual-verify.mjs      # 38 项 computed-style �
 | `app`      | planner, fitness, finance, music                                                                |
 | `mode`     | light, dark                                                                                     |
 | `viewport` | desktop (1440), tablet (768), mobile (390)                                                      |
+| `view`     | `matrix` — 4×2 grid；默认 detail                                                                |
+| `embed`    | `1` — 无侧栏，供 matrix iframe 使用                                                             |
 
 ## Showcase → 真实来源
 
 | Showcase                       | Import 来源                                 | 说明                                       |
-| ------------------------------ | ------------------------------------------- | ------------------------------------------ | ---------- |
+| ------------------------------ | ------------------------------------------- | ------------------------------------------ |
 | tokens                         | `@life-os/theme` generated                  | 品牌 token 预览                            |
 | buttons / segments / utilities | `@life-os/theme` CSS 类                     | theme 层 primitive，非 platform-web Svelte |
 | settings                       | `@life-os/platform-web/svelte/settings/*`   | 样式在 theme，P3b 已接 `--control-*`       |
-| brand / icon                   | `@life-os/platform-web/svelte/brand         | icon`                                      | 无独立色值 |
+| brand / icon                   | `@life-os/platform-web/svelte/brand\|icon`   | 无独立色值                                 |
 | navigation                     | `@life-os/platform-web/svelte/navigation/*` | BackButton + MobileMoreSheet               |
 | feedback                       | `SyncErrorBanner` + `Toast`                 | banner + toast 均走 `--feedback-*`         |
 | toast                          | `@life-os/platform-web/svelte/toast`        | co-located `toast.css`                     |

@@ -382,68 +382,34 @@ Storybook-first / Figma-first 已明确否决（现阶段）。
 
 ### D-P3 全面状态检查 — _2026-07-08_
 
-**Merge readiness（catalog + theme 层）：PASS（待 commit）**
+**Merge readiness（catalog + theme 层）：PASS**
 
-| 检查项                                   | 结果         | 备注                                       |
-| ---------------------------------------- | ------------ | ------------------------------------------ |
-| `npm run validate:tokens`                | ✅           | refs / contract / drift 全绿               |
-| `npm run build -w design-catalog`        | ✅           |                                            |
-| `npm run test:design-catalog`            | ✅ **42/42** | tokens 4×2、cards 4×2 + 单点 smoke         |
-| `design-catalog-p3-screenshot-audit.mjs` | ✅ **64/64** | 8 showcase × 4 app × 2 mode                |
-| `design-catalog-p3-visual-verify.mjs`    | ✅ **38/38** | 含 toast spacing / danger 语义 / html 同步 |
-| 生产四端 app 页面迁移                    | ⛔ 未做      | D-P3 刻意边界                              |
-| `apps/music/exports/**` 截图             | ⛔ 未提交    | 边界遵守                                   |
+| 检查项 | 结果 |
+| ------ | ---- |
+| `npm run validate:tokens` | ✅ |
+| `npm run build -w design-catalog` | ✅ |
+| `npm run test:design-catalog` | ✅ **152/152**（含 P4c 全矩阵） |
+| `design-catalog-p3-screenshot-audit.mjs` | ✅ 64/64 |
+| `design-catalog-p3-visual-verify.mjs` | ✅ 38/38 |
+| P3 UX 批次 | ✅ `ff37d401` |
 
-**已推送 `master`（`7491989f` 及之前）：** P1/P2/P3a/P3b/P3c。
+### ✅ D-P4a/P4c: Catalog matrix + smoke — _2026-07-08 本地完成_
 
-**本地未 commit（P3 catalog UX + spacing + platform-web 小 API）：** 约 25 文件 / +483 −52 行（不含 `apps/home/**`、`apps/music/exports/**`、icon-manifest 等无关改动）。
+| 子项 | 状态 |
+| ---- | ---- |
+| `/?view=matrix&showcase=*` — 4×2 iframe grid | ✅ `CatalogMatrixView.svelte` |
+| `embed=1` 无 chrome（matrix iframe） | ✅ |
+| 侧栏 Matrix 入口；cell → detail | ✅ |
+| Playwright：8 showcase × 4 app × 2 mode | ✅ **128** + tokens 16 + 专项 8 = **152** |
 
-**组件 smoke 覆盖（Playwright committed）：**
-
-| Showcase                                                                  | 矩阵覆盖        | ad-hoc 截图 |
-| ------------------------------------------------------------------------- | --------------- | ----------- |
-| tokens                                                                    | ✅ 4×2          | ✅          |
-| cards                                                                     | ✅ 4×2 + mobile | ✅          |
-| buttons / segments / settings / navigation / feedback / toast / utilities | 🟡 单点或部分   | ✅ 全矩阵   |
-| brand / icon                                                              | ❌              | ❌          |
-| CommandPalette                                                            | ❌ 无 showcase  | ❌          |
-
-**→ 可进入 D-P4：** P3 组件 token + catalog inspection 面已可信；建议 **先 commit P3 UX 批次** 再开 P4。
-
-### ⏳ D-P4: Catalog 2.0 matrix view — _建议下一步_
-
-**目标：** 把 catalog 从「单 showcase + URL 参数切换」升级为 **可扫视的 inspection matrix**，成为 D-P5 screenshot baseline 的前置 UI。
-
-**现状：** `ThemeMatrix.svelte` 仅提供 app/mode/viewport 三个 `<select>`；无 grid 概览、无 state 维度、smoke 未覆盖全矩阵。
-
-**建议范围（按优先级）：**
-
-| 优先级  | 交付物                                 | 说明                                                                                                  |
-| ------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| **P4a** | Matrix 路由 `/matrix?showcase=buttons` | 单页 grid：**4 app × 2 mode** 缩略 iframe 或并排 panel；点击跳转 detail URL                           |
-| **P4b** | State 维度                             | 每个 showcase 声明 `states[]`（如 buttons: default/disabled；settings: default/disabled/destructive） |
-| **P4c** | Playwright smoke 扩展                  | P3 showcase 全矩阵 presence test（不必 screenshot）；对齐 P4 grid 单元                                |
-| **P4d** | CommandPalette showcase                | 补 P3 矩阵缺口；overlay + 面板 token 可视化                                                           |
-| **P4e** | `ThemeMatrix` token 化                 | matrix chrome 改读 theme（现为 hardcoded `#1a1a1a`）                                                  |
-
-**刻意不做（仍属 D-P3 边界）：**
-
-- 四端 production 页面 Card/Banner 迁移
-- committed screenshot baseline（→ D-P5）
-- Storybook / Figma-first
-
-**验收标准：**
-
-- 任一 P3 showcase 可在 matrix 页一眼看到 4×2 品牌差异
-- `npm run test:design-catalog` ≥ 80 tests（矩阵 presence，非 pixel diff）
-- README + ROADMAP 更新 matrix URL 与 state 注册方式
+**P4 剩余：** P4b state 维度 · P4d CommandPalette showcase · P4e ThemeMatrix token 化
 
 ### ⏳ D-P5+: 后续阶段（按序）
 
 | 阶段 | 内容                                                          | 触发条件                                |
 | ---- | ------------------------------------------------------------- | --------------------------------------- |
-| D-P4 | Catalog 2.0 matrix view（state × app × mode × viewport）      | D-P3 完成 ✅；**建议先 commit UX 批次** |
-| D-P5 | Playwright `toHaveScreenshot` visual regression baseline      | D-P4 完成                               |
+| D-P4 | P4b state 维度 / P4d CommandPalette / P4e ThemeMatrix token 化 | P4a/P4c ✅ |
+| D-P5 | Playwright `toHaveScreenshot` visual regression baseline      | P4 完成                               |
 | D-P6 | a11y gates（contrast / focus / target size / reduced motion） | D-P5 完成                               |
 | D-P7 | Figma variables mirror（code JSON 仍为真源）                  | 需要设计侧协作                          |
 | D-P8 | Storybook / Chromatic                                         | 仅当团队协作压力出现                    |
