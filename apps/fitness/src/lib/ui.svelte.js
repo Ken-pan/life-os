@@ -2,35 +2,12 @@
 import { parseRepsTarget } from './session.js';
 import { intensityFromReps, DEFAULT_BAR_LBS } from './tools/calculators.js';
 import { S, displayWeight } from './state.svelte.js';
-import { createToastDeduper, resolveToastDuration } from '@life-os/theme';
+import { createToastStore } from '@life-os/platform-web/svelte/toast-store';
 
-export const toastState = $state({ msg: '', show: false, tone: 'success' });
-
-let toastTimer = null;
-const shouldShowToast = createToastDeduper();
-
-export function dismissToast() {
-  clearTimeout(toastTimer);
-  toastState.show = false;
-}
-
-/**
- * @param {string} msg
- * @param {'success'|'error'|'warn'} [tone]
- * @param {{ duration?: number, key?: string, dedupeMs?: number }} [options]
- */
-export function toast(msg, tone = 'success', options = {}) {
-  const key = options.key ?? (tone === 'success' ? msg : `${tone}:${msg}`);
-  if (!shouldShowToast(key, options.dedupeMs ?? 3000)) return;
-
-  toastState.msg = msg;
-  toastState.tone = tone;
-  toastState.show = true;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toastState.show = false;
-  }, options.duration ?? resolveToastDuration(msg, { tone }));
-}
+const toastStore = createToastStore();
+export const toastState = toastStore.toastState;
+export const toast = toastStore.toast;
+export const dismissToast = toastStore.dismissToast;
 
 export const weightModal = $state({
   open: false,

@@ -1,6 +1,6 @@
 import { S } from './state.svelte.js';
 import { SYSTEM_LIST_INBOX } from './types.js';
-import { createToastDeduper, resolveToastDuration } from '@life-os/theme';
+import { createToastStore } from '@life-os/platform-web/svelte/toast-store';
 import { updateTask } from './domain/tasks.js';
 
 /** @param {import('./types.js').Task} task */
@@ -8,43 +8,10 @@ function cloneTask(task) {
   return JSON.parse(JSON.stringify(task));
 }
 
-export const toastState = $state({
-  msg: '',
-  show: false,
-  tone: 'success',
-  /** @type {string} 可选操作按钮文案（如「撤销」） */
-  actionLabel: '',
-  /** @type {(() => void) | null} */
-  onAction: null
-});
-
-let toastTimer = null;
-const shouldShowToast = createToastDeduper();
-
-/**
- * @param {string} msg
- * @param {'success'|'error'|'warn'} [tone]
- * @param {{ actionLabel?: string, onAction?: () => void, duration?: number, key?: string, dedupeMs?: number }} [options]
- */
-export function toast(msg, tone = 'success', options = {}) {
-  const key = options.key ?? (tone === 'success' ? msg : `${tone}:${msg}`);
-  if (!shouldShowToast(key, options.dedupeMs ?? 3000)) return;
-
-  toastState.msg = msg;
-  toastState.tone = tone;
-  toastState.actionLabel = options.actionLabel ?? '';
-  toastState.onAction = options.onAction ?? null;
-  toastState.show = true;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toastState.show = false;
-  }, options.duration ?? resolveToastDuration(msg, { tone, actionLabel: options.actionLabel }));
-}
-
-export function dismissToast() {
-  clearTimeout(toastTimer);
-  toastState.show = false;
-}
+const toastStore = createToastStore();
+export const toastState = toastStore.toastState;
+export const toast = toastStore.toast;
+export const dismissToast = toastStore.dismissToast;
 
 export const taskEditor = $state({
   open: false,

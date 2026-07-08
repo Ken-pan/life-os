@@ -1,15 +1,19 @@
-import { createToastDeduper, resolveToastDuration } from '@life-os/theme'
+import { resolveToastDuration } from '@life-os/theme'
+import { createToastStore } from '@life-os/platform-web/svelte/toast-store'
 import { loadUiPrefs, saveUiPrefs } from './settingsPersistence.js'
 
-export const toastState = $state({ msg: '', show: false, tone: 'success' })
+// Music 专属时长策略：整体更紧凑（error 4500–6000 / 其他 2000–3500）
+const toastStore = createToastStore({
+  resolveDuration: (msg, { tone }) =>
+    resolveToastDuration(msg, {
+      tone,
+      min: tone === 'error' ? 4500 : 2000,
+      max: tone === 'error' ? 6000 : 3500,
+    }),
+})
 
-let toastTimer = null
-const shouldShowToast = createToastDeduper()
-
-export function dismissToast() {
-  toastState.show = false
-  clearTimeout(toastTimer)
-}
+export const toastState = toastStore.toastState
+export const dismissToast = toastStore.dismissToast
 
 /**
  * @param {string} msg
@@ -17,36 +21,8 @@ export function dismissToast() {
  * @param {{ duration?: number, key?: string, dedupeMs?: number }} [maybeOpts]
  */
 export function toast(msg, toneOrOpts = 'success', maybeOpts = {}) {
-  let tone = 'success'
-  /** @type {{ duration?: number, key?: string, dedupeMs?: number }} */
-  let options = {}
-
-  if (typeof toneOrOpts === 'object' && toneOrOpts !== null) {
-    tone = toneOrOpts.error ? 'error' : toneOrOpts.warn ? 'warn' : 'success'
-    options = toneOrOpts
-  } else {
-    tone = toneOrOpts
-    options = maybeOpts
-  }
-
-  const key = options.key ?? (tone === 'success' ? msg : `${tone}:${msg}`)
-  if (!shouldShowToast(key, options.dedupeMs ?? 3000)) return
   if (!String(msg ?? '').trim()) return
-
-  const ms =
-    options.duration ??
-    resolveToastDuration(msg, {
-      tone,
-      min: tone === 'error' ? 4500 : 2000,
-      max: tone === 'error' ? 6000 : 3500,
-    })
-  toastState.msg = msg
-  toastState.tone = tone
-  toastState.show = true
-  clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => {
-    toastState.show = false
-  }, ms)
+  toastStore.toast(msg, toneOrOpts, maybeOpts)
 }
 
 export const queueDrawerOpen = $state({ open: false })
