@@ -7,13 +7,14 @@ alwaysApply: true
 
 **Canonical repo:** `Ken-pan/life-os` at `/Users/kenpan/「Projects」/life-os`
 
-| App     | Path           | Workspace name | Netlify site  | 备注     |
-| ------- | -------------- | -------------- | ------------- | -------- |
-| Planner | `apps/planner` | `planner-os`   | planneros-ken | 生产     |
-| Fitness | `apps/fitness` | `fitness-os`   | fitnessos-ken | 生产     |
-| Finance | `apps/finance` | `finance-os`   | financeos-ken | 生产     |
-| Music   | `apps/music`   | `music-os`     | musicos-ken   | 生产     |
-| Portal  | `apps/portal`  | `portal`       | portal-ken  | I-P1 WIP |
+| App     | Path           | Workspace name | Netlify site  | 备注         |
+| ------- | -------------- | -------------- | ------------- | ------------ |
+| Planner | `apps/planner` | `planner-os`   | planneros-ken | 生产         |
+| Fitness | `apps/fitness` | `fitness-os`   | fitnessos-ken | 生产         |
+| Finance | `apps/finance` | `finance-os`   | financeos-ken | 生产         |
+| Music   | `apps/music`   | `music-os`     | musicos-ken   | 生产         |
+| Portal  | `apps/portal`  | `portal`       | portal-ken    | 生产（I-P1） |
+| Home    | `apps/home`    | `home-os`      | homeos-ken    | 实验 WIP     |
 
 Shared: `packages/theme`, `packages/sync`, `packages/contracts`, `packages/platform-web`.
 
@@ -36,4 +37,4 @@ cd apps/planner && npm run dev
 
 ## Deploy
 
-Push `master` → Netlify Git build (path ignore per app). Docs: `docs/NETLIFY.md`, `docs/CANONICAL.md`.
+Push `master` → Netlify Git build (path ignore per app). Docs: `docs/ops/netlify.md`, `docs/ops/canonical.md`, hub `docs/LIFEOS_ROADMAP.md`.

@@ -1,0 +1,190 @@
+@import '@life-os/theme/design-system.css';
+@import '@life-os/theme/brands/home.css';
+
+:root {
+  --storage-accent: #5c758c;
+  --plan-paper: #eef1f4;
+  --plan-room: #e8edf1;
+  --plan-furn: #dfe3e8;
+  --plan-wall: #20242b;
+  --plan-accent: #5c758c;
+  --plan-grid: #dbe1e6;
+  --plan-hatch-bg: #edf1f5;
+  --plan-hatch-line: #9aadc0;
+  --theme-color: #eef1f4;
+  --seg-btn-radius: 999px;
+}
+
+[data-theme='dark'] {
+  --plan-paper: #2a3138;
+  --plan-room: #343c44;
+  --plan-furn: #3d4650;
+  --plan-wall: #e8edf1;
+  --plan-grid: #3a424a;
+  --plan-hatch-bg: #2f3840;
+  --plan-hatch-line: #6a8299;
+  --theme-color: #14181c;
+}
+
+/* Home domain: spatial audit chips & section headers */
+.home-eyebrow {
+  font-family: var(--mono);
+  font-size: var(--text-xs, 11px);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 6px;
+}
+
+.home-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.home-chip {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--t1);
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 6px 11px;
+  border-radius: 999px;
+}
+
+.home-chip b {
+  color: var(--storage-accent);
+  font-weight: 600;
+}
+
+.home-section-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 32px 0 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.home-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 14px;
+}
+
+.home-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t3);
+}
+
+.home-legend .sw {
+  display: inline-block;
+  width: 16px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.home-legend .sw.store {
+  background: repeating-linear-gradient(45deg, #dce4ec, #dce4ec 3px, #f4f7fa 3px, #f4f7fa 6px);
+  border-color: var(--storage-accent);
+}
+
+.home-legend .sw.room {
+  background: #e8edf1;
+}
+
+.home-legend .sw.furn {
+  background: #dfe3e8;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 24px;
+}
+
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--t1);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.home-btn.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+
+.home-notes {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--storage-accent);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--t2);
+}
+
+.home-notes ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.home-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.home-table th,
+.home-table td {
+  text-align: left;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.home-table th {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.home-table td:first-child {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--t3);
+  white-space: nowrap;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.table-scroll .home-table {
+  margin: 0;
+  min-width: 520px;
+}

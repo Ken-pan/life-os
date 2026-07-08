@@ -23,6 +23,7 @@
     "./brands/fitness.css": "./src/generated/brands/fitness.css",
     "./brands/finance.css": "./src/generated/brands/finance.css",
     "./brands/music.css": "./src/generated/brands/music.css",
+    "./brands/home.css": "./src/generated/brands/home.css",
     "./brand": {
       "types": "./src/index.d.ts",
       "import": "./src/brand.js"

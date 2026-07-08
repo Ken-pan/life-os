@@ -127,6 +127,11 @@ def main() -> None:
             "light": REPO / "apps/finance/public/assets/brand/icon-light.png",
             "out": REPO / "apps/finance/public/assets/brand",
         },
+        "home": {
+            "dark": REPO / "apps/home/static/icon-dark.png",
+            "light": REPO / "apps/home/static/icon-light.png",
+            "out": REPO / "apps/home/static",
+        },
     }
 
     summary = {}
@@ -143,7 +148,7 @@ def main() -> None:
         dst.write_bytes(src.read_bytes())
     (ext_popup / "brand-mark.png").write_bytes((brand / "brand-circle-dark-64.png").read_bytes())
 
-    manifest_path = REPO / "docs/exports/life-os-logos/icon-manifest.json"
+    manifest_path = REPO / "docs/assets/life-os-logos/icon-manifest.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {manifest_path}")

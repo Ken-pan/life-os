@@ -20,9 +20,10 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `./scripts/verify-life-os-identity-p0.sh`                    | I-P0 身份 + Supabase migration 验收                           |
 | `./scripts/test-outbox-trigger.sh [--smoke]`                 | I-P1.5 Outbox 结构检查 / 端到端 smoke                         |
 | `npm run verify:outbox`                                      | 同上（`test-outbox-trigger.sh --smoke` 快捷方式）             |
-| E2E 问题记录                                                 | [`docs/E2E_ISSUES.md`](docs/E2E_ISSUES.md)                    |
+| E2E 问题记录                                                 | [`docs/qa/e2e-issues.md`](docs/qa/e2e-issues.md)              |
+| [`MAINTENANCE.md`](docs/MAINTENANCE.md)                      | docs 目录维护约定                                             |
 | `./scripts/supabase-sql.sh "<sql>"` / `-f <file.sql>`        | 远程 Supabase SQL（Management API；直连 5432 在本网络不可用） |
-| `./scripts/deploy-all-netlify.sh`                            | CLI prod deploy 四站（Portal 未上线）                         |
+| `./scripts/deploy-all-netlify.sh`                            | CLI prod deploy 六站（含 Portal、Home）                       |
 | `npm run sync:packages`                                      | Copy sibling theme/sync into `packages/*` (legacy)            |
 | `npm run pwa:build`                                          | 五端 production build（PWA 验收用）                           |
 | `npm run pwa:preview:{planner,fitness,music,finance,portal}` | 标准端口 preview（见 `apps.config.mjs`）                      |
@@ -36,20 +37,22 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `npm run test:design-catalog:snapshots`                      | Catalog pixel baseline（80；desktop）                         |
 | `npm run test:design-catalog:all`                            | smoke + snapshots（252）                                      |
 
-PWA iOS debug：[`docs/DEBUG_PWA_IOS.md`](docs/DEBUG_PWA_IOS.md)、[`docs/PWA_VIEWPORT_CHECKLIST.md`](docs/PWA_VIEWPORT_CHECKLIST.md)、SSOT [`scripts/pwa/apps.config.mjs`](scripts/pwa/apps.config.mjs)、规则 [`.cursor/rules/pwa-ios-debug.mdc`](.cursor/rules/pwa-ios-debug.mdc)。
+PWA iOS debug：[`docs/qa/pwa-ios.md`](docs/qa/pwa-ios.md)、[`docs/qa/pwa-viewport-checklist.md`](docs/qa/pwa-viewport-checklist.md)、SSOT [`scripts/pwa/apps.config.mjs`](scripts/pwa/apps.config.mjs)、规则 [`.cursor/rules/pwa-ios-debug.mdc`](.cursor/rules/pwa-ios-debug.mdc)。
 
 Any manual `netlify deploy` **must** include `CI=1` and `--filter <workspace>`
-(`planner-os` / `fitness-os` / `finance-os` / `music-os` / `portal`)，否则 CLI 会交互式询问项目并挂起。
+(`planner-os` / `fitness-os` / `finance-os` / `music-os` / `portal` / `home-os`)，否则 CLI 会交互式询问项目并挂起。
 
 ## Layout
 
 - `apps/{planner,fitness,finance,music}` — 生产四站 SvelteKit apps
-- `apps/portal` — I-P1 WIP（未部署 `portal.kenos.space`）
+- `apps/portal` — I-P1 统一入口（`portal.kenos.space` 已上线；Launcher 等产品收尾中）
+- `apps/home` — H-P0 户型编辑实验（`home.kenos.space` 已 CLI 部署；工坊 `?studio=1`）
 - `packages/{theme,sync,contracts,platform-web}` — 共享包
-- `docs/LIFEOS_ROADMAP.md` — Integration + Platform 路线图与完成度
-- `docs/SUPABASE.md` — 共享 DB 迁移与 `supabase-sql.sh` 运维
-- `docs/CANONICAL.md` — source of truth vs archived repos
-- `docs/NETLIFY.md` — 四站 deploy + Portal 计划
+- `docs/README.md` — 文档导航 hub
+- `docs/LIFEOS_ROADMAP.md` — 状态 hub（Now / Next / Shipped）
+- `docs/ops/supabase.md` — 共享 DB 迁移与 `supabase-sql.sh` 运维
+- `docs/ops/canonical.md` — source of truth vs archived repos
+- `docs/ops/netlify.md` — 五站 deploy（含 Portal）
 
 ## Git / Netlify
 

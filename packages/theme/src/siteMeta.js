@@ -1,4 +1,4 @@
-/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'portal'} LifeOsAppId */
+/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'home' | 'portal'} LifeOsAppId */
 
 /**
  * Life OS 三端统一的浏览器 / PWA / 社交分享 metadata
@@ -103,6 +103,29 @@ export const LIFE_OS_SITE_META = {
     manifest: '/manifest.webmanifest',
     appleTouchIcon: '/apple-touch-icon.png',
     categories: ['music', 'entertainment', 'utilities'],
+  },
+  home: {
+    id: 'home',
+    name: 'HOME.OS',
+    shortName: 'HOME',
+    description: {
+      zh: '居家空间规划 · 平面审计与储藏区管理',
+      en: 'Home spatial planning · floor audit & storage zones',
+    },
+    themeColor: { light: '#eef1f4', dark: '#14181c' },
+    defaultTheme: 'auto',
+    locale: 'zh-CN',
+    storageKey: 'homeos_spatial_v1',
+    storageKind: 'nested',
+    settingsThemePath: ['settings', 'theme'],
+    favicon: {
+      id: 'app-favicon',
+      light: '/favicon-32.png',
+      dark: '/favicon-32.png',
+    },
+    manifest: '/manifest.webmanifest',
+    appleTouchIcon: '/apple-touch-icon.png',
+    categories: ['lifestyle', 'utilities'],
   },
   portal: {
     id: 'portal',

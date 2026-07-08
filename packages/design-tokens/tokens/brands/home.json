@@ -1,0 +1,100 @@
+{
+  "app": "home",
+  "defaultMode": "light",
+  "modes": {
+    "light": {
+      "colorScheme": "light",
+      "vars": {
+        "bg": { "$type": "color", "$value": "#eef1f4" },
+        "bg-2": { "$type": "color", "$value": "#ffffff" },
+        "card": { "$type": "color", "$value": "#ffffff" },
+        "card-h": { "$type": "color", "$value": "#e4eaef" },
+        "border": { "$type": "color", "$value": "#d2dae2" },
+        "border-l": { "$type": "color", "$value": "#bcc6d0" },
+        "t1": { "$type": "color", "$value": "#16181d" },
+        "t2": { "$type": "color", "$value": "#4a5563" },
+        "t3": { "$type": "color", "$value": "#6a7580" },
+        "t4": { "$type": "color", "$value": "#8a939c" },
+        "accent": { "$type": "color", "$value": "{color.home.slate.600}" },
+        "accent-2": { "$type": "color", "$value": "{color.home.slate.500}" },
+        "accent-bg": { "$type": "color", "$value": "rgba(74, 98, 120, 0.1)" },
+        "on-accent": { "$type": "color", "$value": "#ffffff" },
+        "sidebar": { "$type": "color", "$value": "#1a1f24" },
+        "sidebar-foreground": { "$type": "color", "$value": "#eef2f6" },
+        "sidebar-muted": {
+          "$type": "color",
+          "$value": "rgba(238, 242, 246, 0.55)"
+        },
+        "sidebar-accent": { "$type": "color", "$value": "#242a31" },
+        "sidebar-primary": {
+          "$type": "color",
+          "$value": "{color.home.slate.400}"
+        },
+        "sidebar-primary-foreground": { "$type": "color", "$value": "#0f1418" },
+        "sidebar-border": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.08)"
+        },
+        "appbar-bg": {
+          "$type": "color",
+          "$value": "rgba(238, 241, 244, 0.88)"
+        },
+        "nav-bg": { "$type": "color", "$value": "rgba(255, 255, 255, 0.92)" },
+        "seg-display": { "$type": "cssValue", "$value": "flex" },
+        "seg-flex-wrap": { "$type": "cssValue", "$value": "wrap" },
+        "seg-gap": { "$type": "dimension", "$value": "8px" },
+        "seg-track-bg": { "$type": "cssValue", "$value": "transparent" },
+        "seg-track-border": { "$type": "cssValue", "$value": "none" },
+        "seg-track-padding": { "$type": "cssValue", "$value": "0" },
+        "seg-btn-bg": { "$type": "cssValue", "$value": "var(--card)" },
+        "seg-btn-border": {
+          "$type": "cssValue",
+          "$value": "1px solid var(--border)"
+        },
+        "seg-active-bg": { "$type": "cssValue", "$value": "var(--accent-bg)" },
+        "seg-active-fg": { "$type": "cssValue", "$value": "var(--accent)" },
+        "seg-active-border-token": {
+          "$type": "cssValue",
+          "$value": "var(--accent)"
+        }
+      }
+    },
+    "dark": {
+      "colorScheme": "dark",
+      "vars": {
+        "bg": { "$type": "color", "$value": "#14181c" },
+        "bg-2": { "$type": "color", "$value": "#1a1f24" },
+        "card": { "$type": "color", "$value": "#1f252b" },
+        "card-h": { "$type": "color", "$value": "#262d34" },
+        "border": { "$type": "color", "$value": "rgba(255, 255, 255, 0.08)" },
+        "border-l": { "$type": "color", "$value": "rgba(255, 255, 255, 0.12)" },
+        "t1": { "$type": "color", "$value": "#eef2f6" },
+        "t2": { "$type": "color", "$value": "#a5b0bc" },
+        "t3": { "$type": "color", "$value": "#6f7a86" },
+        "t4": { "$type": "color", "$value": "rgba(238, 242, 246, 0.38)" },
+        "accent": { "$type": "color", "$value": "{color.home.slate.400}" },
+        "accent-2": { "$type": "color", "$value": "{color.home.slate.300}" },
+        "accent-bg": {
+          "$type": "color",
+          "$value": "rgba(125, 147, 168, 0.14)"
+        },
+        "on-accent": { "$type": "color", "$value": "#0f1418" },
+        "appbar-bg": { "$type": "color", "$value": "rgba(20, 24, 28, 0.92)" },
+        "nav-bg": { "$type": "color", "$value": "rgba(20, 24, 28, 0.94)" },
+        "sidebar": { "$type": "color", "$value": "#14181c" },
+        "sidebar-foreground": { "$type": "color", "$value": "#eef2f6" },
+        "sidebar-muted": { "$type": "color", "$value": "#a5b0bc" },
+        "sidebar-accent": { "$type": "color", "$value": "#1a1f24" },
+        "sidebar-primary": { "$type": "cssValue", "$value": "var(--accent)" },
+        "sidebar-primary-foreground": {
+          "$type": "cssValue",
+          "$value": "var(--on-accent)"
+        },
+        "sidebar-border": {
+          "$type": "color",
+          "$value": "rgba(255, 255, 255, 0.08)"
+        }
+      }
+    }
+  }
+}

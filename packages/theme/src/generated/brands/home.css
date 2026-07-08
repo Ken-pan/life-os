@@ -1,0 +1,71 @@
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/brands/home.json
+  Rebuild: npm run build:tokens
+*/
+
+[data-app='home'] {
+  --bg: #eef1f4;
+  --bg-2: #ffffff;
+  --card: #ffffff;
+  --card-h: #e4eaef;
+  --border: #d2dae2;
+  --border-l: #bcc6d0;
+  --t1: #16181d;
+  --t2: #4a5563;
+  --t3: #6a7580;
+  --t4: #8a939c;
+  --accent: #4a6278;
+  --accent-2: #5c758c;
+  --accent-bg: rgba(74, 98, 120, 0.1);
+  --on-accent: #ffffff;
+  --sidebar: #1a1f24;
+  --sidebar-foreground: #eef2f6;
+  --sidebar-muted: rgba(238, 242, 246, 0.55);
+  --sidebar-accent: #242a31;
+  --sidebar-primary: #7d93a8;
+  --sidebar-primary-foreground: #0f1418;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --appbar-bg: rgba(238, 241, 244, 0.88);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --seg-display: flex;
+  --seg-flex-wrap: wrap;
+  --seg-gap: 8px;
+  --seg-track-bg: transparent;
+  --seg-track-border: none;
+  --seg-track-padding: 0;
+  --seg-btn-bg: var(--card);
+  --seg-btn-border: 1px solid var(--border);
+  --seg-active-bg: var(--accent-bg);
+  --seg-active-fg: var(--accent);
+  --seg-active-border-token: var(--accent);
+  color-scheme: light;
+}
+
+[data-app='home'][data-mode='dark'],
+[data-app='home'][data-theme='dark'] {
+  --bg: #14181c;
+  --bg-2: #1a1f24;
+  --card: #1f252b;
+  --card-h: #262d34;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-l: rgba(255, 255, 255, 0.12);
+  --t1: #eef2f6;
+  --t2: #a5b0bc;
+  --t3: #6f7a86;
+  --t4: rgba(238, 242, 246, 0.38);
+  --accent: #7d93a8;
+  --accent-2: #9aadc0;
+  --accent-bg: rgba(125, 147, 168, 0.14);
+  --on-accent: #0f1418;
+  --appbar-bg: rgba(20, 24, 28, 0.92);
+  --nav-bg: rgba(20, 24, 28, 0.94);
+  --sidebar: #14181c;
+  --sidebar-foreground: #eef2f6;
+  --sidebar-muted: #a5b0bc;
+  --sidebar-accent: #1a1f24;
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
+}

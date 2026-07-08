@@ -1,0 +1,92 @@
+<script>
+  import '../app.css'
+  import { onMount, setContext } from 'svelte'
+  import { page } from '$app/state'
+  import AppBar from '$lib/components/AppBar.svelte'
+  import SideNav from '$lib/components/SideNav.svelte'
+  import BottomNav from '$lib/components/BottomNav.svelte'
+  import Toast from '$lib/components/Toast.svelte'
+  import DocumentHead from '@life-os/platform-web/svelte/head'
+  import PortraitGate from '@life-os/platform-web/svelte/portrait-gate'
+  import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
+  import { ICONS } from '$lib/iconRegistry.js'
+  import {
+    applyTheme,
+    bindAppThemeSystemChange,
+    S,
+    getActiveProject,
+    getPlanSubtitle,
+  } from '$lib/state.svelte.js'
+  import { bindViewportHeight } from '@life-os/theme'
+  import { syncSpatialStudioFromUrl, isSpatialStudioEnabled } from '$lib/spatial-studio.js'
+
+  let { children } = $props()
+
+  $effect(() => {
+    syncSpatialStudioFromUrl(page.url.searchParams)
+  })
+
+  setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
+
+  const pageMeta = $derived.by(() => {
+    const p = page.url.pathname
+    const project = getActiveProject()
+    if (p === '/') {
+      return {
+        title: '空间概览',
+        subtitle: project.meta.nameZh,
+      }
+    }
+    if (p === '/plan') {
+      const custom = getPlanSubtitle()
+      return {
+        title: '顶视平面',
+        subtitle: custom || '储藏区可点击',
+      }
+    }
+    if (p === '/storage') {
+      return {
+        title: '储藏审计',
+        subtitle: `S1–S${project.storageZones.length} 物品清单`,
+      }
+    }
+    if (p === '/settings') return { title: '设置', subtitle: '' }
+    return { title: 'HOME.OS', subtitle: '' }
+  })
+
+  onMount(() => {
+    applyTheme()
+    const cleanupViewport = bindViewportHeight()
+    const cleanupTheme = bindAppThemeSystemChange()
+    return () => {
+      cleanupViewport()
+      cleanupTheme()
+    }
+  })
+</script>
+
+<DocumentHead appId="home" pageTitle={pageMeta.title} />
+
+<div class="app-shell">
+  <div class="safari-chrome-tint-top" aria-hidden="true"></div>
+  <SideNav />
+  <div class="main-col">
+    <AppBar title={pageMeta.title} subtitle={pageMeta.subtitle} />
+    <main id="main-content" class="wrap">
+      {@render children()}
+    </main>
+  </div>
+  <BottomNav />
+  <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
+</div>
+
+<Toast />
+
+{#if S.settings.lockPortraitOnPhone}
+  <PortraitGate
+    enabled={true}
+    title="请旋转设备"
+    hint="平面图在横屏下查看更清晰；可在设置中关闭竖屏锁定"
+    ariaLabel="竖屏锁定提示"
+  />
+{/if}

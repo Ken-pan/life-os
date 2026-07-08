@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-app="home" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HOME.OS</title>
+  <meta name="description" content="居家空间规划 · 平面审计与储藏区管理" />
+  <meta name="application-name" content="HOME.OS" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#eef1f4" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14181c" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#eef1f4" id="theme-color-meta" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="HOME.OS" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <script>
+    (function () {
+      try {
+        var pref = 'auto';
+        var raw = localStorage.getItem('homeos_spatial_v1');
+        if (raw) {
+          var s = JSON.parse(raw);
+          if (s.settings && s.settings.theme) pref = s.settings.theme;
+        }
+        var light =
+          pref === 'light' ||
+          (pref === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
+        var resolved = light ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', resolved);
+        document.documentElement.style.colorScheme = resolved;
+        var meta = document.getElementById('theme-color-meta');
+        if (meta) meta.content = resolved === 'light' ? '#eef1f4' : '#14181c';
+      } catch (e) {}
+    })();
+    (function () {
+      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      document.documentElement.style.setProperty('--app-vh', h + 'px');
+      var standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator && window.navigator.standalone === true);
+      document.documentElement.classList.toggle('standalone-pwa', standalone);
+    })();
+  </script>
+  %sveltekit.head%
+</head>
+<body data-sveltekit-preload-data="hover">
+  <div style="display: contents">%sveltekit.body%</div>
+</body>
+</html>

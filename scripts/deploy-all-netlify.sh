@@ -22,5 +22,6 @@ deploy_one fc92f305-8dcf-46c3-82f5-ef511597df1c finance-os apps/finance/dist
 # Music: use --filter music-os; functions path is relative to apps/music (not repo root).
 deploy_one 83dfdf84-095a-4b8a-955d-106d046a314b music-os apps/music/build netlify/functions
 deploy_one a5df5c3e-0e42-4f82-aca8-8d6802da357f portal apps/portal/build .netlify/functions-internal
+deploy_one 69d4c072-d153-499c-90a8-57909df461a4 home-os apps/home/build
 
-echo "All five Life OS sites deployed."
+echo "All six Life OS sites deployed."
