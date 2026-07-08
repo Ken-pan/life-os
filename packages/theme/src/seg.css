@@ -134,3 +134,19 @@
   flex-wrap: wrap;
   max-width: 100%;
 }
+
+.seg.seg--disabled {
+  opacity: 0.72;
+}
+
+.seg.seg--disabled button:disabled {
+  cursor: not-allowed;
+}
+
+.seg.seg--disabled button.on,
+.seg.seg--disabled button.active {
+  background: var(--seg-btn-bg);
+  border-color: var(--seg-btn-border);
+  color: var(--t3, var(--text-muted));
+  font-weight: 500;
+}

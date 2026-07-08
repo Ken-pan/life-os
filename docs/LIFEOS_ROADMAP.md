@@ -349,15 +349,14 @@ Storybook-first / Figma-first 已明确否决（现阶段）。
 | **Segments**（`.seg`）           | `seg.css`          | ✅ `segment.*`       | ✅   |
 | **Toggle**（`.settings-toggle`） | `settings-ext.css` | ✅ `control.toggle*` | ✅   |
 
-**D-P3 刻意不做：** production app 页面迁移；MusicCard / TaskCard 等业务 card；Storybook；screenshot baseline commit（D-P5）。
+**D-P3 刻意不做：** production app 页面迁移；MusicCard / TaskCard 等业务 card；Storybook。
 
-**遗留 → 后续：**
+**遗留 → 后续（D-P6+）：**
 
 - `tokens.css` 结构层仍 authored
-- CommandPalette 面板未抽 component tokens（仅 backdrop ✅）；无 catalog showcase
+- CommandPalette 面板未抽 component tokens（仅 backdrop ✅）
 - PortraitGate 仍用 structural `--bg`/`--t1` fallback
 - app 层 `.back-btn` 边距 override（planner/fitness）仍保留
-- catalog smoke 对 toast/settings 未做 4×2 矩阵（Cards 已有）；ad-hoc 截图见 `scripts/design-catalog-p3-screenshot-audit.mjs`
 
 ### ✅ D-P3c: Button / Segment / Toggle token 化 — _2026-07-08 完成_
 
@@ -380,39 +379,65 @@ Storybook-first / Figma-first 已明确否决（现阶段）。
 | P2: sheet preview `manageFocus={false}` / Sign out danger / toast action 色      | ✅   |
 | Toast spacing 对齐 MD3/WCAG（48px min-h、lh 1.5、dismiss 居中、action gap 12px） | ✅   |
 
-### D-P3 全面状态检查 — _2026-07-08_
+### D-P3–P5 全面状态检查 — _2026-07-08_
 
-**Merge readiness（catalog + theme 层）：PASS**
+**Merge readiness（catalog + theme 层）：PASS（待 commit）**
 
-| 检查项 | 结果 |
-| ------ | ---- |
-| `npm run validate:tokens` | ✅ |
-| `npm run build -w design-catalog` | ✅ |
-| `npm run test:design-catalog` | ✅ **152/152**（含 P4c 全矩阵） |
-| `design-catalog-p3-screenshot-audit.mjs` | ✅ 64/64 |
-| `design-catalog-p3-visual-verify.mjs` | ✅ 38/38 |
-| P3 UX 批次 | ✅ `ff37d401` |
+| 检查项                                   | 结果                                       |
+| ---------------------------------------- | ------------------------------------------ |
+| `npm run validate:tokens`                | ✅                                         |
+| `npm run build -w design-catalog`        | ✅                                         |
+| `npm run test:design-catalog`            | ✅ **172/172**（smoke；含 state 重置回归） |
+| `npm run test:design-catalog:snapshots`  | ✅ **80/80**（desktop pixel baseline）     |
+| `design-catalog-p3-screenshot-audit.mjs` | ✅ 64/64（ad-hoc，不提交）                 |
+| `design-catalog-p3-visual-verify.mjs`    | ✅ 38/38                                   |
+| P3 UX                                    | ✅ `ff37d401`                              |
+| P4a/c matrix + smoke                     | ✅ `02c3733a`                              |
+| P4b/d/e + P5 + review fixes              | ✅ **本地完成，待 commit**                 |
 
-### ✅ D-P4a/P4c: Catalog matrix + smoke — _2026-07-08 本地完成_
+**勿混入 commit：** `apps/home/**`、`apps/music/exports/**`、无关 icon-manifest 等。
 
-| 子项 | 状态 |
-| ---- | ---- |
+### ✅ D-P4a/P4c: Catalog matrix + smoke — _2026-07-08_
+
+| 子项                                         | 状态                          |
+| -------------------------------------------- | ----------------------------- |
 | `/?view=matrix&showcase=*` — 4×2 iframe grid | ✅ `CatalogMatrixView.svelte` |
-| `embed=1` 无 chrome（matrix iframe） | ✅ |
-| 侧栏 Matrix 入口；cell → detail | ✅ |
-| Playwright：8 showcase × 4 app × 2 mode | ✅ **128** + tokens 16 + 专项 8 = **152** |
+| `embed=1` 无 chrome（matrix iframe）         | ✅                            |
+| 侧栏 Matrix 入口；cell → detail              | ✅                            |
+| Playwright：8 showcase × 4 app × 2 mode      | ✅ **152**（`02c3733a`）      |
 
-**P4 剩余：** P4b state 维度 · P4d CommandPalette showcase · P4e ThemeMatrix token 化
+### ✅ D-P4b/P4d/P4e — _2026-07-08_
 
-### ⏳ D-P5+: 后续阶段（按序）
+| 子项                                                            | 状态           |
+| --------------------------------------------------------------- | -------------- |
+| **P4b** `showcaseStates.js` + URL `state` + `CatalogStateBlock` | ✅             |
+| Matrix 按 state 分行（`<details>` 折叠 + 动态 iframe 高度）     | ✅             |
+| **P4d** `CommandPaletteShowcase` + empty fixture                | ✅             |
+| **P4e** `--catalog-chrome-*` tokens（ThemeMatrix + nav）        | ✅             |
+| ThemeMatrix **State** 下拉；侧栏切换重置 `state`                | ✅             |
+| Playwright smoke                                                | ✅ **172/172** |
 
-| 阶段 | 内容                                                          | 触发条件                                |
-| ---- | ------------------------------------------------------------- | --------------------------------------- |
-| D-P4 | P4b state 维度 / P4d CommandPalette / P4e ThemeMatrix token 化 | P4a/P4c ✅ |
-| D-P5 | Playwright `toHaveScreenshot` visual regression baseline      | P4 完成                               |
-| D-P6 | a11y gates（contrast / focus / target size / reduced motion） | D-P5 完成                               |
-| D-P7 | Figma variables mirror（code JSON 仍为真源）                  | 需要设计侧协作                          |
-| D-P8 | Storybook / Chromatic                                         | 仅当团队协作压力出现                    |
+**P4 完成。**
+
+### ✅ D-P5: Pixel regression baseline — _2026-07-08_
+
+| 子项                                                           | 状态 |
+| -------------------------------------------------------------- | ---- |
+| `design-catalog.snapshots.spec.ts` + `@visual` tag             | ✅   |
+| 80 embed baselines（tokens + 9 matrix showcases × 4×2）        | ✅   |
+| `test:design-catalog:snapshots` / `:update` / `:docker:update` | ✅   |
+| Smoke 与 snapshot 分离（`--grep-invert @visual`）              | ✅   |
+| `snapshotPathTemplate` 无 OS 平台后缀                          | ✅   |
+
+**D-P5 完成。** 下一项：**D-P6** a11y gates。
+
+### ⏳ D-P6+: 后续阶段（按序）
+
+| 阶段 | 内容                                                          | 触发条件             |
+| ---- | ------------------------------------------------------------- | -------------------- |
+| D-P6 | a11y gates（contrast / focus / target size / reduced motion） | D-P5 ✅              |
+| D-P7 | Figma variables mirror（code JSON 仍为真源）                  | 需要设计侧协作       |
+| D-P8 | Storybook / Chromatic                                         | 仅当团队协作压力出现 |
 
 ---
 

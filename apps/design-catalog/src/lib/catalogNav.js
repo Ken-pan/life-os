@@ -61,6 +61,12 @@ export const CATALOG_SECTIONS = [
     group: 'components',
     testId: 'showcase-cards',
   },
+  {
+    id: 'command-palette',
+    label: 'Command palette',
+    group: 'components',
+    testId: 'showcase-command-palette',
+  },
 ]
 
 export const SHOWCASE_IDS = CATALOG_SECTIONS.map((s) => s.id)
@@ -76,6 +82,7 @@ export const MATRIX_SHOWCASES = CATALOG_SECTIONS.filter((s) =>
     'feedback',
     'toast',
     'cards',
+    'command-palette',
   ].includes(s.id),
 )
 

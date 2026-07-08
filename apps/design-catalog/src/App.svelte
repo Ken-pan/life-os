@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { CATALOG_SECTIONS } from '$lib/catalogNav.js'
   import { readCatalogParams, writeCatalogParams } from '$lib/catalogState.js'
+  import { CATALOG_STATE_ALL } from '$lib/showcaseStateFilter.js'
   import ThemeMatrix from '$lib/ThemeMatrix.svelte'
   import ResponsiveFrame from '$lib/ResponsiveFrame.svelte'
   import CatalogShell from '$lib/CatalogShell.svelte'
@@ -17,6 +18,7 @@
   import FeedbackShowcase from './showcases/FeedbackShowcase.svelte'
   import ToastShowcase from './showcases/ToastShowcase.svelte'
   import CardsShowcase from './showcases/CardsShowcase.svelte'
+  import CommandPaletteShowcase from './showcases/CommandPaletteShowcase.svelte'
 
   const pages = {
     tokens: TokensShowcase,
@@ -30,6 +32,7 @@
     feedback: FeedbackShowcase,
     toast: ToastShowcase,
     cards: CardsShowcase,
+    'command-palette': CommandPaletteShowcase,
   }
 
   let showcase = $state('tokens')
@@ -38,6 +41,7 @@
   let viewport = $state('desktop')
   let view = $state('detail')
   let embed = $state(false)
+  let catalogState = $state('all')
 
   const ActivePage = $derived(pages[showcase])
 
@@ -49,6 +53,7 @@
     viewport = state.viewport
     view = state.view
     embed = state.embed
+    catalogState = state.state
   }
 
   function pushUrl(overrides = {}) {
@@ -59,26 +64,30 @@
       viewport,
       view,
       embed,
+      state: catalogState,
       ...overrides,
     })
   }
 
   function setShowcase(id) {
     showcase = id
-    pushUrl({ view: 'detail' })
+    catalogState = CATALOG_STATE_ALL
+    pushUrl({ view: 'detail', state: CATALOG_STATE_ALL })
   }
 
   function openMatrix(currentShowcase = showcase) {
     showcase = currentShowcase
     view = 'matrix'
-    pushUrl({ view: 'matrix', embed: false })
+    catalogState = CATALOG_STATE_ALL
+    pushUrl({ view: 'matrix', embed: false, state: CATALOG_STATE_ALL })
   }
 
-  function openDetailFromMatrix(nextApp, nextMode) {
+  function openDetailFromMatrix(nextApp, nextMode, nextState) {
     app = nextApp
     mode = nextMode
+    if (nextState) catalogState = nextState
     view = 'detail'
-    pushUrl({ view: 'detail', embed: false })
+    pushUrl({ view: 'detail', embed: false, state: nextState ?? catalogState })
   }
 
   onMount(() => {
@@ -91,7 +100,7 @@
 
 {#if embed}
   <div class="catalog-embed" data-testid="catalog-embed">
-    <CatalogShell {app} {mode}>
+    <CatalogShell {app} {mode} state={catalogState}>
       {#if ActivePage}
         <ActivePage />
       {/if}
@@ -111,7 +120,7 @@
           class:catalog-nav__link--active={view === 'matrix'}
           onclick={() => openMatrix(showcase)}
         >
-          Matrix (4×2)
+          Matrix (states×4×2)
         </button>
         <p class="catalog-nav__group">@life-os/theme</p>
         {#each CATALOG_SECTIONS.filter((s) => s.group === 'theme') as section}
@@ -144,6 +153,8 @@
           {app}
           {mode}
           {viewport}
+          {showcase}
+          {catalogState}
           onApp={(v) => {
             app = v
             pushUrl()
@@ -155,6 +166,10 @@
           onViewport={(v) => {
             viewport = v
             pushUrl()
+          }}
+          onState={(v) => {
+            catalogState = v
+            pushUrl({ state: v })
           }}
         />
       {/if}
@@ -170,7 +185,7 @@
           />
         {:else}
           <ResponsiveFrame {viewport}>
-            <CatalogShell {app} {mode}>
+            <CatalogShell {app} {mode} state={catalogState}>
               {#if ActivePage}
                 <ActivePage />
               {/if}
@@ -185,7 +200,7 @@
 <style>
   :global(body) {
     margin: 0;
-    background: #111;
+    background: var(--catalog-chrome-bg);
   }
 
   .catalog-embed {
@@ -210,10 +225,10 @@
   }
 
   .catalog-nav {
-    background: #161616;
-    color: #f2f2f2;
+    background: var(--catalog-chrome-surface);
+    color: var(--catalog-chrome-text);
     padding: 20px 12px;
-    border-right: 1px solid #2a2a2a;
+    border-right: 1px solid var(--catalog-chrome-border);
     position: sticky;
     top: 0;
     height: 100vh;
@@ -229,7 +244,7 @@
   .catalog-nav__head p {
     margin: 4px 0 16px;
     font-size: 12px;
-    color: #9a9a9a;
+    color: var(--catalog-chrome-text-muted);
   }
 
   .catalog-nav__group {
@@ -237,7 +252,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #7a7a7a;
+    color: var(--catalog-chrome-text-subtle);
   }
 
   .catalog-nav__link {
@@ -246,7 +261,7 @@
     text-align: left;
     border: none;
     background: transparent;
-    color: #d8d8d8;
+    color: var(--catalog-chrome-text-link);
     padding: 8px 10px;
     border-radius: 8px;
     cursor: pointer;
@@ -254,18 +269,18 @@
   }
 
   .catalog-nav__link:hover {
-    background: #242424;
+    background: var(--catalog-chrome-surface-hover);
   }
 
   .catalog-nav__link--active {
-    background: #2d2d2d;
+    background: var(--catalog-chrome-surface-active);
     color: #fff;
   }
 
   .catalog-main {
     flex: 1;
     min-width: 0;
-    background: #eceae6;
+    background: var(--catalog-chrome-workspace-bg);
   }
 
   @media (max-width: 839px) {

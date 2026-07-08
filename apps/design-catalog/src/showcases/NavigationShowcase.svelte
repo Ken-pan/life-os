@@ -2,6 +2,7 @@
   import BackButton from '@life-os/platform-web/svelte/navigation'
   import MobileMoreSheet from '@life-os/platform-web/svelte/navigation/MobileMoreSheet'
   import { NAV_GROUPS } from '../fixtures/navigation.js'
+  import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
 
   let sheetOpen = $state(false)
 </script>
@@ -9,12 +10,11 @@
 <section class="catalog-section" data-testid="showcase-navigation">
   <h2 class="catalog-section__title">Navigation</h2>
   <div class="catalog-panel catalog-grid">
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">BackButton</p>
+    <CatalogStateBlock stateId="default" label="BackButton">
       <BackButton href="/" label="Back" />
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">MobileMoreSheet (open preview)</p>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock stateId="sheet-open" label="MobileMoreSheet (open preview)">
       <div class="catalog-doc-preview catalog-doc-preview--sheet">
         <MobileMoreSheet
           open={true}
@@ -26,9 +26,9 @@
           onClose={() => {}}
         />
       </div>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">MobileMoreSheet (interactive)</p>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock stateId="detail:interactive" label="MobileMoreSheet (interactive)">
       <button
         type="button"
         class="btn-secondary"
@@ -42,7 +42,7 @@
         closeLabel="Close"
         onClose={() => (sheetOpen = false)}
       />
-    </div>
+    </CatalogStateBlock>
   </div>
 </section>
 

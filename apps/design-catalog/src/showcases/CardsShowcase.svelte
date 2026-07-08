@@ -9,6 +9,7 @@
     CardMedia,
     CardTitle,
   } from '@life-os/platform-web/svelte/card'
+  import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
 
   const variants = /** @type {const} */ ([
     'surface',
@@ -26,9 +27,21 @@
   </p>
 
   <div class="catalog-panel catalog-grid">
-    {#each variants as variant (variant)}
-      <div class="catalog-state-block">
-        <p class="catalog-state-label">{variant}</p>
+    <CatalogStateBlock stateId="surface" label="surface">
+      <Card variant="surface" density="comfortable">
+        <CardHeader>
+          <CardTitle>Monthly overview</CardTitle>
+          <CardDescription>Tokenized card primitive preview</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Body content uses component tokens for spacing and text color.</p>
+        </CardContent>
+        <CardFooter>Updated just now</CardFooter>
+      </Card>
+    </CatalogStateBlock>
+
+    {#each variants.filter((v) => v !== 'surface') as variant (variant)}
+      <CatalogStateBlock stateId="detail:{variant}" label={variant}>
         <Card {variant} density="comfortable">
           <CardHeader>
             <CardTitle>Monthly overview</CardTitle>
@@ -39,7 +52,7 @@
           </CardContent>
           <CardFooter>Updated just now</CardFooter>
         </Card>
-      </div>
+      </CatalogStateBlock>
     {/each}
   </div>
 
@@ -49,8 +62,7 @@
     nested controls.
   </p>
   <div class="catalog-panel catalog-grid catalog-grid--states">
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">interactive</p>
+    <CatalogStateBlock stateId="interactive" label="interactive">
       <Card variant="surface" interactive density="comfortable">
         <CardHeader>
           <CardTitle>Interactive card</CardTitle>
@@ -60,25 +72,23 @@
           <p>Tap anywhere on the card to activate.</p>
         </CardContent>
       </Card>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">selected</p>
+    </CatalogStateBlock>
+    <CatalogStateBlock stateId="detail:selected" label="selected">
       <Card variant="surface" interactive selected density="comfortable">
         <CardHeader>
           <CardTitle>Selected card</CardTitle>
           <CardDescription>aria-pressed when interactive</CardDescription>
         </CardHeader>
       </Card>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">disabled (interactive)</p>
+    </CatalogStateBlock>
+    <CatalogStateBlock stateId="disabled" label="disabled (interactive)">
       <Card variant="surface" interactive disabled density="comfortable">
         <CardHeader>
           <CardTitle>Disabled interactive</CardTitle>
           <CardDescription>Native button disabled</CardDescription>
         </CardHeader>
       </Card>
-    </div>
+    </CatalogStateBlock>
   </div>
 
   <h3 class="catalog-subtitle">B — Card with actions</h3>
@@ -86,8 +96,7 @@
     Non-interactive root. Put buttons and links in <code>CardActions</code>.
   </p>
   <div class="catalog-panel catalog-grid catalog-grid--states">
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">actions</p>
+    <CatalogStateBlock stateId="detail:actions" label="actions">
       <Card variant="surface" density="comfortable">
         <CardHeader>
           <CardTitle>Review queue</CardTitle>
@@ -101,27 +110,24 @@
           <button type="button" class="btn-primary">Open</button>
         </CardActions>
       </Card>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">disabled (visual)</p>
+    </CatalogStateBlock>
+    <CatalogStateBlock stateId="detail:static-disabled" label="disabled (visual)">
       <Card variant="surface" disabled density="comfortable">
         <CardHeader>
           <CardTitle>Disabled static card</CardTitle>
           <CardDescription>Visual-only disabled state</CardDescription>
         </CardHeader>
       </Card>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">comfortable</p>
+    </CatalogStateBlock>
+    <CatalogStateBlock stateId="detail:comfortable" label="comfortable">
       <Card variant="surface" density="comfortable">
         <CardHeader>
           <CardTitle>Comfortable density</CardTitle>
         </CardHeader>
         <CardContent>Default padding from --card-padding.</CardContent>
       </Card>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">compact + media</p>
+    </CatalogStateBlock>
+    <CatalogStateBlock stateId="detail:compact" label="compact + media">
       <Card variant="elevated" density="compact">
         <CardMedia>
           <div class="catalog-card-media-placeholder" aria-hidden="true"></div>
@@ -133,7 +139,7 @@
           <button type="button" class="btn-secondary">Action</button>
         </CardActions>
       </Card>
-    </div>
+    </CatalogStateBlock>
   </div>
 </section>
 

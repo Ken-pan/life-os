@@ -8,6 +8,7 @@
   import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
   import SettingsFileButton from '@life-os/platform-web/svelte/settings/file-button'
   import { SEGMENT_OPTIONS } from '../fixtures/settings.js'
+  import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
 
   let toggleOn = $state(true)
   let segment = $state('week')
@@ -16,8 +17,7 @@
 <section class="catalog-section" data-testid="showcase-settings">
   <h2 class="catalog-section__title">Settings components</h2>
   <div class="catalog-panel catalog-grid">
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Default</p>
+    <CatalogStateBlock stateId="default" label="Default">
       <SettingsSection title="Preferences" desc="From @life-os/platform-web">
         <SettingsToggleRow
           label="Enable notifications"
@@ -31,9 +31,9 @@
           onclick={() => {}}
         />
       </SettingsSection>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Disabled</p>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock stateId="disabled" label="Disabled">
       <SettingsSection title="Disabled row">
         <SettingsToggleRow label="Locked" checked={false} disabled={true} />
         <SettingsActionRow
@@ -42,9 +42,9 @@
           disabled={true}
         />
       </SettingsSection>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Segment + actions</p>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock stateId="detail:segment" label="Segment + actions">
       <SettingsSection title="View">
         <SettingsSegment
           options={SEGMENT_OPTIONS}
@@ -58,9 +58,9 @@
         </SettingsButtonGroup>
         <SettingsFileButton label="Import" onchange={() => {}} />
       </SettingsSection>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Destructive action</p>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock stateId="destructive" label="Destructive action">
       <SettingsSection title="Account">
         <SettingsActionRow
           label="Sign out"
@@ -79,15 +79,15 @@
           </div>
         </div>
       </SettingsSection>
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Custom slot</p>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock stateId="detail:slot" label="Custom slot">
       <SettingsRow label="Slot" desc="Children in control column">
         {#snippet children()}
           <SettingsToggle checked={false} ariaLabel="Custom" />
         {/snippet}
       </SettingsRow>
-    </div>
+    </CatalogStateBlock>
   </div>
 </section>
 

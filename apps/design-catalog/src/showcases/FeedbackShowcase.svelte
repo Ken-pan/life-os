@@ -1,6 +1,7 @@
 <script>
   import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
   import Toast from '@life-os/platform-web/svelte/toast'
+  import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
 
   function subscribe(onError) {
     onError('network')
@@ -15,20 +16,17 @@
 <section class="catalog-section" data-testid="showcase-feedback">
   <h2 class="catalog-section__title">Feedback</h2>
   <div class="catalog-panel catalog-grid catalog-doc-preview">
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Error — SyncErrorBanner</p>
+    <CatalogStateBlock stateId="sync-error" label="Error — SyncErrorBanner">
       <SyncErrorBanner {subscribe} {formatMessage} dismissLabel="Dismiss" />
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Warn toast</p>
+    </CatalogStateBlock>
+    <CatalogStateBlock stateId="warn" label="Warn toast">
       <Toast
         state={{ show: true, msg: 'Connection unstable', tone: 'warn' }}
         dismissLabel="Close"
         onDismiss={() => {}}
       />
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Error + action</p>
+    </CatalogStateBlock>
+    <CatalogStateBlock stateId="error" label="Error + action">
       <Toast
         state={{
           show: true,
@@ -40,7 +38,7 @@
         dismissLabel="Close"
         onDismiss={() => {}}
       />
-    </div>
+    </CatalogStateBlock>
   </div>
 </section>
 

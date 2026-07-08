@@ -1,7 +1,9 @@
 <script>
+  import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
+
   const states = [
-    { label: 'Default', props: {} },
-    { label: 'Disabled', props: { disabled: true } },
+    { id: 'default', label: 'Default', props: {} },
+    { id: 'disabled', label: 'Disabled', props: { disabled: true } },
   ]
 </script>
 
@@ -9,8 +11,7 @@
   <h2 class="catalog-section__title">Buttons</h2>
   <div class="catalog-grid">
     {#each states as state}
-      <div class="catalog-state-block">
-        <p class="catalog-state-label">{state.label}</p>
+      <CatalogStateBlock stateId={state.id} label={state.label}>
         <div class="catalog-row">
           <button
             type="button"
@@ -33,7 +34,7 @@
             disabled={state.props.disabled}>Danger</button
           >
         </div>
-      </div>
+      </CatalogStateBlock>
     {/each}
   </div>
 </section>

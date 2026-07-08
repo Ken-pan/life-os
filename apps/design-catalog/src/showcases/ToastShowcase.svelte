@@ -1,12 +1,12 @@
 <script>
   import Toast from '@life-os/platform-web/svelte/toast'
+  import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
 </script>
 
 <section class="catalog-section" data-testid="showcase-toast">
   <h2 class="catalog-section__title">Toast component</h2>
   <div class="catalog-panel catalog-grid catalog-doc-preview">
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Success + action</p>
+    <CatalogStateBlock stateId="success" label="Success + action">
       <Toast
         state={{
           show: true,
@@ -18,15 +18,14 @@
         dismissLabel="Dismiss"
         onDismiss={() => {}}
       />
-    </div>
-    <div class="catalog-state-block">
-      <p class="catalog-state-label">Info</p>
+    </CatalogStateBlock>
+    <CatalogStateBlock stateId="info" label="Info">
       <Toast
         state={{ show: true, msg: 'Saved', tone: 'info' }}
         dismissLabel="Close"
         onDismiss={() => {}}
       />
-    </div>
+    </CatalogStateBlock>
   </div>
 </section>
 

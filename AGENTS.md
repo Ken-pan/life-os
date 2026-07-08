@@ -32,6 +32,9 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `npm run pwa:healthcheck`                                    | Xcode / preview / Playwright 预检（`PWA_APP=` 筛选）          |
 | `npm run pwa:sim:open -- <app> [path]`                       | iOS Simulator 打开 preview                                    |
 | `npm run pwa:sim:shot -- <name>`                             | Simulator 截图 → `screenshots/pwa/`                           |
+| `npm run test:design-catalog`                                | Catalog smoke（172；排除 `@visual`）                          |
+| `npm run test:design-catalog:snapshots`                      | Catalog pixel baseline（80；desktop）                         |
+| `npm run test:design-catalog:all`                            | smoke + snapshots（252）                                      |
 
 PWA iOS debug：[`docs/DEBUG_PWA_IOS.md`](docs/DEBUG_PWA_IOS.md)、[`docs/PWA_VIEWPORT_CHECKLIST.md`](docs/PWA_VIEWPORT_CHECKLIST.md)、SSOT [`scripts/pwa/apps.config.mjs`](scripts/pwa/apps.config.mjs)、规则 [`.cursor/rules/pwa-ios-debug.mdc`](.cursor/rules/pwa-ios-debug.mdc)。
 

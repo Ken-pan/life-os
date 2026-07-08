@@ -12,6 +12,7 @@ const MATRIX_SHOWCASES = [
   'feedback',
   'toast',
   'cards',
+  'command-palette',
 ] as const
 
 function catalogUrl(
@@ -91,11 +92,35 @@ test.describe('design-catalog visual smoke', () => {
     )
   })
 
-  test('matrix — buttons grid', async ({ page }) => {
+  test('matrix — buttons grid with state rows', async ({ page }) => {
     await page.goto(catalogUrl('buttons', 'planner', 'light', 'desktop', { view: 'matrix' }))
     await expect(page.getByTestId('catalog-matrix')).toBeVisible()
-    await expect(page.getByTestId('matrix-cell-buttons-planner-light')).toBeVisible()
-    await expect(page.getByTestId('matrix-cell-buttons-music-dark')).toBeVisible()
+    await expect(page.getByTestId('matrix-state-buttons-default')).toBeVisible()
+    await expect(page.getByTestId('matrix-state-buttons-disabled')).toBeVisible()
+    await expect(
+      page.getByTestId('matrix-cell-buttons-default-planner-light'),
+    ).toBeVisible()
+    await page.getByTestId('matrix-state-buttons-disabled').locator('summary').click()
+    await expect(
+      page.getByTestId('matrix-cell-buttons-disabled-music-dark'),
+    ).toBeVisible()
+  })
+
+  test('embed — buttons disabled state', async ({ page }) => {
+    await page.goto(
+      catalogUrl('buttons', 'planner', 'light', 'desktop', {
+        embed: '1',
+        state: 'disabled',
+      }),
+    )
+    await expect(page.getByTestId('catalog-embed')).toBeVisible()
+    await expect(page.getByTestId('catalog-shell')).toHaveAttribute(
+      'data-state',
+      'disabled',
+    )
+    await expect(page.getByTestId('showcase-buttons')).toBeVisible()
+    await expect(page.locator('[data-catalog-state="default"]')).toHaveCount(0)
+    await expect(page.locator('[data-catalog-state="disabled"]')).toHaveCount(1)
   })
 
   test('embed — toast planner light', async ({ page }) => {
@@ -105,5 +130,22 @@ test.describe('design-catalog visual smoke', () => {
     await expect(page.getByTestId('catalog-embed')).toBeVisible()
     await expect(page.getByTestId('showcase-toast')).toBeVisible()
     await expect(page.getByTestId('theme-matrix')).toHaveCount(0)
+  })
+
+  test('sidebar — resets state when switching showcase', async ({ page }) => {
+    await page.goto(
+      catalogUrl('buttons', 'planner', 'light', 'desktop', { state: 'disabled' }),
+    )
+    await expect(page.locator('[data-catalog-state="disabled"]')).toHaveCount(1)
+    await page.getByRole('button', { name: 'Settings', exact: true }).click()
+    await expect(page).toHaveURL(/showcase=settings/)
+    await expect(page).not.toHaveURL(/state=disabled/)
+    await expect(page.getByTestId('theme-matrix-state')).toBeVisible()
+    await expect(page.getByTestId('catalog-shell')).toHaveAttribute(
+      'data-state',
+      'all',
+    )
+    await expect(page.locator('[data-catalog-state="default"]')).toBeVisible()
+    await expect(page.locator('[data-catalog-state="destructive"]')).toBeVisible()
   })
 })

@@ -112,7 +112,7 @@
   onclose={closePalette}
   onclick={(e) => e.target === dialogRef && closePalette()}
 >
-  <div class="cp-container" onclick={(e) => e.stopPropagation()}>
+  <div class="cp-container" role="group" aria-label="Command palette" onclick={(e) => e.stopPropagation()}>
     <div class="cp-header">
       <Icon name="search" size={20} class="cp-search-icon" />
       <input

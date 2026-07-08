@@ -1,6 +1,7 @@
 <script>
   import { getContext } from 'svelte'
   import { CATALOG_CONTEXT_KEY } from '../lib/catalogContext.js'
+  import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
 
   const catalog = /** @type {{ app: string }} */ (getContext(CATALOG_CONTEXT_KEY))
 
@@ -37,20 +38,37 @@
 <section class="catalog-section" data-testid="showcase-segments">
   <h2 class="catalog-section__title">Segments (.seg)</h2>
   <p class="catalog-section__lead">{segLabel} — switches with App selector above.</p>
-  <div class="catalog-panel">
-    <div class={segClass} role="group" aria-label="Demo segment">
-      {#each options as opt}
-        <button
-          type="button"
-          class:on={value === opt.value}
-          class:active={value === opt.value}
-          aria-pressed={value === opt.value}
-          onclick={() => (value = opt.value)}
-        >
-          {opt.label}
-        </button>
-      {/each}
-    </div>
+  <div class="catalog-panel catalog-grid">
+    <CatalogStateBlock stateId="default" label="Default">
+      <div class={segClass} role="group" aria-label="Demo segment">
+        {#each options as opt}
+          <button
+            type="button"
+            class:on={value === opt.value}
+            class:active={value === opt.value}
+            aria-pressed={value === opt.value}
+            onclick={() => (value = opt.value)}
+          >
+            {opt.label}
+          </button>
+        {/each}
+      </div>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock stateId="disabled" label="Disabled">
+      <div
+        class="{segClass} seg--disabled"
+        role="group"
+        aria-label="Disabled segment"
+        aria-disabled="true"
+      >
+        {#each options as opt}
+          <button type="button" disabled class:on={opt.value === 'a'}>
+            {opt.label}
+          </button>
+        {/each}
+      </div>
+    </CatalogStateBlock>
   </div>
 </section>
 

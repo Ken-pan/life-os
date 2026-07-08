@@ -1,6 +1,26 @@
 @import '@life-os/theme/design-system.css';
 @import '@life-os/theme/app-themes.css';
 
+/*
+  Catalog shell chrome — not part of Life OS design system.
+  Neutral dark UI for nav / matrix toolbar; independent of [data-app] brand tokens.
+*/
+:root {
+  --catalog-chrome-bg: #111111;
+  --catalog-chrome-surface: #161616;
+  --catalog-chrome-surface-hover: #242424;
+  --catalog-chrome-surface-active: #2d2d2d;
+  --catalog-chrome-border: #2a2a2a;
+  --catalog-chrome-border-strong: #444444;
+  --catalog-chrome-text: #f2f2f2;
+  --catalog-chrome-text-muted: #9a9a9a;
+  --catalog-chrome-text-subtle: #7a7a7a;
+  --catalog-chrome-text-link: #d8d8d8;
+  --catalog-chrome-workspace-bg: #eceae6;
+  --catalog-chrome-control-bg: #2a2a2a;
+  --catalog-chrome-control-text: #ffffff;
+}
+
 /* Catalog-only layout chrome — not part of Life OS design system */
 .catalog-preview {
   font-family: var(--font);
@@ -232,4 +252,105 @@
 
 .catalog-doc-preview--sheet .mobile-more-row.active .mobile-more-row-label {
   font-weight: 600;
+}
+
+/* Inline command palette fixture for catalog / matrix embeds */
+.catalog-doc-preview--palette {
+  position: relative;
+  min-height: 320px;
+}
+
+.catalog-doc-preview--palette .command-palette-modal {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  display: flex !important;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 0;
+  z-index: 0;
+}
+
+.catalog-doc-preview--palette .command-palette-modal::backdrop {
+  display: none;
+}
+
+.catalog-doc-preview--palette .cp-container {
+  width: 100%;
+  max-width: 100%;
+  box-shadow: var(--shadow-elevated, 0 12px 40px rgba(31, 28, 24, 0.12));
+}
+
+/* Embed mode — matrix iframe cells: hide page chrome, show state blocks only */
+.catalog-embed .catalog-section__title,
+.catalog-embed .catalog-section__lead,
+.catalog-embed .catalog-subtitle,
+.catalog-embed .catalog-section__hint,
+.catalog-embed .catalog-state-label {
+  display: none;
+}
+
+.catalog-embed .catalog-section {
+  padding: var(--space-2);
+}
+
+.catalog-embed .catalog-state-block {
+  border: none;
+  padding: var(--space-1);
+}
+
+/* Static empty command palette fixture (detail view; avoids dual dialog) */
+.catalog-cp-empty-fixture {
+  width: 100%;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-elevated, 0 12px 40px rgba(31, 28, 24, 0.12));
+  border: 1px solid var(--border-l, var(--border-strong, var(--border)));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.catalog-cp-empty-fixture .cp-header {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  gap: var(--space-3);
+}
+
+.catalog-cp-empty-fixture .cp-search-icon {
+  color: var(--t3, var(--text-muted));
+  font-size: 18px;
+  line-height: 1;
+}
+
+.catalog-cp-empty-fixture .cp-input--placeholder {
+  flex: 1;
+  color: var(--t3, var(--text-muted));
+  font-size: var(--text-lg);
+}
+
+.catalog-cp-empty-fixture .cp-shortcut-hint {
+  font-size: var(--text-xs);
+  color: var(--t3, var(--text-muted));
+  background: color-mix(in srgb, var(--t1, var(--text)) 5%, transparent);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--space-1);
+  font-weight: 500;
+}
+
+.catalog-cp-empty-fixture .cp-content {
+  padding: var(--space-2);
+}
+
+.catalog-cp-empty-fixture .cp-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--t3, var(--text-muted));
+  font-size: var(--text-sm);
 }

@@ -1,13 +1,16 @@
 <script>
   import { APPS, MODES, MATRIX_SHOWCASES } from './catalogNav.js'
   import { matrixEmbedUrl } from './catalogState.js'
+  import { getShowcaseStates, getMatrixIframeHeight } from './showcaseStates.js'
 
-  /** @type {{ showcase: string, onShowcase: (id: string) => void, onOpenDetail: (app: string, mode: string) => void }} */
+  /** @type {{ showcase: string, onShowcase: (id: string) => void, onOpenDetail: (app: string, mode: string, state: string) => void }} */
   let { showcase, onShowcase, onOpenDetail } = $props()
 
   const matrixMeta = $derived(
     MATRIX_SHOWCASES.find((s) => s.id === showcase) ?? MATRIX_SHOWCASES[0],
   )
+
+  const matrixStates = $derived(getShowcaseStates(showcase))
 </script>
 
 <section class="catalog-matrix" data-testid="catalog-matrix">
@@ -15,7 +18,7 @@
     <div>
       <h2 class="catalog-matrix__title">Matrix — {matrixMeta.label}</h2>
       <p class="catalog-matrix__lead">
-        4 apps × 2 modes preview. Click a cell to open detail view.
+        States × 4 apps × 2 modes. Click a cell to open detail view with that state.
       </p>
     </div>
     <label class="catalog-matrix__picker">
@@ -28,33 +31,43 @@
     </label>
   </header>
 
-  <div class="catalog-matrix__grid" role="grid" aria-label="App and mode matrix">
-    <div class="catalog-matrix__corner" aria-hidden="true"></div>
-    {#each APPS as app}
-      <div class="catalog-matrix__col-head" role="columnheader">{app}</div>
-    {/each}
+  {#each matrixStates as stateDef, stateIndex (stateDef.id)}
+    <details
+      class="catalog-matrix__state"
+      data-testid="matrix-state-{showcase}-{stateDef.id}"
+      open={stateIndex === 0}
+    >
+      <summary class="catalog-matrix__state-title">{stateDef.label}</summary>
+      <div class="catalog-matrix__grid" role="grid" aria-label="{stateDef.label} matrix">
+        <div class="catalog-matrix__corner" aria-hidden="true"></div>
+        {#each APPS as app}
+          <div class="catalog-matrix__col-head" role="columnheader">{app}</div>
+        {/each}
 
-    {#each MODES as mode}
-      <div class="catalog-matrix__row-head" role="rowheader">{mode}</div>
-      {#each APPS as app}
-        <button
-          type="button"
-          class="catalog-matrix__cell"
-          data-testid="matrix-cell-{showcase}-{app}-{mode}"
-          aria-label="Open {matrixMeta.label} — {app} {mode}"
-          onclick={() => onOpenDetail(app, mode)}
-        >
-          <iframe
-            title="{matrixMeta.label} {app} {mode}"
-            src={matrixEmbedUrl(showcase, app, mode)}
-            loading="lazy"
-            tabindex="-1"
-          ></iframe>
-          <span class="catalog-matrix__cell-label">{app} · {mode}</span>
-        </button>
-      {/each}
-    {/each}
-  </div>
+        {#each MODES as mode}
+          <div class="catalog-matrix__row-head" role="rowheader">{mode}</div>
+          {#each APPS as app}
+            <button
+              type="button"
+              class="catalog-matrix__cell"
+              data-testid="matrix-cell-{showcase}-{stateDef.id}-{app}-{mode}"
+              aria-label="Open {matrixMeta.label} — {stateDef.label} — {app} {mode}"
+              onclick={() => onOpenDetail(app, mode, stateDef.id)}
+            >
+              <iframe
+                title="{matrixMeta.label} {stateDef.label} {app} {mode}"
+                src={matrixEmbedUrl(showcase, app, mode, stateDef.id)}
+                style:height="{getMatrixIframeHeight(showcase, stateDef.id)}px"
+                loading="lazy"
+                tabindex="-1"
+              ></iframe>
+              <span class="catalog-matrix__cell-label">{app} · {mode}</span>
+            </button>
+          {/each}
+        {/each}
+      </div>
+    </details>
+  {/each}
 </section>
 
 <style>
@@ -98,6 +111,37 @@
     border: 1px solid var(--border);
     background: var(--card);
     color: var(--t1, var(--text));
+  }
+
+  .catalog-matrix__state {
+    margin-bottom: var(--space-8);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 8px);
+    padding: var(--space-3);
+    background: color-mix(in srgb, var(--card) 88%, var(--bg));
+  }
+
+  .catalog-matrix__state-title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-sm, 13px);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--t3, var(--text-muted));
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .catalog-matrix__state-title::-webkit-details-marker {
+    display: none;
+  }
+
+  details[open] > .catalog-matrix__state-title {
+    margin-bottom: var(--space-3);
+  }
+
+  details:not([open]) > .catalog-matrix__state-title {
+    margin-bottom: 0;
   }
 
   .catalog-matrix__grid {
@@ -154,7 +198,7 @@
 
   .catalog-matrix__cell iframe {
     width: 100%;
-    height: 220px;
+    min-height: 120px;
     border: 0;
     border-radius: var(--radius-sm, 6px);
     background: var(--bg);

@@ -4,8 +4,8 @@
   import { ICONS } from './iconRegistry.js'
   import { CATALOG_CONTEXT_KEY } from './catalogContext.js'
 
-  /** @type {{ app: string, mode: string, children }} */
-  let { app = 'planner', mode = 'light', children } = $props()
+  /** @type {{ app: string, mode: string, state?: string, children }} */
+  let { app = 'planner', mode = 'light', state = 'all', children } = $props()
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
   setContext(CATALOG_CONTEXT_KEY, {
@@ -14,6 +14,9 @@
     },
     get mode() {
       return mode
+    },
+    get state() {
+      return state
     },
   })
 
@@ -36,6 +39,7 @@
   data-app={app}
   data-mode={mode}
   data-theme={mode}
+  data-state={state}
   data-testid="catalog-shell"
 >
   {@render children?.()}
