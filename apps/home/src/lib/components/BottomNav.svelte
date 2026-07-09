@@ -3,12 +3,15 @@
   import Icon from '@life-os/platform-web/svelte/icon';
   import { buildPrimaryNavItems, resolveNavTab, isNavChromeHidden } from '$lib/nav.js';
 
+  /** @type {{ hidden?: boolean }} */
+  let { hidden = false } = $props()
+
   const items = $derived(buildPrimaryNavItems());
   const current = $derived(resolveNavTab(page.url.pathname));
-  const hidden = $derived(isNavChromeHidden(page.url.pathname));
+  const navHidden = $derived(hidden || isNavChromeHidden(page.url.pathname));
 </script>
 
-{#if !hidden}
+{#if !navHidden}
 <nav class="nav" aria-label="主导航">
   <div class="nav-inner">
     {#each items as item (item.tab)}

@@ -519,6 +519,69 @@ export function previewGraphOpeningEdit(graph, graphOpenings, openingId, pt, mod
 }
 
 /**
+ * Live drag hint for graph opening HUD (RoomSketcher-style along-wall dimensions).
+ * @param {WallGraph} graph
+ * @param {GraphOpening[]} graphOpenings
+ * @param {string} openingId
+ * @param {import('./types.js').Point} pt
+ * @param {'move' | 'resize-start' | 'resize-end'} mode
+ */
+export function describeGraphOpeningDrag(graph, graphOpenings, openingId, pt, mode) {
+  const orig = graphOpenings.find((o) => o.id === openingId)
+  if (!orig) {
+    return {
+      valid: false,
+      title: '门窗',
+      detail: '未找到选中项',
+      delta: '',
+      gridSnapped: false,
+    }
+  }
+  const next =
+    previewGraphOpeningEdit(graph, graphOpenings, openingId, pt, mode).find(
+      (o) => o.id === openingId,
+    ) ?? orig
+  const kind = orig.type === 'window' ? '窗' : '门'
+  const title = `${kind} · ${formatInchesLabel(orig.spanIn)}`
+  const offsetLabel = formatInchesLabel(next.offsetIn)
+  const spanLabel = formatInchesLabel(next.spanIn)
+
+  if (mode === 'move') {
+    return {
+      valid: true,
+      title,
+      detail: `沿墙 ${offsetLabel}`,
+      delta: `宽 ${spanLabel}`,
+      gridSnapped: false,
+    }
+  }
+  if (mode === 'resize-start' || mode === 'resize-end') {
+    return {
+      valid: true,
+      title,
+      detail: `宽 ${spanLabel}`,
+      delta: `起点 ${offsetLabel}`,
+      gridSnapped: false,
+    }
+  }
+  return {
+    valid: true,
+    title,
+    detail: `沿墙 ${offsetLabel} · 宽 ${spanLabel}`,
+    delta: '',
+    gridSnapped: false,
+  }
+}
+
+/** @param {number} inches */
+function formatInchesLabel(inches) {
+  const ft = Math.floor(inches / 12)
+  const inch = Math.round(inches - ft * 12)
+  if (inch === 0) return `${ft}'`
+  return `${ft}'${inch}"`
+}
+
+/**
  * @param {GraphOpening} go
  * @returns {GraphOpening}
  */

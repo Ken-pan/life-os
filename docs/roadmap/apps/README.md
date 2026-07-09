@@ -27,9 +27,9 @@
 
 | Hub ID      | App 分卷                                                           | 状态 / 锚点                                            |
 | ----------- | ------------------------------------------------------------------ | ------------------------------------------------------ |
-| **G-P4b-H** | [portal.md](./portal.md) · [home.md](./home.md)                    | 阻塞 H-P6a                                             |
+| **G-P4b-H** | [portal.md](./portal.md) · [home.md](./home.md)                    | ✅ 2026-07-09 · H-P6a                                  |
 
-**已发货（2026-07-09）：** G-P8 · G-P9 · Phase 0–4 批次 — [`../SHIPPED.md`](../SHIPPED.md)
+**已发货（2026-07-09）：** G-P8 · G-P9 · G-P4b-H · Phase 0–6 — [`../SHIPPED.md`](../SHIPPED.md)
 
 ## 一览（Top Next）
 
@@ -39,8 +39,8 @@
 | Fitness | 生产   | FT-P1 ✅ · 维护 E2E    | [fitness.md](./fitness.md) |
 | Finance | 生产   | F-P3 ✅ · F-P1b        | [finance.md](./finance.md) |
 | Music   | 生产   | M-P5 ✅ · 管道维护     | [music.md](./music.md)     |
-| Portal  | 启动器 | **G-P4b-H**（H-P6a）   | [portal.md](./portal.md)   |
-| Home    | 实验   | **H-W2b** 手机 UX · **H-W3** 分区 | [home.md](./home.md)       |
+| Portal  | 启动器 | 维护 · UI 低优 P-4/P-5 | [portal.md](./portal.md)   |
+| Home    | 实验   | **H-W3** 手绘分区 · Wave UX ✅ | [home.md](./home.md)       |
 
 ## 跨站集成矩阵（只读 / 事件）
 
@@ -49,14 +49,14 @@
 | **读 `core_*`**        | ✅      | ✅       | ✅      | ✅         | ✅         | ✅       |
 | **`life_events` 生产** | —       | ✅ FT-P1 | ✅      | —          | —          | —        |
 | **`life_events` 消费** | ✅      | —        | —       | —          | 角标 G-P2  | —        |
-| **Portal 摘要 G-P4**   | ✅ 任务 | ✅ 训练  | ✅ 结余 | ✅ Music   | ⏳ G-P4b-H | —        |
+| **Portal 摘要 G-P4**   | ✅ 任务 | ✅ 训练  | ✅ 结余 | ✅ Music   | ✅ Home    | —        |
 | **业务数据云**         | ✅      | ✅       | ✅      | ✅         | —          | ❌ local |
 
 ## 已知阻塞（排期前必读）
 
 | 阻塞                              | 影响项                             | 解除方式                                                                     |
 | --------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
-| Home 仅 localStorage              | **G-P4b** Home 卡、`H-P6` 储藏区数 | **H-P6a** 轻量上报 `storage_zone_count` 到 `core_*` 元数据；或卡片仅深链无数 |
+| Home 仅 localStorage              | ~~**G-P4b** Home 卡~~              | ✅ **H-P6a** 元数据 + **G-P4b-H** 第五卡（2026-07-09）                       |
 | `events.ts` 仅 `finance.bill_due` | ~~**I-P1.5b** / **FT-P1**~~            | ✅ 已扩 `fitness.workout_logged`（2026-07-09）                               |
 
 ## 潜力排序（→ [`../POTENTIAL.md`](../POTENTIAL.md)）
@@ -65,14 +65,14 @@
 | --- | ---------------------- | ------------------------------- |
 | 1   | **M-P5**               | 行为分验收（有曲库账号）        |
 | 2   | **G-P8/G-P9**          | Portal 角标深链 + smoke         |
-| 3   | **G-P4b-H**            | Home 卡（H-P6a 后）             |
+| 3   | **G-P4b-H**            | Home 卡（H-P6a 后）             | ✅ 2026-07-09 |
 
 ## Wave 投入估算（单人 · Phase 5+）
 
 | Phase  | 项                    | 合计  |
 | ------ | --------------------- | ----- |
 | **5**  | G-P8 + G-P9 + M-P5    | ~2–3d |
-| **6**  | G-P4b-H（H-P6a 后）   | ~1–2d |
+| **6**  | G-P4b-H（H-P6a 后）   | ~1–2d | ✅ 2026-07-09 |
 
 **已完成 Wave（2026-07-09）：** Phase 0–4 — 见 [`../SHIPPED.md`](../SHIPPED.md)
 

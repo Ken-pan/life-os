@@ -1,9 +1,9 @@
 # Home 空间编辑 · 高标准 UI/UX 审核报告
 
-> **日期：** 2026-07-08（H-W2c 之后）  
+> **日期：** 2026-07-08（H-W2c 后 · **Wave A/B/C UX** 2026-07-08 收尾）  
 > **审核框架：** Nielsen 10 启发式 · WCAG 2.2 触达/对比 · CAD 编辑器惯例（RoomSketcher / Figma / Floor Plan Studio）  
-> **截图：** [`apps/home/screenshots/qa-uiux-2026-07-08/`](../../apps/home/screenshots/qa-uiux-2026-07-08/)  
-> **前置修复：** UI-01–06、FN-01 已在 H-W2b/c 处理；本报告聚焦**剩余与回归**问题
+> **截图：** [`apps/home/screenshots/qa-uiux-2026-07-08/`](../../apps/home/screenshots/qa-uiux-2026-07-08/)（初版；Wave B/C 后建议重跑 `qa-ui-screenshots.mjs`）  
+> **前置修复：** UI-01–06、FN-01 已在 H-W2b/c 处理；**Wave A–C** 见下文「已修复」节
 
 ## 审核方法
 
@@ -82,12 +82,25 @@
 ## 已通过 / 回归确认 ✅
 
 - Hint 三重重复（旧 UI-03）已缓解：AppBar 短副标题 + viewer hint + `?` 抽屉
-- 手机 GraphSelectionBar / GraphOpeningSelectionBar 可见（旧 UI-02 墙图部分）
-- 手机 zoom 精简为 ± + %（旧 UI-05 部分）
-- 门窗沿墙拖、改宽、门↔窗（FN-01）
-- 竖墙 symbol 方向（旧 UI-06）
-- 桌面墙图编辑信息架构清晰：浏览|编辑 → ①②③ → 四工具
-- 帮助面板 contextHint 区（绿色 callout）可读性良好
+- 手机 GraphSelectionBar / GraphOpeningSelectionBar / **PlanSelectionBar（508）** 可见
+- 手机 zoom 精简；编辑态折叠 % chip + 左下定位（UX-11）
+- 门窗沿墙拖、改宽、门↔窗 + **graph drag HUD**（FN-01 · UX-12）
+- 竖墙 symbol / grip 光标（UI-06 · UX-20）
+- `--graph-accent` token 统一墙图编辑色（UX-09）
+- 删墙 act-then-undo toast + 级联橙色高亮（UX-17）
+- 手机编辑 immersive（副标题 + bottom nav 收起 · UX-21）
+- 帮助 `aria-modal` + 平台快捷键（A11Y-01/03）
+
+## 剩余开放（H-W3 前 / P3）
+
+| ID | 说明 | 建议阶段 |
+|----|------|----------|
+| **UX-01†** | 「未加载到墙图」空态（fit/对比已修） | H-W5 或 quick win |
+| **UX-13†** | 508 手机底栏「详情」→ inspector 尺寸编辑深链 | H-W5 |
+| **A11Y-02** | 选中态虚线动画 / `aria-selected` | H-W3 并行 |
+| **I18N-01** | 房间名中英混排与 UI locale 统一 | 产品化前 |
+
+† 主路径已可用，属 polish。
 
 ---
 
@@ -124,6 +137,39 @@ Wave C（P2，随 H-W3/W5）
 | UX-08 | 禁用步骤 tooltip 产品化 |
 
 **下一步：** Wave B（UX-09/10/11/12）· **H-W3** 手绘分区
+
+## Wave B 已修复（2026-07-08）
+
+| ID | 修复 |
+|----|------|
+| UX-09 | `--graph-accent` / `--graph-accent-muted` token；墙图组件/SVG 统一引用 |
+| UX-10 | 508 编辑「转换为墙图」**主按钮横幅** +「稍后」dismiss（sessionStorage） |
+| UX-11 | 桌面编辑态 zoom 条**移左下** + 默认**折叠为 % chip**（Fusion 式 progressive disclosure） |
+| UX-12 | 墙图门窗拖曳 **HUD**（`describeGraphOpeningDrag` · 沿墙 offset / 宽度 ft-in） |
+| UX-14 | `PlanLegend` 墙图模式 +3 项（顶点、门窗虚线框、改宽握把） |
+| UX-15 | 墙图浏览角标「508 参数快照」 |
+| UX-18 | 编辑态 **常驻 ↶↷**（disabled 态可见） |
+| UX-19 | 图例按钮移动 ≥44px |
+| UX-20 | 竖墙改宽 grip `ns-resize`（`data-wall-axis`） |
+
+**参考：** [Autodesk Fusion toolbar progressive disclosure](https://www.swetzoff.com/projects/project-autodesk-di.html) · [OpenCad2D cursor-adjacent HUD](https://github.com/archistico/OpenCad2D) · [Syncfusion floor planner dimensions](https://github.com/syncfusion/ej2-showcase-react-floor-planner)
+
+**下一步：** Wave C（UX-13/17/21）· **H-W3** 手绘分区
+
+## Wave C 已修复（2026-07-08）
+
+| ID | 修复 |
+|----|------|
+| UX-13 | `PlanSelectionBar` 手机端 compact 底栏（与墙图 bar 对齐，横滚 + 44px） |
+| UX-17 | 删墙 **act-then-undo** toast（8s「撤销」）；删墙工具下含门窗墙段 **橙色高亮** |
+| UX-21 | 手机编辑 **immersive**：隐藏 AppBar 副标题 + 收起 bottom nav，画布 `78dvh` |
+| UX-16 | FAB 统一为「详情」；选中 bar 可见时自动隐藏 |
+| A11Y-01 | 帮助 dialog `aria-modal` + 打开时 focus 关闭按钮 |
+| A11Y-03 | 快捷键 ⌘ / Ctrl+ 平台分支 |
+
+**参考：** [Undo UX Pattern](https://uxpatternsguide.com/patterns/undo/) · [Vauchi GUI — confirm only irrevocable](https://docs.vauchi.app/developers/gui-guidelines.html) · [magicplan undo placement](https://help.magicplan.app/undo)
+
+**下一步：** **H-W3** 手绘分区 · UX-13 508 inspector 深链 · A11Y-02 选中动画
 
 ## 复现
 

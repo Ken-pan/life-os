@@ -14,7 +14,7 @@ priority_model: 2026-07-09-per-app-roadmaps
 > 详细阶段史、Wave 完成记录、提取决策矩阵 → [`roadmap/`](./roadmap/README.md)
 > **六 app 产品排期** → [`roadmap/apps/`](./roadmap/apps/README.md)
 >
-> **优先级依据（2026-07-09）：** Phase 5 Portal ✅；下一档 **M-P5 行为分**（已可自包含验收）· **G-P4b-H**（H-P6a）。
+> **优先级依据（2026-07-09）：** Phase 6 **G-P4b-H / H-P6a** ✅；下一档按 [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) 条件项。
 
 ## 一句话
 
@@ -31,13 +31,13 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 | 序  | ID  | 主题 | 桶  | ROI | 下一步 | 验收 |
 | --- | --- | ---- | --- | --- | ------ | ---- |
 
-**2026-07-09 已验收（见 §Shipped）：** Phase 0–5 — **F-P3** · **G-P4b-M** · **G-P6** · **G-P8** · **G-P9** · **M-P5** · **P-P2** · **FT-P0/FT-P1** · **I-P1.5b** · CI 接线。
+**2026-07-09 已验收（见 §Shipped）：** Phase 0–6 — **F-P3** · **G-P4b-M/H** · **G-P6** · **G-P8** · **G-P9** · **M-P5** · **H-P6a** · **P-P2** · **FT-P0/FT-P1** · **I-P1.5b** · CI 接线。
 
 ### Next — 已排期
 
 | ID           | 主题                                       | App     | 桶       | ROI | 触发 / 范围                                   |
 | ------------ | ------------------------------------------ | ------- | -------- | --- | --------------------------------------------- |
-| **G-P4b-H**  | Portal 摘要 Home 储藏卡                    | Portal  | Growth   | ○   | 阻塞：先 **H-P6a** 元数据                     |
+| **H-W3**     | Home 手绘分区 `zones[]`                    | Home    | Product  | ◆◆◆ | [`home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) §6 |
 | **C-P2 P2+** | Finance React 共享 UI                      | Finance | Platform | ✗   | 第 3 React 消费者前不做                       |
 | **C-P1+**    | Finance nav contracts mirror               | Finance | Platform | ✗   | `contracts/events` 已够                       |
 
@@ -48,14 +48,18 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 研判全文 → [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
 ```text
-Phase 6 — 条件 Growth
-  G-P4b-H（先 H-P6a）
+Phase 7 — Home 空间编辑续 · 按需
+  H-W3 手绘分区 · D-P7 · 各 app §Parked
 
-Phase 7 — 按需
-  D-P7 · 各 app §Parked
+已完成（2026-07-08 Home 墙图）
+  H-W0–W2c · Wave A/B/C UX — 见 [`qa/home-spatial-uiux-audit-2026-07-08.md`](./qa/home-spatial-uiux-audit-2026-07-08.md)
+
+已完成（2026-07-09 Phase 6）
+  H-P6a Home 储藏元数据 → core_*
+  G-P4b-H Portal 第五卡（储藏审计 · 实验）
 
 已完成（2026-07-09 Phase 5）
-  M-P5 qa:rec-behavior 6/6 ✅（M5 QA seed + recently completed）
+  M-P5 qa:rec-behavior 6/6 ✅
   G-P8 · G-P9 · P-1 遮罩 ✅
 ```
 
@@ -66,7 +70,7 @@ Phase 7 — 按需
 | 主线        | 摘要                                                                           | 详情                                                      |
 | ----------- | ------------------------------------------------------------------------------ | --------------------------------------------------------- |
 | Core        | **F-P3** Finance STS 口径统一 · **P-P2** Planner Insight E2E 22/22           | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-09   |
-| Growth      | **G-P8** pending→inbox · **G-P9** `qa:smoke` · **M-P5** 行为分 6/6          | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md) |
+| Growth      | **G-P4b-H** Home 储藏卡 · **H-P6a** 元数据 · **G-P8/G-P9** · **M-P5** | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md) |
 | Integration | **FT-P1** / **I-P1.5b** 完练 → Planner 打卡                                    | `fitness_workout_event_trigger` migration                 |
 | Infra       | CI `planner-e2e-desktop` · `finance-ia-routes`；FT-P0 **20/20**                | `.github/workflows/ci.yml`                                |
 | Integration | `core_profiles` 远程 ✅；`life_events` outbox + Planner inbox ✅               | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md)      |
@@ -142,7 +146,7 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 | **I-P1.5** 事件中心  | ✅ 管道通；**I-P1.5b** Fitness 完练打卡 ✅（2026-07-09） | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p15) |
 | **G-P1–G-P5** Growth | ✅ 生产验收完成（含 F-P1/G-P2）                     | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                 |
 | **H-P0** Home 实验   | 🟡 已部署；SSO + PWA ✅；H-P5 平面 UX ✅；H-P4 搁置 | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)  |
-| **H-W** 空间编辑     | 🟡 **H-W0–W2c + Wave A UX**；Wave B · **H-W3** 分区 · [`qa/home-spatial-uiux-audit-2026-07-08.md`](./qa/home-spatial-uiux-audit-2026-07-08.md) | [`roadmap/apps/home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) |
+| **H-W** 空间编辑     | 🟡 **H-W0–W2c ✅** · **Wave A/B/C UX ✅** · **H-W3** 分区 📋 · [`qa/home-spatial-uiux-audit-2026-07-08.md`](./qa/home-spatial-uiux-audit-2026-07-08.md) | [`roadmap/apps/home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) |
 | **C-P1+** 平台扩容   | 🟡 Finance 部分接入；低优先                         | [`roadmap/PLATFORM.md`](./roadmap/PLATFORM.md)             |
 | **D-P6** 设计系统    | ✅ catalog a11y gates（2026-07-08）                 | [`roadmap/DESIGN.md`](./roadmap/DESIGN.md)                 |
 
@@ -155,7 +159,7 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 | Finance | 生产   | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅  | ✅     | F-P3 ✅ · F-P1b 按需                            |
 | Music   | 生产   | [music.kenos.space](https://music.kenos.space)     | `music-os`   | ✅  | ✅     | M-P5 ✅ · 维护推荐管道                          |
 | Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space)   | `portal`     | ✅  | —      | **M-P5** 行为分（hub）                        |
-| Home    | 实验   | [home.kenos.space](https://home.kenos.space)       | `home-os`    | ✅  | ✅     | **H-W3** 手绘分区 · H-P6a |
+| Home    | 实验   | [home.kenos.space](https://home.kenos.space)       | `home-os`    | ✅  | ✅     | **H-W3** 手绘分区 |
 
 **分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · 插件：Finance OS Sync — `apps/finance/extension`
 

@@ -19,10 +19,17 @@
   /** @type {{
    *   selectedWall?: string,
    *   selectedOpening?: string,
+   *   compact?: boolean,
    *   onClear?: () => void,
    *   onOpenDetails?: () => void,
    * }} */
-  let { selectedWall = '', selectedOpening = '', onClear, onOpenDetails } = $props()
+  let {
+    selectedWall = '',
+    selectedOpening = '',
+    compact = false,
+    onClear,
+    onOpenDetails,
+  } = $props()
 
   const project = $derived(getActiveProject())
   const config = $derived(project.layoutConfig)
@@ -76,10 +83,17 @@
 </script>
 
 {#if title}
-  <div class="sel-bar" role="toolbar" aria-label="选中项快捷编辑">
-    <span class="sel-title">{title}</span>
+  <div
+    class="sel-bar"
+    class:sel-bar-compact={compact}
+    role="toolbar"
+    aria-label="选中项快捷编辑"
+  >
+    {#if !compact}
+      <span class="sel-title">{title}</span>
+    {/if}
 
-    {#if wallBinding?.roomKey && wallBinding.axis && activeConfig}
+    {#if !compact && wallBinding?.roomKey && wallBinding.axis && activeConfig}
       {@const room =
         activeConfig.rooms[
           /** @type {keyof typeof activeConfig.rooms} */ (wallBinding.roomKey)
@@ -154,8 +168,10 @@
       {:else if wallBinding}
         <span class="sel-meta">拖曳改尺寸 · 墙体不可删除</span>
       {/if}
-    {:else if openingBinding && activeConfig}
+    {:else if !compact && openingBinding && activeConfig}
       <span class="sel-meta">拖曳移动 · Delete 仅隐藏门窗</span>
+    {:else if compact}
+      <span class="sel-title sel-title-compact">{title}</span>
     {/if}
 
     <div class="sel-actions">
@@ -212,6 +228,13 @@
     font-weight: 650;
     color: var(--t1);
     white-space: nowrap;
+  }
+
+  .sel-title-compact {
+    font-size: 12px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .sel-meta {
@@ -282,7 +305,33 @@
 
   @media (max-width: 599px) {
     .sel-bar {
+      left: max(12px, var(--safe-left-effective));
+      right: max(12px, var(--safe-right-effective));
+      transform: none;
+      max-width: none;
+      bottom: calc(
+        var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 72px
+      );
+      padding: 8px 10px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .sel-bar::-webkit-scrollbar {
       display: none;
+    }
+
+    .sel-bar-compact .sel-actions {
+      margin-left: 0;
+      flex-wrap: nowrap;
+      width: 100%;
+    }
+
+    .sel-btn {
+      min-height: 44px;
+      flex-shrink: 0;
     }
   }
 </style>

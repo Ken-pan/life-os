@@ -10,12 +10,12 @@
 
 | 焦点       | 主题                          | 文档                                             |
 | ---------- | ----------------------------- | ------------------------------------------------ |
-| 🔥 Phase 0 | **F-P3** Finance 信任锚点     | [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) |
-| Phase 1    | **G-P4b-M** · **M-P2** · P-P2 | hub §Next                                        |
-| Phase 1b   | CI 接线（F-P0/QA-P2 本地 ✅） | [`qa/e2e-issues.md`](./qa/e2e-issues.md)         |
-| ○ 条件     | I-P1.5b / G-P4b-H             | 每天用两站 / H-P6a                               |
+| Phase 6    | **H-W3** Home 手绘分区        | [`roadmap/apps/home.md`](./roadmap/apps/home.md) |
 
-**2026-07-09 已验收：** F-P0 · QA-P2 · I-P0 · G-P4 · H-P1/H-P2/H-P3 · F-P1 · G-P2 · M-P1 · AppBrandSwitcher — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-09 已验收：** Phase 6 **G-P4b-H / H-P6a** — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+| ○ 条件     | G-P4b-H / H-P6a               | 每天用 Home                                      |
+
+**2026-07-09 已验收：** Phase 0–4 批次 — F-P3 · G-P4b-M · G-P6 · P-P2 · FT-P0/FT-P1 · I-P1.5b — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
 **六 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
@@ -70,6 +70,7 @@ docs/
 | 查 life_events 格式    | [`architecture/events-rfc.md`](./architecture/events-rfc.md)    |
 | 调试 iOS PWA           | [`qa/pwa-ios.md`](./qa/pwa-ios.md)                              |
 | 看 E2E 失败记录        | [`qa/e2e-issues.md`](./qa/e2e-issues.md)                        |
+| Portal UI 截图走查     | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md) |
 
 ## 验收命令（hub 级）
 

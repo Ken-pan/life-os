@@ -363,17 +363,32 @@ export function flipGraphOpeningDirection(openingId) {
   applyEditSource({ graphOpenings }, { toastMsg: '已翻转开向' })
 }
 
+/**
+ * @param {GraphOpening[]} graphOpenings
+ * @param {string} edgeId
+ */
+export function countGraphOpeningsOnEdge(graphOpenings, edgeId) {
+  return graphOpenings.filter((o) => o.edgeId === edgeId && !o.hidden).length
+}
+
 /** @param {string} edgeId */
 export function removeGraphWall(edgeId) {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const graph = raw.wallGraph
   if (!graph) return
+  const cascadeCount = countGraphOpeningsOnEdge(raw.graphOpenings ?? [], edgeId)
   const nextGraph = deleteWallEdge(graph, edgeId)
   const graphOpenings = filterOpeningsForEdge(raw.graphOpenings ?? [], edgeId)
-  applyEditSource(
-    { wallGraph: nextGraph, graphOpenings },
-    { toastMsg: '已删除墙段' },
-  )
+  applyEditSource({ wallGraph: nextGraph, graphOpenings }, { silent: true })
+  const msg =
+    cascadeCount > 0
+      ? `已删除墙段 · 级联 ${cascadeCount} 个门窗`
+      : '已删除墙段'
+  toast(msg, {
+    actionLabel: '撤销',
+    onAction: () => undoGraphEdit(),
+    duration: 8000,
+  })
 }
 
 /** @param {string} edgeId */
@@ -495,9 +510,8 @@ export function getActiveProject() {
 
 /** @type {string} */
 let planSubtitle = $state('')
-
-/** @type {number} */
-let layoutSavedAt = $state(0)
+/** @type {boolean} */
+let planImmersiveEdit = $state(false)
 
 /** @param {string} subtitle */
 export function setPlanSubtitle(subtitle) {
@@ -508,6 +522,19 @@ export function setPlanSubtitle(subtitle) {
 export function getPlanSubtitle() {
   return planSubtitle
 }
+
+/** @param {boolean} on */
+export function setPlanImmersiveEdit(on) {
+  planImmersiveEdit = on
+}
+
+/** @returns {boolean} */
+export function getPlanImmersiveEdit() {
+  return planImmersiveEdit
+}
+
+/** @type {number} */
+let layoutSavedAt = $state(0)
 
 export function notifyLayoutSaved() {
   layoutSavedAt = Date.now()

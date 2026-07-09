@@ -12,7 +12,7 @@
  *   onSelectEdge: (edgeId: string) => void,
  *   onSelectOpening?: (openingId: string) => void,
  *   onOpeningDragStart?: (openingId: string, mode: GraphOpeningDragMode) => void,
- *   onOpeningDrag?: (openingId: string, pt: { x: number, y: number }, mode: GraphOpeningDragMode) => void,
+   *   onOpeningDrag?: (openingId: string, pt: { x: number, y: number }, mode: GraphOpeningDragMode, clientX: number, clientY: number) => void,
  *   onOpeningDrop?: (openingId: string, pt: { x: number, y: number }, mode: GraphOpeningDragMode) => void,
  *   onVertexDragStart?: (vertexId: string) => void,
  *   onVertexDrag?: (vertexId: string, pt: { x: number, y: number }) => void,
@@ -146,7 +146,7 @@ export function bindPlanGraphEdit(el, opts) {
     if (dragOpeningId && dragOpeningMode) {
       e.preventDefault()
       const pt = opts.clientToSvg(e.clientX, e.clientY)
-      opts.onOpeningDrag?.(dragOpeningId, pt, dragOpeningMode)
+      opts.onOpeningDrag?.(dragOpeningId, pt, dragOpeningMode, e.clientX, e.clientY)
       return
     }
     if (!dragVertexId) return

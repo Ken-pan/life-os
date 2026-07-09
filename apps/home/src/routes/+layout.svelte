@@ -16,6 +16,7 @@
     S,
     getActiveProject,
     getPlanSubtitle,
+    getPlanImmersiveEdit,
   } from '$lib/state.svelte.js'
 
   import { bindViewportHeight } from '@life-os/theme'
@@ -30,6 +31,7 @@
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   const planRoute = $derived(page.url.pathname === '/plan')
+  const planImmersive = $derived(planRoute && getPlanImmersiveEdit())
 
   const pageMeta = $derived.by(() => {
     const p = page.url.pathname
@@ -44,7 +46,7 @@
       const custom = getPlanSubtitle()
       return {
         title: '顶视平面',
-        subtitle: custom || '储藏区可点击',
+        subtitle: planImmersive ? '' : custom || '储藏区可点击',
       }
     }
     if (p === '/storage') {
@@ -87,7 +89,7 @@
 
 <a class="skip-link" href="#main-content">跳到主内容</a>
 
-<div class="app-shell">
+<div class="app-shell" class:plan-immersive-edit={planImmersive}>
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <SideNav />
   <div class="main-col">
@@ -96,7 +98,7 @@
       {@render children()}
     </main>
   </div>
-  <BottomNav />
+  <BottomNav hidden={planImmersive} />
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
 </div>
 

@@ -92,7 +92,7 @@
     max-width: min(640px, calc(100% - 24px));
     padding: 10px 14px;
     border-radius: 14px;
-    border: 1px solid color-mix(in srgb, #1d6b42 35%, var(--border));
+    border: 1px solid color-mix(in srgb, var(--graph-accent) 35%, var(--border));
     background: color-mix(in srgb, var(--card) 94%, transparent);
     backdrop-filter: blur(10px);
     box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.32);
@@ -101,7 +101,7 @@
   .graph-open-title {
     font-size: 13px;
     font-weight: 650;
-    color: #1d6b42;
+    color: var(--graph-accent);
     font-family: var(--mono);
     white-space: nowrap;
   }
@@ -132,8 +132,8 @@
   }
 
   .graph-open-accent {
-    color: #1d6b42;
-    border-color: color-mix(in srgb, #1d6b42 35%, var(--border));
+    color: var(--graph-accent);
+    border-color: color-mix(in srgb, var(--graph-accent) 35%, var(--border));
   }
 
   @media (max-width: 599px) {

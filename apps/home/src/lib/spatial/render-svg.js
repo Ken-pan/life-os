@@ -1,6 +1,6 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 import { formatFtIn } from './dimensions.js'
-import { graphOpeningHitRect } from './graph-openings.js'
+import { graphOpeningBounds, graphOpeningHitRect } from './graph-openings.js'
 import {
   isEditableWall,
   OPENING_EDIT_BINDINGS,
@@ -128,18 +128,21 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .measure-label{font:700 12px var(--mono,monospace);fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:3px;paint-order:stroke fill}
  .graph-edge-hit{stroke:rgba(92,117,140,.12);stroke-width:${wallHitStroke};cursor:pointer;pointer-events:stroke}
  .graph-edge-hit:hover{stroke:rgba(92,117,140,.45)}
- .graph-edge-on{stroke:rgba(29,107,66,.75);stroke-width:${wallOnStroke}}
+ .graph-edge-on{stroke:color-mix(in srgb,var(--graph-accent,#1d6b42) 75%,transparent);stroke-width:${wallOnStroke}}
  .graph-edge-rm{cursor:crosshair}
+ .graph-edge-rm.graph-edge-cascade{stroke:rgba(180,83,9,.55);stroke-width:${wallHitStroke}}
+ .graph-edge-rm:hover{stroke:rgba(180,83,9,.75)}
  .graph-vert{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.5}
- .graph-chain{stroke:#1d6b42;stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
- .graph-chain-vert{fill:#1d6b42;stroke:#fff;stroke-width:1.5;pointer-events:none}
- .graph-vertex-hit{fill:rgba(29,107,66,.85);stroke:#fff;stroke-width:1.5;cursor:grab;pointer-events:all}
- .graph-vertex-hit:hover{fill:#1d6b42}
- .graph-open-hit{fill:rgba(29,107,66,.08);stroke:rgba(29,107,66,.35);stroke-width:2;cursor:grab;pointer-events:all}
- .graph-open-hit:hover{fill:rgba(29,107,66,.16)}
- .graph-open-on{fill:rgba(29,107,66,.18);stroke:#1d6b42;stroke-width:2.5}
- .graph-open-grip{fill:#1d6b42;stroke:#fff;stroke-width:1.2;pointer-events:none}
+ .graph-chain{stroke:var(--graph-accent,#1d6b42);stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
+ .graph-chain-vert{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;pointer-events:none}
+ .graph-vertex-hit{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 85%,transparent);stroke:#fff;stroke-width:1.5;cursor:grab;pointer-events:all}
+ .graph-vertex-hit:hover{fill:var(--graph-accent,#1d6b42)}
+ .graph-open-hit{fill:var(--graph-accent-muted,color-mix(in srgb,#1d6b42 8%,transparent));stroke:color-mix(in srgb,var(--graph-accent,#1d6b42) 35%,transparent);stroke-width:2;cursor:grab;pointer-events:all}
+ .graph-open-hit:hover{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 16%,transparent)}
+ .graph-open-on{fill:var(--graph-accent-muted,color-mix(in srgb,#1d6b42 18%,transparent));stroke:var(--graph-accent,#1d6b42);stroke-width:2.5}
+ .graph-open-grip{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.2;pointer-events:none}
  .graph-open-grip-hit{fill:transparent;stroke:none;cursor:ew-resize;pointer-events:all}
+ .graph-open-grip-hit[data-wall-axis="v"]{cursor:ns-resize}
 </style>`)
 
   parts.push('<g class="grid">')
@@ -289,13 +292,33 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const verts = Object.fromEntries(
         project.wallGraph.vertices.map((v) => [v.id, v]),
       )
+      const openingsByEdge = new Map()
+      for (const go of project.graphOpenings ?? []) {
+        if (go.hidden) continue
+        openingsByEdge.set(go.edgeId, (openingsByEdge.get(go.edgeId) ?? 0) + 1)
+      }
+      const rmMode = opts.graphTool === 'remove'
       for (const edge of project.wallGraph.edges) {
         const a = verts[edge.a]
         const b = verts[edge.b]
         if (!a || !b) continue
         const on = opts.selectedEdge === edge.id
+        const cascade = rmMode && (openingsByEdge.get(edge.id) ?? 0) > 0
+        const edgeCls = [
+          'graph-edge-hit',
+          on ? 'graph-edge-on' : '',
+          rmMode ? 'graph-edge-rm' : '',
+          cascade ? 'graph-edge-cascade' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
+        const tip = cascade
+          ? `墙段 — 点击删除 · 含 ${openingsByEdge.get(edge.id)} 个门窗`
+          : rmMode
+            ? '墙段 — 点击删除'
+            : '墙段 — 点击选中'
         parts.push(
-          `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${edge.id}" data-plan-tip="墙段 — 点击选中"><title>墙段 — 点击选中</title></line>`,
+          `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="${edgeCls}" data-edge-id="${edge.id}" data-plan-tip="${esc(tip)}"><title>${esc(tip)}</title></line>`,
         )
       }
     } else {
@@ -334,6 +357,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
       for (const go of project.graphOpenings) {
         if (go.hidden) continue
         const hit = graphOpeningHitRect(project.wallGraph, go)
+        const bounds = graphOpeningBounds(project.wallGraph, go)
+        const wallAxis = bounds?.horizontal === false ? 'v' : 'h'
         const on = opts.selectedOpening === go.id
         const label = go.type === 'window' ? '窗' : '门'
         const title = `${label} · 拖曳沿墙移动 · 端点改宽`
@@ -341,8 +366,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
           `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="graph-open-hit${on ? ' graph-open-on' : ''}" data-graph-opening-id="${go.id}" data-plan-tip="${esc(title)}"><title>${esc(title)}</title></rect>`,
         )
         if (on && opts.graphTool === 'select') {
-          appendGraphOpeningGrip(parts, go.id, hit.p0, 'start', touchScale)
-          appendGraphOpeningGrip(parts, go.id, hit.p1, 'end', touchScale)
+          appendGraphOpeningGrip(parts, go.id, hit.p0, 'start', touchScale, wallAxis)
+          appendGraphOpeningGrip(parts, go.id, hit.p1, 'end', touchScale, wallAxis)
         }
       }
       parts.push('</g>')
@@ -554,13 +579,13 @@ function renderGraphicScale(parts, height, pxPerFt, compact) {
   }
 }
 
-/** @param {string[]} parts @param {string} openingId @param {{ x: number, y: number }} pt @param {'start' | 'end'} grip @param {number} [touchScale] */
-function appendGraphOpeningGrip(parts, openingId, pt, grip, touchScale = 1) {
+/** @param {string[]} parts @param {string} openingId @param {{ x: number, y: number }} pt @param {'start' | 'end'} grip @param {number} [touchScale] @param {'h' | 'v'} [wallAxis] */
+function appendGraphOpeningGrip(parts, openingId, pt, grip, touchScale = 1, wallAxis = 'h') {
   const scale = Math.max(1, touchScale)
   const hitR = (RESIZE_GRIP_HIT * scale) / 2
   const visR = 5
   parts.push(
-    `<circle cx="${pt.x}" cy="${pt.y}" r="${hitR}" class="graph-open-grip-hit" data-graph-opening-id="${openingId}" data-graph-opening-grip="${grip}" aria-label="拖曳调整开口宽度"><title>拖曳改宽</title></circle>`,
+    `<circle cx="${pt.x}" cy="${pt.y}" r="${hitR}" class="graph-open-grip-hit" data-graph-opening-id="${openingId}" data-graph-opening-grip="${grip}" data-wall-axis="${wallAxis}" aria-label="拖曳调整开口宽度"><title>拖曳改宽</title></circle>`,
   )
   parts.push(
     `<circle cx="${pt.x}" cy="${pt.y}" r="${visR}" class="graph-open-grip" aria-hidden="true"/>`,

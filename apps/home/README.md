@@ -30,7 +30,15 @@ npm run check
 | **508 参数** | 默认 · Avalon #508 参数化 | 拖内墙/门窗；Delete 软隐藏门窗 |
 | **墙图** | 设置页一次性转换 | ① 墙体：建/删/选/拖顶点/分割/门窗 · ②③ 划分/布置（H-W3/W4） |
 
-墙图模式下 **门窗** 挂在墙边（`graphOpenings[]`，英寸 `offsetIn`/`spanIn`），移墙跟墙走、删墙级联删开口。
+墙图模式下 **门窗** 挂在墙边（`graphOpenings[]`，英寸 `offsetIn`/`spanIn`），移墙跟墙走、删墙级联删开口（toast 可撤销）。
+
+### 编辑 UX 要点（2026-07-08）
+
+- 墙图编辑色：`--graph-accent`（`app.css`）
+- 手机编辑：**immersive**（收起 bottom nav + 隐藏 AppBar 副标题）
+- 选中条：墙图 / 508 均在手机端 compact 底栏
+- 删墙：橙色级联高亮 + 8s「撤销」toast
+- 帮助：`?` · `PlanShortcutsHelp`（墙图/508 分支 · ⌘/Ctrl 自适应）
 
 ## 数据模型（schema v3）
 
@@ -51,14 +59,17 @@ SpatialProject
 
 ```bash
 npm run test:viewport      # 508 模式定位回归（67 checks）
-npm run test:plan-edit       # 墙图 smoke：建删墙/门窗/undo/持久（6 checks）
+npm run test:plan-edit       # 墙图 smoke（8 checks）
+node scripts/qa-ui-screenshots.mjs   # UI/UX 截图（可选）
 ```
 
-截图验收报告：[`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../docs/qa/home-spatial-editor-audit-2026-07-08.md)
+## 文档
 
-## 路线图
+| 文档 | 用途 |
+|------|------|
+| [`docs/roadmap/apps/home-spatial-editor.md`](../../docs/roadmap/apps/home-spatial-editor.md) | H-W0–W5 执行方案 |
+| [`docs/roadmap/apps/home.md`](../../docs/roadmap/apps/home.md) | App 排期 |
+| [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../docs/qa/home-spatial-editor-audit-2026-07-08.md) | 功能验收 |
+| [`docs/qa/home-spatial-uiux-audit-2026-07-08.md`](../../docs/qa/home-spatial-uiux-audit-2026-07-08.md) | UI/UX 审核（Wave A/B/C） |
 
-- 执行方案：[`docs/roadmap/apps/home-spatial-editor.md`](../../docs/roadmap/apps/home-spatial-editor.md)
-- App 排期：[`docs/roadmap/apps/home.md`](../../docs/roadmap/apps/home.md)
-
-**当前进度（2026-07-08）：** H-W0 ✅ · H-W1 ✅ · H-W2 核心 ✅（§5.3 交互待补）· H-W3–W5 📋
+**当前进度（2026-07-08）：** H-W0 ✅ · H-W1 ✅ · H-W2（含 W2b/c）✅ · Wave A/B/C UX ✅ · **H-W3** 手绘分区 📋

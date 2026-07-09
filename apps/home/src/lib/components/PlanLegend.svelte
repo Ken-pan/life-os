@@ -59,6 +59,18 @@
         <span class="plan-legend-item plan-legend-edit" role="listitem">
           <i class="sw chain-edit" aria-hidden="true"></i> 绿色虚线 = 建墙预览
         </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw vert-edit" aria-hidden="true"></i> 绿点 = 墙顶点（拖曳改形）
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw graph-open-hit" aria-hidden="true"></i> 虚线框 = 门窗选中区
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw graph-grip" aria-hidden="true"></i> 端点圆点 = 改宽握把
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw delete-hint" aria-hidden="true"></i> Delete 删除门窗/墙段
+        </span>
       {:else if editMode}
         <span class="plan-legend-item plan-legend-edit" role="listitem">
           <i class="sw wall-edit" aria-hidden="true"></i> 内墙线（拖曳改尺寸）
@@ -247,7 +259,7 @@
 
   .sw.wall-graph {
     background: transparent;
-    border: 2px solid rgba(29, 107, 66, 0.55);
+    border: 2px solid color-mix(in srgb, var(--graph-accent) 55%, transparent);
     border-radius: 1px;
     height: 3px;
     width: 18px;
@@ -257,10 +269,33 @@
   .sw.chain-edit {
     background: transparent;
     border: none;
-    border-top: 2px dashed #1d6b42;
+    border-top: 2px dashed var(--graph-accent);
     border-radius: 0;
     height: 0;
     width: 18px;
+    align-self: center;
+  }
+
+  .sw.vert-edit {
+    background: var(--graph-accent);
+    border: 1.5px solid #fff;
+    border-radius: 999px;
+    width: 10px;
+    height: 10px;
+    align-self: center;
+  }
+
+  .sw.graph-open-hit {
+    background: var(--graph-accent-muted);
+    border: 1.5px dashed var(--graph-accent);
+  }
+
+  .sw.graph-grip {
+    background: var(--graph-accent);
+    border: 1.5px solid #fff;
+    border-radius: 999px;
+    width: 8px;
+    height: 8px;
     align-self: center;
   }
 
@@ -298,5 +333,12 @@
     height: 16px;
     color: var(--t2);
     flex-shrink: 0;
+  }
+  @media (max-width: 599px) {
+    .legend-toggle {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 8px 14px;
+    }
   }
 </style>

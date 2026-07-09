@@ -510,7 +510,7 @@
     padding: 2px 8px;
     border-radius: 999px;
     background: rgba(34, 139, 84, 0.12);
-    color: #1d6b42;
+    color: var(--graph-accent);
     white-space: nowrap;
   }
 

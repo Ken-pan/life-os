@@ -10,7 +10,7 @@
 |------|------|
 | 环境 | `cd apps/home && npm run dev -- --port 5197` |
 | 截图 | Playwright 脚本批量采集（桌面 1280×900、iPhone SE 375×667、深色模式） |
-| 自动化 | `npm run check` · `npm run test:viewport`（67 PASS）· `npm run test:plan-edit`（6 PASS） |
+| 自动化 | `npm run check` · `npm run test:viewport`（67 PASS）· `npm run test:plan-edit`（**8 PASS**） |
 | 508→墙图 | 设置页「从当前户型生成墙图」→ 识别 **9** 个 `graphOpenings`（6 门 + 2 窗 + 1 推拉门，不含 AC） |
 
 ## 截图索引
@@ -60,7 +60,7 @@
 |----|------|------|
 | **DOC-01** | `home-spatial-editor.md` §1 资产表仍描述 H-W0 前状态 | 已在本轮文档更新中修正 |
 | **DOC-02** | 无 `apps/home/README.md` | 已创建（H-P0） |
-| **TST-01** | smoke 未覆盖「508 转换后 9 门窗目视/坐标」 | H-W2b：prime 全量 508 → 断言 `path.door`/`line.win` 数量 |
+| **TST-01** | smoke 未覆盖「508 转换后 9 门窗目视/坐标」 | H-W5 或 H-P10：prime 全量 508 → 断言 door/window 数量 |
 
 ---
 
@@ -84,12 +84,18 @@
 5. H-W3   手绘分区
 ```
 
+## UI/UX Wave 验收（2026-07-08）
+
+功能项（UI/FN）见上文 H-W2b/c。**高标准 UI/UX** 另见专卷：
+
+- [`home-spatial-uiux-audit-2026-07-08.md`](./home-spatial-uiux-audit-2026-07-08.md) — Wave A/B/C ✅；剩余 A11Y-02 · I18N-01 · polish 见该文档 §剩余开放
+
 ## H-W2c 已修复（2026-07-08）
 
 | ID | 修复 |
 |----|------|
 | FN-01 | 选择工具：拖门窗沿墙改 `offsetIn`；端点握把改 `spanIn`；底部条「改窗/改门」「翻转」「删除」 |
-| — | `plan-graph-edit.js` 开口 pointer 管线；`graph-openings.js` move/resize/preview |
+| — | `plan-graph-edit.js` 开口 pointer 管线；`graph-openings.js` move/resize/preview/HUD |
 | — | `PlanGraphOpeningSelectionBar.svelte`；smoke +2（drag / toggle）→ **8 checks** |
 
 **参考：** [RoomSketcher 门窗拖曳沿墙](https://help.roomsketcher.com/hc/en-us/articles/360000808925) · 蓝箭头改宽

@@ -3,8 +3,9 @@
 > **Workstream：** `H-W*`（Home · Wall/空间编辑），与 `H-P*`（Home 产品杂项）并行、编号互不冲突。
 > **产品形态：** `/plan` = 浏览 + 编辑（① 墙体 → ② 划分 → ③ 布置）三步编辑器。
 > **SSOT 原则：** 墙图（点/边 graph）是第一步的唯一真源；门窗挂在墙边上；分区是用户手绘多边形；储藏由用户指派。**不再用 508 房间参数间接改墙。**
-> **状态：** 🟡 进行中 · H-W0 ✅ · H-W1 ✅ · **H-W2 核心 ✅**（§5.3 交互待补）· H-W3–W5 📋 · 创建于 2026-07-08 · 索引见 [home.md](./home.md)  
-> **截图验收：** [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../qa/home-spatial-editor-audit-2026-07-08.md) · 截图 `apps/home/screenshots/qa-hw2/`
+> **状态：** 🟡 进行中 · H-W0 ✅ · H-W1 ✅ · **H-W2 ✅**（含 W2b/c · §5.3）· **Wave A/B/C UX ✅** · H-W3–W5 📋 · 创建于 2026-07-08 · 索引见 [home.md](./home.md)  
+> **功能验收：** [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../qa/home-spatial-editor-audit-2026-07-08.md) · 截图 `apps/home/screenshots/qa-hw2/`  
+> **UI/UX 验收：** [`docs/qa/home-spatial-uiux-audit-2026-07-08.md`](../../qa/home-spatial-uiux-audit-2026-07-08.md)
 
 ---
 
@@ -14,10 +15,13 @@
 |------|------|------|
 | **H-W0** | ✅ | wallGraph hydrate、三步壳、设置页转换/返回 508 |
 | **H-W1** | ✅ | 建/删/选/拖顶点/分割、undo、test:plan-edit |
-| **H-W2** | 🟡 | `graphOpenings` 派生、508→9 开口、放置/删墙级联、设置「重新识别」；**未做** 沿墙滑动/改宽/类型切换 |
+| **H-W2** | ✅ | `graphOpenings` · 508→9 开口 · 放置/删墙级联 · §5.3 沿墙拖/改宽/门↔窗 |
+| **H-W2b** | ✅ | 手机 compact chrome · hint 去重 · GraphSelectionBar 移动可见 |
+| **H-W2c** | ✅ | `PlanGraphOpeningSelectionBar` · smoke **8 checks** |
+| **Wave A/B/C** | ✅ | UI/UX 审核 UX-01–22 主项 + A11Y-01/03 — 见 [uiux-audit](../../qa/home-spatial-uiux-audit-2026-07-08.md) |
 | **H-W3–W5** | 📋 | 分区 · 家具/储藏 · 文档/CI |
 
-**已知 UI 问题：** UI-01–06 已在 **H-W2b**（2026-07-08）修复；剩余 **FN-01**（沿墙拖动/改宽）→ H-W2c 或并入 H-W3 前。
+**下一步：** **H-W3** 手绘分区 `zones[]`
 
 ---
 
@@ -42,16 +46,18 @@
 | 文件 | 现状（2026-07-08） | 在 H-W 中的角色 |
 |------|------|-----------------|
 | [lib/spatial/wall-graph.js](../../../apps/home/src/lib/spatial/wall-graph.js) | ✅ 含 `moveVertex`/`splitWallAtMidpoint`；`buildFromWallGraph` 走 `graph-openings` 派生 | H-W1/W2 核心 |
-| [lib/spatial/graph-openings.js](../../../apps/home/src/lib/spatial/graph-openings.js) | ✅ **新增** · `convert508Openings` · `deriveWallsAndOpenings` · `createOpeningAtPoint` | H-W2 SSOT |
-| [lib/spatial/model.js](../../../apps/home/src/lib/spatial/model.js) | ✅ 已恢复 wallGraph 分支 | H-W0 |
-| [lib/state.svelte.js](../../../apps/home/src/lib/state.svelte.js) | ✅ 编辑源快照 undo · `applyEditSource` · `graphOpenings` 级联 · schema v3 迁移 | H-W0–W2 |
-| [lib/plan-graph-edit.js](../../../apps/home/src/lib/plan-graph-edit.js) | ✅ tools: select/wallAdd/remove/**opening** · 顶点拖拽 | H-W1/W2 |
-| [lib/components/FloorPlanViewer.svelte](../../../apps/home/src/lib/components/FloorPlanViewer.svelte) | ✅ graph 全接线 · `onPlaceOpening` | H-W1/W2 |
-| [lib/spatial/render-svg.js](../../../apps/home/src/lib/spatial/render-svg.js) | ✅ graph 命中层用 `wallGraph.edges`；顶点把手 | H-W1/W2 |
-| [lib/components/PlanGraphSelectionBar.svelte](../../../apps/home/src/lib/components/PlanGraphSelectionBar.svelte) | ✅ 含分割 · ⚠️ 手机隐藏（UI-02） | H-W1 |
-| [routes/plan/+page.svelte](../../../apps/home/src/routes/plan/+page.svelte) | ✅ 三步壳 + 四工具 + 手机 compact chrome（H-W2b） | H-W0–W2b |
-| [routes/settings/+page.svelte](../../../apps/home/src/routes/settings/+page.svelte) | ✅ 转换/返回/重新识别门窗 | H-W0/W2 |
-| [scripts/plan-edit-smoke.mjs](../../../apps/home/scripts/plan-edit-smoke.mjs) | ✅ 6 checks（含门窗/级联） | H-W1/W2 |
+| [lib/spatial/graph-openings.js](../../../apps/home/src/lib/spatial/graph-openings.js) | ✅ `convert508Openings` · 沿墙 move/resize · `describeGraphOpeningDrag` HUD | H-W2/c |
+| [lib/spatial/model.js](../../../apps/home/src/lib/spatial/model.js) | ✅ wallGraph hydrate 分支 | H-W0 |
+| [lib/state.svelte.js](../../../apps/home/src/lib/state.svelte.js) | ✅ 编辑源快照 undo · `removeGraphWall` undo toast · `setPlanImmersiveEdit` | H-W0–Wave C |
+| [lib/plan-graph-edit.js](../../../apps/home/src/lib/plan-graph-edit.js) | ✅ select/wallAdd/remove/opening · 开口 pointer 拖曳 | H-W1/W2c |
+| [lib/components/FloorPlanViewer.svelte](../../../apps/home/src/lib/components/FloorPlanViewer.svelte) | ✅ graph HUD · zoom chip · 编辑态左下工具条 | H-W2/Wave B |
+| [lib/spatial/render-svg.js](../../../apps/home/src/lib/spatial/render-svg.js) | ✅ graph 命中层 · 删墙级联高亮 `--graph-accent` | H-W1/Wave C |
+| [lib/components/PlanGraphSelectionBar.svelte](../../../apps/home/src/lib/components/PlanGraphSelectionBar.svelte) | ✅ 含分割 · 手机 compact 底栏 | H-W1/W2b |
+| [lib/components/PlanGraphOpeningSelectionBar.svelte](../../../apps/home/src/lib/components/PlanGraphOpeningSelectionBar.svelte) | ✅ 改窗/改门 · 翻转 · 人类可读标题 | H-W2c |
+| [lib/components/PlanSelectionBar.svelte](../../../apps/home/src/lib/components/PlanSelectionBar.svelte) | ✅ 508 选中条 · 手机 compact（Wave C UX-13） | Wave C |
+| [routes/plan/+page.svelte](../../../apps/home/src/routes/plan/+page.svelte) | ✅ 三步壳 · immersive 编辑 · 转换横幅 CTA | H-W0–Wave C |
+| [routes/settings/+page.svelte](../../../apps/home/src/routes/settings/+page.svelte) | ✅ 转换/返回/重新识别 · 墙图统计 | H-W0/W2 |
+| [scripts/plan-edit-smoke.mjs](../../../apps/home/scripts/plan-edit-smoke.mjs) | ✅ **8 checks**（含 drag/toggle/级联/持久） | H-W2c |
 | [scripts/plan-viewport-stress.mjs](../../../apps/home/scripts/plan-viewport-stress.mjs) | ✅ 508 回归 67 checks | 每阶段 |
 
 ### 1.2 git 历史资产（可直接恢复，别重写）
@@ -256,9 +262,9 @@ npm run test:plan-edit     # 新 smoke
 
 ---
 
-## 5. H-W2 — ①b 门窗：挂边开口 🟡
+## 5. H-W2 — ①b 门窗：挂边开口 ✅
 
-**状态：** H-W0–W2c 已发货（2026-07-08）· **H-W3** 手绘分区下一步
+**状态：** H-W0–W2c + Wave A/B/C UX 已发货（2026-07-08）· **H-W3** 手绘分区下一步
 
 **目标**：门窗成为墙边的寄生数据——移墙跟墙走、删墙级联删；替换 H-W0 的静态贴图。
 **前置**：H-W1。
@@ -297,9 +303,9 @@ npm run test:plan-edit     # 新 smoke
 
 **5.4 撤销栈升级为编辑源快照**（§2.2，半小时）+ `load()` 迁移补空数组（§2.3）。
 
-**5.5 smoke 扩展** ✅：放门 → 删宿主墙 → 开口级联清除（`test:plan-edit` 6 checks）。待补：拖顶点后 door path 坐标断言。
+**5.5 smoke 扩展** ✅：`test:plan-edit` **8 checks**（放门 · 沿墙拖 · 改门/窗 · 删墙级联 · undo ×2 · 持久）。待补：508 全量转换后 door/window 坐标断言（TST-01）。
 
-**5.6 截图验收（2026-07-08）** — 见 [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../qa/home-spatial-editor-audit-2026-07-08.md)
+**5.6 截图验收（2026-07-08）** — 功能见 [`home-spatial-editor-audit`](../../qa/home-spatial-editor-audit-2026-07-08.md) · UI/UX 见 [`home-spatial-uiux-audit`](../../qa/home-spatial-uiux-audit-2026-07-08.md)
 
 | 优先级 | 问题 | 方案摘要 |
 |--------|------|----------|
@@ -318,6 +324,14 @@ npm run test:plan-edit     # 新 smoke
 - `settings/+page.svelte`：墙图统计（FN-02）
 
 **下一步 H-W2c：** ~~§5.3 沿墙滑动 / 改宽 / 门↔窗切换（FN-01）~~ ✅ 2026-07-08
+
+### Wave UX（2026-07-08）✅
+
+| 波次 | 范围 | 文档 |
+|------|------|------|
+| Wave A | 手机 P0：工具两行 · 门窗不弹 drawer · silent drag · 深色画布 | [uiux-audit §Wave A](../../qa/home-spatial-uiux-audit-2026-07-08.md) |
+| Wave B | P1：`--graph-accent` · 转换 CTA · zoom chip · graph HUD · 图例 | 同上 §Wave B |
+| Wave C | P2：508 移动 bar · 删墙 undo toast · immersive 编辑 · FAB「详情」 | 同上 §Wave C |
 
 **下一步 H-W3：** 手绘分区 `zones[]`
 

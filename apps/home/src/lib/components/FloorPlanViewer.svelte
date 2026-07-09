@@ -15,6 +15,7 @@
     dragLabelAnchor,
     RESIZE_GRIP_HIT,
   } from '$lib/spatial/wall-edit.js'
+  import { describeGraphOpeningDrag } from '$lib/spatial/graph-openings.js'
   import { snapDeltaPx } from '$lib/spatial/dimensions.js'
   import {
     clampPlanZoom,
@@ -55,7 +56,7 @@
    *   onGraphSelectEdge?: (edgeId: string) => void,
    *   onGraphSelectOpening?: (openingId: string) => void,
    *   onOpeningDragStart?: (openingId: string, mode: 'move' | 'resize-start' | 'resize-end') => void,
-   *   onOpeningDrag?: (openingId: string, pt: { x: number, y: number }, mode: 'move' | 'resize-start' | 'resize-end') => void,
+   *   onOpeningDrag?: (openingId: string, pt: { x: number, y: number }, mode: 'move' | 'resize-start' | 'resize-end', clientX: number, clientY: number) => void,
    *   onOpeningDrop?: (openingId: string, pt: { x: number, y: number }, mode: 'move' | 'resize-start' | 'resize-end') => void,
    *   onPlaceOpening?: (pt: { x: number, y: number }, edgeId: string) => void,
    *   onGraphHover?: (pt: { x: number, y: number } | null, shiftKey?: boolean) => void,
@@ -132,6 +133,20 @@
   let dragPending = null
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let snapFlashTimer
+  let zoomChromeExpanded = $state(false)
+
+  const planEditing = $derived(editMode || graphEditMode)
+  const zoomChromeCollapsed = $derived(
+    planEditing && !toolbarMinimal && !zoomChromeExpanded,
+  )
+
+  $effect(() => {
+    if (!planEditing) zoomChromeExpanded = false
+  })
+
+  function toggleZoomChrome() {
+    zoomChromeExpanded = !zoomChromeExpanded
+  }
 
   const graphToolbarHint = $derived.by(() => {
     if (graphTool === 'wallAdd') {
@@ -479,9 +494,29 @@
       onRemoveEdge: (id) => onGraphRemoveEdge?.(id),
       onSelectEdge: (id) => onGraphSelectEdge?.(id),
       onSelectOpening: (id) => onGraphSelectOpening?.(id),
-      onOpeningDragStart: (id, mode) => onOpeningDragStart?.(id, mode),
-      onOpeningDrag: (id, pt, mode) => onOpeningDrag?.(id, pt, mode),
-      onOpeningDrop: (id, pt, mode) => onOpeningDrop?.(id, pt, mode),
+      onOpeningDragStart: (id, mode) => {
+        dragActive = true
+        onOpeningDragStart?.(id, mode)
+      },
+      onOpeningDrag: (id, pt, mode, clientX, clientY) => {
+        dragHudX = clientX + 14
+        dragHudY = clientY - 36
+        if (project.wallGraph) {
+          dragHint = describeGraphOpeningDrag(
+            project.wallGraph,
+            project.graphOpenings ?? [],
+            id,
+            pt,
+            mode,
+          )
+        }
+        onOpeningDrag?.(id, pt, mode, clientX, clientY)
+      },
+      onOpeningDrop: (id, pt, mode) => {
+        dragHint = null
+        dragActive = false
+        onOpeningDrop?.(id, pt, mode)
+      },
       onPlaceOpening: (pt, edgeId) => onPlaceOpening?.(pt, edgeId),
       onVertexDragStart: (id) => onVertexDragStart?.(id),
       onVertexDrag: (id, pt) => onVertexDrag?.(id, pt),
@@ -619,46 +654,75 @@
   class="plan-shell"
   class:compact
   class:edit-mode={editMode}
+  class:plan-editing={planEditing}
   class:canvas-priority={canvasPriority}
   class:toolbar-minimal={toolbarMinimal}
 >
   {#if zoomable}
-    <div class="plan-toolbar" aria-label="平面图缩放">
-      <button
-        type="button"
-        class="plan-tool"
-        onclick={zoomOut}
-        aria-label="缩小">−</button
-      >
-      <span class="plan-zoom-pct">{Math.round(zoom * 100)}%</span>
-      <button type="button" class="plan-tool" onclick={zoomIn} aria-label="放大"
-        >+</button
-      >
-      {#if !toolbarMinimal}
+    <div
+      class="plan-toolbar"
+      class:plan-toolbar-collapsed={zoomChromeCollapsed}
+      aria-label="平面图缩放"
+    >
+      {#if zoomChromeCollapsed}
         <button
           type="button"
-          class="plan-tool plan-tool-text"
-          class:active={fitMode === 'contain'}
-          onclick={() => applyFit('contain')}
-          aria-pressed={fitMode === 'contain'}
-          title="默认：完整显示整张户型">看全图</button
+          class="plan-tool plan-zoom-chip"
+          onclick={toggleZoomChrome}
+          aria-expanded="false"
+          aria-label="展开缩放控件"
+          title="展开缩放"
         >
+          {Math.round(zoom * 100)}%
+        </button>
+      {:else}
         <button
           type="button"
-          class="plan-tool plan-tool-text"
-          class:active={fitMode === 'width'}
-          onclick={() => applyFit('width')}
-          aria-pressed={fitMode === 'width'}
-          title="放大到铺满宽度，上下需滑动">铺满宽</button
+          class="plan-tool"
+          onclick={zoomOut}
+          aria-label="缩小">−</button
         >
-      {/if}
-      {#if toolbarHint && !toolbarMinimal}
-        <span
-          class="plan-hint"
-          class:plan-hint-graph={graphEditMode}
-          class:plan-hint-measure={measureMode}
-          class:plan-hint-edit={editMode && !graphEditMode}
-        >{toolbarHint}</span>
+        <span class="plan-zoom-pct">{Math.round(zoom * 100)}%</span>
+        <button type="button" class="plan-tool" onclick={zoomIn} aria-label="放大"
+          >+</button
+        >
+        {#if planEditing && !toolbarMinimal}
+          <button
+            type="button"
+            class="plan-tool plan-tool-text plan-zoom-collapse"
+            onclick={toggleZoomChrome}
+            aria-label="收起缩放控件"
+            title="收起"
+          >
+            收起
+          </button>
+        {/if}
+        {#if !toolbarMinimal}
+          <button
+            type="button"
+            class="plan-tool plan-tool-text"
+            class:active={fitMode === 'contain'}
+            onclick={() => applyFit('contain')}
+            aria-pressed={fitMode === 'contain'}
+            title="默认：完整显示整张户型">看全图</button
+          >
+          <button
+            type="button"
+            class="plan-tool plan-tool-text"
+            class:active={fitMode === 'width'}
+            onclick={() => applyFit('width')}
+            aria-pressed={fitMode === 'width'}
+            title="放大到铺满宽度，上下需滑动">铺满宽</button
+          >
+        {/if}
+        {#if toolbarHint && !toolbarMinimal}
+          <span
+            class="plan-hint"
+            class:plan-hint-graph={graphEditMode}
+            class:plan-hint-measure={measureMode}
+            class:plan-hint-edit={editMode && !graphEditMode}
+          >{toolbarHint}</span>
+        {/if}
       {/if}
     </div>
   {/if}
@@ -802,6 +866,33 @@
     box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.35);
   }
 
+  @media (min-width: 600px) {
+    .plan-shell.canvas-priority.plan-editing .plan-toolbar {
+      top: auto;
+      bottom: max(12px, var(--safe-bottom-effective));
+      left: max(12px, var(--safe-left-effective));
+      right: auto;
+    }
+  }
+
+  .plan-toolbar-collapsed {
+    padding: 3px 6px;
+  }
+
+  .plan-zoom-chip {
+    min-width: 52px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .plan-zoom-collapse {
+    color: var(--t3);
+    border-color: transparent;
+    background: transparent;
+  }
+
   .plan-toolbar {
     display: flex;
     align-items: center;
@@ -882,21 +973,21 @@
 
   .plan-viewer.graph-edit-mode {
     cursor: crosshair;
-    border-color: color-mix(in srgb, #1d6b42 60%, var(--accent));
+    border-color: color-mix(in srgb, var(--graph-accent) 60%, var(--accent));
   }
 
   .plan-hint-graph {
-    color: #1d6b42;
+    color: var(--graph-accent);
   }
 
   .plan-viewer.measure-mode {
     cursor: crosshair;
-    border-color: color-mix(in srgb, #1d6b42 55%, var(--accent));
-    box-shadow: 0 0 0 1px color-mix(in srgb, #1d6b42 30%, transparent);
+    border-color: color-mix(in srgb, var(--graph-accent) 55%, var(--accent));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--graph-accent) 30%, transparent);
   }
 
   .plan-hint-measure {
-    color: #1d6b42;
+    color: var(--graph-accent);
   }
 
   .plan-viewer.edit-mode {
@@ -984,8 +1075,8 @@
   }
 
   .drag-hud-status.ok {
-    background: #1d6b42;
-    box-shadow: 0 0 0 3px color-mix(in srgb, #1d6b42 22%, transparent);
+    background: var(--graph-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--graph-accent) 22%, transparent);
   }
 
   .drag-hud-status.bad {

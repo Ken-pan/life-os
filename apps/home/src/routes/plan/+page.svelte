@@ -22,6 +22,7 @@
     removeGraphWall,
     setOpeningDisabled,
     setPlanSubtitle,
+    setPlanImmersiveEdit,
     splitGraphWall,
     undoGraphEdit,
     undoLayoutEdit,
@@ -63,6 +64,9 @@
   /** @type {import('$lib/spatial/types.js').GraphOpening[] | null} */
   let graphPreviewOpenings = $state(null)
   let compactPlanChrome = $state(false)
+  let convertBannerDismissed = $state(false)
+
+  const CONVERT_BANNER_KEY = 'home_plan_convert_banner_dismissed'
 
   const editMode508 = $derived(planMode === 'edit' && !wallGraph)
   const graphEditMode = $derived(
@@ -74,7 +78,6 @@
   const canRedo = $derived(
     graphEditMode ? canRedoGraph() : canRedoLayout(),
   )
-  const hasEditHistory = $derived(canUndo || canRedo)
   const showSelectionBar = $derived(
     editMode508 && (selectedWall || selectedOpening),
   )
@@ -87,9 +90,7 @@
   const hideFabForBar = $derived(
     showSelectionBar || showGraphSelectionBar || showGraphOpeningSelectionBar,
   )
-  const drawerLabel = $derived(
-    graphEditMode ? '墙图' : editMode508 ? '调整' : '房间',
-  )
+  const drawerLabel = $derived('详情')
 
   const viewerProject = $derived.by(() => {
     const graph = graphPreviewGraph ?? project.wallGraph
@@ -119,7 +120,7 @@
     return '拖曳内墙与门窗调整户型 · Delete 隐藏门窗'
   })
 
-  /** AppBar 单行副标题（不与画布工具条重复长文案） */
+  /** AppBar 单行副标题（沉浸式编辑时由 layout 隐藏） */
   const appBarSubtitle = $derived.by(() => {
     if (planMode === 'browse') return '储藏区可点击'
     if (graphEditMode) {
@@ -142,6 +143,8 @@
   onMount(() => {
     bumpFit(false, 'contain')
     if (!browser) return
+    convertBannerDismissed =
+      sessionStorage.getItem(CONVERT_BANNER_KEY) === '1'
     const mq = window.matchMedia('(max-width: 599px)')
     compactPlanChrome = mq.matches
     /** @param {MediaQueryListEvent} e */
@@ -281,11 +284,23 @@
     editStep = 'walls'
     graphTool = 'wallAdd'
     if (planMode !== 'edit') planMode = 'edit'
+    convertBannerDismissed = true
+    if (browser) sessionStorage.setItem(CONVERT_BANNER_KEY, '1')
     bumpFit(false)
+  }
+
+  function dismissConvertBanner() {
+    convertBannerDismissed = true
+    if (browser) sessionStorage.setItem(CONVERT_BANNER_KEY, '1')
   }
 
   $effect(() => {
     setPlanSubtitle(appBarSubtitle)
+  })
+
+  $effect(() => {
+    setPlanImmersiveEdit(planMode === 'edit' && compactPlanChrome)
+    return () => setPlanImmersiveEdit(false)
   })
 
   $effect(() => {
@@ -431,7 +446,7 @@
   })
 </script>
 
-<div class="plan-page">
+<div class="plan-page" class:plan-page-immersive={planMode === 'edit' && compactPlanChrome}>
   <header
     class="plan-top"
     class:plan-top-edit={planMode === 'edit'}
@@ -459,7 +474,7 @@
         </button>
       </div>
 
-      {#if editMode508 && hasEditHistory}
+      {#if editMode508}
         <div class="mode-history" role="group" aria-label="编辑历史">
           <button
             type="button"
@@ -478,7 +493,7 @@
             onclick={performRedo}>↷</button
           >
         </div>
-      {:else if graphEditMode && hasEditHistory}
+      {:else if graphEditMode}
         <div class="mode-history" role="group" aria-label="编辑历史">
           <button
             type="button"
@@ -585,14 +600,30 @@
       </div>
     {/if}
 
-    {#if editMode508}
-      <p class="plan-convert-banner" role="note">
-        此户型为参数模式，
-        <button type="button" class="plan-convert-link" onclick={convertToWallGraph}>
-          转换为墙图
-        </button>
-        后可自由建删墙
-      </p>
+    {#if editMode508 && !convertBannerDismissed}
+      <div class="plan-convert-banner" role="note">
+        <div class="plan-convert-copy">
+          <strong>参数模式</strong>
+          <span>转换为墙图后可自由建删墙、沿墙拖门窗。</span>
+        </div>
+        <div class="plan-convert-actions">
+          <button
+            type="button"
+            class="plan-convert-cta"
+            onclick={convertToWallGraph}
+          >
+            转换为墙图
+          </button>
+          <button
+            type="button"
+            class="plan-convert-dismiss"
+            onclick={dismissConvertBanner}
+            aria-label="稍后提醒"
+          >
+            稍后
+          </button>
+        </div>
+      </div>
     {/if}
   </header>
 
@@ -604,6 +635,11 @@
   />
 
   <div class="plan-stage">
+    {#if wallGraph && planMode === 'browse'}
+      <p class="plan-snapshot-badge" role="note">
+        房间名与色块来自 508 参数快照 · 手绘分区（H-W3）上线后替换
+      </p>
+    {/if}
     <FloorPlanViewer
       project={viewerProject}
       canvasPriority
@@ -696,6 +732,7 @@
       <PlanSelectionBar
         {selectedWall}
         {selectedOpening}
+        compact={compactPlanChrome}
         onClear={clearSelection}
         onOpenDetails={() => (drawerOpen = true)}
       />
@@ -920,8 +957,8 @@
     display: inline-flex;
     padding: 3px;
     border-radius: 10px;
-    border: 1px solid color-mix(in srgb, #1d6b42 25%, var(--border));
-    background: color-mix(in srgb, #1d6b42 6%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--graph-accent) 25%, var(--border));
+    background: color-mix(in srgb, var(--graph-accent) 6%, var(--bg));
     gap: 2px;
   }
 
@@ -948,11 +985,21 @@
     color: var(--accent);
   }
 
+  .tool-segment .step-btn.active {
+    background: color-mix(in srgb, var(--graph-accent) 14%, var(--card));
+    color: var(--graph-accent);
+  }
+
   .plan-convert-banner {
     flex: 1 1 100%;
     margin: 0;
-    padding: 8px 10px;
+    padding: 10px 12px;
     border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 14px;
     font-size: 12px;
     line-height: 1.45;
     color: var(--t2);
@@ -960,16 +1007,48 @@
     border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
   }
 
-  .plan-convert-link {
-    padding: 0;
-    border: none;
-    background: none;
-    color: var(--accent);
-    font-size: inherit;
+  .plan-convert-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .plan-convert-copy strong {
+    color: var(--t1);
+    font-size: 13px;
+  }
+
+  .plan-convert-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .plan-convert-cta {
+    font-size: 13px;
     font-weight: 650;
+    min-height: 40px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #f5f8fa;
     cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    white-space: nowrap;
+  }
+
+  .plan-convert-dismiss {
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 40px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--t2);
+    cursor: pointer;
   }
 
   .graph-aside {
@@ -1036,6 +1115,18 @@
 
   .mode-undo-btn:not(:disabled):hover {
     background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  }
+
+  .plan-snapshot-badge {
+    flex: 0 0 auto;
+    margin: 0 0 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--t2);
+    background: color-mix(in srgb, var(--graph-accent) 8%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--graph-accent) 20%, var(--border));
   }
 
   .plan-stage {
@@ -1247,6 +1338,14 @@
     .mode-undo-btn {
       width: 44px;
       height: 44px;
+    }
+
+    .plan-page-immersive :global(.plan-shell.canvas-priority .plan-viewer:not(.compact)) {
+      min-height: min(78dvh, 860px);
+    }
+
+    .plan-page-immersive .plan-drawer-fab {
+      bottom: calc(var(--safe-bottom-effective) + 14px);
     }
   }
 

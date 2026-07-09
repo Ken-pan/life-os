@@ -1,6 +1,19 @@
 <script>
+  import { browser } from '$app/environment'
+
   /** @type {{ open?: boolean, contextHint?: string, graphEditMode?: boolean, onClose?: () => void }} */
   let { open = false, contextHint = '', graphEditMode = false, onClose } = $props()
+
+  /** @type {HTMLButtonElement | null} */
+  let closeBtn = $state(null)
+
+  const modKey = $derived(
+    browser && /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘' : 'Ctrl+',
+  )
+
+  $effect(() => {
+    if (open && closeBtn) closeBtn.focus()
+  })
 </script>
 
 {#if open}
@@ -13,20 +26,27 @@
       class="help-panel"
       onclick={(e) => e.stopPropagation()}
       role="dialog"
+      aria-modal="true"
       aria-labelledby="plan-help-title"
       tabindex="-1"
     >
       <header class="help-head">
         <h2 id="plan-help-title" class="help-title">平面图快捷键</h2>
-        <button type="button" class="help-close" onclick={() => onClose?.()} aria-label="关闭">×</button>
+        <button
+          type="button"
+          class="help-close"
+          bind:this={closeBtn}
+          onclick={() => onClose?.()}
+          aria-label="关闭"
+        >×</button>
       </header>
       <dl class="help-list">
         <div class="help-row"><dt><kbd>?</kbd></dt><dd>打开/关闭本帮助</dd></div>
         <div class="help-row"><dt><kbd>E</kbd></dt><dd>浏览 ↔ 编辑</dd></div>
         <div class="help-row"><dt><kbd>F</kbd></dt><dd>切换全图 / 铺满宽度</dd></div>
         <div class="help-row"><dt><kbd>Esc</kbd></dt><dd>取消选中 → 退出编辑</dd></div>
-        <div class="help-row"><dt><kbd>⌘Z</kbd></dt><dd>撤销修改</dd></div>
-        <div class="help-row"><dt><kbd>⌘⇧Z</kbd></dt><dd>重做</dd></div>
+        <div class="help-row"><dt><kbd>{modKey}Z</kbd></dt><dd>撤销修改</dd></div>
+        <div class="help-row"><dt><kbd>{modKey}{modKey === '⌘' ? '⇧Z' : 'Y'}</kbd></dt><dd>重做</dd></div>
         {#if graphEditMode}
           <div class="help-row"><dt><kbd>1–3</kbd></dt><dd>切换建墙 / 选择 / 删墙工具</dd></div>
           <div class="help-row">

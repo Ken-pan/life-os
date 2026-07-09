@@ -3,6 +3,9 @@
 
 :root {
   --storage-accent: #5c758c;
+  /* Wall-graph edit accent — distinct from global --accent for CAD edit mode */
+  --graph-accent: #1d6b42;
+  --graph-accent-muted: color-mix(in srgb, var(--graph-accent) 18%, transparent);
   --plan-paper: #eef1f4;
   --plan-room: #e8edf1;
   --plan-furn: #c5ced8;
@@ -242,6 +245,19 @@ main.plan-route {
 @media (max-width: 839px) {
   main.plan-route {
     padding-bottom: calc(var(--mobile-tabbar-total-h) + var(--safe-bottom-effective) + 6px);
+  }
+
+  .app-shell.plan-immersive-edit main.plan-route {
+    padding-bottom: calc(var(--safe-bottom-effective) + 8px);
+  }
+}
+
+/* Plan edit immersive: hide bottom nav chrome, lift selection bars */
+@media (max-width: 599px) {
+  .app-shell.plan-immersive-edit .sel-bar,
+  .app-shell.plan-immersive-edit .graph-sel-bar,
+  .app-shell.plan-immersive-edit .graph-open-bar {
+    bottom: calc(var(--safe-bottom-effective) + 72px);
   }
 }
 
