@@ -34,6 +34,9 @@ const lifeOsAuth = createLifeOsAuth(supabase, {
     auth.session = session
     auth.user = session?.user ?? null
     auth.ready = true
+    // 与 React AuthGate 对齐：session 为空即走登出清理（含冷启动未登录）。
+    // packages/sync 的 onSignedOut 只在 SIGNED_OUT 触发，不会覆盖「从未登录」。
+    if (!session) signedOutHandler?.()
   },
   onSignedOut: () => {
     clearAllCache()
