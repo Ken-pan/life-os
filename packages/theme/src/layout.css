@@ -38,7 +38,8 @@
 
   /* 底栏（mobile/tablet 共用；desktop 不渲染） */
   --tabbar-h: 62px;
-  --tabbar-total-h: calc(var(--tabbar-h) + max(var(--space-2, 8px), var(--safe-bottom-effective, 0px)));
+  --mobile-tabbar-safe-padding: max(var(--space-2, 8px), env(safe-area-inset-bottom, 0px));
+  --tabbar-total-h: calc(var(--tabbar-h) + var(--mobile-tabbar-safe-padding));
 }
 
 @media (--life-os-desktop) {

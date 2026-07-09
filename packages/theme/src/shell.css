@@ -649,6 +649,14 @@ html {
   padding-bottom: var(--header-block-end);
 }
 
+@media (--life-os-mobile) {
+
+  .page-head,
+  .day-head {
+    background-color: var(--bg);
+  }
+}
+
 @media (--life-os-desktop) {
 
   .main-wrap:not(:has(> .appbar)) #main-content .wrap:not(:has(> :is(.page-head, .day-head):first-child)),
@@ -921,18 +929,6 @@ html {
   }
 }
 
-@media (--life-os-mobile) {
-  @media (display-mode: standalone) {
-
-    .bottom-shell .nav,
-    .bottom-shell .bottom-nav,
-    .bottom-shell .mobile-tabbar {
-      padding-bottom: max(var(--space-2),
-          min(env(safe-area-inset-bottom, 0px), 0.75rem));
-    }
-  }
-}
-
 /* ===== 底栏（Planner/Fitness .nav · Finance .mobile-tabbar）===== */
 .nav,
 .mobile-tabbar {
@@ -946,7 +942,7 @@ html {
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
   padding:
-    var(--space-2) var(--inset-inline-end) max(var(--space-2), var(--safe-bottom-effective)) var(--inset-inline-start);
+    var(--space-2) var(--inset-inline-end) var(--mobile-tabbar-safe-padding, max(var(--space-2), env(safe-area-inset-bottom, 0px))) var(--inset-inline-start);
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 

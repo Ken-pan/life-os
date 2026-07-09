@@ -167,6 +167,9 @@
   >
     {@render children()}
     <Fab />
+  </div>
+
+  <div class="bottom-shell">
     <BottomNav />
   </div>
 </div>

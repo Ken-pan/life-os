@@ -122,7 +122,8 @@
   --fab-radius: var(--radius-pill);
   --nav-h: var(--tabbar-h, 62px);
   --mobile-tabbar-h: var(--tabbar-h, 62px);
-  --mobile-tabbar-total-h: var(--tabbar-total-h, calc(var(--nav-h) + max(var(--space-2), var(--safe-bottom-effective))));
+  --mobile-tabbar-safe-padding: max(var(--space-2), env(safe-area-inset-bottom, 0px));
+  --mobile-tabbar-total-h: var(--tabbar-total-h, calc(var(--nav-h) + var(--mobile-tabbar-safe-padding)));
   --mobile-content-inset: calc(var(--fab-h) + var(--fab-offset-above-tabbar) + var(--mobile-tabbar-total-h));
   --mobile-content-inset-tabbar: calc(var(--mobile-tabbar-total-h) + var(--space-3));
   --mobile-content-inset-minimal: calc(var(--space-6) + var(--safe-bottom-effective));
@@ -161,7 +162,7 @@
   --viewport-stable-h: 100svh;
   --bottom-chrome-h: var(--mobile-tabbar-total-h);
   --safari-chrome-tint-top-bg: var(--bg);
-  --safari-chrome-tint-bottom-bg: var(--bg-elevated, var(--card));
+  --safari-chrome-tint-bottom-bg: var(--nav-bg, var(--bg-elevated, var(--card)));
   --z-safe-area-tint: 19;
   --z-mobile-chrome: 35;
   --z-nav: 30;

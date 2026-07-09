@@ -100,9 +100,13 @@
   "fab-radius": { "$type": "cssValue", "$value": "var(--radius-pill)" },
   "nav-h": { "$type": "cssValue", "$value": "var(--tabbar-h, 62px)" },
   "mobile-tabbar-h": { "$type": "cssValue", "$value": "var(--tabbar-h, 62px)" },
+  "mobile-tabbar-safe-padding": {
+    "$type": "cssValue",
+    "$value": "max(var(--space-2), env(safe-area-inset-bottom, 0px))"
+  },
   "mobile-tabbar-total-h": {
     "$type": "cssValue",
-    "$value": "var(--tabbar-total-h, calc(var(--nav-h) + max(var(--space-2), var(--safe-bottom-effective))))"
+    "$value": "var(--tabbar-total-h, calc(var(--nav-h) + var(--mobile-tabbar-safe-padding)))"
   },
   "mobile-content-inset": {
     "$type": "cssValue",
@@ -195,7 +199,7 @@
   "safari-chrome-tint-top-bg": { "$type": "cssValue", "$value": "var(--bg)" },
   "safari-chrome-tint-bottom-bg": {
     "$type": "cssValue",
-    "$value": "var(--bg-elevated, var(--card))"
+    "$value": "var(--nav-bg, var(--bg-elevated, var(--card)))"
   },
   "z-safe-area-tint": { "$type": "number", "$value": "19" },
   "z-mobile-chrome": { "$type": "number", "$value": "35" },

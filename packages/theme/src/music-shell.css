@@ -258,15 +258,6 @@
     left: auto;
     right: auto;
   }
-
-  @media (display-mode: standalone) {
-
-    .bottom-shell .nav,
-    .bottom-shell .bottom-nav {
-      padding-bottom: max(var(--space-2),
-          min(env(safe-area-inset-bottom, 0px), 0.75rem));
-    }
-  }
 }
 
 .mini-player-link {

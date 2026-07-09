@@ -108,17 +108,19 @@ body,
   .safari-chrome-tint-top {
     top: 0;
     z-index: var(--z-safe-area-tint);
-    height: max(6px, env(safe-area-inset-top, 0px));
-    min-height: 6px;
+    /* +1px overlap avoids seam under Dynamic Island / notch */
+    height: calc(var(--safe-top-effective) + 1px);
+    min-height: 0;
     background-color: var(--safari-chrome-tint-top-bg, var(--bg));
   }
 
   .safari-chrome-tint-bottom {
     bottom: 0;
-    z-index: var(--z-mobile-chrome);
-    height: max(12px, env(safe-area-inset-bottom, 0px));
-    min-height: 6px;
-    background-color: var(--safari-chrome-tint-bottom-bg, var(--bg-elevated, var(--card)));
+    /* Sit behind fixed tab bar; fills home-indicator strip if nav bg is translucent */
+    z-index: calc(var(--z-nav, 30) - 1);
+    height: var(--mobile-tabbar-safe-padding, max(var(--space-2), env(safe-area-inset-bottom, 0px)));
+    min-height: 0;
+    background-color: var(--safari-chrome-tint-bottom-bg, var(--nav-bg, var(--bg-elevated, var(--card))));
   }
 }
 

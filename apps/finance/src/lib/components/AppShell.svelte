@@ -246,36 +246,38 @@
     </main>
   </div>
 
-  <nav
-    class="mobile-tabbar{moreSheet ? ' is-backgrounded' : ''}"
-    aria-label={t('nav.mainNavAria')}
-  >
-    <div class="mobile-tabbar-inner">
-      {#each mobilePrimaryTabs as tabItem (tabItem.id)}
+  <div class="bottom-shell">
+    <nav
+      class="mobile-tabbar{moreSheet ? ' is-backgrounded' : ''}"
+      aria-label={t('nav.mainNavAria')}
+    >
+      <div class="mobile-tabbar-inner">
+        {#each mobilePrimaryTabs as tabItem (tabItem.id)}
+          <button
+            type="button"
+            class="mobile-tab{currentTab === tabItem.id ? ' active' : ''}"
+            onclick={() => switchTab(tabItem.href)}
+            aria-current={currentTab === tabItem.id ? 'page' : undefined}
+            aria-label={tabItem.label}
+          >
+            <tabItem.icon size={17} strokeWidth={1.75} />
+            <span>{tabItem.label}</span>
+          </button>
+        {/each}
         <button
           type="button"
-          class="mobile-tab{currentTab === tabItem.id ? ' active' : ''}"
-          onclick={() => switchTab(tabItem.href)}
-          aria-current={currentTab === tabItem.id ? 'page' : undefined}
-          aria-label={tabItem.label}
+          class="mobile-tab{moreSheet || isMoreNavActive(currentTab) ? ' active' : ''}"
+          onclick={() => (moreSheet = !moreSheet)}
+          aria-expanded={moreSheet}
+          aria-haspopup="dialog"
+          aria-label={t('common.more')}
         >
-          <tabItem.icon size={17} strokeWidth={1.75} />
-          <span>{tabItem.label}</span>
+          <MoreHorizontal size={17} strokeWidth={1.75} />
+          <span>{t('common.more')}</span>
         </button>
-      {/each}
-      <button
-        type="button"
-        class="mobile-tab{moreSheet || isMoreNavActive(currentTab) ? ' active' : ''}"
-        onclick={() => (moreSheet = !moreSheet)}
-        aria-expanded={moreSheet}
-        aria-haspopup="dialog"
-        aria-label={t('common.more')}
-      >
-        <MoreHorizontal size={17} strokeWidth={1.75} />
-        <span>{t('common.more')}</span>
-      </button>
-    </div>
-  </nav>
+      </div>
+    </nav>
+  </div>
 
   {#if moreSheet}
     <div class="mobile-more-backdrop" onclick={() => (moreSheet = false)} aria-hidden="true"></div>

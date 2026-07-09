@@ -125,6 +125,7 @@ const STRUCTURAL_SECTIONS = [
     'fab-radius',
     'nav-h',
     'mobile-tabbar-h',
+    'mobile-tabbar-safe-padding',
     'mobile-tabbar-total-h',
     'mobile-content-inset',
     'mobile-content-inset-tabbar',

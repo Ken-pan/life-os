@@ -195,7 +195,9 @@
 </div>
 
 <TimerWidget />
-<BottomNav />
+<div class="bottom-shell">
+  <BottomNav />
+</div>
 <WeightModal />
 <SetLogSheet />
 <SkipModal />
