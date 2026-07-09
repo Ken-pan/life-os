@@ -54,13 +54,16 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   placementTool?: 'place' | 'storage',
  *   selectedPlacement?: string,
  *   showFurniture?: boolean,
+ *   showRoomEnglish?: boolean,
  * }} [opts]
  */
 export function renderFloorPlanSvg(project, opts = {}) {
   const { width, height } = project.viewport
   const step = project.gridStep ?? 52
   const compact = opts.compact ?? false
-  const pxPerFt = project.layoutConfig?.pxPerFt ?? project.wallGraph?.pxPerFt ?? 36
+  const showRoomEnglish = opts.showRoomEnglish ?? false
+  const pxPerFt =
+    project.layoutConfig?.pxPerFt ?? project.wallGraph?.pxPerFt ?? 36
   const touchScale = Math.max(1, opts.touchScale ?? 1)
   const wallHitStroke = Math.round(18 * touchScale)
   const wallOnStroke = Math.round(20 * touchScale)
@@ -212,7 +215,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
     parts.push(
       `<text x="${cx}" y="${cy}" text-anchor="middle" class="room-zh${dimmed}">${esc(room.nameZh)}</text>`,
     )
-    if (!compact) {
+    if (showRoomEnglish && !compact) {
       parts.push(
         `<text x="${cx}" y="${cy + 18}" text-anchor="middle" class="room-en${dimmed}">${esc(room.nameEn)}</text>`,
       )
@@ -247,6 +250,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
   }
 
   for (const zone of project.storageZones) {
+    if (!zone.bounds) continue
     const { x, y, w, h } = zone.bounds
     const on = opts.highlightZone === zone.code
     const unassigned = !zone.zoneId && !zone.placementId
@@ -436,8 +440,22 @@ export function renderFloorPlanSvg(project, opts = {}) {
           `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="graph-open-hit${on ? ' graph-open-on' : ''}" data-graph-opening-id="${go.id}" data-plan-tip="${esc(title)}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(title)}</title></rect>`,
         )
         if (on && opts.graphTool === 'select') {
-          appendGraphOpeningGrip(parts, go.id, hit.p0, 'start', touchScale, wallAxis)
-          appendGraphOpeningGrip(parts, go.id, hit.p1, 'end', touchScale, wallAxis)
+          appendGraphOpeningGrip(
+            parts,
+            go.id,
+            hit.p0,
+            'start',
+            touchScale,
+            wallAxis,
+          )
+          appendGraphOpeningGrip(
+            parts,
+            go.id,
+            hit.p1,
+            'end',
+            touchScale,
+            wallAxis,
+          )
         }
       }
       parts.push('</g>')
@@ -532,6 +550,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
   }
 
   for (const zone of project.storageZones) {
+    if (!zone.marker) continue
     const { x, y } = zone.marker
     const r = compact ? 8 : 11
     const markerTitle = opts.interactive
@@ -624,9 +643,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
       ]
         .filter(Boolean)
         .join(' ')
-      const tip = rmMode
-        ? `${z.nameZh} — 点击删除`
-        : `${z.nameZh} — 点击选中`
+      const tip = rmMode ? `${z.nameZh} — 点击删除` : `${z.nameZh} — 点击选中`
       parts.push(
         `<polygon points="${pts}" class="${hitCls}" data-spatial-zone-id="${z.id}" data-plan-tip="${esc(tip)}" data-zone-stale="${z.stale ? '1' : '0'}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(tip)}</title></polygon>`,
       )
@@ -659,7 +676,9 @@ export function renderFloorPlanSvg(project, opts = {}) {
   }
 
   if (opts.placementEditMode && project.placements?.length) {
-    parts.push('<g class="edit-layer placement-edit-layer" aria-label="家具编辑">')
+    parts.push(
+      '<g class="edit-layer placement-edit-layer" aria-label="家具编辑">',
+    )
     for (const p of project.placements) {
       const on = opts.selectedPlacement === p.id
       parts.push(
@@ -708,7 +727,14 @@ function renderGraphicScale(parts, height, pxPerFt, compact) {
 }
 
 /** @param {string[]} parts @param {string} openingId @param {{ x: number, y: number }} pt @param {'start' | 'end'} grip @param {number} [touchScale] @param {'h' | 'v'} [wallAxis] */
-function appendGraphOpeningGrip(parts, openingId, pt, grip, touchScale = 1, wallAxis = 'h') {
+function appendGraphOpeningGrip(
+  parts,
+  openingId,
+  pt,
+  grip,
+  touchScale = 1,
+  wallAxis = 'h',
+) {
   const scale = Math.max(1, touchScale)
   const hitR = (RESIZE_GRIP_HIT * scale) / 2
   const visR = 5

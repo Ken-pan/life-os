@@ -1016,8 +1016,8 @@
     .plan-shell.canvas-priority.plan-editing .plan-toolbar {
       top: auto;
       bottom: var(--stack-tight);
-      left: var(--stack-tight);
-      right: auto;
+      right: var(--stack-tight);
+      left: auto;
     }
   }
 

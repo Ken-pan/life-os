@@ -1,12 +1,8 @@
 <script>
   import {
     applyLayoutConfig,
-    canRedoLayout,
-    canUndoLayout,
     getActiveProject,
     getLayoutDragPreview,
-    redoLayoutEdit,
-    undoLayoutEdit,
   } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
   import { formatFtIn } from '$lib/spatial/dimensions.js'
@@ -36,8 +32,6 @@
   const previewConfig = $derived(getLayoutDragPreview())
   const activeConfig = $derived(previewConfig ?? config)
   const isPreview = $derived(previewConfig !== null)
-  const undoAvailable = $derived(canUndoLayout())
-  const redoAvailable = $derived(canRedoLayout())
 
   const wallBinding = $derived(
     selectedWall ? resolveWallBinding(selectedWall) : null,
@@ -204,24 +198,6 @@
           {detailsOpen ? '收起' : '尺寸'}
         </button>
       {/if}
-      <button
-        type="button"
-        class="sel-btn"
-        disabled={!undoAvailable}
-        title="撤销 (⌘Z)"
-        onclick={undoLayoutEdit}
-      >
-        撤销
-      </button>
-      <button
-        type="button"
-        class="sel-btn"
-        disabled={!redoAvailable}
-        title="重做"
-        onclick={redoLayoutEdit}
-      >
-        重做
-      </button>
       <button type="button" class="sel-btn sel-btn-accent" onclick={() => onOpenDetails?.()}>
         详情
       </button>

@@ -1,11 +1,5 @@
 <script>
-  import {
-    canRedoGraph,
-    canUndoGraph,
-    redoGraphEdit,
-    removeGraphWall,
-    undoGraphEdit,
-  } from '$lib/state.svelte.js'
+  import { removeGraphWall } from '$lib/state.svelte.js'
 
   /** @type {{
    *   selectedEdge?: string,
@@ -15,9 +9,6 @@
    *   onSplit?: () => void,
    * }} */
   let { selectedEdge = '', compact = false, onClear, onOpenDetails, onSplit } = $props()
-
-  const undoAvailable = $derived(canUndoGraph())
-  const redoAvailable = $derived(canRedoGraph())
 </script>
 
 {#if selectedEdge}
@@ -31,18 +22,6 @@
       <span class="graph-sel-title">墙段 · {selectedEdge}</span>
     {/if}
     <div class="graph-sel-actions">
-      <button
-        type="button"
-        class="graph-sel-btn"
-        disabled={!undoAvailable}
-        onclick={undoGraphEdit}
-      >撤销</button>
-      <button
-        type="button"
-        class="graph-sel-btn"
-        disabled={!redoAvailable}
-        onclick={redoGraphEdit}
-      >重做</button>
       <button
         type="button"
         class="graph-sel-btn graph-sel-warn"

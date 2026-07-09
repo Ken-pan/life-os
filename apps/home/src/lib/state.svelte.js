@@ -21,6 +21,7 @@ import {
 } from './spatial/wall-edit.js'
 import {
   addWallSegment,
+  createEmptyWallGraph,
   deleteWallEdge,
   export508ToWallGraph,
   moveVertex,
@@ -466,6 +467,99 @@ export function revertToParametric508() {
   })
   setActiveProject(next)
   toast('已切回 508 参数化编辑')
+}
+
+/**
+ * Clear everything except the outermost walls: interior walls, openings,
+ * zones (rooms) and placements are removed so the plan can be redrawn from
+ * scratch. Storage zone item lists are kept but unassigned from geometry.
+ */
+export function resetToOuterShell() {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const hydrated = hydrateProject(raw)
+  const sourceGraph =
+    raw.layoutMode === 'wallGraph' && raw.wallGraph
+      ? raw.wallGraph
+      : export508ToWallGraph(hydrated)
+  const exteriorEdges = sourceGraph.edges.filter((e) => e.exterior)
+  const boundsEdges = exteriorEdges.length ? exteriorEdges : sourceGraph.edges
+  if (!boundsEdges.length) {
+    toast('墙图为空，没有可保留的外墙', 'warn')
+    return false
+  }
+  const vById = Object.fromEntries(sourceGraph.vertices.map((v) => [v.id, v]))
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const edge of boundsEdges) {
+    for (const v of [vById[edge.a], vById[edge.b]]) {
+      if (!v) continue
+      minX = Math.min(minX, v.x)
+      minY = Math.min(minY, v.y)
+      maxX = Math.max(maxX, v.x)
+      maxY = Math.max(maxY, v.y)
+    }
+  }
+  if (!(maxX > minX) || !(maxY > minY)) {
+    toast('外墙范围无效，无法清空', 'warn')
+    return false
+  }
+
+  if (raw.wallGraph) {
+    pushGraphUndo()
+  } else {
+    // Coming from 508 parametric mode: seed undo with the fully converted
+    // wall graph so ⌘Z restores the previous layout instead of nothing.
+    graphUndoStack = [
+      JSON.stringify({
+        wallGraph: sourceGraph,
+        graphOpenings: convert508Openings(hydrated, sourceGraph),
+        zones: [],
+        placements: [],
+      }),
+    ]
+    graphRedoStack = []
+    persistGraphUndoStacks()
+  }
+
+  let shell = createEmptyWallGraph(sourceGraph.pxPerFt, sourceGraph.margin)
+  const sides = [
+    [minX, minY, maxX, minY],
+    [maxX, minY, maxX, maxY],
+    [maxX, maxY, minX, maxY],
+    [minX, maxY, minX, minY],
+  ]
+  for (const [x1, y1, x2, y2] of sides) {
+    shell = addWallSegment(shell, x1, y1, x2, y2, { exterior: true }).graph
+  }
+
+  // 物品清单保留；几何位置清空，待「标储藏」重新指派后才在图上显示
+  const storageZones = (raw.storageZones ?? []).map((sz) => ({
+    ...sz,
+    zoneId: undefined,
+    placementId: undefined,
+    bounds: undefined,
+    marker: undefined,
+  }))
+  const next = hydrateProject({
+    ...raw,
+    layoutMode: 'wallGraph',
+    wallGraph: shell,
+    graphOpenings: [],
+    zones: [],
+    placements: [],
+    rooms: [],
+    openings: [],
+    storageZones,
+  })
+  setActiveProject(next)
+  toast('已清空户型 · 仅保留最外围墙，可开始重新绘制', {
+    actionLabel: '撤销',
+    onAction: () => undoGraphEdit(),
+    duration: 8000,
+  })
+  return true
 }
 
 /**

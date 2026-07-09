@@ -278,7 +278,7 @@ main.plan-route>.plan-top:first-child {
   .app-shell.plan-immersive-edit .sel-bar,
   .app-shell.plan-immersive-edit .graph-sel-bar,
   .app-shell.plan-immersive-edit .graph-open-bar {
-    bottom: calc(var(--safe-bottom-effective) + 72px);
+    bottom: calc(var(--safe-bottom-effective) + 14px);
   }
 }
 

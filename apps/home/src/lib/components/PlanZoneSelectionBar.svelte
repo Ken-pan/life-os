@@ -1,13 +1,5 @@
 <script>
-  import {
-    canRedoGraph,
-    canUndoGraph,
-    confirmZone,
-    redoGraphEdit,
-    removeZone,
-    undoGraphEdit,
-    updateZone,
-  } from '$lib/state.svelte.js'
+  import { confirmZone, removeZone, updateZone } from '$lib/state.svelte.js'
   import { ZONE_COLORS } from '$lib/spatial/zones.js'
 
   /** @type {{
@@ -16,9 +8,6 @@
    *   onClear?: () => void,
    * }} */
   let { zone, compact = false, onClear } = $props()
-
-  const undoAvailable = $derived(canUndoGraph())
-  const redoAvailable = $derived(canRedoGraph())
 
   let nameDraft = $state('')
   let detailsOpen = $state(false)
@@ -65,7 +54,7 @@
         aria-label="分区名称"
       />
       <div class="zone-colors" role="group" aria-label="分区颜色">
-        {#each ZONE_COLORS.slice(0, 5) as color}
+        {#each ZONE_COLORS.slice(0, 5) as color (color)}
           <button
             type="button"
             class="zone-color-swatch"
@@ -97,18 +86,6 @@
         onclick={() => confirmZone(zone.id)}
       >确认</button>
     {/if}
-    <button
-      type="button"
-      class="graph-sel-btn"
-      disabled={!undoAvailable}
-      onclick={undoGraphEdit}
-    >撤销</button>
-    <button
-      type="button"
-      class="graph-sel-btn"
-      disabled={!redoAvailable}
-      onclick={redoGraphEdit}
-    >重做</button>
     <button
       type="button"
       class="graph-sel-btn graph-sel-warn"

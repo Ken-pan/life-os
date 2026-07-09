@@ -27,6 +27,7 @@
     removeGraphWall,
     removePlacement,
     removeZone,
+    resetToOuterShell,
     rotatePlacementById,
     setOpeningDisabled,
     setPlanSubtitle,
@@ -50,6 +51,7 @@
   import PlanPlacementSelectionBar from '$lib/components/PlanPlacementSelectionBar.svelte'
   import { PLACEMENT_KINDS, STORAGE_CODES } from '$lib/spatial/placements.js'
   import PlanContextMenu from '$lib/components/PlanContextMenu.svelte'
+  import PlanEditToolbar from '$lib/components/PlanEditToolbar.svelte'
   import PlanShortcutsHelp from '$lib/components/PlanShortcutsHelp.svelte'
 
   const project = $derived(getActiveProject())
@@ -237,6 +239,12 @@
     /** @param {MediaQueryListEvent} e */
     const onMq = (e) => {
       compactPlanChrome = e.matches
+      // Desktop has no erase-mode chrome (select → Delete / selection bar).
+      // Clear orphan remove tools left over from compact.
+      if (!e.matches) {
+        if (graphTool === 'remove') setGraphTool('select')
+        if (zoneTool === 'zoneRemove') setZoneTool('zoneSelect')
+      }
     }
     mq.addEventListener('change', onMq)
     return () => mq.removeEventListener('change', onMq)
@@ -487,9 +495,9 @@
   function setEditStep(step) {
     if (!wallGraph && step !== 'walls') return
     if (step === 'place' && !wallGraph) return
-    if (editStep === step) return
+    const prev = editStep
     editStep = step
-    syncEditStepSideEffects()
+    if (prev !== step) syncEditStepSideEffects()
   }
 
   /** @param {import('$lib/plan-graph-edit.js').GraphTool} tool */
@@ -513,6 +521,87 @@
   function dismissConvertBanner() {
     convertBannerDismissed = true
     if (browser) sessionStorage.setItem(CONVERT_BANNER_KEY, '1')
+  }
+
+  /** 浮动工具栏当前高亮的工具 */
+  const toolbarActiveTool = $derived.by(() => {
+    if (planMode !== 'edit' || !wallGraph) return null
+    if (editStep === 'walls') {
+      if (graphTool === 'wallAdd') return 'wall'
+      if (graphTool === 'opening') return 'opening'
+      if (graphTool === 'select') return 'select'
+      return null
+    }
+    if (editStep === 'zones') {
+      if (zoneTool === 'zoneAdd') return 'zone'
+      if (zoneTool === 'zoneSelect') return 'select'
+      return null
+    }
+    if (editStep === 'place') {
+      return placementTool === 'place' ? 'furniture' : null
+    }
+    return null
+  })
+
+  /** @param {'select' | 'wall' | 'opening' | 'zone' | 'furniture'} id */
+  function activateToolbarTool(id) {
+    if (!wallGraph) {
+      convertToWallGraph()
+    } else if (planMode !== 'edit') {
+      setPlanMode('edit')
+    }
+    if (id === 'select') {
+      if (editStep === 'zones') {
+        setZoneTool('zoneSelect')
+      } else {
+        setEditStep('walls')
+        setGraphTool('select')
+      }
+      return
+    }
+    if (id === 'wall') {
+      setEditStep('walls')
+      setGraphTool('wallAdd')
+      return
+    }
+    if (id === 'opening') {
+      setEditStep('walls')
+      setGraphTool('opening')
+      return
+    }
+    if (id === 'zone') {
+      setEditStep('zones')
+      setZoneTool('zoneAdd')
+      return
+    }
+    if (id === 'furniture') {
+      setEditStep('place')
+      setPlacementTool('place')
+    }
+  }
+
+  function handleResetToShell() {
+    const ok = window.confirm(
+      '清空户型？将删除所有内墙、门窗、分区与房间，仅保留最外围墙（可用 ⌘Z 撤销）。',
+    )
+    if (!ok) return
+    if (!resetToOuterShell()) return
+    clearSelection()
+    clearGraphChain()
+    clearZoneChain()
+    graphPreviewGraph = null
+    graphPreviewOpenings = null
+    previewZones = null
+    previewPlacements = null
+    if (planMode !== 'edit') {
+      setPlanMode('edit')
+    } else {
+      setEditStep('walls')
+    }
+    graphTool = 'wallAdd'
+    convertBannerDismissed = true
+    if (browser) sessionStorage.setItem(CONVERT_BANNER_KEY, '1')
+    bumpFit(false, 'contain')
   }
 
   $effect(() => {
@@ -680,11 +769,12 @@
         return
       }
 
+      // Align with PlanEditToolbar: select / wall / opening (delete = select + Delete / bar)
       if (!inField && graphEditMode && ['1', '2', '3'].includes(e.key)) {
         e.preventDefault()
         if (e.key === '1') setGraphTool('select')
         if (e.key === '2') setGraphTool('wallAdd')
-        if (e.key === '3') setGraphTool('remove')
+        if (e.key === '3') setGraphTool('opening')
         return
       }
 
@@ -757,8 +847,13 @@
             <select
               class="plan-tool-select"
               aria-label="编辑步骤"
-              bind:value={editStep}
-              onchange={syncEditStepSideEffects}
+              value={editStep}
+              onchange={(e) =>
+                setEditStep(
+                  /** @type {'walls' | 'zones' | 'place'} */ (
+                    /** @type {HTMLSelectElement} */ (e.currentTarget).value
+                  ),
+                )}
             >
               <option value="walls">① 墙体</option>
               <option value="zones" disabled={!wallGraph}>② 划分</option>
@@ -772,8 +867,13 @@
               <select
                 class="plan-tool-select"
                 aria-label="墙图工具"
-                bind:value={graphTool}
-                onchange={() => setGraphTool(graphTool)}
+                value={graphTool}
+                onchange={(e) =>
+                  setGraphTool(
+                    /** @type {import('$lib/plan-graph-edit.js').GraphTool} */ (
+                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
+                    ),
+                  )}
               >
                 <option value="select">选择</option>
                 <option value="wallAdd">建墙</option>
@@ -787,8 +887,13 @@
               <select
                 class="plan-tool-select"
                 aria-label="分区工具"
-                bind:value={zoneTool}
-                onchange={() => setZoneTool(zoneTool)}
+                value={zoneTool}
+                onchange={(e) =>
+                  setZoneTool(
+                    /** @type {import('$lib/plan-zone-edit.js').ZoneTool} */ (
+                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
+                    ),
+                  )}
               >
                 <option value="zoneAdd">画区</option>
                 <option value="zoneSelect">选区</option>
@@ -801,8 +906,13 @@
               <select
                 class="plan-tool-select"
                 aria-label="布置工具"
-                bind:value={placementTool}
-                onchange={() => setPlacementTool(placementTool)}
+                value={placementTool}
+                onchange={(e) =>
+                  setPlacementTool(
+                    /** @type {import('$lib/plan-placement-edit.js').PlacementTool} */ (
+                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
+                    ),
+                  )}
               >
                 <option value="place">家具</option>
                 <option value="storage">标储藏</option>
@@ -814,10 +924,15 @@
                 <select
                   class="plan-tool-select"
                   aria-label="家具类型"
-                  bind:value={placementKind}
-                  onchange={() => setPlacementKind(placementKind)}
+                  value={placementKind}
+                  onchange={(e) =>
+                    setPlacementKind(
+                      /** @type {keyof typeof PLACEMENT_KINDS} */ (
+                        /** @type {HTMLSelectElement} */ (e.currentTarget).value
+                      ),
+                    )}
                 >
-                  {#each Object.entries(PLACEMENT_KINDS) as [kind, spec]}
+                  {#each Object.entries(PLACEMENT_KINDS) as [kind, spec] (kind)}
                     <option value={kind}>{spec.label}</option>
                   {/each}
                 </select>
@@ -827,7 +942,7 @@
         </div>
       {/if}
 
-      {#if editMode508}
+      {#if editMode508 || (wallGraphEditMode && compactPlanChrome)}
         <div class="mode-history" role="group" aria-label="编辑历史">
           <button
             type="button"
@@ -845,25 +960,15 @@
             aria-label="重做"
             onclick={performRedo}>↷</button
           >
-        </div>
-      {:else if wallGraphEditMode}
-        <div class="mode-history" role="group" aria-label="编辑历史">
-          <button
-            type="button"
-            class="mode-undo-btn"
-            disabled={!canUndo}
-            title="撤销 (⌘Z)"
-            aria-label="撤销"
-            onclick={performUndo}>↶</button
-          >
-          <button
-            type="button"
-            class="mode-undo-btn"
-            disabled={!canRedo}
-            title="重做"
-            aria-label="重做"
-            onclick={performRedo}>↷</button
-          >
+          {#if wallGraphEditMode && compactPlanChrome}
+            <button
+              type="button"
+              class="mode-undo-btn mode-reset-btn"
+              title="清空户型"
+              aria-label="清空户型"
+              onclick={handleResetToShell}>清空</button
+            >
+          {/if}
         </div>
       {/if}
 
@@ -914,80 +1019,7 @@
           </button>
         </div>
 
-        {#if graphEditMode}
-          <div class="tool-segment-scroll" data-scroll-hint="tools">
-            <div class="tool-segment" role="group" aria-label="墙图工具">
-              <button
-                type="button"
-                class="step-btn"
-                class:active={graphTool === 'select'}
-                aria-pressed={graphTool === 'select'}
-                onclick={() => setGraphTool('select')}
-              >
-                选择
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                class:active={graphTool === 'wallAdd'}
-                aria-pressed={graphTool === 'wallAdd'}
-                onclick={() => setGraphTool('wallAdd')}
-              >
-                建墙
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                class:active={graphTool === 'opening'}
-                aria-pressed={graphTool === 'opening'}
-                onclick={() => setGraphTool('opening')}
-              >
-                门窗
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                class:active={graphTool === 'remove'}
-                aria-pressed={graphTool === 'remove'}
-                onclick={() => setGraphTool('remove')}
-              >
-                删墙
-              </button>
-            </div>
-          </div>
-        {:else if zoneEditMode}
-          <div class="tool-segment-scroll" data-scroll-hint="tools">
-            <div class="tool-segment" role="group" aria-label="分区工具">
-              <button
-                type="button"
-                class="step-btn"
-                class:active={zoneTool === 'zoneAdd'}
-                aria-pressed={zoneTool === 'zoneAdd'}
-                onclick={() => setZoneTool('zoneAdd')}
-              >
-                画区
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                class:active={zoneTool === 'zoneSelect'}
-                aria-pressed={zoneTool === 'zoneSelect'}
-                onclick={() => setZoneTool('zoneSelect')}
-              >
-                选区
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                class:active={zoneTool === 'zoneRemove'}
-                aria-pressed={zoneTool === 'zoneRemove'}
-                onclick={() => setZoneTool('zoneRemove')}
-              >
-                删区
-              </button>
-            </div>
-          </div>
-        {:else if placeEditMode}
+        {#if placeEditMode}
           <div class="tool-segment-scroll" data-scroll-hint="tools">
             <div class="tool-segment" role="group" aria-label="布置工具">
               <button
@@ -1013,7 +1045,7 @@
           {#if placementTool === 'place'}
             <div class="tool-segment-scroll" data-scroll-hint="kinds">
               <div class="tool-segment" role="group" aria-label="家具类型">
-                {#each Object.entries(PLACEMENT_KINDS) as [kind, spec]}
+                {#each Object.entries(PLACEMENT_KINDS) as [kind, spec] (kind)}
                   <button
                     type="button"
                     class="step-btn step-btn-compact"
@@ -1228,6 +1260,16 @@
       }}
       {onBlankContextMenu}
     />
+    <PlanEditToolbar
+      activeTool={toolbarActiveTool}
+      {canUndo}
+      {canRedo}
+      hidden={planMode !== 'edit' || editMode508 || compactPlanChrome}
+      onTool={activateToolbarTool}
+      onUndo={performUndo}
+      onRedo={performRedo}
+      onReset={handleResetToShell}
+    />
     {#if showSelectionBar}
       <PlanSelectionBar
         {selectedWall}
@@ -1276,7 +1318,7 @@
     >
       <p id="storage-picker-title" class="storage-picker-title">指派到储藏区</p>
       <div class="storage-picker-grid">
-        {#each STORAGE_CODES as code}
+        {#each STORAGE_CODES as code (code)}
           <button
             type="button"
             class="storage-picker-btn"
@@ -1304,7 +1346,7 @@
         选择家具类型
       </p>
       <div class="storage-picker-grid placement-kinds-grid">
-        {#each Object.entries(PLACEMENT_KINDS) as [kind, spec]}
+        {#each Object.entries(PLACEMENT_KINDS) as [kind, spec] (kind)}
           <button
             type="button"
             class="storage-picker-btn"
@@ -1786,6 +1828,21 @@
 
   .mode-undo-btn:not(:disabled):hover {
     background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  }
+
+  .mode-reset-btn {
+    width: auto;
+    min-width: 44px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 650;
+    color: #b45309;
+    border-color: color-mix(in srgb, #b45309 35%, var(--border));
+  }
+
+  .mode-reset-btn:not(:disabled):hover {
+    background: color-mix(in srgb, #b45309 10%, var(--card));
+    color: #b45309;
   }
 
   .plan-snapshot-badge {

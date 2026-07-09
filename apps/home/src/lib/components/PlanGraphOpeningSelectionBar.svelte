@@ -41,7 +41,9 @@
     aria-label="门窗快捷操作"
     title={opening.id}
   >
-    {#if !compact}
+    {#if compact}
+      <span class="graph-open-title graph-open-title-compact">{title}</span>
+    {:else}
       <span class="graph-open-title">{title}</span>
     {/if}
     <div class="graph-open-actions">
@@ -106,6 +108,15 @@
     white-space: nowrap;
   }
 
+  .graph-open-title-compact {
+    font-size: 12px;
+    max-width: min(120px, 32vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   .graph-open-actions {
     display: inline-flex;
     align-items: center;
@@ -157,9 +168,9 @@
     }
 
     .graph-open-bar-compact .graph-open-actions {
-      margin-left: 0;
+      margin-left: auto;
       flex-wrap: nowrap;
-      width: 100%;
+      flex-shrink: 0;
     }
 
     .graph-open-btn {

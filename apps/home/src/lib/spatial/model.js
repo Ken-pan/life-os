@@ -97,7 +97,7 @@ export function toExtrusionHints(project) {
       label: f.label,
       heightFt: 2.5,
     })),
-    storageZones: project.storageZones.map((z) => ({
+    storageZones: project.storageZones.filter((z) => z.bounds).map((z) => ({
       id: z.id,
       code: z.code,
       footprint: rectToPolygon(z.bounds),

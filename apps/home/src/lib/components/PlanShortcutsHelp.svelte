@@ -73,16 +73,16 @@
         <div class="help-row"><dt><kbd>{modKey}Z</kbd></dt><dd>撤销修改</dd></div>
         <div class="help-row"><dt><kbd>{modKey}{modKey === '⌘' ? '⇧Z' : 'Y'}</kbd></dt><dd>重做</dd></div>
         {#if editStep === 'walls' || graphEditMode}
-          <div class="help-row"><dt><kbd>1–3</kbd></dt><dd>选择 / 建墙 / 删墙</dd></div>
+          <div class="help-row"><dt><kbd>1–3</kbd></dt><dd>选择 / 建墙 / 门窗</dd></div>
           <div class="help-row">
             <dt><kbd>Delete</kbd></dt>
-            <dd>删除选中墙段或门窗</dd>
+            <dd>删除选中墙段或门窗（底部操作条亦可）</dd>
           </div>
         {:else if editStep === 'zones'}
           <div class="help-row"><dt><kbd>Enter</kbd></dt><dd>闭合当前画区（≥3 点）</dd></div>
           <div class="help-row">
             <dt><kbd>Delete</kbd></dt>
-            <dd>删除选中分区</dd>
+            <dd>删除选中分区（底部操作条亦可）</dd>
           </div>
         {:else if editStep === 'place'}
           <div class="help-row">

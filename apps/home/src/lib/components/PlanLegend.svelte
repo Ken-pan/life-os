@@ -56,7 +56,7 @@
       </span>
       {#if graphEditMode}
         <span class="plan-legend-item plan-legend-edit" role="listitem">
-          <i class="sw wall-graph" aria-hidden="true"></i> 墙段（建墙/删墙）
+          <i class="sw wall-graph" aria-hidden="true"></i> 墙段（选中后可删）
         </span>
         <span class="plan-legend-item plan-legend-edit" role="listitem">
           <i class="sw chain-edit" aria-hidden="true"></i> 绿色虚线 = 建墙预览

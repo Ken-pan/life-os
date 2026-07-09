@@ -1,11 +1,7 @@
 <script>
   import {
-    canRedoGraph,
-    canUndoGraph,
-    redoGraphEdit,
     removePlacement,
     rotatePlacementById,
-    undoGraphEdit,
     updatePlacement,
   } from '$lib/state.svelte.js'
 
@@ -15,9 +11,6 @@
    *   onClear?: () => void,
    * }} */
   let { placement, compact = false, onClear } = $props()
-
-  const undoAvailable = $derived(canUndoGraph())
-  const redoAvailable = $derived(canRedoGraph())
 
   let detailsOpen = $state(false)
   let wDraft = $state('')
@@ -100,18 +93,6 @@
       class="graph-sel-btn graph-sel-accent"
       onclick={() => rotatePlacementById(placement.id)}
     >旋转 90°</button>
-    <button
-      type="button"
-      class="graph-sel-btn"
-      disabled={!undoAvailable}
-      onclick={undoGraphEdit}
-    >撤销</button>
-    <button
-      type="button"
-      class="graph-sel-btn"
-      disabled={!redoAvailable}
-      onclick={redoGraphEdit}
-    >重做</button>
     <button
       type="button"
       class="graph-sel-btn graph-sel-warn"
