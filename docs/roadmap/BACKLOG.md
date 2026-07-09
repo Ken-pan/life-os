@@ -87,30 +87,46 @@ Svelte + Finance React       → theme/brand 数据 + 各栈薄壳；或 ui-reac
 
 Hub §Next 已排期。细节与外部对标 → [`GROWTH.md`](./GROWTH.md)。
 
-| ID      | 主题                              | ROI | 投入   | 依赖      |
-| ------- | --------------------------------- | --- | ------ | --------- |
-| G-P1    | Portal 继续 → DB `last_opened_at` | 🔥  | 0.5–1d | I-P1 DB   |
-| G-P3    | `default_app` 跳转                | 🔥  | 0.5d   | I-P1 DB   |
-| G-P2    | 待办 / 事件角标                   | ◆   | 1–2d   | I-P0 SSO  |
-| M-P1    | Music `play_events` + reasons     | ◆   | 1–1.5d | —         |
-| F-P1    | Finance 扩展同步反馈              | ◆   | 1–2d   | —         |
-| G-P5    | PWA 安装引导（六站含 Home）       | ○   | 1–2d   | —         |
-| H-P1    | Portal Home 实验卡                | ✅  | —      | `PORTAL_APPS` 实验区 |
+| ID      | 主题                              | ROI | 投入   | 依赖                       |
+| ------- | --------------------------------- | --- | ------ | -------------------------- |
+| G-P1    | Portal 继续 → DB `last_opened_at` | 🔥  | 0.5–1d | I-P1 DB                    |
+| G-P3    | `default_app` 跳转                | 🔥  | 0.5d   | I-P1 DB                    |
+| G-P2    | 待办 / 事件角标                   | ◆   | 1–2d   | I-P0 SSO                   |
+| M-P1    | Music `play_events` + reasons     | ◆   | 1–1.5d | —                          |
+| F-P1    | Finance 扩展同步反馈              | ◆   | 1–2d   | —                          |
+| G-P5    | PWA 安装引导（六站含 Home）       | ○   | 1–2d   | —                          |
+| H-P1    | Portal Home 实验卡                | ✅  | —      | `PORTAL_APPS` 实验区       |
 | H-P2    | Home `coreIdentity` + SSO         | ✅  | —      | `createLifeOsAuth('home')` |
 | H-P3    | Home redirect + DB `home`         | ✅  | H-P2   | migration `20260708180000` |
 | G-P4    | 今日摘要卡片                      | ✅  | —      | migration `20260708190000` |
-| I-P1.5b | Fitness → Planner 事件            | ○   | 3–5d   | 产品规则  |
+| I-P1.5b | Fitness → Planner 事件            | ○   | 3–5d   | 产品规则                   |
 
 Tier B（未进 hub §Next）：G-P6、F-P2、M-P3、P-P1、**H-P4** spatial 云同步。（**H-P5** 平面浏览/编辑 ✅ 2026-07-08）
 
 ---
 
-## 推荐执行顺序（与 hub 同步 · 2026-07-09 后）
+## 推荐执行顺序（与 hub · POTENTIAL 同步）
 
-| 周       | 项                                                     | 桶           | ROI |
-| -------- | ------------------------------------------------------ | ------------ | --- |
-| **按需** | D-P6 a11y（platform-web + catalog）                    | Infra        | ○   |
-| **按需** | I-P1.5b Fitness → Planner；QA-P2 Planner desktop E2E   | Growth/Infra | ○   |
-| **暂缓** | Finance `ui-react` / nav mirror / i18n                 | Platform     | ✗   |
+| Phase    | 项                                     | 桶                | ROI |
+| -------- | -------------------------------------- | ----------------- | --- |
+| **0**    | **F-P3**                               | Core              | 🔥  |
+| **1**    | G-P4b-M · M-P2 · P-P2                  | Growth/Infra/Core | ◆   |
+| **1b**   | CI 接线（F-P0/QA-P2 本地 ✅）          | Infra             | ◆   |
+| **3**    | I-P1.5b/FT-P1 · G-P4b-H                | Growth            | ○   |
+| **按需** | D-P7 a11y；各 app §Parked              | Infra/Product     | ○   |
+| **暂缓** | Finance `ui-react` / nav mirror / i18n | Platform          | ✗   |
 
-**2026-07-09 已完成：** I-P0 · G-P4 · H-P1/H-P2/H-P3 · F-P1 · G-P2 · M-P1 · AppBrandSwitcher — 见 [`SHIPPED.md`](./SHIPPED.md)。
+**2026-07-09 已完成：** F-P0 · QA-P2 · I-P0 · G-P4 · H-P1/H-P2/H-P3 · F-P1 · G-P2 · M-P1 · AppBrandSwitcher — 见 [`SHIPPED.md`](./SHIPPED.md)。
+
+## 六 app 产品候选（2026-07-09 脑暴入库）
+
+Hub §Next 已收录 🔥/◆ 项。完整表 → [`apps/README.md`](./apps/README.md)。
+
+| App     | Top IDs          | 分卷                                   |
+| ------- | ---------------- | -------------------------------------- |
+| Planner | P-P2, P-P3       | [`apps/planner.md`](./apps/planner.md) |
+| Fitness | FT-P0, FT-P1     | [`apps/fitness.md`](./apps/fitness.md) |
+| Finance | F-P3, F-P1b      | [`apps/finance.md`](./apps/finance.md) |
+| Music   | M-P2, M-P4, M-P5 | [`apps/music.md`](./apps/music.md)     |
+| Portal  | G-P4b, G-P6      | [`apps/portal.md`](./apps/portal.md)   |
+| Home    | H-P6a, H-P7      | [`apps/home.md`](./apps/home.md)       |

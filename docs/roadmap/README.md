@@ -10,7 +10,9 @@
 | [`GROWTH.md`](./GROWTH.md)           | G-P\* / M-P1 / F-P1 / H-P1–H-P3 · 外部对标 | Growth 项状态或调研更新时   |
 | [`BACKLOG.md`](./BACKLOG.md)         | 提取候选、决策矩阵、do-not-abstract        | 评估新共享提取时            |
 | [`SHIPPED.md`](./SHIPPED.md)         | 发货日志（日期 · 摘要 · commit）           | 每次从 Now 移入 Shipped 时  |
+| [`apps/`](./apps/README.md)          | **六 app 产品排期**（Planner…Home）        | 单 app 优先级或脑暴更新时   |
+| [`POTENTIAL.md`](./POTENTIAL.md)     | **潜力研判 / ROI 证据**                    | 代码检索或优先级重估时      |
 
 **不要**在分卷里重复 hub 的 Now/Next 表——避免双源漂移。
 
-执行顺序与 ROI 标签：hub §推荐执行顺序 · [`BACKLOG.md`](./BACKLOG.md) §推荐执行顺序
+执行顺序：hub §推荐执行顺序 · [`POTENTIAL.md`](./POTENTIAL.md) · [`BACKLOG.md`](./BACKLOG.md)

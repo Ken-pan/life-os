@@ -6,13 +6,13 @@
 
 ## 总览
 
-| App         | 命令                                         | 结果                          | 说明                                    |
-| ----------- | -------------------------------------------- | ----------------------------- | --------------------------------------- |
-| **Planner** | `cd apps/planner && CI=1 npm run test:e2e`   | ❌ 20 fail / 40 pass / 4 skip | 移动端基本通过；桌面项目大量失败        |
-| **Fitness** | `cd apps/fitness && npm run test:e2e`        | ❌ 20/20 fail（**无效跑**）   | 5173 被 Portal 占用，非 Fitness 页面    |
-| **Fitness** | 重跑：`5190` + `playwright.e2e-ci.config.js` | ✅ 20/20 pass                 | 见下方「Fitness 端口冲突」              |
-| **Finance** | `ia-route-smoke.mjs` + `ia-nav-qa.mjs`       | 🟡 路由 ❌ / 导航 ✅          | 路由 smoke 无登录；导航 QA 注入 session |
-| **Music**   | `cd apps/music && npm run test:sw:full`      | ✅ 21/21 pass                 | Service Worker E2E                      |
+| App         | 命令                                         | 结果                         | 说明                                            |
+| ----------- | -------------------------------------------- | ---------------------------- | ----------------------------------------------- |
+| **Planner** | `cd apps/planner && CI=1 npm run test:e2e`   | 🟡 1 fail / 41 pass / 4 skip | desktop **21/22** ✅（QA-P2）；遗留 P-1 Insight |
+| **Fitness** | `cd apps/fitness && npm run test:e2e`        | ❌ 20/20 fail（**无效跑**）  | 5173 被 Portal 占用，非 Fitness 页面            |
+| **Fitness** | 重跑：`5190` + `playwright.e2e-ci.config.js` | ✅ 20/20 pass                | 见下方「Fitness 端口冲突」                      |
+| **Finance** | `qa:ia-routes` + `qa:ia-nav`                 | ✅ 22/22 + 31/31             | F-P0 ✅ `ia-qa-auth.mjs`（FN-1 已修）           |
+| **Music**   | `test:sw:full` + `qa:ui-flow`                | ✅ 21/21 + 15/15             | SW + UI 流 E2E（M-P2 ✅）                       |
 
 **图例：** ✅ 通过 · ❌ 失败 · 🟡 部分通过 · ⚠️ 基础设施/配置问题
 
@@ -122,15 +122,13 @@ Finance **无** `test:e2e` npm script；使用 Playwright 脚本：
 | `scripts/ia-route-smoke.mjs` | 22 条 canonical 路由可渲染        |
 | `scripts/ia-nav-qa.mjs`      | 桌面侧栏 + 移动底栏导航（需登录） |
 
-### 问题 FN-1 · 路由 smoke 未注入 Auth（22/22 fail）
+### 问题 FN-1 · 路由 smoke 未注入 Auth — ✅ 已修复（F-P0）
 
-| 项         | 内容                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------ |
-| **命令**   | `UI_QA_URL=http://127.0.0.1:5180 node scripts/ia-route-smoke.mjs`（dev 已启动）            |
-| **现象**   | 全部路由 `waitForSelector('.app-shell')` 15s 超时                                          |
-| **根因**   | Finance AuthGate 未登录时不挂载 `.app-shell`；脚本未像 `ia-nav-qa` 一样注入 `life_os_auth` |
-| **建议**   | 复用 `ia-nav-qa.mjs` 的 session 注入，或 smoke 接受登录页并单独断言 redirect               |
-| **优先级** | P1 — 当前脚本无法作为「已登录 IA」回归                                                     |
+| 项       | 内容                                                                               |
+| -------- | ---------------------------------------------------------------------------------- |
+| **命令** | `UI_QA_URL=http://127.0.0.1:5180 npm run qa:ia-routes`                             |
+| **修复** | `scripts/ia-qa-auth.mjs` 共享模块；`ia-route-smoke.mjs` 登录 + 注入 `life_os_auth` |
+| **结果** | **22/22 passed**（authenticated）                                                  |
 
 ### 问题 FN-2 · 路由 smoke 需先起 dev
 
@@ -152,27 +150,35 @@ Finance **无** `test:e2e` npm script；使用 Playwright 脚本：
 ```bash
 cd apps/finance && npm run dev -- --port 5180 --host 127.0.0.1
 UI_QA_URL=http://127.0.0.1:5180 node scripts/ia-nav-qa.mjs   # 需 .env.local
-UI_QA_URL=http://127.0.0.1:5180 node scripts/ia-route-smoke.mjs  # 当前会 fail（FN-1）
+UI_QA_URL=http://127.0.0.1:5180 npm run qa:ia-routes         # 22/22 ✅（F-P0）
 ```
 
 ---
 
 ## Music (`music-os`)
 
-**命令：** `npm run test:sw:full`（build + `scripts/qa-service-worker.mjs`）
+**命令：** `npm run test:sw:full`（SW）· `npm run qa:ui-flow` / `test:e2e`（UI 流，**M-P2**）
 
 ### 结果 ✅
 
-- **21/21 passed**（static / lifecycle / precache / fetch / purge / trim / integration）
+- **SW 21/21 passed**（static / lifecycle / precache / fetch / purge / trim / integration）
 - 报告：`apps/music/.qa-screenshots/service-worker/REPORT.md`
 
-### 缺口 M-1 · 无 UI 流 E2E
+### UI 流 E2E ✅（M-P2 · `scripts/qa-ui-flow.mjs`）
 
-| 项         | 内容                                                         |
-| ---------- | ------------------------------------------------------------ |
-| **现状**   | 仅有 Service Worker 层 E2E；无 Playwright 覆盖播放/歌单/导航 |
-| **建议**   | 后续增加 `test:e2e`（可参考 Finance `ia-nav-qa` 模式）       |
-| **优先级** | P2                                                           |
+| 项       | 内容                                                                        |
+| -------- | --------------------------------------------------------------------------- |
+| **命令** | `MUSIC_QA_URL=http://127.0.0.1:5189 npm run qa:ui-flow`                     |
+| **覆盖** | 8 条路由 smoke · IDB seed · 曲库播放 · 正在播放队列 · 导入页可达            |
+| **Auth** | `ia-qa-auth.mjs` — `signInWithPassword` + `life_os_auth`（同 Finance F-P0） |
+
+### 缺口 M-1 · 完整文件导入 E2E（可选）
+
+| 项         | 内容                                                                      |
+| ---------- | ------------------------------------------------------------------------- |
+| **现状**   | UI 流用 IDB seed 模拟导入后状态；真实 mp3 导入见 `qa-import-pipeline.mjs` |
+| **建议**   | CI 可选 `MUSIC_QA_IMPORT_FILE=…` 跑完整导入链                             |
+| **优先级** | P3                                                                        |
 
 ---
 
@@ -195,16 +201,16 @@ UI_QA_URL=http://127.0.0.1:5180 node scripts/ia-route-smoke.mjs  # 当前会 fai
 
 ---
 
-## 建议修复优先级（与 hub §Now / §Next 对齐）
+## 建议修复优先级（与 [`POTENTIAL.md`](../roadmap/POTENTIAL.md) 对齐）
 
-| Hub 序 | 优先级     | ID        | App     | 摘要                                            |
-| ------ | ---------- | --------- | ------- | ----------------------------------------------- |
-| 5      | **Week 2** | F-0 / X-1 | Fitness | 修复 5173 端口/reuseExistingServer（**QA-F0**） |
-| —      | P1         | FN-1      | Finance | `ia-route-smoke` 注入 session                   |
-| —      | **Next**   | P-2       | Planner | desktop Playwright 与 FAB/侧栏对齐（**QA-P2**） |
-| —      | P2         | P-1       | Planner | Insight 批量排期行为或测试同步                  |
-| —      | P2         | P-3       | Planner | GoTrue 多实例警告                               |
-| —      | P2         | M-1       | Music   | 补充 UI E2E                                     |
+| 潜力序 | Hub ID      | App     | 摘要                         | 状态          |
+| ------ | ----------- | ------- | ---------------------------- | ------------- |
+| **#1** | **F-P3**    | Finance | STS / Scenarios / Spend 对齐 | §Next         |
+| **#2** | **G-P4b-M** | Portal  | Music 第四卡                 | §Next         |
+| —      | **M-P2**    | Music   | UI E2E `qa-ui-flow` 15/15    | ✅ 2026-07-09 |
+| —      | **F-P0**    | Finance | route smoke 22/22            | ✅ 2026-07-09 |
+| —      | **P-P2**    | Planner | Insight 排期（P-1）          | §Next         |
+| —      | —           | Planner | QA-P2 desktop 21/22          | ✅ 2026-07-09 |
 
 ---
 
@@ -212,6 +218,7 @@ UI_QA_URL=http://127.0.0.1:5180 node scripts/ia-route-smoke.mjs  # 当前会 fai
 
 - [`../ops/netlify.md`](../ops/netlify.md) — 六站部署
 - [`../ops/supabase.md`](../ops/supabase.md) — 共享 Auth
+- [`../roadmap/POTENTIAL.md`](../roadmap/POTENTIAL.md) — ROI 研判
 - [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) — 功能阶段
 
 _本文件随 E2E 跑批更新；修复 issue 后请在对应条目打 ✅ 并注明 commit/日期。_

@@ -12,9 +12,12 @@
     "preview:static": "npx --yes serve build -s -l 5193",
     "test:sw": "node scripts/qa-service-worker.mjs",
     "test:sw:full": "npm run build && node scripts/qa-service-worker.mjs",
+    "qa:ui-flow": "node scripts/qa-ui-flow.mjs",
+    "test:e2e": "node scripts/qa-ui-flow.mjs",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json"
   },
   "devDependencies": {
+    "playwright": "^1.61.1",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.68.0",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",

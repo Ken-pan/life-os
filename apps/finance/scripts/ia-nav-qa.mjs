@@ -5,15 +5,17 @@
  *   UI_QA_URL=http://localhost:5180 node scripts/ia-nav-qa.mjs
  */
 import { chromium } from 'playwright'
-import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import {
+  injectLifeOsSession,
+  loadFinanceQaEnv,
+  signInForFinanceQa,
+} from './ia-qa-auth.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const baseUrl = process.env.UI_QA_URL ?? 'https://kensfinanceos.netlify.app'
-const storageKey = 'life_os_auth'
 
 const DESKTOP_NAV = [
   { label: '首页', expectPath: '/home/today' },
@@ -46,15 +48,7 @@ const HOME_HUB_TABS = [
 ]
 
 function loadEnv() {
-  return Object.fromEntries(
-    readFileSync(resolve(root, '.env.local'), 'utf8')
-      .split('\n')
-      .filter((l) => l && !l.startsWith('#'))
-      .map((l) => {
-        const i = l.indexOf('=')
-        return [l.slice(0, i), l.slice(i + 1)]
-      }),
-  )
+  return loadFinanceQaEnv(root)
 }
 
 function normPath(url) {
@@ -62,25 +56,7 @@ function normPath(url) {
 }
 
 async function injectSession(page, session) {
-  await page.goto(baseUrl, { waitUntil: 'domcontentloaded' })
-  await page.evaluate(
-    ({ key, session: s }) => {
-      localStorage.setItem(
-        key,
-        JSON.stringify({
-          access_token: s.access_token,
-          refresh_token: s.refresh_token,
-          expires_at: s.expires_at,
-          expires_in: s.expires_in,
-          token_type: s.token_type,
-          user: s.user,
-        }),
-      )
-    },
-    { key: storageKey, session },
-  )
-  await page.reload({ waitUntil: 'networkidle' })
-  await page.waitForSelector('.app-shell', { timeout: 30000 })
+  await injectLifeOsSession(page, session, baseUrl)
 }
 
 async function assertAppReady(page) {
@@ -169,19 +145,11 @@ if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY) {
   process.exit(1)
 }
 
-const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
-  auth: { storageKey, persistSession: false },
-})
-
-const email = process.env.UI_QA_EMAIL ?? 'p1a-rls-test-b@example.test'
-const password = process.env.UI_QA_PASSWORD ?? 'P1aTestPass!2026'
-
-const { data: auth, error } = await sb.auth.signInWithPassword({
-  email,
-  password,
-})
-if (error || !auth.session) {
-  console.error('Auth failed:', error?.message)
+let auth
+try {
+  auth = { session: await signInForFinanceQa(env) }
+} catch (e) {
+  console.error('Auth failed:', e instanceof Error ? e.message : e)
   process.exit(1)
 }
 

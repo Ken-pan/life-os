@@ -1,8 +1,13 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  STORAGE_KEY,
+  clearAppState,
+  openNewTaskEditor,
+  waitForPlannerReady,
+} from './e2e.helpers.js';
 
-const STORAGE_KEY = 'planos_v1';
 const OUT_DIR = path.join(process.cwd(), 'tests', 'screenshots');
 
 function localDateOffset(days = 0) {
@@ -180,21 +185,18 @@ function richSeedState() {
   };
 }
 
-async function seedState(page, state) {
+async function seedState(page, state, projectName = 'mobile') {
   await page.goto('/');
   await page.evaluate(
     ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
     { key: STORAGE_KEY, data: state }
   );
   await page.reload();
-  await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 });
+  await waitForPlannerReady(page, projectName);
 }
 
-async function clearAppState(page) {
-  await page.goto('/');
-  await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY);
-  await page.reload();
-  await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 });
+async function clearAppStateForAudit(page, projectName = 'mobile') {
+  await clearAppState(page, projectName);
 }
 
 async function snap(page, name) {
@@ -220,7 +222,7 @@ test.describe('PlannerOS 全页面截图审计', () => {
   });
 
   test('空态与认证', async ({ page }, testInfo) => {
-    await clearAppState(page);
+    await clearAppState(page, testInfo.project.name)
 
     await page.goto('/');
     await expect(page.locator('h1.page-title')).toBeVisible();
@@ -251,13 +253,13 @@ test.describe('PlannerOS 全页面截图审计', () => {
   });
 
   test('丰富数据 — 主导航与编辑器', async ({ page }, testInfo) => {
-    await seedState(page, richSeedState());
+    await seedState(page, richSeedState(), testInfo.project.name);
 
     await page.goto('/');
     await waitForInsights(page);
     await snap(page, '10-home-rich');
 
-    await page.getByTestId('fab-add').click();
+    await openNewTaskEditor(page, testInfo.project.name);
     await expect(page.getByRole('dialog')).toBeVisible();
     await snap(page, '11-editor-new');
 
@@ -296,7 +298,7 @@ test.describe('PlannerOS 全页面截图审计', () => {
   });
 
   test('深色主题与英文', async ({ page }, testInfo) => {
-    await seedState(page, richSeedState());
+    await seedState(page, richSeedState(), testInfo.project.name);
 
     await page.goto('/settings');
     await page.getByRole('button', { name: '深色', exact: true }).click();
@@ -319,7 +321,7 @@ test.describe('PlannerOS 全页面截图审计', () => {
     await page.goto('/calendar');
     await snap(page, '25-calendar-en');
 
-    await page.getByTestId('fab-add').click();
+    await openNewTaskEditor(page, testInfo.project.name);
     await expect(page.getByRole('dialog')).toBeVisible();
     await snap(page, '26-editor-en');
 

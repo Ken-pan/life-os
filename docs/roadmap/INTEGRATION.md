@@ -1,6 +1,6 @@
 # Integration 主线（I-_ / H-_）
 
-Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
+Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。**六 app 产品排期** → [`apps/README.md`](./apps/README.md)。
 
 ---
 
@@ -8,14 +8,14 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 
 **目标：** 四生产站 + Portal + Home（按需）共用 `auth.uid()` 与 `core_profiles`，跨 `.kenos.space` SSO。
 
-| 子项                                       | 状态    | 证据                                      |
-| ------------------------------------------ | ------- | ----------------------------------------- |
-| `core_profiles` + `core_user_app_settings` | ✅ 远程 | migration `20260707230000`                |
-| 四站 Auth hooks                            | ✅      | `createCoreIdentityHandler`               |
-| 客户端 profile 兜底                        | ✅      | `packages/sync/src/coreIdentity.js`       |
-| 跨子域 SSO Cookie                          | ✅      | `setupCrossDomainSSO`；生产 E2E 2026-07-09              |
-| `schema.sql`（`core_*`）                   | ✅      | merge 进 canonical（2026-07-08）          |
-| 验收脚本                                   | ✅      | `./scripts/verify-life-os-identity-p0.sh` |
+| 子项                                       | 状态    | 证据                                       |
+| ------------------------------------------ | ------- | ------------------------------------------ |
+| `core_profiles` + `core_user_app_settings` | ✅ 远程 | migration `20260707230000`                 |
+| 四站 Auth hooks                            | ✅      | `createCoreIdentityHandler`                |
+| 客户端 profile 兜底                        | ✅      | `packages/sync/src/coreIdentity.js`        |
+| 跨子域 SSO Cookie                          | ✅      | `setupCrossDomainSSO`；生产 E2E 2026-07-09 |
+| `schema.sql`（`core_*`）                   | ✅      | merge 进 canonical（2026-07-08）           |
+| 验收脚本                                   | ✅      | `./scripts/verify-life-os-identity-p0.sh`  |
 
 **SSO 备注：**
 
@@ -47,13 +47,13 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 
 详情 → [`GROWTH.md`](./GROWTH.md)
 
-| ID   | 状态 | 摘要                                                |
-| ---- | ---- | --------------------------------------------------- |
-| G-P1 | ✅   | `recentApp` 读 DB `last_opened_at`，跨设备「继续」  |
+| ID   | 状态 | 摘要                                                 |
+| ---- | ---- | ---------------------------------------------------- |
+| G-P1 | ✅   | `recentApp` 读 DB `last_opened_at`，跨设备「继续」   |
 | G-P2 | ✅   | 只读待办 / `life_events` 角标（生产验收 2026-07-09） |
-| G-P3 | ✅   | `default_app` 登录后跳转                            |
-| G-P4 | ✅   | `portal_today_summary()` 今日摘要三卡（2026-07-09） |
-| G-P5 | ✅   | 六站 PWA 安装引导                                   |
+| G-P3 | ✅   | `default_app` 登录后跳转                             |
+| G-P4 | ✅   | `portal_today_summary()` 今日摘要三卡（2026-07-09）  |
+| G-P5 | ✅   | 六站 PWA 安装引导                                    |
 
 ## I-P1.5: 跨应用事件中心 {#i-p15}
 
@@ -90,30 +90,30 @@ RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 
 与 Portal **并存**（早期 archive 曾 portal/home 二选一；现 Portal = 启动器，Home = spatial 产品）。
 
-| 子项            | 状态 | 证据                                                              |
-| --------------- | ---- | ----------------------------------------------------------------- |
-| SvelteKit app   | 🟡   | 概览 / 平面 `/plan` / 储藏 `/storage` / 设置                      |
+| 子项            | 状态 | 证据                                                               |
+| --------------- | ---- | ------------------------------------------------------------------ |
+| SvelteKit app   | 🟡   | 概览 / 平面 `/plan` / 储藏 `/storage` / 设置                       |
 | Spatial 编辑    | 🟡   | `/plan` **浏览 / 编辑**；墙/门拖拽、undo；`plan-viewport` CTM 定位 |
-| 导出            | ✅   | HTML / MHTML audit 导出                                           |
-| 共享包          | ✅   | contracts + platform-web + sync + theme                           |
-| design-tokens   | ✅   | `tokens/brands/home.json` · `LIFE_OS_SITE_META.home`              |
-| Turbo / build   | ✅   | `npm run build:home` · 含于 `npm run build`                       |
-| Netlify 部署    | ✅   | `homeos-ken` → `home.kenos.space`；2026-07-09 生产 deploy       |
-| Portal Launcher | ✅   | `PORTAL_APPS` 含 Home 实验卡（H-P1 · 2026-07-09）                 |
-| `coreIdentity`  | ✅   | `createLifeOsAuth('home')` → `createCoreIdentityHandler`（H-P2） |
-| SSO / redirect  | ✅   | `home.kenos.space/**` + `20260708180000` constraint（H-P3）       |
-| Portal 继续     | ✅   | `touchAppLastOpened` 打开时写入 `last_opened_at`（G-P1）         |
-| PWA             | ✅   | `static/sw.js` + `bindPwaForegroundResume`                      |
-| 云同步          | ❌   | `homeos_spatial_v1` localStorage only                             |
+| 导出            | ✅   | HTML / MHTML audit 导出                                            |
+| 共享包          | ✅   | contracts + platform-web + sync + theme                            |
+| design-tokens   | ✅   | `tokens/brands/home.json` · `LIFE_OS_SITE_META.home`               |
+| Turbo / build   | ✅   | `npm run build:home` · 含于 `npm run build`                        |
+| Netlify 部署    | ✅   | `homeos-ken` → `home.kenos.space`；2026-07-09 生产 deploy          |
+| Portal Launcher | ✅   | `PORTAL_APPS` 含 Home 实验卡（H-P1 · 2026-07-09）                  |
+| `coreIdentity`  | ✅   | `createLifeOsAuth('home')` → `createCoreIdentityHandler`（H-P2）   |
+| SSO / redirect  | ✅   | `home.kenos.space/**` + `20260708180000` constraint（H-P3）        |
+| Portal 继续     | ✅   | `touchAppLastOpened` 打开时写入 `last_opened_at`（G-P1）           |
+| PWA             | ✅   | `static/sw.js` + `bindPwaForegroundResume`                         |
+| 云同步          | ❌   | `homeos_spatial_v1` localStorage only                              |
 
 ### Home 排期（hub §Next / §Parked）
 
-| ID       | 主题                    | ROI | 依赖          | 说明                                        |
-| -------- | ----------------------- | --- | ------------- | ------------------------------------------- |
-| **H-P1** | Portal Launcher 实验卡  | ✅  | —             | `portal.kenos.space` 实验区                 |
-| **H-P2** | 接 `coreIdentity` + SSO | ✅  | —             | `apps/home/src/lib/auth.svelte.js`          |
-| **H-P3** | redirect + DB `app_id`  | ✅  | —             | migration + Supabase Management API         |
-| **H-P4** | spatial 云同步          | ⏸️  | —             | Supabase 表 + `sync.js`；大投入             |
-| **H-P5** | 平面双模式（浏览/编辑） | ✅  | —             | 已去掉工坊 gate；无墙图/测距入口              |
+| ID       | 主题                    | ROI | 依赖 | 说明                                |
+| -------- | ----------------------- | --- | ---- | ----------------------------------- |
+| **H-P1** | Portal Launcher 实验卡  | ✅  | —    | `portal.kenos.space` 实验区         |
+| **H-P2** | 接 `coreIdentity` + SSO | ✅  | —    | `apps/home/src/lib/auth.svelte.js`  |
+| **H-P3** | redirect + DB `app_id`  | ✅  | —    | migration + Supabase Management API |
+| **H-P4** | spatial 云同步          | ⏸️  | —    | Supabase 表 + `sync.js`；大投入     |
+| **H-P5** | 平面双模式（浏览/编辑） | ✅  | —    | 已去掉工坊 gate；无墙图/测距入口    |
 
 **提交纪律：** 勿将 `apps/home/**` 与 platform/catalog 变更混 PR（除非明确做 Home）。

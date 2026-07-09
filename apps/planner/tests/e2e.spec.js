@@ -1,30 +1,13 @@
 import { test, expect } from '@playwright/test'
+import {
+  clearAppState,
+  openNewTaskEditor,
+  quickAddTask,
+  waitForPlannerReady,
+} from './e2e.helpers.js'
 
-const STORAGE_KEY = 'planos_v1'
-
-async function clearAppState(page) {
-  await page.goto('/')
-  await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY)
-  await page.reload()
-  await page.waitForSelector('.app-shell', { timeout: 15_000 })
-}
-
-// Inbox 走页面内快速添加；其余页面走 FAB + 编辑器
-async function quickAddTask(page, title) {
-  const pathname = new URL(page.url()).pathname
-  if (pathname.startsWith('/inbox')) {
-    const input = page.getByRole('textbox').first()
-    await expect(input).toBeVisible()
-    await input.fill(title)
-    await page.getByRole('button', { name: '添加', exact: true }).click()
-    return
-  }
-
-  await page.getByTestId('fab-add').click()
-  const dialog = page.getByRole('dialog')
-  await dialog.locator('#task-title').fill(title)
-  await dialog.getByRole('button', { name: '保存' }).click()
-  await expect(dialog).toHaveCount(0)
+async function clearAppStateForProject(page, testInfo) {
+  await clearAppState(page, testInfo.project.name)
 }
 
 // 新建任务的编辑器默认折叠高级选项，需要先展开
@@ -63,8 +46,8 @@ async function swipeTaskRow(page, title, deltaX) {
 }
 
 test.describe('PlannerOS E2E', () => {
-  test.beforeEach(async ({ page }) => {
-    await clearAppState(page)
+  test.beforeEach(async ({ page }, testInfo) => {
+    await clearAppStateForProject(page, testInfo)
   })
 
   test('首页加载与品牌展示', async ({ page }) => {
@@ -73,24 +56,24 @@ test.describe('PlannerOS E2E', () => {
     await expect(page.locator('h1.page-title')).toHaveText('今天')
   })
 
-  test('快速添加任务并出现在今天列表', async ({ page }) => {
+  test('快速添加任务并出现在今天列表', async ({ page }, testInfo) => {
     await page.goto('/')
-    await quickAddTask(page, '写周报')
+    await quickAddTask(page, '写周报', testInfo.project.name)
     await expect(
       page.locator('.task-title', { hasText: '写周报' }),
     ).toBeVisible()
     await expect(page.locator('.sec-title', { hasText: '今天' })).toBeVisible()
   })
 
-  test('FAB 打开编辑器并保存任务', async ({ page }) => {
+  test('FAB 打开编辑器并保存任务', async ({ page }, testInfo) => {
     await page.goto('/')
-    await page.getByTestId('fab-add').click()
-    await expect(page.getByRole('dialog')).toBeVisible()
-    await page.locator('#task-title').fill('会议准备')
-    await page.locator('#task-due').fill(localDateOffset(0))
-    await openAdvancedOptions(page.getByRole('dialog'))
-    await page.locator('#task-priority').selectOption({ label: '高' })
-    await page.getByRole('dialog').getByRole('button', { name: '保存' }).click()
+    const dialog = await openNewTaskEditor(page, testInfo.project.name)
+    await dialog.locator('#task-title').fill('会议准备')
+    await dialog.locator('#task-due').fill(localDateOffset(0))
+    await openAdvancedOptions(dialog)
+    await dialog.locator('#task-priority').selectOption({ label: '高' })
+    await dialog.getByRole('button', { name: '保存' }).click()
+    await page.goto('/')
     await expect(
       page.locator('.task-title', { hasText: '会议准备' }),
     ).toBeVisible()
@@ -99,9 +82,9 @@ test.describe('PlannerOS E2E', () => {
     ).toBeVisible()
   })
 
-  test('完成任务后进入今日完成或庆祝态', async ({ page }) => {
+  test('完成任务后进入今日完成或庆祝态', async ({ page }, testInfo) => {
     await page.goto('/')
-    await quickAddTask(page, '待完成项')
+    await quickAddTask(page, '待完成项', testInfo.project.name)
     const row = page.locator('.task-row', {
       has: page.locator('.task-title', { hasText: '待完成项' }),
     })
@@ -119,9 +102,9 @@ test.describe('PlannerOS E2E', () => {
     ).toHaveCount(0)
   })
 
-  test('点击任务打开编辑并更新标题', async ({ page }) => {
+  test('点击任务打开编辑并更新标题', async ({ page }, testInfo) => {
     await page.goto('/')
-    await quickAddTask(page, '旧标题')
+    await quickAddTask(page, '旧标题', testInfo.project.name)
     await page.locator('.task-title', { hasText: '旧标题' }).click()
     await expect(page.getByRole('dialog')).toBeVisible()
     await page.locator('#task-title').fill('新标题')
@@ -131,22 +114,22 @@ test.describe('PlannerOS E2E', () => {
     ).toBeVisible()
   })
 
-  test('收件箱页面添加无日期任务', async ({ page }) => {
+  test('收件箱页面添加无日期任务', async ({ page }, testInfo) => {
     await page.goto('/inbox')
     await expect(page.locator('h1.page-title')).toHaveText('收件箱')
     await expect(page.getByTestId('fab-add')).toHaveCount(0)
-    await quickAddTask(page, '收件箱任务')
+    await quickAddTask(page, '收件箱任务', testInfo.project.name)
     await expect(
       page.locator('.task-title', { hasText: '收件箱任务' }),
     ).toBeVisible()
   })
 
-  test('即将页面路由可访问', async ({ page }) => {
+  test('即将页面路由可访问', async ({ page }, testInfo) => {
     await page.goto('/')
-    await page.getByTestId('fab-add').click()
-    await page.locator('#task-title').fill('明天的事')
-    await page.locator('#task-due').fill(localDateOffset(1))
-    await page.getByRole('dialog').getByRole('button', { name: '保存' }).click()
+    const dialog = await openNewTaskEditor(page, testInfo.project.name)
+    await dialog.locator('#task-title').fill('明天的事')
+    await dialog.locator('#task-due').fill(localDateOffset(1))
+    await dialog.getByRole('button', { name: '保存' }).click()
 
     await page.goto('/upcoming')
     await expect(page.locator('h1.page-title')).toHaveText('即将')
@@ -164,13 +147,13 @@ test.describe('PlannerOS E2E', () => {
     await expect(days.nth(2)).toHaveClass(/on/)
   })
 
-  test('搜索任务与标签过滤', async ({ page }) => {
+  test('搜索任务与标签过滤', async ({ page }, testInfo) => {
     await page.goto('/')
-    await page.getByTestId('fab-add').click()
-    await page.locator('#task-title').fill('搜索目标')
-    await openAdvancedOptions(page.getByRole('dialog'))
-    await page.locator('#task-tags').fill('work, urgent')
-    await page.getByRole('dialog').getByRole('button', { name: '保存' }).click()
+    const dialog = await openNewTaskEditor(page, testInfo.project.name)
+    await dialog.locator('#task-title').fill('搜索目标')
+    await openAdvancedOptions(dialog)
+    await dialog.locator('#task-tags').fill('work, urgent')
+    await dialog.getByRole('button', { name: '保存' }).click()
 
     await page.goto('/search')
     await page.locator('.field input').fill('搜索目标')
@@ -215,11 +198,11 @@ test.describe('PlannerOS E2E', () => {
     await expect(page.locator('h1.page-title')).toHaveText('Today')
   })
 
-  test('localStorage 持久化：刷新后任务仍在', async ({ page }) => {
+  test('localStorage 持久化：刷新后任务仍在', async ({ page }, testInfo) => {
     await page.goto('/')
-    await quickAddTask(page, '持久化测试')
+    await quickAddTask(page, '持久化测试', testInfo.project.name)
     await page.reload()
-    await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 })
+    await waitForPlannerReady(page, testInfo.project.name)
     await expect(
       page.locator('.task-title', { hasText: '持久化测试' }),
     ).toBeVisible()
@@ -239,15 +222,15 @@ test.describe('PlannerOS E2E', () => {
     await expect(page).toHaveURL(/\/settings/)
   })
 
-  test('重复任务：完成后生成下一项', async ({ page }) => {
+  test('重复任务：完成后生成下一项', async ({ page }, testInfo) => {
     await page.goto('/')
-    await page.getByTestId('fab-add').click()
-    const dialog = page.getByRole('dialog')
+    const dialog = await openNewTaskEditor(page, testInfo.project.name)
     await dialog.locator('#task-title').fill('每日晨跑')
     await dialog.locator('#task-due').fill(localDateOffset(0))
     await openAdvancedOptions(dialog)
     await dialog.getByRole('button', { name: '每天', exact: true }).click()
     await dialog.getByRole('button', { name: '保存' }).click()
+    await page.goto('/')
     await expect(
       page.locator('.task-title', { hasText: '每日晨跑' }),
     ).toBeVisible()
@@ -280,9 +263,9 @@ test.describe('PlannerOS E2E', () => {
     await expect(page).toHaveURL(/\/settings/)
   })
 
-  test('删除任务', async ({ page }) => {
+  test('删除任务', async ({ page }, testInfo) => {
     await page.goto('/')
-    await quickAddTask(page, '将被删除')
+    await quickAddTask(page, '将被删除', testInfo.project.name)
     await page.locator('.task-title', { hasText: '将被删除' }).click()
     await page.getByRole('dialog').getByRole('button', { name: '删除' }).click()
     await expect(
@@ -290,9 +273,9 @@ test.describe('PlannerOS E2E', () => {
     ).toHaveCount(0)
   })
 
-  test('右滑完成任务', async ({ page }) => {
+  test('右滑完成任务', async ({ page }, testInfo) => {
     await page.goto('/inbox')
-    await quickAddTask(page, '右滑完成')
+    await quickAddTask(page, '右滑完成', testInfo.project.name)
     await swipeTaskRow(page, '右滑完成', 120)
     await expect(
       page.locator('.task-title', { hasText: '右滑完成' }),
@@ -303,9 +286,9 @@ test.describe('PlannerOS E2E', () => {
     ).toBeVisible()
   })
 
-  test('左滑展开操作并删除可撤销', async ({ page }) => {
+  test('左滑展开操作并删除可撤销', async ({ page }, testInfo) => {
     await page.goto('/inbox')
-    await quickAddTask(page, '左滑删除')
+    await quickAddTask(page, '左滑删除', testInfo.project.name)
     await swipeTaskRow(page, '左滑删除', -140)
     const deleteBtn = page
       .locator('.swipe-item', {
@@ -321,9 +304,9 @@ test.describe('PlannerOS E2E', () => {
     ).toBeVisible()
   })
 
-  test('左滑改期到明天', async ({ page }) => {
+  test('左滑改期到明天', async ({ page }, testInfo) => {
     await page.goto('/inbox')
-    await quickAddTask(page, '改期任务')
+    await quickAddTask(page, '改期任务', testInfo.project.name)
     await swipeTaskRow(page, '改期任务', -140)
     await page
       .locator('.swipe-item', {
@@ -338,9 +321,9 @@ test.describe('PlannerOS E2E', () => {
     ).toBeVisible()
   })
 
-  test('编辑已有任务添加子任务', async ({ page }) => {
+  test('编辑已有任务添加子任务', async ({ page }, testInfo) => {
     await page.goto('/')
-    await quickAddTask(page, '带子任务')
+    await quickAddTask(page, '带子任务', testInfo.project.name)
     await page.locator('.task-title', { hasText: '带子任务' }).click()
     const dialog = page.getByRole('dialog')
     await openAdvancedOptions(dialog)
@@ -374,9 +357,9 @@ test.describe('PlannerOS E2E', () => {
     }
   })
 
-  test('已完成任务页展示', async ({ page }) => {
+  test('已完成任务页展示', async ({ page }, testInfo) => {
     await page.goto('/')
-    await quickAddTask(page, '完成后可见')
+    await quickAddTask(page, '完成后可见', testInfo.project.name)
     const row = page.locator('.task-row', {
       has: page.locator('.task-title', { hasText: '完成后可见' }),
     })
@@ -406,11 +389,11 @@ test.describe('PlannerOS E2E', () => {
     })
   })
 
-  test('Insight 批量排期无日期任务', async ({ page }) => {
+  test('Insight 批量排期无日期任务', async ({ page }, testInfo) => {
     await page.goto('/inbox')
-    await quickAddTask(page, '排期A')
-    await quickAddTask(page, '排期B')
-    await quickAddTask(page, '排期C')
+    await quickAddTask(page, '排期A', testInfo.project.name)
+    await quickAddTask(page, '排期B', testInfo.project.name)
+    await quickAddTask(page, '排期C', testInfo.project.name)
     await page.goto('/')
     // 有任务时 Insight 默认折叠为摘要，等待加载后展开
     const summary = page.locator('.insight-summary')

@@ -8,20 +8,24 @@
 
 **模型：** Core 闭环 → 防回归 → Growth（Portal `core_*` + 单 App 管道）→ 窄 Design — 详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §推荐执行顺序
 
-| 焦点   | 主题                                              | 状态 |
-| ------ | ------------------------------------------------- | ---- |
-| ○ 按需 | D-P6 a11y · I-P1.5b · QA-P2 Planner desktop E2E | —    |
-| ✗ 暂缓 | Finance React 抽象 · I-P2 · Home 云同步（H-P4）   | —    |
+| 焦点       | 主题                          | 文档                                             |
+| ---------- | ----------------------------- | ------------------------------------------------ |
+| 🔥 Phase 0 | **F-P3** Finance 信任锚点     | [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) |
+| Phase 1    | **G-P4b-M** · **M-P2** · P-P2 | hub §Next                                        |
+| Phase 1b   | CI 接线（F-P0/QA-P2 本地 ✅） | [`qa/e2e-issues.md`](./qa/e2e-issues.md)         |
+| ○ 条件     | I-P1.5b / G-P4b-H             | 每天用两站 / H-P6a                               |
 
-**2026-07-09 已验收：** I-P0 · G-P4 · H-P1/H-P2/H-P3 · F-P1 · G-P2 · M-P1 · AppBrandSwitcher — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-09 已验收：** F-P0 · QA-P2 · I-P0 · G-P4 · H-P1/H-P2/H-P3 · F-P1 · G-P2 · M-P1 · AppBrandSwitcher — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+
+**六 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
 ## 六 app + 插件（一览）
 
 | App / 插件                          | 层级                  | 文档                                                                       |
 | ----------------------------------- | --------------------- | -------------------------------------------------------------------------- |
-| Planner · Fitness · Finance · Music | 生产四站              | hub §六 app 一览                                                           |
-| Portal                              | 启动器                | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p1)                  |
-| Home                                | 实验第六站            | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)                  |
+| Planner · Fitness · Finance · Music | 生产四站              | [`roadmap/apps/`](./roadmap/apps/README.md)                                |
+| Portal                              | 启动器                | [`roadmap/apps/portal.md`](./roadmap/apps/portal.md)                       |
+| Home                                | 实验第六站            | [`roadmap/apps/home.md`](./roadmap/apps/home.md)                           |
 | Finance OS Sync                     | Chrome 扩展（非 app） | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md#f-p1) · `apps/finance/extension` |
 
 ## 文档地图（单人团队四层）
@@ -40,7 +44,7 @@
 docs/
 ├── LIFEOS_ROADMAP.md    ← 每周扫一眼（Now / Next / Shipped / Not doing / 六 app 一览）
 ├── MAINTENANCE.md       ← 怎么维护这套文档
-├── roadmap/             ← 分卷：INTEGRATION · GROWTH · PLATFORM · DESIGN · BACKLOG · SHIPPED
+├── roadmap/             ← 分卷：INTEGRATION · GROWTH · PLATFORM · DESIGN · BACKLOG · SHIPPED · apps/
 ├── ops/                 ← Netlify · Supabase · canonical
 ├── architecture/        ← contracts · events-rfc · native-readiness
 ├── qa/                  ← e2e · pwa · input-ime
@@ -56,6 +60,8 @@ docs/
 | ---------------------- | --------------------------------------------------------------- |
 | 看当前在做什么         | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §Now · §推荐执行顺序 |
 | 看六 app 状态          | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §六 app 一览         |
+| 看单 app 排期          | [`roadmap/apps/`](./roadmap/apps/README.md)                     |
+| 看 ROI 研判            | [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)                |
 | 部署 / env / 六站 URL  | [`ops/netlify.md`](./ops/netlify.md)                            |
 | Growth 排期与外部对标  | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                      |
 | 跑远程 SQL / migration | [`ops/supabase.md`](./ops/supabase.md)                          |
