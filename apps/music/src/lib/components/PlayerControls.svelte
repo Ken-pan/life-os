@@ -10,6 +10,7 @@
     cycleRepeat,
   } from '$lib/player.svelte.js';
   import { openQueueDrawer } from '$lib/ui.svelte.js';
+  import { t } from '$lib/i18n/index.js';
 
   let { large = false, quiet = false, minimal = false, hideProgress = false, apple = false } = $props();
 
@@ -31,8 +32,18 @@
   <button class="ctrl" type="button" aria-label="上一首" onclick={prevTrack}>
     <Icon name="skip-back" size={minimal ? 20 : 22} strokeWidth={apple ? 2.25 : 1.75} />
   </button>
-  <button class="ctrl ctrl-main" type="button" aria-label={player.playing ? '暂停' : '播放'} onclick={togglePlay}>
-    <Icon name={player.playing ? 'pause' : 'play'} size={minimal ? 24 : 28} strokeWidth={apple ? 2.5 : 2} />
+  <button
+    class="ctrl ctrl-main"
+    type="button"
+    aria-label={player.loading ? t('common.loading') : player.playing ? t('common.pause') : t('common.play')}
+    aria-busy={player.loading}
+    onclick={togglePlay}
+  >
+    {#if player.loading}
+      <Icon name="loader-circle" size={minimal ? 24 : 28} strokeWidth={apple ? 2.5 : 2} class="ctrl-main-spin" />
+    {:else}
+      <Icon name={player.playing ? 'pause' : 'play'} size={minimal ? 24 : 28} strokeWidth={apple ? 2.5 : 2} />
+    {/if}
   </button>
   <button class="ctrl" type="button" aria-label="下一首" onclick={nextTrack}>
     <Icon name="skip-forward" size={minimal ? 20 : 22} strokeWidth={apple ? 2.25 : 1.75} />

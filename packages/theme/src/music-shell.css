@@ -305,6 +305,32 @@
   color: var(--on-accent);
 }
 
+@keyframes musicos-ctrl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ctrl-main-spin {
+  animation: musicos-ctrl-spin 0.75s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctrl-main-spin {
+    animation: none;
+  }
+}
+
+.mini-player-status-hint {
+  margin-top: 2px;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--danger, #e85d6a) 82%, var(--t3, var(--text-muted)));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .mini-player-art {
   width: 44px;
   height: 44px;

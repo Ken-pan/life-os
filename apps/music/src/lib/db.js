@@ -128,8 +128,10 @@ export function hydrateTrack(track) {
 
 /** @returns {Promise<import('./types.js').Track[]>} */
 export async function getAllTracks() {
-  await ensureAlbumArtCache()
-  const rows = await db.tracks.orderBy('addedAt').reverse().toArray()
+  const [, rows] = await Promise.all([
+    ensureAlbumArtCache(),
+    db.tracks.orderBy('addedAt').reverse().toArray(),
+  ])
   return rows.map(hydrateTrack)
 }
 

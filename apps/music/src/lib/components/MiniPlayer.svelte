@@ -27,6 +27,7 @@
   const visible = $derived(Boolean(track) && !hidden);
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
   const volumeIcon = $derived(player.muted || player.volume === 0 ? 'volume-x' : 'volume-2');
+  const statusHint = $derived(player.statusHint || '');
 
   let isDesktop = $state(browser && window.matchMedia('(min-width: 840px)').matches);
 
@@ -78,6 +79,9 @@
       <div class="mini-player-meta">
         <div class="mini-player-title">{track?.title}</div>
         <div class="mini-player-artist">{track?.artist}</div>
+        {#if statusHint}
+          <p class="mini-player-status-hint" role="status">{statusHint}</p>
+        {/if}
       </div>
       {#if !isDesktop}
         <Icon name="chevron-up" size={16} class="mini-player-expand" />
@@ -92,8 +96,18 @@
         <button class="ctrl" type="button" aria-label="上一首" onclick={prevTrack}>
           <Icon name="skip-back" size={18} />
         </button>
-        <button class="ctrl ctrl-main" type="button" aria-label={player.playing ? t('common.pause') : t('common.play')} onclick={togglePlay}>
-          <Icon name={player.playing ? 'pause' : 'play'} size={20} strokeWidth={2} />
+        <button
+          class="ctrl ctrl-main"
+          type="button"
+          aria-label={player.loading ? t('common.loading') : player.playing ? t('common.pause') : t('common.play')}
+          aria-busy={player.loading}
+          onclick={togglePlay}
+        >
+          {#if player.loading}
+            <Icon name="loader-circle" size={20} strokeWidth={2} class="ctrl-main-spin" />
+          {:else}
+            <Icon name={player.playing ? 'pause' : 'play'} size={20} strokeWidth={2} />
+          {/if}
         </button>
         <button class="ctrl" type="button" aria-label="下一首" onclick={nextTrack}>
           <Icon name="skip-forward" size={18} />
@@ -160,8 +174,18 @@
         oninput={(e) => setVolume(Number(e.currentTarget.value))}
       />
     </div>
-    <button class="mini-player-btn play mini-player-btn--mobile-only" type="button" aria-label={player.playing ? t('common.pause') : t('common.play')} onclick={togglePlay}>
-      <Icon name={player.playing ? 'pause' : 'play'} size={20} strokeWidth={2} />
+    <button
+      class="mini-player-btn play mini-player-btn--mobile-only"
+      type="button"
+      aria-label={player.loading ? t('common.loading') : player.playing ? t('common.pause') : t('common.play')}
+      aria-busy={player.loading}
+      onclick={togglePlay}
+    >
+      {#if player.loading}
+        <Icon name="loader-circle" size={20} strokeWidth={2} class="ctrl-main-spin" />
+      {:else}
+        <Icon name={player.playing ? 'pause' : 'play'} size={20} strokeWidth={2} />
+      {/if}
     </button>
   </div>
   </div>

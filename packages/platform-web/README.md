@@ -37,6 +37,8 @@ This package contains thin web-only adapters. P0 PR 3 adds appearance and page-m
 | `@life-os/platform-web/sync-error`                        | `createSyncErrorPresentation`                                                                     |
 | `@life-os/platform-web/icon-registry`                     | `ICON_REGISTRY_CONTEXT_KEY`                                                                       |
 | `@life-os/platform-web/navigation`                        | `WebNavItem` / `WebNavGroup` types                                                                |
+| `@life-os/platform-web/sw-lifecycle`                      | `registerServiceWorker({ url, shouldDeferUpdate, deferEvents })` — SW register + deferred-update lifecycle |
+| `@life-os/platform-web/wake-lock`                         | `createScreenWakeLock()` — Screen Wake Lock helper (`bind` / `bindWithGestureFallback`)           |
 
 Settings 子路径：`row`、`action-row`、`toggle`、`toggle-row`、`segment`、`button-group`、`file-button`、`stack-block`、`backup-rows`、`section`、`sync-block`。各 app 保留 `*Rows` / `*Block` 业务组合件。
 
@@ -47,6 +49,8 @@ SSR/static `<svelte:head>` output.
 See [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)（C-P0/C-P1） and [`../../docs/architecture/contracts.md`](../../docs/architecture/contracts.md)（Web 映射附录）.
 
 **Portal（I-P1 WIP）** 已使用 `CommandPalette`；Planner/Fitness 使用 `applyDocumentMetaWeb`。
+
+See [`../../docs/architecture/pwa-background-work.md`](../../docs/architecture/pwa-background-work.md) for the cross-app background-work pattern (SW lifecycle, wake lock, foreground-resume, iOS constraints).
 
 ## Allowed dependencies
 

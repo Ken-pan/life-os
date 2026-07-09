@@ -1,15 +1,10 @@
 import { browser } from '$app/environment';
+import { registerServiceWorker as registerServiceWorkerShared } from '@life-os/platform-web/sw-lifecycle';
 import { syncRemindersToServiceWorker } from './services/reminders.js';
 
-export async function registerServiceWorker() {
-  if (!browser || !('serviceWorker' in navigator)) return () => {};
-  try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
-    await syncRemindersToServiceWorker();
-    return () => {};
-  } catch {
-    return () => {};
-  }
+/** @returns {() => void} */
+export function registerServiceWorker() {
+  return registerServiceWorkerShared({ enabled: browser });
 }
 
 export { syncRemindersToServiceWorker };

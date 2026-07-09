@@ -28,6 +28,7 @@
   import {
     playTracks,
     playTrack,
+    prewarmTrack,
     togglePlay,
     getCurrentTrack,
     player,
@@ -36,6 +37,7 @@
   } from '$lib/player.svelte.js'
   import { markNowPlayingReturn } from '$lib/nav.js'
   import { openUtilityPane } from '$lib/ui.svelte.js'
+  import { prefetchSignedUrls } from '$lib/cloudAudio.js'
 
   let recent = $state([])
   let recentAdded = $state([])
@@ -109,6 +111,12 @@
       getSpeedDialPages(fatigueId),
     ])
     quickPicks = await getQuickPicks(speedDialTrackIds(speedDialPages), 6)
+    void prefetchSignedUrls(
+      [...recent, ...recentAdded, ...quickPicks]
+        .map((tr) => tr.storagePath)
+        .filter(Boolean),
+      24,
+    )
   }
 
   async function onSpeedDialChange() {
@@ -315,6 +323,7 @@
               <button
                 type="button"
                 class="quick-pick-card"
+                onpointerdown={() => prewarmTrack(track)}
                 onclick={() => playTrack(track, 'quick_picks')}
               >
                 <TrackArt

@@ -4,6 +4,7 @@
   import TrackRow from '$lib/components/TrackRow.svelte'
   import TrackTable from '$lib/components/TrackTable.svelte'
   import { getAllTracks } from '$lib/db.js'
+  import { prefetchSignedUrls } from '$lib/cloudAudio.js'
   import { scheduleLibraryMaintenance } from '$lib/import.js'
   import { librarySignals, S, patchLocalSettings } from '$lib/state.svelte.js'
   import { setPageChrome } from '$lib/pageChrome.svelte.js'
@@ -15,10 +16,17 @@
   let filter = $state('')
   let selectedIds = $state(new Set())
   let isDesktop = $state(false)
+  let loading = $state(true)
 
   async function loadTracks() {
+    loading = true
     scheduleLibraryMaintenance({ lyrics: false })
     tracks = await getAllTracks()
+    loading = false
+    void prefetchSignedUrls(
+      tracks.map((tr) => tr.storagePath).filter(Boolean),
+      32,
+    )
   }
 
   onMount(() => {
@@ -123,7 +131,13 @@
     </div>
   {/if}
 
-  {#if isDesktop && tracks.length}
+  {#if loading}
+    <div class="library-skeleton" aria-busy="true" aria-label={t('common.loading')}>
+      {#each { length: 8 } as _}
+        <div class="library-skeleton-row"></div>
+      {/each}
+    </div>
+  {:else if isDesktop && tracks.length}
     <input
       id="library-filter"
       class="library-filter"
@@ -181,5 +195,39 @@
     border-radius: var(--radius-md);
     background: color-mix(in srgb, var(--accent) 8%, var(--card));
     border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  }
+
+  .library-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .library-skeleton-row {
+    height: 56px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(
+      90deg,
+      var(--card) 25%,
+      color-mix(in srgb, var(--accent) 10%, var(--card)) 50%,
+      var(--card) 75%
+    );
+    background-size: 200% 100%;
+    animation: library-skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+
+  @keyframes library-skeleton-shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .library-skeleton-row {
+      animation: none;
+    }
   }
 </style>

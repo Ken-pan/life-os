@@ -4,7 +4,7 @@
   import TrackArt from './TrackArt.svelte';
   import ContextMenu from './ContextMenu.svelte';
   import LikeButton from './LikeButton.svelte';
-  import { playTrack, playTracks, appendToQueue, insertAfterCurrent } from '$lib/player.svelte.js';
+  import { playTrack, playTracks, appendToQueue, insertAfterCurrent, prewarmTrack } from '$lib/player.svelte.js';
   import { formatTime } from '$lib/player.svelte.js';
   import { t } from '$lib/i18n/index.js';
 
@@ -121,6 +121,7 @@
         <button
           type="button"
           class="track-table-title-btn"
+          onpointerdown={() => prewarmTrack(track)}
           onclick={(e) => (onToggleSelect ? onToggleSelect(track.id, e) : playTrack(track))}
         >
           {track.title}
@@ -140,7 +141,7 @@
         />
       </span>
       <span class="track-table-col track-table-col--actions">
-        <button type="button" class="track-table-icon-btn play" aria-label={t('common.playNow')} onclick={() => playTrack(track)}>
+        <button type="button" class="track-table-icon-btn play" aria-label={t('common.playNow')} onpointerdown={() => prewarmTrack(track)} onclick={() => playTrack(track)}>
           <Icon name="play" size={14} strokeWidth={2} />
         </button>
         <button type="button" class="track-table-icon-btn" aria-label={t('common.more')} onclick={(e) => openMenu(track, e)}>

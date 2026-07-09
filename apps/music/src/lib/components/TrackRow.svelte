@@ -3,7 +3,7 @@
   import TrackArt from './TrackArt.svelte'
   import ContextMenu from './ContextMenu.svelte'
   import LikeButton from './LikeButton.svelte'
-  import { playTrack, playTracks, appendToQueue, insertAfterCurrent } from '$lib/player.svelte.js'
+  import { playTrack, playTracks, appendToQueue, insertAfterCurrent, prewarmTrack } from '$lib/player.svelte.js'
   import { t } from '$lib/i18n/index.js'
 
   /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, queueMode?: boolean, richActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
@@ -43,6 +43,10 @@
     else onPlay()
   }
 
+  function onPrewarm() {
+    prewarmTrack(track)
+  }
+
   /** @param {MouseEvent} e */
   function openMenu(e) {
     e.stopPropagation()
@@ -65,6 +69,7 @@
     type="button"
     class="track-row-art-btn"
     aria-label={t('common.playNow')}
+    onpointerdown={onPrewarm}
     onclick={onPlay}
   >
     <TrackArt
@@ -83,7 +88,7 @@
       <Icon name="play" size={14} strokeWidth={2} />
     </span>
   </button>
-  <button type="button" class="track-row-body" onclick={onRowClick}>
+  <button type="button" class="track-row-body" onpointerdown={onPrewarm} onclick={onRowClick}>
     <div class="track-row-title">{track.title}</div>
     <div class="track-row-sub">{track.artist} · {track.album}</div>
   </button>

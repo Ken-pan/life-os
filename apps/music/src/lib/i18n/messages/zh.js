@@ -10,6 +10,7 @@ export default {
     playAll: '播放全部',
     playAlbum: '播放专辑',
     pause: '暂停',
+    loading: '加载中',
     import: '导入音乐',
     search: '搜索',
     more: '更多',

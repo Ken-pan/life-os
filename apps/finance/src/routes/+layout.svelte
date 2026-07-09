@@ -10,6 +10,8 @@
   import AppShell from '$lib/components/AppShell.svelte'
   import { migrateLegacyRouteUrl } from '@life-os/finance-core/routing/app-route'
   import { bindViewportHeight, bindPwaForegroundResume } from '@life-os/theme'
+  import { registerServiceWorker } from '@life-os/platform-web/sw-lifecycle'
+  import { dev } from '$app/environment'
   import { setPurchaseImageBaseUrl } from '$lib/engine/purchaseEnrichment'
   import { supabaseUrl } from '$lib/supabase.js'
   import { t, initLocale } from '$lib/i18n.svelte.js'
@@ -53,11 +55,13 @@
 
     const cleanupViewport = bindViewportHeight()
     const cleanupForeground = bindPwaForegroundResume()
+    const cleanupServiceWorker = registerServiceWorker({ enabled: !dev })
 
     return () => {
       cleanupLocale()
       cleanupViewport()
       cleanupForeground()
+      cleanupServiceWorker()
     }
   })
 </script>

@@ -7,7 +7,7 @@
   import TrackArt from './TrackArt.svelte'
   import SearchHighlight from './SearchHighlight.svelte'
   import { getRecentSearches, addRecentSearch } from '$lib/db.js'
-  import { playTrack } from '$lib/player.svelte.js'
+  import { playTrack, prewarmTrack } from '$lib/player.svelte.js'
   import { recordMusicInteraction } from '$lib/musicInteractions.js'
   import {
     searchState,
@@ -373,6 +373,7 @@
               class={rowClass(idx)}
               role="option"
               aria-selected={activeIndex === idx}
+              onpointerdown={() => prewarmTrack(track)}
               onclick={() => pickTrack(track)}
             >
               <TrackArt

@@ -35,6 +35,7 @@ import Sparkles from '@lucide/svelte/icons/sparkles'
 import Headphones from '@lucide/svelte/icons/headphones'
 import CircleUser from '@lucide/svelte/icons/circle-user'
 import GripVertical from '@lucide/svelte/icons/grip-vertical'
+import LoaderCircle from '@lucide/svelte/icons/loader-circle'
 
 /** @type {Record<string, import('svelte').Component>} */
 export const ICONS = {
@@ -75,4 +76,5 @@ export const ICONS = {
   sparkles: Sparkles,
   'circle-user': CircleUser,
   'grip-vertical': GripVertical,
+  'loader-circle': LoaderCircle,
 }

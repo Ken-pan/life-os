@@ -117,6 +117,12 @@
     "./navigation": {
       "types": "./src/navigation.d.ts"
     },
+    "./sw-lifecycle": {
+      "import": "./src/swLifecycle.js"
+    },
+    "./wake-lock": {
+      "import": "./src/wakeLock.js"
+    },
     "./svelte/navigation": {
       "svelte": "./src/svelte/navigation/BackButton.svelte",
       "default": "./src/svelte/navigation/BackButton.svelte"

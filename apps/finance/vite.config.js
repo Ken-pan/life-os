@@ -1,75 +1,36 @@
 /// <reference types="vitest/config" />
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig, loadEnv } from 'vite'
 import { handleKimiBrief } from './server/kimiBrief.ts'
 
-const STOOQ_BATCH_CONCURRENCY = 4
+// Stamps a per-deploy build id into static/sw.js's cache name so a new deploy
+// gets a fresh cache instead of serving stale precached assets forever.
+// Same pattern as apps/music/vite.config.js's musicPwaCacheVersionPlugin.
+function financePwaCacheVersionPlugin() {
+  const buildId =
+    process.env.COMMIT_REF ||
+    process.env.DEPLOY_ID ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    `dev-${Date.now().toString(36)}`
 
-function symbolsFromReqUrl(url) {
-  if (!url) return []
-  const q = url.indexOf('?')
-  if (q < 0) return []
-  for (const part of url.slice(q + 1).split('&')) {
-    if (!part.startsWith('symbols=')) continue
-    return decodeURIComponent(part.slice('symbols='.length).replace(/\+/g, ' '))
-      .split(',')
-      .map((s) => s.trim().toUpperCase())
-      .filter(Boolean)
-  }
-  return []
-}
-
-function stooqBatchPlugin() {
   return {
-    name: 'stooq-batch',
-    configureServer(server) {
-      server.middlewares.use('/api/stooq-batch', async (req, res) => {
-        try {
-          const symbols = symbolsFromReqUrl(req.url)
-          const out = {}
-          let i = 0
-          const workers = Array.from(
-            {
-              length: Math.min(
-                STOOQ_BATCH_CONCURRENCY,
-                Math.max(symbols.length, 1),
-              ),
-            },
-            async () => {
-              while (i < symbols.length) {
-                const sym = symbols[i++]
-                const ticker = sym.toLowerCase()
-                const endpoint = `https://stooq.com/q/l/?s=${encodeURIComponent(`${ticker}.us`)}&i=d`
-                const response = await fetch(endpoint)
-                if (!response.ok) continue
-                const body = await response.text()
-                const line = body
-                  .trim()
-                  .split('\n')
-                  .map((x) => x.trim())
-                  .find((x) => x.includes(',20'))
-                if (!line) continue
-                const parts = line.split(',')
-                if (parts.length < 7) continue
-                const price = Number(parts[6])
-                if (!Number.isFinite(price)) continue
-                out[sym] = {
-                  symbol: sym,
-                  price,
-                  date: parts[1],
-                  time: parts[2],
-                }
-              }
-            },
-          )
-          await Promise.all(workers)
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(out))
-        } catch {
-          res.statusCode = 502
-          res.end(JSON.stringify({}))
-        }
-      })
+    name: 'finance-pwa-cache-version',
+    apply: 'build',
+    closeBundle() {
+      const sw = readFileSync(join(process.cwd(), 'static/sw.js'), 'utf8').replaceAll(
+        '__FINANCE_BUILD_ID__',
+        buildId,
+      )
+      for (const outDir of [
+        join(process.cwd(), '.svelte-kit/output/client'),
+        join(process.cwd(), 'build'),
+      ]) {
+        const swPath = join(outDir, 'sw.js')
+        if (!existsSync(swPath)) continue
+        writeFileSync(swPath, sw)
+      }
     },
   }
 }
@@ -112,16 +73,11 @@ function kimiBriefPlugin(apiKey) {
 export default defineConfig(({ mode }) => ({
   plugins: [
     sveltekit(),
-    stooqBatchPlugin(),
     kimiBriefPlugin(loadEnv(mode, process.cwd(), '').KIMI_API_KEY),
+    financePwaCacheVersionPlugin(),
   ],
   server: {
     proxy: {
-      '/api/stooq': {
-        target: 'https://stooq.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/stooq/, ''),
-      },
       '/api/news': {
         target: 'https://news.google.com',
         changeOrigin: true,

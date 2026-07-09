@@ -164,6 +164,8 @@ export const player = $state({
   ready: false,
   volume: 1,
   muted: false,
+  /** True while resolving/buffering a track that isn't playable yet. */
+  loading: false,
   /** Inline hint on now-playing (non-blocking; avoids toast over lyrics). */
   statusHint: '',
 })
@@ -317,6 +319,18 @@ export function playTracks(
   player.queue = queue
   player.index = index
   void loadAndPlay()
+}
+
+/**
+ * Warm the signed-URL cache for a track before the user commits to playing it
+ * (e.g. on pointerdown, ~100ms ahead of click) so the network round-trip for
+ * cloud tracks overlaps with the tap gesture instead of blocking playback start.
+ * @param {import('./types.js').Track | null | undefined} track
+ */
+export function prewarmTrack(track) {
+  if (!track || !browser) return
+  if (resolvePlayUrlSync(track)) return
+  void resolvePlayUrl(track).catch(() => {})
 }
 
 /** @param {import('./types.js').Track} track @param {import('./musicInteractions.js').PlaySource} [source] */
@@ -906,12 +920,14 @@ async function loadAndPlay(opts = {}) {
   if (typeof opts.seekTo === 'number' && opts.seekTo > 0) {
     player.currentTime = opts.seekTo
   }
+  if (opts.autoplay !== false) player.loading = true
 
   let src = resolvePlayUrlSync(track)
   if (!src) {
     try {
       src = await resolvePlayUrl(track)
     } catch (err) {
+      if (token === loadToken) player.loading = false
       if (opts.fromToggle) {
         await playbackToast(syncErrorMessage(err), { error: true })
       } else {
@@ -945,6 +961,7 @@ async function loadAndPlay(opts = {}) {
   }
 
   const ok = await startPlayback(src, token, track, opts)
+  if (token === loadToken) player.loading = false
   if (!ok || token !== loadToken) return
 
   beginTrackSession(track)
