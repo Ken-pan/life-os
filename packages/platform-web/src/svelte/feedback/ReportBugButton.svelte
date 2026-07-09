@@ -18,6 +18,36 @@
   let successState = $state(false)
   let successMode = $state('remote')
 
+  let savedScrollY = 0
+
+  function portal(node) {
+    if (typeof document === 'undefined') return {}
+    document.body.appendChild(node)
+    return {
+      destroy() {
+        if (node.parentNode) node.parentNode.removeChild(node)
+      }
+    }
+  }
+
+  function enableScrollLock() {
+    if (typeof window === 'undefined') return
+    savedScrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${savedScrollY}px`
+    document.body.style.width = '100%'
+    document.body.classList.add('lifeos-bug-report-open')
+  }
+
+  function disableScrollLock() {
+    if (typeof window === 'undefined') return
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.classList.remove('lifeos-bug-report-open')
+    window.scrollTo(0, savedScrollY)
+  }
+
   // Diagnostics metadata compiler
   function getDiagnostics() {
     if (typeof window === 'undefined') return {}
@@ -87,10 +117,12 @@
     errorMsg = ''
     successState = false
     successMode = 'remote'
+    enableScrollLock()
   }
 
   function closeSheet() {
     isOpen = false
+    disableScrollLock()
     if (screenshotPreviewUrl) {
       URL.revokeObjectURL(screenshotPreviewUrl)
       screenshotPreviewUrl = ''
@@ -204,6 +236,7 @@
 
   onMount(() => {
     return () => {
+      disableScrollLock()
       if (screenshotPreviewUrl) {
         URL.revokeObjectURL(screenshotPreviewUrl)
       }
@@ -253,6 +286,7 @@
 {#if isOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div
+    use:portal
     class="bug-report-backdrop"
     onclick={(e) => e.target === e.currentTarget && closeSheet()}
   >
@@ -411,7 +445,7 @@
   .bug-report-sheet {
     width: 100%;
     max-width: 520px;
-    max-height: calc(100dvh - env(safe-area-inset-top) - 16px);
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
     border: 1px solid var(--border-l, var(--border-strong, var(--border)));
     border-radius: 20px 20px 0 0;
     background: var(--card);

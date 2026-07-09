@@ -97,8 +97,6 @@
     html.standalone-pwa body:has(.mobile-more-backdrop) :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap),
     html.standalone-pwa body:has(.sheet-bg) :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap),
     html.standalone-pwa body:has(.sheet-bg) :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap),
-    html.standalone-pwa body:has(.bug-report-backdrop) :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap),
-    html.standalone-pwa body:has(.bug-report-backdrop) :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap),
     html.standalone-pwa body:has(.modal-bg.show) :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap),
     html.standalone-pwa body:has(.modal-bg.show) :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap),
     html.standalone-pwa body:has(.schedule-popover-bg) :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap),
@@ -138,7 +136,6 @@
 
     /* Sheet / More / Modal — Safari 16+ CSS fallback; iOS 橡皮筋由 JS lockScroll() 负责 */
     body:has(.sheet-bg),
-    body:has(.bug-report-backdrop),
     body:has(.mobile-more-backdrop),
     body:has(.modal-bg.show),
     body:has(.schedule-popover-bg) {
