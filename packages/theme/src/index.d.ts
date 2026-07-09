@@ -9,7 +9,31 @@ export declare const LIFE_OS_LAYOUT: {
   readonly bpMobileMin: 840
   readonly contentMaxText: 820
   readonly contentMaxData: 1320
+  readonly appbarH: 56
+  readonly appbarHBack: 52
+  readonly pageHeaderH: 68
+  readonly tabbarH: 62
+  readonly contentFrameModeMax: 'max'
+  readonly contentFrameModeSpan: 'span'
 }
+
+export declare const LIFE_OS_CONTENT_FRAME: {
+  readonly modeMax: 'max'
+  readonly modeSpan: 'span'
+}
+
+export declare function lifeOsMaxWidthMq(px: number): string
+export declare function lifeOsMinWidthMq(px: number): string
+export declare function lifeOsMobileMq(): string
+export declare function lifeOsDesktopMq(): string
+export declare function isLifeOsMobile(win?: Window): boolean
+export declare function isLifeOsDesktop(win?: Window): boolean
+export declare function matchLifeOsMedia(query: string, win?: Window): boolean
+export declare function bindLifeOsMedia(
+  query: string,
+  onChange: (matches: boolean) => void,
+  win?: Window,
+): () => void
 
 export type LifeOsAppId =
   | 'planner'

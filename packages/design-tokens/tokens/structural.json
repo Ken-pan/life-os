@@ -85,6 +85,9 @@
     "$value": "calc(var(--space-6) + var(--safe-bottom-effective))"
   },
   "sidebar-w": { "$type": "dimension", "$value": "228px" },
+  "appbar-h": { "$type": "dimension", "$value": "56px" },
+  "appbar-h-back": { "$type": "dimension", "$value": "52px" },
+  "appbar-height": { "$type": "cssValue", "$value": "var(--appbar-h)" },
   "page-header-h": { "$type": "dimension", "$value": "68px" },
   "nav-leading": {
     "$type": "cssValue",

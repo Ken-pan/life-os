@@ -117,6 +117,9 @@
   --mobile-content-inset-tabbar: calc(var(--mobile-tabbar-total-h) + var(--space-3));
   --mobile-content-inset-minimal: calc(var(--space-6) + var(--safe-bottom-effective));
   --sidebar-w: 228px;
+  --appbar-h: 56px;
+  --appbar-h-back: 52px;
+  --appbar-height: var(--appbar-h);
   --page-header-h: 68px;
   --nav-leading: max(16px, calc(env(safe-area-inset-left, 0px) + 8px));
   --nav-trailing: max(16px, calc(env(safe-area-inset-right, 0px) + 8px));

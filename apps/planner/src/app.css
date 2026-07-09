@@ -1333,13 +1333,7 @@ body {
 
 @media (--life-os-desktop) {
   .main-col {
-    --planner-desktop-span: calc(100cqw - var(--page-gutter-desktop, 24px) * 2);
-  }
-
-  @supports not (width: 100cqw) {
-    .main-col {
-      --planner-desktop-span: calc(100vw - var(--sidebar-w, 208px) - var(--page-gutter-desktop, 24px) * 2);
-    }
+    --planner-desktop-span: var(--content-span);
   }
 
   .quick-add--mobile {
@@ -1356,16 +1350,6 @@ body {
 
   .appbar-brand {
     display: none;
-  }
-
-  /* Split-layout pages: AppBar inner must share the same span as today-layout / desktop-split */
-  .main-col>.appbar:has(+ .today-layout) .appbar-inner,
-  .main-col>.appbar:has(+ .desktop-split-layout) .appbar-inner,
-  .main-col>.appbar:has(+ .wrap.settings-page--planner) .appbar-inner {
-    width: 100%;
-    max-width: var(--planner-desktop-span);
-    margin-inline: auto;
-    padding-inline: 0;
   }
 
   .today-layout,

@@ -16,6 +16,7 @@
 @import './portrait-gate.css' layer(life-os.platform);
 @import './ios-safari.css' layer(life-os.platform);
 @import './layout.css' layer(life-os.layout);
+@import './content-frame.css' layer(life-os.layout);
 @import './shell.css' layer(life-os.shell);
 @import './seg.css' layer(life-os.seg);
 @import './settings-ext.css' layer(life-os.settings);

@@ -6,6 +6,7 @@
   import TrackRow from '$lib/components/TrackRow.svelte'
   import TrackArt from '$lib/components/TrackArt.svelte'
   import SearchHighlight from '$lib/components/SearchHighlight.svelte'
+  import { isLifeOsMobile } from '@life-os/theme'
   import {
     getRecentSearches,
     clearRecentSearches,
@@ -43,7 +44,7 @@
 
   onMount(async () => {
     topArtists = await getTopArtists(6)
-    if (window.matchMedia('(max-width: 839px)').matches) {
+    if (isLifeOsMobile()) {
       pageInput?.focus()
     }
   })
@@ -661,7 +662,7 @@
     overflow: hidden;
   }
 
-  @media (max-width: 839px) {
+  @media (--life-os-mobile) {
     .search-scopes-wrap {
       margin-inline: calc(-1 * var(--page-gutter, var(--space-4)));
     }
@@ -687,7 +688,7 @@
     );
   }
 
-  @media (max-width: 839px) {
+  @media (--life-os-mobile) {
     .search-scopes {
       padding: 4px var(--page-gutter, var(--space-4));
       scroll-padding-inline: var(--page-gutter, var(--space-4));

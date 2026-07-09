@@ -1,8 +1,9 @@
 <script>
   import { onMount, untrack } from 'svelte'
+  import { lifeOsMobileMq } from '@life-os/theme'
   import Icon from '../icon/Icon.svelte'
 
-  const MOBILE_MQ = '(max-width: 839px)'
+  const MOBILE_MQ = lifeOsMobileMq()
 
   /** @type {{
     title: string,

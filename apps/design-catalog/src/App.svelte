@@ -127,7 +127,8 @@
           <button
             type="button"
             class="catalog-nav__link"
-            class:catalog-nav__link--active={view === 'detail' && showcase === section.id}
+            class:catalog-nav__link--active={view === 'detail' &&
+              showcase === section.id}
             onclick={() => setShowcase(section.id)}
           >
             {section.label}
@@ -138,7 +139,8 @@
           <button
             type="button"
             class="catalog-nav__link"
-            class:catalog-nav__link--active={view === 'detail' && showcase === section.id}
+            class:catalog-nav__link--active={view === 'detail' &&
+              showcase === section.id}
             onclick={() => setShowcase(section.id)}
           >
             {section.label}
@@ -283,7 +285,7 @@
     background: var(--catalog-chrome-workspace-bg);
   }
 
-  @media (max-width: 839px) {
+  @media (--life-os-mobile) {
     .catalog-app {
       grid-template-columns: 1fr;
     }

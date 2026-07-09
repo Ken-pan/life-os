@@ -27,14 +27,20 @@
   } from '$lib/nav.js'
   import { pageChrome, resetPageChrome } from '$lib/pageChrome.svelte.js'
   import { player } from '$lib/player.svelte.js'
-  import { applyTrackAmbience, refreshImmersiveChrome } from '$lib/trackAmbience.js'
-  import { ensureBuiltinPlaylists, ensureAlbumArtCache } from '$lib/db.js'
   import {
-    scheduleLibraryMaintenance,
-  } from '$lib/import.js'
+    applyTrackAmbience,
+    refreshImmersiveChrome,
+  } from '$lib/trackAmbience.js'
+  import { ensureBuiltinPlaylists, ensureAlbumArtCache } from '$lib/db.js'
+  import { scheduleLibraryMaintenance } from '$lib/import.js'
   import { initAuth, auth } from '$lib/auth.svelte.js'
   import { bindVisibilitySync } from '@life-os/sync'
-  import { bindViewportHeight, resetScrollLock } from '@life-os/theme'
+  import {
+    bindViewportHeight,
+    isLifeOsMobile,
+    resetScrollLock,
+    LIFE_OS_CONTENT_FRAME,
+  } from '@life-os/theme'
   import { flushPendingSync, syncBidirectional } from '$lib/sync.js'
   import { bindConnectivity } from '$lib/connectivity.svelte.js'
   import { bindBackgroundPlayback } from '$lib/backgroundAudio.js'
@@ -108,8 +114,7 @@
       searchInput,
       focusSearch: () => {
         const onSearchPage = page.url.pathname === '/search'
-        const mobile =
-          browser && window.matchMedia('(max-width: 839px)').matches
+        const mobile = browser && isLifeOsMobile()
         if (onSearchPage && mobile) {
           document.querySelector('.search-page-input')?.focus()
         } else {
@@ -144,8 +149,7 @@
       searchInput,
       focusSearch: () => {
         const onSearchPage = page.url.pathname === '/search'
-        const mobile =
-          browser && window.matchMedia('(max-width: 839px)').matches
+        const mobile = browser && isLifeOsMobile()
         if (onSearchPage && mobile) {
           document.querySelector('.search-page-input')?.focus()
         } else {
@@ -224,6 +228,7 @@
     class="main-wrap"
     data-mobile-chrome="tabbar"
     data-player-chrome={playerChrome === 'mini' ? 'mini' : undefined}
+    data-content-mode={wideContent ? LIFE_OS_CONTENT_FRAME.modeSpan : undefined}
   >
     <AppBar
       hidden={appBarHidden}

@@ -28,7 +28,8 @@
 
 | 文件                | 内容                                                                                   |
 | ------------------- | -------------------------------------------------------------------------------------- |
-| `layout.css`        | Custom media 断点、`--tabbar-h`                                                        |
+| `layout.css`        | Custom media 断点、`--tabbar-h`、container 主列契约                                    |
+| `content-frame.css` | `data-content-mode`、页眉/内容共享 frame（`--content-span`）                           |
 | `tokens.css`        | 间距、字号、动效、safe-area、语义色、mobile-content-inset                              |
 | `ios-safari.css`    | **iOS/Safari 平台层**：100dvh、overscroll、scroll lock、chrome tint、表单防缩放        |
 | `base.css`          | Reset、tap 优化、`.page-title`、`.wrap`、工具类                                        |
@@ -142,19 +143,25 @@ padding-inline-end: max(var(--content-inline-pad), var(--safe-right-effective));
 ```js
 import {
   LIFE_OS_LAYOUT,
+  isLifeOsMobile,
+  lifeOsMobileMq,
+  bindLifeOsMedia,
   applyDocumentMeta,
   resolveTheme,
   applyResolvedTheme,
 } from '@life-os/theme'
 ```
 
+页眉 / 响应式完整契约：[`../../docs/architecture/responsive-chrome.md`](../../docs/architecture/responsive-chrome.md)。
+
 ## 维护规则
 
 1. 断点 / gutter：**只改** `layout.css` + `layout.js`
-2. 共享组件视觉：**只改** `design-system.css` 子模块
-3. 品牌色 / 领域 UI：**只改** 各 app 的 `app.css` / `index.css`
-4. 四端不再保留 legacy theme 副本
-5. **依赖方向**：`@life-os/theme` **不依赖** `@life-os/contracts` 或 `@life-os/platform-web`。Browser runtime 组合逻辑目标迁入 `platform-web`（P1+）。详见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)
+2. AppBar 高度 / scroll-padding：**只改** `design-tokens` `structural.json` + `shell.css`
+3. 共享组件视觉：**只改** `design-system.css` 子模块
+4. 品牌色 / 领域 UI：**只改** 各 app 的 `app.css` / `index.css`
+5. 六端不再保留 legacy theme 副本；JS 勿硬编码 `839px`（用 `isLifeOsMobile()`）
+6. **依赖方向**：`@life-os/theme` **不依赖** `@life-os/contracts` 或 `@life-os/platform-web`。Browser runtime 组合逻辑目标迁入 `platform-web`（P1+）。详见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)
 
 同目录另有 `@life-os/sync`（`packages/sync`）。产品契约见 [`../../docs/architecture/contracts.md`](../../docs/architecture/contracts.md)。
 
@@ -169,3 +176,12 @@ import {
 | `--life-os-tablet`  | 600–839px |
 | `--life-os-mobile`  | ≤839px    |
 | `--life-os-desktop` | ≥840px    |
+
+## Header chrome 速查
+
+| Token                  | Desktop             | Mobile                      |
+| ---------------------- | ------------------- | --------------------------- |
+| `--appbar-h`           | 56px                | `= --page-header-h`         |
+| `--appbar-h-back`      | 52px                | `52px + safe-top`           |
+| `--page-header-h`      | 68px                | `88px + safe-top`           |
+| `--scroll-padding-top` | `= --page-header-h` | back 时用 `--appbar-h-back` |

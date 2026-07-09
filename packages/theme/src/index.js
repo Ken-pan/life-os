@@ -1,4 +1,15 @@
-export { LIFE_OS_LAYOUT } from './layout.js'
+export {
+  LIFE_OS_LAYOUT,
+  LIFE_OS_CONTENT_FRAME,
+  lifeOsMaxWidthMq,
+  lifeOsMinWidthMq,
+  lifeOsMobileMq,
+  lifeOsDesktopMq,
+  isLifeOsMobile,
+  isLifeOsDesktop,
+  matchLifeOsMedia,
+  bindLifeOsMedia,
+} from './layout.js'
 
 export {
   LIFE_OS_SITE_META,

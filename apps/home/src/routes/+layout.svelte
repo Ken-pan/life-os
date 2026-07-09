@@ -19,11 +19,14 @@
     getPlanImmersiveEdit,
   } from '$lib/state.svelte.js'
 
-  import { bindViewportHeight } from '@life-os/theme'
+  import { bindViewportHeight, LIFE_OS_CONTENT_FRAME } from '@life-os/theme'
   import { bindPwaForegroundResume } from '@life-os/theme'
   import { initAuth, auth } from '$lib/auth.svelte.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
-  import { bindLifeOsPresence, touchLifeOsPresence } from '$lib/lifeOsPresence.js'
+  import {
+    bindLifeOsPresence,
+    touchLifeOsPresence,
+  } from '$lib/lifeOsPresence.js'
   import { scheduleHomePortalMetadataSync } from '$lib/homePortalMetadata.js'
 
   let { children } = $props()
@@ -92,7 +95,10 @@
 <div class="app-shell" class:plan-immersive-edit={planImmersive}>
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <SideNav />
-  <div class="main-col">
+  <div
+    class="main-col"
+    data-content-mode={planRoute ? LIFE_OS_CONTENT_FRAME.modeSpan : undefined}
+  >
     <AppBar title={pageMeta.title} subtitle={pageMeta.subtitle} />
     <main id="main-content" class="wrap" class:plan-route={planRoute}>
       {@render children()}

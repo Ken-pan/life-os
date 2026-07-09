@@ -1,0 +1,84 @@
+/*
+  Life OS content frame — shared header / body width contract
+
+  Industry pattern: full-width chrome shell (sticky bg + border) + inner frame
+  that shares max-width + horizontal inset with main content (Mantine AppShell,
+  classic .container inside header + main).
+
+  Modes (data-content-mode on .main-col | .main-wrap | .life-os-page-workspace):
+  - max (default): --content-max + --content-inline-pad (820px-style reading column)
+  - span: workspace span minus desktop gutters; optional --content-span-max cap
+*/
+
+.main-col,
+.main-wrap {
+  --content-span: calc(100cqw - var(--page-gutter-desktop, 32px) * 2);
+}
+
+@supports not (width: 100cqw) {
+
+  .main-col,
+  .main-wrap {
+    --content-span: calc(100% - var(--page-gutter-desktop, 32px) * 2);
+  }
+}
+
+.life-os-page-workspace {
+  width: 100%;
+  min-width: 0;
+}
+
+.main-col[data-content-mode='span'],
+.main-wrap[data-content-mode='span'],
+.life-os-page-workspace[data-content-mode='span'] {
+  --content-max: min(var(--content-span-max, var(--content-span)), var(--content-span));
+  --content-inline-pad: var(--page-gutter-desktop);
+}
+
+@media (--life-os-desktop) {
+
+  /* Chrome inner shares the same frame as page body */
+  :is(.main-col, .main-wrap, .life-os-page-workspace)[data-content-mode='span']> :is(.appbar, header.appbar) .appbar-inner,
+  :is(.main-col, .main-wrap)[data-content-mode='span']>.page-header {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding-inline:
+      max(var(--content-inline-pad), var(--safe-left-effective)) max(var(--content-inline-pad), var(--safe-right-effective));
+    box-sizing: border-box;
+  }
+
+  /* Planner-style page workspace (AppBar + split / wrap as siblings) */
+  .life-os-page-workspace[data-content-mode='span']> :is(.life-os-split-layout,
+    .today-layout,
+    .desktop-split-layout,
+    .wrap) {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+
+  .life-os-page-workspace[data-content-mode='span']> :is(.life-os-split-layout,
+    .today-layout,
+    .desktop-split-layout) {
+    padding-inline: 0;
+  }
+
+  /* Layout-level shell: Home main.wrap, Finance .content, Fitness/Music #main-content > .wrap */
+  .main-col[data-content-mode='span']>.wrap,
+  .main-wrap[data-content-mode='span']>.content,
+  .main-wrap[data-content-mode='span']>#main-content>.wrap {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding-inline:
+      max(var(--content-inline-pad), var(--safe-left-effective)) max(var(--content-inline-pad), var(--safe-right-effective));
+    box-sizing: border-box;
+  }
+
+  /* Desktop AppBar: title only (brand/tagline live in sidebar or mobile chrome) */
+  .appbar .page-sub {
+    display: none;
+  }
+}

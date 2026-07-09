@@ -3482,49 +3482,20 @@ html:has(.np-ambient-back) .bottom-shell {
     --content-inline-pad: var(--page-gutter-desktop);
   }
 
-  .music-app[data-wide-content='true'] .main-wrap {
-    --content-inline-pad: var(--page-gutter-desktop);
-    --content-max: min(1240px, calc(100cqw - var(--page-gutter-desktop) * 2));
+  /* Wide routes: span frame is owned by content-frame.css via data-content-mode="span" on .main-wrap */
+
+  .music-app[data-wide-content='true'][data-utility-open='true'] .main-wrap[data-content-mode='span'] {
+    --content-span: calc(100cqw - var(--page-gutter-desktop) * 2 - var(--utility-pane-w, 0px));
   }
 
   @supports not (width: 100cqw) {
-    .music-app[data-wide-content='true'] .main-wrap {
-      --content-max: min(1240px, calc(100vw - var(--sidebar-w) - var(--page-gutter-desktop) * 2));
-    }
-  }
-
-  .music-app[data-wide-content='true'] .wrap {
-    max-width: var(--content-max);
-    width: 100%;
-    margin-inline: auto;
-    padding-inline: var(--page-gutter-desktop);
-  }
-
-  .music-app[data-wide-content='true'][data-utility-open='true'] .wrap {
-    max-width: min(1240px,
-        calc(100vw - var(--sidebar-w) - var(--utility-pane-w) - var(--page-gutter-desktop) * 2));
-  }
-
-  .music-app[data-wide-content='true'] .home-page {
-    --content-max: min(1240px, calc(100cqw - var(--page-gutter-desktop) * 2));
-  }
-
-  @supports not (width: 100cqw) {
-    .music-app[data-wide-content='true'] .home-page {
-      --content-max: min(1240px, calc(100vw - var(--sidebar-w) - var(--page-gutter-desktop) * 2));
+    .music-app[data-wide-content='true'][data-utility-open='true'] .main-wrap[data-content-mode='span'] {
+      --content-span: calc(100% - var(--page-gutter-desktop) * 2 - var(--utility-pane-w, 0px));
     }
   }
 
   .music-app[data-wide-content='true'] .home-page .speed-dial-section {
     margin-top: 0;
-  }
-
-  .music-app[data-wide-content='true'] .music-appbar .appbar-inner {
-    max-width: var(--content-max);
-    width: 100%;
-    margin-inline: auto;
-    padding-inline: var(--page-gutter-desktop);
-    box-sizing: border-box;
   }
 
   .music-app[data-wide-content='true'] .music-appbar .appbar-center {

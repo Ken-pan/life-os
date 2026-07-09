@@ -81,7 +81,6 @@
 }
 
 html {
-  scroll-padding-top: var(--page-header-h);
   background-color: var(--bg);
 }
 
@@ -4196,10 +4195,6 @@ div.input {
     --page-header-h: calc(88px + var(--safe-top-effective));
     --ios-landscape-top-buffer: 20px;
     --mobile-content-inset-tabbar: calc(var(--fab-h) + var(--fab-offset-above-tabbar) + var(--mobile-tabbar-total-h));
-  }
-
-  html {
-    scroll-padding-top: var(--page-header-h);
   }
 
   .mobile-tabbar.is-backgrounded {

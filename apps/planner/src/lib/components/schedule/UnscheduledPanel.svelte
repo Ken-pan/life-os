@@ -1,33 +1,34 @@
 <script>
-  import { onMount } from 'svelte';
-  import { t } from '$lib/i18n/index.js';
-  import { openSchedulePopover } from '$lib/ui.svelte.js';
-  import { editTask } from '$lib/taskUi.js';
-  import Icon from '@life-os/platform-web/svelte/icon';
+  import { onMount } from 'svelte'
+  import { t } from '$lib/i18n/index.js'
+  import { openSchedulePopover } from '$lib/ui.svelte.js'
+  import { editTask } from '$lib/taskUi.js'
+  import Icon from '@life-os/platform-web/svelte/icon'
+  import { isLifeOsMobile, lifeOsDesktopMq } from '@life-os/theme'
 
   /** @type {{ dateKey: string, tasks: import('$lib/types.js').Task[] }} */
-  let { dateKey, tasks } = $props();
+  let { dateKey, tasks } = $props()
 
-  let expanded = $state(true);
-  let desktopDnD = $state(false);
+  let expanded = $state(true)
+  let desktopDnD = $state(false)
 
   onMount(() => {
-    if (window.matchMedia('(max-width: 839px)').matches) expanded = false;
+    if (isLifeOsMobile()) expanded = false
 
-    const mq = window.matchMedia('(min-width: 840px) and (pointer: fine)');
+    const mq = window.matchMedia(`${lifeOsDesktopMq()} and (pointer: fine)`)
     const sync = () => {
-      desktopDnD = mq.matches;
-    };
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  });
+      desktopDnD = mq.matches
+    }
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  })
 
   /** @param {DragEvent} e @param {string} taskId */
   function onDragStart(e, taskId) {
-    if (!desktopDnD || !e.dataTransfer) return;
-    e.dataTransfer.setData('application/x-planner-task-id', taskId);
-    e.dataTransfer.effectAllowed = 'move';
+    if (!desktopDnD || !e.dataTransfer) return
+    e.dataTransfer.setData('application/x-planner-task-id', taskId)
+    e.dataTransfer.effectAllowed = 'move'
   }
 </script>
 
@@ -41,7 +42,11 @@
     <h2 class="unscheduled-panel-title">{t('schedule.unscheduled')}</h2>
     <span class="unscheduled-panel-trailing">
       <span class="unscheduled-panel-count">{tasks.length}</span>
-      <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={16} strokeWidth={2} />
+      <Icon
+        name={expanded ? 'chevron-up' : 'chevron-down'}
+        size={16}
+        strokeWidth={2}
+      />
     </span>
   </button>
 
@@ -55,7 +60,11 @@
             draggable={desktopDnD}
             ondragstart={(e) => onDragStart(e, task.id)}
           >
-            <button type="button" class="unscheduled-item-title" onclick={() => editTask(task)}>
+            <button
+              type="button"
+              class="unscheduled-item-title"
+              onclick={() => editTask(task)}
+            >
               {task.title}
             </button>
             <button

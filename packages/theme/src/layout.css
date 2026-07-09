@@ -1,9 +1,14 @@
 /*
-  Life OS 共享响应式布局
+  Life OS 共享响应式布局（SSOT）
   在 app.css / index.css 顶部 @import '@life-os/theme/layout.css'
   查询使用 @media (--life-os-*) — 由 PostCSS custom-media 展开
 
-  三端 tier（Planner / FinanceOS / FitnessOS 共用）：
+  分工（对齐现代实践）：
+  - Viewport media：壳层决策 — 侧栏/底栏、AppBar 结构、page gutter
+  - Container queries：组件在主列内的自适应（卡片、网格）
+  - Header chrome token：--appbar-h / --page-header-h（见 shell.css）
+
+  Tier（六端共用：Planner / Fitness / Finance / Music / Portal / Home）：
   - reflow   ≤320px   WCAG 1.4.10 / 400% zoom 对等宽度，最小 gutter
   - phone    ≤599px   紧凑 gutter、底栏 Primary+More
   - tablet   600–839px  加宽 gutter、底栏同 phone（侧栏仍隐藏）

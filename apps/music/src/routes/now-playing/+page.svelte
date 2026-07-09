@@ -27,6 +27,7 @@
   import { db } from '$lib/db.js'
   import { fetchLyricsForTrack } from '$lib/lyricsFetch.js'
   import { scheduleAutoCloudPush } from '$lib/sync.js'
+  import { bindLifeOsMedia, lifeOsMobileMq } from '@life-os/theme'
   import { S, setImmersiveViewMode, librarySignals } from '$lib/state.svelte.js'
   import { auth } from '$lib/auth.svelte.js'
 
@@ -181,15 +182,12 @@
         }
       }
     })()
-    const mq = window.matchMedia('(max-width: 839px)')
-    isMobile = mq.matches
-    const onChange = () => {
-      isMobile = mq.matches
-    }
-    mq.addEventListener('change', onChange)
+    const unbind = bindLifeOsMedia(lifeOsMobileMq(), (matches) => {
+      isMobile = matches
+    })
     return () => {
       clearTimeout(controlsIdleTimer)
-      mq.removeEventListener('change', onChange)
+      unbind()
     }
   })
 </script>

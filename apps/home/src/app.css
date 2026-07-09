@@ -230,6 +230,13 @@
   min-width: 520px;
 }
 
+@media (--life-os-desktop) {
+  main.plan-route {
+    padding:
+      var(--page-top) max(var(--content-inline-pad), var(--safe-right-effective)) calc(var(--safe-bottom-effective) + 8px) max(var(--content-inline-pad), var(--safe-left-effective));
+  }
+}
+
 /* Plan route: give the floor plan canvas a stable flex height */
 main.plan-route {
   display: flex;
@@ -242,7 +249,7 @@ main.plan-route {
     max(8px, var(--safe-top-effective)) max(8px, var(--safe-right-effective)) calc(var(--safe-bottom-effective) + 8px) max(8px, var(--safe-left-effective));
 }
 
-@media (max-width: 839px) {
+@media (--life-os-mobile) {
   main.plan-route {
     padding-bottom: calc(var(--mobile-tabbar-total-h) + var(--safe-bottom-effective) + 6px);
   }
@@ -253,7 +260,8 @@ main.plan-route {
 }
 
 /* Plan edit immersive: hide bottom nav chrome, lift selection bars */
-@media (max-width: 599px) {
+@media (--life-os-phone) {
+
   .app-shell.plan-immersive-edit .sel-bar,
   .app-shell.plan-immersive-edit .graph-sel-bar,
   .app-shell.plan-immersive-edit .graph-open-bar {

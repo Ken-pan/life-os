@@ -149,11 +149,9 @@
   }
 
   .brand-switcher-item--current:hover {
-    background: color-mix(
-      in srgb,
-      var(--brand-switcher-item-accent, var(--sidebar-primary)) 24%,
-      var(--sidebar-accent)
-    );
+    background: color-mix(in srgb,
+        var(--brand-switcher-item-accent, var(--sidebar-primary)) 24%,
+        var(--sidebar-accent));
   }
 }
 
@@ -232,11 +230,9 @@
 }
 
 .brand-switcher-item--current {
-  background: color-mix(
-    in srgb,
-    var(--brand-switcher-item-accent, var(--sidebar-primary)) 20%,
-    var(--sidebar-accent)
-  );
+  background: color-mix(in srgb,
+      var(--brand-switcher-item-accent, var(--sidebar-primary)) 20%,
+      var(--sidebar-accent));
   color: var(--sidebar-foreground);
   font-weight: 600;
 }
@@ -469,7 +465,12 @@
   margin: 0;
 }
 
-/* ===== AppBar / Page Header ===== */
+/* ===== AppBar / Page Header =====
+   Chrome contract (viewport media owns structure; tokens own offsets):
+   - Desktop: --appbar-h (56) / --page-header-h (68) for sticky + scroll-padding
+   - Mobile:  --page-header-h includes safe-top; back mode uses --appbar-h-back
+   - Prefer CSS sticky; avoid scroll listeners for chrome state
+*/
 .appbar,
 .page-header {
   position: sticky;
@@ -480,6 +481,15 @@
   background: color-mix(in srgb, var(--bg) 86%, transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
+}
+
+:root {
+  --appbar-height: var(--appbar-h, 56px);
+  --scroll-padding-top: var(--page-header-h, 68px);
+}
+
+html {
+  scroll-padding-top: var(--scroll-padding-top);
 }
 
 .appbar-inner {
@@ -700,14 +710,14 @@
 @media (--life-os-mobile) {
   :root {
     --page-header-h: calc(88px + var(--safe-top-effective));
-  }
-
-  html {
-    scroll-padding-top: var(--page-header-h);
+    --appbar-h: var(--page-header-h);
+    --appbar-height: var(--page-header-h);
+    --appbar-h-back: calc(52px + var(--safe-top-effective));
+    --scroll-padding-top: var(--page-header-h);
   }
 
   html:has(.appbar--back) {
-    scroll-padding-top: calc(52px + var(--safe-top-effective));
+    --scroll-padding-top: var(--appbar-h-back);
   }
 
   .appbar {
