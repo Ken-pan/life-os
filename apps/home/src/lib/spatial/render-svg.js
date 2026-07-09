@@ -272,29 +272,29 @@ export function renderFloorPlanSvg(project, opts = {}) {
   if (!hideStorageZones) {
     for (const zone of project.storageZones) {
       if (!zone.bounds) continue
-    const { x, y, w, h } = zone.bounds
-    const on = opts.highlightZone === zone.code
-    const unassigned = !zone.zoneId && !zone.placementId
-    const dash = unassigned ? ' storage-unassigned' : ''
-    parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="storage-zone${dash}" fill="url(#hatch)" stroke="var(--plan-accent,#5c758c)" stroke-width="1.8" rx="3" stroke-dasharray="5 3"/>`,
-    )
-    if (!compact && w > 40 && h > 22) {
+      const { x, y, w, h } = zone.bounds
+      const on = opts.highlightZone === zone.code
+      const unassigned = !zone.zoneId && !zone.placementId
+      const dash = unassigned ? ' storage-unassigned' : ''
       parts.push(
-        `<text x="${x + 6}" y="${y + 14}" class="zone-glyph" pointer-events="none">${esc(zone.code)}</text>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="storage-zone${dash}" fill="url(#hatch)" stroke="var(--plan-accent,#5c758c)" stroke-width="1.8" rx="3" stroke-dasharray="5 3"/>`,
       )
-    }
-    if (opts.interactive) {
-      const zoneTitle = `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
-      parts.push(
-        `<rect class="zone-hit${on ? ' zone-on' : ''}" data-zone="${zone.code}" data-plan-tip="${esc(zoneTitle)}" tabindex="0" role="button" aria-label="${esc(zoneTitle)}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"><title>${esc(zoneTitle)}</title></rect>`,
-      )
-    } else {
-      const zoneTip = `${zone.code} · ${zone.nameZh}`
-      parts.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="none" pointer-events="all" class="zone-label-hit" data-plan-tip="${esc(zoneTip)}"><title>${esc(zoneTip)}</title></rect>`,
-      )
-    }
+      if (!compact && w > 40 && h > 22) {
+        parts.push(
+          `<text x="${x + 6}" y="${y + 14}" class="zone-glyph" pointer-events="none">${esc(zone.code)}</text>`,
+        )
+      }
+      if (opts.interactive) {
+        const zoneTitle = `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
+        parts.push(
+          `<rect class="zone-hit${on ? ' zone-on' : ''}" data-zone="${zone.code}" data-plan-tip="${esc(zoneTitle)}" tabindex="0" role="button" aria-label="${esc(zoneTitle)}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"><title>${esc(zoneTitle)}</title></rect>`,
+        )
+      } else {
+        const zoneTip = `${zone.code} · ${zone.nameZh}`
+        parts.push(
+          `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="none" pointer-events="all" class="zone-label-hit" data-plan-tip="${esc(zoneTip)}"><title>${esc(zoneTip)}</title></rect>`,
+        )
+      }
     }
   }
 
