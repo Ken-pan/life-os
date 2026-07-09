@@ -55,6 +55,7 @@
  * @property {OpeningSlotConfig} laundryDoor
  * @property {OpeningSlotConfig} entryDoor
  * @property {OpeningSlotConfig} balconyDoor
+ * @property {OpeningSlotConfig} patioDoor
  * @property {OpeningSlotConfig} livingWindow
  * @property {OpeningSlotConfig} bedroomWindow
  */

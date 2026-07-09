@@ -138,8 +138,14 @@ export const OPENING_EDIT_BINDINGS =
       axis: 'x',
       configPath: 'entryDoor',
     },
+    'door-patio': {
+      label: '露台推拉门',
+      drag: 'center',
+      axis: 'x',
+      configPath: 'patioDoor',
+    },
     'door-balcony': {
-      label: '阳台门',
+      label: '卧室推拉门',
       drag: 'center',
       axis: 'x',
       configPath: 'balconyDoor',
@@ -332,8 +338,13 @@ export function defaultOpenings() {
     bathDoor: { offset: { ft: 5, in: 0 }, span: { ft: 1, in: 6 } },
     coatDoor: { offset: { ft: 1, in: 0 }, span: { ft: 1, in: 6 } },
     laundryDoor: { offset: { ft: 0, in: 0 }, span: { ft: 5, in: 4 } },
-    entryDoor: { offsetFromRight: { ft: 2, in: 0 }, span: { ft: 3, in: 0 } },
+    entryDoor: { offsetFromRight: { ft: 0, in: 0 }, span: { ft: 3, in: 0 } },
     balconyDoor: {
+      offset: { ft: 0, in: 0 },
+      span: { ft: 6, in: 0 },
+      center: true,
+    },
+    patioDoor: {
       offset: { ft: 0, in: 0 },
       span: { ft: 6, in: 0 },
       center: true,
@@ -388,7 +399,12 @@ export function openingHitAlongH(x1, x2, y, thick = 44) {
   const pad = 18
   const x = Math.min(x1, x2)
   const w = Math.abs(x2 - x1)
-  return { x: x - pad, y: y - thick / 2, w: Math.max(w, 28) + pad * 2, h: thick }
+  return {
+    x: x - pad,
+    y: y - thick / 2,
+    w: Math.max(w, 28) + pad * 2,
+    h: thick,
+  }
 }
 
 /** @param {number} x @param {number} y1 @param {number} y2 @param {number} [thick] */
@@ -396,7 +412,12 @@ export function openingHitAlongV(x, y1, y2, thick = 44) {
   const pad = 18
   const y = Math.min(y1, y2)
   const h = Math.abs(y2 - y1)
-  return { x: x - thick / 2, y: y - pad, w: thick, h: Math.max(h, 28) + pad * 2 }
+  return {
+    x: x - thick / 2,
+    y: y - pad,
+    w: thick,
+    h: Math.max(h, 28) + pad * 2,
+  }
 }
 
 /**
@@ -427,7 +448,10 @@ export function openingHitRect(op) {
       h: Math.max(y2 - y1, 28) + pad * 2,
     }
   }
-  if (op.pathD && /^M\s+[\d.-]+\s+[\d.-]+\s+L\s+[\d.-]+\s+[\d.-]+\s*$/.test(op.pathD.trim())) {
+  if (
+    op.pathD &&
+    /^M\s+[\d.-]+\s+[\d.-]+\s+L\s+[\d.-]+\s+[\d.-]+\s*$/.test(op.pathD.trim())
+  ) {
     const nums = op.pathD.match(/-?\d+(\.\d+)?/g)?.map(Number) ?? []
     if (nums.length >= 4) {
       return openingHitAlongH(nums[0], nums[2], nums[1])
@@ -583,7 +607,12 @@ function avoidRoomLabelOverlap(project, pos) {
     const titleBox = { x: rx + w / 2 - 72, y: titleY - 22, w: 144, h: 44 }
     const dimBox = { x: rx + 2, y: ry + h - 22, w: Math.min(w - 4, 120), h: 18 }
     for (const box of [titleBox, dimBox]) {
-      if (x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h) {
+      if (
+        x >= box.x &&
+        x <= box.x + box.w &&
+        y >= box.y &&
+        y <= box.y + box.h
+      ) {
         const toLeft = x - box.x
         const toRight = box.x + box.w - x
         const toTop = y - box.y
