@@ -16,6 +16,37 @@
   let screenshotPreviewUrl = $state('')
   let errorMsg = $state('')
   let successState = $state(false)
+  let successMode = $state('remote')
+
+  let savedScrollY = 0
+
+  function portal(node) {
+    if (typeof document === 'undefined') return {}
+    document.body.appendChild(node)
+    return {
+      destroy() {
+        if (node.parentNode) node.parentNode.removeChild(node)
+      }
+    }
+  }
+
+  function enableScrollLock() {
+    if (typeof window === 'undefined') return
+    savedScrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${savedScrollY}px`
+    document.body.style.width = '100%'
+    document.body.classList.add('lifeos-bug-report-open')
+  }
+
+  function disableScrollLock() {
+    if (typeof window === 'undefined') return
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.classList.remove('lifeos-bug-report-open')
+    window.scrollTo(0, savedScrollY)
+  }
 
   // Diagnostics metadata compiler
   function getDiagnostics() {
@@ -70,8 +101,8 @@
     }
   }
 
-  function handleKeyDown(e) {
-    if (e.key === 'Escape' && isOpen) {
+  function handleWindowKeyDown(e) {
+    if (e.key === 'Escape') {
       closeSheet()
     }
   }
@@ -85,20 +116,16 @@
     screenshotPreviewUrl = ''
     errorMsg = ''
     successState = false
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('paste', handlePaste)
-    }
+    successMode = 'remote'
+    enableScrollLock()
   }
 
   function closeSheet() {
     isOpen = false
+    disableScrollLock()
     if (screenshotPreviewUrl) {
       URL.revokeObjectURL(screenshotPreviewUrl)
       screenshotPreviewUrl = ''
-    }
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('paste', handlePaste)
     }
   }
 
@@ -123,6 +150,7 @@
         screenshotType: screenshot ? screenshot.type : null,
       }
       console.log('[ReportBugButton] Local simulation payload:', payload)
+      successMode = 'local'
       successState = true
       if (toast) {
         toast('Bug reported successfully (local simulation).', 'success')
@@ -142,7 +170,10 @@
         return
       }
 
-      const bugId = crypto.randomUUID()
+      const bugId =
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`
 
       if (screenshot) {
         const ext = screenshot.name.split('.').pop() || 'png'
@@ -192,6 +223,7 @@
         throw insertError
       }
 
+      successMode = 'remote'
       successState = true
       if (toast) {
         toast('Bug report submitted successfully.', 'success')
@@ -204,17 +236,23 @@
 
   onMount(() => {
     return () => {
+      disableScrollLock()
       if (screenshotPreviewUrl) {
         URL.revokeObjectURL(screenshotPreviewUrl)
       }
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('paste', handlePaste)
-      }
+    }
+  })
+
+  $effect(() => {
+    if (typeof window === 'undefined' || !isOpen) return
+    window.addEventListener('paste', handlePaste)
+    window.addEventListener('keydown', handleWindowKeyDown)
+    return () => {
+      window.removeEventListener('paste', handlePaste)
+      window.removeEventListener('keydown', handleWindowKeyDown)
     }
   })
 </script>
-
-<svelte:window onkeydown={handleKeyDown} />
 
 <button
   type="button"
@@ -248,21 +286,22 @@
 {#if isOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div
-    class="sheet-bg"
+    use:portal
+    class="bug-report-backdrop"
     onclick={(e) => e.target === e.currentTarget && closeSheet()}
   >
     <div
-      class="sheet bug-reporter-sheet"
+      class="bug-report-sheet"
       role="dialog"
       aria-modal="true"
       aria-labelledby="bug-reporter-title"
     >
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h2 id="bug-reporter-title" class="sheet-title">Report a Bug</h2>
+      <div class="bug-report-handle"></div>
+      <div class="bug-report-header">
+        <h2 id="bug-reporter-title" class="bug-report-title">Report a Bug</h2>
         <button
           type="button"
-          class="sheet-close-btn"
+          class="bug-report-close-btn"
           onclick={closeSheet}
           aria-label="Close"
         >
@@ -270,122 +309,189 @@
         </button>
       </div>
 
-      {#if successState}
-        <div class="success-view">
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--feedback-success, green)"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            style="margin: 16px auto; display: block;"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="m9 12 2 2 4-4" />
-          </svg>
-          <p class="success-message">
-            Thank you! Your bug report has been logged locally.
-          </p>
-          <div class="backend-notice">
-            <span class="badge">MVP Note</span> Supabase database integration is a pending follow-up task.
-          </div>
-          <div class="sheet-actions">
-            <button type="button" class="btn-primary" onclick={closeSheet}>
-              Done
-            </button>
-          </div>
-        </div>
-      {:else}
-        <form onsubmit={handleSubmit}>
-          {#if errorMsg}
-            <div class="error-banner banner critical">
-              {errorMsg}
-            </div>
-          {/if}
-
-          <div class="field">
-            <label for="bug-title">Bug Title *</label>
-            <input
-              type="text"
-              id="bug-title"
-              bind:value={title}
-              placeholder="e.g. App crashes when clicking save"
-              required
-            />
-          </div>
-
-          <div class="field">
-            <label for="bug-notes">Notes / Steps to Reproduce</label>
-            <textarea
-              id="bug-notes"
-              bind:value={notes}
-              rows="3"
-              placeholder="Provide any helpful context..."
-            ></textarea>
-          </div>
-
-          <div class="field">
-            <label for="bug-severity">Severity</label>
-            <select id="bug-severity" bind:value={severity}>
-              <option value="low">Low - Minor styling or visual issues</option>
-              <option value="medium">Medium - Functional bug with workaround</option>
-              <option value="high">High - Critical issue blocking usage</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="bug-screenshot">Screenshot (Optional, Max 6MB)</label>
-            <div class="screenshot-input-container">
-              <input
-                type="file"
-                id="bug-screenshot"
-                accept="image/*"
-                onchange={handleFileChange}
-              />
-              <span class="paste-hint">Tip: You can also paste an image while this sheet is open.</span>
-            </div>
-
-            {#if screenshotPreviewUrl}
-              <div class="screenshot-preview">
-                <img src={screenshotPreviewUrl} alt="Screenshot preview" />
-                <button
-                  type="button"
-                  class="remove-screenshot-btn"
-                  onclick={() => {
-                    screenshot = null
-                    URL.revokeObjectURL(screenshotPreviewUrl)
-                    screenshotPreviewUrl = ''
-                  }}
-                >
-                  Remove Image
-                </button>
+      <div class="bug-report-body">
+        {#if successState}
+          <div class="success-view">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--feedback-success, green)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style="margin: 16px auto; display: block;"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            <p class="success-message">
+              {successMode === 'local'
+                ? 'Thank you! Your bug report has been logged locally.'
+                : 'Thank you! Your bug report has been submitted.'}
+            </p>
+            {#if successMode === 'local'}
+              <div class="backend-notice">
+                <span class="badge">MVP Note</span> Supabase database integration is a pending follow-up task.
               </div>
             {/if}
+            <div class="bug-report-actions">
+              <button type="button" class="btn-primary" onclick={closeSheet}>
+                Done
+              </button>
+            </div>
           </div>
+        {:else}
+          <form class="bug-report-form" onsubmit={handleSubmit}>
+            {#if errorMsg}
+              <div class="error-banner banner critical">
+                {errorMsg}
+              </div>
+            {/if}
 
-          <div class="sheet-actions">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick={closeSheet}
-            >
-              Cancel
-            </button>
-            <button type="submit" class="btn-primary">
-              Submit Report
-            </button>
-          </div>
-        </form>
-      {/if}
+            <div class="field">
+              <label for="bug-title">Bug Title *</label>
+              <input
+                type="text"
+                id="bug-title"
+                bind:value={title}
+                placeholder="e.g. App crashes when clicking save"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label for="bug-notes">Notes / Steps to Reproduce</label>
+              <textarea
+                id="bug-notes"
+                bind:value={notes}
+                rows="3"
+                placeholder="Provide any helpful context..."
+              ></textarea>
+            </div>
+
+            <div class="field">
+              <label for="bug-severity">Severity</label>
+              <select id="bug-severity" bind:value={severity}>
+                <option value="low">Low - Minor styling or visual issues</option>
+                <option value="medium">Medium - Functional bug with workaround</option>
+                <option value="high">High - Critical issue blocking usage</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bug-screenshot">Screenshot (Optional, Max 6MB)</label>
+              <div class="screenshot-input-container">
+                <input
+                  type="file"
+                  id="bug-screenshot"
+                  accept="image/*"
+                  onchange={handleFileChange}
+                />
+                <span class="paste-hint">Tip: You can also paste an image while this sheet is open.</span>
+              </div>
+
+              {#if screenshotPreviewUrl}
+                <div class="screenshot-preview">
+                  <img src={screenshotPreviewUrl} alt="Screenshot preview" />
+                  <button
+                    type="button"
+                    class="remove-screenshot-btn"
+                    onclick={() => {
+                      screenshot = null
+                      URL.revokeObjectURL(screenshotPreviewUrl)
+                      screenshotPreviewUrl = ''
+                    }}
+                  >
+                    Remove Image
+                  </button>
+                </div>
+              {/if}
+            </div>
+
+            <div class="bug-report-actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick={closeSheet}
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary">
+                Submit Report
+              </button>
+            </div>
+          </form>
+        {/if}
+      </div>
     </div>
   </div>
 {/if}
 
 <style>
-  .sheet-close-btn {
+  .bug-report-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-top: max(16px, env(safe-area-inset-top));
+    overscroll-behavior: contain;
+  }
+
+  .bug-report-sheet {
+    width: 100%;
+    max-width: 520px;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+    border: 1px solid var(--border-l, var(--border-strong, var(--border)));
+    border-radius: 20px 20px 0 0;
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+
+  .bug-report-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border-l, var(--border-strong, var(--border)));
+    border-radius: 999px;
+    margin: 12px auto;
+    flex-shrink: 0;
+  }
+
+  .bug-report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px 12px;
+    flex-shrink: 0;
+  }
+
+  .bug-report-title {
+    margin: 0;
+  }
+
+  .bug-report-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 20px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .bug-report-form {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  .bug-report-close-btn {
     border: none;
     background: transparent;
     font-size: 24px;
@@ -394,13 +500,30 @@
     padding: 4px 8px;
     border-radius: 4px;
   }
-  .sheet-close-btn:hover {
+  .bug-report-close-btn:hover {
     background: var(--control-bg-hover, rgba(0,0,0,0.05));
     color: var(--t1, #000);
   }
+
+  .bug-report-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 12px;
+    padding-bottom: max(16px, calc(8px + env(safe-area-inset-bottom)));
+    background: linear-gradient(to top, var(--card) 82%, transparent);
+  }
+
+  .bug-report-actions button {
+    flex: 1;
+  }
+
   .success-view {
     text-align: center;
-    padding: 16px 0;
+    padding: 8px 0 0;
   }
   .success-message {
     font-size: 16px;
@@ -459,15 +582,6 @@
   .remove-screenshot-btn:hover {
     background: var(--critical-subtle, rgba(255,0,0,0.05));
   }
-  .sheet-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  .sheet-title {
-    margin: 0;
-  }
   .report-bug-trigger {
     border: none;
     background: transparent;
@@ -481,5 +595,21 @@
   .report-bug-trigger:hover {
     background: var(--control-bg-hover, rgba(0,0,0,0.05));
     color: var(--t1, inherit);
+  }
+
+  @media (--life-os-desktop) {
+    .bug-report-backdrop {
+      align-items: center;
+      padding: 20px;
+    }
+
+    .bug-report-sheet {
+      border-radius: 16px;
+      max-height: 85dvh;
+    }
+
+    .bug-report-handle {
+      display: none;
+    }
   }
 </style>
