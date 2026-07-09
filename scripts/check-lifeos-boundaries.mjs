@@ -251,6 +251,25 @@ function checkPackageJson(file) {
         )
       }
     }
+    return
+  }
+
+  if (rel === 'packages/finance-core/package.json') {
+    const allowedRoots = [
+      '@life-os/finance-enrichment-contract',
+      '@life-os/contracts',
+    ]
+    for (const spec of deps) {
+      if (!spec.startsWith('@life-os/') && !isAppsSpec(spec) && !spec.startsWith('apps/')) {
+        continue
+      }
+      if (allowedRoots.some((root) => matchesPackageOrSubpath(spec, root))) continue
+      fail(
+        'finance-core-deps',
+        file,
+        `forbidden dependency "${spec}" in @life-os/finance-core (allowed: @life-os/finance-enrichment-contract, @life-os/contracts)`,
+      )
+    }
   }
 }
 
@@ -406,6 +425,26 @@ function checkSourceFile(file) {
         file,
         `forbidden import of "${spec}" (allowed workspace deps: @life-os/contracts, @life-os/theme)`,
       )
+    }
+  }
+
+  if (rel.startsWith('packages/finance-core/')) {
+    const forbidden = [
+      '@life-os/theme',
+      '@life-os/platform-web',
+      '@life-os/sync',
+      '@life-os/domain',
+    ]
+    for (const spec of extractModuleSpecifiers(content)) {
+      if (isAppsSpec(spec) || isUiPackageSpec(spec)) {
+        fail('finance-core-imports', file, `forbidden import of "${spec}"`)
+        continue
+      }
+      for (const root of forbidden) {
+        if (matchesPackageOrSubpath(spec, root)) {
+          fail('finance-core-imports', file, `forbidden import of "${spec}"`)
+        }
+      }
     }
   }
 

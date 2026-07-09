@@ -10,7 +10,7 @@
 | ------------- | ----------------- | ----------------------------- | -------------------- | --------------------------- | -------- |
 | planneros-ken | `apps/planner`    | `npm run build -w planner-os` | `apps/planner/build` | https://planner.kenos.space | 生产     |
 | fitnessos-ken | `apps/fitness`    | `npm run build -w fitness-os` | `apps/fitness/build` | https://fitness.kenos.space | 生产     |
-| financeos-ken | `apps/finance`    | `npm run build -w finance-os` | `apps/finance/dist`  | https://finance.kenos.space | 生产     |
+| financeos-ken | `apps/finance`    | `npm run build -w finance-os` | `apps/finance/build` | https://finance.kenos.space | 生产     |
 | musicos-ken   | `apps/music`      | `npm run build -w music-os`   | `apps/music/build`   | https://music.kenos.space   | 生产     |
 | portal-ken    | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://portal.kenos.space  | 启动器   |
 | homeos-ken    | `apps/home`       | `npm run build -w home-os`    | `apps/home/build`    | https://home.kenos.space    | **实验** |

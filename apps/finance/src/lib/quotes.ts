@@ -1,9 +1,5 @@
-export interface LiveQuote {
-  symbol: string;
-  price: number;
-  date: string;
-  time: string;
-}
+export type { LiveQuote } from '@life-os/finance-core/quotes/types';
+import type { LiveQuote } from '@life-os/finance-core/quotes/types';
 
 function parseStooqLine(line: string): LiveQuote | null {
   const parts = line.split(",");

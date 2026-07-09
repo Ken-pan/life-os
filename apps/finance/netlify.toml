@@ -1,7 +1,7 @@
 [build]
   command = "npm run build -w finance-os"
-  publish = "apps/finance/dist"
-  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/finance packages/theme packages/sync"
+  publish = "apps/finance/build"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/finance packages/finance-core packages/theme packages/sync packages/platform-web"
 
 [build.environment]
   NODE_VERSION = "22"

@@ -2,8 +2,8 @@
 
 > **版本**：2026-07-06（混合双层 IA 落地）
 > **应用路径**：`apps/finance`
-> **技术栈**：React + Vite SPA（非 SvelteKit 文件路由）
-> **路由实现**：History API 路径路由（`src/lib/appRoute.ts` + `AppShell.tsx`）；`#/…` hash 仅 legacy 解析，启动时自动迁移
+> **技术栈**：SvelteKit 2 + Svelte 5（`src/routes` 文件路由）
+> **路由实现**：SvelteKit 路径路由（`@life-os/finance-core/routing/app-route` + `AppShell.svelte`）；`#/…` hash 仅 legacy 解析，启动时自动迁移
 
 ---
 

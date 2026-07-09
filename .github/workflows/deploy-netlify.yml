@@ -61,7 +61,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build -w finance-os
-      - run: npx netlify deploy --prod --site=fc92f305-8dcf-46c3-82f5-ef511597df1c --dir=apps/finance/dist
+      - run: CI=1 npx netlify deploy --prod --no-build --filter finance-os --site=fc92f305-8dcf-46c3-82f5-ef511597df1c --dir=apps/finance/build
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 

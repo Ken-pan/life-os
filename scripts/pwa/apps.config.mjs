@@ -125,8 +125,11 @@ export const PWA_APPS = {
     ...scrollSelectorsFor('main-wrap-content'),
     mainQuery: '.main-wrap > .content, .auth-screen',
     nestedWrapInMain: false,
-    routes: [{ path: '/', name: 'home' }],
-    scrollQaPath: '/',
+    routes: [
+      { path: '/home/today', name: 'home' },
+      { path: '/settings/app', name: 'settings' },
+    ],
+    scrollQaPath: '/home/today',
     moreButton: '.mobile-tabbar button[aria-label="更多"]',
     moreClose: '.mobile-more-close',
     authGate: true,

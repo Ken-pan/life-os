@@ -38,7 +38,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 | ID           | 主题                                       | App     | 桶       | ROI | 触发 / 范围                                   |
 | ------------ | ------------------------------------------ | ------- | -------- | --- | --------------------------------------------- |
 | **H-W3**     | Home 手绘分区 `zones[]`                    | Home    | Product  | ◆◆◆ | [`home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) §6 |
-| **C-P2 P2+** | Finance React 共享 UI                      | Finance | Platform | ✗   | 第 3 React 消费者前不做                       |
+| **C-P2 P2+** | Finance React 共享 UI                      | Finance | Platform | ✗   | Finance 已迁移 SvelteKit；第 3 React 消费者前不做 |
 | **C-P1+**    | Finance nav contracts mirror               | Finance | Platform | ✗   | `contracts/events` 已够                       |
 
 分 app 细节 → [`roadmap/apps/`](./roadmap/apps/README.md) · Growth / Home Integration → [`roadmap/GROWTH.md`](./roadmap/GROWTH.md) · [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)
@@ -80,7 +80,7 @@ Phase 7 — Home 空间编辑续 · 按需
 | Growth      | G-P4 Portal 今日摘要 ✅；G-P2/F-P1/M-P1 生产验收 ✅                            | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                |
 | Integration | I-P1 Portal DB + redirect · P2 `schema.sql` · G-P1–G-P3 · G-P5 · CI-补 · QA-F0 | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)              |
 | Portal      | `portal.kenos.space` 读 `core_*`（继续/默认跳转/角标/今日摘要/PWA 引导）       | `apps/portal`                                             |
-| Platform    | AppBrandSwitcher 六站侧栏跨 app 切换（Svelte + Finance React 薄壳）            | `packages/platform-web` · `packages/theme/launcher.js`    |
+| Platform    | AppBrandSwitcher 六站侧栏跨 app 切换（Svelte）                                 | `packages/platform-web` · `packages/theme/launcher.js`    |
 | Home        | `home.kenos.space` 生产；SSO + PWA + 平面 UX ✅（H-P5）；H-P4 云同步搁置       | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0) |
 | CI          | build + design-catalog（smoke/a11y/snapshots）+ integration-smoke 进 GHA       | `.github/workflows/ci.yml`                                |
 
@@ -111,7 +111,7 @@ Phase 7 — Home 空间编辑续 · 按需
 | 产品     | I-P2 智能推荐；无场景的 `life_events` 扩展                                    | I-P2 无消费者                                           |
 | 产品     | 全模块 AI Life OS；第三方 SaaS 聚合（Todoist/Notion/Chase）；自动打电话 Agent | 对标 FluxOS/PAI/Iddu；单人不可维护                      |
 | 页面     | production app 页面 token 迁移；六 app 全量 a11y audit                        | D 线只做共享 primitive + catalog                        |
-| Platform | Finance `ui-react` / nav mirror / i18n 统一                                   | 仅 Finance 一个 React 栈；见 §Next ✗                    |
+| Platform | ~~Finance `ui-react` / nav mirror / i18n 统一~~ Finance SvelteKit 迁移已完成 | 见 Finance SvelteKit 分支 ✓ |
 
 ---
 
