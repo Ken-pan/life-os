@@ -4,6 +4,8 @@ import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './supabase.js'
 import { MUSIC_TABLES as T } from './supabaseTables.js'
 import { db, getAllTracks } from './db.js'
 import { t } from './i18n/index.js'
+import { loadCachedAudioUrl, peekCachedAudioUrl } from './audioBlobStore.js'
+import { getPrefetchLimit, getWarmByteMode } from './networkPolicy.js'
 
 export const MUSIC_BUCKET = 'music'
 export const MUSIC_COVERS_BUCKET = 'music-covers'
@@ -265,24 +267,7 @@ export async function getSignedAudioUrl(path, ttlSec = SIGNED_TTL_SEC) {
  * @returns {number}
  */
 function prefetchLimitForNetwork(limit) {
-  if (!browser) return limit
-  try {
-    const conn =
-      /** @type {{ saveData?: boolean, effectiveType?: string } | undefined} */ (
-        navigator.connection ||
-          // @ts-expect-error vendor-prefixed
-          navigator.mozConnection ||
-          // @ts-expect-error vendor-prefixed
-          navigator.webkitConnection
-      )
-    if (conn?.saveData) return 0
-    if (conn?.effectiveType === '2g' || conn?.effectiveType === 'slow-2g') {
-      return Math.min(limit, 4)
-    }
-  } catch {
-    /* ignore */
-  }
-  return limit
+  return getPrefetchLimit(limit)
 }
 
 /**
@@ -306,18 +291,22 @@ export function resolvePlayUrlSync(track) {
     track.objectUrl = URL.createObjectURL(track.audioBlob)
     return track.objectUrl
   }
+  const cached = peekCachedAudioUrl(track.id)
+  if (cached) return cached
   if (track.storagePath) return peekSignedAudioUrl(track.storagePath) || ''
   return ''
 }
 
 /**
- * Resolve a playable URL: prefer local blob, else signed cloud URL.
+ * Resolve a playable URL: prefer local blob, IndexedDB cache, else signed cloud URL.
  * @param {import('./types.js').Track} track
  * @returns {Promise<string>}
  */
 export async function resolvePlayUrl(track) {
   const sync = resolvePlayUrlSync(track)
   if (sync) return sync
+  const cached = await loadCachedAudioUrl(track.id)
+  if (cached) return cached
   if (track?.storagePath) return getSignedAudioUrl(track.storagePath)
   return ''
 }
@@ -370,6 +359,8 @@ export async function prefetchTracksAudio(tracks, limit = 24) {
   }
 
   const { precacheAudioInServiceWorker } = await import('./audioPrecache.js')
+  const { scheduleFullAudioBlobCache } = await import('./audioBlobStore.js')
+  const warmMode = getWarmByteMode()
   const warmed = new Set()
   for (const tr of cloud) {
     if (warmed.size >= capped) break
@@ -378,7 +369,12 @@ export async function prefetchTracksAudio(tracks, limit = 24) {
     const url = peekSignedAudioUrl(path)
     if (!url) continue
     warmed.add(path)
-    precacheAudioInServiceWorker(url, tr.id)
+    if (warmMode !== 'none') {
+      precacheAudioInServiceWorker(url, tr.id, { mode: warmMode })
+    }
+    if (warmMode === 'full') {
+      scheduleFullAudioBlobCache(tr, url)
+    }
   }
 }
 

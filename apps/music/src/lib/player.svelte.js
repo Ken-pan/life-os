@@ -26,6 +26,11 @@ import {
 } from './audioPrecache.js'
 import { warmTrackAudio, warmTrackAudioFireAndForget } from './audioWarm.js'
 import {
+  scheduleFullAudioBlobCache,
+  trimAudioBlobCache,
+} from './audioBlobStore.js'
+import { getWarmByteMode } from './networkPolicy.js'
+import {
   bindMediaSessionHandlers,
   declarePlaybackSession,
   updateMediaSession,
@@ -450,7 +455,8 @@ async function prefetchNextTrackUrl() {
   if (nextIndex == null) return
   const track = player.queue[nextIndex]
   if (!track) return
-  await warmTrackAudio(track)
+  const keepIds = [getCurrentTrack()?.id, track.id].filter(Boolean)
+  await warmTrackAudio(track, keepIds)
 }
 
 /** @param {import('./types.js').Track} track @returns {Promise<string>} */
@@ -494,7 +500,10 @@ async function preloadNextTrack() {
 
   if (token !== preloadState.token) return
   preloadState.trackId = track.id
-  precacheAudioInServiceWorker(src, track.id)
+  const warmMode = getWarmByteMode()
+  if (warmMode !== 'none') {
+    precacheAudioInServiceWorker(src, track.id, { mode: warmMode })
+  }
 
   const markReady = () => {
     if (token !== preloadState.token || preloadState.trackId !== track.id)
@@ -551,6 +560,9 @@ function beginTrackSession(track) {
     keepIds.push(player.queue[nextIdx].id)
   }
   purgeAudioCacheInServiceWorker(keepIds)
+  void trimAudioBlobCache(keepIds)
+  const src = getActiveAudio()?.src
+  if (src) scheduleFullAudioBlobCache(track, src, keepIds)
   void preloadNextTrack()
 }
 
@@ -983,7 +995,10 @@ async function loadAndPlay(opts = {}) {
 
   beginTrackSession(track)
   void prefetchNextTrackUrl()
-  precacheAudioInServiceWorker(src, track.id)
+  const warmMode = getWarmByteMode()
+  if (warmMode !== 'none') {
+    precacheAudioInServiceWorker(src, track.id, { mode: warmMode })
+  }
 }
 
 /** @param {'a' | 'b'} slot */

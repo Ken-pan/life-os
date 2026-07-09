@@ -4,6 +4,7 @@
   import ContextMenu from './ContextMenu.svelte'
   import LikeButton from './LikeButton.svelte'
   import { playTrack, playTracks, appendToQueue, insertAfterCurrent, prewarmTrack } from '$lib/player.svelte.js'
+  import { visibleWarm } from '$lib/visibleWarm.js'
   import { t } from '$lib/i18n/index.js'
 
   /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, queueMode?: boolean, richActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
@@ -64,6 +65,7 @@
   class:track-row--compact-actions={compactActions}
   class:track-row--queue={queueMode}
   class:track-row--rich-actions={richActions}
+  use:visibleWarm={track}
 >
   <button
     type="button"

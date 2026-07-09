@@ -1,14 +1,19 @@
 import { browser } from '$app/environment'
 
 /** Ask the service worker to fetch & cache the next track (cloud signed URLs). */
-/** @param {string | undefined | null} url @param {string | undefined | null} trackId */
-export function precacheAudioInServiceWorker(url, trackId) {
+/** @param {string | undefined | null} url @param {string | undefined | null} trackId @param {{ mode?: 'range' | 'full' }} [opts] */
+export function precacheAudioInServiceWorker(url, trackId, opts = {}) {
   if (!browser || !url || !trackId) return
   if (url.startsWith('blob:')) return
   const controller = navigator.serviceWorker?.controller
   if (!controller) return
   try {
-    controller.postMessage({ type: 'PRECACHE_AUDIO', url, trackId })
+    controller.postMessage({
+      type: 'PRECACHE_AUDIO',
+      url,
+      trackId,
+      mode: opts.mode || 'full',
+    })
   } catch {
     /* ignore */
   }

@@ -5,6 +5,7 @@
   import ContextMenu from './ContextMenu.svelte';
   import LikeButton from './LikeButton.svelte';
   import { playTrack, playTracks, appendToQueue, insertAfterCurrent, prewarmTrack } from '$lib/player.svelte.js';
+  import { visibleWarm } from '$lib/visibleWarm.js';
   import { formatTime } from '$lib/player.svelte.js';
   import { t } from '$lib/i18n/index.js';
 
@@ -113,6 +114,7 @@
       class:track-table-row--selected={selectedIds.has(track.id)}
       role="row"
       tabindex={0}
+      use:visibleWarm={track}
       oncontextmenu={(e) => openMenu(track, e)}
     >
       <span class="track-table-col track-table-col--idx">{i + 1}</span>

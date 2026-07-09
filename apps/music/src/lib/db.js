@@ -82,6 +82,20 @@ db.version(3)
     }
   })
 
+db.version(4).stores({
+  tracks:
+    'id, title, artist, album, albumKey, artistKey, duration, addedAt, playCount, liked, *words',
+  playlists: 'id, name, createdAt, updatedAt, kind',
+  playlistTracks: '++rowId, playlistId, trackId, position',
+  recent: 'trackId, playedAt',
+  interactions:
+    '++id, entityType, entityId, action, source, createdAt, passive',
+  speedDialSlots:
+    'id, entityType, entityId, source, position, pinned, hidden, updatedAt',
+  albumArt: 'albumKey, artist, album, updatedAt',
+  audioBlobs: 'trackId, storagePath, cachedAt',
+})
+
 export { ensureAlbumArtCache }
 
 /** @param {string} s */

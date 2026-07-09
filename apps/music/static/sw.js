@@ -7,6 +7,8 @@ const ART_CACHE = 'musicos-art-v2'
 const RUNTIME_CACHE_LIMIT = 128
 const AUDIO_CACHE_LIMIT = 8
 const ART_CACHE_LIMIT = 320
+/** First-chunk warm size (512 KiB) — must match networkPolicy.RANGE_WARM_BYTES */
+const RANGE_WARM_BYTES = 512 * 1024
 
 const PRECACHE = [
   '/',
@@ -174,10 +176,20 @@ async function handleMusicAudioFetch(request) {
   }
 }
 
-/** @param {string} url @param {string} trackId */
-async function precacheAudioUrl(url, trackId) {
+/** @param {string} url @param {string} trackId @param {'range' | 'full'} [mode] */
+async function precacheAudioUrl(url, trackId, mode = 'full') {
   if (!url || url.startsWith('blob:')) return
   try {
+    if (mode === 'range') {
+      await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit',
+        headers: { Range: `bytes=0-${RANGE_WARM_BYTES - 1}` },
+      })
+      void trackId
+      return
+    }
+
     const key = audioCacheKey(new URL(url))
     const cache = await caches.open(AUDIO_CACHE)
     const existing = await cache.match(key)
@@ -269,7 +281,13 @@ self.addEventListener('message', (event) => {
     return
   }
   if (data.type === 'PRECACHE_AUDIO') {
-    event.waitUntil(precacheAudioUrl(data.url, data.trackId))
+    event.waitUntil(
+      precacheAudioUrl(
+        data.url,
+        data.trackId,
+        data.mode === 'range' ? 'range' : 'full',
+      ),
+    )
     return
   }
   if (data.type === 'PURGE_AUDIO_CACHE') {
