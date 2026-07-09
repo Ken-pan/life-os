@@ -433,7 +433,7 @@
   .bug-report-backdrop {
     position: fixed;
     inset: 0;
-    z-index: var(--z-sheet, 110);
+    z-index: 9999;
     background: rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: flex-end;
@@ -513,7 +513,7 @@
     gap: 10px;
     margin-top: auto;
     padding-top: 12px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-bottom: max(16px, calc(8px + env(safe-area-inset-bottom)));
     background: linear-gradient(to top, var(--card) 82%, transparent);
   }
 
