@@ -12,7 +12,7 @@ This document captures the verification status of the hardware target connectivi
 * **Home Partition (`/home`)**: ~45.8G free. Writable and safe for experiments.
 
 ## Setup Workspace
-A safe workspace has been prepared on the device:
+A safe legacy workspace has been prepared on the device:
 * **Path**: `/home/root/planneros-lite`
 * **README**: `/home/root/planneros-lite/DEVICE_README.txt`
 * **Access Mode**: Restricted permissions (`chmod 700`)
@@ -26,13 +26,15 @@ successful setup. The canonical PaperOS target path is now:
 * **Reason**: PaperOS is the device OS/app shell name; Planner is the first data
   provider, not the device product name.
 
-Next live-device step: reconnect SSH, inspect `/home/root/planneros-lite`, then
-copy, rename, or symlink it to `/home/root/paperos` without touching `/`, `/usr`,
-or `/etc`.
+Current status: `/home/root/paperos` is deployed as the canonical PaperOS
+workspace. The old `/home/root/planneros-lite` directory remains as a rollback
+source.
 
 ## Latest Live SSH Check
 
-* **2026-07-09**: `ssh remarkable-pro-move` timed out on `10.11.99.1:22` from
-  this workstation. This does not invalidate the earlier successful device
-  verification; it means the Move must be reconnected or Wi-Fi SSH must be
-  reachable before device-side migration can proceed.
+* **2026-07-09**: `ssh remarkable-pro-move` reached `imx93-chiappa` again.
+  `/home/root/planneros-lite` was confirmed as the legacy workspace and
+  `/home/root/paperos` is now the canonical PaperOS workspace.
+* **2026-07-09**: `open-paperos.sh` launched `/home/root/paperos/paperos`
+  with xochitl inactive, and `recover-xochitl.sh` restored xochitl to
+  `active`. See [`PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](./PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md).

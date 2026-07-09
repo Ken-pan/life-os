@@ -17,7 +17,7 @@
 | PWA         | ✅   | SW + IndexedDB 提醒 + 通知                                       |
 | Integration | ✅   | SSO · `finance.bill_due` → `lifeEventsInbox.js`                  |
 | Insight     | ✅   | 批量排期 E2E **P-P2** desktop 22/22 ✅                           |
-| Paper Pro Move | 🟡 | Paper API PR-3B local HTTP full pass；legacy device workspace verified；PaperOS device UX 进入 P-MOVE-1 |
+| Paper Pro Move | 🟡 | P-MOVE-1 home-only session pass；PaperOS 已部署到 `/home/root/paperos`；下一步 P-MOVE-2 token + read cache |
 
 ## Next（按 ROI）
 
@@ -27,7 +27,7 @@
 | **P-P2** {#p-p2}   | Insight「批量排期」（**P-1**）                      | ✅  | Core   | —    | desktop **22/22** ✅                   | §Shipped            |
 | **P-P3**           | Inbox `life_events` 来源徽章 + 深链 Finance/Fitness | ✅  | Growth | —    | `chip--life-event` · Finance `#/today` | §Shipped 2026-07-09 |
 | **P-P4**           | Today 计数与 `portal_today_summary` 对齐            | ◆   | Growth | 0.5d | 与 Portal 同账号任务数一致             | —                   |
-| **P-MOVE-1**       | Paper Pro Move home-only launcher baseline          | ◆   | Product | 0.5–1d | 恢复 SSH；旧 `/home/root/planneros-lite` → `/home/root/paperos`；不碰 xochitl 内部 | [`planner-pro-move.md`](./planner-pro-move.md) |
+| **P-MOVE-1**       | Paper Pro Move home-only launcher baseline          | ✅  | Product | — | `/home/root/paperos` 已部署；启动/恢复 gate pass | [`planner-pro-move.md`](./planner-pro-move.md) |
 | **P-MOVE-2**       | PaperOS read path + offline cache                   | ◆   | Product | 1–2d | `/api/paper/today` → `cache.json`；离线可读 | [`planner-pro-move.md`](./planner-pro-move.md) |
 | **P-MOVE-3**       | Paper `task.complete` controlled write MVP          | ◆   | Product | 1d | 本地 HTTP A-E ✅；staging 写入通过；生产写开关默认关      | [`planner-pro-move.md`](./planner-pro-move.md) |
 | **P-P5** {#p-p5}   | 消费 `fitness.workout_logged` → habit 打卡          | ✅  | Growth | —    | inbox 测试 7/7 · FT-P1 触发器          | §Shipped            |

@@ -29,23 +29,23 @@ path is verified on device.
   last_sync.txt
   open-paperos.sh
   recover-xochitl.sh
+  refresh-cache.sh
 ```
 
 ## Deploy Template Files
 
 ```bash
-scp apps/planner/paper-device/open-paperos.sh \
-    apps/planner/paper-device/recover-xochitl.sh \
-    apps/planner/paper-device/config.example.json \
-    remarkable-pro-move:/home/root/paperos/
+apps/planner/paper-device/deploy-paperos.sh
+```
 
-ssh remarkable-pro-move '
-  cd /home/root/paperos &&
-  cp -n config.example.json config.json &&
-  chmod 700 /home/root/paperos &&
-  chmod 600 config.json token 2>/dev/null || true &&
-  chmod 755 open-paperos.sh recover-xochitl.sh
-'
+The deploy script copies the legacy `/home/root/planneros-lite/planneros-lite`
+binary to `/home/root/paperos/paperos` when no PaperOS binary exists yet. It
+also preserves the old workspace as a rollback point.
+
+## Refresh Cache
+
+```bash
+ssh remarkable-pro-move /home/root/paperos/refresh-cache.sh
 ```
 
 ## Run

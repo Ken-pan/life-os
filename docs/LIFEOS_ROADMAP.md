@@ -30,7 +30,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | 序  | ID  | 主题 | 桶  | ROI | 下一步 | 验收 |
 | --- | --- | ---- | --- | --- | ------ | ---- |
-| 1 | **P-MOVE-1** | PaperOS on Paper Pro Move：home-only launcher baseline | Product / Device | ◆ | 恢复 SSH；检查旧 `/home/root/planneros-lite`；迁移/部署到 `/home/root/paperos` | `open-paperos.sh` 可启动；退出/崩溃后 `recover-xochitl.sh` 返回 `active` |
+| 1 | **P-MOVE-2** | PaperOS read path + offline cache | Planner | Product | ◆ | P-MOVE-1 设备会话已通过；安装 `/home/root/paperos/token`；`/api/paper/today` → `cache.json` | Move 离线可读 Today；缺 token fail closed |
 
 **2026-07-09 已验收（见 §Shipped）：** Phase 0–6 — **F-P3** · **G-P4b-M/H** · **G-P6** · **G-P8** · **G-P9** · **M-P5** · **H-P6a** · **P-P2** · **FT-P0/FT-P1** · **I-P1.5b** · CI 接线。
 

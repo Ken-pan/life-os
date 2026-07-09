@@ -1,6 +1,6 @@
 # PaperOS on reMarkable Paper Pro Move
 
-**Owner:** Planner · **Device:** reMarkable Paper Pro Move (`imx93-chiappa`) · **Status:** P-MOVE-1 in progress
+**Owner:** Planner · **Device:** reMarkable Paper Pro Move (`imx93-chiappa`) · **Status:** P-MOVE-2 next
 
 This is the execution plan for the Paper Pro Move UX path. The decision is to
 build a home-only, session-based PaperOS first, then add autonomous
@@ -12,14 +12,14 @@ first functional provider for PaperOS.
 | Area | Status | Evidence |
 | --- | --- | --- |
 | Device access | Previously verified | `ssh remarkable-pro-move`; legacy writable workspace `/home/root/planneros-lite`; see [`../../PRO_MOVE_DEVICE_ACCESS.md`](../../PRO_MOVE_DEVICE_ACCESS.md) |
-| Current live SSH | Blocked | 2026-07-09 check timed out on `10.11.99.1:22`; reconnect USB/Wi-Fi SSH before device mutation |
+| Current live SSH | PASS | 2026-07-09 live session reached `imx93-chiappa`; see [`../../PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](../../PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md) |
 | Backend mock API | PASS | PR-1 mock endpoints callable; see [`../../PRO_MOVE_PR1_FINAL_GATE.md`](../../PRO_MOVE_PR1_FINAL_GATE.md) |
 | Backend read API | PASS | `/api/paper/today` and `/api/paper/delta` verified via local Netlify dev; see [`../../PRO_MOVE_PR2_READ_ONLY_GATE.md`](../../PRO_MOVE_PR2_READ_ONLY_GATE.md) and [`../../PRO_MOVE_PR2_MERGE_GATE.md`](../../PRO_MOVE_PR2_MERGE_GATE.md) |
 | Backend action API | Implemented with safety switch | `/api/paper/actions`; real writes require `PAPER_ACTIONS_WRITE_ENABLED=true` |
 | Real write scope | PR-3B MVP | `task.complete` only; unsupported actions rejected |
 | Idempotency | PASS locally | `paper_device_actions` log-first state machine; full local HTTP A-E validation passed with RLS enabled; see [`../../PRO_MOVE_PR3B_LOCAL_VALIDATION_GAP_GATE.md`](../../PRO_MOVE_PR3B_LOCAL_VALIDATION_GAP_GATE.md) |
 | Production write enablement | Not enabled | Staging/production validation still required before `PAPER_ACTIONS_WRITE_ENABLED=true` |
-| Device app UX | Partially prepared | Old device workspace exists as `/home/root/planneros-lite`; PaperOS canonical workspace should be `/home/root/paperos` |
+| Device app UX | P-MOVE-1 PASS | Old binary migrated from `/home/root/planneros-lite/planneros-lite` to `/home/root/paperos/paperos`; launcher/recovery verified |
 | xochitl integration | Out of scope | No xochitl patching, sidebar injection, or boot replacement in this phase |
 
 ## Product Decision
@@ -50,6 +50,7 @@ Scope:
 - `config.example.json` with no checked-in token
 - Migrate or mirror the legacy `/home/root/planneros-lite` workspace to `/home/root/paperos`
 - Manual `scp` deployment to `/home/root/paperos` once SSH is reachable
+- `refresh-cache.sh` for the P-MOVE-2 read-cache path
 
 Acceptance:
 - `sh -n apps/planner/paper-device/open-paperos.sh`
@@ -57,6 +58,9 @@ Acceptance:
 - Device directory remains under `/home/root/paperos`
 - `recover-xochitl.sh` returns `active`
 - No `/etc/systemd/system` unit is installed
+
+Status: **PASS on 2026-07-09**. See
+[`../../PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](../../PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md).
 
 ### P-MOVE-2 — PaperOS Read Path
 
@@ -136,12 +140,13 @@ Already successful:
 - [x] Device access and legacy workspace verification: `/home/root/planneros-lite`.
 
 Remaining before daily use on Move:
-- [ ] Restore live SSH access to `remarkable-pro-move`.
-- [ ] Inspect legacy `/home/root/planneros-lite` contents and decide whether to rename, copy, or symlink to `/home/root/paperos`.
-- [ ] Deploy PaperOS templates to `/home/root/paperos`.
-- [ ] Identify the previously successful runtime artifact or package a new `paperos` binary.
-- [ ] Run PaperOS session and verify exit/recovery returns xochitl to `active`.
-- [ ] Wire PaperOS read cache against `/api/paper/today`.
+- [x] Restore live SSH access to `remarkable-pro-move`.
+- [x] Inspect legacy `/home/root/planneros-lite` contents and decide whether to rename, copy, or symlink to `/home/root/paperos`.
+- [x] Deploy PaperOS templates to `/home/root/paperos`.
+- [x] Identify the previously successful runtime artifact or package a new `paperos` binary.
+- [x] Run PaperOS session and verify exit/recovery returns xochitl to `active`.
+- [ ] Add `/home/root/paperos/token` and verify `refresh-cache.sh` against `/api/paper/today`.
+- [ ] Wire PaperOS read cache rendering against `cache.json`.
 - [ ] Run staging validation before enabling real writes outside local validation.
 
 ## Immediate Next Checklist
@@ -149,6 +154,7 @@ Remaining before daily use on Move:
 - [x] Add repo-side paper-device launcher templates.
 - [x] Add this roadmap page and hub links.
 - [x] Reconcile prior success evidence from PR-1/PR-2/PR-3B gate docs.
-- [ ] Restore live SSH access and inspect the legacy device workspace.
-- [ ] Deploy/migrate PaperOS under `/home/root/paperos`.
-- [ ] Record device-session evidence in a new gate doc before P-MOVE-2.
+- [x] Restore live SSH access and inspect the legacy device workspace.
+- [x] Deploy/migrate PaperOS under `/home/root/paperos`.
+- [x] Record device-session evidence in a new gate doc before P-MOVE-2.
+- [ ] Install device token and validate read-cache refresh.
