@@ -1,8 +1,8 @@
 # PR-3B: Fix Gate Report — Log-First Resumable State Machine
 
-**Status**: ✅ **PASS** — Critical fix implemented and validated  
-**Date**: 2026-07-09  
-**Previous Issue**: Write ordering NOT retry-safe (hard gate failed)  
+**Status**: ✅ **PASS** — Critical fix implemented and validated
+**Date**: 2026-07-09
+**Previous Issue**: Write ordering NOT retry-safe (hard gate failed)
 **Current Status**: Write ordering FIXED (log-first pattern implemented)
 
 ---
@@ -63,19 +63,19 @@ When retry finds existing action log entry, routes through status handler:
 switch (existingAction.status) {
   case 'applied':
     → Return duplicate with prior result
-  
+
   case 'duplicate':
     → Return duplicate (shouldn't happen, but handled)
-  
+
   case 'conflict':
     → Return prior conflict details
-  
+
   case 'rejected':
     → Return prior rejection
-  
+
   case 'failed':
     → Return as failed (may retry)
-  
+
   case 'received':  // ← NEW RECOVERY LOGIC
     → Fetch task
     → If task.completed = true:
@@ -339,12 +339,11 @@ B. Real write mode (with explicit approval):
 
 ## Sign-Off
 
-**Implementation**: ✅ Complete  
-**Write Ordering**: ✅ Retry-safe (log-first pattern)  
-**Received State Recovery**: ✅ Implemented  
-**Testing**: ✅ Code passes checks, real DB test pending approval  
-**Security**: ✅ Service role protected  
-**Safety Switch**: ✅ Active (dry-run by default)  
+**Implementation**: ✅ Complete
+**Write Ordering**: ✅ Retry-safe (log-first pattern)
+**Received State Recovery**: ✅ Implemented
+**Testing**: ✅ Code passes checks, real DB test pending approval
+**Security**: ✅ Service role protected
+**Safety Switch**: ✅ Active (dry-run by default)
 
 **Verdict**: **APPROVE PR-3B FOR MERGE**
-

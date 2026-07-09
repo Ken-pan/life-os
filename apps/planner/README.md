@@ -68,6 +68,7 @@ Supabase 客户端配置见 `src/lib/supabase.js`（Life OS 统一项目 `iueozz
 
 1. `supabase/migrations/20260705130000_planner_core_schema.sql` — legacy JSON blob
 2. `supabase/migrations/20260705140000_planner_structured_tables.sql` — 任务/清单分表（推荐）
+3. `supabase/migrations/20260709200000_add_paper_device_actions.sql` — Paper Pro Move action log（PR-3B；生产写入开关默认关闭）
 
 应用会优先从 `planner_tasks` / `planner_lists` 读写；若表不存在则自动回退 JSON blob。
 
@@ -87,6 +88,16 @@ npm run preview
 ```
 
 部署到 Netlify 时，`netlify.toml` 已配置 SPA 回退与 `/api/ai/plan` 函数路由。
+
+## PaperOS / Paper Pro Move
+
+Paper Pro Move device templates live in [`paper-device/`](paper-device/). The
+current UX track is home-only session mode under `/home/root/paperos`:
+stock xochitl boots first, `open-paperos.sh` stops xochitl for the foreground
+PaperOS session, and the cleanup trap starts xochitl again on exit.
+
+Do not check in a device token, patch xochitl, or install systemd units for this
+track until the launcher/recovery baseline is verified on device.
 
 ## 架构说明
 

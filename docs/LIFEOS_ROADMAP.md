@@ -30,6 +30,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | 序  | ID  | 主题 | 桶  | ROI | 下一步 | 验收 |
 | --- | --- | ---- | --- | --- | ------ | ---- |
+| 1 | **P-MOVE-1** | PaperOS on Paper Pro Move：home-only launcher baseline | Product / Device | ◆ | 恢复 SSH；检查旧 `/home/root/planneros-lite`；迁移/部署到 `/home/root/paperos` | `open-paperos.sh` 可启动；退出/崩溃后 `recover-xochitl.sh` 返回 `active` |
 
 **2026-07-09 已验收（见 §Shipped）：** Phase 0–6 — **F-P3** · **G-P4b-M/H** · **G-P6** · **G-P8** · **G-P9** · **M-P5** · **H-P6a** · **P-P2** · **FT-P0/FT-P1** · **I-P1.5b** · CI 接线。
 
@@ -37,6 +38,8 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | ID           | 主题                                       | App     | 桶       | ROI | 触发 / 范围                                   |
 | ------------ | ------------------------------------------ | ------- | -------- | --- | --------------------------------------------- |
+| **P-MOVE-2** | PaperOS read path + offline cache          | Planner | Product  | ◆   | P-MOVE-1 设备会话恢复通过后；`/api/paper/today` → `cache.json` |
+| **P-MOVE-3** | Paper `task.complete` controlled write MVP | Planner | Product  | ◆   | PR-3B 本地 HTTP A-E ✅；下一步 staging pass；生产 `PAPER_ACTIONS_WRITE_ENABLED` 仍默认关 |
 | **H-W3**     | Home 手绘分区 `zones[]`                    | Home    | Product  | ◆◆◆ | [`home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) §6 |
 | **C-P2 P2+** | Finance React 共享 UI                      | Finance | Platform | ✗   | Finance 已迁移 SvelteKit；第 3 React 消费者前不做 |
 | **C-P1+**    | Finance nav contracts mirror               | Finance | Platform | ✗   | `contracts/events` 已够                       |
@@ -48,8 +51,8 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 研判全文 → [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
 ```text
-Phase 7 — Home 空间编辑续 · 按需
-  H-W3 手绘分区 · D-P7 · 各 app §Parked
+Phase 7 — Planner Pro Move + Home 空间编辑续 · 按需
+  P-MOVE-1 PaperOS home-only launcher · H-W3 手绘分区 · D-P7 · 各 app §Parked
 
 已完成（2026-07-08 Home 墙图）
   H-W0–W2c · Wave A/B/C UX — 见 [`qa/home-spatial-uiux-audit-2026-07-08.md`](./qa/home-spatial-uiux-audit-2026-07-08.md)
@@ -154,7 +157,7 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 
 | App     | 层级   | URL                                                | Workspace    | SSO | Portal | Top Next（→ 分卷）                       |
 | ------- | ------ | -------------------------------------------------- | ------------ | --- | ------ | ---------------------------------------- |
-| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅  | ✅     | **P-P3** GoTrue · P-P5 ✅                       |
+| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅  | ✅     | **P-MOVE-1** PaperOS · P-P4                       |
 | Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅  | ✅     | FT-P1 ✅ · 维护 E2E                             |
 | Finance | 生产   | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅  | ✅     | F-P3 ✅ · F-P1b 按需                            |
 | Music   | 生产   | [music.kenos.space](https://music.kenos.space)     | `music-os`   | ✅  | ✅     | M-P5 ✅ · 维护推荐管道                          |

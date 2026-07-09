@@ -1,8 +1,8 @@
 # PR-3B: Hard Gate Analysis — CRITICAL ISSUE FOUND
 
-**Status**: ⚠️ **WARN** — Implementation incomplete, write ordering is NOT retry-safe  
-**Date**: 2026-07-09  
-**Verdict**: Do NOT merge until write ordering is corrected  
+**Status**: ⚠️ **WARN** — Implementation incomplete, write ordering is NOT retry-safe
+**Date**: 2026-07-09
+**Verdict**: Do NOT merge until write ordering is corrected
 
 ---
 
@@ -204,7 +204,7 @@ if (writeEnabled) {
 }
 ```
 
-**Default Behavior**: 
+**Default Behavior**:
 - If `PAPER_ACTIONS_WRITE_ENABLED` is not set → undefined
 - `undefined === 'true'` → false
 - Calls dryRunActions() → dry-run mode active
@@ -416,11 +416,10 @@ STEP 3: Transition log to status='applied' ← Mark action as complete
 
 ## Sign-Off
 
-**Code Review**: ✅ Issue FIXED  
-**Security**: ✅ Pass (no service role leak)  
-**Safety**: ✅ Default dry-run active  
-**Idempotency**: ✅ FIXED (log-first pattern, retry-safe)  
-**Device**: ✅ Unmodified  
+**Code Review**: ✅ Issue FIXED
+**Security**: ✅ Pass (no service role leak)
+**Safety**: ✅ Default dry-run active
+**Idempotency**: ✅ FIXED (log-first pattern, retry-safe)
+**Device**: ✅ Unmodified
 
 **Verdict**: **APPROVE PR-3B FOR MERGE** (after fix validation)
-

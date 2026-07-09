@@ -1,11 +1,12 @@
-# PlannerOS reMarkable Paper Pro Move Integration Readiness Audit
+# PaperOS / Planner Provider reMarkable Paper Pro Move Readiness Audit
 
-This document audits the current state of PlannerOS and assesses its readiness for integrating with the reMarkable Paper Pro Move device client.
+This document audits the Planner-backed PaperOS integration for the reMarkable
+Paper Pro Move. Planner is the first functional provider for PaperOS.
 
 ## Summary Judgement: PASS (with minor WARN constraints)
 
 ### Rationale
-1. **Device Verification Complete**: Device access via SSH, storage path `/home/root/planneros-lite`, and OS characteristics (`5.7.126 (scarthgap)`) are fully verified.
+1. **Device Verification Complete**: Device access via SSH, legacy storage path `/home/root/planneros-lite`, and OS characteristics (`5.7.126 (scarthgap)`) were fully verified. PaperOS now uses `/home/root/paperos` as the canonical target path.
 2. **No Backend SvelteKit Server Runtime**: PlannerOS is configured as a Static Site (using `@sveltejs/adapter-static`). All dynamic API routes are implemented as Netlify Functions under `apps/planner/netlify/functions`.
 3. **No Delta History Table**: The data is synchronized using structured tables (`planner_tasks`, `planner_lists`) or a legacy JSON blob (`planner_user_state`) by upserting whole tasks. There is no commit log or transaction history table. A sync delta endpoint (`/api/paper/delta`) will query updated times or construct virtual deltas.
 4. **No Device Authentication**: Static API tokens mapping to User IDs are used for mock & MVP stages.
@@ -89,7 +90,25 @@ PlannerOS is built as an SPA and runs entirely client-side. Server/dynamic actio
 
 ---
 
+## Current State Update (2026-07-09)
+
+The original readiness audit is now behind the implementation state:
+
+- PR-1 mock endpoints exist and passed local gate verification.
+- PR-2 real read endpoints exist for `/api/paper/today` and `/api/paper/delta`, with dry-run actions verified.
+- PR-3A action-log/idempotency design is complete.
+- PR-3B `task.complete` real-write path is implemented behind `PAPER_ACTIONS_WRITE_ENABLED`.
+- PR-3B local HTTP endpoint validation is a full PASS: fresh complete, duplicate retry, unsupported actions, stale version, and received-state recovery all passed with RLS enabled.
+- Staging/production write enablement is still gated.
+- Device UX work has moved to the Planner roadmap as **P-MOVE-1**: home-only PaperOS launcher baseline.
+- Current live SSH check timed out on `10.11.99.1:22`; reconnect device access before mutating the Move.
+
+See [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) for the active execution plan.
+
 ## PR Roadmap
 
-- **PR-1 (Current)**: Implement PlannerOS Paper API Mock Layer. Define schemas, types, and mock-only edge functions.
-- **PR-2 (Next)**: Real integration with Supabase for data queries, batch writes (LWW logic), virtual delta generation, and secure API Token validation.
+- **PR-1**: ✅ Paper API mock layer.
+- **PR-2**: ✅ Real read-only Supabase integration for Today and virtual delta.
+- **PR-3A**: ✅ Action log and idempotency design.
+- **PR-3B**: ✅ Real write MVP for `task.complete`; local HTTP full pass, staging/production gate remains.
+- **P-MOVE-1**: 🟡 Device-side home-only PaperOS launcher baseline under `/home/root/paperos`.

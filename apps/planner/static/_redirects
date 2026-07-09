@@ -1,0 +1,10 @@
+/api/paper/mock/today /.netlify/functions/paper-mock-today 200
+/api/paper/mock/actions /.netlify/functions/paper-mock-actions 200
+/api/paper/mock/delta /.netlify/functions/paper-mock-delta 200
+/api/paper/mock/heartbeat /.netlify/functions/paper-mock-heartbeat 200
+
+/api/paper/today /.netlify/functions/paper-today 200
+/api/paper/delta /.netlify/functions/paper-delta 200
+/api/paper/actions /.netlify/functions/paper-actions 200
+
+/* /index.html 200

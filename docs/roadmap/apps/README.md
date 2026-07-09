@@ -14,6 +14,7 @@
 | 前缀             | App     | 勿与下列混淆                                                                               |
 | ---------------- | ------- | ------------------------------------------------------------------------------------------ |
 | `P-P*` / `QA-P*` | Planner | `QA-P2` = desktop E2E                                                                      |
+| `P-MOVE-*`       | Planner | reMarkable Paper Pro Move / PaperOS device track                                            |
 | `FT-P*`          | Fitness | ≠ E2E 问题 **F-0**（端口冲突，已修）                                                       |
 | `F-P*`           | Finance | `F-P0` = route smoke；≠ Fitness **F-0**                                                    |
 | `M-P*`           | Music   | `M-P1` ✅ 已发货                                                                           |
@@ -27,6 +28,7 @@
 
 | Hub ID      | App 分卷                                        | 状态 / 锚点           |
 | ----------- | ----------------------------------------------- | --------------------- |
+| **P-MOVE-1** | [planner-pro-move.md](./planner-pro-move.md) | 🟡 home-only launcher baseline |
 | **G-P4b-H** | [portal.md](./portal.md) · [home.md](./home.md) | ✅ 2026-07-09 · H-P6a |
 
 **已发货（2026-07-09）：** G-P8 · G-P9 · G-P4b-H · Phase 0–6 — [`../SHIPPED.md`](../SHIPPED.md)
@@ -35,7 +37,7 @@
 
 | App     | 层级   | Top Next                          | 分卷                       |
 | ------- | ------ | --------------------------------- | -------------------------- |
-| Planner | 生产   | **P-P4** Today 计数对齐 · P-P3 ✅ | [planner.md](./planner.md) |
+| Planner | 生产   | **P-MOVE-1** PaperOS · P-P4 | [planner.md](./planner.md) · [planner-pro-move.md](./planner-pro-move.md) |
 | Fitness | 生产   | FT-P1 ✅ · 维护 E2E               | [fitness.md](./fitness.md) |
 | Finance | 生产   | F-P3 ✅ · F-P1b                   | [finance.md](./finance.md) |
 | Music   | 生产   | M-P5 ✅ · 管道维护                | [music.md](./music.md)     |

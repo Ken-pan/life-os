@@ -1,0 +1,7 @@
+{
+  "apiBaseUrl": "https://planner.kenos.space",
+  "deviceId": "imx93-chiappa",
+  "tokenFile": "/home/root/paperos/token",
+  "cachePath": "/home/root/paperos/cache.json",
+  "lastSyncPath": "/home/root/paperos/last_sync.txt"
+}

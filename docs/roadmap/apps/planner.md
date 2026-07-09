@@ -17,6 +17,7 @@
 | PWA         | ✅   | SW + IndexedDB 提醒 + 通知                                       |
 | Integration | ✅   | SSO · `finance.bill_due` → `lifeEventsInbox.js`                  |
 | Insight     | ✅   | 批量排期 E2E **P-P2** desktop 22/22 ✅                           |
+| Paper Pro Move | 🟡 | Paper API PR-3B local HTTP full pass；legacy device workspace verified；PaperOS device UX 进入 P-MOVE-1 |
 
 ## Next（按 ROI）
 
@@ -26,6 +27,9 @@
 | **P-P2** {#p-p2}   | Insight「批量排期」（**P-1**）                      | ✅  | Core   | —    | desktop **22/22** ✅                   | §Shipped            |
 | **P-P3**           | Inbox `life_events` 来源徽章 + 深链 Finance/Fitness | ✅  | Growth | —    | `chip--life-event` · Finance `#/today` | §Shipped 2026-07-09 |
 | **P-P4**           | Today 计数与 `portal_today_summary` 对齐            | ◆   | Growth | 0.5d | 与 Portal 同账号任务数一致             | —                   |
+| **P-MOVE-1**       | Paper Pro Move home-only launcher baseline          | ◆   | Product | 0.5–1d | 恢复 SSH；旧 `/home/root/planneros-lite` → `/home/root/paperos`；不碰 xochitl 内部 | [`planner-pro-move.md`](./planner-pro-move.md) |
+| **P-MOVE-2**       | PaperOS read path + offline cache                   | ◆   | Product | 1–2d | `/api/paper/today` → `cache.json`；离线可读 | [`planner-pro-move.md`](./planner-pro-move.md) |
+| **P-MOVE-3**       | Paper `task.complete` controlled write MVP          | ◆   | Product | 1d | 本地 HTTP A-E ✅；staging 写入通过；生产写开关默认关      | [`planner-pro-move.md`](./planner-pro-move.md) |
 | **P-P5** {#p-p5}   | 消费 `fitness.workout_logged` → habit 打卡          | ✅  | Growth | —    | inbox 测试 7/7 · FT-P1 触发器          | §Shipped            |
 | **P-P6**           | 消除 `Multiple GoTrueClient` 警告（**P-3**）        | ✅  | Infra  | —    | `@life-os/sync` 浏览器单例缓存         | §Shipped 2026-07-08 |
 
@@ -38,6 +42,7 @@
 | P-P3  | `src/lib/services/lifeEventsInbox.js` · inbox UI                           |
 | P-P5  | `lifeEventsInbox.js` 扩 type 分支；依赖 `packages/contracts/src/events.ts` |
 | P-P6  | `packages/sync/src/supabaseClient.js` · `scripts/supabaseClient.test.mjs`  |
+| P-MOVE | [`paper-device/`](../../../apps/planner/paper-device/) templates · `/api/paper/*` Netlify functions · `server/paperService.mjs` |
 
 ## 验收命令
 
@@ -55,6 +60,7 @@ npm run test                                       # vitest 单元
 | P-P7 | CSV / 外部日历导入                                 |
 | P-P8 | Planner 生产 `life_events`（需第二消费端）         |
 | —    | 合并他站业务表 · 全站 AI Agent · 页面级 token 迁移 |
+| —    | xochitl patch / sidebar 注入 / boot replacement（Paper Pro Move track 明确不做） |
 
 ## 集成
 

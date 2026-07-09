@@ -27,6 +27,23 @@ export default async (req) => {
     });
   }
 
+  // Validate heartbeat body parameters
+  if (
+    typeof body.battery !== 'number' ||
+    typeof body.onlineState !== 'string' ||
+    typeof body.queueDepth !== 'number' ||
+    typeof body.appVersion !== 'string' ||
+    typeof body.osVersion !== 'string'
+  ) {
+    return new Response(JSON.stringify({
+      error: 'validation_failed',
+      message: 'battery (number), onlineState (string), queueDepth (number), appVersion (string), and osVersion (string) are required fields.'
+    }), {
+      status: 400,
+      headers
+    });
+  }
+
   const responseBody = {
     status: "ok",
     serverTime: new Date().toISOString()

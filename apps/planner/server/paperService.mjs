@@ -396,7 +396,7 @@ async function handleExistingActionLog(supabase, userId, batch, action, existing
             conflict: { reason: 'task_missing_during_recovery' }
           })
           .eq('id', existingAction.id)
-          .catch(() => {});
+;
 
         conflicts.push({
           clientActionId: action.clientActionId,
@@ -424,7 +424,7 @@ async function handleExistingActionLog(supabase, userId, batch, action, existing
               applied_at: now
             })
             .eq('id', existingAction.id)
-            .catch(() => {});
+  ;
 
           duplicates.push({
             clientActionId: action.clientActionId,
@@ -573,7 +573,7 @@ export async function applyActions(userId, batch) {
             result: { reason: 'task_query_error', message: taskQueryError.message }
           })
           .eq('id', existingLogId)
-          .catch(() => {});
+;
       } else {
         await supabase.from('paper_device_actions').insert({
           user_id: userId,
@@ -587,7 +587,7 @@ export async function applyActions(userId, batch) {
           status: 'rejected',
           result: { reason: 'task_query_error', message: taskQueryError.message },
           created_at: now
-        }).catch(() => {});
+        });
       }
 
       rejected.push({
@@ -609,7 +609,7 @@ export async function applyActions(userId, batch) {
             result: { reason: 'task_not_found' }
           })
           .eq('id', existingLogId)
-          .catch(() => {});
+;
       } else {
         await supabase.from('paper_device_actions').insert({
           user_id: userId,
@@ -623,7 +623,7 @@ export async function applyActions(userId, batch) {
           status: 'rejected',
           result: { reason: 'task_not_found' },
           created_at: now
-        }).catch(() => {});
+        });
       }
 
       rejected.push({
@@ -647,7 +647,7 @@ export async function applyActions(userId, batch) {
             conflict: { reason: 'task_deleted', deletedAt: task.deletedAt }
           })
           .eq('id', existingLogId)
-          .catch(() => {});
+;
       } else {
         await supabase.from('paper_device_actions').insert({
           user_id: userId,
@@ -661,7 +661,7 @@ export async function applyActions(userId, batch) {
           status: 'conflict',
           conflict: { reason: 'task_deleted', deletedAt: task.deletedAt },
           created_at: now
-        }).catch(() => {});
+        });
       }
 
       conflicts.push({
@@ -692,7 +692,7 @@ export async function applyActions(userId, batch) {
               applied_at: now
             })
             .eq('id', existingLogId)
-            .catch(() => {});
+  ;
         } else {
           await supabase.from('paper_device_actions').insert({
             user_id: userId,
@@ -712,7 +712,7 @@ export async function applyActions(userId, batch) {
             },
             applied_at: now,
             created_at: now
-          }).catch(() => {});
+          });
         }
 
         applied.push({
@@ -739,7 +739,7 @@ export async function applyActions(userId, batch) {
               }
             })
             .eq('id', existingLogId)
-            .catch(() => {});
+  ;
         } else {
           await supabase.from('paper_device_actions').insert({
             user_id: userId,
@@ -758,7 +758,7 @@ export async function applyActions(userId, batch) {
               taskCompleted: false
             },
             created_at: now
-          }).catch(() => {});
+          });
         }
 
         conflicts.push({
@@ -795,7 +795,7 @@ export async function applyActions(userId, batch) {
             applied_at: now
           })
           .eq('id', existingLogId)
-          .catch(() => {});
+;
       } else {
         // Insert new log entry as 'applied'
         await supabase.from('paper_device_actions').insert({
@@ -815,7 +815,7 @@ export async function applyActions(userId, batch) {
           },
           applied_at: now,
           created_at: now
-        }).catch(() => {});
+        });
       }
 
       applied.push({
