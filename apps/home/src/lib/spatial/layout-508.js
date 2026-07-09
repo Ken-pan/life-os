@@ -36,9 +36,9 @@ export function default508Config() {
         h: { ft: 2, in: 0 },
         door: { w: { ft: 5, in: 0 }, offset: { ft: 1, in: 0 } },
       },
-      coatCloset: { w: { ft: 3, in: 5 }, h: { ft: 3, in: 2 } },
-      bathroom: { w: { ft: 7, in: 11 }, h: { ft: 7, in: 8 } },
-      laundry: { w: { ft: 3, in: 2 }, h: { ft: 5, in: 4 } },
+      coatCloset: { w: { ft: 3, in: 5 }, h: { ft: 2, in: 0 } },
+      bathroom: { w: { ft: 6, in: 8 }, h: { ft: 7, in: 8 } },
+      laundry: { w: { ft: 2, in: 10 }, h: { ft: 5, in: 4 } },
       living: { w: { ft: 11, in: 10 }, h: { ft: 16, in: 9 } },
       kitchen: { w: { ft: 11, in: 10 }, h: { ft: 13, in: 10 } },
       entry: { w: { ft: 3, in: 9 }, h: { ft: 4, in: 5 } },
@@ -118,6 +118,8 @@ export function build508Project(config, carry = {}) {
   const kitchenH = px(r.kitchen.h, P)
   const entryW = px(r.entry.w, P)
   const entryH = px(r.entry.h, P)
+  const kitCounterDepth = px({ ft: 2, in: 4 }, P)
+  const kitCounterX = X_END - kitCounterDepth
   const op = config.openings ?? defaultOpenings()
 
   const yBalconyBot = Y0 + balconyH
@@ -241,6 +243,10 @@ export function build508Project(config, carry = {}) {
         h: hallH,
       },
       fill: 'transparent',
+      dimensions: {
+        w: fromInches(Math.round((hallW / P) * 12)),
+        h: fromInches(Math.round((hallH / P) * 12)),
+      },
     },
     {
       id: 'structural-pillar',
@@ -254,18 +260,19 @@ export function build508Project(config, carry = {}) {
 
   /** @type {SpatialProject['walls']} */
   const walls = [
-    { id: 'w-outer-left', from: { x: X0, y: Y0 }, to: { x: X0, y: Y_BOT }, kind: 'wall' },
-    { id: 'w-outer-bot-left', from: { x: X0, y: Y_BOT }, to: { x: X_DIV, y: Y_BOT }, kind: 'wall' },
-    { id: 'w-outer-right', from: { x: X_END, y: Y0 }, to: { x: X_END, y: Y_BOT }, kind: 'wall' },
-    { id: 'w-outer-top', from: { x: X0, y: Y0 }, to: { x: X_END, y: Y0 }, kind: 'wall' },
-    { id: 'w-div', from: { x: X_DIV, y: Y0 }, to: { x: X_DIV, y: Y_BOT }, kind: 'wall' },
-    { id: 'w-balcony', from: { x: X0, y: yBalconyBot }, to: { x: X0 + LEFT_W, y: yBalconyBot }, kind: 'wall' },
+    { id: 'w-outer-left', from: { x: X0, y: Y0 }, to: { x: X0, y: Y_BOT }, kind: 'wall', role: 'exterior' },
+    { id: 'w-outer-bot-left', from: { x: X0, y: Y_BOT }, to: { x: X_DIV, y: Y_BOT }, kind: 'wall', role: 'exterior' },
+    { id: 'w-outer-right', from: { x: X_END, y: Y0 }, to: { x: X_END, y: Y_BOT }, kind: 'wall', role: 'exterior' },
+    { id: 'w-outer-top', from: { x: X0, y: Y0 }, to: { x: X_END, y: Y0 }, kind: 'wall', role: 'exterior' },
+    { id: 'w-div', from: { x: X_DIV, y: Y0 }, to: { x: X_DIV, y: Y_BOT }, kind: 'wall', role: 'interior' },
+    { id: 'w-balcony', from: { x: X0, y: yBalconyBot }, to: { x: X0 + LEFT_W, y: yBalconyBot }, kind: 'wall', role: 'interior' },
     // Closet row — gap for bifold door (bed-closet → bedroom only)
     {
       id: 'w-closet-row-l',
       from: { x: X0, y: yBedroomBot },
       to: { x: doorX1, y: yBedroomBot },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'g-bed-closet',
@@ -278,24 +285,28 @@ export function build508Project(config, carry = {}) {
       from: { x: doorX2, y: yBedroomBot },
       to: { x: X0 + bedClosetW, y: yBedroomBot },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'w-closet-row-ext',
       from: { x: X0 + bedClosetW, y: yBedroomBot },
       to: { x: X0 + LEFT_W, y: yBedroomBot },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'w-closet-v',
       from: { x: X0 + bedClosetW, y: yBedroomBot },
       to: { x: X0 + bedClosetW, y: yBedroomBot + coatClosetH },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'w-coat-east-top',
       from: { x: coatX, y: yBedroomBot },
       to: { x: coatX, y: coatDoorY1 },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'g-coat',
@@ -314,24 +325,28 @@ export function build508Project(config, carry = {}) {
       from: { x: coatX, y: coatDoorY2 },
       to: { x: coatX, y: yBedroomBot + coatClosetH },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'w-bath-top',
       from: { x: X0, y: yClosetBandBot },
       to: { x: X0 + bathW + laundryW, y: yClosetBandBot },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'w-bath-right',
       from: { x: X0 + bathW, y: yClosetBandBot },
       to: { x: X0 + bathW, y: yLaundryTop },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'w-laundry-east-top',
       from: { x: hallX, y: yLaundryTop },
       to: { x: hallX, y: laundryDoorY1 },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'g-laundry',
@@ -350,18 +365,28 @@ export function build508Project(config, carry = {}) {
       from: { x: hallX, y: laundryDoorY2 },
       to: { x: hallX, y: yLaundryTop + laundryH },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'w-bath-right-low',
       from: { x: X0 + bathW, y: yLaundryTop + laundryH },
       to: { x: X0 + bathW, y: Y_BOT },
       kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'w-liv-kit',
       from: { x: X_DIV, y: Y0 + livingH },
       to: { x: X_END - px({ ft: 4, in: 0 }, P), y: Y0 + livingH },
       kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'w-kit-counter',
+      from: { x: kitCounterX, y: Y0 + livingH },
+      to: { x: kitCounterX, y: Y_BOT },
+      kind: 'wall',
+      role: 'interior',
     },
     {
       id: 'g-bed',
@@ -559,8 +584,10 @@ export function build508Project(config, carry = {}) {
       scaleLabel: `${config.pxPerFt} px/ft · 北向上 · 可编辑尺寸`,
       assumptions: [
         '<b>平面来源</b>：参数化布局，默认按开发商 769 sqft 户型图重建。',
-        '<b>卧室壁橱</b>：双折门（bifold），仅向卧室方向开启，不向走廊开门。',
-        '<b>洗衣间</b>：双折门 5′ 宽，向走廊开启；底部结构柱为实心不可进。',
+        '<b>墙厚</b>：美国公寓惯例 — 外墙 6″、内隔墙 4.5″（2×4 + 双面石膏板）。',
+        '<b>壁橱带</b>：卧室壁橱与储物柜同深 2′；走廊宽 3′ 符合最小通行净宽。',
+        '<b>厨房</b>：东墙橱柜条深 2′4″；客厅·厨房分隔墙东端留 4′ 开口通玄关。',
+        '<b>洗衣间</b>：双折门 5′4″ 满高，向走廊开启；底部结构柱实心不可进。',
         '<b>储藏区 S1–S8</b>：位置随尺寸自适应；柜内明细可继续修正。',
       ],
       sourceNote: carry.meta?.sourceNote ?? 'HOME.OS · 参数化户型 · 储藏清单来自现场审计',
@@ -613,8 +640,8 @@ function defaultStorageZones(config, L) {
       nameZh: '厨房橱柜 + 干货',
       locationZh: '厨房 · 东墙橱柜',
       formZh: '上柜 + 下柜 + 台面',
-      bounds: { x: L.X_END - 58, y: L.Y0 + L.livingH + 20, w: 52, h: px({ ft: 11, in: 0 }, P) },
-      marker: { x: L.X_END - 32, y: L.Y0 + L.livingH + px({ ft: 6, in: 0 }, P) },
+      bounds: { x: L.X_END - px({ ft: 2, in: 4 }, P), y: L.Y0 + L.livingH + 20, w: px({ ft: 2, in: 0 }, P), h: px({ ft: 11, in: 0 }, P) },
+      marker: { x: L.X_END - px({ ft: 1, in: 4 }, P), y: L.Y0 + L.livingH + px({ ft: 6, in: 0 }, P) },
       items: ['餐具 / 玻璃杯 / 干货', '锅具 / 平底锅', '咖啡设备 · 小家电', '调味 / 囤货'],
     },
     {
@@ -755,9 +782,15 @@ export function validate508Config(config) {
   }
   const bathLaundry =
     toInches(config.rooms.bathroom.w) + toInches(config.rooms.laundry.w)
+  const hallIn = leftIn - bathLaundry
   if (bathLaundry > leftIn) {
     issues.push(
       `浴室+洗衣间总宽超过左列（${formatFtIn(fromInches(bathLaundry))} > ${formatFtIn(config.leftCol)}）`,
+    )
+  }
+  if (hallIn < 36) {
+    issues.push(
+      `走廊净宽 ${formatFtIn(fromInches(hallIn))} 小于美国公寓最小通行 3′`,
     )
   }
   return issues

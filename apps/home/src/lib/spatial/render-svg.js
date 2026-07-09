@@ -2,6 +2,7 @@
 import { formatFtIn } from './dimensions.js'
 import { graphOpeningBounds, graphOpeningHitRect } from './graph-openings.js'
 import { polygonPointsAttr, zoneCentroid } from './zones.js'
+import { wallStrokePx } from './wall-standards.js'
 import {
   isEditableWall,
   OPENING_EDIT_BINDINGS,
@@ -64,6 +65,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
   const showRoomEnglish = opts.showRoomEnglish ?? false
   const pxPerFt =
     project.layoutConfig?.pxPerFt ?? project.wallGraph?.pxPerFt ?? 36
+  const extStroke = wallStrokePx('exterior', pxPerFt)
+  const intStroke = wallStrokePx('interior', pxPerFt)
   const touchScale = Math.max(1, opts.touchScale ?? 1)
   const wallHitStroke = Math.round(18 * touchScale)
   const wallOnStroke = Math.round(20 * touchScale)
@@ -90,8 +93,10 @@ export function renderFloorPlanSvg(project, opts = {}) {
 </defs>`)
   parts.push(`<style>
  .grid line{stroke:var(--plan-grid,#dbe1e6);stroke-width:1}
- .wall{stroke:var(--plan-wall,#20242b);stroke-width:5;stroke-linecap:square}
- .gap{stroke:var(--plan-paper,#eef1f4);stroke-width:7}
+ .wall{stroke:var(--plan-wall,#20242b);stroke-linecap:square}
+ .wall-exterior{stroke-width:${extStroke}}
+ .wall-interior{stroke-width:${intStroke}}
+ .gap{stroke:var(--plan-paper,#eef1f4);stroke-width:${intStroke + 2}}
  .thresh{stroke:var(--plan-threshold,#b9c1c9);stroke-width:1.4;stroke-dasharray:2 3}
  .door{fill:rgba(138,146,156,.12);stroke:var(--plan-door,#8a929c);stroke-width:1.2}
  .door-cad,.door-bifold,.door-pocket{fill:none;stroke:var(--plan-door,#8a929c);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -324,7 +329,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
   if (project.outerBounds) {
     const { x, y, w, h } = project.outerBounds
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="var(--plan-wall,#20242b)" stroke-width="6"/>`,
+      `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="var(--plan-wall,#20242b)" stroke-width="${extStroke}"/>`,
     )
   }
 
@@ -368,7 +373,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
         ? 'gap'
         : wall.kind === 'threshold'
           ? 'thresh'
-          : 'wall'
+          : `wall ${wall.role === 'exterior' ? 'wall-exterior' : 'wall-interior'}`
     parts.push(
       `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="${cls}"/>`,
     )

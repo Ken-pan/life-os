@@ -91,11 +91,16 @@
  */
 
 /**
+ * @typedef {'exterior' | 'interior'} WallRole
+ */
+
+/**
  * @typedef {object} SpatialWall
  * @property {string} id
  * @property {Point} from
  * @property {Point} to
  * @property {WallKind} kind
+ * @property {WallRole} [role]
  */
 
 /**

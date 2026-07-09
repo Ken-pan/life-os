@@ -331,7 +331,7 @@ export function defaultOpenings() {
     bedroomDoor: { offset: { ft: 8, in: 11 }, span: { ft: 2, in: 0 } },
     bathDoor: { offset: { ft: 5, in: 0 }, span: { ft: 1, in: 6 } },
     coatDoor: { offset: { ft: 1, in: 0 }, span: { ft: 1, in: 6 } },
-    laundryDoor: { offset: { ft: 0, in: 6 }, span: { ft: 5, in: 0 } },
+    laundryDoor: { offset: { ft: 0, in: 0 }, span: { ft: 5, in: 4 } },
     entryDoor: { offsetFromRight: { ft: 2, in: 0 }, span: { ft: 3, in: 0 } },
     balconyDoor: {
       offset: { ft: 0, in: 0 },
