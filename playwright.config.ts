@@ -16,7 +16,8 @@ const projects = (
     headless: true,
   },
   webServer: {
-    command: `npm run preview -w ${app.workspace} -- --host 127.0.0.1 --port ${app.port}`,
+    command: `bash scripts/pwa/preview-app.sh ${app.id}`,
+    env: { HOST: '127.0.0.1', PWA_PORT: String(app.port) },
     url: `http://127.0.0.1:${app.port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

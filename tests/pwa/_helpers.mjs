@@ -54,6 +54,11 @@ export async function readShellMetrics(page, app, standalone = false) {
       document.documentElement.style.setProperty('--safe-bottom-effective', '34px')
       document.documentElement.style.setProperty('--mobile-tabbar-safe-padding', '34px')
     })
+    await page.waitForFunction(
+      () => getComputedStyle(document.body).display === 'flex',
+      undefined,
+      { timeout: 5_000 },
+    ).catch(() => {})
     await page.waitForTimeout(300)
   }
   return page.evaluate(collectShellMetricsInBrowser, {
