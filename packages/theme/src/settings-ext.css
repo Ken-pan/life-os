@@ -207,21 +207,29 @@
 /* Toggle 别名（Fitness 沿用 .toggle） — W3C APG: button + role=switch; 44px hit area via padding */
 .toggle,
 .settings-toggle {
-  width: 46px;
-  height: 27px;
-  border-radius: 20px;
-  background: var(--control-toggle-track);
+  --toggle-track-w: 46px;
+  --toggle-track-h: 27px;
+  --toggle-thumb-size: 21px;
+  --toggle-thumb-inset: 3px;
+  --toggle-travel: calc(
+    var(--toggle-track-w) - var(--toggle-thumb-size) - (var(--toggle-thumb-inset) * 2)
+  );
+
+  width: var(--toggle-track-w);
+  min-width: var(--toggle-track-w);
+  min-height: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
   position: relative;
-  transition: background var(--dur-base) var(--ease-standard);
   flex-shrink: 0;
   cursor: pointer;
-  border: none;
-  box-sizing: content-box;
-  padding-block: calc((44px - 27px) / 2);
-  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .toggle:focus-visible,
@@ -230,28 +238,44 @@
   box-shadow: var(--focus-ring);
 }
 
+.toggle::before,
+.settings-toggle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--toggle-track-w);
+  height: var(--toggle-track-h);
+  border-radius: 20px;
+  background: var(--control-toggle-track);
+  transform: translate(-50%, -50%);
+  transition: background var(--dur-base) var(--ease-standard);
+  pointer-events: none;
+}
+
+.toggle.on::before,
+.settings-toggle.on::before {
+  background: var(--control-toggle-on);
+}
+
 .toggle::after,
 .settings-toggle::after {
   content: '';
   position: absolute;
   top: 50%;
-  left: 3px;
-  width: 21px;
-  height: 21px;
+  left: calc((100% - var(--toggle-track-w)) / 2 + var(--toggle-thumb-inset));
+  width: var(--toggle-thumb-size);
+  height: var(--toggle-thumb-size);
   border-radius: 50%;
   background: var(--control-toggle-thumb);
   transition: transform var(--dur-base) var(--ease-emphasized);
   transform: translateY(-50%);
-}
-
-.toggle.on,
-.settings-toggle.on {
-  background: var(--control-toggle-on);
+  pointer-events: none;
 }
 
 .toggle.on::after,
 .settings-toggle.on::after {
-  transform: translateY(-50%) translateX(19px);
+  transform: translateY(-50%) translateX(var(--toggle-travel));
 }
 
 .toggle.disabled,
