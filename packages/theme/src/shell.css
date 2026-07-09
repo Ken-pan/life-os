@@ -778,6 +778,7 @@ html {
   }
 
   .appbar {
+    background: var(--bg);
     background-color: var(--bg);
     background-image: none;
     -webkit-backdrop-filter: none;
@@ -785,47 +786,67 @@ html {
   }
 
   /*
-    Standalone: appbar owns safe-top padding so one opaque layer paints the
-    status-bar band (padding is inside the border box; margin would not).
+    Standalone: safe-top on .appbar-inner only (single paint layer). Fixed seam
+    cover spans the safe-top boundary where WKWebView leaves a 1px hairline.
   */
   @supports (-webkit-touch-callout: none) {
     html.standalone-pwa .appbar,
     html.standalone-pwa .page-header {
-      background-color: var(--bg);
+      padding-top: 0;
+      background: var(--bg);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
-    }
-
-    html.standalone-pwa .appbar {
-      padding-top: max(59px, var(--safe-top-effective));
+      border-top: none;
     }
 
     html.standalone-pwa .appbar-inner {
-      padding-top: max(var(--stack-tight), 0px);
+      padding-top: max(59px, var(--safe-top-effective));
     }
 
     html.standalone-pwa .page-header {
       padding-top: max(var(--stack-tight), max(59px, var(--safe-top-effective)));
     }
 
+    html.standalone-pwa .app-shell:has(.appbar, .page-header)::after {
+      content: '';
+      position: fixed;
+      top: calc(max(59px, var(--safe-top-effective)) - 2px);
+      left: 0;
+      right: 0;
+      height: 4px;
+      background-color: var(--bg);
+      z-index: var(--z-mobile-chrome, 35);
+      pointer-events: none;
+    }
+
     @media (display-mode: standalone) {
       .appbar,
       .page-header {
-        background-color: var(--bg);
+        padding-top: 0;
+        background: var(--bg);
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
-      }
-
-      .appbar {
-        padding-top: max(59px, var(--safe-top-effective));
+        border-top: none;
       }
 
       .appbar-inner {
-        padding-top: max(var(--stack-tight), 0px);
+        padding-top: max(59px, var(--safe-top-effective));
       }
 
       .page-header {
         padding-top: max(var(--stack-tight), max(59px, var(--safe-top-effective)));
+      }
+
+      .app-shell:has(.appbar, .page-header)::after {
+        content: '';
+        position: fixed;
+        top: calc(max(59px, var(--safe-top-effective)) - 2px);
+        left: 0;
+        right: 0;
+        height: 4px;
+        background-color: var(--bg);
+        z-index: var(--z-mobile-chrome, 35);
+        pointer-events: none;
       }
     }
   }

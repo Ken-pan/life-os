@@ -115,10 +115,10 @@ body,
   }
 
   /*
-    Standalone + real header: hide the extra fixed tint strip — sticky header
-    extends behind the status bar (shell.css). Without a header, tint stays on.
+    Any mobile header paints the status-bar band — a second fixed tint strip
+    leaves a 1px hairline at safe-top (Safari browser + standalone PWA).
   */
-  html.standalone-pwa .app-shell:has(.appbar, .page-header) .safari-chrome-tint-top {
+  .app-shell:has(.appbar, .page-header) .safari-chrome-tint-top {
     display: none !important;
   }
 
@@ -149,10 +149,6 @@ body,
   @media (display-mode: standalone) {
     :root {
       --safe-top-effective: max(59px, var(--ios-edge-min), env(safe-area-inset-top, 0px));
-    }
-
-    .app-shell:has(.appbar, .page-header) .safari-chrome-tint-top {
-      display: none !important;
     }
   }
 

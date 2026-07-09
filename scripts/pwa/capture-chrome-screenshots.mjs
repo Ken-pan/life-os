@@ -137,6 +137,36 @@ async function seedMusic(page) {
 }
 
 /** @param {import('playwright').Page} page */
+async function detectTopHairline(page) {
+  return page.evaluate(() => {
+    const root = document.documentElement
+    const safeTop = Math.round(
+      parseFloat(getComputedStyle(root).getPropertyValue('--safe-top-effective')) ||
+        59,
+    )
+    const y = Math.max(0, safeTop - 1)
+    const samples = []
+    const width = window.innerWidth
+    for (let x = 16; x < width - 16; x += Math.max(32, Math.floor(width / 8))) {
+      const el = document.elementFromPoint(x, y)
+      if (!el) continue
+      const cs = getComputedStyle(el)
+      samples.push({
+        x,
+        tag: el.tagName.toLowerCase(),
+        className: String(el.className || '').slice(0, 80),
+        borderTop: cs.borderTopWidth,
+        borderBottom: cs.borderBottomWidth,
+        backgroundColor: cs.backgroundColor,
+      })
+    }
+    const tint = document.querySelector('.safari-chrome-tint-top')
+    const tintDisplay = tint ? getComputedStyle(tint).display : null
+    return { safeTop, probeY: y, tintDisplay, samples }
+  })
+}
+
+/** @param {import('playwright').Page} page */
 async function collectChromeMetrics(page) {
   return page.evaluate(() => {
     const px = (v) => Math.round(parseFloat(v) || 0)
@@ -245,6 +275,7 @@ async function main() {
       await primeStandalonePwa(page)
 
       const metrics = await collectChromeMetrics(page)
+      const hairline = await detectTopHairline(page)
       await page.screenshot({
         path: resolveShotPath(OUT_DIR, {
           surface: `${id}-${route.name}-chrome`,
@@ -259,7 +290,7 @@ async function main() {
         fullPage: true,
       })
 
-      report.apps[id] = { route: route.path, metrics }
+      report.apps[id] = { route: route.path, metrics, hairline }
       console.log(`✓ ${id} → ${id}-${route.name}-chrome-viewport.png`)
     } catch (err) {
       report.apps[id] = { error: String(err.message || err) }
