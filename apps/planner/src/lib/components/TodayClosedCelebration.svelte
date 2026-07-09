@@ -9,14 +9,14 @@
     variant?: 'clean' | 'partial',
     unscheduledCount?: number,
     onDismiss?: () => void,
-    onOpenTimeline?: () => void
+    onOpenCalendar?: () => void
   }} */
   let {
     stats,
     variant = 'clean',
     unscheduledCount = 0,
     onDismiss,
-    onOpenTimeline,
+    onOpenCalendar,
   } = $props();
 
   const DISMISS_KEY = 'planner_today_closed';
@@ -61,7 +61,7 @@
   </p>
   <div class="today-closed-actions">
     {#if isPartial}
-      <button type="button" class="today-progress-chip today-progress-chip--action" onclick={() => onOpenTimeline?.()}>
+      <button type="button" class="today-progress-chip today-progress-chip--action" onclick={() => onOpenCalendar?.()}>
         {t('home.scheduleRemaining')}
       </button>
       <button type="button" class="today-progress-chip today-progress-chip--ghost" onclick={() => goto('/completed')}>

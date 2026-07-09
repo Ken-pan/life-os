@@ -100,7 +100,9 @@
   let graphPreviewGraph = $state(null)
   /** @type {import('$lib/spatial/types.js').GraphOpening[] | null} */
   let graphPreviewOpenings = $state(null)
-  let compactPlanChrome = $state(false)
+  let compactPlanChrome = $state(
+    browser ? window.matchMedia('(max-width: 599px)').matches : false,
+  )
   let convertBannerDismissed = $state(false)
 
   const CONVERT_BANNER_KEY = 'home_plan_convert_banner_dismissed'

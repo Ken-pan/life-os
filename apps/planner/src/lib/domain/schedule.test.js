@@ -15,6 +15,11 @@ import {
   resizeBlockBottom,
   resizeBlockTop,
   formatConflictLabel,
+  DEFAULT_SLOT_DURATION_MINUTES,
+  MIN_BLOCK_DURATION,
+  slotPreviewFromPointer,
+  slotRangeFromDrag,
+  timelineTopFromMinutes,
 } from './schedule.js'
 
 const task = (overrides = {}) => ({
@@ -128,5 +133,51 @@ describe('schedule', () => {
         tr,
       ),
     ).toBe('Standup (09:00-09:30)')
+  })
+
+  it('exports default slot duration of 30 minutes', () => {
+    expect(DEFAULT_SLOT_DURATION_MINUTES).toBe(30)
+  })
+
+  it('builds slot preview from pointer Y with snapped start', () => {
+    const topPx = timelineTopFromMinutes(9 * 60 + 7)
+    const preview = slotPreviewFromPointer(topPx, DEFAULT_SLOT_DURATION_MINUTES)
+    expect(preview).not.toBeNull()
+    expect(preview?.start).toBe('09:00')
+    expect(preview?.end).toBe('09:30')
+    expect(preview?.durationMinutes).toBe(30)
+    expect(preview?.layout.top).toBe(HOUR_HEIGHT_PX)
+  })
+
+  it('clamps slot preview start so full duration fits in day', () => {
+    const topPx = timelineTopFromMinutes(22 * 60 + 45)
+    const preview = slotPreviewFromPointer(topPx, 60)
+    expect(preview).not.toBeNull()
+    expect(preview?.start).toBe('22:00')
+    expect(preview?.end).toBe('23:00')
+    expect(preview?.durationMinutes).toBe(60)
+    expect(
+      (preview?.startMinutes ?? 0) + (preview?.durationMinutes ?? 0),
+    ).toBeLessThanOrEqual(23 * 60)
+  })
+
+  it('builds create range from click-drag with min duration', () => {
+    const origin = timelineTopFromMinutes(10 * 60)
+    const current = timelineTopFromMinutes(10 * 60 + 5)
+    const range = slotRangeFromDrag(origin, current)
+    expect(range).not.toBeNull()
+    expect(range?.start).toBe('10:00')
+    expect(range?.durationMinutes).toBe(MIN_BLOCK_DURATION)
+    expect(range?.end).toBe('10:15')
+  })
+
+  it('builds create range dragging upward', () => {
+    const origin = timelineTopFromMinutes(11 * 60)
+    const current = timelineTopFromMinutes(10 * 60)
+    const range = slotRangeFromDrag(origin, current)
+    expect(range).not.toBeNull()
+    expect(range?.start).toBe('10:00')
+    expect(range?.end).toBe('11:00')
+    expect(range?.durationMinutes).toBe(60)
   })
 })

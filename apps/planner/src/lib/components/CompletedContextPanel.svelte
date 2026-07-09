@@ -10,7 +10,7 @@
   let { summary, progress, doneToday } = $props();
 </script>
 
-<aside class="today-recap completed-context" aria-label={t('completed.recapTitle')}>
+<aside class="life-os-grid__aside today-recap completed-context" aria-label={t('completed.recapTitle')}>
   <header class="today-recap-head">
     <h2 class="today-recap-title">{t('completed.recapTitle')}</h2>
     <p class="today-recap-sub">{t('home.progressDoneOnly', { count: doneToday.length })}</p>

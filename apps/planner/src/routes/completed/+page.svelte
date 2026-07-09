@@ -25,8 +25,8 @@
 <AppBar title={t('completed.title')} />
 
 <div class="life-os-page-workspace">
-  <div class="desktop-split-layout desktop-split-layout--log">
-    <div class="desktop-split-main">
+  <div class="life-os-grid life-os-grid--split life-os-grid--aside-wide desktop-split-layout desktop-split-layout--log">
+    <div class="life-os-grid__main desktop-split-main">
       <div class="wrap completed-page">
         <section class="completed-rhythm completed-rhythm--inline">
           <h2 class="completed-section-title">{t('rhythm.title')}</h2>

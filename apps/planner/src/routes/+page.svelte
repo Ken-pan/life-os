@@ -1,5 +1,4 @@
 <script>
-  import { page } from '$app/state'
   import { goto } from '$app/navigation'
   import AppBar from '$lib/components/AppBar.svelte'
   import QuickAddBar from '$lib/components/QuickAddBar.svelte'
@@ -9,8 +8,6 @@
   import TodayProgressCard from '$lib/components/TodayProgressCard.svelte'
   import TodayRecapPanel from '$lib/components/TodayRecapPanel.svelte'
   import TodayClosedCelebration from '$lib/components/TodayClosedCelebration.svelte'
-  import TodayViewToggle from '$lib/components/TodayViewToggle.svelte'
-  import DaySchedulePanel from '$lib/components/schedule/DaySchedulePanel.svelte'
   import { taskIndex } from '$lib/taskIndex.svelte.js'
   import {
     selectTodayGroups,
@@ -44,16 +41,6 @@
   const allPlanDone = $derived(progress.total > 0 && progress.remaining === 0)
   const trulyClean = $derived(allPlanDone && unscheduledToday.length === 0)
 
-  const viewMode = $derived(
-    page.url.searchParams.get('view') === 'timeline' ? 'timeline' : 'list',
-  )
-
-  const scheduleDate = $derived.by(() => {
-    const q = page.url.searchParams.get('date')
-    if (q && /^\d{4}-\d{2}-\d{2}$/.test(q)) return q
-    return todayKey()
-  })
-
   const contextDate = todayKey()
 
   let showClosed = $state(false)
@@ -73,34 +60,8 @@
 
   const closedStats = $derived(computeTodayClosedStats(S.tasks, todayKey()))
 
-  /** @param {'list' | 'timeline'} mode */
-  function setViewMode(mode) {
-    const url = new URL(page.url)
-    if (mode === 'timeline') {
-      url.searchParams.set('view', 'timeline')
-    } else {
-      url.searchParams.delete('view')
-      url.searchParams.delete('date')
-    }
-    gotoTimelineUrl(url)
-  }
-
-  /** @param {string} dateKey */
-  function setScheduleDate(dateKey) {
-    const url = new URL(page.url)
-    url.searchParams.set('view', 'timeline')
-    if (dateKey === todayKey()) {
-      url.searchParams.delete('date')
-    } else {
-      url.searchParams.set('date', dateKey)
-    }
-    gotoTimelineUrl(url)
-  }
-
-  /** @param {URL} url */
-  function gotoTimelineUrl(url) {
-    const target = `${url.pathname}${url.search}${url.hash}`
-    goto(target, { replaceState: true, keepFocus: true, noScroll: true })
+  function openCalendar() {
+    goto('/calendar')
   }
 </script>
 
@@ -108,22 +69,22 @@
   <AppBar title={t('home.title')} subtitle={t('app.tagline')} />
 
   <div
-    class="today-layout"
-    class:today-layout--timeline={viewMode === 'timeline'}
-    class:today-layout--with-recap={viewMode !== 'timeline' && !showClosed}
+    class="life-os-grid today-layout"
+    class:life-os-grid--split={!showClosed}
+    class:today-layout--with-recap={!showClosed}
   >
-    <div class="today-main">
+    <div class="life-os-grid__main today-main">
       <div class="wrap">
         <QuickAddBar dueDate={todayKey()} />
 
-        {#if showProgress && !showClosed && viewMode !== 'timeline'}
+        {#if showProgress && !showClosed}
           <TodayProgressCard
             done={progress.done}
             total={progress.total}
             remaining={progress.remaining}
             doneTodayCount={progress.doneToday.length}
             unscheduledCount={unscheduledToday.length}
-            onOpenTimeline={() => setViewMode('timeline')}
+            onOpenCalendar={openCalendar}
           />
         {/if}
 
@@ -133,85 +94,75 @@
             variant={trulyClean ? 'clean' : 'partial'}
             unscheduledCount={unscheduledToday.length}
             onDismiss={() => (showClosed = false)}
-            onOpenTimeline={() => setViewMode('timeline')}
+            onOpenCalendar={openCalendar}
           />
         {/if}
 
-        <TodayViewToggle mode={viewMode} onChange={setViewMode} />
+        {#if !allPlanDone}
+          <InsightCard />
+        {/if}
 
-        {#if viewMode === 'timeline'}
-          <DaySchedulePanel
-            dateKey={scheduleDate}
-            showToolbar={scheduleDate !== todayKey()}
-            onDateChange={setScheduleDate}
-          />
+        {#if fullyEmpty}
+          <EmptyState message={t('common.empty')} />
         {:else}
-          {#if !allPlanDone}
-            <InsightCard />
+          {#if groups.overdue.length}
+            <TaskGroup
+              title={t('home.overdue')}
+              tasks={groups.overdue}
+              compactRows
+              ritualComplete
+              showScheduleAction
+              scheduleDate={contextDate}
+              {contextDate}
+              onToggle={completeTask}
+              onEdit={editTask}
+            />
+          {/if}
+          {#if groups.today.length}
+            <TaskGroup
+              title={t('home.today')}
+              tasks={groups.today}
+              compactRows
+              ritualComplete
+              showScheduleAction
+              scheduleDate={contextDate}
+              {contextDate}
+              onToggle={completeTask}
+              onEdit={editTask}
+            />
+          {/if}
+          {#if !total && groups.noDate.length}
+            <TaskGroup
+              title={t('home.nodate')}
+              tasks={groups.noDate.slice(0, 5)}
+              compactRows
+              showScheduleAction
+              scheduleDate={contextDate}
+              {contextDate}
+              onToggle={completeTask}
+              onEdit={editTask}
+            />
           {/if}
 
-          {#if fullyEmpty}
-            <EmptyState message={t('common.empty')} />
-          {:else}
-            {#if groups.overdue.length}
+          {#if progress.doneToday.length}
+            {#key showClosed}
               <TaskGroup
-                title={t('home.overdue')}
-                tasks={groups.overdue}
+                sectionId="done-today"
+                title={t('home.doneToday')}
+                tasks={progress.doneToday}
                 compactRows
-                ritualComplete
-                showScheduleAction
-                scheduleDate={contextDate}
+                collapsible
                 {contextDate}
                 onToggle={completeTask}
                 onEdit={editTask}
               />
-            {/if}
-            {#if groups.today.length}
-              <TaskGroup
-                title={t('home.today')}
-                tasks={groups.today}
-                compactRows
-                ritualComplete
-                showScheduleAction
-                scheduleDate={contextDate}
-                {contextDate}
-                onToggle={completeTask}
-                onEdit={editTask}
-              />
-            {/if}
-            {#if !total && groups.noDate.length}
-              <TaskGroup
-                title={t('home.nodate')}
-                tasks={groups.noDate.slice(0, 5)}
-                compactRows
-                showScheduleAction
-                scheduleDate={contextDate}
-                {contextDate}
-                onToggle={completeTask}
-                onEdit={editTask}
-              />
-            {/if}
-
-            {#if progress.doneToday.length}
-              {#key showClosed}
-                <TaskGroup
-                  sectionId="done-today"
-                  title={t('home.doneToday')}
-                  tasks={progress.doneToday}
-                  compactRows
-                  collapsible
-                  {contextDate}
-                  onToggle={completeTask}
-                  onEdit={editTask}
-                />
-              {/key}
-            {/if}
+            {/key}
           {/if}
         {/if}
       </div>
     </div>
 
-    {#if viewMode !== 'timeline' && !showClosed}
+    {#if !showClosed}
       <TodayRecapPanel
         summary={rhythm}
         progress={{
@@ -222,7 +173,7 @@
         doneToday={progress.doneToday}
         {nextTask}
         unscheduledCount={unscheduledToday.length}
-        onOpenTimeline={() => setViewMode('timeline')}
+        onOpenCalendar={openCalendar}
       />
     {/if}
   </div>

@@ -46,6 +46,13 @@
   --title-stack: var(--space-0-5);
   --header-block: var(--space-5);
   --gap: var(--space-5);
+  --grid-gap: var(--gap);
+  --grid-gap-tight: var(--space-3);
+  --grid-min-card: 248px;
+  --grid-min-tile: 140px;
+  --grid-min-panel: 280px;
+  --grid-split-aside: minmax(260px, 320px);
+  --grid-split-aside-wide: minmax(280px, 360px);
   --back-to-content: 8px;
 
   --content-max: 820px;

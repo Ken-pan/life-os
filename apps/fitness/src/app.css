@@ -285,10 +285,8 @@ p {
 /* ─────────── DASHBOARD (TODAY) ─────────── */
 .hero {
   padding: 30px 0 8px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
-  gap: 22px;
   align-items: center;
+  gap: 22px;
 }
 
 .hero-copy {
@@ -662,8 +660,7 @@ p {
 
 /* week rail / rotation rail */
 .week-rail {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin-top: 20px;
 }
@@ -5844,7 +5841,6 @@ body:has(.focus-view) {
 
   .hero {
     padding: 20px 0 2px;
-    grid-template-columns: 1fr;
     gap: 14px;
   }
 

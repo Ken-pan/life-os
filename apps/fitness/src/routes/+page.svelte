@@ -104,8 +104,8 @@
 
 <section class="view">
   <div class="wrap">
-    <div class="hero">
-      <div class="hero-copy" use:reveal>
+    <div class="life-os-grid life-os-grid--split hero">
+      <div class="life-os-grid__main hero-copy" use:reveal>
         <p class="eyebrow">
           {dateLabel}<span data-ui-decor="meta-strip"> · {m.name}</span>
         </p>
@@ -132,7 +132,7 @@
           · <a class="btn-link" href="/discover/stats">{t('home.statsLink')}</a>
         </div>
       </div>
-      <div class="hero-media" use:reveal={{ delay: 60 }}>
+      <div class="life-os-grid__aside hero-media" use:reveal={{ delay: 60 }}>
         <CoverMedia
           src={dayImage(recId)}
           alt={t('home.trainingCoverAlt', { day: day.cn })}
@@ -262,7 +262,7 @@
       <span class="tag" data-ui-decor="tag">{t('home.manualPick')}</span>
       <h2 class="sec-title">{t('home.switchDay')}</h2>
     </div>
-    <div class="week-rail">
+    <div class="life-os-grid week-rail">
       {#each ORDER() as did (did)}
         {@const d = program.days[did]}
         <a class="wr-day" class:is-today={did === recId} href="/day/{did}">

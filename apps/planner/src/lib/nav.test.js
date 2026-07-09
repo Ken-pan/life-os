@@ -4,7 +4,10 @@ import {
   resolvePrimaryNavTab,
   resolveFabMode,
   isTaskModuleRoute,
+  buildBrowseNavItems,
 } from './nav.js'
+
+const tr = (key) => key
 
 describe('nav', () => {
   it('treats smart lists and user lists as task module', () => {
@@ -17,11 +20,15 @@ describe('nav', () => {
     expect(isTaskModuleRoute('/search')).toBe(false)
   })
 
-  it('highlights tasks tab for all task-module routes including timeline', () => {
+  it('highlights tasks tab for all task-module routes', () => {
     expect(resolvePrimaryNavTab('/')).toBe('tasks')
     expect(resolvePrimaryNavTab('/inbox')).toBe('tasks')
     expect(resolvePrimaryNavTab('/lists/abc')).toBe('tasks')
-    expect(isMoreNavActive('/', '?view=timeline')).toBe(false)
+  })
+
+  it('browse group only has calendar and search', () => {
+    const items = buildBrowseNavItems(tr)
+    expect(items.map((i) => i.tab)).toEqual(['calendar', 'search'])
   })
 
   it('highlights calendar and search as primary; more only for settings', () => {
@@ -35,7 +42,6 @@ describe('nav', () => {
 
   it('assigns FAB modes by route', () => {
     expect(resolveFabMode('/')).toBe('large')
-    expect(resolveFabMode('/', '?view=timeline')).toBe('none')
     expect(resolveFabMode('/inbox')).toBe('none')
     expect(resolveFabMode('/upcoming')).toBe('compact')
     expect(resolveFabMode('/calendar')).toBe('compact')

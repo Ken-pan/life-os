@@ -64,7 +64,7 @@
     当前高亮 <b>{selected}</b> · 点击平面图或其他卡片可切换
   </p>
 {/if}
-<div class="home-grid-cards">
+<div class="life-os-grid life-os-grid--autofill home-grid-cards">
   {#each project.storageZones as zone (zone.id)}
     <StorageZoneCard
       id={`zone-${zone.code}`}

@@ -465,17 +465,38 @@ h3.flush,
   margin: 0;
 }
 
-.kpi-row {
-  grid-template-columns: repeat(4, 1fr);
-}
-
+/* KPI strips: prefer .life-os-grid.life-os-grid--kpi; aliases keep older markup working */
+.kpi-row,
 .kpi-row-4,
 .today-kpis {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--grid-gap-tight);
 }
 
 .cols-2 {
-  grid-template-columns: 1.6fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container life-os-main (min-width: 480px) {
+  .kpi-row,
+  .kpi-row-4,
+  .today-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container life-os-main (min-width: 640px) {
+  .cols-2 {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  }
+}
+
+@container life-os-main (min-width: 840px) {
+  .kpi-row,
+  .kpi-row-4,
+  .today-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .cash-position-strip {
@@ -570,7 +591,6 @@ h3.flush,
 }
 
 .today-headline {
-  grid-template-columns: 1fr 1fr;
   align-items: stretch;
 }
 
@@ -589,40 +609,14 @@ h3.flush,
   gap: var(--space-1-5);
 }
 
-@media (max-width: 1100px) {
-  .today-headline {
-    grid-template-columns: 1fr;
-  }
-}
-
 .today-main-panels {
   align-items: start;
-  grid-template-columns: minmax(620px, 1.55fr) minmax(320px, 1fr);
 }
 
 .today-side-stack {
   display: grid;
   gap: var(--space-3);
   align-content: start;
-}
-
-@media (max-width: 1320px) {
-  .today-main-panels {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 1100px) {
-
-  .kpi-row,
-  .kpi-row-4,
-  .today-kpis {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .cols-2 {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ===== 严重度圆点（始终与文字标签搭配）===== */
@@ -4487,12 +4481,6 @@ div.input {
   .card {
     border-radius: var(--radius-sm);
     padding: var(--card-padding-mobile);
-  }
-
-  .kpi-row,
-  .kpi-row-4,
-  .today-kpis {
-    grid-template-columns: 1fr;
   }
 
   .review-table,

@@ -1,7 +1,11 @@
 <script>
   import { onMount } from 'svelte'
   import { t } from '$lib/i18n/index.js'
-  import { openSchedulePopover } from '$lib/ui.svelte.js'
+  import {
+    openSchedulePopover,
+    beginScheduleDrag,
+    endScheduleDrag,
+  } from '$lib/ui.svelte.js'
   import { editTask } from '$lib/taskUi.js'
   import Icon from '@life-os/platform-web/svelte/icon'
   import { isLifeOsMobile, lifeOsDesktopMq } from '@life-os/theme'
@@ -29,6 +33,11 @@
     if (!desktopDnD || !e.dataTransfer) return
     e.dataTransfer.setData('application/x-planner-task-id', taskId)
     e.dataTransfer.effectAllowed = 'move'
+    beginScheduleDrag(taskId)
+  }
+
+  function onDragEnd() {
+    endScheduleDrag()
   }
 </script>
 
@@ -59,6 +68,7 @@
             class:unscheduled-item--draggable={desktopDnD}
             draggable={desktopDnD}
             ondragstart={(e) => onDragStart(e, task.id)}
+            ondragend={onDragEnd}
           >
             <button
               type="button"

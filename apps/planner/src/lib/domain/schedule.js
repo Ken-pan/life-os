@@ -169,6 +169,105 @@ export function snapMinutesFromTimelineTop(topPx, opts = {}) {
 
 export const MIN_BLOCK_DURATION = 15
 export const SCHEDULE_SNAP_MINUTES = 15
+export const DEFAULT_SLOT_DURATION_MINUTES = 30
+
+/**
+ * Empty-slot / drop preview from a timeline Y position.
+ * Snaps start to 15 minutes and clamps so duration fits within the day.
+ * @param {number} topPx
+ * @param {number} durationMinutes
+ * @param {{ dayStart?: number, dayEnd?: number, hourHeight?: number, snapMinutes?: number }} [opts]
+ * @returns {{ startMinutes: number, endMinutes: number, start: string, end: string, durationMinutes: number, layout: BlockLayout } | null}
+ */
+export function slotPreviewFromPointer(topPx, durationMinutes, opts = {}) {
+  const bounds = dayBoundsMinutes(opts.dayStart, opts.dayEnd)
+  const duration = Math.max(
+    MIN_BLOCK_DURATION,
+    Math.min(durationMinutes, bounds.end - bounds.start),
+  )
+  const startMinutes = snapMinutesFromTimelineTop(topPx, {
+    dayStart: opts.dayStart,
+    dayEnd: opts.dayEnd,
+    hourHeight: opts.hourHeight,
+    snapMinutes: opts.snapMinutes ?? SCHEDULE_SNAP_MINUTES,
+    minDuration: duration,
+  })
+  const clampedDuration = Math.max(
+    MIN_BLOCK_DURATION,
+    Math.min(duration, bounds.end - startMinutes),
+  )
+  const start = formatMinutesAsTime(startMinutes)
+  const endMinutes = startMinutes + clampedDuration
+  const end = formatMinutesAsTime(endMinutes)
+  const layout = blockLayout(start, clampedDuration, {
+    dayStart: opts.dayStart,
+    dayEnd: opts.dayEnd,
+    hourHeight: opts.hourHeight,
+  })
+  if (!layout) return null
+  return {
+    startMinutes,
+    endMinutes,
+    start,
+    end,
+    durationMinutes: clampedDuration,
+    layout,
+  }
+}
+
+/**
+ * Click-drag create range between two timeline Y positions (Google Calendar style).
+ * Duration is abs(end − start), snapped to 15 minutes, at least MIN_BLOCK_DURATION.
+ * @param {number} originTopPx
+ * @param {number} currentTopPx
+ * @param {{ dayStart?: number, dayEnd?: number, hourHeight?: number, snapMinutes?: number }} [opts]
+ * @returns {{ startMinutes: number, endMinutes: number, start: string, end: string, durationMinutes: number, layout: BlockLayout } | null}
+ */
+export function slotRangeFromDrag(originTopPx, currentTopPx, opts = {}) {
+  const dayStart = opts.dayStart ?? DAY_START_HOUR
+  const dayEnd = opts.dayEnd ?? DAY_END_HOUR
+  const hourHeight = opts.hourHeight ?? HOUR_HEIGHT_PX
+  const snapMinutes = opts.snapMinutes ?? SCHEDULE_SNAP_MINUTES
+  const bounds = dayBoundsMinutes(dayStart, dayEnd)
+
+  /** @param {number} topPx @param {boolean} allowDayEnd */
+  function snapEdge(topPx, allowDayEnd) {
+    const rawMinutes = dayStart * 60 + (topPx / hourHeight) * 60
+    const snapped = Math.round(rawMinutes / snapMinutes) * snapMinutes
+    const max = allowDayEnd ? bounds.end : bounds.end - MIN_BLOCK_DURATION
+    return Math.max(bounds.start, Math.min(max, snapped))
+  }
+
+  const origin = snapEdge(originTopPx, false)
+  const current = snapEdge(currentTopPx, true)
+  let startMinutes = Math.min(origin, current)
+  let endMinutes = Math.max(origin, current)
+
+  if (endMinutes - startMinutes < MIN_BLOCK_DURATION) {
+    endMinutes = Math.min(bounds.end, startMinutes + MIN_BLOCK_DURATION)
+    if (endMinutes - startMinutes < MIN_BLOCK_DURATION) {
+      startMinutes = Math.max(bounds.start, endMinutes - MIN_BLOCK_DURATION)
+    }
+  }
+
+  const durationMinutes = endMinutes - startMinutes
+  const start = formatMinutesAsTime(startMinutes)
+  const end = formatMinutesAsTime(endMinutes)
+  const layout = blockLayout(start, durationMinutes, {
+    dayStart,
+    dayEnd,
+    hourHeight,
+  })
+  if (!layout) return null
+  return {
+    startMinutes,
+    endMinutes,
+    start,
+    end,
+    durationMinutes,
+    layout,
+  }
+}
 
 /** @param {number} deltaPx @param {number} [hourHeight] @param {number} [snapMinutes] */
 export function snapMinutesDelta(

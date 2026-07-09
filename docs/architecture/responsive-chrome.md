@@ -153,12 +153,40 @@ Token：`--cq-xs` … `--cq-lg`（320 / 480 / 640 / 840）。
 
 ---
 
-## 8. 维护清单
+## 8. Grid patterns（主列内多列布局）
+
+SSOT：`packages/theme/src/grid.css` + structural tokens（`--grid-*`）。
+
+**不采用** Bootstrap 式 12 列工具类。页面多列布局优先用命名模式：
+
+| Class | 行为 |
+| ----- | ---- |
+| `.life-os-grid` | `display: grid` + `--grid-gap` |
+| `.life-os-grid--stack` | 单列 |
+| `.life-os-grid--split` | 窄：1 列；`@container life-os-main ≥640`：主列 + aside（侧栏打开时主列更窄，故用 `--cq-md`） |
+| `.life-os-grid--split-lg` | 同 split，但 ≥960 才双列（Finance 日历等宽面板） |
+| `.life-os-grid--autofill` | `auto-fit` + `--grid-min-card`（248px） |
+| `.life-os-grid--tiles` | `auto-fit` + `--grid-min-tile`（140px） |
+| `.life-os-grid--kpi` | 1 → 2（≥480）→ 4（≥840）列 |
+
+修饰：`--aside-wide`、`--aside-start`、`--gap-tight`、`--kpi-2`、`--kpi-3`。  
+槽位：`.life-os-grid__main` / `.life-os-grid__aside` / `.life-os-grid__span-full`。
+
+**规则：**
+
+1. 壳层仍用 viewport；列数/split 只用 `@container life-os-main`（与 `--cq-*` 对齐）。
+2. **禁止**在 `.life-os-grid*` 上设 `container-type`（与 subgrid 冲突）。
+3. 禁止在页面层再写裸 `720/1100/1320px` 媒体查询做多列切换。
+
+---
+
+## 9. 维护清单
 
 | 改什么                       | 改哪里                                                |
 | ---------------------------- | ----------------------------------------------------- |
 | 断点数值                     | `layout.css` + `layout.js`                            |
 | Content frame / span 对齐    | `content-frame.css`                                   |
+| Grid patterns / `--grid-*`   | `grid.css` + `design-tokens` structural               |
 | AppBar 高度 / scroll-padding | `design-tokens` + `shell.css`                         |
 | 底栏 / 壳层 class            | `shell.css`                                           |
 | 品牌色 / 领域 sticky         | 各 app `app.css` / `index.css`（引用 `--appbar-h`）   |

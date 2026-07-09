@@ -49,7 +49,7 @@
   }
 </script>
 
-<section class="day-schedule-panel" aria-label={t('schedule.title')}>
+<section class="day-schedule-panel" aria-label={t('calendar.title')}>
   {#if showToolbar}
     <div class="schedule-toolbar">
       <button type="button" class="btn-ghost" onclick={() => shiftDay(-1)} aria-label={t('schedule.prevDay')}>←</button>

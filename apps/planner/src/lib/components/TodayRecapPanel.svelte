@@ -11,14 +11,14 @@
     doneToday: import('$lib/types.js').Task[],
     nextTask: import('$lib/types.js').Task | null,
     unscheduledCount?: number,
-    onOpenTimeline?: () => void
+    onOpenCalendar?: () => void
   }} */
-  let { summary, progress, doneToday, nextTask, unscheduledCount = 0, onOpenTimeline } = $props();
+  let { summary, progress, doneToday, nextTask, unscheduledCount = 0, onOpenCalendar } = $props();
 
   const previewDone = $derived(doneToday.slice(0, 5));
 </script>
 
-<aside class="today-recap" aria-label={t('home.recapTitle')}>
+<aside class="life-os-grid__aside today-recap" aria-label={t('home.recapTitle')}>
   <header class="today-recap-head">
     <h2 class="today-recap-title">{t('home.recapTitle')}</h2>
     <p class="today-recap-sub">
@@ -65,7 +65,7 @@
 
   <div class="today-recap-foot">
     {#if unscheduledCount > 0}
-      <button type="button" class="today-progress-chip" onclick={() => onOpenTimeline?.()}>
+      <button type="button" class="today-progress-chip" onclick={() => onOpenCalendar?.()}>
         {t('schedule.planToday', { count: unscheduledCount })}
       </button>
     {/if}

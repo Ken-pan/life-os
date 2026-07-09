@@ -70,7 +70,7 @@
 <p class="page-sub" style="margin: 0 0 12px">
   <a href="/storage">查看全部 S1–S{stats.storageZones} →</a>
 </p>
-<div class="home-grid-cards">
+<div class="life-os-grid life-os-grid--autofill home-grid-cards">
   {#each previewZones as zone (zone.id)}
     <StorageZoneCard
       code={zone.code}

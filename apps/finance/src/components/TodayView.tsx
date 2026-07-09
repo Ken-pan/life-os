@@ -227,7 +227,7 @@ export function TodayView({
   return (
     <div className="grid gap-4">
       <p className="muted-note mb-1">{t('today.intro', { safeToSpend })}</p>
-      <div className="grid today-headline">
+      <div className="life-os-grid life-os-grid--kpi life-os-grid--kpi-2 today-headline">
         <div className="card kpi kpi-accent today-hero">
           <span className="label">
             {safeToSpend}
@@ -261,8 +261,8 @@ export function TodayView({
         onConfirmOccurred={(id) => void timeline.markConfirmedPaid(id)}
       />
 
-      <div className="grid cols-2 today-main-panels">
-        <div className="card today-calendar-card">
+      <div className="life-os-grid life-os-grid--split-lg life-os-grid--aside-wide today-main-panels">
+        <div className="life-os-grid__main card today-calendar-card">
           <div className="today-card-head">
             <h3>{t('today.cashCalendar')}</h3>
             <div className="today-card-actions">
@@ -323,7 +323,7 @@ export function TodayView({
           />
         </div>
 
-        <div className="today-side-stack">
+        <div className="life-os-grid__aside today-side-stack">
           <ProtectedReserveFallbackCard
             dashboard={dashboard}
             privacy={privacy}

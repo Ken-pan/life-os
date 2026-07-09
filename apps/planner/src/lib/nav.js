@@ -1,8 +1,10 @@
 /**
- * Life OS 导航 IA — Planner.OS（对齐滴答：模块底栏 + 智能清单抽屉）
+ * Life OS 导航 IA — Planner.OS
+ *
+ * 原则：今天 = 做什么；日历 = 哪天/几点做（日程与日历是同一模块）
  *
  * Mobile：任务 | 日历 | 搜索 | 更多
- *   - 「任务」Tab 始终回到今天（B1）
+ *   - 「任务」Tab 始终回到今天
  *   - 智能清单 / 用户清单在任务抽屉（☰）
  * Desktop：侧栏全展开（智能清单 + 浏览 + 用户清单 + 设置）
  */
@@ -22,7 +24,7 @@ export function isTaskModuleRoute(pathname) {
 }
 
 /**
- * Mobile 底栏 Primary（A2）
+ * Mobile 底栏 Primary
  * @param {(key: string, params?: Record<string, unknown>) => string} tr
  */
 export function buildPrimaryNavItems(tr) {
@@ -63,8 +65,7 @@ export function buildSmartListNavItems(tr) {
       href: '/',
       label: tr('nav.today'),
       icon: 'sun',
-      match: (p, search = '') =>
-        p === '/' && new URLSearchParams(search).get('view') !== 'timeline',
+      match: (p) => p === '/',
     },
     {
       tab: 'inbox',
@@ -91,19 +92,11 @@ export function buildSmartListNavItems(tr) {
 }
 
 /**
- * Desktop 浏览组：时间轴 + 日历 + 搜索
+ * Desktop 浏览组：日历（含排程）+ 搜索
  * @param {(key: string, params?: Record<string, unknown>) => string} tr
  */
 export function buildBrowseNavItems(tr) {
   return [
-    {
-      tab: 'schedule',
-      href: '/schedule',
-      label: tr('nav.timeline'),
-      icon: 'clock',
-      match: (p, search = '') =>
-        p === '/' && new URLSearchParams(search).get('view') === 'timeline',
-    },
     {
       tab: 'calendar',
       href: '/calendar',
@@ -176,7 +169,6 @@ export function buildTaskDrawerNavGroups(tr, lists, listLabelFn) {
 
 /**
  * More Sheet（Mobile）：用户清单 + 设置
- * 搜索已在 Primary，不再进 More
  * @param {(key: string, params?: Record<string, unknown>) => string} tr
  * @param {import('./types.js').TaskList[]} lists
  * @param {(list: import('./types.js').TaskList) => string} listLabelFn
@@ -228,17 +220,12 @@ export function isMoreNavActive(pathname, search = '') {
 
 /** @param {string} pathname @param {string} [search] */
 export function resolveFabMode(pathname, search = '') {
+  void search
   if (pathname.startsWith('/settings')) return 'none'
   if (pathname.startsWith('/auth')) return 'none'
   if (pathname.startsWith('/search')) return 'none'
   if (pathname.startsWith('/completed')) return 'none'
   if (pathname.startsWith('/inbox')) return 'none'
-  if (
-    pathname === '/' &&
-    new URLSearchParams(search).get('view') === 'timeline'
-  ) {
-    return 'none'
-  }
   if (pathname === '/') return 'large'
   if (
     pathname.startsWith('/upcoming') ||
@@ -266,18 +253,13 @@ export function isNavChromeHidden(pathname) {
  * @returns {'full' | 'tabbar' | 'minimal'}
  */
 export function resolveMobileChromeInset(pathname, search = '') {
+  void search
   if (pathname.startsWith('/auth')) return 'minimal'
   if (
     pathname.startsWith('/settings') ||
     pathname.startsWith('/search') ||
     pathname.startsWith('/completed') ||
     pathname.startsWith('/inbox')
-  ) {
-    return 'tabbar'
-  }
-  if (
-    pathname === '/' &&
-    new URLSearchParams(search).get('view') === 'timeline'
   ) {
     return 'tabbar'
   }

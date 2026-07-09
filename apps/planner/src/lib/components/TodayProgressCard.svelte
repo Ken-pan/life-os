@@ -8,7 +8,7 @@
     remaining: number,
     doneTodayCount?: number,
     unscheduledCount?: number,
-    onOpenTimeline?: () => void
+    onOpenCalendar?: () => void
   }} */
   let {
     done,
@@ -16,7 +16,7 @@
     remaining,
     doneTodayCount = 0,
     unscheduledCount = 0,
-    onOpenTimeline,
+    onOpenCalendar,
   } = $props();
 
   const pct = $derived(total > 0 ? Math.min(100, (done / total) * 100) : 0);
@@ -62,7 +62,7 @@
   <div class="today-progress-foot">
     <div class="today-progress-foot-row">
       {#if unscheduledCount > 0}
-        <button type="button" class="today-progress-stats today-progress-stats--link" onclick={() => onOpenTimeline?.()}>
+        <button type="button" class="today-progress-stats today-progress-stats--link" onclick={() => onOpenCalendar?.()}>
           {t('home.progressStats', { done: statsDone, unscheduled: unscheduledCount })}
         </button>
       {:else}

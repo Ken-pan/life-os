@@ -2809,8 +2809,13 @@ html:has(.np-ambient-back) .bottom-shell {
 
 .album-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--space-4);
+  gap: var(--grid-gap, var(--space-4));
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, var(--grid-min-tile)), 1fr)
+  );
 }
 
 .album-card {
@@ -3029,10 +3034,6 @@ html:has(.np-ambient-back) .bottom-shell {
   :root {
     --player-art-size: clamp(260px, min(42vw, 46vh), 380px);
   }
-
-  .album-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
 }
 
 @media (--life-os-mobile-landscape) {
@@ -3188,11 +3189,6 @@ html:has(.np-ambient-back) .bottom-shell {
 
   .now-playing-lyrics-body.timed {
     max-height: min(52dvh, 380px);
-  }
-
-  .album-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--space-5);
   }
 
   .mood-hero-desc {
@@ -4497,34 +4493,6 @@ html.utility-pane-resizing {
   margin-bottom: var(--space-4);
   width: fit-content;
   max-width: 100%;
-}
-
-.browse-grid {
-  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-}
-
-@media (--life-os-desktop) {
-
-  .browse-grid,
-  .browse-page .album-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-
-  .album-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-}
-
-@media (min-width: 1100px) {
-  .browse-grid {
-    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  }
-}
-
-@media (min-width: 1400px) {
-  .browse-grid {
-    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
-  }
 }
 
 /* ── Now Playing：跟随 app 主题，专辑光晕作 accent ── */

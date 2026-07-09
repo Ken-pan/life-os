@@ -79,7 +79,7 @@
 
   {#if tab === 'albums'}
     {#if sortedAlbums.length}
-      <div class="album-grid browse-grid">
+      <div class="life-os-grid life-os-grid--tiles album-grid browse-grid">
         {#each sortedAlbums as album (album.albumKey)}
           <a class="album-card" href={`/album/${encodeURIComponent(album.albumKey)}`}>
             <TrackArt
@@ -132,7 +132,7 @@
       </div>
     {/if}
   {:else if playlists.length}
-    <div class="album-grid browse-grid">
+    <div class="life-os-grid life-os-grid--tiles album-grid browse-grid">
       {#each playlists as pl (pl.id)}
         <a class="album-card" href={`/playlists/${pl.id}`}>
           <div class="album-card-art placeholder">♪</div>

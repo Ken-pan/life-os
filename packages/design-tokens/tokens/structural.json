@@ -24,6 +24,19 @@
   "title-stack": { "$type": "cssValue", "$value": "var(--space-0-5)" },
   "header-block": { "$type": "cssValue", "$value": "var(--space-5)" },
   "gap": { "$type": "cssValue", "$value": "var(--space-5)" },
+  "grid-gap": { "$type": "cssValue", "$value": "var(--gap)" },
+  "grid-gap-tight": { "$type": "cssValue", "$value": "var(--space-3)" },
+  "grid-min-card": { "$type": "dimension", "$value": "248px" },
+  "grid-min-tile": { "$type": "dimension", "$value": "140px" },
+  "grid-min-panel": { "$type": "dimension", "$value": "280px" },
+  "grid-split-aside": {
+    "$type": "cssValue",
+    "$value": "minmax(260px, 320px)"
+  },
+  "grid-split-aside-wide": {
+    "$type": "cssValue",
+    "$value": "minmax(280px, 360px)"
+  },
   "back-to-content": { "$type": "dimension", "$value": "8px" },
   "content-max": { "$type": "dimension", "$value": "820px" },
   "maxw": { "$type": "cssValue", "$value": "var(--content-max)" },

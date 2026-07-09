@@ -30,6 +30,7 @@
 | ------------------- | -------------------------------------------------------------------------------------- |
 | `layout.css`        | Custom media 断点、`--tabbar-h`、container 主列契约                                    |
 | `content-frame.css` | `data-content-mode`、页眉/内容共享 frame（`--content-span`）                           |
+| `grid.css`          | 模式化栅格：`.life-os-grid--split` / `--autofill` / `--kpi` / `--stack`（CQ 驱动）     |
 | `tokens.css`        | 间距、字号、动效、safe-area、语义色、mobile-content-inset                              |
 | `ios-safari.css`    | **iOS/Safari 平台层**：100dvh、overscroll、scroll lock、chrome tint、表单防缩放        |
 | `base.css`          | Reset、tap 优化、`.page-title`、`.wrap`、工具类                                        |
@@ -52,7 +53,7 @@
 | ----- | ------------------------------------- | ------------------------------------------------------------ |
 | 结构  | `tokens.css`                          | 间距、字号、safe-area、FAB/按钮尺寸、共享语义色              |
 | 平台  | `ios-safari.css`                      | 视口高度、橡皮筋、Sheet 滚动锁、Safari 26 chrome tint        |
-| 布局  | `layout.css`                          | 断点、tabbar 高度                                            |
+| 布局  | `layout.css` + `grid.css`             | 断点、tabbar 高度、模式化栅格（split / autofill / kpi）      |
 | 壳层  | `shell.css`                           | 侧栏、AppBar/PageHeader、底栏、More Sheet                    |
 | 分段  | `seg.css`                             | `.seg`、`.seg-scroll`、`.seg-chips` / `.seg-track` 修饰符    |
 | 设置  | `settings-ext.css` + `components.css` | 设置页网格、分组卡片、toggle                                 |

@@ -13,6 +13,21 @@ export const toastState = toastStore.toastState
 export const toast = toastStore.toast
 export const dismissToast = toastStore.dismissToast
 
+/** HTML5 drag of an unscheduled task onto the day timeline (readable during dragover). */
+export const scheduleDrag = $state({
+  /** @type {string | null} */
+  taskId: null,
+})
+
+/** @param {string} taskId */
+export function beginScheduleDrag(taskId) {
+  scheduleDrag.taskId = taskId
+}
+
+export function endScheduleDrag() {
+  scheduleDrag.taskId = null
+}
+
 export const taskEditor = $state({
   open: false,
   taskId: null,

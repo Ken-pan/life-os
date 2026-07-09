@@ -11,18 +11,33 @@
     overlapBlockColumns,
     snapMinutesFromTimelineTop,
     formatMinutesAsTime,
+    formatTimeRange,
     defaultDurationMinutes,
     blockLayout,
     taskDurationMinutes,
+    DEFAULT_SLOT_DURATION_MINUTES,
+    slotPreviewFromPointer,
+    slotRangeFromDrag,
+    findScheduleConflicts,
   } from '$lib/domain/schedule.js';
   import { todayKey } from '$lib/state.svelte.js';
   import { t } from '$lib/i18n/index.js';
   import TimeBlock from './TimeBlock.svelte';
-  import { openSchedulePopover, openScheduleSlot, applyTaskSchedule, toast } from '$lib/ui.svelte.js';
+  import {
+    openSchedulePopover,
+    openScheduleSlot,
+    applyTaskSchedule,
+    toast,
+    scheduleDrag,
+    endScheduleDrag,
+  } from '$lib/ui.svelte.js';
   import { S } from '$lib/state.svelte.js';
+  import { updateTask } from '$lib/domain/tasks.js';
 
   /** @type {{ dateKey: string, tasks: import('$lib/types.js').Task[] }} */
   let { dateKey, tasks } = $props();
+
+  const CLICK_DRAG_THRESHOLD_PX = 4;
 
   /** @type {HTMLDivElement | undefined} */
   let scrollEl = $state();
@@ -30,10 +45,36 @@
   let canvasEl = $state();
 
   let dragOver = $state(false);
+  let dragEnterCount = 0;
   let desktopDnD = $state(false);
   let nowMs = $state(Date.now());
   /** @type {string | null} */
   let lastScrollKey = $state(null);
+
+  /**
+   * @typedef {{
+   *   mode: 'hover' | 'drop' | 'create',
+   *   top: number,
+   *   height: number,
+   *   label: string,
+   *   title?: string,
+   *   conflict?: boolean,
+   *   conflictCount?: number,
+   * }} GhostState
+   */
+  /** @type {GhostState | null} */
+  let ghost = $state(null);
+
+  /**
+   * @typedef {{
+   *   pointerId: number,
+   *   originClientY: number,
+   *   originTopPx: number,
+   *   active: boolean,
+   * }} CreateGesture
+   */
+  /** @type {CreateGesture | null} */
+  let createGesture = $state(null);
 
   const hours = $derived(
     Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, i) => DAY_START_HOUR + i),
@@ -50,9 +91,89 @@
     return `${String(h).padStart(2, '0')}:00`;
   }
 
+  /** @param {number} clientY */
+  function canvasTopPx(clientY) {
+    if (!canvasEl) return 0;
+    return clientY - canvasEl.getBoundingClientRect().top;
+  }
+
+  function clearHoverGhost() {
+    if (ghost?.mode === 'hover') ghost = null;
+  }
+
+  function clearDropGhost() {
+    if (ghost?.mode === 'drop') ghost = null;
+  }
+
+  function clearCreateGhost() {
+    if (ghost?.mode === 'create') ghost = null;
+  }
+
+  function resetDragTarget() {
+    dragEnterCount = 0;
+    dragOver = false;
+    clearDropGhost();
+  }
+
+  /** @param {number} topPx */
+  function setHoverGhost(topPx) {
+    if (!desktopDnD || createGesture || dragOver) return;
+    const preview = slotPreviewFromPointer(topPx, DEFAULT_SLOT_DURATION_MINUTES);
+    if (!preview) {
+      clearHoverGhost();
+      return;
+    }
+    ghost = {
+      mode: 'hover',
+      top: preview.layout.top,
+      height: preview.layout.height,
+      label: formatTimeRange(preview.startMinutes, preview.endMinutes, t),
+    };
+  }
+
+  /** @param {number} topPx */
+  function setDropGhost(topPx) {
+    const taskId = scheduleDrag.taskId;
+    if (!taskId) return;
+    const task = S.tasks.find((item) => item.id === taskId && !item.deletedAt);
+    if (!task) return;
+
+    const durationMinutes = task.durationMinutes || defaultDurationMinutes(task);
+    const preview = slotPreviewFromPointer(topPx, durationMinutes);
+    if (!preview) {
+      clearDropGhost();
+      return;
+    }
+
+    const conflicts = findScheduleConflicts(
+      tasks,
+      preview.start,
+      preview.durationMinutes,
+      task.id,
+    );
+    ghost = {
+      mode: 'drop',
+      top: preview.layout.top,
+      height: preview.layout.height,
+      title: task.title,
+      label: formatTimeRange(preview.startMinutes, preview.endMinutes, t),
+      conflict: conflicts.length > 0,
+      conflictCount: conflicts.length,
+    };
+  }
+
   /** @param {import('$lib/types.js').Task} task */
   function reschedule(task) {
     openSchedulePopover(task.id, dateKey);
+  }
+
+  /** @param {DragEvent} e */
+  function onDragEnter(e) {
+    if (!desktopDnD) return;
+    if (!e.dataTransfer?.types.includes('application/x-planner-task-id')) return;
+    e.preventDefault();
+    dragEnterCount += 1;
+    dragOver = true;
   }
 
   /** @param {DragEvent} e */
@@ -62,43 +183,155 @@
     e.preventDefault();
     dragOver = true;
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    if (canvasEl) setDropGhost(canvasTopPx(e.clientY));
+  }
+
+  /** @param {DragEvent} e */
+  function onDragLeave(e) {
+    if (!desktopDnD) return;
+    const related = /** @type {Node | null} */ (e.relatedTarget);
+    if (related && canvasEl?.contains(related)) return;
+    dragEnterCount = Math.max(0, dragEnterCount - 1);
+    if (dragEnterCount === 0) {
+      dragOver = false;
+      clearDropGhost();
+    }
   }
 
   /** @param {DragEvent} e */
   function onDrop(e) {
-    dragOver = false;
+    resetDragTarget();
     if (!desktopDnD || !canvasEl) return;
     e.preventDefault();
-    const taskId = e.dataTransfer?.getData('application/x-planner-task-id');
+    const taskId =
+      e.dataTransfer?.getData('application/x-planner-task-id') || scheduleDrag.taskId;
+    endScheduleDrag();
     if (!taskId) return;
 
     const task = S.tasks.find((item) => item.id === taskId && !item.deletedAt);
     if (!task) return;
 
-    const rect = canvasEl.getBoundingClientRect();
-    const topPx = e.clientY - rect.top;
-    const startMinutes = snapMinutesFromTimelineTop(topPx);
-    const start = formatMinutesAsTime(startMinutes);
+    const topPx = canvasTopPx(e.clientY);
     const durationMinutes = task.durationMinutes || defaultDurationMinutes(task);
+    const preview = slotPreviewFromPointer(topPx, durationMinutes);
+    if (!preview) return;
 
-    applyTaskSchedule(task.id, { dateKey, start, durationMinutes });
-    toast(t('toast.scheduledBlock', { title: task.title, start }), 'success', {
+    const previous = {
+      scheduledDate: task.scheduledDate ?? null,
+      scheduledStart: task.scheduledStart ?? null,
+      durationMinutes: task.durationMinutes ?? null,
+    };
+
+    applyTaskSchedule(task.id, {
+      dateKey,
+      start: preview.start,
+      durationMinutes: preview.durationMinutes,
+    });
+    toast(t('toast.scheduledBlock', { title: task.title, start: preview.start }), 'success', {
       key: `schedule-${task.id}`,
-      dedupeMs: 2000,
+      dedupeMs: 4000,
+      actionLabel: t('common.undo'),
+      onAction: () => {
+        updateTask(task.id, {
+          scheduledDate: previous.scheduledDate,
+          scheduledStart: previous.scheduledStart,
+          durationMinutes: previous.durationMinutes,
+        });
+      },
     });
   }
 
+  /** @param {PointerEvent} e */
+  function onHitboxPointerDown(e) {
+    if (!desktopDnD || !canvasEl) return;
+    if (e.button !== 0) return;
+    e.preventDefault();
+    clearHoverGhost();
+    createGesture = {
+      pointerId: e.pointerId,
+      originClientY: e.clientY,
+      originTopPx: canvasTopPx(e.clientY),
+      active: false,
+    };
+    /** @type {HTMLElement} */ (e.currentTarget).setPointerCapture(e.pointerId);
+  }
+
+  /** @param {PointerEvent} e */
+  function onHitboxPointerMove(e) {
+    if (createGesture && createGesture.pointerId === e.pointerId) {
+      const dy = Math.abs(e.clientY - createGesture.originClientY);
+      if (!createGesture.active && dy < CLICK_DRAG_THRESHOLD_PX) return;
+
+      createGesture = { ...createGesture, active: true };
+      const range = slotRangeFromDrag(createGesture.originTopPx, canvasTopPx(e.clientY));
+      if (!range) {
+        clearCreateGhost();
+        return;
+      }
+      ghost = {
+        mode: 'create',
+        top: range.layout.top,
+        height: range.layout.height,
+        label: formatTimeRange(range.startMinutes, range.endMinutes, t),
+      };
+      return;
+    }
+
+    if (!desktopDnD || dragOver || createGesture) return;
+    setHoverGhost(canvasTopPx(e.clientY));
+  }
+
+  /** @param {PointerEvent} e */
+  function onHitboxPointerUp(e) {
+    if (!createGesture || createGesture.pointerId !== e.pointerId) return;
+    const gesture = createGesture;
+    createGesture = null;
+    try {
+      /** @type {HTMLElement} */ (e.currentTarget).releasePointerCapture(e.pointerId);
+    } catch {
+      /* already released */
+    }
+
+    if (!gesture.active) {
+      const preview = slotPreviewFromPointer(
+        gesture.originTopPx,
+        DEFAULT_SLOT_DURATION_MINUTES,
+      );
+      clearCreateGhost();
+      if (preview) openScheduleSlot(dateKey, preview.start, DEFAULT_SLOT_DURATION_MINUTES);
+      return;
+    }
+
+    const range = slotRangeFromDrag(gesture.originTopPx, canvasTopPx(e.clientY));
+    clearCreateGhost();
+    if (range) openScheduleSlot(dateKey, range.start, range.durationMinutes);
+  }
+
+  /** @param {PointerEvent} e */
+  function onHitboxPointerCancel(e) {
+    if (!createGesture || createGesture.pointerId !== e.pointerId) return;
+    createGesture = null;
+    clearCreateGhost();
+  }
+
+  function onHitboxPointerLeave() {
+    if (!createGesture) clearHoverGhost();
+  }
+
   /** @param {MouseEvent} e */
-  function onCanvasClick(e) {
+  function onHitboxClick(e) {
+    if (desktopDnD) {
+      e.preventDefault();
+      return;
+    }
     if (!canvasEl) return;
     const target = /** @type {Element | null} */ (e.target instanceof Element ? e.target : null);
     if (target?.closest('.time-block')) return;
 
-    const rect = canvasEl.getBoundingClientRect();
-    const topPx = e.clientY - rect.top;
+    const topPx = canvasTopPx(e.clientY);
     const startMinutes = snapMinutesFromTimelineTop(topPx);
     const start = formatMinutesAsTime(startMinutes);
-    openScheduleSlot(dateKey, start, 30);
+    openScheduleSlot(dateKey, start, DEFAULT_SLOT_DURATION_MINUTES);
   }
 
   /** @param {import('$lib/types.js').Task[]} scheduledTasks */
@@ -132,6 +365,13 @@
     scrollEl.scrollTop = Math.max(0, anchor - scrollEl.clientHeight * 0.12);
   });
 
+  $effect(() => {
+    if (!scheduleDrag.taskId) {
+      clearDropGhost();
+      if (dragEnterCount === 0) dragOver = false;
+    }
+  });
+
   onMount(() => {
     const tickNow = () => {
       nowMs = Date.now();
@@ -148,6 +388,7 @@
     return () => {
       window.clearInterval(nowTimer);
       mq.removeEventListener('change', sync);
+      endScheduleDrag();
     };
   });
 </script>
@@ -170,15 +411,21 @@
         bind:this={canvasEl}
         role="region"
         aria-label={t('schedule.title')}
+        ondragenter={onDragEnter}
         ondragover={onDragOver}
-        ondragleave={() => (dragOver = false)}
+        ondragleave={onDragLeave}
         ondrop={onDrop}
       >
         <button
           type="button"
           class="day-timeline-slot-hitbox"
           aria-label={t('schedule.createAtSlot')}
-          onclick={onCanvasClick}
+          onpointerdown={onHitboxPointerDown}
+          onpointermove={onHitboxPointerMove}
+          onpointerup={onHitboxPointerUp}
+          onpointercancel={onHitboxPointerCancel}
+          onpointerleave={onHitboxPointerLeave}
+          onclick={onHitboxClick}
         ></button>
         <div class="day-timeline-grid" aria-hidden="true">
           {#each hours as hour}
@@ -189,6 +436,31 @@
         {#if nowTop != null}
           <div class="day-timeline-now" style:top="{nowTop}px" aria-hidden="true">
             <span class="day-timeline-now-dot"></span>
+          </div>
+        {/if}
+
+        {#if ghost}
+          <div
+            class="day-timeline-ghost"
+            class:day-timeline-ghost--hover={ghost.mode === 'hover'}
+            class:day-timeline-ghost--drop={ghost.mode === 'drop'}
+            class:day-timeline-ghost--create={ghost.mode === 'create'}
+            class:day-timeline-ghost--conflict={Boolean(ghost.conflict)}
+            style:top="{ghost.top}px"
+            style:height="{ghost.height}px"
+            aria-hidden="true"
+          >
+            <div class="day-timeline-ghost-body">
+              {#if ghost.title}
+                <div class="day-timeline-ghost-title">{ghost.title}</div>
+              {/if}
+              <div class="day-timeline-ghost-meta">{ghost.label}</div>
+              {#if ghost.conflict && ghost.conflictCount}
+                <div class="day-timeline-ghost-conflict">
+                  {t('schedule.conflictHint', { count: ghost.conflictCount })}
+                </div>
+              {/if}
+            </div>
           </div>
         {/if}
 
@@ -207,7 +479,7 @@
           {/each}
         </div>
 
-        {#if !tasks.length}
+        {#if !tasks.length && !ghost}
           <p class="day-timeline-empty">{t('schedule.timelineEmpty')}</p>
         {/if}
       </div>

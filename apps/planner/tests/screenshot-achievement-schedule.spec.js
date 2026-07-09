@@ -284,7 +284,6 @@ test.describe('成就感 + 日程截图', () => {
 
     await page.goto('/')
     await page.waitForSelector('.today-progress', { timeout: 10_000 })
-    await page.waitForSelector('.today-view-toggle', { timeout: 5000 })
     await snap(page, '01-today-list-progress')
 
     const doneSection = page.locator('#done-today, [id="done-today"]')
@@ -293,10 +292,10 @@ test.describe('成就感 + 日程截图', () => {
       await snap(page, '02-today-done-today')
     }
 
-    await page.goto('/?view=timeline')
-    await page.waitForSelector('.today-view-toggle', { timeout: 5000 })
+    await page.goto('/calendar')
+    await page.waitForSelector('.calendar-grid', { timeout: 5000 })
     await page.waitForSelector('.schedule-summary', { timeout: 10_000 })
-    await snap(page, '03-today-timeline')
+    await snap(page, '03-calendar-schedule')
 
     const unscheduledHead = page.locator('.unscheduled-panel-head--toggle')
     if ((await unscheduledHead.getAttribute('aria-expanded')) === 'false') {

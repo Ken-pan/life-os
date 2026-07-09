@@ -1,0 +1,125 @@
+/*
+  Life OS pattern grid — page/content layouts inside life-os-main.
+
+  Viewport media → chrome (sidebar / tabbar).
+  @container life-os-main → column count / split (mirrors --cq-* in layout.css).
+
+  Do not set container-type on these pattern classes (CQ/subgrid conflict).
+*/
+
+.life-os-grid {
+  display: grid;
+  gap: var(--grid-gap);
+  width: 100%;
+  min-width: 0;
+}
+
+.life-os-grid--gap-tight {
+  gap: var(--grid-gap-tight);
+}
+
+.life-os-grid--stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Main + aside; stacks until main column is mid-wide (--cq-md) */
+.life-os-grid--split,
+.life-os-grid--split-lg {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.life-os-grid--split > .life-os-grid__main,
+.life-os-grid--split > .life-os-grid__aside,
+.life-os-grid--split-lg > .life-os-grid__main,
+.life-os-grid--split-lg > .life-os-grid__aside {
+  min-width: 0;
+}
+
+.life-os-grid--aside-start > .life-os-grid__aside {
+  order: -1;
+}
+
+/* Intrinsic card / tile grids — no media query needed */
+.life-os-grid--autofill {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, var(--grid-min-card)), 1fr)
+  );
+}
+
+.life-os-grid--tiles {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, var(--grid-min-tile)), 1fr)
+  );
+}
+
+/* KPI / metric strips: 1 → 2 → 4 */
+.life-os-grid--kpi {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--grid-gap-tight);
+}
+
+.life-os-grid__span-full {
+  grid-column: 1 / -1;
+}
+
+/* CQ thresholds mirror --cq-sm/md/lg in layout.css (320/480/640/840).
+   Size queries need literal lengths — keep in sync with layout.css. */
+@container life-os-main (min-width: 480px) {
+  .life-os-grid--kpi:not(.life-os-grid--kpi-2):not(.life-os-grid--kpi-3) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .life-os-grid--kpi-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container life-os-main (min-width: 640px) {
+  .life-os-grid--split {
+    grid-template-columns: minmax(0, 1fr) var(--grid-split-aside);
+  }
+
+  .life-os-grid--split.life-os-grid--aside-wide {
+    grid-template-columns: minmax(0, 1fr) var(--grid-split-aside-wide);
+  }
+
+  .life-os-grid--split.life-os-grid--aside-start {
+    grid-template-columns: var(--grid-split-aside) minmax(0, 1fr);
+  }
+
+  .life-os-grid--split.life-os-grid--aside-start.life-os-grid--aside-wide {
+    grid-template-columns: var(--grid-split-aside-wide) minmax(0, 1fr);
+  }
+
+  .life-os-grid--kpi-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container life-os-main (min-width: 840px) {
+  .life-os-grid--kpi:not(.life-os-grid--kpi-2):not(.life-os-grid--kpi-3) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Wide dashboards (e.g. Finance calendar + side stack) */
+@container life-os-main (min-width: 960px) {
+  .life-os-grid--split-lg {
+    grid-template-columns: minmax(0, 1.55fr) var(--grid-split-aside);
+  }
+
+  .life-os-grid--split-lg.life-os-grid--aside-wide {
+    grid-template-columns: minmax(0, 1.55fr) var(--grid-split-aside-wide);
+  }
+
+  .life-os-grid--split-lg.life-os-grid--aside-start {
+    grid-template-columns: var(--grid-split-aside) minmax(0, 1.55fr);
+  }
+
+  .life-os-grid--split-lg.life-os-grid--aside-start.life-os-grid--aside-wide {
+    grid-template-columns: var(--grid-split-aside-wide) minmax(0, 1.55fr);
+  }
+}

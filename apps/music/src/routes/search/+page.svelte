@@ -445,7 +445,7 @@
               </button>
             {/if}
           </div>
-          <div class="album-grid">
+          <div class="life-os-grid life-os-grid--tiles album-grid">
             {#each previewAlbums as album (album.albumKey)}
               <a
                 class="album-card"
