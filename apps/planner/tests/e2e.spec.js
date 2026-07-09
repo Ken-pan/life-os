@@ -3,6 +3,7 @@ import {
   clearAppState,
   openNewTaskEditor,
   quickAddTask,
+  trackGoTrueWarnings,
   waitForPlannerReady,
 } from './e2e.helpers.js'
 
@@ -54,6 +55,14 @@ test.describe('PlannerOS E2E', () => {
     await page.goto('/')
     await expect(page.locator('aside.sidebar .brand')).toContainText('PLANNER')
     await expect(page.locator('h1.page-title')).toHaveText('今天')
+  })
+
+  test('P-P6: 无重复 GoTrueClient 控制台警告', async ({ page }, testInfo) => {
+    const warnings = trackGoTrueWarnings(page)
+    await page.goto('/')
+    await waitForPlannerReady(page, testInfo.project.name)
+    await page.waitForTimeout(500)
+    expect(warnings).toEqual([])
   })
 
   test('快速添加任务并出现在今天列表', async ({ page }, testInfo) => {

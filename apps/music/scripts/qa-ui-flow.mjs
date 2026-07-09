@@ -9,6 +9,7 @@
 import { chromium } from 'playwright'
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { waitForQaUrl } from '../../../scripts/qa-health.mjs'
 import {
   injectLifeOsSession,
   loadMusicQaEnv,
@@ -18,6 +19,8 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const baseUrl = process.env.MUSIC_QA_URL ?? 'http://127.0.0.1:5189'
+
+await waitForQaUrl(baseUrl, { timeoutMs: 60_000 })
 
 const ROUTES = [
   '/',

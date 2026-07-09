@@ -100,3 +100,15 @@ export async function openNewTaskEditor(page, projectName = 'mobile') {
   await expect(dialog).toBeVisible()
   return dialog
 }
+
+/** @param {import('@playwright/test').Page} page */
+export function trackGoTrueWarnings(page) {
+  /** @type {string[]} */
+  const warnings = []
+  page.on('console', (msg) => {
+    if (msg.text().includes('Multiple GoTrueClient instances detected')) {
+      warnings.push(msg.text())
+    }
+  })
+  return warnings
+}

@@ -58,6 +58,9 @@ export function createLifeOsSupabaseClient(
   isSupabaseConfigured: boolean
 }
 
+/** Test-only: clear browser singleton cache (HMR / unit tests). */
+export function resetLifeOsSupabaseClientCache(): void
+
 export function createLifeOsAuth(
   supabase: import('@supabase/supabase-js').SupabaseClient,
   options: {

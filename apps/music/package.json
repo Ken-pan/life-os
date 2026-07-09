@@ -13,6 +13,7 @@
     "test:sw": "node scripts/qa-service-worker.mjs",
     "test:sw:full": "npm run build && node scripts/qa-service-worker.mjs",
     "qa:ui-flow": "node scripts/qa-ui-flow.mjs",
+    "qa:import": "node scripts/qa-import-e2e.mjs",
     "qa:rec-behavior": "node scripts/qa-recommendation-behavior.mjs",
     "test:e2e": "node scripts/qa-ui-flow.mjs",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json"

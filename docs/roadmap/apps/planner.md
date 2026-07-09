@@ -27,7 +27,7 @@
 | **P-P3**           | Inbox `life_events` 来源徽章 + 深链 Finance/Fitness | ✅  | Growth | —    | `chip--life-event` · Finance `#/today` | §Shipped 2026-07-09 |
 | **P-P4**           | Today 计数与 `portal_today_summary` 对齐            | ◆   | Growth | 0.5d | 与 Portal 同账号任务数一致             | —                   |
 | **P-P5** {#p-p5}   | 消费 `fitness.workout_logged` → habit 打卡          | ✅  | Growth | —    | inbox 测试 7/7 · FT-P1 触发器          | §Shipped            |
-| **P-P6**           | 消除 `Multiple GoTrueClient` 警告（**P-3**）        | ○   | Infra  | 0.5d | 控制台无重复 client                    | —                   |
+| **P-P6**           | 消除 `Multiple GoTrueClient` 警告（**P-3**）        | ✅  | Infra  | —    | `@life-os/sync` 浏览器单例缓存         | §Shipped 2026-07-08 |
 
 ### 实现锚点
 
@@ -37,6 +37,7 @@
 | P-P2  | Insight CTA · Today 列表写入路径                                           |
 | P-P3  | `src/lib/services/lifeEventsInbox.js` · inbox UI                           |
 | P-P5  | `lifeEventsInbox.js` 扩 type 分支；依赖 `packages/contracts/src/events.ts` |
+| P-P6  | `packages/sync/src/supabaseClient.js` · `scripts/supabaseClient.test.mjs`  |
 
 ## 验收命令
 

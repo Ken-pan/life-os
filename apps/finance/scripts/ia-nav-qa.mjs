@@ -7,6 +7,7 @@
 import { chromium } from 'playwright'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { waitForQaUrl } from '../../../scripts/qa-health.mjs'
 import {
   injectLifeOsSession,
   loadFinanceQaEnv,
@@ -16,6 +17,10 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const baseUrl = process.env.UI_QA_URL ?? 'https://kensfinanceos.netlify.app'
+
+if (/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/.test(baseUrl)) {
+  await waitForQaUrl(baseUrl, { timeoutMs: 60_000 })
+}
 
 const DESKTOP_NAV = [
   { label: '首页', expectPath: '/home/today' },

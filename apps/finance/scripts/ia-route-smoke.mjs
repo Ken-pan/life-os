@@ -6,6 +6,7 @@
 import { chromium } from 'playwright'
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { waitForQaUrl } from '../../../scripts/qa-health.mjs'
 import {
   injectLifeOsSession,
   loadFinanceQaEnv,
@@ -14,7 +15,9 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
-const baseUrl = process.env.UI_QA_URL ?? 'http://localhost:5180'
+const baseUrl = process.env.UI_QA_URL ?? 'http://127.0.0.1:5180'
+
+await waitForQaUrl(baseUrl, { timeoutMs: 60_000 })
 
 const ROUTES = [
   '/home/today',
