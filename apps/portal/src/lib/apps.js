@@ -1,6 +1,6 @@
 import { LIFE_OS_SITE_META } from '@life-os/theme'
 
-/** @typedef {'planner' | 'finance' | 'fitness' | 'music'} LauncherAppId */
+/** @typedef {'planner' | 'finance' | 'fitness' | 'music' | 'home'} LauncherAppId */
 
 /**
  * Portal launcher 顺序与各端真实品牌色（与各 app app.css 对齐，非 Tailwind 渐变）
@@ -10,6 +10,7 @@ import { LIFE_OS_SITE_META } from '@life-os/theme'
  *   iconLight: string,
  *   iconDark: string,
  *   accent: string,
+ *   experimental?: boolean,
  * }>}
  */
 export const PORTAL_APPS = [
@@ -41,7 +42,18 @@ export const PORTAL_APPS = [
     iconDark: '/apps/music-dark-96.png',
     accent: '#c41e3a',
   },
+  {
+    id: 'home',
+    url: 'https://home.kenos.space',
+    iconLight: '/apps/home-light-96.png',
+    iconDark: '/apps/home-dark-96.png',
+    accent: '#5c758c',
+    experimental: true,
+  },
 ]
+
+/** 四生产站（default_app / 自动跳转；不含实验 Home） */
+export const PORTAL_PRODUCTION_APPS = PORTAL_APPS.filter((app) => !app.experimental)
 
 /** @param {LauncherAppId} id */
 export function getLauncherMeta(id) {

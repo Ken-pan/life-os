@@ -7,19 +7,20 @@ export const LIFE_OS_APP_IDS: readonly [
   'planner',
   'music',
   'portal',
+  'home',
 ]
 
 export function syncMetaStorageKey(
-  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal',
+  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home',
 ): string
 export function readSyncMeta(
-  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal',
+  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home',
 ): {
   userId?: string
   lastSyncAt?: string
 } | null
 export function writeSyncMeta(
-  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal',
+  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home',
   userId: string,
 ): void
 
@@ -60,7 +61,7 @@ export function createLifeOsSupabaseClient(
 export function createLifeOsAuth(
   supabase: import('@supabase/supabase-js').SupabaseClient,
   options: {
-    appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal'
+    appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home'
     onSession: (
       session: import('@supabase/supabase-js').Session | null,
     ) => void
@@ -91,12 +92,12 @@ export function ensureCoreProfile(
 export function touchAppLastOpened(
   supabase: import('@supabase/supabase-js').SupabaseClient,
   userId: string,
-  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal',
+  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home',
 ): Promise<void>
 
 export function createCoreIdentityHandler(
   supabase: import('@supabase/supabase-js').SupabaseClient,
-  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal',
+  appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home',
 ): (
   event: string,
   session: {

@@ -36,4 +36,5 @@ export const LIFE_OS_APP_IDS = /** @type {const} */ ([
   'planner',
   'music',
   'portal',
+  'home',
 ])

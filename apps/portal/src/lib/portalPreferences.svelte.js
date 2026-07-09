@@ -1,4 +1,4 @@
-import { PORTAL_APPS } from './apps.js'
+import { PORTAL_APPS, PORTAL_PRODUCTION_APPS } from './apps.js'
 import {
   fetchLastOpenedLauncherApp,
   fetchPendingLifeEventsCount,
@@ -72,7 +72,7 @@ export function shouldAutoRedirect(defaultApp, skipAutoRedirect) {
   if (!defaultApp || skipAutoRedirect) return false
   if (typeof sessionStorage === 'undefined') return false
   if (sessionStorage.getItem('portal_stay_on_launcher') === '1') return false
-  return PORTAL_APPS.some((app) => app.id === defaultApp)
+  return PORTAL_PRODUCTION_APPS.some((app) => app.id === defaultApp)
 }
 
 /**

@@ -1,32 +1,6 @@
 /** @typedef {{ x: number, y: number }} PlanPoint */
 
-/**
- * 屏幕坐标 → SVG viewBox 坐标（考虑画布平移/缩放）。
- * @param {DOMRect} viewportRect
- * @param {number} clientX
- * @param {number} clientY
- * @param {number} panX
- * @param {number} panY
- * @param {number} zoom
- * @param {number} [padding]
- * @returns {PlanPoint}
- */
-export function clientToSvgPoint(
-  viewportRect,
-  clientX,
-  clientY,
-  panX,
-  panY,
-  zoom,
-  padding = 12,
-) {
-  const relX = clientX - viewportRect.left - padding
-  const relY = clientY - viewportRect.top - padding
-  return {
-    x: (relX - panX) / zoom,
-    y: (relY - panY) / zoom,
-  }
-}
+export { clientToSvgPoint } from './plan-viewport.js'
 
 /**
  * @param {PlanPoint} a

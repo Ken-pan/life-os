@@ -1,6 +1,6 @@
 <script>
   import { LIFE_OS_SITE_META } from '@life-os/theme'
-  import { PORTAL_APPS } from '$lib/apps.js'
+  import { PORTAL_APPS, PORTAL_PRODUCTION_APPS } from '$lib/apps.js'
   import {
     portalPreferences,
     saveDefaultApp,
@@ -58,7 +58,7 @@
         onchange={onDefaultChange}
       >
         <option value="">每次显示 Launcher</option>
-        {#each PORTAL_APPS as app (app.id)}
+        {#each PORTAL_PRODUCTION_APPS as app (app.id)}
           <option value={app.id}>{LIFE_OS_SITE_META[app.id].name}</option>
         {/each}
       </select>

@@ -252,15 +252,17 @@ function load() {
       data.projects = { ...defaultState().projects, ...(data.projects || {}) }
     }
     const stored = data.projects[SAMPLE_508.meta.id]
+    if (stored.layoutMode === 'wallGraph') {
+      stored.layoutMode = 'parametric508'
+      delete stored.wallGraph
+    }
     data.projects[SAMPLE_508.meta.id] = hydrateProject({
       ...SAMPLE_508,
       ...stored,
       layoutConfig: stored.layoutConfig ?? SAMPLE_508.layoutConfig,
-      layoutMode: stored.layoutMode ?? 'parametric508',
-      wallGraph: stored.wallGraph,
+      layoutMode: 'parametric508',
       storageZones: stored.storageZones ?? SAMPLE_508.storageZones,
-      furnitureInventory:
-        stored.furnitureInventory ?? SAMPLE_508.furnitureInventory,
+      furnitureInventory: [],
       meta: { ...SAMPLE_508.meta, ...stored.meta },
     })
     return { ...defaultState(), ...data }
@@ -500,7 +502,7 @@ export function reset508Layout() {
     items: itemsById[z.id] ?? z.items,
   }))
   setActiveProject({ ...base, storageZones: zones })
-  toast('已恢复开发商默认尺寸')
+  toast('已恢复默认户型')
 }
 
 /** @param {SpatialProject} project */
@@ -620,7 +622,7 @@ export function importLayoutJson(raw) {
       layoutConfig: merged,
     })
     setActiveProject(next)
-    toast('508 布局已导入')
+    toast('户型布局已导入')
     return { ok: true }
   } catch {
     return { ok: false, error: 'JSON 解析失败' }

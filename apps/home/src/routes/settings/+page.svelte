@@ -4,17 +4,45 @@
   import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row'
   import { S, setTheme, reset508Layout, exportLayoutJson, importLayoutJson } from '$lib/state.svelte.js'
   import { getActiveProject } from '$lib/state.svelte.js'
-  import {
-    isSpatialStudioEnabled,
-    setSpatialStudioEnabled,
-  } from '$lib/spatial-studio.js'
+  import { auth, signIn, signUp, signOut, authErrorMessage } from '$lib/auth.svelte.js'
+  import { isSupabaseConfigured } from '$lib/supabase.js'
 
   const project = $derived(getActiveProject())
-  const studio = $derived(isSpatialStudioEnabled())
+
+  let authMode = $state('signin')
+  let email = $state('')
+  let password = $state('')
+  let authBusy = $state(false)
+  let authError = $state('')
+  let confirmSent = $state(false)
 
   /** @param {import('@life-os/contracts/appearance').ColorSchemePreference} value */
   function onTheme(value) {
     setTheme(value)
+  }
+
+  /** @param {SubmitEvent} e */
+  async function onAuthSubmit(e) {
+    e.preventDefault()
+    if (authBusy) return
+    authError = ''
+    authBusy = true
+    try {
+      if (authMode === 'signup') {
+        const { needsConfirm } = await signUp(email.trim(), password)
+        if (needsConfirm) confirmSent = true
+      } else {
+        await signIn(email.trim(), password)
+      }
+    } catch (err) {
+      authError = authErrorMessage(err)
+    } finally {
+      authBusy = false
+    }
+  }
+
+  async function onSignOut() {
+    await signOut()
   }
 
   function downloadLayoutJson() {
@@ -42,6 +70,44 @@
     reader.readAsText(file)
   }
 </script>
+
+<SettingsSection title="Life OS 账号">
+  {#if !isSupabaseConfigured}
+    <SettingsRow label="状态">
+      <span class="settings-value">未配置 Supabase</span>
+    </SettingsRow>
+  {:else if auth.user}
+    <SettingsRow label="已登录">
+      <span class="settings-value">{auth.user.email}</span>
+    </SettingsRow>
+    <SettingsRow label="操作">
+      <button type="button" class="settings-btn" onclick={onSignOut}>退出登录</button>
+    </SettingsRow>
+    <p class="settings-hint">布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。</p>
+  {:else if confirmSent}
+    <p class="settings-hint">验证邮件已发送至 {email}，请查收后登录。</p>
+  {:else}
+    <form class="auth-form" onsubmit={onAuthSubmit}>
+      <SettingsRow label="邮箱">
+        <input class="settings-input" type="email" bind:value={email} autocomplete="email" required />
+      </SettingsRow>
+      <SettingsRow label="密码">
+        <input class="settings-input" type="password" bind:value={password} autocomplete={authMode === 'signup' ? 'new-password' : 'current-password'} minlength="6" required />
+      </SettingsRow>
+      {#if authError}
+        <p class="settings-error">{authError}</p>
+      {/if}
+      <div class="auth-actions">
+        <button type="submit" class="settings-btn settings-btn-primary" disabled={authBusy}>
+          {authBusy ? '…' : authMode === 'signin' ? '登录' : '注册'}
+        </button>
+        <button type="button" class="settings-btn" onclick={() => { authMode = authMode === 'signin' ? 'signup' : 'signin'; authError = '' }}>
+          {authMode === 'signin' ? '创建账号' : '已有账号？登录'}
+        </button>
+      </div>
+    </form>
+  {/if}
+</SettingsSection>
 
 <SettingsSection title="外观">
   <SettingsRow label="主题">
@@ -82,37 +148,21 @@
   <SettingsRow label="储藏区">
     <span class="settings-value">{project.storageZones.length} 处</span>
   </SettingsRow>
-  {#if studio}
-    <SettingsRow label="尺寸编辑">
-      <a class="settings-link" href="/plan">前往平面页 →</a>
-    </SettingsRow>
-    <SettingsRow label="布局备份">
-      <button type="button" class="settings-btn" onclick={downloadLayoutJson}>导出 JSON</button>
-    </SettingsRow>
-    <SettingsRow label="布局恢复">
-      <label class="settings-file">
-        <span class="settings-btn">导入 JSON</span>
-        <input type="file" accept="application/json,.json" class="sr-only" onchange={onImportLayout} />
-      </label>
-    </SettingsRow>
-    <SettingsRow label="恢复默认">
-      <button type="button" class="settings-btn" onclick={reset508Layout}>开发商户型尺寸</button>
-    </SettingsRow>
-  {/if}
-</SettingsSection>
-
-<SettingsSection title="空间工坊（内部）">
-  <SettingsToggleRow
-    label="户型编辑与家具层"
-    desc="对外站点默认关闭；可用 ?studio=1 启用并持久化"
-    checked={studio}
-    onchange={(v) => setSpatialStudioEnabled(v)}
-  />
-  {#if studio}
-    <SettingsRow label="入口">
-      <a class="settings-link" href="/plan">平面 · 编辑户型 →</a>
-    </SettingsRow>
-  {/if}
+  <SettingsRow label="编辑户型">
+    <a class="settings-link" href="/plan">前往平面图 →</a>
+  </SettingsRow>
+  <SettingsRow label="布局备份">
+    <button type="button" class="settings-btn" onclick={downloadLayoutJson}>导出 JSON</button>
+  </SettingsRow>
+  <SettingsRow label="布局恢复">
+    <label class="settings-file">
+      <span class="settings-btn">导入 JSON</span>
+      <input type="file" accept="application/json,.json" class="sr-only" onchange={onImportLayout} />
+    </label>
+  </SettingsRow>
+  <SettingsRow label="恢复默认">
+    <button type="button" class="settings-btn" onclick={reset508Layout}>默认户型尺寸</button>
+  </SettingsRow>
 </SettingsSection>
 
 <style>
@@ -148,6 +198,48 @@
     background: var(--card);
     color: var(--t1);
     cursor: pointer;
+  }
+
+  .settings-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent, #fff);
+  }
+
+  .settings-input {
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--t1);
+    min-width: 200px;
+  }
+
+  .settings-hint {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--t2);
+    line-height: 1.45;
+  }
+
+  .settings-error {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: var(--danger, #c0392b);
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .auth-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
   }
 
   .settings-file {

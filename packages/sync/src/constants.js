@@ -1,4 +1,4 @@
-/** Life OS 各端（Finance / Fitness / Planner / Music / Portal）共享常量 */
+/** Life OS 各端（Finance / Fitness / Planner / Music / Portal / Home）共享常量 */
 
 /** Supabase Auth localStorage 键 — 四端必须一致 */
 export const LIFE_OS_AUTH_STORAGE_KEY = 'life_os_auth'
@@ -10,18 +10,19 @@ export const SYNC_DEFAULTS = {
   debounceMs: 800,
 }
 
-/** @param {'finance'|'fitness'|'planner'|'music'|'portal'} appId */
+/** @param {'finance'|'fitness'|'planner'|'music'|'portal'|'home'} appId */
 export function syncMetaStorageKey(appId) {
   const map = {
     finance: 'fos_sync_v1',
     fitness: 'fitos_sync_v1',
     planner: 'planos_sync_v1',
     music: 'musicos_sync_v1',
+    home: 'homeos_sync_v1',
   }
   return map[appId] ?? `${appId}_sync_v1`
 }
 
-/** @param {'finance'|'fitness'|'planner'|'music'|'portal'} appId */
+/** @param {'finance'|'fitness'|'planner'|'music'|'portal'|'home'} appId */
 export function readSyncMeta(appId) {
   if (typeof localStorage === 'undefined') return null
   try {

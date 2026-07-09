@@ -79,7 +79,7 @@
         </div>
       </div>
       <p class="dim-editor-hint">
-        输入后约 0.4s 自动保存；平面、墙、门、家具与储藏区随之重算。壁橱双折门仅向卧室开启。
+        输入后约 0.4s 自动保存；平面、墙、门与储藏区随之重算。壁橱双折门仅向卧室开启。
       </p>
       {#if validationIssues.length}
         <p class="dim-warn" role="status">{validationIssues[0]}</p>

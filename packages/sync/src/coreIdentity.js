@@ -1,6 +1,6 @@
 import { AUTH_SYNC_EVENTS } from './constants.js'
 
-/** @typedef {'finance'|'fitness'|'planner'|'music'|'portal'} LifeOsAppId */
+/** @typedef {'finance'|'fitness'|'planner'|'music'|'portal'|'home'} LifeOsAppId */
 
 const CORE_PROFILES = 'core_profiles'
 const CORE_USER_APP_SETTINGS = 'core_user_app_settings'

@@ -11,7 +11,7 @@ import { createCoreIdentityHandler } from './coreIdentity.js'
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {{
- *   appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal';
+ *   appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home';
  *   onSession: (session: import('@supabase/supabase-js').Session | null) => void;
  *   onSignedOut?: () => void;
  *   onSyncSession?: (options: { force?: boolean }) => void | Promise<unknown>;

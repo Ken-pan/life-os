@@ -171,7 +171,7 @@
       <li>卧室下墙、阳台下墙 → 房间深度</li>
       <li>壁橱/浴室/洗衣间竖墙 → 房间宽度</li>
       <li>客厅·厨房横墙 → 客厅高度</li>
-      <li><kbd>Delete</kbd> 隐藏选中门窗（508 拓扑下不拆墙开口）</li>
+      <li><kbd>Delete</kbd> 隐藏选中门窗（不会拆除墙体）</li>
     </ul>
     {#if disabledOpenings.length}
       <div class="inspector-hidden">

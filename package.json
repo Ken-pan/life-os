@@ -28,6 +28,7 @@
     "pwa:preview:music": "bash scripts/pwa/preview-app.sh music",
     "pwa:preview:finance": "bash scripts/pwa/preview-app.sh finance",
     "pwa:preview:portal": "bash scripts/pwa/preview-app.sh portal",
+    "pwa:preview:home": "bash scripts/pwa/preview-app.sh home",
     "pwa:healthcheck": "node scripts/pwa/pwa-healthcheck.mjs",
     "pwa:sim:open": "bash scripts/pwa/ios-sim-open.sh",
     "pwa:sim:shot": "bash scripts/pwa/ios-sim-screenshot.sh",

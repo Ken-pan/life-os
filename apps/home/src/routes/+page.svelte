@@ -11,11 +11,9 @@
     downloadBlob,
   } from '$lib/spatial/export-html.js'
   import { toast } from '$lib/ui.svelte.js'
-  import { isSpatialStudioEnabled } from '$lib/spatial-studio.js'
 
   const project = $derived(getActiveProject())
   const stats = $derived(projectStats(project))
-  const studio = $derived(isSpatialStudioEnabled())
   const roomCount = $derived(project.rooms.filter((r) => r.kind !== 'circulation').length)
   const previewZones = $derived(
     ['s6', 's5', 's8']
@@ -26,7 +24,7 @@
   function exportHtml() {
     const filename = `${project.meta.id}-audit.html`
     downloadBlob(
-      exportAuditHtml(project, { includeFurniture: studio }),
+      exportAuditHtml(project),
       filename,
       'text/html;charset=utf-8',
     )
@@ -36,7 +34,7 @@
   function exportMhtml() {
     const filename = `${project.meta.id}-audit.mhtml`
     downloadBlob(
-      exportAuditMhtml(project, { includeFurniture: studio }),
+      exportAuditMhtml(project),
       filename,
       'multipart/related',
     )
@@ -45,7 +43,7 @@
 </script>
 
 <p class="page-sub home-lead">
-  {stats.storageZones} 个储藏区 · {roomCount} 个房间 · 青灰斜纹 = 储藏区{#if studio} · 灰底 = 家具（工坊）{/if}
+  {stats.storageZones} 个储藏区 · {roomCount} 个房间 · 青灰斜纹 = 储藏区
 </p>
 
 <div class="home-chips">
@@ -66,7 +64,7 @@
 
 <FloorPlanPreview {project} />
 
-<PlanLegend showFurniture={studio} />
+<PlanLegend />
 
 <h2 class="home-section-title">储藏区速览</h2>
 <p class="page-sub" style="margin: 0 0 12px">
@@ -87,7 +85,7 @@
 </div>
 
 <div class="home-notes" style="margin-top: 24px">
-  <b>按开发商 769 sqft 户型图等比重建。</b> Living 11'10"×16'9"、Bedroom 12'6"×10'11" 等为图面标注；储藏区为物品审计映射。
+  <b>按开发商户型图等比重建。</b> 房间尺寸为图面标注；储藏区为物品审计映射。
   {#if project.meta.floorplanUrl}
     <a
       class="home-inline-link"

@@ -1,9 +1,12 @@
 import { supabase } from './supabase.js'
-import { PORTAL_APPS } from './apps.js'
+import { PORTAL_APPS, PORTAL_PRODUCTION_APPS } from './apps.js'
 
 /** @typedef {import('./apps.js').LauncherAppId} LauncherAppId */
 
 const LAUNCHER_IDS = new Set(PORTAL_APPS.map((app) => app.id))
+const PRODUCTION_LAUNCHER_IDS = new Set(
+  PORTAL_PRODUCTION_APPS.map((app) => app.id),
+)
 
 /**
  * @param {string} userId
@@ -49,7 +52,7 @@ export async function fetchPortalPreferences(userId) {
 
   const defaultRaw = profileRes.data?.default_app
   const defaultApp =
-    defaultRaw && LAUNCHER_IDS.has(/** @type {LauncherAppId} */ (defaultRaw))
+    defaultRaw && PRODUCTION_LAUNCHER_IDS.has(/** @type {LauncherAppId} */ (defaultRaw))
       ? /** @type {LauncherAppId} */ (defaultRaw)
       : null
 

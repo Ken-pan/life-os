@@ -52,10 +52,15 @@ export function renderFloorPlanSvg(project, opts = {}) {
   const wallOnStroke = Math.round(20 * touchScale)
   const dimmed = opts.dragDimmed ? ' room-dimmed' : ''
   const editModeOn = opts.editMode ? ' edit-mode-on' : ''
+  const interactiveOn = opts.interactive ? ' plan-interactive' : ''
+  const svgRole = opts.interactive ? 'application' : 'img'
+  const svgLabel = opts.interactive
+    ? '顶视平面图，Tab 聚焦储藏区后按 Enter 查看清单'
+    : '顶视平面图'
 
   const parts = []
   parts.push(
-    `<svg class="floor-plan-svg${editModeOn}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="floor plan" xmlns="http://www.w3.org/2000/svg">`,
+    `<svg class="floor-plan-svg${editModeOn}${interactiveOn}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="${svgRole}" aria-label="${esc(svgLabel)}" xmlns="http://www.w3.org/2000/svg">`,
   )
   parts.push(`<defs>
   <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
@@ -70,25 +75,29 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .thresh{stroke:var(--plan-threshold,#b9c1c9);stroke-width:1.4;stroke-dasharray:2 3}
  .door{fill:rgba(138,146,156,.12);stroke:var(--plan-door,#8a929c);stroke-width:1.2}
  .door-bifold{fill:none;stroke:var(--plan-door,#8a929c);stroke-width:1.6;stroke-linejoin:round}
- .dim-tag{font:${compact ? 8 : 9}px var(--mono,monospace);fill:var(--plan-dim,#6a727c)}
+ .dim-tag{font:${compact ? 8 : 9}px var(--mono,monospace);fill:var(--plan-dim,#6a727c);pointer-events:none}
  .win{stroke:var(--plan-window,#5b6470);stroke-width:1.6}
- .room-zh{font:650 ${compact ? 11 : 14}px var(--font,system-ui,sans-serif);fill:var(--plan-text,#3a4048)}
- .room-en{font:${compact ? 9 : 11}px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.14em}
+ .room-zh{font:650 ${compact ? 11 : 14}px var(--font,system-ui,sans-serif);fill:var(--plan-text,#3a4048);pointer-events:none}
+ .room-en{font:${compact ? 9 : 11}px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.14em;pointer-events:none}
  .room-circ{stroke:var(--plan-circ,#c5cdd6);stroke-width:1;stroke-dasharray:4 3;fill:var(--plan-circ-fill,rgba(238,236,230,.45))}
- .edit-mode-on .room-fill,.edit-mode-on .room-circ{opacity:.86}
- .circ-label{font:600 9px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.08em}
- .furn{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a)}
- .furn-item{cursor:help}
+ .edit-mode-on .room-fill,.edit-mode-on .room-circ{opacity:.72}
+ .circ-label{font:600 9px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.08em;pointer-events:none}
+ .furn{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
+ .furn-item{cursor:help;fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c)}
+ .storage-zone{pointer-events:none}
  .tiny{font:10px var(--mono,monospace);fill:var(--plan-dim,#6a727c)}
  .mk{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.5}
- .mk-t{font:700 ${compact ? 9 : 11}px var(--mono,monospace);fill:#f5f8fa}
+ .mk-t{pointer-events:none;font:700 ${compact ? 9 : 11}px var(--mono,monospace);fill:#f5f8fa}
+ .plan-interactive .mk{cursor:pointer}
  .scale{stroke:var(--plan-text,#3a4048);stroke-width:1.6;fill:var(--plan-text,#3a4048)}
  .scale-seg{stroke:var(--plan-text,#3a4048);stroke-width:1}
  .north{fill:var(--plan-text,#3a4048)}
  .zone-hit{cursor:pointer;opacity:0}
- .zone-hit:hover{opacity:.2;fill:var(--plan-accent,#5c758c)}
+ .zone-hit:hover,.zone-hit:focus-visible{opacity:.2;fill:var(--plan-accent,#5c758c)}
  .zone-on{opacity:.24;fill:var(--plan-accent,#5c758c)}
+ .plan-interactive .zone-marker:focus-visible{stroke:var(--plan-accent,#5c758c);stroke-width:3;outline:none}
  .zone-label-hit{cursor:help;pointer-events:all}
+ .zone-glyph{font:700 9px var(--mono,monospace);fill:var(--plan-accent,#5c758c);opacity:.72;pointer-events:none}
  .wall-hit{stroke:rgba(92,117,140,.14);stroke-width:${wallHitStroke};cursor:ew-resize;pointer-events:stroke}
  .wall-hit.wall-h{cursor:ns-resize}
  .wall-hit:hover{stroke:rgba(92,117,140,.42)}
@@ -138,8 +147,9 @@ export function renderFloorPlanSvg(project, opts = {}) {
     const isCirc = room.kind === 'circulation'
     const fill = room.fill ?? 'var(--plan-room,#e8edf1)'
     if (isCirc) {
+      const circTip = `动线 · ${room.nameZh}`
       parts.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-circ room-fill"/>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-circ room-fill" data-plan-tip="${esc(circTip)}"/>`,
       )
       if (!compact) {
         parts.push(
@@ -148,8 +158,9 @@ export function renderFloorPlanSvg(project, opts = {}) {
       }
       continue
     }
+    const roomTip = `房间 · ${room.nameZh}（浅色仅区分房间）`
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-fill" fill="${fill}" stroke="var(--plan-room-stroke,#cdd4da)" stroke-width="1"/>`,
+      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-fill" fill="${fill}" stroke="var(--plan-room-stroke,#cdd4da)" stroke-width="1" data-plan-tip="${esc(roomTip)}"/>`,
     )
     const cx = x + w / 2
     const cy = y + h / 2 - (compact ? 6 : 8)
@@ -175,8 +186,9 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const dash =
         item.strokeStyle === 'dashed' ? ' stroke-dasharray="4 3"' : ''
       const inferred = item.strokeStyle === 'dashed' ? ' · 推测摆位' : ''
+      const furnTip = `家具示意 · ${item.label}${inferred}（不可删除）`
       parts.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="furn-item" fill="var(--plan-furn,#dfe3e8)" stroke="var(--plan-door,#8a929c)" stroke-width="1.2" rx="3"${dash}>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="furn-item" stroke-width="1.2" rx="3"${dash} data-plan-tip="${esc(furnTip)}">`,
       )
       parts.push(
         `<title>家具示意 · ${esc(item.label)}${inferred}（不可删除）</title></rect>`,
@@ -193,16 +205,22 @@ export function renderFloorPlanSvg(project, opts = {}) {
     const { x, y, w, h } = zone.bounds
     const on = opts.highlightZone === zone.code
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#hatch)" stroke="var(--plan-accent,#5c758c)" stroke-width="1.6" rx="3" stroke-dasharray="5 3"/>`,
+      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="storage-zone" fill="url(#hatch)" stroke="var(--plan-accent,#5c758c)" stroke-width="1.8" rx="3" stroke-dasharray="5 3"/>`,
     )
+    if (!compact && w > 40 && h > 22) {
+      parts.push(
+        `<text x="${x + 6}" y="${y + 14}" class="zone-glyph" pointer-events="none">${esc(zone.code)}</text>`,
+      )
+    }
     if (opts.interactive) {
       const zoneTitle = `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
       parts.push(
-        `<rect class="zone-hit${on ? ' zone-on' : ''}" data-zone="${zone.code}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"><title>${esc(zoneTitle)}</title></rect>`,
+        `<rect class="zone-hit${on ? ' zone-on' : ''}" data-zone="${zone.code}" data-plan-tip="${esc(zoneTitle)}" tabindex="0" role="button" aria-label="${esc(zoneTitle)}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"><title>${esc(zoneTitle)}</title></rect>`,
       )
     } else {
+      const zoneTip = `${zone.code} · ${zone.nameZh}`
       parts.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="none" pointer-events="all" class="zone-label-hit"><title>${esc(`${zone.code} · ${zone.nameZh}`)}</title></rect>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="none" pointer-events="all" class="zone-label-hit" data-plan-tip="${esc(zoneTip)}"><title>${esc(zoneTip)}</title></rect>`,
       )
     }
   }
@@ -266,7 +284,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
         ? `墙段 · ${binding.label} — 点击选中`
         : '墙段 — 点击选中'
       parts.push(
-        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${wall.id}"><title>${esc(edgeTitle)}</title></line>`,
+        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${wall.id}" data-plan-tip="${esc(edgeTitle)}"><title>${esc(edgeTitle)}</title></line>`,
       )
     }
     if (opts.wallChainFrom) {
@@ -296,7 +314,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
         ? `墙体 · ${binding.label} — 拖曳改房间尺寸`
         : '内墙 — 拖曳改尺寸'
       parts.push(
-        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="wall-hit${orient}${on ? ' wall-on' : ''}${blocked ? ' wall-blocked' : ''}${deemph}" data-wall-id="${wall.id}"><title>${esc(wallTitle)}</title></line>`,
+        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="wall-hit${orient}${on ? ' wall-on' : ''}${blocked ? ' wall-blocked' : ''}${deemph}" data-wall-id="${wall.id}" data-plan-tip="${esc(wallTitle)}"><title>${esc(wallTitle)}</title></line>`,
       )
     }
     parts.push('</g>')
@@ -315,7 +333,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
           : `开口 · ${openingBinding.label} — 拖曳改位置`
         : '门窗 — 拖曳改位置'
       parts.push(
-        `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="${op.id}"><title>${esc(openTitle)}</title></rect>`,
+        `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="${op.id}" data-plan-tip="${esc(openTitle)}"><title>${esc(openTitle)}</title></rect>`,
       )
       if (supportsDoorWidthResize(op.id)) {
         appendResizeGrip(parts, op.id, hit, touchScale)
@@ -332,7 +350,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const blocked = opts.dragBlockedOpening === 'g-bed-closet'
       const closetTitle = '开口 · 壁橱双折门 — 拖曳移动 · 右侧握把改门宽'
       parts.push(
-        `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="g-bed-closet"><title>${esc(closetTitle)}</title></rect>`,
+        `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="g-bed-closet" data-plan-tip="${esc(closetTitle)}"><title>${esc(closetTitle)}</title></rect>`,
       )
       appendResizeGrip(parts, 'g-bed-closet', hit, touchScale)
     }
@@ -374,8 +392,11 @@ export function renderFloorPlanSvg(project, opts = {}) {
     const markerTitle = opts.interactive
       ? `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
       : `${zone.code} · ${zone.nameZh}`
+    const markerA11y = opts.interactive
+      ? ` tabindex="0" role="button" aria-label="${esc(markerTitle)}"`
+      : ''
     parts.push(
-      `<circle cx="${x}" cy="${y}" r="${r}" class="mk"><title>${esc(markerTitle)}</title></circle>`,
+      `<circle cx="${x}" cy="${y}" r="${r}" class="mk zone-marker" data-zone="${zone.code}" data-plan-tip="${esc(markerTitle)}"${markerA11y}><title>${esc(markerTitle)}</title></circle>`,
     )
     parts.push(
       `<text x="${x}" y="${y + (compact ? 2.8 : 3.6)}" text-anchor="middle" class="mk-t">${esc(zone.code)}</text>`,

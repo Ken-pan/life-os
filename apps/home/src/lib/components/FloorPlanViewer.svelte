@@ -16,7 +16,14 @@
     RESIZE_GRIP_HIT,
   } from '$lib/spatial/wall-edit.js'
   import { snapDeltaPx } from '$lib/spatial/dimensions.js'
-  import { clientToSvgPoint } from '$lib/plan-measure.js'
+  import {
+    clampPlanZoom,
+    clientToSvgPoint,
+    computePlanFit,
+    getViewportContentBox,
+    panForZoomAtPoint,
+  } from '$lib/plan-viewport.js'
+  import { bindPlanSvgTooltip } from '$lib/plan-svg-tooltip.js'
 
   /** @type {{
    *   project: import('$lib/spatial/types.js').SpatialProject,
@@ -57,7 +64,7 @@
     measureMode = false,
     graphEditMode = false,
     graphTool = 'select',
-    hideFurniture = false,
+    hideFurniture = true,
     selectedWall = '',
     selectedOpening = '',
     selectedEdge = '',
@@ -167,8 +174,33 @@
   )
 
   const canvasStyle = $derived(
-    `transform: translate(${panX}px, ${panY}px) scale(${zoom}); transform-origin: ${fitMode === 'contain' ? 'center center' : 'top center'};`,
+    `transform: translate(${panX}px, ${panY}px) scale(${zoom}); transform-origin: 0 0;`,
   )
+
+  function getPlanSvg() {
+    const el = viewportEl?.querySelector('.floor-plan-svg')
+    return el instanceof SVGElement ? el : null
+  }
+
+  function applyZoomAt(clientX, clientY, nextZoom) {
+    if (!viewportEl) {
+      zoom = clampPlanZoom(nextZoom)
+      return
+    }
+    const next = clampPlanZoom(nextZoom)
+    const p = panForZoomAtPoint({
+      viewportEl,
+      focalClientX: clientX,
+      focalClientY: clientY,
+      panX,
+      panY,
+      zoom,
+      nextZoom: next,
+    })
+    zoom = p.zoom
+    panX = p.panX
+    panY = p.panY
+  }
 
   function scheduleFit() {
     if (!browser) return
@@ -186,15 +218,7 @@
   }
 
   function clientToSvg(clientX, clientY) {
-    if (!viewportEl) return { x: 0, y: 0 }
-    return clientToSvgPoint(
-      viewportEl.getBoundingClientRect(),
-      clientX,
-      clientY,
-      panX,
-      panY,
-      zoom,
-    )
+    return clientToSvgPoint(getPlanSvg(), clientX, clientY) ?? { x: 0, y: 0 }
   }
 
   /** @param {MouseEvent} e */
@@ -236,6 +260,25 @@
     })
   }
 
+  /** @param {KeyboardEvent} e */
+  function handleKeydown(e) {
+    if (
+      (e.key === 'Enter' || e.key === ' ') &&
+      onZoneSelect &&
+      !editMode &&
+      !measureMode &&
+      !graphEditMode
+    ) {
+      const hit =
+        e.target instanceof Element ? e.target.closest('[data-zone]') : null
+      const code = hit?.getAttribute('data-zone')
+      if (code) {
+        e.preventDefault()
+        onZoneSelect(code)
+      }
+    }
+  }
+
   /** @param {MouseEvent} e */
   function handleClick(e) {
     if (graphEditMode) return
@@ -244,14 +287,7 @@
         delete viewportEl.dataset.dragged
         return
       }
-      const pt = clientToSvgPoint(
-        viewportEl.getBoundingClientRect(),
-        e.clientX,
-        e.clientY,
-        panX,
-        panY,
-        zoom,
-      )
+      const pt = clientToSvg(e.clientX, e.clientY)
       onMeasurePoint(pt)
       return
     }
@@ -270,23 +306,33 @@
       return
     }
     if (!onZoneSelect) return
-    if (viewportEl?.dataset.dragged === '1') {
-      delete viewportEl.dataset.dragged
-      return
-    }
     const target = /** @type {SVGElement | null} */ (
       e.target instanceof Element ? e.target.closest('[data-zone]') : null
     )
     const code = target?.getAttribute('data-zone')
+    if (viewportEl?.dataset.dragged === '1') {
+      delete viewportEl.dataset.dragged
+      if (!code) return
+    }
     if (code) onZoneSelect(code)
   }
 
   function zoomIn() {
-    zoom = Math.min(2.5, Math.round((zoom + 0.15) * 100) / 100)
+    if (!viewportEl) {
+      zoom = clampPlanZoom(zoom + 0.15)
+      return
+    }
+    const rect = viewportEl.getBoundingClientRect()
+    applyZoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, zoom + 0.15)
   }
 
   function zoomOut() {
-    zoom = Math.max(0.4, Math.round((zoom - 0.15) * 100) / 100)
+    if (!viewportEl) {
+      zoom = clampPlanZoom(zoom - 0.15)
+      return
+    }
+    const rect = viewportEl.getBoundingClientRect()
+    applyZoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, zoom - 0.15)
   }
 
   function resetView() {
@@ -311,20 +357,19 @@
     if (!viewportEl) return
     const vbW = displayProject.viewport.width
     const vbH = displayProject.viewport.height
-    const pad = 16
-    const canvasW = Math.max(viewportEl.clientWidth - pad * 2, 200)
-    const canvasH = Math.max(viewportEl.clientHeight - pad * 2, 200)
-    if (!vbW || !vbH || canvasW < 80 || canvasH < 80) return
+    const { contentW, contentH } = getViewportContentBox(viewportEl)
+    if (!vbW || !vbH) return
 
-    const scaleW = (canvasW / vbW) * 0.96
-    const scaleH = (canvasH / vbH) * 0.96
-    const fit = fitMode === 'width' ? scaleW : Math.min(scaleW, scaleH)
-    zoom = Math.min(2.5, Math.max(0.2, fit))
-
-    const layoutH = canvasW * (vbH / vbW)
-    const scaledH = layoutH * zoom
-    panX = 0
-    panY = fitMode === 'contain' ? Math.max(0, (canvasH - scaledH) / 2) : 0
+    const fit = computePlanFit({
+      contentW,
+      contentH,
+      vbW,
+      vbH,
+      mode: fitMode,
+    })
+    zoom = fit.zoom
+    panX = fit.panX
+    panY = fit.panY
   }
 
   /** @param {import('$lib/spatial/types.js').Layout508Config} config */
@@ -344,6 +389,13 @@
     } else if (fitRequest.mode === 'contain' || fitRequest.mode === 'width') {
       fitMode = fitRequest.mode
     }
+    scheduleFit()
+  })
+
+  $effect(() => {
+    displayProject.viewport.width
+    displayProject.viewport.height
+    svgHtml
     scheduleFit()
   })
 
@@ -372,6 +424,7 @@
         panX = p.x
         panY = p.y
       },
+      onZoomAt: (clientX, clientY, next) => applyZoomAt(clientX, clientY, next),
       onLongPress: onBlankContextMenu ? handleLongPress : undefined,
     })
     return () => action.destroy()
@@ -505,6 +558,15 @@
     })
     return () => action.destroy()
   })
+
+  $effect(() => {
+    const el = viewportEl
+    if (!el) return
+    const action = bindPlanSvgTooltip(el, {
+      enabled: () => !dragActive && !measureMode,
+    })
+    return () => action.destroy()
+  })
 </script>
 
 <div
@@ -558,7 +620,7 @@
           >拖曳编辑 · 点空白取消选中 · 长按/右键菜单</span
         >
       {:else if !compact}
-        <span class="plan-hint">双指捏合缩放 · 拖拽平移</span>
+        <span class="plan-hint">双指捏合缩放 · 拖拽平移 · Tab 聚焦储藏区</span>
       {/if}
     </div>
   {/if}
@@ -574,9 +636,9 @@
       ? 'group'
       : undefined}
     aria-label={graphEditMode
-      ? '墙图编辑画布'
+      ? '户型编辑画布'
       : measureMode
-        ? '测距画布：点击两点量距离'
+        ? '户型编辑画布'
         : editMode
           ? '户型编辑画布'
           : onZoneSelect
@@ -584,7 +646,7 @@
             : '顶视平面图'}
     onclick={handleClick}
     oncontextmenu={handleContextMenu}
-    onkeydown={() => {}}
+    onkeydown={handleKeydown}
   >
     <div class="plan-canvas" style={canvasStyle}>
       {@html svgHtml}
@@ -642,8 +704,8 @@
     max-height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: flex-start;
     overflow: hidden;
   }
 
@@ -669,6 +731,7 @@
     top: 10px;
     right: 10px;
     z-index: 4;
+    pointer-events: none;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -690,8 +753,9 @@
   }
 
   .plan-tool {
-    min-width: 36px;
-    min-height: 36px;
+    pointer-events: auto;
+    min-width: 44px;
+    min-height: 44px;
     padding: 0 8px;
     border-radius: 8px;
     border: 1px solid var(--border);
@@ -715,6 +779,7 @@
   }
 
   .plan-zoom-pct {
+    pointer-events: none;
     font-family: var(--mono);
     font-size: 11px;
     color: var(--t3);
@@ -724,6 +789,7 @@
   }
 
   .plan-hint {
+    pointer-events: none;
     font-size: 11px;
     color: var(--t3);
     font-family: var(--mono);
@@ -928,6 +994,39 @@
     100% {
       opacity: 0;
       transform: translate(-50%, -50%) scale(1.15);
+    }
+  }
+
+  .plan-viewer :global(.plan-svg-tooltip) {
+    position: absolute;
+    z-index: 6;
+    max-width: min(280px, calc(100% - 16px));
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+    background: color-mix(in srgb, var(--card) 94%, transparent);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--t2);
+    pointer-events: none;
+    user-select: none;
+    transform: translateY(calc(-100% - 6px));
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+  }
+
+  .plan-viewer :global(.plan-svg-tooltip[data-visible='1']) {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plan-viewer :global(.plan-svg-tooltip) {
+      transition: none;
     }
   }
 </style>

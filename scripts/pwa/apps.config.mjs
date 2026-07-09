@@ -135,6 +135,27 @@ export const PWA_APPS = {
     production: false,
     pwaTestEnabled: true,
   },
+  home: {
+    id: 'home',
+    name: 'HOME.OS',
+    workspace: 'home-os',
+    port: 5196,
+    shellType: 'main-col-wrap',
+    waitSelector: '.app-shell',
+    scrollSelector: '.main-col > .wrap',
+    mainQuery: '.main-col > .wrap',
+    nestedWrapInMain: false,
+    routes: [
+      { path: '/', name: 'overview' },
+      { path: '/plan', name: 'plan' },
+      { path: '/storage', name: 'storage' },
+      { path: '/settings', name: 'settings' },
+    ],
+    clipPaths: ['/settings'],
+    scrollQaPath: '/settings',
+    production: true,
+    pwaTestEnabled: false,
+  },
 }
 
 /** @param {string} id */
@@ -175,5 +196,5 @@ export const PWA_SHELL_REFERENCE = {
   'main-wrap-main':
     'Fitness / Music — `.main-wrap > #main-content` scrolls; nested `.wrap` must stay `height: auto`',
   'main-wrap-content': 'Finance — `.main-wrap > .content` scrolls',
-  'main-col-wrap': 'Planner / Portal — `.main-col > .wrap` scrolls',
+  'main-col-wrap': 'Planner / Portal / Home — `.main-col > .wrap` scrolls',
 }

@@ -13,6 +13,7 @@
    *     iconLight: string,
    *     iconDark: string,
    *     accent: string,
+   *     experimental?: boolean,
    *   },
    *   variant?: 'default' | 'hero',
    * }} */
@@ -20,7 +21,7 @@
 
   const meta = $derived(getLauncherMeta(app.id))
   const ariaLabel = $derived(
-    `打开 ${meta.name}：${meta.description.zh}（在新标签页打开）`,
+    `打开 ${meta.name}${app.experimental ? '（实验）' : ''}：${meta.description.zh}（在新标签页打开）`,
   )
 </script>
 
@@ -43,7 +44,12 @@
     />
   </span>
   <div class="portal-app-copy">
-    <p class="portal-app-name">{meta.name}</p>
+    <p class="portal-app-name">
+      {meta.name}
+      {#if app.experimental}
+        <span class="portal-app-exp" title="实验功能：布局数据仍存本机">实验</span>
+      {/if}
+    </p>
     <p class="portal-app-desc">{meta.description.zh}</p>
   </div>
   <span class="portal-app-trailing" aria-hidden="true">

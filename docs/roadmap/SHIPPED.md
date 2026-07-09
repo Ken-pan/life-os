@@ -6,6 +6,54 @@
 
 ---
 
+## 2026-07-08（Home Life OS 接入 + H-P5 平面 UX）
+
+| 主线        | 摘要                                                                                       | 证据                                                    |
+| ----------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Integration | Home SSO 生产化：`touchAppLastOpened` + `lifeOsPresence`；migration `home` app_id 远程 ✅ | `apps/home/src/lib/lifeOsPresence.js` · Supabase MCP   |
+| Integration | Home PWA：`static/sw.js` + `SKIP_WAITING` 热更新；manifest shortcuts                       | `apps/home/static/` · `serviceWorker.js`                |
+| Home        | H-P5：浏览/编辑双模式；`plan-viewport` CTM；`test:viewport` 67/67 ✅                       | `apps/home/scripts/plan-viewport-stress.mjs`            |
+| Platform    | PWA SSOT 增 `home`；`npm run pwa:preview:home`                                           | `scripts/pwa/apps.config.mjs`                           |
+
+## 2026-07-09（H-P1 Portal Home 实验卡）
+
+| 主线   | 摘要                                                                 | 证据                         |
+| ------ | -------------------------------------------------------------------- | ---------------------------- |
+| Growth | H-P1：`PORTAL_APPS` 加 `home`；独立「实验」区 + inline「实验」badge；default_app 仍仅四生产站 | `apps/portal/src/lib/apps.js` |
+
+## 2026-07-09（F-P1 + G-P2 生产验收）
+
+| 主线   | 摘要                                                                 | 证据                                              |
+| ------ | -------------------------------------------------------------------- | ------------------------------------------------- |
+| Growth | G-P2：Portal AppBar 角标 ✅ — pending `life_events` 显示「1 条待处理事件」 | `portal.kenos.space` + 测试行后清理               |
+| Growth | F-P1：ExtensionSyncBridge 生产 toast ✅ — 模拟 `FOS_BRIDGE_CAPTURES` 后显示「Rocket Money 已同步」+ 时间戳 | `finance.kenos.space` CDP 注入（空 recurring rows） |
+| Infra  | I-P1.5 outbox `--smoke` 远程 ✅ — `finance.bill_due` pending + cleanup | `./scripts/test-outbox-trigger.sh --smoke`        |
+
+## 2026-07-09（G-P4 Portal 今日摘要）
+
+| 主线   | 摘要                                                                                       | 证据                               |
+| ------ | ------------------------------------------------------------------------------------------ | ---------------------------------- |
+| Growth | G-P4：`portal_today_summary()` RPC — Planner 今日/逾期、Finance 月结余、Fitness 最近完练 | `portal.kenos.space`「今日摘要」区 |
+
+## 2026-07-09（H-P1 生产 + H-P2/H-P3 Home SSO）
+
+| 主线        | 摘要                                                                                       | 证据                                                    |
+| ----------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Growth      | H-P1：Portal「实验」区 + HOME.OS 卡 ✅ — `4 个生产应用 · 1 个实验`                          | `portal.kenos.space` 生产 deploy                        |
+| Integration | H-P2：`createLifeOsAuth('home')` + `setupCrossDomainSSO`；设置页账号区 ✅                   | `home.kenos.space/settings` 跨域 Cookie 自动登录        |
+| Integration | H-P3：`20260708180000` 扩 `app_id` 含 `home`；redirect `home.kenos.space/**` ✅            | `./scripts/verify-life-os-identity-p0.sh`             |
+| Growth      | G-P2：Portal `life_events` pending 角标生产验收 ✅                                         | 测试 pending 行 + Portal 角标                           |
+
+## 2026-07-09（I-P0 生产 E2E + 关联验收）
+
+| 主线        | 摘要                                                                                       | 证据                                                    |
+| ----------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Integration | I-P0：五站生产跨域 SSO ✅ — 同 `auth.uid()`（`c2831538…`）；`lifeos_shared_session` Cookie 生效 | Portal / Planner / Finance / Fitness / Music 浏览器验收 |
+| Growth      | G-P1：Portal「继续」读 DB `last_opened_at` → Planner ✅                                    | `portal.kenos.space`「继续」区                            |
+| Growth      | M-P1：`music.play_events` 生产已有 **167** 行 ✅                                           | `./scripts/supabase-sql.sh`                             |
+| Platform    | AppBrandSwitcher 生产 ✅ — Finance 侧栏菜单含 5 站 + Home「实验」                           | `finance.kenos.space` 走查                              |
+| Integration | I-P0 冷启动：Playwright 新 context 无 Cookie 时需重新登录（符合预期）                       | 严格无痕「先登 Finance 再开 Planner」仍建议人工复验 1 次  |
+
 ## 2026-07-08（Roadmap 4 周计划执行）
 
 | 主线        | 摘要                                                                                       | 证据                                                    |

@@ -11,6 +11,7 @@
 | Music   | `music-os`   | 5191         | `main-wrap-main`    | `.main-wrap > #main-content` |
 | Finance | `finance-os` | 5180         | `main-wrap-content` | `.main-wrap > .content`      |
 | Portal  | `portal`     | 5195         | `main-col-wrap`     | `.main-col > .wrap`          |
+| Home    | `home-os`    | 5196         | `main-col-wrap`     | `.app-shell`                 |
 
 共享 CSS：`packages/theme/src/ios-safari.css`
 
@@ -29,7 +30,7 @@ L6  真机 iPhone                   最终验收
 
 ```bash
 # 构建
-npm run pwa:build                 # 五端全部
+npm run pwa:build                 # 六站全部
 npm run build:fitness             # 单端
 
 # Preview（标准端口，与 apps.config 一致）

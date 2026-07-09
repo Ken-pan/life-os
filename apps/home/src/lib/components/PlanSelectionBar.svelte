@@ -151,6 +151,8 @@
         <span class="sel-meta"
           >左 {formatFtIn(activeConfig.leftCol)} · 右 {formatFtIn(activeConfig.rightCol)}</span
         >
+      {:else if wallBinding}
+        <span class="sel-meta">拖曳改尺寸 · 墙体不可删除</span>
       {/if}
     {:else if openingBinding && activeConfig}
       <span class="sel-meta">拖曳移动 · Delete 仅隐藏门窗</span>

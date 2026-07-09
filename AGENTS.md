@@ -26,7 +26,7 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `./scripts/deploy-all-netlify.sh`                            | CLI prod deploy 六站（含 Portal、Home）                       |
 | `npm run sync:packages`                                      | Copy sibling theme/sync into `packages/*` (legacy)            |
 | `npm run pwa:build`                                          | 五端 production build（PWA 验收用）                           |
-| `npm run pwa:preview:{planner,fitness,music,finance,portal}` | 标准端口 preview（见 `apps.config.mjs`）                      |
+| `npm run pwa:preview:{planner,fitness,music,finance,portal,home}` | 标准端口 preview（见 `apps.config.mjs`）                      |
 | `npm run test:pwa`                                           | 全 app Playwright PWA viewport（`PWA_APP=` 筛选）             |
 | `npm run qa:pwa`                                             | healthcheck + test:pwa + mobile-scroll                        |
 | `npm run qa:mobile-scroll`                                   | 四端生产 app PWA 滚动 QA                                      |
@@ -46,7 +46,7 @@ Any manual `netlify deploy` **must** include `CI=1` and `--filter <workspace>`
 
 - `apps/{planner,fitness,finance,music}` — 生产四站
 - `apps/portal` — 启动器（`portal.kenos.space`）
-- `apps/home` — 第六 app · 实验（`home.kenos.space`；spatial + 工坊 `?studio=1`）
+- `apps/home` — 第六 app · 实验（`home.kenos.space`；spatial 浏览/编辑 + Life OS SSO）
 - `apps/finance/extension` — Finance OS Sync Chrome 扩展（生产向插件，非 app）
 - `packages/{theme,sync,contracts,platform-web}` — 共享包
 - `docs/README.md` — 文档导航 hub

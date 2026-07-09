@@ -1,10 +1,9 @@
 <script>
-  /** @type {{ interactive?: boolean, editMode?: boolean, graphEditMode?: boolean, showFurniture?: boolean, overlay?: boolean }} */
+  /** @type {{ interactive?: boolean, editMode?: boolean, graphEditMode?: boolean, overlay?: boolean }} */
   let {
     interactive = false,
     editMode = false,
     graphEditMode = false,
-    showFurniture = false,
     overlay = false,
   } = $props()
 
@@ -40,11 +39,6 @@
           斜线区 = 储藏区 S1–S8
         {/if}
       </span>
-      {#if showFurniture}
-        <span class="plan-legend-item" role="listitem">
-          <i class="sw furn" aria-hidden="true"></i> 灰块 = 家具示意（不可删改）
-        </span>
-      {/if}
       <span class="plan-legend-item" role="listitem">
         <svg class="sym sym-wall" viewBox="0 0 28 16" aria-hidden="true">
           <line
@@ -84,6 +78,9 @@
         </span>
       {/if}
       {#if !graphEditMode && !editMode}
+        <span class="plan-legend-item" role="listitem">
+          <i class="sw gap" aria-hidden="true"></i> 浅色宽条 = 墙上门洞
+        </span>
         <span class="plan-legend-item" role="listitem">
           <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
             <line
@@ -228,10 +225,6 @@
     border-color: var(--storage-accent);
   }
 
-  .sw.furn {
-    background: var(--plan-furn, #dfe3e8);
-  }
-
   .sw.wall-edit {
     background: transparent;
     border: 2px solid rgba(92, 117, 140, 0.45);
@@ -282,6 +275,14 @@
     border-radius: 999px;
     width: 12px;
     height: 12px;
+  }
+
+  .sw.gap {
+    background: var(--plan-paper, #eef1f4);
+    border: 2px solid var(--plan-wall, #20242b);
+    height: 4px;
+    width: 18px;
+    align-self: center;
   }
 
   .plan-legend-edit {

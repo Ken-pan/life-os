@@ -492,77 +492,8 @@ export function build508Project(config, carry = {}) {
     },
   ].filter((op) => !(config.disabledOpenings ?? []).includes(op.id))
 
-  const roomById = Object.fromEntries(rooms.map((rm) => [rm.id, rm]))
-
-  /** Place furniture relative to room bounds */
-  function rel(roomId, xPct, yPct, wFt, hFt, label, extra = {}) {
-    const rm = roomById[roomId]
-    if (!rm) return null
-    const wf = wFt * P
-    const hf = hFt * P
-    return {
-      id: extra.id ?? `${roomId}-${label}`,
-      roomId,
-      bounds: {
-        x: rm.bounds.x + rm.bounds.w * xPct,
-        y: rm.bounds.y + rm.bounds.h * yPct,
-        w: wf,
-        h: hf,
-      },
-      label,
-      ...extra,
-    }
-  }
-
   /** @type {SpatialProject['furniture']} */
-  const furniture = [
-    rel('living', 0.08, 0.42, 6, 3, '沙发区', { id: 'sofa' }),
-    rel('living', 0.1, 0.62, 5, 2.5, '升降桌 · 双屏', { id: 'desk' }),
-    rel('living', 0.42, 0.68, 2, 2, '人体工学椅', { id: 'chair' }),
-    {
-      id: 'pet-pen',
-      roomId: 'living',
-      bounds: {
-        x: X_DIV + px({ ft: 3, in: 0 }, P),
-        y: Y0 + px({ ft: 4, in: 0 }, P),
-        w: px({ ft: 4, in: 0 }, P),
-        h: px({ ft: 3, in: 0 }, P),
-      },
-      label: '宠物围栏',
-      strokeStyle: 'dashed',
-    },
-    {
-      id: 'dw',
-      roomId: 'kitchen',
-      bounds: { x: X_END - 52, y: Y0 + livingH + px({ ft: 1, in: 0 }, P), w: 44, h: 44 },
-      label: 'DW',
-    },
-    {
-      id: 'sink',
-      roomId: 'kitchen',
-      bounds: { x: X_END - 52, y: Y0 + livingH + px({ ft: 3, in: 0 }, P), w: 44, h: 44 },
-      label: '水槽',
-    },
-    {
-      id: 'stove',
-      roomId: 'kitchen',
-      bounds: { x: X_END - 52, y: Y0 + livingH + px({ ft: 6, in: 0 }, P), w: 44, h: 44 },
-      label: '灶台',
-    },
-    {
-      id: 'fridge',
-      roomId: 'kitchen',
-      bounds: { x: X_END - 52, y: Y0 + livingH + px({ ft: 10, in: 0 }, P), w: 44, h: 52 },
-      label: '冰箱',
-    },
-    rel('bedroom', 0.1, 0.35, 6, 5, '双人床', { id: 'bed' }),
-    rel('bedroom', 0.62, 0.42, 1.5, 2, '床头钢架', { id: 'bed-shelf' }),
-    rel('bathroom', 0.08, 0.55, 3, 4, '浴缸', { id: 'tub' }),
-    rel('bathroom', 0.48, 0.35, 2, 1.5, '洗手台', { id: 'vanity' }),
-    rel('bathroom', 0.58, 0.62, 1.5, 1.5, '马桶', { id: 'toilet' }),
-    rel('laundry', 0.15, 0.2, 2, 2, 'W / D', { id: 'washer' }),
-    rel('entry', 0.1, 0.2, 2, 1.5, '入户区', { id: 'entry-mat' }),
-  ].filter(Boolean)
+  const furniture = []
 
   const defaultZones = defaultStorageZones(config, {
     X0,
@@ -601,7 +532,7 @@ export function build508Project(config, carry = {}) {
     schemaVersion: SPATIAL_SCHEMA_VERSION,
     meta: {
       id: 'avalon-508',
-      nameZh: 'Avalon #508 · 空间存储审计',
+      nameZh: '我的户型 · 储藏审计',
       unitId: '001-508',
       building: 'Avalon Alderwood Place',
       sqft: carry.meta?.sqft ?? 769,
@@ -614,7 +545,6 @@ export function build508Project(config, carry = {}) {
         '<b>平面来源</b>：参数化布局，默认按开发商 769 sqft 户型图重建。',
         '<b>卧室壁橱</b>：双折门（bifold），仅向卧室方向开启，不向走廊开门。',
         '<b>储藏区 S1–S8</b>：位置随尺寸自适应；柜内明细可继续修正。',
-        '<b>家具摆放</b>：相对房间比例定位，改尺寸后自动跟随。',
       ],
       sourceNote: carry.meta?.sourceNote ?? 'HOME.OS · 参数化户型 · 储藏清单来自现场审计',
       ...(carry.meta ?? {}),
@@ -627,24 +557,9 @@ export function build508Project(config, carry = {}) {
     openings,
     furniture,
     storageZones,
-    furnitureInventory: defaultFurnitureInventory(r),
+    furnitureInventory: [],
     layoutConfig: config,
   }
-}
-
-/** @param {Layout508Config['rooms']} r */
-function defaultFurnitureInventory(r) {
-  return [
-    { zoneZh: '客厅', objectZh: '沙发 + 升降桌 + 双屏 + 工学椅', noteZh: `${formatFtIn(r.living.w)}×${formatFtIn(r.living.h)} · 靠北窗采光` },
-    { zoneZh: '客厅', objectZh: '钢丝补给货架 S4', noteZh: '东墙内侧 · 推测摆位 · 避开北窗 AC/窗帘' },
-    { zoneZh: '客厅', objectZh: '宠物围栏', noteZh: '开放客厅区内' },
-    { zoneZh: '厨房', objectZh: 'DW · 水槽 · 灶台 · 冰箱', noteZh: '沿东墙（右墙）布置' },
-    { zoneZh: '卧室', objectZh: '双人床 + 床头钢架', noteZh: `${formatFtIn(r.bedroom.w)}×${formatFtIn(r.bedroom.h)}` },
-    { zoneZh: '卧室', objectZh: '阳台门 + 壁橱双折门', noteZh: `壁橱 ${formatFtIn(r.bedCloset.w)}×${formatFtIn(r.bedCloset.h)}` },
-    { zoneZh: '浴室', objectZh: '浴缸 · 洗手台 · 马桶', noteZh: `${formatFtIn(r.bathroom.w)}×${formatFtIn(r.bathroom.h)}` },
-    { zoneZh: '洗衣间', objectZh: '洗衣机 / 烘干机', noteZh: `${formatFtIn(r.laundry.w)}×${formatFtIn(r.laundry.h)}` },
-    { zoneZh: '玄关', objectZh: '入户门 + 储物柜', noteZh: `${formatFtIn(r.entry.w)}×${formatFtIn(r.entry.h)} Entry` },
-  ]
 }
 
 /**

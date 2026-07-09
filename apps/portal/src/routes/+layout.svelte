@@ -28,7 +28,7 @@
   const cpActions = $derived([
     ...PORTAL_APPS.map((app) => ({
       id: app.id,
-      title: `打开 ${getLauncherMeta(app.id).name}`,
+      title: `打开 ${getLauncherMeta(app.id).name}${app.experimental ? '（实验）' : ''}`,
       icon:
         app.id === 'finance'
           ? 'wallet'
@@ -36,7 +36,9 @@
             ? 'check-square'
             : app.id === 'fitness'
               ? 'activity'
-              : 'music',
+              : app.id === 'home'
+                ? 'home'
+                : 'music',
       onSelect: () => {
         window.location.href = app.url
       },

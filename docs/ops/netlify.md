@@ -1,6 +1,6 @@
 # Netlify 部署说明
 
-**最后与代码同步：** 2026-07-08
+**最后与代码同步：** 2026-07-09
 
 ## 当前模式（推荐）：`Ken-pan/life-os` Monorepo + Deploy Key
 
@@ -83,15 +83,15 @@ npm run build:portal
 CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/build --functions=.netlify/functions-internal --site=a5df5c3e-0e42-4f82-aca8-8d6802da357f
 ```
 
-## Home（H-P0，🟡 实验 · CLI 已部署）
+## Home（H-P0，🟡 实验 · 生产已部署）
 
 | 项           | 状态                                                                                     |
 | ------------ | ---------------------------------------------------------------------------------------- |
 | 代码         | `apps/home`（SvelteKit + adapter-static）                                                |
 | Netlify site | `homeos-ken`（`69d4c072-d153-499c-90a8-57909df461a4`）                                   |
 | 生产 URL     | https://home.kenos.space                                                                 |
-| Portal       | ❌ 未进 Launcher；见 hub §Home 速览 · [`INTEGRATION.md`](../roadmap/INTEGRATION.md#h-p0) |
-| Integration  | ❌ 无 SSO / redirect；spatial 数据 localStorage only                                     |
+| Portal       | ✅ Launcher 实验区（H-P1 · 2026-07-09）                                                  |
+| Integration  | ✅ SSO + redirect（H-P2/H-P3）；spatial 数据仍 localStorage only                         |
 
 ```bash
 npm run build:home

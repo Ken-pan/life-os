@@ -17,22 +17,20 @@
       tabindex="-1"
     >
       <header class="help-head">
-        <h2 id="plan-help-title" class="help-title">平面工坊快捷键</h2>
+        <h2 id="plan-help-title" class="help-title">平面图快捷键</h2>
         <button type="button" class="help-close" onclick={() => onClose?.()} aria-label="关闭">×</button>
       </header>
       <dl class="help-list">
         <div class="help-row"><dt><kbd>?</kbd></dt><dd>打开/关闭本帮助</dd></div>
-        <div class="help-row"><dt><kbd>M</kbd></dt><dd>测距工具（再按切回浏览）</dd></div>
-        <div class="help-row"><dt><kbd>E</kbd></dt><dd>编辑户型（再按切回浏览）</dd></div>
-        <div class="help-row"><dt><kbd>F</kbd></dt><dd>适配视图（重置缩放平移）</dd></div>
-        <div class="help-row"><dt><kbd>Esc</kbd></dt><dd>取消选中 → 退出当前模式</dd></div>
-        <div class="help-row"><dt><kbd>⌘Z</kbd></dt><dd>撤销尺寸修改</dd></div>
+        <div class="help-row"><dt><kbd>E</kbd></dt><dd>浏览 ↔ 编辑</dd></div>
+        <div class="help-row"><dt><kbd>F</kbd></dt><dd>切换全图 / 铺满宽度</dd></div>
+        <div class="help-row"><dt><kbd>Esc</kbd></dt><dd>取消选中 → 退出编辑</dd></div>
+        <div class="help-row"><dt><kbd>⌘Z</kbd></dt><dd>撤销修改</dd></div>
         <div class="help-row"><dt><kbd>⌘⇧Z</kbd></dt><dd>重做</dd></div>
-        <div class="help-row"><dt><kbd>W</kbd></dt><dd>建墙工具（墙图模式）</dd></div>
-        <div class="help-row"><dt><kbd>Delete</kbd></dt><dd>删选中墙段 / 隐藏门窗</dd></div>
+        <div class="help-row"><dt><kbd>Delete</kbd></dt><dd>隐藏选中门窗</dd></div>
       </dl>
       <p class="help-note">
-        508 参数化户型可用「自由墙图」增删墙段；隐藏门窗不拆墙开口。布局 JSON v1/v2 可在设置页导入/导出。
+        浏览模式点击储藏区进入物品清单；编辑模式可拖曳墙与门窗。布局备份见设置页。
       </p>
     </div>
   </div>

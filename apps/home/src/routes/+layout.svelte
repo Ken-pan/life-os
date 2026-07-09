@@ -17,17 +17,14 @@
     getActiveProject,
     getPlanSubtitle,
   } from '$lib/state.svelte.js'
+
   import { bindViewportHeight } from '@life-os/theme'
-  import {
-    syncSpatialStudioFromUrl,
-    isSpatialStudioEnabled,
-  } from '$lib/spatial-studio.js'
+  import { bindPwaForegroundResume } from '@life-os/theme'
+  import { initAuth, auth } from '$lib/auth.svelte.js'
+  import { registerServiceWorker } from '$lib/serviceWorker.js'
+  import { bindLifeOsPresence, touchLifeOsPresence } from '$lib/lifeOsPresence.js'
 
   let { children } = $props()
-
-  $effect(() => {
-    syncSpatialStudioFromUrl(page.url.searchParams)
-  })
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
@@ -61,16 +58,30 @@
 
   onMount(() => {
     applyTheme()
+    const cleanupAuth = initAuth()
     const cleanupViewport = bindViewportHeight()
     const cleanupTheme = bindAppThemeSystemChange()
+    const cleanupSw = registerServiceWorker()
+    const cleanupPresence = bindLifeOsPresence()
+    const cleanupForeground = bindPwaForegroundResume()
     return () => {
+      cleanupAuth()
       cleanupViewport()
       cleanupTheme()
+      cleanupSw()
+      cleanupPresence()
+      cleanupForeground()
     }
+  })
+
+  $effect(() => {
+    if (auth.ready && auth.user) touchLifeOsPresence()
   })
 </script>
 
 <DocumentHead appId="home" pageTitle={pageMeta.title} />
+
+<a class="skip-link" href="#main-content">跳到主内容</a>
 
 <div class="app-shell">
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>

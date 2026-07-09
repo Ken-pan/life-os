@@ -4,7 +4,7 @@
 > **Canonical 迁移目录：** `apps/finance/supabase/`（`schema.sql` + `migrations/`）
 > **路线图：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)
 
-**最后与代码同步：** 2026-07-08
+**最后与代码同步：** 2026-07-09
 
 ## 执行 SQL（本网络推荐路径）
 
@@ -27,17 +27,19 @@
 
 ## 平台级迁移（Integration / 共享 public 表）
 
-| Version          | 文件                                                     | 阶段   | 远程状态（2026-07-08）                                 |
+| Version          | 文件                                                     | 阶段   | 远程状态（2026-07-09）                                 |
 | ---------------- | -------------------------------------------------------- | ------ | ------------------------------------------------------ |
 | `20260707230000` | `migrations/20260707230000_life_os_shared_identity.sql`  | I-P0   | ✅ 已 apply                                            |
 | `20260708000000` | `migrations/20260708000000_life_events_and_outbox.sql`   | I-P1.5 | ✅ 已 apply（触发器挂 `finance_expected_occurrences`） |
 | `20260708120000` | `migrations/20260708120000_portal_app_id_constraint.sql` | I-P1   | ✅ 已 apply（`app_id` 含 `portal` + 回填）             |
+| `20260708180000` | `migrations/20260708180000_home_app_id_constraint.sql`   | H-P3   | ✅ 已 apply（`app_id` 含 `home` + 回填 + `life_os_modules`） |
+| `20260708190000` | `migrations/20260708190000_portal_today_summary_rpc.sql` | G-P4   | ✅ 已 apply（`portal_today_summary()` RPC）            |
 
 ### I-P0：`core_profiles` + `core_user_app_settings`
 
 - 表：`public.core_profiles`、`public.core_user_app_settings`
 - Auth 触发器：`auth.users` → `core_on_auth_user_created`
-- 客户端：`@life-os/sync` 的 `createCoreIdentityHandler`（四站 + Portal WIP）
+- 客户端：`@life-os/sync` 的 `createCoreIdentityHandler`（四站 + Portal + Home）
 - 验收：`./scripts/verify-life-os-identity-p0.sh`
 
 ### I-P1.5：`life_events` + Outbox 触发器
@@ -49,6 +51,12 @@
 - **Planner 消费端：** `src/lib/services/lifeEventsInbox.js` — poll pending → 幂等任务 → mark processed
 
 `schema.sql` 已含 I-P0 `core_*` + I-P1.5 `life_events` DDL（2026-07-08 merge）；远程需单独 apply migration。
+
+### G-P4：`portal_today_summary()` RPC
+
+- 函数：`public.portal_today_summary()` — 返回 Planner 今日/逾期、Finance 月收支结余、Fitness 最近完练（`security invoker`）
+- Migration：`20260708190000_portal_today_summary_rpc.sql`
+- 消费端：`apps/portal` `PortalTodaySummary.svelte`
 
 ## App 级 schema（同项目，分 schema / 前缀）
 
@@ -69,6 +77,8 @@ Finance 仓内的 `apps/finance/supabase/migrations/` 是 **Life OS 全项目** 
 - `https://{finance,planner,fitness,music}os-ken.netlify.app/**`
 
 **Portal（I-P1）：** `https://portal.kenos.space/**` + `https://portal-ken.netlify.app/**`（2026-07-08 远程已对齐）
+
+**Home（H-P3）：** `https://home.kenos.space/**` + `https://homeos-ken.netlify.app/**`（2026-07-09 远程已对齐）
 
 ## 相关脚本
 

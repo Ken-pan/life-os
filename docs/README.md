@@ -2,23 +2,18 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后重组：** 2026-07-08 · 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后重组：** 2026-07-09 · 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
 **模型：** Core 闭环 → 防回归 → Growth（Portal `core_*` + 单 App 管道）→ 窄 Design — 详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §推荐执行顺序
 
-| 焦点   | 主题                                                  | 状态     |
-| ------ | ----------------------------------------------------- | -------- |
-| 🔥 Now | I-P0 SSO 生产 E2E                                     | 人工验收 |
-| ◆ Now  | M-P1 Music `play_events` 生产验证                     | 代码 ✅  |
-| ◆ Now  | F-P1 Finance 扩展同步反馈生产验收                     | 代码 ✅  |
-| ◆ Now  | AppBrandSwitcher 六站侧栏跨 app 切换                  | 代码 ✅  |
-| ○ Next | G-P2 角标生产验收 · H-P1–H-P3 Home · G-P4 摘要 · D-P6 | 已排期   |
-| ○ 按需 | I-P1.5b · QA-P2 Planner desktop E2E                   |          |
-| ✗ 暂缓 | Finance React 抽象 · I-P2 · Home 云同步（H-P4）       |          |
+| 焦点   | 主题                                              | 状态 |
+| ------ | ------------------------------------------------- | ---- |
+| ○ 按需 | D-P6 a11y · I-P1.5b · QA-P2 Planner desktop E2E | —    |
+| ✗ 暂缓 | Finance React 抽象 · I-P2 · Home 云同步（H-P4）   | —    |
 
-**2026-07-08 已落地：** I-P1 Portal redirect/DB · P2 `schema.sql` · CI-补 · QA-F0 · G-P1–G-P3 · G-P5 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-09 已验收：** I-P0 · G-P4 · H-P1/H-P2/H-P3 · F-P1 · G-P2 · M-P1 · AppBrandSwitcher — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
 ## 六 app + 插件（一览）
 

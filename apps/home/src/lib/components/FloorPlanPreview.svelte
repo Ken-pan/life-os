@@ -1,17 +1,15 @@
 <script>
   import { renderFloorPlanSvg } from '$lib/spatial/render-svg.js'
-  import { isSpatialStudioEnabled } from '$lib/spatial-studio.js'
 
   /** @type {{ project: import('$lib/spatial/types.js').SpatialProject }} */
   let { project } = $props()
 
-  const studio = $derived(isSpatialStudioEnabled())
   const svgHtml = $derived(
-    renderFloorPlanSvg(project, { compact: true, hideFurniture: !studio }),
+    renderFloorPlanSvg(project, { compact: true, hideFurniture: true }),
   )
 </script>
 
-<a class="plan-preview" href="/plan" data-sveltekit-noscroll>
+<a class="plan-preview plan-preview-wrap" href="/plan" data-sveltekit-noscroll>
   <div class="plan-preview-frame" aria-hidden="true">
     {@html svgHtml}
   </div>

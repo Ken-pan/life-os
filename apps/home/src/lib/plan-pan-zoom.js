@@ -12,6 +12,7 @@
  *   setPan: (p: { x: number, y: number }) => void,
  *   onGestureEnd?: () => void,
  *   onLongPress?: (e: PointerEvent) => void,
+ *   onZoomAt?: (clientX: number, clientY: number, nextScale: number) => void,
  *   longPressMs?: number,
  * }} params
  */
@@ -86,8 +87,19 @@ export function planPanZoom(node, params) {
     if (pointers.size >= 2 && lastPinch > 0) {
       const d = dist()
       if (d > 0) {
-        const next = Math.min(2.5, Math.max(0.55, params.getScale() * (d / lastPinch)))
-        params.setScale(Math.round(next * 100) / 100)
+        const pts = [...pointers.values()]
+        const focalX = (pts[0].x + pts[1].x) / 2
+        const focalY = (pts[0].y + pts[1].y) / 2
+        const next = Math.min(
+          2.5,
+          Math.max(0.1, params.getScale() * (d / lastPinch)),
+        )
+        const rounded = Math.round(next * 100) / 100
+        if (params.onZoomAt) {
+          params.onZoomAt(focalX, focalY, rounded)
+        } else {
+          params.setScale(rounded)
+        }
         lastPinch = d
       }
       e.preventDefault()
@@ -129,8 +141,13 @@ export function planPanZoom(node, params) {
     if (!(e.ctrlKey || e.metaKey)) return
     e.preventDefault()
     const delta = e.deltaY > 0 ? -0.08 : 0.08
-    const next = Math.min(2.5, Math.max(0.55, params.getScale() + delta))
-    params.setScale(Math.round(next * 100) / 100)
+    const next = Math.min(2.5, Math.max(0.1, params.getScale() + delta))
+    const rounded = Math.round(next * 100) / 100
+    if (params.onZoomAt) {
+      params.onZoomAt(e.clientX, e.clientY, rounded)
+    } else {
+      params.setScale(rounded)
+    }
   }
 
   node.addEventListener('pointerdown', down)

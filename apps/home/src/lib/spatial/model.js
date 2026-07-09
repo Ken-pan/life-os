@@ -1,23 +1,32 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
 import { build508Project, default508Config, merge508Config } from './layout-508.js'
-import { buildFromWallGraph } from './wall-graph.js'
 
 /**
- * Rebuild derived geometry from layoutConfig or wallGraph source of truth.
+ * Rebuild derived geometry from layoutConfig.
  * @param {SpatialProject} project
  * @returns {SpatialProject}
  */
 export function hydrateProject(project) {
-  if (project.layoutMode === 'wallGraph' && project.wallGraph) {
-    return buildFromWallGraph(project.wallGraph, project)
-  }
   if (!project.layoutConfig) {
-    return build508Project(default508Config(), project)
+    const built = build508Project(default508Config(), project)
+    return {
+      ...built,
+      layoutMode: 'parametric508',
+      wallGraph: undefined,
+      furniture: [],
+      furnitureInventory: [],
+    }
   }
   const config = merge508Config(default508Config(), project.layoutConfig)
   const built = build508Project(config, project)
-  return { ...built, layoutMode: project.layoutMode ?? 'parametric508' }
+  return {
+    ...built,
+    layoutMode: 'parametric508',
+    wallGraph: undefined,
+    furniture: [],
+    furnitureInventory: [],
+  }
 }
 
 /**

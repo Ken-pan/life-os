@@ -1,7 +1,7 @@
 ---
 title: Life OS Roadmap
 owner: kenpan
-last_verified: 2026-07-08
+last_verified: 2026-07-09
 review_cadence: monthly
 doc_role: status-hub
 priority_model: 2026-07-08-home-growth
@@ -27,25 +27,16 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 ### Now — 当前在飞（按推荐顺序）
 
-| 序  | ID       | 主题                  | 桶       | ROI | 下一步                                           | 验收                                               |
-| --- | -------- | --------------------- | -------- | --- | ------------------------------------------------ | -------------------------------------------------- |
-| 1   | **I-P0** | SSO 跨域体验          | Core     | 🔥  | 人工生产 E2E：Finance 登录 → Planner/Portal 免登 | 无痕 `.kenos.space` 跨站（自动化预检 ✅）          |
-| 2   | **M-P1** | Music `play_events`   | Growth   | ◆   | 生产登录播歌验证 + reasons UI                    | 见 [`roadmap/GROWTH.md`](./roadmap/GROWTH.md#m-p1) |
-| 3   | **F-P1** | Finance 扩展同步反馈  | Growth   | ◆   | 生产扩展 → 主站 toast 验收                       | popup last sync + 主站 toast                       |
-| 4   | **C-P2** | 侧栏 AppBrandSwitcher | Platform | ◆   | 六站侧栏跨 app 切换（代码已接，待生产验收）      | 各站 brand 菜单可跳转六 app；Home 标「实验」       |
+| 序  | ID       | 主题                 | 桶     | ROI | 下一步                         | 验收                          |
+| --- | -------- | -------------------- | ------ | --- | ------------------------------ | ----------------------------- |
 
-**2026-07-08 已落地（见 §Shipped）：** I-P1 Portal redirect/DB · P2 `schema.sql` `core_*` · CI-补 · QA-F0 · G-P1–G-P3 · G-P5 · M-P1/F-P1 代码 · AppBrandSwitcher 六站接入。
+**2026-07-09 已验收（见 §Shipped）：** G-P4 今日摘要 ✅ · H-P1/H-P2/H-P3 ✅ · F-P1 · G-P2 · I-P0 · M-P1 · AppBrandSwitcher ✅。
 
 ### Next — 已排期
 
 | ID           | 主题                                      | 桶       | ROI | 触发 / 范围                              |
 | ------------ | ----------------------------------------- | -------- | --- | ---------------------------------------- |
-| **G-P2**     | Portal 待办 / `life_events` 角标          | Growth   | ○   | 代码 ✅；Finance `bill_due` 生产角标验收 |
-| **H-P1**     | Portal Launcher 加 Home 实验入口          | Growth   | ○   | `home.kenos.space` 已部署；非四站同级    |
-| **H-P2**     | Home 接 `coreIdentity` + SSO              | Core     | ○   | I-P0 通过后；与四站同模式                |
-| **H-P3**     | Supabase redirect + DB `app_id` 含 `home` | Core     | ○   | 与 H-P2 同批                             |
 | **D-P6**     | a11y gates                                | Infra    | ○   | **窄范围**：`platform-web` + catalog     |
-| **G-P4**     | Portal「今日摘要」只读卡片                | Growth   | ○   | G-P1–G-P3 后；可含 Home 储藏区摘要       |
 | **I-P1.5b**  | Fitness 完练 → Planner 打卡               | Growth   | ○   | **须有每天用两站的场景**                 |
 | **QA-P2**    | Planner desktop E2E                       | Infra    | ○   | FAB/侧栏对齐 desktop project             |
 | **C-P2 P2+** | Finance React 共享 UI                     | Platform | ✗   | 第 3 React 消费者前不做                  |
@@ -53,23 +44,19 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 Growth / Home 细节 → [`roadmap/GROWTH.md`](./roadmap/GROWTH.md) · [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)
 
-### 推荐执行顺序（2026-07-08 后 · 单人）
+### 推荐执行顺序（2026-07-09 后 · 单人）
 
 ```text
-当前焦点 — 生产验收
-  ① I-P0 SSO 生产 E2E（人工 · 无痕 .kenos.space）
-  ② M-P1 Music play_events 生产播歌 + reasons
-  ③ F-P1 Finance 扩展 → 主站 toast 生产验收
-  ④ AppBrandSwitcher 六站侧栏切换生产走查
-
-按需（不阻塞）
-  G-P2  Finance bill_due → Portal 角标生产验收
-  H-P1  Portal Launcher 加 Home 实验卡
-  H-P2 + H-P3  Home SSO + redirect（每天用 Home 时可与 I-P0 同批）
-  G-P4  今日摘要卡片
+当前焦点 — 按需
+  D-P6  窄范围 a11y
   I-P1.5b  Fitness → Planner（有场景再开）
-  D-P6  窄范围 a11y（platform-web + catalog）
   QA-P2  Planner desktop E2E
+
+已完成（2026-07-09）
+  G-P4 Portal 今日摘要 ✅（Planner / Finance / Fitness 三卡）
+  H-P1 Portal Home 实验卡 ✅（portal.kenos.space 生产）
+  H-P2 + H-P3 Home SSO ✅（home.kenos.space 跨域 Cookie + core_*）
+  F-P1 / G-P2 / I-P0 / M-P1 / AppBrandSwitcher ✅
 ```
 
 **已完成（2026-07-08 四轮计划）：** I-P1 redirect/DB · P2 `schema.sql` · CI-补 · QA-F0 · G-P1–G-P3 · G-P5 · M-P1/F-P1 代码 · AppBrandSwitcher — 详情 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
@@ -81,10 +68,12 @@ Growth / Home 细节 → [`roadmap/GROWTH.md`](./roadmap/GROWTH.md) · [`roadmap
 | Integration | `core_profiles` 远程 ✅；`life_events` outbox + Planner inbox ✅               | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md)      |
 | Platform    | C-P0–C-P1 ✅；C-P2 Wave 1–3 P1+ ✅                                             | [`roadmap/PLATFORM.md`](./roadmap/PLATFORM.md)            |
 | Design      | D-P0–D-P5 ✅（tokens + catalog 172 smoke / 80 snapshots）                      | [`roadmap/DESIGN.md`](./roadmap/DESIGN.md)                |
+| Integration | I-P0 生产 SSO E2E ✅；H-P2/H-P3 Home SSO + redirect ✅                         | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)              |
+| Growth      | G-P4 Portal 今日摘要 ✅；G-P2/F-P1/M-P1 生产验收 ✅                              | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                 |
 | Integration | I-P1 Portal DB + redirect · P2 `schema.sql` · G-P1–G-P3 · G-P5 · CI-补 · QA-F0 | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)              |
-| Portal      | `portal.kenos.space` 读 `core_*`（继续/默认跳转/角标/PWA 引导）                | `apps/portal`                                             |
+| Portal      | `portal.kenos.space` 读 `core_*`（继续/默认跳转/角标/今日摘要/PWA 引导）       | `apps/portal`                                             |
 | Platform    | AppBrandSwitcher 六站侧栏跨 app 切换（Svelte + Finance React 薄壳）            | `packages/platform-web` · `packages/theme/launcher.js`    |
-| Home        | `home.kenos.space` CLI 部署；spatial WIP 🟡                                    | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0) |
+| Home        | `home.kenos.space` 生产；SSO + PWA + 平面 UX ✅（H-P5）；H-P4 云同步搁置        | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0) |
 | CI          | build + design-catalog（smoke/a11y/snapshots）+ integration-smoke 进 GHA       | `.github/workflows/ci.yml`                                |
 
 完整发货记录与 commit 锚点 → [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
@@ -94,9 +83,9 @@ Growth / Home 细节 → [`roadmap/GROWTH.md`](./roadmap/GROWTH.md) · [`roadmap
 | ID                   | 说明                                                                                           |
 | -------------------- | ---------------------------------------------------------------------------------------------- |
 | **I-P2** 跨应用智能  | 依赖更多 `life_events` 消费端                                                                  |
-| **H-P0** `apps/home` | 第六 app · 户型/储藏 spatial + 工坊；`home.kenos.space` CLI 已部署；**未进 Portal / 未接 SSO** |
+| **H-P0** `apps/home` | 第六 app · 户型/储藏 spatial；`/plan` 浏览+编辑；`home.kenos.space` 已部署；Portal 实验卡 ✅ |
 | **H-P4** Home 云同步 | spatial 项目 Supabase 持久化（现 `localStorage` only）                                         |
-| **H-P5** Home 工坊   | `?studio=1` 家具拖拽默认可用（现 feature flag）                                                |
+| **H-P5** Home 平面 UX | 浏览/编辑双模式；`plan-viewport` + `test:viewport` 验收 ✅（2026-07-08）                      |
 
 ---
 
@@ -110,7 +99,7 @@ Growth / Home 细节 → [`roadmap/GROWTH.md`](./roadmap/GROWTH.md) · [`roadmap
 | 设计流程 | Storybook-first / **Figma / Figma-first**                                     | 无 Figma；已定 token-first + design-catalog             |
 | 架构     | 合并各 app 业务表；app 互引                                                   | 边界硬规则                                              |
 | 抽象     | `sync.js` 引擎、`nav.js` 内容、业务 Row 组件                                  | 见 [`roadmap/BACKLOG.md`](./roadmap/BACKLOG.md) §不提取 |
-| 产品     | Home 升四站同级（云同步、默认 Launcher、life_events）                         | Home 实验性；H-P4/H-P5 搁置；Integration 先 H-P2/3      |
+| 产品     | Home 升四站同级（云同步、默认 Launcher、life_events）                         | Home 实验性；H-P4 搁置；H-P5 平面 UX ✅；H-P2/3 SSO ✅       |
 | 产品     | I-P2 智能推荐；无场景的 `life_events` 扩展                                    | I-P2 无消费者                                           |
 | 产品     | 全模块 AI Life OS；第三方 SaaS 聚合（Todoist/Notion/Chase）；自动打电话 Agent | 对标 FluxOS/PAI/Iddu；单人不可维护                      |
 | 页面     | production app 页面 token 迁移；六 app 全量 a11y audit                        | D 线只做共享 primitive + catalog                        |
@@ -144,11 +133,11 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 
 | 主线                 | 当前状态                               | 深度文档                                                   |
 | -------------------- | -------------------------------------- | ---------------------------------------------------------- |
-| **I-P0** 统一身份    | 🟡 已落地，SSO 待 E2E                  | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p0)  |
+| **I-P0** 统一身份    | ✅ 生产 E2E（2026-07-09）             | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p0)  |
 | **I-P1** Portal      | ✅ 已上线；Growth G-P1–G-P5 已接       | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p1)  |
 | **I-P1.5** 事件中心  | ✅ 管道通；I-P1.5b 按需                | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p15) |
-| **G-P1–G-P5** Growth | ✅ 代码落地；G-P2/M-P1/F-P1 待生产验收 | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                 |
-| **H-P0** Home 实验   | 🟡 已部署；Integration 未接            | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)  |
+| **G-P1–G-P5** Growth | ✅ 生产验收完成（含 F-P1/G-P2）        | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                 |
+| **H-P0** Home 实验   | 🟡 已部署；SSO + PWA ✅；H-P5 平面 UX ✅；H-P4 搁置 | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)  |
 | **C-P1+** 平台扩容   | 🟡 Finance 部分接入；低优先            | [`roadmap/PLATFORM.md`](./roadmap/PLATFORM.md)             |
 | **D-P6** 设计系统    | ⏳ 窄范围 a11y（Next）                 | [`roadmap/DESIGN.md`](./roadmap/DESIGN.md)                 |
 
@@ -156,12 +145,12 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 
 | App     | 层级   | URL                                                | Workspace    | SSO         | Portal      | 下一步 / 备注                        |
 | ------- | ------ | -------------------------------------------------- | ------------ | ----------- | ----------- | ------------------------------------ |
-| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | 🟡 I-P0 E2E | ✅ Launcher | 任务/日历/AI；`life_events` 消费端   |
-| Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | 🟡          | ✅          | Focus 训练；QA-F0 端口债             |
-| Finance | 生产   | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | 🟡          | ✅          | 月度推演；**Chrome 扩展**同步        |
-| Music   | 生产   | [music.kenos.space](https://music.kenos.space)     | `music-os`   | 🟡          | ✅          | M-P1 `play_events` 生产验收          |
-| Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space)   | `portal`     | 🟡 I-P0 E2E | —           | G-P1–G-P5 ✅；读 `core_*` + PWA 引导 |
-| Home    | 实验   | [home.kenos.space](https://home.kenos.space)       | `home-os`    | ❌          | ❌          | spatial + 工坊；H-P1–H-P3 按需       |
+| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅          | ✅ Launcher | 任务/日历/AI；`life_events` 消费端   |
+| Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅          | ✅          | Focus 训练；QA-F0 端口债             |
+| Finance | 生产   | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅          | ✅          | 月度推演；**Chrome 扩展**同步        |
+| Music   | 生产   | [music.kenos.space](https://music.kenos.space)     | `music-os`   | ✅          | ✅          | M-P1 `play_events` ✅（167 行）      |
+| Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space)   | `portal`     | ✅          | —           | G-P1–G-P5 ✅；读 `core_*` + PWA 引导 |
+| Home    | 实验   | [home.kenos.space](https://home.kenos.space)       | `home-os`    | ✅          | ✅ 实验卡   | spatial 浏览/编辑；H-P4 云同步搁置   |
 
 **插件（生产向，非第六 app）：** Finance OS Sync — `apps/finance/extension`（DOM 抓取 → 主站同步）
 
@@ -173,6 +162,7 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 ./scripts/verify-life-os-identity-p0.sh    # I-P0
 ./scripts/test-outbox-trigger.sh --smoke   # I-P1.5
 npm run check:lifeos-boundaries            # C-P0
+npm run test:viewport -w home-os           # H-P5 平面定位（需 dev/preview）
 npm run validate:tokens                    # D 线 token 完整性
 npm run test:design-catalog                # 172 smoke
 npm run test:design-catalog:snapshots    # 80 pixel baselines
