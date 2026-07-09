@@ -7,15 +7,14 @@
 ## 结论（TL;DR）
 
 ```text
-① Finance F-P3     信任锚点 — 每日 KPI + Portal 摘要可信度（audit Critical 仍无专项测试）
-② G-P4b-M + M-P2   下一档 ROI — G-P4 模式可复制 ~1d；Music 仅 SW E2E、无 UI 回归
-③ CI 接线          复利缺口 — F-P0 ✅ 22/22 · QA-P2 ✅ 21/22，但 .github/workflows/ci.yml 仍零生产 app E2E
-④ FT-P1 / I-P1.5b  条件天花板 — markSessionEnded 钩子现成；须每天用两站
+① ~~G-P4b-H~~        ✅ 2026-07-09
 ```
 
-**已完成（代码/本地验收，2026-07-09）：** **F-P0**（`ia-qa-auth.mjs` + route smoke 22/22）· **QA-P2**（Planner desktop 21/22）
+**已完成（2026-07-09 Phase 6）：** H-P6a · G-P4b-H — 见 [`SHIPPED.md`](./SHIPPED.md)
 
-**不建议现在投入：** Home H-P4 全量云同步 · G-P4b-H（需 H-P6a）· M-P4 单独做（reasons 已部分展示 → 优先 **M-P5**）
+**已完成（早前 2026-07-09）：** F-P0 route smoke 22/22 · M-P2 qa-ui-flow 15/15 · QA-P2 → P-P2 22/22
+
+**不建议现在投入：** Home H-P4 全量云同步 · G-P4b-H（需 H-P6a）· M-P4 单独做（优先 **M-P5**）
 
 ---
 

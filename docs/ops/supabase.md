@@ -33,7 +33,8 @@
 | `20260708000000` | `migrations/20260708000000_life_events_and_outbox.sql`   | I-P1.5 | ✅ 已 apply（触发器挂 `finance_expected_occurrences`） |
 | `20260708120000` | `migrations/20260708120000_portal_app_id_constraint.sql` | I-P1   | ✅ 已 apply（`app_id` 含 `portal` + 回填）             |
 | `20260708180000` | `migrations/20260708180000_home_app_id_constraint.sql`   | H-P3   | ✅ 已 apply（`app_id` 含 `home` + 回填 + `life_os_modules`） |
-| `20260708190000` | `migrations/20260708190000_portal_today_summary_rpc.sql` | G-P4   | ✅ 已 apply（`portal_today_summary()` RPC）            |
+| `20260708191000` | `migrations/20260708191000_portal_today_summary_music.sql` | G-P4b-M | ✅ 已 apply（Music 第四卡） |
+| `20260709021500` | `migrations/20260709021500_portal_today_summary_home.sql` | G-P4b-H | ✅ 已 apply（Home 第五卡 · `core_user_app_settings`） |
 
 ### I-P0：`core_profiles` + `core_user_app_settings`
 
@@ -54,9 +55,11 @@
 
 ### G-P4：`portal_today_summary()` RPC
 
-- 函数：`public.portal_today_summary()` — 返回 Planner 今日/逾期、Finance 月收支结余、Fitness 最近完练（`security invoker`）
-- Migration：`20260708190000_portal_today_summary_rpc.sql`
-- 消费端：`apps/portal` `PortalTodaySummary.svelte`
+- 函数：`public.portal_today_summary()` — Planner / Finance / Fitness / Music / **Home**（`security invoker`）
+- Home 字段：读 `core_user_app_settings`（`app_id = 'home'`）→ `settings.portal_summary.storage_zone_count`
+- 上报端：**H-P6a** `@life-os/sync` `syncHomePortalSummary`（Home 打开 / 项目变更时）
+- Migrations：`20260708190000`（初版）→ `20260708191000`（Music）→ `20260709021500`（Home）
+- 消费端：`apps/portal` `PortalTodaySummary.svelte`（五卡）
 
 ## App 级 schema（同项目，分 schema / 前缀）
 

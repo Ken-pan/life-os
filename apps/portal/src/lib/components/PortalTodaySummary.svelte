@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import BrandMark from '@life-os/platform-web/svelte/brand/mark'
   import { PORTAL_APPS } from '$lib/apps.js'
   import {
@@ -6,17 +6,29 @@
     formatShortDate,
     formatUsd,
     fitnessDayLabel,
+    formatPlayedAgo,
+    musicTrackLabel,
+    formatHomeStorageZones,
+    formatReportedAgo,
   } from '$lib/todaySummary.js'
 
-  /** @type {{ userId: string }} */
-  let { userId } = $props()
+  type SummaryAppId = 'planner' | 'finance' | 'fitness' | 'music' | 'home'
 
-  /** @type {import('$lib/todaySummary.js').PortalTodaySummaryPayload | null} */
-  let summary = $state(null)
-  /** @type {boolean} */
+  type PortalTodaySummaryPayload = {
+    ok: boolean
+    asOf?: string
+    planner?: { todayOpen: number; overdue: number }
+    finance?: { monthSurplus: number; monthIncome: number; monthExpense: number }
+    fitness?: { sessionDate: string; dayId: string } | null
+    music?: { trackTitle: string; trackArtist: string; playedAt: string } | null
+    home?: { storageZoneCount: number; reportedAt: string } | null
+  }
+
+  let { userId }: { userId: string } = $props()
+
+  let summary = $state<PortalTodaySummaryPayload | null>(null)
   let loading = $state(true)
-  /** @type {string | null} */
-  let error = $state(null)
+  let error = $state<string | null>(null)
 
   const appById = $derived(Object.fromEntries(PORTAL_APPS.map((app) => [app.id, app])))
 
@@ -50,9 +62,12 @@
     }
   })
 
-  /** @param {import('$lib/todaySummary.js').SummaryAppId} id */
-  function appMeta(id) {
+  function appMeta(id: SummaryAppId) {
     return appById[id]
+  }
+
+  function summaryHref(id: SummaryAppId, url: string) {
+    return id === 'home' ? `${url.replace(/\/$/, '')}/storage` : url
   }
 </script>
 
@@ -62,7 +77,7 @@
 
     {#if loading}
       <div class="portal-summary-grid" aria-busy="true" aria-live="polite">
-        {#each ['planner', 'finance', 'fitness'] as id (id)}
+        {#each ['planner', 'finance', 'fitness', 'music', 'home'] as id (id)}
           <div class="portal-summary-card portal-summary-card--loading">
             <span class="portal-summary-skeleton" aria-hidden="true"></span>
           </div>
@@ -98,27 +113,62 @@
             : '本周尚未记录完练',
           summary.fitness ? '已同步到云端' : '打开 Fitness 开始训练',
         )}
+
+        {@render summaryCard(
+          'music',
+          '最近播放',
+          summary.music
+            ? musicTrackLabel(summary.music.trackTitle, summary.music.trackArtist)
+            : '尚未记录播放',
+          summary.music
+            ? formatPlayedAgo(summary.music.playedAt)
+            : '打开 Music 开始听',
+        )}
+
+        {@render summaryCard(
+          'home',
+          '储藏审计',
+          summary.home
+            ? formatHomeStorageZones(summary.home.storageZoneCount)
+            : '尚未同步储藏数据',
+          summary.home
+            ? `已上报 · ${formatReportedAgo(summary.home.reportedAt) || '最近'}`
+            : '打开 Home 同步本地清单',
+          true,
+        )}
       </div>
     {/if}
   </section>
 {/if}
 
-{#snippet summaryCard(id, title, value, detail)}
+{#snippet summaryCard(
+  id: SummaryAppId,
+  title: string,
+  value: string,
+  detail: string,
+  experimental = false,
+)}
   {@const app = appMeta(id)}
   {#if app}
     <a
-      href={app.url}
+      href={summaryHref(id, app.url)}
       class="settings-block portal-summary-card"
+      class:portal-summary-card--experimental={experimental || app.experimental}
       style="--portal-app-accent: {app.accent}"
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`${title}：${value}（打开 ${id}，新标签页）`}
     >
       <span class="portal-summary-mark" aria-hidden="true">
-        <BrandMark size={32} lightSrc={app.iconLight} darkSrc={app.iconDark} />
+        <BrandMark size={40} lightSrc={app.iconLight} darkSrc={app.iconDark} />
       </span>
       <div class="portal-summary-copy">
-        <p class="portal-summary-kicker">{title}</p>
+        <p class="portal-summary-kicker">
+          {title}
+          {#if experimental || app.experimental}
+            <span class="portal-summary-exp-badge">实验</span>
+          {/if}
+        </p>
         <p class="portal-summary-value">{value}</p>
         <p class="portal-summary-detail">{detail}</p>
       </div>

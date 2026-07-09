@@ -118,28 +118,57 @@
   box-shadow: none;
 }
 
-.portal-appbar .appbar-trailing {
-  flex-wrap: wrap;
-  justify-content: flex-end;
+/* P-7：appbar 省略「OS」accent，避免与 inbox 角标邻接时被误读为叠影「0」 */
+.portal-appbar .appbar-brand-name .brand-name-accent {
+  display: none;
 }
 
-.portal-events-badge {
+.portal-appbar .appbar-inner {
+  gap: var(--space-2);
+}
+
+.portal-appbar .appbar-leading {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.portal-appbar .appbar-trailing {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.portal-inbox-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.5rem;
-  height: 1.5rem;
-  padding: 0 var(--space-2);
+  flex-shrink: 0;
+}
+
+.portal-events-badge {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
   border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--on-accent);
-  font-size: var(--text-xs);
+  font-size: 0.625rem;
   font-weight: 700;
-  text-decoration: none;
   line-height: 1;
+  border: 2px solid var(--card);
+  pointer-events: none;
 }
 
-.portal-events-badge:hover {
+.portal-inbox-btn:hover .portal-events-badge {
   filter: brightness(1.05);
 }
 
@@ -208,6 +237,9 @@
 }
 
 .portal-signout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
   flex-shrink: 0;
 }
 
@@ -299,15 +331,26 @@
   line-height: 1.4;
 }
 
+.portal-pending-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.portal-pending-link:hover {
+  color: color-mix(in srgb, var(--accent) 85%, var(--t1, var(--text)));
+}
+
 .portal-status-chip {
   border-color: color-mix(in srgb, var(--portal-app-accent, var(--accent)) 18%, var(--border));
   color: var(--t2, var(--text-secondary));
 }
 
 .portal-status-chip--ok {
-  background: color-mix(in srgb, var(--accent) 10%, var(--card));
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+  color: color-mix(in srgb, var(--accent) 78%, var(--t1, var(--text)));
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  font-weight: 600;
 }
 
 .portal-continue .portal-app-card--hero {
@@ -346,6 +389,10 @@
 
 .portal-app-card--hero {
   margin-bottom: 0;
+}
+
+.portal-app-card--experimental {
+  border-left-style: dashed;
 }
 
 .portal-app-trailing {
@@ -451,6 +498,16 @@
   gap: var(--card-stack-gap);
 }
 
+@media (min-width: 36rem) {
+  .portal-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portal-summary-card--experimental {
+    grid-column: 1 / -1;
+  }
+}
+
 .portal-summary-card {
   display: flex;
   align-items: flex-start;
@@ -519,6 +576,22 @@
 .portal-summary-copy {
   min-width: 0;
   flex: 1;
+}
+
+.portal-summary-card--experimental {
+  border-left-style: dashed;
+}
+
+.portal-summary-exp-badge {
+  display: inline-block;
+  margin-left: var(--space-1-5);
+  padding: var(--space-0-5) var(--space-1-5);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--portal-app-accent, var(--accent));
+  background: color-mix(in srgb, var(--portal-app-accent, var(--accent)) 12%, transparent);
+  vertical-align: middle;
 }
 
 .portal-summary-kicker {
@@ -691,16 +764,101 @@
   }
 }
 
+.portal-appbar-more-btn {
+  display: none;
+}
+
+.portal-appbar-overflow {
+  display: contents;
+}
+
+button.portal-more-action {
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.portal-more-user-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding:
+    var(--space-2-5) max(var(--page-gutter), var(--safe-right-effective)) var(--space-2-5) max(var(--page-gutter), var(--safe-left-effective));
+}
+
+.portal-more-user-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.portal-more-user-email {
+  min-width: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--t1, var(--text));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-more-action--danger .mobile-more-row-label {
+  color: var(--danger, #b42318);
+}
+
+.portal-more-action--danger .mobile-more-row-icon {
+  color: var(--danger, #b42318);
+  background: color-mix(in srgb, var(--danger, #b42318) 10%, var(--card));
+}
+
 @media (--life-os-compact) {
+
+  .portal-appbar-overflow {
+    display: none;
+  }
+
+  .portal-appbar-more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
 
   .portal-user-email,
   .portal-theme-label,
-  .portal-cmd-label {
+  .portal-cmd-label,
+  .portal-signout-label {
     display: none;
   }
 
   .portal-user-chip {
     max-width: none;
     padding-inline: var(--space-1-5);
+  }
+
+  .portal-appbar .btn-secondary,
+  .portal-appbar .portal-inbox-btn,
+  .portal-appbar .portal-user-chip {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: var(--space-2);
+  }
+
+  .portal-appbar .portal-cmd-btn {
+    padding-inline: var(--space-2-5);
+  }
+
+  .portal-appbar .portal-signout-btn {
+    justify-content: center;
   }
 }

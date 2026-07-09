@@ -21,8 +21,8 @@
 | ID               | 主题                         | ROI | 桶      | 投入 | 验收                  | Hub      |
 | ---------------- | ---------------------------- | --- | ------- | ---- | --------------------- | -------- |
 | **M-P2** {#m-p2} | UI E2E                       | ✅  | Infra   | 1–2d | `npm run qa:ui-flow`  | §Shipped 2026-07-09 |
-| **M-P5**         | 验收 v6 行为分效果           | ◆   | Product | 1d   | 续播/reasons 随历史变 | —        |
-| **M-P7**         | Portal **G-P4b-M** 最近 N 首 | ○   | Growth  | 0.5d | 与 Portal 同批        | hub      |
+| **M-P5**         | 验收 v6 行为分效果           | ✅  | Product | —    | `qa:rec-behavior` 6/6 · M5 seed | §Shipped |
+| **M-P7**         | Portal **G-P4b-M** 最近播放  | ✅  | Growth  | —    | 与 Portal 同批                  | §Shipped |
 | **M-P4**         | debug 全量预览（开发）       | ○   | Product | 0.5d | `musicos:debug-rec`   | —        |
 
 ### 实现锚点

@@ -12,15 +12,14 @@
    * @property {() => void} onSelect
    */
 
-  /** @type {{ open: boolean, actions?: CommandAction[], placeholder?: string, onOpenChange?: (open: boolean) => void }} */
+  /** @type {{ open: boolean, actions?: CommandAction[], placeholder?: string, query?: string, onOpenChange?: (open: boolean) => void }} */
   let {
     open = $bindable(false),
     actions = [],
     placeholder = 'Type a command or search...',
+    query = $bindable(''),
     onOpenChange,
   } = $props()
-
-  let query = $state('')
   let selectedIndex = $state(0)
   /** @type {HTMLInputElement | null} */
   let inputRef = $state(null)
@@ -207,8 +206,8 @@
 
   .command-palette-modal::backdrop {
     background: var(--overlay-backdrop);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     animation: cp-fade-in var(--dur-fast) var(--ease-standard);
   }
 
@@ -217,7 +216,9 @@
     max-width: 600px;
     background: var(--command-palette-container-bg);
     border-radius: var(--command-palette-container-radius);
-    box-shadow: var(--command-palette-container-shadow);
+    box-shadow:
+      var(--command-palette-container-shadow),
+      0 24px 48px color-mix(in srgb, var(--t1, var(--text)) 12%, transparent);
     border: 1px solid var(--command-palette-container-border);
     display: flex;
     flex-direction: column;

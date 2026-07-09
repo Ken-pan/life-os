@@ -50,7 +50,10 @@ export async function signInForMusicQa(env, options = {}) {
   }
 
   const email =
-    options.email ?? process.env.UI_QA_EMAIL ?? 'p1a-rls-test-b@example.test'
+    options.email ??
+    process.env.MUSIC_QA_EMAIL ??
+    process.env.UI_QA_EMAIL ??
+    'p1a-rls-test-b@example.test'
   const password =
     options.password ?? process.env.UI_QA_PASSWORD ?? 'P1aTestPass!2026'
 

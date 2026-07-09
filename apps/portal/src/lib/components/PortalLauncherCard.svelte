@@ -29,6 +29,7 @@
   href={app.url}
   class="settings-block portal-app-card"
   class:portal-app-card--hero={variant === 'hero'}
+  class:portal-app-card--experimental={app.experimental}
   style="--portal-app-accent: {app.accent}"
   target="_blank"
   rel="noopener noreferrer"

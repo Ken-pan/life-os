@@ -6,6 +6,58 @@
 
 ---
 
+## 2026-07-09（Portal UI 修复 · P-4/P-5/P-7/P-9/P-11）
+
+| 主线   | 摘要                                                                 | 证据                                      |
+| ------ | -------------------------------------------------------------------- | ----------------------------------------- |
+| Design | **P-4** BrandMark 40px · **P-11** 五卡 2×2+通栏 · **P-9** 状态 pill 对比度 | `PortalTodaySummary.svelte` · `app.css`   |
+| Design | **P-7** 铃铛 inbox 角标 · 隐藏 appbar OS accent · **P-5** compact 44px 触控 | `PortalAppBar.svelte`                     |
+| QA     | **P-8** mobile 视口截图 + `mobile-launcher.png`；`qa:smoke` 五卡 ✅ | `qa-screenshot.mjs` · 走查第四轮          |
+
+## 2026-07-09（Phase 6 · H-P6a + G-P4b-H）
+
+| 主线   | 摘要                                                                 | 证据                                      |
+| ------ | -------------------------------------------------------------------- | ----------------------------------------- |
+| Home   | **H-P6a** `syncHomePortalSummary` — 储藏区数 → `core_user_app_settings.settings.portal_summary` | `packages/sync/src/homePortalMetadata.js` · `apps/home/src/lib/homePortalMetadata.js` |
+| Growth | **G-P4b-H** `portal_today_summary` 扩 `home` + Portal 第五卡「储藏审计」深链 `/storage` | migration `20260709021500` · `PortalTodaySummary.svelte` |
+| QA     | `qa:smoke` 五卡 ✅ · RPC 验收 `storageZoneCount: 8`                  | `qa-smoke.mjs` · `desktop-summary.png`    |
+
+## 2026-07-09（Portal UI 截图走查 · 第二轮）
+
+| 主线   | 摘要                                                                 | 证据                                      |
+| ------ | -------------------------------------------------------------------- | ----------------------------------------- |
+| QA     | 12 张截图 + `manifest.json`；G-P8 inbox 深链 desktop/mobile ✅；`qa:smoke` ✅ | [`docs/qa/portal-screenshot-audit.md`](../qa/portal-screenshot-audit.md) · `docs/ui-qa-screenshots/portal/` |
+| 遗留   | P-4/P-5/P-7/P-8/P-9 低优先级 UI/a11y（方案已检索 WCAG 2.5.8 / 1.4.3） | 走查报告 §问题清单                        |
+
+## 2026-07-09（M-P5 行为分验收）
+
+| 主线  | 摘要                                                                 | 证据                                           |
+| ----- | -------------------------------------------------------------------- | ---------------------------------------------- |
+| Music | **M-P5** `qa:rec-behavior` **6/6** — complete 事件 → `recently completed` reason + Δscore 0.04 | `seed-m5-qa-library.mjs` · `qa-recommendation-behavior.mjs` |
+| Infra | CI 增 `portal-qa-smoke` · `music-qa-rec-behavior`（secrets 缺则 skip） | `.github/workflows/ci.yml`                     |
+
+## 2026-07-09（Phase 5 · Portal G-P8/G-P9 + P-1）
+
+| 主线   | 摘要                                                                 | 证据                                      |
+| ------ | -------------------------------------------------------------------- | ----------------------------------------- |
+| Growth | **G-P8** pending 角标 + 状态文案 → `planner…/inbox` 深链             | `PortalAppBar.svelte` · `+page.svelte`    |
+| Infra  | **G-P9** `qa:smoke.mjs` — 四卡 · inbox 深链 · ⌘K · Esc 关闭 ✅       | `apps/portal/scripts/qa-smoke.mjs`        |
+| Design | **P-1** `--overlay-backdrop` 55% + CommandPalette blur 8px           | `design-tokens` · `CommandPalette.svelte` |
+
+## 2026-07-09（四轮计划 · Phase 0–4 批次）
+
+| 主线        | 摘要                                                                                              | 证据                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Finance     | **F-P3** `buildAugmentedDailyOutlook()` — Today 与 Spend 抽屉 STS 口径统一；`outlook.test.ts` 40 pass | `apps/finance/src/engine/outlook.ts`                                 |
+| Growth      | **G-P4b-M** `portal_today_summary` 扩 Music 第四卡；骨架四卡                                      | migration `20260708191000` · `PortalTodaySummary.svelte`             |
+| Growth      | **G-P6** Portal ⌘K 14 条跨站深链 + `portal_cp_recent_v1` 最近搜索；`test:cp` ✅                   | `commandPaletteActions.js` · `CommandPalette.svelte`                 |
+| Planner     | **P-P2** Insight 批量排期 E2E — `localDateKey()` 修复 UTC/本地日；desktop **22/22**             | `scheduling.js` · `e2e.spec.js`                                      |
+| Fitness     | **FT-P0** E2E **20/20**；**FT-P1** `fitness.workout_logged` 触发器远程 ✅                       | `apps/fitness/tests/` · migration `20260708200000`                   |
+| Integration | **I-P1.5b** / **P-P5** Planner `lifeEventsInbox` 消费完练事件 → habit 打卡；inbox 测试 7/7      | `packages/contracts/src/events.ts` · `lifeEventsInbox.js`            |
+| Music       | **M-P5** `qa:rec-behavior` 脚本就绪（QA 账号无曲库时 SKIP）                                       | `apps/music/scripts/qa-recommendation-behavior.mjs`                    |
+| Infra       | CI 增 `planner-e2e-desktop` · `finance-ia-routes`（secrets 缺则 skip）                            | `.github/workflows/ci.yml`                                           |
+| Portal      | UI 截图走查 + **P-2** ICON_REGISTRY 修复；`svelte-check` **0 errors**                             | [`docs/qa/portal-screenshot-audit.md`](../qa/portal-screenshot-audit.md) |
+
 ## 2026-07-08（Home Life OS 接入 + H-P5 平面 UX）
 
 | 主线        | 摘要                                                                                      | 证据                                                 |

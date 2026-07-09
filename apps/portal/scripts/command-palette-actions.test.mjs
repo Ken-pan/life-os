@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict'
+import {
+  PORTAL_DEEP_LINKS,
+  buildPortalDeepLinkUrl,
+  buildPlannerInboxUrl,
+  buildPortalCommandActions,
+  recordRecentSearch,
+  loadRecentSearches,
+} from '../src/lib/commandPaletteActions.js'
+
+assert.ok(PORTAL_DEEP_LINKS.length >= 10, 'deep links registry')
+
+const plannerToday = PORTAL_DEEP_LINKS.find((l) => l.id === 'planner-today')
+assert.ok(plannerToday)
+assert.equal(
+  buildPortalDeepLinkUrl('planner', '/'),
+  'https://planner.kenos.space/',
+)
+assert.equal(buildPlannerInboxUrl(), 'https://planner.kenos.space/inbox')
+
+const financeToday = PORTAL_DEEP_LINKS.find((l) => l.id === 'finance-today')
+assert.ok(financeToday)
+assert.equal(
+  buildPortalDeepLinkUrl('finance', '/home/today'),
+  'https://finance.kenos.space/home/today',
+)
+
+const filtered = buildPortalCommandActions({
+  signOut: async () => {},
+  query: '曲库',
+})
+assert.ok(filtered.some((a) => a.id === 'music-library'))
+assert.ok(!filtered.some((a) => a.id === 'planner-inbox'))
+
+const all = buildPortalCommandActions({ signOut: async () => {}, query: '' })
+assert.ok(all.some((a) => a.id === 'sign-out'))
+assert.ok(all.some((a) => a.id.startsWith('app-')))
+
+if (typeof localStorage !== 'undefined') {
+  localStorage.removeItem('portal_cp_recent_v1')
+  recordRecentSearch('今日', 'planner-today', 'Planner · 今日')
+  const recent = loadRecentSearches()
+  assert.equal(recent.length, 1)
+  assert.equal(recent[0].actionId, 'planner-today')
+  localStorage.removeItem('portal_cp_recent_v1')
+}
+
+console.log('command-palette-actions.test.mjs: all passed')

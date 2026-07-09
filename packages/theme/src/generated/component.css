@@ -7,7 +7,7 @@
 :root {
   --focus-ring: var(--btn-focus-ring, 0 0 0 2px color-mix(in srgb, var(--accent) 32%, transparent));
   --focus-offset: 2px;
-  --overlay-backdrop: color-mix(in srgb, var(--t1, var(--text)) 40%, transparent);
+  --overlay-backdrop: color-mix(in srgb, var(--t1, var(--text)) 55%, transparent);
   --card-bg: var(--card);
   --card-bg-hover: var(--card-h);
   --card-bg-selected: color-mix(in srgb, var(--accent) 8%, var(--card));

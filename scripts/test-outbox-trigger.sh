@@ -118,6 +118,18 @@ TRIGGER=$(
 [[ "$TRIGGER" == *"1"* ]] && pass "finance_bill_event_trigger on ${OCCURRENCES_TABLE}" \
   || fail "finance_bill_event_trigger missing on ${OCCURRENCES_TABLE}"
 
+FITNESS_FUNC=$(
+  sql "select count(*) from pg_proc p join pg_namespace n on p.pronamespace=n.oid where n.nspname='public' and p.proname='trg_fitness_workout_to_event';"
+)
+[[ "$FITNESS_FUNC" == *"1"* ]] && pass "trg_fitness_workout_to_event() exists" \
+  || info "trg_fitness_workout_to_event() missing (apply migration 20260708200000)"
+
+FITNESS_TRIGGER=$(
+  sql "select count(*) from pg_trigger t join pg_class c on t.tgrelid=c.oid join pg_namespace n on c.relnamespace=n.oid where n.nspname='fitness' and c.relname='fitness_workout_sessions' and t.tgname='fitness_workout_event_trigger' and not t.tgisinternal;"
+)
+[[ "$FITNESS_TRIGGER" == *"1"* ]] && pass "fitness_workout_event_trigger on fitness.fitness_workout_sessions" \
+  || info "fitness_workout_event_trigger missing (apply migration 20260708200000)"
+
 RLS=$(
   sql "select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='life_events' and c.relrowsecurity = true;"
 )

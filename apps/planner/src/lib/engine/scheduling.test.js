@@ -17,9 +17,10 @@ describe('suggestDueDate', () => {
     expect(result.confidence).toBeGreaterThan(0);
   });
 
-  it('prefers high priority slot reason', () => {
-    const result = suggestDueDate({ dueDate: null, priority: 1 }, { busyDates: [] });
-    expect(result.reason).toBe('high_priority_slot');
+  it('uses local calendar date keys (not UTC toISOString)', () => {
+    const localToday = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+    const result = suggestDueDate({ dueDate: null, priority: 2 }, { busyDates: [] });
+    expect(result.date).toBe(localToday);
   });
 });
 

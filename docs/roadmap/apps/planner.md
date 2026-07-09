@@ -16,17 +16,17 @@
 | 云同步      | ✅   | `planner_tasks` / `planner_lists` + LWW                          |
 | PWA         | ✅   | SW + IndexedDB 提醒 + 通知                                       |
 | Integration | ✅   | SSO · `finance.bill_due` → `lifeEventsInbox.js`                  |
-| Insight     | 🟡   | 批量排期 — E2E **P-1** 失败                                      |
+| Insight     | ✅   | 批量排期 E2E **P-P2** desktop 22/22 ✅                           |
 
 ## Next（按 ROI）
 
 | ID                 | 主题                                         | ROI | 桶     | 投入   | 验收                            | Hub      |
 | ------------------ | -------------------------------------------- | --- | ------ | ------ | ------------------------------- | -------- |
 | **QA-P2** {#qa-p2} | Desktop E2E 侧栏/快捷键                      | ✅  | Infra  | —      | desktop **21/22** ✅            | —        |
-| **P-P2** {#p-p2}   | Insight「批量排期」（**P-1**）               | ◆   | Core   | 0.5–1d | `e2e.spec.js:409`               | ✅ §Next |
+| **P-P2** {#p-p2}   | Insight「批量排期」（**P-1**）               | ✅  | Core   | —      | desktop **22/22** ✅            | §Shipped |
 | **P-P3**           | Inbox `life_events` 来源徽章 + 深链 Finance  | ◆   | Growth | 1d     | 账单任务标「来自 Finance」      | —        |
 | **P-P4**           | Today 计数与 `portal_today_summary` 对齐     | ◆   | Growth | 0.5d   | 与 Portal 同账号任务数一致      | —        |
-| **P-P5** {#p-p5}   | 消费 `fitness.workout_logged` → habit 打卡   | ○   | Growth | 2d     | 与 **I-P1.5b** / **FT-P1** 同批 | ✅ §Next |
+| **P-P5** {#p-p5}   | 消费 `fitness.workout_logged` → habit 打卡   | ✅  | Growth | —      | inbox 测试 7/7 · FT-P1 触发器   | §Shipped |
 | **P-P6**           | 消除 `Multiple GoTrueClient` 警告（**P-3**） | ○   | Infra  | 0.5d   | 控制台无重复 client             | —        |
 
 ### 实现锚点

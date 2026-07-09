@@ -1,8 +1,11 @@
 <script>
-  import { Monitor, Moon, Sun } from '@lucide/svelte'
+  import { Bell, Ellipsis, LogOut, Monitor, Moon, Sun } from '@lucide/svelte'
+  import { lockScroll, unlockScroll } from '@life-os/theme'
   import AppBrand from '@life-os/platform-web/svelte/brand'
+  import PortalAppBarMoreSheet from '$lib/components/PortalAppBarMoreSheet.svelte'
   import { getCommandPaletteShortcutLabel } from '$lib/keyboardShortcut.js'
   import { abbreviateEmail, getUserInitial } from '$lib/userDisplay.js'
+  import { buildPlannerInboxUrl } from '$lib/commandPaletteActions.js'
   import {
     cycleThemePreference,
     portalTheme,
@@ -26,6 +29,7 @@
     pendingEvents != null && pendingEvents > 0 ? pendingEvents : null,
   )
 
+  const plannerInboxUrl = buildPlannerInboxUrl()
   const shortcutLabel = getCommandPaletteShortcutLabel()
   const userInitial = $derived(getUserInitial(userEmail))
   const userShort = $derived(abbreviateEmail(userEmail))
@@ -38,9 +42,18 @@
         : Monitor,
   )
 
+  let moreOpen = $state(false)
+
   function handleThemeCycle() {
     cycleThemePreference()
   }
+
+  $effect(() => {
+    if (moreOpen) {
+      lockScroll()
+      return () => unlockScroll()
+    }
+  })
 </script>
 
 <header class="appbar portal-appbar">
@@ -51,12 +64,15 @@
     <div class="appbar-trailing">
       {#if pendingBadge != null}
         <a
-          href="https://planner.kenos.space"
-          class="portal-events-badge"
-          title="待处理跨应用事件"
-          aria-label="{pendingBadge} 条待处理事件，打开 Planner"
+          href={plannerInboxUrl}
+          class="btn-secondary portal-inbox-btn"
+          title="待处理跨应用事件 — 打开 Planner 收件箱"
+          aria-label="{pendingBadge} 条待处理事件，打开 Planner 收件箱"
         >
-          {pendingBadge > 99 ? '99+' : pendingBadge}
+          <Bell size={18} strokeWidth={2} aria-hidden="true" />
+          <span class="portal-events-badge" aria-hidden="true">
+            {pendingBadge > 99 ? '99+' : pendingBadge}
+          </span>
         </a>
       {/if}
       {#if onOpenCommandPalette}
@@ -70,37 +86,65 @@
           <kbd class="portal-cmd-kbd">{shortcutLabel}</kbd>
         </button>
       {/if}
-      <button
-        type="button"
-        class="btn-secondary portal-theme-btn"
-        onclick={handleThemeCycle}
-        aria-label="切换主题，当前：{themePreferenceLabel(
-          portalTheme.preference,
-        )}"
-        title="主题：{themePreferenceLabel(portalTheme.preference)}"
-      >
-        <ThemeIcon size={16} strokeWidth={2} aria-hidden="true" />
-        <span class="portal-theme-label"
-          >{themePreferenceLabel(portalTheme.preference)}</span
-        >
-      </button>
-      {#if userEmail}
-        <span class="portal-user-chip" title={userEmail}>
-          <span class="portal-user-avatar" aria-hidden="true"
-            >{userInitial}</span
-          >
-          <span class="portal-user-email">{userShort}</span>
-        </span>
-      {/if}
-      {#if onSignOut}
+      <span class="portal-appbar-overflow">
         <button
           type="button"
-          class="btn-secondary portal-signout-btn"
-          onclick={onSignOut}
+          class="btn-secondary portal-theme-btn"
+          onclick={handleThemeCycle}
+          aria-label="切换主题，当前：{themePreferenceLabel(
+            portalTheme.preference,
+          )}"
+          title="主题：{themePreferenceLabel(portalTheme.preference)}"
         >
-          退出
+          <ThemeIcon size={16} strokeWidth={2} aria-hidden="true" />
+          <span class="portal-theme-label"
+            >{themePreferenceLabel(portalTheme.preference)}</span
+          >
         </button>
-      {/if}
+        {#if userEmail}
+          <span class="portal-user-chip" title={userEmail}>
+            <span class="portal-user-avatar" aria-hidden="true"
+              >{userInitial}</span
+            >
+            <span class="portal-user-email">{userShort}</span>
+          </span>
+        {/if}
+        {#if onSignOut}
+          <button
+            type="button"
+            class="btn-secondary portal-signout-btn"
+            onclick={onSignOut}
+            aria-label="退出登录"
+          >
+            <LogOut size={18} strokeWidth={2} aria-hidden="true" />
+            <span class="portal-signout-label">退出</span>
+          </button>
+        {/if}
+      </span>
+      <button
+        type="button"
+        class="btn-secondary portal-appbar-more-btn"
+        aria-expanded={moreOpen}
+        aria-haspopup="dialog"
+        aria-controls="portal-appbar-more-title"
+        aria-label="更多设置"
+        onclick={() => {
+          moreOpen = !moreOpen
+        }}
+      >
+        <Ellipsis size={18} strokeWidth={2} aria-hidden="true" />
+      </button>
     </div>
   </div>
 </header>
+
+<PortalAppBarMoreSheet
+  open={moreOpen}
+  {userEmail}
+  themePreference={portalTheme.preference}
+  onClose={() => {
+    moreOpen = false
+  }}
+  onThemeCycle={handleThemeCycle}
+  {onSignOut}
+/>

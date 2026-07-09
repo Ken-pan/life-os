@@ -59,3 +59,100 @@ jobs:
           else
             echo "Skip remote smoke — SUPABASE_ACCESS_TOKEN not configured"
           fi
+
+  planner-e2e-desktop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - name: Planner desktop E2E (QA-P2 / P-P2)
+        working-directory: apps/planner
+        env:
+          CI: '1'
+        run: npm run test:e2e -- --project=desktop
+
+  finance-ia-routes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - name: Finance IA route smoke (F-P0)
+        working-directory: apps/finance
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          UI_QA_EMAIL: ${{ secrets.UI_QA_EMAIL }}
+          UI_QA_PASSWORD: ${{ secrets.UI_QA_PASSWORD }}
+        run: |
+          if [ -z "${VITE_SUPABASE_URL:-}" ] || [ -z "${VITE_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Skip finance ia-routes — VITE_SUPABASE_* secrets not configured"
+            exit 0
+          fi
+          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' \
+            "$VITE_SUPABASE_URL" "$VITE_SUPABASE_ANON_KEY" > .env.local
+          npm run qa:ia-routes
+
+  portal-qa-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - run: npm run build -w portal
+      - name: Portal smoke (G-P9)
+        working-directory: apps/portal
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          UI_QA_EMAIL: ${{ secrets.UI_QA_EMAIL }}
+          UI_QA_PASSWORD: ${{ secrets.UI_QA_PASSWORD }}
+        run: |
+          if [ -z "${VITE_SUPABASE_URL:-}" ] || [ -z "${VITE_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Skip portal qa:smoke — VITE_SUPABASE_* secrets not configured"
+            exit 0
+          fi
+          npm run preview -- --host 127.0.0.1 --port 5195 &
+          PREVIEW_PID=$!
+          sleep 3
+          PORTAL_QA_URL=http://127.0.0.1:5195 npm run qa:smoke
+          kill $PREVIEW_PID || true
+
+  music-qa-rec-behavior:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Music M-P5 behavior smoke
+        working-directory: apps/music
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          UI_QA_EMAIL: ${{ secrets.UI_QA_EMAIL }}
+          UI_QA_PASSWORD: ${{ secrets.UI_QA_PASSWORD }}
+          MUSIC_QA_EMAIL: ${{ secrets.MUSIC_QA_EMAIL }}
+        run: |
+          if [ -z "${VITE_SUPABASE_URL:-}" ] || [ -z "${VITE_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Skip music qa:rec-behavior — VITE_SUPABASE_* secrets not configured"
+            exit 0
+          fi
+          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' \
+            "$VITE_SUPABASE_URL" "$VITE_SUPABASE_ANON_KEY" > .env.local
+          npm run qa:rec-behavior

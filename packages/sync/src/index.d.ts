@@ -95,6 +95,12 @@ export function touchAppLastOpened(
   appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home',
 ): Promise<void>
 
+export function syncHomePortalSummary(
+  supabase: import('@supabase/supabase-js').SupabaseClient,
+  userId: string,
+  payload: { storageZoneCount: number },
+): Promise<void>
+
 export function createCoreIdentityHandler(
   supabase: import('@supabase/supabase-js').SupabaseClient,
   appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home',

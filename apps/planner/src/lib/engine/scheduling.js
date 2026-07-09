@@ -1,3 +1,8 @@
+/** @param {Date} d */
+function localDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 /**
  * @param {import('../types.js').Task} task
  * @param {{ busyDates?: string[] }} [calendar]
@@ -14,7 +19,7 @@ export function suggestDueDate(task, calendar = {}) {
   const busy = new Set(calendar.busyDates || []);
   const d = new Date();
   for (let i = 0; i < 14; i += 1) {
-    const key = d.toISOString().slice(0, 10);
+    const key = localDateKey(d);
     if (!busy.has(key)) {
       return {
         date: key,

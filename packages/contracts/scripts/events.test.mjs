@@ -59,11 +59,29 @@ assert.equal(
 
 const unknownType = parseLifeEvent({
   ...envelopeRow,
-  type: 'fitness.workout_logged',
-  payload: { workout_id: 'w1' },
+  type: 'planner.task_completed',
+  payload: { task_id: 't1' },
 })
 assert.equal(unknownType.ok, false)
 if (!unknownType.ok) assert.equal(unknownType.reason, 'unknown-type')
+
+const fitnessRow = {
+  ...envelopeRow,
+  type: 'fitness.workout_logged',
+  payload: {
+    session_id: '770e8400-e29b-41d4-a716-446655440002',
+    day_id: 'chest',
+    session_date: '2026-07-08',
+    ended_at: '2026-07-08T12:00:00.000Z',
+  },
+}
+const fitnessParsed = parseLifeEvent(fitnessRow)
+assert.equal(fitnessParsed.ok, true)
+if (fitnessParsed.ok) {
+  assert.equal(fitnessParsed.event.type, 'fitness.workout_logged')
+  assert.equal(fitnessParsed.event.payload.session_id, '770e8400-e29b-41d4-a716-446655440002')
+  assert.equal(fitnessParsed.event.payload.session_date, '2026-07-08')
+}
 
 const badPayload = parseLifeEvent({
   ...envelopeRow,

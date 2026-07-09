@@ -18,13 +18,29 @@ export const FinanceBillDueSchema = z.object({
 
 export type FinanceBillDueEvent = z.infer<typeof FinanceBillDueSchema>
 
+/**
+ * Fitness 完练事件契约
+ * 触发条件: fitness_workout_sessions 写入/更新且 ended_at 非空
+ */
+export const FitnessWorkoutLoggedSchema = z.object({
+  type: z.literal('fitness.workout_logged'),
+  payload: z.object({
+    session_id: z.string().uuid().describe('fitness_workout_sessions 主键'),
+    day_id: z.string(),
+    session_date: dateYmd.describe('YYYY-MM-DD 格式'),
+    ended_at: z.string().optional().describe('ISO timestamptz'),
+  }),
+})
+
+export type FitnessWorkoutLoggedEvent = z.infer<typeof FitnessWorkoutLoggedSchema>
+
 // -----------------------------------------------------------------------------
 // Life Event 联合类型 (Single Source of Truth)
 // -----------------------------------------------------------------------------
 
 export const LifeEventSchema = z.discriminatedUnion('type', [
   FinanceBillDueSchema,
-  // 未来其他事件可以在此处添加，例如 PlannerTaskCompletedSchema 等
+  FitnessWorkoutLoggedSchema,
 ])
 
 export type LifeEvent = z.infer<typeof LifeEventSchema>

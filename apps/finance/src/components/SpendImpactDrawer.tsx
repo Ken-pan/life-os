@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { FinanceData, FundingSource, ScenarioEvent } from "../types";
 import type { MonthSnapshot } from "../engine/monthly";
 import { projectMonthly } from "../engine/monthly";
-import { projectDaily } from "../engine/daily";
+import { buildAugmentedDailyOutlook } from "../engine/outlook";
 import { computeSpendImpact, liquidAfterSimulatedSpend, selectSafeToSpendBreakdown } from "../engine/metrics";
 import { money, signedMoney, delayToHuman, monthToYearLabel, depositDeltaClass } from "../format";
 import { todayLocalISO } from "../engine/calendar";
@@ -130,7 +130,7 @@ export function SpendImpactDrawer({
       goals: simData.goals,
       assumptions: simData.assumptions,
     });
-    const simDailyOutlook = projectDaily(simData);
+    const { outlook: simDailyOutlook } = buildAugmentedDailyOutlook(simData);
     const spend = { amount, type, fundingSource: source };
     const safeToSpendBreakdownAfter = selectSafeToSpendBreakdown({
       outlook: simDailyOutlook,

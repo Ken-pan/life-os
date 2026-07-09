@@ -11,6 +11,9 @@
   import PortalSettings from '$lib/components/PortalSettings.svelte'
   import PortalPwaGuide from '$lib/components/PortalPwaGuide.svelte'
   import PortalTodaySummary from '$lib/components/PortalTodaySummary.svelte'
+  import { buildPlannerInboxUrl } from '$lib/commandPaletteActions.js'
+
+  const plannerInboxUrl = buildPlannerInboxUrl()
 
   const recentApp = $derived(getLastApp())
   const productionCount = PORTAL_PRODUCTION_APPS.length
@@ -54,7 +57,9 @@
   >
     {productionCount} 个生产应用 · 跨站 SSO
     {#if portalPreferences.pendingEvents != null && portalPreferences.pendingEvents > 0}
-      · {portalPreferences.pendingEvents} 条待处理事件
+      · <a href={plannerInboxUrl} class="portal-pending-link"
+        >{portalPreferences.pendingEvents} 条待处理事件</a
+      >
     {/if}
   </span>
 </div>

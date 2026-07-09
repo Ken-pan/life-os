@@ -11,7 +11,7 @@
 
 | 域             | 状态 | 要点                                                     |
 | -------------- | ---- | -------------------------------------------------------- |
-| 月度引擎       | 🟡   | STS / Spend Impact — 专款 `current` 未扣（**Critical**） |
+| 月度引擎       | ✅   | STS / Spend — `buildAugmentedDailyOutlook()` 统一口径（**F-P3**） |
 | 历史/预测/决策 | ✅   | 交易 · 图表 · Decision Studio                            |
 | Chrome 扩展    | ✅   | DOM → `ExtensionSyncBridge`                              |
 | Integration    | ✅   | SSO · outbox · Portal G-P4                               |
@@ -22,7 +22,7 @@
 
 | ID               | 主题                                | ROI | 桶      | 投入   | 验收                      | Hub      |
 | ---------------- | ----------------------------------- | --- | ------- | ------ | ------------------------- | -------- |
-| **F-P3** {#f-p3} | STS 与专款 reserve / Spend 抽屉对齐 | 🔥  | Core    | 2–3d   | audit Critical 两项测试绿 | ✅ §Next |
+| **F-P3** {#f-p3} | STS 与专款 reserve / Spend 抽屉对齐 | ✅  | Core    | —      | `outlook.test.ts` 40 pass | §Shipped |
 | **F-P1b**        | 扩展 popup last sync + 重试         | ◆   | Growth  | 0.5–1d | popup 可见 timestamp      | —        |
 | **F-P4**         | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | pending 与 UI 一致        | —        |
 | **F-P5**         | History CSV 最小导入                | ○   | Product | 3–5d   | `/review/import` 可上传   | —        |

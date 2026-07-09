@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   findTaskByFinanceOccurrenceId,
   upsertTaskFromFinanceBillDue,
+  findTaskByFitnessSessionId,
+  upsertHabitFromFitnessWorkoutLogged,
   consumePendingLifeEvents,
 } from './lifeEventsInbox.js'
 import { S } from '../state.svelte.js'
@@ -27,7 +29,6 @@ vi.mock('../supabase.js', () => ({
 const envelopeBase = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   user_id: '660e8400-e29b-41d4-a716-446655440001',
-  type: 'finance.bill_due',
   status: 'pending',
   created_at: '2026-07-08T00:00:00.000Z',
   updated_at: '2026-07-08T00:00:00.000Z',
@@ -38,6 +39,13 @@ const billPayload = {
   label: 'Amex Statement',
   expected_amount: 500,
   occurrence_date: '2026-08-15',
+}
+
+const workoutPayload = {
+  session_id: '770e8400-e29b-41d4-a716-446655440002',
+  day_id: 'chest',
+  session_date: '2026-07-08',
+  ended_at: '2026-07-08T12:00:00.000Z',
 }
 
 beforeEach(() => {
@@ -64,6 +72,25 @@ describe('lifeEventsInbox', () => {
     expect(findTaskByFinanceOccurrenceId('occ-123')?.id).toBe(S.tasks[0].id)
   })
 
+  it('creates completed habit from fitness.workout_logged', () => {
+    const task = upsertHabitFromFitnessWorkoutLogged(workoutPayload)
+    expect(task.title).toBe('健身 · 胸')
+    expect(task.dueDate).toBe('2026-07-08')
+    expect(task.completed).toBe(true)
+    expect(task.meta.kind).toBe('habit')
+    expect(task.meta.lifeEventRef).toEqual({
+      domain: 'fitness',
+      sessionId: workoutPayload.session_id,
+    })
+  })
+
+  it('is idempotent by fitness session_id', () => {
+    upsertHabitFromFitnessWorkoutLogged(workoutPayload)
+    upsertHabitFromFitnessWorkoutLogged(workoutPayload)
+    expect(S.tasks).toHaveLength(1)
+    expect(findTaskByFitnessSessionId(workoutPayload.session_id)?.id).toBe(S.tasks[0].id)
+  })
+
   it('consumes pending events and marks processed', async () => {
     const updates = []
     const client = {
@@ -76,12 +103,15 @@ describe('lifeEventsInbox', () => {
           eq() {
             return this
           },
+          in() {
+            return this
+          },
           order() {
             return this
           },
           limit() {
             return Promise.resolve({
-              data: [{ ...envelopeBase, payload: billPayload }],
+              data: [{ ...envelopeBase, type: 'finance.bill_due', payload: billPayload }],
               error: null,
             })
           },
@@ -102,6 +132,51 @@ describe('lifeEventsInbox', () => {
     expect(S.tasks).toHaveLength(1)
   })
 
+  it('consumes fitness.workout_logged and marks processed', async () => {
+    const updates = []
+    const client = {
+      from() {
+        return {
+          select() {
+            return this
+          },
+          eq() {
+            return this
+          },
+          in() {
+            return this
+          },
+          order() {
+            return this
+          },
+          limit() {
+            return Promise.resolve({
+              data: [
+                {
+                  ...envelopeBase,
+                  type: 'fitness.workout_logged',
+                  payload: workoutPayload,
+                },
+              ],
+              error: null,
+            })
+          },
+          update(patch) {
+            updates.push(patch)
+            return {
+              eq: () => Promise.resolve({ error: null }),
+            }
+          },
+        }
+      },
+    }
+
+    const result = await consumePendingLifeEvents(client)
+    expect(result.processed).toBe(1)
+    expect(updates[0]?.status).toBe('processed')
+    expect(S.tasks[0]?.completed).toBe(true)
+  })
+
   it('marks failed on bad payload for known type', async () => {
     const updates = []
     const client = {
@@ -113,12 +188,15 @@ describe('lifeEventsInbox', () => {
           eq() {
             return this
           },
+          in() {
+            return this
+          },
           order() {
             return this
           },
           limit() {
             return Promise.resolve({
-              data: [{ ...envelopeBase, payload: { occurrence_id: 'only-id' } }],
+              data: [{ ...envelopeBase, type: 'finance.bill_due', payload: { occurrence_id: 'only-id' } }],
               error: null,
             })
           },

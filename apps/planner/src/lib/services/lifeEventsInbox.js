@@ -1,10 +1,25 @@
 import { parseLifeEvent } from '@life-os/contracts/events'
-import { createTask } from '../domain/tasks.js'
+import { createTask, updateTask } from '../domain/tasks.js'
 import { S } from '../state.svelte.js'
 import { SYSTEM_LIST_INBOX } from '../types.js'
 import { supabase, isSupabaseConfigured } from '../supabase.js'
 
 const BATCH_LIMIT = 50
+
+const CONSUMED_EVENT_TYPES = ['finance.bill_due', 'fitness.workout_logged']
+
+const FITNESS_DAY_LABELS = /** @type {Record<string, string>} */ ({
+  chest: '胸',
+  back: '背',
+  legs: '腿',
+  arms: '臂',
+})
+
+/** @param {string} dayId */
+function fitnessDayLabel(dayId) {
+  if (!dayId) return '训练'
+  return FITNESS_DAY_LABELS[dayId] ?? dayId
+}
 
 /**
  * @param {string} occurrenceId
@@ -16,6 +31,19 @@ export function findTaskByFinanceOccurrenceId(occurrenceId) {
       !task.deletedAt &&
       task.meta?.lifeEventRef?.domain === 'finance' &&
       task.meta.lifeEventRef.occurrenceId === occurrenceId,
+  )
+}
+
+/**
+ * @param {string} sessionId
+ * @returns {import('../types.js').Task | undefined}
+ */
+export function findTaskByFitnessSessionId(sessionId) {
+  return S.tasks.find(
+    (task) =>
+      !task.deletedAt &&
+      task.meta?.lifeEventRef?.domain === 'fitness' &&
+      task.meta.lifeEventRef.sessionId === sessionId,
   )
 }
 
@@ -46,6 +74,34 @@ export function upsertTaskFromFinanceBillDue(payload) {
 }
 
 /**
+ * @param {import('@life-os/contracts/events').FitnessWorkoutLoggedEvent['payload']} payload
+ * @returns {import('../types.js').Task}
+ */
+export function upsertHabitFromFitnessWorkoutLogged(payload) {
+  const existing = findTaskByFitnessSessionId(payload.session_id)
+  if (existing) return existing
+
+  const task = createTask({
+    title: `健身 · ${fitnessDayLabel(payload.day_id)}`,
+    dueDate: payload.session_date,
+    listId: SYSTEM_LIST_INBOX,
+    notes: '来自 Fitness 完练',
+    meta: {
+      kind: 'habit',
+      lifeEventRef: {
+        domain: 'fitness',
+        sessionId: payload.session_id,
+      },
+    },
+  })
+
+  return updateTask(task.id, {
+    completed: true,
+    completedAt: payload.ended_at ? Date.parse(payload.ended_at) || Date.now() : Date.now(),
+  })
+}
+
+/**
  * @param {import('@supabase/supabase-js').SupabaseClient} client
  * @param {string} eventId
  * @param {'processed' | 'failed'} status
@@ -60,6 +116,19 @@ export async function markLifeEventStatus(client, eventId, status) {
 }
 
 /**
+ * @param {import('@life-os/contracts/events').LifeEvent} event
+ */
+function applyLifeEvent(event) {
+  if (event.type === 'finance.bill_due') {
+    return upsertTaskFromFinanceBillDue(event.payload)
+  }
+  if (event.type === 'fitness.workout_logged') {
+    return upsertHabitFromFitnessWorkoutLogged(event.payload)
+  }
+  return null
+}
+
+/**
  * @param {import('@supabase/supabase-js').SupabaseClient} [client]
  */
 export async function consumePendingLifeEvents(client = supabase) {
@@ -69,7 +138,7 @@ export async function consumePendingLifeEvents(client = supabase) {
     .from('life_events')
     .select('*')
     .eq('status', 'pending')
-    .eq('type', 'finance.bill_due')
+    .in('type', CONSUMED_EVENT_TYPES)
     .order('created_at', { ascending: true })
     .limit(BATCH_LIMIT)
 
@@ -91,13 +160,13 @@ export async function consumePendingLifeEvents(client = supabase) {
       continue
     }
 
-    if (result.event.type !== 'finance.bill_due') {
+    if (!CONSUMED_EVENT_TYPES.includes(result.event.type)) {
       skipped += 1
       continue
     }
 
     try {
-      upsertTaskFromFinanceBillDue(result.event.payload)
+      applyLifeEvent(result.event)
       await markLifeEventStatus(client, result.envelope.id, 'processed')
       processed += 1
     } catch {

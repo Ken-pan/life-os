@@ -9,7 +9,7 @@
   "overlay": {
     "backdrop": {
       "$type": "color",
-      "$value": "color-mix(in srgb, var(--t1, var(--text)) 40%, transparent)"
+      "$value": "color-mix(in srgb, var(--t1, var(--text)) 55%, transparent)"
     }
   },
   "card": {

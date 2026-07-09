@@ -1,13 +1,15 @@
 <script>
   import '../app.css'
-  import { onMount } from 'svelte'
+  import { onMount, setContext } from 'svelte'
   import CommandPalette from '@life-os/platform-web/CommandPalette.svelte'
+  import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
+  import { ICONS } from '$lib/iconRegistry.js'
   import { bindViewportHeight } from '@life-os/theme'
   import DocumentHead from '@life-os/platform-web/svelte/head'
   import PortalShell from '$lib/components/PortalShell.svelte'
   import PortalLoading from '$lib/components/PortalLoading.svelte'
   import PortalUnauth from '$lib/components/PortalUnauth.svelte'
-  import { PORTAL_APPS, getLauncherMeta } from '$lib/apps.js'
+  import { buildPortalCommandActions } from '$lib/commandPaletteActions.js'
   import { auth, initAuth, signOut } from '$lib/auth.svelte.js'
   import { applyRecentAppFromDb, initRecentApp } from '$lib/recentApp.svelte.js'
   import {
@@ -20,36 +22,20 @@
 
   let { children } = $props()
 
+  setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
+
   let cpOpen = $state(false)
+  let cpQuery = $state('')
   let coreHydrated = $state(false)
   let lastHydratedUserId = $state(/** @type {string | null} */ (null))
   let hydrateSeq = 0
 
-  const cpActions = $derived([
-    ...PORTAL_APPS.map((app) => ({
-      id: app.id,
-      title: `打开 ${getLauncherMeta(app.id).name}${app.experimental ? '（实验）' : ''}`,
-      icon:
-        app.id === 'finance'
-          ? 'wallet'
-          : app.id === 'planner'
-            ? 'check-square'
-            : app.id === 'fitness'
-              ? 'activity'
-              : app.id === 'home'
-                ? 'home'
-                : 'music',
-      onSelect: () => {
-        window.location.href = app.url
-      },
-    })),
-    {
-      id: 'sign-out',
-      title: '退出登录',
-      icon: 'log-out',
-      onSelect: () => signOut().then(() => window.location.reload()),
-    },
-  ])
+  const cpActions = $derived(
+    buildPortalCommandActions({
+      signOut,
+      query: cpQuery,
+    }),
+  )
 
   async function handleSignOut() {
     await signOut()
@@ -79,7 +65,7 @@
       lastHydratedUserId = userId
 
       const { defaultApp, skipAutoRedirect } = portalPreferences
-      if (shouldAutoRedirect(defaultApp, skipAutoRedirect)) {
+      if (defaultApp && shouldAutoRedirect(defaultApp, skipAutoRedirect)) {
         redirectToDefaultApp(
           /** @type {import('$lib/apps.js').LauncherAppId} */ (defaultApp),
         )
@@ -120,7 +106,8 @@
   </PortalShell>
   <CommandPalette
     bind:open={cpOpen}
+    bind:query={cpQuery}
     actions={cpActions}
-    placeholder="跳转到应用或操作…"
+    placeholder="跳转到应用、页面或操作…"
   />
 {/if}

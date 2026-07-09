@@ -1,18 +1,18 @@
 import { useMemo } from "react";
 import type { FinanceData, Goal } from "../types";
 import { useProjection, type Projection } from "./useProjection";
-import { projectDaily, type DailyOutlook, type ProjectDailyOptions, timelineDailyOptions } from "../engine/daily";
+import { type DailyOutlook, type ProjectDailyOptions, timelineDailyOptions } from "../engine/daily";
+import { buildAugmentedDailyOutlook } from "../engine/outlook";
 import type { LiquidCashAnchors } from "../engine/reconciliation";
 import { baselineCategoryAverages } from "../engine/realityLoop";
 import {
   goalReachMonth,
   selectSafeToSpendBreakdown,
-  selectMonthlySavingCapacity,
   type SafeToSpendBreakdown,
   type MonthlySavingCapacity,
 } from "../engine/metrics";
 import { buildActions, type ActionItem } from "../engine/actions";
-import { isMilestoneGoal, primaryEmergencyReserveGoal } from "../engine/goals";
+import { isMilestoneGoal } from "../engine/goals";
 import { useTimeline } from "../store/timeline";
 import { useTransactions } from "../store/transactions";
 
@@ -87,30 +87,7 @@ export function useDashboard(data: FinanceData): Dashboard {
 
     const dailyOpts = buildDailyOpts(cashAnchors, occurrences, txns);
 
-    // 第一遍：不含 Emergency 月度预留，得到「最佳存钱日 + 当月可执行额」。
-    const baseOutlook = projectDaily(data, 35, today, dailyOpts);
-    const savingCapacity = selectMonthlySavingCapacity({
-      outlook: baseOutlook,
-      assumptions: data.assumptions,
-      goals: data.goals,
-      today,
-    });
-
-    // 第二遍：把 Emergency 月度预留按最佳日、当月实际额度注入现金日历，全局口径一致。
-    const emergencyGoal = primaryEmergencyReserveGoal(data.goals);
-    const outlook =
-      savingCapacity.capacity > 0 && savingCapacity.bestDay
-        ? projectDaily(data, 35, today, {
-            ...dailyOpts,
-            extraTransfers: [
-              {
-                date: savingCapacity.bestDay,
-                label: `${emergencyGoal?.name ?? "应急储备"} 月度预留`,
-                amount: savingCapacity.capacity,
-              },
-            ],
-          })
-        : baseOutlook;
+    const { outlook, savingCapacity } = buildAugmentedDailyOutlook(data, 35, today, dailyOpts);
 
     const emergencyFloor = Math.max(0, data.assumptions.emergencyReserveTarget);
     const safeToSpendBreakdown = selectSafeToSpendBreakdown({

@@ -27,6 +27,7 @@ export {
   touchAppLastOpened,
   createCoreIdentityHandler,
 } from './coreIdentity.js'
+export { syncHomePortalSummary } from './homePortalMetadata.js'
 export { setupCrossDomainSSO } from './sso.js'
 
 /** Life OS 四端 appId */

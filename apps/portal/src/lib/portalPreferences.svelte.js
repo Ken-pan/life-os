@@ -65,7 +65,8 @@ export async function saveSkipAutoRedirect(userId, skip) {
 }
 
 /**
- * @param {LauncherAppId} defaultApp
+ * @param {LauncherAppId | null} defaultApp
+ * @param {boolean} skipAutoRedirect
  * @returns {boolean}
  */
 export function shouldAutoRedirect(defaultApp, skipAutoRedirect) {
