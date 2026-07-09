@@ -20,6 +20,9 @@ first functional provider for PaperOS.
 | Idempotency | PASS locally | `paper_device_actions` log-first state machine; full local HTTP A-E validation passed with RLS enabled; see [`../../PRO_MOVE_PR3B_LOCAL_VALIDATION_GAP_GATE.md`](../../PRO_MOVE_PR3B_LOCAL_VALIDATION_GAP_GATE.md) |
 | Production write enablement | Not enabled | Staging/production validation still required before `PAPER_ACTIONS_WRITE_ENABLED=true` |
 | Device app UX | P-MOVE-1 PASS | Old binary migrated from `/home/root/planneros-lite/planneros-lite` to `/home/root/paperos/paperos`; launcher/recovery verified |
+| Production read API | PASS | 2026-07-09 production redeploy included Netlify functions; `/api/paper/today` returns 200 with `PAPER_DEVICE_TOKEN` |
+| Device read cache | PASS | `/home/root/paperos/refresh-cache.sh` writes `cache.json` and `last_sync.txt` from production API; see [`../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md) |
+| PaperOS read-cache binary | Pending SDK build | Source is wired to cache/token paths; rebuilt `paperos` binary still needs the reMarkable Qt6 SDK |
 | xochitl integration | Out of scope | No xochitl patching, sidebar injection, or boot replacement in this phase |
 
 ## Product Decision
@@ -67,10 +70,12 @@ Status: **PASS on 2026-07-09**. See
 **Goal:** prove the app can be useful offline before enabling more writes.
 
 Scope:
-- Build or package the PaperOS device binary.
-- Read `/api/paper/today` into `cache.json`.
-- On network failure, render last-good cache with `last_sync.txt`.
-- Show battery/network/cache status in a quiet footer.
+- Rebuild the PaperOS Qt/QML device binary from
+  [`../../../apps/planner-device/remarkable-lite`](../../../apps/planner-device/remarkable-lite).
+- Read `/home/root/paperos/cache.json` before any network request.
+- Fetch `/api/paper/today` with `/home/root/paperos/token`.
+- On network failure, keep rendering last-good cache with `last_sync.txt`.
+- Show cache/API status in a quiet footer.
 
 Acceptance:
 - Fresh network fetch renders Today tasks.
@@ -145,8 +150,11 @@ Remaining before daily use on Move:
 - [x] Deploy PaperOS templates to `/home/root/paperos`.
 - [x] Identify the previously successful runtime artifact or package a new `paperos` binary.
 - [x] Run PaperOS session and verify exit/recovery returns xochitl to `active`.
-- [ ] Add `/home/root/paperos/token` and verify `refresh-cache.sh` against `/api/paper/today`.
-- [ ] Wire PaperOS read cache rendering against `cache.json`.
+- [x] Add `/home/root/paperos/token` and verify `refresh-cache.sh` against `/api/paper/today`.
+- [x] Restore PaperOS device source into this monorepo.
+- [x] Wire PaperOS source to load `cache.json`, `token`, and `last_sync.txt`.
+- [ ] Rebuild the updated `paperos` binary with the reMarkable Qt6 SDK.
+- [ ] Deploy rebuilt `paperos` to `/home/root/paperos/paperos` and verify offline cached rendering.
 - [ ] Run staging validation before enabling real writes outside local validation.
 
 ## Immediate Next Checklist
@@ -157,4 +165,5 @@ Remaining before daily use on Move:
 - [x] Restore live SSH access and inspect the legacy device workspace.
 - [x] Deploy/migrate PaperOS under `/home/root/paperos`.
 - [x] Record device-session evidence in a new gate doc before P-MOVE-2.
-- [ ] Install device token and validate read-cache refresh.
+- [x] Install device token and validate read-cache refresh.
+- [ ] Build and deploy the refreshed PaperOS Qt binary.

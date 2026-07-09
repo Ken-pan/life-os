@@ -10,7 +10,7 @@
 
 | 焦点    | 主题                   | 文档                                             |
 | ------- | ---------------------- | ------------------------------------------------ |
-| Now     | **P-MOVE-1** PaperOS on Paper Pro Move | [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) |
+| Now     | **P-MOVE-2** PaperOS read cache on Paper Pro Move | [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) |
 | Next    | **H-W3** Home 手绘分区 | [`roadmap/apps/home.md`](./roadmap/apps/home.md) |
 
 **2026-07-09 已验收：** Phase 6 **G-P4b-H / H-P6a** · Portal UI 走查 **P-1–P-12** — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
