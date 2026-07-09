@@ -2,7 +2,7 @@ import { browser } from '$app/environment'
 import { createDebouncedTask } from '@life-os/sync'
 import { supabase } from './supabase.js'
 import { MUSIC_TABLES as T } from './supabaseTables.js'
-import { prefetchSignedUrls } from './cloudAudio.js'
+import { prefetchTracksAudio } from './cloudAudio.js'
 import {
   db,
   slugKey,
@@ -112,8 +112,16 @@ async function fetchCloudSnapshot(userId) {
       .eq('user_id', userId)
       .maybeSingle()
       .abortSignal(signal),
-    supabase.from(T.trackMeta).select('*').eq('user_id', userId).abortSignal(signal),
-    supabase.from(T.playlists).select('*').eq('user_id', userId).abortSignal(signal),
+    supabase
+      .from(T.trackMeta)
+      .select('*')
+      .eq('user_id', userId)
+      .abortSignal(signal),
+    supabase
+      .from(T.playlists)
+      .select('*')
+      .eq('user_id', userId)
+      .abortSignal(signal),
     supabase
       .from(T.playlistTracks)
       .select('*')
@@ -158,9 +166,7 @@ async function pushLocal(userId, snap) {
       })
       const localArt = peekAlbumArt(merged.albumKey)?.artRemoteUrl || ''
       const artRemote =
-        localArt ||
-        (cloudArt.startsWith('https://') ? cloudArt : '') ||
-        ''
+        localArt || (cloudArt.startsWith('https://') ? cloudArt : '') || ''
       return {
         user_id: userId,
         track_id: merged.id,
@@ -248,7 +254,8 @@ async function pushLocal(userId, snap) {
 }
 
 async function pullCloud(userId, existingSnap = null) {
-  const snap = existingSnap || (await withSyncRetry(() => fetchCloudSnapshot(userId)))
+  const snap =
+    existingSnap || (await withSyncRetry(() => fetchCloudSnapshot(userId)))
   if (snap.state?.settings) {
     applyCloudSettingsMerge(snap.state.settings)
     applyThemeFromCloud()
@@ -348,12 +355,13 @@ async function pullCloud(userId, existingSnap = null) {
         scheduleLibraryMaintenance({ lyrics: false })
       })
       .catch(() => {})
-    const cloudPaths = snap.tracks
-      .map((row) =>
-        typeof row.storage_path === 'string' ? row.storage_path : '',
-      )
-      .filter(Boolean)
-    void prefetchSignedUrls(cloudPaths, 32)
+    const cloudTracks = snap.tracks
+      .filter((row) => typeof row.storage_path === 'string' && row.storage_path)
+      .map((row) => ({
+        id: row.track_id,
+        storagePath: row.storage_path,
+      }))
+    void prefetchTracksAudio(cloudTracks, 32)
   }
 }
 
@@ -364,7 +372,11 @@ function applyThemeFromCloud() {
 /** @param {{ silent?: boolean, force?: boolean }} [opts] */
 async function syncBidirectionalInternal(opts = {}) {
   if (!browser) return
-  if (opts.silent && !opts.force && Date.now() - lastSync < AUTO_SYNC_MIN_GAP_MS)
+  if (
+    opts.silent &&
+    !opts.force &&
+    Date.now() - lastSync < AUTO_SYNC_MIN_GAP_MS
+  )
     return
   if (!isOnline()) {
     markSyncPending()

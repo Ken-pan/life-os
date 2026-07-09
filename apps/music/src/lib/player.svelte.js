@@ -8,6 +8,8 @@ import {
   resolvePlayUrl,
   resolvePlayUrlSync,
   hasPlayableSource,
+  getSignedAudioUrl,
+  invalidateSignedAudioUrl,
 } from './cloudAudio.js'
 import {
   registerAudioPool,
@@ -22,6 +24,7 @@ import {
   precacheAudioInServiceWorker,
   purgeAudioCacheInServiceWorker,
 } from './audioPrecache.js'
+import { warmTrackAudio, warmTrackAudioFireAndForget } from './audioWarm.js'
 import {
   bindMediaSessionHandlers,
   declarePlaybackSession,
@@ -322,15 +325,13 @@ export function playTracks(
 }
 
 /**
- * Warm the signed-URL cache for a track before the user commits to playing it
- * (e.g. on pointerdown, ~100ms ahead of click) so the network round-trip for
- * cloud tracks overlaps with the tap gesture instead of blocking playback start.
+ * Warm signed-URL cache + SW audio bytes before the user commits to playing
+ * (e.g. on pointerdown, ~100ms ahead of click) so network work overlaps the tap.
  * @param {import('./types.js').Track | null | undefined} track
  */
 export function prewarmTrack(track) {
   if (!track || !browser) return
-  if (resolvePlayUrlSync(track)) return
-  void resolvePlayUrl(track).catch(() => {})
+  warmTrackAudioFireAndForget(track)
 }
 
 /** @param {import('./types.js').Track} track @param {import('./musicInteractions.js').PlaySource} [source] */
@@ -442,18 +443,14 @@ function invalidatePreload() {
   }
 }
 
-/** Warm signed-URL cache for the next queue item. */
+/** Warm signed-URL cache + SW bytes for the next queue item (gapless or not). */
 async function prefetchNextTrackUrl() {
-  if (!S.settings.gapless || !browser) return
+  if (!browser) return
   const nextIndex = getUpcomingIndex()
   if (nextIndex == null) return
   const track = player.queue[nextIndex]
-  if (!track || resolvePlayUrlSync(track)) return
-  try {
-    await resolvePlayUrl(track)
-  } catch {
-    /* ignore */
-  }
+  if (!track) return
+  await warmTrackAudio(track)
 }
 
 /** @param {import('./types.js').Track} track @returns {Promise<string>} */
@@ -859,7 +856,7 @@ async function playbackToast(msg, opts = {}) {
  * @param {string} src
  * @param {number} token
  * @param {import('./types.js').Track} track
- * @param {{ fromToggle?: boolean }} [opts]
+ * @param {{ fromToggle?: boolean, retried?: boolean }} [opts]
  */
 async function startPlayback(src, token, track, opts = {}) {
   const audio = getActiveAudio()
@@ -894,7 +891,27 @@ async function startPlayback(src, token, track, opts = {}) {
       await waitCanPlay(audio)
       await audio.play()
       return true
-    } catch {
+    } catch (err) {
+      if (
+        !opts.retried &&
+        track.storagePath &&
+        token === loadToken &&
+        getCurrentTrack()?.id === track.id
+      ) {
+        try {
+          invalidateSignedAudioUrl(track.storagePath)
+          const fresh = await getSignedAudioUrl(track.storagePath)
+          if (token !== loadToken || getCurrentTrack()?.id !== track.id)
+            return false
+          return startPlayback(fresh, token, track, {
+            ...opts,
+            retried: true,
+          })
+        } catch {
+          /* fall through to failure UI */
+        }
+      }
+      void err
       if (opts.fromToggle) {
         await playbackToast(t('player.playFailed'), { error: true })
       } else {

@@ -4,7 +4,7 @@
   import TrackRow from '$lib/components/TrackRow.svelte'
   import TrackTable from '$lib/components/TrackTable.svelte'
   import { getAllTracks } from '$lib/db.js'
-  import { prefetchSignedUrls } from '$lib/cloudAudio.js'
+  import { prefetchTracksAudio } from '$lib/cloudAudio.js'
   import { scheduleLibraryMaintenance } from '$lib/import.js'
   import { librarySignals, S, patchLocalSettings } from '$lib/state.svelte.js'
   import { setPageChrome } from '$lib/pageChrome.svelte.js'
@@ -23,10 +23,7 @@
     scheduleLibraryMaintenance({ lyrics: false })
     tracks = await getAllTracks()
     loading = false
-    void prefetchSignedUrls(
-      tracks.map((tr) => tr.storagePath).filter(Boolean),
-      32,
-    )
+    void prefetchTracksAudio(tracks, 32)
   }
 
   onMount(() => {

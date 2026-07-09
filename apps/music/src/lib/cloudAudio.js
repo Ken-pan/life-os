@@ -14,6 +14,7 @@ const RESUMABLE_THRESHOLD = 6 * 1024 * 1024
 const SIGNED_TTL_SEC = 3600
 const AUDIO_UPLOAD_CONCURRENCY = 2
 const RETRY_DELAYS_MS = [350, 1000]
+const SIGNED_URL_BATCH_SIZE = 24
 
 const SIGNED_URL_CACHE_KEY = 'musicos_signed_url_cache'
 
@@ -185,6 +186,44 @@ export function peekSignedAudioUrl(path) {
  * @param {number} [ttlSec]
  * @returns {Promise<string>}
  */
+/**
+ * Drop a cached signed URL so the next resolve fetches a fresh token.
+ * @param {string} path
+ */
+export function invalidateSignedAudioUrl(path) {
+  if (!path) return
+  signedUrlCache.delete(path)
+  persistSignedUrlCache()
+}
+
+/**
+ * @param {string[]} paths
+ * @param {number} [ttlSec]
+ */
+async function signAudioPathsBatch(paths, ttlSec = SIGNED_TTL_SEC) {
+  if (!paths.length) return
+  const { data: sessionData, error: sessionError } =
+    await supabase.auth.getSession()
+  if (sessionError || !sessionData.session) return
+
+  const now = Date.now()
+  for (let i = 0; i < paths.length; i += SIGNED_URL_BATCH_SIZE) {
+    const chunk = paths.slice(i, i + SIGNED_URL_BATCH_SIZE)
+    const { data, error } = await supabase.storage
+      .from(MUSIC_BUCKET)
+      .createSignedUrls(chunk, ttlSec)
+    if (error || !data) continue
+    for (const row of data) {
+      if (row.error || !row.signedUrl || !row.path) continue
+      signedUrlCache.set(row.path, {
+        url: row.signedUrl,
+        expiresAt: now + ttlSec * 1000,
+      })
+    }
+  }
+  persistSignedUrlCache()
+}
+
 export async function getSignedAudioUrl(path, ttlSec = SIGNED_TTL_SEC) {
   if (!path) throw new Error(t('cloudAudio.noPath'))
   const hit = peekSignedAudioUrl(path)
@@ -218,6 +257,32 @@ export async function getSignedAudioUrl(path, ttlSec = SIGNED_TTL_SEC) {
 
   signedUrlInflight.set(path, job)
   return job
+}
+
+/**
+ * Cap prefetch volume on Save-Data / slow cellular.
+ * @param {number} limit
+ * @returns {number}
+ */
+function prefetchLimitForNetwork(limit) {
+  if (!browser) return limit
+  try {
+    const conn =
+      /** @type {{ saveData?: boolean, effectiveType?: string } | undefined} */ (
+        navigator.connection ||
+          // @ts-expect-error vendor-prefixed
+          navigator.mozConnection ||
+          // @ts-expect-error vendor-prefixed
+          navigator.webkitConnection
+      )
+    if (conn?.saveData) return 0
+    if (conn?.effectiveType === '2g' || conn?.effectiveType === 'slow-2g') {
+      return Math.min(limit, 4)
+    }
+  } catch {
+    /* ignore */
+  }
+  return limit
 }
 
 /**
@@ -259,16 +324,62 @@ export async function resolvePlayUrl(track) {
 
 /**
  * Warm signed URL cache for cloud tracks (call after sync).
+ * Uses createSignedUrls in batches; does not fetch audio bytes (no track ids).
  * @param {string[]} paths
  * @param {number} [limit]
  */
 export async function prefetchSignedUrls(paths, limit = 24) {
+  const capped = prefetchLimitForNetwork(limit)
+  if (capped <= 0) return
   const unique = [...new Set(paths.filter(Boolean))]
-  const pending = unique.filter((p) => !peekSignedAudioUrl(p)).slice(0, limit)
+  const pending = unique.filter((p) => !peekSignedAudioUrl(p)).slice(0, capped)
   if (!pending.length) return
   const { data } = await supabase.auth.getSession()
   if (!data.session) return
-  await Promise.all(pending.map((p) => getSignedAudioUrl(p).catch(() => {})))
+  await signAudioPathsBatch(pending).catch(() => {})
+}
+
+/**
+ * Batch-sign missing URLs and ask the SW to precache audio bytes.
+ * @param {Pick<import('./types.js').Track, 'id' | 'storagePath' | 'audioBlob'>[]} tracks
+ * @param {number} [limit]
+ */
+export async function prefetchTracksAudio(tracks, limit = 24) {
+  const capped = prefetchLimitForNetwork(limit)
+  if (capped <= 0 || !browser) return
+
+  const cloud = tracks.filter(
+    (tr) =>
+      tr &&
+      typeof tr.storagePath === 'string' &&
+      tr.storagePath &&
+      !(tr.audioBlob instanceof Blob),
+  )
+  if (!cloud.length) return
+
+  const uniquePaths = [
+    ...new Set(cloud.map((tr) => /** @type {string} */ (tr.storagePath))),
+  ]
+  const pending = uniquePaths
+    .filter((p) => !peekSignedAudioUrl(p))
+    .slice(0, capped)
+  if (pending.length) {
+    const { data } = await supabase.auth.getSession()
+    if (!data.session) return
+    await signAudioPathsBatch(pending).catch(() => {})
+  }
+
+  const { precacheAudioInServiceWorker } = await import('./audioPrecache.js')
+  const warmed = new Set()
+  for (const tr of cloud) {
+    if (warmed.size >= capped) break
+    const path = tr.storagePath
+    if (!path || warmed.has(path)) continue
+    const url = peekSignedAudioUrl(path)
+    if (!url) continue
+    warmed.add(path)
+    precacheAudioInServiceWorker(url, tr.id)
+  }
 }
 
 /**

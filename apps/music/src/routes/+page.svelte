@@ -37,7 +37,7 @@
   } from '$lib/player.svelte.js'
   import { markNowPlayingReturn } from '$lib/nav.js'
   import { openUtilityPane } from '$lib/ui.svelte.js'
-  import { prefetchSignedUrls } from '$lib/cloudAudio.js'
+  import { prefetchTracksAudio } from '$lib/cloudAudio.js'
 
   let recent = $state([])
   let recentAdded = $state([])
@@ -111,10 +111,8 @@
       getSpeedDialPages(fatigueId),
     ])
     quickPicks = await getQuickPicks(speedDialTrackIds(speedDialPages), 6)
-    void prefetchSignedUrls(
-      [...recent, ...recentAdded, ...quickPicks]
-        .map((tr) => tr.storagePath)
-        .filter(Boolean),
+    void prefetchTracksAudio(
+      [...recent, ...recentAdded, ...quickPicks],
       24,
     )
   }
