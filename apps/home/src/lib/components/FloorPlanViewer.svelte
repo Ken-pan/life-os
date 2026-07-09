@@ -31,7 +31,7 @@
    *   wallChainFrom?: { x: number, y: number } | null,
    *   wallChainHover?: { x: number, y: number } | null,
    *   measurePoints?: { a: { x: number, y: number } | null, b: { x: number, y: number } | null },
-   *   fitRequest?: { token: number, cycle?: boolean },
+   *   fitRequest?: { token: number, cycle?: boolean, mode?: 'contain' | 'width' },
    *   onZoneSelect?: (code: string) => void,
    *   onClearSelection?: () => void,
    *   onBlankContextMenu?: (pt: { x: number, y: number, svgX: number, svgY: number }) => void,
@@ -77,11 +77,8 @@
   let panX = $state(0)
   let panY = $state(0)
   /** @type {'contain' | 'width'} */
-  let fitMode = $state(
-    browser && sessionStorage.getItem('home-plan-fit-mode') === 'width'
-      ? 'width'
-      : 'contain',
-  )
+  let fitMode = $state('contain')
+  let fitRaf = 0
   /** @type {HTMLElement | null} */
   let viewportEl = $state(null)
   /** @type {import('$lib/spatial/types.js').Layout508Config | null} */
@@ -166,8 +163,16 @@
   )
 
   const canvasStyle = $derived(
-    `transform: translate(${panX}px, ${panY}px) scale(${zoom}); transform-origin: top center;`,
+    `transform: translate(${panX}px, ${panY}px) scale(${zoom}); transform-origin: ${fitMode === 'contain' ? 'center center' : 'top center'};`,
   )
+
+  function scheduleFit() {
+    if (!browser) return
+    cancelAnimationFrame(fitRaf)
+    fitRaf = requestAnimationFrame(() => {
+      fitRaf = requestAnimationFrame(() => fitToView())
+    })
+  }
 
   function updateHudPos(clientX, clientY) {
     if (!viewportEl) return
@@ -280,7 +285,8 @@
 
   function resetView() {
     if (canvasPriority) {
-      fitToView()
+      fitMode = 'contain'
+      scheduleFit()
       return
     }
     zoom = 1
@@ -291,24 +297,28 @@
   /** @param {'contain' | 'width'} [mode] */
   function applyFit(mode) {
     if (mode) fitMode = mode
-    fitToView()
+    scheduleFit()
   }
 
-  /** Fit plan: contain = full drawing; width = fill canvas width */
+  /** Fit plan: contain = entire drawing visible; width = fill canvas width */
   function fitToView() {
     if (!viewportEl) return
     const vbW = displayProject.viewport.width
     const vbH = displayProject.viewport.height
-    const pad = 12
-    const canvasW = Math.max(viewportEl.clientWidth - pad, 120)
-    const canvasH = Math.max(viewportEl.clientHeight - pad, 120)
-    if (!vbW || !vbH) return
-    const scaleW = (canvasW / vbW) * 0.99
-    const scaleH = (canvasH / vbH) * 0.99
+    const pad = 16
+    const canvasW = Math.max(viewportEl.clientWidth - pad * 2, 200)
+    const canvasH = Math.max(viewportEl.clientHeight - pad * 2, 200)
+    if (!vbW || !vbH || canvasW < 80 || canvasH < 80) return
+
+    const scaleW = (canvasW / vbW) * 0.96
+    const scaleH = (canvasH / vbH) * 0.96
     const fit = fitMode === 'width' ? scaleW : Math.min(scaleW, scaleH)
-    zoom = Math.min(2.5, Math.max(0.4, fit))
+    zoom = Math.min(2.5, Math.max(0.2, fit))
+
+    const layoutH = canvasW * (vbH / vbW)
+    const scaledH = layoutH * zoom
     panX = 0
-    panY = 0
+    panY = fitMode === 'contain' ? Math.max(0, (canvasH - scaledH) / 2) : 0
   }
 
   /** @param {import('$lib/spatial/types.js').Layout508Config} config */
@@ -318,24 +328,29 @@
 
   $effect(() => {
     if (!browser) return
-    sessionStorage.setItem('home-plan-fit-mode', fitMode)
+    sessionStorage.removeItem('home-plan-fit-mode')
   })
 
   $effect(() => {
     if (!fitRequest.token) return
     if (fitRequest.cycle) {
       fitMode = fitMode === 'contain' ? 'width' : 'contain'
+    } else if (fitRequest.mode === 'contain' || fitRequest.mode === 'width') {
+      fitMode = fitRequest.mode
     }
-    fitToView()
+    scheduleFit()
   })
 
   $effect(() => {
     const el = viewportEl
     if (!canvasPriority || !el) return
-    fitToView()
-    const ro = new ResizeObserver(() => fitToView())
+    scheduleFit()
+    const ro = new ResizeObserver(() => scheduleFit())
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => {
+      ro.disconnect()
+      cancelAnimationFrame(fitRaf)
+    }
   })
 
   $effect(() => {
@@ -505,14 +520,16 @@
         class:active={fitMode === 'contain'}
         onclick={() => applyFit('contain')}
         aria-pressed={fitMode === 'contain'}
-      >全图</button>
+        title="默认：完整显示整张户型"
+      >看全图</button>
       <button
         type="button"
         class="plan-tool plan-tool-text"
         class:active={fitMode === 'width'}
         onclick={() => applyFit('width')}
         aria-pressed={fitMode === 'width'}
-      >宽度</button>
+        title="放大到铺满宽度，上下需滑动"
+      >铺满宽</button>
       {#if graphEditMode}
         <span class="plan-hint plan-hint-graph">
           {graphTool === 'wallAdd'
@@ -600,12 +617,18 @@
 
   .plan-shell.canvas-priority .plan-viewer:not(.compact) {
     flex: 1 1 auto;
-    min-height: 0;
+    min-height: min(68dvh, 760px);
     max-height: 100%;
     display: flex;
     flex-direction: column;
+    align-items: center;
     justify-content: center;
     overflow: hidden;
+  }
+
+  .plan-shell.canvas-priority .plan-canvas {
+    width: 100%;
+    max-width: 100%;
   }
 
   @media (min-width: 768px) {

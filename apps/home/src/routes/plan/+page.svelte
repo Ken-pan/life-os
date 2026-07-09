@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
   import {
     activateWallGraphMode,
@@ -58,9 +59,16 @@
   )
   const hideFabForBar = $derived(showSelectionBar || showGraphSelectionBar)
 
-  function bumpFit(/** @type {boolean} */ cycle = false) {
-    fitRequest = { token: fitRequest.token + 1, cycle }
+  function bumpFit(
+    /** @type {boolean} */ cycle = false,
+    /** @type {'contain' | 'width' | undefined} */ mode = undefined,
+  ) {
+    fitRequest = { token: fitRequest.token + 1, cycle, mode }
   }
+
+  onMount(() => {
+    bumpFit(false, 'contain')
+  })
 
   /** @type {{ a: { x: number, y: number } | null, b: { x: number, y: number } | null }} */
   let measurePoints = $state({ a: null, b: null })
