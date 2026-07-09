@@ -11,6 +11,10 @@ Window {
     // Paper Pro resolution is 1620x2160, 229 PPI, with color support
     color: "#FFFFFF"
 
+    Component.onCompleted: {
+        apiClient.fetchDashboard()
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 100
@@ -25,7 +29,7 @@ Window {
         }
 
         Text {
-            text: new Date().toLocaleDateString(Qt.locale(), "dddd, MMMM d, yyyy")
+            text: apiClient.dashboardData.today ? apiClient.dashboardData.today.date : new Date().toLocaleDateString(Qt.locale(), "dddd, MMMM d, yyyy")
             font.pixelSize: 40
             Layout.alignment: Qt.AlignHCenter
             color: "#555555"
@@ -38,19 +42,27 @@ Window {
         }
 
         Text {
-            text: "Current Focus"
+            text: apiClient.dashboardData.today && apiClient.dashboardData.today.currentFocus ? "Focus: " + apiClient.dashboardData.today.currentFocus.title : "Current Focus"
             font.pixelSize: 50
             font.bold: true
             color: "#000000"
             Layout.topMargin: 50
         }
 
-        // 3 Task Rows
+        Text {
+            visible: apiClient.errorMessage !== ""
+            text: "Offline / unable to sync: " + apiClient.errorMessage
+            font.pixelSize: 35
+            color: "#FF0000"
+            Layout.alignment: Qt.AlignHCenter
+        }
+
+        // Tasks
         Repeater {
-            model: [
-                "1. Complete PR-4A Hello App",
-                "2. Review PlannerOS API",
-                "3. Sync local changes"
+            model: apiClient.dashboardData.tasks ? apiClient.dashboardData.tasks : [
+                { title: "1. Complete PR-4A Hello App (Fallback)", isCompleted: false },
+                { title: "2. Review PlannerOS API (Fallback)", isCompleted: false },
+                { title: "3. Sync local changes (Fallback)", isCompleted: false }
             ]
             
             Rectangle {
@@ -63,9 +75,9 @@ Window {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.leftMargin: 30
-                    text: modelData
+                    text: modelData.title !== undefined ? modelData.title : modelData
                     font.pixelSize: 40
-                    color: index === 0 ? "#FF0000" : "#000000" // Use some color to test Paper Pro
+                    color: index === 0 ? "#FF0000" : "#000000"
                 }
             }
         }
@@ -75,7 +87,7 @@ Window {
         }
 
         Text {
-            text: "Last sync: mock"
+            text: apiClient.isLoading ? "Syncing..." : ("Last sync: " + new Date().toLocaleTimeString())
             font.pixelSize: 30
             Layout.alignment: Qt.AlignHCenter
             color: "#888888"

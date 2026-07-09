@@ -4,12 +4,14 @@ project(planneros-lite VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Network)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(planneros-lite
     src/main.cpp
+    src/ApiClient.cpp
+    src/ApiClient.h
 )
 
 qt_add_qml_module(planneros-lite
@@ -25,4 +27,5 @@ target_link_libraries(planneros-lite
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::Network
 )

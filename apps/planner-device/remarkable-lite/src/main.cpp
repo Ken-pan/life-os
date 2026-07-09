@@ -2,6 +2,8 @@
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 #include <QSurfaceFormat>
+#include <QQmlContext>
+#include "ApiClient.h"
 
 int main(int argc, char *argv[])
 {
@@ -11,7 +13,11 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+    ApiClient apiClient;
+
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("apiClient", &apiClient);
+
     const QUrl url(u"qrc:/qt/qml/PlannerOS/qml/Main.qml"_qs);
     QObject::connect(
         &engine,
