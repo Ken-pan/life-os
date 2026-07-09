@@ -15,7 +15,7 @@ qt_add_executable(paperos
 )
 
 qt_add_qml_module(paperos
-    URI PaperOS
+    URI PaperOSApp
     VERSION 1.0
     QML_FILES
         qml/Main.qml

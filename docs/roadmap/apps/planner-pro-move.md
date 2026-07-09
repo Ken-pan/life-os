@@ -1,6 +1,6 @@
 # PaperOS on reMarkable Paper Pro Move
 
-**Owner:** Planner · **Device:** reMarkable Paper Pro Move (`imx93-chiappa`) · **Status:** P-MOVE-2 next
+**Owner:** Planner · **Device:** reMarkable Paper Pro Move (`imx93-chiappa`) · **Status:** P-MOVE-2 read-cache binary deployed
 
 This is the execution plan for the Paper Pro Move UX path. The decision is to
 build a home-only, session-based PaperOS first, then add autonomous
@@ -22,7 +22,7 @@ first functional provider for PaperOS.
 | Device app UX | P-MOVE-1 PASS | Old binary migrated from `/home/root/planneros-lite/planneros-lite` to `/home/root/paperos/paperos`; launcher/recovery verified |
 | Production read API | PASS | 2026-07-09 production redeploy included Netlify functions; `/api/paper/today` returns 200 with `PAPER_DEVICE_TOKEN` |
 | Device read cache | PASS | `/home/root/paperos/refresh-cache.sh` writes `cache.json` and `last_sync.txt` from production API; see [`../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md) |
-| PaperOS read-cache binary | Pending SDK build | Source is wired to cache/token paths; rebuilt `paperos` binary still needs the reMarkable Qt6 SDK |
+| PaperOS read-cache binary | PASS | Rebuilt `paperos` deployed to `/home/root/paperos/paperos`; session refreshed `last_sync.txt` to `2026-07-09T23:55:02Z` |
 | xochitl integration | Out of scope | No xochitl patching, sidebar injection, or boot replacement in this phase |
 
 ## Product Decision
@@ -153,8 +153,9 @@ Remaining before daily use on Move:
 - [x] Add `/home/root/paperos/token` and verify `refresh-cache.sh` against `/api/paper/today`.
 - [x] Restore PaperOS device source into this monorepo.
 - [x] Wire PaperOS source to load `cache.json`, `token`, and `last_sync.txt`.
-- [ ] Rebuild the updated `paperos` binary with the reMarkable Qt6 SDK.
-- [ ] Deploy rebuilt `paperos` to `/home/root/paperos/paperos` and verify offline cached rendering.
+- [x] Rebuild the updated `paperos` binary with the reMarkable Qt6 SDK.
+- [x] Deploy rebuilt `paperos` to `/home/root/paperos/paperos` and verify cache refresh from the client.
+- [ ] Verify explicit offline visual rendering on Move.
 - [ ] Run staging validation before enabling real writes outside local validation.
 
 ## Immediate Next Checklist
@@ -166,4 +167,5 @@ Remaining before daily use on Move:
 - [x] Deploy/migrate PaperOS under `/home/root/paperos`.
 - [x] Record device-session evidence in a new gate doc before P-MOVE-2.
 - [x] Install device token and validate read-cache refresh.
-- [ ] Build and deploy the refreshed PaperOS Qt binary.
+- [x] Build and deploy the refreshed PaperOS Qt binary.
+- [ ] Populate Planner data for the configured PaperOS user and verify non-empty Today rendering.

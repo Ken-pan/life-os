@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("apiClient", &apiClient);
 
-    const QUrl url(u"qrc:/qt/qml/PaperOS/qml/Main.qml"_qs);
+    const QUrl url(u"qrc:/qt/qml/PaperOSApp/qml/Main.qml"_qs);
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

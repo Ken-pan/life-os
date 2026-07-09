@@ -98,7 +98,7 @@ Window {
                     }
 
                     Text {
-                        text: apiClient.dashboardData.today && apiClient.dashboardData.today.currentFocus ? apiClient.dashboardData.today.currentFocus.title : "No current focus"
+                        text: apiClient.dashboardData.today && apiClient.dashboardData.today.currentFocus && apiClient.dashboardData.today.currentFocus.title ? apiClient.dashboardData.today.currentFocus.title : "No current focus"
                         font.pixelSize: root.fontFocus
                         font.bold: true
                         color: root.inkColor
