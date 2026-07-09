@@ -968,10 +968,15 @@
       min-height: min(72dvh, 780px);
     }
 
+    .plan-shell.canvas-priority.toolbar-minimal .plan-viewer:not(.compact) {
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+
     .plan-shell.canvas-priority.toolbar-minimal .plan-toolbar {
       top: auto;
-      bottom: max(10px, var(--safe-bottom-effective));
-      right: max(10px, var(--safe-right-effective));
+      bottom: var(--space-2-5);
+      right: var(--space-2-5);
       left: auto;
       flex-wrap: nowrap;
       padding: 3px 5px;
@@ -1010,8 +1015,8 @@
   @media (min-width: 600px) {
     .plan-shell.canvas-priority.plan-editing .plan-toolbar {
       top: auto;
-      bottom: max(12px, var(--safe-bottom-effective));
-      left: max(12px, var(--safe-left-effective));
+      bottom: var(--stack-tight);
+      left: var(--stack-tight);
       right: auto;
     }
   }

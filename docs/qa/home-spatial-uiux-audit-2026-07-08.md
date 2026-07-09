@@ -182,6 +182,14 @@ Wave C（P2，随 H-W3/W5）
 
 **验证：** `npm run check` · `npm run test:plan-edit` · `npm run test:viewport`
 
+## Wave 3.1 回归修复（2026-07-08）
+
+| 问题 | 修复 |
+|------|------|
+| 手机编辑 `plan-top` 撑至 ~375px、画布 `plan-stage` ≈0 | compact select 行去掉 `flex: 1 1 140px` 纵向拉伸；immersive 画布改 flex 填充（`min-height: 0` + stage `min(52dvh)`） |
+
+**复验截图：** `verify/23-edit-mobile-fixed.png` · `09-opening-selected-iphone-se.png` · `25-empty-graph-mobile-fixed.png`
+
 ## 复现
 
 ```bash

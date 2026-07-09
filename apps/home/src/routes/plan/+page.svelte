@@ -880,41 +880,41 @@
 
     {#if planMode === 'edit' && !compactPlanChrome}
       <div class="edit-chrome-wrap">
-          <div class="step-segment" role="group" aria-label="编辑步骤">
-            <button
-              type="button"
-              class="step-btn"
-              class:active={editStep === 'walls'}
-              aria-pressed={editStep === 'walls'}
-              onclick={() => setEditStep('walls')}
-            >
-              ① 墙体
-            </button>
-            <button
-              type="button"
-              class="step-btn"
-              class:active={editStep === 'zones'}
-              aria-pressed={editStep === 'zones'}
-              disabled={!wallGraph}
-              title={wallGraph ? '手绘分区' : '请先转换为墙图'}
-              onclick={() => setEditStep('zones')}
-            >
-              ② 划分
-            </button>
-            <button
-              type="button"
-              class="step-btn"
-              class:active={editStep === 'place'}
-              aria-pressed={editStep === 'place'}
-              disabled={!wallGraph}
-              title={wallGraph ? '家具与储藏指派' : '请先转换为墙图'}
-              onclick={() => setEditStep('place')}
-            >
-              ③ 布置
-            </button>
-          </div>
+        <div class="step-segment" role="group" aria-label="编辑步骤">
+          <button
+            type="button"
+            class="step-btn"
+            class:active={editStep === 'walls'}
+            aria-pressed={editStep === 'walls'}
+            onclick={() => setEditStep('walls')}
+          >
+            ① 墙体
+          </button>
+          <button
+            type="button"
+            class="step-btn"
+            class:active={editStep === 'zones'}
+            aria-pressed={editStep === 'zones'}
+            disabled={!wallGraph}
+            title={wallGraph ? '手绘分区' : '请先转换为墙图'}
+            onclick={() => setEditStep('zones')}
+          >
+            ② 划分
+          </button>
+          <button
+            type="button"
+            class="step-btn"
+            class:active={editStep === 'place'}
+            aria-pressed={editStep === 'place'}
+            disabled={!wallGraph}
+            title={wallGraph ? '家具与储藏指派' : '请先转换为墙图'}
+            onclick={() => setEditStep('place')}
+          >
+            ③ 布置
+          </button>
+        </div>
 
-          {#if graphEditMode}
+        {#if graphEditMode}
           <div class="tool-segment-scroll" data-scroll-hint="tools">
             <div class="tool-segment" role="group" aria-label="墙图工具">
               <button
@@ -1300,7 +1300,9 @@
       aria-labelledby="placement-kinds-title"
       onclose={() => (placementKindsOpen = false)}
     >
-      <p id="placement-kinds-title" class="storage-picker-title">选择家具类型</p>
+      <p id="placement-kinds-title" class="storage-picker-title">
+        选择家具类型
+      </p>
       <div class="storage-picker-grid placement-kinds-grid">
         {#each Object.entries(PLACEMENT_KINDS) as [kind, spec]}
           <button
@@ -1309,7 +1311,9 @@
             class:active={placementKind === kind}
             aria-pressed={placementKind === kind}
             onclick={() =>
-              setPlacementKind(/** @type {keyof typeof PLACEMENT_KINDS} */ (kind))}
+              setPlacementKind(
+                /** @type {keyof typeof PLACEMENT_KINDS} */ (kind),
+              )}
           >
             {spec.label}
           </button>
@@ -1338,7 +1342,7 @@
       editMode={editMode508}
       {graphEditMode}
       {zoneEditMode}
-      placeEditMode={placeEditMode}
+      {placeEditMode}
     />
 
     <button
@@ -1427,7 +1431,9 @@
               </p>
               {#if selectedPlacementObj}
                 <p class="graph-aside-lead">
-                  {selectedPlacementObj.label} · {Math.round(selectedPlacementObj.w)}″×{Math.round(selectedPlacementObj.h)}″
+                  {selectedPlacementObj.label} · {Math.round(
+                    selectedPlacementObj.w,
+                  )}″×{Math.round(selectedPlacementObj.h)}″
                 </p>
                 <button
                   type="button"
@@ -1448,7 +1454,8 @@
                 </button>
               {:else}
                 <p class="graph-aside-lead">
-                  选中画布上的家具可在此编辑；「标储藏」点击分区或家具指派 S1–S8。
+                  选中画布上的家具可在此编辑；「标储藏」点击分区或家具指派
+                  S1–S8。
                 </p>
               {/if}
             </section>
@@ -1491,8 +1498,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 8px 10px;
-    margin-bottom: 10px;
-    padding: 8px 10px;
+    padding: var(--stack-tight) var(--stack-section);
     flex-shrink: 0;
     border-radius: 14px;
     border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
@@ -1520,7 +1526,7 @@
 
   .plan-tool-select-wrap {
     display: flex;
-    flex: 1 1 140px;
+    flex: 1 1 auto;
     min-width: 0;
   }
 
@@ -1826,7 +1832,7 @@
   .plan-drawer-fab {
     position: fixed;
     z-index: 48;
-    right: max(14px, var(--safe-right-effective));
+    right: var(--inset-inline-end);
     bottom: calc(
       var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 14px
     );
@@ -1864,11 +1870,14 @@
     position: fixed;
     z-index: 50;
     top: calc(var(--appbar-h, 56px) + 8px);
-    right: max(8px, var(--safe-right-effective));
+    right: var(--inset-inline-end);
     bottom: calc(
       var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 8px
     );
-    width: min(380px, calc(100vw - 16px));
+    width: min(
+      380px,
+      calc(100vw - var(--inset-inline-start) - var(--inset-inline-end))
+    );
     display: flex;
     flex-direction: column;
     border: 1px solid var(--border);
@@ -1938,8 +1947,8 @@
   @media (max-width: 599px) {
     .plan-drawer {
       top: auto;
-      left: max(8px, var(--safe-left-effective));
-      right: max(8px, var(--safe-right-effective));
+      left: var(--inset-inline-start);
+      right: var(--inset-inline-end);
       width: auto;
       max-height: min(72dvh, 560px);
       border-radius: 14px 14px 0 0;
@@ -1956,10 +1965,16 @@
     }
 
     .plan-top-edit .edit-chrome-compact {
-      flex: 1 1 100%;
+      flex: 0 0 auto;
       flex-direction: column;
       align-items: stretch;
       gap: 6px;
+      width: 100%;
+    }
+
+    .plan-top-edit .edit-chrome-compact .plan-tool-select-wrap {
+      flex: 0 0 auto;
+      width: 100%;
     }
 
     .plan-top-edit .edit-chrome-wrap:not(.edit-chrome-compact) {
@@ -2024,9 +2039,15 @@
       height: 44px;
     }
 
+    .plan-page-immersive .plan-stage {
+      flex: 1 1 auto;
+      min-height: min(52dvh, 520px);
+    }
+
     .plan-page-immersive
       :global(.plan-shell.canvas-priority .plan-viewer:not(.compact)) {
-      min-height: min(78dvh, 860px);
+      min-height: 0;
+      flex: 1 1 auto;
     }
 
     .plan-page-immersive .plan-drawer-fab {
