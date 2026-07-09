@@ -1,5 +1,6 @@
 -- UI locale preference (zh-CN / en-US), synced per user.
--- Legacy one-off; canonical migration: migrations/20260709120000_finance_user_settings_locale.sql
+-- Table was renamed user_settings → finance_user_settings; locale was never added on prod.
+
 alter table public.finance_user_settings
   add column if not exists locale text not null default 'zh-CN';
 

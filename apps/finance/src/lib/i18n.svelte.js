@@ -7,7 +7,11 @@
 // $effect）中调用 `locale()` 即可正确建立依赖追踪。
 import { browser } from '$app/environment'
 import { intlLocale } from '@life-os/finance-core/i18n/formatLocale'
-import { getActiveLocale, setActiveLocale, t as translateMessage } from '@life-os/finance-core/i18n/translate'
+import {
+  getActiveLocale,
+  setActiveLocale,
+  t as translateMessage,
+} from '@life-os/finance-core/i18n/translate'
 import {
   DEFAULT_LOCALE,
   isAppLocale,
@@ -56,7 +60,11 @@ export function locale() {
 export function initLocale(options = {}) {
   const { initialLocale, onLocaleChange } = options
   onLocaleChangeHandler = onLocaleChange ?? null
-  if (initialLocale && isAppLocale(initialLocale) && initialLocale !== currentLocale) {
+  if (
+    initialLocale &&
+    isAppLocale(initialLocale) &&
+    initialLocale !== currentLocale
+  ) {
     currentLocale = initialLocale
   }
   applyLocaleSideEffects(currentLocale)
@@ -72,7 +80,7 @@ export function initLocale(options = {}) {
 
 /** @param {import('@life-os/finance-core/i18n/types').AppLocale} next */
 export function setLocale(next) {
-  if (!isAppLocale(next)) return
+  if (!isAppLocale(next) || next === currentLocale) return
   currentLocale = next
   onLocaleChangeHandler?.(next)
 }

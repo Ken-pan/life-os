@@ -41,7 +41,7 @@
   import { createDefaultData } from '@life-os/finance-core/defaults'
   import { ensureFinanceSetup } from '$lib/engine/financeSetup'
   import { DEFAULT_LOCALE, readStoredLocale } from '@life-os/finance-core/i18n/types'
-  import { t, setLocale } from '$lib/i18n.svelte.js'
+  import { t, locale, setLocale } from '$lib/i18n.svelte.js'
   import AppBrand from '@life-os/platform-web/svelte/brand'
   import FinanceProviders from './FinanceProviders.svelte'
 
@@ -66,7 +66,7 @@
     dataSig = sig
     initialData = data
     dataEpoch += 1
-    if (data.locale) setLocale(data.locale)
+    if (data.locale && data.locale !== locale()) setLocale(data.locale)
   }
 
   /** @returns {Promise<string | null>} */
@@ -158,12 +158,13 @@
 
   onMount(() => {
     const handleLocaleEvent = (e) => {
-      const locale = e.detail
-      if (!locale || phase !== 'ready') return
-      void saveLocale(locale).catch((e) => {
+      const nextLocale = e.detail
+      if (!nextLocale || phase !== 'ready') return
+      if (initialData?.locale === nextLocale) return
+      void saveLocale(nextLocale).catch((e) => {
         console.warn('[finance] 保存语言偏好失败：', e)
       })
-      if (initialData) initialData = { ...initialData, locale }
+      if (initialData) initialData = { ...initialData, locale: nextLocale }
     }
     window.addEventListener(LOCALE_CHANGE_EVENT, handleLocaleEvent)
 
@@ -187,11 +188,11 @@
 
   // 云端 locale 到达时同步激活；若用户已在本地显式切换过语言，则不覆盖。
   $effect(() => {
-    const locale = initialData?.locale
-    if (!locale) return
+    const cloudLocale = initialData?.locale
+    if (!cloudLocale || cloudLocale === locale()) return
     const stored = readStoredLocale()
-    if (stored !== DEFAULT_LOCALE && stored !== locale) return
-    setLocale(locale)
+    if (stored !== DEFAULT_LOCALE && stored !== cloudLocale) return
+    setLocale(cloudLocale)
   })
 
   let email = $state('')

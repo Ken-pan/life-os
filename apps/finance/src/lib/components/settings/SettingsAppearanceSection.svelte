@@ -1,7 +1,6 @@
 <script>
   import { SUPPORTED_LOCALES } from '@life-os/finance-core/i18n/types'
   import { t, locale, setLocale } from '$lib/i18n.svelte.js'
-  import { notifyLocalePersist } from '$lib/components/AuthGate.svelte'
   import SettingsPrefRow from './SettingsPrefRow.svelte'
 
   /** @typedef {import('../../../lib/themePreference').ThemePreference} ThemePreference */
@@ -27,7 +26,6 @@
   /** @param {import('@life-os/finance-core/i18n/types').AppLocale} next */
   function pickLocale(next) {
     setLocale(next)
-    notifyLocalePersist(next)
   }
 </script>
 
