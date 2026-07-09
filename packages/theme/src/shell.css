@@ -784,23 +784,50 @@ html {
     backdrop-filter: none;
   }
 
-  /* Standalone: cover iOS status-bar / content hairline with one opaque header layer */
-  html.standalone-pwa .appbar,
-  html.standalone-pwa .page-header {
-    isolation: isolate;
-  }
+  /*
+    Standalone: appbar owns safe-top padding so one opaque layer paints the
+    status-bar band (padding is inside the border box; margin would not).
+  */
+  @supports (-webkit-touch-callout: none) {
+    html.standalone-pwa .appbar,
+    html.standalone-pwa .page-header {
+      background-color: var(--bg);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
 
-  html.standalone-pwa .appbar::before,
-  html.standalone-pwa .page-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: calc(var(--safe-top-effective) + 3px);
-    background-color: var(--bg);
-    pointer-events: none;
-    z-index: -1;
+    html.standalone-pwa .appbar {
+      padding-top: max(59px, var(--safe-top-effective));
+    }
+
+    html.standalone-pwa .appbar-inner {
+      padding-top: max(var(--stack-tight), 0px);
+    }
+
+    html.standalone-pwa .page-header {
+      padding-top: max(var(--stack-tight), max(59px, var(--safe-top-effective)));
+    }
+
+    @media (display-mode: standalone) {
+      .appbar,
+      .page-header {
+        background-color: var(--bg);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+
+      .appbar {
+        padding-top: max(59px, var(--safe-top-effective));
+      }
+
+      .appbar-inner {
+        padding-top: max(var(--stack-tight), 0px);
+      }
+
+      .page-header {
+        padding-top: max(var(--stack-tight), max(59px, var(--safe-top-effective)));
+      }
+    }
   }
 
   .page-header {

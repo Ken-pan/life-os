@@ -115,10 +115,8 @@ body,
   }
 
   /*
-    Standalone + real header: one sticky/fixed chrome layer paints the status-bar
-    region (Safari 26 samples .appbar / .page-header). A second fixed tint strip
-    leaves a 1px hairline under the Dynamic Island — hide it when header exists.
-    Ref: andesco/safari-color-tinting, 1ar.io Safari 26 Liquid Glass notes.
+    Standalone + real header: hide the extra fixed tint strip — sticky header
+    extends behind the status bar (shell.css). Without a header, tint stays on.
   */
   html.standalone-pwa .app-shell:has(.appbar, .page-header) .safari-chrome-tint-top {
     display: none !important;
@@ -140,6 +138,38 @@ body,
   html.standalone-pwa :is(.nav, .mobile-tabbar, .bottom-shell .nav, .bottom-shell .bottom-nav) {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+}
+
+/*
+  iOS standalone: env(safe-area-inset-top) may be 0 on cold start (WebKit #301994).
+  59px covers Dynamic Island devices when env() under-reports.
+*/
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    :root {
+      --safe-top-effective: max(59px, var(--ios-edge-min), env(safe-area-inset-top, 0px));
+    }
+
+    .app-shell:has(.appbar, .page-header) .safari-chrome-tint-top {
+      display: none !important;
+    }
+  }
+
+  html.standalone-pwa {
+    --safe-top-effective: max(59px, var(--ios-edge-min), env(safe-area-inset-top, 0px));
+  }
+
+  @media (--life-os-mobile) {
+    html.standalone-pwa {
+      background-color: var(--bg);
+    }
+  }
+
+  @media (--life-os-mobile) and (display-mode: standalone) {
+    html {
+      background-color: var(--bg);
+    }
   }
 }
 

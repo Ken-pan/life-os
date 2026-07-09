@@ -142,6 +142,23 @@ function syncStandaloneClass() {
   document.documentElement.classList.toggle('standalone-pwa', isStandalonePwa())
 }
 
+/** iOS 26.1: env(safe-area-inset-top) can be 0 in standalone on cold start */
+function syncSafeTopEffective() {
+  if (typeof document === 'undefined' || !isStandalonePwa()) return
+
+  const root = document.documentElement
+  const probe = document.createElement('div')
+  probe.style.cssText =
+    'position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)'
+  document.body?.appendChild(probe)
+  const measured = parseFloat(getComputedStyle(probe).paddingTop) || 0
+  probe.remove()
+
+  const minTop = 59
+  const effective = Math.max(minTop, measured)
+  root.style.setProperty('--safe-top-effective', `${effective}px`)
+}
+
 /**
  * Keep --app-vh aligned with viewport mode:
  * - Safari browser: visualViewport px (URL bar)
@@ -153,6 +170,7 @@ export function bindViewportHeight() {
 
   syncViewportHeight(true)
   syncStandaloneClass()
+  syncSafeTopEffective()
 
   if (!needsViewportHeightSync()) {
     return () => {}
@@ -165,6 +183,7 @@ export function bindViewportHeight() {
     rafId = null
     syncViewportHeight()
     syncStandaloneClass()
+    syncSafeTopEffective()
   }
 
   const schedule = () => {

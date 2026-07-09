@@ -56,6 +56,9 @@
         ? "100vh"
         : ((window.visualViewport && window.visualViewport.height) || window.innerHeight) + "px";
       document.documentElement.style.setProperty("--app-vh", vh);
+      if (standalone) {
+        document.documentElement.style.setProperty("--safe-top-effective", "59px");
+      }
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
