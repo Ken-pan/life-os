@@ -10,5 +10,12 @@
 
 <label class="file-input-btn btn-secondary">
   {label}
-  <input type="file" {accept} {disabled} {onchange} />
+  <input
+    type="file"
+    {accept}
+    {disabled}
+    {onchange}
+    aria-hidden="true"
+    tabindex="-1"
+  />
 </label>

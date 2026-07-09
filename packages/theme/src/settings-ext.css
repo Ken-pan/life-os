@@ -204,7 +204,7 @@
   }
 }
 
-/* Toggle 别名（Fitness 沿用 .toggle） */
+/* Toggle 别名（Fitness 沿用 .toggle） — W3C APG: button + role=switch; 44px hit area via padding */
 .toggle,
 .settings-toggle {
   width: 46px;
@@ -216,6 +216,18 @@
   flex-shrink: 0;
   cursor: pointer;
   border: none;
+  box-sizing: content-box;
+  padding-block: calc((44px - 27px) / 2);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle:focus-visible,
+.settings-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .toggle::after,
@@ -242,7 +254,9 @@
 }
 
 .toggle.disabled,
-.settings-toggle.disabled {
+.toggle:disabled,
+.settings-toggle.disabled,
+.settings-toggle:disabled {
   opacity: var(--control-toggle-disabled-opacity);
   cursor: not-allowed;
 }

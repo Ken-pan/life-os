@@ -1,7 +1,12 @@
 <script>
   import SettingsSection from '@life-os/platform-web/svelte/settings/section'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
+  import SettingsActionRow from '@life-os/platform-web/svelte/settings/action-row'
   import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row'
+  import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
+  import SettingsStackBlock from '@life-os/platform-web/svelte/settings/stack-block'
+  import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
+  import SettingsFileButton from '@life-os/platform-web/svelte/settings/file-button'
   import {
     S,
     setTheme,
@@ -16,6 +21,13 @@
   import { getActiveProject } from '$lib/state.svelte.js'
   import { auth, signIn, signUp, signOut, authErrorMessage } from '$lib/auth.svelte.js'
   import { isSupabaseConfigured } from '$lib/supabase.js'
+  import { toast } from '$lib/ui.svelte.js'
+
+  const themeOptions = [
+    { value: 'auto', label: '跟随系统' },
+    { value: 'light', label: '浅色' },
+    { value: 'dark', label: '深色' },
+  ]
 
   const project = $derived(getActiveProject())
   const wallGraphMode = $derived(isWallGraphMode())
@@ -78,6 +90,12 @@
     await signOut()
   }
 
+  function onReset508Layout() {
+    if (!confirm('恢复默认户型尺寸？将覆盖当前布局参数。')) return
+    reset508Layout()
+    toast('已恢复默认户型尺寸')
+  }
+
   function downloadLayoutJson() {
     const blob = new Blob([exportLayoutJson()], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -97,7 +115,7 @@
     reader.onload = () => {
       const text = typeof reader.result === 'string' ? reader.result : ''
       const result = importLayoutJson(text)
-      if (!result.ok) alert(result.error)
+      if (!result.ok) toast(result.error, 'error')
       input.value = ''
     }
     reader.readAsText(file)
@@ -113,46 +131,48 @@
     <SettingsRow label="已登录">
       <span class="settings-value">{auth.user.email}</span>
     </SettingsRow>
-    <SettingsRow label="操作">
-      <button type="button" class="settings-btn" onclick={onSignOut}>退出登录</button>
-    </SettingsRow>
-    <p class="settings-hint">布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。</p>
+    <SettingsActionRow label="操作" buttonLabel="退出登录" onclick={onSignOut} />
+    <p class="block-desc">布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。</p>
   {:else if confirmSent}
-    <p class="settings-hint">验证邮件已发送至 {email}，请查收后登录。</p>
+    <p class="block-desc">验证邮件已发送至 {email}，请查收后登录。</p>
   {:else}
     <form class="auth-form" onsubmit={onAuthSubmit}>
       <SettingsRow label="邮箱">
-        <input class="settings-input" type="email" bind:value={email} autocomplete="email" required />
+        <input type="email" bind:value={email} autocomplete="email" required />
       </SettingsRow>
       <SettingsRow label="密码">
-        <input class="settings-input" type="password" bind:value={password} autocomplete={authMode === 'signup' ? 'new-password' : 'current-password'} minlength="6" required />
+        <input type="password" bind:value={password} autocomplete={authMode === 'signup' ? 'new-password' : 'current-password'} minlength="6" required />
       </SettingsRow>
       {#if authError}
-        <p class="settings-error">{authError}</p>
+        <p class="block-desc settings-error">{authError}</p>
       {/if}
-      <div class="auth-actions">
-        <button type="submit" class="settings-btn settings-btn-primary" disabled={authBusy}>
+      <SettingsButtonGroup>
+        <button type="submit" class="btn-primary" disabled={authBusy}>
           {authBusy ? '…' : authMode === 'signin' ? '登录' : '注册'}
         </button>
-        <button type="button" class="settings-btn" onclick={() => { authMode = authMode === 'signin' ? 'signup' : 'signin'; authError = '' }}>
+        <button
+          type="button"
+          class="btn-secondary"
+          onclick={() => {
+            authMode = authMode === 'signin' ? 'signup' : 'signin'
+            authError = ''
+          }}
+        >
           {authMode === 'signin' ? '创建账号' : '已有账号？登录'}
         </button>
-      </div>
+      </SettingsButtonGroup>
     </form>
   {/if}
 </SettingsSection>
 
 <SettingsSection title="外观">
   <SettingsRow label="主题">
-    <select
-      class="settings-select"
-      value={S.settings.theme}
-      onchange={(e) => onTheme(/** @type {HTMLSelectElement} */ (e.currentTarget).value)}
-    >
-      <option value="auto">跟随系统</option>
-      <option value="light">浅色</option>
-      <option value="dark">深色</option>
-    </select>
+    <SettingsSegment
+      options={themeOptions}
+      value={S.settings.theme || 'auto'}
+      onchange={onTheme}
+      ariaLabel="主题"
+    />
   </SettingsRow>
   <SettingsToggleRow
     label="竖屏锁定（手机）"
@@ -170,31 +190,27 @@
     <span class="settings-value">{wallGraphMode ? '墙图' : '508 参数'}</span>
   </SettingsRow>
   {#if !wallGraphMode}
-    <SettingsRow label="转换">
-      <button type="button" class="settings-btn settings-btn-primary" onclick={onConvertToWallGraph}>
+    <SettingsStackBlock label="转换">
+      <button type="button" class="btn-primary" onclick={onConvertToWallGraph}>
         从当前户型生成墙图（一次性）
       </button>
-    </SettingsRow>
-    <p class="settings-hint">转换后可自由建删墙；508 参数仍保留作「返回 508」的安全气囊。</p>
+    </SettingsStackBlock>
+    <p class="block-desc">转换后可自由建删墙；508 参数仍保留作「返回 508」的安全气囊。</p>
   {:else}
     <SettingsRow label="墙图统计">
-      <span class="settings-value">
-        顶点 {project.wallGraph?.vertices.length ?? 0} · 墙段
-        {project.wallGraph?.edges.length ?? 0} · 门窗
-        {project.graphOpenings?.length ?? 0}
-      </span>
+      <span class="settings-value">{project.wallGraph?.vertices.length ?? 0} 顶点 ·
+        {project.wallGraph?.edges.length ?? 0} 墙段 ·
+        {project.graphOpenings?.length ?? 0} 门窗 ·
+        {project.zones?.length ?? 0} 分区 ·
+        {project.placements?.length ?? 0} 家具</span>
     </SettingsRow>
-    <SettingsRow label="恢复">
-      <button type="button" class="settings-btn" onclick={onRevertTo508}>
-        返回 508 参数模式
-      </button>
-    </SettingsRow>
-    <p class="settings-hint">墙图改动不会回写 508 参数；返回后将丢弃墙图编辑。</p>
-    <SettingsRow label="门窗">
-      <button type="button" class="settings-btn" onclick={reconvertGraphOpenings}>
-        重新识别门窗
-      </button>
-    </SettingsRow>
+    <SettingsActionRow
+      label="恢复"
+      desc="墙图改动不会回写 508 参数"
+      buttonLabel="返回 508 参数模式"
+      onclick={onRevertTo508}
+    />
+    <SettingsActionRow label="门窗" buttonLabel="重新识别门窗" onclick={reconvertGraphOpenings} />
   {/if}
 </SettingsSection>
 
@@ -218,34 +234,27 @@
     <a class="settings-link" href="/plan">前往平面图 →</a>
   </SettingsRow>
   <SettingsRow label="布局备份">
-    <button type="button" class="settings-btn" onclick={downloadLayoutJson}>导出 JSON</button>
+    <button type="button" class="btn-secondary" onclick={downloadLayoutJson}>导出 JSON</button>
   </SettingsRow>
   <SettingsRow label="布局恢复">
-    <label class="settings-file">
-      <span class="settings-btn">导入 JSON</span>
-      <input type="file" accept="application/json,.json" class="sr-only" onchange={onImportLayout} />
-    </label>
+    <SettingsFileButton label="导入 JSON" accept="application/json,.json" onchange={onImportLayout} />
   </SettingsRow>
-  <SettingsRow label="恢复默认">
-    <button type="button" class="settings-btn" onclick={reset508Layout}>默认户型尺寸</button>
-  </SettingsRow>
+  <SettingsActionRow
+    label="恢复默认"
+    desc="覆盖当前户型尺寸参数"
+    buttonLabel="默认户型尺寸"
+    variant="danger"
+    onclick={onReset508Layout}
+  />
 </SettingsSection>
 
 <style>
-  .settings-select {
-    font-size: 14px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--t1);
-  }
-
   .settings-value {
     font-size: 14px;
     font-weight: 600;
     color: var(--t1);
     font-variant-numeric: tabular-nums;
+    text-align: end;
   }
 
   .settings-link {
@@ -255,71 +264,17 @@
     text-decoration: none;
   }
 
-  .settings-btn {
-    font-size: 13px;
-    font-weight: 600;
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--t1);
-    cursor: pointer;
-  }
-
-  .settings-btn-primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--on-accent, #fff);
-  }
-
-  .settings-input {
-    font-size: 14px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--t1);
-    min-width: 200px;
-  }
-
-  .settings-hint {
-    margin: 8px 0 0;
-    font-size: 13px;
-    color: var(--t2);
-    line-height: 1.45;
-  }
-
   .settings-error {
-    margin: 8px 0 0;
-    font-size: 13px;
     color: var(--danger, #c0392b);
   }
 
   .auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    display: contents;
   }
 
-  .auth-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
-  }
-
-  .settings-file {
-    cursor: pointer;
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
+  :global(.settings-block.set-group .block-title.sg-title) {
+    text-transform: none;
+    letter-spacing: 0.04em;
+    font-family: var(--font);
   }
 </style>

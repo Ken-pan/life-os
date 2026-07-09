@@ -287,6 +287,10 @@ a.btn-danger {
   margin-bottom: var(--card-stack-gap);
 }
 
+.settings-block.set-group {
+  padding: 0;
+}
+
 .settings-block:last-child { margin-bottom: 0; }
 
 .settings-block .block-title {
@@ -318,6 +322,11 @@ a.btn-danger {
   border-top: 1px solid var(--control-border);
 }
 
+.settings-row.set-row,
+.set-row.settings-row {
+  padding: var(--space-4) var(--inset-inline);
+}
+
 .pref-label {
   font-size: var(--text-base);
   font-weight: 500;
@@ -342,6 +351,30 @@ a.btn-danger {
 .settings-row .pref-control > .btn-secondary:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--accent) 28%, var(--button-secondary-border, var(--border)));
   background: var(--control-bg-hover, var(--card-h));
+}
+
+.settings-row .pref-control > .btn-secondary:disabled,
+.settings-row .pref-control > .btn-danger:disabled {
+  opacity: 1;
+  color: var(--control-text-muted, var(--t3, var(--text-muted)));
+  background: var(--control-bg, var(--card));
+  border-color: var(--control-border, var(--border));
+  cursor: not-allowed;
+}
+
+.settings-row .pref-control > input[type='email'],
+.settings-row .pref-control > input[type='password'],
+.settings-row .pref-control > input[type='text'] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius, var(--radius-control, 8px));
+  background: var(--card);
+  color: var(--t1, var(--text));
+  padding: 10px 12px;
+  font-size: var(--text-base);
 }
 
 .sr-label,

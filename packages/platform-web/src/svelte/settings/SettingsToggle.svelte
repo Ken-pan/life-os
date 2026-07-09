@@ -8,21 +8,14 @@
   }
 </script>
 
-<div
+<button
+  type="button"
   class="toggle settings-toggle"
   class:on={checked}
   class:disabled
   role="switch"
   aria-label={ariaLabel || undefined}
   aria-checked={checked}
-  aria-disabled={disabled}
-  tabindex={disabled ? -1 : 0}
+  {disabled}
   onclick={toggle}
-  onkeydown={(e) => {
-    if (disabled) return
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      toggle()
-    }
-  }}
-></div>
+></button>

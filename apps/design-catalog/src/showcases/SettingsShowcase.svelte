@@ -7,6 +7,7 @@
   import SettingsSection from '@life-os/platform-web/svelte/settings/section'
   import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
   import SettingsFileButton from '@life-os/platform-web/svelte/settings/file-button'
+  import SettingsStackBlock from '@life-os/platform-web/svelte/settings/stack-block'
   import { SEGMENT_OPTIONS } from '../fixtures/settings.js'
   import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
 
@@ -46,17 +47,23 @@
 
     <CatalogStateBlock stateId="detail:segment" label="Segment + actions">
       <SettingsSection title="View">
-        <SettingsSegment
-          options={SEGMENT_OPTIONS}
-          value={segment}
-          onchange={(v) => (segment = v)}
-          ariaLabel="Range"
-        />
-        <SettingsButtonGroup>
-          <button type="button" class="btn-secondary">Cancel</button>
-          <button type="button" class="btn-primary">Save</button>
-        </SettingsButtonGroup>
-        <SettingsFileButton label="Import" onchange={() => {}} />
+        <SettingsRow label="Range">
+          <SettingsSegment
+            options={SEGMENT_OPTIONS}
+            value={segment}
+            onchange={(v) => (segment = v)}
+            ariaLabel="Range"
+          />
+        </SettingsRow>
+        <SettingsStackBlock label="Actions">
+          <SettingsButtonGroup>
+            <button type="button" class="btn-secondary">Cancel</button>
+            <button type="button" class="btn-primary">Save</button>
+          </SettingsButtonGroup>
+        </SettingsStackBlock>
+        <SettingsRow label="Import">
+          <SettingsFileButton label="Import" onchange={() => {}} />
+        </SettingsRow>
       </SettingsSection>
     </CatalogStateBlock>
 
