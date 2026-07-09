@@ -7,7 +7,7 @@
   NODE_VERSION = "22"
 
 [functions]
-  directory = "apps/planner/netlify/functions"
+  directory = "netlify/functions"
 
 [[headers]]
   for = "/sw.js"
