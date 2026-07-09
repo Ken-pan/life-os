@@ -4,8 +4,8 @@
 **PASS / Option B Satisfied** (Build environment is fully scripted and docs-ready; only blocker is the user-provided proprietary SDK installer).
 
 ## Chosen Route
-**Option B: Docker `linux/amd64` container on Apple Silicon.**
-- We utilize Docker Desktop which can run `linux/amd64` containers via emulation / Rosetta-backed acceleration where supported to emulate the `x86_64` architecture required by the official reMarkable Yocto toolchain installer.
+**Option B: Docker container with Architecture Detection.**
+- We utilize Docker Desktop which can run `linux/arm64` containers natively for the newly available `aarch64` SDK, or `linux/amd64` containers via emulation / Rosetta-backed acceleration where supported to emulate the `x86_64` architecture.
 - This provides the most highly reproducible, containerized compilation pipeline without touching the host OS or requiring external cloud infrastructure. 
 
 ## Rejected Routes and Why

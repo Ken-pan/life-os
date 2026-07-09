@@ -1,5 +1,5 @@
-# Use a stable x86_64 base image
-FROM --platform=linux/amd64 ubuntu:22.04
+# Use a stable base image without hardcoding the platform
+FROM ubuntu:22.04
 
 # Avoid tzdata/interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
