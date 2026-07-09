@@ -108,7 +108,9 @@ export function AppBrandSwitcher({
   }
 
   const openMenu = () => {
-    const currentIndex = LIFE_OS_SWITCHER_APPS.findIndex((entry) => entry.id === appId)
+    const currentIndex = LIFE_OS_SWITCHER_APPS.findIndex(
+      (entry) => entry.id === appId,
+    )
     setSelectedIndex(currentIndex >= 0 ? currentIndex : 0)
     setOpen(true)
     requestAnimationFrame(() => {
@@ -246,7 +248,11 @@ export function AppBrandSwitcher({
   }
 
   const handleTriggerKeydown = (event: React.KeyboardEvent) => {
-    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+    if (
+      event.key === 'ArrowDown' ||
+      event.key === 'Enter' ||
+      event.key === ' '
+    ) {
       event.preventDefault()
       if (!open) openMenu()
     }
@@ -271,20 +277,6 @@ export function AppBrandSwitcher({
           </span>
           {tagline ? <span className="brand-tag">{tagline}</span> : null}
         </span>
-        <svg
-          className="brand-switcher-chevron"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
       </button>
 
       {open ? (
@@ -340,8 +332,12 @@ export function AppBrandSwitcher({
                     />
                     <span className="brand-switcher-item-copy">
                       <span className="brand-switcher-item-name">
-                        <span className="brand-name-base">{itemBrand.wordmarkBase}</span>
-                        <span className="brand-name-accent">{itemBrand.wordmarkAccent}</span>
+                        <span className="brand-name-base">
+                          {itemBrand.wordmarkBase}
+                        </span>
+                        <span className="brand-name-accent">
+                          {itemBrand.wordmarkAccent}
+                        </span>
                       </span>
                       {entry.experimental ? (
                         <span className="brand-switcher-item-badge">实验</span>

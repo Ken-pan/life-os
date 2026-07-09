@@ -1,9 +1,6 @@
 <script>
   import { tick } from 'svelte'
-  import {
-    getLifeOsBrand,
-    getLifeOsBrandMarkSize,
-  } from '@life-os/theme/brand'
+  import { getLifeOsBrand, getLifeOsBrandMarkSize } from '@life-os/theme/brand'
   import {
     LIFE_OS_SWITCHER_APPS,
     getLifeOsAppOrigin,
@@ -36,7 +33,9 @@
 
   const brand = $derived(getLifeOsBrand(appId))
   const markSize = $derived(getLifeOsBrandMarkSize(appId, 'sidebar'))
-  const filteredApps = $derived(filterLifeOsSwitcherApps(LIFE_OS_SWITCHER_APPS, query))
+  const filteredApps = $derived(
+    filterLifeOsSwitcherApps(LIFE_OS_SWITCHER_APPS, query),
+  )
 
   function resetMenuState() {
     query = ''
@@ -46,7 +45,9 @@
 
   function openMenu() {
     open = true
-    const currentIndex = LIFE_OS_SWITCHER_APPS.findIndex((entry) => entry.id === appId)
+    const currentIndex = LIFE_OS_SWITCHER_APPS.findIndex(
+      (entry) => entry.id === appId,
+    )
     selectedIndex = currentIndex >= 0 ? currentIndex : 0
     tick().then(() => {
       searchInputEl?.focus()
@@ -164,7 +165,11 @@
 
   /** @param {KeyboardEvent} event */
   function handleTriggerKeydown(event) {
-    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+    if (
+      event.key === 'ArrowDown' ||
+      event.key === 'Enter' ||
+      event.key === ' '
+    ) {
       event.preventDefault()
       if (!open) openMenu()
     }
@@ -216,20 +221,6 @@
         <span class="brand-tag">{tagline}</span>
       {/if}
     </span>
-    <svg
-      class="brand-switcher-chevron"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
   </button>
 
   {#if open}
@@ -295,7 +286,9 @@
                 {/if}
               </span>
               {#if isCurrent}
-                <span class="brand-switcher-item-check" aria-hidden="true">✓</span>
+                <span class="brand-switcher-item-check" aria-hidden="true"
+                  >✓</span
+                >
               {/if}
             </button>
           {/each}

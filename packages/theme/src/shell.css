@@ -115,20 +115,26 @@
 
 .brand-switcher-trigger {
   width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-2-5);
+  margin: calc(var(--space-1) * -1) calc(var(--space-2) * -1) 0;
   border: none;
   background: transparent;
   cursor: pointer;
   text-align: left;
   font: inherit;
-  color: inherit;
+  color: var(--sidebar-foreground);
   border-radius: var(--radius-control);
   transition:
     color var(--motion-fast, var(--dur-fast)) var(--ease),
     background-color var(--motion-fast, var(--dur-fast)) var(--ease);
 }
 
-.brand-switcher-trigger:hover {
-  background: color-mix(in srgb, var(--sidebar-foreground) 5%, transparent);
+@media (hover: hover) {
+  .brand-switcher-trigger:hover {
+    background: color-mix(in srgb, var(--sidebar-foreground) 5%, transparent);
+    color: var(--sidebar-foreground);
+  }
 }
 
 .brand-switcher-trigger:focus-visible {
@@ -138,17 +144,6 @@
 
 .brand-switcher-trigger[aria-expanded='true'] {
   background: color-mix(in srgb, var(--sidebar-primary) 10%, transparent);
-}
-
-.brand-switcher-chevron {
-  flex: 0 0 auto;
-  margin-inline-start: auto;
-  color: color-mix(in srgb, var(--sidebar-muted) 88%, transparent);
-  transition: transform var(--motion-fast, var(--dur-fast)) var(--ease);
-}
-
-.brand-switcher-trigger[aria-expanded='true'] .brand-switcher-chevron {
-  transform: rotate(180deg);
   color: var(--sidebar-foreground);
 }
 
