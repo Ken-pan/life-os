@@ -95,8 +95,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .open-hit:hover{fill:rgba(92,117,140,.14);stroke:var(--plan-accent,#5c758c);stroke-width:1.5;stroke-dasharray:4 3}
  .open-on{fill:rgba(92,117,140,.22);stroke:var(--plan-accent,#5c758c);stroke-width:2}
  .open-blocked{fill:rgba(180,83,9,.26)!important;stroke:#b45309!important;stroke-width:2.5;stroke-dasharray:4 3}
- .open-resize-hit{fill:rgba(92,117,140,.08);stroke:var(--plan-accent,#5c758c);stroke-width:1.2;stroke-dasharray:3 2;cursor:ew-resize;opacity:.95}
- .open-resize-hit:hover{fill:rgba(92,117,140,.18)}
+ .open-resize-hit{fill:rgba(92,117,140,.12);stroke:var(--plan-accent,#5c758c);stroke-width:1.4;stroke-dasharray:3 2;cursor:ew-resize;opacity:1}
+ .open-resize-hit:hover{fill:rgba(92,117,140,.24)}
  .open-resize{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1;pointer-events:none;opacity:.95}
  .drag-leader{stroke:var(--plan-accent,#5c758c);stroke-width:1;stroke-dasharray:4 3;opacity:.65}
  .drag-leader.invalid{stroke:#b45309;opacity:.8}
@@ -271,7 +271,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const on = opts.selectedWall === wall.id
       const orient = binding?.orientation === 'h' ? ' wall-h' : ''
       const blocked = opts.dragBlockedWall === wall.id
-      const deemph = opts.selectedOpening ? ' wall-deemph' : ''
+      const deemph =
+        opts.selectedOpening || (opts.selectedWall && !on) ? ' wall-deemph' : ''
       parts.push(
         `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="wall-hit${orient}${on ? ' wall-on' : ''}${blocked ? ' wall-blocked' : ''}${deemph}" data-wall-id="${wall.id}"/>`,
       )

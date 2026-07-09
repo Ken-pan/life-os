@@ -47,11 +47,6 @@
         : '',
   )
 
-  /** @param {import('$lib/spatial/types.js').Layout508Config} cfg */
-  function cloneLayoutConfig(cfg) {
-    return JSON.parse(JSON.stringify(cfg))
-  }
-
   function pushConfig(next) {
     const issues = validate508Config(next)
     if (issues.length) {

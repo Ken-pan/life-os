@@ -27,6 +27,7 @@
   import PlanEditInspector from '$lib/components/PlanEditInspector.svelte'
   import PlanLegend from '$lib/components/PlanLegend.svelte'
   import PlanSelectionBar from '$lib/components/PlanSelectionBar.svelte'
+  import PlanGraphSelectionBar from '$lib/components/PlanGraphSelectionBar.svelte'
   import PlanContextMenu from '$lib/components/PlanContextMenu.svelte'
   import PlanShortcutsHelp from '$lib/components/PlanShortcutsHelp.svelte'
 
@@ -42,16 +43,24 @@
   let selectedOpening = $state('')
   let selectedEdge = $state('')
   let showHelp = $state(false)
-  let fitSignal = $state(0)
+  let fitRequest = $state({ token: 0, cycle: false })
   let drawerOpen = $state(false)
   let ctxMenu = $state({ open: false, x: 0, y: 0 })
 
   const canUndo = $derived(wallGraph ? canUndoGraph() : canUndoLayout())
   const canRedo = $derived(wallGraph ? canRedoGraph() : canRedoLayout())
   const hasEditHistory = $derived(canUndo || canRedo)
+  const showGraphSelectionBar = $derived(
+    studio && graphEditMode && Boolean(selectedEdge),
+  )
   const showSelectionBar = $derived(
     studio && editMode && (selectedWall || selectedOpening),
   )
+  const hideFabForBar = $derived(showSelectionBar || showGraphSelectionBar)
+
+  function bumpFit(/** @type {boolean} */ cycle = false) {
+    fitRequest = { token: fitRequest.token + 1, cycle }
+  }
 
   /** @type {{ a: { x: number, y: number } | null, b: { x: number, y: number } | null }} */
   let measurePoints = $state({ a: null, b: null })
@@ -133,6 +142,9 @@
     if (planMode !== 'browse') {
       items.push({ id: 'browse', label: '返回浏览', action: () => setPlanMode('browse') })
     }
+    if (selectedWall || selectedOpening) {
+      items.push({ id: 'clear', label: '取消选中', action: () => clearSelection() })
+    }
     return items
   })
 
@@ -179,7 +191,7 @@
       selectedEdge = ''
     }
     if (mode === 'browse') drawerOpen = false
-    fitSignal += 1
+    bumpFit(false)
   }
 
   function exitWallGraphTo508() {
@@ -260,7 +272,7 @@
 
       if ((e.key === 'f' || e.key === 'F') && !inField && !e.metaKey && !e.ctrlKey) {
         e.preventDefault()
-        fitSignal += 1
+        bumpFit(true)
         return
       }
 
@@ -467,15 +479,15 @@
           <kbd>Esc</kbd><span>清除测距</span>
           <kbd>点击</kbd><span>选两点量距离</span>
         {/if}
-        <kbd>F</kbd><span>适配视图</span>
+        <kbd>F</kbd><span>切换全图/宽度适配</span>
       </p>
       <p class="mode-kbd-compact" aria-label="快捷键简讯">
         {#if planMode === 'graph'}
           W 建墙 · Delete 删墙 · Esc 退出
         {:else if planMode === 'edit'}
-          Esc 退出 · Delete 隐藏门窗 · F 适配
+          Esc 退出 · Delete 隐藏门窗 · F 切换适配
         {:else}
-          Esc 清除 · 点击测距 · F 适配
+          Esc 清除 · 点击测距 · F 切换适配
         {/if}
       </p>
     {/if}
@@ -494,13 +506,14 @@
       graphEditMode={studio && graphEditMode}
       {graphTool}
       {measurePoints}
-      {fitSignal}
+      {fitRequest}
       {selectedWall}
       {selectedOpening}
       {selectedEdge}
       {wallChainFrom}
       {wallChainHover}
       onZoneSelect={studio && planMode === 'browse' ? selectZone : undefined}
+      onClearSelection={studio && editMode ? clearSelection : undefined}
       onMeasurePoint={studio && measureMode ? onMeasurePoint : undefined}
       onGraphWallPoint={studio && graphEditMode ? onGraphWallPoint : undefined}
       onGraphRemoveEdge={(id) => removeGraphWall(id)}
@@ -531,6 +544,15 @@
         onOpenDetails={() => (drawerOpen = true)}
       />
     {/if}
+    {#if showGraphSelectionBar}
+      <PlanGraphSelectionBar
+        {selectedEdge}
+        onClear={() => {
+          selectedEdge = ''
+        }}
+        onOpenDetails={() => (drawerOpen = true)}
+      />
+    {/if}
     <PlanLegend
       overlay
       interactive={studio && planMode === 'browse'}
@@ -544,6 +566,7 @@
         type="button"
         class="plan-drawer-fab"
         class:open={drawerOpen}
+        class:hide-for-bar={hideFabForBar && !drawerOpen}
         aria-expanded={drawerOpen}
         aria-controls="plan-drawer"
         onclick={() => (drawerOpen = !drawerOpen)}
@@ -1015,6 +1038,25 @@
 
   @media (min-width: 600px) {
     .plan-drawer-backdrop {
+      display: none;
+    }
+
+    .plan-drawer {
+      top: auto;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      bottom: calc(var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 88px);
+      width: min(520px, calc(100vw - 32px));
+      max-height: min(42vh, 400px);
+    }
+
+    .plan-stage:has(:global(.sel-bar)) .plan-drawer,
+    .plan-stage:has(:global(.graph-sel-bar)) .plan-drawer {
+      bottom: calc(var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 148px);
+    }
+
+    .plan-drawer-fab.hide-for-bar {
       display: none;
     }
   }

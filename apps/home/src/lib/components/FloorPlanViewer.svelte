@@ -1,4 +1,5 @@
 <script>
+  import { browser } from '$app/environment'
   import { renderFloorPlanSvg } from '$lib/spatial/render-svg.js'
   import { planPanZoom } from '$lib/plan-pan-zoom.js'
   import { bindPlanEditDrag } from '$lib/plan-edit-drag.js'
@@ -30,8 +31,9 @@
    *   wallChainFrom?: { x: number, y: number } | null,
    *   wallChainHover?: { x: number, y: number } | null,
    *   measurePoints?: { a: { x: number, y: number } | null, b: { x: number, y: number } | null },
-   *   fitSignal?: number,
+   *   fitRequest?: { token: number, cycle?: boolean },
    *   onZoneSelect?: (code: string) => void,
+   *   onClearSelection?: () => void,
    *   onBlankContextMenu?: (pt: { x: number, y: number, svgX: number, svgY: number }) => void,
    *   onSelectWall?: (id: string) => void,
    *   onSelectOpening?: (id: string) => void,
@@ -58,8 +60,9 @@
     wallChainFrom = null,
     wallChainHover = null,
     measurePoints = { a: null, b: null },
-    fitSignal = 0,
+    fitRequest = { token: 0, cycle: false },
     onZoneSelect,
+    onClearSelection,
     onBlankContextMenu,
     onSelectWall,
     onSelectOpening,
@@ -74,7 +77,11 @@
   let panX = $state(0)
   let panY = $state(0)
   /** @type {'contain' | 'width'} */
-  let fitMode = $state('contain')
+  let fitMode = $state(
+    browser && sessionStorage.getItem('home-plan-fit-mode') === 'width'
+      ? 'width'
+      : 'contain',
+  )
   /** @type {HTMLElement | null} */
   let viewportEl = $state(null)
   /** @type {import('$lib/spatial/types.js').Layout508Config | null} */
@@ -133,7 +140,7 @@
     const canvasW = Math.max(viewportEl.clientWidth - 24, 120)
     if (!vbW) return 1
     const vbPerScreenPx = vbW / canvasW / Math.max(zoom, 0.55)
-    return Math.max(1, (44 * vbPerScreenPx) / RESIZE_GRIP_HIT)
+    return Math.max(1.15, (52 * vbPerScreenPx) / RESIZE_GRIP_HIT)
   })
 
   const svgHtml = $derived(
@@ -200,6 +207,26 @@
     })
   }
 
+  /** @param {PointerEvent} e */
+  function handleLongPress(e) {
+    if (!onBlankContextMenu) return
+    if (
+      e.target instanceof Element &&
+      e.target.closest(
+        '[data-wall-id],[data-opening-id],[data-zone],[data-edge-id],[data-drag-mode]',
+      )
+    ) {
+      return
+    }
+    const svgPt = clientToSvg(e.clientX, e.clientY)
+    onBlankContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      svgX: svgPt.x,
+      svgY: svgPt.y,
+    })
+  }
+
   /** @param {MouseEvent} e */
   function handleClick(e) {
     if (graphEditMode) return
@@ -219,7 +246,19 @@
       onMeasurePoint(pt)
       return
     }
-    if (editMode || !onZoneSelect) return
+    if (editMode) {
+      if (viewportEl?.dataset.dragged === '1') {
+        delete viewportEl.dataset.dragged
+        return
+      }
+      const hit =
+        e.target instanceof Element
+          ? e.target.closest('[data-wall-id],[data-opening-id],[data-drag-mode]')
+          : null
+      if (!hit) onClearSelection?.()
+      return
+    }
+    if (!onZoneSelect) return
     if (viewportEl?.dataset.dragged === '1') {
       delete viewportEl.dataset.dragged
       return
@@ -278,8 +317,16 @@
   }
 
   $effect(() => {
-    if (!fitSignal) return
-    resetView()
+    if (!browser) return
+    sessionStorage.setItem('home-plan-fit-mode', fitMode)
+  })
+
+  $effect(() => {
+    if (!fitRequest.token) return
+    if (fitRequest.cycle) {
+      fitMode = fitMode === 'contain' ? 'width' : 'contain'
+    }
+    fitToView()
   })
 
   $effect(() => {
@@ -304,6 +351,7 @@
         panX = p.x
         panY = p.y
       },
+      onLongPress: onBlankContextMenu ? handleLongPress : undefined,
     })
     return () => action.destroy()
   })
@@ -476,7 +524,7 @@
       {:else if measureMode}
         <span class="plan-hint plan-hint-measure">点击两点测距 · 第三次点击重新开始</span>
       {:else if editMode}
-        <span class="plan-hint plan-hint-edit">空白处平移 · 捏合/⌘ 滚轮缩放</span>
+        <span class="plan-hint plan-hint-edit">拖曳编辑 · 点空白取消选中 · 长按/右键菜单</span>
       {:else if !compact}
         <span class="plan-hint">双指捏合缩放 · 拖拽平移</span>
       {/if}
@@ -515,6 +563,7 @@
         role="status"
         aria-live="polite"
       >
+        <span class="drag-hud-status" class:ok={dragHint.valid} class:bad={!dragHint.valid}></span>
         <span class="drag-hud-title">{dragHint.title}</span>
         {#if dragHint.valid}
           <span class="drag-hud-detail">{dragHint.delta}</span>
@@ -722,9 +771,9 @@
     z-index: 4;
     transform: translate(-50%, calc(-100% - 12px));
     pointer-events: none;
-    min-width: 120px;
-    max-width: 220px;
-    padding: 8px 10px;
+    min-width: 132px;
+    max-width: 240px;
+    padding: 9px 11px 9px 28px;
     border-radius: 10px;
     border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
     background: color-mix(in srgb, var(--card) 92%, transparent);
@@ -738,7 +787,42 @@
 
   .drag-hud.invalid {
     border-color: color-mix(in srgb, #b45309 55%, var(--border));
-    background: color-mix(in srgb, #fff7ed 88%, var(--card));
+    background: color-mix(in srgb, #fff7ed 92%, var(--card));
+    animation: drag-hud-shake 0.42s ease;
+  }
+
+  @keyframes drag-hud-shake {
+    0%,
+    100% {
+      transform: translate(-50%, calc(-100% - 12px));
+    }
+    25% {
+      transform: translate(calc(-50% - 3px), calc(-100% - 12px));
+    }
+    75% {
+      transform: translate(calc(-50% + 3px), calc(-100% - 12px));
+    }
+  }
+
+  .drag-hud-status {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin-top: -5px;
+    border-radius: 999px;
+    background: var(--t3);
+  }
+
+  .drag-hud-status.ok {
+    background: #1d6b42;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #1d6b42 22%, transparent);
+  }
+
+  .drag-hud-status.bad {
+    background: #b45309;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #b45309 22%, transparent);
   }
 
   .drag-hud-title {
