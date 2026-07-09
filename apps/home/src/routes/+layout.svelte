@@ -20,9 +20,10 @@
   } from '$lib/state.svelte.js'
 
   import { bindViewportHeight } from '@life-os/theme'
-  import { bindPwaForegroundResume } from '@life-os/theme'
+  import { bindNetworkResume } from '@life-os/platform-web/network-resume'
   import { initAuth, auth } from '$lib/auth.svelte.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
+  import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
   import {
     bindLifeOsPresence,
     touchLifeOsPresence,
@@ -68,8 +69,16 @@
     const cleanupViewport = bindViewportHeight()
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupSw = registerServiceWorker()
+    void requestPersistentStorage()
     const cleanupPresence = bindLifeOsPresence()
-    const cleanupForeground = bindPwaForegroundResume()
+    const cleanupForeground = bindNetworkResume({
+      onResume: () => {
+        if (auth.ready && auth.user) {
+          touchLifeOsPresence()
+          scheduleHomePortalMetadataSync(getActiveProject().storageZones.length)
+        }
+      },
+    })
     return () => {
       cleanupAuth()
       cleanupViewport()

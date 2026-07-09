@@ -27,7 +27,7 @@
   import { db } from '$lib/db.js'
   import { fetchLyricsForTrack } from '$lib/lyricsFetch.js'
   import { scheduleAutoCloudPush } from '$lib/sync.js'
-  import { bindLifeOsMedia, lifeOsMobileMq } from '@life-os/theme'
+  import { createScreenWakeLock } from '@life-os/platform-web/wake-lock'
   import { S, setImmersiveViewMode, librarySignals } from '$lib/state.svelte.js'
   import { auth } from '$lib/auth.svelte.js'
 
@@ -165,6 +165,12 @@
       togglePlay()
     }
   }
+
+  $effect(() => {
+    if (!player.playing) return
+    const wakeLock = createScreenWakeLock()
+    return wakeLock.bindWithGestureFallback()
+  })
 
   onMount(() => {
     ensureNowPlayingReturn('/')

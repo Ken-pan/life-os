@@ -21,7 +21,13 @@
  * @returns {() => void} cleanup — call on unmount
  */
 export function registerServiceWorker(options = {}) {
-  const { url = '/sw.js', scope, enabled = true, shouldDeferUpdate, deferEvents = [] } = options
+  const {
+    url = '/sw.js',
+    scope,
+    enabled = true,
+    shouldDeferUpdate,
+    deferEvents = [],
+  } = options
 
   if (
     !enabled ||
@@ -62,12 +68,21 @@ export function registerServiceWorker(options = {}) {
     }
   }
 
-  function onVisibilityChange() {
+  function checkForUpdates() {
     if (document.visibilityState !== 'visible') return
     registration
       ?.update()
       .then(applyPendingUpdate)
       .catch(() => {})
+  }
+
+  function onVisibilityChange() {
+    if (document.visibilityState !== 'visible') return
+    checkForUpdates()
+  }
+
+  function onPageShow() {
+    checkForUpdates()
   }
 
   /** @param {ServiceWorkerRegistration} reg */
@@ -76,7 +91,10 @@ export function registerServiceWorker(options = {}) {
       const worker = reg.installing
       if (!worker) return
       worker.addEventListener('statechange', () => {
-        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+        if (
+          worker.state === 'installed' &&
+          navigator.serviceWorker.controller
+        ) {
           activateWaiting(reg)
         }
       })
@@ -84,12 +102,16 @@ export function registerServiceWorker(options = {}) {
   }
 
   navigator.serviceWorker
-    .register(url, scope ? { scope, updateViaCache: 'none' } : { updateViaCache: 'none' })
+    .register(
+      url,
+      scope ? { scope, updateViaCache: 'none' } : { updateViaCache: 'none' },
+    )
     .then((reg) => {
       registration = reg
       listenForUpdates(reg)
       activateWaiting(reg)
       document.addEventListener('visibilitychange', onVisibilityChange)
+      window.addEventListener('pageshow', onPageShow)
     })
     .catch(() => {})
 
@@ -105,14 +127,23 @@ export function registerServiceWorker(options = {}) {
 
   const onDeferEvent = () => applyPendingUpdate()
 
-  navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+  navigator.serviceWorker.addEventListener(
+    'controllerchange',
+    onControllerChange,
+  )
   window.addEventListener('focus', onDeferEvent)
-  for (const eventName of deferEvents) window.addEventListener(eventName, onDeferEvent)
+  for (const eventName of deferEvents)
+    window.addEventListener(eventName, onDeferEvent)
 
   return () => {
-    navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+    navigator.serviceWorker.removeEventListener(
+      'controllerchange',
+      onControllerChange,
+    )
     window.removeEventListener('focus', onDeferEvent)
-    for (const eventName of deferEvents) window.removeEventListener(eventName, onDeferEvent)
+    for (const eventName of deferEvents)
+      window.removeEventListener(eventName, onDeferEvent)
     document.removeEventListener('visibilitychange', onVisibilityChange)
+    window.removeEventListener('pageshow', onPageShow)
   }
 }

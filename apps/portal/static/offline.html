@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#3d9ed6" />
+    <title>PORTAL.OS · 离线</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #14161a;
+        --text: #f2f4f7;
+        --muted: #9aa3b2;
+        --accent: #3d9ed6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      main {
+        width: min(420px, 100%);
+        text-align: center;
+      }
+      img {
+        width: 96px;
+        height: 96px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.35rem;
+        font-weight: 650;
+        letter-spacing: 0.02em;
+      }
+      p {
+        margin: 0 0 24px;
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 0.98rem;
+      }
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 22px;
+        font: inherit;
+        font-weight: 600;
+        color: #081018;
+        background: var(--accent);
+        cursor: pointer;
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/brand-circle-dark-96.png" width="96" height="96" alt="" />
+      <h1>当前离线</h1>
+      <p>Portal 需要网络连接以登录账号并跳转到 Life OS 应用。恢复网络后请重试。</p>
+      <button type="button" onclick="location.reload()">重试</button>
+    </main>
+  </body>
+</html>

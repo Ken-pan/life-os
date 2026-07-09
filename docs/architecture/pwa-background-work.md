@@ -14,7 +14,7 @@ are installed Home Screen PWAs) does **not** support:
 - Background Fetch API
 
 There is no announced timeline for iOS to add them. Push notifications and
-the Wake Lock API *do* work on iOS 16.4+/18.4+ Home Screen apps. This means:
+the Wake Lock API _do_ work on iOS 16.4+/18.4+ Home Screen apps. This means:
 
 - **Don't build features around Background Sync / Periodic Sync.** They'd
   silently no-op for most users. Chromium-only, installed-PWA-only, and even
@@ -62,9 +62,10 @@ next visibility change, window focus, or `deferEvents` firing. This is what
 prevents a deploy from yanking the page out from under someone mid-audio or
 mid-form.
 
-Used by music, home, planner, and finance. Each app keeps its own `static/sw.js`
+Used by music, home, planner, finance, fitness, and portal (portal defers
+navigate failures to `/offline.html` because it is SSR). Each app keeps its own `static/sw.js`
 (cache strategy, precache list, and — for planner — reminder/notification
-handling — are genuinely per-app), but the *registration/update* logic is
+handling — are genuinely per-app), but the _registration/update_ logic is
 shared instead of hand-copied.
 
 ### `@life-os/platform-web/wake-lock`
@@ -85,6 +86,59 @@ unrelated features holding their own controller won't fight each other.
 
 Currently used by fitness's workout timer / focus session. Good candidates
 elsewhere: music's now-playing view, home's active CAD-edit session.
+
+### `@life-os/platform-web/network-resume`
+
+```js
+import { bindNetworkResume } from '@life-os/platform-web/network-resume'
+
+const cleanup = bindNetworkResume({
+  onResume: () => scheduleBidirectionalSync(),
+  shouldDefer: () => player.playing, // same defer semantics as SW updates
+  when: () => Boolean(auth.user),
+  skipWhenOffline: true, // default — skip foreground callback while offline
+})
+```
+
+Combines `bindPwaForegroundResume` (viewport flush on return) with an
+`online` listener so queued sync/reconcile work runs when network returns
+**without** requiring the user to background the app. Used by music, fitness,
+planner (sync), home, and finance AuthGate.
+
+Call with no `onResume` to get viewport-only flush (music/finance root layouts).
+
+### `@life-os/platform-web/app-badge`
+
+```js
+import { setAppBadgeCount } from '@life-os/platform-web/app-badge'
+
+void setAppBadgeCount(overdueCount) // 0 clears
+```
+
+Shows a count on the installed-app icon (iOS 16.4+ Home Screen apps,
+Chromium). Planner uses this for overdue-task count.
+
+### `@life-os/platform-web/connectivity`
+
+```js
+import { isOnline, bindOnlineStatus } from '@life-os/platform-web/connectivity'
+```
+
+Lightweight online/offline helpers. Music's Svelte `$state` connectivity
+module wraps `bindOnlineStatus` for UI banners.
+
+### `@life-os/platform-web/persistent-storage`
+
+```js
+import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
+void requestPersistentStorage() // once, in the root layout's onMount
+```
+
+Asks the browser to protect the origin's storage (IndexedDB, Cache Storage,
+localStorage) from eviction under disk pressure. Without it, Chrome/Firefox
+may silently wipe local data — fatal for music's Dexie library and planner's
+reminder jobs. iOS Home Screen apps are persisted implicitly (no-op there).
+Best-effort and prompt-free in practice; all five apps call it on startup.
 
 ## Per-app `sw.js`: shared shape, not shared file
 
@@ -133,3 +187,19 @@ level, or updates never reach clients — every app's `netlify.toml` sets:
 5. If the app has a view that should keep the screen awake, use
    `createScreenWakeLock()` from `@life-os/platform-web/wake-lock` instead of
    a bespoke implementation or a `NoSleep`-style hack.
+6. Call `requestPersistentStorage()` from
+   `@life-os/platform-web/persistent-storage` in the same `onMount`.
+7. If the app syncs to cloud, prefer `bindNetworkResume()` from
+   `@life-os/platform-web/network-resume` over hand-rolled
+   `visibilitychange` + `online` listeners.
+
+## Known gaps / next candidates
+
+- **Portal offline scope** — SW shows `/offline.html` when navigate fails; login
+  and app redirects still require network (by design for SSR launcher).
+- **Planner push ops** — Web Push cron is implemented (`planner-reminder-push`
+  Netlify scheduled function, every 5 min). Production requires:
+  1. Apply migration `apps/planner/supabase/migrations/20260709120000_planner_push_subscriptions.sql`
+  2. Generate keys: `node apps/planner/scripts/generate-vapid-keys.mjs`
+  3. Set Netlify env: `PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SUPABASE_SERVICE_ROLE_KEY`
+  Local in-SW `setTimeout` reminders remain as a Chromium progressive enhancement.

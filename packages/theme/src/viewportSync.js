@@ -10,7 +10,8 @@ export function isStandalonePwa() {
   if (typeof window === 'undefined') return false
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
-    /** @type {{ standalone?: boolean }} */ (navigator).standalone === true
+    /** @type {{ standalone?: boolean }} */ (navigator).standalone === true ||
+    document.documentElement.classList.contains('standalone-pwa')
   )
 }
 

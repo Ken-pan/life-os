@@ -27,7 +27,9 @@
     notificationPermission,
     requestNotificationPermission,
     syncRemindersToServiceWorker,
+    ensurePushSubscription,
   } from '$lib/services/reminders.js'
+  import { unsubscribePlannerPushNotifications } from '$lib/pushSubscription.js'
 
   let listName = $state('')
   let syncBusy = $state(false)
@@ -82,6 +84,7 @@
     const perm = await requestNotificationPermission()
     updateSettings({ notificationsEnabled: perm === 'granted' })
     await syncRemindersToServiceWorker()
+    if (perm === 'granted') await ensurePushSubscription()
     toast(
       perm === 'granted'
         ? t('settings.notifyOn')
@@ -210,6 +213,8 @@
           return
         }
         updateSettings({ notificationsEnabled: checked })
+        if (checked) await ensurePushSubscription()
+        else await unsubscribePlannerPushNotifications()
         await syncRemindersToServiceWorker()
       }}
     />

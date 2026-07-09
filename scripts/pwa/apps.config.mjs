@@ -6,10 +6,10 @@
  */
 
 import {
-  LIFE_OS_SHELL_REFERENCE,
+  LIFE_OS_SHELL as LIFE_OS_SHELL_REFERENCE,
   getScrollRootSelectorForShell,
   getScrollRootSelectorsForShell,
-} from '@life-os/theme'
+} from '../../packages/theme/src/shell.js'
 
 /** @typedef {import('@life-os/theme').LifeOsShellType} LifeOsShellType */
 

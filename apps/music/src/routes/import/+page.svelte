@@ -1,6 +1,7 @@
 <script>
   import { t } from '$lib/i18n/index.js';
   import { runImportPipeline } from '$lib/importPipeline.js';
+  import { beginBackgroundJob } from '$lib/audioPrecache.js';
   import { refreshQueueMetadata } from '$lib/player.svelte.js';
   import { auth } from '$lib/auth.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
@@ -37,53 +38,58 @@
   async function handleFiles(files) {
     if (!files?.length) return;
     progress = t('import.importing', { done: 0, total: files.length });
-    const result = await runImportPipeline(files, (p) => {
-      progress = progressLabel(p);
-      if (p.title && (p.phase === 'upload' || p.phase === 'tags')) {
-        progress += ` · ${p.title}`;
+    const endJob = beginBackgroundJob();
+    try {
+      const result = await runImportPipeline(files, (p) => {
+        progress = progressLabel(p);
+        if (p.title && (p.phase === 'upload' || p.phase === 'tags')) {
+          progress += ` · ${p.title}`;
+        }
+      });
+
+      const { audioCount, lrcCount, total, cloud, uploaded, uploadFailed, tagged, tagFailed, syncFailed, enrichFailed } = result;
+
+      if (audioCount > 0) {
+        await refreshQueueMetadata();
+      } else if (lrcCount > 0) {
+        await refreshQueueMetadata();
       }
-    });
 
-    const { audioCount, lrcCount, total, cloud, uploaded, uploadFailed, tagged, tagFailed, syncFailed, enrichFailed } = result;
-
-    if (audioCount > 0) {
-      await refreshQueueMetadata();
-    } else if (lrcCount > 0) {
-      await refreshQueueMetadata();
-    }
-
-    if (audioCount > 0 && cloud) {
-      if (uploadFailed > 0) {
-        toast(
-          t('import.doneCloudPartial', {
-            count: audioCount,
-            uploaded,
-            failed: uploadFailed,
-            tagged,
-          }),
-        );
+      if (audioCount > 0 && cloud) {
+        if (uploadFailed > 0) {
+          toast(
+            t('import.doneCloudPartial', {
+              count: audioCount,
+              uploaded,
+              failed: uploadFailed,
+              tagged,
+            }),
+          );
+        } else {
+          toast(
+            t('import.doneCloud', {
+              count: audioCount,
+              uploaded,
+              tagged,
+            }),
+          );
+        }
+        if (tagFailed > 0) toast(t('import.tagFailed', { count: tagFailed }));
+        if (syncFailed) toast(t('import.syncFailed'));
+        if (enrichFailed) toast(t('import.enrichFailed'));
+      } else if (lrcCount > 0) {
+        toast(t('import.doneMixed', { audio: audioCount, lrc: lrcCount }));
+      } else if (audioCount > 0) {
+        toast(t('import.doneLocal', { count: total }));
       } else {
-        toast(
-          t('import.doneCloud', {
-            count: audioCount,
-            uploaded,
-            tagged,
-          }),
-        );
+        toast(t('import.done', { count: total }));
       }
-      if (tagFailed > 0) toast(t('import.tagFailed', { count: tagFailed }));
-      if (syncFailed) toast(t('import.syncFailed'));
-      if (enrichFailed) toast(t('import.enrichFailed'));
-    } else if (lrcCount > 0) {
-      toast(t('import.doneMixed', { audio: audioCount, lrc: lrcCount }));
-    } else if (audioCount > 0) {
-      toast(t('import.doneLocal', { count: total }));
-    } else {
-      toast(t('import.done', { count: total }));
-    }
 
-    progress = '';
-    if (audioCount > 0) await goto('/library');
+      progress = '';
+      if (audioCount > 0) await goto('/library');
+    } finally {
+      endJob();
+    }
   }
 
   /** @param {Event} e */

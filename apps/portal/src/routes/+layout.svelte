@@ -19,6 +19,8 @@
     shouldAutoRedirect,
   } from '$lib/portalPreferences.svelte.js'
   import { initPortalTheme } from '$lib/theme.svelte.js'
+  import { registerServiceWorker } from '$lib/serviceWorker.js'
+  import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
 
   let { children } = $props()
 
@@ -78,11 +80,14 @@
     const cleanupAuth = initAuth()
     const cleanupTheme = initPortalTheme()
     const cleanupRecent = initRecentApp()
+    const cleanupSw = registerServiceWorker()
+    void requestPersistentStorage()
     return () => {
       cleanupAuth()
       cleanupViewport()
       cleanupTheme()
       cleanupRecent()
+      cleanupSw()
     }
   })
 </script>

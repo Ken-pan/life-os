@@ -11,6 +11,7 @@
   import { migrateLegacyRouteUrl } from '@life-os/finance-core/routing/app-route'
   import { bindViewportHeight, bindPwaForegroundResume } from '@life-os/theme'
   import { registerServiceWorker } from '@life-os/platform-web/sw-lifecycle'
+  import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
   import { dev } from '$app/environment'
   import { setPurchaseImageBaseUrl } from '$lib/engine/purchaseEnrichment'
   import { supabaseUrl } from '$lib/supabase.js'
@@ -56,6 +57,7 @@
     const cleanupViewport = bindViewportHeight()
     const cleanupForeground = bindPwaForegroundResume()
     const cleanupServiceWorker = registerServiceWorker({ enabled: !dev })
+    void requestPersistentStorage()
 
     return () => {
       cleanupLocale()

@@ -5,7 +5,7 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
@@ -120,8 +120,20 @@
     "./sw-lifecycle": {
       "import": "./src/swLifecycle.js"
     },
+    "./persistent-storage": {
+      "import": "./src/persistentStorage.js"
+    },
     "./wake-lock": {
       "import": "./src/wakeLock.js"
+    },
+    "./network-resume": {
+      "import": "./src/networkResume.js"
+    },
+    "./app-badge": {
+      "import": "./src/appBadge.js"
+    },
+    "./connectivity": {
+      "import": "./src/connectivity.js"
     },
     "./svelte/navigation": {
       "svelte": "./src/svelte/navigation/BackButton.svelte",

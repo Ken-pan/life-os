@@ -1,4 +1,9 @@
 import { browser } from '$app/environment'
+import {
+  beginBackgroundJob,
+  bindBackgroundJobAck,
+  trackBackgroundJob,
+} from './backgroundActivity.svelte.js'
 
 /** Ask the service worker to fetch & cache the next track (cloud signed URLs). */
 /** @param {string | undefined | null} url @param {string | undefined | null} trackId @param {{ mode?: 'range' | 'full' }} [opts] */
@@ -8,6 +13,7 @@ export function precacheAudioInServiceWorker(url, trackId, opts = {}) {
   const controller = navigator.serviceWorker?.controller
   if (!controller) return
   try {
+    trackBackgroundJob(1)
     controller.postMessage({
       type: 'PRECACHE_AUDIO',
       url,
@@ -15,7 +21,7 @@ export function precacheAudioInServiceWorker(url, trackId, opts = {}) {
       mode: opts.mode || 'full',
     })
   } catch {
-    /* ignore */
+    trackBackgroundJob(-1)
   }
 }
 
@@ -31,3 +37,10 @@ export function purgeAudioCacheInServiceWorker(keepTrackIds = []) {
     /* ignore */
   }
 }
+
+/** Wire SW precache completion messages to decrement the badge counter. */
+export function bindPrecacheActivityAck() {
+  return bindBackgroundJobAck(() => trackBackgroundJob(-1))
+}
+
+export { beginBackgroundJob }

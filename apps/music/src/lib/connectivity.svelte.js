@@ -1,4 +1,5 @@
 import { browser } from '$app/environment'
+import { bindOnlineStatus } from '@life-os/platform-web/connectivity'
 
 export const connectivity = $state({
   online: true,
@@ -34,8 +35,7 @@ export function markSynced() {
 export function bindConnectivity(onOnline) {
   if (!browser) return () => {}
 
-  const refresh = () => {
-    const online = navigator.onLine
+  return bindOnlineStatus((online) => {
     if (connectivity.online === online) return
     connectivity.online = online
     if (online) {
@@ -44,17 +44,5 @@ export function bindConnectivity(onOnline) {
     } else {
       connectivity.lastOfflineAt = Date.now()
     }
-  }
-
-  connectivity.online = navigator.onLine
-  connectivity.lastOnlineAt = connectivity.online ? Date.now() : 0
-  connectivity.lastOfflineAt = connectivity.online ? 0 : Date.now()
-
-  window.addEventListener('online', refresh)
-  window.addEventListener('offline', refresh)
-
-  return () => {
-    window.removeEventListener('online', refresh)
-    window.removeEventListener('offline', refresh)
-  }
+  })
 }

@@ -19,26 +19,30 @@ This package contains thin web-only adapters. P0 PR 3 adds appearance and page-m
 `planner-os`, `fitness-os`, `music-os`, and `portal` consume shared Svelte components via
 `@life-os/platform-web/svelte/*` subpath exports (C-P2 Wave 2A PR 1).
 
-| Subpath export                                            | Component / module                                                                                |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `@life-os/platform-web/svelte/head`                       | `DocumentHead.svelte`                                                                             |
-| `@life-os/platform-web/svelte/icon`                       | `Icon.svelte` (registry via `setContext` + `@life-os/platform-web/icon-registry`)                 |
-| `@life-os/platform-web/svelte/sync-error`                 | `SyncErrorBanner.svelte`                                                                          |
-| `@life-os/platform-web/svelte/navigation`                 | `BackButton.svelte`                                                                               |
-| `@life-os/platform-web/svelte/navigation/MobileMoreSheet` | `MobileMoreSheet.svelte`（`closeLabel` + 可选 `search` / `dotColor`）                             |
-| `@life-os/platform-web/svelte/brand/switcher`             | `AppBrandSwitcher.svelte`（六 app 侧栏切换；数据 `@life-os/theme/launcher`）                      |
-| `@life-os/platform-web/svelte/brand`                      | `AppBrand.svelte` / `BrandMark.svelte` / `AppBrandWordmark.svelte`（`@life-os/theme/brand` 数据） |
-| `@life-os/platform-web/svelte/brand/mark`                 | `BrandMark.svelte` 子路径                                                                         |
-| `@life-os/platform-web/svelte/brand/wordmark`             | `AppBrandWordmark.svelte` 子路径                                                                  |
-| `@life-os/platform-web/svelte/portrait-gate`              | `PortraitGate.svelte`（竖屏锁定；样式在 `@life-os/theme`）                                        |
-| `@life-os/platform-web/local-cache`                       | `createLocalCache({ prefix })` — planner/finance SWR 快照                                         |
-| `@life-os/platform-web/svelte/toast`                      | `Toast.svelte`                                                                                    |
-| `@life-os/platform-web/svelte/toast-store`                | `createToastStore`                                                                                |
-| `@life-os/platform-web/sync-error`                        | `createSyncErrorPresentation`                                                                     |
-| `@life-os/platform-web/icon-registry`                     | `ICON_REGISTRY_CONTEXT_KEY`                                                                       |
-| `@life-os/platform-web/navigation`                        | `WebNavItem` / `WebNavGroup` types                                                                |
+| Subpath export                                            | Component / module                                                                                         |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `@life-os/platform-web/svelte/head`                       | `DocumentHead.svelte`                                                                                      |
+| `@life-os/platform-web/svelte/icon`                       | `Icon.svelte` (registry via `setContext` + `@life-os/platform-web/icon-registry`)                          |
+| `@life-os/platform-web/svelte/sync-error`                 | `SyncErrorBanner.svelte`                                                                                   |
+| `@life-os/platform-web/svelte/navigation`                 | `BackButton.svelte`                                                                                        |
+| `@life-os/platform-web/svelte/navigation/MobileMoreSheet` | `MobileMoreSheet.svelte`（`closeLabel` + 可选 `search` / `dotColor`）                                      |
+| `@life-os/platform-web/svelte/brand/switcher`             | `AppBrandSwitcher.svelte`（六 app 侧栏切换；数据 `@life-os/theme/launcher`）                               |
+| `@life-os/platform-web/svelte/brand`                      | `AppBrand.svelte` / `BrandMark.svelte` / `AppBrandWordmark.svelte`（`@life-os/theme/brand` 数据）          |
+| `@life-os/platform-web/svelte/brand/mark`                 | `BrandMark.svelte` 子路径                                                                                  |
+| `@life-os/platform-web/svelte/brand/wordmark`             | `AppBrandWordmark.svelte` 子路径                                                                           |
+| `@life-os/platform-web/svelte/portrait-gate`              | `PortraitGate.svelte`（竖屏锁定；样式在 `@life-os/theme`）                                                 |
+| `@life-os/platform-web/local-cache`                       | `createLocalCache({ prefix })` — planner/finance SWR 快照                                                  |
+| `@life-os/platform-web/svelte/toast`                      | `Toast.svelte`                                                                                             |
+| `@life-os/platform-web/svelte/toast-store`                | `createToastStore`                                                                                         |
+| `@life-os/platform-web/sync-error`                        | `createSyncErrorPresentation`                                                                              |
+| `@life-os/platform-web/icon-registry`                     | `ICON_REGISTRY_CONTEXT_KEY`                                                                                |
+| `@life-os/platform-web/navigation`                        | `WebNavItem` / `WebNavGroup` types                                                                         |
 | `@life-os/platform-web/sw-lifecycle`                      | `registerServiceWorker({ url, shouldDeferUpdate, deferEvents })` — SW register + deferred-update lifecycle |
-| `@life-os/platform-web/wake-lock`                         | `createScreenWakeLock()` — Screen Wake Lock helper (`bind` / `bindWithGestureFallback`)           |
+| `@life-os/platform-web/wake-lock`                         | `createScreenWakeLock()` — Screen Wake Lock helper (`bind` / `bindWithGestureFallback`)                    |
+| `@life-os/platform-web/persistent-storage`                | `requestPersistentStorage()` — protect IndexedDB/caches from eviction                                      |
+| `@life-os/platform-web/network-resume`                    | `bindNetworkResume()` — foreground + `online` resume (wraps theme viewport flush)                          |
+| `@life-os/platform-web/app-badge`                         | `setAppBadgeCount()` / `clearAppBadge()` — installed-app icon badge                                        |
+| `@life-os/platform-web/connectivity`                      | `isOnline()` / `bindOnlineStatus()` — lightweight online/offline events                                    |
 
 Settings 子路径：`row`、`action-row`、`toggle`、`toggle-row`、`segment`、`button-group`、`file-button`、`stack-block`、`backup-rows`、`section`、`sync-block`。各 app 保留 `*Rows` / `*Block` 业务组合件。
 

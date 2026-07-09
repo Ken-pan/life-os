@@ -71,9 +71,9 @@ async function postToClients(message) {
 }
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
-  );
+  // No skipWaiting here: the page decides when the new version may take over
+  // (via a SKIP_WAITING message), so an update never lands mid-timer.
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));
 });
 
 self.addEventListener('activate', (event) => {
@@ -87,6 +87,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   const data = event.data || {};
   const { type, id, endAt, name, mode, sound, notify, countdown } = data;
+
+  if (type === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
 
   if (type === 'CANCEL_TIMER') {
     if (id) cancelTimerJobs(id);

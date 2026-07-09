@@ -35,8 +35,13 @@
   import PortraitGate from '@life-os/platform-web/svelte/portrait-gate'
   import { scheduleBidirectionalSync, initAutoSync } from '$lib/sync.js'
   import { registerServiceWorker } from '$lib/swRegister.js'
-  import { syncRemindersToServiceWorker } from '$lib/services/reminders.js'
+  import { bindNetworkResume } from '@life-os/platform-web/network-resume'
+  import { setAppBadgeCount } from '@life-os/platform-web/app-badge'
+  import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
+  import { syncRemindersToServiceWorker, ensurePushSubscription } from '$lib/services/reminders.js'
   import { consumePendingLifeEvents } from '$lib/services/lifeEventsInbox.js'
+  import { selectTodayGroups } from '$lib/domain/selectors.js'
+  import { taskIndex } from '$lib/taskIndex.svelte.js'
   import {
     peekSessionUserId,
     readCache,
@@ -91,6 +96,7 @@
     const cleanupAuth = initAuth()
     registerServiceWorker()
     syncRemindersToServiceWorker()
+    void requestPersistentStorage()
 
     const params = new URLSearchParams(window.location.search)
     const taskId = params.get('task')
@@ -123,19 +129,35 @@
 
     consumePendingLifeEvents().catch(() => {})
 
-    const cleanupVisibility = bindPwaForegroundResume({
-      onForeground: () => {
+    const cleanupForeground = bindNetworkResume({
+      onResume: () => {
         scheduleBidirectionalSync()
         consumePendingLifeEvents().catch(() => {})
       },
+      when: () => Boolean(auth.user),
     })
     const cleanupAutoSync = initAutoSync({
       isSignedIn: () => Boolean(auth.user),
     })
     return () => {
-      cleanupVisibility()
+      cleanupForeground()
       cleanupAutoSync()
     }
+  })
+
+  /** 逾期任务数 → 主屏幕图标角标（iOS 16.4+ 已安装 PWA） */
+  $effect(() => {
+    const overdue = selectTodayGroups(taskIndex()).overdue.length
+    void setAppBadgeCount(overdue)
+    return () => {
+      void setAppBadgeCount(0)
+    }
+  })
+
+  /** 已开启提醒时确保 Web Push 订阅（登录后 / 设置变更） */
+  $effect(() => {
+    if (!auth.ready || !auth.user || !S.settings.notificationsEnabled) return
+    void ensurePushSubscription()
   })
 
   afterNavigate(() => {

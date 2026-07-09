@@ -178,7 +178,10 @@ async function handleMusicAudioFetch(request) {
 
 /** @param {string} url @param {string} trackId @param {'range' | 'full'} [mode] */
 async function precacheAudioUrl(url, trackId, mode = 'full') {
-  if (!url || url.startsWith('blob:')) return
+  if (!url || url.startsWith('blob:')) {
+    notifyPrecacheDone(trackId)
+    return
+  }
   try {
     if (mode === 'range') {
       await fetch(url, {
@@ -186,23 +189,36 @@ async function precacheAudioUrl(url, trackId, mode = 'full') {
         credentials: 'omit',
         headers: { Range: `bytes=0-${RANGE_WARM_BYTES - 1}` },
       })
-      void trackId
+      notifyPrecacheDone(trackId)
       return
     }
 
     const key = audioCacheKey(new URL(url))
     const cache = await caches.open(AUDIO_CACHE)
     const existing = await cache.match(key)
-    if (existing) return
+    if (existing) {
+      notifyPrecacheDone(trackId)
+      return
+    }
     const response = await fetch(url, { mode: 'cors', credentials: 'omit' })
     if (response.ok && response.status === 200) {
       await cache.put(key, response.clone())
       await trimCache(AUDIO_CACHE, AUDIO_CACHE_LIMIT)
     }
-    void trackId
   } catch {
     /* offline or expired signed URL */
+  } finally {
+    notifyPrecacheDone(trackId)
   }
+}
+
+/** @param {string | undefined} trackId */
+function notifyPrecacheDone(trackId) {
+  self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+    for (const client of clients) {
+      client.postMessage({ type: 'PRECACHE_AUDIO_DONE', trackId })
+    }
+  })
 }
 
 /** @param {string[]} keepTrackIds */

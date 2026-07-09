@@ -34,7 +34,6 @@
   import { ensureBuiltinPlaylists, ensureAlbumArtCache } from '$lib/db.js'
   import { scheduleLibraryMaintenance } from '$lib/import.js'
   import { initAuth, auth } from '$lib/auth.svelte.js'
-  import { bindVisibilitySync } from '@life-os/sync'
   import {
     bindViewportHeight,
     isLifeOsMobile,
@@ -45,6 +44,11 @@
   import { bindConnectivity } from '$lib/connectivity.svelte.js'
   import { bindBackgroundPlayback } from '$lib/backgroundAudio.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
+  import { bindNetworkResume } from '@life-os/platform-web/network-resume'
+  import { setAppBadgeCount } from '@life-os/platform-web/app-badge'
+  import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
+  import { backgroundActivity } from '$lib/backgroundActivity.svelte.js'
+  import { bindPrecacheActivityAck } from '$lib/audioPrecache.js'
   import {
     bindGlobalShortcuts,
     registerShortcutHandlers,
@@ -132,7 +136,10 @@
     const cleanupServiceWorker = registerServiceWorker({
       shouldDeferUpdate: () => player.playing,
     })
+    void requestPersistentStorage()
     const cleanupBackground = bindBackgroundPlayback()
+    const cleanupForeground = bindNetworkResume()
+    const cleanupPrecacheAck = bindPrecacheActivityAck()
     return () => {
       cleanupShortcuts()
       cleanupTheme()
@@ -141,6 +148,8 @@
       cleanupConnectivity()
       cleanupServiceWorker()
       cleanupBackground()
+      cleanupForeground()
+      cleanupPrecacheAck()
     }
   })
 
@@ -186,7 +195,8 @@
   $effect(() => {
     if (!auth.ready || !auth.user) return
     scheduleLibraryMaintenance({ art: false })
-    return bindVisibilitySync(() => syncBidirectional({ silent: true }), {
+    return bindNetworkResume({
+      onResume: () => syncBidirectional({ silent: true }),
       when: () => Boolean(auth.user),
     })
   })
@@ -194,6 +204,15 @@
   $effect(() => {
     S.settings.locale
     applyLocale()
+  })
+
+  /** 后台音频预缓存 / 导入任务 → 主屏幕图标角标 */
+  $effect(() => {
+    const jobs = backgroundActivity.activeJobs
+    void setAppBadgeCount(jobs)
+    return () => {
+      void setAppBadgeCount(0)
+    }
   })
 
   $effect(() => {

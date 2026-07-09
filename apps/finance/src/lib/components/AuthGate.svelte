@@ -37,7 +37,7 @@
     authErrorMessage,
     registerAuthHandlers,
   } from '$lib/auth.svelte.js'
-  import { bindPwaForegroundResume } from '@life-os/theme'
+  import { bindNetworkResume } from '@life-os/platform-web/network-resume'
   import { createDefaultData } from '@life-os/finance-core/defaults'
   import { ensureFinanceSetup } from '$lib/engine/financeSetup'
   import { DEFAULT_LOCALE, readStoredLocale } from '@life-os/finance-core/i18n/types'
@@ -172,8 +172,8 @@
       return () => window.removeEventListener(LOCALE_CHANGE_EVENT, handleLocaleEvent)
     }
 
-    const cleanupForeground = bindPwaForegroundResume({
-      onForeground: () => {
+    const cleanupForeground = bindNetworkResume({
+      onResume: () => {
         if (phase === 'ready') void scheduleBidirectionalSync()
       },
     })

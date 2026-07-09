@@ -71,6 +71,14 @@ export async function syncRemindersToServiceWorker() {
   });
 }
 
+/** Best-effort Web Push subscription after local reminders are synced. */
+export async function ensurePushSubscription() {
+  if (!browser || !S.settings.notificationsEnabled) return;
+  if (notificationPermission() !== 'granted') return;
+  const { subscribePlannerPushNotifications } = await import('../pushSubscription.js');
+  await subscribePlannerPushNotifications();
+}
+
 /** @param {import('../types.js').Task} task */
 export async function showLocalNotification(task) {
   if (!browser || Notification.permission !== 'granted') return;

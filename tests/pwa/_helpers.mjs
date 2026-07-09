@@ -47,9 +47,14 @@ export function collectShellMetricsInBrowser(opts) {
  */
 export async function readShellMetrics(page, app, standalone = false) {
   if (standalone) {
-    await page.evaluate(() =>
-      document.documentElement.classList.add('standalone-pwa'),
-    )
+    await page.evaluate(() => {
+      document.documentElement.classList.add('standalone-pwa')
+      document.documentElement.style.setProperty('--app-vh', '100vh')
+      document.documentElement.style.setProperty('--safe-top-effective', '59px')
+      document.documentElement.style.setProperty('--safe-bottom-effective', '34px')
+      document.documentElement.style.setProperty('--mobile-tabbar-safe-padding', '34px')
+    })
+    await page.waitForTimeout(300)
   }
   return page.evaluate(collectShellMetricsInBrowser, {
     mainQuery: app.mainQuery,

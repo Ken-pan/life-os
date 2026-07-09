@@ -24,15 +24,17 @@
   import { auth, initAuth } from '$lib/auth.svelte.js'
   import {
     bindViewportHeight,
-    bindPwaForegroundResume,
     resetScrollLock,
   } from '@life-os/theme'
+  import { bindNetworkResume } from '@life-os/platform-web/network-resume'
   import { shouldDeferFitnessForegroundSync } from '$lib/pwaResume.js'
   import {
     scheduleAutoCloudPush,
     scheduleBidirectionalSync,
   } from '$lib/sync.js'
   import { initTimer, timer } from '$lib/timer.svelte.js'
+  import { registerServiceWorker } from '$lib/serviceWorker.js'
+  import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
   import { bindFitnessAudioCleanup } from '$lib/audio.js'
   import { getProgram } from '$lib/programRuntime.js'
   import { finalizeStaleSessions } from '$lib/session.js'
@@ -124,9 +126,8 @@
     const cleanupAuth = initAuth()
     const cleanupAudio = bindFitnessAudioCleanup()
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {})
-    }
+    const cleanupServiceWorker = registerServiceWorker()
+    void requestPersistentStorage()
 
     return () => {
       cleanupTheme()
@@ -134,6 +135,7 @@
       cleanupTimer()
       cleanupAuth()
       cleanupAudio()
+      cleanupServiceWorker()
     }
   })
 
@@ -145,8 +147,8 @@
   /** 已登录时回到前台：视口立刻校正；专注/计时中延后云同步 */
   $effect(() => {
     if (!auth.ready || !auth.user) return
-    return bindPwaForegroundResume({
-      onForeground: () => scheduleBidirectionalSync(),
+    return bindNetworkResume({
+      onResume: () => scheduleBidirectionalSync(),
       shouldDefer: () =>
         shouldDeferFitnessForegroundSync(page.url.pathname, timer),
     })

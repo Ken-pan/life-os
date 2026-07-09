@@ -147,6 +147,10 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('message', (event) => {
   const data = event.data || {};
+  if (data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
   if (data.type === 'CLEAR_REMINDERS') {
     cancelAllJobs();
     clearPersistedJobs().catch(() => {});
@@ -158,6 +162,30 @@ self.addEventListener('message', (event) => {
       .catch(() => {})
       .finally(() => scheduleReminderJobs(jobs));
   }
+});
+
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {};
+  }
+  const title = payload.title || 'PLANNER.OS 提醒';
+  const body = payload.body || '';
+  const taskId = payload.taskId;
+  const url = payload.url || (taskId ? `/?task=${encodeURIComponent(taskId)}` : '/');
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: '/notify-192.png',
+      badge: '/notify-192.png',
+      tag: taskId ? `planos-reminder-${taskId}` : 'planos-reminder',
+      renotify: true,
+      vibrate: [100, 50, 100],
+      data: { url, taskId }
+    })
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {

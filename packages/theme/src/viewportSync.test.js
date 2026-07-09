@@ -26,6 +26,19 @@ function stubViewport(opts) {
     value: { standalone: Boolean(opts.standalone) },
     configurable: true,
   })
+  Object.defineProperty(globalThis, 'document', {
+    value: {
+      documentElement: {
+        classList: {
+          contains: () => false,
+          add: () => {},
+          remove: () => {},
+        },
+        style: { setProperty: () => {} },
+      },
+    },
+    configurable: true,
+  })
 }
 
 test('resolveAppVhCSSValue uses 100vh in standalone PWA cold start', () => {
@@ -36,6 +49,13 @@ test('resolveAppVhCSSValue uses 100vh in standalone PWA cold start', () => {
 test('resolveAppVhCSSValue tracks visual viewport when keyboard shrinks standalone', () => {
   stubViewport({ standalone: true, innerHeight: 852, visualHeight: 420 })
   assert.equal(resolveAppVhCSSValue(), '420px')
+})
+
+test('resolveAppVhCSSValue uses 100vh when standalone-pwa class is set', () => {
+  stubViewport({ standalone: false, innerHeight: 852, visualHeight: 793 })
+  // @ts-expect-error test stub
+  globalThis.document.documentElement.classList.contains = () => true
+  assert.equal(resolveAppVhCSSValue(), '100vh')
 })
 
 test('resolveAppVhCSSValue uses visual viewport px in browser mode', () => {
