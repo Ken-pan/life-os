@@ -1,53 +1,59 @@
 <script>
-  import { page } from '$app/state';
-  import { userLists } from '$lib/state.svelte.js';
-  import { t, listLabel } from '$lib/i18n/index.js';
-  import { taskEditor } from '$lib/ui.svelte.js';
+  import { page } from '$app/state'
+  import { userLists } from '$lib/state.svelte.js'
+  import { t, listLabel } from '$lib/i18n/index.js'
+  import { taskEditor } from '$lib/ui.svelte.js'
   import {
     buildPrimaryNavItems,
     buildMoreNavGroups,
     resolvePrimaryNavTab,
     isMoreNavActive,
-    isNavChromeHidden
-  } from '$lib/nav.js';
-  import Icon from '@life-os/platform-web/svelte/icon';
-  import MobileMoreSheet from '@life-os/platform-web/svelte/navigation/MobileMoreSheet';
+    isNavChromeHidden,
+  } from '$lib/nav.js'
+  import Icon from '@life-os/platform-web/svelte/icon'
+  import MobileMoreSheet from '@life-os/platform-web/svelte/navigation/MobileMoreSheet'
 
-  import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
+  import { lockScroll, unlockScroll } from '$lib/scrollLock.js'
 
-  let moreOpen = $state(false);
+  let moreOpen = $state(false)
 
-  const primaryItems = $derived(buildPrimaryNavItems(t));
-  const moreGroups = $derived(buildMoreNavGroups(t, userLists(), listLabel));
-  const pathname = $derived(page.url.pathname);
-  const search = $derived(page.url.search);
-  const primaryTab = $derived(resolvePrimaryNavTab(pathname));
-  const moreActive = $derived(isMoreNavActive(pathname, search));
-  const hidden = $derived(taskEditor.open || isNavChromeHidden(pathname));
+  const primaryItems = $derived(buildPrimaryNavItems(t))
+  const moreGroups = $derived(buildMoreNavGroups(t, userLists(), listLabel))
+  const pathname = $derived(page.url.pathname)
+  const search = $derived(page.url.search)
+  const primaryTab = $derived(resolvePrimaryNavTab(pathname))
+  const moreActive = $derived(isMoreNavActive(pathname, search))
+  const hidden = $derived(taskEditor.open || isNavChromeHidden(pathname))
 
   $effect(() => {
-    pathname;
-    moreOpen = false;
-  });
+    pathname
+    moreOpen = false
+  })
 
   $effect(() => {
     if (moreOpen) {
-      lockScroll();
-      return () => unlockScroll();
+      lockScroll()
+      return () => unlockScroll()
     }
-  });
+  })
 </script>
 
 {#if !hidden}
-  <nav class="nav bottom-nav" class:is-backgrounded={moreOpen} aria-label={t('nav.mainAria')}>
+  <nav
+    class="nav bottom-nav"
+    class:is-backgrounded={moreOpen}
+    aria-label={t('nav.mainAria')}
+  >
     <div class="nav-inner">
       {#each primaryItems as item (item.tab)}
         <a
           class="nav-item"
-          class:on={primaryTab === item.tab && !(moreActive && pathname !== '/')}
+          class:on={primaryTab === item.tab && !moreActive}
           href={item.href}
           data-sveltekit-noscroll
-          aria-current={primaryTab === item.tab ? 'page' : undefined}
+          aria-current={primaryTab === item.tab && !moreActive
+            ? 'page'
+            : undefined}
           aria-label={item.label}
         >
           <Icon name={item.icon} size={21} strokeWidth={1.5} />
@@ -62,7 +68,7 @@
         aria-haspopup="dialog"
         aria-label={t('common.more')}
         onclick={() => {
-          moreOpen = !moreOpen;
+          moreOpen = !moreOpen
         }}
       >
         <Icon name="ellipsis" size={21} strokeWidth={1.5} />
@@ -76,10 +82,10 @@
     title={t('common.more')}
     groups={moreGroups}
     {pathname}
-    search={search}
+    {search}
     closeLabel={t('common.close')}
     onClose={() => {
-      moreOpen = false;
+      moreOpen = false
     }}
   />
 {/if}

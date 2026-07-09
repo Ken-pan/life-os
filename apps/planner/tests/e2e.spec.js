@@ -220,8 +220,10 @@ test.describe('PlannerOS E2E', () => {
   test('底部导航切换页面（移动端）', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', '仅移动端')
     await page.goto('/')
-    await page.getByRole('link', { name: '收件箱' }).click()
-    await expect(page).toHaveURL(/\/inbox/)
+    await page.getByRole('link', { name: '日历' }).click()
+    await expect(page).toHaveURL(/\/calendar/)
+    await page.getByRole('link', { name: '搜索' }).click()
+    await expect(page).toHaveURL(/\/search/)
     await page.getByRole('button', { name: '更多' }).click()
     await page
       .getByRole('dialog')
@@ -229,6 +231,20 @@ test.describe('PlannerOS E2E', () => {
       .getByRole('link', { name: '设置' })
       .click()
     await expect(page).toHaveURL(/\/settings/)
+  })
+
+  test('任务抽屉打开智能清单（移动端）', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', '仅移动端')
+    await page.goto('/')
+    await page.getByRole('button', { name: '打开清单' }).click()
+    await page
+      .getByRole('dialog')
+      .filter({ has: page.getByText('清单菜单') })
+      .getByRole('link', { name: '收件箱' })
+      .click()
+    await expect(page).toHaveURL(/\/inbox/)
+    await page.getByRole('link', { name: '任务' }).click()
+    await expect(page).toHaveURL(/\/$/)
   })
 
   test('重复任务：完成后生成下一项', async ({ page }, testInfo) => {

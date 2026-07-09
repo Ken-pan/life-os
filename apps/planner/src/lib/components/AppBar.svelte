@@ -1,32 +1,53 @@
 <script>
-  import { page } from '$app/state';
-  import Icon from '@life-os/platform-web/svelte/icon';
-  import AppBrand from '@life-os/platform-web/svelte/brand';
-  import { t } from '$lib/i18n/index.js';
+  import { page } from '$app/state'
+  import Icon from '@life-os/platform-web/svelte/icon'
+  import AppBrand from '@life-os/platform-web/svelte/brand'
+  import { t } from '$lib/i18n/index.js'
+  import { isTaskModuleRoute } from '$lib/nav.js'
+  import { openTaskDrawer, taskDrawer } from '$lib/ui.svelte.js'
 
   /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, historyBack?: boolean }} */
-  let { title, subtitle, backHref, backLabel, historyBack = false } = $props();
+  let { title, subtitle, backHref, backLabel, historyBack = false } = $props()
 
-  const showMobileSearch = $derived(
-    !page.url.pathname.startsWith('/search') &&
-      !page.url.pathname.startsWith('/auth') &&
-      !page.url.pathname.startsWith('/settings')
-  );
+  const pathname = $derived(page.url.pathname)
+  const showListMenu = $derived(
+    isTaskModuleRoute(pathname) && !historyBack && !backHref,
+  )
 
   const showMobileSettings = $derived(
-    !page.url.pathname.startsWith('/settings') && !page.url.pathname.startsWith('/auth')
-  );
+    !pathname.startsWith('/settings') && !pathname.startsWith('/auth'),
+  )
 
-  const resolvedBackLabel = $derived(backLabel ?? t('common.back'));
-  const hasBack = $derived(Boolean(backHref) || historyBack);
-  const hasTools = $derived(showMobileSearch || showMobileSettings);
+  const resolvedBackLabel = $derived(backLabel ?? t('common.back'))
+  const hasBack = $derived(Boolean(backHref) || historyBack)
+  const hasTools = $derived(showMobileSettings)
 </script>
 
-<header class="appbar" class:appbar--back={hasBack} class:appbar--tools={hasTools}>
+<header
+  class="appbar"
+  class:appbar--back={hasBack}
+  class:appbar--tools={hasTools}
+  class:appbar--list-menu={showListMenu}
+>
   <div class="appbar-inner">
     <div class="appbar-leading">
-      {#if historyBack}
-        <button type="button" class="appbar-back" onclick={() => history.back()}>
+      {#if showListMenu}
+        <button
+          type="button"
+          class="appbar-menu"
+          aria-label={t('nav.openLists')}
+          aria-expanded={taskDrawer.open}
+          aria-haspopup="dialog"
+          onclick={openTaskDrawer}
+        >
+          <Icon name="menu" size={20} strokeWidth={1.75} />
+        </button>
+      {:else if historyBack}
+        <button
+          type="button"
+          class="appbar-back"
+          onclick={() => history.back()}
+        >
           <Icon name="chevron-left" size={16} strokeWidth={2.5} />
           <span class="appbar-back-label">{resolvedBackLabel}</span>
         </button>
@@ -49,13 +70,12 @@
 
     <div class="appbar-trailing">
       {#if showMobileSettings}
-        <a class="appbar-settings" href="/settings" aria-label={t('nav.settings')}>
+        <a
+          class="appbar-settings"
+          href="/settings"
+          aria-label={t('nav.settings')}
+        >
           <Icon name="settings" size={20} strokeWidth={1.75} />
-        </a>
-      {/if}
-      {#if showMobileSearch}
-        <a class="appbar-search" href="/search" aria-label={t('nav.search')}>
-          <Icon name="search" size={20} strokeWidth={1.75} />
         </a>
       {/if}
     </div>

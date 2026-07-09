@@ -244,29 +244,47 @@ test.describe('移动端 IA 验收截图', () => {
     await page.goto('/')
     await expect(page.locator('h1.page-title')).toHaveText('今天')
     await expect(page.locator('.today-progress')).toBeVisible()
-    await expect(page.getByTestId('fab-add')).toHaveAttribute('data-fab-mode', 'large')
+    await expect(page.getByTestId('fab-add')).toHaveAttribute(
+      'data-fab-mode',
+      'large',
+    )
     await snap(page, '01-today', { flow: 'IA', note: 'Today 大 FAB + 进度卡' })
 
     await page.goto('/inbox')
     await expect(page.locator('h1.page-title')).toHaveText('收件箱')
     await expect(page.getByTestId('fab-add')).toHaveCount(0)
     await expect(page.locator('.page-hint')).toBeVisible()
-    await snap(page, '02-inbox', { flow: 'IA', note: 'Inbox 无 FAB + 轻量 hint' })
+    await snap(page, '02-inbox', {
+      flow: 'IA',
+      note: 'Inbox 无 FAB + 轻量 hint',
+    })
 
     await page.goto('/upcoming')
     await expect(page.locator('h1.page-title')).toHaveText('即将')
-    await expect(page.getByTestId('fab-add')).toHaveAttribute('data-fab-mode', 'compact')
+    await expect(page.getByTestId('fab-add')).toHaveAttribute(
+      'data-fab-mode',
+      'compact',
+    )
     await snap(page, '03-upcoming', { flow: 'IA', note: 'Upcoming 小 FAB' })
 
     await page.goto('/completed')
     await expect(page.locator('h1.page-title')).toHaveText('已完成')
     await expect(page.getByTestId('fab-add')).toHaveCount(0)
-    await snap(page, '04-completed', { flow: 'IA', note: 'Completed 节奏与成就' })
+    await snap(page, '04-completed', {
+      flow: 'IA',
+      note: 'Completed 节奏与成就',
+    })
 
     await page.goto('/calendar')
     await expect(page.locator('h1.page-title')).toHaveText('日历')
-    await expect(page.locator('.appbar-back')).toBeVisible()
-    await expect(page.getByTestId('fab-add')).toHaveAttribute('data-fab-mode', 'compact')
-    await snap(page, '05-calendar', { flow: 'IA', note: 'Calendar back + 小 FAB' })
+    await expect(page.getByRole('link', { name: '日历' })).toBeVisible()
+    await expect(page.getByTestId('fab-add')).toHaveAttribute(
+      'data-fab-mode',
+      'compact',
+    )
+    await snap(page, '05-calendar', {
+      flow: 'IA',
+      note: 'Calendar Primary Tab + 小 FAB',
+    })
   })
 })

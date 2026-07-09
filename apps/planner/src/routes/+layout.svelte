@@ -4,13 +4,13 @@
   import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'
   import ListSidebar from '$lib/components/ListSidebar.svelte'
-  import AppBar from '$lib/components/AppBar.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
   import Toast from '$lib/components/Toast.svelte'
   import TaskEditorSheet from '$lib/components/TaskEditorSheet.svelte'
   import QuickSchedulePopover from '$lib/components/schedule/QuickSchedulePopover.svelte'
   import ScheduleSlotSheet from '$lib/components/schedule/ScheduleSlotSheet.svelte'
   import Fab from '$lib/components/Fab.svelte'
+  import TaskListDrawer from '$lib/components/TaskListDrawer.svelte'
   import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
   import DocumentHead from '@life-os/platform-web/svelte/head'
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
@@ -173,6 +173,7 @@
 </div>
 
 <Toast />
+<TaskListDrawer />
 <TaskEditorSheet />
 <QuickSchedulePopover />
 <ScheduleSlotSheet />

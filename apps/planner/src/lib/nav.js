@@ -1,21 +1,70 @@
 /**
- * Life OS 导航 IA — Planner.OS
- * mobile/tablet：4 个 Primary Tab + More Sheet（与 FinanceOS 对齐）
- * desktop：完整侧栏分组
+ * Life OS 导航 IA — Planner.OS（对齐滴答：模块底栏 + 智能清单抽屉）
+ *
+ * Mobile：任务 | 日历 | 搜索 | 更多
+ *   - 「任务」Tab 始终回到今天（B1）
+ *   - 智能清单 / 用户清单在任务抽屉（☰）
+ * Desktop：侧栏全展开（智能清单 + 浏览 + 用户清单 + 设置）
  */
 
 /** @typedef {import('@life-os/platform-web/navigation').WebNavItem} NavItem */
 /** @typedef {import('@life-os/platform-web/navigation').WebNavGroup} NavGroup */
 
-/** @param {(key: string, params?: Record<string, unknown>) => string} tr */
+/** 任务模块路由（底栏「任务」高亮；可开清单抽屉） */
+/** @param {string} pathname */
+export function isTaskModuleRoute(pathname) {
+  if (pathname === '/') return true
+  if (pathname.startsWith('/inbox')) return true
+  if (pathname.startsWith('/upcoming')) return true
+  if (pathname.startsWith('/completed')) return true
+  if (pathname.startsWith('/lists/')) return true
+  return false
+}
+
+/**
+ * Mobile 底栏 Primary（A2）
+ * @param {(key: string, params?: Record<string, unknown>) => string} tr
+ */
 export function buildPrimaryNavItems(tr) {
+  return [
+    {
+      tab: 'tasks',
+      href: '/',
+      label: tr('nav.tasks'),
+      icon: 'check',
+      match: (p) => isTaskModuleRoute(p),
+    },
+    {
+      tab: 'calendar',
+      href: '/calendar',
+      label: tr('nav.calendar'),
+      icon: 'calendar',
+      match: (p) => p.startsWith('/calendar'),
+    },
+    {
+      tab: 'search',
+      href: '/search',
+      label: tr('nav.search'),
+      icon: 'search',
+      match: (p) => p.startsWith('/search'),
+    },
+  ]
+}
+
+/**
+ * 智能清单（今天 / 收件箱 / 即将 / 已完成）
+ * @param {(key: string, params?: Record<string, unknown>) => string} tr
+ * @returns {NavItem[]}
+ */
+export function buildSmartListNavItems(tr) {
   return [
     {
       tab: 'today',
       href: '/',
       label: tr('nav.today'),
-      icon: 'home',
-      match: (p) => p === '/',
+      icon: 'sun',
+      match: (p, search = '') =>
+        p === '/' && new URLSearchParams(search).get('view') !== 'timeline',
     },
     {
       tab: 'inbox',
@@ -41,9 +90,20 @@ export function buildPrimaryNavItems(tr) {
   ]
 }
 
-/** @param {(key: string, params?: Record<string, unknown>) => string} tr */
-export function buildMoreBrowseNavItems(tr) {
+/**
+ * Desktop 浏览组：时间轴 + 日历 + 搜索
+ * @param {(key: string, params?: Record<string, unknown>) => string} tr
+ */
+export function buildBrowseNavItems(tr) {
   return [
+    {
+      tab: 'schedule',
+      href: '/schedule',
+      label: tr('nav.timeline'),
+      icon: 'clock',
+      match: (p, search = '') =>
+        p === '/' && new URLSearchParams(search).get('view') === 'timeline',
+    },
     {
       tab: 'calendar',
       href: '/calendar',
@@ -62,21 +122,6 @@ export function buildMoreBrowseNavItems(tr) {
 }
 
 /** @param {(key: string, params?: Record<string, unknown>) => string} tr */
-export function buildBrowseNavItems(tr) {
-  return [
-    {
-      tab: 'schedule',
-      href: '/schedule',
-      label: tr('nav.schedule'),
-      icon: 'clock',
-      match: (p, search = '') =>
-        p === '/' && new URLSearchParams(search).get('view') === 'timeline',
-    },
-    ...buildMoreBrowseNavItems(tr),
-  ]
-}
-
-/** @param {(key: string, params?: Record<string, unknown>) => string} tr */
 export function buildSettingsNavItem(tr) {
   return {
     tab: 'settings',
@@ -88,19 +133,50 @@ export function buildSettingsNavItem(tr) {
 }
 
 /**
- * 侧栏分组（desktop）
+ * Desktop 侧栏分组（全展开）
  * @param {(key: string, params?: Record<string, unknown>) => string} tr
  * @returns {NavGroup[]}
  */
 export function buildSidebarNavGroups(tr) {
   return [
-    { label: tr('nav.groupTasks'), items: buildPrimaryNavItems(tr) },
+    { label: tr('nav.groupSmart'), items: buildSmartListNavItems(tr) },
     { label: tr('nav.groupBrowse'), items: buildBrowseNavItems(tr) },
   ]
 }
 
 /**
- * More Sheet 分组（mobile / tablet）
+ * Mobile 任务抽屉分组（智能清单 + 用户清单）
+ * @param {(key: string, params?: Record<string, unknown>) => string} tr
+ * @param {import('./types.js').TaskList[]} lists
+ * @param {(list: import('./types.js').TaskList) => string} listLabelFn
+ * @returns {NavGroup[]}
+ */
+export function buildTaskDrawerNavGroups(tr, lists, listLabelFn) {
+  /** @type {NavGroup[]} */
+  const groups = [
+    { label: tr('nav.groupSmart'), items: buildSmartListNavItems(tr) },
+  ]
+
+  if (lists.length) {
+    groups.push({
+      label: tr('nav.lists'),
+      items: lists.map((list) => ({
+        tab: `list-${list.id}`,
+        href: `/lists/${list.id}`,
+        label: listLabelFn(list),
+        icon: 'list',
+        dotColor: list.color,
+        match: (p) => p === `/lists/${list.id}`,
+      })),
+    })
+  }
+
+  return groups
+}
+
+/**
+ * More Sheet（Mobile）：用户清单 + 设置
+ * 搜索已在 Primary，不再进 More
  * @param {(key: string, params?: Record<string, unknown>) => string} tr
  * @param {import('./types.js').TaskList[]} lists
  * @param {(list: import('./types.js').TaskList) => string} listLabelFn
@@ -108,9 +184,7 @@ export function buildSidebarNavGroups(tr) {
  */
 export function buildMoreNavGroups(tr, lists, listLabelFn) {
   /** @type {NavGroup[]} */
-  const groups = [
-    { label: tr('nav.groupBrowse'), items: buildMoreBrowseNavItems(tr) },
-  ]
+  const groups = []
 
   if (lists.length) {
     groups.push({
@@ -136,18 +210,15 @@ export function buildMoreNavGroups(tr, lists, listLabelFn) {
 
 /** @param {string} pathname */
 export function resolvePrimaryNavTab(pathname) {
-  if (pathname === '/') return 'today'
-  if (pathname.startsWith('/inbox')) return 'inbox'
-  if (pathname.startsWith('/upcoming')) return 'upcoming'
-  if (pathname.startsWith('/completed')) return 'completed'
+  if (isTaskModuleRoute(pathname)) return 'tasks'
+  if (pathname.startsWith('/calendar')) return 'calendar'
+  if (pathname.startsWith('/search')) return 'search'
   return ''
 }
 
 /** @param {string} pathname @param {string} [search] */
 export function isMoreNavActive(pathname, search = '') {
-  if (pathname.startsWith('/search')) return true
-  if (pathname.startsWith('/calendar')) return true
-  if (pathname.startsWith('/lists/')) return true
+  void search
   if (pathname.startsWith('/settings')) return true
   if (pathname.startsWith('/auth')) return true
   return false
@@ -190,7 +261,7 @@ export function isNavChromeHidden(pathname) {
 }
 
 /**
- * mobile 主内容区底部留白档位（按路由，避免 Sheet 打开时 FAB 卸载触发布局跳动）
+ * mobile 主内容区底部留白档位
  * @param {string} pathname @param {string} [search]
  * @returns {'full' | 'tabbar' | 'minimal'}
  */

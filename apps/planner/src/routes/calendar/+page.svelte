@@ -58,7 +58,7 @@
   }
 </script>
 
-<AppBar title={t('calendar.title')} historyBack />
+<AppBar title={t('calendar.title')} />
 
 <div class="life-os-page-workspace" data-content-mode="span">
   <div class="desktop-split-layout calendar-page">

@@ -21,6 +21,7 @@
   <div class="sidebar-body">
     {#each navGroups as group, index (group.label)}
       <div class="nav-group" class:nav-group-divider={index > 0}>
+        <p class="nav-group-label">{group.label}</p>
         {#each group.items as link (link.href)}
           <a
             class="nav-item"
@@ -36,6 +37,7 @@
     {/each}
 
     <div class="nav-group nav-group-divider">
+      <p class="nav-group-label">{t('nav.lists')}</p>
       {#each lists as list (list.id)}
         <a
           class="nav-item"

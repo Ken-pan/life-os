@@ -51,12 +51,14 @@ body {
 }
 
 .appbar-back:focus-visible,
+.appbar-menu:focus-visible,
 .appbar-search:focus-visible,
 .appbar-settings:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
   outline-offset: 2px;
 }
 
+.appbar-menu,
 .appbar-search,
 .appbar-settings {
   display: grid;
@@ -73,6 +75,7 @@ body {
     color var(--dur-fast) var(--ease);
 }
 
+.appbar-menu:hover,
 .appbar-search:hover,
 .appbar-settings:hover {
   background: color-mix(in srgb, var(--t1) 6%, transparent);
@@ -2800,6 +2803,158 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
 
 .sidebar-add-task:hover {
   background: color-mix(in srgb, var(--accent) 10%, var(--card));
+}
+
+/* ===== Mobile 任务清单抽屉（滴答式）===== */
+.task-drawer-backdrop,
+.task-drawer-panel {
+  display: none;
+}
+
+@media (--life-os-mobile) {
+  .task-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-more-sheet);
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    background: var(--overlay-backdrop);
+    -webkit-backdrop-filter: blur(1px);
+    backdrop-filter: blur(1px);
+    animation: life-os-fade-in var(--dur-fast) var(--ease-standard);
+  }
+
+  .task-drawer-panel {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: calc(var(--z-more-sheet) + 1);
+    width: min(86vw, 320px);
+    max-width: 100%;
+    background: var(--navigation-sheet-bg, var(--card));
+    border-right: 1px solid var(--control-border, var(--border));
+    box-shadow: var(--shadow-elevated, 0 12px 40px rgba(31, 28, 24, 0.12));
+    padding-top: max(var(--space-3), env(safe-area-inset-top));
+    padding-bottom: max(var(--space-3), var(--safe-bottom-effective));
+    animation: planner-task-drawer-in var(--dur-base) var(--ease-standard);
+  }
+
+  @keyframes planner-task-drawer-in {
+    from {
+      transform: translateX(-100%);
+      opacity: 0.7;
+    }
+
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .task-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4) var(--space-3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .task-drawer-title {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  .task-drawer-close {
+    display: grid;
+    place-items: center;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--t2);
+  }
+
+  .task-drawer-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: var(--space-2) var(--space-2) var(--space-4);
+  }
+
+  .task-drawer-section {
+    margin-bottom: var(--space-3);
+  }
+
+  .task-drawer-section-label {
+    margin: 0;
+    padding: var(--space-2) var(--space-3) var(--space-1);
+    font-family: var(--mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--t3);
+  }
+
+  .task-drawer-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--tap-min);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md, 12px);
+    color: var(--t1);
+    text-decoration: none;
+  }
+
+  .task-drawer-row.active {
+    background: color-mix(in srgb, var(--accent) 12%, var(--card));
+    color: var(--accent);
+  }
+
+  .task-drawer-row-icon {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    flex-shrink: 0;
+  }
+
+  .task-drawer-row-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--text-base);
+    font-weight: 550;
+  }
+
+  .task-drawer-row-check {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .task-drawer-row-chevron {
+    color: var(--t3);
+  }
+
+  body:has(.task-drawer-backdrop) .fab {
+    display: none;
+  }
+}
+
+@media (--life-os-desktop) {
+  .appbar-menu {
+    display: none;
+  }
 }
 
 .chip--life-event {
