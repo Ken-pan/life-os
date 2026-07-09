@@ -104,7 +104,7 @@
   }
 </script>
 
-<div class="life-os-page-workspace" data-content-mode="span">
+<div class="life-os-page-workspace">
   <AppBar title={t('home.title')} subtitle={t('app.tagline')} />
 
   <div

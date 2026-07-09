@@ -10,6 +10,11 @@
 */
 
 :root {
+  /* 与 Finance 等同：主列居中 content frame */
+  --content-max: 1320px;
+  --maxw: var(--content-max);
+  --content-inline-pad: max(var(--page-gutter), calc((100% - var(--content-max)) / 2));
+
   /* ===== 领域语义（任务 UI） ===== */
   --done: var(--positive);
   --deadline: var(--critical);
@@ -1336,7 +1341,7 @@ body {
 
 @media (--life-os-desktop) {
   .main-col {
-    --planner-desktop-span: var(--content-span);
+    --planner-desktop-span: var(--content-max);
   }
 
   .quick-add--mobile {

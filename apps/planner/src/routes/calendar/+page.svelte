@@ -60,7 +60,7 @@
 
 <AppBar title={t('calendar.title')} />
 
-<div class="life-os-page-workspace" data-content-mode="span">
+<div class="life-os-page-workspace">
   <div class="desktop-split-layout calendar-page">
     <div class="desktop-split-main">
       <div class="wrap">

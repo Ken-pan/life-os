@@ -139,7 +139,7 @@
 
 <AppBar title={t('settings.title')} historyBack />
 
-<div class="life-os-page-workspace" data-content-mode="span">
+<div class="life-os-page-workspace">
   <div class="wrap settings-page settings-page--planner">
     <SettingsSection
       title={t('settings.appearance')}

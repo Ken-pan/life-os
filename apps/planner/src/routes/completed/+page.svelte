@@ -24,7 +24,7 @@
 
 <AppBar title={t('completed.title')} />
 
-<div class="life-os-page-workspace" data-content-mode="span">
+<div class="life-os-page-workspace">
   <div class="desktop-split-layout desktop-split-layout--log">
     <div class="desktop-split-main">
       <div class="wrap completed-page">
