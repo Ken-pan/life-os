@@ -13,11 +13,10 @@ export const LIFE_OS_APP_ORIGINS = {
 }
 
 /**
- * Sidebar / launcher switcher order.
+ * Sidebar switcher order (product apps only — Portal is the launcher hub, not listed here).
  * @type {Array<{ id: LifeOsAppId; experimental?: boolean }>}
  */
 export const LIFE_OS_SWITCHER_APPS = [
-  { id: 'portal' },
   { id: 'planner' },
   { id: 'finance' },
   { id: 'fitness' },
