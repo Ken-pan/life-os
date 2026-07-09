@@ -240,7 +240,7 @@
               class="brand-switcher-item-name"
             />
             {#if entry.experimental}
-              <span class="brand-switcher-item-badge">实验</span>
+              <span class="brand-switcher-item-badge">beta</span>
             {/if}
           </span>
           {#if isCurrent}

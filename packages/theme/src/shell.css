@@ -272,7 +272,7 @@
   white-space: nowrap;
 }
 
-.brand-switcher-item-name .brand-name-accent {
+.brand-switcher-item .brand-switcher-item-name .brand-name-accent {
   color: var(--brand-switcher-item-accent, var(--sidebar-primary));
 }
 
@@ -282,7 +282,7 @@
   color: var(--sidebar-muted);
 }
 
-.brand-switcher-item-check {
+.brand-switcher-item .brand-switcher-item-check {
   flex: 0 0 auto;
   font-size: var(--text-sm);
   font-weight: 700;

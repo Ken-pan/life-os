@@ -18,7 +18,7 @@ export function filterLifeOsSwitcherApps(apps, query) {
       brand.fullName,
       brand.wordmarkBase,
       brand.wordmarkAccent,
-      entry.experimental ? '实验 experimental' : '',
+      entry.experimental ? 'beta experimental' : '',
     ]
       .join(' ')
       .toLowerCase()

@@ -275,7 +275,7 @@ export function AppBrandSwitcher({
                     </span>
                   </span>
                   {entry.experimental ? (
-                    <span className="brand-switcher-item-badge">实验</span>
+                    <span className="brand-switcher-item-badge">beta</span>
                   ) : null}
                 </span>
                 {isCurrent ? (
