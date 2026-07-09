@@ -7,7 +7,4 @@
 /api/paper/delta /.netlify/functions/paper-delta 200
 /api/paper/actions /.netlify/functions/paper-actions 200
 
-# Exclude Netlify function paths from SPA catch-all
-/.netlify/functions/* 200
-
 /* /index.html 200
