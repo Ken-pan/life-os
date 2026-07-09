@@ -234,13 +234,14 @@
 .settings-toggle::after {
   content: '';
   position: absolute;
-  top: 3px;
+  top: 50%;
   left: 3px;
   width: 21px;
   height: 21px;
   border-radius: 50%;
   background: var(--control-toggle-thumb);
   transition: transform var(--dur-base) var(--ease-emphasized);
+  transform: translateY(-50%);
 }
 
 .toggle.on,
@@ -250,7 +251,7 @@
 
 .toggle.on::after,
 .settings-toggle.on::after {
-  transform: translateX(19px);
+  transform: translateY(-50%) translateX(19px);
 }
 
 .toggle.disabled,
