@@ -94,10 +94,29 @@ export declare const LIFE_OS_SWITCHER_APPS: Array<{
 
 export declare function getLifeOsAppOrigin(appId: LifeOsAppId): string
 
+export declare function getLifeOsAppBrandOrigin(appId: LifeOsAppId): string
+
 export declare function getLifeOsAppBrandIconUrl(
   appId: LifeOsAppId,
   theme?: 'light' | 'dark',
 ): string
+
+export declare function getLifeOsAppBrandMark(appId: LifeOsAppId): {
+  light: string
+  dark: string
+  lightSrcSet: string
+  darkSrcSet: string
+}
+
+export declare function filterLifeOsSwitcherApps(
+  apps: Array<{ id: LifeOsAppId; experimental?: boolean }>,
+  query: string,
+): Array<{ id: LifeOsAppId; experimental?: boolean }>
+
+export declare function findSwitcherTypeAheadIndex(
+  apps: Array<{ id: LifeOsAppId; experimental?: boolean }>,
+  query: string,
+): number
 
 export type ApplyDocumentMetaOptions = {
   pageTitle: string
