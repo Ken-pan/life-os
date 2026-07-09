@@ -9,9 +9,16 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs'
 import { spawn } from 'child_process'
 import { createClient } from '@supabase/supabase-js'
 import { PWA_APPS } from './apps.config.mjs'
+import { resolveScreenshotDir } from '../qa/screenshot-output.mjs'
 
-const OUT_DIR = 'screenshots/pwa'
-const FILTER = process.env.PWA_APP?.split(',').map((s) => s.trim()).filter(Boolean)
+const { dir: OUT_DIR } = resolveScreenshotDir({
+  app: 'pwa',
+  suite: 'chrome-audit',
+  importMetaUrl: import.meta.url,
+})
+const FILTER = process.env.PWA_APP?.split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
 
 /** @type {Record<string, import('child_process').ChildProcess>} */
 const servers = {}
@@ -22,7 +29,17 @@ function startPreview(id) {
   if (!app) throw new Error(`Unknown app: ${id}`)
   const child = spawn(
     'npm',
-    ['run', 'preview', '-w', app.workspace, '--', '--host', '127.0.0.1', '--port', String(app.port)],
+    [
+      'run',
+      'preview',
+      '-w',
+      app.workspace,
+      '--',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      String(app.port),
+    ],
     { stdio: 'ignore', detached: false },
   )
   servers[id] = child
@@ -50,17 +67,31 @@ async function primeStandalonePwa(page) {
     document.documentElement.classList.add('standalone-pwa')
     document.documentElement.style.setProperty('--app-vh', '100vh')
     document.documentElement.style.setProperty('--safe-top-effective', '59px')
-    document.documentElement.style.setProperty('--safe-bottom-effective', '34px')
-    document.documentElement.style.setProperty('--mobile-tabbar-safe-padding', '34px')
+    document.documentElement.style.setProperty(
+      '--safe-bottom-effective',
+      '34px',
+    )
+    document.documentElement.style.setProperty(
+      '--mobile-tabbar-safe-padding',
+      '34px',
+    )
   })
-  await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {})
+  await page
+    .waitForLoadState('networkidle', { timeout: 15_000 })
+    .catch(() => {})
   await page.waitForTimeout(800)
   await page.evaluate(() => {
     document.documentElement.classList.add('standalone-pwa')
     document.documentElement.style.setProperty('--app-vh', '100vh')
     document.documentElement.style.setProperty('--safe-top-effective', '59px')
-    document.documentElement.style.setProperty('--safe-bottom-effective', '34px')
-    document.documentElement.style.setProperty('--mobile-tabbar-safe-padding', '34px')
+    document.documentElement.style.setProperty(
+      '--safe-bottom-effective',
+      '34px',
+    )
+    document.documentElement.style.setProperty(
+      '--mobile-tabbar-safe-padding',
+      '34px',
+    )
   })
 }
 
@@ -199,8 +230,12 @@ async function main() {
       }
       if (id === 'music') await seedMusic(page)
       if (id === 'planner') {
-        await page.waitForURL(/\/(calendar)?(\?.*)?$/, { timeout: 15_000 }).catch(() => {})
-        await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {})
+        await page
+          .waitForURL(/\/(calendar)?(\?.*)?$/, { timeout: 15_000 })
+          .catch(() => {})
+        await page
+          .waitForLoadState('networkidle', { timeout: 15_000 })
+          .catch(() => {})
       }
       await page.waitForSelector(app.waitSelector, { timeout: 45_000 })
       await primeStandalonePwa(page)
@@ -218,7 +253,10 @@ async function main() {
     }
   }
 
-  writeFileSync(`${OUT_DIR}/chrome-audit-report.json`, JSON.stringify(report, null, 2))
+  writeFileSync(
+    `${OUT_DIR}/chrome-audit-report.json`,
+    JSON.stringify(report, null, 2),
+  )
   console.log(`Report: ${OUT_DIR}/chrome-audit-report.json`)
 
   await browser.close()

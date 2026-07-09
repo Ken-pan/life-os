@@ -4,9 +4,14 @@
 import { chromium } from 'playwright'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const BASE = process.env.IME_AUDIT_BASE ?? 'http://127.0.0.1:5196'
-const OUT = join(process.cwd(), '.qa-screenshots/ime-audit')
+const { dir: OUT } = resolveScreenshotDir({
+  app: 'music',
+  suite: 'ime-audit',
+  importMetaUrl: import.meta.url,
+})
 const issues = []
 
 function issue(id, title, detail) {
@@ -64,7 +69,9 @@ async function getSearchInput(page) {
 async function dispatchCompositionInput(page, input, text) {
   await input.focus()
   await input.evaluate((el, text) => {
-    el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    el.dispatchEvent(
+      new CompositionEvent('compositionstart', { bubbles: true }),
+    )
     el.value = text
     el.dispatchEvent(
       new InputEvent('input', {
@@ -171,11 +178,7 @@ async function run() {
   })
   await page.waitForTimeout(50)
   if (new URL(page.url()).pathname.startsWith('/search')) {
-    issue(
-      'IME-T2',
-      'Safari-order IME confirm Enter submits search',
-      page.url(),
-    )
+    issue('IME-T2', 'Safari-order IME confirm Enter submits search', page.url())
   }
 
   // T3: keyCode 229 Enter must not submit
@@ -207,12 +210,11 @@ async function run() {
   })
   await page.waitForTimeout(600)
   const url4 = page.url()
-  if (!url4.includes('q=%E5%91%A8%E6%9D%B0%E4%BC%A6') && !url4.includes('q=周杰伦')) {
-    issue(
-      'IME-T4',
-      'Enter after composition should submit search',
-      url4,
-    )
+  if (
+    !url4.includes('q=%E5%91%A8%E6%9D%B0%E4%BC%A6') &&
+    !url4.includes('q=周杰伦')
+  ) {
+    issue('IME-T4', 'Enter after composition should submit search', url4)
   }
 
   // T5: composition期间 suggestPending should not flip true mid-pinyin (debounced guard)
@@ -221,7 +223,9 @@ async function run() {
   const input5 = await getSearchInput(page)
   let pendingDuringComposition = false
   await input5.evaluate((el) => {
-    el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    el.dispatchEvent(
+      new CompositionEvent('compositionstart', { bubbles: true }),
+    )
   })
   for (const ch of ['z', 'h', 'o', 'u']) {
     await input5.evaluate((el, ch) => {
@@ -315,7 +319,9 @@ async function run() {
   await mobilePage.waitForTimeout(400)
   const pageInput8 = mobilePage.locator('.search-page-input').first()
   await pageInput8.evaluate((el) => {
-    el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+    el.dispatchEvent(
+      new CompositionEvent('compositionstart', { bubbles: true }),
+    )
   })
   for (const ch of ['z', 'h', 'o']) {
     await pageInput8.evaluate((el, ch) => {

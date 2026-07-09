@@ -9,11 +9,17 @@ import { createClient } from '@supabase/supabase-js'
 import { mkdirSync, writeFileSync, readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const dateTag = process.env.UI_QA_DATE ?? '2026-07-06-records'
-const shotRoot = resolve(root, `docs/ui-qa-screenshots/records-tab-${dateTag}`)
+const { dir: shotRoot } = resolveScreenshotDir({
+  app: 'finance',
+  suite: 'records-tab',
+  importMetaUrl: import.meta.url,
+  runId: process.env.QA_RUN_ID ?? dateTag,
+})
 const storageKey = 'life_os_auth'
 const baseUrl = process.env.UI_QA_URL ?? 'http://localhost:5180'
 

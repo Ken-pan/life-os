@@ -4,11 +4,13 @@
  */
 import { chromium } from '@playwright/test'
 import { mkdir, writeFile } from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const OUT = path.join(__dirname, '../screenshots/today-card-audit')
+const { dir: OUT } = resolveScreenshotDir({
+  app: 'fitness',
+  suite: 'today-card-audit',
+  importMetaUrl: import.meta.url,
+})
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:5173'
 
 const VIEWPORTS = [

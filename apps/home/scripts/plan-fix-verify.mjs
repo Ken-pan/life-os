@@ -1,11 +1,14 @@
 import { chromium } from 'playwright'
-import { mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:5197'
-const OUT = join(process.cwd(), 'apps/home/screenshots/plan-audit-fix-20260708')
+const { dir: OUT } = resolveScreenshotDir({
+  app: 'home',
+  suite: 'plan-fix-verify',
+  importMetaUrl: import.meta.url,
+  runId: process.env.QA_RUN_ID ?? '20260708',
+})
 const SKEY = 'homeos_spatial_v1'
-mkdirSync(OUT, { recursive: true })
 
 /** @param {import('playwright').Page} page */
 async function prime(page, studio) {
@@ -46,7 +49,10 @@ if (box) {
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await page.waitForTimeout(350)
 }
-await page.screenshot({ path: join(OUT, 'public-hover-s6.png'), fullPage: false })
+await page.screenshot({
+  path: join(OUT, 'public-hover-s6.png'),
+  fullPage: false,
+})
 const tip = page.locator('.plan-svg-tooltip')
 console.log('tooltip visible:', await tip.isVisible())
 console.log('tooltip text:', await tip.textContent())
@@ -55,7 +61,10 @@ console.log('tooltip text:', await tip.textContent())
 await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
 await page.waitForURL(/\/storage\?zone=S6/)
 console.log('navigated:', page.url())
-await page.screenshot({ path: join(OUT, 'public-click-s6-storage.png'), fullPage: true })
+await page.screenshot({
+  path: join(OUT, 'public-click-s6-storage.png'),
+  fullPage: true,
+})
 
 await prime(page, true)
 await page.goto(`${BASE}/plan?studio=1`, { waitUntil: 'networkidle' })
@@ -66,13 +75,19 @@ if (fb) {
   await page.mouse.move(fb.x + fb.width / 2, fb.y + fb.height / 2)
   await page.waitForTimeout(350)
 }
-await page.screenshot({ path: join(OUT, 'studio-hover-furniture.png'), fullPage: false })
+await page.screenshot({
+  path: join(OUT, 'studio-hover-furniture.png'),
+  fullPage: false,
+})
 const tip2 = page.locator('.plan-svg-tooltip')
 console.log('furniture tooltip:', await tip2.textContent())
 
 await page.getByRole('button', { name: '编辑户型' }).click()
 await page.waitForTimeout(600)
-await page.screenshot({ path: join(OUT, 'studio-edit-mode.png'), fullPage: true })
+await page.screenshot({
+  path: join(OUT, 'studio-edit-mode.png'),
+  fullPage: true,
+})
 
 await browser.close()
 console.log('done', OUT)

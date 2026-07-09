@@ -1,34 +1,47 @@
-import { chromium } from '@playwright/test';
-import { mkdir } from 'node:fs/promises';
-import path from 'node:path';
+import { chromium } from '@playwright/test'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
-const outDir = path.resolve('docs/ui-qa-screenshots');
+const { dir: outDir } = resolveScreenshotDir({
+  app: 'fitness',
+  suite: 'sidebar-desktop',
+  importMetaUrl: import.meta.url,
+})
 const targets = [
-  { name: 'fitness-home', url: 'http://127.0.0.1:5174/', file: 'fitness-sidebar-brand.png' },
-  { name: 'planner-home', url: 'http://127.0.0.1:5188/', file: 'planner-sidebar-brand.png' },
-  { name: 'finance-home', url: 'http://127.0.0.1:5173/', file: 'finance-sidebar-brand.png' }
-];
+  {
+    name: 'fitness-home',
+    url: 'http://127.0.0.1:5174/',
+    file: 'fitness-sidebar-brand.png',
+  },
+  {
+    name: 'planner-home',
+    url: 'http://127.0.0.1:5188/',
+    file: 'planner-sidebar-brand.png',
+  },
+  {
+    name: 'finance-home',
+    url: 'http://127.0.0.1:5173/',
+    file: 'finance-sidebar-brand.png',
+  },
+]
 
-await mkdir(outDir, { recursive: true });
+const browser = await chromium.launch()
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 } })
 
-const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-
-let failed = false;
+let failed = false
 
 for (const target of targets) {
-  await page.goto(target.url, { waitUntil: 'networkidle', timeout: 60_000 });
+  await page.goto(target.url, { waitUntil: 'networkidle', timeout: 60_000 })
 
   const audit = await page.evaluate(() => {
-    const sidebar = document.querySelector('.sidebar');
-    const brand = sidebar?.querySelector('.brand');
-    const item = sidebar?.querySelector('.nav-item');
+    const sidebar = document.querySelector('.sidebar')
+    const brand = sidebar?.querySelector('.brand')
+    const item = sidebar?.querySelector('.nav-item')
     const settings =
       sidebar?.querySelector('.sidebar-foot-item') ??
-      sidebar?.querySelector('.nav-item:last-of-type');
-    const mark = brand?.querySelector('.brand-mark, img.brand-mark');
-    const accent = brand?.querySelector('.brand-name-accent');
-    const brandName = brand?.querySelector('.brand-name');
+      sidebar?.querySelector('.nav-item:last-of-type')
+    const mark = brand?.querySelector('.brand-mark, img.brand-mark')
+    const accent = brand?.querySelector('.brand-name-accent')
+    const brandName = brand?.querySelector('.brand-name')
 
     if (!sidebar || !brand || !item || !settings || !mark || !brandName) {
       return {
@@ -39,23 +52,25 @@ for (const target of targets) {
             ? 'brand-missing'
             : !mark
               ? 'brand-mark-missing'
-              : 'nav-missing'
-      };
+              : 'nav-missing',
+      }
     }
 
-    const itemStyle = getComputedStyle(item);
-    const markRect = mark.getBoundingClientRect();
-    const accentStyle = accent ? getComputedStyle(accent) : null;
-    const brandText = brandName.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-    const sidebarRect = sidebar.getBoundingClientRect();
-    const settingsRect = settings.getBoundingClientRect();
+    const itemStyle = getComputedStyle(item)
+    const markRect = mark.getBoundingClientRect()
+    const accentStyle = accent ? getComputedStyle(accent) : null
+    const brandText = brandName.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+    const sidebarRect = sidebar.getBoundingClientRect()
+    const settingsRect = settings.getBoundingClientRect()
 
-    const brandNameStyle = getComputedStyle(brandName);
-    const nameBase = brand?.querySelector('.brand-name-base');
-    const nameBaseRect = nameBase?.getBoundingClientRect();
-    const accentRect = accent?.getBoundingClientRect();
+    const brandNameStyle = getComputedStyle(brandName)
+    const nameBase = brand?.querySelector('.brand-name-base')
+    const nameBaseRect = nameBase?.getBoundingClientRect()
+    const accentRect = accent?.getBoundingClientRect()
     const nameOsGap =
-      nameBaseRect && accentRect ? Math.round(accentRect.left - nameBaseRect.right) : null;
+      nameBaseRect && accentRect
+        ? Math.round(accentRect.left - nameBaseRect.right)
+        : null
 
     return {
       ok:
@@ -75,21 +90,23 @@ for (const target of targets) {
       brandText,
       accentText: accent?.textContent?.trim() ?? null,
       nameOsGap,
-      settingsBottomGap: Math.round(sidebarRect.bottom - settingsRect.bottom)
-    };
-  });
+      settingsBottomGap: Math.round(sidebarRect.bottom - settingsRect.bottom),
+    }
+  })
 
-  const screenshotPath = path.join(outDir, target.file);
-  const brand = page.locator('.sidebar .brand');
+  const screenshotPath = path.join(outDir, target.file)
+  const brand = page.locator('.sidebar .brand')
   if (await brand.count()) {
-    await brand.screenshot({ path: screenshotPath });
+    await brand.screenshot({ path: screenshotPath })
   } else {
-    await page.screenshot({ path: screenshotPath });
+    await page.screenshot({ path: screenshotPath })
   }
 
-  console.log(JSON.stringify({ target: target.name, audit, screenshotPath }, null, 2));
-  if (!audit.ok) failed = true;
+  console.log(
+    JSON.stringify({ target: target.name, audit, screenshotPath }, null, 2),
+  )
+  if (!audit.ok) failed = true
 }
 
-await browser.close();
-process.exit(failed ? 1 : 0);
+await browser.close()
+process.exit(failed ? 1 : 0)

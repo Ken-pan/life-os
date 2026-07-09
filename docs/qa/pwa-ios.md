@@ -19,9 +19,9 @@
 
 iOS standalone PWA **冷启动**时 `100dvh` / `visualViewport.height` 会比真屏矮约 `env(safe-area-inset-top)`，底部会出现黑缝。Life OS 策略：
 
-| 模式 | `--app-vh` |
-| ---- | ---------- |
-| Safari 浏览器 | `visualViewport` 像素值（随 URL 栏变化） |
+| 模式           | `--app-vh`                                   |
+| -------------- | -------------------------------------------- |
+| Safari 浏览器  | `visualViewport` 像素值（随 URL 栏变化）     |
 | standalone PWA | `100vh`（键盘弹出时临时跟 `visualViewport`） |
 
 实现：`packages/theme/src/viewportSync.js` + 各 app `app.html` 首屏 bootstrap。

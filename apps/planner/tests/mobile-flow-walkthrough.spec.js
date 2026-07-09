@@ -1,14 +1,13 @@
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
-import path from 'node:path'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const STORAGE_KEY = 'planos_v1'
-const OUT_DIR = path.join(
-  process.cwd(),
-  'tests',
-  'screenshots',
-  'mobile-flow-walkthrough',
-)
+const { dir: OUT_DIR } = resolveScreenshotDir({
+  app: 'planner',
+  suite: 'mobile-flow-walkthrough',
+  importMetaUrl: import.meta.url,
+})
 
 /** @type {Array<{ file: string, flow: string, note: string }>} */
 const SNAP_INDEX = []

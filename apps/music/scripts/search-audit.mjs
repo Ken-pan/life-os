@@ -4,9 +4,14 @@
 import { chromium } from 'playwright'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const BASE = process.env.SEARCH_AUDIT_BASE ?? 'http://127.0.0.1:5189'
-const OUT = join(process.cwd(), '.qa-screenshots/search-audit')
+const { dir: OUT } = resolveScreenshotDir({
+  app: 'music',
+  suite: 'search-audit',
+  importMetaUrl: import.meta.url,
+})
 const issues = []
 
 function issue(id, sev, flow, title, detail, shot = '') {

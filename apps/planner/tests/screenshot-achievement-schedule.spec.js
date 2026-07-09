@@ -1,14 +1,13 @@
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
-import path from 'node:path'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const STORAGE_KEY = 'planos_v1'
-const OUT_DIR = path.join(
-  process.cwd(),
-  'tests',
-  'screenshots',
-  'planner-core-latest',
-)
+const { dir: OUT_DIR } = resolveScreenshotDir({
+  app: 'planner',
+  suite: 'achievement-schedule',
+  importMetaUrl: import.meta.url,
+})
 
 function localDateOffset(days = 0) {
   const d = new Date()
@@ -362,7 +361,9 @@ test.describe('成就感 + 日程截图', () => {
     const row = page.locator('.task-row', { hasText: '深度写作' }).first()
     await row.locator('.task-check').first().click({ force: true })
     await page.waitForTimeout(400)
-    await expect(page.locator('#done-today .task-title', { hasText: '深度写作' })).toBeVisible()
+    await expect(
+      page.locator('#done-today .task-title', { hasText: '深度写作' }),
+    ).toBeVisible()
     await snap(page, '10-complete-ritual')
 
     testInfo.annotations.push({

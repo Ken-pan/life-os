@@ -12,14 +12,24 @@
  * Auto-starts `serve build -s` when the port is free and build/ exists.
  */
 import { chromium } from 'playwright'
-import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
+import {
+  resolveScreenshotDir,
+  screenshotDirRel,
+} from '../../../scripts/qa/screenshot-output.mjs'
 
 const BASE = process.env.MUSIC_QA_URL ?? 'http://127.0.0.1:5193'
-const appRoot = fileURLToPath(new URL('..', import.meta.url))
-const outDir = join(appRoot, '.qa-screenshots', 'service-worker')
+const { dir: outDir } = resolveScreenshotDir({
+  app: 'music',
+  suite: 'service-worker',
+  importMetaUrl: import.meta.url,
+})
+const screenshotDirRelPath = screenshotDirRel({
+  app: 'music',
+  suite: 'service-worker',
+})
 
 const MOCK_ORIGIN = 'https://iueozzuctstwvzbcxcyh.supabase.co'
 const mockUrl = (trackId) =>

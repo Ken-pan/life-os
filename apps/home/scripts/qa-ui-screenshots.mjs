@@ -4,14 +4,16 @@
  */
 import { chromium, devices } from 'playwright'
 import { mkdir } from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:5197'
-const OUT = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../screenshots/qa-uiux-2026-07-08',
-)
+const { dir: OUT } = resolveScreenshotDir({
+  app: 'home',
+  suite: 'uiux-audit',
+  importMetaUrl: import.meta.url,
+  runId: process.env.QA_RUN_ID ?? '2026-07-08',
+})
 const SKEY = 'homeos_spatial_v1'
 const OPENING_ID = 'go-audit-1'
 
@@ -148,7 +150,9 @@ async function enterGraphEdit(page) {
   if (await toolSelect.count()) {
     await toolSelect.selectOption('select')
   } else {
-    await page.getByRole('button', { name: '选择', exact: true }).click({ force: true })
+    await page
+      .getByRole('button', { name: '选择', exact: true })
+      .click({ force: true })
   }
   await page.waitForTimeout(250)
 }
@@ -243,7 +247,9 @@ const browser = await chromium.launch()
   await enterGraphEdit(page)
   await enterPlaceStep(page)
   await shot(page, '12-edit-place-desktop.png')
-  await page.locator('[data-placement-id="pl-audit-1"]').waitFor({ state: 'attached', timeout: 15000 })
+  await page
+    .locator('[data-placement-id="pl-audit-1"]')
+    .waitFor({ state: 'attached', timeout: 15000 })
   await page.locator('[data-placement-id="pl-audit-1"]').click({ force: true })
   await page.waitForTimeout(400)
   await shot(page, '13-placement-selected-desktop.png')

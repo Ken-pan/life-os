@@ -8,19 +8,16 @@
  *   DESIGN_CATALOG_URL=http://127.0.0.1:5190 node scripts/design-catalog-p3-screenshot-audit.mjs
  */
 import { mkdir, writeFile } from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
+import { formatRunId, resolveScreenshotDir } from './qa/screenshot-output.mjs'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ROOT = path.resolve(__dirname, '..')
 const BASE_URL = process.env.DESIGN_CATALOG_URL ?? 'http://127.0.0.1:5190'
-const OUT_DIR = path.join(
-  ROOT,
-  'screenshots',
-  'design-catalog',
-  `p3-audit-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`,
-)
+const { dir: OUT_DIR } = resolveScreenshotDir({
+  app: 'design-catalog',
+  suite: 'p3-audit',
+  importMetaUrl: import.meta.url,
+  runId: process.env.QA_RUN_ID ?? formatRunId().slice(0, 8),
+})
 
 const APPS = ['planner', 'fitness', 'finance', 'music']
 const MODES = ['light', 'dark']
@@ -47,7 +44,8 @@ async function assertCatalogTheme(page, app, mode, errors) {
     htmlMode: document.documentElement.dataset.mode ?? '',
   }))
   if (htmlApp !== app) errors.push(`html data-app=${htmlApp} expected ${app}`)
-  if (htmlMode !== mode) errors.push(`html data-mode=${htmlMode} expected ${mode}`)
+  if (htmlMode !== mode)
+    errors.push(`html data-mode=${htmlMode} expected ${mode}`)
 }
 
 /** @param {import('@playwright/test').Page} page */
@@ -77,13 +75,15 @@ async function assertShowcaseVisuals(page, showcase, errors) {
 
   if (showcase === 'toast' || showcase === 'feedback') {
     const box = await page.locator('.toast').first().boundingBox()
-    if (!box || box.height < 12) errors.push('toast has no visible height in showcase')
+    if (!box || box.height < 12)
+      errors.push('toast has no visible height in showcase')
   }
 
   if (showcase === 'feedback') {
     const banner = page.locator('.banner.critical').first()
     const box = await banner.boundingBox()
-    if (!box || box.height < 12) errors.push('critical banner has no visible height')
+    if (!box || box.height < 12)
+      errors.push('critical banner has no visible height')
   }
 }
 
@@ -116,14 +116,15 @@ async function main() {
           await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 })
           const el = page.getByTestId(testId)
           await el.waitFor({ state: 'visible', timeout: 10_000 })
-          const appAttr = await page.getByTestId('catalog-shell').getAttribute('data-app')
-          const modeAttr = await page.getByTestId('catalog-shell').getAttribute('data-mode')
+          const appAttr = await page
+            .getByTestId('catalog-shell')
+            .getAttribute('data-app')
+          const modeAttr = await page
+            .getByTestId('catalog-shell')
+            .getAttribute('data-mode')
           await assertCatalogTheme(page, app, mode, errors)
           await assertShowcaseVisuals(page, showcase, errors)
-          ok =
-            appAttr === app &&
-            modeAttr === mode &&
-            errors.length === 0
+          ok = appAttr === app && modeAttr === mode && errors.length === 0
           const file = path.join(OUT_DIR, `${showcase}__${app}__${mode}.png`)
           await el.screenshot({ path: file })
         } catch (err) {

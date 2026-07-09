@@ -14,11 +14,15 @@ import {
   LIFE_OS_SUPABASE_PUBLISHABLE_KEY,
   LIFE_OS_SUPABASE_URL,
 } from '../../../packages/sync/src/supabaseClient.js'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
-const repoRoot = resolve(root, '../..')
-const outDir = resolve(repoRoot, 'docs/ui-qa-screenshots/portal')
+const { dir: outDir } = resolveScreenshotDir({
+  app: 'portal',
+  suite: 'main',
+  importMetaUrl: import.meta.url,
+})
 const baseUrl = process.env.PORTAL_QA_URL ?? 'http://127.0.0.1:5195'
 const LIFE_OS_AUTH_STORAGE_KEY = 'life_os_auth'
 const plannerInboxPath = '/inbox'
@@ -33,11 +37,16 @@ const manifest = {
 async function signIn() {
   const email = process.env.UI_QA_EMAIL ?? 'p1a-rls-test-b@example.test'
   const password = process.env.UI_QA_PASSWORD ?? 'P1aTestPass!2026'
-  const sb = createClient(LIFE_OS_SUPABASE_URL, LIFE_OS_SUPABASE_PUBLISHABLE_KEY, {
-    auth: { storageKey: LIFE_OS_AUTH_STORAGE_KEY, persistSession: false },
-  })
+  const sb = createClient(
+    LIFE_OS_SUPABASE_URL,
+    LIFE_OS_SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: { storageKey: LIFE_OS_AUTH_STORAGE_KEY, persistSession: false },
+    },
+  )
   const { data, error } = await sb.auth.signInWithPassword({ email, password })
-  if (error || !data.session) throw new Error(error?.message ?? 'sign in failed')
+  if (error || !data.session)
+    throw new Error(error?.message ?? 'sign in failed')
   return data.session
 }
 
@@ -66,7 +75,9 @@ mkdirSync(outDir, { recursive: true })
 
 const session = await signIn()
 const browser = await chromium.launch()
-const desktop = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+const desktop = await browser.newContext({
+  viewport: { width: 1280, height: 800 },
+})
 const mobile = await browser.newContext({
   viewport: { width: 390, height: 844 },
   isMobile: true,
@@ -78,7 +89,9 @@ for (const [label, ctx] of [
 ]) {
   const page = await ctx.newPage()
   await injectSession(page, session)
-  await page.waitForSelector('.portal-page-header, .page-title', { timeout: 20000 })
+  await page.waitForSelector('.portal-page-header, .page-title', {
+    timeout: 20000,
+  })
   await page.waitForTimeout(1500)
 
   await page.screenshot({
@@ -89,7 +102,9 @@ for (const [label, ctx] of [
   if (label === 'mobile') {
     const launcher = page.locator('.portal-app-section')
     if (await launcher.isVisible().catch(() => false)) {
-      await launcher.screenshot({ path: resolve(outDir, `${label}-launcher.png`) })
+      await launcher.screenshot({
+        path: resolve(outDir, `${label}-launcher.png`),
+      })
     }
   }
 
@@ -113,12 +128,18 @@ for (const [label, ctx] of [
   manifest.checks.push({
     viewport: label,
     pendingBadgeVisible: await badge.isVisible().catch(() => false),
-    pendingBadgeHref: (await badge.getAttribute('href').catch(() => null)) ?? null,
+    pendingBadgeHref:
+      (await badge.getAttribute('href').catch(() => null)) ?? null,
     pendingLinkVisible: await pendingLink.isVisible().catch(() => false),
-    pendingLinkHref: (await pendingLink.getAttribute('href').catch(() => null)) ?? null,
+    pendingLinkHref:
+      (await pendingLink.getAttribute('href').catch(() => null)) ?? null,
     inboxPathOk:
-      ((await badge.getAttribute('href').catch(() => '')) ?? '').includes(plannerInboxPath) ||
-      ((await pendingLink.getAttribute('href').catch(() => '')) ?? '').includes(plannerInboxPath),
+      ((await badge.getAttribute('href').catch(() => '')) ?? '').includes(
+        plannerInboxPath,
+      ) ||
+      ((await pendingLink.getAttribute('href').catch(() => '')) ?? '').includes(
+        plannerInboxPath,
+      ),
   })
 
   await page.keyboard.press('Meta+k')
@@ -140,5 +161,8 @@ for (const [label, ctx] of [
 }
 
 await browser.close()
-writeFileSync(resolve(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+writeFileSync(
+  resolve(outDir, 'manifest.json'),
+  `${JSON.stringify(manifest, null, 2)}\n`,
+)
 console.log(`Portal screenshots → ${outDir}`)

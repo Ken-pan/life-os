@@ -4,13 +4,15 @@
  */
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const BASE = process.argv[2] ?? 'https://home.kenos.space'
-const OUT = join(
-  process.cwd(),
-  'apps/home/screenshots/plan-audit-20260708',
-)
+const { dir: OUT } = resolveScreenshotDir({
+  app: 'home',
+  suite: 'plan-audit',
+  importMetaUrl: import.meta.url,
+  runId: process.env.QA_RUN_ID ?? '20260708',
+})
 const SKEY = 'homeos_spatial_v1'
 
 mkdirSync(OUT, { recursive: true })
@@ -40,7 +42,11 @@ async function primeStorage(page, studio, layoutMode = 'parametric508') {
         ? JSON.parse(raw)
         : {
             schemaVersion: 1,
-            settings: { theme: 'auto', locale: 'zh', lockPortraitOnPhone: false },
+            settings: {
+              theme: 'auto',
+              locale: 'zh',
+              lockPortraitOnPhone: false,
+            },
             activeProjectId: 'avalon-508',
             projects: {},
           }

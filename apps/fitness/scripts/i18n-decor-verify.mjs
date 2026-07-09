@@ -3,13 +3,16 @@
  * node scripts/i18n-decor-verify.mjs
  */
 import { chromium } from '@playwright/test'
-import { mkdirSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { writeFileSync } from 'fs'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 import { UI_DECOR_ROLES } from '../src/lib/uiDecor.js'
 
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:5173'
-const OUT = join(process.cwd(), 'screenshots/i18n-decor-verify')
-mkdirSync(OUT, { recursive: true })
+const { dir: OUT } = resolveScreenshotDir({
+  app: 'fitness',
+  suite: 'i18n-decor-verify',
+  importMetaUrl: import.meta.url,
+})
 
 /** @param {import('@playwright/test').Page} page @param {'zh'|'en'} locale */
 async function seed(page, locale) {

@@ -1,23 +1,32 @@
-import { chromium, devices } from 'playwright';
-import fs from 'node:fs';
-import path from 'node:path';
+import { chromium, devices } from 'playwright'
+import fs from 'node:fs'
+import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
-const BASE = 'http://127.0.0.1:5188';
-const OUT = path.join(process.cwd(), 'docs/ui-qa-screenshots/headers-2026-07-05');
-const STORAGE_KEY = 'planos_v1';
+const BASE = 'http://127.0.0.1:5188'
+const { dir: OUT } = resolveScreenshotDir({
+  app: 'planner',
+  suite: 'headers',
+  importMetaUrl: import.meta.url,
+})
+const STORAGE_KEY = 'planos_v1'
 
 const shots = [
   { name: 'planner-home-mobile', path: '/', project: 'mobile' },
-  { name: 'planner-list-back-mobile', path: '/lists/list_work_audit', project: 'mobile', seed: true },
+  {
+    name: 'planner-list-back-mobile',
+    path: '/lists/list_work_audit',
+    project: 'mobile',
+    seed: true,
+  },
   { name: 'planner-auth-mobile', path: '/auth', project: 'mobile' },
   { name: 'planner-home-desktop', path: '/', project: 'desktop' },
-  { name: 'planner-auth-desktop', path: '/auth', project: 'desktop' }
-];
+  { name: 'planner-auth-desktop', path: '/auth', project: 'desktop' },
+]
 
 function seed() {
-  const today = new Date();
+  const today = new Date()
   const fmt = (d) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   return {
     schemaVersion: 2,
     tasks: [
@@ -35,8 +44,8 @@ function seed() {
         subtasks: [],
         completed: false,
         createdAt: Date.now(),
-        updatedAt: Date.now()
-      }
+        updatedAt: Date.now(),
+      },
     ],
     lists: [
       {
@@ -45,7 +54,7 @@ function seed() {
         icon: 'inbox',
         color: '#F5A623',
         sortOrder: 0,
-        system: 'inbox'
+        system: 'inbox',
       },
       {
         id: 'list_work_audit',
@@ -53,35 +62,47 @@ function seed() {
         icon: 'list',
         color: '#0F66AE',
         sortOrder: 1,
-        system: null
-      }
+        system: null,
+      },
     ],
-    settings: { theme: 'light', locale: 'zh', defaultListId: 'inbox', notificationsEnabled: false, syncAuto: true }
-  };
+    settings: {
+      theme: 'light',
+      locale: 'zh',
+      defaultListId: 'inbox',
+      notificationsEnabled: false,
+      syncAuto: true,
+    },
+  }
 }
 
-async function capture(browser, { name, path: route, project, seed: withSeed }) {
+async function capture(
+  browser,
+  { name, path: route, project, seed: withSeed },
+) {
   const ctx = await browser.newContext({
     ...(project === 'mobile' ? devices['Pixel 7'] : {}),
-    viewport: project === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 800 }
-  });
-  const page = await ctx.newPage();
+    viewport:
+      project === 'mobile'
+        ? { width: 390, height: 844 }
+        : { width: 1280, height: 800 },
+  })
+  const page = await ctx.newPage()
   if (withSeed) {
-    await page.goto(`${BASE}/`);
+    await page.goto(`${BASE}/`)
     await page.evaluate(
       ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
-      { key: STORAGE_KEY, data: seed() }
-    );
+      { key: STORAGE_KEY, data: seed() },
+    )
   }
-  await page.goto(`${BASE}${route}`);
-  await page.waitForSelector('.appbar', { timeout: 15_000 });
-  await page.waitForTimeout(250);
-  await page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true });
-  await ctx.close();
+  await page.goto(`${BASE}${route}`)
+  await page.waitForSelector('.appbar', { timeout: 15_000 })
+  await page.waitForTimeout(250)
+  await page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true })
+  await ctx.close()
 }
 
-fs.mkdirSync(OUT, { recursive: true });
-const browser = await chromium.launch();
-for (const shot of shots) await capture(browser, shot);
-await browser.close();
-console.log(`Header QA screenshots saved to ${OUT}`);
+fs.mkdirSync(OUT, { recursive: true })
+const browser = await chromium.launch()
+for (const shot of shots) await capture(browser, shot)
+await browser.close()
+console.log(`Header QA screenshots saved to ${OUT}`)

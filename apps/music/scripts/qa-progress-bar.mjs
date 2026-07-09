@@ -3,14 +3,23 @@
  * Usage: node scripts/qa-progress-bar.mjs
  */
 import { chromium } from 'playwright'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import {
+  resolveScreenshotDir,
+  screenshotDirRel,
+} from '../../../scripts/qa/screenshot-output.mjs'
 
 const BASE = process.env.MUSIC_QA_URL ?? 'http://127.0.0.1:5189'
-const appRoot = fileURLToPath(new URL('..', import.meta.url))
-const outDir = join(appRoot, '.qa-screenshots', 'progress-bar')
-mkdirSync(outDir, { recursive: true })
+const { dir: outDir } = resolveScreenshotDir({
+  app: 'music',
+  suite: 'progress-bar',
+  importMetaUrl: import.meta.url,
+})
+const screenshotDirRelPath = screenshotDirRel({
+  app: 'music',
+  suite: 'progress-bar',
+})
 
 /** @type {{ id: string, severity: 'high'|'medium'|'low', surface: string, viewport: string, issue: string, screenshot?: string }[]} */
 const issues = []
@@ -595,7 +604,7 @@ if (edge && !edge.disabled) {
 const report = {
   generatedAt: new Date().toISOString(),
   baseUrl: BASE,
-  screenshotDir: '.qa-screenshots/progress-bar',
+  screenshotDir: screenshotDirRelPath,
   measurements: {
     desktopMini: dMini,
     desktopNp: dNp,
@@ -616,7 +625,7 @@ writeFileSync(join(outDir, 'report.json'), JSON.stringify(report, null, 2))
 
 let md = `# Music OS 进度条 UI/UX 走查报告\n\n`
 md += `生成时间：${report.generatedAt}\n\n`
-md += `截图目录：\`apps/music/.qa-screenshots/progress-bar/\`\n\n`
+md += `截图目录：\`${screenshotDirRelPath}/\`\n\n`
 md += `## 摘要\n\n`
 md += `- 问题总数：**${report.summary.total}**（高 ${report.summary.high} / 中 ${report.summary.medium} / 低 ${report.summary.low}）\n\n`
 md += `## 问题清单\n\n`
