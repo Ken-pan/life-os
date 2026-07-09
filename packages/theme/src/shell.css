@@ -34,6 +34,11 @@
   flex-direction: column;
 }
 
+/* Shell column: Planner / Portal / Home — pairs with shell.js + scroll-shell.css */
+.life-os-shell-column {
+  min-width: 0;
+}
+
 #main-content {
   flex: 1 1 auto;
   width: 100%;
@@ -496,7 +501,7 @@ html {
   width: 100%;
   margin: 0;
   padding:
-    max(var(--header-block), var(--safe-top-effective)) max(var(--content-inline-pad), var(--safe-right-effective)) var(--header-block) max(var(--content-inline-pad), var(--safe-left-effective));
+    max(var(--header-block), var(--safe-top-effective)) max(var(--content-inline-pad), var(--safe-right-effective)) var(--header-block-end) max(var(--content-inline-pad), var(--safe-left-effective));
   display: grid;
   align-items: center;
   column-gap: var(--stack-section);
@@ -608,9 +613,53 @@ html {
   align-items: center;
   gap: var(--stack-section);
   padding-top: var(--header-block);
-  padding-bottom: var(--header-block);
+  padding-bottom: var(--header-block-end);
   padding-inline:
     max(var(--content-inline-pad), var(--safe-left-effective)) max(var(--content-inline-pad), var(--safe-right-effective));
+}
+
+/* 壳层 AppBar 下方、主列内的流式标题（Portal 等：.wrap padding-top: 0 + 本 modifier） */
+.page-header--in-flow {
+  position: static;
+  border-bottom: none;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  padding-top: var(--content-pad-start);
+  padding-bottom: var(--header-block-end);
+  padding-inline: 0;
+}
+
+/*
+  AppBar 未挂载（hidden / 未渲染）：主列内容补 safe-top + content-pad-start。
+  页内 substitute head（Fitness .page-head / .day-head）：.wrap 顶部归零，由 head 承担。
+*/
+.main-wrap:not(:has(> .appbar)) #main-content .wrap:not(:has(> :is(.page-head, .day-head):first-child)),
+.main-col:not(:has(> .appbar))>.wrap:not(:has(> :is(.page-head, .day-head, .plan-top):first-child)) {
+  padding-top: calc(var(--safe-top-effective) + var(--content-pad-start));
+}
+
+.wrap:has(> :is(.page-head, .day-head):first-child) {
+  padding-top: 0;
+}
+
+.page-head,
+.day-head {
+  padding-top: calc(var(--safe-top-effective) + var(--content-pad-start));
+  padding-bottom: var(--header-block-end);
+}
+
+@media (--life-os-desktop) {
+
+  .main-wrap:not(:has(> .appbar)) #main-content .wrap:not(:has(> :is(.page-head, .day-head):first-child)),
+  .main-col:not(:has(> .appbar))>.wrap:not(:has(> :is(.page-head, .day-head, .plan-top):first-child)) {
+    padding-top: var(--content-pad-start);
+  }
+
+  .page-head,
+  .day-head {
+    padding-top: var(--content-pad-start);
+  }
 }
 
 .page-header h1,
@@ -672,13 +721,13 @@ html {
 @media (--life-os-desktop) {
 
   .appbar-inner,
-  .page-header {
+  .page-header:not(.page-header--in-flow) {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--stack-section);
     padding-top: var(--header-block);
-    padding-bottom: var(--header-block);
+    padding-bottom: var(--header-block-end);
   }
 
   .appbar-leading,
@@ -737,12 +786,18 @@ html {
       'brand trailing'
       'titles titles';
     padding-top: max(var(--stack-tight), var(--safe-top-effective));
-    padding-bottom: var(--stack-tight);
+    padding-bottom: var(--header-block-end);
     padding-inline: max(var(--content-inline-pad), var(--safe-left-effective)) max(var(--content-inline-pad), var(--safe-right-effective));
     background-color: var(--bg);
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+
+  .page-header--in-flow {
+    display: block;
+    padding-top: var(--content-pad-start);
+    padding-bottom: var(--header-block-end);
   }
 
   .page-header-brand {
@@ -768,7 +823,7 @@ html {
 
   .appbar-inner {
     padding-top: max(var(--stack-tight), var(--safe-top-effective));
-    padding-bottom: var(--stack-tight);
+    padding-bottom: var(--header-block-end);
   }
 
   .page-title,
@@ -891,7 +946,7 @@ html {
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
   padding:
-    var(--space-2) max(var(--space-2-5), var(--safe-right-effective)) max(var(--space-2), var(--safe-bottom-effective)) max(var(--space-2-5), var(--safe-left-effective));
+    var(--space-2) var(--inset-inline-end) max(var(--space-2), var(--safe-bottom-effective)) var(--inset-inline-start);
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 

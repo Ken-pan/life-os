@@ -1,6 +1,8 @@
 /* Life OS 基础样式与排版 reset */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -101,12 +103,25 @@ button,
   border: 0;
 }
 
-.text-xs { font-size: var(--text-xs); }
-.text-sm { font-size: var(--text-sm); }
-.text-md { font-size: var(--text-md); }
-.text-base { font-size: var(--text-base); }
+.text-xs {
+  font-size: var(--text-xs);
+}
 
-.brand-dot { color: var(--accent); }
+.text-sm {
+  font-size: var(--text-sm);
+}
+
+.text-md {
+  font-size: var(--text-md);
+}
+
+.text-base {
+  font-size: var(--text-base);
+}
+
+.brand-dot {
+  color: var(--accent);
+}
 
 .page-title {
   font-size: var(--text-4xl);
@@ -128,10 +143,7 @@ button,
   min-width: 0;
   margin: 0;
   padding:
-    var(--page-top)
-    max(var(--content-inline-pad), var(--safe-right-effective))
-    var(--page-block-gap)
-    max(var(--content-inline-pad), var(--safe-left-effective));
+    var(--content-pad-start) max(var(--content-inline-pad), var(--safe-right-effective)) var(--page-block-gap) max(var(--content-inline-pad), var(--safe-left-effective));
 }
 
 .content,
@@ -141,10 +153,7 @@ button,
   min-width: 0;
   margin: 0;
   padding:
-    var(--page-block-gap)
-    max(var(--content-inline-pad), var(--safe-right-effective))
-    var(--page-scroll-bottom)
-    max(var(--content-inline-pad), var(--safe-left-effective));
+    var(--content-pad-start) max(var(--content-inline-pad), var(--safe-right-effective)) var(--page-scroll-bottom) max(var(--content-inline-pad), var(--safe-left-effective));
 }
 
 @media (--life-os-mobile) {
@@ -183,6 +192,7 @@ button,
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

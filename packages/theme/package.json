@@ -14,6 +14,7 @@
     "./design-system.css": "./src/design-system.css",
     "./utilities.css": "./src/utilities.css",
     "./ios-safari.css": "./src/ios-safari.css",
+    "./scroll-shell.css": "./src/scroll-shell.css",
     "./music-shell.css": "./src/music-shell.css",
     "./tokens.css": "./src/tokens.css",
     "./component.css": "./src/generated/component.css",

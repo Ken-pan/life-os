@@ -27,10 +27,10 @@ When debugging **Planner / Fitness / Music / Finance / Portal** PWA layout issue
    - duplicated `env(safe-area-inset-bottom)` deductions
    - **nested scroll containers** (more than one `overflow-y: auto`)
    - descendant selectors like `.main-wrap .wrap` with `height: 0` (clips nested route `.wrap`)
-3. Confirm exactly **one primary scroll container** per app (see `PWA_SHELL_REFERENCE` in `apps.config.mjs`):
+3. Confirm exactly **one primary scroll container** per app (see `LIFE_OS_SHELL_REFERENCE` / `getScrollRootSelectorForShell()` in `@life-os/theme`):
    - Fitness / Music: `.main-wrap > #main-content`
    - Finance: `.main-wrap > .content`
-   - Planner / Portal: `.main-col > .wrap`
+   - Planner / Portal / Home: `.life-os-shell-column` direct child (`.life-os-page-workspace` / `.wrap` / `.life-os-scroll-surface`)
 4. Do **not** fix clipping by adding margins to individual cards.
 5. Do **not** redesign UI unless explicitly requested.
 6. Do **not** touch Supabase, data models, migrations, or business logic for viewport bugs.

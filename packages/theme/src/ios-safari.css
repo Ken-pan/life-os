@@ -4,8 +4,11 @@
   前置条件：app.html viewport 含 viewport-fit=cover（三端已配置）。
   布局壳内需放置 .safari-chrome-tint-top / .safari-chrome-tint-bottom（见 shell 注释）。
 
+  移动端滚动壳 SSOT：scroll-shell.css + shell.js
   参考：MDN env()、100dvh/100svh、overscroll-behavior（Safari 16+）
 */
+
+@import './scroll-shell.css';
 
 /* ===== 视口高度（避免 100vh 被 Safari 工具栏撑破）===== */
 html {
@@ -66,100 +69,6 @@ body,
     display: flex;
     flex-direction: column;
   }
-
-  /* Finance / Fitness / Music：main-wrap 内滚动 */
-  html.standalone-pwa .main-wrap,
-  html.standalone-pwa .main-col:has(.main-wrap) {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  html.standalone-pwa .main-wrap>.page-header,
-  html.standalone-pwa .main-wrap>.appbar {
-    flex-shrink: 0;
-    position: relative;
-    top: auto;
-  }
-
-  /*
-    Single scroll surface per app shell:
-    - Fitness/Music: .main-wrap > #main-content (pages nest .view > .wrap inside)
-    - Finance: .main-wrap > .content
-    Do NOT target descendant .wrap — height:0 on nested .wrap clips page content in PWA.
-  */
-  html.standalone-pwa .main-wrap>#main-content,
-  html.standalone-pwa .main-wrap>.content,
-  html.standalone-pwa .main-wrap>.wrap {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    touch-action: pan-y;
-  }
-
-  html.standalone-pwa #main-content>.view,
-  html.standalone-pwa #main-content .wrap,
-  html.standalone-pwa #main-content .content {
-    flex: none;
-    height: auto;
-    min-height: auto;
-    overflow: visible;
-  }
-
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>#main-content,
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>.content,
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>.wrap,
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col>.life-os-page-workspace,
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col>.wrap,
-  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col>.auth-wrap {
-    overflow: hidden;
-  }
-
-  /*
-    Planner：main-col 为 flex 壳，页面 workspace / .wrap / .auth-wrap 内滚动
-    （Fab/底栏 fixed 不参与）。life-os-page-workspace 为 grid 迁移后的页面壳。
-  */
-  html.standalone-pwa .main-col:not(:has(.main-wrap)) {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 0;
-  }
-
-  html.standalone-pwa .main-col:not(:has(.main-wrap))>.appbar,
-  html.standalone-pwa .main-col:not(:has(.main-wrap))>header.appbar {
-    flex-shrink: 0;
-    position: relative;
-    top: auto;
-  }
-
-  html.standalone-pwa .main-col:not(:has(.main-wrap))>.life-os-page-workspace,
-  html.standalone-pwa .main-col:not(:has(.main-wrap))>.wrap,
-  html.standalone-pwa .main-col:not(:has(.main-wrap))>.auth-wrap {
-    flex: 1 1 0;
-    height: 0;
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    touch-action: pan-y;
-  }
-
-  html.standalone-pwa .main-col:not(:has(.main-wrap))>.life-os-page-workspace .wrap,
-  html.standalone-pwa .main-col:not(:has(.main-wrap))>.life-os-page-workspace .auth-wrap {
-    flex: none;
-    height: auto;
-    min-height: auto;
-    overflow: visible;
-  }
 }
 
 @supports (-webkit-touch-callout: none) {
@@ -170,74 +79,12 @@ body,
   }
 }
 
-/* ===== 滚动与橡皮筋 ===== */
+/* ===== 滚动与橡皮筋（全局）===== */
 @media (--life-os-mobile) {
 
   html,
   body {
     overscroll-behavior-y: none;
-  }
-
-  html:not(.standalone-pwa) .app-shell {
-    display: flex;
-    flex-direction: column;
-    min-height: auto;
-  }
-
-  html:not(.standalone-pwa),
-  html:not(.standalone-pwa) body {
-    touch-action: pan-y;
-  }
-
-  html:not(.standalone-pwa) body {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .main-wrap>.page-header,
-  .main-wrap>.appbar {
-    flex-shrink: 0;
-  }
-
-  .main-wrap>.content,
-  .main-wrap>#main-content {
-    min-height: 0;
-  }
-
-  /* Sheet / More / Modal：Safari 16+ CSS fallback；旧版与 iOS 橡皮筋由 JS lockScroll()（@life-os/theme）负责 */
-  body:has(.sheet-bg),
-  body:has(.mobile-more-backdrop),
-  body:has(.modal-bg.show),
-  body:has(.schedule-popover-bg) {
-    overflow: hidden;
-  }
-}
-
-/* ===== 主内容底部留白（避开 fixed 底栏 / FAB）===== */
-@media (--life-os-mobile) {
-
-  .wrap,
-  .content,
-  #main-content:not(:has(> .wrap, > .content)) {
-    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset));
-  }
-
-  .main-col[data-mobile-chrome='tabbar'] .wrap,
-  .main-col[data-mobile-chrome='tabbar'] .content,
-  .main-col[data-mobile-chrome='tabbar'] #main-content:not(:has(> .wrap, > .content)),
-  .main-wrap[data-mobile-chrome='tabbar'] .wrap,
-  .main-wrap[data-mobile-chrome='tabbar'] .content,
-  .main-wrap[data-mobile-chrome='tabbar'] #main-content:not(:has(> .wrap, > .content)) {
-    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-tabbar));
-  }
-
-  .main-col[data-mobile-chrome='minimal'] .wrap,
-  .main-col[data-mobile-chrome='minimal'] .content,
-  .main-col[data-mobile-chrome='minimal'] #main-content:not(:has(> .wrap, > .content)),
-  .main-wrap[data-mobile-chrome='minimal'] .wrap,
-  .main-wrap[data-mobile-chrome='minimal'] .content,
-  .main-wrap[data-mobile-chrome='minimal'] #main-content:not(:has(> .wrap, > .content)) {
-    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-minimal));
   }
 }
 

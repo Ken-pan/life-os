@@ -1,0 +1,163 @@
+/*
+  Life OS mobile scroll shell — SSOT (pairs with shell.js)
+
+  Contract: exactly one primary scroll surface per app in PWA standalone.
+  - main-wrap apps: scroll on direct child (#main-content / .content / .wrap)
+  - shell column apps: scroll on direct child (.life-os-page-workspace / .wrap / .life-os-scroll-surface)
+  - Nested .wrap / .content inside a scroll surface must stay overflow: visible (no height:0 clip)
+
+  Markup:
+  - Add .life-os-shell-column on .main-col when there is no .main-wrap (Planner / Portal / Home)
+  - Optional .life-os-scroll-surface on the explicit scroll container for atypical pages
+*/
+
+@layer life-os.platform {
+
+  /* ===== PWA standalone: shell column (Planner / Portal / Home) ===== */
+  @media (--life-os-mobile) {
+
+    html.standalone-pwa :is(.life-os-shell-column, .main-col:not(:has(.main-wrap))) {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 0;
+    }
+
+    html.standalone-pwa :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.appbar, header.appbar) {
+      flex-shrink: 0;
+      position: relative;
+      top: auto;
+    }
+
+    html.standalone-pwa :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap) {
+      flex: 1 1 0;
+      height: 0;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      touch-action: pan-y;
+    }
+
+    html.standalone-pwa :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace) :is(.wrap, .auth-wrap, .content) {
+      flex: none;
+      height: auto;
+      min-height: auto;
+      overflow: visible;
+    }
+  }
+
+  /* ===== PWA standalone: main-wrap apps (Fitness / Music / Finance) ===== */
+  @media (--life-os-mobile) {
+
+    html.standalone-pwa .main-wrap,
+    html.standalone-pwa .main-col:has(.main-wrap) {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    html.standalone-pwa .main-wrap>.page-header,
+    html.standalone-pwa .main-wrap>.appbar {
+      flex-shrink: 0;
+      position: relative;
+      top: auto;
+    }
+
+    html.standalone-pwa :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap) {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      touch-action: pan-y;
+    }
+
+    html.standalone-pwa #main-content>.view,
+    html.standalone-pwa #main-content .wrap,
+    html.standalone-pwa #main-content .content,
+    html.standalone-pwa .main-wrap>.life-os-scroll-surface :is(.wrap, .content, .view) {
+      flex: none;
+      height: auto;
+      min-height: auto;
+      overflow: visible;
+    }
+  }
+
+  /* ===== PWA: lock scroll surfaces when overlay chrome is open ===== */
+  @media (--life-os-mobile) {
+
+    html.standalone-pwa body:has(.mobile-more-backdrop) :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap),
+    html.standalone-pwa body:has(.mobile-more-backdrop) :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap),
+    html.standalone-pwa body:has(.sheet-bg) :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap),
+    html.standalone-pwa body:has(.sheet-bg) :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap),
+    html.standalone-pwa body:has(.modal-bg.show) :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap),
+    html.standalone-pwa body:has(.modal-bg.show) :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap),
+    html.standalone-pwa body:has(.schedule-popover-bg) :is(.main-wrap > .life-os-scroll-surface, .main-wrap > #main-content, .main-wrap > .content, .main-wrap > .wrap),
+    html.standalone-pwa body:has(.schedule-popover-bg) :is(.life-os-shell-column, .main-col:not(:has(.main-wrap)))> :is(.life-os-scroll-surface, .life-os-page-workspace, .wrap, .auth-wrap) {
+      overflow: hidden;
+    }
+  }
+
+  /* ===== Mobile browser: document scroll + flex prep ===== */
+  @media (--life-os-mobile) {
+
+    html:not(.standalone-pwa) .app-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: auto;
+    }
+
+    html:not(.standalone-pwa),
+    html:not(.standalone-pwa) body {
+      touch-action: pan-y;
+    }
+
+    html:not(.standalone-pwa) body {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .main-wrap>.page-header,
+    .main-wrap>.appbar {
+      flex-shrink: 0;
+    }
+
+    .main-wrap>.content,
+    .main-wrap>#main-content {
+      min-height: 0;
+    }
+
+    /* Sheet / More / Modal — Safari 16+ CSS fallback; iOS 橡皮筋由 JS lockScroll() 负责 */
+    body:has(.sheet-bg),
+    body:has(.mobile-more-backdrop),
+    body:has(.modal-bg.show),
+    body:has(.schedule-popover-bg) {
+      overflow: hidden;
+    }
+  }
+
+  /* ===== Bottom inset for fixed tabbar / FAB (padding on content, not shell column) ===== */
+  @media (--life-os-mobile) {
+
+    .wrap,
+    .content,
+    #main-content:not(:has(> .wrap, > .content)) {
+      padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset));
+    }
+
+    :is(.main-col, .main-wrap)[data-mobile-chrome='tabbar'] :is(.wrap, .content, #main-content:not(:has(> .wrap, > .content))) {
+      padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-tabbar));
+    }
+
+    :is(.main-col, .main-wrap)[data-mobile-chrome='minimal'] :is(.wrap, .content, #main-content:not(:has(> .wrap, > .content))) {
+      padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-minimal));
+    }
+  }
+}

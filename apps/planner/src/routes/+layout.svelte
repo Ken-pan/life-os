@@ -161,7 +161,7 @@
   />
   <ListSidebar />
   <div
-    class="main-col"
+    class="main-col life-os-shell-column"
     data-mobile-chrome={mobileChromeInset}
     data-fab-visible={fabVisible ? 'true' : 'false'}
   >

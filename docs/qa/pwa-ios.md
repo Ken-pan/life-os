@@ -4,14 +4,14 @@
 
 ## App 一览
 
-| App     | Workspace    | Preview 端口 | Shell 类型          | 主滚动容器                   |
-| ------- | ------------ | ------------ | ------------------- | ---------------------------- |
-| Planner | `planner-os` | 5188         | `main-col-wrap`     | `.main-col > .wrap`          |
-| Fitness | `fitness-os` | 4173         | `main-wrap-main`    | `.main-wrap > #main-content` |
-| Music   | `music-os`   | 5191         | `main-wrap-main`    | `.main-wrap > #main-content` |
-| Finance | `finance-os` | 5180         | `main-wrap-content` | `.main-wrap > .content`      |
-| Portal  | `portal`     | 5195         | `main-col-wrap`     | `.main-col > .wrap`          |
-| Home    | `home-os`    | 5196         | `main-col-wrap`     | `.app-shell`                 |
+| App     | Workspace    | Preview 端口 | Shell 类型          | 主滚动容器                                                                             |
+| ------- | ------------ | ------------ | ------------------- | -------------------------------------------------------------------------------------- |
+| Planner | `planner-os` | 5188         | `main-col-wrap`     | `.life-os-shell-column > .life-os-page-workspace`（SSOT: `@life-os/theme` `shell.js`） |
+| Fitness | `fitness-os` | 4173         | `main-wrap-main`    | `.main-wrap > #main-content`                                                           |
+| Music   | `music-os`   | 5191         | `main-wrap-main`    | `.main-wrap > #main-content`                                                           |
+| Finance | `finance-os` | 5180         | `main-wrap-content` | `.main-wrap > .content`                                                                |
+| Portal  | `portal`     | 5195         | `main-col-wrap`     | 同 Planner（`.life-os-shell-column` 滚动面）                                           |
+| Home    | `home-os`    | 5196         | `main-col-wrap`     | `.app-shell`                                                                           |
 
 共享 CSS：`packages/theme/src/ios-safari.css`
 

@@ -95,7 +95,7 @@
 <div class="app-shell" class:plan-immersive-edit={planImmersive}>
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <SideNav />
-  <div class="main-col">
+  <div class="main-col life-os-shell-column">
     <AppBar
       title={pageMeta.title}
       subtitle={pageMeta.subtitle}

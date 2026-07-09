@@ -35,6 +35,48 @@ export declare function bindLifeOsMedia(
   win?: Window,
 ): () => void
 
+export type LifeOsShellType =
+  | 'main-wrap-main'
+  | 'main-wrap-content'
+  | 'main-col-wrap'
+
+export declare const LIFE_OS_SHELL: {
+  readonly scrollSurfaceClass: 'life-os-scroll-surface'
+  readonly shellColumnClass: 'life-os-shell-column'
+  readonly pageWorkspaceClass: 'life-os-page-workspace'
+  readonly types: {
+    readonly mainWrapMain: 'main-wrap-main'
+    readonly mainWrapContent: 'main-wrap-content'
+    readonly mainColWrap: 'main-col-wrap'
+  }
+}
+
+export declare const LIFE_OS_SHELL_COLUMN_IS: string
+export declare const LIFE_OS_MAIN_WRAP_SCROLL_SELECTORS: readonly string[]
+export declare const LIFE_OS_SHELL_COLUMN_SCROLL_SELECTORS: readonly string[]
+export declare const LIFE_OS_SCROLL_ROOT_SELECTORS: readonly string[]
+export declare const LIFE_OS_SCROLL_ROOT_SELECTORS_BY_SHELL: Record<
+  LifeOsShellType,
+  readonly string[]
+>
+export declare const LIFE_OS_SHELL_REFERENCE: Record<LifeOsShellType, string>
+
+export declare function getScrollRootSelectorsForShell(
+  shellType: LifeOsShellType,
+): readonly string[]
+export declare function getScrollRootSelector(): string
+export declare function getScrollRootSelectorForShell(
+  shellType: LifeOsShellType,
+): string
+export declare function resolveScrollRoot(
+  doc: Document,
+  selectors: readonly string[],
+): { node: HTMLElement; selector: string } | null
+export declare function findActiveScrollRoot(
+  doc?: Document,
+  selectors?: readonly string[],
+): HTMLElement | null
+
 export type LifeOsAppId =
   | 'planner'
   | 'fitness'

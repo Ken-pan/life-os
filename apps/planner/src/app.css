@@ -995,7 +995,7 @@ body {
   border-radius: var(--control-radius);
   border: 1px solid var(--border);
   background: var(--card);
-  padding: 0 14px;
+  padding: 0 var(--btn-pad-x-md);
 }
 
 .quick-add input:focus {
@@ -1722,7 +1722,7 @@ body {
 @media (--life-os-mobile) {
   .appbar-inner {
     padding:
-      max(var(--space-4), var(--safe-top-effective)) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-right-effective)) var(--stack-tight) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-left-effective));
+      max(var(--space-4), var(--safe-top-effective)) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-right-effective)) var(--header-block-end) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-left-effective));
   }
 
   .appbar-brand-name {
@@ -1740,20 +1740,7 @@ body {
   }
 
   /* 页面标题沿用 shell.css：--text-3xl，与 Finance 底栏页一致 */
-
-  .wrap {
-    padding:
-      var(--stack-tight) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-right-effective)) calc(var(--page-block-gap) + var(--mobile-content-inset)) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-left-effective));
-  }
-
-  .main-col[data-mobile-chrome='tabbar'] .wrap {
-    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-tabbar));
-  }
-
-  .main-col[data-mobile-chrome='minimal'] .wrap,
-  .main-col[data-mobile-chrome='minimal'] .auth-wrap {
-    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-minimal));
-  }
+  /* .wrap 顶部/底部 inset：base.css + ios-safari.css（勿在此重复 padding-top） */
 
   .insight-summary {
     min-height: var(--control-h);
@@ -2399,7 +2386,7 @@ body {
   .schedule-popover-custom input[type='time'] {
     width: 100%;
     min-height: 48px;
-    padding: 0 14px;
+    padding: 0 var(--btn-pad-x-md);
     border-radius: var(--radius-control);
     border: 1px solid var(--border);
     background: var(--card);

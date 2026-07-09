@@ -1,9 +1,17 @@
 /**
  * Life OS PWA debug — single source of truth for all apps.
  * Used by: playwright, mobile-scroll-qa, ios-sim scripts, healthcheck, docs.
+ *
+ * Scroll selectors: @life-os/theme shell.js (getScrollRootSelectorForShell)
  */
 
-/** @typedef {'main-wrap-main' | 'main-wrap-content' | 'main-col-wrap'} PwaShellType */
+import {
+  LIFE_OS_SHELL_REFERENCE,
+  getScrollRootSelectorForShell,
+  getScrollRootSelectorsForShell,
+} from '@life-os/theme'
+
+/** @typedef {import('@life-os/theme').LifeOsShellType} LifeOsShellType */
 
 /**
  * @typedef {object} PwaRoute
@@ -17,9 +25,10 @@
  * @property {string} name
  * @property {string} workspace npm workspace name
  * @property {number} port default preview port
- * @property {PwaShellType} shellType
+ * @property {LifeOsShellType} shellType
  * @property {string} waitSelector
- * @property {string} scrollSelector primary scroll container(s)
+ * @property {string} scrollSelector primary scroll container(s) — comma string for docs
+ * @property {readonly string[]} scrollSelectors ordered list for resolveScrollRoot()
  * @property {string} mainQuery element for metrics (first match)
  * @property {boolean} nestedWrapInMain true if .wrap is inside #main-content (clip guard)
  * @property {PwaRoute[]} routes pages for viewport tests
@@ -32,6 +41,13 @@
  * @property {boolean} [pwaTestEnabled] include in playwright projects
  */
 
+/** @param {LifeOsShellType} shellType */
+function scrollSelectorsFor(shellType) {
+  const scrollSelectors = getScrollRootSelectorsForShell(shellType)
+  const scrollSelector = getScrollRootSelectorForShell(shellType)
+  return { scrollSelector, scrollSelectors, mainQuery: scrollSelector }
+}
+
 /** @type {Record<string, PwaAppConfig>} */
 export const PWA_APPS = {
   planner: {
@@ -41,10 +57,7 @@ export const PWA_APPS = {
     port: 5188,
     shellType: 'main-col-wrap',
     waitSelector: '.app-shell',
-    scrollSelector:
-      '.main-col > .life-os-page-workspace, .main-col > .wrap, .main-col > .auth-wrap',
-    mainQuery:
-      '.main-col > .life-os-page-workspace, .main-col > .wrap, .main-col > .auth-wrap',
+    ...scrollSelectorsFor('main-col-wrap'),
     nestedWrapInMain: false,
     routes: [
       { path: '/', name: 'today' },
@@ -66,8 +79,7 @@ export const PWA_APPS = {
     port: 4173,
     shellType: 'main-wrap-main',
     waitSelector: '.app-shell',
-    scrollSelector: '#main-content',
-    mainQuery: '#main-content',
+    ...scrollSelectorsFor('main-wrap-main'),
     nestedWrapInMain: true,
     routes: [
       { path: '/', name: 'today' },
@@ -89,8 +101,7 @@ export const PWA_APPS = {
     port: 5191,
     shellType: 'main-wrap-main',
     waitSelector: '.app-shell',
-    scrollSelector: '#main-content',
-    mainQuery: '#main-content',
+    ...scrollSelectorsFor('main-wrap-main'),
     nestedWrapInMain: true,
     routes: [
       { path: '/', name: 'home' },
@@ -111,7 +122,7 @@ export const PWA_APPS = {
     port: 5180,
     shellType: 'main-wrap-content',
     waitSelector: '.app-shell, .auth-screen',
-    scrollSelector: '.main-wrap > .content',
+    ...scrollSelectorsFor('main-wrap-content'),
     mainQuery: '.main-wrap > .content, .auth-screen',
     nestedWrapInMain: false,
     routes: [{ path: '/', name: 'home' }],
@@ -129,8 +140,7 @@ export const PWA_APPS = {
     port: 5195,
     shellType: 'main-col-wrap',
     waitSelector: '.app-shell, .portal-loading',
-    scrollSelector: '.main-col > .wrap',
-    mainQuery: '.main-col > .wrap',
+    ...scrollSelectorsFor('main-col-wrap'),
     nestedWrapInMain: false,
     routes: [{ path: '/', name: 'home' }],
     scrollQaPath: '/',
@@ -144,8 +154,7 @@ export const PWA_APPS = {
     port: 5196,
     shellType: 'main-col-wrap',
     waitSelector: '.app-shell',
-    scrollSelector: '.main-col > .wrap',
-    mainQuery: '.main-col > .wrap',
+    ...scrollSelectorsFor('main-col-wrap'),
     nestedWrapInMain: false,
     routes: [
       { path: '/', name: 'overview' },
@@ -193,10 +202,5 @@ export function resolveAppFilter(filter) {
   return getAppList(ids?.length ? { ids } : {})
 }
 
-/** Shell layout reference for docs / rules */
-export const PWA_SHELL_REFERENCE = {
-  'main-wrap-main':
-    'Fitness / Music — `.main-wrap > #main-content` scrolls; nested `.wrap` must stay `height: auto`',
-  'main-wrap-content': 'Finance — `.main-wrap > .content` scrolls',
-  'main-col-wrap': 'Planner / Portal / Home — `.main-col > .wrap` scrolls',
-}
+/** Shell layout reference for docs / rules — re-export from @life-os/theme */
+export { LIFE_OS_SHELL_REFERENCE as PWA_SHELL_REFERENCE }

@@ -1,10 +1,11 @@
 /**
  * Life OS 移动端滚动 QA（浏览器 + PWA standalone）
  * Config: scripts/pwa/apps.config.mjs
+ * Scroll resolution: @life-os/theme shell.js (resolveScrollRoot)
  *
  * Usage:
  *   npm run pwa:build
- *   npm run pwa:preview:all &   # or per-app preview
+ *   npm run pwa:preview:planner &   # auto-builds if missing
  *   npm run qa:mobile-scroll
  *
  * Env:
@@ -12,6 +13,7 @@
  *   SCROLL_QA_<APP>_URL=http://127.0.0.1:PORT  (override per app, uppercase id)
  */
 import { chromium, devices } from 'playwright'
+import { resolveScrollRoot } from '@life-os/theme'
 import { appBaseUrl, resolveAppFilter } from './pwa/apps.config.mjs'
 
 /** @param {import('./pwa/apps.config.mjs').PwaAppConfig} app */
@@ -22,10 +24,11 @@ function toScrollQaApp(app) {
     url: process.env[envKey] ?? appBaseUrl(app),
     path: app.scrollQaPath,
     waitSelector: app.waitSelector,
-    scrollSelector: app.scrollSelector,
+    scrollSelectors: app.scrollSelectors,
+    shellType: app.shellType,
     moreButton: app.moreButton,
     moreClose: app.moreClose,
-    clipPaths: app.nestedWrapInMain ? app.clipPaths : undefined,
+    clipPaths: app.clipPaths,
     authGate: app.authGate,
   }
 }
@@ -43,54 +46,54 @@ function record(app, testCase, ok, detail = '') {
   console.log(`${mark} [${app}] ${testCase}${detail ? ` — ${detail}` : ''}`)
 }
 
-async function wheelScrollY(page, selector, deltaY) {
-  const loc = page.locator(selector).first()
-  const box = await loc.boundingBox()
-  if (!box) return false
-  await page.mouse.move(
-    box.x + box.width / 2,
-    box.y + Math.min(box.height * 0.35, box.height - 8),
+/** @param {import('playwright').Page} page */
+async function pickScrollRoot(page, scrollSelectors) {
+  return page.evaluate(
+    ({ selectors, resolveScrollRootSource }) => {
+      const resolveScrollRoot = new Function(
+        `return (${resolveScrollRootSource})`,
+      )()
+      const hit = resolveScrollRoot(document, selectors)
+      if (!hit) return null
+      return { selector: hit.selector }
+    },
+    {
+      selectors: scrollSelectors,
+      resolveScrollRootSource: resolveScrollRoot.toString(),
+    },
   )
-  await page.mouse.wheel(0, deltaY)
-  await page.waitForTimeout(180)
-  return true
 }
 
-async function ensureScrollable(page, scrollSelector) {
-  return page.evaluate((sel) => {
-    const pick = () => {
-      for (const part of sel.split(',').map((s) => s.trim())) {
-        const el = document.querySelector(part)
-        if (el instanceof HTMLElement) return el
+/** @param {import('playwright').Page} page */
+async function ensureScrollable(page, scrollSelectors) {
+  return page.evaluate(
+    ({ selectors, resolveScrollRootSource }) => {
+      const resolveScrollRoot = new Function(
+        `return (${resolveScrollRootSource})`,
+      )()
+      const hit = resolveScrollRoot(document, selectors)
+      if (!hit) return { ok: false, reason: 'scroll root missing' }
+      const root = hit.node
+      let filler = document.getElementById('__scroll_qa_filler')
+      if (!filler) {
+        filler = document.createElement('div')
+        filler.id = '__scroll_qa_filler'
+        filler.style.height = '3200px'
+        filler.style.pointerEvents = 'none'
+        root.appendChild(filler)
       }
-      return null
-    }
-    const root = pick()
-    if (!root) return { ok: false, reason: 'scroll root missing' }
-    let filler = document.getElementById('__scroll_qa_filler')
-    if (!filler) {
-      filler = document.createElement('div')
-      filler.id = '__scroll_qa_filler'
-      filler.style.height = '3200px'
-      filler.style.pointerEvents = 'none'
-      root.appendChild(filler)
-    }
-    return {
-      ok: root.scrollHeight - root.clientHeight > 200,
-      scrollHeight: root.scrollHeight,
-      clientHeight: root.clientHeight,
-    }
-  }, scrollSelector)
-}
-
-async function queryScrollRoot(page, scrollSelector) {
-  return page.evaluate((sel) => {
-    for (const part of sel.split(',').map((s) => s.trim())) {
-      const el = document.querySelector(part)
-      if (el instanceof HTMLElement) return part
-    }
-    return null
-  }, scrollSelector)
+      return {
+        ok: root.scrollHeight - root.clientHeight > 200,
+        selector: hit.selector,
+        scrollHeight: root.scrollHeight,
+        clientHeight: root.clientHeight,
+      }
+    },
+    {
+      selectors: scrollSelectors,
+      resolveScrollRootSource: resolveScrollRoot.toString(),
+    },
+  )
 }
 
 async function checkPwaNestedWrap(page, appId, clipPath, baseUrl) {
@@ -146,6 +149,79 @@ async function checkPwaNestedWrap(page, appId, clipPath, baseUrl) {
   )
 }
 
+async function checkPwaShellColumnWorkspace(page, appId, clipPath, baseUrl) {
+  await page.goto(`${baseUrl}${clipPath}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 45000,
+  })
+  await page.waitForSelector('.app-shell', { timeout: 30000 })
+  await page.evaluate(() =>
+    document.documentElement.classList.add('standalone-pwa'),
+  )
+
+  const metrics = await page.evaluate(() => {
+    const shell = document.querySelector('.life-os-shell-column')
+    const surface =
+      shell?.querySelector(':scope > .life-os-page-workspace') ??
+      shell?.querySelector(':scope > .wrap')
+    const wrap = surface?.querySelector('.wrap')
+    const body = getComputedStyle(document.body)
+
+    if (!shell) return { ok: false, reason: 'missing .life-os-shell-column' }
+    if (!surface)
+      return { ok: false, reason: 'missing shell column scroll surface' }
+
+    let filler = document.getElementById('__scroll_qa_shell_filler')
+    if (!filler) {
+      filler = document.createElement('div')
+      filler.id = '__scroll_qa_shell_filler'
+      filler.style.height = '2400px'
+      filler.style.pointerEvents = 'none'
+      surface.appendChild(filler)
+    }
+
+    const surfaceCs = getComputedStyle(surface)
+    const surfaceOk =
+      surfaceCs.overflowY === 'auto' &&
+      surface.scrollHeight > surface.clientHeight + 40
+
+    if (!wrap) {
+      return {
+        ok: surfaceOk,
+        skip: !wrap,
+        reason: 'direct .wrap surface (no nested wrap)',
+        surfaceOverflowY: surfaceCs.overflowY,
+        surfaceScrollHeight: surface.scrollHeight,
+        surfaceClientHeight: surface.clientHeight,
+      }
+    }
+
+    const wrapCs = getComputedStyle(wrap)
+    const wrapOk =
+      wrapCs.height !== '0px' &&
+      wrapCs.overflowY === 'visible' &&
+      wrap.offsetHeight > 80
+
+    return {
+      ok: surfaceOk && wrapOk,
+      bodyDisplay: body.display,
+      surfaceOverflowY: surfaceCs.overflowY,
+      surfaceScrollHeight: surface.scrollHeight,
+      surfaceClientHeight: surface.clientHeight,
+      wrapHeight: wrapCs.height,
+      wrapOverflowY: wrapCs.overflowY,
+      wrapOffsetHeight: wrap.offsetHeight,
+    }
+  })
+
+  record(
+    appId,
+    `pwa:shell-col${clipPath}`,
+    metrics.ok,
+    metrics.skip ? metrics.reason : JSON.stringify(metrics),
+  )
+}
+
 async function runApp(browser, app) {
   const context = await browser.newContext({
     ...devices['Pixel 7'],
@@ -176,7 +252,7 @@ async function runApp(browser, app) {
     await page.evaluate(() =>
       document.documentElement.classList.add('standalone-pwa'),
     )
-    const prep = await ensureScrollable(page, app.scrollSelector)
+    const prep = await ensureScrollable(page, app.scrollSelectors)
     record(app.id, 'prep:scroll-root', prep.ok, JSON.stringify(prep))
 
     await page.evaluate(() =>
@@ -200,66 +276,67 @@ async function runApp(browser, app) {
     await page.evaluate(() =>
       document.documentElement.classList.add('standalone-pwa'),
     )
-    const scrollSel = await queryScrollRoot(page, app.scrollSelector)
-    if (scrollSel) {
-      await page.evaluate((sel) => {
-        for (const part of sel.split(',').map((s) => s.trim())) {
-          const el = document.querySelector(part)
-          if (el instanceof HTMLElement) {
-            el.scrollTop = 0
-            break
+    const scrollHit = await pickScrollRoot(page, app.scrollSelectors)
+    if (scrollHit?.selector) {
+      const before = await page.evaluate((selector) => {
+        const el = document.querySelector(selector)
+        return el instanceof HTMLElement ? el.scrollTop : 0
+      }, scrollHit.selector)
+      const after = await page.evaluate(
+        ({ selector, delta }) => {
+          const el = document.querySelector(selector)
+          if (!(el instanceof HTMLElement)) {
+            return { scrollTop: 0, overflow: '' }
           }
-        }
-      }, app.scrollSelector)
-      const before = await page.evaluate(
-        (sel) =>
-          document.querySelector(sel.split(',')[0].trim())?.scrollTop ?? 0,
-        app.scrollSelector,
+          el.scrollTop = Math.min(
+            el.scrollHeight - el.clientHeight,
+            el.scrollTop + delta,
+          )
+          return {
+            scrollTop: el.scrollTop,
+            overflow: getComputedStyle(el).overflowY,
+          }
+        },
+        { selector: scrollHit.selector, delta: 420 },
       )
-      await wheelScrollY(page, scrollSel, 420)
-      const after = await page.evaluate((sel) => {
-        const part = sel.split(',')[0].trim()
-        const el = document.querySelector(part)
-        return {
-          scrollTop: el?.scrollTop ?? 0,
-          overflow: el ? getComputedStyle(el).overflowY : '',
-        }
-      }, app.scrollSelector)
       record(
         app.id,
-        'scroll:pwa-wheel',
+        'scroll:pwa-surface',
         after.scrollTop > before + 80,
-        JSON.stringify({ before, after }),
+        JSON.stringify({ selector: scrollHit.selector, before, after }),
       )
     } else {
-      record(app.id, 'scroll:pwa-wheel', false, 'scroll root not found')
+      record(app.id, 'scroll:pwa-surface', false, 'scroll root not found')
     }
 
     await page.evaluate(() =>
       document.documentElement.classList.add('standalone-pwa'),
     )
-    const pwa = await page.evaluate((sel) => {
-      const pick = () => {
-        for (const part of sel.split(',').map((s) => s.trim())) {
-          const el = document.querySelector(part)
-          if (el instanceof HTMLElement) return el
+    const pwa = await page.evaluate(
+      ({ selectors, resolveScrollRootSource }) => {
+        const resolveScrollRoot = new Function(
+          `return (${resolveScrollRootSource})`,
+        )()
+        const hit = resolveScrollRoot(document, selectors)
+        const content = hit?.node
+        if (!content) return { ok: false, reason: 'missing nodes' }
+        const canScroll = content.scrollHeight - content.clientHeight > 200
+        content.scrollTop = 1600
+        return {
+          ok:
+            getComputedStyle(document.body).overflowY === 'hidden' &&
+            (!canScroll || content.scrollTop > 400),
+          selector: hit.selector,
+          bodyOverflow: getComputedStyle(document.body).overflowY,
+          contentScrollTop: content.scrollTop,
+          contentOverflow: getComputedStyle(content).overflowY,
         }
-        return null
-      }
-      const content = pick()
-      const shell = document.querySelector('.app-shell')
-      if (!content || !shell) return { ok: false, reason: 'missing nodes' }
-      const canScroll = content.scrollHeight - content.clientHeight > 200
-      content.scrollTop = 1600
-      return {
-        ok:
-          getComputedStyle(document.body).overflowY === 'hidden' &&
-          (!canScroll || content.scrollTop > 400),
-        bodyOverflow: getComputedStyle(document.body).overflowY,
-        contentScrollTop: content.scrollTop,
-        contentOverflow: getComputedStyle(content).overflowY,
-      }
-    }, app.scrollSelector)
+      },
+      {
+        selectors: app.scrollSelectors,
+        resolveScrollRootSource: resolveScrollRoot.toString(),
+      },
+    )
     record(app.id, 'scroll:pwa-content', pwa.ok, JSON.stringify(pwa))
 
     await page.evaluate(() =>
@@ -311,9 +388,15 @@ async function runApp(browser, app) {
       )
     }
 
-    if (app.clipPaths?.length) {
+    if (app.shellType === 'main-wrap-main' && app.clipPaths?.length) {
       for (const clipPath of app.clipPaths) {
         await checkPwaNestedWrap(page, app.id, clipPath, app.url)
+      }
+    }
+
+    if (app.shellType === 'main-col-wrap' && app.clipPaths?.length) {
+      for (const clipPath of app.clipPaths) {
+        await checkPwaShellColumnWorkspace(page, app.id, clipPath, app.url)
       }
     }
   } catch (err) {

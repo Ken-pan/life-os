@@ -93,7 +93,7 @@
     justify-content: space-between;
     gap: var(--stack-section);
     padding-top: var(--header-block);
-    padding-bottom: var(--header-block);
+    padding-bottom: var(--header-block-end);
     padding-inline:
       max(var(--content-inline-pad), var(--safe-left-effective)) max(var(--content-inline-pad), var(--safe-right-effective));
   }
@@ -251,18 +251,9 @@
   width: 100%;
 }
 
-/* 单层页头 — 顶栏已承担 chrome，内容区标题不再 sticky */
+/* 单层页头 — 顶栏已承担 chrome；间距见 shell .page-header--in-flow */
 .portal-wrap .portal-page-header.page-header {
   display: block;
-  position: static;
-  border-bottom: none;
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  padding-top: var(--space-2);
-  padding-bottom: var(--space-3);
-  /* .wrap 已承担 content-inline-pad，避免页头二次内边距把标题压成 0 宽 */
-  padding-inline: 0;
 }
 
 .portal-wrap .portal-page-header .titles {

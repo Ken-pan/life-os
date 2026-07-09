@@ -9,8 +9,8 @@
 */
 
 :root {
-  --nav-leading: max(16px, calc(env(safe-area-inset-left, 0px) + 8px));
-  --nav-trailing: max(16px, calc(env(safe-area-inset-right, 0px) + 8px));
+  --nav-leading: var(--inset-inline-start);
+  --nav-trailing: var(--inset-inline-end);
   --back-to-content: 8px;
   --navigation-back-margin-bottom: var(--back-to-content);
   --navigation-back-margin-inline-start: calc(var(--nav-leading) - var(--wrap-pad-x));
@@ -1121,11 +1121,7 @@ p {
 }
 
 /* ─────────── DAY DETAIL ─────────── */
-.page-head,
-.day-head {
-  padding-top: calc(env(safe-area-inset-top, 0px) + var(--page-top));
-  padding-bottom: 4px;
-}
+/* 页眉→内容间距见 @life-os/theme shell.css（.page-head / .day-head） */
 
 .back-btn {
   font-size: var(--text-base);
@@ -1746,11 +1742,10 @@ p {
 
 .lib-filter-bar {
   position: sticky;
-  top: 0;
+  top: var(--safe-top-effective, 0px);
   z-index: 12;
   margin: 10px calc(-1 * var(--wrap-pad-x)) 6px;
-  padding: 8px var(--wrap-pad-x) 10px;
-  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  padding: var(--stack-tight) var(--wrap-pad-x) var(--stack-tight);
   background: linear-gradient(to bottom, var(--bg) 78%, color-mix(in srgb, var(--bg) 88%, transparent));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

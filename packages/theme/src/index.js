@@ -12,6 +12,21 @@ export {
 } from './layout.js'
 
 export {
+  LIFE_OS_SHELL,
+  LIFE_OS_SHELL_COLUMN_IS,
+  LIFE_OS_MAIN_WRAP_SCROLL_SELECTORS,
+  LIFE_OS_SHELL_COLUMN_SCROLL_SELECTORS,
+  LIFE_OS_SCROLL_ROOT_SELECTORS,
+  LIFE_OS_SCROLL_ROOT_SELECTORS_BY_SHELL,
+  LIFE_OS_SHELL_REFERENCE,
+  getScrollRootSelector,
+  getScrollRootSelectorForShell,
+  getScrollRootSelectorsForShell,
+  resolveScrollRoot,
+  findActiveScrollRoot,
+} from './shell.js'
+
+export {
   LIFE_OS_SITE_META,
   LIFE_OS_ROBOTS,
   LIFE_OS_REFERRER,

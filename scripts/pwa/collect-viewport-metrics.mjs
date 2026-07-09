@@ -5,12 +5,31 @@
 import { fileURLToPath } from 'node:url'
 
 export function collectViewportMetrics() {
-  const main =
-    document.querySelector('#main-content') ||
-    document.querySelector('.main-wrap > .content') ||
-    document.querySelector('[data-app-main]') ||
-    document.querySelector('main') ||
-    document.scrollingElement
+  const scrollSelectors = [
+    '.life-os-scroll-surface',
+    '.main-wrap > #main-content',
+    '.main-wrap > .content',
+    '.life-os-shell-column > .life-os-page-workspace',
+    '.life-os-shell-column > .wrap',
+    '.main-col:not(:has(.main-wrap)) > .life-os-page-workspace',
+    '.main-col:not(:has(.main-wrap)) > .wrap',
+  ]
+
+  let main = null
+  for (const selector of scrollSelectors) {
+    const el = document.querySelector(selector)
+    if (el instanceof HTMLElement) {
+      main = el
+      break
+    }
+  }
+
+  if (!main) {
+    main =
+      document.querySelector('[data-app-main]') ||
+      document.querySelector('main') ||
+      document.scrollingElement
+  }
 
   const tabbar =
     document.querySelector('[data-bottom-tabbar]') ||
@@ -22,16 +41,20 @@ export function collectViewportMetrics() {
   const wrap = main?.querySelector('.wrap')
 
   const data = {
-    displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
+    displayModeStandalone: window.matchMedia('(display-mode: standalone)')
+      .matches,
     navigatorStandalone: window.navigator.standalone === true,
-    htmlStandaloneClass: document.documentElement.classList.contains('standalone-pwa'),
+    htmlStandaloneClass:
+      document.documentElement.classList.contains('standalone-pwa'),
     innerHeight: window.innerHeight,
     outerHeight: window.outerHeight,
     documentClientHeight: document.documentElement.clientHeight,
     bodyClientHeight: document.body?.clientHeight,
     visualViewportHeight: window.visualViewport?.height,
     visualViewportOffsetTop: window.visualViewport?.offsetTop,
-    appVh: getComputedStyle(document.documentElement).getPropertyValue('--app-vh').trim(),
+    appVh: getComputedStyle(document.documentElement)
+      .getPropertyValue('--app-vh')
+      .trim(),
     scrollY: window.scrollY,
     scrollHeight: document.documentElement.scrollHeight,
     main: main

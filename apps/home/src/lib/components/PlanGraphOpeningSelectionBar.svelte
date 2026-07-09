@@ -82,14 +82,14 @@
   .graph-open-bar {
     position: absolute;
     left: 50%;
-    bottom: max(14px, var(--safe-bottom-effective));
+    bottom: var(--stack-tight);
     transform: translateX(-50%);
     z-index: 42;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 8px 12px;
-    max-width: min(640px, calc(100% - 24px));
+    max-width: min(640px, calc(100% - 2 * var(--stack-tight)));
     padding: 10px 14px;
     border-radius: 14px;
     border: 1px solid color-mix(in srgb, var(--graph-accent) 35%, var(--border));
@@ -138,8 +138,8 @@
 
   @media (max-width: 599px) {
     .graph-open-bar {
-      left: max(12px, var(--safe-left-effective));
-      right: max(12px, var(--safe-right-effective));
+      left: 0;
+      right: 0;
       transform: none;
       max-width: none;
       bottom: calc(

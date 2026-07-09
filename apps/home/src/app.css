@@ -236,8 +236,15 @@ main.plan-route {
   min-height: 0;
   height: 0;
   max-height: 100dvh;
-  padding:
-    max(8px, var(--safe-top-effective)) max(8px, var(--safe-right-effective)) calc(var(--safe-bottom-effective) + 8px) max(8px, var(--safe-left-effective));
+  padding-top: 0;
+  padding-inline:
+    max(8px, var(--safe-left-effective)) max(8px, var(--safe-right-effective));
+  padding-bottom: calc(var(--safe-bottom-effective) + var(--content-pad-start));
+}
+
+main.plan-route>.plan-top:first-child {
+  margin-top: calc(var(--safe-top-effective) + var(--content-pad-start));
+  margin-bottom: var(--header-block-end);
 }
 
 @media (--life-os-desktop) {
@@ -245,8 +252,13 @@ main.plan-route {
   /* Plan: shell AppBar hidden; in-page plan-top + full-width canvas */
   main.plan-route {
     --content-inline-pad: var(--page-gutter-desktop);
-    padding:
-      var(--stack-tight) max(var(--content-inline-pad), var(--safe-right-effective)) calc(var(--safe-bottom-effective) + 8px) max(var(--content-inline-pad), var(--safe-left-effective));
+    padding-inline:
+      max(var(--content-inline-pad), var(--safe-left-effective)) max(var(--content-inline-pad), var(--safe-right-effective));
+    padding-bottom: calc(var(--safe-bottom-effective) + var(--content-pad-start));
+  }
+
+  main.plan-route>.plan-top:first-child {
+    margin-top: var(--content-pad-start);
   }
 }
 

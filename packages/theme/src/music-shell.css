@@ -537,7 +537,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-3) var(--content-inline-pad) calc(var(--space-8) + var(--safe-bottom-effective));
+  padding:
+    calc(var(--safe-top-effective) + var(--content-pad-start)) var(--content-inline-pad) calc(var(--space-8) + var(--safe-bottom-effective));
   gap: var(--space-4);
 }
 
@@ -1354,7 +1355,7 @@
 .now-playing--immersive {
   justify-content: flex-start;
   min-height: calc(100dvh - var(--page-header-h) - var(--mini-player-h, 0px));
-  padding-top: var(--space-2);
+  padding-top: calc(var(--safe-top-effective) + var(--content-pad-start));
   padding-bottom: calc(var(--space-4) + var(--safe-bottom-effective));
 }
 
@@ -2468,7 +2469,7 @@ html:has(.np-ambient-back) .bottom-shell {
     }
 
     .now-playing--apple-mobile {
-      padding-top: calc(var(--safe-top-effective, 0px) + var(--space-1));
+      padding-top: calc(var(--safe-top-effective) + var(--content-pad-start));
       padding-bottom: max(var(--space-2), var(--safe-bottom-effective, 0px));
     }
 
@@ -2812,10 +2813,8 @@ html:has(.np-ambient-back) .bottom-shell {
   gap: var(--grid-gap, var(--space-4));
   width: 100%;
   min-width: 0;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(100%, var(--grid-min-tile)), 1fr)
-  );
+  grid-template-columns: repeat(auto-fit,
+      minmax(min(100%, var(--grid-min-tile)), 1fr));
 }
 
 .album-card {
@@ -3039,7 +3038,7 @@ html:has(.np-ambient-back) .bottom-shell {
 @media (--life-os-mobile-landscape) {
   .now-playing {
     min-height: auto;
-    padding-top: var(--space-2);
+    padding-top: calc(var(--safe-top-effective) + var(--content-pad-start));
     padding-bottom: calc(var(--space-4) + var(--safe-bottom-effective));
   }
 
@@ -3107,11 +3106,15 @@ html:has(.np-ambient-back) .bottom-shell {
 
   .now-playing {
     min-height: calc(100dvh - var(--page-header-h));
-    padding-top: var(--space-6);
+    padding-top: var(--content-pad-start);
     padding-bottom: var(--space-8);
     display: grid;
     place-items: center;
     align-content: center;
+  }
+
+  .now-playing--immersive {
+    padding-top: var(--content-pad-start);
   }
 
   .now-playing-handle {
@@ -3266,7 +3269,7 @@ html:has(.np-ambient-back) .bottom-shell {
 }
 
 .settings-library-actions {
-  padding: 0 var(--inset-inline) calc(var(--space-6) + var(--mobile-content-inset-tabbar, 0px));
+  padding: 0 0 calc(var(--space-6) + var(--mobile-content-inset-tabbar, 0px));
 }
 
 .settings-action-hint {
@@ -3284,7 +3287,7 @@ html:has(.np-ambient-back) .bottom-shell {
 .tag-review-list {
   list-style: none;
   margin: 0;
-  padding: 0 var(--inset-inline) var(--space-4);
+  padding: 0 0 var(--space-4);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -4006,7 +4009,7 @@ body.search-typeahead-open .music-appbar {
 
   .mini-player-body {
     gap: var(--space-1);
-    padding-inline: var(--space-1);
+    padding-inline: var(--inset-inline-start) var(--inset-inline-end);
   }
 
   .mini-player-link {
@@ -4018,7 +4021,7 @@ body.search-typeahead-open .music-appbar {
   .mini-player-actions {
     flex: 0 0 auto;
     gap: 0;
-    padding-right: max(var(--space-1), var(--safe-right-effective));
+    padding-right: 0;
   }
 
   .mini-player-btn.play {
@@ -4650,7 +4653,6 @@ html.utility-pane-resizing {
   }
 
   .music-app[data-page-route='now-playing'] .now-playing {
-    padding-top: var(--space-2);
     justify-content: flex-start;
   }
 

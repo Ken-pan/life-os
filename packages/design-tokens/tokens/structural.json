@@ -5,7 +5,26 @@
   "page-gutter-tablet": { "$type": "cssValue", "$value": "var(--space-5)" },
   "page-gutter-desktop": { "$type": "cssValue", "$value": "var(--space-8)" },
   "page-gutter": { "$type": "cssValue", "$value": "var(--page-gutter-mobile)" },
-  "page-top": { "$type": "dimension", "$value": "8px" },
+  "content-after-header": {
+    "$type": "cssValue",
+    "$value": "var(--stack-section)",
+    "$description": "页眉底边 → 主内容顶边的总留白（header-block-end + content-pad-start）"
+  },
+  "header-block-end": {
+    "$type": "cssValue",
+    "$value": "var(--space-2)",
+    "$description": "AppBar / page-header 下内边距（占 content-after-header 的一半）"
+  },
+  "content-pad-start": {
+    "$type": "cssValue",
+    "$value": "calc(var(--content-after-header) - var(--header-block-end))",
+    "$description": ".wrap / .content 上内边距（占 content-after-header 的另一半）"
+  },
+  "page-top": {
+    "$type": "cssValue",
+    "$value": "var(--content-pad-start)",
+    "$description": "Deprecated alias — use --content-pad-start"
+  },
   "page-block-gap": { "$type": "cssValue", "$value": "var(--space-7)" },
   "page-scroll-bottom": { "$type": "cssValue", "$value": "var(--space-24)" },
   "wrap-pad-x": { "$type": "cssValue", "$value": "var(--page-gutter)" },

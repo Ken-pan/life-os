@@ -17,7 +17,9 @@
 
   const recentApp = $derived(getLastApp())
   const productionCount = PORTAL_PRODUCTION_APPS.length
-  const experimentalApps = $derived(PORTAL_APPS.filter((app) => app.experimental))
+  const experimentalApps = $derived(
+    PORTAL_APPS.filter((app) => app.experimental),
+  )
   const gridApps = $derived(
     recentApp && !recentApp.experimental
       ? PORTAL_PRODUCTION_APPS.filter((app) => app.id !== recentApp.id)
@@ -33,7 +35,7 @@
   const userId = $derived(auth.user?.id ?? '')
 </script>
 
-<header class="page-header portal-page-header">
+<header class="page-header page-header--in-flow portal-page-header">
   <div class="titles">
     <h1 class="page-title">选择应用</h1>
     <p class="subtitle">
@@ -87,7 +89,10 @@
 </section>
 
 {#if experimentalGridApps.length > 0}
-  <section class="portal-app-section" aria-labelledby="portal-experimental-title">
+  <section
+    class="portal-app-section"
+    aria-labelledby="portal-experimental-title"
+  >
     <h2 id="portal-experimental-title" class="portal-section-label">实验</h2>
     <div class="portal-app-grid portal-app-grid--experimental">
       {#each experimentalGridApps as app (app.id)}

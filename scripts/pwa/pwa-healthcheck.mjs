@@ -38,6 +38,20 @@ try {
   record('theme-ios-safari', false, 'missing ios-safari.css')
 }
 
+try {
+  accessSync(join(root, 'packages/theme/src/scroll-shell.css'))
+  record('theme-scroll-shell', true, 'packages/theme/src/scroll-shell.css')
+} catch {
+  record('theme-scroll-shell', false, 'missing scroll-shell.css')
+}
+
+try {
+  accessSync(join(root, 'packages/theme/src/shell.js'))
+  record('theme-shell-js', true, 'packages/theme/src/shell.js')
+} catch {
+  record('theme-shell-js', false, 'missing shell.js')
+}
+
 const apps = resolveAppFilter(process.env.PWA_APP)
 
 console.log('\n── Preview servers ──')

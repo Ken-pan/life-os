@@ -24,7 +24,7 @@
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
   <div
-    class="main-col"
+    class="main-col life-os-shell-column"
     data-mobile-chrome="minimal"
     class:portal-main-col--center={centerContent}
   >

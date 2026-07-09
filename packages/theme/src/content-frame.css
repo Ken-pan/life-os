@@ -8,6 +8,9 @@
   Modes (data-content-mode on .main-col | .main-wrap | .life-os-page-workspace):
   - max (default): --content-max + --content-inline-pad (820px-style reading column)
   - span: workspace span minus desktop gutters; optional --content-span-max cap
+
+  Vertical inset below shell chrome uses --content-pad-start on .wrap / .content
+  (--content-after-header split with --header-block-end on AppBar / .page-header).
 */
 
 .main-col,
@@ -28,14 +31,21 @@
   min-width: 0;
 }
 
-.main-col[data-content-mode='span'],
-.main-wrap[data-content-mode='span'],
-.life-os-page-workspace[data-content-mode='span'] {
-  --content-max: min(var(--content-span-max, var(--content-span)), var(--content-span));
-  --content-inline-pad: var(--page-gutter-desktop);
-}
+/*
+  When .life-os-page-workspace is a direct child of .life-os-shell-column,
+  it is the PWA scroll surface (see scroll-shell.css). AppBar may live inside
+  (sticky) or as a sibling above the workspace (fixed in column flex).
+*/
 
 @media (--life-os-desktop) {
+
+  /* Span mode: desktop workspace width + 32px gutters (mobile keeps --page-gutter via layout.css) */
+  .main-col[data-content-mode='span'],
+  .main-wrap[data-content-mode='span'],
+  .life-os-page-workspace[data-content-mode='span'] {
+    --content-max: min(var(--content-span-max, var(--content-span)), var(--content-span));
+    --content-inline-pad: var(--page-gutter-desktop);
+  }
 
   /* Chrome inner shares the same frame as page body */
   :is(.main-col, .main-wrap, .life-os-page-workspace)[data-content-mode='span']> :is(.appbar, header.appbar) .appbar-inner,

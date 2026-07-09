@@ -478,6 +478,7 @@ h3.flush,
 }
 
 @container life-os-main (min-width: 480px) {
+
   .kpi-row,
   .kpi-row-4,
   .today-kpis {
@@ -492,6 +493,7 @@ h3.flush,
 }
 
 @container life-os-main (min-width: 840px) {
+
   .kpi-row,
   .kpi-row-4,
   .today-kpis {
@@ -4222,6 +4224,13 @@ div.input {
   }
 
   .card {
+    padding-block: var(--card-padding-mobile);
+    padding-inline: 0;
+  }
+
+  .drawer .card,
+  .modal-bg .card,
+  .mobile-more-sheet .card {
     padding: var(--card-padding-mobile);
   }
 
@@ -4261,8 +4270,6 @@ div.input {
     backdrop-filter: none;
     border-top: 1px solid var(--border);
     box-shadow: 0 -10px 24px rgba(16, 23, 25, 0.1);
-    padding:
-      var(--space-2) max(var(--space-2-5), var(--safe-right-effective)) max(var(--space-2), var(--safe-bottom-effective)) max(var(--space-2-5), var(--safe-left-effective));
   }
 
   .mobile-tabbar-inner {
@@ -4325,7 +4332,7 @@ div.input {
     border-top: 1px solid var(--border);
     border-radius: 16px 16px 0 0;
     padding:
-      18px max(16px, var(--safe-right-effective)) max(14px, var(--safe-bottom-effective)) max(16px, var(--safe-left-effective));
+      var(--space-4) var(--inset-inline-end) max(var(--inset-inline), var(--safe-bottom-effective)) var(--inset-inline-start);
     animation: sheet-in var(--motion-slow) var(--ease);
   }
 
@@ -4480,6 +4487,13 @@ div.input {
 
   .card {
     border-radius: var(--radius-sm);
+    padding-block: var(--card-padding-mobile);
+    padding-inline: 0;
+  }
+
+  .drawer .card,
+  .modal-bg .card,
+  .mobile-more-sheet .card {
     padding: var(--card-padding-mobile);
   }
 
@@ -4588,7 +4602,7 @@ div.input {
     overscroll-behavior-x: contain;
     scrollbar-width: none;
     scroll-snap-type: x proximity;
-    scroll-padding-inline: max(var(--space-2, 8px), env(safe-area-inset-left, 0px)) max(var(--space-2, 8px), env(safe-area-inset-right, 0px));
+    scroll-padding-inline: var(--inset-inline-start) var(--inset-inline-end);
     mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
   }
@@ -6844,8 +6858,8 @@ div.input {
 
 @media (--life-os-compact) {
   .ai-signal-brief::before {
-    left: var(--card-padding-mobile);
-    right: var(--card-padding-mobile);
+    left: 0;
+    right: 0;
   }
 
   .ai-signal-brief .ai-signal-row {

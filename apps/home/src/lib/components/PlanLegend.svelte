@@ -171,8 +171,8 @@
 
   .plan-legend-wrap.overlay {
     position: absolute;
-    left: max(8px, var(--safe-left-effective));
-    bottom: 8px;
+    left: var(--space-2);
+    bottom: var(--space-2);
     z-index: 3;
     margin-top: 0;
     max-width: min(520px, calc(100% - 120px));
