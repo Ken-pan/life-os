@@ -1,0 +1,6 @@
+{
+    "apiBaseUrl": "https://planner.kenos.space",
+    "mode": "real",
+    "deviceId": "remarkable-pro-move-dev",
+    "token": "REPLACE_WITH_REAL_DEVICE_TOKEN"
+}

@@ -15,6 +15,7 @@ ApiClient::ApiClient(QObject *parent) : QObject(parent)
 void ApiClient::loadConfig()
 {
     m_apiBaseUrl = "https://planner.kenos.space";
+    m_mode = "mock";
 
     QFile file("/home/root/planneros-lite/config.json");
     if (!file.exists()) {
@@ -28,6 +29,12 @@ void ApiClient::loadConfig()
             if (obj.contains("apiBaseUrl")) {
                 m_apiBaseUrl = obj["apiBaseUrl"].toString();
             }
+            if (obj.contains("mode")) {
+                m_mode = obj["mode"].toString();
+            }
+            if (obj.contains("token")) {
+                m_token = obj["token"].toString();
+            }
         }
         file.close();
     }
@@ -40,9 +47,15 @@ void ApiClient::fetchDashboard()
     emit loadingChanged();
     emit errorChanged();
 
-    QUrl url(m_apiBaseUrl + "/api/paper/mock/today");
+    QString endpoint = (m_mode == "real") ? "/api/paper/today" : "/api/paper/mock/today";
+    QUrl url(m_apiBaseUrl + endpoint);
+    
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    if (m_mode == "real" && !m_token.isEmpty()) {
+        request.setRawHeader("Authorization", ("Bearer " + m_token).toUtf8());
+    }
 
     // Since we're doing local network/mock fetch, sometimes SSL is strict. Ignore SSL errors if needed.
     QSslConfiguration conf = request.sslConfiguration();
@@ -64,7 +77,11 @@ void ApiClient::fetchDashboard()
                 emit errorChanged();
             }
         } else {
-            m_errorMessage = reply->errorString();
+            if (reply->error() == QNetworkReply::AuthenticationRequiredError || reply->error() == QNetworkReply::ContentAccessDenied) {
+                m_errorMessage = "Auth Error (" + QString::number(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()) + "): Check Token";
+            } else {
+                m_errorMessage = reply->errorString();
+            }
             emit errorChanged();
         }
         reply->deleteLater();

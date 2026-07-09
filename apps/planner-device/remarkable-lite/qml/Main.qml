@@ -204,7 +204,7 @@ Window {
                     anchors.fill: parent
 
                     Text {
-                        text: apiClient.isLoading ? "Syncing..." : ("Last sync: " + new Date().toLocaleTimeString() + " · Mock API")
+                        text: apiClient.isLoading ? "Syncing..." : ("Last sync: " + new Date().toLocaleTimeString() + " · " + (apiClient.mode === "real" ? "Real API" : "Mock API"))
                         font.pixelSize: root.fontMeta
                         color: root.mutedInkColor
                         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
