@@ -19,7 +19,13 @@
     reconvertGraphOpenings,
   } from '$lib/state.svelte.js'
   import { getActiveProject } from '$lib/state.svelte.js'
-  import { auth, signIn, signUp, signOut, authErrorMessage } from '$lib/auth.svelte.js'
+  import {
+    auth,
+    signIn,
+    signUp,
+    signOut,
+    authErrorMessage,
+  } from '$lib/auth.svelte.js'
   import { isSupabaseConfigured } from '$lib/supabase.js'
   import { toast } from '$lib/ui.svelte.js'
 
@@ -131,8 +137,14 @@
     <SettingsRow label="已登录">
       <span class="settings-value">{auth.user.email}</span>
     </SettingsRow>
-    <SettingsActionRow label="操作" buttonLabel="退出登录" onclick={onSignOut} />
-    <p class="block-desc">布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。</p>
+    <SettingsActionRow
+      label="操作"
+      buttonLabel="退出登录"
+      onclick={onSignOut}
+    />
+    <p class="block-desc">
+      布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。
+    </p>
   {:else if confirmSent}
     <p class="block-desc">验证邮件已发送至 {email}，请查收后登录。</p>
   {:else}
@@ -141,7 +153,15 @@
         <input type="email" bind:value={email} autocomplete="email" required />
       </SettingsRow>
       <SettingsRow label="密码">
-        <input type="password" bind:value={password} autocomplete={authMode === 'signup' ? 'new-password' : 'current-password'} minlength="6" required />
+        <input
+          type="password"
+          bind:value={password}
+          autocomplete={authMode === 'signup'
+            ? 'new-password'
+            : 'current-password'}
+          minlength="6"
+          required
+        />
       </SettingsRow>
       {#if authError}
         <p class="block-desc settings-error">{authError}</p>
@@ -195,14 +215,18 @@
         从当前户型生成墙图（一次性）
       </button>
     </SettingsStackBlock>
-    <p class="block-desc">转换后可自由建删墙；508 参数仍保留作「返回 508」的安全气囊。</p>
+    <p class="block-desc">
+      转换后可自由建删墙；508 参数仍保留作「返回 508」的安全气囊。
+    </p>
   {:else}
     <SettingsRow label="墙图统计">
-      <span class="settings-value">{project.wallGraph?.vertices.length ?? 0} 顶点 ·
+      <span class="settings-value"
+        >{project.wallGraph?.vertices.length ?? 0} 顶点 ·
         {project.wallGraph?.edges.length ?? 0} 墙段 ·
         {project.graphOpenings?.length ?? 0} 门窗 ·
         {project.zones?.length ?? 0} 分区 ·
-        {project.placements?.length ?? 0} 家具</span>
+        {project.placements?.length ?? 0} 家具</span
+      >
     </SettingsRow>
     <SettingsActionRow
       label="恢复"
@@ -210,7 +234,11 @@
       buttonLabel="返回 508 参数模式"
       onclick={onRevertTo508}
     />
-    <SettingsActionRow label="门窗" buttonLabel="重新识别门窗" onclick={reconvertGraphOpenings} />
+    <SettingsActionRow
+      label="门窗"
+      buttonLabel="重新识别门窗"
+      onclick={reconvertGraphOpenings}
+    />
   {/if}
 </SettingsSection>
 
@@ -222,10 +250,14 @@
     <span class="settings-value">{project.meta.building ?? '—'}</span>
   </SettingsRow>
   <SettingsRow label="面积">
-    <span class="settings-value">{project.meta.sqft ? `${project.meta.sqft} sqft` : '—'}</span>
+    <span class="settings-value"
+      >{project.meta.sqft ? `${project.meta.sqft} sqft` : '—'}</span
+    >
   </SettingsRow>
   <SettingsRow label="房间">
-    <span class="settings-value">{project.rooms.filter((r) => r.kind !== 'circulation').length} 区</span>
+    <span class="settings-value"
+      >{project.rooms.filter((r) => r.kind !== 'circulation').length} 区</span
+    >
   </SettingsRow>
   <SettingsRow label="储藏区">
     <span class="settings-value">{project.storageZones.length} 处</span>
@@ -234,10 +266,16 @@
     <a class="settings-link" href="/plan">前往平面图 →</a>
   </SettingsRow>
   <SettingsRow label="布局备份">
-    <button type="button" class="btn-secondary" onclick={downloadLayoutJson}>导出 JSON</button>
+    <button type="button" class="btn-secondary" onclick={downloadLayoutJson}
+      >导出 JSON</button
+    >
   </SettingsRow>
   <SettingsRow label="布局恢复">
-    <SettingsFileButton label="导入 JSON" accept="application/json,.json" onchange={onImportLayout} />
+    <SettingsFileButton
+      label="导入 JSON"
+      accept="application/json,.json"
+      onchange={onImportLayout}
+    />
   </SettingsRow>
   <SettingsActionRow
     label="恢复默认"
