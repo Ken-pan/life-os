@@ -10,7 +10,7 @@
 
 :root {
   --content-max: 920px;
-  --content-span-max: 1240px;
+  --content-span-max: 1320px;
 
   --shadow: rgba(31, 18, 20, 0.08);
   --shadow-elevated: 0 12px 40px rgba(196, 30, 58, 0.12), 0 4px 16px rgba(31, 18, 20, 0.06);
