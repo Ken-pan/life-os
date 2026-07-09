@@ -111,62 +111,135 @@
   position: relative;
   flex-shrink: 0;
   z-index: 2;
+  padding-block: var(--space-1) var(--space-2);
+  --brand-switcher-hover-bg: var(--sidebar-accent);
+  --brand-switcher-open-bg: color-mix(in srgb,
+      var(--sidebar-primary) 11%,
+      var(--sidebar-accent));
+  --brand-switcher-current-bg: color-mix(in srgb,
+      var(--sidebar-primary) 13%,
+      var(--sidebar-accent));
+  --brand-switcher-hover-border: color-mix(in srgb,
+      var(--sidebar-border) 72%,
+      var(--sidebar-foreground) 28%);
+  --brand-switcher-open-border: color-mix(in srgb,
+      var(--sidebar-primary) 28%,
+      var(--sidebar-border));
 }
 
-.brand-switcher-trigger {
+.sidebar .brand.brand-switcher-trigger {
+  gap: var(--space-2-5);
+  margin: 0;
   width: 100%;
-  min-height: var(--tap-min);
   padding: var(--space-2) var(--space-2-5);
-  margin: calc(var(--space-1) * -1) calc(var(--space-2) * -1) 0;
-  border: none;
+}
+
+.brand-switcher-trigger,
+.brand-switcher-item {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
   text-align: left;
   font: inherit;
+  transition:
+    color var(--motion-standard, var(--dur-fast)) var(--ease),
+    border-color var(--motion-standard, var(--dur-fast)) var(--ease),
+    box-shadow var(--motion-standard, var(--dur-fast)) var(--ease),
+    transform var(--motion-fast, var(--dur-fast)) var(--ease);
+}
+
+.brand-switcher-trigger::before,
+.brand-switcher-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--brand-switcher-hover-bg);
+  opacity: 0;
+  transition: opacity var(--motion-standard, var(--dur-fast)) var(--ease);
+  z-index: -1;
+}
+
+.brand-switcher-trigger {
+  min-height: var(--tap-min);
   color: var(--sidebar-foreground);
   border-radius: var(--radius-control);
-  transition:
-    color var(--motion-fast, var(--dur-fast)) var(--ease),
-    background-color var(--motion-fast, var(--dur-fast)) var(--ease);
 }
 
 @media (hover: hover) {
   .brand-switcher-trigger:hover {
-    background: color-mix(in srgb, var(--sidebar-foreground) 5%, transparent);
+    border-color: var(--brand-switcher-hover-border);
+  }
+
+  .brand-switcher-trigger:hover::before {
+    opacity: 1;
+  }
+
+  .brand-switcher-item:hover {
     color: var(--sidebar-foreground);
+    border-color: color-mix(in srgb, var(--sidebar-border) 55%, transparent);
+  }
+
+  .brand-switcher-item:hover::before {
+    opacity: 1;
+  }
+
+  .brand-switcher-item--current:hover {
+    border-color: var(--brand-switcher-open-border);
   }
 }
 
-.brand-switcher-trigger:focus-visible {
+.brand-switcher-trigger:active,
+.brand-switcher-item:active {
+  transform: scale(0.992);
+}
+
+.brand-switcher-trigger:active::before,
+.brand-switcher-item:active::before {
+  opacity: 1;
+}
+
+.brand-switcher-trigger:focus-visible,
+.brand-switcher-item:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
 .brand-switcher-trigger[aria-expanded='true'] {
-  background: color-mix(in srgb, var(--sidebar-primary) 10%, transparent);
   color: var(--sidebar-foreground);
+  border-color: var(--brand-switcher-open-border);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--sidebar-primary) 10%, transparent),
+    0 1px 0 color-mix(in srgb, var(--sidebar-foreground) 4%, transparent);
+}
+
+.brand-switcher-trigger[aria-expanded='true']::before {
+  opacity: 1;
+  background: var(--brand-switcher-open-bg);
 }
 
 .brand-switcher-menu {
   position: absolute;
-  top: 100%;
-  left: var(--space-1);
-  right: var(--space-1);
+  top: calc(100% - var(--space-1));
+  left: 0;
+  right: 0;
   z-index: 60;
   display: flex;
   flex-direction: column;
   gap: var(--space-0-5);
-  margin-top: var(--space-0-5);
   padding: var(--space-1);
   border-radius: var(--command-palette-container-radius, var(--radius-lg));
   border: 1px solid var(--command-palette-container-border, var(--sidebar-border));
-  background: var(--sidebar);
-  box-shadow: var(--command-palette-container-shadow, var(--shadow-elevated));
+  background: color-mix(in srgb, var(--sidebar) 94%, var(--sidebar-accent) 6%);
+  box-shadow:
+    var(--command-palette-container-shadow, var(--shadow-elevated)),
+    0 10px 28px color-mix(in srgb, var(--sidebar-foreground) 6%, transparent);
 }
 
-.brand-switcher-item--active {
-  background: color-mix(in srgb, var(--sidebar-foreground) 5%, transparent);
-  color: var(--sidebar-foreground);
+.brand-switcher:has(.brand-switcher-trigger[aria-expanded='true']) .brand-switcher-menu {
+  border-color: var(--brand-switcher-open-border);
 }
 
 .sidebar:has(.brand-switcher-trigger[aria-expanded='true']) {
@@ -181,32 +254,46 @@
   width: 100%;
   min-height: var(--tap-min);
   padding: var(--space-2) var(--space-2-5);
-  border: none;
   border-radius: var(--radius-control);
   background: transparent;
   color: var(--sidebar-muted);
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-  transition:
-    color var(--motion-fast, var(--dur-fast)) var(--ease),
-    background-color var(--motion-fast, var(--dur-fast)) var(--ease);
 }
 
-.brand-switcher-item:hover {
-  background: color-mix(in srgb, var(--sidebar-foreground) 5%, transparent);
+.brand-switcher-item--active:not(.brand-switcher-item--current) {
   color: var(--sidebar-foreground);
+  border-color: color-mix(in srgb, var(--sidebar-border) 55%, transparent);
 }
 
-.brand-switcher-item:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+.brand-switcher-item--active:not(.brand-switcher-item--current)::before {
+  opacity: 1;
 }
 
 .brand-switcher-item--current {
-  background: color-mix(in srgb, var(--sidebar-primary) 10%, transparent);
   color: var(--sidebar-foreground);
   font-weight: 600;
+  border-color: var(--brand-switcher-open-border);
+}
+
+.brand-switcher-item--current::before {
+  opacity: 1;
+  background: var(--brand-switcher-current-bg);
+}
+
+.brand-switcher-item--current::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--space-1) + 1px);
+  top: 50%;
+  width: 3px;
+  height: 1.125rem;
+  border-radius: 999px;
+  background: var(--sidebar-primary);
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sidebar-primary) 24%, transparent);
+}
+
+.brand-switcher-item--active.brand-switcher-item--current::after {
+  height: 1.25rem;
 }
 
 .brand-switcher-item-mark,
