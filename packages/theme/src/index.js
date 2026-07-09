@@ -15,6 +15,7 @@ export {
   getBrandIconPaths,
   getLifeOsBrand,
   getLifeOsBrandMarkSize,
+  getLifeOsAppWordmarkAccent,
 } from './brand.js'
 
 export {

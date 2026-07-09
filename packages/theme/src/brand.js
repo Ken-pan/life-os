@@ -56,6 +56,29 @@ export function getLifeOsBrand(appId) {
 }
 
 /**
+ * Wordmark accent (`OS`) colors per app — aligned with brand sidebar-primary tokens.
+ * @type {Record<LifeOsAppId, { light: string; dark: string }>}
+ */
+const LIFE_OS_APP_WORDMARK_ACCENT = {
+  portal: { light: '#3d9ed6', dark: '#5cb8ea' },
+  planner: { light: '#e9a832', dark: '#f5b83d' },
+  finance: { light: '#c6f43d', dark: '#b2dc37' },
+  fitness: { light: '#c42f0a', dark: '#ff4d2e' },
+  music: { light: '#ff4d6d', dark: '#ff4d6d' },
+  home: { light: '#7d93a8', dark: '#7d93a8' },
+}
+
+/**
+ * @param {LifeOsAppId} appId
+ * @param {'light' | 'dark'} [theme='dark']
+ */
+export function getLifeOsAppWordmarkAccent(appId, theme = 'dark') {
+  const tones = LIFE_OS_APP_WORDMARK_ACCENT[appId]
+  if (!tones) return '#888888'
+  return theme === 'light' ? tones.light : tones.dark
+}
+
+/**
  * @param {LifeOsAppId} appId
  * @param {LifeOsBrandVariant} [variant='sidebar']
  */

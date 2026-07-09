@@ -82,6 +82,11 @@ export declare function getLifeOsBrandMarkSize(
   variant?: LifeOsBrandVariant,
 ): number
 
+export declare function getLifeOsAppWordmarkAccent(
+  appId: LifeOsAppId,
+  theme?: 'light' | 'dark',
+): string
+
 export declare const LIFE_OS_APP_ORIGINS: Record<
   LifeOsAppId,
   { production: string; devPort: number }

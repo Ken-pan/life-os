@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   getLifeOsBrand,
   getLifeOsBrandMarkSize,
+  getLifeOsAppWordmarkAccent,
   type LifeOsAppId,
 } from '@life-os/theme/brand'
 import {
@@ -76,6 +77,7 @@ export function AppBrandSwitcher({
 }: AppBrandSwitcherProps) {
   const brand = getLifeOsBrand(appId)
   const size = getLifeOsBrandMarkSize(appId, 'sidebar')
+  const [, , resolvedTheme] = useThemePreference()
   const rootRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const typeAheadRef = useRef('')
@@ -245,6 +247,11 @@ export function AppBrandSwitcher({
                 key={entry.id}
                 type="button"
                 className={`brand-switcher-item${isCurrent ? ' brand-switcher-item--current' : ''}${isActive ? ' brand-switcher-item--active' : ''}`}
+                data-app-id={entry.id}
+                style={{
+                  ['--brand-switcher-item-accent' as string]:
+                    getLifeOsAppWordmarkAccent(entry.id, resolvedTheme),
+                }}
                 role="menuitem"
                 aria-current={isCurrent ? 'true' : undefined}
                 onClick={() => navigateToApp(entry.id)}

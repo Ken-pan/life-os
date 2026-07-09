@@ -1,6 +1,6 @@
 <script>
   import { tick } from 'svelte'
-  import { getLifeOsBrand, getLifeOsBrandMarkSize } from '@life-os/theme/brand'
+  import { getLifeOsBrand, getLifeOsBrandMarkSize, getLifeOsAppWordmarkAccent } from '@life-os/theme/brand'
   import {
     LIFE_OS_SWITCHER_APPS,
     getLifeOsAppOrigin,
@@ -31,6 +31,12 @@
 
   const brand = $derived(getLifeOsBrand(appId))
   const markSize = $derived(getLifeOsBrandMarkSize(appId, 'sidebar'))
+  const resolvedTheme = $derived.by(() => {
+    if (typeof document === 'undefined') return 'dark'
+    return document.documentElement.getAttribute('data-theme') === 'light'
+      ? 'light'
+      : 'dark'
+  })
 
   function resetMenuState() {
     typeAheadBuffer = ''
@@ -210,6 +216,8 @@
           class="brand-switcher-item"
           class:brand-switcher-item--current={isCurrent}
           class:brand-switcher-item--active={isActive}
+          data-app-id={entry.id}
+          style={`--brand-switcher-item-accent: ${getLifeOsAppWordmarkAccent(entry.id, resolvedTheme)}`}
           role="menuitem"
           aria-current={isCurrent ? 'true' : undefined}
           onclick={() => navigateToApp(entry.id)}
