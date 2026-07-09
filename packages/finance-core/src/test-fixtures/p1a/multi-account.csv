@@ -1,0 +1,6 @@
+Date,Amount,Description,Category,Account,Institution,Account Type
+2026-02-01,-55.00,GROCERY NORTH,Groceries,Checking-1,Demo Bank,checking
+2026-02-02,-55.00,GROCERY NORTH,Groceries,Checking-2,Demo Bank,checking
+2026-02-06,-600.00,TRANSFER TO SAVINGS,Transfers > Savings,Checking-1,Demo Bank,checking
+2026-02-06,600.00,TRANSFER FROM CHECKING,Transfers > Savings,Savings-1,Demo Bank,savings
+2026-02-20,-130.00,CARD PAYMENT,Transfers > Credit card payment,Checking-1,Demo Bank,checking

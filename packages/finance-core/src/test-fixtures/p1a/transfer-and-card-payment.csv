@@ -1,0 +1,5 @@
+Date,Amount,Description,Category,Account
+2026-01-03,-400.00,TRANSFER TO BROKERAGE,Transfers > Savings,Checking-1
+2026-01-03,400.00,TRANSFER FROM CHECKING,Transfers > Savings,Brokerage-1
+2026-01-17,-190.00,CREDIT CARD PAYMENT,Transfers > Credit card payment,Checking-1
+2026-01-18,-85.00,TRANSFER TO WIFE,Transfers > Family,Checking-1

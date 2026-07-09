@@ -100,7 +100,12 @@ jobs:
           fi
           printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' \
             "$VITE_SUPABASE_URL" "$VITE_SUPABASE_ANON_KEY" > .env.local
-          npm run qa:ia-routes
+          # SvelteKit SPA: build + preview (not vite dev) so CI matches Netlify output
+          npm run build
+          npx vite preview --host 127.0.0.1 --port 5180 &
+          preview_pid=$!
+          trap 'kill $preview_pid 2>/dev/null || true' EXIT
+          UI_QA_URL=http://127.0.0.1:5180 npm run qa:ia-routes
 
   portal-qa-smoke:
     runs-on: ubuntu-latest

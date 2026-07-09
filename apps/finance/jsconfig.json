@@ -1,0 +1,25 @@
+{
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "moduleResolution": "bundler",
+    "paths": {
+      "@life-os/finance-core": ["../../packages/finance-core/src/index.ts"],
+      "@life-os/finance-core/*": ["../../packages/finance-core/src/*"],
+      "@life-os/finance-core/engine/*": ["../../packages/finance-core/src/engine/*"],
+      "@life-os/finance-core/routing/*": ["../../packages/finance-core/src/routing/*"],
+      "@life-os/finance-core/analytics/*": ["../../packages/finance-core/src/analytics/*"],
+      "@life-os/finance-core/quotes/*": ["../../packages/finance-core/src/quotes/*"],
+      "@life-os/finance-core/i18n/*": ["../../packages/finance-core/src/i18n/*"],
+      "@life-os/finance-core/copy/*": ["../../packages/finance-core/src/copy/*"],
+      "@life-os/finance-core/format/*": ["../../packages/finance-core/src/format/*"]
+    }
+  }
+}

@@ -3,6 +3,7 @@ import type { DisplayMode } from "./types";
 import { getActiveLocale } from "./i18n/translate";
 import { intlLocale } from "./i18n/formatLocale";
 import { t } from "./i18n/translate";
+export { daysSince, formatDateForIntl } from '@life-os/finance-core/format/date'
 
 const MASK = "••••";
 
@@ -128,12 +129,6 @@ export function todayISO(): string {
   return new Date().toISOString();
 }
 
-export function daysSince(iso?: string): number {
-  if (!iso) return Infinity;
-  const t = new Date(iso).getTime();
-  if (!Number.isFinite(t)) return Infinity;
-  return Math.floor((Date.now() - t) / 86_400_000);
-}
 
 /** 存款 / 现金变动：增加为绿，减少为红。仅用于带符号的变动金额。 */
 export function depositDeltaClass(delta: number): string {
@@ -164,10 +159,6 @@ export function formatDateZh(iso: string | undefined): string | null {
   return formatDateLocalized(iso);
 }
 
-export function formatDateForIntl(iso: string | Date, options?: Intl.DateTimeFormatOptions): string {
-  const d = typeof iso === "string" ? new Date(iso) : iso;
-  return d.toLocaleDateString(intlLocale(getActiveLocale()), options);
-}
 
 export function formatDateTimeForIntl(iso: string | Date, options?: Intl.DateTimeFormatOptions): string {
   const d = typeof iso === "string" ? new Date(iso) : iso;

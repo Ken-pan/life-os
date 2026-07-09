@@ -10,9 +10,9 @@
 
 ## 技术栈
 
-- React 19 + Vite + TypeScript
+- SvelteKit 2 + Svelte 5 + Vite
 - Supabase（Auth + Postgres + RLS）
-- Recharts 图表
+- LayerChart v2 图表（预测轨迹）；SVG 图表（花销趋势、配置趋势）
 - Vitest 单元测试
 - `@life-os/finance-enrichment-contract`：purchase-enrichment display classification 与 web-state read model 的规则对齐
 
@@ -22,9 +22,8 @@
 npm install
 npm run dev        # 本地开发
 npm run test       # 运行引擎单测
-npm run typecheck  # 类型检查
-npm run lint       # 代码检查
-npm run build      # 生产构建 -> dist/
+npm run check      # Svelte/TS 类型检查
+npm run build      # 生产构建 -> build/
 ```
 
 ## 架构

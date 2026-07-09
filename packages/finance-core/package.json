@@ -1,0 +1,39 @@
+{
+  "name": "@life-os/finance-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Finance OS pure domain engine, repo mappers, and extension sync protocol",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@life-os/finance-enrichment-contract": "*",
+    "@supabase/supabase-js": "^2.106.2"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./defaults": "./src/defaults.ts",
+    "./supabase-tables": "./src/supabase-tables.ts",
+    "./extension-sync": "./src/extension-sync.ts",
+    "./repo": "./src/repo/createRepo.ts",
+    "./routing/app-route": "./src/routing/app-route.ts",
+    "./analytics/routes": "./src/analytics/routes.ts",
+    "./quotes/types": "./src/quotes/types.ts",
+    "./i18n/translate": "./src/i18n/translate.ts",
+    "./i18n/types": "./src/i18n/types.ts",
+    "./i18n/formatLocale": "./src/i18n/formatLocale.ts",
+    "./i18n/messages": "./src/i18n/messages/index.ts",
+    "./copy/metrics": "./src/copy/metrics.ts",
+    "./copy/terminology": "./src/copy/terminology.ts",
+    "./format/date": "./src/format/date.ts",
+    "./engine/*": "./src/engine/*"
+  }
+}

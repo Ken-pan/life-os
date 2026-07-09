@@ -1,0 +1,4 @@
+Date,Amount,Description,Category,Account
+2026-05-01,-19.0,=CMD|'/C calc'!A0,Shopping,Checking-1
+2026-05-02,-21.0,+SUM(A1:A2),Shopping,Checking-1
+2026-05-03,-13.0,@HYPERLINK("http://evil"),Shopping,Checking-1

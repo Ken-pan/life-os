@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { createThemePreferenceStoreWeb } from '@life-os/platform-web';
 import { isThemePreference, THEME_STORAGE_KEY } from './themePreference';
 
