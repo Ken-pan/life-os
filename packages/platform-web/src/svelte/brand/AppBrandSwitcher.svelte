@@ -148,6 +148,8 @@
       activateSelected()
       return
     }
+
+    if (key === 'Escape') {
       event.preventDefault()
       closeMenu()
       return
