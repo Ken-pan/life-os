@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
-import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
+import { join } from 'node:path'
+import {
+  resolveScreenshotDir,
+  formatShotFilename,
+} from '../../../scripts/qa/screenshot-output.mjs'
 
 const STORAGE_KEY = 'planos_v1'
 const { dir: OUT_DIR } = resolveScreenshotDir({
@@ -173,7 +177,7 @@ function purgeOldScreenshots() {
   fs.mkdirSync(OUT_DIR, { recursive: true })
   for (const name of fs.readdirSync(OUT_DIR)) {
     if (name.endsWith('.png')) {
-      fs.unlinkSync(path.join(OUT_DIR, name))
+      fs.unlinkSync(join(OUT_DIR, name))
     }
   }
 }
@@ -192,9 +196,13 @@ async function snap(page, name, meta = { flow: '', note: '' }) {
   fs.mkdirSync(OUT_DIR, { recursive: true })
   await page.evaluate(() => document.fonts?.ready)
   await page.waitForTimeout(250)
-  const file = path.join(OUT_DIR, `${name}.png`)
+  const file = join(OUT_DIR, formatShotFilename({ surface: name }))
   await page.screenshot({ path: file, fullPage: false, animations: 'disabled' })
-  SNAP_INDEX.push({ file: `${name}.png`, flow: meta.flow, note: meta.note })
+  SNAP_INDEX.push({
+    file: formatShotFilename({ surface: name }),
+    flow: meta.flow,
+    note: meta.note,
+  })
   return file
 }
 
@@ -221,7 +229,7 @@ function writeSnapReadme() {
     ),
     '',
   ]
-  fs.writeFileSync(path.join(OUT_DIR, '00_README.md'), lines.join('\n'))
+  fs.writeFileSync(join(OUT_DIR, '00-readme.md'), lines.join('\n'))
 }
 
 test.describe.configure({ timeout: 90_000, mode: 'serial' })

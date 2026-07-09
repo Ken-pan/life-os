@@ -7,7 +7,11 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
+import {
+  resolveScreenshotDir,
+  resolveShotPath,
+  slugify,
+} from '../../../scripts/qa/screenshot-output.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const { dir: shotDir } = resolveScreenshotDir({
@@ -106,7 +110,10 @@ await page.reload({ waitUntil: 'networkidle' })
 await page.waitForTimeout(5000)
 
 const bodyText = await page.locator('body').innerText()
-await page.screenshot({ path: `${shotDir}/00_after_login.png`, fullPage: true })
+await page.screenshot({
+  path: resolveShotPath(shotDir, { seq: 1, surface: 'after-login' }),
+  fullPage: true,
+})
 
 if (
   bodyText.includes('请使用你的账户登录') ||
@@ -114,7 +121,11 @@ if (
   bodyText.includes('正在加载')
 ) {
   await page.screenshot({
-    path: `${shotDir}/00_auth_failed.png`,
+    path: resolveShotPath(shotDir, {
+      seq: 0,
+      surface: 'auth',
+      state: 'failed',
+    }),
     fullPage: true,
   })
   console.error('App did not reach ready state:', bodyText.slice(0, 400))
@@ -133,7 +144,7 @@ async function checkTab(name, buttonLabel, checks) {
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.waitForTimeout(300)
 
-  const path = `${shotDir}/${name}.png`
+  const path = resolveShotPath(shotDir, { surface: slugify(name) })
   await page.screenshot({ path, fullPage: true })
 
   const report = await page.evaluate(overflowReport)
@@ -181,7 +192,11 @@ await page.waitForTimeout(800)
 await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 await page.waitForTimeout(400)
 await page.screenshot({
-  path: `${shotDir}/04_today_scrolled_bottom.png`,
+  path: resolveShotPath(shotDir, {
+    seq: 4,
+    surface: 'today',
+    state: 'scrolled-bottom',
+  }),
   fullPage: false,
 })
 
@@ -191,7 +206,10 @@ await page
   .getByRole('button', { name: '更多' })
   .click()
 await page.waitForTimeout(600)
-await page.screenshot({ path: `${shotDir}/05_more_sheet.png`, fullPage: false })
+await page.screenshot({
+  path: resolveShotPath(shotDir, { seq: 5, surface: 'more-sheet' }),
+  fullPage: false,
+})
 const tabbarOpacity = await page.evaluate(() => {
   const el = document.querySelector('.mobile-tabbar')
   if (!el) return null

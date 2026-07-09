@@ -6,7 +6,7 @@
  *   PORTAL_QA_URL=http://127.0.0.1:5195 node scripts/qa-screenshot.mjs
  */
 import { chromium } from 'playwright'
-import { mkdirSync, writeFileSync } from 'fs'
+import { mkdirSync } from 'fs'
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
@@ -14,7 +14,11 @@ import {
   LIFE_OS_SUPABASE_PUBLISHABLE_KEY,
   LIFE_OS_SUPABASE_URL,
 } from '../../../packages/sync/src/supabaseClient.js'
-import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
+import {
+  resolveScreenshotDir,
+  resolveShotPath,
+  writeManifest,
+} from '../../../scripts/qa/screenshot-output.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -95,7 +99,7 @@ for (const [label, ctx] of [
   await page.waitForTimeout(1500)
 
   await page.screenshot({
-    path: resolve(outDir, `${label}-home.png`),
+    path: resolveShotPath(outDir, { viewport: label, surface: 'home' }),
     fullPage: label === 'desktop',
   })
 
@@ -103,24 +107,30 @@ for (const [label, ctx] of [
     const launcher = page.locator('.portal-app-section')
     if (await launcher.isVisible().catch(() => false)) {
       await launcher.screenshot({
-        path: resolve(outDir, `${label}-launcher.png`),
+        path: resolveShotPath(outDir, { viewport: label, surface: 'launcher' }),
       })
     }
   }
 
   const summary = page.locator('.portal-summary')
   if (await summary.isVisible().catch(() => false)) {
-    await summary.screenshot({ path: resolve(outDir, `${label}-summary.png`) })
+    await summary.screenshot({
+      path: resolveShotPath(outDir, { viewport: label, surface: 'summary' }),
+    })
   }
 
   const appbar = page.locator('.portal-appbar')
   if (await appbar.isVisible().catch(() => false)) {
-    await appbar.screenshot({ path: resolve(outDir, `${label}-appbar.png`) })
+    await appbar.screenshot({
+      path: resolveShotPath(outDir, { viewport: label, surface: 'appbar' }),
+    })
   }
 
   const status = page.locator('.portal-status-summary')
   if (await status.isVisible().catch(() => false)) {
-    await status.screenshot({ path: resolve(outDir, `${label}-status.png`) })
+    await status.screenshot({
+      path: resolveShotPath(outDir, { viewport: label, surface: 'status' }),
+    })
   }
 
   const badge = page.locator('.portal-inbox-btn')
@@ -145,7 +155,10 @@ for (const [label, ctx] of [
   await page.keyboard.press('Meta+k')
   await page.waitForSelector('.command-palette-modal[open]', { timeout: 5000 })
   await page.screenshot({
-    path: resolve(outDir, `${label}-command-palette.png`),
+    path: resolveShotPath(outDir, {
+      viewport: label,
+      surface: 'command-palette',
+    }),
     fullPage: false,
   })
 
@@ -153,7 +166,11 @@ for (const [label, ctx] of [
   await input.fill('曲库')
   await page.waitForTimeout(300)
   await page.screenshot({
-    path: resolve(outDir, `${label}-command-palette-filter.png`),
+    path: resolveShotPath(outDir, {
+      viewport: label,
+      surface: 'command-palette',
+      state: 'filter',
+    }),
     fullPage: false,
   })
 
@@ -161,8 +178,5 @@ for (const [label, ctx] of [
 }
 
 await browser.close()
-writeFileSync(
-  resolve(outDir, 'manifest.json'),
-  `${JSON.stringify(manifest, null, 2)}\n`,
-)
+writeManifest(outDir, manifest)
 console.log(`Portal screenshots → ${outDir}`)

@@ -19,6 +19,7 @@
     "verify:web-state": "npm run verify --prefix tools/web-state-devtools/bridge",
     "qa:mobile-scroll": "node scripts/life-os-mobile-scroll-qa.mjs",
     "qa:screenshots:prune": "node scripts/qa/prune-screenshots.mjs",
+    "qa:screenshots:cleanup": "node scripts/qa/cleanup-legacy-screenshots.mjs",
     "check:lifeos-boundaries": "node scripts/check-lifeos-boundaries.mjs",
     "generate:brand-icons": "python3 scripts/generate-life-os-brand-icons.py",
     "verify:identity-p0": "./scripts/verify-life-os-identity-p0.sh",

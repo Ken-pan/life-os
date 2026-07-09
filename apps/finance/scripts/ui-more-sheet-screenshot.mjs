@@ -7,7 +7,10 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, mkdirSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
+import {
+  resolveScreenshotDir,
+  resolveShotPath,
+} from '../../../scripts/qa/screenshot-output.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const { dir: shotDir } = resolveScreenshotDir({
@@ -71,17 +74,33 @@ async function closeMore() {
 
 await setTheme('light')
 await openMore()
-await page.screenshot({ path: resolve(shotDir, '01_more_light.png') })
+await page.screenshot({
+  path: resolveShotPath(shotDir, {
+    seq: 1,
+    surface: 'more-sheet',
+    state: 'light',
+  }),
+})
 await closeMore()
 
 await setTheme('dark')
 await openMore()
-await page.screenshot({ path: resolve(shotDir, '02_more_dark.png') })
+await page.screenshot({
+  path: resolveShotPath(shotDir, {
+    seq: 2,
+    surface: 'more-sheet',
+    state: 'dark',
+  }),
+})
 const sheet = page.locator('.mobile-more-sheet')
 const box = await sheet.boundingBox()
 if (box) {
   await page.screenshot({
-    path: resolve(shotDir, '02b_more_dark_bottom_crop.png'),
+    path: resolveShotPath(shotDir, {
+      seq: 2,
+      surface: 'more-sheet',
+      state: 'dark-bottom-crop',
+    }),
     clip: {
       x: 0,
       y: Math.max(0, box.y - 48),
@@ -97,7 +116,11 @@ await page.locator('.mobile-more-row').filter({ hasText: '审查' }).click()
 await page.waitForTimeout(600)
 await openMore()
 await page.screenshot({
-  path: resolve(shotDir, '03_more_active_item_dark.png'),
+  path: resolveShotPath(shotDir, {
+    seq: 3,
+    surface: 'more-sheet',
+    state: 'active-item-dark',
+  }),
 })
 
 console.log('Screenshots saved to', shotDir)

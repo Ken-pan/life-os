@@ -8,7 +8,10 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, mkdirSync, writeFileSync, cpSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
+import {
+  resolveScreenshotDir,
+  resolveShotPath,
+} from '../../../scripts/qa/screenshot-output.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -207,7 +210,7 @@ async function clickSubTab(page, label) {
 
 async function capture(page, viewportId, name, checks = {}) {
   const dir = resolve(shotRoot, viewportId)
-  const path = resolve(dir, `${name}.png`)
+  const path = resolveShotPath(dir, { surface: name })
   const fullPage = viewportId === 'desktop'
   await page.screenshot({ path, fullPage })
   const overflow = await page.evaluate(overflowReport)
@@ -237,7 +240,10 @@ async function closeDrawer(page) {
 }
 
 async function captureDrawer(page, viewportId, name) {
-  const path = resolve(shotRoot, 'drawers', `${viewportId}-${name}.png`)
+  const path = resolveShotPath(resolve(shotRoot, 'drawers'), {
+    viewport: viewportId,
+    surface: name,
+  })
   await page.screenshot({ path, fullPage: false })
   console.log(`INFO [${viewportId}] drawer ${name}`)
 }
@@ -253,7 +259,11 @@ for (const vp of VIEWPORTS) {
     await assertReady(page)
   } catch (e) {
     await page.screenshot({
-      path: resolve(shotRoot, vp.id, '00_auth_failed.png'),
+      path: resolveShotPath(resolve(shotRoot, vp.id), {
+        seq: 0,
+        surface: 'auth',
+        state: 'failed',
+      }),
       fullPage: true,
     })
     console.error(`[${vp.id}] ${e.message}`)
@@ -305,14 +315,20 @@ for (const vp of VIEWPORTS) {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     await page.waitForTimeout(400)
     await page.screenshot({
-      path: resolve(shotRoot, 'mobile', 'today-scrolled-bottom.png'),
+      path: resolveShotPath(resolve(shotRoot, 'mobile'), {
+        surface: 'today',
+        state: 'scrolled-bottom',
+      }),
       fullPage: false,
     })
 
     await page.locator('.mobile-tabbar button[aria-label="更多"]').click()
     await page.waitForTimeout(500)
     await page.screenshot({
-      path: resolve(shotRoot, 'mobile', 'more-sheet-light.png'),
+      path: resolveShotPath(resolve(shotRoot, 'mobile'), {
+        surface: 'more-sheet',
+        state: 'light',
+      }),
       fullPage: false,
     })
     await page.locator('.mobile-more-close').click()
@@ -322,7 +338,10 @@ for (const vp of VIEWPORTS) {
     await page.locator('.mobile-tabbar button[aria-label="更多"]').click()
     await page.waitForTimeout(500)
     await page.screenshot({
-      path: resolve(shotRoot, 'mobile', 'more-sheet-dark.png'),
+      path: resolveShotPath(resolve(shotRoot, 'mobile'), {
+        surface: 'more-sheet',
+        state: 'dark',
+      }),
       fullPage: false,
     })
     await page.locator('.mobile-more-close').click()

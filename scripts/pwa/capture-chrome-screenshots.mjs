@@ -9,7 +9,11 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs'
 import { spawn } from 'child_process'
 import { createClient } from '@supabase/supabase-js'
 import { PWA_APPS } from './apps.config.mjs'
-import { resolveScreenshotDir } from '../qa/screenshot-output.mjs'
+import {
+  resolveScreenshotDir,
+  resolveShotPath,
+  writeReport,
+} from '../qa/screenshot-output.mjs'
 
 const { dir: OUT_DIR } = resolveScreenshotDir({
   app: 'pwa',
@@ -241,23 +245,30 @@ async function main() {
       await primeStandalonePwa(page)
 
       const metrics = await collectChromeMetrics(page)
-      const base = `${OUT_DIR}/${id}-${route.name}-chrome-audit`
-      await page.screenshot({ path: `${base}-viewport.png` })
-      await page.screenshot({ path: `${base}-full.png`, fullPage: true })
+      await page.screenshot({
+        path: resolveShotPath(OUT_DIR, {
+          surface: `${id}-${route.name}-chrome`,
+          state: 'viewport',
+        }),
+      })
+      await page.screenshot({
+        path: resolveShotPath(OUT_DIR, {
+          surface: `${id}-${route.name}-chrome`,
+          state: 'full',
+        }),
+        fullPage: true,
+      })
 
       report.apps[id] = { route: route.path, metrics }
-      console.log(`✓ ${id} → ${base}-viewport.png`)
+      console.log(`✓ ${id} → ${id}-${route.name}-chrome-viewport.png`)
     } catch (err) {
       report.apps[id] = { error: String(err.message || err) }
       console.error(`✗ ${id}:`, err.message || err)
     }
   }
 
-  writeFileSync(
-    `${OUT_DIR}/chrome-audit-report.json`,
-    JSON.stringify(report, null, 2),
-  )
-  console.log(`Report: ${OUT_DIR}/chrome-audit-report.json`)
+  writeReport(OUT_DIR, 'chrome-audit', report)
+  console.log(`Report: ${OUT_DIR}/chrome-audit.json`)
 
   await browser.close()
   for (const child of Object.values(servers)) child.kill('SIGTERM')
