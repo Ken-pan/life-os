@@ -113,6 +113,7 @@
   position: relative;
   flex-shrink: 0;
   z-index: 2;
+  --brand-switcher-menu-offset: var(--space-1);
 }
 
 .brand-switcher:has(.brand-switcher-trigger[aria-expanded='true']) {
@@ -138,9 +139,31 @@
 }
 
 @media (hover: hover) {
-  .brand-switcher-trigger:hover {
-    background: color-mix(in srgb, var(--sidebar-foreground) 10%, var(--sidebar-accent));
+  .sidebar .brand.brand-switcher-trigger:hover {
+    background: color-mix(in srgb, var(--sidebar-foreground) 14%, var(--sidebar-accent));
   }
+
+  .brand-switcher-item:hover {
+    background: color-mix(in srgb, var(--sidebar-foreground) 14%, var(--sidebar-accent));
+    color: var(--sidebar-foreground);
+  }
+
+  .brand-switcher-item--current:hover {
+    background: color-mix(
+      in srgb,
+      var(--brand-switcher-item-accent, var(--sidebar-primary)) 24%,
+      var(--sidebar-accent)
+    );
+  }
+}
+
+.sidebar .brand.brand-switcher-trigger:active {
+  background: color-mix(in srgb, var(--sidebar-foreground) 14%, var(--sidebar-accent));
+}
+
+.sidebar .nav-item:active {
+  background: color-mix(in srgb, var(--sidebar-foreground) 14%, var(--sidebar-accent));
+  color: var(--sidebar-foreground);
 }
 
 .brand-switcher-trigger:focus-visible {
@@ -148,24 +171,24 @@
   box-shadow: var(--focus-ring);
 }
 
-.brand-switcher-trigger[aria-expanded='true'] {
-  background: color-mix(in srgb, var(--sidebar-primary) 16%, var(--sidebar-accent));
+.sidebar .brand.brand-switcher-trigger[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--sidebar-primary) 18%, var(--sidebar-accent));
   color: var(--sidebar-foreground);
 }
 
 .brand-switcher-menu {
   position: absolute;
-  top: calc(100% + var(--space-0-5));
-  left: var(--space-1);
-  right: var(--space-1);
+  top: calc(100% + var(--brand-switcher-menu-offset));
+  left: 0;
+  right: 0;
   z-index: 60;
   display: flex;
   flex-direction: column;
   gap: var(--space-0-5);
   box-sizing: border-box;
   min-width: 0;
-  max-width: calc(100% - 2 * var(--space-1));
-  padding: var(--space-0-5);
+  max-width: 100%;
+  padding: var(--space-1);
   border-radius: var(--command-palette-container-radius, var(--radius-lg));
   border: 1px solid var(--command-palette-container-border, var(--sidebar-border));
   background: var(--sidebar);
@@ -198,35 +221,20 @@
     background-color var(--motion-fast, var(--dur-fast)) var(--ease);
 }
 
-@media (hover: hover) {
-  .brand-switcher-item:hover {
-    background: color-mix(in srgb, var(--sidebar-foreground) 10%, var(--sidebar-accent));
-    color: var(--sidebar-foreground);
-  }
-
-  .brand-switcher-item--current:hover {
-    background: color-mix(
-      in srgb,
-      var(--brand-switcher-item-accent, var(--sidebar-primary)) 22%,
-      var(--sidebar-accent)
-    );
-  }
-}
-
 .brand-switcher-item:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
 .brand-switcher-item--active:not(.brand-switcher-item--current) {
-  background: color-mix(in srgb, var(--sidebar-foreground) 10%, var(--sidebar-accent));
+  background: color-mix(in srgb, var(--sidebar-foreground) 14%, var(--sidebar-accent));
   color: var(--sidebar-foreground);
 }
 
 .brand-switcher-item--current {
   background: color-mix(
     in srgb,
-    var(--brand-switcher-item-accent, var(--sidebar-primary)) 18%,
+    var(--brand-switcher-item-accent, var(--sidebar-primary)) 20%,
     var(--sidebar-accent)
   );
   color: var(--sidebar-foreground);
@@ -432,7 +440,7 @@
 }
 
 .sidebar .nav-item:hover {
-  background: color-mix(in srgb, var(--sidebar-foreground) 10%, var(--sidebar-accent));
+  background: color-mix(in srgb, var(--sidebar-foreground) 14%, var(--sidebar-accent));
   color: var(--sidebar-foreground);
 }
 
