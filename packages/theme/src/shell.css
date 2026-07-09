@@ -784,6 +784,25 @@ html {
     backdrop-filter: none;
   }
 
+  /* Standalone: cover iOS status-bar / content hairline with one opaque header layer */
+  html.standalone-pwa .appbar,
+  html.standalone-pwa .page-header {
+    isolation: isolate;
+  }
+
+  html.standalone-pwa .appbar::before,
+  html.standalone-pwa .page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--safe-top-effective) + 3px);
+    background-color: var(--bg);
+    pointer-events: none;
+    z-index: -1;
+  }
+
   .page-header {
     display: grid;
     align-items: center;

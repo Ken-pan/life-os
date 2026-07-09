@@ -26,6 +26,8 @@ iOS standalone PWA **冷启动**时 `100dvh` / `visualViewport.height` 会比真
 
 实现：`packages/theme/src/viewportSync.js` + 各 app `app.html` 首屏 bootstrap。
 
+**灵动岛下细线（standalone）**：根因是 `.safari-chrome-tint-top` 与 `.appbar` / `.page-header` 双层顶栏在 safe-top 边界叠出 1px hairline。standalone 且有顶栏时隐藏 tint，由 sticky 顶栏单层绘制状态栏区（`ios-safari.css` + `shell.css`）。
+
 ## 验证分层
 
 ```txt

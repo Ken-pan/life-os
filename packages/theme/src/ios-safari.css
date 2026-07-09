@@ -108,11 +108,20 @@ body,
   .safari-chrome-tint-top {
     top: 0;
     z-index: var(--z-safe-area-tint);
-    /* +1px overlap avoids seam under Dynamic Island / notch */
-    height: calc(var(--safe-top-effective) + 1px);
+    height: var(--safe-top-effective);
     /* Safari 26+ samples fixed strips ≥6px at the top edge */
     min-height: 6px;
     background-color: var(--safari-chrome-tint-top-bg, var(--bg));
+  }
+
+  /*
+    Standalone + real header: one sticky/fixed chrome layer paints the status-bar
+    region (Safari 26 samples .appbar / .page-header). A second fixed tint strip
+    leaves a 1px hairline under the Dynamic Island — hide it when header exists.
+    Ref: andesco/safari-color-tinting, 1ar.io Safari 26 Liquid Glass notes.
+  */
+  html.standalone-pwa .app-shell:has(.appbar, .page-header) .safari-chrome-tint-top {
+    display: none !important;
   }
 
   .safari-chrome-tint-bottom {
