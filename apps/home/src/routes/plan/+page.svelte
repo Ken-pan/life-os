@@ -21,6 +21,7 @@
     getActiveProject,
     isOpeningDisabled,
     isWallGraphMode,
+    getLastDoorStyle,
     previewGraphVertexMove,
     redoGraphEdit,
     redoLayoutEdit,
@@ -53,6 +54,7 @@
   import PlanContextMenu from '$lib/components/PlanContextMenu.svelte'
   import PlanEditToolbar from '$lib/components/PlanEditToolbar.svelte'
   import PlanShortcutsHelp from '$lib/components/PlanShortcutsHelp.svelte'
+  import { defaultDoorSpanIn, doorStyleLabel } from '$lib/spatial/door-styles.js'
 
   const project = $derived(getActiveProject())
   const wallGraph = $derived(isWallGraphMode())
@@ -188,7 +190,10 @@
         return '建墙：点击拐点连线 · Shift 正交 · 1″ 吸附 · Esc 断链'
       }
       if (graphTool === 'remove') return '删墙：点击墙段删除'
-      if (graphTool === 'opening') return '门窗：点击墙段放置门（32″）'
+      if (graphTool === 'opening') {
+        const style = getLastDoorStyle()
+        return `门窗：点击墙段放置门（${doorStyleLabel(style)} ${defaultDoorSpanIn(style)}″）`
+      }
       return '选择：点墙段/门窗 · 拖顶点或沿墙移动 · Delete 删除'
     }
     if (wallGraph && editStep === 'zones') {

@@ -30,6 +30,8 @@ import {
 import {
   convert508Openings,
   createOpeningAtPoint,
+  cycleDoorStyleOpening,
+  doorStyleLabel,
   filterOpeningsForEdge,
   flipGraphOpeningSwing,
   fitGraphOpeningOnEdge,
@@ -579,20 +581,63 @@ export function addGraphWall(x1, y1, x2, y2) {
   return true
 }
 
+/** @type {import('./spatial/types.js').GraphOpening['style']} */
+let lastDoorStyle = 'swing'
+
+/** @returns {import('./spatial/types.js').GraphOpening['style']} */
+export function getLastDoorStyle() {
+  return lastDoorStyle
+}
+
+/** @param {import('./spatial/types.js').GraphOpening['style']} style */
+export function setLastDoorStyle(style) {
+  if (style) lastDoorStyle = style
+}
+
 /**
  * @param {string} edgeId
  * @param {{ x: number, y: number }} pt
  * @param {'door' | 'window'} [type]
+ * @param {import('./spatial/types.js').GraphOpening['style']} [doorStyle]
  */
-export function addGraphOpening(edgeId, pt, type = 'door') {
+export function addGraphOpening(edgeId, pt, type = 'door', doorStyle) {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const graph = raw.wallGraph
   if (!graph) return null
-  const opening = createOpeningAtPoint(graph, edgeId, pt, type)
+  const style = type === 'door' ? doorStyle ?? lastDoorStyle : undefined
+  const opening = createOpeningAtPoint(graph, edgeId, pt, type, style ?? 'swing')
   if (!opening) return null
+  if (type === 'door' && opening.style) lastDoorStyle = opening.style
   const graphOpenings = [...(raw.graphOpenings ?? []), opening]
-  applyEditSource({ graphOpenings }, { toastMsg: '已添加门窗' })
+  applyEditSource(
+    { graphOpenings },
+    {
+      toastMsg: `已添加${type === 'window' ? '窗' : `门（${doorStyleLabel(opening.style)} · ${opening.spanIn}″）`}`,
+    },
+  )
   return opening.id
+}
+
+/** @param {string} openingId */
+export function cycleGraphOpeningStyle(openingId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  if (!graph) return
+  const graphOpenings = (raw.graphOpenings ?? []).map((o) => {
+    if (o.id !== openingId || o.type !== 'door') return o
+    const next = cycleDoorStyleOpening(o)
+    return fitGraphOpeningOnEdge(graph, next)
+  })
+  const next = graphOpenings.find((o) => o.id === openingId)
+  if (next?.style) lastDoorStyle = next.style
+  applyEditSource(
+    { graphOpenings },
+    {
+      toastMsg: next
+        ? `已切换为${doorStyleLabel(next.style)}（${next.spanIn}″）`
+        : '已切换门型',
+    },
+  )
 }
 
 /** @param {string} openingId */

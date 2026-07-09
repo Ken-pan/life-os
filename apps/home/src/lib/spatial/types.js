@@ -102,7 +102,7 @@
  * @typedef {object} SpatialOpening
  * @property {string} id
  * @property {'door' | 'window' | 'ac'} type
- * @property {'swing' | 'bifold' | 'sliding'} [doorStyle]
+ * @property {'swing' | 'bifold' | 'sliding' | 'double' | 'bypass' | 'pocket'} [doorStyle]
  * @property {string} [opensInto]
  * @property {string} [pathD]
  * @property {import('./types.js').Rect} [rect]
@@ -165,7 +165,7 @@
  * @property {number} offsetIn 沿边起点偏移（英寸）
  * @property {number} spanIn 开口宽度（英寸）
  * @property {'door' | 'window'} type
- * @property {'swing' | 'sliding' | 'bifold'} [style]
+ * @property {'swing' | 'sliding' | 'bifold' | 'double' | 'bypass' | 'pocket'} [style]
  * @property {'in' | 'out'} [swing]
  * @property {boolean} [hidden]
  */

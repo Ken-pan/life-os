@@ -9,6 +9,7 @@
   import { hydrateProject } from '$lib/spatial/model.js'
   import {
     commitLayoutDrag,
+    getLastDoorStyle,
     previewLayoutDrag,
     setLayoutDragPreview,
   } from '$lib/state.svelte.js'
@@ -27,6 +28,7 @@
     panForZoomAtPoint,
   } from '$lib/plan-viewport.js'
   import { bindPlanSvgTooltip } from '$lib/plan-svg-tooltip.js'
+  import { defaultDoorSpanIn, doorStyleLabel } from '$lib/spatial/door-styles.js'
 
   /** @type {{
    *   project: import('$lib/spatial/types.js').SpatialProject,
@@ -202,7 +204,10 @@
       return '建墙：点击拐点连线 · Shift 正交 · 1″ 吸附 · Esc 断链'
     }
     if (graphTool === 'remove') return '删墙：点击墙段删除'
-    if (graphTool === 'opening') return '门窗：点击墙段放置门（32″）'
+    if (graphTool === 'opening') {
+      const style = getLastDoorStyle()
+      return `门窗：点击墙段放置门（${doorStyleLabel(style)} ${defaultDoorSpanIn(style)}″）`
+    }
     return '选择：拖门窗沿墙移动 · 端点改宽 · Delete 删除'
   })
 

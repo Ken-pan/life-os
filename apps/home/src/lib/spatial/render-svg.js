@@ -94,7 +94,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .gap{stroke:var(--plan-paper,#eef1f4);stroke-width:7}
  .thresh{stroke:var(--plan-threshold,#b9c1c9);stroke-width:1.4;stroke-dasharray:2 3}
  .door{fill:rgba(138,146,156,.12);stroke:var(--plan-door,#8a929c);stroke-width:1.2}
- .door-bifold{fill:none;stroke:var(--plan-door,#8a929c);stroke-width:1.6;stroke-linejoin:round}
+ .door-cad,.door-bifold,.door-pocket{fill:none;stroke:var(--plan-door,#8a929c);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+ .door-pocket{stroke-dasharray:5 3}
  .dim-tag{font:${compact ? 8 : 9}px var(--mono,monospace);fill:var(--plan-dim,#6a727c);pointer-events:none}
  .win{stroke:var(--plan-window,#5b6470);stroke-width:1.6}
  .room-zh{font:650 ${compact ? 11 : 14}px var(--font,system-ui,sans-serif);fill:var(--plan-text,#3a4048);pointer-events:none}
@@ -282,10 +283,11 @@ export function renderFloorPlanSvg(project, opts = {}) {
         op.type === 'door'
           ? op.doorStyle === 'bifold'
             ? 'door door-bifold'
-            : 'door'
+            : op.doorStyle === 'pocket'
+              ? 'door door-cad door-pocket'
+              : 'door door-cad'
           : 'win'
-      const fill = op.doorStyle === 'bifold' ? 'fill="none"' : ''
-      parts.push(`<path d="${op.pathD}" class="${cls}" ${fill}/>`)
+      parts.push(`<path d="${op.pathD}" class="${cls}"/>`)
     }
     if (op.rect) {
       const { x, y, w, h } = op.rect

@@ -8,12 +8,22 @@ import {
   bifoldHorizontalUp,
   bifoldVerticalLeft,
   bifoldVerticalRight,
+  bypassSlidingHorizontal,
+  bypassSlidingVertical,
+  doubleSwingHorizontalDown,
+  doubleSwingHorizontalUp,
+  doubleSwingVerticalLeft,
+  doubleSwingVerticalRight,
+  pocketHorizontal,
+  pocketVertical,
   slidingHorizontal,
   slidingVertical,
+  swingHorizontalDown,
   swingHorizontalUp,
   swingVerticalLeft,
   swingVerticalRight,
 } from './doors.js'
+import { defaultDoorSpanIn, doorStyleLabel } from './door-styles.js'
 import { pickWallEdgeAt } from './wall-graph.js'
 
 let openingSeq = 1
@@ -164,14 +174,113 @@ export function convert508Openings(project, graph) {
           ? 'sliding'
           : op.doorStyle === 'bifold'
             ? 'bifold'
-            : op.doorStyle === 'swing'
-              ? 'swing'
-              : undefined,
+            : op.doorStyle === 'double'
+              ? 'double'
+              : op.doorStyle === 'bypass'
+                ? 'bypass'
+                : op.doorStyle === 'pocket'
+                  ? 'pocket'
+                  : op.doorStyle === 'swing'
+                    ? 'swing'
+                    : undefined,
       swing: op.doorStyle === 'swing' ? 'out' : undefined,
     }
     out.push(go)
   }
   return out
+}
+
+/**
+ * @param {GraphOpening} go
+ * @param {import('./types.js').Point} p0
+ * @param {import('./types.js').Point} p1
+ * @param {boolean} horizontal
+ * @returns {string}
+ */
+function doorPathForGraphOpening(go, p0, p1, horizontal) {
+  const style = go.style ?? 'swing'
+  const inward = go.swing === 'in'
+
+  if (style === 'sliding') {
+    if (horizontal) {
+      const x1 = Math.min(p0.x, p1.x)
+      const x2 = Math.max(p0.x, p1.x)
+      return slidingHorizontal({ x1, x2, y: p0.y })
+    }
+    const y1 = Math.min(p0.y, p1.y)
+    const y2 = Math.max(p0.y, p1.y)
+    return slidingVertical({ x: p0.x, y1, y2 })
+  }
+
+  if (style === 'bypass') {
+    if (horizontal) {
+      const x1 = Math.min(p0.x, p1.x)
+      const x2 = Math.max(p0.x, p1.x)
+      return bypassSlidingHorizontal({ x1, x2, y: p0.y })
+    }
+    const y1 = Math.min(p0.y, p1.y)
+    const y2 = Math.max(p0.y, p1.y)
+    return bypassSlidingVertical({ x: p0.x, y1, y2 })
+  }
+
+  if (style === 'pocket') {
+    const slideH = inward ? 'right' : 'left'
+    const slideV = inward ? 'down' : 'up'
+    if (horizontal) {
+      const x1 = Math.min(p0.x, p1.x)
+      const x2 = Math.max(p0.x, p1.x)
+      return pocketHorizontal({ x1, x2, y: p0.y, slide: slideH })
+    }
+    const y1 = Math.min(p0.y, p1.y)
+    const y2 = Math.max(p0.y, p1.y)
+    return pocketVertical({ x: p0.x, y1, y2, slide: slideV })
+  }
+
+  if (style === 'bifold') {
+    if (horizontal) {
+      const x1 = Math.min(p0.x, p1.x)
+      const x2 = Math.max(p0.x, p1.x)
+      return bifoldHorizontalUp({ x1, x2, y: p0.y })
+    }
+    const y1 = Math.min(p0.y, p1.y)
+    const y2 = Math.max(p0.y, p1.y)
+    return inward
+      ? bifoldVerticalLeft({ x: p0.x, y1, y2 })
+      : bifoldVerticalRight({ x: p0.x, y1, y2 })
+  }
+
+  if (style === 'double') {
+    if (horizontal) {
+      const x1 = Math.min(p0.x, p1.x)
+      const x2 = Math.max(p0.x, p1.x)
+      const y = p0.y
+      return inward
+        ? doubleSwingHorizontalDown({ x1, x2, y })
+        : doubleSwingHorizontalUp({ x1, x2, y })
+    }
+    const y1 = Math.min(p0.y, p1.y)
+    const y2 = Math.max(p0.y, p1.y)
+    const x = p0.x
+    return inward
+      ? doubleSwingVerticalLeft({ x, y1, y2 })
+      : doubleSwingVerticalRight({ x, y1, y2 })
+  }
+
+  if (horizontal) {
+    const x1 = Math.min(p0.x, p1.x)
+    const x2 = Math.max(p0.x, p1.x)
+    const y = p0.y
+    return inward
+      ? swingHorizontalDown({ x1, x2, y })
+      : swingHorizontalUp({ x1, x2, y })
+  }
+
+  const y1 = Math.min(p0.y, p1.y)
+  const y2 = Math.max(p0.y, p1.y)
+  const x = p0.x
+  return inward
+    ? swingVerticalLeft({ x, y1, y2 })
+    : swingVerticalRight({ x, y1, y2 })
 }
 
 /**
@@ -192,81 +301,12 @@ function graphOpeningToSpatial(go, p0, p1, horizontal) {
     }
   }
 
-  if (go.style === 'sliding') {
-    if (horizontal) {
-      const x1 = Math.min(p0.x, p1.x)
-      const x2 = Math.max(p0.x, p1.x)
-      const y = p0.y
-      return {
-        id,
-        type: 'door',
-        doorStyle: 'sliding',
-        pathD: slidingHorizontal({ x1, x2, y }),
-      }
-    }
-    const y1 = Math.min(p0.y, p1.y)
-    const y2 = Math.max(p0.y, p1.y)
-    const x = p0.x
-    return {
-      id,
-      type: 'door',
-      doorStyle: 'sliding',
-      pathD: slidingVertical({ x, y1, y2 }),
-    }
-  }
-
-  if (go.style === 'bifold') {
-    if (horizontal) {
-      const x1 = Math.min(p0.x, p1.x)
-      const x2 = Math.max(p0.x, p1.x)
-      const y = p0.y
-      return {
-        id,
-        type: 'door',
-        doorStyle: 'bifold',
-        pathD: bifoldHorizontalUp({ x1, x2, y }),
-      }
-    }
-    const y1 = Math.min(p0.y, p1.y)
-    const y2 = Math.max(p0.y, p1.y)
-    const x = p0.x
-    return {
-      id,
-      type: 'door',
-      doorStyle: 'bifold',
-      pathD:
-        go.swing === 'in'
-          ? bifoldVerticalLeft({ x, y1, y2 })
-          : bifoldVerticalRight({ x, y1, y2 }),
-    }
-  }
-
-  if (horizontal) {
-    const x1 = Math.min(p0.x, p1.x)
-    const x2 = Math.max(p0.x, p1.x)
-    const y = p0.y
-    return {
-      id,
-      type: 'door',
-      doorStyle: 'swing',
-      pathD:
-        go.swing === 'in'
-          ? swingHorizontalUp({ x1, x2, y })
-          : swingHorizontalUp({ x1, x2, y }),
-    }
-  }
-
-  const y1 = Math.min(p0.y, p1.y)
-  const y2 = Math.max(p0.y, p1.y)
-  const x = p0.x
+  const doorStyle = go.style ?? 'swing'
   return {
     id,
     type: 'door',
-    doorStyle: 'swing',
-    pathD:
-      go.swing === 'in'
-        ? swingVerticalLeft({ x, y1, y2 })
-        : swingVerticalRight({ x, y1, y2 }),
+    doorStyle,
+    pathD: doorPathForGraphOpening(go, p0, p1, horizontal),
   }
 }
 
@@ -387,12 +427,20 @@ export function remapOpeningsAfterSplit(
  * @param {string} edgeId
  * @param {import('./types.js').Point} pt
  * @param {'door' | 'window'} [type]
+ * @param {GraphOpening['style']} [doorStyle]
  * @returns {GraphOpening | null}
  */
-export function createOpeningAtPoint(graph, edgeId, pt, type = 'door') {
+export function createOpeningAtPoint(
+  graph,
+  edgeId,
+  pt,
+  type = 'door',
+  doorStyle = 'swing',
+) {
   const proj = projectPointOnEdge(graph, edgeId, pt)
   if (!proj) return null
-  const spanIn = type === 'window' ? 48 : 32
+  const spanIn =
+    type === 'window' ? 48 : defaultDoorSpanIn(doorStyle ?? 'swing')
   let offsetIn = Math.max(0, proj.offsetIn - spanIn / 2)
   if (proj.lenIn > 0) {
     offsetIn = Math.min(offsetIn, Math.max(0, proj.lenIn - spanIn))
@@ -403,12 +451,14 @@ export function createOpeningAtPoint(graph, edgeId, pt, type = 'door') {
     offsetIn,
     spanIn,
     type,
-    style: type === 'door' ? 'swing' : undefined,
+    style: type === 'door' ? doorStyle : undefined,
     swing: 'out',
   }
 }
 
 export const MIN_OPENING_SPAN_IN = 24
+
+export { cycleDoorStyleOpening, doorStyleLabel } from './door-styles.js'
 
 /**
  * @param {number} offsetIn
@@ -542,7 +592,9 @@ export function describeGraphOpeningDrag(graph, graphOpenings, openingId, pt, mo
       (o) => o.id === openingId,
     ) ?? orig
   const kind = orig.type === 'window' ? '窗' : '门'
-  const title = `${kind} · ${formatInchesLabel(orig.spanIn)}`
+  const styleLabel =
+    orig.type === 'door' ? doorStyleLabel(orig.style) : ''
+  const title = styleLabel ? `${kind} · ${styleLabel}` : `${kind} · ${formatInchesLabel(orig.spanIn)}`
   const offsetLabel = formatInchesLabel(next.offsetIn)
   const spanLabel = formatInchesLabel(next.spanIn)
 
