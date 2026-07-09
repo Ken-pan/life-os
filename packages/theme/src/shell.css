@@ -785,70 +785,9 @@ html {
     backdrop-filter: none;
   }
 
-  /*
-    Standalone: safe-top on .appbar-inner only (single paint layer). Fixed seam
-    cover spans the safe-top boundary where WKWebView leaves a 1px hairline.
-  */
-  @supports (-webkit-touch-callout: none) {
-    html.standalone-pwa .appbar,
-    html.standalone-pwa .page-header {
-      padding-top: 0;
-      background: var(--bg);
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-      border-top: none;
-    }
-
-    html.standalone-pwa .appbar-inner {
-      padding-top: max(59px, var(--safe-top-effective));
-    }
-
-    html.standalone-pwa .page-header {
-      padding-top: max(var(--stack-tight), max(59px, var(--safe-top-effective)));
-    }
-
-    html.standalone-pwa .app-shell:has(.appbar, .page-header)::after {
-      content: '';
-      position: fixed;
-      top: calc(max(59px, var(--safe-top-effective)) - 2px);
-      left: 0;
-      right: 0;
-      height: 4px;
-      background-color: var(--bg);
-      z-index: var(--z-mobile-chrome, 35);
-      pointer-events: none;
-    }
-
-    @media (display-mode: standalone) {
-      .appbar,
-      .page-header {
-        padding-top: 0;
-        background: var(--bg);
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-        border-top: none;
-      }
-
-      .appbar-inner {
-        padding-top: max(59px, var(--safe-top-effective));
-      }
-
-      .page-header {
-        padding-top: max(var(--stack-tight), max(59px, var(--safe-top-effective)));
-      }
-
-      .app-shell:has(.appbar, .page-header)::after {
-        content: '';
-        position: fixed;
-        top: calc(max(59px, var(--safe-top-effective)) - 2px);
-        left: 0;
-        right: 0;
-        height: 4px;
-        background-color: var(--bg);
-        z-index: var(--z-mobile-chrome, 35);
-        pointer-events: none;
-      }
-    }
+  .appbar-inner {
+    padding-top: max(var(--stack-tight), var(--safe-top-effective));
+    padding-bottom: var(--header-block-end);
   }
 
   .page-header {
@@ -894,11 +833,6 @@ html {
   .page-header .spacer,
   .page-header .updated {
     display: none;
-  }
-
-  .appbar-inner {
-    padding-top: max(var(--stack-tight), var(--safe-top-effective));
-    padding-bottom: var(--header-block-end);
   }
 
   .page-title,
@@ -1059,9 +993,20 @@ html {
 
 .nav .nav-item.on,
 .nav .nav-item.active,
+.nav .nav-item-more.on,
 .mobile-tabbar .mobile-tab.active {
-  color: var(--navigation-item-text-active);
-  background: var(--navigation-item-bg-active);
+  color: var(--accent);
+  background: transparent;
+}
+
+.nav .nav-item.on svg,
+.nav .nav-item.active svg,
+.nav .nav-item-more.on svg,
+.mobile-tabbar .mobile-tab.active svg {
+  padding: 7px;
+  border-radius: var(--radius-control);
+  background: var(--accent-bg);
+  box-sizing: content-box;
 }
 
 .nav .nav-lbl,

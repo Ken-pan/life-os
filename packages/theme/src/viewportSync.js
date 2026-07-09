@@ -142,9 +142,15 @@ function syncStandaloneClass() {
   document.documentElement.classList.toggle('standalone-pwa', isStandalonePwa())
 }
 
-/** iOS 26.1: env(safe-area-inset-top) can be 0 in standalone on cold start */
+/** @returns {boolean} */
+function isIosWebKit() {
+  if (typeof CSS === 'undefined' || !CSS.supports) return false
+  return CSS.supports('(-webkit-touch-callout: none)')
+}
+
+/** iOS: env(safe-area-inset-top) can be 0 (WebKit #301994); floor at 59px on mobile */
 function syncSafeTopEffective() {
-  if (typeof document === 'undefined' || !isStandalonePwa()) return
+  if (typeof document === 'undefined' || !isIosWebKit() || !isLifeOsMobile()) return
 
   const root = document.documentElement
   const probe = document.createElement('div')
@@ -154,8 +160,7 @@ function syncSafeTopEffective() {
   const measured = parseFloat(getComputedStyle(probe).paddingTop) || 0
   probe.remove()
 
-  const minTop = 59
-  const effective = Math.max(minTop, measured)
+  const effective = Math.max(59, measured)
   root.style.setProperty('--safe-top-effective', `${effective}px`)
 }
 

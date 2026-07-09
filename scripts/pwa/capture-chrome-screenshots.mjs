@@ -141,8 +141,9 @@ async function detectTopHairline(page) {
   return page.evaluate(() => {
     const root = document.documentElement
     const safeTop = Math.round(
-      parseFloat(getComputedStyle(root).getPropertyValue('--safe-top-effective')) ||
-        59,
+      parseFloat(
+        getComputedStyle(root).getPropertyValue('--safe-top-effective'),
+      ) || 59,
     )
     const y = Math.max(0, safeTop - 1)
     const samples = []

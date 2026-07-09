@@ -34,6 +34,7 @@
     "pwa:healthcheck": "node scripts/pwa/pwa-healthcheck.mjs",
     "pwa:sim:open": "bash scripts/pwa/ios-sim-open.sh",
     "pwa:sim:shot": "bash scripts/pwa/ios-sim-screenshot.sh",
+    "pwa:sim:capture": "node scripts/pwa/capture-sim-screenshots.mjs",
     "pwa:metrics": "node scripts/pwa/collect-viewport-metrics.mjs",
     "test:pwa": "playwright test",
     "qa:pwa": "npm run pwa:healthcheck && npm run test:pwa && npm run qa:mobile-scroll",

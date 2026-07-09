@@ -6,10 +6,9 @@ import { dimPx, formatFtIn, toInches, fromInches } from './dimensions.js'
 import {
   bypassSlidingHorizontal,
   doubleSwingVerticalRight,
-  swingHorizontalDownFromRight,
+  swingHorizontalDown,
   swingHorizontalUp,
-  swingHorizontalUpFromRight,
-  swingVerticalLeft,
+  swingVerticalLeftFromBottom,
   swingVerticalRight,
 } from './doors.js'
 import {
@@ -19,7 +18,7 @@ import {
 } from './wall-edit.js'
 
 /** Bump when default topology changes — stale saved configs are discarded. */
-export const LAYOUT_508_VERSION = 3
+export const LAYOUT_508_VERSION = 4
 
 /** @param {FtIn} d @param {number} px */
 function px(d, px) {
@@ -38,21 +37,21 @@ export function default508Config() {
     layoutVersion: LAYOUT_508_VERSION,
     pxPerFt: 36,
     margin: { x: 40, y: 40 },
-    leftCol: { ft: 12, in: 6 },
-    rightCol: { ft: 11, in: 10 },
+    leftCol: { ft: 12, in: 0 },
+    rightCol: { ft: 12, in: 4 },
     rooms: {
-      balcony: { w: { ft: 12, in: 6 }, h: { ft: 4, in: 0 } },
-      bedroom: { w: { ft: 12, in: 6 }, h: { ft: 10, in: 11 } },
+      balcony: { w: { ft: 12, in: 0 }, h: { ft: 4, in: 6 } },
+      bedroom: { w: { ft: 12, in: 0 }, h: { ft: 12, in: 9 } },
       bedCloset: {
-        w: { ft: 7, in: 1 },
-        h: { ft: 2, in: 0 },
-        door: { w: { ft: 3, in: 11 }, offset: { ft: 3, in: 0 } },
+        w: { ft: 7, in: 0 },
+        h: { ft: 2, in: 2 },
+        door: { w: { ft: 3, in: 11 }, offset: { ft: 2, in: 10 } },
       },
-      linenCloset: { w: { ft: 2, in: 8 }, h: { ft: 6, in: 0 } },
-      bathroom: { w: { ft: 9, in: 0 }, h: { ft: 7, in: 8 } },
-      laundry: { w: { ft: 5, in: 4 }, h: { ft: 6, in: 0 } },
-      living: { w: { ft: 11, in: 10 }, h: { ft: 13, in: 10 } },
-      kitchen: { w: { ft: 11, in: 10 }, h: { ft: 16, in: 9 } },
+      linenCloset: { w: { ft: 2, in: 8 }, h: { ft: 3, in: 6 } },
+      bathroom: { w: { ft: 8, in: 5 }, h: { ft: 7, in: 8 } },
+      laundry: { w: { ft: 3, in: 7 }, h: { ft: 6, in: 0 } },
+      living: { w: { ft: 12, in: 4 }, h: { ft: 13, in: 10 } },
+      kitchen: { w: { ft: 12, in: 4 }, h: { ft: 16, in: 9 } },
       entry: { w: { ft: 5, in: 0 }, h: { ft: 3, in: 4 } },
     },
     openings: defaultOpenings(),
@@ -602,7 +601,7 @@ export function build508Project(config, carry = {}) {
       doorStyle: 'swing',
       opensInto: 'balcony',
       hitRect: openingHitAlongV(X_DIV, balcDoorY1, balcDoorY2),
-      pathD: swingVerticalLeft({
+      pathD: swingVerticalLeftFromBottom({
         x: X_DIV,
         y1: balcDoorY1,
         y2: balcDoorY2,
@@ -615,7 +614,7 @@ export function build508Project(config, carry = {}) {
       doorStyle: 'swing',
       opensInto: 'hall',
       hitRect: openingHitAlongH(bedDoorX1, bedDoorX2, yBedroomBot),
-      pathD: swingHorizontalDownFromRight({
+      pathD: swingHorizontalDown({
         x1: bedDoorX1,
         x2: bedDoorX2,
         y: yBedroomBot,
@@ -673,7 +672,7 @@ export function build508Project(config, carry = {}) {
       type: 'door',
       doorStyle: 'swing',
       hitRect: openingHitAlongH(entryX1, entryX2, Y_BOT),
-      pathD: swingHorizontalUpFromRight({
+      pathD: swingHorizontalUp({
         x1: entryX1,
         x2: entryX2,
         y: Y_BOT,
@@ -730,14 +729,14 @@ export function build508Project(config, carry = {}) {
         'https://resource.avalonbay.com//floorplans/wa037/wa802-a9-769sf-dci.png',
       scaleLabel: `${config.pxPerFt} px/ft · 北向上 · 可编辑尺寸`,
       assumptions: [
-        '<b>平面来源</b>：2026-07 按开发商户型图红线重描 — 墙线、门位、开向逐一校准。',
+        '<b>平面来源</b>：2026-07 按手绘红线重描 v4 — 墙线比例、门铰链/开向逐一校准。',
         '<b>墙厚</b>：美国公寓惯例 — 外墙 6″、内隔墙 4.5″（2×4 + 双面石膏板）。',
-        '<b>阳台</b>：仅由客厅西北角平开门进入（向阳台开）；卧室北墙为整幅窗、无门。',
-        '<b>卧室门</b>：在南墙偏东（距东角约 1′），东铰链向走廊下开。',
-        '<b>壁橱</b>：卧室壁橱推拉门朝走廊；走廊储物柜贴西墙 2′8″ 深，门向走廊外开。',
+        '<b>阳台</b>：仅由客厅西北角平开门进入（底铰链向阳台开）；卧室北墙为整幅窗、无门。',
+        '<b>卧室门</b>：在南墙偏东（距东角约 1′），西铰链向走廊下开。',
+        '<b>壁橱</b>：卧室壁橱推拉门朝走廊；走廊储物柜贴西墙 2′8″ 深 × 3′6″ 高，门向走廊外开。',
         '<b>浴室</b>：西南角，门在北墙、向走廊外开；东墙与洗衣间西墙共线。',
         '<b>洗衣间</b>：双开门朝东向玄关走廊；正下方结构柱实心不可进，直落南墙。',
-        '<b>入户门</b>：南墙紧贴结构柱东侧，东铰链向内开、折向柱壁。',
+        '<b>入户门</b>：南墙紧贴结构柱东侧，西铰链向内开。',
         '<b>厨房</b>：与客厅开放贯通、无隔墙；东墙橱柜条深 2′4″ 直达南墙。',
       ],
       sourceNote:

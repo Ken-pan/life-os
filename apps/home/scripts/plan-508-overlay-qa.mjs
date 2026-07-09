@@ -86,15 +86,12 @@ const { dir } = resolveScreenshotDir({
 
 const redlineDataUrl = `data:image/png;base64,${readFileSync(FIXTURE).toString('base64')}`
 const floorplanUrl = project.meta.floorplanUrl ?? ''
-// Redline sketch aspect (724×1024 ≈ 0.71) ≠ real outerBounds (≈ 0.80).
-// Contain-fit into outerBounds so topology/doors can be compared without stretch.
-const RED_W = 724
-const RED_H = 1024
-const fit = Math.min(bounds.w / RED_W, bounds.h / RED_H)
-const fittedW = RED_W * fit
-const fittedH = RED_H * fit
-const fittedOx = bounds.x + (bounds.w - fittedW) / 2
-const fittedOy = bounds.y + (bounds.h - fittedH) / 2
+// Stretch redline to outerBounds so wall topology can be compared 1:1
+// (sketch aspect ≠ real aspect; stretch is intentional for alignment QA).
+const fittedOx = bounds.x
+const fittedOy = bounds.y
+const fittedW = bounds.w
+const fittedH = bounds.h
 
 const stageW = Math.ceil(viewport.width * args.scale + Math.abs(args.tx) + 16)
 const stageH = Math.ceil(viewport.height * args.scale + Math.abs(args.ty) + 16)
@@ -172,7 +169,16 @@ writeFileSync(
       bounds,
       doors,
       args,
-      red: { fittedOx, fittedOy, fittedW, fittedH, redLeft, redTop, redW, redH },
+      red: {
+        fittedOx,
+        fittedOy,
+        fittedW,
+        fittedH,
+        redLeft,
+        redTop,
+        redW,
+        redH,
+      },
     },
     null,
     2,
@@ -209,7 +215,10 @@ await page.evaluate(() => {
     }
   }
 })
-const svgOnlyPath = join(dir, formatShotFilename({ seq: 2, surface: 'svg-only' }))
+const svgOnlyPath = join(
+  dir,
+  formatShotFilename({ seq: 2, surface: 'svg-only' }),
+)
 await stage.screenshot({ path: svgOnlyPath })
 console.log('saved', svgOnlyPath)
 

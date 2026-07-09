@@ -1788,25 +1788,11 @@ body {
     box-shadow: none;
   }
 
-  /* 底栏 / FAB：对齐 Finance mobile-tabbar + theme components.css */
+  /* 底栏：SSOT 在 theme shell.css（icon pill active） */
   .nav .nav-item,
   .nav .nav-item-more {
     gap: var(--space-1);
     color: var(--t3);
-  }
-
-  .nav .nav-item.on,
-  .nav .nav-item-more.on {
-    color: var(--accent);
-    background: transparent;
-  }
-
-  .nav .nav-item.on svg,
-  .nav .nav-item-more.on svg {
-    padding: 7px;
-    border-radius: var(--radius-control);
-    background: var(--accent-bg);
-    box-sizing: content-box;
   }
 
   .nav .nav-lbl {

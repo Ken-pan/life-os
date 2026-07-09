@@ -13,7 +13,7 @@ case "$APP" in
   fitness) WORKSPACE="fitness-os"; PORT=4173; BUILD_DIR="apps/fitness/build" ;;
   music)   WORKSPACE="music-os";   PORT=5191; BUILD_DIR="apps/music/build" ;;
   finance) WORKSPACE="finance-os"; PORT=5180; BUILD_DIR="apps/finance/build" ;;
-  portal)  WORKSPACE="portal";     PORT=5195; BUILD_DIR="apps/portal/build" ;;
+  portal) WORKSPACE="portal"; PORT=5195; BUILD_DIR="apps/portal/build"; BUILD_MARKER="apps/portal/build/manifest.webmanifest" ;;
   home)    WORKSPACE="home-os";    PORT=5196; BUILD_DIR="apps/home/build" ;;
   *)
     echo "Unknown app: $APP (planner|fitness|music|finance|portal|home)"
@@ -24,14 +24,15 @@ esac
 PORT="${PORT:-${PWA_PORT:-$PORT}}"
 HOST="${HOST:-0.0.0.0}"
 BUILD_INDEX="$ROOT/$BUILD_DIR/index.html"
+BUILD_MARKER="${BUILD_MARKER:-$BUILD_INDEX}"
 
-if [[ "${PWA_BUILD:-0}" == "1" ]] || [[ ! -f "$BUILD_INDEX" ]]; then
+if [[ "${PWA_BUILD:-0}" == "1" ]] || [[ ! -f "$BUILD_MARKER" ]]; then
   echo "Building ${WORKSPACE}…"
   npm run build -w "$WORKSPACE"
 fi
 
-if [[ ! -f "$BUILD_INDEX" ]]; then
-  echo "Missing production build: $BUILD_INDEX"
+if [[ ! -f "$BUILD_MARKER" ]]; then
+  echo "Missing production build marker: $BUILD_MARKER"
   exit 1
 fi
 

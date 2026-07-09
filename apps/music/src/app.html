@@ -51,7 +51,9 @@
       } catch (e) {}
     })();
     (function () {
+      var pwaSim = /(?:^|[?&])pwa_sim=1(?:&|$)/.test(location.search);
       var standalone =
+        pwaSim ||
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator && window.navigator.standalone === true);
       document.documentElement.classList.toggle('standalone-pwa', standalone);

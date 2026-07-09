@@ -243,7 +243,7 @@ export default {
     themeDesc: '选「系统」时，会跟随设备的浅色 / 深色模式',
     themeDark: '深色',
     themeLight: '浅色',
-    themeAuto: '系统',
+    themeAuto: '跟随系统',
     lockPortraitOnPhone: '手机锁定竖屏',
     lockPortraitOnPhoneDesc: '在手机上横屏时提示旋转回竖屏（PWA 推荐开启）',
     rotatePortrait: '请旋转至竖屏',

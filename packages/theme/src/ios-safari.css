@@ -142,10 +142,47 @@ body,
 }
 
 /*
-  iOS standalone: env(safe-area-inset-top) may be 0 on cold start (WebKit #301994).
-  59px covers Dynamic Island devices when env() under-reports.
+  iOS: env(safe-area-inset-top) may be 0 (WebKit #301994, fixed iOS 26.2+).
+  Apply 59px floor on all mobile Safari/PWA — not only display-mode: standalone.
+  Ref: chronosnap, Sorcha #1090, Karma ITNEXT notch embrace.
 */
 @supports (-webkit-touch-callout: none) {
+  @media (--life-os-mobile) {
+    :root {
+      --safe-top-effective: max(59px, var(--ios-edge-min), env(safe-area-inset-top, 0px));
+    }
+
+    html {
+      background-color: var(--bg);
+      min-height: calc(100% + env(safe-area-inset-top, 0px));
+    }
+
+    /*
+      Full-bleed status band behind sticky header — one opaque layer from the
+      physical top (Sorcha: bg edge-to-edge, content inset below).
+    */
+    .app-shell:has(.appbar, .page-header)::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: max(59px, var(--safe-top-effective));
+      background-color: var(--bg);
+      z-index: calc(var(--z-nav, 30) - 1);
+      pointer-events: none;
+    }
+
+    .appbar,
+    .page-header {
+      background: var(--bg);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      border-top: none;
+      transform: translateZ(0);
+    }
+  }
+
   @media (display-mode: standalone) {
     :root {
       --safe-top-effective: max(59px, var(--ios-edge-min), env(safe-area-inset-top, 0px));

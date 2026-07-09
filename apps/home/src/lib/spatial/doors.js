@@ -76,6 +76,15 @@ export function swingVerticalLeft({ x, y1, y2, radius = 32 }) {
   ].join(' ')
 }
 
+/** Vertical wall — hinge on bottom jamb, swings up and left */
+export function swingVerticalLeftFromBottom({ x, y1, y2, radius = 32 }) {
+  const r = Math.min(radius, y2 - y1 - 2)
+  return [
+    `M ${x} ${y1} L ${x} ${y2}`,
+    `M ${x} ${y2} A ${r} ${r} 0 0 0 ${x - r} ${y2 - r}`,
+  ].join(' ')
+}
+
 /**
  * Double hinged (French) on horizontal wall — arcs swing toward smaller y.
  * @param {{ x1: number, x2: number, y: number, radius?: number }} opts
