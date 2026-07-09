@@ -36,6 +36,18 @@ import {
   remapOpeningsAfterSplit,
   toggleGraphOpeningType,
 } from './spatial/graph-openings.js'
+import {
+  createZoneFromChain,
+  findZoneAtPoint,
+  markZonesStaleOnWallChange,
+} from './spatial/zones.js'
+import {
+  createPlacement,
+  placementsToFurniture,
+  resolveStorageZoneBounds,
+  rotatePlacement,
+} from './spatial/placements.js'
+import { snapGraphPoint } from './spatial/wall-graph.js'
 import { toast } from './ui.svelte.js'
 
 /** @typedef {import('./spatial/types.js').SpatialProject} SpatialProject */
@@ -195,23 +207,207 @@ export function redoGraphEdit() {
  *   graphOpenings?: import('./spatial/types.js').GraphOpening[],
  *   zones?: import('./spatial/types.js').SpatialZone[],
  *   placements?: import('./spatial/types.js').SpatialPlacement[],
+ *   storageZones?: import('./spatial/types.js').SpatialStorageZone[],
  * }} patch
  * @param {{ skipUndo?: boolean, silent?: boolean, toastMsg?: string }} [opts]
  */
 export function applyEditSource(patch, opts = {}) {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   if (!opts.skipUndo) pushGraphUndo()
+  const nextGraph = patch.wallGraph ?? raw.wallGraph
+  let zones = patch.zones ?? raw.zones ?? []
+  if (
+    patch.wallGraph &&
+    raw.wallGraph &&
+    nextGraph &&
+    !patch.zones &&
+    zones.length
+  ) {
+    zones = markZonesStaleOnWallChange(raw.wallGraph, nextGraph, zones)
+  }
   const next = hydrateProject({
     ...raw,
     layoutMode: 'wallGraph',
-    wallGraph: patch.wallGraph ?? raw.wallGraph,
+    wallGraph: nextGraph,
     graphOpenings: patch.graphOpenings ?? raw.graphOpenings ?? [],
-    zones: patch.zones ?? raw.zones ?? [],
+    zones,
     placements: patch.placements ?? raw.placements ?? [],
+    storageZones: patch.storageZones ?? raw.storageZones ?? [],
   })
   setActiveProject(next)
   if (!opts.silent && opts.toastMsg) toast(opts.toastMsg)
   else if (!opts.silent) notifyLayoutSaved()
+}
+
+/**
+ * @param {import('./spatial/types.js').Point[]} polygon
+ * @param {string} [nameZh]
+ */
+export function addZone(polygon, nameZh) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const zones = raw.zones ?? []
+  const zone = createZoneFromChain(polygon, nameZh, zones)
+  if (!zone) return null
+  applyEditSource({ zones: [...zones, zone] }, { toastMsg: `已添加 ${zone.nameZh}` })
+  return zone.id
+}
+
+/**
+ * @param {string} zoneId
+ * @param {Partial<import('./spatial/types.js').SpatialZone>} patch
+ */
+export function updateZone(zoneId, patch) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const zones = (raw.zones ?? []).map((z) =>
+    z.id === zoneId ? { ...z, ...patch } : z,
+  )
+  applyEditSource({ zones }, { silent: true })
+}
+
+/** @param {string} zoneId */
+export function removeZone(zoneId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const zones = (raw.zones ?? []).filter((z) => z.id !== zoneId)
+  applyEditSource({ zones }, { silent: true })
+  toast('已删除分区', {
+    actionLabel: '撤销',
+    onAction: () => undoGraphEdit(),
+    duration: 8000,
+  })
+}
+
+/** @param {string} zoneId */
+export function confirmZone(zoneId) {
+  updateZone(zoneId, { stale: false })
+  toast('已确认分区')
+}
+
+/**
+ * @param {string} zoneId
+ * @param {number} vertexIndex
+ * @param {number} x
+ * @param {number} y
+ */
+export function commitZoneVertexMove(zoneId, vertexIndex, x, y) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  const pxPerFt = graph?.pxPerFt ?? 36
+  const snapped = snapGraphPoint(x, y, pxPerFt)
+  const zones = (raw.zones ?? []).map((z) => {
+    if (z.id !== zoneId) return z
+    const polygon = z.polygon.map((p, i) =>
+      i === vertexIndex ? snapped : p,
+    )
+    return { ...z, polygon }
+  })
+  applyEditSource({ zones }, { toastMsg: '已调整分区顶点' })
+}
+
+/**
+ * @param {string} kind
+ * @param {number} x
+ * @param {number} y
+ */
+export function addPlacement(kind, x, y) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const zones = raw.zones ?? []
+  const placements = raw.placements ?? []
+  const p = createPlacement(kind, x, y, zones, placements)
+  if (!p) return null
+  applyEditSource(
+    { placements: [...placements, p] },
+    { toastMsg: `已放置 ${p.label}` },
+  )
+  return p.id
+}
+
+/**
+ * @param {string} placementId
+ * @param {Partial<import('./spatial/types.js').SpatialPlacement>} patch
+ */
+export function updatePlacement(placementId, patch) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const placements = (raw.placements ?? []).map((p) =>
+    p.id === placementId ? { ...p, ...patch } : p,
+  )
+  applyEditSource({ placements }, { silent: true })
+}
+
+/** @param {string} placementId */
+export function removePlacement(placementId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  let placements = (raw.placements ?? []).filter((p) => p.id !== placementId)
+  const storageZones = (raw.storageZones ?? []).map((sz) =>
+    sz.placementId === placementId
+      ? { ...sz, placementId: undefined, zoneId: undefined }
+      : sz,
+  )
+  applyEditSource({ placements, storageZones }, { silent: true })
+  toast('已删除家具', {
+    actionLabel: '撤销',
+    onAction: () => undoGraphEdit(),
+    duration: 8000,
+  })
+}
+
+/** @param {string} placementId */
+export function rotatePlacementById(placementId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const placements = (raw.placements ?? []).map((p) =>
+    p.id === placementId ? rotatePlacement(p) : p,
+  )
+  applyEditSource({ placements }, { toastMsg: '已旋转家具' })
+}
+
+/**
+ * @param {string} placementId
+ * @param {number} x
+ * @param {number} y
+ */
+export function commitPlacementMove(placementId, x, y) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  const pxPerFt = graph?.pxPerFt ?? 36
+  const snapped = snapGraphPoint(x, y, pxPerFt)
+  const zones = raw.zones ?? []
+  const placements = (raw.placements ?? []).map((p) => {
+    if (p.id !== placementId) return p
+    const cx = snapped.x
+    const cy = snapped.y
+    const zone = findZoneAtPoint(zones, { x: cx, y: cy })
+    return {
+      ...p,
+      x: cx - p.w / 2,
+      y: cy - p.h / 2,
+      zoneId: zone?.id,
+    }
+  })
+  applyEditSource({ placements }, { silent: true })
+}
+
+/**
+ * @param {string} code
+ * @param {{ zoneId?: string, placementId?: string }} target
+ */
+export function assignStorageZone(code, target) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const storageZones = (raw.storageZones ?? []).map((sz) =>
+    sz.code === code
+      ? { ...sz, zoneId: target.zoneId, placementId: target.placementId }
+      : sz,
+  )
+  applyEditSource({ storageZones }, { toastMsg: `已将 ${code} 指派到新位置` })
+}
+
+/** @param {string} code */
+export function unassignStorageZone(code) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const storageZones = (raw.storageZones ?? []).map((sz) =>
+    sz.code === code
+      ? { ...sz, zoneId: undefined, placementId: undefined }
+      : sz,
+  )
+  applyEditSource({ storageZones }, { toastMsg: `已解除 ${code} 指派` })
 }
 
 /**

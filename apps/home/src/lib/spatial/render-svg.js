@@ -1,6 +1,7 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 import { formatFtIn } from './dimensions.js'
 import { graphOpeningBounds, graphOpeningHitRect } from './graph-openings.js'
+import { polygonPointsAttr, zoneCentroid } from './zones.js'
 import {
   isEditableWall,
   OPENING_EDIT_BINDINGS,
@@ -42,13 +43,24 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   selectedEdge?: string,
  *   wallChainFrom?: { x: number, y: number } | null,
  *   wallChainHover?: { x: number, y: number } | null,
+ *   zoneEditMode?: boolean,
+ *   zoneTool?: 'zoneAdd' | 'zoneSelect' | 'zoneRemove',
+ *   selectedSpatialZone?: string,
+ *   zoneChainFrom?: { x: number, y: number } | null,
+ *   zoneChainHover?: { x: number, y: number } | null,
+ *   zoneChainPoints?: { x: number, y: number }[],
+ *   previewZones?: import('./types.js').SpatialZone[] | null,
+ *   placementEditMode?: boolean,
+ *   placementTool?: 'place' | 'storage',
+ *   selectedPlacement?: string,
+ *   showFurniture?: boolean,
  * }} [opts]
  */
 export function renderFloorPlanSvg(project, opts = {}) {
   const { width, height } = project.viewport
   const step = project.gridStep ?? 52
   const compact = opts.compact ?? false
-  const pxPerFt = project.layoutConfig?.pxPerFt ?? 36
+  const pxPerFt = project.layoutConfig?.pxPerFt ?? project.wallGraph?.pxPerFt ?? 36
   const touchScale = Math.max(1, opts.touchScale ?? 1)
   const wallHitStroke = Math.round(18 * touchScale)
   const wallOnStroke = Math.round(20 * touchScale)
@@ -59,6 +71,9 @@ export function renderFloorPlanSvg(project, opts = {}) {
   const svgLabel = opts.interactive
     ? '顶视平面图，Tab 聚焦储藏区后按 Enter 查看清单'
     : '顶视平面图'
+  const spatialZones = opts.previewZones ?? project.zones ?? []
+  const hasSpatialZones = spatialZones.length > 0
+  const hideFurniture = opts.hideFurniture && !opts.showFurniture
 
   const parts = []
   parts.push(
@@ -143,6 +158,22 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .graph-open-grip{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.2;pointer-events:none}
  .graph-open-grip-hit{fill:transparent;stroke:none;cursor:ew-resize;pointer-events:all}
  .graph-open-grip-hit[data-wall-axis="v"]{cursor:ns-resize}
+ .spatial-zone{stroke:var(--plan-room-stroke,#cdd4da);stroke-width:1;pointer-events:none}
+ .spatial-zone-stale{stroke-dasharray:6 4;stroke:#b45309;stroke-width:2}
+ .spatial-zone-label{font:650 ${compact ? 11 : 13}px var(--font,system-ui,sans-serif);fill:var(--plan-text,#3a4048);pointer-events:none}
+ .spatial-zone-hit{fill:transparent;stroke:none;cursor:pointer;pointer-events:all}
+ .spatial-zone-hit:hover{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 12%,transparent)}
+ .spatial-zone-on{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 14%,transparent);stroke:var(--graph-accent,#1d6b42);stroke-width:2}
+ .spatial-zone-rm{cursor:pointer;fill:color-mix(in srgb,#b45309 10%,transparent)}
+ .spatial-zone-rm:hover{fill:color-mix(in srgb,#b45309 22%,transparent)}
+ .zone-chain{stroke:var(--graph-accent,#1d6b42);stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
+ .zone-chain-vert{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;pointer-events:none}
+ .zone-vertex-hit{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;cursor:grab;pointer-events:all}
+ .placement-item{fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1.2}
+ .placement-on{stroke:var(--graph-accent,#1d6b42);stroke-width:2.5}
+ .placement-label{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
+ .placement-hit{fill:transparent;stroke:none;cursor:pointer;pointer-events:all}
+ .storage-unassigned{stroke-dasharray:4 3;opacity:.85}
 </style>`)
 
   parts.push('<g class="grid">')
@@ -155,6 +186,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
   parts.push('</g>')
 
   for (const room of project.rooms) {
+    if (hasSpatialZones) continue
     const { x, y, w, h } = room.bounds
     const isCirc = room.kind === 'circulation'
     const fill = room.fill ?? 'var(--plan-room,#e8edf1)'
@@ -192,7 +224,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
     }
   }
 
-  if (!opts.hideFurniture) {
+  if (!hideFurniture && !project.placements?.length) {
     for (const item of project.furniture) {
       const { x, y, w, h } = item.bounds
       const dash =
@@ -216,8 +248,10 @@ export function renderFloorPlanSvg(project, opts = {}) {
   for (const zone of project.storageZones) {
     const { x, y, w, h } = zone.bounds
     const on = opts.highlightZone === zone.code
+    const unassigned = !zone.zoneId && !zone.placementId
+    const dash = unassigned ? ' storage-unassigned' : ''
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="storage-zone" fill="url(#hatch)" stroke="var(--plan-accent,#5c758c)" stroke-width="1.8" rx="3" stroke-dasharray="5 3"/>`,
+      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="storage-zone${dash}" fill="url(#hatch)" stroke="var(--plan-accent,#5c758c)" stroke-width="1.8" rx="3" stroke-dasharray="5 3"/>`,
     )
     if (!compact && w > 40 && h > 22) {
       parts.push(
@@ -274,6 +308,41 @@ export function renderFloorPlanSvg(project, opts = {}) {
       `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="var(--plan-wall,#20242b)" stroke-width="6"/>`,
     )
   }
+
+  if (hasSpatialZones) {
+    parts.push('<g class="spatial-zones" aria-label="手绘分区">')
+    for (const z of spatialZones) {
+      const pts = polygonPointsAttr(z.polygon)
+      const fill = z.color ?? 'var(--plan-room,#e8edf1)'
+      const staleCls = z.stale ? ' spatial-zone-stale' : ''
+      const c = zoneCentroid(z.polygon)
+      parts.push(
+        `<polygon points="${pts}" class="spatial-zone${staleCls}" fill="${fill}" fill-opacity="0.18" data-zone-stale="${z.stale ? '1' : '0'}"/>`,
+      )
+      parts.push(
+        `<text x="${c.x}" y="${c.y}" text-anchor="middle" class="spatial-zone-label${dimmed}">${esc(z.nameZh)}${z.stale ? ' · 需核对' : ''}</text>`,
+      )
+    }
+    parts.push('</g>')
+  }
+
+  if (!hideFurniture && project.placements?.length) {
+    parts.push('<g class="placements" aria-label="家具布置">')
+    for (const p of project.placements) {
+      const on = opts.selectedPlacement === p.id
+      const rot = p.rotation ?? 0
+      const cx = p.x + p.w / 2
+      const cy = p.y + p.h / 2
+      parts.push(
+        `<g transform="rotate(${rot} ${cx} ${cy})">`,
+        `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" class="placement-item${on ? ' placement-on' : ''}"/>`,
+        `<text x="${cx}" y="${cy + 4}" text-anchor="middle" class="placement-label">${esc(p.label)}</text>`,
+        `</g>`,
+      )
+    }
+    parts.push('</g>')
+  }
+
   for (const wall of project.walls) {
     const cls =
       wall.kind === 'gap'
@@ -536,6 +605,64 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 12 }
       parts.push(
         `<text x="${mid.x}" y="${mid.y}" text-anchor="middle" class="measure-label">${esc(label)}</text>`,
+      )
+    }
+    parts.push('</g>')
+  }
+
+  if (opts.zoneEditMode) {
+    parts.push('<g class="edit-layer zone-edit-layer" aria-label="分区编辑">')
+    const rmMode = opts.zoneTool === 'zoneRemove'
+    for (const z of spatialZones) {
+      const pts = polygonPointsAttr(z.polygon)
+      const on = opts.selectedSpatialZone === z.id
+      const hitCls = [
+        'spatial-zone-hit',
+        on ? 'spatial-zone-on' : '',
+        rmMode ? 'spatial-zone-rm' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      const tip = rmMode
+        ? `${z.nameZh} — 点击删除`
+        : `${z.nameZh} — 点击选中`
+      parts.push(
+        `<polygon points="${pts}" class="${hitCls}" data-spatial-zone-id="${z.id}" data-plan-tip="${esc(tip)}" data-zone-stale="${z.stale ? '1' : '0'}"><title>${esc(tip)}</title></polygon>`,
+      )
+      if (on && opts.zoneTool === 'zoneSelect') {
+        const vr = 6 * touchScale
+        z.polygon.forEach((p, i) => {
+          parts.push(
+            `<circle cx="${p.x}" cy="${p.y}" r="${vr}" class="zone-vertex-hit" data-spatial-zone-id="${z.id}" data-zone-vertex-index="${i}"><title>拖曳调整顶点</title></circle>`,
+          )
+        })
+      }
+    }
+    if (opts.zoneChainFrom) {
+      parts.push(
+        `<circle cx="${opts.zoneChainFrom.x}" cy="${opts.zoneChainFrom.y}" r="5" class="zone-chain-vert"/>`,
+      )
+      if (opts.zoneChainHover) {
+        parts.push(
+          `<line x1="${opts.zoneChainFrom.x}" y1="${opts.zoneChainFrom.y}" x2="${opts.zoneChainHover.x}" y2="${opts.zoneChainHover.y}" class="zone-chain"/>`,
+        )
+        if (opts.zoneChainPoints?.length) {
+          const preview = [...opts.zoneChainPoints, opts.zoneChainHover]
+          parts.push(
+            `<polyline points="${polygonPointsAttr(preview)}" class="zone-chain" fill="none"/>`,
+          )
+        }
+      }
+    }
+    parts.push('</g>')
+  }
+
+  if (opts.placementEditMode && project.placements?.length) {
+    parts.push('<g class="edit-layer placement-edit-layer" aria-label="家具编辑">')
+    for (const p of project.placements) {
+      const on = opts.selectedPlacement === p.id
+      parts.push(
+        `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" class="placement-hit${on ? ' placement-on' : ''}" data-placement-id="${p.id}"><title>${esc(p.label)} — 点击选中</title></rect>`,
       )
     }
     parts.push('</g>')

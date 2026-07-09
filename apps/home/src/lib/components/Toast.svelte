@@ -3,4 +3,4 @@
   import { toastState, dismissToast } from '$lib/ui.svelte.js'
 </script>
 
-<SharedToast state={toastState} ondismiss={dismissToast} />
+<SharedToast state={toastState} ondismiss={dismissToast} dismissLabel="关闭" />

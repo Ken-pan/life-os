@@ -56,11 +56,9 @@
         class="graph-sel-btn graph-sel-accent"
         onclick={() => onSplit?.()}
       >分割</button>
-      {#if !compact}
-        <button type="button" class="graph-sel-btn graph-sel-accent" onclick={() => onOpenDetails?.()}>
-          详情
-        </button>
-      {/if}
+      <button type="button" class="graph-sel-btn graph-sel-accent" onclick={() => onOpenDetails?.()}>
+        详情
+      </button>
       <button type="button" class="graph-sel-btn" onclick={() => onClear?.()} aria-label="取消选中">
         ×
       </button>

@@ -1,9 +1,11 @@
 <script>
-  /** @type {{ interactive?: boolean, editMode?: boolean, graphEditMode?: boolean, overlay?: boolean }} */
+  /** @type {{ interactive?: boolean, editMode?: boolean, graphEditMode?: boolean, zoneEditMode?: boolean, placeEditMode?: boolean, overlay?: boolean }} */
   let {
     interactive = false,
     editMode = false,
     graphEditMode = false,
+    zoneEditMode = false,
+    placeEditMode = false,
     overlay = false,
   } = $props()
 
@@ -71,6 +73,26 @@
         <span class="plan-legend-item plan-legend-edit" role="listitem">
           <i class="sw delete-hint" aria-hidden="true"></i> Delete 删除门窗/墙段
         </span>
+      {:else if zoneEditMode}
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw wall-graph" aria-hidden="true"></i> 分区填充（淡色多边形）
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw chain-edit" aria-hidden="true"></i> 绿色虚线 = 画区预览
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw delete-hint" aria-hidden="true"></i> 橙色虚线 = 需核对（改墙后）
+        </span>
+      {:else if placeEditMode}
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw placement" aria-hidden="true"></i> 矩形 = 家具放置
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw store" aria-hidden="true"></i> 标储藏 = 指派 S1–S8
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw delete-hint" aria-hidden="true"></i> Delete 删除选中家具
+        </span>
       {:else if editMode}
         <span class="plan-legend-item plan-legend-edit" role="listitem">
           <i class="sw wall-edit" aria-hidden="true"></i> 内墙线（拖曳改尺寸）
@@ -89,7 +111,7 @@
           <i class="sw zone-dot" aria-hidden="true"></i> 圆点 S1–S8 = 储藏入口
         </span>
       {/if}
-      {#if !graphEditMode && !editMode}
+      {#if !graphEditMode && !zoneEditMode && !placeEditMode && !editMode}
         <span class="plan-legend-item" role="listitem">
           <i class="sw gap" aria-hidden="true"></i> 浅色宽条 = 墙上门洞
         </span>
@@ -302,6 +324,11 @@
   .sw.delete-hint {
     background: rgba(180, 83, 9, 0.12);
     border: 1.5px dashed #b45309;
+  }
+
+  .sw.placement {
+    background: color-mix(in srgb, var(--graph-accent) 18%, var(--bg));
+    border: 1.5px solid color-mix(in srgb, var(--graph-accent) 45%, var(--border));
   }
 
   .sw.zone-dot {

@@ -5,7 +5,12 @@
     activateWallGraphMode,
     addGraphWall,
     addGraphOpening,
+    addPlacement,
+    addZone,
+    assignStorageZone,
     commitGraphOpeningEdit,
+    commitPlacementMove,
+    commitZoneVertexMove,
     removeGraphOpening,
     previewGraphOpeningDrag,
     canRedoGraph,
@@ -20,6 +25,9 @@
     redoGraphEdit,
     redoLayoutEdit,
     removeGraphWall,
+    removePlacement,
+    removeZone,
+    rotatePlacementById,
     setOpeningDisabled,
     setPlanSubtitle,
     setPlanImmersiveEdit,
@@ -28,6 +36,8 @@
     undoLayoutEdit,
   } from '$lib/state.svelte.js'
   import { buildFromWallGraph } from '$lib/spatial/wall-graph.js'
+  import { snapGraphPoint } from '$lib/spatial/wall-graph.js'
+  import { canClosePolygon, findZoneAtPoint } from '$lib/spatial/zones.js'
   import { browser } from '$app/environment'
   import FloorPlanViewer from '$lib/components/FloorPlanViewer.svelte'
   import RoomDimensionsEditor from '$lib/components/RoomDimensionsEditor.svelte'
@@ -36,6 +46,9 @@
   import PlanSelectionBar from '$lib/components/PlanSelectionBar.svelte'
   import PlanGraphSelectionBar from '$lib/components/PlanGraphSelectionBar.svelte'
   import PlanGraphOpeningSelectionBar from '$lib/components/PlanGraphOpeningSelectionBar.svelte'
+  import PlanZoneSelectionBar from '$lib/components/PlanZoneSelectionBar.svelte'
+  import PlanPlacementSelectionBar from '$lib/components/PlanPlacementSelectionBar.svelte'
+  import { PLACEMENT_KINDS, STORAGE_CODES } from '$lib/spatial/placements.js'
   import PlanContextMenu from '$lib/components/PlanContextMenu.svelte'
   import PlanShortcutsHelp from '$lib/components/PlanShortcutsHelp.svelte'
 
@@ -48,9 +61,25 @@
   let editStep = $state('walls')
   /** @type {import('$lib/plan-graph-edit.js').GraphTool} */
   let graphTool = $state('wallAdd')
+  /** @type {import('$lib/plan-zone-edit.js').ZoneTool} */
+  let zoneTool = $state('zoneAdd')
+  /** @type {import('$lib/plan-placement-edit.js').PlacementTool} */
+  let placementTool = $state('place')
+  /** @type {keyof typeof PLACEMENT_KINDS} */
+  let placementKind = $state('cabinet')
   let selectedWall = $state('')
   let selectedOpening = $state('')
   let selectedEdge = $state('')
+  let selectedSpatialZone = $state('')
+  let selectedPlacement = $state('')
+  let storagePickerOpen = $state(false)
+  /** @type {HTMLDialogElement | null} */
+  let storagePickerDialog = $state(null)
+  let placementKindsOpen = $state(false)
+  /** @type {HTMLDialogElement | null} */
+  let placementKindsDialog = $state(null)
+  /** @type {{ zoneId?: string, placementId?: string }} */
+  let storagePickerTarget = $state({})
   let showHelp = $state(false)
   let fitRequest = $state({ token: 0, cycle: false })
   let drawerOpen = $state(false)
@@ -59,6 +88,14 @@
   let wallChainFrom = $state(null)
   /** @type {{ x: number, y: number } | null} */
   let wallChainHover = $state(null)
+  /** @type {{ x: number, y: number }[]} */
+  let zoneChainPoints = $state([])
+  /** @type {{ x: number, y: number } | null} */
+  let zoneChainHover = $state(null)
+  /** @type {import('$lib/spatial/types.js').SpatialZone[] | null} */
+  let previewZones = $state(null)
+  /** @type {import('$lib/spatial/types.js').SpatialPlacement[] | null} */
+  let previewPlacements = $state(null)
   /** @type {import('$lib/spatial/types.js').WallGraph | null} */
   let graphPreviewGraph = $state(null)
   /** @type {import('$lib/spatial/types.js').GraphOpening[] | null} */
@@ -72,12 +109,17 @@
   const graphEditMode = $derived(
     wallGraph && planMode === 'edit' && editStep === 'walls',
   )
-  const canUndo = $derived(
-    graphEditMode ? canUndoGraph() : canUndoLayout(),
+  const zoneEditMode = $derived(
+    wallGraph && planMode === 'edit' && editStep === 'zones',
   )
-  const canRedo = $derived(
-    graphEditMode ? canRedoGraph() : canRedoLayout(),
+  const placeEditMode = $derived(
+    wallGraph && planMode === 'edit' && editStep === 'place',
   )
+  const wallGraphEditMode = $derived(
+    graphEditMode || zoneEditMode || placeEditMode,
+  )
+  const canUndo = $derived(wallGraphEditMode ? canUndoGraph() : canUndoLayout())
+  const canRedo = $derived(wallGraphEditMode ? canRedoGraph() : canRedoLayout())
   const showSelectionBar = $derived(
     editMode508 && (selectedWall || selectedOpening),
   )
@@ -87,16 +129,45 @@
   const showGraphOpeningSelectionBar = $derived(
     graphEditMode && Boolean(selectedOpening),
   )
+  const selectedZoneObj = $derived(
+    (project.zones ?? []).find((z) => z.id === selectedSpatialZone) ?? null,
+  )
+  const showZoneSelectionBar = $derived(
+    zoneEditMode && Boolean(selectedZoneObj),
+  )
+  const selectedPlacementObj = $derived(
+    (project.placements ?? []).find((p) => p.id === selectedPlacement) ?? null,
+  )
+  const showPlacementSelectionBar = $derived(
+    placeEditMode && Boolean(selectedPlacementObj),
+  )
   const hideFabForBar = $derived(
-    showSelectionBar || showGraphSelectionBar || showGraphOpeningSelectionBar,
+    showSelectionBar ||
+      showGraphSelectionBar ||
+      showGraphOpeningSelectionBar ||
+      showZoneSelectionBar ||
+      showPlacementSelectionBar,
   )
   const drawerLabel = $derived('详情')
 
   const viewerProject = $derived.by(() => {
     const graph = graphPreviewGraph ?? project.wallGraph
     const graphOpenings = graphPreviewOpenings ?? project.graphOpenings ?? []
+    const zones = previewZones ?? project.zones ?? []
     if (graph && (graphPreviewGraph || graphPreviewOpenings)) {
-      return buildFromWallGraph(graph, { ...project, graphOpenings })
+      return buildFromWallGraph(graph, { ...project, graphOpenings, zones })
+    }
+    if (previewZones) {
+      return buildFromWallGraph(project.wallGraph ?? graph, {
+        ...project,
+        zones: previewZones,
+      })
+    }
+    if (previewPlacements) {
+      return buildFromWallGraph(project.wallGraph ?? graph, {
+        ...project,
+        placements: previewPlacements,
+      })
     }
     return project
   })
@@ -113,9 +184,15 @@
       if (graphTool === 'opening') return '门窗：点击墙段放置门（32″）'
       return '选择：点墙段/门窗 · 拖顶点或沿墙移动 · Delete 删除'
     }
-    if (wallGraph) {
-      if (editStep === 'zones') return '② 划分（H-W3 开放）'
-      return '③ 布置（H-W4 开放）'
+    if (wallGraph && editStep === 'zones') {
+      if (zoneTool === 'zoneAdd') {
+        return '画区：逐点落顶点 · 点击首点或 Enter 闭合 · Esc 取消'
+      }
+      if (zoneTool === 'zoneRemove') return '删区：点击分区删除'
+      return '选区：点分区改名/换色 · 拖顶点微调 · 需核对时点确认'
+    }
+    if (wallGraph && editStep === 'place') {
+      return '布置：选家具类型后点画布放置 · 标储藏指派 S1–S8'
     }
     return '拖曳内墙与门窗调整户型 · Delete 隐藏门窗'
   })
@@ -129,6 +206,12 @@
       if (graphTool === 'remove') return '墙图 · 删墙'
       return '墙图 · 选择'
     }
+    if (zoneEditMode) {
+      if (zoneTool === 'zoneAdd') return '墙图 · 画区'
+      if (zoneTool === 'zoneRemove') return '墙图 · 删区'
+      return '墙图 · 选区'
+    }
+    if (placeEditMode) return '墙图 · 布置'
     if (editMode508) return '508 参数编辑'
     return '编辑'
   })
@@ -143,8 +226,7 @@
   onMount(() => {
     bumpFit(false, 'contain')
     if (!browser) return
-    convertBannerDismissed =
-      sessionStorage.getItem(CONVERT_BANNER_KEY) === '1'
+    convertBannerDismissed = sessionStorage.getItem(CONVERT_BANNER_KEY) === '1'
     const mq = window.matchMedia('(max-width: 599px)')
     compactPlanChrome = mq.matches
     /** @param {MediaQueryListEvent} e */
@@ -164,11 +246,126 @@
     selectedWall = ''
     selectedOpening = ''
     selectedEdge = ''
+    selectedSpatialZone = ''
+    selectedPlacement = ''
+  }
+
+  function clearZoneChain() {
+    zoneChainPoints = []
+    zoneChainHover = null
   }
 
   function clearGraphChain() {
     wallChainFrom = null
     wallChainHover = null
+  }
+
+  /** @param {{ x: number, y: number }} pt */
+  function onZonePoint(pt) {
+    if (zoneTool !== 'zoneAdd') return
+    const pxPerFt = project.wallGraph?.pxPerFt ?? 36
+    const snapped = snapGraphPoint(pt.x, pt.y, pxPerFt)
+    if (!zoneChainPoints.length) {
+      zoneChainPoints = [snapped]
+      return
+    }
+    if (
+      zoneChainPoints.length >= 3 &&
+      canClosePolygon(snapped, zoneChainPoints[0])
+    ) {
+      const id = addZone([...zoneChainPoints], undefined)
+      clearZoneChain()
+      if (id) selectedSpatialZone = id
+      return
+    }
+    zoneChainPoints = [...zoneChainPoints, snapped]
+  }
+
+  function closeZoneChainFromKeyboard() {
+    if (zoneChainPoints.length < 3) return
+    const id = addZone([...zoneChainPoints], undefined)
+    clearZoneChain()
+    if (id) selectedSpatialZone = id
+  }
+
+  /** @param {import('$lib/plan-placement-edit.js').PlacementTool} tool */
+  function setPlacementTool(tool) {
+    placementTool = tool
+    previewPlacements = null
+    storagePickerOpen = false
+    placementKindsOpen = false
+  }
+
+  /** @param {keyof typeof PLACEMENT_KINDS} kind */
+  function setPlacementKind(kind) {
+    placementKind = kind
+    placementKindsOpen = false
+  }
+
+  /** @param {{ x: number, y: number }} pt */
+  function onPlacementPoint(pt) {
+    if (placementTool !== 'place') return
+    const id = addPlacement(placementKind, pt.x, pt.y)
+    if (id) selectedPlacement = id
+  }
+
+  /** @param {{ x: number, y: number }} pt */
+  function onAssignStorageAt(pt) {
+    const zones = project.zones ?? []
+    const placements = project.placements ?? []
+    /** @type {{ zoneId?: string, placementId?: string }} */
+    const target = {}
+    for (const p of placements) {
+      if (
+        pt.x >= p.x &&
+        pt.x <= p.x + p.w &&
+        pt.y >= p.y &&
+        pt.y <= p.y + p.h
+      ) {
+        target.placementId = p.id
+        break
+      }
+    }
+    if (!target.placementId) {
+      const z = findZoneAtPoint(zones, pt)
+      if (z) target.zoneId = z.id
+    }
+    if (!target.placementId && !target.zoneId) return
+    storagePickerTarget = target
+    storagePickerOpen = true
+  }
+
+  /** @param {string} code */
+  function pickStorageCode(code) {
+    assignStorageZone(code, storagePickerTarget)
+    storagePickerOpen = false
+  }
+
+  $effect(() => {
+    const dialog = storagePickerDialog
+    if (!dialog || !browser) return
+    if (storagePickerOpen) {
+      if (!dialog.open) dialog.showModal()
+    } else if (dialog.open) {
+      dialog.close()
+    }
+  })
+
+  $effect(() => {
+    const dialog = placementKindsDialog
+    if (!dialog || !browser) return
+    if (placementKindsOpen) {
+      if (!dialog.open) dialog.showModal()
+    } else if (dialog.open) {
+      dialog.close()
+    }
+  })
+
+  /** @param {import('$lib/plan-zone-edit.js').ZoneTool} tool */
+  function setZoneTool(tool) {
+    zoneTool = tool
+    clearZoneChain()
+    previewZones = null
   }
 
   /** @param {{ x: number, y: number }} from @param {{ x: number, y: number }} to */
@@ -181,8 +378,7 @@
   /** @param {{ x: number, y: number }} pt */
   function onGraphWallPoint(pt) {
     if (graphTool !== 'wallAdd') return
-    const target =
-      wallChainFrom && wallChainHover ? wallChainHover : pt
+    const target = wallChainFrom && wallChainHover ? wallChainHover : pt
     if (!wallChainFrom) {
       wallChainFrom = target
       return
@@ -193,12 +389,12 @@
   }
 
   function performUndo() {
-    if (graphEditMode) undoGraphEdit()
+    if (wallGraphEditMode) undoGraphEdit()
     else undoLayoutEdit()
   }
 
   function performRedo() {
-    if (graphEditMode) redoGraphEdit()
+    if (wallGraphEditMode) redoGraphEdit()
     else redoLayoutEdit()
   }
 
@@ -262,12 +458,18 @@
 
   /** @param {'walls' | 'zones' | 'place'} step */
   function setEditStep(step) {
-    if (step === 'zones' || step === 'place') return
+    if (!wallGraph && step !== 'walls') return
+    if (step === 'place' && !wallGraph) return
     editStep = step
     clearSelection()
     clearGraphChain()
+    clearZoneChain()
     graphPreviewGraph = null
     graphPreviewOpenings = null
+    previewZones = null
+    previewPlacements = null
+    if (step === 'zones') zoneTool = 'zoneAdd'
+    if (step === 'place') placementTool = 'place'
     bumpFit(false)
   }
 
@@ -304,7 +506,7 @@
   })
 
   $effect(() => {
-    if (graphEditMode && compactPlanChrome) {
+    if ((graphEditMode || placeEditMode) && compactPlanChrome) {
       bumpFit(false, 'contain')
     }
   })
@@ -348,6 +550,14 @@
           showHelp = false
           return
         }
+        if (storagePickerOpen) {
+          storagePickerOpen = false
+          return
+        }
+        if (placementKindsOpen) {
+          placementKindsOpen = false
+          return
+        }
         if (drawerOpen) {
           drawerOpen = false
           return
@@ -362,10 +572,60 @@
           } else setPlanMode('browse')
           return
         }
+        if (zoneEditMode) {
+          if (selectedSpatialZone) selectedSpatialZone = ''
+          else if (zoneChainPoints.length) clearZoneChain()
+          else if (previewZones) previewZones = null
+          else setPlanMode('browse')
+          return
+        }
+        if (placeEditMode) {
+          if (selectedPlacement) selectedPlacement = ''
+          else if (placementTool === 'storage') setPlacementTool('place')
+          else if (previewPlacements) previewPlacements = null
+          else setPlanMode('browse')
+          return
+        }
         if (planMode === 'edit') {
           if (selectedWall || selectedOpening) clearSelection()
           else setPlanMode('browse')
         }
+        return
+      }
+
+      if (
+        e.key === 'Enter' &&
+        zoneEditMode &&
+        zoneTool === 'zoneAdd' &&
+        zoneChainPoints.length >= 3 &&
+        !inField
+      ) {
+        e.preventDefault()
+        closeZoneChainFromKeyboard()
+        return
+      }
+
+      if (
+        (e.key === 'Delete' || e.key === 'Backspace') &&
+        placeEditMode &&
+        selectedPlacement &&
+        !inField
+      ) {
+        e.preventDefault()
+        removePlacement(selectedPlacement)
+        selectedPlacement = ''
+        return
+      }
+
+      if (
+        (e.key === 'Delete' || e.key === 'Backspace') &&
+        zoneEditMode &&
+        selectedSpatialZone &&
+        !inField
+      ) {
+        e.preventDefault()
+        removeZone(selectedSpatialZone)
+        selectedSpatialZone = ''
         return
       }
 
@@ -417,7 +677,7 @@
 
       if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
         if (inField) return
-        if (graphEditMode && canUndoGraph()) {
+        if (wallGraphEditMode && canUndoGraph()) {
           e.preventDefault()
           undoGraphEdit()
           return
@@ -431,7 +691,7 @@
         (e.ctrlKey && e.key === 'y')
       ) {
         if (inField) return
-        if (graphEditMode && canRedoGraph()) {
+        if (wallGraphEditMode && canRedoGraph()) {
           e.preventDefault()
           redoGraphEdit()
           return
@@ -446,7 +706,10 @@
   })
 </script>
 
-<div class="plan-page" class:plan-page-immersive={planMode === 'edit' && compactPlanChrome}>
+<div
+  class="plan-page"
+  class:plan-page-immersive={planMode === 'edit' && compactPlanChrome}
+>
   <header
     class="plan-top"
     class:plan-top-edit={planMode === 'edit'}
@@ -493,7 +756,7 @@
             onclick={performRedo}>↷</button
           >
         </div>
-      {:else if graphEditMode}
+      {:else if wallGraphEditMode}
         <div class="mode-history" role="group" aria-label="编辑历史">
           <button
             type="button"
@@ -540,16 +803,22 @@
           <button
             type="button"
             class="step-btn"
-            disabled
-            title="即将推出：手绘分区"
+            class:active={editStep === 'zones'}
+            aria-pressed={editStep === 'zones'}
+            disabled={!wallGraph}
+            title={wallGraph ? '手绘分区' : '请先转换为墙图'}
+            onclick={() => setEditStep('zones')}
           >
             ② 划分
           </button>
           <button
             type="button"
             class="step-btn"
-            disabled
-            title="即将推出：家具布置"
+            class:active={editStep === 'place'}
+            aria-pressed={editStep === 'place'}
+            disabled={!wallGraph}
+            title={wallGraph ? '家具与储藏指派' : '请先转换为墙图'}
+            onclick={() => setEditStep('place')}
           >
             ③ 布置
           </button>
@@ -558,44 +827,134 @@
         {#if graphEditMode}
           <div class="tool-segment-scroll" data-scroll-hint="tools">
             <div class="tool-segment" role="group" aria-label="墙图工具">
-            <button
-              type="button"
-              class="step-btn"
-              class:active={graphTool === 'select'}
-              aria-pressed={graphTool === 'select'}
-              onclick={() => setGraphTool('select')}
-            >
-              选择
-            </button>
-            <button
-              type="button"
-              class="step-btn"
-              class:active={graphTool === 'wallAdd'}
-              aria-pressed={graphTool === 'wallAdd'}
-              onclick={() => setGraphTool('wallAdd')}
-            >
-              建墙
-            </button>
-            <button
-              type="button"
-              class="step-btn"
-              class:active={graphTool === 'opening'}
-              aria-pressed={graphTool === 'opening'}
-              onclick={() => setGraphTool('opening')}
-            >
-              门窗
-            </button>
-            <button
-              type="button"
-              class="step-btn"
-              class:active={graphTool === 'remove'}
-              aria-pressed={graphTool === 'remove'}
-              onclick={() => setGraphTool('remove')}
-            >
-            删墙
-            </button>
+              <button
+                type="button"
+                class="step-btn"
+                class:active={graphTool === 'select'}
+                aria-pressed={graphTool === 'select'}
+                onclick={() => setGraphTool('select')}
+              >
+                选择
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                class:active={graphTool === 'wallAdd'}
+                aria-pressed={graphTool === 'wallAdd'}
+                onclick={() => setGraphTool('wallAdd')}
+              >
+                建墙
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                class:active={graphTool === 'opening'}
+                aria-pressed={graphTool === 'opening'}
+                onclick={() => setGraphTool('opening')}
+              >
+                门窗
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                class:active={graphTool === 'remove'}
+                aria-pressed={graphTool === 'remove'}
+                onclick={() => setGraphTool('remove')}
+              >
+                删墙
+              </button>
+            </div>
           </div>
+        {:else if zoneEditMode}
+          <div class="tool-segment-scroll" data-scroll-hint="tools">
+            <div class="tool-segment" role="group" aria-label="分区工具">
+              <button
+                type="button"
+                class="step-btn"
+                class:active={zoneTool === 'zoneAdd'}
+                aria-pressed={zoneTool === 'zoneAdd'}
+                onclick={() => setZoneTool('zoneAdd')}
+              >
+                画区
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                class:active={zoneTool === 'zoneSelect'}
+                aria-pressed={zoneTool === 'zoneSelect'}
+                onclick={() => setZoneTool('zoneSelect')}
+              >
+                选区
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                class:active={zoneTool === 'zoneRemove'}
+                aria-pressed={zoneTool === 'zoneRemove'}
+                onclick={() => setZoneTool('zoneRemove')}
+              >
+                删区
+              </button>
+            </div>
           </div>
+        {:else if placeEditMode}
+          <div class="tool-segment-scroll" data-scroll-hint="tools">
+            <div class="tool-segment" role="group" aria-label="布置工具">
+              <button
+                type="button"
+                class="step-btn"
+                class:active={placementTool === 'place'}
+                aria-pressed={placementTool === 'place'}
+                onclick={() => setPlacementTool('place')}
+              >
+                家具
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                class:active={placementTool === 'storage'}
+                aria-pressed={placementTool === 'storage'}
+                onclick={() => setPlacementTool('storage')}
+              >
+                标储藏
+              </button>
+            </div>
+          </div>
+          {#if placementTool === 'place'}
+            {#if compactPlanChrome}
+              <div class="tool-segment placement-kind-row" role="group" aria-label="家具类型">
+                <span class="placement-kind-current" aria-current="true">
+                  {PLACEMENT_KINDS[placementKind].label}
+                </span>
+                <button
+                  type="button"
+                  class="step-btn step-btn-compact"
+                  onclick={() => (placementKindsOpen = true)}
+                >
+                  换类型
+                </button>
+              </div>
+            {:else}
+              <div class="tool-segment-scroll" data-scroll-hint="kinds">
+                <div class="tool-segment" role="group" aria-label="家具类型">
+                  {#each Object.entries(PLACEMENT_KINDS) as [kind, spec]}
+                    <button
+                      type="button"
+                      class="step-btn step-btn-compact"
+                      class:active={placementKind === kind}
+                      aria-pressed={placementKind === kind}
+                      onclick={() =>
+                        setPlacementKind(
+                          /** @type {keyof typeof PLACEMENT_KINDS} */ (kind),
+                        )}
+                    >
+                      {spec.label}
+                    </button>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          {/if}
         {/if}
       </div>
     {/if}
@@ -630,14 +989,15 @@
   <PlanShortcutsHelp
     open={showHelp}
     contextHint={modeHint}
-    graphEditMode={graphEditMode}
+    {graphEditMode}
+    editStep={wallGraph && planMode === 'edit' ? editStep : null}
     onClose={() => (showHelp = false)}
   />
 
   <div class="plan-stage">
-    {#if wallGraph && planMode === 'browse'}
+    {#if wallGraph && planMode === 'browse' && !project.zones?.length}
       <p class="plan-snapshot-badge" role="note">
-        房间名与色块来自 508 参数快照 · 手绘分区（H-W3）上线后替换
+        房间名与色块来自 508 参数快照 · 在编辑②划分中手绘分区后替换
       </p>
     {/if}
     <FloorPlanViewer
@@ -645,7 +1005,7 @@
       canvasPriority
       hideFurniture
       editMode={editMode508}
-      graphEditMode={graphEditMode}
+      {graphEditMode}
       toolbarMinimal={compactPlanChrome && planMode === 'edit'}
       {graphTool}
       {fitRequest}
@@ -654,6 +1014,67 @@
       {selectedEdge}
       {wallChainFrom}
       {wallChainHover}
+      {zoneEditMode}
+      {zoneTool}
+      {selectedSpatialZone}
+      zoneChainFrom={zoneChainPoints[0] ?? null}
+      {zoneChainHover}
+      {zoneChainPoints}
+      {previewZones}
+      onZonePoint={zoneEditMode ? onZonePoint : undefined}
+      onSelectSpatialZone={(id) => {
+        selectedSpatialZone = id
+      }}
+      onRemoveSpatialZone={(id) => {
+        removeZone(id)
+        if (selectedSpatialZone === id) selectedSpatialZone = ''
+      }}
+      onZoneHover={(pt) => {
+        zoneChainHover = pt
+      }}
+      onZoneVertexDragStart={() => {
+        previewZones = project.zones ?? []
+      }}
+      onZoneVertexDrag={(zoneId, index, pt) => {
+        const pxPerFt = project.wallGraph?.pxPerFt ?? 36
+        const snapped = snapGraphPoint(pt.x, pt.y, pxPerFt)
+        previewZones = (project.zones ?? []).map((z) => {
+          if (z.id !== zoneId) return z
+          return {
+            ...z,
+            polygon: z.polygon.map((p, i) => (i === index ? snapped : p)),
+          }
+        })
+      }}
+      onZoneVertexDrop={(zoneId, index, pt) => {
+        previewZones = null
+        commitZoneVertexMove(zoneId, index, pt.x, pt.y)
+      }}
+      placementEditMode={placeEditMode}
+      {placementTool}
+      {selectedPlacement}
+      showFurniture={placeEditMode || planMode === 'browse'}
+      onPlacementPoint={placeEditMode ? onPlacementPoint : undefined}
+      onAssignStorage={placeEditMode ? onAssignStorageAt : undefined}
+      onSelectPlacement={(id) => {
+        selectedPlacement = id
+      }}
+      onPlacementDragStart={() => {
+        previewPlacements = project.placements ?? []
+      }}
+      onPlacementDrag={(id, pt) => {
+        const p = (project.placements ?? []).find((x) => x.id === id)
+        if (!p) return
+        previewPlacements = (project.placements ?? []).map((item) =>
+          item.id === id
+            ? { ...item, x: pt.x - item.w / 2, y: pt.y - item.h / 2 }
+            : item,
+        )
+      }}
+      onPlacementDrop={(id, pt) => {
+        previewPlacements = null
+        commitPlacementMove(id, pt.x, pt.y)
+      }}
       onZoneSelect={planMode === 'browse' ? selectZone : undefined}
       onClearSelection={editMode508 ? clearSelection : undefined}
       onGraphWallPoint={graphEditMode ? onGraphWallPoint : undefined}
@@ -669,7 +1090,6 @@
       onGraphSelectEdge={(id) => {
         selectedEdge = id
         selectedOpening = ''
-        openDrawerForSelection('edge')
       }}
       onGraphSelectOpening={(id) => {
         selectedOpening = id
@@ -726,7 +1146,7 @@
         selectedWall = ''
         openDrawerForSelection()
       }}
-      onBlankContextMenu={onBlankContextMenu}
+      {onBlankContextMenu}
     />
     {#if showSelectionBar}
       <PlanSelectionBar
@@ -759,11 +1179,86 @@
         onOpenDetails={() => (drawerOpen = true)}
       />
     {/if}
+    {#if showPlacementSelectionBar && selectedPlacementObj}
+      <PlanPlacementSelectionBar
+        placement={selectedPlacementObj}
+        compact={compactPlanChrome}
+        onClear={() => {
+          selectedPlacement = ''
+        }}
+      />
+    {/if}
+    <dialog
+      bind:this={storagePickerDialog}
+      class="storage-picker plan-modal-picker"
+      aria-labelledby="storage-picker-title"
+      onclose={() => (storagePickerOpen = false)}
+    >
+      <p id="storage-picker-title" class="storage-picker-title">指派到储藏区</p>
+      <div class="storage-picker-grid">
+        {#each STORAGE_CODES as code}
+          <button
+            type="button"
+            class="storage-picker-btn"
+            onclick={() => pickStorageCode(code)}
+          >
+            {code}
+          </button>
+        {/each}
+      </div>
+      <button
+        type="button"
+        class="storage-picker-cancel"
+        onclick={() => (storagePickerOpen = false)}
+      >
+        取消
+      </button>
+    </dialog>
+    <dialog
+      bind:this={placementKindsDialog}
+      class="placement-kinds-picker plan-modal-picker"
+      aria-labelledby="placement-kinds-title"
+      onclose={() => (placementKindsOpen = false)}
+    >
+      <p id="placement-kinds-title" class="storage-picker-title">选择家具类型</p>
+      <div class="storage-picker-grid placement-kinds-grid">
+        {#each Object.entries(PLACEMENT_KINDS) as [kind, spec]}
+          <button
+            type="button"
+            class="storage-picker-btn"
+            class:active={placementKind === kind}
+            aria-pressed={placementKind === kind}
+            onclick={() =>
+              setPlacementKind(/** @type {keyof typeof PLACEMENT_KINDS} */ (kind))}
+          >
+            {spec.label}
+          </button>
+        {/each}
+      </div>
+      <button
+        type="button"
+        class="storage-picker-cancel"
+        onclick={() => (placementKindsOpen = false)}
+      >
+        取消
+      </button>
+    </dialog>
+    {#if showZoneSelectionBar && selectedZoneObj}
+      <PlanZoneSelectionBar
+        zone={selectedZoneObj}
+        compact={compactPlanChrome}
+        onClear={() => {
+          selectedSpatialZone = ''
+        }}
+      />
+    {/if}
     <PlanLegend
       overlay
       interactive={planMode === 'browse'}
       editMode={editMode508}
-      graphEditMode={graphEditMode}
+      {graphEditMode}
+      {zoneEditMode}
+      placeEditMode={placeEditMode}
     />
 
     <button
@@ -804,7 +1299,11 @@
                 {project.wallGraph?.edges.length ?? 0}
               </p>
               {#if wallChainFrom}
-                <button type="button" class="graph-aside-btn" onclick={clearGraphChain}>
+                <button
+                  type="button"
+                  class="graph-aside-btn"
+                  onclick={clearGraphChain}
+                >
                   清除建墙链点
                 </button>
               {/if}
@@ -816,6 +1315,61 @@
                     if (splitGraphWall(selectedEdge)) selectedEdge = ''
                   }}>分割选中墙段</button
                 >
+              {/if}
+            </section>
+          {:else if zoneEditMode}
+            <section class="graph-aside" aria-label="分区编辑">
+              <p class="graph-aside-lead">
+                已划分 {project.zones?.length ?? 0} 个分区
+              </p>
+              {#if zoneChainPoints.length}
+                <button
+                  type="button"
+                  class="graph-aside-btn"
+                  onclick={clearZoneChain}
+                >
+                  清除画区链点
+                </button>
+                <button
+                  type="button"
+                  class="graph-aside-btn"
+                  onclick={closeZoneChainFromKeyboard}
+                  disabled={zoneChainPoints.length < 3}
+                >
+                  闭合当前分区
+                </button>
+              {/if}
+            </section>
+          {:else if placeEditMode}
+            <section class="graph-aside" aria-label="布置编辑">
+              <p class="graph-aside-lead">
+                已放置 {project.placements?.length ?? 0} 件家具
+              </p>
+              {#if selectedPlacementObj}
+                <p class="graph-aside-lead">
+                  {selectedPlacementObj.label} · {Math.round(selectedPlacementObj.w)}″×{Math.round(selectedPlacementObj.h)}″
+                </p>
+                <button
+                  type="button"
+                  class="graph-aside-btn"
+                  onclick={() => rotatePlacementById(selectedPlacementObj.id)}
+                >
+                  旋转选中家具 90°
+                </button>
+                <button
+                  type="button"
+                  class="graph-aside-btn"
+                  onclick={() => {
+                    removePlacement(selectedPlacementObj.id)
+                    selectedPlacement = ''
+                  }}
+                >
+                  删除选中家具
+                </button>
+              {:else}
+                <p class="graph-aside-lead">
+                  选中画布上的家具可在此编辑；「标储藏」点击分区或家具指派 S1–S8。
+                </p>
               {/if}
             </section>
           {:else if editMode508}
@@ -1186,7 +1740,7 @@
   .plan-drawer {
     position: fixed;
     z-index: 50;
-    top: calc(var(--appbar-height, 56px) + 8px);
+    top: calc(var(--appbar-h, 56px) + 8px);
     right: max(8px, var(--safe-right-effective));
     bottom: calc(
       var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 8px
@@ -1340,7 +1894,8 @@
       height: 44px;
     }
 
-    .plan-page-immersive :global(.plan-shell.canvas-priority .plan-viewer:not(.compact)) {
+    .plan-page-immersive
+      :global(.plan-shell.canvas-priority .plan-viewer:not(.compact)) {
       min-height: min(78dvh, 860px);
     }
 
@@ -1382,6 +1937,117 @@
       bottom: calc(
         var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 148px
       );
+    }
+  }
+
+  .step-btn-compact {
+    font-size: 11px;
+    padding-inline: 8px;
+  }
+
+  .placement-kind-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    flex: 0 0 auto;
+  }
+
+  .placement-kind-current {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--graph-accent);
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+
+  .plan-modal-picker {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    margin: 0;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--card) 96%, transparent);
+    box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.35);
+    min-width: min(320px, calc(100% - 32px));
+    max-width: calc(100% - 32px);
+  }
+
+  .storage-picker::backdrop,
+  .placement-kinds-picker::backdrop {
+    background: rgba(12, 16, 22, 0.42);
+  }
+
+  @media (max-width: 599px) {
+    .plan-modal-picker {
+      top: auto;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      transform: none;
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      border-radius: 18px 18px 0 0;
+      padding-bottom: calc(16px + var(--safe-bottom-effective));
+    }
+  }
+
+  .storage-picker-title {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 650;
+  }
+
+  .storage-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .storage-picker-btn {
+    min-height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .storage-picker-cancel {
+    margin-top: 12px;
+    width: 100%;
+    min-height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--t2);
+    cursor: pointer;
+  }
+
+  .storage-picker-btn.active {
+    border-color: var(--graph-accent);
+    color: var(--graph-accent);
+    background: color-mix(in srgb, var(--graph-accent) 10%, var(--bg));
+  }
+
+  .placement-kinds-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @media (max-width: 599px) {
+    .placement-kinds-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .storage-picker-btn {
+      min-height: 44px;
     }
   }
 </style>

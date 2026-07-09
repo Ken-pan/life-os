@@ -28,7 +28,7 @@ npm run check
 | 模式 | 说明 | 编辑方式 |
 |------|------|----------|
 | **508 参数** | 默认 · Avalon #508 参数化 | 拖内墙/门窗；Delete 软隐藏门窗 |
-| **墙图** | 设置页一次性转换 | ① 墙体：建/删/选/拖顶点/分割/门窗 · ②③ 划分/布置（H-W3/W4） |
+| **墙图** | 设置页一次性转换 | ① 墙体 · **② 划分**（画区/选区/删区）· **③ 布置**（8 类家具 + 储藏指派 S1–S8） |
 
 墙图模式下 **门窗** 挂在墙边（`graphOpenings[]`，英寸 `offsetIn`/`spanIn`），移墙跟墙走、删墙级联删开口（toast 可撤销）。
 
@@ -48,8 +48,9 @@ SpatialProject
 ├── layoutConfig?          # 508 参数（安全气囊）
 ├── wallGraph?             # 顶点/边 SSOT
 ├── graphOpenings[]        # 挂边门窗
-├── zones[]                # H-W3 手绘分区
-├── placements[]           # H-W4 家具
+├── zones[]                # 手绘分区（polygon + stale）
+├── placements[]           # 矩形家具（8 类）
+├── storageZones[]         # S1–S8 · 可 zoneId/placementId 指派
 └── rooms/walls/openings…  # hydrate 派生，勿手编
 ```
 
@@ -59,7 +60,7 @@ SpatialProject
 
 ```bash
 npm run test:viewport      # 508 模式定位回归（67 checks）
-npm run test:plan-edit       # 墙图 smoke（8 checks）
+npm run test:plan-edit       # 墙图 smoke（13 checks：墙/门窗/分区/储藏）
 node scripts/qa-ui-screenshots.mjs   # UI/UX 截图（可选）
 ```
 
@@ -72,4 +73,4 @@ node scripts/qa-ui-screenshots.mjs   # UI/UX 截图（可选）
 | [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../docs/qa/home-spatial-editor-audit-2026-07-08.md) | 功能验收 |
 | [`docs/qa/home-spatial-uiux-audit-2026-07-08.md`](../../docs/qa/home-spatial-uiux-audit-2026-07-08.md) | UI/UX 审核（Wave A/B/C） |
 
-**当前进度（2026-07-08）：** H-W0 ✅ · H-W1 ✅ · H-W2（含 W2b/c）✅ · Wave A/B/C UX ✅ · **H-W3** 手绘分区 📋
+**当前进度（2026-07-08）：** H-W0–W5 ✅ · Wave A/B/C UX ✅ · 三步编辑器（墙体/划分/布置）已发货

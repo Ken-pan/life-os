@@ -1,8 +1,20 @@
 <script>
   import { browser } from '$app/environment'
 
-  /** @type {{ open?: boolean, contextHint?: string, graphEditMode?: boolean, onClose?: () => void }} */
-  let { open = false, contextHint = '', graphEditMode = false, onClose } = $props()
+  /** @type {{
+   *   open?: boolean,
+   *   contextHint?: string,
+   *   graphEditMode?: boolean,
+   *   editStep?: 'walls' | 'zones' | 'place' | null,
+   *   onClose?: () => void,
+   * }} */
+  let {
+    open = false,
+    contextHint = '',
+    graphEditMode = false,
+    editStep = null,
+    onClose,
+  } = $props()
 
   /** @type {HTMLButtonElement | null} */
   let closeBtn = $state(null)
@@ -10,6 +22,19 @@
   const modKey = $derived(
     browser && /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘' : 'Ctrl+',
   )
+
+  const escHint = $derived.by(() => {
+    if (editStep === 'place') {
+      return '关弹窗 → 取消选中 → 退出标储藏 → 退出编辑'
+    }
+    if (editStep === 'zones') {
+      return '取消选中 → 清除画区链 → 退出编辑'
+    }
+    if (editStep === 'walls' || graphEditMode) {
+      return '取消选中 → 断建墙链 → 退出编辑'
+    }
+    return '取消选中 → 退出编辑'
+  })
 
   $effect(() => {
     if (open && closeBtn) closeBtn.focus()
@@ -44,16 +69,27 @@
         <div class="help-row"><dt><kbd>?</kbd></dt><dd>打开/关闭本帮助</dd></div>
         <div class="help-row"><dt><kbd>E</kbd></dt><dd>浏览 ↔ 编辑</dd></div>
         <div class="help-row"><dt><kbd>F</kbd></dt><dd>切换全图 / 铺满宽度</dd></div>
-        <div class="help-row"><dt><kbd>Esc</kbd></dt><dd>取消选中 → 退出编辑</dd></div>
+        <div class="help-row"><dt><kbd>Esc</kbd></dt><dd>{escHint}</dd></div>
         <div class="help-row"><dt><kbd>{modKey}Z</kbd></dt><dd>撤销修改</dd></div>
         <div class="help-row"><dt><kbd>{modKey}{modKey === '⌘' ? '⇧Z' : 'Y'}</kbd></dt><dd>重做</dd></div>
-        {#if graphEditMode}
-          <div class="help-row"><dt><kbd>1–3</kbd></dt><dd>切换建墙 / 选择 / 删墙工具</dd></div>
+        {#if editStep === 'walls' || graphEditMode}
+          <div class="help-row"><dt><kbd>1–3</kbd></dt><dd>选择 / 建墙 / 删墙</dd></div>
           <div class="help-row">
             <dt><kbd>Delete</kbd></dt>
             <dd>删除选中墙段或门窗</dd>
           </div>
-        {:else}
+        {:else if editStep === 'zones'}
+          <div class="help-row"><dt><kbd>Enter</kbd></dt><dd>闭合当前画区（≥3 点）</dd></div>
+          <div class="help-row">
+            <dt><kbd>Delete</kbd></dt>
+            <dd>删除选中分区</dd>
+          </div>
+        {:else if editStep === 'place'}
+          <div class="help-row">
+            <dt><kbd>Delete</kbd></dt>
+            <dd>删除选中家具</dd>
+          </div>
+        {:else if !graphEditMode}
           <div class="help-row"><dt><kbd>Delete</kbd></dt><dd>隐藏选中门窗（508 模式）</dd></div>
         {/if}
       </dl>
@@ -61,8 +97,12 @@
         <p class="help-context" aria-live="polite">{contextHint}</p>
       {/if}
       <p class="help-note">
-        {#if graphEditMode}
-          墙图模式：拖顶点改墙形，拖门窗沿墙移动，端点圆点改宽。布局备份见设置页。
+        {#if editStep === 'walls' || graphEditMode}
+          墙图 ①：拖顶点改墙形，拖门窗沿墙移动，端点圆点改宽。布局备份见设置页。
+        {:else if editStep === 'zones'}
+          墙图 ②：手绘分区闭合后自动命名；改墙后 stale 分区需点确认。布局备份见设置页。
+        {:else if editStep === 'place'}
+          墙图 ③：放置家具后可拖曳移动；「标储藏」点击分区或家具指派 S1–S8。
         {:else}
           浏览模式点击储藏区进入物品清单；508 编辑可拖曳墙与门窗。布局备份见设置页。
         {/if}

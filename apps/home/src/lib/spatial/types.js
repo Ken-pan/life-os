@@ -132,6 +132,8 @@
  * @property {Point} marker
  * @property {string[]} items
  * @property {boolean} [inferred]
+ * @property {string} [zoneId]
+ * @property {string} [placementId]
  */
 
 /**

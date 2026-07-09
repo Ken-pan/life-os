@@ -3,7 +3,7 @@
 > **Workstream：** `H-W*`（Home · Wall/空间编辑），与 `H-P*`（Home 产品杂项）并行、编号互不冲突。
 > **产品形态：** `/plan` = 浏览 + 编辑（① 墙体 → ② 划分 → ③ 布置）三步编辑器。
 > **SSOT 原则：** 墙图（点/边 graph）是第一步的唯一真源；门窗挂在墙边上；分区是用户手绘多边形；储藏由用户指派。**不再用 508 房间参数间接改墙。**
-> **状态：** 🟡 进行中 · H-W0 ✅ · H-W1 ✅ · **H-W2 ✅**（含 W2b/c · §5.3）· **Wave A/B/C UX ✅** · H-W3–W5 📋 · 创建于 2026-07-08 · 索引见 [home.md](./home.md)  
+> **状态：** ✅ 已发货 · H-W0–W5 ✅ · Wave A/B/C UX ✅ · 创建于 2026-07-08 · 索引见 [home.md](./home.md)  
 > **功能验收：** [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../qa/home-spatial-editor-audit-2026-07-08.md) · 截图 `apps/home/screenshots/qa-hw2/`  
 > **UI/UX 验收：** [`docs/qa/home-spatial-uiux-audit-2026-07-08.md`](../../qa/home-spatial-uiux-audit-2026-07-08.md)
 
@@ -19,9 +19,9 @@
 | **H-W2b** | ✅ | 手机 compact chrome · hint 去重 · GraphSelectionBar 移动可见 |
 | **H-W2c** | ✅ | `PlanGraphOpeningSelectionBar` · smoke **8 checks** |
 | **Wave A/B/C** | ✅ | UI/UX 审核 UX-01–22 主项 + A11Y-01/03 — 见 [uiux-audit](../../qa/home-spatial-uiux-audit-2026-07-08.md) |
-| **H-W3–W5** | 📋 | 分区 · 家具/储藏 · 文档/CI |
+| **H-W3–W5** | ✅ | 分区 · 家具/储藏 · 文档/CI |
 
-**下一步：** **H-W3** 手绘分区 `zones[]`
+**下一步：** H-P7 多项目 / H-P9 引导 / 云同步 H-P4
 
 ---
 

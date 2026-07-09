@@ -5,6 +5,11 @@
 
 import { SPATIAL_SCHEMA_VERSION } from './types.js'
 import { deriveWallsAndOpenings } from './graph-openings.js'
+import { zonesToRooms } from './zones.js'
+import {
+  placementsToFurniture,
+  resolveStorageZoneBounds,
+} from './placements.js'
 
 const VERTEX_TOL_PX = 3
 let idSeq = 1
@@ -220,6 +225,14 @@ export function buildFromWallGraph(graph, carry = {}) {
 
   const { width, height, outerBounds } = graphViewport(graph)
 
+  const zones = carry.zones ?? []
+  const placements = carry.placements ?? []
+  const storageZones = resolveStorageZoneBounds(
+    carry.storageZones ?? [],
+    zones,
+    placements,
+  )
+
   return {
     schemaVersion: SPATIAL_SCHEMA_VERSION,
     meta: carry.meta ?? {
@@ -228,18 +241,18 @@ export function buildFromWallGraph(graph, carry = {}) {
     },
     viewport: { width, height },
     gridStep: Math.round(graph.pxPerFt * (4 / 12)),
-    rooms: carry.rooms ?? [],
+    rooms: zones.length ? zonesToRooms(zones) : (carry.rooms ?? []),
     walls,
     outerBounds,
     openings,
-    furniture: [],
-    storageZones: carry.storageZones ?? [],
+    furniture: placementsToFurniture(placements),
+    storageZones,
     furnitureInventory: [],
     layoutMode: 'wallGraph',
     wallGraph: graph,
     graphOpenings,
-    zones: carry.zones ?? [],
-    placements: carry.placements ?? [],
+    zones,
+    placements,
     layoutConfig: carry.layoutConfig,
   }
 }

@@ -62,16 +62,26 @@ export function deserializeProject(raw) {
  */
 export function toExtrusionHints(project) {
   const wallHeightFt = 8
+  const zones = project.zones ?? []
+  const floors =
+    zones.length > 0
+      ? zones.map((z, i) => ({
+          id: z.id,
+          polygon: z.polygon,
+          elevationFt: 0,
+          fill: z.color ?? project.rooms[i]?.fill,
+        }))
+      : project.rooms.map((room) => ({
+          id: room.id,
+          polygon: rectToPolygon(room.bounds),
+          elevationFt: 0,
+          fill: room.fill,
+        }))
   return {
     schemaVersion: 1,
     unit: 'ft',
     wallHeightFt,
-    floors: project.rooms.map((room) => ({
-      id: room.id,
-      polygon: rectToPolygon(room.bounds),
-      elevationFt: 0,
-      fill: room.fill,
-    })),
+    floors,
     walls: project.walls
       .filter((w) => w.kind === 'wall')
       .map((wall) => ({

@@ -4,6 +4,8 @@
   import { planPanZoom } from '$lib/plan-pan-zoom.js'
   import { bindPlanEditDrag } from '$lib/plan-edit-drag.js'
   import { bindPlanGraphEdit } from '$lib/plan-graph-edit.js'
+  import { bindPlanZoneEdit } from '$lib/plan-zone-edit.js'
+  import { bindPlanPlacementEdit } from '$lib/plan-placement-edit.js'
   import { hydrateProject } from '$lib/spatial/model.js'
   import {
     commitLayoutDrag,
@@ -63,6 +65,29 @@
    *   onVertexDragStart?: (vertexId: string) => void,
    *   onVertexDrag?: (vertexId: string, pt: { x: number, y: number }) => void,
    *   onVertexDrop?: (vertexId: string, pt: { x: number, y: number }) => void,
+   *   zoneEditMode?: boolean,
+   *   zoneTool?: import('$lib/plan-zone-edit.js').ZoneTool,
+   *   selectedSpatialZone?: string,
+   *   zoneChainFrom?: { x: number, y: number } | null,
+   *   zoneChainHover?: { x: number, y: number } | null,
+   *   zoneChainPoints?: { x: number, y: number }[],
+   *   previewZones?: import('$lib/spatial/types.js').SpatialZone[] | null,
+   *   onZonePoint?: (pt: { x: number, y: number }) => void,
+   *   onSelectSpatialZone?: (zoneId: string) => void,
+   *   onRemoveSpatialZone?: (zoneId: string) => void,
+   *   onZoneHover?: (pt: { x: number, y: number } | null) => void,
+   *   onZoneVertexDragStart?: (zoneId: string, index: number) => void,
+   *   onZoneVertexDrag?: (zoneId: string, index: number, pt: { x: number, y: number }) => void,
+   *   onZoneVertexDrop?: (zoneId: string, index: number, pt: { x: number, y: number }) => void,
+   *   placementEditMode?: boolean,
+   *   placementTool?: 'place' | 'storage',
+   *   selectedPlacement?: string,
+   *   onPlacementPoint?: (pt: { x: number, y: number }) => void,
+   *   onSelectPlacement?: (id: string) => void,
+   *   onAssignStorage?: (pt: { x: number, y: number }) => void,
+   *   onPlacementDrag?: (id: string, pt: { x: number, y: number }) => void,
+   *   onPlacementDrop?: (id: string, pt: { x: number, y: number }) => void,
+   *   showFurniture?: boolean,
    *   overrideProject?: import('$lib/spatial/types.js').SpatialProject,
    * }} */
   let {
@@ -102,6 +127,30 @@
     onVertexDragStart,
     onVertexDrag,
     onVertexDrop,
+    zoneEditMode = false,
+    zoneTool = 'zoneAdd',
+    selectedSpatialZone = '',
+    zoneChainFrom = null,
+    zoneChainHover = null,
+    zoneChainPoints = [],
+    previewZones = null,
+    onZonePoint,
+    onSelectSpatialZone,
+    onRemoveSpatialZone,
+    onZoneHover,
+    onZoneVertexDragStart,
+    onZoneVertexDrag,
+    onZoneVertexDrop,
+    placementEditMode = false,
+    placementTool = 'place',
+    selectedPlacement = '',
+    onPlacementPoint,
+    onSelectPlacement,
+    onAssignStorage,
+    onPlacementDragStart,
+    onPlacementDrag,
+    onPlacementDrop,
+    showFurniture = false,
     overrideProject,
   } = $props()
 
@@ -195,7 +244,11 @@
   })
 
   const touchScale = $derived.by(() => {
-    if ((!editMode && !graphEditMode) || !viewportEl) return 1
+    if (
+      (!editMode && !graphEditMode && !zoneEditMode && !placementEditMode) ||
+      !viewportEl
+    )
+      return 1
     const vbW = displayProject.viewport.width
     const canvasW = Math.max(viewportEl.clientWidth - 24, 120)
     if (!vbW) return 1
@@ -209,7 +262,7 @@
       highlightZone,
       compact,
       editMode,
-      hideFurniture,
+      hideFurniture: hideFurniture && !showFurniture,
       selectedWall,
       selectedOpening,
       dragOverlay,
@@ -223,6 +276,17 @@
       selectedEdge,
       wallChainFrom,
       wallChainHover,
+      zoneEditMode,
+      zoneTool,
+      selectedSpatialZone,
+      zoneChainFrom,
+      zoneChainHover,
+      zoneChainPoints,
+      previewZones,
+      placementEditMode,
+      placementTool,
+      selectedPlacement,
+      showFurniture,
     }),
   )
 
@@ -376,7 +440,11 @@
       return
     }
     const rect = viewportEl.getBoundingClientRect()
-    applyZoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, zoom + 0.15)
+    applyZoomAt(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      zoom + 0.15,
+    )
   }
 
   function zoomOut() {
@@ -385,7 +453,11 @@
       return
     }
     const rect = viewportEl.getBoundingClientRect()
-    applyZoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, zoom - 0.15)
+    applyZoomAt(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      zoom - 0.15,
+    )
   }
 
   function resetView() {
@@ -539,6 +611,53 @@
 
   $effect(() => {
     const el = viewportEl
+    if (!zoneEditMode || !el) return
+    const action = bindPlanZoneEdit(el, {
+      getTool: () => zoneTool,
+      clientToSvg,
+      onZoneChainPoint: (pt) => onZonePoint?.(pt),
+      onSelectZone: (id) => onSelectSpatialZone?.(id),
+      onRemoveZone: (id) => onRemoveSpatialZone?.(id),
+      onZoneVertexDragStart: (zoneId, index) =>
+        onZoneVertexDragStart?.(zoneId, index),
+      onZoneVertexDrag: (zoneId, index, pt) =>
+        onZoneVertexDrag?.(zoneId, index, pt),
+      onZoneVertexDrop: (zoneId, index, pt) =>
+        onZoneVertexDrop?.(zoneId, index, pt),
+    })
+    /** @param {PointerEvent} e */
+    function onMove(e) {
+      if (zoneTool !== 'zoneAdd' || !zoneChainPoints.length) {
+        onZoneHover?.(null)
+        return
+      }
+      onZoneHover?.(clientToSvg(e.clientX, e.clientY))
+    }
+    el.addEventListener('pointermove', onMove)
+    return () => {
+      action.destroy()
+      el.removeEventListener('pointermove', onMove)
+    }
+  })
+
+  $effect(() => {
+    const el = viewportEl
+    if (!placementEditMode || !el) return
+    const action = bindPlanPlacementEdit(el, {
+      getTool: () => placementTool,
+      clientToSvg,
+      onPlacePoint: (pt) => onPlacementPoint?.(pt),
+      onSelectPlacement: (id) => onSelectPlacement?.(id),
+      onAssignStorage: (pt) => onAssignStorage?.(pt),
+      onPlacementDragStart: (id) => onPlacementDragStart?.(id),
+      onPlacementDrag: (id, pt) => onPlacementDrag?.(id, pt),
+      onPlacementDrop: (id, pt) => onPlacementDrop?.(id, pt),
+    })
+    return () => action.destroy()
+  })
+
+  $effect(() => {
+    const el = viewportEl
     if (!editMode || graphEditMode || !el) return
 
     const action = bindPlanEditDrag(el, {
@@ -683,8 +802,11 @@
           aria-label="缩小">−</button
         >
         <span class="plan-zoom-pct">{Math.round(zoom * 100)}%</span>
-        <button type="button" class="plan-tool" onclick={zoomIn} aria-label="放大"
-          >+</button
+        <button
+          type="button"
+          class="plan-tool"
+          onclick={zoomIn}
+          aria-label="放大">+</button
         >
         {#if planEditing && !toolbarMinimal}
           <button
@@ -721,7 +843,8 @@
             class:plan-hint-graph={graphEditMode}
             class:plan-hint-measure={measureMode}
             class:plan-hint-edit={editMode && !graphEditMode}
-          >{toolbarHint}</span>
+            >{toolbarHint}</span
+          >
         {/if}
       {/if}
     </div>
@@ -1001,7 +1124,8 @@
   .plan-viewer.measure-mode {
     cursor: crosshair;
     border-color: color-mix(in srgb, var(--graph-accent) 55%, var(--accent));
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--graph-accent) 30%, transparent);
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--graph-accent) 30%, transparent);
   }
 
   .plan-hint-measure {
@@ -1094,7 +1218,8 @@
 
   .drag-hud-status.ok {
     background: var(--graph-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--graph-accent) 22%, transparent);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--graph-accent) 22%, transparent);
   }
 
   .drag-hud-status.bad {
@@ -1183,7 +1308,9 @@
     transform: translateY(calc(-100% - 6px));
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.15s ease, visibility 0.15s ease;
+    transition:
+      opacity 0.15s ease,
+      visibility 0.15s ease;
   }
 
   .plan-viewer :global(.plan-svg-tooltip[data-visible='1']) {
