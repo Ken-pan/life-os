@@ -53,12 +53,14 @@
       } catch (e) { }
     })();
     (function () {
-      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-      document.documentElement.style.setProperty('--app-vh', h + 'px');
       var standalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator && window.navigator.standalone === true);
       document.documentElement.classList.toggle('standalone-pwa', standalone);
+      var vh = standalone
+        ? '100vh'
+        : ((window.visualViewport && window.visualViewport.height) || window.innerHeight) + 'px';
+      document.documentElement.style.setProperty('--app-vh', vh);
     })();
   </script>
   %sveltekit.head%

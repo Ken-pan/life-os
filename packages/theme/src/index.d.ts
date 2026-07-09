@@ -263,6 +263,7 @@ export declare function clampPopoverPosition(
   opts?: { padding?: number; bottomInset?: number },
 ): { left: number; top: number }
 export declare function bindViewportHeight(): () => void
+export declare function resolveAppVhCSSValue(): string
 
 export type PwaSettings = {
   lockPortraitOnPhone?: boolean

@@ -36,7 +36,7 @@ body,
   html.standalone-pwa,
   html.standalone-pwa body,
   html.standalone-pwa #root {
-    height: var(--app-vh, 100dvh);
+    height: var(--app-vh, 100vh);
     overflow: hidden;
   }
 
@@ -110,17 +110,27 @@ body,
     z-index: var(--z-safe-area-tint);
     /* +1px overlap avoids seam under Dynamic Island / notch */
     height: calc(var(--safe-top-effective) + 1px);
-    min-height: 0;
+    /* Safari 26+ samples fixed strips ≥6px at the top edge */
+    min-height: 6px;
     background-color: var(--safari-chrome-tint-top-bg, var(--bg));
   }
 
   .safari-chrome-tint-bottom {
-    bottom: 0;
-    /* Sit behind fixed tab bar; fills home-indicator strip if nav bg is translucent */
+    /* Safari 26+ samples fixed strips up to 8px below the layout viewport */
+    bottom: -8px;
     z-index: calc(var(--z-nav, 30) - 1);
-    height: var(--mobile-tabbar-safe-padding, max(var(--space-2), env(safe-area-inset-bottom, 0px)));
-    min-height: 0;
+    height: max(
+      var(--mobile-tabbar-safe-padding, max(var(--space-2), env(safe-area-inset-bottom, 0px))),
+      12px
+    );
+    min-height: 12px;
     background-color: var(--safari-chrome-tint-bottom-bg, var(--nav-bg, var(--bg-elevated, var(--card))));
+  }
+
+  /* Liquid Glass: avoid sampling semi-transparent blurred tab bars in standalone */
+  html.standalone-pwa :is(.nav, .mobile-tabbar, .bottom-shell .nav, .bottom-shell .bottom-nav) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 

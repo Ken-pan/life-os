@@ -73,6 +73,7 @@ export {
   getViewportRect,
   isStandalonePwa,
   needsViewportHeightSync,
+  resolveAppVhCSSValue,
 } from './viewportSync.js'
 
 export {

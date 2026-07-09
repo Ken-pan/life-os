@@ -1,14 +1,11 @@
-import { getVisualViewportHeight } from './viewportSync.js'
+import { resolveAppVhCSSValue } from './viewportSync.js'
 
 export const PWA_FOREGROUND_DEFER_MS = 5000
 
 /** 回到前台时立刻校正 iOS PWA 视口高度，避免布局错位 */
 export function flushViewportHeight() {
   if (typeof document === 'undefined') return
-  document.documentElement.style.setProperty(
-    '--app-vh',
-    `${getVisualViewportHeight()}px`,
-  )
+  document.documentElement.style.setProperty('--app-vh', resolveAppVhCSSValue())
 }
 
 /**

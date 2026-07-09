@@ -2,8 +2,8 @@ import { isLifeOsMobile } from './layout.js'
 
 /** @typedef {{ height: number; width: number; offsetTop: number; offsetLeft: number }} ViewportRect */
 
-/** @type {number | null} */
-let lastSyncedHeight = null
+/** @type {string | null} */
+let lastSyncedAppVh = null
 
 /** @returns {boolean} */
 export function isStandalonePwa() {
@@ -48,6 +48,27 @@ export function getViewportRect() {
 /** @returns {number} */
 export function getVisualViewportHeight() {
   return getViewportRect().height
+}
+
+/**
+ * CSS value for --app-vh.
+ * Browser: track visual viewport (URL bar). Standalone PWA: 100vh — dvh/vv lie on cold start.
+ * @returns {string}
+ */
+export function resolveAppVhCSSValue() {
+  if (typeof window === 'undefined') return '100dvh'
+
+  if (isStandalonePwa()) {
+    const vv = window.visualViewport
+    const layoutH = window.innerHeight
+    if (vv && vv.height > 0 && layoutH > 0 && vv.height < layoutH * 0.82) {
+      return `${Math.round(vv.height)}px`
+    }
+    return '100vh'
+  }
+
+  const h = getVisualViewportHeight()
+  return h > 0 ? `${Math.round(h)}px` : '100dvh'
 }
 
 /**
@@ -110,10 +131,10 @@ export function clampPopoverPosition(x, y, width, height, opts = {}) {
 }
 
 function syncViewportHeight(force = false) {
-  const height = getVisualViewportHeight()
-  if (!force && lastSyncedHeight === height) return
-  lastSyncedHeight = height
-  document.documentElement.style.setProperty('--app-vh', `${height}px`)
+  const appVh = resolveAppVhCSSValue()
+  if (!force && lastSyncedAppVh === appVh) return
+  lastSyncedAppVh = appVh
+  document.documentElement.style.setProperty('--app-vh', appVh)
 }
 
 function syncStandaloneClass() {
@@ -121,8 +142,9 @@ function syncStandaloneClass() {
 }
 
 /**
- * Keep --app-vh aligned with visualViewport (iOS PWA standalone).
- * Uses rAF coalescing; skips work when height is unchanged.
+ * Keep --app-vh aligned with viewport mode:
+ * - Safari browser: visualViewport px (URL bar)
+ * - iOS standalone PWA: 100vh (dvh/vv under-report safe-area-top on cold start)
  * @returns {() => void}
  */
 export function bindViewportHeight() {

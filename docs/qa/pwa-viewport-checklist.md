@@ -43,6 +43,7 @@ Standalone 页粘贴 snippet，记录 `displayModeStandalone`、`main.overflowY`
 | If                                       | Then                                                                                 |
 | ---------------------------------------- | ------------------------------------------------------------------------------------ |
 | 仅 Fitness/Music 裁剪                    | 查 `#main-content` vs 后代 `.wrap` 的 `height:0`                                     |
+| 底部黑缝 / nav 悬空（standalone 冷启动） | 查 `--app-vh` 是否为 `100vh`（勿用 `100dvh` / `visualViewport` px 锁高）              |
 | 仅 Planner/Portal/Home                   | 查 `.life-os-shell-column` 直接子元素 flex 链（SSOT: `packages/theme/src/shell.js`） |
 | 仅 Finance                               | 查 `.main-wrap > .content`；确认已登录进 shell                                       |
 | Playwright 过、Simulator standalone 失败 | 继续查 `ios-safari.css` + 真机                                                       |
