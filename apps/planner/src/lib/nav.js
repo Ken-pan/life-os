@@ -17,6 +17,7 @@
 export function isTaskModuleRoute(pathname) {
   if (pathname === '/') return true
   if (pathname.startsWith('/inbox')) return true
+  if (pathname.startsWith('/triage')) return true
   if (pathname.startsWith('/upcoming')) return true
   if (pathname.startsWith('/completed')) return true
   if (pathname.startsWith('/lists/')) return true
@@ -73,6 +74,13 @@ export function buildSmartListNavItems(tr) {
       label: tr('nav.inbox'),
       icon: 'inbox',
       match: (p) => p.startsWith('/inbox'),
+    },
+    {
+      tab: 'triage',
+      href: '/triage',
+      label: tr('nav.triage'),
+      icon: 'sparkles',
+      match: (p) => p.startsWith('/triage'),
     },
     {
       tab: 'upcoming',
@@ -226,6 +234,7 @@ export function resolveFabMode(pathname, search = '') {
   if (pathname.startsWith('/search')) return 'none'
   if (pathname.startsWith('/completed')) return 'none'
   if (pathname.startsWith('/inbox')) return 'none'
+  if (pathname.startsWith('/triage')) return 'none'
   if (pathname === '/') return 'large'
   if (
     pathname.startsWith('/upcoming') ||

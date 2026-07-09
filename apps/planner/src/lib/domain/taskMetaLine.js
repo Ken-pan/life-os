@@ -75,8 +75,12 @@ export function buildTaskMetaLine(task, t, opts = {}) {
 
   if (kind === 'focus') parts.push(t('task.kindFocus'))
 
-  if (task.priority > 0 && task.priority <= 2) {
-    parts.push(t(`task.p${task.priority}`))
+  if (task.priority === 'P0' || task.priority === 1) {
+    parts.push(t('task.priority_P0') || 'P0')
+  } else if (task.priority === 'P1' || task.priority === 2) {
+    parts.push(t('task.priority_P1') || 'P1')
+  } else if (task.priority === 'P2' || task.priority === 3) {
+    parts.push(t('task.priority_P2') || 'P2')
   }
 
   if (task.recurrence?.rule && task.recurrence.rule !== 'none') {

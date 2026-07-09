@@ -97,6 +97,10 @@
       "svelte": "./src/svelte/toast/Toast.svelte",
       "default": "./src/svelte/toast/Toast.svelte"
     },
+    "./svelte/feedback": {
+      "svelte": "./src/svelte/feedback/ReportBugButton.svelte",
+      "default": "./src/svelte/feedback/ReportBugButton.svelte"
+    },
     "./svelte/toast-store": {
       "svelte": "./src/svelte/toast/store.svelte.js",
       "default": "./src/svelte/toast/store.svelte.js"

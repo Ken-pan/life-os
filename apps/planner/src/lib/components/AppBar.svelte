@@ -4,7 +4,10 @@
   import AppBrand from '@life-os/platform-web/svelte/brand'
   import { t } from '$lib/i18n/index.js'
   import { isTaskModuleRoute } from '$lib/nav.js'
-  import { openTaskDrawer, taskDrawer } from '$lib/ui.svelte.js'
+  import { openTaskDrawer, taskDrawer, toast } from '$lib/ui.svelte.js'
+  import ReportBugButton from '@life-os/platform-web/svelte/feedback'
+  import { supabase } from '$lib/supabase.js'
+  import { auth } from '$lib/auth.svelte.js'
 
   /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, historyBack?: boolean }} */
   let { title, subtitle, backHref, backLabel, historyBack = false } = $props()
@@ -69,6 +72,7 @@
     {/if}
 
     <div class="appbar-trailing">
+      <ReportBugButton app="planner" {supabase} user={auth.user} {toast} />
       {#if showMobileSettings}
         <a
           class="appbar-settings"

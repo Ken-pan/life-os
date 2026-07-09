@@ -31,13 +31,20 @@
       Boolean(draft.notes?.trim()) ||
       draft.reminderMinutes != null ||
       Boolean(draft.recurrence) ||
-      (draft.priority ?? 0) > 0 ||
+      draft.priority !== 'P3' ||
       draft.tags.length > 0 ||
       draft.subtasks.length > 0 ||
       normalizeTaskKind(draft.meta?.kind) !== 'standard' ||
       draft.scheduledDate ||
       draft.scheduledStart ||
-      draft.durationMinutes
+      draft.durationMinutes ||
+      draft.urgency !== 'normal' ||
+      draft.size !== 'medium' ||
+      draft.area !== 'other' ||
+      draft.effortMin != null ||
+      Boolean(draft.nextAction?.trim()) ||
+      Boolean(draft.aiContext?.trim()) ||
+      Boolean(draft.projectId?.trim())
     );
   });
 
@@ -75,6 +82,13 @@
       notes: draft.notes,
       listId: draft.listId,
       priority: draft.priority,
+      urgency: draft.urgency || 'normal',
+      size: draft.size || 'medium',
+      area: draft.area || 'other',
+      effortMin: draft.effortMin != null ? Number(draft.effortMin) : null,
+      nextAction: draft.nextAction || null,
+      aiContext: draft.aiContext || null,
+      projectId: draft.projectId || null,
       dueDate: draft.dueDate,
       dueTime: draft.dueTime || null,
       scheduledDate: draft.scheduledDate || null,
@@ -148,11 +162,10 @@
   }
 
   const priorityOptions = [
-    { v: 0, label: t('task.p0') },
-    { v: 1, label: t('task.p1') },
-    { v: 2, label: t('task.p2') },
-    { v: 3, label: t('task.p3') },
-    { v: 4, label: t('task.p4') }
+    { v: 'P0', label: t('task.priority_P0') },
+    { v: 'P1', label: t('task.priority_P1') },
+    { v: 'P2', label: t('task.priority_P2') },
+    { v: 'P3', label: t('task.priority_P3') }
   ];
 
   function toggleDraftSubtask(subId) {
@@ -364,6 +377,80 @@
                 <option value={opt.v}>{opt.label}</option>
               {/each}
             </select>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="task-urgency">{t('task.urgency')}</label>
+              <select id="task-urgency" bind:value={draft.urgency}>
+                <option value="urgent">{t('task.urgencyUrgent')}</option>
+                <option value="normal">{t('task.urgencyNormal')}</option>
+                <option value="low">{t('task.urgencyLow')}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="task-size">{t('task.size')}</label>
+              <select id="task-size" bind:value={draft.size}>
+                <option value="small">{t('task.sizeSmall')}</option>
+                <option value="medium">{t('task.sizeMedium')}</option>
+                <option value="large">{t('task.sizeLarge')}</option>
+                <option value="epic">{t('task.sizeEpic')}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="task-area">{t('task.area')}</label>
+              <select id="task-area" bind:value={draft.area}>
+                <option value="life">{t('task.areaLife')}</option>
+                <option value="work">{t('task.areaWork')}</option>
+                <option value="planner">{t('task.areaPlanner')}</option>
+                <option value="fitness">{t('task.areaFitness')}</option>
+                <option value="finance">{t('task.areaFinance')}</option>
+                <option value="home">{t('task.areaHome')}</option>
+                <option value="other">{t('task.areaOther')}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="task-effort">{t('task.effortMin')}</label>
+              <input
+                id="task-effort"
+                type="number"
+                placeholder="e.g. 30"
+                bind:value={draft.effortMin}
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="task-next-action">{t('task.nextAction')}</label>
+            <input
+              id="task-next-action"
+              type="text"
+              placeholder="Next concrete step..."
+              bind:value={draft.nextAction}
+            />
+          </div>
+
+          <div class="field">
+            <label for="task-project-id">{t('task.projectId')}</label>
+            <input
+              id="task-project-id"
+              type="text"
+              placeholder="Optional project ID"
+              bind:value={draft.projectId}
+            />
+          </div>
+
+          <div class="field">
+            <label for="task-ai-context">{t('task.aiContext')}</label>
+            <textarea
+              id="task-ai-context"
+              rows="2"
+              placeholder="Context or hints for later AI triage..."
+              bind:value={draft.aiContext}
+            ></textarea>
           </div>
 
           <div class="field">

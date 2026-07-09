@@ -1,0 +1,319 @@
+{
+  "exported_at": "2026-07-06T05:40:25.031Z",
+  "user_id": "c2831538-94b0-4a57-b034-5e873a53c42e",
+  "counts": {
+    "tracks": 268,
+    "tags": 2517,
+    "tag_dictionary": 82,
+    "audio_features": 268,
+    "play_events": 0,
+    "review_queue_pending": 0,
+    "embeddings": 0
+  },
+  "coverage": {
+    "ready_tracks": 251,
+    "partial_tracks": 17,
+    "needs_review_tracks": 0,
+    "bpm_coverage_pct": 0,
+    "embedding_coverage_pct": 0,
+    "vibe_coverage_pct": 98.1,
+    "context_coverage_pct": 100
+  },
+  "top_tags": {
+    "all": [
+      {
+        "slug": "playlist-continue-good",
+        "namespace": "context",
+        "count": 268
+      },
+      {
+        "slug": "transition-safe",
+        "namespace": "context",
+        "count": 268
+      },
+      {
+        "slug": "original",
+        "namespace": "version",
+        "count": 237
+      },
+      {
+        "slug": "high-compressed",
+        "namespace": "quality",
+        "count": 236
+      },
+      {
+        "slug": "confident",
+        "namespace": "vibe",
+        "count": 142
+      },
+      {
+        "slug": "pop",
+        "namespace": "genre",
+        "count": 136
+      },
+      {
+        "slug": "lang-en",
+        "namespace": "language",
+        "count": 130
+      },
+      {
+        "slug": "party",
+        "namespace": "context",
+        "count": 111
+      },
+      {
+        "slug": "dance-pop",
+        "namespace": "genre",
+        "count": 107
+      },
+      {
+        "slug": "club",
+        "namespace": "vibe",
+        "count": 79
+      },
+      {
+        "slug": "dramatic",
+        "namespace": "vibe",
+        "count": 65
+      },
+      {
+        "slug": "gym",
+        "namespace": "context",
+        "count": 65
+      },
+      {
+        "slug": "background",
+        "namespace": "context",
+        "count": 63
+      },
+      {
+        "slug": "baddie",
+        "namespace": "vibe",
+        "count": 59
+      },
+      {
+        "slug": "lang-ko",
+        "namespace": "language",
+        "count": 58
+      },
+      {
+        "slug": "k-pop",
+        "namespace": "genre",
+        "count": 57
+      },
+      {
+        "slug": "homepage-safe",
+        "namespace": "context",
+        "count": 42
+      },
+      {
+        "slug": "playful",
+        "namespace": "vibe",
+        "count": 41
+      },
+      {
+        "slug": "alt-pop",
+        "namespace": "genre",
+        "count": 40
+      },
+      {
+        "slug": "lang-zh",
+        "namespace": "language",
+        "count": 25
+      },
+      {
+        "slug": "girl-group",
+        "namespace": "genre",
+        "count": 25
+      },
+      {
+        "slug": "girl-crush",
+        "namespace": "vibe",
+        "count": 24
+      },
+      {
+        "slug": "soft",
+        "namespace": "vibe",
+        "count": 21
+      },
+      {
+        "slug": "mandopop",
+        "namespace": "genre",
+        "count": 19
+      },
+      {
+        "slug": "hip-hop",
+        "namespace": "genre",
+        "count": 18
+      },
+      {
+        "slug": "c-pop",
+        "namespace": "genre",
+        "count": 18
+      },
+      {
+        "slug": "euphoric",
+        "namespace": "vibe",
+        "count": 15
+      },
+      {
+        "slug": "rebellious",
+        "namespace": "vibe",
+        "count": 15
+      },
+      {
+        "slug": "k-pop-solo",
+        "namespace": "genre",
+        "count": 12
+      },
+      {
+        "slug": "quirky",
+        "namespace": "vibe",
+        "count": 11
+      }
+    ],
+    "vibe": [
+      {
+        "slug": "confident",
+        "namespace": "vibe",
+        "count": 142
+      },
+      {
+        "slug": "club",
+        "namespace": "vibe",
+        "count": 79
+      },
+      {
+        "slug": "dramatic",
+        "namespace": "vibe",
+        "count": 65
+      },
+      {
+        "slug": "baddie",
+        "namespace": "vibe",
+        "count": 59
+      },
+      {
+        "slug": "playful",
+        "namespace": "vibe",
+        "count": 41
+      },
+      {
+        "slug": "girl-crush",
+        "namespace": "vibe",
+        "count": 24
+      },
+      {
+        "slug": "soft",
+        "namespace": "vibe",
+        "count": 21
+      },
+      {
+        "slug": "euphoric",
+        "namespace": "vibe",
+        "count": 15
+      },
+      {
+        "slug": "rebellious",
+        "namespace": "vibe",
+        "count": 15
+      },
+      {
+        "slug": "quirky",
+        "namespace": "vibe",
+        "count": 11
+      }
+    ],
+    "genre": [
+      {
+        "slug": "pop",
+        "namespace": "genre",
+        "count": 136
+      },
+      {
+        "slug": "dance-pop",
+        "namespace": "genre",
+        "count": 107
+      },
+      {
+        "slug": "k-pop",
+        "namespace": "genre",
+        "count": 57
+      },
+      {
+        "slug": "alt-pop",
+        "namespace": "genre",
+        "count": 40
+      },
+      {
+        "slug": "girl-group",
+        "namespace": "genre",
+        "count": 25
+      },
+      {
+        "slug": "mandopop",
+        "namespace": "genre",
+        "count": 19
+      },
+      {
+        "slug": "hip-hop",
+        "namespace": "genre",
+        "count": 18
+      },
+      {
+        "slug": "c-pop",
+        "namespace": "genre",
+        "count": 18
+      },
+      {
+        "slug": "k-pop-solo",
+        "namespace": "genre",
+        "count": 12
+      }
+    ],
+    "context": [
+      {
+        "slug": "playlist-continue-good",
+        "namespace": "context",
+        "count": 268
+      },
+      {
+        "slug": "transition-safe",
+        "namespace": "context",
+        "count": 268
+      },
+      {
+        "slug": "party",
+        "namespace": "context",
+        "count": 111
+      },
+      {
+        "slug": "gym",
+        "namespace": "context",
+        "count": 65
+      },
+      {
+        "slug": "background",
+        "namespace": "context",
+        "count": 63
+      },
+      {
+        "slug": "homepage-safe",
+        "namespace": "context",
+        "count": 42
+      }
+    ]
+  },
+  "issues": {
+    "critical": 0,
+    "high": 22,
+    "medium": 598,
+    "low": 3
+  },
+  "smoke_tests": {
+    "total_seeds": 15,
+    "successful": 10,
+    "failed": 0,
+    "skipped": 5
+  }
+}

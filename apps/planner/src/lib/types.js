@@ -1,4 +1,4 @@
-/** @typedef {0|1|2|3|4} TaskPriority */
+/** @typedef {'P0'|'P1'|'P2'|'P3'} TaskPriority */
 
 /** @typedef {'none'|'daily'|'weekly'|'monthly'|'yearly'} RecurrenceRule */
 
@@ -35,6 +35,13 @@
  * @property {string} notes
  * @property {string} listId
  * @property {TaskPriority} priority
+ * @property {'urgent'|'normal'|'low'} urgency
+ * @property {'small'|'medium'|'large'|'epic'} size
+ * @property {'life'|'work'|'planner'|'fitness'|'finance'|'home'|'other'} area
+ * @property {number|null} effortMin
+ * @property {string|null} nextAction
+ * @property {string|null} aiContext
+ * @property {string|null} projectId
  * @property {string|null} dueDate
  * @property {string|null} dueTime
  * @property {string|null} scheduledDate YYYY-MM-DD 计划在哪天做
@@ -90,11 +97,10 @@
 
 /** @type {Record<TaskPriority, string>} */
 export const PRIORITY_COLORS = {
-  0: 'var(--t3)',
-  1: '#E34432',
-  2: '#F5A623',
-  3: '#0F66AE',
-  4: '#A8A5A0',
+  'P0': '#E34432',
+  'P1': '#F5A623',
+  'P2': '#0F66AE',
+  'P3': 'var(--t3)',
 }
 
 export const SYSTEM_LIST_INBOX = 'inbox'
@@ -122,3 +128,96 @@ export function normalizeRecurrence(raw) {
     seriesId: raw.seriesId || null,
   }
 }
+
+/**
+ * @typedef {Object} PaperDeviceUser
+ * @property {string} id
+ * @property {string} name
+ * @property {string} locale
+ * @property {string} timezone
+ */
+
+/**
+ * @typedef {Object} PaperDeviceScheduleBlock
+ * @property {string} id
+ * @property {string} title
+ * @property {string} start HH:mm
+ * @property {number} durationMinutes
+ * @property {boolean} completed
+ */
+
+/**
+ * @typedef {Object} PaperDeviceTask
+ * @property {string} id
+ * @property {string} title
+ * @property {string} notes
+ * @property {TaskPriority} priority
+ * @property {string|null} dueDate YYYY-MM-DD
+ * @property {boolean} completed
+ * @property {number} updatedAt
+ */
+
+/**
+ * @typedef {Object} PaperDeviceTodayResponse
+ * @property {string} serverTime ISO 8601
+ * @property {string} cursor Stringified timestamp
+ * @property {PaperDeviceUser} user
+ * @property {Object} today
+ * @property {string} today.date YYYY-MM-DD
+ * @property {PaperDeviceTask|Object} today.currentFocus
+ * @property {PaperDeviceScheduleBlock[]} today.scheduleBlocks
+ * @property {PaperDeviceTask[]} tasks
+ * @property {Object} inbox
+ * @property {number} inbox.count
+ * @property {Object} devicePolicy
+ * @property {number} devicePolicy.activePollSeconds
+ * @property {number} devicePolicy.idlePollSeconds
+ * @property {number} devicePolicy.heartbeatSeconds
+ */
+
+/**
+ * @typedef {Object} PaperDeviceAction
+ * @property {string} clientActionId
+ * @property {'task.complete'|'task.snooze'|'task.moveTomorrow'|'task.create'|'sync.heartbeat'} type
+ * @property {string} [taskId]
+ * @property {number} [baseVersion]
+ * @property {string} [title]
+ * @property {TaskPriority} [priority]
+ * @property {string} [scheduledDate]
+ * @property {number} [snoozeDays]
+ */
+
+/**
+ * @typedef {Object} PaperDeviceActionBatch
+ * @property {string} deviceId
+ * @property {string} clientBatchId
+ * @property {string} baseCursor
+ * @property {PaperDeviceAction[]} actions
+ */
+
+/**
+ * @typedef {Object} PaperDeviceActionResult
+ * @property {'applied'|'partially_applied'|'rejected'} batchStatus
+ * @property {string[]} applied clientActionIds
+ * @property {string[]} conflicts clientActionIds
+ * @property {string} newCursor
+ */
+
+/**
+ * @typedef {Object} PaperDeviceDeltaResponse
+ * @property {string} cursor
+ * @property {boolean} hasMore
+ * @property {Object} changes
+ * @property {PaperDeviceTask[]} changes.upserted
+ * @property {string[]} changes.deleted
+ */
+
+/**
+ * @typedef {Object} PaperDeviceHeartbeat
+ * @property {number} battery
+ * @property {string} onlineState
+ * @property {number} queueDepth
+ * @property {string} appVersion
+ * @property {string} osVersion
+ */
+

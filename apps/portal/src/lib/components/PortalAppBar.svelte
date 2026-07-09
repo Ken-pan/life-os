@@ -2,6 +2,9 @@
   import { Bell, Ellipsis, LogOut, Monitor, Moon, Sun } from '@lucide/svelte'
   import { lockScroll, unlockScroll } from '@life-os/theme'
   import AppBrand from '@life-os/platform-web/svelte/brand'
+  import ReportBugButton from '@life-os/platform-web/svelte/feedback'
+  import { supabase } from '$lib/supabase.js'
+  import { auth } from '$lib/auth.svelte.js'
   import PortalAppBarMoreSheet from '$lib/components/PortalAppBarMoreSheet.svelte'
   import { getCommandPaletteShortcutLabel } from '$lib/keyboardShortcut.js'
   import { abbreviateEmail, getUserInitial } from '$lib/userDisplay.js'
@@ -121,6 +124,7 @@
           </button>
         {/if}
       </span>
+      <ReportBugButton app="portal" {supabase} user={auth.user} />
       <button
         type="button"
         class="btn-secondary portal-appbar-more-btn"

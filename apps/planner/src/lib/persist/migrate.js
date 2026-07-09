@@ -76,8 +76,27 @@ export function defaultState() {
 export function migrateTask(task) {
   if (!task || typeof task !== 'object') return null
   const t = /** @type {Record<string, unknown>} */ (task)
+
+  let priority = t.priority
+  if (typeof priority === 'number') {
+    if (priority === 1) priority = 'P0'
+    else if (priority === 2) priority = 'P1'
+    else if (priority === 3) priority = 'P2'
+    else priority = 'P3'
+  } else if (priority !== 'P0' && priority !== 'P1' && priority !== 'P2' && priority !== 'P3') {
+    priority = 'P3'
+  }
+
   return {
     ...t,
+    priority,
+    urgency: typeof t.urgency === 'string' ? t.urgency : 'normal',
+    size: typeof t.size === 'string' ? t.size : 'medium',
+    area: typeof t.area === 'string' ? t.area : 'other',
+    effortMin: typeof t.effortMin === 'number' ? t.effortMin : null,
+    nextAction: typeof t.nextAction === 'string' ? t.nextAction : null,
+    aiContext: typeof t.aiContext === 'string' ? t.aiContext : null,
+    projectId: typeof t.projectId === 'string' ? t.projectId : null,
     reminderMinutes: t.reminderMinutes ?? null,
     scheduledDate: typeof t.scheduledDate === 'string' ? t.scheduledDate : null,
     scheduledStart: typeof t.scheduledStart === 'string' ? t.scheduledStart : null,

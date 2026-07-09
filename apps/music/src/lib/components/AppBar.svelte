@@ -6,6 +6,11 @@
   import GlobalSearch from './GlobalSearch.svelte';
   import { getPageActions } from '$lib/pageChrome.svelte.js';
 
+  import { toast } from '$lib/ui.svelte.js';
+  import ReportBugButton from '@life-os/platform-web/svelte/feedback';
+  import { supabase } from '$lib/supabase.js';
+  import { auth } from '$lib/auth.svelte.js';
+
   /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, hidden?: boolean, searchRef?: HTMLInputElement | null }} */
   let {
     title,
@@ -56,6 +61,7 @@
             <Icon name="search" size={20} strokeWidth={1.75} />
           </a>
         {/if}
+        <ReportBugButton app="music" {supabase} user={auth.user} {toast} />
         {#each actions as action, i (action.label + i)}
           {#if action.href}
             <a

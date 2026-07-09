@@ -1,0 +1,1001 @@
+track_id,title,artist,namespace,tag_slug,tag_label,confidence,source,locked,created_at
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:58:14.181071+00:00
+82745fe4c16420d0b9fb92d3673f0a9ca41fec2e73f57eaad5d4eaa013364317,Escapism.,070 Shake;RAYE,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:58:14.181071+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,genre,c-pop,C-Pop,0.6,llm,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,genre,mandopop,Mandopop,0.6,llm,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,vibe,dramatic,Dramatic,0.58,llm,false,2026-07-06T05:07:03.018403+00:00
+8c1fcd974837738c30fcf2a23c5b3f8389a1c5236a926192a34e699d2abad4c6,玫瑰少年,蔡依林,vibe,confident,Confident,0.58,llm,false,2026-07-06T05:07:03.018403+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,context,party,Party,0.6599999999999999,llm,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,genre,c-pop,C-Pop,0.7,llm,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,genre,mandopop,Mandopop,0.7,llm,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,language,lang-zh,Chinese,0.6499999999999999,llm,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,vibe,baddie,Baddie,0.6799999999999999,llm,false,2026-07-06T05:07:02.672358+00:00
+9dc2cebc8bbd98e7fbf9b1a129f733532bb75fc498dc1ed0857bd7c1fe895137,美杜莎,蔡依林,vibe,confident,Confident,0.6799999999999999,llm,false,2026-07-06T05:07:02.672358+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,context,party,Party,0.61,llm,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,genre,c-pop,C-Pop,0.65,llm,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,genre,pop,Pop,0.65,llm,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,language,lang-zh,Chinese,0.6,llm,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,version,original,Original,0.7,heuristic,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,vibe,confident,Confident,0.63,llm,false,2026-07-06T05:10:04.467538+00:00
+154a942a279ee919fda6f7344f2b9bb9d2d4fd72b5e6224baa12ef0c8b3b8633,美人计,蔡依林,vibe,baddie,Baddie,0.63,llm,false,2026-07-06T05:10:04.467538+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,context,background,Background,0.71,llm,false,2026-07-06T05:07:28.225966+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:28.225966+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:28.225966+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,genre,c-pop,C-Pop,0.75,llm,false,2026-07-06T05:07:28.225966+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,genre,mandopop,Mandopop,0.75,llm,false,2026-07-06T05:07:28.225966+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,language,lang-zh,Chinese,0.7,llm,false,2026-07-06T05:07:28.225966+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:28.225966+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:28.225966+00:00
+89aed1a6d0c112e9196049d38fd700d4860b32bcd83272e481d4a8c99970bb96,Pleasure,蔡依林,vibe,sexy,Sexy,0.73,llm,false,2026-07-06T05:07:28.225966+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,genre,c-pop,C-Pop,0.6,llm,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,genre,pop,Pop,0.6,llm,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,version,original,Original,0.7,heuristic,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,vibe,soft,Soft,0.58,llm,false,2026-07-06T05:10:04.907044+00:00
+c05668b1ee2635961847685bde22dda8969f27f3bc117ea7d262371bc5bb1dd4,爱人错过,告五人,vibe,dramatic,Dramatic,0.58,llm,false,2026-07-06T05:10:04.907044+00:00
+cc4b366b4b5151e1bc7c320a6c8b0fddc7fe6be36c0f35276dc1e59fdb9deb97,悬溺,葛东琪,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:31.683492+00:00
+cc4b366b4b5151e1bc7c320a6c8b0fddc7fe6be36c0f35276dc1e59fdb9deb97,悬溺,葛东琪,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:31.683492+00:00
+cc4b366b4b5151e1bc7c320a6c8b0fddc7fe6be36c0f35276dc1e59fdb9deb97,悬溺,葛东琪,context,background,Background,0.55,llm,false,2026-07-06T05:09:31.683492+00:00
+cc4b366b4b5151e1bc7c320a6c8b0fddc7fe6be36c0f35276dc1e59fdb9deb97,悬溺,葛东琪,genre,mandopop,Mandopop,0.55,llm,false,2026-07-06T05:09:31.683492+00:00
+cc4b366b4b5151e1bc7c320a6c8b0fddc7fe6be36c0f35276dc1e59fdb9deb97,悬溺,葛东琪,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:09:31.683492+00:00
+cc4b366b4b5151e1bc7c320a6c8b0fddc7fe6be36c0f35276dc1e59fdb9deb97,悬溺,葛东琪,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:31.683492+00:00
+cc4b366b4b5151e1bc7c320a6c8b0fddc7fe6be36c0f35276dc1e59fdb9deb97,悬溺,葛东琪,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:31.683492+00:00
+cc4b366b4b5151e1bc7c320a6c8b0fddc7fe6be36c0f35276dc1e59fdb9deb97,悬溺,葛东琪,vibe,dramatic,Dramatic,0.55,llm,false,2026-07-06T05:09:31.683492+00:00
+8f232208cdcfd43140f85c71f500e8794e070dd333783db08af71fe152e6906a,大展鸿图,揽佬SKAI ISYOURGOD;AR刘夫阳,context,background,Background,0.6599999999999999,llm,false,2026-07-06T05:09:03.897007+00:00
+8f232208cdcfd43140f85c71f500e8794e070dd333783db08af71fe152e6906a,大展鸿图,揽佬SKAI ISYOURGOD;AR刘夫阳,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:03.897007+00:00
+8f232208cdcfd43140f85c71f500e8794e070dd333783db08af71fe152e6906a,大展鸿图,揽佬SKAI ISYOURGOD;AR刘夫阳,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:03.897007+00:00
+8f232208cdcfd43140f85c71f500e8794e070dd333783db08af71fe152e6906a,大展鸿图,揽佬SKAI ISYOURGOD;AR刘夫阳,genre,pop,Pop,0.7,llm,false,2026-07-06T05:09:03.897007+00:00
+8f232208cdcfd43140f85c71f500e8794e070dd333783db08af71fe152e6906a,大展鸿图,揽佬SKAI ISYOURGOD;AR刘夫阳,language,lang-zh,Chinese,0.6499999999999999,llm,false,2026-07-06T05:09:03.897007+00:00
+8f232208cdcfd43140f85c71f500e8794e070dd333783db08af71fe152e6906a,大展鸿图,揽佬SKAI ISYOURGOD;AR刘夫阳,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:03.897007+00:00
+8f232208cdcfd43140f85c71f500e8794e070dd333783db08af71fe152e6906a,大展鸿图,揽佬SKAI ISYOURGOD;AR刘夫阳,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:03.897007+00:00
+8f232208cdcfd43140f85c71f500e8794e070dd333783db08af71fe152e6906a,大展鸿图,揽佬SKAI ISYOURGOD;AR刘夫阳,vibe,dramatic,Dramatic,0.6799999999999999,llm,false,2026-07-06T05:09:03.897007+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,context,party,Party,0.6599999999999999,llm,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,context,gym,Gym,0.6599999999999999,llm,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,genre,j-pop,J-Pop,0.7,llm,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,genre,pop,Pop,0.7,llm,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,language,lang-ja,Japanese,0.6499999999999999,llm,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,vibe,confident,Confident,0.6799999999999999,llm,false,2026-07-06T05:08:32.50489+00:00
+f87b1ed58714ddd385b06348fcabdc8666484122d28292bf48800ec920851343,KICK BACK,米津玄師,vibe,baddie,Baddie,0.6799999999999999,llm,false,2026-07-06T05:08:32.50489+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,genre,c-pop,C-Pop,0.6,llm,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,genre,mandopop,Mandopop,0.6,llm,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,vibe,dramatic,Dramatic,0.58,llm,false,2026-07-06T05:07:00.230712+00:00
+4a069eebf97591779d1f289cd208fa4a6f38c0174ab2bb309137d25539e4243c,木偶人,薛之谦,vibe,soft,Soft,0.58,llm,false,2026-07-06T05:07:00.230712+00:00
+48a4fda2457a4bfce3440bda8906f09051d3de732c0a24c786eacb0059b7e024,阿嬷,周林枫,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:30.82938+00:00
+48a4fda2457a4bfce3440bda8906f09051d3de732c0a24c786eacb0059b7e024,阿嬷,周林枫,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:30.82938+00:00
+48a4fda2457a4bfce3440bda8906f09051d3de732c0a24c786eacb0059b7e024,阿嬷,周林枫,context,background,Background,0.55,llm,false,2026-07-06T05:09:30.82938+00:00
+48a4fda2457a4bfce3440bda8906f09051d3de732c0a24c786eacb0059b7e024,阿嬷,周林枫,genre,mandopop,Mandopop,0.55,llm,false,2026-07-06T05:09:30.82938+00:00
+48a4fda2457a4bfce3440bda8906f09051d3de732c0a24c786eacb0059b7e024,阿嬷,周林枫,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:09:30.82938+00:00
+48a4fda2457a4bfce3440bda8906f09051d3de732c0a24c786eacb0059b7e024,阿嬷,周林枫,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:30.82938+00:00
+48a4fda2457a4bfce3440bda8906f09051d3de732c0a24c786eacb0059b7e024,阿嬷,周林枫,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:30.82938+00:00
+48a4fda2457a4bfce3440bda8906f09051d3de732c0a24c786eacb0059b7e024,阿嬷,周林枫,vibe,dramatic,Dramatic,0.55,llm,false,2026-07-06T05:09:30.82938+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,genre,c-pop,C-Pop,0.6,llm,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,genre,mandopop,Mandopop,0.6,llm,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,vibe,dramatic,Dramatic,0.58,llm,false,2026-07-06T05:07:03.817068+00:00
+405256d90fe8180cb1d78afc03d32cbb2fe39d836c33080d7d25283f61cc27f9,大鱼,周深,vibe,soft,Soft,0.58,llm,false,2026-07-06T05:07:03.817068+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,genre,c-pop,C-Pop,0.6,llm,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,genre,mandopop,Mandopop,0.6,llm,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,vibe,dramatic,Dramatic,0.58,llm,false,2026-07-06T05:07:02.249263+00:00
+a35d70b04defbbd2fceb2614f990eb944c0d1460f8508386212e69e58f169357,起风了,周深,vibe,soft,Soft,0.58,llm,false,2026-07-06T05:07:02.249263+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:16.106774+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:16.106774+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:16.106774+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:16.106774+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:16.106774+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:16.106774+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:16.106774+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:16.106774+00:00
+7c1e416c5c8360ba9f21a1a0819d0a7c47e79474d61b32f7b7d0553bc08ba514,Drama,aespa,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:16.106774+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d,Spicy,aespa,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:01.401751+00:00
+c61a8480966f3bbd0492dc37461c0fb70ea0b07bac542c92cfcf7bf9042d5033,Faded,Alan Walker,context,gym,Gym,0.72,heuristic,false,2026-07-06T04:57:42.83025+00:00
+c61a8480966f3bbd0492dc37461c0fb70ea0b07bac542c92cfcf7bf9042d5033,Faded,Alan Walker,context,transition-safe,Transition Safe,0.65,heuristic,false,2026-07-06T04:57:42.83025+00:00
+c61a8480966f3bbd0492dc37461c0fb70ea0b07bac542c92cfcf7bf9042d5033,Faded,Alan Walker,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:57:42.83025+00:00
+c61a8480966f3bbd0492dc37461c0fb70ea0b07bac542c92cfcf7bf9042d5033,Faded,Alan Walker,genre,edm,EDM,0.88,heuristic,false,2026-07-06T04:57:42.83025+00:00
+c61a8480966f3bbd0492dc37461c0fb70ea0b07bac542c92cfcf7bf9042d5033,Faded,Alan Walker,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:42.83025+00:00
+c61a8480966f3bbd0492dc37461c0fb70ea0b07bac542c92cfcf7bf9042d5033,Faded,Alan Walker,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:42.83025+00:00
+c61a8480966f3bbd0492dc37461c0fb70ea0b07bac542c92cfcf7bf9042d5033,Faded,Alan Walker,vibe,euphoric,Euphoric,0.8,heuristic,false,2026-07-06T04:57:42.83025+00:00
+3040046c1c745cac00b46953cc72ba1b74c46431721bf6269abadc6098bdb91f,Darkside,Alan Walker;Au/Ra;Tomine Harket,context,gym,Gym,0.72,heuristic,false,2026-07-06T04:57:45.433288+00:00
+3040046c1c745cac00b46953cc72ba1b74c46431721bf6269abadc6098bdb91f,Darkside,Alan Walker;Au/Ra;Tomine Harket,context,transition-safe,Transition Safe,0.65,heuristic,false,2026-07-06T04:57:45.433288+00:00
+3040046c1c745cac00b46953cc72ba1b74c46431721bf6269abadc6098bdb91f,Darkside,Alan Walker;Au/Ra;Tomine Harket,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:57:45.433288+00:00
+3040046c1c745cac00b46953cc72ba1b74c46431721bf6269abadc6098bdb91f,Darkside,Alan Walker;Au/Ra;Tomine Harket,genre,edm,EDM,0.88,heuristic,false,2026-07-06T04:57:45.433288+00:00
+3040046c1c745cac00b46953cc72ba1b74c46431721bf6269abadc6098bdb91f,Darkside,Alan Walker;Au/Ra;Tomine Harket,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:45.433288+00:00
+3040046c1c745cac00b46953cc72ba1b74c46431721bf6269abadc6098bdb91f,Darkside,Alan Walker;Au/Ra;Tomine Harket,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:45.433288+00:00
+3040046c1c745cac00b46953cc72ba1b74c46431721bf6269abadc6098bdb91f,Darkside,Alan Walker;Au/Ra;Tomine Harket,vibe,euphoric,Euphoric,0.8,heuristic,false,2026-07-06T04:57:45.433288+00:00
+73f4ae3f208c1d202fa2172f6cc939a8ae9bcc69060f188ba35cbd03ded9bde4,2002,Anne-Marie,context,background,Background,0.6599999999999999,llm,false,2026-07-06T05:08:29.939319+00:00
+73f4ae3f208c1d202fa2172f6cc939a8ae9bcc69060f188ba35cbd03ded9bde4,2002,Anne-Marie,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:08:29.939319+00:00
+73f4ae3f208c1d202fa2172f6cc939a8ae9bcc69060f188ba35cbd03ded9bde4,2002,Anne-Marie,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:29.939319+00:00
+73f4ae3f208c1d202fa2172f6cc939a8ae9bcc69060f188ba35cbd03ded9bde4,2002,Anne-Marie,genre,pop,Pop,0.7,llm,false,2026-07-06T05:08:29.939319+00:00
+73f4ae3f208c1d202fa2172f6cc939a8ae9bcc69060f188ba35cbd03ded9bde4,2002,Anne-Marie,language,lang-en,English,0.6499999999999999,llm,false,2026-07-06T05:08:29.939319+00:00
+73f4ae3f208c1d202fa2172f6cc939a8ae9bcc69060f188ba35cbd03ded9bde4,2002,Anne-Marie,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:29.939319+00:00
+73f4ae3f208c1d202fa2172f6cc939a8ae9bcc69060f188ba35cbd03ded9bde4,2002,Anne-Marie,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:29.939319+00:00
+73f4ae3f208c1d202fa2172f6cc939a8ae9bcc69060f188ba35cbd03ded9bde4,2002,Anne-Marie,vibe,playful,Playful,0.6799999999999999,llm,false,2026-07-06T05:08:29.939319+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:54.273774+00:00
+309bd47ce44b4c1cdd81b9eadc7b256e310918365816ee7ac5caf27894ef6728,7 rings,Ariana Grande,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:57:54.273774+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:49.812127+00:00
+9b6611d6733b817078469ddfc60ea824abd42e90723f3bf29cc089a33c3cc68d,"break up with your girlfriend, i'm bored (Explicit)",Ariana Grande,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:57:49.812127+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:43.98315+00:00
+483b42ab0b878a04f6d0cc6424a7d21c15a2f07aec6b53fd97abc036a26fb099,eternal sunshine,Ariana Grande,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:57:43.98315+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,context,background,Background,0.76,llm,false,2026-07-06T05:07:28.822161+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:28.822161+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:28.822161+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,genre,pop,Pop,0.8,llm,false,2026-07-06T05:07:28.822161+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,genre,alt-pop,Alt Pop,0.8,llm,false,2026-07-06T05:07:28.822161+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:28.822161+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:28.822161+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,vibe,dramatic,Dramatic,0.78,llm,false,2026-07-06T05:07:28.822161+00:00
+5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d,Moral of the Story,Ashe,vibe,confident,Confident,0.78,llm,false,2026-07-06T05:07:28.822161+00:00
+9516a34a417180ba2d4c047d759f4f965389fea1fb74820b9598e4a71164c284,Beautiful Things,Benson Boone,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:01.680871+00:00
+9516a34a417180ba2d4c047d759f4f965389fea1fb74820b9598e4a71164c284,Beautiful Things,Benson Boone,context,background,Background,0.61,llm,false,2026-07-06T05:08:01.680871+00:00
+9516a34a417180ba2d4c047d759f4f965389fea1fb74820b9598e4a71164c284,Beautiful Things,Benson Boone,context,shower,Shower,0.61,llm,false,2026-07-06T05:08:01.680871+00:00
+9516a34a417180ba2d4c047d759f4f965389fea1fb74820b9598e4a71164c284,Beautiful Things,Benson Boone,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:01.680871+00:00
+9516a34a417180ba2d4c047d759f4f965389fea1fb74820b9598e4a71164c284,Beautiful Things,Benson Boone,genre,pop,Pop,0.65,llm,false,2026-07-06T05:08:01.680871+00:00
+9516a34a417180ba2d4c047d759f4f965389fea1fb74820b9598e4a71164c284,Beautiful Things,Benson Boone,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:01.680871+00:00
+9516a34a417180ba2d4c047d759f4f965389fea1fb74820b9598e4a71164c284,Beautiful Things,Benson Boone,version,original,Original,0.62,llm,false,2026-07-06T05:08:01.680871+00:00
+9516a34a417180ba2d4c047d759f4f965389fea1fb74820b9598e4a71164c284,Beautiful Things,Benson Boone,vibe,soft,Soft,0.63,llm,false,2026-07-06T05:08:01.680871+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,context,game,Game,0.61,llm,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,context,transition-safe,Transition Safe,0.61,llm,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,genre,game-ost,Game OST,0.65,llm,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,genre,pop,Pop,0.65,llm,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,version,original,Original,0.62,llm,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,vibe,dramatic,Dramatic,0.63,llm,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,vibe,cinematic,Cinematic,0.63,llm,false,2026-07-06T05:07:59.845137+00:00
+ca0d45bc6c554c580063d42c662d634fa05315d3cc47e59960425f1841e00baf,GHOST TOWN,Benson Boone,vibe,boss-fight,Boss Fight,0.63,llm,false,2026-07-06T05:07:59.845137+00:00
+e353128c20dcff27d5c0cfa2613a478992515c2198cd3e5b62fd0e3e8ba88480,In The Stars,Benson Boone,context,background,Background,0.6599999999999999,llm,false,2026-07-06T05:07:29.606593+00:00
+e353128c20dcff27d5c0cfa2613a478992515c2198cd3e5b62fd0e3e8ba88480,In The Stars,Benson Boone,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:29.606593+00:00
+e353128c20dcff27d5c0cfa2613a478992515c2198cd3e5b62fd0e3e8ba88480,In The Stars,Benson Boone,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:29.606593+00:00
+e353128c20dcff27d5c0cfa2613a478992515c2198cd3e5b62fd0e3e8ba88480,In The Stars,Benson Boone,genre,pop,Pop,0.7,llm,false,2026-07-06T05:07:29.606593+00:00
+e353128c20dcff27d5c0cfa2613a478992515c2198cd3e5b62fd0e3e8ba88480,In The Stars,Benson Boone,genre,alt-pop,Alt Pop,0.7,llm,false,2026-07-06T05:07:29.606593+00:00
+e353128c20dcff27d5c0cfa2613a478992515c2198cd3e5b62fd0e3e8ba88480,In The Stars,Benson Boone,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:29.606593+00:00
+e353128c20dcff27d5c0cfa2613a478992515c2198cd3e5b62fd0e3e8ba88480,In The Stars,Benson Boone,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:29.606593+00:00
+e353128c20dcff27d5c0cfa2613a478992515c2198cd3e5b62fd0e3e8ba88480,In The Stars,Benson Boone,vibe,dramatic,Dramatic,0.6799999999999999,llm,false,2026-07-06T05:07:29.606593+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,context,party,Party,0.76,llm,false,2026-07-06T05:09:33.335803+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,context,playlist-continue-good,Playlist Continue,0.76,llm,false,2026-07-06T05:09:33.335803+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:33.335803+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,genre,pop,Pop,0.8,llm,false,2026-07-06T05:09:33.335803+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,genre,dark-pop,Dark Pop,0.8,llm,false,2026-07-06T05:09:33.335803+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:33.335803+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:33.335803+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,vibe,rebellious,Rebellious,0.78,llm,false,2026-07-06T05:09:33.335803+00:00
+bf547264c3268a8c4b7fb37947f0aa45748d10925fa75d22cb86f72c0afcea89,bad guy,Billie Eilish,vibe,confident,Confident,0.78,llm,false,2026-07-06T05:09:33.335803+00:00
+0aebb796e3884848a4e1bfffe2252e2b7c40ab5468a16b47f074a9a296f1a0a8,BIRDS OF A FEATHER,Billie Eilish,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:32.905048+00:00
+0aebb796e3884848a4e1bfffe2252e2b7c40ab5468a16b47f074a9a296f1a0a8,BIRDS OF A FEATHER,Billie Eilish,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:32.905048+00:00
+0aebb796e3884848a4e1bfffe2252e2b7c40ab5468a16b47f074a9a296f1a0a8,BIRDS OF A FEATHER,Billie Eilish,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:09:32.905048+00:00
+0aebb796e3884848a4e1bfffe2252e2b7c40ab5468a16b47f074a9a296f1a0a8,BIRDS OF A FEATHER,Billie Eilish,genre,alt-pop,Alt Pop,0.6,llm,false,2026-07-06T05:09:32.905048+00:00
+0aebb796e3884848a4e1bfffe2252e2b7c40ab5468a16b47f074a9a296f1a0a8,BIRDS OF A FEATHER,Billie Eilish,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:32.905048+00:00
+0aebb796e3884848a4e1bfffe2252e2b7c40ab5468a16b47f074a9a296f1a0a8,BIRDS OF A FEATHER,Billie Eilish,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:32.905048+00:00
+0aebb796e3884848a4e1bfffe2252e2b7c40ab5468a16b47f074a9a296f1a0a8,BIRDS OF A FEATHER,Billie Eilish,vibe,soft,Soft,0.58,llm,false,2026-07-06T05:09:32.905048+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,context,background,Background,0.76,llm,false,2026-07-06T05:07:29.189858+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:29.189858+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:29.189858+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,genre,pop,Pop,0.8,llm,false,2026-07-06T05:07:29.189858+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,genre,alt-pop,Alt Pop,0.8,llm,false,2026-07-06T05:07:29.189858+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:29.189858+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:29.189858+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,vibe,dramatic,Dramatic,0.78,llm,false,2026-07-06T05:07:29.189858+00:00
+9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d,lovely,Billie Eilish;Khalid,vibe,sad,Sad,0.78,llm,false,2026-07-06T05:07:29.189858+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,context,party,Party,0.76,llm,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,context,playlist-continue-good,Playlist Continue,0.76,llm,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,genre,pop,Pop,0.8,llm,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,genre,dance-pop,Dance Pop,0.8,llm,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,language,lang-en,English,0.75,llm,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,vibe,sexy,Sexy,0.78,llm,false,2026-07-06T05:09:03.176338+00:00
+2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f,Havana,Camila Cabello;Young Thug,vibe,confident,Confident,0.78,llm,false,2026-07-06T05:09:03.176338+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,context,party,Party,0.71,llm,false,2026-07-06T05:08:01.258555+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,context,playlist-continue-good,Playlist Continue,0.71,llm,false,2026-07-06T05:08:01.258555+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:01.258555+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,genre,pop,Pop,0.75,llm,false,2026-07-06T05:08:01.258555+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:01.258555+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,version,original,Original,0.72,llm,false,2026-07-06T05:08:01.258555+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,version,explicit,Explicit,0.72,llm,false,2026-07-06T05:08:01.258555+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,vibe,confident,Confident,0.73,llm,false,2026-07-06T05:08:01.258555+00:00
+b20627ff04546464a40873c8b8cdf470c1956cc26065b5f47a6f0c9326f8eb9f,Casual (Explicit),Chappell Roan,vibe,playful,Playful,0.73,llm,false,2026-07-06T05:08:01.258555+00:00
+ee5ab277320b432637e0a2b997010805f9cf826d748ddfd6018935f08d6b9336,Pink Pony Club,Chappell Roan,context,party,Party,0.61,llm,false,2026-07-06T05:10:06.571421+00:00
+ee5ab277320b432637e0a2b997010805f9cf826d748ddfd6018935f08d6b9336,Pink Pony Club,Chappell Roan,genre,pop,Pop,0.65,llm,false,2026-07-06T05:10:06.571421+00:00
+ee5ab277320b432637e0a2b997010805f9cf826d748ddfd6018935f08d6b9336,Pink Pony Club,Chappell Roan,genre,dance-pop,Dance Pop,0.65,llm,false,2026-07-06T05:10:06.571421+00:00
+ee5ab277320b432637e0a2b997010805f9cf826d748ddfd6018935f08d6b9336,Pink Pony Club,Chappell Roan,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:10:06.571421+00:00
+ee5ab277320b432637e0a2b997010805f9cf826d748ddfd6018935f08d6b9336,Pink Pony Club,Chappell Roan,version,original,Original,0.7,heuristic,false,2026-07-06T05:10:06.571421+00:00
+ee5ab277320b432637e0a2b997010805f9cf826d748ddfd6018935f08d6b9336,Pink Pony Club,Chappell Roan,vibe,baddie,Baddie,0.63,llm,false,2026-07-06T05:10:06.571421+00:00
+ee5ab277320b432637e0a2b997010805f9cf826d748ddfd6018935f08d6b9336,Pink Pony Club,Chappell Roan,vibe,confident,Confident,0.63,llm,false,2026-07-06T05:10:06.571421+00:00
+3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018,Super Graphic Ultra Modern Girl,Chappell Roan,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:07:27.840139+00:00
+3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018,Super Graphic Ultra Modern Girl,Chappell Roan,context,transition-safe,Transition Safe,0.6599999999999999,llm,false,2026-07-06T05:07:27.840139+00:00
+3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018,Super Graphic Ultra Modern Girl,Chappell Roan,genre,hip-hop,Hip-Hop,0.7,llm,false,2026-07-06T05:07:27.840139+00:00
+3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018,Super Graphic Ultra Modern Girl,Chappell Roan,genre,rap,Rap,0.7,llm,false,2026-07-06T05:07:27.840139+00:00
+3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018,Super Graphic Ultra Modern Girl,Chappell Roan,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:27.840139+00:00
+3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018,Super Graphic Ultra Modern Girl,Chappell Roan,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:27.840139+00:00
+3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018,Super Graphic Ultra Modern Girl,Chappell Roan,vibe,quirky,Quirky,0.6799999999999999,llm,false,2026-07-06T05:07:27.840139+00:00
+3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018,Super Graphic Ultra Modern Girl,Chappell Roan,vibe,meme,Meme,0.6799999999999999,llm,false,2026-07-06T05:07:27.840139+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:53.524331+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:53.524331+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:53.524331+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:53.524331+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:53.524331+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:53.524331+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:53.524331+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:53.524331+00:00
+17d3bb09a7e2e0326fa925e54f109d6f8c6a657f8f4dada89c59f6e337d95037,Apple,Charli xcx,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:53.524331+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:41.065683+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:41.065683+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:41.065683+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:41.065683+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:41.065683+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:41.065683+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:41.065683+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:41.065683+00:00
+19276fcb7b430200f53763bbf6a7dcbd83361f1d75dc26787f9747252f29b70c,Guess,Charli xcx,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:41.065683+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:42.106076+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:42.106076+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:42.106076+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:42.106076+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:42.106076+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:42.106076+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,quality,standard-quality,Standard,0.85,heuristic,false,2026-07-06T04:57:42.106076+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:42.106076+00:00
+0ff9b29122bf131f7d8c8c9f4f2b42c1be696e8dbd4c84d5c33293f86cddeae1,"Girl, so confusing (2025科切拉音乐节现场)",Charli xcx、Lorde,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:42.106076+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,context,party,Party,0.6599999999999999,llm,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,genre,pop,Pop,0.7,llm,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,genre,dance-pop,Dance Pop,0.7,llm,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,language,lang-en,English,0.6499999999999999,llm,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,version,original,Original,0.7,heuristic,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,vibe,playful,Playful,0.6799999999999999,llm,false,2026-07-06T05:10:05.312455+00:00
+8e5ad0dbc01deefa435a3c8c4d8e75b7c27f2df098c3049cb42a42bd92ecdf5c,Light Switch,Charlie Puth,vibe,confident,Confident,0.6799999999999999,llm,false,2026-07-06T05:10:05.312455+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,context,party,Party,0.8099999999999999,llm,false,2026-07-06T05:09:32.49393+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,context,gym,Gym,0.8099999999999999,llm,false,2026-07-06T05:09:32.49393+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:32.49393+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:32.49393+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,genre,edm,EDM,0.85,llm,false,2026-07-06T05:09:32.49393+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:32.49393+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:32.49393+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,vibe,club,Club,0.83,llm,false,2026-07-06T05:09:32.49393+00:00
+ed1a95a83258352003cf3fca8e47b6e96edcd9eda4364c524c71ccb71d2cf2e0,Turn Down For What,DJ Snake;Lil Jon,vibe,euphoric,Euphoric,0.83,llm,false,2026-07-06T05:09:32.49393+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:53.880146+00:00
+ee21a86303b8fdcef481a1caec9aa99ad5d45c52441d405f0930322b3c32fc4e,Agora Hills (Explicit),Doja Cat,vibe,dramatic,Dramatic,0.57,heuristic,false,2026-07-06T04:57:53.880146+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,vibe,night-drive,Night Drive,0.63,filename,false,2026-07-06T04:57:47.188919+00:00
+d45beb0801ed4edc72aefdec4dbb4f31f3b5151ec462a55874f540f7c0ea338f,Dance The Night,Dua Lipa,vibe,neon,Neon,0.6000000000000001,filename,false,2026-07-06T04:57:47.188919+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:45.050485+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:45.050485+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:45.050485+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:45.050485+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:45.050485+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:45.050485+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:45.050485+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:45.050485+00:00
+36476579f00a2e898d5e32fcadb062ff4d7c6a573628980cc9f1d3b58e8139fd,Don't Start Now,Dua Lipa,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:45.050485+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:39.224498+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:39.224498+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:39.224498+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:39.224498+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:39.224498+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:39.224498+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:39.224498+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:39.224498+00:00
+f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92,Houdini,Dua Lipa,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:39.224498+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:38.243003+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:38.243003+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:38.243003+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:38.243003+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:38.243003+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:38.243003+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:38.243003+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:38.243003+00:00
+11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3,Illusion,Dua Lipa,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:38.243003+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,context,game,Game,0.63,filename,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,genre,game-ost,Game OST,0.63,filename,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:36.860426+00:00
+299e2c98f6b9942dca982c38e2baa78efaee3ef7c2e2bb9dee8115f08e8b398b,Levitating,Dua Lipa,vibe,boss-fight,Boss Fight,0.6000000000000001,filename,false,2026-07-06T04:57:36.860426+00:00
+6934843b49e470f328d309c6711736109babeebc10e29cba03bff20aad295b74,Eyes Closed,Ed Sheeran,context,background,Background,0.6599999999999999,llm,false,2026-07-06T05:08:00.204949+00:00
+6934843b49e470f328d309c6711736109babeebc10e29cba03bff20aad295b74,Eyes Closed,Ed Sheeran,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:08:00.204949+00:00
+6934843b49e470f328d309c6711736109babeebc10e29cba03bff20aad295b74,Eyes Closed,Ed Sheeran,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:00.204949+00:00
+6934843b49e470f328d309c6711736109babeebc10e29cba03bff20aad295b74,Eyes Closed,Ed Sheeran,genre,pop,Pop,0.7,llm,false,2026-07-06T05:08:00.204949+00:00
+6934843b49e470f328d309c6711736109babeebc10e29cba03bff20aad295b74,Eyes Closed,Ed Sheeran,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:00.204949+00:00
+6934843b49e470f328d309c6711736109babeebc10e29cba03bff20aad295b74,Eyes Closed,Ed Sheeran,version,original,Original,0.6699999999999999,llm,false,2026-07-06T05:08:00.204949+00:00
+6934843b49e470f328d309c6711736109babeebc10e29cba03bff20aad295b74,Eyes Closed,Ed Sheeran,vibe,soft,Soft,0.6799999999999999,llm,false,2026-07-06T05:08:00.204949+00:00
+6934843b49e470f328d309c6711736109babeebc10e29cba03bff20aad295b74,Eyes Closed,Ed Sheeran,vibe,playful,Playful,0.6799999999999999,llm,false,2026-07-06T05:08:00.204949+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,context,party,Party,0.6599999999999999,llm,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,genre,pop,Pop,0.7,llm,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,genre,dance-pop,Dance Pop,0.7,llm,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,language,lang-en,English,0.6499999999999999,llm,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,version,original,Original,0.7,heuristic,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,vibe,playful,Playful,0.6799999999999999,llm,false,2026-07-06T05:10:06.088755+00:00
+7ec8bf6061c473aeabef26f8f73fbeed712d03590b87f327f3ae0984f7e3c6bd,Shivers,Ed Sheeran,vibe,confident,Confident,0.6799999999999999,llm,false,2026-07-06T05:10:06.088755+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,context,party,Party,0.76,llm,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,context,playlist-continue-good,Playlist Continue,0.76,llm,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,genre,k-pop,K-Pop,0.8,llm,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,genre,girl-group,Girl Group,0.8,llm,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,language,lang-ko,Korean,0.75,llm,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,vibe,playful,Playful,0.78,llm,false,2026-07-06T05:09:04.304398+00:00
+2d3de4d625a91b67ad14cfa42c93dfb7e861df13f7e4f561d1164bf79d5e3b34,Cupid,FIFTY FIFTY,vibe,confident,Confident,0.78,llm,false,2026-07-06T05:09:04.304398+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:27.34656+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,context,background,Background,0.61,llm,false,2026-07-06T05:07:27.34656+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:27.34656+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,genre,c-pop,C-Pop,0.65,llm,false,2026-07-06T05:07:27.34656+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,genre,mandopop,Mandopop,0.65,llm,false,2026-07-06T05:07:27.34656+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,language,lang-zh,Chinese,0.6,llm,false,2026-07-06T05:07:27.34656+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:27.34656+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:27.34656+00:00
+2b3ec2e926334f17703465c67780675b1b52074b4ac24de614c2f48e55eaca29,倒数,G.E.M. 邓紫棋,vibe,playful,Playful,0.63,llm,false,2026-07-06T05:07:27.34656+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:26.505166+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,context,background,Background,0.61,llm,false,2026-07-06T05:07:26.505166+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:26.505166+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,genre,c-pop,C-Pop,0.65,llm,false,2026-07-06T05:07:26.505166+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,genre,mandopop,Mandopop,0.65,llm,false,2026-07-06T05:07:26.505166+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,language,lang-zh,Chinese,0.6,llm,false,2026-07-06T05:07:26.505166+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:26.505166+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:26.505166+00:00
+371679ec5b2a678e732e55c902c5de649082bb69ee9fc950e4015b8b20d23563,光年之外,G.E.M. 邓紫棋,vibe,dramatic,Dramatic,0.63,llm,false,2026-07-06T05:07:26.505166+00:00
+4223ed1913a972011adece9b2d4efdf90361625c15d7dd1c96009c4bde83f0fb,超能力,G.E.M.邓紫棋,context,party,Party,0.6599999999999999,llm,false,2026-07-06T05:09:31.259947+00:00
+4223ed1913a972011adece9b2d4efdf90361625c15d7dd1c96009c4bde83f0fb,超能力,G.E.M.邓紫棋,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:31.259947+00:00
+4223ed1913a972011adece9b2d4efdf90361625c15d7dd1c96009c4bde83f0fb,超能力,G.E.M.邓紫棋,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:31.259947+00:00
+4223ed1913a972011adece9b2d4efdf90361625c15d7dd1c96009c4bde83f0fb,超能力,G.E.M.邓紫棋,genre,mandopop,Mandopop,0.7,llm,false,2026-07-06T05:09:31.259947+00:00
+4223ed1913a972011adece9b2d4efdf90361625c15d7dd1c96009c4bde83f0fb,超能力,G.E.M.邓紫棋,language,lang-zh,Chinese,0.6499999999999999,llm,false,2026-07-06T05:09:31.259947+00:00
+4223ed1913a972011adece9b2d4efdf90361625c15d7dd1c96009c4bde83f0fb,超能力,G.E.M.邓紫棋,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:31.259947+00:00
+4223ed1913a972011adece9b2d4efdf90361625c15d7dd1c96009c4bde83f0fb,超能力,G.E.M.邓紫棋,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:31.259947+00:00
+4223ed1913a972011adece9b2d4efdf90361625c15d7dd1c96009c4bde83f0fb,超能力,G.E.M.邓紫棋,vibe,confident,Confident,0.6799999999999999,llm,false,2026-07-06T05:09:31.259947+00:00
+7fe8946007c1acb4c7d754bd35cfee931adb1affec3348eaec45a206ec577308,句号,G.E.M.邓紫棋,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:33.830228+00:00
+7fe8946007c1acb4c7d754bd35cfee931adb1affec3348eaec45a206ec577308,句号,G.E.M.邓紫棋,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:33.830228+00:00
+7fe8946007c1acb4c7d754bd35cfee931adb1affec3348eaec45a206ec577308,句号,G.E.M.邓紫棋,context,background,Background,0.55,llm,false,2026-07-06T05:09:33.830228+00:00
+7fe8946007c1acb4c7d754bd35cfee931adb1affec3348eaec45a206ec577308,句号,G.E.M.邓紫棋,genre,mandopop,Mandopop,0.55,llm,false,2026-07-06T05:09:33.830228+00:00
+7fe8946007c1acb4c7d754bd35cfee931adb1affec3348eaec45a206ec577308,句号,G.E.M.邓紫棋,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:09:33.830228+00:00
+7fe8946007c1acb4c7d754bd35cfee931adb1affec3348eaec45a206ec577308,句号,G.E.M.邓紫棋,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:33.830228+00:00
+7fe8946007c1acb4c7d754bd35cfee931adb1affec3348eaec45a206ec577308,句号,G.E.M.邓紫棋,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:33.830228+00:00
+7fe8946007c1acb4c7d754bd35cfee931adb1affec3348eaec45a206ec577308,句号,G.E.M.邓紫棋,vibe,dramatic,Dramatic,0.55,llm,false,2026-07-06T05:09:33.830228+00:00
+294d8cfc8fea820f49fd58f31d91135e3c5f9e287151abaff314dc09c45720f4,Heat Waves,Glass Animals,context,playlist-continue-good,Playlist Continue,0.71,llm,false,2026-07-06T05:07:30.049152+00:00
+294d8cfc8fea820f49fd58f31d91135e3c5f9e287151abaff314dc09c45720f4,Heat Waves,Glass Animals,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:30.049152+00:00
+294d8cfc8fea820f49fd58f31d91135e3c5f9e287151abaff314dc09c45720f4,Heat Waves,Glass Animals,genre,pop,Pop,0.75,llm,false,2026-07-06T05:07:30.049152+00:00
+294d8cfc8fea820f49fd58f31d91135e3c5f9e287151abaff314dc09c45720f4,Heat Waves,Glass Animals,genre,alt-pop,Alt Pop,0.75,llm,false,2026-07-06T05:07:30.049152+00:00
+294d8cfc8fea820f49fd58f31d91135e3c5f9e287151abaff314dc09c45720f4,Heat Waves,Glass Animals,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:30.049152+00:00
+294d8cfc8fea820f49fd58f31d91135e3c5f9e287151abaff314dc09c45720f4,Heat Waves,Glass Animals,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:30.049152+00:00
+294d8cfc8fea820f49fd58f31d91135e3c5f9e287151abaff314dc09c45720f4,Heat Waves,Glass Animals,vibe,playful,Playful,0.73,llm,false,2026-07-06T05:07:30.049152+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,context,playlist-continue-good,Playlist Continue,0.8099999999999999,llm,false,2026-07-06T05:07:26.911436+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,context,transition-safe,Transition Safe,0.8099999999999999,llm,false,2026-07-06T05:07:26.911436+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,genre,pop,Pop,0.85,llm,false,2026-07-06T05:07:26.911436+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,genre,dance-pop,Dance Pop,0.85,llm,false,2026-07-06T05:07:26.911436+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:26.911436+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:26.911436+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,vibe,dramatic,Dramatic,0.83,llm,false,2026-07-06T05:07:26.911436+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,vibe,confident,Confident,0.83,llm,false,2026-07-06T05:07:26.911436+00:00
+b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f,Nightmare,Halsey,vibe,night-drive,Night Drive,0.83,llm,false,2026-07-06T05:07:26.911436+00:00
+bd5673775738546ab56aad350854720239994d45e33942f6f4ce2deecca38e44,As It Was,Harry Styles,context,background,Background,0.71,llm,false,2026-07-06T05:08:03.408637+00:00
+bd5673775738546ab56aad350854720239994d45e33942f6f4ce2deecca38e44,As It Was,Harry Styles,context,playlist-continue-good,Playlist Continue,0.71,llm,false,2026-07-06T05:08:03.408637+00:00
+bd5673775738546ab56aad350854720239994d45e33942f6f4ce2deecca38e44,As It Was,Harry Styles,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:03.408637+00:00
+bd5673775738546ab56aad350854720239994d45e33942f6f4ce2deecca38e44,As It Was,Harry Styles,genre,pop,Pop,0.75,llm,false,2026-07-06T05:08:03.408637+00:00
+bd5673775738546ab56aad350854720239994d45e33942f6f4ce2deecca38e44,As It Was,Harry Styles,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:03.408637+00:00
+bd5673775738546ab56aad350854720239994d45e33942f6f4ce2deecca38e44,As It Was,Harry Styles,version,original,Original,0.72,llm,false,2026-07-06T05:08:03.408637+00:00
+bd5673775738546ab56aad350854720239994d45e33942f6f4ce2deecca38e44,As It Was,Harry Styles,vibe,playful,Playful,0.73,llm,false,2026-07-06T05:08:03.408637+00:00
+bd5673775738546ab56aad350854720239994d45e33942f6f4ce2deecca38e44,As It Was,Harry Styles,vibe,confident,Confident,0.73,llm,false,2026-07-06T05:08:03.408637+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,context,background,Background,0.61,llm,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,context,focus,Focus,0.61,llm,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,genre,pop,Pop,0.65,llm,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,language,lang-en,English,0.6,llm,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,vibe,dramatic,Dramatic,0.63,llm,false,2026-07-06T05:08:31.118383+00:00
+08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f,Natural,Imagine Dragons,vibe,confident,Confident,0.63,llm,false,2026-07-06T05:08:31.118383+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:19.701566+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:19.701566+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:19.701566+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:19.701566+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:19.701566+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:19.701566+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:19.701566+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:19.701566+00:00
+746c5d205da3c2fbe98f7e60e9443c7c35668569f6cb525ed6307ff91a34cf11,CAKE,ITZY,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:19.701566+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:21.696879+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:21.696879+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:21.696879+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:21.696879+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:21.696879+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:21.696879+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:21.696879+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:21.696879+00:00
+214d22a112735c1abdb2cd9fc97c05ce9f9ae9f51bee3de48c8c11de35fbd735,Baddie,IVE,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:21.696879+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:13.882164+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:13.882164+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:13.882164+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:13.882164+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:13.882164+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:13.882164+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:13.882164+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:13.882164+00:00
+22bf688c02b4479697c321f7ef7145cd6f437ad6ce3143a1cd4dc2464dc6bb61,Either Way,IVE,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:13.882164+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:09.373081+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:09.373081+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:09.373081+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:09.373081+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:09.373081+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:09.373081+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:09.373081+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:09.373081+00:00
+c00420cdb2665db25dc55d46e79fd9dddfb4363380915c55fed2c6e13ccf49a5,I AM,IVE,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:09.373081+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,context,gym,Gym,0.6,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,genre,k-pop-solo,K-Pop Solo,0.85,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,genre,k-pop,K-Pop,0.82,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,language,lang-ko,Korean,0.7,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,vibe,girl-crush,Girl Crush,0.78,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,vibe,baddie,Baddie,0.75,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:58:00.895456+00:00
+18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92,SOLO,JENNIE,vibe,club,Club,0.65,heuristic,false,2026-07-06T04:58:00.895456+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,context,gym,Gym,0.6,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,genre,k-pop-solo,K-Pop Solo,0.85,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,genre,k-pop,K-Pop,0.82,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,language,lang-ko,Korean,0.7,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,vibe,girl-crush,Girl Crush,0.78,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,vibe,baddie,Baddie,0.75,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:57:55.514147+00:00
+103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526,You & Me,JENNIE,vibe,club,Club,0.65,heuristic,false,2026-07-06T04:57:55.514147+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,context,party,Party,0.8099999999999999,llm,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,context,gym,Gym,0.8099999999999999,llm,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,genre,k-pop-solo,K-Pop Solo,0.85,llm,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,genre,pop,Pop,0.85,llm,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,language,lang-ko,Korean,0.7999999999999999,llm,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,vibe,confident,Confident,0.83,llm,false,2026-07-06T05:08:31.543308+00:00
+b7c1c603e9ee22c8f7fac65648580109edd5d1e30d967b8371fece1b93e14cf1,Like Crazy,Jimin,vibe,baddie,Baddie,0.83,llm,false,2026-07-06T05:08:31.543308+00:00
+468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361,Life's A Mess (Explicit),Juice WRLD;Halsey,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:57:36.111374+00:00
+468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361,Life's A Mess (Explicit),Juice WRLD;Halsey,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:36.111374+00:00
+468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361,Life's A Mess (Explicit),Juice WRLD;Halsey,genre,pop,Pop,0.82,heuristic,false,2026-07-06T04:57:36.111374+00:00
+468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361,Life's A Mess (Explicit),Juice WRLD;Halsey,genre,dance-pop,Dance Pop,0.57,heuristic,false,2026-07-06T04:57:36.111374+00:00
+468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361,Life's A Mess (Explicit),Juice WRLD;Halsey,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:36.111374+00:00
+468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361,Life's A Mess (Explicit),Juice WRLD;Halsey,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:36.111374+00:00
+468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361,Life's A Mess (Explicit),Juice WRLD;Halsey,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:57:36.111374+00:00
+468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361,Life's A Mess (Explicit),Juice WRLD;Halsey,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:57:36.111374+00:00
+8ec98c855023186c76d68a5aad4eaebb76ca78f84791230b526cf9ea8a8ed91b,Seven (Shadw Edit),Jung Kook、Latto、MK (JPN),context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:01.503495+00:00
+8ec98c855023186c76d68a5aad4eaebb76ca78f84791230b526cf9ea8a8ed91b,Seven (Shadw Edit),Jung Kook、Latto、MK (JPN),context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:01.503495+00:00
+8ec98c855023186c76d68a5aad4eaebb76ca78f84791230b526cf9ea8a8ed91b,Seven (Shadw Edit),Jung Kook、Latto、MK (JPN),quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:01.503495+00:00
+8ec98c855023186c76d68a5aad4eaebb76ca78f84791230b526cf9ea8a8ed91b,Seven (Shadw Edit),Jung Kook、Latto、MK (JPN),version,remix,Remix,0.75,heuristic,false,2026-07-06T04:58:01.503495+00:00
+8ec98c855023186c76d68a5aad4eaebb76ca78f84791230b526cf9ea8a8ed91b,Seven (Shadw Edit),Jung Kook、Latto、MK (JPN),version,original,Original,0.7,heuristic,false,2026-07-06T04:58:01.503495+00:00
+02799b14bf0c47d8fc519a1636f3fc1a69d42bca771778850baabe9bdf551268,golden hour,JVKE,context,background,Background,0.6599999999999999,llm,false,2026-07-06T05:07:30.47825+00:00
+02799b14bf0c47d8fc519a1636f3fc1a69d42bca771778850baabe9bdf551268,golden hour,JVKE,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:30.47825+00:00
+02799b14bf0c47d8fc519a1636f3fc1a69d42bca771778850baabe9bdf551268,golden hour,JVKE,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:30.47825+00:00
+02799b14bf0c47d8fc519a1636f3fc1a69d42bca771778850baabe9bdf551268,golden hour,JVKE,genre,pop,Pop,0.7,llm,false,2026-07-06T05:07:30.47825+00:00
+02799b14bf0c47d8fc519a1636f3fc1a69d42bca771778850baabe9bdf551268,golden hour,JVKE,genre,dance-pop,Dance Pop,0.7,llm,false,2026-07-06T05:07:30.47825+00:00
+02799b14bf0c47d8fc519a1636f3fc1a69d42bca771778850baabe9bdf551268,golden hour,JVKE,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:30.47825+00:00
+02799b14bf0c47d8fc519a1636f3fc1a69d42bca771778850baabe9bdf551268,golden hour,JVKE,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:30.47825+00:00
+02799b14bf0c47d8fc519a1636f3fc1a69d42bca771778850baabe9bdf551268,golden hour,JVKE,vibe,soft,Soft,0.6799999999999999,llm,false,2026-07-06T05:07:30.47825+00:00
+b2413a2e1e74afd9ee9e7c3121521557dd5af6478caa2f1037f182e331b52a0c,Deeper Well,Kacey Musgraves,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:00.665243+00:00
+b2413a2e1e74afd9ee9e7c3121521557dd5af6478caa2f1037f182e331b52a0c,Deeper Well,Kacey Musgraves,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:00.665243+00:00
+b2413a2e1e74afd9ee9e7c3121521557dd5af6478caa2f1037f182e331b52a0c,Deeper Well,Kacey Musgraves,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:08:00.665243+00:00
+b2413a2e1e74afd9ee9e7c3121521557dd5af6478caa2f1037f182e331b52a0c,Deeper Well,Kacey Musgraves,genre,pop,Pop,0.6,llm,false,2026-07-06T05:08:00.665243+00:00
+b2413a2e1e74afd9ee9e7c3121521557dd5af6478caa2f1037f182e331b52a0c,Deeper Well,Kacey Musgraves,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:00.665243+00:00
+b2413a2e1e74afd9ee9e7c3121521557dd5af6478caa2f1037f182e331b52a0c,Deeper Well,Kacey Musgraves,version,original,Original,0.57,llm,false,2026-07-06T05:08:00.665243+00:00
+b2413a2e1e74afd9ee9e7c3121521557dd5af6478caa2f1037f182e331b52a0c,Deeper Well,Kacey Musgraves,vibe,soft,Soft,0.58,llm,false,2026-07-06T05:08:00.665243+00:00
+b2413a2e1e74afd9ee9e7c3121521557dd5af6478caa2f1037f182e331b52a0c,Deeper Well,Kacey Musgraves,vibe,dramatic,Dramatic,0.58,llm,false,2026-07-06T05:08:00.665243+00:00
+db9d0d9abd23cf826f54722c44230ec1bb6b43af4bb18ab85c143dbf7b252403,Strangers,Kenya Grace,context,party,Party,0.71,llm,false,2026-07-06T05:09:05.145286+00:00
+db9d0d9abd23cf826f54722c44230ec1bb6b43af4bb18ab85c143dbf7b252403,Strangers,Kenya Grace,context,playlist-continue-good,Playlist Continue,0.71,llm,false,2026-07-06T05:09:05.145286+00:00
+db9d0d9abd23cf826f54722c44230ec1bb6b43af4bb18ab85c143dbf7b252403,Strangers,Kenya Grace,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:05.145286+00:00
+db9d0d9abd23cf826f54722c44230ec1bb6b43af4bb18ab85c143dbf7b252403,Strangers,Kenya Grace,genre,pop,Pop,0.75,llm,false,2026-07-06T05:09:05.145286+00:00
+db9d0d9abd23cf826f54722c44230ec1bb6b43af4bb18ab85c143dbf7b252403,Strangers,Kenya Grace,language,lang-en,English,0.7,llm,false,2026-07-06T05:09:05.145286+00:00
+db9d0d9abd23cf826f54722c44230ec1bb6b43af4bb18ab85c143dbf7b252403,Strangers,Kenya Grace,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:05.145286+00:00
+db9d0d9abd23cf826f54722c44230ec1bb6b43af4bb18ab85c143dbf7b252403,Strangers,Kenya Grace,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:05.145286+00:00
+db9d0d9abd23cf826f54722c44230ec1bb6b43af4bb18ab85c143dbf7b252403,Strangers,Kenya Grace,vibe,confident,Confident,0.73,llm,false,2026-07-06T05:09:05.145286+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,context,party,Party,0.71,llm,false,2026-07-06T05:09:32.115819+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,context,gym,Gym,0.71,llm,false,2026-07-06T05:09:32.115819+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:32.115819+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:32.115819+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,genre,pop,Pop,0.75,llm,false,2026-07-06T05:09:32.115819+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:32.115819+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:32.115819+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,vibe,club,Club,0.73,llm,false,2026-07-06T05:09:32.115819+00:00
+41c7daefe6feb611b461346dad8970f7061b0ef6c7eea7b23373f9470b72dd10,Don't Play,KSI;Anne-Marie;Digital Farm Animals,vibe,confident,Confident,0.73,llm,false,2026-07-06T05:09:32.115819+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:07:03.378728+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:03.378728+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,context,background,Background,0.55,llm,false,2026-07-06T05:07:03.378728+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,genre,pop,Pop,0.55,llm,false,2026-07-06T05:07:03.378728+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,language,lang-zh,Chinese,0.55,llm,false,2026-07-06T05:07:03.378728+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:03.378728+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:03.378728+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,vibe,soft,Soft,0.55,llm,false,2026-07-06T05:07:03.378728+00:00
+0371753662ca651ed824d209c1dbc06c3e48cb88f79e837b6b6bfae78c2de0f7,小城夏天,LBI利比,vibe,cute,Cute,0.55,llm,false,2026-07-06T05:07:03.378728+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:14.360804+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:14.360804+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:14.360804+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:14.360804+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:14.360804+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:14.360804+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:14.360804+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:14.360804+00:00
+e3810e0d826a6affd5c8247cfda9bd92fb00408fcef8d2ebb3dabbdd266dc77e,EASY,LE SSERAFIM,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:14.360804+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,vibe,night-drive,Night Drive,0.63,filename,false,2026-07-06T04:58:04.292674+00:00
+8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76,Perfect Night,LE SSERAFIM,vibe,neon,Neon,0.6000000000000001,filename,false,2026-07-06T04:58:04.292674+00:00
+3ad6b9ba9f7bec411fd51b4dc515752ce2597e08dfcb6a358448797bea1fa1b8,Before You Go,Lewis Capaldi,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:21.297456+00:00
+3ad6b9ba9f7bec411fd51b4dc515752ce2597e08dfcb6a358448797bea1fa1b8,Before You Go,Lewis Capaldi,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:21.297456+00:00
+3ad6b9ba9f7bec411fd51b4dc515752ce2597e08dfcb6a358448797bea1fa1b8,Before You Go,Lewis Capaldi,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:21.297456+00:00
+3ad6b9ba9f7bec411fd51b4dc515752ce2597e08dfcb6a358448797bea1fa1b8,Before You Go,Lewis Capaldi,version,remix,Remix,0.75,heuristic,false,2026-07-06T04:58:21.297456+00:00
+3ad6b9ba9f7bec411fd51b4dc515752ce2597e08dfcb6a358448797bea1fa1b8,Before You Go,Lewis Capaldi,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:21.297456+00:00
+2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e,MONTERO (Call Me By Your Name),Lil Nas X,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:05.605379+00:00
+2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e,MONTERO (Call Me By Your Name),Lil Nas X,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:05.605379+00:00
+2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e,MONTERO (Call Me By Your Name),Lil Nas X,genre,hip-hop,Hip-Hop,0.8,heuristic,false,2026-07-06T04:58:05.605379+00:00
+2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e,MONTERO (Call Me By Your Name),Lil Nas X,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:05.605379+00:00
+2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e,MONTERO (Call Me By Your Name),Lil Nas X,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:05.605379+00:00
+2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e,MONTERO (Call Me By Your Name),Lil Nas X,vibe,quirky,Quirky,0.85,heuristic,false,2026-07-06T04:58:05.605379+00:00
+2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e,MONTERO (Call Me By Your Name),Lil Nas X,vibe,playful,Playful,0.75,heuristic,false,2026-07-06T04:58:05.605379+00:00
+2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e,MONTERO (Call Me By Your Name),Lil Nas X,vibe,meme,Meme,0.7,heuristic,false,2026-07-06T04:58:05.605379+00:00
+2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98,INDUSTRY BABY (Explicit),Lil Nas X;Jack Harlow,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:08.885373+00:00
+2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98,INDUSTRY BABY (Explicit),Lil Nas X;Jack Harlow,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:08.885373+00:00
+2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98,INDUSTRY BABY (Explicit),Lil Nas X;Jack Harlow,genre,hip-hop,Hip-Hop,0.8,heuristic,false,2026-07-06T04:58:08.885373+00:00
+2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98,INDUSTRY BABY (Explicit),Lil Nas X;Jack Harlow,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:08.885373+00:00
+2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98,INDUSTRY BABY (Explicit),Lil Nas X;Jack Harlow,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:08.885373+00:00
+2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98,INDUSTRY BABY (Explicit),Lil Nas X;Jack Harlow,vibe,quirky,Quirky,0.85,heuristic,false,2026-07-06T04:58:08.885373+00:00
+2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98,INDUSTRY BABY (Explicit),Lil Nas X;Jack Harlow,vibe,playful,Playful,0.75,heuristic,false,2026-07-06T04:58:08.885373+00:00
+2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98,INDUSTRY BABY (Explicit),Lil Nas X;Jack Harlow,vibe,meme,Meme,0.7,heuristic,false,2026-07-06T04:58:08.885373+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:33.379548+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,context,background,Background,0.61,llm,false,2026-07-06T05:08:33.379548+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:33.379548+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,genre,pop,Pop,0.65,llm,false,2026-07-06T05:08:33.379548+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,language,lang-en,English,0.6,llm,false,2026-07-06T05:08:33.379548+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:33.379548+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:33.379548+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,vibe,playful,Playful,0.63,llm,false,2026-07-06T05:08:33.379548+00:00
+9acaaa00c2a1833ce246bff02b279d5accd1ad7ae0eaa50018451645c56f9f4a,Give A Little,Maggie Rogers,vibe,confident,Confident,0.63,llm,false,2026-07-06T05:08:33.379548+00:00
+881987254c549c73705497b79c61efc787dd3e34ff57e09598b25d2757d991cd,Lean On,Major Lazer;DJ Snake;MØ,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:06.322505+00:00
+881987254c549c73705497b79c61efc787dd3e34ff57e09598b25d2757d991cd,Lean On,Major Lazer;DJ Snake;MØ,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:06.322505+00:00
+881987254c549c73705497b79c61efc787dd3e34ff57e09598b25d2757d991cd,Lean On,Major Lazer;DJ Snake;MØ,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:06.322505+00:00
+881987254c549c73705497b79c61efc787dd3e34ff57e09598b25d2757d991cd,Lean On,Major Lazer;DJ Snake;MØ,version,remix,Remix,0.75,heuristic,false,2026-07-06T04:58:06.322505+00:00
+881987254c549c73705497b79c61efc787dd3e34ff57e09598b25d2757d991cd,Lean On,Major Lazer;DJ Snake;MØ,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:06.322505+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,context,shower,Shower,0.5599999999999999,llm,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,genre,pop,Pop,0.6,llm,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,language,lang-en,English,0.55,llm,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,vibe,playful,Playful,0.58,llm,false,2026-07-06T05:08:32.100092+00:00
+567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0,Kids,MGMT,vibe,quirky,Quirky,0.58,llm,false,2026-07-06T05:08:32.100092+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:58:11.799156+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:58:11.799156+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:11.799156+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:58:11.799156+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:58:11.799156+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:58:11.799156+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:11.799156+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:11.799156+00:00
+f87c90eef35334df358d46210a16af44107a9c9eb73160577965a4717df168ea,Flowers,Miley Cyrus,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:58:11.799156+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,context,playlist-continue-good,Playlist Continue,0.7,heuristic,false,2026-07-06T04:57:58.09208+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,context,homepage-safe,Homepage Safe,0.68,heuristic,false,2026-07-06T04:57:58.09208+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:58.09208+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,genre,pop,Pop,0.85,heuristic,false,2026-07-06T04:57:58.09208+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,genre,dance-pop,Dance Pop,0.82,heuristic,false,2026-07-06T04:57:58.09208+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,language,lang-en,English,0.8,heuristic,false,2026-07-06T04:57:58.09208+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:58.09208+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:58.09208+00:00
+1456d6d6646cd870f5bd38d3c2c76af4d71c35b4ba1cb630e9abd34dc1bd8b21,Used To Be Young,Miley Cyrus,vibe,club,Club,0.75,heuristic,false,2026-07-06T04:57:58.09208+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:19.872867+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:19.872867+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:19.872867+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:19.872867+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:19.872867+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:19.872867+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:19.872867+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:19.872867+00:00
+895c59c54b80b3c995b8e1abecdeae3b3c85a1623c499e50278457852632d6a1,Bubble Gum,NewJeans,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:19.872867+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:15.917023+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:15.917023+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:15.917023+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:15.917023+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:15.917023+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:15.917023+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:15.917023+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:15.917023+00:00
+2f4a33ee133e9a77ae742e56449a2648e79ad1a3b179327013a45b223b6fc5b6,Ditto,NewJeans,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:15.917023+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:12.39719+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:12.39719+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:12.39719+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:12.39719+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:12.39719+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:12.39719+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:12.39719+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:12.39719+00:00
+7bfab576725489089a2e3c880a950a264e238f25059c31bd806a9484396cd8ac,ETA,NewJeans,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:12.39719+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:04.241489+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:04.241489+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:58:04.241489+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:58:04.241489+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:58:04.241489+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:04.241489+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:04.241489+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:58:04.241489+00:00
+8c1656e27cedf4b2467ee795c5d8286919c8d8eb01a0f3eae452a10693169cd3,OMG,NewJeans,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:58:04.241489+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:57:59.509223+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:59.509223+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,genre,k-pop,K-Pop,0.85,heuristic,false,2026-07-06T04:57:59.509223+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,genre,girl-group,Girl Group,0.82,heuristic,false,2026-07-06T04:57:59.509223+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,language,lang-ko,Korean,0.65,heuristic,false,2026-07-06T04:57:59.509223+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,quality,standard-quality,Standard,0.85,heuristic,false,2026-07-06T04:57:59.509223+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:59.509223+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,vibe,girl-crush,Girl Crush,0.8,heuristic,false,2026-07-06T04:57:59.509223+00:00
+650ac985d65a9875bb288affe11596f0fee92c8c61d35f55f92dca6949bfeedf,Super Shy,NewJeans,vibe,baddie,Baddie,0.72,heuristic,false,2026-07-06T04:57:59.509223+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,context,party,Party,0.84,llm,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,context,playlist-continue-good,Playlist Continue,0.84,llm,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,genre,alt-pop,Alt Pop,0.88,llm,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,genre,pop,Pop,0.88,llm,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,language,lang-en,English,0.83,llm,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,version,original,Original,0.7,heuristic,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,vibe,playful,Playful,0.86,llm,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,vibe,rebellious,Rebellious,0.86,llm,false,2026-07-06T05:06:59.780989+00:00
+aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e,bad idea right? (Explicit),Olivia Rodrigo,vibe,confident,Confident,0.86,llm,false,2026-07-06T05:06:59.780989+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,context,party,Party,0.8099999999999999,llm,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,context,playlist-continue-good,Playlist Continue,0.8099999999999999,llm,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,genre,alt-pop,Alt Pop,0.85,llm,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,genre,pop,Pop,0.85,llm,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,language,lang-en,English,0.7999999999999999,llm,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,vibe,playful,Playful,0.83,llm,false,2026-07-06T05:09:02.804986+00:00
+14605a70b76b62ec190391086970c1cde1e31c739d5742f61b2797c634071eb3,deja vu (Explicit),Olivia Rodrigo,vibe,confident,Confident,0.83,llm,false,2026-07-06T05:09:02.804986+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,context,party,Party,0.8099999999999999,llm,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,context,playlist-continue-good,Playlist Continue,0.8099999999999999,llm,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,genre,alt-pop,Alt Pop,0.85,llm,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,genre,pop,Pop,0.85,llm,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,language,lang-en,English,0.7999999999999999,llm,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,version,original,Original,0.7,heuristic,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,vibe,confident,Confident,0.83,llm,false,2026-07-06T05:06:59.31787+00:00
+f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97,obsessed (Explicit),Olivia Rodrigo,vibe,rebellious,Rebellious,0.83,llm,false,2026-07-06T05:06:59.31787+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,context,party,Party,0.8099999999999999,llm,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,context,playlist-continue-good,Playlist Continue,0.8099999999999999,llm,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,genre,alt-pop,Alt Pop,0.85,llm,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,genre,pop,Pop,0.85,llm,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,version,original,Original,0.82,llm,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,version,explicit,Explicit,0.82,llm,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,vibe,dramatic,Dramatic,0.83,llm,false,2026-07-06T05:08:02.188081+00:00
+9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e,vampire (Explicit),Olivia Rodrigo,vibe,rebellious,Rebellious,0.83,llm,false,2026-07-06T05:08:02.188081+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,context,party,Party,0.71,llm,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,context,gym,Gym,0.71,llm,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,genre,dance-pop,Dance Pop,0.75,llm,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,language,lang-en,English,0.7,llm,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,vibe,club,Club,0.73,llm,false,2026-07-06T05:08:30.754415+00:00
+861259e2b283f165b95f7175251921530b6d092689e8b9a882fc3501662a5e69,Ride It,Regard,vibe,sexy,Sexy,0.73,llm,false,2026-07-06T05:08:30.754415+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,context,background,Background,0.71,llm,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,context,shower,Shower,0.71,llm,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,genre,pop,Pop,0.75,llm,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,language,lang-en,English,0.7,llm,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,vibe,soft,Soft,0.73,llm,false,2026-07-06T05:09:03.529948+00:00
+4ce7d30b4c75c40721063948767436e19f43d070a2444733fb0978452e058d91,Dandelions,Ruth B.,vibe,cute,Cute,0.73,llm,false,2026-07-06T05:09:03.529948+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,context,party,Party,0.76,llm,false,2026-07-06T05:08:02.980867+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,context,gym,Gym,0.76,llm,false,2026-07-06T05:08:02.980867+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:02.980867+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:02.980867+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,genre,pop,Pop,0.8,llm,false,2026-07-06T05:08:02.980867+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:02.980867+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,version,original,Original,0.77,llm,false,2026-07-06T05:08:02.980867+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,vibe,club,Club,0.78,llm,false,2026-07-06T05:08:02.980867+00:00
+c77ad5964d67cfd989d897897071e56ef4aa732c120e34b55445e18dc0e74f32,Unholy,Sam Smith;Kim Petras,vibe,sexy,Sexy,0.78,llm,false,2026-07-06T05:08:02.980867+00:00
+5cd3a03d0ef9fc163eb72afc87754d065f9e510eb13b98d91969516ba699ccd2,Chandelier,Sia,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:19.118294+00:00
+5cd3a03d0ef9fc163eb72afc87754d065f9e510eb13b98d91969516ba699ccd2,Chandelier,Sia,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:19.118294+00:00
+5cd3a03d0ef9fc163eb72afc87754d065f9e510eb13b98d91969516ba699ccd2,Chandelier,Sia,genre,pop,Pop,0.82,heuristic,false,2026-07-06T04:58:19.118294+00:00
+5cd3a03d0ef9fc163eb72afc87754d065f9e510eb13b98d91969516ba699ccd2,Chandelier,Sia,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:19.118294+00:00
+5cd3a03d0ef9fc163eb72afc87754d065f9e510eb13b98d91969516ba699ccd2,Chandelier,Sia,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:19.118294+00:00
+5cd3a03d0ef9fc163eb72afc87754d065f9e510eb13b98d91969516ba699ccd2,Chandelier,Sia,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:58:19.118294+00:00
+5cd3a03d0ef9fc163eb72afc87754d065f9e510eb13b98d91969516ba699ccd2,Chandelier,Sia,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:58:19.118294+00:00
+52ec10778b4a0dfa1d890b84479ca282cdc2c557e10c7f4aad07649829b3c60d,Cheap Thrills,Sia,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:17.957101+00:00
+52ec10778b4a0dfa1d890b84479ca282cdc2c557e10c7f4aad07649829b3c60d,Cheap Thrills,Sia,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:17.957101+00:00
+52ec10778b4a0dfa1d890b84479ca282cdc2c557e10c7f4aad07649829b3c60d,Cheap Thrills,Sia,genre,pop,Pop,0.82,heuristic,false,2026-07-06T04:58:17.957101+00:00
+52ec10778b4a0dfa1d890b84479ca282cdc2c557e10c7f4aad07649829b3c60d,Cheap Thrills,Sia,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:17.957101+00:00
+52ec10778b4a0dfa1d890b84479ca282cdc2c557e10c7f4aad07649829b3c60d,Cheap Thrills,Sia,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:17.957101+00:00
+52ec10778b4a0dfa1d890b84479ca282cdc2c557e10c7f4aad07649829b3c60d,Cheap Thrills,Sia,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:58:17.957101+00:00
+52ec10778b4a0dfa1d890b84479ca282cdc2c557e10c7f4aad07649829b3c60d,Cheap Thrills,Sia,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:58:17.957101+00:00
+f3cc9a15711febb8af9191ef7b308b0edc8dcaa39fce335a8fba6a2373dae081,Snowman,Sia,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:58:01.069355+00:00
+f3cc9a15711febb8af9191ef7b308b0edc8dcaa39fce335a8fba6a2373dae081,Snowman,Sia,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:58:01.069355+00:00
+f3cc9a15711febb8af9191ef7b308b0edc8dcaa39fce335a8fba6a2373dae081,Snowman,Sia,genre,pop,Pop,0.82,heuristic,false,2026-07-06T04:58:01.069355+00:00
+f3cc9a15711febb8af9191ef7b308b0edc8dcaa39fce335a8fba6a2373dae081,Snowman,Sia,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:58:01.069355+00:00
+f3cc9a15711febb8af9191ef7b308b0edc8dcaa39fce335a8fba6a2373dae081,Snowman,Sia,version,remix,Remix,0.75,heuristic,false,2026-07-06T04:58:01.069355+00:00
+f3cc9a15711febb8af9191ef7b308b0edc8dcaa39fce335a8fba6a2373dae081,Snowman,Sia,version,original,Original,0.7,heuristic,false,2026-07-06T04:58:01.069355+00:00
+f3cc9a15711febb8af9191ef7b308b0edc8dcaa39fce335a8fba6a2373dae081,Snowman,Sia,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:58:01.069355+00:00
+f3cc9a15711febb8af9191ef7b308b0edc8dcaa39fce335a8fba6a2373dae081,Snowman,Sia,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:58:01.069355+00:00
+a990c8a36080f8b49e419067fa2630ee04af9c47fe55efb3e862b2d14852d180,Unstoppable,Sia,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:57:58.534551+00:00
+a990c8a36080f8b49e419067fa2630ee04af9c47fe55efb3e862b2d14852d180,Unstoppable,Sia,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:58.534551+00:00
+a990c8a36080f8b49e419067fa2630ee04af9c47fe55efb3e862b2d14852d180,Unstoppable,Sia,genre,pop,Pop,0.82,heuristic,false,2026-07-06T04:57:58.534551+00:00
+a990c8a36080f8b49e419067fa2630ee04af9c47fe55efb3e862b2d14852d180,Unstoppable,Sia,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:58.534551+00:00
+a990c8a36080f8b49e419067fa2630ee04af9c47fe55efb3e862b2d14852d180,Unstoppable,Sia,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:58.534551+00:00
+a990c8a36080f8b49e419067fa2630ee04af9c47fe55efb3e862b2d14852d180,Unstoppable,Sia,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:57:58.534551+00:00
+a990c8a36080f8b49e419067fa2630ee04af9c47fe55efb3e862b2d14852d180,Unstoppable,Sia,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:57:58.534551+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,context,playlist-continue-good,Playlist Continue,0.8099999999999999,llm,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,genre,alt-pop,Alt Pop,0.85,llm,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,genre,pop,Pop,0.85,llm,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,language,lang-en,English,0.7999999999999999,llm,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,version,remix,Remix,0.75,heuristic,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,vibe,dramatic,Dramatic,0.83,llm,false,2026-07-06T05:09:06.417632+00:00
+39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996,Anti-Hero,Taylor Swift,vibe,confident,Confident,0.83,llm,false,2026-07-06T05:09:06.417632+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,context,homepage-safe,Homepage Safe,0.84,llm,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,context,playlist-continue-good,Playlist Continue,0.84,llm,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,genre,alt-pop,Alt Pop,0.88,llm,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,genre,pop,Pop,0.88,llm,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,language,lang-en,English,0.83,llm,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,vibe,dramatic,Dramatic,0.86,llm,false,2026-07-06T05:09:04.685237+00:00
+ffb941b0e5447e79df6ec49a363df74091062a02ea9e87588e9c371c89e825d7,Cruel Summer,Taylor Swift,vibe,confident,Confident,0.86,llm,false,2026-07-06T05:09:04.685237+00:00
+a242afc15312c3df2da8ba7a95ca6cdeba6da2acdf833cc788e9beccecd8427a,Down Bad,Taylor Swift,context,homepage-safe,Homepage Safe,0.6599999999999999,llm,false,2026-07-06T05:09:34.286608+00:00
+a242afc15312c3df2da8ba7a95ca6cdeba6da2acdf833cc788e9beccecd8427a,Down Bad,Taylor Swift,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:09:34.286608+00:00
+a242afc15312c3df2da8ba7a95ca6cdeba6da2acdf833cc788e9beccecd8427a,Down Bad,Taylor Swift,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:34.286608+00:00
+a242afc15312c3df2da8ba7a95ca6cdeba6da2acdf833cc788e9beccecd8427a,Down Bad,Taylor Swift,genre,alt-pop,Alt Pop,0.7,llm,false,2026-07-06T05:09:34.286608+00:00
+a242afc15312c3df2da8ba7a95ca6cdeba6da2acdf833cc788e9beccecd8427a,Down Bad,Taylor Swift,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:34.286608+00:00
+a242afc15312c3df2da8ba7a95ca6cdeba6da2acdf833cc788e9beccecd8427a,Down Bad,Taylor Swift,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:34.286608+00:00
+a242afc15312c3df2da8ba7a95ca6cdeba6da2acdf833cc788e9beccecd8427a,Down Bad,Taylor Swift,vibe,confident,Confident,0.6799999999999999,llm,false,2026-07-06T05:09:34.286608+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,context,playlist-continue-good,Playlist Continue,0.8099999999999999,llm,false,2026-07-06T05:08:32.968912+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:32.968912+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,genre,alt-pop,Alt Pop,0.85,llm,false,2026-07-06T05:08:32.968912+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,language,lang-en,English,0.7999999999999999,llm,false,2026-07-06T05:08:32.968912+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:32.968912+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,version,remix,Remix,0.75,heuristic,false,2026-07-06T05:08:32.968912+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:32.968912+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,vibe,neon,Neon,0.83,llm,false,2026-07-06T05:08:32.968912+00:00
+46f544fb80e163b955cf8719b7a4684b267e0b8350f5d80d0086dd78a191af7a,Karma (Explicit),Taylor Swift,vibe,confident,Confident,0.83,llm,false,2026-07-06T05:08:32.968912+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,context,background,Background,0.6599999999999999,llm,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,genre,alt-pop,Alt Pop,0.7,llm,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,genre,pop,Pop,0.7,llm,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,version,original,Original,0.6699999999999999,llm,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,version,explicit,Explicit,0.6699999999999999,llm,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,vibe,dramatic,Dramatic,0.6799999999999999,llm,false,2026-07-06T05:08:03.785415+00:00
+187a27d8f3fb9c4e48775979c78440291ffc5f693edafe1cad3f0cd37674c585,The Alchemy,Taylor Swift,vibe,confident,Confident,0.6799999999999999,llm,false,2026-07-06T05:08:03.785415+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,context,game,Game,0.6599999999999999,llm,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,genre,pop,Pop,0.7,llm,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,genre,hip-hop,Hip-Hop,0.7,llm,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,language,lang-en,English,0.6499999999999999,llm,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,vibe,night-drive,Night Drive,0.6799999999999999,llm,false,2026-07-06T05:08:33.757455+00:00
+69be1254dcfb859716e2316e2e89b7c050064db6ffb3d3bc025873d45b96fab2,Fortnight,Taylor Swift;Post Malone,vibe,confident,Confident,0.6799999999999999,llm,false,2026-07-06T05:08:33.757455+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,context,party,Party,0.71,llm,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,context,playlist-continue-good,Playlist Continue,0.71,llm,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,genre,pop,Pop,0.75,llm,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,genre,dance-pop,Dance Pop,0.75,llm,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,language,lang-en,English,0.7,llm,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,version,original,Original,0.7,heuristic,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,vibe,euphoric,Euphoric,0.73,llm,false,2026-07-06T05:10:05.725001+00:00
+be6a01789337008e93cae31f177535f6d779c0d8836fe6ba56bd2575d52eb29c,Something Just Like This,The Chainsmokers;Coldplay,vibe,confident,Confident,0.73,llm,false,2026-07-06T05:10:05.725001+00:00
+552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39,Closer,The Chainsmokers;Halsey,context,playlist-continue-good,Playlist Continue,0.62,heuristic,false,2026-07-06T04:57:49.298431+00:00
+552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39,Closer,The Chainsmokers;Halsey,context,transition-safe,Transition Safe,0.58,heuristic,false,2026-07-06T04:57:49.298431+00:00
+552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39,Closer,The Chainsmokers;Halsey,genre,pop,Pop,0.82,heuristic,false,2026-07-06T04:57:49.298431+00:00
+552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39,Closer,The Chainsmokers;Halsey,genre,dance-pop,Dance Pop,0.57,heuristic,false,2026-07-06T04:57:49.298431+00:00
+552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39,Closer,The Chainsmokers;Halsey,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T04:57:49.298431+00:00
+552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39,Closer,The Chainsmokers;Halsey,version,original,Original,0.7,heuristic,false,2026-07-06T04:57:49.298431+00:00
+552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39,Closer,The Chainsmokers;Halsey,vibe,dramatic,Dramatic,0.78,heuristic,false,2026-07-06T04:57:49.298431+00:00
+552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39,Closer,The Chainsmokers;Halsey,vibe,confident,Confident,0.7,heuristic,false,2026-07-06T04:57:49.298431+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,context,transition-safe,Transition Safe,0.71,llm,false,2026-07-06T05:10:04.111322+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,context,playlist-continue-good,Playlist Continue,0.71,llm,false,2026-07-06T05:10:04.111322+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,genre,pop,Pop,0.75,llm,false,2026-07-06T05:10:04.111322+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,genre,dance-pop,Dance Pop,0.75,llm,false,2026-07-06T05:10:04.111322+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,language,lang-en,English,0.7,llm,false,2026-07-06T05:10:04.111322+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:10:04.111322+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,version,original,Original,0.7,heuristic,false,2026-07-06T05:10:04.111322+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,vibe,night-drive,Night Drive,0.73,llm,false,2026-07-06T05:10:04.111322+00:00
+578cbaa88bcaf624264653d2e4c9eae1c0ebda8b073a2b2d7d3389a14e3087c3,I Feel It Coming,The Weeknd、Daft Punk,vibe,euphoric,Euphoric,0.73,llm,false,2026-07-06T05:10:04.111322+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,context,party,Party,0.76,llm,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,context,gym,Gym,0.76,llm,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,genre,pop,Pop,0.8,llm,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,genre,alt-pop,Alt Pop,0.8,llm,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,language,lang-en,English,0.75,llm,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,vibe,sexy,Sexy,0.78,llm,false,2026-07-06T05:09:05.536577+00:00
+6cba6b47e5b95a8baab07c9a502bc5351a90f97ced1d061622b5ee4e0691c838,Bloom,Troye Sivan,vibe,confident,Confident,0.78,llm,false,2026-07-06T05:09:05.536577+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,context,party,Party,0.76,llm,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,context,gym,Gym,0.76,llm,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,genre,pop,Pop,0.8,llm,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,genre,dance-pop,Dance Pop,0.8,llm,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,language,lang-en,English,0.75,llm,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,version,original,Original,0.7,heuristic,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,vibe,confident,Confident,0.78,llm,false,2026-07-06T05:08:30.367556+00:00
+78f3b2ee5468f628a0c6dca664bf9da3fcd01ce8db3ade46824de916987fd78c,Rush,Troye Sivan,vibe,baddie,Baddie,0.78,llm,false,2026-07-06T05:08:30.367556+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,context,background,Background,0.6599999999999999,llm,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,context,shower,Shower,0.6599999999999999,llm,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,genre,alt-pop,Alt Pop,0.7,llm,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,genre,pop,Pop,0.7,llm,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,language,lang-en,English,0.6499999999999999,llm,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,vibe,quirky,Quirky,0.6799999999999999,llm,false,2026-07-06T05:09:05.978461+00:00
+d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c,bad,wave to earth,vibe,playful,Playful,0.6799999999999999,llm,false,2026-07-06T05:09:05.978461+00:00
+d04349e2e7e474e4ad81466a3ce8b898c62cc85c0b21f21e02e1f39c50ecbb00,seasons,wave to earth,context,playlist-continue-good,Playlist Continue,0.62,llm,false,2026-07-06T05:09:30.415039+00:00
+d04349e2e7e474e4ad81466a3ce8b898c62cc85c0b21f21e02e1f39c50ecbb00,seasons,wave to earth,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:09:30.415039+00:00
+d04349e2e7e474e4ad81466a3ce8b898c62cc85c0b21f21e02e1f39c50ecbb00,seasons,wave to earth,context,background,Background,0.5599999999999999,llm,false,2026-07-06T05:09:30.415039+00:00
+d04349e2e7e474e4ad81466a3ce8b898c62cc85c0b21f21e02e1f39c50ecbb00,seasons,wave to earth,genre,pop,Pop,0.6,llm,false,2026-07-06T05:09:30.415039+00:00
+d04349e2e7e474e4ad81466a3ce8b898c62cc85c0b21f21e02e1f39c50ecbb00,seasons,wave to earth,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:09:30.415039+00:00
+d04349e2e7e474e4ad81466a3ce8b898c62cc85c0b21f21e02e1f39c50ecbb00,seasons,wave to earth,version,original,Original,0.7,heuristic,false,2026-07-06T05:09:30.415039+00:00
+d04349e2e7e474e4ad81466a3ce8b898c62cc85c0b21f21e02e1f39c50ecbb00,seasons,wave to earth,vibe,soft,Soft,0.58,llm,false,2026-07-06T05:09:30.415039+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,context,party,Party,0.6599999999999999,llm,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,genre,alt-pop,Alt Pop,0.7,llm,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,genre,pop,Pop,0.7,llm,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,version,original,Original,0.6699999999999999,llm,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,version,explicit,Explicit,0.6699999999999999,llm,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,vibe,quirky,Quirky,0.6799999999999999,llm,false,2026-07-06T05:08:02.54196+00:00
+6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f,Ur Mum (Explicit),Wet Leg,vibe,rebellious,Rebellious,0.6799999999999999,llm,false,2026-07-06T05:08:02.54196+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,context,party,Party,0.71,llm,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,context,playlist-continue-good,Playlist Continue,0.71,llm,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,genre,pop,Pop,0.75,llm,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,genre,hip-hop,Hip-Hop,0.75,llm,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,language,lang-en,English,0.7,llm,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,vibe,playful,Playful,0.73,llm,false,2026-07-06T05:07:01.194033+00:00
+905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e,Betty (Get Money),Yung Gravy,vibe,confident,Confident,0.73,llm,false,2026-07-06T05:07:01.194033+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,context,party,Party,0.6599999999999999,llm,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,context,playlist-continue-good,Playlist Continue,0.6599999999999999,llm,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,context,transition-safe,Transition Safe,0.58,llm,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,genre,pop,Pop,0.7,llm,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,genre,hip-hop,Hip-Hop,0.7,llm,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,language,lang-en,English,0.6499999999999999,llm,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,quality,high-compressed,High Compressed,0.85,heuristic,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,version,original,Original,0.7,heuristic,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,vibe,quirky,Quirky,0.6799999999999999,llm,false,2026-07-06T05:07:00.675878+00:00
+4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c,oops!,Yung Gravy,vibe,meme,Meme,0.6799999999999999,llm,false,2026-07-06T05:07:00.675878+00:00

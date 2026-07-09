@@ -174,6 +174,7 @@ function scheduleAudioRelease(delayMs) {
 export async function primeAudioLease() {
   logAudioLeaseDebug('prime:start')
   rememberCurrentSessionType()
+  safeSetAudioSessionType('ambient')
 
   const ok = await resumeContextIfNeeded()
   if (!ok || !ctx) {
@@ -206,14 +207,14 @@ export async function primeAudioLease() {
 }
 
 /**
- * 短提示音：临时 transient，播完 release。
+ * 短提示音：临时 ambient，播完 release。
  * @param {() => number | void} playFn 返回 cue 时长（秒）
  * @returns {Promise<boolean>}
  */
 export async function withAudioCuePlayback(playFn) {
   logAudioLeaseDebug('cue:start')
   rememberCurrentSessionType()
-  safeSetAudioSessionType('transient')
+  safeSetAudioSessionType('ambient')
 
   const ok = await resumeContextIfNeeded()
   if (!ok || !ctx) {

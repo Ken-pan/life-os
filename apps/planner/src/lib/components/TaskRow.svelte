@@ -13,7 +13,7 @@
   } from '$lib/domain/tasks.js'
   import { formatDateShort } from '$lib/domain/dateFormat.js'
   import { listLabel, t } from '$lib/i18n/index.js'
-  import { getListById, dateKeyOf } from '$lib/state.svelte.js'
+  import { getListById, dateKeyOf, todayKey, S } from '$lib/state.svelte.js'
   import { getTaskKind } from '$lib/domain/taskKind.js'
   import { buildTaskMetaLine } from '$lib/domain/taskMetaLine.js'
   import { openSchedulePopover } from '$lib/ui.svelte.js'
@@ -275,6 +275,62 @@
     )
   }
 
+  const archiveList = $derived(
+    S.lists.find(
+      (l) =>
+        !l.deletedAt &&
+        (l.title?.toLowerCase() === 'archive' || l.title === '归档'),
+    ),
+  )
+
+  function thisWeekKey() {
+    const d = new Date()
+    const day = d.getDay()
+    const diff = day === 0 ? 0 : 7 - day
+    d.setDate(d.getDate() + diff)
+    return dateKeyOf(d)
+  }
+
+  function doToday() {
+    const date = todayKey()
+    updateTask(task.id, { dueDate: date })
+    closeActions()
+    toast(
+      t('toast.scheduled', { title: task.title, date: fmtDate(date) }),
+      'success',
+    )
+  }
+
+  function doThisWeek() {
+    const date = thisWeekKey()
+    updateTask(task.id, { dueDate: date })
+    closeActions()
+    toast(
+      t('toast.scheduled', { title: task.title, date: fmtDate(date) }),
+      'success',
+    )
+  }
+
+  function doClearDate() {
+    updateTask(task.id, { dueDate: null })
+    closeActions()
+    toast(
+      t('toast.scheduleCleared', { title: task.title }),
+      'success',
+    )
+  }
+
+  function doArchive() {
+    if (archiveList) {
+      updateTask(task.id, { listId: archiveList.id })
+      closeActions()
+      toast(
+        t('task.archivedSuccess', { title: task.title }),
+        'success',
+      )
+    }
+  }
+
   function doDelete() {
     const id = task.id
     deleteTask(id)
@@ -358,7 +414,7 @@
         class="task-check"
         class:on={showAsCompleted}
         class:completing
-        class:task-check--accent={task.priority === 1}
+        class:task-check--accent={task.priority === 'P0'}
         aria-label="toggle"
         onclick={handleCheckToggle}
       >
@@ -369,11 +425,22 @@
           />{/if}
       </button>
 
-      <button
-        type="button"
+      <div
         class="task-body"
-        style="text-align:left;background:none;border:none;padding:0;width:100%"
-        onclick={() => onEdit?.(task)}
+        role="button"
+        tabindex="0"
+        style="text-align:left;background:none;border:none;padding:0;width:100%;cursor:pointer"
+        onclick={(e) => {
+          if (e.target.closest('a') || e.target.closest('button')) return
+          onEdit?.(task)
+        }}
+        onkeydown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            if (e.target.closest('a') || e.target.closest('button')) return
+            e.preventDefault()
+            onEdit?.(task)
+          }
+        }}
       >
         <div class="task-title-row">
           {#if kind === 'micro'}
@@ -415,7 +482,36 @@
               >{/each}
           </div>
         {/if}
-      </button>
+        {#if overdue && !showAsCompleted}
+          <div
+            class="task-overdue-actions"
+            role="presentation"
+            onclick={(e) => e.stopPropagation()}
+            onkeydown={(e) => e.stopPropagation()}
+          >
+            <button type="button" class="overdue-action-btn" onclick={doToday}>
+              {t('task.actionToday')}
+            </button>
+            <button type="button" class="overdue-action-btn" onclick={doTomorrow}>
+              {t('task.actionTomorrow')}
+            </button>
+            <button type="button" class="overdue-action-btn" onclick={doThisWeek}>
+              {t('task.actionThisWeek')}
+            </button>
+            <button type="button" class="overdue-action-btn" onclick={doClearDate}>
+              {t('task.actionClearDate')}
+            </button>
+            <button type="button" class="overdue-action-btn" onclick={handleCheckToggle}>
+              {t('task.actionDone')}
+            </button>
+            {#if archiveList}
+              <button type="button" class="overdue-action-btn" onclick={doArchive}>
+                {t('task.actionArchive')}
+              </button>
+            {/if}
+          </div>
+        {/if}
+      </div>
 
       <div class="task-row-trailing">
         {#if showScheduleBtn}

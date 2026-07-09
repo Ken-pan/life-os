@@ -1,0 +1,5457 @@
+[
+  {
+    "seed": {
+      "track_id": "5d429221b5510f4fa7c9ed9eb5be2e79753f5e51ea525e8b32990218960fa501",
+      "title": "ZEN (Explicit)",
+      "artist": "JENNIE",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "ab3b98427d0942d800df4cc6b5c71ab32c67c3b441745c515cd01a1ee067dd2c",
+        "title": "Mantra (Explicit)",
+        "artist": "JENNIE",
+        "score": 0.4395,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "28e6d8ed3a903ee5e28ccd9d9ca69998b4f99125b86b7b218368d6c835a0deef",
+        "title": "like JENNIE",
+        "artist": "JENNIE",
+        "score": 0.4257,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "a9aa015869302b77e27ba814c128ac7f8e86277be6b4cc2922e2cea771388f96",
+        "title": "ExtraL",
+        "artist": "JENNIE;Doechii",
+        "score": 0.4186,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "f5d0f0cfab0b8bd175c72951196963d43279e2fb82c9255ddf645bd5cc151efc",
+        "title": "Love Hangover (feat. Dominic Fike)(Explicit)",
+        "artist": "JENNIE;Dominic Fike",
+        "score": 0.4175,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92",
+        "title": "SOLO",
+        "artist": "JENNIE",
+        "score": 0.3889,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "gym",
+          "k-pop"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "k-pop-solo"
+        ],
+        "vibe_tags": [
+          "girl-crush",
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526",
+        "title": "You & Me",
+        "artist": "JENNIE",
+        "score": 0.3882,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "gym",
+          "k-pop"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "k-pop-solo"
+        ],
+        "vibe_tags": [
+          "girl-crush",
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "a98415dec826983366cc73bded6fe8f971026c4ca97b0d38ca82f905aadba606",
+        "title": "UNFORGIVEN (feat. Nile Rodgers)",
+        "artist": "LE SSERAFIM;Nile Rodgers",
+        "score": 0.3338,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "a14332efa15b4930e67789cf49dfec92a7583c56c6e12c53ac563f8a364f74fd",
+        "title": "Pretty Savage",
+        "artist": "BLACKPINK",
+        "score": 0.3139,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "dd0abd9c23c7694068b35a2b5d06f9e9ec89b2249b77717b61406c8f00e7284c",
+        "title": "MONEY",
+        "artist": "LISA",
+        "score": 0.3136,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "5486ff72afe77ed9fd175a0c5f09cd5f0e3581fb4d6ca2d301cbbd4320f3f302",
+        "title": "Savage",
+        "artist": "aespa",
+        "score": 0.3132,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "28e6d8ed3a903ee5e28ccd9d9ca69998b4f99125b86b7b218368d6c835a0deef",
+      "title": "like JENNIE",
+      "artist": "JENNIE",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "ab3b98427d0942d800df4cc6b5c71ab32c67c3b441745c515cd01a1ee067dd2c",
+        "title": "Mantra (Explicit)",
+        "artist": "JENNIE",
+        "score": 0.4595,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "5d429221b5510f4fa7c9ed9eb5be2e79753f5e51ea525e8b32990218960fa501",
+        "title": "ZEN (Explicit)",
+        "artist": "JENNIE",
+        "score": 0.4393,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "f5d0f0cfab0b8bd175c72951196963d43279e2fb82c9255ddf645bd5cc151efc",
+        "title": "Love Hangover (feat. Dominic Fike)(Explicit)",
+        "artist": "JENNIE;Dominic Fike",
+        "score": 0.4375,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92",
+        "title": "SOLO",
+        "artist": "JENNIE",
+        "score": 0.4089,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "gym",
+          "k-pop"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "k-pop-solo"
+        ],
+        "vibe_tags": [
+          "girl-crush",
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "103073e0ea3cd0fd081ed1e818be574a073e37b7ce6a6c099f8339df398db526",
+        "title": "You & Me",
+        "artist": "JENNIE",
+        "score": 0.4082,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "gym",
+          "k-pop"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "k-pop-solo"
+        ],
+        "vibe_tags": [
+          "girl-crush",
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "a9aa015869302b77e27ba814c128ac7f8e86277be6b4cc2922e2cea771388f96",
+        "title": "ExtraL",
+        "artist": "JENNIE;Doechii",
+        "score": 0.3986,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "a14332efa15b4930e67789cf49dfec92a7583c56c6e12c53ac563f8a364f74fd",
+        "title": "Pretty Savage",
+        "artist": "BLACKPINK",
+        "score": 0.3339,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "dd0abd9c23c7694068b35a2b5d06f9e9ec89b2249b77717b61406c8f00e7284c",
+        "title": "MONEY",
+        "artist": "LISA",
+        "score": 0.3336,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "5486ff72afe77ed9fd175a0c5f09cd5f0e3581fb4d6ca2d301cbbd4320f3f302",
+        "title": "Savage",
+        "artist": "aespa",
+        "score": 0.3332,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "2e8f60495a8ef352ccfd4d0787de249235c6fb3a168af1fea87c20cd91bc2664",
+        "title": "Supernova",
+        "artist": "aespa",
+        "score": 0.325,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "09723ac1dc6da6bf08163de517ae5bdb15d6bda46e03077b7d20892e6d4f2507",
+      "title": "Born Again ft. Doja Cat & RAYE",
+      "artist": "LISA;Doja Cat;RAYE",
+      "match": "fuzzy"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "dd0abd9c23c7694068b35a2b5d06f9e9ec89b2249b77717b61406c8f00e7284c",
+        "title": "MONEY",
+        "artist": "LISA",
+        "score": 0.4535,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "f9ec0752aec6529736429c4fca5d9eb0adbdbe62102e3bced9ccd347aafe64a1",
+        "title": "New Woman (ft. ROSALíA)",
+        "artist": "LISA;ROSALÍA",
+        "score": 0.4458,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "505b84bb739053b4cca80d92f19b73f3eb7f8bd8d2ff14518ddeb44e07025d35",
+        "title": "LALISA",
+        "artist": "LISA",
+        "score": 0.4288,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "7b6250cbecd5982608a319bd98d96a4f109731bbcb9f411a9aea39d2e42992b1",
+        "title": "Moonlit Floor",
+        "artist": "LISA",
+        "score": 0.3988,
+        "reasons": [
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "sexy",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "8499eb86382964f528e54780738395ec4b2a71abe993d656f130775794819c76",
+        "title": "Perfect Night",
+        "artist": "LE SSERAFIM",
+        "score": 0.3928,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "k-pop"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group"
+        ],
+        "vibe_tags": [
+          "night-drive",
+          "neon",
+          "girl-crush",
+          "baddie"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "ebc66e824361b22d4c3a4cb2f25780b8c981676089506c714f65e768b4a80bae",
+        "title": "Slumber Party",
+        "artist": "Ashnikko;Princess Nokia",
+        "score": 0.3649,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "sexy"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "a98415dec826983366cc73bded6fe8f971026c4ca97b0d38ca82f905aadba606",
+        "title": "UNFORGIVEN (feat. Nile Rodgers)",
+        "artist": "LE SSERAFIM;Nile Rodgers",
+        "score": 0.3337,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "5d429221b5510f4fa7c9ed9eb5be2e79753f5e51ea525e8b32990218960fa501",
+        "title": "ZEN (Explicit)",
+        "artist": "JENNIE",
+        "score": 0.3192,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "a14332efa15b4930e67789cf49dfec92a7583c56c6e12c53ac563f8a364f74fd",
+        "title": "Pretty Savage",
+        "artist": "BLACKPINK",
+        "score": 0.3139,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "5486ff72afe77ed9fd175a0c5f09cd5f0e3581fb4d6ca2d301cbbd4320f3f302",
+        "title": "Savage",
+        "artist": "aespa",
+        "score": 0.3131,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": [
+      "seed_fuzzy_match"
+    ]
+  },
+  {
+    "seed": {
+      "track_id": "97bf34bb0a05f9fee7b16c641687e511ebba7ffa860af3df93701998fdecc380",
+      "title": "Hallucinate",
+      "artist": "Dua Lipa",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "b30f1d95423cd7b86e9bf696a4203a6b7334d62c5ed58279f3c9b7b33901abaa",
+        "title": "Don't Start Now",
+        "artist": "Dua Lipa",
+        "score": 0.4613,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "9479c5b513bf5250787bce130f8e5e8eb6d21497f591e92b4643914cd3a263cb",
+        "title": "Physical",
+        "artist": "Dua Lipa",
+        "score": 0.4522,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "35ab60df9c714e1d2137c4fcbb73423ed9b5682e04bc83eb65f9c129fc8a3bcd",
+        "title": "Training Season",
+        "artist": "Dua Lipa",
+        "score": 0.4433,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "f8e76d6247b036e70083597003efe6e7ce6554aadf24b938e3bb111a95a9fb92",
+        "title": "Houdini",
+        "artist": "Dua Lipa",
+        "score": 0.4091,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "club"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "homepage-safe",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3",
+        "title": "Illusion",
+        "artist": "Dua Lipa",
+        "score": 0.4089,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "club"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "homepage-safe",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "bd63c564bb2c7e344fb4ccbd099d1324b104d0992d0541804a20748c00f56643",
+        "title": "Levitating",
+        "artist": "Dua Lipa",
+        "score": 0.3271,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "euphoric",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "euphoric"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "ac63a31b99a4169f82989f98ff2cae4114ea0dcbac90616da6218f82fb3785fc",
+        "title": "Dance The Night",
+        "artist": "Dua Lipa",
+        "score": 0.3259,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "euphoric",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "euphoric",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "a14332efa15b4930e67789cf49dfec92a7583c56c6e12c53ac563f8a364f74fd",
+        "title": "Pretty Savage",
+        "artist": "BLACKPINK",
+        "score": 0.3131,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "dd0abd9c23c7694068b35a2b5d06f9e9ec89b2249b77717b61406c8f00e7284c",
+        "title": "MONEY",
+        "artist": "LISA",
+        "score": 0.3128,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "13ff19db77fe2b64cd7fa1f1aa256aeac151d47e5d14a5319e9cf49aac0527ed",
+        "title": "JUMP",
+        "artist": "BLACKPINK",
+        "score": 0.3126,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "d756f70876968e03d0ad81dadaa847a76967632edb57d8b56bfbc563366f6942",
+      "title": "Houdini",
+      "artist": "Dua Lipa",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "b30f1d95423cd7b86e9bf696a4203a6b7334d62c5ed58279f3c9b7b33901abaa",
+        "title": "Don't Start Now",
+        "artist": "Dua Lipa",
+        "score": 0.4698,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "9479c5b513bf5250787bce130f8e5e8eb6d21497f591e92b4643914cd3a263cb",
+        "title": "Physical",
+        "artist": "Dua Lipa",
+        "score": 0.4602,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "35ab60df9c714e1d2137c4fcbb73423ed9b5682e04bc83eb65f9c129fc8a3bcd",
+        "title": "Training Season",
+        "artist": "Dua Lipa",
+        "score": 0.4508,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "97bf34bb0a05f9fee7b16c641687e511ebba7ffa860af3df93701998fdecc380",
+        "title": "Hallucinate",
+        "artist": "Dua Lipa",
+        "score": 0.4439,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "euphoric",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "11b36a9891865861761dec4a582f8833cf911ac32f4a56a8b2a3b1cf40abd4c3",
+        "title": "Illusion",
+        "artist": "Dua Lipa",
+        "score": 0.4089,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "dance-pop"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "club"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "homepage-safe",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "bd63c564bb2c7e344fb4ccbd099d1324b104d0992d0541804a20748c00f56643",
+        "title": "Levitating",
+        "artist": "Dua Lipa",
+        "score": 0.3264,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "euphoric"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "ac63a31b99a4169f82989f98ff2cae4114ea0dcbac90616da6218f82fb3785fc",
+        "title": "Dance The Night",
+        "artist": "Dua Lipa",
+        "score": 0.3253,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "euphoric",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "a14332efa15b4930e67789cf49dfec92a7583c56c6e12c53ac563f8a364f74fd",
+        "title": "Pretty Savage",
+        "artist": "BLACKPINK",
+        "score": 0.321,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "dd0abd9c23c7694068b35a2b5d06f9e9ec89b2249b77717b61406c8f00e7284c",
+        "title": "MONEY",
+        "artist": "LISA",
+        "score": 0.3208,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "13ff19db77fe2b64cd7fa1f1aa256aeac151d47e5d14a5319e9cf49aac0527ed",
+        "title": "JUMP",
+        "artist": "BLACKPINK",
+        "score": 0.3206,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "21bd5e03a9135d12816a4dd4c3773d48d3fe8c8b48b62f296398f4b484a4aa5c",
+      "title": "Escapism.",
+      "artist": "RAYE;070 Shake",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "e70a38df417d2ad0c3154d44ee996aae43893ef762a1964ccf5b5e9dfc5a5691",
+        "title": "Genesis.",
+        "artist": "RAYE",
+        "score": 0.4903,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "r-and-b"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "confident",
+          "sexy"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "1968fd851b453639bd6222fea331156049a5170d58e445c004db0081350d6054",
+        "title": "Demons",
+        "artist": "Doja Cat",
+        "score": 0.355,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "r-and-b"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "confident",
+          "dark"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "2ea9b5abacf1d1ca6a071291a808a38c8c1f54a84699fb384d5e6f810d159145",
+        "title": "Worth It.",
+        "artist": "RAYE",
+        "score": 0.3455,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "r-and-b"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "09723ac1dc6da6bf08163de517ae5bdb15d6bda46e03077b7d20892e6d4f2507",
+        "title": "Born Again ft. Doja Cat & RAYE",
+        "artist": "LISA;Doja Cat;RAYE",
+        "score": 0.3229,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "04b70002748349f51a59a38c628a83c67a388b23d0346d350b98976150d740de",
+        "title": "Prada",
+        "artist": "cassö;RAYE;D-Block Europe",
+        "score": 0.3226,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "0ac335ca05ad572692ce761608e77048828c011d31eb7d9313275bf6ef50f665",
+        "title": "supernatural",
+        "artist": "Ariana Grande",
+        "score": 0.3081,
+        "reasons": [
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "r-and-b"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "soft",
+          "dramatic"
+        ],
+        "context_tags": [
+          "background",
+          "shower",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "d04349e2e7e474e4ad81466a3ce8b898c62cc85c0b21f21e02e1f39c50ecbb00",
+        "title": "seasons",
+        "artist": "wave to earth",
+        "score": 0.3054,
+        "reasons": [
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "r-and-b"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "soft",
+          "sad",
+          "night-drive"
+        ],
+        "context_tags": [
+          "background",
+          "walking",
+          "playlist-continue-good"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f",
+        "title": "Nightmare",
+        "artist": "Halsey",
+        "score": 0.3049,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident",
+          "night-drive"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "2ce50cdd9a15f0e10ccb029fc7ad40170e50727e554b4993cb87b31c34ea0d5f",
+        "title": "Havana",
+        "artist": "Camila Cabello;Young Thug",
+        "score": 0.3038,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "sexy",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "02727e4f165c5c2fd6cea7fabea3cf75c5cff590904e3961e513d9fa2ea5684d",
+        "title": "Drama",
+        "artist": "aespa",
+        "score": 0.3038,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "homepage-safe",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "38f72fe5864048b07784dea33f0502ee1f1cc66fcff60a340c288fe70cae5ceb",
+      "title": "exes (Explicit)",
+      "artist": "Tate McRae",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "bc8a525197d46676ad905e4f3546ddb9333269a6628b0cf5a4aee7d001fc7f8a",
+        "title": "Sports car",
+        "artist": "Tate McRae",
+        "score": 0.3094,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "pop"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "44f6c44bcffdd10b204130106e70e6456b1ff288bb6fc2739279a5e152887414",
+        "title": "It's ok I'm ok (Explicit)",
+        "artist": "Tate McRae",
+        "score": 0.3092,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "d45de23b906ecf890c417097ae59db46801b65cc8cb6743b41cb8bed8d65e010",
+        "title": "10:35",
+        "artist": "Tiësto;Tate McRae",
+        "score": 0.2883,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "edm"
+        ],
+        "vibe_tags": [
+          "club",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "aa8d59d773164d6b1f1cc8203b226129b288bb9b616df0d074f0e75ea0db0f8e",
+        "title": "bad idea right? (Explicit)",
+        "artist": "Olivia Rodrigo",
+        "score": 0.2776,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "party",
+          "pop",
+          "rebellious"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "rebellious",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "6894128e0750086e1ed343b6b4188527c5e726eff7c791a69f1cd8022791301b",
+        "title": "Without Me",
+        "artist": "Halsey",
+        "score": 0.2747,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "pop",
+          "rebellious"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "rebellious"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "f638cb26e87f1e4b6b0996a1f8fa138f700458ebf4750383607327a4eec01d97",
+        "title": "obsessed (Explicit)",
+        "artist": "Olivia Rodrigo",
+        "score": 0.274,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "party",
+          "pop",
+          "rebellious"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "rebellious"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "15ca4cbef5dcf0dfe65901265739845e3f942a4b8f28275beeed8b078e8d8bda",
+        "title": "Daisy (Explicit)",
+        "artist": "Ashnikko",
+        "score": 0.2627,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "rebellious"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "rebellious",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "64e61a7d8b333163733b3aacc3fec8454b27745d046b14bb46bd4d5e01d5b19a",
+        "title": "abcdefu (Explicit)",
+        "artist": "GAYLE",
+        "score": 0.2586,
+        "reasons": [
+          "same vibe",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "party",
+          "rebellious"
+        ],
+        "genre_tags": [
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "rebellious",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "11a5d5f76f6f31ce3d6c85b74dbec4f89344c44c7d6c5294143a2b2aeaf46c60",
+        "title": "good 4 u (Explicit)",
+        "artist": "Olivia Rodrigo",
+        "score": 0.2582,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "party",
+          "pop",
+          "rebellious"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "rebellious",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "ae9e4e2791214c2089b43e8b2c564a6b6879809f59c885ab2805ff5e9f99d5ae",
+        "title": "get him back! (Explicit)",
+        "artist": "Olivia Rodrigo",
+        "score": 0.2511,
+        "reasons": [
+          "same vibe",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "party",
+          "rebellious"
+        ],
+        "genre_tags": [
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "rebellious",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "b17f031353ab4ade2d65616e14376b063f65ceda16234b663004b319922bef40",
+      "title": "15 MINUTES",
+      "artist": "Madison Beer",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "f8d19330d4725bcc59b1e727dd8cecdfc5dc687dd93e8d52fa21ad22879609ec",
+        "title": "Reckless",
+        "artist": "Madison Beer",
+        "score": 0.4363,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "dramatic",
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "dramatic"
+        ],
+        "context_tags": [
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "3ad6b9ba9f7bec411fd51b4dc515752ce2597e08dfcb6a358448797bea1fa1b8",
+        "title": "Before You Go",
+        "artist": "Lewis Capaldi",
+        "score": 0.409,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow",
+          "you liked",
+          "recently completed"
+        ],
+        "matched_tags": [
+          "dramatic",
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "sad"
+        ],
+        "context_tags": [
+          "background",
+          "transition-safe",
+          "playlist-continue-good"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "39b39136a309402406aaebc7be1e7888925dea3c77a045f8174133db218e7996",
+        "title": "Anti-Hero",
+        "artist": "Taylor Swift",
+        "score": 0.3255,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow",
+          "recently completed"
+        ],
+        "matched_tags": [
+          "confident",
+          "dramatic",
+          "pop"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39",
+        "title": "Closer",
+        "artist": "The Chainsmokers;Halsey",
+        "score": 0.3071,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "dramatic",
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361",
+        "title": "Life's A Mess (Explicit)",
+        "artist": "Juice WRLD;Halsey",
+        "score": 0.3063,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "dramatic",
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "138d1a69b88ec834c22b5a045c0f4410a6a67af50299c1785b9a871d951963ef",
+        "title": "Home To Another One",
+        "artist": "Madison Beer",
+        "score": 0.3061,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident"
+        ],
+        "genre_tags": [
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "soft",
+          "confident"
+        ],
+        "context_tags": [
+          "background",
+          "shower",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "bc2527f3cfaf49c15af2993ab35b5e0cabfd7325fe2e435ec878e208e6c19a34",
+        "title": "Baby",
+        "artist": "Madison Beer",
+        "score": 0.3031,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "sexy"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "17aa59ceff0c3686f9911a0d22c86acb9375aefaa693992b1e3a622566423b67",
+        "title": "Die 4 Me",
+        "artist": "Halsey",
+        "score": 0.3022,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "dramatic",
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "9bfac01774ee50b0f20036ab7d6ed71de1790a4c20b77b68b4143011ab4ce061",
+        "title": "Sweet Relief",
+        "artist": "Madison Beer",
+        "score": 0.3021,
+        "reasons": [
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "soft",
+          "cute"
+        ],
+        "context_tags": [
+          "background",
+          "shower",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f",
+        "title": "Nightmare",
+        "artist": "Halsey",
+        "score": 0.3017,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "dramatic",
+          "pop"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident",
+          "night-drive"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "747410d9fc3f237172018ada4d0be132ffabe12e9c6843d6fcc255d8a44c28db",
+      "title": "Spinnin",
+      "artist": "Connor Price;Bens",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "077f7af7c328a0004cf27243b14b2c9e615ae94c667c81eb0d9f510a7328dec3",
+        "title": "Trendsetter",
+        "artist": "Connor Price;Haviah Mighty",
+        "score": 0.5392,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "gym",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "hip-hop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "d6839900189400d46fdc276dd6008867b70c796fba291ce8070b31da2cdcc325",
+        "title": "Say So",
+        "artist": "Doja Cat",
+        "score": 0.4243,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "d01f402449e146c9a22a407755dc040e0ebbea502a83a4b9b7a8a89a92c327c4",
+        "title": "the boy is mine",
+        "artist": "Ariana Grande",
+        "score": 0.4008,
+        "reasons": [
+          "same vibe",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "karaoke",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "8e8329b969ff9991b8e7a4d33e9a2fb63a024b74e9861d26ff8b200b2f641221",
+        "title": "Guess featuring Billie Eilish",
+        "artist": "Charli xcx;Billie Eilish",
+        "score": 0.3989,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "ffb00e668022db8393e7bb7ab1de20e78b4c6267a0e0a6e51f6e08c649ca4e4d",
+        "title": "help herself",
+        "artist": "bbno$;Diamond Pistols",
+        "score": 0.3986,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "hip-hop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "meme"
+        ],
+        "context_tags": [
+          "party",
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "2ea9b5abacf1d1ca6a071291a808a38c8c1f54a84699fb384d5e6f810d159145",
+        "title": "Worth It.",
+        "artist": "RAYE",
+        "score": 0.3986,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "5b739b6472c48d751b76457b07c977af5950c415b711e968bddf97722613f59b",
+        "title": "UP!",
+        "artist": "Forrest Frank;Connor Price",
+        "score": 0.3951,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "a3966c8bbdfcd7c6e8ce86c74db337fcc4278c5aca57641f336f01975d29dc7b",
+        "title": "i like the way you kiss me",
+        "artist": "Artemas",
+        "score": 0.3944,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "gym",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "hyperpop",
+          "electropop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "quirky",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "gym"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c",
+        "title": "bad",
+        "artist": "wave to earth",
+        "score": 0.3652,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "playful"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "playful"
+        ],
+        "context_tags": [
+          "background",
+          "shower",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "d349684d87ab5b9a5227334d2d1b0bdfd7cc77a3582f9f15da3b9fc9d25bb9a3",
+        "title": "One Of Your Girls",
+        "artist": "Troye Sivan",
+        "score": 0.3649,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "playful"
+        ],
+        "genre_tags": [
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "1f4a510819653eadc246cf63d82d6d23badf8bfabed40a9b1ee11c15dff97b08",
+      "title": "Lalala",
+      "artist": "Y2K;bbno$",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "2cdf613e5978e93baf4b1505297d681b25b3d251edf64908f108edcffa6ade4e",
+        "title": "MONTERO (Call Me By Your Name)",
+        "artist": "Lil Nas X",
+        "score": 0.5221,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "hip-hop",
+          "playful",
+          "quirky"
+        ],
+        "genre_tags": [
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "meme",
+          "playful"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "2e80b575f8a3e2d73d1557a203aea37088cc064ec05a2d2ad6bdf3bd9407ec98",
+        "title": "INDUSTRY BABY (Explicit)",
+        "artist": "Lil Nas X;Jack Harlow",
+        "score": 0.5215,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "hip-hop",
+          "playful",
+          "quirky"
+        ],
+        "genre_tags": [
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "meme",
+          "playful"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "4268cc01a3ffaba0335cabe73e3ebf83a16eea021db5939322f76c3fe0bb7cb6",
+        "title": "Welcome to Chilis",
+        "artist": "Baby Gravy;Yung Gravy;bbno$",
+        "score": 0.4764,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "background",
+          "hip-hop",
+          "party",
+          "playful",
+          "quirky"
+        ],
+        "genre_tags": [
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "a3966c8bbdfcd7c6e8ce86c74db337fcc4278c5aca57641f336f01975d29dc7b",
+        "title": "i like the way you kiss me",
+        "artist": "Artemas",
+        "score": 0.4441,
+        "reasons": [
+          "same vibe",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "party",
+          "playful",
+          "quirky"
+        ],
+        "genre_tags": [
+          "hyperpop",
+          "electropop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "quirky",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "gym"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "d225846814eb0c5fe2682ddc68ffe6c1f93228dbc82cfc371359f058543d953c",
+        "title": "bad",
+        "artist": "wave to earth",
+        "score": 0.4163,
+        "reasons": [
+          "same vibe",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "background",
+          "playful",
+          "quirky"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "playful"
+        ],
+        "context_tags": [
+          "background",
+          "shower",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "567c0707e6f04b44df5c476219f79fa896f3c4d723bf08d8dc71d04e2231bab0",
+        "title": "Kids",
+        "artist": "MGMT",
+        "score": 0.4159,
+        "reasons": [
+          "same vibe",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "background",
+          "playful",
+          "quirky"
+        ],
+        "genre_tags": [
+          "pop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "quirky"
+        ],
+        "context_tags": [
+          "background",
+          "shower",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "58d3b0c86253afbdb5c9e0edf385ebc9485e40cf5e5d78178f311fbcc8625da4",
+        "title": "Chaise Longue",
+        "artist": "Wet Leg",
+        "score": 0.3988,
+        "reasons": [
+          "same vibe",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "background",
+          "playful",
+          "quirky"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "playful"
+        ],
+        "context_tags": [
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c",
+        "title": "oops!",
+        "artist": "Yung Gravy",
+        "score": 0.3848,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "hip-hop",
+          "party",
+          "quirky"
+        ],
+        "genre_tags": [
+          "pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "meme"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "905c26b72b6b4a7292fef280f6c53a91d11da0927c0ab81a12d0a8fcd518478e",
+        "title": "Betty (Get Money)",
+        "artist": "Yung Gravy",
+        "score": 0.3759,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "hip-hop",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "7f6f9d7fde69b2d6fce0c9e23570f79148f2991b007b15c2a34c391c0e8c9257",
+        "title": "it boy",
+        "artist": "bbno$",
+        "score": 0.3712,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "hip-hop",
+          "party",
+          "playful"
+        ],
+        "genre_tags": [
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "meme",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "3de88578cd68f443c57de6abeefe5c02ddd994ffe7d894f9b6d0d73956c007cb",
+      "title": "Whiplash",
+      "artist": "aespa",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "5486ff72afe77ed9fd175a0c5f09cd5f0e3581fb4d6ca2d301cbbd4320f3f302",
+        "title": "Savage",
+        "artist": "aespa",
+        "score": 0.6086,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "2e8f60495a8ef352ccfd4d0787de249235c6fb3a168af1fea87c20cd91bc2664",
+        "title": "Supernova",
+        "artist": "aespa",
+        "score": 0.6054,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "confident",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "8a6958a41bb1fb763536d3aa4cf9bde2125ebcec9a59fc2124c839eea3f3b34d",
+        "title": "Armageddon",
+        "artist": "aespa",
+        "score": 0.5449,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "a14332efa15b4930e67789cf49dfec92a7583c56c6e12c53ac563f8a364f74fd",
+        "title": "Pretty Savage",
+        "artist": "BLACKPINK",
+        "score": 0.4693,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "dd0abd9c23c7694068b35a2b5d06f9e9ec89b2249b77717b61406c8f00e7284c",
+        "title": "MONEY",
+        "artist": "LISA",
+        "score": 0.4691,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "40fe606f82062459503ac6cdfd621a69b6d6405dce42645d88bb9694ed212896",
+        "title": "MASCARA",
+        "artist": "XG",
+        "score": 0.4524,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "confident",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "a98415dec826983366cc73bded6fe8f971026c4ca97b0d38ca82f905aadba606",
+        "title": "UNFORGIVEN (feat. Nile Rodgers)",
+        "artist": "LE SSERAFIM;Nile Rodgers",
+        "score": 0.4493,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "505b84bb739053b4cca80d92f19b73f3eb7f8bd8d2ff14518ddeb44e07025d35",
+        "title": "LALISA",
+        "artist": "LISA",
+        "score": 0.4444,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "c65723e17aa5f45e6f7446d0eff3d36cd53347300598cf5a065a2c0283fa8c2d",
+        "title": "Spicy",
+        "artist": "aespa",
+        "score": 0.3927,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "k-pop"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group"
+        ],
+        "vibe_tags": [
+          "girl-crush",
+          "baddie"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "18dbac1f27aadb92ee7a57479c1eb4e7201bbfd5cd334f67428eca875d26df92",
+        "title": "SOLO",
+        "artist": "JENNIE",
+        "score": 0.375,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "club",
+          "confident",
+          "gym",
+          "k-pop"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "k-pop-solo"
+        ],
+        "vibe_tags": [
+          "girl-crush",
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "1c53efeceb7a8d7d88b20b271b55bcfad0326d1c9739a3c2815f1fe6ff42ed26",
+      "title": "WOKE UP",
+      "artist": "XG",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "40fe606f82062459503ac6cdfd621a69b6d6405dce42645d88bb9694ed212896",
+        "title": "MASCARA",
+        "artist": "XG",
+        "score": 0.4369,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "143059b436b59932ef4ea145c1fdb50a494bfdf956edf3ae85e596b2eb457976",
+        "title": "SHOOTING STAR",
+        "artist": "XG",
+        "score": 0.4289,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "a98415dec826983366cc73bded6fe8f971026c4ca97b0d38ca82f905aadba606",
+        "title": "UNFORGIVEN (feat. Nile Rodgers)",
+        "artist": "LE SSERAFIM;Nile Rodgers",
+        "score": 0.3338,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "5d429221b5510f4fa7c9ed9eb5be2e79753f5e51ea525e8b32990218960fa501",
+        "title": "ZEN (Explicit)",
+        "artist": "JENNIE",
+        "score": 0.3193,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "a14332efa15b4930e67789cf49dfec92a7583c56c6e12c53ac563f8a364f74fd",
+        "title": "Pretty Savage",
+        "artist": "BLACKPINK",
+        "score": 0.3139,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "girl-group",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "dd0abd9c23c7694068b35a2b5d06f9e9ec89b2249b77717b61406c8f00e7284c",
+        "title": "MONEY",
+        "artist": "LISA",
+        "score": 0.3136,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "5486ff72afe77ed9fd175a0c5f09cd5f0e3581fb4d6ca2d301cbbd4320f3f302",
+        "title": "Savage",
+        "artist": "aespa",
+        "score": 0.3132,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "09723ac1dc6da6bf08163de517ae5bdb15d6bda46e03077b7d20892e6d4f2507",
+        "title": "Born Again ft. Doja Cat & RAYE",
+        "artist": "LISA;Doja Cat;RAYE",
+        "score": 0.3113,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "f9ec0752aec6529736429c4fca5d9eb0adbdbe62102e3bced9ccd347aafe64a1",
+        "title": "New Woman (ft. ROSALíA)",
+        "artist": "LISA;ROSALÍA",
+        "score": 0.3058,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "8a6958a41bb1fb763536d3aa4cf9bde2125ebcec9a59fc2124c839eea3f3b34d",
+        "title": "Armageddon",
+        "artist": "aespa",
+        "score": 0.3058,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "baddie",
+          "confident",
+          "dance-pop",
+          "gym",
+          "k-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "k-pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "f7c7c89a951af2ac21ee44dfd32f0e02d6a364ec8b3a6d2663c728b914b0df17",
+      "title": "Sweetest Pie",
+      "artist": "Megan Thee Stallion;Dua Lipa",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "bee59dfc76b1dbd7195714daa739f6ad208929fc37c051b0da246b37bd2a0b78",
+        "title": "Team",
+        "artist": "Iggy Azalea",
+        "score": 0.3458,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "hip-hop",
+          "party"
+        ],
+        "genre_tags": [
+          "hip-hop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "04b70002748349f51a59a38c628a83c67a388b23d0346d350b98976150d740de",
+        "title": "Prada",
+        "artist": "cassö;RAYE;D-Block Europe",
+        "score": 0.3458,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "hip-hop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "077f7af7c328a0004cf27243b14b2c9e615ae94c667c81eb0d9f510a7328dec3",
+        "title": "Trendsetter",
+        "artist": "Connor Price;Haviah Mighty",
+        "score": 0.3415,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "hip-hop",
+          "party"
+        ],
+        "genre_tags": [
+          "hip-hop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "22df9cc4afbf7c01ee43f68a1c0bb3cbca2e222662248190f978aab2031cb3da",
+        "title": "Slumber Party (feat. Princess Nokia)",
+        "artist": "Ashnikko;Princess Nokia",
+        "score": 0.3379,
+        "reasons": [
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "hip-hop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "club"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "ffb00e668022db8393e7bb7ab1de20e78b4c6267a0e0a6e51f6e08c649ca4e4d",
+        "title": "help herself",
+        "artist": "bbno$;Diamond Pistols",
+        "score": 0.3345,
+        "reasons": [
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "dance-pop",
+          "hip-hop",
+          "party"
+        ],
+        "genre_tags": [
+          "hip-hop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "meme"
+        ],
+        "context_tags": [
+          "party",
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "70fba6691c6def7f4390e7434342aa574dfd0767ac4a9e1cac93d9868d1f6469",
+        "title": "Agora Hills",
+        "artist": "Doja Cat",
+        "score": 0.33,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "hip-hop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "f28a0bcb852678d92b9c4a41e024934fcbbb57adafc64b95bb55aab200ce4472",
+        "title": "Break My Heart",
+        "artist": "Dua Lipa",
+        "score": 0.3182,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "sexy"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "sexy"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "e70a38df417d2ad0c3154d44ee996aae43893ef762a1964ccf5b5e9dfc5a5691",
+        "title": "Genesis.",
+        "artist": "RAYE",
+        "score": 0.3084,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "sexy"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "confident",
+          "sexy"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "d6839900189400d46fdc276dd6008867b70c796fba291ce8070b31da2cdcc325",
+        "title": "Say So",
+        "artist": "Doja Cat",
+        "score": 0.3048,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "18708d26cf4b86598aef046f2f5044bafe94a09fd2206ffffeb0437862788e24",
+        "title": "Boss Bitch",
+        "artist": "Doja Cat",
+        "score": 0.3039,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "hip-hop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "baddie"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 5,
+        "danceability": 5,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  },
+  {
+    "seed": {
+      "track_id": "9ebc7fe590b2913879615f8115c3b246b2378009d887905e60297d92b310f608",
+      "title": "I am not a woman, I'm a god",
+      "artist": "Halsey",
+      "match": "fuzzy"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "f9f504f9b73657ba15efd07a2fa53f42667fc95d5aa25ca05ff2201b48587118",
+        "title": "You should be sad",
+        "artist": "Halsey",
+        "score": 0.588,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "sad"
+        ],
+        "context_tags": [
+          "background",
+          "shower",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "3ad6b9ba9f7bec411fd51b4dc515752ce2597e08dfcb6a358448797bea1fa1b8",
+        "title": "Before You Go",
+        "artist": "Lewis Capaldi",
+        "score": 0.579,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow",
+          "you liked",
+          "recently completed"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "sad"
+        ],
+        "context_tags": [
+          "background",
+          "transition-safe",
+          "playlist-continue-good"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "552d7357c391b93972a2233c1ffccb8ddfba8b7230f15d443128016bd7ecde39",
+        "title": "Closer",
+        "artist": "The Chainsmokers;Halsey",
+        "score": 0.5548,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "468c9fc7eeedf8b07bb15f7a040a0404dbe946fa550b3f463751ff92c7daa361",
+        "title": "Life's A Mess (Explicit)",
+        "artist": "Juice WRLD;Halsey",
+        "score": 0.554,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "17aa59ceff0c3686f9911a0d22c86acb9375aefaa693992b1e3a622566423b67",
+        "title": "Die 4 Me",
+        "artist": "Halsey",
+        "score": 0.5466,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "b19419c078db53ec46afb37e1f50f7a13b807ee4e2c2b6065528f690b616890f",
+        "title": "Nightmare",
+        "artist": "Halsey",
+        "score": 0.544,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident",
+          "night-drive"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "5fa214e7021bb3e881bb67ca86ac227fa67708f6a956042b4b940ae73c094e0d",
+        "title": "Moral of the Story",
+        "artist": "Ashe",
+        "score": 0.4668,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "confident",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "9b47721ce2953ee66cd37d67f0cb42c787221f833a7183772ac976f1b6580c4d",
+        "title": "lovely",
+        "artist": "Billie Eilish;Khalid",
+        "score": 0.4595,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "sad"
+        ],
+        "context_tags": [
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "08daf2399d5fd370ef5d74a3e0ba5ad2832e943b9f296c58a85af0539dcdd75f",
+        "title": "Natural",
+        "artist": "Imagine Dragons",
+        "score": 0.4547,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "confident",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "background",
+          "focus",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "9555829677bb30e1dcac56b65f52175070a19b7c427e24a245d6e5271bf3984e",
+        "title": "vampire (Explicit)",
+        "artist": "Olivia Rodrigo",
+        "score": 0.4502,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "dramatic"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "rebellious"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": [
+      "seed_fuzzy_match"
+    ]
+  },
+  {
+    "seed": {
+      "track_id": "0dc4b82d3c3eb14d41b6eaee6ff149847f434596413015394feb0c14c341b5cc",
+      "title": "Apple",
+      "artist": "Charli xcx",
+      "match": "exact"
+    },
+    "mode": "same_vibe",
+    "results": [
+      {
+        "rank": 1,
+        "track_id": "6192f8ac566c4f86a1e9fb9a0aacea56c8d0b3a4f36ef9b095c6ae2bf0b10a5f",
+        "title": "Ur Mum (Explicit)",
+        "artist": "Wet Leg",
+        "score": 0.4497,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "party",
+          "quirky"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "pop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "rebellious"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 2,
+        "track_id": "f7c7c89a951af2ac21ee44dfd32f0e02d6a364ec8b3a6d2663c728b914b0df17",
+        "title": "Sweetest Pie",
+        "artist": "Megan Thee Stallion;Dua Lipa",
+        "score": 0.4223,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "sexy",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 3,
+        "track_id": "dda9168cbdea65c2460b4aa1962aefe083c7f3d0da65f1230ea9140f58affc43",
+        "title": "Bang!",
+        "artist": "AJR",
+        "score": 0.4096,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident",
+          "dance-pop",
+          "party",
+          "quirky"
+        ],
+        "genre_tags": [
+          "pop",
+          "dance-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "quirky"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 4,
+        "track_id": "68a16095271b66d55e1c8dac3a1250e05125a42bf8bf288bc9b77e061259e53a",
+        "title": "360 (Explicit)",
+        "artist": "Charli xcx",
+        "score": 0.3653,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "baddie",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "gym",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 5,
+        "track_id": "4fc2e87818888278471850821d175192f313a141531437c09b431b6a4f0a4c50",
+        "title": "Enemy",
+        "artist": "Imagine Dragons;JID;英雄联盟",
+        "score": 0.3471,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "confident"
+        ],
+        "genre_tags": [
+          "pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "dramatic",
+          "confident"
+        ],
+        "context_tags": [
+          "background",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 6,
+        "track_id": "8e8329b969ff9991b8e7a4d33e9a2fb63a024b74e9861d26ff8b200b2f641221",
+        "title": "Guess featuring Billie Eilish",
+        "artist": "Charli xcx;Billie Eilish",
+        "score": 0.3457,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "confident",
+          "dance-pop",
+          "party"
+        ],
+        "genre_tags": [
+          "dance-pop",
+          "alt-pop"
+        ],
+        "vibe_tags": [
+          "playful",
+          "confident"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 7,
+        "track_id": "3ed28a61e1aa0c4a22b185338dd4de92f0fb30242047e1cd9174a6430c077018",
+        "title": "Super Graphic Ultra Modern Girl",
+        "artist": "Chappell Roan",
+        "score": 0.3444,
+        "reasons": [
+          "same vibe",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "quirky"
+        ],
+        "genre_tags": [
+          "hip-hop",
+          "rap"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "meme"
+        ],
+        "context_tags": [
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 8,
+        "track_id": "4f0c5f051b423a878fcc122efa5268cbf6568e99fd70e39b4890e76e0714ea7c",
+        "title": "oops!",
+        "artist": "Yung Gravy",
+        "score": 0.3294,
+        "reasons": [
+          "same vibe",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "party",
+          "quirky"
+        ],
+        "genre_tags": [
+          "pop",
+          "hip-hop"
+        ],
+        "vibe_tags": [
+          "quirky",
+          "meme"
+        ],
+        "context_tags": [
+          "party",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 4,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 9,
+        "track_id": "d01f402449e146c9a22a407755dc040e0ebbea502a83a4b9b7a8a89a92c327c4",
+        "title": "the boy is mine",
+        "artist": "Ariana Grande",
+        "score": 0.3197,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "same context",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "confident",
+          "party"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "r-and-b"
+        ],
+        "vibe_tags": [
+          "confident",
+          "playful"
+        ],
+        "context_tags": [
+          "party",
+          "karaoke",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 4,
+        "danceability": 3,
+        "tagging_status": "ready"
+      },
+      {
+        "rank": 10,
+        "track_id": "9ebc7fe590b2913879615f8115c3b246b2378009d887905e60297d92b310f608",
+        "title": "I am not a woman, I'm a god",
+        "artist": "Halsey",
+        "score": 0.3154,
+        "reasons": [
+          "same vibe",
+          "same genre",
+          "energy flow"
+        ],
+        "matched_tags": [
+          "alt-pop",
+          "confident"
+        ],
+        "genre_tags": [
+          "alt-pop",
+          "dark-pop"
+        ],
+        "vibe_tags": [
+          "confident",
+          "dramatic"
+        ],
+        "context_tags": [
+          "homepage-safe",
+          "playlist-continue-good",
+          "transition-safe"
+        ],
+        "energy": 3,
+        "danceability": 3,
+        "tagging_status": "ready"
+      }
+    ],
+    "issues": []
+  }
+]

@@ -37,6 +37,9 @@
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
   import { subscribeSyncError } from '$lib/syncNotify'
   import ExtensionSyncBridge from './ExtensionSyncBridge.svelte'
+  import ReportBugButton from '@life-os/platform-web/svelte/feedback'
+  import { supabase } from '$lib/supabase.js'
+  import { auth } from '$lib/auth.svelte.js'
 
   /** @type {{ children?: import('svelte').Snippet }} */
   let { children } = $props()
@@ -231,6 +234,7 @@
       {#if updatedLabel}
         <span class="updated">{updatedLabel}</span>
       {/if}
+      <ReportBugButton app="finance" {supabase} user={auth.user} />
     </header>
 
     <main class="content">
