@@ -49,11 +49,11 @@
 
 /**
  * @typedef {object} Layout508OpeningsConfig
- * @property {OpeningSlotConfig} bedroomDoor 卧室南墙门（offset 沿南墙从西起）
- * @property {OpeningSlotConfig} bathDoor 浴室北墙门（offset 沿北墙从西起）
+ * @property {OpeningSlotConfig} bedroomDoor 卧室南墙门（offset 沿南墙从西起；东铰链向走廊下开）
+ * @property {OpeningSlotConfig} bathDoor 浴室北墙门（offset 沿北墙从西起；向走廊外开）
  * @property {OpeningSlotConfig} linenDoor 走廊储物柜东墙门（offset 从柜顶起）
  * @property {OpeningSlotConfig} laundryDoor
- * @property {OpeningSlotConfig} entryDoor
+ * @property {OpeningSlotConfig} entryDoor 入户门（offsetFromRight；东铰链向内折向结构柱）
  * @property {OpeningSlotConfig} balconyDoor 客厅↔阳台门（offset 沿分隔墙从北起）
  * @property {OpeningSlotConfig} livingWindow
  * @property {OpeningSlotConfig} bedroomWindow
