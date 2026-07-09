@@ -35,6 +35,8 @@
   } from '$lib/tagReview.js'
   import { toast } from '$lib/ui.svelte.js'
   import { setLocale } from '$lib/i18n/index.js'
+  import SettingsRow from '@life-os/platform-web/svelte/settings/row'
+  import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
 
   let count = $state(0)
   let missingLyrics = $state(0)
@@ -139,6 +141,60 @@
 
   const crossfadeSteps = [0, 500, 1000, 2000, 3000, 5000, 8000, 12000]
 
+  const localeOptions = $derived([
+    { value: 'zh', label: t('settings.languageZh') },
+    { value: 'en', label: t('settings.languageEn') },
+  ])
+
+  const themeOptions = $derived([
+    { value: 'auto', label: t('settings.themeAuto') },
+    { value: 'light', label: t('settings.themeLight') },
+    { value: 'dark', label: t('settings.themeDark') },
+  ])
+
+  const gaplessOptions = $derived([
+    { value: 'on', label: t('settings.gaplessOn') },
+    { value: 'off', label: t('settings.gaplessOff') },
+  ])
+
+  const albumAmbienceOptions = $derived([
+    { value: 'on', label: t('settings.albumAmbienceOn') },
+    { value: 'off', label: t('settings.albumAmbienceOff') },
+  ])
+
+  const autoContinueSimilarOptions = $derived([
+    { value: 'on', label: t('settings.autoContinueSimilarOn') },
+    { value: 'off', label: t('settings.autoContinueSimilarOff') },
+  ])
+
+  const immersiveViewModeOptions = $derived([
+    { value: 'player', label: t('nowPlaying.modeCover') },
+    { value: 'lyrics', label: t('nowPlaying.modeLyrics') },
+    { value: 'queue', label: t('nowPlaying.modeQueue') },
+  ])
+
+  /** @param {string} value */
+  function setGaplessFromSegment(value) {
+    setGapless(value === 'on')
+  }
+
+  /** @param {string} value */
+  function setAlbumAmbienceFromSegment(value) {
+    setAlbumAmbience(value === 'on')
+  }
+
+  /** @param {string} value */
+  function setAutoContinueSimilarFromSegment(value) {
+    setAutoContinueSimilar(value === 'on')
+  }
+
+  /** @param {string} value */
+  function setImmersiveViewModeFromSegment(value) {
+    if (value === 'player' || value === 'lyrics' || value === 'queue') {
+      setImmersiveViewMode(value)
+    }
+  }
+
   /** @param {boolean} enabled */
   function setAlbumAmbience(enabled) {
     patchCloudSettings({ albumAmbience: enabled })
@@ -152,9 +208,9 @@
     patchCloudSettings({ autoContinueSimilar: enabled })
   }
 
-  /** @param {'zh' | 'en'} locale */
+  /** @param {string} locale */
   function setLanguage(locale) {
-    setLocale(locale)
+    if (locale === 'zh' || locale === 'en') setLocale(locale)
   }
 
   async function exportMeta() {
@@ -442,50 +498,26 @@
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.language')}</h3>
-    <div class="set-row settings-row">
-      <div class="pref-copy">
-        <div class="pref-label">{t('settings.languageLabel')}</div>
-        <div class="pref-desc">{t('settings.languageDesc')}</div>
-      </div>
-      <div class="pref-control seg">
-        <button
-          type="button"
-          class:active={S.settings.locale === 'zh'}
-          onclick={() => setLanguage('zh')}>{t('settings.languageZh')}</button
-        >
-        <button
-          type="button"
-          class:active={S.settings.locale === 'en'}
-          onclick={() => setLanguage('en')}>{t('settings.languageEn')}</button
-        >
-      </div>
-    </div>
+    <SettingsRow label={t('settings.languageLabel')} desc={t('settings.languageDesc')}>
+      <SettingsSegment
+        options={localeOptions}
+        value={S.settings.locale}
+        onchange={setLanguage}
+        ariaLabel={t('settings.languageLabel')}
+      />
+    </SettingsRow>
   </section>
 
   <section class="settings-block set-group">
     <h3 class="block-title sg-title">{t('settings.theme')}</h3>
-    <div class="set-row settings-row">
-      <div class="pref-copy">
-        <div class="pref-label">{t('settings.appearance')}</div>
-      </div>
-      <div class="pref-control seg">
-        <button
-          type="button"
-          class:active={S.settings.theme === 'auto'}
-          onclick={() => setTheme('auto')}>{t('settings.themeAuto')}</button
-        >
-        <button
-          type="button"
-          class:active={S.settings.theme === 'light'}
-          onclick={() => setTheme('light')}>{t('settings.themeLight')}</button
-        >
-        <button
-          type="button"
-          class:active={S.settings.theme === 'dark'}
-          onclick={() => setTheme('dark')}>{t('settings.themeDark')}</button
-        >
-      </div>
-    </div>
+    <SettingsRow label={t('settings.appearance')}>
+      <SettingsSegment
+        options={themeOptions}
+        value={S.settings.theme}
+        onchange={setTheme}
+        ariaLabel={t('settings.appearance')}
+      />
+    </SettingsRow>
   </section>
 
   <section class="settings-block set-group">
@@ -493,35 +525,21 @@
     <p class="block-desc block-desc--pad-bottom-sm">
       {t('settings.gaplessDesc')}
     </p>
-    <div class="set-row settings-row">
-      <div class="pref-copy">
-        <div class="pref-label">{t('settings.gapless')}</div>
-      </div>
-      <div class="pref-control seg">
-        <button
-          type="button"
-          class:active={S.settings.gapless !== false}
-          onclick={() => setGapless(true)}
-        >
-          {t('settings.gaplessOn')}
-        </button>
-        <button
-          type="button"
-          class:active={S.settings.gapless === false}
-          onclick={() => setGapless(false)}
-        >
-          {t('settings.gaplessOff')}
-        </button>
-      </div>
-    </div>
-    <div class="set-row settings-row">
-      <div class="pref-copy">
-        <div class="pref-label">{t('settings.crossfade')}</div>
-        <div class="pref-desc">{t('settings.crossfadeDesc')}</div>
-      </div>
-    </div>
-    <div class="set-row settings-row" style="padding-top:0">
-      <div class="pref-control seg settings-seg-full settings-seg-crossfade">
+    <SettingsRow label={t('settings.gapless')}>
+      <SettingsSegment
+        options={gaplessOptions}
+        value={S.settings.gapless !== false ? 'on' : 'off'}
+        onchange={setGaplessFromSegment}
+        ariaLabel={t('settings.gapless')}
+      />
+    </SettingsRow>
+    <SettingsRow label={t('settings.crossfade')} desc={t('settings.crossfadeDesc')}>
+      <div
+        class="seg seg--wrap"
+        class:seg--disabled={S.settings.gapless === false}
+        role="group"
+        aria-label={t('settings.crossfade')}
+      >
         {#each crossfadeSteps as ms (ms)}
           <button
             type="button"
@@ -533,7 +551,7 @@
           </button>
         {/each}
       </div>
-    </div>
+    </SettingsRow>
   </section>
 
   <section class="settings-block set-group">
@@ -541,22 +559,14 @@
     <p class="block-desc block-desc--pad-bottom-sm">
       {t('settings.albumAmbienceDesc')}
     </p>
-    <div class="set-row settings-row">
-      <div class="pref-control seg settings-seg-full">
-        <button
-          type="button"
-          class:active={S.settings.albumAmbience !== false}
-          onclick={() => setAlbumAmbience(true)}
-        >
-          {t('settings.albumAmbienceOn')}
-        </button>
-        <button
-          type="button"
-          class:active={S.settings.albumAmbience === false}
-          onclick={() => setAlbumAmbience(false)}
-        >
-          {t('settings.albumAmbienceOff')}
-        </button>
+    <div class="set-row settings-row settings-row--segment">
+      <div class="pref-control">
+        <SettingsSegment
+          options={albumAmbienceOptions}
+          value={S.settings.albumAmbience !== false ? 'on' : 'off'}
+          onchange={setAlbumAmbienceFromSegment}
+          ariaLabel={t('settings.albumAmbience')}
+        />
       </div>
     </div>
   </section>
@@ -566,22 +576,14 @@
     <p class="block-desc block-desc--pad-bottom-sm">
       {t('settings.autoContinueSimilarDesc')}
     </p>
-    <div class="set-row settings-row">
-      <div class="pref-control seg settings-seg-full">
-        <button
-          type="button"
-          class:active={S.settings.autoContinueSimilar !== false}
-          onclick={() => setAutoContinueSimilar(true)}
-        >
-          {t('settings.autoContinueSimilarOn')}
-        </button>
-        <button
-          type="button"
-          class:active={S.settings.autoContinueSimilar === false}
-          onclick={() => setAutoContinueSimilar(false)}
-        >
-          {t('settings.autoContinueSimilarOff')}
-        </button>
+    <div class="set-row settings-row settings-row--segment">
+      <div class="pref-control">
+        <SettingsSegment
+          options={autoContinueSimilarOptions}
+          value={S.settings.autoContinueSimilar !== false ? 'on' : 'off'}
+          onchange={setAutoContinueSimilarFromSegment}
+          ariaLabel={t('settings.autoContinueSimilar')}
+        />
       </div>
     </div>
   </section>
@@ -591,29 +593,14 @@
     <p class="block-desc block-desc--pad-bottom-sm">
       {t('settings.immersiveViewModeDesc')}
     </p>
-    <div class="set-row settings-row">
-      <div class="pref-control seg settings-seg-full settings-seg-immersive">
-        <button
-          type="button"
-          class:active={S.settings.immersiveViewMode === 'player'}
-          onclick={() => setImmersiveViewMode('player')}
-        >
-          {t('nowPlaying.modeCover')}
-        </button>
-        <button
-          type="button"
-          class:active={S.settings.immersiveViewMode === 'lyrics'}
-          onclick={() => setImmersiveViewMode('lyrics')}
-        >
-          {t('nowPlaying.modeLyrics')}
-        </button>
-        <button
-          type="button"
-          class:active={S.settings.immersiveViewMode === 'queue'}
-          onclick={() => setImmersiveViewMode('queue')}
-        >
-          {t('nowPlaying.modeQueue')}
-        </button>
+    <div class="set-row settings-row settings-row--segment">
+      <div class="pref-control">
+        <SettingsSegment
+          options={immersiveViewModeOptions}
+          value={S.settings.immersiveViewMode ?? 'player'}
+          onchange={setImmersiveViewModeFromSegment}
+          ariaLabel={t('settings.immersiveViewMode')}
+        />
       </div>
     </div>
   </section>

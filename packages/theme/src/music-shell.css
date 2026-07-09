@@ -4676,8 +4676,7 @@ html.utility-pane-resizing {
   }
 }
 
-.settings-seg-full {
-  width: 100%;
+.set-group > .set-row.settings-row--segment {
   justify-content: flex-end;
 }
 
