@@ -1358,6 +1358,16 @@ body {
     display: none;
   }
 
+  /* Split-layout pages: AppBar inner must share the same span as today-layout / desktop-split */
+  .main-col>.appbar:has(+ .today-layout) .appbar-inner,
+  .main-col>.appbar:has(+ .desktop-split-layout) .appbar-inner,
+  .main-col>.appbar:has(+ .wrap.settings-page--planner) .appbar-inner {
+    width: 100%;
+    max-width: var(--planner-desktop-span);
+    margin-inline: auto;
+    padding-inline: 0;
+  }
+
   .today-layout,
   .desktop-split-layout {
     display: grid;
@@ -2795,4 +2805,26 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
   .main-col[data-mobile-chrome='tabbar'] .wrap:has(.day-timeline-shell) {
     padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-tabbar));
   }
+}
+
+.sidebar-add-task {
+  flex-shrink: 0;
+  margin-top: var(--space-1);
+  border: 1px dashed color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--card));
+}
+
+.sidebar-add-task:hover {
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+}
+
+.chip--life-event {
+  text-decoration: none;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+}
+
+.chip--life-event:hover {
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
 }

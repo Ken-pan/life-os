@@ -1,30 +1,24 @@
 <script>
-  import { page } from '$app/state';
-  import Icon from '@life-os/platform-web/svelte/icon';
-  import { openTaskEditor, taskEditor, calendarView, schedulePopover } from '$lib/ui.svelte.js';
-  import { resolveFabMode } from '$lib/nav.js';
-  import { t } from '$lib/i18n/index.js';
-  import { todayKey } from '$lib/state.svelte.js';
+  import { page } from '$app/state'
+  import Icon from '@life-os/platform-web/svelte/icon'
+  import {
+    openTaskEditor,
+    taskEditor,
+    schedulePopover,
+  } from '$lib/ui.svelte.js'
+  import { resolveFabMode } from '$lib/nav.js'
+  import { resolveTaskEditorDefaults } from '$lib/taskEditorDefaults.js'
+  import { t } from '$lib/i18n/index.js'
 
-  const pathname = $derived(page.url.pathname);
-  const search = $derived(page.url.search);
+  const pathname = $derived(page.url.pathname)
+  const search = $derived(page.url.search)
 
-  const mode = $derived(resolveFabMode(pathname, search));
+  const mode = $derived(resolveFabMode(pathname, search))
   const hidden = $derived(
     taskEditor.open || schedulePopover.open || mode === 'none',
-  );
+  )
 
-  function defaults() {
-    const path = pathname;
-    if (path === '/') return { dueDate: todayKey() };
-    if (path.startsWith('/calendar')) return { dueDate: calendarView.selected || todayKey() };
-    if (path.startsWith('/lists/')) {
-      const listId = path.split('/')[2];
-      return listId ? { listId, dueDate: null } : {};
-    }
-    if (path.startsWith('/upcoming')) return { dueDate: null };
-    return {};
-  }
+  const editorDefaults = $derived(resolveTaskEditorDefaults(pathname, search))
 
   const label = $derived(
     pathname.startsWith('/lists/')
@@ -32,7 +26,7 @@
       : mode === 'compact'
         ? t('common.add')
         : t('common.addTask'),
-  );
+  )
 </script>
 
 {#if !hidden}
@@ -43,7 +37,7 @@
     data-testid="fab-add"
     data-fab-mode={mode}
     aria-label={label}
-    onclick={() => openTaskEditor(null, defaults())}
+    onclick={() => openTaskEditor(null, editorDefaults)}
   >
     <Icon name="plus" size={mode === 'compact' ? 22 : 18} strokeWidth={2} />
     {#if mode === 'large'}

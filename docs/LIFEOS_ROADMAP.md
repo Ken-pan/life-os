@@ -70,9 +70,9 @@ Phase 7 — Home 空间编辑续 · 按需
 | 主线        | 摘要                                                                           | 详情                                                      |
 | ----------- | ------------------------------------------------------------------------------ | --------------------------------------------------------- |
 | Core        | **F-P3** Finance STS 口径统一 · **P-P2** Planner Insight E2E 22/22           | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-09   |
-| Growth      | **G-P4b-H** Home 储藏卡 · **H-P6a** 元数据 · **G-P8/G-P9** · **M-P5** | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md) |
+| Growth      | **G-P4b-H** Home 储藏卡 · **H-P6a** 元数据 · **G-P8/G-P9** · **M-P5** · **P-5b/P-12** UI | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md) |
 | Integration | **FT-P1** / **I-P1.5b** 完练 → Planner 打卡                                    | `fitness_workout_event_trigger` migration                 |
-| Infra       | CI `planner-e2e-desktop` · `finance-ia-routes`；FT-P0 **20/20**                | `.github/workflows/ci.yml`                                |
+| Infra       | CI `planner-e2e-desktop` · `finance-ia-routes` · `portal-qa-smoke`；FT-P0 **20/20** | `.github/workflows/ci.yml`                                |
 | Integration | `core_profiles` 远程 ✅；`life_events` outbox + Planner inbox ✅               | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md)      |
 | Platform    | C-P0–C-P1 ✅；C-P2 Wave 1–3 P1+ ✅                                             | [`roadmap/PLATFORM.md`](./roadmap/PLATFORM.md)            |
 | Design      | D-P0–D-P5 ✅（tokens + catalog 172 smoke / 80 snapshots）                      | [`roadmap/DESIGN.md`](./roadmap/DESIGN.md)                |

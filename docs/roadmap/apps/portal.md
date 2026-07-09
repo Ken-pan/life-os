@@ -21,9 +21,9 @@
 
 ## Next（按 ROI）
 
-_无阻塞 Growth 项；见 hub §Next **H-W2b**。_
+_无阻塞 Growth 项；见 hub §Next **H-W3**。_
 
-## UI 走查（2026-07-09 第二轮）
+## UI 走查（2026-07-09 · 第五轮 · P-1–P-12 ✅）
 
 见 [`docs/qa/portal-screenshot-audit.md`](../../qa/portal-screenshot-audit.md)。
 

@@ -3,6 +3,8 @@
   import { userLists } from '$lib/state.svelte.js'
   import { t, listLabel } from '$lib/i18n/index.js'
   import { buildSidebarNavGroups, buildSettingsNavItem } from '$lib/nav.js'
+  import { openTaskEditor } from '$lib/ui.svelte.js'
+  import { resolveTaskEditorDefaults } from '$lib/taskEditorDefaults.js'
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
   import Icon from '@life-os/platform-web/svelte/icon'
 
@@ -50,6 +52,17 @@
       {/if}
     </div>
   </div>
+
+  <button
+    type="button"
+    class="nav-item sidebar-add-task"
+    data-testid="desktop-add-task"
+    onclick={() =>
+      openTaskEditor(null, resolveTaskEditorDefaults(path, search))}
+  >
+    <Icon name="plus" size={18} strokeWidth={1.75} />
+    <span>{t('common.addTask')}</span>
+  </button>
 
   <a
     class="nav-item sidebar-foot-item"

@@ -546,12 +546,10 @@
   width: 100%;
   height: 56px;
   border-radius: 8px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--border) 70%, transparent) 0%,
-    color-mix(in srgb, var(--border) 35%, transparent) 50%,
-    color-mix(in srgb, var(--border) 70%, transparent) 100%
-  );
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--border) 70%, transparent) 0%,
+      color-mix(in srgb, var(--border) 35%, transparent) 50%,
+      color-mix(in srgb, var(--border) 70%, transparent) 100%);
   background-size: 200% 100%;
   animation: portal-summary-shimmer 1.2s ease-in-out infinite;
 }
@@ -560,6 +558,7 @@
   0% {
     background-position: 100% 0;
   }
+
   100% {
     background-position: -100% 0;
   }
@@ -610,6 +609,12 @@
   line-height: 1.25;
   color: var(--t1, var(--text));
   font-variant-numeric: tabular-nums;
+}
+
+.portal-summary-value--empty {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--t2, var(--text-secondary));
 }
 
 .portal-summary-detail {

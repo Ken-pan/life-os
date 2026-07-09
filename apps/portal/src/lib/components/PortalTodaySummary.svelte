@@ -18,7 +18,11 @@
     ok: boolean
     asOf?: string
     planner?: { todayOpen: number; overdue: number }
-    finance?: { monthSurplus: number; monthIncome: number; monthExpense: number }
+    finance?: {
+      monthSurplus: number
+      monthIncome: number
+      monthExpense: number
+    }
     fitness?: { sessionDate: string; dayId: string } | null
     music?: { trackTitle: string; trackArtist: string; playedAt: string } | null
     home?: { storageZoneCount: number; reportedAt: string } | null
@@ -30,7 +34,9 @@
   let loading = $state(true)
   let error = $state<string | null>(null)
 
-  const appById = $derived(Object.fromEntries(PORTAL_APPS.map((app) => [app.id, app])))
+  const appById = $derived(
+    Object.fromEntries(PORTAL_APPS.map((app) => [app.id, app])),
+  )
 
   $effect(() => {
     if (!userId) {
@@ -112,17 +118,24 @@
             ? `${fitnessDayLabel(summary.fitness.dayId)} · ${formatShortDate(summary.fitness.sessionDate)}`
             : '本周尚未记录完练',
           summary.fitness ? '已同步到云端' : '打开 Fitness 开始训练',
+          false,
+          !summary.fitness,
         )}
 
         {@render summaryCard(
           'music',
           '最近播放',
           summary.music
-            ? musicTrackLabel(summary.music.trackTitle, summary.music.trackArtist)
+            ? musicTrackLabel(
+                summary.music.trackTitle,
+                summary.music.trackArtist,
+              )
             : '尚未记录播放',
           summary.music
             ? formatPlayedAgo(summary.music.playedAt)
-            : '打开 Music 开始听',
+            : '在 Music 播放后会显示最近曲目',
+          false,
+          !summary.music,
         )}
 
         {@render summaryCard(
@@ -147,6 +160,7 @@
   value: string,
   detail: string,
   experimental = false,
+  empty = false,
 )}
   {@const app = appMeta(id)}
   {#if app}
@@ -169,7 +183,12 @@
             <span class="portal-summary-exp-badge">实验</span>
           {/if}
         </p>
-        <p class="portal-summary-value">{value}</p>
+        <p
+          class="portal-summary-value"
+          class:portal-summary-value--empty={empty}
+        >
+          {value}
+        </p>
         <p class="portal-summary-detail">{detail}</p>
       </div>
     </a>

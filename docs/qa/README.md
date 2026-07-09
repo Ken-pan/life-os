@@ -8,7 +8,7 @@
 | [`pwa-ios.md`](./pwa-ios.md)                               | iOS PWA 调试流程          |
 | [`pwa-viewport-checklist.md`](./pwa-viewport-checklist.md) | Viewport 验收清单         |
 | [`input-ime.md`](./input-ime.md)                           | CJK IME guard（web-only） |
-| [`portal-screenshot-audit.md`](./portal-screenshot-audit.md) | Portal UI 截图走查（第四轮 · UI 修复 2026-07-09） |
+| [`portal-screenshot-audit.md`](./portal-screenshot-audit.md) | Portal UI 截图走查（第五轮 · 遗留 UI 清零 2026-07-09） |
 | [`home-spatial-editor-audit-2026-07-08.md`](./home-spatial-editor-audit-2026-07-08.md) | Home 墙图**功能**验收（H-W0–W2c · 8 smoke checks） |
 | [`home-spatial-uiux-audit-2026-07-08.md`](./home-spatial-uiux-audit-2026-07-08.md) | Home 空间编辑 **UI/UX 审核**（Wave A/B/C ✅ · 剩余见 §剩余开放） |
 

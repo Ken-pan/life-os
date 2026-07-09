@@ -244,6 +244,8 @@ export default {
     kindFocus: 'Focus',
     kindHabit: 'Habit',
     unscheduledLine: 'Today · unscheduled',
+    lifeEventFinance: 'From Finance',
+    lifeEventFitness: 'From Fitness',
     unscheduledOnly: 'Unscheduled',
   },
   recurrence: {
@@ -371,7 +373,8 @@ export default {
     weeklyShort: '{active}/7 this week',
     weeklyHint: 'Days you met your daily goal',
     weeklyGoalHint: 'Clear all of today’s tasks to count as a good day',
-    weeklyStreakCombined: 'Clear all of today’s tasks to count as a good day. {count} left today.',
+    weeklyStreakCombined:
+      'Clear all of today’s tasks to count as a good day. {count} left today.',
     focusTasks: 'Focus tasks',
     focusWins: 'Focus today',
     focusWinsWeek: 'Focus this week',

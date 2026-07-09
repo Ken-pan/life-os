@@ -25,7 +25,7 @@
  * @property {string} [suggestedDueDate]
  * @property {number} [confidence]
  * @property {'micro'|'standard'|'focus'|'habit'} [kind]
- * @property {{ domain: 'finance', occurrenceId: string }} [lifeEventRef] I-P1.5 幂等键
+ * @property {{ domain: 'finance', occurrenceId: string } | { domain: 'fitness', sessionId: string }} [lifeEventRef] I-P1.5 / P-P5 幂等键
  */
 
 /**

@@ -14,7 +14,9 @@ export async function waitForPlannerShell(page) {
 export async function waitForPlannerReady(page, projectName = 'mobile') {
   await waitForPlannerShell(page)
   if (projectName === 'desktop') {
-    await page.waitForSelector('.sidebar, .quick-add input', { timeout: 15_000 })
+    await page.waitForSelector('.sidebar, .quick-add input', {
+      timeout: 15_000,
+    })
     return
   }
   await page.waitForSelector('[data-testid="fab-add"]', { timeout: 15_000 })
@@ -88,17 +90,9 @@ export async function quickAddTask(page, title, projectName = 'mobile') {
  */
 export async function openNewTaskEditor(page, projectName = 'mobile') {
   if (projectName === 'desktop') {
-    await page.goto('/inbox')
+    await page.goto('/')
     await waitForPlannerShell(page)
-    const cta = page.getByRole('button', { name: /添加灵感|Add idea/i })
-    if (await cta.isVisible().catch(() => false)) {
-      await cta.click()
-    } else {
-      // 收件箱非空时桌面 CSS 隐藏 FAB；直接触发 click 事件打开全屏编辑器（截图审计）
-      await page.goto('/')
-      await waitForPlannerShell(page)
-      await page.getByTestId('fab-add').dispatchEvent('click')
-    }
+    await page.getByTestId('desktop-add-task').click()
   } else {
     await page.getByTestId('fab-add').click()
   }

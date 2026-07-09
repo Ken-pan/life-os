@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-07-09（Portal UI 修复 · P-5b/P-12 · 第五轮）
+
+| 主线   | 摘要                                                                 | 证据                                      |
+| ------ | -------------------------------------------------------------------- | ----------------------------------------- |
+| Design | **P-5b** compact 顶栏 **More sheet**（主题 / 账号 / 退出）+ `lockScroll` | `PortalAppBarMoreSheet.svelte` · `PortalAppBar.svelte` |
+| Design | **P-12** Launcher HOME.OS 实验卡左边框改 **虚线**，与摘要实验卡一致   | `PortalLauncherCard.svelte` · `app.css`   |
+| QA     | 走查 **P-1–P-12 全部关闭**；`qa:smoke` 五卡 ✅                        | [`docs/qa/portal-screenshot-audit.md`](../qa/portal-screenshot-audit.md) 第五轮 |
+
 ## 2026-07-09（Portal UI 修复 · P-4/P-5/P-7/P-9/P-11）
 
 | 主线   | 摘要                                                                 | 证据                                      |
@@ -27,7 +35,7 @@
 | 主线   | 摘要                                                                 | 证据                                      |
 | ------ | -------------------------------------------------------------------- | ----------------------------------------- |
 | QA     | 12 张截图 + `manifest.json`；G-P8 inbox 深链 desktop/mobile ✅；`qa:smoke` ✅ | [`docs/qa/portal-screenshot-audit.md`](../qa/portal-screenshot-audit.md) · `docs/ui-qa-screenshots/portal/` |
-| 遗留   | P-4/P-5/P-7/P-8/P-9 低优先级 UI/a11y（方案已检索 WCAG 2.5.8 / 1.4.3） | 走查报告 §问题清单                        |
+| 后续   | P-4/P-5/P-7/P-8/P-9 已于第四轮修复；P-5b/P-12 于第五轮关闭              | 走查报告 §问题清单                        |
 
 ## 2026-07-09（M-P5 行为分验收）
 
@@ -41,7 +49,7 @@
 | 主线   | 摘要                                                                 | 证据                                      |
 | ------ | -------------------------------------------------------------------- | ----------------------------------------- |
 | Growth | **G-P8** pending 角标 + 状态文案 → `planner…/inbox` 深链             | `PortalAppBar.svelte` · `+page.svelte`    |
-| Infra  | **G-P9** `qa:smoke.mjs` — 四卡 · inbox 深链 · ⌘K · Esc 关闭 ✅       | `apps/portal/scripts/qa-smoke.mjs`        |
+| Infra  | **G-P9** `qa:smoke.mjs` — **五卡** · inbox 深链 · ⌘K · Esc 关闭 ✅       | `apps/portal/scripts/qa-smoke.mjs`        |
 | Design | **P-1** `--overlay-backdrop` 55% + CommandPalette blur 8px           | `design-tokens` · `CommandPalette.svelte` |
 
 ## 2026-07-09（四轮计划 · Phase 0–4 批次）

@@ -240,6 +240,8 @@ export default {
     kindFocus: '关键',
     kindHabit: '习惯',
     unscheduledLine: '今天 · 未排程',
+    lifeEventFinance: '来自 Finance',
+    lifeEventFitness: '来自 Fitness',
     unscheduledOnly: '未排程',
   },
   recurrence: {
