@@ -134,14 +134,6 @@ async function shot(page, name) {
 }
 
 /** @param {import('playwright').Page} page */
-async function enterGraphEdit(page) {
-  await page.getByRole('button', { name: '编辑', exact: true }).click()
-  await page.waitForTimeout(350)
-  await page.keyboard.press('1')
-  await page.waitForTimeout(250)
-}
-
-/** @param {import('playwright').Page} page */
 async function clickFirstOpening(page) {
   const opening = page.locator('[data-graph-opening-id]').first()
   await opening.waitFor({ state: 'attached', timeout: 15000 })
@@ -149,14 +141,37 @@ async function clickFirstOpening(page) {
 }
 
 /** @param {import('playwright').Page} page */
+async function enterGraphEdit(page) {
+  await page.getByRole('button', { name: '编辑', exact: true }).click()
+  await page.waitForTimeout(350)
+  const toolSelect = page.locator('select[aria-label="墙图工具"]')
+  if (await toolSelect.count()) {
+    await toolSelect.selectOption('select')
+  } else {
+    await page.getByRole('button', { name: '选择', exact: true }).click({ force: true })
+  }
+  await page.waitForTimeout(250)
+}
+
+/** @param {import('playwright').Page} page */
 async function enterZonesStep(page) {
-  await page.getByRole('button', { name: '② 划分', exact: true }).click()
+  const stepSelect = page.locator('select[aria-label="编辑步骤"]')
+  if (await stepSelect.count()) {
+    await stepSelect.selectOption('zones')
+  } else {
+    await page.getByRole('button', { name: '② 划分', exact: true }).click()
+  }
   await page.waitForTimeout(300)
 }
 
 /** @param {import('playwright').Page} page */
 async function enterPlaceStep(page) {
-  await page.getByRole('button', { name: '③ 布置', exact: true }).click()
+  const stepSelect = page.locator('select[aria-label="编辑步骤"]')
+  if (await stepSelect.count()) {
+    await stepSelect.selectOption('place')
+  } else {
+    await page.getByRole('button', { name: '③ 布置', exact: true }).click()
+  }
   await page.waitForTimeout(300)
 }
 
@@ -265,7 +280,7 @@ const browser = await chromium.launch()
   await ctx.close()
 }
 
-// iPhone SE — ③ 布置（compact 换类型）
+// iPhone SE — ③ 布置（compact 家具类型 select）
 {
   const ctx = await browser.newContext({
     ...devices['iPhone SE'],
@@ -276,9 +291,12 @@ const browser = await chromium.launch()
   await enterGraphEdit(page)
   await enterPlaceStep(page)
   await shot(page, '15-edit-place-iphone-se.png')
-  await page.getByRole('button', { name: '换类型', exact: true }).click()
-  await page.waitForTimeout(250)
-  await shot(page, '16-placement-kinds-picker-iphone-se.png')
+  const kindSelect = page.locator('select[aria-label="家具类型"]')
+  if (await kindSelect.count()) {
+    await kindSelect.selectOption('bed')
+    await page.waitForTimeout(250)
+    await shot(page, '16-placement-kind-select-iphone-se.png')
+  }
   await ctx.close()
 }
 

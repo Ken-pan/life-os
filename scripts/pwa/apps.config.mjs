@@ -41,8 +41,10 @@ export const PWA_APPS = {
     port: 5188,
     shellType: 'main-col-wrap',
     waitSelector: '.app-shell',
-    scrollSelector: '.main-col > .wrap, .main-col > .auth-wrap',
-    mainQuery: '.main-col > .wrap, .main-col > .auth-wrap',
+    scrollSelector:
+      '.main-col > .life-os-page-workspace, .main-col > .wrap, .main-col > .auth-wrap',
+    mainQuery:
+      '.main-col > .life-os-page-workspace, .main-col > .wrap, .main-col > .auth-wrap',
     nestedWrapInMain: false,
     routes: [
       { path: '/', name: 'today' },

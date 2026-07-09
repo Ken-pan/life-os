@@ -10,7 +10,7 @@ let scrollRoot = null;
 let scrollRootTop = 0;
 
 const SCROLL_ROOT_SELECTOR =
-  '#main-content, .main-wrap > .content, .main-col > .wrap, .main-col > .auth-wrap';
+  '#main-content, .main-wrap > .content, .main-col > .life-os-page-workspace, .main-col > .wrap, .main-col > .auth-wrap';
 
 function activeScrollRoot() {
   if (typeof document === 'undefined') return null;

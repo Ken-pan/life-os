@@ -171,6 +171,17 @@ Wave C（P2，随 H-W3/W5）
 
 **下一步：** **H-W3** 手绘分区 · UX-13 508 inspector 深链 · A11Y-02 选中动画
 
+## Wave 3 已修复（2026-07-08）
+
+| ID | 修复 |
+|----|------|
+| UX-03 延伸 | 移动端选中墙段 / 508 **不再自动弹 drawer**；手动点底栏「详情」仍可打开 |
+| UX-01† | 墙图为空时在 `plan-stage` 顶部显示 **「墙图为空 · ① 建墙…」** 提示条 |
+| UX-13† | `PlanSelectionBar` compact 底栏增加 **「尺寸」** 展开，内联宽/深英尺英寸输入 |
+| A11Y-02 | SVG 选中元素加 `aria-selected`；选中虚线 **pulse 动画**（`plan-sel-pulse`） |
+
+**验证：** `npm run check` · `npm run test:plan-edit` · `npm run test:viewport`
+
 ## 复现
 
 ```bash

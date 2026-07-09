@@ -114,12 +114,16 @@ body,
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>#main-content,
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>.content,
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-wrap>.wrap,
+  html.standalone-pwa body:has(.mobile-more-backdrop) .main-col>.life-os-page-workspace,
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-col>.wrap,
   html.standalone-pwa body:has(.mobile-more-backdrop) .main-col>.auth-wrap {
     overflow: hidden;
   }
 
-  /* Planner：main-col 为 flex 壳，页面 .wrap / .auth-wrap 内滚动（Fab/底栏 fixed 不参与） */
+  /*
+    Planner：main-col 为 flex 壳，页面 workspace / .wrap / .auth-wrap 内滚动
+    （Fab/底栏 fixed 不参与）。life-os-page-workspace 为 grid 迁移后的页面壳。
+  */
   html.standalone-pwa .main-col:not(:has(.main-wrap)) {
     flex: 1 1 auto;
     min-height: 0;
@@ -129,6 +133,14 @@ body,
     padding-bottom: 0;
   }
 
+  html.standalone-pwa .main-col:not(:has(.main-wrap))>.appbar,
+  html.standalone-pwa .main-col:not(:has(.main-wrap))>header.appbar {
+    flex-shrink: 0;
+    position: relative;
+    top: auto;
+  }
+
+  html.standalone-pwa .main-col:not(:has(.main-wrap))>.life-os-page-workspace,
   html.standalone-pwa .main-col:not(:has(.main-wrap))>.wrap,
   html.standalone-pwa .main-col:not(:has(.main-wrap))>.auth-wrap {
     flex: 1 1 0;
@@ -139,6 +151,14 @@ body,
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
+  }
+
+  html.standalone-pwa .main-col:not(:has(.main-wrap))>.life-os-page-workspace .wrap,
+  html.standalone-pwa .main-col:not(:has(.main-wrap))>.life-os-page-workspace .auth-wrap {
+    flex: none;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
   }
 }
 

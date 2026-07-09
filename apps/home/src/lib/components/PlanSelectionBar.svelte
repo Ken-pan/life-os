@@ -54,6 +54,24 @@
         : '',
   )
 
+  let detailsOpen = $state(false)
+
+  const compactSizeEditable = $derived(
+    Boolean(
+      compact &&
+        wallBinding?.roomKey &&
+        wallBinding.axis &&
+        activeConfig?.rooms[
+          /** @type {keyof typeof activeConfig.rooms} */ (wallBinding.roomKey)
+        ],
+    ),
+  )
+
+  $effect(() => {
+    title
+    detailsOpen = false
+  })
+
   function pushConfig(next) {
     const issues = validate508Config(next)
     if (issues.length) {
@@ -86,14 +104,17 @@
   <div
     class="sel-bar"
     class:sel-bar-compact={compact}
+    class:sel-bar-details={compact && detailsOpen}
     role="toolbar"
     aria-label="选中项快捷编辑"
   >
     {#if !compact}
       <span class="sel-title">{title}</span>
+    {:else}
+      <span class="sel-title sel-title-compact">{title}</span>
     {/if}
 
-    {#if !compact && wallBinding?.roomKey && wallBinding.axis && activeConfig}
+    {#if (!compact || detailsOpen) && wallBinding?.roomKey && wallBinding.axis && activeConfig}
       {@const room =
         activeConfig.rooms[
           /** @type {keyof typeof activeConfig.rooms} */ (wallBinding.roomKey)
@@ -168,13 +189,21 @@
       {:else if wallBinding}
         <span class="sel-meta">拖曳改尺寸 · 墙体不可删除</span>
       {/if}
-    {:else if !compact && openingBinding && activeConfig}
+    {:else if (!compact || detailsOpen) && openingBinding && activeConfig}
       <span class="sel-meta">拖曳移动 · Delete 仅隐藏门窗</span>
-    {:else if compact}
-      <span class="sel-title sel-title-compact">{title}</span>
     {/if}
 
     <div class="sel-actions">
+      {#if compactSizeEditable}
+        <button
+          type="button"
+          class="sel-btn sel-btn-accent"
+          aria-expanded={detailsOpen}
+          onclick={() => (detailsOpen = !detailsOpen)}
+        >
+          {detailsOpen ? '收起' : '尺寸'}
+        </button>
+      {/if}
       <button
         type="button"
         class="sel-btn"
@@ -327,6 +356,21 @@
       margin-left: 0;
       flex-wrap: nowrap;
       width: 100%;
+    }
+
+    .sel-bar-details {
+      flex-wrap: wrap;
+      overflow-x: visible;
+    }
+
+    .sel-bar-details .sel-actions {
+      margin-left: auto;
+      width: auto;
+    }
+
+    .sel-bar-compact:not(.sel-bar-details) .sel-actions {
+      margin-left: auto;
+      width: auto;
     }
 
     .sel-btn {

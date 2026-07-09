@@ -143,7 +143,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .measure-label{font:700 12px var(--mono,monospace);fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:3px;paint-order:stroke fill}
  .graph-edge-hit{stroke:rgba(92,117,140,.12);stroke-width:${wallHitStroke};cursor:pointer;pointer-events:stroke}
  .graph-edge-hit:hover{stroke:rgba(92,117,140,.45)}
- .graph-edge-on{stroke:color-mix(in srgb,var(--graph-accent,#1d6b42) 75%,transparent);stroke-width:${wallOnStroke}}
+ .graph-edge-on{stroke:color-mix(in srgb,var(--graph-accent,#1d6b42) 75%,transparent);stroke-width:${wallOnStroke};stroke-dasharray:8 5;animation:plan-sel-pulse 1.15s ease-in-out infinite}
  .graph-edge-rm{cursor:crosshair}
  .graph-edge-rm.graph-edge-cascade{stroke:rgba(180,83,9,.55);stroke-width:${wallHitStroke}}
  .graph-edge-rm:hover{stroke:rgba(180,83,9,.75)}
@@ -154,7 +154,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .graph-vertex-hit:hover{fill:var(--graph-accent,#1d6b42)}
  .graph-open-hit{fill:var(--graph-accent-muted,color-mix(in srgb,#1d6b42 8%,transparent));stroke:color-mix(in srgb,var(--graph-accent,#1d6b42) 35%,transparent);stroke-width:2;cursor:grab;pointer-events:all}
  .graph-open-hit:hover{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 16%,transparent)}
- .graph-open-on{fill:var(--graph-accent-muted,color-mix(in srgb,#1d6b42 18%,transparent));stroke:var(--graph-accent,#1d6b42);stroke-width:2.5}
+ .graph-open-on{fill:var(--graph-accent-muted,color-mix(in srgb,#1d6b42 18%,transparent));stroke:var(--graph-accent,#1d6b42);stroke-width:2.5;stroke-dasharray:6 4;animation:plan-sel-pulse 1.15s ease-in-out infinite}
  .graph-open-grip{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.2;pointer-events:none}
  .graph-open-grip-hit{fill:transparent;stroke:none;cursor:ew-resize;pointer-events:all}
  .graph-open-grip-hit[data-wall-axis="v"]{cursor:ns-resize}
@@ -163,17 +163,18 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .spatial-zone-label{font:650 ${compact ? 11 : 13}px var(--font,system-ui,sans-serif);fill:var(--plan-text,#3a4048);pointer-events:none}
  .spatial-zone-hit{fill:transparent;stroke:none;cursor:pointer;pointer-events:all}
  .spatial-zone-hit:hover{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 12%,transparent)}
- .spatial-zone-on{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 14%,transparent);stroke:var(--graph-accent,#1d6b42);stroke-width:2}
+ .spatial-zone-on{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 14%,transparent);stroke:var(--graph-accent,#1d6b42);stroke-width:2;stroke-dasharray:8 5;animation:plan-sel-pulse 1.15s ease-in-out infinite}
  .spatial-zone-rm{cursor:pointer;fill:color-mix(in srgb,#b45309 10%,transparent)}
  .spatial-zone-rm:hover{fill:color-mix(in srgb,#b45309 22%,transparent)}
  .zone-chain{stroke:var(--graph-accent,#1d6b42);stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
  .zone-chain-vert{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;pointer-events:none}
  .zone-vertex-hit{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;cursor:grab;pointer-events:all}
  .placement-item{fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1.2}
- .placement-on{stroke:var(--graph-accent,#1d6b42);stroke-width:2.5}
+ .placement-on{stroke:var(--graph-accent,#1d6b42);stroke-width:2.5;stroke-dasharray:6 4;animation:plan-sel-pulse 1.15s ease-in-out infinite}
  .placement-label{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
  .placement-hit{fill:transparent;stroke:none;cursor:pointer;pointer-events:all}
  .storage-unassigned{stroke-dasharray:4 3;opacity:.85}
+ @keyframes plan-sel-pulse{0%,100%{stroke-opacity:1}50%{stroke-opacity:.45}}
 </style>`)
 
   parts.push('<g class="grid">')
@@ -387,7 +388,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
             ? '墙段 — 点击删除'
             : '墙段 — 点击选中'
         parts.push(
-          `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="${edgeCls}" data-edge-id="${edge.id}" data-plan-tip="${esc(tip)}"><title>${esc(tip)}</title></line>`,
+          `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="${edgeCls}" data-edge-id="${edge.id}" data-plan-tip="${esc(tip)}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(tip)}</title></line>`,
         )
       }
     } else {
@@ -432,7 +433,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
         const label = go.type === 'window' ? '窗' : '门'
         const title = `${label} · 拖曳沿墙移动 · 端点改宽`
         parts.push(
-          `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="graph-open-hit${on ? ' graph-open-on' : ''}" data-graph-opening-id="${go.id}" data-plan-tip="${esc(title)}"><title>${esc(title)}</title></rect>`,
+          `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="graph-open-hit${on ? ' graph-open-on' : ''}" data-graph-opening-id="${go.id}" data-plan-tip="${esc(title)}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(title)}</title></rect>`,
         )
         if (on && opts.graphTool === 'select') {
           appendGraphOpeningGrip(parts, go.id, hit.p0, 'start', touchScale, wallAxis)
@@ -627,7 +628,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
         ? `${z.nameZh} — 点击删除`
         : `${z.nameZh} — 点击选中`
       parts.push(
-        `<polygon points="${pts}" class="${hitCls}" data-spatial-zone-id="${z.id}" data-plan-tip="${esc(tip)}" data-zone-stale="${z.stale ? '1' : '0'}"><title>${esc(tip)}</title></polygon>`,
+        `<polygon points="${pts}" class="${hitCls}" data-spatial-zone-id="${z.id}" data-plan-tip="${esc(tip)}" data-zone-stale="${z.stale ? '1' : '0'}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(tip)}</title></polygon>`,
       )
       if (on && opts.zoneTool === 'zoneSelect') {
         const vr = 6 * touchScale
@@ -662,7 +663,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
     for (const p of project.placements) {
       const on = opts.selectedPlacement === p.id
       parts.push(
-        `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" class="placement-hit${on ? ' placement-on' : ''}" data-placement-id="${p.id}"><title>${esc(p.label)} — 点击选中</title></rect>`,
+        `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" class="placement-hit${on ? ' placement-on' : ''}" data-placement-id="${p.id}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(p.label)} — 点击选中</title></rect>`,
       )
     }
     parts.push('</g>')
