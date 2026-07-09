@@ -2,6 +2,7 @@ import { browser } from '$app/environment'
 import { resolvePlayUrl, resolvePlayUrlSync } from './cloudAudio.js'
 import { precacheAudioInServiceWorker } from './audioPrecache.js'
 import {
+  isAudioBlobCachePendingOrReady,
   loadCachedAudioUrl,
   peekCachedAudioUrl,
   scheduleFullAudioBlobCache,
@@ -10,6 +11,7 @@ import { getWarmByteMode } from './networkPolicy.js'
 
 /**
  * Resolve a playable URL (if needed) and warm audio bytes per network policy.
+ * Prefer IndexedDB full cache; skip SW full when IDB owns / will own the bytes.
  * @param {import('./types.js').Track | null | undefined} track
  * @param {string[]} [keepTrackIds]
  */
@@ -34,12 +36,18 @@ export async function warmTrackAudio(track, keepTrackIds = []) {
   if (!url) return
 
   const mode = getWarmByteMode()
-  if (mode !== 'none') {
-    precacheAudioInServiceWorker(url, track.id, { mode })
-  }
+  if (mode === 'none') return
+
   if (mode === 'full') {
-    scheduleFullAudioBlobCache(track, url, keepTrackIds)
+    // Personal app: IDB is the durable full-cache layer — skip SW full duplicate.
+    if (!isAudioBlobCachePendingOrReady(track.id)) {
+      scheduleFullAudioBlobCache(track, url, keepTrackIds)
+    }
+    return
   }
+
+  // range: warm CDN first chunk only (no SW Cache pollution with 206)
+  precacheAudioInServiceWorker(url, track.id, { mode: 'range' })
 }
 
 /**

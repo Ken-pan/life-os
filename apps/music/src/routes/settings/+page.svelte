@@ -29,6 +29,13 @@
     uploadPendingAudio,
   } from '$lib/cloudAudio.js'
   import {
+    getAudioBlobCacheStats,
+  } from '$lib/audioBlobStore.js'
+  import {
+    summarizePlayMetrics,
+    clearPlayMetrics,
+  } from '$lib/playMetrics.js'
+  import {
     fetchPendingTagReviews,
     fetchRecommendationHealth,
     resolveTagReview,
@@ -56,6 +63,9 @@
   let tagReviews = $state([])
   let health = $state({ playEvents: 0, embeddings: 0, pendingReviews: 0 })
   let resolvingReviewId = $state('')
+  let offlineCacheCount = $state(0)
+  let offlineCacheBytes = $state(0)
+  let playMetricsSummary = $state(summarizePlayMetrics())
 
   /** @param {unknown} proposed */
   function formatProposedTags(proposed) {
@@ -80,6 +90,10 @@
     cloudStored = stats.cloud
     cloudLocalAudio = stats.localAudio
     cloudPendingBytes = stats.pendingBytes
+    const offline = await getAudioBlobCacheStats()
+    offlineCacheCount = offline.count
+    offlineCacheBytes = offline.bytes
+    playMetricsSummary = summarizePlayMetrics()
     if (auth.user) {
       ;[tagReviews, health] = await Promise.all([
         fetchPendingTagReviews(12),
@@ -89,6 +103,25 @@
       tagReviews = []
       health = { playEvents: 0, embeddings: 0, pendingReviews: 0 }
     }
+  }
+
+  function onClearPlayMetrics() {
+    clearPlayMetrics()
+    playMetricsSummary = summarizePlayMetrics()
+  }
+
+  /** @param {Record<string, number>} counts */
+  function formatSourceCounts(counts) {
+    const labels = {
+      blob: '本地',
+      idb: 'IDB',
+      signed: '签名缓存',
+      network: '网络',
+      unknown: '未知',
+    }
+    return Object.entries(counts)
+      .map(([k, n]) => `${labels[k] || k} ${n}`)
+      .join(' · ')
   }
 
   /** @param {string} id @param {'approved' | 'rejected'} status */
@@ -601,6 +634,56 @@
           onchange={setImmersiveViewModeFromSegment}
           ariaLabel={t('settings.immersiveViewMode')}
         />
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-block set-group">
+    <h3 class="block-title sg-title">{t('settings.playLoadDebug')}</h3>
+    <p class="block-desc block-desc--pad-bottom-sm">
+      {t('settings.playLoadDebugDesc')}
+    </p>
+    <div class="set-row settings-row">
+      <div class="pref-copy">
+        <div class="pref-desc">
+          {t('settings.playLoadSamples', { count: playMetricsSummary.count })}
+        </div>
+        {#if playMetricsSummary.p50Canplay != null}
+          <div class="pref-desc">
+            {t('settings.playLoadP50', { ms: playMetricsSummary.p50Canplay })}
+            ·
+            {t('settings.playLoadP95', {
+              ms: playMetricsSummary.p95Canplay ?? '—',
+            })}
+          </div>
+        {/if}
+        {#if Object.keys(playMetricsSummary.sourceCounts).length}
+          <div class="pref-desc">
+            {t('settings.playLoadSources', {
+              summary: formatSourceCounts(playMetricsSummary.sourceCounts),
+            })}
+          </div>
+        {/if}
+        {#if playMetricsSummary.failCount}
+          <div class="pref-desc" style="color:var(--danger, #e85d6a)">
+            {t('settings.playLoadFails', { count: playMetricsSummary.failCount })}
+          </div>
+        {/if}
+      </div>
+      <button type="button" class="btn-ghost" onclick={onClearPlayMetrics}>
+        {t('settings.playLoadClear')}
+      </button>
+    </div>
+    <div class="set-row settings-row">
+      <div class="pref-copy">
+        <div class="pref-label">{t('settings.offlineCache')}</div>
+        <div class="pref-desc">{t('settings.offlineCacheDesc')}</div>
+        <div class="pref-desc">
+          {t('settings.offlineCacheStats', {
+            count: offlineCacheCount,
+            size: formatBytes(offlineCacheBytes),
+          })}
+        </div>
       </div>
     </div>
   </section>

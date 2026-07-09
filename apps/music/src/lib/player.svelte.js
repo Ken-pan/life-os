@@ -10,6 +10,7 @@ import {
   hasPlayableSource,
   getSignedAudioUrl,
   invalidateSignedAudioUrl,
+  peekSignedAudioUrl,
 } from './cloudAudio.js'
 import {
   registerAudioPool,
@@ -30,6 +31,14 @@ import {
   trimAudioBlobCache,
 } from './audioBlobStore.js'
 import { getWarmByteMode } from './networkPolicy.js'
+import {
+  markPlayRequest,
+  markUrlResolved,
+  markCanplay,
+  markPlaying,
+  markPlayFailed,
+  classifyPlayUrlSource,
+} from './playMetrics.js'
 import {
   bindMediaSessionHandlers,
   declarePlaybackSession,
@@ -875,6 +884,7 @@ async function startPlayback(src, token, track, opts = {}) {
   if (!audio || token !== loadToken || getCurrentTrack()?.id !== track.id)
     return false
   if (!src) {
+    markPlayFailed('no_source')
     if (opts.fromToggle) {
       await playbackToast(t('player.noSource'), { error: true })
     } else {
@@ -895,13 +905,19 @@ async function startPlayback(src, token, track, opts = {}) {
   await resumeAudioContext()
   syncOutputGains()
 
+  const onCanPlay = () => markCanplay()
+  audio.addEventListener('canplay', onCanPlay, { once: true })
+
   try {
     await audio.play()
+    markPlaying()
     return true
   } catch {
     try {
       await waitCanPlay(audio)
+      markCanplay()
       await audio.play()
+      markPlaying()
       return true
     } catch (err) {
       if (
@@ -924,6 +940,7 @@ async function startPlayback(src, token, track, opts = {}) {
         }
       }
       void err
+      markPlayFailed(t('player.playFailed'), { retried: Boolean(opts.retried) })
       if (opts.fromToggle) {
         await playbackToast(t('player.playFailed'), { error: true })
       } else {
@@ -931,6 +948,8 @@ async function startPlayback(src, token, track, opts = {}) {
       }
       return false
     }
+  } finally {
+    audio.removeEventListener('canplay', onCanPlay)
   }
 }
 
@@ -949,22 +968,39 @@ async function loadAndPlay(opts = {}) {
   if (typeof opts.seekTo === 'number' && opts.seekTo > 0) {
     player.currentTime = opts.seekTo
   }
-  if (opts.autoplay !== false) player.loading = true
+  if (opts.autoplay !== false) {
+    player.loading = true
+    markPlayRequest(track.id)
+  }
 
+  /** @type {import('./playMetrics.js').PlayUrlSource} */
+  let urlSource = 'unknown'
   let src = resolvePlayUrlSync(track)
-  if (!src) {
+  if (src) {
+    urlSource = classifyPlayUrlSource(track, src)
+  } else {
     try {
+      const hadSigned = Boolean(
+        track.storagePath && peekSignedAudioUrl(track.storagePath),
+      )
       src = await resolvePlayUrl(track)
+      urlSource = classifyPlayUrlSource(track, src)
+      if (urlSource === 'signed' && !hadSigned) urlSource = 'network'
     } catch (err) {
       if (token === loadToken) player.loading = false
+      const offline =
+        typeof navigator !== 'undefined' && navigator.onLine === false
+      const msg = offline ? t('player.offlineUncached') : syncErrorMessage(err)
+      markPlayFailed(msg)
       if (opts.fromToggle) {
-        await playbackToast(syncErrorMessage(err), { error: true })
+        await playbackToast(msg, { error: true })
       } else {
-        player.statusHint = syncErrorMessage(err)
+        player.statusHint = msg
       }
       return
     }
   }
+  if (opts.autoplay !== false) markUrlResolved(urlSource)
 
   if (token !== loadToken || getCurrentTrack()?.id !== track.id) return
   player.duration = track.duration || 0
@@ -995,9 +1031,10 @@ async function loadAndPlay(opts = {}) {
 
   beginTrackSession(track)
   void prefetchNextTrackUrl()
+  // Prefer IDB full cache; skip SW full when IDB will own the bytes.
   const warmMode = getWarmByteMode()
-  if (warmMode !== 'none') {
-    precacheAudioInServiceWorker(src, track.id, { mode: warmMode })
+  if (warmMode === 'range') {
+    precacheAudioInServiceWorker(src, track.id, { mode: 'range' })
   }
 }
 

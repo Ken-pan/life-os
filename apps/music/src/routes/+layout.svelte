@@ -49,6 +49,7 @@
   import { requestPersistentStorage } from '@life-os/platform-web/persistent-storage'
   import { backgroundActivity } from '$lib/backgroundActivity.svelte.js'
   import { bindPrecacheActivityAck } from '$lib/audioPrecache.js'
+  import { refreshExpiringSignedUrls } from '$lib/cloudAudio.js'
   import {
     bindGlobalShortcuts,
     registerShortcutHandlers,
@@ -140,6 +141,14 @@
     const cleanupBackground = bindBackgroundPlayback()
     const cleanupForeground = bindNetworkResume()
     const cleanupPrecacheAck = bindPrecacheActivityAck()
+    void refreshExpiringSignedUrls()
+    const refreshTimer = setInterval(() => {
+      void refreshExpiringSignedUrls()
+    }, 10 * 60_000)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void refreshExpiringSignedUrls()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
     return () => {
       cleanupShortcuts()
       cleanupTheme()
@@ -150,6 +159,8 @@
       cleanupBackground()
       cleanupForeground()
       cleanupPrecacheAck()
+      clearInterval(refreshTimer)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   })
 

@@ -5,6 +5,7 @@
   import TrackTable from '$lib/components/TrackTable.svelte'
   import { getAllTracks } from '$lib/db.js'
   import { prefetchTracksAudio } from '$lib/cloudAudio.js'
+  import { scheduleHydrateRecentAudioCache } from '$lib/audioBlobStore.js'
   import { scheduleLibraryMaintenance } from '$lib/import.js'
   import { librarySignals, S, patchLocalSettings } from '$lib/state.svelte.js'
   import { setPageChrome } from '$lib/pageChrome.svelte.js'
@@ -24,6 +25,10 @@
     tracks = await getAllTracks()
     loading = false
     void prefetchTracksAudio(tracks, 32)
+    scheduleHydrateRecentAudioCache(
+      tracks.slice(0, 24).map((tr) => tr.id),
+      8,
+    )
   }
 
   onMount(() => {

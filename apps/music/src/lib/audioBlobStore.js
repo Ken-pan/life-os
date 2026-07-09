@@ -9,6 +9,9 @@ export const MAX_AUDIO_BLOB_CACHE = 12
 /** @type {Map<string, { objectUrl: string, size: number }>} */
 const memoryByTrackId = new Map()
 
+/** @type {Map<string, Promise<void>>} */
+const inflightFullCache = new Map()
+
 /**
  * @param {string} trackId
  * @returns {string | null}
@@ -86,9 +89,6 @@ export async function trimAudioBlobCache(keepTrackIds = []) {
   }
 }
 
-/** @type {Map<string, Promise<void>>} */
-const inflightFullCache = new Map()
-
 /**
  * Progressively download a cloud track into IndexedDB (after play or on good network).
  * @param {Pick<import('./types.js').Track, 'id' | 'storagePath' | 'mime'>} track
@@ -128,4 +128,60 @@ export function scheduleFullAudioBlobCache(track, url, keepTrackIds = []) {
   })()
 
   inflightFullCache.set(key, job)
+}
+
+/**
+ * Whether a full IDB download is already cached or in flight for this track.
+ * @param {string} trackId
+ */
+export function isAudioBlobCachePendingOrReady(trackId) {
+  if (!trackId) return false
+  return memoryByTrackId.has(trackId) || inflightFullCache.has(trackId)
+}
+
+/**
+ * Idle-hydrate recent track blobs into the memory map for sync resolve hits.
+ * @param {string[]} trackIds
+ * @param {number} [limit]
+ */
+export async function hydrateRecentAudioCache(trackIds, limit = 8) {
+  if (!browser || !trackIds?.length) return
+  const unique = [...new Set(trackIds.filter(Boolean))].slice(0, limit)
+  for (const id of unique) {
+    if (memoryByTrackId.has(id)) continue
+    await loadCachedAudioUrl(id)
+  }
+}
+
+/**
+ * Schedule hydrate on idle so UI stays responsive.
+ * @param {string[]} trackIds
+ * @param {number} [limit]
+ */
+export function scheduleHydrateRecentAudioCache(trackIds, limit = 8) {
+  if (!browser || !trackIds?.length) return
+  const run = () => {
+    void hydrateRecentAudioCache(trackIds, limit).catch(() => {})
+  }
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run, { timeout: 2500 })
+  } else {
+    setTimeout(run, 400)
+  }
+}
+
+/**
+ * Offline cache stats for Settings.
+ * @returns {Promise<{ count: number, bytes: number }>}
+ */
+export async function getAudioBlobCacheStats() {
+  if (!browser) return { count: 0, bytes: 0 }
+  try {
+    const rows = await db.audioBlobs.toArray()
+    let bytes = 0
+    for (const row of rows) bytes += Number(row.size) || 0
+    return { count: rows.length, bytes }
+  } catch {
+    return { count: 0, bytes: 0 }
+  }
 }

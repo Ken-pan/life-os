@@ -226,6 +226,25 @@ async function signAudioPathsBatch(paths, ttlSec = SIGNED_TTL_SEC) {
   persistSignedUrlCache()
 }
 
+const SIGNED_URL_REFRESH_MARGIN_MS = 5 * 60_000
+
+/**
+ * Silently refresh signed URLs that expire within 5 minutes.
+ * @param {number} [limit]
+ */
+export async function refreshExpiringSignedUrls(limit = 32) {
+  if (!browser) return
+  const now = Date.now()
+  const expiring = [...signedUrlCache.entries()]
+    .filter(([, v]) => v && v.expiresAt - now < SIGNED_URL_REFRESH_MARGIN_MS)
+    .map(([path]) => path)
+    .slice(0, limit)
+  if (!expiring.length) return
+  const { data } = await supabase.auth.getSession()
+  if (!data.session) return
+  await signAudioPathsBatch(expiring).catch(() => {})
+}
+
 export async function getSignedAudioUrl(path, ttlSec = SIGNED_TTL_SEC) {
   if (!path) throw new Error(t('cloudAudio.noPath'))
   const hit = peekSignedAudioUrl(path)
@@ -359,21 +378,29 @@ export async function prefetchTracksAudio(tracks, limit = 24) {
   }
 
   const { precacheAudioInServiceWorker } = await import('./audioPrecache.js')
-  const { scheduleFullAudioBlobCache } = await import('./audioBlobStore.js')
+  const {
+    scheduleFullAudioBlobCache,
+    isAudioBlobCachePendingOrReady,
+    peekCachedAudioUrl,
+  } = await import('./audioBlobStore.js')
   const warmMode = getWarmByteMode()
   const warmed = new Set()
   for (const tr of cloud) {
     if (warmed.size >= capped) break
     const path = tr.storagePath
     if (!path || warmed.has(path)) continue
+    if (peekCachedAudioUrl(tr.id) || isAudioBlobCachePendingOrReady(tr.id)) {
+      warmed.add(path)
+      continue
+    }
     const url = peekSignedAudioUrl(path)
     if (!url) continue
     warmed.add(path)
-    if (warmMode !== 'none') {
-      precacheAudioInServiceWorker(url, tr.id, { mode: warmMode })
-    }
     if (warmMode === 'full') {
       scheduleFullAudioBlobCache(tr, url)
+      // Prefer IDB as durable full cache; skip SW full duplicate download.
+    } else if (warmMode === 'range') {
+      precacheAudioInServiceWorker(url, tr.id, { mode: 'range' })
     }
   }
 }

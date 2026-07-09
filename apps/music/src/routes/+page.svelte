@@ -35,9 +35,11 @@
     restoreLastSession,
     resumeSession,
   } from '$lib/player.svelte.js'
+  import { visibleWarm } from '$lib/visibleWarm.js'
   import { markNowPlayingReturn } from '$lib/nav.js'
   import { openUtilityPane } from '$lib/ui.svelte.js'
   import { prefetchTracksAudio } from '$lib/cloudAudio.js'
+  import { scheduleHydrateRecentAudioCache } from '$lib/audioBlobStore.js'
 
   let recent = $state([])
   let recentAdded = $state([])
@@ -114,6 +116,10 @@
     void prefetchTracksAudio(
       [...recent, ...recentAdded, ...quickPicks],
       24,
+    )
+    scheduleHydrateRecentAudioCache(
+      [...recent, ...recentAdded, ...quickPicks].map((tr) => tr.id),
+      8,
     )
   }
 
@@ -321,6 +327,7 @@
               <button
                 type="button"
                 class="quick-pick-card"
+                use:visibleWarm={track}
                 onpointerdown={() => prewarmTrack(track)}
                 onclick={() => playTrack(track, 'quick_picks')}
               >

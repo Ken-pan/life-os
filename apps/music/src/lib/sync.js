@@ -362,6 +362,14 @@ async function pullCloud(userId, existingSnap = null) {
         storagePath: row.storage_path,
       }))
     void prefetchTracksAudio(cloudTracks, 32)
+    import('./audioBlobStore.js')
+      .then(({ scheduleHydrateRecentAudioCache }) => {
+        scheduleHydrateRecentAudioCache(
+          cloudTracks.map((tr) => tr.id),
+          8,
+        )
+      })
+      .catch(() => {})
   }
 }
 
