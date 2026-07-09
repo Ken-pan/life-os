@@ -29,10 +29,8 @@ RUN chmod +x /tmp/sdk-installer.sh && \
 
 # Create an entrypoint script to source the environment and run cmake/make
 RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-# Find the environment setup script\n\
-ENV_SCRIPT=$(find /opt/poky -name "environment-setup-cortexa55*" -print -quit)\n\
+# Find the environment setup script (can be in /opt/poky or /opt/codex)\n\
+ENV_SCRIPT=$(find /opt/poky /opt/codex -name "environment-setup-cortexa55*" -print -quit 2>/dev/null)\n\
 if [ -z "$ENV_SCRIPT" ]; then\n\
     echo "Error: Could not find Yocto environment setup script."\n\
     exit 1\n\
@@ -41,6 +39,7 @@ fi\n\
 echo "Sourcing toolchain: $ENV_SCRIPT"\n\
 source "$ENV_SCRIPT"\n\
 \n\
+set -e\n\
 echo "Host Architecture: $(uname -m)"\n\
 echo "Target Architecture: $CC"\n\
 \n\
