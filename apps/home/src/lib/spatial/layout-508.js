@@ -6,7 +6,9 @@ import { dimPx, formatFtIn, toInches, fromInches } from './dimensions.js'
 import {
   bypassSlidingHorizontal,
   doubleSwingVerticalRight,
+  swingHorizontalDownFromRight,
   swingHorizontalUp,
+  swingHorizontalUpFromRight,
   swingVerticalLeft,
   swingVerticalRight,
 } from './doors.js'
@@ -17,7 +19,7 @@ import {
 } from './wall-edit.js'
 
 /** Bump when default topology changes — stale saved configs are discarded. */
-export const LAYOUT_508_VERSION = 2
+export const LAYOUT_508_VERSION = 3
 
 /** @param {FtIn} d @param {number} px */
 function px(d, px) {
@@ -611,9 +613,9 @@ export function build508Project(config, carry = {}) {
       id: 'door-bedroom',
       type: 'door',
       doorStyle: 'swing',
-      opensInto: 'bedroom',
+      opensInto: 'hall',
       hitRect: openingHitAlongH(bedDoorX1, bedDoorX2, yBedroomBot),
-      pathD: swingHorizontalUp({
+      pathD: swingHorizontalDownFromRight({
         x1: bedDoorX1,
         x2: bedDoorX2,
         y: yBedroomBot,
@@ -671,7 +673,7 @@ export function build508Project(config, carry = {}) {
       type: 'door',
       doorStyle: 'swing',
       hitRect: openingHitAlongH(entryX1, entryX2, Y_BOT),
-      pathD: swingHorizontalUp({
+      pathD: swingHorizontalUpFromRight({
         x1: entryX1,
         x2: entryX2,
         y: Y_BOT,
@@ -731,11 +733,11 @@ export function build508Project(config, carry = {}) {
         '<b>平面来源</b>：2026-07 按开发商户型图红线重描 — 墙线、门位、开向逐一校准。',
         '<b>墙厚</b>：美国公寓惯例 — 外墙 6″、内隔墙 4.5″（2×4 + 双面石膏板）。',
         '<b>阳台</b>：仅由客厅西北角平开门进入（向阳台开）；卧室北墙为整幅窗、无门。',
-        '<b>卧室门</b>：在南墙偏东（距东角约 1′），西侧铰链向卧室内开。',
+        '<b>卧室门</b>：在南墙偏东（距东角约 1′），东铰链向走廊下开。',
         '<b>壁橱</b>：卧室壁橱推拉门朝走廊；走廊储物柜贴西墙 2′8″ 深，门向走廊外开。',
         '<b>浴室</b>：西南角，门在北墙、向走廊外开；东墙与洗衣间西墙共线。',
         '<b>洗衣间</b>：双开门朝东向玄关走廊；正下方结构柱实心不可进，直落南墙。',
-        '<b>入户门</b>：南墙紧贴结构柱东侧，向内开、折向柱壁。',
+        '<b>入户门</b>：南墙紧贴结构柱东侧，东铰链向内开、折向柱壁。',
         '<b>厨房</b>：与客厅开放贯通、无隔墙；东墙橱柜条深 2′4″ 直达南墙。',
       ],
       sourceNote:

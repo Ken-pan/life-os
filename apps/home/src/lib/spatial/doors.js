@@ -25,6 +25,15 @@ export function swingHorizontalUpFromRight({ x1, x2, y, radius = 40 }) {
   ].join(' ')
 }
 
+/** South-wall bedroom — hinge on right jamb, swings down into hall */
+export function swingHorizontalDownFromRight({ x1, x2, y, radius = 40 }) {
+  const r = Math.min(radius, x2 - x1 - 2)
+  return [
+    `M ${x1} ${y} L ${x2} ${y}`,
+    `M ${x2} ${y} A ${r} ${r} 0 0 1 ${x2 - r} ${y + r}`,
+  ].join(' ')
+}
+
 /**
  * @param {number} x1
  * @param {number} x2
