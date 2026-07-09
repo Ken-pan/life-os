@@ -156,6 +156,7 @@ export interface SyncReport {
   kind: CaptureKind
   summary: string
   notes: string[]
+  syncedAt?: string
 }
 
 // ===================== 扩展抓取计划（app → 扩展快照） =====================

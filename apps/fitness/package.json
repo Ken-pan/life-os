@@ -18,7 +18,8 @@
     "test:sync": "node scripts/test-sync-logic.mjs",
     "test:supabase": "node scripts/test-supabase-connectivity.mjs",
     "test": "node scripts/plate-calculators-check.mjs && playwright test",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:ci": "playwright test -c playwright.e2e-ci.config.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

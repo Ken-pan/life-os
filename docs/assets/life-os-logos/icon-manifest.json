@@ -98,5 +98,30 @@
       "icon-light.png",
       "notify-192.png"
     ]
+  },
+  "home": {
+    "out_dir": "apps/home/static",
+    "circle_ratio": 0.64,
+    "files": [
+      "apple-touch-icon.png",
+      "brand-circle-dark-48.png",
+      "brand-circle-dark-64.png",
+      "brand-circle-dark-96.png",
+      "brand-circle-light-48.png",
+      "brand-circle-light-64.png",
+      "brand-circle-light-96.png",
+      "favicon-16.png",
+      "favicon-32.png",
+      "icon-128.png",
+      "icon-16.png",
+      "icon-192.png",
+      "icon-32.png",
+      "icon-48.png",
+      "icon-512-maskable.png",
+      "icon-512.png",
+      "icon-dark.png",
+      "icon-light.png",
+      "notify-192.png"
+    ]
   }
 }

@@ -1,15 +1,25 @@
 <script>
   import { PORTAL_APPS } from '$lib/apps.js'
+  import { auth } from '$lib/auth.svelte.js'
   import { getLastApp } from '$lib/recentApp.svelte.js'
-  import { getCommandPaletteShortcutLabel, getModKeyLabel } from '$lib/keyboardShortcut.js'
+  import { portalPreferences } from '$lib/portalPreferences.svelte.js'
+  import {
+    getCommandPaletteShortcutLabel,
+    getModKeyLabel,
+  } from '$lib/keyboardShortcut.js'
   import PortalLauncherCard from '$lib/components/PortalLauncherCard.svelte'
+  import PortalSettings from '$lib/components/PortalSettings.svelte'
+  import PortalPwaGuide from '$lib/components/PortalPwaGuide.svelte'
 
   const recentApp = $derived(getLastApp())
   const gridApps = $derived(
-    recentApp ? PORTAL_APPS.filter((app) => app.id !== recentApp.id) : PORTAL_APPS,
+    recentApp
+      ? PORTAL_APPS.filter((app) => app.id !== recentApp.id)
+      : PORTAL_APPS,
   )
   const shortcutLabel = getCommandPaletteShortcutLabel()
   const modKey = getModKeyLabel()
+  const userId = $derived(auth.user?.id ?? '')
 </script>
 
 <header class="page-header portal-page-header">
@@ -19,14 +29,20 @@
   </div>
 </header>
 
-  <div
+<div
   class="portal-status-summary"
   role="status"
-  aria-label={`Life OS 连接状态：账号已连接，${PORTAL_APPS.length} 个应用可用，跨站 SSO 已启用`}
+  aria-label={`Life OS 连接状态：账号已连接，${PORTAL_APPS.length} 个应用可用，跨站 SSO 已启用${portalPreferences.pendingEvents ? `，${portalPreferences.pendingEvents} 条待处理事件` : ''}`}
 >
   <span class="chip portal-status-chip portal-status-chip--ok">账号已连接</span>
-  <span class="portal-status-detail" title="同一账号在 .kenos.space 子域间单点登录">
+  <span
+    class="portal-status-detail"
+    title="同一账号在 .kenos.space 子域间单点登录"
+  >
     {PORTAL_APPS.length} 个应用可用 · 跨站 SSO
+    {#if portalPreferences.pendingEvents != null && portalPreferences.pendingEvents > 0}
+      · {portalPreferences.pendingEvents} 条待处理事件
+    {/if}
   </span>
 </div>
 
@@ -47,6 +63,12 @@
     {/each}
   </div>
 </section>
+
+{#if userId}
+  <PortalSettings {userId} />
+{/if}
+
+<PortalPwaGuide />
 
 <p class="portal-hint">
   按 <kbd>{modKey}</kbd><kbd>K</kbd> 或顶栏「搜索」快速跳转（{shortcutLabel}）

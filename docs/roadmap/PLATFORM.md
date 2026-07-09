@@ -15,7 +15,9 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 
 ---
 
-## C-P1+: 平台扩容 — 进行中
+## C-P1+: 平台扩容 — 低优先级（暂缓大项）
+
+> **ROI 评审（2026-07-08）：** `contracts/events` 已接；Finance React 共享 UI / nav mirror **移出 §Now**，见 hub §Next ✗。仅 Finance 一个 React 栈时不做 `ui-react`。
 
 | App     | contracts  | platform-web                 | 备注                                                                  |
 | ------- | ---------- | ---------------------------- | --------------------------------------------------------------------- |
@@ -26,7 +28,7 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 | Portal  | ✅ dep     | ✅ CommandPalette + AppBrand | CI build ✅                                                           |
 | Home    | ✅ dep     | ✅ 部分                      | 实验；未 deploy                                                       |
 
-**待办：** Finance React 共享 UI（SyncErrorBanner 等）→ 见 [`BACKLOG.md`](./BACKLOG.md) P2
+**待办（低优先级）：** Finance React 共享 UI — 见 [`BACKLOG.md`](./BACKLOG.md) P2；**不在当前 2–3 周执行顺序内**。
 
 ---
 

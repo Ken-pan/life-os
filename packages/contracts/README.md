@@ -4,12 +4,12 @@ Life OS **cross-surface** product contracts — data shapes, state enums, and us
 
 ## 模块
 
-| 模块                                           | 文件        | 消费方式                                             |
-| ---------------------------------------------- | ----------- | ---------------------------------------------------- |
-| appearance, meta, nav, content, sync, feedback | `*.d.ts`    | **type-only**（JSDoc 或 `import type`）              |
+| 模块                                           | 文件        | 消费方式                                                    |
+| ---------------------------------------------- | ----------- | ----------------------------------------------------------- |
+| appearance, meta, nav, content, sync, feedback | `*.d.ts`    | **type-only**（JSDoc 或 `import type`）                     |
 | **events**                                     | `events.ts` | **Zod runtime**（I-P1.5 ✅；envelope + `finance.bill_due`） |
 
-见 [`../../docs/LIFEOS_CONTRACTS.md`](../../docs/LIFEOS_CONTRACTS.md) export 白名单；边界规则见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)。
+见 [`../../docs/architecture/contracts.md`](../../docs/architecture/contracts.md) export 白名单；边界规则见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)。
 
 ## Type-only consumption（7 个 `.d.ts` 模块）
 
@@ -22,12 +22,12 @@ Life OS **cross-surface** product contracts — data shapes, state enums, and us
 
 ## 试点状态（C-P1 / C-P1+）
 
-| App     | contracts  | 备注                                        |
-| ------- | ---------- | ------------------------------------------- |
-| Planner | ✅ P1A/B/C | JSDoc + `applyDocumentMetaWeb`              |
-| Fitness | ✅ P1A/B/C | 同上                                        |
-| Portal  | 🟡 WIP     | dep 已声明；未纳入 turbo CI                 |
-| Finance | ❌         | 使用 `@life-os/finance-enrichment-contract` |
+| App     | contracts  | 备注                                                |
+| ------- | ---------- | --------------------------------------------------- |
+| Planner | ✅ P1A/B/C | JSDoc + `applyDocumentMetaWeb`                      |
+| Fitness | ✅ P1A/B/C | 同上                                                |
+| Portal  | 🟡 WIP     | dep 已声明；未纳入 turbo CI                         |
+| Finance | ❌         | 使用 `@life-os/finance-enrichment-contract`         |
 | Music   | ✅ P1A/B/C | JSDoc nav/feedback/sync + `createI18n` + `AppBrand` |
 
 ## Dependency direction

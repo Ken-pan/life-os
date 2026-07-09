@@ -198,6 +198,7 @@ export function ExtensionSyncBridge() {
           kind: env.kind,
           summary,
           notes,
+          syncedAt: new Date().toISOString(),
         },
         updatedAccountIds,
         assertionDate: env.asOfDate,
@@ -487,6 +488,9 @@ export function ExtensionSyncBridge() {
             <strong>
               {tl('extension.synced', { source: SOURCE_LABEL[r.source] })}
             </strong>
+            <span className="ext-sync-toast-time">
+              {new Date(r.syncedAt ?? Date.now()).toLocaleTimeString()}
+            </span>
           </div>
           <span>{redactMoneyText(r.summary, privacy)}</span>
           {r.notes.length > 0 && (

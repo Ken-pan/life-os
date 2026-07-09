@@ -11,10 +11,20 @@
 
   /** @type {{
    *   userEmail?: string | null,
+   *   pendingEvents?: number | null,
    *   onSignOut?: () => void,
    *   onOpenCommandPalette?: () => void,
    * }} */
-  let { userEmail = null, onSignOut, onOpenCommandPalette } = $props()
+  let {
+    userEmail = null,
+    pendingEvents = null,
+    onSignOut,
+    onOpenCommandPalette,
+  } = $props()
+
+  const pendingBadge = $derived(
+    pendingEvents != null && pendingEvents > 0 ? pendingEvents : null,
+  )
 
   const shortcutLabel = getCommandPaletteShortcutLabel()
   const userInitial = $derived(getUserInitial(userEmail))
@@ -39,6 +49,16 @@
       <AppBrand appId="portal" variant="appbar" ariaLabel="PORTAL.OS" />
     </div>
     <div class="appbar-trailing">
+      {#if pendingBadge != null}
+        <a
+          href="https://planner.kenos.space"
+          class="portal-events-badge"
+          title="待处理跨应用事件"
+          aria-label="{pendingBadge} 条待处理事件，打开 Planner"
+        >
+          {pendingBadge > 99 ? '99+' : pendingBadge}
+        </a>
+      {/if}
       {#if onOpenCommandPalette}
         <button
           type="button"
@@ -54,20 +74,30 @@
         type="button"
         class="btn-secondary portal-theme-btn"
         onclick={handleThemeCycle}
-        aria-label="切换主题，当前：{themePreferenceLabel(portalTheme.preference)}"
+        aria-label="切换主题，当前：{themePreferenceLabel(
+          portalTheme.preference,
+        )}"
         title="主题：{themePreferenceLabel(portalTheme.preference)}"
       >
         <ThemeIcon size={16} strokeWidth={2} aria-hidden="true" />
-        <span class="portal-theme-label">{themePreferenceLabel(portalTheme.preference)}</span>
+        <span class="portal-theme-label"
+          >{themePreferenceLabel(portalTheme.preference)}</span
+        >
       </button>
       {#if userEmail}
         <span class="portal-user-chip" title={userEmail}>
-          <span class="portal-user-avatar" aria-hidden="true">{userInitial}</span>
+          <span class="portal-user-avatar" aria-hidden="true"
+            >{userInitial}</span
+          >
           <span class="portal-user-email">{userShort}</span>
         </span>
       {/if}
       {#if onSignOut}
-        <button type="button" class="btn-secondary portal-signout-btn" onclick={onSignOut}>
+        <button
+          type="button"
+          class="btn-secondary portal-signout-btn"
+          onclick={onSignOut}
+        >
           退出
         </button>
       {/if}

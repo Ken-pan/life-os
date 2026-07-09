@@ -1,5 +1,6 @@
 import { browser } from '$app/environment'
-import { supabase } from './supabase.js'
+import { db, slugKey } from './db.js'
+import { supabase, isSupabaseConfigured } from './supabase.js'
 import { MUSIC_TABLES as T } from './supabaseTables.js'
 import { peekRecommendationAttribution } from './recommendationContext.js'
 
@@ -23,6 +24,45 @@ async function resolveCanonicalTrackId(userId, trackId) {
     .eq('track_id', trackId)
     .maybeSingle()
   return enr?.canonical_track_id || trackId
+}
+
+/** Ensure FK target exists — play_events references music_track_meta. */
+async function ensureTrackMetaForPlay(userId, trackId, fallbackTrackId = null) {
+  const { data: existing, error: readErr } = await supabase
+    .from(T.trackMeta)
+    .select('track_id')
+    .eq('user_id', userId)
+    .eq('track_id', trackId)
+    .maybeSingle()
+  if (readErr) throw readErr
+  if (existing?.track_id) return true
+
+  let track = await db.tracks.get(trackId)
+  if (!track && fallbackTrackId && fallbackTrackId !== trackId) {
+    track = await db.tracks.get(fallbackTrackId)
+  }
+  if (!track) return false
+
+  const artist = track.artist?.trim() || 'Unknown Artist'
+  const album = track.album?.trim() || 'Unknown Album'
+  const { error } = await supabase.from(T.trackMeta).upsert(
+    {
+      user_id: userId,
+      track_id: trackId,
+      title: track.title?.trim() || 'Untitled',
+      artist,
+      album,
+      album_key: track.albumKey || slugKey(`${artist}::${album}`),
+      artist_key: slugKey(artist),
+      duration: Number(track.duration) || 0,
+      liked: track.liked ? 1 : 0,
+      play_count: track.playCount || 0,
+      added_at: track.addedAt || Date.now(),
+    },
+    { onConflict: 'user_id,track_id' },
+  )
+  if (error) throw error
+  return true
 }
 
 /** @param {string} userId @param {RecordPlayEventInput} input @param {string} canonicalId @param {object | null} attr */
@@ -57,7 +97,7 @@ async function insertRecommendationEvent(userId, input, canonicalId, attr) {
 
 /** Fire-and-forget Supabase play_events（需登录；失败静默） */
 export async function recordPlayEvent(input) {
-  if (!browser || !input.trackId) return
+  if (!browser || !input.trackId || !isSupabaseConfigured) return
 
   try {
     const {
@@ -66,6 +106,9 @@ export async function recordPlayEvent(input) {
     if (!user) return
 
     const trackId = await resolveCanonicalTrackId(user.id, input.trackId)
+    const ready = await ensureTrackMetaForPlay(user.id, trackId, input.trackId)
+    if (!ready) return
+
     const attr = peekRecommendationAttribution(input.trackId)
     /** @type {Record<string, unknown>} */
     const metadata = {}

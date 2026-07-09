@@ -1,81 +1,90 @@
 # Life OS Docs
 
-Canonical documentation index for the Life OS monorepo.
+> **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后与代码同步：** 2026-07-08（对照远程 Supabase + 工作区核实；含 C-P2 提取候选审计）
+**最后重组：** 2026-07-08 · 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
 
-## 当前状态速览
+## 当前优先级（摘要）
 
-图例：✅ 完成 · 🟡 部分 / WIP · ❌ 未做 · ⏸️ 搁置
+**模型：** Core 闭环 → 防回归 → Growth（Portal `core_*` + 单 App 管道）→ 窄 Design — 详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §推荐执行顺序
 
-| 主线        | 阶段                 | 状态 | 说明                                                                        |
-| ----------- | -------------------- | ---- | --------------------------------------------------------------------------- |
-| Integration | I-P0 身份            | 🟡   | 远程 `core_profiles` ✅；四站 hooks ✅；SSO 跨域待 E2E 验收                 |
-| Integration | I-P1 Portal          | 🟡   | `apps/portal` WIP；Netlify `portal-ken` 已部署                            |
-| Integration | I-P1.5 events        | 🟡   | 远程 `life_events` + Outbox ✅；Planner inbox processor ✅；Zod envelope ✅ |
-| Integration | I-P2 智能            | ⏸️   | 搁置                                                                        |
-| Platform    | C-P0 边界/契约包     | ✅   | `check:lifeos-boundaries` 通过                                              |
-| Platform    | C-P1 Planner/Fitness | ✅   | P1A/B/C 完成                                                                |
-| Platform    | C-P1+ Finance/Music  | 🟡   | Finance enrichment-contract；Music contracts mirror ✅                      |
-| Platform    | C-P2 Wave 3 P1+      | ✅   | MobileMoreSheet / Portal auth / events envelope / Planner inbox             |
+| 周     | 主题                                                    | 状态   |
+| ------ | ------------------------------------------------------- | ------ |
+| Week 1 | I-P0 SSO E2E · I-P1 Portal 配置 · `schema.sql` `core_*` | 🔥 Now |
+| Week 2 | CI boundaries/smoke · Fitness E2E 端口（QA-F0）         | ◆ Now  |
+| Week 3 | G-P1–G-P3 Portal 读 `core_*`                            | ○ Next |
+| Week 4 | M-P1 Music · F-P1 扩展 · G-P5 PWA（六站）               | ○ Next |
+| 按需   | H-P1–H-P3 Home · G-P4 摘要 · I-P1.5b · D-P6 · QA-P2     | ○      |
+| 暂缓   | Finance React 抽象 · I-P2 · Home 云同步（H-P4）         | ✗      |
 
-详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) 完成度总览、**§C-P2 Wave 3 提取候选**与决策矩阵。
+## 六 app + 插件（一览）
 
-验收：`./scripts/verify-life-os-identity-p0.sh` · `./scripts/test-outbox-trigger.sh --smoke` · `npm run check:lifeos-boundaries` · E2E 见 [`E2E_ISSUES.md`](./E2E_ISSUES.md)
+| App / 插件                          | 层级                  | 文档                                                                       |
+| ----------------------------------- | --------------------- | -------------------------------------------------------------------------- |
+| Planner · Fitness · Finance · Music | 生产四站              | hub §六 app 一览                                                           |
+| Portal                              | 启动器                | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p1)                  |
+| Home                                | 实验第六站            | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)                  |
+| Finance OS Sync                     | Chrome 扩展（非 app） | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md#f-p1) · `apps/finance/extension` |
 
-## 计划文档（两条主线）
+## 文档地图（单人团队四层）
 
-| 主线       | 文档                                       | 说明                                                      |
-| ---------- | ------------------------------------------ | --------------------------------------------------------- |
-| **Global** | `[LIFEOS_ROADMAP.md](./LIFEOS_ROADMAP.md)` | 融合了 Integration 与 Platform 的最新架构路线图与阶段规划 |
+| 层                 | 目录 / 文件                                                                    | 回答什么问题                     |
+| ------------------ | ------------------------------------------------------------------------------ | -------------------------------- |
+| **Future + Now**   | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) + [`roadmap/`](./roadmap/README.md) | 做什么、不做什么、发货记录       |
+| **Present · 运维** | [`ops/`](./ops/README.md)                                                      | 怎么部署、连哪库、以谁为准       |
+| **Present · 架构** | [`architecture/`](./architecture/README.md)                                    | 契约、事件、未来 Native 边界     |
+| **Present · 质量** | [`qa/`](./qa/README.md)                                                        | E2E、PWA、IME、截图证据          |
+| **Tooling**        | [`tooling/`](./tooling/README.md)                                              | Cursor / DevTools 集成           |
+| **Past**           | [`archive/`](./archive/README.md)                                              | 已合并的旧规划（勿在新 PR 引用） |
+| **Assets**         | [`assets/`](./assets/README.md)                                                | 品牌 SVG / icon manifest         |
 
-**命名：** `I-*` = Integration；`C-*` = Contracts/Platform。
+```text
+docs/
+├── LIFEOS_ROADMAP.md    ← 每周扫一眼（Now / Next / Shipped / Not doing / 六 app 一览）
+├── MAINTENANCE.md       ← 怎么维护这套文档
+├── roadmap/             ← 分卷：INTEGRATION · GROWTH · PLATFORM · DESIGN · BACKLOG · SHIPPED
+├── ops/                 ← Netlify · Supabase · canonical
+├── architecture/        ← contracts · events-rfc · native-readiness
+├── qa/                  ← e2e · pwa · input-ime
+├── tooling/             ← cursor-page-bridge
+├── assets/              ← life-os-logos
+├── ui-qa-screenshots/   ← QA 脚本输出（证据，非计划真源）
+└── archive/             ← 历史规划
+```
 
-| 参考                                                         | 用途                                         |
-| ------------------------------------------------------------ | -------------------------------------------- |
-| `[LIFEOS_CONTRACTS.md](./LIFEOS_CONTRACTS.md)`               | 契约白名单（源码 `packages/contracts/src/`） |
-| `[LIFEOS_NATIVE_READINESS.md](./LIFEOS_NATIVE_READINESS.md)` | Future iOS 矩阵                              |
-| `[SUPABASE.md](./SUPABASE.md)`                               | 共享 DB 迁移、SQL 运维、平台 migration 状态  |
+## 快速入口
 
-## 运维与开发
+| 我要…                  | 打开                                                            |
+| ---------------------- | --------------------------------------------------------------- |
+| 看当前在做什么         | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §Now · §推荐执行顺序 |
+| 看六 app 状态          | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §六 app 一览         |
+| 部署 / env / 六站 URL  | [`ops/netlify.md`](./ops/netlify.md)                            |
+| Growth 排期与外部对标  | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                      |
+| 跑远程 SQL / migration | [`ops/supabase.md`](./ops/supabase.md)                          |
+| 确认 canonical repo    | [`ops/canonical.md`](./ops/canonical.md)                        |
+| 查 contracts 白名单    | [`architecture/contracts.md`](./architecture/contracts.md)      |
+| 查 life_events 格式    | [`architecture/events-rfc.md`](./architecture/events-rfc.md)    |
+| 调试 iOS PWA           | [`qa/pwa-ios.md`](./qa/pwa-ios.md)                              |
+| 看 E2E 失败记录        | [`qa/e2e-issues.md`](./qa/e2e-issues.md)                        |
 
-| Doc                                                | Purpose                                  |
-| -------------------------------------------------- | ---------------------------------------- |
-| `[CANONICAL.md](./CANONICAL.md)`                   | Source-of-truth repo vs archived legacy  |
-| `[NETLIFY.md](./NETLIFY.md)`                       | 四站 deploy + Portal 计划 + env vars     |
-| `[SUPABASE.md](./SUPABASE.md)`                     | 远程 SQL、平台 migration、Auth redirect  |
-| `[E2E_ISSUES.md](./E2E_ISSUES.md)`                 | 四 App E2E/QA 跑批问题记录（2026-07-08） |
-| `[INPUT_IME.md](./INPUT_IME.md)`                   | CJK IME guard                            |
-| `[CURSOR_PAGE_BRIDGE.md](./CURSOR_PAGE_BRIDGE.md)` | Web State DevTools                       |
-| `[LEGACY_LOCAL.md](./LEGACY_LOCAL.md)`             | Removed sibling repo paths               |
+## 验收命令（hub 级）
 
-## Packages
+```bash
+./scripts/verify-life-os-identity-p0.sh
+./scripts/test-outbox-trigger.sh --smoke
+npm run check:lifeos-boundaries
+npm run test:design-catalog
+```
 
-| Package                                | Doc                                                                        |
-| -------------------------------------- | -------------------------------------------------------------------------- |
-| `@life-os/contracts`                   | `[../packages/contracts/README.md](../packages/contracts/README.md)`       |
-| `@life-os/platform-web`                | `[../packages/platform-web/README.md](../packages/platform-web/README.md)` |
-| `@life-os/sync`                        | `[../packages/sync/README.md](../packages/sync/README.md)`                 |
-| `@life-os/theme`                       | `[../packages/theme/README.md](../packages/theme/README.md)`               |
-| `@life-os/finance-enrichment-contract` | Finance-owned purchase 展示分类（**非**平台包）                            |
+## Packages & Apps
 
-## 共享提取与边界
+| 类型          | 文档位置                                                                 |
+| ------------- | ------------------------------------------------------------------------ |
+| 共享包        | `packages/*/README.md`                                                   |
+| 生产 + Portal | `apps/{planner,fitness,finance,music,portal}/README.md`                  |
+| Home 实验     | `apps/home/` · [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0) |
+| App 专属证据  | `apps/*/docs/`（非全局计划真源）                                         |
 
-- **路线图 + 候选清单：** [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §C-P2（Wave 1–2.5 已完成，Wave 3 待办）
-- **契约白名单：** [`LIFEOS_CONTRACTS.md`](./LIFEOS_CONTRACTS.md)
-- **历史边界细则：** [`archive/LIFEOS_SHARED_BOUNDARIES.md`](./archive/LIFEOS_SHARED_BOUNDARIES.md)
-- **Repo 级脚本（非 npm 包）：** `scripts/pwa/*`（五端 PWA QA）、`scripts/check-lifeos-boundaries.mjs`、`scripts/verify-life-os-identity-p0.sh`
+## 根目录旧文件名
 
-## Apps
-
-- `[../apps/planner/README.md](../apps/planner/README.md)` — contracts 试点 + I-P0
-- `[../apps/fitness/README.md](../apps/fitness/README.md)` — contracts 试点 + I-P0
-- `[../apps/finance/README.md](../apps/finance/README.md)` — I-P0 + Supabase canonical 源（见 [`docs/SUPABASE.md`](./SUPABASE.md)）
-- `[../apps/music/README.md](../apps/music/README.md)` — I-P0；无 contracts
-- `[../apps/portal/README.md](../apps/portal/README.md)` — I-P1 WIP（未部署）
-
-`apps/*/docs`、exports、QA 截图为 app 证据，非计划真源。
-
-## Archive
-
-`[archive/README.md](./archive/README.md)` — 已合并的旧规划文档
+`CANONICAL.md`、`NETLIFY.md`、`SUPABASE.md` 等已迁至子目录，根目录保留 **重定向 stub** 以防旧链接失效。

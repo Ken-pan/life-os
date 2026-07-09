@@ -44,15 +44,16 @@ Any manual `netlify deploy` **must** include `CI=1` and `--filter <workspace>`
 
 ## Layout
 
-- `apps/{planner,fitness,finance,music}` — 生产四站 SvelteKit apps
-- `apps/portal` — I-P1 统一入口（`portal.kenos.space` 已上线；Launcher 等产品收尾中）
-- `apps/home` — H-P0 户型编辑实验（`home.kenos.space` 已 CLI 部署；工坊 `?studio=1`）
+- `apps/{planner,fitness,finance,music}` — 生产四站
+- `apps/portal` — 启动器（`portal.kenos.space`）
+- `apps/home` — 第六 app · 实验（`home.kenos.space`；spatial + 工坊 `?studio=1`）
+- `apps/finance/extension` — Finance OS Sync Chrome 扩展（生产向插件，非 app）
 - `packages/{theme,sync,contracts,platform-web}` — 共享包
 - `docs/README.md` — 文档导航 hub
 - `docs/LIFEOS_ROADMAP.md` — 状态 hub（Now / Next / Shipped）
 - `docs/ops/supabase.md` — 共享 DB 迁移与 `supabase-sql.sh` 运维
 - `docs/ops/canonical.md` — source of truth vs archived repos
-- `docs/ops/netlify.md` — 五站 deploy（含 Portal）
+- `docs/ops/netlify.md` — 六站 deploy（含 Portal、Home 实验）
 
 ## Git / Netlify
 

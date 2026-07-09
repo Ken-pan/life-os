@@ -362,6 +362,16 @@ async function renderSyncHealth(lastSync, inFlight, queueLen, dlqLen) {
     const status = lastSync.ok ? '成功' : '部分失败'
     row.innerHTML = `<span>最近写入 ${fmtTime(lastSync.at)}</span><strong>${status} · ${lastSync.processed ?? 0} 条</strong>`
     el.appendChild(row)
+    if (!lastSync.ok) {
+      const retry = document.createElement('button')
+      retry.type = 'button'
+      retry.className = 'btn ghost sync-health-retry'
+      retry.textContent = '打开 Finance OS 重试'
+      retry.addEventListener('click', () => {
+        chrome.tabs.create({ url: 'https://finance.kenos.space' })
+      })
+      el.appendChild(retry)
+    }
     if (Array.isArray(lastSync.summaries) && lastSync.summaries.length > 0) {
       const detail = document.createElement('div')
       detail.className = 'sync-health-row'

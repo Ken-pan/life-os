@@ -73,10 +73,50 @@ Svelte + Finance React       → theme/brand 数据 + 各栈薄壳；或 ui-reac
 
 三类工作桶（参考 indie roadmap 实践）：
 
-| 桶                 | 例子                                  | 默认优先级           |
-| ------------------ | ------------------------------------- | -------------------- |
-| **Core**           | I-P0 SSO、I-P1.5 事件消费、边界守卫   | 最高——影响多站正确性 |
-| **Growth**         | Portal Launcher 体验、跨 app 任务联动 | 中——用户可感知价值   |
-| **Infrastructure** | D-P6 a11y、schema.sql 同步、CI 补齐   | 按需——防债累积       |
+| 桶                 | 例子                                            | 默认优先级           |
+| ------------------ | ----------------------------------------------- | -------------------- |
+| **Core**           | I-P0 SSO、I-P1.5 事件消费、边界守卫             | 最高——影响多站正确性 |
+| **Growth**         | Portal Launcher、Home 实验入口、跨 app 任务联动 | 中——用户可感知价值   |
+| **Infrastructure** | D-P6 a11y、schema.sql 同步、CI 补齐             | 按需——防债累积       |
 
 新条目入 Backlog 前先标桶 + 是否触发「3+ app 重复」规则。
+
+---
+
+## Growth 候选（2026-07-08 调研入库）
+
+Hub §Next 已排期。细节与外部对标 → [`GROWTH.md`](./GROWTH.md)。
+
+| ID      | 主题                              | ROI | 投入   | 依赖      |
+| ------- | --------------------------------- | --- | ------ | --------- |
+| G-P1    | Portal 继续 → DB `last_opened_at` | 🔥  | 0.5–1d | I-P1 DB   |
+| G-P3    | `default_app` 跳转                | 🔥  | 0.5d   | I-P1 DB   |
+| G-P2    | 待办 / 事件角标                   | ◆   | 1–2d   | I-P0 SSO  |
+| M-P1    | Music `play_events` + reasons     | ◆   | 1–1.5d | —         |
+| F-P1    | Finance 扩展同步反馈              | ◆   | 1–2d   | —         |
+| G-P5    | PWA 安装引导（六站含 Home）       | ○   | 1–2d   | —         |
+| H-P1    | Portal Home 实验卡                | ○   | 0.5–1d | —         |
+| H-P2    | Home `coreIdentity` + SSO         | ○   | 1–2d   | I-P0      |
+| H-P3    | Home redirect + DB `home`         | ○   | 0.5d   | H-P2      |
+| G-P4    | 今日摘要卡片                      | ○   | 3–5d   | G-P1–G-P3 |
+| I-P1.5b | Fitness → Planner 事件            | ○   | 3–5d   | 产品规则  |
+
+Tier B（未进 hub §Next）：G-P6、F-P2、M-P3、P-P1、**H-P4** spatial 云同步、**H-P5** 工坊默认开。
+
+---
+
+## 推荐执行顺序（与 hub 同步 · 2026-07-08 Growth 评审）
+
+| 周       | 项                                                     | 桶           | ROI |
+| -------- | ------------------------------------------------------ | ------------ | --- |
+| **1**    | I-P0 SSO 生产 E2E                                      | Core         | 🔥  |
+| **1**    | I-P1 Supabase redirect + DB `portal`                   | Core         | 🔥  |
+| **1**    | `schema.sql` merge `core_*`                            | Infra        | 🔥  |
+| **2**    | GHA：`check:lifeos-boundaries` + identity/outbox smoke | Infra        | ◆   |
+| **2**    | Fitness E2E 5173 端口（QA-F0）                         | Infra        | ◆   |
+| **3**    | G-P1 + G-P3 + G-P2                                     | Growth       | 🔥◆ |
+| **4**    | M-P1 + F-P1 + G-P5（六站 PWA）                         | Growth       | ◆○  |
+| **按需** | H-P1 Home Launcher 卡                                  | Growth       | ○   |
+| **按需** | H-P2 + H-P3 Home SSO（每天用可并入 Week 1）            | Core         | ○   |
+| **按需** | G-P4 今日摘要；I-P1.5b；D-P6 a11y；QA-P2               | Growth/Infra | ○   |
+| **暂缓** | Finance `ui-react` / nav mirror / i18n                 | Platform     | ✗   |

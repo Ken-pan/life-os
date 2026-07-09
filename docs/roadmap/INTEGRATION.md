@@ -6,7 +6,7 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 
 ## I-P0: 统一身份 {#i-p0}
 
-**目标：** 四生产站 + Portal 共用 `auth.uid()` 与 `core_profiles`，跨 `.kenos.space` SSO。
+**目标：** 四生产站 + Portal + Home（按需）共用 `auth.uid()` 与 `core_profiles`，跨 `.kenos.space` SSO。
 
 | 子项                                       | 状态    | 证据                                      |
 | ------------------------------------------ | ------- | ----------------------------------------- |
@@ -14,7 +14,7 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 | 四站 Auth hooks                            | ✅      | `createCoreIdentityHandler`               |
 | 客户端 profile 兜底                        | ✅      | `packages/sync/src/coreIdentity.js`       |
 | 跨子域 SSO Cookie                          | 🟡      | `setupCrossDomainSSO`；待生产 E2E         |
-| `schema.sql`（`core_*`）                   | ❌      | 仅 migration，未 merge canonical          |
+| `schema.sql`（`core_*`）                   | ✅      | merge 进 canonical（2026-07-08）          |
 | 验收脚本                                   | ✅      | `./scripts/verify-life-os-identity-p0.sh` |
 
 **SSO 下一步：**
@@ -33,15 +33,25 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 | --------------------------- | ---- | -------------------------------------------------- |
 | SvelteKit app               | 🟡   | Launcher + `PortalLauncherCard` + `CommandPalette` |
 | SSO / coreIdentity          | ✅   | `createCoreIdentityHandler('portal')`              |
-| Netlify + DNS               | ✅   | 生产五站；HTTP 200 已验证                          |
+| Netlify + DNS               | ✅   | 四生产站 + Portal + Home；HTTP 200 已验证          |
 | Turbo / GHA build           | ✅   | `npm run build` 含 `portal`                        |
-| Auth redirect               | 🟡   | `*.netlify.app/**` 已覆盖；自定义域建议显式加入    |
+| Auth redirect               | ✅   | `portal.kenos.space/**` 远程已配置（2026-07-08）   |
 | Portal 内登录               | ✅   | `PortalUnauth` + `createLifeOsAuth`                |
-| DB `app_id` / `default_app` | 🟡   | check 仍限四生产 app                               |
+| DB `app_id` / `default_app` | ✅   | constraint 含 `portal`；migration `20260708120000` |
 
-**收尾：** Supabase `portal.kenos.space/**` → 扩 DB constraint 含 `portal` → Launcher/PWA QA
+**Growth（Week 3+ · 已落地 2026-07-08）：** 见 [`GROWTH.md`](./GROWTH.md) G-P1–G-P5（读 `core_*`、角标、PWA）
 
 ---
+
+## Growth 项（Portal 读 `core_*`）{#growth-portal}
+
+详情 → [`GROWTH.md`](./GROWTH.md)
+
+| ID   | 依赖 I-P1 | 摘要                                              |
+| ---- | --------- | ------------------------------------------------- |
+| G-P1 | DB ✅     | `recentApp` 改读 `last_opened_at`，跨设备「继续」 |
+| G-P2 | SSO ✅    | 只读待办 / `life_events` 角标                     |
+| G-P3 | DB ✅     | `default_app` 登录后跳转                          |
 
 ## I-P1.5: 跨应用事件中心 {#i-p15}
 
@@ -62,7 +72,9 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 2. `finance_expected_occurrences` insert → `life_events` 同事务
 3. Planner poll → `parseLifeEvent` → 幂等任务 → `processed`
 
-RFC：[`../LIFEOS_EVENTS_RFC.md`](../LIFEOS_EVENTS_RFC.md)
+**扩展（低优先级 · I-P1.5b）：** Fitness 完练 → Planner 打卡；**须有每天用两站场景**。管道已验收。见 [`GROWTH.md`](./GROWTH.md#i-p15b)。
+
+RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 
 ---
 
@@ -72,16 +84,34 @@ RFC：[`../LIFEOS_EVENTS_RFC.md`](../LIFEOS_EVENTS_RFC.md)
 
 ---
 
-## H-P0: Home OS（实验）{#h-p0}
+## H-P0: Home OS（第六 app · 实验）{#h-p0}
 
-与 Portal 独立。早期 archive 曾 portal/home 二选一，现并存。
+与 Portal **并存**（早期 archive 曾 portal/home 二选一；现 Portal = 启动器，Home = spatial 产品）。
 
-| 子项               | 状态 | 证据                                    |
-| ------------------ | ---- | --------------------------------------- |
-| SvelteKit app      | 🟡   | 户型预览 / 储藏区 / spatial 编辑        |
-| 共享包             | ✅   | contracts + platform-web + sync + theme |
-| design-tokens      | ✅   | `tokens/brands/home.json`               |
-| Turbo build        | ✅   | `npm run build:home`                    |
-| 部署 / Integration | ❌   | 未链 Netlify；未接 `coreIdentity`       |
+| 子项            | 状态 | 证据                                                              |
+| --------------- | ---- | ----------------------------------------------------------------- |
+| SvelteKit app   | 🟡   | 概览 / 平面 `/plan` / 储藏 `/storage` / 设置                      |
+| Spatial 编辑    | 🟡   | `FloorPlanViewer`、墙/门拖拽、undo；工坊 `?studio=1`              |
+| 导出            | ✅   | HTML / MHTML audit 导出                                           |
+| 共享包          | ✅   | contracts + platform-web + sync + theme                           |
+| design-tokens   | ✅   | `tokens/brands/home.json` · `LIFE_OS_SITE_META.home`              |
+| Turbo / build   | ✅   | `npm run build:home` · 含于 `npm run build`                       |
+| Netlify 部署    | 🟡   | `homeos-ken` → `home.kenos.space`；`deploy-all-netlify.sh` 第六站 |
+| Portal Launcher | ❌   | `PORTAL_APPS` 仅四生产站；Home 未露出                             |
+| `coreIdentity`  | ❌   | 无 `createCoreIdentityHandler('home')`                            |
+| SSO / redirect  | ❌   | Supabase 未加 `home.kenos.space/**`；DB check 未含 `home`         |
+| 云同步          | ❌   | `homeos_spatial_v1` localStorage only                             |
+
+### Home 排期（hub §Next / §Parked）
+
+| ID       | 主题                    | ROI | 依赖          | 说明                                        |
+| -------- | ----------------------- | --- | ------------- | ------------------------------------------- |
+| **H-P1** | Portal Launcher 实验卡  | ○   | 无            | 第五格或「实验」区；链 `home.kenos.space`   |
+| **H-P2** | 接 `coreIdentity` + SSO | ○   | I-P0 模式已通 | 与四站同 `createCoreIdentityHandler`        |
+| **H-P3** | redirect + DB `app_id`  | ○   | H-P2          | `home.kenos.space/**`；constraint 扩 `home` |
+| **H-P4** | spatial 云同步          | ⏸️  | H-P2/3        | Supabase 表 + `sync.js`；大投入             |
+| **H-P5** | 工坊默认开              | ⏸️  | —             | 去掉 `?studio=1` gate 或设置项              |
+
+**触发 H-P2/3：** 你开始**每天用 Home** 时，可与 Week 1 I-P0/I-P1 同批做 redirect + identity，不必等 Week 4。
 
 **提交纪律：** 勿将 `apps/home/**` 与 platform/catalog 变更混 PR（除非明确做 Home）。

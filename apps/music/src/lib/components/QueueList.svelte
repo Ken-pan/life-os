@@ -265,12 +265,9 @@
     </div>
   {/if}
 
-  {#if recDebug.enabled && recommendationPreview.length && !compact}
-    <section
-      class="rec-preview"
-      aria-label={t('nowPlaying.recDebugPreviewTitle')}
-    >
-      <h3 class="rec-preview-title">{t('nowPlaying.recDebugPreviewTitle')}</h3>
+  {#if recommendationPreview.length && !compact}
+    <section class="rec-preview" aria-label={t('nowPlaying.recReasonsTitle')}>
+      <h3 class="rec-preview-title">{t('nowPlaying.recReasonsTitle')}</h3>
       <ul class="rec-preview-list">
         {#each recommendationPreview as pick (pick.track.id)}
           <li class="rec-preview-item">

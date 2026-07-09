@@ -2,7 +2,7 @@
 
 `@life-os/theme` 是四端 Web 应用（Planner / Fitness / Finance / Music）的 **Web CSS 与设计 token** 包。
 
-> **边界**：theme 是 **web-only** 层，**不依赖** `@life-os/contracts`。跨 Surface 产品语义见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) 与 [`../../docs/LIFEOS_CONTRACTS.md`](../../docs/LIFEOS_CONTRACTS.md)。Future iOS native 使用 SwiftUI DesignTokens（映射 token 命名，不 import 本包 CSS）。
+> **边界**：theme 是 **web-only** 层，**不依赖** `@life-os/contracts`。跨 Surface 产品语义见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) 与 [`../../docs/architecture/contracts.md`](../../docs/architecture/contracts.md)。Future iOS native 使用 SwiftUI DesignTokens（映射 token 命名，不 import 本包 CSS）。
 
 ## 安装
 
@@ -156,7 +156,7 @@ import {
 4. 四端不再保留 legacy theme 副本
 5. **依赖方向**：`@life-os/theme` **不依赖** `@life-os/contracts` 或 `@life-os/platform-web`。Browser runtime 组合逻辑目标迁入 `platform-web`（P1+）。详见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)
 
-同目录另有 `@life-os/sync`（`packages/sync`）。产品契约见 [`../../docs/LIFEOS_CONTRACTS.md`](../../docs/LIFEOS_CONTRACTS.md)。
+同目录另有 `@life-os/sync`（`packages/sync`）。产品契约见 [`../../docs/architecture/contracts.md`](../../docs/architecture/contracts.md)。
 
 ## Custom Media 速查
 

@@ -231,6 +231,7 @@ export default {
     continueSimilarFailed: '推荐失败，请稍后重试',
     continueSimilarHint: '基于当前曲目推荐相似歌曲',
     recDebugPreviewTitle: '推荐调试（开发）',
+    recReasonsTitle: '推荐依据',
     lyrics: '歌词',
     synced: '同步',
     noLyrics: '暂无歌词',

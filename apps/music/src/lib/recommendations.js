@@ -34,8 +34,15 @@ export function formatRecommendationTags(tags) {
 /** @param {ResolvedPick[]} picks */
 function syncRecommendationPreview(picks) {
   recommendationPreview.length = 0
-  if (!recDebug.enabled || !picks.length) return
-  recommendationPreview.push(...picks)
+  if (!picks.length) return
+  if (recDebug.enabled) {
+    recommendationPreview.push(...picks)
+    return
+  }
+  const surfaced = picks.filter(
+    (p) => (p.reasons?.length ?? 0) > 0 || (p.matchedTags?.length ?? 0) > 0,
+  )
+  if (surfaced.length) recommendationPreview.push(...surfaced.slice(0, 5))
 }
 
 /**

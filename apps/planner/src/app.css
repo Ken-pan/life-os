@@ -44,7 +44,8 @@
   background-image: none;
 }
 
-html, body {
+html,
+body {
   background-image:
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(196, 122, 8, 0.035), transparent 62%);
 }
@@ -196,7 +197,9 @@ html, body {
   box-shadow: var(--shadow-elevated);
 }
 
-.task-row.done { opacity: 0.55; }
+.task-row.done {
+  opacity: 0.55;
+}
 
 .task-row.overdue {
   border-color: color-mix(in srgb, var(--deadline) 35%, var(--border));
@@ -246,11 +249,9 @@ html, body {
   position: absolute;
   inset: -5px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--accent) 50%, transparent),
-    transparent 68%
-  );
+  background: radial-gradient(circle,
+      color-mix(in srgb, var(--accent) 50%, transparent),
+      transparent 68%);
   animation: check-glow 300ms ease-out forwards;
   pointer-events: none;
   z-index: -1;
@@ -260,9 +261,11 @@ html, body {
   0% {
     transform: scale(0.9);
   }
+
   55% {
     transform: scale(1.08);
   }
+
   100% {
     transform: scale(1);
   }
@@ -273,6 +276,7 @@ html, body {
     opacity: 0.75;
     transform: scale(0.85);
   }
+
   to {
     opacity: 0;
     transform: scale(1.45);
@@ -403,11 +407,9 @@ html, body {
 .today-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 88%, #f5a623),
-    var(--accent)
-  );
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--accent) 88%, #f5a623),
+      var(--accent));
   transition: width 280ms var(--ease, ease);
 }
 
@@ -669,11 +671,9 @@ html, body {
 .today-closed-orb-ring--inner {
   inset: 8px;
   border-color: color-mix(in srgb, var(--accent) 42%, transparent);
-  background: radial-gradient(
-    circle at 50% 38%,
-    color-mix(in srgb, var(--accent) 22%, transparent),
-    transparent 72%
-  );
+  background: radial-gradient(circle at 50% 38%,
+      color-mix(in srgb, var(--accent) 22%, transparent),
+      transparent 72%);
 }
 
 .today-closed-orb-core {
@@ -727,11 +727,13 @@ html, body {
 }
 
 @keyframes today-closed-breathe {
+
   0%,
   100% {
     transform: scale(1);
     opacity: 0.88;
   }
+
   50% {
     transform: scale(1.05);
     opacity: 1;
@@ -743,6 +745,7 @@ html, body {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -940,13 +943,16 @@ html, body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .today-closed,
   .today-closed-orb {
     animation: none;
   }
 }
 
-.task-body { min-width: 0; }
+.task-body {
+  min-width: 0;
+}
 
 .task-title {
   font-size: var(--text-base);
@@ -1204,12 +1210,17 @@ html, body {
 }
 
 .settings-block .block-title,
-.set-group .sg-title { margin: 0 0 var(--space-2); }
+.set-group .sg-title {
+  margin: 0 0 var(--space-2);
+}
 
 .settings-block .block-desc,
-.set-group .block-desc { margin-top: 0; }
+.set-group .block-desc {
+  margin-top: 0;
+}
 
 @media (--life-os-compact) {
+
   .task-row,
   .insight-card:not(.insight-ai),
   .insight-ai {
@@ -1218,7 +1229,9 @@ html, body {
 }
 
 @media (--life-os-mobile) {
-  .auth-link { width: 100%; }
+  .auth-link {
+    width: 100%;
+  }
 
   /*
    * 底部 inset 仅由 .wrap 承担；shell main-col padding-bottom 与之叠加会重复留白。
@@ -1295,10 +1308,10 @@ html, body {
     align-items: stretch;
   }
 
-  .settings-row-stack > .btn-primary,
-  .settings-row-stack > .btn-secondary,
-  .settings-row-stack > .btn-danger,
-  .settings-row-stack > .file-input-btn {
+  .settings-row-stack>.btn-primary,
+  .settings-row-stack>.btn-secondary,
+  .settings-row-stack>.btn-danger,
+  .settings-row-stack>.file-input-btn {
     width: 100%;
     justify-content: center;
   }
@@ -1325,9 +1338,7 @@ html, body {
 
   @supports not (width: 100cqw) {
     .main-col {
-      --planner-desktop-span: calc(
-        100vw - var(--sidebar-w, 208px) - var(--page-gutter-desktop, 24px) * 2
-      );
+      --planner-desktop-span: calc(100vw - var(--sidebar-w, 208px) - var(--page-gutter-desktop, 24px) * 2);
     }
   }
 
@@ -1462,12 +1473,12 @@ html, body {
     align-items: start;
   }
 
-  .settings-page--planner > .settings-block:nth-child(3),
-  .settings-page--planner > .settings-block:nth-child(6) {
+  .settings-page--planner>.settings-block:nth-child(3),
+  .settings-page--planner>.settings-block:nth-child(6) {
     grid-column: 1 / -1;
   }
 
-  .settings-page--planner > .settings-block {
+  .settings-page--planner>.settings-block {
     overflow: visible;
   }
 
@@ -1653,7 +1664,9 @@ html, body {
   box-shadow: 0 4px 16px color-mix(in srgb, var(--critical) 8%, transparent);
 }
 
-.banner-close:hover:not(:disabled) { opacity: 1; }
+.banner-close:hover:not(:disabled) {
+  opacity: 1;
+}
 
 .toast {
   backdrop-filter: blur(10px);
@@ -1725,7 +1738,7 @@ html, body {
   padding-bottom: var(--space-1);
 }
 
-.task-group--compact .swipe-item + .swipe-item {
+.task-group--compact .swipe-item+.swipe-item {
   border-top: none;
 }
 
@@ -1750,10 +1763,7 @@ html, body {
 @media (--life-os-mobile) {
   .appbar-inner {
     padding:
-      max(var(--space-4), var(--safe-top-effective))
-      max(var(--content-inline-pad, var(--page-gutter)), var(--safe-right-effective))
-      var(--stack-tight)
-      max(var(--content-inline-pad, var(--page-gutter)), var(--safe-left-effective));
+      max(var(--space-4), var(--safe-top-effective)) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-right-effective)) var(--stack-tight) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-left-effective));
   }
 
   .appbar-brand-name {
@@ -1774,10 +1784,7 @@ html, body {
 
   .wrap {
     padding:
-      var(--stack-tight)
-      max(var(--content-inline-pad, var(--page-gutter)), var(--safe-right-effective))
-      calc(var(--page-block-gap) + var(--mobile-content-inset))
-      max(var(--content-inline-pad, var(--page-gutter)), var(--safe-left-effective));
+      var(--stack-tight) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-right-effective)) calc(var(--page-block-gap) + var(--mobile-content-inset)) max(var(--content-inline-pad, var(--page-gutter)), var(--safe-left-effective));
   }
 
   .main-col[data-mobile-chrome='tabbar'] .wrap {

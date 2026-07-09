@@ -47,10 +47,13 @@ Commit 锚点 → [`SHIPPED.md`](./SHIPPED.md) §Design
 
 ---
 
-## 前瞻：D-P7+
+## 前瞻：D-P6+
 
-| 阶段     | 内容                          | 触发                     |
-| -------- | ----------------------------- | ------------------------ |
-| **D-P8** | Storybook / Chromatic         | 团队协作压力（现阶段否决） |
+| 阶段     | 内容                  | 触发 / 范围                                                                              |
+| -------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| **D-P6** | a11y gates            | **窄范围**：`platform-web` + design-catalog 自动化；**不做**六 app production 全量 audit |
+| **D-P8** | Storybook / Chromatic | 团队协作压力（现阶段否决）                                                               |
 
-**已砍掉：** ~~D-P7 Figma variables mirror~~ — 项目无 Figma；设计真源仅为 `packages/design-tokens` + catalog。
+**已砍掉：** ~~D-P7 Figma variables mirror~~ — 项目无 Figma。
+
+**排期：** D-P6 在 hub **Week 3+**（Core 闭环 + CI 补齐之后）。

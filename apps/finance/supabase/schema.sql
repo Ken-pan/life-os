@@ -720,6 +720,124 @@ revoke execute on function public.enforce_device_limit() from public;
 revoke execute on function public.enforce_device_limit() from anon;
 revoke execute on function public.enforce_device_limit() from authenticated;
 
+-- ===== I-P0: Life OS shared identity (core_profiles + core_user_app_settings) =====
+create table if not exists public.core_profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  display_name text,
+  avatar_url text,
+  timezone text not null default 'America/Los_Angeles',
+  locale text not null default 'en',
+  default_app text check (default_app is null or default_app in ('finance', 'fitness', 'planner', 'music', 'portal')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+comment on table public.core_profiles is 'Life OS 共享用户档案；id = auth.users.id';
+comment on column public.core_profiles.default_app is 'Portal / 启动器默认打开的 App';
+
+alter table public.core_profiles enable row level security;
+
+drop policy if exists "core_profiles_select_own" on public.core_profiles;
+create policy "core_profiles_select_own"
+  on public.core_profiles for select
+  using ((select auth.uid()) = id);
+
+drop policy if exists "core_profiles_insert_own" on public.core_profiles;
+create policy "core_profiles_insert_own"
+  on public.core_profiles for insert
+  with check ((select auth.uid()) = id);
+
+drop policy if exists "core_profiles_update_own" on public.core_profiles;
+create policy "core_profiles_update_own"
+  on public.core_profiles for update
+  using ((select auth.uid()) = id);
+
+drop trigger if exists core_profiles_updated_at on public.core_profiles;
+create trigger core_profiles_updated_at
+  before update on public.core_profiles
+  for each row execute function private.set_updated_at();
+
+create table if not exists public.core_user_app_settings (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  app_id text not null check (app_id in ('finance', 'fitness', 'planner', 'music', 'portal')),
+  settings jsonb not null default '{}'::jsonb,
+  last_opened_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, app_id)
+);
+
+comment on table public.core_user_app_settings is 'Life OS 各 App 用户设置（jsonb）与 last_opened_at';
+
+alter table public.core_user_app_settings enable row level security;
+
+drop policy if exists "core_user_app_settings_select_own" on public.core_user_app_settings;
+create policy "core_user_app_settings_select_own"
+  on public.core_user_app_settings for select
+  using ((select auth.uid()) = user_id);
+
+drop policy if exists "core_user_app_settings_insert_own" on public.core_user_app_settings;
+create policy "core_user_app_settings_insert_own"
+  on public.core_user_app_settings for insert
+  with check ((select auth.uid()) = user_id);
+
+drop policy if exists "core_user_app_settings_update_own" on public.core_user_app_settings;
+create policy "core_user_app_settings_update_own"
+  on public.core_user_app_settings for update
+  using ((select auth.uid()) = user_id);
+
+drop trigger if exists core_user_app_settings_updated_at on public.core_user_app_settings;
+create trigger core_user_app_settings_updated_at
+  before update on public.core_user_app_settings
+  for each row execute function private.set_updated_at();
+
+create or replace function private.core_handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_display_name text;
+  v_app text;
+begin
+  v_display_name := coalesce(
+    new.raw_user_meta_data ->> 'display_name',
+    split_part(new.email, '@', 1)
+  );
+
+  insert into public.core_profiles (id, display_name)
+  values (new.id, v_display_name)
+  on conflict (id) do nothing;
+
+  foreach v_app in array array['finance', 'fitness', 'planner', 'music', 'portal']
+  loop
+    insert into public.core_user_app_settings (user_id, app_id)
+    values (new.id, v_app)
+    on conflict (user_id, app_id) do nothing;
+  end loop;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists core_on_auth_user_created on auth.users;
+create trigger core_on_auth_user_created
+  after insert on auth.users
+  for each row execute function private.core_handle_new_user();
+
+alter table public.core_profiles
+  add column if not exists os_module text not null default 'core';
+alter table public.core_profiles drop constraint if exists core_profiles_os_module_check;
+alter table public.core_profiles
+  add constraint core_profiles_os_module_check check (os_module = 'core');
+
+alter table public.core_user_app_settings
+  add column if not exists os_module text not null default 'core';
+alter table public.core_user_app_settings drop constraint if exists core_user_app_settings_os_module_check;
+alter table public.core_user_app_settings
+  add constraint core_user_app_settings_os_module_check check (os_module = 'core');
+
 -- ===== I-P1.5 Events Layer: life_events table & transactional outbox =====
 create table if not exists public.life_events (
   id uuid primary key default gen_random_uuid(),

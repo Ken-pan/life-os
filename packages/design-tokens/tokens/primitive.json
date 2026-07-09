@@ -32,6 +32,16 @@
         "400": { "$type": "color", "$value": "#ff4d6d" },
         "300": { "$type": "color", "$value": "#ff758f" }
       }
+    },
+    "home": {
+      "slate": {
+        "800": { "$type": "color", "$value": "#2a3540" },
+        "700": { "$type": "color", "$value": "#3a4a58" },
+        "600": { "$type": "color", "$value": "#4a6278" },
+        "500": { "$type": "color", "$value": "#5c758c" },
+        "400": { "$type": "color", "$value": "#7d93a8" },
+        "300": { "$type": "color", "$value": "#9aadc0" }
+      }
     }
   },
   "space": {
@@ -73,11 +83,26 @@
     "3xl": { "$type": "cssValue", "$value": "clamp(20px, 2vw + 12px, 24px)" },
     "4xl": { "$type": "cssValue", "$value": "clamp(22px, 2.5vw + 12px, 28px)" },
     "5xl": { "$type": "cssValue", "$value": "clamp(24px, 3vw + 12px, 32px)" },
-    "display-sm": { "$type": "cssValue", "$value": "clamp(28px, 3.5vw + 12px, 36px)" },
-    "display": { "$type": "cssValue", "$value": "clamp(32px, 4vw + 12px, 44px)" },
-    "display-md": { "$type": "cssValue", "$value": "clamp(34px, 4.5vw + 12px, 48px)" },
-    "display-xl": { "$type": "cssValue", "$value": "clamp(36px, 5vw + 12px, 56px)" },
-    "display-lg": { "$type": "cssValue", "$value": "clamp(44px, 6vw + 12px, 64px)" }
+    "display-sm": {
+      "$type": "cssValue",
+      "$value": "clamp(28px, 3.5vw + 12px, 36px)"
+    },
+    "display": {
+      "$type": "cssValue",
+      "$value": "clamp(32px, 4vw + 12px, 44px)"
+    },
+    "display-md": {
+      "$type": "cssValue",
+      "$value": "clamp(34px, 4.5vw + 12px, 48px)"
+    },
+    "display-xl": {
+      "$type": "cssValue",
+      "$value": "clamp(36px, 5vw + 12px, 56px)"
+    },
+    "display-lg": {
+      "$type": "cssValue",
+      "$value": "clamp(44px, 6vw + 12px, 64px)"
+    }
   },
   "font": {
     "font": {

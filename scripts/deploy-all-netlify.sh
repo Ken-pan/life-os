@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 本地构建并发布 Life OS 五站到 Netlify（需已 netlify login）
+# 本地构建并发布 Life OS 六站到 Netlify（需已 netlify login）
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

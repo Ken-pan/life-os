@@ -87,4 +87,4 @@ npm run qa:mobile-scroll             # production apps
 npm run qa:pwa                       # full automated pipeline
 ```
 
-See `docs/DEBUG_PWA_IOS.md` and `docs/PWA_VIEWPORT_CHECKLIST.md`.
+See `docs/qa/pwa-ios.md` and `docs/qa/pwa-viewport-checklist.md`.

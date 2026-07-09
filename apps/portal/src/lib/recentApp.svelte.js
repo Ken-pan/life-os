@@ -15,9 +15,22 @@ function readLastAppId() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    return PORTAL_APPS.some((app) => app.id === raw) ? /** @type {LauncherAppId} */ (raw) : null
+    return PORTAL_APPS.some((app) => app.id === raw)
+      ? /** @type {LauncherAppId} */ (raw)
+      : null
   } catch {
     return null
+  }
+}
+
+/** @param {LauncherAppId | null} id */
+function persistLastAppId(id) {
+  if (typeof localStorage === 'undefined') return
+  try {
+    if (id) localStorage.setItem(STORAGE_KEY, id)
+    else localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    /* ignore quota */
   }
 }
 
@@ -27,14 +40,22 @@ export function initRecentApp() {
   return () => {}
 }
 
+/**
+ * DB wins over localStorage when available (G-P1).
+ * @param {LauncherAppId | null} dbAppId
+ */
+export function applyRecentAppFromDb(dbAppId) {
+  if (dbAppId && PORTAL_APPS.some((app) => app.id === dbAppId)) {
+    recentAppState.id = dbAppId
+    persistLastAppId(dbAppId)
+    return
+  }
+  recentAppState.id = readLastAppId()
+}
+
 /** @param {LauncherAppId} id */
 export function rememberApp(id) {
-  if (typeof localStorage === 'undefined') return
-  try {
-    localStorage.setItem(STORAGE_KEY, id)
-  } catch {
-    /* ignore quota */
-  }
+  persistLastAppId(id)
   recentAppState.id = id
 }
 

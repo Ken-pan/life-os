@@ -22,7 +22,7 @@ cd apps/planner && npm run dev
 
 ## Netlify 部署
 
-四站生产环境由 **`Ken-pan/life-os` monorepo** 驱动（Deploy Key + 各 app 的 `netlify.toml`）。文档入口见 [docs/README.md](docs/README.md)，部署细节见 [docs/NETLIFY.md](docs/NETLIFY.md)，仓库准绳见 [docs/CANONICAL.md](docs/CANONICAL.md)。
+四站生产环境由 **`Ken-pan/life-os` monorepo** 驱动（Deploy Key + 各 app 的 `netlify.toml`）。文档入口见 [docs/README.md](docs/README.md)，部署见 [docs/ops/netlify.md](docs/ops/netlify.md)，仓库准绳见 [docs/ops/canonical.md](docs/ops/canonical.md)。
 
 Push 到 `master` 后 Netlify 自动构建；PR 触发 GitHub Actions `ci.yml`。
 

@@ -9,12 +9,21 @@
   import PortalUnauth from '$lib/components/PortalUnauth.svelte'
   import { PORTAL_APPS, getLauncherMeta } from '$lib/apps.js'
   import { auth, initAuth, signOut } from '$lib/auth.svelte.js'
-  import { initRecentApp } from '$lib/recentApp.svelte.js'
+  import { applyRecentAppFromDb, initRecentApp } from '$lib/recentApp.svelte.js'
+  import {
+    hydratePortalFromCore,
+    portalPreferences,
+    redirectToDefaultApp,
+    shouldAutoRedirect,
+  } from '$lib/portalPreferences.svelte.js'
   import { initPortalTheme } from '$lib/theme.svelte.js'
 
   let { children } = $props()
 
   let cpOpen = $state(false)
+  let coreHydrated = $state(false)
+  let lastHydratedUserId = $state(/** @type {string | null} */ (null))
+  let hydrateSeq = 0
 
   const cpActions = $derived([
     ...PORTAL_APPS.map((app) => ({
@@ -49,6 +58,33 @@
     cpOpen = true
   }
 
+  $effect(() => {
+    const userId = auth.session?.user?.id
+    if (!auth.ready) return
+    if (!userId) {
+      coreHydrated = false
+      lastHydratedUserId = null
+      return
+    }
+    if (coreHydrated && lastHydratedUserId === userId) return
+
+    const seq = ++hydrateSeq
+    void (async () => {
+      const lastApp = await hydratePortalFromCore(userId)
+      if (seq !== hydrateSeq) return
+      applyRecentAppFromDb(lastApp)
+      coreHydrated = true
+      lastHydratedUserId = userId
+
+      const { defaultApp, skipAutoRedirect } = portalPreferences
+      if (shouldAutoRedirect(defaultApp, skipAutoRedirect)) {
+        redirectToDefaultApp(
+          /** @type {import('$lib/apps.js').LauncherAppId} */ (defaultApp),
+        )
+      }
+    })()
+  })
+
   onMount(() => {
     const cleanupViewport = bindViewportHeight()
     const cleanupAuth = initAuth()
@@ -74,6 +110,7 @@
 {:else}
   <PortalShell
     userEmail={auth.user?.email}
+    pendingEvents={portalPreferences.pendingEvents}
     onSignOut={handleSignOut}
     onOpenCommandPalette={openCommandPalette}
   >

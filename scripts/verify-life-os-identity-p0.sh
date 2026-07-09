@@ -50,7 +50,9 @@ else
 fi
 
 # ── 6. Netlify env (optional — needs netlify login) ──
-if command -v netlify >/dev/null && netlify api listSites >/dev/null 2>&1; then
+if [[ "${VERIFY_SKIP_NETLIFY:-}" == "1" ]]; then
+  info "Skip Netlify env check (VERIFY_SKIP_NETLIFY=1)"
+elif command -v netlify >/dev/null && netlify api listSites >/dev/null 2>&1; then
   declare -A SITE_IDS=(
     [planneros-ken]=82a6cadc-03f9-443c-85f7-26bd4a90f83f
     [fitnessos-ken]=0394cf19-7fb7-4fea-81d7-d4a9d025fab3

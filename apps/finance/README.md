@@ -62,13 +62,13 @@ Monorepo 文档入口见 [`../../docs/README.md`](../../docs/README.md)。Financ
 
 ## Life OS 集成
 
-| 主线                | 状态 | 说明                                                                              |
-| ------------------- | ---- | --------------------------------------------------------------------------------- |
-| **I-P0** 身份       | ✅   | `createCoreIdentityHandler('finance')` + `setupCrossDomainSSO`                    |
-| **I-P1.5** 事件     | 🟡   | Outbox 远程 ✅（`test-outbox-trigger.sh --smoke`）；Planner 消费端仍缺            |
+| 主线                | 状态 | 说明                                                                                                                       |
+| ------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------- |
+| **I-P0** 身份       | ✅   | `createCoreIdentityHandler('finance')` + `setupCrossDomainSSO`                                                             |
+| **I-P1.5** 事件     | 🟡   | Outbox 远程 ✅（`test-outbox-trigger.sh --smoke`）；Planner 消费端仍缺                                                     |
 | **C-P1+** contracts | 🟡   | purchase 展示用 `@life-os/finance-enrichment-contract`（Finance-owned）；跨应用业务事件 Zod 在 `@life-os/contracts/events` |
 
-Supabase 迁移 canonical 源：**本目录** `supabase/`（全 Life OS 共享 public 表亦在此维护）。运维见 [`../../docs/SUPABASE.md`](../../docs/SUPABASE.md)。
+Supabase 迁移 canonical 源：**本目录** `supabase/`（全 Life OS 共享 public 表亦在此维护）。运维见 [`../../docs/ops/supabase.md`](../../docs/ops/supabase.md)。
 
 ```bash
 # I-P0 验收
