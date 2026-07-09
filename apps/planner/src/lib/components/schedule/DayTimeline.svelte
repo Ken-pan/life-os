@@ -363,7 +363,7 @@
   $effect(() => {
     if (scheduleDrag.taskId) return;
     if (ghost?.mode === 'drop') ghost = null;
-    dragOver = false;
+    if (dragOver) dragOver = false;
   });
 
   onMount(() => {

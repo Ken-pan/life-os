@@ -149,7 +149,7 @@ export default {
     resizeTop: 'Drag to adjust start',
     resizeBottom: 'Drag to adjust end',
     desktopHint:
-      'Drag tasks from the left onto the timeline, or drag blocks to adjust',
+      'Drop unscheduled tasks, click or drag empty slots to create; drag blocks to adjust',
     summaryScheduled: 'Scheduled',
     summaryPlanned: 'Planned time',
     summaryUnscheduled: 'Unscheduled',

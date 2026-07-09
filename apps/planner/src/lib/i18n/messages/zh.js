@@ -148,7 +148,7 @@ export default {
     moveBlock: '拖动移动时间块',
     resizeTop: '拖动调整开始时间',
     resizeBottom: '拖动调整结束时间',
-    desktopHint: '将左侧任务拖入时间轴，或拖动时间块调整安排',
+    desktopHint: '拖入待排程、点击或拖选空白格创建；拖动时间块可调整',
     summaryScheduled: '已安排',
     summaryPlanned: '计划时长',
     summaryUnscheduled: '待排程',
