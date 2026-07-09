@@ -45,7 +45,6 @@
   let canvasEl = $state();
 
   let dragOver = $state(false);
-  let dragEnterCount = 0;
   let desktopDnD = $state(false);
   let nowMs = $state(Date.now());
   /** @type {string | null} */
@@ -110,7 +109,6 @@
   }
 
   function resetDragTarget() {
-    dragEnterCount = 0;
     dragOver = false;
     clearDropGhost();
   }
@@ -172,7 +170,6 @@
     if (!desktopDnD) return;
     if (!e.dataTransfer?.types.includes('application/x-planner-task-id')) return;
     e.preventDefault();
-    dragEnterCount += 1;
     dragOver = true;
   }
 
@@ -190,12 +187,10 @@
   function onDragLeave(e) {
     if (!desktopDnD) return;
     const related = /** @type {Node | null} */ (e.relatedTarget);
+    // Ignore leave events that stay inside the canvas (child transitions).
     if (related && canvasEl?.contains(related)) return;
-    dragEnterCount = Math.max(0, dragEnterCount - 1);
-    if (dragEnterCount === 0) {
-      dragOver = false;
-      clearDropGhost();
-    }
+    dragOver = false;
+    clearDropGhost();
   }
 
   /** @param {DragEvent} e */
@@ -366,10 +361,9 @@
   });
 
   $effect(() => {
-    if (!scheduleDrag.taskId) {
-      clearDropGhost();
-      if (dragEnterCount === 0) dragOver = false;
-    }
+    if (scheduleDrag.taskId) return;
+    if (ghost?.mode === 'drop') ghost = null;
+    dragOver = false;
   });
 
   onMount(() => {
@@ -397,7 +391,7 @@
   <div class="day-timeline-scroll" bind:this={scrollEl}>
     <div class="day-timeline" style:--timeline-height="{height}px">
       <div class="day-timeline-ruler" aria-hidden="true">
-        {#each hours as hour}
+        {#each hours as hour (hour)}
           <div class="day-timeline-hour" style:height="{HOUR_HEIGHT_PX}px">
             <span class="day-timeline-hour-label">{formatHour(hour)}</span>
           </div>
@@ -428,7 +422,7 @@
           onclick={onHitboxClick}
         ></button>
         <div class="day-timeline-grid" aria-hidden="true">
-          {#each hours as hour}
+          {#each hours as hour (hour)}
             <div class="day-timeline-grid-line" style:height="{HOUR_HEIGHT_PX}px"></div>
           {/each}
         </div>
@@ -448,7 +442,8 @@
             class:day-timeline-ghost--conflict={Boolean(ghost.conflict)}
             style:top="{ghost.top}px"
             style:height="{ghost.height}px"
-            aria-hidden="true"
+            role="status"
+            aria-label={t('schedule.slotGhost')}
           >
             <div class="day-timeline-ghost-body">
               {#if ghost.title}

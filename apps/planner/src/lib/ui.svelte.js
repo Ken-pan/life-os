@@ -2,6 +2,7 @@ import { S } from './state.svelte.js'
 import { SYSTEM_LIST_INBOX } from './types.js'
 import { createToastStore } from '@life-os/platform-web/svelte/toast-store'
 import { updateTask } from './domain/tasks.js'
+import { DEFAULT_SLOT_DURATION_MINUTES } from './domain/schedule.js'
 
 /** @param {import('./types.js').Task} task */
 function cloneTask(task) {
@@ -132,7 +133,7 @@ export const scheduleSlot = $state({
   open: false,
   dateKey: /** @type {string | null} */ (null),
   start: /** @type {string | null} */ (null),
-  durationMinutes: 30,
+  durationMinutes: DEFAULT_SLOT_DURATION_MINUTES,
 })
 
 /**
@@ -140,7 +141,11 @@ export const scheduleSlot = $state({
  * @param {string} start
  * @param {number} [durationMinutes]
  */
-export function openScheduleSlot(dateKey, start, durationMinutes = 30) {
+export function openScheduleSlot(
+  dateKey,
+  start,
+  durationMinutes = DEFAULT_SLOT_DURATION_MINUTES,
+) {
   scheduleSlot.dateKey = dateKey
   scheduleSlot.start = start
   scheduleSlot.durationMinutes = durationMinutes
@@ -151,7 +156,7 @@ export function closeScheduleSlot() {
   scheduleSlot.open = false
   scheduleSlot.dateKey = null
   scheduleSlot.start = null
-  scheduleSlot.durationMinutes = 30
+  scheduleSlot.durationMinutes = DEFAULT_SLOT_DURATION_MINUTES
   if (typeof document !== 'undefined') {
     document.documentElement.classList.remove('planner-schedule-modal-open')
   }

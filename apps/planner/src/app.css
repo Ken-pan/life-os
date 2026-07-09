@@ -1257,7 +1257,7 @@ body {
     padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-tabbar) + var(--space-2));
   }
 
-  .today-layout--timeline .today-progress-actions {
+  .calendar-page .today-progress-actions {
     display: none;
   }
 
@@ -1346,25 +1346,21 @@ body {
     padding-right: 0;
   }
 
-  .today-layout--timeline {
-    max-width: var(--planner-desktop-span);
-  }
-
-  .today-layout--timeline .day-schedule-panel,
-  .today-layout--timeline .schedule-layout {
+  .calendar-page .day-schedule-panel,
+  .calendar-page .schedule-layout {
     width: 100%;
   }
 
-  .today-layout--timeline .schedule-layout {
+  .calendar-page .schedule-layout {
     grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
     gap: var(--space-5);
   }
 
-  .today-layout--timeline .day-timeline-shell {
+  .calendar-page .day-timeline-shell {
     min-width: 0;
   }
 
-  .today-layout--timeline .day-timeline-scroll {
+  .calendar-page .day-timeline-scroll {
     max-height: min(78vh, 1040px);
   }
 
@@ -2012,7 +2008,7 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 2;
+  z-index: 3;
   box-sizing: border-box;
   pointer-events: none;
   border-radius: var(--radius-sm, 6px);
@@ -2777,16 +2773,16 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     grid-template-columns: 1fr;
   }
 
-  .today-layout--timeline .schedule-summary {
+  .calendar-page .schedule-summary {
     margin-bottom: var(--space-2);
     padding: var(--space-2) var(--space-2-5);
   }
 
-  .today-layout--timeline .schedule-summary-value {
+  .calendar-page .schedule-summary-value {
     font-size: var(--text-sm);
   }
 
-  .today-layout--timeline .day-timeline-scroll {
+  .calendar-page .day-timeline-scroll {
     max-height: min(64vh, 680px);
     padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
   }
