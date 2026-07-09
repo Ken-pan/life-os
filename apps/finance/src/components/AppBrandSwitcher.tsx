@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   getLifeOsBrand,
   getLifeOsBrandMarkSize,
@@ -8,7 +8,6 @@ import {
   getLifeOsAppBrandMark,
   getLifeOsAppOrigin,
   LIFE_OS_SWITCHER_APPS,
-  filterLifeOsSwitcherApps,
   findSwitcherTypeAheadIndex,
 } from '@life-os/theme'
 import { useThemePreference } from '../hooks/useThemePreference'
@@ -78,33 +77,18 @@ export function AppBrandSwitcher({
   const brand = getLifeOsBrand(appId)
   const size = getLifeOsBrandMarkSize(appId, 'sidebar')
   const rootRef = useRef<HTMLDivElement>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const listRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const typeAheadRef = useRef('')
   const typeAheadTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   )
 
   const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
 
-  const filteredApps = useMemo(
-    () => filterLifeOsSwitcherApps(LIFE_OS_SWITCHER_APPS, query),
-    [query],
-  )
-
   const resetMenuState = () => {
-    setQuery('')
     typeAheadRef.current = ''
     if (typeAheadTimerRef.current) clearTimeout(typeAheadTimerRef.current)
-  }
-
-  const scrollToSelected = (index: number) => {
-    requestAnimationFrame(() => {
-      const items = listRef.current?.querySelectorAll('.brand-switcher-item')
-      items?.[index]?.scrollIntoView({ block: 'nearest' })
-    })
   }
 
   const openMenu = () => {
@@ -113,10 +97,7 @@ export function AppBrandSwitcher({
     )
     setSelectedIndex(currentIndex >= 0 ? currentIndex : 0)
     setOpen(true)
-    requestAnimationFrame(() => {
-      searchInputRef.current?.focus()
-      scrollToSelected(currentIndex >= 0 ? currentIndex : 0)
-    })
+    requestAnimationFrame(() => menuRef.current?.focus())
   }
 
   const closeMenu = () => {
@@ -133,7 +114,7 @@ export function AppBrandSwitcher({
   }
 
   const activateSelected = () => {
-    const entry = filteredApps[selectedIndex]
+    const entry = LIFE_OS_SWITCHER_APPS[selectedIndex]
     if (entry) navigateToApp(entry.id)
   }
 
@@ -145,18 +126,10 @@ export function AppBrandSwitcher({
     }, 700)
 
     const matchIndex = findSwitcherTypeAheadIndex(
-      filteredApps,
+      LIFE_OS_SWITCHER_APPS,
       typeAheadRef.current,
     )
-    if (matchIndex >= 0) {
-      setSelectedIndex(matchIndex)
-      scrollToSelected(matchIndex)
-      return
-    }
-
-    setQuery(typeAheadRef.current)
-    setSelectedIndex(0)
-    scrollToSelected(0)
+    if (matchIndex >= 0) setSelectedIndex(matchIndex)
   }
 
   useEffect(() => {
@@ -177,49 +150,29 @@ export function AppBrandSwitcher({
 
   const handleMenuKeydown = (event: React.KeyboardEvent) => {
     const { key } = event
-    const count = filteredApps.length
+    const count = LIFE_OS_SWITCHER_APPS.length
 
     if (key === 'ArrowDown') {
       event.preventDefault()
-      if (!count) return
-      if (event.target === searchInputRef.current) {
-        setSelectedIndex(0)
-        scrollToSelected(0)
-        return
-      }
-      setSelectedIndex((index) => {
-        const next = (index + 1) % count
-        scrollToSelected(next)
-        return next
-      })
+      setSelectedIndex((index) => (index + 1) % count)
       return
     }
 
     if (key === 'ArrowUp') {
       event.preventDefault()
-      if (!count) return
-      setSelectedIndex((index) => {
-        const next = (index - 1 + count) % count
-        scrollToSelected(next)
-        return next
-      })
+      setSelectedIndex((index) => (index - 1 + count) % count)
       return
     }
 
     if (key === 'Home') {
       event.preventDefault()
-      if (!count) return
       setSelectedIndex(0)
-      scrollToSelected(0)
       return
     }
 
     if (key === 'End') {
       event.preventDefault()
-      if (!count) return
-      const last = count - 1
-      setSelectedIndex(last)
-      scrollToSelected(last)
+      setSelectedIndex(count - 1)
       return
     }
 
@@ -235,13 +188,7 @@ export function AppBrandSwitcher({
       return
     }
 
-    if (
-      key.length === 1 &&
-      !event.metaKey &&
-      !event.ctrlKey &&
-      !event.altKey &&
-      event.target !== searchInputRef.current
-    ) {
+    if (key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
       event.preventDefault()
       bumpTypeAhead(key)
     }
@@ -281,81 +228,60 @@ export function AppBrandSwitcher({
 
       {open ? (
         <div
+          ref={menuRef}
           className="brand-switcher-menu"
           role="menu"
+          tabIndex={-1}
           aria-label="切换 Life OS 应用"
           onKeyDown={handleMenuKeydown}
         >
-          <div className="brand-switcher-search-wrap">
-            <input
-              ref={searchInputRef}
-              type="search"
-              className="brand-switcher-search"
-              placeholder="搜索应用…"
-              aria-label="搜索 Life OS 应用"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value)
-                setSelectedIndex(0)
-              }}
-              autoComplete="off"
-              spellCheck={false}
-            />
-          </div>
-
-          <div className="brand-switcher-list" role="none" ref={listRef}>
-            {filteredApps.length === 0 ? (
-              <p className="brand-switcher-empty">没有匹配的应用</p>
-            ) : (
-              filteredApps.map((entry, index) => {
-                const itemBrand = getLifeOsBrand(entry.id)
-                const itemMark = getLifeOsAppBrandMark(entry.id)
-                const isCurrent = entry.id === appId
-                const isActive = index === selectedIndex
-                return (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    className={`brand-switcher-item${isCurrent ? ' brand-switcher-item--current' : ''}${isActive ? ' brand-switcher-item--active' : ''}`}
-                    role="menuitem"
-                    aria-current={isCurrent ? 'true' : undefined}
-                    onClick={() => navigateToApp(entry.id)}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                  >
-                    <BrandMarkImg
-                      size={28}
-                      className="brand-switcher-item-mark"
-                      lightSrc={itemMark.light}
-                      darkSrc={itemMark.dark}
-                      lightSrcSet={itemMark.lightSrcSet}
-                      darkSrcSet={itemMark.darkSrcSet}
-                    />
-                    <span className="brand-switcher-item-copy">
-                      <span className="brand-switcher-item-name">
-                        <span className="brand-name-base">
-                          {itemBrand.wordmarkBase}
-                        </span>
-                        <span className="brand-name-accent">
-                          {itemBrand.wordmarkAccent}
-                        </span>
-                      </span>
-                      {entry.experimental ? (
-                        <span className="brand-switcher-item-badge">实验</span>
-                      ) : null}
+          {LIFE_OS_SWITCHER_APPS.map((entry, index) => {
+            const itemBrand = getLifeOsBrand(entry.id)
+            const itemMark = getLifeOsAppBrandMark(entry.id)
+            const isCurrent = entry.id === appId
+            const isActive = index === selectedIndex
+            return (
+              <button
+                key={entry.id}
+                type="button"
+                className={`brand-switcher-item${isCurrent ? ' brand-switcher-item--current' : ''}${isActive ? ' brand-switcher-item--active' : ''}`}
+                role="menuitem"
+                aria-current={isCurrent ? 'true' : undefined}
+                onClick={() => navigateToApp(entry.id)}
+                onMouseEnter={() => setSelectedIndex(index)}
+              >
+                <BrandMarkImg
+                  size={28}
+                  className="brand-switcher-item-mark"
+                  lightSrc={itemMark.light}
+                  darkSrc={itemMark.dark}
+                  lightSrcSet={itemMark.lightSrcSet}
+                  darkSrcSet={itemMark.darkSrcSet}
+                />
+                <span className="brand-switcher-item-copy">
+                  <span className="brand-switcher-item-name">
+                    <span className="brand-name-base">
+                      {itemBrand.wordmarkBase}
                     </span>
-                    {isCurrent ? (
-                      <span
-                        className="brand-switcher-item-check"
-                        aria-hidden="true"
-                      >
-                        ✓
-                      </span>
-                    ) : null}
-                  </button>
-                )
-              })
-            )}
-          </div>
+                    <span className="brand-name-accent">
+                      {itemBrand.wordmarkAccent}
+                    </span>
+                  </span>
+                  {entry.experimental ? (
+                    <span className="brand-switcher-item-badge">实验</span>
+                  ) : null}
+                </span>
+                {isCurrent ? (
+                  <span
+                    className="brand-switcher-item-check"
+                    aria-hidden="true"
+                  >
+                    ✓
+                  </span>
+                ) : null}
+              </button>
+            )
+          })}
         </div>
       ) : null}
     </div>
