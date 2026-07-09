@@ -2,12 +2,45 @@
   import SettingsSection from '@life-os/platform-web/svelte/settings/section'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row'
-  import { S, setTheme, reset508Layout, exportLayoutJson, importLayoutJson } from '$lib/state.svelte.js'
+  import {
+    S,
+    setTheme,
+    reset508Layout,
+    exportLayoutJson,
+    importLayoutJson,
+    isWallGraphMode,
+    activateWallGraphMode,
+    revertToParametric508,
+    reconvertGraphOpenings,
+  } from '$lib/state.svelte.js'
   import { getActiveProject } from '$lib/state.svelte.js'
   import { auth, signIn, signUp, signOut, authErrorMessage } from '$lib/auth.svelte.js'
   import { isSupabaseConfigured } from '$lib/supabase.js'
 
   const project = $derived(getActiveProject())
+  const wallGraphMode = $derived(isWallGraphMode())
+
+  function onConvertToWallGraph() {
+    if (
+      !confirm(
+        '将当前 508 户型转换为墙图模式。转换后可自由建删墙，但墙图改动不会回写 508 参数。',
+      )
+    ) {
+      return
+    }
+    activateWallGraphMode()
+  }
+
+  function onRevertTo508() {
+    if (
+      !confirm(
+        '返回 508 参数模式将丢弃墙图编辑。墙图上的改动不会回写到 508 参数，确定继续？',
+      )
+    ) {
+      return
+    }
+    revertToParametric508()
+  }
 
   let authMode = $state('signin')
   let email = $state('')
@@ -130,6 +163,39 @@
       import('$lib/state.svelte.js').then((m) => m.persist())
     }}
   />
+</SettingsSection>
+
+<SettingsSection title="户型编辑模式">
+  <SettingsRow label="当前模式">
+    <span class="settings-value">{wallGraphMode ? '墙图' : '508 参数'}</span>
+  </SettingsRow>
+  {#if !wallGraphMode}
+    <SettingsRow label="转换">
+      <button type="button" class="settings-btn settings-btn-primary" onclick={onConvertToWallGraph}>
+        从当前户型生成墙图（一次性）
+      </button>
+    </SettingsRow>
+    <p class="settings-hint">转换后可自由建删墙；508 参数仍保留作「返回 508」的安全气囊。</p>
+  {:else}
+    <SettingsRow label="墙图统计">
+      <span class="settings-value">
+        顶点 {project.wallGraph?.vertices.length ?? 0} · 墙段
+        {project.wallGraph?.edges.length ?? 0} · 门窗
+        {project.graphOpenings?.length ?? 0}
+      </span>
+    </SettingsRow>
+    <SettingsRow label="恢复">
+      <button type="button" class="settings-btn" onclick={onRevertTo508}>
+        返回 508 参数模式
+      </button>
+    </SettingsRow>
+    <p class="settings-hint">墙图改动不会回写 508 参数；返回后将丢弃墙图编辑。</p>
+    <SettingsRow label="门窗">
+      <button type="button" class="settings-btn" onclick={reconvertGraphOpenings}>
+        重新识别门窗
+      </button>
+    </SettingsRow>
+  {/if}
 </SettingsSection>
 
 <SettingsSection title="当前户型">

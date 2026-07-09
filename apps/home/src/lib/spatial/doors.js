@@ -54,3 +54,42 @@ export function slidingHorizontal(opts) {
   const { x1, x2, y } = opts
   return `M ${x1} ${y} L ${x2} ${y}`
 }
+
+/**
+ * Double bifold closet door on a vertical wall segment.
+ * Panels fold into the room on the "left" side (smaller x).
+ * @param {{ x: number, y1: number, y2: number, depth?: number }} opts
+ */
+export function bifoldVerticalLeft(opts) {
+  const { x, y1, y2, depth = 26 } = opts
+  const mid = (y1 + y2) / 2
+  const h = y2 - y1
+  const q = h * 0.22
+  return [
+    `M ${x} ${y1} L ${x - depth} ${y1 + q} L ${x} ${mid - 4}`,
+    `M ${x} ${y2} L ${x - depth} ${y2 - q} L ${x} ${mid + 4}`,
+    `M ${x} ${mid - 4} L ${x - depth * 0.55} ${mid} L ${x} ${mid + 4}`,
+  ].join(' ')
+}
+
+/**
+ * Double bifold on vertical wall — panels fold toward +x room.
+ * @param {{ x: number, y1: number, y2: number, depth?: number }} opts
+ */
+export function bifoldVerticalRight(opts) {
+  const { x, y1, y2, depth = 26 } = opts
+  const mid = (y1 + y2) / 2
+  const h = y2 - y1
+  const q = h * 0.22
+  return [
+    `M ${x} ${y1} L ${x + depth} ${y1 + q} L ${x} ${mid - 4}`,
+    `M ${x} ${y2} L ${x + depth} ${y2 - q} L ${x} ${mid + 4}`,
+    `M ${x} ${mid - 4} L ${x + depth * 0.55} ${mid} L ${x} ${mid + 4}`,
+  ].join(' ')
+}
+
+/** Sliding door on vertical wall */
+export function slidingVertical(opts) {
+  const { x, y1, y2 } = opts
+  return `M ${x} ${y1} L ${x} ${y2}`
+}

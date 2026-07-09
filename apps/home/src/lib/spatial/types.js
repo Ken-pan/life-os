@@ -157,6 +157,40 @@
  */
 
 /**
+ * @typedef {object} GraphOpening
+ * @property {string} id
+ * @property {string} edgeId
+ * @property {number} offsetIn 沿边起点偏移（英寸）
+ * @property {number} spanIn 开口宽度（英寸）
+ * @property {'door' | 'window'} type
+ * @property {'swing' | 'sliding' | 'bifold'} [style]
+ * @property {'in' | 'out'} [swing]
+ * @property {boolean} [hidden]
+ */
+
+/**
+ * @typedef {object} SpatialZone
+ * @property {string} id
+ * @property {string} nameZh
+ * @property {string} [color]
+ * @property {Point[]} polygon
+ * @property {boolean} [stale]
+ */
+
+/**
+ * @typedef {object} SpatialPlacement
+ * @property {string} id
+ * @property {string} kind
+ * @property {string} label
+ * @property {number} x
+ * @property {number} y
+ * @property {number} w
+ * @property {number} h
+ * @property {0 | 90 | 180 | 270} rotation
+ * @property {string} [zoneId]
+ */
+
+/**
  * @typedef {object} SpatialProject
  * @property {number} schemaVersion
  * @property {SpatialMeta} meta
@@ -172,6 +206,9 @@
  * @property {Layout508Config} [layoutConfig]
  * @property {'parametric508' | 'wallGraph'} [layoutMode]
  * @property {WallGraph} [wallGraph]
+ * @property {GraphOpening[]} [graphOpenings]
+ * @property {SpatialZone[]} [zones]
+ * @property {SpatialPlacement[]} [placements]
  */
 
 /**
@@ -197,4 +234,4 @@
  * @property {WallGraphEdge[]} edges
  */
 
-export const SPATIAL_SCHEMA_VERSION = 2
+export const SPATIAL_SCHEMA_VERSION = 3

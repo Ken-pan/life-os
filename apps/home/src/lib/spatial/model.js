@@ -1,13 +1,17 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
 import { build508Project, default508Config, merge508Config } from './layout-508.js'
+import { buildFromWallGraph } from './wall-graph.js'
 
 /**
- * Rebuild derived geometry from layoutConfig.
+ * Rebuild derived geometry from layoutConfig or wallGraph source of truth.
  * @param {SpatialProject} project
  * @returns {SpatialProject}
  */
 export function hydrateProject(project) {
+  if (project.layoutMode === 'wallGraph' && project.wallGraph) {
+    return buildFromWallGraph(project.wallGraph, project)
+  }
   if (!project.layoutConfig) {
     const built = build508Project(default508Config(), project)
     return {

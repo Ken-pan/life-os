@@ -59,6 +59,11 @@
     0 10px 28px -10px rgba(0, 0, 0, 0.5);
 }
 
+[data-theme='dark'] .plan-stage {
+  background: color-mix(in srgb, var(--bg) 88%, #0a0c0e);
+  border-radius: 12px;
+}
+
 /* Home domain: spatial audit chips & section headers */
 .home-eyebrow {
   font-family: var(--mono);

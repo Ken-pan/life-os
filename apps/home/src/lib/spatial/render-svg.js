@@ -1,5 +1,6 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 import { formatFtIn } from './dimensions.js'
+import { graphOpeningHitRect } from './graph-openings.js'
 import {
   isEditableWall,
   OPENING_EDIT_BINDINGS,
@@ -37,6 +38,7 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   touchScale?: number,
  *   measure?: { a: { x: number, y: number } | null, b: { x: number, y: number } | null },
  *   graphEditMode?: boolean,
+ *   graphTool?: 'wallAdd' | 'remove' | 'select' | 'opening',
  *   selectedEdge?: string,
  *   wallChainFrom?: { x: number, y: number } | null,
  *   wallChainHover?: { x: number, y: number } | null,
@@ -131,6 +133,13 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .graph-vert{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.5}
  .graph-chain{stroke:#1d6b42;stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
  .graph-chain-vert{fill:#1d6b42;stroke:#fff;stroke-width:1.5;pointer-events:none}
+ .graph-vertex-hit{fill:rgba(29,107,66,.85);stroke:#fff;stroke-width:1.5;cursor:grab;pointer-events:all}
+ .graph-vertex-hit:hover{fill:#1d6b42}
+ .graph-open-hit{fill:rgba(29,107,66,.08);stroke:rgba(29,107,66,.35);stroke-width:2;cursor:grab;pointer-events:all}
+ .graph-open-hit:hover{fill:rgba(29,107,66,.16)}
+ .graph-open-on{fill:rgba(29,107,66,.18);stroke:#1d6b42;stroke-width:2.5}
+ .graph-open-grip{fill:#1d6b42;stroke:#fff;stroke-width:1.2;pointer-events:none}
+ .graph-open-grip-hit{fill:transparent;stroke:none;cursor:ew-resize;pointer-events:all}
 </style>`)
 
   parts.push('<g class="grid">')
@@ -276,16 +285,27 @@ export function renderFloorPlanSvg(project, opts = {}) {
 
   if (opts.graphEditMode) {
     parts.push('<g class="edit-layer graph-layer" aria-label="墙图编辑">')
-    for (const wall of project.walls) {
-      if (wall.kind !== 'wall') continue
-      const on = opts.selectedEdge === wall.id
-      const binding = resolveWallBinding(wall.id)
-      const edgeTitle = binding
-        ? `墙段 · ${binding.label} — 点击选中`
-        : '墙段 — 点击选中'
-      parts.push(
-        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${wall.id}" data-plan-tip="${esc(edgeTitle)}"><title>${esc(edgeTitle)}</title></line>`,
+    if (project.wallGraph) {
+      const verts = Object.fromEntries(
+        project.wallGraph.vertices.map((v) => [v.id, v]),
       )
+      for (const edge of project.wallGraph.edges) {
+        const a = verts[edge.a]
+        const b = verts[edge.b]
+        if (!a || !b) continue
+        const on = opts.selectedEdge === edge.id
+        parts.push(
+          `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${edge.id}" data-plan-tip="墙段 — 点击选中"><title>墙段 — 点击选中</title></line>`,
+        )
+      }
+    } else {
+      for (const wall of project.walls) {
+        if (wall.kind !== 'wall') continue
+        const on = opts.selectedEdge === wall.id
+        parts.push(
+          `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${wall.id}" data-plan-tip="墙段 — 点击选中"><title>墙段 — 点击选中</title></line>`,
+        )
+      }
     }
     if (opts.wallChainFrom) {
       parts.push(
@@ -296,6 +316,36 @@ export function renderFloorPlanSvg(project, opts = {}) {
           `<line x1="${opts.wallChainFrom.x}" y1="${opts.wallChainFrom.y}" x2="${opts.wallChainHover.x}" y2="${opts.wallChainHover.y}" class="graph-chain"/>`,
         )
       }
+    }
+    if (opts.graphTool === 'select' && project.wallGraph) {
+      const vr = 6 * touchScale
+      for (const v of project.wallGraph.vertices) {
+        parts.push(
+          `<circle cx="${v.x}" cy="${v.y}" r="${vr}" class="graph-vertex-hit" data-vertex-id="${v.id}"><title>拖曳调整顶点</title></circle>`,
+        )
+      }
+    }
+    if (
+      project.wallGraph &&
+      (opts.graphTool === 'select' || opts.graphTool === 'opening') &&
+      project.graphOpenings?.length
+    ) {
+      parts.push('<g class="graph-openings-hit" aria-label="墙图门窗">')
+      for (const go of project.graphOpenings) {
+        if (go.hidden) continue
+        const hit = graphOpeningHitRect(project.wallGraph, go)
+        const on = opts.selectedOpening === go.id
+        const label = go.type === 'window' ? '窗' : '门'
+        const title = `${label} · 拖曳沿墙移动 · 端点改宽`
+        parts.push(
+          `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="graph-open-hit${on ? ' graph-open-on' : ''}" data-graph-opening-id="${go.id}" data-plan-tip="${esc(title)}"><title>${esc(title)}</title></rect>`,
+        )
+        if (on && opts.graphTool === 'select') {
+          appendGraphOpeningGrip(parts, go.id, hit.p0, 'start', touchScale)
+          appendGraphOpeningGrip(parts, go.id, hit.p1, 'end', touchScale)
+        }
+      }
+      parts.push('</g>')
     }
     parts.push('</g>')
   } else if (opts.editMode) {
@@ -502,6 +552,19 @@ function renderGraphicScale(parts, height, pxPerFt, compact) {
       `<text x="${x0 + seg}" y="${y + 28}" text-anchor="middle" class="tiny">比例尺 · ${pxPerFt} px/ft · 北向上</text>`,
     )
   }
+}
+
+/** @param {string[]} parts @param {string} openingId @param {{ x: number, y: number }} pt @param {'start' | 'end'} grip @param {number} [touchScale] */
+function appendGraphOpeningGrip(parts, openingId, pt, grip, touchScale = 1) {
+  const scale = Math.max(1, touchScale)
+  const hitR = (RESIZE_GRIP_HIT * scale) / 2
+  const visR = 5
+  parts.push(
+    `<circle cx="${pt.x}" cy="${pt.y}" r="${hitR}" class="graph-open-grip-hit" data-graph-opening-id="${openingId}" data-graph-opening-grip="${grip}" aria-label="拖曳调整开口宽度"><title>拖曳改宽</title></circle>`,
+  )
+  parts.push(
+    `<circle cx="${pt.x}" cy="${pt.y}" r="${visR}" class="graph-open-grip" aria-hidden="true"/>`,
+  )
 }
 
 /** @param {string[]} parts @param {string} openingId @param {{ x: number, y: number, w: number, h: number }} hit @param {number} [touchScale] */

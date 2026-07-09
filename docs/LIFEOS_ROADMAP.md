@@ -14,7 +14,7 @@ priority_model: 2026-07-09-per-app-roadmaps
 > 详细阶段史、Wave 完成记录、提取决策矩阵 → [`roadmap/`](./roadmap/README.md)
 > **六 app 产品排期** → [`roadmap/apps/`](./roadmap/apps/README.md)
 >
-> **优先级依据（2026-07-09）：** 潜力研判见 [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) — **F-P3 信任锚点** → **G-P4b-M / M-P2** → **CI 接线** → 条件跨站 FT-P1。
+> **优先级依据（2026-07-09）：** Phase 5 Portal ✅；下一档 **M-P5 行为分**（已可自包含验收）· **G-P4b-H**（H-P6a）。
 
 ## 一句话
 
@@ -31,16 +31,12 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 | 序  | ID  | 主题 | 桶  | ROI | 下一步 | 验收 |
 | --- | --- | ---- | --- | --- | ------ | ---- |
 
-**2026-07-09 已验收（见 §Shipped）：** G-P4 今日摘要 ✅ · H-P1/H-P2/H-P3 ✅ · F-P0 · F-P1 · G-P2 · M-P2 ✅ · I-P0 · M-P1 · AppBrandSwitcher ✅。
+**2026-07-09 已验收（见 §Shipped）：** Phase 0–5 — **F-P3** · **G-P4b-M** · **G-P6** · **G-P8** · **G-P9** · **M-P5** · **P-P2** · **FT-P0/FT-P1** · **I-P1.5b** · CI 接线。
 
 ### Next — 已排期
 
 | ID           | 主题                                       | App     | 桶       | ROI | 触发 / 范围                                   |
 | ------------ | ------------------------------------------ | ------- | -------- | --- | --------------------------------------------- |
-| **F-P3**     | Safe-to-spend / Scenarios / Spend 抽屉对齐 | Finance | Core     | 🔥  | audit Critical；**潜力 #1** — 见 POTENTIAL.md |
-| **G-P4b-M**  | Portal 摘要扩 **Music** 卡                 | Portal  | Growth   | ◆   | `play_events` 已可读；~1d · **潜力 #2**       |
-| **P-P2**     | Planner Insight 批量排期 E2E（P-1）        | Planner | Core     | ◆   | QA-P2 desktop 21/22 ✅ 后剩余项               |
-| **I-P1.5b**  | Fitness 完练 → Planner 打卡                | Fitness | Growth   | ○   | **每天用两站** · FT-P1 · 潜力 #4              |
 | **G-P4b-H**  | Portal 摘要 Home 储藏卡                    | Portal  | Growth   | ○   | 阻塞：先 **H-P6a** 元数据                     |
 | **C-P2 P2+** | Finance React 共享 UI                      | Finance | Platform | ✗   | 第 3 React 消费者前不做                       |
 | **C-P1+**    | Finance nav contracts mirror               | Finance | Platform | ✗   | `contracts/events` 已够                       |
@@ -52,30 +48,15 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 研判全文 → [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
 ```text
-Phase 0 — 信任锚点（#1 潜力）
-  F-P3   STS / Scenarios / Spend 抽屉 + 回归测试
-
-Phase 1 — 快赢 + 防回归（可并行）
-  G-P4b-M  Portal Music 第四卡
-  M-P2     Music UI E2E
-  P-P2     Insight E2E（P-1）
-
-Phase 1b — CI 复利（可选并行）
-  Finance qa:ia-routes + Planner desktop → ci.yml
-
-Phase 2 — 基础设施
-  FT-P0  Fitness E2E 确认
-
-Phase 3 — 条件跨站
-  FT-P1 / I-P1.5b
+Phase 6 — 条件 Growth
   G-P4b-H（先 H-P6a）
 
-Phase 4 — 按需
+Phase 7 — 按需
   D-P7 · 各 app §Parked
 
-已完成（2026-07-09）
-  F-P0 route smoke 22/22 ✅ · QA-P2 desktop 21/22 ✅
-  G-P4 · H-P1/H-P2/H-P3 · F-P1 / G-P2 / I-P0 / M-P1 / AppBrandSwitcher ✅
+已完成（2026-07-09 Phase 5）
+  M-P5 qa:rec-behavior 6/6 ✅（M5 QA seed + recently completed）
+  G-P8 · G-P9 · P-1 遮罩 ✅
 ```
 
 **已完成（2026-07-08 四轮计划）：** I-P1 redirect/DB · P2 `schema.sql` · CI-补 · QA-F0 · G-P1–G-P3 · G-P5 · M-P1/F-P1 代码 · AppBrandSwitcher — 详情 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
@@ -84,6 +65,10 @@ Phase 4 — 按需
 
 | 主线        | 摘要                                                                           | 详情                                                      |
 | ----------- | ------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Core        | **F-P3** Finance STS 口径统一 · **P-P2** Planner Insight E2E 22/22           | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-09   |
+| Growth      | **G-P8** pending→inbox · **G-P9** `qa:smoke` · **M-P5** 行为分 6/6          | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md) |
+| Integration | **FT-P1** / **I-P1.5b** 完练 → Planner 打卡                                    | `fitness_workout_event_trigger` migration                 |
+| Infra       | CI `planner-e2e-desktop` · `finance-ia-routes`；FT-P0 **20/20**                | `.github/workflows/ci.yml`                                |
 | Integration | `core_profiles` 远程 ✅；`life_events` outbox + Planner inbox ✅               | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md)      |
 | Platform    | C-P0–C-P1 ✅；C-P2 Wave 1–3 P1+ ✅                                             | [`roadmap/PLATFORM.md`](./roadmap/PLATFORM.md)            |
 | Design      | D-P0–D-P5 ✅（tokens + catalog 172 smoke / 80 snapshots）                      | [`roadmap/DESIGN.md`](./roadmap/DESIGN.md)                |
@@ -148,15 +133,16 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 
 ## 主线速览
 
-命名：`I-*` Integration · `C-*` Platform · `D-*` Design · `G-*` Growth · `P-P*`/`QA-P*` Planner · `FT-P*` Fitness · `F-P*` Finance · `M-P*` Music · `H-P*` Home
+命名：`I-*` Integration · `C-*` Platform · `D-*` Design · `G-*` Growth · `P-P*`/`QA-P*` Planner · `FT-P*` Fitness · `F-P*` Finance · `M-P*` Music · `H-P*` Home · `H-W*` Home 空间编辑（墙图三步编辑器）
 
 | 主线                 | 当前状态                                            | 深度文档                                                   |
 | -------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
 | **I-P0** 统一身份    | ✅ 生产 E2E（2026-07-09）                           | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p0)  |
 | **I-P1** Portal      | ✅ 已上线；Growth G-P1–G-P5 已接                    | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p1)  |
-| **I-P1.5** 事件中心  | ✅ 管道通；I-P1.5b 按需                             | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p15) |
+| **I-P1.5** 事件中心  | ✅ 管道通；**I-P1.5b** Fitness 完练打卡 ✅（2026-07-09） | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p15) |
 | **G-P1–G-P5** Growth | ✅ 生产验收完成（含 F-P1/G-P2）                     | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                 |
 | **H-P0** Home 实验   | 🟡 已部署；SSO + PWA ✅；H-P5 平面 UX ✅；H-P4 搁置 | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)  |
+| **H-W** 空间编辑     | 🟡 **H-W0–W2c + Wave A UX**；Wave B · **H-W3** 分区 · [`qa/home-spatial-uiux-audit-2026-07-08.md`](./qa/home-spatial-uiux-audit-2026-07-08.md) | [`roadmap/apps/home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) |
 | **C-P1+** 平台扩容   | 🟡 Finance 部分接入；低优先                         | [`roadmap/PLATFORM.md`](./roadmap/PLATFORM.md)             |
 | **D-P6** 设计系统    | ✅ catalog a11y gates（2026-07-08）                 | [`roadmap/DESIGN.md`](./roadmap/DESIGN.md)                 |
 
@@ -164,12 +150,12 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 
 | App     | 层级   | URL                                                | Workspace    | SSO | Portal | Top Next（→ 分卷）                       |
 | ------- | ------ | -------------------------------------------------- | ------------ | --- | ------ | ---------------------------------------- |
-| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅  | ✅     | **P-P2** Insight（QA-P2 21/22 ✅）       |
-| Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅  | ✅     | **FT-P0** E2E · FT-P1 条件               |
-| Finance | 生产   | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅  | ✅     | **F-P3** 信任锚点                        |
-| Music   | 生产   | [music.kenos.space](https://music.kenos.space)     | `music-os`   | ✅  | ✅     | **M-P2** E2E · **M-P5** 行为分           |
-| Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space)   | `portal`     | ✅  | —      | **G-P4b-M** Music 卡 · G-P6              |
-| Home    | 实验   | [home.kenos.space](https://home.kenos.space)       | `home-os`    | ✅  | ✅     | **H-P6a** 元数据 · **H-P7** 多项目 local |
+| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅  | ✅     | **P-P3** GoTrue · P-P5 ✅                       |
+| Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅  | ✅     | FT-P1 ✅ · 维护 E2E                             |
+| Finance | 生产   | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅  | ✅     | F-P3 ✅ · F-P1b 按需                            |
+| Music   | 生产   | [music.kenos.space](https://music.kenos.space)     | `music-os`   | ✅  | ✅     | M-P5 ✅ · 维护推荐管道                          |
+| Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space)   | `portal`     | ✅  | —      | **M-P5** 行为分（hub）                        |
+| Home    | 实验   | [home.kenos.space](https://home.kenos.space)       | `home-os`    | ✅  | ✅     | **H-W3** 手绘分区 · H-P6a |
 
 **分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · 插件：Finance OS Sync — `apps/finance/extension`
 
@@ -182,12 +168,13 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 ./scripts/test-outbox-trigger.sh --smoke   # I-P1.5
 npm run check:lifeos-boundaries            # C-P0
 npm run test:viewport -w home-os           # H-P5 平面定位（需 dev/preview）
+npm run test:plan-edit -w home-os          # H-W 墙图 smoke（8 checks）
 npm run validate:tokens                    # D 线 token 完整性
 npm run test:design-catalog                # 172 smoke
 npm run test:design-catalog:snapshots    # 80 pixel baselines
 ```
 
-**CI（`.github/workflows/ci.yml`）：** 三 job — `build`（`validate:tokens` + Turbo `build`）· `design-catalog`（smoke + a11y + snapshots）· `integration-smoke`（`check:lifeos-boundaries` + outbox 结构 + 可选远程 identity/outbox smoke，需 `SUPABASE_ACCESS_TOKEN` secret）。
+**CI（`.github/workflows/ci.yml`）：** build · design-catalog · integration-smoke · planner-e2e-desktop · finance-ia-routes · **portal-qa-smoke** · **music-qa-rec-behavior**（secrets 缺则 skip）。
 
 ## 运维索引
 
@@ -207,5 +194,8 @@ npm run test:design-catalog:snapshots    # 80 pixel baselines
 ## 维护约定
 
 详见 [`MAINTENANCE.md`](./MAINTENANCE.md)。Hub 只维护 §Now / §Next / §Shipped / §Not doing；阶段史与证据写入 `roadmap/` 分卷。
+
+_旧版单文件长篇阶段史已拆分至 `docs/roadmap/`（2026-07-08 结构优化）。_
+dmap/` 分卷。
 
 _旧版单文件长篇阶段史已拆分至 `docs/roadmap/`（2026-07-08 结构优化）。_

@@ -4,6 +4,7 @@
 /** @typedef {import('./types.js').WallGraphEdge} WallGraphEdge */
 
 import { SPATIAL_SCHEMA_VERSION } from './types.js'
+import { deriveWallsAndOpenings } from './graph-openings.js'
 
 const VERTEX_TOL_PX = 3
 let idSeq = 1
@@ -214,18 +215,8 @@ function graphViewport(graph) {
  * @returns {SpatialProject}
  */
 export function buildFromWallGraph(graph, carry = {}) {
-  const verts = Object.fromEntries(graph.vertices.map((v) => [v.id, v]))
-  /** @type {SpatialProject['walls']} */
-  const walls = graph.edges.map((edge) => {
-    const a = verts[edge.a]
-    const b = verts[edge.b]
-    return {
-      id: edge.id,
-      from: { x: a.x, y: a.y },
-      to: { x: b.x, y: b.y },
-      kind: /** @type {'wall'} */ ('wall'),
-    }
-  })
+  const graphOpenings = carry.graphOpenings ?? []
+  const { walls, openings } = deriveWallsAndOpenings(graph, graphOpenings)
 
   const { width, height, outerBounds } = graphViewport(graph)
 
@@ -240,13 +231,91 @@ export function buildFromWallGraph(graph, carry = {}) {
     rooms: carry.rooms ?? [],
     walls,
     outerBounds,
-    openings: carry.openings ?? [],
+    openings,
     furniture: [],
     storageZones: carry.storageZones ?? [],
     furnitureInventory: [],
     layoutMode: 'wallGraph',
     wallGraph: graph,
+    graphOpenings,
+    zones: carry.zones ?? [],
+    placements: carry.placements ?? [],
     layoutConfig: carry.layoutConfig,
+  }
+}
+
+/**
+ * @param {WallGraph} graph
+ * @param {string} vertexId
+ * @param {number} x
+ * @param {number} y
+ * @returns {WallGraph}
+ */
+export function moveVertex(graph, vertexId, x, y) {
+  const next = cloneWallGraph(graph)
+  const idx = next.vertices.findIndex((v) => v.id === vertexId)
+  if (idx < 0) return next
+
+  const snapped = snapGraphPoint(x, y, next.pxPerFt)
+  const mergeTarget = next.vertices.find(
+    (v, i) =>
+      i !== idx &&
+      Math.hypot(v.x - snapped.x, v.y - snapped.y) <= VERTEX_TOL_PX,
+  )
+
+  if (mergeTarget) {
+    const oldId = vertexId
+    for (const edge of next.edges) {
+      if (edge.a === oldId) edge.a = mergeTarget.id
+      if (edge.b === oldId) edge.b = mergeTarget.id
+    }
+    next.vertices.splice(idx, 1)
+  } else {
+    next.vertices[idx] = { ...next.vertices[idx], x: snapped.x, y: snapped.y }
+  }
+
+  const seen = new Set()
+  next.edges = next.edges.filter((e) => {
+    if (e.a === e.b) return false
+    const key = e.a < e.b ? `${e.a}|${e.b}` : `${e.b}|${e.a}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  const used = new Set(next.edges.flatMap((e) => [e.a, e.b]))
+  next.vertices = next.vertices.filter((v) => used.has(v.id))
+  return next
+}
+
+/**
+ * @param {WallGraph} graph
+ * @param {string} edgeId
+ * @returns {{ graph: WallGraph, newVertexId: string, edgeAId: string, edgeBId: string, splitT: number } | null}
+ */
+export function splitWallAtMidpoint(graph, edgeId) {
+  const edge = graph.edges.find((e) => e.id === edgeId)
+  if (!edge) return null
+  const va = graph.vertices.find((v) => v.id === edge.a)
+  const vb = graph.vertices.find((v) => v.id === edge.b)
+  if (!va || !vb) return null
+  const splitT = 0.5
+  const px = (va.x + vb.x) / 2
+  const py = (va.y + vb.y) / 2
+  const result = splitWallAt(graph, edgeId, px, py)
+  if (!result) return null
+  const newEdges = result.graph.edges.filter(
+    (e) =>
+      (e.a === result.newVertexId || e.b === result.newVertexId) &&
+      e.id !== edgeId,
+  )
+  if (newEdges.length < 2) return null
+  return {
+    graph: result.graph,
+    newVertexId: result.newVertexId,
+    edgeAId: newEdges[0].id,
+    edgeBId: newEdges[1].id,
+    splitT,
   }
 }
 
@@ -278,11 +347,12 @@ export function hitTestWallEdge(graph, edgeId, px) {
 /**
  * @param {WallGraph} graph
  * @param {{ x: number, y: number }} pt
+ * @param {number} [maxDistPx]
  * @returns {string | null}
  */
-export function pickWallEdgeAt(graph, pt) {
+export function pickWallEdgeAt(graph, pt, maxDistPx = 16) {
   let best = null
-  let bestD = 16
+  let bestD = maxDistPx
   for (const edge of graph.edges) {
     const a = graph.vertices.find((v) => v.id === edge.a)
     const b = graph.vertices.find((v) => v.id === edge.b)

@@ -23,6 +23,7 @@
   import { initAuth, auth } from '$lib/auth.svelte.js'
   import { registerServiceWorker } from '$lib/serviceWorker.js'
   import { bindLifeOsPresence, touchLifeOsPresence } from '$lib/lifeOsPresence.js'
+  import { scheduleHomePortalMetadataSync } from '$lib/homePortalMetadata.js'
 
   let { children } = $props()
 
@@ -75,7 +76,10 @@
   })
 
   $effect(() => {
-    if (auth.ready && auth.user) touchLifeOsPresence()
+    if (auth.ready && auth.user) {
+      touchLifeOsPresence()
+      scheduleHomePortalMetadataSync(getActiveProject().storageZones.length)
+    }
   })
 </script>
 

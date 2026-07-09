@@ -35,6 +35,7 @@
    *   measureMode?: boolean,
    *   graphEditMode?: boolean,
    *   graphTool?: import('$lib/plan-graph-edit.js').GraphTool,
+   *   toolbarMinimal?: boolean,
    *   hideFurniture?: boolean,
    *   selectedWall?: string,
    *   selectedOpening?: string,
@@ -52,7 +53,16 @@
    *   onGraphWallPoint?: (pt: { x: number, y: number }) => void,
    *   onGraphRemoveEdge?: (edgeId: string) => void,
    *   onGraphSelectEdge?: (edgeId: string) => void,
-   *   onGraphHover?: (pt: { x: number, y: number } | null) => void,
+   *   onGraphSelectOpening?: (openingId: string) => void,
+   *   onOpeningDragStart?: (openingId: string, mode: 'move' | 'resize-start' | 'resize-end') => void,
+   *   onOpeningDrag?: (openingId: string, pt: { x: number, y: number }, mode: 'move' | 'resize-start' | 'resize-end') => void,
+   *   onOpeningDrop?: (openingId: string, pt: { x: number, y: number }, mode: 'move' | 'resize-start' | 'resize-end') => void,
+   *   onPlaceOpening?: (pt: { x: number, y: number }, edgeId: string) => void,
+   *   onGraphHover?: (pt: { x: number, y: number } | null, shiftKey?: boolean) => void,
+   *   onVertexDragStart?: (vertexId: string) => void,
+   *   onVertexDrag?: (vertexId: string, pt: { x: number, y: number }) => void,
+   *   onVertexDrop?: (vertexId: string, pt: { x: number, y: number }) => void,
+   *   overrideProject?: import('$lib/spatial/types.js').SpatialProject,
    * }} */
   let {
     project,
@@ -64,6 +74,7 @@
     measureMode = false,
     graphEditMode = false,
     graphTool = 'select',
+    toolbarMinimal = false,
     hideFurniture = true,
     selectedWall = '',
     selectedOpening = '',
@@ -81,7 +92,16 @@
     onGraphWallPoint,
     onGraphRemoveEdge,
     onGraphSelectEdge,
+    onGraphSelectOpening,
+    onOpeningDragStart,
+    onOpeningDrag,
+    onOpeningDrop,
+    onPlaceOpening,
     onGraphHover,
+    onVertexDragStart,
+    onVertexDrag,
+    onVertexDrop,
+    overrideProject,
   } = $props()
 
   let zoom = $state(1)
@@ -98,7 +118,7 @@
   /** @type {import('$lib/spatial/types.js').SpatialProject | null} */
   let previewProject = $state(null)
 
-  const displayProject = $derived(previewProject ?? project)
+  const displayProject = $derived(overrideProject ?? previewProject ?? project)
 
   /** @type {{ valid: boolean, title: string, detail: string, delta: string, gridSnapped: boolean } | null} */
   let dragHint = $state(null)
@@ -112,6 +132,23 @@
   let dragPending = null
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let snapFlashTimer
+
+  const graphToolbarHint = $derived.by(() => {
+    if (graphTool === 'wallAdd') {
+      return '建墙：点击拐点连线 · Shift 正交 · 1″ 吸附 · Esc 断链'
+    }
+    if (graphTool === 'remove') return '删墙：点击墙段删除'
+    if (graphTool === 'opening') return '门窗：点击墙段放置门（32″）'
+    return '选择：拖门窗沿墙移动 · 端点改宽 · Delete 删除'
+  })
+
+  const toolbarHint = $derived.by(() => {
+    if (graphEditMode) return graphToolbarHint
+    if (measureMode) return '点击两点测距 · 第三次点击重新开始'
+    if (editMode) return '拖曳编辑 · 点空白取消选中 · 长按/右键菜单'
+    if (!compact) return '双指捏合缩放 · 拖拽平移 · Tab 聚焦储藏区'
+    return ''
+  })
 
   const dragOverlay = $derived.by(() => {
     if (!dragHint || !dragActive || !displayProject || !dragPending) return null
@@ -143,7 +180,7 @@
   })
 
   const touchScale = $derived.by(() => {
-    if (!editMode || !viewportEl) return 1
+    if ((!editMode && !graphEditMode) || !viewportEl) return 1
     const vbW = displayProject.viewport.width
     const canvasW = Math.max(viewportEl.clientWidth - 24, 120)
     if (!vbW) return 1
@@ -167,6 +204,7 @@
       touchScale,
       measure: measureMode ? measurePoints : undefined,
       graphEditMode,
+      graphTool,
       selectedEdge,
       wallChainFrom,
       wallChainHover,
@@ -440,6 +478,14 @@
       onWallChainPoint: (pt) => onGraphWallPoint?.(pt),
       onRemoveEdge: (id) => onGraphRemoveEdge?.(id),
       onSelectEdge: (id) => onGraphSelectEdge?.(id),
+      onSelectOpening: (id) => onGraphSelectOpening?.(id),
+      onOpeningDragStart: (id, mode) => onOpeningDragStart?.(id, mode),
+      onOpeningDrag: (id, pt, mode) => onOpeningDrag?.(id, pt, mode),
+      onOpeningDrop: (id, pt, mode) => onOpeningDrop?.(id, pt, mode),
+      onPlaceOpening: (pt, edgeId) => onPlaceOpening?.(pt, edgeId),
+      onVertexDragStart: (id) => onVertexDragStart?.(id),
+      onVertexDrag: (id, pt) => onVertexDrag?.(id, pt),
+      onVertexDrop: (id, pt) => onVertexDrop?.(id, pt),
     })
     /** @param {PointerEvent} e */
     function onMove(e) {
@@ -447,7 +493,7 @@
         onGraphHover?.(null)
         return
       }
-      onGraphHover?.(clientToSvg(e.clientX, e.clientY))
+      onGraphHover?.(clientToSvg(e.clientX, e.clientY), e.shiftKey)
     }
     el.addEventListener('pointermove', onMove)
     return () => {
@@ -574,6 +620,7 @@
   class:compact
   class:edit-mode={editMode}
   class:canvas-priority={canvasPriority}
+  class:toolbar-minimal={toolbarMinimal}
 >
   {#if zoomable}
     <div class="plan-toolbar" aria-label="平面图缩放">
@@ -587,40 +634,31 @@
       <button type="button" class="plan-tool" onclick={zoomIn} aria-label="放大"
         >+</button
       >
-      <button
-        type="button"
-        class="plan-tool plan-tool-text"
-        class:active={fitMode === 'contain'}
-        onclick={() => applyFit('contain')}
-        aria-pressed={fitMode === 'contain'}
-        title="默认：完整显示整张户型">看全图</button
-      >
-      <button
-        type="button"
-        class="plan-tool plan-tool-text"
-        class:active={fitMode === 'width'}
-        onclick={() => applyFit('width')}
-        aria-pressed={fitMode === 'width'}
-        title="放大到铺满宽度，上下需滑动">铺满宽</button
-      >
-      {#if graphEditMode}
-        <span class="plan-hint plan-hint-graph">
-          {graphTool === 'wallAdd'
-            ? '建墙：依次点击拐点 · 1″ 吸附'
-            : graphTool === 'remove'
-              ? '删墙：点击墙段'
-              : '选择墙段'}
-        </span>
-      {:else if measureMode}
-        <span class="plan-hint plan-hint-measure"
-          >点击两点测距 · 第三次点击重新开始</span
+      {#if !toolbarMinimal}
+        <button
+          type="button"
+          class="plan-tool plan-tool-text"
+          class:active={fitMode === 'contain'}
+          onclick={() => applyFit('contain')}
+          aria-pressed={fitMode === 'contain'}
+          title="默认：完整显示整张户型">看全图</button
         >
-      {:else if editMode}
-        <span class="plan-hint plan-hint-edit"
-          >拖曳编辑 · 点空白取消选中 · 长按/右键菜单</span
+        <button
+          type="button"
+          class="plan-tool plan-tool-text"
+          class:active={fitMode === 'width'}
+          onclick={() => applyFit('width')}
+          aria-pressed={fitMode === 'width'}
+          title="放大到铺满宽度，上下需滑动">铺满宽</button
         >
-      {:else if !compact}
-        <span class="plan-hint">双指捏合缩放 · 拖拽平移 · Tab 聚焦储藏区</span>
+      {/if}
+      {#if toolbarHint && !toolbarMinimal}
+        <span
+          class="plan-hint"
+          class:plan-hint-graph={graphEditMode}
+          class:plan-hint-measure={measureMode}
+          class:plan-hint-edit={editMode && !graphEditMode}
+        >{toolbarHint}</span>
       {/if}
     </div>
   {/if}
@@ -717,6 +755,26 @@
   @media (min-width: 768px) {
     .plan-shell.canvas-priority .plan-viewer:not(.compact) {
       min-height: 0;
+    }
+  }
+
+  @media (max-width: 599px) {
+    .plan-shell.canvas-priority .plan-viewer:not(.compact) {
+      min-height: min(72dvh, 780px);
+    }
+
+    .plan-shell.canvas-priority.toolbar-minimal .plan-toolbar {
+      top: auto;
+      bottom: max(10px, var(--safe-bottom-effective));
+      right: max(10px, var(--safe-right-effective));
+      left: auto;
+      flex-wrap: nowrap;
+      padding: 3px 5px;
+    }
+
+    .plan-shell.canvas-priority.toolbar-minimal .plan-tool {
+      min-width: 40px;
+      min-height: 40px;
     }
   }
 

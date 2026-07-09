@@ -5,6 +5,7 @@ import {
   resolveTheme,
 } from '@life-os/theme'
 import { SAMPLE_508 } from './spatial/sample-508.js'
+import { scheduleHomePortalMetadataSync } from './homePortalMetadata.js'
 import { deserializeProject, hydrateProject } from './spatial/model.js'
 import {
   default508Config,
@@ -22,7 +23,19 @@ import {
   addWallSegment,
   deleteWallEdge,
   export508ToWallGraph,
+  moveVertex,
+  splitWallAtMidpoint,
 } from './spatial/wall-graph.js'
+import {
+  convert508Openings,
+  createOpeningAtPoint,
+  filterOpeningsForEdge,
+  flipGraphOpeningSwing,
+  fitGraphOpeningOnEdge,
+  previewGraphOpeningEdit,
+  remapOpeningsAfterSplit,
+  toggleGraphOpeningType,
+} from './spatial/graph-openings.js'
 import { toast } from './ui.svelte.js'
 
 /** @typedef {import('./spatial/types.js').SpatialProject} SpatialProject */
@@ -104,10 +117,31 @@ export function isWallGraphMode() {
   return raw.layoutMode === 'wallGraph' && Boolean(raw.wallGraph)
 }
 
+function snapshotEditSource(raw) {
+  return JSON.stringify({
+    wallGraph: raw.wallGraph,
+    graphOpenings: raw.graphOpenings ?? [],
+    zones: raw.zones ?? [],
+    placements: raw.placements ?? [],
+  })
+}
+
+/** @param {string} raw */
+function parseEditSnapshot(raw) {
+  const data = JSON.parse(raw)
+  if (data && typeof data === 'object' && data.wallGraph) return data
+  return {
+    wallGraph: data,
+    graphOpenings: [],
+    zones: [],
+    placements: [],
+  }
+}
+
 function pushGraphUndo() {
   const raw = S.projects[S.activeProjectId]
   if (!raw?.wallGraph) return
-  graphUndoStack.push(JSON.stringify(raw.wallGraph))
+  graphUndoStack.push(snapshotEditSource(raw))
   if (graphUndoStack.length > MAX_LAYOUT_UNDO) graphUndoStack.shift()
   graphRedoStack = []
   persistGraphUndoStacks()
@@ -129,30 +163,55 @@ export function undoGraphEdit() {
   }
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   if (raw?.wallGraph) {
-    graphRedoStack.push(JSON.stringify(raw.wallGraph))
+    graphRedoStack.push(snapshotEditSource(raw))
     if (graphRedoStack.length > MAX_LAYOUT_UNDO) graphRedoStack.shift()
   }
-  const graph = JSON.parse(prev)
-  applyWallGraph(graph, { skipUndo: true, silent: true })
+  const snap = parseEditSnapshot(prev)
+  applyEditSource(snap, { skipUndo: true, silent: true })
   persistGraphUndoStacks()
   toast('已撤销墙图修改')
 }
 
 export function redoGraphEdit() {
-  const nextGraph = graphRedoStack.pop()
-  if (!nextGraph) {
+  const nextSnap = graphRedoStack.pop()
+  if (!nextSnap) {
     toast('没有可重做的墙图修改', 'warn')
     return
   }
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   if (raw?.wallGraph) {
-    graphUndoStack.push(JSON.stringify(raw.wallGraph))
+    graphUndoStack.push(snapshotEditSource(raw))
     if (graphUndoStack.length > MAX_LAYOUT_UNDO) graphUndoStack.shift()
   }
-  const graph = JSON.parse(nextGraph)
-  applyWallGraph(graph, { skipUndo: true, silent: true })
+  const snap = parseEditSnapshot(nextSnap)
+  applyEditSource(snap, { skipUndo: true, silent: true })
   persistGraphUndoStacks()
   toast('已重做墙图修改')
+}
+
+/**
+ * @param {{
+ *   wallGraph?: import('./spatial/types.js').WallGraph,
+ *   graphOpenings?: import('./spatial/types.js').GraphOpening[],
+ *   zones?: import('./spatial/types.js').SpatialZone[],
+ *   placements?: import('./spatial/types.js').SpatialPlacement[],
+ * }} patch
+ * @param {{ skipUndo?: boolean, silent?: boolean, toastMsg?: string }} [opts]
+ */
+export function applyEditSource(patch, opts = {}) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  if (!opts.skipUndo) pushGraphUndo()
+  const next = hydrateProject({
+    ...raw,
+    layoutMode: 'wallGraph',
+    wallGraph: patch.wallGraph ?? raw.wallGraph,
+    graphOpenings: patch.graphOpenings ?? raw.graphOpenings ?? [],
+    zones: patch.zones ?? raw.zones ?? [],
+    placements: patch.placements ?? raw.placements ?? [],
+  })
+  setActiveProject(next)
+  if (!opts.silent && opts.toastMsg) toast(opts.toastMsg)
+  else if (!opts.silent) notifyLayoutSaved()
 }
 
 /**
@@ -160,22 +219,14 @@ export function redoGraphEdit() {
  * @param {{ skipUndo?: boolean, silent?: boolean, toastMsg?: string }} [opts]
  */
 export function applyWallGraph(graph, opts = {}) {
-  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
-  if (!opts.skipUndo) pushGraphUndo()
-  const next = hydrateProject({
-    ...raw,
-    layoutMode: 'wallGraph',
-    wallGraph: graph,
-  })
-  setActiveProject(next)
-  if (!opts.silent && opts.toastMsg) toast(opts.toastMsg)
-  else if (!opts.silent) notifyLayoutSaved()
+  applyEditSource({ wallGraph: graph }, opts)
 }
 
 export function activateWallGraphMode() {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const hydrated = hydrateProject(raw)
   const graph = export508ToWallGraph(hydrated)
+  const graphOpenings = convert508Openings(hydrated, graph)
   graphUndoStack = []
   graphRedoStack = []
   persistGraphUndoStacks()
@@ -183,9 +234,26 @@ export function activateWallGraphMode() {
     ...hydrated,
     layoutMode: 'wallGraph',
     wallGraph: graph,
+    graphOpenings,
+    openings: [],
   })
   setActiveProject(next)
-  toast('已切换墙图，点「墙图编辑」开始建墙')
+  toast(`已切换墙图 · 识别 ${graphOpenings.length} 个门窗`)
+}
+
+export function reconvertGraphOpenings() {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  if (!raw.wallGraph) {
+    toast('当前不是墙图模式', 'warn')
+    return
+  }
+  const hydrated508 = hydrateProject({
+    ...raw,
+    layoutMode: 'parametric508',
+    wallGraph: undefined,
+  })
+  const graphOpenings = convert508Openings(hydrated508, raw.wallGraph)
+  applyEditSource({ graphOpenings }, { toastMsg: `已重新识别 ${graphOpenings.length} 个门窗` })
 }
 
 export function revertToParametric508() {
@@ -198,6 +266,7 @@ export function revertToParametric508() {
     ...raw,
     layoutMode: 'parametric508',
     wallGraph: undefined,
+    graphOpenings: [],
   })
   setActiveProject(next)
   toast('已切回 508 参数化编辑')
@@ -216,8 +285,82 @@ export function addGraphWall(x1, y1, x2, y2) {
     return false
   }
   if (!result.edgeId) return false
-  applyWallGraph(result.graph, { toastMsg: '已添加墙段' })
+  applyEditSource({ wallGraph: result.graph }, { toastMsg: '已添加墙段' })
   return true
+}
+
+/**
+ * @param {string} edgeId
+ * @param {{ x: number, y: number }} pt
+ * @param {'door' | 'window'} [type]
+ */
+export function addGraphOpening(edgeId, pt, type = 'door') {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  if (!graph) return null
+  const opening = createOpeningAtPoint(graph, edgeId, pt, type)
+  if (!opening) return null
+  const graphOpenings = [...(raw.graphOpenings ?? []), opening]
+  applyEditSource({ graphOpenings }, { toastMsg: '已添加门窗' })
+  return opening.id
+}
+
+/** @param {string} openingId */
+export function removeGraphOpening(openingId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graphOpenings = (raw.graphOpenings ?? []).filter((o) => o.id !== openingId)
+  applyEditSource({ graphOpenings }, { toastMsg: '已删除门窗' })
+}
+
+/**
+ * @param {string} openingId
+ * @param {{ x: number, y: number }} pt
+ * @param {'move' | 'resize-start' | 'resize-end'} mode
+ */
+export function commitGraphOpeningEdit(openingId, pt, mode) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  if (!graph) return
+  const graphOpenings = previewGraphOpeningEdit(
+    graph,
+    raw.graphOpenings ?? [],
+    openingId,
+    pt,
+    mode,
+  )
+  applyEditSource({ graphOpenings }, { silent: true })
+}
+
+/**
+ * @param {import('./spatial/types.js').WallGraph} graph
+ * @param {import('./spatial/types.js').GraphOpening[]} graphOpenings
+ * @param {string} openingId
+ * @param {{ x: number, y: number }} pt
+ * @param {'move' | 'resize-start' | 'resize-end'} mode
+ */
+export function previewGraphOpeningDrag(graph, graphOpenings, openingId, pt, mode) {
+  return previewGraphOpeningEdit(graph, graphOpenings, openingId, pt, mode)
+}
+
+/** @param {string} openingId */
+export function toggleGraphOpeningKind(openingId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  if (!graph) return
+  const graphOpenings = (raw.graphOpenings ?? []).map((o) => {
+    if (o.id !== openingId) return o
+    return fitGraphOpeningOnEdge(graph, toggleGraphOpeningType(o))
+  })
+  applyEditSource({ graphOpenings }, { toastMsg: '已切换门窗类型' })
+}
+
+/** @param {string} openingId */
+export function flipGraphOpeningDirection(openingId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graphOpenings = (raw.graphOpenings ?? []).map((o) =>
+    o.id === openingId ? flipGraphOpeningSwing(o) : o,
+  )
+  applyEditSource({ graphOpenings }, { toastMsg: '已翻转开向' })
 }
 
 /** @param {string} edgeId */
@@ -225,8 +368,62 @@ export function removeGraphWall(edgeId) {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const graph = raw.wallGraph
   if (!graph) return
-  const next = deleteWallEdge(graph, edgeId)
-  applyWallGraph(next, { toastMsg: '已删除墙段' })
+  const nextGraph = deleteWallEdge(graph, edgeId)
+  const graphOpenings = filterOpeningsForEdge(raw.graphOpenings ?? [], edgeId)
+  applyEditSource(
+    { wallGraph: nextGraph, graphOpenings },
+    { toastMsg: '已删除墙段' },
+  )
+}
+
+/** @param {string} edgeId */
+export function splitGraphWall(edgeId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  if (!graph) return false
+  const result = splitWallAtMidpoint(graph, edgeId)
+  if (!result) {
+    toast('无法分割此墙段', 'warn')
+    return false
+  }
+  const graphOpenings = remapOpeningsAfterSplit(
+    graph,
+    raw.graphOpenings ?? [],
+    edgeId,
+    result.edgeAId,
+    result.edgeBId,
+    result.splitT,
+  )
+  applyEditSource(
+    { wallGraph: result.graph, graphOpenings },
+    { toastMsg: '已分割墙段' },
+  )
+  return true
+}
+
+/**
+ * @param {string} vertexId
+ * @param {number} x
+ * @param {number} y
+ */
+export function commitGraphVertexMove(vertexId, x, y) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  if (!graph) return
+  const nextGraph = moveVertex(graph, vertexId, x, y)
+  applyEditSource({ wallGraph: nextGraph }, { toastMsg: '已移动顶点' })
+}
+
+/**
+ * @param {import('./spatial/types.js').WallGraph} graph
+ * @param {string} vertexId
+ * @param {number} x
+ * @param {number} y
+ * @returns {import('./spatial/types.js').WallGraph | null}
+ */
+export function previewGraphVertexMove(graph, vertexId, x, y) {
+  if (!graph) return null
+  return moveVertex(graph, vertexId, x, y)
 }
 
 const defaultState = () => ({
@@ -252,15 +449,23 @@ function load() {
       data.projects = { ...defaultState().projects, ...(data.projects || {}) }
     }
     const stored = data.projects[SAMPLE_508.meta.id]
-    if (stored.layoutMode === 'wallGraph') {
-      stored.layoutMode = 'parametric508'
-      delete stored.wallGraph
+    if ((stored.schemaVersion ?? 2) < 3 && stored.layoutMode === 'wallGraph') {
+      stored.graphOpenings = stored.graphOpenings ?? []
+      stored.zones = stored.zones ?? []
+      stored.placements = stored.placements ?? []
+      graphUndoStack = []
+      graphRedoStack = []
+      persistGraphUndoStacks()
     }
     data.projects[SAMPLE_508.meta.id] = hydrateProject({
       ...SAMPLE_508,
       ...stored,
       layoutConfig: stored.layoutConfig ?? SAMPLE_508.layoutConfig,
-      layoutMode: 'parametric508',
+      layoutMode: stored.layoutMode ?? 'parametric508',
+      wallGraph: stored.wallGraph,
+      graphOpenings: stored.graphOpenings ?? [],
+      zones: stored.zones ?? [],
+      placements: stored.placements ?? [],
       storageZones: stored.storageZones ?? SAMPLE_508.storageZones,
       furnitureInventory: [],
       meta: { ...SAMPLE_508.meta, ...stored.meta },
@@ -510,6 +715,7 @@ export function setActiveProject(project) {
   S.projects[project.meta.id] = project
   S.activeProjectId = project.meta.id
   persist()
+  scheduleHomePortalMetadataSync(project.storageZones?.length ?? 0)
 }
 
 export function applyTheme() {
@@ -567,6 +773,7 @@ export function exportLayoutJson() {
           projectId: raw.meta.id,
           layoutMode: 'wallGraph',
           wallGraph: raw.wallGraph,
+          graphOpenings: raw.graphOpenings ?? [],
           layoutConfig: raw.layoutConfig,
         }
       : {
@@ -598,6 +805,7 @@ export function importLayoutJson(raw) {
         ...base,
         layoutMode: 'wallGraph',
         wallGraph: data.wallGraph,
+        graphOpenings: data.graphOpenings ?? [],
         layoutConfig: data.layoutConfig ?? base.layoutConfig,
       })
       setActiveProject(next)

@@ -11,7 +11,8 @@
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
-    "test:viewport": "node scripts/plan-viewport-stress.mjs"
+    "test:viewport": "node scripts/plan-viewport-stress.mjs",
+    "test:plan-edit": "node scripts/plan-edit-smoke.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",

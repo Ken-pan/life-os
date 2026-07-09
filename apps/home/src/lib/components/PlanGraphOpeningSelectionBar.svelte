@@ -1,67 +1,77 @@
 <script>
   import {
-    canRedoGraph,
-    canUndoGraph,
-    redoGraphEdit,
-    removeGraphWall,
-    undoGraphEdit,
+    flipGraphOpeningDirection,
+    getActiveProject,
+    removeGraphOpening,
+    toggleGraphOpeningKind,
   } from '$lib/state.svelte.js'
+  import { formatFtIn } from '$lib/spatial/dimensions.js'
 
   /** @type {{
-   *   selectedEdge?: string,
+   *   selectedOpening?: string,
    *   compact?: boolean,
    *   onClear?: () => void,
-   *   onOpenDetails?: () => void,
-   *   onSplit?: () => void,
    * }} */
-  let { selectedEdge = '', compact = false, onClear, onOpenDetails, onSplit } = $props()
+  let { selectedOpening = '', compact = false, onClear } = $props()
 
-  const undoAvailable = $derived(canUndoGraph())
-  const redoAvailable = $derived(canRedoGraph())
+  const project = $derived(getActiveProject())
+  const opening = $derived(
+    (project.graphOpenings ?? []).find((o) => o.id === selectedOpening) ?? null,
+  )
+
+  /** @param {number} spanIn */
+  function spanLabel(spanIn) {
+    const ft = Math.floor(spanIn / 12)
+    const inch = Math.round(spanIn % 12)
+    return formatFtIn({ ft, in: inch })
+  }
+
+  const title = $derived.by(() => {
+    if (!opening) return ''
+    const kind = opening.type === 'window' ? '窗' : '门'
+    return `${kind} · ${spanLabel(opening.spanIn)}`
+  })
 </script>
 
-{#if selectedEdge}
+{#if opening && title}
   <div
-    class="graph-sel-bar"
-    class:graph-sel-bar-compact={compact}
+    class="graph-open-bar"
+    class:graph-open-bar-compact={compact}
     role="toolbar"
-    aria-label="墙段快捷操作"
+    aria-label="门窗快捷操作"
+    title={opening.id}
   >
     {#if !compact}
-      <span class="graph-sel-title">墙段 · {selectedEdge}</span>
+      <span class="graph-open-title">{title}</span>
     {/if}
-    <div class="graph-sel-actions">
+    <div class="graph-open-actions">
       <button
         type="button"
-        class="graph-sel-btn"
-        disabled={!undoAvailable}
-        onclick={undoGraphEdit}
-      >撤销</button>
-      <button
-        type="button"
-        class="graph-sel-btn"
-        disabled={!redoAvailable}
-        onclick={redoGraphEdit}
-      >重做</button>
-      <button
-        type="button"
-        class="graph-sel-btn graph-sel-warn"
-        onclick={() => {
-          removeGraphWall(selectedEdge)
-          onClear?.()
-        }}
-      >删除</button>
-      <button
-        type="button"
-        class="graph-sel-btn graph-sel-accent"
-        onclick={() => onSplit?.()}
-      >分割</button>
-      {#if !compact}
-        <button type="button" class="graph-sel-btn graph-sel-accent" onclick={() => onOpenDetails?.()}>
-          详情
+        class="graph-open-btn graph-open-accent"
+        onclick={() => toggleGraphOpeningKind(opening.id)}
+      >
+        {opening.type === 'door' ? '改窗' : '改门'}
+      </button>
+      {#if opening.type === 'door'}
+        <button
+          type="button"
+          class="graph-open-btn"
+          onclick={() => flipGraphOpeningDirection(opening.id)}
+        >
+          翻转
         </button>
       {/if}
-      <button type="button" class="graph-sel-btn" onclick={() => onClear?.()} aria-label="取消选中">
+      <button
+        type="button"
+        class="graph-open-btn graph-open-warn"
+        onclick={() => {
+          removeGraphOpening(opening.id)
+          onClear?.()
+        }}
+      >
+        删除
+      </button>
+      <button type="button" class="graph-open-btn" onclick={() => onClear?.()} aria-label="取消选中">
         ×
       </button>
     </div>
@@ -69,7 +79,7 @@
 {/if}
 
 <style>
-  .graph-sel-bar {
+  .graph-open-bar {
     position: absolute;
     left: 50%;
     bottom: max(14px, var(--safe-bottom-effective));
@@ -88,7 +98,7 @@
     box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.32);
   }
 
-  .graph-sel-title {
+  .graph-open-title {
     font-size: 13px;
     font-weight: 650;
     color: #1d6b42;
@@ -96,7 +106,7 @@
     white-space: nowrap;
   }
 
-  .graph-sel-actions {
+  .graph-open-actions {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -104,7 +114,7 @@
     flex-wrap: wrap;
   }
 
-  .graph-sel-btn {
+  .graph-open-btn {
     font-size: 12px;
     font-weight: 600;
     min-height: 36px;
@@ -116,23 +126,18 @@
     cursor: pointer;
   }
 
-  .graph-sel-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  .graph-sel-warn {
+  .graph-open-warn {
     color: #b45309;
     border-color: color-mix(in srgb, #b45309 35%, var(--border));
   }
 
-  .graph-sel-accent {
+  .graph-open-accent {
     color: #1d6b42;
     border-color: color-mix(in srgb, #1d6b42 35%, var(--border));
   }
 
   @media (max-width: 599px) {
-    .graph-sel-bar {
+    .graph-open-bar {
       left: max(12px, var(--safe-left-effective));
       right: max(12px, var(--safe-right-effective));
       transform: none;
@@ -147,17 +152,17 @@
       scrollbar-width: none;
     }
 
-    .graph-sel-bar::-webkit-scrollbar {
+    .graph-open-bar::-webkit-scrollbar {
       display: none;
     }
 
-    .graph-sel-bar-compact .graph-sel-actions {
+    .graph-open-bar-compact .graph-open-actions {
       margin-left: 0;
       flex-wrap: nowrap;
       width: 100%;
     }
 
-    .graph-sel-btn {
+    .graph-open-btn {
       min-height: 44px;
       flex-shrink: 0;
     }

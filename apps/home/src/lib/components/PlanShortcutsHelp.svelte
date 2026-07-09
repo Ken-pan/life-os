@@ -1,6 +1,6 @@
 <script>
-  /** @type {{ open?: boolean, onClose?: () => void }} */
-  let { open = false, onClose } = $props()
+  /** @type {{ open?: boolean, contextHint?: string, graphEditMode?: boolean, onClose?: () => void }} */
+  let { open = false, contextHint = '', graphEditMode = false, onClose } = $props()
 </script>
 
 {#if open}
@@ -27,10 +27,25 @@
         <div class="help-row"><dt><kbd>Esc</kbd></dt><dd>取消选中 → 退出编辑</dd></div>
         <div class="help-row"><dt><kbd>⌘Z</kbd></dt><dd>撤销修改</dd></div>
         <div class="help-row"><dt><kbd>⌘⇧Z</kbd></dt><dd>重做</dd></div>
-        <div class="help-row"><dt><kbd>Delete</kbd></dt><dd>隐藏选中门窗</dd></div>
+        {#if graphEditMode}
+          <div class="help-row"><dt><kbd>1–3</kbd></dt><dd>切换建墙 / 选择 / 删墙工具</dd></div>
+          <div class="help-row">
+            <dt><kbd>Delete</kbd></dt>
+            <dd>删除选中墙段或门窗</dd>
+          </div>
+        {:else}
+          <div class="help-row"><dt><kbd>Delete</kbd></dt><dd>隐藏选中门窗（508 模式）</dd></div>
+        {/if}
       </dl>
+      {#if contextHint}
+        <p class="help-context" aria-live="polite">{contextHint}</p>
+      {/if}
       <p class="help-note">
-        浏览模式点击储藏区进入物品清单；编辑模式可拖曳墙与门窗。布局备份见设置页。
+        {#if graphEditMode}
+          墙图模式：拖顶点改墙形，拖门窗沿墙移动，端点圆点改宽。布局备份见设置页。
+        {:else}
+          浏览模式点击储藏区进入物品清单；508 编辑可拖曳墙与门窗。布局备份见设置页。
+        {/if}
       </p>
     </div>
   </div>
@@ -88,12 +103,12 @@
   .help-list {
     margin: 0;
     display: grid;
-    gap: 8px;
+    gap: 10px;
   }
 
   .help-row {
     display: grid;
-    grid-template-columns: 72px 1fr;
+    grid-template-columns: 56px 1fr;
     gap: 10px;
     align-items: baseline;
     font-size: 13px;
@@ -118,6 +133,18 @@
     background: var(--bg);
     color: var(--t1);
     font-family: var(--mono);
+  }
+
+  .help-context {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--accent);
+    font-family: var(--mono);
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
   }
 
   .help-note {
