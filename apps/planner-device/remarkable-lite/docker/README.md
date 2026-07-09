@@ -3,7 +3,7 @@
 
 This directory contains the reproducible Docker environment required to cross-compile the PlannerOS Lite app for the reMarkable Paper Pro (chiappa / OS 5.7.x).
 
-Since the official reMarkable Qt6 SDK toolchain is compiled strictly for `x86_64` Linux hosts, Apple Silicon (M-series) Macs cannot use it natively. This Dockerfile forces a `linux/amd64` platform, utilizing Rosetta 2 emulation to build the app transparently.
+Since the official reMarkable Qt6 SDK toolchain is compiled strictly for `x86_64` Linux hosts, Apple Silicon (M-series) Macs cannot use it natively. This Dockerfile forces a `linux/amd64` platform. Docker Desktop can run `linux/amd64` containers via emulation / Rosetta-backed acceleration where supported to build the app transparently.
 
 ## Prerequisites
 

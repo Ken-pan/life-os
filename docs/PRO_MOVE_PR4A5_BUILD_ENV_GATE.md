@@ -5,7 +5,7 @@
 
 ## Chosen Route
 **Option B: Docker `linux/amd64` container on Apple Silicon.**
-- We utilize Docker's Rosetta 2 emulation layer on Apple Silicon to emulate the `x86_64` architecture required by the official reMarkable Yocto toolchain installer.
+- We utilize Docker Desktop which can run `linux/amd64` containers via emulation / Rosetta-backed acceleration where supported to emulate the `x86_64` architecture required by the official reMarkable Yocto toolchain installer.
 - This provides the most highly reproducible, containerized compilation pipeline without touching the host OS or requiring external cloud infrastructure. 
 
 ## Rejected Routes and Why

@@ -13,7 +13,7 @@
 - **Supported Host:** Linux `x86_64` (Ubuntu 22.04 LTS or newer is recommended).
 - **Apple Silicon (M1/M2/M3) Compatibility:** **Unsupported directly.** The SDK binaries and pre-compiled cross-compilers (`aarch64-oe-linux-gcc`) are strictly compiled for `x86_64` host machines. macOS cannot execute these directly.
 - **Workarounds for Apple Silicon:**
-  - **Docker with Rosetta 2:** Running a `linux/amd64` Docker container. Docker Desktop leverages Rosetta 2 to emulate x86_64 on ARM64 Macs. Performance overhead is notable but it provides the most reproducible, scriptable, and contained environment without external dependencies.
+  - **Docker with Rosetta 2:** Running a `linux/amd64` Docker container. Docker Desktop can run `linux/amd64` containers via emulation / Rosetta-backed acceleration where supported. Performance overhead is notable but it provides the most reproducible, scriptable, and contained environment without external dependencies.
   - **UTM / Parallels VM:** Emulating an x86_64 Ubuntu VM. Performance is very slow compared to native or Rosetta translation.
   - **Remote Build Server:** A native x86_64 Linux machine (GitHub Actions, EC2, etc.). Extremely fast but requires external infrastructure.
 
