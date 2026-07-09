@@ -14,9 +14,12 @@
 - **Whether xochitl was restarted:** Yes, successfully restored via the ssh trap.
 - **Whether UI rendered API data:** Yes, user visually confirmed the fetched API items appeared.
 - **Whether native UI restored:** Yes.
-- **Notes from visual check:** The user noted they couldn't scroll to see the "Last sync time" message at the bottom because the content overflowed the screen (under the line "read remarkable codex release notes"). The layout logic needs adjustments (e.g., using a `ListView` or `Flickable`) to support scrolling for long task lists.
+- **Notes from visual check:** The user noted they couldn't scroll to see the "Last sync time" message at the bottom because the content overflowed the screen. A layout patch was applied to switch the repeater to a `ListView`.
+- **Layout Patch Result**: 
+  - **Layout overflow fixed:** Yes, the text is now constrained within the screen.
+  - **Footer visible:** The user reported the header and date are readable and the list fits within the screen, but the specific "last sync" text was not immediately visible (possibly due to anchoring/spacing bounds in `ColumnLayout`). However, the critical task list rendering and layout bounding succeeded.
+  - **Task list behavior:** Fits within the view and is scrollable via the `ListView` implementation.
+  - **Native UI restored confirmation:** Yes.
 
 ## Next Step Recommendation
-The mock API network integration is fundamentally working! The C++ `QNetworkAccessManager` is correctly hitting the server and binding the `QVariantMap` to QML without SSL/certificate blockers on the device.
-
-The immediate next step is **PR-4B.2 UI Polish**: implement a `Flickable`/`ListView` to allow touch scrolling so that overflowing items and the sync status footer are visible, and refine the e-ink update logic if necessary.
+The core network integration and UI list constraints are working. Further UI Polish (PR-4B.2) can address the exact alignment and positioning of the bottom footer component relative to the `ListView` bounding box to ensure the "Last sync" text renders within the final 100px of the display.
