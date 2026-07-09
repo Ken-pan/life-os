@@ -132,11 +132,43 @@ Incoming Request → Netlify Edge → _redirects Processing
 - API rules (more specific) listed before catch-all (less specific)
 - Ensures requests to `/api/paper/*` never reach the catch-all rule
 
+## Production Deployment Status
+
+### Commit History
+1. **Commit 6a10df46** - Removed redundant catch-all from netlify.toml
+2. **Commit beadeb3a** - Fixed Netlify functions directory path (netlify/functions)
+   - Both commits pushed to origin/master
+   - Netlify deployment in progress
+
+### Deployment Findings (2026-07-09T23:10:00Z)
+
+**Issue Found During Verification:**
+- Netlify functions directory path was incorrect
+- Path was: `apps/planner/netlify/functions` (absolute from repo root)
+- Fixed to: `netlify/functions` (relative to netlify.toml location)
+- This prevented Netlify from locating serverless functions
+
+**Functions Status:**
+- Direct function URLs still returning 404 (deployment in progress)
+- Mock endpoint status: pending deployment completion
+- Real endpoint status: pending deployment completion
+- SPA fallback: confirmed working (loads app)
+
+**Next Action:**
+- Wait 2-5 minutes for Netlify deployment to complete
+- Retest all endpoints after deployment
+- Expected behavior after deployment:
+  - `/api/paper/mock/today` → JSON 200
+  - `/api/paper/today` (no auth) → JSON 401
+  - `/.netlify/functions/paper-mock-today` → JSON 200 (direct)
+  - `/nonexistent-route` → SPA HTML fallback 200
+
 ## Conclusion
 
 ✓ **Routing Fix Complete**  
 ✓ **Tests Passing Locally**  
 ✓ **Build Verified**  
-✓ **Ready for Production Deployment**
+✓ **Functions Path Fixed**  
+⏳ **Deployment In Progress**  
 
-The routing configuration is now correct and unambiguous. The separation of concerns (API routing via `_redirects`, static/SPA routing via adapter) is clean and maintainable.
+All code changes are in place and pushed. Awaiting Netlify deployment completion to verify production behavior.
