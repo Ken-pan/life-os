@@ -433,6 +433,12 @@
       <p class="plan-mode-sub" aria-live="polite">
         {getPlanSubtitle() || '储藏区可点击'}
       </p>
+      {#if planMode === 'browse'}
+        <p class="plan-browse-hint">
+          浅色底 = 房间 · 斜线区 = 储藏 · 灰块 = 家具示意（仅参考，不可删除）·
+          悬停可看名称
+        </p>
+      {/if}
       <div class="mode-segment">
         <button
           type="button"
@@ -829,12 +835,26 @@
     font-family: var(--mono);
   }
 
+  .plan-browse-hint {
+    flex: 1 1 100%;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--t3);
+    font-family: var(--mono);
+  }
+
   @media (min-width: 720px) {
     .plan-mode-sub {
       flex: 1 1 auto;
       order: 10;
       text-align: right;
       margin-left: auto;
+    }
+
+    .plan-browse-hint {
+      flex: 1 1 100%;
+      order: 11;
     }
   }
 

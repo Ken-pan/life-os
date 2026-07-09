@@ -23,7 +23,41 @@
   </button>
 
   {#if !overlay || expanded}
-    <div id="plan-legend-body" class="plan-legend" role="list" aria-label="平面图图例">
+    <div
+      id="plan-legend-body"
+      class="plan-legend"
+      role="list"
+      aria-label="平面图图例"
+    >
+      <span class="plan-legend-item" role="listitem">
+        <i class="sw room" aria-hidden="true"></i> 房间区域（浅色底）
+      </span>
+      <span class="plan-legend-item" role="listitem">
+        <i class="sw store" aria-hidden="true"></i>
+        {#if interactive}
+          斜线区 = 储藏区（悬停见名称 · 点击进清单）
+        {:else}
+          斜线区 = 储藏区 S1–S8
+        {/if}
+      </span>
+      {#if showFurniture}
+        <span class="plan-legend-item" role="listitem">
+          <i class="sw furn" aria-hidden="true"></i> 灰块 = 家具示意（不可删改）
+        </span>
+      {/if}
+      <span class="plan-legend-item" role="listitem">
+        <svg class="sym sym-wall" viewBox="0 0 28 16" aria-hidden="true">
+          <line
+            x1="2"
+            y1="14"
+            x2="26"
+            y2="14"
+            stroke="currentColor"
+            stroke-width="3.5"
+          />
+        </svg>
+        粗实线 = 承重墙/隔墙
+      </span>
       {#if graphEditMode}
         <span class="plan-legend-item plan-legend-edit" role="listitem">
           <i class="sw wall-graph" aria-hidden="true"></i> 墙段（建墙/删墙）
@@ -41,45 +75,60 @@
         <span class="plan-legend-item plan-legend-edit" role="listitem">
           <i class="sw grip-edit" aria-hidden="true"></i> 虚线框 = 门宽握把
         </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw delete-hint" aria-hidden="true"></i> Delete 仅隐藏门窗
+        </span>
       {:else if interactive}
         <span class="plan-legend-item" role="listitem">
-          <i class="sw store" aria-hidden="true"></i> 储藏区（点击跳转清单）
-        </span>
-      {:else}
-        <span class="plan-legend-item" role="listitem">
-          <i class="sw store" aria-hidden="true"></i> 储藏区
+          <i class="sw zone-dot" aria-hidden="true"></i> 圆点 S1–S8 = 储藏入口
         </span>
       {/if}
-      {#if showFurniture}
+      {#if !graphEditMode && !editMode}
         <span class="plan-legend-item" role="listitem">
-          <i class="sw furn" aria-hidden="true"></i> 家具
+          <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
+            <line
+              x1="2"
+              y1="14"
+              x2="26"
+              y2="14"
+              stroke="currentColor"
+              stroke-width="1.2"
+              stroke-dasharray="3 2"
+            />
+          </svg>
+          通道口
+        </span>
+        <span class="plan-legend-item" role="listitem">
+          <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
+            <path
+              d="M4 14 L10 4 L14 14 M24 14 L18 4 L14 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
+            />
+          </svg>
+          双折门
+        </span>
+        <span class="plan-legend-item" role="listitem">
+          <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
+            <line
+              x1="4"
+              y1="14"
+              x2="4"
+              y2="2"
+              stroke="currentColor"
+              stroke-width="1.2"
+            />
+            <path
+              d="M4 14 A10 10 0 0 0 14 8"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.2"
+            />
+          </svg>
+          平开门
         </span>
       {/if}
-      <span class="plan-legend-item" role="listitem">
-        <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
-          <line x1="2" y1="14" x2="26" y2="14" stroke="currentColor" stroke-width="2.5" />
-        </svg>
-        承重墙
-      </span>
-      <span class="plan-legend-item" role="listitem">
-        <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
-          <line x1="2" y1="14" x2="26" y2="14" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2" />
-        </svg>
-        通道口
-      </span>
-      <span class="plan-legend-item" role="listitem">
-        <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
-          <path d="M4 14 L10 4 L14 14 M24 14 L18 4 L14 14" fill="none" stroke="currentColor" stroke-width="1.4" />
-        </svg>
-        双折门
-      </span>
-      <span class="plan-legend-item" role="listitem">
-        <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
-          <line x1="4" y1="14" x2="4" y2="2" stroke="currentColor" stroke-width="1.2" />
-          <path d="M4 14 A10 10 0 0 0 14 8" fill="none" stroke="currentColor" stroke-width="1.2" />
-        </svg>
-        平开门
-      </span>
     </div>
   {/if}
 </div>
@@ -163,6 +212,11 @@
     flex-shrink: 0;
   }
 
+  .sw.room {
+    background: var(--plan-room, #e8edf1);
+    border-color: var(--plan-room-stroke, #cdd4da);
+  }
+
   .sw.store {
     background: repeating-linear-gradient(
       45deg,
@@ -217,8 +271,25 @@
     align-self: center;
   }
 
+  .sw.delete-hint {
+    background: rgba(180, 83, 9, 0.12);
+    border: 1.5px dashed #b45309;
+  }
+
+  .sw.zone-dot {
+    background: var(--plan-accent, #5c758c);
+    border: 1.5px solid #fff;
+    border-radius: 999px;
+    width: 12px;
+    height: 12px;
+  }
+
   .plan-legend-edit {
     color: var(--accent);
+  }
+
+  .sym-wall {
+    color: var(--plan-wall, #20242b);
   }
 
   .sym {

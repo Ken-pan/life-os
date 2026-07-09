@@ -51,10 +51,11 @@ export function renderFloorPlanSvg(project, opts = {}) {
   const wallHitStroke = Math.round(18 * touchScale)
   const wallOnStroke = Math.round(20 * touchScale)
   const dimmed = opts.dragDimmed ? ' room-dimmed' : ''
+  const editModeOn = opts.editMode ? ' edit-mode-on' : ''
 
   const parts = []
   parts.push(
-    `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="floor plan" xmlns="http://www.w3.org/2000/svg">`,
+    `<svg class="floor-plan-svg${editModeOn}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="floor plan" xmlns="http://www.w3.org/2000/svg">`,
   )
   parts.push(`<defs>
   <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
@@ -74,8 +75,10 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .room-zh{font:650 ${compact ? 11 : 14}px var(--font,system-ui,sans-serif);fill:var(--plan-text,#3a4048)}
  .room-en{font:${compact ? 9 : 11}px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.14em}
  .room-circ{stroke:var(--plan-circ,#c5cdd6);stroke-width:1;stroke-dasharray:4 3;fill:var(--plan-circ-fill,rgba(238,236,230,.45))}
+ .edit-mode-on .room-fill,.edit-mode-on .room-circ{opacity:.86}
  .circ-label{font:600 9px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.08em}
  .furn{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a)}
+ .furn-item{cursor:help}
  .tiny{font:10px var(--mono,monospace);fill:var(--plan-dim,#6a727c)}
  .mk{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.5}
  .mk-t{font:700 ${compact ? 9 : 11}px var(--mono,monospace);fill:#f5f8fa}
@@ -85,6 +88,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .zone-hit{cursor:pointer;opacity:0}
  .zone-hit:hover{opacity:.2;fill:var(--plan-accent,#5c758c)}
  .zone-on{opacity:.24;fill:var(--plan-accent,#5c758c)}
+ .zone-label-hit{cursor:help;pointer-events:all}
  .wall-hit{stroke:rgba(92,117,140,.14);stroke-width:${wallHitStroke};cursor:ew-resize;pointer-events:stroke}
  .wall-hit.wall-h{cursor:ns-resize}
  .wall-hit:hover{stroke:rgba(92,117,140,.42)}
@@ -135,7 +139,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
     const fill = room.fill ?? 'var(--plan-room,#e8edf1)'
     if (isCirc) {
       parts.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-circ"/>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-circ room-fill"/>`,
       )
       if (!compact) {
         parts.push(
@@ -145,7 +149,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
       continue
     }
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="var(--plan-room-stroke,#cdd4da)" stroke-width="1"/>`,
+      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-fill" fill="${fill}" stroke="var(--plan-room-stroke,#cdd4da)" stroke-width="1"/>`,
     )
     const cx = x + w / 2
     const cy = y + h / 2 - (compact ? 6 : 8)
@@ -170,8 +174,12 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const { x, y, w, h } = item.bounds
       const dash =
         item.strokeStyle === 'dashed' ? ' stroke-dasharray="4 3"' : ''
+      const inferred = item.strokeStyle === 'dashed' ? ' · 推测摆位' : ''
       parts.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--plan-furn,#dfe3e8)" stroke="var(--plan-door,#8a929c)" stroke-width="1.2" rx="3"${dash}/>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="furn-item" fill="var(--plan-furn,#dfe3e8)" stroke="var(--plan-door,#8a929c)" stroke-width="1.2" rx="3"${dash}>`,
+      )
+      parts.push(
+        `<title>家具示意 · ${esc(item.label)}${inferred}（不可删除）</title></rect>`,
       )
       if (!compact || w > 36) {
         parts.push(
@@ -188,8 +196,13 @@ export function renderFloorPlanSvg(project, opts = {}) {
       `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#hatch)" stroke="var(--plan-accent,#5c758c)" stroke-width="1.6" rx="3" stroke-dasharray="5 3"/>`,
     )
     if (opts.interactive) {
+      const zoneTitle = `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
       parts.push(
-        `<rect class="zone-hit${on ? ' zone-on' : ''}" data-zone="${zone.code}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"/>`,
+        `<rect class="zone-hit${on ? ' zone-on' : ''}" data-zone="${zone.code}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3"><title>${esc(zoneTitle)}</title></rect>`,
+      )
+    } else {
+      parts.push(
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="none" pointer-events="all" class="zone-label-hit"><title>${esc(`${zone.code} · ${zone.nameZh}`)}</title></rect>`,
       )
     }
   }
@@ -248,8 +261,12 @@ export function renderFloorPlanSvg(project, opts = {}) {
     for (const wall of project.walls) {
       if (wall.kind !== 'wall') continue
       const on = opts.selectedEdge === wall.id
+      const binding = resolveWallBinding(wall.id)
+      const edgeTitle = binding
+        ? `墙段 · ${binding.label} — 点击选中`
+        : '墙段 — 点击选中'
       parts.push(
-        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${wall.id}"/>`,
+        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${wall.id}"><title>${esc(edgeTitle)}</title></line>`,
       )
     }
     if (opts.wallChainFrom) {
@@ -264,7 +281,9 @@ export function renderFloorPlanSvg(project, opts = {}) {
     }
     parts.push('</g>')
   } else if (opts.editMode) {
-    parts.push('<g class="edit-layer edit-layer-walls" aria-label="可编辑墙线">')
+    parts.push(
+      '<g class="edit-layer edit-layer-walls" aria-label="可编辑墙线">',
+    )
     for (const wall of project.walls) {
       if (wall.kind !== 'wall' || !isEditableWall(wall.id)) continue
       const binding = resolveWallBinding(wall.id)
@@ -273,19 +292,30 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const blocked = opts.dragBlockedWall === wall.id
       const deemph =
         opts.selectedOpening || (opts.selectedWall && !on) ? ' wall-deemph' : ''
+      const wallTitle = binding
+        ? `墙体 · ${binding.label} — 拖曳改房间尺寸`
+        : '内墙 — 拖曳改尺寸'
       parts.push(
-        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="wall-hit${orient}${on ? ' wall-on' : ''}${blocked ? ' wall-blocked' : ''}${deemph}" data-wall-id="${wall.id}"/>`,
+        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="wall-hit${orient}${on ? ' wall-on' : ''}${blocked ? ' wall-blocked' : ''}${deemph}" data-wall-id="${wall.id}"><title>${esc(wallTitle)}</title></line>`,
       )
     }
     parts.push('</g>')
-    parts.push('<g class="edit-layer edit-layer-openings" aria-label="可编辑门窗">')
+    parts.push(
+      '<g class="edit-layer edit-layer-openings" aria-label="可编辑门窗">',
+    )
     for (const op of project.openings) {
       if (op.id === 'ac-living') continue
       const hit = openingHitRect(op)
       const on = opts.selectedOpening === op.id
       const blocked = opts.dragBlockedOpening === op.id
+      const openingBinding = OPENING_EDIT_BINDINGS[op.id]
+      const openTitle = openingBinding
+        ? supportsDoorWidthResize(op.id)
+          ? `开口 · ${openingBinding.label} — 拖曳移动 · 右侧握把改门宽`
+          : `开口 · ${openingBinding.label} — 拖曳改位置`
+        : '门窗 — 拖曳改位置'
       parts.push(
-        `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="${op.id}"/>`,
+        `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="${op.id}"><title>${esc(openTitle)}</title></rect>`,
       )
       if (supportsDoorWidthResize(op.id)) {
         appendResizeGrip(parts, op.id, hit, touchScale)
@@ -293,11 +323,16 @@ export function renderFloorPlanSvg(project, opts = {}) {
     }
     const closetGap = project.walls.find((w) => w.id === 'g-bed-closet')
     if (closetGap) {
-      const hit = openingHitAlongH(closetGap.from.x, closetGap.to.x, closetGap.from.y)
+      const hit = openingHitAlongH(
+        closetGap.from.x,
+        closetGap.to.x,
+        closetGap.from.y,
+      )
       const on = opts.selectedOpening === 'g-bed-closet'
       const blocked = opts.dragBlockedOpening === 'g-bed-closet'
+      const closetTitle = '开口 · 壁橱双折门 — 拖曳移动 · 右侧握把改门宽'
       parts.push(
-        `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="g-bed-closet"/>`,
+        `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="g-bed-closet"><title>${esc(closetTitle)}</title></rect>`,
       )
       appendResizeGrip(parts, 'g-bed-closet', hit, touchScale)
     }
@@ -336,7 +371,12 @@ export function renderFloorPlanSvg(project, opts = {}) {
   for (const zone of project.storageZones) {
     const { x, y } = zone.marker
     const r = compact ? 8 : 11
-    parts.push(`<circle cx="${x}" cy="${y}" r="${r}" class="mk"/>`)
+    const markerTitle = opts.interactive
+      ? `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
+      : `${zone.code} · ${zone.nameZh}`
+    parts.push(
+      `<circle cx="${x}" cy="${y}" r="${r}" class="mk"><title>${esc(markerTitle)}</title></circle>`,
+    )
     parts.push(
       `<text x="${x}" y="${y + (compact ? 2.8 : 3.6)}" text-anchor="middle" class="mk-t">${esc(zone.code)}</text>`,
     )
@@ -387,14 +427,12 @@ export function renderFloorPlanSvg(project, opts = {}) {
 
   if (opts.measure?.a) {
     const { a, b } = opts.measure
-    parts.push('<g class="measure-layer" pointer-events="none" aria-label="测距">')
     parts.push(
-      `<circle cx="${a.x}" cy="${a.y}" r="5" class="measure-dot"/>`,
+      '<g class="measure-layer" pointer-events="none" aria-label="测距">',
     )
+    parts.push(`<circle cx="${a.x}" cy="${a.y}" r="5" class="measure-dot"/>`)
     if (b) {
-      parts.push(
-        `<circle cx="${b.x}" cy="${b.y}" r="5" class="measure-dot"/>`,
-      )
+      parts.push(`<circle cx="${b.x}" cy="${b.y}" r="5" class="measure-dot"/>`)
       parts.push(
         `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="measure-line"/>`,
       )
