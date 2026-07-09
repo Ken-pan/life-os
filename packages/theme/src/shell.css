@@ -93,11 +93,11 @@
   gap: var(--space-1);
   padding: max(var(--space-4), env(safe-area-inset-top)) var(--space-3) var(--space-4);
   overflow: hidden;
+  overflow-x: clip;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--sidebar) 96%, #fff 4%) 0%, var(--sidebar) 100%);
   color: var(--sidebar-foreground);
   border-right: 1px solid var(--sidebar-border);
-  --sidebar-row-pad-inline: calc(var(--space-3) + var(--space-2-5));
 }
 
 .sidebar .brand {
@@ -108,16 +108,15 @@
   padding: var(--space-1) var(--space-2) var(--space-3-5);
 }
 
-/* Workspace switcher — full-bleed row (Notion / Linear / shadcn SidebarHeader) */
+/* Workspace switcher — compact popover aligned to sidebar content width */
 .brand-switcher {
   position: relative;
   flex-shrink: 0;
   z-index: 2;
-  margin-top: calc(-1 * max(var(--space-4), env(safe-area-inset-top)));
-  margin-inline: calc(var(--space-3) * -1);
-  width: calc(100% + 2 * var(--space-3));
-  padding-top: max(var(--space-4), env(safe-area-inset-top));
-  padding-bottom: var(--space-1);
+}
+
+.brand-switcher:has(.brand-switcher-trigger[aria-expanded='true']) {
+  z-index: 8;
 }
 
 .sidebar .brand.brand-switcher-trigger {
@@ -125,9 +124,9 @@
   margin: 0;
   width: 100%;
   min-height: var(--tap-min);
-  padding: var(--space-2) var(--sidebar-row-pad-inline);
+  padding: var(--space-2) var(--space-2-5);
   border: none;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--sidebar-foreground);
   cursor: pointer;
@@ -156,22 +155,25 @@
 
 .brand-switcher-menu {
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
+  top: calc(100% + var(--space-0-5));
+  left: var(--space-1);
+  right: var(--space-1);
   z-index: 60;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: var(--space-0-5) 0;
-  border-radius: 0;
-  border: none;
+  gap: var(--space-0-5);
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: calc(100% - 2 * var(--space-1));
+  padding: var(--space-0-5);
+  border-radius: var(--command-palette-container-radius, var(--radius-lg));
+  border: 1px solid var(--command-palette-container-border, var(--sidebar-border));
   background: var(--sidebar);
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--sidebar-foreground) 8%, transparent);
+  box-shadow: var(--command-palette-container-shadow, var(--shadow-elevated));
+  overflow: hidden;
 }
 
 .sidebar:has(.brand-switcher-trigger[aria-expanded='true']) {
-  overflow: visible;
   z-index: 4;
 }
 
@@ -179,12 +181,13 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-2-5);
+  gap: var(--space-2);
   width: 100%;
-  min-height: var(--tap-min);
-  padding: var(--space-2) var(--sidebar-row-pad-inline);
+  min-width: 0;
+  min-height: calc(var(--tap-min) - 2px);
+  padding: var(--space-1-5) var(--space-2);
   border: none;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--sidebar-muted);
   text-align: left;
@@ -247,6 +250,7 @@
   gap: var(--space-2);
   min-width: 0;
   flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .brand-switcher-item-name {
@@ -254,6 +258,10 @@
   font-size: var(--text-sm);
   font-weight: inherit;
   letter-spacing: 0.02em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .brand-switcher-item-name .brand-name-accent {
@@ -276,6 +284,7 @@
 .sidebar-body {
   flex: 1 1 auto;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -389,12 +398,11 @@
   align-items: center;
   justify-content: flex-start;
   gap: var(--space-2-5);
-  width: calc(100% + 2 * var(--space-3));
+  width: 100%;
   min-height: var(--tap-min);
-  margin-inline: calc(var(--space-3) * -1);
-  padding: var(--space-2) var(--sidebar-row-pad-inline);
+  padding: var(--space-2) var(--space-2-5);
   border: none;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--sidebar-muted);
   font-size: var(--text-base);
