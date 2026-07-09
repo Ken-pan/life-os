@@ -6,6 +6,7 @@ import { calendarView } from '$lib/ui.svelte.js'
  * @param {string} [search]
  */
 export function resolveTaskEditorDefaults(pathname, search = '') {
+  void search
   if (pathname === '/') return { dueDate: todayKey() }
   if (pathname.startsWith('/calendar')) {
     return { dueDate: calendarView.selected || todayKey() }
@@ -18,11 +19,5 @@ export function resolveTaskEditorDefaults(pathname, search = '') {
     return { listId: 'inbox', dueDate: null }
   }
   if (pathname.startsWith('/upcoming')) return { dueDate: null }
-  if (
-    pathname === '/' &&
-    new URLSearchParams(search).get('view') === 'timeline'
-  ) {
-    return { dueDate: todayKey() }
-  }
   return {}
 }
