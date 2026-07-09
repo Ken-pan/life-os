@@ -19,6 +19,7 @@
     canUndoLayout,
     commitGraphVertexMove,
     getActiveProject,
+    getBrowseFloorPlan,
     isOpeningDisabled,
     isWallGraphMode,
     getLastDoorStyle,
@@ -29,6 +30,7 @@
     removePlacement,
     removeZone,
     resetToOuterShell,
+    reset508Layout,
     rotatePlacementById,
     setOpeningDisabled,
     setPlanSubtitle,
@@ -132,6 +134,11 @@
   const wallGraphEmpty = $derived(
     wallGraph && (project.wallGraph?.edges?.length ?? 0) === 0,
   )
+  const wallGraphOuterShellOnly = $derived(
+    wallGraph &&
+      !wallGraphEmpty &&
+      (project.wallGraph?.edges?.every((e) => e.exterior) ?? false),
+  )
   const showGraphSelectionBar = $derived(
     graphEditMode && Boolean(selectedEdge) && !selectedOpening,
   )
@@ -178,12 +185,15 @@
         placements: previewPlacements,
       })
     }
+    if (planMode === 'browse') {
+      return getBrowseFloorPlan()
+    }
     return project
   })
 
   const modeHint = $derived.by(() => {
     if (planMode === 'browse') {
-      return '点击储藏区查看物品 · 双指缩放平移'
+      return '双指缩放平移 · 储藏清单见左侧「储藏」'
     }
     if (wallGraph && editStep === 'walls') {
       if (graphTool === 'wallAdd') {
@@ -211,7 +221,7 @@
 
   /** AppBar 单行副标题（沉浸式编辑时由 layout 隐藏） */
   const appBarSubtitle = $derived.by(() => {
-    if (planMode === 'browse') return '储藏区可点击'
+    if (planMode === 'browse') return '浏览 508 户型'
     if (graphEditMode) {
       if (graphTool === 'wallAdd') return '墙图 · 建墙'
       if (graphTool === 'opening') return '墙图 · 门窗'
@@ -583,6 +593,17 @@
       setEditStep('place')
       setPlacementTool('place')
     }
+  }
+
+  function restoreDefaultLayout() {
+    if (
+      !window.confirm('恢复完整 508 默认户型？将退出墙图模式并显示全部内墙与门窗。')
+    ) {
+      return
+    }
+    reset508Layout()
+    clearSelection()
+    bumpFit(false, 'contain')
   }
 
   function handleResetToShell() {
@@ -1112,9 +1133,13 @@
         墙图为空 · ① 墙体中用「建墙」点击拐点连线，或到设置页从 508 重新转换
       </p>
     {/if}
-    {#if wallGraph && planMode === 'browse' && !project.zones?.length}
-      <p class="plan-snapshot-badge" role="note">
-        房间名与色块来自 508 参数快照 · 在编辑②划分中手绘分区后替换
+    {#if wallGraphOuterShellOnly}
+      <p class="plan-empty-wallgraph" role="status">
+        当前只剩外墙框，内墙与门已清空。
+        <button type="button" class="plan-inline-btn" onclick={restoreDefaultLayout}>
+          恢复默认户型
+        </button>
+        或 ⌘Z 撤销
       </p>
     {/if}
     <FloorPlanViewer
@@ -1192,7 +1217,8 @@
         previewPlacements = null
         commitPlacementMove(id, pt.x, pt.y)
       }}
-      onZoneSelect={planMode === 'browse' ? selectZone : undefined}
+      hideStorageZones={planMode === 'browse'}
+      onZoneSelect={undefined}
       onClearSelection={editMode508 ? clearSelection : undefined}
       onGraphWallPoint={graphEditMode ? onGraphWallPoint : undefined}
       onGraphRemoveEdge={(id) => removeGraphWall(id)}
@@ -1850,18 +1876,6 @@
     color: #b45309;
   }
 
-  .plan-snapshot-badge {
-    flex: 0 0 auto;
-    margin: 0 0 6px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--t2);
-    background: color-mix(in srgb, var(--graph-accent) 8%, var(--card));
-    border: 1px solid color-mix(in srgb, var(--graph-accent) 20%, var(--border));
-  }
-
   .plan-empty-wallgraph {
     flex: 0 0 auto;
     margin: 0 0 6px;
@@ -1872,6 +1886,18 @@
     color: var(--t2);
     background: color-mix(in srgb, #b45309 10%, var(--card));
     border: 1px solid color-mix(in srgb, #b45309 28%, var(--border));
+  }
+
+  .plan-inline-btn {
+    margin: 0 4px;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: underline;
+    cursor: pointer;
   }
 
   .plan-stage {

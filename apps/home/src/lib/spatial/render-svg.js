@@ -56,6 +56,7 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   selectedPlacement?: string,
  *   showFurniture?: boolean,
  *   showRoomEnglish?: boolean,
+ *   hideStorageZones?: boolean,
  * }} [opts]
  */
 export function renderFloorPlanSvg(project, opts = {}) {
@@ -80,6 +81,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
   const spatialZones = opts.previewZones ?? project.zones ?? []
   const hasSpatialZones = spatialZones.length > 0
   const hideFurniture = opts.hideFurniture && !opts.showFurniture
+  const hideStorageZones = opts.hideStorageZones ?? false
 
   const parts = []
   parts.push(
@@ -267,8 +269,9 @@ export function renderFloorPlanSvg(project, opts = {}) {
     }
   }
 
-  for (const zone of project.storageZones) {
-    if (!zone.bounds) continue
+  if (!hideStorageZones) {
+    for (const zone of project.storageZones) {
+      if (!zone.bounds) continue
     const { x, y, w, h } = zone.bounds
     const on = opts.highlightZone === zone.code
     const unassigned = !zone.zoneId && !zone.placementId
@@ -291,6 +294,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
       parts.push(
         `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="none" pointer-events="all" class="zone-label-hit" data-plan-tip="${esc(zoneTip)}"><title>${esc(zoneTip)}</title></rect>`,
       )
+    }
     }
   }
 
@@ -568,22 +572,24 @@ export function renderFloorPlanSvg(project, opts = {}) {
     }
   }
 
-  for (const zone of project.storageZones) {
-    if (!zone.marker) continue
-    const { x, y } = zone.marker
-    const r = compact ? 8 : 11
-    const markerTitle = opts.interactive
-      ? `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
-      : `${zone.code} · ${zone.nameZh}`
-    const markerA11y = opts.interactive
-      ? ` tabindex="0" role="button" aria-label="${esc(markerTitle)}"`
-      : ''
-    parts.push(
-      `<circle cx="${x}" cy="${y}" r="${r}" class="mk zone-marker" data-zone="${zone.code}" data-plan-tip="${esc(markerTitle)}"${markerA11y}><title>${esc(markerTitle)}</title></circle>`,
-    )
-    parts.push(
-      `<text x="${x}" y="${y + (compact ? 2.8 : 3.6)}" text-anchor="middle" class="mk-t">${esc(zone.code)}</text>`,
-    )
+  if (!hideStorageZones) {
+    for (const zone of project.storageZones) {
+      if (!zone.marker) continue
+      const { x, y } = zone.marker
+      const r = compact ? 8 : 11
+      const markerTitle = opts.interactive
+        ? `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
+        : `${zone.code} · ${zone.nameZh}`
+      const markerA11y = opts.interactive
+        ? ` tabindex="0" role="button" aria-label="${esc(markerTitle)}"`
+        : ''
+      parts.push(
+        `<circle cx="${x}" cy="${y}" r="${r}" class="mk zone-marker" data-zone="${zone.code}" data-plan-tip="${esc(markerTitle)}"${markerA11y}><title>${esc(markerTitle)}</title></circle>`,
+      )
+      parts.push(
+        `<text x="${x}" y="${y + (compact ? 2.8 : 3.6)}" text-anchor="middle" class="mk-t">${esc(zone.code)}</text>`,
+      )
+    }
   }
 
   renderGraphicScale(parts, height, pxPerFt, compact)

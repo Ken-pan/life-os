@@ -3,9 +3,14 @@
 /** @typedef {import('./types.js').WallGraphVertex} WallGraphVertex */
 /** @typedef {import('./types.js').WallGraphEdge} WallGraphEdge */
 
-import { SPATIAL_SCHEMA_VERSION } from './types.js'
+import {
+  build508Project,
+  default508Config,
+  merge508Config,
+} from './layout-508.js'
 import { deriveWallsAndOpenings } from './graph-openings.js'
 import { zonesToRooms } from './zones.js'
+import { SPATIAL_SCHEMA_VERSION } from './types.js'
 import {
   placementsToFurniture,
   resolveStorageZoneBounds,
@@ -55,8 +60,7 @@ export function createEmptyWallGraph(pxPerFt, margin) {
 function findOrCreateVertex(graph, x, y) {
   const snapped = snapGraphPoint(x, y, graph.pxPerFt)
   const hit = graph.vertices.find(
-    (v) =>
-      Math.hypot(v.x - snapped.x, v.y - snapped.y) <= VERTEX_TOL_PX,
+    (v) => Math.hypot(v.x - snapped.x, v.y - snapped.y) <= VERTEX_TOL_PX,
   )
   if (hit) return hit
   const v = { id: nextId('v'), x: snapped.x, y: snapped.y }
@@ -85,8 +89,7 @@ export function addWallSegment(graph, x1, y1, x2, y2, opts = {}) {
     return { graph: next, edgeId: null, error: '墙段过短' }
   }
   const dup = next.edges.find(
-    (e) =>
-      (e.a === a.id && e.b === b.id) || (e.a === b.id && e.b === a.id),
+    (e) => (e.a === a.id && e.b === b.id) || (e.a === b.id && e.b === a.id),
   )
   if (dup) return { graph: next, edgeId: dup.id, error: '墙段已存在' }
   const edge = {
@@ -215,6 +218,16 @@ function graphViewport(graph) {
 }
 
 /**
+ * 墙图浏览模式下无手绘分区时，用 508 参数快照渲染房间色块（与平面页提示一致）。
+ * @param {Partial<SpatialProject>} carry
+ * @returns {SpatialProject['rooms']}
+ */
+function snapshot508Rooms(carry) {
+  const config = merge508Config(default508Config(), carry.layoutConfig ?? {})
+  return build508Project(config, carry).rooms
+}
+
+/**
  * @param {WallGraph} graph
  * @param {Partial<SpatialProject>} [carry]
  * @returns {SpatialProject}
@@ -241,7 +254,11 @@ export function buildFromWallGraph(graph, carry = {}) {
     },
     viewport: { width, height },
     gridStep: Math.round(graph.pxPerFt * (4 / 12)),
-    rooms: zones.length ? zonesToRooms(zones) : (carry.rooms ?? []),
+    rooms: zones.length
+      ? zonesToRooms(zones)
+      : carry.rooms?.length
+        ? carry.rooms
+        : snapshot508Rooms(carry),
     walls,
     outerBounds,
     openings,
@@ -374,7 +391,10 @@ export function pickWallEdgeAt(graph, pt, maxDistPx = 16) {
     const dy = b.y - a.y
     const len2 = dx * dx + dy * dy
     if (len2 < 1) continue
-    const t = Math.max(0, Math.min(1, ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / len2))
+    const t = Math.max(
+      0,
+      Math.min(1, ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / len2),
+    )
     const cx = a.x + t * dx
     const cy = a.y + t * dy
     const d = Math.hypot(pt.x - cx, pt.y - cy)

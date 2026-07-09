@@ -251,7 +251,10 @@ export function addZone(polygon, nameZh) {
   const zones = raw.zones ?? []
   const zone = createZoneFromChain(polygon, nameZh, zones)
   if (!zone) return null
-  applyEditSource({ zones: [...zones, zone] }, { toastMsg: `已添加 ${zone.nameZh}` })
+  applyEditSource(
+    { zones: [...zones, zone] },
+    { toastMsg: `已添加 ${zone.nameZh}` },
+  )
   return zone.id
 }
 
@@ -298,9 +301,7 @@ export function commitZoneVertexMove(zoneId, vertexIndex, x, y) {
   const snapped = snapGraphPoint(x, y, pxPerFt)
   const zones = (raw.zones ?? []).map((z) => {
     if (z.id !== zoneId) return z
-    const polygon = z.polygon.map((p, i) =>
-      i === vertexIndex ? snapped : p,
-    )
+    const polygon = z.polygon.map((p, i) => (i === vertexIndex ? snapped : p))
     return { ...z, polygon }
   })
   applyEditSource({ zones }, { toastMsg: '已调整分区顶点' })
@@ -452,7 +453,10 @@ export function reconvertGraphOpenings() {
     wallGraph: undefined,
   })
   const graphOpenings = convert508Openings(hydrated508, raw.wallGraph)
-  applyEditSource({ graphOpenings }, { toastMsg: `已重新识别 ${graphOpenings.length} 个门窗` })
+  applyEditSource(
+    { graphOpenings },
+    { toastMsg: `已重新识别 ${graphOpenings.length} 个门窗` },
+  )
 }
 
 export function revertToParametric508() {
@@ -604,8 +608,14 @@ export function addGraphOpening(edgeId, pt, type = 'door', doorStyle) {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const graph = raw.wallGraph
   if (!graph) return null
-  const style = type === 'door' ? doorStyle ?? lastDoorStyle : undefined
-  const opening = createOpeningAtPoint(graph, edgeId, pt, type, style ?? 'swing')
+  const style = type === 'door' ? (doorStyle ?? lastDoorStyle) : undefined
+  const opening = createOpeningAtPoint(
+    graph,
+    edgeId,
+    pt,
+    type,
+    style ?? 'swing',
+  )
   if (!opening) return null
   if (type === 'door' && opening.style) lastDoorStyle = opening.style
   const graphOpenings = [...(raw.graphOpenings ?? []), opening]
@@ -643,7 +653,9 @@ export function cycleGraphOpeningStyle(openingId) {
 /** @param {string} openingId */
 export function removeGraphOpening(openingId) {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
-  const graphOpenings = (raw.graphOpenings ?? []).filter((o) => o.id !== openingId)
+  const graphOpenings = (raw.graphOpenings ?? []).filter(
+    (o) => o.id !== openingId,
+  )
   applyEditSource({ graphOpenings }, { toastMsg: '已删除门窗' })
 }
 
@@ -673,7 +685,13 @@ export function commitGraphOpeningEdit(openingId, pt, mode) {
  * @param {{ x: number, y: number }} pt
  * @param {'move' | 'resize-start' | 'resize-end'} mode
  */
-export function previewGraphOpeningDrag(graph, graphOpenings, openingId, pt, mode) {
+export function previewGraphOpeningDrag(
+  graph,
+  graphOpenings,
+  openingId,
+  pt,
+  mode,
+) {
   return previewGraphOpeningEdit(graph, graphOpenings, openingId, pt, mode)
 }
 
@@ -716,9 +734,7 @@ export function removeGraphWall(edgeId) {
   const graphOpenings = filterOpeningsForEdge(raw.graphOpenings ?? [], edgeId)
   applyEditSource({ wallGraph: nextGraph, graphOpenings }, { silent: true })
   const msg =
-    cascadeCount > 0
-      ? `已删除墙段 · 级联 ${cascadeCount} 个门窗`
-      : '已删除墙段'
+    cascadeCount > 0 ? `已删除墙段 · 级联 ${cascadeCount} 个门窗` : '已删除墙段'
   toast(msg, {
     actionLabel: '撤销',
     onAction: () => undoGraphEdit(),
@@ -841,6 +857,19 @@ export function persist() {
 export function getActiveProject() {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   return hydrateProject(raw)
+}
+
+/** 浏览页固定显示 508 参数化户型，不受墙图编辑态干扰。 */
+export function getBrowseFloorPlan() {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  return hydrateProject({
+    ...raw,
+    layoutMode: 'parametric508',
+    wallGraph: undefined,
+    graphOpenings: [],
+    zones: [],
+    placements: [],
+  })
 }
 
 /** @type {string} */
@@ -1054,13 +1083,21 @@ export function commitLayoutDrag(kind, id, deltaPx, opts = {}) {
 export function reset508Layout() {
   layoutUndoStack = []
   layoutRedoStack = []
+  graphUndoStack = []
+  graphRedoStack = []
   persistUndoStacks()
+  persistGraphUndoStacks()
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const itemsById = Object.fromEntries(
     (raw.storageZones ?? []).map((z) => [z.id, z.items]),
   )
   const base = hydrateProject({
     ...raw,
+    layoutMode: 'parametric508',
+    wallGraph: undefined,
+    graphOpenings: [],
+    zones: [],
+    placements: [],
     layoutConfig: default508Config(),
     furnitureInventory: undefined,
   })
