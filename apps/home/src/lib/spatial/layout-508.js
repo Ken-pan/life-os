@@ -5,6 +5,7 @@ import { SPATIAL_SCHEMA_VERSION } from './types.js'
 import { dimPx, formatFtIn, toInches, fromInches } from './dimensions.js'
 import {
   bifoldHorizontalUp,
+  bifoldVerticalRight,
   slidingHorizontal,
   swingHorizontalUp,
   swingVerticalLeft,
@@ -39,7 +40,7 @@ export function default508Config() {
       bathroom: { w: { ft: 7, in: 11 }, h: { ft: 7, in: 8 } },
       laundry: { w: { ft: 3, in: 2 }, h: { ft: 5, in: 4 } },
       living: { w: { ft: 11, in: 10 }, h: { ft: 16, in: 9 } },
-      kitchen: { w: { ft: 7, in: 8 }, h: { ft: 13, in: 10 } },
+      kitchen: { w: { ft: 11, in: 10 }, h: { ft: 13, in: 10 } },
       entry: { w: { ft: 3, in: 9 }, h: { ft: 4, in: 5 } },
     },
     openings: defaultOpenings(),
@@ -132,6 +133,12 @@ export function build508Project(config, carry = {}) {
   const yRightBot = Y0 + livingH + kitchenH
   const Y_BOT = Math.max(yLeftBot, yRightBot)
   const outerH = Y_BOT - Y0
+  const midColX = X0 + bathW
+  const midColW = laundryW + hallW
+  const pillarW = px({ ft: 2, in: 0 }, P)
+  const pillarH = px({ ft: 2, in: 0 }, P)
+  const pillarX = midColX + Math.max(0, (midColW - pillarW) / 2)
+  const pillarY = Y_BOT - pillarH
   const coatDoorY1 = yBedroomBot + px(op.coatDoor.offset, P)
   const coatDoorY2 = coatDoorY1 + px(op.coatDoor.span, P)
   const laundryDoorY1 = yLaundryTop + px(op.laundryDoor.offset, P)
@@ -234,6 +241,14 @@ export function build508Project(config, carry = {}) {
         h: hallH,
       },
       fill: 'transparent',
+    },
+    {
+      id: 'structural-pillar',
+      nameZh: '结构柱',
+      nameEn: 'Structural Column',
+      kind: 'structural',
+      bounds: { x: pillarX, y: pillarY, w: pillarW, h: pillarH },
+      fill: '#c9bfb4',
     },
   ]
 
@@ -479,9 +494,10 @@ export function build508Project(config, carry = {}) {
     {
       id: 'door-laundry',
       type: 'door',
-      doorStyle: 'swing',
+      doorStyle: 'bifold',
+      opensInto: 'hall',
       hitRect: openingHitAlongV(hallX, laundryDoorY1, laundryDoorY2),
-      pathD: swingVerticalRight({ x: hallX, y1: laundryDoorY1, y2: laundryDoorY2, radius: 28 }),
+      pathD: bifoldVerticalRight({ x: hallX, y1: laundryDoorY1, y2: laundryDoorY2 }),
     },
     {
       id: 'door-entry',
@@ -544,6 +560,7 @@ export function build508Project(config, carry = {}) {
       assumptions: [
         '<b>平面来源</b>：参数化布局，默认按开发商 769 sqft 户型图重建。',
         '<b>卧室壁橱</b>：双折门（bifold），仅向卧室方向开启，不向走廊开门。',
+        '<b>洗衣间</b>：双折门 5′ 宽，向走廊开启；底部结构柱为实心不可进。',
         '<b>储藏区 S1–S8</b>：位置随尺寸自适应；柜内明细可继续修正。',
       ],
       sourceNote: carry.meta?.sourceNote ?? 'HOME.OS · 参数化户型 · 储藏清单来自现场审计',

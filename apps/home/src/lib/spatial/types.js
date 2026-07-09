@@ -86,7 +86,7 @@
  * @property {string} nameEn
  * @property {Rect} bounds
  * @property {string} [fill]
- * @property {'room' | 'circulation'} [kind]
+ * @property {'room' | 'circulation' | 'structural'} [kind]
  * @property {RoomDimensions} [dimensions]
  */
 

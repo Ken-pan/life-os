@@ -101,6 +101,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .room-zh{font:650 ${compact ? 11 : 14}px var(--font,system-ui,sans-serif);fill:var(--plan-text,#3a4048);pointer-events:none}
  .room-en{font:${compact ? 9 : 11}px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.14em;pointer-events:none}
  .room-circ{stroke:var(--plan-circ,#c5cdd6);stroke-width:1;stroke-dasharray:4 3;fill:var(--plan-circ-fill,rgba(238,236,230,.45))}
+ .room-structural{stroke:#b45309;stroke-width:1.6;stroke-dasharray:5 3;fill:url(#hatch);pointer-events:none}
+ .structural-label{font:600 8px var(--mono,monospace);fill:#b45309;pointer-events:none}
  .edit-mode-on .room-fill,.edit-mode-on .room-circ{opacity:.72}
  .circ-label{font:600 9px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.08em;pointer-events:none}
  .furn{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
@@ -194,7 +196,17 @@ export function renderFloorPlanSvg(project, opts = {}) {
     if (hasSpatialZones) continue
     const { x, y, w, h } = room.bounds
     const isCirc = room.kind === 'circulation'
+    const isStructural = room.kind === 'structural'
     const fill = room.fill ?? 'var(--plan-room,#e8edf1)'
+    if (isStructural) {
+      parts.push(
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-structural" data-plan-tip="${esc('结构柱 · 实心不可进')}"/>`,
+      )
+      parts.push(
+        `<text x="${x + w / 2}" y="${y + h / 2 + 3}" text-anchor="middle" class="structural-label${dimmed}">实心不可进</text>`,
+      )
+      continue
+    }
     if (isCirc) {
       const circTip = `动线 · ${room.nameZh}`
       parts.push(
