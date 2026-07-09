@@ -126,10 +126,18 @@
     /** @type {{ id: string, label: string, action: () => void }[]} */
     const items = []
     if (!wallGraph && planMode !== 'edit') {
-      items.push({ id: 'edit', label: '编辑户型', action: () => setPlanMode('edit') })
+      items.push({
+        id: 'edit',
+        label: '编辑户型',
+        action: () => setPlanMode('edit'),
+      })
     }
     if (planMode !== 'measure') {
-      items.push({ id: 'measure', label: '测距', action: () => setPlanMode('measure') })
+      items.push({
+        id: 'measure',
+        label: '测距',
+        action: () => setPlanMode('measure'),
+      })
     }
     if (wallGraph && planMode !== 'graph') {
       items.push({
@@ -148,10 +156,18 @@
       })
     }
     if (planMode !== 'browse') {
-      items.push({ id: 'browse', label: '返回浏览', action: () => setPlanMode('browse') })
+      items.push({
+        id: 'browse',
+        label: '返回浏览',
+        action: () => setPlanMode('browse'),
+      })
     }
     if (selectedWall || selectedOpening) {
-      items.push({ id: 'clear', label: '取消选中', action: () => clearSelection() })
+      items.push({
+        id: 'clear',
+        label: '取消选中',
+        action: () => clearSelection(),
+      })
     }
     return items
   })
@@ -190,7 +206,9 @@
     }
   }
 
-  function setPlanMode(/** @type {'browse' | 'edit' | 'measure' | 'graph'} */ mode) {
+  function setPlanMode(
+    /** @type {'browse' | 'edit' | 'measure' | 'graph'} */ mode,
+  ) {
     planMode = mode
     if (mode !== 'edit') clearSelection()
     if (mode !== 'measure') clearMeasure()
@@ -209,7 +227,9 @@
     selectedEdge = ''
   }
 
-  function enterGraphEdit(/** @type {import('$lib/plan-graph-edit.js').GraphTool} */ tool = 'wallAdd') {
+  function enterGraphEdit(
+    /** @type {import('$lib/plan-graph-edit.js').GraphTool} */ tool = 'wallAdd',
+  ) {
     setPlanMode('graph')
     graphTool = tool
   }
@@ -260,25 +280,47 @@
         return
       }
 
-      if ((e.key === 'w' || e.key === 'W') && !inField && !e.metaKey && !e.ctrlKey && wallGraph) {
+      if (
+        (e.key === 'w' || e.key === 'W') &&
+        !inField &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        wallGraph
+      ) {
         e.preventDefault()
         enterGraphEdit('wallAdd')
         return
       }
 
-      if ((e.key === 'm' || e.key === 'M') && !inField && !e.metaKey && !e.ctrlKey) {
+      if (
+        (e.key === 'm' || e.key === 'M') &&
+        !inField &&
+        !e.metaKey &&
+        !e.ctrlKey
+      ) {
         e.preventDefault()
         setPlanMode(planMode === 'measure' ? 'browse' : 'measure')
         return
       }
 
-      if ((e.key === 'e' || e.key === 'E') && !inField && !e.metaKey && !e.ctrlKey && !wallGraph) {
+      if (
+        (e.key === 'e' || e.key === 'E') &&
+        !inField &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !wallGraph
+      ) {
         e.preventDefault()
         setPlanMode(planMode === 'edit' ? 'browse' : 'edit')
         return
       }
 
-      if ((e.key === 'f' || e.key === 'F') && !inField && !e.metaKey && !e.ctrlKey) {
+      if (
+        (e.key === 'f' || e.key === 'F') &&
+        !inField &&
+        !e.metaKey &&
+        !e.ctrlKey
+      ) {
         e.preventDefault()
         bumpFit(true)
         return
@@ -368,153 +410,175 @@
 </script>
 
 <div class="plan-page">
-{#if !studio}
-  <section class="plan-intro" aria-label="页面说明">
-    <p class="plan-intro-lead">
-      <strong>顶视平面</strong>：查看整套 508 户型与各储藏区（S1–S8）在房间里的位置。
-    </p>
-    <ul class="plan-intro-list">
-      <li><strong>点击图上圆点</strong>（如 S6）→ 进入该储藏区的物品清单</li>
-      <li>右上角 <strong>看全图</strong>：默认完整显示；<strong>铺满宽</strong> 仅放大宽度</li>
-      <li>编辑户型、测距、墙图等进阶功能需在<a href="/settings">设置</a>开启「空间工坊」，或访问 <code>?studio=1</code></li>
-    </ul>
-  </section>
-{/if}
-{#if studio}
-  <div class="plan-mode-bar" role="group" aria-label="平面显示模式">
-    <p class="plan-mode-sub" aria-live="polite">{getPlanSubtitle() || '储藏区可点击'}</p>
-    <div class="mode-segment">
-      <button
-        type="button"
-        class="mode-btn"
-        class:active={planMode === 'browse'}
-        aria-pressed={planMode === 'browse'}
-        onclick={() => setPlanMode('browse')}
-      >
-        浏览
-      </button>
-      {#if wallGraph}
-        {#if planMode === 'graph'}
-          <button
-            type="button"
-            class="mode-btn"
-            class:active={graphTool === 'wallAdd'}
-            aria-pressed={graphTool === 'wallAdd'}
-            onclick={() => enterGraphEdit('wallAdd')}
-          >
-            建墙
-          </button>
-          <button
-            type="button"
-            class="mode-btn"
-            class:active={graphTool === 'remove'}
-            aria-pressed={graphTool === 'remove'}
-            onclick={() => enterGraphEdit('remove')}
-          >
-            删墙
-          </button>
-        {/if}
-      {:else}
+  {#if !studio}
+    <section class="plan-intro" aria-label="页面说明">
+      <p class="plan-intro-lead">
+        <strong>顶视平面</strong>：查看整套 508
+        户型与各储藏区（S1–S8）在房间里的位置。
+      </p>
+      <ul class="plan-intro-list">
+        <li><strong>点击图上圆点</strong>（如 S6）→ 进入该储藏区的物品清单</li>
+        <li>
+          右上角 <strong>看全图</strong>：默认完整显示；<strong>铺满宽</strong> 仅放大宽度
+        </li>
+        <li>
+          编辑户型、测距、墙图等进阶功能需在<a href="/settings">设置</a
+          >开启「空间工坊」，或访问 <code>?studio=1</code>
+        </li>
+      </ul>
+    </section>
+  {/if}
+  {#if studio}
+    <div class="plan-mode-bar" role="group" aria-label="平面显示模式">
+      <p class="plan-mode-sub" aria-live="polite">
+        {getPlanSubtitle() || '储藏区可点击'}
+      </p>
+      <div class="mode-segment">
         <button
           type="button"
           class="mode-btn"
-          class:active={planMode === 'edit'}
-          aria-pressed={planMode === 'edit'}
-          onclick={() => setPlanMode('edit')}
+          class:active={planMode === 'browse'}
+          aria-pressed={planMode === 'browse'}
+          onclick={() => setPlanMode('browse')}
         >
-          编辑户型
+          浏览
         </button>
+        {#if wallGraph}
+          {#if planMode === 'graph'}
+            <button
+              type="button"
+              class="mode-btn"
+              class:active={graphTool === 'wallAdd'}
+              aria-pressed={graphTool === 'wallAdd'}
+              onclick={() => enterGraphEdit('wallAdd')}
+            >
+              建墙
+            </button>
+            <button
+              type="button"
+              class="mode-btn"
+              class:active={graphTool === 'remove'}
+              aria-pressed={graphTool === 'remove'}
+              onclick={() => enterGraphEdit('remove')}
+            >
+              删墙
+            </button>
+          {/if}
+        {:else}
+          <button
+            type="button"
+            class="mode-btn"
+            class:active={planMode === 'edit'}
+            aria-pressed={planMode === 'edit'}
+            onclick={() => setPlanMode('edit')}
+          >
+            编辑户型
+          </button>
+        {/if}
+        <button
+          type="button"
+          class="mode-btn"
+          class:active={planMode === 'measure'}
+          aria-pressed={planMode === 'measure'}
+          onclick={() =>
+            setPlanMode(planMode === 'measure' ? 'browse' : 'measure')}
+        >
+          测距
+        </button>
+      </div>
+      {#if wallGraph && planMode !== 'graph'}
+        <button
+          type="button"
+          class="graph-edit-btn"
+          onclick={() => enterGraphEdit('wallAdd')}
+        >
+          墙图编辑
+        </button>
+      {/if}
+      <span class="studio-badge" title="内部功能，对外默认隐藏">
+        {wallGraph ? '墙图' : '工坊'}
+      </span>
+      {#if wallGraph}
+        <button
+          type="button"
+          class="graph-revert-btn"
+          onclick={exitWallGraphTo508}
+        >
+          返回 508
+        </button>
+      {:else}
+        <button
+          type="button"
+          class="graph-enable-btn"
+          onclick={() => {
+            activateWallGraphMode()
+            setPlanMode('browse')
+          }}
+        >
+          自由墙图
+        </button>
+      {/if}
+      {#if hasEditHistory}
+        <div class="mode-history" role="group" aria-label="编辑历史">
+          <button
+            type="button"
+            class="mode-undo-btn"
+            disabled={!canUndo}
+            title="撤销 (⌘Z)"
+            aria-label="撤销"
+            onclick={performUndo}>↶</button
+          >
+          <button
+            type="button"
+            class="mode-undo-btn"
+            disabled={!canRedo}
+            title="重做"
+            aria-label="重做"
+            onclick={performRedo}>↷</button
+          >
+        </div>
       {/if}
       <button
         type="button"
-        class="mode-btn"
-        class:active={planMode === 'measure'}
-        aria-pressed={planMode === 'measure'}
-        onclick={() => setPlanMode(planMode === 'measure' ? 'browse' : 'measure')}
+        class="help-btn"
+        onclick={() => (showHelp = !showHelp)}
+        aria-label="快捷键帮助"
       >
-        测距
+        ?
       </button>
+      {#if planMode === 'edit' && !wallGraph}
+        <span class="mode-note">Delete 仅隐藏门窗，不会删除墙体</span>
+      {/if}
+      {#if planMode !== 'browse'}
+        <p class="mode-kbd" aria-label="快捷键">
+          {#if planMode === 'graph'}
+            <kbd>W</kbd><span>建墙</span>
+            <kbd>Delete</kbd><span>删选中墙</span>
+            <kbd>Esc</kbd><span>清除链点 / 退出</span>
+          {:else if planMode === 'edit'}
+            <kbd>Esc</kbd><span>取消选中 / 退出编辑</span>
+            <kbd>Delete</kbd><span>隐藏门窗（非删墙）</span>
+            <kbd>⌘Z</kbd><span>撤销</span>
+          {:else}
+            <kbd>Esc</kbd><span>清除测距</span>
+            <kbd>点击</kbd><span>选两点量距离</span>
+          {/if}
+          <kbd>F</kbd><span>切换全图/宽度适配</span>
+        </p>
+        <p class="mode-kbd-compact" aria-label="快捷键简讯">
+          {#if planMode === 'graph'}
+            W 建墙 · Delete 删墙 · Esc 退出
+          {:else if planMode === 'edit'}
+            Esc 退出 · Delete 隐藏门窗 · F 切换适配
+          {:else}
+            Esc 清除 · 点击测距 · F 切换适配
+          {/if}
+        </p>
+      {/if}
     </div>
-    {#if wallGraph && planMode !== 'graph'}
-      <button type="button" class="graph-edit-btn" onclick={() => enterGraphEdit('wallAdd')}>
-        墙图编辑
-      </button>
-    {/if}
-    <span class="studio-badge" title="内部功能，对外默认隐藏">
-      {wallGraph ? '墙图' : '工坊'}
-    </span>
-    {#if wallGraph}
-      <button type="button" class="graph-revert-btn" onclick={exitWallGraphTo508}>
-        返回 508
-      </button>
-    {:else}
-      <button
-        type="button"
-        class="graph-enable-btn"
-        onclick={() => {
-          activateWallGraphMode()
-          setPlanMode('browse')
-        }}
-      >
-        自由墙图
-      </button>
-    {/if}
-    {#if hasEditHistory}
-      <div class="mode-history" role="group" aria-label="编辑历史">
-        <button
-          type="button"
-          class="mode-undo-btn"
-          disabled={!canUndo}
-          title="撤销 (⌘Z)"
-          aria-label="撤销"
-          onclick={performUndo}
-        >↶</button>
-        <button
-          type="button"
-          class="mode-undo-btn"
-          disabled={!canRedo}
-          title="重做"
-          aria-label="重做"
-          onclick={performRedo}
-        >↷</button>
-      </div>
-    {/if}
-    <button type="button" class="help-btn" onclick={() => (showHelp = !showHelp)} aria-label="快捷键帮助">
-      ?
-    </button>
-    {#if planMode === 'edit' && !wallGraph}
-      <span class="mode-note">Delete 仅隐藏门窗，不会删除墙体</span>
-    {/if}
-    {#if planMode !== 'browse'}
-      <p class="mode-kbd" aria-label="快捷键">
-        {#if planMode === 'graph'}
-          <kbd>W</kbd><span>建墙</span>
-          <kbd>Delete</kbd><span>删选中墙</span>
-          <kbd>Esc</kbd><span>清除链点 / 退出</span>
-        {:else if planMode === 'edit'}
-          <kbd>Esc</kbd><span>取消选中 / 退出编辑</span>
-          <kbd>Delete</kbd><span>隐藏门窗（非删墙）</span>
-          <kbd>⌘Z</kbd><span>撤销</span>
-        {:else}
-          <kbd>Esc</kbd><span>清除测距</span>
-          <kbd>点击</kbd><span>选两点量距离</span>
-        {/if}
-        <kbd>F</kbd><span>切换全图/宽度适配</span>
-      </p>
-      <p class="mode-kbd-compact" aria-label="快捷键简讯">
-        {#if planMode === 'graph'}
-          W 建墙 · Delete 删墙 · Esc 退出
-        {:else if planMode === 'edit'}
-          Esc 退出 · Delete 隐藏门窗 · F 切换适配
-        {:else}
-          Esc 清除 · 点击测距 · F 切换适配
-        {/if}
-      </p>
-    {/if}
-  </div>
-{/if}
+  {/if}
 
-<PlanShortcutsHelp open={showHelp} onClose={() => (showHelp = false)} />
+  <PlanShortcutsHelp open={showHelp} onClose={() => (showHelp = false)} />
 
   <div class="plan-stage">
     <FloorPlanViewer
@@ -609,8 +673,8 @@
               type="button"
               class="plan-drawer-close"
               onclick={() => (drawerOpen = false)}
-              aria-label="关闭面板"
-            >×</button>
+              aria-label="关闭面板">×</button
+            >
           </header>
           <div class="plan-drawer-body">
             {#if graphEditMode}
@@ -627,18 +691,20 @@
                     type="button"
                     class="graph-btn"
                     disabled={!canUndoGraph()}
-                    onclick={undoGraphEdit}
-                  >撤销</button>
+                    onclick={undoGraphEdit}>撤销</button
+                  >
                   <button
                     type="button"
                     class="graph-btn"
                     disabled={!canRedoGraph()}
-                    onclick={redoGraphEdit}
-                  >重做</button>
+                    onclick={redoGraphEdit}>重做</button
+                  >
                 </div>
                 {#if wallChainFrom}
-                  <button type="button" class="graph-btn" onclick={clearGraphChain}
-                    >清除建墙链点</button
+                  <button
+                    type="button"
+                    class="graph-btn"
+                    onclick={clearGraphChain}>清除建墙链点</button
                   >
                 {/if}
                 {#if selectedEdge}
@@ -648,8 +714,8 @@
                     onclick={() => {
                       removeGraphWall(selectedEdge)
                       selectedEdge = ''
-                    }}
-                  >删除选中墙段</button>
+                    }}>删除选中墙段</button
+                  >
                 {/if}
                 <ul class="graph-list">
                   <li>建墙：连续点击拐点连线</li>
@@ -668,8 +734,10 @@
                   在平面图上依次点击两点显示距离。第三次点击重新开始；不改变户型数据。
                 </p>
                 {#if measurePoints.a && measurePoints.b}
-                  <button type="button" class="measure-clear" onclick={clearMeasure}
-                    >清除测距线</button
+                  <button
+                    type="button"
+                    class="measure-clear"
+                    onclick={clearMeasure}>清除测距线</button
                   >
                 {/if}
               </section>
@@ -963,7 +1031,9 @@
     position: fixed;
     z-index: 48;
     right: max(14px, var(--safe-right-effective));
-    bottom: calc(var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 14px);
+    bottom: calc(
+      var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 14px
+    );
     min-height: 44px;
     padding: 10px 16px;
     border-radius: 999px;
@@ -994,7 +1064,9 @@
     z-index: 50;
     top: calc(var(--appbar-height, 56px) + 8px);
     right: max(8px, var(--safe-right-effective));
-    bottom: calc(var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 8px);
+    bottom: calc(
+      var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 8px
+    );
     width: min(380px, calc(100vw - 16px));
     display: flex;
     flex-direction: column;
@@ -1108,14 +1180,18 @@
       left: 50%;
       right: auto;
       transform: translateX(-50%);
-      bottom: calc(var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 88px);
+      bottom: calc(
+        var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 88px
+      );
       width: min(520px, calc(100vw - 32px));
       max-height: min(42vh, 400px);
     }
 
     .plan-stage:has(:global(.sel-bar)) .plan-drawer,
     .plan-stage:has(:global(.graph-sel-bar)) .plan-drawer {
-      bottom: calc(var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 148px);
+      bottom: calc(
+        var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 148px
+      );
     }
 
     .plan-drawer-fab.hide-for-bar {

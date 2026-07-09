@@ -1,28 +1,32 @@
 <script>
-  import { page } from '$app/state';
-  import { t } from '$lib/i18n/index.js';
-  import AppBrand from '@life-os/platform-web/svelte/brand';
-  import Icon from '@life-os/platform-web/svelte/icon';
+  import { page } from '$app/state'
+  import { t } from '$lib/i18n/index.js'
+  import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
+  import Icon from '@life-os/platform-web/svelte/icon'
   import {
     buildSidebarNavGroups,
     buildSettingsNavItem,
-    isNavChromeHidden
-  } from '$lib/nav.js';
+    isNavChromeHidden,
+  } from '$lib/nav.js'
 
-  const groups = $derived(buildSidebarNavGroups(t));
-  const settingsItem = $derived(buildSettingsNavItem(t));
-  const pathname = $derived(page.url.pathname);
-  const hidden = $derived(isNavChromeHidden(page.url.pathname));
+  const groups = $derived(buildSidebarNavGroups(t))
+  const settingsItem = $derived(buildSettingsNavItem(t))
+  const pathname = $derived(page.url.pathname)
+  const hidden = $derived(isNavChromeHidden(page.url.pathname))
 
   /** @param {import('$lib/nav.js').NavItem} item */
   function isActive(item) {
-    return item.match(pathname);
+    return item.match(pathname)
   }
 </script>
 
 {#if !hidden}
   <aside class="sidebar music-sidebar" aria-label={t('nav.mainAria')}>
-    <AppBrand appId="music" tagline={t('app.tagline')} ariaLabel={t('common.brand')} />
+    <AppBrandSwitcher
+      appId="music"
+      tagline={t('app.tagline')}
+      ariaLabel={t('common.brand')}
+    />
 
     <div class="sidebar-body">
       {#each groups as group (group.label)}

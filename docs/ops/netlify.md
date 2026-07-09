@@ -33,10 +33,12 @@ cd life-os && npm install && npm run build
 
 ## GitHub Actions
 
-| Workflow                               | 作用                                                    |
-| -------------------------------------- | ------------------------------------------------------- |
-| `.github/workflows/ci.yml`             | PR / push 全量 `npm run build`                          |
-| `.github/workflows/deploy-netlify.yml` | **手动** CLI 上传兜底（需 `NETLIFY_AUTH_TOKEN` secret） |
+| Workflow                                         | 作用                                                                                               |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `.github/workflows/ci.yml` → `build`             | PR / push：`validate:tokens` + Turbo `npm run build`                                               |
+| `.github/workflows/ci.yml` → `design-catalog`    | smoke（172）+ a11y + snapshots（80 pixel baselines）                                               |
+| `.github/workflows/ci.yml` → `integration-smoke` | `check:lifeos-boundaries` + outbox 结构；有 `SUPABASE_ACCESS_TOKEN` 时跑远程 identity/outbox smoke |
+| `.github/workflows/deploy-netlify.yml`           | **手动** CLI 上传兜底（需 `NETLIFY_AUTH_TOKEN` secret）                                            |
 
 主路径是 Netlify Git 构建；GHA 部署仅在需要时使用。
 
@@ -62,7 +64,7 @@ cd life-os && npm install && npm run build
 
 修改 `packages/sync` 或 `packages/theme` 会触发四站 rebuild（各 app `netlify.toml` 的 ignore 规则包含 `packages/*`）。
 
-## Portal（I-P1，🟡 已上线，产品收尾中）
+## Portal（I-P1，✅ 已上线 · Growth G-P1–G-P5 已接）
 
 | 项             | 状态                                                                                 |
 | -------------- | ------------------------------------------------------------------------------------ |

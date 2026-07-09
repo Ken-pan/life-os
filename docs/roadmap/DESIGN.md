@@ -56,4 +56,4 @@ Commit 锚点 → [`SHIPPED.md`](./SHIPPED.md) §Design
 
 **已砍掉：** ~~D-P7 Figma variables mirror~~ — 项目无 Figma。
 
-**排期：** D-P6 在 hub **Week 3+**（Core 闭环 + CI 补齐之后）。
+**排期：** D-P6 在 hub §Next（按需 · 窄范围 a11y）。

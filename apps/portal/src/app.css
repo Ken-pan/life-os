@@ -388,15 +388,15 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  border-radius: var(--control-radius);
-  background: color-mix(in srgb, var(--portal-app-accent, var(--accent)) 10%, var(--card));
-  border: 1px solid color-mix(in srgb, var(--portal-app-accent, var(--accent)) 16%, var(--border));
 }
 
-.portal-app-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: calc(var(--control-radius) - 2px);
+.portal-app-mark,
+.portal-app-mark.brand-icon-pair {
+  width: 40px;
+  height: 40px;
+}
+
+.portal-app-mark.brand-icon-pair img {
   box-shadow: none;
 }
 

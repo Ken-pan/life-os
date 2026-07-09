@@ -17,6 +17,20 @@ export {
   getLifeOsBrandMarkSize,
 } from './brand.js'
 
+export {
+  LIFE_OS_APP_ORIGINS,
+  LIFE_OS_SWITCHER_APPS,
+  getLifeOsAppOrigin,
+  getLifeOsAppBrandOrigin,
+  getLifeOsAppBrandIconUrl,
+  getLifeOsAppBrandMark,
+} from './launcher.js'
+
+export {
+  filterLifeOsSwitcherApps,
+  findSwitcherTypeAheadIndex,
+} from './brandSwitcher.js'
+
 export { applyDocumentMeta } from './documentMeta.js'
 
 export { lockScroll, unlockScroll, resetScrollLock } from './scrollLock.js'

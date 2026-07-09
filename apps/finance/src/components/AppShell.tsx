@@ -18,6 +18,7 @@ import { useDashboard } from '../hooks/useDashboard'
 import { daysSince } from '../format'
 import { SyncErrorBanner } from './SyncErrorBanner'
 import { AppBrand } from './AppBrand'
+import { AppBrandSwitcher } from './AppBrandSwitcher'
 import { HomeHubView } from './HomeHubView'
 import { AccountsView } from './AccountsView'
 import { RecordsView, type RecordsSection } from './RecordsView'
@@ -582,352 +583,356 @@ export function AppShell() {
         hint={t('settings.rotatePortraitHint')}
       />
       <div className="app-shell">
-      <div className="safari-chrome-tint-top" aria-hidden="true" />
-      <div className="safari-chrome-tint-bottom" aria-hidden="true" />
-      <ExtensionSyncBridge />
-      <aside className="sidebar">
-        <AppBrand tagline={t('nav.brandTag')} />
-        <div className="sidebar-body">
-          {navGroups.map((group, index) => (
-            <div
-              key={group.label}
-              className={`nav-group${index > 0 ? ' nav-group-divider' : ''}`}
-            >
-              {group.items.map((t) => {
-                const Icon = t.icon
-                const activeTab = tab === t.id
-                return (
-                  <button
-                    key={t.id}
-                    className={`nav-item${activeTab ? ' active' : ''}`}
-                    onClick={() => switchTab(t.id)}
-                    aria-current={activeTab ? 'page' : undefined}
-                  >
-                    <Icon {...ICON} weight={activeTab ? 'fill' : 'regular'} />
-                    {t.label}
-                  </button>
-                )
-              })}
-            </div>
-          ))}
-        </div>
-        <button
-          className={`nav-item sidebar-foot-item${tab === settingsNavTab.id ? ' active' : ''}`}
-          onClick={() => switchTab(settingsNavTab.id)}
-          aria-current={tab === settingsNavTab.id ? 'page' : undefined}
-        >
-          <SlidersHorizontal
-            {...ICON}
-            weight={tab === settingsNavTab.id ? 'fill' : 'regular'}
-          />
-          {settingsNavTab.label}
-        </button>
-      </aside>
-
-      <div className="main-wrap" data-mobile-chrome="tabbar">
-        <header className="page-header">
-          <AppBrand variant="header" />
-          <div className="titles">
-            <h1>{pageHeader.title}</h1>
-            <span className="subtitle">{pageHeader.subtitle}</span>
-          </div>
-          <span className="spacer" />
-          <span className="updated">{updatedLabel}</span>
-        </header>
-
-        <main className="content">
-          <SyncErrorBanner />
-          {stale && <div className="banner">{t('nav.staleBanner')}</div>}
-          {tab === 'home' && (
-            <HomeHubView
-              data={store.data}
-              dashboard={dashboard}
-              projection={projection}
-              active={homeSection}
-              onChange={(section) => {
-                setHomeSection(section)
-                syncHash(
-                  tab,
-                  section,
-                  recordsTab,
-                  forecastTab,
-                  reviewTab,
-                  decisionTab,
-                  settingsTab,
-                )
-              }}
-              onOpenSpend={() => setDrawer(true)}
-              onGoTab={switchTab}
-              onGoStocks={goStocks}
-            />
-          )}
-          {tab === 'accounts' && <AccountsView onGoStocks={() => goStocks()} />}
-          {tab === 'history' && (
-            <RecordsView
-              data={store.data}
-              active={recordsTab}
-              onChange={(section) => {
-                setRecordsTab(section)
-                syncHash(
-                  tab,
-                  homeSection,
-                  section,
-                  forecastTab,
-                  reviewTab,
-                  decisionTab,
-                  settingsTab,
-                )
-              }}
-              onGoTab={switchTab}
-              ledgerSearch={ledgerSearch}
-              onLedgerSearchConsumed={() => setLedgerSearch(undefined)}
-              focusEventId={focusEventId}
-              onFocusEventConsumed={() => setFocusEventId(undefined)}
-              onQuickAdd={() => setTxnDrawer(true)}
-            />
-          )}
-          {tab === 'review' && (
-            <ReviewView
-              data={store.data}
-              active={reviewTab}
-              onChange={(section) => {
-                setReviewTab(section)
-                syncHash(
-                  tab,
-                  homeSection,
-                  recordsTab,
-                  forecastTab,
-                  section,
-                  decisionTab,
-                  settingsTab,
-                )
-              }}
-            />
-          )}
-          {tab === 'forecast' && (
-            <ForecastHubView
-              data={store.data}
-              projection={projection}
-              displayLiquidCash={dashboard.derived.liquidCash}
-              cashAnchors={dashboard.derived.cashAnchors}
-              onGoTab={switchTab}
-              active={forecastTab}
-              onChange={(section) => {
-                setForecastTab(section)
-                syncHash(
-                  tab,
-                  homeSection,
-                  recordsTab,
-                  section,
-                  reviewTab,
-                  decisionTab,
-                  settingsTab,
-                )
-              }}
-            />
-          )}
-          {tab === 'decision' && (
-            <DecisionStudioView
-              active={decisionTab}
-              onChange={(section) => {
-                setDecisionTab(section)
-                syncHash(
-                  tab,
-                  homeSection,
-                  recordsTab,
-                  forecastTab,
-                  reviewTab,
-                  section,
-                  settingsTab,
-                )
-              }}
-            />
-          )}
-          <div hidden={tab !== 'stocks'} aria-hidden={tab !== 'stocks'}>
-            <StocksView
-              data={store.data}
-              tabActive={tab === 'stocks'}
-              onGoSettings={() => switchTab('accounts')}
-              savingCapacity={dashboard.derived.savingCapacity}
-            />
-          </div>
-          {tab === 'settings' && (
-            <SettingsView
-              themePreference={themePreference}
-              onThemePreferenceChange={setThemePreference}
-              lockPortraitOnPhone={pwaSettings.lockPortraitOnPhone}
-              onLockPortraitOnPhoneChange={setLockPortraitOnPhone}
-              section={settingsTab}
-              onSectionChange={(section) => {
-                setSettingsTab(section)
-                syncHash(
-                  tab,
-                  homeSection,
-                  recordsTab,
-                  forecastTab,
-                  reviewTab,
-                  decisionTab,
-                  section,
-                )
-              }}
-              onGoTab={switchTab}
-            />
-          )}
-        </main>
-      </div>
-
-      {!drawer && !txnDrawer && !planDrawer && activeFab && (
-        <button
-          className="fab"
-          onClick={activeFab.onClick}
-          aria-label={activeFab.label}
-        >
-          <activeFab.icon size={18} strokeWidth={2} />
-          {activeFab.label}
-        </button>
-      )}
-      {drawer && (
-        <SpendImpactDrawer
-          data={store.data}
-          baseline={projection.baseline}
-          onClose={() => setDrawer(false)}
-        />
-      )}
-      {txnDrawer && (
-        <TxnEntryDrawer
-          onAdd={addTxn}
-          onClose={() => setTxnDrawer(false)}
-          privacy={store.data.privacy}
-        />
-      )}
-      {planDrawer && tab === 'history' && recordsTab === 'oneoff' && (
-        <CashflowQuickAddDrawer onClose={() => setPlanDrawer(false)} />
-      )}
-
-      <nav
-        className={`mobile-tabbar${moreSheet ? ' is-backgrounded' : ''}`}
-        aria-label={t('nav.mainNavAria')}
-      >
-        <div className="mobile-tabbar-inner">
-          {mobilePrimaryTabs.map((tabItem) => {
-            const Icon = tabItem.icon
-            const activeTab = tab === tabItem.id
-            return (
-              <button
-                key={tabItem.id}
-                className={`mobile-tab${activeTab ? ' active' : ''}`}
-                onClick={() => {
-                  setMoreSheet(false)
-                  switchTab(tabItem.id)
-                }}
-                aria-current={activeTab ? 'page' : undefined}
-                aria-label={tabItem.label}
+        <div className="safari-chrome-tint-top" aria-hidden="true" />
+        <div className="safari-chrome-tint-bottom" aria-hidden="true" />
+        <ExtensionSyncBridge />
+        <aside className="sidebar">
+          <AppBrandSwitcher tagline={t('nav.brandTag')} />
+          <div className="sidebar-body">
+            {navGroups.map((group, index) => (
+              <div
+                key={group.label}
+                className={`nav-group${index > 0 ? ' nav-group-divider' : ''}`}
               >
-                <Icon
-                  {...MOBILE_ICON}
-                  weight={activeTab ? 'fill' : 'regular'}
-                />
-                <span>{tabItem.label}</span>
-              </button>
-            )
-          })}
+                {group.items.map((t) => {
+                  const Icon = t.icon
+                  const activeTab = tab === t.id
+                  return (
+                    <button
+                      key={t.id}
+                      className={`nav-item${activeTab ? ' active' : ''}`}
+                      onClick={() => switchTab(t.id)}
+                      aria-current={activeTab ? 'page' : undefined}
+                    >
+                      <Icon {...ICON} weight={activeTab ? 'fill' : 'regular'} />
+                      {t.label}
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
           <button
-            className={`mobile-tab${moreSheet || isMoreNavActive(tab) ? ' active' : ''}`}
-            onClick={() => setMoreSheet((v) => !v)}
-            aria-expanded={moreSheet}
-            aria-haspopup="dialog"
-            aria-label={t('common.more')}
+            className={`nav-item sidebar-foot-item${tab === settingsNavTab.id ? ' active' : ''}`}
+            onClick={() => switchTab(settingsNavTab.id)}
+            aria-current={tab === settingsNavTab.id ? 'page' : undefined}
           >
-            <DotsThreeOutline
-              {...MOBILE_ICON}
-              weight={moreSheet || isMoreNavActive(tab) ? 'fill' : 'regular'}
+            <SlidersHorizontal
+              {...ICON}
+              weight={tab === settingsNavTab.id ? 'fill' : 'regular'}
             />
-            <span>{t('common.more')}</span>
+            {settingsNavTab.label}
           </button>
-        </div>
-      </nav>
+        </aside>
 
-      {moreSheet && (
-        <>
-          <div
-            className="mobile-more-backdrop"
-            onClick={() => setMoreSheet(false)}
-            aria-hidden="true"
-          />
-          <div
-            ref={moreSheetRef}
-            className="mobile-more-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="mobile-more-title"
-          >
-            <div className="mobile-more-handle" aria-hidden="true" />
-            <div className="mobile-more-header">
-              <h2 id="mobile-more-title" className="mobile-more-title">
-                {t('common.more')}
-              </h2>
-              <button
-                type="button"
-                className="mobile-more-close"
-                onClick={() => setMoreSheet(false)}
-                aria-label={t('common.close')}
-              >
-                <X size={20} strokeWidth={1.75} />
-              </button>
+        <div className="main-wrap" data-mobile-chrome="tabbar">
+          <header className="page-header">
+            <AppBrand variant="header" />
+            <div className="titles">
+              <h1>{pageHeader.title}</h1>
+              <span className="subtitle">{pageHeader.subtitle}</span>
             </div>
-            <div className="mobile-more-body">
-              {mobileMoreGroups.map((group) => (
-                <div key={group.label} className="mobile-more-section">
-                  {group.items.map((t) => {
-                    const Icon = t.icon
-                    const activeTab = tab === t.id
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        role="menuitem"
-                        className={`mobile-more-row${activeTab ? ' active' : ''}`}
-                        aria-current={activeTab ? 'page' : undefined}
-                        onClick={() => {
-                          setMoreSheet(false)
-                          switchTab(t.id)
-                        }}
-                      >
-                        <span
-                          className="mobile-more-row-icon"
-                          aria-hidden="true"
+            <span className="spacer" />
+            <span className="updated">{updatedLabel}</span>
+          </header>
+
+          <main className="content">
+            <SyncErrorBanner />
+            {stale && <div className="banner">{t('nav.staleBanner')}</div>}
+            {tab === 'home' && (
+              <HomeHubView
+                data={store.data}
+                dashboard={dashboard}
+                projection={projection}
+                active={homeSection}
+                onChange={(section) => {
+                  setHomeSection(section)
+                  syncHash(
+                    tab,
+                    section,
+                    recordsTab,
+                    forecastTab,
+                    reviewTab,
+                    decisionTab,
+                    settingsTab,
+                  )
+                }}
+                onOpenSpend={() => setDrawer(true)}
+                onGoTab={switchTab}
+                onGoStocks={goStocks}
+              />
+            )}
+            {tab === 'accounts' && (
+              <AccountsView onGoStocks={() => goStocks()} />
+            )}
+            {tab === 'history' && (
+              <RecordsView
+                data={store.data}
+                active={recordsTab}
+                onChange={(section) => {
+                  setRecordsTab(section)
+                  syncHash(
+                    tab,
+                    homeSection,
+                    section,
+                    forecastTab,
+                    reviewTab,
+                    decisionTab,
+                    settingsTab,
+                  )
+                }}
+                onGoTab={switchTab}
+                ledgerSearch={ledgerSearch}
+                onLedgerSearchConsumed={() => setLedgerSearch(undefined)}
+                focusEventId={focusEventId}
+                onFocusEventConsumed={() => setFocusEventId(undefined)}
+                onQuickAdd={() => setTxnDrawer(true)}
+              />
+            )}
+            {tab === 'review' && (
+              <ReviewView
+                data={store.data}
+                active={reviewTab}
+                onChange={(section) => {
+                  setReviewTab(section)
+                  syncHash(
+                    tab,
+                    homeSection,
+                    recordsTab,
+                    forecastTab,
+                    section,
+                    decisionTab,
+                    settingsTab,
+                  )
+                }}
+              />
+            )}
+            {tab === 'forecast' && (
+              <ForecastHubView
+                data={store.data}
+                projection={projection}
+                displayLiquidCash={dashboard.derived.liquidCash}
+                cashAnchors={dashboard.derived.cashAnchors}
+                onGoTab={switchTab}
+                active={forecastTab}
+                onChange={(section) => {
+                  setForecastTab(section)
+                  syncHash(
+                    tab,
+                    homeSection,
+                    recordsTab,
+                    section,
+                    reviewTab,
+                    decisionTab,
+                    settingsTab,
+                  )
+                }}
+              />
+            )}
+            {tab === 'decision' && (
+              <DecisionStudioView
+                active={decisionTab}
+                onChange={(section) => {
+                  setDecisionTab(section)
+                  syncHash(
+                    tab,
+                    homeSection,
+                    recordsTab,
+                    forecastTab,
+                    reviewTab,
+                    section,
+                    settingsTab,
+                  )
+                }}
+              />
+            )}
+            <div hidden={tab !== 'stocks'} aria-hidden={tab !== 'stocks'}>
+              <StocksView
+                data={store.data}
+                tabActive={tab === 'stocks'}
+                onGoSettings={() => switchTab('accounts')}
+                savingCapacity={dashboard.derived.savingCapacity}
+              />
+            </div>
+            {tab === 'settings' && (
+              <SettingsView
+                themePreference={themePreference}
+                onThemePreferenceChange={setThemePreference}
+                lockPortraitOnPhone={pwaSettings.lockPortraitOnPhone}
+                onLockPortraitOnPhoneChange={setLockPortraitOnPhone}
+                section={settingsTab}
+                onSectionChange={(section) => {
+                  setSettingsTab(section)
+                  syncHash(
+                    tab,
+                    homeSection,
+                    recordsTab,
+                    forecastTab,
+                    reviewTab,
+                    decisionTab,
+                    section,
+                  )
+                }}
+                onGoTab={switchTab}
+              />
+            )}
+          </main>
+        </div>
+
+        {!drawer && !txnDrawer && !planDrawer && activeFab && (
+          <button
+            className="fab"
+            onClick={activeFab.onClick}
+            aria-label={activeFab.label}
+          >
+            <activeFab.icon size={18} strokeWidth={2} />
+            {activeFab.label}
+          </button>
+        )}
+        {drawer && (
+          <SpendImpactDrawer
+            data={store.data}
+            baseline={projection.baseline}
+            onClose={() => setDrawer(false)}
+          />
+        )}
+        {txnDrawer && (
+          <TxnEntryDrawer
+            onAdd={addTxn}
+            onClose={() => setTxnDrawer(false)}
+            privacy={store.data.privacy}
+          />
+        )}
+        {planDrawer && tab === 'history' && recordsTab === 'oneoff' && (
+          <CashflowQuickAddDrawer onClose={() => setPlanDrawer(false)} />
+        )}
+
+        <nav
+          className={`mobile-tabbar${moreSheet ? ' is-backgrounded' : ''}`}
+          aria-label={t('nav.mainNavAria')}
+        >
+          <div className="mobile-tabbar-inner">
+            {mobilePrimaryTabs.map((tabItem) => {
+              const Icon = tabItem.icon
+              const activeTab = tab === tabItem.id
+              return (
+                <button
+                  key={tabItem.id}
+                  className={`mobile-tab${activeTab ? ' active' : ''}`}
+                  onClick={() => {
+                    setMoreSheet(false)
+                    switchTab(tabItem.id)
+                  }}
+                  aria-current={activeTab ? 'page' : undefined}
+                  aria-label={tabItem.label}
+                >
+                  <Icon
+                    {...MOBILE_ICON}
+                    weight={activeTab ? 'fill' : 'regular'}
+                  />
+                  <span>{tabItem.label}</span>
+                </button>
+              )
+            })}
+            <button
+              className={`mobile-tab${moreSheet || isMoreNavActive(tab) ? ' active' : ''}`}
+              onClick={() => setMoreSheet((v) => !v)}
+              aria-expanded={moreSheet}
+              aria-haspopup="dialog"
+              aria-label={t('common.more')}
+            >
+              <DotsThreeOutline
+                {...MOBILE_ICON}
+                weight={moreSheet || isMoreNavActive(tab) ? 'fill' : 'regular'}
+              />
+              <span>{t('common.more')}</span>
+            </button>
+          </div>
+        </nav>
+
+        {moreSheet && (
+          <>
+            <div
+              className="mobile-more-backdrop"
+              onClick={() => setMoreSheet(false)}
+              aria-hidden="true"
+            />
+            <div
+              ref={moreSheetRef}
+              className="mobile-more-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mobile-more-title"
+            >
+              <div className="mobile-more-handle" aria-hidden="true" />
+              <div className="mobile-more-header">
+                <h2 id="mobile-more-title" className="mobile-more-title">
+                  {t('common.more')}
+                </h2>
+                <button
+                  type="button"
+                  className="mobile-more-close"
+                  onClick={() => setMoreSheet(false)}
+                  aria-label={t('common.close')}
+                >
+                  <X size={20} strokeWidth={1.75} />
+                </button>
+              </div>
+              <div className="mobile-more-body">
+                {mobileMoreGroups.map((group) => (
+                  <div key={group.label} className="mobile-more-section">
+                    {group.items.map((t) => {
+                      const Icon = t.icon
+                      const activeTab = tab === t.id
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          role="menuitem"
+                          className={`mobile-more-row${activeTab ? ' active' : ''}`}
+                          aria-current={activeTab ? 'page' : undefined}
+                          onClick={() => {
+                            setMoreSheet(false)
+                            switchTab(t.id)
+                          }}
                         >
-                          <Icon
-                            size={20}
-                            weight={activeTab ? 'fill' : 'regular'}
-                          />
-                        </span>
-                        <span className="mobile-more-row-label">{t.label}</span>
-                        {activeTab ? (
                           <span
-                            className="mobile-more-row-check"
+                            className="mobile-more-row-icon"
                             aria-hidden="true"
                           >
-                            ✓
+                            <Icon
+                              size={20}
+                              weight={activeTab ? 'fill' : 'regular'}
+                            />
                           </span>
-                        ) : (
-                          <ChevronRight
-                            className="mobile-more-row-chevron"
-                            size={18}
-                            strokeWidth={1.75}
-                            aria-hidden="true"
-                          />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              ))}
+                          <span className="mobile-more-row-label">
+                            {t.label}
+                          </span>
+                          {activeTab ? (
+                            <span
+                              className="mobile-more-row-check"
+                              aria-hidden="true"
+                            >
+                              ✓
+                            </span>
+                          ) : (
+                            <ChevronRight
+                              className="mobile-more-row-chevron"
+                              size={18}
+                              strokeWidth={1.75}
+                              aria-hidden="true"
+                            />
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
     </>
   )
 }

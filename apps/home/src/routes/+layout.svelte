@@ -18,7 +18,10 @@
     getPlanSubtitle,
   } from '$lib/state.svelte.js'
   import { bindViewportHeight } from '@life-os/theme'
-  import { syncSpatialStudioFromUrl, isSpatialStudioEnabled } from '$lib/spatial-studio.js'
+  import {
+    syncSpatialStudioFromUrl,
+    isSpatialStudioEnabled,
+  } from '$lib/spatial-studio.js'
 
   let { children } = $props()
 
@@ -74,11 +77,7 @@
   <SideNav />
   <div class="main-col">
     <AppBar title={pageMeta.title} subtitle={pageMeta.subtitle} />
-    <main
-      id="main-content"
-      class="wrap"
-      class:plan-route={planRoute}
-    >
+    <main id="main-content" class="wrap" class:plan-route={planRoute}>
       {@render children()}
     </main>
   </div>

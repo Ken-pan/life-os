@@ -8,14 +8,17 @@
 
 **模型：** Core 闭环 → 防回归 → Growth（Portal `core_*` + 单 App 管道）→ 窄 Design — 详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §推荐执行顺序
 
-| 周     | 主题                                                    | 状态   |
-| ------ | ------------------------------------------------------- | ------ |
-| Week 1 | I-P0 SSO E2E · I-P1 Portal 配置 · `schema.sql` `core_*` | 🔥 Now |
-| Week 2 | CI boundaries/smoke · Fitness E2E 端口（QA-F0）         | ◆ Now  |
-| Week 3 | G-P1–G-P3 Portal 读 `core_*`                            | ○ Next |
-| Week 4 | M-P1 Music · F-P1 扩展 · G-P5 PWA（六站）               | ○ Next |
-| 按需   | H-P1–H-P3 Home · G-P4 摘要 · I-P1.5b · D-P6 · QA-P2     | ○      |
-| 暂缓   | Finance React 抽象 · I-P2 · Home 云同步（H-P4）         | ✗      |
+| 焦点   | 主题                                                  | 状态     |
+| ------ | ----------------------------------------------------- | -------- |
+| 🔥 Now | I-P0 SSO 生产 E2E                                     | 人工验收 |
+| ◆ Now  | M-P1 Music `play_events` 生产验证                     | 代码 ✅  |
+| ◆ Now  | F-P1 Finance 扩展同步反馈生产验收                     | 代码 ✅  |
+| ◆ Now  | AppBrandSwitcher 六站侧栏跨 app 切换                  | 代码 ✅  |
+| ○ Next | G-P2 角标生产验收 · H-P1–H-P3 Home · G-P4 摘要 · D-P6 | 已排期   |
+| ○ 按需 | I-P1.5b · QA-P2 Planner desktop E2E                   |          |
+| ✗ 暂缓 | Finance React 抽象 · I-P2 · Home 云同步（H-P4）       |          |
+
+**2026-07-08 已落地：** I-P1 Portal redirect/DB · P2 `schema.sql` · CI-补 · QA-F0 · G-P1–G-P3 · G-P5 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
 ## 六 app + 插件（一览）
 
@@ -73,14 +76,16 @@ docs/
 ./scripts/verify-life-os-identity-p0.sh
 ./scripts/test-outbox-trigger.sh --smoke
 npm run check:lifeos-boundaries
-npm run test:design-catalog
+npm run test:design-catalog              # 172 smoke
+npm run test:design-catalog:a11y         # catalog a11y gates
+npm run test:design-catalog:snapshots    # 80 pixel baselines
 ```
 
 ## Packages & Apps
 
 | 类型          | 文档位置                                                                 |
 | ------------- | ------------------------------------------------------------------------ |
-| 共享包        | `packages/*/README.md`                                                   |
+| 共享包        | `packages/{contracts,sync,theme,platform-web,design-tokens}/README.md`   |
 | 生产 + Portal | `apps/{planner,fitness,finance,music,portal}/README.md`                  |
 | Home 实验     | `apps/home/` · [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0) |
 | App 专属证据  | `apps/*/docs/`（非全局计划真源）                                         |

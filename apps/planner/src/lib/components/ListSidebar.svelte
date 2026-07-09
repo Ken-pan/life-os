@@ -1,20 +1,20 @@
 <script>
-  import { page } from '$app/state';
-  import { userLists } from '$lib/state.svelte.js';
-  import { t, listLabel } from '$lib/i18n/index.js';
-  import { buildSidebarNavGroups, buildSettingsNavItem } from '$lib/nav.js';
-  import AppBrand from '@life-os/platform-web/svelte/brand';
-  import Icon from '@life-os/platform-web/svelte/icon';
+  import { page } from '$app/state'
+  import { userLists } from '$lib/state.svelte.js'
+  import { t, listLabel } from '$lib/i18n/index.js'
+  import { buildSidebarNavGroups, buildSettingsNavItem } from '$lib/nav.js'
+  import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
+  import Icon from '@life-os/platform-web/svelte/icon'
 
-  const navGroups = $derived(buildSidebarNavGroups(t));
-  const settingsLink = $derived(buildSettingsNavItem(t));
-  const lists = $derived(userLists());
-  const path = $derived(page.url.pathname);
-  const search = $derived(page.url.search);
+  const navGroups = $derived(buildSidebarNavGroups(t))
+  const settingsLink = $derived(buildSettingsNavItem(t))
+  const lists = $derived(userLists())
+  const path = $derived(page.url.pathname)
+  const search = $derived(page.url.search)
 </script>
 
 <aside class="sidebar" aria-label={t('nav.mainAria')}>
-  <AppBrand appId="planner" tagline={t('app.tagline')} />
+  <AppBrandSwitcher appId="planner" tagline={t('app.tagline')} />
 
   <div class="sidebar-body">
     {#each navGroups as group, index (group.label)}

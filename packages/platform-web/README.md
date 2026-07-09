@@ -26,6 +26,7 @@ This package contains thin web-only adapters. P0 PR 3 adds appearance and page-m
 | `@life-os/platform-web/svelte/sync-error`                 | `SyncErrorBanner.svelte`                                                                          |
 | `@life-os/platform-web/svelte/navigation`                 | `BackButton.svelte`                                                                               |
 | `@life-os/platform-web/svelte/navigation/MobileMoreSheet` | `MobileMoreSheet.svelte`（`closeLabel` + 可选 `search` / `dotColor`）                             |
+| `@life-os/platform-web/svelte/brand/switcher`             | `AppBrandSwitcher.svelte`（六 app 侧栏切换；数据 `@life-os/theme/launcher`）                      |
 | `@life-os/platform-web/svelte/brand`                      | `AppBrand.svelte` / `BrandMark.svelte` / `AppBrandWordmark.svelte`（`@life-os/theme/brand` 数据） |
 | `@life-os/platform-web/svelte/brand/mark`                 | `BrandMark.svelte` 子路径                                                                         |
 | `@life-os/platform-web/svelte/brand/wordmark`             | `AppBrandWordmark.svelte` 子路径                                                                  |

@@ -11,7 +11,13 @@ export declare const LIFE_OS_LAYOUT: {
   readonly contentMaxData: 1320
 }
 
-export type LifeOsAppId = 'planner' | 'fitness' | 'finance' | 'music' | 'home' | 'portal'
+export type LifeOsAppId =
+  | 'planner'
+  | 'fitness'
+  | 'finance'
+  | 'music'
+  | 'home'
+  | 'portal'
 
 export type LifeOsSiteMetaEntry = {
   id: LifeOsAppId
@@ -75,6 +81,23 @@ export declare function getLifeOsBrandMarkSize(
   appId: LifeOsAppId,
   variant?: LifeOsBrandVariant,
 ): number
+
+export declare const LIFE_OS_APP_ORIGINS: Record<
+  LifeOsAppId,
+  { production: string; devPort: number }
+>
+
+export declare const LIFE_OS_SWITCHER_APPS: Array<{
+  id: LifeOsAppId
+  experimental?: boolean
+}>
+
+export declare function getLifeOsAppOrigin(appId: LifeOsAppId): string
+
+export declare function getLifeOsAppBrandIconUrl(
+  appId: LifeOsAppId,
+  theme?: 'light' | 'dark',
+): string
 
 export type ApplyDocumentMetaOptions = {
   pageTitle: string

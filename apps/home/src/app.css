@@ -198,10 +198,7 @@ main.plan-route {
   height: 0;
   max-height: 100dvh;
   padding:
-    max(8px, var(--safe-top-effective))
-    max(8px, var(--safe-right-effective))
-    calc(var(--safe-bottom-effective) + 8px)
-    max(8px, var(--safe-left-effective));
+    max(8px, var(--safe-top-effective)) max(8px, var(--safe-right-effective)) calc(var(--safe-bottom-effective) + 8px) max(8px, var(--safe-left-effective));
 }
 
 @media (max-width: 839px) {

@@ -20,6 +20,7 @@
 | Growth      | G-P5：Portal 六站 PWA 安装引导                                                             | `PortalPwaGuide.svelte`                                 |
 | Growth      | M-P1：`play_events` 写入前 ensure `music_track_meta`；Queue 展示推荐 reasons               | `apps/music/src/lib/playEvents.js`                      |
 | Growth      | F-P1：扩展 popup 失败重试 + 主站 sync toast 时间戳                                         | `popup.js` + `ExtensionSyncBridge.tsx`                  |
+| Platform    | AppBrandSwitcher：六站侧栏跨 app 切换（`LIFE_OS_SWITCHER_APPS`；Home 标实验）              | `packages/platform-web` · `packages/theme/launcher.js`  |
 
 ## 2026-07-08
 

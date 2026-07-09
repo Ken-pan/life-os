@@ -1,6 +1,6 @@
 <script>
   import { page } from '$app/state'
-  import AppBrand from '@life-os/platform-web/svelte/brand'
+  import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
   import Icon from '@life-os/platform-web/svelte/icon'
   import {
     buildPrimaryNavItems,
@@ -17,7 +17,7 @@
 
 {#if !hidden}
   <aside class="sidebar" aria-label="侧栏导航">
-    <AppBrand appId="home" tagline="居家空间规划" ariaLabel="HOME.OS" />
+    <AppBrandSwitcher appId="home" tagline="居家空间规划" ariaLabel="HOME.OS" />
 
     <div class="sidebar-body">
       <div class="nav-group">
@@ -44,7 +44,8 @@
       aria-current={current === settingsItem.tab ? 'page' : undefined}
     >
       <Icon name={settingsItem.icon} size={18} strokeWidth={1.75} />
-      <span class="nav-lbl" data-ui-decor="nav-label">{settingsItem.label}</span>
+      <span class="nav-lbl" data-ui-decor="nav-label">{settingsItem.label}</span
+      >
     </a>
   </aside>
 {/if}

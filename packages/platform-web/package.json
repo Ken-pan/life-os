@@ -33,6 +33,10 @@
       "svelte": "./src/svelte/brand/BrandMark.svelte",
       "default": "./src/svelte/brand/BrandMark.svelte"
     },
+    "./svelte/brand/switcher": {
+      "svelte": "./src/svelte/brand/AppBrandSwitcher.svelte",
+      "default": "./src/svelte/brand/AppBrandSwitcher.svelte"
+    },
     "./svelte/icon": {
       "svelte": "./src/svelte/icon/Icon.svelte",
       "default": "./src/svelte/icon/Icon.svelte"

@@ -10,7 +10,11 @@
     previewLayoutDrag,
     setLayoutDragPreview,
   } from '$lib/state.svelte.js'
-  import { describeDragEdit, dragLabelAnchor, RESIZE_GRIP_HIT } from '$lib/spatial/wall-edit.js'
+  import {
+    describeDragEdit,
+    dragLabelAnchor,
+    RESIZE_GRIP_HIT,
+  } from '$lib/spatial/wall-edit.js'
   import { snapDeltaPx } from '$lib/spatial/dimensions.js'
   import { clientToSvgPoint } from '$lib/plan-measure.js'
 
@@ -258,7 +262,9 @@
       }
       const hit =
         e.target instanceof Element
-          ? e.target.closest('[data-wall-id],[data-opening-id],[data-drag-mode]')
+          ? e.target.closest(
+              '[data-wall-id],[data-opening-id],[data-drag-mode]',
+            )
           : null
       if (!hit) onClearSelection?.()
       return
@@ -501,7 +507,12 @@
   })
 </script>
 
-<div class="plan-shell" class:compact class:edit-mode={editMode} class:canvas-priority={canvasPriority}>
+<div
+  class="plan-shell"
+  class:compact
+  class:edit-mode={editMode}
+  class:canvas-priority={canvasPriority}
+>
   {#if zoomable}
     <div class="plan-toolbar" aria-label="平面图缩放">
       <button
@@ -520,16 +531,16 @@
         class:active={fitMode === 'contain'}
         onclick={() => applyFit('contain')}
         aria-pressed={fitMode === 'contain'}
-        title="默认：完整显示整张户型"
-      >看全图</button>
+        title="默认：完整显示整张户型">看全图</button
+      >
       <button
         type="button"
         class="plan-tool plan-tool-text"
         class:active={fitMode === 'width'}
         onclick={() => applyFit('width')}
         aria-pressed={fitMode === 'width'}
-        title="放大到铺满宽度，上下需滑动"
-      >铺满宽</button>
+        title="放大到铺满宽度，上下需滑动">铺满宽</button
+      >
       {#if graphEditMode}
         <span class="plan-hint plan-hint-graph">
           {graphTool === 'wallAdd'
@@ -539,9 +550,13 @@
               : '选择墙段'}
         </span>
       {:else if measureMode}
-        <span class="plan-hint plan-hint-measure">点击两点测距 · 第三次点击重新开始</span>
+        <span class="plan-hint plan-hint-measure"
+          >点击两点测距 · 第三次点击重新开始</span
+        >
       {:else if editMode}
-        <span class="plan-hint plan-hint-edit">拖曳编辑 · 点空白取消选中 · 长按/右键菜单</span>
+        <span class="plan-hint plan-hint-edit"
+          >拖曳编辑 · 点空白取消选中 · 长按/右键菜单</span
+        >
       {:else if !compact}
         <span class="plan-hint">双指捏合缩放 · 拖拽平移</span>
       {/if}
@@ -555,16 +570,18 @@
     class:measure-mode={measureMode}
     class:graph-edit-mode={graphEditMode}
     bind:this={viewportEl}
-    role={onZoneSelect && !editMode && !measureMode && !graphEditMode ? 'group' : undefined}
+    role={onZoneSelect && !editMode && !measureMode && !graphEditMode
+      ? 'group'
+      : undefined}
     aria-label={graphEditMode
       ? '墙图编辑画布'
       : measureMode
-      ? '测距画布：点击两点量距离'
-      : editMode
-        ? '户型编辑画布'
-        : onZoneSelect
-          ? '平面图储藏区选择'
-          : '顶视平面图'}
+        ? '测距画布：点击两点量距离'
+        : editMode
+          ? '户型编辑画布'
+          : onZoneSelect
+            ? '平面图储藏区选择'
+            : '顶视平面图'}
     onclick={handleClick}
     oncontextmenu={handleContextMenu}
     onkeydown={() => {}}
@@ -580,7 +597,11 @@
         role="status"
         aria-live="polite"
       >
-        <span class="drag-hud-status" class:ok={dragHint.valid} class:bad={!dragHint.valid}></span>
+        <span
+          class="drag-hud-status"
+          class:ok={dragHint.valid}
+          class:bad={!dragHint.valid}
+        ></span>
         <span class="drag-hud-title">{dragHint.title}</span>
         {#if dragHint.valid}
           <span class="drag-hud-detail">{dragHint.delta}</span>

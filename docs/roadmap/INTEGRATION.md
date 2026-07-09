@@ -29,17 +29,17 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 
 **URL：** https://portal.kenos.space（Netlify `portal-ken`，`a5df5c3e-0e42-4f82-aca8-8d6802da357f`）
 
-| 子项                        | 状态 | 证据                                               |
-| --------------------------- | ---- | -------------------------------------------------- |
-| SvelteKit app               | 🟡   | Launcher + `PortalLauncherCard` + `CommandPalette` |
-| SSO / coreIdentity          | ✅   | `createCoreIdentityHandler('portal')`              |
-| Netlify + DNS               | ✅   | 四生产站 + Portal + Home；HTTP 200 已验证          |
-| Turbo / GHA build           | ✅   | `npm run build` 含 `portal`                        |
-| Auth redirect               | ✅   | `portal.kenos.space/**` 远程已配置（2026-07-08）   |
-| Portal 内登录               | ✅   | `PortalUnauth` + `createLifeOsAuth`                |
-| DB `app_id` / `default_app` | ✅   | constraint 含 `portal`；migration `20260708120000` |
+| 子项                        | 状态 | 证据                                                           |
+| --------------------------- | ---- | -------------------------------------------------------------- |
+| SvelteKit app               | ✅   | Launcher + `PortalLauncherCard` + `CommandPalette` + G-P1–G-P5 |
+| SSO / coreIdentity          | ✅   | `createCoreIdentityHandler('portal')`                          |
+| Netlify + DNS               | ✅   | 四生产站 + Portal + Home；HTTP 200 已验证                      |
+| Turbo / GHA build           | ✅   | `npm run build` 含 `portal`                                    |
+| Auth redirect               | ✅   | `portal.kenos.space/**` 远程已配置（2026-07-08）               |
+| Portal 内登录               | ✅   | `PortalUnauth` + `createLifeOsAuth`                            |
+| DB `app_id` / `default_app` | ✅   | constraint 含 `portal`；migration `20260708120000`             |
 
-**Growth（Week 3+ · 已落地 2026-07-08）：** 见 [`GROWTH.md`](./GROWTH.md) G-P1–G-P5（读 `core_*`、角标、PWA）
+**Growth（已落地 2026-07-08）：** 见 [`GROWTH.md`](./GROWTH.md) G-P1–G-P5（读 `core_*`、角标、PWA）
 
 ---
 
@@ -47,11 +47,12 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 
 详情 → [`GROWTH.md`](./GROWTH.md)
 
-| ID   | 依赖 I-P1 | 摘要                                              |
-| ---- | --------- | ------------------------------------------------- |
-| G-P1 | DB ✅     | `recentApp` 改读 `last_opened_at`，跨设备「继续」 |
-| G-P2 | SSO ✅    | 只读待办 / `life_events` 角标                     |
-| G-P3 | DB ✅     | `default_app` 登录后跳转                          |
+| ID   | 状态 | 摘要                                                |
+| ---- | ---- | --------------------------------------------------- |
+| G-P1 | ✅   | `recentApp` 读 DB `last_opened_at`，跨设备「继续」  |
+| G-P2 | ✅   | 只读待办 / `life_events` 角标（生产 bill_due 待验） |
+| G-P3 | ✅   | `default_app` 登录后跳转                            |
+| G-P5 | ✅   | 六站 PWA 安装引导                                   |
 
 ## I-P1.5: 跨应用事件中心 {#i-p15}
 
@@ -112,6 +113,6 @@ RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 | **H-P4** | spatial 云同步          | ⏸️  | H-P2/3        | Supabase 表 + `sync.js`；大投入             |
 | **H-P5** | 工坊默认开              | ⏸️  | —             | 去掉 `?studio=1` gate 或设置项              |
 
-**触发 H-P2/3：** 你开始**每天用 Home** 时，可与 Week 1 I-P0/I-P1 同批做 redirect + identity，不必等 Week 4。
+**触发 H-P2/3：** 你开始**每天用 Home** 时，可与 I-P0 SSO 同批做 redirect + identity。
 
 **提交纪律：** 勿将 `apps/home/**` 与 platform/catalog 变更混 PR（除非明确做 Home）。
