@@ -113,6 +113,11 @@
   border-bottom-color: color-mix(in srgb, var(--accent) 12%, var(--border));
 }
 
+.portal-appbar .appbar-brand-mark,
+.portal-appbar .brand-icon-pair img {
+  box-shadow: none;
+}
+
 .portal-appbar .appbar-trailing {
   flex-wrap: wrap;
   justify-content: flex-end;
