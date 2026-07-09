@@ -88,6 +88,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .wall-hit{stroke:rgba(92,117,140,.14);stroke-width:${wallHitStroke};cursor:ew-resize;pointer-events:stroke}
  .wall-hit.wall-h{cursor:ns-resize}
  .wall-hit:hover{stroke:rgba(92,117,140,.42)}
+ .wall-hit.wall-deemph{stroke:rgba(92,117,140,.08);pointer-events:stroke}
+ .wall-hit.wall-deemph:hover{stroke:rgba(92,117,140,.22)}
  .wall-on{stroke:rgba(92,117,140,.65);stroke-width:${wallOnStroke}}
  .open-hit{fill:transparent;stroke:transparent;cursor:grab;pointer-events:all}
  .open-hit:hover{fill:rgba(92,117,140,.14);stroke:var(--plan-accent,#5c758c);stroke-width:1.5;stroke-dasharray:4 3}
@@ -262,7 +264,20 @@ export function renderFloorPlanSvg(project, opts = {}) {
     }
     parts.push('</g>')
   } else if (opts.editMode) {
-    parts.push('<g class="edit-layer" aria-label="可编辑门窗">')
+    parts.push('<g class="edit-layer edit-layer-walls" aria-label="可编辑墙线">')
+    for (const wall of project.walls) {
+      if (wall.kind !== 'wall' || !isEditableWall(wall.id)) continue
+      const binding = resolveWallBinding(wall.id)
+      const on = opts.selectedWall === wall.id
+      const orient = binding?.orientation === 'h' ? ' wall-h' : ''
+      const blocked = opts.dragBlockedWall === wall.id
+      const deemph = opts.selectedOpening ? ' wall-deemph' : ''
+      parts.push(
+        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="wall-hit${orient}${on ? ' wall-on' : ''}${blocked ? ' wall-blocked' : ''}${deemph}" data-wall-id="${wall.id}"/>`,
+      )
+    }
+    parts.push('</g>')
+    parts.push('<g class="edit-layer edit-layer-openings" aria-label="可编辑门窗">')
     for (const op of project.openings) {
       if (op.id === 'ac-living') continue
       const hit = openingHitRect(op)
@@ -284,18 +299,6 @@ export function renderFloorPlanSvg(project, opts = {}) {
         `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="g-bed-closet"/>`,
       )
       appendResizeGrip(parts, 'g-bed-closet', hit, touchScale)
-    }
-    parts.push('</g>')
-    parts.push('<g class="edit-layer edit-layer-walls" aria-label="可编辑墙线">')
-    for (const wall of project.walls) {
-      if (wall.kind !== 'wall' || !isEditableWall(wall.id)) continue
-      const binding = resolveWallBinding(wall.id)
-      const on = opts.selectedWall === wall.id
-      const orient = binding?.orientation === 'h' ? ' wall-h' : ''
-      const blocked = opts.dragBlockedWall === wall.id
-      parts.push(
-        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="wall-hit${orient}${on ? ' wall-on' : ''}${blocked ? ' wall-blocked' : ''}" data-wall-id="${wall.id}"/>`,
-      )
     }
     parts.push('</g>')
     if (!compact) {

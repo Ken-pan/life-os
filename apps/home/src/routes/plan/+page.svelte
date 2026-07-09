@@ -21,10 +21,13 @@
     undoLayoutEdit,
   } from '$lib/state.svelte.js'
   import { isSpatialStudioEnabled } from '$lib/spatial-studio.js'
+  import { browser } from '$app/environment'
   import FloorPlanViewer from '$lib/components/FloorPlanViewer.svelte'
   import RoomDimensionsEditor from '$lib/components/RoomDimensionsEditor.svelte'
   import PlanEditInspector from '$lib/components/PlanEditInspector.svelte'
   import PlanLegend from '$lib/components/PlanLegend.svelte'
+  import PlanSelectionBar from '$lib/components/PlanSelectionBar.svelte'
+  import PlanContextMenu from '$lib/components/PlanContextMenu.svelte'
   import PlanShortcutsHelp from '$lib/components/PlanShortcutsHelp.svelte'
 
   const project = $derived(getActiveProject())
@@ -41,6 +44,14 @@
   let showHelp = $state(false)
   let fitSignal = $state(0)
   let drawerOpen = $state(false)
+  let ctxMenu = $state({ open: false, x: 0, y: 0 })
+
+  const canUndo = $derived(wallGraph ? canUndoGraph() : canUndoLayout())
+  const canRedo = $derived(wallGraph ? canRedoGraph() : canRedoLayout())
+  const hasEditHistory = $derived(canUndo || canRedo)
+  const showSelectionBar = $derived(
+    studio && editMode && (selectedWall || selectedOpening),
+  )
 
   /** @type {{ a: { x: number, y: number } | null, b: { x: number, y: number } | null }} */
   let measurePoints = $state({ a: null, b: null })
@@ -72,6 +83,58 @@
     selectedWall = ''
     selectedOpening = ''
   }
+
+  function openDrawerForSelection() {
+    if (browser && window.matchMedia('(max-width: 599px)').matches) {
+      drawerOpen = true
+    }
+  }
+
+  function performUndo() {
+    if (wallGraph) undoGraphEdit()
+    else undoLayoutEdit()
+  }
+
+  function performRedo() {
+    if (wallGraph) redoGraphEdit()
+    else redoLayoutEdit()
+  }
+
+  /** @param {{ x: number, y: number }} pt */
+  function onBlankContextMenu(pt) {
+    ctxMenu = { open: true, x: pt.x, y: pt.y }
+  }
+
+  const ctxMenuItems = $derived.by(() => {
+    /** @type {{ id: string, label: string, action: () => void }[]} */
+    const items = []
+    if (!wallGraph && planMode !== 'edit') {
+      items.push({ id: 'edit', label: '编辑户型', action: () => setPlanMode('edit') })
+    }
+    if (planMode !== 'measure') {
+      items.push({ id: 'measure', label: '测距', action: () => setPlanMode('measure') })
+    }
+    if (wallGraph && planMode !== 'graph') {
+      items.push({
+        id: 'graph',
+        label: '墙图编辑',
+        action: () => enterGraphEdit('wallAdd'),
+      })
+    }
+    if (wallGraph && planMode === 'graph' && graphTool !== 'wallAdd') {
+      items.push({
+        id: 'wallAdd',
+        label: '建墙',
+        action: () => {
+          graphTool = 'wallAdd'
+        },
+      })
+    }
+    if (planMode !== 'browse') {
+      items.push({ id: 'browse', label: '返回浏览', action: () => setPlanMode('browse') })
+    }
+    return items
+  })
 
   function clearMeasure() {
     measurePoints = { a: null, b: null }
@@ -157,7 +220,7 @@
             ? '测距：点击两点，不改变户型'
             : '自由墙图 · 房间标注沿用 508 导入时数据'
         : planMode === 'edit'
-          ? '拖拽内墙与门窗；Delete 可隐藏选中开口'
+          ? '拖拽内墙与门窗；Delete 仅隐藏门窗（不拆墙）'
           : planMode === 'measure'
             ? '测距：点击两点，不改变户型'
             : '储藏区可点击 · 可切换编辑或测距',
@@ -353,16 +416,43 @@
         返回 508
       </button>
     {:else}
-      <button type="button" class="graph-enable-btn" onclick={() => {
-        activateWallGraphMode()
-        enterGraphEdit('wallAdd')
-      }}>
+      <button
+        type="button"
+        class="graph-enable-btn"
+        onclick={() => {
+          activateWallGraphMode()
+          setPlanMode('browse')
+        }}
+      >
         自由墙图
       </button>
+    {/if}
+    {#if hasEditHistory}
+      <div class="mode-history" role="group" aria-label="编辑历史">
+        <button
+          type="button"
+          class="mode-undo-btn"
+          disabled={!canUndo}
+          title="撤销 (⌘Z)"
+          aria-label="撤销"
+          onclick={performUndo}
+        >↶</button>
+        <button
+          type="button"
+          class="mode-undo-btn"
+          disabled={!canRedo}
+          title="重做"
+          aria-label="重做"
+          onclick={performRedo}
+        >↷</button>
+      </div>
     {/if}
     <button type="button" class="help-btn" onclick={() => (showHelp = !showHelp)} aria-label="快捷键帮助">
       ?
     </button>
+    {#if planMode === 'edit' && !wallGraph}
+      <span class="mode-note">Delete 仅隐藏门窗，不会删除墙体</span>
+    {/if}
     {#if planMode !== 'browse'}
       <p class="mode-kbd" aria-label="快捷键">
         {#if planMode === 'graph'}
@@ -371,13 +461,22 @@
           <kbd>Esc</kbd><span>清除链点 / 退出</span>
         {:else if planMode === 'edit'}
           <kbd>Esc</kbd><span>取消选中 / 退出编辑</span>
-          <kbd>Delete</kbd><span>隐藏门窗</span>
+          <kbd>Delete</kbd><span>隐藏门窗（非删墙）</span>
           <kbd>⌘Z</kbd><span>撤销</span>
         {:else}
           <kbd>Esc</kbd><span>清除测距</span>
           <kbd>点击</kbd><span>选两点量距离</span>
         {/if}
         <kbd>F</kbd><span>适配视图</span>
+      </p>
+      <p class="mode-kbd-compact" aria-label="快捷键简讯">
+        {#if planMode === 'graph'}
+          W 建墙 · Delete 删墙 · Esc 退出
+        {:else if planMode === 'edit'}
+          Esc 退出 · Delete 隐藏门窗 · F 适配
+        {:else}
+          Esc 清除 · 点击测距 · F 适配
+        {/if}
       </p>
     {/if}
   </div>
@@ -407,7 +506,7 @@
       onGraphRemoveEdge={(id) => removeGraphWall(id)}
       onGraphSelectEdge={(id) => {
         selectedEdge = id
-        drawerOpen = true
+        openDrawerForSelection()
       }}
       onGraphHover={(pt) => {
         wallChainHover = pt
@@ -415,14 +514,23 @@
       onSelectWall={(id) => {
         selectedWall = id
         selectedOpening = ''
-        drawerOpen = true
+        openDrawerForSelection()
       }}
       onSelectOpening={(id) => {
         selectedOpening = id
         selectedWall = ''
-        drawerOpen = true
+        openDrawerForSelection()
       }}
+      onBlankContextMenu={studio ? onBlankContextMenu : undefined}
     />
+    {#if showSelectionBar}
+      <PlanSelectionBar
+        {selectedWall}
+        {selectedOpening}
+        onClear={clearSelection}
+        onOpenDetails={() => (drawerOpen = true)}
+      />
+    {/if}
     <PlanLegend
       overlay
       interactive={studio && planMode === 'browse'}
@@ -531,6 +639,14 @@
     {/if}
   </div>
 </div>
+
+<PlanContextMenu
+  open={ctxMenu.open}
+  x={ctxMenu.x}
+  y={ctxMenu.y}
+  items={ctxMenuItems}
+  onClose={() => (ctxMenu = { open: false, x: 0, y: 0 })}
+/>
 
 <style>
   .plan-page {
@@ -690,6 +806,57 @@
     color: var(--t3);
   }
 
+  .mode-kbd-compact {
+    display: none;
+    flex: 1 1 100%;
+    margin: 0;
+    font-size: 11px;
+    color: var(--t3);
+    font-family: var(--mono);
+  }
+
+  .mode-note {
+    flex: 1 1 100%;
+    font-size: 11px;
+    color: var(--t3);
+    font-family: var(--mono);
+  }
+
+  @media (min-width: 720px) {
+    .mode-note {
+      flex: 0 1 auto;
+      order: 11;
+    }
+  }
+
+  .mode-history {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .mode-undo-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--accent);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .mode-undo-btn:disabled {
+    opacity: 0.38;
+    color: var(--t3);
+    cursor: not-allowed;
+  }
+
+  .mode-undo-btn:not(:disabled):hover {
+    background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  }
+
   .plan-stage {
     position: relative;
     display: flex;
@@ -838,6 +1005,16 @@
     }
 
     .mode-kbd {
+      display: none;
+    }
+
+    .mode-kbd-compact {
+      display: block;
+    }
+  }
+
+  @media (min-width: 600px) {
+    .plan-drawer-backdrop {
       display: none;
     }
   }

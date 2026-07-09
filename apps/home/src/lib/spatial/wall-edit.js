@@ -384,19 +384,19 @@ export function listEditableOpenings(project) {
 }
 
 /** @param {number} x1 @param {number} x2 @param {number} y @param {number} [thick] */
-export function openingHitAlongH(x1, x2, y, thick = 30) {
-  const pad = 10
+export function openingHitAlongH(x1, x2, y, thick = 44) {
+  const pad = 18
   const x = Math.min(x1, x2)
   const w = Math.abs(x2 - x1)
-  return { x: x - pad, y: y - thick / 2, w: Math.max(w, 20) + pad * 2, h: thick }
+  return { x: x - pad, y: y - thick / 2, w: Math.max(w, 28) + pad * 2, h: thick }
 }
 
 /** @param {number} x @param {number} y1 @param {number} y2 @param {number} [thick] */
-export function openingHitAlongV(x, y1, y2, thick = 30) {
-  const pad = 10
+export function openingHitAlongV(x, y1, y2, thick = 44) {
+  const pad = 18
   const y = Math.min(y1, y2)
   const h = Math.abs(y2 - y1)
-  return { x: x - thick / 2, y: y - pad, w: thick, h: Math.max(h, 20) + pad * 2 }
+  return { x: x - thick / 2, y: y - pad, w: thick, h: Math.max(h, 28) + pad * 2 }
 }
 
 /**
@@ -405,18 +405,26 @@ export function openingHitAlongV(x, y1, y2, thick = 30) {
  */
 export function openingHitRect(op) {
   if (op.hitRect) return { ...op.hitRect }
-  if (op.rect) return { ...op.rect, h: op.rect.h + 12 }
+  if (op.rect) {
+    const pad = 14
+    return {
+      x: op.rect.x - pad,
+      y: op.rect.y - pad,
+      w: op.rect.w + pad * 2,
+      h: op.rect.h + pad * 2 + 8,
+    }
+  }
   if (op.from && op.to) {
     const x1 = Math.min(op.from.x, op.to.x)
     const x2 = Math.max(op.from.x, op.to.x)
     const y1 = Math.min(op.from.y, op.to.y)
     const y2 = Math.max(op.from.y, op.to.y)
-    const pad = 10
+    const pad = 18
     return {
       x: x1 - pad,
       y: y1 - pad,
-      w: Math.max(x2 - x1, 24) + pad * 2,
-      h: Math.max(y2 - y1, 24) + pad * 2,
+      w: Math.max(x2 - x1, 28) + pad * 2,
+      h: Math.max(y2 - y1, 28) + pad * 2,
     }
   }
   if (op.pathD && /^M\s+[\d.-]+\s+[\d.-]+\s+L\s+[\d.-]+\s+[\d.-]+\s*$/.test(op.pathD.trim())) {
@@ -557,7 +565,7 @@ export function supportsDoorWidthResize(openingId) {
 }
 
 /** SVG viewBox units — enlarged for touch; visual grip stays narrow */
-export const RESIZE_GRIP_HIT = 48
+export const RESIZE_GRIP_HIT = 56
 export const RESIZE_GRIP_VIS_W = 12
 
 /**

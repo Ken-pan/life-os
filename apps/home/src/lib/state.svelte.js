@@ -185,7 +185,7 @@ export function activateWallGraphMode() {
     wallGraph: graph,
   })
   setActiveProject(next)
-  toast('已启用自由墙图：可建墙与删墙')
+  toast('已切换墙图，点「墙图编辑」开始建墙')
 }
 
 export function revertToParametric508() {

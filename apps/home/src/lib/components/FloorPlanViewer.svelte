@@ -32,6 +32,7 @@
    *   measurePoints?: { a: { x: number, y: number } | null, b: { x: number, y: number } | null },
    *   fitSignal?: number,
    *   onZoneSelect?: (code: string) => void,
+   *   onBlankContextMenu?: (pt: { x: number, y: number, svgX: number, svgY: number }) => void,
    *   onSelectWall?: (id: string) => void,
    *   onSelectOpening?: (id: string) => void,
    *   onMeasurePoint?: (pt: { x: number, y: number }) => void,
@@ -59,6 +60,7 @@
     measurePoints = { a: null, b: null },
     fitSignal = 0,
     onZoneSelect,
+    onBlankContextMenu,
     onSelectWall,
     onSelectOpening,
     onMeasurePoint,
@@ -71,6 +73,8 @@
   let zoom = $state(1)
   let panX = $state(0)
   let panY = $state(0)
+  /** @type {'contain' | 'width'} */
+  let fitMode = $state('contain')
   /** @type {HTMLElement | null} */
   let viewportEl = $state(null)
   /** @type {import('$lib/spatial/types.js').Layout508Config | null} */
@@ -178,6 +182,25 @@
   }
 
   /** @param {MouseEvent} e */
+  function handleContextMenu(e) {
+    if (!onBlankContextMenu) return
+    const blocked =
+      e.target instanceof Element &&
+      e.target.closest(
+        '[data-wall-id],[data-opening-id],[data-zone],[data-edge-id],[data-drag-mode]',
+      )
+    if (blocked) return
+    e.preventDefault()
+    const svgPt = clientToSvg(e.clientX, e.clientY)
+    onBlankContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      svgX: svgPt.x,
+      svgY: svgPt.y,
+    })
+  }
+
+  /** @param {MouseEvent} e */
   function handleClick(e) {
     if (graphEditMode) return
     if (measureMode && onMeasurePoint && viewportEl) {
@@ -226,7 +249,13 @@
     panY = 0
   }
 
-  /** Fit plan: desktop fills width; mobile fits entire drawing in view */
+  /** @param {'contain' | 'width'} [mode] */
+  function applyFit(mode) {
+    if (mode) fitMode = mode
+    fitToView()
+  }
+
+  /** Fit plan: contain = full drawing; width = fill canvas width */
   function fitToView() {
     if (!viewportEl) return
     const vbW = displayProject.viewport.width
@@ -237,8 +266,7 @@
     if (!vbW || !vbH) return
     const scaleW = (canvasW / vbW) * 0.99
     const scaleH = (canvasH / vbH) * 0.99
-    const narrow = canvasW < 840
-    const fit = narrow ? Math.min(scaleW, scaleH) : scaleW
+    const fit = fitMode === 'width' ? scaleW : Math.min(scaleW, scaleH)
     zoom = Math.min(2.5, Math.max(0.4, fit))
     panX = 0
     panY = 0
@@ -423,9 +451,20 @@
       <button type="button" class="plan-tool" onclick={zoomIn} aria-label="放大"
         >+</button
       >
-      <button type="button" class="plan-tool plan-tool-text" onclick={resetView}
-        >适配</button
-      >
+      <button
+        type="button"
+        class="plan-tool plan-tool-text"
+        class:active={fitMode === 'contain'}
+        onclick={() => applyFit('contain')}
+        aria-pressed={fitMode === 'contain'}
+      >全图</button>
+      <button
+        type="button"
+        class="plan-tool plan-tool-text"
+        class:active={fitMode === 'width'}
+        onclick={() => applyFit('width')}
+        aria-pressed={fitMode === 'width'}
+      >宽度</button>
       {#if graphEditMode}
         <span class="plan-hint plan-hint-graph">
           {graphTool === 'wallAdd'
@@ -462,6 +501,7 @@
           ? '平面图储藏区选择'
           : '顶视平面图'}
     onclick={handleClick}
+    oncontextmenu={handleContextMenu}
     onkeydown={() => {}}
   >
     <div class="plan-canvas" style={canvasStyle}>
@@ -573,6 +613,12 @@
     font-size: 12px;
     font-weight: 600;
     padding: 0 10px;
+  }
+
+  .plan-tool-text.active {
+    background: var(--accent);
+    color: #f5f8fa;
+    border-color: transparent;
   }
 
   .plan-zoom-pct {

@@ -101,19 +101,19 @@
   {/if}
 </SettingsSection>
 
-{#if studio}
-  <SettingsSection title="空间工坊（内部）">
-    <SettingsToggleRow
-      label="户型编辑与家具层"
-      desc="对外站点默认关闭；可用 ?studio=1 启用并持久化"
-      checked={studio}
-      onchange={(v) => setSpatialStudioEnabled(v)}
-    />
+<SettingsSection title="空间工坊（内部）">
+  <SettingsToggleRow
+    label="户型编辑与家具层"
+    desc="对外站点默认关闭；可用 ?studio=1 启用并持久化"
+    checked={studio}
+    onchange={(v) => setSpatialStudioEnabled(v)}
+  />
+  {#if studio}
     <SettingsRow label="入口">
       <a class="settings-link" href="/plan">平面 · 编辑户型 →</a>
     </SettingsRow>
-  </SettingsSection>
-{/if}
+  {/if}
+</SettingsSection>
 
 <style>
   .settings-select {

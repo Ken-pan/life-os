@@ -23,24 +23,27 @@ export function bindPlanEditDrag(el, opts) {
   /** @param {PointerEvent} e */
   function down(e) {
     if (e.button !== 0) return
-    const wall = e.target instanceof Element ? e.target.closest('[data-wall-id]') : null
     const resize =
       e.target instanceof Element ? e.target.closest('[data-drag-mode="width"]') : null
     const opening =
       resize ??
       (e.target instanceof Element ? e.target.closest('[data-opening-id]') : null)
+    const wall =
+      !opening && e.target instanceof Element
+        ? e.target.closest('[data-wall-id]')
+        : null
     if (!wall && !opening) return
     e.preventDefault()
     e.stopPropagation()
     el.setPointerCapture(e.pointerId)
-    if (wall) {
-      active = { kind: 'wall', id: wall.getAttribute('data-wall-id') ?? '' }
-    } else if (opening) {
+    if (opening) {
       active = {
         kind: 'opening',
         id: opening.getAttribute('data-opening-id') ?? '',
         mode: opening.getAttribute('data-drag-mode') === 'width' ? 'width' : 'move',
       }
+    } else if (wall) {
+      active = { kind: 'wall', id: wall.getAttribute('data-wall-id') ?? '' }
     }
     startX = e.clientX
     startY = e.clientY
