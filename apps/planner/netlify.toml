@@ -25,9 +25,5 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# ai-plan 通过 export const config.path 直接挂载 /api/ai/plan，无需 rewrite
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# api-plan 通过 export const config.path 直接挂载 /api/ai/plan，无需 rewrite
+# API routes and SPA catch-all are defined in static/_redirects (processed before netlify.toml)
