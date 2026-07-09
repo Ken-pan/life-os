@@ -49,19 +49,19 @@
 
 /**
  * @typedef {object} Layout508OpeningsConfig
- * @property {OpeningSlotConfig} bedroomDoor
- * @property {OpeningSlotConfig} bathDoor
- * @property {OpeningSlotConfig} coatDoor
+ * @property {OpeningSlotConfig} bedroomDoor 卧室南墙门（offset 沿南墙从西起）
+ * @property {OpeningSlotConfig} bathDoor 浴室北墙门（offset 沿北墙从西起）
+ * @property {OpeningSlotConfig} linenDoor 走廊储物柜东墙门（offset 从柜顶起）
  * @property {OpeningSlotConfig} laundryDoor
  * @property {OpeningSlotConfig} entryDoor
- * @property {OpeningSlotConfig} balconyDoor
- * @property {OpeningSlotConfig} patioDoor
+ * @property {OpeningSlotConfig} balconyDoor 客厅↔阳台门（offset 沿分隔墙从北起）
  * @property {OpeningSlotConfig} livingWindow
  * @property {OpeningSlotConfig} bedroomWindow
  */
 
 /**
  * @typedef {object} Layout508Config
+ * @property {number} [layoutVersion] 拓扑版本 — 旧版存档整体丢弃
  * @property {number} pxPerFt
  * @property {{ x: number, y: number }} margin
  * @property {FtIn} leftCol
@@ -72,7 +72,7 @@
  * @property {RoomDimensions} rooms.balcony
  * @property {RoomDimensions} rooms.bedroom
  * @property {BedClosetConfig} rooms.bedCloset
- * @property {RoomDimensions} rooms.coatCloset
+ * @property {RoomDimensions} rooms.linenCloset
  * @property {RoomDimensions} rooms.bathroom
  * @property {RoomDimensions} rooms.laundry
  * @property {RoomDimensions} rooms.living

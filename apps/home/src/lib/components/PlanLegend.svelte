@@ -132,13 +132,13 @@
         <span class="plan-legend-item" role="listitem">
           <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
             <path
-              d="M4 14 L10 4 L14 14 M24 14 L18 4 L14 14"
+              d="M4 6 L24 6 M4 10 L24 10"
               fill="none"
               stroke="currentColor"
               stroke-width="1.4"
             />
           </svg>
-          双折门
+          推拉门
         </span>
         <span class="plan-legend-item" role="listitem">
           <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">

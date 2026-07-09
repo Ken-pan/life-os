@@ -4,10 +4,9 @@
 import { SPATIAL_SCHEMA_VERSION } from './types.js'
 import { dimPx, formatFtIn, toInches, fromInches } from './dimensions.js'
 import {
-  bifoldHorizontalUp,
+  bypassSlidingHorizontal,
   doubleSwingVerticalRight,
-  slidingHorizontal,
-  swingHorizontalUpFromRight,
+  swingHorizontalUp,
   swingVerticalLeft,
   swingVerticalRight,
 } from './doors.js'
@@ -17,17 +16,24 @@ import {
   openingHitAlongV,
 } from './wall-edit.js'
 
+/** Bump when default topology changes — stale saved configs are discarded. */
+export const LAYOUT_508_VERSION = 2
+
 /** @param {FtIn} d @param {number} px */
 function px(d, px) {
   return dimPx(d, px)
 }
 
 /**
- * Default Avalon #508 dimensions from developer floor plan.
+ * Avalon #508 dimensions, re-traced 2026-07 from the developer floor plan
+ * (red-line audit): balcony door off the living room, bedroom door on the
+ * south wall, west-wall storage closet, open-concept living/kitchen,
+ * solid structural core under the laundry.
  * @returns {Layout508Config}
  */
 export function default508Config() {
   return {
+    layoutVersion: LAYOUT_508_VERSION,
     pxPerFt: 36,
     margin: { x: 40, y: 40 },
     leftCol: { ft: 12, in: 6 },
@@ -38,14 +44,14 @@ export function default508Config() {
       bedCloset: {
         w: { ft: 7, in: 1 },
         h: { ft: 2, in: 0 },
-        door: { w: { ft: 5, in: 0 }, offset: { ft: 1, in: 0 } },
+        door: { w: { ft: 3, in: 11 }, offset: { ft: 3, in: 0 } },
       },
-      coatCloset: { w: { ft: 3, in: 5 }, h: { ft: 2, in: 0 } },
-      bathroom: { w: { ft: 7, in: 11 }, h: { ft: 7, in: 8 } },
-      laundry: { w: { ft: 3, in: 2 }, h: { ft: 5, in: 4 } },
-      living: { w: { ft: 11, in: 10 }, h: { ft: 16, in: 9 } },
-      kitchen: { w: { ft: 11, in: 10 }, h: { ft: 13, in: 10 } },
-      entry: { w: { ft: 3, in: 9 }, h: { ft: 4, in: 5 } },
+      linenCloset: { w: { ft: 2, in: 8 }, h: { ft: 6, in: 0 } },
+      bathroom: { w: { ft: 9, in: 0 }, h: { ft: 7, in: 8 } },
+      laundry: { w: { ft: 5, in: 4 }, h: { ft: 6, in: 0 } },
+      living: { w: { ft: 11, in: 10 }, h: { ft: 13, in: 10 } },
+      kitchen: { w: { ft: 11, in: 10 }, h: { ft: 16, in: 9 } },
+      entry: { w: { ft: 5, in: 0 }, h: { ft: 3, in: 4 } },
     },
     openings: defaultOpenings(),
   }
@@ -57,6 +63,11 @@ export function default508Config() {
  * @returns {Layout508Config}
  */
 export function merge508Config(base, patch) {
+  // Saved configs from an older topology (pre red-line re-trace) carry
+  // offsets whose semantics changed — discard them wholesale.
+  if ((patch?.layoutVersion ?? 1) < (base.layoutVersion ?? 1)) {
+    return structuredClone(base)
+  }
   const rooms = /** @type {Layout508Config['rooms']} */ ({})
   for (const key of Object.keys(base.rooms)) {
     const k = /** @type {keyof Layout508Config['rooms']} */ (key)
@@ -83,6 +94,7 @@ export function merge508Config(base, patch) {
   return {
     ...base,
     ...patch,
+    layoutVersion: base.layoutVersion,
     margin: { ...base.margin, ...patch.margin },
     leftCol: patch.leftCol ?? base.leftCol,
     rightCol: patch.rightCol ?? base.rightCol,
@@ -91,6 +103,11 @@ export function merge508Config(base, patch) {
     disabledOpenings: patch.disabledOpenings ?? base.disabledOpenings ?? [],
   }
 }
+
+/** Solid structural core below the laundry — floor to south wall. */
+const PILLAR_H = { ft: 3, in: 4 }
+/** Kitchen counter run depth along the east wall. */
+const COUNTER_DEPTH = { ft: 2, in: 4 }
 
 /**
  * Build full spatial project from parametric layout config.
@@ -111,9 +128,8 @@ export function build508Project(config, carry = {}) {
   const bedroomH = px(r.bedroom.h, P)
   const bedClosetW = px(r.bedCloset.w, P)
   const bedClosetH = px(r.bedCloset.h, P)
-  const coatClosetW = px(r.coatCloset.w, P)
-  const coatClosetH = px(r.coatCloset.h, P)
-  const closetBandH = Math.max(bedClosetH, coatClosetH)
+  const linenW = px(r.linenCloset.w, P)
+  const linenH = px(r.linenCloset.h, P)
   const bathW = px(r.bathroom.w, P)
   const bathH = px(r.bathroom.h, P)
   const laundryW = px(r.laundry.w, P)
@@ -122,50 +138,48 @@ export function build508Project(config, carry = {}) {
   const kitchenH = px(r.kitchen.h, P)
   const entryW = px(r.entry.w, P)
   const entryH = px(r.entry.h, P)
-  const kitCounterDepth = px({ ft: 2, in: 4 }, P)
+  const pillarH = px(PILLAR_H, P)
+  const kitCounterDepth = px(COUNTER_DEPTH, P)
   const kitCounterX = X_END - kitCounterDepth
   const op = { ...defaultOpenings(), ...(config.openings ?? {}) }
 
   const yBalconyBot = Y0 + balconyH
   const yBedroomBot = yBalconyBot + bedroomH
-  const yClosetBandBot = yBedroomBot + closetBandH
-  const yLaundryTop = yClosetBandBot + px({ ft: 2, in: 0 }, P)
-  const coatX = X0 + bedClosetW + coatClosetW
-  const hallX = X0 + bathW + laundryW
-  const hallW = X_DIV - hallX
-  const hallH = bathH + px(r.coatCloset.h, P) - px({ ft: 2, in: 0 }, P)
-
-  const yLeftBot = Math.max(yClosetBandBot + bathH, yLaundryTop + laundryH)
-  const yRightBot = Y0 + livingH + kitchenH
-  const Y_BOT = Math.max(yLeftBot, yRightBot)
+  const yClosetBandBot = yBedroomBot + bedClosetH
+  const yLinenBot = yClosetBandBot + linenH
+  const yLivKit = Y0 + livingH
+  const Y_BOT = Math.max(yLivKit + kitchenH, yLinenBot + bathH)
   const outerH = Y_BOT - Y0
-  const midColX = X0 + bathW
-  const midColW = laundryW + hallW
-  const pillarW = px({ ft: 2, in: 0 }, P)
-  const pillarH = px({ ft: 2, in: 0 }, P)
-  const pillarX = midColX + Math.max(0, (midColW - pillarW) / 2)
-  const pillarY = Y_BOT - pillarH
-  const coatDoorY1 = yBedroomBot + px(op.coatDoor.offset, P)
-  const coatDoorY2 = coatDoorY1 + px(op.coatDoor.span, P)
+
+  const yBathTop = Y_BOT - bathH
+  const laundryX = X0 + bathW
+  const laundryE = laundryX + laundryW
+  const yPillarTop = Y_BOT - pillarH
+  const yLaundryTop = yPillarTop - laundryH
+  const linenE = X0 + linenW
+
+  // Balcony ↔ living swing door at the top of the divider wall
+  const balcDoorY1 = Y0 + px(op.balconyDoor.offset, P)
+  const balcDoorY2 = balcDoorY1 + px(op.balconyDoor.span, P)
+  // Bedroom door on the bedroom's south wall, near the east corner
+  const bedDoorX1 = X0 + px(op.bedroomDoor.offset, P)
+  const bedDoorX2 = bedDoorX1 + px(op.bedroomDoor.span, P)
+  // Bed closet sliding front onto the hall (south face)
+  const cdX1 = X0 + px(r.bedCloset.door.offset, P)
+  const cdX2 = cdX1 + px(r.bedCloset.door.w, P)
+  // Linen closet door on its east wall
+  const linenDoorY1 = yClosetBandBot + px(op.linenDoor.offset, P)
+  const linenDoorY2 = linenDoorY1 + px(op.linenDoor.span, P)
+  // Bathroom door on its north wall, swings out into the hall
+  const bathDoorX1 = X0 + px(op.bathDoor.offset, P)
+  const bathDoorX2 = bathDoorX1 + px(op.bathDoor.span, P)
+  // Laundry double doors on its east wall
   const laundryDoorY1 = yLaundryTop + px(op.laundryDoor.offset, P)
   const laundryDoorY2 = laundryDoorY1 + px(op.laundryDoor.span, P)
-
-  // Bed closet bifold door on shared wall with bedroom (opens up into bedroom only)
-  const doorOff = px(r.bedCloset.door.offset, P)
-  const doorW = px(r.bedCloset.door.w, P)
-  const doorX1 = X0 + doorOff
-  const doorX2 = doorX1 + doorW
-
-  const balconySpanPx = px(op.balconyDoor.span, P)
-  const balconyDoorX1 = op.balconyDoor.center
-    ? X0 + LEFT_W / 2 - balconySpanPx / 2
-    : X0 + px(op.balconyDoor.offset, P)
-  const balconyDoorX2 = balconyDoorX1 + balconySpanPx
-  const patioSpanPx = px(op.patioDoor.span, P)
-  const patioDoorX1 = op.patioDoor.center
-    ? X0 + LEFT_W / 2 - patioSpanPx / 2
-    : X0 + px(op.patioDoor.offset, P)
-  const patioDoorX2 = patioDoorX1 + patioSpanPx
+  // Entry door on the south wall, just east of the structural core
+  const entryX2 =
+    X_END - px(op.entryDoor.offsetFromRight ?? { ft: 0, in: 0 }, P)
+  const entryX1 = entryX2 - px(op.entryDoor.span, P)
 
   /** @type {SpatialProject['rooms']} */
   const rooms = [
@@ -194,23 +208,18 @@ export function build508Project(config, carry = {}) {
       dimensions: { w: r.bedCloset.w, h: r.bedCloset.h },
     },
     {
-      id: 'coat-closet',
+      id: 'linen-closet',
       nameZh: '走廊储物柜',
-      nameEn: 'Coat Closet',
-      bounds: {
-        x: X0 + bedClosetW,
-        y: yBedroomBot,
-        w: coatClosetW,
-        h: coatClosetH,
-      },
+      nameEn: 'Linen / Storage Closet',
+      bounds: { x: X0, y: yClosetBandBot, w: linenW, h: linenH },
       fill: '#e8edf1',
-      dimensions: { w: r.coatCloset.w, h: r.coatCloset.h },
+      dimensions: { w: r.linenCloset.w, h: r.linenCloset.h },
     },
     {
       id: 'bathroom',
       nameZh: '浴室',
       nameEn: 'Bath',
-      bounds: { x: X0, y: yClosetBandBot, w: bathW, h: bathH },
+      bounds: { x: X0, y: yBathTop, w: bathW, h: bathH },
       fill: '#e6eef0',
       dimensions: { w: r.bathroom.w, h: r.bathroom.h },
     },
@@ -218,7 +227,7 @@ export function build508Project(config, carry = {}) {
       id: 'laundry',
       nameZh: '洗衣间',
       nameEn: 'Laundry',
-      bounds: { x: X0 + bathW, y: yLaundryTop, w: laundryW, h: laundryH },
+      bounds: { x: laundryX, y: yLaundryTop, w: laundryW, h: laundryH },
       fill: '#eef1f4',
       dimensions: { w: r.laundry.w, h: r.laundry.h },
     },
@@ -232,9 +241,9 @@ export function build508Project(config, carry = {}) {
     },
     {
       id: 'kitchen',
-      nameZh: '厨房',
-      nameEn: 'Kitchen',
-      bounds: { x: X_DIV, y: Y0 + livingH, w: RIGHT_W, h: kitchenH },
+      nameZh: '厨房 · 餐区',
+      nameEn: 'Kitchen / Dining',
+      bounds: { x: X_DIV, y: yLivKit, w: RIGHT_W, h: kitchenH },
       fill: '#efece5',
       dimensions: { w: r.kitchen.w, h: r.kitchen.h },
     },
@@ -243,8 +252,8 @@ export function build508Project(config, carry = {}) {
       nameZh: '玄关',
       nameEn: 'Entry',
       bounds: {
-        x: X_END - entryW,
-        y: Y0 + livingH + kitchenH - entryH,
+        x: laundryE,
+        y: Y_BOT - entryH,
         w: entryW,
         h: entryH,
       },
@@ -257,23 +266,23 @@ export function build508Project(config, carry = {}) {
       nameEn: 'Circulation',
       kind: 'circulation',
       bounds: {
-        x: hallX,
-        y: yBedroomBot + bedClosetH,
-        w: hallW,
-        h: hallH,
+        x: linenE,
+        y: yClosetBandBot,
+        w: laundryX - linenE,
+        h: yBathTop - yClosetBandBot,
       },
       fill: 'transparent',
       dimensions: {
-        w: fromInches(Math.round((hallW / P) * 12)),
-        h: fromInches(Math.round((hallH / P) * 12)),
+        w: fromInches(Math.round(((laundryX - linenE) / P) * 12)),
+        h: fromInches(Math.round(((yBathTop - yClosetBandBot) / P) * 12)),
       },
     },
     {
       id: 'structural-pillar',
-      nameZh: '结构柱',
-      nameEn: 'Structural Column',
+      nameZh: '结构柱 · 实心不可进',
+      nameEn: 'Solid Core',
       kind: 'structural',
-      bounds: { x: pillarX, y: pillarY, w: pillarW, h: pillarH },
+      bounds: { x: laundryX, y: yPillarTop, w: laundryW, h: pillarH },
       fill: '#c9bfb4',
     },
   ]
@@ -288,9 +297,9 @@ export function build508Project(config, carry = {}) {
       role: 'exterior',
     },
     {
-      id: 'w-outer-bot-left',
-      from: { x: X0, y: Y_BOT },
-      to: { x: X_DIV, y: Y_BOT },
+      id: 'w-outer-top',
+      from: { x: X0, y: Y0 },
+      to: { x: X_END, y: Y0 },
       kind: 'wall',
       role: 'exterior',
     },
@@ -301,256 +310,257 @@ export function build508Project(config, carry = {}) {
       kind: 'wall',
       role: 'exterior',
     },
+    // South wall with entry door just east of the structural core
     {
-      id: 'w-outer-top-l',
-      from: { x: X0, y: Y0 },
-      to: { x: patioDoorX1, y: Y0 },
+      id: 'w-outer-bot-w',
+      from: { x: X0, y: Y_BOT },
+      to: { x: entryX1, y: Y_BOT },
       kind: 'wall',
       role: 'exterior',
     },
     {
-      id: 'g-patio',
-      from: { x: patioDoorX1, y: Y0 },
-      to: { x: patioDoorX2, y: Y0 },
+      id: 'g-entry',
+      from: { x: entryX1, y: Y_BOT },
+      to: { x: entryX2, y: Y_BOT },
       kind: 'gap',
     },
     {
-      id: 't-patio',
-      from: { x: patioDoorX1, y: Y0 },
-      to: { x: patioDoorX2, y: Y0 },
+      id: 't-entry',
+      from: { x: entryX1, y: Y_BOT },
+      to: { x: entryX2, y: Y_BOT },
       kind: 'threshold',
     },
     {
-      id: 'w-outer-top-m',
-      from: { x: patioDoorX2, y: Y0 },
-      to: { x: X_DIV, y: Y0 },
+      id: 'w-outer-bot-e',
+      from: { x: entryX2, y: Y_BOT },
+      to: { x: X_END, y: Y_BOT },
       kind: 'wall',
       role: 'exterior',
     },
+    // Divider wall alongside balcony + bedroom only — open to the hall below
     {
-      id: 'w-outer-top-r',
+      id: 'w-div-top',
       from: { x: X_DIV, y: Y0 },
-      to: { x: X_END, y: Y0 },
+      to: { x: X_DIV, y: balcDoorY1 },
       kind: 'wall',
-      role: 'exterior',
+      role: 'interior',
+    },
+    {
+      id: 'g-balcony',
+      from: { x: X_DIV, y: balcDoorY1 },
+      to: { x: X_DIV, y: balcDoorY2 },
+      kind: 'gap',
+    },
+    {
+      id: 't-balcony',
+      from: { x: X_DIV, y: balcDoorY1 },
+      to: { x: X_DIV, y: balcDoorY2 },
+      kind: 'threshold',
     },
     {
       id: 'w-div',
-      from: { x: X_DIV, y: Y0 },
-      to: { x: X_DIV, y: Y_BOT },
+      from: { x: X_DIV, y: balcDoorY2 },
+      to: { x: X_DIV, y: yBedroomBot },
       kind: 'wall',
       role: 'interior',
     },
+    // Balcony / bedroom separation — solid, window only
     {
       id: 'w-balcony',
       from: { x: X0, y: yBalconyBot },
-      to: { x: X0 + LEFT_W, y: yBalconyBot },
+      to: { x: X_DIV, y: yBalconyBot },
       kind: 'wall',
       role: 'interior',
     },
-    // Closet row — gap for bifold door (bed-closet → bedroom only)
+    // Bedroom south wall with swing door near the east corner
     {
-      id: 'w-closet-row-l',
+      id: 'w-bed-south-l',
       from: { x: X0, y: yBedroomBot },
-      to: { x: doorX1, y: yBedroomBot },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'g-bed-closet',
-      from: { x: doorX1, y: yBedroomBot },
-      to: { x: doorX2, y: yBedroomBot },
-      kind: 'gap',
-    },
-    {
-      id: 'w-closet-row-r',
-      from: { x: doorX2, y: yBedroomBot },
-      to: { x: X0 + bedClosetW, y: yBedroomBot },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-closet-row-ext',
-      from: { x: X0 + bedClosetW, y: yBedroomBot },
-      to: { x: X0 + LEFT_W, y: yBedroomBot },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-closet-v',
-      from: { x: X0 + bedClosetW, y: yBedroomBot },
-      to: { x: X0 + bedClosetW, y: yBedroomBot + coatClosetH },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-coat-east-top',
-      from: { x: coatX, y: yBedroomBot },
-      to: { x: coatX, y: coatDoorY1 },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'g-coat',
-      from: { x: coatX, y: coatDoorY1 },
-      to: { x: coatX, y: coatDoorY2 },
-      kind: 'gap',
-    },
-    {
-      id: 't-coat',
-      from: { x: coatX, y: coatDoorY1 },
-      to: { x: coatX, y: coatDoorY2 },
-      kind: 'threshold',
-    },
-    {
-      id: 'w-coat-east-bot',
-      from: { x: coatX, y: coatDoorY2 },
-      to: { x: coatX, y: yBedroomBot + coatClosetH },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-bath-top',
-      from: { x: X0, y: yClosetBandBot },
-      to: { x: X0 + bathW + laundryW, y: yClosetBandBot },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-bath-right',
-      from: { x: X0 + bathW, y: yClosetBandBot },
-      to: { x: X0 + bathW, y: yLaundryTop },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-laundry-east-top',
-      from: { x: hallX, y: yLaundryTop },
-      to: { x: hallX, y: laundryDoorY1 },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'g-laundry',
-      from: { x: hallX, y: laundryDoorY1 },
-      to: { x: hallX, y: laundryDoorY2 },
-      kind: 'gap',
-    },
-    {
-      id: 't-laundry',
-      from: { x: hallX, y: laundryDoorY1 },
-      to: { x: hallX, y: laundryDoorY2 },
-      kind: 'threshold',
-    },
-    {
-      id: 'w-laundry-east-bot',
-      from: { x: hallX, y: laundryDoorY2 },
-      to: { x: hallX, y: yLaundryTop + laundryH },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-bath-right-low',
-      from: { x: X0 + bathW, y: yLaundryTop + laundryH },
-      to: { x: X0 + bathW, y: Y_BOT },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-liv-kit',
-      from: { x: X_DIV, y: Y0 + livingH },
-      to: { x: X_END - px({ ft: 4, in: 0 }, P), y: Y0 + livingH },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'w-kit-counter',
-      from: { x: kitCounterX, y: Y0 + livingH },
-      to: { x: kitCounterX, y: Y_BOT },
+      to: { x: bedDoorX1, y: yBedroomBot },
       kind: 'wall',
       role: 'interior',
     },
     {
       id: 'g-bed',
-      from: { x: X_DIV, y: yBalconyBot + px(op.bedroomDoor.offset, P) },
-      to: {
-        x: X_DIV,
-        y:
-          yBalconyBot +
-          px(op.bedroomDoor.offset, P) +
-          px(op.bedroomDoor.span, P),
-      },
+      from: { x: bedDoorX1, y: yBedroomBot },
+      to: { x: bedDoorX2, y: yBedroomBot },
       kind: 'gap',
     },
     {
       id: 't-bed',
-      from: { x: X_DIV, y: yBalconyBot + px(op.bedroomDoor.offset, P) },
-      to: {
-        x: X_DIV,
-        y:
-          yBalconyBot +
-          px(op.bedroomDoor.offset, P) +
-          px(op.bedroomDoor.span, P),
-      },
+      from: { x: bedDoorX1, y: yBedroomBot },
+      to: { x: bedDoorX2, y: yBedroomBot },
       kind: 'threshold',
     },
     {
+      id: 'w-bed-south-r',
+      from: { x: bedDoorX2, y: yBedroomBot },
+      to: { x: X_DIV, y: yBedroomBot },
+      kind: 'wall',
+      role: 'interior',
+    },
+    // Bed closet — east cheek wall + sliding front facing the hall
+    {
+      id: 'w-closet-v',
+      from: { x: X0 + bedClosetW, y: yBedroomBot },
+      to: { x: X0 + bedClosetW, y: yClosetBandBot },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'w-closet-face-l',
+      from: { x: X0, y: yClosetBandBot },
+      to: { x: cdX1, y: yClosetBandBot },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'g-bed-closet',
+      from: { x: cdX1, y: yClosetBandBot },
+      to: { x: cdX2, y: yClosetBandBot },
+      kind: 'gap',
+    },
+    {
+      id: 'w-closet-face-r',
+      from: { x: cdX2, y: yClosetBandBot },
+      to: { x: X0 + bedClosetW, y: yClosetBandBot },
+      kind: 'wall',
+      role: 'interior',
+    },
+    // Linen / storage closet along the west wall
+    {
+      id: 'w-linen-east-top',
+      from: { x: linenE, y: yClosetBandBot },
+      to: { x: linenE, y: linenDoorY1 },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'g-linen',
+      from: { x: linenE, y: linenDoorY1 },
+      to: { x: linenE, y: linenDoorY2 },
+      kind: 'gap',
+    },
+    {
+      id: 't-linen',
+      from: { x: linenE, y: linenDoorY1 },
+      to: { x: linenE, y: linenDoorY2 },
+      kind: 'threshold',
+    },
+    {
+      id: 'w-linen-east-bot',
+      from: { x: linenE, y: linenDoorY2 },
+      to: { x: linenE, y: yLinenBot },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'w-linen-bot',
+      from: { x: X0, y: yLinenBot },
+      to: { x: linenE, y: yLinenBot },
+      kind: 'wall',
+      role: 'interior',
+    },
+    // Bathroom north wall — door swings out into the hall
+    {
+      id: 'w-bath-top-l',
+      from: { x: X0, y: yBathTop },
+      to: { x: bathDoorX1, y: yBathTop },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
       id: 'g-bath',
-      from: { x: X0 + bathW, y: yClosetBandBot + px(op.bathDoor.offset, P) },
-      to: {
-        x: X0 + bathW,
-        y: yClosetBandBot + px(op.bathDoor.offset, P) + px(op.bathDoor.span, P),
-      },
+      from: { x: bathDoorX1, y: yBathTop },
+      to: { x: bathDoorX2, y: yBathTop },
       kind: 'gap',
     },
     {
       id: 't-bath',
-      from: { x: X0 + bathW, y: yClosetBandBot + px(op.bathDoor.offset, P) },
-      to: {
-        x: X0 + bathW,
-        y: yClosetBandBot + px(op.bathDoor.offset, P) + px(op.bathDoor.span, P),
-      },
+      from: { x: bathDoorX1, y: yBathTop },
+      to: { x: bathDoorX2, y: yBathTop },
       kind: 'threshold',
     },
     {
-      id: 'g-entry',
-      from: {
-        x:
-          X_END -
-          px(op.entryDoor.offsetFromRight ?? { ft: 0, in: 0 }, P) -
-          px(op.entryDoor.span, P),
-        y: Y_BOT,
-      },
-      to: {
-        x: X_END - px(op.entryDoor.offsetFromRight ?? { ft: 0, in: 0 }, P),
-        y: Y_BOT,
-      },
+      id: 'w-bath-top-r',
+      from: { x: bathDoorX2, y: yBathTop },
+      to: { x: laundryX, y: yBathTop },
+      kind: 'wall',
+      role: 'interior',
+    },
+    // Bath east wall = laundry/pillar west wall (single shared line)
+    {
+      id: 'w-bath-laundry',
+      from: { x: laundryX, y: yLaundryTop },
+      to: { x: laundryX, y: Y_BOT },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'w-laundry-top',
+      from: { x: laundryX, y: yLaundryTop },
+      to: { x: laundryE, y: yLaundryTop },
+      kind: 'wall',
+      role: 'interior',
+    },
+    // Laundry east wall with full-height double doors
+    {
+      id: 'w-laundry-east-top',
+      from: { x: laundryE, y: yLaundryTop },
+      to: { x: laundryE, y: laundryDoorY1 },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'g-laundry',
+      from: { x: laundryE, y: laundryDoorY1 },
+      to: { x: laundryE, y: laundryDoorY2 },
       kind: 'gap',
     },
     {
-      id: 't-entry',
-      from: {
-        x:
-          X_END -
-          px(op.entryDoor.offsetFromRight ?? { ft: 0, in: 0 }, P) -
-          px(op.entryDoor.span, P),
-        y: Y_BOT,
-      },
-      to: {
-        x: X_END - px(op.entryDoor.offsetFromRight ?? { ft: 0, in: 0 }, P),
-        y: Y_BOT,
-      },
+      id: 't-laundry',
+      from: { x: laundryE, y: laundryDoorY1 },
+      to: { x: laundryE, y: laundryDoorY2 },
       kind: 'threshold',
     },
+    {
+      id: 'w-laundry-east-bot',
+      from: { x: laundryE, y: laundryDoorY2 },
+      to: { x: laundryE, y: yPillarTop },
+      kind: 'wall',
+      role: 'interior',
+    },
+    // Solid structural core under the laundry, down to the south wall
+    {
+      id: 'w-pillar-top',
+      from: { x: laundryX, y: yPillarTop },
+      to: { x: laundryE, y: yPillarTop },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'w-pillar-east',
+      from: { x: laundryE, y: yPillarTop },
+      to: { x: laundryE, y: Y_BOT },
+      kind: 'wall',
+      role: 'interior',
+    },
+    // Kitchen counter run along the east wall (open-concept, no room divider)
+    {
+      id: 'w-kit-cap',
+      from: { x: kitCounterX, y: yLivKit },
+      to: { x: X_END, y: yLivKit },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'w-kit-counter',
+      from: { x: kitCounterX, y: yLivKit },
+      to: { x: kitCounterX, y: Y_BOT },
+      kind: 'wall',
+      role: 'interior',
+    },
   ]
-
-  const bedDoorY1 = yBalconyBot + px(op.bedroomDoor.offset, P)
-  const bedDoorY2 = bedDoorY1 + px(op.bedroomDoor.span, P)
-  const bathDoorY1 = yClosetBandBot + px(op.bathDoor.offset, P)
-  const bathDoorY2 = bathDoorY1 + px(op.bathDoor.span, P)
-  const entryX2 =
-    X_END - px(op.entryDoor.offsetFromRight ?? { ft: 0, in: 0 }, P)
-  const entryX1 = entryX2 - px(op.entryDoor.span, P)
 
   /** @type {SpatialProject['openings']} */
   const openings = [
@@ -585,25 +595,16 @@ export function build508Project(config, carry = {}) {
       label: 'WALL AC',
     },
     {
-      id: 'door-patio',
-      type: 'door',
-      doorStyle: 'sliding',
-      hitRect: openingHitAlongH(patioDoorX1, patioDoorX2, Y0),
-      pathD: slidingHorizontal({
-        x1: patioDoorX1,
-        x2: patioDoorX2,
-        y: Y0,
-      }),
-    },
-    {
       id: 'door-balcony',
       type: 'door',
-      doorStyle: 'sliding',
-      hitRect: openingHitAlongH(balconyDoorX1, balconyDoorX2, yBalconyBot),
-      pathD: slidingHorizontal({
-        x1: balconyDoorX1,
-        x2: balconyDoorX2,
-        y: yBalconyBot,
+      doorStyle: 'swing',
+      opensInto: 'balcony',
+      hitRect: openingHitAlongV(X_DIV, balcDoorY1, balcDoorY2),
+      pathD: swingVerticalLeft({
+        x: X_DIV,
+        y1: balcDoorY1,
+        y2: balcDoorY2,
+        radius: balcDoorY2 - balcDoorY1,
       }),
     },
     {
@@ -611,38 +612,46 @@ export function build508Project(config, carry = {}) {
       type: 'door',
       doorStyle: 'swing',
       opensInto: 'bedroom',
-      hitRect: openingHitAlongV(X_DIV, bedDoorY1, bedDoorY2),
-      pathD: swingVerticalLeft({ x: X_DIV, y1: bedDoorY1, y2: bedDoorY2 }),
+      hitRect: openingHitAlongH(bedDoorX1, bedDoorX2, yBedroomBot),
+      pathD: swingHorizontalUp({
+        x1: bedDoorX1,
+        x2: bedDoorX2,
+        y: yBedroomBot,
+        radius: bedDoorX2 - bedDoorX1,
+      }),
     },
     {
       id: 'door-bed-closet',
       type: 'door',
-      doorStyle: 'bifold',
-      opensInto: 'bedroom',
-      hitRect: openingHitAlongH(doorX1, doorX2, yBedroomBot),
-      pathD: bifoldHorizontalUp({ x1: doorX1, x2: doorX2, y: yBedroomBot }),
+      doorStyle: 'bypass',
+      opensInto: 'hall',
+      hitRect: openingHitAlongH(cdX1, cdX2, yClosetBandBot),
+      pathD: bypassSlidingHorizontal({ x1: cdX1, x2: cdX2, y: yClosetBandBot }),
+    },
+    {
+      id: 'door-linen',
+      type: 'door',
+      doorStyle: 'swing',
+      opensInto: 'hall',
+      hitRect: openingHitAlongV(linenE, linenDoorY1, linenDoorY2),
+      pathD: swingVerticalRight({
+        x: linenE,
+        y1: linenDoorY1,
+        y2: linenDoorY2,
+        radius: linenDoorY2 - linenDoorY1,
+      }),
     },
     {
       id: 'door-bath',
       type: 'door',
       doorStyle: 'swing',
-      hitRect: openingHitAlongV(X0 + bathW, bathDoorY1, bathDoorY2),
-      pathD: swingVerticalLeft({
-        x: X0 + bathW,
-        y1: bathDoorY1,
-        y2: bathDoorY2,
-      }),
-    },
-    {
-      id: 'door-coat',
-      type: 'door',
-      doorStyle: 'swing',
-      hitRect: openingHitAlongV(coatX, coatDoorY1, coatDoorY2),
-      pathD: swingVerticalRight({
-        x: coatX,
-        y1: coatDoorY1,
-        y2: coatDoorY2,
-        radius: 28,
+      opensInto: 'hall',
+      hitRect: openingHitAlongH(bathDoorX1, bathDoorX2, yBathTop),
+      pathD: swingHorizontalUp({
+        x1: bathDoorX1,
+        x2: bathDoorX2,
+        y: yBathTop,
+        radius: bathDoorX2 - bathDoorX1,
       }),
     },
     {
@@ -650,9 +659,9 @@ export function build508Project(config, carry = {}) {
       type: 'door',
       doorStyle: 'double',
       opensInto: 'hall',
-      hitRect: openingHitAlongV(hallX, laundryDoorY1, laundryDoorY2),
+      hitRect: openingHitAlongV(laundryE, laundryDoorY1, laundryDoorY2),
       pathD: doubleSwingVerticalRight({
-        x: hallX,
+        x: laundryE,
         y1: laundryDoorY1,
         y2: laundryDoorY2,
       }),
@@ -662,7 +671,12 @@ export function build508Project(config, carry = {}) {
       type: 'door',
       doorStyle: 'swing',
       hitRect: openingHitAlongH(entryX1, entryX2, Y_BOT),
-      pathD: swingHorizontalUpFromRight({ x1: entryX1, x2: entryX2, y: Y_BOT }),
+      pathD: swingHorizontalUp({
+        x1: entryX1,
+        x2: entryX2,
+        y: Y_BOT,
+        radius: entryX2 - entryX1,
+      }),
     },
   ].filter((op) => !(config.disabledOpenings ?? []).includes(op.id))
 
@@ -677,12 +691,12 @@ export function build508Project(config, carry = {}) {
     yBalconyBot,
     yBedroomBot,
     yClosetBandBot,
+    yBathTop,
     yLaundryTop,
+    laundryX,
     livingH,
     LEFT_W,
     bedClosetW,
-    coatClosetW,
-    bathW,
     P,
   })
 
@@ -700,8 +714,6 @@ export function build508Project(config, carry = {}) {
       : z
   })
 
-  const sqft = carry.meta?.sqft ?? 769
-
   return {
     schemaVersion: SPATIAL_SCHEMA_VERSION,
     meta: {
@@ -716,13 +728,15 @@ export function build508Project(config, carry = {}) {
         'https://resource.avalonbay.com//floorplans/wa037/wa802-a9-769sf-dci.png',
       scaleLabel: `${config.pxPerFt} px/ft · 北向上 · 可编辑尺寸`,
       assumptions: [
-        '<b>平面来源</b>：参数化布局，默认按开发商 769 sqft 户型图重建。',
+        '<b>平面来源</b>：2026-07 按开发商户型图红线重描 — 墙线、门位、开向逐一校准。',
         '<b>墙厚</b>：美国公寓惯例 — 外墙 6″、内隔墙 4.5″（2×4 + 双面石膏板）。',
-        '<b>壁橱带</b>：卧室壁橱与储物柜同深 2′；走廊净宽 1′5″ 与开发商户型一致。',
-        '<b>厨房</b>：东墙橱柜条深 2′4″；客厅·厨房分隔墙东端留 4′ 开口通玄关。',
-        '<b>门扇</b>：入户门贴右下角右铰链内开；卧室门开入卧室；洗衣间双开平开门向走廊；露台北墙推拉门。',
-        '<b>洗衣间</b>：双开门 5′4″ 满高，向走廊开启；底部结构柱实心不可进。',
-        '<b>储藏区 S1–S8</b>：位置随尺寸自适应；柜内明细可继续修正。',
+        '<b>阳台</b>：仅由客厅西北角平开门进入（向阳台开）；卧室北墙为整幅窗、无门。',
+        '<b>卧室门</b>：在南墙偏东（距东角约 1′），西侧铰链向卧室内开。',
+        '<b>壁橱</b>：卧室壁橱推拉门朝走廊；走廊储物柜贴西墙 2′8″ 深，门向走廊外开。',
+        '<b>浴室</b>：西南角，门在北墙、向走廊外开；东墙与洗衣间西墙共线。',
+        '<b>洗衣间</b>：双开门朝东向玄关走廊；正下方结构柱实心不可进，直落南墙。',
+        '<b>入户门</b>：南墙紧贴结构柱东侧，向内开、折向柱壁。',
+        '<b>厨房</b>：与客厅开放贯通、无隔墙；东墙橱柜条深 2′4″ 直达南墙。',
       ],
       sourceNote:
         carry.meta?.sourceNote ?? 'HOME.OS · 参数化户型 · 储藏清单来自现场审计',
@@ -755,17 +769,17 @@ function defaultStorageZones(config, L) {
       id: 's1',
       code: 'S1',
       nameZh: '走廊储物柜',
-      locationZh: `走廊旁 · ${formatFtIn(r.coatCloset.w)}×${formatFtIn(r.coatCloset.h)}`,
-      formZh: 'Coat / Storage Closet',
+      locationZh: `走廊西侧 · ${formatFtIn(r.linenCloset.w)}×${formatFtIn(r.linenCloset.h)}`,
+      formZh: 'Linen / Storage Closet',
       bounds: {
-        x: L.X0 + px(r.bedCloset.w),
-        y: L.yBedroomBot,
-        w: px(r.coatCloset.w),
-        h: px(r.coatCloset.h),
+        x: L.X0,
+        y: L.yClosetBandBot,
+        w: px(r.linenCloset.w),
+        h: px(r.linenCloset.h),
       },
       marker: {
-        x: L.X0 + px(r.bedCloset.w) + px({ ft: 1, in: 8 }, P),
-        y: L.yBedroomBot + px({ ft: 1, in: 7 }, P),
+        x: L.X0 + px(r.linenCloset.w) / 2,
+        y: L.yClosetBandBot + px(r.linenCloset.h) / 2,
       },
       items: [
         '外套 / 夹克',
@@ -840,13 +854,13 @@ function defaultStorageZones(config, L) {
       formZh: '壁挂层板 + 台下',
       bounds: {
         x: L.X0 + px({ ft: 4, in: 0 }, P),
-        y: L.yClosetBandBot + px({ ft: 2, in: 0 }, P),
+        y: L.yBathTop + px({ ft: 2, in: 0 }, P),
         w: px({ ft: 2, in: 0 }, P),
         h: px({ ft: 3, in: 0 }, P),
       },
       marker: {
         x: L.X0 + px({ ft: 5, in: 0 }, P),
-        y: L.yClosetBandBot + px({ ft: 3, in: 6 }, P),
+        y: L.yBathTop + px({ ft: 3, in: 6 }, P),
       },
       items: ['护肤 / 洗漱', '毛巾 · 纸品', '清洁工具', '体脂秤'],
     },
@@ -855,7 +869,7 @@ function defaultStorageZones(config, L) {
       code: 'S6',
       nameZh: '卧室壁橱',
       locationZh: `卧室下 · ${formatFtIn(r.bedCloset.w)}×${formatFtIn(r.bedCloset.h)}`,
-      formZh: '双折门 · 仅向卧室开启',
+      formZh: '推拉门 · 朝走廊开启',
       bounds: {
         x: L.X0,
         y: L.yBedroomBot,
@@ -893,13 +907,13 @@ function defaultStorageZones(config, L) {
       locationZh: `洗衣间 · ${formatFtIn(r.laundry.w)}×${formatFtIn(r.laundry.h)}`,
       formZh: 'W/D + 清洁囤货',
       bounds: {
-        x: L.X0 + px(r.bathroom.w),
+        x: L.laundryX,
         y: L.yLaundryTop,
         w: px(r.laundry.w),
         h: px(r.laundry.h),
       },
       marker: {
-        x: L.X0 + px({ ft: 8, in: 6 }, P),
+        x: L.laundryX + px(r.laundry.w) / 2,
         y: L.yLaundryTop + px({ ft: 2, in: 0 }, P),
       },
       items: ['洗衣液 / 柔顺剂', '清洁用品囤货', '垃圾桶 / 回收', '搬家纸箱'],
@@ -912,7 +926,7 @@ export const EDITABLE_ROOM_KEYS = [
   ['balcony', '阳台'],
   ['bedroom', '卧室'],
   ['bedCloset', '卧室壁橱'],
-  ['coatCloset', '走廊储物柜'],
+  ['linenCloset', '走廊储物柜'],
   ['bathroom', '浴室'],
   ['laundry', '洗衣间'],
   ['living', '客厅'],
@@ -950,31 +964,51 @@ export function setRoomDimension(config, roomKey, axis, value) {
  */
 export function validate508Config(config) {
   const issues = []
+  const op = { ...defaultOpenings(), ...(config.openings ?? {}) }
   const leftIn = toInches(config.leftCol)
-  const closetSum =
-    toInches(config.rooms.bedCloset.w) + toInches(config.rooms.coatCloset.w)
-  if (closetSum > leftIn) {
+  const totalIn = leftIn + toInches(config.rightCol)
+
+  if (toInches(config.rooms.bedCloset.w) > leftIn) {
     issues.push(
-      `壁橱+储物柜总宽 ${formatFtIn(fromInches(closetSum))} 超过左列 ${formatFtIn(config.leftCol)}`,
+      `卧室壁橱宽 ${formatFtIn(config.rooms.bedCloset.w)} 超过左列 ${formatFtIn(config.leftCol)}`,
     )
   }
+  const cd = config.rooms.bedCloset.door
   if (
-    toInches(config.rooms.bedCloset.door.w) > toInches(config.rooms.bedCloset.w)
+    toInches(cd.offset) + toInches(cd.w) >
+    toInches(config.rooms.bedCloset.w)
   ) {
-    issues.push('壁橱双折门宽度不能大于壁橱宽度')
+    issues.push('壁橱推拉门超出壁橱面宽')
   }
-  const bathLaundry =
+  if (toInches(config.rooms.linenCloset.w) >= toInches(cd.offset)) {
+    issues.push('储物柜宽度不能遮挡壁橱推拉门开口')
+  }
+  const bedDoorEnd =
+    toInches(op.bedroomDoor.offset) + toInches(op.bedroomDoor.span)
+  if (bedDoorEnd > leftIn) {
+    issues.push('卧室门超出南墙范围')
+  }
+  const bathDoorEnd = toInches(op.bathDoor.offset) + toInches(op.bathDoor.span)
+  if (bathDoorEnd > toInches(config.rooms.bathroom.w)) {
+    issues.push('浴室门超出浴室北墙范围')
+  }
+  if (toInches(op.bathDoor.offset) < toInches(config.rooms.linenCloset.w)) {
+    issues.push('浴室门被走廊储物柜遮挡')
+  }
+  const laundryEastIn =
     toInches(config.rooms.bathroom.w) + toInches(config.rooms.laundry.w)
-  const hallIn = leftIn - bathLaundry
-  if (bathLaundry > leftIn) {
-    issues.push(
-      `浴室+洗衣间总宽超过左列（${formatFtIn(fromInches(bathLaundry))} > ${formatFtIn(config.leftCol)}）`,
-    )
+  if (laundryEastIn > totalIn - 28 - 36) {
+    issues.push('浴室+洗衣间过宽 — 玄关走廊被挤压（需留入户门与橱柜条）')
   }
-  if (hallIn < 17) {
-    issues.push(
-      `走廊净宽 ${formatFtIn(fromInches(hallIn))} 小于开发商户型最小值 1′5″`,
-    )
+  const laundryDoorEnd =
+    toInches(op.laundryDoor.offset) + toInches(op.laundryDoor.span)
+  if (laundryDoorEnd > toInches(config.rooms.laundry.h)) {
+    issues.push('洗衣间双开门超出洗衣间高度')
+  }
+  const linenDoorEnd =
+    toInches(op.linenDoor.offset) + toInches(op.linenDoor.span)
+  if (linenDoorEnd > toInches(config.rooms.linenCloset.h)) {
+    issues.push('储物柜门超出柜体高度')
   }
   return issues
 }

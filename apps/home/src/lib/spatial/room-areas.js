@@ -23,7 +23,7 @@ export function summarize508Areas(config) {
     ['balcony', '阳台'],
     ['bedroom', '卧室'],
     ['bedCloset', '卧室壁橱'],
-    ['coatCloset', '走廊储物柜'],
+    ['linenCloset', '走廊储物柜'],
     ['bathroom', '浴室'],
     ['laundry', '洗衣间'],
     ['living', '客厅'],

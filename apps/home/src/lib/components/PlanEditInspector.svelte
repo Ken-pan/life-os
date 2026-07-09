@@ -163,7 +163,7 @@
     <p class="inspector-lead">
       点击或拖拽<strong>内墙线</strong>调整房间尺寸；点击<strong
         >门窗符号</strong
-      >后可微调偏移与宽度。 壁橱双折门<strong>右侧握把</strong
+      >后可微调偏移与宽度。 壁橱推拉门<strong>右侧握把</strong
       >（虚线框）可横向拖改门宽。 外墙与整体外廓随列宽联动。
     </p>
     <ul class="inspector-list">

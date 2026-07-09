@@ -534,7 +534,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
       )
       const on = opts.selectedOpening === 'g-bed-closet'
       const blocked = opts.dragBlockedOpening === 'g-bed-closet'
-      const closetTitle = '开口 · 壁橱双折门 — 拖曳移动 · 右侧握把改门宽'
+      const closetTitle = '开口 · 壁橱推拉门 — 拖曳移动 · 右侧握把改门宽'
       parts.push(
         `<rect x="${hit.x}" y="${hit.y}" width="${hit.w}" height="${hit.h}" rx="4" class="open-hit${on ? ' open-on' : ''}${blocked ? ' open-blocked' : ''}" data-opening-id="g-bed-closet" data-plan-tip="${esc(closetTitle)}"><title>${esc(closetTitle)}</title></rect>`,
       )

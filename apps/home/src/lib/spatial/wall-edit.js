@@ -39,7 +39,7 @@ export const WALL_EDIT_BINDINGS =
       axis: 'h',
       minIn: 24,
     },
-    'w-closet-row-l': {
+    'w-bed-south-l': {
       label: '卧室下墙',
       orientation: 'h',
       type: 'room',
@@ -55,16 +55,16 @@ export const WALL_EDIT_BINDINGS =
       axis: 'w',
       minIn: 36,
     },
-    'w-coat-east-top': {
+    'w-linen-east-top': {
       label: '储物柜东墙',
       orientation: 'v',
       type: 'room',
-      roomKey: 'coatCloset',
+      roomKey: 'linenCloset',
       axis: 'w',
-      minIn: 24,
+      minIn: 20,
     },
-    'w-bath-right': {
-      label: '浴室东墙',
+    'w-bath-laundry': {
+      label: '浴室东墙 · 洗衣间西墙',
       orientation: 'v',
       type: 'room',
       roomKey: 'bathroom',
@@ -79,8 +79,8 @@ export const WALL_EDIT_BINDINGS =
       axis: 'w',
       minIn: 24,
     },
-    'w-liv-kit': {
-      label: '客厅·厨房分隔',
+    'w-kit-cap': {
+      label: '客厅·厨房分界',
       orientation: 'h',
       type: 'room',
       roomKey: 'living',
@@ -89,13 +89,12 @@ export const WALL_EDIT_BINDINGS =
     },
   })
 
-/** 同一水平墙段共用绑定 */
+/** 同一墙段共用绑定 */
 export const WALL_EDIT_ALIASES = {
-  'w-closet-row-r': 'w-closet-row-l',
-  'w-closet-row-ext': 'w-closet-row-l',
-  'w-coat-east-bot': 'w-coat-east-top',
+  'w-bed-south-r': 'w-bed-south-l',
+  'w-linen-east-bot': 'w-linen-east-top',
   'w-laundry-east-bot': 'w-laundry-east-top',
-  'w-bath-right-low': 'w-bath-right',
+  'w-pillar-east': 'w-laundry-east-top',
 }
 
 /**
@@ -111,20 +110,20 @@ export const OPENING_EDIT_BINDINGS =
     'door-bedroom': {
       label: '卧室门',
       drag: 'offset',
-      axis: 'y',
+      axis: 'x',
       configPath: 'bedroomDoor',
     },
     'door-bath': {
       label: '浴室门',
       drag: 'offset',
-      axis: 'y',
+      axis: 'x',
       configPath: 'bathDoor',
     },
-    'door-coat': {
+    'door-linen': {
       label: '储物柜门',
       drag: 'offset',
       axis: 'y',
-      configPath: 'coatDoor',
+      configPath: 'linenDoor',
     },
     'door-laundry': {
       label: '洗衣间门',
@@ -138,26 +137,20 @@ export const OPENING_EDIT_BINDINGS =
       axis: 'x',
       configPath: 'entryDoor',
     },
-    'door-patio': {
-      label: '露台推拉门',
-      drag: 'center',
-      axis: 'x',
-      configPath: 'patioDoor',
-    },
     'door-balcony': {
-      label: '卧室推拉门',
-      drag: 'center',
-      axis: 'x',
+      label: '阳台门',
+      drag: 'offset',
+      axis: 'y',
       configPath: 'balconyDoor',
     },
     'door-bed-closet': {
-      label: '壁橱双折门',
+      label: '壁橱推拉门',
       drag: 'doorOffset',
       axis: 'x',
       configPath: 'bedCloset.door',
     },
     'g-bed-closet': {
-      label: '壁橱双折门',
+      label: '壁橱推拉门',
       drag: 'doorOffset',
       axis: 'x',
       configPath: 'bedCloset.door',
@@ -334,21 +327,12 @@ export function applyOpeningDrag(
 /** @returns {import('./types.js').Layout508OpeningsConfig} */
 export function defaultOpenings() {
   return {
-    bedroomDoor: { offset: { ft: 8, in: 11 }, span: { ft: 2, in: 0 } },
-    bathDoor: { offset: { ft: 5, in: 0 }, span: { ft: 1, in: 6 } },
-    coatDoor: { offset: { ft: 1, in: 0 }, span: { ft: 1, in: 6 } },
-    laundryDoor: { offset: { ft: 0, in: 0 }, span: { ft: 5, in: 4 } },
-    entryDoor: { offsetFromRight: { ft: 0, in: 0 }, span: { ft: 3, in: 0 } },
-    balconyDoor: {
-      offset: { ft: 0, in: 0 },
-      span: { ft: 6, in: 0 },
-      center: true,
-    },
-    patioDoor: {
-      offset: { ft: 0, in: 0 },
-      span: { ft: 6, in: 0 },
-      center: true,
-    },
+    bedroomDoor: { offset: { ft: 8, in: 10 }, span: { ft: 2, in: 8 } },
+    bathDoor: { offset: { ft: 3, in: 5 }, span: { ft: 2, in: 10 } },
+    linenDoor: { offset: { ft: 0, in: 6 }, span: { ft: 2, in: 4 } },
+    laundryDoor: { offset: { ft: 0, in: 4 }, span: { ft: 5, in: 0 } },
+    entryDoor: { offsetFromRight: { ft: 6, in: 10 }, span: { ft: 3, in: 0 } },
+    balconyDoor: { offset: { ft: 0, in: 6 }, span: { ft: 2, in: 8 } },
     livingWindow: {
       offset: { ft: 0, in: 0 },
       span: { ft: 0, in: 0 },

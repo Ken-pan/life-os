@@ -88,7 +88,7 @@ footer{margin-top:40px;color:var(--mut);font-family:var(--mono);font-size:11px;b
  ${includeFurniture ? '<span><i class="furn"></i>家具</span>' : ''}
  <span>实线 = 承重墙</span>
  <span>虚线 = 通道口</span>
- <span>∧ 双折门 · ⌒ 平开门</span>
+ <span>= 推拉门 · ⌒ 平开门</span>
 </div>
 <h2>储藏区清单</h2>
 <p class="h2sub">对应平面青灰标注点。</p>

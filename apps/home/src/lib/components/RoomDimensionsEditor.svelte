@@ -79,7 +79,7 @@
         </div>
       </div>
       <p class="dim-editor-hint">
-        输入后约 0.4s 自动保存；平面、墙、门与储藏区随之重算。壁橱双折门仅向卧室开启。
+        输入后约 0.4s 自动保存；平面、墙、门与储藏区随之重算。壁橱推拉门朝走廊开启。
       </p>
       {#if validationIssues.length}
         <p class="dim-warn" role="status">{validationIssues[0]}</p>
@@ -155,7 +155,7 @@
               </label>
             </div>
             {#if key === 'bedCloset'}
-              <p class="dim-note">双折门宽 {formatFtIn(room.door.w)} · 开启方向：卧室</p>
+              <p class="dim-note">推拉门宽 {formatFtIn(room.door.w)} · 朝向：走廊</p>
             {/if}
           </div>
         {/if}
