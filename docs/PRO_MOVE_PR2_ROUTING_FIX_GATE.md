@@ -163,12 +163,30 @@ Incoming Request → Netlify Edge → _redirects Processing
   - `/.netlify/functions/paper-mock-today` → JSON 200 (direct)
   - `/nonexistent-route` → SPA HTML fallback 200
 
+## Final Status - Production Verified
+
+### Verified Working (2026-07-09T23:30:00Z):
+From automated verification loop:
+- ✓ `/api/paper/mock/today` → HTTP 200 JSON ({"serverTime", "cursor", "user"...})
+- ✓ `/api/paper/today` (no auth) → HTTP 401 JSON ({"error":"unauthorized"})
+
+### All Commits Deployed:
+1. **6a10df46** - Removed redundant catch-all from netlify.toml
+2. **beadeb3a** - Fixed functions directory path (relative to app config)
+3. **6292fc12** - Moved netlify.toml to repository root
+4. **419a2a75** - Added Netlify functions exception (temporary)
+5. **ef3f8e6c** - Reverted exception rule (clean final state)
+
+### Root Cause & Resolution:
+- **Original Problem**: `netlify.toml` in wrong location (apps/planner/), causing path resolution failures
+- **Solution**: Moved `netlify.toml` to repository root with absolute paths
+- **Result**: Functions correctly discovered and deployed
+
 ## Conclusion
 
-✓ **Routing Fix Complete**
-✓ **Tests Passing Locally**
-✓ **Build Verified**
-✓ **Functions Path Fixed**
-⏳ **Deployment In Progress**
+✓ **Routing Fix PASSED**
+✓ **Production Verified**  
+✓ **JSON Responses Confirmed**
+✓ **Ready for PR-4B.2 Device Test**
 
-All code changes are in place and pushed. Awaiting Netlify deployment completion to verify production behavior.
+API endpoints now correctly route to Netlify Functions and return JSON (not HTML). Production is stable and ready for device real-mode testing.
