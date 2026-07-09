@@ -617,7 +617,7 @@
 
   .plan-shell.canvas-priority .plan-viewer:not(.compact) {
     flex: 1 1 auto;
-    min-height: min(68dvh, 760px);
+    min-height: min(56dvh, 640px);
     max-height: 100%;
     display: flex;
     flex-direction: column;

@@ -222,7 +222,7 @@
 
   $effect(() => {
     if (!studio) {
-      setPlanSubtitle('')
+      setPlanSubtitle('点击 S1–S8 圆点查看储藏清单 · 双指/滚轮可缩放平移')
       planMode = 'browse'
       clearSelection()
       clearMeasure()
@@ -368,6 +368,18 @@
 </script>
 
 <div class="plan-page">
+{#if !studio}
+  <section class="plan-intro" aria-label="页面说明">
+    <p class="plan-intro-lead">
+      <strong>顶视平面</strong>：查看整套 508 户型与各储藏区（S1–S8）在房间里的位置。
+    </p>
+    <ul class="plan-intro-list">
+      <li><strong>点击图上圆点</strong>（如 S6）→ 进入该储藏区的物品清单</li>
+      <li>右上角 <strong>看全图</strong>：默认完整显示；<strong>铺满宽</strong> 仅放大宽度</li>
+      <li>编辑户型、测距、墙图等进阶功能需在<a href="/settings">设置</a>开启「空间工坊」，或访问 <code>?studio=1</code></li>
+    </ul>
+  </section>
+{/if}
 {#if studio}
   <div class="plan-mode-bar" role="group" aria-label="平面显示模式">
     <p class="plan-mode-sub" aria-live="polite">{getPlanSubtitle() || '储藏区可点击'}</p>
@@ -688,6 +700,48 @@
     min-width: 0;
     min-height: 0;
     height: 0;
+  }
+
+  .plan-intro {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--accent) 6%, var(--card));
+  }
+
+  .plan-intro-lead {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: var(--t1);
+    line-height: 1.5;
+  }
+
+  .plan-intro-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 13px;
+    color: var(--t2);
+    line-height: 1.55;
+  }
+
+  .plan-intro-list li + li {
+    margin-top: 4px;
+  }
+
+  .plan-intro-list a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .plan-intro-list code {
+    font-size: 12px;
+    font-family: var(--mono);
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
   }
 
   .plan-mode-bar {

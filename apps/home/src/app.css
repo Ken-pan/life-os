@@ -189,29 +189,7 @@
   min-width: 520px;
 }
 
-/* Plan route: canvas-first — full bleed, no side-by-side squeeze */
-.app-shell.plan-immersive {
-  min-height: 100dvh;
-}
-
-.app-shell.plan-immersive .main-col.plan-main {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 100dvh;
-  padding-bottom: 0;
-}
-
-@media (min-width: 840px) {
-  .app-shell.plan-immersive {
-    grid-template-columns: 1fr;
-  }
-
-  .app-shell.plan-immersive .sidebar {
-    display: none !important;
-  }
-}
-
+/* Plan route: give the floor plan canvas a stable flex height */
 main.plan-route {
   display: flex;
   flex-direction: column;
