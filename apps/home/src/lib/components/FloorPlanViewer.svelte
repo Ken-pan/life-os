@@ -818,7 +818,25 @@
 
   @media (min-width: 768px) {
     .plan-shell.canvas-priority .plan-viewer:not(.compact) {
+      flex: 1 1 auto;
       min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .plan-shell.canvas-priority .plan-viewer:not(.compact) .plan-canvas {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .plan-shell.canvas-priority .plan-viewer:not(.compact) :global(svg) {
+      max-height: 100%;
+      width: auto;
+      max-width: 100%;
     }
   }
 

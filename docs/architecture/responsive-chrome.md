@@ -111,7 +111,7 @@ import { LIFE_OS_CONTENT_FRAME } from '@life-os/theme'
 | ---------------- | ------------------------------ | ------------------------------------------------------------------ |
 | Planner          | 今天 / 日历 / 已完成 / 设置    | 页内 `.life-os-page-workspace`                                     |
 | Music            | wide 路由（library / search…） | `main-wrap[data-content-mode=span]` + `--content-span-max: 1240px` |
-| Home             | `/plan`                        | `main-col[data-content-mode=span]`                                 |
+| Home             | `/plan`                        | **immersive**：隐藏壳层 AppBar，全宽 canvas + `plan-top`           |
 | Finance          | —                              | 默认 `max` + `--content-max: 1320px`（已对齐）                     |
 | Fitness / Portal | —                              | 默认 `max`（已对齐）                                               |
 

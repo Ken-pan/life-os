@@ -230,13 +230,6 @@
   min-width: 520px;
 }
 
-@media (--life-os-desktop) {
-  main.plan-route {
-    padding:
-      var(--page-top) max(var(--content-inline-pad), var(--safe-right-effective)) calc(var(--safe-bottom-effective) + 8px) max(var(--content-inline-pad), var(--safe-left-effective));
-  }
-}
-
 /* Plan route: give the floor plan canvas a stable flex height */
 main.plan-route {
   display: flex;
@@ -247,6 +240,16 @@ main.plan-route {
   max-height: 100dvh;
   padding:
     max(8px, var(--safe-top-effective)) max(8px, var(--safe-right-effective)) calc(var(--safe-bottom-effective) + 8px) max(8px, var(--safe-left-effective));
+}
+
+@media (--life-os-desktop) {
+
+  /* Plan: shell AppBar hidden; in-page plan-top + full-width canvas */
+  main.plan-route {
+    --content-inline-pad: var(--page-gutter-desktop);
+    padding:
+      var(--stack-tight) max(var(--content-inline-pad), var(--safe-right-effective)) calc(var(--safe-bottom-effective) + 8px) max(var(--content-inline-pad), var(--safe-left-effective));
+  }
 }
 
 @media (--life-os-mobile) {
