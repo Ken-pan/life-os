@@ -2,6 +2,7 @@
   import { renderFloorPlanSvg } from '$lib/spatial/render-svg.js'
   import { planPanZoom } from '$lib/plan-pan-zoom.js'
   import { bindPlanEditDrag } from '$lib/plan-edit-drag.js'
+  import { bindPlanGraphEdit } from '$lib/plan-graph-edit.js'
   import { hydrateProject } from '$lib/spatial/model.js'
   import {
     commitLayoutDrag,
@@ -10,32 +11,61 @@
   } from '$lib/state.svelte.js'
   import { describeDragEdit, dragLabelAnchor, RESIZE_GRIP_HIT } from '$lib/spatial/wall-edit.js'
   import { snapDeltaPx } from '$lib/spatial/dimensions.js'
+  import { clientToSvgPoint } from '$lib/plan-measure.js'
 
   /** @type {{
    *   project: import('$lib/spatial/types.js').SpatialProject,
    *   highlightZone?: string,
    *   compact?: boolean,
    *   zoomable?: boolean,
+   *   canvasPriority?: boolean,
    *   editMode?: boolean,
+   *   measureMode?: boolean,
+   *   graphEditMode?: boolean,
+   *   graphTool?: import('$lib/plan-graph-edit.js').GraphTool,
    *   hideFurniture?: boolean,
    *   selectedWall?: string,
    *   selectedOpening?: string,
+   *   selectedEdge?: string,
+   *   wallChainFrom?: { x: number, y: number } | null,
+   *   wallChainHover?: { x: number, y: number } | null,
+   *   measurePoints?: { a: { x: number, y: number } | null, b: { x: number, y: number } | null },
+   *   fitSignal?: number,
    *   onZoneSelect?: (code: string) => void,
    *   onSelectWall?: (id: string) => void,
    *   onSelectOpening?: (id: string) => void,
+   *   onMeasurePoint?: (pt: { x: number, y: number }) => void,
+   *   onGraphWallPoint?: (pt: { x: number, y: number }) => void,
+   *   onGraphRemoveEdge?: (edgeId: string) => void,
+   *   onGraphSelectEdge?: (edgeId: string) => void,
+   *   onGraphHover?: (pt: { x: number, y: number } | null) => void,
    * }} */
   let {
     project,
     highlightZone = '',
     compact = false,
     zoomable = true,
+    canvasPriority = false,
     editMode = false,
+    measureMode = false,
+    graphEditMode = false,
+    graphTool = 'select',
     hideFurniture = false,
     selectedWall = '',
     selectedOpening = '',
+    selectedEdge = '',
+    wallChainFrom = null,
+    wallChainHover = null,
+    measurePoints = { a: null, b: null },
+    fitSignal = 0,
     onZoneSelect,
     onSelectWall,
     onSelectOpening,
+    onMeasurePoint,
+    onGraphWallPoint,
+    onGraphRemoveEdge,
+    onGraphSelectEdge,
+    onGraphHover,
   } = $props()
 
   let zoom = $state(1)
@@ -116,6 +146,11 @@
       dragBlockedOpening,
       dragDimmed: dragActive,
       touchScale,
+      measure: measureMode ? measurePoints : undefined,
+      graphEditMode,
+      selectedEdge,
+      wallChainFrom,
+      wallChainHover,
     }),
   )
 
@@ -130,8 +165,37 @@
     dragHudY = Math.min(Math.max(clientY - r.top, 8), r.height - 8)
   }
 
+  function clientToSvg(clientX, clientY) {
+    if (!viewportEl) return { x: 0, y: 0 }
+    return clientToSvgPoint(
+      viewportEl.getBoundingClientRect(),
+      clientX,
+      clientY,
+      panX,
+      panY,
+      zoom,
+    )
+  }
+
   /** @param {MouseEvent} e */
   function handleClick(e) {
+    if (graphEditMode) return
+    if (measureMode && onMeasurePoint && viewportEl) {
+      if (viewportEl.dataset.dragged === '1') {
+        delete viewportEl.dataset.dragged
+        return
+      }
+      const pt = clientToSvgPoint(
+        viewportEl.getBoundingClientRect(),
+        e.clientX,
+        e.clientY,
+        panX,
+        panY,
+        zoom,
+      )
+      onMeasurePoint(pt)
+      return
+    }
     if (editMode || !onZoneSelect) return
     if (viewportEl?.dataset.dragged === '1') {
       delete viewportEl.dataset.dragged
@@ -149,11 +213,33 @@
   }
 
   function zoomOut() {
-    zoom = Math.max(0.55, Math.round((zoom - 0.15) * 100) / 100)
+    zoom = Math.max(0.4, Math.round((zoom - 0.15) * 100) / 100)
   }
 
   function resetView() {
+    if (canvasPriority) {
+      fitToView()
+      return
+    }
     zoom = 1
+    panX = 0
+    panY = 0
+  }
+
+  /** Fit plan: desktop fills width; mobile fits entire drawing in view */
+  function fitToView() {
+    if (!viewportEl) return
+    const vbW = displayProject.viewport.width
+    const vbH = displayProject.viewport.height
+    const pad = 12
+    const canvasW = Math.max(viewportEl.clientWidth - pad, 120)
+    const canvasH = Math.max(viewportEl.clientHeight - pad, 120)
+    if (!vbW || !vbH) return
+    const scaleW = (canvasW / vbW) * 0.99
+    const scaleH = (canvasH / vbH) * 0.99
+    const narrow = canvasW < 840
+    const fit = narrow ? Math.min(scaleW, scaleH) : scaleW
+    zoom = Math.min(2.5, Math.max(0.4, fit))
     panX = 0
     panY = 0
   }
@@ -162,6 +248,20 @@
   function cloneLayoutConfig(config) {
     return JSON.parse(JSON.stringify(config))
   }
+
+  $effect(() => {
+    if (!fitSignal) return
+    resetView()
+  })
+
+  $effect(() => {
+    const el = viewportEl
+    if (!canvasPriority || !el) return
+    fitToView()
+    const ro = new ResizeObserver(() => fitToView())
+    ro.observe(el)
+    return () => ro.disconnect()
+  })
 
   $effect(() => {
     const el = viewportEl
@@ -182,7 +282,33 @@
 
   $effect(() => {
     const el = viewportEl
-    if (!editMode || !el) return
+    if (!graphEditMode || !el) return
+    const action = bindPlanGraphEdit(el, {
+      getZoom: () => zoom,
+      getTool: () => graphTool,
+      clientToSvg,
+      onWallChainPoint: (pt) => onGraphWallPoint?.(pt),
+      onRemoveEdge: (id) => onGraphRemoveEdge?.(id),
+      onSelectEdge: (id) => onGraphSelectEdge?.(id),
+    })
+    /** @param {PointerEvent} e */
+    function onMove(e) {
+      if (graphTool !== 'wallAdd' || !wallChainFrom) {
+        onGraphHover?.(null)
+        return
+      }
+      onGraphHover?.(clientToSvg(e.clientX, e.clientY))
+    }
+    el.addEventListener('pointermove', onMove)
+    return () => {
+      action.destroy()
+      el.removeEventListener('pointermove', onMove)
+    }
+  })
+
+  $effect(() => {
+    const el = viewportEl
+    if (!editMode || graphEditMode || !el) return
 
     const action = bindPlanEditDrag(el, {
       getZoom: () => zoom,
@@ -284,7 +410,7 @@
   })
 </script>
 
-<div class="plan-shell" class:compact class:edit-mode={editMode}>
+<div class="plan-shell" class:compact class:edit-mode={editMode} class:canvas-priority={canvasPriority}>
   {#if zoomable}
     <div class="plan-toolbar" aria-label="平面图缩放">
       <button
@@ -300,7 +426,17 @@
       <button type="button" class="plan-tool plan-tool-text" onclick={resetView}
         >适配</button
       >
-      {#if editMode}
+      {#if graphEditMode}
+        <span class="plan-hint plan-hint-graph">
+          {graphTool === 'wallAdd'
+            ? '建墙：依次点击拐点 · 1″ 吸附'
+            : graphTool === 'remove'
+              ? '删墙：点击墙段'
+              : '选择墙段'}
+        </span>
+      {:else if measureMode}
+        <span class="plan-hint plan-hint-measure">点击两点测距 · 第三次点击重新开始</span>
+      {:else if editMode}
         <span class="plan-hint plan-hint-edit">空白处平移 · 捏合/⌘ 滚轮缩放</span>
       {:else if !compact}
         <span class="plan-hint">双指捏合缩放 · 拖拽平移</span>
@@ -312,13 +448,19 @@
     class="plan-viewer"
     class:compact
     class:edit-mode={editMode}
+    class:measure-mode={measureMode}
+    class:graph-edit-mode={graphEditMode}
     bind:this={viewportEl}
-    role={onZoneSelect && !editMode ? 'group' : undefined}
-    aria-label={editMode
-      ? '户型编辑画布'
-      : onZoneSelect
-        ? '平面图储藏区选择'
-        : '顶视平面图'}
+    role={onZoneSelect && !editMode && !measureMode && !graphEditMode ? 'group' : undefined}
+    aria-label={graphEditMode
+      ? '墙图编辑画布'
+      : measureMode
+      ? '测距画布：点击两点量距离'
+      : editMode
+        ? '户型编辑画布'
+        : onZoneSelect
+          ? '平面图储藏区选择'
+          : '顶视平面图'}
     onclick={handleClick}
     onkeydown={() => {}}
   >
@@ -358,10 +500,52 @@
 </div>
 
 <style>
+  .plan-shell.canvas-priority {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .plan-shell.canvas-priority .plan-viewer:not(.compact) {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  @media (min-width: 768px) {
+    .plan-shell.canvas-priority .plan-viewer:not(.compact) {
+      min-height: 0;
+    }
+  }
+
   .plan-shell {
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .plan-shell.canvas-priority .plan-toolbar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.35);
   }
 
   .plan-toolbar {
@@ -410,6 +594,11 @@
     color: var(--accent);
   }
 
+  .plan-shell.canvas-priority .plan-viewer {
+    padding: 8px;
+    border-radius: 10px;
+  }
+
   .plan-viewer {
     position: relative;
     background: var(--plan-paper, #eef1f4);
@@ -426,6 +615,25 @@
   .plan-viewer:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  .plan-viewer.graph-edit-mode {
+    cursor: crosshair;
+    border-color: color-mix(in srgb, #1d6b42 60%, var(--accent));
+  }
+
+  .plan-hint-graph {
+    color: #1d6b42;
+  }
+
+  .plan-viewer.measure-mode {
+    cursor: crosshair;
+    border-color: color-mix(in srgb, #1d6b42 55%, var(--accent));
+    box-shadow: 0 0 0 1px color-mix(in srgb, #1d6b42 30%, transparent);
+  }
+
+  .plan-hint-measure {
+    color: #1d6b42;
   }
 
   .plan-viewer.edit-mode {

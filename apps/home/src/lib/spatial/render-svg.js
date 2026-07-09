@@ -10,6 +10,7 @@ import {
   RESIZE_GRIP_VIS_W,
   supportsDoorWidthResize,
 } from './wall-edit.js'
+import { distanceFt, formatMeasureFt } from '../plan-measure.js'
 
 /**
  * @param {SpatialProject} project
@@ -34,6 +35,11 @@ import {
  *   dragBlockedOpening?: string,
  *   dragDimmed?: boolean,
  *   touchScale?: number,
+ *   measure?: { a: { x: number, y: number } | null, b: { x: number, y: number } | null },
+ *   graphEditMode?: boolean,
+ *   selectedEdge?: string,
+ *   wallChainFrom?: { x: number, y: number } | null,
+ *   wallChainHover?: { x: number, y: number } | null,
  * }} [opts]
  */
 export function renderFloorPlanSvg(project, opts = {}) {
@@ -100,6 +106,16 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .drag-live-sub{font:600 9px var(--mono,monospace);fill:var(--plan-dim,#6a727c);stroke:#fff;stroke-width:2.5px;paint-order:stroke fill}
  .drag-live-sub.invalid{fill:#b45309}
  .wall-blocked{stroke:rgba(180,83,9,.72)!important;stroke-width:${wallOnStroke + 2}}
+ .measure-line{stroke:var(--plan-accent,#5c758c);stroke-width:2.2;stroke-dasharray:6 4}
+ .measure-dot{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:2}
+ .measure-label{font:700 12px var(--mono,monospace);fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:3px;paint-order:stroke fill}
+ .graph-edge-hit{stroke:rgba(92,117,140,.12);stroke-width:${wallHitStroke};cursor:pointer;pointer-events:stroke}
+ .graph-edge-hit:hover{stroke:rgba(92,117,140,.45)}
+ .graph-edge-on{stroke:rgba(29,107,66,.75);stroke-width:${wallOnStroke}}
+ .graph-edge-rm{cursor:crosshair}
+ .graph-vert{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.5}
+ .graph-chain{stroke:#1d6b42;stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
+ .graph-chain-vert{fill:#1d6b42;stroke:#fff;stroke-width:1.5;pointer-events:none}
 </style>`)
 
   parts.push('<g class="grid">')
@@ -225,7 +241,27 @@ export function renderFloorPlanSvg(project, opts = {}) {
     )
   }
 
-  if (opts.editMode) {
+  if (opts.graphEditMode) {
+    parts.push('<g class="edit-layer graph-layer" aria-label="墙图编辑">')
+    for (const wall of project.walls) {
+      if (wall.kind !== 'wall') continue
+      const on = opts.selectedEdge === wall.id
+      parts.push(
+        `<line x1="${wall.from.x}" y1="${wall.from.y}" x2="${wall.to.x}" y2="${wall.to.y}" class="graph-edge-hit${on ? ' graph-edge-on' : ''}" data-edge-id="${wall.id}"/>`,
+      )
+    }
+    if (opts.wallChainFrom) {
+      parts.push(
+        `<circle cx="${opts.wallChainFrom.x}" cy="${opts.wallChainFrom.y}" r="5" class="graph-chain-vert"/>`,
+      )
+      if (opts.wallChainHover) {
+        parts.push(
+          `<line x1="${opts.wallChainFrom.x}" y1="${opts.wallChainFrom.y}" x2="${opts.wallChainHover.x}" y2="${opts.wallChainHover.y}" class="graph-chain"/>`,
+        )
+      }
+    }
+    parts.push('</g>')
+  } else if (opts.editMode) {
     parts.push('<g class="edit-layer" aria-label="可编辑门窗">')
     for (const op of project.openings) {
       if (op.id === 'ac-living') continue
@@ -340,6 +376,28 @@ export function renderFloorPlanSvg(project, opts = {}) {
     if (sub) {
       parts.push(
         `<text x="${x}" y="${y - 6}" text-anchor="middle" class="${subCls}">${sub}</text>`,
+      )
+    }
+    parts.push('</g>')
+  }
+
+  if (opts.measure?.a) {
+    const { a, b } = opts.measure
+    parts.push('<g class="measure-layer" pointer-events="none" aria-label="测距">')
+    parts.push(
+      `<circle cx="${a.x}" cy="${a.y}" r="5" class="measure-dot"/>`,
+    )
+    if (b) {
+      parts.push(
+        `<circle cx="${b.x}" cy="${b.y}" r="5" class="measure-dot"/>`,
+      )
+      parts.push(
+        `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="measure-line"/>`,
+      )
+      const label = formatMeasureFt(distanceFt(a, b, pxPerFt))
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 12 }
+      parts.push(
+        `<text x="${mid.x}" y="${mid.y}" text-anchor="middle" class="measure-label">${esc(label)}</text>`,
       )
     }
     parts.push('</g>')

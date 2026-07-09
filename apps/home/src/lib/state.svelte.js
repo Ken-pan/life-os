@@ -8,6 +8,7 @@ import { SAMPLE_508 } from './spatial/sample-508.js'
 import { deserializeProject, hydrateProject } from './spatial/model.js'
 import {
   default508Config,
+  merge508Config,
   setRoomDimension,
   validate508Config,
 } from './spatial/layout-508.js'
@@ -17,18 +18,216 @@ import {
   OPENING_EDIT_BINDINGS,
   resolveWallBinding,
 } from './spatial/wall-edit.js'
+import {
+  addWallSegment,
+  deleteWallEdge,
+  export508ToWallGraph,
+} from './spatial/wall-graph.js'
 import { toast } from './ui.svelte.js'
 
 /** @typedef {import('./spatial/types.js').SpatialProject} SpatialProject */
 /** @typedef {import('@life-os/contracts/appearance').ColorSchemePreference} ColorSchemePreference */
 
 const SKEY = 'homeos_spatial_v1'
+const UNDO_KEY = 'homeos_layout_undo_v1'
+const GRAPH_UNDO_KEY = 'homeos_wall_graph_undo_v1'
 const MAX_LAYOUT_UNDO = 24
 
 /** @type {string[]} */
 let layoutUndoStack = []
 /** @type {string[]} */
 let layoutRedoStack = []
+
+function persistUndoStacks() {
+  if (!browser) return
+  try {
+    localStorage.setItem(
+      UNDO_KEY,
+      JSON.stringify({ undo: layoutUndoStack, redo: layoutRedoStack }),
+    )
+  } catch {
+    /* quota */
+  }
+}
+
+function loadUndoStacks() {
+  if (!browser) return
+  try {
+    const raw = localStorage.getItem(UNDO_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw)
+    if (Array.isArray(data.undo)) layoutUndoStack = data.undo
+    if (Array.isArray(data.redo)) layoutRedoStack = data.redo
+  } catch {
+    layoutUndoStack = []
+    layoutRedoStack = []
+  }
+}
+
+loadUndoStacks()
+
+/** @type {string[]} */
+let graphUndoStack = []
+/** @type {string[]} */
+let graphRedoStack = []
+
+function persistGraphUndoStacks() {
+  if (!browser) return
+  try {
+    localStorage.setItem(
+      GRAPH_UNDO_KEY,
+      JSON.stringify({ undo: graphUndoStack, redo: graphRedoStack }),
+    )
+  } catch {
+    /* quota */
+  }
+}
+
+function loadGraphUndoStacks() {
+  if (!browser) return
+  try {
+    const raw = localStorage.getItem(GRAPH_UNDO_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw)
+    if (Array.isArray(data.undo)) graphUndoStack = data.undo
+    if (Array.isArray(data.redo)) graphRedoStack = data.redo
+  } catch {
+    graphUndoStack = []
+    graphRedoStack = []
+  }
+}
+
+loadGraphUndoStacks()
+
+export function isWallGraphMode() {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  return raw.layoutMode === 'wallGraph' && Boolean(raw.wallGraph)
+}
+
+function pushGraphUndo() {
+  const raw = S.projects[S.activeProjectId]
+  if (!raw?.wallGraph) return
+  graphUndoStack.push(JSON.stringify(raw.wallGraph))
+  if (graphUndoStack.length > MAX_LAYOUT_UNDO) graphUndoStack.shift()
+  graphRedoStack = []
+  persistGraphUndoStacks()
+}
+
+export function canUndoGraph() {
+  return graphUndoStack.length > 0
+}
+
+export function canRedoGraph() {
+  return graphRedoStack.length > 0
+}
+
+export function undoGraphEdit() {
+  const prev = graphUndoStack.pop()
+  if (!prev) {
+    toast('没有可撤销的墙图修改', 'warn')
+    return
+  }
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  if (raw?.wallGraph) {
+    graphRedoStack.push(JSON.stringify(raw.wallGraph))
+    if (graphRedoStack.length > MAX_LAYOUT_UNDO) graphRedoStack.shift()
+  }
+  const graph = JSON.parse(prev)
+  applyWallGraph(graph, { skipUndo: true, silent: true })
+  persistGraphUndoStacks()
+  toast('已撤销墙图修改')
+}
+
+export function redoGraphEdit() {
+  const nextGraph = graphRedoStack.pop()
+  if (!nextGraph) {
+    toast('没有可重做的墙图修改', 'warn')
+    return
+  }
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  if (raw?.wallGraph) {
+    graphUndoStack.push(JSON.stringify(raw.wallGraph))
+    if (graphUndoStack.length > MAX_LAYOUT_UNDO) graphUndoStack.shift()
+  }
+  const graph = JSON.parse(nextGraph)
+  applyWallGraph(graph, { skipUndo: true, silent: true })
+  persistGraphUndoStacks()
+  toast('已重做墙图修改')
+}
+
+/**
+ * @param {import('./spatial/types.js').WallGraph} graph
+ * @param {{ skipUndo?: boolean, silent?: boolean, toastMsg?: string }} [opts]
+ */
+export function applyWallGraph(graph, opts = {}) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  if (!opts.skipUndo) pushGraphUndo()
+  const next = hydrateProject({
+    ...raw,
+    layoutMode: 'wallGraph',
+    wallGraph: graph,
+  })
+  setActiveProject(next)
+  if (!opts.silent && opts.toastMsg) toast(opts.toastMsg)
+  else if (!opts.silent) notifyLayoutSaved()
+}
+
+export function activateWallGraphMode() {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const hydrated = hydrateProject(raw)
+  const graph = export508ToWallGraph(hydrated)
+  graphUndoStack = []
+  graphRedoStack = []
+  persistGraphUndoStacks()
+  const next = hydrateProject({
+    ...hydrated,
+    layoutMode: 'wallGraph',
+    wallGraph: graph,
+  })
+  setActiveProject(next)
+  toast('已启用自由墙图：可建墙与删墙')
+}
+
+export function revertToParametric508() {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  if (!raw.layoutConfig) {
+    toast('无 508 参数可恢复', 'warn')
+    return
+  }
+  const next = hydrateProject({
+    ...raw,
+    layoutMode: 'parametric508',
+    wallGraph: undefined,
+  })
+  setActiveProject(next)
+  toast('已切回 508 参数化编辑')
+}
+
+/**
+ * @param {number} x1 @param {number} y1 @param {number} x2 @param {number} y2
+ */
+export function addGraphWall(x1, y1, x2, y2) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  if (!graph) return false
+  const result = addWallSegment(graph, x1, y1, x2, y2)
+  if (!result.edgeId && result.error && result.error !== '墙段已存在') {
+    toast(result.error, 'warn')
+    return false
+  }
+  if (!result.edgeId) return false
+  applyWallGraph(result.graph, { toastMsg: '已添加墙段' })
+  return true
+}
+
+/** @param {string} edgeId */
+export function removeGraphWall(edgeId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const graph = raw.wallGraph
+  if (!graph) return
+  const next = deleteWallEdge(graph, edgeId)
+  applyWallGraph(next, { toastMsg: '已删除墙段' })
+}
 
 const defaultState = () => ({
   schemaVersion: 1,
@@ -57,6 +256,8 @@ function load() {
       ...SAMPLE_508,
       ...stored,
       layoutConfig: stored.layoutConfig ?? SAMPLE_508.layoutConfig,
+      layoutMode: stored.layoutMode ?? 'parametric508',
+      wallGraph: stored.wallGraph,
       storageZones: stored.storageZones ?? SAMPLE_508.storageZones,
       furnitureInventory:
         stored.furnitureInventory ?? SAMPLE_508.furnitureInventory,
@@ -141,6 +342,7 @@ function pushLayoutUndo() {
   layoutUndoStack.push(JSON.stringify(raw.layoutConfig))
   if (layoutUndoStack.length > MAX_LAYOUT_UNDO) layoutUndoStack.shift()
   clearLayoutRedo()
+  persistUndoStacks()
 }
 
 export function undoLayoutEdit() {
@@ -157,6 +359,7 @@ export function undoLayoutEdit() {
   const config = JSON.parse(prev)
   const next = hydrateProject({ ...raw, layoutConfig: config })
   setActiveProject(next)
+  persistUndoStacks()
   toast('已撤销上一步尺寸修改')
 }
 
@@ -174,6 +377,7 @@ export function redoLayoutEdit() {
   const config = JSON.parse(nextConfig)
   const next = hydrateProject({ ...raw, layoutConfig: config })
   setActiveProject(next)
+  persistUndoStacks()
   toast('已重做')
 }
 
@@ -281,6 +485,7 @@ export function commitLayoutDrag(kind, id, deltaPx, opts = {}) {
 export function reset508Layout() {
   layoutUndoStack = []
   layoutRedoStack = []
+  persistUndoStacks()
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const itemsById = Object.fromEntries(
     (raw.storageZones ?? []).map((z) => [z.id, z.items]),
@@ -321,6 +526,105 @@ export function setTheme(theme) {
   S.settings.theme = theme
   applyTheme()
   persist()
+}
+
+/**
+ * @param {string} openingId
+ * @returns {boolean}
+ */
+export function isOpeningDisabled(openingId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  return (raw.layoutConfig?.disabledOpenings ?? []).includes(openingId)
+}
+
+/**
+ * @param {string} openingId
+ * @param {boolean} disabled
+ */
+export function setOpeningDisabled(openingId, disabled) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const config = raw.layoutConfig ?? SAMPLE_508.layoutConfig
+  if (!config) return
+  const set = new Set(config.disabledOpenings ?? [])
+  if (disabled) set.add(openingId)
+  else set.delete(openingId)
+  const next = { ...config, disabledOpenings: [...set] }
+  applyLayoutConfig(next, {
+    toastMsg: disabled ? '已隐藏门窗' : '已恢复门窗',
+  })
+}
+
+/** @returns {string} */
+export function exportLayoutJson() {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const payload =
+    raw.layoutMode === 'wallGraph' && raw.wallGraph
+      ? {
+          schema: 'homeos-layout-v2',
+          exportedAt: new Date().toISOString(),
+          projectId: raw.meta.id,
+          layoutMode: 'wallGraph',
+          wallGraph: raw.wallGraph,
+          layoutConfig: raw.layoutConfig,
+        }
+      : {
+          schema: 'homeos-layout-v1',
+          exportedAt: new Date().toISOString(),
+          projectId: raw.meta.id,
+          layoutMode: 'parametric508',
+          layoutConfig: raw.layoutConfig,
+        }
+  return JSON.stringify(payload, null, 2)
+}
+
+/**
+ * @param {string} raw
+ * @returns {{ ok: true } | { ok: false, error: string }}
+ */
+export function importLayoutJson(raw) {
+  try {
+    const data = JSON.parse(raw)
+    if (data.layoutMode === 'wallGraph' && data.wallGraph?.vertices) {
+      layoutUndoStack = []
+      layoutRedoStack = []
+      graphUndoStack = []
+      graphRedoStack = []
+      persistUndoStacks()
+      persistGraphUndoStacks()
+      const base = S.projects[S.activeProjectId] ?? SAMPLE_508
+      const next = hydrateProject({
+        ...base,
+        layoutMode: 'wallGraph',
+        wallGraph: data.wallGraph,
+        layoutConfig: data.layoutConfig ?? base.layoutConfig,
+      })
+      setActiveProject(next)
+      toast('墙图布局已导入')
+      return { ok: true }
+    }
+    const patch = data.layoutConfig ?? data
+    if (!patch?.rooms || !patch.leftCol) {
+      return { ok: false, error: '不是有效的 layoutConfig JSON' }
+    }
+    const merged = merge508Config(default508Config(), patch)
+    const issues = validate508Config(merged)
+    if (issues.length) return { ok: false, error: issues[0] }
+    layoutUndoStack = []
+    layoutRedoStack = []
+    persistUndoStacks()
+    const base = S.projects[S.activeProjectId] ?? SAMPLE_508
+    const next = hydrateProject({
+      ...base,
+      layoutMode: 'parametric508',
+      wallGraph: undefined,
+      layoutConfig: merged,
+    })
+    setActiveProject(next)
+    toast('508 布局已导入')
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'JSON 解析失败' }
+  }
 }
 
 export { deserializeProject }

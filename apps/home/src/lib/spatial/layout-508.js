@@ -83,6 +83,7 @@ export function merge508Config(base, patch) {
     rightCol: patch.rightCol ?? base.rightCol,
     rooms,
     openings,
+    disabledOpenings: patch.disabledOpenings ?? base.disabledOpenings ?? [],
   }
 }
 
@@ -489,7 +490,7 @@ export function build508Project(config, carry = {}) {
       hitRect: openingHitAlongH(entryX1, entryX2, Y_BOT),
       pathD: swingHorizontalUp({ x1: entryX1, x2: entryX2, y: Y_BOT }),
     },
-  ]
+  ].filter((op) => !(config.disabledOpenings ?? []).includes(op.id))
 
   const roomById = Object.fromEntries(rooms.map((rm) => [rm.id, rm]))
 

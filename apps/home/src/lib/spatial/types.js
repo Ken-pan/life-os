@@ -66,6 +66,7 @@
  * @property {FtIn} leftCol
  * @property {FtIn} rightCol
  * @property {Layout508OpeningsConfig} [openings]
+ * @property {string[]} [disabledOpenings] 软隐藏门窗 ID（508 拓扑下不拆墙）
  * @property {object} rooms
  * @property {RoomDimensions} rooms.balcony
  * @property {RoomDimensions} rooms.bedroom
@@ -169,6 +170,31 @@
  * @property {SpatialStorageZone[]} storageZones
  * @property {SpatialFurnitureRow[]} furnitureInventory
  * @property {Layout508Config} [layoutConfig]
+ * @property {'parametric508' | 'wallGraph'} [layoutMode]
+ * @property {WallGraph} [wallGraph]
+ */
+
+/**
+ * @typedef {object} WallGraphVertex
+ * @property {string} id
+ * @property {number} x
+ * @property {number} y
+ */
+
+/**
+ * @typedef {object} WallGraphEdge
+ * @property {string} id
+ * @property {string} a
+ * @property {string} b
+ * @property {boolean} [exterior]
+ */
+
+/**
+ * @typedef {object} WallGraph
+ * @property {number} pxPerFt
+ * @property {{ x: number, y: number }} margin
+ * @property {WallGraphVertex[]} vertices
+ * @property {WallGraphEdge[]} edges
  */
 
 export const SPATIAL_SCHEMA_VERSION = 2

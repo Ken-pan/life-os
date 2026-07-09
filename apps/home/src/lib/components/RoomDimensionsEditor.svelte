@@ -10,10 +10,12 @@
   } from '$lib/state.svelte.js'
   import { EDITABLE_ROOM_KEYS, validate508Config } from '$lib/spatial/layout-508.js'
   import { formatFtIn } from '$lib/spatial/dimensions.js'
+  import { roomAreaSqft, summarize508Areas } from '$lib/spatial/room-areas.js'
 
   const project = $derived(getActiveProject())
   const config = $derived(project.layoutConfig)
   const validationIssues = $derived(config ? validate508Config(config) : [])
+  const areaSummary = $derived(config ? summarize508Areas(config) : null)
   const undoAvailable = $derived(canUndoLayout())
   const redoAvailable = $derived(canRedoLayout())
 
@@ -82,6 +84,11 @@
       {#if validationIssues.length}
         <p class="dim-warn" role="status">{validationIssues[0]}</p>
       {/if}
+      {#if areaSummary}
+        <p class="dim-area-total" role="status">
+          可编辑房间合计约 <strong>{areaSummary.totalSqft} sqft</strong>
+        </p>
+      {/if}
     </header>
 
     <div class="dim-grid">
@@ -91,7 +98,9 @@
           <div class="dim-card">
             <div class="dim-card-head">
               <span class="dim-card-name">{label}</span>
-              <span class="dim-card-val">{formatFtIn(room.w)} × {formatFtIn(room.h)}</span>
+              <span class="dim-card-val"
+                >{formatFtIn(room.w)} × {formatFtIn(room.h)} · {roomAreaSqft(room.w, room.h)} sf</span
+              >
             </div>
             <div class="dim-fields">
               <label class="dim-field">
@@ -237,6 +246,17 @@
     margin: 8px 0 0;
     font-size: 12px;
     color: var(--warn, #b45309);
+  }
+
+  .dim-area-total {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--t2);
+  }
+
+  .dim-area-total strong {
+    font-family: var(--mono);
+    color: var(--accent);
   }
 
   .dim-grid {

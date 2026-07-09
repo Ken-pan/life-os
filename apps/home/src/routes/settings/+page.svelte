@@ -2,7 +2,7 @@
   import SettingsSection from '@life-os/platform-web/svelte/settings/section'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row'
-  import { S, setTheme, reset508Layout } from '$lib/state.svelte.js'
+  import { S, setTheme, reset508Layout, exportLayoutJson, importLayoutJson } from '$lib/state.svelte.js'
   import { getActiveProject } from '$lib/state.svelte.js'
   import {
     isSpatialStudioEnabled,
@@ -15,6 +15,31 @@
   /** @param {import('@life-os/contracts/appearance').ColorSchemePreference} value */
   function onTheme(value) {
     setTheme(value)
+  }
+
+  function downloadLayoutJson() {
+    const blob = new Blob([exportLayoutJson()], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `homeos-layout-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  /** @param {Event} e */
+  function onImportLayout(e) {
+    const input = /** @type {HTMLInputElement} */ (e.currentTarget)
+    const file = input.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const text = typeof reader.result === 'string' ? reader.result : ''
+      const result = importLayoutJson(text)
+      if (!result.ok) alert(result.error)
+      input.value = ''
+    }
+    reader.readAsText(file)
   }
 </script>
 
@@ -60,6 +85,15 @@
   {#if studio}
     <SettingsRow label="尺寸编辑">
       <a class="settings-link" href="/plan">前往平面页 →</a>
+    </SettingsRow>
+    <SettingsRow label="布局备份">
+      <button type="button" class="settings-btn" onclick={downloadLayoutJson}>导出 JSON</button>
+    </SettingsRow>
+    <SettingsRow label="布局恢复">
+      <label class="settings-file">
+        <span class="settings-btn">导入 JSON</span>
+        <input type="file" accept="application/json,.json" class="sr-only" onchange={onImportLayout} />
+      </label>
     </SettingsRow>
     <SettingsRow label="恢复默认">
       <button type="button" class="settings-btn" onclick={reset508Layout}>开发商户型尺寸</button>
@@ -114,5 +148,20 @@
     background: var(--card);
     color: var(--t1);
     cursor: pointer;
+  }
+
+  .settings-file {
+    cursor: pointer;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
   }
 </style>

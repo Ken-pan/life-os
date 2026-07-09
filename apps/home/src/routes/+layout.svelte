@@ -28,6 +28,8 @@
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
+  const planImmersive = $derived(page.url.pathname === '/plan')
+
   const pageMeta = $derived.by(() => {
     const p = page.url.pathname
     const project = getActiveProject()
@@ -67,12 +69,20 @@
 
 <DocumentHead appId="home" pageTitle={pageMeta.title} />
 
-<div class="app-shell">
+<div class="app-shell" class:plan-immersive={planImmersive}>
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <SideNav />
-  <div class="main-col">
-    <AppBar title={pageMeta.title} subtitle={pageMeta.subtitle} />
-    <main id="main-content" class="wrap">
+  <div class="main-col" class:plan-main={planImmersive}>
+    <AppBar
+      title={pageMeta.title}
+      subtitle={planImmersive ? '' : pageMeta.subtitle}
+      hidden={planImmersive}
+    />
+    <main
+      id="main-content"
+      class="wrap"
+      class:plan-route={planImmersive}
+    >
       {@render children()}
     </main>
   </div>

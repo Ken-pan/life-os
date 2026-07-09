@@ -6,7 +6,9 @@
     getActiveProject,
     getLayoutDragPreview,
     getLayoutSavedAt,
+    isOpeningDisabled,
     redoLayoutEdit,
+    setOpeningDisabled,
     undoLayoutEdit,
   } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
@@ -20,6 +22,7 @@
     resolveWallBinding,
     defaultOpenings,
   } from '$lib/spatial/wall-edit.js'
+  import { roomAreaSqft } from '$lib/spatial/room-areas.js'
 
   /** @type {{
    *   selectedWall?: string,
@@ -36,6 +39,7 @@
   const undoAvailable = $derived(canUndoLayout())
   const redoAvailable = $derived(canRedoLayout())
   const layoutSavedAt = $derived(getLayoutSavedAt())
+  const disabledOpenings = $derived(config?.disabledOpenings ?? [])
 
   let saveFlash = $state(false)
   /** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -167,7 +171,26 @@
       <li>卧室下墙、阳台下墙 → 房间深度</li>
       <li>壁橱/浴室/洗衣间竖墙 → 房间宽度</li>
       <li>客厅·厨房横墙 → 客厅高度</li>
+      <li><kbd>Delete</kbd> 隐藏选中门窗（508 拓扑下不拆墙开口）</li>
     </ul>
+    {#if disabledOpenings.length}
+      <div class="inspector-hidden">
+        <h3 class="inspector-label">已隐藏门窗</h3>
+        <ul class="hidden-list">
+          {#each disabledOpenings as id (id)}
+            {@const label = OPENING_EDIT_BINDINGS[id]?.label ?? id}
+            <li>
+              <span>{label}</span>
+              <button
+                type="button"
+                class="insp-btn"
+                onclick={() => setOpeningDisabled(id, false)}
+              >恢复</button>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
   {:else if wallBinding}
     <div class="inspector-card">
       <h3 class="inspector-label">墙体 · {wallBinding.label}</h3>
@@ -189,6 +212,7 @@
         {#if room && wallBinding.axis in room}
           <p class="inspector-meta">
             {isPreview ? '拖拽预览（松手后写入）' : '关联房间尺寸'}
+            · 面积约 {roomAreaSqft(room.w, room.h)} sqft
           </p>
           <label class="insp-field">
             宽
@@ -430,6 +454,19 @@
           {/if}
         {/if}
       {/if}
+      {#if selectedOpening && !isOpeningDisabled(selectedOpening)}
+        <button
+          type="button"
+          class="insp-btn insp-btn-warn"
+          disabled={isPreview}
+          onclick={() => {
+            setOpeningDisabled(selectedOpening, true)
+            onClear?.()
+          }}
+        >
+          隐藏此门窗
+        </button>
+      {/if}
     </div>
   {/if}
 </section>
@@ -504,6 +541,44 @@
     opacity: 0.45;
     cursor: not-allowed;
     color: var(--t3);
+  }
+
+  .insp-btn-warn {
+    margin-top: 10px;
+    color: #b45309;
+    border-color: color-mix(in srgb, #b45309 35%, var(--border));
+  }
+
+  .inspector-hidden {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .hidden-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 6px;
+  }
+
+  .hidden-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--t2);
+  }
+
+  .inspector-list kbd {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-family: var(--mono);
   }
 
   .inspector-lead {

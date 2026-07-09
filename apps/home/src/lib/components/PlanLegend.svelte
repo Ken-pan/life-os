@@ -1,69 +1,151 @@
 <script>
-  /** @type {{ interactive?: boolean, editMode?: boolean, showFurniture?: boolean }} */
-  let { interactive = false, editMode = false, showFurniture = false } = $props()
+  /** @type {{ interactive?: boolean, editMode?: boolean, graphEditMode?: boolean, showFurniture?: boolean, overlay?: boolean }} */
+  let {
+    interactive = false,
+    editMode = false,
+    graphEditMode = false,
+    showFurniture = false,
+    overlay = false,
+  } = $props()
+
+  let expanded = $state(false)
 </script>
 
-<div class="plan-legend" role="list" aria-label="平面图图例">
-  {#if editMode}
-    <span class="plan-legend-item plan-legend-edit" role="listitem">
-      <i class="sw wall-edit" aria-hidden="true"></i> 内墙线（拖曳改尺寸）
-    </span>
-    <span class="plan-legend-item plan-legend-edit" role="listitem">
-      <i class="sw open-edit" aria-hidden="true"></i> 门窗（拖曳改位置）
-    </span>
-    <span class="plan-legend-item plan-legend-edit" role="listitem">
-      <i class="sw grip-edit" aria-hidden="true"></i> 虚线框 = 门宽握把
-    </span>
-  {:else if interactive}
-    <span class="plan-legend-item" role="listitem">
-      <i class="sw store" aria-hidden="true"></i> 储藏区（点击跳转清单）
-    </span>
-  {:else}
-    <span class="plan-legend-item" role="listitem">
-      <i class="sw store" aria-hidden="true"></i> 储藏区
-    </span>
+<div class="plan-legend-wrap" class:overlay>
+  <button
+    type="button"
+    class="legend-toggle"
+    aria-expanded={expanded}
+    aria-controls="plan-legend-body"
+    onclick={() => (expanded = !expanded)}
+  >
+    {expanded ? '收起图例' : '图例'}
+  </button>
+
+  {#if !overlay || expanded}
+    <div id="plan-legend-body" class="plan-legend" role="list" aria-label="平面图图例">
+      {#if graphEditMode}
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw wall-graph" aria-hidden="true"></i> 墙段（建墙/删墙）
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw chain-edit" aria-hidden="true"></i> 绿色虚线 = 建墙预览
+        </span>
+      {:else if editMode}
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw wall-edit" aria-hidden="true"></i> 内墙线（拖曳改尺寸）
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw open-edit" aria-hidden="true"></i> 门窗（拖曳改位置）
+        </span>
+        <span class="plan-legend-item plan-legend-edit" role="listitem">
+          <i class="sw grip-edit" aria-hidden="true"></i> 虚线框 = 门宽握把
+        </span>
+      {:else if interactive}
+        <span class="plan-legend-item" role="listitem">
+          <i class="sw store" aria-hidden="true"></i> 储藏区（点击跳转清单）
+        </span>
+      {:else}
+        <span class="plan-legend-item" role="listitem">
+          <i class="sw store" aria-hidden="true"></i> 储藏区
+        </span>
+      {/if}
+      {#if showFurniture}
+        <span class="plan-legend-item" role="listitem">
+          <i class="sw furn" aria-hidden="true"></i> 家具
+        </span>
+      {/if}
+      <span class="plan-legend-item" role="listitem">
+        <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
+          <line x1="2" y1="14" x2="26" y2="14" stroke="currentColor" stroke-width="2.5" />
+        </svg>
+        承重墙
+      </span>
+      <span class="plan-legend-item" role="listitem">
+        <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
+          <line x1="2" y1="14" x2="26" y2="14" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2" />
+        </svg>
+        通道口
+      </span>
+      <span class="plan-legend-item" role="listitem">
+        <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
+          <path d="M4 14 L10 4 L14 14 M24 14 L18 4 L14 14" fill="none" stroke="currentColor" stroke-width="1.4" />
+        </svg>
+        双折门
+      </span>
+      <span class="plan-legend-item" role="listitem">
+        <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
+          <line x1="4" y1="14" x2="4" y2="2" stroke="currentColor" stroke-width="1.2" />
+          <path d="M4 14 A10 10 0 0 0 14 8" fill="none" stroke="currentColor" stroke-width="1.2" />
+        </svg>
+        平开门
+      </span>
+    </div>
   {/if}
-  {#if showFurniture}
-    <span class="plan-legend-item" role="listitem">
-      <i class="sw furn" aria-hidden="true"></i> 家具
-    </span>
-  {/if}
-  <span class="plan-legend-item" role="listitem">
-    <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
-      <line x1="2" y1="14" x2="26" y2="14" stroke="currentColor" stroke-width="2.5" />
-    </svg>
-    承重墙
-  </span>
-  <span class="plan-legend-item" role="listitem">
-    <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
-      <line x1="2" y1="14" x2="26" y2="14" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2" />
-    </svg>
-    通道口
-  </span>
-  <span class="plan-legend-item" role="listitem">
-    <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
-      <path d="M4 14 L10 4 L14 14 M24 14 L18 4 L14 14" fill="none" stroke="currentColor" stroke-width="1.4" />
-    </svg>
-    双折门
-  </span>
-  <span class="plan-legend-item" role="listitem">
-    <svg class="sym" viewBox="0 0 28 16" aria-hidden="true">
-      <line x1="4" y1="14" x2="4" y2="2" stroke="currentColor" stroke-width="1.2" />
-      <path d="M4 14 A10 10 0 0 0 14 8" fill="none" stroke="currentColor" stroke-width="1.2" />
-    </svg>
-    平开门
-  </span>
 </div>
 
 <style>
+  .plan-legend-wrap {
+    margin-top: 12px;
+  }
+
+  .plan-legend-wrap.overlay {
+    position: absolute;
+    left: max(8px, var(--safe-left-effective));
+    bottom: 8px;
+    z-index: 3;
+    margin-top: 0;
+    max-width: min(520px, calc(100% - 120px));
+    pointer-events: none;
+  }
+
+  .plan-legend-wrap.overlay .legend-toggle,
+  .plan-legend-wrap.overlay .plan-legend {
+    pointer-events: auto;
+  }
+
+  .legend-toggle {
+    min-height: 32px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--card) 92%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--t2);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.35);
+  }
+
   .plan-legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px 16px;
-    margin-top: 12px;
+    gap: 8px 12px;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+    background: color-mix(in srgb, var(--card) 90%, transparent);
+    backdrop-filter: blur(8px);
     font-family: var(--mono);
     font-size: 11px;
     color: var(--t3);
+    box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.35);
+  }
+
+  .plan-legend-wrap:not(.overlay) .plan-legend {
+    margin-top: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .plan-legend-wrap:not(.overlay) .legend-toggle {
+    display: none;
   }
 
   .plan-legend-item {
@@ -114,6 +196,25 @@
     background: rgba(92, 117, 140, 0.08);
     border: 1.5px dashed var(--accent);
     width: 10px;
+  }
+
+  .sw.wall-graph {
+    background: transparent;
+    border: 2px solid rgba(29, 107, 66, 0.55);
+    border-radius: 1px;
+    height: 3px;
+    width: 18px;
+    align-self: center;
+  }
+
+  .sw.chain-edit {
+    background: transparent;
+    border: none;
+    border-top: 2px dashed #1d6b42;
+    border-radius: 0;
+    height: 0;
+    width: 18px;
+    align-self: center;
   }
 
   .plan-legend-edit {
