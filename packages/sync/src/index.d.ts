@@ -1,4 +1,5 @@
 export const LIFE_OS_AUTH_STORAGE_KEY: string
+export const LIFE_OS_PERSONAL_OWNER_EMAIL: '334452284ken@gmail.com'
 export const SYNC_DEFAULTS: { cooldownMs: number; debounceMs: number }
 export const AUTH_SYNC_EVENTS: readonly string[]
 export const LIFE_OS_APP_IDS: readonly [
@@ -72,6 +73,7 @@ export function createLifeOsAuth(
     onSyncSession?: (options: {
       force?: boolean
     }) => void | Promise<unknown>
+    onAllowedAppKeys?: (appKeys: string[] | null) => void
   },
 ): {
   init: () => () => void

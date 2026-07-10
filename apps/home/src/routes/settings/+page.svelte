@@ -22,7 +22,6 @@
   import {
     auth,
     signIn,
-    signUp,
     signOut,
     authErrorMessage,
   } from '$lib/auth.svelte.js'
@@ -60,12 +59,10 @@
     revertToParametric508()
   }
 
-  let authMode = $state('signin')
   let email = $state('')
   let password = $state('')
   let authBusy = $state(false)
   let authError = $state('')
-  let confirmSent = $state(false)
 
   /** @param {import('@life-os/contracts/appearance').ColorSchemePreference} value */
   function onTheme(value) {
@@ -79,12 +76,7 @@
     authError = ''
     authBusy = true
     try {
-      if (authMode === 'signup') {
-        const { needsConfirm } = await signUp(email.trim(), password)
-        if (needsConfirm) confirmSent = true
-      } else {
-        await signIn(email.trim(), password)
-      }
+      await signIn(email.trim(), password)
     } catch (err) {
       authError = authErrorMessage(err)
     } finally {
@@ -145,8 +137,6 @@
     <p class="block-desc">
       布局数据仍保存在本机；登录用于跨站 SSO 与 Portal 最近打开记录。
     </p>
-  {:else if confirmSent}
-    <p class="block-desc">验证邮件已发送至 {email}，请查收后登录。</p>
   {:else}
     <form class="auth-form" onsubmit={onAuthSubmit}>
       <SettingsRow label="邮箱">
@@ -156,9 +146,7 @@
         <input
           type="password"
           bind:value={password}
-          autocomplete={authMode === 'signup'
-            ? 'new-password'
-            : 'current-password'}
+          autocomplete="current-password"
           minlength="6"
           required
         />
@@ -168,17 +156,7 @@
       {/if}
       <SettingsButtonGroup>
         <button type="submit" class="btn-primary" disabled={authBusy}>
-          {authBusy ? '…' : authMode === 'signin' ? '登录' : '注册'}
-        </button>
-        <button
-          type="button"
-          class="btn-secondary"
-          onclick={() => {
-            authMode = authMode === 'signin' ? 'signup' : 'signin'
-            authError = ''
-          }}
-        >
-          {authMode === 'signin' ? '创建账号' : '已有账号？登录'}
+          {authBusy ? '…' : '登录'}
         </button>
       </SettingsButtonGroup>
     </form>

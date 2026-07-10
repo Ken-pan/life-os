@@ -343,7 +343,7 @@ export default {
       '最近播放的云曲目会渐进写入本机 IndexedDB，便于重复播放与弱网。',
     offlineCacheStats: '已缓存 {count} 首 · 约 {size}',
     account: '账号',
-    signIn: '登录 / 注册',
+    signIn: '登录',
     signOut: '退出登录',
     about: '关于',
     version: 'MUSIC.OS 0.1',

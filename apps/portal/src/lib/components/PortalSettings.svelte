@@ -1,6 +1,6 @@
 <script>
   import { LIFE_OS_SITE_META } from '@life-os/theme'
-  import { PORTAL_APPS, PORTAL_PRODUCTION_APPS } from '$lib/apps.js'
+  import { PORTAL_PRODUCTION_APPS } from '$lib/apps.js'
   import {
     portalPreferences,
     saveDefaultApp,
@@ -11,14 +11,18 @@
 
   /** @type {{
    *   userId: string,
+   *   allowedAppKeys?: string[],
    * }} */
-  let { userId } = $props()
+  let { userId, allowedAppKeys = [] } = $props()
 
   let savingDefault = $state(false)
   let savingSkip = $state(false)
 
   const defaultApp = $derived(portalPreferences.defaultApp)
   const skipAutoRedirect = $derived(portalPreferences.skipAutoRedirect)
+  const allowedProductionApps = $derived(
+    PORTAL_PRODUCTION_APPS.filter((app) => allowedAppKeys.includes(app.id)),
+  )
 
   /** @param {Event} event */
   async function onDefaultChange(event) {
@@ -58,7 +62,7 @@
         onchange={onDefaultChange}
       >
         <option value="">每次显示 Launcher</option>
-        {#each PORTAL_PRODUCTION_APPS as app (app.id)}
+        {#each allowedProductionApps as app (app.id)}
           <option value={app.id}>{LIFE_OS_SITE_META[app.id].name}</option>
         {/each}
       </select>

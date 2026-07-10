@@ -1,8 +1,10 @@
 <script>
   import { page } from '$app/state'
   import { t } from '$lib/i18n/index.js'
+  import { auth } from '$lib/auth.svelte.js'
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
   import Icon from '@life-os/platform-web/svelte/icon'
+  import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
   import {
     buildPrimaryNavItems,
     buildSettingsNavItem,
@@ -14,6 +16,9 @@
   const settingsItem = $derived(buildSettingsNavItem(t))
   const current = $derived(resolveNavTab(page.url.pathname))
   const hidden = $derived(isNavChromeHidden(page.url.pathname))
+  const canSwitchApps = $derived(
+    auth.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL,
+  )
 </script>
 
 {#if !hidden}
@@ -22,6 +27,8 @@
       appId="fitness"
       tagline={t('nav.brandTag')}
       ariaLabel="FITNESS OS"
+      allowedAppIds={auth.allowedAppKeys}
+      canSwitch={canSwitchApps}
     />
 
     <div class="sidebar-body">

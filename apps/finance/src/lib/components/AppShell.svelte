@@ -40,6 +40,7 @@
   import ReportBugButton from '@life-os/platform-web/svelte/feedback'
   import { supabase } from '$lib/supabase.js'
   import { auth } from '$lib/auth.svelte.js'
+  import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
 
   /** @type {{ children?: import('svelte').Snippet }} */
   let { children } = $props()
@@ -109,6 +110,9 @@
 
   const currentRoute = $derived(parseAppPath(page.url.pathname))
   const currentTab = $derived(currentRoute?.tab ?? 'home')
+  const canSwitchApps = $derived(
+    auth.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL,
+  )
 
   const pageHeader = $derived.by(() => {
     if (currentTab === 'home') {
@@ -195,7 +199,12 @@
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
   <ExtensionSyncBridge />
   <aside class="sidebar">
-    <AppBrandSwitcher appId="finance" tagline={t('nav.brandTag')} />
+    <AppBrandSwitcher
+      appId="finance"
+      tagline={t('nav.brandTag')}
+      allowedAppIds={auth.allowedAppKeys}
+      canSwitch={canSwitchApps}
+    />
     <div class="sidebar-body">
       {#each navGroups as group, index (group.label)}
         <div class="nav-group{index > 0 ? ' nav-group-divider' : ''}">

@@ -3,20 +3,30 @@
   import { userLists } from '$lib/state.svelte.js'
   import { t, listLabel } from '$lib/i18n/index.js'
   import { buildSidebarNavGroups, buildSettingsNavItem } from '$lib/nav.js'
+  import { auth } from '$lib/auth.svelte.js'
   import { openTaskEditor } from '$lib/ui.svelte.js'
   import { resolveTaskEditorDefaults } from '$lib/taskEditorDefaults.js'
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
   import Icon from '@life-os/platform-web/svelte/icon'
+  import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
 
   const navGroups = $derived(buildSidebarNavGroups(t))
   const settingsLink = $derived(buildSettingsNavItem(t))
   const lists = $derived(userLists())
   const path = $derived(page.url.pathname)
   const search = $derived(page.url.search)
+  const canSwitchApps = $derived(
+    auth.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL,
+  )
 </script>
 
 <aside class="sidebar" aria-label={t('nav.mainAria')}>
-  <AppBrandSwitcher appId="planner" tagline={t('app.tagline')} />
+  <AppBrandSwitcher
+    appId="planner"
+    tagline={t('app.tagline')}
+    allowedAppIds={auth.allowedAppKeys}
+    canSwitch={canSwitchApps}
+  />
 
   <div class="sidebar-body">
     {#each navGroups as group, index (group.label)}

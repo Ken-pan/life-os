@@ -9,6 +9,7 @@ export const auth = $state({
   user: null,
   session: null,
   ready: false,
+  allowedAppKeys: /** @type {string[] | null} */ (null),
 })
 
 const lifeOsAuth = createLifeOsAuth(supabase, {
@@ -17,6 +18,9 @@ const lifeOsAuth = createLifeOsAuth(supabase, {
     auth.session = session
     auth.user = session?.user ?? null
     auth.ready = true
+  },
+  onAllowedAppKeys: (appKeys) => {
+    auth.allowedAppKeys = appKeys
   },
   onSignedOut: () => {
     resetSyncCooldown()

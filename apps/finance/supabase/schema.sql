@@ -14,13 +14,13 @@ create table if not exists public.finance_data (
 
 alter table public.finance_data enable row level security;
 drop policy if exists "own finance_data select" on public.finance_data;
-create policy "own finance_data select" on public.finance_data for select using ((select auth.uid()) = user_id);
+create policy "own finance_data select" on public.finance_data for select using ((select auth.uid()) = user_id and private.has_app_access('finance'));
 drop policy if exists "own finance_data insert" on public.finance_data;
-create policy "own finance_data insert" on public.finance_data for insert with check ((select auth.uid()) = user_id);
+create policy "own finance_data insert" on public.finance_data for insert with check ((select auth.uid()) = user_id and private.has_app_access('finance'));
 drop policy if exists "own finance_data update" on public.finance_data;
-create policy "own finance_data update" on public.finance_data for update using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create policy "own finance_data update" on public.finance_data for update using ((select auth.uid()) = user_id and private.has_app_access('finance')) with check ((select auth.uid()) = user_id and private.has_app_access('finance'));
 drop policy if exists "own finance_data delete" on public.finance_data;
-create policy "own finance_data delete" on public.finance_data for delete using ((select auth.uid()) = user_id);
+create policy "own finance_data delete" on public.finance_data for delete using ((select auth.uid()) = user_id and private.has_app_access('finance'));
 
 -- ===== normalized tables =====
 create table if not exists public.user_settings (
@@ -471,13 +471,13 @@ begin
   loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists %I on public.%I', t || '_select', t);
-    execute format('create policy %I on public.%I for select using ((select auth.uid()) = user_id)', t || '_select', t);
+    execute format('create policy %I on public.%I for select using ((select auth.uid()) = user_id and private.has_app_access(''finance''))', t || '_select', t);
     execute format('drop policy if exists %I on public.%I', t || '_insert', t);
-    execute format('create policy %I on public.%I for insert with check ((select auth.uid()) = user_id)', t || '_insert', t);
+    execute format('create policy %I on public.%I for insert with check ((select auth.uid()) = user_id and private.has_app_access(''finance''))', t || '_insert', t);
     execute format('drop policy if exists %I on public.%I', t || '_update', t);
-    execute format('create policy %I on public.%I for update using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id)', t || '_update', t);
+    execute format('create policy %I on public.%I for update using ((select auth.uid()) = user_id and private.has_app_access(''finance'')) with check ((select auth.uid()) = user_id and private.has_app_access(''finance''))', t || '_update', t);
     execute format('drop policy if exists %I on public.%I', t || '_delete', t);
-    execute format('create policy %I on public.%I for delete using ((select auth.uid()) = user_id)', t || '_delete', t);
+    execute format('create policy %I on public.%I for delete using ((select auth.uid()) = user_id and private.has_app_access(''finance''))', t || '_delete', t);
   end loop;
 end $$;
 
@@ -774,17 +774,19 @@ alter table public.core_user_app_settings enable row level security;
 drop policy if exists "core_user_app_settings_select_own" on public.core_user_app_settings;
 create policy "core_user_app_settings_select_own"
   on public.core_user_app_settings for select
-  using ((select auth.uid()) = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id and private.has_app_access(app_id));
 
-drop policy if exists "core_user_app_settings_insert_own" on public.core_user_app_settings;
 create policy "core_user_app_settings_insert_own"
   on public.core_user_app_settings for insert
-  with check ((select auth.uid()) = user_id);
+  to authenticated
+  with check ((select auth.uid()) = user_id and private.has_app_access(app_id));
 
-drop policy if exists "core_user_app_settings_update_own" on public.core_user_app_settings;
 create policy "core_user_app_settings_update_own"
   on public.core_user_app_settings for update
-  using ((select auth.uid()) = user_id);
+  to authenticated
+  using ((select auth.uid()) = user_id and private.has_app_access(app_id))
+  with check ((select auth.uid()) = user_id and private.has_app_access(app_id));
 
 drop trigger if exists core_user_app_settings_updated_at on public.core_user_app_settings;
 create trigger core_user_app_settings_updated_at
@@ -941,3 +943,99 @@ create trigger fitness_workout_event_trigger
   after insert or update of ended_at on fitness.fitness_workout_sessions
   for each row
   execute function public.trg_fitness_workout_to_event();
+
+-- ===== Phase 2: App Entitlement Foundation =====
+
+create table if not exists public.app_registry (
+  app_key text primary key check (app_key ~ '^[a-z][a-z0-9_-]{1,31}$'),
+  display_name text not null,
+  app_url text,
+  icon_key text,
+  is_enabled boolean not null default true,
+  sort_order integer not null default 100,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.app_memberships (
+  app_key text not null references public.app_registry(app_key) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null default 'member' check (role in ('owner', 'admin', 'member')),
+  status text not null default 'active' check (status in ('invited', 'active', 'suspended', 'revoked')),
+  granted_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  activated_at timestamptz,
+  revoked_at timestamptz,
+  primary key (app_key, user_id)
+);
+
+create index if not exists app_memberships_user_status_app_idx
+  on public.app_memberships (user_id, status, app_key);
+
+alter table public.app_registry enable row level security;
+alter table public.app_memberships enable row level security;
+
+drop policy if exists "Users read own app memberships" on public.app_memberships;
+create policy "Users read own app memberships"
+on public.app_memberships for select
+to authenticated
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users read accessible apps" on public.app_registry;
+create policy "Users read accessible apps"
+on public.app_registry for select
+to authenticated
+using (
+  is_enabled = true
+  and exists (
+    select 1
+    from public.app_memberships m
+    where m.app_key = app_registry.app_key
+      and m.user_id = (select auth.uid())
+      and m.status = 'active'
+  )
+);
+
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to authenticated, service_role;
+
+create or replace function private.has_app_access(requested_app_key text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.app_memberships m
+    where m.user_id = (select auth.uid())
+      and m.app_key = requested_app_key
+      and m.status = 'active'
+  );
+$$;
+
+revoke all on function private.has_app_access(text) from public;
+grant execute on function private.has_app_access(text) to authenticated, service_role;
+
+create or replace function private.has_app_role(requested_app_key text, allowed_roles text[])
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.app_memberships m
+    where m.user_id = (select auth.uid())
+      and m.app_key = requested_app_key
+      and m.status = 'active'
+      and m.role = any(allowed_roles)
+  );
+$$;
+
+revoke all on function private.has_app_role(text, text[]) from public;
+grant execute on function private.has_app_role(text, text[]) to authenticated, service_role;

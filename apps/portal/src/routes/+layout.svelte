@@ -27,7 +27,7 @@
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   let cpOpen = $state(false)
-  let cpQuery = $state('')
+  let cpQuery = $state(/** @type {string} */ (''))
   let coreHydrated = $state(false)
   let lastHydratedUserId = $state(/** @type {string | null} */ (null))
   let hydrateSeq = 0
@@ -36,6 +36,7 @@
     buildPortalCommandActions({
       signOut,
       query: cpQuery,
+      allowedAppKeys: auth.allowedAppKeys ?? [],
     }),
   )
 
@@ -54,12 +55,16 @@
     if (!userId) {
       coreHydrated = false
       lastHydratedUserId = null
+      auth.allowedAppKeys = null
       return
     }
+    if (auth.allowedAppKeys === null) return
     if (coreHydrated && lastHydratedUserId === userId) return
 
     const seq = ++hydrateSeq
     void (async () => {
+      const allowed = auth.allowedAppKeys ?? []
+
       const lastApp = await hydratePortalFromCore(userId)
       if (seq !== hydrateSeq) return
       applyRecentAppFromDb(lastApp)
@@ -68,9 +73,11 @@
 
       const { defaultApp, skipAutoRedirect } = portalPreferences
       if (defaultApp && shouldAutoRedirect(defaultApp, skipAutoRedirect)) {
-        redirectToDefaultApp(
-          /** @type {import('$lib/apps.js').LauncherAppId} */ (defaultApp),
-        )
+        if (allowed.includes(defaultApp)) {
+          redirectToDefaultApp(
+            /** @type {import('$lib/apps.js').LauncherAppId} */ (defaultApp),
+          )
+        }
       }
     })()
   })

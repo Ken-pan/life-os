@@ -1,8 +1,10 @@
 <script>
   import { page } from '$app/state'
   import { t } from '$lib/i18n/index.js'
+  import { auth } from '$lib/auth.svelte.js'
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
   import Icon from '@life-os/platform-web/svelte/icon'
+  import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
   import {
     buildSidebarNavGroups,
     buildSettingsNavItem,
@@ -13,6 +15,9 @@
   const settingsItem = $derived(buildSettingsNavItem(t))
   const pathname = $derived(page.url.pathname)
   const hidden = $derived(isNavChromeHidden(page.url.pathname))
+  const canSwitchApps = $derived(
+    auth.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL,
+  )
 
   /** @param {import('$lib/nav.js').NavItem} item */
   function isActive(item) {
@@ -26,6 +31,8 @@
       appId="music"
       tagline={t('app.tagline')}
       ariaLabel={t('common.brand')}
+      allowedAppIds={auth.allowedAppKeys}
+      canSwitch={canSwitchApps}
     />
 
     <div class="sidebar-body">

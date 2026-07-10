@@ -1,7 +1,9 @@
 <script>
   import { page } from '$app/state'
+  import { auth } from '$lib/auth.svelte.js'
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
   import Icon from '@life-os/platform-web/svelte/icon'
+  import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
   import {
     buildPrimaryNavItems,
     buildSettingsNavItem,
@@ -13,11 +15,20 @@
   const settingsItem = $derived(buildSettingsNavItem())
   const current = $derived(resolveNavTab(page.url.pathname))
   const hidden = $derived(isNavChromeHidden(page.url.pathname))
+  const canSwitchApps = $derived(
+    auth.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL,
+  )
 </script>
 
 {#if !hidden}
   <aside class="sidebar" aria-label="侧栏导航">
-    <AppBrandSwitcher appId="home" tagline="居家空间规划" ariaLabel="HOME.OS" />
+    <AppBrandSwitcher
+      appId="home"
+      tagline="居家空间规划"
+      ariaLabel="HOME.OS"
+      allowedAppIds={auth.allowedAppKeys}
+      canSwitch={canSwitchApps}
+    />
 
     <div class="sidebar-body">
       <div class="nav-group">

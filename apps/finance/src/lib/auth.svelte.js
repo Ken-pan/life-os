@@ -12,6 +12,7 @@ export const auth = $state({
   user: null,
   session: null,
   ready: false,
+  allowedAppKeys: /** @type {string[] | null} */ (null),
 })
 
 /** @type {(() => void) | null} */
@@ -43,6 +44,9 @@ const lifeOsAuth = createLifeOsAuth(supabase, {
     signedOutHandler?.()
   },
   onSyncSession: (options) => syncSessionHandler?.(options),
+  onAllowedAppKeys: (appKeys) => {
+    auth.allowedAppKeys = appKeys
+  },
 })
 
 export function initAuth() {

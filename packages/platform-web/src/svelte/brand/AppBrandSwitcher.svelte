@@ -14,9 +14,18 @@
    *   appId: import('@life-os/theme').LifeOsAppId,
    *   tagline?: string,
    *   ariaLabel?: string,
+   *   allowedAppIds?: string[] | null,
+   *   canSwitch?: boolean,
    *   class?: string,
    * }} */
-  let { appId, tagline = '', ariaLabel = '', class: className = '' } = $props()
+  let {
+    appId,
+    tagline = '',
+    ariaLabel = '',
+    allowedAppIds = null,
+    canSwitch = true,
+    class: className = '',
+  } = $props()
 
   let open = $state(false)
   let selectedIndex = $state(0)
@@ -30,6 +39,13 @@
   let typeAheadTimer
 
   const brand = $derived(getLifeOsBrand(appId))
+  const switcherApps = $derived.by(() => {
+    const apps = allowedAppIds
+      ? LIFE_OS_SWITCHER_APPS.filter((entry) => allowedAppIds.includes(entry.id))
+      : LIFE_OS_SWITCHER_APPS
+    return apps.some((entry) => entry.id === appId) ? apps : [{ id: appId }]
+  })
+  const switchingEnabled = $derived(canSwitch && switcherApps.length > 1)
   const markSize = $derived(getLifeOsBrandMarkSize(appId, 'sidebar'))
   const resolvedTheme = $derived.by(() => {
     if (typeof document === 'undefined') return 'dark'
@@ -44,8 +60,9 @@
   }
 
   function openMenu() {
+    if (!switchingEnabled) return
     open = true
-    const currentIndex = LIFE_OS_SWITCHER_APPS.findIndex(
+    const currentIndex = switcherApps.findIndex(
       (entry) => entry.id === appId,
     )
     selectedIndex = currentIndex >= 0 ? currentIndex : 0
@@ -58,6 +75,7 @@
   }
 
   function toggleMenu() {
+    if (!switchingEnabled) return
     if (open) closeMenu()
     else openMenu()
   }
@@ -72,7 +90,7 @@
   }
 
   function activateSelected() {
-    const entry = LIFE_OS_SWITCHER_APPS[selectedIndex]
+    const entry = switcherApps[selectedIndex]
     if (entry) navigateToApp(entry.id)
   }
 
@@ -84,7 +102,7 @@
     }, 700)
 
     const matchIndex = findSwitcherTypeAheadIndex(
-      LIFE_OS_SWITCHER_APPS,
+      switcherApps,
       typeAheadBuffer,
     )
     if (matchIndex >= 0) selectedIndex = matchIndex
@@ -93,7 +111,7 @@
   /** @param {KeyboardEvent} event */
   function handleMenuKeydown(event) {
     const { key } = event
-    const count = LIFE_OS_SWITCHER_APPS.length
+    const count = switcherApps.length
 
     if (key === 'ArrowDown') {
       event.preventDefault()
@@ -139,6 +157,7 @@
 
   /** @param {KeyboardEvent} event */
   function handleTriggerKeydown(event) {
+    if (!switchingEnabled) return
     if (
       event.key === 'ArrowDown' ||
       event.key === 'Enter' ||
@@ -172,8 +191,8 @@
     type="button"
     class="brand brand-switcher-trigger"
     aria-label={ariaLabel || `${brand.fullName} · 切换应用`}
-    aria-expanded={open}
-    aria-haspopup="menu"
+    aria-expanded={switchingEnabled ? open : undefined}
+    aria-haspopup={switchingEnabled ? 'menu' : undefined}
     onclick={toggleMenu}
     onkeydown={handleTriggerKeydown}
   >
@@ -197,7 +216,7 @@
     </span>
   </button>
 
-  {#if open}
+  {#if open && switchingEnabled}
     <div
       bind:this={menuEl}
       class="brand-switcher-menu"
@@ -206,7 +225,7 @@
       aria-label="切换 Life OS 应用"
       onkeydown={handleMenuKeydown}
     >
-      {#each LIFE_OS_SWITCHER_APPS as entry, index (entry.id)}
+      {#each switcherApps as entry, index (entry.id)}
         {@const itemBrand = getLifeOsBrand(entry.id)}
         {@const itemMark = getLifeOsAppBrandMark(entry.id)}
         {@const isCurrent = entry.id === appId}

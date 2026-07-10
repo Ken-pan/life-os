@@ -3,6 +3,8 @@
 /** Supabase Auth localStorage 键 — 四端必须一致 */
 export const LIFE_OS_AUTH_STORAGE_KEY = 'life_os_auth'
 
+export const LIFE_OS_PERSONAL_OWNER_EMAIL = '334452284ken@gmail.com'
+
 export const SYNC_DEFAULTS = {
   /** 同一账号两次完整双向同步的最小间隔 */
   cooldownMs: 4000,

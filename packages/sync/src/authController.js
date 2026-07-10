@@ -1,5 +1,6 @@
 import { createAuthSyncHandler } from './authSync.js'
 import { createCoreIdentityHandler } from './coreIdentity.js'
+import { LIFE_OS_PERSONAL_OWNER_EMAIL } from './constants.js'
 
 /**
  * Life OS 标准 auth 生命周期：getSession 引导 + onAuthStateChange 上接
@@ -15,16 +16,72 @@ import { createCoreIdentityHandler } from './coreIdentity.js'
  *   onSession: (session: import('@supabase/supabase-js').Session | null) => void;
  *   onSignedOut?: () => void;
  *   onSyncSession?: (options: { force?: boolean }) => void | Promise<unknown>;
+ *   onAllowedAppKeys?: (appKeys: string[] | null) => void;
  * }} options
  */
 export function createLifeOsAuth(supabase, options) {
-  const { appId, onSession, onSignedOut, onSyncSession } = options
+  const { appId, onSession, onSignedOut, onSyncSession, onAllowedAppKeys } = options
+
+  function getPortalOrigin() {
+    if (typeof window === 'undefined') return 'https://portal.kenos.space'
+    const host = window.location.hostname
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://127.0.0.1:5195'
+    }
+    const parts = host.split('.')
+    if (parts.length >= 2) {
+      const domain = parts.slice(-2).join('.')
+      return `https://portal.${domain}`
+    }
+    return 'https://portal.kenos.space'
+  }
+
+  function isPersonalOwner(session) {
+    return session?.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL
+  }
+
+  function normalizeAllowedAppKeys(session, appKeys) {
+    if (!session?.user) return null
+    if (isPersonalOwner(session)) return appKeys
+    return appKeys.filter((key) => key === 'fitness')
+  }
+
+  function redirectToPortal() {
+    if (typeof window !== 'undefined') {
+      window.location.href = getPortalOrigin()
+    }
+  }
+
+  async function checkAppAccess(session) {
+    if (!session?.user) {
+      onAllowedAppKeys?.(null)
+      return
+    }
+
+    const { data: allowedApps, error } = await supabase.from('app_registry').select('app_key')
+    if (error || !allowedApps) {
+      onAllowedAppKeys?.([])
+      return
+    }
+
+    const allowedAppKeys = normalizeAllowedAppKeys(
+      session,
+      allowedApps.map((app) => app.app_key),
+    )
+    onAllowedAppKeys?.(allowedAppKeys)
+
+    if (appId !== 'portal') {
+      const hasAccess = allowedAppKeys.includes(appId)
+      if (!hasAccess) redirectToPortal()
+    }
+  }
 
   function init() {
     if (typeof window === 'undefined') return () => {}
 
     supabase.auth.getSession().then(({ data }) => {
       onSession(data.session)
+      checkAppAccess(data.session)
     })
 
     const handleAuthSync = createAuthSyncHandler({
@@ -37,13 +94,25 @@ export function createLifeOsAuth(supabase, options) {
       onSession(session)
       handleAuthSync(event, session)
       handleCoreIdentity(event, session)
+      checkAppAccess(session)
     })
 
     return () => data.subscription.unsubscribe()
   }
 
   async function signUp(email, password) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (appId !== 'fitness') {
+      throw new Error('New user registration is only available through FitnessOS.')
+    }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          signup_app: appId,
+        },
+      },
+    })
     if (error) throw error
     return { needsConfirm: !data.session, user: data.user }
   }

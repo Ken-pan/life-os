@@ -28,7 +28,10 @@
     home?: { storageZoneCount: number; reportedAt: string } | null
   }
 
-  let { userId }: { userId: string } = $props()
+  let {
+    userId,
+    allowedAppKeys = [],
+  }: { userId: string; allowedAppKeys?: string[] } = $props()
 
   let summary = $state<PortalTodaySummaryPayload | null>(null)
   let loading = $state(true)
@@ -36,6 +39,11 @@
 
   const appById = $derived(
     Object.fromEntries(PORTAL_APPS.map((app) => [app.id, app])),
+  )
+  const visibleSummaryAppIds = $derived(
+    (['planner', 'finance', 'fitness', 'music', 'home'] as SummaryAppId[]).filter((id) =>
+      allowedAppKeys.includes(id),
+    ),
   )
 
   $effect(() => {
@@ -83,7 +91,7 @@
 
     {#if loading}
       <div class="portal-summary-grid" aria-busy="true" aria-live="polite">
-        {#each ['planner', 'finance', 'fitness', 'music', 'home'] as id (id)}
+        {#each visibleSummaryAppIds as id (id)}
           <div class="portal-summary-card portal-summary-card--loading">
             <span class="portal-summary-skeleton" aria-hidden="true"></span>
           </div>
@@ -93,62 +101,72 @@
       <p class="portal-summary-error" role="status">{error}</p>
     {:else if summary}
       <div class="portal-summary-grid">
-        {@render summaryCard(
-          'planner',
-          '今日待办',
-          summary.planner?.todayOpen === 0
-            ? '今天没有到期任务'
-            : `${summary.planner?.todayOpen ?? 0} 项今日到期`,
-          summary.planner?.overdue
-            ? `${summary.planner.overdue} 项逾期`
-            : 'Planner 任务清单',
-        )}
+        {#if allowedAppKeys.includes('planner')}
+          {@render summaryCard(
+            'planner',
+            '今日待办',
+            summary.planner?.todayOpen === 0
+              ? '今天没有到期任务'
+              : `${summary.planner?.todayOpen ?? 0} 项今日到期`,
+            summary.planner?.overdue
+              ? `${summary.planner.overdue} 项逾期`
+              : 'Planner 任务清单',
+          )}
+        {/if}
 
-        {@render summaryCard(
-          'finance',
-          '本月结余',
-          formatUsd(summary.finance?.monthSurplus ?? 0, { signed: true }),
-          `收入 ${formatUsd(summary.finance?.monthIncome ?? 0)} · 支出 ${formatUsd(summary.finance?.monthExpense ?? 0)}`,
-        )}
+        {#if allowedAppKeys.includes('finance')}
+          {@render summaryCard(
+            'finance',
+            '本月结余',
+            formatUsd(summary.finance?.monthSurplus ?? 0, { signed: true }),
+            `收入 ${formatUsd(summary.finance?.monthIncome ?? 0)} · 支出 ${formatUsd(summary.finance?.monthExpense ?? 0)}`,
+          )}
+        {/if}
 
-        {@render summaryCard(
-          'fitness',
-          '最近训练',
-          summary.fitness
-            ? `${fitnessDayLabel(summary.fitness.dayId)} · ${formatShortDate(summary.fitness.sessionDate)}`
-            : '本周尚未记录完练',
-          summary.fitness ? '已同步到云端' : '打开 Fitness 开始训练',
-          false,
-          !summary.fitness,
-        )}
+        {#if allowedAppKeys.includes('fitness')}
+          {@render summaryCard(
+            'fitness',
+            '最近训练',
+            summary.fitness
+              ? `${fitnessDayLabel(summary.fitness.dayId)} · ${formatShortDate(summary.fitness.sessionDate)}`
+              : '本周尚未记录完练',
+            summary.fitness ? '已同步到云端' : '打开 Fitness 开始训练',
+            false,
+            !summary.fitness,
+          )}
+        {/if}
 
-        {@render summaryCard(
-          'music',
-          '最近播放',
-          summary.music
-            ? musicTrackLabel(
-                summary.music.trackTitle,
-                summary.music.trackArtist,
-              )
-            : '尚未记录播放',
-          summary.music
-            ? formatPlayedAgo(summary.music.playedAt)
-            : '在 Music 播放后会显示最近曲目',
-          false,
-          !summary.music,
-        )}
+        {#if allowedAppKeys.includes('music')}
+          {@render summaryCard(
+            'music',
+            '最近播放',
+            summary.music
+              ? musicTrackLabel(
+                  summary.music.trackTitle,
+                  summary.music.trackArtist,
+                )
+              : '尚未记录播放',
+            summary.music
+              ? formatPlayedAgo(summary.music.playedAt)
+              : '在 Music 播放后会显示最近曲目',
+            false,
+            !summary.music,
+          )}
+        {/if}
 
-        {@render summaryCard(
-          'home',
-          '储藏审计',
-          summary.home
-            ? formatHomeStorageZones(summary.home.storageZoneCount)
-            : '尚未同步储藏数据',
-          summary.home
-            ? `已上报 · ${formatReportedAgo(summary.home.reportedAt) || '最近'}`
-            : '打开 Home 同步本地清单',
-          true,
-        )}
+        {#if allowedAppKeys.includes('home')}
+          {@render summaryCard(
+            'home',
+            '储藏审计',
+            summary.home
+              ? formatHomeStorageZones(summary.home.storageZoneCount)
+              : '尚未同步储藏数据',
+            summary.home
+              ? `已上报 · ${formatReportedAgo(summary.home.reportedAt) || '最近'}`
+              : '打开 Home 同步本地清单',
+            true,
+          )}
+        {/if}
       </div>
     {/if}
   </section>

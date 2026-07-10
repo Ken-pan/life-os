@@ -13,11 +13,12 @@ const AUTH_ERROR_LABELS = {
   generic: '登录失败，请稍后重试',
 }
 
-/** @type {{ user: import('@supabase/supabase-js').User | null; session: import('@supabase/supabase-js').Session | null; ready: boolean }} */
+/** @type {{ user: import('@supabase/supabase-js').User | null; session: import('@supabase/supabase-js').Session | null; ready: boolean; allowedAppKeys: string[] | null }} */
 export const auth = $state({
   user: null,
   session: null,
   ready: false,
+  allowedAppKeys: /** @type {string[] | null} */ (null),
 })
 
 const lifeOsAuth = createLifeOsAuth(supabase, {
@@ -26,6 +27,9 @@ const lifeOsAuth = createLifeOsAuth(supabase, {
     auth.session = session
     auth.user = session?.user ?? null
     auth.ready = true
+  },
+  onAllowedAppKeys: (appKeys) => {
+    auth.allowedAppKeys = appKeys
   },
 })
 

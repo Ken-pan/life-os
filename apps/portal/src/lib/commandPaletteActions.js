@@ -219,10 +219,11 @@ function deepLinkToAction(link, query = '') {
 }
 
 /**
- * @param {{ signOut: () => Promise<void>, query?: string }} options
+ * @param {{ signOut: () => Promise<void>, query?: string, allowedAppKeys?: string[] }} options
  */
-export function buildPortalCommandActions({ signOut, query = '' }) {
+export function buildPortalCommandActions({ signOut, query = '', allowedAppKeys = [] }) {
   const q = query.trim().toLowerCase()
+  const allowed = new Set(allowedAppKeys)
 
   /** @type {Array<{ id: string, title: string, subtitle?: string, icon?: string, onSelect: () => void }>} */
   const actions = []
@@ -231,7 +232,7 @@ export function buildPortalCommandActions({ signOut, query = '' }) {
     for (const recent of loadRecentSearches()) {
       const link = deepLinkById[recent.actionId]
       const app = PORTAL_APPS.find((a) => a.id === link?.appId)
-      if (link) {
+      if (link && allowed.has(link.appId)) {
         actions.push({
           id: `recent-${link.id}`,
           title: recent.title,
@@ -242,7 +243,7 @@ export function buildPortalCommandActions({ signOut, query = '' }) {
             window.location.href = buildPortalDeepLinkUrl(link.appId, link.path)
           },
         })
-      } else if (app) {
+      } else if (app && allowed.has(app.id)) {
         actions.push({
           id: `recent-app-${app.id}`,
           title: recent.title,
@@ -258,6 +259,7 @@ export function buildPortalCommandActions({ signOut, query = '' }) {
   }
 
   for (const link of PORTAL_DEEP_LINKS) {
+    if (!allowed.has(link.appId)) continue
     if (
       q &&
       !link.title.toLowerCase().includes(q) &&
@@ -270,6 +272,7 @@ export function buildPortalCommandActions({ signOut, query = '' }) {
   }
 
   for (const app of PORTAL_APPS) {
+    if (!allowed.has(app.id)) continue
     const meta = getLauncherMeta(app.id)
     const label = `打开 ${meta.name}${app.experimental ? '（实验）' : ''}`
     if (
