@@ -52,21 +52,26 @@ export function createLifeOsAuth(supabase, options) {
     }
   }
 
+  async function loadActiveMembershipAppKeys(session) {
+    const query = supabase.schema('public').from('app_memberships')
+    const { data: memberships, error } = await query
+      .select('app_key')
+      .eq('user_id', session.user.id)
+      .eq('status', 'active')
+
+    if (error || !memberships) return []
+    return [...new Set(memberships.map((membership) => membership.app_key))]
+  }
+
   async function checkAppAccess(session) {
     if (!session?.user) {
       onAllowedAppKeys?.(null)
       return
     }
 
-    const { data: allowedApps, error } = await supabase.from('app_registry').select('app_key')
-    if (error || !allowedApps) {
-      onAllowedAppKeys?.([])
-      return
-    }
-
     const allowedAppKeys = normalizeAllowedAppKeys(
       session,
-      allowedApps.map((app) => app.app_key),
+      await loadActiveMembershipAppKeys(session),
     )
     onAllowedAppKeys?.(allowedAppKeys)
 

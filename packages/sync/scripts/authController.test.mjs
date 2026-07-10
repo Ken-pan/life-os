@@ -47,22 +47,31 @@ function createMockSupabase({ session = null, allowedApps = [] } = {}) {
       },
     },
     from(table) {
-      assert.equal(table, 'app_registry')
-      return {
-        select: async () => ({
-          data: allowedApps.map((app_key) => ({ app_key })),
-          error: null,
-        }),
-      }
+      throw new Error(`unexpected table query: ${table}`)
     },
-    schema() {
+    schema(schemaName) {
+      assert.equal(schemaName, 'public')
       return {
-        from: (table) => ({
-          upsert: async (row) => {
-            calls.upserts.push({ table, row })
-            return { error: null }
-          },
-        }),
+        from(table) {
+          if (table === 'app_memberships') {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: async () => ({
+                    data: allowedApps.map((app_key) => ({ app_key })),
+                    error: null,
+                  }),
+                }),
+              }),
+            }
+          }
+          return {
+            upsert: async (row) => {
+              calls.upserts.push({ table, row })
+              return { error: null }
+            },
+          }
+        },
       }
     },
   }
