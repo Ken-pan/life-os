@@ -19,6 +19,8 @@ Baseline:
 | Storage policies | **BLOCKER** | **MATCH** — `public_select` removed; `select_own` + `has_app_access` |
 | Ken memberships | 7× owner/active | **UNCHANGED** |
 | **PROD-ROLL-2 ready?** | **NO** | **YES** (pending frontend deploy + prod smoke) |
+| **PROD-ROLL-2 smoke (DB)** | — | **PASS** (2026-07-10) |
+| **Frontend deploy** | — | **PUSHED** `master` → Netlify Git build |
 
 ### Critical correction: previous “applied” migration list was staging
 
@@ -244,6 +246,30 @@ supabase migration repair --status applied 20260710160000 20260710161000 --workd
 5. Finance image URL probe: unauthenticated fetch must fail
 
 Note: `local-supabase-final-gate.mjs` only supports `LIFEOS_SECURITY_TARGET=staging` today; production smoke is manual until prod target is added.
+
+### PROD-ROLL-2 execution log (2026-07-10)
+
+**Git / deploy**
+
+- Commit: `28246ea0` — `feat(security): ship app entitlement frontend and Life OS baseline migrations`
+- Pushed: `master` → `origin/master` (triggers Netlify Git builds for six sites)
+
+**Production DB smoke** (admin API + anon client, synthetic `@kenos.space` user)
+
+- [x] Signup trigger → only `fitness/member/active`
+- [x] Only `core_user_app_settings.app_id = fitness`
+- [x] Cross-app deny: `planner_tasks` (0 rows), `finance_data` / `music_user_state` (error)
+- [x] Finance storage upload denied for fitness-only user
+- [x] Synthetic user deleted after test
+
+**Ken regression**
+
+- [x] 7 apps `owner/active` unchanged (`334452284ken@gmail.com`)
+
+**Frontend verification**
+
+- Portal production URL loads (`portal.kenos.space`)
+- Netlify builds in progress after push; Ken should confirm app switcher / fail-closed UX after deploy completes
 
 ### PROD-ROLL-3 — Friend invite
 
