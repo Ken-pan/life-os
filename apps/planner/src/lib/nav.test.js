@@ -26,9 +26,9 @@ describe('nav', () => {
     expect(resolvePrimaryNavTab('/lists/abc')).toBe('tasks')
   })
 
-  it('browse group only has calendar and search', () => {
+  it('browse group has projects, calendar and search', () => {
     const items = buildBrowseNavItems(tr)
-    expect(items.map((i) => i.tab)).toEqual(['calendar', 'search'])
+    expect(items.map((i) => i.tab)).toEqual(['projects', 'calendar', 'search'])
   })
 
   it('highlights calendar and search as primary; more only for settings', () => {
@@ -37,6 +37,7 @@ describe('nav', () => {
     expect(isMoreNavActive('/calendar')).toBe(false)
     expect(isMoreNavActive('/search')).toBe(false)
     expect(isMoreNavActive('/lists/work')).toBe(false)
+    expect(isMoreNavActive('/projects')).toBe(true)
     expect(isMoreNavActive('/settings')).toBe(true)
   })
 

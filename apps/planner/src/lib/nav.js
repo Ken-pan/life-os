@@ -106,6 +106,13 @@ export function buildSmartListNavItems(tr) {
 export function buildBrowseNavItems(tr) {
   return [
     {
+      tab: 'projects',
+      href: '/projects',
+      label: tr('nav.projects'),
+      icon: 'folder',
+      match: (p) => p.startsWith('/projects'),
+    },
+    {
       tab: 'calendar',
       href: '/calendar',
       label: tr('nav.calendar'),
@@ -186,6 +193,19 @@ export function buildMoreNavGroups(tr, lists, listLabelFn) {
   /** @type {NavGroup[]} */
   const groups = []
 
+  groups.push({
+    label: tr('nav.groupBrowse'),
+    items: [
+      {
+        tab: 'projects',
+        href: '/projects',
+        label: tr('nav.projects'),
+        icon: 'folder',
+        match: (p) => p.startsWith('/projects'),
+      },
+    ],
+  })
+
   if (lists.length) {
     groups.push({
       label: tr('nav.lists'),
@@ -221,6 +241,7 @@ export function isMoreNavActive(pathname, search = '') {
   void search
   if (pathname.startsWith('/settings')) return true
   if (pathname.startsWith('/auth')) return true
+  if (pathname.startsWith('/projects')) return true
   return false
 }
 
@@ -266,6 +287,7 @@ export function resolveMobileChromeInset(pathname, search = '') {
   if (pathname.startsWith('/auth')) return 'minimal'
   if (
     pathname.startsWith('/settings') ||
+    pathname.startsWith('/projects') ||
     pathname.startsWith('/search') ||
     pathname.startsWith('/completed') ||
     pathname.startsWith('/inbox')
