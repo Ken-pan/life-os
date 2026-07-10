@@ -30,7 +30,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | 序  | ID  | 主题 | 桶  | ROI | 下一步 | 验收 |
 | --- | --- | ---- | --- | --- | ------ | ---- |
-| 1 | **P-MOVE-2** | PaperOS read path + offline cache | Planner | Product | ◆ | PaperOS Qt binary 已重建并部署到 Move；下一步填充 Planner 数据并做显式离线视觉验收 | Move 离线可读 Today；缺 token fail closed |
+| 1 | **P-MOVE-2** | PaperOS read path + offline cache | Planner | Product | ◆ | 生产 Today 23 tasks ✅；Move cache/offline launch ✅；下一步 P-MOVE-3 staging write gate | Move 离线可读 Today；缺 token fail closed |
 
 **2026-07-09 已验收（见 §Shipped）：** Phase 0–6 — **F-P3** · **G-P4b-M/H** · **G-P6** · **G-P8** · **G-P9** · **M-P5** · **H-P6a** · **P-P2** · **FT-P0/FT-P1** · **I-P1.5b** · CI 接线。
 
@@ -38,7 +38,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | ID           | 主题                                       | App     | 桶       | ROI | 触发 / 范围                                   |
 | ------------ | ------------------------------------------ | ------- | -------- | --- | --------------------------------------------- |
-| **P-MOVE-2** | PaperOS read path + offline cache          | Planner | Product  | ◆   | Binary deployed ✅；client refresh cache ✅；待非空 Today + explicit offline visual check |
+| **P-MOVE-2** | PaperOS read path + offline cache          | Planner | Product  | ◆   | Deployed/read-cache/offline launch ✅；保留 P-MOVE-3 前生产写关闭 |
 | **P-MOVE-3** | Paper `task.complete` controlled write MVP | Planner | Product  | ◆   | PR-3B 本地 HTTP A-E ✅；下一步 staging pass；生产 `PAPER_ACTIONS_WRITE_ENABLED` 仍默认关 |
 | **H-W3**     | Home 手绘分区 `zones[]`                    | Home    | Product  | ◆◆◆ | [`home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) §6 |
 | **C-P2 P2+** | Finance React 共享 UI                      | Finance | Platform | ✗   | Finance 已迁移 SvelteKit；第 3 React 消费者前不做 |

@@ -25,20 +25,24 @@
 - A live PaperOS session started successfully with the `epaper` platform plugin.
 - The PaperOS client refreshed `last_sync.txt` to `2026-07-09T23:55:02Z`.
 - `recover-xochitl.sh` returned stock xochitl to `active`.
+- Production Paper API now returns the configured user's real Planner data:
+  `tasks=23`, `focus=modera丢垃圾`, `inbox=23`.
+- Device cache was refreshed to 4974 bytes with the same 23 tasks.
+- Offline/unreachable API launch was verified by temporarily setting
+  `apiBaseUrl` to `http://127.0.0.1:9`; PaperOS stayed running with no QML
+  errors and preserved `last_sync=2026-07-10T00:04:05Z`.
 
 ## Current Production Payload
 
-The configured `PAPER_DEVICE_USER_ID` currently returns an empty Planner day:
+The configured `PAPER_DEVICE_USER_ID` now returns a non-empty Planner day:
 
 ```json
 {
-  "tasks": [],
-  "inbox": { "count": 0 }
+  "today": { "currentFocus": { "title": "modera丢垃圾" } },
+  "tasks": [{ "title": "收拾东西-卧室", "priority": "P0" }],
+  "inbox": { "count": 23 }
 }
 ```
-
-That means the Move can sync successfully, but the PaperOS today view will be
-empty until that user has tasks/focus data available through Planner.
 
 ## Source Progress
 
@@ -86,14 +90,12 @@ After recovery:
 
 ```text
 xochitl=active
-last_sync=2026-07-09T23:55:02Z
-cache_bytes=376
+last_sync=2026-07-10T00:04:05Z
+cache_bytes=4974
 ```
 
 ## Remaining Product Work
 
-- Populate Planner data for the configured `PAPER_DEVICE_USER_ID`, because the
-  current production payload is valid but empty.
-- Run an explicit offline visual check by starting PaperOS after network/API is
-  unavailable and confirming it renders the cached Today view.
+- Add a direct screen-capture or manual photo step for future visual QA; this
+  device image currently has no screenshot utility installed.
 - Keep production writes disabled until P-MOVE-3 staging validation passes.

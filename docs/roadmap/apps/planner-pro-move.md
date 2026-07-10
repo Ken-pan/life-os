@@ -20,8 +20,8 @@ first functional provider for PaperOS.
 | Idempotency | PASS locally | `paper_device_actions` log-first state machine; full local HTTP A-E validation passed with RLS enabled; see [`../../PRO_MOVE_PR3B_LOCAL_VALIDATION_GAP_GATE.md`](../../PRO_MOVE_PR3B_LOCAL_VALIDATION_GAP_GATE.md) |
 | Production write enablement | Not enabled | Staging/production validation still required before `PAPER_ACTIONS_WRITE_ENABLED=true` |
 | Device app UX | P-MOVE-1 PASS | Old binary migrated from `/home/root/planneros-lite/planneros-lite` to `/home/root/paperos/paperos`; launcher/recovery verified |
-| Production read API | PASS | 2026-07-09 production redeploy included Netlify functions; `/api/paper/today` returns 200 with `PAPER_DEVICE_TOKEN` |
-| Device read cache | PASS | `/home/root/paperos/refresh-cache.sh` writes `cache.json` and `last_sync.txt` from production API; see [`../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md) |
+| Production read API | PASS | 2026-07-09 production redeploy included Netlify functions; `/api/paper/today` returns 23 tasks with `PAPER_DEVICE_TOKEN` |
+| Device read cache | PASS | `/home/root/paperos/refresh-cache.sh` writes 4974-byte `cache.json` and `last_sync.txt` from production API; see [`../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md) |
 | PaperOS read-cache binary | PASS | Rebuilt `paperos` deployed to `/home/root/paperos/paperos`; session refreshed `last_sync.txt` to `2026-07-09T23:55:02Z` |
 | xochitl integration | Out of scope | No xochitl patching, sidebar injection, or boot replacement in this phase |
 
@@ -155,7 +155,7 @@ Remaining before daily use on Move:
 - [x] Wire PaperOS source to load `cache.json`, `token`, and `last_sync.txt`.
 - [x] Rebuild the updated `paperos` binary with the reMarkable Qt6 SDK.
 - [x] Deploy rebuilt `paperos` to `/home/root/paperos/paperos` and verify cache refresh from the client.
-- [ ] Verify explicit offline visual rendering on Move.
+- [x] Verify offline/unreachable API launch on Move preserves cached Today data.
 - [ ] Run staging validation before enabling real writes outside local validation.
 
 ## Immediate Next Checklist
@@ -168,4 +168,4 @@ Remaining before daily use on Move:
 - [x] Record device-session evidence in a new gate doc before P-MOVE-2.
 - [x] Install device token and validate read-cache refresh.
 - [x] Build and deploy the refreshed PaperOS Qt binary.
-- [ ] Populate Planner data for the configured PaperOS user and verify non-empty Today rendering.
+- [x] Populate/verify Planner data for the configured PaperOS user and verify non-empty Today rendering.

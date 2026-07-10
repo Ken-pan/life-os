@@ -16,6 +16,51 @@ export function getSupabaseClient() {
 }
 
 /**
+ * Load PaperOS task rows through the normal service-role path, or through a
+ * token-guarded database RPC when Netlify env cannot expose service role.
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} userId
+ * @returns {Promise<{ statePayload: object|null, taskRows: Array<{id:string,data:object}> }>}
+ */
+async function loadPaperSnapshotRows(supabase, userId) {
+  if (!readSupabaseServiceRoleKey()) {
+    const deviceToken = readEnv('PAPER_DEVICE_TOKEN');
+    if (!deviceToken) {
+      throw new Error('PAPER_DEVICE_TOKEN is missing.');
+    }
+
+    const { data, error } = await supabase.rpc('paper_device_snapshot', {
+      p_token: deviceToken,
+      p_user_id: userId
+    });
+    if (error) throw error;
+
+    return {
+      statePayload: data?.state_payload || null,
+      taskRows: data?.tasks || []
+    };
+  }
+
+  const [{ data: stateRow }, { data: taskRows, error }] = await Promise.all([
+    supabase
+      .from('planner_user_state')
+      .select('payload')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase
+      .from('planner_tasks')
+      .select('id, data')
+      .eq('user_id', userId)
+  ]);
+
+  if (error) throw error;
+  return {
+    statePayload: stateRow?.payload || null,
+    taskRows: taskRows || []
+  };
+}
+
+/**
  * Verifies the incoming Bearer token.
  * @param {Request} req
  * @returns {boolean}
@@ -62,24 +107,11 @@ function parseTimeToMinutes(time) {
 export async function loadPaperToday(userId) {
   const supabase = getSupabaseClient();
 
-  // 1. Fetch user settings for timezone/locale
-  const { data: stateRow } = await supabase
-    .from('planner_user_state')
-    .select('payload')
-    .eq('user_id', userId)
-    .maybeSingle();
+  const { statePayload, taskRows } = await loadPaperSnapshotRows(supabase, userId);
 
-  const settings = stateRow?.payload?.settings || {};
+  const settings = statePayload?.settings || {};
   const tz = settings.timezone || 'America/Los_Angeles';
   const locale = settings.locale || 'zh-CN';
-
-  // 2. Fetch all active tasks
-  const { data: taskRows, error } = await supabase
-    .from('planner_tasks')
-    .select('id, data')
-    .eq('user_id', userId);
-
-  if (error) throw error;
 
   const allTasks = (taskRows || []).map((row) => ({ id: row.id, ...row.data }));
 
@@ -239,13 +271,7 @@ export async function loadPaperToday(userId) {
  */
 export async function loadPaperDelta(userId, cursorMs) {
   const supabase = getSupabaseClient();
-
-  const { data: taskRows, error } = await supabase
-    .from('planner_tasks')
-    .select('id, data')
-    .eq('user_id', userId);
-
-  if (error) throw error;
+  const { taskRows } = await loadPaperSnapshotRows(supabase, userId);
 
   const allTasks = (taskRows || []).map((row) => ({ id: row.id, ...row.data }));
   const updatedTasks = allTasks.filter(t => (t.updatedAt || t.createdAt || 0) > cursorMs);
