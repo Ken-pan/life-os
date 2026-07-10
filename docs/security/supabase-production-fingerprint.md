@@ -18,9 +18,11 @@ Baseline:
 | Auth signup trigger | **BLOCKER** | **MATCH** — fitness-only settings + `app_memberships` insert |
 | Storage policies | **BLOCKER** | **MATCH** — `public_select` removed; `select_own` + `has_app_access` |
 | Ken memberships | 7× owner/active | **UNCHANGED** |
-| **PROD-ROLL-2 ready?** | **NO** | **YES** (pending frontend deploy + prod smoke) |
-| **PROD-ROLL-2 smoke (DB)** | — | **PASS** (2026-07-10) |
-| **Frontend deploy** | — | **PUSHED** `master` → Netlify Git build |
+| **PROD-ROLL-2 ready?** | **NO** | **COMPLETE** |
+| **PROD-ROLL-2 smoke (DB)** | — | **PASS** |
+| **App switcher fix** | — | **PASS** (`9dc40434`) |
+| **PROD-ROLL-3 ready?** | — | **YES** |
+| **Frontend deploy** | — | **LIVE** on Netlify (`master`) |
 
 ### Critical correction: previous “applied” migration list was staging
 
@@ -268,12 +270,17 @@ Note: `local-supabase-final-gate.mjs` only supports `LIFEOS_SECURITY_TARGET=stag
 
 **Frontend verification**
 
-- Portal production URL loads (`portal.kenos.space`)
-- Netlify builds in progress after push; Ken should confirm app switcher / fail-closed UX after deploy completes
+- [x] Portal / six-app switcher — Ken confirmed working after `9dc40434`
+- [x] Fitness + Music no longer query `app_registry` (404 fixed)
+
+**Housekeeping (2026-07-10)**
+
+- [x] Deleted 4 leftover production test users (`@example.com` / `@example.test` from gate run)
+- [x] `unexpected_cross_app_members = 0`, `non_ken_users = 0`
 
 ### PROD-ROLL-3 — Friend invite
 
-Only after PROD-ROLL-2 smoke **PASS**.
+**Status: READY** — see [`PROD-ROLL-3-friend-invite.md`](./PROD-ROLL-3-friend-invite.md)
 
 ---
 
