@@ -24,3 +24,6 @@ test-results
 **/supabase/.temp
 apps/**/package-lock.json
 **/.tmp-*
+
+# Device-only CJK font assets (deployed to /home/root/paperos/fonts, not committed)
+/NotoSansCJKsc-Regular.otf
