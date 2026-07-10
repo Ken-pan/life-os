@@ -15,7 +15,7 @@ Item {
         spacing: Ui.gap
 
         Text {
-            text: "Mail Triage"
+            text: "Inbox"
             font.family: Ui.fontFamily
             font.pixelSize: Ui.fontSection
             font.bold: true

@@ -16,6 +16,8 @@ qt_add_executable(paperos
     src/ActionQueue.h
     src/DeviceStatus.cpp
     src/DeviceStatus.h
+    src/InkCanvasItem.cpp
+    src/InkCanvasItem.h
     src/NoteStore.cpp
     src/NoteStore.h
     src/PenInputService.cpp
@@ -35,7 +37,7 @@ qt_add_qml_module(paperos
         qml/HomePage.qml
         qml/TodayPage.qml
         qml/NotesPage.qml
-        qml/MailPage.qml
+        qml/InboxPage.qml
         qml/ReviewPage.qml
         qml/SystemPage.qml
 )

@@ -7,9 +7,11 @@
 #include <QFont>
 #include <QFontDatabase>
 #include <QDebug>
+#include <QtQml/qqml.h>
 #include "ApiClient.h"
 #include "ActionQueue.h"
 #include "DeviceStatus.h"
+#include "InkCanvasItem.h"
 #include "NoteStore.h"
 #include "PenInputService.h"
 #include "RefreshController.h"
@@ -67,15 +69,36 @@ int main(int argc, char *argv[])
     // Shared look tokens for every QML file. A context property (not a QML
     // singleton) because the module's files live in a qml/ subdirectory,
     // where the implicit directory import shadows module-qmldir singletons.
+    // Sizes are physical pixels on the 954x1696 @ 264 PPI Move panel:
+    // ~94px = the 9mm minimum touch target, ~38px = 10.5pt body text.
     QVariantMap ui{
         {"fontFamily", cjkFamily.isEmpty() ? QGuiApplication::font().family() : cjkFamily},
-        {"pageMargin", 40}, {"gap", 16}, {"cardPadding", 24}, {"radius", 16},
-        {"fontTitle", 40}, {"fontFocus", 34}, {"fontSection", 28},
-        {"fontBody", 30}, {"fontMeta", 22},
-        {"paper", "#F7F4EA"}, {"card", "#FFFFFF"}, {"ink", "#171717"},
-        {"mutedInk", "#5E5E5E"}, {"faintInk", "#8A8A8A"},
-        {"line", "#D8D2C4"}, {"accent", "#7A1F2B"},
+        // layout
+        {"pageMargin", 40}, {"gap", 20}, {"cardPadding", 28}, {"radius", 12},
+        // type scale
+        {"fontTitle", 44},   // app mark
+        {"fontClock", 88},   // home clock
+        {"fontFocus", 46},   // focus / now primary line
+        {"fontSection", 32}, // page + section titles
+        {"fontBody", 38},    // task and list body (incl. CJK)
+        {"fontMeta", 26},    // secondary / meta
+        {"fontFooter", 22},  // footers only
+        // tap targets
+        {"tabBarHeight", 120}, {"buttonHeight", 72}, {"buttonHeightSmall", 60},
+        {"checkboxSize", 64},
+        // e-ink grayscale: no information may rely on light gray alone
+        {"paper", "#FFFFFF"},        // pure paper white
+        {"card", "#FFFFFF"},
+        {"ink", "#111111"},          // primary text
+        {"inkSecondary", "#333333"}, // secondary body
+        {"mutedInk", "#4D4D4D"},     // meta, never below mid-gray
+        {"faintInk", "#767676"},     // disabled / empty states only
+        {"line", "#999999"},         // subtle border
+        {"lineStrong", "#111111"},   // primary card border
+        {"accent", "#7A1F2B"},       // status + active emphasis only
     };
+
+    qmlRegisterType<InkCanvasItem>("PaperOS", 1, 0, "InkCanvasItem");
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("Ui", ui);

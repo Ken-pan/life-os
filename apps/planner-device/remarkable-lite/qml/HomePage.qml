@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Home: pick the device up, know in 3 seconds how today goes.
+// Home: pick the device up, know in 3 seconds — what time it is, what to
+// do next, what's in focus, what's still open. Four blocks, no debug.
 Item {
     id: page
 
@@ -13,6 +14,7 @@ Item {
         }
         return null
     }
+    readonly property int openCount: tasks.filter(function(t) { return !t.completed }).length
     readonly property var calendarCache: apiClient.readCacheFile("calendar")
     readonly property var mailCache: apiClient.readCacheFile("mail")
 
@@ -27,43 +29,64 @@ Item {
         anchors.fill: parent
         spacing: Ui.gap
 
-        // NOW
+        // CLOCK — the anchor of the page
+        RowLayout {
+            Layout.fillWidth: true
+            Text {
+                text: page.clock
+                font.family: Ui.fontFamily
+                font.pixelSize: Ui.fontClock
+                font.bold: true
+                color: Ui.ink
+            }
+            Item { Layout.fillWidth: true }
+            Text {
+                text: apiClient.dashboardData.today ? apiClient.dashboardData.today.date : ""
+                font.family: Ui.fontFamily
+                font.pixelSize: Ui.fontSection
+                color: Ui.mutedInk
+                Layout.alignment: Qt.AlignBottom
+                Layout.bottomMargin: 14
+            }
+        }
+
+        // NOW — the single next action
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 170
+            Layout.preferredHeight: 190
             color: Ui.card
             radius: Ui.radius
             border.width: 2
-            border.color: Ui.line
+            border.color: Ui.lineStrong
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Ui.cardPadding
-                spacing: 6
-
-                RowLayout {
+                spacing: 10
+                Text {
+                    text: "NOW"
+                    font.family: Ui.fontFamily
+                    font.pixelSize: Ui.fontMeta
+                    font.bold: true
+                    color: Ui.accent
+                }
+                Text {
+                    text: page.nextAction ? page.nextAction.title : "All clear"
+                    font.family: Ui.fontFamily
+                    font.pixelSize: Ui.fontFocus
+                    font.bold: true
+                    color: Ui.ink
+                    elide: Text.ElideRight
+                    maximumLineCount: 2
+                    wrapMode: Text.WordWrap
                     Layout.fillWidth: true
-                    Text {
-                        text: page.clock
-                        font.family: Ui.fontFamily
-                        font.pixelSize: 56
-                        font.bold: true
-                        color: Ui.ink
-                    }
-                    Item { Layout.fillWidth: true }
-                    Text {
-                        text: apiClient.dashboardData.today ? apiClient.dashboardData.today.date : ""
-                        font.family: Ui.fontFamily
-                        font.pixelSize: Ui.fontMeta
-                        color: Ui.mutedInk
-                    }
                 }
                 Text {
                     text: {
                         var events = page.calendarCache.events
                         if (events && events.length > 0)
-                            return "Next event: " + events[0].title + (events[0].start ? " · " + events[0].start : "")
-                        return "Next event: no calendar data"
+                            return "Next event · " + events[0].title + (events[0].start ? " · " + events[0].start : "")
+                        return "No upcoming events"
                     }
                     font.family: Ui.fontFamily
                     font.pixelSize: Ui.fontMeta
@@ -71,30 +94,22 @@ Item {
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }
-                Text {
-                    text: page.nextAction ? "Next action: " + page.nextAction.title : "Next action: all clear"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontBody
-                    color: Ui.ink
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                }
             }
         }
 
-        // TODAY FOCUS
+        // FOCUS — thick border, the visual anchor below the clock
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 150
+            Layout.preferredHeight: 180
             color: Ui.card
             radius: Ui.radius
-            border.width: 2
-            border.color: Ui.line
+            border.width: 4
+            border.color: Ui.lineStrong
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Ui.cardPadding
-                spacing: 6
+                spacing: 10
                 Text {
                     text: "FOCUS"
                     font.family: Ui.fontFamily
@@ -114,10 +129,10 @@ Item {
             }
         }
 
-        // OPEN LOOPS
+        // OPEN LOOPS — the numbers that decide the day
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 190
+            Layout.preferredHeight: 250
             color: Ui.card
             radius: Ui.radius
             border.width: 1
@@ -126,7 +141,7 @@ Item {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Ui.cardPadding
-                spacing: 8
+                spacing: 12
                 Text {
                     text: "OPEN LOOPS"
                     font.family: Ui.fontFamily
@@ -135,8 +150,8 @@ Item {
                     color: Ui.accent
                 }
                 StatusLine {
-                    label: "Tasks today"
-                    value: page.tasks.length + " (" + page.tasks.filter(function(t) { return t.completed }).length + " done)"
+                    label: "Today tasks"
+                    value: page.openCount + " open of " + page.tasks.length
                 }
                 StatusLine {
                     label: "Inbox"
@@ -144,10 +159,10 @@ Item {
                 }
                 StatusLine {
                     label: "Mail needing action"
-                    value: page.mailCache.messages ? String(page.mailCache.messages.length) : "no mail cache"
+                    value: page.mailCache.messages ? String(page.mailCache.messages.length) : "—"
                 }
                 StatusLine {
-                    label: "Pending sync actions"
+                    label: "Pending sync"
                     value: String(actionQueue.pendingCount)
                 }
             }
@@ -155,32 +170,18 @@ Item {
 
         Item { Layout.fillHeight: true }
 
-        // DEVICE STATUS
-        Rectangle {
+        // STATUS — one quiet line; detail lives in System / Quick Settings
+        Text {
             Layout.fillWidth: true
-            Layout.preferredHeight: 130
-            color: "transparent"
-            radius: Ui.radius
-            border.width: 1
-            border.color: Ui.line
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Ui.cardPadding
-                spacing: 6
-                StatusLine {
-                    label: "Battery"
-                    value: deviceStatus.batteryPercent >= 0 ? deviceStatus.batteryPercent + "% " + deviceStatus.batteryState : "unknown"
-                }
-                StatusLine {
-                    label: "Sync"
-                    value: apiClient.isLoading ? "syncing..." : (apiClient.errorMessage !== "" ? "offline/stale · last " + apiClient.lastSync : "fresh · " + apiClient.lastSync)
-                }
-                StatusLine {
-                    label: "Refresh mode"
-                    value: refreshControl.mode
-                }
-            }
+            text: (apiClient.isLoading ? "syncing"
+                   : (apiClient.errorMessage !== "" ? "offline · last sync " + apiClient.lastSync
+                                                    : "synced " + apiClient.lastSync))
+                  + (deviceStatus.batteryPercent >= 0 ? " · battery " + deviceStatus.batteryPercent + "%" : "")
+                  + " · " + refreshControl.mode + " refresh"
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.fontFooter
+            color: Ui.mutedInk
+            elide: Text.ElideRight
         }
     }
 }

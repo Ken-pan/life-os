@@ -1,4 +1,5 @@
 #include "PenInputService.h"
+#include "InkCanvasItem.h"
 #include "PaperOsPaths.h"
 
 #include <QFile>
@@ -198,15 +199,35 @@ void PenInputService::dispatchFrame()
                     << ") -> screen" << pos;
             --m_downLogBudget;
         }
-        m_lastInjected = pos;
-        injectMouse(pos, true, false);
+        // Ink fast path first: a stroke starting on a visible, enabled ink
+        // canvas bypasses mouse synthesis entirely.
+        m_inkStroke = false;
+        if (m_inkTarget && m_inkTarget->isVisible() && m_inkTarget->captureEnabled()) {
+            const QPointF itemPos = m_inkTarget->mapFromScene(pos);
+            if (m_inkTarget->contains(itemPos)) {
+                m_inkStroke = true;
+                m_inkTarget->penDown(itemPos, m_pressureNorm, m_toolRubber);
+            }
+        }
+        if (!m_inkStroke) {
+            m_lastInjected = pos;
+            injectMouse(pos, true, false);
+        }
     } else if (!m_touching && m_wasTouching) {
-        injectMouse(pos, false, true);
+        if (m_inkStroke) {
+            if (m_inkTarget)
+                m_inkTarget->penUp();
+            m_inkStroke = false;
+        } else {
+            injectMouse(pos, false, true);
+        }
     } else if (m_touching) {
-        // Motion filter: pen frames arrive at ~200 Hz; injecting each one
-        // floods the scene with mouse moves the e-ink can never keep up
-        // with. Only forward movement of ≥3 px.
-        if ((pos - m_lastInjected).manhattanLength() >= 3.0) {
+        if (m_inkStroke) {
+            if (m_inkTarget)
+                m_inkTarget->penMove(m_inkTarget->mapFromScene(pos), m_pressureNorm);
+        } else if ((pos - m_lastInjected).manhattanLength() >= 3.0) {
+            // Motion filter for synthesized mouse moves — UI taps/drags
+            // don't need 200 Hz delivery.
             m_lastInjected = pos;
             injectMouse(pos, false, false);
         }
@@ -224,6 +245,13 @@ void PenInputService::dispatchFrame()
         m_notifiedInRange = inRange;
         emit penStateChanged();
     }
+}
+
+void PenInputService::setInkTarget(QObject *target)
+{
+    m_inkTarget = qobject_cast<InkCanvasItem *>(target);
+    if (target && !m_inkTarget)
+        qWarning() << "PaperOS pen: setInkTarget got a non-InkCanvasItem object";
 }
 
 void PenInputService::injectMouse(const QPointF &pos, bool down, bool up)

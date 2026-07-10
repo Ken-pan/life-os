@@ -14,7 +14,7 @@ Window {
     color: Ui.paper
 
     property int currentModule: 0
-    readonly property var moduleNames: ["Home", "Today", "Notes", "Mail", "Review", "System"]
+    readonly property var moduleNames: ["Home", "Today", "Notes", "Inbox", "Review", "System"]
 
     onCurrentModuleChanged: refreshControl.pageUpdated()
 
@@ -30,10 +30,10 @@ Window {
         anchors.bottomMargin: 0
         spacing: Ui.gap
 
-        // SHELL HEADER
+        // SHELL HEADER — the status cluster is a tap target: Quick Settings.
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 72
+            Layout.preferredHeight: 84
             spacing: Ui.gap
 
             Text {
@@ -49,30 +49,48 @@ Window {
                 font.pixelSize: Ui.fontSection
                 color: Ui.mutedInk
                 Layout.alignment: Qt.AlignBottom
-                Layout.bottomMargin: 4
+                Layout.bottomMargin: 6
             }
             Item { Layout.fillWidth: true }
-            Text {
-                text: (deviceStatus.batteryPercent >= 0 ? deviceStatus.batteryPercent + "%" : "")
-                      + (apiClient.errorMessage !== "" ? "  ·  offline" : "")
-                      + (actionQueue.pendingCount > 0 ? "  ·  " + actionQueue.pendingCount + " pending" : "")
-                font.family: Ui.fontFamily
-                font.pixelSize: Ui.fontMeta
-                color: Ui.mutedInk
-                Layout.alignment: Qt.AlignVCenter
+
+            Rectangle {
+                Layout.preferredHeight: 72
+                Layout.preferredWidth: statusText.implicitWidth + 48
+                radius: Ui.radius
+                color: quickSettings.visible ? Ui.ink : "transparent"
+                border.width: 1
+                border.color: Ui.line
+
+                Text {
+                    id: statusText
+                    anchors.centerIn: parent
+                    text: (deviceStatus.batteryPercent >= 0 ? deviceStatus.batteryPercent + "%" : "—")
+                          + (apiClient.errorMessage !== "" ? " · offline" : "")
+                          + (actionQueue.pendingCount > 0 ? " · " + actionQueue.pendingCount + " pending" : "")
+                    font.family: Ui.fontFamily
+                    font.pixelSize: Ui.fontMeta
+                    color: quickSettings.visible ? Ui.card : Ui.mutedInk
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: quickSettings.visible = !quickSettings.visible
+                }
             }
+
             PaperButton {
                 label: "Exit"
                 fontSize: Ui.fontMeta
-                implicitHeight: 56
+                secondary: true
+                implicitHeight: 72
                 onTapped: Qt.quit()
             }
         }
 
         Rectangle {
             Layout.fillWidth: true
-            height: 2
-            color: Ui.line
+            height: 3
+            color: Ui.lineStrong
         }
 
         // MODULE CONTENT
@@ -84,28 +102,32 @@ Window {
             HomePage {}
             TodayPage {}
             NotesPage {}
-            MailPage {}
-            ReviewPage {}
+            InboxPage {}
+            ReviewPage {
+                onNavigateTo: function(module) { root.currentModule = module }
+            }
             SystemPage {}
         }
 
-        // BOTTOM NAV
+        // BOTTOM NAV — full-height tap targets, black-on-white inversion for
+        // the active module. No light-gray states: inactive stays full ink.
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 104
+            Layout.preferredHeight: Ui.tabBarHeight
             color: Ui.paper
 
             Rectangle {
                 anchors.top: parent.top
                 width: parent.width
-                height: 2
-                color: Ui.line
+                height: 3
+                color: Ui.lineStrong
             }
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 8
-                spacing: 8
+                anchors.topMargin: 11
+                anchors.bottomMargin: 8
+                spacing: 6
 
                 Repeater {
                     model: root.moduleNames
@@ -120,7 +142,7 @@ Window {
                             text: modelData
                             font.family: Ui.fontFamily
                             font.pixelSize: Ui.fontMeta
-                            font.bold: root.currentModule === index
+                            font.bold: true
                             color: root.currentModule === index ? Ui.card : Ui.ink
                         }
 
@@ -130,6 +152,102 @@ Window {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // QUICK SETTINGS — opened from the header status cluster. Everything a
+    // pick-up-and-use moment needs without leaving the current page.
+    Rectangle {
+        id: quickSettings
+        visible: false
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 128
+        anchors.rightMargin: Ui.pageMargin
+        width: 560
+        height: quickColumn.implicitHeight + Ui.cardPadding * 2
+        z: 900
+        color: Ui.card
+        radius: Ui.radius
+        border.width: 3
+        border.color: Ui.lineStrong
+
+        onVisibleChanged: refreshControl.pageUpdated()
+
+        ColumnLayout {
+            id: quickColumn
+            anchors.fill: parent
+            anchors.margins: Ui.cardPadding
+            spacing: Ui.gap
+
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "Quick Settings"
+                    font.family: Ui.fontFamily
+                    font.pixelSize: Ui.fontSection
+                    font.bold: true
+                    color: Ui.ink
+                }
+                Item { Layout.fillWidth: true }
+                PaperButton {
+                    label: "Close"
+                    fontSize: Ui.fontMeta
+                    secondary: true
+                    implicitHeight: Ui.buttonHeightSmall
+                    onTapped: quickSettings.visible = false
+                }
+            }
+
+            StatusLine {
+                label: "Sync"
+                value: apiClient.isLoading ? "syncing..."
+                     : (apiClient.errorMessage !== "" ? "offline · last " + apiClient.lastSync
+                                                      : "fresh · " + apiClient.lastSync)
+            }
+            StatusLine {
+                label: "Battery"
+                value: deviceStatus.batteryPercent >= 0
+                       ? deviceStatus.batteryPercent + "% " + deviceStatus.batteryState : "unknown"
+            }
+
+            RowLayout {
+                spacing: 12
+                PaperButton {
+                    label: apiClient.isLoading ? "Syncing..." : "Sync now"
+                    fontSize: Ui.fontMeta
+                    enabled: !apiClient.isLoading
+                    implicitHeight: Ui.buttonHeightSmall
+                    onTapped: apiClient.fetchDashboard()
+                }
+                PaperButton {
+                    label: "Clean screen"
+                    fontSize: Ui.fontMeta
+                    implicitHeight: Ui.buttonHeightSmall
+                    onTapped: { quickSettings.visible = false; refreshControl.requestClean() }
+                }
+            }
+
+            RowLayout {
+                spacing: 12
+                Repeater {
+                    model: ["clean", "balanced", "fast"]
+                    delegate: PaperButton {
+                        label: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                        fontSize: Ui.fontMeta
+                        implicitHeight: Ui.buttonHeightSmall
+                        selected: refreshControl.mode === modelData
+                        onTapped: refreshControl.mode = modelData
+                    }
+                }
+            }
+
+            PaperButton {
+                label: "Return to reMarkable"
+                fontSize: Ui.fontMeta
+                Layout.fillWidth: true
+                onTapped: Qt.quit()
             }
         }
     }

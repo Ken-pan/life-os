@@ -19,7 +19,7 @@ public:
     int noteCount() const { return m_noteCount; }
 
     Q_INVOKABLE QString createNote(const QString &kind);
-    Q_INVOKABLE bool appendStroke(const QString &noteId, const QVariantList &points);
+    Q_INVOKABLE bool saveStrokes(const QString &noteId, const QVariantList &strokes);
     Q_INVOKABLE QVariantMap inputProbe() const;
 
 signals:

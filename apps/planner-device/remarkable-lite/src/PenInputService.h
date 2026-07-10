@@ -2,11 +2,13 @@
 
 #include <QObject>
 #include <QPointF>
+#include <QPointer>
 #include <QString>
 #include <QVariantMap>
 
 class QSocketNotifier;
 class QQuickWindow;
+class InkCanvasItem;
 
 // Marker input for the reMarkable Paper Pro Move (chiappa). The epaper QPA
 // only delivers touch, so this service reads the pen's evdev node directly
@@ -30,6 +32,10 @@ public:
     ~PenInputService() override;
 
     void setWindow(QQuickWindow *window) { m_window = window; }
+
+    // Ink fast path: while a stroke starts inside this item, pen frames go
+    // straight to it as C++ calls (full event rate, no mouse synthesis).
+    Q_INVOKABLE void setInkTarget(QObject *target);
 
     bool available() const { return m_fd >= 0; }
     bool penInRange() const { return m_toolPen || m_toolRubber; }
@@ -72,6 +78,8 @@ private:
     bool m_notifiedTouching = false;
     bool m_notifiedRubber = false;
     bool m_notifiedInRange = false;
+    QPointer<InkCanvasItem> m_inkTarget;
+    bool m_inkStroke = false;
 
     QString findPenDevice() const;
     void openDevice();

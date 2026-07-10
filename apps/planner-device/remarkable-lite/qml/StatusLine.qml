@@ -5,20 +5,21 @@ Row {
     property string label: ""
     property string value: ""
 
-    spacing: 12
+    spacing: 16
 
     Text {
         text: label
         font.family: Ui.fontFamily
         font.pixelSize: Ui.fontMeta
         color: Ui.mutedInk
-        width: 260
+        width: 330
         elide: Text.ElideRight
     }
     Text {
         text: value
         font.family: Ui.fontFamily
         font.pixelSize: Ui.fontMeta
+        font.bold: true
         color: Ui.ink
     }
 }

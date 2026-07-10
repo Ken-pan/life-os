@@ -6,6 +6,9 @@ import QtQuick.Layouts
 Item {
     id: page
 
+    // Lets the shutdown checklist jump straight to the module it names.
+    signal navigateTo(int module)
+
     readonly property var tasks: apiClient.dashboardData.tasks ? apiClient.dashboardData.tasks : []
     readonly property int doneCount: tasks.filter(function(t) { return t.completed === true }).length
 

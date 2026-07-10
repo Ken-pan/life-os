@@ -31,16 +31,16 @@ Item {
         // FOCUS CARD
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 150
+            Layout.preferredHeight: 160
             color: Ui.card
             radius: Ui.radius
-            border.width: 2
-            border.color: Ui.line
+            border.width: 3
+            border.color: Ui.lineStrong
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Ui.cardPadding
-                spacing: 6
+                spacing: 8
                 Text {
                     text: "NOW"
                     font.family: Ui.fontFamily
@@ -68,7 +68,7 @@ Item {
             Column {
                 anchors.top: parent.top
                 width: parent.width
-                spacing: 12
+                spacing: 14
 
                 Repeater {
                     model: page.pageTasks
@@ -77,14 +77,15 @@ Item {
                         readonly property string key: page.taskKey(modelData, index)
                         readonly property bool isDone: modelData.completed === true || page.locallyCompleted[key] === true
                         readonly property bool isDeferred: page.locallyDeferred[key] === true
+                        readonly property string priority: modelData.priority ? modelData.priority : "P3"
 
                         width: parent.width
-                        height: 118
+                        height: 160
                         color: Ui.card
                         radius: Ui.radius
                         border.width: 1
                         border.color: Ui.line
-                        opacity: isDeferred ? 0.45 : 1.0
+                        opacity: isDeferred ? 0.4 : 1.0
 
                         RowLayout {
                             anchors.fill: parent
@@ -93,23 +94,25 @@ Item {
 
                             // Checkbox → task.complete into the queue
                             Rectangle {
-                                width: 44
-                                height: 44
-                                radius: 8
-                                border.width: 2
-                                border.color: isDone ? Ui.ink : Ui.faintInk
+                                Layout.preferredWidth: Ui.checkboxSize
+                                Layout.preferredHeight: Ui.checkboxSize
+                                radius: 10
+                                border.width: 3
+                                border.color: isDone ? Ui.ink : Ui.mutedInk
                                 color: isDone ? Ui.ink : "transparent"
 
                                 Text {
                                     anchors.centerIn: parent
                                     visible: isDone
                                     text: "✓"
-                                    font.pixelSize: 30
+                                    font.pixelSize: 42
                                     color: Ui.card
                                 }
 
                                 MouseArea {
+                                    // over-size the hit area past the visual box
                                     anchors.fill: parent
+                                    anchors.margins: -16
                                     enabled: !isDone
                                     onClicked: {
                                         if (actionQueue.enqueue("task.complete", { id: modelData.id !== undefined ? modelData.id : key, title: modelData.title !== undefined ? modelData.title : String(modelData) })) {
@@ -123,7 +126,7 @@ Item {
 
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 4
+                                spacing: 6
                                 Text {
                                     text: modelData.title !== undefined ? modelData.title : modelData
                                     font.family: Ui.fontFamily
@@ -131,20 +134,47 @@ Item {
                                     font.strikeout: isDone
                                     color: isDone ? Ui.faintInk : Ui.ink
                                     elide: Text.ElideRight
+                                    maximumLineCount: 2
+                                    wrapMode: Text.WordWrap
                                     Layout.fillWidth: true
                                 }
-                                Text {
-                                    text: (modelData.priority ? modelData.priority : "P3") + (modelData.dueTime ? " · " + modelData.dueTime : "") + (isDeferred ? " · deferred" : "")
-                                    font.family: Ui.fontFamily
-                                    font.pixelSize: Ui.fontMeta
-                                    color: Ui.mutedInk
+                                RowLayout {
+                                    spacing: 10
+                                    // Priority badge — P0/P1 inverted so urgency reads at a glance
+                                    Rectangle {
+                                        readonly property bool urgent: priority === "P0" || priority === "P1"
+                                        width: badgeText.implicitWidth + 20
+                                        height: 34
+                                        radius: 6
+                                        color: urgent && !isDone ? Ui.ink : "transparent"
+                                        border.width: 1
+                                        border.color: isDone ? Ui.line : Ui.mutedInk
+
+                                        Text {
+                                            id: badgeText
+                                            anchors.centerIn: parent
+                                            text: priority
+                                            font.family: Ui.fontFamily
+                                            font.pixelSize: Ui.fontFooter
+                                            font.bold: true
+                                            color: parent.urgent && !isDone ? Ui.card : Ui.mutedInk
+                                        }
+                                    }
+                                    Text {
+                                        text: (modelData.dueTime ? modelData.dueTime : "") + (isDeferred ? "  deferred" : "")
+                                        font.family: Ui.fontFamily
+                                        font.pixelSize: Ui.fontMeta
+                                        color: Ui.mutedInk
+                                        visible: text !== ""
+                                    }
                                 }
                             }
 
                             PaperButton {
                                 label: "Defer"
                                 fontSize: Ui.fontMeta
-                                implicitHeight: 52
+                                secondary: true
+                                implicitHeight: Ui.buttonHeightSmall
                                 visible: !isDone && !isDeferred
                                 onTapped: {
                                     if (actionQueue.enqueue("task.defer", { id: modelData.id !== undefined ? modelData.id : key, title: modelData.title !== undefined ? modelData.title : String(modelData) })) {
@@ -172,25 +202,28 @@ Item {
         // PAGER
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            spacing: 40
+            spacing: 48
             visible: page.allTasks.length > page.pageSize
 
             PaperButton {
                 label: "‹  Prev"
+                fontSize: Ui.fontMeta
                 enabled: page.pageIndex > 0
-                implicitWidth: 180
+                implicitWidth: 220
                 onTapped: { page.pageIndex = Math.max(0, page.pageIndex - 1); refreshControl.pageUpdated() }
             }
             Text {
                 text: (page.pageIndex + 1) + " / " + page.pageCount
                 font.family: Ui.fontFamily
                 font.pixelSize: Ui.fontSection
-                color: Ui.mutedInk
+                font.bold: true
+                color: Ui.ink
             }
             PaperButton {
                 label: "Next  ›"
+                fontSize: Ui.fontMeta
                 enabled: page.pageIndex < page.pageCount - 1
-                implicitWidth: 180
+                implicitWidth: 220
                 onTapped: { page.pageIndex = Math.min(page.pageCount - 1, page.pageIndex + 1); refreshControl.pageUpdated() }
             }
         }
@@ -201,14 +234,14 @@ Item {
             Text {
                 text: apiClient.isLoading ? "Syncing..." : ("Synced " + (apiClient.lastSync !== "" ? apiClient.lastSync : "never"))
                 font.family: Ui.fontFamily
-                font.pixelSize: Ui.fontMeta
+                font.pixelSize: Ui.fontFooter
                 color: Ui.mutedInk
             }
             Item { Layout.fillWidth: true }
             Text {
                 text: "pending " + actionQueue.pendingCount + " · " + refreshControl.mode + " refresh"
                 font.family: Ui.fontFamily
-                font.pixelSize: Ui.fontMeta
+                font.pixelSize: Ui.fontFooter
                 color: Ui.mutedInk
             }
         }

@@ -1,178 +1,177 @@
 import QtQuick
 import QtQuick.Layouts
+import PaperOS 1.0
 
-// Quick Note v0: capture raw ink to strokes JSONL. Recognition and export
-// come later — ink first, like Newton: never lose the original strokes.
+// Quick Note with a full tool system: ballpoint / fineliner / marker /
+// pencil / eraser, color palette (the Move has a color panel), S/M/L
+// widths, undo/redo. The pen draws through the C++ fast path; fingers
+// navigate but do not draw — free palm rejection.
+// Stroke counts, note ids and pen probes live in System > Diagnostics,
+// not here: this page is the paper.
 Item {
     id: page
 
     property string activeNoteId: ""
-    property var currentStroke: []
-    property int strokeCount: 0
+    property bool confirmingClear: false
 
     function startNote() {
         activeNoteId = noteStore.createNote("quick")
-        strokeCount = 0
-        canvas.clearAll()
+        inkItem.clear()
     }
 
-    function saveStroke() {
-        if (currentStroke.length > 1 && activeNoteId !== "") {
-            noteStore.appendStroke(activeNoteId, currentStroke)
-            strokeCount += 1
-        }
-        currentStroke = []
+    function persist() {
+        if (activeNoteId !== "")
+            noteStore.saveStrokes(activeNoteId, inkItem.allStrokes())
+    }
+
+    Timer {
+        id: clearConfirmTimer
+        interval: 3000
+        onTriggered: page.confirmingClear = false
     }
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: Ui.gap
+        spacing: 12
 
+        // ROW 1: session controls
         RowLayout {
             Layout.fillWidth: true
-            spacing: Ui.gap
+            spacing: 12
 
             PaperButton {
-                label: page.activeNoteId === "" ? "New Quick Note" : "New Page"
+                label: page.activeNoteId === "" ? "New Note" : "New Page"
+                fontSize: Ui.fontMeta
+                implicitHeight: Ui.buttonHeightSmall
                 onTapped: page.startNote()
             }
             PaperButton {
-                label: "Clear"
-                enabled: page.activeNoteId !== ""
-                onTapped: canvas.clearAll()
+                label: "Undo"
+                fontSize: Ui.fontMeta
+                implicitHeight: Ui.buttonHeightSmall
+                enabled: inkItem.canUndo
+                onTapped: inkItem.undo()
             }
+            PaperButton {
+                label: "Redo"
+                fontSize: Ui.fontMeta
+                implicitHeight: Ui.buttonHeightSmall
+                enabled: inkItem.canRedo
+                onTapped: inkItem.redo()
+            }
+
             Item { Layout.fillWidth: true }
-            Text {
-                text: {
-                    var pen = penBridge.available
-                        ? (penBridge.eraserActive ? "eraser" : (penBridge.penInRange ? "pen ready" : "pen idle"))
-                        : "pen off"
-                    var base = page.activeNoteId === "" ? noteStore.noteCount + " notes saved" : page.activeNoteId + " · " + page.strokeCount + " strokes"
-                    return base + " · " + pen
+
+            // Clear is destructive: first tap arms it, second tap within 3s
+            // wipes the page. Anything else lets the timer disarm it.
+            PaperButton {
+                label: page.confirmingClear ? "Clear page?" : "Clear"
+                fontSize: Ui.fontMeta
+                secondary: !page.confirmingClear
+                selected: page.confirmingClear
+                implicitHeight: Ui.buttonHeightSmall
+                enabled: page.activeNoteId !== "" && inkItem.strokeCount > 0
+                onTapped: {
+                    if (page.confirmingClear) {
+                        page.confirmingClear = false
+                        clearConfirmTimer.stop()
+                        inkItem.clear()
+                    } else {
+                        page.confirmingClear = true
+                        clearConfirmTimer.restart()
+                    }
                 }
-                font.family: Ui.fontFamily
-                font.pixelSize: Ui.fontMeta
-                color: Ui.mutedInk
             }
         }
 
-        // INK SURFACE
+        // ROW 2: tools + width
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            Repeater {
+                model: [["ballpoint", "Ball"], ["fineliner", "Fine"], ["marker", "Mark"], ["pencil", "Pencil"], ["eraser", "Erase"]]
+                delegate: PaperButton {
+                    label: modelData[1]
+                    fontSize: Ui.fontMeta
+                    implicitHeight: Ui.buttonHeightSmall
+                    selected: inkItem.tool === modelData[0]
+                    onTapped: inkItem.tool = modelData[0]
+                }
+            }
+
+            Item { Layout.fillWidth: true }
+
+            Repeater {
+                model: [["S", 2.0], ["M", 3.2], ["L", 5.2]]
+                delegate: PaperButton {
+                    label: modelData[0]
+                    fontSize: Ui.fontMeta
+                    implicitHeight: Ui.buttonHeightSmall
+                    implicitWidth: Ui.buttonHeightSmall
+                    selected: Math.abs(inkItem.baseWidth - modelData[1]) < 0.1
+                    onTapped: inkItem.baseWidth = modelData[1]
+                }
+            }
+        }
+
+        // ROW 3: color palette (Move renders color)
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 14
+
+            Repeater {
+                model: ["#171717", "#9E9E9E", "#C03434", "#2456A4", "#2E7D4F", "#C7A500"]
+                delegate: Rectangle {
+                    width: 64
+                    height: 64
+                    radius: 32
+                    color: modelData
+                    border.width: Qt.colorEqual(inkItem.strokeColor, modelData) ? 6 : 1
+                    border.color: Qt.colorEqual(inkItem.strokeColor, modelData) ? Ui.accent : Ui.line
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: inkItem.strokeColor = modelData
+                    }
+                }
+            }
+
+            Item { Layout.fillWidth: true }
+        }
+
+        // INK SURFACE — plain white paper, hairline frame
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: Ui.card
-            radius: Ui.radius
-            border.width: 2
+            radius: 4
+            border.width: 1
             border.color: Ui.line
 
             Text {
                 anchors.centerIn: parent
                 visible: page.activeNoteId === ""
-                text: "Tap New Quick Note, then write here.\nStrokes are saved to data/notes/ as JSONL."
+                text: "Tap New Note, then write with the Marker."
                 horizontalAlignment: Text.AlignHCenter
                 font.family: Ui.fontFamily
                 font.pixelSize: Ui.fontBody
                 color: Ui.faintInk
             }
 
-            Canvas {
-                id: canvas
+            InkCanvasItem {
+                id: inkItem
                 anchors.fill: parent
                 anchors.margins: 4
-                property var pendingPoints: []
+                captureEnabled: page.activeNoteId !== ""
 
-                function clearAll() {
-                    pendingPoints = []
-                    var ctx = getContext("2d")
-                    ctx.clearRect(0, 0, width, height)
-                    requestPaint()
-                }
+                Component.onCompleted: penBridge.setInkTarget(inkItem)
 
-                // Paint batching: points accumulate and flush at ~25 fps —
-                // per-point repaints drown the e-ink pipeline and the line
-                // shows up seconds after the pen.
-                Timer {
-                    id: paintTimer
-                    interval: 40
-                    repeat: true
-                    running: false
-                    onTriggered: {
-                        if (canvas.pendingPoints.length > 1)
-                            canvas.requestPaint()
-                    }
-                }
-
-                onPaint: {
-                    var ctx = getContext("2d")
-                    ctx.lineCap = "round"
-                    ctx.lineJoin = "round"
-                    var pts = pendingPoints
-                    for (var i = 1; i < pts.length; i++) {
-                        // Eraser paints wide card-color strokes; pen width
-                        // follows pressure (finger has p=0 → base width).
-                        ctx.strokeStyle = pts[i].e ? Ui.card : Ui.ink
-                        ctx.lineWidth = pts[i].e ? 28 : (2 + pts[i].p * 4)
-                        ctx.beginPath()
-                        ctx.moveTo(pts[i - 1].x, pts[i - 1].y)
-                        ctx.lineTo(pts[i].x, pts[i].y)
-                        ctx.stroke()
-                    }
-                    if (pts.length > 0)
-                        pendingPoints = [pts[pts.length - 1]]
-                }
-            }
-
-            // Receives finger touches and pen contacts alike — the pen is
-            // injected as mouse events by PenInputService; pressure and
-            // eraser state are read imperatively from penBridge per point.
-            MouseArea {
-                anchors.fill: parent
-                enabled: page.activeNoteId !== ""
-                onPressed: (mouse) => {
-                    var p = penBridge.penTouching ? penBridge.pressure : 0
-                    var e = penBridge.eraserActive
-                    page.currentStroke = [{ x: mouse.x, y: mouse.y, t: Date.now(), p: p, tool: e ? "eraser" : "pen" }]
-                    canvas.pendingPoints = [{ x: mouse.x, y: mouse.y, p: p, e: e }]
-                    paintTimer.start()
-                }
-                onPositionChanged: (mouse) => {
-                    var p = penBridge.penTouching ? penBridge.pressure : 0
-                    page.currentStroke.push({ x: mouse.x, y: mouse.y, t: Date.now(), p: p })
-                    canvas.pendingPoints.push({ x: mouse.x, y: mouse.y, p: p, e: penBridge.eraserActive })
-                }
-                onReleased: {
-                    paintTimer.stop()
-                    canvas.requestPaint()
-                    page.saveStroke()
-                }
-            }
-        }
-
-        // INPUT PROBE
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Ui.gap
-
-            PaperButton {
-                label: "Input Probe"
-                fontSize: Ui.fontMeta
-                implicitHeight: 52
-                onTapped: {
-                    var probe = noteStore.inputProbe()
-                    var names = []
-                    for (var i = 0; i < probe.devices.length; i++)
-                        names.push(probe.devices[i].name)
-                    probeResult.text = probe.devices.length + " input devices: " + names.join(" · ")
-                }
-            }
-            Text {
-                id: probeResult
-                text: "Probe lists pen/touch hardware for the OCR roadmap."
-                font.family: Ui.fontFamily
-                font.pixelSize: Ui.fontMeta
-                color: Ui.mutedInk
-                elide: Text.ElideRight
-                Layout.fillWidth: true
+                // strokesChanged only fires on committed changes (pen up,
+                // undo, redo, clear) — never mid-stroke, so persisting here
+                // is safe and covers every path. No refresh-flash while
+                // writing: deghosting stays manual via Clean screen.
+                onStrokesChanged: page.persist()
             }
         }
     }

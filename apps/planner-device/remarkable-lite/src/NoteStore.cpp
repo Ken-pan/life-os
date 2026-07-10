@@ -46,18 +46,24 @@ QString NoteStore::createNote(const QString &kind)
     return noteId;
 }
 
-bool NoteStore::appendStroke(const QString &noteId, const QVariantList &points)
+// Full rewrite (not append): undo/redo must keep the file consistent with
+// the canvas, and quick-note stroke files are small. One JSON object per
+// line: {tool, color, width, points:[{x,y,p,t}…]}.
+bool NoteStore::saveStrokes(const QString &noteId, const QVariantList &strokes)
 {
-    if (noteId.isEmpty() || points.isEmpty())
+    if (noteId.isEmpty())
         return false;
 
     QFile file(notesDir() + QLatin1Char('/') + noteId + QStringLiteral("/page-001.strokes.jsonl"));
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
-        qWarning() << "PaperOS notes: cannot append stroke for" << noteId;
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "PaperOS notes: cannot write strokes for" << noteId;
         return false;
     }
-    file.write(QJsonDocument(QJsonArray::fromVariantList(points)).toJson(QJsonDocument::Compact));
-    file.write("\n");
+    for (const QVariant &stroke : strokes) {
+        file.write(QJsonDocument(QJsonObject::fromVariantMap(stroke.toMap()))
+                       .toJson(QJsonDocument::Compact));
+        file.write("\n");
+    }
     return true;
 }
 
