@@ -25,6 +25,7 @@ public:
     QString lastSync() const { return m_lastSync; }
 
     Q_INVOKABLE void fetchDashboard();
+    Q_INVOKABLE QVariantMap readCacheFile(const QString &name) const;
 
 signals:
     void dashboardDataChanged();

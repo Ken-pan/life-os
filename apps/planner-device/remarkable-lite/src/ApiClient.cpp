@@ -110,6 +110,19 @@ void ApiClient::saveCache(const QByteArray &payload)
     emit lastSyncChanged();
 }
 
+// Reads an optional side-cache file (cache/<name>.json) for domains the
+// Today API does not cover yet (calendar, mail, notes index). Missing file
+// returns an empty map — pages must render an empty state, never fail.
+QVariantMap ApiClient::readCacheFile(const QString &name) const
+{
+    QFileInfo info(m_cachePath);
+    QFile file(info.absolutePath() + "/cache/" + name + ".json");
+    if (!file.open(QIODevice::ReadOnly))
+        return {};
+    const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    return doc.isObject() ? doc.object().toVariantMap() : QVariantMap{};
+}
+
 void ApiClient::fetchDashboard()
 {
     m_isLoading = true;

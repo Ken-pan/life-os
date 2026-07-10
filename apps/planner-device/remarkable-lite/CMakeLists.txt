@@ -12,6 +12,15 @@ qt_add_executable(paperos
     src/main.cpp
     src/ApiClient.cpp
     src/ApiClient.h
+    src/ActionQueue.cpp
+    src/ActionQueue.h
+    src/DeviceStatus.cpp
+    src/DeviceStatus.h
+    src/NoteStore.cpp
+    src/NoteStore.h
+    src/RefreshController.cpp
+    src/RefreshController.h
+    src/PaperOsPaths.h
 )
 
 qt_add_qml_module(paperos
@@ -19,6 +28,14 @@ qt_add_qml_module(paperos
     VERSION 1.0
     QML_FILES
         qml/Main.qml
+        qml/PaperButton.qml
+        qml/StatusLine.qml
+        qml/HomePage.qml
+        qml/TodayPage.qml
+        qml/NotesPage.qml
+        qml/MailPage.qml
+        qml/ReviewPage.qml
+        qml/SystemPage.qml
 )
 
 target_link_libraries(paperos

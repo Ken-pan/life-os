@@ -25,6 +25,9 @@ first functional provider for PaperOS.
 | E-ink pagination | PASS | Fixed 5-per-page, Prev/Next buttons, no flick/animation; operator-verified on device |
 | Exit + crash recovery | PASS | Exit button, hardened trap/recover scripts, systemd `ExecStopPost` auto-restores xochitl after `kill -9`; see [`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md) |
 | Device-side launcher | PASS | `systemctl start paperos` (unit in `/home`, root-fs symlink only); survives SSH disconnect |
+| Shell MVP (6 modules) | PASS | Home/Today/Notes/Mail/Review/System + RefreshController + action queue + Quick Note v0; see [`../../PRO_MOVE_SHELL_MVP_GATE.md`](../../PRO_MOVE_SHELL_MVP_GATE.md) |
+| Marker input | Phase 0 done, pen not usable yet | epaper QPA delivers touch only; pen node mapped — see [`../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md`](../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md); Phase 1 = `PenInputService` |
+| Production read API | **REGRESSED 2026-07-09** | `/api/paper/today` returns 404 in production — functions dropped from a Netlify deploy; spun off as a separate fix task |
 | Production write enablement | Not enabled | Staging validation required before `PAPER_ACTIONS_WRITE_ENABLED=true` |
 | xochitl integration | Out of scope | No xochitl patching, sidebar injection, or boot replacement |
 
@@ -132,7 +135,10 @@ Acceptance:
 
 ## Remaining Before Daily Use
 
-- [ ] Operator confirms Exit-button tap on screen (process-exit path already verified).
+- [ ] **Restore production Paper API** — `/api/paper/today` 404s since a 2026-07-09 Netlify deploy (blocks all device sync).
+- [ ] Marker Phase 1: `PenInputService` on `/dev/input/event2` (pen taps, pressure, eraser); until then PaperOS is touch-only.
+- [ ] Post-reboot step: re-run `systemctl link /home/root/paperos/paperos.service` (the `/etc` overlay drops the symlink); or fold into an OS-upgrade drill doc.
+- [x] Operator confirms Exit-button tap on screen (worked — the "frozen" report was an unsupervised bare-binary test session; see Shell MVP gate incident 1).
 - [ ] "Sync now" button (P-MOVE-6).
 - [ ] Font regression string in a repeatable QA step (中英混排 acceptance text).
 - [ ] Performance baseline capture (P-MOVE-6).

@@ -8,6 +8,10 @@
 #include <QFontDatabase>
 #include <QDebug>
 #include "ApiClient.h"
+#include "ActionQueue.h"
+#include "DeviceStatus.h"
+#include "NoteStore.h"
+#include "RefreshController.h"
 
 // Load the first usable font from PAPEROS_FONT_DIR (default
 // /home/root/paperos/fonts). Returns the family name, or an empty
@@ -53,9 +57,31 @@ int main(int argc, char *argv[])
         app.setFont(QFont(cjkFamily));
 
     ApiClient apiClient;
+    ActionQueue actionQueue;
+    DeviceStatus deviceStatus;
+    NoteStore noteStore;
+    RefreshController refreshControl;
+
+    // Shared look tokens for every QML file. A context property (not a QML
+    // singleton) because the module's files live in a qml/ subdirectory,
+    // where the implicit directory import shadows module-qmldir singletons.
+    QVariantMap ui{
+        {"fontFamily", cjkFamily.isEmpty() ? QGuiApplication::font().family() : cjkFamily},
+        {"pageMargin", 40}, {"gap", 16}, {"cardPadding", 24}, {"radius", 16},
+        {"fontTitle", 40}, {"fontFocus", 34}, {"fontSection", 28},
+        {"fontBody", 30}, {"fontMeta", 22},
+        {"paper", "#F7F4EA"}, {"card", "#FFFFFF"}, {"ink", "#171717"},
+        {"mutedInk", "#5E5E5E"}, {"faintInk", "#8A8A8A"},
+        {"line", "#D8D2C4"}, {"accent", "#7A1F2B"},
+    };
 
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("Ui", ui);
     engine.rootContext()->setContextProperty("apiClient", &apiClient);
+    engine.rootContext()->setContextProperty("actionQueue", &actionQueue);
+    engine.rootContext()->setContextProperty("deviceStatus", &deviceStatus);
+    engine.rootContext()->setContextProperty("noteStore", &noteStore);
+    engine.rootContext()->setContextProperty("refreshControl", &refreshControl);
     engine.rootContext()->setContextProperty("appFontFamily", cjkFamily);
 
     const QUrl url(u"qrc:/qt/qml/PaperOSApp/qml/Main.qml"_qs);
