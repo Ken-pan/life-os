@@ -38,3 +38,30 @@ source.
 * **2026-07-09**: `open-paperos.sh` launched `/home/root/paperos/paperos`
   with xochitl inactive, and `recover-xochitl.sh` restored xochitl to
   `active`. See [`PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](./PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md).
+* **2026-07-09 (P-MOVE-3/4)**: CJK font + pagination binary and the
+  `paperos.service` launcher were deployed and verified live. Crash
+  (`kill -9`) auto-recovery to xochitl confirmed. See
+  [`PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](./PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md).
+
+## Connectivity Notes
+
+* The device suspends after idle and drops the USB network; SSH then fails
+  with "No route to host" / timeouts. Wake the device (power button) before
+  deploying. Verify with `ping -c 1 10.11.99.1`.
+* USB is the default deploy channel; Wi-Fi SSH stays off unless explicitly
+  needed.
+
+## Current Device Workspace (2026-07-09)
+
+```text
+/home/root/paperos/
+  paperos              # Qt Quick app (CJK + pagination + Exit), sha256 8992df6a…
+  paperos.backup-*     # rollback binaries from each promotion
+  paperos.service      # launcher unit (linked into /etc/systemd/system)
+  open-paperos.sh      # shell launcher with recovery trap + exit-code log
+  recover-xochitl.sh   # manual recovery (kills paperos*, restores xochitl)
+  refresh-cache.sh     # sidecar cache refresh (wget + token)
+  config.json / token  # mode 600, never committed
+  cache.json / last_sync.txt
+  fonts/NotoSansCJKsc-Regular.otf
+```

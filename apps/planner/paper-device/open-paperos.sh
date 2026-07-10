@@ -5,6 +5,8 @@ BASE="${PAPEROS_HOME:-/home/root/paperos}"
 APP="${PAPEROS_APP:-$BASE/paperos}"
 
 cleanup() {
+  status=$?
+  echo "$(date '+%Y-%m-%d %H:%M:%S') exit=$status" >> "$BASE/last_run.txt" 2>/dev/null || true
   systemctl start xochitl >/dev/null 2>&1 || true
 }
 

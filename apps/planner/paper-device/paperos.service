@@ -1,0 +1,17 @@
+# PaperOS launcher unit. Lives in /home/root/paperos and is made known to
+# systemd via `systemctl link` (only a symlink lands on the root filesystem).
+#
+#   start:  systemctl start paperos   (Conflicts= stops xochitl first)
+#   exit:   on-screen Exit button, crash, or systemctl stop paperos
+#           -> ExecStopPost always brings xochitl back.
+[Unit]
+Description=PaperOS e-ink shell
+Conflicts=xochitl.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/root/paperos
+Environment=QT_QUICK_BACKEND=epaper
+ExecStart=/home/root/paperos/paperos -platform epaper
+ExecStopPost=/bin/sh -c 'systemctl --no-block start xochitl'
+TimeoutStopSec=10

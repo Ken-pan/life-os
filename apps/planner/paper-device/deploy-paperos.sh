@@ -21,6 +21,7 @@ scp \
   "$HERE/open-paperos.sh" \
   "$HERE/recover-xochitl.sh" \
   "$HERE/refresh-cache.sh" \
+  "$HERE/paperos.service" \
   "$HERE/config.example.json" \
   "$DEVICE:$TARGET/"
 
@@ -32,6 +33,8 @@ ssh "$DEVICE" "
   chmod 755 open-paperos.sh recover-xochitl.sh refresh-cache.sh
   [ ! -e paperos ] || chmod 755 paperos
   chmod 600 config.json token cache.json last_sync.txt 2>/dev/null || true
+  systemctl link '$TARGET/paperos.service' 2>/dev/null || true
+  systemctl daemon-reload
   echo \"xochitl=\$(systemctl is-active xochitl || true)\"
   ls -la '$TARGET'
 "

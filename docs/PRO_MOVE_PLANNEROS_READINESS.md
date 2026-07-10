@@ -100,10 +100,12 @@ The original readiness audit is now behind the implementation state:
 - PR-3B `task.complete` real-write path is implemented behind `PAPER_ACTIONS_WRITE_ENABLED`.
 - PR-3B local HTTP endpoint validation is a full PASS: fresh complete, duplicate retry, unsupported actions, stale version, and received-state recovery all passed with RLS enabled.
 - Staging/production write enablement is still gated.
-- Device UX work has moved to the Planner roadmap as **P-MOVE-1**: home-only PaperOS launcher baseline.
-- Current live SSH check timed out on `10.11.99.1:22`; reconnect device access before mutating the Move.
+- Device UX work is tracked on the Planner roadmap as the P-MOVE series;
+  P-MOVE-1 through P-MOVE-4 all passed live device gates on 2026-07-09.
 
-See [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) for the active execution plan.
+See [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) for the active execution plan,
+and [`PRO_MOVE_STATUS_VS_IDEAL.md`](./PRO_MOVE_STATUS_VS_IDEAL.md) for the
+gap-analysis cross-check.
 
 ## PR Roadmap
 
@@ -111,4 +113,8 @@ See [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) for
 - **PR-2**: ✅ Real read-only Supabase integration for Today and virtual delta.
 - **PR-3A**: ✅ Action log and idempotency design.
 - **PR-3B**: ✅ Real write MVP for `task.complete`; local HTTP full pass, staging/production gate remains.
-- **P-MOVE-1**: 🟡 Device-side home-only PaperOS launcher baseline under `/home/root/paperos`.
+- **P-MOVE-1**: ✅ Device-side home-only PaperOS launcher baseline under `/home/root/paperos`.
+- **P-MOVE-2**: ✅ Read cache path — last-good `cache.json`, offline launch verified.
+- **P-MOVE-3**: ✅ CJK font (Noto Sans CJK SC) + e-ink pagination, operator-verified.
+- **P-MOVE-4**: ✅ Exit button, crash auto-recovery, systemd device launcher.
+- **P-MOVE-5**: ⏳ Controlled write MVP — blocked on staging validation.

@@ -71,21 +71,52 @@ Window {
                 Layout.fillWidth: true
                 Layout.preferredHeight: root.headerHeight
 
-                ColumnLayout {
+                RowLayout {
                     anchors.fill: parent
-                    spacing: 4
-                    Text {
-                        text: "PaperOS"
-                        font.family: root.uiFont
-                        font.pixelSize: root.fontTitle
-                        font.bold: true
-                        color: root.inkColor
+                    spacing: root.gap
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+                        Text {
+                            text: "PaperOS"
+                            font.family: root.uiFont
+                            font.pixelSize: root.fontTitle
+                            font.bold: true
+                            color: root.inkColor
+                        }
+                        Text {
+                            text: apiClient.dashboardData.today ? apiClient.dashboardData.today.date : new Date().toLocaleDateString(Qt.locale(), "dddd, MMMM d, yyyy")
+                            font.family: root.uiFont
+                            font.pixelSize: root.fontMeta
+                            color: root.mutedInkColor
+                        }
                     }
-                    Text {
-                        text: apiClient.dashboardData.today ? apiClient.dashboardData.today.date : new Date().toLocaleDateString(Qt.locale(), "dddd, MMMM d, yyyy")
-                        font.family: root.uiFont
-                        font.pixelSize: root.fontMeta
-                        color: root.mutedInkColor
+
+                    // Exit returns to xochitl: the launcher (open-paperos.sh
+                    // trap / paperos.service ExecStopPost) restarts it when
+                    // this process exits.
+                    Rectangle {
+                        Layout.alignment: Qt.AlignTop | Qt.AlignRight
+                        width: 140
+                        height: 64
+                        radius: root.radius
+                        color: root.cardColor
+                        border.width: 2
+                        border.color: root.inkColor
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Exit"
+                            font.family: root.uiFont
+                            font.pixelSize: root.fontSection
+                            color: root.inkColor
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: Qt.quit()
+                        }
                     }
                 }
             }
