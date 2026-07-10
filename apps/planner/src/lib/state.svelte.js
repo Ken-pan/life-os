@@ -13,6 +13,7 @@ import {
   migrateTask,
   mergeTasksByUpdatedAt,
   mergeListsByUpdatedAt,
+  mergeProjectsByUpdatedAt,
   mergeSettingsByUpdatedAt,
 } from './persist/migrate.js'
 import { loadState, saveState } from './persist/localStore.js'
@@ -27,6 +28,7 @@ export {
   migrate,
   migrateTask,
   mergeTasksByUpdatedAt,
+  mergeProjectsByUpdatedAt,
 }
 
 export const S = $state(loadState())
@@ -92,6 +94,7 @@ export function applyState(data, mode = 'replace') {
   if (mode === 'replace') {
     const next = migrate(data)
     S.tasks = next.tasks
+    S.projects = next.projects
     S.lists = next.lists
     S.settings = next.settings
     S.schemaVersion = next.schemaVersion
@@ -102,6 +105,9 @@ export function applyState(data, mode = 'replace') {
   }
   if (Array.isArray(data.lists)) {
     S.lists = mergeListsByUpdatedAt(S.lists, data.lists)
+  }
+  if (Array.isArray(data.projects)) {
+    S.projects = mergeProjectsByUpdatedAt(S.projects, data.projects)
   }
   if (data.settings) {
     S.settings = mergeSettingsByUpdatedAt(S.settings, data.settings)
@@ -134,6 +140,7 @@ export function exportPayload() {
   return {
     schemaVersion: SCHEMA_VERSION,
     tasks: JSON.parse(JSON.stringify(S.tasks)),
+    projects: JSON.parse(JSON.stringify(S.projects)),
     lists: JSON.parse(JSON.stringify(S.lists)),
     settings: JSON.parse(JSON.stringify(S.settings)),
   }

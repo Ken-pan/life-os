@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
+import path from 'node:path'
 import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 import {
   STORAGE_KEY,
@@ -264,7 +265,6 @@ test.describe('PlannerOS 全页面截图审计', () => {
   test('丰富数据 — 主导航与编辑器', async ({ page }, testInfo) => {
     await seedState(page, richSeedState(), testInfo.project.name)
 
-    await page.goto('/')
     await waitForInsights(page)
     await snap(page, '10-home-rich')
 

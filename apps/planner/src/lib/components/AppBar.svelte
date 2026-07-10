@@ -35,16 +35,7 @@
   <div class="appbar-inner">
     <div class="appbar-leading">
       {#if showListMenu}
-        <button
-          type="button"
-          class="appbar-menu"
-          aria-label={t('nav.openLists')}
-          aria-expanded={taskDrawer.open}
-          aria-haspopup="dialog"
-          onclick={openTaskDrawer}
-        >
-          <Icon name="menu" size={20} strokeWidth={1.75} />
-        </button>
+        <AppBrand appId="planner" variant="appbar" ariaLabel={t('app.name')} />
       {:else if historyBack}
         <button
           type="button"
@@ -65,9 +56,21 @@
     </div>
 
     {#if title}
-      <div class="appbar-titles">
+      <div class="appbar-titles" class:appbar-titles--list-menu={showListMenu}>
+        {#if showListMenu}
+          <button
+            type="button"
+            class="appbar-menu"
+            aria-label={t('nav.openLists')}
+            aria-expanded={taskDrawer.open}
+            aria-haspopup="dialog"
+            onclick={openTaskDrawer}
+          >
+            <Icon name="menu" size={20} strokeWidth={1.75} />
+          </button>
+        {/if}
         <h1 class="page-title">{title}</h1>
-        {#if subtitle}<p class="page-sub">{subtitle}</p>{/if}
+        {#if subtitle && !showListMenu}<p class="page-sub">{subtitle}</p>{/if}
       </div>
     {/if}
 

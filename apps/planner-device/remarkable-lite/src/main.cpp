@@ -11,6 +11,7 @@
 #include "ActionQueue.h"
 #include "DeviceStatus.h"
 #include "NoteStore.h"
+#include "PenInputService.h"
 #include "RefreshController.h"
 
 // Load the first usable font from PAPEROS_FONT_DIR (default
@@ -61,6 +62,7 @@ int main(int argc, char *argv[])
     DeviceStatus deviceStatus;
     NoteStore noteStore;
     RefreshController refreshControl;
+    PenInputService penBridge;
 
     // Shared look tokens for every QML file. A context property (not a QML
     // singleton) because the module's files live in a qml/ subdirectory,
@@ -82,6 +84,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("deviceStatus", &deviceStatus);
     engine.rootContext()->setContextProperty("noteStore", &noteStore);
     engine.rootContext()->setContextProperty("refreshControl", &refreshControl);
+    engine.rootContext()->setContextProperty("penBridge", &penBridge);
     engine.rootContext()->setContextProperty("appFontFamily", cjkFamily);
 
     const QUrl url(u"qrc:/qt/qml/PaperOSApp/qml/Main.qml"_qs);
@@ -92,6 +95,11 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
     engine.load(url);
+
+    if (!engine.rootObjects().isEmpty()) {
+        if (auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first()))
+            penBridge.setWindow(window);
+    }
 
     return app.exec();
 }

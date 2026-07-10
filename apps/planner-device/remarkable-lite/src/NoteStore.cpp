@@ -70,9 +70,11 @@ QVariantMap NoteStore::inputProbe() const
 
     QFile procFile(QStringLiteral("/proc/bus/input/devices"));
     if (procFile.open(QIODevice::ReadOnly)) {
+        // procfs: read whole file; readLine/atEnd loops end at size 0.
+        const QStringList lines = QString::fromUtf8(procFile.readAll()).split('\n');
         QVariantMap current;
-        while (!procFile.atEnd()) {
-            const QString line = QString::fromUtf8(procFile.readLine()).trimmed();
+        for (const QString &rawLine : lines) {
+            const QString line = rawLine.trimmed();
             if (line.startsWith("N: Name=")) {
                 current["name"] = line.mid(8).remove('"');
             } else if (line.startsWith("H: Handlers=")) {

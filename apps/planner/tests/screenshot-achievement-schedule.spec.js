@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
+import path from 'node:path'
 import { resolveScreenshotDir } from '../../../scripts/qa/screenshot-output.mjs'
 
 const STORAGE_KEY = 'planos_v1'
@@ -27,7 +28,7 @@ function featureSeedState(opts = {}) {
 
   /** @param {Record<string, unknown>} row */
   function todayTask(row) {
-    if (!todayOpen && row.dueDate === today && !row.completed) {
+    if (!todayOpen && row.dueDate && row.dueDate <= today && !row.completed) {
       return { ...row, completed: true, completedAt: hourAgo }
     }
     return row
@@ -281,7 +282,6 @@ test.describe('成就感 + 日程截图', () => {
   test('主导航与核心界面', async ({ page }, testInfo) => {
     await seedState(page, featureSeedState())
 
-    await page.goto('/')
     await page.waitForSelector('.today-progress', { timeout: 10_000 })
     await snap(page, '01-today-list-progress')
 
@@ -345,7 +345,6 @@ test.describe('成就感 + 日程截图', () => {
   test('Today 庆祝卡', async ({ page }, testInfo) => {
     await seedState(page, featureSeedState({ allTodayDone: true }))
     await page.evaluate(() => sessionStorage.removeItem('planner_today_closed'))
-    await page.goto('/')
     await page.waitForSelector('.today-closed', { timeout: 10_000 })
     await snap(page, '09-today-closed-celebration')
 
@@ -357,7 +356,6 @@ test.describe('成就感 + 日程截图', () => {
 
   test('完成动效', async ({ page }, testInfo) => {
     await seedState(page, featureSeedState())
-    await page.goto('/')
     const row = page.locator('.task-row', { hasText: '深度写作' }).first()
     await row.locator('.task-check').first().click({ force: true })
     await page.waitForTimeout(400)

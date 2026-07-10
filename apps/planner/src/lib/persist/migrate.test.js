@@ -3,8 +3,10 @@ import {
   migrate,
   mergeTasksByUpdatedAt,
   mergeListsByUpdatedAt,
+  mergeProjectsByUpdatedAt,
   mergeSettingsByUpdatedAt,
   migrateTask,
+  migrateProject,
   splitExpiredTombstones,
   TOMBSTONE_TTL_MS,
   SCHEMA_VERSION
@@ -15,6 +17,7 @@ describe('migrate', () => {
     const state = migrate(null);
     expect(state.schemaVersion).toBe(SCHEMA_VERSION);
     expect(state.tasks).toEqual([]);
+    expect(state.projects).toEqual([]);
     expect(state.lists.length).toBeGreaterThan(0);
   });
 
@@ -32,6 +35,50 @@ describe('migrate', () => {
     const state = migrate({ tasks: [null, 'bad', { id: '2', title: 'ok', listId: 'inbox' }] });
     expect(state.tasks).toHaveLength(1);
     expect(state.tasks[0].id).toBe('2');
+  });
+
+  it('migrates projects with safe defaults and references', () => {
+    const state = migrate({
+      projects: [
+        {
+          id: 'proj-1',
+          title: 'Paper OS',
+          status: 'bad',
+          priority: 'p1',
+          progressMode: 'manual',
+          manualProgress: 150,
+          roadmapRefs: [
+            {
+              id: 'ref-1',
+              roadmapItemId: 'P-MOVE-3',
+              sourcePath: 'docs/roadmap/apps/planner.md',
+              isPrimary: true
+            },
+            { id: 'bad' }
+          ],
+          repoRefs: [
+            {
+              id: 'repo-1',
+              kind: 'repo',
+              label: 'life-os',
+              url: 'https://github.com/Ken-pan/life-os'
+            },
+            { id: 'bad', kind: 'unknown' }
+          ]
+        }
+      ]
+    });
+    expect(state.projects[0]).toMatchObject({
+      id: 'proj-1',
+      title: 'Paper OS',
+      slug: 'paper-os',
+      status: 'active',
+      priority: 'p1',
+      progressMode: 'manual',
+      manualProgress: 100
+    });
+    expect(state.projects[0].roadmapRefs).toHaveLength(1);
+    expect(state.projects[0].repoRefs).toHaveLength(1);
   });
 });
 
@@ -97,6 +144,29 @@ describe('mergeListsByUpdatedAt', () => {
   });
 });
 
+describe('mergeProjectsByUpdatedAt', () => {
+  const base = (id, updatedAt, title = 'Project') =>
+    migrateProject({ id, title, updatedAt, status: 'active' });
+
+  it('keeps the newer project version by updatedAt', () => {
+    const local = [base('p1', 100, 'old')];
+    const incoming = [base('p1', 200, 'new')];
+    expect(mergeProjectsByUpdatedAt(local, incoming)[0].title).toBe('new');
+  });
+
+  it('does not overwrite a newer local project with stale remote data', () => {
+    const local = [base('p1', 300, 'local')];
+    const incoming = [base('p1', 100, 'remote')];
+    expect(mergeProjectsByUpdatedAt(local, incoming)[0].title).toBe('local');
+  });
+
+  it('propagates project tombstones', () => {
+    const local = [base('p1', 100, 'alive')];
+    const incoming = [{ ...base('p1', 200, 'alive'), deletedAt: 200 }];
+    expect(mergeProjectsByUpdatedAt(local, incoming)[0].deletedAt).toBe(200);
+  });
+});
+
 describe('mergeSettingsByUpdatedAt', () => {
   it('applies incoming settings only when newer', () => {
     const local = { theme: 'light', updatedAt: 100 };
@@ -132,6 +202,17 @@ describe('tombstone lifecycle', () => {
       ]
     });
     expect(state.tasks.map((t) => t.id)).toEqual(['a']);
+  });
+
+  it('migrate drops expired project tombstones but keeps fresh ones', () => {
+    const now = Date.now();
+    const state = migrate({
+      projects: [
+        { id: 'a', title: 'A', deletedAt: now - 1000 },
+        { id: 'b', title: 'B', deletedAt: now - TOMBSTONE_TTL_MS - 1000 }
+      ]
+    });
+    expect(state.projects.map((p) => p.id)).toEqual(['a']);
   });
 
   it('migrate restores inbox if it was tombstoned', () => {

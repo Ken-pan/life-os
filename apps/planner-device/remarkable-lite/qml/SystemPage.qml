@@ -140,6 +140,7 @@ Item {
                 StatusLine { label: "Battery"; value: deviceStatus.batteryPercent >= 0 ? deviceStatus.batteryPercent + "% " + deviceStatus.batteryState : "unknown" }
                 StatusLine { label: "Storage (/home)"; value: deviceStatus.storageFreeGb.toFixed(1) + " GB free of " + deviceStatus.storageTotalGb.toFixed(1) + " GB" }
                 StatusLine { label: "Wi-Fi"; value: deviceStatus.wifiState }
+                StatusLine { label: "Marker"; value: penBridge.available ? "active — " + penBridge.calibrationInfo : penBridge.calibrationInfo }
                 StatusLine { label: "PaperOS"; value: deviceStatus.appVersion }
             }
         }

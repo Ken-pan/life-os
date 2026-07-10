@@ -34,7 +34,7 @@ const AUTO_SYNC_DEBOUNCE_MS = 2500;
 
 // 墓碑也算数据：全部删光后仍需 merge + push 才能把删除传播到云端
 export function localHasData() {
-  return S.tasks.length > 0 || S.lists.length > 1;
+  return S.tasks.length > 0 || S.projects.length > 0 || S.lists.length > 1;
 }
 
 function isOffline() {
@@ -62,15 +62,21 @@ function applyCloudState(state, mode, userId) {
 
 /**
  * 物理清理过期墓碑：本地移除，并返回需要从云端删除的 id。
- * @returns {{ taskIds: string[], listIds: string[] }}
+ * @returns {{ taskIds: string[], projectIds: string[], listIds: string[] }}
  */
 function pruneExpiredTombstones() {
   const now = Date.now();
   const tasks = splitExpiredTombstones(S.tasks, now);
   if (tasks.expiredIds.length) S.tasks = tasks.live;
+  const projects = splitExpiredTombstones(S.projects, now);
+  if (projects.expiredIds.length) S.projects = projects.live;
   const lists = splitExpiredTombstones(S.lists, now);
   if (lists.expiredIds.length) S.lists = lists.live;
-  return { taskIds: tasks.expiredIds, listIds: lists.expiredIds };
+  return {
+    taskIds: tasks.expiredIds,
+    projectIds: projects.expiredIds,
+    listIds: lists.expiredIds
+  };
 }
 
 async function pushToCloudInternal() {

@@ -42,15 +42,15 @@ export async function upsertPlannerPayload(userId, payload, schemaVersion) {
   if (error) throw error;
 }
 
-/** @param {{ payload?: { tasks?: unknown[], lists?: unknown[] } } | null | undefined} row */
+/** @param {{ payload?: { tasks?: unknown[], lists?: unknown[], projects?: unknown[] } } | null | undefined} row */
 export function payloadHasData(row) {
   const payload = row?.payload;
-  return Boolean(payload && (payload.tasks?.length || payload.lists?.length > 1));
+  return Boolean(payload && (payload.tasks?.length || payload.projects?.length || payload.lists?.length > 1));
 }
 
-/** @param {{ tasks?: unknown[], lists?: unknown[] } | null | undefined} state */
+/** @param {{ tasks?: unknown[], lists?: unknown[], projects?: unknown[] } | null | undefined} state */
 export function structuredHasData(state) {
-  return Boolean(state && (state.tasks?.length || state.lists?.length > 1));
+  return Boolean(state && (state.tasks?.length || state.projects?.length || state.lists?.length > 1));
 }
 
 
@@ -76,18 +76,32 @@ export function buildListSyncRows(userId, lists) {
   }));
 }
 
+/** @param {string} userId @param {object[]} projects */
+export function buildProjectSyncRows(userId, projects) {
+  const now = new Date().toISOString();
+  return projects.map((project) => ({
+    user_id: userId,
+    id: project.id,
+    data: project,
+    updated_at: project.updatedAt ? new Date(project.updatedAt).toISOString() : now
+  }));
+}
+
 /** @param {string} userId */
 async function loadStructuredRows(userId) {
-  const [tasksRes, listsRes] = await Promise.all([
+  const [tasksRes, listsRes, projectsRes] = await Promise.all([
     supabase.from('planner_tasks').select('data').eq('user_id', userId),
-    supabase.from('planner_lists').select('data').eq('user_id', userId)
+    supabase.from('planner_lists').select('data').eq('user_id', userId),
+    supabase.from('planner_projects').select('data').eq('user_id', userId)
   ]);
   if (tasksRes.error) throw tasksRes.error;
   if (listsRes.error) throw listsRes.error;
+  if (projectsRes.error) throw projectsRes.error;
 
   const tasks = (tasksRes.data ?? []).map((r) => r.data).filter(Boolean);
   const lists = (listsRes.data ?? []).map((r) => r.data).filter(Boolean);
-  if (!structuredHasData({ tasks, lists })) return null;
+  const projects = (projectsRes.data ?? []).map((r) => r.data).filter(Boolean);
+  if (!structuredHasData({ tasks, lists, projects })) return null;
 
   const blob = await loadPlannerPayload(userId);
   const settings = blob?.payload?.settings ?? {};
@@ -95,12 +109,13 @@ async function loadStructuredRows(userId) {
   return {
     schemaVersion: blob?.schema_version ?? blob?.payload?.schemaVersion ?? 2,
     tasks,
+    projects,
     lists,
     settings
   };
 }
 
-/** @param {'planner_tasks'|'planner_lists'} table @param {string} userId @param {string[]} ids */
+/** @param {'planner_tasks'|'planner_lists'|'planner_projects'} table @param {string} userId @param {string[]} ids */
 async function deleteRows(table, userId, ids) {
   if (!ids.length) return;
   const { error } = await supabase.from(table).delete().eq('user_id', userId).in('id', ids);
@@ -113,19 +128,26 @@ async function deleteRows(table, userId, ids) {
  * 避免旧设备直接上传时误删其他设备新建的数据。
  *
  * @param {string} userId
- * @param {{ tasks?: unknown[], lists?: unknown[], settings?: object, schemaVersion?: number }} payload
+ * @param {{ tasks?: unknown[], lists?: unknown[], projects?: unknown[], settings?: object, schemaVersion?: number }} payload
  * @param {number} schemaVersion
- * @param {{ taskIds?: string[], listIds?: string[] }} [expiredTombstones]
+ * @param {{ taskIds?: string[], listIds?: string[], projectIds?: string[] }} [expiredTombstones]
  */
 async function upsertStructuredRows(userId, payload, schemaVersion, expiredTombstones = {}) {
   const tasks = payload.tasks ?? [];
   const lists = payload.lists ?? [];
+  const projects = payload.projects ?? [];
 
   if (tasks.length) {
     const { error } = await supabase.from('planner_tasks').upsert(buildTaskSyncRows(userId, tasks));
     if (error) throw error;
   }
   await deleteRows('planner_tasks', userId, expiredTombstones.taskIds ?? []);
+
+  if (projects.length) {
+    const { error } = await supabase.from('planner_projects').upsert(buildProjectSyncRows(userId, projects));
+    if (error) throw error;
+  }
+  await deleteRows('planner_projects', userId, expiredTombstones.projectIds ?? []);
 
   if (lists.length) {
     const { error } = await supabase.from('planner_lists').upsert(buildListSyncRows(userId, lists));
@@ -145,7 +167,7 @@ export async function loadPlannerState(userId) {
     const structured = await loadStructuredRows(userId);
     if (structured) return structured;
   } catch (e) {
-    if (!/planner_tasks|planner_lists|relation.*does not exist/i.test(String(e?.message || e))) {
+    if (!/planner_tasks|planner_lists|planner_projects|relation.*does not exist/i.test(String(e?.message || e))) {
       throw e;
     }
   }
@@ -155,6 +177,7 @@ export async function loadPlannerState(userId) {
   return {
     schemaVersion: row.schema_version ?? row.payload?.schemaVersion ?? 2,
     tasks: row.payload.tasks ?? [],
+    projects: row.payload.projects ?? [],
     lists: row.payload.lists ?? [],
     settings: row.payload.settings ?? {}
   };
@@ -162,15 +185,15 @@ export async function loadPlannerState(userId) {
 
 /**
  * @param {string} userId
- * @param {{ tasks?: unknown[], lists?: unknown[], settings?: object, schemaVersion?: number }} payload
+ * @param {{ tasks?: unknown[], lists?: unknown[], projects?: unknown[], settings?: object, schemaVersion?: number }} payload
  * @param {number} schemaVersion
- * @param {{ taskIds?: string[], listIds?: string[] }} [expiredTombstones] 需从云端物理清理的过期墓碑 id
+ * @param {{ taskIds?: string[], listIds?: string[], projectIds?: string[] }} [expiredTombstones] 需从云端物理清理的过期墓碑 id
  */
 export async function upsertPlannerState(userId, payload, schemaVersion, expiredTombstones) {
   try {
     await upsertStructuredRows(userId, payload, schemaVersion, expiredTombstones);
   } catch (e) {
-    if (/planner_tasks|planner_lists|relation.*does not exist/i.test(String(e?.message || e))) {
+    if (/planner_tasks|planner_lists|planner_projects|relation.*does not exist/i.test(String(e?.message || e))) {
       await upsertPlannerPayload(userId, payload, schemaVersion);
       return;
     }
@@ -178,7 +201,7 @@ export async function upsertPlannerState(userId, payload, schemaVersion, expired
   }
 }
 
-/** @param {{ tasks?: unknown[], lists?: unknown[], settings?: object } | null | undefined} state */
+/** @param {{ tasks?: unknown[], lists?: unknown[], projects?: unknown[], settings?: object } | null | undefined} state */
 export function stateHasData(state) {
   return structuredHasData(state);
 }

@@ -1,6 +1,18 @@
 import { SYSTEM_LIST_INBOX, normalizeRecurrence } from '../types.js'
 
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
+
+const PROJECT_STATUSES = /** @type {const} */ (['active', 'paused', 'shipped', 'archived'])
+const PROJECT_PRIORITIES = /** @type {const} */ (['p0', 'p1', 'p2', 'p3'])
+const PROJECT_PROGRESS_MODES = /** @type {const} */ (['automatic', 'manual'])
+const REPO_REF_KINDS = /** @type {const} */ ([
+  'repo',
+  'branch',
+  'commit',
+  'pull_request',
+  'issue',
+  'deploy',
+])
 
 /** 墓碑（已删除标记）保留时长，超过后本地与云端都会被物理清理 */
 export const TOMBSTONE_TTL_MS = 30 * 24 * 60 * 60 * 1000
@@ -44,6 +56,7 @@ export function defaultState() {
   return {
     schemaVersion: SCHEMA_VERSION,
     tasks: [],
+    projects: [],
     lists: [
       {
         id: SYSTEM_LIST_INBOX,
@@ -69,6 +82,97 @@ export function defaultState() {
       rhythmRestDays: [],
       updatedAt: 0,
     },
+  }
+}
+
+/** @param {unknown} value */
+function optionalString(value) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+/** @param {unknown} value */
+function optionalTimestamp(value) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+/** @param {unknown} value */
+function clampProgress(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  return Math.max(0, Math.min(100, Math.round(value)))
+}
+
+/** @param {string} value */
+function slugify(value) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+/** @param {unknown} ref */
+function migrateRoadmapRef(ref) {
+  if (!ref || typeof ref !== 'object') return null
+  const r = /** @type {Record<string, unknown>} */ (ref)
+  const id = optionalString(r.id)
+  const roadmapItemId = optionalString(r.roadmapItemId)
+  const sourcePath = optionalString(r.sourcePath)
+  if (!id || !roadmapItemId || !sourcePath) return null
+  return {
+    id,
+    roadmapItemId,
+    sourcePath,
+    anchor: optionalString(r.anchor) ?? undefined,
+    label: optionalString(r.label) ?? undefined,
+    isPrimary: typeof r.isPrimary === 'boolean' ? r.isPrimary : undefined,
+  }
+}
+
+/** @param {unknown} ref */
+function migrateRepoRef(ref) {
+  if (!ref || typeof ref !== 'object') return null
+  const r = /** @type {Record<string, unknown>} */ (ref)
+  const id = optionalString(r.id)
+  const kind = REPO_REF_KINDS.includes(r.kind) ? r.kind : null
+  const label = optionalString(r.label)
+  const url = optionalString(r.url)
+  if (!id || !kind || !label || !url) return null
+  return { id, kind, label, url }
+}
+
+/** @param {unknown} project */
+export function migrateProject(project) {
+  if (!project || typeof project !== 'object') return null
+  const p = /** @type {Record<string, unknown>} */ (project)
+  const id = optionalString(p.id)
+  if (!id) return null
+  const title = optionalString(p.title) ?? optionalString(p.name) ?? id
+  const slug = optionalString(p.slug) ?? (slugify(title) || id)
+  const status = PROJECT_STATUSES.includes(p.status) ? p.status : 'active'
+  const progressMode = PROJECT_PROGRESS_MODES.includes(p.progressMode)
+    ? p.progressMode
+    : 'automatic'
+  return {
+    ...p,
+    id,
+    title,
+    slug,
+    status,
+    areaId: optionalString(p.areaId),
+    priority: PROJECT_PRIORITIES.includes(p.priority) ? p.priority : null,
+    summary: typeof p.summary === 'string' ? p.summary : '',
+    progressMode,
+    manualProgress: progressMode === 'manual' ? clampProgress(p.manualProgress) : null,
+    roadmapRefs: Array.isArray(p.roadmapRefs)
+      ? p.roadmapRefs.map(migrateRoadmapRef).filter(Boolean)
+      : [],
+    repoRefs: Array.isArray(p.repoRefs)
+      ? p.repoRefs.map(migrateRepoRef).filter(Boolean)
+      : [],
+    createdAt: typeof p.createdAt === 'number' ? p.createdAt : Date.now(),
+    updatedAt: typeof p.updatedAt === 'number' ? p.updatedAt : 0,
+    archivedAt: optionalTimestamp(p.archivedAt),
+    deletedAt: optionalTimestamp(p.deletedAt),
   }
 }
 
@@ -154,6 +258,19 @@ export function mergeListsByUpdatedAt(local, incoming) {
   return [...byId.values()]
 }
 
+/** LWW 合并项目：按 updatedAt 取较新，墓碑同样参与传播 */
+/** @param {import('../types.js').PlannerProject[]} local @param {import('../types.js').PlannerProject[]} incoming */
+export function mergeProjectsByUpdatedAt(local, incoming) {
+  const byId = new Map(local.map((p) => [p.id, p]))
+  for (const p of incoming.map(migrateProject).filter(Boolean)) {
+    const existing = byId.get(p.id)
+    if (!existing || (p.updatedAt ?? 0) >= (existing.updatedAt ?? 0)) {
+      byId.set(p.id, p)
+    }
+  }
+  return [...byId.values()]
+}
+
 /**
  * LWW 合并设置：incoming（云端）更新才覆盖，避免旧设备的旧设置回灌。
  * 历史数据无 updatedAt 时视为 0（保留本地）。
@@ -178,6 +295,9 @@ export function migrate(raw) {
   const tasks = (
     Array.isArray(r.tasks) ? r.tasks.map(migrateTask).filter(Boolean) : []
   ).filter((t) => !isExpiredTombstone(t, now))
+  const projects = (
+    Array.isArray(r.projects) ? r.projects.map(migrateProject).filter(Boolean) : []
+  ).filter((p) => !isExpiredTombstone(p, now))
   let lists = (
     Array.isArray(r.lists) ? r.lists.map(migrateList).filter(Boolean) : []
   ).filter((l) => !isExpiredTombstone(l, now))
@@ -187,6 +307,7 @@ export function migrate(raw) {
   return {
     schemaVersion: SCHEMA_VERSION,
     tasks,
+    projects,
     lists,
     settings: { ...base.settings, ...(r.settings || {}) },
   }

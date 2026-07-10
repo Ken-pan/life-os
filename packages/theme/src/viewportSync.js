@@ -8,7 +8,9 @@ let lastSyncedAppVh = null
 /** @returns {boolean} */
 export function isStandalonePwa() {
   if (typeof window === 'undefined') return false
+  const params = new URLSearchParams(window.location.search)
   return (
+    params.get('pwa_sim') === '1' ||
     window.matchMedia('(display-mode: standalone)').matches ||
     /** @type {{ standalone?: boolean }} */ (navigator).standalone === true ||
     document.documentElement.classList.contains('standalone-pwa')
@@ -150,7 +152,13 @@ function isIosWebKit() {
 
 /** iOS: env(safe-area-inset-top) can be 0 (WebKit #301994); floor at 59px on mobile */
 function syncSafeTopEffective() {
-  if (typeof document === 'undefined' || !isIosWebKit() || !isLifeOsMobile()) return
+  if (
+    typeof document === 'undefined' ||
+    !isIosWebKit() ||
+    !isLifeOsMobile() ||
+    !isStandalonePwa()
+  )
+    return
 
   const root = document.documentElement
   const probe = document.createElement('div')

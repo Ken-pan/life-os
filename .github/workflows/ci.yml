@@ -32,7 +32,7 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npx playwright install chromium --with-deps
+      - run: npx playwright install chromium webkit --with-deps
       - run: npm run build -w design-catalog
       - run: npm run test:design-catalog
       - run: npm run test:design-catalog:a11y

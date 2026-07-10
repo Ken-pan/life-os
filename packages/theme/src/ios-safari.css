@@ -142,12 +142,12 @@ body,
 }
 
 /*
-  iOS: env(safe-area-inset-top) may be 0 (WebKit #301994, fixed iOS 26.2+).
-  Apply 59px floor on all mobile Safari/PWA — not only display-mode: standalone.
-  Ref: chronosnap, Sorcha #1090, Karma ITNEXT notch embrace.
+  iOS standalone PWA: env(safe-area-inset-top) may be 0 (WebKit #301994,
+  fixed iOS 26.2+). Apply the 59px floor only in standalone/PWA simulation;
+  regular Safari already positions the visual viewport below browser chrome.
 */
 @supports (-webkit-touch-callout: none) {
-  @media (--life-os-mobile) {
+  @media (--life-os-mobile) and (display-mode: standalone) {
     :root {
       --safe-top-effective: max(59px, var(--ios-edge-min), env(safe-area-inset-top, 0px));
     }
@@ -180,12 +180,6 @@ body,
       backdrop-filter: none;
       border-top: none;
       transform: translateZ(0);
-    }
-  }
-
-  @media (display-mode: standalone) {
-    :root {
-      --safe-top-effective: max(59px, var(--ios-edge-min), env(safe-area-inset-top, 0px));
     }
   }
 

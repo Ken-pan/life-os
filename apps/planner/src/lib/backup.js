@@ -14,6 +14,7 @@ export function exportBackup() {
     schemaVersion: SCHEMA_VERSION,
     data: {
       tasks: JSON.parse(JSON.stringify(S.tasks)),
+      projects: JSON.parse(JSON.stringify(S.projects)),
       lists: JSON.parse(JSON.stringify(S.lists)),
       settings: JSON.parse(JSON.stringify(S.settings))
     }

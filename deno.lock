@@ -1,0 +1,195 @@
+{
+  "version": "5",
+  "remote": {
+    "https://edge.netlify.com/": "fd941d61d88673d5f28aab283fb86fcc50f08a3bc80ee5470498fcfa88c65cfb",
+    "https://edge.netlify.com/bootstrap/config.ts": "6a2ce0e544e15e8f8883a5c18da5948e37fd0f2619f68cb31f3af53c51817025",
+    "https://edge.netlify.com/bootstrap/context.ts": "e97240232121e2f369f6546ce961490f34d961ea1ea54be3ff09633e3f08373f",
+    "https://edge.netlify.com/bootstrap/cookie.ts": "8b0baae708989ca183c6f3b4ab3d029e6abcbc2e43f93edeb0ff447b3bbc3a05",
+    "https://edge.netlify.com/bootstrap/edge_function.ts": "b8253e86aa83c67341f5cfedeba5049d77fbf84dcab7eceff7566b7728ae9b39",
+    "https://edge.netlify.com/bootstrap/globals/types.ts": "eaa6148ded3121d8dee62dd91c86e7fe76601df0f3ca8d7962243a30f4c8935f"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@playwright/test@^1.61.1",
+        "npm:playwright@^1.61.1",
+        "npm:turbo@^2.5.4"
+      ]
+    },
+    "members": {
+      "apps/design-catalog": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/platform-web@*",
+            "npm:@life-os/theme@*",
+            "npm:@lucide/svelte@^1.22.0",
+            "npm:@sveltejs/vite-plugin-svelte@^7.1.2",
+            "npm:postcss-custom-media@^12.0.1",
+            "npm:svelte@^5.56.4",
+            "npm:vite@^8.1.0"
+          ]
+        }
+      },
+      "apps/finance": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/contracts@*",
+            "npm:@life-os/finance-core@*",
+            "npm:@life-os/finance-enrichment-contract@*",
+            "npm:@life-os/platform-web@*",
+            "npm:@life-os/sync@*",
+            "npm:@life-os/theme@*",
+            "npm:@lucide/svelte@^1.22.0",
+            "npm:@playwright/test@^1.61.1",
+            "npm:@supabase/supabase-js@^2.106.2",
+            "npm:@sveltejs/adapter-static@^3.0.10",
+            "npm:@sveltejs/kit@^2.68.0",
+            "npm:@sveltejs/vite-plugin-svelte@^7.1.2",
+            "npm:@vitest/browser@^3.2.4",
+            "npm:jsdom@^29.1.1",
+            "npm:layerchart@2.0.0-next.57",
+            "npm:playwright@^1.61.1",
+            "npm:postcss-custom-media@^12.0.1",
+            "npm:simple-icons@^16.24.1",
+            "npm:svelte-check@^4.7.1",
+            "npm:svelte@^5.56.4",
+            "npm:typescript@^6.0.3",
+            "npm:vite@^8.1.0",
+            "npm:vitest-browser-svelte@0.1",
+            "npm:vitest@^3.2.4"
+          ]
+        }
+      },
+      "apps/fitness": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/contracts@*",
+            "npm:@life-os/platform-web@*",
+            "npm:@life-os/sync@*",
+            "npm:@life-os/theme@*",
+            "npm:@lucide/svelte@^1.22.0",
+            "npm:@playwright/test@^1.61.1",
+            "npm:@supabase/supabase-js@^2.110.0",
+            "npm:@sveltejs/adapter-static@^3.0.10",
+            "npm:@sveltejs/kit@^2.68.0",
+            "npm:@sveltejs/vite-plugin-svelte@^7.1.2",
+            "npm:postcss-custom-media@^12.0.1",
+            "npm:svelte-check@^4.7.1",
+            "npm:svelte@^5.56.4",
+            "npm:vite@^8.1.0"
+          ]
+        }
+      },
+      "apps/home": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/contracts@*",
+            "npm:@life-os/platform-web@*",
+            "npm:@life-os/sync@*",
+            "npm:@life-os/theme@*",
+            "npm:@lucide/svelte@^1.22.0",
+            "npm:@supabase/supabase-js@^2.110.0",
+            "npm:@sveltejs/adapter-static@^3.0.10",
+            "npm:@sveltejs/kit@^2.63.0",
+            "npm:@sveltejs/vite-plugin-svelte@^7.1.2",
+            "npm:postcss-custom-media@^12.0.1",
+            "npm:svelte-check@^4.6.0",
+            "npm:svelte@^5.56.1",
+            "npm:typescript@^6.0.3",
+            "npm:vite@^8.0.16"
+          ]
+        }
+      },
+      "apps/music": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/contracts@*",
+            "npm:@life-os/platform-web@*",
+            "npm:@life-os/sync@*",
+            "npm:@life-os/theme@*",
+            "npm:@lucide/svelte@^1.22.0",
+            "npm:@supabase/supabase-js@^2.110.0",
+            "npm:@sveltejs/adapter-static@^3.0.10",
+            "npm:@sveltejs/kit@^2.68.0",
+            "npm:@sveltejs/vite-plugin-svelte@^7.1.2",
+            "npm:dexie@^4.0.11",
+            "npm:playwright@^1.61.1",
+            "npm:postcss-custom-media@^12.0.1",
+            "npm:svelte-check@^4.7.1",
+            "npm:svelte-dnd-action@~0.9.70",
+            "npm:svelte@^5.56.4",
+            "npm:tus-js-client@^4.3.1",
+            "npm:vite@^8.1.0"
+          ]
+        }
+      },
+      "apps/planner": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/contracts@*",
+            "npm:@life-os/platform-web@*",
+            "npm:@life-os/sync@*",
+            "npm:@life-os/theme@*",
+            "npm:@lucide/svelte@^1.22.0",
+            "npm:@playwright/test@^1.61.1",
+            "npm:@supabase/supabase-js@^2.110.0",
+            "npm:@sveltejs/adapter-static@^3.0.10",
+            "npm:@sveltejs/kit@^2.68.0",
+            "npm:@sveltejs/vite-plugin-svelte@^7.1.2",
+            "npm:postcss-custom-media@^12.0.1",
+            "npm:svelte-check@^4.7.1",
+            "npm:svelte@^5.56.4",
+            "npm:vite@^8.1.0",
+            "npm:vitest@^3.2.4",
+            "npm:web-push@^3.6.7"
+          ]
+        }
+      },
+      "apps/portal": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/contracts@*",
+            "npm:@life-os/platform-web@*",
+            "npm:@life-os/sync@*",
+            "npm:@life-os/theme@*",
+            "npm:@lucide/svelte@^1.22.0",
+            "npm:@supabase/supabase-js@^2.110.0",
+            "npm:@sveltejs/adapter-netlify@^6.0.4",
+            "npm:@sveltejs/kit@^2.63.0",
+            "npm:@sveltejs/vite-plugin-svelte@^7.1.2",
+            "npm:postcss-custom-media@^12.0.1",
+            "npm:svelte-check@^4.6.0",
+            "npm:svelte@^5.56.1",
+            "npm:typescript@^6.0.3",
+            "npm:vite@^8.0.16"
+          ]
+        }
+      },
+      "packages/contracts": {
+        "packageJson": {
+          "dependencies": [
+            "npm:zod@^3.23.0"
+          ]
+        }
+      },
+      "packages/finance-core": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/finance-enrichment-contract@*",
+            "npm:@supabase/supabase-js@^2.106.2",
+            "npm:typescript@^6.0.3",
+            "npm:vitest@^4.1.7"
+          ]
+        }
+      },
+      "packages/platform-web": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@life-os/contracts@*",
+            "npm:@life-os/theme@*"
+          ]
+        }
+      }
+    }
+  }
+}

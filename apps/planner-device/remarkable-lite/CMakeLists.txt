@@ -18,6 +18,8 @@ qt_add_executable(paperos
     src/DeviceStatus.h
     src/NoteStore.cpp
     src/NoteStore.h
+    src/PenInputService.cpp
+    src/PenInputService.h
     src/RefreshController.cpp
     src/RefreshController.h
     src/PaperOsPaths.h

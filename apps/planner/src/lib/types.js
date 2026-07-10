@@ -4,6 +4,12 @@
 
 /** @typedef {import('@life-os/contracts/appearance').ColorSchemePreference} ColorSchemePreference */
 
+/** @typedef {'active'|'paused'|'shipped'|'archived'} ProjectStatus */
+
+/** @typedef {'automatic'|'manual'} ProjectProgressMode */
+
+/** @typedef {'p0'|'p1'|'p2'|'p3'} ProjectPriority */
+
 /**
  * @typedef {Object} TaskRecurrence
  * @property {RecurrenceRule} rule
@@ -73,6 +79,43 @@
  */
 
 /**
+ * @typedef {Object} RoadmapRef
+ * @property {string} id
+ * @property {string} roadmapItemId
+ * @property {string} sourcePath
+ * @property {string} [anchor]
+ * @property {string} [label]
+ * @property {boolean} [isPrimary]
+ */
+
+/**
+ * @typedef {Object} RepoRef
+ * @property {string} id
+ * @property {'repo'|'branch'|'commit'|'pull_request'|'issue'|'deploy'} kind
+ * @property {string} label
+ * @property {string} url
+ */
+
+/**
+ * @typedef {Object} PlannerProject
+ * @property {string} id
+ * @property {string} title
+ * @property {string} slug
+ * @property {ProjectStatus} status
+ * @property {string|null} areaId
+ * @property {ProjectPriority|null} priority
+ * @property {string} summary
+ * @property {ProjectProgressMode} progressMode
+ * @property {number|null} manualProgress
+ * @property {RoadmapRef[]} roadmapRefs
+ * @property {RepoRef[]} repoRefs
+ * @property {number} createdAt
+ * @property {number} updatedAt
+ * @property {number|null} archivedAt
+ * @property {number|null} deletedAt
+ */
+
+/**
  * @typedef {Object} AppSettings
  * @property {'light'|'dark'|'auto'} theme Web runtime storage uses `auto`; contracts `ColorSchemePreference` uses `system` for the same semantics.
  * @property {'zh'|'en'} locale
@@ -92,6 +135,7 @@
  * @property {number} schemaVersion
  * @property {Task[]} tasks
  * @property {TaskList[]} lists
+ * @property {PlannerProject[]} projects
  * @property {AppSettings} settings
  */
 
@@ -220,4 +264,3 @@ export function normalizeRecurrence(raw) {
  * @property {string} appVersion
  * @property {string} osVersion
  */
-

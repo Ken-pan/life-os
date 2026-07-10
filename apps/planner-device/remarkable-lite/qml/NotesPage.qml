@@ -43,7 +43,13 @@ Item {
             }
             Item { Layout.fillWidth: true }
             Text {
-                text: page.activeNoteId === "" ? noteStore.noteCount + " notes saved" : page.activeNoteId + " · " + page.strokeCount + " strokes"
+                text: {
+                    var pen = penBridge.available
+                        ? (penBridge.eraserActive ? "eraser" : (penBridge.penInRange ? "pen ready" : "pen idle"))
+                        : "pen off"
+                    var base = page.activeNoteId === "" ? noteStore.noteCount + " notes saved" : page.activeNoteId + " · " + page.strokeCount + " strokes"
+                    return base + " · " + pen
+                }
                 font.family: Ui.fontFamily
                 font.pixelSize: Ui.fontMeta
                 color: Ui.mutedInk
@@ -98,15 +104,18 @@ Item {
                 }
             }
 
+            // Receives finger touches and pen contacts alike — the pen is
+            // injected as mouse events by PenInputService; pressure and
+            // eraser state ride along via the penBridge properties.
             MouseArea {
                 anchors.fill: parent
                 enabled: page.activeNoteId !== ""
                 onPressed: (mouse) => {
-                    page.currentStroke = [{ x: mouse.x, y: mouse.y, t: Date.now() }]
+                    page.currentStroke = [{ x: mouse.x, y: mouse.y, t: Date.now(), p: penBridge.penTouching ? penBridge.pressure : 0, tool: penBridge.eraserActive ? "eraser" : "pen" }]
                     canvas.pendingPoints = [{ x: mouse.x, y: mouse.y }]
                 }
                 onPositionChanged: (mouse) => {
-                    page.currentStroke.push({ x: mouse.x, y: mouse.y, t: Date.now() })
+                    page.currentStroke.push({ x: mouse.x, y: mouse.y, t: Date.now(), p: penBridge.penTouching ? penBridge.pressure : 0 })
                     canvas.pendingPoints.push({ x: mouse.x, y: mouse.y })
                     canvas.requestPaint()
                 }
