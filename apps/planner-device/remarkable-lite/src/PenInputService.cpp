@@ -198,15 +198,32 @@ void PenInputService::dispatchFrame()
                     << ") -> screen" << pos;
             --m_downLogBudget;
         }
+        m_lastInjected = pos;
         injectMouse(pos, true, false);
     } else if (!m_touching && m_wasTouching) {
         injectMouse(pos, false, true);
     } else if (m_touching) {
-        injectMouse(pos, false, false);
+        // Motion filter: pen frames arrive at ~200 Hz; injecting each one
+        // floods the scene with mouse moves the e-ink can never keep up
+        // with. Only forward movement of ≥3 px.
+        if ((pos - m_lastInjected).manhattanLength() >= 3.0) {
+            m_lastInjected = pos;
+            injectMouse(pos, false, false);
+        }
     }
     m_wasTouching = m_touching;
 
-    emit penStateChanged();
+    // Notify QML only on discrete transitions (tool / touch / range) —
+    // pressure is read imperatively during strokes. Binding this signal
+    // to per-frame updates repainted half the UI at pen rate.
+    const bool inRange = penInRange();
+    if (m_touching != m_notifiedTouching || m_toolRubber != m_notifiedRubber
+        || inRange != m_notifiedInRange) {
+        m_notifiedTouching = m_touching;
+        m_notifiedRubber = m_toolRubber;
+        m_notifiedInRange = inRange;
+        emit penStateChanged();
+    }
 }
 
 void PenInputService::injectMouse(const QPointF &pos, bool down, bool up)

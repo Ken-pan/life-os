@@ -68,6 +68,10 @@ private:
     bool m_desynced = false;
     qreal m_pressureNorm = 0.0;
     int m_downLogBudget = 3;
+    QPointF m_lastInjected;
+    bool m_notifiedTouching = false;
+    bool m_notifiedRubber = false;
+    bool m_notifiedInRange = false;
 
     QString findPenDevice() const;
     void openDevice();
