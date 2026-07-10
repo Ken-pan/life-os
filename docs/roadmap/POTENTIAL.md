@@ -1,7 +1,9 @@
-# 潜力研判（2026-07-09 代码检索）
+# 潜力研判（2026-07-09 历史快照）
+
+> **状态：已归档研判。** 本文保留当时的 ROI 证据与决策过程，不再代表当前排序。当前 Now / Next 只看 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)；2026-07-10 复核后的顺序为 **P-PROJ-3 → P-MOVE-5 → F-P1b / FT-P2 / P-P4**。
 
 > **用途：** 回答「如果只做一两件事，哪里 ROI 最高？」
-> **Hub 排期真源：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) §Next · §推荐执行顺序
+> **Hub 排期真源：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) §Now · §Next · §推荐执行顺序
 > **分卷细节：** [`apps/`](./apps/README.md)
 
 ## 结论（TL;DR）

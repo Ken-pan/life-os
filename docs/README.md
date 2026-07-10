@@ -2,7 +2,7 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后重组：** 2026-07-09 · 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后核对：** 2026-07-10 · 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
@@ -10,12 +10,10 @@
 
 | 焦点    | 主题                   | 文档                                             |
 | ------- | ---------------------- | ------------------------------------------------ |
-| Now     | **P-MOVE-2** PaperOS read cache on Paper Pro Move | [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) |
-| Next    | **H-W3** Home 手绘分区 | [`roadmap/apps/home.md`](./roadmap/apps/home.md) |
+| Now     | **P-MOVE-5** staging write gate | [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) |
+| Next    | F-P1b · FT-P2 · P-P4 · H-P7 | [`roadmap/apps/`](./roadmap/apps/README.md) |
 
 **2026-07-09 已验收：** Phase 6 **G-P4b-H / H-P6a** · Portal UI 走查 **P-1–P-12** — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
-| ○ 条件 | G-P4b-H / H-P6a | 每天用 Home |
-
 **2026-07-09 已验收：** Phase 0–4 批次 — F-P3 · G-P4b-M · G-P6 · P-P2 · FT-P0/FT-P1 · I-P1.5b — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
 **六 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)

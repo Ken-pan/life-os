@@ -1,6 +1,6 @@
 # PROD-ROLL-3 — Friend Invite Checklist
 
-Date: 2026-07-10  
+Date: 2026-07-10
 Status: **READY TO INVITE**
 
 ## Preconditions (all complete)

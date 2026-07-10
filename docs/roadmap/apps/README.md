@@ -28,7 +28,8 @@
 
 | Hub ID      | App 分卷                                        | 状态 / 锚点           |
 | ----------- | ----------------------------------------------- | --------------------- |
-| **P-MOVE-1** | [planner-pro-move.md](./planner-pro-move.md) | 🟡 home-only launcher baseline |
+| **P-PROJ-3** | [planner.md](./planner.md) | ✅ Roadmap refs UI（2026-07-10） |
+| **P-MOVE-5** | [planner-pro-move.md](./planner-pro-move.md) | ⏳ controlled write staging gate |
 | **G-P4b-H** | [portal.md](./portal.md) · [home.md](./home.md) | ✅ 2026-07-09 · H-P6a |
 
 **已发货（2026-07-09）：** G-P8 · G-P9 · G-P4b-H · Phase 0–6 — [`../SHIPPED.md`](../SHIPPED.md)
@@ -37,12 +38,12 @@
 
 | App     | 层级   | Top Next                          | 分卷                       |
 | ------- | ------ | --------------------------------- | -------------------------- |
-| Planner | 生产   | **P-MOVE-1** PaperOS · P-P4 | [planner.md](./planner.md) · [planner-pro-move.md](./planner-pro-move.md) |
-| Fitness | 生产   | FT-P1 ✅ · 维护 E2E               | [fitness.md](./fitness.md) |
-| Finance | 生产   | F-P3 ✅ · F-P1b                   | [finance.md](./finance.md) |
-| Music   | 生产   | M-P5 ✅ · 管道维护                | [music.md](./music.md)     |
+| Planner | 生产   | **P-MOVE-5** · P-ATTACH-0 | [planner.md](./planner.md) · [planner-pro-move.md](./planner-pro-move.md) |
+| Fitness | 生产   | **FT-P2** Portal 今日是否已练     | [fitness.md](./fitness.md) |
+| Finance | 生产   | **F-P1b** · F-P4                  | [finance.md](./finance.md) |
+| Music   | 生产   | M-P4 按需                         | [music.md](./music.md)     |
 | Portal  | 启动器 | 维护 · UI 走查 P-1–P-12 ✅        | [portal.md](./portal.md)   |
-| Home    | 实验   | **H-W3** 手绘分区 · Wave UX ✅    | [home.md](./home.md)       |
+| Home    | 实验   | **H-P7** 多项目切换 · H-W0–W5 ✅ | [home.md](./home.md)       |
 
 ## 跨站集成矩阵（只读 / 事件）
 
@@ -61,24 +62,24 @@
 | Home 仅 localStorage              | ~~**G-P4b** Home 卡~~       | ✅ **H-P6a** 元数据 + **G-P4b-H** 第五卡（2026-07-09） |
 | `events.ts` 仅 `finance.bill_due` | ~~**I-P1.5b** / **FT-P1**~~ | ✅ 已扩 `fitness.workout_logged`（2026-07-09）         |
 
-## 潜力排序（→ [`../POTENTIAL.md`](../POTENTIAL.md)）
+## 当前排序（→ hub §Now / §Next）
 
-| 序  | 项            | 说明                     |
-| --- | ------------- | ------------------------ | ------------- |
-| 1   | **M-P5**      | 行为分验收（有曲库账号） |
-| 2   | **G-P8/G-P9** | Portal 角标深链 + smoke  |
-| 3   | **G-P4b-H**   | Home 卡（H-P6a 后）      | ✅ 2026-07-09 |
+| 序 | 项 | 说明 |
+| --- | --- | --- |
+| 1 | **P-PROJ-3** | 让 Planner 中的执行项目可追溯到 Markdown roadmap |
+| 2 | **P-MOVE-5** | controlled write staging gate；生产继续 fail closed |
+| 3 | **F-P1b / FT-P2 / P-P4** | 0.5–1d 级跨站快赢 |
 
 ## Wave 投入估算（单人 · Phase 5+）
 
-| Phase | 项                  | 合计  |
-| ----- | ------------------- | ----- | ------------- |
-| **5** | G-P8 + G-P9 + M-P5  | ~2–3d |
-| **6** | G-P4b-H（H-P6a 后） | ~1–2d | ✅ 2026-07-09 |
+| Phase | 项 | 合计 |
+| --- | --- | --- |
+| **7** | P-PROJ-3 + P-MOVE-5 | ~2–3d |
+| **8** | F-P1b + FT-P2 + P-P4 | ~1–2d |
 
 **已完成 Wave（2026-07-09）：** Phase 0–6 + Portal UI 走查 P-1–P-12 — 见 [`../SHIPPED.md`](../SHIPPED.md)
 
-**下一档（Phase 7）：** **H-W3** Home 手绘分区 — 见 [`home.md`](./home.md) · [`home-spatial-editor.md`](./home-spatial-editor.md)
+**Phase 7：** **P-PROJ-3** → **P-MOVE-5**；Home H-W0–W5 已完成，不再作为下一档。
 
 ## 何时更新
 

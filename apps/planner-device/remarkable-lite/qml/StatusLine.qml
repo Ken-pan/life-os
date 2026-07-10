@@ -1,6 +1,6 @@
 import QtQuick
 
-// One "label: value" row for status panels.
+// One "label: value" row for status/settings panels.
 Row {
     property string label: ""
     property string value: ""
@@ -10,15 +10,15 @@ Row {
     Text {
         text: label
         font.family: Ui.fontFamily
-        font.pixelSize: Ui.fontMeta
-        color: Ui.mutedInk
+        font.pixelSize: Ui.meta
+        color: Ui.muted
         width: 330
         elide: Text.ElideRight
     }
     Text {
         text: value
         font.family: Ui.fontFamily
-        font.pixelSize: Ui.fontMeta
+        font.pixelSize: Ui.meta
         font.bold: true
         color: Ui.ink
     }

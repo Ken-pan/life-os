@@ -8,13 +8,18 @@
 #include <QFontDatabase>
 #include <QDebug>
 #include <QtQml/qqml.h>
+#include <QTimer>
 #include "ApiClient.h"
+#include "epframebuffer.h"
 #include "ActionQueue.h"
 #include "DeviceStatus.h"
 #include "InkCanvasItem.h"
+#include "InkModeController.h"
 #include "NoteStore.h"
 #include "PenInputService.h"
 #include "RefreshController.h"
+#include "TestBridge.h"
+#include "PerfLog.h"
 
 // Load the first usable font from PAPEROS_FONT_DIR (default
 // /home/root/paperos/fonts). Returns the family name, or an empty
@@ -49,9 +54,18 @@ static QString loadPaperOsFont()
 
 int main(int argc, char *argv[])
 {
+    PerfLog::instance().log("APP_PROCESS_START");
+
     // The reMarkable Paper Pro (chiappa) uses the "epaper" platform plugin.
     // This can be set via environment variable QT_QPA_PLATFORM=epaper or in code.
     qputenv("QT_QPA_PLATFORM", "epaper");
+
+    // Phase 2B-0 direct-ink diagnostics. No-op unless PAPEROS_DIRECT_DIAG=1;
+    // arms the framebuffer interposers before the platform plugin loads.
+    DirectInkDiag::install();
+    // Native ink mode resolves the vendor framebuffer in-process, so
+    // candidate capture is always armed before the platform plugin runs.
+    DirectInkDiag::armCapture();
 
     QGuiApplication app(argc, argv);
 
@@ -63,39 +77,52 @@ int main(int argc, char *argv[])
     ActionQueue actionQueue;
     DeviceStatus deviceStatus;
     NoteStore noteStore;
+    InkModeController inkModeController;
     RefreshController refreshControl;
     PenInputService penBridge;
+    TestBridge testBridge;
 
-    // Shared look tokens for every QML file. A context property (not a QML
-    // singleton) because the module's files live in a qml/ subdirectory,
-    // where the implicit directory import shadows module-qmldir singletons.
-    // Sizes are physical pixels on the 954x1696 @ 264 PPI Move panel:
-    // ~94px = the 9mm minimum touch target, ~38px = 10.5pt body text.
+    // ── Design tokens ──────────────────────────────────────────────
+    // Physical pixels on the 954 × 1696 @ 264 PPI Move panel.
+    // Three font-size presets: S / M / L, selected by env PAPEROS_SCALE.
+    // M is the default. All tap targets are fixed (≥ 6 mm physical).
+
+    const QString scaleEnv =
+        qEnvironmentVariable("PAPEROS_SCALE", QStringLiteral("M")).toUpper();
+
+    // Font scale tables: {homeTime, section, primary, task, meta, button, footer}
+    struct Scale { int homeTime, section, primary, task, meta, button, footer; };
+    Scale s;
+    if (scaleEnv == QLatin1String("S"))
+        s = {72, 28, 42, 36, 24, 24, 20};
+    else if (scaleEnv == QLatin1String("L"))
+        s = {108, 38, 56, 50, 32, 32, 28};
+    else // M (default)
+        s = {88, 32, 48, 42, 28, 28, 24};
+
+    qInfo() << "PaperOS: scale" << scaleEnv
+            << "task" << s.task << "meta" << s.meta;
+
     QVariantMap ui{
         {"fontFamily", cjkFamily.isEmpty() ? QGuiApplication::font().family() : cjkFamily},
-        // layout
-        {"pageMargin", 40}, {"gap", 20}, {"cardPadding", 28}, {"radius", 12},
-        // type scale
-        {"fontTitle", 44},   // app mark
-        {"fontClock", 88},   // home clock
-        {"fontFocus", 46},   // focus / now primary line
-        {"fontSection", 32}, // page + section titles
-        {"fontBody", 38},    // task and list body (incl. CJK)
-        {"fontMeta", 26},    // secondary / meta
-        {"fontFooter", 22},  // footers only
-        // tap targets
-        {"tabBarHeight", 120}, {"buttonHeight", 72}, {"buttonHeightSmall", 60},
-        {"checkboxSize", 64},
-        // e-ink grayscale: no information may rely on light gray alone
-        {"paper", "#FFFFFF"},        // pure paper white
-        {"card", "#FFFFFF"},
-        {"ink", "#111111"},          // primary text
-        {"inkSecondary", "#333333"}, // secondary body
-        {"mutedInk", "#4D4D4D"},     // meta, never below mid-gray
-        {"faintInk", "#767676"},     // disabled / empty states only
-        {"line", "#999999"},         // subtle border
-        {"lineStrong", "#111111"},   // primary card border
-        {"accent", "#7A1F2B"},       // status + active emphasis only
+        {"scale", scaleEnv},
+        // layout – generous margins, no rounded-rect radius
+        {"pageMargin", 48}, {"gap", 24},
+        // type scale (physical px at 264 PPI)
+        {"homeTime",  s.homeTime},   // clock on Home
+        {"section",   s.section},    // section labels (NOW, FOCUS, …)
+        {"primary",   s.primary},    // focus / hero text
+        {"task",      s.task},       // task body & CJK
+        {"meta",      s.meta},       // secondary info
+        {"button",    s.button},     // button labels
+        {"footer",    s.footer},     // status footer
+        // tap targets (fixed across scales)
+        {"tabH", 96}, {"btnH", 80}, {"btnHs", 64}, {"cbSize", 56},
+        // grayscale – three stops only
+        {"paper",   "#FFFFFF"},
+        {"ink",     "#000000"},
+        {"muted",   "#555555"},
+        {"divider", "#000000"},
     };
 
     qmlRegisterType<InkCanvasItem>("PaperOS", 1, 0, "InkCanvasItem");
@@ -106,8 +133,10 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("actionQueue", &actionQueue);
     engine.rootContext()->setContextProperty("deviceStatus", &deviceStatus);
     engine.rootContext()->setContextProperty("noteStore", &noteStore);
+    engine.rootContext()->setContextProperty("inkMode", &inkModeController);
     engine.rootContext()->setContextProperty("refreshControl", &refreshControl);
     engine.rootContext()->setContextProperty("penBridge", &penBridge);
+    engine.rootContext()->setContextProperty("perfLog", &PerfLog::instance());
     engine.rootContext()->setContextProperty("appFontFamily", cjkFamily);
 
     const QUrl url(u"qrc:/qt/qml/PaperOSApp/qml/Main.qml"_qs);
@@ -117,11 +146,37 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
+    PerfLog::instance().log("QML_LOAD_BEGIN");
     engine.load(url);
+    PerfLog::instance().log("QML_LOAD_END");
 
     if (!engine.rootObjects().isEmpty()) {
-        if (auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first()))
+        if (auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first())) {
             penBridge.setWindow(window);
+            testBridge.maybeStart(window);
+            PerfLog::instance().log("BRIDGE_READY");
+        }
+    }
+
+    // Run the direct-ink startup gate after the platform has shown the window
+    // and the vendor has registered its buffers (setBuffers). Diagnostic only.
+    if (qEnvironmentVariableIntValue("PAPEROS_DIRECT_DIAG") == 1) {
+        fprintf(stderr, "[DirectDiag] gate scheduled (T+900ms)\n");
+        QTimer::singleShot(900, &app, [argc, argv]() {
+            fprintf(stderr, "[DirectDiag] gate callback entered\n");
+            DirectInkDiag::runStartupGate(argc, argv);
+
+            // Test-A HOLD: re-assert the deterministic line every 500 ms so
+            // the operator can judge physical solid-vs-dotted while the shell
+            // repaints. Purely diagnostic; PAPEROS_DIRECT_TESTA=1 only.
+            if (qEnvironmentVariableIntValue("PAPEROS_DIRECT_TESTA") == 1
+                && DirectInkDiag::ready()) {
+                auto *hold = new QTimer(qApp);
+                QObject::connect(hold, &QTimer::timeout, []() { DirectInkDiag::runTestAHold(); });
+                hold->start(500);
+                fprintf(stderr, "[DirectDiag] Test-A hold active (line at mid-screen)\n");
+            }
+        });
     }
 
     return app.exec();

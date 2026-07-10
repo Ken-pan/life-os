@@ -22,10 +22,11 @@
 
 | ID               | 主题                                | ROI | 桶      | 投入   | 验收                      | Hub      |
 | ---------------- | ----------------------------------- | --- | ------- | ------ | ------------------------- | -------- |
-| **F-P3** {#f-p3} | STS 与专款 reserve / Spend 抽屉对齐 | ✅  | Core    | —      | `outlook.test.ts` 40 pass | §Shipped |
 | **F-P1b**        | 扩展 popup last sync + 重试         | ◆   | Growth  | 0.5–1d | popup 可见 timestamp      | —        |
 | **F-P4**         | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | pending 与 UI 一致        | —        |
 | **F-P5**         | History CSV 最小导入                | ○   | Product | 3–5d   | `/review/import` 可上传   | —        |
+
+**已完成：** F-P3 STS / reserve / Spend 口径统一，`outlook.test.ts` 40 pass。
 
 ### 实现锚点
 

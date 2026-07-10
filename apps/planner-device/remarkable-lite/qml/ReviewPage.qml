@@ -1,100 +1,179 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Review: the daily shutdown loop. v0 is a status mirror — done counts,
-// pending queue, notes captured — not yet an interactive checklist.
+// Review: daily shutdown loop — 4 steps, each with status and action.
 Item {
     id: page
 
-    // Lets the shutdown checklist jump straight to the module it names.
     signal navigateTo(int module)
 
     readonly property var tasks: apiClient.dashboardData.tasks ? apiClient.dashboardData.tasks : []
     readonly property int doneCount: tasks.filter(function(t) { return t.completed === true }).length
+    readonly property int openCount: tasks.length - doneCount
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: Ui.gap
+        spacing: 0
 
         Text {
-            text: "Daily Review"
+            text: "Daily Shutdown"
             font.family: Ui.fontFamily
-            font.pixelSize: Ui.fontSection
+            font.pixelSize: Ui.primary
             font.bold: true
             color: Ui.ink
+            Layout.bottomMargin: Ui.gap
         }
 
-        Rectangle {
+        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
+
+        // ── Step 1 ─────────────────────────────────────────────
+        Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: 230
-            color: Ui.card
-            radius: Ui.radius
-            border.width: 1
-            border.color: Ui.line
+            height: 110
 
-            ColumnLayout {
+            RowLayout {
                 anchors.fill: parent
-                anchors.margins: Ui.cardPadding
-                spacing: 10
-                Text {
-                    text: "TODAY SO FAR"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontMeta
-                    font.bold: true
-                    color: Ui.accent
-                }
-                StatusLine { label: "Done today"; value: page.doneCount + " / " + page.tasks.length }
-                StatusLine { label: "Still open"; value: String(page.tasks.length - page.doneCount) }
-                StatusLine { label: "Notes captured"; value: String(noteStore.noteCount) }
-                StatusLine { label: "Actions awaiting sync"; value: String(actionQueue.pendingCount) }
-            }
-        }
+                spacing: Ui.gap
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 240
-            color: Ui.card
-            radius: Ui.radius
-            border.width: 1
-            border.color: Ui.line
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Ui.cardPadding
-                spacing: 8
-                Text {
-                    text: "SHUTDOWN CHECKLIST"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontMeta
-                    font.bold: true
-                    color: Ui.accent
-                }
-                Repeater {
-                    model: [
-                        "Clear Today list — complete or defer everything",
-                        "Capture loose ends as Quick Notes",
-                        "Check pending sync actions reached zero",
-                        "Pick tomorrow's focus in Planner",
-                    ]
-                    delegate: Text {
-                        text: "•  " + modelData
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text {
+                        text: "1  Clear Today"
                         font.family: Ui.fontFamily
-                        font.pixelSize: Ui.fontMeta
+                        font.pixelSize: Ui.task
+                        font.bold: true
                         color: Ui.ink
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
+                    }
+                    Text {
+                        text: page.openCount + " still open"
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.meta
+                        color: page.openCount > 0 ? Ui.ink : Ui.muted
                     }
                 }
+                PaperButton {
+                    label: "Review"
+                    secondary: page.openCount === 0
+                    implicitHeight: Ui.btnHs
+                    onTapped: page.navigateTo(1)
+                }
             }
+
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.divider }
+        }
+
+        // ── Step 2 ─────────────────────────────────────────────
+        Item {
+            Layout.fillWidth: true
+            height: 110
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: Ui.gap
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text {
+                        text: "2  Process Notes"
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.task
+                        font.bold: true
+                        color: Ui.ink
+                    }
+                    Text {
+                        text: noteStore.noteCount + " notes captured"
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.meta
+                        color: noteStore.noteCount > 0 ? Ui.ink : Ui.muted
+                    }
+                }
+                PaperButton {
+                    label: "Notes"
+                    secondary: noteStore.noteCount === 0
+                    implicitHeight: Ui.btnHs
+                    onTapped: page.navigateTo(2)
+                }
+            }
+
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.divider }
+        }
+
+        // ── Step 3 ─────────────────────────────────────────────
+        Item {
+            Layout.fillWidth: true
+            height: 110
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: Ui.gap
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text {
+                        text: "3  Sync"
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.task
+                        font.bold: true
+                        color: Ui.ink
+                    }
+                    Text {
+                        text: actionQueue.pendingCount + " pending"
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.meta
+                        color: actionQueue.pendingCount > 0 ? Ui.ink : Ui.muted
+                    }
+                }
+                PaperButton {
+                    label: "Sync now"
+                    secondary: actionQueue.pendingCount === 0
+                    implicitHeight: Ui.btnHs
+                    onTapped: actionQueue.sync()
+                }
+            }
+
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.divider }
+        }
+
+        // ── Step 4 ─────────────────────────────────────────────
+        Item {
+            Layout.fillWidth: true
+            height: 110
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: Ui.gap
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text {
+                        text: "4  Pick Tomorrow Focus"
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.task
+                        font.bold: true
+                        color: Ui.ink
+                    }
+                    Text {
+                        text: "Set priority in Planner"
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.meta
+                        color: Ui.muted
+                    }
+                }
+                PaperButton {
+                    label: "Choose"
+                    secondary: true
+                    implicitHeight: Ui.btnHs
+                    onTapped: page.navigateTo(1)
+                }
+            }
+
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.divider }
         }
 
         Item { Layout.fillHeight: true }
-
-        Text {
-            text: "Weekly review and drift analysis land with the backend review feed."
-            font.family: Ui.fontFamily
-            font.pixelSize: Ui.fontMeta
-            color: Ui.faintInk
-        }
     }
 }

@@ -7,11 +7,13 @@
   import { completeTask, editTask } from '$lib/taskUi.js'
   import { t } from '$lib/i18n/index.js'
   import { sortTasks } from '$lib/engine/prioritizer.js'
+  import { visibleProjects } from '$lib/domain/projects.js'
 
   const TAGS_VISIBLE = 4
 
   let query = $state('')
   let tag = $state('')
+  let projectId = $state('')
   let showAllTags = $state(false)
   /** @type {HTMLInputElement | null} */
   let searchInput = $state(null)
@@ -23,11 +25,13 @@
   })
 
   const tags = $derived(selectAllTags(taskIndex()))
+  const projects = $derived(visibleProjects())
   const visibleTags = $derived(showAllTags ? tags : tags.slice(0, TAGS_VISIBLE))
   const hiddenTagCount = $derived(Math.max(0, tags.length - TAGS_VISIBLE))
   const tasks = $derived.by(() => {
     let list = selectSearch(taskIndex(), query)
     if (tag) list = list.filter((t) => t.tags.includes(tag))
+    if (projectId) list = list.filter((t) => t.projectId === projectId)
     return sortTasks(list, 'smart')
   })
 </script>
@@ -65,6 +69,23 @@
           {t('search.moreTags', { count: hiddenTagCount })}
         </button>
       {/if}
+    </div>
+  {/if}
+  {#if projects.length}
+    <div class="search-tags">
+      <div class="seg seg-scroll">
+        <button type="button" class:on={!projectId} onclick={() => (projectId = '')}
+          >{t('projects.all')}</button
+        >
+        {#each projects as project (project.id)}
+          <button
+            type="button"
+            class:on={projectId === project.id}
+            onclick={() => (projectId = project.id)}
+            >{project.title}</button
+          >
+        {/each}
+      </div>
     </div>
   {/if}
   <TaskGroup

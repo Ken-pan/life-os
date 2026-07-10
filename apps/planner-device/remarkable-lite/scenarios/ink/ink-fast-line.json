@@ -1,0 +1,21 @@
+{
+  "name": "ink-fast-line",
+  "iterations": 1,
+  "setup": [
+    "systemctl stop paperos"
+  ],
+  "actions": [
+    { "cmd": "fixture", "type": "ink-fast-line" }
+  ],
+  "metrics": [
+    "input_to_swap",
+    "raster_duration"
+  ],
+  "assertions": [
+    { "metric": "input_to_swap_p95", "max": 12000 }
+  ],
+  "cleanup": [
+    "systemctl stop paperos"
+  ],
+  "recovery": "recover"
+}

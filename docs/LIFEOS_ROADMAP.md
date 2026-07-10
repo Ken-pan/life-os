@@ -1,8 +1,8 @@
 ---
 title: Life OS Roadmap
 owner: kenpan
-last_verified: 2026-07-09
-review_cadence: monthly
+last_verified: 2026-07-10
+review_cadence: weekly
 doc_role: status-hub
 priority_model: 2026-07-09-per-app-roadmaps
 ---
@@ -14,7 +14,7 @@ priority_model: 2026-07-09-per-app-roadmaps
 > 详细阶段史、Wave 完成记录、提取决策矩阵 → [`roadmap/`](./roadmap/README.md)
 > **六 app 产品排期** → [`roadmap/apps/`](./roadmap/apps/README.md)
 >
-> **优先级依据（2026-07-09）：** Phase 6 **G-P4b-H / H-P6a** ✅；下一档按 [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) 条件项。
+> **状态口径（2026-07-10）：** 代码、生产验收与 app 分卷交叉核对；Planner 承载当前执行 tickets，Markdown 继续作为长期规划与技术决策真源。
 
 ## 一句话
 
@@ -30,7 +30,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | 序  | ID  | 主题 | 桶  | ROI | 下一步 | 验收 |
 | --- | --- | ---- | --- | --- | ------ | ---- |
-| 1 | **P-MOVE-2** | PaperOS read path + offline cache | Planner | Product | ◆ | 生产 Today 23 tasks ✅；Move cache/offline launch ✅；下一步 P-MOVE-3 staging write gate | Move 离线可读 Today；缺 token fail closed |
+| 1 | **P-MOVE-5** | PaperOS controlled write staging gate | Planner | Product | ◆ | staging 验证 `task.complete`；生产写开关保持关闭 | staging 写入与幂等通过，生产 fail closed |
 
 **2026-07-09 已验收（见 §Shipped）：** Phase 0–6 — **F-P3** · **G-P4b-M/H** · **G-P6** · **G-P8** · **G-P9** · **M-P5** · **H-P6a** · **P-P2** · **FT-P0/FT-P1** · **I-P1.5b** · CI 接线。
 
@@ -38,21 +38,28 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | ID           | 主题                                       | App     | 桶       | ROI | 触发 / 范围                                   |
 | ------------ | ------------------------------------------ | ------- | -------- | --- | --------------------------------------------- |
-| **P-MOVE-2** | PaperOS read path + offline cache          | Planner | Product  | ◆   | Deployed/read-cache/offline launch ✅；保留 P-MOVE-3 前生产写关闭 |
-| **P-MOVE-3** | Paper `task.complete` controlled write MVP | Planner | Product  | ◆   | PR-3B 本地 HTTP A-E ✅；下一步 staging pass；生产 `PAPER_ACTIONS_WRITE_ENABLED` 仍默认关 |
-| **H-W3**     | Home 手绘分区 `zones[]`                    | Home    | Product  | ◆◆◆ | [`home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) §6 |
-| **C-P2 P2+** | Finance React 共享 UI                      | Finance | Platform | ✗   | Finance 已迁移 SvelteKit；第 3 React 消费者前不做 |
-| **C-P1+**    | Finance nav contracts mirror               | Finance | Platform | ✗   | `contracts/events` 已够                       |
+| **P-ATTACH-0** | Task / Project 附件底座                  | Planner | Core     | ◆◆  | Supabase Storage + metadata；在线上传/删除/预览 |
+| **P-P4**       | Today 与 Portal 今日任务计数对齐          | Planner | Growth   | ◆   | 同账号、同日期口径一致                         |
+| **P-MOVE-6**   | PaperOS 定时缓存 + 手动 Sync now          | Planner | Product  | ◆   | scheduled cache、手动同步、性能 baseline        |
+| **F-P1b**      | Finance 扩展 last sync + retry            | Finance | Growth   | ◆   | popup 显示 timestamp、失败原因与重试             |
+| **FT-P2**      | Portal 摘要显示今日是否已练               | Fitness | Growth   | ◆   | 扩 `portal_today_summary`                        |
+| **H-P7**       | Home 多项目 localStorage 切换             | Home    | Product  | ◆   | H-W0–W5 发货后的下一项                           |
 
 分 app 细节 → [`roadmap/apps/`](./roadmap/apps/README.md) · Growth / Home Integration → [`roadmap/GROWTH.md`](./roadmap/GROWTH.md) · [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)
 
-### 推荐执行顺序（2026-07-09 潜力研判 · 单人）
+### 推荐执行顺序（2026-07-10 状态复核 · 单人）
 
 研判全文 → [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
 ```text
-Phase 7 — Planner Pro Move + Home 空间编辑续 · 按需
-  P-MOVE-2 PaperOS read cache binary · H-W3 手绘分区 · D-P7 · 各 app §Parked
+Phase 7 — 执行系统闭环
+  P-PROJ-3 Roadmap refs UI ✅ → P-MOVE-5 staging write gate
+
+Phase 8 — 半天级跨站快赢
+  F-P1b Finance 扩展反馈 · FT-P2 今日是否已练 · P-P4 计数对齐
+
+Phase 9 — 产品增量
+  P-ATTACH-0 附件底座 · P-MOVE-6 定时缓存 · H-P7 Home 多项目
 
 已完成（2026-07-08 Home 墙图）
   H-W0–W2c · Wave A/B/C UX — 见 [`qa/home-spatial-uiux-audit-2026-07-08.md`](./qa/home-spatial-uiux-audit-2026-07-08.md)
@@ -94,9 +101,7 @@ Phase 7 — Planner Pro Move + Home 空间编辑续 · 按需
 | ID                    | 说明                                                                                         |
 | --------------------- | -------------------------------------------------------------------------------------------- |
 | **I-P2** 跨应用智能   | 依赖更多 `life_events` 消费端                                                                |
-| **H-P0** `apps/home`  | 第六 app · 户型/储藏 spatial；`/plan` 浏览+编辑；`home.kenos.space` 已部署；Portal 实验卡 ✅ |
 | **H-P4** Home 云同步  | spatial 项目 Supabase 持久化（现 `localStorage` only）                                       |
-| **H-P5** Home 平面 UX | 浏览/编辑双模式；`plan-viewport` + `test:viewport` 验收 ✅（2026-07-08）                     |
 
 ---
 
@@ -148,8 +153,8 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 | **I-P1** Portal      | ✅ 已上线；Growth G-P1–G-P5 已接                    | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p1)  |
 | **I-P1.5** 事件中心  | ✅ 管道通；**I-P1.5b** Fitness 完练打卡 ✅（2026-07-09） | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#i-p15) |
 | **G-P1–G-P5** Growth | ✅ 生产验收完成（含 F-P1/G-P2）                     | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                 |
-| **H-P0** Home 实验   | 🟡 已部署；SSO + PWA ✅；H-P5 平面 UX ✅；H-P4 搁置 | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)  |
-| **H-W** 空间编辑     | 🟡 **H-W0–W2c ✅** · **Wave A/B/C UX ✅** · **H-W3** 分区 📋 · [`qa/home-spatial-uiux-audit-2026-07-08.md`](./qa/home-spatial-uiux-audit-2026-07-08.md) | [`roadmap/apps/home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) |
+| **H-P0** Home 实验   | 🟡 已部署；SSO + PWA + H-P5 平面 UX ✅；H-P4 云同步搁置 | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)  |
+| **H-W** 空间编辑     | ✅ **H-W0–W5** · Wave A/B/C UX · `test:plan-edit` 13 checks | [`roadmap/apps/home-spatial-editor.md`](./roadmap/apps/home-spatial-editor.md) |
 | **C-P1+** 平台扩容   | 🟡 Finance 部分接入；低优先                         | [`roadmap/PLATFORM.md`](./roadmap/PLATFORM.md)             |
 | **D-P6** 设计系统    | ✅ catalog a11y gates（2026-07-08）                 | [`roadmap/DESIGN.md`](./roadmap/DESIGN.md)                 |
 
@@ -157,12 +162,12 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 
 | App     | 层级   | URL                                                | Workspace    | SSO | Portal | Top Next（→ 分卷）                       |
 | ------- | ------ | -------------------------------------------------- | ------------ | --- | ------ | ---------------------------------------- |
-| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅  | ✅     | **P-MOVE-2** PaperOS · P-P4                       |
-| Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅  | ✅     | FT-P1 ✅ · 维护 E2E                             |
+| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅  | ✅     | **P-MOVE-5** · P-ATTACH-0                           |
+| Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅  | ✅     | **FT-P2** Portal 今日是否已练                      |
 | Finance | 生产   | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅  | ✅     | F-P3 ✅ · F-P1b 按需                            |
 | Music   | 生产   | [music.kenos.space](https://music.kenos.space)     | `music-os`   | ✅  | ✅     | M-P5 ✅ · 维护推荐管道                          |
-| Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space)   | `portal`     | ✅  | —      | **M-P5** 行为分（hub）                        |
-| Home    | 实验   | [home.kenos.space](https://home.kenos.space)       | `home-os`    | ✅  | ✅     | **H-W3** 手绘分区 |
+| Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space)   | `portal`     | ✅  | —      | 当前无阻塞项；维护 smoke                           |
+| Home    | 实验   | [home.kenos.space](https://home.kenos.space)       | `home-os`    | ✅  | ✅     | **H-P7** 多项目切换                                |
 
 **分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · 插件：Finance OS Sync — `apps/finance/extension`
 
@@ -175,7 +180,7 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → [`roadmap/BA
 ./scripts/test-outbox-trigger.sh --smoke   # I-P1.5
 npm run check:lifeos-boundaries            # C-P0
 npm run test:viewport -w home-os           # H-P5 平面定位（需 dev/preview）
-npm run test:plan-edit -w home-os          # H-W 墙图 smoke（8 checks）
+npm run test:plan-edit -w home-os          # H-W 墙图 smoke（13 checks）
 npm run validate:tokens                    # D 线 token 完整性
 npm run test:design-catalog                # 172 smoke
 npm run test:design-catalog:snapshots    # 80 pixel baselines

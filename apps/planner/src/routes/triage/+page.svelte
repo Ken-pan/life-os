@@ -22,6 +22,7 @@
       if (t.completed || t.deletedAt) return false
       // Exclude archived
       if (archive && t.listId === archive.id) return false
+      if (t.meta?.triagedAt) return false
       
       const isUnscheduled = !t.dueDate
       const isOverdue = t.dueDate && t.dueDate < today
@@ -34,6 +35,8 @@
   })
 
   let currentTaskId = $state(null)
+  let processedCount = $state(0)
+  let initialQueueCount = $state(0)
   
   // Resolve active task to show
   const currentTask = $derived.by(() => {
@@ -44,10 +47,25 @@
   
   // Keep active task ID updated
   $effect(() => {
+    if (!initialQueueCount && triageTasks.length) initialQueueCount = triageTasks.length
     if (currentTask && currentTaskId !== currentTask.id) {
       currentTaskId = currentTask.id
     }
   })
+
+  function finishTriage(patch = {}) {
+    if (!currentTask) return
+    updateTask(currentTask.id, {
+      ...patch,
+      meta: {
+        ...(currentTask.meta || {}),
+        ...(patch.meta || {}),
+        triagedAt: Date.now(),
+      },
+    })
+    processedCount += 1
+    toast(t('triage.saved'), 'success')
+  }
 
   function tomorrowKey() {
     const d = new Date()
@@ -64,40 +82,34 @@
   }
 
   function doToday() {
-    if (!currentTask) return
-    updateTask(currentTask.id, { dueDate: todayKey() })
-    toast(t('toast.saved'), 'success')
+    finishTriage({ dueDate: todayKey() })
   }
 
   function doTomorrow() {
-    if (!currentTask) return
-    updateTask(currentTask.id, { dueDate: tomorrowKey() })
-    toast(t('toast.saved'), 'success')
+    finishTriage({ dueDate: tomorrowKey() })
   }
 
   function doThisWeek() {
-    if (!currentTask) return
-    updateTask(currentTask.id, { dueDate: thisWeekKey() })
-    toast(t('toast.saved'), 'success')
+    finishTriage({ dueDate: thisWeekKey() })
   }
 
   function doSomeday() {
-    if (!currentTask) return
-    updateTask(currentTask.id, { dueDate: null })
-    toast(t('toast.saved'), 'success')
+    finishTriage({ dueDate: null })
   }
 
   function doDone() {
     if (!currentTask) return
     toggleComplete(currentTask.id)
-    toast(t('toast.saved'), 'success')
+    processedCount += 1
+    toast(t('triage.completed'), 'success')
   }
 
   function doDelete() {
     if (!currentTask) return
     const id = currentTask.id
     deleteTask(id)
-    toast(t('toast.deleted'), 'success')
+    processedCount += 1
+    toast(t('triage.deleted'), 'success')
   }
 
   function doEdit() {
@@ -137,160 +149,158 @@
 </script>
 
 <div class="life-os-page-workspace triage-page">
-  <AppBar title={t('nav.triage')} subtitle="Process messy tasks one by one" />
+  <AppBar title={t('nav.triage')} subtitle={t('triage.subtitle')} />
 
   <div class="wrap triage-container">
     {#if !currentTask}
       <div class="triage-done-state">
-        <EmptyState message="All caught up!" hint="Your backlog is fully sorted and triaged." />
+        <div class="completion-mark" aria-hidden="true"><Icon name="check" size={28} /></div>
+        <EmptyState message={t('triage.allDone')} hint={t('triage.allDoneHint')} />
+        {#if processedCount}
+          <p class="session-summary">{t('triage.sessionSummary', { count: processedCount })}</p>
+        {/if}
       </div>
     {:else}
+      <div class="triage-progress-header">
+        <div>
+          <span>{t('triage.progressLabel')}</span>
+          <strong>{t('triage.remaining', { count: triageTasks.length })}</strong>
+        </div>
+        <div
+          class="progress-track"
+          role="progressbar"
+          aria-label={t('triage.progressLabel')}
+          aria-valuemin="0"
+          aria-valuemax={Math.max(initialQueueCount, triageTasks.length)}
+          aria-valuenow={processedCount}
+        >
+          <span style:width={`${Math.min(100, (processedCount / Math.max(initialQueueCount, 1)) * 100)}%`}></span>
+        </div>
+      </div>
+
       <div class="triage-card">
-        <!-- Card Header -->
         <div class="triage-card-header">
-          <span class="area-chip">
+          <span class="source-label">
             {getListById(currentTask.listId) ? listLabel(getListById(currentTask.listId)) : 'Inbox'}
           </span>
           {#if currentTask.recurrence && currentTask.recurrence.rule !== 'none'}
-            <span class="recurrence-chip">🔁 {currentTask.recurrence.rule}</span>
+            <span class="recurrence-chip">{t('triage.repeating')}</span>
           {/if}
         </div>
 
-        <!-- Task Title -->
         <h2 class="task-title">{currentTask.title}</h2>
-
-        <!-- Task Notes -->
         {#if currentTask.notes}
           <p class="task-notes">{currentTask.notes}</p>
         {/if}
 
-        <!-- Status / Dates -->
         <div class="task-status-row">
-          <span class="status-label">Due Date:</span>
+          <span class="status-label">{t('triage.due')}</span>
           <span class="status-value" class:overdue={isOverdue(currentTask)}>
-            {currentTask.dueDate ? formatDateShort(currentTask.dueDate) : 'Unscheduled'}
+            {currentTask.dueDate ? formatDateShort(currentTask.dueDate) : t('triage.unscheduled')}
             {#if isOverdue(currentTask)}
-              <span class="overdue-badge">Overdue</span>
+              <span class="overdue-badge">{t('triage.overdue')}</span>
             {/if}
           </span>
         </div>
 
-        <hr class="divider" />
-
-        <!-- Metadata Form -->
         <div class="metadata-section">
-          <!-- Priority -->
-          <div class="meta-field">
-            <span class="meta-label">Priority</span>
+          <div class="meta-field next-action-field">
+            <label for="triage-next-action" class="meta-label">{t('triage.nextAction')}</label>
+            <input
+              id="triage-next-action"
+              type="text"
+              class="text-input"
+              placeholder={t('triage.nextActionPlaceholder')}
+              value={currentTask.nextAction || ''}
+              onchange={(e) => setNextAction(e.currentTarget.value)}
+              onkeydown={(e) => e.key === 'Enter' && setNextAction(e.currentTarget.value)}
+            />
+            <span class="field-hint">{t('triage.nextActionHint')}</span>
+          </div>
+
+          <fieldset class="meta-field">
+            <legend class="meta-label">{t('triage.priority')}</legend>
             <div class="selector-row">
               {#each ['P0', 'P1', 'P2', 'P3'] as p}
                 <button
                   type="button"
                   class="selector-btn p-{p}"
                   class:selected={currentTask.priority === p}
+                  aria-pressed={currentTask.priority === p}
                   onclick={() => setPriority(p)}
                 >
                   {p}
                 </button>
               {/each}
             </div>
-          </div>
+          </fieldset>
 
-          <!-- Size -->
-          <div class="meta-field">
-            <span class="meta-label">Size</span>
+          <fieldset class="meta-field">
+            <legend class="meta-label">{t('triage.size')}</legend>
             <div class="selector-row">
               {#each ['small', 'medium', 'large', 'epic'] as s}
                 <button
                   type="button"
                   class="selector-btn size-{s}"
                   class:selected={currentTask.size === s}
+                  aria-pressed={currentTask.size === s}
                   onclick={() => setSize(s)}
                 >
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {t(`triage.size_${s}`)}
                 </button>
               {/each}
             </div>
-          </div>
+          </fieldset>
 
-          <!-- Area -->
-          <div class="meta-field">
-            <span class="meta-label">Area</span>
-            <div class="selector-row" style="flex-wrap: wrap; gap: 6px;">
+          <details class="more-details">
+            <summary>{t('triage.moreDetails')}</summary>
+            <fieldset class="meta-field">
+              <legend class="meta-label">{t('triage.area')}</legend>
+              <div class="selector-row area-selector-row">
               {#each ['life', 'work', 'planner', 'fitness', 'finance', 'home', 'other'] as a}
                 <button
                   type="button"
                   class="selector-btn area-{a}"
-                  style="flex: none; min-width: 65px; height: 30px; font-size: 11px; padding: 2px 4px;"
                   class:selected={currentTask.area === a}
+                  aria-pressed={currentTask.area === a}
                   onclick={() => setArea(a)}
                 >
-                  {a.charAt(0).toUpperCase() + a.slice(1)}
+                  {t(`triage.area_${a}`)}
                 </button>
               {/each}
-            </div>
-          </div>
-
-          <!-- Next Action -->
-          <div class="meta-field">
-            <label for="triage-next-action" class="meta-label">Next Action</label>
-            <input
-              id="triage-next-action"
-              type="text"
-              class="text-input"
-              placeholder="What is the next physical action?"
-              value={currentTask.nextAction || ''}
-              onchange={(e) => setNextAction(e.target.value)}
-              onkeydown={(e) => {
-                if (e.key === 'Enter') {
-                  setNextAction(e.currentTarget.value);
-                }
-              }}
-            />
-          </div>
-
-          <!-- Needs Split -->
-          <div class="meta-field inline-field">
+              </div>
+            </fieldset>
             <label class="checkbox-container">
               <input
                 type="checkbox"
                 checked={Boolean(currentTask.meta?.needsSplit)}
                 onchange={(e) => setNeedsSplit(e.currentTarget.checked)}
               />
-              <span class="checkbox-label">Needs Split (Complex Task)</span>
+              <span class="checkbox-label">{t('triage.needsSplit')}</span>
             </label>
-          </div>
+          </details>
         </div>
 
-        <hr class="divider" />
-
-        <!-- Actions Panel -->
         <div class="actions-panel">
-          <div class="action-section-title">Schedule</div>
+          <div class="action-section-title">{t('triage.organize')}</div>
           <div class="actions-grid schedule-grid">
-            <button type="button" class="action-btn" onclick={doToday}>Today</button>
-            <button type="button" class="action-btn" onclick={doTomorrow}>Tomorrow</button>
-            <button type="button" class="action-btn" onclick={doThisWeek}>This Week</button>
-            <button type="button" class="action-btn" onclick={doSomeday}>Someday</button>
+            <button type="button" class="action-btn action-primary" onclick={doToday}>{t('triage.today')}</button>
+            <button type="button" class="action-btn" onclick={doTomorrow}>{t('triage.tomorrow')}</button>
+            <button type="button" class="action-btn" onclick={doThisWeek}>{t('triage.thisWeek')}</button>
+            <button type="button" class="action-btn" onclick={doSomeday}>{t('triage.someday')}</button>
           </div>
 
-          <div class="action-section-title" style="margin-top: var(--space-4)">Operations</div>
           <div class="actions-grid operations-grid">
             <button type="button" class="action-btn btn-done" onclick={doDone}>
-              <Icon name="check" size={16} /> Done
+              <Icon name="check" size={16} /> {t('triage.done')}
             </button>
             <button type="button" class="action-btn btn-edit" onclick={doEdit}>
-              <Icon name="pencil" size={16} /> Edit
+              <Icon name="pencil" size={16} /> {t('triage.edit')}
             </button>
             <button type="button" class="action-btn btn-delete" onclick={doDelete}>
-              <Icon name="trash" size={16} /> Delete
+              <Icon name="trash" size={16} /> {t('triage.delete')}
             </button>
           </div>
-        </div>
-
-        <!-- Progress Counter -->
-        <div class="triage-progress">
-          Remaining in queue: <strong>{triageTasks.length}</strong> {triageTasks.length === 1 ? 'task' : 'tasks'}
         </div>
       </div>
     {/if}
@@ -309,21 +319,26 @@
     overflow-y: auto;
     padding: var(--space-4);
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: flex-start;
+    gap: var(--space-3);
+    width: min(100%, 600px);
+    margin-inline: auto;
   }
   .triage-done-state {
     width: 100%;
     margin-top: 10vh;
+    text-align: center;
   }
   .triage-card {
     width: 100%;
-    max-width: 520px;
+    max-width: none;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
-    padding: var(--space-4);
-    box-shadow: var(--shadow-sm);
+    padding: clamp(var(--space-4), 4vw, var(--space-6));
+    box-shadow: 0 12px 36px color-mix(in srgb, var(--t1) 7%, transparent);
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
@@ -333,7 +348,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  .area-chip {
+  .source-label {
     font-family: var(--mono);
     font-size: var(--text-xs);
     background: color-mix(in srgb, var(--accent) 12%, transparent);
@@ -397,12 +412,20 @@
   .metadata-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-4);
+    padding-block: var(--space-3);
+    border-block: 1px solid var(--border);
   }
   .meta-field {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+  }
+  fieldset.meta-field {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
   .meta-label {
     font-family: var(--mono);
@@ -417,7 +440,7 @@
   }
   .selector-btn {
     flex: 1;
-    min-height: 36px;
+    min-height: var(--tap-min);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
     background: transparent;
@@ -457,7 +480,7 @@
   }
   .text-input {
     min-height: var(--tap-min);
-    padding: 0 var(--space-2);
+    padding: 0 var(--space-3);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
     background: var(--bg);
@@ -474,6 +497,7 @@
     cursor: pointer;
     font-size: var(--text-sm);
     color: var(--t2);
+    min-height: var(--tap-min);
   }
   .checkbox-label {
     user-select: none;
@@ -497,7 +521,7 @@
     grid-template-columns: repeat(3, 1fr);
   }
   .action-btn {
-    min-height: 40px;
+    min-height: var(--tap-min);
     border: 1px solid var(--border);
     border-radius: var(--radius-control);
     background: color-mix(in srgb, var(--t1) 2%, transparent);
@@ -531,16 +555,157 @@
   .btn-delete:hover {
     background: rgba(227, 68, 50, 0.15);
   }
-  .triage-progress {
-    font-size: var(--text-xs);
+
+  .triage-progress-header {
+    width: 100%;
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .triage-progress-header > div:first-child {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
     color: var(--t3);
-    text-align: center;
-    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .triage-progress-header strong {
+    color: var(--t2);
+    font-weight: 650;
+  }
+
+  .progress-track {
+    height: 3px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--border);
+  }
+
+  .progress-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width 180ms ease-out;
+  }
+
+  .field-hint,
+  .session-summary {
+    color: var(--t3);
+    font-size: var(--text-xs);
+  }
+
+  .next-action-field .meta-label {
+    color: var(--t2);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 650;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .more-details {
+    border-radius: var(--radius-control);
+    background: color-mix(in srgb, var(--t1) 2%, transparent);
+  }
+
+  .more-details summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap-min);
+    padding-inline: var(--space-3);
+    color: var(--t2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .more-details[open] {
+    padding-bottom: var(--space-3);
+  }
+
+  .more-details[open] summary {
+    margin-bottom: var(--space-2);
+  }
+
+  .more-details .meta-field,
+  .more-details .checkbox-container {
+    margin-inline: var(--space-3);
+  }
+
+  .area-selector-row {
+    flex-wrap: wrap;
+  }
+
+  .area-selector-row .selector-btn {
+    flex: 1 1 86px;
+  }
+
+  .actions-panel {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .action-primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-contrast, #fff);
+    font-weight: 700;
+  }
+
+  .action-primary:hover {
+    background: color-mix(in srgb, var(--accent) 88%, var(--t1));
+    color: var(--accent-contrast, #fff);
+  }
+
+  .operations-grid {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+  }
+
+  .completion-mark {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto var(--space-3);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
   }
 
   @media (max-width: 480px) {
+    .triage-container {
+      padding: var(--space-3);
+    }
+
+    .triage-card {
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      box-shadow: none;
+    }
+
     .schedule-grid {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    .selector-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .area-selector-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .progress-track span,
+    .selector-btn,
+    .action-btn {
+      transition: none;
     }
   }
 </style>

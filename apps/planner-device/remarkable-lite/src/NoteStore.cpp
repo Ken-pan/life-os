@@ -8,16 +8,52 @@
 #include <QJsonObject>
 #include <QDateTime>
 #include <QDebug>
+#include <QUrl>
 
 NoteStore::NoteStore(QObject *parent) : QObject(parent)
 {
+    QDir().mkpath(notesDir());
     m_noteCount = QDir(notesDir()).entryList(QDir::Dirs | QDir::NoDotAndDotDot).size();
+    if (m_noteCount == 0)
+        createNote(QStringLiteral("default"));
     qInfo() << "PaperOS notes:" << m_noteCount;
 }
 
 QString NoteStore::notesDir() const
 {
     return paperosHome() + QStringLiteral("/data/notes");
+}
+
+QVariantList NoteStore::listNotes() const
+{
+    QVariantList out;
+    const auto entries = QDir(notesDir()).entryInfoList(
+        QDir::Dirs | QDir::NoDotAndDotDot, QDir::Time);
+    for (const QFileInfo &fi : entries) {
+        const QString pagePath = fi.filePath() + QStringLiteral("/page-001.png");
+        const QDateTime modified = fi.lastModified();
+        QString title;
+        QFile metaFile(fi.filePath() + QStringLiteral("/meta.json"));
+        if (metaFile.open(QIODevice::ReadOnly))
+            title = QJsonDocument::fromJson(metaFile.readAll()).object().value("title").toString();
+        if (title.isEmpty())
+            title = QStringLiteral("Notebook · %1").arg(modified.toString(QStringLiteral("MMM d")));
+        QVariantMap m;
+        m[QStringLiteral("noteId")] = fi.fileName();
+        m[QStringLiteral("displayTitle")] = title;
+        m[QStringLiteral("modifiedAt")] = modified.toString(QStringLiteral("yyyy-MM-dd HH:mm"));
+        m[QStringLiteral("modifiedLabel")] =
+            modified.date() == QDate::currentDate()
+                ? QStringLiteral("Updated today at %1").arg(modified.toString(QStringLiteral("h:mm AP")))
+                : QStringLiteral("Updated %1").arg(modified.toString(QStringLiteral("MMM d at h:mm AP")));
+        m[QStringLiteral("hasInk")] = QFile::exists(pagePath);
+        m[QStringLiteral("pageCount")] = 1;
+        m[QStringLiteral("previewUrl")] = QFile::exists(pagePath)
+            ? QUrl::fromLocalFile(pagePath).toString()
+            : QString();
+        out.append(m);
+    }
+    return out;
 }
 
 QString NoteStore::createNote(const QString &kind)
@@ -33,6 +69,9 @@ QString NoteStore::createNote(const QString &kind)
     QJsonObject meta;
     meta["noteId"] = noteId;
     meta["kind"] = kind.isEmpty() ? QStringLiteral("quick") : kind;
+    meta["title"] = kind == QLatin1String("default")
+        ? QStringLiteral("My Notebook")
+        : QStringLiteral("Untitled notebook");
     meta["createdAt"] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     meta["format"] = QStringLiteral("strokes-jsonl-v1");
 

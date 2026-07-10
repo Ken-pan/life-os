@@ -1,177 +1,233 @@
 import QtQuick
 import QtQuick.Layouts
-import PaperOS 1.0
 
-// Quick Note with a full tool system: ballpoint / fineliner / marker /
-// pencil / eraser, color palette (the Move has a color panel), S/M/L
-// widths, undo/redo. The pen draws through the C++ fast path; fingers
-// navigate but do not draw — free palm rejection.
-// Stroke counts, note ids and pen probes live in System > Diagnostics,
-// not here: this page is the paper.
+// A quiet notebook shelf: two columns on the Move in portrait, three in
+// landscape. The preview is the interaction; metadata stays deliberately
+// sparse so the page scans like a physical shelf rather than a dashboard.
 Item {
     id: page
 
-    property string activeNoteId: ""
-    property bool confirmingClear: false
+    readonly property bool landscape: width > height
+    readonly property int columns: landscape ? 3 : 2
+    readonly property int gridGap: landscape ? 20 : 22
+    property string collection: "recent"
+    property var notes: noteStore.listNotes()
 
-    function startNote() {
-        activeNoteId = noteStore.createNote("quick")
-        inkItem.clear()
+    function refresh() {
+        notes = noteStore.listNotes()
     }
 
-    function persist() {
-        if (activeNoteId !== "")
-            noteStore.saveStrokes(activeNoteId, inkItem.allStrokes())
-    }
-
-    Timer {
-        id: clearConfirmTimer
-        interval: 3000
-        onTriggered: page.confirmingClear = false
+    Connections {
+        target: inkMode
+        function onExited(code) { page.refresh() }
     }
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 12
+        spacing: 0
 
-        // ROW 1: session controls
-        RowLayout {
+        // 96 px orientation + creation bar. The count is secondary and the
+        // square + action remains a full 88 px target.
+        Item {
             Layout.fillWidth: true
-            spacing: 12
+            Layout.preferredHeight: 104
+            Layout.minimumHeight: 104
+            Layout.maximumHeight: 104
 
-            PaperButton {
-                label: page.activeNoteId === "" ? "New Note" : "New Page"
-                fontSize: Ui.fontMeta
-                implicitHeight: Ui.buttonHeightSmall
-                onTapped: page.startNote()
-            }
-            PaperButton {
-                label: "Undo"
-                fontSize: Ui.fontMeta
-                implicitHeight: Ui.buttonHeightSmall
-                enabled: inkItem.canUndo
-                onTapped: inkItem.undo()
-            }
-            PaperButton {
-                label: "Redo"
-                fontSize: Ui.fontMeta
-                implicitHeight: Ui.buttonHeightSmall
-                enabled: inkItem.canRedo
-                onTapped: inkItem.redo()
+            Column {
+                anchors.left: parent.left
+                anchors.right: newNoteButton.left
+                anchors.rightMargin: 20
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
+
+                Text {
+                    width: parent.width
+                    text: "Notebooks"
+                    font.family: Ui.fontFamily
+                    font.pixelSize: Ui.section
+                    font.bold: true
+                    color: Ui.ink
+                }
+                Text {
+                    width: parent.width
+                    text: page.notes.length + (page.notes.length === 1 ? " notebook" : " notebooks") + "  ·  On this device"
+                    font.family: Ui.fontFamily
+                    font.pixelSize: Ui.meta
+                    color: Ui.muted
+                }
             }
 
-            Item { Layout.fillWidth: true }
+            Rectangle {
+                id: newNoteButton
+                objectName: "notes.new"
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                width: 88
+                height: 88
+                color: Ui.ink
 
-            // Clear is destructive: first tap arms it, second tap within 3s
-            // wipes the page. Anything else lets the timer disarm it.
-            PaperButton {
-                label: page.confirmingClear ? "Clear page?" : "Clear"
-                fontSize: Ui.fontMeta
-                secondary: !page.confirmingClear
-                selected: page.confirmingClear
-                implicitHeight: Ui.buttonHeightSmall
-                enabled: page.activeNoteId !== "" && inkItem.strokeCount > 0
-                onTapped: {
-                    if (page.confirmingClear) {
-                        page.confirmingClear = false
-                        clearConfirmTimer.stop()
-                        inkItem.clear()
-                    } else {
-                        page.confirmingClear = true
-                        clearConfirmTimer.restart()
+                Text {
+                    anchors.centerIn: parent
+                    text: "+"
+                    font.family: Ui.fontFamily
+                    font.pixelSize: 52
+                    color: Ui.paper
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        var id = noteStore.createNote("quick")
+                        if (id !== "") {
+                            page.refresh()
+                            inkMode.enter(id)
+                        }
                     }
                 }
             }
         }
 
-        // ROW 2: tools + width
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            Layout.preferredHeight: 76
+            Layout.minimumHeight: 76
+            Layout.maximumHeight: 76
+            spacing: 0
 
             Repeater {
-                model: [["ballpoint", "Ball"], ["fineliner", "Fine"], ["marker", "Mark"], ["pencil", "Pencil"], ["eraser", "Erase"]]
-                delegate: PaperButton {
-                    label: modelData[1]
-                    fontSize: Ui.fontMeta
-                    implicitHeight: Ui.buttonHeightSmall
-                    selected: inkItem.tool === modelData[0]
-                    onTapped: inkItem.tool = modelData[0]
+                model: [["recent", "Recent"], ["all", "All notebooks"]]
+                delegate: Item {
+                    Layout.preferredWidth: Math.max(190, tabLabel.implicitWidth + 48)
+                    Layout.fillHeight: true
+
+                    Text {
+                        id: tabLabel
+                        anchors.centerIn: parent
+                        text: modelData[1]
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.button
+                        font.bold: page.collection === modelData[0]
+                        color: page.collection === modelData[0] ? Ui.ink : Ui.muted
+                    }
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        height: page.collection === modelData[0] ? 4 : 1
+                        color: Ui.ink
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: page.collection = modelData[0]
+                    }
                 }
             }
-
             Item { Layout.fillWidth: true }
-
-            Repeater {
-                model: [["S", 2.0], ["M", 3.2], ["L", 5.2]]
-                delegate: PaperButton {
-                    label: modelData[0]
-                    fontSize: Ui.fontMeta
-                    implicitHeight: Ui.buttonHeightSmall
-                    implicitWidth: Ui.buttonHeightSmall
-                    selected: Math.abs(inkItem.baseWidth - modelData[1]) < 0.1
-                    onTapped: inkItem.baseWidth = modelData[1]
-                }
-            }
         }
 
-        // ROW 3: color palette (Move renders color)
-        RowLayout {
+        GridView {
+            id: shelf
             Layout.fillWidth: true
-            spacing: 14
+            Layout.fillHeight: true
+            Layout.topMargin: page.gridGap
+            clip: true
+            model: page.notes
+            cellWidth: Math.floor(width / page.columns)
+            cellHeight: page.landscape ? 610 : 590
+            boundsBehavior: Flickable.StopAtBounds
 
-            Repeater {
-                model: ["#171717", "#9E9E9E", "#C03434", "#2456A4", "#2E7D4F", "#C7A500"]
-                delegate: Rectangle {
-                    width: 64
-                    height: 64
-                    radius: 32
-                    color: modelData
-                    border.width: Qt.colorEqual(inkItem.strokeColor, modelData) ? 6 : 1
-                    border.color: Qt.colorEqual(inkItem.strokeColor, modelData) ? Ui.accent : Ui.line
+            delegate: Item {
+                objectName: "notes.item." + modelData.noteId
+                width: shelf.cellWidth
+                height: shelf.cellHeight
+
+                Item {
+                    anchors.fill: parent
+                    anchors.rightMargin: index % page.columns === page.columns - 1 ? 0 : page.gridGap
+                    anchors.bottomMargin: page.gridGap
+
+                    Rectangle {
+                        id: preview
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        height: parent.height - 116
+                        color: "#F4F4F1"
+                        border.width: 2
+                        border.color: Ui.ink
+                        clip: true
+
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            visible: modelData.hasInk
+                            source: modelData.previewUrl
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            cache: false
+                            sourceClipRect: Qt.rect(96, 88, 858, 1608)
+                        }
+
+                        // Blank paper gets a restrained rule rather than an
+                        // app-style placeholder icon.
+                        Rectangle {
+                            visible: !modelData.hasInk
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.leftMargin: 32
+                            anchors.rightMargin: 32
+                            anchors.topMargin: 54
+                            height: 2
+                            color: "#C9C9C5"
+                        }
+                        Text {
+                            visible: !modelData.hasInk
+                            anchors.centerIn: parent
+                            text: "Blank page"
+                            font.family: Ui.fontFamily
+                            font.pixelSize: Ui.meta
+                            color: Ui.muted
+                        }
+                    }
+
+                    Text {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: preview.bottom
+                        anchors.topMargin: 14
+                        text: modelData.displayTitle
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.task
+                        font.bold: true
+                        color: Ui.ink
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        text: modelData.pageCount + " page  ·  " + (modelData.hasInk ? modelData.modifiedLabel : "Ready to write")
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.meta
+                        color: Ui.muted
+                        elide: Text.ElideRight
+                    }
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: inkItem.strokeColor = modelData
+                        onClicked: inkMode.enter(modelData.noteId)
                     }
                 }
             }
 
-            Item { Layout.fillWidth: true }
-        }
-
-        // INK SURFACE — plain white paper, hairline frame
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            color: Ui.card
-            radius: 4
-            border.width: 1
-            border.color: Ui.line
-
             Text {
                 anchors.centerIn: parent
-                visible: page.activeNoteId === ""
-                text: "Tap New Note, then write with the Marker."
-                horizontalAlignment: Text.AlignHCenter
+                visible: page.notes.length === 0
+                text: "No notebooks yet"
                 font.family: Ui.fontFamily
-                font.pixelSize: Ui.fontBody
-                color: Ui.faintInk
-            }
-
-            InkCanvasItem {
-                id: inkItem
-                anchors.fill: parent
-                anchors.margins: 4
-                captureEnabled: page.activeNoteId !== ""
-
-                Component.onCompleted: penBridge.setInkTarget(inkItem)
-
-                // strokesChanged only fires on committed changes (pen up,
-                // undo, redo, clear) — never mid-stroke, so persisting here
-                // is safe and covers every path. No refresh-flash while
-                // writing: deghosting stays manual via Clean screen.
-                onStrokesChanged: page.persist()
+                font.pixelSize: Ui.task
+                color: Ui.muted
             }
         }
     }

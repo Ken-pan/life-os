@@ -2977,6 +2977,23 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
   background: color-mix(in srgb, var(--accent) 14%, var(--card));
 }
 
+.chip--project {
+  text-decoration: none;
+  color: var(--t2);
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--card));
+}
+
+.chip--project:hover {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+}
+
+.chip--project-missing {
+  color: var(--t3);
+  border-style: dashed;
+}
+
 .task-overdue-actions {
   display: flex;
   flex-wrap: wrap;

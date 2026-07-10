@@ -6,6 +6,7 @@
   import { t, listLabel } from '$lib/i18n/index.js';
   import { SYSTEM_LIST_INBOX, RECURRENCE_RULES, REMINDER_PRESETS } from '$lib/types.js';
   import { TASK_KINDS, normalizeTaskKind } from '$lib/domain/taskKind.js';
+  import { getProjectById, selectableProjects } from '$lib/domain/projects.js';
   import { SCHEDULE_DURATIONS, formatDurationLabel } from '$lib/domain/schedule.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
   import { createImeGuard } from '@life-os/theme';
@@ -24,6 +25,12 @@
   const draft = $derived(taskEditor.draft);
   const isNew = $derived(!taskEditor.taskId);
   const recurrenceRule = $derived(draft?.recurrence?.rule || 'none');
+  const projects = $derived(selectableProjects());
+  const orphanProject = $derived(
+    draft?.projectId && !getProjectById(draft.projectId)
+      ? draft.projectId
+      : null
+  );
 
   const needsAdvancedOpen = $derived.by(() => {
     if (!draft) return false;
@@ -434,13 +441,16 @@
           </div>
 
           <div class="field">
-            <label for="task-project-id">{t('task.projectId')}</label>
-            <input
-              id="task-project-id"
-              type="text"
-              placeholder="Optional project ID"
-              bind:value={draft.projectId}
-            />
+            <label for="task-project-id">{t('task.project')}</label>
+            <select id="task-project-id" bind:value={draft.projectId}>
+              <option value={null}>{t('task.noProject')}</option>
+              {#if orphanProject}
+                <option value={orphanProject}>{t('task.unknownProject')}</option>
+              {/if}
+              {#each projects as project (project.id)}
+                <option value={project.id}>{project.title}</option>
+              {/each}
+            </select>
           </div>
 
           <div class="field">

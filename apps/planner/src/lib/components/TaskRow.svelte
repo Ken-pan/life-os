@@ -15,6 +15,7 @@
   import { listLabel, t } from '$lib/i18n/index.js'
   import { getListById, dateKeyOf, todayKey, S } from '$lib/state.svelte.js'
   import { getTaskKind } from '$lib/domain/taskKind.js'
+  import { getProjectById } from '$lib/domain/projects.js'
   import { buildTaskMetaLine } from '$lib/domain/taskMetaLine.js'
   import { openSchedulePopover } from '$lib/ui.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
@@ -47,6 +48,7 @@
   const overdue = $derived(isOverdue(task))
   const kind = $derived(getTaskKind(task))
   const list = $derived(getListById(task.listId))
+  const project = $derived(getProjectById(task.projectId))
   const hasRecurrence = $derived(
     task.recurrence?.rule && task.recurrence.rule !== 'none',
   )
@@ -459,7 +461,7 @@
             {metaLine}
           </p>
         {/if}
-        {#if showSecondaryMeta && (lifeEventSource || task.reminderMinutes != null || list || task.tags.length)}
+        {#if showSecondaryMeta && (lifeEventSource || task.projectId || task.reminderMinutes != null || list || task.tags.length)}
           <div class="task-meta">
             {#if lifeEventSource}
               <a
@@ -472,6 +474,22 @@
               >
                 {lifeEventSource.label}
               </a>
+            {/if}
+            {#if task.projectId}
+              {#if project}
+                <a
+                  class="chip chip--project"
+                  href="/projects/{project.id}"
+                  title={project.title}
+                  onclick={(e) => e.stopPropagation()}
+                >
+                  {project.title}
+                </a>
+              {:else}
+                <span class="chip chip--project chip--project-missing">
+                  {t('task.unknownProject')}
+                </span>
+              {/if}
             {/if}
             {#if task.reminderMinutes != null}
               <span class="chip">🔔</span>

@@ -12,6 +12,7 @@
     getProjectById,
     projectNextTask,
     projectOpenTasks,
+    safeProjectRefUrl,
     setProjectStatus,
     updateProject,
   } from '$lib/domain/projects.js'
@@ -108,6 +109,57 @@
         <span>{t('projects.doneCount', { count: doneTasks.length })}</span>
       </div>
     </section>
+
+    {#if project.roadmapRefs.length || project.repoRefs.length}
+      <section class="project-references" aria-labelledby="project-references-title">
+        <div class="project-reference-heading">
+          <div>
+            <p class="project-kicker">{t('projects.context')}</p>
+            <h2 id="project-references-title">{t('projects.references')}</h2>
+          </div>
+          <span>{t('projects.referenceCount', { count: project.roadmapRefs.length + project.repoRefs.length })}</span>
+        </div>
+
+        {#if project.roadmapRefs.length}
+          <div class="project-reference-group">
+            <h3>{t('projects.roadmapReferences')}</h3>
+            <ul>
+              {#each project.roadmapRefs as ref (ref.id)}
+                <li class:reference-primary={ref.isPrimary}>
+                  <div>
+                    <strong>{ref.roadmapItemId}</strong>
+                    <span>{ref.label || t('projects.roadmapReference')}</span>
+                  </div>
+                  <code>{ref.sourcePath}{ref.anchor ? `#${ref.anchor}` : ''}</code>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+
+        {#if project.repoRefs.length}
+          <div class="project-reference-group">
+            <h3>{t('projects.repositoryReferences')}</h3>
+            <ul>
+              {#each project.repoRefs as ref (ref.id)}
+                {@const safeUrl = safeProjectRefUrl(ref.url)}
+                <li>
+                  <div>
+                    <span class="reference-kind">{t(`projects.refKind_${ref.kind}`)}</span>
+                    {#if safeUrl}
+                      <a href={safeUrl} target="_blank" rel="noreferrer">{ref.label}</a>
+                    {:else}
+                      <strong>{ref.label}</strong>
+                    {/if}
+                  </div>
+                  {#if !safeUrl}<code>{ref.url}</code>{/if}
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+      </section>
+    {/if}
 
     <form
       class="project-editor"
@@ -279,6 +331,95 @@
     gap: var(--space-3);
   }
 
+  .project-references {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    background: var(--card);
+  }
+
+  .project-reference-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .project-reference-heading h2,
+  .project-reference-group h3 {
+    margin: 0;
+    color: var(--t1);
+  }
+
+  .project-reference-heading h2 {
+    font-size: var(--text-lg);
+  }
+
+  .project-reference-heading > span,
+  .reference-kind {
+    color: var(--t3);
+    font-size: var(--text-xs);
+    font-weight: 650;
+  }
+
+  .project-reference-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .project-reference-group h3 {
+    font-size: var(--text-sm);
+  }
+
+  .project-reference-group ul {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .project-reference-group li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--surface-2, var(--bg-2)) 88%, transparent);
+  }
+
+  .project-reference-group li.reference-primary {
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  .project-reference-group li > div {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .project-reference-group a {
+    color: var(--accent);
+    font-weight: 650;
+  }
+
+  .project-reference-group code {
+    overflow: hidden;
+    max-width: 55%;
+    color: var(--t3);
+    font-size: var(--text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .project-editor-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -369,6 +510,15 @@
     .project-editor-grid,
     .project-task-add {
       grid-template-columns: 1fr;
+    }
+
+    .project-reference-group li {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .project-reference-group code {
+      max-width: 100%;
     }
 
     .project-actions > button,

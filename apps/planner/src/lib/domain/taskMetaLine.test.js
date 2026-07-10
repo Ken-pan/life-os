@@ -10,7 +10,7 @@ const t = (key, params = {}) => {
     'task.unscheduledLine': '今天 · 未排程',
     'task.unscheduledOnly': '未排程',
     'task.kindFocus': '关键',
-    'task.p1': '高',
+    'task.priority_P0': 'P0 (最高)',
     'schedule.scheduledRange': '已安排 {start}–{end}',
     'schedule.estimatedDuration': '预计 {duration}',
     'schedule.dueAt': '截止 {time}',
@@ -40,7 +40,7 @@ describe('buildTaskMetaLine', () => {
       t,
       { contextDate: '2026-07-06' },
     )
-    expect(line).toBe('已安排 09:00–10:30 · 预计 1h30m · 关键 · 高')
+    expect(line).toBe('已安排 09:00–10:30 · 预计 1h30m · 关键 · P0 (最高)')
   })
 
   it('formats unscheduled task on today', () => {

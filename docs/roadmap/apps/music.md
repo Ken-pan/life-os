@@ -20,11 +20,9 @@
 
 | ID               | 主题                        | ROI | 桶      | 投入 | 验收                            | Hub                 |
 | ---------------- | --------------------------- | --- | ------- | ---- | ------------------------------- | ------------------- |
-| **M-P8** {#m-p8} | 播放加载 Phase D 抛光       | ✅  | Product | 3–4d | Settings 指标 + 真机 P50/P95    | 本页 §M-P8          |
-| **M-P2** {#m-p2} | UI E2E                      | ✅  | Infra   | 1–2d | `npm run qa:ui-flow`            | §Shipped 2026-07-09 |
-| **M-P5**         | 验收 v6 行为分效果          | ✅  | Product | —    | `qa:rec-behavior` 6/6 · M5 seed | §Shipped            |
-| **M-P7**         | Portal **G-P4b-M** 最近播放 | ✅  | Growth  | —    | 与 Portal 同批                  | §Shipped            |
 | **M-P4**         | debug 全量预览（开发）      | ○   | Product | 0.5d | `musicos:debug-rec`             | —                   |
+
+**已完成：** M-P2 UI E2E · M-P5 行为分 6/6 · M-P7 Portal 最近播放 · M-P8 播放加载 Phase A–D。
 
 ### M-P8 播放加载 Phase D（个人私有）
 

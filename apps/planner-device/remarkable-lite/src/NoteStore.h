@@ -20,6 +20,7 @@ public:
 
     Q_INVOKABLE QString createNote(const QString &kind);
     Q_INVOKABLE bool saveStrokes(const QString &noteId, const QVariantList &strokes);
+    Q_INVOKABLE QVariantList listNotes() const;
     Q_INVOKABLE QVariantMap inputProbe() const;
 
 signals:

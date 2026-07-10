@@ -7,11 +7,15 @@ BASE="${PAPEROS_HOME:-/home/root/paperos}"
 systemctl stop paperos >/dev/null 2>&1 || true
 
 # Kill any manually launched binaries — absolute or relative invocations of
-# paperos, paperos.next, etc. (a "cd $BASE && ./paperos.next" process has no
-# absolute path in its cmdline, so match the bare binary name).
+# paperos, paperos.next, and test candidates such as paperos-ink-live (a
+# "cd $BASE && ./paperos.next" process has no absolute path in its cmdline,
+# so match the bare binary name).
 paperos_pids() {
-  ps | awk '/paperos(\.[a-z0-9]+)? -platform|\/paperos(\.[a-z0-9]+)?( |$)/ && !/awk/ { print $1 }'
+  ps | awk '/paperos(\.[a-z0-9]+)? -platform|\/paperos(\.[a-z0-9]+)?( |$)|paperos-ink-[a-z0-9-]+/ && !/awk/ { print $1 }'
 }
+
+# Remove stale candidate locks so the next launch starts clean.
+rm -f /tmp/paperos-test-driver/*.lock >/dev/null 2>&1 || true
 
 for pid in $(paperos_pids); do
   kill "$pid" >/dev/null 2>&1 || true

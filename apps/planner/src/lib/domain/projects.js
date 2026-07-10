@@ -115,6 +115,21 @@ export function getProjectById(id, projects = S.projects) {
 }
 
 /**
+ * Only allow browser-safe external links from synced project references.
+ * Invalid URLs remain visible as labels but are not rendered as anchors.
+ * @param {string | null | undefined} value
+ */
+export function safeProjectRefUrl(value) {
+  if (!value) return null
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null
+  } catch {
+    return null
+  }
+}
+
+/**
  * @param {import('../types.js').PlannerProject} project
  * @param {import('../types.js').Task[]} tasks
  */

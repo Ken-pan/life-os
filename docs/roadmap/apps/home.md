@@ -14,7 +14,7 @@
 | `/plan` 墙图 | ✅   | H-W0–W5 ✅ · Wave A/B/C UX · `test:plan-edit`（**13 checks**） |
 | `/storage`   | ✅   | 储藏区卡片 · `?zone=` 深链                 |
 | SSO / Portal | ✅   | H-P1–H-P3 · H-P6 储藏卡                    |
-| 文档         | ✅   | [`apps/home/README.md`](../../apps/home/README.md) |
+| 文档         | ✅   | [`apps/home/README.md`](../../../apps/home/README.md) |
 | 云同步       | ❌   | H-P4 搁置                                  |
 
 ## 空间编辑 Workstream（H-W，主线）
@@ -44,7 +44,6 @@ UI/UX 验收 → **[home-spatial-uiux-audit-2026-07-08.md](../../qa/home-spatial
 
 | ID        | 主题                                            | ROI | 桶      | 投入   | 验收                                        |
 | --------- | ----------------------------------------------- | --- | ------- | ------ | ------------------------------------------- |
-| **H-W3**  | 手绘分区 `zones[]` · 画区/选区/删区             | ✅ | Product | —      | 浏览态 zones 填充 · stale 标记 · smoke 扩展 |
 | **H-P7**  | 多项目 localStorage 切换                        | ◆   | Product | 1–2d   | **建议 H-W5 后**                            |
 | **H-P9**  | 平面编辑首次引导                                | ○   | Product | 0.5–1d | `PlanShortcutsHelp`  onboarding             |
 | **H-P10** | `/plan` smoke 扩面（508 转换 9 门窗 TST-01）    | ○   | Infra   | 0.5d   | `test:plan-edit` 或独立脚本                 |
@@ -53,7 +52,7 @@ UI/UX 验收 → **[home-spatial-uiux-audit-2026-07-08.md](../../qa/home-spatial
 
 | ID    | 文件 / 位置                                                                                                               |
 | ----- | ------------------------------------------------------------------------------------------------------------------------- |
-| H-W*  | [home-spatial-editor.md](./home-spatial-editor.md) · [graph-openings.js](../../apps/home/src/lib/spatial/graph-openings.js) |
+| H-W*  | [home-spatial-editor.md](./home-spatial-editor.md) · [graph-openings.js](../../../apps/home/src/lib/spatial/graph-openings.js) |
 | QA    | [home-spatial-editor-audit](../../qa/home-spatial-editor-audit-2026-07-08.md) · [uiux-audit](../../qa/home-spatial-uiux-audit-2026-07-08.md) |
 | H-P6a | `homePortalMetadata.js` · `packages/sync/src/homePortalMetadata.js`                                                       |
 

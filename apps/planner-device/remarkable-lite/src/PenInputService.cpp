@@ -1,6 +1,7 @@
 #include "PenInputService.h"
 #include "InkCanvasItem.h"
 #include "PaperOsPaths.h"
+#include "metrics.h"
 
 #include <QFile>
 #include <QGuiApplication>
@@ -192,6 +193,12 @@ void PenInputService::dispatchFrame()
     const QPointF pos = mapToScreen();
 
     if (m_touching && !m_wasTouching) {
+        QJsonObject extra;
+        extra["x"] = pos.x();
+        extra["y"] = pos.y();
+        extra["pressure"] = m_pressureNorm;
+        Metrics::logEvent("pen-down", extra);
+
         if (m_downLogBudget > 0) {
             // Calibration aid: compare these against where the pen actually
             // touched to derive pen_calib.json swap/invert overrides.
@@ -214,6 +221,11 @@ void PenInputService::dispatchFrame()
             injectMouse(pos, true, false);
         }
     } else if (!m_touching && m_wasTouching) {
+        QJsonObject extra;
+        extra["x"] = pos.x();
+        extra["y"] = pos.y();
+        Metrics::logEvent("pen-up", extra);
+
         if (m_inkStroke) {
             if (m_inkTarget)
                 m_inkTarget->penUp();
@@ -222,6 +234,12 @@ void PenInputService::dispatchFrame()
             injectMouse(pos, false, true);
         }
     } else if (m_touching) {
+        QJsonObject extra;
+        extra["x"] = pos.x();
+        extra["y"] = pos.y();
+        extra["pressure"] = m_pressureNorm;
+        Metrics::logEvent("pen-move", extra);
+
         if (m_inkStroke) {
             if (m_inkTarget)
                 m_inkTarget->penMove(m_inkTarget->mapFromScene(pos), m_pressureNorm);

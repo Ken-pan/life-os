@@ -1,27 +1,43 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Mail triage, not a mail client: read the important few, convert to
-// tasks. Reads cache/mail.json written by the (future) sync helper; the
-// backend feed is a later phase, so the empty state explains itself.
+// Inbox: everything waiting on a decision — mail needing action,
+// planner task inbox, unprocessed notes, sync queue.
 Item {
     id: page
 
     readonly property var mailCache: apiClient.readCacheFile("mail")
     readonly property var messages: mailCache.messages ? mailCache.messages : []
+    readonly property int plannerInbox: apiClient.dashboardData.inbox && apiClient.dashboardData.inbox.count !== undefined ? apiClient.dashboardData.inbox.count : -1
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: Ui.gap
+        spacing: 0
 
+        // ── header summary ─────────────────────────────────────
         Text {
-            text: "Inbox"
+            text: "WAITING ON YOU"
             font.family: Ui.fontFamily
-            font.pixelSize: Ui.fontSection
+            font.pixelSize: Ui.section
             font.bold: true
-            color: Ui.ink
+            font.letterSpacing: 4
+            color: Ui.muted
+            Layout.bottomMargin: 12
         }
 
+        Text {
+            text: page.messages.length + " mail · "
+                + (page.plannerInbox >= 0 ? page.plannerInbox : 0) + " inbox · "
+                + actionQueue.pendingCount + " pending"
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.task
+            color: Ui.ink
+            Layout.bottomMargin: Ui.gap
+        }
+
+        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
+
+        // ── mail list ──────────────────────────────────────────
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -29,31 +45,27 @@ Item {
             Column {
                 anchors.top: parent.top
                 width: parent.width
-                spacing: 12
 
                 Repeater {
                     model: page.messages.slice(0, 5)
 
-                    delegate: Rectangle {
+                    delegate: Item {
                         width: parent.width
-                        height: 130
-                        color: Ui.card
-                        radius: Ui.radius
-                        border.width: 1
-                        border.color: Ui.line
+                        height: 120
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.margins: Ui.cardPadding
+                            anchors.topMargin: 12
+                            anchors.bottomMargin: 12
                             spacing: Ui.gap
 
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: 4
+                                spacing: 6
                                 Text {
                                     text: modelData.subject !== undefined ? modelData.subject : "(no subject)"
                                     font.family: Ui.fontFamily
-                                    font.pixelSize: Ui.fontBody
+                                    font.pixelSize: Ui.task
                                     color: Ui.ink
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
@@ -61,8 +73,8 @@ Item {
                                 Text {
                                     text: (modelData.from !== undefined ? modelData.from : "") + (modelData.summary ? " · " + modelData.summary : "")
                                     font.family: Ui.fontFamily
-                                    font.pixelSize: Ui.fontMeta
-                                    color: Ui.mutedInk
+                                    font.pixelSize: Ui.meta
+                                    color: Ui.muted
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
@@ -70,10 +82,17 @@ Item {
 
                             PaperButton {
                                 label: "→ Task"
-                                fontSize: Ui.fontMeta
-                                implicitHeight: 52
+                                secondary: true
+                                implicitHeight: Ui.btnHs
                                 onTapped: actionQueue.enqueue("mail.convert_to_task", { messageId: modelData.id !== undefined ? modelData.id : "", subject: modelData.subject !== undefined ? modelData.subject : "" })
                             }
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            width: parent.width
+                            height: 1
+                            color: Ui.divider
                         }
                     }
                 }
@@ -84,29 +103,22 @@ Item {
                 visible: page.messages.length === 0
                 spacing: 8
                 Text {
-                    text: "No mail cache yet"
+                    text: "Nothing waiting"
                     horizontalAlignment: Text.AlignHCenter
                     font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontBody
-                    color: Ui.faintInk
-                    Layout.alignment: Qt.AlignHCenter
-                }
-                Text {
-                    text: "The LifeOS backend mail feed lands in a later phase.\nThis page reads cache/mail.json when it exists."
-                    horizontalAlignment: Text.AlignHCenter
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontMeta
-                    color: Ui.faintInk
+                    font.pixelSize: Ui.task
+                    color: Ui.muted
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
         }
 
+        // ── footer ─────────────────────────────────────────────
         Text {
-            text: "Convert-to-task actions queue offline · pending " + actionQueue.pendingCount
+            text: "pending " + actionQueue.pendingCount + " · " + refreshControl.mode
             font.family: Ui.fontFamily
-            font.pixelSize: Ui.fontMeta
-            color: Ui.mutedInk
+            font.pixelSize: Ui.footer
+            color: Ui.muted
         }
     }
 }

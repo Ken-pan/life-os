@@ -27,7 +27,7 @@ first functional provider for PaperOS.
 | Device-side launcher | PASS | `systemctl start paperos` (unit in `/home`, root-fs symlink only); survives SSH disconnect |
 | Shell MVP (6 modules) | PASS | Home/Today/Notes/Mail/Review/System + RefreshController + action queue + Quick Note v0; see [`../../PRO_MOVE_SHELL_MVP_GATE.md`](../../PRO_MOVE_SHELL_MVP_GATE.md) |
 | Marker input | Phase 0 done, pen not usable yet | epaper QPA delivers touch only; pen node mapped — see [`../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md`](../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md); Phase 1 = `PenInputService` |
-| Production read API | **REGRESSED 2026-07-09** | `/api/paper/today` returns 404 in production — functions dropped from a Netlify deploy; spun off as a separate fix task |
+| Production read API | PASS | `/api/paper/today` + offline cache 已完成生产与设备验证（P-MOVE-2） |
 | Production write enablement | Not enabled | Staging validation required before `PAPER_ACTIONS_WRITE_ENABLED=true` |
 | xochitl integration | Out of scope | No xochitl patching, sidebar injection, or boot replacement |
 
@@ -78,7 +78,7 @@ Exit button, hardened launcher/recover scripts with exit-code logging,
 `ExecStopPost`, session survives SSH disconnect). See
 [`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md).
 
-### P-MOVE-5 — Controlled Write MVP (was P-MOVE-3)
+### P-MOVE-5 — Controlled Write MVP · NEXT (was P-MOVE-3)
 
 **Goal:** allow one safe paper action from the device.
 
@@ -95,7 +95,7 @@ Acceptance:
 - Stale or deleted task returns conflict/rejected and refreshes cache.
 - Production write switch remains off until staging passes.
 
-### P-MOVE-6 — Scheduled Cache / Manual Sync (was P-MOVE-4)
+### P-MOVE-6 — Scheduled Cache / Manual Sync · PLANNED (was P-MOVE-4)
 
 **Goal:** reduce Mac dependency while preserving stock boot.
 

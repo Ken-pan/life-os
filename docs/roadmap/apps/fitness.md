@@ -21,11 +21,11 @@ Focus Mode 力量训练 + Coach Lite；Portal **G-P4** 已读最近完练；**`f
 
 | ID                 | 主题                                          | ROI | 桶       | 投入 | 验收                         | Hub                |
 | ------------------ | --------------------------------------------- | --- | -------- | ---- | ---------------------------- | ------------------ |
-| **FT-P0**          | E2E：`reuseExistingServer: !CI` + 文档化 5190 | ✅  | Infra    | —    | **20/20** pass               | §Shipped |
-| **FT-P1** {#ft-p1} | 完练 → outbox `fitness.workout_logged`        | ✅  | Growth   | —    | migration + Planner inbox    | §Shipped |
 | **FT-P2**          | Portal 摘要「今日是否已练」                   | ◆   | Growth   | 0.5d | 扩 `portal_today_summary`    | —                  |
 | **FT-P3**          | 动作示意图                                    | ○   | Product  | 2–3d | Focus 流可见缩略图           | —                  |
 | **FT-P4**          | `SyncErrorPresentation` 契约对齐              | ○   | Platform | 1d   | C-P1+                        | —                  |
+
+**已完成：** FT-P0 E2E 20/20 · FT-P1 `fitness.workout_logged` → Planner 打卡。
 
 ### 实现锚点
 

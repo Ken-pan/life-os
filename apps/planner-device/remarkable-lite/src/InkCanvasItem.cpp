@@ -5,6 +5,8 @@
 #include <QPainterPath>
 #include <QVariantMap>
 #include <cmath>
+#include "epframebuffer.h"
+#include "ink_raster.h"
 
 namespace {
 constexpr qreal kPressureAlpha = 0.45;  // EMA responsiveness
@@ -263,6 +265,19 @@ void InkCanvasItem::drawSegment(const InkStroke &stroke, const QPointF &from,
     p.drawPath(path);
     p.end();
 
+    // Rejected Qt/direct hybrid diagnostic path. Product Notes must use the
+    // standalone native takeover ink runtime instead. This remains only for
+    // forensic comparison when explicitly enabled by env.
+    if (m_directStroke) {
+        const QPointF sFrom = mapToScene(from);
+        const QPointF sTo = mapToScene(to);
+        const int radius = qMax(1, int(width / 2.0 + 0.5));
+        DirectInk::segment(int(sFrom.x() + 0.5), int(sFrom.y() + 0.5),
+                           int(sTo.x() + 0.5), int(sTo.y() + 0.5),
+                           radius, stroke.tool == "eraser");
+        return;
+    }
+
     if (notifyUpdate) {
         const qreal pad = width + 3;
         queueDirty(path.boundingRect().adjusted(-pad, -pad, pad, pad));
@@ -272,6 +287,13 @@ void InkCanvasItem::drawSegment(const InkStroke &stroke, const QPointF &from,
 void InkCanvasItem::penDown(const QPointF &itemPos, qreal pressure, bool flipEraser)
 {
     m_strokeActive = true;
+
+    // Claim the rejected hybrid direct path only when explicitly enabled.
+    m_directStroke = false;
+    if (DirectInk::enabled()) {
+        DirectInk::beginStroke();
+        m_directStroke = true;
+    }
 
     m_current = InkStroke();
     m_current.tool = flipEraser ? QStringLiteral("eraser") : m_tool;
@@ -322,7 +344,15 @@ void InkCanvasItem::penUp()
                     m_smoothedWidth, true);
 
     m_strokeActive = false;
-    flushDirty();  // final segments land immediately on pen lift
+    if (m_directStroke) {
+        DirectInk::endStroke();
+        m_directStroke = false;
+        // One reconciling Qt repaint of the whole item after the stroke, so
+        // the scene graph's copy matches the framebuffer we drew into.
+        update();
+    } else {
+        flushDirty();  // final segments land immediately on pen lift
+    }
     m_strokes.append(m_current);
     m_redoStack.clear();
     emit strokesChanged();

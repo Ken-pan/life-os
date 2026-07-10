@@ -264,7 +264,7 @@ npm run test:plan-edit     # 新 smoke
 
 ## 5. H-W2 — ①b 门窗：挂边开口 ✅
 
-**状态：** H-W0–W2c + Wave A/B/C UX 已发货（2026-07-08）· **H-W3** 手绘分区下一步
+**状态：** H-W0–W5 + Wave A/B/C UX 已发货；本节保留为实现记录。
 
 **目标**：门窗成为墙边的寄生数据——移墙跟墙走、删墙级联删；替换 H-W0 的静态贴图。
 **前置**：H-W1。
@@ -333,7 +333,7 @@ npm run test:plan-edit     # 新 smoke
 | Wave B | P1：`--graph-accent` · 转换 CTA · zoom chip · graph HUD · 图例 | 同上 §Wave B |
 | Wave C | P2：508 移动 bar · 删墙 undo toast · immersive 编辑 · FAB「详情」 | 同上 §Wave C |
 
-**下一步 H-W3：** 手绘分区 `zones[]`
+**后续结果：** H-W3 手绘分区、H-W4 布置/储藏指派与 H-W5 迁移/文档均已完成。
 
 ### 验收
 

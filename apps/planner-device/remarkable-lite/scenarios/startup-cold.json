@@ -1,0 +1,24 @@
+{
+  "name": "startup-cold",
+  "iterations": 10,
+  "setup": [
+    "systemctl stop paperos",
+    "rm -rf /home/root/.local/share/PaperOS",
+    "sync; echo 3 > /proc/sys/vm/drop_caches"
+  ],
+  "actions": [
+    { "cmd": "wait", "condition": "page=today", "timeout": 15000 }
+  ],
+  "metrics": [
+    "startup_time",
+    "peak_rss",
+    "major_faults"
+  ],
+  "assertions": [
+    { "metric": "startup_time", "max": 8000 }
+  ],
+  "cleanup": [
+    "systemctl stop paperos"
+  ],
+  "recovery": "recover"
+}

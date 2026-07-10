@@ -93,6 +93,7 @@ private:
     QPointF m_prevPoint, m_lastPoint;
     qint64 m_lastTimeMs = 0;
     bool m_hasSegment = false;
+    bool m_directStroke = false;   // rejected Qt/direct hybrid diagnostic
     qreal m_smoothedPressure = 0.0;
     qreal m_smoothedWidth = 2.0;
 

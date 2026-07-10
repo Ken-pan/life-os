@@ -1,8 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Home: pick the device up, know in 3 seconds — what time it is, what to
-// do next, what's in focus, what's still open. Four blocks, no debug.
+// Home: a typographic planner page. Pick up the device, know in 3 seconds
+// what time it is, what to do next, what's in focus, what's still open.
+// No cards. No borders. Hierarchy through type size, weight, and dividers.
 Item {
     id: page
 
@@ -19,168 +20,142 @@ Item {
     readonly property var mailCache: apiClient.readCacheFile("mail")
 
     property string clock: ""
+    property string weekday: ""
 
     Timer {
-        interval: 30000; running: true; repeat: true; triggeredOnStart: true
-        onTriggered: page.clock = new Date().toLocaleTimeString(Qt.locale(), "HH:mm")
+        // Paused during native ink mode: a clock tick would swap the shell's
+        // scenegraph over the ink runtime's framebuffer.
+        interval: 30000; running: !inkMode.active; repeat: true; triggeredOnStart: true
+        onTriggered: {
+            var now = new Date()
+            page.clock = now.toLocaleTimeString(Qt.locale(), "HH:mm")
+            page.weekday = now.toLocaleDateString(Qt.locale(), "ddd MMM dd")
+        }
     }
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: Ui.gap
+        spacing: 0
 
-        // CLOCK — the anchor of the page
+        // ── CLOCK ──────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
+            Layout.bottomMargin: 12
+
             Text {
                 text: page.clock
                 font.family: Ui.fontFamily
-                font.pixelSize: Ui.fontClock
-                font.bold: true
+                font.pixelSize: Ui.homeTime
+                font.weight: Font.Light
                 color: Ui.ink
             }
             Item { Layout.fillWidth: true }
             Text {
-                text: apiClient.dashboardData.today ? apiClient.dashboardData.today.date : ""
+                text: page.weekday
                 font.family: Ui.fontFamily
-                font.pixelSize: Ui.fontSection
-                color: Ui.mutedInk
+                font.pixelSize: Ui.meta
+                color: Ui.muted
                 Layout.alignment: Qt.AlignBottom
-                Layout.bottomMargin: 14
+                Layout.bottomMargin: 18
             }
         }
 
-        // NOW — the single next action
-        Rectangle {
+        // ── divider ────────────────────────────────────────────
+        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
+
+        // ── NOW ────────────────────────────────────────────────
+        Item { Layout.preferredHeight: Ui.gap }
+        Text {
+            text: "NOW"
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.section
+            font.bold: true
+            font.letterSpacing: 4
+            color: Ui.muted
+        }
+        Item { Layout.preferredHeight: 8 }
+        Text {
+            text: page.nextAction ? page.nextAction.title : "All clear"
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.primary
+            font.bold: true
+            color: Ui.ink
+            wrapMode: Text.WordWrap
+            maximumLineCount: 2
+            elide: Text.ElideRight
             Layout.fillWidth: true
-            Layout.preferredHeight: 190
-            color: Ui.card
-            radius: Ui.radius
-            border.width: 2
-            border.color: Ui.lineStrong
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Ui.cardPadding
-                spacing: 10
-                Text {
-                    text: "NOW"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontMeta
-                    font.bold: true
-                    color: Ui.accent
-                }
-                Text {
-                    text: page.nextAction ? page.nextAction.title : "All clear"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontFocus
-                    font.bold: true
-                    color: Ui.ink
-                    elide: Text.ElideRight
-                    maximumLineCount: 2
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-                Text {
-                    text: {
-                        var events = page.calendarCache.events
-                        if (events && events.length > 0)
-                            return "Next event · " + events[0].title + (events[0].start ? " · " + events[0].start : "")
-                        return "No upcoming events"
-                    }
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontMeta
-                    color: Ui.mutedInk
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                }
-            }
         }
-
-        // FOCUS — thick border, the visual anchor below the clock
-        Rectangle {
+        Text {
+            text: {
+                var events = page.calendarCache.events
+                if (events && events.length > 0)
+                    return events[0].title + (events[0].start ? " · " + events[0].start : "")
+                return ""
+            }
+            visible: text !== ""
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.meta
+            color: Ui.muted
+            elide: Text.ElideRight
             Layout.fillWidth: true
-            Layout.preferredHeight: 180
-            color: Ui.card
-            radius: Ui.radius
-            border.width: 4
-            border.color: Ui.lineStrong
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Ui.cardPadding
-                spacing: 10
-                Text {
-                    text: "FOCUS"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontMeta
-                    font.bold: true
-                    color: Ui.accent
-                }
-                Text {
-                    text: apiClient.dashboardData.today && apiClient.dashboardData.today.currentFocus && apiClient.dashboardData.today.currentFocus.title ? apiClient.dashboardData.today.currentFocus.title : "No current focus"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontFocus
-                    font.bold: true
-                    color: Ui.ink
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                }
-            }
+            Layout.topMargin: 8
         }
 
-        // OPEN LOOPS — the numbers that decide the day
-        Rectangle {
+        // ── divider ────────────────────────────────────────────
+        Item { Layout.preferredHeight: Ui.gap }
+        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
+
+        // ── FOCUS ──────────────────────────────────────────────
+        Item { Layout.preferredHeight: Ui.gap }
+        Text {
+            text: "FOCUS"
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.section
+            font.bold: true
+            font.letterSpacing: 4
+            color: Ui.muted
+        }
+        Item { Layout.preferredHeight: 8 }
+        Text {
+            text: apiClient.dashboardData.today && apiClient.dashboardData.today.currentFocus && apiClient.dashboardData.today.currentFocus.title ? apiClient.dashboardData.today.currentFocus.title : "No current focus"
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.primary
+            font.bold: true
+            color: Ui.ink
+            wrapMode: Text.WordWrap
+            maximumLineCount: 2
+            elide: Text.ElideRight
             Layout.fillWidth: true
-            Layout.preferredHeight: 250
-            color: Ui.card
-            radius: Ui.radius
-            border.width: 1
-            border.color: Ui.line
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Ui.cardPadding
-                spacing: 12
-                Text {
-                    text: "OPEN LOOPS"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.fontMeta
-                    font.bold: true
-                    color: Ui.accent
-                }
-                StatusLine {
-                    label: "Today tasks"
-                    value: page.openCount + " open of " + page.tasks.length
-                }
-                StatusLine {
-                    label: "Inbox"
-                    value: apiClient.dashboardData.inbox && apiClient.dashboardData.inbox.count !== undefined ? String(apiClient.dashboardData.inbox.count) : "—"
-                }
-                StatusLine {
-                    label: "Mail needing action"
-                    value: page.mailCache.messages ? String(page.mailCache.messages.length) : "—"
-                }
-                StatusLine {
-                    label: "Pending sync"
-                    value: String(actionQueue.pendingCount)
-                }
-            }
         }
 
+        // ── divider ────────────────────────────────────────────
+        Item { Layout.preferredHeight: Ui.gap }
+        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
+
+        // ── OPEN LOOPS (single summary line) ───────────────────
+        Item { Layout.preferredHeight: Ui.gap }
+        Text {
+            readonly property int inbox: apiClient.dashboardData.inbox && apiClient.dashboardData.inbox.count !== undefined ? apiClient.dashboardData.inbox.count : 0
+            readonly property int mail: page.mailCache.messages ? page.mailCache.messages.length : 0
+            text: page.openCount + " open · " + inbox + " inbox · " + actionQueue.pendingCount + " pending"
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.task
+            color: Ui.ink
+        }
+
+        // ── spacer ─────────────────────────────────────────────
         Item { Layout.fillHeight: true }
 
-        // STATUS — one quiet line; detail lives in System / Quick Settings
+        // ── STATUS FOOTER (one quiet line) ─────────────────────
         Text {
             Layout.fillWidth: true
             text: (apiClient.isLoading ? "syncing"
-                   : (apiClient.errorMessage !== "" ? "offline · last sync " + apiClient.lastSync
+                   : (apiClient.errorMessage !== "" ? "offline"
                                                     : "synced " + apiClient.lastSync))
-                  + (deviceStatus.batteryPercent >= 0 ? " · battery " + deviceStatus.batteryPercent + "%" : "")
-                  + " · " + refreshControl.mode + " refresh"
+                  + " · " + refreshControl.mode
             font.family: Ui.fontFamily
-            font.pixelSize: Ui.fontFooter
-            color: Ui.mutedInk
+            font.pixelSize: Ui.footer
+            color: Ui.muted
             elide: Text.ElideRight
         }
     }

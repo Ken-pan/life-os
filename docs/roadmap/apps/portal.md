@@ -21,7 +21,7 @@
 
 ## Next（按 ROI）
 
-_无阻塞 Growth 项；见 hub §Next **H-W3**。_
+_当前无阻塞 Growth 项；后续跨站摘要增量见 hub §Next（FT-P2 / P-P4）。_
 
 ## UI 走查（2026-07-09 · 第五轮 · P-1–P-12 ✅）
 

@@ -4,6 +4,16 @@
 
 维护：每次完成 hub §Now 项后追加一行；不必复制整表。
 
+## 2026-07-10（Planner Projects · Home / PaperOS 状态收口）
+
+| 主线 | 发货项 | 证据 |
+| ---- | ------ | ---- |
+| Planner | **P-PROJ-0–2** 项目实体 + structured sync、Projects 列表/详情、任务 `@项目` 与 project chip | `935a5b78` · `7bacded2` · `planner_projects` 远程表 |
+| Planner | **P-PROJ-3** 项目详情只读 Roadmap / repo refs；危险 URL 不渲染为链接；mobile + desktop E2E | `routes/projects/[id]/+page.svelte` · `project-references.spec.js` |
+| Home | **H-W3–W5** 手绘分区、家具/储藏指派、迁移/文档；H-W0–W5 全线完成 | `b06217fe` · `test:plan-edit` 13 checks |
+| PaperOS | **P-MOVE-1–4** launcher、离线读、CJK/分页、退出/恢复/systemd launcher | `51791a93` · `ea92f6dd` · `b662285a` |
+| Docs | Roadmap 全量状态复核；当前执行顺序统一为 P-PROJ-3 → P-MOVE-5 → 跨站快赢 | `LIFEOS_ROADMAP.md` · `roadmap/apps/` |
+
 ---
 
 ## 2026-07-09（Portal UI 修复 · P-5b/P-12 · 第五轮）

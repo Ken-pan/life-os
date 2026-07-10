@@ -12,6 +12,11 @@ Conflicts=xochitl.service
 Type=simple
 WorkingDirectory=/home/root/paperos
 Environment=QT_QUICK_BACKEND=epaper
+# Development bridge is loopback-only; paperctl reaches it through SSH
+# forwarding. Keeping it on makes semantic state/screenshot checks available
+# without replacing the production launcher for every QA run.
+Environment=PAPEROS_TEST_BRIDGE=1
+Environment=PAPEROS_TEST_BRIDGE_PORT=18765
 ExecStart=/home/root/paperos/paperos -platform epaper
 ExecStopPost=/bin/sh -c 'systemctl --no-block start xochitl'
 TimeoutStopSec=10
