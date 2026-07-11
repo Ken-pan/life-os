@@ -2,6 +2,11 @@
 
 **Status: PASS with known gaps** · 2026-07-09
 
+> **UI pivot (2026-07-10):** This gate documents the **shipped 6-tab shell baseline**.
+> The next product direction is paper-first OS UX — see
+> [`qa/paperos-eink-uiux-agent-brief.md`](qa/paperos-eink-uiux-agent-brief.md) and
+> [`qa/paperos-eink-uiux-gap-audit.md`](qa/paperos-eink-uiux-gap-audit.md).
+
 PaperOS grew from a single Today screen into a 6-module e-ink shell:
 Home · Today · Notes · Mail · Review · System, with an app-level refresh
 policy, an offline action queue, device telemetry, and Quick Note ink
@@ -9,19 +14,19 @@ capture. Deployed and touch-verified live on the device.
 
 ## What shipped
 
-| Area | Implementation |
-| --- | --- |
-| Shell IA | Bottom nav with 6 modules, page-swap only (StackLayout), big touch targets, shared header with battery/pending/offline + Exit |
-| Home | Clock, next event (calendar cache), next action, focus, open loops (tasks/inbox/mail/pending), device status |
-| Today | Focus card + 5-per-page pagination; checkbox → `task.complete`, Defer → `task.defer` (optimistic local state) |
-| Notes | Quick Note v0: MouseArea/Canvas ink capture → strokes JSONL under `data/notes/<id>/` (`meta.json` + `page-001.strokes.jsonl`); input probe button |
-| Mail | Triage skeleton reading `cache/mail.json` (self-explaining empty state until the backend feed exists); → Task enqueues `mail.convert_to_task` |
-| Review | Done counts, pending queue, notes captured, shutdown checklist |
-| System | Sync now + state, refresh mode (Clean/Balanced/Fast) + Clean screen, frontlight probe, battery/storage/Wi-Fi/version, Return to reMarkable, recovery help |
-| RefreshController | App-level: full-repaint flash every 1/6/16 page updates by mode; persisted to `refresh_mode.txt`; no driver access |
-| ActionQueue | Append-only `data/queue/actions.jsonl`, 5 action types, pending count in UI, survives crash |
-| DeviceStatus | Battery/Wi-Fi/storage from /sys + QStorageInfo, 60s refresh; frontlight probe (read-only) |
-| Cache-first | Unchanged `ApiClient` last-good behavior + `readCacheFile()` for `cache/{calendar,mail,…}.json` side-caches |
+| Area              | Implementation                                                                                                                                            |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shell IA          | Bottom nav with 6 modules, page-swap only (StackLayout), big touch targets, shared header with battery/pending/offline + Exit                             |
+| Home              | Clock, next event (calendar cache), next action, focus, open loops (tasks/inbox/mail/pending), device status                                              |
+| Today             | Focus card + 5-per-page pagination; checkbox → `task.complete`, Defer → `task.defer` (optimistic local state)                                             |
+| Notes             | Quick Note v0: MouseArea/Canvas ink capture → strokes JSONL under `data/notes/<id>/` (`meta.json` + `page-001.strokes.jsonl`); input probe button         |
+| Mail              | Triage skeleton reading `cache/mail.json` (self-explaining empty state until the backend feed exists); → Task enqueues `mail.convert_to_task`             |
+| Review            | Done counts, pending queue, notes captured, shutdown checklist                                                                                            |
+| System            | Sync now + state, refresh mode (Clean/Balanced/Fast) + Clean screen, frontlight probe, battery/storage/Wi-Fi/version, Return to reMarkable, recovery help |
+| RefreshController | App-level: full-repaint flash every 1/6/16 page updates by mode; persisted to `refresh_mode.txt`; no driver access                                        |
+| ActionQueue       | Append-only `data/queue/actions.jsonl`, 5 action types, pending count in UI, survives crash                                                               |
+| DeviceStatus      | Battery/Wi-Fi/storage from /sys + QStorageInfo, 60s refresh; frontlight probe (read-only)                                                                 |
+| Cache-first       | Unchanged `ApiClient` last-good behavior + `readCacheFile()` for `cache/{calendar,mail,…}.json` side-caches                                               |
 
 Binary: 1.6M aarch64, deployed as `paperos.next` → promoted after checks.
 
@@ -29,7 +34,7 @@ Binary: 1.6M aarch64, deployed as `paperos.next` → promoted after checks.
 
 - Clean start, zero QML errors; log: font `Noto Sans CJK SC`, queue 0, notes 0, refresh `balanced`, shell up at 954×1696.
 - Operator drove the UI by touch: refresh mode switched to `fast`, frontlight probe ran (found `/sys/class/backlight/rm_frontlight`, brightness 1600/2047, writable — a Brightness slider is feasible later).
-- API failure path exercised for real: production Paper API 404'd mid-test; UI showed `offline/stale`, kept rendering cached tasks — no white screen, no data loss. (The 404 is a backend regression, spun off as its own task.)
+- API failure path exercised for real: production Paper API returned **404** mid-test (2026-07-09); UI showed `offline/stale` and kept cached tasks. **2026-07-10复核：** `curl https://planner.kenos.space/api/paper/today` → **401**（路由正常）；见 hub **P-MOVE-VERIFY**（设备 token E2E 待复验）。
 - `systemctl start paperos` runs the shell; `stop` restores xochitl. Device reboot boots stock xochitl normally.
 
 ## Incidents & findings during test

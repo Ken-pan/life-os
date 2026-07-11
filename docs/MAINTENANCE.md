@@ -14,6 +14,9 @@
 | `ops/*`                | 运维                  | 部署/infra 变更时              |
 | `architecture/*`       | 架构师                | 契约/边界变更时                |
 | `qa/e2e-issues.md`     | QA                    | 每次跑批 E2E 后                |
+| `qa/planner-schedule-*` | QA                   | P-SCHED-0 baseline / 走查关闭时 |
+| `qa/paperos-*`         | QA / PaperOS          | Slice gate 或 SSOT 变更时      |
+| `PRO_MOVE.md` + gates  | 设备工程              | 新 gate 或 blocker 变更时      |
 | `archive/*`            | —                     | **只读**，不更新               |
 
 ## 更新流程
@@ -40,6 +43,7 @@
 | 部署、DNS、env、canonical     | `docs/ops/`                              |
 | 契约、RFC、长期架构           | `docs/architecture/`                     |
 | 测试 playbook、失败记录       | `docs/qa/`                               |
+| PaperOS / 设备 gate 证据      | `docs/PRO_MOVE*.md` + 索引 `docs/PRO_MOVE.md` |
 | Cursor / 脚本工具             | `docs/tooling/`                          |
 | 品牌资产、manifest            | `docs/assets/`                           |
 | 已完成阶段史                  | `roadmap/SHIPPED.md` 或 `archive/`       |
