@@ -1,0 +1,7 @@
+[Unit]
+Description=PaperOS Planner cache refresh
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/root/paperos
+ExecStart=/home/root/paperos/refresh-cache.sh

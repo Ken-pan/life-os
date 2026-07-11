@@ -26,7 +26,7 @@
 | ------------------ | --------------------------------------------------- | --- | ------ | ---- | -------------------------------------- | ------------------- |
 | **P-P4**           | Today 计数与 `portal_today_summary` 对齐            | ◆   | Growth | 0.5d | 与 Portal 同账号任务数一致             | —                   |
 | **P-MOVE-5**       | Controlled write staging gate                       | ◆   | Product | 1d | staging `task.complete` + 幂等；生产默认关闭 | §Now |
-| **P-MOVE-6**       | 定时缓存 + 手动 Sync now                            | ◆   | Product | 1–2d | scheduled cache + 性能 baseline | §Next |
+| **P-MOVE-6**       | 定时缓存 + 手动 Sync now                            | ◆   | Product | 1–2d | safe cache + states + opt-in timer 已实现；设备 gate / 性能 baseline 待验收 | §Next |
 | **P-ATTACH-0**     | Task / Project 附件底座                             | ◆◆  | Core   | 1–2d | Supabase Storage + metadata；在线上传/删除/预览 | §Next |
 | **P-ATTACH-1**     | 图片与截图体验                                      | ◆   | Product | 1d | paste / drag-drop / mobile picker / thumbnail / retry | — |
 

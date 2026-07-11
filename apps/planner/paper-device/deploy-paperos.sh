@@ -22,6 +22,8 @@ scp \
   "$HERE/recover-xochitl.sh" \
   "$HERE/refresh-cache.sh" \
   "$HERE/paperos.service" \
+  "$HERE/paperos-cache-refresh.service" \
+  "$HERE/paperos-cache-refresh.timer" \
   "$HERE/config.example.json" \
   "$DEVICE:$TARGET/"
 
@@ -34,7 +36,11 @@ ssh "$DEVICE" "
   [ ! -e paperos ] || chmod 755 paperos
   chmod 600 config.json token cache.json last_sync.txt 2>/dev/null || true
   systemctl link '$TARGET/paperos.service' 2>/dev/null || true
+  systemctl link '$TARGET/paperos-cache-refresh.service' 2>/dev/null || true
+  systemctl link '$TARGET/paperos-cache-refresh.timer' 2>/dev/null || true
   systemctl daemon-reload
+  # Intentionally do not enable the timer. Operator opt-in is documented in
+  # the P-MOVE-6 gate after physical-device validation.
   echo \"xochitl=\$(systemctl is-active xochitl || true)\"
   ls -la '$TARGET'
 "

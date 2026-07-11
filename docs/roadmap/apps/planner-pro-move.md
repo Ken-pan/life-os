@@ -99,7 +99,7 @@ Acceptance:
 - Stale or deleted task returns conflict/rejected and refreshes cache.
 - Production write switch remains off until staging passes.
 
-### P-MOVE-6 — Scheduled Cache / Manual Sync · PLANNED (was P-MOVE-4)
+### P-MOVE-6 — Scheduled Cache / Manual Sync · IMPLEMENTED · DEVICE GATE PENDING (was P-MOVE-4)
 
 **Goal:** reduce Mac dependency while preserving stock boot.
 
@@ -114,6 +114,8 @@ Acceptance:
 - Stock boot remains xochitl-first.
 - Timer can be disabled and removed with one documented rollback command.
 - Cache refresh never requires xochitl document-store mutation.
+
+Implementation and device checklist: [`../../PRO_MOVE_P_MOVE_6_SAFE_CACHE_SYNC_GATE.md`](../../PRO_MOVE_P_MOVE_6_SAFE_CACHE_SYNC_GATE.md).
 
 ### P-MOVE-7 — Read-Only Document Export Track (was P-MOVE-5)
 

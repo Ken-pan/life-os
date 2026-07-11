@@ -30,18 +30,38 @@ if [ ! -r "$TOKEN_FILE" ]; then
 fi
 
 TOKEN="$(tr -d '\r\n' < "$TOKEN_FILE")"
-TMP="$CACHE_PATH.tmp"
 
 mkdir -p "$(dirname "$CACHE_PATH")"
-rm -f "$TMP"
+mkdir -p "$(dirname "$LAST_SYNC_PATH")"
+TMP_CACHE="$(mktemp "${CACHE_PATH}.tmp.XXXXXX")"
+TMP_SYNC="$(mktemp "${LAST_SYNC_PATH}.tmp.XXXXXX")"
 
-wget -q -O "$TMP" \
+cleanup() {
+  rm -f "$TMP_CACHE" "$TMP_SYNC"
+}
+trap cleanup EXIT HUP INT TERM
+
+# wget fails on non-2xx responses; validate the expected dashboard shape before
+# replacing the last-good cache. This intentionally avoids parsing or logging
+# the bearer token.
+wget -q -O "$TMP_CACHE" \
   --header="Authorization: Bearer $TOKEN" \
   --header="Accept: application/json" \
   "$API_BASE/api/paper/today"
 
-mv "$TMP" "$CACHE_PATH"
-date -u '+%Y-%m-%dT%H:%M:%SZ' > "$LAST_SYNC_PATH"
-chmod 600 "$CACHE_PATH" "$LAST_SYNC_PATH"
+if [ ! -s "$TMP_CACHE" ] \
+  || ! grep -Eq '^[[:space:]]*\{' "$TMP_CACHE" \
+  || ! grep -Eq '"today"[[:space:]]*:' "$TMP_CACHE"; then
+  echo "PaperOS cache refresh returned an invalid dashboard payload; keeping last-good cache." >&2
+  exit 65
+fi
+
+date -u '+%Y-%m-%dT%H:%M:%SZ' > "$TMP_SYNC"
+chmod 600 "$TMP_CACHE" "$TMP_SYNC"
+
+# Both temporary files live beside their targets, so each mv is an atomic
+# filesystem rename. A fetch or validation failure never touches either target.
+mv "$TMP_CACHE" "$CACHE_PATH"
+mv "$TMP_SYNC" "$LAST_SYNC_PATH"
 
 echo "PaperOS cache refreshed: $CACHE_PATH"
