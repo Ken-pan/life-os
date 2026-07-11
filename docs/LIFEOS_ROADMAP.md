@@ -79,7 +79,7 @@ Phase 9 — 产品增量
 
 | 主线        | 摘要                                                                           | 详情                                                      |
 | ----------- | ------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| Infra       | **P-MOVE-BLOCK** recovery + durable config preview PASS; Git production confirmation pending | [`PRO_MOVE_P_MOVE_BLOCK_GATE.md`](./PRO_MOVE_P_MOVE_BLOCK_GATE.md) 2026-07-11 |
+| Infra       | **P-MOVE-BLOCK** Planner Paper API recovery + durable Git deploy PASS         | [`PRO_MOVE_P_MOVE_BLOCK_GATE.md`](./PRO_MOVE_P_MOVE_BLOCK_GATE.md) 2026-07-11 |
 | Core        | **F-P3** Finance STS 口径统一 · **P-P2** Planner Insight E2E 22/22           | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-09   |
 | Growth      | **G-P4b-H** Home 储藏卡 · **H-P6a** 元数据 · **G-P8/G-P9** · **M-P5** · **P-5b/P-12** UI | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md) |
 | Integration | **FT-P1** / **I-P1.5b** 完练 → Planner 打卡                                    | `fitness_workout_event_trigger` migration                 |
