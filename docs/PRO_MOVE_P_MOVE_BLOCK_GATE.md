@@ -1,6 +1,6 @@
 # P-MOVE-BLOCK — Production Paper API Gate
 
-**Status:** PASS WITH WARN — manual recovery is live; durable Git deployment confirmation remains pending.  
+**Status:** PASS — manual recovery and durable Git deployment confirmed.
 **Date:** 2026-07-11  
 **Scope:** Restore production delivery of the existing Planner Paper Netlify Functions. No API, routing, function-source, device, or data changes.
 
@@ -96,8 +96,15 @@ CI=1 npx netlify deploy --no-build --filter planner-os \
 
 ## D. Remaining Production Confirmation
 
-Do not replace the recovered production deploy in this gate. After the draft
-passes and this branch is merged, a normal Git-driven Planner production build
-must be verified to contain the same functions before changing this status to
-PASS. This gate does not validate a device-authenticated 200 response; that
-remains the physical-device gate.
+PASS — PR #11 merged as `492e167dff2ea0c82c2aa18eb98bc319bd7e8e0f` and
+triggered Git production deploy `6a51a964c66e3800084068c3`.
+
+- The active production deploy is `ready`, references that merge commit, and
+  lists every required Paper function in `available_functions`.
+- Live production responses are: `GET today` 401 JSON unauthorized; `GET
+  delta` 401 JSON unauthorized; `GET actions` 405 JSON method-not-allowed;
+  `POST actions` 401 JSON unauthorized.
+- The recovered manual deploy was superseded only after this Git deploy passed.
+
+This gate does not validate a device-authenticated 200 response; that remains
+the physical-device gate.

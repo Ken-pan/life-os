@@ -78,9 +78,9 @@ Exit button, hardened launcher/recover scripts with exit-code logging,
 `ExecStopPost`, session survives SSH disconnect). See
 [`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md).
 
-### P-MOVE-BLOCK — Production Paper API · PASS WITH WARN 2026-07-11
+### P-MOVE-BLOCK — Production Paper API · PASS 2026-07-11
 
-The active Git deploy had no Paper functions, so `/api/paper/*` was served as an HTML 404. The targeted Planner deployment restored the deployed manifest, and the durable path passed a normal-config draft deploy. The merge-triggered Git production deploy still requires manifest confirmation. See [`../../PRO_MOVE_P_MOVE_BLOCK_GATE.md`](../../PRO_MOVE_P_MOVE_BLOCK_GATE.md).
+The active Git deploy had no Paper functions, so `/api/paper/*` was served as an HTML 404. The targeted Planner deployment restored the deployed manifest, and the normal-config draft plus merge-triggered Git production deploy both passed with the required functions. See [`../../PRO_MOVE_P_MOVE_BLOCK_GATE.md`](../../PRO_MOVE_P_MOVE_BLOCK_GATE.md).
 
 ### P-MOVE-5 — Controlled Write MVP · NEXT (was P-MOVE-3)
 
