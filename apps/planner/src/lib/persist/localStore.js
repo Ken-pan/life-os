@@ -29,11 +29,12 @@ export function loadState() {
 /** @param {import('../types.js').AppState} state */
 export function saveState(state) {
   const ls = safeStorage();
-  if (!ls) return;
+  if (!ls) return false;
   try {
     ls.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
   } catch {
-    /* storage full */
+    return false;
   }
 }
 

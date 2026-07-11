@@ -248,7 +248,6 @@ test.describe('移动端 IA 验收截图', () => {
     test.skip(testInfo.project.name !== 'mobile', '仅移动端')
     await seedState(page, flowSeedState())
 
-    await page.goto('/')
     await expect(page.locator('h1.page-title')).toHaveText('今天')
     await expect(page.locator('.today-progress')).toBeVisible()
     await expect(page.getByTestId('fab-add')).toHaveAttribute(

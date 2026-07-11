@@ -27,7 +27,6 @@
     hasConflict?: boolean,
     column?: number,
     columns?: number,
-    desktopInteractive?: boolean,
     onReschedule?: () => void
   }} */
   let {
@@ -38,7 +37,6 @@
     hasConflict = false,
     column = 0,
     columns = 1,
-    desktopInteractive = false,
     onReschedule,
   } = $props();
 
@@ -73,7 +71,10 @@
   const columned = $derived(columns > 1);
   const compact = $derived(Boolean(activeLayout && activeLayout.height <= 56));
   const showRangeMeta = $derived(Boolean(rangeLabel));
-  const interactive = $derived(desktopInteractive && !task.completed);
+  // Pointer capture works for mouse, pen, and touch. Desktop capability still
+  // controls hover/create affordances in DayTimeline, but blocks themselves
+  // must remain movable and resizable on mobile.
+  const interactive = $derived(!task.completed);
 
   /** @param {PointerEvent} e @param {'move' | 'resize-top' | 'resize-bottom'} mode */
   function beginPointerDrag(e, mode) {

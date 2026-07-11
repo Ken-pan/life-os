@@ -293,7 +293,7 @@ test.describe('成就感 + 日程截图', () => {
 
     await page.goto('/calendar')
     await page.waitForSelector('.calendar-grid', { timeout: 5000 })
-    await page.waitForSelector('.schedule-summary', { timeout: 10_000 })
+    await page.waitForSelector('.schedule-summary:visible', { timeout: 10_000 })
     await snap(page, '03-calendar-schedule')
 
     const unscheduledHead = page.locator('.unscheduled-panel-head--toggle')
@@ -344,7 +344,9 @@ test.describe('成就感 + 日程截图', () => {
 
   test('Today 庆祝卡', async ({ page }, testInfo) => {
     await seedState(page, featureSeedState({ allTodayDone: true }))
+    await page.waitForLoadState('networkidle')
     await page.evaluate(() => sessionStorage.removeItem('planner_today_closed'))
+    await page.reload()
     await page.waitForSelector('.today-closed', { timeout: 10_000 })
     await snap(page, '09-today-closed-celebration')
 

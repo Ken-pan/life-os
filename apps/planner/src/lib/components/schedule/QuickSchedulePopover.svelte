@@ -69,11 +69,12 @@
 
   function save() {
     if (!task || !schedulePopover.dateKey) return;
-    applyTaskSchedule(task.id, {
+    const applied = applyTaskSchedule(task.id, {
       dateKey: schedulePopover.dateKey,
       start,
       durationMinutes: duration,
     });
+    if (!applied) return;
     toast(t('toast.scheduledBlock', { title: task.title, start }), 'success', {
       key: `schedule-${task.id}`,
       dedupeMs: 2000,

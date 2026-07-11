@@ -2181,6 +2181,7 @@ body {
   padding: 0;
   background: transparent;
   cursor: ns-resize;
+  touch-action: none;
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
@@ -2188,6 +2189,17 @@ body {
 .time-block--interactive:hover .time-block-handle,
 .time-block--dragging .time-block-handle {
   opacity: 1;
+}
+
+@media (--life-os-mobile) {
+  .time-block-handle {
+    height: 14px;
+    opacity: 1;
+  }
+
+  .time-block-grip {
+    width: 24px;
+  }
 }
 
 .time-block-handle--top {

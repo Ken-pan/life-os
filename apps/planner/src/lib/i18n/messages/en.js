@@ -486,6 +486,7 @@ export default {
     completedHabit: 'Rhythm kept today',
     scheduledBlock: 'Scheduled “{title}” at {start}',
     scheduleCleared: 'Cleared schedule for “{title}”',
+    schedulePersistFailed: 'Could not save the schedule; the previous state was restored',
     restored: 'Restored',
     inboxAdded: 'Added to Inbox',
   },

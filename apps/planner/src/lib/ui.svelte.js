@@ -1,8 +1,9 @@
-import { S } from './state.svelte.js'
+import { S, flushSave } from './state.svelte.js'
 import { SYSTEM_LIST_INBOX } from './types.js'
 import { createToastStore } from '@life-os/platform-web/svelte/toast-store'
 import { updateTask } from './domain/tasks.js'
 import { DEFAULT_SLOT_DURATION_MINUTES } from './domain/schedule.js'
+import { t } from './i18n/index.js'
 
 /** @param {import('./types.js').Task} task */
 function cloneTask(task) {
@@ -167,20 +168,42 @@ export function closeScheduleSlot() {
  * @param {{ dateKey: string, start: string, durationMinutes: number }} payload
  */
 export function applyTaskSchedule(taskId, payload) {
+  const previous = S.tasks.find((task) => task.id === taskId)
+  if (!previous) return false
   updateTask(taskId, {
     scheduledDate: payload.dateKey,
     scheduledStart: payload.start,
     durationMinutes: payload.durationMinutes,
   })
+  if (!flushSave()) {
+    S.tasks = S.tasks.map((task) => (task.id === taskId ? previous : task))
+    toast(t('toast.schedulePersistFailed'), 'error', {
+      key: `schedule-persist-${taskId}`,
+      dedupeMs: 2000,
+    })
+    return false
+  }
   closeSchedulePopover()
+  return true
 }
 
 /** @param {string} taskId */
 export function clearTaskSchedule(taskId) {
+  const previous = S.tasks.find((task) => task.id === taskId)
+  if (!previous) return false
   updateTask(taskId, {
     scheduledDate: null,
     scheduledStart: null,
     durationMinutes: null,
   })
+  if (!flushSave()) {
+    S.tasks = S.tasks.map((task) => (task.id === taskId ? previous : task))
+    toast(t('toast.schedulePersistFailed'), 'error', {
+      key: `schedule-persist-${taskId}`,
+      dedupeMs: 2000,
+    })
+    return false
+  }
   closeSchedulePopover()
+  return true
 }

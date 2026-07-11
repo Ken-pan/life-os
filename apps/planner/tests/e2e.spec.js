@@ -80,15 +80,17 @@ test.describe('PlannerOS E2E', () => {
     await dialog.locator('#task-title').fill('会议准备')
     await dialog.locator('#task-due').fill(localDateOffset(0))
     await openAdvancedOptions(dialog)
-    await dialog.locator('#task-priority').selectOption('P1')
+    await dialog.locator('#task-priority').selectOption('P0')
     await dialog.getByRole('button', { name: '保存' }).click()
     await page.goto('/')
     await expect(
       page.locator('.task-title', { hasText: '会议准备' }),
     ).toBeVisible()
-    await expect(
-      page.locator('.task-meta-line', { hasText: '高' }),
-    ).toBeVisible()
+    const savedRow = page.locator('.task-row', {
+      has: page.locator('.task-title', { hasText: '会议准备' }),
+    })
+    await expect(savedRow.locator('.task-check--accent')).toBeVisible()
+    await expect(savedRow.locator('.task-meta-line')).not.toContainText('P0')
   })
 
   test('完成任务后进入今日完成或庆祝态', async ({ page }, testInfo) => {
@@ -259,13 +261,13 @@ test.describe('PlannerOS E2E', () => {
     await expect(
       page.locator('.task-title', { hasText: '每日晨跑' }),
     ).toBeVisible()
-    await expect(
-      page.locator('.task-meta-line', { hasText: '每天' }),
-    ).toBeVisible()
-
-    const row = page.locator('.task-row', {
+    const recurringRow = page.locator('.task-row', {
       has: page.locator('.task-title', { hasText: '每日晨跑' }),
     })
+    await expect(recurringRow.locator('.chip--recurrence')).toBeVisible()
+    await expect(recurringRow.locator('.task-meta-line')).not.toContainText('每天')
+
+    const row = recurringRow
     await row.locator('.task-check').click()
     await expect(page.locator('.today-closed')).toBeVisible()
     await expect(
@@ -368,7 +370,7 @@ test.describe('PlannerOS E2E', () => {
   test('移动端 AppBar 搜索入口', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', '仅移动端')
     await page.goto('/')
-    await page.locator('.appbar-search').click()
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '搜索' }).click()
     await expect(page).toHaveURL(/\/search/)
   })
 
