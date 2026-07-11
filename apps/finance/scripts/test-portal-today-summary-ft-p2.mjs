@@ -11,7 +11,8 @@
 import assert from 'node:assert/strict'
 import { createClient } from '@supabase/supabase-js'
 
-const url = process.env.SUPABASE_URL || process.env.API_URL || 'http://127.0.0.1:54321'
+const url =
+  process.env.SUPABASE_URL || process.env.API_URL || 'http://127.0.0.1:54321'
 const serviceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SERVICE_ROLE_KEY ||
@@ -40,7 +41,8 @@ async function createUser(email) {
     password,
     email_confirm: true,
   })
-  if (error || !data.user) throw error ?? new Error(`createUser failed: ${email}`)
+  if (error || !data.user)
+    throw error ?? new Error(`createUser failed: ${email}`)
   return data.user
 }
 
@@ -59,7 +61,9 @@ async function rpcAs(email) {
 /** @returns {string} */
 function laTodayKey() {
   const now = new Date()
-  const la = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  const la = new Date(
+    now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }),
+  )
   const y = la.getFullYear()
   const m = String(la.getMonth() + 1).padStart(2, '0')
   const d = String(la.getDate()).padStart(2, '0')
@@ -97,14 +101,17 @@ async function insertSession(userId, sessionDate, dayId, opts = {}) {
  * @param {{ done?: number, skipped?: object | null }} payload
  */
 async function insertLog(userId, sessionId, exerciseId, payload) {
-  const { error } = await service.schema('fitness').from('fitness_exercise_logs').insert({
-    user_id: userId,
-    session_id: sessionId,
-    exercise_id: exerciseId,
-    done: payload.done ?? 0,
-    sets: [],
-    skipped: payload.skipped ?? null,
-  })
+  const { error } = await service
+    .schema('fitness')
+    .from('fitness_exercise_logs')
+    .insert({
+      user_id: userId,
+      session_id: sessionId,
+      exercise_id: exerciseId,
+      done: payload.done ?? 0,
+      sets: [],
+      skipped: payload.skipped ?? null,
+    })
   if (error) throw error
 }
 
@@ -152,31 +159,39 @@ async function seedOtherCards(userId, today) {
   if (finErr) throw finErr
 
   const trackId = `ft-p2-${stamp}`
-  const { error: metaErr } = await service.schema('music').from('music_track_meta').insert({
-    user_id: userId,
-    track_id: trackId,
-    title: 'FT-P2 Track',
-    artist: 'Test Artist',
-  })
+  const { error: metaErr } = await service
+    .schema('music')
+    .from('music_track_meta')
+    .insert({
+      user_id: userId,
+      track_id: trackId,
+      title: 'FT-P2 Track',
+      artist: 'Test Artist',
+    })
   if (metaErr) throw metaErr
 
-  const { error: playErr } = await service.schema('music').from('play_events').insert({
-    user_id: userId,
-    track_id: trackId,
-    event_type: 'play',
-  })
+  const { error: playErr } = await service
+    .schema('music')
+    .from('play_events')
+    .insert({
+      user_id: userId,
+      track_id: trackId,
+      event_type: 'play',
+    })
   if (playErr) throw playErr
 
-  const { error: homeErr } = await service.from('core_user_app_settings').upsert({
-    user_id: userId,
-    app_id: 'home',
-    settings: {
-      portal_summary: {
-        storage_zone_count: 3,
-        reported_at: new Date().toISOString(),
+  const { error: homeErr } = await service
+    .from('core_user_app_settings')
+    .upsert({
+      user_id: userId,
+      app_id: 'home',
+      settings: {
+        portal_summary: {
+          storage_zone_count: 3,
+          reported_at: new Date().toISOString(),
+        },
       },
-    },
-  })
+    })
   if (homeErr) throw homeErr
 }
 
@@ -228,6 +243,8 @@ async function main() {
   const payloadC = await rpcAs(`ft-p2-c-${stamp}@example.test`)
   assert.equal(payloadC.fitness.workedOutToday, false)
   assert.equal(payloadC.fitness.todayCompleted, false)
+  assert.equal(payloadC.fitness.lastSessionDate, null)
+  assert.equal(payloadC.fitness.lastDayId, null)
   pass('C today skipped only')
 
   const userD = await createUser(`ft-p2-d-${stamp}@example.test`)
@@ -237,7 +254,9 @@ async function main() {
   pass('D today session with no exercise logs')
 
   const userE = await createUser(`ft-p2-e-${stamp}@example.test`)
-  const sessE = await insertSession(userE.id, yesterdayKey, 'chest', { ended: true })
+  const sessE = await insertSession(userE.id, yesterdayKey, 'chest', {
+    ended: true,
+  })
   await insertLog(userE.id, sessE, 'c_bench', { done: 4 })
   const payloadE = await rpcAs(`ft-p2-e-${stamp}@example.test`)
   assert.equal(payloadE.fitness.workedOutToday, false)
@@ -269,6 +288,34 @@ async function main() {
   assert.equal(payloadG.fitness.todayDayId, 'back')
   assert.equal(payloadG.fitness.todayCompleted, false)
   pass('G multiple sessions today picks most recent with done>0')
+
+  const userI = await createUser(`ft-p2-i-${stamp}@example.test`)
+  const sessI = await insertSession(userI.id, today, 'arms', { ended: true })
+  await insertLog(userI.id, sessI, 'c_curl', {
+    done: 0,
+    skipped: { reason: 'busy', ts: new Date().toISOString() },
+  })
+  const payloadI = await rpcAs(`ft-p2-i-${stamp}@example.test`)
+  assert.equal(payloadI.fitness.workedOutToday, false)
+  assert.equal(payloadI.fitness.lastSessionDate, null)
+  assert.equal(payloadI.fitness.lastDayId, null)
+  pass('I today skipped-only ended with no earlier active workout')
+
+  const userJ = await createUser(`ft-p2-j-${stamp}@example.test`)
+  const sessJYesterday = await insertSession(userJ.id, yesterdayKey, 'back', {
+    ended: true,
+  })
+  await insertLog(userJ.id, sessJYesterday, 'c_row', { done: 3 })
+  const sessJToday = await insertSession(userJ.id, today, 'legs', { ended: true })
+  await insertLog(userJ.id, sessJToday, 'c_squat', {
+    done: 0,
+    skipped: { reason: 'busy', ts: new Date().toISOString() },
+  })
+  const payloadJ = await rpcAs(`ft-p2-j-${stamp}@example.test`)
+  assert.equal(payloadJ.fitness.workedOutToday, false)
+  assert.equal(payloadJ.fitness.lastSessionDate, yesterdayKey)
+  assert.equal(payloadJ.fitness.lastDayId, 'back')
+  pass('J today skipped-only ended with yesterday active workout')
 
   console.log('portal_today_summary FT-P2 RPC matrix: all checks passed')
 }

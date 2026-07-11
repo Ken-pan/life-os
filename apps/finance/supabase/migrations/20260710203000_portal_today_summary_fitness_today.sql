@@ -1,4 +1,4 @@
--- FT-P2: Portal today summary — Fitness workedOutToday + last completed session.
+-- FT-P2: Portal today summary — Fitness workedOutToday + last active completed session.
 -- Extends portal_today_summary(); preserves Planner / Finance / Music / Home blocks.
 
 create or replace function public.portal_today_summary()
@@ -69,6 +69,12 @@ begin
   from fitness.fitness_workout_sessions s
   where s.user_id = v_uid
     and s.ended_at is not null
+    and exists (
+      select 1
+      from fitness.fitness_exercise_logs l
+      where l.session_id = s.id
+        and l.done > 0
+    )
   order by s.session_date desc, s.ended_at desc
   limit 1;
 

@@ -32,11 +32,11 @@ function caseC() {
   const copy = formatFitnessTodaySummary({
     workedOutToday: false,
     todayCompleted: false,
-    lastSessionDate: '2026-07-09',
-    lastDayId: 'legs',
+    lastSessionDate: null,
+    lastDayId: null,
   })
   assert.equal(copy.value, '今日尚未训练')
-  assert.equal(copy.detail, '上次：腿 · 7/9')
+  assert.equal(copy.detail, '打开 Fitness 开始训练')
   assert.equal(copy.empty, true)
 }
 
@@ -48,6 +48,17 @@ function caseD() {
   assert.equal(copy.value, '今日尚未训练')
   assert.equal(copy.detail, '打开 Fitness 开始训练')
   assert.equal(copy.empty, true)
+}
+
+function caseJ() {
+  const copy = formatFitnessTodaySummary({
+    workedOutToday: false,
+    todayCompleted: false,
+    lastSessionDate: '2026-07-09',
+    lastDayId: 'back',
+  })
+  assert.equal(copy.value, '今日尚未训练')
+  assert.equal(copy.detail, '上次：背 · 7/9')
 }
 
 function legacyLastSessionFields() {
@@ -70,6 +81,7 @@ caseA()
 caseB()
 caseC()
 caseD()
+caseJ()
 legacyLastSessionFields()
 nullFitnessPayload()
 
