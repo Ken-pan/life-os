@@ -1,8 +1,6 @@
 <script>
   import { onMount } from 'svelte';
   import {
-    DAY_START_HOUR,
-    DAY_END_HOUR,
     HOUR_HEIGHT_PX,
     timelineHeightPx,
     currentTimeMarkerTop,
@@ -16,6 +14,7 @@
     blockLayout,
     taskDurationMinutes,
     DEFAULT_SLOT_DURATION_MINUTES,
+    dayBoundsForTasks,
     slotPreviewFromPointer,
     slotRangeFromDrag,
     findScheduleConflicts,
@@ -75,12 +74,18 @@
   /** @type {CreateGesture | null} */
   let createGesture = $state(null);
 
+  /* 可见时间窗随当日块动态外扩（SCH：窗口外块不可丢） */
+  const dayBounds = $derived(dayBoundsForTasks(tasks));
+  const dayStart = $derived(dayBounds.dayStart);
+  const dayEnd = $derived(dayBounds.dayEnd);
   const hours = $derived(
-    Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, i) => DAY_START_HOUR + i),
+    Array.from({ length: dayEnd - dayStart }, (_, i) => dayStart + i),
   );
-  const height = $derived(timelineHeightPx());
+  const height = $derived(timelineHeightPx(dayStart, dayEnd));
   const nowTop = $derived(
-    isTodayDate(dateKey, todayKey()) ? currentTimeMarkerTop(nowMs) : null,
+    isTodayDate(dateKey, todayKey())
+      ? currentTimeMarkerTop(nowMs, dayStart, dayEnd)
+      : null,
   );
   const overlapIds = $derived(overlappingTaskIds(tasks));
   const overlapColumns = $derived(overlapBlockColumns(tasks));
@@ -113,10 +118,15 @@
     clearDropGhost();
   }
 
+  /** @param {number} topPx @param {number} durationMinutes */
+  function pointerPreview(topPx, durationMinutes) {
+    return slotPreviewFromPointer(topPx, durationMinutes, { dayStart, dayEnd });
+  }
+
   /** @param {number} topPx */
   function setHoverGhost(topPx) {
     if (!desktopDnD || createGesture || dragOver) return;
-    const preview = slotPreviewFromPointer(topPx, DEFAULT_SLOT_DURATION_MINUTES);
+    const preview = pointerPreview(topPx, DEFAULT_SLOT_DURATION_MINUTES);
     if (!preview) {
       clearHoverGhost();
       return;
@@ -137,7 +147,7 @@
     if (!task) return;
 
     const durationMinutes = task.durationMinutes || defaultDurationMinutes(task);
-    const preview = slotPreviewFromPointer(topPx, durationMinutes);
+    const preview = pointerPreview(topPx, durationMinutes);
     if (!preview) {
       clearDropGhost();
       return;
@@ -208,7 +218,7 @@
 
     const topPx = canvasTopPx(e.clientY);
     const durationMinutes = task.durationMinutes || defaultDurationMinutes(task);
-    const preview = slotPreviewFromPointer(topPx, durationMinutes);
+    const preview = pointerPreview(topPx, durationMinutes);
     if (!preview) return;
 
     const previous = {
@@ -258,7 +268,10 @@
       if (!createGesture.active && dy < CLICK_DRAG_THRESHOLD_PX) return;
 
       createGesture = { ...createGesture, active: true };
-      const range = slotRangeFromDrag(createGesture.originTopPx, canvasTopPx(e.clientY));
+      const range = slotRangeFromDrag(createGesture.originTopPx, canvasTopPx(e.clientY), {
+        dayStart,
+        dayEnd,
+      });
       if (!range) {
         clearCreateGhost();
         return;
@@ -288,7 +301,7 @@
     }
 
     if (!gesture.active) {
-      const preview = slotPreviewFromPointer(
+      const preview = pointerPreview(
         gesture.originTopPx,
         DEFAULT_SLOT_DURATION_MINUTES,
       );
@@ -297,7 +310,10 @@
       return;
     }
 
-    const range = slotRangeFromDrag(gesture.originTopPx, canvasTopPx(e.clientY));
+    const range = slotRangeFromDrag(gesture.originTopPx, canvasTopPx(e.clientY), {
+      dayStart,
+      dayEnd,
+    });
     clearCreateGhost();
     if (range) openScheduleSlot(dateKey, range.start, range.durationMinutes);
   }
@@ -324,7 +340,7 @@
     if (target?.closest('.time-block')) return;
 
     const topPx = canvasTopPx(e.clientY);
-    const startMinutes = snapMinutesFromTimelineTop(topPx);
+    const startMinutes = snapMinutesFromTimelineTop(topPx, { dayStart, dayEnd });
     const start = formatMinutesAsTime(startMinutes);
     openScheduleSlot(dateKey, start, DEFAULT_SLOT_DURATION_MINUTES);
   }
@@ -334,19 +350,56 @@
     let earliestTop = null;
     for (const task of scheduledTasks) {
       if (!task.scheduledStart) continue;
-      const layout = blockLayout(task.scheduledStart, taskDurationMinutes(task));
+      const layout = blockLayout(task.scheduledStart, taskDurationMinutes(task), {
+        dayStart,
+        dayEnd,
+      });
       if (!layout) continue;
       earliestTop =
         earliestTop == null ? layout.top : Math.min(earliestTop, layout.top);
     }
 
     const markerTop = isTodayDate(dateKey, todayKey())
-      ? currentTimeMarkerTop(nowMs)
+      ? currentTimeMarkerTop(nowMs, dayStart, dayEnd)
       : null;
     if (markerTop != null) {
       return earliestTop != null ? Math.min(earliestTop, markerTop) : markerTop;
     }
     return earliestTop ?? 0;
+  }
+
+  /** @param {HTMLElement | null | undefined} el 时间轴自身是否为滚动容器（桌面）*/
+  function ownsScroll(el) {
+    if (!el) return false;
+    if (el.scrollHeight <= el.clientHeight + 1) return false;
+    const overflowY = getComputedStyle(el).overflowY;
+    return overflowY === 'auto' || overflowY === 'scroll';
+  }
+
+  /** 找到实际滚动面（桌面 = 时间轴内滚；移动端 = 页面主滚动面） */
+  function findScrollSurface() {
+    /** @type {HTMLElement | null | undefined} */
+    let node = scrollEl;
+    while (node) {
+      if (ownsScroll(node)) return node;
+      node = node.parentElement;
+    }
+    return /** @type {HTMLElement | null} */ (document.scrollingElement);
+  }
+
+  /** @param {number} anchorPx canvas 内 Y 坐标 @param {ScrollBehavior} [behavior] */
+  function scrollToAnchor(anchorPx, behavior = 'auto') {
+    if (!canvasEl) return;
+    const surface = findScrollSurface();
+    if (!surface) return;
+    const canvasOffset =
+      canvasEl.getBoundingClientRect().top -
+      surface.getBoundingClientRect().top +
+      surface.scrollTop;
+    surface.scrollTo({
+      top: Math.max(0, canvasOffset + anchorPx - surface.clientHeight * 0.12),
+      behavior,
+    });
   }
 
   $effect(() => {
@@ -356,6 +409,8 @@
     if (scrollKey === lastScrollKey) return;
     lastScrollKey = scrollKey;
 
+    // 仅当时间轴自带滚动（桌面）时自动锚定；移动端页面主滚动面不被劫持。
+    if (!ownsScroll(scrollEl)) return;
     const anchor = scrollAnchorTop(tasks);
     scrollEl.scrollTop = Math.max(0, anchor - scrollEl.clientHeight * 0.12);
   });
@@ -465,6 +520,8 @@
             <TimeBlock
               {task}
               {dateKey}
+              {dayStart}
+              {dayEnd}
               desktopInteractive={desktopDnD}
               hasConflict={overlapIds.has(task.id)}
               column={columnLayout?.column ?? 0}
@@ -487,8 +544,8 @@
         type="button"
         class="day-timeline-jump-now"
         onclick={() => {
-          if (!scrollEl || nowTop == null) return;
-          scrollEl.scrollTo({ top: Math.max(0, nowTop - 80), behavior: 'smooth' });
+          if (nowTop == null) return;
+          scrollToAnchor(nowTop, 'smooth');
         }}
       >
         {t('schedule.jumpNow')}

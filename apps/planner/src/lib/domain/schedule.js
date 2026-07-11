@@ -279,6 +279,26 @@ export function snapMinutesDelta(
   return Math.round(raw / snapMinutes) * snapMinutes
 }
 
+/**
+ * 当日时间轴可见窗口：默认 08:00–23:00，若有块落在窗口外则按整点向外扩，
+ * 保证所有已排程块可见（列表/统计与时间轴口径一致）。
+ * @param {import('../types.js').Task[]} tasks
+ * @param {{ dayStart?: number, dayEnd?: number }} [opts]
+ * @returns {{ dayStart: number, dayEnd: number }}
+ */
+export function dayBoundsForTasks(tasks, opts = {}) {
+  let dayStart = opts.dayStart ?? DAY_START_HOUR
+  let dayEnd = opts.dayEnd ?? DAY_END_HOUR
+  for (const task of tasks) {
+    if (!task?.scheduledStart || task.deletedAt) continue
+    const start = parseTimeToMinutes(task.scheduledStart)
+    const end = start + taskDurationMinutes(task)
+    dayStart = Math.min(dayStart, Math.floor(start / 60))
+    dayEnd = Math.max(dayEnd, Math.ceil(end / 60))
+  }
+  return { dayStart: Math.max(0, dayStart), dayEnd: Math.min(24, dayEnd) }
+}
+
 /** @param {number} [dayStart] @param {number} [dayEnd] */
 export function dayBoundsMinutes(
   dayStart = DAY_START_HOUR,

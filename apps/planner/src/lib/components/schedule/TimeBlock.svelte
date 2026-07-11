@@ -2,6 +2,8 @@
   import { t } from '$lib/i18n/index.js';
   import { getTaskKind } from '$lib/domain/taskKind.js';
   import {
+    DAY_START_HOUR,
+    DAY_END_HOUR,
     blockLayout,
     taskDurationMinutes,
     formatTimeRange,
@@ -20,6 +22,8 @@
   /** @type {{
     task: import('$lib/types.js').Task,
     dateKey: string,
+    dayStart?: number,
+    dayEnd?: number,
     hasConflict?: boolean,
     column?: number,
     columns?: number,
@@ -29,6 +33,8 @@
   let {
     task,
     dateKey,
+    dayStart = DAY_START_HOUR,
+    dayEnd = DAY_END_HOUR,
     hasConflict = false,
     column = 0,
     columns = 1,
@@ -39,7 +45,9 @@
   const kind = $derived(getTaskKind(task));
   const duration = $derived(taskDurationMinutes(task));
   const layout = $derived(
-    task.scheduledStart ? blockLayout(task.scheduledStart, duration) : null,
+    task.scheduledStart
+      ? blockLayout(task.scheduledStart, duration, { dayStart, dayEnd })
+      : null,
   );
 
   /** @type {{ startMinutes: number, durationMinutes: number } | null} */
@@ -51,6 +59,7 @@
       return blockLayout(
         formatMinutesAsTime(preview.startMinutes),
         preview.durationMinutes,
+        { dayStart, dayEnd },
       );
     }
     return layout;
@@ -78,7 +87,7 @@
     const originY = e.clientY;
     const originStart = parseTimeToMinutes(task.scheduledStart);
     const originDuration = duration;
-    const bounds = dayBoundsMinutes();
+    const bounds = dayBoundsMinutes(dayStart, dayEnd);
     dragging = true;
     preview = { startMinutes: originStart, durationMinutes: originDuration };
 

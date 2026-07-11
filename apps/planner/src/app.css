@@ -899,6 +899,41 @@ body {
   border-color: transparent;
 }
 
+/* P-TASK-DISPLAY: focus 用形态区分（左侧 accent 竖条），小字不再写「关键」 */
+.task-row--focus {
+  position: relative;
+}
+
+.task-row--focus::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--space-1-5);
+  bottom: var(--space-1-5);
+  width: 3px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+/* compact 行 padding-inline 为 0，避免竖条压住 checkbox */
+.task-row--focus.task-row--compact {
+  padding-left: calc(3px + var(--space-2));
+}
+
+.chip--recurrence {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--t2);
+  border-color: transparent;
+  background: color-mix(in srgb, var(--surface-2, var(--bg-2)) 88%, transparent);
+}
+
+/* compact 行保留关键 chip 时收紧上边距 */
+.task-row--compact .task-meta {
+  margin-top: var(--space-1, 4px);
+}
+
 .completed-page {
   display: flex;
   flex-direction: column;
@@ -1370,6 +1405,11 @@ body {
 
   .calendar-page .day-timeline-scroll {
     max-height: min(78vh, 1040px);
+  }
+
+  /* SCH-7: 桌面右栏 CalendarContextPanel 已含 ScheduleSummary，主栏不重复 */
+  .calendar-page .day-schedule-panel .schedule-summary {
+    display: none;
   }
 
   .today-layout--with-recap .today-progress-actions {
@@ -2700,8 +2740,10 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     grid-column: 1 / -1;
   }
 
+  /* SCH-1/SCH-10: 移动端单一主滚动面（.life-os-page-workspace），时间轴不再内滚 */
   .day-timeline-scroll {
-    max-height: 58vh;
+    max-height: none;
+    overflow: visible;
   }
 }
 
@@ -2763,34 +2805,19 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     font-size: var(--text-sm);
   }
 
-  .calendar-page .day-timeline-scroll {
-    max-height: min(64vh, 680px);
-    padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
-  }
-
+  /* SCH-1: 待排程内联在时间轴上方（原 fixed 浮层遮挡内容且与 FAB 冲突） */
   .unscheduled-panel {
-    position: fixed;
-    left: max(var(--page-gutter), var(--safe-left-effective));
-    right: max(var(--page-gutter), var(--safe-right-effective));
-    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-2));
-    z-index: calc(var(--z-nav, 30) + 1);
-    max-height: min(48dvh, 420px);
     padding: var(--space-2) var(--space-2-5);
-    overflow: hidden;
-    border-radius: 24px 24px var(--radius-control) var(--radius-control);
-    box-shadow: var(--shadow-elevated);
+    background: var(--card);
   }
 
   .unscheduled-panel-head {
-    min-height: 56px;
+    min-height: 44px;
     margin-bottom: 0;
     align-items: center;
   }
 
   .unscheduled-panel .unscheduled-list {
-    max-height: calc(min(48dvh, 420px) - 72px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
     padding-bottom: var(--space-1);
   }
 

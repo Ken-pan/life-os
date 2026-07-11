@@ -18,6 +18,7 @@ import Trash2 from '@lucide/svelte/icons/trash-2'
 import Pencil from '@lucide/svelte/icons/pencil'
 import Ellipsis from '@lucide/svelte/icons/ellipsis'
 import RotateCcw from '@lucide/svelte/icons/rotate-ccw'
+import Repeat from '@lucide/svelte/icons/repeat'
 import TriangleAlert from '@lucide/svelte/icons/triangle-alert'
 import GripVertical from '@lucide/svelte/icons/grip-vertical'
 import Menu from '@lucide/svelte/icons/menu'
@@ -44,6 +45,7 @@ export const ICONS = {
   pencil: Pencil,
   ellipsis: Ellipsis,
   'rotate-ccw': RotateCcw,
+  repeat: Repeat,
   'alert-triangle': TriangleAlert,
   'grip-vertical': GripVertical,
   menu: Menu,
