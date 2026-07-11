@@ -159,23 +159,26 @@ test.describe('P-SCHED-0 scheduling usability', () => {
     const canvas = page.locator('.day-timeline-canvas')
     const canvasBox = await canvas.boundingBox()
     expect(canvasBox).not.toBeNull()
-    const hitbox = page.locator('.day-timeline-slot-hitbox')
-    const canvasClientTop = await canvas.evaluate(
-      (element) => element.getBoundingClientRect().top,
+    await page.locator('.day-timeline-scroll').evaluate(
+      (element, hourHeight) => element.scrollTo({ top: 5 * hourHeight }),
+      HOUR_HEIGHT,
     )
-    const createClientY = canvasClientTop + 7 * HOUR_HEIGHT
-    await hitbox.dispatchEvent('pointerdown', {
-      button: 0,
-      clientY: createClientY,
-      pointerId: 41,
-      pointerType: 'mouse',
+    const emptyPoint = await page.evaluate(() => {
+      const scroll = document.querySelector('.day-timeline-scroll')
+      const canvasElement = document.querySelector('.day-timeline-canvas')
+      if (!scroll || !canvasElement) return null
+      const scrollRect = scroll.getBoundingClientRect()
+      const canvasRect = canvasElement.getBoundingClientRect()
+      const x = canvasRect.left + canvasRect.width * 0.8
+      for (let y = scrollRect.top + 24; y < scrollRect.bottom - 24; y += 12) {
+        if (document.elementFromPoint(x, y)?.closest('.day-timeline-slot-hitbox')) {
+          return { x, y }
+        }
+      }
+      return null
     })
-    await hitbox.dispatchEvent('pointerup', {
-      button: 0,
-      clientY: createClientY,
-      pointerId: 41,
-      pointerType: 'mouse',
-    })
+    expect(emptyPoint).not.toBeNull()
+    await page.mouse.click(emptyPoint.x, emptyPoint.y)
     await expect(page.getByRole('dialog')).toBeVisible()
     await expect(page.getByRole('dialog')).toContainText(/\d{2}:(00|15|30|45)/)
     await page.getByRole('dialog').getByRole('button', { name: 'Place me' }).click()
