@@ -106,6 +106,7 @@ private:
     bool m_downInBackZone = false;
     bool m_downInHeader = false;
     bool m_downInHandle = false;
+    bool m_canvasDirty = false;
     Chrome m_chrome = Chrome::Clean;
     QString m_lastRetreat;
     QImage m_topUnder;      // canvas pixels beneath revealed chrome
