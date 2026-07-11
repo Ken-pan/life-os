@@ -335,6 +335,7 @@ void InkModeController::drawPage()
     m_railUnder = QImage();
     m_handleUnder = g_inkGoldBuffer->copy(handleRect());
     paintHandle(false);
+    m_captureFrame = g_inkGoldBuffer->copy();
 }
 
 void InkModeController::drawToolbar()
@@ -429,6 +430,7 @@ bool InkModeController::handleToolbarTap(const QPoint &point)
         return false;
 
     drawToolbar();
+    m_captureFrame = g_inkGoldBuffer->copy();
     if (EPFramebuffer *ep = EPFramebuffer::instance())
         ep->sendSwap(m_landscape
                          ? QRect(0, 0, m_screenW, kLandscapeBarH + 3)
@@ -502,6 +504,7 @@ void InkModeController::applyReveal()
     drawToolbar();
     m_chrome = Chrome::Revealed;
     m_lastRetreat.clear();
+    m_captureFrame = g_inkGoldBuffer->copy();
 
     if (EPFramebuffer *ep = EPFramebuffer::instance()) {
         ep->sendSwap(topChromeRect(), EPContentType::Mono,
@@ -533,6 +536,7 @@ void InkModeController::applyHide(const QString &reason, bool present)
     paintHandle(false);
     m_chrome = Chrome::Clean;
     m_lastRetreat = reason;
+    m_captureFrame = g_inkGoldBuffer->copy();
 
     if (present) {
         if (EPFramebuffer *ep = EPFramebuffer::instance()) {

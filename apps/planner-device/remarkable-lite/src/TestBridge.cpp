@@ -289,9 +289,12 @@ bool TestBridge::saveScreenshot(const QString &path, QString *error) const
         return false;
     }
     const bool nativeInk = m_window->property("nativeInkActive").toBool();
-    const bool saved = nativeInk && DirectInkDiag::ready() && g_drawBuffer
-        ? g_drawBuffer->copy().save(path, "PNG")
-        : m_window->grabWindow().save(path, "PNG");
+    const QImage nativeFrame = m_inkMode ? m_inkMode->captureFrame() : QImage();
+    const bool saved = nativeInk && !nativeFrame.isNull()
+        ? nativeFrame.save(path, "PNG")
+        : nativeInk && DirectInkDiag::ready() && g_drawBuffer
+            ? g_drawBuffer->copy().save(path, "PNG")
+            : m_window->grabWindow().save(path, "PNG");
     if (!saved) {
         *error = QStringLiteral("failed to save screenshot");
         return false;
