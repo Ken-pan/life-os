@@ -112,6 +112,7 @@ private:
     QImage m_topUnder;      // canvas pixels beneath revealed chrome
     QImage m_railUnder;
     QImage m_handleUnder;   // canvas pixels beneath the clean-state handle
+    QImage m_cleanCanvasFrame; // immutable entry canvas for read-only retreat
     QImage m_captureFrame;  // exact last full frame painted for presentation
     quint64 m_retreatGeneration = 0;
     EvdevMarkerSource *m_evdev = nullptr;

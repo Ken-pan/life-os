@@ -335,6 +335,7 @@ void InkModeController::drawPage()
 
     m_topUnder = QImage();
     m_railUnder = QImage();
+    m_cleanCanvasFrame = g_inkGoldBuffer->copy();
     m_handleUnder = g_inkGoldBuffer->copy(handleRect());
     paintHandle(false);
     m_captureFrame = g_inkGoldBuffer->copy();
@@ -547,8 +548,9 @@ void InkModeController::applyHide(const QString &reason, bool present)
         if (!m_railUnder.isNull())
             p.drawImage(railChromeRect(), m_railUnder);
     }
-    QImage cleanFrame = m_captureFrame.isNull()
-        ? g_inkGoldBuffer->copy() : m_captureFrame;
+    QImage cleanFrame = !m_canvasDirty && !m_cleanCanvasFrame.isNull()
+        ? m_cleanCanvasFrame
+        : m_captureFrame.isNull() ? g_inkGoldBuffer->copy() : m_captureFrame;
     {
         QPainter capturePainter(&cleanFrame);
         if (!m_topUnder.isNull())
