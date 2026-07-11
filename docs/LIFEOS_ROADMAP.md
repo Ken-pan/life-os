@@ -1,7 +1,7 @@
 ---
 title: Life OS Roadmap
 owner: kenpan
-last_verified: 2026-07-11-lifecycle
+last_verified: 2026-07-11-p-sched-0
 review_cadence: weekly
 doc_role: status-hub
 priority_model: 2026-07-11-lifecycle-correction
@@ -14,9 +14,9 @@ priority_model: 2026-07-11-lifecycle-correction
 > 详细阶段史、Wave 完成记录、提取决策矩阵 → `[roadmap/](./roadmap/README.md)`
 > **六 app 产品排期** → `[roadmap/apps/](./roadmap/apps/README.md)`
 >
-> **状态口径（2026-07-10 深度复核）：** 对照生产 HTTP、迁移文件、设备 gate 与 Antigravity 证据；修正 Paper API 404 误判、Slice 1.1 已修项、FT-P2 代码发货与 P-SCHED-0 根因锚点。
+> **状态口径（2026-07-11 P-SCHED-0 交接）：** canonical 实现位于 `fable/p-sched-0` worktree；SCH-0 根因已修；PWA preview harness 已稳定；**P-SCHED-0 整体仍为 BLOCKED**（standalone 自动化 guard 未稳 + 真机 iPhone 未验 + Fable sign-off 未完成）。
 
-## 深度复核摘要（2026-07-10）
+## 深度复核摘要（2026-07-11 · P-SCHED-0）
 
 
 | 项                       | 原记录                       | 复核结论                                                                                                                                                                |
@@ -24,8 +24,9 @@ priority_model: 2026-07-11-lifecycle-correction
 | **P-MOVE-BLOCK**        | 生产 `/api/paper/today` 404 | **路由正常** — `curl` 无 token → **401**；`_redirects` + `apps/planner/netlify/functions` 已接线。2026-07-09 Shell MVP 的 404 为当时测试窗口现象。**剩余：** 设备 + token + Netlify env 端到端复验 |
 | **P-MOVE-UI Slice 1.1** | toolbar P0 blocker        | **代码已修** — `52ae55e0`（InkModeController）· `d7c52858`（QML）· visual delta gate PASS。**剩余：** 设备复验后进入 Slice 2                                                           |
 | **FT-P2**               | §Next                     | **已发货** — migration `20260710203000` **远程已应用**（Supabase 复核）· Portal UI · verify PASS                                                                                |
-| **P-SCHED-0 SCH-0**     | legacy tags 崩溃            | **根因：** `migrateTask()` 不补 `tags: []`（`persist/migrate.js`）；消费端 `taskIndex.js` 等直接 `for (task.tags)`                                                                |
-| **P-SCHED-0 SCH-10**    | mobile 无裁切                | baseline **未**加 `standalone-pwa` — **待** `qa:pwa` / iOS Sim                                                                                                         |
+| **P-SCHED-0 SCH-0**     | legacy tags 崩溃            | **PASS — 根因已修** — `cb11fbcc`：`migrateTask()` 在唯一边界输出合法 `tags: string[]`；migration unit · check · build 均通过                                                                 |
+| **P-SCHED-0 SCH-10**    | mobile 无裁切                | **仍开放** — PWA mobile sanity（Today/Settings/Calendar）✅；standalone shell guard / `qa:mobile-scroll` 仍失败；**真机 iPhone Home Screen standalone 未验**                                      |
+| **P-SCHED-0 整体**        | 进行中                       | **BLOCKED** — 无已确认产品 P0；剩余为测试注入/fixture 债务 + 物理 standalone 签收                                                                                              |
 | **PaperOS 生命周期**        | 仅 UI/sync                 | **缺口** — 启动/退出/睡眠/唤醒/崩溃 → `**P-MOVE-SYS-*`**                                                                                                                        |
 
 
@@ -56,7 +57,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | 序   | ID                | 主题                                    | App     | 桶       | ROI | Agent 线                   | 验收                                                                                       |
 | --- | ----------------- | ------------------------------------- | ------- | ------- | --- | ------------------------- | ---------------------------------------------------------------------------------------- |
-| 1   | **P-SCHED-0**     | 日程视图 debug + 可用性闭环                    | Planner | Product | 🔥  | A · **Claude Fable**      | baseline ✅ · 修 `migrateTask` tags · PWA 滚动复测                                             |
+| 1   | **P-SCHED-0**     | 日程视图 debug + 可用性闭环                    | Planner | Product | 🔥  | A · **Claude Fable**      | **BLOCKED** · SCH-0 ✅ `cb11fbcc` · desktop E2E 72/8 · standalone guard / 真机 iPhone 待关 |
 | 2   | **FT-P5**         | 替代动作完整训练流                             | Fitness | Product | 🔥  | C · Codex（Fable 短 review） | 跳过选替代 → Focus 练替代 · 统计归因 · E2E                                                           |
 | 3   | **F-P6**          | 支出审核（商品明细 + 后续处理）                     | Finance | Product | 🔥  | F · Fable owner           | F-P6a 确认/驳回 UI 未建；read model 已有                                                          |
 | 4   | **P-MOVE-UI**     | PaperOS Slice 1.1 设备复验 → Slice 2      | Planner | Product | ◆◆  | B · Cursor Auto + Codex   | 1.1 代码 ✅ · 见 `qa/paperos-next-ui-update-guide.md`                                        |
@@ -67,7 +68,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 **Agent 分线全文：** `[roadmap/AGENT_WORKSTREAMS.md](./roadmap/AGENT_WORKSTREAMS.md)`
 
-**P-SCHED-0 进度：** Antigravity baseline ✅；**开放 P0** = `migrateTask` 缺 `tags` 默认（`migrate.js`）；**SCH-10** 待 `standalone-pwa` 专项复测。
+**P-SCHED-0 进度（canonical：`fable/p-sched-0` · worktree `.claude/worktrees/p-sched-0`）：** Antigravity baseline ✅ · **SCH-0 PASS** `cb11fbcc` · PWA harness `29f0c2ed` · Planner build/check/unit ✅ · desktop E2E **72 passed / 8 skipped** · PWA mobile sanity ✅ · **无已确认产品 P0**。阻塞：**standalone shell guard**（Today `display` 断言 / Settings·Calendar `Execution context was destroyed`）· **`qa:mobile-scroll`** 同类失败 · isolated `schedule-usability.spec.js` fixture 债务 · **真机 iPhone Home Screen standalone 未验** · Fable 最终 sign-off 未完成。**F-P6a / P-UIUX-0 禁止开始。**
 
 **PaperOS 生命周期：** 见 §PaperOS 系统生命周期 · **P-MOVE-SYS-0** 与 VERIFY 同一设备窗口优先。
 
@@ -78,7 +79,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | ID                  | 主题                                | App     | 桶       | ROI | Agent 线     | 触发 / 范围                                                                        |
 | ------------------- | --------------------------------- | ------- | ------- | --- | ----------- | ------------------------------------------------------------------------------ |
-| **P-UIUX-0**        | Planner 全站 UI/UX 走查（非日程）          | Planner | Product | ◆   | A · Fable   | Today/Inbox/Projects 截图走查；日程后并行                                                |
+| **P-UIUX-0**        | Planner 全站 UI/UX 走查（非日程）          | Planner | Product | ◆   | A · Fable   | **禁止开始** — 须 P-SCHED-0 合并关闭后；Today/Inbox/Projects 截图走查                              |
 | **P-ATTACH-0**      | Task / Project 附件底座               | Planner | Core    | ◆◆  | Codex       | Supabase Storage + metadata；在线上传/删除/预览                                         |
 | **P-P4**            | Today 与 Portal 今日任务计数对齐           | Planner | Growth  | ◆   | D · Codex   | 同账号、同日期口径一致                                                                    |
 | **P-MOVE-SYS-1**    | enter / exit / recovery · systemd | Planner | Product | ◆◆  | B · Codex   | 安全返回 xochitl + rm-sync · 无 Mac 进出                                              |
@@ -98,7 +99,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 ```text
 Phase 7 — 日程 + 训练 + 审核（本周 🔥）
-  P-SCHED-0 migrateTask tags + PWA 复测 · FT-P5 · F-P6a 审核 UI
+  P-SCHED-0 standalone guard + 真机 iPhone 签收（SCH-0 ✅）· FT-P5 · F-P6 待 P-SCHED-0 关单
 
 Phase 8 — PaperOS 生命周期 + 写路径
   VERIFY → SYS-0 discovery → SYS-1 exit/recovery → SYS-2 sleep/wake → SYS-3 settings

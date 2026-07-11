@@ -1,7 +1,7 @@
 ---
 title: Agent Workstreams
 owner: kenpan
-last_verified: 2026-07-11
+last_verified: 2026-07-11-p-sched-0
 doc_role: execution-routing
 priority_model: 2026-07-11-lifecycle-correction
 ---
@@ -18,9 +18,9 @@ priority_model: 2026-07-11-lifecycle-correction
 ┌──────────────────────────────────────────────────────────────────────────┐
 │  Ken     Slice 1.1 点验 + SYS-0 电源/Folio/suspend 日志（60–90min）     │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  Fable   独占 1 worktree · 只关 P-SCHED-0 · 不建 F-P6 实现 worktree     │
+│  Fable   独占 1 worktree · P-SCHED-0 **BLOCKED** · 待 standalone + 真机签收 · 不建 F-P6 worktree │
 │  Codex   Track1 FT-P5 │ Track2 VERIFY → SYS-0 → SYS-1/2                  │
-│  Cursor  SCH-0 · qa:pwa · 等 SYS-0 后再碰生命周期 System 菜单              │
+│  Cursor  docs 已同步 · 下一步 standalone 注入/fixture · 等 SYS-0 后再碰生命周期 C++ │
 │  Antigravity  F-P6 baseline · 不负责物理睡眠判定                          │
 │  Copilot  lint / PR summary only                                         │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -39,20 +39,26 @@ priority_model: 2026-07-11-lifecycle-correction
 
 ---
 
-## 0. 当前并行分配一览（2026-07-11）
+## 0. 当前并行分配一览（2026-07-11 · P-SCHED-0 交接）
+
+**Canonical 实现：** branch `fable/p-sched-0` · worktree `/Users/kenpan/「Projects」/life-os/.claude/worktrees/p-sched-0`（Cursor/Fable 实现冲突已解除；master working tree **不是** P-SCHED-0 实现位置）。
 
 | 平台             | 当前任务                                    | Hub ID            | 投入       | 阻塞 / 交接              |
 | ---------------- | ------------------------------------------- | ----------------- | ---------- | ------------------------ |
 | **Ken**          | Slice 1.1 点验 + **SYS-0** 生命周期日志采集 | P-MOVE-UI · SYS-0 | 60–90m     | 与 VERIFY 同一设备窗口   |
-| **Claude Fable** | **仅** P-SCHED-0 闭环                       | P-SCHED-0         | 1 worktree | F-P6 **等关单后**        |
+| **Claude Fable** | **P-SCHED-0 最终 sign-off**（暂停中）       | P-SCHED-0         | 1 worktree | standalone guard · 真机 iPhone · **BLOCKED** |
 | **Codex T1**     | FT-P5 主实现                                | FT-P5             | 2–3d       | 与 Fable 并行            |
 | **Codex T2**     | P-MOVE-VERIFY → **P-MOVE-SYS-0**            | VERIFY · SYS-0    | 0.5–1d     | Ken 设备                 |
 | **Codex**        | P-MOVE-5 staging（数据层，非日用发布）      | P-MOVE-5          | 1d         | VERIFY 后                |
-| **Cursor**       | `migrateTask` tags · `qa:pwa`               | SCH-0/10          | <半天      | SYS-0 前勿改生命周期 C++ |
+| **Cursor**       | standalone 状态注入 / isolated fixture 稳定 | SCH-10 harness    | <半天      | SCH-0 ✅ · PWA harness ✅ · SYS-0 前勿改 C++ |
 | **Antigravity**  | F-P6 History baseline                       | F-P6              | S          | 无物理 suspend           |
 | **Copilot**      | PR summary / lint                           | —                 | 碎片       | —                        |
 
-**暂停 / 后移：** `P-MOVE-6` 实现 · Slice 2 **真机合并**（IA 可先做）· 用 Antigravity 判设备睡眠。
+**P-SCHED-0 已验证：** SCH-0 `cb11fbcc` · PWA harness `29f0c2ed` · build/check/unit ✅ · desktop E2E 72/8 · PWA mobile sanity ✅。
+
+**P-SCHED-0 仍 BLOCKED：** standalone shell guard · `qa:mobile-scroll` · isolated `schedule-usability` fixture · 真机 iPhone standalone · Fable sign-off。
+
+**暂停 / 后移：** `P-MOVE-6` 实现 · Slice 2 **真机合并**（IA 可先做）· 用 Antigravity 判设备睡眠 · **F-P6a** · **P-UIUX-0**（须 P-SCHED-0 关单后）。
 
 ---
 
@@ -150,7 +156,7 @@ P-MOVE-VERIFY（Line E）
 | ---- | ------------ | --------------------------------------- | -------------- |
 | T1   | Claude Fable | P-SCHED-0 · F-P6 · Slice 2 **IA**       | usage credits  |
 | T1   | Codex        | FT-P5 · VERIFY · **SYS-1/2** · P-MOVE-5 | Terra / Sol    |
-| T1   | Cursor       | SCH-0 · qa:pwa · **SYS-3** QML          | Auto           |
+| T1   | Cursor       | standalone fixture · **SYS-3** QML          | Auto           |
 | T2   | Antigravity  | PWA 证据 · F-P6 baseline                | 无设备 suspend |
 | T3   | Copilot      | 补全 / summary                          | —              |
 
@@ -161,7 +167,7 @@ P-MOVE-VERIFY（Line E）
 ```text
 产品闭环 / 审核 IA / Slice 2 信息架构     → Fable（单 worktree）
 设备生命周期 / SSH / systemd / suspend    → Codex
-migrateTask / PWA 脚本 / SYS-3 设置 UI    → Cursor
+migrateTask / standalone PWA harness / SYS-3 设置 UI    → Cursor
 浏览器截图                                 → Antigravity
 ```
 
@@ -181,7 +187,7 @@ migrateTask / PWA 脚本 / SYS-3 设置 UI    → Cursor
 ## 3. 六条执行线
 
 ```text
-Line A  Planner       P-SCHED-0              Fable · Cursor/Codex SCH-0 · Antigravity PWA
+Line A  Planner       P-SCHED-0 **BLOCKED**    Fable sign-off · Cursor standalone harness · Antigravity PWA
 Line B  PaperOS Shell P-MOVE-UI · SYS-*      Codex · Ken · Cursor（SYS-3）· Fable IA only
 Line C  Fitness       FT-P5                  Codex · Fable 短 review
 Line D  快赢          P-P4 · F-P1b           Codex / Cursor
@@ -215,8 +221,8 @@ Line F  Finance       F-P6                   Fable（关 P-SCHED-0 后）· Code
 
 | 顺位 | 任务           | 条件                       |
 | ---- | -------------- | -------------------------- |
-| 1    | **P-SCHED-0**  | **独占**                   |
-| 2    | **F-P6a**      | P-SCHED-0 **已合并关闭**   |
+| 1    | **P-SCHED-0**  | **BLOCKED** — SCH-0 ✅ · 待 standalone + 真机 + sign-off |
+| 2    | **F-P6a**      | P-SCHED-0 **已合并关闭** — **当前禁止**                  |
 | 3    | **Slice 2 IA** | 1.1 PASS；真机实现等 SYS-1 |
 | 4    | FT-P5 review   | ≤30min                     |
 | 5    | SYS-3 语义     | ≤30min                     |
@@ -228,13 +234,13 @@ Line F  Finance       F-P6                   Fable（关 P-SCHED-0 后）· Code
 ```text
 Ken           Slice 1.1 + SYS-0 日志（同一 60–90min 窗口）
 
-Fable         只关 P-SCHED-0（1 worktree）
+Fable         **暂停** — 待 standalone guard + 真机 iPhone 后 sign-off
 
 Codex T1      FT-P5
 
 Codex T2      P-MOVE-VERIFY → 紧接 P-MOVE-SYS-0
 
-Cursor        SCH-0 + qa:pwa（不动生命周期 C++/systemd）
+Cursor        standalone 注入 / isolated fixture（SCH-0 ✅ · harness `29f0c2ed` · 不动 C++/systemd）
 
 Antigravity   F-P6 baseline only
 
