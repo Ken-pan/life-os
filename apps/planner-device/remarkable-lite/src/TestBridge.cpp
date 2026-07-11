@@ -4,18 +4,14 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QHostAddress>
-#include <QEventLoop>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QMouseEvent>
-#include <QPainter>
 #include <QQuickItem>
-#include <QQuickItemGrabResult>
 #include <QQuickWindow>
 #include <QSet>
 #include <QTcpSocket>
 #include <QThread>
-#include <QTimer>
 
 namespace {
 QString moduleName(int index)
@@ -288,32 +284,9 @@ bool TestBridge::saveScreenshot(const QString &path, QString *error) const
         return false;
     }
     const bool nativeInk = m_window->property("nativeInkActive").toBool();
-    bool saved = false;
-    if (nativeInk && DirectInkDiag::ready() && g_drawBuffer) {
-        saved = g_drawBuffer->copy().save(path, "PNG");
-    } else if (QQuickItem *content = m_window->contentItem()) {
-        // QQuickWindow::grabWindow() on the e-paper backend can expose only
-        // the most recent incremental back buffer. A full offscreen item
-        // grab reconstructs the current shell scene deterministically.
-        const auto grab = content->grabToImage(QSize(m_window->width(), m_window->height()));
-        if (grab) {
-            QEventLoop loop;
-            QTimer timeout;
-            timeout.setSingleShot(true);
-            QObject::connect(grab.data(), &QQuickItemGrabResult::ready, &loop, &QEventLoop::quit);
-            QObject::connect(&timeout, &QTimer::timeout, &loop, &QEventLoop::quit);
-            timeout.start(5000);
-            loop.exec();
-            if (!grab->image().isNull()) {
-                QImage composed(m_window->size(), QImage::Format_RGB32);
-                composed.fill(Qt::white);
-                QPainter painter(&composed);
-                painter.drawImage(QPoint(0, 0), grab->image());
-                painter.end();
-                saved = composed.save(path, "PNG");
-            }
-        }
-    }
+    const bool saved = nativeInk && DirectInkDiag::ready() && g_drawBuffer
+        ? g_drawBuffer->copy().save(path, "PNG")
+        : m_window->grabWindow().save(path, "PNG");
     if (!saved) {
         *error = QStringLiteral("failed to save screenshot");
         return false;
