@@ -441,13 +441,13 @@ bool InkModeController::handleToolbarTap(const QPoint &point)
     }
     PerfLog::instance().log("INK_TOOL_CHANGED", {{"tool", tool()}, {"color", color()}});
     emit toolChanged();
-    ++m_retreatGeneration;
+    scheduleWritingRetreat();
     return true;
 }
 
 QRect InkModeController::handleRect() const
 {
-    return QRect(12, m_screenH - 100, 88, 88).intersected(
+    return QRect(12, 12, 88, 88).intersected(
         QRect(0, 0, m_screenW, m_screenH));
 }
 

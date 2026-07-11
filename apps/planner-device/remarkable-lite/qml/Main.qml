@@ -310,7 +310,7 @@ Window {
         MouseArea {
             objectName: "editor.chrome.handle"
             x: 12
-            y: parent.height - 100
+            y: 12
             width: 88
             height: 88
             // Active changes only at the native enter/exit boundary. Do not
