@@ -5,7 +5,7 @@
 > **Antigravity 报告：** [`planner-schedule-antigravity-baseline.md`](./planner-schedule-antigravity-baseline.md)
 > **代码锚点：** `routes/calendar/` · `components/schedule/*` · `domain/schedule.js` · `domain/tasks.js`
 
-**状态：** Antigravity baseline **已完成**（2026-07-10）· Fable 修复 **进行中**（P0 开放 2 项）
+**状态：** Antigravity baseline **已完成**（2026-07-10）· Scheduling implementation 已从旧 mixed-scope branch 重建到 scope-pure replacement branch；自动化与真机门仍按下文分别验收。
 
 ## 目标
 
@@ -18,6 +18,7 @@
 | Desktop    | `cd apps/planner && npm run dev` → `/calendar`                         |
 | Mobile PWA | `npm run pwa:preview:planner` + Playwright `standalone-pwa` 或 iOS Sim |
 | Baseline   | `apps/planner/tests/antigravity-baseline.spec.js`（**未**设 `html.standalone-pwa`） |
+| 稳定回归   | `apps/planner/tests/schedule-usability.spec.js`                         |
 | 截图证据   | `docs/qa/evidence/planner-schedule/2026-07-10/`                        |
 
 ## Baseline 结论（2026-07-10）
@@ -28,6 +29,19 @@
 2. **P1 · Mobile 滚动容器** — `.life-os-page-workspace` `overflowY: visible`，整页 body 滚动而非内部裁切（**`PLNR.SCHED.10.pwa`**）
 
 详见 [`planner-schedule-antigravity-baseline.md`](./planner-schedule-antigravity-baseline.md) §2–§5。
+
+## Replacement branch recovery
+
+旧 `fable/p-sched-0` 历史包含 PaperOS 与共享 roadmap checkpoint，不能在不改写历史的情况下继续作为 scope-pure PR。Scheduling implementation、migration guard、targeted tests、QA docs 和 README 登记的正式截图已从最新 `origin/master` 重建；PaperOS、跨 App docs、共享 workstream 文件和临时 Playwright output 均未带入。
+
+当前自动化覆盖：
+
+- 创建、移动、resize、重叠布局和 reload persistence；
+- mobile PWA 单一滚动面、底栏/FAB 避让和 sheet 关闭后的滚动恢复；
+- legacy schema migration 后 Calendar/Today 可渲染且无横向溢出；
+- 正式证据清单见 [`evidence/planner-schedule/2026-07-10/README.md`](./evidence/planner-schedule/2026-07-10/README.md)。
+
+Playwright mobile 仿真不能替代物理 iPhone Home Screen standalone QA；真机 safe-area、惯性滚动和 Home Indicator 遮挡仍需 owner 手动签收。
 
 ## 问题清单
 
@@ -61,5 +75,6 @@
 | 日期       | ID      | 根因 / 动作 | 证据 |
 | ---------- | ------- | ----------- | ---- |
 | 2026-07-10 | —       | Antigravity baseline 完成；Scenario A/B 分离 | [`planner-schedule-antigravity-baseline.md`](./planner-schedule-antigravity-baseline.md) |
+| 2026-07-12 | SCH-0/1/2/3/4/5/7/10 | 从最新 master 重建 scope-pure scheduling branch；补 legacy migration walk、单滚动面与正式 evidence manifest | `schedule-usability.spec.js` · [`evidence README`](./evidence/planner-schedule/2026-07-10/README.md) |
 
 _后续修复在此追加：日期 · ID · 根因 · commit/PR_
