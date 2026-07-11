@@ -1,0 +1,152 @@
+[
+  {
+    "id": "QA-001",
+    "scenario": "Scenario B (Legacy/Malformed)",
+    "severity": "P0",
+    "viewport": "Desktop",
+    "steps": "Open calendar with malformed task (missing tags)",
+    "expected": "App handles missing tags gracefully or ignores task",
+    "actual": "App crashes",
+    "screenshot": "ScenarioB-Desktop-legacy-crash.png",
+    "consoleOrNetwork": "Page Error: task.tags is not iterable\n\n\tin <unknown>\n\tin +layout.svelte\n\tin root.svelte\n\tin undefined\n\nPage Error: task.tags is not iterable\n\n\tin <unknown>\n\tin +page.svelte\n\tin +layout.svelte\n\tin root.svelte\n\tin undefined\n",
+    "area": "Data Normalization / DayTimeline"
+  },
+  {
+    "id": "QA-002",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P2",
+    "viewport": "Desktop",
+    "steps": "Open calendar on an empty day",
+    "expected": "Should show sparseHint or empty state",
+    "actual": "Checked visually",
+    "screenshot": "ScenarioA-Desktop-01-calendar-empty.png",
+    "consoleOrNetwork": "",
+    "area": "Calendar Context / DayTimeline"
+  },
+  {
+    "id": "QA-003",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P0",
+    "viewport": "Desktop",
+    "steps": "Open calendar with normal events",
+    "expected": "Events shown without overlap",
+    "actual": "Events rendered successfully",
+    "screenshot": "ScenarioA-Desktop-02-calendar-normal.png",
+    "consoleOrNetwork": "",
+    "area": "DayTimeline"
+  },
+  {
+    "id": "QA-004",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P1",
+    "viewport": "Desktop",
+    "steps": "Drag time block down, reload page",
+    "expected": "Block moves and persists new time",
+    "actual": "Verified via screenshot",
+    "screenshot": "ScenarioA-Desktop-04-reload-persistence.png",
+    "consoleOrNetwork": "",
+    "area": "DayTimeline Drag & Drop"
+  },
+  {
+    "id": "QA-005",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P0",
+    "viewport": "Desktop",
+    "steps": "Open calendar with 2 overlapping events",
+    "expected": "Events shown side by side",
+    "actual": "Rendered successfully",
+    "screenshot": "ScenarioA-Desktop-06-calendar-2-overlap.png",
+    "consoleOrNetwork": "",
+    "area": "DayTimeline / overlappingTaskIds"
+  },
+  {
+    "id": "QA-006",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P1",
+    "viewport": "Desktop",
+    "steps": "Open calendar with 3 overlapping events",
+    "expected": "Events shown side by side and clickable",
+    "actual": "Rendered successfully",
+    "screenshot": "ScenarioA-Desktop-07-calendar-3-overlap.png",
+    "consoleOrNetwork": "",
+    "area": "DayTimeline / overlappingTaskIds"
+  },
+  {
+    "id": "QA-007",
+    "scenario": "Scenario B (Legacy/Malformed)",
+    "severity": "P0",
+    "viewport": "Mobile_393x852",
+    "steps": "Open calendar with malformed task (missing tags)",
+    "expected": "App handles missing tags gracefully or ignores task",
+    "actual": "App crashes",
+    "screenshot": "ScenarioB-Mobile_393x852-legacy-crash.png",
+    "consoleOrNetwork": "Page Error: task.tags is not iterable\n\n\tin <unknown>\n\tin +layout.svelte\n\tin root.svelte\n\tin undefined\n\nPage Error: task.tags is not iterable\n\n\tin <unknown>\n\tin +page.svelte\n\tin +layout.svelte\n\tin root.svelte\n\tin undefined\n",
+    "area": "Data Normalization / DayTimeline"
+  },
+  {
+    "id": "QA-008",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P2",
+    "viewport": "Mobile_393x852",
+    "steps": "Open calendar on an empty day",
+    "expected": "Should show sparseHint or empty state",
+    "actual": "Checked visually",
+    "screenshot": "ScenarioA-Mobile_393x852-01-calendar-empty.png",
+    "consoleOrNetwork": "",
+    "area": "Calendar Context / DayTimeline"
+  },
+  {
+    "id": "QA-009",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P0",
+    "viewport": "Mobile_393x852",
+    "steps": "Open calendar with normal events",
+    "expected": "Events shown without overlap",
+    "actual": "Events rendered successfully",
+    "screenshot": "ScenarioA-Mobile_393x852-02-calendar-normal.png",
+    "consoleOrNetwork": "",
+    "area": "DayTimeline"
+  },
+  {
+    "id": "QA-010",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P1",
+    "viewport": "Mobile_393x852",
+    "steps": "Simulate touch drag on mobile",
+    "expected": "Page scrolls or block drags appropriately",
+    "actual": "Captured metrics",
+    "screenshot": "ScenarioA-Mobile_393x852-05-scroll-interaction.png",
+    "consoleOrNetwork": "",
+    "area": "Mobile Scroll",
+    "scrollMetrics": {
+      "scrollTop": 0,
+      "scrollHeight": 1300,
+      "clientHeight": 1300,
+      "overflowY": "visible"
+    }
+  },
+  {
+    "id": "QA-011",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P0",
+    "viewport": "Mobile_393x852",
+    "steps": "Open calendar with 2 overlapping events",
+    "expected": "Events shown side by side",
+    "actual": "Rendered successfully",
+    "screenshot": "ScenarioA-Mobile_393x852-06-calendar-2-overlap.png",
+    "consoleOrNetwork": "",
+    "area": "DayTimeline / overlappingTaskIds"
+  },
+  {
+    "id": "QA-012",
+    "scenario": "Scenario A (Canonical)",
+    "severity": "P1",
+    "viewport": "Mobile_393x852",
+    "steps": "Open calendar with 3 overlapping events",
+    "expected": "Events shown side by side and clickable",
+    "actual": "Rendered successfully",
+    "screenshot": "ScenarioA-Mobile_393x852-07-calendar-3-overlap.png",
+    "consoleOrNetwork": "",
+    "area": "DayTimeline / overlappingTaskIds"
+  }
+]

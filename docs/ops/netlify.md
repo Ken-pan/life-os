@@ -1,6 +1,8 @@
 # Netlify 部署说明
 
-**最后与代码同步：** 2026-07-09
+**最后与代码同步：** 2026-07-10
+
+**Planner Paper API：** 函数目录在 repo 根 `netlify.toml` → `apps/planner/netlify/functions`（非 `apps/planner/netlify.toml` 内的相对路径 alone）。生产 `GET /api/paper/today` 无 token → **401**（2026-07-10）。
 
 ## 当前模式（推荐）：`Ken-pan/life-os` Monorepo + Deploy Key
 

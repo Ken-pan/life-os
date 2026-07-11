@@ -12,6 +12,9 @@
 | [`SHIPPED.md`](./SHIPPED.md)         | 发货日志（日期 · 摘要 · commit）           | 每次从 Now 移入 Shipped 时  |
 | [`apps/`](./apps/README.md)          | **六 app 产品排期**（Planner…Home）        | 单 app 优先级或脑暴更新时   |
 | [`POTENTIAL.md`](./POTENTIAL.md)     | **潜力研判 / ROI 证据**                    | 代码检索或优先级重估时      |
+| [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) | **多 Agent 执行分线与难度** | 优先级重排或模型路由调整时  |
+| [`apps/planner-pro-move.md`](./apps/planner-pro-move.md) | **PaperOS 设备执行计划** | P-MOVE-* 状态变化时 |
+| [`../PRO_MOVE.md`](../PRO_MOVE.md) | PaperOS gate 文档索引 | 新增 `PRO_MOVE_*` gate 时 |
 
 **不要**在分卷里重复 hub 的 Now/Next 表——避免双源漂移。
 
