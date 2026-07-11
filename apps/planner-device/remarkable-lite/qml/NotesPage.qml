@@ -126,12 +126,13 @@ Item {
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             cache: false
-                            // Legacy pages carry baked-in editor chrome in
-                            // the old top-bar/rail zones; crop it out. Pages
-                            // saved by the edge-to-edge editor are pure
-                            // canvas and show in full.
-                            sourceClipRect: modelData.canvasV2 ? Qt.rect(0, 0, 954, 1696)
-                                                               : Qt.rect(96, 88, 858, 1608)
+                            // Crop only when the bitmap itself truthfully
+                            // contains the old editor's full separator rules.
+                            // New edge-to-edge pages display in full without
+                            // adding a metadata format version.
+                            sourceClipRect: modelData.legacyChrome
+                                          ? Qt.rect(96, 88, 858, 1608)
+                                          : Qt.rect(0, 0, 954, 1696)
                         }
 
                         // Blank paper keeps a restrained rule rather than an

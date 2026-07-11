@@ -39,6 +39,46 @@ static const InkColorChoice kColors[] = {
     {"yellow", 0xFFD19A20},
 };
 
+static double darkestRowRatio(const QImage &image, int y, int thickness)
+{
+    double best = 0.0;
+    for (int row = y; row < qMin(image.height(), y + thickness); ++row) {
+        int dark = 0;
+        for (int x = 0; x < image.width(); ++x)
+            dark += qGray(image.pixel(x, row)) < 64 ? 1 : 0;
+        best = qMax(best, image.width() > 0 ? double(dark) / image.width() : 0.0);
+    }
+    return best;
+}
+
+static double darkestColumnRatio(const QImage &image, int x, int yStart, int thickness)
+{
+    double best = 0.0;
+    for (int column = x; column < qMin(image.width(), x + thickness); ++column) {
+        int dark = 0;
+        const int height = image.height() - yStart;
+        for (int y = yStart; y < image.height(); ++y)
+            dark += qGray(image.pixel(column, y)) < 64 ? 1 : 0;
+        best = qMax(best, height > 0 ? double(dark) / height : 0.0);
+    }
+    return best;
+}
+
+static bool hasLegacyBakedChrome(const QImage &image)
+{
+    if (image.isNull())
+        return false;
+    const bool landscape = image.width() > image.height();
+    const int titleY = qRound(image.height()
+        * double(landscape ? kLandscapeBarH : kPortraitTitleH)
+        / double(landscape ? 954 : 1696));
+    const bool horizontalRule = darkestRowRatio(image, titleY, 4) > 0.75;
+    if (landscape)
+        return horizontalRule;
+    const int railX = qRound(image.width() * double(kPortraitRailW) / 954.0);
+    return horizontalRule && darkestColumnRatio(image, railX, titleY, 4) > 0.75;
+}
+
 static QRect backZone(bool landscape)
 {
     return landscape ? QRect(0, 0, 176, kLandscapeBarH)
@@ -77,6 +117,17 @@ QString InkModeController::color() const
     return QStringLiteral("black");
 }
 
+QString InkModeController::chromeName() const
+{
+    return m_chrome == Chrome::Revealed ? QStringLiteral("revealed")
+                                        : QStringLiteral("clean");
+}
+
+bool InkModeController::testBridgeEnabled() const
+{
+    return qEnvironmentVariableIntValue("PAPEROS_TEST_BRIDGE") == 1;
+}
+
 void InkModeController::enter(const QString &noteId)
 {
     if (m_active || noteId.isEmpty())
@@ -105,6 +156,11 @@ void InkModeController::enter(const QString &noteId)
 
     PerfLog::instance().log("INK_MODE_ENTER", {{"noteId", noteId}});
     m_leaving = false;
+    m_ready = false;
+    m_chrome = Chrome::Clean;
+    m_lastRetreat.clear();
+    ++m_retreatGeneration;
+    emit chromeChanged();
     setActive(true);
     // One render pass for the static overlay so the scenegraph's last swap
     // is done before direct framebuffer control starts.
@@ -165,17 +221,24 @@ void InkModeController::beginSession()
     m_penWasDown = false;
     m_downInBackZone = false;
     m_downInHeader = false;
+    m_downInHandle = false;
     m_evdev->frameFilter = [this](const PenFrame &f) -> bool {
         const QPoint point(f.mappedX, f.mappedY);
-        const bool inControls = m_landscape
-            ? f.mappedY < kLandscapeBarH
-            : (f.mappedY < kPortraitTitleH || f.mappedX < kPortraitRailW);
         if (f.touching && !m_penWasDown) {
             m_penWasDown = true;
-            m_downInBackZone = backZone(m_landscape).contains(point);
-            m_downInHeader = inControls;
+            m_downInHandle = m_chrome == Chrome::Clean && handleRect().contains(point);
+            m_downInBackZone = m_chrome == Chrome::Revealed
+                && backZone(m_landscape).contains(point);
+            m_downInHeader = m_chrome == Chrome::Revealed && inChromeZone(point);
         } else if (!f.touching && m_penWasDown) {
             m_penWasDown = false;
+            if (m_downInHandle) {
+                const bool activate = handleRect().contains(point);
+                m_downInHandle = false;
+                if (activate)
+                    QTimer::singleShot(0, this, [this]() { revealChrome(); });
+                return true;
+            }
             if (m_downInBackZone && backZone(m_landscape).contains(point)) {
                 PerfLog::instance().log("BACK_TAP");
                 // Leave via the event loop — not from inside the evdev read.
@@ -189,15 +252,16 @@ void InkModeController::beginSession()
                 return true;
             }
             m_downInBackZone = false;
+            scheduleWritingRetreat();
         }
-        if (m_downInHeader || m_downInBackZone)
-            return true;
-        if (f.touching && inControls)
+        if (m_downInHandle || m_downInHeader || m_downInBackZone)
             return true;
         return false;
     };
 
     m_evdev->setAcceptInput(true);
+    m_ready = true;
+    emit chromeChanged();
     PerfLog::instance().log("INK_MODE_LIVE");
 }
 
@@ -206,6 +270,7 @@ void InkModeController::leave(int code)
     if (m_leaving)
         return;
     m_leaving = true;
+    ++m_retreatGeneration;
 
     if (m_evdev) {
         m_evdev->setAcceptInput(false);
@@ -217,6 +282,8 @@ void InkModeController::leave(int code)
     DisplayScheduler::instance().presenter = nullptr;
     DisplayScheduler::instance().settlePresenter = nullptr;
     g_inkGoldBuffer = nullptr;
+    m_ready = false;
+    emit chromeChanged();
 
     PerfLog::instance().log("INK_MODE_EXIT", {{"exitCode", code}});
     setActive(false);  // QML overlay hides; scenegraph re-renders the shell
@@ -240,13 +307,32 @@ void InkModeController::drawPage()
     if (QFile::exists(pagePath)) {
         QImage prior(pagePath);
         if (!prior.isNull()) {
+            if (hasLegacyBakedChrome(prior)) {
+                const bool priorLandscape = prior.width() > prior.height();
+                QPainter cleanup(&prior);
+                if (priorLandscape) {
+                    const int barH = qRound(prior.height() * double(kLandscapeBarH) / 954.0);
+                    cleanup.fillRect(QRect(0, 0, prior.width(), barH + 3), Qt::white);
+                } else {
+                    const int titleH = qRound(prior.height() * double(kPortraitTitleH) / 1696.0);
+                    const int railW = qRound(prior.width() * double(kPortraitRailW) / 954.0);
+                    cleanup.fillRect(QRect(0, 0, prior.width(), titleH + 2), Qt::white);
+                    cleanup.fillRect(QRect(0, titleH, railW + 2,
+                                           prior.height() - titleH), Qt::white);
+                }
+                PerfLog::instance().log("NOTE_LEGACY_CHROME_REMOVED_IN_MEMORY");
+            }
             p.drawImage(QRect(0, 0, m_screenW, m_screenH), prior);
             PerfLog::instance().log("NOTE_PAGE_RESTORED", {{"path", pagePath}});
         }
     }
 
     p.end();
-    drawToolbar();
+
+    m_topUnder = QImage();
+    m_railUnder = QImage();
+    m_handleUnder = g_inkGoldBuffer->copy(handleRect());
+    paintHandle(false);
 }
 
 void InkModeController::drawToolbar()
@@ -352,12 +438,173 @@ bool InkModeController::handleToolbarTap(const QPoint &point)
     return true;
 }
 
+QRect InkModeController::handleRect() const
+{
+    return QRect(12, m_screenH - 100, 88, 88).intersected(
+        QRect(0, 0, m_screenW, m_screenH));
+}
+
+QRect InkModeController::topChromeRect() const
+{
+    return QRect(0, 0, m_screenW,
+                 m_landscape ? kLandscapeBarH : kPortraitTitleH);
+}
+
+QRect InkModeController::railChromeRect() const
+{
+    return m_landscape
+        ? QRect()
+        : QRect(0, kPortraitTitleH, kPortraitRailW, m_screenH - kPortraitTitleH);
+}
+
+bool InkModeController::inChromeZone(const QPoint &point) const
+{
+    return topChromeRect().contains(point) || railChromeRect().contains(point);
+}
+
+void InkModeController::paintHandle(bool inverted)
+{
+    if (!g_inkGoldBuffer)
+        return;
+    const QRect rect = handleRect();
+    QPainter p(g_inkGoldBuffer);
+    p.fillRect(rect, inverted ? Qt::black : Qt::white);
+    p.setPen(QPen(inverted ? Qt::white : Qt::black, 3));
+    p.drawRect(rect.adjusted(1, 1, -2, -2));
+    QFont font;
+    font.setPixelSize(22);
+    font.setBold(true);
+    p.setFont(font);
+    p.drawText(rect, Qt::AlignCenter, QStringLiteral("Tools"));
+}
+
+void InkModeController::eraseHandle()
+{
+    if (!g_inkGoldBuffer || m_handleUnder.isNull())
+        return;
+    QPainter p(g_inkGoldBuffer);
+    p.drawImage(handleRect(), m_handleUnder);
+    m_handleUnder = QImage();
+}
+
+void InkModeController::applyReveal()
+{
+    if (!m_active || !m_ready || !g_inkGoldBuffer || m_chrome == Chrome::Revealed)
+        return;
+
+    ++m_retreatGeneration;
+    eraseHandle();
+    m_topUnder = g_inkGoldBuffer->copy(topChromeRect());
+    if (!railChromeRect().isNull())
+        m_railUnder = g_inkGoldBuffer->copy(railChromeRect());
+    drawToolbar();
+    m_chrome = Chrome::Revealed;
+    m_lastRetreat.clear();
+
+    if (EPFramebuffer *ep = EPFramebuffer::instance()) {
+        ep->sendSwap(topChromeRect(), EPContentType::Mono,
+                     EPScreenMode::Quality3, EPFramebuffer::NoRefresh);
+        if (!railChromeRect().isNull())
+            ep->sendSwap(railChromeRect(), EPContentType::Mono,
+                         EPScreenMode::Quality3, EPFramebuffer::NoRefresh);
+    }
+    PerfLog::instance().log("INK_CHROME_REVEALED");
+    emit chromeChanged();
+}
+
+void InkModeController::applyHide(const QString &reason, bool present)
+{
+    if (!m_active || !m_ready || !g_inkGoldBuffer || m_chrome != Chrome::Revealed)
+        return;
+
+    ++m_retreatGeneration;
+    {
+        QPainter p(g_inkGoldBuffer);
+        if (!m_topUnder.isNull())
+            p.drawImage(topChromeRect(), m_topUnder);
+        if (!m_railUnder.isNull())
+            p.drawImage(railChromeRect(), m_railUnder);
+    }
+    m_topUnder = QImage();
+    m_railUnder = QImage();
+    m_handleUnder = g_inkGoldBuffer->copy(handleRect());
+    paintHandle(false);
+    m_chrome = Chrome::Clean;
+    m_lastRetreat = reason;
+
+    if (present) {
+        if (EPFramebuffer *ep = EPFramebuffer::instance()) {
+            ep->sendSwap(topChromeRect(), EPContentType::Mono,
+                         EPScreenMode::Quality3, EPFramebuffer::NoRefresh);
+            if (!railChromeRect().isNull())
+                ep->sendSwap(railChromeRect(), EPContentType::Mono,
+                             EPScreenMode::Quality3, EPFramebuffer::NoRefresh);
+            else
+                ep->sendSwap(handleRect(), EPContentType::Mono,
+                             EPScreenMode::Quality3, EPFramebuffer::NoRefresh);
+        }
+    }
+    PerfLog::instance().log("INK_CHROME_HIDDEN", {{"reason", reason}});
+    emit chromeChanged();
+}
+
+void InkModeController::scheduleWritingRetreat()
+{
+    if (!m_active || !m_ready || m_chrome != Chrome::Revealed)
+        return;
+    const quint64 generation = ++m_retreatGeneration;
+    QTimer::singleShot(1500, this, [this, generation]() {
+        if (generation == m_retreatGeneration && m_active && m_ready
+            && m_chrome == Chrome::Revealed) {
+            applyHide(QStringLiteral("writing"), true);
+        }
+    });
+}
+
+void InkModeController::toggleChrome()
+{
+    if (m_chrome == Chrome::Revealed)
+        hideChrome();
+    else
+        revealChrome();
+}
+
+void InkModeController::revealChrome()
+{
+    applyReveal();
+}
+
+void InkModeController::hideChrome()
+{
+    applyHide(QStringLiteral("explicit"), true);
+}
+
+void InkModeController::simulateWritingRetreat()
+{
+    if (!testBridgeEnabled() || !m_active || !m_ready)
+        return;
+    if (m_chrome == Chrome::Revealed)
+        applyHide(QStringLiteral("writing"), true);
+}
+
 bool InkModeController::savePage()
 {
     if (!g_inkGoldBuffer)
         return false;
     const QString pagePath = m_noteDir + QStringLiteral("/page-001.png");
-    const bool ok = g_inkGoldBuffer->copy(0, 0, m_screenW, m_screenH).save(pagePath);
+    QImage canvas = g_inkGoldBuffer->copy(0, 0, m_screenW, m_screenH);
+    {
+        QPainter p(&canvas);
+        if (m_chrome == Chrome::Revealed) {
+            if (!m_topUnder.isNull())
+                p.drawImage(topChromeRect(), m_topUnder);
+            if (!m_railUnder.isNull())
+                p.drawImage(railChromeRect(), m_railUnder);
+        } else if (!m_handleUnder.isNull()) {
+            p.drawImage(handleRect(), m_handleUnder);
+        }
+    }
+    const bool ok = canvas.save(pagePath);
     PerfLog::instance().log(ok ? "NOTE_PAGE_SAVED" : "NOTE_PAGE_SAVE_FAILED",
                             {{"path", pagePath}});
     return ok;

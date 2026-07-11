@@ -29,6 +29,19 @@ if not any(n.get("id") == target and n.get("visible") for n in nodes):
 ' "$id"
 }
 
+wait_visible() {
+  id=$1
+  attempts=0
+  until require_visible "$id" 2>/dev/null; do
+    attempts=$((attempts + 1))
+    if [ "$attempts" -ge 40 ]; then
+      echo "timed out waiting for visible semantic ID: $id" >&2
+      return 1
+    fi
+    sleep 0.25
+  done
+}
+
 tap_visible() {
   id=$1
   require_visible "$id"
@@ -76,18 +89,18 @@ capture "04-notes-all"
 
 note_id=$(first_visible_note)
 tap_visible "$note_id"
-require_visible "editor.clean"
+wait_visible "editor.clean"
 capture "05-notebook-opened"
 capture "06-editor-clean"
 
 tap_visible "editor.chrome.handle"
-require_visible "editor.tools.revealed"
+wait_visible "editor.tools.revealed"
 capture "07-editor-tools-revealed"
 
 # This must be a pre-seeded, read-only visual fixture.  The runner never
 # injects pen input or calls an API that persists a stroke.
 tap_visible "editor.fixture.after-writing"
-require_visible "editor.after-writing"
+wait_visible "editor.after-writing"
 capture "08-editor-after-writing"
 
 printf '%s\n' "P-MOVE-UI Core Slice 1 screenshot gate passed: $OUT"

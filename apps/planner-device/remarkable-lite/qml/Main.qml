@@ -28,6 +28,7 @@ Window {
     property string nativeInkColor: inkMode.color
     property string nativeInkChrome: inkMode.chrome
     property string nativeInkRetreat: inkMode.lastRetreat
+    property bool nativeInkReady: inkMode.ready
 
     function exitNativeInk() {
         if (inkMode.active)
@@ -294,6 +295,7 @@ Window {
     // strokes. Visibility binds to inkMode.active only, which changes
     // exactly at the enter/exit render boundaries.
     Rectangle {
+        id: nativeInkCover
         anchors.fill: parent
         color: "#FFFFFF"
         visible: inkMode.active
@@ -314,8 +316,34 @@ Window {
             y: parent.height - 100
             width: 88
             height: 88
-            enabled: inkMode.active
+            enabled: inkMode.active && inkMode.ready
             onClicked: inkMode.toggleChrome()
+        }
+
+        // Semantic state root only: objectName changes do not render QML
+        // pixels over the native framebuffer. The after-writing state is the
+        // same clean canvas reached by a real stroke retreat.
+        Item {
+            anchors.fill: parent
+            objectName: !inkMode.ready ? ""
+                      : inkMode.lastRetreat === "writing" ? "editor.after-writing"
+                      : inkMode.chrome === "revealed" ? "editor.tools.revealed"
+                      : "editor.clean"
+        }
+
+        // Debug-bridge-only, read-only fixture. It changes presentation
+        // state through the same retreat path as pen-up, but injects no
+        // stroke and never enters, exits, creates, or saves a note.
+        MouseArea {
+            objectName: inkMode.testBridgeEnabled && inkMode.ready
+                        && inkMode.chrome === "revealed"
+                      ? "editor.fixture.after-writing" : ""
+            x: parent.width - 100
+            y: parent.height - 100
+            width: 88
+            height: 88
+            enabled: objectName !== ""
+            onClicked: inkMode.simulateWritingRetreat()
         }
     }
 
