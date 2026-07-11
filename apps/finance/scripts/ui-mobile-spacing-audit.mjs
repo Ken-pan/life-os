@@ -29,9 +29,12 @@ const env = Object.fromEntries(
 const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
   auth: { storageKey: 'life_os_auth', persistSession: false },
 })
+const email = process.env.FINANCE_QA_EMAIL ?? process.env.UI_QA_EMAIL
+const password = process.env.FINANCE_QA_PASSWORD ?? process.env.UI_QA_PASSWORD
+if (!email || !password) throw new Error('Missing rotated FINANCE_QA_EMAIL or FINANCE_QA_PASSWORD (values redacted)')
 const { data: auth } = await sb.auth.signInWithPassword({
-  email: 'p1a-rls-test-b@example.test',
-  password: 'P1aTestPass!2026',
+  email,
+  password,
 })
 
 const tabs = [

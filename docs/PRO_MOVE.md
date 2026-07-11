@@ -25,9 +25,11 @@
 | [`PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](./PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md)                         | 离线 last-good cache               | PASS                                                      |
 | [`PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md`](./PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md)                 | CJK 字体 + 硬分页                  | PASS                                                      |
 | [`PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](./PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md) | Exit · 崩溃恢复 · systemd          | PASS                                                      |
-| **P-MOVE-VERIFY**                                                                                        | 设备生产 sync E2E                  | **PENDING** — Line E · Codex                              |
-| **P-MOVE-SYS-0**                                                                                         | 生命周期发现                       | **PENDING** — 见 qa/paperos-device-lifecycle-discovery.md |
-| **P-MOVE-SYS-1/2/3**                                                                                     | enter/exit · sleep/wake · settings | **PLANNED** — SYS-0 后                                    |
+| [`qa/paperos-data-plane-verify-2026-07-11.md`](./qa/paperos-data-plane-verify-2026-07-11.md)              | 设备生产 sync E2E                  | **PASS** — 200 + schema + cache/UI refresh                |
+| **P-MOVE-SYS-0**                                                                                         | 生命周期发现                       | **CONDITIONAL PASS accepted** — [`qa/paperos-device-lifecycle-discovery.md`](./qa/paperos-device-lifecycle-discovery.md) |
+| **P-MOVE-SYS-1A**                                                                                        | Triple-power launch                | **BLOCKED / CLOSED**                                      |
+| **P-MOVE-SYS-1B**                                                                                        | Launcher Document discovery        | **ACTIVE / INCOMPLETE**                                   |
+| **P-MOVE-SYS-1/2/3**                                                                                     | enter/exit · sleep/wake · settings | **SYS-1 BLOCKED** · SYS-2 not started                     |
 | **P-MOVE-UI**                                                                                            | Slice 1.1 复验 → Slice 2           | **IN FLIGHT** — 真机合并等 SYS-1                          |
 | **P-MOVE-6**                                                                                             | Sync now + timers                  | **BLOCKED on SYS-2**                                      |
 | **P-MOVE-5**                                                                                             | Controlled write staging           | NEXT                                                      |

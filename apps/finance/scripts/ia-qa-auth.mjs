@@ -35,8 +35,13 @@ export async function signInForFinanceQa(env, options = {}) {
     throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env.local')
   }
 
-  const email = options.email ?? process.env.UI_QA_EMAIL ?? 'p1a-rls-test-b@example.test'
-  const password = options.password ?? process.env.UI_QA_PASSWORD ?? 'P1aTestPass!2026'
+  const email = options.email ?? process.env.FINANCE_QA_EMAIL ?? process.env.UI_QA_EMAIL
+  const password = options.password ?? process.env.FINANCE_QA_PASSWORD ?? process.env.UI_QA_PASSWORD
+  if (!email || !password) {
+    throw new Error(
+      'Missing FINANCE_QA_EMAIL or FINANCE_QA_PASSWORD. Set rotated disposable QA credentials; values are never logged.',
+    )
+  }
 
   const sb = createClient(url, anonKey, {
     auth: { storageKey: LIFE_OS_AUTH_STORAGE_KEY, persistSession: false },

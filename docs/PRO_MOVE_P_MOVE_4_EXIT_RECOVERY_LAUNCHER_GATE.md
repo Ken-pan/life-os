@@ -82,3 +82,10 @@ ssh remarkable-pro-move 'cp /home/root/paperos/paperos.backup-<latest> /home/roo
 
 Binary backups retained on device from every promotion
 (`paperos.backup-YYYYMMDD-HHMMSS`).
+
+## Relationship to P-MOVE-SYS (2026-07-11)
+
+P-MOVE-4 established SSH/systemd entry, Exit, and **Class B** crash recovery via
+`open-paperos.sh` / `paperos.service` `ExecStopPost`. **P-MOVE-SYS-1** device-side
+launch surface remains **unresolved** (SYS-1A closed · SYS-1B discovery active).
+See [`qa/paperos-device-lifecycle-discovery.md`](./qa/paperos-device-lifecycle-discovery.md).

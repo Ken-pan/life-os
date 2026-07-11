@@ -19,10 +19,11 @@
 | [`paperos-core-slice-1-integration-gate.md`](./paperos-core-slice-1-integration-gate.md)       | Core Slice 1 **技术 Integration Gate**                           |
 | [`paperos-core-slice-1-visual-gate.md`](./paperos-core-slice-1-visual-gate.md)                 | Core Slice 1 **视觉 Gate**（Antigravity）                        |
 | [`paperos-core-slice-1-1-visual-delta-gate.md`](./paperos-core-slice-1-1-visual-delta-gate.md) | Core Slice 1.1 **QML 视觉 delta**（Gallery/Drawer/`+`）          |
-| [`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md)             | **P-MOVE-SYS-0** 设备生命周期发现（待采集）                      |
+| [`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md)             | **SYS-0** accepted · **SYS-1B** discovery（矩阵 T-01–T-08）        |
 | [`paperos-device-lifecycle-gate.md`](./paperos-device-lifecycle-gate.md)                       | **P-MOVE-SYS-GATE** 真机可靠性用例                               |
 | [`home-spatial-editor-audit-2026-07-08.md`](./home-spatial-editor-audit-2026-07-08.md)         | Home 墙图**功能**验收（H-W0–W2c · 8 smoke checks）               |
-| [`home-spatial-uiux-audit-2026-07-08.md`](./home-spatial-uiux-audit-2026-07-08.md)             | Home 空间编辑 **UI/UX 审核**（Wave A/B/C ✅ · 剩余见 §剩余开放） |
+| [`../apps/fitness/docs/FT-P5-substitution.md`](../apps/fitness/docs/FT-P5-substitution.md)     | **FT-P5** 工程 gate PASS · 产品 gate BLOCKED（2026-07-11） |
+| [`../apps/fitness/docs/FT-P5-ui-closure-guide.md`](../apps/fitness/docs/FT-P5-ui-closure-guide.md) | **FT-P5** UI/copy closure 实施指南 · 方案对比 · 下一步 |
 
 ## 证据目录（非 Markdown 计划）
 

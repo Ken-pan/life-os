@@ -13,6 +13,7 @@
   import {
     getExLog,
     getSessionProgress,
+    getSessionExercises,
     sessionDuration,
     markSessionEnded
   } from '$lib/session.js';
@@ -48,16 +49,20 @@
   );
 
   function exRows() {
-    return day.ex.map((ex) => {
-      const log = getExLog(dayId, ex.id, ex.sets, dk);
-      const prs = detectPR(ex.id, dayId, dk);
-      return {
-        ex,
-        log,
-        prs,
-        w: exWeight(ex),
-        unit: exUnit(ex)
-      };
+    return getSessionExercises(dayId, dk).flatMap((ex, index) => {
+      const displayed = ex.substitution ? [day.ex[index], ex] : [ex];
+      return displayed.map((rowEx) => {
+        const ex = rowEx;
+        const log = getExLog(dayId, ex.id, ex.sets, dk);
+        const prs = detectPR(ex.id, dayId, dk);
+        return {
+          ex,
+          log,
+          prs,
+          w: exWeight(ex),
+          unit: exUnit(ex)
+        };
+      });
     });
   }
 

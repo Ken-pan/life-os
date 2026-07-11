@@ -1,7 +1,7 @@
 # Portal UI 截图验收（第五轮 · 遗留 UI 清零）
 
 **日期：** 2026-07-09（第五轮）
-**环境：** `127.0.0.1:5198` preview · 账号 `p1a-rls-test-b@example.test`
+**环境：** `127.0.0.1:5198` preview · disposable QA account（由环境变量提供）
 **脚本：** `apps/portal/scripts/qa-screenshot.mjs` · `qa-smoke.mjs`（**五卡**）
 **证据目录：** [`ui-qa-screenshots/portal/main/latest/`](../ui-qa-screenshots/portal/main/latest/)（含 `manifest.json` · `mobile-launcher.png`）
 
@@ -169,7 +169,7 @@ PORTAL_QA_URL=http://127.0.0.1:5195 npm run qa:smoke
 cd ../music && npm run qa:rec-behavior
 ```
 
-可选：`UI_QA_EMAIL` / `UI_QA_PASSWORD` 覆盖默认 P1a 测试账号。
+必须设置已轮换的 `UI_QA_EMAIL` / `UI_QA_PASSWORD`；仓库不提供默认凭证。
 
 ## 相关文档
 

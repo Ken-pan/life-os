@@ -5,7 +5,7 @@ import {
   resolveTheme,
 } from '@life-os/theme'
 import { getProgramById, DEFAULT_PROGRAM_ID } from './data/program.js'
-import { EX_ID_ALIASES, resolveExerciseId } from './data/exercises.js'
+import { EX_BY_ID, EX_ID_ALIASES, resolveExerciseId } from './data/exercises.js'
 import { effectiveDone, migrateLogEntry } from './logs.js'
 import {
   equipType,
@@ -378,6 +378,15 @@ export function dayDone(dateK, day) {
     const skipped = entry && typeof entry === 'object' && entry.skipped
     done += eff
     total += skipped ? eff : e.sets
+  })
+  const plannedIds = new Set(day.ex.map((e) => e.id))
+  Object.entries(log).forEach(([exId, entry]) => {
+    if (plannedIds.has(exId)) return
+    const performed = EX_BY_ID[resolveExerciseId(exId)]
+    if (!performed) return
+    const eff = effectiveDone(entry, performed.sets)
+    done += eff
+    total += entry?.skipped ? eff : performed.sets
   })
   return { done, total, pct: total ? Math.round((done / total) * 100) : 0 }
 }

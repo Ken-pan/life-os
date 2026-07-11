@@ -29,7 +29,8 @@
     updateSetLog,
     parseTimedTarget,
     getSessionTimes,
-    parseRepsTarget
+    parseRepsTarget,
+    getSessionExercises
   } from '$lib/session.js';
   import { recommendNextWeight, detectPR, isActionableHoldAdvice } from '$lib/progression.js';
   import { startTimer, timer, cancelTimer } from '$lib/timer.svelte.js';
@@ -122,7 +123,8 @@
   });
 
   const progress = $derived(getSessionProgress(dayId));
-  const currentEx = $derived(day?.ex?.[exIndex] ?? null);
+  const sessionExercises = $derived(getSessionExercises(dayId));
+  const currentEx = $derived(sessionExercises[exIndex] ?? null);
 
   $effect(() => {
     currentEx?.id;
@@ -137,7 +139,7 @@
   );
   const advice = $derived(currentEx ? recommendNextWeight(currentEx.id) : null);
   const schemeHint = $derived(
-    currentEx ? schemeCoachHint(currentEx, day?.ex ?? []) : null
+    currentEx ? schemeCoachHint(currentEx, sessionExercises) : null
   );
   const focusCues = $derived(currentEx?.cues ?? []);
   const schemeBadge = $derived(currentEx ? schemeLabel(currentEx.scheme) : null);
@@ -218,7 +220,7 @@
       return 'rest';
     }
 
-    if (exIndex < day.ex.length - 1) {
+    if (exIndex < sessionExercises.length - 1) {
       const nextEx = day.ex[exIndex + 1];
       exIndex += 1;
       startTimer(ex.rest, t('focus.nextTimer', { name: nextEx.name }), ctx, { inline: true });
@@ -302,7 +304,7 @@
   }
 
   function goNext() {
-    if (exIndex < day.ex.length - 1) {
+    if (exIndex < sessionExercises.length - 1) {
       cancelTimer();
       exIndex += 1;
     }
@@ -314,9 +316,13 @@
       dayId,
       ex: currentEx,
       onConfirm: ({ reason, substituteId }) => {
-        skipExercise(dayId, currentEx.id, reason, substituteId);
+        const result = skipExercise(dayId, currentEx.id, reason, substituteId);
+        if (!result.ok) return;
         toast(t('focus.skipped', { name: currentEx.name }));
-        if (exIndex < day.ex.length - 1) {
+        if (result.substituted) {
+          // Replacement occupies the same persisted queue slot.
+          exIndex = exIndex;
+        } else if (exIndex < sessionExercises.length - 1) {
           exIndex += 1;
         } else {
           const p = getSessionProgress(dayId);
@@ -415,7 +421,7 @@
             <Icon name="chevron-left" size={17} strokeWidth={2.25} />
           </button>
           <div class="focus-progress-meta focus-chip-ghost" aria-label={t('focus.progressAria', { pct: progress.pct })}>
-            <span class="focus-ex-count">{exIndex + 1}/{day.ex.length}</span>
+            <span class="focus-ex-count">{exIndex + 1}/{sessionExercises.length}</span>
             {#if elapsedLabel}
               <span class="focus-chip-dot" aria-hidden="true">·</span>
               <span class="focus-elapsed" aria-label={t('focus.elapsedAria')}>{elapsedLabel}</span>
@@ -595,7 +601,7 @@
               <button
                 type="button"
                 class="focus-nav-btn"
-                disabled={exIndex >= day.ex.length - 1}
+                disabled={exIndex >= sessionExercises.length - 1}
                 onclick={goNext}
                 aria-label={t('focus.nextEx')}
               >{t('focus.nextEx')}</button>

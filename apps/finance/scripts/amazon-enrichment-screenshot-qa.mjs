@@ -49,8 +49,9 @@ const sb = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
   auth: { storageKey, persistSession: false },
 })
 
-const email = process.env.UI_QA_EMAIL ?? 'p1a-rls-test-b@example.test'
-const password = process.env.UI_QA_PASSWORD ?? 'P1aTestPass!2026'
+const email = process.env.FINANCE_QA_EMAIL ?? process.env.UI_QA_EMAIL
+const password = process.env.FINANCE_QA_PASSWORD ?? process.env.UI_QA_PASSWORD
+if (!email || !password) throw new Error('Missing rotated FINANCE_QA_EMAIL or FINANCE_QA_PASSWORD (values redacted)')
 
 const { data: auth, error } = await sb.auth.signInWithPassword({
   email,
@@ -196,7 +197,7 @@ await browser.close()
 
 writeFileSync(
   resolve(shotRoot, 'manifest.json'),
-  JSON.stringify({ dateTag, baseUrl, email, shots: manifest }, null, 2),
+  JSON.stringify({ dateTag, baseUrl, shots: manifest }, null, 2),
 )
 
 console.log(`\nScreenshots saved to:\n${shotRoot}`)

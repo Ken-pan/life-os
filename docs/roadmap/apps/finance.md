@@ -3,6 +3,7 @@
 **URL：** [finance.kenos.space](https://finance.kenos.space) · **Workspace：** `finance-os`
 **扩展：** `apps/finance/extension` · **Audit：** `apps/finance/docs/pto-audit-export/`
 **订单审核 handoff：** [`../../apps/finance/docs/merchant-order-audit/DOWNSTREAM_HANDOFF_v1_1.md`](../../apps/finance/docs/merchant-order-audit/DOWNSTREAM_HANDOFF_v1_1.md)
+**F-P6 canonical（2026-07-11）：** [`../../apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../../apps/finance/docs/FP6_PURCHASE_REVIEW.md) — discovery **CONDITIONAL PASS** · F-P6a **BLOCKED** · [Implementation guide](../../apps/finance/docs/FP6_PURCHASE_REVIEW_IMPLEMENTATION_GUIDE.md)
 
 ## 一句话
 
@@ -45,13 +46,16 @@
 
 **产品问题：** 信用卡只显示商家名（如 `AMAZON MARKETPLACE`），用户需要知道**买了什么**、**订单是否匹配正确**、**退货/退款后如何处理**。
 
+**Discovery 收口（2026-07-11）：** 产品合同 **PASS** · 数据层 **BLOCKED** · section **CONDITIONAL PASS** — 详见 [`FP6_PURCHASE_REVIEW.md`](../../apps/finance/docs/FP6_PURCHASE_REVIEW.md)。**不得在现有 `purchase_enrichment` JSONB 上直接实现 Confirm/Reject/Undo。**
+
 | 子项      | 范围                                                                     | 验收                                                |
 | --------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
-| **F-P6a** | History 审核视图：`matched_review` 筛选 · 确认/驳回匹配 · 商品行默认展示 | **UI 未建** — 仅有 `purchase:review` 筛选 + `PurchaseEnrichmentBlock` 展示；无 confirm/reject/undo |
+| **F-P6**  | Discovery：产品语义 · 数据审计 · QA 静态准备                               | **CONDITIONAL PASS** — 实现未授权                    |
+| **F-P6a** | Data foundation + History 确认/驳回/Undo UI                              | **BLOCKED** — 需 association/decision migration 先行 |
 | **F-P6b** | 后续处理：`returnInfo` · 关联退款 txn · 用户备注/处理状态                | 退货订单显示关联负向交易                            |
 | **F-P6c** | Amazon/BBY 策展批次（读 `review_queue_v1_1`，**非** broad apply）        | handoff v1.2/v1.3 增量 clean 行进 DB                |
 
-**已完成：** F-P3 STS / reserve / Spend 口径统一，`outlook.test.ts` 40 pass。
+**已完成：** F-P3 STS / reserve / Spend 口径统一，`outlook.test.ts` 40 pass · F-P6 产品合同与数据 blocker 文档化。
 
 ### 实现锚点
 

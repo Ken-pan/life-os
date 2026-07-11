@@ -2,6 +2,8 @@ import { browser } from '$app/environment';
 import { getProgram } from './programRuntime.js';
 import { S, save, todayKey, exWeight, ORDER } from './state.svelte.js';
 import { effectiveDone, normalizeExLog } from './logs.js';
+import { EX_BY_ID, resolveExerciseId } from './data/exercises.js';
+import { buildSessionQueue } from './sessionQueue.js';
 
 /** 某条动作记录是否有真实训练痕迹(做过组或明确跳过) */
 export function exLogHasActivity(entry) {
@@ -137,6 +139,28 @@ export function getExLog(dayId, exId, totalSets, dateK = todayKey()) {
   return normalizeExLog(dayLog[exId], totalSets);
 }
 
+function listedSubstitute(day, plannedEx, substituteId) {
+  const id = resolveExerciseId(substituteId);
+  if (!id || id === plannedEx.id || !EX_BY_ID[id]) return null;
+  if (!plannedEx.alternatives?.some((alt) => resolveExerciseId(alt.id) === id)) return null;
+  return EX_BY_ID[id];
+}
+
+/** Canonical persisted Focus queue, with valid substitutions replacing planned slots. */
+export function getSessionExercises(dayId, dateK = todayKey()) {
+  const day = getProgram().days[dayId];
+  if (!day?.ex) return [];
+  const dayLog = getDayLog(dayId, dateK);
+  return buildSessionQueue(dayId, day.ex, dayLog, EX_BY_ID, resolveExerciseId);
+}
+
+export function getSessionExercise(dayId, exId, dateK = todayKey()) {
+  const id = resolveExerciseId(exId);
+  return getSessionExercises(dayId, dateK).find(
+    (ex) => ex.slotKey === exId || resolveExerciseId(ex.id) === id
+  ) ?? null;
+}
+
 function writeExLog(dayId, exId, entry, dateK = todayKey()) {
   const k = sessionKey(dayId, dateK);
   if (!S.logs[k]) S.logs[k] = {};
@@ -167,39 +191,44 @@ export function getCurrentSet(dayId, exId, totalSets, dateK = todayKey()) {
 export function getSessionProgress(dayId, dateK = todayKey()) {
   const day = getProgram().days[dayId];
   if (!day?.ex) return { done: 0, total: 0, pct: 0, exIndex: 0, exId: null };
+  const queue = getSessionExercises(dayId, dateK);
 
   let done = 0;
   let total = 0;
   let exIndex = 0;
   let foundCurrent = false;
 
-  for (let i = 0; i < day.ex.length; i++) {
-    const ex = day.ex[i];
+  for (let i = 0; i < queue.length; i++) {
+    const ex = queue[i];
     const log = getExLog(dayId, ex.id, ex.sets, dateK);
+    const plannedLog = ex.substitution
+      ? getExLog(dayId, ex.plannedExerciseId, day.ex[i].sets, dateK)
+      : null;
+    const preserved = plannedLog ? effectiveDone(plannedLog, day.ex[i].sets) : 0;
     // 跳过的动作按实际做过的组中性计入（done/total 同加），不再伪装成满组
     const recorded = log.skipped
       ? Math.min(log.sets.filter(Boolean).length, ex.sets)
       : Math.min(log.done, ex.sets);
-    done += recorded;
-    total += log.skipped ? recorded : ex.sets;
+    done += recorded + preserved;
+    total += (log.skipped ? recorded : ex.sets) + preserved;
     if (!foundCurrent && !log.skipped && log.done < ex.sets) {
       exIndex = i;
       foundCurrent = true;
     }
   }
 
-  const allDone = day.ex.every((ex) => {
+  const allDone = queue.every((ex) => {
     const l = getExLog(dayId, ex.id, ex.sets, dateK);
     return l.skipped || l.done >= ex.sets;
   });
 
-  const currentEx = day.ex[exIndex];
+  const currentEx = queue[exIndex];
 
   return {
     done,
     total,
     pct: total ? Math.round((done / total) * 100) : 0,
-    exIndex: allDone ? day.ex.length - 1 : exIndex,
+    exIndex: allDone ? queue.length - 1 : exIndex,
     exId: currentEx?.id ?? null,
     allDone
   };
@@ -207,8 +236,7 @@ export function getSessionProgress(dayId, dateK = todayKey()) {
 
 /** 完成一组（setIndex 为 1-based） */
 export function completeSet(dayId, exId, setIndex, payload = {}, dateK = todayKey()) {
-  const day = getProgram().days[dayId];
-  const ex = day?.ex?.find((e) => e.id === exId);
+  const ex = getSessionExercise(dayId, exId, dateK);
   if (!ex) return { ok: false };
 
   ensureSession(dayId, dateK);
@@ -235,8 +263,7 @@ export function completeSet(dayId, exId, setIndex, payload = {}, dateK = todayKe
 
 /** 撤销最后一组 */
 export function undoLastSet(dayId, exId, dateK = todayKey()) {
-  const day = getProgram().days[dayId];
-  const ex = day?.ex?.find((e) => e.id === exId);
+  const ex = getSessionExercise(dayId, exId, dateK);
   if (!ex) return { ok: false };
 
   const log = getExLog(dayId, exId, ex.sets, dateK);
@@ -250,8 +277,7 @@ export function undoLastSet(dayId, exId, dateK = todayKey()) {
 
 /** 切换某组完成状态（列表模式兼容） */
 export function toggleSet(dayId, exId, i, dateK = todayKey()) {
-  const day = getProgram().days[dayId];
-  const ex = day?.ex?.find((e) => e.id === exId);
+  const ex = getSessionExercise(dayId, exId, dateK);
   if (!ex) return { prev: 0, next: 0 };
 
   const log = getExLog(dayId, exId, ex.sets, dateK);
@@ -283,17 +309,29 @@ export function toggleSet(dayId, exId, i, dateK = todayKey()) {
 export function skipExercise(dayId, exId, reason, substituteId = null, dateK = todayKey()) {
   const day = getProgram().days[dayId];
   const ex = day?.ex?.find((e) => e.id === exId);
-  if (!ex) return;
+  if (!ex) return { ok: false, reason: 'missing_exercise' };
 
   const log = getExLog(dayId, exId, ex.sets, dateK);
-  log.skipped = { reason, substituteId, ts: new Date().toISOString() };
+  if (log.skipped) return { ok: false, reason: 'already_skipped' };
+  const substitute = substituteId ? listedSubstitute(day, ex, substituteId) : null;
+  log.skipped = {
+    reason,
+    substituteId: substitute?.id ?? null,
+    attribution: substitute ? { source: 'user_selection' } : null,
+    ts: new Date().toISOString()
+  };
   writeExLog(dayId, exId, log, dateK);
+  return {
+    ok: true,
+    substituted: Boolean(substitute),
+    substitute: substitute ?? null,
+    reason: substituteId && !substitute ? 'invalid_substitute' : null
+  };
 }
 
 /** 更新已完成的某一组数据 */
 export function updateSetLog(dayId, exId, setIndex, payload, dateK = todayKey()) {
-  const day = getProgram().days[dayId];
-  const ex = day?.ex?.find((e) => e.id === exId);
+  const ex = getSessionExercise(dayId, exId, dateK);
   if (!ex) return false;
 
   const log = getExLog(dayId, exId, ex.sets, dateK);
@@ -344,7 +382,7 @@ export function recentSessionsForEx(exId, limit = 3) {
     const log = S.logs[k][exId];
     const [date, dayId] = k.split('|');
     const day = getProgram().days[dayId];
-    const ex = day?.ex?.find((e) => e.id === exId);
+    const ex = day?.ex?.find((e) => e.id === exId) ?? EX_BY_ID[resolveExerciseId(exId)];
     if (!ex) continue;
     if (!log || effectiveDone(log, ex.sets) === 0) continue;
 

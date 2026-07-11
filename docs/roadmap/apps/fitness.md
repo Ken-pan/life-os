@@ -23,11 +23,13 @@ _**FT-P2** 已发货（2026-07-10）— Portal Fitness 卡 `workedOutToday`；mi
 
 | ID        | 主题                             | ROI | 桶       | 投入 | Agent                            | 验收                                                   | Hub   |
 | --------- | -------------------------------- | --- | -------- | ---- | -------------------------------- | ------------------------------------------------------ | ----- |
-| **FT-P5** | 替代动作完整训练流               | 🔥  | Product  | 2–3d | **Codex** 实现 · Fable 短 review | 跳过选替代 → Focus 练替代；Summary/Coach/容量归因；E2E | §Now  |
+| **FT-P5** | 替代动作完整训练流               | 🔥  | Product  | UI closure | **Codex** 实现 ✅ · product re-review 待 UI | 工程 gate **PASS** · 产品 gate **BLOCKED** — [`FT-P5-substitution.md`](../../../apps/fitness/docs/FT-P5-substitution.md) | §Now  |
 | **FT-P3** | 动作示意图                       | ○   | Product  | 2–3d | Fable                            | Focus 流可见缩略图                                     | —     |
 | **FT-P4** | `SyncErrorPresentation` 契约对齐 | ○   | Platform | 1d   | Codex                            | C-P1+                                                  | —     |
 
-**FT-P5 现状缺口：** `SkipModal` + `skipExercise(substituteId)` 仅**记录**替代 ID，未插入 Focus 训练流；周容量与 Coach 未按替代动作计组。程序数据里部分动作已有 `alternatives[]`（`program.js` / `exercises.js`），需补全覆盖 + 运行时切换。
+**FT-P5 进度（2026-07-11）：** 状态模型与归因 **工程 gate PASS**（`sessionQueue.js` · focused tests 8/8）；**产品 gate BLOCKED** — 替代选中态几乎不可见（P0）+ modal/Summary 文案待修。详见 [`FT-P5-substitution.md`](../../../apps/fitness/docs/FT-P5-substitution.md)。
+
+**剩余 closure（bounded UI/copy）：** 见 [`FT-P5-ui-closure-guide.md`](../../../apps/fitness/docs/FT-P5-ui-closure-guide.md) — **推荐方案 1**（背景高亮 + `aria-pressed`）；PR-A 解 P0 → PR-B 文案 → PR-C Focus 标签 → product re-review。
 
 **已完成：** FT-P0 E2E 20/20 · FT-P1 `fitness.workout_logged` → Planner 打卡 · **FT-P2** Portal `workedOutToday` ✅（migration 远程已应用）。
 
@@ -38,7 +40,7 @@ _**FT-P2** 已发货（2026-07-10）— Portal Fitness 卡 `workedOutToday`；mi
 | FT-P0 | `playwright.config.js` · `vite.config.js`（port 5190）                                                             |
 | FT-P1 | 完练 hook → `life_events` insert；`packages/contracts/src/events.ts` 扩 schema；参考 `finance_bill_event_trigger`  |
 | FT-P2 | `20260710203000_portal_today_summary_fitness_today.sql` · `todaySummaryFormat.js` · `verify-ft-p2-prod.mjs` |
-| FT-P5 | `SkipModal.svelte` · `session.js` `skipExercise` · `FocusSession.svelte` · `program.js` `alternatives` · `sync.js` |
+| FT-P5 | `sessionQueue.js` · `session.js` · `SkipModal.svelte` · `FocusSession.svelte` · `SummaryView.svelte` · `stats.js` · `progression.js` · `coachMetrics.js` · [`FT-P5-substitution.md`](../../../apps/fitness/docs/FT-P5-substitution.md) |
 
 ## 验收命令
 

@@ -29,11 +29,12 @@
 | Hub ID             | App 分卷                                        | 状态 / 锚点                                                                                                                                         |
 | ------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **P-SCHED-0**      | [planner.md](./planner.md)                      | 🟡 baseline ✅ · legacy tags + mobile scroll 待修 · [`planner-schedule-antigravity-baseline.md`](../../qa/planner-schedule-antigravity-baseline.md) |
-| **P-MOVE-VERIFY**  | [planner-pro-move.md](./planner-pro-move.md)    | ◆ Line **E** only · 设备 token E2E                                                                                                                  |
-| **P-MOVE-SYS-0**   | [planner-pro-move.md](./planner-pro-move.md)    | 🔥 生命周期发现 · VERIFY 同窗口                                                                                                                     |
-| **P-MOVE-SYS-1/2** | [planner-pro-move.md](./planner-pro-move.md)    | ⏳ enter/exit · sleep/wake                                                                                                                          |
+| **P-MOVE-VERIFY**  | [planner-pro-move.md](./planner-pro-move.md)    | ✅ PASS 2026-07-11                                                                                                                  |
+| **P-MOVE-SYS-0**   | [planner-pro-move.md](./planner-pro-move.md)    | ✅ CONDITIONAL PASS accepted                                                                                                        |
+| **P-MOVE-SYS-1B**  | [planner-pro-move.md](./planner-pro-move.md)    | 🔄 Launcher Document discovery · ACTIVE / INCOMPLETE                                                                                |
+| **P-MOVE-SYS-1/2** | [planner-pro-move.md](./planner-pro-move.md)    | 🔒 SYS-1 blocked · SYS-2 not started                                                                                                |
 | **P-MOVE-UI**      | [planner-pro-move.md](./planner-pro-move.md)    | 🟡 Slice 1.1 设备复验 · Slice 2 IA 可早做                                                                                                           |
-| **FT-P5**          | [fitness.md](./fitness.md)                      | ⏳ 替代动作完整流                                                                                                                                   |
+| **FT-P5**          | [fitness.md](./fitness.md)                      | 🟡 工程 PASS · 产品 BLOCKED — [`FT-P5-substitution.md`](../../apps/fitness/docs/FT-P5-substitution.md) |
 | **F-P6**           | [finance.md](./finance.md)                      | ⏳ 支出审核（Amazon/BBY/Target）                                                                                                                    |
 | **P-PROJ-3**       | [planner.md](./planner.md)                      | ✅ Roadmap refs UI（2026-07-10）                                                                                                                    |
 | **P-MOVE-5**       | [planner-pro-move.md](./planner-pro-move.md)    | ⏳ controlled write staging gate                                                                                                                    |
@@ -45,8 +46,8 @@
 
 | App     | 层级   | Top Next                                            | 分卷                                                                      |
 | ------- | ------ | --------------------------------------------------- | ------------------------------------------------------------------------- |
-| Planner | 生产   | **P-SCHED-0** · **P-MOVE-VERIFY→SYS-0** · P-MOVE-UI | [planner.md](./planner.md) · [planner-pro-move.md](./planner-pro-move.md) |
-| Fitness | 生产   | **FT-P5** 替代动作 · FT-P2                          | [fitness.md](./fitness.md)                                                |
+| Planner | 生产   | **P-SCHED-0** · **SYS-1B** · P-MOVE-UI | [planner.md](./planner.md) · [planner-pro-move.md](./planner-pro-move.md) |
+| Fitness | 生产   | **FT-P5** UI closure · FT-P2 ✅                          | [fitness.md](./fitness.md)                                                |
 | Finance | 生产   | **F-P6** 支出审核 · F-P1b                           | [finance.md](./finance.md)                                                |
 | Music   | 生产   | M-P5 ✅ · 维护 · M-P4 按需                          | [music.md](./music.md)                                                    |
 | Portal  | 启动器 | 维护 · UI 走查 P-1–P-12 ✅                          | [portal.md](./portal.md)                                                  |
@@ -74,9 +75,9 @@
 | 序  | 项                        | 说明                                              |
 | --- | ------------------------- | ------------------------------------------------- |
 | 1   | **P-SCHED-0**             | 日程视图 debug + 可用性（Planner 最高产品优先级） |
-| 2   | **P-MOVE-VERIFY → SYS-0** | 数据面复验 + 生命周期发现（同一设备窗口）         |
+| 2   | **P-MOVE-SYS-1B**         | Launcher Document launch-surface discovery（read-only） |
 | 3   | **F-P6**                  | Finance 支出审核（商品级 + 后续处理）             |
-| 4   | **FT-P5**                 | Fitness 替代动作（Codex 实现）                    |
+| 4   | **FT-P5**                 | Fitness 替代动作 — 工程 PASS · 产品 UI closure 待审 |
 | 5   | **P-MOVE-5**              | controlled write staging                          |
 | 6   | **F-P1b / P-P4**          | Codex · Cursor Auto（不用 Fable / Copilot Agent） |
 

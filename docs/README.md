@@ -2,21 +2,21 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后核对：** 2026-07-10（深度复核：生产 API · migrateTask · FT-P2 · Slice 1.1）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后核对：** 2026-07-11（FT-P5 工程 gate · F-P6 discovery · P-MOVE-VERIFY）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
 **模型：** Core 闭环 → 防回归 → Growth（Portal `core_*` + 单 App 管道）→ 窄 Design — 详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §推荐执行顺序
 
-| 焦点 | 主题                                                                     | 文档                                                             |
-| ---- | ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| Now  | **P-SCHED-0** · **FT-P5** · **F-P6** · **P-MOVE-UI** · **P-MOVE-VERIFY** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
-| Next | P-MOVE-5/6 · F-P1b · P-P4 · H-P7 · P-UIUX-0 · P-ATTACH-0                 | [`roadmap/apps/`](./roadmap/apps/README.md)                      |
+| 焦点 | 主题                                                                                | 文档                                                             |
+| ---- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Now  | **P-SCHED-0** · **FT-P5** UI closure · **F-P6** · **P-MOVE-UI** · **P-MOVE-VERIFY** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
+| Next | P-MOVE-5/6 · F-P1b · P-P4 · H-P7 · P-UIUX-0 · P-ATTACH-0                            | [`roadmap/apps/`](./roadmap/apps/README.md)                      |
 
 **2026-07-09 已验收：** Phase 6 **G-P4b-H / H-P6a** · Portal UI 走查 **P-1–P-12** — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 **2026-07-09 已验收：** Phase 0–4 批次 — F-P3 · G-P4b-M · G-P6 · P-P2 · FT-P0/FT-P1 · I-P1.5b — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
-> **策略（2026-07-11）：** **Fable** 只关 P-SCHED-0 · **Codex** FT-P5 + VERIFY→**SYS-0** · **Ken** 设备 60–90min — [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
+> **策略（2026-07-11 · 审核修订）：** 活跃 5 lane（Ken · Fable SCH-0 · Codex T1/T2 · Antigravity SCH-10A）· Cursor/Codex T3 Queued — [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) §7
 
 **六 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 

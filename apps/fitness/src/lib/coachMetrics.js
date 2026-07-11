@@ -2,6 +2,7 @@ import { S, todayKey, daysBetween, sessionStats } from './state.svelte.js';
 import { effectiveDone } from './logs.js';
 import { getProgram } from './programRuntime.js';
 import { exerciseHistory } from './stats.js';
+import { EX_BY_ID, resolveExerciseId } from './data/exercises.js';
 
 /* ═══════════════ 肌群归一化与周容量 ═══════════════ */
 
@@ -41,8 +42,10 @@ export function weeklyMuscleVolume(daysBack = 7) {
     if (!day?.ex) return;
 
     const log = S.logs[k];
-    day.ex.forEach((ex) => {
-      const done = effectiveDone(log[ex.id], ex.sets);
+    Object.entries(log).forEach(([exId, entry]) => {
+      const ex = day.ex.find((item) => item.id === exId) ?? EX_BY_ID[resolveExerciseId(exId)];
+      if (!ex) return;
+      const done = effectiveDone(entry, ex.sets);
       if (!done) return;
       const g = muscleGroupOf(ex.m);
       if (!g) return;
@@ -80,6 +83,15 @@ export function muscleVolumeGap(daysBack = 7) {
       if (!g) return;
       planned[g] = (planned[g] || 0) + ex.sets;
       done[g] = (done[g] || 0) + effectiveDone(log[ex.id], ex.sets);
+    });
+    const plannedIds = new Set(day.ex.map((ex) => ex.id));
+    Object.entries(log).forEach(([exId, entry]) => {
+      if (plannedIds.has(exId)) return;
+      const ex = EX_BY_ID[resolveExerciseId(exId)];
+      if (!ex) return;
+      const g = muscleGroupOf(ex.m);
+      if (!g) return;
+      done[g] = (done[g] || 0) + effectiveDone(entry, ex.sets);
     });
   });
 

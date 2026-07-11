@@ -1,8 +1,18 @@
--- Seed QA test user with Amazon transactions + purchase_enrichment for UI screenshots.
--- Safe to re-run: deletes prior QA rows first.
+-- Seed a disposable QA user with synthetic Amazon transactions + enrichment.
+-- Run through scripts/finance-qa-bootstrap.mjs. The caller validates and supplies
+-- the generated Auth UUID as the psql variable qa_user_id.
+-- Safe to re-run: the fixture keys are deleted before insertion.
+
+\if :{?qa_user_id}
+\else
+  \echo 'ERROR: missing required qa_user_id (UUID is supplied by the QA bootstrap)'
+  \quit 2
+\endif
+
+begin;
 
 delete from public.finance_transactions
-where user_id = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+where user_id = :'qa_user_id'::uuid
   and platform_id like 'qa-amazon-enrich-%';
 
 insert into public.finance_transactions (
@@ -33,7 +43,7 @@ insert into public.finance_transactions (
 )
 values
   (
-    'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    :'qa_user_id'::uuid,
     '2026-07-03',
     '2026-07-03',
     'Amazon Purchase',
@@ -72,7 +82,7 @@ values
     }'::jsonb
   ),
   (
-    'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    :'qa_user_id'::uuid,
     '2026-06-30',
     '2026-06-30',
     'Amazon Purchase',
@@ -112,7 +122,7 @@ values
     }'::jsonb
   ),
   (
-    'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    :'qa_user_id'::uuid,
     '2026-05-19',
     '2026-05-19',
     'Amazon Purchase',
@@ -150,3 +160,5 @@ values
       "matchedAt": "2026-07-06T23:00:00.000Z"
     }'::jsonb
   );
+
+commit;

@@ -1,6 +1,6 @@
 import { exWeight, exUnit, displayWeight, todayKey, daysBetween, sessionStats, exEquipMode } from './state.svelte.js';
 import { deloadAdvice } from './phase.js';
-import { parseRepsTarget, parseTimedTarget, recentSessionsForEx, getExLog, sessionKey } from './session.js';
+import { parseRepsTarget, parseTimedTarget, recentSessionsForEx, getExLog, sessionKey, getSessionExercises } from './session.js';
 import { estimate1RM, equipType, EQUIP_INFO } from './tools/calculators.js';
 import { S } from './state.svelte.js';
 import { effectiveDone } from './logs.js';
@@ -356,7 +356,7 @@ export function dayProgressionAdvice(dayId, dateK) {
 
   const showHoldKeys = new Set(['lastFailed', 'lastGrinding']);
 
-  return day.ex
+  return getSessionExercises(dayId, dateK)
     .map((ex) => ({ ex, ...recommendNextWeight(ex.id) }))
     .filter(
       (a) =>
@@ -392,8 +392,9 @@ function dayDoneSets(dayId, dateK) {
   if (!day?.ex) return 0;
   const log = S.logs[`${dateK}|${dayId}`] || {};
   let done = 0;
-  day.ex.forEach((ex) => {
-    done += effectiveDone(log[ex.id], ex.sets);
+  Object.entries(log).forEach(([exId, entry]) => {
+    const ex = findEx(exId);
+    if (ex) done += effectiveDone(entry, ex.sets);
   });
   return done;
 }

@@ -2,7 +2,7 @@ import { S, todayKey, daysBetween, dayDone, dateKeyOf } from './state.svelte.js'
 import { effectiveDone } from './logs.js';
 import { getProgram } from './programRuntime.js';
 import { estimate1RM } from './tools/calculators.js';
-import { exerciseIdVariants, resolveExerciseId } from './data/exercises.js';
+import { EX_BY_ID, exerciseIdVariants, resolveExerciseId } from './data/exercises.js';
 import { t, localeTag } from './i18n/index.js';
 
 /** 所有有训练记录的日期（去重，跳过的动作不算真实训练） */
@@ -54,8 +54,10 @@ export function volumeByDayType(daysBack = 28) {
 
     const log = S.logs[k];
     let sets = 0;
-    day.ex.forEach((ex) => {
-      sets += effectiveDone(log[ex.id], ex.sets);
+    Object.entries(log).forEach(([exId, entry]) => {
+      const ex = day.ex.find((item) => item.id === exId) ?? EX_BY_ID[resolveExerciseId(exId)];
+      if (!ex) return;
+      sets += effectiveDone(entry, ex.sets);
     });
     if (sets === 0) return;
     totals[dayId] = (totals[dayId] || 0) + sets;
@@ -137,8 +139,9 @@ export function exerciseCompletion(daysBack = 28) {
     if (!day?.ex) return;
     const log = S.logs[k];
 
-    day.ex.forEach((ex) => {
-      const entry = log[ex.id];
+    Object.entries(log).forEach(([exId, entry]) => {
+      const ex = day.ex.find((item) => item.id === exId) ?? EX_BY_ID[resolveExerciseId(exId)];
+      if (!ex) return;
       const done = effectiveDone(entry, ex.sets);
       if (done === 0) return;
       const skipped = entry && typeof entry === 'object' && entry.skipped;
@@ -167,7 +170,7 @@ export function exerciseHistory(exId, sessions = 8) {
   for (const k of keys) {
     const [date, dayId] = k.split('|');
     const day = getProgram().days[dayId];
-    const ex = day?.ex?.find((e) => variants.has(e.id));
+    const ex = day?.ex?.find((e) => variants.has(e.id)) ?? [...variants].map((id) => EX_BY_ID[id]).find(Boolean);
     if (!ex) continue;
 
     let log = null;

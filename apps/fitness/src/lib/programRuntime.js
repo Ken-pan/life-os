@@ -213,7 +213,8 @@ export function findExercise(exId) {
     const ex = day.ex?.find((e) => e.id === id || e.id === exId);
     if (ex) return { ex, dayId: day.id };
   }
-  return null;
+  const ex = EX_BY_ID[id];
+  return ex ? { ex, dayId: null } : null;
 }
 
 export function setExerciseOverride(exId, patch) {
