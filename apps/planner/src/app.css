@@ -893,6 +893,39 @@ body {
   background: color-mix(in srgb, var(--surface-2, var(--bg-2)) 88%, transparent);
 }
 
+/* P-TASK-DISPLAY: focus 用形态区分（左侧 accent 竖条），小字不再写「关键」 */
+.task-row--focus {
+  position: relative;
+}
+
+.task-row--focus::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--space-1-5);
+  bottom: var(--space-1-5);
+  width: 3px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+.task-row--focus.task-row--compact {
+  padding-left: calc(3px + var(--space-2));
+}
+
+.chip--recurrence {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--t2);
+  border-color: transparent;
+  background: color-mix(in srgb, var(--surface-2, var(--bg-2)) 88%, transparent);
+}
+
+.task-row--compact .task-meta {
+  margin-top: var(--space-1, 4px);
+}
+
 .task-meta .chip.tag {
   background: color-mix(in srgb, var(--surface-2, var(--bg-2)) 88%, transparent);
   color: var(--t2);
@@ -1370,6 +1403,11 @@ body {
 
   .calendar-page .day-timeline-scroll {
     max-height: min(78vh, 1040px);
+  }
+
+  /* SCH-7: desktop context panel already owns the schedule summary. */
+  .calendar-page .day-schedule-panel .schedule-summary {
+    display: none;
   }
 
   .today-layout--with-recap .today-progress-actions {
@@ -2789,7 +2827,7 @@ html.planner-schedule-modal-open .schedule-popover {
 }
 
 @media (--life-os-mobile) {
-  html.standalone-pwa .day-timeline-scroll {
+  .day-timeline-scroll {
     max-height: none;
     overflow: visible;
     overscroll-behavior: visible;
@@ -2934,40 +2972,24 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     font-size: var(--text-sm);
   }
 
-  html:not(.standalone-pwa) .calendar-page .day-timeline-scroll {
-    max-height: min(64vh, 680px);
-    padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
-  }
-
-  html.standalone-pwa .calendar-page .day-timeline-scroll {
+  .calendar-page .day-timeline-scroll {
     max-height: none;
     padding-bottom: 0;
     overflow: visible;
   }
 
   .unscheduled-panel {
-    position: fixed;
-    left: max(var(--page-gutter), var(--safe-left-effective));
-    right: max(var(--page-gutter), var(--safe-right-effective));
-    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-2));
-    z-index: calc(var(--z-nav, 30) + 1);
-    max-height: min(48dvh, 420px);
     padding: var(--space-2) var(--space-2-5);
-    overflow: hidden;
-    border-radius: 24px 24px var(--radius-control) var(--radius-control);
-    box-shadow: var(--shadow-elevated);
+    background: var(--card);
   }
 
   .unscheduled-panel-head {
-    min-height: 56px;
+    min-height: 44px;
     margin-bottom: 0;
     align-items: center;
   }
 
   .unscheduled-panel .unscheduled-list {
-    max-height: calc(min(48dvh, 420px) - 72px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
     padding-bottom: var(--space-1);
   }
 

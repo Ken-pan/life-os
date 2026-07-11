@@ -397,6 +397,7 @@ export default {
     lifeEventFinance: '来自 Finance',
     lifeEventFitness: '来自 Fitness',
     unscheduledOnly: '未排程',
+    recurring: '循环任务',
     actionToday: '今天',
     actionTomorrow: '明天',
     actionThisWeek: '本周',

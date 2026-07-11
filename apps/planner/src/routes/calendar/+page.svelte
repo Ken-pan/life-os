@@ -98,8 +98,8 @@
 <AppBar title={t('calendar.title')} />
 
 <div class="life-os-page-workspace">
-  <div class="desktop-split-layout calendar-page">
-    <div class="desktop-split-main">
+  <div class="life-os-grid life-os-grid--split desktop-split-layout calendar-page">
+    <div class="life-os-grid__main desktop-split-main">
       <div class="wrap">
         <div class="calendar-week-nav">
           <button

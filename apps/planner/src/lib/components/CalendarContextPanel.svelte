@@ -28,7 +28,7 @@
 </script>
 
 <aside
-  class="today-recap calendar-context"
+  class="life-os-grid__aside today-recap calendar-context"
   aria-label={t('calendar.contextTitle')}
 >
   <header class="today-recap-head">

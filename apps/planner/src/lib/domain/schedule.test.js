@@ -21,6 +21,9 @@ import {
   slotPreviewFromPointer,
   slotRangeFromDrag,
   timelineTopFromMinutes,
+  dayBoundsForTasks,
+  DAY_START_HOUR,
+  DAY_END_HOUR,
 } from './schedule.js'
 
 const task = (overrides = {}) => ({
@@ -49,6 +52,36 @@ describe('schedule', () => {
   it('returns null for blocks outside the visible day window', () => {
     expect(blockLayout('07:00', 30)).toBeNull()
     expect(blockLayout('23:30', 30)).toBeNull()
+  })
+
+  it('keeps default day bounds when all blocks fit', () => {
+    const bounds = dayBoundsForTasks([
+      task({ scheduledStart: '09:00', durationMinutes: 60 }),
+    ])
+    expect(bounds).toEqual({ dayStart: DAY_START_HOUR, dayEnd: DAY_END_HOUR })
+  })
+
+  it('widens day bounds to whole hours so early/late blocks stay visible', () => {
+    const bounds = dayBoundsForTasks([
+      task({ id: 'a', scheduledStart: '06:30', durationMinutes: 45 }),
+      task({ id: 'b', scheduledStart: '22:30', durationMinutes: 90 }),
+    ])
+    expect(bounds).toEqual({ dayStart: 6, dayEnd: 24 })
+    // 06:30 block now has a layout inside the widened window
+    const layout = blockLayout('06:30', 45, {
+      dayStart: bounds.dayStart,
+      dayEnd: bounds.dayEnd,
+    })
+    expect(layout).not.toBeNull()
+    expect(layout?.top).toBe(HOUR_HEIGHT_PX / 2)
+  })
+
+  it('ignores deleted and unscheduled tasks when computing bounds', () => {
+    const bounds = dayBoundsForTasks([
+      task({ id: 'a', scheduledStart: '05:00', deletedAt: 1 }),
+      task({ id: 'b', scheduledStart: null }),
+    ])
+    expect(bounds).toEqual({ dayStart: DAY_START_HOUR, dayEnd: DAY_END_HOUR })
   })
 
   it('defaults duration by task kind', () => {

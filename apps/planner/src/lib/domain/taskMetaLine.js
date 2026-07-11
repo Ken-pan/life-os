@@ -1,4 +1,3 @@
-import { getTaskKind } from './taskKind.js'
 import {
   taskDurationMinutes,
   formatDurationCompact,
@@ -9,6 +8,11 @@ import { formatDateShort } from './dateFormat.js'
 import { recurrenceLabel } from './recurrence.js'
 
 /**
+ * 任务行小字（meta line）——按视图矩阵只答一个问题（何时做 / 为何在这 / 还差什么）。
+ * 规则见 docs/qa/planner-task-display-spec.md：
+ * - kind / priority 不再进小字（改由 checkbox accent 与 focus 色条表达）
+ * - contextDate（Today / Calendar 选中日）下不重复 recurrence 长文案
+ * - 子任务进度以 `n/m` 结尾，列表可扫
  * @param {import('../types.js').Task} task
  * @param {(key: string, params?: Record<string, unknown>) => string} t
  * @param {{
@@ -19,7 +23,6 @@ import { recurrenceLabel } from './recurrence.js'
  */
 export function buildTaskMetaLine(task, t, opts = {}) {
   const { contextDate, minimal = false, overdue = false } = opts
-  const kind = getTaskKind(task)
   const onContextDay = Boolean(
     contextDate && task.dueDate === contextDate && !overdue,
   )
@@ -37,6 +40,17 @@ export function buildTaskMetaLine(task, t, opts = {}) {
 
   if (overdue && task.dueDate) {
     parts.push(formatDateShort(task.dueDate))
+    if (task.scheduledStart) {
+      const startMinutes = parseTimeToMinutes(task.scheduledStart)
+      parts.push(
+        t('schedule.scheduledRange', {
+          start: task.scheduledStart,
+          end: formatMinutesAsTime(startMinutes + taskDurationMinutes(task)),
+        }),
+      )
+    }
+    appendSubtaskProgress(task, parts)
+    return parts.join(' · ')
   }
 
   if (task.scheduledStart) {
@@ -62,7 +76,7 @@ export function buildTaskMetaLine(task, t, opts = {}) {
     } else {
       parts.push(t('task.unscheduledOnly'))
     }
-    if (task.dueTime && (onContextDay || task.durationMinutes)) {
+    if (task.durationMinutes) {
       parts.push(
         t('schedule.estimatedDuration', {
           duration: formatDurationCompact(taskDurationMinutes(task), t),
@@ -71,21 +85,24 @@ export function buildTaskMetaLine(task, t, opts = {}) {
     }
   }
 
-  if (task.scheduledStart && task.dueTime) parts.push(t('schedule.dueAt', { time: task.dueTime }))
-
-  if (kind === 'focus') parts.push(t('task.kindFocus'))
-
-  if (task.priority === 'P0' || task.priority === 1) {
-    parts.push(t('task.priority_P0') || 'P0')
-  } else if (task.priority === 'P1' || task.priority === 2) {
-    parts.push(t('task.priority_P1') || 'P1')
-  } else if (task.priority === 'P2' || task.priority === 3) {
-    parts.push(t('task.priority_P2') || 'P2')
-  }
-
-  if (task.recurrence?.rule && task.recurrence.rule !== 'none') {
+  // recurrence 长文案只在无 contextDate 的列表（Upcoming / Inbox / Project）出现
+  if (
+    !contextDate &&
+    task.recurrence?.rule &&
+    task.recurrence.rule !== 'none'
+  ) {
     parts.push(recurrenceLabel(task.recurrence, t))
   }
 
+  appendSubtaskProgress(task, parts)
+
   return parts.join(' · ')
+}
+
+/** @param {import('../types.js').Task} task @param {string[]} parts */
+function appendSubtaskProgress(task, parts) {
+  const total = task.subtasks?.length ?? 0
+  if (!total) return
+  const done = task.subtasks.filter((s) => s.done).length
+  parts.push(`${done}/${total}`)
 }

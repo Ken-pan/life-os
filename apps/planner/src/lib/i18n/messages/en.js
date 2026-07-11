@@ -401,6 +401,7 @@ export default {
     lifeEventFinance: 'From Finance',
     lifeEventFitness: 'From Fitness',
     unscheduledOnly: 'Unscheduled',
+    recurring: 'Recurring',
     actionToday: 'Today',
     actionTomorrow: 'Tomorrow',
     actionThisWeek: 'This week',
