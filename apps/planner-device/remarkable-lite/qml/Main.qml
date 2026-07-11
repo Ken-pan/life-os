@@ -2,10 +2,11 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Window
 
-// PaperOS Shell — paper-native, minimal chrome.
-// 4 primary tabs: Home / Today / Write / ···
-// Hidden modules (Inbox, Review, System) accessed via More page.
-// No header bar. No thick border frame. Just content and a quiet tab strip.
+// PaperOS Shell — paper canvas + contextual tools + temporary system surfaces.
+// Layer-1 navigation lives in a temporary System drawer (SystemDrawer.qml)
+// opened from the shell menu button; there is no permanent tab bar or rail.
+// One compact header row carries: menu · current page title · Home action ·
+// contextual add. All seven module routes stay mounted at their indices.
 Window {
     id: root
     objectName: "app.root"
@@ -18,22 +19,20 @@ Window {
     // module indices: 0=Home, 1=Today, 2=Write(Notes), 3=Inbox, 4=Review, 5=System, 6=More
     property int currentModule: 0
     readonly property bool landscape: width > height
+    readonly property var moduleTitles: ["Home", "Today", "Notes", "Inbox", "Review", "System", "More"]
     // Mirrored onto the root object so the local-only test bridge can inspect
     // native framebuffer sessions without reaching into QML context objects.
     property bool nativeInkActive: inkMode.active
     property string nativeInkNoteId: inkMode.noteId
     property string nativeInkTool: inkMode.tool
     property string nativeInkColor: inkMode.color
+    property string nativeInkChrome: inkMode.chrome
+    property string nativeInkRetreat: inkMode.lastRetreat
 
     function exitNativeInk() {
         if (inkMode.active)
             inkMode.exit()
     }
-
-    // The 4 visible tabs map to these module indices
-    readonly property var tabModules: [0, 1, 2, 6]
-    readonly property var tabLabels: ["Home", "Today", "Write", "···"]
-    readonly property var tabIds: ["home", "today", "write", "more"]
 
     onCurrentModuleChanged: refreshControl.pageUpdated()
 
@@ -44,135 +43,156 @@ Window {
         apiClient.fetchDashboard()
     }
 
-    Component {
-        id: portraitNavigation
-        Item {
-            implicitHeight: Ui.tabH
-            Rectangle { anchors.left: parent.left; anchors.right: parent.right; height: 1; color: Ui.divider }
-            RowLayout {
-                anchors.fill: parent
-                spacing: 0
-                Repeater {
-                    model: root.tabLabels
-                    delegate: Item {
-                        objectName: "nav." + root.tabIds[index]
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        readonly property int targetModule: root.tabModules[index]
-                        readonly property bool active: root.currentModule === targetModule
-                                                     || (targetModule === 6 && root.currentModule >= 3 && root.currentModule <= 5)
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData
-                            font.family: Ui.fontFamily
-                            font.pixelSize: Ui.button
-                            font.bold: active
-                            color: active ? Ui.ink : Ui.muted
-                        }
-                        Rectangle {
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: parent.width * 0.55
-                            height: active ? 4 : 0
-                            color: Ui.ink
-                        }
-                        MouseArea { anchors.fill: parent; onClicked: root.currentModule = targetModule }
-                    }
-                }
-            }
-        }
+    // Bridge marker: the shell is in its closed state (no temporary surface).
+    Item {
+        objectName: "shell.closed"
+        visible: !systemDrawer.open
+        width: 0; height: 0
     }
 
-    Component {
-        id: landscapeNavigation
-        Item {
-            implicitWidth: 132
-            Rectangle { anchors.top: parent.top; anchors.bottom: parent.bottom; anchors.right: parent.right; width: 2; color: Ui.divider }
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.topMargin: 24
-                anchors.bottomMargin: 24
-                spacing: 8
-                Repeater {
-                    model: root.tabLabels
-                    delegate: Item {
-                        objectName: "nav." + root.tabIds[index]
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        readonly property int targetModule: root.tabModules[index]
-                        readonly property bool active: root.currentModule === targetModule
-                                                     || (targetModule === 6 && root.currentModule >= 3 && root.currentModule <= 5)
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            width: active ? 6 : 0
-                            color: Ui.ink
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData
-                            font.family: Ui.fontFamily
-                            font.pixelSize: Ui.button
-                            font.bold: active
-                            color: active ? Ui.ink : Ui.muted
-                        }
-                        MouseArea { anchors.fill: parent; onClicked: root.currentModule = targetModule }
-                    }
-                }
-            }
-        }
-    }
-
-    RowLayout {
+    ColumnLayout {
         anchors.fill: parent
+        anchors.leftMargin: root.landscape ? 40 : Ui.pageMargin
+        anchors.rightMargin: root.landscape ? 40 : Ui.pageMargin
+        anchors.topMargin: root.landscape ? 24 : 32
         spacing: 0
 
-        Loader {
-            visible: root.landscape
-            active: root.landscape
-            sourceComponent: landscapeNavigation
-            Layout.preferredWidth: root.landscape ? 132 : 0
-            Layout.fillHeight: true
+        // ── SHELL HEADER ───────────────────────────────────────────
+        // menu · title · Home action · contextual add. Quiet and
+        // borderless; whitespace separates it from page content.
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 88
+            Layout.bottomMargin: 8
+            spacing: 24
+
+            Item {
+                objectName: "shell.menu"
+                Layout.preferredWidth: 72
+                Layout.preferredHeight: 72
+                Layout.alignment: Qt.AlignVCenter
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Ui.ink100
+                    visible: menuTap.pressed
+                }
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 9
+                    Repeater {
+                        model: 3
+                        Rectangle {
+                            width: 34; height: 4
+                            color: menuTap.pressed ? Ui.paper : Ui.ink100
+                        }
+                    }
+                }
+                MouseArea {
+                    id: menuTap
+                    anchors.fill: parent
+                    onClicked: systemDrawer.open = true
+                }
+            }
+
+            Text {
+                text: root.moduleTitles[root.currentModule]
+                font.family: Ui.fontFamily
+                font.pixelSize: Ui.section
+                font.bold: true
+                color: Ui.ink100
+            }
+
+            Item { Layout.fillWidth: true }
+
+            // Home is a Layer-1 system action and stays visibly reachable
+            // while the drawer is closed (visible gesture alternative).
+            Item {
+                objectName: "nav.home"
+                Layout.preferredWidth: homeLabel.implicitWidth + 32
+                Layout.preferredHeight: 72
+                Layout.alignment: Qt.AlignVCenter
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Ui.ink100
+                    visible: homeTap.pressed
+                }
+                Text {
+                    id: homeLabel
+                    anchors.centerIn: parent
+                    text: "Home"
+                    font.family: Ui.fontFamily
+                    font.pixelSize: Ui.button
+                    color: homeTap.pressed ? Ui.paper
+                         : root.currentModule === 0 ? Ui.ink30
+                         : Ui.ink70
+                }
+                MouseArea {
+                    id: homeTap
+                    anchors.fill: parent
+                    onClicked: root.currentModule = 0
+                }
+            }
+
+            // Contextual add — Notes only. Routes through the existing safe
+            // quick-note flow; the template picker is a later slice.
+            Rectangle {
+                objectName: "notes.new"
+                visible: root.currentModule === 2
+                Layout.preferredWidth: 72
+                Layout.preferredHeight: 72
+                Layout.alignment: Qt.AlignVCenter
+                color: Ui.ink100
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "+"
+                    font.family: Ui.fontFamily
+                    font.pixelSize: 46
+                    color: Ui.paper
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        var id = noteStore.createNote("quick")
+                        if (id !== "")
+                            inkMode.enter(id)
+                    }
+                }
+            }
         }
 
-        ColumnLayout {
+        StackLayout {
+            objectName: "module.stack"
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.leftMargin: root.landscape ? 40 : Ui.pageMargin
-            Layout.rightMargin: root.landscape ? 40 : Ui.pageMargin
-            Layout.topMargin: root.landscape ? 32 : Ui.pageMargin
-            spacing: 0
+            currentIndex: root.currentModule
 
-            StackLayout {
-                objectName: "module.stack"
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                currentIndex: root.currentModule
-
-                HomePage { objectName: "page.home" }
-                TodayPage { objectName: "page.today" }
-                NotesPage { objectName: "page.write" }
-                InboxPage { objectName: "page.inbox" }
-                ReviewPage {
-                    objectName: "page.review"
-                    onNavigateTo: function(module) { root.currentModule = module }
-                }
-                SystemPage { objectName: "page.system" }
-                MorePage {
-                    objectName: "page.more"
-                    onOpenModule: function(module) { root.currentModule = module }
-                }
+            HomePage { objectName: "page.home" }
+            TodayPage { objectName: "page.today" }
+            NotesPage { objectName: "page.write" }
+            InboxPage { objectName: "page.inbox" }
+            ReviewPage {
+                objectName: "page.review"
+                onNavigateTo: function(module) { root.currentModule = module }
             }
-
-            Loader {
-                visible: !root.landscape
-                active: !root.landscape
-                sourceComponent: portraitNavigation
-                Layout.fillWidth: true
-                Layout.preferredHeight: root.landscape ? 0 : Ui.tabH
+            SystemPage { objectName: "page.system" }
+            MorePage {
+                objectName: "page.more"
+                onOpenModule: function(module) { root.currentModule = module }
             }
         }
+    }
+
+    // ── SYSTEM DRAWER ──────────────────────────────────────────
+    SystemDrawer {
+        id: systemDrawer
+        anchors.fill: parent
+        z: 880
+        currentModule: root.currentModule
+        onNavigate: function(module) { root.currentModule = module }
+        onOpenChanged: refreshControl.pageUpdated()
     }
 
     // ── QUICK SETTINGS OVERLAY ─────────────────────────────────
@@ -264,9 +284,15 @@ Window {
     }
 
     // ── NATIVE INK MODE OVERLAY ────────────────────────────────
-    // Static full-white cover while paperos-ink-runtime owns the display:
-    // freezes the scenegraph's last swap and eats all touch input so the
-    // shell UI cannot react (the Marker is grabbed by the runtime).
+    // Static full-white cover while the in-process ink session owns the
+    // display: freezes the scenegraph's last swap and eats all touch input
+    // so the shell UI cannot react (the Marker is grabbed by the runtime).
+    //
+    // IMPORTANT: nothing inside this overlay may change a visual property
+    // while inkMode.active is true — any scenegraph re-render would swap
+    // the white cover over the live ink framebuffer and destroy unsaved
+    // strokes. Visibility binds to inkMode.active only, which changes
+    // exactly at the enter/exit render boundaries.
     Rectangle {
         anchors.fill: parent
         color: "#FFFFFF"
@@ -277,6 +303,19 @@ Window {
             anchors.fill: parent
             enabled: inkMode.active
             preventStealing: true
+        }
+
+        // Finger/bridge alternative for the pen-tappable chrome handle.
+        // Geometry mirrors InkModeController::handleRect(). A MouseArea has
+        // no visual content, so taps cannot dirty the frozen scenegraph.
+        MouseArea {
+            objectName: "editor.chrome.handle"
+            x: 12
+            y: parent.height - 100
+            width: 88
+            height: 88
+            enabled: inkMode.active
+            onClicked: inkMode.toggleChrome()
         }
     }
 

@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
 
-// A quiet notebook shelf: two columns on the Move in portrait, three in
-// landscape. The preview is the interaction; metadata stays deliberately
-// sparse so the page scans like a physical shelf rather than a dashboard.
+// Notes Gallery — Layer-2 navigation (brief §7.3). The shell header above
+// this page carries menu · Notes · add; the page itself is category tabs
+// plus a two-column shelf of paper thumbnails. The paper object is the
+// interaction; metadata stays sparse. No card frames, no fake favorite or
+// sync badges, no page counts the single-page data model cannot back.
 Item {
     id: page
 
@@ -11,10 +13,20 @@ Item {
     readonly property int columns: landscape ? 3 : 2
     readonly property int gridGap: landscape ? 20 : 22
     property string collection: "recent"
-    property var notes: noteStore.listNotes()
+    property var allNotes: noteStore.listNotes()
+
+    // Recent keeps the shelf scannable; All is the full set. Folders and
+    // Favorites have no backing data yet, so they show truthful empty
+    // states instead of fabricated collections.
+    readonly property var notes: collection === "recent" ? allNotes.slice(0, 6)
+                               : collection === "all" ? allNotes
+                               : []
+    readonly property string emptyLabel: collection === "folders" ? "No folders yet"
+                                       : collection === "favorites" ? "No favorites yet"
+                                       : "No notes yet"
 
     function refresh() {
-        notes = noteStore.listNotes()
+        allNotes = noteStore.listNotes()
     }
 
     Connections {
@@ -26,79 +38,21 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        // 96 px orientation + creation bar. The count is secondary and the
-        // square + action remains a full 88 px target.
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 104
-            Layout.minimumHeight: 104
-            Layout.maximumHeight: 104
-
-            Column {
-                anchors.left: parent.left
-                anchors.right: newNoteButton.left
-                anchors.rightMargin: 20
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
-
-                Text {
-                    width: parent.width
-                    text: "Notebooks"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.section
-                    font.bold: true
-                    color: Ui.ink
-                }
-                Text {
-                    width: parent.width
-                    text: page.notes.length + (page.notes.length === 1 ? " notebook" : " notebooks") + "  ·  On this device"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.meta
-                    color: Ui.muted
-                }
-            }
-
-            Rectangle {
-                id: newNoteButton
-                objectName: "notes.new"
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                width: 88
-                height: 88
-                color: Ui.ink
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "+"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: 52
-                    color: Ui.paper
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        var id = noteStore.createNote("quick")
-                        if (id !== "") {
-                            page.refresh()
-                            inkMode.enter(id)
-                        }
-                    }
-                }
-            }
-        }
-
+        // ── collection tabs: text + underline, current = ink100 ────
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 76
-            Layout.minimumHeight: 76
-            Layout.maximumHeight: 76
-            spacing: 0
+            Layout.preferredHeight: 72
+            Layout.minimumHeight: 72
+            Layout.maximumHeight: 72
+            spacing: 8
 
             Repeater {
-                model: [["recent", "Recent"], ["all", "All notebooks"]]
+                model: [["recent", "Recent"], ["all", "All"], ["folders", "Folders"], ["favorites", "Favorites"]]
                 delegate: Item {
-                    Layout.preferredWidth: Math.max(190, tabLabel.implicitWidth + 48)
+                    objectName: "notes.collection." + modelData[0]
+                    Layout.preferredWidth: tabLabel.implicitWidth + 44
                     Layout.fillHeight: true
+                    readonly property bool current: page.collection === modelData[0]
 
                     Text {
                         id: tabLabel
@@ -106,15 +60,19 @@ Item {
                         text: modelData[1]
                         font.family: Ui.fontFamily
                         font.pixelSize: Ui.button
-                        font.bold: page.collection === modelData[0]
-                        color: page.collection === modelData[0] ? Ui.ink : Ui.muted
+                        font.bold: parent.current
+                        color: parent.current ? Ui.ink100 : Ui.ink70
                     }
                     Rectangle {
                         anchors.left: parent.left
                         anchors.right: parent.right
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
                         anchors.bottom: parent.bottom
-                        height: page.collection === modelData[0] ? 4 : 1
-                        color: Ui.ink
+                        anchors.bottomMargin: 10
+                        height: 4
+                        color: Ui.ink100
+                        visible: parent.current
                     }
                     MouseArea {
                         anchors.fill: parent
@@ -146,29 +104,37 @@ Item {
                     anchors.rightMargin: index % page.columns === page.columns - 1 ? 0 : page.gridGap
                     anchors.bottomMargin: page.gridGap
 
+                    // The paper object itself: paper fill, hairline edge —
+                    // a real document edge, not decorative card chrome.
                     Rectangle {
                         id: preview
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
-                        height: parent.height - 116
-                        color: "#F4F4F1"
-                        border.width: 2
-                        border.color: Ui.ink
+                        height: parent.height - 108
+                        radius: 3
+                        color: Ui.paper
+                        border.width: 1
+                        border.color: Ui.ink30
                         clip: true
 
                         Image {
                             anchors.fill: parent
-                            anchors.margins: 4
+                            anchors.margins: 2
                             visible: modelData.hasInk
                             source: modelData.previewUrl
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             cache: false
-                            sourceClipRect: Qt.rect(96, 88, 858, 1608)
+                            // Legacy pages carry baked-in editor chrome in
+                            // the old top-bar/rail zones; crop it out. Pages
+                            // saved by the edge-to-edge editor are pure
+                            // canvas and show in full.
+                            sourceClipRect: modelData.canvasV2 ? Qt.rect(0, 0, 954, 1696)
+                                                               : Qt.rect(96, 88, 858, 1608)
                         }
 
-                        // Blank paper gets a restrained rule rather than an
+                        // Blank paper keeps a restrained rule rather than an
                         // app-style placeholder icon.
                         Rectangle {
                             visible: !modelData.hasInk
@@ -179,15 +145,7 @@ Item {
                             anchors.rightMargin: 32
                             anchors.topMargin: 54
                             height: 2
-                            color: "#C9C9C5"
-                        }
-                        Text {
-                            visible: !modelData.hasInk
-                            anchors.centerIn: parent
-                            text: "Blank page"
-                            font.family: Ui.fontFamily
-                            font.pixelSize: Ui.meta
-                            color: Ui.muted
+                            color: Ui.ink30
                         }
                     }
 
@@ -195,22 +153,23 @@ Item {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: preview.bottom
-                        anchors.topMargin: 14
+                        anchors.topMargin: 16
                         text: modelData.displayTitle
                         font.family: Ui.fontFamily
                         font.pixelSize: Ui.task
                         font.bold: true
-                        color: Ui.ink
+                        color: Ui.ink100
                         elide: Text.ElideRight
                     }
                     Text {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-                        text: modelData.pageCount + " page  ·  " + (modelData.hasInk ? modelData.modifiedLabel : "Ready to write")
+                        anchors.bottomMargin: 6
+                        text: modelData.hasInk ? modelData.modifiedLabel : "Ready to write"
                         font.family: Ui.fontFamily
                         font.pixelSize: Ui.meta
-                        color: Ui.muted
+                        color: Ui.ink70
                         elide: Text.ElideRight
                     }
 
@@ -220,15 +179,29 @@ Item {
                     }
                 }
             }
+        }
+    }
 
-            Text {
-                anchors.centerIn: parent
-                visible: page.notes.length === 0
-                text: "No notebooks yet"
-                font.family: Ui.fontFamily
-                font.pixelSize: Ui.task
-                color: Ui.muted
-            }
+    // Empty state — content-first, no card.
+    Column {
+        anchors.centerIn: parent
+        spacing: 12
+        visible: page.notes.length === 0
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: page.emptyLabel
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.task
+            color: Ui.ink70
+        }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: page.collection === "recent" || page.collection === "all"
+            text: "Tap + to start writing"
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.meta
+            color: Ui.ink30
         }
     }
 }

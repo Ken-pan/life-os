@@ -118,7 +118,24 @@ int main(int argc, char *argv[])
         {"footer",    s.footer},     // status footer
         // tap targets (fixed across scales)
         {"tabH", 96}, {"btnH", 80}, {"btnHs", 64}, {"cbSize", 56},
-        // grayscale – three stops only
+        // ── P-MOVE-UI system language (slice 1) ────────────────────
+        // Four grayscale tokens only (brief §4.2). The panel is
+        // monochrome; mid grays must sit far apart to survive
+        // quantization, so no 5–15% steps.
+        //   ink100  current selection, primary text, primary action
+        //   ink70   normal text, icons, secondary controls
+        //   ink30   dividers, disabled state, inactive metadata
+        //   paper   canvas and paper surfaces
+        // State semantics (brief §8) for migrated components:
+        //   current  = ink100 bold + 4px underline / left bar
+        //   selected = reverse fill (ink100 surface, paper glyph)
+        //   pressed  = temporary reverse fill while touched
+        //   focus    = thin ink100 outline (input focus only)
+        //   disabled = ink30
+        {"ink100", "#000000"},
+        {"ink70",  "#555555"},
+        {"ink30",  "#B0B0AC"},
+        // legacy three stops — kept for pages not yet migrated
         {"paper",   "#FFFFFF"},
         {"ink",     "#000000"},
         {"muted",   "#555555"},
