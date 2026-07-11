@@ -15,13 +15,16 @@ const projects = (
     colorScheme: 'dark',
     headless: true,
   },
-  webServer: {
-    command: `bash scripts/pwa/preview-app.sh ${app.id}`,
-    env: { HOST: '127.0.0.1', PWA_PORT: String(app.port) },
-    url: `http://127.0.0.1:${app.port}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+}))
+
+const webServers = (
+  filter?.length ? apps.filter((a) => filter.includes(a.id)) : apps
+).map((app) => ({
+  command: `bash scripts/pwa/preview-app.sh ${app.id}`,
+  env: { HOST: '127.0.0.1', PWA_PORT: String(app.port) },
+  url: `http://127.0.0.1:${app.port}`,
+  reuseExistingServer: !process.env.CI,
+  timeout: 120_000,
 }))
 
 export default defineConfig({
@@ -29,5 +32,6 @@ export default defineConfig({
   testMatch: '**/*.spec.ts',
   timeout: 60_000,
   projects: projects.length ? projects : undefined,
+  webServer: webServers.length ? webServers : undefined,
   reporter: [['list']],
 })

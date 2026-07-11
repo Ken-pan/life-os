@@ -38,4 +38,5 @@ fi
 
 echo "Preview ${APP} (${WORKSPACE}) → http://${HOST}:${PORT}"
 cd "$ROOT"
-exec npm run preview -w "$WORKSPACE" -- --host "$HOST" --port "$PORT"
+export CI=1
+exec npm run preview -w "$WORKSPACE" -- --host "$HOST" --port "$PORT" --strictPort
