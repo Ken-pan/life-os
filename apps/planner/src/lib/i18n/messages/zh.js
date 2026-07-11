@@ -510,6 +510,7 @@ export default {
     scheduledBlock: '已安排「{title}」{start} 开始',
     scheduledBlockDetailed: '已安排「{title}」· {date} {start}–{end}',
     scheduleCleared: '已清除「{title}」的时间安排',
+    schedulePersistFailed: '未能保存时间安排，已恢复原状态',
     restored: '已恢复',
     inboxAdded: '已加入收件箱',
   },

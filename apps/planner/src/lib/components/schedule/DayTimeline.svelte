@@ -227,11 +227,12 @@
       durationMinutes: task.durationMinutes ?? null,
     };
 
-    applyTaskSchedule(task.id, {
+    const applied = applyTaskSchedule(task.id, {
       dateKey,
       start: preview.start,
       durationMinutes: preview.durationMinutes,
     });
+    if (!applied) return;
     toast(t('toast.scheduledBlock', { title: task.title, start: preview.start }), 'success', {
       key: `schedule-${task.id}`,
       dedupeMs: 4000,
@@ -522,7 +523,6 @@
               {dateKey}
               {dayStart}
               {dayEnd}
-              desktopInteractive={desktopDnD}
               hasConflict={overlapIds.has(task.id)}
               column={columnLayout?.column ?? 0}
               columns={columnLayout?.columns ?? 1}

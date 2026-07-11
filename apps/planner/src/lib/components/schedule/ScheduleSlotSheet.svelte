@@ -60,11 +60,12 @@
   function scheduleTaskHere(task) {
     if (!scheduleSlot.dateKey || !scheduleSlot.start) return;
     const start = scheduleSlot.start;
-    applyTaskSchedule(task.id, {
+    const applied = applyTaskSchedule(task.id, {
       dateKey: scheduleSlot.dateKey,
       start,
       durationMinutes: scheduleSlot.durationMinutes,
     });
+    if (!applied) return;
     closeScheduleSlot();
     toast(t('toast.scheduledBlock', { title: task.title, start }), 'success', {
       key: `slot-schedule-${task.id}`,
