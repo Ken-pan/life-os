@@ -193,6 +193,7 @@ export function migrateTask(task) {
 
   return {
     ...t,
+    tags: Array.isArray(t.tags) ? t.tags : [],
     priority,
     urgency: typeof t.urgency === 'string' ? t.urgency : 'normal',
     size: typeof t.size === 'string' ? t.size : 'medium',
