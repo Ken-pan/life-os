@@ -101,6 +101,15 @@ function clampProgress(value) {
   return Math.max(0, Math.min(100, Math.round(value)))
 }
 
+/** @param {unknown} value */
+function migrateTags(value) {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter((tag) => typeof tag === 'string')
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+}
+
 /** @param {string} value */
 function slugify(value) {
   return value
@@ -207,9 +216,7 @@ export function migrateTask(task) {
     durationMinutes:
       typeof t.durationMinutes === 'number' ? t.durationMinutes : null,
     recurrence: normalizeRecurrence(t.recurrence),
-    tags: Array.isArray(t.tags)
-      ? t.tags.filter((tag) => typeof tag === 'string')
-      : [],
+    tags: migrateTags(t.tags),
     subtasks: Array.isArray(t.subtasks) ? t.subtasks : [],
     deletedAt: typeof t.deletedAt === 'number' ? t.deletedAt : null,
     meta: t.meta && typeof t.meta === 'object'

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { buildTaskIndex } from '../domain/taskIndex.js';
 import {
   migrate,
   mergeTasksByUpdatedAt,
@@ -54,6 +55,7 @@ describe('migrate', () => {
     const state = migrate({ tasks: [null, 'bad', { id: '2', title: 'ok', listId: 'inbox' }] });
     expect(state.tasks).toHaveLength(1);
     expect(state.tasks[0].id).toBe('2');
+    expect(state.tasks[0].tags).toEqual([]);
   });
 
   it('migrates projects with safe defaults and references', () => {
@@ -98,6 +100,40 @@ describe('migrate', () => {
     });
     expect(state.projects[0].roadmapRefs).toHaveLength(1);
     expect(state.projects[0].repoRefs).toHaveLength(1);
+  });
+});
+
+describe('migrateTask tags', () => {
+  const legacy = { id: 't1', title: 'Legacy', listId: 'inbox', completed: false };
+
+  it('defaults missing tags to an empty array', () => {
+    expect(migrateTask(legacy)?.tags).toEqual([]);
+  });
+
+  it('preserves valid string tags', () => {
+    const task = migrateTask({ ...legacy, tags: ['work', 'urgent'] });
+    expect(task?.tags).toEqual(['work', 'urgent']);
+  });
+
+  it('normalizes whitespace and drops invalid tag entries', () => {
+    const task = migrateTask({
+      ...legacy,
+      tags: [' work ', '', '  ', 42, null, 'home']
+    });
+    expect(task?.tags).toEqual(['work', 'home']);
+  });
+
+  it('is idempotent when migration runs repeatedly', () => {
+    const once = migrateTask(legacy);
+    const twice = migrateTask(once);
+    expect(twice?.tags).toEqual([]);
+    expect(twice).toEqual(once);
+  });
+
+  it('feeds taskIndex tag iteration without throwing', () => {
+    const tasks = [migrateTask(legacy), migrateTask({ ...legacy, id: 't2', tags: ['a'] })].filter(Boolean);
+    const index = buildTaskIndex(tasks);
+    expect(index.tagSet).toEqual(new Set(['a']));
   });
 });
 
