@@ -3,9 +3,8 @@
   import { PORTAL_APPS } from '$lib/apps.js'
   import {
     fetchPortalTodaySummary,
-    formatShortDate,
     formatUsd,
-    fitnessDayLabel,
+    formatFitnessTodaySummary,
     formatPlayedAgo,
     musicTrackLabel,
     formatHomeStorageZones,
@@ -13,6 +12,16 @@
   } from '$lib/todaySummary.js'
 
   type SummaryAppId = 'planner' | 'finance' | 'fitness' | 'music' | 'home'
+
+  type PortalFitnessSummary = {
+    workedOutToday: boolean
+    todayCompleted: boolean
+    todayDayId?: string | null
+    lastSessionDate?: string | null
+    lastDayId?: string | null
+    sessionDate?: string | null
+    dayId?: string | null
+  }
 
   type PortalTodaySummaryPayload = {
     ok: boolean
@@ -23,7 +32,7 @@
       monthIncome: number
       monthExpense: number
     }
-    fitness?: { sessionDate: string; dayId: string } | null
+    fitness?: PortalFitnessSummary | null
     music?: { trackTitle: string; trackArtist: string; playedAt: string } | null
     home?: { storageZoneCount: number; reportedAt: string } | null
   }
@@ -124,15 +133,14 @@
         {/if}
 
         {#if allowedAppKeys.includes('fitness')}
+          {@const fitnessCopy = formatFitnessTodaySummary(summary.fitness)}
           {@render summaryCard(
             'fitness',
-            '最近训练',
-            summary.fitness
-              ? `${fitnessDayLabel(summary.fitness.dayId)} · ${formatShortDate(summary.fitness.sessionDate)}`
-              : '本周尚未记录完练',
-            summary.fitness ? '已同步到云端' : '打开 Fitness 开始训练',
+            fitnessCopy.kicker,
+            fitnessCopy.value,
+            fitnessCopy.detail,
             false,
-            !summary.fitness,
+            fitnessCopy.empty,
           )}
         {/if}
 

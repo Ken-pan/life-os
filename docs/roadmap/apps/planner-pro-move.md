@@ -27,7 +27,7 @@ first functional provider for PaperOS.
 | Device-side launcher | PASS | `systemctl start paperos` (unit in `/home`, root-fs symlink only); survives SSH disconnect |
 | Shell MVP (6 modules) | PASS | Home/Today/Notes/Mail/Review/System + RefreshController + action queue + Quick Note v0; see [`../../PRO_MOVE_SHELL_MVP_GATE.md`](../../PRO_MOVE_SHELL_MVP_GATE.md) |
 | Marker input | Phase 0 done, pen not usable yet | epaper QPA delivers touch only; pen node mapped — see [`../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md`](../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md); Phase 1 = `PenInputService` |
-| Production read API | PASS | `/api/paper/today` + offline cache 已完成生产与设备验证（P-MOVE-2） |
+| Production read API | PASS | `/api/paper/today` + offline cache 已完成生产与设备验证（P-MOVE-2）；P-MOVE-BLOCK production function delivery restored 2026-07-11 |
 | Production write enablement | Not enabled | Staging validation required before `PAPER_ACTIONS_WRITE_ENABLED=true` |
 | xochitl integration | Out of scope | No xochitl patching, sidebar injection, or boot replacement |
 
@@ -77,6 +77,10 @@ Exit button, hardened launcher/recover scripts with exit-code logging,
 `paperos.service` linked from `/home` (crash auto-recovery via
 `ExecStopPost`, session survives SSH disconnect). See
 [`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md).
+
+### P-MOVE-BLOCK — Production Paper API · PASS 2026-07-11
+
+The active Git deploy had no Paper functions, so `/api/paper/*` was served as an HTML 404. The targeted Planner deployment restored the deployed manifest, and the normal-config draft plus merge-triggered Git production deploy both passed with the required functions. See [`../../PRO_MOVE_P_MOVE_BLOCK_GATE.md`](../../PRO_MOVE_P_MOVE_BLOCK_GATE.md).
 
 ### P-MOVE-5 — Controlled Write MVP · NEXT (was P-MOVE-3)
 

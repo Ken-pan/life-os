@@ -18,7 +18,7 @@
 | PWA         | ✅   | SW + IndexedDB 提醒 + 通知                                       |
 | Integration | ✅   | SSO · `finance.bill_due` → `lifeEventsInbox.js`                  |
 | Insight     | ✅   | 批量排期 E2E **P-P2** desktop 22/22 ✅                           |
-| Paper Pro Move | 🟡 | P-MOVE-1–4 ✅；下一步 P-MOVE-5 controlled write staging gate |
+| Paper Pro Move | 🟡 | P-MOVE-1–4 + P-MOVE-BLOCK ✅；下一步 P-MOVE-5 controlled write staging gate |
 
 ## Next（按 ROI）
 
@@ -36,6 +36,7 @@
 | --- | ---- |
 | QA-P2 / P-P2 / P-P3 / P-P5 / P-P6 | E2E、Insight、事件徽章/深链、Fitness 打卡与 Auth 单例均已发货 |
 | P-MOVE-1–4 | Launcher、离线读、CJK/分页、退出/崩溃恢复/systemd launcher 已通过 |
+| P-MOVE-BLOCK | Production recovery, normal-config preview, and merge-triggered Git production function manifest all passed |
 | P-PROJ-0–3 | 项目实体与远程表、Projects 列表/详情、`@项目`、project chip 与只读 Roadmap/代码引用已落地 |
 
 ### Project / Attachment 设计边界
