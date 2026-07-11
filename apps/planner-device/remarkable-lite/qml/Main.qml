@@ -26,9 +26,6 @@ Window {
     property string nativeInkNoteId: inkMode.noteId
     property string nativeInkTool: inkMode.tool
     property string nativeInkColor: inkMode.color
-    property string nativeInkChrome: inkMode.chrome
-    property string nativeInkRetreat: inkMode.lastRetreat
-    property bool nativeInkReady: inkMode.ready
 
     function exitNativeInk() {
         if (inkMode.active)
@@ -332,14 +329,12 @@ Window {
         // Debug-bridge-only, read-only fixture. It changes presentation
         // state through the same retreat path as pen-up, but injects no
         // stroke and never enters, exits, creates, or saves a note.
-        MouseArea {
+        Item {
             objectName: inkMode.testBridgeEnabled ? "editor.fixture.after-writing" : ""
             x: parent.width - 100
             y: parent.height - 100
             width: 88
             height: 88
-            enabled: inkMode.testBridgeEnabled && inkMode.active
-            onClicked: inkMode.simulateWritingRetreat()
         }
     }
 

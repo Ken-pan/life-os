@@ -1,4 +1,5 @@
 #include "TestBridge.h"
+#include "InkModeController.h"
 #include "epframebuffer.h"
 
 #include <QCoreApplication>
@@ -34,7 +35,8 @@ QJsonArray rectArray(const QRectF &rect)
 }
 }
 
-TestBridge::TestBridge(QObject *parent) : QObject(parent)
+TestBridge::TestBridge(InkModeController *inkMode, QObject *parent)
+    : QObject(parent), m_inkMode(inkMode)
 {
     connect(&m_server, &QTcpServer::newConnection, this, &TestBridge::onNewConnection);
 }
@@ -125,9 +127,9 @@ QJsonObject TestBridge::stateObject() const
         {"nativeInkNoteId", m_window ? m_window->property("nativeInkNoteId").toString() : QString()},
         {"nativeInkTool", m_window ? m_window->property("nativeInkTool").toString() : QString()},
         {"nativeInkColor", m_window ? m_window->property("nativeInkColor").toString() : QString()},
-        {"nativeInkChrome", m_window ? m_window->property("nativeInkChrome").toString() : QString()},
-        {"nativeInkRetreat", m_window ? m_window->property("nativeInkRetreat").toString() : QString()},
-        {"nativeInkReady", m_window ? m_window->property("nativeInkReady").toBool() : false},
+        {"nativeInkChrome", m_inkMode ? m_inkMode->chromeName() : QString()},
+        {"nativeInkRetreat", m_inkMode ? m_inkMode->lastRetreat() : QString()},
+        {"nativeInkReady", m_inkMode ? m_inkMode->ready() : false},
         {"thread", QString::number(quintptr(QThread::currentThreadId()))},
     };
 }
@@ -165,11 +167,9 @@ QJsonObject TestBridge::nodeObject(QObject *object) const
         // The bridge exposes their truthful logical visibility instead.
         const QString id = object->objectName();
         const bool active = m_window && m_window->property("nativeInkActive").toBool();
-        const bool ready = m_window && m_window->property("nativeInkReady").toBool();
-        const QString chrome = m_window
-            ? m_window->property("nativeInkChrome").toString() : QString();
-        const QString retreat = m_window
-            ? m_window->property("nativeInkRetreat").toString() : QString();
+        const bool ready = m_inkMode && m_inkMode->ready();
+        const QString chrome = m_inkMode ? m_inkMode->chromeName() : QString();
+        const QString retreat = m_inkMode ? m_inkMode->lastRetreat() : QString();
         if (id == QLatin1String("editor.chrome.handle")) {
             node["visible"] = active && ready;
             node["enabled"] = active && ready;
@@ -246,16 +246,21 @@ bool TestBridge::tapObject(const QString &name, QString *error)
         *error = QStringLiteral("window unavailable");
         return false;
     }
+    if (name == QLatin1String("editor.chrome.handle") && m_inkMode && m_inkMode->ready()) {
+        m_inkMode->toggleChrome();
+        *error = QString();
+        return true;
+    }
+    if (name == QLatin1String("editor.fixture.after-writing") && m_inkMode
+        && m_inkMode->ready() && m_inkMode->chromeName() == QLatin1String("revealed")) {
+        m_inkMode->simulateWritingRetreat();
+        *error = QString();
+        return true;
+    }
     QObject *object = findObjectByName(name);
     auto *item = qobject_cast<QQuickItem *>(object);
     if (!item) {
         *error = QStringLiteral("target not found or not a QQuickItem: ") + name;
-        return false;
-    }
-    if (name == QLatin1String("editor.fixture.after-writing")
-        && (!m_window->property("nativeInkReady").toBool()
-            || m_window->property("nativeInkChrome").toString() != QLatin1String("revealed"))) {
-        *error = QStringLiteral("target is not visibly actionable: ") + name;
         return false;
     }
     if (!item->isVisible() || !item->isEnabled() || item->width() <= 0 || item->height() <= 0) {

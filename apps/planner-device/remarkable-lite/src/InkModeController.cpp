@@ -162,9 +162,11 @@ void InkModeController::enter(const QString &noteId)
     ++m_retreatGeneration;
     emit chromeChanged();
     setActive(true);
-    // One render pass for the static overlay so the scenegraph's last swap
-    // is done before direct framebuffer control starts.
-    QTimer::singleShot(300, this, [this]() { beginSession(); });
+    // Let the e-paper scenegraph finish the static full-screen cover before
+    // direct framebuffer ownership begins. The backend can take well beyond
+    // one LCD frame to settle; starting at 300 ms allowed a late cover swap
+    // to overwrite the native canvas after entry.
+    QTimer::singleShot(1500, this, [this]() { beginSession(); });
 }
 
 void InkModeController::beginSession()
