@@ -4,14 +4,18 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QHostAddress>
+#include <QEventLoop>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QQuickItem>
+#include <QQuickItemGrabResult>
 #include <QQuickWindow>
 #include <QSet>
 #include <QTcpSocket>
 #include <QThread>
+#include <QTimer>
 
 namespace {
 QString moduleName(int index)
@@ -159,6 +163,32 @@ QJsonObject TestBridge::nodeObject(QObject *object) const
         node["bounds"] = rectArray(QRectF(topLeft, QSizeF(item->width(), item->height())));
         node["visible"] = item->isVisible();
         node["enabled"] = item->isEnabled();
+
+        // Native editor semantic roots stay static in QML so state changes
+        // cannot schedule a scenegraph swap over the direct framebuffer.
+        // The bridge exposes their truthful logical visibility instead.
+        const QString id = object->objectName();
+        const bool active = m_window && m_window->property("nativeInkActive").toBool();
+        const bool ready = m_window && m_window->property("nativeInkReady").toBool();
+        const QString chrome = m_window
+            ? m_window->property("nativeInkChrome").toString() : QString();
+        const QString retreat = m_window
+            ? m_window->property("nativeInkRetreat").toString() : QString();
+        if (id == QLatin1String("editor.chrome.handle")) {
+            node["visible"] = active && ready;
+            node["enabled"] = active && ready;
+        } else if (id == QLatin1String("editor.clean")) {
+            node["visible"] = active && ready && chrome == QLatin1String("clean")
+                && retreat != QLatin1String("writing");
+        } else if (id == QLatin1String("editor.tools.revealed")) {
+            node["visible"] = active && ready && chrome == QLatin1String("revealed");
+        } else if (id == QLatin1String("editor.after-writing")) {
+            node["visible"] = active && ready && chrome == QLatin1String("clean")
+                && retreat == QLatin1String("writing");
+        } else if (id == QLatin1String("editor.fixture.after-writing")) {
+            node["visible"] = active && ready && chrome == QLatin1String("revealed");
+            node["enabled"] = active && ready && chrome == QLatin1String("revealed");
+        }
     }
     return node;
 }
@@ -226,6 +256,12 @@ bool TestBridge::tapObject(const QString &name, QString *error)
         *error = QStringLiteral("target not found or not a QQuickItem: ") + name;
         return false;
     }
+    if (name == QLatin1String("editor.fixture.after-writing")
+        && (!m_window->property("nativeInkReady").toBool()
+            || m_window->property("nativeInkChrome").toString() != QLatin1String("revealed"))) {
+        *error = QStringLiteral("target is not visibly actionable: ") + name;
+        return false;
+    }
     if (!item->isVisible() || !item->isEnabled() || item->width() <= 0 || item->height() <= 0) {
         *error = QStringLiteral("target is not visibly actionable: ") + name;
         return false;
@@ -252,9 +288,32 @@ bool TestBridge::saveScreenshot(const QString &path, QString *error) const
         return false;
     }
     const bool nativeInk = m_window->property("nativeInkActive").toBool();
-    const bool saved = nativeInk && DirectInkDiag::ready() && g_drawBuffer
-        ? g_drawBuffer->copy().save(path, "PNG")
-        : m_window->grabWindow().save(path, "PNG");
+    bool saved = false;
+    if (nativeInk && DirectInkDiag::ready() && g_drawBuffer) {
+        saved = g_drawBuffer->copy().save(path, "PNG");
+    } else if (QQuickItem *content = m_window->contentItem()) {
+        // QQuickWindow::grabWindow() on the e-paper backend can expose only
+        // the most recent incremental back buffer. A full offscreen item
+        // grab reconstructs the current shell scene deterministically.
+        const auto grab = content->grabToImage(QSize(m_window->width(), m_window->height()));
+        if (grab) {
+            QEventLoop loop;
+            QTimer timeout;
+            timeout.setSingleShot(true);
+            QObject::connect(grab.data(), &QQuickItemGrabResult::ready, &loop, &QEventLoop::quit);
+            QObject::connect(&timeout, &QTimer::timeout, &loop, &QEventLoop::quit);
+            timeout.start(5000);
+            loop.exec();
+            if (!grab->image().isNull()) {
+                QImage composed(m_window->size(), QImage::Format_RGB32);
+                composed.fill(Qt::white);
+                QPainter painter(&composed);
+                painter.drawImage(QPoint(0, 0), grab->image());
+                painter.end();
+                saved = composed.save(path, "PNG");
+            }
+        }
+    }
     if (!saved) {
         *error = QStringLiteral("failed to save screenshot");
         return false;
