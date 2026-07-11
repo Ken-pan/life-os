@@ -433,22 +433,15 @@ bool InkModeController::handleToolbarTap(const QPoint &point)
         return false;
 
     drawToolbar();
-    if (!m_captureFrame.isNull()) {
-        QPainter capturePainter(&m_captureFrame);
-        capturePainter.drawImage(topChromeRect(), g_inkGoldBuffer->copy(topChromeRect()));
+    m_captureFrame = g_inkGoldBuffer->copy();
+    if (EPFramebuffer *ep = EPFramebuffer::instance()) {
+        ep->sendSwap(topChromeRect(), EPContentType::Color, EPScreenMode::Quality3, EPFramebuffer::NoRefresh);
         if (!railChromeRect().isNull())
-            capturePainter.drawImage(railChromeRect(), g_inkGoldBuffer->copy(railChromeRect()));
-    } else {
-        m_captureFrame = g_inkGoldBuffer->copy();
+            ep->sendSwap(railChromeRect(), EPContentType::Color, EPScreenMode::Quality3, EPFramebuffer::NoRefresh);
     }
-    if (EPFramebuffer *ep = EPFramebuffer::instance())
-        ep->sendSwap(m_landscape
-                         ? QRect(0, 0, m_screenW, kLandscapeBarH + 3)
-                         : QRect(0, 0, kPortraitRailW + 3, m_screenH),
-                     EPContentType::Color,
-                     EPScreenMode::Quality3, EPFramebuffer::NoRefresh);
     PerfLog::instance().log("INK_TOOL_CHANGED", {{"tool", tool()}, {"color", color()}});
     emit toolChanged();
+    ++m_retreatGeneration;
     return true;
 }
 
@@ -508,21 +501,13 @@ void InkModeController::applyReveal()
 
     ++m_retreatGeneration;
     eraseHandle();
-    const QImage cleanFrame = m_captureFrame.isNull()
-        ? g_inkGoldBuffer->copy() : m_captureFrame;
-    m_topUnder = cleanFrame.copy(topChromeRect());
+    m_topUnder = g_inkGoldBuffer->copy(topChromeRect());
     if (!railChromeRect().isNull())
-        m_railUnder = cleanFrame.copy(railChromeRect());
+        m_railUnder = g_inkGoldBuffer->copy(railChromeRect());
     drawToolbar();
     m_chrome = Chrome::Revealed;
     m_lastRetreat.clear();
-    m_captureFrame = cleanFrame;
-    {
-        QPainter capturePainter(&m_captureFrame);
-        capturePainter.drawImage(topChromeRect(), g_inkGoldBuffer->copy(topChromeRect()));
-        if (!railChromeRect().isNull())
-            capturePainter.drawImage(railChromeRect(), g_inkGoldBuffer->copy(railChromeRect()));
-    }
+    m_captureFrame = g_inkGoldBuffer->copy();
 
     if (EPFramebuffer *ep = EPFramebuffer::instance()) {
         ep->sendSwap(topChromeRect(), EPContentType::Mono,
@@ -548,27 +533,13 @@ void InkModeController::applyHide(const QString &reason, bool present)
         if (!m_railUnder.isNull())
             p.drawImage(railChromeRect(), m_railUnder);
     }
-    QImage cleanFrame = !m_canvasDirty && !m_cleanCanvasFrame.isNull()
-        ? m_cleanCanvasFrame
-        : m_captureFrame.isNull() ? g_inkGoldBuffer->copy() : m_captureFrame;
-    {
-        QPainter capturePainter(&cleanFrame);
-        if (!m_topUnder.isNull())
-            capturePainter.drawImage(topChromeRect(), m_topUnder);
-        if (!m_railUnder.isNull())
-            capturePainter.drawImage(railChromeRect(), m_railUnder);
-    }
     m_topUnder = QImage();
     m_railUnder = QImage();
-    m_handleUnder = cleanFrame.copy(handleRect());
+    m_handleUnder = g_inkGoldBuffer->copy(handleRect());
     paintHandle(false);
     m_chrome = Chrome::Clean;
     m_lastRetreat = reason;
-    {
-        QPainter capturePainter(&cleanFrame);
-        capturePainter.drawImage(handleRect(), g_inkGoldBuffer->copy(handleRect()));
-    }
-    m_captureFrame = cleanFrame;
+    m_captureFrame = g_inkGoldBuffer->copy();
 
     if (present) {
         if (EPFramebuffer *ep = EPFramebuffer::instance()) {
