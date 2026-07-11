@@ -104,8 +104,7 @@ Item {
                     anchors.rightMargin: index % page.columns === page.columns - 1 ? 0 : page.gridGap
                     anchors.bottomMargin: page.gridGap
 
-                    // The paper object itself: paper fill, hairline edge —
-                    // a real document edge, not decorative card chrome.
+                    // Paper object: no card frame; content defines the shape.
                     Rectangle {
                         id: preview
                         anchors.left: parent.left
@@ -114,13 +113,10 @@ Item {
                         height: parent.height - 108
                         radius: 3
                         color: Ui.paper
-                        border.width: 1
-                        border.color: Ui.ink30
                         clip: true
 
                         Image {
                             anchors.fill: parent
-                            anchors.margins: 2
                             visible: modelData.hasInk
                             source: modelData.previewUrl
                             fillMode: Image.PreserveAspectCrop

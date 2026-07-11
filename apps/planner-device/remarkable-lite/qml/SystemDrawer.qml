@@ -69,9 +69,9 @@ Item {
                 }
                 Rectangle {
                     anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: row.current ? 6 : 0       // current = ink100 left bar
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: row.current ? 3 : 0
+                    height: row.current ? 48 : 0
                     color: rowTap.pressed ? Ui.paper : Ui.ink100
                 }
                 Text {

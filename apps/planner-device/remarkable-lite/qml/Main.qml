@@ -133,24 +133,29 @@ Window {
                 }
             }
 
-            // Contextual add — Notes only. Routes through the existing safe
-            // quick-note flow; the template picker is a later slice.
-            Rectangle {
+            // Contextual add — Notes only. Light linear plus on Paper;
+            // pressed briefly inverts. Template picker is a later slice.
+            Item {
                 objectName: "notes.new"
                 visible: root.currentModule === 2
-                Layout.preferredWidth: 72
-                Layout.preferredHeight: 72
+                Layout.preferredWidth: 88
+                Layout.preferredHeight: 88
                 Layout.alignment: Qt.AlignVCenter
-                color: Ui.ink100
 
+                Rectangle {
+                    anchors.fill: parent
+                    color: Ui.ink100
+                    visible: addTap.pressed
+                }
                 Text {
                     anchors.centerIn: parent
                     text: "+"
                     font.family: Ui.fontFamily
-                    font.pixelSize: 46
-                    color: Ui.paper
+                    font.pixelSize: 34
+                    color: addTap.pressed ? Ui.paper : Ui.ink100
                 }
                 MouseArea {
+                    id: addTap
                     anchors.fill: parent
                     onClicked: {
                         var id = noteStore.createNote("quick")
@@ -338,26 +343,11 @@ Window {
         }
     }
 
-    // ── CLEAN-SCREEN FLASH ─────────────────────────────────────
-    Rectangle {
-        id: cleanFlash
-        anchors.fill: parent
-        color: "#000000"
-        visible: false
-        z: 1000
-
-        Timer {
-            id: flashTimer
-            interval: 260
-            onTriggered: cleanFlash.visible = false
-        }
-    }
-
+    // ── NATIVE REFRESH POLICY (NO-OP / TELEMETRY ONLY) ─────────
     Connections {
         target: refreshControl
         function onCleanRequested() {
-            cleanFlash.visible = true
-            flashTimer.restart()
+            console.info("[PaperOS] Native clean/full-refresh requested (ghosting policy). Currently no-op pending hardware integration.")
         }
     }
 }
