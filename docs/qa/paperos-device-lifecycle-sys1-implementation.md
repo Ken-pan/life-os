@@ -677,6 +677,61 @@ burst is correctly rejected by `vendor_startlimit_ok`
 (`startlimit-incompat detail=vendor-burst=4 <= budget=9`) — the vendor guard
 prevents us from ever configuring a budget looser than the OS.
 
+## Manual Mode deployment — LIVE (session-scoped, 2026-07-12)
+
+**Status: SYS.1 Manual Mode PASS.** PaperOS is deployed under `/home` and usable
+on the device via the Open PaperOS trigger, with xochitl as the boot default. No
+`/usr` write, no `systemctl enable`, no boot-target change — the unit link is
+per-boot (tmpfs `/etc`), so this is **session-scoped Manual Mode**, not the
+deferred persistent SYS.1p.
+
+### Deployment packaging fix
+
+`deploy-lifecycle.sh` previously only `link`ed a pre-existing unit and never
+shipped the hardened `paperos.service`. It now performs a `/home`-only deploy:
+
+```text
+repo paperos.service
+  → /home/root/paperos/systemd/paperos.service     (shipped, NOT /usr)
+  → systemctl link /home/root/paperos/systemd/paperos.service   (link ≠ enable)
+  → systemctl daemon-reload
+  → verify effective ExecStopPost carries the conditional restart-intent;
+    FAIL CLOSED (exit 3) if stale — caller must not enter PaperOS
+```
+
+Guarantees (host-tested, 143/143): no `/usr` write, no root remount, no
+`systemctl enable`, no boot-target change, no `/etc` persistence assumption,
+xochitl never stopped, idempotent repeat deploy (`disable`+`link`). `rollback`
+unlinks the session unit and preserves the `/home` install; `--purge` also
+removes `/home/root/paperos/systemd/paperos.service`.
+
+### Device smoke gate (2026-07-12, Ken present) — all steps PASS
+
+| Step | Result | Evidence |
+| ---- | ------ | -------- |
+| 1 Native preflight | **PASS** | xochitl+rm-sync active, runtime absent, `get-default`=multi-user.target |
+| 2 Standard deploy | **PASS** | link → `/home/root/paperos/systemd/paperos.service`, xochitl not stopped |
+| 3 Deployed `/home` unit | **PASS** | `$T/systemd/paperos.service` present + hardened |
+| 4 Effective ExecStopPost | **PASS** | `systemctl show` → conditional restart-intent |
+| 5 Arm watcher (this boot) | **PASS** | detached watcher, `event=start` |
+| 6–7 Open PaperOS → active | **PASS** | exactly one `result=LAUNCH` (right uuid) → `PAPEROS_ACTIVE`, 1 proc |
+| 8–9 Restart PaperOS | **PASS** | `restart-done result=paperos-only`, `ExecMainStartTimestamp` advanced, **xochitl start count flat** |
+| 10 Return to reMarkable | **PASS** | `NATIVE`, xochitl+rm-sync active, 0 procs |
+| 11 Re-enter after cooldown | **PASS** | budget correctly blocked <180 s, then `enter rc=0` → `PAPEROS_ACTIVE` |
+| 12 Leave active | **PASS** | `PAPEROS_ACTIVE`, 1 proc, unit still linked from `/home` |
+
+**Net:** across the whole gate xochitl was really started once (the Return);
+`StartLimitBurst=4` never approached, `emergency.target`/reboot never fired (same
+boot throughout, 0 `rm-emergency` invocations). No unrelated document triggered
+PaperOS. Device left with PaperOS **active** — not rolled back, not purged.
+
+### Reboot behaviour (Manual Mode limitation)
+
+> After a device reboot, xochitl starts normally as the default shell. PaperOS
+> does **not** auto-start. The owner must re-run `deploy-lifecycle.sh` and
+> re-arm the watcher, because the `/etc` unit link is on a tmpfs overlay and does
+> not persist across reboot. Persistent enablement is PAPR.SYS.1p (deferred).
+
 ## Remaining blockers before persistent enablement
 
 1. **Finding C (CONFIRMED)** — implement the SYS.1 hardening patch above; a safe

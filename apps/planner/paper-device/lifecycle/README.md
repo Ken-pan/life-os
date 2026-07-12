@@ -1,9 +1,10 @@
 # PaperOS Lifecycle Runtime (PAPR.SYS.1)
 
 Reliable **enter / exit / recovery** foundation for PaperOS on the reMarkable
-Paper Pro Move. POSIX `sh`, BusyBox v1.36 compatible. Everything lives under
-`/home/root/paperos` (persistent `/home`); nothing writes to `/etc` or enables a
-boot unit.
+Paper Pro Move. POSIX `sh`, BusyBox v1.36 compatible. Everything installs under
+`/home/root/paperos` (persistent `/home`); nothing is written to `/usr` and no
+boot unit is enabled. The only `/etc` write is the per-boot `systemctl link`
+symlink, which lives on a tmpfs overlay and is gone on reboot (Manual Mode).
 
 > **Status:** PAPR.SYS.1 — **PASS** (owner sign-off 2026-07-12; Finding C
 > hardening host + device validated). **Scope:** no sleep/wake (SYS.2), no sync
@@ -120,19 +121,35 @@ Four layers keep us clear of it (design + confirmation in
    # once, no retry, fully logged.
    ```
 
-## Deploy (temporary, reversible) & rollback
+## Deploy (Manual Mode — session-scoped, reversible) & rollback
+
+`deploy-lifecycle.sh` ships everything under `/home` (never `/usr`): the bin
+scripts **and** the hardened unit to `/home/root/paperos/systemd/paperos.service`,
+which it `systemctl link`s for the current boot (link ≠ enable) and then verifies
+the effective `ExecStopPost` is the conditional restart-intent one — failing
+closed if stale, so a bad unit is never entered. It does not enable anything,
+does not stop xochitl, and is idempotent.
 
 ```sh
-apps/planner/paper-device/deploy-lifecycle.sh        # scp + chmod; enables NOTHING
-ssh remarkable-pro-move /home/root/paperos/bin/paperos-watch   # manual foreground
-apps/planner/paper-device/rollback-lifecycle.sh      # stop + restore + verify
-apps/planner/paper-device/rollback-lifecycle.sh --purge   # full uninstall
+apps/planner/paper-device/deploy-lifecycle.sh                  # ship + link + verify unit
+ssh remarkable-pro-move "echo <open-paperos-uuid> > /home/root/paperos/launcher.uuid"
+ssh remarkable-pro-move /home/root/paperos/bin/paperos-watch   # arm watcher (this boot)
+# → open the "Open PaperOS" document to enter PaperOS
+apps/planner/paper-device/rollback-lifecycle.sh               # unlink + restore + verify (keeps /home install)
+apps/planner/paper-device/rollback-lifecycle.sh --purge        # also remove bin/, systemd/paperos.service, compat, uuid
 ```
+
+> **Manual Mode / reboot:** the `/etc` unit link is on a tmpfs overlay, so it
+> does **not** survive a reboot. After a reboot xochitl starts normally as the
+> default shell and PaperOS does not auto-start — re-run `deploy-lifecycle.sh`
+> and re-arm the watcher for the new session. Persistent enablement is
+> [`PAPR.SYS.1p`](../../../../docs/qa/paperos-device-lifecycle-sys1p-persistent.md)
+> (deferred).
 
 ## Host tests
 
 ```sh
-apps/planner/paper-device/tests/sys1/run-tests.sh    # 117 cases, mocked systemd
+apps/planner/paper-device/tests/sys1/run-tests.sh    # 143 cases, mocked systemd
 ```
 
 See [`docs/qa/paperos-device-lifecycle-sys1-implementation.md`](../../../../docs/qa/paperos-device-lifecycle-sys1-implementation.md)
