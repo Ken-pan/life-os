@@ -391,6 +391,42 @@ export function findScheduleConflicts(
   })
 }
 
+/**
+ * Find the earliest conflict-free start at or after a preferred time.
+ * Candidates snap forward so a suggestion never moves work earlier.
+ * @param {import('../types.js').Task[]} tasks
+ * @param {string} preferredStart HH:mm
+ * @param {number} durationMinutes
+ * @param {string | null} [excludeId]
+ * @param {{ dayStart?: number, dayEnd?: number, snapMinutes?: number }} [opts]
+ * @returns {string | null}
+ */
+export function findNextAvailableStart(
+  tasks,
+  preferredStart,
+  durationMinutes,
+  excludeId = null,
+  opts = {},
+) {
+  const dayStart = (opts.dayStart ?? DAY_START_HOUR) * 60
+  const dayEnd = (opts.dayEnd ?? DAY_END_HOUR) * 60
+  const snapMinutes = opts.snapMinutes ?? SCHEDULE_SNAP_MINUTES
+  const preferred = Math.max(dayStart, parseTimeToMinutes(preferredStart))
+  const firstCandidate = Math.ceil(preferred / snapMinutes) * snapMinutes
+
+  for (
+    let candidate = firstCandidate;
+    candidate + durationMinutes <= dayEnd;
+    candidate += snapMinutes
+  ) {
+    const start = formatMinutesAsTime(candidate)
+    if (!findScheduleConflicts(tasks, start, durationMinutes, excludeId).length) {
+      return start
+    }
+  }
+  return null
+}
+
 /** @param {import('../types.js').Task[]} tasks */
 export function computeDayScheduleStats(tasks) {
   let plannedMinutes = 0

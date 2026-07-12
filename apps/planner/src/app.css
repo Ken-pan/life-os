@@ -2338,8 +2338,8 @@ body {
 .schedule-popover {
   position: relative;
   z-index: calc(var(--z-sheet, 100) + 3);
-  width: min(100%, 420px);
-  padding: var(--space-3-5);
+  width: min(100%, 460px);
+  padding: var(--space-4);
   border-radius: var(--radius-control);
   border: 1px solid var(--border);
   background: var(--card);
@@ -2415,8 +2415,9 @@ html.planner-schedule-modal-open .schedule-popover {
 
 .schedule-popover-title {
   margin: 0;
-  font-size: var(--text-base);
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: 650;
+  outline: none;
 }
 
 .schedule-popover-close {
@@ -2428,9 +2429,94 @@ html.planner-schedule-modal-open .schedule-popover {
 }
 
 .schedule-popover-task {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: var(--space-2) 0 var(--space-3);
+  color: var(--t1);
+  font-size: var(--text-sm);
+  font-weight: 550;
+}
+
+.schedule-popover-task-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.schedule-popover-task > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-popover-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) 0;
+  border-block: 1px solid var(--border);
   color: var(--t2);
   font-size: var(--text-sm);
+}
+
+.schedule-popover-summary strong {
+  color: var(--t1);
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.schedule-popover-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(132px, 0.8fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.schedule-popover-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.schedule-popover-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-2-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--card) 88%, var(--bg));
+  color: var(--t3);
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+
+.schedule-popover-input-wrap:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--border));
+  box-shadow: 0 0 0 3px var(--accent-bg);
+  color: var(--accent);
+}
+
+.schedule-popover-input-wrap input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--t1);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .schedule-popover-section {
@@ -2444,7 +2530,7 @@ html.planner-schedule-modal-open .schedule-popover {
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--t2);
 }
 
@@ -2460,6 +2546,7 @@ html.planner-schedule-modal-open .schedule-popover {
   border: 1px solid var(--border);
   background: transparent;
   color: var(--t2);
+  min-height: 36px;
   font-size: var(--text-xs);
   font-weight: 600;
 }
@@ -2470,12 +2557,66 @@ html.planner-schedule-modal-open .schedule-popover {
   color: var(--accent);
 }
 
+.schedule-popover-duration {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-1);
+  padding: 3px;
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--t1) 5%, transparent);
+}
+
+.schedule-popover-duration .schedule-chip {
+  padding-inline: var(--space-1);
+  border-color: transparent;
+  border-radius: calc(var(--radius-control) - 3px);
+}
+
+.schedule-popover-duration .schedule-chip.on {
+  border-color: var(--border);
+  background: var(--card);
+  box-shadow: 0 1px 3px color-mix(in srgb, #000 10%, transparent);
+}
+
+.schedule-popover-section--quick {
+  margin-top: calc(-1 * var(--space-1));
+}
+
+.schedule-popover-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-block: 1px solid var(--border);
+}
+
+.schedule-popover-quick-actions button {
+  min-height: 38px;
+  padding: 0 var(--space-2);
+  color: var(--t2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.schedule-popover-quick-actions button + button {
+  border-left: 1px solid var(--border);
+}
+
+.schedule-popover-quick-actions button span {
+  color: var(--t3);
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-popover-quick-actions button.on,
+.schedule-popover-quick-actions button.on span {
+  color: var(--accent);
+}
+
 .schedule-popover-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
   gap: var(--space-2);
+  padding-top: var(--space-1);
 }
 
 .schedule-slot-create {
@@ -2563,6 +2704,20 @@ html.planner-schedule-modal-open .schedule-popover {
   color: var(--t2);
   font-size: var(--text-xs);
   line-height: 1.45;
+}
+
+.schedule-popover-conflict-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  min-height: 36px;
+  margin-top: var(--space-2);
+  padding: 0 var(--space-2-5);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--warning) 16%, var(--card));
+  color: var(--t1);
+  font-size: var(--text-xs);
+  font-weight: 650;
 }
 
 .schedule-popover-conflict-head .icon {

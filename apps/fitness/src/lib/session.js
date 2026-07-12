@@ -1,9 +1,10 @@
 import { browser } from '$app/environment';
 import { getProgram } from './programRuntime.js';
-import { S, save, todayKey, exWeight, ORDER } from './state.svelte.js';
+import { S, save, todayKey, exWeight, setExWeight, ORDER } from './state.svelte.js';
 import { effectiveDone, normalizeExLog } from './logs.js';
 import { EX_BY_ID, resolveExerciseId } from './data/exercises.js';
 import { buildSessionQueue } from './sessionQueue.js';
+import { carryForwardWeight, carriesStartingWeight } from './weightMemory.js';
 
 /** 某条动作记录是否有真实训练痕迹(做过组或明确跳过) */
 export function exLogHasActivity(entry) {
@@ -258,6 +259,13 @@ export function completeSet(dayId, exId, setIndex, payload = {}, dateK = todayKe
   if (!log.startedAt) log.startedAt = setData.ts;
 
   writeExLog(dayId, exId, log, dateK);
+  // Straight sets carry each newly performed load immediately. Ramp/drop-style
+  // schemes keep the currently selected load between sets, then restore their
+  // first work-set load only after the exercise is complete for the next session.
+  if (!carriesStartingWeight(ex) || setIndex >= ex.sets) {
+    const nextWeight = carryForwardWeight(ex, log.sets);
+    if (nextWeight != null) setExWeight(ex.id, nextWeight);
+  }
   return { ok: true, prev, next: setIndex, setData, ex };
 }
 

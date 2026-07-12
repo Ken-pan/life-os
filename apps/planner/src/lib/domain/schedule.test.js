@@ -4,6 +4,7 @@ import {
   parseTimeToMinutes,
   defaultDurationMinutes,
   findScheduleConflicts,
+  findNextAvailableStart,
   overlappingTaskIds,
   overlapBlockColumns,
   computeDayScheduleStats,
@@ -62,6 +63,19 @@ describe('schedule', () => {
     ]
     expect(findScheduleConflicts(tasks, '09:45', 30, 'c')).toHaveLength(2)
     expect(overlappingTaskIds(tasks).size).toBe(2)
+  })
+
+  it('finds the next available snapped start without moving earlier', () => {
+    const tasks = [
+      task({ id: 'a', scheduledStart: '09:00', durationMinutes: 60 }),
+      task({ id: 'b', scheduledStart: '10:30', durationMinutes: 30 }),
+    ]
+    expect(findNextAvailableStart(tasks, '09:10', 30)).toBe('10:00')
+    expect(findNextAvailableStart(tasks, '10:20', 30)).toBe('11:00')
+  })
+
+  it('returns null when no remaining slot fits', () => {
+    expect(findNextAvailableStart([], '22:50', 30)).toBeNull()
   })
 
   it('assigns side-by-side columns for overlapping blocks', () => {

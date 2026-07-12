@@ -1,4 +1,55 @@
 import { test, expect } from '@playwright/test';
+import { dateKey, seed } from './helpers.js';
+
+test('next workout defaults to the most recently performed straight-set weight', async ({ page }) => {
+  await seed(page, {
+    weights: { c_bench: 185 },
+    logs: {
+      [`${dateKey(-1)}|chest`]: {
+        c_bench: {
+          done: 4,
+          sets: [
+            { weight: 185, reps: 8, rir: 2 },
+            { weight: 190, reps: 8, rir: 2 },
+            { weight: 190, reps: 7, rir: 1 },
+            { weight: 190, reps: 7, rir: 1 }
+          ]
+        }
+      }
+    }
+  });
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('fitos_v2'));
+    state.schemaVersion = 6;
+    localStorage.setItem('fitos_v2', JSON.stringify(state));
+  });
+  await page.reload();
+  await page.goto('/day/chest/focus');
+
+  await expect(page.locator('.focus-weight .w-num')).toContainText('190');
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('fitos_v2')).weights.c_bench)).toBe(190);
+});
+
+test('changing weight mid-workout preserves old sets and carries the new load forward', async ({ page }) => {
+  await seed(page, { weights: { c_bench: 185 }, settings: { logDetail: 'minimal' } });
+  await page.goto('/day/chest/focus');
+
+  await page.locator('.focus-cta-set').click();
+  await page.locator('.focus-weight').click();
+  const modal = page.locator('.modal.wtm');
+  await modal.locator('.wc-value-input').fill('175');
+  await modal.locator('.ma-save').click();
+  await page.locator('.focus-cta-set').click();
+
+  const result = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('fitos_v2'));
+    const sets = state.logs[`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}|chest`].c_bench.sets;
+    return { saved: state.weights.c_bench, first: sets[0].weight, second: sets[1].weight };
+  });
+
+  expect(result).toEqual({ saved: 175, first: 185, second: 175 });
+});
 
 test('weight recommendation end-to-end', async ({ page }) => {
   // Go to home page to initialize state
