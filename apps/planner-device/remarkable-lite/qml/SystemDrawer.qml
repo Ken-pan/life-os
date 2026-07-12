@@ -24,7 +24,7 @@ Item {
     // dither badly on e-ink and force a large repaint.
     MouseArea {
         anchors.fill: parent
-        onClicked: drawer.dismiss()
+        onPressed: drawer.dismiss()
     }
 
     Rectangle {
@@ -89,7 +89,7 @@ Item {
                 MouseArea {
                     id: rowTap
                     anchors.fill: parent
-                    onClicked: {
+                    onPressed: {
                         drawer.dismiss()
                         drawer.navigate(row.module)
                     }

@@ -96,7 +96,9 @@ Window {
                 MouseArea {
                     id: menuTap
                     anchors.fill: parent
-                    onClicked: systemDrawer.open = true
+                    onPressed: {
+                        systemDrawer.open = true
+                    }
                 }
             }
 
@@ -136,7 +138,7 @@ Window {
                 MouseArea {
                     id: homeTap
                     anchors.fill: parent
-                    onClicked: root.currentModule = 0
+                    onPressed: root.currentModule = 0
                 }
             }
 
@@ -164,7 +166,7 @@ Window {
                 MouseArea {
                     id: addTap
                     anchors.fill: parent
-                    onClicked: {
+                    onPressed: {
                         var id = noteStore.createNote("quick")
                         if (id !== "")
                             inkMode.enter(id)
@@ -203,7 +205,6 @@ Window {
         z: 880
         currentModule: root.currentModule
         onNavigate: function(module) { root.currentModule = module }
-        onOpenChanged: refreshControl.pageUpdated()
     }
 
     // ── QUICK SETTINGS OVERLAY ─────────────────────────────────
