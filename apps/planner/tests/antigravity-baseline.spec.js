@@ -123,7 +123,7 @@ function generateState(opts = {}) {
 }
 
 async function seedState(page, state) {
-  await page.goto('http://localhost:5173/')
+  await page.goto('/')
   await page.evaluate(
     ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
     { key: STORAGE_KEY, data: state },
@@ -176,7 +176,7 @@ test.describe('Antigravity Baseline', () => {
       
       // We just need one test to prove it crashes due to missing tags
       await seedState(page, generateState({ scenario: 'legacy' }))
-      await page.goto('http://localhost:5173/calendar')
+      await page.goto('/calendar')
       await page.waitForTimeout(2000)
       const snapFile = await snap(page, `ScenarioB-${vp.name}-legacy-crash`)
       
@@ -195,12 +195,11 @@ test.describe('Antigravity Baseline', () => {
     })
 
     test(`Scenario A: Canonical Task Interactions - ${vp.name}`, async ({ page, context }) => {
-      await context.tracing.start({ screenshots: true, snapshots: true, sources: true })
       await page.setViewportSize({ width: vp.width, height: vp.height })
 
       // Empty Day
       await seedState(page, generateState({ scenario: 'canonical', empty: true }))
-      await page.goto('http://localhost:5173/calendar')
+      await page.goto('/calendar')
       await page.waitForTimeout(1000)
       let snapFile = await snap(page, `ScenarioA-${vp.name}-01-calendar-empty`)
       addFinding({
@@ -211,7 +210,7 @@ test.describe('Antigravity Baseline', () => {
 
       // Normal Day
       await seedState(page, generateState({ scenario: 'canonical' }))
-      await page.goto('http://localhost:5173/calendar')
+      await page.goto('/calendar')
       await page.waitForTimeout(1000)
       snapFile = await snap(page, `ScenarioA-${vp.name}-02-calendar-normal`)
       addFinding({
@@ -284,7 +283,7 @@ test.describe('Antigravity Baseline', () => {
 
       // 2 Overlap
       await seedState(page, generateState({ scenario: 'canonical', overlapping: 2 }))
-      await page.goto('http://localhost:5173/calendar')
+      await page.goto('/calendar')
       await page.waitForTimeout(1000)
       snapFile = await snap(page, `ScenarioA-${vp.name}-06-calendar-2-overlap`)
       addFinding({
@@ -295,7 +294,7 @@ test.describe('Antigravity Baseline', () => {
 
       // 3 Overlap
       await seedState(page, generateState({ scenario: 'canonical', overlapping: 3 }))
-      await page.goto('http://localhost:5173/calendar')
+      await page.goto('/calendar')
       await page.waitForTimeout(1000)
       snapFile = await snap(page, `ScenarioA-${vp.name}-07-calendar-3-overlap`)
       addFinding({
@@ -304,7 +303,6 @@ test.describe('Antigravity Baseline', () => {
       })
       errors = []
 
-      await context.tracing.stop({ path: path.join(OUT_DIR, `trace-${vp.name}.zip`) })
     })
   }
 })
