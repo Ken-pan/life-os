@@ -1,6 +1,6 @@
 # PaperOS on reMarkable Paper Pro Move
 
-**Owner:** **PaperOS (`PAPR`)** · first data provider **Planner** · **Device:** reMarkable Paper Pro Move (`imx93-chiappa`) · **Status:** PAPR.DEV.4 shipped — daily-usable read path with CJK, pagination, Exit, crash recovery, and a systemd launcher
+**Owner:** **PaperOS (`PAPR`)** · first data provider **Planner** · **Device:** reMarkable Paper Pro Move (`imx93-chiappa`) · **Status:** `PAPR.SYS.1` primary lane; read path and live-ink baseline shipped
 
 **Ticket ID（canonical）：** [`../TICKET_NAMING.md`](../TICKET_NAMING.md)
 
@@ -18,24 +18,23 @@ first functional provider for PaperOS.
 
 | Area                        | Status                           | Evidence                                                                                                                                                                                                                         |
 | --------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Device access               | PASS                             | `ssh remarkable-pro-move` (USB, `10.11.99.1`); see [`../../PRO_MOVE_DEVICE_ACCESS.md`](../../PRO_MOVE_DEVICE_ACCESS.md)                                                                                                          |
-| Backend mock API            | PASS                             | PR-1 mock endpoints callable; see [`../../PRO_MOVE_PR1_FINAL_GATE.md`](../../PRO_MOVE_PR1_FINAL_GATE.md)                                                                                                                         |
-| Backend read API (prod)     | **PASS**                         | PAPR.DATA.verify 2026-07-11；见 [`../../qa/paperos-data-plane-verify-2026-07-11.md`](../../qa/paperos-data-plane-verify-2026-07-11.md)                                                                                           |
+| Device access               | PASS                             | `ssh remarkable-pro-move` (USB, `10.11.99.1`); see [`../../ops/paperos-device.md`](../../ops/paperos-device.md)                                                                                                          |
+| Backend mock API            | PASS                             | PR-1 mock endpoints callable; see [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md)                                                                                                                         |
+| Backend read API (prod)     | **PASS**                         | PAPR.DATA.verify 2026-07-11；见 [`../../qa/paperos/data-plane-2026-07-11.md`](../../qa/paperos/data-plane-2026-07-11.md)                                                                                           |
 | Backend action API          | Implemented, gated               | `/api/paper/actions`; real writes require `PAPER_ACTIONS_WRITE_ENABLED=true`; full local HTTP validation passed                                                                                                                  |
-| Device read cache           | PASS                             | `ApiClient` last-good cache (atomic write) + `refresh-cache.sh` sidecar; offline launch verified; see [`../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md)                                 |
-| CJK rendering               | PASS                             | Noto Sans CJK SC loaded at runtime from `/home/root/paperos/fonts/`; see [`../../PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md`](../../PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md)                                                      |
+| Device read cache           | PASS                             | `ApiClient` last-good cache (atomic write) + `refresh-cache.sh` sidecar; offline launch verified; see [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md)                                 |
+| CJK rendering               | PASS                             | Noto Sans CJK SC loaded at runtime from `/home/root/paperos/fonts/`; see [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md)                                                      |
 | E-ink pagination            | PASS                             | Fixed 5-per-page, Prev/Next buttons, no flick/animation; operator-verified on device                                                                                                                                             |
-| Exit + crash recovery       | PASS                             | Exit button, hardened trap/recover scripts, systemd `ExecStopPost` auto-restores xochitl after `kill -9`; see [`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md) |
+| Exit + crash recovery       | PASS                             | Exit button, hardened trap/recover scripts, systemd `ExecStopPost` auto-restores xochitl after `kill -9`; see [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md) |
 | Device-side launcher        | PASS                             | `systemctl start paperos` (unit in `/home`, root-fs symlink only); survives SSH disconnect                                                                                                                                       |
-| Shell MVP (6 modules)       | PASS                             | Home/Today/Notes/Mail/Review/System + RefreshController + action queue + Quick Note v0; see [`../../PRO_MOVE_SHELL_MVP_GATE.md`](../../PRO_MOVE_SHELL_MVP_GATE.md)                                                               |
-| Marker input                | Phase 0 done, pen not usable yet | epaper QPA delivers touch only; pen node mapped — see [`../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md`](../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md); Phase 1 = `PenInputService`                                                      |
+| Shell MVP (6 modules)       | PASS                             | Home/Today/Notes/Mail/Review/System + RefreshController + action queue + Quick Note v0; see [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md)                                                               |
+| Native ink primitive       | PASS on device                   | direct framebuffer + raw Marker input; continuous pressure ink and eraser verified — [`../../architecture/paperos-ink-runtime.md`](../../architecture/paperos-ink-runtime.md) |
 | Production read API         | **PASS**                         | PAPR.DATA.verify 2026-07-11 — device 200 + schema + cache/UI；见 **PAPR.DATA.verify** 节                                                                                                                                         |
 | Production write enablement | Not enabled                      | Staging validation required before `PAPER_ACTIONS_WRITE_ENABLED=true`                                                                                                                                                            |
 | xochitl integration         | Out of scope                     | No xochitl patching, sidebar injection, or boot replacement                                                                                                                                                                      |
 
-Gap-analysis cross-check against the "ideal e-ink experience" report:
-[`../../PRO_MOVE_STATUS_VS_IDEAL.md`](../../PRO_MOVE_STATUS_VS_IDEAL.md).
-Gate doc index: [`../../PRO_MOVE.md`](../../PRO_MOVE.md).
+Completed device and PR gates are summarized once in
+[`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md).
 
 ## Product Decision
 
@@ -54,32 +53,9 @@ safety, recoverability, autonomy, and update resilience.
 
 ## Execution Plan
 
-### PAPR.DEV.1 — Home-Only Launcher Baseline · PASS 2026-07-09
-
-Shell launcher (`open-paperos.sh`) + manual recovery (`recover-xochitl.sh`)
-under `/home/root/paperos`, no systemd. See
-[`../../PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](../../PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md).
-(The "no `/etc/systemd/system` unit" acceptance was correct for this phase and
-was deliberately superseded by the linked unit in PAPR.DEV.4.)
-
-### PAPR.DEV.2 — PaperOS Read Path · PASS 2026-07-09
-
-Last-good cache read-before-fetch, token auth, offline resilience, sync
-status footer. See
-[`../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md).
-
-### PAPR.DEV.3 — CJK Font + Pagination UX · PASS 2026-07-09
-
-Noto Sans CJK SC runtime loading with fallback; scroll replaced by fixed
-5-per-page pagination. Operator-verified on device. See
-[`../../PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md`](../../PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md).
-
-### PAPR.DEV.4 — Exit, Crash Recovery, Device Launcher · PASS 2026-07-09
-
-Exit button, hardened launcher/recover scripts with exit-code logging,
-`paperos.service` linked from `/home` (crash auto-recovery via
-`ExecStopPost`, session survives SSH disconnect). See
-[`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md).
+`PAPR.DEV.1–4` 已完成，不再在活跃 roadmap 重复展开。结论见
+[`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md)，
+设备操作见 [`../../ops/paperos-device.md`](../../ops/paperos-device.md)。
 
 ### PAPR.DATA.verify — Device Production Sync · PASS (2026-07-11; was `P-MOVE.verify`)
 
@@ -100,7 +76,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" https://planner.kenos.space/api/paper/
 - Device `ApiClient` real mode → production HTTP **200** with the device credential.
 - Structural payload check PASS; cache and `last_sync.txt` updated twice, including an on-screen retry.
 - System UI rendered the new sync timestamp; invalid credentials returned **401** without replacing the last-good cache.
-- Sanitized evidence: [`../../qa/paperos-data-plane-verify-2026-07-11.md`](../../qa/paperos-data-plane-verify-2026-07-11.md).
+- Sanitized evidence: [`../../qa/paperos/data-plane-2026-07-11.md`](../../qa/paperos/data-plane-2026-07-11.md).
 
 **Agent:** Codex Terra + device operator tap.
 
@@ -108,10 +84,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" https://planner.kenos.space/api/paper/
 
 **Goal:** paper-native OS — canvas-first, contextual tools, temporary system surfaces.
 
-**Execution SSOT:** [`../../qa/paperos-next-ui-update-guide.md`](../../qa/paperos-next-ui-update-guide.md)
-**Long-term brief:** [`../../qa/paperos-eink-uiux-agent-brief.md`](../../qa/paperos-eink-uiux-agent-brief.md)
-**Gap audit:** [`../../qa/paperos-eink-uiux-gap-audit.md`](../../qa/paperos-eink-uiux-gap-audit.md)
-**Slice 1 gates:** [`../../qa/paperos-core-slice-1-integration-gate.md`](../../qa/paperos-core-slice-1-integration-gate.md) · [`../../qa/paperos-core-slice-1-visual-gate.md`](../../qa/paperos-core-slice-1-visual-gate.md)
+**Execution SSOT:** [`../../qa/paperos/ui-spec.md`](../../qa/paperos/ui-spec.md)
 **Evidence:** `docs/ui-qa-screenshots/paperos/device/baseline-2026-07-10/` · [`../../qa/paperos/reference/2026-07-10/`](../../qa/paperos/reference/2026-07-10/)
 
 #### Shipped — Core Slice 1 (2026-07-10)
@@ -121,7 +94,7 @@ System drawer · Notes Gallery · native ink chrome states · semantic `paperctl
 #### Now — Core Slice 1.1 · CODE COMPLETE · device re-verify
 
 **Native toolbar P0:** fixed in `52ae55e0` (`InkModeController` framebuffer sync).
-**QML visual:** fixed in `d7c52858`; Antigravity delta gate PASS — [`qa/paperos-core-slice-1-1-visual-delta-gate.md`](../../qa/paperos-core-slice-1-1-visual-delta-gate.md).
+**QML visual:** fixed in `d7c52858`; Antigravity delta gate PASS — archived in [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md).
 
 **Before Slice 2:** operator device pass (toolbar + Gallery + recovery). Do **not** parallel Slice 2 in same PR.
 
@@ -133,26 +106,26 @@ Merge Home + Today; drawer IA → `Today · Notes · Tasks · Documents · Setti
 
 Multi-page · Page Overview · Templates · OCR/Search · Tags · Quick Switcher · Control Center — next guide §10.
 
-### PAPR.SYS — Device Shell Lifecycle · **PAUSED** 2026-07-11
+### PAPR.SYS — Device Shell Lifecycle · **PRIMARY LANE** 2026-07-12
 
 PaperOS is becoming the **primary device shell**, not a foreground app. PAPR.DEV.4 covered exit/crash via systemd; **`PAPR.SYS.*`** extends to boot, sleep, wake, and daily use without Mac/SSH.
 
-**Launch mode (2026-07-11):** **Mode A — Xochitl default**; implement **A-default, B-ready** (`PAPR.SYS.3` adds opt-in Beta auto-launch, default Off). **Lifecycle hub:** [`qa/paperos-device-lifecycle/README.md`](../../qa/paperos-device-lifecycle/README.md) · 产品假设见 [`qa/paperos-device-lifecycle-discovery.md`](../../qa/paperos-device-lifecycle-discovery.md) §产品假设.
+**Launch mode (2026-07-11):** **Mode A — Xochitl default**; implement **A-default, B-ready** (`PAPR.SYS.3` adds opt-in Beta auto-launch, default Off). **Lifecycle hub:** [`qa/paperos/README.md`](../../qa/paperos/README.md) · 产品假设见 [`qa/paperos/lifecycle.md`](../../qa/paperos/lifecycle.md) §产品假设.
 
-**Checkpoint (2026-07-11):** Architecture discovery complete · implementation intentionally paused · device safe.
+**Checkpoint (2026-07-12):** Architecture discovery complete · **PAPR.SYS.1 PRIMARY LANE** — design → 分步 impl（Ken 逐步授权）· device safe.
 
 **Agent:** Line B (Shell) — Codex + Ken + Cursor · **VERIFY belongs to Line E only**
 
-| ID                  | Theme                   | Status (2026-07-11)                             | Owner               | Deliverable                                                                                  |
+| ID                  | Theme                   | Status (2026-07-12)                             | Owner               | Deliverable                                                                                  |
 | ------------------- | ----------------------- | ----------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------- |
-| **PAPR.SYS.0**      | Lifecycle discovery     | **CONDITIONAL PASS accepted**                   | Codex + Ken         | [`qa/paperos-device-lifecycle-discovery.md`](../../qa/paperos-device-lifecycle-discovery.md) |
+| **PAPR.SYS.0**      | Lifecycle discovery     | **CONDITIONAL PASS accepted**                   | Codex + Ken         | [`qa/paperos/lifecycle.md`](../../qa/paperos/lifecycle.md) |
 | **PAPR.SYS.1a**     | Triple-power launch     | **BLOCKED / CLOSED**                            | —                   | 不得实现                                                                                     |
 | **PAPR.SYS.1b.fs**  | Filesystem signals      | **BLOCKED / CLOSED**                            | —                   | lastOpened / fd / snapshot 不可用                                                            |
 | **PAPR.SYS.1b.jrn** | Journal UUID signal     | **CONDITIONAL PASS accepted**                   | Codex + Ken         | `EntityOpen::open` 矩阵 10/10 · 0 FP                                                         |
-| **PAPR.SYS.1**      | enter / exit / recovery | **UNBLOCKED BUT NOT STARTED — PAUSED BY OWNER** | Codex · Cursor      | `paperos-enter` · `paperos-exit` · journal watcher（均未开始）                               |
+| **PAPR.SYS.1**      | enter / exit / recovery | **PRIMARY LANE — design → 分步 impl**           | Codex · Ken         | `paperos-enter` · `paperos-exit` · journal watcher（按 Ken 授权分步）                        |
 | **PAPR.SYS.2**      | sleep / wake / idle     | **NOT STARTED** — hard blocked by PAPR.SYS.1    | Codex               | pre-suspend flush · wake refresh · `lastSyncAt` catch-up                                     |
 | **PAPR.SYS.3**      | Settings UI             | **OUT OF SCOPE**                                | Cursor · Fable ≤30m | auto-sleep · **Launch after unlock [Beta] Off**                                              |
-| **PAPR.SYS.gate**   | Reliability matrix      | **BLOCKED**                                     | Ken + Codex         | [`qa/paperos-device-lifecycle-gate.md`](../../qa/paperos-device-lifecycle-gate.md)           |
+| **PAPR.SYS.gate**   | Reliability matrix      | **BLOCKED**                                     | Ken + Codex         | [`qa/paperos/lifecycle-gate.md`](../../qa/paperos/lifecycle-gate.md)           |
 
 **PAPR.SYS.1 System menu (minimum):** Sleep · Restart PaperOS · Return to reMarkable · Restart device · Shut down.
 
@@ -162,7 +135,7 @@ PaperOS is becoming the **primary device shell**, not a foreground app. PAPR.DEV
 PAPR.DATA.verify ✅
 → PAPR.SYS.0 🟡 accepted
 → PAPR.SYS.1 launch discovery ✅ (PAPR.SYS.1b.jrn conditional pass)
-→ PAPR.SYS.1 implementation ⏸ PAUSED / NOT STARTED
+→ PAPR.SYS.1 implementation 🟡 PRIMARY LANE（2026-07-12 · Ken 分步授权）
 → PAPR.SYS.2 🔒
 → PAPR.SYS.3 (out of scope until PAPR.SYS.1/2)
 → PAPR.SYNC.6 🔒
@@ -171,9 +144,11 @@ PAPR.DATA.verify ✅
 
 Slice 2 **IA** may start after Slice 1.1 PASS; Slice 2 **device merge** must not bypass **PAPR.SYS.1**.
 
-**PAPR.SYS.1 launch surface（2026-07-11）：** PAPR.SYS.1a closed · PAPR.SYS.1b.fs closed · **PAPR.SYS.1b.jrn conditional pass accepted** · PAPR.SYS.1 implementation paused. 完整矩阵、journal 证据与 fail-closed 风险见
-[`qa/paperos-device-lifecycle-discovery.md`](../../qa/paperos-device-lifecycle-discovery.md)
+**PAPR.SYS.1 launch surface（2026-07-12）：** PAPR.SYS.1a closed · PAPR.SYS.1b.fs closed · **PAPR.SYS.1b.jrn conditional pass accepted** · **PAPR.SYS.1 PRIMARY LANE**（Ken + Codex 主航道）。完整矩阵见
+[`qa/paperos/lifecycle.md`](../../qa/paperos/lifecycle.md)
 §PAPR.SYS.1b.jrn。
+
+**Supabase（Planner provider）：** 读路径 ✅ `paper_device_snapshot` · 写路径 **PAPR.WRITE.5** — `paper_device_actions` migration **未上生产** → [`../../ops/supabase.md`](../../ops/supabase.md) §PlannerOS
 
 ---
 
@@ -191,10 +166,11 @@ Scope:
 
 Acceptance:
 
-- Fresh complete creates one `paper_device_actions` row.
+- Fresh complete creates one `paper_device_actions` row (**requires migration apply** — 生产表尚未存在，2026-07-12）。
 - Duplicate retry returns prior result without changing `completedAt`.
 - Stale or deleted task returns conflict/rejected and refreshes cache.
 - Production write switch remains off until staging passes.
+- **DB：** `paper_device_actions` migration **未上生产**（2026-07-12 MCP）— 代码层已就绪。
 
 ### PAPR.SYNC.6 — Scheduled Cache / Manual Sync · BLOCKED on PAPR.SYS.2
 
@@ -244,13 +220,13 @@ Acceptance:
 ## Remaining Before Daily Use
 
 - [x] **PAPR.DATA.verify** — PASS 2026-07-11: device production fetch 200 + schema + cache/UI refresh.
-- [ ] **PAPR.UI.1.1** — device re-verify after `52ae55e0` / `d7c52858` ([`qa/paperos-next-ui-update-guide.md`](../../qa/paperos-next-ui-update-guide.md)).
-- [x] **PAPR.SYS.0** — CONDITIONAL PASS accepted ([`qa/paperos-device-lifecycle-discovery.md`](../../qa/paperos-device-lifecycle-discovery.md)).
+- [ ] **PAPR.UI.1.1** — device re-verify after `52ae55e0` / `d7c52858` ([`qa/paperos/ui-spec.md`](../../qa/paperos/ui-spec.md)).
+- [x] **PAPR.SYS.0** — CONDITIONAL PASS accepted ([`qa/paperos/lifecycle.md`](../../qa/paperos/lifecycle.md)).
 - [x] **PAPR.SYS.1b** discovery — PAPR.SYS.1b.fs closed · PAPR.SYS.1b.jrn **CONDITIONAL PASS accepted** (2026-07-11).
-- [ ] **PAPR.SYS.1** — **UNBLOCKED BUT NOT STARTED — PAUSED BY OWNER**; no watcher/launcher/systemd implementation.
+- [ ] **PAPR.SYS.1** — **PRIMARY LANE** — design → 分步 impl（Ken 逐步授权）；无授权步骤不得 enable watcher/systemd
 - [ ] **PAPR.SYS.2** — **NOT STARTED** (hard blocked by PAPR.SYS.1 implementation verdict).
-- [ ] **PAPR.SYS.gate** — LC-01–LC-15 ([`qa/paperos-device-lifecycle-gate.md`](../../qa/paperos-device-lifecycle-gate.md)).
-- [ ] Marker Phase 1: `PenInputService` on `/dev/input/event2` (pen taps, pressure, eraser); until then PaperOS is touch-only.
+- [ ] **PAPR.SYS.gate** — LC-01–LC-15 ([`qa/paperos/lifecycle-gate.md`](../../qa/paperos/lifecycle-gate.md)).
+- [ ] Integrate the device-proven raw Marker/direct-framebuffer primitive into the production `paperos-core` persistence boundary.
 - [ ] Post-reboot step: re-run `systemctl link /home/root/paperos/paperos.service` (the `/etc` overlay drops the symlink); or fold into an OS-upgrade drill doc.
 - [x] Operator confirms Exit-button tap on screen (worked — the "frozen" report was an unsupervised bare-binary test session; see Shell MVP gate incident 1).
 - [ ] "Sync now" button (PAPR.SYNC.6).

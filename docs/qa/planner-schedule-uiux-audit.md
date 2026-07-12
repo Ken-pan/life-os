@@ -35,7 +35,7 @@
 
 | ID      | 区域               | 现象 / 风险                                              | 优先级 | 状态 | Baseline |
 | ------- | ------------------ | -------------------------------------------------------- | ------ | ---- | -------- |
-| PLNR.SCHED.0.migrate | 数据规范化         | legacy task 缺 `tags` → 日历/Timeline 崩溃               | P0     | ⬜   | QA-001/007 · **`migrateTask()` 不补 `tags: []`**（`persist/migrate.js:180`） |
+| PLNR.SCHED.0.migrate | 数据规范化         | legacy task 缺 `tags` → 日历/Timeline 崩溃               | P0     | ✅   | **#15 Shipped** · `migrate.integration.test.js` |
 | SCH-1   | 移动 `/calendar`   | 时间轴区域是否可滚动、是否被 AppBar/底栏遮挡             | P1     | 🟡   | QA-010 · baseline **未**模拟 `html.standalone-pwa` |
 | SCH-2   | `DayTimeline`      | 拖放创建时间块：ghost 预览、冲突提示、snap 是否跟手      | P0     | ✅*  | QA-004（canonical） |
 | SCH-3   | `TimeBlock`        | resize 上下把手、move、与 overlap 列宽是否可读           | P0     | ✅*  | QA-004 |
@@ -45,7 +45,7 @@
 | SCH-7   | Desktop split      | 右侧 `CalendarContextPanel` 与主栏信息是否重复/脱节      | P2     | ⬜   | — |
 | SCH-8   | 当前时间线         | `now` marker 仅今天显示；滚动是否自动滚到当前小时附近    | P2     | ⬜   | — |
 | SCH-9   | 空日 / 稀疏日      | `sparseHint`（`tasks.length <= 3`）与 `schedule.timelineEmpty` | P2     | ⬜   | QA-002/008 · 代码已有，baseline 视觉待复判 |
-| PLNR.SCHED.10.pwa  | PWA iOS            | 单滚动容器（`.life-os-page-workspace`）；`standalone-pwa`  | P1     | 🟡   | QA-010 · 待 `npm run qa:pwa` / iOS Sim |
+| PLNR.SCHED.10.pwa  | PWA iOS            | 单滚动容器（`.life-os-page-workspace`）；`standalone-pwa`  | P1     | 🟡   | 代码 ✅ #18 · **最终关闭** = Ken **10b.ios** |
 
 \* Scenario A（canonical fixture）已通过；**PLNR.SCHED.0.migrate** 修复后需在真实/legacy 数据下复验。
 

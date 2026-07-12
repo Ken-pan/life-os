@@ -4,9 +4,9 @@
   import AppBar from '$lib/components/AppBar.svelte'
   import EmptyState from '$lib/components/EmptyState.svelte'
   import TaskGroup from '$lib/components/TaskGroup.svelte'
+  import QuickAddBar from '$lib/components/QuickAddBar.svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
   import { S } from '$lib/state.svelte.js'
-  import { createTask } from '$lib/domain/tasks.js'
   import {
     deleteProject,
     getProjectById,
@@ -18,7 +18,6 @@
   } from '$lib/domain/projects.js'
   import { sortTasks } from '$lib/engine/prioritizer.js'
   import { completeTask, editTask } from '$lib/taskUi.js'
-  import { SYSTEM_LIST_INBOX } from '$lib/types.js'
   import { t } from '$lib/i18n/index.js'
   import { toast } from '$lib/ui.svelte.js'
 
@@ -39,7 +38,6 @@
   let status = $state('active')
   let progressMode = $state('automatic')
   let manualProgress = $state(0)
-  let taskTitle = $state('')
 
   $effect(() => {
     if (!project) return
@@ -60,18 +58,6 @@
       manualProgress: progressMode === 'manual' ? Number(manualProgress) : null,
     })
     toast(t('toast.projectSaved'), 'success')
-  }
-
-  function addTask() {
-    if (!project || !taskTitle.trim()) return
-    createTask({
-      title: taskTitle.trim(),
-      projectId: project.id,
-      listId: S.settings.defaultListId || SYSTEM_LIST_INBOX,
-      dueDate: null,
-    })
-    taskTitle = ''
-    toast(t('toast.projectTaskAdded'), 'success')
   }
 
   /** @param {import('$lib/types.js').ProjectStatus} nextStatus */
@@ -232,23 +218,15 @@
       </div>
     </form>
 
-    <form
-      class="project-task-add"
-      onsubmit={(e) => {
-        e.preventDefault()
-        addTask()
-      }}
-    >
-      <input
-        bind:value={taskTitle}
+    <div class="project-task-add">
+      <QuickAddBar
+        projectId={project.id}
+        dueDate={null}
+        showOnMobile
         placeholder={t('projects.addTaskPlaceholder')}
-        aria-label={t('projects.addTaskPlaceholder')}
+        toastOnAdd={t('toast.projectTaskAdded')}
       />
-      <button type="submit" class="btn-primary" disabled={!taskTitle.trim()}>
-        <Icon name="plus" size={17} strokeWidth={2} />
-        <span>{t('common.addTask')}</span>
-      </button>
-    </form>
+    </div>
 
     <TaskGroup
       title={t('projects.openTasks')}
@@ -441,8 +419,7 @@
 
   .project-editor input,
   .project-editor select,
-  .project-editor textarea,
-  .project-task-add input {
+  .project-editor textarea {
     width: 100%;
     min-width: 0;
     border-radius: var(--control-radius);
@@ -453,8 +430,7 @@
   }
 
   .project-editor input,
-  .project-editor select,
-  .project-task-add input {
+  .project-editor select {
     height: var(--control-h);
   }
 
@@ -466,8 +442,7 @@
 
   .project-editor input:focus,
   .project-editor select:focus,
-  .project-editor textarea:focus,
-  .project-task-add input:focus {
+  .project-editor textarea:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-bg);
@@ -479,19 +454,6 @@
     gap: var(--space-2);
   }
 
-  .project-task-add {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .project-task-add .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-1);
-  }
-
-  .project-task-add .btn-primary:disabled,
   .project-editor .btn-primary:disabled {
     opacity: 0.55;
     cursor: not-allowed;
@@ -507,8 +469,7 @@
       min-width: 0;
     }
 
-    .project-editor-grid,
-    .project-task-add {
+    .project-editor-grid {
       grid-template-columns: 1fr;
     }
 
@@ -521,8 +482,7 @@
       max-width: 100%;
     }
 
-    .project-actions > button,
-    .project-task-add .btn-primary {
+    .project-actions > button {
       width: 100%;
       justify-content: center;
     }

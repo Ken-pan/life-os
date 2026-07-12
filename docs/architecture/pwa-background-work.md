@@ -198,8 +198,8 @@ level, or updates never reach clients — every app's `netlify.toml` sets:
 - **Portal offline scope** — SW shows `/offline.html` when navigate fails; login
   and app redirects still require network (by design for SSR launcher).
 - **Planner push ops** — Web Push cron is implemented (`planner-reminder-push`
-  Netlify scheduled function, every 5 min). Production requires:
-  1. Apply migration `apps/planner/supabase/migrations/20260709120000_planner_push_subscriptions.sql`
-  2. Generate keys: `node apps/planner/scripts/generate-vapid-keys.mjs`
-  3. Set Netlify env: `PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SUPABASE_SERVICE_ROLE_KEY`
+  Netlify scheduled function, every 5 min). Production **DB tables exist** (2026-07-12).
+  Remaining ops (if enabling push):
+  1. Generate keys: `node apps/planner/scripts/generate-vapid-keys.mjs`
+  2. Set Netlify env: `PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SUPABASE_SERVICE_ROLE_KEY`
   Local in-SW `setTimeout` reminders remain as a Chromium progressive enhancement.

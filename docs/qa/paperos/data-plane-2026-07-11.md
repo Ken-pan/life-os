@@ -80,7 +80,7 @@ them again.
 
 ## Next allowed task
 
-`PAPR.SYS.1` design — **PAUSED BY OWNER** until explicit authorization.
-Architecture discovery complete: PAPR.SYS.1b.jrn **CONDITIONAL PASS accepted** (journal `EntityOpen::open` UUID).
-See [`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md)
-§Future resume point. `PAPR.SYS.1` implementation **not started**.
+`PAPR.SYS.1` is the primary lane as of 2026-07-12 and proceeds in explicitly
+reviewed implementation steps. Architecture discovery is complete;
+PAPR.SYS.1b.jrn is **CONDITIONAL PASS accepted**. See
+[`lifecycle.md`](./lifecycle.md) §Future resume point.

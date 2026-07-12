@@ -1,6 +1,6 @@
 # PaperOS Native Ink Runtime Architecture
 
-**Status:** target architecture after rejecting the Qt Quick hybrid ink path.  
+**Status:** target production architecture; the direct-framebuffer live-ink probe passed on device on 2026-07-10.  
 **Goal:** PaperOS Notes enters a full-takeover native ink mode with xochitl-like
 latency while preserving a seamless PaperOS navigation experience.
 
@@ -11,6 +11,26 @@ paperos-shell
 paperos-core
 paperos-ink-runtime
 ```
+
+## Verified device baseline
+
+The chiappa device exposes power key on `event0`, Folio switches on `event1`,
+Elan Marker on `event2`, and multitouch on `event3`. Runtime ioctls measured
+Marker ranges `ABS_X 0..6760`, `ABS_Y 0..11960`, and `ABS_PRESSURE 0..4096`
+for the 954×1696 portrait screen; production code must continue reading these
+ranges at runtime rather than hardcoding them.
+
+The successful live path owns the vendor RGB32 framebuffer directly and uses:
+
+- strokes: `Mono + QualityFastest + NoRefresh`;
+- page setup: `Mono + Quality3 + CompleteRefresh`;
+- connected line segments, pressure-mapped 1–4 px pen width, and 12 px eraser;
+- `/proc/<pid>` for liveness and a recovery path that matches every
+  `paperos-ink-*` candidate before restoring Xochitl.
+
+The 2026-07-10 physical gate passed without per-stroke flashing; continuous
+ink, pressure and eraser behavior were operator-confirmed. This validates the
+display/input primitive, not the full `paperos-core` persistence architecture.
 
 ### paperos-shell
 
@@ -154,8 +174,10 @@ page navigation
 No color, highlighter, pencil texture, lasso, zoom, or animations until the
 gold baseline passes.
 
-## Hard Gate
+## Expansion gate
 
-Native note mode cannot expand beyond ballpoint until all criteria in
-[`PRO_MOVE_MARKER_PHASE2B_GATE.md`](PRO_MOVE_MARKER_PHASE2B_GATE.md) pass with
-video and swap logs.
+Native note mode stays limited to the first toolbar and ballpoint behavior
+until persistence, enter/exit recovery and physical writing pass the active
+QA criteria in [`../qa/paperos/`](../qa/paperos/README.md). Historical probe
+results are summarized in
+[`../archive/paperos/milestones-2026-07.md`](../archive/paperos/milestones-2026-07.md).

@@ -53,7 +53,7 @@ export async function quickAddTask(page, title, projectName = 'mobile') {
   const pathname = new URL(page.url()).pathname
 
   if (pathname.startsWith('/inbox')) {
-    const input = page.getByRole('textbox').first()
+    const input = page.locator('.quick-add input').first()
     await expect(input).toBeVisible()
     await input.fill(title)
     await page.getByRole('button', { name: '添加', exact: true }).click()
@@ -79,7 +79,7 @@ export async function quickAddTask(page, title, projectName = 'mobile') {
   await page.getByTestId('fab-add').click()
   const dialog = page.getByRole('dialog')
   await dialog.locator('#task-title').fill(title)
-  await dialog.getByRole('button', { name: '保存' }).click()
+  await dialog.getByRole('button', { name: /创建任务|保存更改/ }).click()
   await expect(dialog).toHaveCount(0)
 }
 

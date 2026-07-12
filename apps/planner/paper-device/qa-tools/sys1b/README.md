@@ -9,7 +9,7 @@
 
 **Discovery status (2026-07-11):** PAPR.SYS.1b.fs **BLOCKED / CLOSED** (filesystem/fd/snapshot signals unreliable). PAPR.SYS.1b.jrn **CONDITIONAL PASS accepted** — journal `EntityOpen::open` with document UUID (10/10 target opens · 0 known false positives). **Quick sheets** was only a test fixture (`6dc48b38-4709-4c41-8b49-77d5e0b1630a`); future production needs a dedicated **「Open PaperOS」** document. PAPR.SYS.1 implementation **not started — paused by owner**. Do **not** present these scripts as the future journal watcher.
 
-Related: [`docs/qa/paperos-device-lifecycle-discovery.md`](../../../../../docs/qa/paperos-device-lifecycle-discovery.md) §PAPR.SYS.1b.jrn.
+Related: [`docs/qa/paperos/lifecycle.md`](../../../../../docs/qa/paperos/lifecycle.md) §PAPR.SYS.1b.jrn.
 
 ## Why these exist
 

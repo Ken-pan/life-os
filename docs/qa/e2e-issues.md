@@ -54,6 +54,15 @@
 | **修复** | `@life-os/sync` `createLifeOsSupabaseClient` 浏览器端 `globalThis` 单例缓存（同 url+key+schema） |
 | **验收** | `node packages/sync/scripts/supabaseClient.test.mjs`；Planner E2E 无 GoTrue 警告                 |
 
+### 问题 P-4 · 任务捕获（Capture）测试缺口 — ✅ automated closed（2026-07-12）
+
+| 项       | 内容                                                                                                        |
+| -------- | ----------------------------------------------------------------------------------------------------------- |
+| **Hub**  | **PLNR.CAPTURE.0** · [`planner-task-capture-spec.md`](./planner-task-capture-spec.md)                       |
+| **修复** | 共享 `taskCapture.js`；Sheet `ProjectPicker`；完整 draft defaults；QuickAdd IME guard；dirty guard + undo |
+| **代码** | `QuickAddBar.svelte` · `TaskEditorSheet.svelte` · `ui.svelte.js`                                            |
+| **验收** | unit 98/98；Capture mobile 4/4 + desktop 4/4；剩余真机 iOS 中文 IME / 键盘人工 gate |
+
 ### 复现
 
 ```bash

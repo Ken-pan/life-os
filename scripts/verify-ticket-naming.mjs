@@ -31,10 +31,10 @@ const HUB_FILES = [
   'docs/LIFEOS_ROADMAP.md',
   'docs/roadmap/AGENT_WORKSTREAMS.md',
   'docs/roadmap/apps/README.md',
-  'docs/qa/paperos-device-lifecycle/README.md',
-  'docs/qa/paperos-device-lifecycle-discovery.md',
-  'docs/roadmap/apps/planner-pro-move.md',
-  'docs/PRO_MOVE.md',
+  'docs/qa/paperos/README.md',
+  'docs/qa/paperos/lifecycle.md',
+  'docs/roadmap/apps/paperos.md',
+  'docs/archive/paperos/milestones-2026-07.md',
 ]
 
 const LINK_CHECK_FILES = [
@@ -43,6 +43,13 @@ const LINK_CHECK_FILES = [
   'docs/roadmap/apps/fitness.md',
   'docs/roadmap/apps/finance.md',
   'docs/qa/README.md',
+  'docs/qa/paperos/README.md',
+  'docs/qa/paperos/lifecycle.md',
+  'docs/qa/paperos/lifecycle-gate.md',
+  'docs/qa/paperos/ui-spec.md',
+  'docs/architecture/paperos-api.md',
+  'docs/architecture/paperos-ink-runtime.md',
+  'docs/ops/paperos-device.md',
   'docs/roadmap/TICKET_NAMING.md',
 ]
 
@@ -85,7 +92,6 @@ function isIntentionalLegacyLine(line, fileRel) {
   if (/Legacy|legacy/.test(line)) return true
   if (fileRel.endsWith('migrate.test.js') && line.includes('P-MOVE-3'))
     return true
-  if (fileRel.includes('PRO_MOVE_P_MOVE_BLOCK_GATE')) return true
   if (fileRel.includes('archive/')) return true
   if (/FT-P5/.test(line) && /\.md/.test(line)) return true
   if (/`P-[A-Z*]/.test(line) && /[·|]/.test(line)) return true
@@ -163,7 +169,7 @@ function checkHubDup() {
   const issues = []
   for (const fileRel of [
     'docs/roadmap/apps/README.md',
-    'docs/qa/paperos-device-lifecycle/README.md',
+    'docs/qa/paperos/README.md',
   ]) {
     const lines = readFileSync(join(ROOT, fileRel), 'utf8').split('\n')
     for (let i = 0; i < lines.length; i++) {

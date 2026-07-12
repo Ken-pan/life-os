@@ -5,10 +5,39 @@ import {
   quickAddTask,
   trackGoTrueWarnings,
   waitForPlannerReady,
+  STORAGE_KEY,
 } from './e2e.helpers.js'
 
 async function clearAppStateForProject(page, testInfo) {
   await clearAppState(page, testInfo.project.name)
+}
+
+async function seedCaptureProject(page, projectName) {
+  await page.evaluate((key) => {
+    const state = JSON.parse(localStorage.getItem(key) || '{}')
+    state.projects = [
+      {
+        id: 'project-life-os',
+        title: 'Life OS',
+        slug: 'life-os',
+        status: 'active',
+        areaId: null,
+        priority: 'p0',
+        summary: '',
+        progressMode: 'automatic',
+        manualProgress: null,
+        roadmapRefs: [],
+        repoRefs: [],
+        createdAt: 1,
+        updatedAt: 1,
+        archivedAt: null,
+        deletedAt: null,
+      },
+    ]
+    localStorage.setItem(key, JSON.stringify(state))
+  }, STORAGE_KEY)
+  await page.reload()
+  await waitForPlannerReady(page, projectName)
 }
 
 // 新建任务的编辑器默认折叠高级选项，需要先展开
@@ -81,7 +110,7 @@ test.describe('PlannerOS E2E', () => {
     await dialog.locator('#task-due').fill(localDateOffset(0))
     await openAdvancedOptions(dialog)
     await dialog.locator('#task-priority').selectOption('P1')
-    await dialog.getByRole('button', { name: '保存' }).click()
+    await dialog.getByRole('button', { name: /创建任务|保存更改/ }).click()
     await page.goto('/')
     await expect(
       page.locator('.task-title', { hasText: '会议准备' }),
@@ -89,6 +118,81 @@ test.describe('PlannerOS E2E', () => {
     await expect(
       page.locator('.task-meta-line', { hasText: '高' }),
     ).toBeVisible()
+  })
+
+  test('PLNR.CAPTURE.0: 新建 dialog 默认折叠并支持 @ 项目与撤销', async ({ page }, testInfo) => {
+    await page.goto('/')
+    await seedCaptureProject(page, testInfo.project.name)
+
+    const dialog = await openNewTaskEditor(page, testInfo.project.name)
+    await expect(dialog.locator('.sheet-advanced-toggle')).toHaveAttribute('aria-expanded', 'false')
+
+    const title = dialog.locator('#task-title')
+    await title.fill('准备发布 @life')
+    await expect(dialog.getByRole('option', { name: 'Life OS' })).toBeVisible()
+    await title.press('Enter')
+
+    await expect(title).toHaveValue('准备发布')
+    await expect(dialog.locator('.project-picker-trigger')).toContainText('Life OS')
+    await expect(dialog.locator('.sheet-advanced-toggle')).toHaveAttribute('aria-expanded', 'false')
+
+    await dialog.getByRole('button', { name: '创建任务' }).click()
+    const row = page.locator('.task-row', {
+      has: page.locator('.task-title', { hasText: '准备发布' }),
+    })
+    await expect(row).toBeVisible()
+    await expect(row.locator('.chip--project')).toHaveText('Life OS')
+
+    await page.getByRole('button', { name: '撤销' }).click()
+    await expect(row).toHaveCount(0)
+  })
+
+  test('PLNR.CAPTURE.0: 脏草稿关闭前要求确认', async ({ page }, testInfo) => {
+    await page.goto('/')
+    const dialog = await openNewTaskEditor(page, testInfo.project.name)
+    await dialog.locator('#task-title').fill('不应意外丢失')
+    await dialog.getByRole('button', { name: '关闭' }).click()
+
+    await expect(dialog.getByText('放弃未保存的更改？')).toBeVisible()
+    await dialog.getByRole('button', { name: '继续编辑' }).click()
+    await expect(dialog.locator('#task-title')).toHaveValue('不应意外丢失')
+
+    await dialog.getByRole('button', { name: '取消' }).click()
+    await dialog.getByRole('button', { name: '放弃更改' }).click()
+    await expect(dialog).toHaveCount(0)
+  })
+
+  test('PLNR.CAPTURE.0: Inbox QuickAdd 共用 @ 项目键盘流', async ({ page }, testInfo) => {
+    await page.goto('/')
+    await seedCaptureProject(page, testInfo.project.name)
+    await page.goto('/inbox')
+
+    const input = page.locator('.quick-add input').first()
+    await input.fill('收集灵感 @life')
+    await expect(page.getByRole('option', { name: 'Life OS' })).toBeVisible()
+    await input.press('Enter')
+    await expect(input).toHaveValue('收集灵感')
+    await input.press('Enter')
+
+    const row = page.locator('.task-row', {
+      has: page.locator('.task-title', { hasText: '收集灵感' }),
+    })
+    await expect(row).toBeVisible()
+    await expect(row.locator('.chip--project')).toHaveText('Life OS')
+  })
+
+  test('PLNR.CAPTURE.0: QuickAdd 在 IME 组字期间不误提交', async ({ page }) => {
+    await page.goto('/inbox')
+    const input = page.locator('.quick-add input').first()
+    await input.fill('拼音任务')
+    await input.dispatchEvent('compositionstart')
+    await input.press('Enter')
+    await expect(page.locator('.task-title', { hasText: '拼音任务' })).toHaveCount(0)
+
+    await input.dispatchEvent('compositionend')
+    await page.waitForTimeout(10)
+    await input.press('Enter')
+    await expect(page.locator('.task-title', { hasText: '拼音任务' })).toBeVisible()
   })
 
   test('完成任务后进入今日完成或庆祝态', async ({ page }, testInfo) => {
@@ -117,7 +221,7 @@ test.describe('PlannerOS E2E', () => {
     await page.locator('.task-title', { hasText: '旧标题' }).click()
     await expect(page.getByRole('dialog')).toBeVisible()
     await page.locator('#task-title').fill('新标题')
-    await page.getByRole('dialog').getByRole('button', { name: '保存' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: /创建任务|保存更改/ }).click()
     await expect(
       page.locator('.task-title', { hasText: '新标题' }),
     ).toBeVisible()
@@ -138,7 +242,7 @@ test.describe('PlannerOS E2E', () => {
     const dialog = await openNewTaskEditor(page, testInfo.project.name)
     await dialog.locator('#task-title').fill('明天的事')
     await dialog.locator('#task-due').fill(localDateOffset(1))
-    await dialog.getByRole('button', { name: '保存' }).click()
+    await dialog.getByRole('button', { name: /创建任务|保存更改/ }).click()
 
     await page.goto('/upcoming')
     await expect(page.locator('h1.page-title')).toHaveText('即将')
@@ -162,7 +266,7 @@ test.describe('PlannerOS E2E', () => {
     await dialog.locator('#task-title').fill('搜索目标')
     await openAdvancedOptions(dialog)
     await dialog.locator('#task-tags').fill('work, urgent')
-    await dialog.getByRole('button', { name: '保存' }).click()
+    await dialog.getByRole('button', { name: /创建任务|保存更改/ }).click()
 
     await page.goto('/search')
     await page.locator('.field input').fill('搜索目标')
@@ -254,7 +358,7 @@ test.describe('PlannerOS E2E', () => {
     await dialog.locator('#task-due').fill(localDateOffset(0))
     await openAdvancedOptions(dialog)
     await dialog.getByRole('button', { name: '每天', exact: true }).click()
-    await dialog.getByRole('button', { name: '保存' }).click()
+    await dialog.getByRole('button', { name: /创建任务|保存更改/ }).click()
     await page.goto('/')
     await expect(
       page.locator('.task-title', { hasText: '每日晨跑' }),
@@ -292,7 +396,9 @@ test.describe('PlannerOS E2E', () => {
     await page.goto('/')
     await quickAddTask(page, '将被删除', testInfo.project.name)
     await page.locator('.task-title', { hasText: '将被删除' }).click()
-    await page.getByRole('dialog').getByRole('button', { name: '删除' }).click()
+    const dialog = page.getByRole('dialog')
+    await dialog.getByRole('button', { name: '删除任务' }).click()
+    await dialog.getByRole('button', { name: '确认删除' }).click()
     await expect(
       page.locator('.task-title', { hasText: '将被删除' }),
     ).toHaveCount(0)
@@ -357,7 +463,7 @@ test.describe('PlannerOS E2E', () => {
     await expect(
       dialog.locator('.subtask-row', { hasText: '子项一' }),
     ).toBeVisible()
-    await dialog.getByRole('button', { name: '保存' }).click()
+    await dialog.getByRole('button', { name: /创建任务|保存更改/ }).click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await page.locator('.task-title', { hasText: '带子任务' }).click()
     await expect(
@@ -368,7 +474,7 @@ test.describe('PlannerOS E2E', () => {
   test('移动端 AppBar 搜索入口', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', '仅移动端')
     await page.goto('/')
-    await page.locator('.appbar-search').click()
+    await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '搜索' }).click()
     await expect(page).toHaveURL(/\/search/)
   })
 

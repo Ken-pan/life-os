@@ -7,18 +7,18 @@
 | 主题 | Hub |
 | --- | --- |
 | **PaperOS 全览** | [`paperos/README.md`](./paperos/README.md) |
-| **PaperOS 设备生命周期（`PAPR.SYS.*`）** | [`paperos-device-lifecycle/README.md`](./paperos-device-lifecycle/README.md) |
+| **PaperOS 设备生命周期（`PAPR.SYS.*`）** | [`paperos/README.md`](./paperos/README.md) |
 | PWA / iOS | 下文 §PWA |
-| Planner 日程 | 下文 §Planner 日程 |
+| Planner 日程 / 捕获 | 下文 §Planner 日程 / 捕获 |
 
 ## PaperOS（摘要）
 
 | 文档 | 用途 |
 | --- | --- |
-| [`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md) | SYS 发现 SSOT · PAPR.SYS.1 **paused** |
-| [`paperos-device-lifecycle-gate.md`](./paperos-device-lifecycle-gate.md) | PAPR.SYS.gate LC-01–LC-15 |
-| [`paperos-data-plane-verify-2026-07-11.md`](./paperos-data-plane-verify-2026-07-11.md) | PAPR.DATA.verify PASS |
-| [`paperos-next-ui-update-guide.md`](./paperos-next-ui-update-guide.md) | UI 执行 SSOT |
+| [`paperos/lifecycle.md`](./paperos/lifecycle.md) | SYS 发现 SSOT · PAPR.SYS.1 **primary lane** |
+| [`paperos/lifecycle-gate.md`](./paperos/lifecycle-gate.md) | PAPR.SYS.gate LC-01–LC-15 |
+| [`paperos/data-plane-2026-07-11.md`](./paperos/data-plane-2026-07-11.md) | PAPR.DATA.verify PASS |
+| [`paperos/ui-spec.md`](./paperos/ui-spec.md) | UI 执行 SSOT |
 
 完整列表 → [`paperos/README.md`](./paperos/README.md)
 
@@ -29,14 +29,15 @@
 | [`pwa-ios.md`](./pwa-ios.md) | iOS PWA 调试流程 |
 | [`pwa-viewport-checklist.md`](./pwa-viewport-checklist.md) | Viewport 验收清单 |
 
-## Planner 日程
+## Planner 日程 / 捕获
 
 | 文档 | 用途 |
 | --- | --- |
+| [`planner-task-capture-spec.md`](./planner-task-capture-spec.md) | 任务捕获规范（PLNR.CAPTURE.0 · 草案） |
+| [`planner-task-display-spec.md`](./planner-task-display-spec.md) | 任务行展示规范（P-TASK-DISPLAY-0 · 草案） |
 | [`planner-schedule-uiux-audit.md`](./planner-schedule-uiux-audit.md) | PLNR.SCHED.0 走查 |
 | [`planner-schedule-antigravity-baseline.md`](./planner-schedule-antigravity-baseline.md) | Antigravity baseline |
 | [`planner-schedule-antigravity-baseline.json`](./planner-schedule-antigravity-baseline.json) | 机器可读矩阵 |
-| [`planner-task-display-spec.md`](./planner-task-display-spec.md) | 任务行展示规范（草案） |
 
 ## 跨站 / 其他
 

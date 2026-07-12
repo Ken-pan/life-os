@@ -2,6 +2,7 @@
 
 > **Roadmap：** **P-TASK-DISPLAY-0**（并入 **PLNR.UIUX.0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
 > **代码锚点：** `TaskRow.svelte` · `taskMetaLine.js` · `taskKind.js` · `lifeEventSource.js`
+> **姊妹文档：** [`planner-task-capture-spec.md`](./planner-task-capture-spec.md) — 创建时哪些字段进主区；本规范定义创建后如何展示
 > **状态：** 2026-07-10 产品草案（待走查确认）
 
 ## 问题
@@ -28,6 +29,7 @@
 2. **不重复页面已提供的上下文** — Today 列表不重复写「今天」
 3. **特别类别用形态区分** — 色条/图标/chip，不只靠 meta 文案
 4. **Compact 仍保留关键 chip** — 项目、life_event 来源在 Today 也必须可见
+5. **捕获–展示契约** — 在 [capture spec](./planner-task-capture-spec.md) Tier 0 主区暴露的字段，必须在对应页面列表可见（如 `projectId` → project chip）
 
 ---
 
@@ -122,6 +124,7 @@ else → unscheduledOnly
 
 | 步  | 内容                                                         | 文件                           |
 | --- | ------------------------------------------------------------ | ------------------------------ |
+| 0   | 对齐 [capture spec](./planner-task-capture-spec.md) Tier 0 与 §7 契约表 | `planner-task-capture-spec.md` |
 | 1   | 重写 `buildTaskMetaLine` 视图矩阵 + 去掉 kind/priority 文字  | `taskMetaLine.js`              |
 | 2   | Focus 色条 + habit 图标 CSS                                  | `app.css` · `TaskRow.svelte`   |
 | 3   | `showSecondaryMeta` 在 compact 下仍显示 life_event + project | `TaskRow.svelte`               |

@@ -1,50 +1,57 @@
 ---
 title: Agent Workstreams
 owner: kenpan
-last_verified: 2026-07-11-evening-checkpoint
+last_verified: 2026-07-12-master-a13082e8
 doc_role: execution-routing
-priority_model: 2026-07-11-distribution-correction
+priority_model: 2026-07-12-lifecycle-primary
 ---
 
-# Agent 执行分线（2026-07-11 · 审核修订版）
+# Agent 执行分线（2026-07-12 · master `a13082e8` 复核）
 
 > **Hub 真源：** `[../LIFEOS_ROADMAP.md](../LIFEOS_ROADMAP.md)` §Now / §Next（动态状态只看 Hub；本文 Playbook 少重复）
 > **Ticket ID：** `[TICKET_NAMING.md](./TICKET_NAMING.md)` · **产品细节：** `[apps/](./apps/README.md)`
-> **PaperOS 生命周期：** `[../qa/paperos-device-lifecycle/README.md](../qa/paperos-device-lifecycle/README.md)` · discovery `[../qa/paperos-device-lifecycle-discovery.md](../qa/paperos-device-lifecycle-discovery.md)` · gate `[../qa/paperos-device-lifecycle-gate.md](../qa/paperos-device-lifecycle-gate.md)`
-> **可复制 Prompt：** §7（P0 审核修订后 · 含 `BASE_SHA` · 可分发）
+> **PaperOS 生命周期：** `[../qa/paperos/README.md](../qa/paperos/README.md)` · discovery `[../qa/paperos/lifecycle.md](../qa/paperos/lifecycle.md)` · gate `[../qa/paperos/lifecycle-gate.md](../qa/paperos/lifecycle-gate.md)`
+> **可复制 Prompt：** §7（含 `BASE_SHA` · 可分发）
 
-**分发状态：** Playbook **PASS — READY TO DISTRIBUTE** · **方案 A（稳定优先）** · 活跃 lane **3**（Ken · Fable · Codex T1）· Antigravity **PLNR.SCHED.10a.sim Complete** · Codex T2 **Complete** · Cursor/Codex T3 Queued
+**分发状态：** Playbook **PASS — READY TO DISTRIBUTE** · **算力模型：Lifecycle 主航道 + 快赢副线** · **BASE_SHA：** `a13082e8`（`origin/master` 2026-07-12）
 
-**执行快照（2026-07-11 晚 · 对照 `origin/master` + 本地证据）：**
+**执行快照（2026-07-12 · `origin/master` `a13082e8`）：**
 
 
-| Lane        | Hub ID               | 执行状态         | 证据 / 阻塞                                                                                    |
-| ----------- | -------------------- | ------------ | ------------------------------------------------------------------------------------------ |
-| Ken         | PAPR.UI · 10b.ios    | **Active**   | Slice 1.1 点验进行中 · **10b 真机 PWA 待证据**                                                       |
-| Fable       | PLNR.SCHED.0.migrate | **Active**   | `migrateTask()` **仍未**默认 `tags: []` · 无 `migrate.integration.test.js`                      |
-| Codex T1    | GYMS.SUB.5           | **Active**   | 工程 gate PASS · UI closure **未合入**（SkipModal 无 `aria-pressed` · Focus/Summary 文案未改）         |
-| Antigravity | PLNR.SCHED.10a.sim   | **Complete** | `output/playwright/sch-10-planner/report.json` 2026-07-11 · baseline §9 **PASS simulated** |
-| Codex T2    | PAPR.SYS.1b          | **Complete** | discovery 文档归档 ✅                                                                           |
-| Cursor      | PLNR.SCHED.10.pwa    | **Queued**   | 等 Fable merge                                                                              |
-| Codex T3    | PAPR.WRITE.5         | **Queued**   | 见 §5 启动条件                                                                                  |
-| Copilot     | —                    | On demand    | —                                                                                          |
+| 梯队 | Lane | Hub ID | 状态 | 证据 / 阻塞 |
+| ---- | ---- | ------ | ---- | ----------- |
+| **主航道** | Ken | **PAPR.SYS.*** · PAPR.UI · **10b.ios** | **Primary** | lifecycle 设备 · **PLNR.SCHED.10b.ios 真机 PWA 待证据** |
+| **主航道** | Codex | **PAPR.SYS.1** design → impl | **Primary** | discovery ✅ · Ken 分步授权 |
+| **快赢副线** | Fable | **FINC.PURCHASE.6.r0** · PLNR.UIUX.0 | **Next** | migrate ✅ #15 · **不得**再开 migrate worktree |
+| **快赢副线** | Cursor | **PLNR.CORE.4** / **FINC.SYNC.1b** | **Active** | 10.pwa 代码 ✅ #18 · 可领 Line D |
+| **Complete** | — | PLNR.SCHED.0.migrate | **Complete** | #15 `5c66d51e` |
+| **Complete** | — | PLNR.SCHED.10.pwa（代码） | **Complete** | #18 `73757b60` · **父 ticket 仍待 10b.ios** |
+| **Complete** | — | GYMS.SUB.5 | **Complete** | #19 `67e72b81` · Engineering PASS · Product gate PASS · evidence `docs/qa/evidence/gyms-sub-5/` |
+| **Complete** | Antigravity | PLNR.SCHED.10a.sim | **Complete** | 2026-07-11 simulated PASS |
+| **Complete** | Codex T2 | PAPR.SYS.1b docs | **Complete** | discovery 归档 |
+| **后移** | Codex T3 | PAPR.WRITE.5 | **Deferred** | DB `paper_device_actions` 未上生产 |
+| On demand | Copilot | — | On demand | PR summary / lint |
 
 
 ## TL;DR — 现在怎么分 Agent？
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  Ken     Slice 1.1 · PLNR.SCHED.10b.ios（真机 PWA）— PAPR.SYS.1b discovery ✅ paused       │
+│  ★ 主航道（强 AI 算力 · PaperOS lifecycle 第一优先级）                      │
+│  Ken     PAPR.SYS.* 设备 · Slice 1.1 · PLNR.SCHED.10b.ios（真机 gate）    │
+│  Codex   PAPR.SYS.1 design → impl（强模型 · 单 worktree · Ken 分步授权）    │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  Fable   独占 PLNR.SCHED.0.migrate migrateTask（1 worktree）· FINC.PURCHASE.6.r0 只读待命          │
-│  Codex   T1 GYMS.SUB.5 UI │ T2 PAPR.SYS.1b discovery docs ✅ │ T3 PAPR.WRITE.5 Queued  │
-│  Cursor  **Queued** — Fable PLNR.SCHED.0.migrate merge 后接 PLNR.SCHED.10b.ios 修复               │
-│  Antigravity  PLNR.SCHED.10a.sim ✅ Complete（simulated 证据）· FINC.PURCHASE.6 baseline 待命   │
-│  Copilot  PR summary on demand（非持续 lane）                            │
+│  快赢副线（其他 Agent）                                                    │
+│  Fable   FINC.PURCHASE.6.r0 只读 · PLNR.UIUX.0 走查（migrate ✅ 已关）      │
+│  Cursor  PLNR.CORE.4 │ FINC.SYNC.1b（10.pwa 代码 ✅ #18）                  │
+│  Antigravity  FINC.PURCHASE.6 baseline 待命 · 10a.sim ✅                   │
+│  Copilot  PR summary on demand                                            │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**2026-07-11 关键修正：** PaperOS 是 **设备主 Shell**。**PAPR.DATA.verify ✅** · PAPR.SYS.0 accepted · **PAPR.SYS.1 launch architecture discovery complete**（PAPR.SYS.1a/1b.fs closed · PAPR.SYS.1b.jrn conditional pass）· **PAPR.SYS.1 DESIGN-READY · IMPLEMENTATION NOT AUTHORIZED · PAUSED BY OWNER**. Slice 2 可做 IA，真机合并不绕过 **PAPR.SYS.1**.
+**2026-07-12 算力定案：** PaperOS lifecycle = **主航道**（Ken + Codex）。快赢副线三项 **已完成**：`PLNR.SCHED.0.migrate` #15 · `PLNR.SCHED.10.pwa` #18 · `GYMS.SUB.5` #19（Engineering PASS · Product gate PASS）— 剩余为 **Ken 真机 10b**、**Line D 快赢**。
+
+**架构基线不变：** PaperOS 是 **设备主 Shell**。**PAPR.DATA.verify ✅** · PAPR.SYS.0 accepted · **PAPR.SYS.1 launch architecture discovery complete**（PAPR.SYS.1a/1b.fs closed · PAPR.SYS.1b.jrn conditional pass）· **PAPR.SYS.1 DESIGN-READY** — 主航道可推进 design/分步 impl，**仍须 Ken 逐步授权**，不得副线 agent 越权实现 watcher/launcher。
 
 **启动模式定案：** **Mode A — Xochitl 默认** · 架构 **A 默认、B-ready**（`PAPR.SYS.3` Beta「解锁后自动进入 PaperOS」，默认 Off；见 discovery §产品假设）。
 
@@ -55,7 +62,7 @@ priority_model: 2026-07-11-distribution-correction
 | **Fable**                | patch 等待期可 **只读** 审 FINC.PURCHASE.6 discovery；**不得** 开第二个实现 worktree                                                                                          |
 | **FINC.PURCHASE.6**      | Discovery **CONDITIONAL PASS** · **FINC.PURCHASE.6.r0** 只读评审 · **FINC.PURCHASE.6.a impl BLOCKED**                                                             |
 | **PLNR.SCHED.10.pwa**    | **10A** simulated CSS（Antigravity）**✅ Complete** · **10B** 真机 iOS PWA（Ken）— 不得混称                                                                              |
-| **PLNR.SCHED.0.migrate** | **Fable 独占** `migrate.js` · Cursor **不得**碰 migrate · **代码未合入（2026-07-11 晚）**                                                                                  |
+| **PLNR.SCHED.0.migrate** | **Fable** — ✅ **Complete #15** · Cursor → **Line D**（`PLNR.CORE.4` / `FINC.SYNC.1b`） |
 | **PAPR.SYNC.6**          | **暂缓** 至 `PAPR.SYS.2` 完成；suspend 下 Qt Timer 不继续                                                                                                               |
 | **Ken**                  | 设备任务 = 明确矩阵（见 §Ken 设备窗口）                                                                                                                                      |
 | **Prompt 原则**            | 约束优于说教 · 单任务单 worktree · 验收命令必写 · 人审后合并（见 §6–§7）                                                                                                              |
@@ -63,34 +70,78 @@ priority_model: 2026-07-11-distribution-correction
 
 ---
 
-## 0. 当前并行分配（方案 A · 2026-07-11）
+## 算力分配（2026-07-12）
 
+### 主航道 — PaperOS lifecycle（强 AI · 明日优先）
 
-| 平台               | 任务                                             | Hub ID                       | 状态           | 阻塞 / 交接                                                            |
-| ---------------- | ---------------------------------------------- | ---------------------------- | ------------ | ------------------------------------------------------------------ |
-| **Ken**          | Slice 1.1 · **PLNR.SCHED.10b.ios**             | PAPR.UI · PLNR.SCHED.10b.ios | **Active**   | PAPR.SYS.1b discovery **complete — paused**                        |
-| **Claude Fable** | **PLNR.SCHED.0.migrate** `migrateTask` 独占      | PLNR.SCHED.0                 | **Active**   | `tags: []` 修复 **待合入** · 1 worktree                                 |
-| **Codex T1**     | GYMS.SUB.5 UI/copy closure（方案 1）               | GYMS.SUB.5                   | **Active**   | 工程 PASS · UI closure **进行中**（代码未合入）                                |
-| **Codex T2**     | PAPR.SYS.1b discovery 文档同步（只读证据归档）             | PAPR.SYS.1b                  | **Complete** | DESIGN-READY · impl **not authorized**                             |
-| **Antigravity**  | **PLNR.SCHED.10a.sim** simulated standalone 证据 | PLNR.SCHED.10a.sim           | **Complete** | 2026-07-11 PASS simulated · `/today` 无 shell scroll 容器（路由布局差异，已记录） |
-| **Cursor**       | PLNR.SCHED.10.pwa PWA 修复                       | PLNR.SCHED.10.pwa            | **Queued**   | **等 Fable PLNR.SCHED.0.migrate merge**                             |
-| **Codex T3**     | PAPR.WRITE.5 write staging gate                | PAPR.WRITE.5                 | **Queued**   | 见 §5 Codex T3 启动条件                                                 |
-| **Copilot**      | PR summary / lint                              | —                            | On demand    | 非持续 lane                                                           |
+| 谁 | 任务 | 为何占主算力 |
+| --- | --- | --- |
+| **Ken** | Slice 1.1 设备复验 · PAPR.SYS.* 真机观测 · LC 预备 · PLNR.SCHED.10b.ios | 唯一物理设备权限；lifecycle 证据不可代劳 |
+| **Codex**（强模型） | **PAPR.SYS.1** design → 分步 impl · 与 Ken 对齐 journal watcher / enter-exit 契约 | discovery 已完成；这是发布阻塞项，需深度推理 + SSH/systemd |
+| **Cursor**（按需） | PAPR.SYS.3 QML 设置壳 · Slice 2 IA 文档（**非**真机合并） | 仅当主航道需要 UI 并行且文件锁不冲突 |
 
+**主航道禁止分散到副线：** `PAPR.SYS.1/2` 集成 · journal watcher · `paperos-enter/exit` · lifecycle gate 真机矩阵 · `PAPR.WRITE.5` staging · `PAPR.SYNC.6`。
 
-**暂停 / 后移：** `PAPR.SYNC.6` · `PAPR.SYS.2` · `PAPR.SYS.1` impl（**DESIGN-READY · IMPLEMENTATION NOT AUTHORIZED · paused by owner**）· Slice 2 真机合并 · FINC.PURCHASE.6.a UI · FINC.PURCHASE.6 baseline（Antigravity 待命 QA storage state）。
+### 快赢副线 — 其他 Agent（易出效果 · 不复杂）
 
-**Owner note:** Paused intentionally after architecture discovery. No active device lifecycle agent should continue without new owner authorization.
+**入选标准（须同时满足）：**
+
+1. **投入 ≤1d**，文件/模块边界清晰（有 §6 文件锁或可归入 Line D）
+2. **验收可脚本化** — `npm test` / `npm run check` / Playwright 截图，agent 可自证
+3. **用户体感立竿见影** — 崩溃修复、选中态可见、PWA 可滚动、同步时间戳等
+4. **零设备 SSH** · 零 Supabase migration 风险 · 零跨 app 大重构
+
+| 优先级 | Hub ID | Agent | 状态 | 备注 |
+| ---: | --- | --- | --- | --- |
+| — | **PLNR.SCHED.0.migrate** | — | **✅ Complete** | #15 · 勿再分配 |
+| — | **PLNR.SCHED.10.pwa**（代码） | — | **✅ Complete** | #18 · 父 ticket 待 **10b.ios** |
+| — | **GYMS.SUB.5** | — | **✅ Complete** | #19 `67e72b81` · Engineering PASS · Product gate PASS |
+| 1 | **PLNR.CORE.4** | Cursor / Codex | **Active** | Line D · ~0.5d |
+| 2 | **FINC.SYNC.1b** | Cursor / Codex | **Active** | Line D · ~0.5d |
+| 3 | **FINC.PURCHASE.6.r0** | Fable | **Next** | 只读评审 |
+| 4 | **PLNR.UIUX.0** | Fable | **Next** | 走查 · 与 r0 二选一 worktree |
+| 6 | **FINC.PURCHASE.6 baseline** | Antigravity | 待命 | 需 Ken storage state |
+
+**副线合并顺序（已完成）：** #15 migrate → #18 10.pwa → #19 GYMS.SUB.5（均已在 `a13082e8` 祖先链上）。
+
+| Hub ID | 为何不进副线 |
+| --- | --- |
+| **PAPR.WRITE.5** | staging gate 多条件 · 生产隔离 · 需专门 Codex 会话 |
+| **FINC.PURCHASE.6.a** | Discovery 未解除 impl · JSONB mutation + 审核 UI |
+| **PAPR.SYNC.6** | 硬依赖 `PAPR.SYS.2` · suspend 语义 |
+| **PLNR.ATTACH.0** | Storage + metadata 新底座 |
+| **Slice 2 QML 真机** | 不得绕过 **PAPR.SYS.1** |
 
 ---
 
-## PaperOS lifecycle correction（2026-07-11）
+## 0. 当前并行分配（2026-07-12 · `a13082e8`）
 
-### Critical finding（2026-07-11 更新）
+| 平台 | 任务 | Hub ID | 梯队 | 状态 | 阻塞 / 交接 |
+| ---- | ---- | ------ | ---- | ---- | ----------- |
+| **Ken** | **PAPR.SYS.*** · **10b.ios** | PAPR.SYS · PLNR.SCHED.10b.ios | 主航道 | **Primary** | lifecycle · 真机 PWA 证据 |
+| **Codex** | **PAPR.SYS.1** design → impl | PAPR.SYS.1 | 主航道 | **Primary** | Ken 分步授权 |
+| **Fable** | **FINC.PURCHASE.6.r0** / **PLNR.UIUX.0** | FINC · PLNR.UIUX | 快赢副线 | **Next** | migrate ✅ · 单 worktree |
+| **Cursor** | **PLNR.CORE.4** / **FINC.SYNC.1b** | Line D | 快赢副线 | **Active** | 10.pwa ✅ #18 |
+| **Antigravity** | FINC.PURCHASE.6 baseline | FINC | 待命 | On demand | QA storage state |
+| **Codex T3** | PAPR.WRITE.5 | PAPR.WRITE.5 | 后移 | **Deferred** | 见 §5 |
 
-PaperOS 正在接管 Home/Today、导航、笔记、Gallery、同步与 System Drawer，接近 **主 Shell**。
+**主航道专注：** `PAPR.SYS.*` · Slice 1.1 设备 · lifecycle gate。
 
-**2026-07-11 checkpoint：** 生命周期 **架构发现已完成**（PAPR.SYS.0 accepted · PAPR.SYS.1b.jrn conditional pass）。**PAPR.SYS.1 产品实现 intentionally paused by owner** — 无 watcher、无 launcher、无持久 systemd。
+**副线专注：** Line D 快赢 + Fable 评审/走查 + PLNR 产品 gate — **不得抢占主航道 Codex/Ken 会话**。
+
+**暂停 / 后移：** `PAPR.SYNC.6` · `PAPR.SYS.2`（主航道 `PAPR.SYS.1` 分步完成后）· `PAPR.WRITE.5`（Deferred）· Slice 2 真机合并 · FINC.PURCHASE.6.a UI · FINC.PURCHASE.6 baseline（Antigravity 待命 QA storage state）。
+
+**Owner note:** Lifecycle 为全局第一优先级；`PAPR.SYS.1` impl 按 Ken **分步授权**推进，副线 agent 不得自行实现 watcher/launcher。
+
+---
+
+## PaperOS lifecycle correction（2026-07-12）
+
+### Critical finding（2026-07-12 更新）
+
+PaperOS 正在接管 Home/Today、导航、笔记、Gallery、同步与 System Drawer，接近 **主 Shell**。**Lifecycle 为全局第一优先级** — 2026-07-12 起 **主航道分配最多强 AI 算力**（Ken 设备 + Codex `PAPR.SYS.*`）。
+
+**2026-07-12 checkpoint：** 生命周期 **架构发现已完成**（PAPR.SYS.0 accepted · PAPR.SYS.1b.jrn conditional pass）。**PAPR.SYS.1** 进入 **主航道 Active** — design → **分步 impl**（Ken 逐步授权；非副线 agent 任务）。
 
 **仍属发布阻塞（未实现）：**
 
@@ -142,7 +193,7 @@ PAPR.DATA.verify ✅（Line E）
           ├── PAPR.SYS.1b.fs ❌ BLOCKED / closed
           └── PAPR.SYS.1b.jrn 🟡 CONDITIONAL PASS accepted
               ▼
-        PAPR.SYS.1 implementation ⏸ DESIGN-READY · IMPLEMENTATION NOT AUTHORIZED · PAUSED BY OWNER
+        PAPR.SYS.1 implementation 🟡 PRIMARY LANE — design → 分步 impl（Ken 逐步授权）
               ├── Slice 2 device implementation（不得绕过 PAPR.SYS.1）
               ▼
         PAPR.SYS.2 sleep / wake / idle 🔒
@@ -153,32 +204,31 @@ PAPR.DATA.verify ✅（Line E）
 ```
 
 PAPR.SYS.0 accepted conditional pass authorized bounded discovery. PAPR.SYS.1b.jrn conditional pass
-established launch architecture feasibility — production design may begin only after owner authorization;
-**implementation remains unauthorized**. PAPR.SYS.1 remains paused by owner.
+established launch architecture feasibility — **2026-07-12 主航道 Active**：production design + 分步 impl（Ken 逐步授权；副线 agent 不得实现 watcher/launcher）。
 
 ### PAPR.SYS 任务摘要
 
 
 | ID                  | 主题                      | Status (2026-07-11)                                                | Owner                      | 交付                                                                                     |
 | ------------------- | ----------------------- | ------------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------------------------- |
-| **PAPR.SYS.0**      | 生命周期发现                  | **accepted**                                                       | Codex + Ken                | `[paperos-device-lifecycle-discovery.md](../qa/paperos-device-lifecycle-discovery.md)` |
+| **PAPR.SYS.0**      | 生命周期发现                  | **accepted**                                                       | Codex + Ken                | `[paperos/lifecycle.md](../qa/paperos/lifecycle.md)` |
 | **PAPR.SYS.1a**     | Triple-power launch     | **BLOCKED / closed**                                               | —                          | 不得实现                                                                                   |
 | **PAPR.SYS.1b.fs**  | Filesystem signals      | **BLOCKED / closed**                                               | —                          | lastOpened / fd / snapshot 不可用                                                         |
 | **PAPR.SYS.1b.jrn** | Journal UUID signal     | **CONDITIONAL PASS**                                               | Codex + Ken                | `EntityOpen::open` · 10/10 · 0 FP                                                      |
-| **PAPR.SYS.1**      | enter / exit / recovery | **DESIGN-READY · IMPLEMENTATION NOT AUTHORIZED · PAUSED BY OWNER** | Codex · Cursor             | `paperos-enter/exit/recover` · journal watcher（均未开始）                                   |
+| **PAPR.SYS.1**      | enter / exit / recovery | **PRIMARY LANE — design → 分步 impl**                               | Codex · Ken · Cursor | `paperos-enter/exit/recover` · journal watcher（主航道推进）                                   |
 | **PAPR.SYS.2**      | sleep / wake / idle     | **NOT STARTED**                                                    | Codex                      | pre-suspend flush · wake refresh · `lastSyncAt` 补偿                                     |
 | **PAPR.SYS.3**      | Settings UI             | **OUT OF SCOPE**                                                   | Cursor · Fable ≤30m review | auto-sleep · **Launch after unlock [Beta] Off**                                        |
-| **PAPR.SYS.gate**   | 真机可靠性                   | **BLOCKED**                                                        | Ken + Codex                | `[paperos-device-lifecycle-gate.md](../qa/paperos-device-lifecycle-gate.md)`           |
+| **PAPR.SYS.gate**   | 真机可靠性                   | **BLOCKED**                                                        | Ken + Codex                | `[paperos/lifecycle-gate.md](../qa/paperos/lifecycle-gate.md)`           |
 
 
 **PAPR.SYS.1 System 菜单最低项：** Sleep · Restart PaperOS · Return to reMarkable · Restart device · Shut down（危险操作确认）。
 
 **PAPR.SYNC.6 约束：** 应用内 timer **不能**假定 system suspend 期间仍运行；须 **活跃期定时 + 唤醒按 `lastSyncAt` 补偿**；RTC 定时唤醒 = 实验，不进 MVP。
 
-### PAPR.SYS.1b — Launcher Document discovery（2026-07-11 完成 · paused）
+### PAPR.SYS.1b — Launcher Document discovery（2026-07-11 完成 · 2026-07-12 主航道接手）
 
 **Verdict:** PAPR.SYS.1b.fs **BLOCKED / CLOSED** · PAPR.SYS.1b.jrn **CONDITIONAL PASS accepted**.
-Discovery sub-tasks **complete**; PAPR.SYS.1 implementation **not started — paused by owner**.
+Discovery sub-tasks **complete**; **PAPR.SYS.1 主航道 Active** — Codex design → 分步 impl（Ken 逐步授权）。
 
 
 | 项        | 内容                                                                                    |
@@ -188,8 +238,10 @@ Discovery sub-tasks **complete**; PAPR.SYS.1 implementation **not started — pa
 | **物理矩阵** | T-01–T-08 complete — 见 discovery §J1                                                  |
 | **产出**   | journal `EntityOpen::open` UUID · 10/10 TP · 0 FP                                     |
 | **阻塞条件** | FS 路线已关闭；JRN 为 conditional pass（OTA / fail-closed 风险保留）                               |
-| **禁止**   | 将 QA scripts 描述为 production watcher · 无 owner 授权不得继续 impl                             |
+| **禁止**   | 副线 agent 实现 watcher · 将 QA scripts 描述为 production watcher                             |
 
+
+**Resume:** **2026-07-12 主航道 Active** — Codex `PAPR.SYS.1` design → 分步 impl；Ken 设备 gate 并行。
 
 **Accepted journal token:**
 
@@ -217,7 +269,7 @@ EntityId{<launcher-document-UUID>}
 
 ---
 
-## Ken 设备窗口（明确矩阵）
+## Ken 设备窗口（主航道 · 明确矩阵）
 
 
 | 顺序  | 任务                                                        | 验收                                              |
@@ -225,9 +277,10 @@ EntityId{<launcher-document-UUID>}
 | 1   | Slice 1.1 点验（toolbar · Gallery · recovery）                | 通过/失败记入 pro-move 分卷                             |
 | 2   | **PAPR.DATA.verify**                                      | ✅ PASS 2026-07-11                               |
 | 3   | PAPR.SYS.0 lifecycle baseline                             | ✅ accepted                                      |
-| 4   | **PAPR.SYS.1b** launch discovery                          | ✅ PAPR.SYS.1b.jrn conditional pass · **paused** |
-| 5   | **PLNR.SCHED.10b.ios** — 真机 iPhone Add to Home Screen PWA | 见下表 · `docs/qa/pwa-ios.md` L6                   |
-| 6   | （PAPR.SYS.gate 阶段）LC-01–LC-15                             | lifecycle-gate.md                               |
+| 4   | **PAPR.SYS.1b** launch discovery                          | ✅ PAPR.SYS.1b.jrn conditional pass              |
+| 5   | **PAPR.SYS.1** design 对齐 + 分步 impl 真机验证                  | 主航道 · 与 Codex 配对推进                              |
+| 6   | **PLNR.SCHED.10b.ios** — 真机 iPhone Add to Home Screen PWA | 副线穿插 · 见下表 · `docs/qa/pwa-ios.md` L6           |
+| 7   | （PAPR.SYS.gate 阶段）LC-01–LC-15                             | lifecycle-gate.md                               |
 
 
 **PLNR.SCHED.10b.ios 真机 Gate（最低记录项）：**
@@ -253,9 +306,9 @@ EntityId{<launcher-document-UUID>}
 
 | 梯队  | 平台           | Life OS 角色                                                             | 默认            |
 | --- | ------------ | ---------------------------------------------------------------------- | ------------- |
-| T1  | Claude Fable | **PLNR.SCHED.0.migrate** migrateTask · FINC.PURCHASE.6.r0 · Slice 2 IA | usage credits |
-| T1  | Codex        | GYMS.SUB.5 UI · PAPR.SYS.1/2 · PAPR.WRITE.5                            | Terra / Sol   |
-| T1  | Cursor       | **PLNR.SCHED.10.pwa** PWA（Queued）· **PAPR.SYS.3** QML                  | Auto          |
+| T1  | Claude Fable | **FINC.PURCHASE.6.r0** · PLNR.UIUX.0 · Slice 2 IA | usage credits |
+| T1  | Codex        | **PAPR.SYS.1/2**（主航道）                         | Terra / Sol   |
+| T1  | Cursor       | **PLNR.CORE.4** / **FINC.SYNC.1b** · PAPR.SYS.3 QML | Auto          |
 | T2  | Antigravity  | **PLNR.SCHED.10a.sim** ✅ · FINC.PURCHASE.6 baseline 待命                 | 无设备 suspend   |
 | T3  | Copilot      | 补全 / summary                                                           | —             |
 
@@ -265,33 +318,33 @@ EntityId{<launcher-document-UUID>}
 ## 2. 任务路由
 
 ```text
-产品闭环 / 审核 IA / Slice 2 信息架构     → Fable（单 worktree）
-PLNR.SCHED.0.migrate migrateTask                         → Fable（独占）
-设备生命周期 / SSH / systemd / suspend    → Codex
-PLNR.SCHED.10.pwa PWA 修复 / PAPR.SYS.3 设置 UI           → Cursor（PLNR.SCHED.10.pwa 等 Fable merge 后）
-PLNR.SCHED.10a.sim simulated 截图证据                → Antigravity
+产品闭环 / 审核 IA / Slice 2 信息架构     → Fable（单 worktree · migrate ✅ 后）
+FINC.PURCHASE.6.r0 只读评审 / PLNR.UIUX.0  → Fable
+PaperOS lifecycle / SSH / systemd / PAPR.SYS.* → Codex + Ken（主航道）
+PLNR.CORE.4 / FINC.SYNC.1b                  → Cursor / Codex（Line D · Active）
+PLNR.SCHED.10b.ios 真机 PWA                 → Ken（10.pwa 代码 ✅ #18）
 ```
 
 ### Fable 规则（修正冲突）
 
-- **同时只跑一个 Fable 实现 worktree**
-- PLNR.SCHED.0 patch 等待期：可 **只读** 审 FINC.PURCHASE.6.r0 / discovery；**不得** 开 FINC.PURCHASE.6.a 实现 worktree
-- **PLNR.SCHED.0 合并关闭后** → Cursor 可启动 PLNR.SCHED.10.pwa · Fable 可切换 FINC.PURCHASE.6.r0
+- **PLNR.SCHED.0.migrate** ✅ Complete（#15）— Fable **不得**再开 migrate worktree
+- **PLNR.SCHED.0 父 ticket** 关闭条件：仅剩 **PLNR.SCHED.10b.ios** Ken 真机
+- **PLNR.SCHED.10.pwa** 代码 ✅ #18 — Cursor 转 **Line D**
 - Slice 2 **设备合并** 需 Fable IA session，但 **不得** 绕过 PAPR.SYS.1
 
 ### 不给 Fable
 
-- PAPR.SYS.0 日志采集 · PAPR.SYS.1/2 集成 · **PAPR.DATA.verify** · GYMS.SUB.5 UI closure（工程 ✅）
+- PAPR.SYS.0 日志采集 · PAPR.SYS.1/2 集成 · **PAPR.DATA.verify** · GYMS.SUB.5（✅ Complete，勿重开实现）
 
 ---
 
 ## 3. 六条执行线
 
 ```text
-Line A  Planner       PLNR.SCHED.0              Fable（PLNR.SCHED.0.migrate）· Cursor（PLNR.SCHED.10.pwa Queued）· Antigravity（PLNR.SCHED.10a.sim ✅）
+Line A  Planner       PLNR.SCHED.0              migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** Ken · Antigravity（10a ✅）
 Line B  PaperOS Shell PAPR.UI · PAPR.SYS.*      Codex · Ken · Cursor（PAPR.SYS.3）· Fable IA only
-Line C  Fitness       GYMS.SUB.5 UI closure         Codex · product re-review 待 UI
-Line D  快赢          PLNR.CORE.4 · FINC.SYNC.1b           Codex / Cursor
+Line C  Fitness       GYMS.SUB.5                **✅ Complete** · Engineering PASS · Product gate PASS · #19 `67e72b81`
+Line D  快赢          PLNR.CORE.4 · FINC.SYNC.1b           Cursor / Codex **Active**
 Line E  Paper 数据面  PAPR.DATA.verify · PAPR.WRITE.5 · PAPR.SYNC.6         Codex only
 Line F  Finance       FINC.PURCHASE.6                   Fable（关 PLNR.SCHED.0 后）· Codex · Antigravity
 ```
@@ -303,8 +356,8 @@ Line F  Finance       FINC.PURCHASE.6                   Fable（关 PLNR.SCHED.0
 | ------------------------------ | ---------------------------- |
 | Slice 1.1 设备复验                 | Ken + Cursor                 |
 | PAPR.SYS.0 discovery           | ✅ accepted — Codex + Ken     |
-| PAPR.SYS.1b launch discovery   | ✅ complete — paused by owner |
-| PAPR.SYS.1 enter/exit/recovery | **PAUSED** — Codex + Cursor  |
+| PAPR.SYS.1b launch discovery   | ✅ complete — 主航道接手 |
+| PAPR.SYS.1 enter/exit/recovery | **PRIMARY LANE** — Codex + Ken（分步授权）  |
 | PAPR.SYS.2 sleep/wake          | Codex                        |
 | PAPR.SYS.3 settings            | Cursor + Fable ≤30m          |
 | Slice 2 IA                     | Fable（1.1 PASS 后）            |
@@ -326,48 +379,59 @@ Line F  Finance       FINC.PURCHASE.6                   Fable（关 PLNR.SCHED.0
 ## 4. Fable 优先队列
 
 
-| 顺位  | 任务                           | 条件                                                              |
-| --- | ---------------------------- | --------------------------------------------------------------- |
-| 1   | **PLNR.SCHED.0**             | **独占**                                                          |
-| 2   | **FINC.PURCHASE.6.r0**       | PLNR.SCHED.0 关闭 · 只读 readiness 评审（**非** FINC.PURCHASE.6.a impl） |
-| 3   | **Slice 2 IA**               | 1.1 PASS；真机实现等 PAPR.SYS.1                                       |
-| 4   | GYMS.SUB.5 product re-review | ≤30min · Codex T1 UI 完成后                                        |
-| 5   | PAPR.SYS.3 语义                | ≤30min                                                          |
+| 顺位 | 任务 | 条件 |
+| --- | --- | --- |
+| 1 | **FINC.PURCHASE.6.r0** | migrate ✅ · 只读 readiness（**非** FINC.PURCHASE.6.a impl） |
+| 2 | **PLNR.UIUX.0** | 与 r0 二选一 worktree · SCHED 代码轨已清 |
+| 3 | **Slice 2 IA** | 1.1 PASS；真机实现等 PAPR.SYS.1 |
+| 5 | PAPR.SYS.3 语义 | ≤30min |
 
 
 ---
 
-## 5. 第一波并行（方案 A · 可分发）
+## 5. 第一波并行（2026-07-12 · lifecycle 主航道 + 快赢副线）
 
-### Active（3 lanes）
+### 主航道（明日强算力）
 
 ```text
-Ken           Slice 1.1 + PLNR.SCHED.10b.ios（真机证据待提交）
+Ken           PAPR.SYS.* 设备观测 · Slice 1.1 复验 · lifecycle gate 预备
+              （穿插 PLNR.SCHED.10b.ios 真机证据）
 
-Fable         PLNR.SCHED.0.migrate migrateTask 独占（1 worktree · 代码待合入）
-
-Codex T1      GYMS.SUB.5 UI closure 方案 1（进行中）
+Codex         PAPR.SYS.1 design → 分步 impl（强模型 · 单 worktree）
+              与 Ken 配对 · 不得与副线抢同一 Codex 会话
 ```
 
-### Completed
+### 快赢副线（其他 Agent）
 
 ```text
-Antigravity   PLNR.SCHED.10a.sim simulated standalone 证据 ✅ 2026-07-11
-Codex T2      PAPR.SYS.1b discovery 文档归档 ✅
+Fable         FINC.PURCHASE.6.r0 只读 · 或 PLNR.UIUX.0 走查（migrate ✅ 已关）
+
+Cursor        PLNR.CORE.4 / FINC.SYNC.1b（Line D · Active）
+
+Ken           PLNR.SCHED.10b.ios 真机
 ```
 
-### Queued / On demand
+### Completed（master `a13082e8` 祖先链）
 
 ```text
-Cursor        等 Fable PLNR.SCHED.0.migrate merge → PLNR.SCHED.10.pwa PWA 修复 + rebase 重跑 evidence
-Codex T3      见下方启动条件 → PAPR.WRITE.5 write staging gate
+#15  PLNR.SCHED.0.migrate     5c66d51e
+#18  PLNR.SCHED.10.pwa 代码   73757b60
+#19  GYMS.SUB.5 UI closure    67e72b81
+Antigravity   PLNR.SCHED.10a.sim ✅ 2026-07-11
+Codex T2      PAPR.SYS.1b discovery 文档 ✅
+```
+
+### Deferred / On demand
+
+```text
+Codex T3      PAPR.WRITE.5 — 复杂度高 · 不占明日主算力 · 见下方启动条件
 Copilot       有 open PR 时 summary / lint
 ```
 
-**Codex T3 启动条件（方案 A · 稳定优先）：**
+**Codex T3 启动条件（方案 A · 稳定优先 · 2026-07-12 更新）：**
 
-1. Fable `PLNR.SCHED.0` 已 merge
-2. Cursor `PLNR.SCHED.10.pwa` 已 merge，**或** Ken 书面确认与 Codex T3 文件清单零交集
+1. ~~Fable `PLNR.SCHED.0` 已 merge~~ ✅ #15
+2. ~~Cursor `PLNR.SCHED.10.pwa` 已 merge~~ ✅ #18 · **或** Ken 书面确认与 Codex T3 文件清单零交集
 3. `origin/master` clean and green
 4. Ken 批准 Codex T3 具体文件清单
 
@@ -376,25 +440,22 @@ Copilot       有 open PR 时 summary / lint
 ### 合并顺序（Ken 定 · agent 不得自行 push master）
 
 ```text
-1. Fable      PLNR.SCHED.0 / PLNR.SCHED.0.migrate  → master
-2. Cursor     rebase on (1) → PLNR.SCHED.10.pwa → master
-3. Codex T1   GYMS.SUB.5（独立 app，可与 1–2 并行 merge，但产品 gate 见下）
-4. Codex T2   PAPR.SYS.1b discovery 文档 patch ✅（可与上并行）
-5. Codex T3   PAPR.WRITE.5（§5 Codex T3 启动条件全部满足后）
+1. Fable      PLNR.SCHED.0.migrate  → master ✅ #15
+2. Cursor     PLNR.SCHED.10.pwa     → master ✅ #18
+3. Codex T1   GYMS.SUB.5            → master ✅ #19
+4. Cursor     PLNR.CORE.4 / FINC.SYNC.1b（Line D · 可与主航道并行，文件零交集）
+5. Codex T3   PAPR.WRITE.5（§5 启动条件全部满足后）
 ```
 
-**GYMS.SUB.5 产品 gate closure authority（二者至少其一，Codex 不得自行关闭）：**
-
-- Ken 目视 PWA 验收，或
-- Fable ≤30min product re-review
+**GYMS.SUB.5 已关闭：** Engineering PASS · Product gate PASS · #19 `67e72b81` · evidence `docs/qa/evidence/gyms-sub-5/`。
 
 ### PLNR.SCHED.0 关闭后
 
 ```text
-Fable    → FINC.PURCHASE.6.r0 只读评审 · Slice 2 IA 规划（不真机合并）
-Codex    →（owner 授权后）PAPR.SYS.1 design → PAPR.SYS.2 → PAPR.SYNC.6 ∥ PAPR.SYS.3
-Cursor   → PLNR.SCHED.10.pwa（若未在 Queued 阶段完成）→ PAPR.SYS.3 QML · Slice 2 QML（PAPR.SYS.1 后）
-Ken      → PLNR.SCHED.10b.ios ·（PAPR.SYS.gate 阶段）LC-01–LC-15
+Fable    → FINC.PURCHASE.6.r0 只读评审 · PLNR.UIUX.0 走查 · Slice 2 IA 规划（不真机合并）
+Cursor   → PLNR.CORE.4 · FINC.SYNC.1b（Line D）· PAPR.SYS.3 QML（主航道授权后）
+Ken      → PLNR.SCHED.10b.ios（PLNR.SCHED.0 最终关闭）· PAPR.SYS.* 设备 gate
+GYMS.SUB.5 → ✅ Complete（Engineering PASS · Product gate PASS）
 Antigravity → FINC.PURCHASE.6 baseline（Ken 提供 QA storage state 后）
 ```
 
@@ -419,45 +480,40 @@ Antigravity → FINC.PURCHASE.6 baseline（Ken 提供 QA storage state 后）
 **文件级锁（当前波次 · 未列出须先报告）：**
 
 ```text
-Fable:
+Fable（migrate lane closed — 勿再改）:
   apps/planner/src/lib/persist/migrate.js
   apps/planner/src/lib/persist/migrate.test.js
   apps/planner/src/lib/persist/migrate.integration.test.js
 
-Codex T1:
+GYMS.SUB.5（✅ Complete #19 — Engineering PASS · Product gate PASS；勿重开实现）:
   apps/fitness/src/lib/components/SkipModal.svelte
   apps/fitness/src/lib/components/FocusSession.svelte
   apps/fitness/src/lib/components/SummaryView.svelte
-  apps/fitness/src/app.css（或项目内 skip-alt 样式文件）
+  apps/fitness/src/lib/app.css（skip-alt 样式）
   apps/fitness/src/lib/i18n/messages/en.js
   apps/fitness/src/lib/i18n/messages/zh.js
   apps/fitness/tests/substitution.spec.js
 
-  若实际 i18n 路径与上述不同，先报告真实路径；
-  仅允许增加 GYMS.SUB.5 所需 keys，不得顺手重构 locale。
-
-Codex T2:
-  docs/qa/paperos-device-lifecycle-discovery.md（lifecycle status sync only — lane closed）
-
-Codex T3（Queued）:
-  apps/planner/**/paper*write* · staging gate 相关（启动前 Ken 确认具体文件清单）
-
-Cursor（Queued — Fable merge 后）:
-  packages/theme/src/scroll-shell.css   # 共享层 — 见下方回归 gate
-  packages/theme/src/ios-safari.css     # 共享层 — 见下方回归 gate
+PLNR.SCHED.10.pwa（Complete #18 — 勿再改，除非 Ken 10b 证据要求微调）:
+  packages/theme/src/scroll-shell.css
+  packages/theme/src/ios-safari.css
   scripts/pwa/**
-  apps/planner 内 PWA 布局相关 CSS/Svelte（不得碰 migrate.js / migrate.test.js / migrate.integration.test.js）
+  apps/planner 内 PWA 布局相关 CSS/Svelte（不得碰 migrate.js）
 
-  优先 Planner-local override；仅当证明问题来自共享 shell 时才改 packages/theme。
-  若修改 packages/theme，必须额外运行：
-    npm run qa:mobile-scroll
-    npm run check:lifeos-boundaries
-  并报告 Affected apps: Planner / Fitness / Finance / 其他已配置 PWA — 各 PASS 或 N/A。
+Cursor（Active — Line D）:
+  apps/planner/**（PLNR.CORE.4 — Today/Portal 计数）
+  apps/portal/**（若 RPC/契约需对齐）
+  apps/finance/extension/**（FINC.SYNC.1b）
+
+Codex T3（Deferred — PAPR.WRITE.5）:
+  apps/planner/**/paper*write* · staging gate 相关（启动前 Ken 确认具体文件清单）
 
 Antigravity:
   docs/qa/planner-schedule-antigravity-baseline.md
   output/playwright/sch-10-planner/**
 ```
+
+**共享 theme 回归 gate：** 若改 `packages/theme`，须额外运行 `npm run qa:mobile-scroll` · `npm run check:lifeos-boundaries` 并报告 Affected apps。
 
 ---
 
@@ -499,31 +555,35 @@ git status --short
 
 ### 7.1 Ken
 
-**角色：** 唯一有权做物理设备操作与 SSH discovery 的人。
+**角色：** 唯一有权做物理设备操作与 SSH discovery 的人。**主航道 · 明日强算力优先 lifecycle。**
 
 ```markdown
-## 任务：Slice 1.1 + PLNR.SCHED.10b.ios（PAPR.SYS.1b discovery ✅ paused）
+## 任务：PAPR.SYS.* 主航道 + Slice 1.1（2026-07-12 算力优先）
 
-**注意：** PAPR.SYS.1b discovery **complete** — do **not** resume T-02→T-08 or device lifecycle work without explicit owner authorization.
+**梯队：** 主航道 · PaperOS lifecycle 第一优先级
 
 ### 必读
 
-- `docs/qa/paperos-device-lifecycle-discovery.md` §Future resume point
-- `docs/qa/pwa-ios.md`（PLNR.SCHED.10b.ios 最终 gate）
+- `docs/qa/paperos/lifecycle.md` §Future resume point · §J1 矩阵
+- `docs/qa/paperos/lifecycle-gate.md`（LC 预备）
+- `docs/qa/pwa-ios.md`（PLNR.SCHED.10b.ios — 副线穿插）
 
 ### 执行顺序
 
 1. Slice 1.1 点验 — toolbar · Gallery · recovery · Back
-2. **PLNR.SCHED.10b.ios** — 真机 iPhone Add to Home Screen 验收 Planner `/calendar` 滚动
+2. **PAPR.SYS.1** — 与 Codex 配对：design 对齐 · 分步 impl 真机验证（按 Ken 授权范围）
+3. **PLNR.SCHED.10b.ios** — 真机 iPhone Add to Home Screen 验收 Planner `/calendar` 滚动（可穿插）
 
 ### 禁止
 
-- 继续 PAPR.SYS.1b discovery · 安装 watcher · 新建 launcher 文档 · 设备 lifecycle 开发
+- 把副线任务（migrate / GYMS UI / PWA CSS）塞进主航道会话
 - 把 PLNR.SCHED.10a.sim simulated 证据当作 PLNR.SCHED.10.pwa 最终 PASS
+- 副线 agent 代做设备 SSH
 
 ### 验收
 
 - [ ] Slice 1.1 点验结果记入 pro-move 分卷
+- [ ] PAPR.SYS.1 分步进展与 Codex 对齐（design doc / 真机证据）
 - [ ] PLNR.SCHED.10b.ios 真机证据（见 §Ken 设备窗口 10b Gate 表）：
   - Device · 精确 iOS · Install mode（Add to Home Screen）
   - 从 Home Screen 冷启动 · Route `/calendar`
@@ -532,128 +592,128 @@ git status --short
 
 ---
 
-### 7.2 Claude Fable
+### 7.2 Claude Fable — PLNR.SCHED.0.migrate ✅ Complete · 下一任务
 
-**模型：** Claude Opus / Fable · **worktree：** 独占 `apps/planner`
+**模型：** Claude Opus / Fable · **worktree：** 独占 · **migrate lane 已关**
 
 ```markdown
-## 任务：PLNR.SCHED.0 — legacy `tags` 崩溃修复（PLNR.SCHED.0.migrate P0）
+## 任务 A（Complete · #15）：PLNR.SCHED.0.migrate — 勿再实现
 
-**Hub ID：** PLNR.SCHED.0 · **Line A** · **不得**开第二个 worktree 或改 Fitness/Finance/PaperOS 设备代码。
-
-### 背景
-
-Legacy task 缺 `tags` 数组 → `task.tags is not iterable` 崩溃。
-根因：`apps/planner/src/lib/persist/migrate.js` 的 `migrateTask()` spread `...t` 未默认 `tags: []`。
-证据：`docs/qa/planner-schedule-uiux-audit.md` PLNR.SCHED.0.migrate · `planner-schedule-antigravity-baseline.md`。
-
-### 范围（文件级锁 — 仅这些）
-
-- `apps/planner/src/lib/persist/migrate.js`
-- `apps/planner/src/lib/persist/migrate.test.js`
-- `apps/planner/src/lib/persist/migrate.integration.test.js`（legacy task → migrate → Calendar/Timeline selector 不得抛 `task.tags is not iterable`）
-
-### 禁止
-
-- PLNR.SCHED.10.pwa / PWA CSS（Cursor Queued）
-- PaperOS QML / systemd / `PAPR.SYS.*`
-- FINC.PURCHASE.6.a 实现（仅 FINC.PURCHASE.6.r0 只读待命）
-
-### 验收（全部须绿 — 禁止 `|| true`）
-
-    cd apps/planner && npm test -- src/lib/persist/migrate.test.js src/lib/persist/migrate.integration.test.js
-    cd apps/planner && npm run check
-    cd apps/planner && npx vitest run src/lib/domain/schedule.test.js
-
-- [ ] `migrateTask` 对缺失、null 或非数组 `tags` 规范化为 `[]`
-- [ ] `migrate.integration.test.js`：legacy task → migrate → Calendar/Timeline selector 不抛 `task.tags is not iterable`
-- [ ] schedule domain tests 无回归
-- [ ] PR 链到 PLNR.SCHED.0.migrate · 不 claim PLNR.SCHED.10.pwa
-
-### 交接
-
-PLNR.SCHED.0 merge 后通知 Ken → 解锁 Cursor PLNR.SCHED.10.pwa Queued lane。
-FINC.PURCHASE.6.a impl 仍 BLOCKED；FINC.PURCHASE.6.r0 只读评审待命。
-```
+**状态：** ✅ Shipped `5c66d51e` · `migrate.integration.test.js` 绿
 
 ---
 
-### 7.3 Codex T1
+## 任务 B（Next）：FINC.PURCHASE.6.r0 — 只读 readiness 评审
 
-**模型：** GPT-5.x Codex · **范围：** `apps/fitness` only
-
-```markdown
-## 任务：GYMS.SUB.5 产品 UI/copy closure — 方案 1
-
-**Hub ID：** GYMS.SUB.5 · **Line C** · 工程 gate 已 PASS — **不得**改状态模型/归因逻辑。
+**Hub ID：** FINC.PURCHASE.6.r0 · **Line F** · **非** FINC.PURCHASE.6.a impl
 
 ### 必读
 
-- `apps/fitness/docs/FT-P5-ui-closure-guide.md`（方案 1 为默认路径）
-- `apps/fitness/docs/FT-P5-substitution.md`（工程边界）
+- `apps/finance/docs/FP6_PURCHASE_REVIEW.md`
+- `apps/finance/docs/FP6_PURCHASE_REVIEW_DATA_CONTRACT.md`
 
-### 实施清单
+### 交付
 
-1. `.skip-alt.active` — 主题色 background + border + 可读文字色（`app.css`）
-2. `SkipModal.svelte` — `aria-pressed` on substitute buttons
-3. 文案分支 — 0 sets → Skip；partial → Replace remaining sets（`messages/en.js` · `messages/zh.js` i18n keys）
-4. `FocusSession.svelte` — 轻量 `Switched from {planned}` 过渡
-5. `SummaryView.svelte` — `Replaced` badge / 独立行（非 `[Skipped] 2/4` 歧义）
-6. `tests/substitution.spec.js` — 覆盖上述 UI/copy 变更
+- 只读评审：数据层 blocker 是否解除 · FINC.PURCHASE.6.a 是否可授权
+- **不得**实现 Confirm/Reject UI 或 JSONB mutation
 
-### 文件级锁（§6 — 仅这些）
+---
 
-- `SkipModal.svelte` · `FocusSession.svelte` · `SummaryView.svelte` · `app.css`
-- `src/lib/i18n/messages/en.js` · `src/lib/i18n/messages/zh.js`（仅增 GYMS.SUB.5 keys）
-- `tests/substitution.spec.js`
+## 任务 C（可选 Next）：PLNR.UIUX.0 — Planner 全站走查
 
-若 i18n 实际路径不同，先报告；不得重构 locale。
+**条件：** 与任务 B **二选一** worktree（同时只跑一个 Fable 实现 worktree）
+
+### 必读
+
+- `docs/qa/planner-task-display-spec.md`
+- `docs/roadmap/apps/planner.md`
 
 ### 禁止
 
-- `session.js` / `progression.js` / `sessionQueue.js` 状态机
-- 方案 3 分段控件重构
-- 未请求的 a11y 大重构（方案 2 radiogroup 可 follow-up PR）
-
-### 验收
-
-    cd apps/fitness && npm test -- tests/substitution.spec.js tests/session-queue.spec.js
-    cd apps/fitness && npm run check
-
-- [ ] 选中替代项肉眼可辨（非仅颜色 — 边框/背景）
-- [ ] `aria-pressed` 在 DOM 上可见
-- [ ] 产品 gate 项对照 guide §主要发现 全部 addressed
-
-### 交接 / 产品 gate
-
-- **Codex 不得**将 GYMS.SUB.5 产品 gate 标为 PASS
-- 须 **Ken 目视验收** 或 **Fable ≤30min re-review**（至少其一）
-- merge 后更新 Hub 产品 gate 状态
+- `migrate.js`（已关）· PaperOS 设备 · FINC.PURCHASE.6.a impl
 ```
 
 ---
 
-### 7.4 Codex T2
+### 7.3 GYMS.SUB.5 — ✅ Complete
 
-**模型：** GPT-5.x Codex shell · **lane closed 2026-07-11**
+**模型：** — · **Lane closed** · **Engineering：PASS** · **Product gate：PASS**
+
+```markdown
+## 交付：GYMS.SUB.5 — 产品 gate closed
+
+**Hub ID：** GYMS.SUB.5 · **状态：** ✅ Complete · Engineering PASS · Product gate PASS · #19 `67e72b81`
+
+### 已交付（勿重复实现）
+
+- `SkipModal.svelte` — `aria-pressed`
+- `FocusSession.svelte` — `Switched from {planned}`
+- `SummaryView.svelte` — `Replaced` badge
+- `app.css` — `.skip-alt.active` 可见态
+- `tests/substitution.spec.js` 6/6 PASS · 证据 `docs/qa/evidence/gyms-sub-5/`
+- `npm run check` PASS · 393×852 live replacement smoke PASS · no horizontal overflow
+```
+
+---
+
+### 7.4 Codex — 主航道 PAPR.SYS.1
+
+**模型：** GPT-5.x Codex Terra/Sol · **梯队：** 主航道 · 明日强算力
+
+```markdown
+## 任务：PAPR.SYS.1 — enter / exit / recovery（主航道 · 2026-07-12）
+
+**Hub ID：** PAPR.SYS.1 · **Line B** · discovery ✅ · **分步 impl 按 Ken 授权**
+
+### 必读
+
+- `docs/qa/paperos/lifecycle.md` — §J1 · §Future resume point · JRN design 约束
+- `docs/archive/paperos/milestones-2026-07.md` · `docs/archive/paperos/milestones-2026-07.md`
+- `docs/roadmap/apps/paperos.md` §PAPR.SYS
+
+### 目标（按 Ken 授权分步）
+
+1. Production design doc — fail-closed · exact UUID · debounce · OTA guard · emergency disable
+2. `paperos-enter` / `paperos-exit` / `recover-xochitl` 脚本契约
+3. Journal watcher prototype（非 QA `observe-sys1b.sh` 直搬）
+4. 与 Ken 配对真机验证 — 每步有证据再进下一步
+
+### 禁止
+
+- 与副线（GYMS.SUB.5 / migrate / PWA）混在同一 worktree
+- 宣称 PAPR.SYS.2 / PAPR.SYNC.6 已授权
+- 跳过 design 约束直接 `systemctl enable`
+
+### 验收
+
+- [ ] Design doc 与 discovery §J1 矩阵一致
+- [ ] 每步 impl 有 Ken 真机证据或明确 BLOCKED 原因
+- [ ] 无密钥写入 git
+```
+
+---
+
+### 7.4b Codex T2（Complete · 归档 · 2026-07-11）
+
+> **2026-07-12 更新：** PAPR.SYS.1 已升为 **PRIMARY LANE**（§7.4）。本节仅作 discovery 归档参考；**勿**再按 PAUSED 口径分发。
 
 ```markdown
 ## 任务：PAPR.SYS.1b — Discovery 文档同步（read-only · complete)
 
-**Hub ID：** PAPR.SYS.1b · **状态：** Discovery **complete** · PAPR.SYS.1 impl **PAUSED**
+**Hub ID：** PAPR.SYS.1b · **状态：** Discovery **complete** · PAPR.SYS.1 → **PRIMARY LANE**（2026-07-12）
 
 ### 必读
 
-- `docs/qa/paperos-device-lifecycle-discovery.md`
+- `docs/qa/paperos/lifecycle.md`
 
-### 你的工作（若 owner 重新授权 PAPR.SYS.1 design）
+### 你的工作（历史归档）
 
-1. 仅更新 lifecycle 文档 — 不得实现 watcher / paperos-enter
-2. 保持 PAPR.SYS.1 状态为 **DESIGN-READY · IMPLEMENTATION NOT AUTHORIZED · PAUSED BY OWNER**
+1. Discovery 文档已与 §J1 矩阵对齐 — **lane closed**
+2. 后续 impl 见 §7.4 — **分步按 Ken 授权**
 
 ### 禁止
 
-- 设备 SSH · `systemctl enable` · 实现 `paperos-enter` · 宣称 PAPR.SYS.1 implementation 已授权（无 owner 授权）
+- 设备 SSH · `systemctl enable` · 无 Ken 授权的实现步骤
 
 ### 验收
 
@@ -664,26 +724,27 @@ FINC.PURCHASE.6.a impl 仍 BLOCKED；FINC.PURCHASE.6.r0 只读评审待命。
 
 ---
 
-### 7.5 Codex T3（Queued）
+### 7.5 Codex T3（Deferred）
 
-**模型：** GPT-5.x Codex · **启动条件：** 见 §5「Codex T3 启动条件」（方案 A · 稳定优先）
+**模型：** GPT-5.x Codex · **启动条件：** 见 §5「Codex T3 启动条件」（2026-07-12：#15/#18 已满足 · 仍须 Ken 批准文件清单）
 
 ```markdown
 ## 任务：PAPR.WRITE.5 — Controlled write staging gate
 
-**Hub ID：** PAPR.WRITE.5 · **状态：** Queued · **PAPR.DATA.verify** ✅
+**Hub ID：** PAPR.WRITE.5 · **状态：** Deferred · **PAPR.DATA.verify** ✅ · 生产缺 `paper_device_actions` 表
 
 ### 启动前确认（全部满足方可开工）
 
-1. Fable `PLNR.SCHED.0` 已 merge
-2. Cursor `PLNR.SCHED.10.pwa` 已 merge，**或** Ken 书面确认文件清单零交集
+1. ~~Fable `PLNR.SCHED.0` 已 merge~~ ✅ #15
+2. ~~Cursor `PLNR.SCHED.10.pwa` 已 merge~~ ✅ #18 · **或** Ken 书面确认与 Codex T3 文件清单零交集
 3. `origin/master` clean and green
 4. Ken 批准本任务具体文件清单
+5. （建议）主航道 `PAPR.SYS.1` 当前分步不占用同一 Codex 会话
 
 ### 必读
 
-- `docs/PRO_MOVE.md` · `docs/roadmap/apps/planner-pro-move.md`
-- `docs/qa/paperos-data-plane-verify-2026-07-11.md`
+- `docs/archive/paperos/milestones-2026-07.md` · `docs/roadmap/apps/paperos.md`
+- `docs/qa/paperos/data-plane-2026-07-11.md`
 
 ### 目标
 
@@ -727,59 +788,26 @@ FINC.PURCHASE.6.a impl 仍 BLOCKED；FINC.PURCHASE.6.r0 只读评审待命。
 
 ---
 
-### 7.6 Cursor（Queued）
+### 7.6 Cursor — Line D 快赢（Active）
 
-**启动条件：** Fable PLNR.SCHED.0.migrate 已 merge 到 master · 须 rebase 同一 `BASE_SHA` lineage
+**启动条件：** `origin/master` 含 #15/#18/#19 · 领 **PLNR.CORE.4** 或 **FINC.SYNC.1b**（与主航道文件零交集）
 
 ```markdown
-## 任务：PLNR.SCHED.10.pwa PWA 修复（非 PLNR.SCHED.0.migrate）
+## 任务 A（Complete · #18）：PLNR.SCHED.10.pwa — CSS/滚动修复
 
-**Hub ID：** PLNR.SCHED.10.pwa · **状态：** Queued · **Line A**
+**状态：** ✅ Shipped `73757b60` · **PLNR.SCHED.0 父 ticket 仍待 Ken PLNR.SCHED.10b.ios**
 
-### 背景
+---
 
-- **PLNR.SCHED.0.migrate 归 Fable** — 你 **不得** 修改 `migrate.js` / `migrate.test.js`
-- PLNR.SCHED.10a.sim simulated 证据 **已由 Antigravity 交付（2026-07-11）**；你负责修 CSS/布局 + 配合 PLNR.SCHED.10b.ios
-- 手动注入 `standalone-pwa` class ≠ 真 iOS PWA — 最终关闭须 Ken PLNR.SCHED.10b.ios
+## 任务 B（Active）：PLNR.CORE.4 — Today 与 Portal 任务数对齐
 
-### 必读
+见 §7.10 任务 A
 
-- `docs/qa/planner-schedule-uiux-audit.md` SCH-1/10
-- `docs/qa/pwa-ios.md` · `.cursor/rules/pwa-ios-debug.mdc`
-- `packages/theme/src/scroll-shell.css` · `scripts/pwa/apps.config.mjs`
+---
 
-### 文件级锁
+## 任务 C（Active）：FINC.SYNC.1b — 扩展 last sync + retry
 
-- `packages/theme/src/scroll-shell.css` · `packages/theme/src/ios-safari.css`（**共享层** — 优先 Planner-local override）
-- `scripts/pwa/**`
-- Planner PWA 布局相关（**不含** `persist/migrate`*）
-
-### 范围
-
-1. Fable merge 后 `git rebase origin/master`
-2. `PWA_APP=planner npm run test:pwa` — 修 standalone-pwa 滚动
-3. 单一主滚动容器 `.life-os-page-workspace`
-4. 重跑全部 PWA evidence
-5. **仅当**修改 `packages/theme` 时，额外运行 `npm run qa:mobile-scroll` 并报告各 app PASS/N/A
-
-### 禁止
-
-- `apps/planner/src/lib/persist/migrate.js` · `migrate.test.js` · `migrate.integration.test.js`
-- PaperOS QML / systemd（直至 **PAPR.SYS.1 implementation authorized** — 当前 **DESIGN-READY · NOT AUTHORIZED · paused by owner**）
-
-### 验收
-
-    npm run pwa:build
-    PWA_APP=planner npm run test:pwa
-
-若改了 `packages/theme`：
-
-    npm run qa:mobile-scroll
-    npm run check:lifeos-boundaries
-
-- [ ] `/calendar` mobile standalone 可滚动 · tabbar 不遮挡末项
-- [ ] 若改 theme：Affected apps 报告（Planner / Fitness / Finance / 其他）各 PASS 或 N/A
-- [ ] 注明：PASS = CSS fix · PLNR.SCHED.10.pwa 最终关闭仍须 Ken PLNR.SCHED.10b.ios
+见 §7.10 任务 B
 ```
 
 ---
@@ -807,8 +835,8 @@ FINC.PURCHASE.6.a impl 仍 BLOCKED；FINC.PURCHASE.6.r0 只读评审待命。
 
 ### 交接
 
-- Cursor（Queued）：可引用 10a 证据修 CSS；**不得** claim 真 iOS PWA
-- Ken：**PLNR.SCHED.10b.ios** 为 `PLNR.SCHED.10.pwa` 最终关闭条件
+- Cursor：**PLNR.SCHED.10.pwa** 代码 ✅ #18 · Line D **Active**
+- Ken：**PLNR.SCHED.10b.ios** 为 `PLNR.SCHED.0` 父 ticket 最终关闭条件
 
 ---
 
@@ -850,6 +878,59 @@ FINC.PURCHASE.6.a impl 仍 BLOCKED；FINC.PURCHASE.6.r0 只读评审待命。
 
 ---
 
+---
+
+### 7.10 Cursor — 快赢 Line D（PLNR.CORE.4 / FINC.SYNC.1b）
+
+**梯队：** 快赢副线 · **Active**（#15/#18/#19 已在 master · 与主航道文件零交集）
+
+```markdown
+## 任务 A：PLNR.CORE.4 — Today 与 Portal 任务数对齐
+
+**Hub ID：** PLNR.CORE.4 · **Line D** · 投入 ~0.5d
+
+### 目标
+
+同账号、同日期：Planner Today 展示任务数与 Portal `portal_today_summary` 一致。
+
+### 必读
+
+- `docs/roadmap/apps/planner.md` §PLNR.CORE.4
+- `packages/contracts` / Portal today summary 相关 RPC
+
+### 验收
+
+    cd apps/planner && npm test
+    cd apps/planner && npm run check
+
+- [ ] 同账号同日计数一致（附测试或手动步骤）
+- [ ] 未改 migrate.js / PaperOS 设备路径
+
+---
+
+## 任务 B：FINC.SYNC.1b — 扩展 last sync + retry
+
+**Hub ID：** FINC.SYNC.1b · **Line D** · 投入 ~0.5d
+
+### 目标
+
+Finance Chrome 扩展 popup：显示 last sync 时间戳、失败原因、一键 retry。
+
+### 必读
+
+- `docs/roadmap/apps/finance.md` §FINC.SYNC.1b
+- `apps/finance/extension/`
+
+### 验收
+
+    cd apps/finance && npm run check
+
+- [ ] popup 可见 timestamp · 失败可 retry
+- [ ] 未触生产凭证
+```
+
+---
+
 ### 7.9 Fable 后置 — Slice 2 IA / FINC.PURCHASE.6.r0
 
 ```markdown
@@ -871,18 +952,18 @@ FINC.PURCHASE.6.a impl 仍 BLOCKED；FINC.PURCHASE.6.r0 只读评审待命。
 
 ## 任务 B：PaperOS Slice 2 IA（无真机合并）
 
-**条件：** Slice 1.1 device PASS · **PAPR.SYS.1 implementation not authorized** 时仅产出 IA 文档（design-ready，不得真机合并）
+**条件：** Slice 1.1 device PASS · **PAPR.SYS.1** 主航道分步 impl 进行中 — IA 仅文档，不得真机合并
 
 ### 必读
 
-- `docs/qa/paperos-eink-uiux-agent-brief.md`
-- `docs/qa/paperos-next-ui-update-guide.md` Slice 2 节
-- `docs/qa/paperos-eink-uiux-gap-audit.md`
+- `docs/qa/paperos/ui-spec.md`
+- `docs/qa/paperos/ui-spec.md` Slice 2 节
+- `docs/qa/paperos/ui-spec.md`
 
 ### 交付
 
 - Slice 2 导航/页面清单 · 与 brief §6 P0 对照表
-- 明确标注「QML 实现等 PAPR.SYS.1 implementation authorized（当前 DESIGN-READY · NOT AUTHORIZED · paused）」
+- 明确标注「QML 真机实现等 PAPR.SYS.1 对应分步已获 Ken 授权」
 - ≤30min PAPR.SYS.3 Settings 语义评审（Launch after unlock Beta Off）
 
 ### 禁止
@@ -906,24 +987,20 @@ FINC.PURCHASE.6.a impl 仍 BLOCKED；FINC.PURCHASE.6.r0 只读评审待命。
 | 问题                        | 答案                                                                   |
 | ------------------------- | -------------------------------------------------------------------- |
 | PAPR.SYNC.6 何时？           | **PAPR.SYS.2 之后**（与 PAPR.SYS.3 **可并行**）                              |
-| PLNR.SCHED.10.pwa 何时关闭？   | **PLNR.SCHED.10a.sim** simulated + **PLNR.SCHED.10b.ios** Ken 真机 PWA |
-| PLNR.SCHED.0.migrate 谁负责？ | **仅 Fable** — Cursor 不得改 migrate                                     |
-| GYMS.SUB.5 产品 gate？       | **Ken 或 Fable** — Codex 不得自行关闭                                       |
+| PLNR.SCHED.10.pwa 何时关闭？   | 代码 ✅ #18 · **最终关闭** = Ken **PLNR.SCHED.10b.ios** 真机 PWA |
+| PLNR.SCHED.0.migrate 谁负责？ | ✅ **Complete #15** — 勿再分配 |
+| GYMS.SUB.5 产品 gate？       | **✅ Complete** · Engineering PASS · Product gate PASS · #19 `67e72b81` |
 
 
-**维护：** Hub §Now ↔ §0 ↔ §依赖图 · §7 Prompt 随 Hub 更新 · lifecycle hub `[paperos-device-lifecycle/README.md](../qa/paperos-device-lifecycle/README.md)`
+**维护：** Hub §Now ↔ §0 ↔ §算力分配 ↔ §依赖图 · §7 Prompt 随 Hub 更新 · lifecycle hub `[paperos/README.md](../qa/paperos/README.md)`
 
-**审核修订清单（2026-07-11）：**
+**审核修订清单：**
 
-- P0-1～P0-5（首轮）：PLNR.SCHED.0.migrate 归 Fable · 去假绿 · 10a/10b 拆分 · SYS-1b verdict · WRITE.5 gate · BASE_SHA · 合并顺序 · GYMS.SUB.5 closure authority · SYS-1 impl paused
-- P0-6：Codex T1 文件锁补全 i18n（`messages/en.js` · `messages/zh.js`）+ `substitution.spec.js`
-- P0-7：Fable 增 `migrate.integration.test.js` — Calendar/Timeline consumer 链验收
-- P0-8：PAPR.SYS.1 统一为 `DESIGN-READY · IMPLEMENTATION NOT AUTHORIZED`
-- P0-9：Active lane 计数与 Completed 分区 · Ken 10b 不重复 Queued · **2026-07-11 晚：Antigravity → Complete，活跃 3 lane**
-- P1：Cursor theme 全站回归 · Codex T3 启动条件 · WRITE.5 生产证据 · 10b Gate 表 · JRN design 约束
+- **2026-07-12（`a13082e8`）：** master 复核 — #15 migrate · #18 10.pwa · #19 GYMS ✅ Complete（Engineering PASS · Product gate PASS）· Fable→r0/UIUX · Cursor→Line D
+- **2026-07-12：** 算力分配 — lifecycle 主航道 · 快赢任务池
 
-**Verdict：** Playbook `PASS — READY TO DISTRIBUTE` · 执行快照见文首表（2026-07-11 晚）
+**Verdict：** Playbook `PASS — READY TO DISTRIBUTE` · **2026-07-12 算力模型：Lifecycle 主航道 + 快赢副线**
 
-**下次核对触发：** Fable merge · Codex T1 UI PR · Ken 10b 证据 · Cursor 启动
+**下次核对触发：** Ken **10b.ios** 证据 · Cursor Line D PR · Codex 主航道 PAPR.SYS.1 第一步
 
-**相关：** `[planner-schedule-uiux-audit.md](../qa/planner-schedule-uiux-audit.md)` · `[PRO_MOVE.md](../PRO_MOVE.md)` · `[apps/planner-pro-move.md](./apps/planner-pro-move.md)`
+**相关：** `[planner-schedule-uiux-audit.md](../qa/planner-schedule-uiux-audit.md)` · `[archive/paperos/milestones-2026-07.md](../archive/paperos/milestones-2026-07.md)` · `[apps/paperos.md](./apps/paperos.md)`

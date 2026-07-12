@@ -1,6 +1,6 @@
-# reMarkable Paper Pro Move Device API Contract
+# PaperOS Device API Contract
 
-This document specifies the communication contract between the future reMarkable Paper Pro Move device client and the PlannerOS backend.
+This document is the canonical communication contract between the PaperOS device client and the Planner provider backend. Product status belongs in [`../roadmap/apps/paperos.md`](../roadmap/apps/paperos.md); validation evidence belongs in [`../qa/paperos/`](../qa/paperos/README.md).
 
 ## Design Decisions
 

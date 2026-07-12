@@ -8,6 +8,8 @@
 | [`responsive-chrome.md`](./responsive-chrome.md) | 断点 / AppBar / scroll-padding / 壳层契约（六端） |
 | [`events-rfc.md`](./events-rfc.md)               | `life_events` envelope、`finance.bill_due`        |
 | [`native-readiness.md`](./native-readiness.md)   | Future iOS / Widget 类型占位                      |
+| [`paperos-api.md`](./paperos-api.md)             | PaperOS 设备读写 API、幂等与 action log 契约      |
+| [`paperos-ink-runtime.md`](./paperos-ink-runtime.md) | PaperOS native ink 组件、显示和 Marker 边界          |
 
 **边界与提取规则：** [`../roadmap/BACKLOG.md`](../roadmap/BACKLOG.md)
 

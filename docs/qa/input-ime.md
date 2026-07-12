@@ -114,6 +114,18 @@ Use controlled `value` + explicit handlers (avoid `bind:value` driving side effe
 
 Planner task title: `apps/planner/src/lib/components/TaskEditorSheet.svelte` (Enter-to-save).
 
+### Planner Capture（`PLNR.CAPTURE.0`）
+
+规范：[`planner-task-capture-spec.md`](./planner-task-capture-spec.md)
+
+| 表面 | 文件 | IME guard | Enter / 副作用 | 状态 |
+| ---- | ---- | --------- | -------------- | ---- |
+| TaskEditorSheet 标题 | `TaskEditorSheet.svelte` | ✅ | Enter → 保存 | 已覆盖 |
+| QuickAddBar 输入 | `QuickAddBar.svelte` | ✅ | Enter → 创建 | composition 期间 submit fail-closed |
+| `@项目` 补全 | `taskCapture.js` · `ProjectPicker.svelte` | ✅ | Enter 先选项目；无菜单才创建 | mobile + desktop E2E |
+
+`@` 触发与 `atQuery` 推导在 composition 期间返回 `null`；QuickAdd 的 `submit()` 也再次检查 guard，避免 Safari 选词 Enter 落入表单提交。
+
 ---
 
 ## QA checklist

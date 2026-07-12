@@ -3,6 +3,7 @@ import { SYSTEM_LIST_INBOX } from './types.js'
 import { createToastStore } from '@life-os/platform-web/svelte/toast-store'
 import { updateTask } from './domain/tasks.js'
 import { DEFAULT_SLOT_DURATION_MINUTES } from './domain/schedule.js'
+import { createTaskEditorDraft } from './taskEditorDraft.js'
 
 /** @param {import('./types.js').Task} task */
 function cloneTask(task) {
@@ -33,6 +34,7 @@ export const taskEditor = $state({
   open: false,
   taskId: null,
   draft: null,
+  initialDraft: null,
 })
 
 /**
@@ -43,29 +45,19 @@ export const taskEditor = $state({
  *   scheduledDate?: string | null,
  *   scheduledStart?: string | null,
  *   durationMinutes?: number | null,
+ *   projectId?: string | null,
  * }} [defaults] 新建任务时的默认值（如当前页面对应的日期）
  */
 export function openTaskEditor(task = null, defaults = {}) {
   taskEditor.taskId = task?.id ?? null
   taskEditor.draft = task
     ? cloneTask(task)
-    : {
-        title: '',
-        notes: '',
+    : createTaskEditorDraft({
+        ...defaults,
         listId:
           defaults.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
-        priority: 0,
-        dueDate: defaults.dueDate ?? null,
-        dueTime: null,
-        scheduledDate: defaults.scheduledDate ?? null,
-        scheduledStart: defaults.scheduledStart ?? null,
-        durationMinutes: defaults.durationMinutes ?? null,
-        reminderMinutes: null,
-        recurrence: null,
-        tags: [],
-        subtasks: [],
-        meta: { kind: 'standard' },
-      }
+      })
+  taskEditor.initialDraft = cloneTask(taskEditor.draft)
   taskEditor.open = true
 }
 
@@ -78,6 +70,7 @@ export function closeTaskEditor() {
   taskEditor.open = false
   taskEditor.taskId = null
   taskEditor.draft = null
+  taskEditor.initialDraft = null
 }
 
 export const quickAdd = $state({ open: false, text: '' })

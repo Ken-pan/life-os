@@ -1,6 +1,8 @@
-# reMarkable Paper Pro Move Device Access Verification
+# PaperOS Device Operations
 
-This document captures the verification status of the hardware target connectivity.
+Canonical SSH, storage, deployment and recovery notes for the reMarkable Paper
+Pro Move target. Product status belongs in
+[`../roadmap/apps/paperos.md`](../roadmap/apps/paperos.md).
 
 ## Device Details
 * **Device Hostname**: `imx93-chiappa`
@@ -37,11 +39,11 @@ source.
   `/home/root/paperos` is now the canonical PaperOS workspace.
 * **2026-07-09**: `open-paperos.sh` launched `/home/root/paperos/paperos`
   with xochitl inactive, and `recover-xochitl.sh` restored xochitl to
-  `active`. See [`PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](./PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md).
+  `active`. See [`../archive/paperos/milestones-2026-07.md`](../archive/paperos/milestones-2026-07.md).
 * **2026-07-09 (PAPR.DEV.3/4)**: CJK font + pagination binary and the
   `paperos.service` launcher were deployed and verified live. Crash
   (`kill -9`) auto-recovery to xochitl confirmed. See
-  [`PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](./PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md).
+  [`../archive/paperos/milestones-2026-07.md`](../archive/paperos/milestones-2026-07.md).
 
 ## Connectivity Notes
 
@@ -65,3 +67,22 @@ source.
   cache.json / last_sync.txt
   fonts/NotoSansCJKsc-Regular.otf
 ```
+
+## Safe session workflow
+
+1. Wake the device and confirm USB reachability before deployment.
+2. Verify Xochitl is active and no stale `paperos*` or `paperos-ink-*` process
+   owns input/display.
+3. Deploy only under `/home/root/paperos`; keep token and config mode `600`.
+4. Enter through the supervised launcher or `paperctl`, never a bare binary
+   for a release gate.
+5. Exit normally, then verify both `xochitl` and `rm-sync` are active.
+
+If a session fails, kill every PaperOS candidate, remove stale test locks,
+run `/home/root/paperos/recover-xochitl.sh`, and verify Xochitl before another
+attempt. After an OS reboot or upgrade, the volatile `/etc` overlay may require
+re-linking `/home/root/paperos/paperos.service` followed by
+`systemctl daemon-reload`.
+
+Never print or commit the device token, write large artifacts to `/`, patch
+Xochitl, or enable production writes as part of a device UI test.

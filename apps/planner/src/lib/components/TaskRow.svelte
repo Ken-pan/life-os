@@ -57,7 +57,9 @@
     buildTaskMetaLine(task, t, { contextDate, minimal: metaMinimal, overdue }),
   )
   const lifeEventSource = $derived(getLifeEventSource(task, t))
-  const showSecondaryMeta = $derived(!compact && !metaMinimal)
+  const showSecondaryMeta = $derived(
+    !metaMinimal && (!compact || Boolean(lifeEventSource || task.projectId)),
+  )
   const showScheduleBtn = $derived(
     showScheduleAction &&
       !task.completed &&
@@ -491,13 +493,15 @@
                 </span>
               {/if}
             {/if}
-            {#if task.reminderMinutes != null}
+            {#if !compact && task.reminderMinutes != null}
               <span class="chip">🔔</span>
             {/if}
-            {#if list}<span class="chip">{listLabel(list)}</span>{/if}
-            {#each task.tags.filter( (tag) => String(tag || '').trim(), ) as tag}<span
-                class="chip tag">{tag}</span
-              >{/each}
+            {#if !compact && list}<span class="chip">{listLabel(list)}</span>{/if}
+            {#if !compact}
+              {#each task.tags.filter( (tag) => String(tag || '').trim(), ) as tag}<span
+                  class="chip tag">{tag}</span
+                >{/each}
+            {/if}
           </div>
         {/if}
         {#if overdue && !showAsCompleted}

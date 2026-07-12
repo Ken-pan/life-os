@@ -1,17 +1,23 @@
 <script>
   import { S, uid } from '$lib/state.svelte.js';
-  import { createTask, updateTask, deleteTask, addSubtask } from '$lib/domain/tasks.js';
+  import { createTask, updateTask, deleteTask, restoreTask, addSubtask } from '$lib/domain/tasks.js';
   import { taskEditor, closeTaskEditor, toast } from '$lib/ui.svelte.js';
   import { fetchTaskBreakdown, isAiDisabled } from '$lib/services/aiClient.js';
   import { t, listLabel } from '$lib/i18n/index.js';
   import { SYSTEM_LIST_INBOX, RECURRENCE_RULES, REMINDER_PRESETS } from '$lib/types.js';
   import { TASK_KINDS, normalizeTaskKind } from '$lib/domain/taskKind.js';
-  import { getProjectById, selectableProjects } from '$lib/domain/projects.js';
+  import { selectableProjects } from '$lib/domain/projects.js';
+  import {
+    filterCaptureProjects,
+    projectQueryFromTitle,
+    titleWithoutProjectQuery,
+  } from '$lib/domain/taskCapture.js';
   import { SCHEDULE_DURATIONS, formatDurationLabel } from '$lib/domain/schedule.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
-  import { createImeGuard } from '@life-os/theme';
+  import { activateFocusTrap, createImeGuard } from '@life-os/theme';
   import DateField from './DateField.svelte';
   import TimeField from './TimeField.svelte';
+  import ProjectPicker from './ProjectPicker.svelte';
   import Icon from '@life-os/platform-web/svelte/icon';
 
   const ime = createImeGuard();
@@ -19,51 +25,74 @@
   let subtaskDraft = $state('');
   let aiBusy = $state(false);
   let showAdvanced = $state(false);
+  let showDiscardConfirm = $state(false);
+  let showDeleteConfirm = $state(false);
+  let showTitleError = $state(false);
+  let titleComposing = $state(false);
+  let titleSuggestionDismissed = $state(false);
+  let titleSuggestionIndex = $state(0);
   /** @type {HTMLInputElement | null} */
   let titleInput = $state(null);
+  /** @type {HTMLElement | null} */
+  let sheetEl = $state(null);
 
   const draft = $derived(taskEditor.draft);
   const isNew = $derived(!taskEditor.taskId);
   const recurrenceRule = $derived(draft?.recurrence?.rule || 'none');
   const projects = $derived(selectableProjects());
-  const orphanProject = $derived(
-    draft?.projectId && !getProjectById(draft.projectId)
-      ? draft.projectId
-      : null
+  const canSave = $derived(Boolean(draft?.title?.trim()));
+  const isDirty = $derived(
+    Boolean(draft && taskEditor.initialDraft) &&
+      JSON.stringify(draft) !== JSON.stringify(taskEditor.initialDraft)
+  );
+  const titleProjectQuery = $derived(
+    titleComposing || titleSuggestionDismissed || !draft
+      ? null
+      : projectQueryFromTitle(draft.title)
+  );
+  const titleProjectSuggestions = $derived(
+    titleProjectQuery == null
+      ? []
+      : filterCaptureProjects(projects, titleProjectQuery, 5)
   );
 
-  const needsAdvancedOpen = $derived.by(() => {
-    if (!draft) return false;
-    return (
-      Boolean(draft.notes?.trim()) ||
-      draft.reminderMinutes != null ||
-      Boolean(draft.recurrence) ||
-      draft.priority !== 'P3' ||
-      draft.tags.length > 0 ||
-      draft.subtasks.length > 0 ||
-      normalizeTaskKind(draft.meta?.kind) !== 'standard' ||
-      draft.scheduledDate ||
-      draft.scheduledStart ||
-      draft.durationMinutes ||
-      draft.urgency !== 'normal' ||
-      draft.size !== 'medium' ||
-      draft.area !== 'other' ||
-      draft.effortMin != null ||
-      Boolean(draft.nextAction?.trim()) ||
-      Boolean(draft.aiContext?.trim()) ||
-      Boolean(draft.projectId?.trim())
-    );
+  const advancedCount = $derived.by(() => {
+    if (!draft) return 0;
+    return [
+      Boolean(draft.notes?.trim()),
+      draft.reminderMinutes != null,
+      Boolean(draft.recurrence),
+      draft.priority !== 'P3',
+      draft.tags.length > 0,
+      draft.subtasks.length > 0,
+      normalizeTaskKind(draft.meta?.kind) !== 'standard',
+      Boolean(draft.scheduledDate || draft.scheduledStart || draft.durationMinutes),
+      draft.urgency !== 'normal',
+      draft.size !== 'medium',
+      draft.area !== 'other',
+      draft.effortMin != null,
+      Boolean(draft.nextAction?.trim()),
+      Boolean(draft.aiContext?.trim()),
+    ].filter(Boolean).length;
   });
+
+  const needsAdvancedOpen = $derived(!isNew && advancedCount > 0);
 
   $effect(() => {
     if (taskEditor.open) {
       showAdvanced = needsAdvancedOpen;
+      showDiscardConfirm = false;
+      showDeleteConfirm = false;
+      showTitleError = false;
+      titleSuggestionDismissed = false;
       lockScroll();
-      if (!taskEditor.taskId) {
-        // 新建任务：自动聚焦标题，移动端直接弹出键盘
-        requestAnimationFrame(() => titleInput?.focus());
-      }
-      return () => unlockScroll();
+      const releaseFocus = sheetEl
+        ? activateFocusTrap(sheetEl, { initialFocusSelector: '#task-title' })
+        : () => {};
+      return () => {
+        releaseFocus();
+        unlockScroll();
+      };
     }
     showAdvanced = false;
   });
@@ -83,7 +112,11 @@
   }
 
   function save() {
-    if (!draft?.title?.trim()) return;
+    if (!draft?.title?.trim()) {
+      showTitleError = true;
+      titleInput?.focus();
+      return;
+    }
     const payload = {
       title: draft.title,
       notes: draft.notes,
@@ -111,20 +144,107 @@
       },
     };
     if (isNew) {
-      createTask({
+      const created = createTask({
         ...payload,
         listId: payload.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX
       });
+      toast(t('toast.taskCreated'), {
+        actionLabel: t('common.undo'),
+        onAction: () => deleteTask(created.id),
+        key: `task-created:${created.id}`,
+        dedupeMs: 0,
+      });
     } else {
       updateTask(taskEditor.taskId, payload);
+      toast(t('toast.saved'));
     }
     closeTaskEditor();
   }
 
+  function requestClose() {
+    titleSuggestionDismissed = true;
+    if (isDirty) {
+      showDiscardConfirm = true;
+      return;
+    }
+    closeTaskEditor();
+  }
+
+  function discardAndClose() {
+    showDiscardConfirm = false;
+    closeTaskEditor();
+  }
+
+  /** @param {import('$lib/types.js').PlannerProject} project */
+  function selectTitleProject(project) {
+    if (!draft) return;
+    draft.projectId = project.id;
+    draft.title = titleWithoutProjectQuery(draft.title);
+    titleSuggestionDismissed = true;
+    titleSuggestionIndex = 0;
+    requestAnimationFrame(() => titleInput?.focus());
+  }
+
+  /** @param {KeyboardEvent} event */
+  function handleTitleKeydown(event) {
+    if (ime.isComposing(event)) return;
+    if (titleProjectSuggestions.length && !titleSuggestionDismissed) {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        titleSuggestionIndex = Math.min(
+          titleSuggestionIndex + 1,
+          titleProjectSuggestions.length - 1,
+        );
+        return;
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        titleSuggestionIndex = Math.max(titleSuggestionIndex - 1, 0);
+        return;
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        selectTitleProject(titleProjectSuggestions[titleSuggestionIndex]);
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        titleSuggestionDismissed = true;
+        return;
+      }
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      save();
+    }
+  }
+
+  /** @param {KeyboardEvent} event */
+  function handleDialogKeydown(event) {
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+    event.preventDefault();
+    if (showDiscardConfirm) {
+      showDiscardConfirm = false;
+      return;
+    }
+    if (showDeleteConfirm) {
+      showDeleteConfirm = false;
+      return;
+    }
+    requestClose();
+  }
+
   function remove() {
     if (!taskEditor.taskId) return;
-    deleteTask(taskEditor.taskId);
-    toast(t('toast.deleted'));
+    const taskId = taskEditor.taskId;
+    deleteTask(taskId);
+    toast(t('toast.deleted'), {
+      actionLabel: t('common.undo'),
+      onAction: () => restoreTask(taskId),
+      key: `task-deleted:${taskId}`,
+      dedupeMs: 0,
+    });
     closeTaskEditor();
   }
 
@@ -201,12 +321,26 @@
 
 {#if taskEditor.open && draft}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="sheet-bg" role="presentation" onclick={(e) => e.target === e.currentTarget && closeTaskEditor()}>
-    <div class="sheet task-editor-sheet" role="dialog" aria-modal="true" aria-labelledby="task-editor-title">
-      <div class="sheet-handle"></div>
+  <div class="sheet-bg" role="presentation" onclick={(e) => e.target === e.currentTarget && requestClose()}>
+    <div
+      bind:this={sheetEl}
+      class="sheet task-editor-sheet"
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-labelledby="task-editor-title"
+      aria-describedby="task-editor-description"
+      onkeydown={handleDialogKeydown}
+    >
+      <div class="sheet-handle" aria-hidden="true"></div>
       <div class="sheet-header">
-        <h2 id="task-editor-title" class="sheet-title">{isNew ? t('common.add') : t('common.edit')}</h2>
-        <button type="button" class="sheet-close" onclick={closeTaskEditor} aria-label={t('common.close')}>
+        <div>
+          <h2 id="task-editor-title" class="sheet-title">{isNew ? t('task.createTitle') : t('task.editTitle')}</h2>
+          <p id="task-editor-description" class="sheet-description">
+            {isNew ? t('task.createDescription') : t('task.editDescription')}
+          </p>
+        </div>
+        <button type="button" class="sheet-close" onclick={requestClose} aria-label={t('common.close')}>
           <Icon name="x" size={20} strokeWidth={1.75} />
         </button>
       </div>
@@ -219,17 +353,46 @@
           bind:this={titleInput}
           bind:value={draft.title}
           enterkeyhint="done"
-          oncompositionstart={ime.compositionstart}
-          oncompositionend={(e) => ime.compositionend(e)}
-          oncompositioncancel={ime.compositioncancel}
-          onkeydown={(e) => {
-            if (e.key === 'Enter') {
-              if (ime.isComposing(e)) return;
-              e.preventDefault();
-              save();
-            }
+          aria-invalid={showTitleError}
+          aria-describedby={showTitleError ? 'task-title-error' : undefined}
+          oninput={() => {
+            showTitleError = false;
+            titleSuggestionDismissed = false;
+            titleSuggestionIndex = 0;
           }}
+          oncompositionstart={() => {
+            titleComposing = true;
+            ime.compositionstart();
+          }}
+          oncompositionend={(e) => {
+            ime.compositionend(e);
+            setTimeout(() => (titleComposing = false), 0);
+          }}
+          oncompositioncancel={() => {
+            titleComposing = false;
+            ime.compositioncancel();
+          }}
+          onkeydown={handleTitleKeydown}
         />
+        {#if showTitleError}
+          <p id="task-title-error" class="field-error">{t('task.titleRequired')}</p>
+        {/if}
+        {#if titleProjectSuggestions.length && !titleSuggestionDismissed}
+          <div class="title-project-menu" role="listbox" aria-label={t('task.projectSuggestions')}>
+            {#each titleProjectSuggestions as project, index (project.id)}
+              <button
+                type="button"
+                role="option"
+                aria-selected={index === titleSuggestionIndex}
+                class:is-active={index === titleSuggestionIndex}
+                onclick={() => selectTitleProject(project)}
+              >
+                <Icon name="folder" size={16} strokeWidth={1.8} />
+                <span>{project.title}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
       </div>
 
       <div class="field-row">
@@ -257,13 +420,26 @@
         </div>
       </div>
 
+      <div class="field field--project">
+        <ProjectPicker
+          value={draft.projectId}
+          onchange={(projectId) => {
+            draft.projectId = projectId;
+          }}
+        />
+      </div>
+
       <button
         type="button"
         class="sheet-advanced-toggle"
         aria-expanded={showAdvanced}
         onclick={() => (showAdvanced = !showAdvanced)}
       >
-        <span>{t('task.moreOptions')}</span>
+        <span>
+          {advancedCount > 0
+            ? t('task.detailsSummary', { count: advancedCount })
+            : t('task.moreOptions')}
+        </span>
         <Icon name={showAdvanced ? 'chevron-up' : 'chevron-down'} size={18} strokeWidth={2} />
       </button>
 
@@ -441,19 +617,6 @@
           </div>
 
           <div class="field">
-            <label for="task-project-id">{t('task.project')}</label>
-            <select id="task-project-id" bind:value={draft.projectId}>
-              <option value={null}>{t('task.noProject')}</option>
-              {#if orphanProject}
-                <option value={orphanProject}>{t('task.unknownProject')}</option>
-              {/if}
-              {#each projects as project (project.id)}
-                <option value={project.id}>{project.title}</option>
-              {/each}
-            </select>
-          </div>
-
-          <div class="field">
             <label for="task-ai-context">{t('task.aiContext')}</label>
             <textarea
               id="task-ai-context"
@@ -506,12 +669,52 @@
         </div>
       {/if}
 
+      {#if !isNew}
+        <button type="button" class="sheet-delete-action" onclick={() => (showDeleteConfirm = true)}>
+          <Icon name="trash" size={17} strokeWidth={1.8} />
+          {t('task.deleteTask')}
+        </button>
+      {/if}
+
+      {#if showDeleteConfirm}
+        <div class="discard-confirm discard-confirm--danger" role="alert">
+          <div>
+            <strong>{t('task.deleteTitle')}</strong>
+            <span>{t('task.deleteDescription')}</span>
+          </div>
+          <div class="discard-confirm-actions">
+            <button type="button" class="btn-secondary" onclick={() => (showDeleteConfirm = false)}>
+              {t('common.cancel')}
+            </button>
+            <button type="button" class="btn-danger" onclick={remove}>
+              {t('task.deleteAction')}
+            </button>
+          </div>
+        </div>
+      {/if}
+
+      {#if showDiscardConfirm}
+        <div class="discard-confirm" role="alert">
+          <div>
+            <strong>{t('task.discardTitle')}</strong>
+            <span>{t('task.discardDescription')}</span>
+          </div>
+          <div class="discard-confirm-actions">
+            <button type="button" class="btn-secondary" onclick={() => (showDiscardConfirm = false)}>
+              {t('task.keepEditing')}
+            </button>
+            <button type="button" class="btn-danger" onclick={discardAndClose}>
+              {t('task.discardAction')}
+            </button>
+          </div>
+        </div>
+      {/if}
+
       <div class="sheet-actions">
-        <button type="button" class="btn-secondary" onclick={closeTaskEditor}>{t('common.cancel')}</button>
-        {#if !isNew}
-          <button type="button" class="btn-secondary" onclick={remove}>{t('common.delete')}</button>
-        {/if}
-        <button type="button" class="btn-primary" onclick={save}>{t('common.save')}</button>
+        <button type="button" class="btn-secondary" onclick={requestClose}>{t('common.cancel')}</button>
+        <button type="button" class="btn-primary" disabled={!canSave} onclick={save}>
+          {isNew ? t('task.createAction') : t('task.saveChanges')}
+        </button>
       </div>
     </div>
   </div>
@@ -532,6 +735,11 @@
     font-size: var(--text-sm);
     color: var(--t3);
   }
+  .field-error {
+    margin: 7px 0 0;
+    color: var(--feedback-error, #b42318);
+    font-size: var(--text-sm);
+  }
   .field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -550,6 +758,12 @@
   }
   .sheet-header .sheet-title {
     margin: 0;
+  }
+  .sheet-description {
+    margin: 4px 0 0;
+    color: var(--t3);
+    font-size: var(--text-sm);
+    line-height: 1.35;
   }
   .sheet-close {
     display: grid;
@@ -584,14 +798,103 @@
   .sheet-advanced {
     display: flex;
     flex-direction: column;
+    animation: task-details-in 150ms ease-out;
+  }
+  .field--title {
+    position: relative;
+  }
+  .title-project-menu {
+    position: absolute;
+    z-index: var(--z-popover, 50);
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--card);
+    box-shadow: var(--shadow-popover, 0 14px 34px rgba(0, 0, 0, 0.16));
+  }
+  .title-project-menu button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 42px;
+    padding: 0 10px;
+    border-radius: calc(var(--radius-control) - 2px);
+    color: var(--t1);
+    text-align: left;
+  }
+  .title-project-menu button:hover,
+  .title-project-menu button.is-active {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .sheet-delete-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    margin: 2px 0 6px;
+    padding: 0 8px;
+    color: var(--feedback-error, #b42318);
+    font-size: var(--text-sm);
+  }
+  .sheet-delete-action:hover {
+    background: color-mix(in srgb, var(--feedback-error, #b42318) 7%, transparent);
+  }
+  .discard-confirm {
+    display: grid;
+    gap: 12px;
+    margin: 6px 0;
+    padding: 14px;
+    border: 1px solid color-mix(in srgb, var(--feedback-warning, #b54708) 24%, var(--border));
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--feedback-warning, #b54708) 6%, var(--card));
+    animation: task-details-in 150ms ease-out;
+  }
+  .discard-confirm > div:first-child {
+    display: grid;
+    gap: 3px;
+  }
+  .discard-confirm--danger {
+    border-color: color-mix(in srgb, var(--feedback-error, #b42318) 24%, var(--border));
+    background: color-mix(in srgb, var(--feedback-error, #b42318) 6%, var(--card));
+  }
+  .discard-confirm strong {
+    color: var(--t1);
+    font-size: var(--text-sm);
+  }
+  .discard-confirm span {
+    color: var(--t3);
+    font-size: var(--text-sm);
+  }
+  .discard-confirm-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .discard-confirm-actions button {
+    flex: 1;
+  }
+  @keyframes task-details-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (--life-os-desktop) {
+    :global(.task-editor-sheet) .sheet-handle {
+      display: none;
+    }
   }
 
   @media (--life-os-mobile) {
     :global(.task-editor-sheet) {
       border-radius: 28px 28px 0 0;
       padding: 12px 24px calc(16px + env(safe-area-inset-bottom));
-      max-height: 80dvh;
+      max-height: min(88dvh, calc(var(--app-vh, 100dvh) - 8px));
       scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom));
+      animation: task-sheet-in 180ms cubic-bezier(.2, .8, .2, 1);
     }
 
     :global(.task-editor-sheet) .sheet-handle {
@@ -633,6 +936,10 @@
       margin-bottom: 12px;
     }
 
+    :global(.task-editor-sheet) .field--project {
+      margin-bottom: 8px;
+    }
+
     :global(.task-editor-sheet) .sheet-advanced-toggle {
       min-height: 56px;
       height: 56px;
@@ -658,6 +965,19 @@
     :global(.task-editor-sheet) .sheet-actions .btn-secondary {
       min-height: 56px;
       height: 56px;
+    }
+  }
+
+  @keyframes task-sheet-in {
+    from { transform: translateY(18px); opacity: .75; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheet-advanced,
+    .discard-confirm,
+    :global(.task-editor-sheet) {
+      animation: none;
     }
   }
 </style>

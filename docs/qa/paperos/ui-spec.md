@@ -1,12 +1,10 @@
-# PaperOS 下一步 UI Update 详细指导
+# PaperOS E-ink UI 规范与执行指导
 
 **Date:** 2026-07-10（UI）· lifecycle cross-ref 2026-07-11
-**Status:** Proposed execution SSOT（UI track）
-**Lifecycle（独立轨道）：** PAPR.SYS.1 architecture discovery **complete** · implementation **paused by owner** — [`paperos-device-lifecycle/README.md`](./paperos-device-lifecycle/README.md)
+**Status:** Execution SSOT（UI track）
+**Lifecycle（独立轨道）：** PAPR.SYS.1 architecture discovery **complete** · **primary lane** — [`README.md`](./README.md)
 **Applies to:** `PAPR.UI Core Slice 1.1 Correction` + `Core Slice 2 Home/Today`
-**Repo path:** [`docs/qa/paperos-next-ui-update-guide.md`](./paperos-next-ui-update-guide.md)
-**Related gates:** [`paperos-core-slice-1-integration-gate.md`](./paperos-core-slice-1-integration-gate.md) · [`paperos-core-slice-1-visual-gate.md`](./paperos-core-slice-1-visual-gate.md)
-**Long-term product brief:** [`paperos-eink-uiux-agent-brief.md`](./paperos-eink-uiux-agent-brief.md) · gap audit [`paperos-eink-uiux-gap-audit.md`](./paperos-eink-uiux-gap-audit.md)
+**Completed gate summary:** [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md)
 
 ---
 
@@ -679,8 +677,8 @@ Do not modify native ink, InkModeController, TestBridge, NoteStore,
 storage, route architecture, or product IA.
 
 Read:
-- PAPEROS_NEXT_UI_UPDATE_GUIDE_2026-07-10.md (repo: docs/qa/paperos-next-ui-update-guide.md)
-- docs/qa/paperos-core-slice-1-visual-gate.md
+- PAPEROS_NEXT_UI_UPDATE_GUIDE_2026-07-10.md (repo: docs/qa/paperos/ui-spec.md)
+- docs/archive/paperos/milestones-2026-07.md
 - current device screenshots
 - applicable AGENTS.md
 
@@ -733,8 +731,8 @@ Own PaperOS PAPR.UI Core Slice 2: Unified Today landing and final
 Layer-1 system IA.
 
 Read:
-- PAPEROS_NEXT_UI_UPDATE_GUIDE_2026-07-10.md (repo: docs/qa/paperos-next-ui-update-guide.md)
-- docs/qa/paperos-eink-uiux-gap-audit.md
+- PAPEROS_NEXT_UI_UPDATE_GUIDE_2026-07-10.md (repo: docs/qa/paperos/ui-spec.md)
+- docs/qa/paperos/ui-spec.md
 - current Core Slice 1.1 device screenshots
 - applicable AGENTS.md files
 
@@ -867,10 +865,10 @@ Does it survive the physical device gate?
 
 ## Repository sources
 
-- `docs/qa/paperos-core-slice-1-integration-gate.md`
-- `docs/qa/paperos-eink-uiux-gap-audit.md`
-- `docs/qa/paperos-eink-uiux-agent-brief.md`
-- `docs/qa/paperos-core-slice-1-visual-gate.md`
+- `docs/archive/paperos/milestones-2026-07.md`
+- `docs/qa/paperos/ui-spec.md`
+- `docs/qa/paperos/ui-spec.md`
+- `docs/archive/paperos/milestones-2026-07.md`
 - `docs/ui-qa-screenshots/paperos/device/baseline-2026-07-10/`
 - `docs/ui-qa-screenshots/paperos/device/latest/`
 
@@ -892,4 +890,3 @@ Does it survive the physical device gate?
   https://remarkable.com/blog/software-updates-3-0-3-3-typed-text-comes-to-remarkable
 - **[R8]** reMarkable Blog — Calm Tech / software release archive
   https://remarkable.com/blog
-

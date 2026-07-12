@@ -1,27 +1,27 @@
 # PaperOS Device Lifecycle Discovery（`PAPR.SYS.0` / `PAPR.SYS.1` discovery）
 
-> **Canonical ID：** [`../roadmap/TICKET_NAMING.md`](../roadmap/TICKET_NAMING.md) · Legacy 别名见对照表。
+> **Canonical ID：** [`../../roadmap/TICKET_NAMING.md`](../../roadmap/TICKET_NAMING.md) · Legacy 别名见对照表。
 
-**Status:** PAPR.SYS.0 **CONDITIONAL PASS — accepted**（2026-07-11）· PAPR.SYS.1 launch architecture discovery **completed** · PAPR.SYS.1 implementation **UNBLOCKED BUT NOT STARTED — PAUSED BY OWNER**（2026-07-11）
+**Status:** PAPR.SYS.0 **CONDITIONAL PASS — accepted**（2026-07-11）· PAPR.SYS.1 launch architecture discovery **completed** · **PAPR.SYS.1 PRIMARY LANE** — design → 分步 impl（2026-07-12 · Ken 逐步授权）
 
-> **导航 hub：** [`paperos-device-lifecycle/README.md`](./paperos-device-lifecycle/README.md) — 先读此页再进正文。
+> **导航 hub：** [`README.md`](./README.md) — 先读此页再进正文。
 > **Owner:** Codex + Ken
 > **Agent 线:** Line B（Shell）· **PAPR.DATA.verify** PASS（同设备窗口）
-> **暂停原因：** Owner intentionally ended this section after architecture discovery. No active device lifecycle agent should continue without new owner authorization.
-> **阻塞：** `PAPR.SYS.2` 及之后 **HARD BLOCKED** until PAPR.SYS.1 implementation receives a reviewed verdict.
+> **2026-07-11 暂停：** Owner 在 discovery 后暂停全量 impl · **2026-07-12 恢复主航道** — 仅 **分步**推进，每步须 Ken 授权
+> **阻塞：** `PAPR.SYS.2` 及之后 **HARD BLOCKED** until PAPR.SYS.1 对应分步完成并有 reviewed verdict
 
 > PaperOS 正在从「前台 App」升级为 **设备主 Shell**。本 gate 产出**真机状态机**，回答启动、退出、睡眠、唤醒、崩溃恢复与同步在 suspend 下的行为。
 
-## 当前权威状态（2026-07-11）
+## 当前权威状态（2026-07-12）
 
 | 阶段                  | 状态                                            | 说明                                                                                                      |
 | --------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `PAPR.DATA.verify`    | **PASS**                                        | 生产数据面 E2E；见 [`paperos-data-plane-verify-2026-07-11.md`](./paperos-data-plane-verify-2026-07-11.md) |
+| `PAPR.DATA.verify`    | **PASS**                                        | 生产数据面 E2E；见 [`data-plane-2026-07-11.md`](./data-plane-2026-07-11.md) |
 | `PAPR.SYS.0`          | **CONDITIONAL PASS — accepted**                 | 有界 enter/exit、suspend baseline、单次强杀恢复                                                           |
 | `PAPR.SYS.1a`         | **BLOCKED / CLOSED**                            | 三击电源键；无可靠原生 UI 解锁证明                                                                        |
 | `PAPR.SYS.1b.fs`      | **BLOCKED / CLOSED**                            | lastOpened / metadata / snapshot / fd 无法可靠识别纯打开                                                  |
 | `PAPR.SYS.1b.jrn`     | **CONDITIONAL PASS — accepted**                 | journal `EntityOpen::open` 含完整 UUID；真机矩阵 10/10 TP · 0 FP                                          |
-| `PAPR.SYS.1` 实现     | **UNBLOCKED BUT NOT STARTED — PAUSED BY OWNER** | 架构可行；watcher / launcher / lifecycle 均未开始                                                         |
+| `PAPR.SYS.1` 实现     | **PRIMARY LANE — design → 分步 impl**           | 2026-07-12 主航道 Active；watcher / launcher 按 Ken 授权分步                                              |
 | `PAPR.SYS.2`          | **HARD BLOCKED**                                | 依赖 PAPR.SYS.1                                                                                           |
 | `PAPR.SYNC.6`         | **BLOCKED**                                     | 依赖 PAPR.SYS.2                                                                                           |
 | `PAPR.SYS.gate`       | **BLOCKED**                                     | 等待完整生命周期链                                                                                        |
@@ -33,15 +33,13 @@
 VERIFY ✅
 → PAPR.SYS.0 🟡 accepted
 → PAPR.SYS.1 launch discovery ✅ (PAPR.SYS.1b.jrn conditional pass)
-→ PAPR.SYS.1 implementation ⏸ PAUSED / NOT STARTED
+→ PAPR.SYS.1 implementation 🟡 PRIMARY LANE（2026-07-12 · Ken 分步授权）
 → PAPR.SYS.2 🔒
 → PAPR.SYNC.6 🔒
 → PAPR.SYS.gate 🔒
 ```
 
-Architecture discovery completed. Implementation not started. Work intentionally paused by owner.
-
-PAPR.SYS.0 的 accepted conditional pass 授权了有界 discovery；PAPR.SYS.1b.jrn conditional pass 解除了 **架构 blocker**，但 **不授权** 在无 owner 授权时开工 lifecycle supervisor、journal watcher 或 PAPR.SYS.2。
+Architecture discovery completed. **2026-07-12：** PAPR.SYS.1 主航道 Active — design + 分步 impl（每步 Ken 授权）。副线 agent 不得实现 watcher/launcher。
 
 ### 最终安全 handoff 状态（2026-07-11 session 结束）
 
@@ -131,7 +129,7 @@ Mode B **不得**仅凭功能完成进入默认状态。须通过：
 | 长时间运行          |               至少 48 小时无不可恢复故障 |
 | 无 Mac 恢复         | 用户仅用设备可关闭自动启动并返回 Xochitl |
 
-另须通过：冷启动与解锁 Gate · 双向切换 Gate · 电源键与 Folio Gate · 写入中 suspend 完整性 Gate（见 [`paperos-device-lifecycle-gate.md`](./paperos-device-lifecycle-gate.md)）。
+另须通过：冷启动与解锁 Gate · 双向切换 Gate · 电源键与 Folio Gate · 写入中 suspend 完整性 Gate（见 [`paperos/lifecycle-gate.md`](./lifecycle-gate.md)）。
 
 在上述条件完成前，**Mode A 保持默认**；Mode B 仅作为明确标注的 Beta 选项。
 
@@ -189,7 +187,7 @@ RECOVERY            — kill -9 PaperOS → existing temporary open-paperos.sh w
 | -------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | 重启后谁先启动？                 | 未测；Mode A 规定 Xochitl 默认                                                        | 无 cold-boot evidence                                                              |
 | 必须经过 xochitl 解锁吗？        | 未测；不得据此改变 Mode A                                                             | 无 unlock evidence                                                                 |
-| 无 Mac/SSH 如何进入 PaperOS？    | **架构候选已找到，未实现** — journal UUID 机制 viable；须专用 launcher 文档 + watcher | PAPR.SYS.1a/1b.fs closed；PAPR.SYS.1b.jrn conditional pass；PAPR.SYS.1 impl paused |
+| 无 Mac/SSH 如何进入 PaperOS？    | **架构候选已找到，实现按步验收** — journal UUID 机制 viable；须专用 launcher + watcher | PAPR.SYS.1a/1b.fs closed；PAPR.SYS.1b.jrn conditional pass；PAPR.SYS.1 primary lane |
 | 如何安全返回 xochitl + rm-sync？ | 正常 exit 与单次 force-kill wrapper 均恢复                                            | 15:52 与 16:06 evidence                                                            |
 | 短按电源键行为？                 | logind 收到事件，但 PaperOS 无可见 sleep                                              | Ken + journal                                                                      |
 | Folio 睡眠/唤醒？                | INCONCLUSIVE；设备无 Folio                                                            | Ken observation                                                                    |
@@ -241,13 +239,13 @@ PaperOS bridge 就绪、生产 cache 更新；System 的 **Return to reMarkable*
 退出后 Xochitl 与 rm-sync 均恢复 active，未残留 PaperOS 进程。
 
 **Evidence:** `15:50:45` Xochitl/rm-sync stopped；`15:52:26` Xochitl started；
-`15:52:27` 两 unit active；[`paperos-data-plane-verify-2026-07-11.md`](./paperos-data-plane-verify-2026-07-11.md)。
+`15:52:27` 两 unit active；[`paperos/data-plane-2026-07-11.md`](./data-plane-2026-07-11.md)。
 
 **Interpretation:** 现有 launcher 足以支持 PAPR.SYS.0 的有界正常进出测试。
 PaperOS 触控/Marker/显示在单次 session 内已观测；单次强杀恢复亦已验证（Finding 6）。
 Folio、重复崩溃、正式 launcher、持久集成仍未解决；设备端入口现为 **viable candidate**，非已实现功能。
 
-**Implementation consequence:** 保持 Mode A；PAPR.SYS.1 实现 **unblocked but not started** — paused by owner.
+**Implementation consequence:** 保持 Mode A；PAPR.SYS.1 实现已解锁，但必须按 reviewed step 推进，不得一次性启用 watcher / auto-launch。
 须待 owner 授权后设计专用 launcher 文档、journal watcher 与 owned lifecycle supervisor。
 
 **Confidence:** Medium–High for bounded enter/exit; High for single kill recovery.
@@ -360,7 +358,7 @@ authorization, or any PAPR.SYS.3 work.
 **执行摘要：** PAPR.SYS.1 launch architecture discovery **completed**.
 PAPR.SYS.1a（三击电源）与 PAPR.SYS.1b.fs（文件系统信号）**BLOCKED / CLOSED**.
 PAPR.SYS.1b.jrn（journal `EntityOpen::open` UUID）**CONDITIONAL PASS — accepted**.
-PAPR.SYS.1 产品实现 **UNBLOCKED BUT NOT STARTED — PAUSED BY OWNER**.
+PAPR.SYS.1 产品实现 **PRIMARY LANE**（2026-07-12）— design → 分步 impl，每步须 Ken 授权。
 
 官方要求保留 Xochitl 启动链与解锁职责；社区方案（XOVI/AppLoad、三击电源）存在兼容性与 bootloop 风险。
 **可行候选：** 用户在 Xochitl 内主动打开专用 launcher 文档 → journal watcher 检测目标 UUID →（未来）`paperos-enter`。
@@ -524,7 +522,7 @@ guessed unlock.
 
 ## PAPR.SYS.1b — Launcher Document discovery（2026-07-11 完成）
 
-Discovery split into two tracks: **PAPR.SYS.1b.fs** (filesystem signals) and **PAPR.SYS.1b.jrn** (journal signals). QA instrumentation: [`apps/planner/paper-device/qa-tools/sys1b/`](../../apps/planner/paper-device/qa-tools/sys1b/README.md) — **QA-only discovery instrumentation**, not production lifecycle code, not installed as a device service.
+Discovery split into two tracks: **PAPR.SYS.1b.fs** (filesystem signals) and **PAPR.SYS.1b.jrn** (journal signals). QA instrumentation: [`apps/planner/paper-device/qa-tools/sys1b/`](../../../apps/planner/paper-device/qa-tools/sys1b/README.md) — **QA-only discovery instrumentation**, not production lifecycle code, not installed as a device service.
 
 ### Test fixture（discovery only）
 
@@ -732,14 +730,14 @@ xochitl = active · rm-sync = active · PaperOS count = 0 · observer count = 0
 
 ## Gate 关闭条件（PAPR.SYS.gate；未开始）
 
-1. [`paperos-device-lifecycle-gate.md`](./paperos-device-lifecycle-gate.md) LC-01–LC-15 全部有设备证据
+1. [`lifecycle-gate.md`](./lifecycle-gate.md) LC-01–LC-15 全部有设备证据
 2. PAPR.SYS.1b.jrn conditional pass accepted; PAPR.SYS.1 implementation completed and reviewed
 3. PAPR.SYS.2 sleep/wake 完成
 4. `AGENT_WORKSTREAMS.md` §依赖图 与本文一致
 
 ## 相关
 
-- [`../roadmap/apps/planner-pro-move.md`](../roadmap/apps/planner-pro-move.md) §PAPR.SYS
-- [`paperos-device-lifecycle-gate.md`](./paperos-device-lifecycle-gate.md)（PAPR.SYS.gate 用例）
-- [`paperos-data-plane-verify-2026-07-11.md`](./paperos-data-plane-verify-2026-07-11.md)（VERIFY PASS）
-- [`../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md)（PAPR.DEV.4 基线）
+- [`../../roadmap/apps/paperos.md`](../../roadmap/apps/paperos.md) §PAPR.SYS
+- [`lifecycle-gate.md`](./lifecycle-gate.md)（PAPR.SYS.gate 用例）
+- [`data-plane-2026-07-11.md`](./data-plane-2026-07-11.md)（VERIFY PASS）
+- [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md)（PAPR.DEV.4 基线）

@@ -1,11 +1,19 @@
 <script>
-  import { createTask } from '$lib/domain/tasks.js';
+  import { createTask, deleteTask } from '$lib/domain/tasks.js';
   import { S } from '$lib/state.svelte.js';
   import { SYSTEM_LIST_INBOX } from '$lib/types.js';
   import { t } from '$lib/i18n/index.js';
   import { todayKey } from '$lib/state.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
   import { getProjectById, selectableProjects } from '$lib/domain/projects.js';
+  import {
+    filterCaptureProjects,
+    projectQueryFromTitle,
+    titleWithoutProjectQuery,
+  } from '$lib/domain/taskCapture.js';
+  import { createImeGuard } from '@life-os/theme';
+
+  const ime = createImeGuard();
 
   /** @type {{ placeholder?: string, listId?: string, dueDate?: string|null, projectId?: string|null, showOnMobile?: boolean, toastOnAdd?: string }} */
   let {
@@ -19,18 +27,19 @@
 
   let text = $state('');
   let selectedProjectId = $state(null);
+  let composing = $state(false);
+  let suggestionsDismissed = $state(false);
+  let activeSuggestion = $state(0);
 
   const canSubmit = $derived(text.trim().length > 0);
   const selectedProject = $derived(getProjectById(selectedProjectId));
   const atQuery = $derived.by(() => {
-    const match = text.match(/(?:^|\s)@([^@\s]*)$/);
-    return match ? match[1].toLowerCase() : null;
+    if (composing || suggestionsDismissed) return null;
+    return projectQueryFromTitle(text);
   });
   const projectSuggestions = $derived.by(() => {
     if (atQuery == null) return [];
-    return selectableProjects()
-      .filter((project) => project.title.toLowerCase().includes(atQuery))
-      .slice(0, 5);
+    return filterCaptureProjects(selectableProjects(), atQuery, 5);
   });
 
   $effect(() => {
@@ -38,19 +47,22 @@
   });
 
   function cleanTitle() {
-    return text.replace(/(?:^|\s)@([^@\s]*)$/, '').trim();
+    return titleWithoutProjectQuery(text);
   }
 
   /** @param {import('$lib/types.js').PlannerProject} project */
   function selectProject(project) {
     selectedProjectId = project.id;
     text = cleanTitle();
+    suggestionsDismissed = true;
+    activeSuggestion = 0;
   }
 
   function submit() {
+    if (ime.isComposing()) return;
     const title = cleanTitle() || text.trim();
     if (!title) return;
-    createTask({
+    const created = createTask({
       title,
       listId: listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
       dueDate,
@@ -58,7 +70,32 @@
     });
     text = '';
     selectedProjectId = projectId;
-    if (toastOnAdd) toast(toastOnAdd);
+    suggestionsDismissed = false;
+    toast(toastOnAdd || t('toast.taskCreated'), {
+      actionLabel: t('common.undo'),
+      onAction: () => deleteTask(created.id),
+      key: `task-created:${created.id}`,
+      dedupeMs: 0,
+    });
+  }
+
+  /** @param {KeyboardEvent} event */
+  function handleKeydown(event) {
+    if (ime.isComposing(event)) return;
+    if (!projectSuggestions.length) return;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      activeSuggestion = Math.min(activeSuggestion + 1, projectSuggestions.length - 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      activeSuggestion = Math.max(activeSuggestion - 1, 0);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      selectProject(projectSuggestions[activeSuggestion]);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      suggestionsDismissed = true;
+    }
   }
 </script>
 
@@ -74,11 +111,47 @@
         {selectedProject.title}
       </button>
     {/if}
-    <input bind:value={text} {placeholder} aria-label={placeholder} />
+    <input
+      bind:value={text}
+      {placeholder}
+      aria-label={placeholder}
+      role="combobox"
+      aria-autocomplete="list"
+      aria-expanded={projectSuggestions.length > 0}
+      aria-controls="quick-add-project-options"
+      aria-activedescendant={projectSuggestions[activeSuggestion]
+        ? `quick-add-project-${projectSuggestions[activeSuggestion].id}`
+        : undefined}
+      oninput={() => {
+        suggestionsDismissed = false;
+        activeSuggestion = 0;
+      }}
+      oncompositionstart={() => {
+        composing = true;
+        ime.compositionstart();
+      }}
+      oncompositionend={(event) => {
+        ime.compositionend(event);
+        setTimeout(() => (composing = false), 0);
+      }}
+      oncompositioncancel={() => {
+        composing = false;
+        ime.compositioncancel();
+      }}
+      onkeydown={handleKeydown}
+    />
     {#if projectSuggestions.length}
-      <div class="quick-add-project-menu">
-        {#each projectSuggestions as project (project.id)}
-          <button type="button" onclick={() => selectProject(project)}>
+      <div id="quick-add-project-options" class="quick-add-project-menu" role="listbox">
+        {#each projectSuggestions as project, index (project.id)}
+          <button
+            id={`quick-add-project-${project.id}`}
+            type="button"
+            role="option"
+            aria-selected={index === activeSuggestion}
+            class:is-active={index === activeSuggestion}
+            onpointerenter={() => (activeSuggestion = index)}
+            onclick={() => selectProject(project)}
+          >
             {project.title}
           </button>
         {/each}
@@ -156,6 +229,10 @@
   }
 
   .quick-add-project-menu button:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  .quick-add-project-menu button.is-active {
     background: color-mix(in srgb, var(--accent) 8%, transparent);
   }
 </style>

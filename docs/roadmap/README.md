@@ -14,9 +14,8 @@
 | [`POTENTIAL.md`](./POTENTIAL.md)                                                       | **潜力研判 / ROI 证据**                                                       | 代码检索或优先级重估时                                                |
 | [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md)                                       | **多 Agent 执行分线与难度**                                                   | 优先级重排或模型路由调整时                                            |
 | [`TICKET_NAMING.md`](./TICKET_NAMING.md)                                               | **Canonical ticket ID 语法与 Legacy 对照**                                    | 新 ticket / 重命名 / Agent Hub ID 时 · `npm run verify:ticket-naming` |
-| [`apps/planner-pro-move.md`](./apps/planner-pro-move.md)                               | **PaperOS 设备执行计划**                                                      | `PAPR.*` 状态变化时                                                   |
-| [`../PRO_MOVE.md`](../PRO_MOVE.md)                                                     | PaperOS gate 文档索引                                                         | 新增 `PRO_MOVE_*` gate 时                                             |
-| [`../qa/paperos-device-lifecycle/README.md`](../qa/paperos-device-lifecycle/README.md) | **PaperOS SYS 生命周期导航**                                                  | `PAPR.SYS.*` 状态变更时                                               |
+| [`apps/paperos.md`](./apps/paperos.md)                               | **PaperOS 设备执行计划**                                                      | `PAPR.*` 状态变化时                                                   |
+| [`../qa/paperos/README.md`](../qa/paperos/README.md)                                 | **PaperOS QA 总导航**                                                         | 查 UI / lifecycle / 当前 gate 时                                   |
 
 **不要**在分卷里重复 hub 的 Now/Next 表——避免双源漂移。
 

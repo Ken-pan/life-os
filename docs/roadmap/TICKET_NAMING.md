@@ -109,14 +109,14 @@ PaperOS **首个数据提供方**是 Planner（`/api/paper/*`），但 ticket **
 | **PAPR.SYS.1b**      | `P-MOVE.SYS.1b`                                                                          | `P-MOVE-SYS-1B`                                  |
 | **PAPR.SYS.1b.fs**   | `P-MOVE.SYS.1b.fs`                                                                       | `P-MOVE-SYS-1B-FS`                               |
 | **PAPR.SYS.1b.jrn**  | `P-MOVE.SYS.1b.jrn`                                                                      | `P-MOVE-SYS-1B-JRN`                              |
-| **PAPR.SYS.1**       | `P-MOVE.SYS.1`                                                                           | `P-MOVE-SYS-1` · `SYS-1` · **PAUSED**            |
+| **PAPR.SYS.1**       | `P-MOVE.SYS.1`                                                                           | `P-MOVE-SYS-1` · `SYS-1` · **PRIMARY LANE**      |
 | **PAPR.SYS.2**       | `P-MOVE.SYS.2`                                                                           | `P-MOVE-SYS-2` · `SYS-2`                         |
 | **PAPR.SYS.3**       | `P-MOVE.SYS.3`                                                                           | `P-MOVE-SYS-3` · `SYS-3`                         |
 | **PAPR.SYS.gate**    | `P-MOVE.SYS.gate`                                                                        | `SYS-GATE`                                       |
 | **PAPR.UI**          | `P-MOVE.UI` · `P-MOVE-UI`                                                                | E-ink Shell IA / QML                             |
 | **PAPR.UI.1.1**      | `P-MOVE.UI.1.1`                                                                          | Slice 1.1                                        |
 | **PAPR.UI.2**        | `P-MOVE.UI.2`                                                                            | Slice 2                                          |
-| **PAPR.WRITE.5**     | `P-MOVE.5` · `P-MOVE-5`                                                                  | controlled write staging（API 侧常由 PLNR 提供） |
+| **PAPR.WRITE.5**     | `P-MOVE.5` · `P-MOVE-5`                                                                  | write staging · **🟡 Code ✅ · DB ❌** |
 | **PAPR.SYNC.6**      | `P-MOVE.6` · `P-MOVE-6`                                                                  | 定时缓存 + 手动 Sync                             |
 | **PAPR.DEV.1**…**4** | `P-MOVE.1`…`4` · `P-MOVE-1`…`4`                                                          | 设备里程碑 · **冻结**                            |
 | **PAPR.DEV.7**       | `P-MOVE-7`                                                                               | 文档导出 · planned                               |
@@ -136,35 +136,36 @@ PaperOS 生命周期依赖链：
 PAPR.DATA.verify ✅
 → PAPR.SYS.0 🟡
 → PAPR.SYS.1b.jrn ✅
-→ PAPR.SYS.1 ⏸ PAUSED
+→ PAPR.SYS.1 🟡 PRIMARY LANE（2026-07-12）
 → PAPR.SYS.2 🔒
 → PAPR.SYNC.6 🔒
 → PAPR.SYS.gate 🔒
 ```
 
-导航 hub：[`../qa/paperos-device-lifecycle/README.md`](../qa/paperos-device-lifecycle/README.md) · 执行分卷：[`apps/planner-pro-move.md`](./apps/planner-pro-move.md)
+导航 hub：[`../qa/paperos/README.md`](../qa/paperos/README.md) · 执行分卷：[`apps/paperos.md`](./apps/paperos.md) · **Supabase ticket 表：** [`ops/supabase.md`](../ops/supabase.md) §PlannerOS
 
 ### PLNR — Planner
 
 | v2 Canonical             | Legacy v1                 | Legacy v0 / 备注      |
 | ------------------------ | ------------------------- | --------------------- |
 | **PLNR.SCHED.0**         | `P-SCHED.0` · `P-SCHED-0` | 日程可用性            |
-| **PLNR.SCHED.0.migrate** | —                         | `SCH-0`               |
+| **PLNR.SCHED.0.migrate** | —                         | `SCH-0` · **✅ Shipped #15** |
 | **PLNR.SCHED.10.pwa**    | —                         | `SCH-10`              |
 | **PLNR.SCHED.10a.sim**   | —                         | `SCH-10A`             |
 | **PLNR.SCHED.10b.ios**   | —                         | `SCH-10B`             |
-| **PLNR.PROJ.3**          | `P-PROJ-3`                | Projects UI           |
-| **PLNR.CORE.4**          | `P-P4`                    | Portal Today 计数对齐 |
-| **PLNR.CORE.2**          | `P-P2` · `QA-P2`          | Insight E2E           |
-| **PLNR.CORE.1**          | `P-P1`                    | —                     |
-| **PLNR.CORE.3**          | `P-P3`                    | life_events inbox     |
-| **PLNR.CORE.5**          | `P-P5`                    | Fitness 打卡徽章      |
-| **PLNR.CORE.6**          | `P-P6`                    | Auth 单例             |
+| **PLNR.PROJ.0–3**        | `P-PROJ-0`…`P-PROJ-3`     | Projects · `planner_projects` · **✅ Shipped** |
+| **PLNR.CORE.4**          | `P-P4`                    | Portal Today 计数 · **⏳ Open**（RPC ✅ · 口径未对齐） |
+| **PLNR.CORE.2**          | `P-P2` · `QA-P2`          | Insight E2E · **✅ Shipped** |
+| **PLNR.CORE.1**          | `P-P1`                    | Web Push · **🟡 Shipped（schema+code）** |
+| **PLNR.CORE.3**          | `P-P3`                    | life_events inbox · **✅ Shipped** |
+| **PLNR.CORE.5**          | `P-P5`                    | Fitness 打卡 · **✅ Shipped** |
+| **PLNR.CORE.6**          | `P-P6`                    | Auth 单例 · **✅ Shipped** |
 | **PLNR.CORE.7**          | `P-P7`                    | —                     |
 | **PLNR.CORE.8**          | `P-P8`                    | —                     |
 | **PLNR.UIUX.0**          | `P-UIUX-0`                | 全站走查              |
-| **PLNR.ATTACH.0**        | `P-ATTACH-0`              | 附件底座              |
+| **PLNR.ATTACH.0**        | `P-ATTACH-0`              | 附件底座 · **❌ Not started** |
 | **PLNR.ATTACH.1**        | `P-ATTACH-1`              | 图片/截图体验         |
+| **PLNR.CAPTURE.0**       | `P-CAPTURE-0`             | 任务捕获 / iOS 新建 dialog |
 
 ### FINC — Finance
 
@@ -242,7 +243,7 @@ PAPR.DATA.verify ✅
 
 | Canonical ID      | App         | Title                             | Status           |
 | ----------------- | ----------- | --------------------------------- | ---------------- |
-| `PAPR.SYS.1`      | **PaperOS** | Device launcher — journal watcher | PAUSED BY OWNER  |
+| `PAPR.SYS.1`      | **PaperOS** | Device launcher — journal watcher | **PRIMARY LANE**（2026-07-12 · Ken 分步授权） |
 | `FINC.PURCHASE.6` | Finance     | Expense purchase review           | CONDITIONAL PASS |
 
 ## Agent prompt 模板
@@ -251,7 +252,7 @@ PAPR.DATA.verify ✅
 Hub ID: PAPR.SYS.1 # v2 canonical · PaperOS shell（非 PLNR）
 Legacy: P-MOVE.SYS.1 / P-MOVE-SYS-1 / SYS-1
 Data provider (today): PLNR /api/paper/\*
-Status: PAUSED BY OWNER
+Status: PRIMARY LANE — design → 分步 impl（Ken 逐步授权；副线 agent 不得实现 watcher/launcher）
 ```
 
 ## 禁止
@@ -265,6 +266,6 @@ Status: PAUSED BY OWNER
 ## 相关
 
 - [`apps/README.md`](./apps/README.md) — 分卷对照
-- [`apps/planner-pro-move.md`](./apps/planner-pro-move.md) — PaperOS 执行计划（实现锚点）
+- [`apps/paperos.md`](./apps/paperos.md) — PaperOS 执行计划（实现锚点）
 - [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) — Hub ID · §7 Prompt
 - [`../MAINTENANCE.md`](../MAINTENANCE.md) — 文档维护

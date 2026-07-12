@@ -1,10 +1,10 @@
 ---
 title: Life OS Roadmap
 owner: kenpan
-last_verified: 2026-07-11-evening-checkpoint
+last_verified: 2026-07-12-compute-distribution
 review_cadence: weekly
 doc_role: status-hub
-priority_model: 2026-07-11-distribution-correction
+priority_model: 2026-07-12-lifecycle-primary
 ---
 
 # Life OS Roadmap
@@ -23,9 +23,9 @@ priority_model: 2026-07-11-distribution-correction
 | **PAPR.DATA.verify**（legacy `P-MOVE.verify` · `P-MOVE-BLOCK`） | 生产 `/api/paper/today` 404 | **已关闭** — 2026-07-11 设备 `ApiClient` → **200**；schema、cache、UI、retry、401 last-good 行为 PASS                                                                                    |
 | **PAPR.UI.1.1**                                                 | toolbar P0 blocker          | **代码已修** — `52ae55e0`（InkModeController）· `d7c52858`（QML）· visual delta gate PASS。**剩余：** 设备复验后进入 `PAPR.UI.2`                                                         |
 | **GYMS.PORTAL.2**                                               | §Next                       | **已发货** — migration `20260710203000` **远程已应用**（Supabase 复核）· Portal UI · verify PASS                                                                                         |
-| **PLNR.SCHED.0** · `PLNR.SCHED.0.migrate`                       | legacy tags 崩溃            | **根因：** `migrateTask()` 不补 `tags: []`（`persist/migrate.js`）                                                                                                                       |
-| **PLNR.SCHED.0** · `PLNR.SCHED.10.pwa`                          | mobile 无裁切               | **10A** simulated ✅ 2026-07-11（Antigravity）· **10B** 真机 iOS PWA 待 Ken · **migrate** 代码待 Fable                                                                                   |
-| **PaperOS 生命周期**                                            | 仅 UI/sync                  | **Discovery ✅（2026-07-11）** — `PAPR.SYS.1b.jrn` conditional pass；**`PAPR.SYS.1` impl ⏸ paused** → [`qa/paperos-device-lifecycle/README.md`](./qa/paperos-device-lifecycle/README.md) |
+| **PLNR.SCHED.0.migrate** | legacy tags 崩溃            | **✅ Shipped** — #15 `migrateTask` 默认 `tags: []` + `migrate.integration.test.js`                                                                                       |
+| **PLNR.SCHED.0** · `PLNR.SCHED.10.pwa`                          | mobile 无裁切               | **10A** simulated ✅ · **migrate ✅ #15** · **10B** 真机 iOS PWA 待 Ken                                                                                   |
+| **PaperOS 生命周期**                                            | 仅 UI/sync                  | **Discovery ✅ · 2026-07-12 主航道 Active** — `PAPR.SYS.1` design→分步 impl；明日 **最多强 AI 算力** → [`qa/paperos/README.md`](./qa/paperos/README.md) |
 
 ## PaperOS 系统生命周期（2026-07-11）
 
@@ -35,16 +35,14 @@ PaperOS 正升级为主 **device Shell**。在 **`PAPR.DATA.verify`** 之后、*
 
 ```text
 PAPR.DATA.verify ✅ → PAPR.SYS.0 🟡 accepted → PAPR.SYS.1 launch discovery ✅
-→ PAPR.SYS.1 impl ⏸ PAUSED → PAPR.SYS.2 🔒 → PAPR.SYNC.6 🔒 → PAPR.SYS.gate 🔒
+→ PAPR.SYS.1 impl 🟡 PRIMARY LANE（2026-07-12 主航道）→ PAPR.SYS.2 🔒 → PAPR.SYNC.6 🔒 → PAPR.SYS.gate 🔒
 ```
 
-**当前（2026-07-11 晚）：** `PAPR.SYS.0` accepted · `PAPR.SYS.1a` closed · `PAPR.SYS.1b.fs` closed · `PAPR.SYS.1b.jrn` conditional pass · **`PAPR.SYS.1` DESIGN-READY · IMPLEMENTATION NOT AUTHORIZED · PAUSED BY OWNER** · `PAPR.SYS.2` hard blocked · **`PLNR.SCHED.10a.sim` Complete**（Antigravity 2026-07-11）· **`PLNR.SCHED.0.migrate` 代码待合入**。
+**当前（2026-07-12 · `a13082e8`）：** `PAPR.SYS.0` accepted · **`PAPR.SYS.1` PRIMARY LANE** · 快赢 **已完成**：migrate #15 · 10.pwa #18 · **GYMS.SUB.5 #19（工程 PASS · 产品 gate PASS）** · **开放 gate**：`PLNR.SCHED.10b.ios` · **Line D**（`PLNR.CORE.4` / `FINC.SYNC.1b`）。
 
 Legacy 别名见 [`roadmap/TICKET_NAMING.md`](./roadmap/TICKET_NAMING.md)。
 
-Paused intentionally after architecture discovery. No active device lifecycle agent should continue without new owner authorization.
-
-`[AGENT_WORKSTREAMS.md](./roadmap/AGENT_WORKSTREAMS.md)` §PaperOS lifecycle · [`qa/paperos-device-lifecycle/README.md`](./qa/paperos-device-lifecycle/README.md) · [`qa/paperos-device-lifecycle-discovery.md`](./qa/paperos-device-lifecycle-discovery.md) §产品假设
+Lifecycle 为全局第一优先级；`PAPR.SYS.1` 主航道 Active（Ken 逐步授权分步 impl）。快赢副线见 [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) §算力分配 · [`qa/paperos/README.md`](./qa/paperos/README.md) · [`qa/paperos/lifecycle.md`](./qa/paperos/lifecycle.md) §产品假设
 
 ## 一句话
 
@@ -58,23 +56,27 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 ### Now — 当前在飞（按推荐顺序）
 
+> **算力分配（2026-07-12）：** **PaperOS lifecycle = 主航道**（Ken + Codex 明日最多强 AI 算力）。Planner / Fitness / Line D 快赢 = **副线**（其他 Agent）。全文 → [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) §算力分配
+
 | 序  | ID                  | 主题                                         | App         | 桶      | ROI | Agent 线                    | 验收                                                                                                                                                                      |
 | --- | ------------------- | -------------------------------------------- | ----------- | ------- | --- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **PLNR.SCHED.0**    | 日程视图 debug + 可用性闭环                  | Planner     | Product | 🔥  | A · **Claude Fable**        | baseline ✅ · `PLNR.SCHED.0.migrate` tags · `PLNR.SCHED.10.*` PWA 复测                                                                                                    |
-| 2   | **GYMS.SUB.5**      | 替代动作完整训练流                           | Fitness     | Product | 🔥  | C · Codex · UI closure 待审 | 工程 **PASS** · 产品 **BLOCKED** — [`FT-P5-substitution.md`](../apps/fitness/docs/FT-P5-substitution.md)                                                                  |
+| **0** | **PAPR.SYS.***    | **PaperOS 设备生命周期（主航道）**           | **PaperOS** | Product | 🔥🔥 | **B · Ken + Codex 强算力**  | `PAPR.SYS.1` design→分步 impl · Slice 1.1 设备 · lifecycle gate                                                                                                           |
+| 1   | **PLNR.SCHED.0**    | 日程视图 debug + 可用性闭环                  | Planner     | Product | 🔥  | A · Fable/Cursor | migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** 待 Ken |
+| 2   | **GYMS.SUB.5**      | 替代动作完整训练流                           | Fitness     | Product | 🔥  | C · Complete  | **✅ Complete** · Engineering PASS · Product gate PASS · #19 `67e72b81` |
 | 3   | **FINC.PURCHASE.6** | 支出审核（商品明细 + 后续处理）              | Finance     | Product | 🔥  | F · Fable owner             | Discovery **CONDITIONAL PASS**（2026-07-11）；**`FINC.PURCHASE.6.a` BLOCKED** — [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md) |
-| 4   | **PAPR.UI**         | PaperOS `PAPR.UI.1.1` 设备复验 → `PAPR.UI.2` | **PaperOS** | Product | ◆◆  | B · Cursor Auto + Codex     | 1.1 代码 ✅ · `PAPR.SYS.1` impl **paused** · 见 `qa/paperos-next-ui-update-guide.md`                                                                                      |
-| 5   | **PAPR.WRITE.5**    | PaperOS controlled write staging gate        | **PaperOS** | Product | ◆   | E · Codex                   | 数据层可并行；**非**日用发布门槛                                                                                                                                          |
+| 4   | **PAPR.UI**         | PaperOS `PAPR.UI.1.1` 设备复验 → `PAPR.UI.2` | **PaperOS** | Product | ◆◆  | B · Ken（主航道）           | 1.1 代码 ✅ · 并入主航道 · 见 `qa/paperos/ui-spec.md`                                                                                                          |
+| 5   | **PLNR.CORE.4** / **FINC.SYNC.1b** | 快赢 — 计数对齐 / 扩展 sync 状态 | Planner / Finance | Growth | ◆ | D · Cursor / Codex（快赢副线） | ~0.5d 各 · 见 AGENT_WORKSTREAMS §快赢任务池                                                                                                                              |
+| —   | **PAPR.WRITE.5**    | PaperOS controlled write staging gate        | **PaperOS** | Product | ◆   | E · Codex                   | **Deferred** — 复杂度高 · 不占明日主算力                                                                                                                                  |
 
 **Agent 分线全文：** `[roadmap/AGENT_WORKSTREAMS.md](./roadmap/AGENT_WORKSTREAMS.md)`
 
-**GYMS.SUB.5 进度：** 状态模型与归因工程 gate **PASS**（focused tests 8/8）；产品 gate **BLOCKED** — closure 指南 [`apps/fitness/docs/FT-P5-ui-closure-guide.md`](../apps/fitness/docs/FT-P5-ui-closure-guide.md)（推荐方案 1 · PR-A/B/C）。
+**GYMS.SUB.5 进度：** **✅ Complete** · Engineering PASS · Product gate PASS · **Shipped #19**（`67e72b81`）· evidence: `docs/qa/evidence/gyms-sub-5/`。
 
-**PLNR.SCHED.0 进度：** Antigravity baseline ✅ · **PLNR.SCHED.10a.sim** simulated PASS（2026-07-11）· **开放 P0** = `PLNR.SCHED.0.migrate`（`migrateTask` 缺 `tags` 默认 — **代码待合入**）· **`PLNR.SCHED.10b.ios`** 真机 PWA 待 Ken。
+**PLNR.SCHED.0 进度：** migrate ✅ #15 · 10.pwa 代码 ✅ #18 · **父 ticket 关闭条件** = Ken **`PLNR.SCHED.10b.ios`** 真机 PWA。
 
-**PaperOS 数据面：** **`PAPR.DATA.verify` PASS**（2026-07-11）— 设备生产 200 + schema + cache/UI refresh；证据见 [`qa/paperos-data-plane-verify-2026-07-11.md`](./qa/paperos-data-plane-verify-2026-07-11.md)。
+**PaperOS 数据面：** **`PAPR.DATA.verify` PASS**（2026-07-11）— 设备生产 200 + schema + cache/UI refresh；证据见 [`qa/paperos/data-plane-2026-07-11.md`](./qa/paperos/data-plane-2026-07-11.md)。
 
-**PaperOS 生命周期：** `PAPR.DATA.verify` ✅ · `PAPR.SYS.0` accepted · `PAPR.SYS.1` architecture discovery **complete** · `PAPR.SYS.1b.jrn` conditional pass · **`PAPR.SYS.1` implementation paused / not started** — [`qa/paperos-device-lifecycle/README.md`](./qa/paperos-device-lifecycle/README.md)。
+**PaperOS 生命周期：** `PAPR.DATA.verify` ✅ · `PAPR.SYS.0` accepted · `PAPR.SYS.1` architecture discovery **complete** · **`PAPR.SYS.1` PRIMARY LANE（2026-07-12）** — Ken + Codex 主航道 · [`qa/paperos/README.md`](./qa/paperos/README.md)。
 
 **2026-07-09 已验收（见 §Shipped）：** Phase 0–6 — **FINC.CORE.3** · **PORT.GROWTH.4b-M/H** · **PORT.GROWTH.6** · **PORT.GROWTH.8** · **PORT.GROWTH.9** · **MUSC.PIPE.5** · **HOME.PROJ.6a** · **PLNR.CORE.2** · **GYMS.CORE.0/GYMS.EVENTS.1** · **INTG.EVENTS.1b** · CI 接线。
 
@@ -82,14 +84,15 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 | ID                | 主题                              | App         | 桶      | ROI | Agent 线    | 触发 / 范围                                                                                             |
 | ----------------- | --------------------------------- | ----------- | ------- | --- | ----------- | ------------------------------------------------------------------------------------------------------- |
-| **PLNR.UIUX.0**   | Planner 全站 UI/UX 走查（非日程） | Planner     | Product | ◆   | A · Fable   | Today/Inbox/Projects 截图走查；日程后并行                                                               |
+| **PLNR.UIUX.0**   | Planner 全站 UI/UX 走查（非日程） | Planner     | Product | ◆   | A · Fable   | Today/Inbox/Projects 截图走查；日程后并行；含 P-TASK-DISPLAY-0                               |
+| **PLNR.CAPTURE.0**| iOS/移动端任务捕获统一            | Planner     | Product | ◆   | Code ✅ · Ken gate | Tier 0 / `@` / picker / IME / undo / E2E ✅；真机 iOS 键盘待验 |
 | **PLNR.ATTACH.0** | Task / Project 附件底座           | Planner     | Core    | ◆◆  | Codex       | Supabase Storage + metadata；在线上传/删除/预览                                                         |
 | **PLNR.CORE.4**   | Today 与 Portal 今日任务计数对齐  | Planner     | Growth  | ◆   | D · Codex   | 同账号、同日期口径一致                                                                                  |
-| **PAPR.SYS.1**    | enter / exit / recovery · systemd | **PaperOS** | Product | ◆◆  | B · Codex   | **DESIGN-READY · IMPLEMENTATION NOT AUTHORIZED · PAUSED BY OWNER** · `PAPR.SYS.1b.jrn` conditional pass |
+| **PAPR.SYS.1**    | enter / exit / recovery · systemd | **PaperOS** | Product | 🔥🔥 | B · Ken + Codex | **PRIMARY LANE** — design → 分步 impl · `PAPR.SYS.1b.jrn` conditional pass |
 | **PAPR.SYS.2**    | sleep / wake / idle · sync 补偿   | **PaperOS** | Product | ◆◆  | B · Codex   | **NOT STARTED** — hard blocked by `PAPR.SYS.1`                                                          |
 | **PAPR.SYS.3**    | 生命周期 Settings UI              | **PaperOS** | Product | ◆   | B · Cursor  | Fable ≤30m review                                                                                       |
 | **PAPR.SYNC.6**   | Sync now + 活跃期定时 + 唤醒补偿  | **PaperOS** | Product | ◆   | E · Codex   | **依赖 `PAPR.SYS.2`**；非单纯 15min timer                                                               |
-| **PAPR.SYS.gate** | 真机可靠性矩阵                    | **PaperOS** | Product | ◆◆  | Ken + Codex | `[qa/paperos-device-lifecycle-gate.md](./qa/paperos-device-lifecycle-gate.md)`                          |
+| **PAPR.SYS.gate** | 真机可靠性矩阵                    | **PaperOS** | Product | ◆◆  | Ken + Codex | `[qa/paperos/lifecycle-gate.md](./qa/paperos/lifecycle-gate.md)`                          |
 | **FINC.SYNC.1b**  | Finance 扩展 last sync + retry    | Finance     | Growth  | ◆   | D · Codex   | popup 显示 timestamp、失败原因与重试                                                                    |
 | **HOME.PROJ.7**   | Home 多项目 localStorage 切换     | Home        | Product | ◆   | Fable       | HOME.SPATIAL.0–W5 发货后的下一项                                                                        |
 
@@ -100,19 +103,16 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 研判全文 → `[roadmap/POTENTIAL.md](./roadmap/POTENTIAL.md)`
 
 ```text
-Phase 7 — 日程 + 训练 + 审核（本周 🔥）
-  PLNR.SCHED.0 migrateTask tags + PWA 复测 · GYMS.SUB.5 UI closure · FINC.PURCHASE.6.a 审核 UI
+Phase 8 — PaperOS 生命周期（主航道 · 明日强算力）
+  PAPR.SYS.1 design → 分步 impl（Ken + Codex）→ PAPR.SYS.2 → PAPR.SYS.3 → PAPR.SYNC.6 → PAPR.SYS.gate
+  Slice 2 IA 可早做；真机合并等 PAPR.SYS.1 分步完成
 
-Phase 8 — PaperOS 生命周期 + 写路径
-  PAPR.DATA.verify ✅ → PAPR.SYS.0 accepted → PAPR.SYS.1 launch discovery ✅ → PAPR.SYS.1 impl ⏸ PAUSED
-  → PAPR.SYS.2 → PAPR.SYS.3 → PAPR.SYNC.6（PAPR.SYS.2 后）→ PAPR.SYS.gate · PAPR.WRITE.5 staging 可并行
-  Slice 2 IA 可早做；真机合并等 PAPR.SYS.1 implementation
-
-Phase 9 — 半天级跨站快赢（Codex 并行）
-  FINC.SYNC.1b · PLNR.CORE.4
+Phase 7b — 快赢副线（代码已合 · gate 开放）
+  ✅ PLNR.SCHED.0.migrate #15 · ✅ PLNR.SCHED.10.pwa #18 · ✅ GYMS.SUB.5 #19
+  ⏳ PLNR.SCHED.10b.ios · PLNR.CORE.4 · FINC.SYNC.1b
 
 Phase 10 — 产品增量
-  PLNR.UIUX.0 Planner 走查 · PLNR.ATTACH.0 附件 · HOME.PROJ.7 Home 多项目
+  PLNR.CAPTURE.0 任务捕获 · PLNR.UIUX.0 Planner 走查 · PLNR.ATTACH.0 附件 · HOME.PROJ.7 Home 多项目
 
 已完成（2026-07-10）
   GYMS.PORTAL.2 Portal Fitness「今日是否已练」代码 + migration · PaperOS Slice 1.1 commits
@@ -174,6 +174,7 @@ Phase 10 — 产品增量
 | 抽象     | `sync.js` 引擎、`nav.js` 内容、业务 Row 组件                                  | 见 `[roadmap/BACKLOG.md](./roadmap/BACKLOG.md)` §不提取                    |
 | 产品     | Home 升四站同级（云同步、默认 Launcher、life_events）                         | Home 实验性；HOME.PROJ.4 搁置；HOME.PROJ.5 平面 UX ✅；HOME.SSO.2/3 SSO ✅ |
 | 产品     | INTG.EVENTS.2 智能推荐；无场景的 `life_events` 扩展                           | INTG.EVENTS.2 无消费者                                                     |
+| 产品     | Planner NL 日期 / 向量项目检索 / 标题解析 `PLNR.*`（见 PLNR.CAPTURE.0 Not doing） | capture spec 范围外；避免 scope 膨胀                                       |
 | 产品     | 全模块 AI Life OS；第三方 SaaS 聚合（Todoist/Notion/Chase）；自动打电话 Agent | 对标 FluxOS/PAI/Iddu；单人不可维护                                         |
 | 页面     | production app 页面 token 迁移；六 app 全量 a11y audit                        | D 线只做共享 primitive + catalog                                           |
 | Platform | ~~Finance `ui-react` / nav mirror / i18n 统一~~ Finance SvelteKit 迁移已完成  | 见 Finance SvelteKit 分支 ✓                                                |
@@ -219,8 +220,8 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → `[roadmap/BA
 
 | App     | 层级   | URL                                                | Workspace    | SSO | Portal | Top Next（→ 分卷）                                          |
 | ------- | ------ | -------------------------------------------------- | ------------ | --- | ------ | ----------------------------------------------------------- |
-| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅  | ✅     | **PLNR.SCHED.0** · PAPR.UI · PAPR.SYS.1 **paused**          |
-| Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅  | ✅     | **GYMS.SUB.5** 工程 ✅ · 产品 UI closure · GYMS.PORTAL.2 ✅ |
+| Planner | 生产   | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅  | ✅     | **PLNR.SCHED.0** · **PLNR.CAPTURE.0** · PAPR.UI · PAPR.SYS.1 **primary lane** |
+| Fitness | 生产   | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅  | ✅     | **GYMS.SUB.5 ✅ Complete** · Engineering PASS · Product gate PASS · GYMS.PORTAL.2 ✅ |
 | Finance | 生产   | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅  | ✅     | **FINC.PURCHASE.6** 支出审核 · FINC.SYNC.1b 按需            |
 | Music   | 生产   | [music.kenos.space](https://music.kenos.space)     | `music-os`   | ✅  | ✅     | MUSC.PIPE.5 ✅ · 维护推荐管道                               |
 | Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space)   | `portal`     | ✅  | —      | 当前无阻塞项；维护 smoke                                    |
