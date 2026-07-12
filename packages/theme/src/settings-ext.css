@@ -211,13 +211,13 @@
     width: 100%;
   }
 
-  .settings-row .pref-control > .seg:not(.seg--wrap) {
+  .settings-row .pref-control > .seg {
     display: flex;
     width: 100%;
   }
 
-  .settings-row .pref-control > .seg:not(.seg--wrap) button {
-    flex: 1;
+  .settings-row .pref-control > .seg button {
+    flex: 1 1 0;
     min-width: 0;
   }
 
