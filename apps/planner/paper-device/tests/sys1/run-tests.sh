@@ -453,6 +453,23 @@ assert_contains "$out" "xochitl=active" "xochitl line"
 assert_contains "$out" "compat=ok" "compat line"
 assert_contains "$out" "launcher_uuid=$UUID" "uuid line"
 
+# ══ paperos_pids false-positive exclusion (regression: truncated /paperos) ════
+
+setup "paperos_pids: excludes helpers + truncated path, matches only the app"
+cat > "$SHIM/ps" <<'EOSH'
+#!/bin/sh
+echo "  PID USER       VSZ STAT COMMAND"
+echo "  100 root      6924 S    {paperos-watch} /bin/sh /home/root/paperos/bin/paperos-watch"
+echo "  101 root      6924 S    /bin/sh /home/root/paperos/bin/paperos-ctl status"
+echo "  102 root      6792 S    -sh --login -c echo hi   /home/root/paperos/bin/paperos"
+echo "  103 root       500 S    journalctl -fu xochitl -n 0 -o short-unix"
+echo "  104 root      1000 S    /home/root/paperos/paperos -platform epaper"
+exit 0
+EOSH
+chmod 755 "$SHIM/ps"
+out="$(run_env sh -c '. "$0"; paperos_pids | tr "\n" " "' "$LIFECYCLE/paperos-lib.sh")"
+assert_eq "$(echo $out)" "104" "only the real -platform app pid, helpers+truncated-path excluded"
+
 # ══ Summary ═══════════════════════════════════════════════════════════════════
 echo
 echo "PASS=$PASS FAIL=$FAIL"

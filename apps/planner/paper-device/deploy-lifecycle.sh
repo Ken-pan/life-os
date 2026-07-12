@@ -37,6 +37,18 @@ ssh "$DEVICE" "
             '$TARGET/bin/paperos-recover' '$TARGET/bin/paperos-watch' \
             '$TARGET/bin/paperos-ctl'
   chmod 644 '$TARGET/bin/paperos-lib.sh'
+  # Make paperos.service known to systemd so 'systemctl start paperos' works.
+  # link != enable: no boot autostart, and the unit has NO [Install] section so
+  # it cannot be enabled; /etc is a volatile overlay so the link is gone on
+  # reboot anyway. Reversed by rollback (systemctl disable). We LINK the
+  # existing unit; we never overwrite it (it is shipped by deploy-paperos.sh).
+  if [ -e '$TARGET/paperos.service' ]; then
+    systemctl link '$TARGET/paperos.service' 2>/dev/null || true
+    systemctl daemon-reload
+    echo \"paperos.service LoadState=\$(systemctl show paperos -p LoadState --value)\"
+  else
+    echo 'WARNING: paperos.service absent — run deploy-paperos.sh first; enter will fail until present'
+  fi
   if [ ! -e '$TARGET/compat.allowed' ]; then
     sed -n 's/^VERSION_ID=//p' /etc/os-release | tr -d '\"' > '$TARGET/compat.allowed'
     echo \"compat.allowed seeded: \$(cat '$TARGET/compat.allowed')\"

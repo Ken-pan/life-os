@@ -201,9 +201,10 @@ ssh $DEV 'systemctl is-active xochitl rm-sync; echo os=$(sed -n s/^VERSION_ID=//
 apps/planner/paper-device/deploy-lifecycle.sh
 ```
 
-- Expected state: files under `$T/bin/`; `$T/compat.allowed` seeded from current `VERSION_ID`; `$T/run/` created
+- Expected state: files under `$T/bin/`; `$T/compat.allowed` seeded from current `VERSION_ID`; `$T/run/` created; `paperos.service LoadState=loaded` (deploy links the existing unit — `link` ≠ `enable`: no boot autostart, the unit has no `[Install]` section so it cannot be enabled, and `/etc` is volatile so the link is gone on reboot)
 - Expected process: unchanged — `xochitl` + `rm-sync` still active (deploy never stops xochitl)
-- Expected exit code: `0`; output ends "Deployed (temporary, reversible). Nothing was enabled or auto-started."
+- Expected exit code: `0`; output shows `paperos.service LoadState=loaded` and ends "Deployed (temporary, reversible). Nothing was enabled or auto-started."
+- Failure note: `LoadState=not-found` → the unit isn't linked; `paperos-enter` will fail-closed to native (proven safe) but no launch will occur until deploy re-links it
 - Failure stop: scp/ssh error, or trailing status shows `xochitl` not active → run rollback
 - Rollback: `apps/planner/paper-device/rollback-lifecycle.sh --purge`
 

@@ -40,6 +40,9 @@ ssh "$DEVICE" "
   for p in \$(ps w | awk '/paperos(\\.[a-z0-9]+)? -platform|\\/paperos(\\.[a-z0-9]+)?( |\$)|paperos-ink-[a-z0-9-]+/ && !/awk/ {print \$1}'); do
     kill -9 \"\$p\" 2>/dev/null
   done
+  echo '--- unlinking paperos.service (reverses deploy link; not enable) ---'
+  systemctl disable paperos 2>/dev/null || true
+  systemctl daemon-reload 2>/dev/null || true
   echo '--- removing temporary runtime state ---'
   rm -rf '$TARGET/run'
   if [ '$PURGE' = '--purge' ]; then

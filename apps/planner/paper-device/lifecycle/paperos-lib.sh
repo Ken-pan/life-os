@@ -121,10 +121,21 @@ wait_native() {
   done
 }
 
-# Same match set as recover-xochitl.sh: managed binary, .next candidates, and
-# ink test candidates. No pkill on device; PAPEROS_KILL lets tests intercept.
+# Match ONLY the actual PaperOS app process: the managed binary / .next
+# candidate launched with `-platform` (both open-paperos.sh and paperos.service
+# always pass `-platform epaper`), plus ink test candidates. The lifecycle
+# helper scripts (paperos-watch/ctl/enter/exit/recover/lib) and our own ps/awk
+# are explicitly skipped — otherwise a `ps w` line truncated at terminal width
+# to end in `/paperos`, or a helper's own path, would false-match and could fool
+# the native-recovery verification. No pkill on device; PAPEROS_KILL lets tests
+# intercept.
 paperos_pids() {
-  ps w 2>/dev/null | awk '/paperos(\.[a-z0-9]+)? -platform|\/paperos(\.[a-z0-9]+)?( |$)|paperos-ink-[a-z0-9-]+/ && !/awk/ { print $1 }'
+  ps w 2>/dev/null | awk '
+    /awk/ { next }
+    /paperos-(watch|ctl|enter|exit|recover|lib)/ { next }
+    /paperos(\.[a-z0-9]+)? -platform/ { print $1; next }
+    /paperos-ink-[a-z0-9-]+/ { print $1 }
+  '
 }
 
 _send_signal() { ${PAPEROS_KILL:-kill} "$@" 2>/dev/null || true; }
