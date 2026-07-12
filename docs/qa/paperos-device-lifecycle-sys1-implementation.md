@@ -398,17 +398,68 @@ apps/planner/paper-device/rollback-lifecycle.sh --purge  # also remove bin/,
 Native fallbacks (`open-paperos.sh`, `recover-xochitl.sh`, linked
 `paperos.service`) are untouched — the pre-SYS.1 recovery path stays intact.
 
-## Guardrails held
+## Device gate execution log — 2026-07-12 (Ken + live device)
 
-- Persistent systemd enabled: **NO**
-- Permanent boot integration changed: **NO**
-- Native xochitl recovery preserved: **YES**
+First live run on the Paper Pro Move (`VERSION_ID=5.7.126`). Dedicated launcher
+document **Open PaperOS** created; UUID `a7d91a64-9be5-45e0-8875-d96ffcd55049`.
+
+| Step | Result | Evidence |
+| ---- | ------ | -------- |
+| 1 Preflight | **PASS** | native baseline; runtime absent |
+| 2 Deploy | **PASS** (after fix) | see finding A |
+| 3 Launcher UUID | **PASS** | bound + validated |
+| 4 Watcher arm | **PASS** | `event=start`, native untouched |
+| 5 Status | **PASS** | fail-closed config correct |
+| 6a False positive | **PASS** | unrelated open → `IGNORE wrong-uuid`, 0 launches |
+| 6b True positive | **PASS** | launcher open → 1 `LAUNCH` → `PAPEROS_ACTIVE`, 1 proc |
+| 7 Exit | **PASS** | `EXITING→NATIVE`, xochitl+rm-sync active, 0 procs; screen returned, touch normal |
+| 8 Restart | **PASS** | clean exit→enter cycle, exactly 1 proc |
+| 9 Disable/enable | **PASS** | SSH `enter` refused `rc=3`; watcher `BLOCK reason=disabled` on physical open |
+| 10 Fault injection | **INCOMPLETE** | interrupted by a device reboot — see finding C |
+| 11 Recover | **not run** (superseded by Mode-A boot recovery + finding B) |
+| 12–13 Purge rollback | **PASS** | `ROLLBACK OK`; all runtime files gone; native scripts 3/3 intact; Open PaperOS doc preserved |
+
+**Finding A — deploy did not link the unit (FIXED).** After a prior reboot the
+volatile `/etc` link was gone, so `systemctl start paperos` failed
+`Unit not found`; the first 6b attempt therefore hit `enter → unit-start-failed
+→ recover → NATIVE` — i.e. the **fail-closed recovery path executed for real and
+restored native cleanly**. `deploy-lifecycle.sh` now `systemctl link`s the unit
+(link ≠ enable; unit has no `[Install]`), `rollback` unlinks it.
+
+**Finding B — `paperos_pids` false positive (FIXED).** The matcher's path-suffix
+alternative matched a `ps w` line truncated at terminal width to end in
+`/paperos`, so `ctl status` briefly reported `paperos_procs=1` with no app
+running. Narrowed to the actual `-platform` invocation + ink candidates, helper
+scripts skipped; regression test added (host suite 81/81).
+
+**Finding C — device rebooted during fault injection (OPEN).** During step 10 the
+USB session dropped; the device performed a **graceful `reboot`** (journal:
+`pid … comm="reboot"`, orderly xochitl shutdown), **not** a panic/watchdog-kill.
+It was **not** an OTA (`VERSION_ID` unchanged; update engine logged "No update
+available"). It followed ~5 `enter`/`exit` cycles, each of which fully stops
+xochitl via `Conflicts=`. Hypothesis: reMarkable device-level protection reacting
+to repeated xochitl shutdown/restart. Mode A restored native on boot; the `/run`
+drop-in and `/etc` link were cleared as designed. **Not isolated to a single
+cause; must be investigated before persistent enablement or Mode B.** Mitigation
+ideas to evaluate: reduce `READY_TIMEOUT`, avoid rapid repeated cycling in tests,
+and check reMarkable boot-count/emergency behaviour under xochitl churn.
+
+Net: the reversible enter / exit / recovery **core is validated on real
+hardware** (including a genuine fail-closed recovery and a clean full purge);
+fault-injection retry and explicit `recover` are deferred pending finding C.
+
+## Guardrails held (verified on device 2026-07-12)
+
+- Persistent systemd enabled: **NO** (`link`, never `enable`; unit has no `[Install]`)
+- Permanent boot integration changed: **NO** (`/etc` link is volatile; `/run` drop-in is tmpfs; both cleared by the reboot on their own)
+- Native xochitl recovery preserved: **YES** (`open-paperos.sh` / `recover-xochitl.sh` / `paperos.service` intact 3/3; Mode-A boot restored native)
 
 ## Remaining blockers before persistent enablement
 
-1. Ken physical device gate (table above) not yet run
-2. Dedicated **「Open PaperOS」** launcher document not yet created; `launcher.uuid`
-   unset (watcher fails closed until set)
+1. **Finding C** — investigate the graceful reboot under repeated xochitl
+   cycling; confirm safe enter/exit cadence before Mode B or persistent enable
+2. Complete step 10 fault injection + step 11 explicit recover once finding C is
+   understood
 3. Journal token stability across OTA is observational, not contractual —
    `compat.allowed` gate is the mitigation
 4. Persistent `systemctl enable` / boot integration deferred to a later gate
