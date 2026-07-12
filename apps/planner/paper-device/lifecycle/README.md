@@ -39,7 +39,8 @@ these leaves xochitl active and does **not** launch PaperOS:
 
 - UUID mismatch / partial / malformed `EntityId`
 - `DISABLED` marker present
-- `crashloop` latch (≥3 enter failures within the fail window)
+- `crashloop` latch (≥`FAIL_LIMIT`=2 enter failures within the fail window;
+  each failure also forces a `FAIL_BACKOFF` pause — Finding C, Layer 3)
 - OS `VERSION_ID` not in `compat.allowed` (or either file missing)
 - launcher document absent from the Xochitl store
 - event timestamp missing or older/newer than `MAX_EVENT_AGE` (replay guard)
@@ -48,6 +49,12 @@ these leaves xochitl active and does **not** launch PaperOS:
 - inside the post-launch cooldown (duplicate suppression)
 - journal pipeline restarted more than `MAX_RESTARTS` per window → watcher
   latches `watcher.exhausted` and exits (native system unaffected)
+
+`paperos-enter` itself additionally fails closed (exit **9**, xochitl left
+running) **before it stops xochitl** when either Finding-C guard trips: the
+xochitl-cycle budget is exhausted, or the vendor `xochitl.service` start-limit
+has drifted from what we validated (see the hardening section below). A budget
+throttle (exit 9) is **not** counted as a crash by the watcher.
 
 ## Emergency disable
 
@@ -70,6 +77,42 @@ paperos-ctl arm       # clears crashloop + watcher.exhausted latches
 `restart-paperos` / `return-native` detach (`nohup`) because PaperOS itself dies
 mid-sequence when the unit stops.
 
+`restart-paperos` is a **PaperOS-only in-place restart** (`systemctl restart
+paperos` under a fresh `run/restart-intent` marker) that does **not** bounce
+xochitl — the marker makes `paperos.service` `ExecStopPost` skip the xochitl
+restore, and `Conflicts=` is a no-op because xochitl is already stopped. It
+falls back to a native restore only if the restart fails to come up.
+
+## Finding C hardening (vendor start-limit)
+
+Every controlled xochitl restore is a xochitl **start**, and the vendor
+rate-limits those (`StartLimitBurst=4` / 10 min) and force-reboots on overrun.
+Four layers keep us clear of it (design + confirmation in
+[`docs/qa/paperos-device-lifecycle-sys1-implementation.md`](../../../../docs/qa/paperos-device-lifecycle-sys1-implementation.md)
+§"SYS.1 hardening design"):
+
+1. **PaperOS-only restart** (above) — a restart adds **zero** xochitl starts.
+2. **xochitl-cycle budget**, checked *before* xochitl is stopped: at most
+   `XOCHITL_CYCLE_MAX` (2) controlled restores per `XOCHITL_CYCLE_WINDOW`
+   (600 s) and ≥`MIN_SWITCH_INTERVAL` (180 s) between full switches; over
+   budget → `enter` exits 9, xochitl untouched. Restores are tracked in
+   `run/xochitl-restores`. Also fails closed if `systemctl show xochitl`
+   reports a start-limit not strictly looser than our budget, or an
+   `OnFailure` that no longer names `emergency.target` (OS-drift guard).
+3. **Enter-failure threshold + backoff** — `FAIL_LIMIT`=2 with a forced
+   `FAIL_BACKOFF` after each failure; the `crashloop` latch then requires a
+   manual `paperos-ctl arm`.
+4. **Manual-only start-limit reset** — the systemd `reset-failed` rescue is
+   **never** invoked automatically. The only entry point is an explicit,
+   fully-gated manual command:
+
+   ```sh
+   paperos-ctl recover-native --reset-start-limit
+   # refused unless: PaperOS unit inactive, watcher stopped, 0 PaperOS procs,
+   # state NATIVE/RECOVERY. Resets the xochitl start-limit once, starts xochitl
+   # once, no retry, fully logged.
+   ```
+
 ## Deploy (temporary, reversible) & rollback
 
 ```sh
@@ -82,7 +125,7 @@ apps/planner/paper-device/rollback-lifecycle.sh --purge   # full uninstall
 ## Host tests
 
 ```sh
-apps/planner/paper-device/tests/sys1/run-tests.sh    # 81 cases, mocked systemd
+apps/planner/paper-device/tests/sys1/run-tests.sh    # 117 cases, mocked systemd
 ```
 
 See [`docs/qa/paperos-device-lifecycle-sys1-implementation.md`](../../../../docs/qa/paperos-device-lifecycle-sys1-implementation.md)

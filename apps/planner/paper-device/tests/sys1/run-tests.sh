@@ -44,13 +44,38 @@ setup() { # test-name
   printf '#!/bin/sh\nexit 0\n' > "$HOME_DIR/paperos"
   chmod 755 "$HOME_DIR/paperos"
 
-  # systemctl shim: models xochitl/rm-sync/paperos with Conflicts= and
-  # ExecStopPost semantics via marker files in $MOCK.
+  # systemctl shim: models xochitl/rm-sync/paperos with Conflicts=,
+  # conditional-ExecStopPost, and StartLimit `show` semantics via marker files
+  # in $MOCK. $S/xochitl-starts counts every real xochitl (re)start (start cmd
+  # or an ExecStopPost restore) — the Finding-C signal the restart test asserts.
   cat > "$SHIM/systemctl" <<'EOSH'
 #!/bin/sh
 S="$MOCK_DIR"
 cmd="${1:-}"; unit="${2:-}"
 echo "$cmd $unit" >> "$S/systemctl.calls"
+
+# Count a xochitl start only on a genuine inactive->active transition, and
+# honour the xochitl-start-fail marker (models "xochitl genuinely cannot start").
+xochitl_up() {
+  [ -e "$S/xochitl-start-fail" ] && return 1
+  [ -e "$S/xochitl-active" ] || echo x >> "$S/xochitl-starts"
+  touch "$S/xochitl-active"
+}
+# Mirror of paperos.service ExecStopPost: skip the xochitl restore only while a
+# FRESH restart-intent marker exists (TTL matches RESTART_INTENT_TTL).
+restart_intent_fresh() {
+  m="${PAPEROS_HOME:-/home/root/paperos}/run/restart-intent"
+  [ -f "$m" ] || return 1
+  ts=$(cat "$m" 2>/dev/null)
+  case "$ts" in ''|*[!0-9]*) return 1 ;; esac
+  now=$(date +%s); age=$((now - ts))
+  [ "$age" -ge 0 ] && [ "$age" -le "${PAPEROS_RESTART_INTENT_TTL:-30}" ]
+}
+paperos_stoppost() {
+  # ExecStopPost: restore xochitl unless a fresh restart-intent says otherwise.
+  restart_intent_fresh || xochitl_up
+}
+
 case "$cmd" in
   is-active)
     case "$unit" in
@@ -68,7 +93,7 @@ case "$cmd" in
     case "$unit" in
       xochitl)
         [ -e "$S/xochitl-start-fail" ] && exit 1
-        touch "$S/xochitl-active" ;;
+        xochitl_up ;;
       paperos)
         rm -f "$S/xochitl-active"
         [ -e "$S/paperos-start-fail" ] && exit 1
@@ -79,10 +104,25 @@ case "$cmd" in
       xochitl) rm -f "$S/xochitl-active" ;;
       paperos)
         rm -f "$S/paperos-running"
-        # ExecStopPost restores xochitl — unless systemd itself is wedged
-        # (xochitl-start-fail models "xochitl genuinely cannot start").
-        [ -e "$S/xochitl-start-fail" ] || touch "$S/xochitl-active" ;;
+        paperos_stoppost ;;
     esac ;;
+  restart)
+    case "$unit" in
+      paperos)
+        # stop (conditional ExecStopPost) then start (Conflicts stops xochitl)
+        rm -f "$S/paperos-running"
+        paperos_stoppost
+        rm -f "$S/xochitl-active"
+        [ -e "$S/paperos-start-fail" ] && exit 1
+        [ -e "$S/paperos-not-ready" ] || touch "$S/paperos-running" ;;
+    esac ;;
+  show)
+    # StartLimit / OnFailure props for vendor_startlimit_ok. Overridable per
+    # test via MOCK_STARTLIMIT_* env; defaults model the real device.
+    echo "StartLimitBurst=${MOCK_STARTLIMIT_BURST:-4}"
+    echo "StartLimitIntervalUSec=${MOCK_STARTLIMIT_INTERVAL:-10min}"
+    echo "StartLimitAction=${MOCK_STARTLIMIT_ACTION:-none}"
+    echo "OnFailure=${MOCK_STARTLIMIT_ONFAILURE:-emergency.target}" ;;
 esac
 exit 0
 EOSH
@@ -385,7 +425,7 @@ run_env env "PAPEROS_ENTER_CMD=$TMP/fake-enter" "PAPEROS_WATCH_MAX_RESTARTS=0" \
 assert_eq "$(wc -l < "$MOCK/enter.calls" | tr -d ' ')" "1" "enter called once"
 assert_file "$HOME_DIR/run/watcher.exhausted" "exhausted latch after budget 0"
 
-setup "watch run: 3 enter failures latch crashloop; 4th event blocked"
+setup "watch run: FAIL_LIMIT=2 -> 2 enter failures latch crashloop; later events blocked"
 touch "$MOCK/xochitl-active"
 cat > "$SHIM/journalctl" <<EOSH
 #!/bin/sh
@@ -406,10 +446,37 @@ EOSH
 chmod 755 "$TMP/fail-enter"
 run_env env "PAPEROS_ENTER_CMD=$TMP/fail-enter" "PAPEROS_WATCH_MAX_RESTARTS=0" \
   "PAPEROS_WATCH_RESTART_DELAY=0" "PAPEROS_WATCH_COOLDOWN=0" \
+  "PAPEROS_WATCH_FAIL_BACKOFF=0" \
   "$LIFECYCLE/paperos-watch" >/dev/null 2>&1
-assert_eq "$(wc -l < "$MOCK/enter.calls" | tr -d ' ')" "3" "enter attempts capped at 3"
+assert_eq "$(wc -l < "$MOCK/enter.calls" | tr -d ' ')" "2" "enter attempts capped at FAIL_LIMIT=2"
 assert_file "$HOME_DIR/run/crashloop" "crashloop latched"
-assert_contains "$(cat "$HOME_DIR/run/lifecycle.log")" "reason=crashloop" "4th event blocked by crashloop"
+assert_contains "$(cat "$HOME_DIR/run/lifecycle.log")" "reason=crashloop" "later events blocked by crashloop"
+
+setup "watch run: enter throttled (rc=9) does NOT count toward crashloop"
+touch "$MOCK/xochitl-active"
+cat > "$SHIM/journalctl" <<EOSH
+#!/bin/sh
+now=\$(date +%s)
+for i in 1 2 3 4 5; do
+  printf '%s.350000 remarkable xochitl[812]: rm.library.ext.open\n' "\$now"
+  printf 'EntityOpen::open:\n'
+  printf 'EntityId{$UUID}\n'
+done
+sleep 2
+EOSH
+chmod 755 "$SHIM/journalctl"
+cat > "$TMP/throttle-enter" <<EOSH
+#!/bin/sh
+echo run >> "$MOCK/enter.calls"
+exit 9
+EOSH
+chmod 755 "$TMP/throttle-enter"
+run_env env "PAPEROS_ENTER_CMD=$TMP/throttle-enter" "PAPEROS_WATCH_MAX_RESTARTS=0" \
+  "PAPEROS_WATCH_RESTART_DELAY=0" "PAPEROS_WATCH_COOLDOWN=0" \
+  "PAPEROS_WATCH_FAIL_BACKOFF=0" \
+  "$LIFECYCLE/paperos-watch" >/dev/null 2>&1
+assert_no_file "$HOME_DIR/run/crashloop" "throttle (rc=9) must not latch crashloop"
+assert_contains "$(cat "$HOME_DIR/run/lifecycle.log")" "event=enter-throttled" "throttle logged"
 
 setup "watch run: journal restart budget -> exhausted latch, watcher exits"
 touch "$MOCK/xochitl-active"
@@ -469,6 +536,129 @@ EOSH
 chmod 755 "$SHIM/ps"
 out="$(run_env sh -c '. "$0"; paperos_pids | tr "\n" " "' "$LIFECYCLE/paperos-lib.sh")"
 assert_eq "$(echo $out)" "104" "only the real -platform app pid, helpers+truncated-path excluded"
+
+# ══ SYS.1 hardening — Layer 2: xochitl-cycle budget + vendor start-limit ══════
+
+setup "exit: records a xochitl restore in the cycle ledger"
+touch "$MOCK/paperos-running"
+run_env "$LIFECYCLE/paperos-exit" >/dev/null 2>&1
+assert_file "$HOME_DIR/run/xochitl-restores" "restore ledger written"
+assert_eq "$(grep -c '^[0-9]' "$HOME_DIR/run/xochitl-restores")" "1" "one restore recorded"
+
+setup "enter: fast re-enter after exit is blocked BEFORE xochitl stops (spacing)"
+touch "$MOCK/xochitl-active"
+run_env "$LIFECYCLE/paperos-enter" >/dev/null 2>&1     # enter #1 -> paperos up
+run_env "$LIFECYCLE/paperos-exit" >/dev/null 2>&1      # exit -> records restore ~now
+rm -f "$MOCK/systemctl.calls"                          # focus on the blocked re-enter
+run_env "$LIFECYCLE/paperos-enter" >/dev/null 2>&1     # enter #2 -> within MIN_SWITCH_INTERVAL
+rc=$?
+assert_eq "$rc" "9" "re-enter blocked rc 9"
+assert_file "$MOCK/xochitl-active" "xochitl untouched (still active)"
+assert_no_file "$MOCK/paperos-running" "paperos NOT started"
+_n=$(grep -c 'start paperos' "$MOCK/systemctl.calls" 2>/dev/null); assert_eq "${_n:-0}" "0" "xochitl never stopped (no start paperos)"
+assert_contains "$(cat "$HOME_DIR/run/lifecycle.log")" "reason=xochitl-cycle-budget" "budget block logged"
+
+setup "enter: over cycle-count budget (>=MAX restores in window) is blocked"
+touch "$MOCK/xochitl-active"
+NOW_S=$(date +%s)
+printf '%s\n%s\n' "$NOW_S" "$NOW_S" > "$HOME_DIR/run/xochitl-restores"
+run_env env "PAPEROS_MIN_SWITCH_INTERVAL=0" "$LIFECYCLE/paperos-enter" >/dev/null 2>&1
+rc=$?
+assert_eq "$rc" "9" "count budget block rc 9"
+assert_file "$MOCK/xochitl-active" "xochitl untouched on count block"
+
+setup "enter: vendor start-limit not stricter than budget -> block (fail closed)"
+touch "$MOCK/xochitl-active"
+run_env env "MOCK_STARTLIMIT_BURST=2" "$LIFECYCLE/paperos-enter" >/dev/null 2>&1
+rc=$?
+assert_eq "$rc" "9" "vendor burst<=budget blocks"
+assert_file "$MOCK/xochitl-active" "xochitl untouched on start-limit block"
+
+setup "enter: OnFailure drift (no emergency.target) -> block"
+touch "$MOCK/xochitl-active"
+run_env env "MOCK_STARTLIMIT_ONFAILURE=remarkable-fail.service" "$LIFECYCLE/paperos-enter" >/dev/null 2>&1
+rc=$?
+assert_eq "$rc" "9" "onfailure drift blocks"
+
+setup "enter: within budget still succeeds (empty ledger)"
+touch "$MOCK/xochitl-active"
+run_env "$LIFECYCLE/paperos-enter" >/dev/null 2>&1
+rc=$?
+assert_eq "$rc" "0" "budget allows a fresh enter"
+assert_file "$MOCK/paperos-running" "paperos started"
+
+# ══ SYS.1 hardening — Layer 1: PaperOS-only restart + conditional ExecStopPost ═
+
+setup "restart-intent: fresh marker suppresses ExecStopPost xochitl restore"
+run_env sh -c '. "$0"; restart_intent_set' "$LIFECYCLE/paperos-lib.sh"
+touch "$MOCK/paperos-running"
+run_env systemctl stop paperos >/dev/null 2>&1
+assert_no_file "$MOCK/xochitl-active" "fresh intent -> xochitl NOT restored"
+
+setup "restart-intent: absent marker -> ExecStopPost restores xochitl"
+touch "$MOCK/paperos-running"
+run_env systemctl stop paperos >/dev/null 2>&1
+assert_file "$MOCK/xochitl-active" "no intent -> xochitl restored"
+
+setup "restart-intent: stale marker -> ExecStopPost restores xochitl"
+echo 100 > "$HOME_DIR/run/restart-intent"    # epoch 100 (1970) = stale
+touch "$MOCK/paperos-running"
+run_env systemctl stop paperos >/dev/null 2>&1
+assert_file "$MOCK/xochitl-active" "stale intent -> xochitl restored"
+
+setup "restart-paperos: two PaperOS-only restarts add ZERO xochitl starts"
+touch "$MOCK/xochitl-active"
+run_env "$LIFECYCLE/paperos-enter" >/dev/null 2>&1      # xochitl down, paperos up
+run_env "$LIFECYCLE/paperos-ctl" __restart-run >/dev/null 2>&1
+rc1=$?
+run_env "$LIFECYCLE/paperos-ctl" __restart-run >/dev/null 2>&1
+rc2=$?
+assert_eq "$rc1" "0" "first restart rc 0"
+assert_eq "$rc2" "0" "second restart rc 0"
+assert_eq "$(run_env sh -c '. "$0"; get_state' "$LIFECYCLE/paperos-lib.sh")" "PAPEROS_ACTIVE" "state after restart"
+assert_file "$MOCK/paperos-running" "paperos running after restart"
+assert_no_file "$MOCK/xochitl-active" "xochitl stayed down (Conflicts, never restored)"
+assert_eq "$([ -f "$MOCK/xochitl-starts" ] && wc -l < "$MOCK/xochitl-starts" | tr -d ' ' || echo 0)" "0" "Finding C: xochitl start count did NOT rise"
+
+setup "restart-paperos: failed restart falls back to native (xochitl restored)"
+touch "$MOCK/xochitl-active"
+run_env "$LIFECYCLE/paperos-enter" >/dev/null 2>&1      # paperos up, xochitl down
+touch "$MOCK/paperos-not-ready"                         # restart cannot come ready
+run_env "$LIFECYCLE/paperos-ctl" __restart-run >/dev/null 2>&1
+rc=$?
+assert_eq "$rc" "0" "fallback recovered native -> rc 0"
+assert_eq "$(run_env sh -c '. "$0"; get_state' "$LIFECYCLE/paperos-lib.sh")" "NATIVE" "state native after fallback"
+assert_file "$MOCK/xochitl-active" "xochitl restored on restart fallback"
+
+# ══ SYS.1 hardening — Layer 4: manual-only reset-failed rescue ════════════════
+
+setup "ctl recover-native --reset-start-limit: resets + starts xochitl when native-safe"
+echo "NATIVE 2026-07-12T00:00:00Z" > "$HOME_DIR/run/state"
+run_env "$LIFECYCLE/paperos-ctl" recover-native --reset-start-limit >/dev/null 2>&1
+rc=$?
+assert_eq "$rc" "0" "rescue rc 0"
+assert_contains "$(cat "$MOCK/systemctl.calls")" "reset-failed xochitl.service" "reset-failed invoked once"
+assert_file "$MOCK/xochitl-active" "xochitl started by rescue"
+
+setup "ctl recover-native --reset-start-limit: refused while PaperOS active"
+touch "$MOCK/paperos-running"
+run_env "$LIFECYCLE/paperos-ctl" recover-native --reset-start-limit >/dev/null 2>&1
+rc=$?
+assert_eq "$rc" "75" "refused rc 75"
+_n=$(grep -c 'reset-failed' "$MOCK/systemctl.calls" 2>/dev/null); assert_eq "${_n:-0}" "0" "reset-failed NOT called when refused"
+
+setup "ctl recover-native without flag -> usage error, no reset"
+run_env "$LIFECYCLE/paperos-ctl" recover-native >/dev/null 2>&1
+rc=$?
+assert_eq "$rc" "64" "missing flag rc 64"
+_n=$(grep -c 'reset-failed' "$MOCK/systemctl.calls" 2>/dev/null); assert_eq "${_n:-0}" "0" "no reset without explicit flag"
+
+setup "meta: reset-failed appears in NO automatic path (only ctl recover-native)"
+hits="$(grep -l 'reset-failed' \
+  "$LIFECYCLE/paperos-enter" "$LIFECYCLE/paperos-exit" \
+  "$LIFECYCLE/paperos-recover" "$LIFECYCLE/paperos-watch" \
+  "$LIFECYCLE/paperos-lib.sh" 2>/dev/null)"
+assert_eq "$hits" "" "reset-failed must not appear in enter/exit/recover/watch/lib"
 
 # ══ Summary ═══════════════════════════════════════════════════════════════════
 echo

@@ -50,8 +50,12 @@ MAX_EVENT_AGE="${PAPEROS_WATCH_MAX_EVENT_AGE:-5}"
 MAX_RESTARTS="${PAPEROS_WATCH_MAX_RESTARTS:-5}"
 RESTART_WINDOW="${PAPEROS_WATCH_RESTART_WINDOW:-3600}"
 RESTART_DELAY="${PAPEROS_WATCH_RESTART_DELAY:-2}"
-FAIL_LIMIT="${PAPEROS_WATCH_FAIL_LIMIT:-3}"
+FAIL_LIMIT="${PAPEROS_WATCH_FAIL_LIMIT:-2}"
 FAIL_WINDOW="${PAPEROS_WATCH_FAIL_WINDOW:-300}"
+# Forced backoff after every failed enter (Finding C, Layer 3): spaces recovery
+# xochitl-starts far apart so a failing enter cannot rapidly re-trigger and
+# approach the vendor StartLimitBurst before crashloop latches.
+FAIL_BACKOFF="${PAPEROS_WATCH_FAIL_BACKOFF:-180}"
 ENTER_CMD="${PAPEROS_ENTER_CMD:-$LIFECYCLE_DIR/paperos-enter}"
 PENDING_MAX_LINES=3
 
@@ -135,7 +139,19 @@ handle_candidate() {
       fail_window_start=""
       log_line watch enter-ok
     else
-      record_enter_failure
+      _rc=$?
+      # Exit 9 = paperos-enter deliberately throttled (cycle budget / start-limit
+      # drift). That is NOT a crash, so it must not count toward the crashloop
+      # latch — just let the cooldown/budget gate it next time.
+      if [ "$_rc" = 9 ]; then
+        log_line watch enter-throttled rc=9
+      else
+        record_enter_failure
+        if [ "$FAIL_BACKOFF" -gt 0 ]; then
+          log_line watch backoff seconds="$FAIL_BACKOFF"
+          sleep "$FAIL_BACKOFF"
+        fi
+      fi
     fi
   fi
 }

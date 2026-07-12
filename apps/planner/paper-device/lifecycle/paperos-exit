@@ -50,6 +50,9 @@ done
 kill_paperos_procs
 
 if wait_native && [ -z "$(paperos_pids)" ]; then
+  # ExecStopPost restored xochitl — record it against the cycle budget so a
+  # following enter can see how recently we last bounced xochitl.
+  record_xochitl_restore
   set_state NATIVE
   log_line exit done
   exit 0

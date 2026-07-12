@@ -145,7 +145,8 @@ re-point or partially install it.
 ### Host (no device) — `tests/sys1/run-tests.sh`
 
 Runs the **real** device scripts against mocked `systemctl`/`ps`/`kill`/
-`journalctl`. **81/81 pass, deterministic.** Coverage:
+`journalctl`. **117/117 pass, deterministic** (81 core + 36 SYS.1-hardening; see
+§"SYS.1 hardening patch — implemented"). Coverage:
 
 - exact accepted event → LAUNCH; single-line and 3-line variants
 - wrong UUID · partial UUID · malformed `EntityId` → IGNORE
@@ -540,7 +541,13 @@ fault-injection retry and explicit `recover` are deferred pending finding C.
 | Persistent enablement                  | **BLOCKED**          |
 | Mode B / auto-launch-after-unlock      | **BLOCKED**          |
 
-## SYS.1 hardening design (owner-directed — DEFERRED, not in this branch)
+## SYS.1 hardening design (owner-directed — IMPLEMENTED 2026-07-12)
+
+> Implemented on `agent/papr-sys-1-lifecycle-runtime`; see
+> §"SYS.1 hardening patch — implemented" below for the as-built mapping, exit
+> codes, and host results. The four-layer design is unchanged from the original
+> owner direction and reproduced here for reference.
+
 
 The fix must **prevent** reaching the vendor `StartLimit`, **preserve** reMarkable's
 emergency protection, and keep `reset-failed` as a manual-only rescue. Four
@@ -571,6 +578,69 @@ re-test belong to the hardening patch):
 Add a vendor `StartLimit` compatibility check (read `StartLimitBurst` /
 `StartLimitIntervalUSec` / `OnFailure`) so the budget stays conservative relative
 to whatever the current OS ships.
+
+## SYS.1 hardening patch — implemented (2026-07-12)
+
+Status: **host-validated, device re-test PENDING** — SYS.1 stays
+**CONDITIONAL PASS**; do not mark PASS until the constrained device gate below
+re-runs. Owner approved a minimal `paperos.service` `ExecStopPost` edit (Layer 1)
+after confirming it preserves the always-on native fallback.
+
+As-built mapping of the four layers:
+
+1. **PaperOS-only restart.** `paperos-ctl restart-paperos` now detaches into an
+   internal `__restart-run` worker: it sets a fresh `run/restart-intent` marker,
+   runs `systemctl restart paperos`, waits readiness (reusing `READY_TIMEOUT` /
+   `STABLE_SECS`), then clears the marker; on failure it falls back to
+   `recover_to_native`. `paperos.service` `ExecStopPost` is now conditional —
+   it skips the xochitl restore **only** while `run/restart-intent` exists and
+   its epoch is within a 30 s TTL (hardcoded in the unit, mirrors
+   `RESTART_INTENT_TTL` in `paperos-lib.sh`). Absent / stale / unparseable
+   marker → xochitl is restored exactly as before, so the native fallback is
+   intact. A restart therefore adds **zero** xochitl starts (`Conflicts=` is a
+   no-op because xochitl is already stopped). `recover_to_native` clears the
+   marker up front so no recovery ever honours a stale restart-intent.
+2. **xochitl-cycle budget, before stopping xochitl.** `paperos-lib.sh` keeps a
+   pruned ledger `run/xochitl-restores` (one epoch per controlled restore,
+   written by `paperos-exit` on the ExecStopPost restore and by
+   `recover_to_native`). `paperos-enter` calls `xochitl_cycle_ok` **before**
+   `systemctl start paperos`: refuse with **exit 9** (xochitl untouched) when
+   `≥ XOCHITL_CYCLE_MAX` (2) restores in `XOCHITL_CYCLE_WINDOW` (600 s) or
+   `< MIN_SWITCH_INTERVAL` (180 s) since the last switch. It also calls
+   `vendor_startlimit_ok` (`systemctl show xochitl -p StartLimitBurst
+   -p StartLimitIntervalUSec -p StartLimitAction -p OnFailure`) and fails closed
+   (exit 9) if the props are unreadable/unparseable, the vendor burst is not
+   strictly greater than our budget, or `OnFailure` no longer names
+   `emergency.target`. Skippable via `PAPEROS_SKIP_STARTLIMIT_CHECK=1`.
+3. **Enter-failure threshold + backoff.** `paperos-watch` default `FAIL_LIMIT`
+   lowered 3 → 2, with a forced `FAIL_BACKOFF` (180 s) sleep after each failed
+   enter. The `crashloop` latch still requires manual `paperos-ctl arm`. A
+   throttle (enter exit 9) is logged `enter-throttled` and does **not** count
+   toward the latch.
+4. **Manual-only `reset-failed`.** New `paperos-ctl recover-native
+   --reset-start-limit`, gated on {paperos unit inactive, watcher stopped, 0
+   PaperOS procs, state NATIVE/RECOVERY, explicit flag}; resets the limit once,
+   starts xochitl once, no retry, fully logged (refuse → exit 75, missing flag →
+   exit 64). `reset-failed` appears in **no** enter/exit/restart/watch/automatic
+   -recover path (asserted by a host test).
+
+**Host results:** `tests/sys1/run-tests.sh` **117/117**, deterministic across 3
+consecutive runs (was 81; +36 assertions covering budget block/spacing/count,
+vendor start-limit + OnFailure drift, restore-ledger recording, conditional
+ExecStopPost fresh/absent/stale, two PaperOS-only restarts with **zero** xochitl
+starts, restart-failure fallback, `FAIL_LIMIT=2`, throttle-not-crash, and the
+reset-failed allow/refuse/absent-from-automatic-paths checks). `sh -n` clean on
+all six lifecycle scripts + deploy/rollback; `git diff --check` clean. Rollback
+already removes `run/` wholesale, so the new ledger/marker files need no rollback
+change.
+
+**Constrained device re-test — still owed (do NOT approach `StartLimitBurst=4`):**
+one normal enter/exit; two PaperOS-only restarts asserting the xochitl start
+count does **not** rise; one fast re-enter blocked (exit 9) *before* xochitl
+stops; one safe failed-enter recovery; one explicit recover; one rollback.
+First read-only step: `systemctl show xochitl.service -p StartLimitBurst
+-p OnFailure` to confirm `vendor_startlimit_ok` will pass on the live OS before
+relying on the gate.
 
 ## Remaining blockers before persistent enablement
 
@@ -604,6 +674,117 @@ boot hooks; do NOT enable auto-launch / Mode B; do NOT run rapid cycles that
 approach `StartLimitBurst=4` (≥4 xochitl starts / 10 min) — it force-reboots the
 device; keep native `open-paperos.sh` / `recover-xochitl.sh` / `paperos.service`
 untouched; keep PR #20 draft.
+
+## Handoff — session paused before implementation (2026-07-11)
+
+Owner paused this session before any code changes were made, to hand off to a
+fresh agent tomorrow. **No lifecycle scripts, tests, or unit files were
+modified this session** — worktree `agent/papr-sys-1-lifecycle-runtime`
+(`life-os-papr-sys-1`) is clean at `a95feb14` (matches PR #20 HEAD). Baseline
+host suite re-run: **81/81**, deterministic. No device access, no `systemctl`
+calls, no watcher start happened this session — device state is unchanged from
+the "clean native" baseline already recorded above (xochitl active, rm-sync
+active, PaperOS runtime purged, watcher stopped, native fallback scripts
+intact).
+
+This session did a read-only review of every file the hardening patch will
+touch, to save the next agent a discovery pass. Findings below describe
+**current, pre-hardening** behavior — nothing here has been implemented yet;
+verify against source before coding.
+
+### Files reviewed (current behavior)
+
+- `paperos-lib.sh` — state machine, `recover_to_native` (:156-174),
+  `paperos_pids` (:132-139, already hardened against truncated-`ps` false
+  positives per Finding B), `acquire_lock`/`release_lock` (mkdir-lock,
+  :75-92), `log_line` (:61-71, rotates at 256 KB).
+- `paperos-ctl` — `restart-paperos` (:68-73) is currently
+  `nohup sh -c "paperos-exit && paperos-enter"` — a **full native bounce**:
+  `paperos-exit` → `systemctl stop paperos` → `ExecStopPost` starts xochitl →
+  `paperos-enter` → `systemctl start paperos` (`Conflicts=xochitl.service`)
+  stops xochitl again. That is 1 xochitl start + 1 xochitl stop per restart —
+  exactly the Finding-C-relevant cost Layer 1 must remove.
+- `paperos.service` (:1-23) — **`Conflicts=xochitl.service`** and
+  **`ExecStopPost=/bin/sh -c 'systemctl --no-block start xochitl'`** are
+  unconditional, unit-level. This is the actual mechanism Layer 1 has to
+  defeat, not something `paperos-ctl` can override on its own.
+- `paperos-enter` / `paperos-exit` — idempotent handoff scripts, both call
+  into `recover_to_native` on any failure.
+- `paperos-recover` — steals the lifecycle lock (the emergency path), always
+  safe to call, verifies xochitl + rm-sync + zero PaperOS procs.
+- `paperos-watch` — `record_enter_failure` (:83-96) already has a
+  fail-count/window latch (`FAIL_LIMIT=3` / `FAIL_WINDOW=300`) that writes
+  `run/crashloop` — this is what Layer 3 needs to tighten to ≤2 and add
+  forced backoff to.
+- Test harness `tests/sys1/run-tests.sh` — 81 cases, mocked
+  `systemctl`/`ps`/`kill`/`journalctl` via a `MOCK_DIR` marker-file model. New
+  tests must follow the same pattern: real scripts, only systemd/process
+  environment mocked.
+
+### Architecture note — Layer 1 cannot be done in `paperos-ctl` alone
+
+`Conflicts=` and `ExecStopPost=` are enforced by systemd at the unit level,
+not by our scripts. A plain `systemctl stop paperos; systemctl start paperos`
+(or `systemctl restart paperos`) will **always** fire `ExecStopPost` (starts
+xochitl) and then **always** trigger `Conflicts=` on the next start (stops
+xochitl again) — regardless of any restart-intent bookkeeping added to
+`paperos-ctl`. A true "PaperOS-only restart" therefore likely requires making
+`ExecStopPost` itself conditional on a restart-intent marker, e.g.:
+
+```ini
+ExecStopPost=/bin/sh -c 'test -e $RUN_DIR/restart-intent || systemctl --no-block start xochitl'
+```
+
+— i.e. `apps/planner/paper-device/paperos.service` probably needs a
+coordinated edit alongside `paperos-ctl`, not just the ctl script in
+isolation. The marker must live in the volatile runtime dir (`$RUN_DIR`,
+already `$PAPEROS_HOME/run`) per the task spec, and `paperos-lib.sh` will
+likely need small `restart_intent_set` / `restart_intent_clear` /
+`restart_intent_stale` helpers so `paperos-ctl`, the unit's `ExecStopPost`,
+and `paperos-recover` all agree on the same marker and its staleness rules.
+**This is inference from the committed unit file, not device-verified** —
+confirm against real `systemctl show paperos -p Conflicts -p ExecStopPost`
+behavior (or equivalent host-mock coverage) before committing to the design.
+
+### Untouched from here: the four-layer spec
+
+The full design (restart semantics, cycle budget, failure threshold/backoff,
+manual-only `reset-failed`) is already written above in **"SYS.1 hardening
+design"** and in the original task brief — unchanged, still the target. This
+session did not revise that spec, only mapped it onto the actual source so
+implementation can start immediately.
+
+### Next agent starting checklist
+
+1. Re-run baseline: `apps/planner/paper-device/tests/sys1/run-tests.sh` →
+   expect 81/81 before touching anything.
+2. Implement Layer 1: `paperos-ctl restart-paperos` + `paperos.service`
+   `ExecStopPost` conditional + `paperos-lib.sh` restart-intent helpers +
+   `paperos-recover`/crash-path cleanup of stale markers. Must log
+   `restart-intent` / `normal-exit` / `unexpected-crash` /
+   `restart-failure-recovery` distinctly.
+3. Implement Layer 2: read + validate vendor `StartLimitIntervalUSec` /
+   `StartLimitBurst` / `StartLimitAction` / `OnFailure` via `systemctl show
+   xochitl`; fail closed to `INCOMPATIBLE` if unparseable, missing, stricter
+   than PaperOS's budget, or `OnFailure` no longer includes
+   `emergency.target`; enforce PaperOS's own ≤2 restores / 10 min, ≥180 s
+   spacing (or a documented equivalent) before any xochitl-stopping enter —
+   must block *before* xochitl is stopped.
+4. Implement Layer 3: tighten `FAIL_LIMIT` to ≤2 in `paperos-watch`, add
+   forced backoff after each failure, latch requires manual
+   `paperos-ctl arm` to clear (already exists) — watcher must not
+   auto-retry past the threshold.
+5. Implement Layer 4 only if in scope this pass
+   (`paperos-ctl recover-native --reset-start-limit`, all preconditions
+   gated per the brief) — otherwise leave unimplemented and document the
+   manual rescue policy explicitly; `reset-failed` must not appear anywhere
+   in normal enter/exit/restart/watcher/automatic-recover paths.
+6. Add the 20 host regression tests listed in the task brief to
+   `tests/sys1/run-tests.sh`; run 3× for determinism.
+7. `sh -n` all six lifecycle scripts + `deploy-lifecycle.sh` +
+   `rollback-lifecycle.sh`; `git diff --check`.
+8. Update this doc + `lifecycle/README.md` with real results — do **not**
+   mark SYS.1 PASS; commit + push the feature branch; keep PR #20 draft.
 
 ## Next phase (after hardening + Ken re-gate)
 

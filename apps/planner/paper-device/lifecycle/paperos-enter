@@ -9,6 +9,8 @@
 #   5 PaperOS binary missing or not executable
 #   6 launch failed, native shell recovered
 #   7 launch failed AND native recovery failed (state stays RECOVERY)
+#   9 refused to protect the vendor xochitl start-limit (over cycle budget, or
+#     the OS start-limit drifted from what we validated) — xochitl untouched
 set -u
 
 LIFECYCLE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -48,6 +50,20 @@ if paperos_ready; then
   set_state PAPEROS_ACTIVE
   log_line enter noop reason=already-active
   exit 0
+fi
+
+# Finding C guard — BEFORE stopping xochitl. Refuse if the OS start-limit drifted
+# from what we validated, or if entering now would risk the vendor rate limit.
+# Both leave native fully untouched (xochitl still active).
+if ! vendor_startlimit_ok; then
+  log_line enter blocked reason=startlimit-incompat detail="$STARTLIMIT_BLOCK_REASON"
+  echo "paperos-enter: vendor xochitl start-limit changed ($STARTLIMIT_BLOCK_REASON) — fail closed" >&2
+  exit 9
+fi
+if ! xochitl_cycle_ok; then
+  log_line enter blocked reason=xochitl-cycle-budget detail="$CYCLE_BLOCK_REASON"
+  echo "paperos-enter: refused to protect xochitl start-limit ($CYCLE_BLOCK_REASON)" >&2
+  exit 9
 fi
 
 set_state ENTERING_PAPEROS

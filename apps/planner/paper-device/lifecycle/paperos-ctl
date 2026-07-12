@@ -66,10 +66,51 @@ case "$CMD" in
     nohup "$LIFECYCLE_DIR/paperos-exit" >> "$RUN_DIR/ctl.out" 2>&1 &
     ;;
   restart-paperos)
+    # PaperOS-only in-place restart (Finding C hardening). Does NOT bounce
+    # xochitl: a fresh restart-intent marker makes paperos.service ExecStopPost
+    # skip the xochitl restore, and Conflicts= is a no-op because xochitl is
+    # already stopped. Falls back to xochitl only if the restart fails to come
+    # up. Detached because the caller (PaperOS) dies mid-restart.
     ensure_run_dir
     log_line ctl restart-paperos
-    nohup sh -c "\"$LIFECYCLE_DIR/paperos-exit\" && \"$LIFECYCLE_DIR/paperos-enter\"" \
-      >> "$RUN_DIR/ctl.out" 2>&1 &
+    nohup "$0" __restart-run >> "$RUN_DIR/ctl.out" 2>&1 &
+    ;;
+  __restart-run)
+    # Internal synchronous worker for restart-paperos (invoked detached above).
+    ensure_run_dir
+    if ! acquire_lock lifecycle; then
+      log_line ctl restart-blocked reason=lock-busy
+      exit 2
+    fi
+    trap 'restart_intent_clear; release_lock lifecycle' EXIT INT TERM HUP
+    restart_intent_set
+    set_state ENTERING_PAPEROS
+    log_line ctl restart-intent
+    _ready=0
+    if systemctl restart paperos >/dev/null 2>&1; then
+      _deadline=$(( $(now_epoch) + READY_TIMEOUT ))
+      while :; do
+        if paperos_ready; then _ready=1; break; fi
+        [ "$(now_epoch)" -ge "$_deadline" ] && break
+        sleep 1
+      done
+      if [ "$_ready" = 1 ] && [ "$STABLE_SECS" -gt 0 ]; then
+        sleep "$STABLE_SECS"
+        paperos_ready || _ready=0
+      fi
+    else
+      log_line ctl restart-failed reason=unit-restart-failed
+    fi
+    restart_intent_clear
+    if [ "$_ready" = 1 ]; then
+      set_state PAPEROS_ACTIVE
+      log_line ctl restart-done result=paperos-only
+      exit 0
+    fi
+    # Restart did not come up: fall back to native (this DOES start xochitl).
+    log_line ctl restart-failure-recovery
+    if recover_to_native ctl_restart_failed; then exit 0; fi
+    exit 8
     ;;
   sleep)
     ensure_run_dir
@@ -104,8 +145,59 @@ case "$CMD" in
     log_line ctl arm
     echo "crashloop / watcher.exhausted latches cleared."
     ;;
+  recover-native)
+    # Layer 4 — explicit MANUAL rescue only. This is the ONLY place SYS.1 ever
+    # touches the vendor xochitl start-limit. Never called by enter / exit /
+    # restart / watcher / automatic recover. Requires --reset-start-limit and a
+    # safe, native-ish precondition set; resets the limit once and starts
+    # xochitl once, no retry, fully logged.
+    ensure_run_dir
+    _reset=0
+    shift          # drop "recover-native"; inspect remaining flags
+    for _a in "$@"; do
+      case "$_a" in
+        --reset-start-limit) _reset=1 ;;
+      esac
+    done
+    if [ "$_reset" != 1 ]; then
+      echo "usage: paperos-ctl recover-native --reset-start-limit" >&2
+      echo "  explicit manual rescue: clears the xochitl systemd start-limit and" >&2
+      echo "  starts xochitl once. Only when PaperOS + watcher are stopped." >&2
+      exit 64
+    fi
+    _fail=""
+    unit_active paperos && _fail="paperos-unit-active"
+    [ -n "$(paperos_pids)" ] && _fail="${_fail:+$_fail,}paperos-procs-present"
+    _wr=$(ps w 2>/dev/null | grep -c '[p]aperos-watch')
+    [ "${_wr:-0}" -gt 0 ] 2>/dev/null && _fail="${_fail:+$_fail,}watcher-running"
+    case "$(get_state)" in
+      NATIVE|RECOVERY|UNKNOWN) : ;;
+      *) _fail="${_fail:+$_fail,}state-$(get_state)" ;;
+    esac
+    if [ -n "$_fail" ]; then
+      log_line ctl reset-start-limit-refused reason="$_fail"
+      echo "paperos-ctl recover-native: refused ($_fail)." >&2
+      echo "  Stop PaperOS and the watcher first, then retry." >&2
+      exit 75
+    fi
+    log_line ctl reset-start-limit begin
+    systemctl reset-failed xochitl.service >/dev/null 2>&1
+    systemctl start xochitl >/dev/null 2>&1
+    if native_ok; then
+      record_xochitl_restore
+      set_state NATIVE
+      log_line ctl reset-start-limit done result=native-verified
+      echo "paperos-ctl recover-native: start-limit reset; xochitl + rm-sync active."
+      exit 0
+    fi
+    log_line ctl reset-start-limit failed \
+      xochitl="$(systemctl is-active xochitl 2>/dev/null)" \
+      rmsync="$(systemctl is-active rm-sync 2>/dev/null)"
+    echo "paperos-ctl recover-native: xochitl did not return after reset — inspect $LOG_FILE" >&2
+    exit 1
+    ;;
   *)
-    echo "usage: paperos-ctl {status|enter|exit|recover|return-native|restart-paperos|sleep|reboot|poweroff|disable|enable|arm}" >&2
+    echo "usage: paperos-ctl {status|enter|exit|recover|recover-native --reset-start-limit|return-native|restart-paperos|sleep|reboot|poweroff|disable|enable|arm}" >&2
     exit 64
     ;;
 esac
