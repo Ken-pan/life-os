@@ -332,6 +332,13 @@ async function setRhEnrichState(patch) {
   await chrome.storage.local.set({
     [RH_ENRICH_STATE_KEY]: { ...prev, ...patch, updatedAt: Date.now() },
   })
+  
+  // Update heartbeat for active sync if running
+  const { fos_active_sync: active } = await chrome.storage.session.get('fos_active_sync')
+  if (active) {
+    active.heartbeatAt = Date.now()
+    await chrome.storage.session.set({ fos_active_sync: active })
+  }
 }
 
 async function enqueueRobinhoodHoldings(holdings) {
@@ -585,10 +592,10 @@ async function sweepStaleInflight() {
   if (changed) await setInflightMap(inflight)
 }
 
-async function nudgeFinanceOsTab(tab) {
+async function nudgeFinanceOsTab(tab, operationId) {
   if (tab?.id == null) return
   try {
-    await chrome.tabs.sendMessage(tab.id, { type: 'FOS_FORCE_DELIVER' })
+    await chrome.tabs.sendMessage(tab.id, { type: 'FOS_FORCE_DELIVER', operationId })
   } catch {
     try {
       await safeTabsReload(tab.id)
@@ -771,6 +778,29 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           sendResponse({ ok: true, queued: queued.length })
           break
         }
+        case 'FOS_MARK_INFLIGHT': {
+          const { fos_active_sync: active } = await chrome.storage.session.get('fos_active_sync')
+          if (active) {
+            active.heartbeatAt = Date.now()
+            await chrome.storage.session.set({ fos_active_sync: active })
+          }
+          sendResponse(await markInflight(msg.ids))
+          break
+        }
+        case 'FOS_GET_INFLIGHT': {
+          const inflight = await getInflightMap()
+          sendResponse({ ok: true, ids: Object.keys(inflight) })
+          break
+        }
+        case 'FOS_PULL': {
+          const { fos_active_sync: active } = await chrome.storage.session.get('fos_active_sync')
+          if (active) {
+            active.heartbeatAt = Date.now()
+            await chrome.storage.session.set({ fos_active_sync: active })
+          }
+          sendResponse({ ok: true, captures: await getQueue() })
+          break
+        }
         case 'FOS_RH_START_ENRICH': {
           const tickers = Array.isArray(msg.tickers) ? msg.tickers : []
           const holdings = msg.holdings ?? null
@@ -825,19 +855,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           }
           break
         }
-        case 'FOS_PULL': {
-          sendResponse({ ok: true, captures: await getQueue() })
-          break
-        }
-        case 'FOS_MARK_INFLIGHT': {
-          sendResponse(await markInflight(msg.ids))
-          break
-        }
-        case 'FOS_GET_INFLIGHT': {
-          const inflight = await getInflightMap()
-          sendResponse({ ok: true, ids: Object.keys(inflight) })
-          break
-        }
         case 'FOS_ACK': {
           const queue = await getQueue()
           const done = queue.find((c) => c.id === msg.id)
@@ -890,6 +907,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
               await nudgeFinanceOsTab(tab)
             }
           }
+          
+          const { fos_active_sync: active } = await chrome.storage.session.get('fos_active_sync')
+          if (active && active.operationId === msg.operationId) {
+            await chrome.storage.session.remove('fos_active_sync')
+          }
+          
           sendResponse({ ok: true })
           break
         }
@@ -982,6 +1005,32 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         }
         case 'FOS_STATUS': {
           sendResponse(await buildStatusPayload())
+          break
+        }
+        case 'FOS_TRIGGER_SYNC': {
+          const { fos_active_sync: active } = await chrome.storage.session.get('fos_active_sync')
+          // Heartbeat-based stale detection: 60s without any FOS_PULL, FOS_MARK_INFLIGHT, or setRhEnrichState
+          if (active && (Date.now() - (active.heartbeatAt ?? active.startedAt) < 60000)) {
+            sendResponse({ accepted: false, reason: 'already_syncing', operationId: active.operationId })
+            break
+          }
+          
+          const opId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)
+          await chrome.storage.session.set({
+            fos_active_sync: { operationId: opId, startedAt: Date.now(), heartbeatAt: Date.now() }
+          })
+          
+          try {
+            const tab = await focusFinanceOsTab()
+            await nudgeFinanceOsTab(tab, opId)
+            sendResponse({ accepted: true, operationId: opId })
+          } catch (err) {
+            const { fos_active_sync: check } = await chrome.storage.session.get('fos_active_sync')
+            if (check && check.operationId === opId) {
+              await chrome.storage.session.remove('fos_active_sync')
+            }
+            throw err
+          }
           break
         }
         default:

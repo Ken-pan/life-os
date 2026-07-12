@@ -336,60 +336,70 @@ function renderRhEnrichState(rhEnrich, rhDetailsCount = 0) {
 async function renderSyncHealth(lastSync, inFlight, queueLen, dlqLen) {
   const el = document.getElementById('sync-health')
   if (!el) return
-  const inflightN = inFlight?.length ?? 0
-  const pending = queueLen ?? 0
-  const dlq = dlqLen ?? 0
-  let cls = 'sync-health ok'
-  let headline = '链路正常'
-  if (dlq > 0) {
-    cls = 'sync-health error'
-    headline = `${dlq} 条投递失败，需人工处理`
-  } else if (inflightN > 0 || pending > 0) {
-    cls = 'sync-health warn'
-    headline = inflightN > 0 ? `${inflightN} 条投递中` : `${pending} 条待同步`
-  } else if (!lastSync?.at) {
-    cls = 'sync-health'
-    headline = '等待 Finance OS 页面响应…'
-  }
-  el.className = cls
+  
+  // Clean up any stale state UI
   clearNode(el)
-  const title = document.createElement('div')
-  title.innerHTML = `<strong>${headline}</strong>`
-  el.appendChild(title)
-  if (lastSync?.at) {
-    const row = document.createElement('div')
-    row.className = 'sync-health-row'
-    const status = lastSync.ok ? '成功' : '部分失败'
-    row.innerHTML = `<span>最近写入 ${fmtTime(lastSync.at)}</span><strong>${status} · ${lastSync.processed ?? 0} 条</strong>`
-    el.appendChild(row)
-    if (!lastSync.ok) {
-      const retry = document.createElement('button')
-      retry.type = 'button'
-      retry.className = 'btn ghost sync-health-retry'
-      retry.textContent = '打开 Finance OS 重试'
-      retry.addEventListener('click', () => {
-        chrome.tabs.create({ url: 'https://finance.kenos.space' })
-      })
-      el.appendChild(retry)
-    }
-    if (Array.isArray(lastSync.summaries) && lastSync.summaries.length > 0) {
-      const detail = document.createElement('div')
-      detail.className = 'sync-health-row'
-      detail.innerHTML = `<span>${lastSync.summaries[0]}</span>`
-      el.appendChild(detail)
-    }
+  
+  const isSyncing = window.FOS_SYNC_LOGIC.isSyncing(inFlight, queueLen);
+  
+  // 1. Syncing State
+  if (isSyncing) {
+    el.className = 'sync-health warn'
+    const headline = (inFlight?.length ?? 0) > 0 ? `${inFlight.length} 条投递中` : `${queueLen} 条待同步`
+    el.innerHTML = `<div><strong>同步进行中... (${headline})</strong></div>`
+    return
   }
-  if (inflightN > 0) {
-    const row = document.createElement('div')
-    row.className = 'sync-health-row'
-    const maxAttempts = Math.max(...inFlight.map((x) => x.attempts ?? 1))
-    row.innerHTML = `<span>投递中</span><strong>${inflightN} 条 · 最多 ${maxAttempts} 次尝试</strong>`
-    el.appendChild(row)
-    const resetBtn = document.getElementById('release-inflight')
-    if (resetBtn) resetBtn.style.display = 'inline-flex'
+  
+  // 2. Never Synced State
+  if (!lastSync?.at) {
+    el.className = 'sync-health'
+    el.innerHTML = `<div><strong>尚未同步过</strong></div><div class="sync-health-row"><span>无历史同步记录</span></div>`
+    return
+  }
+  
+  // 3 & 4. Success / Failure
+  el.className = lastSync.ok ? 'sync-health ok' : 'sync-health error'
+  const title = document.createElement('div')
+  title.innerHTML = `<strong>${lastSync.ok ? '同步成功' : '同步失败'}</strong>`
+  el.appendChild(title)
+  
+  const row = document.createElement('div')
+  row.className = 'sync-health-row'
+  row.innerHTML = `<span>最近尝试: ${fmtTime(lastSync.at)}</span>`
+  el.appendChild(row)
+  
+  if (!lastSync.ok) {
+    const detail = document.createElement('div')
+    detail.className = 'sync-health-row'
+    // Display error summary securely
+    const rawError = Array.isArray(lastSync.summaries) ? lastSync.summaries : [];
+    const errMsg = window.FOS_SYNC_LOGIC.sanitizeError(rawError);
+    detail.innerHTML = `<span>${errMsg}</span>`
+    el.appendChild(detail)
+    
+    // Add Retry button
+    const retry = document.createElement('button')
+    retry.type = 'button'
+    retry.id = 'inline-sync-retry'
+    retry.className = 'btn ghost sync-health-retry'
+    retry.textContent = '重试同步'
+    retry.addEventListener('click', async () => {
+      if (retry.disabled) return;
+      retry.disabled = true;
+      retry.textContent = '触发中...';
+      const res = await chrome.runtime.sendMessage({ type: 'FOS_TRIGGER_SYNC' });
+      if (res?.reason === 'already_syncing') {
+        retry.textContent = '已在同步中';
+      }
+      refresh();
+    });
+    el.appendChild(retry)
   } else {
-    const resetBtn = document.getElementById('release-inflight')
-    if (resetBtn) resetBtn.style.display = 'none'
+    // Show processed info on success
+    const detail = document.createElement('div')
+    detail.className = 'sync-health-row'
+    detail.innerHTML = `<span>成功写入 ${lastSync.processed ?? 0} 条</span>`
+    el.appendChild(detail)
   }
 }
 
