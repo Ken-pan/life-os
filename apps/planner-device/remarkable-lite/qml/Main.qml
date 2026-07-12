@@ -5,8 +5,11 @@ import QtQuick.Window
 // PaperOS Shell — paper canvas + contextual tools + temporary system surfaces.
 // Layer-1 navigation lives in a temporary System drawer (SystemDrawer.qml)
 // opened from the shell menu button; there is no permanent tab bar or rail.
-// One compact header row carries: menu · current page title · Home action ·
-// contextual add. All seven module routes stay mounted at their indices.
+// One compact header row carries: menu · current page title · contextual add.
+// Home is not an independent destination (PAPR.UI.2 §1.2) — Today is the
+// default landing and the merged Home+Today page. Inbox/Review stay mounted
+// as internal-only routes for bridge/rollback compatibility; they have no
+// visible entry point (PAPR.UI.2 §5).
 Window {
     id: root
     objectName: "app.root"
@@ -16,10 +19,11 @@ Window {
     title: qsTr("PaperOS")
     color: Ui.paper
 
-    // module indices: 0=Home, 1=Today, 2=Write(Notes), 3=Inbox, 4=Review, 5=System, 6=More
+    // module indices: 0=Today, 1=Notes, 2=Tasks, 3=Documents, 4=Settings,
+    // 5=Inbox(internal), 6=Review(internal)
     property int currentModule: 0
     readonly property bool landscape: width > height
-    readonly property var moduleTitles: ["Home", "Today", "Notes", "Inbox", "Review", "System", "More"]
+    readonly property var moduleTitles: ["Today", "Notes", "Tasks", "Documents", "Settings", "Inbox", "Review"]
     // Mirrored onto the root object so the local-only test bridge can inspect
     // native framebuffer sessions without reaching into QML context objects.
     property bool nativeInkActive: inkMode.active
@@ -56,8 +60,8 @@ Window {
         spacing: 0
 
         // ── SHELL HEADER ───────────────────────────────────────────
-        // menu · title · Home action · contextual add. Quiet and
-        // borderless; whitespace separates it from page content.
+        // menu · title · contextual add. Quiet and borderless; whitespace
+        // separates it from page content.
         RowLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 88
@@ -103,41 +107,11 @@ Window {
 
             Item { Layout.fillWidth: true }
 
-            // Home is a Layer-1 system action and stays visibly reachable
-            // while the drawer is closed (visible gesture alternative).
-            Item {
-                objectName: "nav.home"
-                Layout.preferredWidth: homeLabel.implicitWidth + 32
-                Layout.preferredHeight: 72
-                Layout.alignment: Qt.AlignVCenter
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: Ui.ink100
-                    visible: homeTap.pressed
-                }
-                Text {
-                    id: homeLabel
-                    anchors.centerIn: parent
-                    text: "Home"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.button
-                    color: homeTap.pressed ? Ui.paper
-                         : root.currentModule === 0 ? Ui.ink30
-                         : Ui.ink70
-                }
-                MouseArea {
-                    id: homeTap
-                    anchors.fill: parent
-                    onClicked: root.currentModule = 0
-                }
-            }
-
             // Contextual add — Notes only. Light linear plus on Paper;
             // pressed briefly inverts. Template picker is a later slice.
             Item {
                 objectName: "notes.new"
-                visible: root.currentModule === 2
+                visible: root.currentModule === 1
                 Layout.preferredWidth: 88
                 Layout.preferredHeight: 88
                 Layout.alignment: Qt.AlignVCenter
@@ -172,18 +146,21 @@ Window {
             Layout.fillHeight: true
             currentIndex: root.currentModule
 
-            HomePage { objectName: "page.home" }
-            TodayPage { objectName: "page.today" }
-            NotesPage { objectName: "page.write" }
+            HomeTodayPage {
+                objectName: "page.today"
+                onOpenNotes: root.currentModule = 1
+                onOpenTasks: root.currentModule = 2
+            }
+            NotesPage { objectName: "page.notes" }
+            TasksPage { objectName: "page.tasks" }
+            DocumentsPage { objectName: "page.documents" }
+            SystemPage { objectName: "page.settings" }
+            // Internal-only routes (PAPR.UI.2 §5): retained for bridge/rollback
+            // compatibility, no visible Drawer entry navigates here anymore.
             InboxPage { objectName: "page.inbox" }
             ReviewPage {
                 objectName: "page.review"
                 onNavigateTo: function(module) { root.currentModule = module }
-            }
-            SystemPage { objectName: "page.system" }
-            MorePage {
-                objectName: "page.more"
-                onOpenModule: function(module) { root.currentModule = module }
             }
         }
     }

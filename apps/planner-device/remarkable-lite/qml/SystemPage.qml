@@ -1,7 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
 
-// System: user-facing settings. Raw errors/probes live in Diagnostics overlay.
+// Settings (PAPR.UI.2 §2.6): user-facing settings and device status backed by
+// current UI contracts. Return to reMarkable lives only in the Drawer footer
+// (not duplicated here). No Sleep/Wake/Restart/Shutdown or other lifecycle
+// controls belong on this page until their owning track delivers them.
+// Raw errors/probes live in the Diagnostics overlay.
 Item {
     id: page
 
@@ -15,20 +19,23 @@ Item {
         visible: !page.diagnosticsOpen
 
         Text {
-            text: "System"
+            text: "Settings"
             font.family: Ui.fontFamily
             font.pixelSize: Ui.primary
             font.bold: true
-            color: Ui.ink
+            color: Ui.ink100
             Layout.bottomMargin: Ui.gap
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
+        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.ink30 }
 
         // ── Sync ───────────────────────────────────────────────
+        // Healthy sync is hidden (PAPR.UI.2 §2.1); only shown while
+        // loading, on error, or with pending actions.
         Item {
             Layout.fillWidth: true
             height: 130
+            visible: apiClient.isLoading || apiClient.errorMessage !== "" || actionQueue.pendingCount > 0
 
             RowLayout {
                 anchors.fill: parent
@@ -42,20 +49,21 @@ Item {
                         font.family: Ui.fontFamily
                         font.pixelSize: Ui.task
                         font.bold: true
-                        color: Ui.ink
+                        color: Ui.ink100
                     }
                     Text {
                         text: apiClient.isLoading ? "syncing..."
                             : (apiClient.errorMessage !== "" ? "offline" : "synced " + apiClient.lastSync)
                         font.family: Ui.fontFamily
                         font.pixelSize: Ui.meta
-                        color: Ui.muted
+                        color: Ui.ink70
                     }
                     Text {
+                        visible: actionQueue.pendingCount > 0
                         text: actionQueue.pendingCount + " pending actions"
                         font.family: Ui.fontFamily
                         font.pixelSize: Ui.meta
-                        color: Ui.muted
+                        color: Ui.ink70
                     }
                 }
                 PaperButton {
@@ -67,7 +75,7 @@ Item {
                 }
             }
 
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.divider }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.ink30 }
         }
 
         // ── Display ────────────────────────────────────────────
@@ -84,7 +92,7 @@ Item {
                     font.family: Ui.fontFamily
                     font.pixelSize: Ui.task
                     font.bold: true
-                    color: Ui.ink
+                    color: Ui.ink100
                     Layout.topMargin: 12
                 }
                 RowLayout {
@@ -109,7 +117,7 @@ Item {
                 }
             }
 
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.divider }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.ink30 }
         }
 
         // ── Device ─────────────────────────────────────────────
@@ -127,7 +135,7 @@ Item {
                     font.family: Ui.fontFamily
                     font.pixelSize: Ui.task
                     font.bold: true
-                    color: Ui.ink
+                    color: Ui.ink100
                 }
                 StatusLine { label: "Battery"; value: deviceStatus.batteryPercent >= 0 ? deviceStatus.batteryPercent + "% " + deviceStatus.batteryState : "unknown" }
                 StatusLine { label: "Storage"; value: deviceStatus.storageFreeGb.toFixed(1) + " GB free" }
@@ -136,20 +144,16 @@ Item {
                 StatusLine { label: "PaperOS"; value: deviceStatus.appVersion }
             }
 
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.divider }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Ui.ink30 }
         }
 
         Item { Layout.fillHeight: true }
 
-        // ── Safety + Diagnostics ───────────────────────────────
+        // ── Diagnostics entry ──────────────────────────────────
+        // Return to reMarkable is not duplicated here — its canonical
+        // location is the Drawer footer (PAPR.UI.2 §2.6).
         RowLayout {
             spacing: Ui.gap
-            PaperButton {
-                objectName: "system.returnRemarkable"
-                label: "Return to reMarkable"
-                implicitHeight: Ui.btnH
-                onTapped: Qt.quit()
-            }
             PaperButton {
                 objectName: "system.diagnostics"
                 label: "Diagnostics"
@@ -178,7 +182,7 @@ Item {
                     font.family: Ui.fontFamily
                     font.pixelSize: Ui.primary
                     font.bold: true
-                    color: Ui.ink
+                    color: Ui.ink100
                 }
                 Item { Layout.fillWidth: true }
                 PaperButton {
@@ -189,7 +193,7 @@ Item {
                 }
             }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Ui.ink30 }
 
             StatusLine { label: "API Error"; value: apiClient.errorMessage !== "" ? apiClient.errorMessage : "none" }
             StatusLine { label: "Marker"; value: penBridge.available ? "active — " + penBridge.calibrationInfo : penBridge.calibrationInfo }
@@ -203,7 +207,7 @@ Item {
                 font.family: Ui.fontFamily
                 font.pixelSize: Ui.task
                 font.bold: true
-                color: Ui.ink
+                color: Ui.ink100
             }
             RowLayout {
                 spacing: Ui.gap
@@ -221,7 +225,7 @@ Item {
                     text: page.frontlightSummary
                     font.family: Ui.fontFamily
                     font.pixelSize: Ui.meta
-                    color: Ui.muted
+                    color: Ui.ink70
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }

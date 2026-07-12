@@ -56,7 +56,7 @@ Item {
                     label: "Review"
                     secondary: page.openCount === 0
                     implicitHeight: Ui.btnHs
-                    onTapped: page.navigateTo(1)
+                    onTapped: page.navigateTo(0)
                 }
             }
 
@@ -93,7 +93,7 @@ Item {
                     label: "Notes"
                     secondary: noteStore.noteCount === 0
                     implicitHeight: Ui.btnHs
-                    onTapped: page.navigateTo(2)
+                    onTapped: page.navigateTo(1)
                 }
             }
 
@@ -167,7 +167,7 @@ Item {
                     label: "Choose"
                     secondary: true
                     implicitHeight: Ui.btnHs
-                    onTapped: page.navigateTo(1)
+                    onTapped: page.navigateTo(0)
                 }
             }
 
