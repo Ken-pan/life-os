@@ -1,10 +1,11 @@
 # PAPR.SYS.1 — Lifecycle Runtime Implementation
 
-**Status:** **CONDITIONAL PASS** — reversible **enter / exit / recovery core
-validated on real hardware** (2026-07-12). **High-frequency switching,
-persistent enablement, and Mode B are BLOCKED** pending the SYS.1 hardening
-patch (Finding C — confirmed vendor `StartLimit` interaction). Handoff for the
-next agent at the end of this doc.
+**Status:** **PASS** (owner sign-off 2026-07-12) — reversible
+**enter / exit / restart / recovery core + Finding C hardening validated on real
+hardware**. Finding C (vendor `StartLimit`) is **RESOLVED** and device-validated;
+high-frequency switching passes. Persistent enablement and Mode B are **out of
+SYS.1 scope** — separate gates, still not authorized. Handoff / history at the
+end of this doc.
 **Owner:** Ken + Codex · **Agent 线:** Line B (Shell)
 **Depends on:** [`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md)
 (PAPR.SYS.1b.jrn CONDITIONAL PASS — accepted)
@@ -543,9 +544,9 @@ fault-injection retry and explicit `recover` are deferred pending finding C.
 | Manual single enter / exit / recovery  | **PASS**             |
 | Finding C (vendor StartLimit)          | **RESOLVED** (hardened + device-validated 2026-07-12) |
 | High-frequency switching               | **PASS** (Finding C hardening gate, 2026-07-12) |
-| SYS.1 overall                          | **CONDITIONAL PASS** (Finding C cleared; pending Ken sign-off for persistent enable) |
-| Persistent enablement                  | **BLOCKED** (separate gate) |
-| Mode B / auto-launch-after-unlock      | **BLOCKED** (separate gate) |
+| SYS.1 overall                          | **PASS** (owner sign-off 2026-07-12) |
+| Persistent enablement                  | **BLOCKED** (separate gate, not authorized) |
+| Mode B / auto-launch-after-unlock      | **BLOCKED** (separate gate, not authorized) |
 
 ## SYS.1 hardening design (owner-directed — IMPLEMENTED 2026-07-12)
 
@@ -587,13 +588,13 @@ to whatever the current OS ships.
 
 ## SYS.1 hardening patch — implemented (2026-07-12)
 
-Status: **host-validated + device-validated 2026-07-12** (constrained gate below,
-Ken present). Finding C is **RESOLVED**: the full authorized cadence ran without
-ever approaching `StartLimitBurst=4` and the `emergency.target`/reboot path was
-never triggered. High-frequency switching flips to **PASS**; persistent
-enablement / Mode B remain separately **BLOCKED** (out of scope, own gates).
-Owner approved a minimal `paperos.service` `ExecStopPost` edit (Layer 1) after
-confirming it preserves the always-on native fallback.
+Status: **PASS** — host-validated + device-validated 2026-07-12 (constrained gate
+below, Ken present), **owner sign-off same day**. Finding C is **RESOLVED**: the
+full authorized cadence ran without ever approaching `StartLimitBurst=4` and the
+`emergency.target`/reboot path was never triggered. High-frequency switching
+passes; persistent enablement / Mode B remain separately **BLOCKED** (out of
+scope, own gates). Owner approved a minimal `paperos.service` `ExecStopPost` edit
+(Layer 1) after confirming it preserves the always-on native fallback.
 
 As-built mapping of the four layers:
 
