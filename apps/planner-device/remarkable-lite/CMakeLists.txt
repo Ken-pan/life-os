@@ -51,12 +51,17 @@ qt_add_qml_module(paperos
         qml/SystemDrawer.qml
         qml/PaperButton.qml
         qml/StatusLine.qml
-        qml/HomePage.qml
-        qml/TodayPage.qml
+        qml/HomeTodayPage.qml
+        qml/TasksPage.qml
+        qml/DocumentsPage.qml
         qml/NotesPage.qml
+        qml/SystemPage.qml
         qml/InboxPage.qml
         qml/ReviewPage.qml
-        qml/SystemPage.qml
+        # Legacy source, no longer mounted (PAPR.UI.2 §5): retained for
+        # reference/rollback, not registered as an active route.
+        qml/HomePage.qml
+        qml/TodayPage.qml
         qml/MorePage.qml
 )
 

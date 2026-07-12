@@ -2,18 +2,25 @@
 
 **Date:** 2026-07-12
 
-**Status:** **DESIGN-READY**; implementation and device release gated
+**Status:** **IMPLEMENTED, automated device gate PASS** (2026-07-12); full
+acceptance-matrix sign-off still pending owner review — see §11.
 
-**Scope:** docs/design only; unified Today landing and Layer-1 navigation
+**Scope:** IA/design **and** QML implementation of the unified Today landing
+and Layer-1 navigation, both authorized and completed 2026-07-12.
 
-**Implementation baseline inspected:** committed Core Slice 1.1 UI at `d7c52858`
+**Implementation baseline:** `feat/p-move-ui-slice-1-1-visual-cleanup` (`fdfc3f3f`)
+merged into `agent/papr-ui-2-ia`; the pre-existing stale, uncommitted
+2026-07-10 `HomeTodayPage.qml`/`DocumentsPage.qml` draft in that worktree was
+**not** used as source of truth (per §8 checklist below) — everything in §11
+is freshly written against this document.
 
 **Product principle:** paper canvas + contextual tools + temporary system surfaces
 
-This document is the implementation-ready IA contract for `PAPR.UI.2`. It does
-not authorize QML implementation, lifecycle changes, device access, production
-writes, or a device PASS. When this document conflicts with a concept mockup,
-the committed Slice 1.1 contracts and real device evidence take precedence.
+This document was originally docs/design-only; §11 records that the owner
+subsequently authorized and the QML implementation was completed, built, and
+device-gated the same day. When this document conflicts with a concept
+mockup, the committed Slice 1.1 contracts and real device evidence take
+precedence.
 
 ## 0. Scope and invariants
 
