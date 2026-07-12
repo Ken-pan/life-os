@@ -660,6 +660,140 @@ hits="$(grep -l 'reset-failed' \
   "$LIFECYCLE/paperos-lib.sh" 2>/dev/null)"
 assert_eq "$hits" "" "reset-failed must not appear in enter/exit/recover/watch/lib"
 
+# ══ Deploy / rollback packaging tests (Mac-side scripts via ssh/scp shims) ════
+# These exercise the REAL deploy-lifecycle.sh / rollback-lifecycle.sh with ssh
+# executing the remote block locally, scp copying locally, and a systemctl shim
+# that owns link/disable/daemon-reload and reflects the linked unit's
+# ExecStopPost back through `systemctl show` (the effective-unit gate).
+PAPER_DEVICE="$(cd "$HERE/../.." && pwd)"
+
+setup_deploy_env() { # test-name
+  CURRENT="$1"
+  DT="$(mktemp -d "${TMPDIR:-/tmp}/sys1-deploy.XXXXXX")"
+  DTARGET="$DT/paperos"          # fake device /home/root/paperos
+  DMOCK="$DT/mock"
+  DSHIM="$DT/shim"
+  mkdir -p "$DTARGET" "$DMOCK" "$DSHIM"
+  touch "$DMOCK/xochitl-active"                    # native baseline
+  echo "5.7.126" > "$DTARGET/compat.allowed"       # pre-seed so deploy skips /etc/os-release
+
+  # ssh shim: run the remote command string locally (drop the host arg).
+  cat > "$DSHIM/ssh" <<'EOSH'
+#!/bin/sh
+shift
+exec sh -c "$*"
+EOSH
+  # scp shim: copy every source (all but the last arg) into the local dest dir.
+  cat > "$DSHIM/scp" <<'EOSH'
+#!/bin/sh
+last=""; for a in "$@"; do last="$a"; done
+dest="${last#*:}"
+i=0; total=$#
+for a in "$@"; do i=$((i+1)); [ "$i" -eq "$total" ] && break; cp "$a" "$dest"; done
+EOSH
+  # sleep shim: keep rollback fast/deterministic.
+  printf '#!/bin/sh\nexit 0\n' > "$DSHIM/sleep"
+  # ps shim: no PaperOS / watcher processes present.
+  printf '#!/bin/sh\necho "  PID USER COMMAND"\nexit 0\n' > "$DSHIM/ps"
+
+  cat > "$DSHIM/systemctl" <<'EOSH'
+#!/bin/sh
+S="$MOCK_DIR"
+cmd="${1:-}"; unit="${2:-}"
+echo "$cmd $unit" >> "$S/systemctl.calls"
+xochitl_up() { [ -e "$S/xochitl-active" ] || echo x >> "$S/xochitl-starts"; touch "$S/xochitl-active"; }
+case "$cmd" in
+  is-active)
+    case "$unit" in
+      xochitl) [ -e "$S/xochitl-active" ] && { echo active; exit 0; }; echo inactive; exit 3 ;;
+      rm-sync) { [ -e "$S/xochitl-active" ] && [ ! -e "$S/rmsync-fail" ]; } && { echo active; exit 0; }; echo inactive; exit 3 ;;
+      paperos) [ -e "$S/paperos-running" ] && { echo active; exit 0; }; echo inactive; exit 3 ;;
+    esac ;;
+  start) [ "$unit" = xochitl ] && xochitl_up ;;
+  stop)  [ "$unit" = paperos ] && rm -f "$S/paperos-running" ;;
+  link)  echo "$unit" > "$S/linked-unit" ;;
+  disable) [ "$unit" = paperos ] && rm -f "$S/linked-unit" ;;
+  daemon-reload) : ;;
+  show)
+    case "$unit" in
+      paperos|paperos.service)
+        case "$*" in
+          *ExecStopPost*)
+            if [ -e "$S/force-stale-unit" ]; then
+              echo "ExecStopPost={ path=/bin/sh ; argv[]=/bin/sh -c systemctl --no-block start xochitl ; ignore_errors=no }"
+            elif [ -f "$S/linked-unit" ] && [ -f "$(cat "$S/linked-unit" 2>/dev/null)" ]; then
+              esp=$(grep '^ExecStopPost=' "$(cat "$S/linked-unit")" 2>/dev/null | tail -1)
+              echo "ExecStopPost={ path=/bin/sh ; argv[]=${esp#ExecStopPost=} ; ignore_errors=no }"
+            fi ;;
+          *LoadState*) echo loaded ;;
+        esac ;;
+    esac ;;
+esac
+exit 0
+EOSH
+  chmod 755 "$DSHIM/ssh" "$DSHIM/scp" "$DSHIM/sleep" "$DSHIM/ps" "$DSHIM/systemctl"
+}
+run_deploy() { # extra KEY=VAL...
+  env PATH="$DSHIM:$PATH" MOCK_DIR="$DMOCK" PAPEROS_DEVICE=testdev \
+    PAPEROS_HOME="$DTARGET" "$@" sh "$PAPER_DEVICE/deploy-lifecycle.sh"
+}
+run_rollback() { # [--purge]
+  env PATH="$DSHIM:$PATH" MOCK_DIR="$DMOCK" PAPEROS_DEVICE=testdev \
+    PAPEROS_HOME="$DTARGET" sh "$PAPER_DEVICE/rollback-lifecycle.sh" "$@"
+}
+
+setup_deploy_env "deploy: copies hardened unit into /home + links exact unit + daemon-reload"
+run_deploy >/dev/null 2>&1; rc=$?
+assert_eq "$rc" "0" "deploy exit 0"
+assert_file "$DTARGET/systemd/paperos.service" "hardened unit shipped to /home"                       # (1)
+assert_contains "$(cat "$DTARGET/systemd/paperos.service")" "restart-intent" "shipped unit is the hardened one"
+assert_eq "$(cat "$DMOCK/linked-unit" 2>/dev/null)" "$DTARGET/systemd/paperos.service" "linked exact /home unit" # (2)
+assert_contains "$(cat "$DMOCK/systemctl.calls")" "daemon-reload" "daemon-reload ran"                 # (3)
+
+setup_deploy_env "deploy: verifies effective conditional ExecStopPost"
+out="$(run_deploy 2>&1)"; rc=$?
+assert_eq "$rc" "0" "deploy exit 0"
+assert_contains "$out" "conditional restart-intent OK" "effective ExecStopPost verified"              # (4)
+
+setup_deploy_env "deploy: stale/old effective unit blocks deployment (fail closed)"
+touch "$DMOCK/force-stale-unit"
+out="$(run_deploy 2>&1)"; rc=$?
+assert_eq "$rc" "3" "deploy fails closed on stale effective unit"                                     # (5)
+assert_contains "$out" "DEPLOY FAILED" "stale-unit fail-closed message"
+
+setup_deploy_env "deploy: repeated deploy is idempotent"
+run_deploy >/dev/null 2>&1
+run_deploy >/dev/null 2>&1; rc=$?
+assert_eq "$rc" "0" "second deploy exit 0"                                                            # (6)
+assert_eq "$(cat "$DMOCK/linked-unit" 2>/dev/null)" "$DTARGET/systemd/paperos.service" "still linked to same unit"
+assert_file "$DTARGET/systemd/paperos.service" "unit still present after repeat"
+
+setup_deploy_env "deploy: enables nothing and does not stop xochitl"
+run_deploy >/dev/null 2>&1
+assert_eq "$(grep -c 'enable' "$DMOCK/systemctl.calls" 2>/dev/null)" "0" "no systemctl enable"        # (7)
+assert_eq "$(grep -c 'stop xochitl' "$DMOCK/systemctl.calls" 2>/dev/null)" "0" "xochitl never stopped"  # (8)
+assert_file "$DMOCK/xochitl-active" "xochitl still active after deploy"
+
+setup_deploy_env "rollback: unlinks unit and restores native, preserving install"
+run_deploy >/dev/null 2>&1
+mkdir -p "$DTARGET/run"; touch "$DTARGET/run/state"
+out="$(run_rollback 2>&1)"; rc=$?
+assert_eq "$rc" "0" "rollback exit 0"
+assert_contains "$out" "ROLLBACK OK" "native verified"                                                # (10)
+assert_no_file "$DMOCK/linked-unit" "session unit unlinked"                                           # (9)
+assert_contains "$(cat "$DMOCK/systemctl.calls")" "disable paperos" "disable called"
+assert_no_file "$DTARGET/run" "volatile run/ removed"
+assert_file "$DTARGET/systemd/paperos.service" "normal rollback preserves /home unit"                # (12)
+assert_file "$DTARGET/bin/paperos-ctl" "normal rollback preserves bin/"
+
+setup_deploy_env "rollback --purge: deletes /home unit + install files"
+run_deploy >/dev/null 2>&1
+out="$(run_rollback --purge 2>&1)"; rc=$?
+assert_eq "$rc" "0" "purge rollback exit 0"
+assert_no_file "$DTARGET/systemd/paperos.service" "purge removes /home unit"                          # (11)
+assert_no_file "$DTARGET/bin" "purge removes bin/"
+assert_no_file "$DTARGET/compat.allowed" "purge removes compat.allowed"
+
 # ══ Summary ═══════════════════════════════════════════════════════════════════
 echo
 echo "PASS=$PASS FAIL=$FAIL"

@@ -7,12 +7,13 @@
 #   4. restore xochitl
 #   5. verify xochitl + rm-sync active and PaperOS process count 0
 #
-# --purge additionally removes $TARGET/bin, compat.allowed, launcher.uuid and
-# the DISABLED marker (full uninstall of everything deploy-lifecycle.sh and
-# the runtime ever wrote).
+# --purge additionally removes $TARGET/bin, $TARGET/systemd/paperos.service,
+# compat.allowed, launcher.uuid and the DISABLED marker (full uninstall of
+# everything deploy-lifecycle.sh and the runtime ever wrote under /home).
+# Normal rollback PRESERVES the /home installation ($TARGET/bin, $TARGET/systemd).
 #
-# The native fallbacks (open-paperos.sh, recover-xochitl.sh, linked
-# paperos.service) are untouched — the pre-SYS.1 recovery path stays intact.
+# The native fallbacks (open-paperos.sh, recover-xochitl.sh) are untouched — the
+# pre-SYS.1 recovery path stays intact. Nothing under /usr is ever modified.
 set -eu
 
 DEVICE="${PAPEROS_DEVICE:-remarkable-pro-move}"
@@ -40,15 +41,15 @@ ssh "$DEVICE" "
   for p in \$(ps w | awk '/paperos(\\.[a-z0-9]+)? -platform|\\/paperos(\\.[a-z0-9]+)?( |\$)|paperos-ink-[a-z0-9-]+/ && !/awk/ {print \$1}'); do
     kill -9 \"\$p\" 2>/dev/null
   done
-  echo '--- unlinking paperos.service (reverses deploy link; not enable) ---'
+  echo '--- unlinking session unit (reverses deploy link; not enable) ---'
   systemctl disable paperos 2>/dev/null || true
   systemctl daemon-reload 2>/dev/null || true
   echo '--- removing temporary runtime state ---'
   rm -rf '$TARGET/run'
   if [ '$PURGE' = '--purge' ]; then
-    rm -rf '$TARGET/bin'
+    rm -rf '$TARGET/bin' '$TARGET/systemd'
     rm -f '$TARGET/compat.allowed' '$TARGET/launcher.uuid' '$TARGET/DISABLED'
-    echo 'purged bin/, compat.allowed, launcher.uuid, DISABLED'
+    echo 'purged bin/, systemd/paperos.service, compat.allowed, launcher.uuid, DISABLED'
   fi
   echo '--- restoring xochitl ---'
   systemctl start xochitl
