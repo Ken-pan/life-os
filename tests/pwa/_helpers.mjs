@@ -46,6 +46,7 @@ export function collectShellMetricsInBrowser(opts) {
  * @param {boolean} standalone
  */
 export async function readShellMetrics(page, app, standalone = false) {
+  await page.waitForLoadState('networkidle').catch(() => {})
   if (standalone) {
     await page.evaluate(() => {
       document.documentElement.classList.add('standalone-pwa')
@@ -55,11 +56,13 @@ export async function readShellMetrics(page, app, standalone = false) {
       document.documentElement.style.setProperty('--mobile-tabbar-safe-padding', '34px')
     })
     await page.waitForFunction(
-      () => getComputedStyle(document.body).display === 'flex',
+      () =>
+        document.documentElement.classList.contains('standalone-pwa') &&
+        getComputedStyle(document.body).display === 'flex',
       undefined,
-      { timeout: 5_000 },
-    ).catch(() => {})
-    await page.waitForTimeout(300)
+      { timeout: 8_000 },
+    )
+    await page.waitForTimeout(200)
   }
   return page.evaluate(collectShellMetricsInBrowser, {
     mainQuery: app.mainQuery,

@@ -2635,6 +2635,14 @@ html.planner-schedule-modal-open .schedule-popover {
   background: color-mix(in srgb, var(--card) 70%, transparent);
 }
 
+@media (--life-os-mobile) {
+  html.standalone-pwa .day-timeline-scroll {
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: visible;
+  }
+}
+
 .day-timeline-foot {
   border: 1px solid var(--border);
   border-top: none;
@@ -2700,8 +2708,18 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     grid-column: 1 / -1;
   }
 
-  .day-timeline-scroll {
+  html:not(.standalone-pwa) .day-timeline-scroll {
     max-height: 58vh;
+  }
+
+  /*
+   * Standalone PWA: one scroll surface (.life-os-page-workspace).
+   * Nested timeline max-height traps hour 20+ behind the tab bar.
+   */
+  html.standalone-pwa .day-timeline-scroll {
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: visible;
   }
 }
 
@@ -2763,9 +2781,15 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     font-size: var(--text-sm);
   }
 
-  .calendar-page .day-timeline-scroll {
+  html:not(.standalone-pwa) .calendar-page .day-timeline-scroll {
     max-height: min(64vh, 680px);
     padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+  }
+
+  html.standalone-pwa .calendar-page .day-timeline-scroll {
+    max-height: none;
+    padding-bottom: 0;
+    overflow: visible;
   }
 
   .unscheduled-panel {
