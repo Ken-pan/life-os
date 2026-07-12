@@ -43,7 +43,7 @@
     "test:design-catalog:a11y": "playwright test -c playwright.design-catalog.config.ts --grep @a11y --project catalog-desktop",
     "test:design-catalog:snapshots": "playwright test -c playwright.design-catalog.config.ts --grep @visual --project catalog-desktop",
     "test:design-catalog:snapshots:update": "playwright test -c playwright.design-catalog.config.ts --grep @visual --project catalog-desktop --update-snapshots",
-    "test:design-catalog:snapshots:docker:update": "bash scripts/design-catalog-snapshots-docker.sh --update-snapshots",
+    "test:design-catalog:snapshots:canonical": "bash scripts/design-catalog-snapshots-docker.sh",
     "test:design-catalog:all": "playwright test -c playwright.design-catalog.config.ts",
     "build:tokens": "node packages/design-tokens/scripts/build-css.mjs",
     "validate:tokens": "node packages/design-tokens/scripts/validate-tokens.mjs"
