@@ -1,3 +1,41 @@
+/**
+ * @typedef {'task'|'project'} AttachmentOwnerType
+ */
+
+/**
+ * @typedef {'image'|'file'|'link'|'log'} AttachmentKind
+ */
+
+/**
+ * @typedef {'upload'|'paste'|'camera'|'bug-report'|'system'} AttachmentSource
+ */
+
+/**
+ * @typedef {'pending'|'uploading'|'ready'|'failed'} AttachmentStatus
+ */
+
+/**
+ * @typedef {Object} PlannerAttachment
+ * @property {string} id
+ * @property {AttachmentOwnerType} ownerType
+ * @property {string} ownerId
+ * @property {AttachmentKind} kind
+ * @property {AttachmentSource} source
+ * @property {string} name
+ * @property {string} [mimeType]
+ * @property {number} [sizeBytes]
+ * @property {string} [storageBucket]
+ * @property {string} [storagePath]
+ * @property {string} [thumbnailPath]
+ * @property {string} [externalUrl]
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {AttachmentStatus} status
+ * @property {string} [errorCode]
+ * @property {number} updatedAt
+ * @property {number} [deletedAt]
+ */
+
 /** @typedef {'P0'|'P1'|'P2'|'P3'} TaskPriority */
 
 /** @typedef {'none'|'daily'|'weekly'|'monthly'|'yearly'} RecurrenceRule */

@@ -57,6 +57,7 @@ export function defaultState() {
     schemaVersion: SCHEMA_VERSION,
     tasks: [],
     projects: [],
+    attachments: [],
     lists: [
       {
         id: SYSTEM_LIST_INBOX,
@@ -271,8 +272,38 @@ export function mergeProjectsByUpdatedAt(local, incoming) {
   return [...byId.values()]
 }
 
-/**
- * LWW 合并设置：incoming（云端）更新才覆盖，避免旧设备的旧设置回灌。
+/** LWW 合并附件：按 updatedAt 取较新，墓碑同样参与传播 */
+/** @param {import('../types.js').PlannerAttachment[]} local @param {import('../types.js').PlannerAttachment[]} incoming */
+export function migrateAttachment(attachment) {
+  if (!attachment || typeof attachment !== 'object') return null
+  const a = /** @type {Record<string, unknown>} */ (attachment)
+  return {
+    ...a,
+    ownerType: typeof a.ownerType === 'string' ? a.ownerType : 'task',
+    ownerId: typeof a.ownerId === 'string' ? a.ownerId : '',
+    kind: typeof a.kind === 'string' ? a.kind : 'file',
+    source: typeof a.source === 'string' ? a.source : 'system',
+    name: typeof a.name === 'string' ? a.name : 'Untitled',
+    status: typeof a.status === 'string' ? a.status : 'pending',
+    updatedAt: typeof a.updatedAt === 'number' ? a.updatedAt : Date.now(),
+    deletedAt: typeof a.deletedAt === 'number' ? a.deletedAt : null,
+  }
+}
+
+/** LWW 合并附件：按 updatedAt 取较新，墓碑同样参与传播 */
+/** @param {import('../types.js').PlannerAttachment[]} local @param {import('../types.js').PlannerAttachment[]} incoming */
+export function mergeAttachmentsByUpdatedAt(local, incoming) {
+  const byId = new Map(local.map((a) => [a.id, a]))
+  for (const a of incoming.map(migrateAttachment).filter(Boolean)) {
+    const existing = byId.get(a.id)
+    if (!existing || (a.updatedAt ?? 0) >= (existing.updatedAt ?? 0)) {
+      byId.set(a.id, a)
+    }
+  }
+  return [...byId.values()]
+}
+
+/** LWW 合并设置：incoming（云端）更新才覆盖，避免旧设备的旧设置回灌。
  * 历史数据无 updatedAt 时视为 0（保留本地）。
  * @param {import('../types.js').AppSettings} local
  * @param {Partial<import('../types.js').AppSettings> | null | undefined} incoming
@@ -304,11 +335,15 @@ export function migrate(raw) {
   if (!lists.some((l) => l.id === SYSTEM_LIST_INBOX && !l.deletedAt)) {
     lists = [...base.lists, ...lists.filter((l) => l.id !== SYSTEM_LIST_INBOX)]
   }
+  const attachments = (
+    Array.isArray(r.attachments) ? r.attachments.map(migrateAttachment).filter(Boolean) : []
+  ).filter((a) => !isExpiredTombstone(a, now))
   return {
     schemaVersion: SCHEMA_VERSION,
     tasks,
     projects,
     lists,
+    attachments,
     settings: { ...base.settings, ...(r.settings || {}) },
   }
 }

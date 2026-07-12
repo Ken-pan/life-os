@@ -16,6 +16,7 @@ export function exportBackup() {
       tasks: JSON.parse(JSON.stringify(S.tasks)),
       projects: JSON.parse(JSON.stringify(S.projects)),
       lists: JSON.parse(JSON.stringify(S.lists)),
+      attachments: JSON.parse(JSON.stringify(S.attachments)),
       settings: JSON.parse(JSON.stringify(S.settings))
     }
   });

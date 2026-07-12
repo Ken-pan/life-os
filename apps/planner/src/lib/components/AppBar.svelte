@@ -8,6 +8,8 @@
   import ReportBugButton from '@life-os/platform-web/svelte/feedback'
   import { supabase } from '$lib/supabase.js'
   import { auth } from '$lib/auth.svelte.js'
+  import { createTask } from '$lib/domain/tasks.js'
+  import { uploadAttachment, createLinkAttachment } from '$lib/services/attachmentService.js'
 
   /** @type {{ title?: string, subtitle?: string, backHref?: string, backLabel?: string, historyBack?: boolean }} */
   let { title, subtitle, backHref, backLabel, historyBack = false } = $props()
@@ -24,6 +26,37 @@
   const resolvedBackLabel = $derived(backLabel ?? t('common.back'))
   const hasBack = $derived(Boolean(backHref) || historyBack)
   const hasTools = $derived(showMobileSettings)
+  
+  async function handleBugSubmit({ title: bugTitle, notes, severity, screenshot, diagnostics }) {
+    let projectId = null;
+    if (pathname.startsWith('/projects/')) {
+      const parts = pathname.split('/');
+      if (parts.length > 2 && parts[2]) {
+        projectId = parts[2];
+      }
+    }
+    
+    // Create Bug Task
+    const task = createTask({
+      title: bugTitle,
+      notes,
+      priority: severity === 'high' ? 'P1' : (severity === 'low' ? 'P3' : 'P2'),
+      projectId,
+      tags: ['bug'],
+    });
+    
+    // Create diagnostics log attachment
+    const logContent = JSON.stringify(diagnostics, null, 2);
+    const logBlob = new Blob([logContent], { type: 'application/json' });
+    const logFile = new File([logBlob], 'diagnostics.json', { type: 'application/json' });
+    
+    await uploadAttachment('task', task.id, logFile, 'system');
+    
+    // Upload screenshot if provided
+    if (screenshot) {
+      await uploadAttachment('task', task.id, screenshot, 'bug-report');
+    }
+  }
 </script>
 
 <header
@@ -75,7 +108,7 @@
     {/if}
 
     <div class="appbar-trailing">
-      <ReportBugButton app="planner" {supabase} user={auth.user} {toast} />
+      <ReportBugButton app="planner" {supabase} user={auth.user} {toast} onSubmit={handleBugSubmit} />
       {#if showMobileSettings}
         <a
           class="appbar-settings"

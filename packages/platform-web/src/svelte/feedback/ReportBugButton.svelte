@@ -6,6 +6,7 @@
     supabase = null,
     user = null,
     toast = null,
+    onSubmit = null,
   } = $props()
 
   let isOpen = $state(false)
@@ -135,6 +136,20 @@
 
     if (!title.trim()) {
       errorMsg = 'Title is required.'
+      return
+    }
+
+    if (onSubmit) {
+      try {
+        await onSubmit({ title, notes, severity, screenshot, diagnostics: getDiagnostics() })
+        successMode = 'remote'
+        successState = true
+        if (toast) {
+          toast('Bug report submitted successfully.', 'success')
+        }
+      } catch (err) {
+        errorMsg = err.message || 'Submission failed'
+      }
       return
     }
 

@@ -10,6 +10,7 @@ const t = (key, params = {}) => {
     'task.unscheduledLine': '今天 · 未排程',
     'task.unscheduledOnly': '未排程',
     'task.kindFocus': '关键',
+    'task.priority_P0': '高',
     'task.p1': '高',
     'schedule.scheduledRange': '已安排 {start}–{end}',
     'schedule.estimatedDuration': '预计 {duration}',

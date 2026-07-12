@@ -18,7 +18,21 @@ describe('migrate', () => {
     expect(state.schemaVersion).toBe(SCHEMA_VERSION);
     expect(state.tasks).toEqual([]);
     expect(state.projects).toEqual([]);
+    expect(state.attachments).toEqual([]);
     expect(state.lists.length).toBeGreaterThan(0);
+  });
+
+  it('migrates attachments with safe defaults', () => {
+    const state = migrate({
+      attachments: [{ id: 'att-1', ownerId: 't-1' }]
+    });
+    expect(state.attachments[0]).toMatchObject({
+      id: 'att-1',
+      ownerType: 'task',
+      ownerId: 't-1',
+      kind: 'file',
+      status: 'pending',
+    });
   });
 
   it('migrates tasks with reminder and recurrence defaults', () => {
