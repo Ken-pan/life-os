@@ -35,7 +35,7 @@ jobs:
         run: |
           echo "Docker image: mcr.microsoft.com/playwright:v1.61.1-noble"
           echo "Node: $(node --version)"
-          playwright_version="$(node -p \"require('@playwright/test/package.json').version\")"
+          playwright_version="$(node -p "require('@playwright/test/package.json').version")"
           echo "Playwright: ${playwright_version}"
           test "${playwright_version}" = "1.61.1"
           cat /etc/os-release
