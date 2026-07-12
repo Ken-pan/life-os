@@ -34,6 +34,15 @@ source.
 
 ## Latest Live SSH Check
 
+* **2026-07-12 (PAPR.UI.DEVICE-GATE)**: clean PR binaries were built and
+  promoted from their exact remote commits, never from checkpoint binaries:
+  * PR #27 `cc122d308bbe` → shell SHA-256
+    `599c9525d3b4b3556eb01c4f5ce84eeb1947b91c73d545f334b8913462d6dd89`;
+  * PR #28 `3fa85277a3c9` → shell SHA-256
+    `2e36f6ce84398d694e986331d4cda94e498739811a5486aafe73250b3c68b47e`.
+  Both deployed hashes matched locally built binaries. Each normal exit restored
+  `xochitl=active` and `rm-sync=active`. Product verdicts remain BLOCKED; see
+  [`../qa/paperos/ui-spec.md`](../qa/paperos/ui-spec.md) §4.8 and §5.9.
 * **2026-07-09**: `ssh remarkable-pro-move` reached `imx93-chiappa` again.
   `/home/root/planneros-lite` was confirmed as the legacy workspace and
   `/home/root/paperos` is now the canonical PaperOS workspace.

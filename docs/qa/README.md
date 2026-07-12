@@ -18,7 +18,7 @@
 | [`paperos/lifecycle.md`](./paperos/lifecycle.md) | SYS 发现 SSOT · PAPR.SYS.1 **primary lane** |
 | [`paperos/lifecycle-gate.md`](./paperos/lifecycle-gate.md) | PAPR.SYS.gate LC-01–LC-15 |
 | [`paperos/data-plane-2026-07-11.md`](./paperos/data-plane-2026-07-11.md) | PAPR.DATA.verify PASS |
-| [`paperos/ui-spec.md`](./paperos/ui-spec.md) | UI 执行 SSOT |
+| [`paperos/ui-spec.md`](./paperos/ui-spec.md) | UI 执行 SSOT · PR #27/#28 device gate BLOCKED（2026-07-12） |
 
 完整列表 → [`paperos/README.md`](./paperos/README.md)
 

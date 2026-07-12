@@ -91,21 +91,27 @@ curl -sS -o /dev/null -w "%{http_code}\n" https://planner.kenos.space/api/paper/
 
 System drawer · Notes Gallery · native ink chrome states · semantic `paperctl` capture · xochitl recovery.
 
-#### Now — Core Slice 1.1 · CODE COMPLETE · device re-verify
+#### Now — Core Slice 1.1 · DEVICE GATE BLOCKED
 
 **Native toolbar P0:** fixed in `52ae55e0` (`InkModeController` framebuffer sync).
 **QML visual:** fixed in `d7c52858`; Antigravity delta gate PASS — archived in [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md).
 
-**Clean review stack:** `agent/papr-ui-1-1-clean` reconstructs the stable Slice 1.1
-foundation from the preserved checkpoint without importing the toolbar
-auto-retreat or trace experiments. The tool/color synchronization fix is kept
-as an isolated commit and still requires the operator pen/device gate.
+**Clean PR #27:** exact commit `cc122d30` / binary `599c9525d3b4…6dd89` was
+built, promoted, and verified on the Move. Launch/exit, Drawer, Gallery,
+editor return, recovery, and no-auto-retreat behavior PASS. Device metadata
+reproducibly renders `pmUTC` / `amUTC`; physical pen tool/color/stroke match is
+still BLOCKED. Full matrix → [`../../qa/paperos/ui-spec.md`](../../qa/paperos/ui-spec.md) §4.8.
 
-**Before Slice 2:** operator device pass (toolbar + Gallery + recovery). Do **not** parallel Slice 2 in same PR.
+**Next executable action:** fix the locale-safe `NoteStore` formatter with a
+deterministic test, rebuild PR #27, then repeat its device gate. Do not un-draft.
 
-#### Next — Core Slice 2
+#### Next — Core Slice 2 · STACK IMPLEMENTED · DEVICE GATE BLOCKED
 
-Merge Home + Today; drawer IA → `Today · Notes · Tasks · Documents · Settings · Return to reMarkable`. No fake Search.
+PR #28 exact commit `3fa85277` / binary `2e36f6ce8439…8b47e` passed routing,
+real Tasks, honest Documents, note-create refresh, and recovery. It failed
+Today note-tile whitespace, Today long/CJK task truncation, Settings vertical
+layout, and the inherited locale label; its HEAD also contains an unrelated
+Fitness commit. Do not un-draft or merge. Full matrix → UI spec §5.9.
 
 #### Deferred
 
@@ -225,7 +231,7 @@ Acceptance:
 ## Remaining Before Daily Use
 
 - [x] **PAPR.DATA.verify** — PASS 2026-07-11: device production fetch 200 + schema + cache/UI refresh.
-- [ ] **PAPR.UI.1.1** — device re-verify after `52ae55e0` / `d7c52858` ([`qa/paperos/ui-spec.md`](../../qa/paperos/ui-spec.md)).
+- [ ] **PAPR.UI.1.1** — PR #27 device gate **BLOCKED**：`pmUTC/amUTC` formatter FAIL + physical stylus gate ([`qa/paperos/ui-spec.md`](../../qa/paperos/ui-spec.md) §4.8).
 - [x] **PAPR.SYS.0** — CONDITIONAL PASS accepted ([`qa/paperos/lifecycle.md`](../../qa/paperos/lifecycle.md)).
 - [x] **PAPR.SYS.1b** discovery — PAPR.SYS.1b.fs closed · PAPR.SYS.1b.jrn **CONDITIONAL PASS accepted** (2026-07-11).
 - [ ] **PAPR.SYS.1** — **PRIMARY LANE** — design → 分步 impl（Ken 逐步授权）；无授权步骤不得 enable watcher/systemd
