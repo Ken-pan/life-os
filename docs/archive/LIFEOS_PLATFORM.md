@@ -1,7 +1,7 @@
 # Life OS Platform（共享包与契约）
 
-> **主线 C-P0 / C-P1：** contracts、`@life-os/platform-web`、边界守卫
-> **并行 Integration：** [`LIFEOS_INTEGRATION.md`](./LIFEOS_INTEGRATION.md)（I-P0 身份在 `@life-os/sync`）
+> **主线 C-P0 / PLAT.CONTRACTS.1：** contracts、`@life-os/platform-web`、边界守卫
+> **并行 Integration：** [`LIFEOS_INTEGRATION.md`](./LIFEOS_INTEGRATION.md)（INTG.IDENTITY.0 身份在 `@life-os/sync`）
 
 **最后与代码同步：** 2026-07-08（`check:lifeos-boundaries` ✅）
 
@@ -12,8 +12,8 @@
 | 阶段      | 内容                                             | 代码状态       |
 | --------- | ------------------------------------------------ | -------------- |
 | **C-P0**  | contracts 包、platform-web、boundary guard、文档 | ✅             |
-| **C-P1**  | Planner + Fitness 试点 P1A/B/C                   | ✅             |
-| **C-P1+** | Finance/Music 接 contracts、shared UI            | ❌ 未批准/未做 |
+| **PLAT.CONTRACTS.1**  | Planner + Fitness 试点 P1A/B/C                   | ✅             |
+| **PLAT.CONTRACTS.1+** | Finance/Music 接 contracts、shared UI            | ❌ 未批准/未做 |
 
 **验证：**
 
@@ -30,7 +30,7 @@ node apps/fitness/scripts/sync-error-presentation-check.mjs
 ## 架构分层
 
 `@life-os/contracts` 是依赖图 **根**；`@life-os/theme` 与 contracts **无依赖**。
-`@life-os/sync` **独立**（含 I-P0 身份辅助函数，见 Integration 文档）。
+`@life-os/sync` **独立**（含 INTG.IDENTITY.0 身份辅助函数，见 Integration 文档）。
 
 ```
 @life-os/contracts     ← 根：packages/contracts/src/*.d.ts
@@ -64,12 +64,12 @@ apps/*                 ← 禁止互引
 | `contracts`                   | `packages/contracts`                   | 纯 `.d.ts`；模块 appearance/meta/sync/nav/content/feedback           |
 | `platform-web`                | `packages/platform-web`                | Web adapter；Planner/Fitness 已用 `applyDocumentMetaWeb`             |
 | `theme`                       | `packages/theme`                       | Web CSS；四 app 均依赖                                               |
-| `sync`                        | `packages/sync`                        | 云同步 + **I-P0** `resolveSupabaseEnv` / `createCoreIdentityHandler` |
+| `sync`                        | `packages/sync`                        | 云同步 + **INTG.IDENTITY.0** `resolveSupabaseEnv` / `createCoreIdentityHandler` |
 | `finance-enrichment-contract` | `packages/finance-enrichment-contract` | Finance 专用；非 cross-surface 平台包                                |
 
 ---
 
-## C-P1 试点（Planner + Fitness）
+## PLAT.CONTRACTS.1 试点（Planner + Fitness）
 
 **依赖声明：** 仅 `planner-os`、`fitness-os` 的 `package.json` 含 `@life-os/contracts` 与 `@life-os/platform-web`。
 
@@ -83,10 +83,10 @@ apps/*                 ← 禁止互引
 
 | App     | 说明                                                           |
 | ------- | -------------------------------------------------------------- |
-| Finance | React；用 `finance-enrichment-contract`；I-P0 身份已接         |
+| Finance | React；用 `finance-enrichment-contract`；INTG.IDENTITY.0 身份已接         |
 | Music   | 仅用 `@life-os/sync` + `@life-os/theme`；Dexie 同步 app 内自建 |
 
-**规则：** 禁止 runtime value-import contracts；不迁 SyncErrorBanner；C-P1 不做 Supabase schema 变更（I-P0 身份迁移属 Integration 主线，与 C-P1 并行）。
+**规则：** 禁止 runtime value-import contracts；不迁 SyncErrorBanner；PLAT.CONTRACTS.1 不做 Supabase schema 变更（INTG.IDENTITY.0 身份迁移属 Integration 主线，与 PLAT.CONTRACTS.1 并行）。
 
 **扩容门槛：** boundary guard 通过 + 行为不变 + 单独批准 → 再扩 Finance/Music。
 
@@ -113,7 +113,7 @@ apps/*                 ← 禁止互引
 
 ---
 
-## Rollback（C-P1）
+## Rollback（PLAT.CONTRACTS.1）
 
 移除试点 app 的 typedef/adapter 引用；保留 packages；重跑 boundary guard。
 

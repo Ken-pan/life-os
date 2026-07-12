@@ -80,7 +80,7 @@ npm run pwa:metrics
 | Finance | `/`（需登录才有 `.app-shell`；未登录测 auth 屏） |
 | Portal  | `/`                                              |
 
-### Music 播放加载验收（M-P8）
+### Music 播放加载验收（MUSC.PLAY.8）
 
 1. 播放同一首云曲两次 → Settings「播放加载指标」第二次来源应为 IDB/本地，P95 可播应明显低于冷启动
 2. 滚动曲库 / 首页 Quick Picks → Network 可见预暖（pointerdown 或可见行）

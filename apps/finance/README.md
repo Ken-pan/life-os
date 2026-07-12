@@ -63,16 +63,16 @@ Monorepo 文档入口见 [`../../docs/README.md`](../../docs/README.md)。Financ
 
 | 主线                | 状态 | 说明                                                                                                                       |
 | ------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------- |
-| **I-P0** 身份       | ✅   | `createCoreIdentityHandler('finance')` + `setupCrossDomainSSO`                                                             |
-| **I-P1.5** 事件     | 🟡   | Outbox 远程 ✅（`test-outbox-trigger.sh --smoke`）；Planner 消费端仍缺                                                     |
-| **C-P1+** contracts | 🟡   | purchase 展示用 `@life-os/finance-enrichment-contract`（Finance-owned）；跨应用业务事件 Zod 在 `@life-os/contracts/events` |
+| **INTG.IDENTITY.0** 身份       | ✅   | `createCoreIdentityHandler('finance')` + `setupCrossDomainSSO`                                                             |
+| **INTG.EVENTS.1.5** 事件     | 🟡   | Outbox 远程 ✅（`test-outbox-trigger.sh --smoke`）；Planner 消费端仍缺                                                     |
+| **PLAT.CONTRACTS.1+** contracts | 🟡   | purchase 展示用 `@life-os/finance-enrichment-contract`（Finance-owned）；跨应用业务事件 Zod 在 `@life-os/contracts/events` |
 
 Supabase 迁移 canonical 源：**本目录** `supabase/`（全 Life OS 共享 public 表亦在此维护）。运维见 [`../../docs/ops/supabase.md`](../../docs/ops/supabase.md)。
 
 ```bash
-# I-P0 验收
+# INTG.IDENTITY.0 验收
 ../../scripts/verify-life-os-identity-p0.sh
 
-# I-P1.5 Outbox（结构 + smoke）
+# INTG.EVENTS.1.5 Outbox（结构 + smoke）
 ../../scripts/test-outbox-trigger.sh --smoke
 ```

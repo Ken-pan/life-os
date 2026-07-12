@@ -1,7 +1,7 @@
-# Life OS Portal — I-P1 Plan
+# Life OS Portal — INTG.EVENTS.1 Plan
 
 > **Integration Phase 1：** 统一入口 / App Launcher
-> 前置：**I-P0** [`LIFE_OS_IDENTITY_P0.md`](./LIFE_OS_IDENTITY_P0.md) 出口条件满足
+> 前置：**INTG.IDENTITY.0** [`LIFE_OS_IDENTITY_P0.md`](./LIFE_OS_IDENTITY_P0.md) 出口条件满足
 > 总路线图：[`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md)
 
 ---
@@ -15,12 +15,12 @@
 
 ---
 
-## 非目标（I-P1 明确不做）
+## 非目标（INTG.EVENTS.1 明确不做）
 
 - 跨子域 SSO / 共享 cookie session
 - 合并四 App 为单 SPA
 - 直接读 `finance_transactions` / `music_tracks` 等全量业务表
-- `life_events` 完整消费链（留给 I-P1.5）
+- `life_events` 完整消费链（留给 INTG.EVENTS.1.5）
 - Finance 注册 UI
 
 ---
@@ -31,9 +31,9 @@
 | ------------ | ---------------------------------------------- | ------------------------------------------ |
 | 框架         | **SvelteKit**（`apps/portal` 或 `apps/home`）  | 与 Planner/Fitness/Music 一致；静态 deploy |
 | 部署         | Netlify 新站 `homeos-ken` → `home.kenos.space` | 对齐 [`NETLIFY.md`](./NETLIFY.md) 四站模式 |
-| Auth         | 同 Supabase project + `life_os_auth`           | I-P0 已统一                                |
+| Auth         | 同 Supabase project + `life_os_auth`           | INTG.IDENTITY.0 已统一                                |
 | 样式         | `@life-os/theme`                               | 视觉一致                                   |
-| 身份 API     | `core_profiles` + `core_user_app_settings`     | I-P0 已建                                  |
+| 身份 API     | `core_profiles` + `core_user_app_settings`     | INTG.IDENTITY.0 已建                                  |
 | Workspace 名 | `portal-os` 或 `home-os`                       | 与 `planner-os` 等并列                     |
 
 ---
@@ -46,8 +46,8 @@
 └── 已登录
     ├── App Launcher（四卡片 + 最后打开时间）
     ├── Auth Status（email, profile id, 各站 last_opened_at）
-    ├── Today Overview（只读 stub → I-P1.5 接真数据）
-    ├── Quick Actions（占位按钮，I-P1.5 接线）
+    ├── Today Overview（只读 stub → INTG.EVENTS.1.5 接真数据）
+    ├── Quick Actions（占位按钮，INTG.EVENTS.1.5 接线）
     └── System Health（Supabase ping + 可选 Netlify status）
 ```
 
@@ -88,11 +88,11 @@
 | Fitness  | 今日是否已练 / 下次训练         |
 | Music    | 当前 focus 状态 / 最近播放      |
 
-数据获取优先级：I-P1.5 `life_events` > 各 App 只读 RPC（不要直扫大表）。
+数据获取优先级：INTG.EVENTS.1.5 `life_events` > 各 App 只读 RPC（不要直扫大表）。
 
 ### 4. Quick Actions（v1 占位）
 
-- 「安排账单提醒到 Planner」→ disabled + tooltip「I-P1.5」
+- 「安排账单提醒到 Planner」→ disabled + tooltip「INTG.EVENTS.1.5」
 - 「开始 Workout」→ 链到 Fitness
 - 「打开 Music Focus」→ 链到 Music
 
@@ -107,7 +107,7 @@
 
 ### Redirect URLs
 
-在 I-P1 部署前追加（Management API 或 `config.toml`）：
+在 INTG.EVENTS.1 部署前追加（Management API 或 `config.toml`）：
 
 ```txt
 https://home.kenos.space/**
@@ -167,11 +167,11 @@ home.kenos.space  CNAME  homeos-ken.netlify.app
 
 ## `app_id` 扩展注意
 
-I-P0 的 `core_user_app_settings.app_id` check 现为：
+INTG.IDENTITY.0 的 `core_user_app_settings.app_id` check 现为：
 
 `finance | fitness | planner | music`
 
-Portal 若需自己的 `last_opened_at`，I-P1 迁移需：
+Portal 若需自己的 `last_opened_at`，INTG.EVENTS.1 迁移需：
 
 ```sql
 alter table public.core_user_app_settings
@@ -194,6 +194,6 @@ alter table public.core_user_app_settings
 
 ---
 
-## I-P1 完成后 → 启动 I-P1.5
+## INTG.EVENTS.1 完成后 → 启动 INTG.EVENTS.1.5
 
 当 Portal 能稳定展示用户身份与各 App 入口后，按 [`LIFEOS_LIFE_EVENTS_P1_5.md`](./LIFEOS_LIFE_EVENTS_P1_5.md) 添加 `life_events`，并把 Today Overview 从 stub 换成真实跨 App 摘要。

@@ -1,6 +1,6 @@
 # Planner 日程视图 UI/UX 走查清单
 
-> **Roadmap：** **P-SCHED-0** · [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
+> **Roadmap：** **PLNR.SCHED.0** · [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md) · ID 语法 [`../roadmap/TICKET_NAMING.md`](../roadmap/TICKET_NAMING.md)
 > **Agent 线：** Line A · **Claude Code · Fable** · Antigravity baseline ✅ · Codex/Cursor 补强
 > **Antigravity 报告：** [`planner-schedule-antigravity-baseline.md`](./planner-schedule-antigravity-baseline.md)
 > **代码锚点：** `routes/calendar/` · `components/schedule/*` · `domain/schedule.js` · `domain/tasks.js`
@@ -25,7 +25,7 @@
 规范任务（Scenario A）下，日历与 Today 日程 **可渲染、可拖放、可持久化**；重叠 2–3 项布局正常。阻塞项为：
 
 1. **P0 · 旧数据健壮性** — 缺 `tags` 数组的 legacy task 导致全页崩溃（`task.tags is not iterable`）
-2. **P1 · Mobile 滚动容器** — `.life-os-page-workspace` `overflowY: visible`，整页 body 滚动而非内部裁切（SCH-10）
+2. **P1 · Mobile 滚动容器** — `.life-os-page-workspace` `overflowY: visible`，整页 body 滚动而非内部裁切（**`PLNR.SCHED.10.pwa`**）
 
 详见 [`planner-schedule-antigravity-baseline.md`](./planner-schedule-antigravity-baseline.md) §2–§5。
 
@@ -35,7 +35,7 @@
 
 | ID      | 区域               | 现象 / 风险                                              | 优先级 | 状态 | Baseline |
 | ------- | ------------------ | -------------------------------------------------------- | ------ | ---- | -------- |
-| SCH-0   | 数据规范化         | legacy task 缺 `tags` → 日历/Timeline 崩溃               | P0     | ⬜   | QA-001/007 · **`migrateTask()` 不补 `tags: []`**（`persist/migrate.js:180`） |
+| PLNR.SCHED.0.migrate | 数据规范化         | legacy task 缺 `tags` → 日历/Timeline 崩溃               | P0     | ⬜   | QA-001/007 · **`migrateTask()` 不补 `tags: []`**（`persist/migrate.js:180`） |
 | SCH-1   | 移动 `/calendar`   | 时间轴区域是否可滚动、是否被 AppBar/底栏遮挡             | P1     | 🟡   | QA-010 · baseline **未**模拟 `html.standalone-pwa` |
 | SCH-2   | `DayTimeline`      | 拖放创建时间块：ghost 预览、冲突提示、snap 是否跟手      | P0     | ✅*  | QA-004（canonical） |
 | SCH-3   | `TimeBlock`        | resize 上下把手、move、与 overlap 列宽是否可读           | P0     | ✅*  | QA-004 |
@@ -45,15 +45,15 @@
 | SCH-7   | Desktop split      | 右侧 `CalendarContextPanel` 与主栏信息是否重复/脱节      | P2     | ⬜   | — |
 | SCH-8   | 当前时间线         | `now` marker 仅今天显示；滚动是否自动滚到当前小时附近    | P2     | ⬜   | — |
 | SCH-9   | 空日 / 稀疏日      | `sparseHint`（`tasks.length <= 3`）与 `schedule.timelineEmpty` | P2     | ⬜   | QA-002/008 · 代码已有，baseline 视觉待复判 |
-| SCH-10  | PWA iOS            | 单滚动容器（`.life-os-page-workspace`）；`standalone-pwa`  | P1     | 🟡   | QA-010 · 待 `npm run qa:pwa` / iOS Sim |
+| PLNR.SCHED.10.pwa  | PWA iOS            | 单滚动容器（`.life-os-page-workspace`）；`standalone-pwa`  | P1     | 🟡   | QA-010 · 待 `npm run qa:pwa` / iOS Sim |
 
-\* Scenario A（canonical fixture）已通过；SCH-0 修复后需在真实/legacy 数据下复验。
+\* Scenario A（canonical fixture）已通过；**PLNR.SCHED.0.migrate** 修复后需在真实/legacy 数据下复验。
 
-## 验收标准（P-SCHED-0 关闭条件）
+## 验收标准（PLNR.SCHED.0 关闭条件）
 
-1. **SCH-0** 关闭 + SCH-1/SCH-2/SCH-3 在 production 数据下无 P0 开放项
+1. **PLNR.SCHED.0.migrate** 关闭 + SCH-1/SCH-2/SCH-3 在 production 数据下无 P0 开放项
 2. Desktop + mobile 各完成一轮走查截图 → `docs/ui-qa-screenshots/planner/schedule/`（baseline 证据已在 `docs/qa/evidence/planner-schedule/2026-07-10/`）
-3. `domain/schedule.test.js` 现有用例仍绿；SCH-0 有单元测试或 normalization 锚点
+3. `domain/schedule.test.js` 现有用例仍绿；**PLNR.SCHED.0.migrate** 有单元测试或 normalization 锚点
 4. 产品主观：**能在日程视图完成「改时间、看重叠、排新块」而不回 Today**
 
 ## 修复记录

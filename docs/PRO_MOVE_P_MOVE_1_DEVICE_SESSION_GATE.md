@@ -1,4 +1,4 @@
-# P-MOVE-1 Device Session Gate
+# PAPR.DEV.1 Device Session Gate
 
 Date: 2026-07-09
 
@@ -77,12 +77,12 @@ xochitl_after=active
 - The warning `systemctl daemon-reload` appeared when starting xochitl, but no
   PaperOS step wrote systemd units or modified `/etc`; the warning predates
   this home-only deployment path.
-- P-MOVE-1 intentionally does not install a service, timer, xochitl patch, or
+- PAPR.DEV.1 intentionally does not install a service, timer, xochitl patch, or
   boot replacement.
 
 ## Next Gate
 
-P-MOVE-2 should add a device token and verify:
+PAPR.DEV.2 should add a device token and verify:
 
 - `/home/root/paperos/refresh-cache.sh` writes `cache.json`.
 - PaperOS renders the last-good cache when offline.

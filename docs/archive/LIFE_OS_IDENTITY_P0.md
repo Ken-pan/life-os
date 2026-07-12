@@ -184,12 +184,12 @@ where version = '20260707230000';
 
 | 阶段          | 文档                                                                     | 状态            |
 | ------------- | ------------------------------------------------------------------------ | --------------- |
-| I-P0 收尾     | 本文 §6 手动验收                                                         | ⏳ 四站登录确认 |
-| I-P1 Portal   | [`LIFEOS_PORTAL_P1.md`](./LIFEOS_PORTAL_P1.md)                           | 📋 下一步       |
-| I-P1.5 事件层 | [`LIFEOS_LIFE_EVENTS_P1_5.md`](./LIFEOS_LIFE_EVENTS_P1_5.md)             | 📋              |
-| I-P2 智能互通 | [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md) §I-P2 | ⏸️              |
+| INTG.IDENTITY.0 收尾     | 本文 §6 手动验收                                                         | ⏳ 四站登录确认 |
+| INTG.EVENTS.1 Portal   | [`LIFEOS_PORTAL_P1.md`](./LIFEOS_PORTAL_P1.md)                           | 📋 下一步       |
+| INTG.EVENTS.1.5 事件层 | [`LIFEOS_LIFE_EVENTS_P1_5.md`](./LIFEOS_LIFE_EVENTS_P1_5.md)             | 📋              |
+| INTG.EVENTS.2 智能互通 | [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md) §INTG.EVENTS.2 | ⏸️              |
 
-**I-P0 出口 checklist：**
+**INTG.IDENTITY.0 出口 checklist：**
 
 - [x] 四站 custom domain SSL Ready
 - [x] Supabase redirect URLs 已配置

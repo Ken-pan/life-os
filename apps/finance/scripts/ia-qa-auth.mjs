@@ -1,5 +1,5 @@
 /**
- * Shared Supabase session helpers for Finance IA QA scripts (F-P0).
+ * Shared Supabase session helpers for Finance IA QA scripts (FINC.CORE.0).
  */
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync } from 'fs'

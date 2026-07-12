@@ -3,7 +3,7 @@
 > First app pilot after P0. This document records the current pilot status,
 > scope, guardrails, and validation gates.
 
-**Track naming:** 本文 **C-P1** = Shared Platform contracts 试点。四站互通（Portal / 事件层）见 [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md) **I-P1**，两条主线并行。
+**Track naming:** 本文 **PLAT.CONTRACTS.1** = Shared Platform contracts 试点。四站互通（Portal / 事件层）见 [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md) **INTG.EVENTS.1**，两条主线并行。
 
 ---
 

@@ -34,7 +34,7 @@ Binary: 1.6M aarch64, deployed as `paperos.next` → promoted after checks.
 
 - Clean start, zero QML errors; log: font `Noto Sans CJK SC`, queue 0, notes 0, refresh `balanced`, shell up at 954×1696.
 - Operator drove the UI by touch: refresh mode switched to `fast`, frontlight probe ran (found `/sys/class/backlight/rm_frontlight`, brightness 1600/2047, writable — a Brightness slider is feasible later).
-- API failure path exercised for real: production Paper API returned **404** mid-test (2026-07-09); UI showed `offline/stale` and kept cached tasks. **2026-07-10复核：** `curl https://planner.kenos.space/api/paper/today` → **401**（路由正常）；见 hub **P-MOVE-VERIFY**（设备 token E2E 待复验）。
+- API failure path exercised for real: production Paper API returned **404** mid-test (2026-07-09); UI showed `offline/stale` and kept cached tasks. **2026-07-10：** `curl` → **401**（路由正常）。**2026-07-11：** **PAPR.DATA.verify PASS** — 见 [`qa/paperos-data-plane-verify-2026-07-11.md`](qa/paperos-data-plane-verify-2026-07-11.md)。
 - `systemctl start paperos` runs the shell; `stop` restores xochitl. Device reboot boots stock xochitl normally.
 
 ## Incidents & findings during test
@@ -62,7 +62,7 @@ Binary: 1.6M aarch64, deployed as `paperos.next` → promoted after checks.
 - Mail/calendar feeds — pages render empty states until the LifeOS backend
   exposes them; `cache/*.json` contract is ready.
 - Queue drain/sync worker — actions accumulate locally; upload comes with
-  the write-MVP phase (P-MOVE-5), gated on staging validation.
+  the write-MVP phase (PAPR.WRITE.5), gated on staging validation.
 - `task.add` supported by the queue but has no on-screen keyboard UI.
 
 ## Safety constraint compliance

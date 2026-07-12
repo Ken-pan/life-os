@@ -5,8 +5,8 @@
 | 做什么                                 | 在哪里                                                                           |
 | -------------------------------------- | -------------------------------------------------------------------------------- |
 | 改 Planner / Fitness / Finance / Music | `apps/planner` 等                                                                |
-| Portal（I-P1）                         | `apps/portal` — 见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)                |
-| Home（H-P0 实验）                      | `apps/home` — 见 [`../roadmap/INTEGRATION.md`](../roadmap/INTEGRATION.md#h-p0)   |
+| Portal（INTG.EVENTS.1）                         | `apps/portal` — 见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)                |
+| Home（HOME.EXPER.0 实验）                      | `apps/home` — 见 [`../roadmap/INTEGRATION.md`](../roadmap/INTEGRATION.md#h-p0)   |
 | 改共享 theme、sync、contracts、tokens  | `packages/{theme,sync,contracts,design-tokens,platform-web}`                     |
 | 本地开发                               | `cd life-os && npm install`，再 `cd apps/<app>`                                  |
 | Push 触发 Netlify                      | 只 push **`life-os` 的 `master`**                                                |
@@ -35,7 +35,7 @@ vendored `packages/life-os-*` 已从独立 app 仓删除。Netlify **不会**再
 | Planner `KIMI_API_KEY`             | ✅ 已配置                                                                       |
 | Music 生产 URL                     | ✅ https://music.kenos.space（rollback: musicos-ken.netlify.app）               |
 | Netlify 命名                       | ✅ 六站统一 `{app}os-ken.netlify.app`（Portal `portal-ken`，Home `homeos-ken`） |
-| Portal `portal-ken.netlify.app`    | ✅ `portal.kenos.space` 已上线（见 roadmap I-P1）                               |
+| Portal `portal-ken.netlify.app`    | ✅ `portal.kenos.space` 已上线（见 roadmap INTG.EVENTS.1）                               |
 | 本地 sibling 目录                  | ✅ 已删除（见 [`legacy-local.md`](./legacy-local.md)）                          |
 | Cursor 工作区                      | ✅ `Projects/life-os.code-workspace` + `.cursor/rules`                          |
 | 平台 Supabase 文档                 | ✅ [`supabase.md`](./supabase.md)（迁移状态 + `supabase-sql.sh`）               |

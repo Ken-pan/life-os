@@ -1,7 +1,7 @@
 # PaperOS UI Reference Mockups — 2026-07-10
 
 **Status:** Design-direction references (not literal visual specs)
-**Workstream:** P-MOVE-UI
+**Workstream:** PAPR.UI
 **Canonical index:** [`../../paperos-eink-uiux-gap-audit.md`](../../paperos-eink-uiux-gap-audit.md)
 
 These six PNGs capture the **target product language** for PaperOS on reMarkable Paper Pro Move portrait mode. They inform information architecture, chrome behavior, and hierarchy — they are **not** pixel-perfect implementation specs.

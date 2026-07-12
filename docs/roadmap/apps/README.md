@@ -9,89 +9,96 @@
 
 执行顺序以 **hub §推荐执行顺序** 为准；下文不重复 Wave 全文。
 
-## ID 命名（避免混淆）
+## ID 命名（v2 · APP3）
 
-| 前缀             | App     | 勿与下列混淆                                                                               |
-| ---------------- | ------- | ------------------------------------------------------------------------------------------ |
-| `P-P*` / `QA-P*` | Planner | `QA-P2` = desktop E2E                                                                      |
-| `P-MOVE-*`       | Planner | reMarkable Paper Pro Move / PaperOS device track                                           |
-| `FT-P*`          | Fitness | ≠ E2E 问题 **F-0**（端口冲突，已修）                                                       |
-| `F-P*`           | Finance | `F-P0` = route smoke；≠ Fitness **F-0**                                                    |
-| `M-P*`           | Music   | `M-P1` ✅ 已发货                                                                           |
-| `G-P*`           | Portal  | Growth 跨站；`G-P4`–`G-P6` ✅                                                              |
-| `H-P*`           | Home    | Integration `H-P1–H-P5` 见 INTEGRATION                                                     |
-| `H-W*`           | Home    | 空间编辑主线（墙图三步编辑器）≠ `H-P*`；[home-spatial-editor.md](./home-spatial-editor.md) |
+**Canonical 语法与 Legacy 对照：** [`../TICKET_NAMING.md`](../TICKET_NAMING.md)（Hub / Agent **只写 v2**；v1 单字母仅作 legacy）
 
-跨站复用 hub：`I-P1.5b` · `D-P7`（见 [`../DESIGN.md`](../DESIGN.md)）
+| APP3     | App                    | Workspace             | Legacy v1（勿在新 ticket 使用）               |
+| -------- | ---------------------- | --------------------- | --------------------------------------------- |
+| **PAPR** | **PaperOS** 设备 Shell | 代码暂驻 `planner-os` | `P-MOVE-*` · ~~`PLNR.PPOS.*`~~ · ~~`PPOS.*`~~ |
+| **PLNR** | Planner                | `planner-os`          | `P-*` · `P-SCHED-*`                           |
+| **FINC** | Finance                | `finance-os`          | `F-*`                                         |
+| **GYMS** | Fitness                | `fitness-os`          | `FT-*` · ~~`FITN.*`~~                         |
+| **MUSC** | Music                  | `music-os`            | `M-*`                                         |
+| **PORT** | Portal / Growth        | `portal`              | `G-*`                                         |
+| **HOME** | Home                   | `home-os`             | `H-P*` · `H-W*` → `HOME.SPATIAL.*`            |
+| **INTG** | Integration            | —                     | `I-*`                                         |
+
+**E2E 问题码：** Fitness 端口冲突 **`QA-GYMS-0`**（legacy `F-0` · ~~`QA-FITN-0`~~；≠ Finance `FINC.*`）。
+
+跨站复用 hub：`INTG.EVENTS.1b` · `DSGN.CATALOG.7`（见 [`../DESIGN.md`](../DESIGN.md)）
 
 ## Hub §Next ↔ 分卷对照
 
-| Hub ID             | App 分卷                                        | 状态 / 锚点                                                                                                                                         |
-| ------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **P-SCHED-0**      | [planner.md](./planner.md)                      | 🟡 baseline ✅ · legacy tags + mobile scroll 待修 · [`planner-schedule-antigravity-baseline.md`](../../qa/planner-schedule-antigravity-baseline.md) |
-| **P-MOVE-VERIFY**  | [planner-pro-move.md](./planner-pro-move.md)    | ✅ PASS 2026-07-11                                                                                                                  |
-| **P-MOVE-SYS-0**   | [planner-pro-move.md](./planner-pro-move.md)    | ✅ CONDITIONAL PASS accepted                                                                                                        |
-| **P-MOVE-SYS-1B**  | [planner-pro-move.md](./planner-pro-move.md)    | 🔄 Launcher Document discovery · ACTIVE / INCOMPLETE                                                                                |
-| **P-MOVE-SYS-1/2** | [planner-pro-move.md](./planner-pro-move.md)    | 🔒 SYS-1 blocked · SYS-2 not started                                                                                                |
-| **P-MOVE-UI**      | [planner-pro-move.md](./planner-pro-move.md)    | 🟡 Slice 1.1 设备复验 · Slice 2 IA 可早做                                                                                                           |
-| **FT-P5**          | [fitness.md](./fitness.md)                      | 🟡 工程 PASS · 产品 BLOCKED — [`FT-P5-substitution.md`](../../apps/fitness/docs/FT-P5-substitution.md) |
-| **F-P6**           | [finance.md](./finance.md)                      | ⏳ 支出审核（Amazon/BBY/Target）                                                                                                                    |
-| **P-PROJ-3**       | [planner.md](./planner.md)                      | ✅ Roadmap refs UI（2026-07-10）                                                                                                                    |
-| **P-MOVE-5**       | [planner-pro-move.md](./planner-pro-move.md)    | ⏳ controlled write staging gate                                                                                                                    |
-| **G-P4b-H**        | [portal.md](./portal.md) · [home.md](./home.md) | ✅ 2026-07-09 · H-P6a                                                                                                                               |
+| Canonical ID (v2)    | Legacy v1                                 | App 分卷                                        | 状态 / 锚点                                                            |
+| -------------------- | ----------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
+| **PLNR.SCHED.0**     | `P-SCHED.0` · `P-SCHED-0`                 | [planner.md](./planner.md)                      | 🟡 `PLNR.SCHED.0.migrate` 待合入 · **10a.sim ✅** · **10b.ios** 待 Ken |
+| **PAPR.DATA.verify** | `P-MOVE.verify` · `P-MOVE-VERIFY`         | [planner-pro-move.md](./planner-pro-move.md)    | ✅ PASS 2026-07-11                                                     |
+| **PAPR.SYS.0**       | `P-MOVE.SYS.0` · `P-MOVE-SYS-0`           | [planner-pro-move.md](./planner-pro-move.md)    | ✅ CONDITIONAL PASS accepted                                           |
+| **PAPR.SYS.1b.fs**   | `P-MOVE.SYS.1b.fs` · `P-MOVE-SYS-1B-FS`   | [planner-pro-move.md](./planner-pro-move.md)    | ❌ BLOCKED / CLOSED                                                    |
+| **PAPR.SYS.1b.jrn**  | `P-MOVE.SYS.1b.jrn` · `P-MOVE-SYS-1B-JRN` | [planner-pro-move.md](./planner-pro-move.md)    | 🟡 CONDITIONAL PASS accepted                                           |
+| **PAPR.SYS.1**       | `P-MOVE.SYS.1` · `P-MOVE-SYS-1`           | [planner-pro-move.md](./planner-pro-move.md)    | ⏸ UNBLOCKED NOT STARTED — paused                                       |
+| **PAPR.SYS.2**       | `P-MOVE.SYS.2` · `P-MOVE-SYS-2`           | [planner-pro-move.md](./planner-pro-move.md)    | 🔒 not started                                                         |
+| **PAPR.UI**          | `P-MOVE.UI` · `P-MOVE-UI`                 | [planner-pro-move.md](./planner-pro-move.md)    | 🟡 `PAPR.UI.1.1` 设备复验                                              |
+| **GYMS.SUB.5**       | `FT-P5`                                   | [fitness.md](./fitness.md)                      | 🟡 工程 PASS · 产品 BLOCKED                                            |
+| **FINC.PURCHASE.6**  | `F-P6`                                    | [finance.md](./finance.md)                      | ⏳ `FINC.PURCHASE.6.r0` · `FINC.PURCHASE.6.a`                          |
+| **PLNR.PROJ.3**      | `P-PROJ-3`                                | [planner.md](./planner.md)                      | ✅ Roadmap refs UI（2026-07-10）                                       |
+| **PAPR.WRITE.5**     | `P-MOVE.5` · `P-MOVE-5`                   | [planner-pro-move.md](./planner-pro-move.md)    | ⏳ controlled write staging                                            |
+| **PORT.GROWTH.4b-H** | `G-P4b-H`                                 | [portal.md](./portal.md) · [home.md](./home.md) | ✅ 2026-07-09 · `HOME.PROJ.6a`                                         |
 
-**已发货（2026-07-09）：** G-P8 · G-P9 · G-P4b-H · Phase 0–6 — [`../SHIPPED.md`](../SHIPPED.md)
+**已发货（2026-07-09）：** `PORT.GROWTH.8` · `PORT.GROWTH.9` · `PORT.GROWTH.4b-H` · Phase 0–6 — [`../SHIPPED.md`](../SHIPPED.md)
 
 ## 一览（Top Next）
 
-| App     | 层级   | Top Next                                            | 分卷                                                                      |
-| ------- | ------ | --------------------------------------------------- | ------------------------------------------------------------------------- |
-| Planner | 生产   | **P-SCHED-0** · **SYS-1B** · P-MOVE-UI | [planner.md](./planner.md) · [planner-pro-move.md](./planner-pro-move.md) |
-| Fitness | 生产   | **FT-P5** UI closure · FT-P2 ✅                          | [fitness.md](./fitness.md)                                                |
-| Finance | 生产   | **F-P6** 支出审核 · F-P1b                           | [finance.md](./finance.md)                                                |
-| Music   | 生产   | M-P5 ✅ · 维护 · M-P4 按需                          | [music.md](./music.md)                                                    |
-| Portal  | 启动器 | 维护 · UI 走查 P-1–P-12 ✅                          | [portal.md](./portal.md)                                                  |
-| Home    | 实验   | **H-P7** 多项目切换 · H-W0–W5 ✅                    | [home.md](./home.md)                                                      |
+| App         | 层级       | Top Next                                                 | 分卷                                                                                                        |
+| ----------- | ---------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **PaperOS** | 设备 Shell | **PAPR.UI** · **PAPR.SYS.1** (paused) · **PAPR.WRITE.5** | [planner-pro-move.md](./planner-pro-move.md) · lifecycle [hub](../../qa/paperos-device-lifecycle/README.md) |
+| Planner     | 生产       | **PLNR.SCHED.0**                                         | [planner.md](./planner.md)                                                                                  |
+| Fitness     | 生产       | **GYMS.SUB.5** UI closure · **GYMS.PORTAL.2** ✅         | [fitness.md](./fitness.md)                                                                                  |
+| Finance     | 生产       | **FINC.PURCHASE.6** · **FINC.SYNC.1b**                   | [finance.md](./finance.md)                                                                                  |
+| Music       | 生产       | **MUSC.PIPE.5** ✅ · 维护 · **MUSC.PIPE.4** 按需         | [music.md](./music.md)                                                                                      |
+| Portal      | 启动器     | 维护 · UI 走查 P-1–P-12 ✅                               | [portal.md](./portal.md)                                                                                    |
+| Home        | 实验       | **HOME.PROJ.7** 多项目切换 · **HOME.SPATIAL.0–5** ✅     | [home.md](./home.md)                                                                                        |
 
 ## 跨站集成矩阵（只读 / 事件）
 
-|                        | Planner | Fitness  | Finance | Music    | Portal    | Home     |
-| ---------------------- | ------- | -------- | ------- | -------- | --------- | -------- |
-| **读 `core_*`**        | ✅      | ✅       | ✅      | ✅       | ✅        | ✅       |
-| **`life_events` 生产** | —       | ✅ FT-P1 | ✅      | —        | —         | —        |
-| **`life_events` 消费** | ✅      | —        | —       | —        | 角标 G-P2 | —        |
-| **Portal 摘要 G-P4**   | ✅ 任务 | ✅ 训练  | ✅ 结余 | ✅ Music | ✅ Home   | —        |
-| **业务数据云**         | ✅      | ✅       | ✅      | ✅       | —         | ❌ local |
+|                               | Planner | Fitness          | Finance | Music    | Portal             | Home     |
+| ----------------------------- | ------- | ---------------- | ------- | -------- | ------------------ | -------- |
+| **读 `core_*`**               | ✅      | ✅               | ✅      | ✅       | ✅                 | ✅       |
+| **`life_events` 生产**        | —       | ✅ GYMS.EVENTS.1 | ✅      | —        | —                  | —        |
+| **`life_events` 消费**        | ✅      | —                | —       | —        | 角标 PORT.GROWTH.2 | —        |
+| **Portal 摘要 PORT.GROWTH.4** | ✅ 任务 | ✅ 训练          | ✅ 结余 | ✅ Music | ✅ Home            | —        |
+| **业务数据云**                | ✅      | ✅               | ✅      | ✅       | —                  | ❌ local |
 
 ## 已知阻塞（排期前必读）
 
-| 阻塞                              | 影响项                      | 解除方式                                               |
-| --------------------------------- | --------------------------- | ------------------------------------------------------ |
-| Home 仅 localStorage              | ~~**G-P4b** Home 卡~~       | ✅ **H-P6a** 元数据 + **G-P4b-H** 第五卡（2026-07-09） |
-| `events.ts` 仅 `finance.bill_due` | ~~**I-P1.5b** / **FT-P1**~~ | ✅ 已扩 `fitness.workout_logged`（2026-07-09）         |
+| 阻塞                              | 影响项                                     | 解除方式                                                               |
+| --------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
+| Home 仅 localStorage              | ~~**PORT.GROWTH.4b** Home 卡~~             | ✅ **HOME.PROJ.6a** 元数据 + **PORT.GROWTH.4b-H** 第五卡（2026-07-09） |
+| `events.ts` 仅 `finance.bill_due` | ~~**INTG.EVENTS.1b** / **GYMS.EVENTS.1**~~ | ✅ 已扩 `fitness.workout_logged`（2026-07-09）                         |
 
 ## 当前排序（→ hub §Now / §Next）
 
-| 序  | 项                        | 说明                                              |
-| --- | ------------------------- | ------------------------------------------------- |
-| 1   | **P-SCHED-0**             | 日程视图 debug + 可用性（Planner 最高产品优先级） |
-| 2   | **P-MOVE-SYS-1B**         | Launcher Document launch-surface discovery（read-only） |
-| 3   | **F-P6**                  | Finance 支出审核（商品级 + 后续处理）             |
-| 4   | **FT-P5**                 | Fitness 替代动作 — 工程 PASS · 产品 UI closure 待审 |
-| 5   | **P-MOVE-5**              | controlled write staging                          |
-| 6   | **F-P1b / P-P4**          | Codex · Cursor Auto（不用 Fable / Copilot Agent） |
+| 序  | 项                             | 说明                                                |
+| --- | ------------------------------ | --------------------------------------------------- |
+| 1   | **PLNR.SCHED.0**               | 日程视图 debug + 可用性（Planner 最高产品优先级）   |
+| 2   | **PAPR.UI**                    | `PAPR.UI.1.1` 设备复验；`PAPR.SYS.1` 实现 paused    |
+| 3   | **FINC.PURCHASE.6**            | Finance 支出审核（`FINC.PURCHASE.6.a` 等）          |
+| 4   | **GYMS.SUB.5**                 | Fitness 替代动作 — 工程 PASS · 产品 UI closure 待审 |
+| 5   | **PAPR.WRITE.5**               | controlled write staging                            |
+| 6   | **FINC.SYNC.1b / PLNR.CORE.4** | Codex · Cursor Auto（不用 Fable / Copilot Agent）   |
 
 ## Wave 投入估算（单人 · Phase 5+）
 
-| Phase | 项                                                       | 合计  |
-| ----- | -------------------------------------------------------- | ----- |
-| **7** | P-SCHED-0 + P-MOVE-BLOCK + F-P6a + P-MOVE-UI（Today 起） | ~4–6d |
-| **8** | FT-P5 + F-P6b + P-MOVE-5 + P-MOVE-6                      | ~4–5d |
-| **9** | F-P1b + FT-P2 + P-P4                                     | ~1–2d |
+| Phase | 项                                                         | 合计  |
+| ----- | ---------------------------------------------------------- | ----- |
+| **7** | PLNR.SCHED.0 + FINC.PURCHASE.6.a + PAPR.UI（Today 起）     | ~4–6d |
+| **8** | GYMS.SUB.5 + FINC.PURCHASE.6b + PAPR.WRITE.5 + PAPR.SYNC.6 | ~4–5d |
+| **9** | FINC.SYNC.1b + GYMS.PORTAL.2 + PLNR.CORE.4                 | ~1–2d |
 
 **已完成 Wave（2026-07-09）：** Phase 0–6 + Portal UI 走查 P-1–P-12 — 见 [`../SHIPPED.md`](../SHIPPED.md)
 
-**Phase 7：** **P-PROJ-3** → **P-MOVE-5**；Home H-W0–W5 已完成，不再作为下一档。
+**Phase 7：** **PLNR.PROJ.3** → **PAPR.WRITE.5**；Home HOME.SPATIAL.0–5 已完成，不再作为下一档。
 
 ## 何时更新
 

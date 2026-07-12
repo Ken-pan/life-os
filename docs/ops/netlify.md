@@ -55,7 +55,7 @@ cd life-os && npm install && npm run build
 | `VITE_SUPABASE_URL`        | Vite / 本地 `.env` 与 Finance 构建 |
 | `VITE_SUPABASE_ANON_KEY`   | 同上                               |
 
-代码通过 `@life-os/sync` 的 `resolveSupabaseEnv()` 同时读取 `PUBLIC_*` 与 `VITE_*`（见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) I-P0）。
+代码通过 `@life-os/sync` 的 `resolveSupabaseEnv()` 同时读取 `PUBLIC_*` 与 `VITE_*`（见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) INTG.IDENTITY.0）。
 
 **本地 `.env.example` 前缀：**
 
@@ -66,7 +66,7 @@ cd life-os && npm install && npm run build
 
 修改 `packages/sync` 或 `packages/theme` 会触发四站 rebuild（各 app `netlify.toml` 的 ignore 规则包含 `packages/*`）。
 
-## Portal（I-P1，✅ 已上线 · Growth G-P1–G-P5 已接）
+## Portal（INTG.EVENTS.1，✅ 已上线 · Growth PORT.GROWTH.1–PORT.GROWTH.5 已接）
 
 | 项             | 状态                                                                                 |
 | -------------- | ------------------------------------------------------------------------------------ |
@@ -78,22 +78,22 @@ cd life-os && npm install && npm run build
 
 **GoDaddy DNS：** `portal.kenos.space` → CNAME → `portal-ken.netlify.app`
 
-上线步骤见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) §I-P1。CLI 部署时需 `--filter portal`（与四站相同 `CI=1` 规则）。
+上线步骤见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) §INTG.EVENTS.1。CLI 部署时需 `--filter portal`（与四站相同 `CI=1` 规则）。
 
 ```bash
 npm run build:portal
 CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/build --functions=.netlify/functions-internal --site=a5df5c3e-0e42-4f82-aca8-8d6802da357f
 ```
 
-## Home（H-P0，🟡 实验 · 生产已部署）
+## Home（HOME.EXPER.0，🟡 实验 · 生产已部署）
 
 | 项           | 状态                                                                                     |
 | ------------ | ---------------------------------------------------------------------------------------- |
 | 代码         | `apps/home`（SvelteKit + adapter-static）                                                |
 | Netlify site | `homeos-ken`（`69d4c072-d153-499c-90a8-57909df461a4`）                                   |
 | 生产 URL     | https://home.kenos.space                                                                 |
-| Portal       | ✅ Launcher 实验区（H-P1 · 2026-07-09）                                                  |
-| Integration  | ✅ SSO + redirect（H-P2/H-P3）；spatial 数据仍 localStorage only                         |
+| Portal       | ✅ Launcher 实验区（HOME.PORTAL.1 · 2026-07-09）                                                  |
+| Integration  | ✅ SSO + redirect（HOME.SSO.2/HOME.SSO.3）；spatial 数据仍 localStorage only                         |
 
 ```bash
 npm run build:home

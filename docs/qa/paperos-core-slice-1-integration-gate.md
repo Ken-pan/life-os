@@ -1,4 +1,4 @@
-# PaperOS P-MOVE-UI Core Slice 1 — Technical Integration Gate
+# PaperOS PAPR.UI Core Slice 1 — Technical Integration Gate
 
 **Date:** 2026-07-10
 **Status:** Core Slice 1 shipped on device; **Slice 1.1** is the active correction pass

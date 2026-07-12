@@ -16,6 +16,7 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `npm run build`                                                   | Turbo build all apps                                            |
 | `npm run check`                                                   | Typecheck all apps                                              |
 | `npm run check:lifeos-boundaries`                                 | Package/app 依赖边界守卫                                        |
+| `npm run verify:ticket-naming`                                    | v2 APP3 ticket ID 漂移扫描（Hub / 链接 / legacy 泄漏）          |
 | `npm run build:planner`                                           | Single-app production build                                     |
 | `./scripts/verify-life-os-identity-p0.sh`                         | I-P0 身份 + Supabase migration 验收                             |
 | `./scripts/test-outbox-trigger.sh [--smoke]`                      | I-P1.5 Outbox 结构检查 / 端到端 smoke                           |

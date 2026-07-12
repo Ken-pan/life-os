@@ -1,8 +1,8 @@
-# Finance F-P6 Purchase Review — Implementation Guide
+# Finance FINC.PURCHASE.6 Purchase Review — Implementation Guide
 
 **Status:** Planning reference (2026-07-11)
 **Canonical index:** [FP6_PURCHASE_REVIEW.md](./FP6_PURCHASE_REVIEW.md)
-**Not authorization to implement** — F-P6a remains **BLOCKED** until data foundation + isolated QA runtime gates pass.
+**Not authorization to implement** — FINC.PURCHASE.6.a remains **BLOCKED** until data foundation + isolated QA runtime gates pass.
 
 This guide synthesizes user research, competitor patterns, phased delivery, risks, and team handoffs. It supplements — does not override — the [product contract](./FP6_PURCHASE_REVIEW_PRODUCT_CONTRACT.md) and [data contract](./FP6_PURCHASE_REVIEW_DATA_CONTRACT.md).
 
@@ -25,16 +25,16 @@ Users need to review **one bank transaction ↔ one suggested order** quickly, *
 
 ## Competitor patterns (research synthesis)
 
-Public product patterns inform UX direction. Life OS F-P6 still requires its own association/decision data model — competitors assume backend match state we do not yet have.
+Public product patterns inform UX direction. Life OS FINC.PURCHASE.6 still requires its own association/decision data model — competitors assume backend match state we do not yet have.
 
-| Product | Relevant pattern | F-P6 takeaway |
+| Product | Relevant pattern | FINC.PURCHASE.6 takeaway |
 | --- | --- | --- |
 | **Ramp** | PO view → “Match a card transaction”; filter by merchant, cardholder, date; multi-select match updates spend bar | Side-by-side evidence + filterable review queue; match is an explicit user action on a pair |
 | **Spendesk** | 3-way match warnings; detail modal for line-level discrepancies | Surface partial/ambiguous evidence; warnings before confirm |
 | **Brex** | Auto-attach + auto-validate receipts for known merchants; notify only on failure | Prefer automation for clean cases; human review for exceptions — aligns with `clean_enriched` vs actionable queue |
-| **Expensify** | Reconciliation dashboard — imported vs statement totals | Useful for F-P6b+/audit; not the F-P6a single-association review object |
+| **Expensify** | Reconciliation dashboard — imported vs statement totals | Useful for FINC.PURCHASE.6b+/audit; not the FINC.PURCHASE.6.a single-association review object |
 | **Monzo Business** | Transaction detail → “Add receipt” / notes in one screen | Mobile one-surface review sheet; minimal navigation |
-| **Soldo** | Mobile receipt capture in seconds, auto-linked to card txn | Fast mobile capture path — out of F-P6a scope but informs future enrichment |
+| **Soldo** | Mobile receipt capture in seconds, auto-linked to card txn | Fast mobile capture path — out of FINC.PURCHASE.6.a scope but informs future enrichment |
 | **Extend** | Email/SMS receipt → AI match → “Matched” icon on txn | Visual matched state; reduce manual work when confidence is high |
 
 **Shared industry patterns:**
@@ -57,11 +57,11 @@ External references (public docs):
 
 ## Recommended delivery phases
 
-Aligned with [FP6_PURCHASE_REVIEW.md](./FP6_PURCHASE_REVIEW.md) gates. Dates are **illustrative** — adjust when F-P6a section opens.
+Aligned with [FP6_PURCHASE_REVIEW.md](./FP6_PURCHASE_REVIEW.md) gates. Dates are **illustrative** — adjust when FINC.PURCHASE.6.a section opens.
 
 ```mermaid
 gantt
-    title F-P6 delivery (illustrative)
+    title FINC.PURCHASE.6 delivery (illustrative)
     dateFormat YYYY-MM-DD
     section Discovery
     Canonical docs sync           :done, docs, 2026-07-11, 1d
@@ -70,12 +70,12 @@ gantt
     Bootstrap x2 + teardown       :crit, bootstrap, after qaProj, 3d
     Storage state + RLS proof     :storage, after bootstrap, 1d
     Antigravity pre-mutation shots :shots, after storage, 2d
-    section F-P6a data
+    section FINC.PURCHASE.6.a data
     Association/decision design   :dbDesign, after storage, 2d
     Migration + RLS               :dbMigrate, after dbDesign, 4d
     RPC + precedence              :backend, after dbMigrate, 5d
     Backend tests                   :beTests, after backend, 3d
-    section F-P6a UI
+    section FINC.PURCHASE.6.a UI
     Low-risk UI prototypes        :uiProto, after beTests, 3d
     Confirm/Reject + feedback     :uiDev1, after uiProto, 4d
     Undo + timeout reconcile UI   :uiDev2, after uiDev1, 4d
@@ -88,13 +88,13 @@ gantt
 1. **Docs + QA runtime** before claiming any visual baseline
 2. **Backend RPC + migration** before production Confirm/Reject wiring
 3. **Feature flag** for UI mutations until E2E passes
-4. **Post-mutation screenshots** only after F-P6a UI ships
+4. **Post-mutation screenshots** only after FINC.PURCHASE.6.a UI ships
 
 ---
 
-## Low-risk frontend prototypes (pre–F-P6a UI)
+## Low-risk frontend prototypes (pre–FINC.PURCHASE.6.a UI)
 
-These validate UX **without** changing the database. They do **not** unblock F-P6a or replace the data foundation.
+These validate UX **without** changing the database. They do **not** unblock FINC.PURCHASE.6.a or replace the data foundation.
 
 ### Prototype A — static / Storybook
 
@@ -145,7 +145,7 @@ Full backend checklist: [Data contract — Codex tasks](./FP6_PURCHASE_REVIEW_DA
 
 ---
 
-## Codex collaboration checklist (F-P6a Data Foundation)
+## Codex collaboration checklist (FINC.PURCHASE.6.a Data Foundation)
 
 | Task | Deliverable | Acceptance | Est. |
 | --- | --- | --- | ---: |
@@ -171,7 +171,7 @@ Summary:
 3. Run `npm run qa:fp6:bootstrap` **twice** (idempotency)
 4. Verify RLS + generate `.tmp/finance-fp6-qa.storage-state.json`
 5. Hand Antigravity **only** `UI_QA_URL` + storage-state path
-6. Capture pre-mutation baselines; post-mutation shots wait for F-P6a UI
+6. Capture pre-mutation baselines; post-mutation shots wait for FINC.PURCHASE.6.a UI
 7. Run `npm run qa:fp6:teardown` and verify clean state
 
 ---

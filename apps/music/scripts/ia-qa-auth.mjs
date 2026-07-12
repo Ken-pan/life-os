@@ -1,5 +1,5 @@
 /**
- * Shared Supabase session helpers for Music IA / UI QA scripts (M-P2).
+ * Shared Supabase session helpers for Music IA / UI QA scripts (MUSC.UI.2).
  */
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync } from 'fs'

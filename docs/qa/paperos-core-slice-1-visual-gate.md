@@ -1,4 +1,4 @@
-# PaperOS P-MOVE-UI Core Slice 1 — Visual Gate Report
+# PaperOS PAPR.UI Core Slice 1 — Visual Gate Report
 
 1. **FINAL VERDICT:**
    PASS WITH WARN

@@ -1,10 +1,10 @@
-# Platform 主线（C-\*）
+# Platform 主线（PLAT.* · legacy `C-*`）
 
-Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
+Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。**Canonical ID：** [`TICKET_NAMING.md`](./TICKET_NAMING.md) · `PLAT.CONTRACTS.*` / `PLAT.CORE.*`
 
 ---
 
-## C-P0 & C-P1 — 已完成
+## C-P0 & PLAT.CONTRACTS.1 — 已完成
 
 | 子项                                                   | 状态 |
 | ------------------------------------------------------ | ---- |
@@ -15,7 +15,7 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 
 ---
 
-## C-P1+: 平台扩容 — 低优先级（暂缓大项）
+## PLAT.CONTRACTS.1+: 平台扩容 — 低优先级（暂缓大项）
 
 > **ROI 评审（2026-07-08）：** `contracts/events` 已接；Finance React 共享 UI / nav mirror **移出 §Now**，见 hub §Next ✗。仅 Finance 一个 React 栈时不做 `ui-react`。
 

@@ -158,7 +158,7 @@ export function buildPortalDeepLinkUrl(appId, path) {
   return `${origin}${normalized}`
 }
 
-/** Pending life_events → Planner 收件箱（G-P8） */
+/** Pending life_events → Planner 收件箱（PORT.GROWTH.8） */
 export function buildPlannerInboxUrl() {
   return buildPortalDeepLinkUrl('planner', '/inbox')
 }

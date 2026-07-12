@@ -1,7 +1,7 @@
 # RFC: Life OS 跨应用事件契约（`@life-os/contracts/events`）
 
 > **状态：Draft — 仅供评审，未接入任何 app runtime**
-> **日期：** 2026-07-07 · **关联：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) §I-P1.5
+> **日期：** 2026-07-07 · **关联：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) §INTG.EVENTS.1.5
 > **现状基线：** 远程 `life_events` 表 + `finance_bill_event_trigger` 已 deploy（migration `20260708000000`）；
 > `packages/contracts/src/events.ts` 已有 `FinanceBillDueSchema`（**本 RFC 不修改该文件**）
 
@@ -165,7 +165,7 @@ async function consumeFinanceBillEvents(supabase) {
 | trigger SQL 与 Zod 漂移                   | 中   | §4.4 契约测试进 smoke 脚本                                |
 | `numeric` 精度序列化为字符串              | 中   | schema 用 `z.coerce.number()`                             |
 | 表无清理策略（processed 行堆积）          | 低   | 首版可接受；后续加"processed 且 >90 天"清理（单独 RFC）   |
-| `schema.sql` 未同步 `life_events`（已知） | 低   | roadmap I-P0 已跟踪，不在本 RFC 处理                      |
+| `schema.sql` 未同步 `life_events`（已知） | 低   | roadmap INTG.IDENTITY.0 已跟踪，不在本 RFC 处理                      |
 | 消费端标 processed 失败导致重复消费       | 中   | upsert 幂等本身兜底；status 更新失败只造成多余一次 upsert |
 
 ## 9. 评审后落地顺序（建议）

@@ -1,5 +1,5 @@
 /**
- * FT-P2 production verification — Ken account · portal_today_summary · Fitness card UI
+ * GYMS.PORTAL.2 production verification — Ken account · portal_today_summary · Fitness card UI
  *
  * Usage:
  *   npm run preview -- --host 127.0.0.1 --port 5195
@@ -154,4 +154,4 @@ try {
   await browser.close()
 }
 
-console.log('FT-P2 production verify: PASS')
+console.log('GYMS.PORTAL.2 production verify: PASS')

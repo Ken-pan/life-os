@@ -1,4 +1,4 @@
-# PaperOS P-MOVE-2 Read Cache Gate
+# PaperOS PAPR.DEV.2 Read Cache Gate
 
 **Date:** 2026-07-09  
 **Device:** reMarkable Paper Pro Move (`imx93-chiappa`)  
@@ -99,4 +99,4 @@ cache_bytes=4974
 - Add a direct screen-capture or manual photo step for future visual QA; this
   device image currently has no screenshot utility installed.
 - Keep production writes disabled until staging validation passes (tracked as
-  P-MOVE-5 after the renumbering; see the roadmap).
+  PAPR.WRITE.5 after the renumbering; see the roadmap).
