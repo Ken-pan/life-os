@@ -536,10 +536,11 @@ fault-injection retry and explicit `recover` are deferred pending finding C.
 | Item                                   | Status               |
 | -------------------------------------- | -------------------- |
 | Manual single enter / exit / recovery  | **PASS**             |
-| SYS.1 overall                          | **CONDITIONAL PASS** |
-| High-frequency switching               | **BLOCKED** (Finding C) |
-| Persistent enablement                  | **BLOCKED**          |
-| Mode B / auto-launch-after-unlock      | **BLOCKED**          |
+| Finding C (vendor StartLimit)          | **RESOLVED** (hardened + device-validated 2026-07-12) |
+| High-frequency switching               | **PASS** (Finding C hardening gate, 2026-07-12) |
+| SYS.1 overall                          | **CONDITIONAL PASS** (Finding C cleared; pending Ken sign-off for persistent enable) |
+| Persistent enablement                  | **BLOCKED** (separate gate) |
+| Mode B / auto-launch-after-unlock      | **BLOCKED** (separate gate) |
 
 ## SYS.1 hardening design (owner-directed — IMPLEMENTED 2026-07-12)
 
@@ -581,10 +582,13 @@ to whatever the current OS ships.
 
 ## SYS.1 hardening patch — implemented (2026-07-12)
 
-Status: **host-validated, device re-test PENDING** — SYS.1 stays
-**CONDITIONAL PASS**; do not mark PASS until the constrained device gate below
-re-runs. Owner approved a minimal `paperos.service` `ExecStopPost` edit (Layer 1)
-after confirming it preserves the always-on native fallback.
+Status: **host-validated + device-validated 2026-07-12** (constrained gate below,
+Ken present). Finding C is **RESOLVED**: the full authorized cadence ran without
+ever approaching `StartLimitBurst=4` and the `emergency.target`/reboot path was
+never triggered. High-frequency switching flips to **PASS**; persistent
+enablement / Mode B remain separately **BLOCKED** (out of scope, own gates).
+Owner approved a minimal `paperos.service` `ExecStopPost` edit (Layer 1) after
+confirming it preserves the always-on native fallback.
 
 As-built mapping of the four layers:
 
@@ -634,13 +638,38 @@ all six lifecycle scripts + deploy/rollback; `git diff --check` clean. Rollback
 already removes `run/` wholesale, so the new ledger/marker files need no rollback
 change.
 
-**Constrained device re-test — still owed (do NOT approach `StartLimitBurst=4`):**
-one normal enter/exit; two PaperOS-only restarts asserting the xochitl start
-count does **not** rise; one fast re-enter blocked (exit 9) *before* xochitl
-stops; one safe failed-enter recovery; one explicit recover; one rollback.
-First read-only step: `systemctl show xochitl.service -p StartLimitBurst
--p OnFailure` to confirm `vendor_startlimit_ok` will pass on the live OS before
-relying on the gate.
+### Constrained device gate — SYS.1 hardening retest (2026-07-12, Ken present)
+
+Run on the Paper Pro Move (`VERSION_ID=5.7.126`). The Layer 1 conditional
+`ExecStopPost` was applied through a **reversible `/run` tmpfs drop-in** (the
+persistent unit is normally shipped by `deploy-paperos.sh`, which
+`deploy-lifecycle.sh` deliberately does not overwrite — it only `link`s it), so
+the on-device `/home` unit file was never modified. xochitl real starts were
+tracked live via `journalctl -b -u xochitl 'Started reMarkable main application'`.
+
+| Step | Operation | Result | Evidence |
+| ---- | --------- | ------ | -------- |
+| 0 | Preflight + vendor read | **PASS** | xochitl+rm-sync active; `StartLimitBurst=4`, `OnFailure` includes `emergency.target` → `vendor_startlimit_ok` passes |
+| — | Deploy + conditional ExecStopPost (`/run` drop-in) | **PASS** | effective `ExecStopPost` = restart-intent conditional; xochitl untouched by deploy |
+| 1 | enter | **PASS** | rc=0, `PAPEROS_ACTIVE`, 1 proc, xochitl stopped by `Conflicts=`; start counter **1** (unchanged) |
+| 2 | 2× PaperOS-only restart | **PASS** | both rc=0, `restart-done result=paperos-only`, paperos `ExecMainStartTimestamp` advanced each time, procs=1, **xochitl start counter flat at 1** |
+| 3 | exit | **PASS** | rc=0, `NATIVE`, xochitl+rm-sync active; counter 1→2; restore recorded in ledger |
+| 4 | fast re-enter | **PASS** | rc=9, `blocked reason=xochitl-cycle-budget` (last-switch 17s<180s) **before** xochitl stopped; xochitl still active; counter 2 |
+| 5 | failed-enter recovery (fault-injected ExecStart stub) | **PASS** | rc=6, `readiness-timeout` → `recover result=native-verified`; counter 2→3; fault drop-in reverted |
+| 6 | explicit recover | **PASS** | rc=0, native verified; counter **3** (start on already-active xochitl = no-op) |
+| 7 | rollback `--purge` | **PASS** | `ROLLBACK OK — native shell verified`; runtime purged; unit unlinked |
+| — | cleanup + final baseline | **PASS** | drop-in removed; native active; runtime absent; **same boot `05:06:12` (no reboot)**; `rm-emergency.sh invoked` this session = **0** |
+
+**Net:** total xochitl real starts across the whole gate = **2** (exit + recovery),
+never more than 2 within any 10-min window — never approached `StartLimitBurst=4`,
+and the Finding C `emergency.target`/reboot chain was **never entered**. A
+pre-hardening run of the same cadence would have spent 2 extra starts on the two
+restarts alone. Device left pristine clean-native, no persistent changes.
+
+Also confirmed live (informative): raising the enter budget above the vendor
+burst is correctly rejected by `vendor_startlimit_ok`
+(`startlimit-incompat detail=vendor-burst=4 <= budget=9`) — the vendor guard
+prevents us from ever configuring a budget looser than the OS.
 
 ## Remaining blockers before persistent enablement
 
