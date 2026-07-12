@@ -82,7 +82,7 @@ apps/planner/paper-device/rollback-lifecycle.sh --purge   # full uninstall
 ## Host tests
 
 ```sh
-apps/planner/paper-device/tests/sys1/run-tests.sh    # 80 cases, mocked systemd
+apps/planner/paper-device/tests/sys1/run-tests.sh    # 81 cases, mocked systemd
 ```
 
 See [`docs/qa/paperos-device-lifecycle-sys1-implementation.md`](../../../../docs/qa/paperos-device-lifecycle-sys1-implementation.md)

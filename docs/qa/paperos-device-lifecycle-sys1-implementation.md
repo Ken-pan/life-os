@@ -1,7 +1,10 @@
 # PAPR.SYS.1 — Lifecycle Runtime Implementation
 
-**Status:** IMPLEMENTATION READY FOR DEVICE GATE — host-validated, not yet run
-on device
+**Status:** **CONDITIONAL PASS** — reversible **enter / exit / recovery core
+validated on real hardware** (2026-07-12). **High-frequency switching,
+persistent enablement, and Mode B are BLOCKED** pending the SYS.1 hardening
+patch (Finding C — confirmed vendor `StartLimit` interaction). Handoff for the
+next agent at the end of this doc.
 **Owner:** Ken + Codex · **Agent 线:** Line B (Shell)
 **Depends on:** [`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md)
 (PAPR.SYS.1b.jrn CONDITIONAL PASS — accepted)
@@ -56,7 +59,7 @@ Deploy / rollback (Mac-side):
 
 Tests:
 
-- `apps/planner/paper-device/tests/sys1/run-tests.sh` (80 cases, mocked systemd)
+- `apps/planner/paper-device/tests/sys1/run-tests.sh` (81 cases, mocked systemd)
 
 On-device state (never committed):
 
@@ -142,7 +145,7 @@ re-point or partially install it.
 ### Host (no device) — `tests/sys1/run-tests.sh`
 
 Runs the **real** device scripts against mocked `systemctl`/`ps`/`kill`/
-`journalctl`. **80/80 pass, deterministic.** Coverage:
+`journalctl`. **81/81 pass, deterministic.** Coverage:
 
 - exact accepted event → LAUNCH; single-line and 3-line variants
 - wrong UUID · partial UUID · malformed `EntityId` → IGNORE
@@ -432,17 +435,90 @@ alternative matched a `ps w` line truncated at terminal width to end in
 running. Narrowed to the actual `-platform` invocation + ink candidates, helper
 scripts skipped; regression test added (host suite 81/81).
 
-**Finding C — device rebooted during fault injection (OPEN).** During step 10 the
-USB session dropped; the device performed a **graceful `reboot`** (journal:
-`pid … comm="reboot"`, orderly xochitl shutdown), **not** a panic/watchdog-kill.
-It was **not** an OTA (`VERSION_ID` unchanged; update engine logged "No update
-available"). It followed ~5 `enter`/`exit` cycles, each of which fully stops
-xochitl via `Conflicts=`. Hypothesis: reMarkable device-level protection reacting
-to repeated xochitl shutdown/restart. Mode A restored native on boot; the `/run`
-drop-in and `/etc` link were cleared as designed. **Not isolated to a single
-cause; must be investigated before persistent enablement or Mode B.** Mitigation
-ideas to evaluate: reduce `READY_TIMEOUT`, avoid rapid repeated cycling in tests,
-and check reMarkable boot-count/emergency behaviour under xochitl churn.
+**Finding C — device rebooted during fault injection (CONFIRMED / ATTRIBUTED).**
+During step 10 the USB session dropped; the device performed a **graceful
+`reboot`** (journal: `pid 6390 comm="reboot"`). Read-only forensics (config +
+emergency script + previous-boot journal, independently re-verified 2026-07-12)
+confirmed the exact chain — **not** a watchdog, panic, or OTA:
+
+```text
+xochitl repeatedly started (exit / recover / failed-enter each START xochitl)
+→ systemd StartLimitBurst=4 within StartLimitIntervalUSec=10min exceeded
+→ xochitl.service: "Start request repeated too quickly" → 'start-limit-hit'
+→ OnFailure=emergency.target (reMarkable override; StartLimitAction=none, so
+   systemd itself takes no action — the reboot is purely reMarkable policy)
+→ rm-emergency.service → /usr/sbin/rm-emergency.sh
+→ unconditional `reboot` (final line, outside the swu_applied branch)
+```
+
+Confirmed artifacts (verbatim): `StartLimitIntervalUSec=10min`,
+`StartLimitBurst=4`, `StartLimitAction=none`; override
+`xochitl-service-override.conf` → `OnFailure=emergency.target`; base
+`OnFailure=remarkable-fail.service` is **missing** (`Failed to enqueue
+OnFailure= job … not found`), so `emergency.target` is the only live handler;
+journal `/usr/sbin/rm-emergency.sh invoked` immediately precedes the reboot.
+
+```text
+FINAL VERDICT:
+FINDING C ATTRIBUTED
+
+Device modified: NO
+PaperOS started: NO
+xochitl restarted: NO
+Persistent files changed: NO
+
+Reboot timestamp: 2026-07-12 05:06:07 UTC
+Reboot PID: 6390
+Command: reboot
+Executable: /usr/bin/systemctl
+Parent PID/process: rm-emergency.sh (spawned by systemd rm-emergency.service)
+UID: 0
+Cgroup: /system.slice/rm-emergency.service
+Systemd unit: rm-emergency.service
+
+Timeline:
+- last xochitl stop: 2026-07-12 05:06:07 UTC
+- last xochitl start: shortly before 05:06:07 UTC (4th restart within 10 minutes)
+- fault injection began: between 04:56:26 and 05:06:07 UTC
+- reboot requested: 2026-07-12 05:06:07 UTC
+- shutdown completed: shortly after 05:06:07 UTC
+- next boot: immediately after
+
+Evidence:
+- direct evidence:
+  - systemd journal logs `xochitl.service: Start request repeated too quickly` and `Failed with result 'start-limit-hit'`.
+  - systemctl properties show `StartLimitBurst=4` and `StartLimitIntervalUSec=10min` for xochitl.service.
+  - xochitl.service.d/xochitl-service-override.conf has `OnFailure=emergency.target`.
+  - emergency.target requires `rm-emergency.service` which executes `/usr/sbin/rm-emergency.sh`.
+  - `/usr/sbin/rm-emergency.sh` unconditionally runs `reboot`.
+- supporting evidence: journalctl explicitly logs `/usr/sbin/rm-emergency.sh invoked` moments before PID 6390 called reboot.
+- contradictory evidence: none
+
+Most likely cause:
+The rapid stop/start cycles of xochitl during fault injection exceeded the systemd rate limit of 4 restarts within 10 minutes. This triggered the OnFailure hook leading to emergency.target, which then unconditionally rebooted the device as a fallback safety measure.
+Confidence: 100%
+
+Lifecycle implication (owner-reviewed 2026-07-12):
+- Reachable through NORMAL SYS.1 operation, not only synthetic testing. Every
+  paperos-exit (ExecStopPost start xochitl), every recover_to_native, and every
+  failed-enter recovery START xochitl. A few normal switches + one failed enter
+  + one recovery can reach StartLimitBurst=4 within 10 min.
+- FAIL_LIMIT=3 (watcher) can reach the vendor start limit BEFORE PaperOS
+  crash-loop protection latches — the protection can itself provoke the
+  emergency reboot.
+- Manual single enter/exit: PASS. High-frequency switching / persistent watcher
+  / Mode B / auto-launch-after-unlock: BLOCKED until hardened.
+
+Required change: YES — but NOT "reset-failed on every exit/recover".
+A blanket reset-failed in normal paths would bypass reMarkable's genuine
+crash-loop protection (a truly crash-looping xochitl would be masked). The
+correct fix PREVENTS the trigger — see §SYS.1 hardening design below.
+`reset-failed` is permitted ONLY as an explicit, guarded, manual rescue.
+
+Test-only note for rerunning fault injection: space cycles so <4 xochitl starts
+per 10 min, or (test rig only) `systemctl reset-failed xochitl.service` between
+cycles. A normal reboot clears the counter.
+```
 
 Net: the reversible enter / exit / recovery **core is validated on real
 hardware** (including a genuine fail-closed recovery and a clean full purge);
@@ -454,16 +530,82 @@ fault-injection retry and explicit `recover` are deferred pending finding C.
 - Permanent boot integration changed: **NO** (`/etc` link is volatile; `/run` drop-in is tmpfs; both cleared by the reboot on their own)
 - Native xochitl recovery preserved: **YES** (`open-paperos.sh` / `recover-xochitl.sh` / `paperos.service` intact 3/3; Mode-A boot restored native)
 
+## Gate status summary (2026-07-12)
+
+| Item                                   | Status               |
+| -------------------------------------- | -------------------- |
+| Manual single enter / exit / recovery  | **PASS**             |
+| SYS.1 overall                          | **CONDITIONAL PASS** |
+| High-frequency switching               | **BLOCKED** (Finding C) |
+| Persistent enablement                  | **BLOCKED**          |
+| Mode B / auto-launch-after-unlock      | **BLOCKED**          |
+
+## SYS.1 hardening design (owner-directed — DEFERRED, not in this branch)
+
+The fix must **prevent** reaching the vendor `StartLimit`, **preserve** reMarkable's
+emergency protection, and keep `reset-failed` as a manual-only rescue. Four
+layers (design only here; implementation + host tests + a constrained device
+re-test belong to the hardening patch):
+
+1. **Restart PaperOS must not bounce xochitl.** Change `restart-paperos` from
+   `PaperOS → xochitl → PaperOS` to an in-place `PaperOS → PaperOS` process
+   restart; fall back to xochitl only if the restart fails. Removes the most
+   common xochitl-start consumer.
+2. **xochitl-cycle budget, checked BEFORE stopping xochitl.** Track controlled
+   xochitl restores + full enter/exit in the last 10 min; refuse (leaving native
+   untouched) when over budget — suggested more conservative than vendor:
+   ≤2 controlled restores / 10 min, ≥180 s between full switches. Emit
+   `BLOCK reason=xochitl-cycle-budget`. Must block *before* stopping xochitl, so
+   we never enter PaperOS without a safe exit budget.
+3. **Lower enter-failure threshold + backoff.** First failed enter → recover →
+   cooldown; a second failure in the window → latch `crashloop`, stop auto
+   retries (no watcher re-arm) until manual clear. Auto enter-failure budget 1–2,
+   forced backoff after each failure. Prevents FAIL_LIMIT overlapping
+   `StartLimitBurst=4`.
+4. **`reset-failed` = explicit manual rescue only.** e.g.
+   `paperos-ctl recover-native --reset-start-limit`, gated on: PaperOS stopped,
+   watcher inactive, zero PaperOS procs, state NATIVE/RECOVERY, explicit flag,
+   reset once, start xochitl once, no retry, fully logged. `enter` / `exit` /
+   `restart` / automatic recover must **never** call it implicitly.
+
+Add a vendor `StartLimit` compatibility check (read `StartLimitBurst` /
+`StartLimitIntervalUSec` / `OnFailure`) so the budget stays conservative relative
+to whatever the current OS ships.
+
 ## Remaining blockers before persistent enablement
 
-1. **Finding C** — investigate the graceful reboot under repeated xochitl
-   cycling; confirm safe enter/exit cadence before Mode B or persistent enable
-2. Complete step 10 fault injection + step 11 explicit recover once finding C is
-   understood
+1. **Finding C (CONFIRMED)** — implement the SYS.1 hardening patch above; a safe
+   enter/exit/restart cadence must be guaranteed before Mode B or persistent enable.
+2. Complete step 10 fault injection + step 11 explicit recover **after** hardening
+   (and without approaching `StartLimitBurst=4`).
 3. Journal token stability across OTA is observational, not contractual —
-   `compat.allowed` gate is the mitigation
-4. Persistent `systemctl enable` / boot integration deferred to a later gate
+   `compat.allowed` gate is the mitigation.
+4. Persistent `systemctl enable` / boot integration deferred to a later gate.
 
-## Next phase after Ken gate
+## Handoff — for the next agent (2026-07-13)
 
-`PAPR.SYS.2` — sleep / wake / idle + wake sync reconciliation.
+**Branch:** `agent/papr-sys-1-lifecycle-runtime` · **Draft PR:** #20 (keep DRAFT)
+**Device:** left clean + native (purged); "Open PaperOS" doc UUID
+`a7d91a64-9be5-45e0-8875-d96ffcd55049` still on device.
+
+**Done & validated (do not redo):** enter / exit / restart / disable-enable,
+true+false-positive journal detection, a real fail-closed recovery, full purge
+rollback — all on hardware. Host suite **81/81**. Deploy links the unit
+(`link` ≠ `enable`); rollback unlinks. `paperos_pids` hardened.
+
+**Your task = the SYS.1 hardening patch above (4 layers).** Then re-run ONLY:
+one normal enter/exit; two PaperOS-only restarts (assert xochitl start count does
+NOT rise); a fast re-enter that is blocked *before* xochitl stops; one safe
+failed-enter recovery; one explicit recover; rollback. **Add host regression
+tests** for the budget/backoff/reset-failed logic.
+
+**Hard constraints:** do NOT start `PAPR.SYS.2`; do NOT `systemctl enable` or add
+boot hooks; do NOT enable auto-launch / Mode B; do NOT run rapid cycles that
+approach `StartLimitBurst=4` (≥4 xochitl starts / 10 min) — it force-reboots the
+device; keep native `open-paperos.sh` / `recover-xochitl.sh` / `paperos.service`
+untouched; keep PR #20 draft.
+
+## Next phase (after hardening + Ken re-gate)
+
+`PAPR.SYS.2` — sleep / wake / idle + wake sync reconciliation. **Not before** the
+SYS.1 hardening patch lands and re-passes the constrained device re-test.
