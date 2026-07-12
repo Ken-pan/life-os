@@ -7,6 +7,7 @@ import {
 import { getProgramById, DEFAULT_PROGRAM_ID } from './data/program.js'
 import { EX_BY_ID, EX_ID_ALIASES, resolveExerciseId } from './data/exercises.js'
 import { effectiveDone, migrateLogEntry } from './logs.js'
+import { carryForwardWeight } from './weightMemory.js'
 import {
   equipType,
   plateConfigFor,
@@ -22,7 +23,7 @@ import { t } from './i18n/index.js'
 
 /* ═══════════════ STATE (Svelte 5 runes + localStorage) ═══════════════ */
 const SKEY = 'fitos_v2'
-export const SCHEMA_VERSION = 6
+export const SCHEMA_VERSION = 7
 
 /** 本地时区的 YYYY-MM-DD（避免 UTC 偏移导致晚间训练记到「明天」） */
 export const dateKeyOf = (d) =>
@@ -132,6 +133,32 @@ function migrateExerciseIds(data) {
   return data
 }
 
+/**
+ * v7:旧版把动作默认重量和真实训练组重量分开维护，导致两者逐渐脱节。
+ * 以每个动作最近一次有效训练为准，恢复下一次训练的起始重量。
+ */
+function migrateWeightsFromRecentLogs(data) {
+  const program = getProgramById(data.activeProgramId || DEFAULT_PROGRAM_ID)
+  const latest = {}
+
+  Object.keys(data.logs || {})
+    .sort()
+    .forEach((key) => {
+      const [, dayId] = key.split('|')
+      const day = program.days[dayId]
+      Object.entries(data.logs[key] || {}).forEach(([rawId, entry]) => {
+        const id = resolveExerciseId(rawId)
+        const ex = day?.ex?.find((item) => resolveExerciseId(item.id) === id) ?? EX_BY_ID[id]
+        if (!ex || !entry || typeof entry !== 'object') return
+        const weight = carryForwardWeight(ex, entry.sets)
+        if (weight == null) return
+        latest[id] = weight
+      })
+    })
+
+  data.weights = { ...(data.weights || {}), ...latest }
+}
+
 function migrate(raw) {
   const base = defaultState()
   if (!raw || typeof raw !== 'object') return base
@@ -147,6 +174,7 @@ function migrate(raw) {
   if (!data.activeProgramId) data.activeProgramId = DEFAULT_PROGRAM_ID
   if ((raw.schemaVersion ?? 0) < 5) migrateExerciseIds(data)
   data.logs = migrateLogs(data.logs, data.activeProgramId)
+  if ((raw.schemaVersion ?? 0) < 7) migrateWeightsFromRecentLogs(data)
   data.schemaVersion = SCHEMA_VERSION
   return data
 }
