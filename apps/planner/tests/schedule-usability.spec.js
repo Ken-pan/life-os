@@ -75,13 +75,13 @@ function state(tasks) {
   }
 }
 
-async function seed(page, tasks) {
+async function seed(page, tasks, { path = '/calendar' } = {}) {
   await page.goto('/')
   await page.evaluate(
     ({ key, value }) => localStorage.setItem(key, JSON.stringify(value)),
     { key: STORAGE_KEY, value: state(tasks) },
   )
-  await page.goto('/calendar')
+  await page.goto(path)
   await page.waitForLoadState('networkidle')
   await expect(page.locator('.day-timeline-canvas')).toBeVisible()
 }
@@ -255,8 +255,14 @@ test.describe('P-SCHED-0 scheduling usability', () => {
         durationMinutes: 60,
       }),
       task('mobile-unscheduled', 'Mobile unscheduled'),
-    ])
-    await page.evaluate(() => document.documentElement.classList.add('standalone-pwa'))
+    ], { path: '/calendar?pwa_sim=1' })
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.classList.contains('standalone-pwa'),
+        ),
+      )
+      .toBe(true)
 
     const metrics = await page.evaluate(() => {
       const workspace = document.querySelector('.life-os-page-workspace')
@@ -306,6 +312,76 @@ test.describe('P-SCHED-0 scheduling usability', () => {
     const after = await workspace.evaluate((element) => element.scrollTop)
     expect(Math.abs(after - before)).toBeLessThan(2)
 
+    const overflowX = await page.evaluate(() => {
+      const workspace = document.querySelector('.life-os-page-workspace')
+      return {
+        document:
+          document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        workspace: workspace ? workspace.scrollWidth - workspace.clientWidth : 0,
+      }
+    })
+    expect(overflowX.document).toBeLessThanOrEqual(1)
+    expect(overflowX.workspace).toBeLessThanOrEqual(1)
+
+    // SCH-10: 最后一行时间轴必须真实可达 —— 滚到底后最后一个小时标签完整落在
+    // 视口内且不被底部导航覆盖（不是只断言 scrollTop 变化）
+    await workspace.evaluate((element) => element.scrollTo({ top: element.scrollHeight }))
+    const bottomReach = await page.evaluate(() => {
+      const canvas = document.querySelector('.day-timeline-canvas')
+      const nav = document.querySelector('.mobile-tabbar, .nav')
+      const labels = [...document.querySelectorAll('.day-timeline-hour-label')]
+      const last = labels[labels.length - 1]
+      const lastRect = last?.getBoundingClientRect()
+      return {
+        canvasBottom: canvas?.getBoundingClientRect().bottom,
+        lastLabelTop: lastRect?.top,
+        lastLabelBottom: lastRect?.bottom,
+        lastLabelText: last?.textContent?.trim(),
+        navTop: nav?.getBoundingClientRect().top,
+      }
+    })
+    expect(bottomReach.lastLabelText).toMatch(/^\d{2}:\d{2}$/)
+    expect(bottomReach.lastLabelTop).toBeGreaterThanOrEqual(0)
+    expect(bottomReach.canvasBottom).toBeLessThanOrEqual(bottomReach.navTop + 2)
+    expect(bottomReach.lastLabelBottom).toBeLessThanOrEqual(bottomReach.navTop + 2)
+
+    const slotPoint = await page.evaluate(() => {
+      const canvasElement = document.querySelector('.day-timeline-canvas')
+      if (!canvasElement) return null
+      const canvasRect = canvasElement.getBoundingClientRect()
+      const x = canvasRect.left + canvasRect.width * 0.7
+      for (let y = Math.max(canvasRect.top, 0) + 24; y < window.innerHeight - 24; y += 12) {
+        if (document.elementFromPoint(x, y)?.closest('.day-timeline-slot-hitbox')) {
+          return { x, y }
+        }
+      }
+      return null
+    })
+    expect(slotPoint).not.toBeNull()
+    await page.mouse.click(slotPoint.x, slotPoint.y)
+    const sheet = page.getByRole('dialog')
+    await expect(sheet).toBeVisible()
+    const sheetScroll = await page
+      .locator('.schedule-popover')
+      .evaluate((element) => ({
+        overflowY: getComputedStyle(element).overflowY,
+        withinViewport:
+          element.getBoundingClientRect().bottom <= window.innerHeight + 1,
+      }))
+    expect(sheetScroll.overflowY).toBe('auto')
+    expect(sheetScroll.withinViewport).toBe(true)
+    await page.locator('.schedule-popover-close').click()
+    await expect(sheet).toHaveCount(0)
+
+    // sheet 关闭后主滚动面必须恢复可滚动
+    const scrollRestored = await workspace.evaluate((element) => {
+      element.scrollTo({ top: 0 })
+      element.scrollTo({ top: 120 })
+      return element.scrollTop
+    })
+    expect(scrollRestored).toBeGreaterThan(0)
+
+    await workspace.evaluate((element) => element.scrollTo({ top: 240 }))
     await page.screenshot({
       path: path.join(EVIDENCE_DIR, 'final-mobile-393x852.png'),
       fullPage: true,
@@ -329,6 +405,165 @@ test.describe('P-SCHED-0 scheduling usability', () => {
     ).toBe(false)
     await page.screenshot({
       path: path.join(EVIDENCE_DIR, 'final-mobile-430x932.png'),
+      fullPage: true,
+    })
+  })
+
+  test('legacy and representative data walk survives migrate boundary on calendar and today', async ({
+    page,
+  }, testInfo) => {
+    const isMobile = testInfo.project.name === 'mobile'
+    if (isMobile) await page.setViewportSize({ width: 393, height: 852 })
+    const today = localDate()
+    const now = Date.now()
+    /** raw legacy rows: schemaVersion 2, no tags/subtasks defaults, numeric priority */
+    const legacyState = {
+      schemaVersion: 2,
+      tasks: [
+        {
+          id: 'legacy-unscheduled',
+          title: 'Legacy unscheduled — no tags field',
+          listId: 'inbox',
+          priority: 1,
+          dueDate: today,
+          completed: false,
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'legacy-start-only',
+          title: 'Start time only',
+          listId: 'inbox',
+          dueDate: today,
+          scheduledDate: today,
+          scheduledStart: '11:00',
+          durationMinutes: null,
+          completed: false,
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'legacy-start-end',
+          title: 'Start and end time',
+          listId: 'inbox',
+          dueDate: today,
+          scheduledDate: today,
+          scheduledStart: '13:00',
+          durationMinutes: 90,
+          completed: false,
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'legacy-long-title',
+          title:
+            'A very long legacy task title that keeps going and going to exercise truncation and wrapping behaviour in both the time block and the task row layouts without breaking horizontal overflow',
+          listId: 'inbox',
+          dueDate: today,
+          scheduledDate: today,
+          scheduledStart: '13:30',
+          durationMinutes: 60,
+          tags: 'not-an-array',
+          completed: false,
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'legacy-tags',
+          title: 'Tagged task',
+          listId: 'inbox',
+          dueDate: today,
+          tags: [' work ', '', 42, null, 'home'],
+          completed: false,
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'legacy-completed',
+          title: 'Completed legacy task',
+          listId: 'inbox',
+          dueDate: today,
+          scheduledDate: today,
+          scheduledStart: '09:00',
+          durationMinutes: 30,
+          completed: true,
+          completedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'legacy-midnight-edge',
+          title: 'Late block ending at midnight',
+          listId: 'inbox',
+          dueDate: today,
+          scheduledDate: today,
+          scheduledStart: '23:30',
+          durationMinutes: 30,
+          completed: false,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+      lists: [
+        {
+          id: 'inbox',
+          title: 'inbox',
+          icon: 'inbox',
+          color: '#F5A623',
+          sortOrder: 0,
+          system: 'inbox',
+          updatedAt: 0,
+          deletedAt: null,
+        },
+      ],
+      settings: { locale: 'zh', syncAuto: false },
+    }
+
+    /** @type {Error[]} */
+    const pageErrors = []
+    page.on('pageerror', (error) => pageErrors.push(error))
+
+    await page.goto('/')
+    await page.evaluate(
+      ({ key, value }) => localStorage.setItem(key, JSON.stringify(value)),
+      { key: STORAGE_KEY, value: legacyState },
+    )
+    await page.goto(isMobile ? '/calendar?pwa_sim=1' : '/calendar')
+    await page.waitForLoadState('networkidle')
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.classList.contains('standalone-pwa'),
+      ),
+    ).toBe(isMobile)
+
+    await expect(page.locator('.day-timeline-canvas')).toBeVisible()
+    // scheduled: start-only, start+end, long-title, completed, midnight edge
+    await expect(page.locator('.time-block')).toHaveCount(5)
+    await expect(page.locator('.time-block', { hasText: 'Start time only' })).toBeVisible()
+    await expect(
+      page.locator('.day-timeline-hour-label', { hasText: '23:00' }),
+    ).toBeVisible()
+
+    const docOverflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    )
+    expect(docOverflow).toBeLessThanOrEqual(1)
+
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    await expect(
+      page.locator('.task-row', { hasText: 'Legacy unscheduled' }),
+    ).toBeVisible()
+    await expect(page.locator('.task-row', { hasText: 'Tagged task' })).toBeVisible()
+
+    expect(pageErrors).toEqual([])
+
+    await page.screenshot({
+      path: path.join(
+        EVIDENCE_DIR,
+        `legacy-walk-${testInfo.project.name}.png`,
+      ),
       fullPage: true,
     })
   })
