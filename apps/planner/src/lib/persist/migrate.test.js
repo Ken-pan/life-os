@@ -31,6 +31,21 @@ describe('migrate', () => {
     expect(state.settings.locale).toBe('en');
   });
 
+  it('normalizes missing or invalid tags to an empty array', () => {
+    const state = migrate({
+      tasks: [
+        { id: '1', title: 'A', tags: null },
+        { id: '2', title: 'B', tags: 'invalid' },
+        { id: '3', title: 'C' },
+        { id: '4', title: 'D', tags: ['valid'] }
+      ]
+    });
+    expect(state.tasks[0].tags).toEqual([]);
+    expect(state.tasks[1].tags).toEqual([]);
+    expect(state.tasks[2].tags).toEqual([]);
+    expect(state.tasks[3].tags).toEqual(['valid']);
+  });
+
   it('rejects invalid task rows', () => {
     const state = migrate({ tasks: [null, 'bad', { id: '2', title: 'ok', listId: 'inbox' }] });
     expect(state.tasks).toHaveLength(1);

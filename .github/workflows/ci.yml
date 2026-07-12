@@ -24,15 +24,34 @@ jobs:
       - run: npm run build
 
   design-catalog:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+      options: --ipc=host
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
       - run: npm ci
-      - run: npx playwright install chromium webkit --with-deps
+      - name: Report canonical visual environment
+        run: |
+          echo "Docker image: mcr.microsoft.com/playwright:v1.61.1-noble"
+          echo "Node: $(node --version)"
+          playwright_version="$(node -p "require('@playwright/test/package.json').version")"
+          echo "Playwright: ${playwright_version}"
+          test "${playwright_version}" = "1.61.1"
+          cat /etc/os-release
+          node <<'NODE'
+          const { chromium } = require('@playwright/test')
+
+          ;(async () => {
+            const browser = await chromium.launch()
+            console.log(`Chromium executable: ${chromium.executablePath()}`)
+            console.log(`Chromium version: ${browser.version()}`)
+            await browser.close()
+          })().catch((error) => {
+            console.error(error)
+            process.exit(1)
+          })
+          NODE
       - run: npm run build -w design-catalog
       - run: npm run test:design-catalog
       - run: npm run test:design-catalog:a11y
