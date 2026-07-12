@@ -102,6 +102,7 @@ async function checkPwaNestedWrap(page, appId, clipPath, baseUrl) {
     timeout: 45000,
   })
   await page.waitForSelector('.app-shell', { timeout: 30000 })
+  await page.waitForLoadState('networkidle').catch(() => {})
   await page.evaluate(() =>
     document.documentElement.classList.add('standalone-pwa'),
   )
@@ -155,6 +156,7 @@ async function checkPwaShellColumnWorkspace(page, appId, clipPath, baseUrl) {
     timeout: 45000,
   })
   await page.waitForSelector('.app-shell', { timeout: 30000 })
+  await page.waitForLoadState('networkidle').catch(() => {})
   await page.evaluate(() =>
     document.documentElement.classList.add('standalone-pwa'),
   )
@@ -235,6 +237,7 @@ async function runApp(browser, app) {
       timeout: 45000,
     })
     await page.waitForSelector(app.waitSelector, { timeout: 30000 })
+    await page.waitForLoadState('networkidle').catch(() => {})
 
     const hasShell = await page.evaluate(
       () => !!document.querySelector('.app-shell'),

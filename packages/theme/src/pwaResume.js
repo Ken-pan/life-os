@@ -1,4 +1,6 @@
 import { resolveAppVhCSSValue } from './viewportSync.js'
+import { resetScrollLock } from './scrollLock.js'
+import { findActiveScrollRoot } from './shell.js'
 
 export const PWA_FOREGROUND_DEFER_MS = 5000
 
@@ -6,6 +8,17 @@ export const PWA_FOREGROUND_DEFER_MS = 5000
 export function flushViewportHeight() {
   if (typeof document === 'undefined') return
   document.documentElement.style.setProperty('--app-vh', resolveAppVhCSSValue())
+}
+
+/** 清除残留的 scroll lock，并 kick 主滚动面避免 iOS 恢复后无法滚动 */
+function refreshScrollSurface() {
+  if (typeof document === 'undefined') return
+  resetScrollLock()
+  const root = findActiveScrollRoot()
+  if (!root) return
+  root.style.removeProperty('overflow')
+  const top = root.scrollTop
+  root.scrollTop = top
 }
 
 /**
@@ -45,11 +58,13 @@ export function bindPwaForegroundResume(options = {}) {
   const onVisible = () => {
     if (document.visibilityState !== 'visible') return
     flushViewportHeight()
+    refreshScrollSurface()
     runForeground()
   }
 
   const onPageShow = () => {
     flushViewportHeight()
+    refreshScrollSurface()
     if (document.visibilityState === 'visible') runForeground()
   }
 
