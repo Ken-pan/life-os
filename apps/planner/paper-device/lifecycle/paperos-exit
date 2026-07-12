@@ -1,0 +1,62 @@
+#!/bin/sh
+# paperos-exit — PAPR.SYS.1 managed handoff PaperOS -> xochitl. Idempotent.
+#
+# Normal shutdown is requested through systemd (unit TimeoutStopSec escalates
+# TERM -> KILL); leftover manual/candidate processes get one bounded TERM/KILL
+# pass. Success requires xochitl AND rm-sync active with zero PaperOS
+# processes.
+#
+# Exit codes:
+#   0 native shell verified (directly or via recovery)
+#   2 another lifecycle operation holds the lock
+#   8 native restore failed even after recovery (state stays RECOVERY)
+set -u
+
+LIFECYCLE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$LIFECYCLE_DIR/paperos-lib.sh"
+
+ensure_run_dir
+
+if ! acquire_lock lifecycle; then
+  log_line exit blocked reason=lock-busy
+  echo "paperos-exit: another lifecycle operation is running" >&2
+  exit 2
+fi
+trap 'release_lock lifecycle' EXIT INT TERM HUP
+
+# Idempotent: repeated exit while native is already up is a no-op.
+if native_ok && ! unit_active paperos && [ -z "$(paperos_pids)" ]; then
+  set_state NATIVE
+  log_line exit noop reason=already-native
+  exit 0
+fi
+
+set_state EXITING_PAPEROS
+log_line exit begin
+
+# Request graceful shutdown; ExecStopPost brings xochitl back.
+systemctl stop paperos >/dev/null 2>&1 || true
+
+_deadline=$(( $(now_epoch) + STOP_TIMEOUT ))
+while unit_active paperos; do
+  if [ "$(now_epoch)" -ge "$_deadline" ]; then
+    log_line exit escalate reason=unit-stop-timeout
+    break
+  fi
+  sleep 1
+done
+
+# Bounded escalation for stray processes (manual launches, candidates).
+kill_paperos_procs
+
+if wait_native && [ -z "$(paperos_pids)" ]; then
+  set_state NATIVE
+  log_line exit done
+  exit 0
+fi
+
+log_line exit failed reason=native-restore-failed
+if recover_to_native exit_native_restore_failed; then
+  exit 0
+fi
+exit 8

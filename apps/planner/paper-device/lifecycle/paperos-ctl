@@ -1,0 +1,111 @@
+#!/bin/sh
+# paperos-ctl — PAPR.SYS.1 runtime control + diagnostics entry points.
+#
+# Stable entry points for the System menu contract (QML wiring is PAPR.SYS.3;
+# dangerous ops get confirmation UI there):
+#
+#   Sleep                -> paperos-ctl sleep
+#   Restart PaperOS      -> paperos-ctl restart-paperos   (detached)
+#   Return to reMarkable -> paperos-ctl return-native     (detached)
+#   Restart device       -> paperos-ctl reboot
+#   Shut down            -> paperos-ctl poweroff
+#
+# restart-paperos / return-native are detached (nohup) because the caller —
+# PaperOS itself — dies mid-sequence when the unit stops.
+#
+# Ops / diagnostics:
+#   status   machine-readable runtime state (also the structured-diagnostics
+#            surface required by PAPR.SYS.1)
+#   enter    synchronous paperos-enter (SSH use)
+#   exit     synchronous paperos-exit (SSH use)
+#   recover  synchronous paperos-recover
+#   disable  emergency disable: blocks watcher triggers AND paperos-enter
+#   enable   remove the DISABLED marker
+#   arm      clear crashloop + watcher.exhausted latches (deliberate re-arm)
+set -u
+
+LIFECYCLE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$LIFECYCLE_DIR/paperos-lib.sh"
+
+CMD="${1:-status}"
+
+case "$CMD" in
+  status)
+    ensure_run_dir
+    echo "state=$(get_state)"
+    echo "disabled=$([ -e "$DISABLE_MARKER" ] && echo yes || echo no)"
+    echo "crashloop=$([ -e "$CRASHLOOP_MARKER" ] && echo yes || echo no)"
+    echo "watcher_exhausted=$([ -e "$WATCH_EXHAUSTED_MARKER" ] && echo yes || echo no)"
+    echo "xochitl=$(systemctl is-active xochitl 2>/dev/null)"
+    echo "rm_sync=$(systemctl is-active rm-sync 2>/dev/null)"
+    echo "paperos_unit=$(systemctl is-active paperos 2>/dev/null)"
+    echo "paperos_procs=$(paperos_pids | wc -l | tr -d ' ')"
+    echo "version_id=$(current_version_id)"
+    echo "compat=$(compat_ok && echo ok || echo FAIL-CLOSED)"
+    if [ -r "$LAUNCHER_UUID_FILE" ]; then
+      echo "launcher_uuid=$(tr -d ' \t\r\n' < "$LAUNCHER_UUID_FILE")"
+    else
+      echo "launcher_uuid=missing"
+    fi
+    echo "watcher_running=$(ps w 2>/dev/null | grep -c '[p]aperos-watch' || true)"
+    echo "--- last log lines ($LOG_FILE) ---"
+    tail -n 20 "$LOG_FILE" 2>/dev/null || echo "(no log yet)"
+    ;;
+  enter)
+    exec "$LIFECYCLE_DIR/paperos-enter"
+    ;;
+  exit)
+    exec "$LIFECYCLE_DIR/paperos-exit"
+    ;;
+  recover)
+    exec "$LIFECYCLE_DIR/paperos-recover" "${2:-manual-ctl}"
+    ;;
+  return-native)
+    ensure_run_dir
+    log_line ctl return-native
+    nohup "$LIFECYCLE_DIR/paperos-exit" >> "$RUN_DIR/ctl.out" 2>&1 &
+    ;;
+  restart-paperos)
+    ensure_run_dir
+    log_line ctl restart-paperos
+    nohup sh -c "\"$LIFECYCLE_DIR/paperos-exit\" && \"$LIFECYCLE_DIR/paperos-enter\"" \
+      >> "$RUN_DIR/ctl.out" 2>&1 &
+    ;;
+  sleep)
+    ensure_run_dir
+    log_line ctl sleep
+    exec systemctl suspend
+    ;;
+  reboot)
+    ensure_run_dir
+    log_line ctl reboot
+    exec systemctl reboot
+    ;;
+  poweroff)
+    ensure_run_dir
+    log_line ctl poweroff
+    exec systemctl poweroff
+    ;;
+  disable)
+    ensure_run_dir
+    date -u '+%Y-%m-%dT%H:%M:%SZ' > "$DISABLE_MARKER"
+    log_line ctl disable
+    echo "PaperOS launches disabled ($DISABLE_MARKER). Re-enable: paperos-ctl enable"
+    ;;
+  enable)
+    ensure_run_dir
+    rm -f "$DISABLE_MARKER"
+    log_line ctl enable
+    echo "PaperOS launches re-enabled."
+    ;;
+  arm)
+    ensure_run_dir
+    rm -f "$CRASHLOOP_MARKER" "$WATCH_EXHAUSTED_MARKER"
+    log_line ctl arm
+    echo "crashloop / watcher.exhausted latches cleared."
+    ;;
+  *)
+    echo "usage: paperos-ctl {status|enter|exit|recover|return-native|restart-paperos|sleep|reboot|poweroff|disable|enable|arm}" >&2
+    exit 64
+    ;;
+esac
