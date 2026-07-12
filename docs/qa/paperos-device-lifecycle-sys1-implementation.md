@@ -164,23 +164,224 @@ Runs the **real** device scripts against mocked `systemctl`/`ps`/`kill`/
 Syntax: `sh -n` clean on all six runtime scripts + both deploy/rollback scripts.
 (`shellcheck` is not installed in this environment; `sh -n` used instead.)
 
-### Temporary device validation (Ken physical gate — pending)
+### Temporary device validation — Ken physical gate (exact runbook)
 
-Reversible only: manual foreground watcher, no `systemctl enable`, no boot hook.
-Record xochitl/PaperOS baseline before, restore native after.
+**Reversible only.** No `systemctl enable`, no boot hook, no `/etc` write, no
+binary deletion. The one systemd override used (step 10) is a `/run` drop-in on
+tmpfs — reverted in the same step and gone on reboot regardless. If any step's
+**failure stop condition** trips: STOP the gate and run that step's rollback
+command; do not continue.
 
-| # | Physical action                                | Expected                                   |
-| - | ---------------------------------------------- | ------------------------------------------ |
-| 1 | Open launcher document                         | PaperOS enters once                        |
-| 2 | Open unrelated document                        | no launch                                  |
-| 3 | Duplicate open within cooldown                 | no duplicate PaperOS                       |
-| 4 | Force PaperOS launch failure                   | xochitl returns                            |
-| 5 | Restart PaperOS (`paperos-ctl restart-paperos`)| works                                      |
-| 6 | Return to reMarkable (`paperos-ctl return-native`)| xochitl + rm-sync active                 |
-| 7 | Stop watcher                                    | native system unaffected                   |
-| 8 | `paperos-ctl disable` then open launcher       | launch blocked                             |
+Conventions: `$DEV` = the SSH host (`remarkable-pro-move`), `$T` =
+`/home/root/paperos`. Run deploy/rollback from the Mac (repo root); run the
+`ssh $DEV …` lines from the Mac too. `EMERGENCY ROLLBACK` (any step):
+`apps/planner/paper-device/rollback-lifecycle.sh`.
 
-End state each run: `xochitl=active · rm-sync=active · PaperOS=0 · watcher=0`.
+Global end-state after every enter/exit/recover step:
+`xochitl=active · rm-sync=active · paperos_procs=0` (watcher steps also expect
+`watcher-procs` = 0 once stopped).
+
+#### 1. Preflight — device reachable, native baseline
+
+```sh
+DEV=remarkable-pro-move; T=/home/root/paperos
+ping -c1 10.11.99.1                       # device may sleep + drop USB; press power if it fails
+ssh $DEV 'systemctl is-active xochitl rm-sync; echo os=$(sed -n s/^VERSION_ID=//p /etc/os-release)'
+```
+
+- Expected state: NATIVE (no lifecycle installed yet)
+- Expected process: `xochitl` + `rm-sync` running; no `paperos` process
+- Expected exit code: `0`; both units print `active`
+- Failure stop: device unreachable, or either unit not `active` → fix device first; do not deploy
+- Rollback: none (nothing deployed)
+
+#### 2. Deploy (temporary, reversible)
+
+```sh
+apps/planner/paper-device/deploy-lifecycle.sh
+```
+
+- Expected state: files under `$T/bin/`; `$T/compat.allowed` seeded from current `VERSION_ID`; `$T/run/` created
+- Expected process: unchanged — `xochitl` + `rm-sync` still active (deploy never stops xochitl)
+- Expected exit code: `0`; output ends "Deployed (temporary, reversible). Nothing was enabled or auto-started."
+- Failure stop: scp/ssh error, or trailing status shows `xochitl` not active → run rollback
+- Rollback: `apps/planner/paper-device/rollback-lifecycle.sh --purge`
+
+#### 3. Set launcher UUID (dedicated "Open PaperOS" document)
+
+Create a dedicated **Open PaperOS** notebook in Xochitl first, find its UUID,
+then bind it (do **not** reuse the Quick sheets discovery fixture):
+
+```sh
+ssh $DEV 'ls -t ~/.local/share/remarkable/xochitl/*.metadata | head'   # identify the new doc UUID
+ssh $DEV 'echo <OPEN-PAPEROS-UUID> > '"$T"'/launcher.uuid'
+ssh $DEV "$T/bin/paperos-ctl status | grep launcher_uuid"
+```
+
+- Expected state: `launcher_uuid=<uuid>` (lowercase 8-4-4-4-12)
+- Expected process: unchanged native
+- Expected exit code: `0`; `launcher_uuid` is not `missing`
+- Failure stop: `launcher_uuid=missing` or malformed → watcher will fail closed; fix before step 4
+- Rollback: `ssh $DEV 'rm -f '"$T"'/launcher.uuid'`
+
+#### 4. Start foreground watcher (manual — NO systemd)
+
+In a dedicated SSH terminal that Ken keeps open:
+
+```sh
+ssh $DEV "$T/bin/paperos-watch"           # foreground; Ctrl-C or step 7 to stop
+```
+
+- Expected state: log line `event=start uuid=<uuid> …`; watcher blocks waiting on the journal
+- Expected process: exactly one `paperos-watch` + its `journalctl -fu xochitl -n 0`
+- Expected exit code: still running (foreground). Immediate exit `4` = bad UUID (redo step 3); `5` = exhausted latch (`paperos-ctl arm`); `6` = OS incompatible (check `compat.allowed`)
+- Failure stop: watcher exits immediately with 4/5/6 → resolve the cause; do not proceed
+- Rollback: Ctrl-C, then `apps/planner/paper-device/rollback-lifecycle.sh`
+
+#### 5. Inspect status (structured diagnostics)
+
+```sh
+ssh $DEV "$T/bin/paperos-ctl status"
+```
+
+- Expected state: `state=NATIVE`, `disabled=no`, `crashloop=no`, `watcher_exhausted=no`, `compat=ok`, `watcher_running=1`
+- Expected process: `xochitl=active rm_sync=active paperos_unit=inactive paperos_procs=0`
+- Expected exit code: `0`
+- Failure stop: `compat=FAIL-CLOSED`, or `watcher_running=0` when step 4 is up → investigate
+- Rollback: n/a (read-only)
+
+#### 6. Enter — true positive + false positives (physical opens)
+
+With the step-4 watcher running, Ken physically:
+(a) opens the **Open PaperOS** document → **one** enter;
+(b) opens an **unrelated** document → **no** enter;
+(c) rapidly re-opens the launcher within the cooldown → **no duplicate**.
+
+Verify from a second SSH terminal:
+
+```sh
+ssh $DEV "$T/bin/paperos-ctl status"
+ssh $DEV "grep -c 'result=LAUNCH' $T/run/lifecycle.log"
+```
+
+- Expected state: after (a) `state=PAPEROS_ACTIVE`; watcher log shows `result=LAUNCH` once, `result=IGNORE`/`BLOCK reason=duplicate` for (b)/(c)
+- Expected process: after (a) one `paperos` process; `xochitl_unit=inactive` (Conflicts stopped it)
+- Expected exit code: `paperos-enter` (invoked by watcher) `0` on the accepted open
+- Failure stop: unrelated open launches PaperOS, OR duplicate spawns a second instance, OR launcher open does nothing → run rollback
+- Rollback: `apps/planner/paper-device/rollback-lifecycle.sh`
+
+#### 7. Exit — Return to reMarkable
+
+```sh
+ssh $DEV "$T/bin/paperos-ctl exit"        # synchronous; returns when native verified
+```
+
+- Expected state: `state=NATIVE`
+- Expected process: `xochitl=active rm_sync=active paperos_procs=0`
+- Expected exit code: `0` (native verified). `8` = native restore failed
+- Failure stop: exit `8`, or `paperos_procs` > 0 after → run recover (step 11), then rollback
+- Rollback: `apps/planner/paper-device/rollback-lifecycle.sh`
+
+#### 8. Restart PaperOS (idempotent enter/exit cycle)
+
+Enter again (physical launcher open, or `paperos-ctl enter` over SSH), then:
+
+```sh
+ssh $DEV "$T/bin/paperos-ctl restart-paperos"   # detached: exit then enter
+sleep 30
+ssh $DEV "$T/bin/paperos-ctl status"
+```
+
+- Expected state: transient `EXITING_PAPEROS` → `ENTERING_PAPEROS` → `PAPEROS_ACTIVE`
+- Expected process: exactly **one** `paperos` process after settle (no doubled instance)
+- Expected exit code: `restart-paperos` returns `0` immediately (detached); final `status` shows `state=PAPEROS_ACTIVE`
+- Failure stop: two `paperos` processes, or state stuck `RECOVERY` → run recover (step 11)
+- Rollback: `apps/planner/paper-device/rollback-lifecycle.sh`
+
+#### 9. Emergency disable / enable
+
+```sh
+ssh $DEV "$T/bin/paperos-ctl exit"        # back to native first
+ssh $DEV "$T/bin/paperos-ctl disable"
+ssh $DEV "$T/bin/paperos-ctl enter"; echo "enter rc=$?"   # must be refused
+ssh $DEV "$T/bin/paperos-ctl status | grep -E 'state|disabled'"
+ssh $DEV "$T/bin/paperos-ctl enable"
+```
+
+- Expected state: after disable `disabled=yes`, `state=DISABLED`; a physical launcher open while disabled produces `BLOCK reason=disabled` in the watcher log and no launch
+- Expected process: no `paperos` process spawned while disabled
+- Expected exit code: `paperos-ctl enter` prints `enter rc=3` while disabled; `enable` `0`
+- Failure stop: enter returns `0` (launched) while disabled → run rollback immediately
+- Rollback: `ssh $DEV "$T/bin/paperos-ctl enable"` then `apps/planner/paper-device/rollback-lifecycle.sh`
+
+#### 10. Safe fault injection — force readiness failure
+
+Uses a **transient `/run` drop-in** (tmpfs; auto-gone on reboot) that swaps
+`ExecStart` for a stub exiting immediately. The real binary, the committed unit
+file (`$T/paperos.service`), `/etc`, and the boot target are all untouched.
+
+```sh
+ssh $DEV '
+  set -e
+  D=/run/systemd/system/paperos.service.d
+  mkdir -p "$D"
+  printf "[Service]\nExecStart=\nExecStart=/bin/sh -c \"exit 0\"\n" > "$D/faulttest.conf"
+  systemctl daemon-reload
+'
+ssh $DEV "$T/bin/paperos-ctl enter"; echo "enter rc=$?"      # readiness times out -> recover
+# ── revert the override no matter what the enter did ──
+ssh $DEV '
+  rm -f /run/systemd/system/paperos.service.d/faulttest.conf
+  rmdir /run/systemd/system/paperos.service.d 2>/dev/null || true
+  systemctl daemon-reload
+'
+ssh $DEV "$T/bin/paperos-ctl status | grep -E 'state|xochitl|rm_sync'"
+```
+
+- Expected state: enter drives `ENTERING_PAPEROS` → readiness timeout → `recover_to_native` → `state=NATIVE`
+- Expected process: no lingering `paperos`; `xochitl=active rm_sync=active` (ExecStopPost + recover both restore it)
+- Expected exit code: `enter rc=6` (launch failed, native recovered). `rc=7` = recover also failed → go to step 11
+- Failure stop: after revert, `xochitl` not `active`, or `state` stuck `RECOVERY` → run recover (step 11); if still failing, native fallback `ssh $DEV $T/recover-xochitl.sh`
+- Rollback: revert block above (always run it) + `apps/planner/paper-device/rollback-lifecycle.sh`
+
+#### 11. Recover — device-side emergency return
+
+```sh
+ssh $DEV "$T/bin/paperos-ctl recover gate-check"; echo "recover rc=$?"
+```
+
+- Expected state: `state=NATIVE`
+- Expected process: strays/stale locks cleared; `xochitl=active rm_sync=active paperos_procs=0`
+- Expected exit code: `0` (native verified). `1` = native NOT verified
+- Failure stop: recover `1` → native fallback `ssh $DEV $T/recover-xochitl.sh`; if that also fails, power-cycle the device
+- Rollback: `apps/planner/paper-device/rollback-lifecycle.sh`
+
+#### 12. Rollback (stop everything, keep files)
+
+Stop the step-4 watcher terminal (Ctrl-C), then:
+
+```sh
+apps/planner/paper-device/rollback-lifecycle.sh
+```
+
+- Expected state: `run/` removed; `bin/` + `compat.allowed` + `launcher.uuid` retained
+- Expected process: `END-STATE xochitl=active rm-sync=active paperos-procs=0 watcher-procs=0`
+- Expected exit code: `0`; prints "ROLLBACK OK — native shell verified"
+- Failure stop: "ROLLBACK VERIFICATION FAILED" → `ssh $DEV $T/recover-xochitl.sh`, inspect manually
+- Rollback: this **is** the rollback
+
+#### 13. Purge rollback (full uninstall)
+
+```sh
+apps/planner/paper-device/rollback-lifecycle.sh --purge
+ssh $DEV 'ls '"$T"'/bin 2>/dev/null; echo "bin_gone=$?"'
+```
+
+- Expected state: `bin/`, `compat.allowed`, `launcher.uuid`, `DISABLED` all removed; native scripts (`open-paperos.sh`, `recover-xochitl.sh`, `paperos.service`) untouched
+- Expected process: `END-STATE xochitl=active rm-sync=active paperos-procs=0 watcher-procs=0`
+- Expected exit code: `0`; "ROLLBACK OK"; `bin_gone` non-zero (dir absent)
+- Failure stop: verification fails, or native scripts missing → `ssh $DEV $T/recover-xochitl.sh`
+- Rollback: re-run `deploy-lifecycle.sh` to reinstall if needed
 
 ## Rollback
 
