@@ -128,6 +128,7 @@ export default {
     setProgressAria: 'Set progress: {total} total, {done} done',
     completeSetAria: 'Complete set {set} of {total}, {done} done',
     nextTimer: 'Next · {name}',
+    switchedFrom: 'Switched from {planned}',
     elapsedAria: 'Elapsed time',
   },
   setLog: {
@@ -145,6 +146,7 @@ export default {
   skip: {
     aria: 'Skip exercise',
     title: 'Skip · {name}',
+    replaceRemainingTitle: 'Replace remaining sets · {name}',
     sub: 'Pick a reason for later review, or choose a substitute',
     reasonGroup: 'Skip reason',
     equipment: 'Equipment taken',
@@ -152,6 +154,7 @@ export default {
     other: 'Other',
     alternatives: 'Substitute',
     confirm: 'Confirm skip',
+    confirmReplacement: 'Confirm replacement',
   },
   summary: {
     title: '{day} · Summary',
@@ -160,6 +163,7 @@ export default {
     vsLast: 'vs last ({date})',
     exerciseDetail: 'Exercises',
     skipped: 'Skipped',
+    replaced: 'Replaced',
     setChip: '{n}: {reps} reps · RIR {rir}',
     nextAdvice: 'Next session suggestions',
     adoptAll: 'Apply all',

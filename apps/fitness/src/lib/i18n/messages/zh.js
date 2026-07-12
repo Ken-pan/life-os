@@ -127,6 +127,7 @@ export default {
     setProgressAria: '组进度：共 {total} 组，已完成 {done} 组',
     completeSetAria: '完成第 {set} 组，共 {total} 组，已完成 {done} 组',
     nextTimer: '下一个 · {name}',
+    switchedFrom: '原计划：{planned}',
     elapsedAria: '本次训练用时',
   },
   setLog: {
@@ -144,6 +145,7 @@ export default {
   skip: {
     aria: '跳过动作',
     title: '跳过 · {name}',
+    replaceRemainingTitle: '替换剩余组 · {name}',
     sub: '选择原因，方便后续调整；也可以选替代动作',
     reasonGroup: '跳过原因',
     equipment: '器械占用',
@@ -151,6 +153,7 @@ export default {
     other: '其他',
     alternatives: '替代动作',
     confirm: '确认跳过',
+    confirmReplacement: '确认替换',
   },
   summary: {
     title: '{day} · 训练总结',
@@ -159,6 +162,7 @@ export default {
     vsLast: '对比上次（{date}）',
     exerciseDetail: '动作明细',
     skipped: '跳过',
+    replaced: '已替换',
     setChip: '{n}: {reps} reps · RIR {rir}',
     nextAdvice: '下次加重建议',
     adoptAll: '采纳全部建议',

@@ -5413,8 +5413,28 @@ body:has(.focus-view) {
 }
 
 .skip-alt.active {
-  border-color: var(--green);
-  color: var(--green);
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.skip-alt-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.skip-alt.active .skip-alt-indicator {
+  opacity: 1;
 }
 
 /* ─────────── SUMMARY ─────────── */
@@ -5476,6 +5496,19 @@ body:has(.focus-view) {
   background: var(--bg-2);
   color: var(--t3);
   margin-left: 6px;
+}
+
+.skip-badge.replaced {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.focus-switch-note {
+  margin-top: 4px;
+  color: var(--t2);
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .advice-row {

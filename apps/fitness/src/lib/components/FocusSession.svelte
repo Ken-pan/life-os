@@ -125,6 +125,11 @@
   const progress = $derived(getSessionProgress(dayId));
   const sessionExercises = $derived(getSessionExercises(dayId));
   const currentEx = $derived(sessionExercises[exIndex] ?? null);
+  const plannedEx = $derived(
+    currentEx?.substitution
+      ? day.ex.find((ex) => ex.id === currentEx.plannedExerciseId) ?? null
+      : null
+  );
 
   $effect(() => {
     currentEx?.id;
@@ -445,6 +450,9 @@
         <div class="focus-ex-head">
           <div class="focus-ex-head-main">
             <div class="focus-ex-name">{currentEx.name}</div>
+            {#if plannedEx}
+              <div class="focus-switch-note">{t('focus.switchedFrom', { planned: plannedEx.name })}</div>
+            {/if}
             <div class="focus-ex-meta">
               <span class="badge sets">{currentEx.sets} × {currentEx.reps}</span>
               {#if timed}
