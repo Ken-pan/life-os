@@ -85,11 +85,14 @@ On-device state (never committed):
 3. OS `VERSION_ID` not in `compat.allowed` → state INCOMPATIBLE, exit 4
 4. binary missing / not executable → exit 5, xochitl untouched
 5. already ready → state PAPEROS_ACTIVE, noop exit 0 (**idempotent**)
-6. state ENTERING_PAPEROS; `systemctl start paperos` (Conflicts stops xochitl)
-7. poll readiness ≤ `READY_TIMEOUT`; then a `STABLE_SECS` window so an
+6. **Finding C guard, before stopping xochitl:** vendor start-limit drift or
+   xochitl-cycle budget exhausted → exit 9, xochitl left running (see
+   §"SYS.1 hardening")
+7. state ENTERING_PAPEROS; `systemctl start paperos` (Conflicts stops xochitl)
+8. poll readiness ≤ `READY_TIMEOUT`; then a `STABLE_SECS` window so an
    instantly-dying binary is not reported active
-8. success → state PAPEROS_ACTIVE, exit 0
-9. any failure → `recover_to_native`; exit 6 if native restored, exit 7 if not
+9. success → state PAPEROS_ACTIVE, exit 0
+10. any failure → `recover_to_native`; exit 6 if native restored, exit 7 if not
 
 ## Exit sequence (`paperos-exit`)
 
@@ -109,9 +112,11 @@ locks, starts xochitl, and verifies **both** xochitl and rm-sync active with
 zero PaperOS processes before declaring NATIVE. Idempotent.
 
 Watcher-level crash-loop protection: `paperos-watch` counts `paperos-enter`
-failures; `FAIL_LIMIT` (default 3) within `FAIL_WINDOW` (default 300 s) latches
-`run/crashloop`, after which every candidate open is blocked until
-`paperos-ctl arm`.
+failures; `FAIL_LIMIT` (default **2** since the Finding C hardening) within
+`FAIL_WINDOW` (default 300 s) latches `run/crashloop`, after which every
+candidate open is blocked until `paperos-ctl arm`. Each failure additionally
+forces a `FAIL_BACKOFF` pause, and a budget throttle (enter exit 9) is **not**
+counted as a failure. See §"SYS.1 hardening".
 
 ## Fail-closed behaviour
 
