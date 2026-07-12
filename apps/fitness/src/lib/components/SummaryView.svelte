@@ -58,6 +58,7 @@
         return {
           ex,
           log,
+          replaced: Boolean(log.done > 0 && log.skipped?.substituteId),
           prs,
           w: exWeight(ex),
           unit: exUnit(ex)
@@ -140,7 +141,11 @@
               <span class="ex-name">
                 {row.ex.name}
                 {#if row.prs?.length}<span class="pr-badge">PR</span>{/if}
-                {#if row.log.skipped}<span class="skip-badge">{t('summary.skipped')}</span>{/if}
+                {#if row.replaced}
+                  <span class="skip-badge replaced">{t('summary.replaced')}</span>
+                {:else if row.log.skipped}
+                  <span class="skip-badge">{t('summary.skipped')}</span>
+                {/if}
               </span>
               <span class="ex-meta">{row.log.done}/{row.ex.sets} {t('common.sets')} · {weightLabel(row)}</span>
             </div>

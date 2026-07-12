@@ -2,6 +2,7 @@
   import { skipModal, closeSkipModal } from '$lib/ui.svelte.js';
   import { t } from '$lib/i18n/index.js';
   import { exerciseName } from '$lib/i18n/exerciseLabels.js';
+  import { getExLog } from '$lib/session.js';
 
   const reasons = $derived([
     { id: 'equipment', label: t('skip.equipment') },
@@ -18,6 +19,10 @@
   }
 
   const alternatives = $derived(skipModal.ex?.alternatives ?? []);
+  const completedSets = $derived(
+    skipModal.ex ? getExLog(skipModal.dayId, skipModal.ex.id, skipModal.ex.sets).done : 0
+  );
+  const isPartialReplacement = $derived(completedSets > 0);
 
   function onWindowKeydown(e) {
     if (e.key === 'Escape' && skipModal.open) closeSkipModal();
@@ -33,7 +38,9 @@
     onclick={(e) => e.target === e.currentTarget && closeSkipModal()}
   >
     <div class="modal" role="dialog" aria-label={t('skip.aria')} aria-modal="true">
-      <div class="modal-title">{t('skip.title', { name: skipModal.ex.name })}</div>
+      <div class="modal-title">
+        {t(isPartialReplacement ? 'skip.replaceRemainingTitle' : 'skip.title', { name: skipModal.ex.name })}
+      </div>
       <div class="modal-sub">{t('skip.sub')}</div>
 
       <div class="skip-reasons" role="radiogroup" aria-label={t('skip.reasonGroup')}>
@@ -55,17 +62,23 @@
               type="button"
               class="skip-alt"
               class:active={skipModal.substituteId === alt.id}
+              aria-pressed={skipModal.substituteId === alt.id}
               onclick={() =>
                 (skipModal.substituteId =
                   skipModal.substituteId === alt.id ? null : alt.id)}
-            >{exerciseName(alt.id) || alt.name}</button>
+            >
+              <span class="skip-alt-indicator" aria-hidden="true">✓</span>
+              <span>{exerciseName(alt.id) || alt.name}</span>
+            </button>
           {/each}
         </div>
       {/if}
 
       <div class="modal-actions">
         <button type="button" class="ma-cancel" onclick={closeSkipModal}>{t('common.cancel')}</button>
-        <button type="button" class="ma-save" onclick={confirm}>{t('skip.confirm')}</button>
+        <button type="button" class="ma-save" onclick={confirm}>
+          {t(isPartialReplacement ? 'skip.confirmReplacement' : 'skip.confirm')}
+        </button>
       </div>
     </div>
   </div>
