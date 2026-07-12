@@ -2232,18 +2232,26 @@ p {
 }
 
 .btn-danger {
-  width: 100%;
-  padding: 13px;
-  letter-spacing: .08em;
-  color: var(--bi);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--button-danger-text, var(--critical, var(--feedback-danger)));
+  border: 1px solid var(--button-danger-border, color-mix(in srgb, var(--critical, var(--feedback-danger)) 32%, var(--border)));
   border-radius: 10px;
-  background: var(--accent-bg);
+  background: var(--button-danger-bg, var(--critical-subtle, var(--feedback-danger-bg)));
   transition: background .15s;
 }
 
+.set-row.settings-stack-block > .btn-danger,
+.settings-row.set-row.settings-stack-block > .btn-danger {
+  width: 100%;
+  padding: 13px;
+  letter-spacing: .08em;
+}
+
 .btn-danger:hover {
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--critical, var(--feedback-danger)) 10%,
+    var(--button-danger-bg, var(--critical-subtle, var(--feedback-danger-bg)))
+  );
 }
 
 .set-note {
@@ -5793,7 +5801,7 @@ body:has(.focus-view) {
 }
 
 .seg button {
-  min-height: 36px;
+  min-height: var(--tap-min);
   padding: 0 14px;
   font-family: var(--button);
   font-size: var(--text-sm);

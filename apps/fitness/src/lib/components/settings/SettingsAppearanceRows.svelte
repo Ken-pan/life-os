@@ -3,7 +3,7 @@
   import { setLocale, t } from '$lib/i18n/index.js'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
-  import SettingsToggle from '@life-os/platform-web/svelte/settings/toggle'
+  import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row'
 
   /** @type {{ onThemeChange?: (theme: string) => void, onLocaleChange?: (locale: string) => void }} */
   let { onThemeChange, onLocaleChange } = $props()
@@ -52,17 +52,14 @@
     />
   </SettingsRow>
 
-  <SettingsRow
+  <SettingsToggleRow
     label={t('settings.lockPortraitOnPhone')}
     desc={t('settings.lockPortraitOnPhoneDesc')}
-  >
-    <SettingsToggle
-      checked={S.settings.lockPortraitOnPhone !== false}
-      ariaLabel={t('settings.lockPortraitOnPhone')}
-      onchange={(checked) => {
-        S.settings.lockPortraitOnPhone = checked
-        save()
-      }}
-    />
-  </SettingsRow>
+    checked={S.settings.lockPortraitOnPhone !== false}
+    ariaLabel={t('settings.lockPortraitOnPhone')}
+    onchange={(checked) => {
+      S.settings.lockPortraitOnPhone = checked
+      save()
+    }}
+  />
 </div>

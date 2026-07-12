@@ -16,12 +16,13 @@
   import { exportBackup, importBackup } from '$lib/backup.js';
   import { auth, signOut, authErrorMessage } from '$lib/auth.svelte.js';
   import { pushToCloud, pullFromCloud, withSyncNotify } from '$lib/sync.js';
-  import { reveal } from '$lib/actions/reveal.js';
   import { t } from '$lib/i18n/index.js';
   import Icon from '@life-os/platform-web/svelte/icon';
   import SettingsSection from '@life-os/platform-web/svelte/settings/section';
   import SettingsAppearanceRows from '$lib/components/settings/SettingsAppearanceRows.svelte';
   import SettingsRow from '@life-os/platform-web/svelte/settings/row';
+  import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row';
+  import SettingsSegment from '@life-os/platform-web/svelte/settings/segment';
   import SettingsToggle from '@life-os/platform-web/svelte/settings/toggle';
   import SettingsStackBlock from '@life-os/platform-web/svelte/settings/stack-block';
   import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group';
@@ -34,6 +35,31 @@
   const catalog = $derived(listPrograms().map((tpl) => localizeProgram(tpl)));
   const currentProgramId = $derived(activeProgramId());
   const rotLabel = $derived(rotationLabel(program));
+
+  const programOptions = $derived(
+    catalog.map((tpl) => ({
+      value: tpl.id,
+      label: tpl.meta.shortName || tpl.meta.name
+    }))
+  );
+
+  const rotationOptions = $derived(
+    ORDER().map((did) => ({
+      value: did,
+      label: getProgram().days[did].cn
+    }))
+  );
+
+  const unitOptions = [
+    { value: 'lbs', label: 'LBS' },
+    { value: 'kg', label: 'KG' }
+  ];
+
+  const logDetailOptions = $derived([
+    { value: 'off', label: t('settings.logOff') },
+    { value: 'quick', label: t('settings.logQuick') },
+    { value: 'always', label: t('settings.logAlways') }
+  ]);
 
   function chooseProgram(id) {
     if (id === currentProgramId) return;
@@ -52,14 +78,8 @@
     save();
   }
 
-  function toggleSound() {
-    S.settings.sound = !S.settings.sound;
-    save();
-    if (S.settings.sound) previewTimerChime();
-  }
-
-  function toggleNotify() {
-    S.settings.notifyRest = !S.settings.notifyRest;
+  function setNotifyRest(checked) {
+    S.settings.notifyRest = checked;
     save();
   }
 
@@ -190,7 +210,7 @@
 />
 
 <section class="view">
-  <div class="wrap">
+  <div class="wrap settings-page">
 
     <SettingsSection title={t('settings.appearance')}>
       <SettingsAppearanceRows
@@ -209,13 +229,18 @@
       />
     </SettingsSection>
 
-    <SettingsSection title={t('settings.notifications')} testId="settings-notifications">
-      <SettingsRow label={t('settings.notifications')} desc={notifyDesc()}>
+    <SettingsSection
+      title={t('settings.notifications')}
+      testId="settings-notifications"
+      collapsible
+      collapseOnMobile
+    >
+      <SettingsRow label={t('settings.notifyToggleLabel')} desc={notifyDesc()} rowClass="settings-row--toggle">
         {#if notifyPerm === 'granted'}
           <SettingsToggle
             checked={S.settings.notifyRest !== false}
             ariaLabel={t('settings.notifyAria')}
-            onchange={toggleNotify}
+            onchange={setNotifyRest}
           />
         {:else if notifyPerm === 'default'}
           <button type="button" class="btn-secondary" onclick={enableNotifications}>{t('settings.enableNotify')}</button>
@@ -225,15 +250,19 @@
 
     <SettingsSection title={t('settings.account')} testId="settings-sync">
       {#if auth.user}
-        <SettingsStackBlock label={auth.user.email} desc={t('settings.accountDesc')}>
+        <SettingsStackBlock>
+          <p class="settings-account-email">{auth.user.email}</p>
+          <p class="sr-desc pref-desc settings-account-desc">{t('settings.accountDesc')}</p>
           <SettingsButtonGroup>
             <button type="button" class="btn-secondary" disabled={syncing} onclick={onPush}>{t('settings.upload')}</button>
             <button type="button" class="btn-secondary" disabled={syncing} onclick={() => onPull('merge')}>{t('settings.mergeCloud')}</button>
-            <button type="button" class="btn-secondary" disabled={syncing} onclick={() => onPull('replace')}>{t('settings.replaceCloud')}</button>
           </SettingsButtonGroup>
         </SettingsStackBlock>
         <div class="settings-row set-row settings-stack-block">
-          <button type="button" class="btn-danger" onclick={onSignOut}>{t('settings.signOut')}</button>
+          <button type="button" class="btn-danger" disabled={syncing} onclick={() => onPull('replace')}>{t('settings.replaceCloud')}</button>
+        </div>
+        <div class="settings-row set-row settings-stack-block">
+          <button type="button" class="btn-secondary settings-sign-out" onclick={onSignOut}>{t('settings.signOut')}</button>
         </div>
       {:else}
         <SettingsStackBlock label={t('settings.notSignedIn')} desc={t('settings.signInDesc')}>
@@ -242,75 +271,64 @@
       {/if}
     </SettingsSection>
 
-    <div class="set-group" use:reveal>
-      <div class="sg-title" data-ui-decor="section-label">{t('settings.programTemplate')}</div>
-      <div class="set-row" style="display:block">
-        <div class="sr-label" style="margin-bottom:6px">{t('settings.currentProgram', { name: program.meta.name })}</div>
-        <div class="sr-desc" style="margin-bottom:12px">{program.meta.description}</div>
-        <div class="seg seg--wrap">
-          {#each catalog as tpl (tpl.id)}
-            <button class:on={tpl.id === currentProgramId} onclick={() => chooseProgram(tpl.id)}>
-              {tpl.meta.shortName || tpl.meta.name}
-            </button>
-          {/each}
-        </div>
-      </div>
-    </div>
-
-    <div class="set-group" use:reveal>
-      <div class="sg-title" data-ui-decor="section-label">{t('settings.rotation')}</div>
-      <div class="set-row">
-        <div>
-          <div class="sr-label">{t('settings.todayWhichDay')}</div>
-          <div class="sr-desc">{t('settings.rotationDesc', { label: rotLabel })}</div>
-        </div>
-        <div class="seg">
-          {#each ORDER() as did (did)}
-            <button class:on={did === rec} onclick={() => setRotation(did)}>{getProgram().days[did].cn}</button>
-          {/each}
-        </div>
-      </div>
-    </div>
-
-    <div class="set-group" use:reveal>
-      <div class="sg-title" data-ui-decor="section-label">{t('settings.unitFeedback')}</div>
-      <div class="set-row">
-        <div>
-          <div class="sr-label">{t('settings.weightUnit')}</div>
-          <div class="sr-desc">{t('settings.weightUnitDesc')}</div>
-        </div>
-        <div class="seg">
-          <button class:on={S.settings.unit === 'lbs'} onclick={() => setUnit('lbs')}>LBS</button>
-          <button class:on={S.settings.unit === 'kg'} onclick={() => setUnit('kg')}>KG</button>
-        </div>
-      </div>
-      <SettingsRow label={t('settings.timerSound')} desc={t('settings.timerSoundDesc')}>
-        <SettingsToggle
-          checked={S.settings.sound}
-          ariaLabel={t('settings.timerSoundAria')}
-          onchange={(checked) => {
-            S.settings.sound = checked;
-            save();
-            if (checked) previewTimerChime();
-          }}
+    <SettingsSection title={t('settings.programTemplate')}>
+      <SettingsStackBlock
+        label={t('settings.currentProgram', { name: program.meta.name })}
+        desc={program.meta.description}
+      />
+      <SettingsRow label={t('settings.programPick')}>
+        <SettingsSegment
+          options={programOptions}
+          value={currentProgramId}
+          onchange={chooseProgram}
+          ariaLabel={t('settings.programPick')}
         />
       </SettingsRow>
-    </div>
+    </SettingsSection>
 
-    <div class="set-group" use:reveal>
-      <div class="sg-title" data-ui-decor="section-label">{t('settings.logging')}</div>
-      <div class="set-row">
-        <div>
-          <div class="sr-label">{t('settings.logDetail')}</div>
-          <div class="sr-desc">{t('settings.logDetailDesc')}</div>
-        </div>
-        <div class="seg">
-          <button class:on={(S.settings.logDetail || 'quick') === 'off'} onclick={() => setLogDetail('off')}>{t('settings.logOff')}</button>
-          <button class:on={(S.settings.logDetail || 'quick') === 'quick'} onclick={() => setLogDetail('quick')}>{t('settings.logQuick')}</button>
-          <button class:on={S.settings.logDetail === 'always'} onclick={() => setLogDetail('always')}>{t('settings.logAlways')}</button>
-        </div>
-      </div>
-    </div>
+    <SettingsSection title={t('settings.rotation')}>
+      <SettingsRow label={t('settings.todayWhichDay')} desc={t('settings.rotationDesc', { label: rotLabel })}>
+        <SettingsSegment
+          options={rotationOptions}
+          value={rec}
+          onchange={setRotation}
+          ariaLabel={t('settings.todayWhichDay')}
+        />
+      </SettingsRow>
+    </SettingsSection>
+
+    <SettingsSection title={t('settings.unitFeedback')}>
+      <SettingsRow label={t('settings.weightUnit')} desc={t('settings.weightUnitDesc')}>
+        <SettingsSegment
+          options={unitOptions}
+          value={S.settings.unit}
+          onchange={setUnit}
+          ariaLabel={t('settings.weightUnit')}
+        />
+      </SettingsRow>
+      <SettingsToggleRow
+        label={t('settings.timerSound')}
+        desc={t('settings.timerSoundDesc')}
+        checked={S.settings.sound}
+        ariaLabel={t('settings.timerSoundAria')}
+        onchange={(checked) => {
+          S.settings.sound = checked;
+          save();
+          if (checked) previewTimerChime();
+        }}
+      />
+    </SettingsSection>
+
+    <SettingsSection title={t('settings.logging')}>
+      <SettingsRow label={t('settings.logDetail')} desc={t('settings.logDetailDesc')}>
+        <SettingsSegment
+          options={logDetailOptions}
+          value={S.settings.logDetail || 'quick'}
+          onchange={setLogDetail}
+          ariaLabel={t('settings.logDetail')}
+        />
+      </SettingsRow>
+    </SettingsSection>
 
     <SettingsSection title={t('settings.data')} testId="settings-backup">
       <SettingsStackBlock label={t('settings.customProgram')} desc={t('settings.customProgramDesc')}>
@@ -319,10 +337,12 @@
       <SettingsStackBlock label={t('settings.backup')} desc={t('settings.backupDesc')}>
         <SettingsButtonGroup>
           <button type="button" class="btn-secondary" onclick={onExport}>{t('settings.exportJson')}</button>
-          <button type="button" class="btn-secondary" onclick={() => onImportClick('replace')}>{t('settings.importReplace')}</button>
           <button type="button" class="btn-secondary" onclick={() => onImportClick('merge')}>{t('settings.importMerge')}</button>
         </SettingsButtonGroup>
       </SettingsStackBlock>
+      <div class="settings-row set-row settings-stack-block">
+        <button type="button" class="btn-danger" onclick={() => onImportClick('replace')}>{t('settings.importReplace')}</button>
+      </div>
       <div class="settings-row set-row settings-stack-block">
         <button type="button" class="btn-danger" onclick={onResetToday}>{t('settings.clearToday')}</button>
       </div>
@@ -337,3 +357,13 @@
     </div>
   </div>
 </section>
+
+<style>
+  .settings-sign-out {
+    width: 100%;
+  }
+
+  .settings-account-desc {
+    margin-bottom: 12px;
+  }
+</style>

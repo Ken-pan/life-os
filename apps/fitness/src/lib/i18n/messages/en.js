@@ -211,13 +211,14 @@ export default {
     accountDesc: 'Back up workouts to the cloud and restore on another device.',
     upload: 'Upload to cloud',
     mergeCloud: 'Merge from cloud',
-    replaceCloud: 'Cloud overwrites device',
+    replaceCloud: 'Cloud overwrites device (irreversible)',
     signOut: 'Sign out',
     notSignedIn: 'Not signed in',
     signInDesc:
       'Sign in to back up data and avoid losing it after clearing cache or switching phones.',
     signInLink: 'Sign in / Sign up',
     programTemplate: 'Program template',
+    programPick: 'Switch program',
     currentProgram: 'Current: {name}',
     rotation: 'Training rotation',
     todayWhichDay: 'Train which day today',
@@ -229,6 +230,7 @@ export default {
     timerSoundDesc: 'Countdown and chime when rest ends',
     timerSoundAria: 'Timer sounds',
     notifications: 'Background alerts',
+    notifyToggleLabel: 'Rest-end alerts',
     notifyGranted:
       'Alerts when you switch apps or lock screen; sound only while page is open',
     notifyDenied:

@@ -45,6 +45,16 @@
   margin-bottom: 12px;
 }
 
+.settings-account-email {
+  margin: 0 0 var(--space-1);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--t2, var(--text-secondary));
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 .settings-stack-block--pad-x {
   padding-inline: var(--inset-inline);
   padding-bottom: var(--space-4);
@@ -180,9 +190,29 @@
     align-items: stretch;
   }
 
+  /* iOS HIG: label leading, switch trailing — keep toggle rows horizontal */
+  .settings-row.set-row.settings-row--toggle,
+  .set-row.settings-row.settings-row--toggle,
+  .settings-row.set-row:has(.settings-toggle),
+  .set-row.settings-row:has(.settings-toggle) {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .settings-row--toggle .pref-control,
+  .settings-row.set-row:has(.settings-toggle) .pref-control {
+    width: auto;
+    margin-inline-start: auto;
+    flex-shrink: 0;
+  }
+
   .set-row .pref-control,
   .set-row .seg {
     width: 100%;
+  }
+
+  .settings-row.set-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .pref-control > .seg {
+    margin-top: var(--space-2);
   }
 
   .auth-link {

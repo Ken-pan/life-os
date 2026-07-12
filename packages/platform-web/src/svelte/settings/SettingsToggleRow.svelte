@@ -13,7 +13,7 @@
   } = $props()
 </script>
 
-<SettingsRow {label} {desc}>
+<SettingsRow {label} {desc} rowClass="settings-row--toggle">
   <SettingsToggle
     {checked}
     {disabled}
