@@ -211,6 +211,16 @@
     width: 100%;
   }
 
+  .settings-row .pref-control > .seg:not(.seg--wrap) {
+    display: flex;
+    width: 100%;
+  }
+
+  .settings-row .pref-control > .seg:not(.seg--wrap) button {
+    flex: 1;
+    min-width: 0;
+  }
+
   .settings-row.set-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .pref-control > .seg {
     margin-top: var(--space-2);
   }
