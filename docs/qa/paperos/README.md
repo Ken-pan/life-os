@@ -8,7 +8,7 @@ PaperOS 的质量入口。当前状态与优先级以 [`../../LIFEOS_ROADMAP.md`
 | --- | --- | --- |
 | [`lifecycle.md`](./lifecycle.md) | `PAPR.SYS.*` 真机发现、决策、依赖与 resume point | `PAPR.SYS.1` 主航道 |
 | [`lifecycle-gate.md`](./lifecycle-gate.md) | LC-01–LC-15 最终可靠性矩阵 | Blocked by SYS.1–3 |
-| [`ui-spec.md`](./ui-spec.md) | E-ink UI 规范与下一个可执行 slice | Slice 1.1 待设备复验 |
+| [`ui-spec.md`](./ui-spec.md) | E-ink UI 规范与 clean PR device gate | PR #27 / #28 **BLOCKED**（locale、stylus、Slice 2 visual） |
 | [`data-plane-2026-07-11.md`](./data-plane-2026-07-11.md) | 生产读路径的脱敏验收证据 | PASS，只读 |
 | [`reference/2026-07-10/`](./reference/2026-07-10/) | UI 方向参考图 | 证据，非规范真源 |
 
