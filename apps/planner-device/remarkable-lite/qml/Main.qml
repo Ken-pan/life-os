@@ -17,6 +17,7 @@ Window {
     // module indices: 0=HomeToday (Today), 1=TodayPage (Tasks), 2=Write(Notes), 3=Inbox, 4=Review, 5=System (Settings), 6=More, 7=Documents
     property int currentModule: 0
     readonly property bool landscape: width > height
+    readonly property bool navTraceEnabled: Qt.application.arguments.indexOf("--nav-trace") !== -1
     readonly property var moduleTitles: ["Today", "Tasks", "Notes", "Inbox", "Review", "Settings", "More", "Documents"]
 
     property string todayDateString: ""
@@ -45,6 +46,8 @@ Window {
         console.log("PaperOS shell up · font:", Ui.fontFamily,
                     "· screen:", Screen.width, "x", Screen.height,
                     "· scale:", Ui.scale)
+        if (root.navTraceEnabled)
+            console.log("NAV_TRACE build_LATENCY_FIX_TEST_01")
         apiClient.fetchDashboard()
     }
 
@@ -97,7 +100,11 @@ Window {
                     id: menuTap
                     anchors.fill: parent
                     onPressed: {
+                        if (root.navTraceEnabled)
+                            console.log("NAV_TRACE +0ms hamburger_pressed " + Date.now())
                         systemDrawer.open = true
+                        if (root.navTraceEnabled)
+                            console.log("NAV_TRACE drawer.open_set_to_true " + Date.now())
                     }
                 }
             }
@@ -204,6 +211,7 @@ Window {
         anchors.fill: parent
         z: 880
         currentModule: root.currentModule
+        navTraceEnabled: root.navTraceEnabled
         onNavigate: function(module) { root.currentModule = module }
     }
 

@@ -2,6 +2,7 @@
 #include "ink_raster.h"
 #include "metrics.h"
 
+#include <chrono>
 #include <dlfcn.h>
 #include <cstdio>
 #include <cstdint>
@@ -128,6 +129,18 @@ extern "C" void _ZN13EPFramebuffer11swapBuffersE5QRect13EPContentType12EPScreenM
     extra["flags"] = static_cast<int>(flags);
     // Heuristic: full refresh if it covers most of the screen
     extra["full_refresh"] = (rect.width() >= 900 && rect.height() >= 1600) ? 1 : 0;
+
+    // We only log full refreshes from standard Qt to trace navigation latency.
+    const bool navTraceEnabled = qEnvironmentVariableIntValue("PAPEROS_NAV_TRACE") == 1;
+    if (navTraceEnabled
+        && (extra["full_refresh"] == 1
+            || mode == EPScreenMode::QualityFastest
+            || mode == EPScreenMode::Quality3)) {
+        long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        fprintf(stderr, "[PaperOS] NAV_TRACE: frame_submitted (swapBuffers) mode=%d type=%d rect=%d,%d %dx%d full=%d (ts=%lld)\n",
+                (int)mode, (int)type, rect.x(), rect.y(), rect.width(), rect.height(), extra["full_refresh"].toInt(), ms);
+    }
     Metrics::logEvent("swap", extra);
 
     ORG("_ZN13EPFramebuffer11swapBuffersE5QRect13EPContentType12EPScreenMode6QFlagsINS_10UpdateFlagEE", void);
