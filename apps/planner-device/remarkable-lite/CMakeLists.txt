@@ -58,6 +58,8 @@ qt_add_qml_module(paperos
         qml/ReviewPage.qml
         qml/SystemPage.qml
         qml/MorePage.qml
+        qml/HomeTodayPage.qml
+        qml/DocumentsPage.qml
 )
 
 target_link_libraries(paperos

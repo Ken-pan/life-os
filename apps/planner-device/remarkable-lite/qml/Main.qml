@@ -2,11 +2,9 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Window
 
-// PaperOS Shell — paper canvas + contextual tools + temporary system surfaces.
-// Layer-1 navigation lives in a temporary System drawer (SystemDrawer.qml)
-// opened from the shell menu button; there is no permanent tab bar or rail.
-// One compact header row carries: menu · current page title · Home action ·
-// contextual add. All seven module routes stay mounted at their indices.
+// The top-level shell surface. Hosts the module StackLayout and a system-wide
+// header/menu. Sub-apps ("modules") are dynamically loaded as needed to conserve
+// the tight footprint, but kept warm once initialized.
 Window {
     id: root
     objectName: "app.root"
@@ -16,10 +14,19 @@ Window {
     title: qsTr("PaperOS")
     color: Ui.paper
 
-    // module indices: 0=Home, 1=Today, 2=Write(Notes), 3=Inbox, 4=Review, 5=System, 6=More
+    // module indices: 0=HomeToday (Today), 1=TodayPage (Tasks), 2=Write(Notes), 3=Inbox, 4=Review, 5=System (Settings), 6=More, 7=Documents
     property int currentModule: 0
     readonly property bool landscape: width > height
-    readonly property var moduleTitles: ["Home", "Today", "Notes", "Inbox", "Review", "System", "More"]
+    readonly property var moduleTitles: ["Today", "Tasks", "Notes", "Inbox", "Review", "Settings", "More", "Documents"]
+
+    property string todayDateString: ""
+    Timer {
+        interval: 30000; running: !inkMode.active; repeat: true; triggeredOnStart: true
+        onTriggered: {
+            var now = new Date()
+            root.todayDateString = now.toLocaleDateString(Qt.locale(), "ddd, MMM d")
+        }
+    }
     // Mirrored onto the root object so the local-only test bridge can inspect
     // native framebuffer sessions without reaching into QML context objects.
     property bool nativeInkActive: inkMode.active
@@ -94,7 +101,7 @@ Window {
             }
 
             Text {
-                text: root.moduleTitles[root.currentModule]
+                text: root.currentModule === 0 ? root.todayDateString : root.moduleTitles[root.currentModule]
                 font.family: Ui.fontFamily
                 font.pixelSize: Ui.section
                 font.bold: true
@@ -119,7 +126,7 @@ Window {
                 Text {
                     id: homeLabel
                     anchors.centerIn: parent
-                    text: "Home"
+                    text: "Today"
                     font.family: Ui.fontFamily
                     font.pixelSize: Ui.button
                     color: homeTap.pressed ? Ui.paper
@@ -172,7 +179,7 @@ Window {
             Layout.fillHeight: true
             currentIndex: root.currentModule
 
-            HomePage { objectName: "page.home" }
+            HomeTodayPage { objectName: "page.home" }
             TodayPage { objectName: "page.today" }
             NotesPage { objectName: "page.write" }
             InboxPage { objectName: "page.inbox" }
@@ -185,6 +192,7 @@ Window {
                 objectName: "page.more"
                 onOpenModule: function(module) { root.currentModule = module }
             }
+            DocumentsPage { objectName: "page.documents" }
         }
     }
 

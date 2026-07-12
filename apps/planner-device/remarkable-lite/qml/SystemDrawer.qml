@@ -96,23 +96,11 @@ Item {
                 }
             }
 
-            DrawerRow { objectName: "drawer.home";  label: "Home";  module: 0 }
-            DrawerRow { objectName: "drawer.today"; label: "Today"; module: 1 }
+            DrawerRow { objectName: "drawer.today"; label: "Today"; module: 0 }
             DrawerRow { objectName: "drawer.notes"; label: "Notes"; module: 2 }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.leftMargin: 44
-                Layout.rightMargin: 44
-                Layout.topMargin: 20
-                Layout.bottomMargin: 20
-                height: 1
-                color: Ui.ink30
-            }
-
-            DrawerRow { objectName: "drawer.inbox";  label: "Inbox";  module: 3 }
-            DrawerRow { objectName: "drawer.review"; label: "Review"; module: 4 }
-            DrawerRow { objectName: "drawer.system"; label: "System"; module: 5 }
+            DrawerRow { objectName: "drawer.tasks"; label: "Tasks"; module: 1 }
+            DrawerRow { objectName: "drawer.documents"; label: "Documents"; module: 7 }
+            DrawerRow { objectName: "drawer.settings"; label: "Settings"; module: 5 }
 
             Item { Layout.fillHeight: true }
 
