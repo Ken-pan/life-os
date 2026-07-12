@@ -48,6 +48,7 @@ qt_add_qml_module(paperos
     VERSION 1.0
     QML_FILES
         qml/Main.qml
+        qml/SystemDrawer.qml
         qml/PaperButton.qml
         qml/StatusLine.qml
         qml/HomePage.qml

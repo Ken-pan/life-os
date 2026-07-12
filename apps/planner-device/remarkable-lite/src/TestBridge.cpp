@@ -125,6 +125,9 @@ QJsonObject TestBridge::stateObject() const
         {"nativeInkNoteId", m_window ? m_window->property("nativeInkNoteId").toString() : QString()},
         {"nativeInkTool", m_window ? m_window->property("nativeInkTool").toString() : QString()},
         {"nativeInkColor", m_window ? m_window->property("nativeInkColor").toString() : QString()},
+        {"nativeInkChrome", m_window ? m_window->property("nativeInkChrome").toString() : QString()},
+        {"nativeInkRetreat", m_window ? m_window->property("nativeInkRetreat").toString() : QString()},
+        {"nativeInkReady", m_window ? m_window->property("nativeInkReady").toBool() : false},
         {"thread", QString::number(quintptr(QThread::currentThreadId()))},
     };
 }
@@ -221,6 +224,10 @@ bool TestBridge::tapObject(const QString &name, QString *error)
     auto *item = qobject_cast<QQuickItem *>(object);
     if (!item) {
         *error = QStringLiteral("target not found or not a QQuickItem: ") + name;
+        return false;
+    }
+    if (!item->isVisible() || !item->isEnabled() || item->width() <= 0 || item->height() <= 0) {
+        *error = QStringLiteral("target is not visibly actionable: ") + name;
         return false;
     }
     const QPointF pos = item->mapToScene(QPointF(item->width() / 2.0, item->height() / 2.0));
