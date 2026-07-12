@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     InkModeController inkModeController;
     RefreshController refreshControl;
     PenInputService penBridge;
-    TestBridge testBridge;
+    TestBridge testBridge(&inkModeController);
 
     // ── Design tokens ──────────────────────────────────────────────
     // Physical pixels on the 954 × 1696 @ 264 PPI Move panel.

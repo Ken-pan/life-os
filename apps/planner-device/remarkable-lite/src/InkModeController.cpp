@@ -159,12 +159,15 @@ void InkModeController::enter(const QString &noteId)
     m_ready = false;
     m_chrome = Chrome::Clean;
     m_lastRetreat.clear();
+    m_canvasDirty = false;
     ++m_retreatGeneration;
     emit chromeChanged();
     setActive(true);
-    // One render pass for the static overlay so the scenegraph's last swap
-    // is done before direct framebuffer control starts.
-    QTimer::singleShot(300, this, [this]() { beginSession(); });
+    // Let the e-paper scenegraph finish the static full-screen cover before
+    // direct framebuffer ownership begins. The backend can take well beyond
+    // one LCD frame to settle; starting at 300 ms allowed a late cover swap
+    // to overwrite the native canvas after entry.
+    QTimer::singleShot(1500, this, [this]() { beginSession(); });
 }
 
 void InkModeController::beginSession()
@@ -252,6 +255,7 @@ void InkModeController::beginSession()
                 return true;
             }
             m_downInBackZone = false;
+            m_canvasDirty = true;
             scheduleWritingRetreat();
         }
         if (m_downInHandle || m_downInHeader || m_downInBackZone)
@@ -331,8 +335,10 @@ void InkModeController::drawPage()
 
     m_topUnder = QImage();
     m_railUnder = QImage();
+    m_cleanCanvasFrame = g_inkGoldBuffer->copy();
     m_handleUnder = g_inkGoldBuffer->copy(handleRect());
     paintHandle(false);
+    m_captureFrame = g_inkGoldBuffer->copy();
 }
 
 void InkModeController::drawToolbar()
@@ -427,6 +433,14 @@ bool InkModeController::handleToolbarTap(const QPoint &point)
         return false;
 
     drawToolbar();
+    if (!m_captureFrame.isNull()) {
+        QPainter capturePainter(&m_captureFrame);
+        capturePainter.drawImage(topChromeRect(), g_inkGoldBuffer->copy(topChromeRect()));
+        if (!railChromeRect().isNull())
+            capturePainter.drawImage(railChromeRect(), g_inkGoldBuffer->copy(railChromeRect()));
+    } else {
+        m_captureFrame = g_inkGoldBuffer->copy();
+    }
     if (EPFramebuffer *ep = EPFramebuffer::instance())
         ep->sendSwap(m_landscape
                          ? QRect(0, 0, m_screenW, kLandscapeBarH + 3)
@@ -494,12 +508,21 @@ void InkModeController::applyReveal()
 
     ++m_retreatGeneration;
     eraseHandle();
-    m_topUnder = g_inkGoldBuffer->copy(topChromeRect());
+    const QImage cleanFrame = m_captureFrame.isNull()
+        ? g_inkGoldBuffer->copy() : m_captureFrame;
+    m_topUnder = cleanFrame.copy(topChromeRect());
     if (!railChromeRect().isNull())
-        m_railUnder = g_inkGoldBuffer->copy(railChromeRect());
+        m_railUnder = cleanFrame.copy(railChromeRect());
     drawToolbar();
     m_chrome = Chrome::Revealed;
     m_lastRetreat.clear();
+    m_captureFrame = cleanFrame;
+    {
+        QPainter capturePainter(&m_captureFrame);
+        capturePainter.drawImage(topChromeRect(), g_inkGoldBuffer->copy(topChromeRect()));
+        if (!railChromeRect().isNull())
+            capturePainter.drawImage(railChromeRect(), g_inkGoldBuffer->copy(railChromeRect()));
+    }
 
     if (EPFramebuffer *ep = EPFramebuffer::instance()) {
         ep->sendSwap(topChromeRect(), EPContentType::Mono,
@@ -525,12 +548,27 @@ void InkModeController::applyHide(const QString &reason, bool present)
         if (!m_railUnder.isNull())
             p.drawImage(railChromeRect(), m_railUnder);
     }
+    QImage cleanFrame = !m_canvasDirty && !m_cleanCanvasFrame.isNull()
+        ? m_cleanCanvasFrame
+        : m_captureFrame.isNull() ? g_inkGoldBuffer->copy() : m_captureFrame;
+    {
+        QPainter capturePainter(&cleanFrame);
+        if (!m_topUnder.isNull())
+            capturePainter.drawImage(topChromeRect(), m_topUnder);
+        if (!m_railUnder.isNull())
+            capturePainter.drawImage(railChromeRect(), m_railUnder);
+    }
     m_topUnder = QImage();
     m_railUnder = QImage();
-    m_handleUnder = g_inkGoldBuffer->copy(handleRect());
+    m_handleUnder = cleanFrame.copy(handleRect());
     paintHandle(false);
     m_chrome = Chrome::Clean;
     m_lastRetreat = reason;
+    {
+        QPainter capturePainter(&cleanFrame);
+        capturePainter.drawImage(handleRect(), g_inkGoldBuffer->copy(handleRect()));
+    }
+    m_captureFrame = cleanFrame;
 
     if (present) {
         if (EPFramebuffer *ep = EPFramebuffer::instance()) {
@@ -592,7 +630,9 @@ bool InkModeController::savePage()
     if (!g_inkGoldBuffer)
         return false;
     const QString pagePath = m_noteDir + QStringLiteral("/page-001.png");
-    QImage canvas = g_inkGoldBuffer->copy(0, 0, m_screenW, m_screenH);
+    QImage canvas = !m_canvasDirty && !m_captureFrame.isNull()
+        ? m_captureFrame
+        : g_inkGoldBuffer->copy(0, 0, m_screenW, m_screenH);
     {
         QPainter p(&canvas);
         if (m_chrome == Chrome::Revealed) {

@@ -85,6 +85,13 @@ capture "03-notes-recent"
 
 tap_visible "notes.collection.all"
 require_visible "notes.collection.all"
+# Re-enter through semantic navigation so the e-paper scenegraph paints the
+# complete All collection before capture, rather than exposing only its
+# incremental tab-change back buffer.
+tap_visible "nav.home"
+tap_visible "shell.menu"
+tap_visible "drawer.notes"
+require_visible "notes.collection.all"
 capture "04-notes-all"
 
 note_id=$(first_visible_note)

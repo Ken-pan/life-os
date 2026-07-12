@@ -26,9 +26,6 @@ Window {
     property string nativeInkNoteId: inkMode.noteId
     property string nativeInkTool: inkMode.tool
     property string nativeInkColor: inkMode.color
-    property string nativeInkChrome: inkMode.chrome
-    property string nativeInkRetreat: inkMode.lastRetreat
-    property bool nativeInkReady: inkMode.ready
 
     function exitNativeInk() {
         if (inkMode.active)
@@ -316,34 +313,28 @@ Window {
             y: parent.height - 100
             width: 88
             height: 88
-            enabled: inkMode.active && inkMode.ready
+            // Active changes only at the native enter/exit boundary. Do not
+            // bind this item to ready/chrome while direct ink owns the frame.
+            enabled: inkMode.active
             onClicked: inkMode.toggleChrome()
         }
 
-        // Semantic state root only: objectName changes do not render QML
-        // pixels over the native framebuffer. The after-writing state is the
-        // same clean canvas reached by a real stroke retreat.
-        Item {
-            anchors.fill: parent
-            objectName: !inkMode.ready ? ""
-                      : inkMode.lastRetreat === "writing" ? "editor.after-writing"
-                      : inkMode.chrome === "revealed" ? "editor.tools.revealed"
-                      : "editor.clean"
-        }
+        // Static, non-rendering semantic roots. TestBridge reports their
+        // logical visibility from the root state; no QQuickItem property
+        // changes while the native framebuffer is active.
+        Item { anchors.fill: parent; objectName: "editor.clean" }
+        Item { anchors.fill: parent; objectName: "editor.tools.revealed" }
+        Item { anchors.fill: parent; objectName: "editor.after-writing" }
 
         // Debug-bridge-only, read-only fixture. It changes presentation
         // state through the same retreat path as pen-up, but injects no
         // stroke and never enters, exits, creates, or saves a note.
-        MouseArea {
-            objectName: inkMode.testBridgeEnabled && inkMode.ready
-                        && inkMode.chrome === "revealed"
-                      ? "editor.fixture.after-writing" : ""
+        Item {
+            objectName: inkMode.testBridgeEnabled ? "editor.fixture.after-writing" : ""
             x: parent.width - 100
             y: parent.height - 100
             width: 88
             height: 88
-            enabled: objectName !== ""
-            onClicked: inkMode.simulateWritingRetreat()
         }
     }
 

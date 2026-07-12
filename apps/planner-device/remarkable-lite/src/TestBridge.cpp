@@ -1,4 +1,5 @@
 #include "TestBridge.h"
+#include "InkModeController.h"
 #include "epframebuffer.h"
 
 #include <QCoreApplication>
@@ -34,7 +35,8 @@ QJsonArray rectArray(const QRectF &rect)
 }
 }
 
-TestBridge::TestBridge(QObject *parent) : QObject(parent)
+TestBridge::TestBridge(InkModeController *inkMode, QObject *parent)
+    : QObject(parent), m_inkMode(inkMode)
 {
     connect(&m_server, &QTcpServer::newConnection, this, &TestBridge::onNewConnection);
 }
@@ -125,9 +127,9 @@ QJsonObject TestBridge::stateObject() const
         {"nativeInkNoteId", m_window ? m_window->property("nativeInkNoteId").toString() : QString()},
         {"nativeInkTool", m_window ? m_window->property("nativeInkTool").toString() : QString()},
         {"nativeInkColor", m_window ? m_window->property("nativeInkColor").toString() : QString()},
-        {"nativeInkChrome", m_window ? m_window->property("nativeInkChrome").toString() : QString()},
-        {"nativeInkRetreat", m_window ? m_window->property("nativeInkRetreat").toString() : QString()},
-        {"nativeInkReady", m_window ? m_window->property("nativeInkReady").toBool() : false},
+        {"nativeInkChrome", m_inkMode ? m_inkMode->chromeName() : QString()},
+        {"nativeInkRetreat", m_inkMode ? m_inkMode->lastRetreat() : QString()},
+        {"nativeInkReady", m_inkMode ? m_inkMode->ready() : false},
         {"thread", QString::number(quintptr(QThread::currentThreadId()))},
     };
 }
@@ -159,6 +161,30 @@ QJsonObject TestBridge::nodeObject(QObject *object) const
         node["bounds"] = rectArray(QRectF(topLeft, QSizeF(item->width(), item->height())));
         node["visible"] = item->isVisible();
         node["enabled"] = item->isEnabled();
+
+        // Native editor semantic roots stay static in QML so state changes
+        // cannot schedule a scenegraph swap over the direct framebuffer.
+        // The bridge exposes their truthful logical visibility instead.
+        const QString id = object->objectName();
+        const bool active = m_window && m_window->property("nativeInkActive").toBool();
+        const bool ready = m_inkMode && m_inkMode->ready();
+        const QString chrome = m_inkMode ? m_inkMode->chromeName() : QString();
+        const QString retreat = m_inkMode ? m_inkMode->lastRetreat() : QString();
+        if (id == QLatin1String("editor.chrome.handle")) {
+            node["visible"] = active && ready;
+            node["enabled"] = active && ready;
+        } else if (id == QLatin1String("editor.clean")) {
+            node["visible"] = active && ready && chrome == QLatin1String("clean")
+                && retreat != QLatin1String("writing");
+        } else if (id == QLatin1String("editor.tools.revealed")) {
+            node["visible"] = active && ready && chrome == QLatin1String("revealed");
+        } else if (id == QLatin1String("editor.after-writing")) {
+            node["visible"] = active && ready && chrome == QLatin1String("clean")
+                && retreat == QLatin1String("writing");
+        } else if (id == QLatin1String("editor.fixture.after-writing")) {
+            node["visible"] = active && ready && chrome == QLatin1String("revealed");
+            node["enabled"] = active && ready && chrome == QLatin1String("revealed");
+        }
     }
     return node;
 }
@@ -220,6 +246,17 @@ bool TestBridge::tapObject(const QString &name, QString *error)
         *error = QStringLiteral("window unavailable");
         return false;
     }
+    if (name == QLatin1String("editor.chrome.handle") && m_inkMode && m_inkMode->ready()) {
+        m_inkMode->toggleChrome();
+        *error = QString();
+        return true;
+    }
+    if (name == QLatin1String("editor.fixture.after-writing") && m_inkMode
+        && m_inkMode->ready() && m_inkMode->chromeName() == QLatin1String("revealed")) {
+        m_inkMode->simulateWritingRetreat();
+        *error = QString();
+        return true;
+    }
     QObject *object = findObjectByName(name);
     auto *item = qobject_cast<QQuickItem *>(object);
     if (!item) {
@@ -252,9 +289,12 @@ bool TestBridge::saveScreenshot(const QString &path, QString *error) const
         return false;
     }
     const bool nativeInk = m_window->property("nativeInkActive").toBool();
-    const bool saved = nativeInk && DirectInkDiag::ready() && g_drawBuffer
-        ? g_drawBuffer->copy().save(path, "PNG")
-        : m_window->grabWindow().save(path, "PNG");
+    const QImage nativeFrame = m_inkMode ? m_inkMode->captureFrame() : QImage();
+    const bool saved = nativeInk && !nativeFrame.isNull()
+        ? nativeFrame.save(path, "PNG")
+        : nativeInk && DirectInkDiag::ready() && g_drawBuffer
+            ? g_drawBuffer->copy().save(path, "PNG")
+            : m_window->grabWindow().save(path, "PNG");
     if (!saved) {
         *error = QStringLiteral("failed to save screenshot");
         return false;

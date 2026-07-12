@@ -55,6 +55,7 @@ public:
     QString lastRetreat() const { return m_lastRetreat; }
     bool ready() const { return m_ready; }
     bool testBridgeEnabled() const;
+    QImage captureFrame() const { return m_captureFrame; }
 
     Q_INVOKABLE void enter(const QString &noteId);
     Q_INVOKABLE void exit() { leave(0); }
@@ -105,11 +106,14 @@ private:
     bool m_downInBackZone = false;
     bool m_downInHeader = false;
     bool m_downInHandle = false;
+    bool m_canvasDirty = false;
     Chrome m_chrome = Chrome::Clean;
     QString m_lastRetreat;
     QImage m_topUnder;      // canvas pixels beneath revealed chrome
     QImage m_railUnder;
     QImage m_handleUnder;   // canvas pixels beneath the clean-state handle
+    QImage m_cleanCanvasFrame; // immutable entry canvas for read-only retreat
+    QImage m_captureFrame;  // exact last full frame painted for presentation
     quint64 m_retreatGeneration = 0;
     EvdevMarkerSource *m_evdev = nullptr;
 };
