@@ -5,9 +5,16 @@ Paper Pro Move. POSIX `sh`, BusyBox v1.36 compatible. Everything lives under
 `/home/root/paperos` (persistent `/home`); nothing writes to `/etc` or enables a
 boot unit.
 
-> **Scope:** PAPR.SYS.1 only. No sleep/wake (SYS.2), no sync scheduling, no
-> persistent `systemctl enable`, no auto-launch-after-unlock. Those require a
-> separate Ken device gate.
+> **Status:** PAPR.SYS.1 — **PASS** (owner sign-off 2026-07-12; Finding C
+> hardening host + device validated). **Scope:** no sleep/wake (SYS.2), no sync
+> scheduling, no auto-launch-after-unlock, no boot-target change. Persistent
+> `systemctl enable` of the watcher (**PAPR.SYS.1p**) is investigated but
+> **DEFERRED** — see
+> [`docs/qa/paperos-device-lifecycle-sys1p-persistent.md`](../../../../docs/qa/paperos-device-lifecycle-sys1p-persistent.md):
+> this device's `/etc` is a tmpfs overlay, so a plain `enable` does not survive
+> reboot, and the only mechanism that would (writing into the read-only root
+> partition) needs a separate owner decision. Everything below still runs
+> exactly as a **temporary, manually-started** runtime.
 
 ## Components
 
@@ -129,4 +136,7 @@ apps/planner/paper-device/tests/sys1/run-tests.sh    # 117 cases, mocked systemd
 ```
 
 See [`docs/qa/paperos-device-lifecycle-sys1-implementation.md`](../../../../docs/qa/paperos-device-lifecycle-sys1-implementation.md)
-for the design rationale and the Ken physical device gate.
+for the design rationale and the Ken physical device gate. Persistent Mode A
+(watcher via systemd, surviving reboot) is tracked separately in
+[`docs/qa/paperos-device-lifecycle-sys1p-persistent.md`](../../../../docs/qa/paperos-device-lifecycle-sys1p-persistent.md)
+(currently DEFERRED).

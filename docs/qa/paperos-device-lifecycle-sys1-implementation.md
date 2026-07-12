@@ -823,5 +823,17 @@ implementation can start immediately.
 
 ## Next phase (after hardening + Ken re-gate)
 
-`PAPR.SYS.2` — sleep / wake / idle + wake sync reconciliation. **Not before** the
-SYS.1 hardening patch lands and re-passes the constrained device re-test.
+Two follow-on tracks were authorized after SYS.1 PASS:
+
+- **`PAPR.SYS.1p`** — persistent Mode A (systemd-enabled watcher, survives
+  reboot; xochitl stays default, Open PaperOS stays the only trigger). Owner
+  authorized the design 2026-07-12; **investigation complete, implementation
+  DEFERRED** — this device's `/etc` is a tmpfs overlay, so true persistence
+  needs a write into the read-only root partition, which is a bigger
+  escalation than "everything in `/home`." See
+  [`paperos-device-lifecycle-sys1p-persistent.md`](./paperos-device-lifecycle-sys1p-persistent.md)
+  for the full architecture finding, options, and the Option-A implementation
+  sketch to resume from.
+- **`PAPR.SYS.2`** — sleep / wake / idle + wake sync reconciliation. **Not
+  authorized yet**; was always gated on SYS.1 hardening landing (now has) and
+  remains a separate owner go-ahead.
