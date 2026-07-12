@@ -564,6 +564,29 @@ Editor · Page Overview · Outline · Search in notebook（后续）
 - 不实现 Search / multi-page；
 - build、device capture、xochitl recovery 通过。
 
+## 5.9 Clean implementation review status (2026-07-12)
+
+`agent/papr-ui-2-clean` reconstructs the Slice 2 implementation as a stacked
+review branch on `agent/papr-ui-1-1-clean`. The preservation checkpoint
+`21ef1a1e` was used as a file-level source and was not merged wholesale.
+
+Host/static status:
+
+- the approved Today, Tasks, Documents, navigation, semantic bridge, and
+  capture-script delta is present;
+- Today refreshes its writable note list on entry and after native editor exit;
+- the `NoteStore` date formatter is unchanged because no deterministic host
+  reproduction of the reported locale/device output is available;
+- no device deployment or physical visual/pen PASS is claimed.
+
+Remaining device checklist:
+
+- verify Continue/Recent note-card density and blank-space balance;
+- verify Today task-title truncation with representative long and mixed-CJK
+  titles;
+- reproduce the date label under the device locale;
+- complete the Slice 1.1 physical tool/color gate and the Slice 2 visual matrix.
+
 ---
 
 # 6. 文件与所有权映射
