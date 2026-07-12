@@ -1,5 +1,7 @@
 # P-MOVE-BLOCK — Production Paper API Gate
 
+> **Legacy gate ID** — canonical ticket: **`PAPR.DATA.verify`**（PASS 2026-07-11）· 对照 [`roadmap/TICKET_NAMING.md`](./roadmap/TICKET_NAMING.md)
+
 **Status:** PASS — manual recovery and durable Git deployment confirmed.
 **Date:** 2026-07-11  
 **Scope:** Restore production delivery of the existing Planner Paper Netlify Functions. No API, routing, function-source, device, or data changes.

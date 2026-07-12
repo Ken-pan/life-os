@@ -14,7 +14,7 @@ const project = {
   roadmapRefs: [
     {
       id: 'roadmap-ref',
-      roadmapItemId: 'P-PROJ-3',
+      roadmapItemId: 'PLNR.PROJ.3',
       sourcePath: 'docs/roadmap/apps/planner.md',
       anchor: 'project-attachment-设计边界',
       label: 'Planner Roadmap',
@@ -62,7 +62,7 @@ test('renders roadmap and safe repository references', async ({ page }) => {
   await waitForPlannerShell(page)
 
   await expect(page.getByRole('heading', { name: 'Roadmap 与代码引用' })).toBeVisible()
-  await expect(page.getByText('P-PROJ-3', { exact: true })).toBeVisible()
+  await expect(page.getByText('PLNR.PROJ.3', { exact: true })).toBeVisible()
   await expect(page.getByText('docs/roadmap/apps/planner.md#project-attachment-设计边界')).toBeVisible()
 
   const commit = page.getByRole('link', { name: 'Project sync implementation' })

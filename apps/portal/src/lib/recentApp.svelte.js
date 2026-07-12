@@ -41,7 +41,7 @@ export function initRecentApp() {
 }
 
 /**
- * DB wins over localStorage when available (G-P1).
+ * DB wins over localStorage when available (PORT.GROWTH.1).
  * @param {LauncherAppId | null} dbAppId
  */
 export function applyRecentAppFromDb(dbAppId) {

@@ -7,7 +7,7 @@ function coreDb(supabase) {
 }
 
 /**
- * Home 轻量元数据上报 — Portal G-P4b-H 读 `settings.portal_summary`。
+ * Home 轻量元数据上报 — Portal PORT.GROWTH.4b-H 读 `settings.portal_summary`。
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {string} userId
  * @param {{ storageZoneCount: number }} payload

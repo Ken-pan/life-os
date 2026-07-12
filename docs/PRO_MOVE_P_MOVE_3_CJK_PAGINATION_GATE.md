@@ -1,4 +1,4 @@
-# P-MOVE-3: CJK Font + Pagination UI Gate
+# PAPR.DEV.3: CJK Font + Pagination UI Gate
 
 **Status: PASS** · 2026-07-09
 
@@ -84,7 +84,7 @@ qml: UI font family: Noto Sans CJK SC
 Previous binaries retained on device:
 
 ```
-/home/root/paperos/paperos.backup-20260710-002537   (pre-P-MOVE-3 binary)
+/home/root/paperos/paperos.backup-20260710-002537   (pre-PAPR.DEV.3 binary)
 /home/root/paperos/paperos.backup-20260709-235413   (earlier baseline)
 ```
 

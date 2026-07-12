@@ -1,7 +1,7 @@
-# Life OS Shared Events — I-P1.5 Plan
+# Life OS Shared Events — INTG.EVENTS.1.5 Plan
 
 > **Integration Phase 1.5：** 跨 App 数据互通的 **事件层**（不合并业务表）
-> 前置：**I-P0** 身份 + **I-P1** Portal 骨架
+> 前置：**INTG.IDENTITY.0** 身份 + **INTG.EVENTS.1** Portal 骨架
 > 总路线图：[`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md)
 
 ---
@@ -74,7 +74,7 @@ create policy "life_events_insert_own"
 | planner    | `task_completed`        | 任务完成                          |
 | planner    | `task_created`          | 任务创建（可被其他 App 触发写入） |
 
-类型契约后续进入 `@life-os/contracts`（**C-P1+**，与 Integration 不冲突）。
+类型契约后续进入 `@life-os/contracts`（**PLAT.CONTRACTS.1+**，与 Integration 不冲突）。
 
 ---
 
@@ -116,9 +116,9 @@ Fitness workout_completed → Planner 勾选 habit「健身」
 
 ---
 
-## 与 I-P1 Portal 的关系
+## 与 INTG.EVENTS.1 Portal 的关系
 
-| Portal 模块         | I-P1.5 升级                                |
+| Portal 模块         | INTG.EVENTS.1.5 升级                                |
 | ------------------- | ------------------------------------------ |
 | Today Overview stub | 读 `life_events` 最近 24h 摘要             |
 | Quick Actions 占位  | Finance `bill_due` → 深链 Planner 带 query |
@@ -151,14 +151,14 @@ Fitness workout_completed → Planner 勾选 habit「健身」
 
 ---
 
-## 明确不做（I-P1.5）
+## 明确不做（INTG.EVENTS.1.5）
 
 - 双向实时 sync（用现有各 App Dexie/sync 包）
 - 全量 event sourcing 重建状态
-- AI context 管道（留给 I-P2 `ai_context_snapshots`）
+- AI context 管道（留给 INTG.EVENTS.2 `ai_context_snapshots`）
 
 ---
 
-## I-P1.5 完成后 → I-P2
+## INTG.EVENTS.1.5 完成后 → INTG.EVENTS.2
 
-见 [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md) §I-P2：多场景消费、Music↔Planner Focus、预算→AI Context 等。
+见 [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md) §INTG.EVENTS.2：多场景消费、Music↔Planner Focus、预算→AI Context 等。

@@ -1,5 +1,5 @@
 /**
- * FT-P2 local RPC matrix for portal_today_summary() fitness fields.
+ * GYMS.PORTAL.2 local RPC matrix for portal_today_summary() fitness fields.
  *
  * Prereq:
  *   supabase start --workdir apps/finance
@@ -138,7 +138,7 @@ async function seedOtherCards(userId, today) {
   const { error: taskErr } = await service.from('planner_tasks').insert({
     user_id: userId,
     id: `ft-p2-task-${stamp}`,
-    data: { title: 'FT-P2 task', dueDate: today, completed: false },
+    data: { title: 'GYMS.PORTAL.2 task', dueDate: today, completed: false },
   })
   if (taskErr) throw taskErr
 
@@ -148,7 +148,7 @@ async function seedOtherCards(userId, today) {
     amount: 100,
     txn_date: today,
     occurred_on: today,
-    merchant_name: 'FT-P2',
+    merchant_name: 'GYMS.PORTAL.2',
     normalized_category: 'Income',
     source_amount: 100,
     flow_type: 'income',
@@ -165,7 +165,7 @@ async function seedOtherCards(userId, today) {
     .insert({
       user_id: userId,
       track_id: trackId,
-      title: 'FT-P2 Track',
+      title: 'GYMS.PORTAL.2 Track',
       artist: 'Test Artist',
     })
   if (metaErr) throw metaErr
@@ -203,7 +203,7 @@ function assertOtherCards(payload) {
   assert.ok(payload.finance, 'finance payload')
   assert.equal(payload.finance.monthIncome, 100)
   assert.ok(payload.music?.trackTitle, 'music payload')
-  assert.equal(payload.music.trackTitle, 'FT-P2 Track')
+  assert.equal(payload.music.trackTitle, 'GYMS.PORTAL.2 Track')
   assert.ok(payload.home?.reportedAt, 'home payload')
   assert.equal(payload.home.storageZoneCount, 3)
 }
@@ -317,7 +317,7 @@ async function main() {
   assert.equal(payloadJ.fitness.lastDayId, 'back')
   pass('J today skipped-only ended with yesterday active workout')
 
-  console.log('portal_today_summary FT-P2 RPC matrix: all checks passed')
+  console.log('portal_today_summary GYMS.PORTAL.2 RPC matrix: all checks passed')
 }
 
 main().catch((err) => {

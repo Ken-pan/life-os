@@ -893,7 +893,7 @@ create trigger finance_bill_event_trigger
   for each row
   execute function public.trg_finance_bill_to_event();
 
--- I-P1.5b / FT-P1: Fitness 完练 → life_events
+-- INTG.EVENTS.1b / GYMS.EVENTS.1: Fitness 完练 → life_events
 create or replace function public.trg_fitness_workout_to_event()
 returns trigger
 language plpgsql

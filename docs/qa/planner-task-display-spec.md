@@ -1,6 +1,6 @@
 # Planner 任务行（Ticket）展示规范 — 草案
 
-> **Roadmap：** **P-TASK-DISPLAY-0**（并入 **P-UIUX-0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
+> **Roadmap：** **P-TASK-DISPLAY-0**（并入 **PLNR.UIUX.0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
 > **代码锚点：** `TaskRow.svelte` · `taskMetaLine.js` · `taskKind.js` · `lifeEventSource.js`
 > **状态：** 2026-07-10 产品草案（待走查确认）
 
@@ -100,7 +100,7 @@ else → unscheduledOnly
 
 ---
 
-## 与排程视图的关系（P-SCHED-0）
+## 与排程视图的关系（PLNR.SCHED.0）
 
 | 视图            | 任务行差异                                                                           |
 | --------------- | ------------------------------------------------------------------------------------ |
@@ -128,4 +128,4 @@ else → unscheduledOnly
 | 4   | 子任务计数 `subtasks.filter(done).length`                    | `taskMetaLine.js` 或 `TaskRow` |
 | 5   | 截图 + 更新本规范                                            | QA                             |
 
-**Agent：** 并入 **P-SCHED-0** Fable session（不单占额度）· Codex 单测
+**Agent：** 并入 **PLNR.SCHED.0** Fable session（不单占额度）· Codex 单测

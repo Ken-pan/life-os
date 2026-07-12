@@ -1,5 +1,5 @@
 /**
- * M-P5: 验收 v6 推荐 RPC 是否读取 play_events 行为分（recently completed / replay）。
+ * MUSC.PIPE.5: 验收 v6 推荐 RPC 是否读取 play_events 行为分（recently completed / replay）。
  *
  * Usage:
  *   cd apps/music && npm run qa:rec-behavior
@@ -69,7 +69,7 @@ async function main() {
       false,
       '无曲库且 M5 QA seed 失败 — 可设 MUSIC_QA_EMAIL 为有曲库账号',
     )
-    console.log('\nM-P5 behavior smoke: SKIPPED (no library for QA user)')
+    console.log('\nMUSC.PIPE.5 behavior smoke: SKIPPED (no library for QA user)')
     process.exit(0)
   }
 
@@ -138,7 +138,7 @@ async function main() {
   log('cleanup', true)
 
   const failed = report.filter((r) => !r.ok).length
-  console.log(`\nM-P5 behavior smoke: ${report.length - failed}/${report.length} passed`)
+  console.log(`\nMUSC.PIPE.5 behavior smoke: ${report.length - failed}/${report.length} passed`)
   process.exit(failed ? 1 : 0)
 }
 

@@ -4,28 +4,28 @@
 
 ## 一句话
 
-六站启动器 + `core_*` 读模型 + **五卡今日摘要**（含 Home 实验） + ⌘K 跨站深链；Growth **G-P1–G-P9 ✅**。
+六站启动器 + `core_*` 读模型 + **五卡今日摘要**（含 Home 实验） + ⌘K 跨站深链；Growth **PORT.GROWTH.1–PORT.GROWTH.9 ✅**。
 
 ## 当前能力（生产）
 
 | 域        | 状态 | 要点                                              |
 | --------- | ---- | ------------------------------------------------- |
-| Launcher  | ✅   | 四生产 + Home 实验（H-P1）                        |
-| G-P1–G-P5 | ✅   | 继续 · 角标 · 默认跳转 · 摘要 · PWA 引导          |
-| G-P4b-M   | ✅   | Music 第四卡 + `portal_today_summary` RPC         |
-| G-P4b-H   | ✅   | Home 第五卡（储藏区数 · `/storage` 深链 · 实验标） |
-| G-P6      | ✅   | ⌘K 14 深链 + `portal_cp_recent_v1`                |
-| G-P8      | ✅   | pending → Planner `/inbox` 深链（角标 + 状态区）  |
-| G-P9      | ✅   | `qa:smoke`（五卡）· `qa:screenshot`               |
+| Launcher  | ✅   | 四生产 + Home 实验（HOME.PORTAL.1）                        |
+| PORT.GROWTH.1–PORT.GROWTH.5 | ✅   | 继续 · 角标 · 默认跳转 · 摘要 · PWA 引导          |
+| PORT.GROWTH.4b-M   | ✅   | Music 第四卡 + `portal_today_summary` RPC         |
+| PORT.GROWTH.4b-H   | ✅   | Home 第五卡（储藏区数 · `/storage` 深链 · 实验标） |
+| PORT.GROWTH.6      | ✅   | ⌘K 14 深链 + `portal_cp_recent_v1`                |
+| PORT.GROWTH.8      | ✅   | pending → Planner `/inbox` 深链（角标 + 状态区）  |
+| PORT.GROWTH.9      | ✅   | `qa:smoke`（五卡）· `qa:screenshot`               |
 | Auth / ⌘K | ✅   | Portal 内登录 · `CommandPalette` + icon registry  |
 
 ## Next（按 ROI）
 
 _当前无阻塞 Growth 项。_
 
-**近期已发货：** **FT-P2** ✅（2026-07-10）— `portal_today_summary` 扩 `workedOutToday` / `todayCompleted` · Portal 卡文案 · migration `20260710203000` **远程已应用** · `verify-ft-p2-prod.mjs`。
+**近期已发货：** **GYMS.PORTAL.2** ✅（2026-07-10）— `portal_today_summary` 扩 `workedOutToday` / `todayCompleted` · Portal 卡文案 · migration `20260710203000` **远程已应用** · `verify-ft-p2-prod.mjs`。
 
-_后续跨站摘要增量见 hub §Next（**P-P4**）。_
+_后续跨站摘要增量见 hub §Next（**PLNR.CORE.4**）。_
 
 ## UI 走查（2026-07-09 · 第五轮 · P-1–P-12 ✅）
 
@@ -35,14 +35,14 @@ _后续跨站摘要增量见 hub §Next（**P-P4**）。_
 | --- | ------------------- | ------ |
 | P-1 | CommandPalette 遮罩 | ✅ 已修 |
 | P-2 | ICON_REGISTRY       | ✅ 已修 |
-| P-3 | Music 摘要空状态    | ✅ M-P5 seed |
+| P-3 | Music 摘要空状态    | ✅ MUSC.PIPE.5 seed |
 | P-4 | BrandMark 40px      | ✅ 已修 2026-07-09 |
 | P-5 | Mobile 顶栏密度     | ✅ 已修 + **P-5b More sheet** 2026-07-09 |
 | P-6 | svelte-check        | ✅ 已修 |
 | P-7 | 角标/OS 叠影        | ✅ 已修 2026-07-09 |
 | P-8 | 全页截图裁切线      | ✅ 已修 2026-07-09 |
 | P-9 | 状态 pill 对比度    | ✅ 已修 2026-07-09 |
-| P-10 | Home 第五卡        | ✅ G-P4b-H |
+| P-10 | Home 第五卡        | ✅ PORT.GROWTH.4b-H |
 | P-11 | 五卡网格空位       | ✅ 已修 2026-07-09 |
 | P-5b | More sheet         | ✅ 已修 2026-07-09 |
 | P-12 | 实验卡虚线边框     | ✅ 已修 2026-07-09 |

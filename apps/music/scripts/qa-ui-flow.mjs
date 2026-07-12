@@ -1,5 +1,5 @@
 /**
- * Music UI E2E — route smoke + library play + queue (M-P2).
+ * Music UI E2E — route smoke + library play + queue (MUSC.UI.2).
  * Simulates post-import state via IndexedDB seed (full import optional via MUSIC_QA_IMPORT_FILE).
  *
  * Usage:

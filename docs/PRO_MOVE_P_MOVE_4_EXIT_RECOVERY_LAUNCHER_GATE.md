@@ -1,4 +1,4 @@
-# P-MOVE-4: Exit Button + Crash Recovery + Device Launcher Gate
+# PAPR.DEV.4: Exit Button + Crash Recovery + Device Launcher Gate
 
 **Status: PASS (Exit-button on-screen tap pending operator confirmation)** · 2026-07-09
 
@@ -61,14 +61,14 @@ that previously required manual recovery.
 
 ## Verification evidence (all live on device, 2026-07-09)
 
-| Test | Result |
-| --- | --- |
-| `paperos.next` launch, font + QML load | PASS — log shows `loaded font "Noto Sans CJK SC"` |
-| Hard crash (`kill -9`) + `recover-xochitl.sh` | PASS — xochitl `active`, `RECOVER-OK` |
-| `systemctl start paperos` | PASS — `paperos=active xochitl=inactive` (Conflicts works) |
-| Hard crash (`kill -9`) under systemd | PASS — `paperos=failed xochitl=active` with **no manual step** |
-| `systemctl stop paperos` | PASS — `paperos=inactive xochitl=active` |
-| Exit button tap on screen | PENDING operator; process-exit path proven by the stop test |
+| Test                                          | Result                                                         |
+| --------------------------------------------- | -------------------------------------------------------------- |
+| `paperos.next` launch, font + QML load        | PASS — log shows `loaded font "Noto Sans CJK SC"`              |
+| Hard crash (`kill -9`) + `recover-xochitl.sh` | PASS — xochitl `active`, `RECOVER-OK`                          |
+| `systemctl start paperos`                     | PASS — `paperos=active xochitl=inactive` (Conflicts works)     |
+| Hard crash (`kill -9`) under systemd          | PASS — `paperos=failed xochitl=active` with **no manual step** |
+| `systemctl stop paperos`                      | PASS — `paperos=inactive xochitl=active`                       |
+| Exit button tap on screen                     | PENDING operator; process-exit path proven by the stop test    |
 
 ## Rollback
 
@@ -83,9 +83,10 @@ ssh remarkable-pro-move 'cp /home/root/paperos/paperos.backup-<latest> /home/roo
 Binary backups retained on device from every promotion
 (`paperos.backup-YYYYMMDD-HHMMSS`).
 
-## Relationship to P-MOVE-SYS (2026-07-11)
+## Relationship to PAPR.SYS (2026-07-11)
 
-P-MOVE-4 established SSH/systemd entry, Exit, and **Class B** crash recovery via
-`open-paperos.sh` / `paperos.service` `ExecStopPost`. **P-MOVE-SYS-1** device-side
-launch surface remains **unresolved** (SYS-1A closed · SYS-1B discovery active).
+PAPR.DEV.4 established SSH/systemd entry, Exit, and **Class B** crash recovery via
+`open-paperos.sh` / `paperos.service` `ExecStopPost`. **PAPR.SYS.1** launch
+architecture discovery **completed** (PAPR.SYS.1a/1b.fs closed; PAPR.SYS.1b.jrn conditional pass).
+**PAPR.SYS.1 implementation is UNBLOCKED BUT NOT STARTED — PAUSED BY OWNER.**
 See [`qa/paperos-device-lifecycle-discovery.md`](./qa/paperos-device-lifecycle-discovery.md).

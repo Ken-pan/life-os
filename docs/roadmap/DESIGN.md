@@ -1,12 +1,12 @@
-# Design System 主线（D-\*）
+# Design System 主线（DSGN.* · legacy `D-*`）
 
-Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
+Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。**Canonical ID：** [`TICKET_NAMING.md`](./TICKET_NAMING.md) · `DSGN.CATALOG.*`
 
 **战略：** token-first / code-first / visual-test-first。`design-tokens` 为真源 → generated CSS → apps + design-catalog preview。
 
 ---
 
-## 已完成：D-P0 – D-P6
+## 已完成：D-P0 – DSGN.CATALOG.6
 
 | 阶段                     | 日期       | 摘要                                                                        |
 | ------------------------ | ---------- | --------------------------------------------------------------------------- |
@@ -17,7 +17,7 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。
 | **D-P3c** Primitives     | 2026-07-08 | `.btn-*` / `.seg` / `.settings-toggle` → component tokens                   |
 | **D-P4** Matrix + states | 2026-07-08 | 4×2 grid；`showcaseStates`；CommandPalette showcase                         |
 | **D-P5** Pixel baseline  | 2026-07-08 | 80 desktop snapshots；smoke/snapshot 分离                                   |
-| **D-P6** a11y gates      | 2026-07-08 | contrast / focus / touch / reduced-motion；`test:design-catalog:a11y` 47/47 |
+| **DSGN.CATALOG.6** a11y gates      | 2026-07-08 | contrast / focus / touch / reduced-motion；`test:design-catalog:a11y` 47/47 |
 
 ### 验收（2026-07-08）
 
@@ -47,13 +47,13 @@ Commit 锚点 → [`SHIPPED.md`](./SHIPPED.md) §Design
 
 ---
 
-## 前瞻：D-P7+
+## 前瞻：DSGN.CATALOG.7+
 
 | 阶段     | 内容                           | 触发 / 范围                                                                     |
 | -------- | ------------------------------ | ------------------------------------------------------------------------------- |
-| **D-P7** | production 共享 primitive a11y | `platform-web` 组件在 **生产四站** 的 contrast/focus 抽检；**不做**全页面 audit |
+| **DSGN.CATALOG.7** | production 共享 primitive a11y | `platform-web` 组件在 **生产四站** 的 contrast/focus 抽检；**不做**全页面 audit |
 | **D-P8** | Storybook / Chromatic          | 团队协作压力（现阶段否决）                                                      |
 
-**说明：** **D-P6**（design-catalog a11y gates）已于 2026-07-08 发货 ✅。hub 不再将 D-P6 列入 §Next。
+**说明：** **DSGN.CATALOG.6**（design-catalog a11y gates）已于 2026-07-08 发货 ✅。hub 不再将 DSGN.CATALOG.6 列入 §Next。
 
-**已砍掉：** ~~D-P7 Figma variables mirror~~ — 项目无 Figma。
+**已砍掉：** ~~DSGN.CATALOG.7 Figma variables mirror~~ — 项目无 Figma。

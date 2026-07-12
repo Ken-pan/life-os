@@ -6,7 +6,7 @@ import { selectSafeToSpendBreakdown, computeSpendImpact } from "./metrics";
 
 const TODAY = new Date(2026, 4, 29);
 
-describe("buildAugmentedDailyOutlook (F-P3)", () => {
+describe("buildAugmentedDailyOutlook (FINC.CORE.3)", () => {
   it("Today STS 与零额 SpendImpact 共用 augmented outlook", () => {
     const data = createEmptyData();
     data.accounts = [

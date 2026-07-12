@@ -1,4 +1,4 @@
--- FT-P2: Portal today summary — Fitness workedOutToday + last active completed session.
+-- GYMS.PORTAL.2: Portal today summary — Fitness workedOutToday + last active completed session.
 -- Extends portal_today_summary(); preserves Planner / Finance / Music / Home blocks.
 
 create or replace function public.portal_today_summary()

@@ -16,7 +16,7 @@ export interface AugmentedDailyOutlook {
 
 /**
  * 与 Today 主路径一致：先算最佳存钱日，再把 Emergency 月度预留按最佳日注入现金日历。
- * Spend 抽屉与 Today KPI 必须共用此函数，避免 STS 口径分裂（F-P3）。
+ * Spend 抽屉与 Today KPI 必须共用此函数，避免 STS 口径分裂（FINC.CORE.3）。
  */
 export function buildAugmentedDailyOutlook(
   data: FinanceData,

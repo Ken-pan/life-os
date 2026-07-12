@@ -1,9 +1,9 @@
 # Home 空间编辑 · 高标准 UI/UX 审核报告
 
-> **日期：** 2026-07-08（H-W2c 后 · **Wave A/B/C UX** 2026-07-08 收尾）
+> **日期：** 2026-07-08（HOME.SPATIAL.2c 后 · **Wave A/B/C UX** 2026-07-08 收尾）
 > **审核框架：** Nielsen 10 启发式 · WCAG 2.2 触达/对比 · CAD 编辑器惯例（RoomSketcher / Figma / Floor Plan Studio）
 > **截图：** [`docs/ui-qa-screenshots/home/uiux-audit/2026-07-08/`](../ui-qa-screenshots/home/uiux-audit/2026-07-08/)（初版；Wave B/C 后建议重跑 `qa-ui-screenshots.mjs`）
-> **前置修复：** UI-01–06、FN-01 已在 H-W2b/c 处理；**Wave A–C** 见下文「已修复」节
+> **前置修复：** UI-01–06、FN-01 已在 HOME.SPATIAL.2b/c 处理；**Wave A–C** 见下文「已修复」节
 
 ## 审核方法
 
@@ -46,20 +46,20 @@
 | --------- | -------------- | -------------------------------------------------------------- | ---------- | -------------------------------------------------- | -------------------------------------------------------------------- |
 | **UX-05** | 系统与现实匹配 | 选中条标题显示 **`门 · go-audit-1`** 等内部 ID                 | `05`, `09` | `PlanGraphOpeningSelectionBar` 直接用 `opening.id` | 显示 **「门 · 32″」/「窗 · 48″」** 或「客厅北墙」；ID 仅 dev tooltip |
 | **UX-06** | 一致性         | 帮助面板写 Delete =「**隐藏**选中门窗」，墙图模式实为**真删**  | `06`       | `PlanShortcutsHelp` 仅 508 文案                    | 按 `graphEditMode` 分支：墙图 →「删除门窗」；508 →「隐藏」           |
-| **UX-07** | 帮助与文档     | 帮助未覆盖墙图：**1/2/3 工具切换、分割、沿墙拖、端点改宽**     | `06`       | H-W1–W2c 未同步 help                               | 扩展快捷键表 + 链接到 `?` 内 contextHint                             |
-| **UX-08** | 系统与现实     | 禁用步显示 **`title="H-W3 开放"`** — 开发里程碑泄露给用户      | 代码       | 产品 copy 未替换                                   | 「即将推出：手绘分区」+ 可选 waitlist/说明链接                       |
+| **UX-07** | 帮助与文档     | 帮助未覆盖墙图：**1/2/3 工具切换、分割、沿墙拖、端点改宽**     | `06`       | HOME.SPATIAL.1–W2c 未同步 help                               | 扩展快捷键表 + 链接到 `?` 内 contextHint                             |
+| **UX-08** | 系统与现实     | 禁用步显示 **`title="HOME.SPATIAL.3 开放"`** — 开发里程碑泄露给用户      | 代码       | 产品 copy 未替换                                   | 「即将推出：手绘分区」+ 可选 waitlist/说明链接                       |
 | **UX-09** | 视觉设计       | **双 accent 体系**：墙图绿 `#1d6b42` vs 全局 `--accent` 蓝灰   | `04`, `05` | graph 组件 hardcode 绿色                           | 统一为 theme token（如 `--graph-accent`）或文档化「编辑态=绿」       |
 | **UX-10** | 效率           | 508 编辑「转换为墙图」是关键迁移路径，却做成**正文内文本链接** | `02`       | `.plan-convert-link` 样式弱                        | 主按钮 + 次要说明；可 dismiss 的 inline banner                       |
 | **UX-11** | 可见性         | 桌面 zoom 条仍挡 **右上户型**（阳台/客餐厅交界）               | `01`, `05` | `position:absolute; top-right`                     | 移入 header 工具 overflow 或 **仅图标 chip** 展开                    |
 | **UX-12** | 反馈           | 墙图拖门窗/改宽**无实时尺寸 HUD**（508 有 drag HUD）           | 代码       | graph drag 未接 HUD                                | 复用 `dragHint` 显示 `offsetIn`/`spanIn` 英尺英寸                    |
 
-### P2 — 体验债 / H-W3 前可排期
+### P2 — 体验债 / HOME.SPATIAL.3 前可排期
 
 | ID        | 启发式   | 现象                                                                         | 建议                                                     |
 | --------- | -------- | ---------------------------------------------------------------------------- | -------------------------------------------------------- |
 | **UX-13** | 一致性   | 508 的 `PlanSelectionBar` 在 ≤599px 仍为 `display:none`                      | 与墙图 bar 对齐，或统一「选中 → bottom sheet」           |
 | **UX-14** | 识别性   | 图例未解释：绿顶点、门窗虚线框、端点改宽圆点                                 | `PlanLegend` 墙图模式增加 3 项                           |
-| **UX-15** | 诚实 IA  | 墙图浏览仍显示 **508 房间名/色块**（非真实 zones）                           | H-W3 前浏览态角标「508 快照」                            |
+| **UX-15** | 诚实 IA  | 墙图浏览仍显示 **508 房间名/色块**（非真实 zones）                           | HOME.SPATIAL.3 前浏览态角标「508 快照」                            |
 | **UX-16** | 识别性   | FAB「墙图/调整/房间」对新用户含义模糊                                        | 改「详情」图标 + 副标签；或选中时才出现                  |
 | **UX-17** | 错误预防 | 「删墙」工具一次点击即删，无 confirm                                         | 首次 soft-delete 或 toast 撤销；删前高亮级联门窗         |
 | **UX-18** | 效率     | Undo/Redo 仅在有历史时出现，编辑态常**无入口**                               | 编辑模式固定显示 ↶↷（disabled 态）                       |
@@ -115,7 +115,7 @@ Wave B（P1，1–2d）— 专业 CAD 感
   UX-12 拖曳尺寸 HUD
   UX-09 accent token 统一
 
-Wave C（P2，随 H-W3/W5）
+Wave C（P2，随 HOME.SPATIAL.3/W5）
   UX-13/14/15 508 移动 bar + 图例 + 浏览快照标注
   UX-17/18  destructive confirm + 常驻 undo
 ```
@@ -132,7 +132,7 @@ Wave C（P2，随 H-W3/W5）
 | UX-06 / UX-07 | 帮助面板墙图/508 分支 + 墙图快捷键说明                               |
 | UX-08         | 禁用步骤 tooltip 产品化                                              |
 
-**下一步：** Wave B（UX-09/10/11/12）· **H-W3** 手绘分区
+**下一步：** Wave B（UX-09/10/11/12）· **HOME.SPATIAL.3** 手绘分区
 
 ## Wave B 已修复（2026-07-08）
 
@@ -150,7 +150,7 @@ Wave C（P2，随 H-W3/W5）
 
 **参考：** [Autodesk Fusion toolbar progressive disclosure](https://www.swetzoff.com/projects/project-autodesk-di.html) · [OpenCad2D cursor-adjacent HUD](https://github.com/archistico/OpenCad2D) · [Syncfusion floor planner dimensions](https://github.com/syncfusion/ej2-showcase-react-floor-planner)
 
-**下一步：** Wave C（UX-13/17/21）· **H-W3** 手绘分区
+**下一步：** Wave C（UX-13/17/21）· **HOME.SPATIAL.3** 手绘分区
 
 ## Wave C 已修复（2026-07-08）
 
@@ -165,7 +165,7 @@ Wave C（P2，随 H-W3/W5）
 
 **参考：** [Undo UX Pattern](https://uxpatternsguide.com/patterns/undo/) · [Vauchi GUI — confirm only irrevocable](https://docs.vauchi.app/developers/gui-guidelines.html) · [magicplan undo placement](https://help.magicplan.app/undo)
 
-**下一步：** **H-W3** 手绘分区 · UX-13 508 inspector 深链 · A11Y-02 选中动画
+**下一步：** **HOME.SPATIAL.3** 手绘分区 · UX-13 508 inspector 深链 · A11Y-02 选中动画
 
 ## Wave 3 已修复（2026-07-08）
 

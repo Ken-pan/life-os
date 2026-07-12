@@ -1,5 +1,5 @@
 /**
- * Portal UI screenshot QA — 五卡摘要 · ⌘K · G-P8 inbox 铃铛角标
+ * Portal UI screenshot QA — 五卡摘要 · ⌘K · PORT.GROWTH.8 inbox 铃铛角标
  *
  * Usage:
  *   npm run preview -- --host 127.0.0.1 --port 5195

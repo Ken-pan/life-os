@@ -108,9 +108,9 @@ src/routes/
 
 | 主线                    | 状态 | 说明                                                         |
 | ----------------------- | ---- | ------------------------------------------------------------ |
-| **I-P0** 身份           | ✅   | `@life-os/sync` + `fitness` schema RLS                       |
-| **C-P1** contracts 试点 | ✅   | 同 Planner：`applyDocumentMetaWeb` + `SyncErrorPresentation` |
-| **C-P1+**               | 🟡   | Music/Finance 模式未扩到 Fitness nav/feedback 契约           |
+| **INTG.IDENTITY.0** 身份           | ✅   | `@life-os/sync` + `fitness` schema RLS                       |
+| **PLAT.CONTRACTS.1** contracts 试点 | ✅   | 同 Planner：`applyDocumentMetaWeb` + `SyncErrorPresentation` |
+| **PLAT.CONTRACTS.1+**               | 🟡   | Music/Finance 模式未扩到 Fitness nav/feedback 契约           |
 
 路线图：[`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)
 

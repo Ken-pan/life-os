@@ -1,7 +1,7 @@
 # Home 空间编辑 · 截图验收报告
 
-> **日期：** 2026-07-08 · **范围：** H-W0 / H-W1 / H-W2（本地 `http://127.0.0.1:5197`）  
-> **截图目录：** [`apps/home/screenshots/qa-hw2/`](../../apps/home/screenshots/qa-hw2/)  
+> **日期：** 2026-07-08 · **范围：** HOME.SPATIAL.0 / HOME.SPATIAL.1 / HOME.SPATIAL.2（本地 `http://127.0.0.1:5197`）
+> **截图目录：** [`apps/home/screenshots/qa-hw2/`](../../apps/home/screenshots/qa-hw2/)
 > **执行方案：** [`../roadmap/apps/home-spatial-editor.md`](../roadmap/apps/home-spatial-editor.md)
 
 ## 验收方法
@@ -49,18 +49,18 @@
 
 | ID | 现象 | 根因 | 建议方案 | 对应阶段 |
 |----|------|------|----------|----------|
-| **FN-01** | H-W2 §5.3 未完成：沿墙滑动、改宽把手、门↔窗切换 | 本轮仅实现放置+删除+508 转换 | 按 RoomSketcher anchor 模型补 `offsetIn` 拖拽与把手 | **H-W2b** |
-| **FN-02** | ~~设置页未展示统计~~ | ✅ H-W5：顶点/墙段/门窗/分区/家具 | — | ✅ |
-| **FN-03** | ~~508 房间快照~~ | ✅ H-W3：`zones[]` 替换填充 + 无 zones 时角标 | — | ✅ |
+| **FN-01** | HOME.SPATIAL.2 §5.3 未完成：沿墙滑动、改宽把手、门↔窗切换 | 本轮仅实现放置+删除+508 转换 | 按 RoomSketcher anchor 模型补 `offsetIn` 拖拽与把手 | **HOME.SPATIAL.2b** |
+| **FN-02** | ~~设置页未展示统计~~ | ✅ HOME.SPATIAL.5：顶点/墙段/门窗/分区/家具 | — | ✅ |
+| **FN-03** | ~~508 房间快照~~ | ✅ HOME.SPATIAL.3：`zones[]` 替换填充 + 无 zones 时角标 | — | ✅ |
 | **FN-04** | `exportLayoutJson` 已含 `graphOpenings`；旧导入无该字段 | 向后兼容 OK | 文档注明 v2 payload 新字段 | 文档 ✅ 本轮 |
 
 ### P3 — 文档/测试债
 
 | ID | 现象 | 建议 |
 |----|------|------|
-| **DOC-01** | `home-spatial-editor.md` §1 资产表仍描述 H-W0 前状态 | 已在本轮文档更新中修正 |
-| **DOC-02** | 无 `apps/home/README.md` | 已创建（H-P0） |
-| **TST-01** | 508 转换 9 门窗 | 可选 H-P10；当前 smoke 13 checks 覆盖墙/门窗/分区/储藏 |
+| **DOC-01** | `home-spatial-editor.md` §1 资产表仍描述 HOME.SPATIAL.0 前状态 | 已在本轮文档更新中修正 |
+| **DOC-02** | 无 `apps/home/README.md` | 已创建（HOME.EXPER.0） |
+| **TST-01** | 508 转换 9 门窗 | 可选 HOME.SMOKE.10；当前 smoke 13 checks 覆盖墙/门窗/分区/储藏 |
 
 ---
 
@@ -77,20 +77,20 @@
 ## 推荐修复顺序（供下一轮开发）
 
 ```text
-1. ~~UI-03  hint 去重~~ ✅ 2026-07-08 H-W2b
-2. ~~UI-01 + UI-02  手机编辑壳折叠~~ ✅ 2026-07-08 H-W2b（hint→? 抽屉；工具条横向滚动；GraphSelectionBar 移动端可见）
-3. ~~UI-06  门窗符号方向~~ ✅ 2026-07-08 H-W2b（竖墙 bifold/sliding）
-4. ~~FN-01  门窗沿墙拖动~~ ✅ 2026-07-08 H-W2c
-5. H-W3   手绘分区
+1. ~~UI-03  hint 去重~~ ✅ 2026-07-08 HOME.SPATIAL.2b
+2. ~~UI-01 + UI-02  手机编辑壳折叠~~ ✅ 2026-07-08 HOME.SPATIAL.2b（hint→? 抽屉；工具条横向滚动；GraphSelectionBar 移动端可见）
+3. ~~UI-06  门窗符号方向~~ ✅ 2026-07-08 HOME.SPATIAL.2b（竖墙 bifold/sliding）
+4. ~~FN-01  门窗沿墙拖动~~ ✅ 2026-07-08 HOME.SPATIAL.2c
+5. HOME.SPATIAL.3   手绘分区
 ```
 
 ## UI/UX Wave 验收（2026-07-08）
 
-功能项（UI/FN）见上文 H-W2b/c。**高标准 UI/UX** 另见专卷：
+功能项（UI/FN）见上文 HOME.SPATIAL.2b/c。**高标准 UI/UX** 另见专卷：
 
 - [`home-spatial-uiux-audit-2026-07-08.md`](./home-spatial-uiux-audit-2026-07-08.md) — Wave A/B/C ✅；剩余 A11Y-02 · I18N-01 · polish 见该文档 §剩余开放
 
-## H-W2c 已修复（2026-07-08）
+## HOME.SPATIAL.2c 已修复（2026-07-08）
 
 | ID | 修复 |
 |----|------|
@@ -100,7 +100,7 @@
 
 **参考：** [RoomSketcher 门窗拖曳沿墙](https://help.roomsketcher.com/hc/en-us/articles/360000808925) · 蓝箭头改宽
 
-## H-W2b 已修复（2026-07-08）
+## HOME.SPATIAL.2b 已修复（2026-07-08）
 
 | ID | 修复 |
 |----|------|

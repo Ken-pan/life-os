@@ -68,9 +68,9 @@ node scripts/qa-ui-screenshots.mjs   # UI/UX 截图（可选）
 
 | 文档 | 用途 |
 |------|------|
-| [`docs/roadmap/apps/home-spatial-editor.md`](../../docs/roadmap/apps/home-spatial-editor.md) | H-W0–W5 执行方案 |
+| [`docs/roadmap/apps/home-spatial-editor.md`](../../docs/roadmap/apps/home-spatial-editor.md) | HOME.SPATIAL.0–W5 执行方案 |
 | [`docs/roadmap/apps/home.md`](../../docs/roadmap/apps/home.md) | App 排期 |
 | [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../docs/qa/home-spatial-editor-audit-2026-07-08.md) | 功能验收 |
 | [`docs/qa/home-spatial-uiux-audit-2026-07-08.md`](../../docs/qa/home-spatial-uiux-audit-2026-07-08.md) | UI/UX 审核（Wave A/B/C） |
 
-**当前进度（2026-07-08）：** H-W0–W5 ✅ · Wave A/B/C UX ✅ · 三步编辑器（墙体/划分/布置）已发货
+**当前进度（2026-07-08）：** HOME.SPATIAL.0–W5 ✅ · Wave A/B/C UX ✅ · 三步编辑器（墙体/划分/布置）已发货

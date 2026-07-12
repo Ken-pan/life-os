@@ -1,4 +1,4 @@
-# Finance F-P6 isolated QA authentication
+# Finance FINC.PURCHASE.6 isolated QA authentication
 
 **Status:** **CONDITIONAL PASS** (static tooling — 2026-07-11)
 **Runtime verification:** **PENDING**
@@ -118,7 +118,7 @@ Prerequisites: isolated QA project + successful bootstrap (see above).
 
 ### Pre-mutation screenshot scenarios
 
-Capture **after** storage state exists; **before** F-P6a Confirm/Reject UI:
+Capture **after** storage state exists; **before** FINC.PURCHASE.6.a Confirm/Reject UI:
 
 | # | Scenario | Viewport |
 | ---: | --- | --- |
@@ -132,7 +132,7 @@ Capture **after** storage state exists; **before** F-P6a Confirm/Reject UI:
 | 8 | Error state (simulated fetch failure if script supports) | Desktop |
 | 9 | Mobile review sheet / disclosure entry | Mobile |
 
-**Post-mutation** (Confirm loading/success/error, Reject, Undo, timeout): **blocked** until F-P6a UI ships.
+**Post-mutation** (Confirm loading/success/error, Reject, Undo, timeout): **blocked** until FINC.PURCHASE.6.a UI ships.
 
 Optional: inject artificial delay in QA-only build to capture loading skeleton — must not ship to production.
 
@@ -146,7 +146,7 @@ Optional: inject artificial delay in QA-only build to capture loading skeleton �
 
 ## Visual baseline dependency
 
-Pre-mutation screenshots listed in [FP6_PURCHASE_REVIEW.md](./FP6_PURCHASE_REVIEW.md) require valid isolated storage state. Confirm/Reject/Undo screenshots wait for F-P6a implementation.
+Pre-mutation screenshots listed in [FP6_PURCHASE_REVIEW.md](./FP6_PURCHASE_REVIEW.md) require valid isolated storage state. Confirm/Reject/Undo screenshots wait for FINC.PURCHASE.6.a implementation.
 
 ---
 

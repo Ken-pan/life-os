@@ -8,7 +8,7 @@ let lastCount = -1
 const MIN_INTERVAL_MS = 30_000
 
 /**
- * 将当前储藏区数上报 core_user_app_settings（H-P6a）。
+ * 将当前储藏区数上报 core_user_app_settings（HOME.PROJ.6a）。
  * @param {number} storageZoneCount
  */
 export function scheduleHomePortalMetadataSync(storageZoneCount) {

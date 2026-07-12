@@ -75,9 +75,9 @@ Svelte + Finance React       → theme/brand 数据 + 各栈薄壳；或 ui-reac
 
 | 桶                 | 例子                                            | 默认优先级           |
 | ------------------ | ----------------------------------------------- | -------------------- |
-| **Core**           | I-P0 SSO、I-P1.5 事件消费、边界守卫             | 最高——影响多站正确性 |
+| **Core**           | INTG.IDENTITY.0 SSO、INTG.EVENTS.1.5 事件消费、边界守卫             | 最高——影响多站正确性 |
 | **Growth**         | Portal Launcher、Home 实验入口、跨 app 任务联动 | 中——用户可感知价值   |
-| **Infrastructure** | D-P6 a11y、schema.sql 同步、CI 补齐             | 按需——防债累积       |
+| **Infrastructure** | DSGN.CATALOG.6 a11y、schema.sql 同步、CI 补齐             | 按需——防债累积       |
 
 新条目入 Backlog 前先标桶 + 是否触发「3+ app 重复」规则。
 
@@ -89,19 +89,19 @@ Hub §Next 已排期。细节与外部对标 → [`GROWTH.md`](./GROWTH.md)。
 
 | ID      | 主题                              | ROI | 投入   | 依赖                       |
 | ------- | --------------------------------- | --- | ------ | -------------------------- |
-| G-P1    | Portal 继续 → DB `last_opened_at` | 🔥  | 0.5–1d | I-P1 DB                    |
-| G-P3    | `default_app` 跳转                | 🔥  | 0.5d   | I-P1 DB                    |
-| G-P2    | 待办 / 事件角标                   | ◆   | 1–2d   | I-P0 SSO                   |
-| M-P1    | Music `play_events` + reasons     | ◆   | 1–1.5d | —                          |
-| F-P1    | Finance 扩展同步反馈              | ◆   | 1–2d   | —                          |
-| G-P5    | PWA 安装引导（六站含 Home）       | ○   | 1–2d   | —                          |
-| H-P1    | Portal Home 实验卡                | ✅  | —      | `PORTAL_APPS` 实验区       |
-| H-P2    | Home `coreIdentity` + SSO         | ✅  | —      | `createLifeOsAuth('home')` |
-| H-P3    | Home redirect + DB `home`         | ✅  | H-P2   | migration `20260708180000` |
-| G-P4    | 今日摘要卡片                      | ✅  | —      | migration `20260708190000` |
-| I-P1.5b | Fitness → Planner 事件            | ○   | 3–5d   | 产品规则                   |
+| PORT.GROWTH.1    | Portal 继续 → DB `last_opened_at` | 🔥  | 0.5–1d | INTG.EVENTS.1 DB                    |
+| PORT.GROWTH.3    | `default_app` 跳转                | 🔥  | 0.5d   | INTG.EVENTS.1 DB                    |
+| PORT.GROWTH.2    | 待办 / 事件角标                   | ◆   | 1–2d   | INTG.IDENTITY.0 SSO                   |
+| MUSC.CORE.1    | Music `play_events` + reasons     | ◆   | 1–1.5d | —                          |
+| FINC.GROWTH.1    | Finance 扩展同步反馈              | ◆   | 1–2d   | —                          |
+| PORT.GROWTH.5    | PWA 安装引导（六站含 Home）       | ○   | 1–2d   | —                          |
+| HOME.PORTAL.1    | Portal Home 实验卡                | ✅  | —      | `PORTAL_APPS` 实验区       |
+| HOME.SSO.2    | Home `coreIdentity` + SSO         | ✅  | —      | `createLifeOsAuth('home')` |
+| HOME.SSO.3    | Home redirect + DB `home`         | ✅  | HOME.SSO.2   | migration `20260708180000` |
+| PORT.GROWTH.4    | 今日摘要卡片                      | ✅  | —      | migration `20260708190000` |
+| INTG.EVENTS.1b | Fitness → Planner 事件            | ○   | 3–5d   | 产品规则                   |
 
-Tier B（未进 hub §Next）：G-P6、F-P2、M-P3、P-P1、**H-P4** spatial 云同步。（**H-P5** 平面浏览/编辑 ✅ 2026-07-08）
+Tier B（未进 hub §Next）：PORT.GROWTH.6、FINC.CORE.2、MUSC.PIPE.3、PLNR.CORE.1、**HOME.PROJ.4** spatial 云同步。（**HOME.PROJ.5** 平面浏览/编辑 ✅ 2026-07-08）
 
 ---
 
@@ -109,14 +109,14 @@ Tier B（未进 hub §Next）：G-P6、F-P2、M-P3、P-P1、**H-P4** spatial 云
 
 | Phase    | 项                                     | 桶                | ROI |
 | -------- | -------------------------------------- | ----------------- | --- |
-| **0**    | **F-P3**                               | Core              | 🔥  |
-| **1**    | G-P4b-M · M-P2 · P-P2                  | Growth/Infra/Core | ◆   |
-| **1b**   | CI 接线（F-P0/QA-P2 本地 ✅）          | Infra             | ◆   |
-| **3**    | I-P1.5b/FT-P1 · G-P4b-H                | Growth            | ○   |
-| **按需** | D-P7 a11y；各 app §Parked              | Infra/Product     | ○   |
+| **0**    | **FINC.CORE.3**                               | Core              | 🔥  |
+| **1**    | PORT.GROWTH.4b-M · MUSC.UI.2 · PLNR.CORE.2                  | Growth/Infra/Core | ◆   |
+| **1b**   | CI 接线（FINC.CORE.0/PLNR.CORE.2 本地 ✅）          | Infra             | ◆   |
+| **3**    | INTG.EVENTS.1b/GYMS.EVENTS.1 · PORT.GROWTH.4b-H                | Growth            | ○   |
+| **按需** | DSGN.CATALOG.7 a11y；各 app §Parked              | Infra/Product     | ○   |
 | **暂缓** | Finance `ui-react` / nav mirror / i18n | Platform          | ✗   |
 
-**2026-07-09 已完成：** F-P0 · QA-P2 · I-P0 · G-P4 · H-P1/H-P2/H-P3 · F-P1 · G-P2 · M-P1 · AppBrandSwitcher — 见 [`SHIPPED.md`](./SHIPPED.md)。
+**2026-07-09 已完成：** FINC.CORE.0 · PLNR.CORE.2 · INTG.IDENTITY.0 · PORT.GROWTH.4 · HOME.PORTAL.1/HOME.SSO.2/HOME.SSO.3 · FINC.GROWTH.1 · PORT.GROWTH.2 · MUSC.CORE.1 · AppBrandSwitcher — 见 [`SHIPPED.md`](./SHIPPED.md)。
 
 ## 六 app 产品候选（2026-07-09 脑暴入库）
 
@@ -124,9 +124,9 @@ Hub §Next 已收录 🔥/◆ 项。完整表 → [`apps/README.md`](./apps/READ
 
 | App     | Top IDs          | 分卷                                   |
 | ------- | ---------------- | -------------------------------------- |
-| Planner | P-P2, P-P3       | [`apps/planner.md`](./apps/planner.md) |
-| Fitness | FT-P0, FT-P1     | [`apps/fitness.md`](./apps/fitness.md) |
-| Finance | F-P3, F-P1b      | [`apps/finance.md`](./apps/finance.md) |
-| Music   | M-P2, M-P4, M-P5 | [`apps/music.md`](./apps/music.md)     |
-| Portal  | G-P4b, G-P6      | [`apps/portal.md`](./apps/portal.md)   |
-| Home    | H-P6a, H-P7      | [`apps/home.md`](./apps/home.md)       |
+| Planner | PLNR.CORE.2, PLNR.CORE.3       | [`apps/planner.md`](./apps/planner.md) |
+| Fitness | GYMS.CORE.0, GYMS.EVENTS.1     | [`apps/fitness.md`](./apps/fitness.md) |
+| Finance | FINC.CORE.3, FINC.SYNC.1b      | [`apps/finance.md`](./apps/finance.md) |
+| Music   | MUSC.UI.2, MUSC.PIPE.4, MUSC.PIPE.5 | [`apps/music.md`](./apps/music.md)     |
+| Portal  | PORT.GROWTH.4b, PORT.GROWTH.6      | [`apps/portal.md`](./apps/portal.md)   |
+| Home    | HOME.PROJ.6a, HOME.PROJ.7      | [`apps/home.md`](./apps/home.md)       |

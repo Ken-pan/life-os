@@ -57,7 +57,7 @@ test.describe('PlannerOS E2E', () => {
     await expect(page.locator('h1.page-title')).toHaveText('今天')
   })
 
-  test('P-P6: 无重复 GoTrueClient 控制台警告', async ({ page }, testInfo) => {
+  test('PLNR.CORE.6: 无重复 GoTrueClient 控制台警告', async ({ page }, testInfo) => {
     const warnings = trackGoTrueWarnings(page)
     await page.goto('/')
     await waitForPlannerReady(page, testInfo.project.name)

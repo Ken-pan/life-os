@@ -1,5 +1,5 @@
 /**
- * Portal smoke QA — 登录 → 五卡摘要 → pending 深链 → ⌘K（G-P9）
+ * Portal smoke QA — 登录 → 五卡摘要 → pending 深链 → ⌘K（PORT.GROWTH.9）
  *
  * Usage:
  *   npm run preview -- --host 127.0.0.1 --port 5195

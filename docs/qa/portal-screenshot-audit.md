@@ -65,8 +65,8 @@
 | 项               | 内容                                                                                                           |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
 | **现象（首轮）** | 第四卡「尚未记录播放 · 打开 Music 开始听」。                                                                   |
-| **根因**         | QA 账号无 `music.play_events`；与 M-P5 曲库 seed 未接入 Portal 读模型前一致。                                  |
-| **现状**         | M-P5 seed 后有播放记录；无 seed 时空态使用 `--empty` 字重 + 副文案「在 Music 播放后会显示最近曲目」。          |
+| **根因**         | QA 账号无 `music.play_events`；与 MUSC.PIPE.5 曲库 seed 未接入 Portal 读模型前一致。                                  |
+| **现状**         | MUSC.PIPE.5 seed 后有播放记录；无 seed 时空态使用 `--empty` 字重 + 副文案「在 Music 播放后会显示最近曲目」。          |
 | **建议**         | 新环境跑截图前执行 `cd apps/music && npm run qa:rec-behavior`（含自动 seed）；无 seed 时文档标注为预期空状态。 |
 
 ### P-4 · 摘要卡品牌标视觉偏小（低 → 已修 2026-07-09）
@@ -113,7 +113,7 @@
 | **修复** | 字色 `color-mix(accent 78%, text)` · 边框 42% · `font-weight: 600`。            |
 | **参考** | [WCAG 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) |
 
-### P-10 · Home 第五卡 G-P4b-H（低 → 已发货 2026-07-09）
+### P-10 · Home 第五卡 PORT.GROWTH.4b-H（低 → 已发货 2026-07-09）
 
 | 项       | 内容                                          |
 | -------- | --------------------------------------------- |
@@ -147,12 +147,12 @@
 
 | Hub ID          | 验收要点                                          | 截图 / 脚本证据                      |
 | --------------- | ------------------------------------------------- | ------------------------------------ |
-| **G-P4b-M**     | RPC 四卡；桌面 2×2 / 移动单列；Music 有 seed 数据 | `*-summary.png`                      |
-| **G-P6**        | 14 深链 + 过滤「曲库」；图标可见                  | `*-command-palette*.png` · `test:cp` |
-| **G-P8**        | 铃铛 `.portal-inbox-btn` + 状态深链               | `*-appbar.png` · `manifest.json`     |
-| **G-P9**        | 登录 · **五卡** · inbox href · ⌘K · Esc           | `qa:smoke` ✅                        |
-| **G-P4b-H**     | RPC `home` + 第五卡储藏审计                       | `desktop-summary.png`                |
-| **H-P6a**       | 元数据 `storageZoneCount: 8`                      | RPC 验收 · Home 打开即上报           |
+| **PORT.GROWTH.4b-M**     | RPC 四卡；桌面 2×2 / 移动单列；Music 有 seed 数据 | `*-summary.png`                      |
+| **PORT.GROWTH.6**        | 14 深链 + 过滤「曲库」；图标可见                  | `*-command-palette*.png` · `test:cp` |
+| **PORT.GROWTH.8**        | 铃铛 `.portal-inbox-btn` + 状态深链               | `*-appbar.png` · `manifest.json`     |
+| **PORT.GROWTH.9**        | 登录 · **五卡** · inbox href · ⌘K · Esc           | `qa:smoke` ✅                        |
+| **PORT.GROWTH.4b-H**     | RPC `home` + 第五卡储藏审计                       | `desktop-summary.png`                |
+| **HOME.PROJ.6a**       | 元数据 `storageZoneCount: 8`                      | RPC 验收 · Home 打开即上报           |
 | **P-1/P-2/P-6** | 遮罩 · 图标 · 类型                                | 见上                                 |
 | **P-5b/P-12**   | More sheet · 实验卡虚线                           | `mobile-appbar.png` · launcher 截图  |
 
@@ -174,7 +174,7 @@ cd ../music && npm run qa:rec-behavior
 ## 相关文档
 
 - [`roadmap/apps/portal.md`](../roadmap/apps/portal.md)
-- [`roadmap/SHIPPED.md`](../roadmap/SHIPPED.md) — Phase 5 G-P8/G-P9
+- [`roadmap/SHIPPED.md`](../roadmap/SHIPPED.md) — Phase 5 PORT.GROWTH.8/PORT.GROWTH.9
 - [`e2e-issues.md`](./e2e-issues.md) — Portal §
 - [`../ui-qa-screenshots/portal/main/latest/manifest.json`](../ui-qa-screenshots/portal/main/latest/manifest.json)
 

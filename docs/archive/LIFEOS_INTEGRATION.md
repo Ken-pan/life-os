@@ -1,9 +1,9 @@
 # Life OS Integration（四站互通）
 
 > **主线：** 统一身份 → Portal → 事件层 → 跨 App 智能
-> **并行：** Shared Platform 见 [`LIFEOS_PLATFORM.md`](./LIFEOS_PLATFORM.md)（**C-P0 / C-P1**）
+> **并行：** Shared Platform 见 [`LIFEOS_PLATFORM.md`](./LIFEOS_PLATFORM.md)（**C-P0 / PLAT.CONTRACTS.1**）
 
-**命名：** 本文用 **I-P0 / I-P1 / I-P1.5 / I-P2**；勿与 contracts 主线的 C-P0/C-P1 混用。
+**命名：** 本文用 **INTG.IDENTITY.0 / INTG.EVENTS.1 / INTG.EVENTS.1.5 / INTG.EVENTS.2**；勿与 contracts 主线的 C-P0/PLAT.CONTRACTS.1 混用。
 
 **最后与代码同步：** 2026-07-08（`verify-life-os-identity-p0.sh` 自动化项通过；Portal / `life_events` 未开工）
 
@@ -26,17 +26,17 @@
 
 | 阶段       | 名称                        | 代码/DB 状态                     |
 | ---------- | --------------------------- | -------------------------------- |
-| **I-P0**   | Shared Identity             | ✅ 已落地；⏳ 四站浏览器手动登录 |
-| **I-P1**   | Portal (`home.kenos.space`) | ❌ 无 `apps/portal`              |
-| **I-P1.5** | `life_events`               | ❌ 无迁移、无表                  |
-| **I-P2**   | Cross-App Intelligence      | ⏸️                               |
+| **INTG.IDENTITY.0**   | Shared Identity             | ✅ 已落地；⏳ 四站浏览器手动登录 |
+| **INTG.EVENTS.1**   | Portal (`home.kenos.space`) | ❌ 无 `apps/portal`              |
+| **INTG.EVENTS.1.5** | `life_events`               | ❌ 无迁移、无表                  |
+| **INTG.EVENTS.2**   | Cross-App Intelligence      | ⏸️                               |
 | —          | Apex `kenos.space`          | ⏸️                               |
 
-**Next 3：** ① 四站登录验收 I-P0 → ② 建 Portal → ③ `life_events` 单路径 MVP
+**Next 3：** ① 四站登录验收 INTG.IDENTITY.0 → ② 建 Portal → ③ `life_events` 单路径 MVP
 
 ---
 
-## 代码现状（I-P0）
+## 代码现状（INTG.IDENTITY.0）
 
 ### 共享包 `@life-os/sync`
 
@@ -60,7 +60,7 @@
 
 - **Auth 方式：** 四站均为 Email + Password；仓库内 **无** `auth/callback` / OAuth 路由
 - **表名常量：** `apps/finance/src/lib/supabaseTables.ts` → `core.profiles` / `core.userAppSettings`
-- **Music：** 已接 I-P0 身份钩子；**未**接 `@life-os/contracts`（见 Platform 文档）
+- **Music：** 已接 INTG.IDENTITY.0 身份钩子；**未**接 `@life-os/contracts`（见 Platform 文档）
 
 ### 数据库（远程已应用）
 
@@ -87,7 +87,7 @@
 
 ---
 
-## I-P0 — 验收
+## INTG.IDENTITY.0 — 验收
 
 ```bash
 ./scripts/verify-life-os-identity-p0.sh
@@ -120,7 +120,7 @@ delete from supabase_migrations.schema_migrations where version = '2026070723000
 
 ---
 
-## I-P1 — Portal 📋
+## INTG.EVENTS.1 — Portal 📋
 
 **URL 规划：** `https://home.kenos.space`（`homeos-ken.netlify.app`）
 **代码：** ❌ 尚未创建 `apps/portal` / `homeos-ken` Netlify site
@@ -138,7 +138,7 @@ delete from supabase_migrations.schema_migrations where version = '2026070723000
 
 ---
 
-## I-P1.5 — `life_events` 📋
+## INTG.EVENTS.1.5 — `life_events` 📋
 
 **代码/DB：** ❌ 未实现
 
@@ -147,17 +147,17 @@ delete from supabase_migrations.schema_migrations where version = '2026070723000
 
 ---
 
-## I-P2 — Cross-App Intelligence ⏸️
+## INTG.EVENTS.2 — Cross-App Intelligence ⏸️
 
-Finance→Planner、Music↔Planner、Finance→AI 等；待 I-P1.5 稳定后启动。
+Finance→Planner、Music↔Planner、Finance→AI 等；待 INTG.EVENTS.1.5 稳定后启动。
 
 ---
 
-## 与 C-P1 并行
+## 与 PLAT.CONTRACTS.1 并行
 
 | 问题      | 建议                                                   |
 | --------- | ------------------------------------------------------ |
-| 优先级    | **I-P1 Portal** 用户可感知优先                         |
+| 优先级    | **INTG.EVENTS.1 Portal** 用户可感知优先                         |
 | contracts | Planner/Fitness P1A/B/C ✅；Finance/Music 仍 app-owned |
 | 事件类型  | 表在 Supabase；类型后进 contracts                      |
 

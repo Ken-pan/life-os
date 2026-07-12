@@ -1,10 +1,10 @@
-# Home 空间编辑执行方案（H-W0 – H-W5）
+# Home 空间编辑执行方案（HOME.SPATIAL.0 – HOME.SPATIAL.5）
 
 > **Workstream：** `H-W*`（Home · Wall/空间编辑），与 `H-P*`（Home 产品杂项）并行、编号互不冲突。
 > **产品形态：** `/plan` = 浏览 + 编辑（① 墙体 → ② 划分 → ③ 布置）三步编辑器。
 > **SSOT 原则：** 墙图（点/边 graph）是第一步的唯一真源；门窗挂在墙边上；分区是用户手绘多边形；储藏由用户指派。**不再用 508 房间参数间接改墙。**
-> **状态：** ✅ 已发货 · H-W0–W5 ✅ · Wave A/B/C UX ✅ · 创建于 2026-07-08 · 索引见 [home.md](./home.md)  
-> **功能验收：** [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../qa/home-spatial-editor-audit-2026-07-08.md) · 截图 `apps/home/screenshots/qa-hw2/`  
+> **状态：** ✅ 已发货 · HOME.SPATIAL.0–W5 ✅ · Wave A/B/C UX ✅ · 创建于 2026-07-08 · 索引见 [home.md](./home.md)
+> **功能验收：** [`docs/qa/home-spatial-editor-audit-2026-07-08.md`](../../qa/home-spatial-editor-audit-2026-07-08.md) · 截图 `apps/home/screenshots/qa-hw2/`
 > **UI/UX 验收：** [`docs/qa/home-spatial-uiux-audit-2026-07-08.md`](../../qa/home-spatial-uiux-audit-2026-07-08.md)
 
 ---
@@ -13,24 +13,24 @@
 
 | 阶段 | 状态 | 要点 |
 |------|------|------|
-| **H-W0** | ✅ | wallGraph hydrate、三步壳、设置页转换/返回 508 |
-| **H-W1** | ✅ | 建/删/选/拖顶点/分割、undo、test:plan-edit |
-| **H-W2** | ✅ | `graphOpenings` · 508→9 开口 · 放置/删墙级联 · §5.3 沿墙拖/改宽/门↔窗 |
-| **H-W2b** | ✅ | 手机 compact chrome · hint 去重 · GraphSelectionBar 移动可见 |
-| **H-W2c** | ✅ | `PlanGraphOpeningSelectionBar` · smoke **8 checks** |
+| **HOME.SPATIAL.0** | ✅ | wallGraph hydrate、三步壳、设置页转换/返回 508 |
+| **HOME.SPATIAL.1** | ✅ | 建/删/选/拖顶点/分割、undo、test:plan-edit |
+| **HOME.SPATIAL.2** | ✅ | `graphOpenings` · 508→9 开口 · 放置/删墙级联 · §5.3 沿墙拖/改宽/门↔窗 |
+| **HOME.SPATIAL.2b** | ✅ | 手机 compact chrome · hint 去重 · GraphSelectionBar 移动可见 |
+| **HOME.SPATIAL.2c** | ✅ | `PlanGraphOpeningSelectionBar` · smoke **8 checks** |
 | **Wave A/B/C** | ✅ | UI/UX 审核 UX-01–22 主项 + A11Y-01/03 — 见 [uiux-audit](../../qa/home-spatial-uiux-audit-2026-07-08.md) |
-| **H-W3–W5** | ✅ | 分区 · 家具/储藏 · 文档/CI |
+| **HOME.SPATIAL.3–W5** | ✅ | 分区 · 家具/储藏 · 文档/CI |
 
-**下一步：** H-P7 多项目 / H-P9 引导 / 云同步 H-P4
+**下一步：** HOME.PROJ.7 多项目 / HOME.ONBOARD.9 引导 / 云同步 HOME.PROJ.4
 
 ---
 
 | # | 决策 | 结论 | 理由 |
 |---|------|------|------|
-| D1 | 阶段编号 | **`H-W0`–`H-W5`**（不用 H-P6.x/H-P7/H-P8/H-P9） | [home.md](./home.md) 已占用 H-P6/6a、H-P7、H-P9、H-P10（Portal 卡 / 多项目 / 引导 / smoke），语义完全不同 |
+| D1 | 阶段编号 | **`HOME.SPATIAL.0`–`HOME.SPATIAL.5`**（不用 HOME.PROJ.6.x/HOME.PROJ.7/H-P8/HOME.ONBOARD.9） | [home.md](./home.md) 已占用 HOME.PROJ.6/6a、HOME.PROJ.7、HOME.ONBOARD.9、HOME.SMOKE.10（Portal 卡 / 多项目 / 引导 / smoke），语义完全不同 |
 | D2 | Step 2 划分实现 | **方案 A：手绘多边形**（不做墙闭合环自动检测） | 代码库无环检测实现；A 只是多边形工具+独立图层，户型不规整也稳。环检测（Blueprint3D 的 smallest-cycle 算法）留作后续增强 |
 | D3 | 编辑入口 | **已有墙图 → 直接进 ① 墙体；仅 508 → 显示一键「转换为墙图」** | 与 `isWallGraphMode()` 现有状态判断天然对齐 |
-| D4 | 门窗空窗期 | **H-W0 起 carry 508 派生门窗静态渲染，H-W2 替换为挂边模型** | `buildFromWallGraph(graph, carry)` 已支持 `carry.openings`，`render-svg.js` 按 `op.pathD` 绝对坐标绘制，零新代码即可避免门窗消失 |
+| D4 | 门窗空窗期 | **HOME.SPATIAL.0 起 carry 508 派生门窗静态渲染，HOME.SPATIAL.2 替换为挂边模型** | `buildFromWallGraph(graph, carry)` 已支持 `carry.openings`，`render-svg.js` 按 `op.pathD` 绝对坐标绘制，零新代码即可避免门窗消失 |
 | D5 | 撤销/重做 | **统一「编辑源快照」栈**：快照 = `{ wallGraph, graphOpenings, zones, placements }` | 复用现有 `graphUndoStack` 机制（`state.svelte.js`），只改快照内容；三步共享一个 ⌘Z 栈，心智最简 |
 | D6 | 持久化 | **沿用 `homeos_spatial_v1` key，`SPATIAL_SCHEMA_VERSION` 2→3，`load()` 内做 in-place 迁移** | 换 key（草案里的 `homeos_spatial_v3`）会留双份数据且需同步 undo key；in-place 迁移一处搞定 |
 | D7 | 不做 | 整库换 Blueprint3D/OpenPlans · CSG 3D 开洞 · 恢复 508 参数拖墙为主编辑 · 恢复 `spatial-studio` 门控 | `spatial-studio.js` / `?studio=1` 已于 `39bc2707` 删除，**不要恢复**；墙图编辑做成正式功能而非工坊彩蛋 |
@@ -45,19 +45,19 @@
 
 | 文件 | 现状（2026-07-08） | 在 H-W 中的角色 |
 |------|------|-----------------|
-| [lib/spatial/wall-graph.js](../../../apps/home/src/lib/spatial/wall-graph.js) | ✅ 含 `moveVertex`/`splitWallAtMidpoint`；`buildFromWallGraph` 走 `graph-openings` 派生 | H-W1/W2 核心 |
-| [lib/spatial/graph-openings.js](../../../apps/home/src/lib/spatial/graph-openings.js) | ✅ `convert508Openings` · 沿墙 move/resize · `describeGraphOpeningDrag` HUD | H-W2/c |
-| [lib/spatial/model.js](../../../apps/home/src/lib/spatial/model.js) | ✅ wallGraph hydrate 分支 | H-W0 |
-| [lib/state.svelte.js](../../../apps/home/src/lib/state.svelte.js) | ✅ 编辑源快照 undo · `removeGraphWall` undo toast · `setPlanImmersiveEdit` | H-W0–Wave C |
-| [lib/plan-graph-edit.js](../../../apps/home/src/lib/plan-graph-edit.js) | ✅ select/wallAdd/remove/opening · 开口 pointer 拖曳 | H-W1/W2c |
-| [lib/components/FloorPlanViewer.svelte](../../../apps/home/src/lib/components/FloorPlanViewer.svelte) | ✅ graph HUD · zoom chip · 编辑态左下工具条 | H-W2/Wave B |
-| [lib/spatial/render-svg.js](../../../apps/home/src/lib/spatial/render-svg.js) | ✅ graph 命中层 · 删墙级联高亮 `--graph-accent` | H-W1/Wave C |
-| [lib/components/PlanGraphSelectionBar.svelte](../../../apps/home/src/lib/components/PlanGraphSelectionBar.svelte) | ✅ 含分割 · 手机 compact 底栏 | H-W1/W2b |
-| [lib/components/PlanGraphOpeningSelectionBar.svelte](../../../apps/home/src/lib/components/PlanGraphOpeningSelectionBar.svelte) | ✅ 改窗/改门 · 翻转 · 人类可读标题 | H-W2c |
+| [lib/spatial/wall-graph.js](../../../apps/home/src/lib/spatial/wall-graph.js) | ✅ 含 `moveVertex`/`splitWallAtMidpoint`；`buildFromWallGraph` 走 `graph-openings` 派生 | HOME.SPATIAL.1/W2 核心 |
+| [lib/spatial/graph-openings.js](../../../apps/home/src/lib/spatial/graph-openings.js) | ✅ `convert508Openings` · 沿墙 move/resize · `describeGraphOpeningDrag` HUD | HOME.SPATIAL.2/c |
+| [lib/spatial/model.js](../../../apps/home/src/lib/spatial/model.js) | ✅ wallGraph hydrate 分支 | HOME.SPATIAL.0 |
+| [lib/state.svelte.js](../../../apps/home/src/lib/state.svelte.js) | ✅ 编辑源快照 undo · `removeGraphWall` undo toast · `setPlanImmersiveEdit` | HOME.SPATIAL.0–Wave C |
+| [lib/plan-graph-edit.js](../../../apps/home/src/lib/plan-graph-edit.js) | ✅ select/wallAdd/remove/opening · 开口 pointer 拖曳 | HOME.SPATIAL.1/W2c |
+| [lib/components/FloorPlanViewer.svelte](../../../apps/home/src/lib/components/FloorPlanViewer.svelte) | ✅ graph HUD · zoom chip · 编辑态左下工具条 | HOME.SPATIAL.2/Wave B |
+| [lib/spatial/render-svg.js](../../../apps/home/src/lib/spatial/render-svg.js) | ✅ graph 命中层 · 删墙级联高亮 `--graph-accent` | HOME.SPATIAL.1/Wave C |
+| [lib/components/PlanGraphSelectionBar.svelte](../../../apps/home/src/lib/components/PlanGraphSelectionBar.svelte) | ✅ 含分割 · 手机 compact 底栏 | HOME.SPATIAL.1/W2b |
+| [lib/components/PlanGraphOpeningSelectionBar.svelte](../../../apps/home/src/lib/components/PlanGraphOpeningSelectionBar.svelte) | ✅ 改窗/改门 · 翻转 · 人类可读标题 | HOME.SPATIAL.2c |
 | [lib/components/PlanSelectionBar.svelte](../../../apps/home/src/lib/components/PlanSelectionBar.svelte) | ✅ 508 选中条 · 手机 compact（Wave C UX-13） | Wave C |
-| [routes/plan/+page.svelte](../../../apps/home/src/routes/plan/+page.svelte) | ✅ 三步壳 · immersive 编辑 · 转换横幅 CTA | H-W0–Wave C |
-| [routes/settings/+page.svelte](../../../apps/home/src/routes/settings/+page.svelte) | ✅ 转换/返回/重新识别 · 墙图统计 | H-W0/W2 |
-| [scripts/plan-edit-smoke.mjs](../../../apps/home/scripts/plan-edit-smoke.mjs) | ✅ **8 checks**（含 drag/toggle/级联/持久） | H-W2c |
+| [routes/plan/+page.svelte](../../../apps/home/src/routes/plan/+page.svelte) | ✅ 三步壳 · immersive 编辑 · 转换横幅 CTA | HOME.SPATIAL.0–Wave C |
+| [routes/settings/+page.svelte](../../../apps/home/src/routes/settings/+page.svelte) | ✅ 转换/返回/重新识别 · 墙图统计 | HOME.SPATIAL.0/W2 |
+| [scripts/plan-edit-smoke.mjs](../../../apps/home/scripts/plan-edit-smoke.mjs) | ✅ **8 checks**（含 drag/toggle/级联/持久） | HOME.SPATIAL.2c |
 | [scripts/plan-viewport-stress.mjs](../../../apps/home/scripts/plan-viewport-stress.mjs) | ✅ 508 回归 67 checks | 每阶段 |
 
 ### 1.2 git 历史资产（可直接恢复，别重写）
@@ -66,7 +66,7 @@
 # 完整墙图编辑版 plan 页（1311 行，含 planMode='graph'、建墙链、测距、快捷键）
 git show 39bc2707~1:apps/home/src/routes/plan/+page.svelte
 
-# 带 wallGraph 分支的 hydrateProject（H-W0 直接参照）
+# 带 wallGraph 分支的 hydrateProject（HOME.SPATIAL.0 直接参照）
 git show a29d3616:apps/home/src/lib/spatial/model.js
 
 # 历史提交
@@ -86,28 +86,28 @@ git show a29d3616:apps/home/src/lib/spatial/model.js
 SpatialProject (schemaVersion: 3)
 ├── layoutMode: 'parametric508' | 'wallGraph'
 ├── wallGraph            { pxPerFt, margin, vertices[], edges[] }      ← Step① SSOT（已有）
-├── graphOpenings[]      { id, edgeId, offsetIn, spanIn,               ← Step①b（H-W2 新增）
+├── graphOpenings[]      { id, edgeId, offsetIn, spanIn,               ← Step①b（HOME.SPATIAL.2 新增）
 │                          type: 'door'|'window',
 │                          style?: 'swing'|'sliding'|'bifold',
 │                          swing?: 'in'|'out', hidden? }
-├── zones[]              { id, nameZh, color?, polygon: Point[],       ← Step②（H-W3 新增）
+├── zones[]              { id, nameZh, color?, polygon: Point[],       ← Step②（HOME.SPATIAL.3 新增）
 │                          stale? }
-├── placements[]         { id, kind, label, x, y, w, h,                ← Step③（H-W4 新增）
+├── placements[]         { id, kind, label, x, y, w, h,                ← Step③（HOME.SPATIAL.4 新增）
 │                          rotation: 0|90|180|270, zoneId? }
-├── storageZones[]       现有字段 + { zoneId?, placementId? }          ← Step③ 指派（H-W4）
+├── storageZones[]       现有字段 + { zoneId?, placementId? }          ← Step③ 指派（HOME.SPATIAL.4）
 └── （rooms / walls / openings / furniture 仍是 hydrate 派生的渲染层，不手编）
 ```
 
 要点：
 
-- **派生层不变**：`render-svg.js` 消费的 `walls[]` / `openings[]`（含 `pathD`）继续由 `hydrateProject` 派生。H-W2 的关键就是让 `buildFromWallGraph` 从 `graphOpenings` 派生出「带缺口的墙线 + 门窗符号」，渲染层几乎不改。
+- **派生层不变**：`render-svg.js` 消费的 `walls[]` / `openings[]`（含 `pathD`）继续由 `hydrateProject` 派生。HOME.SPATIAL.2 的关键就是让 `buildFromWallGraph` 从 `graphOpenings` 派生出「带缺口的墙线 + 门窗符号」，渲染层几乎不改。
 - **`graphOpenings` 用英寸偏移**（`offsetIn` 沿边起点、`spanIn` 宽度），换算 `px = in * pxPerFt / 12`。墙移动/缩放时开口自动跟随；`deleteWallEdge` 时级联删除 `edgeId` 匹配的开口。
 - **`zones[].polygon` 独立图层**，不参与墙派生。墙图变更后给相交 zone 打 `stale: true`（只标记不重算）。
 - **储藏新语义**：`storageZones[i].bounds` 在指派了 `zoneId`/`placementId` 后由对应几何派生（zone → 多边形 bbox；placement → 矩形本身）；未指派的保留原 508 固定 bbox 兜底，`/storage?zone=S3` 深链全程不断。
 
 ### 2.2 撤销/重做（D5）
 
-`state.svelte.js` 现有 `pushGraphUndo` 只快照 `raw.wallGraph`。H-W2 起改为快照**编辑源包**：
+`state.svelte.js` 现有 `pushGraphUndo` 只快照 `raw.wallGraph`。HOME.SPATIAL.2 起改为快照**编辑源包**：
 
 ```js
 function snapshotEditSource(raw) {
@@ -120,18 +120,18 @@ function snapshotEditSource(raw) {
 }
 ```
 
-undo/redo 反序列化后整包 `applyWallGraph` 风格提交。栈上限沿用 `MAX_LAYOUT_UNDO = 24`，key 沿用 `homeos_wall_graph_undo_v1`（内容格式变了，H-W2 落地时清空一次旧栈即可）。
+undo/redo 反序列化后整包 `applyWallGraph` 风格提交。栈上限沿用 `MAX_LAYOUT_UNDO = 24`，key 沿用 `homeos_wall_graph_undo_v1`（内容格式变了，HOME.SPATIAL.2 落地时清空一次旧栈即可）。
 
 ### 2.3 持久化与迁移（D6）
 
 - key 不变：`homeos_spatial_v1`。
-- `SPATIAL_SCHEMA_VERSION`：2 → 3（H-W2 落地时 bump）。
+- `SPATIAL_SCHEMA_VERSION`：2 → 3（HOME.SPATIAL.2 落地时 bump）。
 - `load()` 内迁移：`schemaVersion < 3` 且存在 wallGraph 项目 → 补空 `graphOpenings/zones/placements` 数组；508 项目零迁移。
 - 导出 payload：`exportLayoutJson` 的 `homeos-layout-v2` schema 扩字段即可（向后兼容：`importLayoutJson` 对缺失数组按空处理）。
 
 ---
 
-## 3. H-W0 — 地基：墙图能存、能显示、有壳 ✅
+## 3. HOME.SPATIAL.0 — 地基：墙图能存、能显示、有壳 ✅
 
 **状态：** 已发货（2026-07-08）
 
@@ -158,7 +158,7 @@ export function hydrateProject(project) {
 ```
 
 注意两处与旧版的差异：
-- **不要**恢复旧版对 furniture 的处理歧义——508 分支保持现状（清空 furniture），wallGraph 分支靠 carry 透传（`buildFromWallGraph` 里 `furniture: []` 暂不变，H-W4 再放开）。
+- **不要**恢复旧版对 furniture 的处理歧义——508 分支保持现状（清空 furniture），wallGraph 分支靠 carry 透传（`buildFromWallGraph` 里 `furniture: []` 暂不变，HOME.SPATIAL.4 再放开）。
 - `buildFromWallGraph` 的 carry 已透传 `rooms`/`openings`/`storageZones`（[wall-graph.js:240-245](../../../apps/home/src/lib/spatial/wall-graph.js)）→ **D4 的门窗静态渲染免费获得**：`activateWallGraphMode` 先 hydrate 508 再转 graph，此时 project 身上带着 508 派生的 `openings[]`（含 `pathD` 绝对坐标）和 `rooms[]`，切换后原样显示。
 
 **3.2 `load()` 停止降级墙图** — [state.svelte.js:255-258](../../../apps/home/src/lib/state.svelte.js)
@@ -174,7 +174,7 @@ export function hydrateProject(project) {
         [ ① 墙体 | ② 划分 | ③ 布置 ]        ← editStep: 'walls' | 'zones' | 'place'
 ```
 
-- `let editStep = $state('walls')`；②③ 先 `disabled`（title「H-W3 / H-W4 开放」）。
+- `let editStep = $state('walls')`；②③ 先 `disabled`（title「HOME.SPATIAL.3 / HOME.SPATIAL.4 开放」）。
 - 508 模式下进入编辑：显示现有 508 拖墙编辑 + 顶部横幅「此户型为参数模式，[转换为墙图] 后可自由建删墙」→ 点击调 `activateWallGraphMode()`（已存在）。
 - 墙图模式下进入编辑：直接落在 ① 墙体（D3）。
 - 保留 `revertToParametric508()` 的「返回 508」入口（放设置页，见 3.4），作为整个 H-W 期间的安全气囊。
@@ -193,18 +193,18 @@ npm run test:viewport                # 508 模式回归必须全 PASS（prime() 
 ```
 
 手工：设置页转换墙图 → `/plan` 墙线/门窗/储藏斜线均显示 → 刷新仍在 → 点储藏区跳 `/storage?zone=…` 正常 → 返回 508 恢复原状。
-**已知可接受**：房间填充为切换瞬间 508 快照（H-W3 用 zones 替换）。
+**已知可接受**：房间填充为切换瞬间 508 快照（HOME.SPATIAL.3 用 zones 替换）。
 
-建议 commit：`feat(home): H-W0 restore wallGraph hydration + 3-step edit shell`
+建议 commit：`feat(home): HOME.SPATIAL.0 restore wallGraph hydration + 3-step edit shell`
 
 ---
 
-## 4. H-W1 — ① 墙体编辑：建 / 删 / 选 / 拖点 / 分割 ✅
+## 4. HOME.SPATIAL.1 — ① 墙体编辑：建 / 删 / 选 / 拖点 / 分割 ✅
 
 **状态：** 已发货（2026-07-08）
 
 **目标**：能删「储物柜东墙」这类真实墙段、画新隔墙、拖端点调墙、撤销重做全通。
-**前置**：H-W0。
+**前置**：HOME.SPATIAL.0。
 
 ### 步骤
 
@@ -258,16 +258,16 @@ npm run test:plan-edit     # 新 smoke
 
 手工：删掉储物柜东墙对应边 → 画一道新隔墙（Shift 正交）→ 拖端点微调 → 撤销全链 → 刷新持久。
 
-建议 commit：`feat(home): H-W1 wall tools — draw/delete/vertex-drag/split with undo`
+建议 commit：`feat(home): HOME.SPATIAL.1 wall tools — draw/delete/vertex-drag/split with undo`
 
 ---
 
-## 5. H-W2 — ①b 门窗：挂边开口 ✅
+## 5. HOME.SPATIAL.2 — ①b 门窗：挂边开口 ✅
 
-**状态：** H-W0–W5 + Wave A/B/C UX 已发货；本节保留为实现记录。
+**状态：** HOME.SPATIAL.0–W5 + Wave A/B/C UX 已发货；本节保留为实现记录。
 
-**目标**：门窗成为墙边的寄生数据——移墙跟墙走、删墙级联删；替换 H-W0 的静态贴图。
-**前置**：H-W1。
+**目标**：门窗成为墙边的寄生数据——移墙跟墙走、删墙级联删；替换 HOME.SPATIAL.0 的静态贴图。
+**前置**：HOME.SPATIAL.1。
 
 ### 步骤
 
@@ -309,12 +309,12 @@ npm run test:plan-edit     # 新 smoke
 
 | 优先级 | 问题 | 方案摘要 |
 |--------|------|----------|
-| P0 | ~~手机编辑画布过小（UI-01）~~ | ✅ H-W2b：compact header + 68dvh 画布 |
+| P0 | ~~手机编辑画布过小（UI-01）~~ | ✅ HOME.SPATIAL.2b：compact header + 68dvh 画布 |
 | P1 | ~~hint 三重重复（UI-03）~~ | ✅ AppBar 短副标题 + viewer hint + ? 抽屉 |
-| P1 | ~~移动端无 GraphSelectionBar（UI-02）~~ | ✅ H-W2b 底部 compact bar |
+| P1 | ~~移动端无 GraphSelectionBar（UI-02）~~ | ✅ HOME.SPATIAL.2b 底部 compact bar |
 | P1 | ~~竖墙 bifold 符号错误（UI-06）~~ | ✅ `bifoldVertical*` / `slidingVertical` |
 
-### H-W2b — 手机 UX + hint 去重（2026-07-08）✅
+### HOME.SPATIAL.2b — 手机 UX + hint 去重（2026-07-08）✅
 
 - `plan/+page.svelte`：移除页头 hint 行；`edit-chrome-row` 横向滚动；`toolbarMinimal` 传 viewer
 - `FloorPlanViewer.svelte`：`toolbarMinimal` 精简 zoom 条；graph hint SSOT
@@ -323,7 +323,7 @@ npm run test:plan-edit     # 新 smoke
 - `doors.js` + `graph-openings.js`：竖墙门窗符号
 - `settings/+page.svelte`：墙图统计（FN-02）
 
-**下一步 H-W2c：** ~~§5.3 沿墙滑动 / 改宽 / 门↔窗切换（FN-01）~~ ✅ 2026-07-08
+**下一步 HOME.SPATIAL.2c：** ~~§5.3 沿墙滑动 / 改宽 / 门↔窗切换（FN-01）~~ ✅ 2026-07-08
 
 ### Wave UX（2026-07-08）✅
 
@@ -333,20 +333,20 @@ npm run test:plan-edit     # 新 smoke
 | Wave B | P1：`--graph-accent` · 转换 CTA · zoom chip · graph HUD · 图例 | 同上 §Wave B |
 | Wave C | P2：508 移动 bar · 删墙 undo toast · immersive 编辑 · FAB「详情」 | 同上 §Wave C |
 
-**后续结果：** H-W3 手绘分区、H-W4 布置/储藏指派与 H-W5 迁移/文档均已完成。
+**后续结果：** HOME.SPATIAL.3 手绘分区、HOME.SPATIAL.4 布置/储藏指派与 HOME.SPATIAL.5 迁移/文档均已完成。
 
 ### 验收
 
 移墙后门窗跟墙走；删墙开口级联删；508 转换进来的 6 门 2 窗位置与原图目视一致；`test:viewport` + `test:plan-edit` PASS。
 
-建议 commit：`feat(home): H-W2 edge-hosted openings with 508 conversion`
+建议 commit：`feat(home): HOME.SPATIAL.2 edge-hosted openings with 508 conversion`
 
 ---
 
-## 6. H-W3 — ② 划分：手绘分区（3–4d）
+## 6. HOME.SPATIAL.3 — ② 划分：手绘分区（3–4d）
 
 **目标**：在墙围合内画多边形分区、命名、上色；浏览模式显示区名。**不是** 508 房间表。
-**前置**：H-W1（不依赖 H-W2，可并行）。
+**前置**：HOME.SPATIAL.1（不依赖 HOME.SPATIAL.2，可并行）。
 
 ### 步骤
 
@@ -371,14 +371,14 @@ npm run test:plan-edit     # 新 smoke
 
 划 6 个区并命名（客厅/厨房/卧室/卫生间/衣帽/阳台）→ 浏览显示区名 → 导出 JSON 含 `zones[]` → 改墙后相交区标「需核对」。
 
-建议 commit：`feat(home): H-W3 hand-drawn zone partitions`
+建议 commit：`feat(home): HOME.SPATIAL.3 hand-drawn zone partitions`
 
 ---
 
-## 7. H-W4 — ③ 布置 + 储藏指派（3–5d）
+## 7. HOME.SPATIAL.4 — ③ 布置 + 储藏指派（3–5d）
 
 **目标**：矩形家具符号可放置/旋转/删除；S1–S8 从固定坐标改为指派到 zone 或家具位；`/storage` 全程不断。
-**前置**：H-W3。
+**前置**：HOME.SPATIAL.3。
 
 ### 步骤
 
@@ -405,19 +405,19 @@ npm run test:plan-edit     # 新 smoke
 
 某柜位标为 S1 → 平面可点 → 储藏页清单完整；家具浏览可隐藏；导出含区+家具+储藏。
 
-建议 commit：`feat(home): H-W4 furniture placements + storage assignment`
+建议 commit：`feat(home): HOME.SPATIAL.4 furniture placements + storage assignment`
 
 ---
 
-## 8. H-W5 — 迁移、测试、文档、上线（1–2d）
+## 8. HOME.SPATIAL.5 — 迁移、测试、文档、上线（1–2d）
 
 - **迁移**：`load()` 的 v2→v3 补全（§2.3）走查三种存量：纯 508 / 墙图无开口 / 手工导入 JSON。原 S 区未指派的显示「待指派」徽标提示（不强制）。
 - **测试**：`test:viewport`（508 回归）+ `test:plan-edit`（墙/门窗/分区/储藏四段 smoke）进 CI 习惯命令；[home.md](./home.md) 验收命令区更新。
-- **文档**：更新 [home.md](./home.md) H-W 状态 → `LIFEOS_ROADMAP.md` §Shipped；`apps/home/README.md`（顺手完成 H-P0）写清三步编辑器操作与数据模型。
+- **文档**：更新 [home.md](./home.md) H-W 状态 → `LIFEOS_ROADMAP.md` §Shipped；`apps/home/README.md`（顺手完成 HOME.EXPER.0）写清三步编辑器操作与数据模型。
 - **清理**：确认无 `studio` 残留引用；508 参数拖墙保留为「508 模式」的编辑方式（不删，仅不再是主路径）；`WALL_EDIT_BINDINGS` 等 508 编辑代码原地保留。
 - **生产走查**：build → deploy → 真机（手机竖屏）过一遍三步编辑 + 储藏跳转。
 
-建议 commit：`chore(home): H-W5 migration, smoke suite, docs`
+建议 commit：`chore(home): HOME.SPATIAL.5 migration, smoke suite, docs`
 
 ---
 
@@ -426,8 +426,8 @@ npm run test:plan-edit     # 新 smoke
 | 命令 | 覆盖 | 阶段 |
 |------|------|------|
 | `npm run test:viewport` | 508 模式定位回归（现有，动态 N checks；prime 自带切回 508） | 每阶段回归 |
-| `npm run test:plan-edit`（新） | wallGraph smoke：建/删/拖点/撤销/持久 → +门窗跟随 → +分区 stale → +储藏指派 | H-W1 建立，逐阶段追加 |
-| 手工矩阵 | 触屏（iPhone 竖屏）· 深色模式 · 返回 508 往返 · 导出/导入 JSON 往返 | H-W0/W2/W4/W5 |
+| `npm run test:plan-edit`（新） | wallGraph smoke：建/删/拖点/撤销/持久 → +门窗跟随 → +分区 stale → +储藏指派 | HOME.SPATIAL.1 建立，逐阶段追加 |
+| 手工矩阵 | 触屏（iPhone 竖屏）· 深色模式 · 返回 508 往返 · 导出/导入 JSON 往返 | HOME.SPATIAL.0/W2/W4/W5 |
 
 原则：**每阶段合并前两条命令必须全绿**；wallGraph 的断言只进 `plan-edit-smoke`，不往 `plan-viewport-stress.mjs` 里塞（它的 prime 逻辑与墙图互斥）。
 
@@ -436,15 +436,15 @@ npm run test:plan-edit     # 新 smoke
 ## 10. 时间线
 
 ```text
-Week 1   H-W0 + H-W1        地基 + 建/删/拖墙 → 已能「重画户型」
-Week 2   H-W2               门窗挂边 + 508 门窗一次性转换
-Week 3   H-W3               手绘分区（可与 H-W2 部分并行）
-Week 4   H-W4               家具 + 储藏指派
-Week 5   H-W5               迁移、smoke 全量、文档、生产走查
-之后     H-P4（搁置中）      云同步 Supabase；H-P7 多项目切换建议排在 H-W 全程之后
+Week 1   HOME.SPATIAL.0 + HOME.SPATIAL.1        地基 + 建/删/拖墙 → 已能「重画户型」
+Week 2   HOME.SPATIAL.2               门窗挂边 + 508 门窗一次性转换
+Week 3   HOME.SPATIAL.3               手绘分区（可与 HOME.SPATIAL.2 部分并行）
+Week 4   HOME.SPATIAL.4               家具 + 储藏指派
+Week 5   HOME.SPATIAL.5               迁移、smoke 全量、文档、生产走查
+之后     HOME.PROJ.4（搁置中）      云同步 Supabase；HOME.PROJ.7 多项目切换建议排在 H-W 全程之后
 ```
 
-依赖链：`H-W0 → H-W1 → H-W2 → H-W4`；`H-W1 → H-W3 → H-W4`；`H-W4 → H-W5`。
+依赖链：`HOME.SPATIAL.0 → HOME.SPATIAL.1 → HOME.SPATIAL.2 → HOME.SPATIAL.4`；`HOME.SPATIAL.1 → HOME.SPATIAL.3 → HOME.SPATIAL.4`；`HOME.SPATIAL.4 → HOME.SPATIAL.5`。
 
 ---
 

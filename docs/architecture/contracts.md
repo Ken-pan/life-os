@@ -26,10 +26,10 @@
 | `NavItemModel` / `NavGroupModel` / `NavPresentation`                   | nav        | `href` web-only                |
 | `SegControlModel` / `SegOption`                                        | nav        |                                |
 | `InsightSection` / `RecommendationDisplay`                             | content    | 展示 only，无 scoring          |
-| `FinanceBillDueSchema` / `LifeEventSchema` / `LifeEvent`               | events     | **Zod runtime**；I-P1.5 ✅     |
+| `FinanceBillDueSchema` / `LifeEventSchema` / `LifeEvent`               | events     | **Zod runtime**；INTG.EVENTS.1.5 ✅     |
 | `LifeEventEnvelopeSchema` / `LifeEventStatusSchema` / `parseLifeEvent` | events     | **Zod runtime**；行级 envelope |
 
-### events 模块（I-P1.5，Zod runtime）
+### events 模块（INTG.EVENTS.1.5，Zod runtime）
 
 Module：`@life-os/contracts/events` — **唯一允许 value import 的子模块**（用于 schema 校验）。
 
@@ -156,7 +156,7 @@ type RecommendationDisplay = {
 }
 ```
 
-**C-P1 消费方（代码）：** Planner / Fitness 通过 JSDoc + `applyDocumentMetaWeb`；Portal WIP 使用 `CommandPalette`；Finance 用 `@life-os/finance-enrichment-contract`；Music **未**依赖本包。
+**PLAT.CONTRACTS.1 消费方（代码）：** Planner / Fitness 通过 JSDoc + `applyDocumentMetaWeb`；Portal WIP 使用 `CommandPalette`；Finance 用 `@life-os/finance-enrichment-contract`；Music **未**依赖本包。
 
 ---
 

@@ -1,4 +1,4 @@
-# Finance F-P6 Purchase Review — Data Contract Audit
+# Finance FINC.PURCHASE.6 Purchase Review — Data Contract Audit
 
 **Status:** **BLOCKED** (structural — 2026-07-11)
 **Owner:** Codex (data layer)
@@ -13,7 +13,7 @@ This document describes **verified current state** and **approved design directi
 
 ```text
 Current JSONB model: NOT a safe review-state store
-F-P6a implementation: BLOCKED until association + decision foundation
+FINC.PURCHASE.6.a implementation: BLOCKED until association + decision foundation
 ```
 
 ---
@@ -335,7 +335,7 @@ stateDiagram-v2
 
 ---
 
-## Migration scope (F-P6a planning)
+## Migration scope (FINC.PURCHASE.6.a planning)
 
 1. New tables: associations + decision events (or equivalent)
 2. Backfill: derive initial `proposed` from existing JSONB where actionable
@@ -347,7 +347,7 @@ stateDiagram-v2
 
 ---
 
-## Tests (required before F-P6a UI)
+## Tests (required before FINC.PURCHASE.6.a UI)
 
 | Layer | Cases |
 | --- | --- |

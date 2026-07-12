@@ -1,4 +1,4 @@
-# Finance F-P6 Purchase Review — Product Contract
+# Finance FINC.PURCHASE.6 Purchase Review — Product Contract
 
 **Status:** **PASS** (approved 2026-07-11)
 **Owner:** Fable (product semantics)
@@ -293,7 +293,7 @@ Prototypes **do not** replace the data foundation or authorize JSONB mutations.
 
 ---
 
-## Explicit non-goals (F-P6a scope)
+## Explicit non-goals (FINC.PURCHASE.6.a scope)
 
 - Approving category or merchant normalization
 - Bulk approve/reject entire History page

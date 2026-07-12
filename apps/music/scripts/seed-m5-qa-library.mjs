@@ -1,5 +1,5 @@
 /**
- * M-P5 QA fixture — minimal cloud library for p1a / default QA user.
+ * MUSC.PIPE.5 QA fixture — minimal cloud library for p1a / default QA user.
  * Idempotent upsert so `qa:rec-behavior` can run without production credentials.
  */
 import { createHash } from 'crypto'
@@ -155,7 +155,7 @@ export async function ensureM5QaLibrary(sb, userId) {
   return { seeded, seedTrackId: M5_QA_TRACKS[0].id }
 }
 
-/** Stable id for cleanup of M-P5 test play_events */
+/** Stable id for cleanup of MUSC.PIPE.5 test play_events */
 export function m5QaEventFingerprint(trackId) {
   return createHash('sha256').update(`m5qa:${trackId}`).digest('hex').slice(0, 32)
 }

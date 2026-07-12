@@ -1,10 +1,10 @@
-# Finance F-P6 Purchase Review — Canonical Index
+# Finance FINC.PURCHASE.6 Purchase Review — Canonical Index
 
 **Verification date:** 2026-07-11
-**Section:** F-P6 discovery / product & data contract
+**Section:** FINC.PURCHASE.6 discovery / product & data contract
 **Overall section closure:** **CONDITIONAL PASS** — discovery can close; **implementation is not authorized.**
 
-> **CONDITIONAL PASS** means this phase successfully answered *how the product should work* and *why the current architecture cannot implement it safely*. It does **not** mean F-P6a is ready to ship or that Confirm/Reject/Undo may be added to the existing JSONB write path.
+> **CONDITIONAL PASS** means this phase successfully answered *how the product should work* and *why the current architecture cannot implement it safely*. It does **not** mean FINC.PURCHASE.6.a is ready to ship or that Confirm/Reject/Undo may be added to the existing JSONB write path.
 
 ---
 
@@ -12,19 +12,19 @@
 
 | Workstream | Status | Notes |
 | --- | ---: | --- |
-| F-P6 product contract | **PASS** | Settled semantics — see [Product contract](./FP6_PURCHASE_REVIEW_PRODUCT_CONTRACT.md) |
-| F-P6 data-contract audit | **BLOCKED** | No durable association/decision model — see [Data contract](./FP6_PURCHASE_REVIEW_DATA_CONTRACT.md) |
-| F-P6 QA Auth / static tooling | **CONDITIONAL PASS** | Bootstrap prepared; no isolated runtime yet — see [QA Auth](./FP6_QA_AUTH.md) |
+| FINC.PURCHASE.6 product contract | **PASS** | Settled semantics — see [Product contract](./FP6_PURCHASE_REVIEW_PRODUCT_CONTRACT.md) |
+| FINC.PURCHASE.6 data-contract audit | **BLOCKED** | No durable association/decision model — see [Data contract](./FP6_PURCHASE_REVIEW_DATA_CONTRACT.md) |
+| FINC.PURCHASE.6 QA Auth / static tooling | **CONDITIONAL PASS** | Bootstrap prepared; no isolated runtime yet — see [QA Auth](./FP6_QA_AUTH.md) |
 | Isolated QA runtime verification | **PENDING** | No QA project credentials supplied; bootstrap ×2 not run |
 | Antigravity desktop/mobile visual baseline | **BLOCKED** | No valid isolated QA storage state |
-| F-P6 discovery / spec section | **PASS** | Product IA, mutation contract, blockers documented |
-| F-P6a implementation readiness | **BLOCKED** | Requires data foundation before UI mutations |
+| FINC.PURCHASE.6 discovery / spec section | **PASS** | Product IA, mutation contract, blockers documented |
+| FINC.PURCHASE.6.a implementation readiness | **BLOCKED** | Requires data foundation before UI mutations |
 
 ---
 
 ## Executive summary
 
-F-P6 discovery is complete. The **review object** is a proposed association between one bank transaction and one suggested merchant order. Confirm, Reject, and Undo semantics, desktop/mobile IA, and mutation feedback are locked in the product contract.
+FINC.PURCHASE.6 discovery is complete. The **review object** is a proposed association between one bank transaction and one suggested merchant order. Confirm, Reject, and Undo semantics, desktop/mobile IA, and mutation feedback are locked in the product contract.
 
 The **data layer is structurally blocked**: suggested-order association and enrichment currently live together in `public.finance_transactions.purchase_enrichment` JSONB. There is no durable association entity, no persisted Confirmed/Rejected state, no decision history, and no safe mutation path. **`matched_review` is a derived data-quality classification, not a review workflow state.** **`unsupported_source` is not actionable purchase review** unless a concrete transaction↔order candidate exists.
 
@@ -56,7 +56,7 @@ Industry peers (Ramp, Spendesk, Brex, Monzo, etc.) automate high-confidence matc
 | [FP6_PURCHASE_REVIEW_IMPLEMENTATION_GUIDE.md](./FP6_PURCHASE_REVIEW_IMPLEMENTATION_GUIDE.md) | User research, competitor patterns, timeline, risks, test matrix, Codex handoff |
 | [FP6_QA_AUTH.md](./FP6_QA_AUTH.md) | Isolated QA auth, bootstrap boundaries, Antigravity handoff |
 
-### Related historical context (not F-P6 SSOT)
+### Related historical context (not FINC.PURCHASE.6 SSOT)
 
 | Document | Status |
 | --- | --- |
@@ -67,24 +67,24 @@ Industry peers (Ramp, Spendesk, Brex, Monzo, etc.) automate high-confidence matc
 
 ## Phase boundaries
 
-### F-P6 (this section) — closed CONDITIONAL PASS
+### FINC.PURCHASE.6 (this section) — closed CONDITIONAL PASS
 
 - Product contract: review object, Confirm/Reject/Undo, IA, mutation sequencing
 - Data-contract audit: JSONB limitations, `matched_review`, `unsupported_source`, required future model
 - QA Auth static preparation and secret boundaries
 - Implementation gates and prohibited shortcuts
 
-### F-P6a — **BLOCKED** until data foundation
+### FINC.PURCHASE.6.a — **BLOCKED** until data foundation
 
 - Association + decision-event migration
 - RPC mutations with version/idempotency
 - Manual-decision precedence over automated matching
 - Only then: Confirm/Reject/Undo in `PurchaseEnrichmentBlock`
 
-### F-P6b / F-P6c — out of scope for this closure
+### FINC.PURCHASE.6b / FINC.PURCHASE.6c — out of scope for this closure
 
-- F-P6b: return/refund follow-up, user notes
-- F-P6c: Amazon/BBY curation batches (read `review_queue_v1_1`, not broad apply)
+- FINC.PURCHASE.6b: return/refund follow-up, user notes
+- FINC.PURCHASE.6c: Amazon/BBY curation batches (read `review_queue_v1_1`, not broad apply)
 
 ---
 
@@ -135,7 +135,7 @@ Full rollback playbook: [Implementation guide — Risks](./FP6_PURCHASE_REVIEW_I
 2. Provision isolated QA Supabase project
 3. Bootstrap ×2 + teardown verification + RLS isolation proof
 4. Antigravity pre-mutation screenshots (History desktop/mobile baselines only)
-5. Open F-P6a Data Foundation section — Codex checklist in implementation guide
+5. Open FINC.PURCHASE.6.a Data Foundation section — Codex checklist in implementation guide
 6. Migration + RPC + manual-decision precedence + backend tests
 7. Low-risk UI prototypes (Storybook / mock API) — optional parallel after backend tests
 8. UI mutation implementation (Confirm / Reject / Undo)
@@ -149,14 +149,14 @@ Illustrative Gantt: [Implementation guide — delivery phases](./FP6_PURCHASE_RE
 - Isolated QA environment provision
 - Bootstrap double-run and teardown verification planning
 - Pre-mutation Antigravity baseline (after QA runtime)
-- Association/decision migration **planning** (design only until F-P6a section opens)
+- Association/decision migration **planning** (design only until FINC.PURCHASE.6.a section opens)
 
 ### Must not start
 
 - Real Confirm/Reject/Undo in UI
 - Direct mutation of `purchase_enrichment` for review decisions
 - New “Reviewed” filter without authoritative server state
-- Claiming F-P6a complete
+- Claiming FINC.PURCHASE.6.a complete
 
 ---
 
@@ -193,4 +193,4 @@ Pre-mutation screenshots still missing:
 - Mobile History
 - Mobile review sheet
 
-Confirm/Reject/Undo screenshots **depend on F-P6a implementation** and are **not** part of the pre-mutation baseline gate.
+Confirm/Reject/Undo screenshots **depend on FINC.PURCHASE.6.a implementation** and are **not** part of the pre-mutation baseline gate.

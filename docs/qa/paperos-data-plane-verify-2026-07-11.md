@@ -1,4 +1,4 @@
-# PaperOS Production Data-Plane Verification（P-MOVE-VERIFY）
+# PaperOS Production Data-Plane Verification（PAPR.DATA.verify）
 
 **Date:** 2026-07-11
 **Device:** reMarkable Paper Pro Move (`imx93-chiappa`)
@@ -7,16 +7,16 @@
 
 ## Sanitized result
 
-| Evidence | Result |
-| --- | --- |
-| Request timestamp | `2026-07-11T15:49:52+0000` |
-| HTTP status | `200 OK` from `https://planner.kenos.space/api/paper/today` with the device credential |
-| Response schema result | PASS — root object; `today` object; `tasks` array of objects; `inbox` object |
-| Cache timestamp before | `2026-07-11T05:59:15Z` (`7014` bytes) |
-| Cache timestamp after | `2026-07-11T15:50:51Z` (`4619` bytes) |
-| UI result | PASS — PaperOS System rendered `synced 2026-07-11T15:51:52Z` after the retry |
-| Retry result | PASS — on-screen **Sync now** advanced `last_sync.txt` from `15:50:51Z` to `15:51:52Z` |
-| Error behavior | PASS — an invalid credential returned `401 Unauthorized`; the production cache timestamp remained unchanged |
+| Evidence               | Result                                                                                                      |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Request timestamp      | `2026-07-11T15:49:52+0000`                                                                                  |
+| HTTP status            | `200 OK` from `https://planner.kenos.space/api/paper/today` with the device credential                      |
+| Response schema result | PASS — root object; `today` object; `tasks` array of objects; `inbox` object                                |
+| Cache timestamp before | `2026-07-11T05:59:15Z` (`7014` bytes)                                                                       |
+| Cache timestamp after  | `2026-07-11T15:50:51Z` (`4619` bytes)                                                                       |
+| UI result              | PASS — PaperOS System rendered `synced 2026-07-11T15:51:52Z` after the retry                                |
+| Retry result           | PASS — on-screen **Sync now** advanced `last_sync.txt` from `15:50:51Z` to `15:51:52Z`                      |
+| Error behavior         | PASS — an invalid credential returned `401 Unauthorized`; the production cache timestamp remained unchanged |
 
 No raw token, authorization header, task title, cookie, password, or private key is recorded here.
 
@@ -80,7 +80,7 @@ them again.
 
 ## Next allowed task
 
-`P-MOVE-SYS-1B` read-only launch-surface discovery. See
-[`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md)
-§Resume from here. `SYS-1` implementation remains **blocked** until a passing
-launch mechanism is discovered and validated.
+`PAPR.SYS.1` design — **PAUSED BY OWNER** until explicit authorization.
+Architecture discovery complete: PAPR.SYS.1b.jrn **CONDITIONAL PASS accepted** (journal `EntityOpen::open` UUID).
+See [`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md)
+§Future resume point. `PAPR.SYS.1` implementation **not started**.

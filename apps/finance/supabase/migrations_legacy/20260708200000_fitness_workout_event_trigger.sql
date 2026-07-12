@@ -1,4 +1,4 @@
--- I-P1.5b / FT-P1: Fitness 完练 → life_events (fitness.workout_logged)
+-- INTG.EVENTS.1b / GYMS.EVENTS.1: Fitness 完练 → life_events (fitness.workout_logged)
 
 begin;
 

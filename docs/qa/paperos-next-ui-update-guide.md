@@ -1,8 +1,9 @@
 # PaperOS 下一步 UI Update 详细指导
 
-**Date:** 2026-07-10
-**Status:** Proposed execution SSOT
-**Applies to:** `P-MOVE-UI Core Slice 1.1 Correction` + `Core Slice 2 Home/Today`
+**Date:** 2026-07-10（UI）· lifecycle cross-ref 2026-07-11
+**Status:** Proposed execution SSOT（UI track）
+**Lifecycle（独立轨道）：** PAPR.SYS.1 architecture discovery **complete** · implementation **paused by owner** — [`paperos-device-lifecycle/README.md`](./paperos-device-lifecycle/README.md)
+**Applies to:** `PAPR.UI Core Slice 1.1 Correction` + `Core Slice 2 Home/Today`
 **Repo path:** [`docs/qa/paperos-next-ui-update-guide.md`](./paperos-next-ui-update-guide.md)
 **Related gates:** [`paperos-core-slice-1-integration-gate.md`](./paperos-core-slice-1-integration-gate.md) · [`paperos-core-slice-1-visual-gate.md`](./paperos-core-slice-1-visual-gate.md)
 **Long-term product brief:** [`paperos-eink-uiux-agent-brief.md`](./paperos-eink-uiux-agent-brief.md) · gap audit [`paperos-eink-uiux-gap-audit.md`](./paperos-eink-uiux-gap-audit.md)
@@ -728,7 +729,7 @@ Return:
 # 9. Handoff Prompt — Cursor/Codex：Core Slice 2
 
 ```text
-Own PaperOS P-MOVE-UI Core Slice 2: Unified Today landing and final
+Own PaperOS PAPR.UI Core Slice 2: Unified Today landing and final
 Layer-1 system IA.
 
 Read:
