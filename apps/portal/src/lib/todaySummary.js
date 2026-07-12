@@ -25,7 +25,14 @@ export {
 
 /** @returns {Promise<PortalTodaySummaryPayload | null>} */
 export async function fetchPortalTodaySummary() {
-  const { data, error } = await supabase.rpc('portal_today_summary')
+  let tz = 'America/Los_Angeles'
+  try {
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  } catch (e) {
+    // Ignore error, fallback is handled
+  }
+
+  const { data, error } = await supabase.rpc('portal_today_summary', { p_timezone: tz })
   if (error) throw error
   if (!data || typeof data !== 'object') return null
   return /** @type {PortalTodaySummaryPayload} */ (data)
