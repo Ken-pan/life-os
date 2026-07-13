@@ -1,14 +1,21 @@
 <script>
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
-  import { C, sendMessage, stopStreaming } from '$lib/chat.svelte.js'
+  import {
+    C,
+    sendMessage,
+    stopStreaming,
+    getDraft,
+    setDraft,
+    requestEditLastUser,
+  } from '$lib/chat.svelte.js'
   import { transcribe, polishTranscript } from '$lib/localai.js'
   import { importFile, IMPORT_ACCEPT } from '$lib/fileImport.js'
 
   /** @type {{ autofocus?: boolean }} */
   let { autofocus = false } = $props()
 
-  let text = $state('')
+  let text = $state(getDraft(C.activeId))
   let images = $state([])
   let files = $state([])
   let importing = $state(0) // 正在解析中的文件数
@@ -17,6 +24,54 @@
   let recording = $state(false)
   let transcribing = $state(false)
   let recorder = null
+  let menuOpen = $state(false)
+  let menuEl = $state(null)
+  let menuBtn = $state(null)
+  let dragging = $state(false)
+  let dragDepth = 0
+  let lastActiveId = C.activeId
+
+  /* —— 「+」能力菜单:让附件/生图/搜索等能力显性可发现(ChatGPT 式) —— */
+  const menuItems = $derived([
+    { key: 'files', icon: 'paperclip', title: t('chat.menuAttach'), desc: t('chat.menuAttachDesc') },
+    { key: 'image', icon: 'image', title: t('chat.menuImage'), desc: t('chat.menuImageDesc'), prefix: t('chat.menuImagePrefix') },
+    { key: 'search', icon: 'search', title: t('chat.menuSearch'), desc: t('chat.menuSearchDesc'), prefix: t('chat.menuSearchPrefix') },
+    { key: 'notes', icon: 'notebook', title: t('chat.menuNotes'), desc: t('chat.menuNotesDesc'), prefix: t('chat.menuNotesPrefix') },
+  ])
+
+  function menuAction(item) {
+    menuOpen = false
+    if (item.key === 'files') {
+      fileInput?.click()
+      return
+    }
+    // 预填模板前缀(输入框已有内容时不覆盖,只聚焦)
+    if (item.prefix && !text.trim()) {
+      text = item.prefix
+      requestAnimationFrame(autogrow)
+    }
+    textarea?.focus()
+  }
+
+  // 点外关闭 + Escape 关闭
+  $effect(() => {
+    if (!menuOpen) return
+    const onDocClick = (e) => {
+      if (!menuEl?.contains(e.target) && !menuBtn?.contains(e.target)) menuOpen = false
+    }
+    const onDocKey = (e) => {
+      if (e.key === 'Escape') {
+        menuOpen = false
+        menuBtn?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', onDocClick, true)
+    document.addEventListener('keydown', onDocKey, true)
+    return () => {
+      document.removeEventListener('pointerdown', onDocClick, true)
+      document.removeEventListener('keydown', onDocKey, true)
+    }
+  })
 
   const canSend = $derived(
     (text.trim().length > 0 || images.length > 0 || files.length > 0) &&
@@ -30,6 +85,59 @@
     textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
   }
 
+  function onInput() {
+    autogrow()
+    setDraft(C.activeId, text) // 每会话草稿留存(内部去抖)
+  }
+
+  // 切换会话:把当前正在打的字存回旧会话,载入新会话的草稿
+  $effect(() => {
+    const id = C.activeId
+    if (id === lastActiveId) return
+    setDraft(lastActiveId, text)
+    text = getDraft(id)
+    lastActiveId = id
+    requestAnimationFrame(autogrow)
+  })
+
+  /* —— 整页拖拽上传:拖文件到页面任意处即可添加(对齐 GPT/Claude)——
+     只有一个 Composer 实例在场(空态 hero 或底部 dock),故 document 级监听即"全页" */
+  $effect(() => {
+    const isFileDrag = (e) => [...(e.dataTransfer?.types ?? [])].includes('Files')
+    const onEnter = (e) => {
+      if (!isFileDrag(e)) return
+      e.preventDefault()
+      dragDepth++
+      dragging = true
+    }
+    const onOver = (e) => {
+      if (isFileDrag(e)) e.preventDefault() // 必须阻止默认才允许 drop
+    }
+    const onLeave = (e) => {
+      if (!isFileDrag(e)) return
+      dragDepth = Math.max(0, dragDepth - 1)
+      if (dragDepth === 0) dragging = false
+    }
+    const onDrop = async (e) => {
+      if (!isFileDrag(e)) return
+      e.preventDefault()
+      dragDepth = 0
+      dragging = false
+      for (const file of e.dataTransfer?.files ?? []) await addAnyFile(file)
+      textarea?.focus()
+    }
+    document.addEventListener('dragenter', onEnter)
+    document.addEventListener('dragover', onOver)
+    document.addEventListener('dragleave', onLeave)
+    document.addEventListener('drop', onDrop)
+    return () => {
+      document.removeEventListener('dragenter', onEnter)
+      document.removeEventListener('dragover', onOver)
+      document.removeEventListener('dragleave', onLeave)
+      document.removeEventListener('drop', onDrop)
+    }
+  })
+
   async function submit() {
     if (C.streaming) {
       stopStreaming()
@@ -42,6 +150,7 @@
     text = ''
     images = []
     files = []
+    setDraft(C.activeId, '') // 发送即清掉该会话草稿
     requestAnimationFrame(autogrow)
     await sendMessage(value, attachedImages, attachedFiles)
   }
@@ -50,6 +159,18 @@
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault()
       submit()
+      return
+    }
+    // 空输入框按 ↑:编辑上一条用户消息(ChatGPT 式快捷)
+    if (
+      event.key === 'ArrowUp' &&
+      !text.trim() &&
+      !images.length &&
+      !files.length &&
+      !event.isComposing &&
+      requestEditLastUser()
+    ) {
+      event.preventDefault()
     }
   }
 
@@ -203,14 +324,31 @@
 
   <div class="row">
     <button
+      bind:this={menuBtn}
       type="button"
       class="aux-btn"
-      title={t('chat.attachImage')}
-      aria-label={t('chat.attachImage')}
-      onclick={() => fileInput?.click()}
+      class:active={menuOpen}
+      title={t('chat.openMenu')}
+      aria-label={t('chat.openMenu')}
+      aria-haspopup="menu"
+      aria-expanded={menuOpen}
+      onclick={() => (menuOpen = !menuOpen)}
     >
-      <Icon name="paperclip" size={18} strokeWidth={1.9} />
+      <Icon name="plus" size={19} strokeWidth={1.9} />
     </button>
+    {#if menuOpen}
+      <div bind:this={menuEl} class="menu" role="menu" aria-label={t('chat.openMenu')}>
+        {#each menuItems as item (item.key)}
+          <button type="button" role="menuitem" class="menu-item" onclick={() => menuAction(item)}>
+            <span class="menu-icon">
+              <Icon name={item.icon} size={16} strokeWidth={1.8} />
+            </span>
+            <span class="menu-title">{item.title}</span>
+            <span class="menu-desc">{item.desc}</span>
+          </button>
+        {/each}
+      </div>
+    {/if}
     <input
       bind:this={fileInput}
       type="file"
@@ -230,7 +368,7 @@
           ? t('chat.transcribing')
           : t('chat.placeholder')}
       aria-label={t('chat.placeholder')}
-      oninput={autogrow}
+      oninput={onInput}
       onkeydown={onKeydown}
       onpaste={onPaste}
     ></textarea>
@@ -266,8 +404,61 @@
   </div>
 </div>
 
+{#if dragging}
+  <div class="drop-overlay" aria-hidden="true">
+    <div class="drop-overlay-inner">
+      <Icon name="paperclip" size={26} strokeWidth={1.6} />
+      <span>{t('chat.dropToUpload')}</span>
+    </div>
+  </div>
+{/if}
+
 <style>
+  /* —— 整页拖拽上传遮罩 —— */
+  .drop-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: color-mix(in srgb, var(--bg) 68%, transparent);
+    pointer-events: none;
+    animation: drop-in 120ms var(--ease, ease);
+  }
+  .drop-overlay-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 36px 56px;
+    border: 2px dashed var(--accent);
+    border-radius: 22px;
+    background: var(--bg);
+    color: var(--t1);
+    font-size: var(--text-base, 15px);
+    font-weight: 550;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  }
+  .drop-overlay-inner :global(svg) {
+    color: var(--accent);
+  }
+  @keyframes drop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .drop-overlay {
+      animation: none;
+    }
+  }
+
   .composer {
+    position: relative;
     display: grid;
     gap: 8px;
     width: 100%;
@@ -277,6 +468,67 @@
     border-radius: 28px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     transition: border-color var(--dur-fast, 120ms) var(--ease, ease);
+  }
+
+  /* —— 「+」能力菜单 —— */
+  .menu {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    inset-inline-start: 0;
+    z-index: 30;
+    min-width: 300px;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 6px;
+    display: grid;
+    gap: 2px;
+    background: var(--bg);
+    border: 1px solid var(--border-l);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+  }
+  .menu-item {
+    display: grid;
+    grid-template-columns: 28px auto 1fr;
+    align-items: center;
+    column-gap: 10px;
+    width: 100%;
+    padding: 9px 12px 9px 8px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--t1);
+    font: inherit;
+    font-size: var(--text-sm, 14px);
+    text-align: start;
+    cursor: pointer;
+  }
+  .menu-item:hover,
+  .menu-item:focus-visible {
+    background: var(--card);
+  }
+  .menu-icon {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--bg-2);
+    color: var(--t2);
+  }
+  .menu-title {
+    font-weight: 550;
+    white-space: nowrap;
+  }
+  .menu-desc {
+    color: var(--t3);
+    font-size: var(--text-xs, 12px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .aux-btn.active {
+    background: var(--card);
+    color: var(--t1);
   }
   .composer:focus-within {
     border-color: var(--t3);

@@ -35,7 +35,7 @@
     aria-label={t('model.label')}
     onclick={() => (open = !open)}
   >
-    <span class="trigger-brand">AI.OS</span>
+    <span class="trigger-brand">AI<span class="trigger-brand-accent">OS</span></span>
     <span class="trigger-model">{t(current.nameKey)}</span>
     <Icon name="chevron-down" size={14} strokeWidth={2} />
   </button>
@@ -108,6 +108,13 @@
     font-family: var(--font-brand, var(--font));
     font-weight: 700;
     letter-spacing: 0.04em;
+  }
+  /* 品牌 wordmark:base「AI」+ 灰色 accent「OS」,与其他 life-os app 一致(色值取自 app.manifest.json wordmarkAccent) */
+  .trigger-brand-accent {
+    color: #b4b4b4;
+  }
+  :global([data-theme='light']) .trigger-brand-accent {
+    color: #5d5d5d;
   }
   .trigger-model {
     color: var(--t3);

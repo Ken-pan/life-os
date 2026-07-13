@@ -2,9 +2,17 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
   import { renderMarkdown, splitThinking } from '$lib/markdown.js'
-  import { C, regenerate, editUserMessage } from '$lib/chat.svelte.js'
+  import {
+    C,
+    regenerate,
+    editUserMessage,
+    continueGenerating,
+    switchBranch,
+    activeConversation,
+  } from '$lib/chat.svelte.js'
   import { toolIcon } from '$lib/tools.js'
   import { speak } from '$lib/localai.js'
+  import { S } from '$lib/state.svelte.js'
   import { openArtifact, openUrl, openFile } from '$lib/panel.svelte.js'
 
   /** @type {{ message: import('$lib/chat.svelte.js').ChatMessage, index?: number, isLast?: boolean }} */
@@ -13,6 +21,8 @@
   let copied = $state(false)
   let editing = $state(false)
   let editText = $state('')
+  let editArea = $state(null)
+  let seenEditSignal = C.editSignal
   let speaking = $state(false)
   let ttsLoading = $state(false)
   let audio = null
@@ -21,14 +31,94 @@
   const thinkingText = $derived(
     [message.reasoning, parts.thinking].filter(Boolean).join('\n'),
   )
-  const answerHtml = $derived(
-    message.role === 'assistant'
-      ? renderMarkdown(parts.answer, { previewLabel: t('panel.preview') })
-      : '',
-  )
   const streamingThis = $derived(
     C.streaming && isLast && message.role === 'assistant',
   )
+  /* —— 回答版本翻页:找到触发本轮的用户消息,读它挂着的分支(仅末轮可切换)—— */
+  const turnUser = $derived.by(() => {
+    if (!isLast || message.role !== 'assistant') return null
+    const msgs = activeConversation()?.messages ?? []
+    for (let i = index - 1; i >= 0; i--) {
+      if (msgs[i].role === 'user') return { index: i, count: msgs[i].branches?.length ?? 0, active: msgs[i].branch ?? 0 }
+    }
+    return null
+  })
+  const answerHtml = $derived(
+    message.role === 'assistant'
+      ? renderMarkdown(parts.answer, {
+          previewLabel: t('panel.preview'),
+          caret: streamingThis && !!parts.answer, // 流式时结尾显示打字光标
+        })
+      : '',
+  )
+  /** 工具调用产出的图片(生图等),在正文上方以画廊展示 */
+  const genImages = $derived((message.toolCalls ?? []).flatMap((tc) => tc.images ?? []))
+
+  /* —— 工具调用的人性化呈现(对齐 Claude/ChatGPT:每步自带上下文)—— */
+  function argsOf(tc) {
+    try {
+      return JSON.parse(tc.arguments || '{}')
+    } catch {
+      return {}
+    }
+  }
+  function hostOf(url) {
+    try {
+      return new URL(url).hostname.replace(/^www\./, '')
+    } catch {
+      return String(url ?? '')
+    }
+  }
+  /** chip 上标题旁的上下文标签:搜索词 / 域名 / 表达式等,一眼看清 AI 在做什么 */
+  function toolContext(tc) {
+    const a = argsOf(tc)
+    switch (tc.name) {
+      case 'browser_search':
+      case 'web_search':
+      case 'search_memory':
+      case 'search_notes':
+        return a.query ?? ''
+      case 'open_browser_page':
+      case 'fetch_url':
+        return a.url ? hostOf(a.url) : ''
+      case 'read_browser_page':
+        return a.part === 'text'
+          ? t('toolCtx.text')
+          : a.part === 'links'
+            ? t('toolCtx.links')
+            : t('toolCtx.page')
+      case 'browser_interact':
+        return a.action ?? ''
+      case 'read_note':
+        return a.path ? a.path.split('/').pop() : ''
+      case 'calculate':
+        return a.expression ?? ''
+      case 'generate_image':
+        return a.prompt ? a.prompt.slice(0, 24) : ''
+      default:
+        return ''
+    }
+  }
+  /** 研究回答的来源:本条消息真正打开过的网页(去重),渲染成来源卡片行 */
+  const sources = $derived.by(() => {
+    const seen = new Set()
+    const out = []
+    for (const tc of message.toolCalls ?? []) {
+      if (tc.name !== 'open_browser_page' && tc.name !== 'fetch_url') continue
+      if (tc.running || (typeof tc.result === 'string' && tc.result.startsWith('错误'))) continue
+      const url = argsOf(tc).url
+      if (!url || seen.has(url)) continue
+      seen.add(url)
+      out.push({ url, host: hostOf(url) })
+    }
+    return out
+  })
+  /** 域名 → 稳定的柔和主题色(本地生成,不发外部 favicon 请求) */
+  function hostHue(host) {
+    let h = 0
+    for (let i = 0; i < host.length; i++) h = (h * 31 + host.charCodeAt(i)) % 360
+    return h
+  }
 
   /* —— 等待/思考状态(ChatGPT 式:实时计时 + 思考流预览)—— */
   const thinkingLive = $derived(
@@ -94,6 +184,25 @@
   }
 
   /* —— 编辑并重发 —— */
+  // 是否本会话最后一条用户消息(响应输入框 ↑ 键的编辑请求)
+  const isLastUser = $derived.by(() => {
+    if (message.role !== 'user') return false
+    const msgs = activeConversation()?.messages ?? []
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      if (msgs[i].role === 'user') return i === index
+    }
+    return false
+  })
+  $effect(() => {
+    const sig = C.editSignal
+    if (sig === seenEditSignal) return
+    seenEditSignal = sig
+    if (isLastUser && !editing) startEdit()
+  })
+  $effect(() => {
+    if (editing) editArea?.focus()
+  })
+
   function startEdit() {
     editText = message.content
     editing = true
@@ -131,7 +240,7 @@
     if (ttsLoading) return
     ttsLoading = true
     try {
-      const blob = await speak(ttsText())
+      const blob = await speak(ttsText(), S.settings.ttsVoice)
       const url = URL.createObjectURL(blob)
       audio = new Audio(url)
       audio.onended = audio.onerror = () => {
@@ -152,7 +261,7 @@
 </script>
 
 {#if message.role === 'user'}
-  <div class="row user">
+  <div class="row user" data-role="user">
     {#if message.images?.length}
       <div class="user-images">
         {#each message.images as src, i (i)}
@@ -175,7 +284,7 @@
     {/if}
     {#if editing}
       <div class="edit-box">
-        <textarea bind:value={editText} rows="3" onkeydown={onEditKeydown}></textarea>
+        <textarea bind:this={editArea} bind:value={editText} rows="3" onkeydown={onEditKeydown}></textarea>
         <div class="edit-actions">
           <button type="button" class="edit-cancel" onclick={() => (editing = false)}>
             {t('chat.cancel')}
@@ -204,7 +313,7 @@
     {/if}
   </div>
 {:else}
-  <div class="row assistant">
+  <div class="row assistant" data-role="assistant">
     {#if thinkingText}
       <div class="think" class:open={thinkOpen}>
         <button
@@ -236,23 +345,24 @@
     {#if message.toolCalls?.length}
       <div class="tools">
         {#each message.toolCalls as tc (tc.id)}
-          <details class="tool">
-            <summary>
+          {@const ctx = toolContext(tc)}
+          <details class="tool" class:running={tc.running}>
+            <summary class:shimmer={tc.running}>
               <span class="tool-icon" class:running={tc.running}>
                 <Icon name={toolIcon(tc.name)} size={13} strokeWidth={2} />
               </span>
               <span class="tool-name">{t(`tool.${tc.name}`)}</span>
-              {#if tc.running}
-                <span class="tool-status shimmer">{t('chat.toolRunning')}</span>
+              {#if ctx}
+                <span class="tool-ctx" title={ctx}>{ctx}</span>
               {/if}
               <Icon name="chevron-down" size={12} strokeWidth={2} />
             </summary>
             <div class="tool-body">
               {#if tc.arguments && tc.arguments !== '{}'}
-                <pre class="tool-args">{tc.arguments}</pre>
+                <pre class="tool-args aios-scroll">{tc.arguments}</pre>
               {/if}
               {#if tc.result}
-                <pre class="tool-result">{tc.result.slice(0, 1500)}{tc.result.length > 1500 ? '…' : ''}</pre>
+                <pre class="tool-result aios-scroll">{tc.result.slice(0, 1500)}{tc.result.length > 1500 ? '…' : ''}</pre>
               {/if}
               {#if tc.name === 'fetch_url' && tc.result && !tc.result.startsWith('错误')}
                 <button
@@ -276,6 +386,16 @@
       </div>
     {/if}
 
+    {#if genImages.length}
+      <div class="gen-images">
+        {#each genImages as src, i (i)}
+          <a href={src} download={`aios-image-${i + 1}.webp`} title={t('chat.downloadImage')}>
+            <img {src} alt={t('chat.generatedImage')} loading="lazy" />
+          </a>
+        {/each}
+      </div>
+    {/if}
+
     {#if parts.answer}
       <!-- 代码块复制按钮的点击委托;按钮本身可聚焦,容器无键盘语义 -->
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -287,6 +407,36 @@
       <div class="pending" role="status" aria-label={t('chat.loading')}>
         <span class="shimmer">{coldStart ? t('chat.pendingCold') : t('chat.pending')}</span>
       </div>
+    {/if}
+
+    {#if !streamingThis && parts.answer && sources.length}
+      <div class="sources">
+        <span class="sources-label">{t('chat.sources')}</span>
+        <div class="sources-row">
+          {#each sources as s, i (s.url)}
+            <button
+              type="button"
+              class="source-card"
+              title={s.url}
+              onclick={() => openUrl(s.url)}
+            >
+              <span
+                class="source-dot"
+                style={`--hue:${hostHue(s.host)}`}
+                aria-hidden="true">{s.host[0]?.toUpperCase() ?? '·'}</span
+              >
+              <span class="source-host">{s.host}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
+    {#if !streamingThis && isLast && !message.error && message.finishReason === 'length'}
+      <button type="button" class="continue-btn" onclick={() => continueGenerating()}>
+        <Icon name="arrow-down" size={13} strokeWidth={2} />
+        {t('chat.continueGenerating')}
+      </button>
     {/if}
 
     {#if message.error}
@@ -302,6 +452,31 @@
 
     {#if !streamingThis && (parts.answer || message.error)}
       <div class="actions">
+        {#if turnUser && turnUser.count > 1}
+          <div class="branch-nav" aria-label={t('chat.answerVersions')}>
+            <button
+              type="button"
+              class="branch-arrow"
+              disabled={turnUser.active === 0}
+              title={t('chat.prevVersion')}
+              aria-label={t('chat.prevVersion')}
+              onclick={() => switchBranch(turnUser.index, -1)}
+            >
+              <Icon name="chevron-left" size={14} strokeWidth={2} />
+            </button>
+            <span class="branch-count">{turnUser.active + 1}/{turnUser.count}</span>
+            <button
+              type="button"
+              class="branch-arrow"
+              disabled={turnUser.active === turnUser.count - 1}
+              title={t('chat.nextVersion')}
+              aria-label={t('chat.nextVersion')}
+              onclick={() => switchBranch(turnUser.index, 1)}
+            >
+              <Icon name="chevron-right" size={14} strokeWidth={2} />
+            </button>
+          </div>
+        {/if}
         {#if parts.answer}
           <button
             type="button"
@@ -549,10 +724,25 @@
   }
   .tool-name {
     font-weight: 550;
+    flex: none;
   }
-  .tool-status {
+  /* chip 上的上下文标签:搜索词 / 域名等,一眼看清 AI 在做什么 */
+  .tool-ctx {
+    min-width: 0;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--t3);
-    font-size: var(--text-xs, 11px);
+    font-size: var(--text-xs, 12px);
+  }
+  .tool-ctx::before {
+    content: '·';
+    margin-right: 6px;
+    color: var(--t3);
+  }
+  .tool.running summary {
+    border-color: var(--border-l);
   }
   .tool-body {
     margin-top: 6px;
@@ -597,12 +787,116 @@
     background: var(--card);
   }
 
+  /* —— 来源卡片行(研究回答底部,对齐 ChatGPT/Perplexity 的 sources)—— */
+  .sources {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .sources-label {
+    color: var(--t3);
+    font-size: var(--text-xs, 11px);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .sources-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .source-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 220px;
+    padding: 5px 11px 5px 6px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--t2);
+    font-size: var(--text-xs, 12px);
+    cursor: pointer;
+    transition:
+      border-color 0.12s,
+      background 0.12s,
+      color 0.12s;
+  }
+  .source-card:hover {
+    border-color: var(--border-l);
+    background: var(--card);
+    color: var(--t1);
+  }
+  .source-dot {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    flex: none;
+    border-radius: 50%;
+    background: hsl(var(--hue) 55% 42%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .source-host {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* —— 生成图片 —— */
+  .gen-images {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .gen-images a {
+    display: block;
+    line-height: 0;
+  }
+  .gen-images img {
+    max-width: min(100%, 420px);
+    max-height: 420px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+
   /* —— markdown 正文 —— */
   .md {
     color: var(--t1);
     font-size: var(--text-base, 15px);
     line-height: 1.65;
     overflow-wrap: anywhere;
+  }
+  /* 流式打字光标:贴在已揭示文字末尾,闪烁提示"正在生成" */
+  .md :global(.md-caret) {
+    display: inline-block;
+    width: 0.52em;
+    height: 1.02em;
+    margin-inline-start: 1px;
+    transform: translateY(0.14em);
+    border-radius: 1px;
+    background: var(--t2);
+    animation: caret-blink 1.05s steps(1, end) infinite;
+  }
+  @keyframes caret-blink {
+    0%,
+    50% {
+      opacity: 1;
+    }
+    50.01%,
+    100% {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .md :global(.md-caret) {
+      animation: none;
+      opacity: 0.55;
+    }
   }
   .md :global(p) {
     margin: 0 0 0.75em;
@@ -848,6 +1142,29 @@
     font-size: var(--text-sm, 13px);
   }
 
+  /* —— 继续生成(回复被 token 上限截断时)—— */
+  .continue-btn {
+    align-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border-l);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--t1);
+    padding: 6px 14px;
+    font-size: var(--text-sm, 13px);
+    font-weight: 550;
+    cursor: pointer;
+    transition: background var(--dur-fast, 120ms) var(--ease, ease);
+  }
+  .continue-btn:hover {
+    background: var(--card);
+  }
+  .continue-btn :global(svg) {
+    color: var(--t3);
+  }
+
   /* —— 错误 —— */
   .error {
     display: grid;
@@ -910,6 +1227,41 @@
     background: var(--card);
     color: var(--t1);
   }
+
+  /* —— 回答版本翻页器 —— */
+  .branch-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    margin-inline-end: 2px;
+  }
+  .branch-arrow {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 28px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--t3);
+    cursor: pointer;
+  }
+  .branch-arrow:hover:not(:disabled) {
+    background: var(--card);
+    color: var(--t1);
+  }
+  .branch-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  .branch-count {
+    font-size: var(--text-xs, 11px);
+    color: var(--t3);
+    font-variant-numeric: tabular-nums;
+    min-width: 24px;
+    text-align: center;
+  }
+
   .actions button.speaking {
     color: var(--t1);
     opacity: 1;

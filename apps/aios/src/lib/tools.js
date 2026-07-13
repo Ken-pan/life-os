@@ -1,5 +1,6 @@
 import { GATEWAY } from '$lib/localai.js'
 import { addMemory, searchMemories } from '$lib/memory.svelte.js'
+import { isNative, NATIVE_DEFS, isNativeTool, executeNativeTool } from '$lib/native.js'
 
 /**
  * 内置工具(OpenAI function calling 格式)。
@@ -185,6 +186,66 @@ const DEFS = [
     },
   },
   {
+    key: 'generate_image',
+    icon: 'image',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'generate_image',
+        description:
+          '本地 AI 生图(支持中文提示词与图中中文文字)。用户要画图、生成图片、海报、插画、头像、场景时使用。' +
+          'prompt 用具体、丰富的描述(主体+外观细节+动作+场景+光线+风格)。' +
+          'quality:fast=秒级出图(草图/插画/快速预览);quality=高质量(人物、写实摄影、图中含文字、用户要求精细时必用,约 1-3 分钟)。' +
+          '角色一致性:save_character="角色名" 会把本次生成注册为可复用角色;之后传 character="角色名" 可让同一角色出现在新的场景/动作/服装中(此时 prompt 描述新场景即可)。' +
+          '生成的图片会自动展示给用户,不要在回答里编造图片链接。',
+        parameters: {
+          type: 'object',
+          properties: {
+            prompt: { type: 'string', description: '图片内容的详细描述' },
+            quality: {
+              type: 'string',
+              enum: ['fast', 'quality'],
+              description: '档位,默认 fast;人物/写实/含文字用 quality',
+            },
+            aspect: {
+              type: 'string',
+              enum: ['1:1', '16:9', '9:16', '4:3', '3:4'],
+              description: '画幅比例,默认 1:1',
+            },
+            negative_prompt: {
+              type: 'string',
+              description: '不想出现的元素(已内置解剖/手部质量兜底,只需补充场景相关的)',
+            },
+            character: {
+              type: 'string',
+              description: '使用已注册角色的名字,让同一角色出现在新场景(prompt 只需描述新场景)',
+            },
+            save_character: {
+              type: 'string',
+              description: '把本次生成的形象注册为角色,供之后 character 参数复用',
+            },
+            seed: { type: 'number', description: '随机种子;复现或微调上一张时传入其 seed' },
+          },
+          required: ['prompt'],
+        },
+      },
+    },
+  },
+  {
+    key: 'list_characters',
+    icon: 'image',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'list_characters',
+        description: '列出已注册的生图角色(名字、描述、参考图数量)。用户问"有哪些角色"或 generate_image 报角色不存在时使用。',
+        parameters: { type: 'object', properties: {} },
+      },
+    },
+  },
+  {
     key: 'browser_status',
     icon: 'monitor',
     web: false,
@@ -254,7 +315,7 @@ const DEFS = [
       function: {
         name: 'browser_search',
         description:
-          '用用户的真实 Chrome 打开搜索引擎搜索,返回结果列表(标题+链接)。比 web_search 更可靠(无代理、不被反爬拦截)。拿到结果后用 open_browser_page 打开值得深入的链接。',
+          '用用户的真实 Chrome 搜索互联网,返回结果列表(标题+链接)和搜索页摘要文本。先根据摘要筛选,只对真正值得深入的 1-3 个链接调 open_browser_page,不要逐个全开。涉及最新信息、新闻、不确定的事实时优先用这个搜索。',
         parameters: {
           type: 'object',
           properties: {
@@ -274,7 +335,7 @@ const DEFS = [
       function: {
         name: 'browser_interact',
         description:
-          '在 Chrome 当前研究页面上执行一个交互动作,之后自动重新采集页面。action:scroll_bottom=滚到页底(加载更多内容);click=点击元素;fill=填入文本;press=按键(如 Enter)。selector 支持 CSS 或语义定位(role=button[name="下一页"]、label="搜索")。用于翻页、展开内容、站内搜索。',
+          '在 Chrome 当前研究页面上执行一个交互动作,之后自动重新采集页面。action:click=点击元素;fill=填入文本;press=按键(如 Enter);scroll_bottom=滚到页底。selector 支持 CSS 或语义定位(role=button[name="下一页"]、label="搜索")。用于翻页、展开折叠内容、站内搜索、触发"加载更多"。注意:读长文正文不需要滚动,直接用 read_browser_page 的 offset 续读。',
         parameters: {
           type: 'object',
           properties: {
@@ -323,11 +384,13 @@ const DEFS = [
 
 /** @param {{ webAccess?: boolean }} opts */
 export function toolDefinitions({ webAccess = true } = {}) {
-  return DEFS.filter((t) => (t.web ? webAccess : true)).map((t) => t.def)
+  const defs = DEFS.filter((t) => (t.web ? webAccess : true))
+  // 原生壳(Tauri)里追加 Mac 专属工具;浏览器里 isNative=false 自动不注册
+  return (isNative ? [...defs, ...NATIVE_DEFS] : defs).map((t) => t.def)
 }
 
 export function toolIcon(name) {
-  return DEFS.find((t) => t.key === name)?.icon ?? 'wrench'
+  return (DEFS.find((t) => t.key === name) ?? NATIVE_DEFS.find((t) => t.key === name))?.icon ?? 'wrench'
 }
 
 /* —— 执行器 —— */
@@ -632,9 +695,15 @@ async function bridgeAction(action, params = {}, timeoutMs = 60000) {
 
 /** 本会话在用户 Chrome 里复用的研究标签页;用户关掉后自动重开 */
 let agentTabId = null
+/** 同 URL 短路:模型重复打开同一页面时跳过导航,直接读现有页面 */
+let lastNavUrl = null
+let lastNavAt = 0
 
 async function navigateAndCapture(url) {
   await ensureExtension()
+  if (agentTabId != null && url === lastNavUrl && Date.now() - lastNavAt < 60000) {
+    return { tabId: agentTabId, url, snapshot: null, reused: true }
+  }
   // active:false = 后台标签页加载,不打断用户当前浏览(需扩展 ≥ 本次改动;旧版忽略该参数)
   const params = { url, waitMs: 1200, active: false }
   if (agentTabId != null) params.tabId = agentTabId
@@ -652,6 +721,8 @@ async function navigateAndCapture(url) {
     )
   }
   agentTabId = result.tabId ?? agentTabId
+  lastNavUrl = url
+  lastNavAt = Date.now()
   return result
 }
 
@@ -768,7 +839,19 @@ async function browserSearch(query) {
   }
 
   if (items.length) {
-    return `搜索「${q}」的结果(按页面顺序,广告已过滤):\n\n${items.join('\n')}\n\n用 open_browser_page 打开值得深入的链接。`
+    // 附上搜索页可见文本(含各结果摘要):模型可以先筛选,不必逐个开页
+    let snippets = ''
+    try {
+      const serp = await bridgeAction('get_text', {
+        ...(agentTabId != null ? { tabId: agentTabId } : {}),
+        maxChars: 2500,
+      })
+      const body = (serp.text ?? '').trim()
+      if (body) snippets = `\n\n——搜索页摘要文本(供筛选,链接以上方列表为准)——\n${body}`
+    } catch {
+      /* 摘要拿不到不影响结果列表 */
+    }
+    return `搜索「${q}」的结果(按页面顺序,广告已过滤):\n\n${items.join('\n')}${snippets}\n\n用 open_browser_page 打开值得深入的链接。`
   }
 
   // 链接抽取失败(页面结构变化):退回读正文让模型自己看
@@ -779,24 +862,33 @@ async function browserSearch(query) {
 async function browserInteract({ action, selector, text, key }) {
   await ensureExtension()
   const tabParams = agentTabId != null ? { tabId: agentTabId } : {}
-  switch (action) {
-    case 'scroll_bottom':
-      await bridgeAction('scroll', { ...tabParams, preset: 'bottom' })
-      break
-    case 'click':
-      if (!selector) return '错误:click 需要 selector'
-      await bridgeAction('click', { ...tabParams, selector })
-      break
-    case 'fill':
-      if (!selector || text == null) return '错误:fill 需要 selector 和 text'
-      await bridgeAction('fill', { ...tabParams, selector, text })
-      break
-    case 'press':
-      if (!key) return '错误:press 需要 key'
-      await bridgeAction('press', { ...tabParams, selector, key })
-      break
-    default:
-      return `错误:未知动作 ${action}`
+  try {
+    switch (action) {
+      case 'scroll_bottom':
+        await bridgeAction('scroll', { ...tabParams, preset: 'bottom' })
+        break
+      case 'click':
+        if (!selector) return '错误:click 需要 selector'
+        await bridgeAction('click', { ...tabParams, selector })
+        break
+      case 'fill':
+        if (!selector || text == null) return '错误:fill 需要 selector 和 text'
+        await bridgeAction('fill', { ...tabParams, selector, text })
+        break
+      case 'press':
+        if (!key) return '错误:press 需要 key'
+        await bridgeAction('press', { ...tabParams, selector, key })
+        break
+      default:
+        return `错误:未知动作 ${action}`
+    }
+  } catch (err) {
+    const message = String(err?.message ?? err)
+    // 找不到元素时给模型可执行的下一步,而不是让它瞎猜 selector
+    if (/not found|找不到|Element/i.test(message)) {
+      return `错误:${message}\n下一步:先 read_browser_page(part=summary) 查看页面元素的 bestSelector,或改用语义定位(如 role=button[name="加载更多"]、label="搜索")再试一次。`
+    }
+    throw err
   }
   // 动作后等页面响应并重新采集,保持快照与真实页面同步
   await sleep(1000)
@@ -911,6 +1003,92 @@ async function readNote(vault, path) {
   return `# ${note.title}(${note.path})\n\n${note.content}`
 }
 
+/* —— 本地生图(local-ai services/image,经网关 upstream)—— */
+
+const IMAGE_API = `${GATEWAY}/upstream/image`
+
+/** 本轮工具调用产出的图片(WebP data URL),由 chat 循环取走挂到消息上 */
+let pendingImages = []
+export function consumePendingImages() {
+  const images = pendingImages
+  pendingImages = []
+  return images
+}
+
+/** PNG base64 → WebP data URL(约缩到 1/10 体积,localStorage 友好);失败退回 PNG */
+async function pngToWebpDataUrl(b64) {
+  const pngUrl = `data:image/png;base64,${b64}`
+  try {
+    const bitmap = await createImageBitmap(await (await fetch(pngUrl)).blob())
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
+    canvas.getContext('2d').drawImage(bitmap, 0, 0)
+    bitmap.close()
+    const blob = await canvas.convertToBlob({ type: 'image/webp', quality: 0.85 })
+    return await new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return pngUrl
+  }
+}
+
+async function generateImage(args) {
+  const prompt = String(args.prompt ?? '').trim()
+  if (!prompt) return '错误:prompt 不能为空'
+  const body = {
+    model: args.quality === 'quality' ? 'image-quality' : 'image-fast',
+    prompt,
+    aspect: args.aspect,
+    negative_prompt: args.negative_prompt,
+    character: args.character,
+    save_character: args.save_character,
+    seed: args.seed,
+    response_format: 'b64_json',
+  }
+  // 冷启动要加载 6-20B 模型,质量档 40 步生成本身要几分钟:超时给足
+  const res = await fetch(`${IMAGE_API}/v1/images/generations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(900000),
+  })
+  const json = await res.json().catch(() => null)
+  if (!res.ok) {
+    throw new Error(json?.error?.message || `生图服务 HTTP ${res.status}`)
+  }
+  const lines = []
+  for (const item of json.data ?? []) {
+    if (item.b64_json) {
+      pendingImages.push(await pngToWebpDataUrl(item.b64_json))
+    }
+    lines.push(
+      `图片已生成并直接展示给用户(${item.width}×${item.height},seed ${item.seed},模型 ${json.model},耗时 ${Math.round((json.timing_ms ?? 0) / 1000)}s)。`,
+    )
+    if (item.character_saved) {
+      lines.push(
+        `已注册角色「${item.character_saved.name}」(参考图 ${item.character_saved.refs} 张),之后可用 character="${item.character_saved.name}" 复用该角色。`,
+      )
+    }
+  }
+  if (!lines.length) return '错误:服务没有返回图片'
+  lines.push('图片已在界面中展示,回答时简短确认即可,不要输出图片链接或 markdown 图片语法。')
+  return lines.join('\n')
+}
+
+async function listCharacters() {
+  const res = await fetch(`${IMAGE_API}/characters`, { signal: AbortSignal.timeout(60000) })
+  if (!res.ok) throw new Error(`生图服务 HTTP ${res.status}`)
+  const { characters } = await res.json()
+  if (!characters?.length) {
+    return '角色库为空。可在 generate_image 时传 save_character="角色名" 注册角色。'
+  }
+  return characters
+    .map((c) => `- ${c.name}(参考图 ${c.refs} 张)${c.description ? `:${c.description}` : ''}`)
+    .join('\n')
+}
+
 /**
  * 执行一个工具调用,永远返回字符串(错误也以文本返回给模型)。
  * @param {string} name
@@ -923,6 +1101,13 @@ export async function executeTool(name, argsJson) {
     args = argsJson ? JSON.parse(argsJson) : {}
   } catch {
     return '错误:工具参数不是合法 JSON'
+  }
+  if (isNativeTool(name)) {
+    try {
+      return await executeNativeTool(name, args)
+    } catch (err) {
+      return `原生工具执行失败:${err?.message ?? err}`
+    }
   }
   try {
     switch (name) {
@@ -960,6 +1145,10 @@ export async function executeTool(name, argsJson) {
         return await fetchUrl(args.url)
       case 'web_search':
         return await webSearch(args.query)
+      case 'generate_image':
+        return await generateImage(args)
+      case 'list_characters':
+        return await listCharacters()
       case 'search_notes':
         return await searchNotes(args.query)
       case 'read_note':

@@ -34,6 +34,9 @@
   --seg-track-bg: #ececec;
   --seg-active-bg: #ffffff;
   --seg-active-fg: #0d0d0d;
+  /* 细滚动条:静止透明,悬停/滚动时浮现(对齐 ChatGPT/Claude) */
+  --sb-thumb: rgba(0, 0, 0, 0.18);
+  --sb-thumb-hover: rgba(0, 0, 0, 0.32);
   color-scheme: light;
 }
 
@@ -67,5 +70,43 @@
   --seg-track-bg: #212121;
   --seg-active-bg: #4a4a4a;
   --seg-active-fg: #ececec;
+  --sb-thumb: rgba(255, 255, 255, 0.16);
+  --sb-thumb-hover: rgba(255, 255, 255, 0.3);
   color-scheme: dark;
+}
+
+/*
+  可复用细滚动条 —— 加 .aios-scroll 到任意滚动容器即可。
+  轨道透明、拇指静止透明,悬停或聚焦时才浮现;拇指用 padding-box
+  边框留白做出"细而圆"的观感(GPT/Claude 同款技巧)。
+*/
+.aios-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.aios-scroll:hover,
+.aios-scroll:focus-within {
+  scrollbar-color: var(--sb-thumb) transparent;
+}
+.aios-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.aios-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.aios-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+.aios-scroll:hover::-webkit-scrollbar-thumb,
+.aios-scroll:focus-within::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb);
+  background-clip: padding-box;
+}
+.aios-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--sb-thumb-hover);
+  background-clip: padding-box;
 }

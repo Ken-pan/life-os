@@ -12,11 +12,13 @@ import Calculator from '@lucide/svelte/icons/calculator'
 import Check from '@lucide/svelte/icons/check'
 import ChevronDown from '@lucide/svelte/icons/chevron-down'
 import ChevronLeft from '@lucide/svelte/icons/chevron-left'
+import ChevronRight from '@lucide/svelte/icons/chevron-right'
 import Clock from '@lucide/svelte/icons/clock'
 import Code from '@lucide/svelte/icons/code'
 import Copy from '@lucide/svelte/icons/copy'
 import Globe from '@lucide/svelte/icons/globe'
 import History from '@lucide/svelte/icons/history'
+import Image from '@lucide/svelte/icons/image'
 import Lightbulb from '@lucide/svelte/icons/lightbulb'
 import MessageCircle from '@lucide/svelte/icons/message-circle'
 import Mic from '@lucide/svelte/icons/mic'
@@ -26,6 +28,8 @@ import Paperclip from '@lucide/svelte/icons/paperclip'
 import Plus from '@lucide/svelte/icons/plus'
 import RefreshCw from '@lucide/svelte/icons/refresh-cw'
 import Settings from '@lucide/svelte/icons/settings'
+import SquareTerminal from '@lucide/svelte/icons/square-terminal'
+import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
 import Square from '@lucide/svelte/icons/square'
 import SquarePen from '@lucide/svelte/icons/square-pen'
 import Trash2 from '@lucide/svelte/icons/trash-2'
@@ -48,11 +52,13 @@ export const ICONS = {
   check: Check,
   'chevron-down': ChevronDown,
   'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
   clock: Clock,
   code: Code,
   copy: Copy,
   globe: Globe,
   history: History,
+  image: Image,
   lightbulb: Lightbulb,
   chat: MessageCircle,
   mic: Mic,
@@ -62,6 +68,8 @@ export const ICONS = {
   plus: Plus,
   refresh: RefreshCw,
   settings: Settings,
+  terminal: SquareTerminal,
+  github: GitPullRequest,
   stop: Square,
   compose: SquarePen,
   trash: Trash2,

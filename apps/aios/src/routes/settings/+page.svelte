@@ -2,7 +2,7 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import { S, save, applyTheme } from '$lib/state.svelte.js'
   import { t, setLocale } from '$lib/i18n/index.js'
-  import { MODELS } from '$lib/localai.js'
+  import { MODELS, TTS_VOICES } from '$lib/localai.js'
   import { C, refreshGateway, clearAllConversations } from '$lib/chat.svelte.js'
   import { M, deleteMemory, clearMemories, addMemory } from '$lib/memory.svelte.js'
 
@@ -96,6 +96,20 @@
           </button>
         {/each}
       </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">{t('settings.ttsVoice')}</span>
+      <select
+        class="voice-select"
+        bind:value={S.settings.ttsVoice}
+        onchange={save}
+        aria-label={t('settings.ttsVoice')}
+      >
+        {#each TTS_VOICES as voice (voice.id)}
+          <option value={voice.id}>{t(voice.nameKey)}</option>
+        {/each}
+      </select>
     </div>
     <p class="note">{t('settings.gatewayNote')}</p>
   </section>
@@ -421,6 +435,21 @@
   }
   textarea:focus,
   .memory-add input:focus {
+    border-color: var(--t3);
+  }
+
+  .voice-select {
+    border: 1px solid var(--border-l);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--t1);
+    font: inherit;
+    font-size: var(--text-sm, 13px);
+    padding: 6px 10px;
+    outline: none;
+    cursor: pointer;
+  }
+  .voice-select:focus {
     border-color: var(--t3);
   }
 

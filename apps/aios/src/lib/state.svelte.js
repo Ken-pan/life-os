@@ -10,6 +10,7 @@ import {
   PROFILE_SCHEMA_VERSION,
   migrateUserProfile,
 } from '$lib/profile.js'
+import { DEFAULT_TTS_VOICE } from '$lib/localai.js'
 
 const DEFAULTS = {
   settings: {
@@ -21,6 +22,7 @@ const DEFAULTS = {
     webAccess: true, // fetch_url 网页阅读(经 r.jina.ai)
     memory: true, // 长期记忆召回注入
     temperature: 0.7,
+    ttsVoice: DEFAULT_TTS_VOICE, // 朗读音色(Qwen3-TTS 内置 9 声)
     customPrompt: '', // 自定义指令
     userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)
     userProfileVersion: PROFILE_SCHEMA_VERSION,

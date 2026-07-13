@@ -1,5 +1,5 @@
 <script>
-  import { tick } from 'svelte'
+  import { tick, untrack } from 'svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
   import {
@@ -20,10 +20,10 @@
   const isEmpty = $derived(!conversation || conversation.messages.length === 0)
 
   const suggestions = $derived([
+    { icon: 'image', text: t('chat.suggestImage') },
     { icon: 'search', text: t('chat.suggestSearch') },
     { icon: 'code', text: t('chat.suggestCode') },
     { icon: 'lightbulb', text: t('chat.suggestBrainstorm') },
-    { icon: 'calculator', text: t('chat.suggestMath') },
   ])
 
   // 追问建议(小模型生成,挂在最后一条助手消息上,空闲时展示)
@@ -38,6 +38,48 @@
   let nearBottom = $state(true)
   let exported = $state(false)
 
+  // —— 长对话:新一轮提问顶部锚定(ChatGPT 式)——
+  // 发送后把用户这条消息顶到视口顶部,回答在下方流式展开;
+  // 靠一个尾部占位撑出空间,答案变长时占位自动收缩,超过一屏后归零。
+  let spacerH = $state(0)
+  let liveAnchor = false // 当前是否处于"新回合锚定"模式
+  let prevId = null
+  let prevLen = 0
+  const TOP_GAP = 16
+
+  function recomputeSpacer() {
+    if (!scroller || !liveAnchor) {
+      if (spacerH !== 0) spacerH = 0
+      return
+    }
+    const col = scroller.firstElementChild
+    if (!col) return
+    const rows = col.querySelectorAll('[data-role]')
+    let lastUser = null
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (rows[i].getAttribute('data-role') === 'user') {
+        lastUser = rows[i]
+        break
+      }
+    }
+    if (!lastUser) {
+      if (spacerH !== 0) spacerH = 0
+      return
+    }
+    // 落点:浮动控件下缘再留一点缝,用户这条消息刚好停在页眉之下
+    const header = scroller.parentElement?.querySelector('.chat-top')
+    const targetTop = (header?.offsetHeight ?? 56) + TOP_GAP
+    // 用户消息在内容中的位置(用 rect 差,免受 offsetParent 影响)
+    const userOffset =
+      lastUser.getBoundingClientRect().top - col.getBoundingClientRect().top
+    // 去掉当前占位后的真实内容高度
+    const contentH = scroller.scrollHeight - spacerH
+    // 使"滚到底"时 userOffset - scrollTop === targetTop
+    const desired = scroller.clientHeight - targetTop + userOffset
+    const next = Math.max(0, desired - contentH)
+    if (Math.abs(next - spacerH) > 1) spacerH = next
+  }
+
   function onScroll() {
     if (!scroller) return
     nearBottom =
@@ -47,6 +89,12 @@
   function scrollToBottom() {
     nearBottom = true
     scroller?.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
+  }
+
+  function onResize() {
+    if (!liveAnchor) return
+    untrack(() => recomputeSpacer())
+    if (nearBottom) scroller?.scrollTo({ top: scroller.scrollHeight })
   }
 
   async function exportConversation() {
@@ -60,26 +108,54 @@
     }
   }
 
-  // 流式输出时跟随滚动(用户上翻后停止跟随)
+  // 切换会话 / 新一轮发送 / 流式跟随 —— 合并成一个 effect,保证顺序确定
   $effect(() => {
-    const last = conversation?.messages.at(-1)
+    const id = C.activeId
+    const conv = C.conversations.find((c) => c.id === id) ?? null
+    const len = conv?.messages.length ?? 0
+    const last = conv?.messages.at(-1)
     void last?.content
     void last?.reasoning
     void last?.suggestions
-    void conversation?.messages.length
-    if (!scroller || !nearBottom) return
-    tick().then(() => {
-      scroller?.scrollTo({ top: scroller.scrollHeight })
-    })
+    if (!scroller) return
+
+    // 切换会话:重置锚定,直接落到底部
+    if (id !== prevId) {
+      prevId = id
+      prevLen = len
+      liveAnchor = false
+      spacerH = 0
+      nearBottom = true
+      tick().then(() => scroller?.scrollTo({ top: scroller.scrollHeight }))
+      return
+    }
+
+    // 同会话内消息增多 → 视为新一轮发送,开启顶部锚定
+    if (len > prevLen) {
+      liveAnchor = true
+      nearBottom = true
+    }
+    prevLen = len
+
+    // 只在跟随底部时调整占位,避免用户上翻阅读时布局突然位移
+    if (!nearBottom) return
+    untrack(() => recomputeSpacer())
+    tick().then(() => scroller?.scrollTo({ top: scroller.scrollHeight }))
   })
 
-  // 切换会话时直接跳到底部
+  // 回复完成:释放顶部锚定占位。锚定只是"流式期间"的临时affordance,
+  // 让回答从顶部从容展开;答完就收起占位,短回合自然贴合底部,不留突兀空白。
+  let wasStreaming = false
   $effect(() => {
-    void C.activeId
-    nearBottom = true
-    tick().then(() => {
-      scroller?.scrollTo({ top: scroller.scrollHeight })
-    })
+    const streaming = C.streaming
+    if (wasStreaming && !streaming && liveAnchor && nearBottom) {
+      liveAnchor = false
+      spacerH = 0
+      tick().then(() =>
+        scroller?.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' }),
+      )
+    }
+    wasStreaming = streaming
   })
 
   // 回复完成后,若包含较完整的 HTML/SVG 代码块 → 自动打开预览(Artifacts 语义)
@@ -95,6 +171,8 @@
     }
   })
 </script>
+
+<svelte:window onresize={onResize} />
 
 <div class="chat">
   <div class="chat-main">
@@ -139,7 +217,7 @@
       <p class="hint">{t('chat.hintLocal')}</p>
     </div>
   {:else}
-    <div class="thread" bind:this={scroller} onscroll={onScroll}>
+    <div class="thread aios-scroll" bind:this={scroller} onscroll={onScroll}>
       <div class="thread-col">
         {#each conversation.messages as message, i (i)}
           <Message {message} index={i} isLast={i === conversation.messages.length - 1} />
@@ -153,6 +231,7 @@
             {/each}
           </div>
         {/if}
+        <div class="thread-spacer" aria-hidden="true" style:height="{spacerH}px"></div>
       </div>
     </div>
     <div class="dock">
@@ -187,6 +266,7 @@
   }
 
   .chat-main {
+    position: relative;
     flex: 1;
     min-width: 0;
     display: flex;
@@ -194,13 +274,27 @@
     min-height: 0;
   }
 
-  /* —— 顶部工具行(替代 AppBar,ChatGPT 式)—— */
+  /* —— 顶部控件:浮层化,不再占据独立页眉带 ——
+     模型选择器 + 操作按钮悬浮在消息流之上,内容满高滚动到其下方;
+     一层从 --bg 渐隐到透明的薄幕遮住上滑内容,读起来"没有页眉"。 */
   .chat-top {
-    flex: 0 0 auto;
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: calc(var(--safe-top-effective, 0px) + 8px) 12px 8px;
+    padding: calc(var(--safe-top-effective, 0px) + 8px) 12px 10px;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      var(--bg) 32%,
+      color-mix(in srgb, var(--bg) 55%, transparent) 68%,
+      transparent
+    );
+  }
+  .chat-top > :global(*) {
+    pointer-events: auto;
   }
   .chat-top-actions {
     display: flex;
@@ -308,7 +402,15 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-6, 24px);
-    padding-block: var(--space-5, 20px) var(--space-4, 16px);
+    /* 顶部留出浮动控件的高度,首条消息不被遮住 */
+    padding-block: calc(var(--safe-top-effective, 0px) + 56px) var(--space-4, 16px);
+  }
+
+  /* 新回合顶部锚定用的尾部占位(高度由 JS 计算);
+     负 margin 抵消 flex gap,占位为 0 时不产生多余留白 */
+  .thread-spacer {
+    flex: 0 0 auto;
+    margin-top: calc(-1 * var(--space-6, 24px));
   }
 
   /* —— 追问建议(回复下方,ChatGPT 式)—— */

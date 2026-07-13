@@ -7,7 +7,7 @@ import {
   pingGateway,
   VISION_MODELS,
 } from '$lib/localai.js'
-import { toolDefinitions, executeTool } from '$lib/tools.js'
+import { toolDefinitions, executeTool, consumePendingImages } from '$lib/tools.js'
 import { recallRelevant } from '$lib/memory.svelte.js'
 
 const STORAGE_KEY = 'aios_chats_v1'
@@ -16,7 +16,7 @@ const MAX_TOOL_ROUNDS = 10
 const HISTORY_CHAR_BUDGET = 28000
 
 /**
- * @typedef {{ id: string, name: string, arguments: string, result?: string, running?: boolean }} ToolCallRecord
+ * @typedef {{ id: string, name: string, arguments: string, result?: string, running?: boolean, images?: string[] }} ToolCallRecord
  * @typedef {{
  *   role: 'user'|'assistant',
  *   content: string,
@@ -28,6 +28,9 @@ const HISTORY_CHAR_BUDGET = 28000
  *   durationMs?: number,
  *   thinkingMs?: number,
  *   suggestions?: string[],
+ *   finishReason?: string,
+ *   branches?: ChatMessage[][],
+ *   branch?: number,
  * }} ChatMessage
  * @typedef {{
  *   id: string,
@@ -107,7 +110,53 @@ export const C = $state({
   gatewayOk: null,
   /** @type {{ id: string, index: number } | null} 刚完成的回复(供 artifact 自动预览,消费后置空) */
   freshAssistant: null,
+  /** 递增计数:从输入框请求"编辑上一条用户消息"(↑ 键)的信号 */
+  editSignal: 0,
 })
+
+/* —— 每会话输入草稿:切换对话不丢正在打的字(ChatGPT 式)——
+   存 sessionStorage(每标签页独立),key 用会话 id,新对话用 'new'。 */
+const DRAFTS_KEY = 'aios_drafts_v1'
+
+function loadDrafts() {
+  if (!browser) return {}
+  try {
+    return JSON.parse(sessionStorage.getItem(DRAFTS_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+const drafts = loadDrafts()
+let draftTimer = null
+
+export function getDraft(id) {
+  return drafts[id ?? 'new'] ?? ''
+}
+
+export function setDraft(id, text) {
+  const key = id ?? 'new'
+  if (text) drafts[key] = text
+  else delete drafts[key]
+  if (!browser) return
+  clearTimeout(draftTimer)
+  draftTimer = setTimeout(() => {
+    try {
+      sessionStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts))
+    } catch {
+      /* sessionStorage 不可用时静默降级 */
+    }
+  }, 300)
+}
+
+/** ↑ 键:请求编辑最后一条用户消息(由该消息组件响应进入编辑态) */
+export function requestEditLastUser() {
+  const conversation = activeConversation()
+  if (!conversation || C.streaming) return false
+  if (!conversation.messages.some((m) => m.role === 'user')) return false
+  C.editSignal++
+  return true
+}
 
 let saveTimer = null
 export function persist() {
@@ -130,6 +179,8 @@ export function persist() {
                   ...m,
                   images: undefined,
                   files: undefined,
+                  branches: undefined, // 重生成历史在配额压力下优先丢弃
+                  toolCalls: m.toolCalls?.map((tc) => ({ ...tc, images: undefined })),
                 })),
               }
             : c,
@@ -197,6 +248,74 @@ export function stopStreaming() {
   C.streaming = false
 }
 
+/* —— 流式平滑释放 ——
+   网络 token 是"一坨一坨"到的,直接拼进正文会一顿一顿。这里做个缓冲:
+   每帧按 backlog 比例匀速揭示(GPT/Claude 式打字机感),长回答也不会因整段
+   重渲而掉帧(把 per-token 重解析收敛为 per-frame)。流结束时 finish() 立即补齐。
+   thinkingMs 的定格也搬到揭示步骤,让"思考用时"与用户看到正文的时刻一致。 */
+function createStreamReveal(target, startedAt) {
+  let raf = null
+  let pendingReason = ''
+  let pendingContent = ''
+  const hasRaf = typeof requestAnimationFrame !== 'undefined'
+
+  const markThinking = () => {
+    if (target.thinkingMs || !target.content) return
+    const inThink =
+      target.content.startsWith('<think>') && !target.content.includes('</think>')
+    const hadThinking = target.reasoning || target.content.startsWith('<think>')
+    if (hadThinking && !inThink) target.thinkingMs = Date.now() - startedAt
+  }
+
+  const drainAll = () => {
+    if (pendingReason) {
+      target.reasoning += pendingReason
+      pendingReason = ''
+    }
+    if (pendingContent) {
+      target.content += pendingContent
+      pendingContent = ''
+      markThinking()
+    }
+  }
+
+  const tick = () => {
+    raf = null
+    if (pendingReason) {
+      const n = Math.max(2, Math.ceil(pendingReason.length / 5))
+      target.reasoning += pendingReason.slice(0, n)
+      pendingReason = pendingReason.slice(n)
+    }
+    if (pendingContent) {
+      const n = Math.max(2, Math.ceil(pendingContent.length / 5))
+      target.content += pendingContent.slice(0, n)
+      pendingContent = pendingContent.slice(n)
+      markThinking()
+    }
+    if (pendingReason || pendingContent) schedule()
+  }
+
+  const schedule = () => {
+    if (raf == null && hasRaf) raf = requestAnimationFrame(tick)
+  }
+
+  return {
+    push(chunk) {
+      if (chunk.reasoning) pendingReason += chunk.reasoning
+      if (chunk.content) pendingContent += chunk.content
+      if (hasRaf) schedule()
+      else drainAll()
+    },
+    finish() {
+      if (raf != null) {
+        cancelAnimationFrame(raf)
+        raf = null
+      }
+      drainAll()
+    },
+  }
+}
+
 /* —— prompt 组装 —— */
 
 async function buildSystemPrompt(conversation) {
@@ -206,7 +325,8 @@ async function buildSystemPrompt(conversation) {
     '你是 AI.OS,运行在用户本机上的私人 AI 助手。推理、记忆和数据全部在这台设备本地完成。',
     `当前时间:${now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}(${timeZone};日期 ${now.toLocaleDateString('sv-SE')})。`,
     '回答使用 Markdown。代码放在带语言标注的代码块里。保持直接、具体,不要空洞客套。',
-    '当用户要网页、可视化、动画、小游戏或 SVG 图形时,输出单文件自包含的 ```html 或 ```svg 代码块(内联 CSS/JS,不引外部资源)——界面会自动在旁边的预览面板实时渲染它。',
+    '当用户要网页、数据可视化、动画、小游戏,或明确要 SVG/矢量图时,输出单文件自包含的 ```html 或 ```svg 代码块(内联 CSS/JS,不引外部资源)——界面会自动在旁边的预览面板实时渲染它。',
+    '硬性规则:用户要"画(一张)图/画画/生成图片/照片/插画/海报/头像/壁纸"时,必须调用 generate_image 工具(本地 AI 生图),严禁用 HTML/SVG/CSS 代码模拟图片;只有用户明确要求"SVG/矢量图/代码画"时才写代码。',
     '用户消息里的【附件文件:xxx】块就是该文件的完整内容(PDF/Word/Excel/PPT/音频转写等已在本地解析为文本)。直接依据它回答,不要说"无法读取附件"。',
   ]
   if (S.settings.memory) {
@@ -216,11 +336,16 @@ async function buildSystemPrompt(conversation) {
   }
   if (S.settings.tools) {
     lines.push(
-      '你可以调用工具:数学用 calculate,代码/数据处理用 run_javascript,时间用 get_time,需要记住或回忆用户信息用 save_memory / search_memory。浏览器工具(经用户的真实 Chrome,读网页首选):搜索用 browser_search;打开网页用 open_browser_page;深入阅读用 read_browser_page(part=text 读全文、links 列链接);翻页/滚动/点击用 browser_interact;页面上的图片、图表等视觉内容用 look_at_browser_page 看;出错先用 browser_status 诊断。做研究时的标准流程:browser_search → 挑 2-3 个结果 open_browser_page → read_browser_page(part=text)读细节 → 汇总并给出来源链接' +
+      '工具选择速查(需要事实时先用工具,不要凭记忆编造):\n' +
+        '- 联网查资料:browser_search(结果自带摘要,先筛选)→ 挑 1-3 篇 open_browser_page(直接返回正文)→ 长文按结果尾部提示用 read_browser_page(part=text, offset=N) 续读 → 汇总并附来源链接\n' +
+        '- 用户说"当前页面/我打开的这个网页":read_browser_page(不要 open)\n' +
+        '- 页面上点击/填表/触发"加载更多":browser_interact;看页面里的图片/图表/布局:look_at_browser_page\n' +
+        '- browser 工具报错:browser_status 诊断,把提示转告用户\n' +
+        '- 算数 calculate;跑代码 run_javascript;日期时间 get_time' +
         (S.settings.webAccess
-          ? ';浏览器工具不可用时退回 web_search 搜索和 fetch_url 读网页(公共代理,较不稳定)'
+          ? '\n- 浏览器工具不可用时才退回 web_search / fetch_url(公共代理,较不稳定)'
           : '') +
-        '。需要事实精度时优先用工具,不要凭感觉编造。',
+        '\n不要:在同一页面反复滚动重读(用 offset 续读);编造网页内容或链接。',
     )
     if (S.settings.memory) {
       // 刻意精简:小模型(尤其思考模式)会逐句反刍长指令,曾因此陷入复读循环;细节纪律在工具描述里
@@ -230,6 +355,9 @@ async function buildSystemPrompt(conversation) {
     }
     lines.push(
       '用户有 Obsidian 笔记库(已全文索引):涉及他过往写下的判断、框架、决策、评审、项目细节或日常记录时,先 search_notes 检索,需要展开再 read_note;回答时给出笔记路径。',
+    )
+    lines.push(
+      '生图:用户要画图/生成图片时用 generate_image,prompt 写具体(主体+细节+场景+光线+风格)。人物、写实、图中含文字用 quality="quality"。创建可复用角色加 save_character="名字";之后 character="名字" 让同一角色进入新场景;已有角色用 list_characters 查。生成结果自动展示,不要编造图片链接。',
     )
   }
   const custom = S.settings.customPrompt?.trim()
@@ -393,6 +521,9 @@ export async function editUserMessage(index, newText) {
   if (!trimmed && !message.images?.length) return
   conversation.messages.splice(index + 1)
   message.content = trimmed
+  // 编辑=新的意图方向:此前重生成累积的回答分支作废
+  message.branches = undefined
+  message.branch = undefined
   // 编辑点落在已摘要区内:摘要失效,重新从头累积
   if ((conversation.summarizedUpTo ?? 0) > index) {
     conversation.summary = undefined
@@ -416,14 +547,121 @@ export function conversationToMarkdown(conversation) {
   return lines.join('\n')
 }
 
-/** 重新生成最后一条助手回复 */
+/** 一轮回答的助手尾巴(可能含多条工具轮消息)脱离响应式的纯快照 */
+function snapshotTail(tail) {
+  return $state.snapshot(tail)
+}
+
+/**
+ * 重新生成最后一轮回复。不再丢弃旧回答:把当前尾巴存成一个"版本",
+ * 生成的新回答作为新版本追加,由消息上的 ‹2/3› 翻页器切换(对齐 GPT/Claude)。
+ */
 export async function regenerate() {
   const conversation = activeConversation()
   if (!conversation || C.streaming) return
   const messages = conversation.messages
-  while (messages.length && messages.at(-1)?.role === 'assistant') messages.pop()
-  if (messages.at(-1)?.role !== 'user') return
+  // 定位本轮触发点:最后一条用户消息
+  let u = messages.length - 1
+  while (u >= 0 && messages[u].role !== 'user') u--
+  if (u < 0) return
+  const user = messages[u]
+
+  const tail = messages.slice(u + 1)
+  const tailHasContent = tail.some((m) => m.role === 'assistant' && m.content && !m.error)
+  if (tailHasContent) {
+    if (!user.branches) {
+      user.branches = [snapshotTail(tail)]
+      user.branch = 0
+    } else {
+      // 当前分支可能被"继续生成"就地续写过,切换前同步回存储
+      user.branches[user.branch ?? 0] = snapshotTail(tail)
+    }
+  }
+
+  messages.splice(u + 1)
   await streamAssistantReply(conversation)
+
+  if (user.branches) {
+    user.branches.push(snapshotTail(conversation.messages.slice(u + 1)))
+    user.branch = user.branches.length - 1
+    persist()
+  }
+}
+
+/** 在某轮回答的多个版本间切换(dir=-1 上一个 / +1 下一个) */
+export function switchBranch(userIndex, dir) {
+  const conversation = activeConversation()
+  if (!conversation || C.streaming) return
+  const user = conversation.messages[userIndex]
+  if (!user?.branches || user.branches.length < 2) return
+  const next = (user.branch ?? 0) + dir
+  if (next < 0 || next >= user.branches.length) return
+  // 先把当前尾巴回存(可能被续写改过),再换上目标版本
+  user.branches[user.branch ?? 0] = snapshotTail(conversation.messages.slice(userIndex + 1))
+  conversation.messages.splice(userIndex + 1)
+  conversation.messages.push(...snapshotTail(user.branches[next]))
+  user.branch = next
+  touch(conversation)
+  persist()
+}
+
+/** 续写被 token 上限(finishReason='length')截断的最后一条回复。
+    衔接进同一条消息,不写入"继续"这类可见消息,读起来像一段连续输出。 */
+export async function continueGenerating() {
+  const conversation = activeConversation()
+  if (!conversation || C.streaming) return
+  const last = conversation.messages.at(-1)
+  if (last?.role !== 'assistant' || !last.content) return
+
+  C.streaming = true
+  controller = new AbortController()
+  const signal = controller.signal
+  const model = resolveModel(conversation)
+  last.finishReason = undefined
+
+  let systemPrompt
+  try {
+    systemPrompt = await buildSystemPrompt(conversation)
+  } catch {
+    systemPrompt = '你是 AI.OS,本地私人 AI 助手。'
+  }
+
+  const startedAt = Date.now()
+  try {
+    // 被截断的助手消息已是 wire 尾部;补一条 wire-only 的续写指令(不入库)
+    const wire = buildWireMessages(conversation, systemPrompt)
+    wire.push({
+      role: 'user',
+      content:
+        '接着你上一条被截断的回复继续写,直接衔接到断点处,不要重复已经写过的内容,也不要重述开头或加过渡语。',
+    })
+    const reveal = createStreamReveal(last, startedAt)
+    const res = await streamChat({
+      model,
+      messages: wire,
+      signal,
+      temperature: S.settings.temperature,
+      maxTokens: 4096,
+      thinking: false,
+      onDelta: (chunk) => {
+        if (chunk.content) reveal.push({ content: chunk.content }) // 续写只接正文
+      },
+    }).finally(() => reveal.finish())
+    last.finishReason = res.finishReason
+    last.durationMs = (last.durationMs ?? 0) + (Date.now() - startedAt)
+  } catch (err) {
+    if (err?.name !== 'AbortError') {
+      last.error = String(err?.message ?? err)
+      C.gatewayOk = await pingGateway()
+    }
+  } finally {
+    if (controller?.signal === signal) {
+      controller = null
+      C.streaming = false
+    }
+    touch(conversation)
+    persist()
+  }
 }
 
 /** agent loop:流式回复,遇到 tool_calls 就执行并继续,最多 MAX_TOOL_ROUNDS 轮 */
@@ -464,8 +702,9 @@ async function streamAssistantReply(conversation) {
 
       // 最后一轮不再提供工具,强制模型基于已有结果收尾作答
       const lastRound = round === MAX_TOOL_ROUNDS - 1
-      const doStream = () =>
-        streamChat({
+      const doStream = () => {
+        const reveal = createStreamReveal(assistant, startedAt)
+        return streamChat({
           model,
           messages: buildWireMessages(conversation, systemPrompt),
           signal,
@@ -473,22 +712,9 @@ async function streamAssistantReply(conversation) {
           maxTokens: useThinking ? 8192 : 4096, // 思考通道占大头,给足预算避免正文被截断
           tools: lastRound ? undefined : tools,
           thinking: useThinking,
-          onDelta: (chunk) => {
-            if (chunk.reasoning) assistant.reasoning += chunk.reasoning
-            if (chunk.content) assistant.content += chunk.content
-            // 正文开始的瞬间定格思考用时(reasoning_content 通道或 <think> 标签均适用)
-            if (!assistant.thinkingMs && assistant.content) {
-              const inThink =
-                assistant.content.startsWith('<think>') &&
-                !assistant.content.includes('</think>')
-              const hadThinking =
-                assistant.reasoning || assistant.content.startsWith('<think>')
-              if (hadThinking && !inThink) {
-                assistant.thinkingMs = Date.now() - startedAt
-              }
-            }
-          },
-        })
+          onDelta: (chunk) => reveal.push(chunk),
+        }).finally(() => reveal.finish()) // 结束/中断都补齐,保证 assistant.content 完整
+      }
 
       let res = await doStream()
       if (
@@ -510,7 +736,11 @@ async function streamAssistantReply(conversation) {
       if (assistant.reasoning && !assistant.thinkingMs) {
         assistant.thinkingMs = assistant.durationMs
       }
-      if (!res.toolCalls.length) break
+      if (!res.toolCalls.length) {
+        // 记下收尾原因:length = 被 token 上限截断,由 UI 提供"继续生成"
+        assistant.finishReason = res.finishReason
+        break
+      }
 
       // 执行工具(串行,保持网关/嵌入模型不打架),结果回填后进入下一轮
       assistant.toolCalls = res.toolCalls.map((tc) => ({
@@ -523,6 +753,9 @@ async function streamAssistantReply(conversation) {
       for (const tc of assistant.toolCalls) {
         if (signal.aborted) break
         tc.result = await executeTool(tc.name, tc.arguments)
+        // 生图类工具的产出图片挂到调用记录上,由 Message 直接渲染(不进模型上下文)
+        const images = consumePendingImages()
+        if (images.length) tc.images = images
         tc.running = false
       }
       persist()
