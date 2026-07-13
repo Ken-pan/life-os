@@ -36,13 +36,13 @@ export default async (req) => {
   }
 
   try {
-    const data = await loadPaperToday(userId);
-    return new Response(JSON.stringify(data), {
+    const todayData = await loadPaperToday(userId);
+    return new Response(JSON.stringify(todayData), {
       status: 200,
       headers
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), {
+    return new Response(JSON.stringify({ error: 'server_error', message: err.message }), {
       status: 500,
       headers
     });

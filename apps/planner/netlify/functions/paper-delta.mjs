@@ -36,30 +36,24 @@ export default async (req) => {
   }
 
   const url = new URL(req.url);
-  const cursorStr = url.searchParams.get('cursor');
-  if (!cursorStr) {
-    return new Response(JSON.stringify({ error: 'bad_request', message: 'cursor parameter is required.' }), {
-      status: 400,
-      headers
-    });
-  }
+  const cursorParam = url.searchParams.get('cursor');
+  const cursor = cursorParam ? parseInt(cursorParam, 10) : 0;
 
-  const cursorMs = Number(cursorStr);
-  if (isNaN(cursorMs)) {
-    return new Response(JSON.stringify({ error: 'bad_request', message: 'cursor must be a valid number representation.' }), {
+  if (isNaN(cursor)) {
+    return new Response(JSON.stringify({ error: 'bad_request', message: 'cursor must be an integer' }), {
       status: 400,
       headers
     });
   }
 
   try {
-    const data = await loadPaperDelta(userId, cursorMs);
-    return new Response(JSON.stringify(data), {
+    const deltaData = await loadPaperDelta(userId, cursor);
+    return new Response(JSON.stringify(deltaData), {
       status: 200,
       headers
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), {
+    return new Response(JSON.stringify({ error: 'server_error', message: err.message }), {
       status: 500,
       headers
     });
