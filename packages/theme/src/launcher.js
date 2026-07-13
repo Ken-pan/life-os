@@ -10,6 +10,7 @@ export const LIFE_OS_APP_ORIGINS = {
   fitness: { production: 'https://fitness.kenos.space', devPort: 5190 },
   music: { production: 'https://music.kenos.space', devPort: 5189 },
   home: { production: 'https://home.kenos.space', devPort: 5196 },
+  // [app-generator:app-origins] promote-life-os-app.mjs 在此行上方插入新 app
 }
 
 /**
@@ -22,6 +23,7 @@ export const LIFE_OS_SWITCHER_APPS = [
   { id: 'fitness' },
   { id: 'music' },
   { id: 'home', experimental: true },
+  // [app-generator:switcher-apps] promote-life-os-app.mjs 在此行上方插入新 app
 ]
 
 /**

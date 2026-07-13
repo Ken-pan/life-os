@@ -10,7 +10,8 @@ export const TOKENS_DIR = join(PKG_ROOT, 'tokens')
 export const THEME_SRC = join(REPO_ROOT, 'packages', 'theme', 'src')
 export const GENERATED_DIR = join(THEME_SRC, 'generated')
 
-export const BRAND_APPS = ['planner', 'fitness', 'finance', 'music']
+// [app-generator:brand-apps] promote-life-os-app.mjs 会向此数组追加新 app
+export const BRAND_APPS = ['planner', 'fitness', 'finance', 'music', 'home']
 
 export function loadJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'))

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * PLAT.SHELL.5 — 从 apps/starter 模板生成新的 Life OS app。
+ * PLAT.SHELL.5/6 — 从 apps/starter 模板生成新的 Life OS app。
  *
  *   node scripts/create-life-os-app.mjs <app-id> [--name "READING.OS"] [--port 5876]
  *
  * <app-id>：小写字母/数字/连字符（如 reading）。生成 apps/<app-id>/，
- * workspace 名 <app-id>-os，并替换模板里的 starter 标识。
- * 注册表类接线（brand / site meta / portal switcher / netlify / PWA 矩阵）
- * 属于 PLAT.SHELL.6 generator 的范围，脚本最后会打印手动清单。
+ * workspace 名 <app-id>-os，并替换模板里的 starter 标识，同时写入
+ * apps/<app-id>/app.manifest.json（AppManifest，声明式注册信息）。
+ * 注册表接线由 scripts/promote-life-os-app.mjs 按 manifest 自动完成。
  */
 import { cpSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -62,6 +62,21 @@ function walk(dir) {
 }
 walk(dest)
 
+// AppManifest：以 starter 的 manifest 为 schema 底稿，填入本 app 的注册信息
+const manifestPath = join(dest, 'app.manifest.json')
+const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+delete manifest.$comment
+Object.assign(manifest, {
+  id,
+  name: displayName,
+  shortName: displayName.replace(/\.OS$/, '') || id.toUpperCase(),
+  storageKey: `${id}os_v1`,
+  workspace: `${id}-os`,
+  devPort: port,
+  domain: `${id}.kenos.space`,
+})
+writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+
 console.log(`✅ apps/${id} 已生成（workspace ${id}-os · 端口 ${port} · ${displayName}）
 
 下一步：
@@ -69,10 +84,7 @@ console.log(`✅ apps/${id} 已生成（workspace ${id}-os · 端口 ${port} · 
   2. npm run check --workspace=${id}-os
   3. npm exec --workspace ${id}-os -- vite dev
 
-晋升为正式 app 时（暂属手动，PLAT.SHELL.6 generator 将自动化）：
-  - 品牌 token → packages/design-tokens/tokens/brands/${id}.json + app.css 换 @import
-  - site meta / wordmark → packages/theme/src/documentMeta.js · brand.js
-  - Portal 切换器 → LIFE_OS_SWITCHER_APPS
-  - PWA 矩阵 → scripts/pwa/apps.config.mjs（含图标 → scripts/generate-life-os-brand-icons.py）
-  - 部署 → 根 netlify.toml + .claude/launch.json + docs/ops/netlify.md
+晋升为正式 app（自动接线 brand/site-meta/switcher/PWA 矩阵/netlify，PLAT.SHELL.6）：
+  先按需修改 apps/${id}/app.manifest.json（描述文案 / 主题色 / 路由 / experimental），再：
+  node scripts/promote-life-os-app.mjs ${id}
 `)

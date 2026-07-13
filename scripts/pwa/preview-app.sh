@@ -16,6 +16,7 @@ case "$APP" in
   portal) WORKSPACE="portal"; PORT=5195; BUILD_DIR="apps/portal/build"; BUILD_MARKER="apps/portal/build/manifest.webmanifest" ;;
   home)    WORKSPACE="home-os";    PORT=5196; BUILD_DIR="apps/home/build" ;;
   starter) WORKSPACE="starter-os"; PORT=5875; BUILD_DIR="apps/starter/build" ;;
+  # [app-generator:preview-case] promote-life-os-app.mjs 在此行上方插入新 app
   *)
     echo "Unknown app: $APP (planner|fitness|music|finance|portal|home|starter)"
     exit 1

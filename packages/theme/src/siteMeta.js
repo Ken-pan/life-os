@@ -150,6 +150,7 @@ export const LIFE_OS_SITE_META = {
     appleTouchIcon: '/apple-touch-icon.png',
     categories: ['productivity', 'utilities'],
   },
+  // [app-generator:site-meta] promote-life-os-app.mjs 在此行上方插入新 app
 }
 
 /** 个人工具类 PWA：默认不对搜索引擎索引 */

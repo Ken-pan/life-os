@@ -66,6 +66,7 @@ const LIFE_OS_APP_WORDMARK_ACCENT = {
   fitness: { light: '#c42f0a', dark: '#ff4d2e' },
   music: { light: '#ff4d6d', dark: '#ff4d6d' },
   home: { light: '#7d93a8', dark: '#7d93a8' },
+  // [app-generator:wordmark-accent] promote-life-os-app.mjs 在此行上方插入新 app
 }
 
 /**

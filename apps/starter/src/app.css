@@ -1,9 +1,10 @@
 @import '@life-os/theme/design-system.css';
 
-/*
+/* [app-generator:brand-placeholder:start]
   STARTER.OS 品牌层（模板占位）
-  正式 app 应把品牌 token 迁到 packages/design-tokens/tokens/brands/<app>.json
-  并 @import '@life-os/theme/brands/<app>.css'（见 README「晋升清单」）。
+  promote-life-os-app.mjs 会把本块整体替换为
+  @import '@life-os/theme/brands/<app>.css'（token 源在
+  packages/design-tokens/tokens/brands/<app>.json）。
   这里只定义中性灰占位色，保证模板脱离品牌注册表也能独立构建。
 */
 
@@ -18,3 +19,4 @@
   --accent-strong: #46535f;
   --sidebar-primary: #5b6a79;
 }
+/* [app-generator:brand-placeholder:end] */

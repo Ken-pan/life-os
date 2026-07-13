@@ -188,6 +188,7 @@ export const PWA_APPS = {
     production: false,
     pwaTestEnabled: false,
   },
+  // [app-generator:pwa-apps] promote-life-os-app.mjs 在此行上方插入新 app
 }
 
 /** @param {string} id */

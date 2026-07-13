@@ -1,0 +1,29 @@
+{
+  "$comment": "Life OS AppManifest（PLAT.SHELL.6）。声明式描述 app 的全部注册信息；scripts/promote-life-os-app.mjs 读取本文件自动接线 siteMeta / launcher / brand / design-tokens / PWA 矩阵 / launch.json / netlify。starter 本身不晋升，此文件同时充当 schema 示例。",
+  "id": "starter",
+  "name": "STARTER.OS",
+  "shortName": "STARTER",
+  "description": {
+    "zh": "Life OS app 模板 · shell + theme + i18n + PWA 基座",
+    "en": "Life OS starter template · shell + theme + i18n + PWA base"
+  },
+  "themeColor": { "light": "#f4f4f3", "dark": "#0d0d0e" },
+  "defaultTheme": "auto",
+  "locale": "zh-CN",
+  "storageKey": "starteros_v1",
+  "storageKind": "nested",
+  "settingsThemePath": ["settings", "theme"],
+  "categories": ["utilities"],
+  "workspace": "starter-os",
+  "devPort": 5875,
+  "domain": "starter.kenos.space",
+  "shellType": "main-wrap-main",
+  "wordmarkAccent": { "light": "#5b6a79", "dark": "#a9b6c4" },
+  "experimental": true,
+  "routes": [
+    { "path": "/", "name": "home" },
+    { "path": "/settings", "name": "settings" }
+  ],
+  "clipPaths": ["/"],
+  "scrollQaPath": "/settings"
+}
