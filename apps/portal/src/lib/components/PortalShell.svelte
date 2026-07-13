@@ -35,7 +35,8 @@
       {onOpenCommandPalette}
     />
     {#if centerContent}
-      <div class="portal-unauth-stage">
+      <!-- life-os-scroll-surface：登录/无权限页的合同滚动根（standalone 下可滚，见 theme scroll-shell.css） -->
+      <div class="portal-unauth-stage life-os-scroll-surface">
         <main id="portal-main" class="wrap portal-wrap portal-wrap--center">
           {@render children()}
         </main>

@@ -72,9 +72,14 @@
 .portal-unauth-stage {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding-block: var(--space-6);
+}
+
+/* margin-auto 垂直居中：内容高于视口时可滚动到顶部（align-items:center 会裁切） */
+.portal-unauth-stage > .portal-wrap--center {
+  margin-block: auto;
 }
 
 @media (--life-os-desktop) {
