@@ -31,10 +31,7 @@ const HUB_FILES = [
   'docs/LIFEOS_ROADMAP.md',
   'docs/roadmap/AGENT_WORKSTREAMS.md',
   'docs/roadmap/apps/README.md',
-  'docs/qa/paperos-device-lifecycle/README.md',
-  'docs/qa/paperos-device-lifecycle-discovery.md',
-  'docs/roadmap/apps/planner-pro-move.md',
-  'docs/PRO_MOVE.md',
+  // PaperOS hub/QA docs moved to the standalone paperos repo (2026-07-12)
 ]
 
 const LINK_CHECK_FILES = [
@@ -163,7 +160,6 @@ function checkHubDup() {
   const issues = []
   for (const fileRel of [
     'docs/roadmap/apps/README.md',
-    'docs/qa/paperos-device-lifecycle/README.md',
   ]) {
     const lines = readFileSync(join(ROOT, fileRel), 'utf8').split('\n')
     for (let i = 0; i < lines.length; i++) {
