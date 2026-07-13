@@ -12,6 +12,7 @@
       "default": "./src/index.js"
     },
     "./layout.css": "./src/layout.css",
+    "./media.css": "./src/media.css",
     "./design-system.css": "./src/design-system.css",
     "./utilities.css": "./src/utilities.css",
     "./ios-safari.css": "./src/ios-safari.css",
