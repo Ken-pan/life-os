@@ -1,8 +1,43 @@
-# Life OS App Shell contract (PLAT-P0-1)
+# Life OS App Shell contract (PLAT.SHELL.1 · legacy PLAT-P0-1)
 
 `LifeOsAppShell` is the first reusable layer for a future Life OS app
 generator. It proves shell reuse with Fitness; it is not an app manifest or a
 generator.
+
+## Contract freeze — v1 (PLAT.SHELL.3, 2026-07-12)
+
+The contract below is **frozen as v1**. Evidence: Fitness adoption audit
+(PLAT.SHELL.1, this document) and Home validation verdict
+`API_READY_FOR_FREEZE`, stability gate **39/40**
+([`life-os-app-shell-home-validation.md`](./life-os-app-shell-home-validation.md)).
+
+Frozen public surface (`@life-os/platform-web` `svelte/app-shell`):
+
+- **Snippets:** `header` · `navigation(projection: 'desktop' | 'mobile')` ·
+  `main` (or `children`) · `persistentOverlay` · `transientOverlay`
+- **Props:** `scrollMode: 'content' | 'document' | 'locked'` ·
+  `navigationKey` · `focusOnNavigate: 'main' | 'preserve'` · `mainId` ·
+  `mainLabel` · `mainClass` · `skipLinkLabel` · `testIdPrefix`
+- **Stable test hooks:** `data-testid` values derived from `testIdPrefix`
+  (shell, `-header`, `-navigation-desktop`, `-navigation-mobile`, `-main`,
+  `-persistent-overlay`, `-transient-overlay`)
+- Internal classes and DOM structure are **not** public API.
+
+Change policy:
+
+1. **Additive-only.** New optional props/snippets are allowed; they must be
+   generic (no app IDs, routes, or domain flags — same bar the `locked` mode
+   and `mainClass` passed in PLAT.SHELL.2).
+2. **No breaking changes** without a new validation round on at least two
+   production apps and an explicit v2 declaration in this document.
+3. Migrations follow
+   [`life-os-app-shell-migration-guide.md`](./life-os-app-shell-migration-guide.md);
+   every adopting app records a validation doc
+   (`life-os-app-shell-<app>-validation.md`).
+
+Next in this line (not started): third-app adoption on the frozen contract,
+then starter template → AppManifest → generator. See
+[`../roadmap/PLATFORM.md`](../roadmap/PLATFORM.md) §PLAT.SHELL.
 
 ## Current-state map before migration
 

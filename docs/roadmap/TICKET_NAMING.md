@@ -223,6 +223,9 @@ PAPR.DATA.verify ✅
 | **PLAT.CONTRACTS.0** | `C-P0`           |
 | **PLAT.CONTRACTS.1** | `C-P1`（若曾用） |
 | **PLAT.CORE.2**      | `C-P2`           |
+| **PLAT.SHELL.1**     | `PLAT-P0-1`      |
+| **PLAT.SHELL.2**     | `PLAT-P0-2`      |
+| **PLAT.SHELL.3**     | `PLAT-P0-3`      |
 
 ### DSGN — Design（已发货简史 · legacy `D-*`）
 

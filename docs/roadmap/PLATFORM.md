@@ -50,6 +50,25 @@ Wave 逐表证据 → [`SHIPPED.md`](./SHIPPED.md) §Platform
 
 ---
 
+## PLAT.SHELL — AppShell → App Generator 主线
+
+目标：可复用 `LifeOsAppShell` → starter template → AppManifest → **app
+generator**(一键生成新的 Life OS app)。
+
+| Ticket             | Legacy      | 内容                                        | 状态                                                                                             |
+| ------------------ | ----------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **PLAT.SHELL.1**   | `PLAT-P0-1` | `LifeOsAppShell` 提取,Fitness 试点         | ✅ [`架构合同`](../architecture/life-os-app-shell.md)                                            |
+| **PLAT.SHELL.2**   | `PLAT-P0-2` | Home 采用验证(`locked` 模式 + `mainClass`)| ✅ **39/40** [`验证记录`](../architecture/life-os-app-shell-home-validation.md)                  |
+| **PLAT.SHELL.3**   | `PLAT-P0-3` | **合同冻结 v1** + 迁移指南                  | ✅ 2026-07-12 [`迁移指南`](../architecture/life-os-app-shell-migration-guide.md)                 |
+| **PLAT.SHELL.4**   | —           | 第三 app 采用冻结合同(候选:Planner/Music)| ⬜ 下一步;按迁移指南执行,补齐 stability gate 第 8 维                                           |
+| **PLAT.SHELL.5**   | —           | Starter template(新 app 骨架:shell + auth + i18n + theme + PWA + Netlify) | ⬜ 依赖 SHELL.4                                                    |
+| **PLAT.SHELL.6**   | —           | AppManifest + generator(声明式生成新 app) | ⬜ 依赖 SHELL.5                                                                                   |
+
+**边界:** SHELL.4 之前不得开始 template/manifest/generator(PLAT.SHELL.2
+验证文档的明确约束)。
+
+---
+
 ## C-P2 P2+ 候选
 
 见 [`BACKLOG.md`](./BACKLOG.md) §Platform 提取候选。

@@ -1,5 +1,10 @@
 # LifeOsAppShell
 
+> **Contract frozen — v1 (PLAT.SHELL.3, 2026-07-12).** Additive generic changes
+> only; no breaking changes without a two-app revalidation and a v2 declaration
+> in `docs/architecture/life-os-app-shell.md`. Migrations:
+> `docs/architecture/life-os-app-shell-migration-guide.md`.
+
 `LifeOsAppShell` is the reusable web shell boundary for Life OS apps. It owns:
 
 - the viewport-height outer structure and single primary content scroll root;
