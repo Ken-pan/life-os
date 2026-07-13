@@ -1,11 +1,15 @@
 import QtQuick
 import QtQuick.Layouts
 
-// System drawer — the temporary Layer-1 navigation surface (brief §7.2).
-// Replaces the permanent bottom tab bar. Opens from the shell menu button,
-// closes after navigation or an outside tap. Discrete show/hide only: no
-// animation, no translucent scrim — the underlying page stays quiet and a
-// single ink100 edge marks the modal boundary.
+// System drawer — the temporary Layer-1 navigation surface (PAPR.UI.2 §1).
+// Final IA: Today / Notes / Tasks / Documents (primary) · Settings
+// (secondary) · Return to reMarkable (system transition, footer). Opens from
+// the shell menu button, closes after navigation or an outside tap. Discrete
+// show/hide only: no animation, no translucent scrim — the underlying page
+// stays quiet and a single ink100 edge marks the modal boundary. Home, Inbox,
+// Review, and the legacy System label are not user-visible destinations here;
+// their pages remain mounted internally for bridge/rollback compatibility
+// (PAPR.UI.2 §5).
 Item {
     id: drawer
     objectName: "system.drawer"
@@ -117,11 +121,22 @@ Item {
                 }
             }
 
-            DrawerRow { objectName: "drawer.today"; label: "Today"; module: 0 }
-            DrawerRow { objectName: "drawer.notes"; label: "Notes"; module: 2 }
-            DrawerRow { objectName: "drawer.tasks"; label: "Tasks"; module: 1 }
-            DrawerRow { objectName: "drawer.documents"; label: "Documents"; module: 7 }
-            DrawerRow { objectName: "drawer.settings"; label: "Settings"; module: 5 }
+            DrawerRow { objectName: "drawer.today";     label: "Today";     module: 0 }
+            DrawerRow { objectName: "drawer.notes";     label: "Notes";     module: 1 }
+            DrawerRow { objectName: "drawer.tasks";     label: "Tasks";     module: 2 }
+            DrawerRow { objectName: "drawer.documents"; label: "Documents"; module: 3 }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.leftMargin: 44
+                Layout.rightMargin: 44
+                Layout.topMargin: 20
+                Layout.bottomMargin: 20
+                height: 1
+                color: Ui.ink30
+            }
+
+            DrawerRow { objectName: "drawer.settings"; label: "Settings"; module: 4 }
 
             Item { Layout.fillHeight: true }
 

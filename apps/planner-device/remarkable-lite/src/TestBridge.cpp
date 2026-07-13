@@ -15,16 +15,19 @@
 #include <QThread>
 
 namespace {
+// PAPR.UI.2 module indices: 0=Today, 1=Notes, 2=Tasks, 3=Documents,
+// 4=Settings, 5=Inbox(internal), 6=Review(internal). Home/Write/System/More
+// are pre-Slice-2 names and no longer reachable module states.
 QString moduleName(int index)
 {
     switch (index) {
-    case 0: return QStringLiteral("home");
-    case 1: return QStringLiteral("today");
-    case 2: return QStringLiteral("write");
-    case 3: return QStringLiteral("inbox");
-    case 4: return QStringLiteral("review");
-    case 5: return QStringLiteral("system");
-    case 6: return QStringLiteral("more");
+    case 0: return QStringLiteral("today");
+    case 1: return QStringLiteral("notes");
+    case 2: return QStringLiteral("tasks");
+    case 3: return QStringLiteral("documents");
+    case 4: return QStringLiteral("settings");
+    case 5: return QStringLiteral("inbox");
+    case 6: return QStringLiteral("review");
     default: return QStringLiteral("unknown");
     }
 }

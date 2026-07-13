@@ -1,73 +1,128 @@
 import QtQuick
 import QtQuick.Layouts
 
-// HomeTodayPage: Unified Daily Landing (Today) Page.
-// Typographic layout combining recent writing, quick note actions,
-// and today's top uncompleted tasks on a borderless paper canvas.
+// HomeTodayPage — the canonical Today landing (PAPR.UI.2 §2.2/§5.3).
+// Merges the old Home + Today pages into one daily-glance destination:
+// resume the most recent notebook, scan today's real tasks, reach recent
+// content. No outer card, no nested card, no dashboard grid — the screen
+// itself is the canvas. Content is capped so the page reads in one glance;
+// overflow uses "View all" rather than scrolling further.
 Item {
     id: page
 
-    property var locallyCompleted: ({})
+    signal openNotes()
+    signal openTasks()
 
     readonly property var allNotes: noteStore.listNotes()
     readonly property var continueNote: allNotes.length > 0 ? allNotes[0] : null
     readonly property var recentNotes: allNotes.length > 1 ? allNotes.slice(1, 3) : []
 
     readonly property var allTasks: apiClient.dashboardData.tasks ? apiClient.dashboardData.tasks : []
-    readonly property var uncompletedTasks: allTasks.filter(function(t) {
-        var key = t.id !== undefined ? String(t.id) : ""
-        return !t.completed && !page.locallyCompleted[key]
-    })
-
-    function refresh() {
-        allNotes = noteStore.listNotes()
+    // Uncompleted first, so the three-row preview surfaces what's left to do.
+    readonly property var previewTasks: {
+        var open = allTasks.filter(function(t) { return !t.completed })
+        var done = allTasks.filter(function(t) { return t.completed })
+        return open.concat(done).slice(0, 3)
     }
+
+    property string dateLabel: ""
+
+    function refreshDate() {
+        var now = new Date()
+        page.dateLabel = now.toLocaleDateString(Qt.locale(), "ddd, MMM d")
+    }
+
+    Component.onCompleted: refreshDate()
+    Timer { interval: 60000; running: !inkMode.active; repeat: true; onTriggered: page.refreshDate() }
 
     Connections {
         target: inkMode
-        function onExited(code) { page.refresh() }
+        function onExited(code) { /* allNotes is a fresh call each read; no cached copy to refresh */ }
     }
 
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        // ── CONTINUE WRITING ──────────────────────────────────
+        // ── Date ───────────────────────────────────────────────
         Text {
-            text: "Continue writing"
+            text: page.dateLabel
             font.family: Ui.fontFamily
-            font.pixelSize: Ui.primary
+            font.pixelSize: Ui.section
             font.bold: true
-            color: Ui.ink70
-            Layout.bottomMargin: 12
+            color: Ui.ink100
+            Layout.bottomMargin: 28
         }
 
-        Item {
-            visible: page.continueNote === null
+        // ── Continue writing ────────────────────────────────────
+        Text {
+            text: "Continue writing"
+            visible: page.continueNote !== null
+            font.family: Ui.fontFamily
+            font.pixelSize: Ui.meta
+            font.bold: true
+            color: Ui.ink70
+            Layout.bottomMargin: 10
+        }
+        Rectangle {
+            id: continueCard
+            objectName: "today.continue"
+            visible: page.continueNote !== null
             Layout.fillWidth: true
-            Layout.preferredHeight: 88
-            Layout.bottomMargin: Ui.gap
+            Layout.preferredHeight: 132
+            Layout.bottomMargin: 28
+            color: "#F4F4F1"
 
             RowLayout {
                 anchors.fill: parent
-                spacing: 16
-                Text {
-                    text: "Create a note"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: Ui.task
-                    color: Ui.ink100
-                }
-                Text {
-                    text: "+"
-                    font.family: Ui.fontFamily
-                    font.pixelSize: 34
-                    font.bold: true
-                    color: Ui.ink100
+                anchors.margins: 20
+                spacing: 20
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 4
+                    Text {
+                        text: page.continueNote ? page.continueNote.displayTitle : ""
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.task
+                        font.bold: true
+                        color: Ui.ink100
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                    }
+                    Text {
+                        text: page.continueNote
+                              ? (page.continueNote.pageCount + " page  ·  " + (page.continueNote.hasInk ? page.continueNote.modifiedLabel : "Ready to write"))
+                              : ""
+                        font.family: Ui.fontFamily
+                        font.pixelSize: Ui.meta
+                        color: Ui.ink70
+                    }
                 }
             }
             MouseArea {
                 anchors.fill: parent
-                onPressed: {
+                onClicked: inkMode.enter(page.continueNote.noteId)
+            }
+        }
+        // No notes at all: light create-a-note row (existing safe quick-note flow).
+        Item {
+            objectName: "today.createNote"
+            visible: page.continueNote === null
+            Layout.fillWidth: true
+            Layout.preferredHeight: 72
+            Layout.bottomMargin: 28
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "+  Create a note"
+                font.family: Ui.fontFamily
+                font.pixelSize: Ui.task
+                color: Ui.ink70
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
                     var id = noteStore.createNote("quick")
                     if (id !== "")
                         inkMode.enter(id)
@@ -75,302 +130,152 @@ Item {
             }
         }
 
-        Item {
-            visible: page.continueNote !== null
-            Layout.fillWidth: true
-            Layout.preferredHeight: 280
-            Layout.bottomMargin: 12
-
-            Rectangle {
-                id: continuePreview
-                anchors.fill: parent
-                radius: 3
-                color: Ui.paper
-                border.width: 1
-                border.color: Ui.ink30
-                clip: true
-
-                Image {
-                    anchors.fill: parent
-                    visible: page.continueNote && page.continueNote.hasInk
-                    source: page.continueNote ? page.continueNote.previewUrl : ""
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    cache: false
-                    sourceClipRect: page.continueNote && page.continueNote.legacyChrome
-                                  ? Qt.rect(96, 88, 858, 1608)
-                                  : Qt.rect(0, 0, 954, 1696)
-                }
-
-                Rectangle {
-                    visible: page.continueNote && !page.continueNote.hasInk
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.leftMargin: 32
-                    anchors.rightMargin: 32
-                    anchors.topMargin: 54
-                    height: 2
-                    color: Ui.ink30
-                }
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    if (page.continueNote)
-                        inkMode.enter(page.continueNote.noteId)
-                }
-            }
-        }
-
-        Text {
-            visible: page.continueNote !== null
-            text: page.continueNote ? page.continueNote.displayTitle : ""
-            font.family: Ui.fontFamily
-            font.pixelSize: Ui.task
-            font.bold: true
-            color: Ui.ink100
-            Layout.fillWidth: true
-        }
-
-        Text {
-            visible: page.continueNote !== null
-            text: page.continueNote ? (page.continueNote.hasInk ? page.continueNote.modifiedLabel : "Ready to write") : ""
-            font.family: Ui.fontFamily
-            font.pixelSize: Ui.meta
-            color: Ui.ink70
-            Layout.fillWidth: true
-            Layout.bottomMargin: Ui.gap
-        }
-
-        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
-
-        // ── RECENT NOTES ──────────────────────────────────────
+        // ── Recent notes ─────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 48
-            Layout.topMargin: 12
-            Layout.bottomMargin: 12
-
+            Layout.bottomMargin: 10
             Text {
                 text: "Recent notes"
                 font.family: Ui.fontFamily
-                font.pixelSize: Ui.primary
+                font.pixelSize: Ui.meta
                 font.bold: true
                 color: Ui.ink70
             }
             Item { Layout.fillWidth: true }
             Text {
+                objectName: "today.notes.viewAll"
                 text: "View all"
                 font.family: Ui.fontFamily
                 font.pixelSize: Ui.meta
                 color: Ui.ink70
-                font.bold: true
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.currentModule = 2
+                MouseArea { anchors.fill: parent; anchors.margins: -16; onClicked: page.openNotes() }
             }
         }
-
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 220
+            Layout.preferredHeight: 160
+            Layout.bottomMargin: 28
             spacing: 20
             visible: page.recentNotes.length > 0
-            Layout.bottomMargin: Ui.gap
 
             Repeater {
                 model: page.recentNotes
-                delegate: Item {
+                delegate: Rectangle {
+                    objectName: "today.notes.recent." + modelData.noteId
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    color: "#F4F4F1"
 
-                    Rectangle {
-                        id: recentPreview
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        height: parent.height - 60
-                        radius: 3
-                        color: Ui.paper
-                        border.width: 1
-                        border.color: Ui.ink30
-                        clip: true
-
-                        Image {
-                            anchors.fill: parent
-                            visible: modelData.hasInk
-                            source: modelData.previewUrl
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: false
-                            sourceClipRect: modelData.legacyChrome
-                                          ? Qt.rect(96, 88, 858, 1608)
-                                          : Qt.rect(0, 0, 954, 1696)
-                        }
-                        Rectangle {
-                            visible: !modelData.hasInk
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.leftMargin: 20
-                            anchors.rightMargin: 20
-                            anchors.topMargin: 30
-                            height: 2
-                            color: Ui.ink30
-                        }
-                    }
-                    Text {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: recentPreview.bottom
-                        anchors.topMargin: 8
-                        text: modelData.displayTitle
-                        font.family: Ui.fontFamily
-                        font.pixelSize: Ui.meta
-                        font.bold: true
-                        color: Ui.ink100
-                        elide: Text.ElideRight
-                    }
-                    MouseArea {
+                    ColumnLayout {
                         anchors.fill: parent
-                        onClicked: inkMode.enter(modelData.noteId)
+                        anchors.margins: 16
+                        Text {
+                            text: modelData.displayTitle
+                            font.family: Ui.fontFamily
+                            font.pixelSize: Ui.meta
+                            font.bold: true
+                            color: Ui.ink100
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                        Item { Layout.fillHeight: true }
+                        Text {
+                            text: modelData.hasInk ? modelData.modifiedLabel : "Ready to write"
+                            font.family: Ui.fontFamily
+                            font.pixelSize: Ui.footer
+                            color: Ui.ink70
+                        }
                     }
+                    MouseArea { anchors.fill: parent; onClicked: inkMode.enter(modelData.noteId) }
                 }
             }
         }
-
         Text {
-            visible: page.recentNotes.length === 0
+            visible: page.recentNotes.length === 0 && page.continueNote !== null
             text: "No other recent notes"
             font.family: Ui.fontFamily
-            font.pixelSize: Ui.meta
+            font.pixelSize: Ui.footer
             color: Ui.ink30
-            Layout.bottomMargin: Ui.gap
+            Layout.bottomMargin: 28
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Ui.divider }
-
-        // ── TASKS ─────────────────────────────────────────────
+        // ── Tasks ─────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 48
-            Layout.topMargin: 12
-            Layout.bottomMargin: 12
-
+            Layout.bottomMargin: 4
             Text {
                 text: "Tasks"
                 font.family: Ui.fontFamily
-                font.pixelSize: Ui.primary
+                font.pixelSize: Ui.meta
                 font.bold: true
                 color: Ui.ink70
             }
             Item { Layout.fillWidth: true }
             Text {
+                objectName: "today.tasks.viewAll"
                 text: "View all"
                 font.family: Ui.fontFamily
                 font.pixelSize: Ui.meta
                 color: Ui.ink70
-                font.bold: true
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.currentModule = 1
+                MouseArea { anchors.fill: parent; anchors.margins: -16; onClicked: page.openTasks() }
             }
         }
-
-        ColumnLayout {
+        Column {
             Layout.fillWidth: true
-            spacing: 0
-            visible: page.uncompletedTasks.length > 0
-            Layout.bottomMargin: Ui.gap
+            Layout.bottomMargin: 8
 
             Repeater {
-                model: page.uncompletedTasks.slice(0, 3)
+                model: page.previewTasks
                 delegate: Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 72
+                    objectName: "today.task.row." + (modelData.id !== undefined ? modelData.id : index)
+                    width: parent.width
+                    height: 88
 
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "#EEEEEE"
-                        visible: rowTap.pressed
-                    }
+                    Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; height: 1; color: Ui.ink30 }
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
                         spacing: 16
-
                         Rectangle {
-                            width: 32
-                            height: 32
+                            Layout.preferredWidth: 28
+                            Layout.preferredHeight: 28
                             border.width: 2
-                            border.color: Ui.muted
-                            color: "transparent"
-
-                            MouseArea {
-                                anchors.fill: parent
-                                anchors.margins: -12
-                                onClicked: {
-                                    var key = modelData.id !== undefined ? String(modelData.id) : ""
-                                    if (actionQueue.enqueue("task.complete", { id: modelData.id !== undefined ? modelData.id : key, title: modelData.title !== undefined ? modelData.title : String(modelData) })) {
-                                        var done = page.locallyCompleted
-                                        done[key] = true
-                                        page.locallyCompleted = done
-                                    }
-                                }
-                            }
+                            border.color: modelData.completed ? Ui.ink30 : Ui.ink70
+                            color: modelData.completed ? Ui.ink30 : "transparent"
                         }
-
                         Text {
                             Layout.fillWidth: true
-                            text: modelData.title !== undefined ? modelData.title : modelData
+                            text: modelData.title !== undefined ? modelData.title : String(modelData)
                             font.family: Ui.fontFamily
                             font.pixelSize: Ui.task
-                            color: Ui.ink100
+                            font.strikeout: modelData.completed === true
+                            color: modelData.completed ? Ui.ink30 : Ui.ink100
                             elide: Text.ElideRight
                         }
-                    }
-
-                    MouseArea {
-                        id: rowTap
-                        anchors.fill: parent
-                        z: -1
-                        onClicked: root.currentModule = 1
-                    }
-
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        width: parent.width
-                        height: 1
-                        color: Ui.divider
                     }
                 }
             }
         }
-
         Text {
-            visible: page.uncompletedTasks.length === 0
+            visible: page.allTasks.length === 0
             text: "Nothing scheduled today"
             font.family: Ui.fontFamily
-            font.pixelSize: Ui.meta
-            color: Ui.ink30
-            Layout.bottomMargin: Ui.gap
+            font.pixelSize: Ui.task
+            color: Ui.ink70
+            Layout.preferredHeight: 88
         }
 
         Item { Layout.fillHeight: true }
 
-        // ── STATUS FOOTER ─────────────────────────────────────
+        // ── Exceptional status only ──────────────────────────────
         Text {
             Layout.fillWidth: true
-            text: (apiClient.isLoading ? "syncing" : (apiClient.errorMessage !== "" ? "offline" : "synced"))
-                  + " · " + refreshControl.mode
+            visible: apiClient.isLoading || apiClient.errorMessage !== ""
+            text: apiClient.isLoading ? "Loading saved data…"
+                  : (apiClient.errorMessage !== "" ? "Offline · showing saved data" : "")
             font.family: Ui.fontFamily
             font.pixelSize: Ui.footer
-            color: Ui.muted
+            color: Ui.ink70
             elide: Text.ElideRight
         }
     }

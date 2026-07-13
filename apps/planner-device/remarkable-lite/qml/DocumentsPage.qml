@@ -1,28 +1,33 @@
 import QtQuick
 import QtQuick.Layouts
 
+// DocumentsPage — the canonical Documents destination (PAPR.UI.2 §2.5).
+// The current build has no document read model (no PDFs/imported files data
+// source exists anywhere in ApiClient/NoteStore). This is a genuine capability
+// gap, not an empty collection — "no documents" would claim a source that can
+// enumerate zero; this page has no such source. Show the truthful capability
+// state only. No list, no primary action, no fabricated content.
 Item {
     id: page
 
     ColumnLayout {
-        anchors.centerIn: parent
-        spacing: 16
+        anchors.fill: parent
+        spacing: 0
+
+        Item { Layout.fillHeight: true }
 
         Text {
+            objectName: "documents.unavailable"
             Layout.alignment: Qt.AlignHCenter
-            text: "No documents yet"
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: "Documents are not available in this build"
             font.family: Ui.fontFamily
             font.pixelSize: Ui.task
-            font.bold: true
-            color: Ui.ink100
+            color: Ui.ink70
+            wrapMode: Text.WordWrap
         }
 
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: "PDFs and EPUBs will appear here when connected."
-            font.family: Ui.fontFamily
-            font.pixelSize: Ui.meta
-            color: Ui.ink70
-        }
+        Item { Layout.fillHeight: true }
     }
 }
