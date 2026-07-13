@@ -72,6 +72,9 @@ shell 合同 spec,并跑 build:tokens + validate。仍属手动的外部操作(N
 创建、DNS、图标生成、Supabase env)由脚本结尾清单打印。顺带修复:`BRAND_APPS`
 补 `home`(此前 `generated/brands/home.css` 存在但不在构建/校验列表)。
 
+**后续深化 → [`APP_GENERATOR.md`](./APP_GENERATOR.md)(PLAT.GEN.1–5:漂移守卫 /
+部署 day-2 / 模板回灌 / 注册表反转 / 能力模块)。**
+
 **SHELL.4 遗留:** Music 播放态(mini player 可见 / utility pane / 沉浸
 now-playing)的真机运行 QA 待导入曲库后人工验收一次。
 
