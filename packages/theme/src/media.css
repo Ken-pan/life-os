@@ -1,0 +1,10 @@
+/* Life OS viewport breakpoints — CSS custom-media SSOT. */
+@custom-media --life-os-reflow (max-width: 320px);
+@custom-media --life-os-narrow (max-width: 380px);
+@custom-media --life-os-compact (max-width: 640px);
+@custom-media --life-os-compact-up (min-width: 640px);
+@custom-media --life-os-phone (max-width: 599px);
+@custom-media --life-os-tablet (min-width: 600px) and (max-width: 839px);
+@custom-media --life-os-mobile (max-width: 839px);
+@custom-media --life-os-mobile-landscape (max-width: 839px) and (orientation: landscape);
+@custom-media --life-os-desktop (min-width: 840px);

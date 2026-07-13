@@ -5,7 +5,7 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
@@ -48,6 +48,12 @@
     "./svelte/portrait-gate": {
       "svelte": "./src/svelte/portrait-gate/PortraitGate.svelte",
       "default": "./src/svelte/portrait-gate/PortraitGate.svelte"
+    },
+    "./svelte/app-shell": {
+      "types": "./src/svelte/app-shell/index.d.ts",
+      "import": "./src/svelte/app-shell/index.js",
+      "svelte": "./src/svelte/app-shell/index.js",
+      "default": "./src/svelte/app-shell/index.js"
     },
     "./svelte/settings/row": {
       "svelte": "./src/svelte/settings/SettingsRow.svelte",
