@@ -5,6 +5,12 @@ export default {
   common: {
     skipToContent: 'Skip to content',
   },
+  gate: {
+    checking: 'Checking sign-in…',
+    prompt: 'This is a private AI.OS cloud instance — please sign in',
+    denied: 'This account is not authorized for this AI.OS',
+    welcome: 'Signed in',
+  },
   nav: {
     mainAria: 'Main navigation',
     chat: 'Chat',
@@ -17,7 +23,6 @@ export default {
     placeholder: 'Ask anything',
     hintLocal: 'Local model · your data never leaves this device',
     hintCloud: 'Cloud view mode · new replies need a local AI machine',
-    cloudSignInPrompt: 'Sign in to your Life OS account to view synced chats & memories',
     send: 'Send',
     stop: 'Stop',
     loading: 'Generating',

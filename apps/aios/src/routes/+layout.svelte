@@ -15,10 +15,16 @@
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
   import { backfillVectors, seedDefaultMemories, dreamMemories } from '$lib/memory.svelte.js'
-  import { initCloud, syncNow, CLOUD } from '$lib/cloud.svelte.js'
+  import { initCloud, syncNow, CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
+  import { CLOUD_BUILD } from '$lib/env.js'
+  import CloudGate from '$lib/components/CloudGate.svelte'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
+
+  // 云端版:只有登录且是本人才放行,否则整个 app 用登录门禁盖住。
+  // 本地形态(Tauri/5219/dev)CLOUD_BUILD 为 false,永不经过门禁。
+  const gated = $derived(CLOUD_BUILD && !isCloudAuthorized())
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
@@ -68,31 +74,35 @@
   <title>{pageTitle} · {t('app.name')}</title>
 </svelte:head>
 
-<LifeOsAppShell
-  navigationKey={page.url.pathname}
-  focusOnNavigate="main"
-  scrollMode={isChat ? 'locked' : 'content'}
-  skipLinkLabel={t('common.skipToContent')}
-  testIdPrefix="aios-shell"
->
-  {#snippet navigation(projection)}
-    {#if projection === 'desktop'}
-      <ChatSidebar />
-    {:else}
-      <BottomNav />
-    {/if}
-  {/snippet}
+{#if gated}
+  <CloudGate />
+{:else}
+  <LifeOsAppShell
+    navigationKey={page.url.pathname}
+    focusOnNavigate="main"
+    scrollMode={isChat ? 'locked' : 'content'}
+    skipLinkLabel={t('common.skipToContent')}
+    testIdPrefix="aios-shell"
+  >
+    {#snippet navigation(projection)}
+      {#if projection === 'desktop'}
+        <ChatSidebar />
+      {:else}
+        <BottomNav />
+      {/if}
+    {/snippet}
 
-  {#snippet header()}
-    <LifeOsAppBar title={pageTitle} hidden={isChat}>
-      {#snippet leading()}
-        <span class="page-title">{t('app.name')}</span>
-      {/snippet}
-    </LifeOsAppBar>
-  {/snippet}
+    {#snippet header()}
+      <LifeOsAppBar title={pageTitle} hidden={isChat}>
+        {#snippet leading()}
+          <span class="page-title">{t('app.name')}</span>
+        {/snippet}
+      </LifeOsAppBar>
+    {/snippet}
 
-  {#snippet main()}
-    {@render children()}
-  {/snippet}
-</LifeOsAppShell>
+    {#snippet main()}
+      {@render children()}
+    {/snippet}
+  </LifeOsAppShell>
+{/if}
 

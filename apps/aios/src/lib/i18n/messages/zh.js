@@ -5,6 +5,12 @@ export default {
   common: {
     skipToContent: '跳到主要内容',
   },
+  gate: {
+    checking: '正在检查登录状态…',
+    prompt: '这是私人 AI.OS 云端版,请登录后使用',
+    denied: '此账户无权访问这个 AI.OS',
+    welcome: '已登录',
+  },
   nav: {
     mainAria: '主导航',
     chat: '对话',
@@ -17,7 +23,6 @@ export default {
     placeholder: '询问任何问题',
     hintLocal: '本地模型 · 数据不出这台设备',
     hintCloud: '云端查看模式 · 生成新回复需连接本地 AI',
-    cloudSignInPrompt: '登录 Life OS 账户查看已同步的对话与记忆',
     send: '发送',
     stop: '停止',
     loading: '正在生成',

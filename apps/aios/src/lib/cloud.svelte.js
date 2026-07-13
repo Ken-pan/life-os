@@ -1,5 +1,5 @@
 import { browser } from '$app/environment'
-import { mapAuthErrorMessage } from '@life-os/sync'
+import { mapAuthErrorMessage, LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
 import { t } from '$lib/i18n/index.js'
 import { S, applyCloudSettings } from '$lib/state.svelte.js'
 import { supabase as sb, isSupabaseConfigured } from '$lib/supabase.js'
@@ -25,6 +25,8 @@ const PULL_CHUNK = 50
 
 export const CLOUD = $state({
   configured: isSupabaseConfigured,
+  /** 登录态是否已从 Supabase 恢复完毕(避免刷新瞬间误判未登录、闪现登录门禁) */
+  ready: false,
   /** @type {{ id: string, email: string } | null} */
   user: null,
   /** 登录/登出请求进行中 */
@@ -34,6 +36,17 @@ export const CLOUD = $state({
   lastSyncAt: 0,
   error: '',
 })
+
+/**
+ * 云端版访问门禁:AIOS 是个人工具(含私人对话/记忆/画像),云端只对本人开放。
+ * @returns {boolean} 当前登录用户是否是 Life OS 个人所有者
+ */
+export function isCloudAuthorized() {
+  return (
+    !!CLOUD.user &&
+    CLOUD.user.email.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL.toLowerCase()
+  )
+}
 
 let pushTimer = null
 let pendingResync = false
@@ -65,7 +78,10 @@ function saveSnapshot(snap) {
 
 /** app 启动时调用:恢复共享登录态、订阅变更、拉一次云端 */
 export async function initCloud() {
-  if (!browser || !CLOUD.configured) return
+  if (!browser || !CLOUD.configured) {
+    CLOUD.ready = true
+    return
+  }
   sb.auth.onAuthStateChange((_event, session) => {
     const u = session?.user
     CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null
@@ -73,6 +89,7 @@ export async function initCloud() {
   const { data } = await sb.auth.getSession()
   const u = data?.session?.user
   CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null
+  CLOUD.ready = true
   if (unsubscribeBus) unsubscribeBus()
   unsubscribeBus = onDataChanged(schedulePush)
   if (CLOUD.user) syncNow()
