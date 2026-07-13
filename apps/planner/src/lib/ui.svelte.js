@@ -3,6 +3,7 @@ import { SYSTEM_LIST_INBOX } from './types.js'
 import { createToastStore } from '@life-os/platform-web/svelte/toast-store'
 import { updateTask } from './domain/tasks.js'
 import { DEFAULT_SLOT_DURATION_MINUTES } from './domain/schedule.js'
+import { createTaskEditorDraft } from './taskEditorDraft.js'
 import { t } from './i18n/index.js'
 
 /** @param {import('./types.js').Task} task */

@@ -2,7 +2,8 @@
 
 > **Roadmap：** **P-TASK-DISPLAY-0**（并入 **PLNR.UIUX.0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
 > **代码锚点：** `TaskRow.svelte` · `taskMetaLine.js` · `taskKind.js` · `lifeEventSource.js`
-> **状态：** 2026-07-10 与 P-SCHED-0 直接相关的 Today / Calendar 切片已实现并通过回归。**P-SCHED-0 整体仍为 BLOCKED**（见 [`planner-schedule-uiux-audit.md`](./planner-schedule-uiux-audit.md)）；本规范语义不变，待 P-UIUX-0 全站走查时继续验收非日程页面。
+> **姊妹文档：** [`planner-task-capture-spec.md`](./planner-task-capture-spec.md) — 创建时哪些字段进主区；本规范定义创建后如何展示
+> **状态：** 2026-07-10 与 PLNR.SCHED.0 直接相关的 Today / Calendar 切片已实现并进入 replacement branch；非日程页面继续由 PLNR.UIUX.0 验收。
 
 ## 问题
 
@@ -129,3 +130,9 @@ else → unscheduledOnly
 | 5   | 截图 + 更新本规范                                            | QA                             |
 
 **Agent：** 并入 **PLNR.SCHED.0** Fable session（不单占额度）· Codex 单测
+
+## PLNR.SCHED.0 implementation record
+
+- Today / Calendar meta line 移除 kind/priority 文案，保留排程时段、时长和子任务进度。
+- Focus 使用左侧 accent；循环任务使用 icon chip；compact 行保留来源、项目与循环关键 chip。
+- Calendar timeline 与任务列表共用 `scheduledStart` / `durationMinutes` 语义，并由 scheduling targeted tests 覆盖。

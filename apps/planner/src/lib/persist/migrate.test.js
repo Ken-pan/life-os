@@ -63,6 +63,23 @@ describe('migrate', () => {
     expect(state.tasks[3].tags).toEqual(['valid']);
   });
 
+  it('normalizes legacy task collections once at the migration boundary', () => {
+    const state = migrate({
+      schemaVersion: 2,
+      tasks: [
+        {
+          id: 'legacy',
+          title: 'Legacy task',
+          listId: 'inbox',
+          tags: 'not-an-array',
+          subtasks: null,
+        },
+      ],
+    });
+
+    expect(state.tasks[0]).toMatchObject({ tags: [], subtasks: [] });
+  });
+
   it('rejects invalid task rows', () => {
     const state = migrate({ tasks: [null, 'bad', { id: '2', title: 'ok', listId: 'inbox' }] });
     expect(state.tasks).toHaveLength(1);
