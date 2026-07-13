@@ -113,7 +113,7 @@ const DEFS = [
       function: {
         name: 'fetch_url',
         description:
-          '读取一个网页并返回其正文(Markdown)。当用户给出链接、或 web_search 的结果需要深入查看时使用。',
+          '(后备通道)经公共代理抓取网页正文,拿不到 JS 渲染内容且常被反爬拦截。读网页优先用 open_browser_page;仅当浏览器工具不可用时才用本工具。',
         parameters: {
           type: 'object',
           properties: {
@@ -133,13 +133,53 @@ const DEFS = [
       function: {
         name: 'web_search',
         description:
-          '在互联网上搜索。当问题涉及最新信息、新闻、你不确定的事实、或用户明确要求搜索时使用。返回结果列表(标题/链接/摘要);要看详情用 fetch_url 打开具体链接。',
+          '(后备通道)经公共代理刮取搜索结果,不稳定且链接常失效。搜索优先用 browser_search(真实浏览器);仅当浏览器工具不可用时才用本工具。',
         parameters: {
           type: 'object',
           properties: {
             query: { type: 'string', description: '搜索关键词' },
           },
           required: ['query'],
+        },
+      },
+    },
+  },
+  {
+    key: 'search_notes',
+    icon: 'notebook',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'search_notes',
+        description:
+          '在用户的 Obsidian 笔记库(判断/框架/决策/工作项目/日常记录)中混合检索(BM25+向量+重排,全本地)。涉及用户过往的想法、项目、评审、决策或"我之前写过/记过"时优先使用。返回相关片段与笔记路径;需要全文用 read_note。',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '检索主题或问题' },
+          },
+          required: ['query'],
+        },
+      },
+    },
+  },
+  {
+    key: 'read_note',
+    icon: 'notebook',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'read_note',
+        description: '读取一篇笔记的完整内容。path 来自 search_notes 的结果。',
+        parameters: {
+          type: 'object',
+          properties: {
+            vault: { type: 'string', description: "vault id,来自搜索结果(默认 'vault')" },
+            path: { type: 'string', description: '笔记相对路径,如 030_Frameworks/xxx.md' },
+          },
+          required: ['path'],
         },
       },
     },
@@ -167,7 +207,7 @@ const DEFS = [
       function: {
         name: 'read_browser_page',
         description:
-          '读取用户 Chrome 里页面的内容。part 可选:summary=结构化摘要(默认,含标题/链接/表单);text=页面完整正文文本(读文章、长内容时用);links=页面全部链接列表(找下一步要打开的页面时用)。当用户提到"当前页面/这个网页",或 open_browser_page 后要深入阅读时使用。',
+          '读取用户 Chrome 里页面的内容。part 可选:text=页面正文(带 offset 分页,长文继续读时把 offset 设为上次提示的位置);summary=结构化摘要(默认,含标题/链接/表单);links=页面全部链接列表。当用户提到"当前页面/这个网页",或要继续读长文时使用。',
         parameters: {
           type: 'object',
           properties: {
@@ -175,6 +215,10 @@ const DEFS = [
               type: 'string',
               enum: ['summary', 'text', 'links'],
               description: '要读取的内容,默认 summary',
+            },
+            offset: {
+              type: 'number',
+              description: 'part=text 时的起始字符位置,续读长文用,默认 0',
             },
           },
         },
@@ -190,7 +234,7 @@ const DEFS = [
       function: {
         name: 'open_browser_page',
         description:
-          '让用户的 Chrome 打开任意 URL 并采集页面,返回结构化摘要。这是读网页最可靠的方式(真实浏览器,支持 JS 渲染和登录态页面),优于 fetch_url。打开后可用 read_browser_page(part=text) 读全文、browser_interact 滚动/点击、look_at_browser_page 看视觉内容。',
+          '让用户的 Chrome 打开任意 URL,直接返回页面正文(真实浏览器,支持 JS 渲染和登录态页面)。读网页用这个,一步到位,不需要再调 read_browser_page;只有长文续读(offset)或要看链接/视觉内容时才用其他工具。',
         parameters: {
           type: 'object',
           properties: {
@@ -502,13 +546,50 @@ async function browserStatus() {
   const health = await bridgeHealth()
   const agent = health.agent ?? {}
   const lines = [`bridge 运行中(v${health.version},由 LocalAI 网关按需托管)`]
-  lines.push(
-    agent.extensionConnected
-      ? `Chrome 扩展在线(最近心跳 ${agent.lastSeenAt ?? '未知'})`
-      : 'Chrome 扩展未连接:需要 Chrome 正在运行且加载了 Web State DevTools 扩展(扩展每 20 秒自动重连,稍等再试)',
-  )
-  const summary = await readPageSummary()
-  lines.push(summary ? '已有页面快照,可用 read_browser_page 读取。' : '还没有页面快照。')
+
+  if (!agent.extensionConnected) {
+    lines.push(
+      'Chrome 扩展未连接:需要 Chrome 正在运行且加载了 Web State DevTools 扩展(扩展每 20 秒自动重连,稍等再试)。',
+    )
+    return lines.join('\n')
+  }
+  lines.push(`Chrome 扩展在线(v${agent.version ?? '?'})`)
+
+  // 实时操控能力:优先用 ping 返回的 devAgentMode;旧版扩展没有该字段时用轻量动作探测
+  let devMode = null
+  try {
+    const pong = await bridgeAction('ping', {}, 8000)
+    devMode = typeof pong.devAgentMode === 'boolean' ? pong.devAgentMode : null
+  } catch {
+    /* ping 失败不阻断诊断 */
+  }
+  if (devMode == null) {
+    try {
+      await bridgeAction('get_text', { selector: 'title' }, 10000)
+      devMode = true
+    } catch (err) {
+      devMode = /实时操控未开启/.test(String(err?.message)) ? false : null
+    }
+  }
+  if (devMode === false) {
+    lines.push(
+      '实时操控未开启:browser_search / open_browser_page / browser_interact / look_at_browser_page 不可用。请让用户点击 Chrome 工具栏的 Web State DevTools 扩展图标,打开「Dev Agent Mode」开关。',
+    )
+  } else if (devMode === true) {
+    lines.push('实时操控可用(Dev Agent Mode 已开启)。')
+  }
+
+  const res = await bridgeFetch('/latest')
+  if (res.ok) {
+    const snapshot = (await res.json()).snapshot ?? {}
+    const capturedAt = snapshot.capturedAt ? new Date(snapshot.capturedAt) : null
+    const ageMin = capturedAt ? Math.round((Date.now() - capturedAt.getTime()) / 60000) : null
+    lines.push(
+      `最新快照:${snapshot.page?.title ?? '(无标题)'} — ${snapshot.page?.url ?? '未知'}${ageMin != null ? `(${ageMin} 分钟前采集)` : ''}`,
+    )
+  } else {
+    lines.push('还没有页面快照。')
+  }
   return lines.join('\n')
 }
 
@@ -537,7 +618,14 @@ async function bridgeAction(action, params = {}, timeoutMs = 60000) {
   )
   const json = await res.json().catch(() => null)
   if (!res.ok || !json?.ok) {
-    throw new Error(json?.error || `动作 ${action} 失败 HTTP ${res.status}`)
+    const message = json?.error || `动作 ${action} 失败 HTTP ${res.status}`
+    // 把扩展的权限闸门报错翻译成可执行的用户指引
+    if (/Dev Agent Mode/i.test(message)) {
+      throw new Error(
+        '浏览器实时操控未开启。请告诉用户:点击 Chrome 工具栏的 Web State DevTools 扩展图标,打开「Dev Agent Mode」开关,然后重试。',
+      )
+    }
+    throw new Error(message)
   }
   return json.result
 }
@@ -547,39 +635,59 @@ let agentTabId = null
 
 async function navigateAndCapture(url) {
   await ensureExtension()
-  const params = { url, waitMs: 1200 }
+  // active:false = 后台标签页加载,不打断用户当前浏览(需扩展 ≥ 本次改动;旧版忽略该参数)
+  const params = { url, waitMs: 1200, active: false }
   if (agentTabId != null) params.tabId = agentTabId
   let result
   try {
     result = await bridgeAction('navigate_and_capture', params, 90000)
   } catch (err) {
-    if (agentTabId == null) throw err
-    // 研究标签页可能已被用户关闭:换新标签页重试
+    // 权限类错误直接上抛;标签页被用户关闭才值得换新标签页重试
+    if (agentTabId == null || /实时操控未开启|不可达/.test(String(err?.message))) throw err
     agentTabId = null
-    result = await bridgeAction('navigate_and_capture', { url, waitMs: 1200 }, 90000)
+    result = await bridgeAction(
+      'navigate_and_capture',
+      { url, waitMs: 1200, active: false },
+      90000,
+    )
   }
   agentTabId = result.tabId ?? agentTabId
   return result
 }
 
+/** 读取页面正文(分页;旧版扩展忽略 offset/maxChars 时退化为前 8000 字) */
+async function readPageText(offset = 0) {
+  const params = { offset, maxChars: 9000 }
+  if (agentTabId != null) params.tabId = agentTabId
+  const result = await bridgeAction('get_text', params)
+  const text = (result.text ?? '').trim()
+  if (!text) return offset > 0 ? '(没有更多内容了)' : '页面没有可读文本。'
+  const footer =
+    result.hasMore === true
+      ? `\n\n[正文共 ${result.totalChars} 字符,已读到 ${(result.offset ?? offset) + result.text.length};继续读用 read_browser_page(part=text, offset=${(result.offset ?? offset) + result.text.length})]`
+      : ''
+  return text + footer
+}
+
 async function openBrowserPage(url) {
   const target = String(url ?? '').trim()
   if (!/^https?:\/\//i.test(target)) return '错误:URL 必须以 http(s):// 开头'
-  await navigateAndCapture(target)
-  const summary = await readPageSummary()
-  return summary
-    ? truncateText(summary)
-    : '页面已打开并采集,但摘要尚未生成;可用 read_browser_page 再读。'
+  const nav = await navigateAndCapture(target)
+  // 一步到位返回正文:省掉「开页→再读全文」的额外工具轮
+  const title = nav.snapshot?.title ?? nav.snapshot?.page?.title ?? ''
+  let body
+  try {
+    body = await readPageText(0)
+  } catch {
+    body = (await readPageSummary()) ?? '(正文读取失败,可用 read_browser_page 重试)'
+  }
+  return `【${title || target}】${target}\n\n${body}`
 }
 
-async function readBrowserPage(part = 'summary') {
+async function readBrowserPage(part = 'summary', offset = 0) {
   if (part === 'text') {
     await ensureExtension()
-    const params = agentTabId != null ? { tabId: agentTabId } : {}
-    const result = await bridgeAction('get_text', params)
-    const text = (result.text ?? '').trim()
-    if (!text) return '页面没有可读文本。'
-    return truncateText(text, 12000)
+    return await readPageText(offset)
   }
   if (part === 'links') {
     const res = await bridgeFetch('/latest')
@@ -600,6 +708,20 @@ async function readBrowserPage(part = 'summary') {
   return truncateText(summary)
 }
 
+/** 搜索结果链接的通用过滤:解码 Bing 跳转、去广告与站内链接 */
+function resolveResultUrl(href) {
+  if (!href || href.includes('/aclk')) return null // Bing 广告
+  const url = href.includes('bing.com/ck/a') ? decodeBingUrl(href) : href
+  if (!/^https?:\/\//.test(url)) return null
+  try {
+    const host = new URL(url).hostname
+    if (/(^|\.)(bing|microsoft|msn)\.com$/.test(host)) return null
+  } catch {
+    return null
+  }
+  return url
+}
+
 async function browserSearch(query) {
   const q = String(query ?? '').trim()
   if (!q) return '错误:缺少搜索关键词'
@@ -608,27 +730,46 @@ async function browserSearch(query) {
   const res = await bridgeFetch('/latest')
   if (!res.ok) return `错误:读取搜索结果快照失败 HTTP ${res.status}`
   const snapshot = (await res.json()).snapshot ?? {}
+  const links = snapshot.links ?? []
   const seen = new Set()
   const items = []
-  for (const link of snapshot.links ?? []) {
-    let href = link.href ?? ''
-    const text = (link.text ?? '').trim()
-    if (!text || text.length < 8) continue
-    if (href.includes('bing.com/ck/a')) href = decodeBingUrl(href)
-    if (!/^https?:\/\//.test(href)) continue
-    let host
-    try {
-      host = new URL(href).hostname
-    } catch {
-      continue
-    }
-    if (/(^|\.)bing\.com$|(^|\.)microsoft\.com$|(^|\.)msn\.com$/.test(host)) continue
-    if (seen.has(href)) continue
-    seen.add(href)
-    items.push(`- **${text.slice(0, 100)}**\n  ${href}`)
-    if (items.length >= 10) break
+  const push = (title, url) => {
+    if (seen.has(url)) return
+    seen.add(url)
+    items.push(`- **${title.slice(0, 100)}**\n  ${url}`)
   }
-  if (items.length) return `搜索「${q}」的结果:\n\n${items.join('\n')}`
+
+  // 首选:h2 结果标题 → 锚文本包含标题的最短链接(纯标题锚),标题干净且 URL 对得上
+  const headings = (snapshot.headings ?? []).filter(
+    (h) => h.level === 2 && (h.text ?? '').trim().length >= 12,
+  )
+  for (const h of headings) {
+    if (items.length >= 10) break
+    const title = h.text.trim()
+    const exact = links.filter((l) => l.href && (l.text ?? '').includes(title))
+    const pool = exact.length
+      ? exact
+      : links.filter((l) => l.href && (l.text ?? '').includes(title.slice(0, 18)))
+    if (!pool.length) continue
+    const best = pool.sort((a, b) => (a.text ?? '').length - (b.text ?? '').length)[0]
+    const url = resolveResultUrl(best.href)
+    if (url) push(title, url)
+  }
+
+  // 回填:标题匹配不足时用通用链接过滤补齐
+  if (items.length < 3) {
+    for (const link of links) {
+      if (items.length >= 10) break
+      const text = (link.text ?? '').trim()
+      if (!text || text.length < 8) continue
+      const url = resolveResultUrl(link.href)
+      if (url) push(text, url)
+    }
+  }
+
+  if (items.length) {
+    return `搜索「${q}」的结果(按页面顺序,广告已过滤):\n\n${items.join('\n')}\n\n用 open_browser_page 打开值得深入的链接。`
+  }
 
   // 链接抽取失败(页面结构变化):退回读正文让模型自己看
   const text = await bridgeAction('get_text', agentTabId != null ? { tabId: agentTabId } : {})
@@ -664,6 +805,33 @@ async function browserInteract({ action, selector, text, key }) {
   return `动作 ${action} 已执行,页面已重新采集。${summary ? `\n\n${truncateText(summary, 4000)}` : ''}`
 }
 
+/**
+ * 缩放截图到 VLM 友好尺寸(长边 ≤1280)。
+ * Retina 截图动辄 3MP+:视觉 token 超出 VLM 上下文会导致空输出,
+ * 实测 vlm-fast 在长边 1280 内表现稳定。
+ */
+async function downscaleForVlm(dataUrl) {
+  const blob = await (await fetch(dataUrl)).blob()
+  const bitmap = await createImageBitmap(blob)
+  const scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height))
+  if (scale >= 1) {
+    bitmap.close()
+    return { url: dataUrl, width: bitmap.width, height: bitmap.height }
+  }
+  const w = Math.round(bitmap.width * scale)
+  const h = Math.round(bitmap.height * scale)
+  const canvas = new OffscreenCanvas(w, h)
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h)
+  bitmap.close()
+  const out = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 })
+  const url = await new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.readAsDataURL(out)
+  })
+  return { url, width: w, height: h }
+}
+
 async function lookAtBrowserPage(question, fullPage = false) {
   await ensureExtension()
   const shot = await bridgeAction(
@@ -678,6 +846,7 @@ async function lookAtBrowserPage(question, fullPage = false) {
     60000,
   )
   if (!shot?.data) return '错误:截图失败'
+  const image = await downscaleForVlm(`data:${shot.mimeType};base64,${shot.data}`)
 
   // 本地 VLM 看图回答(冷启动可能要等模型加载)
   const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
@@ -689,18 +858,17 @@ async function lookAtBrowserPage(question, fullPage = false) {
         {
           role: 'user',
           content: [
-            {
-              type: 'image_url',
-              image_url: { url: `data:${shot.mimeType};base64,${shot.data}` },
-            },
+            { type: 'image_url', image_url: { url: image.url } },
             {
               type: 'text',
-              text: `这是浏览器里一个网页的截图(${shot.width}×${shot.height})。${question}\n\n请具体描述,如果问题涉及图片/图表,逐一说明每张图的内容和位置。`,
+              text: `这是浏览器里一个网页的截图(${image.width}×${image.height})。${question}\n\n请具体描述,如果问题涉及图片/图表,逐一说明每张图的内容和位置。`,
             },
           ],
         },
       ],
       max_tokens: 800,
+      // 贪心解码(temp 0)对压缩网页截图会简并成复读或空输出,必须采样
+      temperature: 0.7,
       stream: false,
     }),
     signal: AbortSignal.timeout(300000),
@@ -708,7 +876,39 @@ async function lookAtBrowserPage(question, fullPage = false) {
   if (!res.ok) return `错误:视觉模型调用失败 HTTP ${res.status}`
   const json = await res.json()
   const answer = json.choices?.[0]?.message?.content?.trim()
-  return answer || '视觉模型没有返回内容。'
+  return answer || '视觉模型没有返回内容(图片可能过大或页面为空白)。'
+}
+
+/* —— Obsidian vault 知识检索(local-ai services/knowledge,经网关 upstream)—— */
+
+const VAULT_API = `${GATEWAY}/upstream/vault`
+
+async function searchNotes(query) {
+  const res = await fetch(`${VAULT_API}/search`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, k: 6 }),
+    signal: AbortSignal.timeout(120000),
+  })
+  if (!res.ok) throw new Error(`vault 服务 HTTP ${res.status}(首次调用需等索引服务拉起)`)
+  const { results } = await res.json()
+  if (!results?.length) return '笔记库中没有找到相关内容。'
+  return results
+    .map(
+      (r) =>
+        `### ${r.breadcrumb}\n(vault: ${r.vault} · path: ${r.path})\n${r.snippet}\n[在 Obsidian 打开](${r.obsidianUrl})`,
+    )
+    .join('\n\n---\n\n')
+}
+
+async function readNote(vault, path) {
+  const params = new URLSearchParams({ vault: vault || 'vault', path })
+  const res = await fetch(`${VAULT_API}/note?${params}`, {
+    signal: AbortSignal.timeout(60000),
+  })
+  if (!res.ok) throw new Error(`读取失败 HTTP ${res.status}`)
+  const note = await res.json()
+  return `# ${note.title}(${note.path})\n\n${note.content}`
 }
 
 /**
@@ -743,7 +943,11 @@ export async function executeTool(name, argsJson) {
         return parts.join('\n\n') || '(无输出)'
       }
       case 'save_memory': {
-        const item = await addMemory(args.content)
+        // 小模型常忘记用第三人称,代码兜底:没有主语就补"用户",保证召回时无歧义
+        const raw = String(args.content ?? '').trim()
+        if (!raw) return '错误:记忆内容为空'
+        const content = /^(用户|Ken|他|她)/i.test(raw) ? raw : `用户${raw}`
+        const item = await addMemory(content)
         return `已记住:${item.text}`
       }
       case 'search_memory': {
@@ -756,10 +960,14 @@ export async function executeTool(name, argsJson) {
         return await fetchUrl(args.url)
       case 'web_search':
         return await webSearch(args.query)
+      case 'search_notes':
+        return await searchNotes(args.query)
+      case 'read_note':
+        return await readNote(args.vault, args.path)
       case 'browser_status':
         return await browserStatus()
       case 'read_browser_page':
-        return await readBrowserPage(args.part || 'summary')
+        return await readBrowserPage(args.part || 'summary', Number(args.offset) || 0)
       case 'open_browser_page':
         return await openBrowserPage(args.url)
       case 'browser_search':

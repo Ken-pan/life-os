@@ -55,7 +55,8 @@ export function getVisualViewportHeight() {
 
 /**
  * CSS value for --app-vh.
- * Browser: track visual viewport (URL bar). Standalone PWA: 100vh — dvh/vv lie on cold start.
+ * Mobile browser: visual viewport px (URL bar). Standalone PWA: 100vh — dvh/vv
+ * lie on cold start. Desktop browser: 100dvh so CSS tracks window resize natively.
  * @returns {string}
  */
 export function resolveAppVhCSSValue() {
@@ -69,6 +70,8 @@ export function resolveAppVhCSSValue() {
     }
     return '100vh'
   }
+
+  if (!isLifeOsMobile()) return '100dvh'
 
   const h = getVisualViewportHeight()
   return h > 0 ? `${Math.round(h)}px` : '100dvh'
@@ -174,8 +177,11 @@ function syncSafeTopEffective() {
 
 /**
  * Keep --app-vh aligned with viewport mode:
- * - Safari browser: visualViewport px (URL bar)
+ * - Mobile Safari browser: visualViewport px (URL bar)
  * - iOS standalone PWA: 100vh (dvh/vv under-report safe-area-top on cold start)
+ * - Desktop browser: 100dvh
+ * Listeners are always attached: the mode is width-dependent (839px breakpoint),
+ * so a desktop window resized narrow must start px sync — and vice versa.
  * @returns {() => void}
  */
 export function bindViewportHeight() {
@@ -184,10 +190,6 @@ export function bindViewportHeight() {
   syncViewportHeight(true)
   syncStandaloneClass()
   syncSafeTopEffective()
-
-  if (!needsViewportHeightSync()) {
-    return () => {}
-  }
 
   /** @type {number | null} */
   let rafId = null

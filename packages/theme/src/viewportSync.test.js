@@ -2,15 +2,22 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { resolveAppVhCSSValue } from './viewportSync.js'
 
-/** @param {{ standalone?: boolean; innerHeight?: number; visualHeight?: number }} opts */
+/** @param {{ standalone?: boolean; mobile?: boolean; innerHeight?: number; visualHeight?: number }} opts */
 function stubViewport(opts) {
   const innerHeight = opts.innerHeight ?? 852
   const visualHeight = opts.visualHeight ?? innerHeight
+  const mobile = opts.mobile ?? true
 
   Object.defineProperty(globalThis, 'window', {
     value: {
       innerHeight,
-      matchMedia: () => ({ matches: Boolean(opts.standalone) }),
+      location: { search: '' },
+      /** @param {string} query */
+      matchMedia: (query) => ({
+        matches: query.includes('display-mode')
+          ? Boolean(opts.standalone)
+          : mobile,
+      }),
       visualViewport: {
         height: visualHeight,
         width: 393,
@@ -58,7 +65,22 @@ test('resolveAppVhCSSValue uses 100vh when standalone-pwa class is set', () => {
   assert.equal(resolveAppVhCSSValue(), '100vh')
 })
 
-test('resolveAppVhCSSValue uses visual viewport px in browser mode', () => {
-  stubViewport({ standalone: false, innerHeight: 800, visualHeight: 720 })
+test('resolveAppVhCSSValue uses visual viewport px in mobile browser mode', () => {
+  stubViewport({
+    standalone: false,
+    mobile: true,
+    innerHeight: 800,
+    visualHeight: 720,
+  })
   assert.equal(resolveAppVhCSSValue(), '720px')
+})
+
+test('resolveAppVhCSSValue uses 100dvh in desktop browser mode', () => {
+  stubViewport({
+    standalone: false,
+    mobile: false,
+    innerHeight: 800,
+    visualHeight: 720,
+  })
+  assert.equal(resolveAppVhCSSValue(), '100dvh')
 })

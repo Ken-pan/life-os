@@ -3,6 +3,7 @@ import { S } from '$lib/state.svelte.js'
 import {
   streamChat,
   generateTitle,
+  tinyComplete,
   pingGateway,
   VISION_MODELS,
 } from '$lib/localai.js'
@@ -26,6 +27,7 @@ const HISTORY_CHAR_BUDGET = 28000
  *   error?: string,
  *   durationMs?: number,
  *   thinkingMs?: number,
+ *   suggestions?: string[],
  * }} ChatMessage
  * @typedef {{
  *   id: string,
@@ -35,6 +37,8 @@ const HISTORY_CHAR_BUDGET = 28000
  *   createdAt: number,
  *   updatedAt: number,
  *   messages: ChatMessage[],
+ *   summary?: string,
+ *   summarizedUpTo?: number,
  * }} Conversation
  */
 
@@ -44,17 +48,60 @@ function loadConversations() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    if (!Array.isArray(parsed)) return []
+    // 页面刷新可能打断生成:清掉悬挂的 running 状态,并在被打断的尾消息上
+    // 标记错误,让现有的「重试」按钮成为恢复入口
+    for (const c of parsed) {
+      for (const [i, m] of (c.messages ?? []).entries()) {
+        if (m.role !== 'assistant') continue
+        for (const tc of m.toolCalls ?? []) {
+          if (tc.running || tc.result === undefined) {
+            tc.running = false
+            tc.result ??= '(执行被页面刷新打断)'
+          }
+        }
+        // 尾部助手消息没有正文也没有错误 = 生成中被打断(无论工具是否完成)
+        if (i === c.messages.length - 1 && !m.content && !m.error) {
+          m.error = '生成被打断(页面已刷新),可点重试继续'
+        }
+      }
+    }
+    return parsed
   } catch {
     return []
   }
 }
 
+/** 当前打开的对话跨刷新保留(sessionStorage:每个标签页独立) */
+const ACTIVE_KEY = 'aios_active_chat_v1'
+
+function rememberActive(id) {
+  if (!browser) return
+  try {
+    if (id) sessionStorage.setItem(ACTIVE_KEY, id)
+    else sessionStorage.removeItem(ACTIVE_KEY)
+  } catch {
+    /* sessionStorage 不可用时静默降级 */
+  }
+}
+
+function restoreActive(conversations) {
+  if (!browser) return null
+  try {
+    const saved = sessionStorage.getItem(ACTIVE_KEY)
+    return conversations.some((c) => c.id === saved) ? saved : null
+  } catch {
+    return null
+  }
+}
+
+const initialConversations = loadConversations()
+
 export const C = $state({
   /** @type {Conversation[]} 按 updatedAt 倒序 */
-  conversations: loadConversations(),
+  conversations: initialConversations,
   /** @type {string | null} */
-  activeId: null,
+  activeId: restoreActive(initialConversations),
   streaming: false,
   /** @type {boolean | null} null = 未检查 */
   gatewayOk: null,
@@ -102,17 +149,22 @@ export function activeConversation() {
 export function startNewChat() {
   stopStreaming()
   C.activeId = null
+  rememberActive(null)
 }
 
 export function selectConversation(id) {
   stopStreaming()
   C.activeId = id
+  rememberActive(id)
 }
 
 export function deleteConversation(id) {
   if (C.activeId === id) stopStreaming()
   C.conversations = C.conversations.filter((c) => c.id !== id)
-  if (C.activeId === id) C.activeId = null
+  if (C.activeId === id) {
+    C.activeId = null
+    rememberActive(null)
+  }
   persist()
 }
 
@@ -120,6 +172,7 @@ export function clearAllConversations() {
   stopStreaming()
   C.conversations = []
   C.activeId = null
+  rememberActive(null)
   persist()
 }
 
@@ -170,13 +223,22 @@ async function buildSystemPrompt(conversation) {
         '。需要事实精度时优先用工具,不要凭感觉编造。',
     )
     if (S.settings.memory) {
+      // 刻意精简:小模型(尤其思考模式)会逐句反刍长指令,曾因此陷入复读循环;细节纪律在工具描述里
       lines.push(
-        '记忆纪律:当用户说出值得跨对话记住的稳定事实(新偏好、身份背景变化、开始做的新事、对你已有认知的纠正)时,主动用 save_memory 记下——一次一条,第三人称一句话,必要时带上时间背景;同一事实有了新版本直接再存即可,旧版本会被自动替换。不要记:密码、密钥、证件号等敏感凭据;只在本轮有意义的临时细节;已在下方画像或记忆里的内容。当用户问到"我之前/你还记得",或任务依赖用户的历史偏好与项目背景而下方记忆没有覆盖时,先 search_memory 再回答,不要凭空猜。记忆操作静默完成,不用刻意宣布,顺带一句"已记住"即可。',
+        '记忆:用户说出值得长期记住的新事实(偏好、背景变化、纠正)时,直接调一次 save_memory;状态/时间纠正要保存为“截至当前日期,用户确认…”的新事实,没给完成日期就不要猜。问到用户历史而上下文里没有答案时,先 search_memory。记忆操作不要反复斟酌,一次调用、顺带确认即可。',
       )
     }
+    lines.push(
+      '用户有 Obsidian 笔记库(已全文索引):涉及他过往写下的判断、框架、决策、评审、项目细节或日常记录时,先 search_notes 检索,需要展开再 read_note;回答时给出笔记路径。',
+    )
   }
   const custom = S.settings.customPrompt?.trim()
   if (custom) lines.push(`用户的自定义指令:\n${custom}`)
+
+  // 长对话压缩:更早的消息已由小模型摘要,注入摘要保住"长期剧情"
+  if (conversation.summary) {
+    lines.push(`本对话较早部分的摘要(原文已省略):\n${conversation.summary}`)
+  }
 
   if (S.settings.memory) {
     // 画像 = 常驻核心记忆:最稳定的身份/偏好,不走检索,保证不漏
@@ -201,7 +263,12 @@ async function buildSystemPrompt(conversation) {
 /** 存储消息 → OpenAI wire 消息(含 tool_calls 回放与图片),带字符预算截断 */
 function buildWireMessages(conversation, systemPrompt) {
   const wire = []
-  for (const m of conversation.messages) {
+  // 已摘要的旧消息不再回放原文(摘要在 system prompt 里)
+  const startIdx = Math.min(
+    conversation.summarizedUpTo ?? 0,
+    conversation.messages.length,
+  )
+  for (const m of conversation.messages.slice(startIdx)) {
     if (m.role === 'user') {
       // 附件文件内容以围栏块内联(单文件截 12k 字符)
       const fileBlocks = (m.files ?? [])
@@ -263,6 +330,10 @@ function buildWireMessages(conversation, systemPrompt) {
   }
   // 不能以 tool 消息开头(会缺 assistant tool_calls 上文)
   while (kept.length && kept[0].role === 'tool') kept.shift()
+  // 多轮工具的长结果会把用户问题挤出预算:没有问题模型会输出空。
+  // 最近一条 user 消息永远在场(它在时间上先于所有保留的尾部消息)。
+  const lastUser = [...wire].reverse().find((m) => m.role === 'user')
+  if (lastUser && !kept.includes(lastUser)) kept.unshift(lastUser)
   return [{ role: 'system', content: systemPrompt }, ...kept]
 }
 
@@ -297,6 +368,7 @@ export async function sendMessage(text, images = [], files = []) {
     }
     C.conversations = [conversation, ...C.conversations]
     C.activeId = conversation.id
+    rememberActive(conversation.id)
   }
   conversation.model = S.settings.model
   conversation.messages.push({
@@ -321,6 +393,11 @@ export async function editUserMessage(index, newText) {
   if (!trimmed && !message.images?.length) return
   conversation.messages.splice(index + 1)
   message.content = trimmed
+  // 编辑点落在已摘要区内:摘要失效,重新从头累积
+  if ((conversation.summarizedUpTo ?? 0) > index) {
+    conversation.summary = undefined
+    conversation.summarizedUpTo = undefined
+  }
   touch(conversation)
   persist()
   await streamAssistantReply(conversation)
@@ -372,6 +449,9 @@ async function streamAssistantReply(conversation) {
     systemPrompt = '你是 AI.OS,本地私人 AI 助手。'
   }
 
+  // 思考模式遇到复读循环熔断后,本次回复的后续轮次全部关思考重试(稳定优先)
+  let useThinking = S.settings.thinking
+
   try {
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
       let assistant = firstAssistant
@@ -382,29 +462,48 @@ async function streamAssistantReply(conversation) {
       }
       const startedAt = Date.now()
 
-      const res = await streamChat({
-        model,
-        messages: buildWireMessages(conversation, systemPrompt),
-        signal,
-        temperature: S.settings.temperature,
-        tools,
-        thinking: S.settings.thinking,
-        onDelta: (chunk) => {
-          if (chunk.reasoning) assistant.reasoning += chunk.reasoning
-          if (chunk.content) assistant.content += chunk.content
-          // 正文开始的瞬间定格思考用时(reasoning_content 通道或 <think> 标签均适用)
-          if (!assistant.thinkingMs && assistant.content) {
-            const inThink =
-              assistant.content.startsWith('<think>') &&
-              !assistant.content.includes('</think>')
-            const hadThinking =
-              assistant.reasoning || assistant.content.startsWith('<think>')
-            if (hadThinking && !inThink) {
-              assistant.thinkingMs = Date.now() - startedAt
+      // 最后一轮不再提供工具,强制模型基于已有结果收尾作答
+      const lastRound = round === MAX_TOOL_ROUNDS - 1
+      const doStream = () =>
+        streamChat({
+          model,
+          messages: buildWireMessages(conversation, systemPrompt),
+          signal,
+          temperature: S.settings.temperature,
+          maxTokens: useThinking ? 8192 : 4096, // 思考通道占大头,给足预算避免正文被截断
+          tools: lastRound ? undefined : tools,
+          thinking: useThinking,
+          onDelta: (chunk) => {
+            if (chunk.reasoning) assistant.reasoning += chunk.reasoning
+            if (chunk.content) assistant.content += chunk.content
+            // 正文开始的瞬间定格思考用时(reasoning_content 通道或 <think> 标签均适用)
+            if (!assistant.thinkingMs && assistant.content) {
+              const inThink =
+                assistant.content.startsWith('<think>') &&
+                !assistant.content.includes('</think>')
+              const hadThinking =
+                assistant.reasoning || assistant.content.startsWith('<think>')
+              if (hadThinking && !inThink) {
+                assistant.thinkingMs = Date.now() - startedAt
+              }
             }
-          }
-        },
-      })
+          },
+        })
+
+      let res = await doStream()
+      if (
+        res.finishReason === 'loop' &&
+        useThinking &&
+        !signal.aborted &&
+        !res.toolCalls.length
+      ) {
+        // 思考通道复读熔断:丢弃循环产物,关思考重试本轮
+        useThinking = false
+        assistant.reasoning = ''
+        assistant.content = ''
+        assistant.thinkingMs = undefined
+        res = await doStream()
+      }
 
       assistant.durationMs = Date.now() - startedAt
       // 只思考没正文就结束(被打断/纯思考轮):整段都算思考时间
@@ -428,10 +527,6 @@ async function streamAssistantReply(conversation) {
       }
       persist()
       if (signal.aborted) break
-      if (round === MAX_TOOL_ROUNDS - 1) {
-        // 最后一轮不再给工具,强制模型收尾
-        tools?.splice(0, tools.length)
-      }
     }
   } catch (err) {
     if (err?.name !== 'AbortError') {
@@ -454,6 +549,11 @@ async function streamAssistantReply(conversation) {
       !last.error
     ) {
       conversation.messages.pop()
+      // 工具轮结束后模型静默返回空:别无声无息,给用户重试入口
+      const prev = conversation.messages.at(-1)
+      if (!signal.aborted && prev?.role === 'assistant' && prev.toolCalls?.length && !prev.error) {
+        prev.error = '模型没有基于工具结果生成回答,可点重试'
+      }
     } else if (last?.role === 'assistant' && last.content && !last.error) {
       C.freshAssistant = { id: conversation.id, index: conversation.messages.length - 1 }
     }
@@ -461,10 +561,13 @@ async function streamAssistantReply(conversation) {
     persist()
   }
 
+  // 回复落定后的小模型辅助任务,全部 fire-and-forget,不阻塞交互
   maybeTitle(conversation)
+  maybeSuggest(conversation)
+  maybeCompact(conversation)
 }
 
-/** 首轮回复完成后,用 llm-fast 起短标题(失败保留截断标题) */
+/** 首轮回复完成后,用常驻小模型起短标题(失败保留截断标题) */
 async function maybeTitle(conversation) {
   if (conversation.titled) return
   const user = conversation.messages.find((m) => m.role === 'user')
@@ -477,5 +580,116 @@ async function maybeTitle(conversation) {
   if (title) {
     conversation.title = title
     persist()
+  }
+}
+
+/* —— 小模型辅助:追问建议 / 历史压缩(常驻 llm-tiny,亚秒级) —— */
+
+/** 回复完成后生成 2-3 个追问建议,挂在最后一条助手消息上 */
+async function maybeSuggest(conversation) {
+  const last = conversation.messages.at(-1)
+  if (!last || last.role !== 'assistant' || !last.content || last.error) return
+  const lastUser = [...conversation.messages].reverse().find((m) => m.role === 'user')
+  if (!lastUser?.content) return
+  const answer = last.content.replace(/^<think>[\s\S]*?<\/think>/, '').trim()
+  if (!answer) return
+
+  const instruction =
+    S.settings.locale === 'en'
+      ? 'Based on this exchange, suggest 3 natural follow-up questions the user might send next. One per line, max 8 words each. Output only the 3 lines, no numbering.'
+      : '基于这轮对话,替用户想 3 个自然的追问(用户视角、可直接发送),每行一个,每个不超过 16 个字。只输出 3 行问题本身,不要编号和其他内容。'
+  const raw = await tinyComplete(
+    `${instruction}\n\n用户: ${lastUser.content.slice(0, 400)}\n助手: ${answer.slice(0, 800)}`,
+    { maxTokens: 96, temperature: 0.7 },
+  )
+  if (!raw) return
+  const suggestions = raw
+    .split('\n')
+    .map((l) => l.replace(/^\s*(?:[-*•]|\d+[.、)])\s*/, '').trim())
+    .filter((l) => l.length >= 2 && l.length <= 40)
+    .slice(0, 3)
+  if (!suggestions.length) return
+  last.suggestions = suggestions
+  persist()
+}
+
+const COMPACT_TRIGGER = 20000 // 未摘要区超过此字符量时触发后台压缩
+const COMPACT_KEEP = 12000 // 压缩后保留原文的近期窗口
+let compacting = false
+
+function messageSize(m) {
+  let n = (m.content ?? '').length
+  for (const f of m.files ?? []) n += Math.min(f.text?.length ?? 0, 12000)
+  for (const tc of m.toolCalls ?? []) {
+    n += (tc.arguments?.length ?? 0) + (tc.result?.length ?? 0)
+  }
+  return n + 50
+}
+
+/**
+ * 长对话历史压缩:旧消息不再被静默丢弃,而是由小模型并入滚动摘要
+ * (摘要进 system prompt,原文只保留近期窗口)。
+ */
+async function maybeCompact(conversation) {
+  if (compacting || C.streaming) return
+  const messages = conversation.messages
+  const start = Math.min(conversation.summarizedUpTo ?? 0, messages.length)
+  const sizes = messages.map(messageSize)
+  const total = sizes.slice(start).reduce((a, b) => a + b, 0)
+  if (total < COMPACT_TRIGGER) return
+
+  // 压缩边界必须落在用户消息开头(避免拆散 assistant+tool 回放),
+  // 从尾部保留约 COMPACT_KEEP 的原文
+  const n = messages.length
+  const suffix = new Array(n + 1).fill(0)
+  for (let i = n - 1; i >= 0; i--) suffix[i] = suffix[i + 1] + sizes[i]
+  let cut = start
+  for (let i = start + 1; i < n; i++) {
+    if (messages[i].role === 'user' && suffix[i] <= COMPACT_KEEP) {
+      cut = i
+      break
+    }
+  }
+  if (cut <= start) {
+    // 近期窗口装不下任何完整轮次(单轮巨大):至少保留最后一轮
+    for (let i = n - 1; i > start; i--) {
+      if (messages[i].role === 'user') {
+        cut = i
+        break
+      }
+    }
+  }
+  if (cut <= start) return
+
+  const chunk = messages
+    .slice(start, cut)
+    .map((m) => {
+      const who = m.role === 'user' ? '用户' : '助手'
+      const text = (m.content ?? '')
+        .replace(/^<think>[\s\S]*?<\/think>/, '')
+        .trim()
+        .slice(0, 1500)
+      const toolNote = m.toolCalls?.length
+        ? `(调用了工具:${m.toolCalls.map((t) => t.name).join('、')})`
+        : ''
+      return `${who}: ${text}${toolNote}`
+    })
+    .filter((l) => l.length > 4)
+    .join('\n')
+  if (!chunk) return
+
+  compacting = true
+  try {
+    const merged = await tinyComplete(
+      `把以下对话内容压缩成不超过 400 字的要点摘要,保留:关键事实与数据、做出的决定、用户偏好、未解决的问题。只输出摘要本身。\n\n${conversation.summary ? `【已有摘要】\n${conversation.summary}\n\n` : ''}【新增对话】\n${chunk.slice(0, 8000)}`,
+      { maxTokens: 800, temperature: 0.3, timeoutMs: 60000 },
+    )
+    if (merged) {
+      conversation.summary = merged.slice(0, 1200)
+      conversation.summarizedUpTo = cut
+      persist()
+    }
+  } finally {
+    compacting = false
   }
 }

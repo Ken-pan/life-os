@@ -26,6 +26,14 @@
     { icon: 'calculator', text: t('chat.suggestMath') },
   ])
 
+  // 追问建议(小模型生成,挂在最后一条助手消息上,空闲时展示)
+  const followUps = $derived.by(() => {
+    if (C.streaming || !conversation) return []
+    const last = conversation.messages.at(-1)
+    if (last?.role !== 'assistant' || last.error) return []
+    return last.suggestions ?? []
+  })
+
   let scroller = $state(null)
   let nearBottom = $state(true)
   let exported = $state(false)
@@ -57,6 +65,7 @@
     const last = conversation?.messages.at(-1)
     void last?.content
     void last?.reasoning
+    void last?.suggestions
     void conversation?.messages.length
     if (!scroller || !nearBottom) return
     tick().then(() => {
@@ -135,6 +144,15 @@
         {#each conversation.messages as message, i (i)}
           <Message {message} index={i} isLast={i === conversation.messages.length - 1} />
         {/each}
+        {#if followUps.length}
+          <div class="follow-ups" aria-label={t('chat.followUps')}>
+            {#each followUps as text (text)}
+              <button type="button" class="follow-chip" onclick={() => sendMessage(text)}>
+                {text}
+              </button>
+            {/each}
+          </div>
+        {/if}
       </div>
     </div>
     <div class="dock">
@@ -291,6 +309,46 @@
     flex-direction: column;
     gap: var(--space-6, 24px);
     padding-block: var(--space-5, 20px) var(--space-4, 16px);
+  }
+
+  /* —— 追问建议(回复下方,ChatGPT 式)—— */
+  .follow-ups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: -8px;
+  }
+  .follow-chip {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--t2);
+    padding: 7px 14px;
+    font-size: var(--text-sm, 13px);
+    text-align: start;
+    cursor: pointer;
+    transition: all var(--dur-fast, 120ms) var(--ease, ease);
+    animation: follow-in 240ms var(--ease, ease) both;
+  }
+  .follow-chip:hover {
+    background: var(--card);
+    color: var(--t1);
+    border-color: var(--border-l);
+  }
+  @keyframes follow-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .follow-chip {
+      animation: none;
+    }
   }
 
   /* —— 底部输入区 —— */

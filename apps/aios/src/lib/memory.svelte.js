@@ -1,5 +1,5 @@
 import { browser } from '$app/environment'
-import { embed, cosine } from '$lib/localai.js'
+import { embed, cosine, tinyComplete } from '$lib/localai.js'
 import { SEED_MEMORIES } from '$lib/profile.js'
 
 /**
@@ -116,6 +116,81 @@ export async function backfillVectors() {
   }
 }
 
+/* —— 记忆 dreaming(ChatGPT memory dreaming 风格) —— */
+
+const DREAM_AT_KEY = 'aios_memory_dreamed_at_v1'
+const DREAM_BACKUP_KEY = 'aios_memory_backup_v1'
+const DREAM_INTERVAL_MS = 24 * 3600 * 1000
+const DREAM_MIN_ITEMS = 8
+
+/**
+ * 空闲时用常驻小模型整理记忆:合并重复、给相对时间补记录日期、删除已被
+ * 明确新事实取代的旧条目。绝不把“计划过期”推断成“已经完成”。
+ * 24h 至多一次;替换前整体备份,解析失败不动原数据。
+ * @returns {Promise<boolean>} 是否执行了整理
+ */
+export async function dreamMemories() {
+  if (!browser) return false
+  const lastRun = Number(localStorage.getItem(DREAM_AT_KEY) ?? 0)
+  if (Date.now() - lastRun < DREAM_INTERVAL_MS) return false
+  if (M.items.length < DREAM_MIN_ITEMS) return false
+  // 先记时间戳:失败也不在同一天反复重试
+  localStorage.setItem(DREAM_AT_KEY, String(Date.now()))
+
+  const items = M.items.slice(0, 120)
+  const listing = items
+    .map((m, i) => `${i + 1}. [${new Date(m.createdAt).toISOString().slice(0, 10)}] ${m.text}`)
+    .join('\n')
+  const today = new Date().toISOString().slice(0, 10)
+  const raw = await tinyComplete(
+    `今天是 ${today}。下面是关于用户的记忆列表(带记录日期)。请整理:\n` +
+      '1. 说同一件事的条目合并为一条(以最新明确事实为准)\n' +
+      '2. “近期/正在/计划”等相对说法要保留为当时状态并补记录日期,例如 [2026-03-01]“7月计划去X”→“截至2026-03-01,用户计划2026年7月去X”\n' +
+      '3. 只有较新的条目明确确认完成/取消/改变时,才删除与它直接矛盾的旧条目\n' +
+      '严禁因为计划日期已过去就推断事情已完成(“计划去X”不能改成“去过X”)。不要发明新信息,不要丢掉仍然有效的信息。输出 JSON 字符串数组(不要对象、不要日期字段),每条一句第三人称,不超过 80 字。格式示例:["记忆一","记忆二"]。只输出 JSON,不要解释。\n\n' +
+      listing,
+    { maxTokens: 2048, temperature: 0.2, timeoutMs: 120000 },
+  )
+  if (!raw) return false
+
+  let texts
+  try {
+    const jsonText = raw.replace(/^[\s\S]*?(\[[\s\S]*\])[\s\S]*$/, '$1')
+    const parsed = JSON.parse(jsonText)
+    if (!Array.isArray(parsed)) return false
+    // 兼容小模型偶尔输出 {text, date} 对象数组
+    texts = parsed
+      .map((t) => (typeof t === 'string' ? t : typeof t?.text === 'string' ? t.text : null))
+      .filter((t) => typeof t === 'string')
+      .map((t) => t.trim().slice(0, 500))
+      .filter(Boolean)
+  } catch {
+    return false
+  }
+  // 防呆:整理结果条数异常(丢了大半或凭空暴涨)时放弃
+  if (texts.length < Math.max(3, Math.floor(items.length / 3))) return false
+  if (texts.length > items.length + 2) return false
+
+  try {
+    localStorage.setItem(DREAM_BACKUP_KEY, JSON.stringify(M.items))
+  } catch {
+    /* 备份失败不阻断 */
+  }
+  const byText = new Map(items.map((m) => [m.text, m]))
+  const untouched = M.items.slice(120)
+  M.items = [
+    ...texts.map((text) => {
+      const old = byText.get(text)
+      // 原文未变的保留 id/向量;改写过的重建,向量由 backfillVectors 补
+      return old ?? { id: crypto.randomUUID(), text, vector: null, createdAt: Date.now() }
+    }),
+    ...untouched,
+  ].slice(0, MAX_MEMORIES)
+  persist()
+  backfillVectors()
+  return true
+}
+
 export function deleteMemory(id) {
   M.items = M.items.filter((m) => m.id !== id)
   persist()
@@ -155,9 +230,10 @@ export async function searchMemories(query, k = 5) {
  * 为本轮对话召回相关记忆(注入 system prompt 用)。
  * 注入端阈值偏高(重精度):无关记忆混进 prompt 会误导小模型;
  * 需要广召回时模型自己会调 search_memory(工具端阈值 0.2,重召回)。
+ * 0.5 来自实测:无关问题对记忆库的相似度上限 ~0.45,相关记忆下限 ~0.53。
  * @returns {Promise<string[]>}
  */
-export async function recallRelevant(query, k = 4, threshold = 0.45) {
+export async function recallRelevant(query, k = 4, threshold = 0.5) {
   if (!M.items.length) return []
   try {
     const results = await searchMemories(query, k)

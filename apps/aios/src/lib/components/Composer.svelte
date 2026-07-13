@@ -2,7 +2,7 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
   import { C, sendMessage, stopStreaming } from '$lib/chat.svelte.js'
-  import { transcribe } from '$lib/localai.js'
+  import { transcribe, polishTranscript } from '$lib/localai.js'
   import { importFile, IMPORT_ACCEPT } from '$lib/fileImport.js'
 
   /** @type {{ autofocus?: boolean }} */
@@ -138,7 +138,7 @@
         if (blob.size < 1000) return
         transcribing = true
         try {
-          const result = await transcribe(blob)
+          const result = await polishTranscript(await transcribe(blob))
           if (result) {
             text = text ? `${text} ${result}` : result
             requestAnimationFrame(autogrow)

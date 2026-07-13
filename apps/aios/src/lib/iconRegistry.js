@@ -21,6 +21,7 @@ import Lightbulb from '@lucide/svelte/icons/lightbulb'
 import MessageCircle from '@lucide/svelte/icons/message-circle'
 import Mic from '@lucide/svelte/icons/mic'
 import Monitor from '@lucide/svelte/icons/monitor'
+import NotebookText from '@lucide/svelte/icons/notebook-text'
 import Paperclip from '@lucide/svelte/icons/paperclip'
 import Plus from '@lucide/svelte/icons/plus'
 import RefreshCw from '@lucide/svelte/icons/refresh-cw'
@@ -56,6 +57,7 @@ export const ICONS = {
   chat: MessageCircle,
   mic: Mic,
   monitor: Monitor,
+  notebook: NotebookText,
   paperclip: Paperclip,
   plus: Plus,
   refresh: RefreshCw,

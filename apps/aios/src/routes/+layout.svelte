@@ -12,7 +12,7 @@
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
-  import { backfillVectors, seedDefaultMemories } from '$lib/memory.svelte.js'
+  import { backfillVectors, seedDefaultMemories, dreamMemories } from '$lib/memory.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
@@ -34,9 +34,12 @@
     refreshGateway()
     seedDefaultMemories()
     backfillVectors()
+    // 记忆 dreaming:启动稳定后空闲整理(内部限 24h 一次)
+    const dreamTimer = setTimeout(() => dreamMemories(), 30000)
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
     return () => {
+      clearTimeout(dreamTimer)
       cleanupTheme()
       cleanupViewport()
     }

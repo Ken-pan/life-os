@@ -16,6 +16,7 @@ npm exec --workspace aios-os -- vite dev   # http://localhost:5197
 | 思考模式 | qwen `enable_thinking`,思考过程折叠展示 | 模型菜单开关 |
 | 工具调用 agent loop | 原生 `tool_calls`,最多 6 轮:网页搜索(Bing 经 CORS 代理,Wikipedia 后备)· 网页阅读 · 计算器(BigInt 精确)· 代码解释器(Worker 沙盒)· 时间 · 记忆读写 | `src/lib/tools.js` · `src/lib/chat.svelte.js` |
 | 长期记忆 | 模型经 save_memory 主动写入;Qwen3-Embedding 语义召回(512 维 Matryoshka 截断)注入 system prompt;设置页可管理 | `src/lib/memory.svelte.js` |
+| 笔记库检索 | Obsidian vault 全文索引(BM25+向量 RRF 融合 + qwen3-reranker-8b 重排),`search_notes` 检索片段+路径,`read_note` 展开全文;回答带 Obsidian 深链 | `src/lib/tools.js` · `local-ai/services/knowledge/vault_server.py` |
 | 视觉 | 图片附件(选择/粘贴,降采样 1568px)自动路由 vlm-fast / vlm-quality | `chat.svelte.js` 视觉路由 |
 | 语音输入 / 朗读 | MediaRecorder → Qwen3-ASR 转写;回复朗读走 Kokoro TTS(前 400 字) | `Composer.svelte` · `Message.svelte` |
 | 消息编辑重发 | 编辑任意用户消息并从该处重发(丢弃其后消息) | `chat.svelte.js editUserMessage` |
@@ -31,7 +32,9 @@ npm exec --workspace aios-os -- vite dev   # http://localhost:5197
 
 会话、记忆、设置全部 `localStorage`(`aios_chats_v1` / `aios_memory_v1` /
 `aiosos_v1`)。网关合同见 `local-ai/docs/CONSUMING.md`;VLM/STT 服务壳的
-CORS 头由 local-ai 侧 FastAPI middleware 提供(浏览器消费必需)。
+CORS 头由 local-ai 侧 FastAPI middleware 提供(浏览器消费必需)。笔记库服务
+(`vault`)同样经网关 `/upstream/vault/*` 代理,按 `local-ai/config/knowledge.json`
+索引 vault 列表,llama-swap 按需拉起/空闲卸载。
 
 ## 已知边界
 

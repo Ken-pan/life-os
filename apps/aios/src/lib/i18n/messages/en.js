@@ -27,6 +27,7 @@ export default {
     thoughtFor: 'Thought for {s}s',
     pending: 'Thinking…',
     pendingCold: 'Waking the local model — first load takes a while…',
+    followUps: 'Suggested follow-ups',
     newChat: 'New chat',
     retry: 'Retry',
     gatewayDown:
@@ -77,6 +78,8 @@ export default {
     search_memory: 'Search memory',
     fetch_url: 'Read webpage',
     web_search: 'Web search',
+    search_notes: 'Search notes',
+    read_note: 'Read note',
     browser_status: 'Browser status',
     read_browser_page: 'Read browser page',
     open_browser_page: 'Open browser page',
