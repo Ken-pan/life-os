@@ -1,0 +1,270 @@
+#!/bin/sh
+# paperos-watch — PAPR.SYS.1 production journal watcher.
+#
+# Watches `journalctl -fu xochitl` (unit-filtered, live-only) for the accepted
+# PAPR.SYS.1b.jrn launch signal:
+#
+#     rm.library.ext.open
+#     EntityOpen::open:
+#     EntityId{<launcher-document-UUID>}
+#
+# and invokes paperos-enter exactly once per deliberate open. The journal
+# token is NOT a public API (may change on OTA), so every anomaly fails
+# closed: no launch, xochitl untouched.
+#
+# Fail-closed gates (in order, all must pass before launch):
+#   exact-UUID match · DISABLED marker · crashloop marker · OTA compat ·
+#   launcher document present in store · event timestamp fresh (no replay) ·
+#   lifecycle state NATIVE-compatible · xochitl active · cooldown elapsed
+#
+# Replay prevention: `-n 0` starts the stream at "now" (no backlog), and every
+# candidate event additionally carries the journal short-unix timestamp which
+# must be within MAX_EVENT_AGE seconds of the device clock.
+#
+# Restart policy: the journalctl pipeline is restarted at most MAX_RESTARTS
+# times per RESTART_WINDOW; beyond that the watcher latches run/watcher.exhausted
+# and exits (fail closed — native system unaffected). Enter failures latch
+# run/crashloop after FAIL_LIMIT failures within FAIL_WINDOW; clear with
+# `paperos-ctl arm`.
+#
+# Deployment: TEMPORARY / MANUAL START ONLY. Never `systemctl enable`, never a
+# boot hook (persistent enablement requires a separate Ken device gate).
+#
+# Usage:
+#   paperos-watch            # run against the live journal (foreground)
+#   paperos-watch --parse    # read journal lines on stdin, print decisions,
+#                            # never launch (host test mode)
+#
+# Exit codes: 1 restart budget exhausted · 2 lock busy · 4 launcher UUID
+# missing/invalid · 5 exhausted marker present · 6 incompatible at startup
+set -u
+
+LIFECYCLE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$LIFECYCLE_DIR/paperos-lib.sh"
+
+MODE=run
+if [ "${1:-}" = "--parse" ]; then MODE=parse; fi
+
+COOLDOWN="${PAPEROS_WATCH_COOLDOWN:-15}"
+MAX_EVENT_AGE="${PAPEROS_WATCH_MAX_EVENT_AGE:-5}"
+MAX_RESTARTS="${PAPEROS_WATCH_MAX_RESTARTS:-5}"
+RESTART_WINDOW="${PAPEROS_WATCH_RESTART_WINDOW:-3600}"
+RESTART_DELAY="${PAPEROS_WATCH_RESTART_DELAY:-2}"
+FAIL_LIMIT="${PAPEROS_WATCH_FAIL_LIMIT:-2}"
+FAIL_WINDOW="${PAPEROS_WATCH_FAIL_WINDOW:-300}"
+# Forced backoff after every failed enter (Finding C, Layer 3): spaces recovery
+# xochitl-starts far apart so a failing enter cannot rapidly re-trigger and
+# approach the vendor StartLimitBurst before crashloop latches.
+FAIL_BACKOFF="${PAPEROS_WATCH_FAIL_BACKOFF:-180}"
+ENTER_CMD="${PAPEROS_ENTER_CMD:-$LIFECYCLE_DIR/paperos-enter}"
+PENDING_MAX_LINES=3
+
+# Test hook: freeze "now" for deterministic staleness/cooldown checks.
+watch_now() {
+  if [ -n "${PAPEROS_WATCH_NOW:-}" ]; then echo "$PAPEROS_WATCH_NOW"; else date +%s; fi
+}
+
+# ── Launcher UUID (fail closed if missing or malformed) ─────────────────────
+UUID=""
+if [ -r "$LAUNCHER_UUID_FILE" ]; then
+  UUID=$(tr -d ' \t\r\n' < "$LAUNCHER_UUID_FILE")
+fi
+if ! printf '%s' "$UUID" | grep -Eq \
+  '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; then
+  log_line watch blocked reason=launcher-uuid-invalid file="$LAUNCHER_UUID_FILE"
+  echo "paperos-watch: launcher UUID missing/invalid ($LAUNCHER_UUID_FILE) — fail closed" >&2
+  exit 4
+fi
+
+emit() {
+  # emit <DECISION> [reason]
+  if [ "$MODE" = parse ]; then
+    if [ -n "${2:-}" ]; then echo "$1 reason=$2"; else echo "$1"; fi
+  fi
+  log_line watch decision result="$1" ${2:+reason="$2"}
+}
+
+record_enter_failure() {
+  _now=$(watch_now)
+  if [ -z "$fail_window_start" ] || \
+     [ $(( _now - fail_window_start )) -gt "$FAIL_WINDOW" ]; then
+    fail_window_start=$_now
+    fail_count=0
+  fi
+  fail_count=$(( fail_count + 1 ))
+  log_line watch enter-failed count="$fail_count" limit="$FAIL_LIMIT"
+  if [ "$fail_count" -ge "$FAIL_LIMIT" ]; then
+    echo "reason=enter-failures count=$fail_count ts=$(now_iso)" > "$CRASHLOOP_MARKER"
+    log_line watch crashloop-latched count="$fail_count"
+  fi
+}
+
+handle_candidate() {
+  # handle_candidate <event_epoch_or_empty>
+  _ets="$1"
+  if is_disabled; then emit BLOCK disabled; return; fi
+  if is_crashlooped; then emit BLOCK crashloop; return; fi
+  if ! compat_ok; then emit BLOCK incompatible; return; fi
+  if [ ! -e "$XOCHITL_STORE/$UUID.metadata" ]; then
+    emit BLOCK launcher-missing
+    return
+  fi
+  # Unparseable timestamp -> cannot prove freshness -> fail closed.
+  if [ -z "$_ets" ]; then emit BLOCK no-timestamp; return; fi
+  _now=$(watch_now)
+  _age=$(( _now - _ets ))
+  if [ "$_age" -gt "$MAX_EVENT_AGE" ] || [ "$_age" -lt -"$MAX_EVENT_AGE" ]; then
+    emit BLOCK stale age="$_age"
+    return
+  fi
+  _st=$(get_state)
+  case "$_st" in
+    ENTERING_PAPEROS|PAPEROS_ACTIVE|EXITING_PAPEROS|RECOVERY)
+      emit BLOCK "state-$_st"
+      return ;;
+  esac
+  if [ "$MODE" = run ] && ! unit_active xochitl; then
+    emit BLOCK xochitl-inactive
+    return
+  fi
+  if [ -n "$last_launch" ] && [ $(( _now - last_launch )) -lt "$COOLDOWN" ]; then
+    emit BLOCK duplicate
+    return
+  fi
+  last_launch=$_now
+  emit LAUNCH
+  if [ "$MODE" = run ]; then
+    if "$ENTER_CMD"; then
+      fail_count=0
+      fail_window_start=""
+      log_line watch enter-ok
+    else
+      _rc=$?
+      # Exit 9 = paperos-enter deliberately throttled (cycle budget / start-limit
+      # drift). That is NOT a crash, so it must not count toward the crashloop
+      # latch — just let the cooldown/budget gate it next time.
+      if [ "$_rc" = 9 ]; then
+        log_line watch enter-throttled rc=9
+      else
+        record_enter_failure
+        if [ "$FAIL_BACKOFF" -gt 0 ]; then
+          log_line watch backoff seconds="$FAIL_BACKOFF"
+          sleep "$FAIL_BACKOFF"
+        fi
+      fi
+    fi
+  fi
+}
+
+check_entity() {
+  # check_entity <line> <armed_epoch_or_empty>
+  case "$1" in
+    *"EntityId{$UUID}"*) handle_candidate "$2" ;;
+    *EntityId\{*\}*)     emit IGNORE wrong-uuid ;;
+    *)                   emit IGNORE malformed-entity ;;
+  esac
+}
+
+# Parser state machine over journalctl short-unix output. The accepted event
+# spans up to three lines (category, EntityOpen, EntityId); only the entry's
+# first line carries the timestamp. Anything that does not complete the exact
+# sequence within PENDING_MAX_LINES lines is dropped.
+parse_stream() {
+  pending=0
+  pending_ts=""
+  pending_left=0
+  last_launch=""
+  fail_count=0
+  fail_window_start=""
+
+  while IFS= read -r line; do
+    line_ts=""
+    case "$line" in
+      [0-9]*.[0-9]*" "*) line_ts=${line%% *}; line_ts=${line_ts%%.*} ;;
+    esac
+
+    matched=0
+    case "$line" in
+      *rm.library.ext.open*)
+        pending=1
+        pending_ts="$line_ts"
+        pending_left=$PENDING_MAX_LINES
+        matched=1 ;;
+    esac
+    if [ "$pending" -ge 1 ]; then
+      case "$line" in
+        *EntityOpen::open*)
+          pending=2
+          pending_left=$PENDING_MAX_LINES
+          matched=1 ;;
+      esac
+    fi
+    if [ "$pending" = 2 ]; then
+      case "$line" in
+        *EntityId*)
+          check_entity "$line" "$pending_ts"
+          pending=0
+          pending_ts=""
+          continue ;;
+      esac
+    fi
+
+    if [ "$pending" -ge 1 ] && [ "$matched" = 0 ]; then
+      pending_left=$(( pending_left - 1 ))
+      if [ "$pending_left" -le 0 ]; then
+        pending=0
+        pending_ts=""
+      fi
+    fi
+  done
+}
+
+if [ "$MODE" = parse ]; then
+  parse_stream
+  exit 0
+fi
+
+# ── Run mode ─────────────────────────────────────────────────────────────────
+ensure_run_dir
+
+if [ -e "$WATCH_EXHAUSTED_MARKER" ]; then
+  log_line watch blocked reason=exhausted-marker
+  echo "paperos-watch: watcher.exhausted marker present — run 'paperos-ctl arm' first" >&2
+  exit 5
+fi
+
+if ! compat_ok; then
+  log_line watch blocked reason=incompatible-at-start version_id="$(current_version_id)"
+  echo "paperos-watch: OS build not in $COMPAT_FILE — fail closed" >&2
+  exit 6
+fi
+
+if ! acquire_lock watch; then
+  echo "paperos-watch: another watcher instance is running" >&2
+  exit 2
+fi
+trap 'release_lock watch; log_line watch stop' EXIT INT TERM HUP
+
+log_line watch start uuid="$UUID" cooldown="$COOLDOWN" max_event_age="$MAX_EVENT_AGE"
+
+restarts=0
+window_start=$(date +%s)
+while :; do
+  # -n 0: live-only — never replays events emitted before this pipeline
+  # started (covers watcher downtime and restarts).
+  journalctl -fu xochitl -n 0 -o short-unix --no-pager 2>/dev/null | parse_stream
+
+  _now=$(date +%s)
+  if [ $(( _now - window_start )) -gt "$RESTART_WINDOW" ]; then
+    restarts=0
+    window_start=$_now
+  fi
+  restarts=$(( restarts + 1 ))
+  if [ "$restarts" -gt "$MAX_RESTARTS" ]; then
+    echo "reason=journal-restart-budget restarts=$restarts ts=$(now_iso)" > "$WATCH_EXHAUSTED_MARKER"
+    log_line watch exit reason=restart-budget-exhausted restarts="$restarts"
+    exit 1
+  fi
+  log_line watch journal-restart n="$restarts" max="$MAX_RESTARTS"
+  sleep "$RESTART_DELAY"
+done

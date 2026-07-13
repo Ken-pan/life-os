@@ -3,7 +3,14 @@
 #
 #   start:  systemctl start paperos   (Conflicts= stops xochitl first)
 #   exit:   on-screen Exit button, crash, or systemctl stop paperos
-#           -> ExecStopPost always brings xochitl back.
+#           -> ExecStopPost brings xochitl back UNLESS a fresh restart-intent
+#              marker is present (PaperOS-only restart, Finding C hardening).
+#
+# The ExecStopPost restart-intent check is deliberately fail-safe: it skips the
+# xochitl restore ONLY when run/restart-intent exists AND its epoch is within
+# the TTL (30 s, hardcoded here — must match RESTART_INTENT_TTL in
+# paperos-lib.sh). An absent, stale, or unparseable marker always restores
+# xochitl, so the always-on native fallback is preserved exactly as before.
 [Unit]
 Description=PaperOS e-ink shell
 Conflicts=xochitl.service
@@ -18,5 +25,5 @@ Environment=QT_QUICK_BACKEND=epaper
 Environment=PAPEROS_TEST_BRIDGE=1
 Environment=PAPEROS_TEST_BRIDGE_PORT=18765
 ExecStart=/home/root/paperos/paperos -platform epaper
-ExecStopPost=/bin/sh -c 'systemctl --no-block start xochitl'
+ExecStopPost=/bin/sh -c 'm=/home/root/paperos/run/restart-intent; if [ -f "$m" ]; then ts=$(cat "$m" 2>/dev/null); now=$(date +%s); case "$ts" in ""|*[!0-9]*) : ;; *) if [ $((now - ts)) -ge 0 ] && [ $((now - ts)) -le 30 ]; then exit 0; fi ;; esac; fi; systemctl --no-block start xochitl'
 TimeoutStopSec=10
