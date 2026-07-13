@@ -31,6 +31,12 @@
   box-sizing: border-box;
 }
 
+/* Full-viewport platform fixtures must exercise their own scroll ownership. */
+.catalog-preview:has([data-testid='showcase-app-shell']) {
+  padding: 0;
+  overflow: hidden;
+}
+
 .catalog-panel {
   max-width: 100%;
   margin: 0 auto;

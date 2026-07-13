@@ -62,6 +62,16 @@ test.describe('design-catalog a11y gates @a11y', () => {
   })
 
   test.describe('focus-visible rings', () => {
+    test('app shell skip link targets the main landmark', async ({ page }) => {
+      await gotoCatalog(page, 'app-shell', 'planner', 'light')
+      const skipLink = page.getByRole('link', { name: 'Skip to fixture content' })
+      await assertFocusRing(skipLink, 'app-shell skip link')
+      await skipLink.press('Enter')
+      await expect(
+        page.getByRole('main', { name: 'Shell fixture content' }),
+      ).toBeFocused()
+    })
+
     for (const mode of MODES) {
       test(`btn-primary — planner / ${mode}`, async ({ page }) => {
         await gotoCatalog(page, 'buttons', 'planner', mode)
