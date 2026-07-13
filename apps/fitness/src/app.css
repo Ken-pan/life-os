@@ -1811,6 +1811,13 @@ p {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
 }
 
+/* iOS zooms the visual viewport when a focused input is below 16px. */
+@media (--life-os-mobile) {
+  .lib-search {
+    font-size: 16px;
+  }
+}
+
 .lib-count {
   font-family: var(--mono);
   font-size: var(--text-xs);
@@ -3775,9 +3782,15 @@ body:has(.focus-view) {
   padding-bottom: 0;
 }
 
+/* Focus owns the full viewport; the shared tabbar inset otherwise creates a
+   138px scroll range and lets the hero/header open above the visible top. */
+body:has(.focus-view) #main-content {
+  padding-bottom: 0;
+}
+
 .focus-view {
   padding-bottom: 0;
-  --focus-safe-top: env(safe-area-inset-top);
+  --focus-safe-top: var(--safe-top-effective, env(safe-area-inset-top, 0px));
   --focus-safe-bottom: env(safe-area-inset-bottom);
   --focus-gutter: 16px;
   --focus-hero-h: clamp(260px, 42vh, 420px);
@@ -3966,7 +3979,7 @@ body:has(.focus-view) {
 
 .focus-header {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 6px);
+  top: calc(var(--focus-safe-top) + 6px);
   left: 0;
   right: 0;
   z-index: 5;
@@ -4471,7 +4484,7 @@ body:has(.focus-view) {
 
 .focus-timer-island {
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 52px);
+  top: calc(var(--focus-safe-top) + 52px);
   left: 50%;
   z-index: 260;
   display: flex;
@@ -4758,7 +4771,7 @@ body:has(.focus-view) {
   }
 
   .focus-timer-island {
-    top: calc(env(safe-area-inset-top, 0px) + 54px);
+    top: calc(var(--focus-safe-top) + 54px);
     width: min(calc(100vw - 64px), 310px);
   }
 
@@ -4798,7 +4811,7 @@ body:has(.focus-view) {
   }
 
   .focus-timer-island {
-    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    top: calc(var(--focus-safe-top) + 58px);
     width: min(calc(100vw - 96px), 318px);
   }
 
@@ -4862,7 +4875,7 @@ body:has(.focus-view) {
   }
 
   .focus-timer-island {
-    top: calc(env(safe-area-inset-top, 0px) + 50px);
+    top: calc(var(--focus-safe-top) + 50px);
     width: min(calc(100vw - 42px), 302px);
   }
 
@@ -4894,7 +4907,7 @@ body:has(.focus-view) {
   }
 
   .focus-timer-island {
-    top: calc(env(safe-area-inset-top, 0px) + 52px);
+    top: calc(var(--focus-safe-top) + 52px);
   }
 
   .focus-rest-hint--island {

@@ -1,0 +1,120 @@
+@import '@life-os/theme/media.css';
+
+/*
+ * LifeOsAppShell owns viewport structure, the primary content scroll surface,
+ * responsive navigation placement, safe-area chrome placement, and overlay
+ * obstruction space. App-provided regions own their markup and behavior.
+ */
+
+.life-os-app-shell {
+  --life-os-persistent-overlay-inset: 0px;
+  width: 100%;
+  height: var(--app-vh, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.life-os-app-shell__column {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.life-os-app-shell__header {
+  display: contents;
+}
+
+.life-os-app-shell__header > :is(.appbar, .page-header) {
+  flex: 0 0 auto;
+}
+
+.life-os-app-shell__main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-block-end: var(--life-os-persistent-overlay-inset);
+  outline: none;
+}
+
+.life-os-app-shell__overlay-spacer {
+  display: block;
+  flex: 0 0 var(--life-os-persistent-overlay-inset);
+  width: 1px;
+  height: var(--life-os-persistent-overlay-inset);
+  pointer-events: none;
+}
+
+.life-os-app-shell[data-transient-overlay-open] .life-os-app-shell__main {
+  overflow-y: hidden;
+}
+
+.life-os-app-shell__navigation--desktop {
+  display: none;
+  min-width: 0;
+  min-height: 0;
+}
+
+.life-os-app-shell__persistent-overlay,
+.life-os-app-shell__transient-overlay {
+  display: contents;
+}
+
+.life-os-app-shell__skip-link {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 11000;
+  padding: 10px 16px;
+  border-radius: 0 0 10px 0;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  font: 600 var(--text-sm, 14px) / 1.4 var(--button, sans-serif);
+  transform: translateY(-120%);
+  transition: transform var(--dur-fast, 120ms) var(--ease-standard, ease);
+}
+
+.life-os-app-shell__skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid currentColor;
+  outline-offset: -4px;
+}
+
+.life-os-app-shell[data-scroll-mode='document'] {
+  height: auto;
+  min-height: var(--app-vh, 100dvh);
+  overflow: visible;
+}
+
+.life-os-app-shell[data-scroll-mode='document'] .life-os-app-shell__column,
+.life-os-app-shell[data-scroll-mode='document'] .life-os-app-shell__main {
+  overflow: visible;
+}
+
+@media (--life-os-desktop) {
+  .life-os-app-shell {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+
+  .life-os-app-shell__navigation--desktop {
+    display: block;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .life-os-app-shell__navigation--mobile {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .life-os-app-shell__skip-link {
+    transition: none;
+  }
+}

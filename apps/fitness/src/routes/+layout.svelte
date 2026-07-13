@@ -154,8 +154,18 @@
     })
   })
 
-  afterNavigate(() => {
+  afterNavigate(({ to }) => {
     resetScrollLock()
+
+    // Standalone PWA scrolls inside #main-content, which SvelteKit does not
+    // restore for us. Focus mode must always open at its own top chrome.
+    if (to?.url.pathname.endsWith('/focus')) {
+      const main = document.getElementById('main-content')
+      if (main) {
+        main.scrollTop = 0
+        main.scrollLeft = 0
+      }
+    }
   })
 </script>
 

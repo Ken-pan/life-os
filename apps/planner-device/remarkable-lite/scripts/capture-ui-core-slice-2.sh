@@ -1,6 +1,6 @@
 #!/bin/sh
 # PAPR.UI.2 Core Slice 2 screenshot gate — focused set from
-# docs/qa/paperos-core-slice-2-ia.md §6.1, captured against real device data
+# docs/qa/paperos/ui-spec.md §5.7, captured against real device data
 # (no fixture injection exists for offline/no-cache/mixed-CJK states in this
 # TestBridge; those remain a follow-up fixture-backed pass, not fabricated
 # here). No fallback coordinate taps.
@@ -46,22 +46,22 @@ capture "20-today-populated"
 
 tap_visible "shell.menu"
 require_visible "system.drawer"
-capture "27-system-drawer-final-ia"
+capture "25-system-drawer-final-ia"
 
 tap_visible "drawer.tasks"
 require_visible "page.tasks"
-capture "24-tasks-populated"
+capture "27-today-open-task-list"
 
 tap_visible "shell.menu"
 tap_visible "drawer.documents"
 require_visible "page.documents"
 require_visible "documents.unavailable"
-capture "25-documents-capability-unavailable"
+capture "28-documents-capability-unavailable"
 
 tap_visible "shell.menu"
 tap_visible "drawer.settings"
 require_visible "page.settings"
-capture "26-settings"
+capture "29-settings"
 
 # Return to Today, leaving the shell in its default landing state.
 tap_visible "shell.menu"

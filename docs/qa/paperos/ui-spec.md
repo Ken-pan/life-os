@@ -414,6 +414,28 @@ Inbox / Review / System 暂时保留，标记为 transition debt，不在此 pas
 - Antigravity delta review = PASS 或 PASS WITH WARN；
 - 不出现 storage-format diff。
 
+## 4.8 Clean PR #27 device gate（2026-07-12）
+
+**Verdict: BLOCKED.** 真机验证使用 PR #27 远端精确 HEAD
+`cc122d308bbeb96cf027e5bc45fc7370d073301b`；交叉构建产物 SHA-256 为
+`599c9525d3b4b3556eb01c4f5ce84eeb1947b91c73d545f334b8913462d6dd89`，
+设备 `/home/root/paperos/paperos` hash 与本地产物一致。
+
+| Gate | Result | Evidence / note |
+| --- | --- | --- |
+| build、launch、normal exit | PASS | `build-remarkable.sh`；退出后 `xochitl` / `rm-sync` active |
+| Drawer open / outside close / navigation | PASS | semantic bridge + device captures |
+| Gallery load / preview / editor return | PASS | `01`–`11` Slice 1 capture set |
+| toolbar 无 auto-retreat experiment | PASS | reveal 后等待 2 秒仍为 `editor.tools.revealed` |
+| physical pen tool / color / actual stroke match | BLOCKED | bridge 不能替代真实 stylus 操作 |
+| note metadata locale | **FAIL** | 真机稳定显示 `pmUTC` / `amUTC` |
+
+`pmUTC` 根因已定位到 `NoteStore.cpp` 的
+`modified.toString("MMM d at h:mm AP")`：未转义的日期格式字符把 AM/PM 与
+timezone token 混入了本应为文字的 `at`。下一次代码 pass 必须输出例如
+`Updated Jul 11, 4:02 PM`，加入确定性回归测试，并重新跑 PR #27 真机 gate。
+在该 FAIL 和真实 stylus gate 关闭前，PR #27 不得 un-draft。
+
 ---
 
 # 5. Core Slice 2 — Unified Home/Today 详细规范
@@ -565,6 +587,34 @@ Editor · Page Overview · Outline · Search in notebook（后续）
 - 不改 NoteStore format；
 - 不实现 Search / multi-page；
 - build、device capture、xochitl recovery 通过。
+
+## 5.9 Clean PR #28 device gate（2026-07-12）
+
+**Verdict: BLOCKED.** 真机验证使用 PR #28 远端精确 HEAD
+`3fa85277a3c985981dafbc24afff83a9d8ee324d`；交叉构建与设备 promoted binary
+SHA-256 均为
+`2e36f6ce84398d694e986331d4cda94e498739811a5486aafe73250b3c68b47e`。
+该 HEAD 额外包含与 PaperOS 无关的 Fitness commit `3fa85277`，合并前也必须清理 scope。
+
+| Gate | 结果 | 设备结论 |
+| --- | --- | --- |
+| Today default + Main / Drawer index | PASS | page=`today`、moduleIndex=`0` |
+| Notes / Tasks / Documents / Settings routes | PASS | final Drawer IA semantic matrix 通过 |
+| Create note → editor exit → Today refresh | PASS | 新 note 后 visible Gallery 3→4，立即成为 Continue item |
+| Edit with physical pen → Today refresh | BLOCKED | 真实 stylus 输入未执行 |
+| Tasks real data / full-page mixed CJK | PASS | 真实 dashboard tasks；full Tasks 两行安全换行 |
+| Tasks empty state | NOT TESTED | 设备存在真实 tasks，当前 bridge 无 no-data fixture |
+| Today task preview | **FAIL** | 英文与中英混排长标题均单行省略 |
+| Documents unavailable state | PASS | `Documents are not available in this build`，无假数据 |
+| Continue / Recent note density | **FAIL** | Recent tiles 高度过大，存在大面积无信息空白 |
+| Date / locale | **FAIL** | Today 日期正常；note metadata 仍泄漏 `pmUTC` / `amUTC` |
+| Settings route / layout | PASS / **FAIL** | route 可达；分隔线与 Sync / Display / Device 内容重叠 |
+| Duplicate navigation | PASS | 选择当前 route 只关闭 Drawer，index 保持 0 |
+| Back / physical ghosting | NOT TESTED / BLOCKED | bridge 无 Back 注入；capture 不能替代相机/现场观察 |
+| Exit / recovery | PASS | `paperos` inactive；`xochitl`、`rm-sync` active |
+
+PR #28 保持 stacked draft；不得在 PR #27 formatter + stylus gate、上述视觉 FAIL、
+以及无关 commit scope 全部关闭前 un-draft 或合并。
 
 ---
 

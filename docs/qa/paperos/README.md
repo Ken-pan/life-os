@@ -4,7 +4,13 @@
 
 按主题拆分，避免在 17 个平铺文件里盲搜。
 
-## 设备生命周期（`PAPR.SYS.*`）
+| 文档 | 职责 | 状态 |
+| --- | --- | --- |
+| [`lifecycle.md`](./lifecycle.md) | `PAPR.SYS.*` 真机发现、决策、依赖与 resume point | `PAPR.SYS.1` 主航道 |
+| [`lifecycle-gate.md`](./lifecycle-gate.md) | LC-01–LC-15 最终可靠性矩阵 | Blocked by SYS.1–3 |
+| [`ui-spec.md`](./ui-spec.md) | E-ink UI 规范与 clean PR device gate | PR #27 / #28 **BLOCKED**（locale、stylus、Slice 2 visual） |
+| [`data-plane-2026-07-11.md`](./data-plane-2026-07-11.md) | 生产读路径的脱敏验收证据 | PASS，只读 |
+| [`reference/2026-07-10/`](./reference/2026-07-10/) | UI 方向参考图 | 证据，非规范真源 |
 
 **导航 hub：** [`../paperos-device-lifecycle/README.md`](../paperos-device-lifecycle/README.md) · **ID 语法：** [`../../roadmap/TICKET_NAMING.md`](../../roadmap/TICKET_NAMING.md)
 

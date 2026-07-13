@@ -39,18 +39,21 @@
 
 ## Hub §Next ↔ 分卷对照
 
-| Hub ID             | App 分卷                                        | 状态 / 锚点                                                                                                                                         |
-| ------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **P-SCHED-0**      | [planner.md](./planner.md)                      | 🟡 baseline ✅ · legacy tags + mobile scroll 待修 · [`planner-schedule-antigravity-baseline.md`](../../qa/planner-schedule-antigravity-baseline.md) |
-| **P-MOVE-VERIFY**  | [planner-pro-move.md](./planner-pro-move.md)    | ◆ Line **E** only · 设备 token E2E                                                                                                                  |
-| **P-MOVE-SYS-0**   | [planner-pro-move.md](./planner-pro-move.md)    | 🔥 生命周期发现 · VERIFY 同窗口                                                                                                                     |
-| **P-MOVE-SYS-1/2** | [planner-pro-move.md](./planner-pro-move.md)    | ⏳ enter/exit · sleep/wake                                                                                                                          |
-| **P-MOVE-UI**      | [planner-pro-move.md](./planner-pro-move.md)    | 🟡 Slice 1.1 设备复验 · Slice 2 IA 可早做                                                                                                           |
-| **FT-P5**          | [fitness.md](./fitness.md)                      | ⏳ 替代动作完整流                                                                                                                                   |
-| **F-P6**           | [finance.md](./finance.md)                      | ⏳ 支出审核（Amazon/BBY/Target）                                                                                                                    |
-| **P-PROJ-3**       | [planner.md](./planner.md)                      | ✅ Roadmap refs UI（2026-07-10）                                                                                                                    |
-| **P-MOVE-5**       | [planner-pro-move.md](./planner-pro-move.md)    | ⏳ controlled write staging gate                                                                                                                    |
-| **G-P4b-H**        | [portal.md](./portal.md) · [home.md](./home.md) | ✅ 2026-07-09 · H-P6a                                                                                                                               |
+| Canonical ID (v2)    | Legacy v1                                 | App 分卷                                        | 状态 / 锚点                                                            |
+| -------------------- | ----------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
+| **PLNR.SCHED.0**     | `P-SCHED.0` · `P-SCHED-0`                 | [planner.md](./planner.md)                      | 🟡 migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** 待 Ken |
+| **PAPR.DATA.verify** | `P-MOVE.verify` · `P-MOVE-VERIFY`         | [paperos.md](./paperos.md)    | ✅ PASS 2026-07-11                                                     |
+| **PAPR.SYS.0**       | `P-MOVE.SYS.0` · `P-MOVE-SYS-0`           | [paperos.md](./paperos.md)    | ✅ CONDITIONAL PASS accepted                                           |
+| **PAPR.SYS.1b.fs**   | `P-MOVE.SYS.1b.fs` · `P-MOVE-SYS-1B-FS`   | [paperos.md](./paperos.md)    | ❌ BLOCKED / CLOSED                                                    |
+| **PAPR.SYS.1b.jrn**  | `P-MOVE.SYS.1b.jrn` · `P-MOVE-SYS-1B-JRN` | [paperos.md](./paperos.md)    | 🟡 CONDITIONAL PASS accepted                                           |
+| **PAPR.SYS.1**       | `P-MOVE.SYS.1` · `P-MOVE-SYS-1`           | [paperos.md](./paperos.md)    | 🟡 PRIMARY LANE — Ken + Codex 主航道                                       |
+| **PAPR.SYS.2**       | `P-MOVE.SYS.2` · `P-MOVE-SYS-2`           | [paperos.md](./paperos.md)    | 🔒 not started                                                         |
+| **PAPR.UI**          | `P-MOVE.UI` · `P-MOVE-UI`                 | [paperos.md](./paperos.md)    | 🔴 PR #27/#28 device gate BLOCKED · locale + stylus + Slice 2 visual   |
+| **GYMS.SUB.5**       | `FT-P5`                                   | [fitness.md](./fitness.md)                      | 🟡 工程 PASS · 产品 BLOCKED                                            |
+| **FINC.PURCHASE.6**  | `F-P6`                                    | [finance.md](./finance.md)                      | ⏳ `FINC.PURCHASE.6.r0` · `FINC.PURCHASE.6.a`                          |
+| **PLNR.PROJ.3**      | `P-PROJ-3`                                | [planner.md](./planner.md)                      | ✅ Roadmap refs UI（2026-07-10）                                       |
+| **PAPR.WRITE.5**     | `P-MOVE.5` · `P-MOVE-5`                   | [paperos.md](./paperos.md)    | 🟡 Code ✅ · DB `paper_device_actions` ❌ · Hub Deferred                |
+| **PORT.GROWTH.4b-H** | `G-P4b-H`                                 | [portal.md](./portal.md) · [home.md](./home.md) | ✅ 2026-07-09 · `HOME.PROJ.6a`                                         |
 
 **已发货（2026-07-09）：** `PORT.GROWTH.8` · `PORT.GROWTH.9` · `PORT.GROWTH.4b-H` · Phase 0–6 — [`../SHIPPED.md`](../SHIPPED.md)
 

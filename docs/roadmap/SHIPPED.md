@@ -8,10 +8,23 @@
 
 | 主线    | 发货项 / 里程碑 | 证据 |
 | ------- | --------------- | ---- |
-| Growth  | **FT-P2** Portal Fitness `workedOutToday` — migration **远程已应用** | migration `20260710203000` · `todaySummaryFormat.js` · Supabase list_migrations ✅ |
-| PaperOS | **Slice 1.1** native toolbar + QML visual | `52ae55e0` · `d7c52858` · [`qa/paperos-core-slice-1-1-visual-delta-gate.md`](../qa/paperos-core-slice-1-1-visual-delta-gate.md) |
-| Planner | **P-SCHED-0** Antigravity baseline + **SCH-0 根因** `migrateTask` 缺 `tags` | [`qa/planner-schedule-antigravity-baseline.md`](../qa/planner-schedule-antigravity-baseline.md) |
-| Infra   | **P-MOVE-VERIFY** — 生产 Paper API 路由复核（401 非 404） | `curl https://planner.kenos.space/api/paper/today` · `apps/planner/static/_redirects` |
+| PaperOS | **PAPR.DATA.verify** 设备生产 sync E2E **PASS** | [`qa/paperos/data-plane-2026-07-11.md`](../qa/paperos/data-plane-2026-07-11.md) |
+| PaperOS | **PAPR.SYS.0** conditional pass accepted | [`qa/paperos/lifecycle.md`](../qa/paperos/lifecycle.md) |
+| PaperOS | **PAPR.SYS.1 launch discovery complete** — PAPR.SYS.1a/1b.fs closed · PAPR.SYS.1b.jrn conditional pass · implementation later resumed as primary lane | [`qa/paperos/README.md`](../qa/paperos/README.md) |
+
+## 2026-07-10（深度复核 · GYMS.PORTAL.2 · PaperOS 1.1 · PLNR.SCHED.0 根因）
+
+> **2026-07-12 correction:** 下列 Slice 1.1 行只记录 checkpoint-era 代码与
+> 当时的视觉 review，不代表 clean replacement PR 已通过 release gate。
+> PR #27 / #28 当前均为 draft + device BLOCKED；最新真机 verdict 见
+> [`qa/paperos/ui-spec.md`](../qa/paperos/ui-spec.md) §4.8 / §5.9。
+
+| 主线    | 发货项 / 里程碑 | 证据 |
+| ------- | --------------- | ---- |
+| Growth  | **GYMS.PORTAL.2** Portal Fitness `workedOutToday` — migration **远程已应用** | migration `20260710203000` · `todaySummaryFormat.js` · Supabase list_migrations ✅ |
+| PaperOS | **Slice 1.1** native toolbar + QML visual | `52ae55e0` · `d7c52858` · [PaperOS 2026-07 里程碑](../archive/paperos/milestones-2026-07.md) |
+| Planner | **PLNR.SCHED.0** Antigravity baseline + **PLNR.SCHED.0.migrate 根因** `migrateTask` 缺 `tags` | [`qa/planner-schedule-antigravity-baseline.md`](../qa/planner-schedule-antigravity-baseline.md) |
+| Infra   | **PAPR.DATA.verify** — 生产 Paper API 路由复核（401 非 404） | `curl https://planner.kenos.space/api/paper/today` · `apps/planner/static/_redirects` · **2026-07-11 设备 E2E 见上节** |
 
 ## 2026-07-10（Planner 日程 baseline · PaperOS Slice 1 · 文档复核）
 

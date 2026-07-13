@@ -13,7 +13,7 @@ Item {
     signal openNotes()
     signal openTasks()
 
-    readonly property var allNotes: noteStore.listNotes()
+    property var allNotes: []
     readonly property var continueNote: allNotes.length > 0 ? allNotes[0] : null
     readonly property var recentNotes: allNotes.length > 1 ? allNotes.slice(1, 3) : []
 
@@ -32,12 +32,24 @@ Item {
         page.dateLabel = now.toLocaleDateString(Qt.locale(), "ddd, MMM d")
     }
 
-    Component.onCompleted: refreshDate()
+    function refreshNotes() {
+        var notes = noteStore.listNotes()
+        page.allNotes = notes ? notes : []
+    }
+
+    Component.onCompleted: {
+        refreshDate()
+        refreshNotes()
+    }
+    onVisibleChanged: {
+        if (visible)
+            refreshNotes()
+    }
     Timer { interval: 60000; running: !inkMode.active; repeat: true; onTriggered: page.refreshDate() }
 
     Connections {
         target: inkMode
-        function onExited(code) { /* allNotes is a fresh call each read; no cached copy to refresh */ }
+        function onExited(code) { page.refreshNotes() }
     }
 
     ColumnLayout {
