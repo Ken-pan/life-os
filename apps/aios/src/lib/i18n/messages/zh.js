@@ -16,6 +16,8 @@ export default {
     greeting: '有什么可以帮忙的?',
     placeholder: '询问任何问题',
     hintLocal: '本地模型 · 数据不出这台设备',
+    hintCloud: '云端查看模式 · 生成新回复需连接本地 AI',
+    cloudSignInPrompt: '登录 Life OS 账户查看已同步的对话与记忆',
     send: '发送',
     stop: '停止',
     loading: '正在生成',

@@ -15,6 +15,8 @@
   import ModelPicker from '$lib/components/ModelPicker.svelte'
   import SidePanel from '$lib/components/SidePanel.svelte'
   import { openArtifact } from '$lib/panel.svelte.js'
+  import { CLOUD_BUILD } from '$lib/env.js'
+  import { CLOUD } from '$lib/cloud.svelte.js'
 
   const conversation = $derived(
     C.conversations.find((c) => c.id === C.activeId) ?? null,
@@ -210,6 +212,9 @@
   {#if isEmpty}
     <div class="hero">
       <h1>{t('chat.greeting')}</h1>
+      {#if CLOUD_BUILD && !CLOUD.user}
+        <a class="cloud-signin" href="/settings">{t('chat.cloudSignInPrompt')}</a>
+      {/if}
       <Composer autofocus />
       <div class="suggestions">
         {#each suggestions as item (item.text)}
@@ -219,7 +224,7 @@
           </button>
         {/each}
       </div>
-      <p class="hint">{t('chat.hintLocal')}</p>
+      <p class="hint">{CLOUD_BUILD ? t('chat.hintCloud') : t('chat.hintLocal')}</p>
     </div>
   {:else}
     <div class="thread aios-scroll" bind:this={scroller} onscroll={onScroll}>
@@ -253,7 +258,7 @@
           </button>
         {/if}
         <Composer />
-        <p class="hint">{t('chat.hintLocal')}</p>
+        <p class="hint">{CLOUD_BUILD ? t('chat.hintCloud') : t('chat.hintLocal')}</p>
       </div>
     </div>
   {/if}
@@ -392,6 +397,18 @@
   }
   .hero :global(.composer) {
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  }
+  .cloud-signin {
+    margin-top: -4px;
+    font-size: var(--text-sm, 13px);
+    color: var(--accent);
+    text-decoration: none;
+    padding: 4px 12px;
+    border: 1px solid var(--border-l);
+    border-radius: 999px;
+  }
+  .cloud-signin:hover {
+    background: var(--card-h);
   }
 
   /* —— 消息流 —— */

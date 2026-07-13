@@ -1,0 +1,40 @@
+# AIOS 云端只读/轻量版(Netlify)
+# 注意:AIOS 是本地优先 app,推理全在本机网关(127.0.0.1:18888)+ 本地生图。
+# 云端版主要是「登录后查看已同步的对话/记忆/图片」的只读查看器;生成新回复
+# 需要连回某台运行本地 AI 网关的机器。VITE_AIOS_CLOUD 让前端切到云端文案与登录引导。
+
+[build]
+  command = "npm run build -w aios-os"
+  publish = "apps/aios/build"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/aios packages/theme packages/sync"
+
+[build.environment]
+  NODE_VERSION = "22"
+  VITE_AIOS_CLOUD = "1"
+
+[dev]
+  command = "npm run dev -w aios-os"
+  targetPort = 5197
+  port = 8890
+  publish = "apps/aios/build"
+  autoLaunch = false
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/_app/immutable/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

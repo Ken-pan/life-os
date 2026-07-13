@@ -16,6 +16,8 @@ export default {
     greeting: 'What can I help with?',
     placeholder: 'Ask anything',
     hintLocal: 'Local model · your data never leaves this device',
+    hintCloud: 'Cloud view mode · new replies need a local AI machine',
+    cloudSignInPrompt: 'Sign in to your Life OS account to view synced chats & memories',
     send: 'Send',
     stop: 'Stop',
     loading: 'Generating',
