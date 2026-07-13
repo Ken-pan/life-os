@@ -1,0 +1,62 @@
+export default {
+  app: {
+    name: 'AI.OS',
+  },
+  common: {
+    skipToContent: 'Skip to content',
+  },
+  nav: {
+    mainAria: 'Main navigation',
+    chat: 'Chat',
+    history: 'History',
+    settings: 'Settings',
+  },
+  chat: {
+    title: 'Chat',
+    greeting: 'What can I help with?',
+    placeholder: 'Ask anything',
+    hintLocal: 'Local model · your data never leaves this device',
+    send: 'Send',
+    stop: 'Stop',
+    loading: 'Generating',
+    copy: 'Copy',
+    copied: 'Copied',
+    regenerate: 'Regenerate',
+    thinking: 'Thinking',
+    newChat: 'New chat',
+    retry: 'Retry',
+    gatewayDown:
+      'Cannot reach the local gateway (127.0.0.1:18888). Make sure LocalAI is running, then retry.',
+  },
+  model: {
+    label: 'Model',
+    fastName: 'Fast',
+    fastDesc: 'Qwen3.6 35B · low-latency everyday chat',
+    qualityName: 'Deep',
+    qualityDesc: 'Qwen3-Next 80B · complex and long-form tasks',
+  },
+  history: {
+    title: 'History',
+    empty: 'No conversations yet — send a message to start.',
+    delete: 'Delete conversation',
+  },
+  settings: {
+    title: 'Settings',
+    ai: 'AI',
+    gateway: 'Local gateway',
+    gatewayOk: 'Connected',
+    gatewayDown: 'Offline',
+    gatewayCheck: 'Check',
+    gatewayNote:
+      'All inference runs on the local LocalAI gateway (127.0.0.1:18888); models load on demand.',
+    defaultModel: 'Default model',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeAuto: 'System',
+    language: 'Language',
+    data: 'Data',
+    clearChats: 'Delete all chats',
+    clearChatsConfirm: 'Delete all conversations? This cannot be undone.',
+  },
+}

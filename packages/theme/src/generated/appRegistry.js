@@ -4,7 +4,7 @@
  * 改 manifest 后运行 npm run build:app-registry。
  */
 
-/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'home' | 'portal'} LifeOsAppId */
+/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'home' | 'portal' | 'aios'} LifeOsAppId */
 
 /**
  * @type {Record<LifeOsAppId, {
@@ -157,6 +157,28 @@ export const LIFE_OS_SITE_META = {
     appleTouchIcon: "/apple-touch-icon.png",
     categories: ["productivity","utilities"],
   },
+  aios: {
+    id: "aios",
+    name: "AI.OS",
+    shortName: "AI",
+    description: {
+      zh: "本地 AI 对话 · LocalAI 网关驱动的私有 LLM 聊天",
+      en: "Local AI chat · private LLM powered by the LocalAI gateway",
+    },
+    themeColor: {
+      light: "#ffffff",
+      dark: "#212121",
+    },
+    defaultTheme: "auto",
+    locale: "zh-CN",
+    storageKey: "aiosos_v1",
+    storageKind: "nested",
+    settingsThemePath: ["settings","theme"],
+    favicon: {"id":"app-favicon","light":"/favicon-32.png","dark":"/favicon-32.png"},
+    manifest: "/manifest.webmanifest",
+    appleTouchIcon: "/apple-touch-icon.png",
+    categories: ["utilities"],
+  },
 }
 
 /** @type {Record<LifeOsAppId, { production: string; devPort: number }>} */
@@ -167,6 +189,7 @@ export const LIFE_OS_APP_ORIGINS = {
   music: { production: "https://music.kenos.space", devPort: 5189 },
   home: { production: "https://home.kenos.space", devPort: 5196 },
   portal: { production: "https://portal.kenos.space", devPort: 5195 },
+  aios: { production: "https://aios.kenos.space", devPort: 5197 },
 }
 
 /**
@@ -179,6 +202,7 @@ export const LIFE_OS_SWITCHER_APPS = [
   { id: "fitness" },
   { id: "music" },
   { id: "home", experimental: true },
+  { id: "aios", experimental: true },
 ]
 
 /** @type {Record<LifeOsAppId, { light: string; dark: string }>} */
@@ -189,6 +213,7 @@ export const LIFE_OS_APP_WORDMARK_ACCENT = {
   music: { light: "#ff4d6d", dark: "#ff4d6d" },
   home: { light: "#7d93a8", dark: "#7d93a8" },
   portal: { light: "#3d9ed6", dark: "#5cb8ea" },
+  aios: { light: "#5d5d5d", dark: "#b4b4b4" },
 }
 
 /** wordmark 主体覆盖（缺省 = shortName） @type {Partial<Record<LifeOsAppId, string>>} */
@@ -295,6 +320,20 @@ export const LIFE_OS_PWA_APPS = {
     nestedWrapInMain: false,
     routes: [{"path":"/","name":"home"}],
     scrollQaPath: "/",
+    production: false,
+    pwaTestEnabled: true,
+  },
+  aios: {
+    id: "aios",
+    name: "AI.OS",
+    workspace: "aios-os",
+    port: 5197,
+    shellType: "main-wrap-main",
+    waitSelector: ".app-shell",
+    nestedWrapInMain: true,
+    routes: [{"path":"/","name":"chat"},{"path":"/history","name":"history"},{"path":"/settings","name":"settings"}],
+    clipPaths: ["/"],
+    scrollQaPath: "/settings",
     production: false,
     pwaTestEnabled: true,
   },

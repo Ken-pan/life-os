@@ -1,0 +1,54 @@
+{
+  "id": "aios",
+  "name": "AI.OS",
+  "shortName": "AI",
+  "description": {
+    "zh": "本地 AI 对话 · LocalAI 网关驱动的私有 LLM 聊天",
+    "en": "Local AI chat · private LLM powered by the LocalAI gateway"
+  },
+  "themeColor": {
+    "light": "#ffffff",
+    "dark": "#212121"
+  },
+  "defaultTheme": "auto",
+  "locale": "zh-CN",
+  "storageKey": "aiosos_v1",
+  "storageKind": "nested",
+  "settingsThemePath": [
+    "settings",
+    "theme"
+  ],
+  "categories": [
+    "utilities"
+  ],
+  "workspace": "aios-os",
+  "devPort": 5197,
+  "domain": "aios.kenos.space",
+  "shellType": "main-wrap-main",
+  "wordmarkAccent": {
+    "light": "#5d5d5d",
+    "dark": "#b4b4b4"
+  },
+  "experimental": true,
+  "switcherOrder": 60,
+  "production": false,
+  "pwaTestEnabled": true,
+  "routes": [
+    {
+      "path": "/",
+      "name": "chat"
+    },
+    {
+      "path": "/history",
+      "name": "history"
+    },
+    {
+      "path": "/settings",
+      "name": "settings"
+    }
+  ],
+  "clipPaths": [
+    "/"
+  ],
+  "scrollQaPath": "/settings"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "AI.OS",
+  "short_name": "AI.OS",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#212121",
+  "theme_color": "#212121",
+  "icons": []
+}
