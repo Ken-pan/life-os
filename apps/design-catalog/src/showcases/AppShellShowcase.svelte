@@ -4,6 +4,7 @@
   let navigationKey = $state('shell-demo-1')
   let showChrome = $state(true)
   let simulateSafeArea = $state(false)
+  let scrollMode = $state('content')
 
   function advanceRoute() {
     navigationKey = navigationKey === 'shell-demo-1' ? 'shell-demo-2' : 'shell-demo-1'
@@ -16,6 +17,7 @@
   data-testid="showcase-app-shell"
 >
   <LifeOsAppShell
+    {scrollMode}
     {navigationKey}
     focusOnNavigate="main"
     mainLabel="Shell fixture content"
@@ -29,6 +31,14 @@
             <strong>Platform shell fixture</strong>
             <div class="shell-demo-controls">
               <button type="button" onclick={advanceRoute}>Simulate route</button>
+              <button
+                type="button"
+                aria-pressed={scrollMode === 'locked'}
+                onclick={() =>
+                  (scrollMode = scrollMode === 'locked' ? 'content' : 'locked')}
+              >
+                {scrollMode === 'locked' ? 'Unlock scroll' : 'Lock scroll'}
+              </button>
               <button type="button" onclick={() => (showChrome = false)}>
                 Empty optional regions
               </button>

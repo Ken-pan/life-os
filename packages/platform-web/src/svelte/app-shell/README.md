@@ -23,6 +23,14 @@ optional snippets.
 `scrollMode="content"` is the default and makes `<main>` the primary scroll
 root. `scrollMode="document"` is reserved for launcher/spatial pilots that need
 document flow and should not be selected simply to preserve legacy CSS.
+`scrollMode="locked"` keeps the viewport shell mounted while preventing page
+main scrolling; it is intended for bounded canvases, editors, maps, and similar
+workspaces. Dialogs and other independently scrolling transient surfaces remain
+usable.
+
+`mainClass` forwards app-owned public layout classes to the semantic `<main>`.
+It is for page composition such as a reading wrapper or bounded workspace, not
+for targeting private AppShell selectors.
 
 `focusOnNavigate="main"` focuses the main landmark when `navigationKey`
 changes, except while focus is in a form or dialog. The default is `preserve`.

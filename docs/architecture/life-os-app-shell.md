@@ -28,6 +28,11 @@ generator.
 The shell accepts app-provided `header`, `navigation(projection)`, `main`,
 `persistentOverlay`, and `transientOverlay` snippets. Optional props control
 scroll mode, route focus, main semantics, skip-link copy, and stable test IDs.
+Content mode makes main the page scroll root; document mode preserves document
+flow; locked mode keeps a bounded viewport while disabling page-main scrolling
+for canvases and editors. Apps choose the mode without exposing route semantics
+to the shell. `mainClass` forwards app-owned public layout classes to the main
+landmark without exposing AppShell internals.
 
 The shell owns the viewport contract, main scroll root, responsive projection,
 semantic landmark and skip link, guarded route focus, safe-area chrome

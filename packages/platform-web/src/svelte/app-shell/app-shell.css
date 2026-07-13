@@ -55,6 +55,11 @@
   overflow-y: hidden;
 }
 
+.life-os-app-shell[data-scroll-mode='locked'] .life-os-app-shell__main {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .life-os-app-shell__navigation--desktop {
   display: none;
   min-width: 0;
