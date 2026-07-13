@@ -12,6 +12,7 @@
 import { cpSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { validateManifest } from './lib/app-manifest.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -75,6 +76,11 @@ Object.assign(manifest, {
   devPort: port,
   domain: `${id}.kenos.space`,
 })
+const manifestErrors = validateManifest(manifest)
+if (manifestErrors.length) {
+  console.error(`生成的 manifest 未通过校验（模板或参数问题）：\n  - ${manifestErrors.join('\n  - ')}`)
+  process.exit(1)
+}
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
 
 console.log(`✅ apps/${id} 已生成（workspace ${id}-os · 端口 ${port} · ${displayName}）

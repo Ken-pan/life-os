@@ -20,6 +20,8 @@
   "shellType": "main-wrap-main",
   "wordmarkAccent": { "light": "#5b6a79", "dark": "#a9b6c4" },
   "experimental": true,
+  "production": false,
+  "pwaTestEnabled": true,
   "routes": [
     { "path": "/", "name": "home" },
     { "path": "/settings", "name": "settings" }

@@ -67,6 +67,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check:lifeos-boundaries
+      - run: npm run check:app-manifests
       - name: Outbox structural + optional remote smoke
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

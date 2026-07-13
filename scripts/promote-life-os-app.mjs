@@ -1,124 +1,151 @@
 #!/usr/bin/env node
 /**
- * PLAT.SHELL.6 — 按 AppManifest 把 starter 生成的 app 晋升为正式 Life OS app。
+ * PLAT.SHELL.6 + PLAT.GEN.1 — 按 AppManifest 接线/同步 Life OS app 注册表。
  *
- *   node scripts/promote-life-os-app.mjs <app-id>
+ *   node scripts/promote-life-os-app.mjs <app-id>            # 接线/同步（upsert，幂等）
+ *   node scripts/promote-life-os-app.mjs <app-id> --check    # 漂移守卫：只报告，不写
+ *   node scripts/promote-life-os-app.mjs --check --all       # 扫描全部带 manifest 的 app（CI 用）
  *
- * 读取 apps/<app-id>/app.manifest.json，自动接线全部注册表（幂等，可重复执行）：
- *   1. packages/theme/src/siteMeta.js      — LifeOsAppId typedef + LIFE_OS_SITE_META
- *   2. packages/theme/src/launcher.js      — LIFE_OS_APP_ORIGINS + LIFE_OS_SWITCHER_APPS
- *   3. packages/theme/src/brand.js         — LIFE_OS_APP_WORDMARK_ACCENT
- *   4. packages/design-tokens              — tokens/brands/<id>.json + BRAND_APPS + theme exports
- *   5. apps/<id>/src/app.css               — 占位品牌块 → @import '@life-os/theme/brands/<id>.css'
- *   6. scripts/pwa/apps.config.mjs         — PWA 矩阵
- *   7. scripts/pwa/preview-app.sh          — preview case
- *   8. 根 package.json                     — build:<id> / pwa:preview:<id>
- *   9. .claude/launch.json                 — dev server 配置
- *  10. apps/<id>/netlify.toml              — Netlify 构建配置
- *  11. tests/pwa/<id>-app-shell.spec.ts    — shell 合同测试（从 starter spec 派生）
- * 然后运行 build:tokens + validate:tokens，并打印剩余手动步骤。
+ * manifest（apps/<id>/app.manifest.json）是 single source of truth：
+ * 改 manifest（端口/文案/路由/production…）后重跑本脚本即把注册表同步过去；
+ * `--check` 在任何注册表条目与 manifest 重算结果不一致时非零退出（Nx sync:check 模式）。
+ *
+ * 接线点：siteMeta（typedef+entry）· launcher（origins+switcher）· brand accent ·
+ * design-tokens（brands json + BRAND_APPS + theme exports）· app.css 品牌 @import ·
+ * PWA 矩阵 · preview case · 根 scripts · launch.json · netlify.toml · shell spec。
+ * 文件类产物（brands json / netlify.toml / spec）只创建从不覆盖——它们晋升后归 app 所有。
  */
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { loadManifest, listManifestApps } from './lib/app-manifest.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-const [, , id] = process.argv
-if (!id || !/^[a-z][a-z0-9-]*$/.test(id)) {
-  console.error('用法：node scripts/promote-life-os-app.mjs <app-id>')
-  process.exit(1)
-}
-if (id === 'starter') {
-  console.error('starter 是模板本体，不晋升。先用 create-life-os-app.mjs 生成新 app。')
-  process.exit(1)
-}
+const argv = process.argv.slice(2)
+const CHECK = argv.includes('--check')
+const ALL = argv.includes('--all')
+const ids = argv.filter((a) => !a.startsWith('--'))
 
-const manifestPath = join(ROOT, 'apps', id, 'app.manifest.json')
-if (!existsSync(manifestPath)) {
-  console.error(`缺少 ${manifestPath} — 先跑 node scripts/create-life-os-app.mjs ${id}`)
+if (ALL && ids.length) {
+  console.error('--all 与显式 <app-id> 互斥')
   process.exit(1)
 }
-/** @type {any} */
-const m = JSON.parse(readFileSync(manifestPath, 'utf8'))
-
-// —— manifest 校验 ——
-const required = ['id', 'name', 'shortName', 'storageKey', 'devPort', 'domain', 'workspace', 'shellType', 'routes']
-for (const k of required) {
-  if (m[k] == null || (Array.isArray(m[k]) && m[k].length === 0)) {
-    console.error(`app.manifest.json 缺少字段：${k}`)
-    process.exit(1)
+const targets = ALL ? listManifestApps(ROOT) : ids
+if (!targets.length) {
+  if (ALL) {
+    console.log('check:app-manifests — 无带 manifest 的 app，跳过。')
+    process.exit(0)
   }
+  console.error('用法：node scripts/promote-life-os-app.mjs <app-id> [--check] | --check --all')
+  process.exit(1)
 }
-if (m.id !== id) {
-  console.error(`manifest.id (${m.id}) 与目录名 (${id}) 不一致`)
+if (targets.includes('starter')) {
+  console.error('starter 是模板本体，不晋升。')
   process.exit(1)
 }
 
-// —— 端口冲突校验（apps.config + launch.json）——
-const appsConfigPath = join(ROOT, 'scripts', 'pwa', 'apps.config.mjs')
-const { PWA_APPS } = await import(pathToFileURL(appsConfigPath).href)
-for (const app of Object.values(PWA_APPS)) {
-  if (app.id !== id && app.port === m.devPort) {
-    console.error(`端口 ${m.devPort} 已被 ${app.id} 占用（scripts/pwa/apps.config.mjs），改 manifest.devPort。`)
-    process.exit(1)
-  }
-}
-const launchPath = join(ROOT, '.claude', 'launch.json')
-const launchJson = JSON.parse(readFileSync(launchPath, 'utf8'))
-for (const cfg of launchJson.configurations) {
-  if (cfg.name !== id && cfg.port === m.devPort) {
-    console.error(`端口 ${m.devPort} 已被 launch.json 的 "${cfg.name}" 占用，改 manifest.devPort。`)
-    process.exit(1)
-  }
-}
-
-const changed = []
-const skipped = []
 const read = (p) => readFileSync(p, 'utf8')
-const write = (p, s) => writeFileSync(p, s)
 /** 单引号 JS 字符串字面量（内含引号时退回 JSON 双引号） */
 const q = (s) => (s.includes("'") ? JSON.stringify(s) : `'${s}'`)
 const rel = (p) => p.slice(ROOT.length + 1)
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
-/** 在锚点行前插入块；containsRe 命中则跳过（幂等） */
-function insertAtAnchor(path, anchor, block, containsRe, label) {
-  const s = read(path)
-  if (containsRe.test(s)) {
-    skipped.push(label)
-    return
+/**
+ * @typedef {{ label: string, path: string, status: 'ok'|'drift'|'missing'|'unpromoted', detail?: string }} StepResult
+ */
+
+/**
+ * 文本接线步骤。约定：locator 含前导 \n；block 不含前导 \n；
+ * present ⇔ 文件含 '\n'+block；drift ⇔ locator 命中但 block 不同；missing ⇔ 都没有。
+ * @param {object} o
+ * @param {string} o.label
+ * @param {string} o.path
+ * @param {string} o.block
+ * @param {RegExp} o.locator
+ * @param {(s: string, block: string) => string|null} o.insert 缺失时的插入（返回 null = 找不到插入点）
+ */
+function textStep(o) {
+  return {
+    label: o.label,
+    path: o.path,
+    run(write) {
+      const s = read(o.path)
+      if (s.includes(`\n${o.block}`)) return { status: 'ok' }
+      if (o.locator.test(s)) {
+        // 函数式替换，避免 block 内 $ 被当作特殊替换符
+        if (write) writeFileSync(o.path, s.replace(o.locator, () => `\n${o.block}`))
+        return { status: 'drift' }
+      }
+      if (write) {
+        const next = o.insert(s, o.block)
+        if (next == null) return { status: 'missing', detail: '找不到插入锚点' }
+        writeFileSync(o.path, next)
+      }
+      return { status: 'missing' }
+    },
   }
-  if (!s.includes(anchor)) {
-    console.error(`${rel(path)} 缺少锚点 ${anchor}`)
-    process.exit(1)
-  }
-  write(path, s.replace(anchor, `${block}\n${anchor}`))
-  changed.push(label)
 }
 
-// —— 1. siteMeta.js：typedef + LIFE_OS_SITE_META ——
-const siteMetaPath = join(ROOT, 'packages', 'theme', 'src', 'siteMeta.js')
-{
-  let s = read(siteMetaPath)
-  if (!new RegExp(`'${id}'`).test(s.split('\n')[0])) {
-    s = s.replace(/(@typedef \{[^}]*)(\} LifeOsAppId \*\/)/, `$1 | '${id}'$2`)
-    write(siteMetaPath, s)
-    changed.push('siteMeta typedef')
-  } else {
-    skipped.push('siteMeta typedef')
+/** 锚点行前插入 */
+const beforeAnchor = (anchor) => (s, block) =>
+  s.includes(anchor) ? s.replace(anchor, () => `${block}\n${anchor}`) : null
+/** 参照行后插入 */
+const afterLine = (line) => (s, block) =>
+  s.includes(line) ? s.replace(line, () => `${line}\n${block}`) : null
+
+/** 文件产物步骤：只创建从不覆盖；--check 仅验存在。 */
+function fileStep(label, path, content) {
+  return {
+    label,
+    path,
+    run(write) {
+      if (existsSync(path)) return { status: 'ok' }
+      if (write) writeFileSync(path, content())
+      return { status: 'missing' }
+    },
   }
 }
-insertAtAnchor(
-  siteMetaPath,
-  '  // [app-generator:site-meta]',
-  `  ${id}: {
+
+/** @param {any} m @returns {Array<{label: string, path: string, run(write: boolean): Omit<StepResult,'label'|'path'>}>} */
+function buildSteps(m) {
+  const id = m.id
+  const siteMetaPath = join(ROOT, 'packages', 'theme', 'src', 'siteMeta.js')
+  const launcherPath = join(ROOT, 'packages', 'theme', 'src', 'launcher.js')
+  const appsConfigPath = join(ROOT, 'scripts', 'pwa', 'apps.config.mjs')
+  const accent = m.wordmarkAccent ?? { light: '#5b6a79', dark: '#a9b6c4' }
+
+  const routesJs = m.routes.map((r) => `      { path: ${q(r.path)}, name: ${q(r.name)} },`).join('\n')
+  const optLines = [
+    m.moreButton ? `    moreButton: ${q(m.moreButton)},` : null,
+    m.moreClose ? `    moreClose: ${q(m.moreClose)},` : null,
+    m.authGate ? `    authGate: true,` : null,
+  ].filter(Boolean)
+
+  return [
+    {
+      label: 'siteMeta typedef',
+      path: siteMetaPath,
+      run(write) {
+        const s = read(siteMetaPath)
+        const typedef = s.match(/@typedef \{[^}]*\} LifeOsAppId/)?.[0] ?? ''
+        if (typedef.includes(`'${id}'`)) return { status: 'ok' }
+        if (write)
+          writeFileSync(siteMetaPath, s.replace(/(@typedef \{[^}]*)(\} LifeOsAppId \*\/)/, `$1 | '${id}'$2`))
+        return { status: 'missing' }
+      },
+    },
+    textStep({
+      label: 'siteMeta entry',
+      path: siteMetaPath,
+      block: `  ${id}: {
     id: ${q(id)},
     name: ${q(m.name)},
     shortName: ${q(m.shortName)},
     description: {
-      zh: ${q(m.description?.zh ?? m.name)},
-      en: ${q(m.description?.en ?? m.name)},
+      zh: ${q(m.description.zh)},
+      en: ${q(m.description.en)},
     },
     themeColor: { light: ${q(m.themeColor.light)}, dark: ${q(m.themeColor.dark)} },
     defaultTheme: ${q(m.defaultTheme ?? 'auto')},
@@ -135,102 +162,84 @@ insertAtAnchor(
     appleTouchIcon: '/apple-touch-icon.png',
     categories: [${(m.categories ?? ['utilities']).map(q).join(', ')}],
   },`,
-  new RegExp(`\\n  ${id}: \\{`),
-  'siteMeta entry',
-)
-
-// —— 2. launcher.js：origins + switcher ——
-const launcherPath = join(ROOT, 'packages', 'theme', 'src', 'launcher.js')
-insertAtAnchor(
-  launcherPath,
-  '  // [app-generator:app-origins]',
-  `  ${id}: { production: ${q(`https://${m.domain}`)}, devPort: ${m.devPort} },`,
-  new RegExp(`\\n  ${id}: \\{ production:`),
-  'launcher origins',
-)
-insertAtAnchor(
-  launcherPath,
-  '  // [app-generator:switcher-apps]',
-  `  { id: ${q(id)}${m.experimental ? ', experimental: true' : ''} },`,
-  new RegExp(`\\{ id: '${id}'`),
-  'launcher switcher',
-)
-
-// —— 3. brand.js：wordmark accent ——
-const accent = m.wordmarkAccent ?? { light: '#5b6a79', dark: '#a9b6c4' }
-insertAtAnchor(
-  join(ROOT, 'packages', 'theme', 'src', 'brand.js'),
-  '  // [app-generator:wordmark-accent]',
-  `  ${id}: { light: ${q(accent.light)}, dark: ${q(accent.dark)} },`,
-  new RegExp(`\\n  ${id}: \\{ light:`),
-  'brand wordmark accent',
-)
-
-// —— 4. design-tokens：brands/<id>.json + BRAND_APPS + theme exports ——
-const brandJsonPath = join(ROOT, 'packages', 'design-tokens', 'tokens', 'brands', `${id}.json`)
-if (!existsSync(brandJsonPath)) {
-  const tpl = JSON.parse(read(join(ROOT, 'scripts', 'templates', 'life-os-brand-neutral.json')))
-  delete tpl.$comment
-  tpl.app = id
-  tpl.defaultMode = m.defaultTheme === 'light' ? 'light' : 'dark'
-  write(brandJsonPath, `${JSON.stringify(tpl, null, 2)}\n`)
-  changed.push('brand tokens json')
-} else {
-  skipped.push('brand tokens json')
-}
-{
-  const p = join(ROOT, 'packages', 'design-tokens', 'scripts', 'lib', 'tokens.mjs')
-  const s = read(p)
-  const re = /export const BRAND_APPS = \[([^\]]*)\]/
-  const list = s.match(re)[1]
-  if (!list.includes(`'${id}'`)) {
-    write(p, s.replace(re, `export const BRAND_APPS = [${list}, '${id}']`))
-    changed.push('BRAND_APPS')
-  } else {
-    skipped.push('BRAND_APPS')
-  }
-}
-{
-  const p = join(ROOT, 'packages', 'theme', 'package.json')
-  const s = read(p)
-  const exportLine = `    "./brands/${id}.css": "./src/generated/brands/${id}.css",`
-  if (!s.includes(`"./brands/${id}.css"`)) {
-    const lines = s.split('\n')
-    const last = lines.findLastIndex((l) => /^\s*"\.\/brands\/.*\.css":/.test(l))
-    lines.splice(last + 1, 0, exportLine)
-    write(p, lines.join('\n'))
-    changed.push('theme exports')
-  } else {
-    skipped.push('theme exports')
-  }
-}
-
-// —— 5. app.css：占位块 → 品牌 @import ——
-{
-  const p = join(ROOT, 'apps', id, 'src', 'app.css')
-  const s = read(p)
-  const brandImport = `@import '@life-os/theme/brands/${id}.css';`
-  if (s.includes(brandImport)) {
-    skipped.push('app.css brand import')
-  } else {
-    const re = /\/\* \[app-generator:brand-placeholder:start\][\s\S]*?\[app-generator:brand-placeholder:end\] \*\/\n?/
-    if (!re.test(s)) {
-      console.error(`${rel(p)} 缺少 brand-placeholder 标记块，手动替换为 ${brandImport}`)
-      process.exit(1)
-    }
-    write(p, s.replace(re, `${brandImport}\n`))
-    changed.push('app.css brand import')
-  }
-}
-
-// —— 6. PWA 矩阵 ——
-const routesJs = m.routes
-  .map((r) => `      { path: ${q(r.path)}, name: ${q(r.name)} },`)
-  .join('\n')
-insertAtAnchor(
-  appsConfigPath,
-  '  // [app-generator:pwa-apps]',
-  `  ${id}: {
+      locator: new RegExp(`\\n  ${esc(id)}: \\{[\\s\\S]*?\\n  \\},`),
+      insert: beforeAnchor('  // [app-generator:site-meta]'),
+    }),
+    textStep({
+      label: 'launcher origins',
+      path: launcherPath,
+      block: `  ${id}: { production: ${q(`https://${m.domain}`)}, devPort: ${m.devPort} },`,
+      locator: new RegExp(`\\n  ${esc(id)}: \\{ production:[^\\n]*`),
+      insert: beforeAnchor('  // [app-generator:app-origins]'),
+    }),
+    textStep({
+      label: 'launcher switcher',
+      path: launcherPath,
+      block: `  { id: ${q(id)}${m.experimental ? ', experimental: true' : ''} },`,
+      locator: new RegExp(`\\n  \\{ id: '${esc(id)}'[^\\n]*`),
+      insert: beforeAnchor('  // [app-generator:switcher-apps]'),
+    }),
+    textStep({
+      label: 'brand wordmark accent',
+      path: join(ROOT, 'packages', 'theme', 'src', 'brand.js'),
+      block: `  ${id}: { light: ${q(accent.light)}, dark: ${q(accent.dark)} },`,
+      locator: new RegExp(`\\n  ${esc(id)}: \\{ light:[^\\n]*`),
+      insert: beforeAnchor('  // [app-generator:wordmark-accent]'),
+    }),
+    fileStep(
+      'brand tokens json',
+      join(ROOT, 'packages', 'design-tokens', 'tokens', 'brands', `${id}.json`),
+      () => {
+        const tpl = JSON.parse(read(join(ROOT, 'scripts', 'templates', 'life-os-brand-neutral.json')))
+        delete tpl.$comment
+        tpl.app = id
+        tpl.defaultMode = m.defaultTheme === 'light' ? 'light' : 'dark'
+        return `${JSON.stringify(tpl, null, 2)}\n`
+      },
+    ),
+    {
+      label: 'BRAND_APPS',
+      path: join(ROOT, 'packages', 'design-tokens', 'scripts', 'lib', 'tokens.mjs'),
+      run(write) {
+        const s = read(this.path)
+        const re = /export const BRAND_APPS = \[([^\]]*)\]/
+        const list = s.match(re)?.[1]
+        if (list == null) return { status: 'missing', detail: '找不到 BRAND_APPS 数组' }
+        if (list.includes(`'${id}'`)) return { status: 'ok' }
+        if (write) writeFileSync(this.path, s.replace(re, `export const BRAND_APPS = [${list}, '${id}']`))
+        return { status: 'missing' }
+      },
+    },
+    textStep({
+      label: 'theme exports',
+      path: join(ROOT, 'packages', 'theme', 'package.json'),
+      block: `    "./brands/${id}.css": "./src/generated/brands/${id}.css",`,
+      locator: new RegExp(`\\n    "\\./brands/${esc(id)}\\.css":[^\\n]*`),
+      insert: (s, block) => {
+        const lines = s.split('\n')
+        const last = lines.findLastIndex((l) => /^\s*"\.\/brands\/.*\.css":/.test(l))
+        if (last < 0) return null
+        lines.splice(last + 1, 0, block)
+        return lines.join('\n')
+      },
+    }),
+    {
+      label: 'app.css brand import',
+      path: join(ROOT, 'apps', id, 'src', 'app.css'),
+      run(write) {
+        const s = read(this.path)
+        const brandImport = `@import '@life-os/theme/brands/${id}.css';`
+        if (s.includes(brandImport)) return { status: 'ok' }
+        const re = /\/\* \[app-generator:brand-placeholder:start\][\s\S]*?\[app-generator:brand-placeholder:end\] \*\/\n?/
+        if (!re.test(s)) return { status: 'missing', detail: `无占位标记，手动加 ${brandImport}` }
+        if (write) writeFileSync(this.path, s.replace(re, `${brandImport}\n`))
+        return { status: 'missing' }
+      },
+    },
+    textStep({
+      label: 'pwa apps.config',
+      path: appsConfigPath,
+      block: `  ${id}: {
     id: ${q(id)},
     name: ${q(m.name)},
     workspace: ${q(m.workspace)},
@@ -244,77 +253,52 @@ ${routesJs}
     ],
     clipPaths: [${(m.clipPaths ?? ['/']).map(q).join(', ')}],
     scrollQaPath: ${q(m.scrollQaPath ?? '/settings')},
-    production: false,
-    pwaTestEnabled: true,
+${optLines.map((l) => `${l}\n`).join('')}    production: ${m.production === true},
+    pwaTestEnabled: ${m.pwaTestEnabled !== false},
   },`,
-  new RegExp(`\\n  ${id}: \\{`),
-  'pwa apps.config',
-)
-
-// —— 7. preview-app.sh case ——
-insertAtAnchor(
-  join(ROOT, 'scripts', 'pwa', 'preview-app.sh'),
-  '  # [app-generator:preview-case]',
-  `  ${id}) WORKSPACE="${m.workspace}"; PORT=${m.devPort}; BUILD_DIR="apps/${id}/build" ;;`,
-  new RegExp(`\\n  ${id}\\) WORKSPACE=`),
-  'preview-app.sh case',
-)
-
-// —— 8. 根 package.json scripts ——
-{
-  const p = join(ROOT, 'package.json')
-  let s = read(p)
-  const pairs = [
-    [`"build:${id}"`, '    "build:home": "npm run build -w home-os",', `    "build:${id}": "npm run build -w ${m.workspace}",`],
-    [`"pwa:preview:${id}"`, '    "pwa:preview:home": "bash scripts/pwa/preview-app.sh home",', `    "pwa:preview:${id}": "bash scripts/pwa/preview-app.sh ${id}",`],
-  ]
-  for (const [key, after, line] of pairs) {
-    if (s.includes(key)) {
-      skipped.push(`package.json ${key}`)
-      continue
-    }
-    if (!s.includes(after)) {
-      console.error(`根 package.json 找不到插入参照行：${after.trim()}`)
-      process.exit(1)
-    }
-    s = s.replace(after, `${after}\n${line}`)
-    changed.push(`package.json ${key}`)
-  }
-  write(p, s)
-}
-
-// —— 9. .claude/launch.json ——
-{
-  const s = read(launchPath)
-  if (launchJson.configurations.some((c) => c.name === id)) {
-    skipped.push('launch.json')
-  } else {
-    const marker = /(    \{\n      "name": "design-catalog")/
-    const entry = `    {
+      locator: new RegExp(`\\n  ${esc(id)}: \\{[\\s\\S]*?\\n  \\},`),
+      insert: beforeAnchor('  // [app-generator:pwa-apps]'),
+    }),
+    textStep({
+      label: 'preview-app.sh case',
+      path: join(ROOT, 'scripts', 'pwa', 'preview-app.sh'),
+      block: `  ${id}) WORKSPACE="${m.workspace}"; PORT=${m.devPort}; BUILD_DIR="apps/${id}/build" ;;`,
+      locator: new RegExp(`\\n  ${esc(id)}\\) WORKSPACE=[^\\n]*`),
+      insert: beforeAnchor('  # [app-generator:preview-case]'),
+    }),
+    textStep({
+      label: `package.json build:${id}`,
+      path: join(ROOT, 'package.json'),
+      block: `    "build:${id}": "npm run build -w ${m.workspace}",`,
+      locator: new RegExp(`\\n    "build:${esc(id)}":[^\\n]*`),
+      insert: afterLine('    "build:home": "npm run build -w home-os",'),
+    }),
+    textStep({
+      label: `package.json pwa:preview:${id}`,
+      path: join(ROOT, 'package.json'),
+      block: `    "pwa:preview:${id}": "bash scripts/pwa/preview-app.sh ${id}",`,
+      locator: new RegExp(`\\n    "pwa:preview:${esc(id)}":[^\\n]*`),
+      insert: afterLine('    "pwa:preview:home": "bash scripts/pwa/preview-app.sh home",'),
+    }),
+    textStep({
+      label: 'launch.json',
+      path: join(ROOT, '.claude', 'launch.json'),
+      block: `    {
       "name": "${id}",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["exec", "--workspace", "${m.workspace}", "--", "vite", "dev", "--port", "${m.devPort}", "--strictPort", "--host", "127.0.0.1"],
       "port": ${m.devPort}
-    },
-`
-    if (!marker.test(s)) {
-      console.error('.claude/launch.json 找不到 design-catalog 插入参照，手动补 dev 配置。')
-      process.exit(1)
-    }
-    write(launchPath, s.replace(marker, `${entry}$1`))
-    changed.push('launch.json')
-  }
-}
-
-// —— 10. netlify.toml ——
-{
-  const p = join(ROOT, 'apps', id, 'netlify.toml')
-  if (existsSync(p)) {
-    skipped.push('netlify.toml')
-  } else {
-    write(
-      p,
-      `[build]
+    },`,
+      locator: new RegExp(`\\n    \\{\\n      "name": "${esc(id)}"[\\s\\S]*?\\n    \\},`),
+      insert: (s, block) => {
+        const anchor = '    {\n      "name": "design-catalog"'
+        return s.includes(anchor) ? s.replace(anchor, () => `${block}\n${anchor}`) : null
+      },
+    }),
+    fileStep(
+      'netlify.toml',
+      join(ROOT, 'apps', id, 'netlify.toml'),
+      () => `[build]
   command = "npm run build -w ${m.workspace}"
   publish = "apps/${id}/build"
   ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/${id} packages/theme packages/sync"
@@ -327,48 +311,95 @@ insertAtAnchor(
   to = "/index.html"
   status = 200
 `,
+    ),
+    fileStep('shell spec', join(ROOT, 'tests', 'pwa', `${id}-app-shell.spec.ts`), () => {
+      const proper = m.shortName.charAt(0).toUpperCase() + m.shortName.slice(1).toLowerCase()
+      return read(join(ROOT, 'tests', 'pwa', 'starter-app-shell.spec.ts'))
+        .replaceAll('starter-shell', `${id}-shell`)
+        .replaceAll("'starter'", `'${id}'`)
+        .replaceAll('Starter template', m.name)
+        .replaceAll('Starter', proper)
+    }),
+  ]
+}
+
+// —— 主流程 ——
+let failed = false
+let touchedRegistries = false
+
+for (const [i, id] of targets.entries()) {
+  const { manifest: m, errors } = loadManifest(ROOT, id)
+  if (errors.length) {
+    console.error(`✖ ${id} manifest 校验失败：\n  - ${errors.join('\n  - ')}`)
+    failed = true
+    continue
+  }
+
+  // 端口冲突（cache-busting 重新 import，write 模式下前一个 app 可能已改文件）
+  const appsConfigUrl = `${pathToFileURL(join(ROOT, 'scripts', 'pwa', 'apps.config.mjs')).href}?v=${i}-${Date.now()}`
+  const { PWA_APPS } = await import(appsConfigUrl)
+  const portClash =
+    Object.values(PWA_APPS).find((a) => a.id !== id && a.port === m.devPort) ??
+    JSON.parse(read(join(ROOT, '.claude', 'launch.json'))).configurations.find(
+      (c) => c.name !== id && c.port === m.devPort,
     )
-    changed.push('netlify.toml')
+  if (portClash) {
+    console.error(`✖ ${id}：端口 ${m.devPort} 已被 "${portClash.id ?? portClash.name}" 占用，改 manifest.devPort。`)
+    failed = true
+    continue
   }
-}
 
-// —— 11. shell 合同测试 ——
-{
-  const p = join(ROOT, 'tests', 'pwa', `${id}-app-shell.spec.ts`)
-  if (existsSync(p)) {
-    skipped.push('shell spec')
+  const steps = buildSteps(m)
+  const results = steps.map((st) => ({ label: st.label, ...st.run(!CHECK) }))
+
+  if (CHECK) {
+    const missing = results.filter((r) => r.status === 'missing')
+    const drift = results.filter((r) => r.status === 'drift')
+    if (missing.length === results.length) {
+      console.log(`○ ${id} — 未晋升（manifest 存在但注册表无接线），跳过`)
+      continue
+    }
+    if (!missing.length && !drift.length) {
+      console.log(`✓ ${id} — ${results.length} 个接线点全部与 manifest 一致`)
+      continue
+    }
+    failed = true
+    console.error(`✖ ${id} — 注册表与 manifest 漂移：`)
+    for (const r of drift) console.error(`  drift    ${r.label}${r.detail ? `（${r.detail}）` : ''}`)
+    for (const r of missing) console.error(`  missing  ${r.label}${r.detail ? `（${r.detail}）` : ''}`)
+    console.error(`  修复：node scripts/promote-life-os-app.mjs ${id}`)
   } else {
-    const proper = m.shortName.charAt(0).toUpperCase() + m.shortName.slice(1).toLowerCase()
-    const spec = read(join(ROOT, 'tests', 'pwa', 'starter-app-shell.spec.ts'))
-      .replaceAll('starter-shell', `${id}-shell`)
-      .replaceAll("'starter'", `'${id}'`)
-      .replaceAll('Starter template', m.name)
-      .replaceAll('Starter', proper)
-    write(p, spec)
-    changed.push('shell spec')
+    const created = results.filter((r) => r.status === 'missing').map((r) => r.label)
+    const updated = results.filter((r) => r.status === 'drift').map((r) => r.label)
+    const bad = results.filter((r) => r.detail)
+    if (bad.length) {
+      failed = true
+      for (const r of bad) console.error(`✖ ${id} ${r.label}：${r.detail}`)
+    }
+    if (created.length || updated.length) touchedRegistries = true
+    console.log(`✅ ${id} 同步完成
+  新接线：${created.length ? created.join('、') : '无'}
+  已更新（manifest 变更同步）：${updated.length ? updated.join('、') : '无'}
+  未变：${results.length - created.length - updated.length} 项`)
   }
 }
 
-// —— 重建生成物 + 校验 ——
-console.log('\n→ npm run build:tokens && npm run validate:tokens')
-execSync('npm run build:tokens && npm run validate:tokens', { cwd: ROOT, stdio: 'inherit' })
-
-console.log(`
-✅ ${id} 晋升接线完成
-  接线：${changed.length ? changed.join('、') : '（无 — 全部已就位）'}
-  跳过（已存在）：${skipped.length ? skipped.join('、') : '无'}
-
+if (!CHECK && touchedRegistries) {
+  console.log('\n→ npm run build:tokens && npm run validate:tokens')
+  execSync('npm run build:tokens && npm run validate:tokens', { cwd: ROOT, stdio: 'inherit' })
+  console.log(`
 验证：
-  npm install && npm run check --workspace=${m.workspace}
-  npm run check:lifeos-boundaries
-  PWA_APP=${id} npx playwright test tests/pwa/${id}-app-shell.spec.ts
+  npm install && npm run check --workspace=<id>-os
+  npm run check:app-manifests && npm run check:lifeos-boundaries
+  PWA_APP=<id> npx playwright test tests/pwa/<id>-app-shell.spec.ts
 
-剩余手动步骤：
-  - 品牌：改 packages/design-tokens/tokens/brands/${id}.json 配色 → npm run build:tokens；
-    图标 scripts/generate-life-os-brand-icons.py（favicon-32 / apple-touch-icon / brand-circle-*）→ apps/${id}/static/
-  - Netlify：新建 site（package dir apps/${id}，build "npm run build -w ${m.workspace}"，publish apps/${id}/build），
-    环境变量 4 个（PUBLIC_/VITE_ SUPABASE），GoDaddy CNAME ${m.domain} → <site>.netlify.app
-  - 记录：docs/ops/netlify.md 六站表加行；scripts/deploy-all-netlify.sh 加 deploy_one（需 site id）
-  - 登录/云同步（如需）：接 @life-os/platform-web createLifeOsAuth（参考 fitness src/lib/auth.svelte.js）
-  - 上线后：apps.config.mjs 该 app production: true
-`)
+剩余手动步骤（首次晋升）：
+  - 品牌：改 packages/design-tokens/tokens/brands/<id>.json 配色 → npm run build:tokens；
+    图标 scripts/generate-life-os-brand-icons.py → apps/<id>/static/
+  - Netlify：新建 site（package dir apps/<id>）+ 4 个 Supabase env + GoDaddy CNAME；
+    记录 docs/ops/netlify.md 六站表 + scripts/deploy-all-netlify.sh deploy_one
+  - 登录/云同步（如需）：@life-os/platform-web createLifeOsAuth（参考 fitness）
+  - 上线后：manifest 设 production: true 再重跑本脚本`)
+}
+
+process.exit(failed ? 1 : 0)
