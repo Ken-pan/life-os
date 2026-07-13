@@ -1,3 +1,4 @@
+import { GATEWAY } from '$lib/localai.js'
 import { addMemory, searchMemories } from '$lib/memory.svelte.js'
 
 /**
@@ -142,6 +143,54 @@ const DEFS = [
       },
     },
   },
+  {
+    key: 'browser_status',
+    icon: 'monitor',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'browser_status',
+        description:
+          '检查本机 Chrome 感知桥(Web State Bridge)的状态:服务是否运行、浏览器扩展是否在线、有没有页面快照。browser 系工具出错时先用它诊断。',
+        parameters: { type: 'object', properties: {} },
+      },
+    },
+  },
+  {
+    key: 'read_browser_page',
+    icon: 'monitor',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'read_browser_page',
+        description:
+          '读取用户 Chrome 最近采集的网页内容摘要(Markdown,含标题、链接、表单与正文结构)。当用户提到"当前页面 / 我打开的这个网页 / 屏幕上的页面"时使用。',
+        parameters: { type: 'object', properties: {} },
+      },
+    },
+  },
+  {
+    key: 'open_browser_page',
+    icon: 'monitor',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'open_browser_page',
+        description:
+          '让用户的 Chrome 打开一个 URL、采集该页面并返回内容摘要。适合读取需要真实浏览器环境的页面;默认只允许 localhost / 127.0.0.1 / *.netlify.app,其他站点会被 bridge 拒绝。',
+        parameters: {
+          type: 'object',
+          properties: {
+            url: { type: 'string', description: '完整 URL,以 http(s):// 开头' },
+          },
+          required: ['url'],
+        },
+      },
+    },
+  },
 ]
 
 /** @param {{ webAccess?: boolean }} opts */
@@ -241,7 +290,7 @@ function htmlToText(html) {
   return title ? `# ${title}\n\n${body}` : body
 }
 
-async function fetchUrl(url) {
+export async function fetchUrl(url) {
   const target = String(url).trim()
   if (!/^https?:\/\//i.test(target)) throw new Error('URL 必须以 http(s):// 开头')
 
@@ -327,6 +376,92 @@ async function webSearch(query) {
   }
 }
 
+/* —— Web State Bridge(Chrome 感知桥,经 LocalAI 网关按需拉起)—— */
+
+const BRIDGE = `${GATEWAY}/upstream/web-state-bridge`
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const truncateText = (text, max = 8000) =>
+  text.length > max ? `${text.slice(0, max)}\n\n[已截断,原文 ${text.length} 字符]` : text
+
+async function bridgeFetch(path, init = {}, timeoutMs = 30000) {
+  let res
+  try {
+    res = await fetch(`${BRIDGE}${path}`, { signal: AbortSignal.timeout(timeoutMs), ...init })
+  } catch (err) {
+    throw new Error(`bridge 不可达(LocalAI 网关 ${GATEWAY} 可能没有运行):${err?.message ?? err}`)
+  }
+  // bridge 刚被网关拉起或刚崩溃重启的瞬间会透传一次 502,等一下重试
+  if (res.status === 502) {
+    await sleep(1500)
+    res = await fetch(`${BRIDGE}${path}`, { signal: AbortSignal.timeout(timeoutMs), ...init })
+  }
+  return res
+}
+
+async function bridgeHealth() {
+  const res = await bridgeFetch('/health')
+  if (!res.ok) throw new Error(`bridge 健康检查失败 HTTP ${res.status}`)
+  return await res.json()
+}
+
+/** @returns {Promise<string | null>} 最新页面摘要 Markdown;还没有快照时为 null */
+async function readPageSummary() {
+  const res = await bridgeFetch('/latest/summary')
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error(`读取页面摘要失败 HTTP ${res.status}`)
+  return await res.text()
+}
+
+async function browserStatus() {
+  const health = await bridgeHealth()
+  const agent = health.agent ?? {}
+  const lines = [`bridge 运行中(v${health.version},由 LocalAI 网关按需托管)`]
+  lines.push(
+    agent.extensionConnected
+      ? `Chrome 扩展在线(最近心跳 ${agent.lastSeenAt ?? '未知'})`
+      : 'Chrome 扩展未连接:需要 Chrome 正在运行且加载了 Web State DevTools 扩展(扩展每 20 秒自动重连,稍等再试)',
+  )
+  const summary = await readPageSummary()
+  lines.push(summary ? '已有页面快照,可用 read_browser_page 读取。' : '还没有页面快照。')
+  return lines.join('\n')
+}
+
+async function openBrowserPage(url) {
+  const target = String(url ?? '').trim()
+  if (!/^https?:\/\//i.test(target)) return '错误:URL 必须以 http(s):// 开头'
+
+  // bridge 冷启动后扩展最多要 20 秒左右才会重连,先等它在线
+  let health = await bridgeHealth()
+  for (let i = 0; i < 8 && !health.agent?.extensionConnected; i++) {
+    await sleep(3000)
+    health = await bridgeHealth()
+  }
+  if (!health.agent?.extensionConnected) {
+    return '错误:Chrome 扩展未连接(Chrome 没在运行,或没有加载 Web State DevTools 扩展),无法打开页面。'
+  }
+
+  const before = await readPageSummary()
+  const res = await bridgeFetch('/commands/open-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: target }),
+  })
+  if (res.status === 403) {
+    return `错误:该站点不在 bridge 白名单里(默认只允许 localhost / 127.0.0.1 / *.netlify.app):${target}`
+  }
+  if (!res.ok) return `错误:打开页面命令入队失败 HTTP ${res.status}`
+
+  // 等扩展打开页面并回传新快照
+  for (let i = 0; i < 20; i++) {
+    await sleep(1500)
+    const now = await readPageSummary()
+    if (now && now !== before) return truncateText(now)
+  }
+  return '打开页面的命令已发给 Chrome,但 30 秒内没等到新快照;稍后可用 read_browser_page 再读。'
+}
+
 /**
  * 执行一个工具调用,永远返回字符串(错误也以文本返回给模型)。
  * @param {string} name
@@ -372,6 +507,17 @@ export async function executeTool(name, argsJson) {
         return await fetchUrl(args.url)
       case 'web_search':
         return await webSearch(args.query)
+      case 'browser_status':
+        return await browserStatus()
+      case 'read_browser_page': {
+        const summary = await readPageSummary()
+        if (!summary) {
+          return '还没有任何页面快照。可用 open_browser_page 打开并采集页面,或让用户在 Chrome 扩展 popup 里点「Capture & Send」。'
+        }
+        return truncateText(summary)
+      }
+      case 'open_browser_page':
+        return await openBrowserPage(args.url)
       default:
         return `错误:未知工具 ${name}`
     }

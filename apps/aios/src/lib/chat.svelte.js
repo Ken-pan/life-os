@@ -21,8 +21,11 @@ const HISTORY_CHAR_BUDGET = 28000
  *   content: string,
  *   reasoning?: string,
  *   images?: string[],
+ *   files?: Array<{ name: string, size: number, text: string }>,
  *   toolCalls?: ToolCallRecord[],
  *   error?: string,
+ *   durationMs?: number,
+ *   thinkingMs?: number,
  * }} ChatMessage
  * @typedef {{
  *   id: string,
@@ -55,6 +58,8 @@ export const C = $state({
   streaming: false,
   /** @type {boolean | null} null = 未检查 */
   gatewayOk: null,
+  /** @type {{ id: string, index: number } | null} 刚完成的回复(供 artifact 自动预览,消费后置空) */
+  freshAssistant: null,
 })
 
 let saveTimer = null
@@ -68,11 +73,18 @@ export function persist() {
         JSON.stringify(C.conversations.slice(0, MAX_CONVERSATIONS)),
       )
     } catch {
-      /* 存储满(多为图片 dataURL):丢掉最旧会话的图片再试 */
+      /* 存储满(多为图片 dataURL / 文件文本):丢掉最旧会话的附件再试 */
       try {
         const slim = C.conversations.slice(0, 50).map((c, i) =>
           i > 10
-            ? { ...c, messages: c.messages.map((m) => ({ ...m, images: undefined })) }
+            ? {
+                ...c,
+                messages: c.messages.map((m) => ({
+                  ...m,
+                  images: undefined,
+                  files: undefined,
+                })),
+              }
             : c,
         )
         localStorage.setItem(STORAGE_KEY, JSON.stringify(slim))
@@ -140,10 +152,11 @@ async function buildSystemPrompt(conversation) {
     '你是 AI.OS,运行在用户本机上的私人 AI 助手。推理、记忆和数据全部在这台设备本地完成。',
     `当前时间:${now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}。`,
     '回答使用 Markdown。代码放在带语言标注的代码块里。保持直接、具体,不要空洞客套。',
+    '当用户要网页、可视化、动画、小游戏或 SVG 图形时,输出单文件自包含的 ```html 或 ```svg 代码块(内联 CSS/JS,不引外部资源)——界面会自动在旁边的预览面板实时渲染它。',
   ]
   if (S.settings.tools) {
     lines.push(
-      '你可以调用工具:数学用 calculate,代码/数据处理用 run_javascript,时间用 get_time,需要记住或回忆用户信息用 save_memory / search_memory' +
+      '你可以调用工具:数学用 calculate,代码/数据处理用 run_javascript,时间用 get_time,需要记住或回忆用户信息用 save_memory / search_memory;要读取用户 Chrome 里打开的页面(如"当前页面/这个网页")用 read_browser_page,要让 Chrome 打开本地开发页面并读取用 open_browser_page,browser 工具出错先用 browser_status 诊断' +
         (S.settings.webAccess
           ? ';涉及最新信息或你不确定的事实,先 web_search 搜索,再用 fetch_url 打开值得深入的链接'
           : '') +
@@ -170,16 +183,24 @@ function buildWireMessages(conversation, systemPrompt) {
   const wire = []
   for (const m of conversation.messages) {
     if (m.role === 'user') {
+      // 附件文件内容以围栏块内联(单文件截 12k 字符)
+      const fileBlocks = (m.files ?? [])
+        .map(
+          (f) =>
+            `【附件文件:${f.name}】\n\`\`\`\n${f.text.slice(0, 12000)}${f.text.length > 12000 ? '\n…(已截断)' : ''}\n\`\`\``,
+        )
+        .join('\n\n')
+      const userText = fileBlocks ? `${fileBlocks}\n\n${m.content}`.trim() : m.content
       if (m.images?.length) {
         wire.push({
           role: 'user',
           content: [
             ...m.images.map((url) => ({ type: 'image_url', image_url: { url } })),
-            { type: 'text', text: m.content || '描述这张图片。' },
+            { type: 'text', text: userText || '描述这张图片。' },
           ],
         })
       } else {
-        wire.push({ role: 'user', content: m.content })
+        wire.push({ role: 'user', content: userText })
       }
       continue
     }
@@ -239,15 +260,15 @@ function resolveModel(conversation) {
 /* —— 发送 / 重生成 —— */
 
 /** 发送一条用户消息并流式接收回复 */
-export async function sendMessage(text, images = []) {
+export async function sendMessage(text, images = [], files = []) {
   const trimmed = text.trim()
-  if ((!trimmed && !images.length) || C.streaming) return
+  if ((!trimmed && !images.length && !files.length) || C.streaming) return
 
   let conversation = activeConversation()
   if (!conversation) {
     conversation = {
       id: crypto.randomUUID(),
-      title: (trimmed || '图片对话').slice(0, 24),
+      title: (trimmed || files[0]?.name || '图片对话').slice(0, 24),
       titled: false,
       model: S.settings.model,
       createdAt: Date.now(),
@@ -262,6 +283,7 @@ export async function sendMessage(text, images = []) {
     role: 'user',
     content: trimmed,
     images: images.length ? images : undefined,
+    files: files.length ? files : undefined,
   })
   touch(conversation)
   persist()
@@ -341,10 +363,25 @@ async function streamAssistantReply(conversation) {
         onDelta: (chunk) => {
           if (chunk.reasoning) assistant.reasoning += chunk.reasoning
           if (chunk.content) assistant.content += chunk.content
+          // 正文开始的瞬间定格思考用时(reasoning_content 通道或 <think> 标签均适用)
+          if (!assistant.thinkingMs && assistant.content) {
+            const inThink =
+              assistant.content.startsWith('<think>') &&
+              !assistant.content.includes('</think>')
+            const hadThinking =
+              assistant.reasoning || assistant.content.startsWith('<think>')
+            if (hadThinking && !inThink) {
+              assistant.thinkingMs = Date.now() - startedAt
+            }
+          }
         },
       })
 
       assistant.durationMs = Date.now() - startedAt
+      // 只思考没正文就结束(被打断/纯思考轮):整段都算思考时间
+      if (assistant.reasoning && !assistant.thinkingMs) {
+        assistant.thinkingMs = assistant.durationMs
+      }
       if (!res.toolCalls.length) break
 
       // 执行工具(串行,保持网关/嵌入模型不打架),结果回填后进入下一轮
@@ -388,6 +425,8 @@ async function streamAssistantReply(conversation) {
       !last.error
     ) {
       conversation.messages.pop()
+    } else if (last?.role === 'assistant' && last.content && !last.error) {
+      C.freshAssistant = { id: conversation.id, index: conversation.messages.length - 1 }
     }
     touch(conversation)
     persist()

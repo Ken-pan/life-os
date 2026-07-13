@@ -11,6 +11,8 @@
   import Composer from '$lib/components/Composer.svelte'
   import Message from '$lib/components/Message.svelte'
   import ModelPicker from '$lib/components/ModelPicker.svelte'
+  import SidePanel from '$lib/components/SidePanel.svelte'
+  import { openArtifact } from '$lib/panel.svelte.js'
 
   const conversation = $derived(
     C.conversations.find((c) => c.id === C.activeId) ?? null,
@@ -70,9 +72,23 @@
       scroller?.scrollTo({ top: scroller.scrollHeight })
     })
   })
+
+  // 回复完成后,若包含较完整的 HTML/SVG 代码块 → 自动打开预览(Artifacts 语义)
+  $effect(() => {
+    const fresh = C.freshAssistant
+    if (!fresh || fresh.id !== C.activeId) return
+    C.freshAssistant = null
+    const message = conversation?.messages[fresh.index]
+    if (!message) return
+    const match = message.content.match(/```(html|svg)\s*\n([\s\S]*?)```/)
+    if (match && match[2].length > 300) {
+      openArtifact({ lang: match[1], code: match[2], title: conversation.title })
+    }
+  })
 </script>
 
 <div class="chat">
+  <div class="chat-main">
   <div class="chat-top">
     <ModelPicker />
     <div class="chat-top-actions">
@@ -139,11 +155,22 @@
       </div>
     </div>
   {/if}
+  </div>
+
+  <SidePanel />
 </div>
 
 <style>
   .chat {
     height: 100%;
+    display: flex;
+    flex-direction: row;
+    min-height: 0;
+  }
+
+  .chat-main {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     min-height: 0;

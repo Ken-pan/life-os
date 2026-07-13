@@ -2,6 +2,9 @@ import ArrowDown from '@lucide/svelte/icons/arrow-down'
 import ArrowUp from '@lucide/svelte/icons/arrow-up'
 import Brain from '@lucide/svelte/icons/brain'
 import Download from '@lucide/svelte/icons/download'
+import ExternalLink from '@lucide/svelte/icons/external-link'
+import Eye from '@lucide/svelte/icons/eye'
+import FileText from '@lucide/svelte/icons/file-text'
 import Pencil from '@lucide/svelte/icons/pencil'
 import Search from '@lucide/svelte/icons/search'
 import Volume2 from '@lucide/svelte/icons/volume-2'
@@ -17,6 +20,7 @@ import History from '@lucide/svelte/icons/history'
 import Lightbulb from '@lucide/svelte/icons/lightbulb'
 import MessageCircle from '@lucide/svelte/icons/message-circle'
 import Mic from '@lucide/svelte/icons/mic'
+import Monitor from '@lucide/svelte/icons/monitor'
 import Paperclip from '@lucide/svelte/icons/paperclip'
 import Plus from '@lucide/svelte/icons/plus'
 import RefreshCw from '@lucide/svelte/icons/refresh-cw'
@@ -33,6 +37,9 @@ export const ICONS = {
   'arrow-up': ArrowUp,
   brain: Brain,
   download: Download,
+  external: ExternalLink,
+  eye: Eye,
+  file: FileText,
   pencil: Pencil,
   search: Search,
   speaker: Volume2,
@@ -48,6 +55,7 @@ export const ICONS = {
   lightbulb: Lightbulb,
   chat: MessageCircle,
   mic: Mic,
+  monitor: Monitor,
   paperclip: Paperclip,
   plus: Plus,
   refresh: RefreshCw,

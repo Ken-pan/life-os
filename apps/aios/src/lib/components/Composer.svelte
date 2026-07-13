@@ -9,13 +9,19 @@
 
   let text = $state('')
   let images = $state([])
+  let files = $state([])
   let textarea = $state(null)
   let fileInput = $state(null)
   let recording = $state(false)
   let transcribing = $state(false)
   let recorder = null
 
-  const canSend = $derived((text.trim().length > 0 || images.length > 0) && !C.streaming)
+  const canSend = $derived(
+    (text.trim().length > 0 || images.length > 0 || files.length > 0) && !C.streaming,
+  )
+
+  const TEXT_FILE_RE =
+    /\.(txt|md|markdown|json|jsonl|csv|tsv|ya?ml|toml|xml|html?|css|js|mjs|ts|jsx|tsx|svelte|vue|py|rb|go|rs|swift|kt|java|c|h|cpp|hpp|sh|zsh|sql|log|ini|conf|env|svg)$/i
 
   function autogrow() {
     if (!textarea) return
@@ -28,13 +34,15 @@
       stopStreaming()
       return
     }
-    if (!text.trim() && !images.length) return
+    if (!text.trim() && !images.length && !files.length) return
     const value = text
-    const attached = images
+    const attachedImages = images
+    const attachedFiles = files
     text = ''
     images = []
+    files = []
     requestAnimationFrame(autogrow)
-    await sendMessage(value, attached)
+    await sendMessage(value, attachedImages, attachedFiles)
   }
 
   function onKeydown(event) {
@@ -44,9 +52,9 @@
     }
   }
 
-  /* —— 图片附件:降采样到长边 1568,JPEG 压缩,dataURL —— */
+  /* —— 附件:图片降采样;文本文件读入内容(供模型阅读 + 侧栏查看)—— */
   async function addImageFile(file) {
-    if (!file.type.startsWith('image/') || images.length >= 4) return
+    if (images.length >= 4) return
     const bitmap = await createImageBitmap(file)
     const scale = Math.min(1, 1568 / Math.max(bitmap.width, bitmap.height))
     const canvas = document.createElement('canvas')
@@ -57,24 +65,39 @@
     images = [...images, canvas.toDataURL('image/jpeg', 0.88)]
   }
 
+  async function addTextFile(file) {
+    if (files.length >= 4 || file.size > 2 * 1024 * 1024) return
+    const content = await file.text()
+    files = [...files, { name: file.name, size: file.size, text: content.slice(0, 200000) }]
+  }
+
+  async function addAnyFile(file) {
+    if (file.type.startsWith('image/')) return addImageFile(file)
+    if (file.type.startsWith('text/') || TEXT_FILE_RE.test(file.name)) return addTextFile(file)
+  }
+
   async function onFilesPicked(event) {
-    for (const file of event.target.files ?? []) await addImageFile(file)
+    for (const file of event.target.files ?? []) await addAnyFile(file)
     event.target.value = ''
   }
 
   async function onPaste(event) {
-    const files = [...(event.clipboardData?.items ?? [])]
+    const pasted = [...(event.clipboardData?.items ?? [])]
       .filter((i) => i.kind === 'file')
       .map((i) => i.getAsFile())
       .filter(Boolean)
-    if (files.length) {
+    if (pasted.length) {
       event.preventDefault()
-      for (const file of files) await addImageFile(file)
+      for (const file of pasted) await addAnyFile(file)
     }
   }
 
   function removeImage(index) {
     images = images.filter((_, i) => i !== index)
+  }
+
+  function removeFile(index) {
+    files = files.filter((_, i) => i !== index)
   }
 
   /* —— 语音输入:MediaRecorder → 本地 Qwen3-ASR 转写 —— */
@@ -121,7 +144,7 @@
 </script>
 
 <div class="composer" class:recording>
-  {#if images.length}
+  {#if images.length || files.length}
     <div class="attachments">
       {#each images as src, i (i)}
         <div class="thumb">
@@ -131,6 +154,20 @@
             class="thumb-x"
             aria-label={t('chat.removeImage')}
             onclick={() => removeImage(i)}
+          >
+            <Icon name="x" size={12} strokeWidth={2.5} />
+          </button>
+        </div>
+      {/each}
+      {#each files as file, i (file.name + i)}
+        <div class="file-pill">
+          <Icon name="file" size={14} strokeWidth={1.75} />
+          <span class="file-pill-name">{file.name}</span>
+          <button
+            type="button"
+            class="file-pill-x"
+            aria-label={t('chat.removeFile')}
+            onclick={() => removeFile(i)}
           >
             <Icon name="x" size={12} strokeWidth={2.5} />
           </button>
@@ -152,7 +189,7 @@
     <input
       bind:this={fileInput}
       type="file"
-      accept="image/*"
+      accept="image/*,text/*,.txt,.md,.markdown,.json,.jsonl,.csv,.tsv,.yaml,.yml,.toml,.xml,.html,.htm,.css,.js,.mjs,.ts,.jsx,.tsx,.svelte,.vue,.py,.rb,.go,.rs,.swift,.kt,.java,.c,.h,.cpp,.hpp,.sh,.zsh,.sql,.log,.ini,.conf,.svg"
       multiple
       hidden
       onchange={onFilesPicked}
@@ -262,6 +299,46 @@
     background: rgba(0, 0, 0, 0.65);
     color: #fff;
     cursor: pointer;
+  }
+
+  .file-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+    height: 34px;
+    padding: 0 6px 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-2);
+    color: var(--t1);
+    font-size: var(--text-sm, 13px);
+  }
+  .file-pill :global(svg) {
+    color: var(--t3);
+    flex: 0 0 auto;
+  }
+  .file-pill-name {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-pill-x {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--t3);
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+  .file-pill-x:hover {
+    color: var(--t1);
+    background: var(--card);
   }
 
   textarea {

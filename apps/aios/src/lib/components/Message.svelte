@@ -5,6 +5,7 @@
   import { C, regenerate, editUserMessage } from '$lib/chat.svelte.js'
   import { toolIcon } from '$lib/tools.js'
   import { speak } from '$lib/localai.js'
+  import { openArtifact, openUrl, openFile } from '$lib/panel.svelte.js'
 
   /** @type {{ message: import('$lib/chat.svelte.js').ChatMessage, index?: number, isLast?: boolean }} */
   let { message, index = 0, isLast = false } = $props()
@@ -21,10 +22,37 @@
     [message.reasoning, parts.thinking].filter(Boolean).join('\n'),
   )
   const answerHtml = $derived(
-    message.role === 'assistant' ? renderMarkdown(parts.answer) : '',
+    message.role === 'assistant'
+      ? renderMarkdown(parts.answer, { previewLabel: t('panel.preview') })
+      : '',
   )
   const streamingThis = $derived(
     C.streaming && isLast && message.role === 'assistant',
+  )
+
+  /* —— 等待/思考状态(ChatGPT 式:实时计时 + 思考流预览)—— */
+  const thinkingLive = $derived(
+    streamingThis && !!thinkingText && !parts.answer && !message.toolCalls?.length,
+  )
+  let thinkOpen = $state(false)
+  let startTs = $state(null)
+  let nowTs = $state(0)
+  $effect(() => {
+    if (!streamingThis) return
+    if (startTs === null) {
+      startTs = Date.now()
+      nowTs = startTs
+    }
+    const id = setInterval(() => (nowTs = Date.now()), 1000)
+    return () => clearInterval(id)
+  })
+  const elapsedS = $derived(
+    startTs === null ? 0 : Math.max(0, Math.round((nowTs - startTs) / 1000)),
+  )
+  // 迟迟没有首个 token:多半是 llama-swap 正在冷加载模型
+  const coldStart = $derived(elapsedS >= 6 && !thinkingText && !parts.answer)
+  const thinkSeconds = $derived(
+    Math.max(1, Math.round((message.thinkingMs ?? message.durationMs ?? 0) / 1000)),
   )
 
   async function copy() {
@@ -37,17 +65,31 @@
     }
   }
 
-  /* —— 代码块复制(委托:按钮由 renderMarkdown 静态生成)—— */
+  /* —— markdown 区域委托:代码复制 / HTML 预览 / 链接进内建阅读器 —— */
   async function onMdClick(event) {
-    const btn = event.target.closest?.('[data-md-copy]')
-    if (!btn) return
-    const code = btn.closest('.md-code')?.querySelector('code')?.textContent ?? ''
-    try {
-      await navigator.clipboard.writeText(code)
-      btn.textContent = '✓'
-      setTimeout(() => (btn.textContent = '⧉'), 1500)
-    } catch {
-      /* ignore */
+    const copyBtn = event.target.closest?.('[data-md-copy]')
+    if (copyBtn) {
+      const code = copyBtn.closest('.md-code')?.querySelector('code')?.textContent ?? ''
+      try {
+        await navigator.clipboard.writeText(code)
+        copyBtn.textContent = '✓'
+        setTimeout(() => (copyBtn.textContent = '⧉'), 1500)
+      } catch {
+        /* ignore */
+      }
+      return
+    }
+    const previewBtn = event.target.closest?.('[data-md-preview]')
+    if (previewBtn) {
+      const code = previewBtn.closest('.md-code')?.querySelector('code')?.textContent ?? ''
+      openArtifact({ lang: previewBtn.dataset.lang || 'html', code })
+      return
+    }
+    // 链接:默认进内建阅读器;按住 Cmd/Ctrl 走系统新标签
+    const link = event.target.closest?.('a[href^="http"]')
+    if (link && !event.metaKey && !event.ctrlKey) {
+      event.preventDefault()
+      openUrl(link.href)
     }
   }
 
@@ -118,6 +160,17 @@
         {/each}
       </div>
     {/if}
+    {#if message.files?.length}
+      <div class="user-files">
+        {#each message.files as file (file.name)}
+          <button type="button" class="file-chip" onclick={() => openFile(file)}>
+            <Icon name="file" size={14} strokeWidth={1.75} />
+            <span class="file-chip-name">{file.name}</span>
+            <span class="file-chip-size">{(file.size / 1024).toFixed(0)}KB</span>
+          </button>
+        {/each}
+      </div>
+    {/if}
     {#if editing}
       <div class="edit-box">
         <textarea bind:value={editText} rows="3" onkeydown={onEditKeydown}></textarea>
@@ -151,13 +204,31 @@
 {:else}
   <div class="row assistant">
     {#if thinkingText}
-      <details class="think" open={streamingThis && !parts.answer}>
-        <summary>
+      <div class="think" class:open={thinkOpen}>
+        <button
+          type="button"
+          class="think-toggle"
+          title={t('chat.thinking')}
+          aria-expanded={thinkOpen}
+          onclick={() => (thinkOpen = !thinkOpen)}
+        >
+          {#if thinkingLive}
+            <span class="shimmer">{t('chat.thinkingNow')}</span>
+            <span class="think-timer">{elapsedS}s</span>
+          {:else}
+            <span>{t('chat.thoughtFor', { s: thinkSeconds })}</span>
+          {/if}
           <Icon name="chevron-down" size={14} strokeWidth={2} />
-          {t('chat.thinking')}
-        </summary>
-        <div class="think-body">{thinkingText}</div>
-      </details>
+        </button>
+        {#if thinkOpen}
+          <div class="think-body">{thinkingText}</div>
+        {:else if thinkingLive}
+          <!-- 流式思考预览:固定高度窗口,底部对齐,顶部渐隐 -->
+          <div class="think-stream" aria-hidden="true">
+            <div class="think-stream-text">{thinkingText}</div>
+          </div>
+        {/if}
+      </div>
     {/if}
 
     {#if message.toolCalls?.length}
@@ -170,7 +241,7 @@
               </span>
               <span class="tool-name">{t(`tool.${tc.name}`)}</span>
               {#if tc.running}
-                <span class="tool-status">{t('chat.toolRunning')}</span>
+                <span class="tool-status shimmer">{t('chat.toolRunning')}</span>
               {/if}
               <Icon name="chevron-down" size={12} strokeWidth={2} />
             </summary>
@@ -180,6 +251,22 @@
               {/if}
               {#if tc.result}
                 <pre class="tool-result">{tc.result.slice(0, 1500)}{tc.result.length > 1500 ? '…' : ''}</pre>
+              {/if}
+              {#if tc.name === 'fetch_url' && tc.result && !tc.result.startsWith('错误')}
+                <button
+                  type="button"
+                  class="tool-open"
+                  onclick={() => {
+                    try {
+                      openUrl(JSON.parse(tc.arguments).url, tc.result)
+                    } catch {
+                      /* 参数异常时忽略 */
+                    }
+                  }}
+                >
+                  <Icon name="eye" size={13} strokeWidth={1.9} />
+                  {t('panel.openReader')}
+                </button>
               {/if}
             </div>
           </details>
@@ -195,8 +282,8 @@
         {@html answerHtml}
       </div>
     {:else if streamingThis && !thinkingText && !message.toolCalls?.length}
-      <div class="pending" aria-label={t('chat.loading')}>
-        <span class="dot"></span>
+      <div class="pending" role="status" aria-label={t('chat.loading')}>
+        <span class="shimmer">{coldStart ? t('chat.pendingCold') : t('chat.pending')}</span>
       </div>
     {/if}
 
@@ -275,6 +362,45 @@
     border-radius: 14px;
     border: 1px solid var(--border);
     display: block;
+  }
+
+  .user-files {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .file-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 260px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-2);
+    color: var(--t1);
+    font-size: var(--text-sm, 13px);
+    cursor: pointer;
+  }
+  .file-chip:hover {
+    border-color: var(--border-l);
+    background: var(--card);
+  }
+  .file-chip :global(svg) {
+    color: var(--t3);
+    flex: 0 0 auto;
+  }
+  .file-chip-name {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-chip-size {
+    color: var(--t4);
+    font-size: var(--text-xs, 11px);
+    flex: 0 0 auto;
   }
 
   .bubble {
@@ -451,6 +577,23 @@
   .tool-result {
     color: var(--t1);
   }
+  .tool-open {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--t2);
+    padding: 5px 10px;
+    font-size: var(--text-xs, 12px);
+    cursor: pointer;
+  }
+  .tool-open:hover {
+    color: var(--t1);
+    background: var(--card);
+  }
 
   /* —— markdown 正文 —— */
   .md {
@@ -529,7 +672,13 @@
     color: var(--t3);
     font-family: var(--mono, ui-monospace, monospace);
   }
-  .md :global(.md-copy) {
+  .md :global(.md-code-actions) {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .md :global(.md-copy),
+  .md :global(.md-preview) {
     border: none;
     background: transparent;
     color: var(--t3);
@@ -539,7 +688,12 @@
     border-radius: 6px;
     cursor: pointer;
   }
-  .md :global(.md-copy:hover) {
+  .md :global(.md-preview) {
+    font-size: var(--text-xs, 12px);
+    font-weight: 550;
+  }
+  .md :global(.md-copy:hover),
+  .md :global(.md-preview:hover) {
     background: var(--card);
     color: var(--t1);
   }
@@ -598,28 +752,36 @@
 
   /* —— 思考块 —— */
   .think {
-    border: none;
     color: var(--t3);
     font-size: var(--text-sm, 13px);
   }
-  .think summary {
+  .think-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    list-style: none;
-    user-select: none;
+    gap: 6px;
+    border: none;
+    background: transparent;
+    padding: 0;
     color: var(--t3);
+    font: inherit;
+    font-size: var(--text-sm, 13px);
+    cursor: pointer;
+    user-select: none;
   }
-  .think summary::-webkit-details-marker {
-    display: none;
+  .think-toggle:hover {
+    color: var(--t1);
   }
-  .think summary :global(svg) {
+  .think-toggle :global(svg) {
     transition: transform var(--dur-fast, 120ms) var(--ease, ease);
     transform: rotate(-90deg);
   }
-  .think[open] summary :global(svg) {
+  .think.open .think-toggle :global(svg) {
     transform: rotate(0deg);
+  }
+  .think-timer {
+    color: var(--t4);
+    font-size: var(--text-xs, 11px);
+    font-variant-numeric: tabular-nums;
   }
   .think-body {
     margin-top: 6px;
@@ -629,29 +791,59 @@
     line-height: 1.6;
     overflow-wrap: anywhere;
   }
+  /* 流式思考预览:约 3 行高,内容底部对齐随流"滚动",顶部渐隐 */
+  .think-stream {
+    margin-top: 8px;
+    max-height: 4.8em;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-inline-start: 12px;
+    border-inline-start: 2px solid var(--border);
+    line-height: 1.6;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 2.2em);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 2.2em);
+  }
+  .think-stream-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
 
-  /* —— 流式等待点 —— */
+  /* —— shimmer 状态文字(等待/思考/工具运行)—— */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--t3) 35%,
+      var(--t1) 50%,
+      var(--t3) 65%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 2s linear infinite;
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shimmer {
+      animation: none;
+      background: none;
+      color: var(--t2);
+    }
+  }
+
+  /* —— 流式等待状态行 —— */
   .pending {
-    padding: 6px 0;
-  }
-  .dot {
-    display: block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--t1);
-    animation: pulse 1s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%,
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.35;
-      transform: scale(0.8);
-    }
+    padding: 4px 0;
+    font-size: var(--text-sm, 13px);
   }
 
   /* —— 错误 —— */
