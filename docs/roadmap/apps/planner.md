@@ -22,18 +22,13 @@
 
 ## Next（按 ROI）
 
-| ID                   | 主题                                       | ROI | 桶      | 投入 | Agent                  | 验收                                                                    | Hub         |
-| -------------------- | ------------------------------------------ | --- | ------- | ---- | ---------------------- | ----------------------------------------------------------------------- | ----------- |
-| **PLNR.SCHED.0**     | 日程视图 debug + 可用性闭环                | 🔥  | Product | 2–4d | Fable / Ken        | migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** 待 Ken | §Now        |
-| **P-TASK-DISPLAY-0** | 任务行小字 + 类别视觉规范                  | ◆   | Product | —    | **并入 PLNR.SCHED.0**  | [`planner-task-display-spec.md`](../../qa/planner-task-display-spec.md) | PLNR.UIUX.0 |
-| **PLNR.UIUX.0**      | 全站 UI/UX 走查（Today/Inbox/Projects 等） | ◆   | Product | 1–2d | Fable（PLNR.SCHED 后） | 截图走查；含 P-TASK-DISPLAY 若未在 A 完成                               | §Next       |
-| **PLNR.CAPTURE.0**   | iOS/移动端任务捕获统一 | ◆   | Product | gate | Code ✅ · Ken iOS | unit/E2E/截图 ✅；真机 IME + 键盘 gate ⏳ | PLNR.UIUX.0 |
-| **PAPR.UI**          | PaperOS Slice 1.1 设备复验 → Slice 2       | ◆◆  | Product | XL   | Cursor Auto + Codex    | 1.1 代码 ✅ `52ae55e0`/`d7c52858` · 见 pro-move 分卷                    | §Now        |
-| **PAPR.WRITE.5**     | Controlled write staging gate              | ◆   | Product | 1d   | Codex（Deferred）      | 代码 ✅ · **DB** `paper_device_actions` ❌ · staging gate 开放        | Deferred    |
-| **PLNR.CORE.4**      | Today 计数与 `portal_today_summary` 对齐   | ◆   | Growth  | 0.5d | Cursor / Codex（快赢） | RPC ✅ · **计数口径未对齐**（`todayOpen` vs `remaining`）             | §Next Open  |
-| **PAPR.SYNC.6**      | 定时缓存 + 手动 Sync now                   | ◆   | Product | 1–2d | Codex                  | scheduled cache + 性能 baseline（**BLOCKED on PAPR.SYS.2**）            | §Next       |
-| **PLNR.ATTACH.0**    | Task / Project 附件底座                    | ◆◆  | Core    | 1–2d | Codex                  | Supabase Storage + metadata；在线上传/删除/预览                         | §Next       |
-| **PLNR.ATTACH.1**    | 图片与截图体验                             | ◆   | Product | 1d   | Fable                  | paste / drag-drop / mobile picker / thumbnail / retry                   | —           |
+| ID                 | 主题                                                | ROI | 桶     | 投入 | 验收                                   | Hub                 |
+| ------------------ | --------------------------------------------------- | --- | ------ | ---- | -------------------------------------- | ------------------- |
+| **P-P4**           | Today 计数与 `portal_today_summary` 对齐            | ◆   | Growth | 0.5d | 与 Portal 同账号任务数一致             | —                   |
+| **P-MOVE-5**       | Controlled write staging gate                       | ◆   | Product | 1d | staging `task.complete` + 幂等；生产默认关闭 | §Now |
+| **P-MOVE-6**       | 定时缓存 + 手动 Sync now                            | ◆   | Product | 1–2d | safe cache + states + opt-in timer 已实现；设备 gate / 性能 baseline 待验收 | §Next |
+| **P-ATTACH-0**     | Task / Project 附件底座                             | ◆◆  | Core   | 1–2d | Supabase Storage + metadata；在线上传/删除/预览 | §Next |
+| **P-ATTACH-1**     | 图片与截图体验                                      | ◆   | Product | 1d | paste / drag-drop / mobile picker / thumbnail / retry | — |
 
 ### 近期已完成
 

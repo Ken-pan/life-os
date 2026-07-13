@@ -9,11 +9,24 @@
 #include <QDateTime>
 #include <QFileInfo>
 #include <QDir>
+#include <QSaveFile>
+
+namespace {
+constexpr qint64 kStaleThresholdSeconds = 60 * 60;
+}
 
 ApiClient::ApiClient(QObject *parent) : QObject(parent)
 {
     loadConfig();
     loadCache();
+
+    m_freshnessTimer.setInterval(60 * 1000);
+    connect(&m_freshnessTimer, &QTimer::timeout, this, [this]() {
+        if (!m_isLoading && m_syncState != "failure" && hasCachedDashboard()) {
+            setSyncState(isCacheStale() ? "stale" : "current");
+        }
+    });
+    m_freshnessTimer.start();
 }
 
 void ApiClient::loadConfig()
@@ -83,31 +96,83 @@ void ApiClient::loadCache()
 
     m_lastSync = readFileTrimmed(m_lastSyncPath);
     emit lastSyncChanged();
+    if (hasCachedDashboard()) {
+        setSyncState(isCacheStale() ? "stale" : "current");
+    }
 }
 
-void ApiClient::saveCache(const QByteArray &payload)
+bool ApiClient::saveCache(const QByteArray &payload)
 {
     QFileInfo info(m_cachePath);
-    QDir().mkpath(info.absolutePath());
+    if (!QDir().mkpath(info.absolutePath())) {
+        qWarning() << "Could not create PaperOS cache directory" << info.absolutePath();
+        return false;
+    }
 
-    QFile file(m_cachePath + ".tmp");
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qWarning() << "Could not write cache" << file.fileName();
+    QSaveFile cacheFile(m_cachePath);
+    if (!cacheFile.open(QIODevice::WriteOnly) || cacheFile.write(payload) != payload.size() || !cacheFile.commit()) {
+        qWarning() << "Could not atomically write cache" << m_cachePath;
+        return false;
+    }
+
+    const QString timestamp = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    const QByteArray timestampBytes = timestamp.toUtf8();
+    QSaveFile syncFile(m_lastSyncPath);
+    if (!syncFile.open(QIODevice::WriteOnly)
+        || syncFile.write(timestampBytes) != timestampBytes.size()
+        || syncFile.write("\n") != 1
+        || !syncFile.commit()) {
+        qWarning() << "Could not atomically write last sync timestamp" << m_lastSyncPath;
+        return false;
+    }
+
+    m_lastSync = timestamp;
+    emit lastSyncChanged();
+    return true;
+}
+
+bool ApiClient::hasCachedDashboard() const
+{
+    return !m_dashboardData.isEmpty();
+}
+
+bool ApiClient::isCacheStale() const
+{
+    const QDateTime lastSyncAt = QDateTime::fromString(m_lastSync, Qt::ISODate);
+    if (!lastSyncAt.isValid()) {
+        return true;
+    }
+    return lastSyncAt.secsTo(QDateTime::currentDateTimeUtc()) > kStaleThresholdSeconds;
+}
+
+void ApiClient::setSyncState(const QString &state)
+{
+    if (m_syncState == state) {
         return;
     }
-    file.write(payload);
-    file.close();
+    m_syncState = state;
+    emit syncStateChanged();
+}
 
-    QFile::remove(m_cachePath);
-    QFile::rename(file.fileName(), m_cachePath);
+void ApiClient::setFailure(const QString &message)
+{
+    m_errorMessage = message;
+    emit errorChanged();
+    setSyncState("failure");
+}
 
-    m_lastSync = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
-    QFile syncFile(m_lastSyncPath);
-    if (syncFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        syncFile.write(m_lastSync.toUtf8());
-        syncFile.write("\n");
+QString ApiClient::syncSummary() const
+{
+    if (m_syncState == "syncing") return "Syncing...";
+    if (m_syncState == "current") return "Current · synced " + m_lastSync;
+    if (m_syncState == "stale") return "Stale · cached " + m_lastSync;
+    if (m_syncState == "failure") {
+        if (!hasCachedDashboard()) return "Sync failed · no cached dashboard";
+        return "Sync failed · showing "
+            + (isCacheStale() ? QStringLiteral("stale") : QStringLiteral("current"))
+            + " cache " + m_lastSync;
     }
-    emit lastSyncChanged();
+    return "Idle · no cached dashboard";
 }
 
 // Reads an optional side-cache file (cache/<name>.json) for domains the
@@ -129,6 +194,7 @@ void ApiClient::fetchDashboard()
     m_errorMessage = "";
     emit loadingChanged();
     emit errorChanged();
+    setSyncState("syncing");
 
     QString endpoint = (m_mode == "real") ? "/api/paper/today" : "/api/paper/mock/today";
     QUrl url(m_apiBaseUrl + endpoint);
@@ -139,9 +205,8 @@ void ApiClient::fetchDashboard()
     if (m_mode == "real") {
         if (m_token.isEmpty()) {
             m_isLoading = false;
-            m_errorMessage = "Missing device token";
             emit loadingChanged();
-            emit errorChanged();
+            setFailure("Missing device token");
             return;
         }
         request.setRawHeader("Authorization", ("Bearer " + m_token).toUtf8());
@@ -160,21 +225,24 @@ void ApiClient::fetchDashboard()
         if (reply->error() == QNetworkReply::NoError) {
             const QByteArray payload = reply->readAll();
             QJsonDocument doc = QJsonDocument::fromJson(payload);
-            if (doc.isObject()) {
-                m_dashboardData = doc.object().toVariantMap();
-                saveCache(payload);
+            const QJsonObject dashboard = doc.object();
+            if (doc.isObject() && dashboard.contains("today")) {
+                if (!saveCache(payload)) {
+                    setFailure("Could not save dashboard cache");
+                } else {
+                    m_dashboardData = dashboard.toVariantMap();
+                    setSyncState("current");
+                }
                 emit dashboardDataChanged();
             } else {
-                m_errorMessage = "Invalid JSON format";
-                emit errorChanged();
+                setFailure("Invalid dashboard response");
             }
         } else {
             if (reply->error() == QNetworkReply::AuthenticationRequiredError || reply->error() == QNetworkReply::ContentAccessDenied) {
-                m_errorMessage = "Auth Error (" + QString::number(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()) + "): Check Token";
+                setFailure("Auth Error (" + QString::number(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()) + "): Check Token");
             } else {
-                m_errorMessage = reply->errorString();
+                setFailure(reply->errorString());
             }
-            emit errorChanged();
         }
         reply->deleteLater();
     });

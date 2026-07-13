@@ -45,8 +45,7 @@ Item {
                         color: Ui.ink
                     }
                     Text {
-                        text: apiClient.isLoading ? "syncing..."
-                            : (apiClient.errorMessage !== "" ? "offline" : "synced " + apiClient.lastSync)
+                        text: apiClient.syncSummary
                         font.family: Ui.fontFamily
                         font.pixelSize: Ui.meta
                         color: Ui.muted
