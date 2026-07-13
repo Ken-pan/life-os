@@ -1,15 +1,20 @@
 import { browser } from '$app/environment'
 import { embed, cosine } from '$lib/localai.js'
+import { SEED_MEMORIES } from '$lib/profile.js'
 
 /**
  * 持久记忆(ChatGPT memory 风格):
  * - 模型经工具 save_memory 写入,或用户在设置页管理
+ * - 首次启动种入用户资料(profile.js),之后由对话增量积累
  * - Qwen3-Embedding 语义召回,每轮把最相关的记忆注入 system prompt
  * - 全部存 localStorage,不出设备;向量截断 512 维控制体积
  */
 
 const STORAGE_KEY = 'aios_memory_v1'
+const SEED_FLAG_KEY = 'aios_memory_seeded_v1'
 const MAX_MEMORIES = 200
+/** 新记忆与旧记忆余弦相似度达到该值视为同一事实的新版本,替换而非并存 */
+const DUP_THRESHOLD = 0.92
 
 /** @typedef {{ id: string, text: string, vector: number[] | null, createdAt: number }} MemoryItem */
 
@@ -64,11 +69,36 @@ export async function addMemory(text) {
   try {
     const [vector] = await embed([trimmed])
     item.vector = vector
+    // 同一事实的新版本:删掉近重复的旧条目,避免过时信息与新信息并存互相矛盾
+    const stale = M.items.filter(
+      (m) => m.id !== item.id && m.vector && cosine(vector, m.vector) >= DUP_THRESHOLD,
+    )
+    if (stale.length) {
+      const staleIds = new Set(stale.map((m) => m.id))
+      M.items = M.items.filter((m) => !staleIds.has(m.id))
+    }
     persist()
   } catch {
     /* embeddings 不可用时保持 null */
   }
   return item
+}
+
+/** 首次启动把用户资料种入记忆(只跑一次;用户清空后不会复活) */
+export function seedDefaultMemories() {
+  if (!browser) return
+  if (localStorage.getItem(SEED_FLAG_KEY)) return
+  localStorage.setItem(SEED_FLAG_KEY, '1')
+  const existing = new Set(M.items.map((m) => m.text))
+  const seeds = SEED_MEMORIES.filter((text) => !existing.has(text)).map((text) => ({
+    id: crypto.randomUUID(),
+    text,
+    vector: null,
+    createdAt: Date.now(),
+  }))
+  if (!seeds.length) return
+  M.items = [...M.items, ...seeds].slice(0, MAX_MEMORIES)
+  persist()
 }
 
 /** 给缺向量的记忆补嵌入(app 启动时调用,静默自愈) */
@@ -123,9 +153,11 @@ export async function searchMemories(query, k = 5) {
 
 /**
  * 为本轮对话召回相关记忆(注入 system prompt 用)。
+ * 注入端阈值偏高(重精度):无关记忆混进 prompt 会误导小模型;
+ * 需要广召回时模型自己会调 search_memory(工具端阈值 0.2,重召回)。
  * @returns {Promise<string[]>}
  */
-export async function recallRelevant(query, k = 4, threshold = 0.3) {
+export async function recallRelevant(query, k = 4, threshold = 0.45) {
   if (!M.items.length) return []
   try {
     const results = await searchMemories(query, k)

@@ -55,8 +55,10 @@ export default {
     suggestBrainstorm: 'Brainstorm my weekend plan',
     suggestMath: 'Compute 2 to the 128th power exactly',
     removeFile: 'Remove file',
+    importingFile: 'Parsing file…',
   },
   panel: {
+    transcript: 'Transcript',
     preview: 'Preview',
     code: 'Code',
     close: 'Close panel',
@@ -78,6 +80,9 @@ export default {
     browser_status: 'Browser status',
     read_browser_page: 'Read browser page',
     open_browser_page: 'Open browser page',
+    browser_search: 'Browser search',
+    browser_interact: 'Interact with page',
+    look_at_browser_page: 'Look at page',
   },
   model: {
     label: 'Model',
@@ -119,6 +124,10 @@ export default {
     memoriesDesc:
       'Facts the model saved during chats; you can also add them manually. Stored on this device only.',
     memoriesEmpty: 'No memories yet. Say "remember…" in a chat to save one.',
+    profile: 'User profile',
+    profileHint: 'Stable facts about you, one per line…',
+    profileDesc:
+      'Always-on memory: injected into every turn — keep it to core identity and preferences; specific facts belong in the memory list below, recalled by relevance.',
     memoryAdd: 'Add',
     memoryAddHint: 'Add a memory manually…',
     clearMemories: 'Delete all memories',

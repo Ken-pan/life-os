@@ -12,7 +12,7 @@
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
-  import { backfillVectors } from '$lib/memory.svelte.js'
+  import { backfillVectors, seedDefaultMemories } from '$lib/memory.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
@@ -32,6 +32,7 @@
     applyTheme()
     applyLocale()
     refreshGateway()
+    seedDefaultMemories()
     backfillVectors()
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()

@@ -73,7 +73,7 @@ const DEFS = [
       function: {
         name: 'save_memory',
         description:
-          '把关于用户的一条重要事实存入长期记忆(跨对话持久)。当用户告诉你偏好、背景、正在做的事,或明确要求"记住"时使用。内容用第三人称一句话概括。',
+          '把关于用户的一条稳定事实存入长期记忆(跨对话持久)。当用户告诉你新偏好、背景变化、正在做的新事,或明确要求"记住"时使用。一次只存一个事实,第三人称一句话,必要时带时间背景;同一事实的新版本直接存,旧的近似条目会被自动替换。不要存敏感凭据(密码/密钥/证件号)和只在本轮有意义的临时细节。',
         parameters: {
           type: 'object',
           properties: {
@@ -92,7 +92,8 @@ const DEFS = [
       type: 'function',
       function: {
         name: 'search_memory',
-        description: '在长期记忆中语义检索与主题相关的事实。当需要回忆用户此前告诉过你的信息时使用。',
+        description:
+          '在长期记忆中语义检索与主题相关的事实。当用户问"我之前说过/你还记得",或任务依赖用户的历史偏好、项目背景而系统提示里没有相关记忆时,先检索再回答,不要凭空猜测。',
         parameters: {
           type: 'object',
           properties: {
@@ -166,8 +167,17 @@ const DEFS = [
       function: {
         name: 'read_browser_page',
         description:
-          '读取用户 Chrome 最近采集的网页内容摘要(Markdown,含标题、链接、表单与正文结构)。当用户提到"当前页面 / 我打开的这个网页 / 屏幕上的页面"时使用。',
-        parameters: { type: 'object', properties: {} },
+          '读取用户 Chrome 里页面的内容。part 可选:summary=结构化摘要(默认,含标题/链接/表单);text=页面完整正文文本(读文章、长内容时用);links=页面全部链接列表(找下一步要打开的页面时用)。当用户提到"当前页面/这个网页",或 open_browser_page 后要深入阅读时使用。',
+        parameters: {
+          type: 'object',
+          properties: {
+            part: {
+              type: 'string',
+              enum: ['summary', 'text', 'links'],
+              description: '要读取的内容,默认 summary',
+            },
+          },
+        },
       },
     },
   },
@@ -180,13 +190,87 @@ const DEFS = [
       function: {
         name: 'open_browser_page',
         description:
-          '让用户的 Chrome 打开一个 URL、采集该页面并返回内容摘要。适合读取需要真实浏览器环境的页面;默认只允许 localhost / 127.0.0.1 / *.netlify.app,其他站点会被 bridge 拒绝。',
+          '让用户的 Chrome 打开任意 URL 并采集页面,返回结构化摘要。这是读网页最可靠的方式(真实浏览器,支持 JS 渲染和登录态页面),优于 fetch_url。打开后可用 read_browser_page(part=text) 读全文、browser_interact 滚动/点击、look_at_browser_page 看视觉内容。',
         parameters: {
           type: 'object',
           properties: {
             url: { type: 'string', description: '完整 URL,以 http(s):// 开头' },
           },
           required: ['url'],
+        },
+      },
+    },
+  },
+  {
+    key: 'browser_search',
+    icon: 'search',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'browser_search',
+        description:
+          '用用户的真实 Chrome 打开搜索引擎搜索,返回结果列表(标题+链接)。比 web_search 更可靠(无代理、不被反爬拦截)。拿到结果后用 open_browser_page 打开值得深入的链接。',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '搜索关键词' },
+          },
+          required: ['query'],
+        },
+      },
+    },
+  },
+  {
+    key: 'browser_interact',
+    icon: 'monitor',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'browser_interact',
+        description:
+          '在 Chrome 当前研究页面上执行一个交互动作,之后自动重新采集页面。action:scroll_bottom=滚到页底(加载更多内容);click=点击元素;fill=填入文本;press=按键(如 Enter)。selector 支持 CSS 或语义定位(role=button[name="下一页"]、label="搜索")。用于翻页、展开内容、站内搜索。',
+        parameters: {
+          type: 'object',
+          properties: {
+            action: {
+              type: 'string',
+              enum: ['scroll_bottom', 'click', 'fill', 'press'],
+              description: '动作类型',
+            },
+            selector: { type: 'string', description: '目标元素(click/fill/press 需要)' },
+            text: { type: 'string', description: 'fill 要填入的文本' },
+            key: { type: 'string', description: 'press 的按键,如 Enter' },
+          },
+          required: ['action'],
+        },
+      },
+    },
+  },
+  {
+    key: 'look_at_browser_page',
+    icon: 'monitor',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'look_at_browser_page',
+        description:
+          '截图 Chrome 当前研究页面并用本地视觉模型观察,回答关于页面视觉内容的问题:页面上有什么图片/图表、图片里是什么、布局长什么样。文字内容用 read_browser_page 更准;这个工具专门看"图"。',
+        parameters: {
+          type: 'object',
+          properties: {
+            question: {
+              type: 'string',
+              description: '想了解页面视觉内容的什么,例如"页面上的产品图是什么样的"',
+            },
+            fullPage: {
+              type: 'boolean',
+              description: '截整页而非可视区域(长页面找图时用),默认 false',
+            },
+          },
+          required: ['question'],
         },
       },
     },
@@ -428,38 +512,203 @@ async function browserStatus() {
   return lines.join('\n')
 }
 
-async function openBrowserPage(url) {
-  const target = String(url ?? '').trim()
-  if (!/^https?:\/\//i.test(target)) return '错误:URL 必须以 http(s):// 开头'
-
-  // bridge 冷启动后扩展最多要 20 秒左右才会重连,先等它在线
+/** bridge 冷启动后扩展最多要 20 秒左右才会重连,先等它在线 */
+async function ensureExtension() {
   let health = await bridgeHealth()
   for (let i = 0; i < 8 && !health.agent?.extensionConnected; i++) {
     await sleep(3000)
     health = await bridgeHealth()
   }
   if (!health.agent?.extensionConnected) {
-    return '错误:Chrome 扩展未连接(Chrome 没在运行,或没有加载 Web State DevTools 扩展),无法打开页面。'
+    throw new Error('Chrome 扩展未连接(Chrome 没在运行,或没有加载 Web State DevTools 扩展)')
   }
+}
 
-  const before = await readPageSummary()
-  const res = await bridgeFetch('/commands/open-url', {
+/** 经 /actions/run 同步执行一个扩展动作,返回 result */
+async function bridgeAction(action, params = {}, timeoutMs = 60000) {
+  const res = await bridgeFetch(
+    '/actions/run',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, params, timeoutMs }),
+    },
+    timeoutMs + 10000,
+  )
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.ok) {
+    throw new Error(json?.error || `动作 ${action} 失败 HTTP ${res.status}`)
+  }
+  return json.result
+}
+
+/** 本会话在用户 Chrome 里复用的研究标签页;用户关掉后自动重开 */
+let agentTabId = null
+
+async function navigateAndCapture(url) {
+  await ensureExtension()
+  const params = { url, waitMs: 1200 }
+  if (agentTabId != null) params.tabId = agentTabId
+  let result
+  try {
+    result = await bridgeAction('navigate_and_capture', params, 90000)
+  } catch (err) {
+    if (agentTabId == null) throw err
+    // 研究标签页可能已被用户关闭:换新标签页重试
+    agentTabId = null
+    result = await bridgeAction('navigate_and_capture', { url, waitMs: 1200 }, 90000)
+  }
+  agentTabId = result.tabId ?? agentTabId
+  return result
+}
+
+async function openBrowserPage(url) {
+  const target = String(url ?? '').trim()
+  if (!/^https?:\/\//i.test(target)) return '错误:URL 必须以 http(s):// 开头'
+  await navigateAndCapture(target)
+  const summary = await readPageSummary()
+  return summary
+    ? truncateText(summary)
+    : '页面已打开并采集,但摘要尚未生成;可用 read_browser_page 再读。'
+}
+
+async function readBrowserPage(part = 'summary') {
+  if (part === 'text') {
+    await ensureExtension()
+    const params = agentTabId != null ? { tabId: agentTabId } : {}
+    const result = await bridgeAction('get_text', params)
+    const text = (result.text ?? '').trim()
+    if (!text) return '页面没有可读文本。'
+    return truncateText(text, 12000)
+  }
+  if (part === 'links') {
+    const res = await bridgeFetch('/latest')
+    if (res.status === 404) return '还没有页面快照,先用 open_browser_page 打开一个页面。'
+    if (!res.ok) return `错误:读取快照失败 HTTP ${res.status}`
+    const snapshot = (await res.json()).snapshot ?? {}
+    const links = (snapshot.links ?? [])
+      .filter((l) => l.href && /^https?:\/\//.test(l.href))
+      .slice(0, 60)
+      .map((l) => `- ${(l.text || '(无文字)').slice(0, 80)} — ${l.href}`)
+    if (!links.length) return '页面上没有提取到链接。'
+    return truncateText(`页面链接(${links.length} 条):\n${links.join('\n')}`, 8000)
+  }
+  const summary = await readPageSummary()
+  if (!summary) {
+    return '还没有任何页面快照。可用 open_browser_page 打开并采集页面,或让用户在 Chrome 扩展 popup 里点「Capture & Send」。'
+  }
+  return truncateText(summary)
+}
+
+async function browserSearch(query) {
+  const q = String(query ?? '').trim()
+  if (!q) return '错误:缺少搜索关键词'
+  await navigateAndCapture(`https://www.bing.com/search?q=${encodeURIComponent(q)}&setlang=zh-hans`)
+
+  const res = await bridgeFetch('/latest')
+  if (!res.ok) return `错误:读取搜索结果快照失败 HTTP ${res.status}`
+  const snapshot = (await res.json()).snapshot ?? {}
+  const seen = new Set()
+  const items = []
+  for (const link of snapshot.links ?? []) {
+    let href = link.href ?? ''
+    const text = (link.text ?? '').trim()
+    if (!text || text.length < 8) continue
+    if (href.includes('bing.com/ck/a')) href = decodeBingUrl(href)
+    if (!/^https?:\/\//.test(href)) continue
+    let host
+    try {
+      host = new URL(href).hostname
+    } catch {
+      continue
+    }
+    if (/(^|\.)bing\.com$|(^|\.)microsoft\.com$|(^|\.)msn\.com$/.test(host)) continue
+    if (seen.has(href)) continue
+    seen.add(href)
+    items.push(`- **${text.slice(0, 100)}**\n  ${href}`)
+    if (items.length >= 10) break
+  }
+  if (items.length) return `搜索「${q}」的结果:\n\n${items.join('\n')}`
+
+  // 链接抽取失败(页面结构变化):退回读正文让模型自己看
+  const text = await bridgeAction('get_text', agentTabId != null ? { tabId: agentTabId } : {})
+  return truncateText(`没有解析出结果链接,以下是搜索页正文:\n\n${text.text ?? ''}`, 6000)
+}
+
+async function browserInteract({ action, selector, text, key }) {
+  await ensureExtension()
+  const tabParams = agentTabId != null ? { tabId: agentTabId } : {}
+  switch (action) {
+    case 'scroll_bottom':
+      await bridgeAction('scroll', { ...tabParams, preset: 'bottom' })
+      break
+    case 'click':
+      if (!selector) return '错误:click 需要 selector'
+      await bridgeAction('click', { ...tabParams, selector })
+      break
+    case 'fill':
+      if (!selector || text == null) return '错误:fill 需要 selector 和 text'
+      await bridgeAction('fill', { ...tabParams, selector, text })
+      break
+    case 'press':
+      if (!key) return '错误:press 需要 key'
+      await bridgeAction('press', { ...tabParams, selector, key })
+      break
+    default:
+      return `错误:未知动作 ${action}`
+  }
+  // 动作后等页面响应并重新采集,保持快照与真实页面同步
+  await sleep(1000)
+  await bridgeAction('capture', tabParams, 60000)
+  const summary = await readPageSummary()
+  return `动作 ${action} 已执行,页面已重新采集。${summary ? `\n\n${truncateText(summary, 4000)}` : ''}`
+}
+
+async function lookAtBrowserPage(question, fullPage = false) {
+  await ensureExtension()
+  const shot = await bridgeAction(
+    'capture_screenshot',
+    {
+      ...(agentTabId != null ? { tabId: agentTabId } : {}),
+      format: 'jpeg',
+      quality: 70,
+      detachCdp: true,
+      ...(fullPage ? { fullPage: true, maxDimension: 4000, maxPixels: 8_000_000 } : {}),
+    },
+    60000,
+  )
+  if (!shot?.data) return '错误:截图失败'
+
+  // 本地 VLM 看图回答(冷启动可能要等模型加载)
+  const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: target }),
+    body: JSON.stringify({
+      model: 'vlm-fast',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: { url: `data:${shot.mimeType};base64,${shot.data}` },
+            },
+            {
+              type: 'text',
+              text: `这是浏览器里一个网页的截图(${shot.width}×${shot.height})。${question}\n\n请具体描述,如果问题涉及图片/图表,逐一说明每张图的内容和位置。`,
+            },
+          ],
+        },
+      ],
+      max_tokens: 800,
+      stream: false,
+    }),
+    signal: AbortSignal.timeout(300000),
   })
-  if (res.status === 403) {
-    return `错误:该站点不在 bridge 白名单里(默认只允许 localhost / 127.0.0.1 / *.netlify.app):${target}`
-  }
-  if (!res.ok) return `错误:打开页面命令入队失败 HTTP ${res.status}`
-
-  // 等扩展打开页面并回传新快照
-  for (let i = 0; i < 20; i++) {
-    await sleep(1500)
-    const now = await readPageSummary()
-    if (now && now !== before) return truncateText(now)
-  }
-  return '打开页面的命令已发给 Chrome,但 30 秒内没等到新快照;稍后可用 read_browser_page 再读。'
+  if (!res.ok) return `错误:视觉模型调用失败 HTTP ${res.status}`
+  const json = await res.json()
+  const answer = json.choices?.[0]?.message?.content?.trim()
+  return answer || '视觉模型没有返回内容。'
 }
 
 /**
@@ -509,15 +758,16 @@ export async function executeTool(name, argsJson) {
         return await webSearch(args.query)
       case 'browser_status':
         return await browserStatus()
-      case 'read_browser_page': {
-        const summary = await readPageSummary()
-        if (!summary) {
-          return '还没有任何页面快照。可用 open_browser_page 打开并采集页面,或让用户在 Chrome 扩展 popup 里点「Capture & Send」。'
-        }
-        return truncateText(summary)
-      }
+      case 'read_browser_page':
+        return await readBrowserPage(args.part || 'summary')
       case 'open_browser_page':
         return await openBrowserPage(args.url)
+      case 'browser_search':
+        return await browserSearch(args.query)
+      case 'browser_interact':
+        return await browserInteract(args)
+      case 'look_at_browser_page':
+        return await lookAtBrowserPage(args.question ?? '这个页面上有什么?', args.fullPage === true)
       default:
         return `错误:未知工具 ${name}`
     }

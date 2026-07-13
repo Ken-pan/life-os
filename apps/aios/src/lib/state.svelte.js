@@ -5,6 +5,7 @@ import {
   resolveTheme,
 } from '@life-os/theme'
 import { createSettingsPersistence } from '@life-os/platform-web/persisted-state'
+import { DEFAULT_USER_PROFILE } from '$lib/profile.js'
 
 const persistence = createSettingsPersistence({
   key: 'aiosos_v1',
@@ -19,6 +20,7 @@ const persistence = createSettingsPersistence({
       memory: true, // 长期记忆召回注入
       temperature: 0.7,
       customPrompt: '', // 自定义指令
+      userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)
     },
   },
   serialize: (state) => ({ settings: state.settings }),

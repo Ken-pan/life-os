@@ -4,6 +4,7 @@
   import { P, closePanel } from '$lib/panel.svelte.js'
   import { renderMarkdown, highlightCode } from '$lib/markdown.js'
   import { fetchUrl } from '$lib/tools.js'
+  import { getBlob } from '$lib/fileImport.js'
 
   let copied = $state(false)
   let readerLoading = $state(false)
@@ -13,6 +14,72 @@
   const panelIcon = $derived(
     { artifact: 'eye', code: 'code', url: 'globe', file: 'file' }[P.kind] ?? 'eye',
   )
+
+  /* —— 文件类附件的富预览:PDF 原生查看器 / 音频播放器(会话内存 blob)—— */
+  let blobUrl = $state('')
+  $effect(() => {
+    if (!P.open || P.kind !== 'file' || !P.blobId) {
+      blobUrl = ''
+      return
+    }
+    const blob = getBlob(P.blobId)
+    if (!blob) {
+      blobUrl = ''
+      return
+    }
+    const url = URL.createObjectURL(blob)
+    blobUrl = url
+    return () => URL.revokeObjectURL(url)
+  })
+
+  const fileKind = $derived(P.kind === 'file' ? (P.fileKind ?? 'text') : null)
+  const showPdf = $derived(fileKind === 'pdf' && blobUrl && P.view === 'preview')
+  const showAudio = $derived(fileKind === 'audio' && blobUrl)
+
+  /** CSV/TSV → 表格数据(简单引号感知,截 200 行 × 24 列) */
+  const csvTable = $derived.by(() => {
+    if (fileKind !== 'csv' || !P.text) return null
+    const delimiter = P.text.includes('\t') ? '\t' : ','
+    const rows = []
+    for (const line of P.text.split('\n').slice(0, 200)) {
+      if (!line.trim()) continue
+      const cells = []
+      let cur = ''
+      let quoted = false
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i]
+        if (quoted) {
+          if (ch === '"' && line[i + 1] === '"') {
+            cur += '"'
+            i++
+          } else if (ch === '"') {
+            quoted = false
+          } else {
+            cur += ch
+          }
+        } else if (ch === '"') {
+          quoted = true
+        } else if (ch === delimiter) {
+          cells.push(cur)
+          cur = ''
+        } else {
+          cur += ch
+        }
+      }
+      cells.push(cur)
+      rows.push(cells.slice(0, 24))
+    }
+    return rows.length ? rows : null
+  })
+
+  const jsonPretty = $derived.by(() => {
+    if (fileKind !== 'json' || !P.text) return ''
+    try {
+      return JSON.stringify(JSON.parse(P.text), null, 2)
+    } catch {
+      return ''
+    }
+  })
 
   /** artifact 预览文档(HTML 直接渲染,SVG/片段自动包壳) */
   const srcdoc = $derived.by(() => {
@@ -36,6 +103,7 @@
       return highlightCode(P.code, P.lang)
     }
     if (P.kind === 'file' && !bodyHtml) {
+      if (fileKind === 'json') return highlightCode(jsonPretty || P.text, 'json')
       const ext = P.name.split('.').pop()?.toLowerCase() ?? ''
       return highlightCode(P.text, ext)
     }
@@ -177,9 +245,38 @@
       </span>
     </header>
 
-    <div class="panel-body" class:flush={P.kind === 'artifact' && P.view === 'preview'}>
+    <div
+      class="panel-body"
+      class:flush={(P.kind === 'artifact' && P.view === 'preview') || showPdf}
+    >
       {#if P.kind === 'artifact' && P.view === 'preview'}
         <iframe class="frame" sandbox="allow-scripts" {srcdoc} title={P.title}></iframe>
+      {:else if showPdf}
+        <!-- Chrome 原生 PDF 查看器(会话内存 blob;刷新后自动降级为文本) -->
+        <iframe class="frame" src={blobUrl} title={P.title}></iframe>
+      {:else if showAudio}
+        <div class="audio-view">
+          <audio controls src={blobUrl}></audio>
+          <p class="transcript-label">{t('panel.transcript')}</p>
+          <p class="transcript">{P.text}</p>
+        </div>
+      {:else if csvTable}
+        <div class="csv-wrap">
+          <table>
+            <thead>
+              <tr>
+                {#each csvTable[0] as cell, i (i)}<th>{cell}</th>{/each}
+              </tr>
+            </thead>
+            <tbody>
+              {#each csvTable.slice(1) as row, ri (ri)}
+                <tr>
+                  {#each row as cell, ci (ci)}<td>{cell}</td>{/each}
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
       {:else if P.kind === 'url'}
         {#if embedMode}
           <iframe
@@ -350,6 +447,63 @@
     color: var(--t3);
     font-family: var(--mono, ui-monospace, monospace);
     overflow-wrap: anywhere;
+  }
+
+  /* —— 音频附件 —— */
+  .audio-view {
+    display: grid;
+    gap: 12px;
+  }
+  .audio-view audio {
+    width: 100%;
+  }
+  .transcript-label {
+    margin: 0;
+    font-size: var(--text-xs, 11px);
+    color: var(--t3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .transcript {
+    margin: 0;
+    color: var(--t1);
+    font-size: var(--text-base, 15px);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  /* —— CSV 表格 —— */
+  .csv-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .csv-wrap table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: var(--text-sm, 13px);
+  }
+  .csv-wrap th,
+  .csv-wrap td {
+    text-align: start;
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--t1);
+  }
+  .csv-wrap th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-2);
+    font-weight: 600;
+    color: var(--t2);
+  }
+  .csv-wrap tr:last-child td {
+    border-bottom: none;
   }
 
   .code-body {

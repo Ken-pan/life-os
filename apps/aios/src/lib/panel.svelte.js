@@ -18,6 +18,10 @@ export const P = $state({
   /** 阅读器/文件正文(url 模式为空时由面板自行抓取) */
   text: '',
   name: '',
+  /** 文件附件的格式类别(pdf/docx/xlsx/audio/csv/json/text…) */
+  fileKind: '',
+  /** 会话级原始 blob(PDF 原生查看器 / 音频播放器) */
+  blobId: '',
   /** artifact 视图:'preview' | 'code' */
   view: 'preview',
 })
@@ -33,6 +37,8 @@ export function openArtifact({ lang, code, title }) {
     url: '',
     text: '',
     name: '',
+    fileKind: '',
+    blobId: '',
   })
 }
 
@@ -47,6 +53,8 @@ export function openCode({ lang, code, title }) {
     url: '',
     text: '',
     name: '',
+    fileKind: '',
+    blobId: '',
   })
 }
 
@@ -66,17 +74,21 @@ export function openUrl(url, text = '') {
     lang: '',
     code: '',
     name: '',
+    fileKind: '',
+    blobId: '',
     view: 'preview',
   })
 }
 
-export function openFile({ name, text }) {
+export function openFile({ name, text, kind = 'text', blobId = '' }) {
   Object.assign(P, {
     open: true,
     kind: 'file',
     name,
     text,
     title: name,
+    fileKind: kind,
+    blobId,
     lang: '',
     code: '',
     url: '',

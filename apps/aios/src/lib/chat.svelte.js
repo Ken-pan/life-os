@@ -11,7 +11,7 @@ import { recallRelevant } from '$lib/memory.svelte.js'
 
 const STORAGE_KEY = 'aios_chats_v1'
 const MAX_CONVERSATIONS = 200
-const MAX_TOOL_ROUNDS = 6
+const MAX_TOOL_ROUNDS = 10
 const HISTORY_CHAR_BUDGET = 28000
 
 /**
@@ -153,25 +153,39 @@ async function buildSystemPrompt(conversation) {
     `当前时间:${now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}。`,
     '回答使用 Markdown。代码放在带语言标注的代码块里。保持直接、具体,不要空洞客套。',
     '当用户要网页、可视化、动画、小游戏或 SVG 图形时,输出单文件自包含的 ```html 或 ```svg 代码块(内联 CSS/JS,不引外部资源)——界面会自动在旁边的预览面板实时渲染它。',
+    '用户消息里的【附件文件:xxx】块就是该文件的完整内容(PDF/Word/Excel/PPT/音频转写等已在本地解析为文本)。直接依据它回答,不要说"无法读取附件"。',
   ]
   if (S.settings.tools) {
     lines.push(
-      '你可以调用工具:数学用 calculate,代码/数据处理用 run_javascript,时间用 get_time,需要记住或回忆用户信息用 save_memory / search_memory;要读取用户 Chrome 里打开的页面(如"当前页面/这个网页")用 read_browser_page,要让 Chrome 打开本地开发页面并读取用 open_browser_page,browser 工具出错先用 browser_status 诊断' +
+      '你可以调用工具:数学用 calculate,代码/数据处理用 run_javascript,时间用 get_time,需要记住或回忆用户信息用 save_memory / search_memory。浏览器工具(经用户的真实 Chrome,读网页首选):搜索用 browser_search;打开网页用 open_browser_page;深入阅读用 read_browser_page(part=text 读全文、links 列链接);翻页/滚动/点击用 browser_interact;页面上的图片、图表等视觉内容用 look_at_browser_page 看;出错先用 browser_status 诊断。做研究时的标准流程:browser_search → 挑 2-3 个结果 open_browser_page → read_browser_page(part=text)读细节 → 汇总并给出来源链接' +
         (S.settings.webAccess
-          ? ';涉及最新信息或你不确定的事实,先 web_search 搜索,再用 fetch_url 打开值得深入的链接'
+          ? ';浏览器工具不可用时退回 web_search 搜索和 fetch_url 读网页(公共代理,较不稳定)'
           : '') +
         '。需要事实精度时优先用工具,不要凭感觉编造。',
     )
+    if (S.settings.memory) {
+      lines.push(
+        '记忆纪律:当用户说出值得跨对话记住的稳定事实(新偏好、身份背景变化、开始做的新事、对你已有认知的纠正)时,主动用 save_memory 记下——一次一条,第三人称一句话,必要时带上时间背景;同一事实有了新版本直接再存即可,旧版本会被自动替换。不要记:密码、密钥、证件号等敏感凭据;只在本轮有意义的临时细节;已在下方画像或记忆里的内容。当用户问到"我之前/你还记得",或任务依赖用户的历史偏好与项目背景而下方记忆没有覆盖时,先 search_memory 再回答,不要凭空猜。记忆操作静默完成,不用刻意宣布,顺带一句"已记住"即可。',
+      )
+    }
   }
   const custom = S.settings.customPrompt?.trim()
   if (custom) lines.push(`用户的自定义指令:\n${custom}`)
 
   if (S.settings.memory) {
+    // 画像 = 常驻核心记忆:最稳定的身份/偏好,不走检索,保证不漏
+    const profile = S.settings.userProfile?.trim()
+    if (profile) {
+      lines.push(`用户画像(长期资料):\n${profile}`)
+    }
+    // 情景记忆 = 语义召回:只注入与本轮相关的,控制小模型的上下文负担
     const lastUser = [...conversation.messages].reverse().find((m) => m.role === 'user')
     if (lastUser?.content) {
       const memories = await recallRelevant(lastUser.content.slice(0, 300))
       if (memories.length) {
-        lines.push(`关于用户的已知信息(长期记忆,按相关度):\n${memories.map((m) => `- ${m}`).join('\n')}`)
+        lines.push(
+          `与本轮相关的长期记忆(按相关度;记忆可能过时,与用户当前所说冲突时以对话为准):\n${memories.map((m) => `- ${m}`).join('\n')}`,
+        )
       }
     }
   }
@@ -340,6 +354,11 @@ async function streamAssistantReply(conversation) {
   const useTools = S.settings.tools && !useVision
   const tools = useTools ? toolDefinitions({ webAccess: S.settings.webAccess }) : undefined
 
+  // 先挂占位消息再组装 prompt:记忆召回(嵌入模型冷启动)可能耗时几十秒,
+  // 这段时间界面必须有等待反馈,不能空白
+  const firstAssistant = $state({ role: 'assistant', content: '', reasoning: '' })
+  conversation.messages.push(firstAssistant)
+
   let systemPrompt
   try {
     systemPrompt = await buildSystemPrompt(conversation)
@@ -349,8 +368,12 @@ async function streamAssistantReply(conversation) {
 
   try {
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-      const assistant = $state({ role: 'assistant', content: '', reasoning: '' })
-      conversation.messages.push(assistant)
+      let assistant = firstAssistant
+      if (round > 0) {
+        const next = $state({ role: 'assistant', content: '', reasoning: '' })
+        conversation.messages.push(next)
+        assistant = next
+      }
       const startedAt = Date.now()
 
       const res = await streamChat({

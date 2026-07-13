@@ -25,6 +25,9 @@ npm exec --workspace aios-os -- vite dev   # http://localhost:5197
 | 自定义指令 / 温度 | system prompt 注入 + 采样温度 | 设置页「智能」 |
 | 自动标题 | 首轮回复后 llm-fast 起题 | `localai.js generateTitle` |
 | 安全 markdown | 零依赖白名单渲染器(代码块/表格/思考块),全量转义 | `src/lib/markdown.js` |
+| 侧栏预览面板 | Artifacts(```html/svg → 沙盒 iframe 实时渲染,自动弹出)· 内建阅读器(链接面板内打开,阅读模式/内嵌/外部)· 文件查看 | `src/lib/panel.svelte.js` · `SidePanel.svelte` |
+| 文件导入 | PDF(pdf.js 抽文本;扫描件自动转页面图走 VLM)· DOCX/PPTX/XLSX/EPUB(fflate+DOMParser 本地抽取)· 音频(Qwen3-ASR 转写)· RTF/CSV/JSON/30+ 文本扩展名;≤4 个/50MB,内容内联上下文(单文件 12k 截断) | `src/lib/fileImport.js` |
+| 文件富预览 | PDF → Chrome 原生查看器 · 音频 → 播放器+转写 · CSV → 表格 · JSON → 美化高亮(原始 blob 仅会话内存,刷新降级为文本) | `SidePanel.svelte` |
 
 会话、记忆、设置全部 `localStorage`(`aios_chats_v1` / `aios_memory_v1` /
 `aiosos_v1`)。网关合同见 `local-ai/docs/CONSUMING.md`;VLM/STT 服务壳的

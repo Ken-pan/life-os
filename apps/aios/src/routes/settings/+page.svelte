@@ -155,6 +155,18 @@
     </h2>
     <p class="note">{t('settings.memoriesDesc')}</p>
 
+    <div class="field">
+      <span class="field-label">{t('settings.profile')}</span>
+      <textarea
+        rows="6"
+        placeholder={t('settings.profileHint')}
+        bind:value={S.settings.userProfile}
+        onblur={save}
+        aria-label={t('settings.profile')}
+      ></textarea>
+      <p class="note">{t('settings.profileDesc')}</p>
+    </div>
+
     <div class="memory-add">
       <input
         type="text"

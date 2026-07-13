@@ -22,6 +22,8 @@
   "dependencies": {
     "@life-os/platform-web": "*",
     "@life-os/theme": "*",
-    "@lucide/svelte": "^1.22.0"
+    "@lucide/svelte": "^1.22.0",
+    "fflate": "^0.8.3",
+    "pdfjs-dist": "^6.1.200"
   }
 }

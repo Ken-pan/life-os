@@ -3,6 +3,7 @@
   import { t } from '$lib/i18n/index.js'
   import { C, sendMessage, stopStreaming } from '$lib/chat.svelte.js'
   import { transcribe } from '$lib/localai.js'
+  import { importFile, IMPORT_ACCEPT } from '$lib/fileImport.js'
 
   /** @type {{ autofocus?: boolean }} */
   let { autofocus = false } = $props()
@@ -10,6 +11,7 @@
   let text = $state('')
   let images = $state([])
   let files = $state([])
+  let importing = $state(0) // 正在解析中的文件数
   let textarea = $state(null)
   let fileInput = $state(null)
   let recording = $state(false)
@@ -17,11 +19,10 @@
   let recorder = null
 
   const canSend = $derived(
-    (text.trim().length > 0 || images.length > 0 || files.length > 0) && !C.streaming,
+    (text.trim().length > 0 || images.length > 0 || files.length > 0) &&
+      !C.streaming &&
+      importing === 0,
   )
-
-  const TEXT_FILE_RE =
-    /\.(txt|md|markdown|json|jsonl|csv|tsv|ya?ml|toml|xml|html?|css|js|mjs|ts|jsx|tsx|svelte|vue|py|rb|go|rs|swift|kt|java|c|h|cpp|hpp|sh|zsh|sql|log|ini|conf|env|svg)$/i
 
   function autogrow() {
     if (!textarea) return
@@ -65,15 +66,33 @@
     images = [...images, canvas.toDataURL('image/jpeg', 0.88)]
   }
 
-  async function addTextFile(file) {
-    if (files.length >= 4 || file.size > 2 * 1024 * 1024) return
-    const content = await file.text()
-    files = [...files, { name: file.name, size: file.size, text: content.slice(0, 200000) }]
-  }
-
   async function addAnyFile(file) {
     if (file.type.startsWith('image/')) return addImageFile(file)
-    if (file.type.startsWith('text/') || TEXT_FILE_RE.test(file.name)) return addTextFile(file)
+    if (files.length >= 4 || file.size > 50 * 1024 * 1024) return
+    importing++
+    try {
+      const imported = await importFile(file)
+      if (!imported) return
+      // 扫描版 PDF:抽不到文本 → 页面图并入图片附件走视觉模型
+      if (imported.pageImages?.length) {
+        images = [...images, ...imported.pageImages].slice(0, 4)
+        imported.pageImages = undefined
+        imported.text = '(扫描版 PDF,无文本层;页面已作为图片附上,请直接阅读图片。)'
+      }
+      files = [...files, imported]
+    } catch (err) {
+      files = [
+        ...files,
+        {
+          name: file.name,
+          size: file.size,
+          text: `(解析失败:${err?.message ?? err})`,
+          kind: 'text',
+        },
+      ]
+    } finally {
+      importing--
+    }
   }
 
   async function onFilesPicked(event) {
@@ -144,7 +163,7 @@
 </script>
 
 <div class="composer" class:recording>
-  {#if images.length || files.length}
+  {#if images.length || files.length || importing > 0}
     <div class="attachments">
       {#each images as src, i (i)}
         <div class="thumb">
@@ -161,7 +180,7 @@
       {/each}
       {#each files as file, i (file.name + i)}
         <div class="file-pill">
-          <Icon name="file" size={14} strokeWidth={1.75} />
+          <Icon name={file.kind === 'audio' ? 'mic' : 'file'} size={14} strokeWidth={1.75} />
           <span class="file-pill-name">{file.name}</span>
           <button
             type="button"
@@ -173,6 +192,12 @@
           </button>
         </div>
       {/each}
+      {#if importing > 0}
+        <div class="file-pill importing">
+          <span class="import-dot"></span>
+          {t('chat.importingFile')}
+        </div>
+      {/if}
     </div>
   {/if}
 
@@ -189,7 +214,7 @@
     <input
       bind:this={fileInput}
       type="file"
-      accept="image/*,text/*,.txt,.md,.markdown,.json,.jsonl,.csv,.tsv,.yaml,.yml,.toml,.xml,.html,.htm,.css,.js,.mjs,.ts,.jsx,.tsx,.svelte,.vue,.py,.rb,.go,.rs,.swift,.kt,.java,.c,.h,.cpp,.hpp,.sh,.zsh,.sql,.log,.ini,.conf,.svg"
+      accept={IMPORT_ACCEPT}
       multiple
       hidden
       onchange={onFilesPicked}
@@ -339,6 +364,27 @@
   .file-pill-x:hover {
     color: var(--t1);
     background: var(--card);
+  }
+  .file-pill.importing {
+    color: var(--t3);
+    gap: 8px;
+    padding-inline-end: 12px;
+  }
+  .import-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--t3);
+    animation: import-pulse 1s ease-in-out infinite;
+  }
+  @keyframes import-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
   }
 
   textarea {

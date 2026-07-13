@@ -101,7 +101,9 @@ export async function streamChat({
   if (!contentType.includes('text/event-stream')) {
     const json = await res.json()
     const message = json.choices?.[0]?.message
-    if (message?.reasoning_content) onDelta?.({ reasoning: message.reasoning_content })
+    // 思考内容字段:mlx-lm 用 reasoning,部分后端用 reasoning_content
+    const reasoning = message?.reasoning_content || message?.reasoning
+    if (reasoning) onDelta?.({ reasoning })
     if (message?.content) onDelta?.({ content: message.content })
     return {
       toolCalls: (message?.tool_calls ?? []).map((tc) => ({
@@ -141,10 +143,10 @@ export async function streamChat({
         if (choice.finish_reason) finishReason = choice.finish_reason
         const delta = choice.delta
         if (!delta) continue
-        if (delta.content || delta.reasoning_content) {
+        if (delta.content || delta.reasoning_content || delta.reasoning) {
           onDelta?.({
             content: delta.content || undefined,
-            reasoning: delta.reasoning_content || undefined,
+            reasoning: delta.reasoning_content || delta.reasoning || undefined,
           })
         }
         // 工具调用增量:按 index 聚合(mlx-lm 通常整块到达,此处防御分片)
@@ -226,7 +228,13 @@ export async function transcribe(blob) {
   return (json.text ?? '').trim()
 }
 
-export const TTS_MODEL = 'mlx-community/Kokoro-82M-bf16'
+export const TTS_MODEL = 'mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit'
+
+/**
+ * 朗读音色(Qwen3-TTS 内置 9 声)。年轻男声可选:
+ * dylan=北京腔清亮少年感 / ryan=动感有节奏 / aiden=阳光美式 / eric=成都腔微沙哑
+ */
+export const TTS_VOICE = 'dylan'
 
 /** 语音壳冷启动偶发 500/502(mlx_audio 首载竞态),等 2s 重试一次 */
 async function fetchWithColdRetry(doFetch) {
@@ -239,19 +247,27 @@ async function fetchWithColdRetry(doFetch) {
 }
 
 /**
- * 文本转语音(Kokoro,本地)。返回 wav Blob。
+ * 文本转语音(Qwen3-TTS CustomVoice,本地)。返回 wav Blob。
+ * instruct 是自然语言风格指令,决定语气/情绪/语速——按文本语言选中英文指令。
  * @param {string} text
  * @returns {Promise<Blob>}
  */
 export async function speak(text) {
-  // Kokoro 单线程壳:长文本合成分钟级且会阻塞队列,朗读取前 400 字
-  const input = text.slice(0, 400)
-  const langCode = /[一-鿿]/.test(input) ? 'z' : 'a'
+  // 语音壳单推理线程:超长文本会阻塞队列,朗读取前 600 字
+  const input = text.slice(0, 600)
+  const zh = /[一-鿿]/.test(input)
   const res = await fetchWithColdRetry(() =>
     fetch(`${GATEWAY}/v1/audio/speech`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: TTS_MODEL, input, lang_code: langCode }),
+      body: JSON.stringify({
+        model: TTS_MODEL,
+        input,
+        voice: TTS_VOICE,
+        instruct: zh
+          ? '用轻松自然的语气说话,像朋友之间日常聊天,语速适中。'
+          : 'Speak in a relaxed, natural conversational tone, like chatting with a friend.',
+      }),
       signal: AbortSignal.timeout(180000),
     }),
   )

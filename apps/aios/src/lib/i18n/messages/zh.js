@@ -54,8 +54,10 @@ export default {
     suggestBrainstorm: '帮我头脑风暴周末计划',
     suggestMath: '精确计算 2 的 128 次方',
     removeFile: '移除文件',
+    importingFile: '正在解析文件…',
   },
   panel: {
+    transcript: '转写文本',
     preview: '预览',
     code: '代码',
     close: '关闭面板',
@@ -77,6 +79,9 @@ export default {
     browser_status: '浏览器状态',
     read_browser_page: '读取浏览器页面',
     open_browser_page: '打开浏览器页面',
+    browser_search: '浏览器搜索',
+    browser_interact: '操作浏览器页面',
+    look_at_browser_page: '查看页面视觉',
   },
   model: {
     label: '模型',
@@ -114,6 +119,10 @@ export default {
     customPromptHint: '告诉 AI.OS 你希望它如何回答,例如语气、格式、身份背景…',
     memories: '记忆',
     memoriesDesc: '模型在对话中主动记下的事实,也可以手动添加。全部存在本机。',
+    profile: '用户画像',
+    profileHint: '关于你的稳定事实,每行一条…',
+    profileDesc:
+      '常驻记忆:每轮对话都注入,放最核心的身份与偏好;具体经历放下面的记忆列表,按相关度召回。',
     memoriesEmpty: '还没有记忆。对话时说"记住…"即可写入。',
     memoryAdd: '添加',
     memoryAddHint: '手动添加一条记忆…',

@@ -111,7 +111,7 @@
     }
   }
 
-  /* —— 朗读(本地 Kokoro TTS)—— */
+  /* —— 朗读(本地 Qwen3-TTS)—— */
   function ttsText() {
     return parts.answer
       .replaceAll(/```[\s\S]*?```/g, ` ${t('chat.codeOmitted')} `)
@@ -164,9 +164,11 @@
       <div class="user-files">
         {#each message.files as file (file.name)}
           <button type="button" class="file-chip" onclick={() => openFile(file)}>
-            <Icon name="file" size={14} strokeWidth={1.75} />
+            <Icon name={file.kind === 'audio' ? 'mic' : 'file'} size={14} strokeWidth={1.75} />
             <span class="file-chip-name">{file.name}</span>
-            <span class="file-chip-size">{(file.size / 1024).toFixed(0)}KB</span>
+            <span class="file-chip-size"
+              >{file.size < 1024 ? `${file.size}B` : `${(file.size / 1024).toFixed(0)}KB`}</span
+            >
           </button>
         {/each}
       </div>
