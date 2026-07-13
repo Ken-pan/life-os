@@ -1,7 +1,0 @@
-build/
-build-docker/
-*.o
-*.so
-planneros-lite
-config.json
-

@@ -1,3 +1,0 @@
-This directory is for the reMarkable SDK installer script (.sh file).
-Do NOT commit the SDK installer to version control due to licensing and size.
-Place the .sh file here to enable the Docker build script.
