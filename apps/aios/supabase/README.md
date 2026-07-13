@@ -7,6 +7,20 @@ AIOS 与 home / portal / music / fitness 等共用同一个 Life OS Supabase 项
 本地优先不变:数据仍存 localStorage;登录后按客户端时间戳 LWW 合并、删除走墓碑。
 AIOS 刻意不接 `app_memberships` 门禁——未登录一切照常,登录只是加同步。
 
+## 云端只读版(Netlify)
+
+**https://aios-kenos.netlify.app** — 登录后查看已同步的对话/记忆/图片。推理仍在本机,
+故这是只读查看器:生成新回复需连回运行本地 AI 网关的机器(手机等纯只读)。
+构建注入 `VITE_AIOS_CLOUD=1`(见 `apps/aios/netlify.toml`),前端据此切云端文案 + 登录引导。
+
+- 站点 = CLI 手动部署(site id `5bfa64b2-7108-479d-b9e2-45f9c4d9f791`,team `jpan28`),
+  **非 Git 集成**,`git push` 不会自动更新。
+- 重新部署:`cd apps/aios && VITE_AIOS_CLOUD=1 npx vite build` 然后
+  `NETLIFY_SITE_ID=5bfa64b2-7108-479d-b9e2-45f9c4d9f791 npx netlify deploy --prod --dir apps/aios/build --filter aios-os`
+  (netlify CLI 在 monorepo 里会弹交互选包,必须带 `--filter aios-os` + `< /dev/null`)。
+- 若想改成像其它六个 app 那样 push 自动构建:Netlify 控制台把该站点连到 GitHub 仓库、
+  base 设 `apps/aios`,`netlify.toml` 会接管构建。
+
 ## 上云的数据(以及不上云的)
 
 | 数据 | 位置 | 同步方式 |
