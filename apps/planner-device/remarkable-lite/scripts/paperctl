@@ -166,8 +166,17 @@ def print_json(obj: dict) -> int:
 def start(args: argparse.Namespace) -> int:
     app = args.binary
     env_vars = " ".join([f"{k}={v}" for k, v in [e.split("=", 1) if "=" in e else (e, "1") for e in (args.env or [])]])
-    
-    remote = f"""
+
+    if app == "/home/root/paperos/paperos" and not args.env:
+        # The promoted service already carries the loopback-only bridge
+        # environment. Reuse it instead of racing ExecStopPost/xochitl with
+        # a second manual display owner during Qt startup.
+        rc = run_ssh(
+            "systemctl stop xochitl >/dev/null 2>&1 || true; "
+            "systemctl start paperos && echo started"
+        )
+    else:
+        remote = f"""
 set -eu
 BASE="${{PAPEROS_HOME:-/home/root/paperos}}"
 systemctl stop paperos >/dev/null 2>&1 || true
@@ -219,7 +228,24 @@ PAPEROS_TEST_BRIDGE=1 PAPEROS_TEST_BRIDGE_PORT="${{PAPEROS_TEST_BRIDGE_PORT:-187
 nohup /tmp/paperos-test-driver/sampler.sh >/dev/null 2>&1 &
 echo started
 """
-    return run_ssh(remote)
+        rc = run_ssh(remote)
+
+    if rc != 0:
+        return rc
+    deadline = time.time() + 12
+    last_error = "bridge did not respond"
+    while time.time() < deadline:
+        try:
+            response = bridge_command({"cmd": "ping"})
+            if response.get("ok") and response.get("pong"):
+                print("bridge-ready")
+                return 0
+            last_error = str(response)
+        except (OSError, RuntimeError, json.JSONDecodeError) as exc:
+            last_error = str(exc)
+        time.sleep(0.25)
+    print(f"PaperOS bridge failed to become ready: {last_error}", file=sys.stderr)
+    return 1
 
 
 def recover(_: argparse.Namespace) -> int:
@@ -775,7 +801,10 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     start_parser = sub.add_parser("start")
-    start_parser.add_argument("--binary", default="/home/root/paperos/paperos.next")
+    # `deploy shell --promote-shell` atomically moves paperos.next to the
+    # service-owned promoted path. The documented deploy -> start workflow
+    # must therefore launch that promoted binary by default.
+    start_parser.add_argument("--binary", default="/home/root/paperos/paperos")
     start_parser.add_argument("--env", action="append", default=[])
     start_parser.set_defaults(func=start)
 

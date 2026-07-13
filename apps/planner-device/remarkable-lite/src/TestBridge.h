@@ -8,6 +8,7 @@
 class QQuickItem;
 class QQuickWindow;
 class QTcpSocket;
+class InkModeController;
 template <typename T> class QSet;
 
 // Debug-only PaperOS test bridge. Enabled only with PAPEROS_TEST_BRIDGE=1 and
@@ -17,7 +18,7 @@ class TestBridge : public QObject
     Q_OBJECT
 
 public:
-    explicit TestBridge(QObject *parent = nullptr);
+    explicit TestBridge(InkModeController *inkMode, QObject *parent = nullptr);
 
     bool maybeStart(QQuickWindow *window);
 
@@ -37,5 +38,6 @@ private:
     void writeResponse(QTcpSocket *socket, const QJsonObject &response) const;
 
     QPointer<QQuickWindow> m_window;
+    InkModeController *m_inkMode = nullptr;
     QTcpServer m_server;
 };

@@ -8,7 +8,51 @@
 #include <QJsonObject>
 #include <QDateTime>
 #include <QDebug>
+#include <QImage>
 #include <QUrl>
+
+namespace {
+double darkestRowRatio(const QImage &image, int y, int thickness)
+{
+    double best = 0.0;
+    for (int row = y; row < qMin(image.height(), y + thickness); ++row) {
+        int dark = 0;
+        for (int x = 0; x < image.width(); ++x)
+            dark += qGray(image.pixel(x, row)) < 64 ? 1 : 0;
+        best = qMax(best, image.width() > 0 ? double(dark) / image.width() : 0.0);
+    }
+    return best;
+}
+
+double darkestColumnRatio(const QImage &image, int x, int yStart, int thickness)
+{
+    double best = 0.0;
+    for (int column = x; column < qMin(image.width(), x + thickness); ++column) {
+        int dark = 0;
+        const int height = image.height() - yStart;
+        for (int y = yStart; y < image.height(); ++y)
+            dark += qGray(image.pixel(column, y)) < 64 ? 1 : 0;
+        best = qMax(best, height > 0 ? double(dark) / height : 0.0);
+    }
+    return best;
+}
+
+bool hasLegacyBakedChrome(const QString &path)
+{
+    const QImage image(path);
+    if (image.isNull())
+        return false;
+    const bool landscape = image.width() > image.height();
+    const int titleY = qRound(image.height() * double(landscape ? 96 : 88)
+                              / double(landscape ? 954 : 1696));
+    if (darkestRowRatio(image, titleY, 4) <= 0.75)
+        return false;
+    if (landscape)
+        return true;
+    const int railX = qRound(image.width() * 96.0 / 954.0);
+    return darkestColumnRatio(image, railX, titleY, 4) > 0.75;
+}
+}
 
 NoteStore::NoteStore(QObject *parent) : QObject(parent)
 {
@@ -47,6 +91,11 @@ QVariantList NoteStore::listNotes() const
                 ? QStringLiteral("Updated today at %1").arg(modified.toString(QStringLiteral("h:mm AP")))
                 : QStringLiteral("Updated %1").arg(modified.toString(QStringLiteral("MMM d at h:mm AP")));
         m[QStringLiteral("hasInk")] = QFile::exists(pagePath);
+        // Read-only compatibility signal for the gallery. Old editor saves
+        // contain exact full-width/full-height separator rules; detecting
+        // both rules avoids inventing a metadata version or changing format.
+        m[QStringLiteral("legacyChrome")] = QFile::exists(pagePath)
+            && hasLegacyBakedChrome(pagePath);
         m[QStringLiteral("pageCount")] = 1;
         m[QStringLiteral("previewUrl")] = QFile::exists(pagePath)
             ? QUrl::fromLocalFile(pagePath).toString()
