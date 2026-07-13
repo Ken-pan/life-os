@@ -170,6 +170,24 @@ export const PWA_APPS = {
     production: true,
     pwaTestEnabled: false,
   },
+  starter: {
+    id: 'starter',
+    name: 'STARTER.OS',
+    workspace: 'starter-os',
+    port: 5875,
+    shellType: 'main-wrap-main',
+    waitSelector: '.app-shell',
+    ...scrollSelectorsFor('main-wrap-main'),
+    nestedWrapInMain: true,
+    routes: [
+      { path: '/', name: 'home' },
+      { path: '/settings', name: 'settings' },
+    ],
+    clipPaths: ['/'],
+    scrollQaPath: '/settings',
+    production: false,
+    pwaTestEnabled: false,
+  },
 }
 
 /** @param {string} id */

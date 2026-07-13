@@ -1,0 +1,20 @@
+@import '@life-os/theme/design-system.css';
+
+/*
+  STARTER.OS 品牌层（模板占位）
+  正式 app 应把品牌 token 迁到 packages/design-tokens/tokens/brands/<app>.json
+  并 @import '@life-os/theme/brands/<app>.css'（见 README「晋升清单」）。
+  这里只定义中性灰占位色，保证模板脱离品牌注册表也能独立构建。
+*/
+
+:root {
+  --accent: #8a97a5;
+  --accent-strong: #a9b6c4;
+  --sidebar-primary: #8a97a5;
+}
+
+[data-theme='light'] {
+  --accent: #5b6a79;
+  --accent-strong: #46535f;
+  --sidebar-primary: #5b6a79;
+}

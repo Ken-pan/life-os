@@ -25,6 +25,7 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | [`MAINTENANCE.md`](docs/MAINTENANCE.md)                           | docs 目录维护约定                                               |
 | `./scripts/supabase-sql.sh "<sql>"` / `-f <file.sql>`             | 远程 Supabase SQL（Management API；直连 5432 在本网络不可用）   |
 | `./scripts/deploy-all-netlify.sh`                                 | CLI prod deploy 六站（含 Portal、Home）                         |
+| `node scripts/create-life-os-app.mjs <id> [--name --port]`        | 从 `apps/starter` 模板生成新 app(PLAT.SHELL.5)                |
 | `npm run sync:packages`                                           | Copy sibling theme/sync into `packages/*` (legacy)              |
 | `npm run pwa:build`                                               | 五端 production build（PWA 验收用）                             |
 | `npm run pwa:preview:{planner,fitness,music,finance,portal,home}` | 标准端口 preview（见 `apps.config.mjs`）                        |

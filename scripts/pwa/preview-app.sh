@@ -15,8 +15,9 @@ case "$APP" in
   finance) WORKSPACE="finance-os"; PORT=5180; BUILD_DIR="apps/finance/build" ;;
   portal) WORKSPACE="portal"; PORT=5195; BUILD_DIR="apps/portal/build"; BUILD_MARKER="apps/portal/build/manifest.webmanifest" ;;
   home)    WORKSPACE="home-os";    PORT=5196; BUILD_DIR="apps/home/build" ;;
+  starter) WORKSPACE="starter-os"; PORT=5875; BUILD_DIR="apps/starter/build" ;;
   *)
-    echo "Unknown app: $APP (planner|fitness|music|finance|portal|home)"
+    echo "Unknown app: $APP (planner|fitness|music|finance|portal|home|starter)"
     exit 1
     ;;
 esac
