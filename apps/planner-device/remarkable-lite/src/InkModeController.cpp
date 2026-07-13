@@ -441,7 +441,6 @@ bool InkModeController::handleToolbarTap(const QPoint &point)
     }
     PerfLog::instance().log("INK_TOOL_CHANGED", {{"tool", tool()}, {"color", color()}});
     emit toolChanged();
-    scheduleWritingRetreat();
     return true;
 }
 

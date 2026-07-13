@@ -12,6 +12,21 @@ Item {
 
     property bool open: false
     property int currentModule: 0
+    property bool navTraceEnabled: false
+
+    onOpenChanged: {
+        if (!navTraceEnabled)
+            return
+        if (open)
+            console.log("NAV_TRACE drawer_opened_true_in_qml " + Date.now())
+        else
+            console.log("NAV_TRACE drawer_opened_false_in_qml " + Date.now())
+    }
+
+    onVisibleChanged: {
+        if (navTraceEnabled)
+            console.log("NAV_TRACE drawer_visibleChanged_" + visible + " " + Date.now())
+    }
 
     signal navigate(int module)
 
@@ -24,7 +39,7 @@ Item {
     // dither badly on e-ink and force a large repaint.
     MouseArea {
         anchors.fill: parent
-        onClicked: drawer.dismiss()
+        onPressed: drawer.dismiss()
     }
 
     Rectangle {
@@ -89,30 +104,24 @@ Item {
                 MouseArea {
                     id: rowTap
                     anchors.fill: parent
-                    onClicked: {
+                    onPressed: {
+                        if (drawer.navTraceEnabled)
+                            console.log("NAV_TRACE +0ms drawer_item_pressed_" + row.module + " " + Date.now())
                         drawer.dismiss()
+                        if (drawer.navTraceEnabled)
+                            console.log("NAV_TRACE drawer_dismiss_called " + Date.now())
                         drawer.navigate(row.module)
+                        if (drawer.navTraceEnabled)
+                            console.log("NAV_TRACE drawer_navigate_called " + Date.now())
                     }
                 }
             }
 
-            DrawerRow { objectName: "drawer.home";  label: "Home";  module: 0 }
-            DrawerRow { objectName: "drawer.today"; label: "Today"; module: 1 }
+            DrawerRow { objectName: "drawer.today"; label: "Today"; module: 0 }
             DrawerRow { objectName: "drawer.notes"; label: "Notes"; module: 2 }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.leftMargin: 44
-                Layout.rightMargin: 44
-                Layout.topMargin: 20
-                Layout.bottomMargin: 20
-                height: 1
-                color: Ui.ink30
-            }
-
-            DrawerRow { objectName: "drawer.inbox";  label: "Inbox";  module: 3 }
-            DrawerRow { objectName: "drawer.review"; label: "Review"; module: 4 }
-            DrawerRow { objectName: "drawer.system"; label: "System"; module: 5 }
+            DrawerRow { objectName: "drawer.tasks"; label: "Tasks"; module: 1 }
+            DrawerRow { objectName: "drawer.documents"; label: "Documents"; module: 7 }
+            DrawerRow { objectName: "drawer.settings"; label: "Settings"; module: 5 }
 
             Item { Layout.fillHeight: true }
 
