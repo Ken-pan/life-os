@@ -170,6 +170,10 @@ export default {
     gatewayOk: 'Connected',
     gatewayDown: 'Offline',
     gatewayCheck: 'Check',
+    gatewayUrl: 'Gateway URL',
+    gatewayApply: 'Apply',
+    gatewayUrlNote: 'Local AI gateway URL (this device only, not synced). Default 127.0.0.1:18888 — only change for a different port/machine.',
+    gatewayUrlCloudNote: 'Enter your publicly-exposed local AI gateway URL (HTTPS) so the cloud version connects directly to your local AI for full functionality. Stored in this browser only, not synced.',
     gatewayNote:
       'All inference runs on the local LocalAI gateway (127.0.0.1:18888); models load on demand.',
     defaultModel: 'Default model',

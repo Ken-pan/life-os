@@ -4,7 +4,40 @@
  * 合同见 local-ai/docs/CONSUMING.md。
  */
 
-export const GATEWAY = 'http://127.0.0.1:18888'
+import { browser } from '$app/environment'
+
+/** 网关地址是**设备本地**配置(不进云同步):本地形态用 127.0.0.1,
+ *  云端版可在设置里填你暴露出来的公网网关。改这里不会覆盖别的设备。
+ *  live binding:consumers 以 `${GATEWAY}/...` 在调用时读取最新值。 */
+const GATEWAY_KEY = 'aios_gateway_url_v1'
+export const DEFAULT_GATEWAY = 'http://127.0.0.1:18888'
+
+function initGateway() {
+  if (!browser) return DEFAULT_GATEWAY
+  try {
+    return (
+      localStorage.getItem(GATEWAY_KEY) ||
+      import.meta.env.VITE_AIOS_GATEWAY ||
+      DEFAULT_GATEWAY
+    )
+  } catch {
+    return DEFAULT_GATEWAY
+  }
+}
+
+export let GATEWAY = initGateway()
+
+/** 设置网关地址(设备本地持久化;空/等于默认则清掉覆盖) */
+export function setGateway(url) {
+  GATEWAY = (url || '').trim() || DEFAULT_GATEWAY
+  if (!browser) return
+  try {
+    if (GATEWAY === DEFAULT_GATEWAY) localStorage.removeItem(GATEWAY_KEY)
+    else localStorage.setItem(GATEWAY_KEY, GATEWAY)
+  } catch {
+    /* localStorage 不可用时仅本次会话生效 */
+  }
+}
 
 export const MODELS = [
   {

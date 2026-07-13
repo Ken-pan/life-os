@@ -2,7 +2,8 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import { S, save, applyTheme } from '$lib/state.svelte.js'
   import { t, setLocale } from '$lib/i18n/index.js'
-  import { MODELS, TTS_VOICES } from '$lib/localai.js'
+  import { MODELS, TTS_VOICES, GATEWAY, DEFAULT_GATEWAY, setGateway } from '$lib/localai.js'
+  import { CLOUD_BUILD } from '$lib/env.js'
   import { C, refreshGateway, clearAllConversations } from '$lib/chat.svelte.js'
   import { M, deleteMemory, clearMemories, addMemory } from '$lib/memory.svelte.js'
   import { CLOUD, signInCloud, signOutCloud, syncNow } from '$lib/cloud.svelte.js'
@@ -40,6 +41,17 @@
     checking = true
     await refreshGateway()
     checking = false
+  }
+
+  /* —— 网关地址(设备本地,不同步)——
+     改地址后重载:部分端点(bridge/vault/image)在模块加载时读取网关,
+     重载让它们一并生效;initGateway 会从 localStorage 读回新地址。 */
+  let gatewayInput = $state(GATEWAY)
+  function applyGateway() {
+    const next = gatewayInput.trim()
+    if (!next || next === GATEWAY) return
+    setGateway(next)
+    location.reload()
   }
 
   function clearChats() {
@@ -96,6 +108,30 @@
           {t('settings.gatewayCheck')}
         </button>
       </span>
+    </div>
+
+    <div class="field">
+      <span class="field-label">{t('settings.gatewayUrl')}</span>
+      <div class="memory-add">
+        <input
+          type="url"
+          placeholder={DEFAULT_GATEWAY}
+          bind:value={gatewayInput}
+          onkeydown={(e) => e.key === 'Enter' && !e.isComposing && applyGateway()}
+          aria-label={t('settings.gatewayUrl')}
+        />
+        <button
+          type="button"
+          class="mini-btn"
+          disabled={gatewayInput.trim() === GATEWAY}
+          onclick={applyGateway}
+        >
+          {t('settings.gatewayApply')}
+        </button>
+      </div>
+      <p class="note">
+        {CLOUD_BUILD ? t('settings.gatewayUrlCloudNote') : t('settings.gatewayUrlNote')}
+      </p>
     </div>
 
     <div class="row">
