@@ -9,6 +9,7 @@ import {
 } from '$lib/localai.js'
 import { toolDefinitions, executeTool, consumePendingImages } from '$lib/tools.js'
 import { recallRelevant } from '$lib/memory.svelte.js'
+import { dataChanged } from '$lib/syncBus.js'
 
 const STORAGE_KEY = 'aios_chats_v1'
 const MAX_CONVERSATIONS = 200
@@ -161,6 +162,7 @@ export function requestEditLastUser() {
 let saveTimer = null
 export function persist() {
   if (!browser) return
+  dataChanged() // 云同步(若已登录)防抖跟进
   clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
     try {

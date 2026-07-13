@@ -1,6 +1,7 @@
 import { browser } from '$app/environment'
 import { embed, cosine, tinyComplete } from '$lib/localai.js'
 import { SEED_MEMORIES } from '$lib/profile.js'
+import { dataChanged } from '$lib/syncBus.js'
 
 /**
  * 持久记忆(ChatGPT memory 风格):
@@ -35,6 +36,7 @@ export const M = $state({
 
 function persist() {
   if (!browser) return
+  dataChanged() // 云同步(若已登录)防抖跟进
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(M.items.slice(0, MAX_MEMORIES)))
   } catch {
@@ -189,6 +191,25 @@ export async function dreamMemories() {
   persist()
   backfillVectors()
   return true
+}
+
+/**
+ * 云同步用:并入其他设备新增的记忆、移除云端已删的(cloud.svelte.js 调用)。
+ * @param {MemoryItem[]} additions
+ * @param {Set<string>} removals
+ */
+export function mergeRemoteMemories(additions, removals) {
+  let items = M.items.filter((m) => !removals.has(m.id))
+  const existing = new Set(items.map((m) => m.id))
+  const texts = new Set(items.map((m) => m.text))
+  for (const a of additions) {
+    if (existing.has(a.id) || texts.has(a.text)) continue
+    items.push(a)
+  }
+  items.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+  M.items = items.slice(0, MAX_MEMORIES)
+  persist()
+  backfillVectors()
 }
 
 export function deleteMemory(id) {

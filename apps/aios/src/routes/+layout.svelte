@@ -14,6 +14,7 @@
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
   import { backfillVectors, seedDefaultMemories, dreamMemories } from '$lib/memory.svelte.js'
+  import { initCloud } from '$lib/cloud.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
@@ -35,6 +36,7 @@
     refreshGateway()
     seedDefaultMemories()
     backfillVectors()
+    initCloud() // 云同步:恢复登录态并汇合云端数据(未配置时静默跳过)
     // 记忆 dreaming:启动稳定后空闲整理(内部限 24h 一次)
     const dreamTimer = setTimeout(() => dreamMemories(), 30000)
     const cleanupTheme = bindAppThemeSystemChange()
