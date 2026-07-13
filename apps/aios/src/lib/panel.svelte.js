@@ -24,6 +24,10 @@ export const P = $state({
   blobId: '',
   /** artifact 视图:'preview' | 'code' */
   view: 'preview',
+  /** 生成图的定位信息(供「上传到云端」按需同步);null = 非本地生成图或无法上传 */
+  imageRef: /** @type {null | { conversationId: string, tcId: string, index: number, cloudPath: string|null, dataUrl: string }} */ (
+    null
+  ),
 })
 
 export function openArtifact({ lang, code, title }) {
@@ -96,8 +100,8 @@ export function openFile({ name, text, kind = 'text', blobId = '' }) {
   })
 }
 
-/** 查看生成的图片(src 为 data URL 或 http URL) */
-export function openImage({ src, title }) {
+/** 查看生成的图片(src 为 data URL 或 http URL);imageRef 给按需云同步用 */
+export function openImage({ src, title, imageRef = null }) {
   Object.assign(P, {
     open: true,
     kind: 'image',
@@ -110,6 +114,7 @@ export function openImage({ src, title }) {
     fileKind: '',
     blobId: '',
     view: 'preview',
+    imageRef,
   })
 }
 

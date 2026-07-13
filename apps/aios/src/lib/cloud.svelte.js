@@ -337,3 +337,58 @@ async function syncMemories(snap) {
 
   snap.mems = M.items.map((m) => m.id)
 }
+
+/* —— 按需图片同步(私有 Storage bucket `aios-images`)——
+   生成图默认只在本机(内联 dataURL)。用户在查看器主动「上传到云」时才存云,
+   路径记在工具调用的 imagePaths[](随对话 payload 同步);别的设备本地无图但
+   有 path 时,imageUrlFromPath 取一个带签名的临时 URL 懒加载显示。 */
+
+const BUCKET = 'aios-images'
+/** @type {Map<string, { url: string, exp: number }>} 签名 URL 缓存(按 path) */
+const signedUrlCache = new Map()
+
+/** dataURL(WebP)→ Blob,供上传 */
+async function dataUrlToBlob(dataUrl) {
+  const res = await fetch(dataUrl)
+  return res.blob()
+}
+
+/**
+ * 把某条工具调用里第 index 张生成图上传到云端,路径写回 tc.imagePaths[index]。
+ * @returns {Promise<string>} 云端对象路径
+ */
+export async function uploadConversationImage(conversationId, tcId, index, dataUrl) {
+  if (!CLOUD.user) throw new Error(t('settings.cloudNeedSignIn'))
+  const conv = C.conversations.find((c) => c.id === conversationId)
+  const tc = conv?.messages
+    .flatMap((m) => m.toolCalls ?? [])
+    .find((t) => t.id === tcId)
+  if (!tc) throw new Error('image not found')
+  if (tc.imagePaths?.[index]) return tc.imagePaths[index] // 已上传过
+
+  const path = `${CLOUD.user.id}/${crypto.randomUUID()}.webp`
+  const blob = await dataUrlToBlob(dataUrl)
+  const { error } = await sb.storage
+    .from(BUCKET)
+    .upload(path, blob, { contentType: 'image/webp', upsert: true })
+  if (error) throw error
+
+  if (!Array.isArray(tc.imagePaths)) tc.imagePaths = []
+  tc.imagePaths[index] = path
+  // 让对话标记为更新并同步(payload 里会带上 imagePaths)
+  conv.updatedAt = Date.now()
+  persistChats()
+  schedulePush()
+  return path
+}
+
+/** 取生成图的带签名临时 URL(懒加载显示用);缓存到过期前复用。 */
+export async function imageUrlFromPath(path) {
+  if (!sb || !path) return null
+  const cached = signedUrlCache.get(path)
+  if (cached && cached.exp > Date.now() + 30000) return cached.url
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(path, 3600)
+  if (error || !data?.signedUrl) return null
+  signedUrlCache.set(path, { url: data.signedUrl, exp: Date.now() + 3600 * 1000 })
+  return data.signedUrl
+}

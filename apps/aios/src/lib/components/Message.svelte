@@ -15,6 +15,7 @@
   import { S } from '$lib/state.svelte.js'
   import { openArtifact, openUrl, openFile, openImage } from '$lib/panel.svelte.js'
   import { IMG } from '$lib/imageProgress.svelte.js'
+  import { imageUrlFromPath } from '$lib/cloud.svelte.js'
 
   /** @type {{ message: import('$lib/chat.svelte.js').ChatMessage, index?: number, isLast?: boolean }} */
   let { message, index = 0, isLast = false } = $props()
@@ -52,8 +53,19 @@
         })
       : '',
   )
-  /** 工具调用产出的图片(生图等),在正文上方以画廊展示 */
-  const genImages = $derived((message.toolCalls ?? []).flatMap((tc) => tc.images ?? []))
+  /** 工具调用产出的图片(生图等),在正文上方以画廊展示。
+      本地有 dataURL(src)就直接显示;别的设备同步来的只有云端 path,则懒加载。 */
+  const genImages = $derived(
+    (message.toolCalls ?? []).flatMap((tc) => {
+      const n = Math.max(tc.images?.length ?? 0, tc.imagePaths?.length ?? 0)
+      return Array.from({ length: n }, (_, i) => ({
+        tcId: tc.id,
+        i,
+        src: tc.images?.[i] ?? null,
+        path: tc.imagePaths?.[i] ?? null,
+      }))
+    }),
+  )
 
   /* —— 工具调用的人性化呈现(对齐 Claude/ChatGPT:每步自带上下文)—— */
   function argsOf(tc) {
@@ -415,15 +427,41 @@
 
     {#if genImages.length}
       <div class="gen-images">
-        {#each genImages as src, i (i)}
-          <button
-            type="button"
-            class="gen-image-btn"
-            title={t('chat.viewImage')}
-            onclick={() => openImage({ src, title: t('chat.generatedImage') })}
-          >
-            <img {src} alt={t('chat.generatedImage')} loading="lazy" />
-          </button>
+        {#each genImages as img (img.tcId + ':' + img.i)}
+          {#if img.src}
+            <button
+              type="button"
+              class="gen-image-btn"
+              title={t('chat.viewImage')}
+              onclick={() =>
+                openImage({
+                  src: img.src,
+                  title: t('chat.generatedImage'),
+                  imageRef: {
+                    conversationId: C.activeId,
+                    tcId: img.tcId,
+                    index: img.i,
+                    cloudPath: img.path,
+                    dataUrl: img.src,
+                  },
+                })}
+            >
+              <img src={img.src} alt={t('chat.generatedImage')} loading="lazy" />
+            </button>
+          {:else if img.path}
+            {#await imageUrlFromPath(img.path) then url}
+              {#if url}
+                <button
+                  type="button"
+                  class="gen-image-btn"
+                  title={t('chat.viewImage')}
+                  onclick={() => openImage({ src: url, title: t('chat.generatedImage') })}
+                >
+                  <img src={url} alt={t('chat.generatedImage')} loading="lazy" />
+                </button>
+              {/if}
+            {/await}
+          {/if}
         {/each}
       </div>
     {/if}

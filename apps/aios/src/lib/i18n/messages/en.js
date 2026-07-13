@@ -94,6 +94,8 @@ export default {
     openReader: 'Open in reader',
     loading: 'Loading page…',
     readerError: 'Failed to load — try embedding or open externally',
+    uploadToCloud: 'Upload to cloud (visible on other devices)',
+    cloudBacked: 'Backed up to cloud',
   },
   tool: {
     get_time: 'Get time',
@@ -200,6 +202,7 @@ export default {
     cloudPassword: 'Password',
     cloudSignIn: 'Sign in',
     cloudSignedInAs: 'Signed in',
+    cloudNeedSignIn: 'Sign in first to upload to cloud',
     cloudSignOut: 'Sign out',
     cloudSyncNow: 'Sync now',
     cloudSyncing: 'Syncing…',

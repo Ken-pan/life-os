@@ -14,6 +14,8 @@ import ChevronDown from '@lucide/svelte/icons/chevron-down'
 import ChevronLeft from '@lucide/svelte/icons/chevron-left'
 import ChevronRight from '@lucide/svelte/icons/chevron-right'
 import Clock from '@lucide/svelte/icons/clock'
+import CloudUpload from '@lucide/svelte/icons/cloud-upload'
+import CloudCheck from '@lucide/svelte/icons/cloud-check'
 import Code from '@lucide/svelte/icons/code'
 import Copy from '@lucide/svelte/icons/copy'
 import Globe from '@lucide/svelte/icons/globe'
@@ -54,6 +56,8 @@ export const ICONS = {
   'chevron-left': ChevronLeft,
   'chevron-right': ChevronRight,
   clock: Clock,
+  'cloud-upload': CloudUpload,
+  'cloud-check': CloudCheck,
   code: Code,
   copy: Copy,
   globe: Globe,

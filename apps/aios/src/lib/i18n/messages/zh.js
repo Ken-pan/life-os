@@ -93,6 +93,8 @@ export default {
     openReader: '在阅读器打开',
     loading: '正在读取网页…',
     readerError: '读取失败,可尝试内嵌网页或外部打开',
+    uploadToCloud: '上传到云端(其它设备可见)',
+    cloudBacked: '已备份到云端',
   },
   tool: {
     get_time: '查询时间',
@@ -196,6 +198,7 @@ export default {
     cloudPassword: '密码',
     cloudSignIn: '登录',
     cloudSignedInAs: '已登录',
+    cloudNeedSignIn: '请先登录再上传到云端',
     cloudSignOut: '退出登录',
     cloudSyncNow: '立即同步',
     cloudSyncing: '同步中…',

@@ -17,7 +17,7 @@ const MAX_TOOL_ROUNDS = 10
 const HISTORY_CHAR_BUDGET = 28000
 
 /**
- * @typedef {{ id: string, name: string, arguments: string, result?: string, running?: boolean, images?: string[] }} ToolCallRecord
+ * @typedef {{ id: string, name: string, arguments: string, result?: string, running?: boolean, images?: string[], imagePaths?: (string|null)[] }} ToolCallRecord
  * @typedef {{
  *   role: 'user'|'assistant',
  *   content: string,

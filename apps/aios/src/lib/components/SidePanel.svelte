@@ -5,11 +5,38 @@
   import { renderMarkdown, highlightCode } from '$lib/markdown.js'
   import { fetchUrl } from '$lib/tools.js'
   import { getBlob } from '$lib/fileImport.js'
+  import { CLOUD, uploadConversationImage } from '$lib/cloud.svelte.js'
 
   let copied = $state(false)
   let readerLoading = $state(false)
   let readerError = $state('')
   let embedMode = $state(false) // url 模式:阅读模式 ⇄ 内嵌网页
+
+  /* —— 生成图按需上传到云端 —— */
+  let uploading = $state(false)
+  // 该图是否已在云端(打开时带 cloudPath,或本次上传成功)
+  const imageBacked = $derived(!!P.imageRef?.cloudPath)
+  // 可上传:登录了 + 有本地生成图 ref + 尚未备份
+  const canUpload = $derived(
+    P.kind === 'image' && !!CLOUD.user && !!P.imageRef?.dataUrl && !imageBacked,
+  )
+  async function uploadImage() {
+    if (!P.imageRef || uploading) return
+    uploading = true
+    try {
+      const path = await uploadConversationImage(
+        P.imageRef.conversationId,
+        P.imageRef.tcId,
+        P.imageRef.index,
+        P.imageRef.dataUrl,
+      )
+      P.imageRef = { ...P.imageRef, cloudPath: path }
+    } catch {
+      /* 失败保持可重试;错误已进 CLOUD.error */
+    } finally {
+      uploading = false
+    }
+  }
 
   const panelIcon = $derived(
     { artifact: 'eye', code: 'code', url: 'globe', file: 'file', image: 'image' }[P.kind] ?? 'eye',
@@ -214,6 +241,22 @@
           </a>
         {/if}
         {#if P.kind === 'image'}
+          {#if canUpload}
+            <button
+              type="button"
+              class="head-btn"
+              disabled={uploading}
+              title={t('panel.uploadToCloud')}
+              aria-label={t('panel.uploadToCloud')}
+              onclick={uploadImage}
+            >
+              <Icon name={uploading ? 'refresh' : 'cloud-upload'} size={15} strokeWidth={1.9} />
+            </button>
+          {:else if imageBacked}
+            <span class="head-btn backed" title={t('panel.cloudBacked')} aria-hidden="true">
+              <Icon name="cloud-check" size={15} strokeWidth={1.9} />
+            </span>
+          {/if}
           <a
             class="head-btn"
             href={P.url}
