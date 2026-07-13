@@ -24,8 +24,6 @@ const DEFAULTS = {
     temperature: 0.7,
     ttsVoice: DEFAULT_TTS_VOICE, // 朗读音色(Qwen3-TTS 内置 9 声)
     customPrompt: '', // 自定义指令
-    supabaseUrl: '', // 云同步:Supabase 项目 URL(空 = 未启用)
-    supabaseKey: '', // 云同步:publishable/anon key(可公开的前端 key,非 service_role)
     userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)
     userProfileVersion: PROFILE_SCHEMA_VERSION,
   },

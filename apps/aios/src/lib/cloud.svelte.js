@@ -1,18 +1,21 @@
 import { browser } from '$app/environment'
-import { createClient } from '@supabase/supabase-js'
-import { S, save } from '$lib/state.svelte.js'
+import { mapAuthErrorMessage } from '@life-os/sync'
+import { t } from '$lib/i18n/index.js'
+import { supabase as sb, isSupabaseConfigured } from '$lib/supabase.js'
 import { C, persist as persistChats } from '$lib/chat.svelte.js'
 import { M, mergeRemoteMemories } from '$lib/memory.svelte.js'
 import { onDataChanged } from '$lib/syncBus.js'
 
 /**
- * 云端同步(Supabase):本地优先,云端做多设备汇合点。
- * - 登录:邮箱验证码(OTP),桌面壳里没有 magic link 回跳的坑
+ * 云端同步:Life OS 统一 Supabase 账户,登录即用,零配置。
+ * - 登录:邮箱 + 密码(与 home/portal/music 同一账户体系,共享登录态);
+ *   注册走 Portal/Fitness,AIOS 不开注册。刻意不接 app_memberships 门禁——
+ *   AIOS 是本地优先的个人 app,未登录一切照常,登录只是加同步。
  * - 合并:按客户端毫秒时间戳 LWW;删除靠云端墓碑 + 本地快照对账
  *   (上次同步时有、现在本地没有 = 本地删了 → 推墓碑;
  *    云端有、快照里没有 = 别的设备新增 → 拉下来)
  * - 会话 payload 上云前瘦身:图片 dataURL 不上传(体积/隐私),文本全保留
- * - 表结构与 RLS 见 supabase/migrations/*_aios_cloud_sync.sql
+ * - 表结构与 RLS 见 supabase/migrations/*_aios_cloud_sync.sql(aios schema)
  */
 
 const SNAP_KEY = 'aios_cloud_snapshot_v1'
@@ -20,12 +23,9 @@ const PUSH_DEBOUNCE_MS = 8000
 const PULL_CHUNK = 50
 
 export const CLOUD = $state({
-  /** URL + key 已配置且客户端已创建 */
-  configured: false,
+  configured: isSupabaseConfigured,
   /** @type {{ id: string, email: string } | null} */
   user: null,
-  /** 验证码已发出,等待输入 */
-  otpSent: false,
   /** 登录/登出请求进行中 */
   busy: false,
   syncing: false,
@@ -34,7 +34,6 @@ export const CLOUD = $state({
   error: '',
 })
 
-let sb = null
 let pushTimer = null
 let pendingResync = false
 let unsubscribeBus = null
@@ -61,41 +60,11 @@ function saveSnapshot(snap) {
   }
 }
 
-/* —— 客户端与会话 —— */
+/* —— 会话与登录 —— */
 
-function clientConfig() {
-  const url = (S.settings.supabaseUrl ?? '').trim()
-  const key = (S.settings.supabaseKey ?? '').trim()
-  return url && key ? { url, key } : null
-}
-
-/** 用当前设置(重新)创建客户端;设置缺失时返回 false */
-export function connectCloud() {
-  if (!browser) return false
-  const cfg = clientConfig()
-  if (!cfg) {
-    CLOUD.configured = false
-    sb = null
-    return false
-  }
-  try {
-    sb = createClient(cfg.url, cfg.key, {
-      auth: { storageKey: 'aios_supabase_auth_v1' },
-    })
-    CLOUD.configured = true
-    CLOUD.error = ''
-    return true
-  } catch (err) {
-    CLOUD.configured = false
-    sb = null
-    CLOUD.error = String(err?.message ?? err)
-    return false
-  }
-}
-
-/** app 启动时调用:恢复会话、订阅变更、拉一次云端 */
+/** app 启动时调用:恢复共享登录态、订阅变更、拉一次云端 */
 export async function initCloud() {
-  if (!browser || !connectCloud()) return
+  if (!browser || !CLOUD.configured) return
   sb.auth.onAuthStateChange((_event, session) => {
     const u = session?.user
     CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null
@@ -114,41 +83,26 @@ function schedulePush() {
   pushTimer = setTimeout(() => syncNow(), PUSH_DEBOUNCE_MS)
 }
 
-/* —— 邮箱验证码登录 —— */
-
-export async function requestCode(email) {
-  if (!sb) return false
+export async function signInCloud(email, password) {
   CLOUD.busy = true
   CLOUD.error = ''
   try {
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    })
+    const { error } = await sb.auth.signInWithPassword({ email, password })
     if (error) throw error
-    CLOUD.otpSent = true
-    return true
-  } catch (err) {
-    CLOUD.error = String(err?.message ?? err)
-    return false
-  } finally {
-    CLOUD.busy = false
-  }
-}
-
-export async function confirmCode(email, code) {
-  if (!sb) return false
-  CLOUD.busy = true
-  CLOUD.error = ''
-  try {
-    const { error } = await sb.auth.verifyOtp({ email, token: code.trim(), type: 'email' })
-    if (error) throw error
-    CLOUD.otpSent = false
     // 登录即同步:把这台设备的数据和云端汇合
     syncNow()
     return true
   } catch (err) {
-    CLOUD.error = String(err?.message ?? err)
+    CLOUD.error = mapAuthErrorMessage(err, {
+      invalidCredentials: t('auth.errInvalidCredentials'),
+      emailNotConfirmed: t('auth.errEmailNotConfirmed'),
+      alreadyRegistered: t('auth.errAlreadyRegistered'),
+      passwordShort: t('auth.errPasswordShort'),
+      invalidEmail: t('auth.errInvalidEmail'),
+      rateLimit: t('auth.errRateLimit'),
+      network: t('auth.errNetwork'),
+      generic: t('auth.errGeneric'),
+    })
     return false
   } finally {
     CLOUD.busy = false
@@ -156,14 +110,12 @@ export async function confirmCode(email, code) {
 }
 
 export async function signOutCloud() {
-  if (!sb) return
   CLOUD.busy = true
   try {
     await sb.auth.signOut()
   } finally {
     CLOUD.busy = false
     CLOUD.user = null
-    CLOUD.otpSent = false
     // 快照属于这个账号的同步历史,登出即作废
     try {
       localStorage.removeItem(SNAP_KEY)
@@ -171,17 +123,6 @@ export async function signOutCloud() {
       /* 忽略 */
     }
   }
-}
-
-/** 设置页保存 URL/key 后调用:重建客户端并重新初始化 */
-export async function reconfigureCloud(url, key) {
-  S.settings.supabaseUrl = url.trim()
-  S.settings.supabaseKey = key.trim()
-  save()
-  CLOUD.user = null
-  CLOUD.otpSent = false
-  await initCloud()
-  return CLOUD.configured
 }
 
 /* —— payload 瘦身:图片 dataURL 不上云 —— */
@@ -202,7 +143,7 @@ function slimConversation(c) {
 /* —— 同步主流程 —— */
 
 export async function syncNow() {
-  if (!sb || !CLOUD.user || CLOUD.syncing) {
+  if (!CLOUD.configured || !CLOUD.user || CLOUD.syncing) {
     pendingResync = CLOUD.syncing
     return
   }
@@ -232,7 +173,7 @@ export async function syncNow() {
 
 async function syncConversations(snap) {
   const { data: remote, error } = await sb
-    .from('aios_conversations')
+    .from('conversations')
     .select('id, updated_at, deleted')
   if (error) throw error
 
@@ -271,7 +212,7 @@ async function syncConversations(snap) {
       payload: slimConversation($state.snapshot(c)),
     }))
     const { error: e } = await sb
-      .from('aios_conversations')
+      .from('conversations')
       .upsert(rows, { onConflict: 'user_id,id' })
     if (e) throw e
   }
@@ -283,7 +224,7 @@ async function syncConversations(snap) {
       payload: null,
     }))
     const { error: e } = await sb
-      .from('aios_conversations')
+      .from('conversations')
       .upsert(rows, { onConflict: 'user_id,id' })
     if (e) throw e
   }
@@ -291,7 +232,7 @@ async function syncConversations(snap) {
   const pulled = []
   for (let i = 0; i < toPull.length; i += PULL_CHUNK) {
     const { data, error: e } = await sb
-      .from('aios_conversations')
+      .from('conversations')
       .select('id, updated_at, payload')
       .in('id', toPull.slice(i, i + PULL_CHUNK))
     if (e) throw e
@@ -316,7 +257,7 @@ async function syncConversations(snap) {
 
 async function syncMemories(snap) {
   const { data: remote, error } = await sb
-    .from('aios_memories')
+    .from('memories')
     .select('id, text, created_at, deleted')
   if (error) throw error
 
@@ -348,14 +289,14 @@ async function syncMemories(snap) {
       deleted: false,
     }))
     const { error: e } = await sb
-      .from('aios_memories')
+      .from('memories')
       .upsert(rows, { onConflict: 'user_id,id' })
     if (e) throw e
   }
   if (toTombstone.length) {
     const rows = toTombstone.map((id) => ({ id, deleted: true }))
     const { error: e } = await sb
-      .from('aios_memories')
+      .from('memories')
       .upsert(rows, { onConflict: 'user_id,id' })
     if (e) throw e
   }

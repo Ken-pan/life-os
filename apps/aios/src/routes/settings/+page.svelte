@@ -5,6 +5,7 @@
   import { MODELS, TTS_VOICES } from '$lib/localai.js'
   import { C, refreshGateway, clearAllConversations } from '$lib/chat.svelte.js'
   import { M, deleteMemory, clearMemories, addMemory } from '$lib/memory.svelte.js'
+  import { CLOUD, signInCloud, signOutCloud, syncNow } from '$lib/cloud.svelte.js'
 
   const themeOptions = $derived([
     { value: 'light', label: t('settings.themeLight') },
@@ -47,6 +48,21 @@
 
   function clearAllMemories() {
     if (confirm(t('settings.clearMemoriesConfirm'))) clearMemories()
+  }
+
+  /* —— 云端同步(Life OS 统一账户) —— */
+  let cloudEmail = $state('')
+  let cloudPassword = $state('')
+
+  async function cloudSignIn() {
+    const email = cloudEmail.trim()
+    if (!email || !cloudPassword) return
+    if (await signInCloud(email, cloudPassword)) cloudPassword = ''
+  }
+
+  function lastSyncLabel(at) {
+    if (!at) return t('settings.cloudNever')
+    return new Date(at).toLocaleTimeString()
   }
 
   let newMemory = $state('')
@@ -260,6 +276,71 @@
         English
       </button>
     </div>
+  </section>
+
+  <section class="card">
+    <h2>{t('settings.cloud')}</h2>
+    <p class="note">{t('settings.cloudDesc')}</p>
+
+    {#if CLOUD.user}
+      <div class="row">
+        <span class="row-label">{t('settings.cloudSignedInAs')}</span>
+        <span class="row-value">
+          <span class="status-dot ok"></span>
+          {CLOUD.user.email}
+        </span>
+      </div>
+      <div class="row">
+        <span class="row-label">{t('settings.cloudLastSync')}</span>
+        <span class="row-value">
+          {CLOUD.syncing ? t('settings.cloudSyncing') : lastSyncLabel(CLOUD.lastSyncAt)}
+          <button
+            type="button"
+            class="mini-btn"
+            disabled={CLOUD.syncing}
+            onclick={() => syncNow()}
+          >
+            {t('settings.cloudSyncNow')}
+          </button>
+          <button type="button" class="mini-btn" disabled={CLOUD.busy} onclick={signOutCloud}>
+            {t('settings.cloudSignOut')}
+          </button>
+        </span>
+      </div>
+      <p class="note">{t('settings.cloudPrivacyNote')}</p>
+    {:else}
+      <div class="cloud-login">
+        <input
+          type="email"
+          class="cloud-input"
+          autocomplete="email"
+          placeholder={t('settings.cloudEmail')}
+          bind:value={cloudEmail}
+          aria-label={t('settings.cloudEmail')}
+        />
+        <input
+          type="password"
+          class="cloud-input"
+          autocomplete="current-password"
+          placeholder={t('settings.cloudPassword')}
+          bind:value={cloudPassword}
+          onkeydown={(e) => e.key === 'Enter' && !e.isComposing && cloudSignIn()}
+          aria-label={t('settings.cloudPassword')}
+        />
+        <button
+          type="button"
+          class="mini-btn cloud-connect"
+          disabled={!cloudEmail.trim() || !cloudPassword || CLOUD.busy}
+          onclick={cloudSignIn}
+        >
+          {t('settings.cloudSignIn')}
+        </button>
+      </div>
+    {/if}
+
+    {#if CLOUD.error}
+      <p class="note cloud-error">{CLOUD.error}</p>
+    {/if}
   </section>
 
   <section class="card">
@@ -502,6 +583,32 @@
   .memory-del:hover {
     color: var(--t1);
     background: var(--card);
+  }
+
+  /* —— 云端同步 —— */
+  .cloud-login {
+    display: grid;
+    gap: 8px;
+  }
+  .cloud-input {
+    width: 100%;
+    border: 1px solid var(--border-l);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--t1);
+    font: inherit;
+    font-size: var(--text-sm, 14px);
+    padding: 10px 12px;
+    outline: none;
+  }
+  .cloud-input:focus {
+    border-color: var(--t3);
+  }
+  .cloud-connect {
+    justify-self: start;
+  }
+  .cloud-error {
+    color: var(--critical, #f85149);
   }
 
   .danger-btn {

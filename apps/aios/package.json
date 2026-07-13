@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@life-os/platform-web": "*",
+    "@life-os/sync": "*",
     "@life-os/theme": "*",
     "@lucide/svelte": "^1.22.0",
     "@supabase/supabase-js": "2.110.3",
