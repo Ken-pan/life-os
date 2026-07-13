@@ -1,10 +1,12 @@
 # PaperOS E-ink UI 规范与执行指导
 
 **Date:** 2026-07-10（UI）· lifecycle cross-ref 2026-07-11
-**Status:** Execution SSOT（UI track）
-**Lifecycle（独立轨道）：** PAPR.SYS.1 architecture discovery **complete** · **primary lane** — [`README.md`](./README.md)
+**Status:** Proposed execution SSOT（UI track）
+**Lifecycle（独立轨道）：** PAPR.SYS.1 architecture discovery **complete** · implementation **paused by owner** — [`paperos-device-lifecycle/README.md`](./paperos-device-lifecycle/README.md)
 **Applies to:** `PAPR.UI Core Slice 1.1 Correction` + `Core Slice 2 Home/Today`
-**Completed gate summary:** [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md)
+**Repo path:** [`docs/qa/paperos-next-ui-update-guide.md`](./paperos-next-ui-update-guide.md)
+**Related gates:** [`paperos-core-slice-1-integration-gate.md`](./paperos-core-slice-1-integration-gate.md) · [`paperos-core-slice-1-visual-gate.md`](./paperos-core-slice-1-visual-gate.md)
+**Long-term product brief:** [`paperos-eink-uiux-agent-brief.md`](./paperos-eink-uiux-agent-brief.md) · gap audit [`paperos-eink-uiux-gap-audit.md`](./paperos-eink-uiux-gap-audit.md)
 
 ---
 

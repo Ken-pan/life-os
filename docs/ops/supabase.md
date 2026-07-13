@@ -41,17 +41,14 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 
 ## 平台级迁移（Integration / 共享 public 表）
 
-| Version          | 文件                                                     | Hub Ticket      | 远程状态（2026-07-12）                                 |
-| ---------------- | -------------------------------------------------------- | --------------- | ------------------------------------------------------ |
-| `20260707230000` | `migrations_legacy/…_life_os_shared_identity.sql`          | INTG.IDENTITY.0 | ✅ 已吸收进 baseline                                   |
-| `20260708000000` | `migrations_legacy/…_life_events_and_outbox.sql`         | INTG.EVENTS.1.5 | ✅ · **Planner 消费** `lifeEventsInbox.js`（PLNR.CORE.3） |
-| `20260708120000` | `migrations_legacy/…_portal_app_id_constraint.sql`       | INTG.EVENTS.1   | ✅                                                     |
-| `20260708180000` | `migrations_legacy/…_home_app_id_constraint.sql`         | HOME.SSO.3      | ✅                                                     |
-| `20260708190000` | `migrations_legacy/…_portal_today_summary_rpc.sql`         | PORT.GROWTH.4   | ✅                                                     |
-| `20260708191000` | `migrations_legacy/…_portal_today_summary_music.sql`       | PORT.GROWTH.4b-M | ✅                                                    |
-| `20260709021500` | `migrations_legacy/…_portal_today_summary_home.sql`        | PORT.GROWTH.4b-H | ✅                                                    |
-| `20260708200000` | `migrations_legacy/…_fitness_workout_event_trigger.sql`    | GYMS.EVENTS.1   | ✅ · **Planner 打卡** PLNR.CORE.5                      |
-| `20260710203000` | `migrations/20260710203000_portal_today_summary_fitness_today.sql` | GYMS.PORTAL.2 | ✅ 独立登记于 baseline 之后                            |
+| Version          | 文件                                                     | 阶段   | 远程状态（2026-07-09）                                 |
+| ---------------- | -------------------------------------------------------- | ------ | ------------------------------------------------------ |
+| `20260707230000` | `migrations/20260707230000_life_os_shared_identity.sql`  | INTG.IDENTITY.0   | ✅ 已 apply                                            |
+| `20260708000000` | `migrations/20260708000000_life_events_and_outbox.sql`   | INTG.EVENTS.1.5 | ✅ 已 apply（触发器挂 `finance_expected_occurrences`） |
+| `20260708120000` | `migrations/20260708120000_portal_app_id_constraint.sql` | INTG.EVENTS.1   | ✅ 已 apply（`app_id` 含 `portal` + 回填）             |
+| `20260708180000` | `migrations/20260708180000_home_app_id_constraint.sql`   | HOME.SSO.3   | ✅ 已 apply（`app_id` 含 `home` + 回填 + `life_os_modules`） |
+| `20260708191000` | `migrations/20260708191000_portal_today_summary_music.sql` | PORT.GROWTH.4b-M | ✅ 已 apply（Music 第四卡） |
+| `20260709021500` | `migrations/20260709021500_portal_today_summary_home.sql` | PORT.GROWTH.4b-H | ✅ 已 apply（Home 第五卡 · `core_user_app_settings`） |
 
 ### INTG.IDENTITY.0：`core_profiles` + `core_user_app_settings`
 
@@ -163,9 +160,7 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 | ----------------------------------------- | ------------------------------------------------------------------ |
 | `./scripts/verify-life-os-identity-p0.sh` | INTG.IDENTITY.0 自动化验收                                                    |
 | `./scripts/test-outbox-trigger.sh`        | INTG.EVENTS.1.5 结构检查；`--smoke` 端到端；`--apply-migration` 首次 deploy |
-| `./scripts/supabase-sql.sh`               | 远程 SQL 执行 · Planner migration `-f apps/planner/supabase/migrations/…` |
-
-**Planner ticket 真源：** 本文 §PlannerOS — Supabase ticket 同步 · [`roadmap/apps/planner.md`](../roadmap/apps/planner.md) §Supabase
+| `./scripts/supabase-sql.sh`               | 远程 SQL 执行                                                      |
 
 ## 回滚注意
 

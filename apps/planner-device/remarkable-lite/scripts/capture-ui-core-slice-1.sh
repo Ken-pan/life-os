@@ -1,5 +1,5 @@
 #!/bin/sh
-# P-MOVE-UI Core Slice 1 screenshot gate.
+# PAPR.UI Core Slice 1 screenshot gate.
 #
 # This runner intentionally has no fallback coordinate taps and never invokes
 # notes.new.  It is safe to use against a debug shell because it only navigates
@@ -110,4 +110,4 @@ tap_visible "editor.fixture.after-writing"
 wait_visible "editor.after-writing"
 capture "08-editor-after-writing"
 
-printf '%s\n' "P-MOVE-UI Core Slice 1 screenshot gate passed: $OUT"
+printf '%s\n' "PAPR.UI Core Slice 1 screenshot gate passed: $OUT"

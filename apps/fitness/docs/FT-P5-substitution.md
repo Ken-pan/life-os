@@ -2,9 +2,9 @@
 
 **Verification date:** 2026-07-11
 **Section:** GYMS.SUB.5 state model · engineering gate · product review
-**Overall release readiness:** **PASS** — GYMS.SUB.5 ✅ Complete; Engineering PASS; Product gate PASS; shipped in #19 (`67e72b81`).
+**Overall release readiness:** **BLOCKED** — engineering complete; bounded UI/copy closure required before ship.
 
-> **Product gate closed:** selected substitute state, accessible `aria-pressed`, replacement copy, Focus relationship copy, and Summary `Replaced` label were accepted. Evidence: [`docs/qa/evidence/gyms-sub-5/`](../../../docs/qa/evidence/gyms-sub-5/).
+> **Do not mark GYMS.SUB.5 complete** because focused behavioral tests pass. The product gate remains blocked until substitute selection is visually perceptible and follow-up copy is corrected.
 
 ---
 
@@ -18,13 +18,13 @@
 | Queue identity | **PASS** | No deduplication by `exerciseId` |
 | Reload / next-back persistence | **PASS** | Substitute survives navigation and reload |
 | Summary / Stats / progression / Coach | **PASS** | Performance attributed to performed exercise |
-| Product understandability | **PASS** | Selected state visible; `aria-pressed`; replacement copy and outcome labels verified |
-| **GYMS.SUB.5 overall** | **PASS** | Engineering PASS · Product gate PASS · #19 `67e72b81` |
+| Product understandability | **BLOCKED** | Substitute selected state imperceptible (P0) |
+| **GYMS.SUB.5 overall** | **BLOCKED** | UI/copy closure + targeted product re-review |
 
 ```text
 GYMS.SUB.5 engineering gate: PASS
-GYMS.SUB.5 product gate: PASS
-GYMS.SUB.5 overall release readiness: PASS
+GYMS.SUB.5 product gate: BLOCKED
+GYMS.SUB.5 overall release readiness: BLOCKED
 ```
 
 ---
@@ -35,9 +35,17 @@ GYMS.SUB.5 replaces the old skip-only bookkeeping with a stable **planned slot /
 
 **Engineering is complete and verified** by focused Playwright tests and build/check gates.
 
-**Product gate is PASS.** The selected state is visibly persistent and exposed through `aria-pressed`; partial completion uses replacement terminology; Focus states the planned exercise; and Summary labels the original as `Replaced`.
+**Product release is blocked** because the substitute option’s selected state in `SkipModal` is effectively identical to its unselected state. Additional P1 copy/terminology issues do not block the state model but must be closed before ship.
 
-**Closure evidence:** `npm run check` PASS; `tests/substitution.spec.js` 6/6 PASS; 393×852 live replacement smoke PASS with no horizontal overflow; screenshots in [`docs/qa/evidence/gyms-sub-5/`](../../../docs/qa/evidence/gyms-sub-5/).
+**Remaining work is bounded UI/copy closure** — not a broader Fitness redesign. **Implementation playbook:** [`FT-P5-ui-closure-guide.md`](./FT-P5-ui-closure-guide.md).
+
+1. Visible substitute selected state (P0) — **Scheme 1 recommended:** accent background + border + checkmark + `aria-pressed`
+2. Partial-completion modal terminology (P1) — Replace/Swap wording when `done > 0`
+3. Summary “Replaced” terminology (P1)
+4. Optional lightweight Focus relationship label (P2)
+5. Targeted product re-review
+
+**Quick fix (unblock P0 only):** CSS-only `.skip-alt.active` tint; copy changes can follow in PR-B.
 
 ---
 
@@ -141,13 +149,100 @@ Completed sets are never moved from the original exercise to the substitute.
 
 ---
 
-## Product gate — PASS
+## Product gate — BLOCKED
 
-- Selected substitute state: visible accent border/background plus checkmark; `aria-pressed` reflects selection.
-- Partial completion: `Replace remaining sets · {exercise}` and `Confirm replacement` avoid implying completed sets are discarded.
-- Focus: `Switched from {planned}` preserves planned-versus-performed context.
-- Summary: partial planned exercises use `Replaced`; the performed substitute stays a separate row.
-- Mobile: 393×852 smoke passed with no horizontal overflow.
+### P0: Substitute selected state is visually imperceptible
+
+The substitute option’s selected state appears effectively identical to its unselected state.
+
+**Observed computed styles (manual / static review):**
+
+```text
+Unselected:
+border: rgb(48, 48, 50)
+background: rgb(32, 32, 34)
+text: rgb(242, 242, 242)
+
+Selected:
+border: rgb(48, 48, 50)
+background: rgb(32, 32, 34)
+text: rgb(242, 242, 242)
+```
+
+**Likely implementation causes:**
+
+- Weak `.skip-alt.active` treatment in `app.css`
+- No background tint on selected state
+- Later `.skip-alt` rules may override active color
+- No secondary non-color selected indicator (checkmark, icon)
+- Missing `aria-pressed` or equivalent accessible selected semantics
+
+**Minimum expected fix (documented only — not implemented in this section):**
+
+```text
+Add a clearly differentiated selected background and border.
+Add a checkmark or equivalent selected indicator.
+Expose selection semantics with aria-pressed or the appropriate
+accessible selected-state property.
+```
+
+Reference pattern: `.skip-reason.active` visual language (`background: var(--accent-bg); border-color: var(--accent); color: var(--accent);`) — accent color need not be orange.
+
+---
+
+## Product follow-up (local UI/copy — not state-model changes)
+
+### P1: Partial-completion modal terminology
+
+**Current (problematic when `log.done > 0`):**
+
+```text
+Skip · Barbell bench press
+Confirm skip
+```
+
+Implies completed sets may be voided.
+
+**Recommended rule:**
+
+| State | Modal title | Confirm |
+| --- | --- | --- |
+| 0 sets completed | `Skip · {exercise}` | `Confirm skip` |
+| Partial sets completed | `Replace remaining sets · {exercise}` | `Confirm replacement` |
+| All sets completed | No substitute entry | — |
+
+### P1: Summary terminology
+
+**Current (problematic):**
+
+```text
+Barbell bench press
+Skipped · 2/4 sets
+```
+
+**Recommended:**
+
+```text
+Barbell bench press
+Replaced after 2 sets · 2/4
+```
+
+Substitute remains a separate row:
+
+```text
+Decline chest press machine
+3/3 sets
+```
+
+Badge rule: **0 original sets** → `Skipped`; **partial original sets + substitute** → `Replaced`.
+
+### P2: Focus transition context (optional)
+
+Lightweight label after substitution — not a large banner:
+
+```text
+Switched from Barbell bench press
+```
 
 ### Stats decision
 
@@ -208,11 +303,10 @@ b3128ac54174d660973f320937c2192e9303d2dc
 | Evidence | Type | Scope |
 | --- | --- | --- |
 | `session-queue.spec.js` · `substitution.spec.js` | **Automated behavioral** | State model, attribution, persistence |
-| `tests/substitution.spec.js` | **Automated product flow** | Selected state, `aria-pressed`, replacement copy, Focus, Summary, attribution |
-| `docs/qa/evidence/gyms-sub-5/` | **Visual product evidence** | Selected state, partial replacement, Focus relationship, Summary `Replaced` |
-| 393×852 live smoke | **Mobile runtime** | Replacement flow with no horizontal overflow |
+| `.skip-alt.active` computed styles | **Static / manual review** | Selected-state visibility (P0 blocker) |
+| Modal / Summary copy | **Static / manual review** | Terminology follow-ups (P1) |
 
-Product gate accepted from automated flow, visual evidence, and the 393×852 live replacement smoke.
+No claim of a full live end-to-end product review on device; product gate findings combine implementation inspection with automated flow evidence.
 
 ---
 
@@ -241,9 +335,14 @@ Do not mark these fixed as part of GYMS.SUB.5 closure.
 - Queue identity and persistence
 - Focused test suite green
 
-### GYMS.SUB.5 product closure — PASS
+### GYMS.SUB.5 product closure — BLOCKED
 
-Product gate accepted: visible selected state, `aria-pressed`, replacement terminology, Focus relationship label, Summary `Replaced`, mobile smoke, and visual evidence are complete.
+See **[`FT-P5-ui-closure-guide.md`](./FT-P5-ui-closure-guide.md)** for research, three schemes, recommended **Scheme 1**, PR split, verification checklist, and optional A/B plan.
+
+- P0 selected-state visibility (`app.css` + `aria-pressed` + checkmark)
+- P1 modal and Summary copy (Replace vs Skip by `done`)
+- P2 optional Focus label
+- Targeted product re-review after UI fixes
 
 ### Out of scope
 

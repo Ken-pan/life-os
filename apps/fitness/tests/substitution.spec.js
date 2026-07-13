@@ -10,7 +10,7 @@ async function chooseBenchSubstitute(page) {
   await page.getByRole('button', { name: '确认替换' }).click();
 }
 
-test.describe('FT-P5 substitute exercise flow', () => {
+test.describe('GYMS.SUB.5 substitute exercise flow', () => {
   test('zero-set skip keeps skip wording and exposes substitute selection state', async ({ page }) => {
     await seed(page, { settings: { logDetail: 'off' } });
     await page.goto('/day/chest/focus');
@@ -25,7 +25,6 @@ test.describe('FT-P5 substitute exercise flow', () => {
     await expect(substitute).toHaveClass(/active/);
     await expect(substitute).toHaveAttribute('aria-pressed', 'true');
   });
-
   test('substitute replaces Focus slot, survives reload, logs sets, and keeps attribution', async ({ page }) => {
     await seed(page, { settings: { logDetail: 'off' } });
     await page.goto('/day/chest/focus');

@@ -1,6 +1,6 @@
 # Planner 任务行（Ticket）展示规范 — 草案
 
-> **Roadmap：** **P-TASK-DISPLAY-0**（并入 **P-UIUX-0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
+> **Roadmap：** **P-TASK-DISPLAY-0**（并入 **PLNR.UIUX.0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
 > **代码锚点：** `TaskRow.svelte` · `taskMetaLine.js` · `taskKind.js` · `lifeEventSource.js`
 > **状态：** 2026-07-10 与 P-SCHED-0 直接相关的 Today / Calendar 切片已实现并通过回归
 
@@ -100,7 +100,7 @@ else → unscheduledOnly
 
 ---
 
-## 与排程视图的关系（P-SCHED-0）
+## 与排程视图的关系（PLNR.SCHED.0）
 
 | 视图            | 任务行差异                                                                           |
 | --------------- | ------------------------------------------------------------------------------------ |
@@ -128,11 +128,4 @@ else → unscheduledOnly
 | 4   | 子任务计数 `subtasks.filter(done).length`                    | `taskMetaLine.js` 或 `TaskRow` |
 | 5   | 截图 + 更新本规范                                            | QA                             |
 
-**Agent：** 并入 **P-SCHED-0** Fable session（不单占额度）· Codex 单测
-
-## 2026-07-10 实现记录
-
-- Today / Calendar 的 meta line 去除 kind / priority 文字，保留排程时段、时长和子任务 `n/m`。
-- Focus 使用左侧 accent；循环任务使用图标 chip；compact 行保留来源、项目和循环关键 chip。
-- E2E 已改为验证 P0 checkbox accent 和 recurrence chip，不再断言已被产品规范移除的「高」/「每天」 meta 文字。
-- 证据见 `docs/ui-qa-screenshots/planner/achievement-schedule/latest/` 与 `playwright-audit/latest/`。
+**Agent：** 并入 **PLNR.SCHED.0** Fable session（不单占额度）· Codex 单测

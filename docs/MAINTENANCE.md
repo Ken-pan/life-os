@@ -14,10 +14,10 @@
 | `ops/*`                | 运维                  | 部署/infra 变更时              |
 | `architecture/*`       | 架构师                | 契约/边界变更时                |
 | `qa/e2e-issues.md`     | QA                    | 每次跑批 E2E 后                |
-| `qa/planner-task-capture-spec.md` | QA           | PLNR.CAPTURE.0 规范冻结 / 发货时 |
 | `qa/planner-schedule-*` | QA                   | PLNR.SCHED.0 baseline / 走查关闭时 |
-| `qa/paperos/`          | QA / PaperOS          | 活跃 UI / lifecycle gate 变更时 |
-| `roadmap/apps/paperos.md` | 产品 / PaperOS   | `PAPR.*` 优先级或状态变更时     |
+| `qa/paperos-*`         | QA / PaperOS          | Slice gate 或 SSOT 变更时      |
+| `qa/paperos-device-lifecycle/` | QA / PaperOS    | SYS lifecycle 状态变更时（导航 hub） |
+| `PRO_MOVE.md` + gates  | 设备工程              | 新 gate 或 blocker 变更时      |
 | `archive/*`            | —                     | **只读**，不更新               |
 
 ## 更新流程
@@ -44,8 +44,7 @@
 | 部署、DNS、env、canonical     | `docs/ops/`                              |
 | 契约、RFC、长期架构           | `docs/architecture/`                     |
 | 测试 playbook、失败记录       | `docs/qa/` · PaperOS 导航 `docs/qa/paperos/` |
-| Planner 任务捕获 / 输入 UX    | `docs/qa/planner-task-capture-spec.md`         |
-| PaperOS 活跃 gate / 证据   | `docs/qa/paperos/`；完成后压缩到 `roadmap/SHIPPED.md` + `archive/paperos/` |
+| PaperOS / 设备 gate 证据      | `docs/PRO_MOVE*.md` + 索引 `docs/PRO_MOVE.md` · 生命周期 hub `docs/qa/paperos-device-lifecycle/` |
 | Cursor / 脚本工具             | `docs/tooling/`                          |
 | 品牌资产、manifest            | `docs/assets/`                           |
 | 已完成阶段史                  | `roadmap/SHIPPED.md` 或 `archive/`       |

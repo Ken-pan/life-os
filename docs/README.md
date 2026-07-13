@@ -2,7 +2,7 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后核对：** 2026-07-12 · `origin/master` `a13082e8` · 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后核对：** 2026-07-11 晚（执行快照：3 active lane · 10a Complete · migrate/UI closure 待合入）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
@@ -10,14 +10,13 @@
 
 | 焦点 | 主题                                                                                    | 文档                                                             |
 | ---- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **主航道** | **PAPR.SYS.*** lifecycle（Ken + Codex 强算力）                                          | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) §算力分配 |
-| 快赢副线 | **PLNR.CORE.4** / **FINC.SYNC.1b**（Active）· **GYMS.SUB.5** 产品 gate · **PLNR.SCHED.10b.ios** | 同上 §快赢任务池 |
-| Next | PAPR.WRITE.5（Deferred）· **PLNR.CAPTURE.0** · HOME.PROJ.7 · PLNR.UIUX.0 · PLNR.ATTACH.0 | [`roadmap/apps/`](./roadmap/apps/README.md)                      |
+| Now  | **PLNR.SCHED.0** · **GYMS.SUB.5** UI closure · **FINC.PURCHASE.6** · **PAPR.UI**        | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
+| Next | PAPR.WRITE.5/6 · FINC.SYNC.1b · PLNR.CORE.4 · HOME.PROJ.7 · PLNR.UIUX.0 · PLNR.ATTACH.0 | [`roadmap/apps/`](./roadmap/apps/README.md)                      |
 
 **2026-07-09 已验收：** Phase 6 **PORT.GROWTH.4b-H / HOME.PROJ.6a** · Portal UI 走查 **P-1–P-12** — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 **2026-07-09 已验收：** Phase 0–4 批次 — FINC.CORE.3 · PORT.GROWTH.4b-M · PORT.GROWTH.6 · PLNR.CORE.2 · GYMS.CORE.0/GYMS.EVENTS.1 · INTG.EVENTS.1b — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
-> **策略（2026-07-12 · `a13082e8`）：** 主航道 = Ken + Codex（PAPR.SYS.*）· 副线 = Cursor Line D + Fable r0/UIUX + Ken/Fable 产品 gate — [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
+> **策略（2026-07-11 晚）：** 活跃 **3** lane（Ken · Fable · Codex T1）· Antigravity **10a Complete** · Codex T2 **Complete** · Cursor/Codex T3 Queued — 执行快照 [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) 文首表 · Prompt §7
 
 **六 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
@@ -47,10 +46,12 @@ docs/
 ├── LIFEOS_ROADMAP.md    ← 每周扫一眼（Now / Next / Shipped / Not doing / 六 app 一览）
 ├── MAINTENANCE.md       ← 怎么维护这套文档
 ├── roadmap/             ← 分卷：INTEGRATION · GROWTH · PLATFORM · DESIGN · BACKLOG · SHIPPED · apps/
-├── ops/                 ← Netlify · Supabase · canonical · PaperOS 设备运维
-├── architecture/        ← contracts · events · PaperOS API / Ink 架构
-├── qa/                  ← e2e · pwa · PLNR.SCHED.0 baseline · PLNR.CAPTURE.0 capture spec
-│   └── paperos/         ← PaperOS QA 导航（UI · lifecycle · current gates）
+├── ops/                 ← Netlify · Supabase · canonical
+├── architecture/        ← contracts · responsive-chrome · events-rfc · native-readiness
+├── qa/                  ← e2e · pwa · PaperOS gates · PLNR.SCHED.0 baseline
+│   ├── paperos/         ← PaperOS QA 主题导航（UI + lifecycle）
+│   └── paperos-device-lifecycle/  ← `PAPR.SYS.*` 生命周期导航 hub
+├── PRO_MOVE.md          ← PaperOS / reMarkable gate 文档索引（36+ gate 文件）
 ├── tooling/             ← cursor-page-bridge
 ├── assets/              ← life-os-logos
 ├── ui-qa-screenshots/   ← QA 脚本输出（证据，非计划真源）
@@ -75,12 +76,10 @@ docs/
 | 查 life_events 格式                   | [`architecture/events-rfc.md`](./architecture/events-rfc.md)                                   |
 | 调试 iOS PWA                          | [`qa/pwa-ios.md`](./qa/pwa-ios.md)                                                             |
 | Planner 日程 baseline（PLNR.SCHED.0） | [`qa/planner-schedule-antigravity-baseline.md`](./qa/planner-schedule-antigravity-baseline.md) |
-| Planner 任务捕获（PLNR.CAPTURE.0）    | [`qa/planner-task-capture-spec.md`](./qa/planner-task-capture-spec.md)                         |
-| Planner 任务行展示（P-TASK-DISPLAY-0）| [`qa/planner-task-display-spec.md`](./qa/planner-task-display-spec.md)                         |
-| PaperOS 总导航                     | [`qa/paperos/README.md`](./qa/paperos/README.md)                                               |
-| PaperOS 产品排期                 | [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)                                         |
-| PaperOS UI 规范                    | [`qa/paperos/ui-spec.md`](./qa/paperos/ui-spec.md)                                             |
-| PaperOS 设备运维                  | [`ops/paperos-device.md`](./ops/paperos-device.md)                                             |
+| PaperOS 设备生命周期（`PAPR.SYS.*`）  | [`qa/paperos-device-lifecycle/README.md`](./qa/paperos-device-lifecycle/README.md)             |
+| PaperOS QA 总导航                     | [`qa/paperos/README.md`](./qa/paperos/README.md)                                               |
+| PaperOS 下一步 UI                     | [`qa/paperos-next-ui-update-guide.md`](./qa/paperos-next-ui-update-guide.md)                   |
+| PaperOS gate 索引                     | [`PRO_MOVE.md`](./PRO_MOVE.md)                                                                 |
 | 看 E2E 失败记录                       | [`qa/e2e-issues.md`](./qa/e2e-issues.md)                                                       |
 | Portal UI 截图走查（P-1–P-12 ✅）     | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md)                             |
 

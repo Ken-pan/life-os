@@ -39,7 +39,7 @@ source.
   `/home/root/paperos` is now the canonical PaperOS workspace.
 * **2026-07-09**: `open-paperos.sh` launched `/home/root/paperos/paperos`
   with xochitl inactive, and `recover-xochitl.sh` restored xochitl to
-  `active`. See [`../archive/paperos/milestones-2026-07.md`](../archive/paperos/milestones-2026-07.md).
+  `active`. See [`PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](./PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md).
 * **2026-07-09 (PAPR.DEV.3/4)**: CJK font + pagination binary and the
   `paperos.service` launcher were deployed and verified live. Crash
   (`kill -9`) auto-recovery to xochitl confirmed. See

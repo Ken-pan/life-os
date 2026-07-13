@@ -1,21 +1,21 @@
 # PaperOS Device Lifecycle Gate（PAPR.SYS.gate）
 
-**Status:** ⏳ **BLOCKED** — 依赖 `PAPR.SYS.1` 分步 impl（**PRIMARY LANE** · Ken 逐步授权）· `PAPR.SYS.2` · `PAPR.SYS.3`
+**Status:** ⏳ **BLOCKED** — 依赖 `PAPR.SYS.1` implementation（**UNBLOCKED BUT NOT STARTED — PAUSED BY OWNER**）· `PAPR.SYS.2` · `PAPR.SYS.3`
 **Owner:** Ken + Codex
 **Agent 线:** Line B（Shell）
 
 > **Antigravity 不能**替代本 gate：网页截图无法证明物理睡眠、Folio 或 system suspend。
 
-**前置状态（2026-07-12）：** **`PAPR.DATA.verify` PASS** · PAPR.SYS.0 accepted · PAPR.SYS.1a closed · PAPR.SYS.1b.fs closed · PAPR.SYS.1b.jrn conditional pass accepted · **PAPR.SYS.1 PRIMARY LANE**（design → 分步 impl）· PAPR.SYS.2 hard blocked。
+**前置状态（2026-07-11）：** **`PAPR.DATA.verify` PASS** · PAPR.SYS.0 accepted · PAPR.SYS.1a closed · PAPR.SYS.1b.fs closed · PAPR.SYS.1b.jrn conditional pass accepted · PAPR.SYS.1 implementation paused/not started · PAPR.SYS.2 hard blocked。
 
-**导航 hub：** [`README.md`](./README.md) · 发现 SSOT：[`lifecycle.md`](./lifecycle.md)
+**导航 hub：** [`paperos-device-lifecycle/README.md`](./paperos-device-lifecycle/README.md) · 发现 SSOT：[`paperos-device-lifecycle-discovery.md`](./paperos-device-lifecycle-discovery.md)
 
 ## 仍待验证项（PAPR.SYS.0 / discovery 未覆盖）
 
 以下在 PAPR.SYS.gate 前仍为开放项，不得因 PAPR.SYS.0 accepted 或 PAPR.DEV.4 PASS 而视为已测：
 
 - 冷启动与原生解锁（LC-01）
-- 设备端无 Mac/SSH 进入（LC-04）— journal UUID 机制 viable；PAPR.SYS.1 实现分步推进中，本用例仍未验收
+- 设备端无 Mac/SSH 进入（LC-04）— journal UUID 机制 viable；PAPR.SYS.1 实现 paused/not started
 - Folio 合盖/开盖（LC-06）— 当前设备无 Folio
 - 重复 enter/exit 循环（Mode B 升级表 10/10）
 - 重复崩溃 / crash-loop fallback（LC-10、LC-11）— 仅单次 `kill -9` 已测

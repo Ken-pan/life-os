@@ -32,18 +32,18 @@
 
 | Canonical ID (v2)    | Legacy v1                                 | App 分卷                                        | 状态 / 锚点                                                            |
 | -------------------- | ----------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
-| **PLNR.SCHED.0**     | `P-SCHED.0` · `P-SCHED-0`                 | [planner.md](./planner.md)                      | 🟡 migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** 待 Ken |
-| **PAPR.DATA.verify** | `P-MOVE.verify` · `P-MOVE-VERIFY`         | [paperos.md](./paperos.md)    | ✅ PASS 2026-07-11                                                     |
-| **PAPR.SYS.0**       | `P-MOVE.SYS.0` · `P-MOVE-SYS-0`           | [paperos.md](./paperos.md)    | ✅ CONDITIONAL PASS accepted                                           |
-| **PAPR.SYS.1b.fs**   | `P-MOVE.SYS.1b.fs` · `P-MOVE-SYS-1B-FS`   | [paperos.md](./paperos.md)    | ❌ BLOCKED / CLOSED                                                    |
-| **PAPR.SYS.1b.jrn**  | `P-MOVE.SYS.1b.jrn` · `P-MOVE-SYS-1B-JRN` | [paperos.md](./paperos.md)    | 🟡 CONDITIONAL PASS accepted                                           |
-| **PAPR.SYS.1**       | `P-MOVE.SYS.1` · `P-MOVE-SYS-1`           | [paperos.md](./paperos.md)    | 🟡 PRIMARY LANE — Ken + Codex 主航道                                       |
-| **PAPR.SYS.2**       | `P-MOVE.SYS.2` · `P-MOVE-SYS-2`           | [paperos.md](./paperos.md)    | 🔒 not started                                                         |
-| **PAPR.UI**          | `P-MOVE.UI` · `P-MOVE-UI`                 | [paperos.md](./paperos.md)    | 🟡 `PAPR.UI.1.1` 设备复验                                              |
+| **PLNR.SCHED.0**     | `P-SCHED.0` · `P-SCHED-0`                 | [planner.md](./planner.md)                      | 🟡 `PLNR.SCHED.0.migrate` 待合入 · **10a.sim ✅** · **10b.ios** 待 Ken |
+| **PAPR.DATA.verify** | `P-MOVE.verify` · `P-MOVE-VERIFY`         | [planner-pro-move.md](./planner-pro-move.md)    | ✅ PASS 2026-07-11                                                     |
+| **PAPR.SYS.0**       | `P-MOVE.SYS.0` · `P-MOVE-SYS-0`           | [planner-pro-move.md](./planner-pro-move.md)    | ✅ CONDITIONAL PASS accepted                                           |
+| **PAPR.SYS.1b.fs**   | `P-MOVE.SYS.1b.fs` · `P-MOVE-SYS-1B-FS`   | [planner-pro-move.md](./planner-pro-move.md)    | ❌ BLOCKED / CLOSED                                                    |
+| **PAPR.SYS.1b.jrn**  | `P-MOVE.SYS.1b.jrn` · `P-MOVE-SYS-1B-JRN` | [planner-pro-move.md](./planner-pro-move.md)    | 🟡 CONDITIONAL PASS accepted                                           |
+| **PAPR.SYS.1**       | `P-MOVE.SYS.1` · `P-MOVE-SYS-1`           | [planner-pro-move.md](./planner-pro-move.md)    | ⏸ UNBLOCKED NOT STARTED — paused                                       |
+| **PAPR.SYS.2**       | `P-MOVE.SYS.2` · `P-MOVE-SYS-2`           | [planner-pro-move.md](./planner-pro-move.md)    | 🔒 not started                                                         |
+| **PAPR.UI**          | `P-MOVE.UI` · `P-MOVE-UI`                 | [planner-pro-move.md](./planner-pro-move.md)    | 🟡 `PAPR.UI.1.1` 设备复验                                              |
 | **GYMS.SUB.5**       | `FT-P5`                                   | [fitness.md](./fitness.md)                      | 🟡 工程 PASS · 产品 BLOCKED                                            |
 | **FINC.PURCHASE.6**  | `F-P6`                                    | [finance.md](./finance.md)                      | ⏳ `FINC.PURCHASE.6.r0` · `FINC.PURCHASE.6.a`                          |
 | **PLNR.PROJ.3**      | `P-PROJ-3`                                | [planner.md](./planner.md)                      | ✅ Roadmap refs UI（2026-07-10）                                       |
-| **PAPR.WRITE.5**     | `P-MOVE.5` · `P-MOVE-5`                   | [paperos.md](./paperos.md)    | 🟡 Code ✅ · DB `paper_device_actions` ❌ · Hub Deferred                |
+| **PAPR.WRITE.5**     | `P-MOVE.5` · `P-MOVE-5`                   | [planner-pro-move.md](./planner-pro-move.md)    | ⏳ controlled write staging                                            |
 | **PORT.GROWTH.4b-H** | `G-P4b-H`                                 | [portal.md](./portal.md) · [home.md](./home.md) | ✅ 2026-07-09 · `HOME.PROJ.6a`                                         |
 
 **已发货（2026-07-09）：** `PORT.GROWTH.8` · `PORT.GROWTH.9` · `PORT.GROWTH.4b-H` · Phase 0–6 — [`../SHIPPED.md`](../SHIPPED.md)
@@ -52,7 +52,7 @@
 
 | App         | 层级       | Top Next                                                 | 分卷                                                                                                        |
 | ----------- | ---------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **PaperOS** | 设备 Shell | **PAPR.SYS.***（主航道）· **PAPR.UI** · PAPR.WRITE.5 deferred | [paperos.md](./paperos.md) · lifecycle [hub](../../qa/paperos/README.md) |
+| **PaperOS** | 设备 Shell | **PAPR.UI** · **PAPR.SYS.1** (paused) · **PAPR.WRITE.5** | [planner-pro-move.md](./planner-pro-move.md) · lifecycle [hub](../../qa/paperos-device-lifecycle/README.md) |
 | Planner     | 生产       | **PLNR.SCHED.0**                                         | [planner.md](./planner.md)                                                                                  |
 | Fitness     | 生产       | **GYMS.SUB.5** UI closure · **GYMS.PORTAL.2** ✅         | [fitness.md](./fitness.md)                                                                                  |
 | Finance     | 生产       | **FINC.PURCHASE.6** · **FINC.SYNC.1b**                   | [finance.md](./finance.md)                                                                                  |
@@ -81,12 +81,12 @@
 
 | 序  | 项                             | 说明                                                |
 | --- | ------------------------------ | --------------------------------------------------- |
-| **0** | **PAPR.SYS.***               | **主航道** — lifecycle · 明日最多强 AI 算力（Ken + Codex） |
-| 1   | **PLNR.SCHED.0**               | 🟡 代码轨已清 — 待 **10b.ios** Ken |
-| 2   | **GYMS.SUB.5**                 | 代码 ✅ #19 · 产品 gate ⏳ |
-| 3   | **PLNR.CORE.4** / **FINC.SYNC.1b** | Cursor Line D **Active** |
-| 4   | **FINC.PURCHASE.6**            | 复杂 — `FINC.PURCHASE.6.a` 仍 BLOCKED             |
-| 5   | **PAPR.WRITE.5**               | Deferred — 不占明日主算力                           |
+| 1   | **PLNR.SCHED.0**               | 日程视图 debug + 可用性（Planner 最高产品优先级）   |
+| 2   | **PAPR.UI**                    | `PAPR.UI.1.1` 设备复验；`PAPR.SYS.1` 实现 paused    |
+| 3   | **FINC.PURCHASE.6**            | Finance 支出审核（`FINC.PURCHASE.6.a` 等）          |
+| 4   | **GYMS.SUB.5**                 | Fitness 替代动作 — 工程 PASS · 产品 UI closure 待审 |
+| 5   | **PAPR.WRITE.5**               | controlled write staging                            |
+| 6   | **FINC.SYNC.1b / PLNR.CORE.4** | Codex · Cursor Auto（不用 Fable / Copilot Agent）   |
 
 ## Wave 投入估算（单人 · Phase 5+）
 

@@ -8,16 +8,16 @@
 
 | 主线    | 发货项 / 里程碑 | 证据 |
 | ------- | --------------- | ---- |
-| PaperOS | **PAPR.DATA.verify** 设备生产 sync E2E **PASS** | [`qa/paperos/data-plane-2026-07-11.md`](../qa/paperos/data-plane-2026-07-11.md) |
-| PaperOS | **PAPR.SYS.0** conditional pass accepted | [`qa/paperos/lifecycle.md`](../qa/paperos/lifecycle.md) |
-| PaperOS | **PAPR.SYS.1 launch discovery complete** — PAPR.SYS.1a/1b.fs closed · PAPR.SYS.1b.jrn conditional pass · implementation later resumed as primary lane | [`qa/paperos/README.md`](../qa/paperos/README.md) |
+| PaperOS | **PAPR.DATA.verify** 设备生产 sync E2E **PASS** | [`qa/paperos-data-plane-verify-2026-07-11.md`](../qa/paperos-data-plane-verify-2026-07-11.md) |
+| PaperOS | **PAPR.SYS.0** conditional pass accepted | [`qa/paperos-device-lifecycle-discovery.md`](../qa/paperos-device-lifecycle-discovery.md) |
+| PaperOS | **PAPR.SYS.1 launch discovery complete** — PAPR.SYS.1a/1b.fs closed · PAPR.SYS.1b.jrn conditional pass · **PAPR.SYS.1 impl paused** | [`qa/paperos-device-lifecycle/README.md`](../qa/paperos-device-lifecycle/README.md) |
 
 ## 2026-07-10（深度复核 · GYMS.PORTAL.2 · PaperOS 1.1 · PLNR.SCHED.0 根因）
 
 | 主线    | 发货项 / 里程碑 | 证据 |
 | ------- | --------------- | ---- |
 | Growth  | **GYMS.PORTAL.2** Portal Fitness `workedOutToday` — migration **远程已应用** | migration `20260710203000` · `todaySummaryFormat.js` · Supabase list_migrations ✅ |
-| PaperOS | **Slice 1.1** native toolbar + QML visual | `52ae55e0` · `d7c52858` · [PaperOS 2026-07 里程碑](../archive/paperos/milestones-2026-07.md) |
+| PaperOS | **Slice 1.1** native toolbar + QML visual | `52ae55e0` · `d7c52858` · [`qa/paperos-core-slice-1-1-visual-delta-gate.md`](../qa/paperos-core-slice-1-1-visual-delta-gate.md) |
 | Planner | **PLNR.SCHED.0** Antigravity baseline + **PLNR.SCHED.0.migrate 根因** `migrateTask` 缺 `tags` | [`qa/planner-schedule-antigravity-baseline.md`](../qa/planner-schedule-antigravity-baseline.md) |
 | Infra   | **PAPR.DATA.verify** — 生产 Paper API 路由复核（401 非 404） | `curl https://planner.kenos.space/api/paper/today` · `apps/planner/static/_redirects` · **2026-07-11 设备 E2E 见上节** |
 
@@ -26,10 +26,10 @@
 | 主线    | 发货项 / 里程碑 | 证据 |
 | ------- | --------------- | ---- |
 | Planner | **PLNR.SCHED.0** Antigravity baseline 完成（Scenario A 通过；legacy `tags` + mobile scroll 待修） | [`qa/planner-schedule-antigravity-baseline.md`](../qa/planner-schedule-antigravity-baseline.md) · `docs/qa/evidence/planner-schedule/2026-07-10/` |
-| PaperOS | **Core Slice 1** System drawer · Gallery · native ink chrome · recovery gate | [PaperOS 2026-07 里程碑](../archive/paperos/milestones-2026-07.md) |
-| PaperOS | **Slice 1.1** QML 视觉 delta（Gallery / Drawer / `+`）Antigravity PASS | [PaperOS 2026-07 里程碑](../archive/paperos/milestones-2026-07.md) |
-| PaperOS | **`PAPR.DATA.verify` PASS**（2026-07-11；legacy `P-MOVE-BLOCK` / `P-MOVE.verify`） | [`qa/paperos/data-plane-2026-07-11.md`](../qa/paperos/data-plane-2026-07-11.md) |
-| Docs    | Hub 优先级复核 → **PLNR.SCHED.0** · `PAPR.DATA.verify` · GYMS.SUB.5 · FINC.PURCHASE.6 · PAPR.UI | [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) · [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) · [`archive/paperos/milestones-2026-07.md`](../archive/paperos/milestones-2026-07.md) |
+| PaperOS | **Core Slice 1** System drawer · Gallery · native ink chrome · recovery gate | [`qa/paperos-core-slice-1-integration-gate.md`](../qa/paperos-core-slice-1-integration-gate.md) |
+| PaperOS | **Slice 1.1** QML 视觉 delta（Gallery / Drawer / `+`）Antigravity PASS | [`qa/paperos-core-slice-1-1-visual-delta-gate.md`](../qa/paperos-core-slice-1-1-visual-delta-gate.md) |
+| PaperOS | **`PAPR.DATA.verify` PASS**（2026-07-11；legacy `P-MOVE-BLOCK` / `P-MOVE.verify`） | [`qa/paperos-data-plane-verify-2026-07-11.md`](../qa/paperos-data-plane-verify-2026-07-11.md) |
+| Docs    | Hub 优先级复核 → **PLNR.SCHED.0** · `PAPR.DATA.verify` · GYMS.SUB.5 · FINC.PURCHASE.6 · PAPR.UI | [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) · [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) · [`PRO_MOVE.md`](../PRO_MOVE.md) |
 
 ## 2026-07-10（Planner Projects · Home 墙图）
 
