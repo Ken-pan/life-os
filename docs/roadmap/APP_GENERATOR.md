@@ -27,23 +27,28 @@ single source of truth。来源见文末。
 
 | Ticket         | 内容                                                                 | 模式来源           | 状态 |
 | -------------- | -------------------------------------------------------------------- | ------------------ | ---- |
-| **PLAT.GEN.1** | Manifest schema 校验 + `promote --check` 漂移守卫接 CI               | Nx `sync:check`    | ⬜   |
+| **PLAT.GEN.1** | Manifest schema 校验 + `promote --check` 漂移守卫接 CI               | Nx `sync:check`    | ✅ 2026-07-12 |
 | **PLAT.GEN.2** | Day-2 部署自动化:Netlify site 创建/env/DNS 清单 + 图标生成参数化    | Backstage day-2    | ⬜   |
 | **PLAT.GEN.3** | 模板版本戳 + `update-life-os-app`(starter 演进回灌旧 app)           | Copier/Cruft       | ⬜   |
 | **PLAT.GEN.4** | 注册表反转:六 app 注册信息迁入各自 manifest,注册表变生成物         | spec-driven SSOT   | ⬜   |
 | **PLAT.GEN.5** | Day-2 能力模块:`add-capability` auth/supabase/portal-card 可组合接入 | Backstage golden path | ⬜ |
 
-### PLAT.GEN.1 — 校验与漂移守卫（~0.5d,先做）
+### PLAT.GEN.1 — 校验与漂移守卫 ✅ 2026-07-12
 
-- `app.manifest.json` JSON Schema(`packages/contracts` 或 `scripts/templates/`),
-  create/promote 入口校验,报错定位到字段。
-- `promote-life-os-app.mjs <id> --check`:dry-run 重算 16 个接线点,任一
-  注册表与 manifest 不一致即非零退出(改名/改端口/改文案后忘了重跑 promote
-  的场景)。
-- 全 app 扫描模式 `--check --all`(有 manifest 的 app 逐个验),挂进
-  `check:lifeos-boundaries` 或新 `npm run check:app-manifests`,CI `ci.yml`
-  build job 加一步。
-- 价值:注册表↔manifest 从"生成时一致"升级为"持续一致",为 GEN.4 反转铺路。
+已发货(`81a6dcba`):
+- `scripts/lib/app-manifest.mjs`:字段级校验(create/promote 共用,含
+  shellType/hex/端口/routes 等约束),报错定位到字段。
+- `promote-life-os-app.mjs` 重写为 **sync 语义**:接线点从 insert-once 升级
+  为 upsert — 改 manifest(端口/文案/production…)后重跑即同步注册表;
+  `--check` dry-run 重算 16 个接线点,drift/missing 非零退出;`--check --all`
+  扫描全部带 manifest 的 app。文件类产物(brands json/netlify.toml/spec)
+  只创建从不覆盖。
+- manifest 新增 `production`/`pwaTestEnabled`/`moreButton`/`moreClose`/
+  `authGate`,PWA 矩阵条目完全可派生。
+- `npm run check:app-manifests` 接入 CI `integration-smoke`。
+- 验证:demo app 篡改端口+文案+production → check 精准报 5 个漂移点 exit 1
+  → promote 再同步(5 更新/11 未变)→ check 绿;坏 hex 与端口撞 planner
+  均被拦;新端口全链路(preview/playwright 3/3)可用。
 
 ### PLAT.GEN.2 — 部署 day-2 自动化（~1d）
 

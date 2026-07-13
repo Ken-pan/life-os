@@ -26,7 +26,8 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `./scripts/supabase-sql.sh "<sql>"` / `-f <file.sql>`             | 远程 Supabase SQL（Management API；直连 5432 在本网络不可用）   |
 | `./scripts/deploy-all-netlify.sh`                                 | CLI prod deploy 六站（含 Portal、Home）                         |
 | `node scripts/create-life-os-app.mjs <id> [--name --port]`        | 从 `apps/starter` 模板生成新 app + AppManifest(PLAT.SHELL.5/6)|
-| `node scripts/promote-life-os-app.mjs <id>`                       | 按 `apps/<id>/app.manifest.json` 自动接线全部注册表(PLAT.SHELL.6,幂等) |
+| `node scripts/promote-life-os-app.mjs <id> [--check]`             | 按 `apps/<id>/app.manifest.json` 同步全部注册表(upsert,幂等);`--check` 只验不写 |
+| `npm run check:app-manifests`                                     | 全 app manifest↔注册表漂移守卫(PLAT.GEN.1,CI 已接)            |
 | `npm run pwa:build`                                               | 五端 production build（PWA 验收用）                             |
 | `npm run pwa:preview:{planner,fitness,music,finance,portal,home}` | 标准端口 preview（见 `apps.config.mjs`）                        |
 | `npm run test:pwa`                                                | 全 app Playwright PWA viewport（`PWA_APP=` 筛选）               |
