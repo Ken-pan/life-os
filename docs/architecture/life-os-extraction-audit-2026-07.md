@@ -62,11 +62,31 @@ music `normalizeSettings`)——是必要领域代码,不强改 persisted-state 
 planner/finance `localCache` 已是共享封装;music `settings.crossfade` 的
 deprecated 字段是数据兼容,保留。
 
+## AppBar 骨架组件(PLAT.CORE.6,2026-07-12)✅
+
+**产物:** `@life-os/platform-web/svelte/app-bar` → `LifeOsAppBar`,拥有
+`header.appbar > .appbar-inner > .appbar-leading / .appbar-titles /
+.appbar-trailing` 骨架。Props:`title / subtitle / backHref / backLabel /
+onBack(history 返回按钮)/ hidden / barClass`;snippets:`leading`(无返回
+态的品牌位)、`titles`(整体替换默认标题块,承载 Music `.appbar-center`、
+Planner 清单菜单等 app 自有中部)、`trailing`。默认返回链接(chevron + label)
+组件内置;样式仍全部归 theme `shell.css`,组件遵循 app-shell 同款
+「generic、无 app ID」约束(见 `packages/platform-web/src/svelte/app-bar/README.md`)。
+
+**迁移:** fitness / starter / music / planner / home 的 `AppBar.svelte` 与
+portal 的 `PortalAppBar.svelte` 全部改为薄封装,只注入 AppBrand /
+ReportBugButton / i18n / 领域动作。顺带统一:home 返回链接补上 chevron 图标
+(其 iconRegistry 本已注册 `chevron-left`)。
+
+**验证:** 7×check 0 错误 · 9×build 全过 · fitness 7/7 · starter 3/3 ·
+music 6/6 · home 7/7 spec;fitness(含 `/auth` 返回态)/ music / planner /
+home / portal dev 实测,appbar DOM 结构与修饰类(`appbar--back/--tools/
+--list-menu`)逐一核对,无 console 错误。
+
 ## 剩余候选(未做)
 
 | 候选 | 证据 | 备注 |
 | --- | --- | --- |
-| **AppBar 骨架组件** | 5 app 手写 `AppBar.svelte`,`appbar-inner/leading/titles/trailing` + AppBrand + ReportBugButton 结构相同 | platform-web `LifeOsAppBar`(snippet 化);逐 app 迁移,适合单独 session |
 | **复杂 SW 收编** | fitness(215)/ planner(230)/ music(384)各有领域缓存策略 | 评估能否「basic 模板 + 策略插槽」;需逐 app 离线 QA |
 | **app 侧 persisted-state 反向对齐** | fitness/music/home 的 load/save 头部 | 顺手活,随下次触碰各 state 文件时做 |
 | **全局错误捕获**(业界标配缺口)| 各 app 无 `unhandledrejection`/`window.onerror` 统一处理(仅 music player 内部有)| 可选:platform-web `bindGlobalErrorReporting`(console + toast);对单用户 QA 有用,无痛点证据前不强推 |

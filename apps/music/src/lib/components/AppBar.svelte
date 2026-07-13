@@ -1,5 +1,6 @@
 <script>
   import { page } from '$app/state';
+  import LifeOsAppBar from '@life-os/platform-web/svelte/app-bar';
   import AppBrand from '@life-os/platform-web/svelte/brand';
   import Icon from '@life-os/platform-web/svelte/icon';
   import { t } from '$lib/i18n/index.js';
@@ -21,68 +22,62 @@
     searchRef = $bindable(null)
   } = $props();
 
-  const resolvedBackLabel = $derived(backLabel ?? t('common.back'));
-  const hasBack = $derived(Boolean(backHref));
   const actions = $derived(getPageActions());
   const hasTools = $derived(actions.length > 0);
   const onSearchPage = $derived(page.url.pathname === '/search');
   const showMobileTitle = $derived(Boolean(title) && !onSearchPage);
 </script>
 
-{#if !hidden}
-  <header class="appbar music-appbar" class:appbar--back={hasBack} class:appbar--tools={hasTools}>
-    <div class="appbar-inner">
-      <div class="appbar-leading">
-        {#if backHref}
-          <a class="appbar-back" href={backHref}>
-            <Icon name="chevron-left" size={16} strokeWidth={2.5} />
-            <span class="appbar-back-label">{resolvedBackLabel}</span>
-          </a>
-        {:else}
-          <AppBrand appId="music" variant="appbar" ariaLabel={t('common.brand')} />
-        {/if}
-      </div>
+<LifeOsAppBar
+  {backHref}
+  backLabel={backLabel ?? t('common.back')}
+  {hidden}
+  barClass={hasTools ? 'music-appbar appbar--tools' : 'music-appbar'}
+>
+  {#snippet leading()}
+    <AppBrand appId="music" variant="appbar" ariaLabel={t('common.brand')} />
+  {/snippet}
 
-      <div class="appbar-center">
-        <div class="appbar-search-desktop">
-          <GlobalSearch bind:inputRef={searchRef} />
+  {#snippet titles()}
+    <div class="appbar-center">
+      <div class="appbar-search-desktop">
+        <GlobalSearch bind:inputRef={searchRef} />
+      </div>
+      {#if showMobileTitle}
+        <div class="appbar-titles appbar-titles--mobile">
+          <h1 class="page-title">{title}</h1>
+          {#if subtitle}<p class="page-sub">{subtitle}</p>{/if}
         </div>
-        {#if showMobileTitle}
-          <div class="appbar-titles appbar-titles--mobile">
-            <h1 class="page-title">{title}</h1>
-            {#if subtitle}<p class="page-sub">{subtitle}</p>{/if}
-          </div>
-        {/if}
-      </div>
-
-      <div class="appbar-trailing">
-        {#if !onSearchPage}
-          <a class="appbar-search-mobile" href="/search" aria-label={t('search.title')}>
-            <Icon name="search" size={20} strokeWidth={1.75} />
-          </a>
-        {/if}
-        <ReportBugButton app="music" {supabase} user={auth.user} {toast} />
-        {#each actions as action, i (action.label + i)}
-          {#if action.href}
-            <a
-              class={action.variant === 'primary' ? 'btn-primary appbar-action' : action.variant === 'ghost' ? 'btn-ghost appbar-action' : 'btn-secondary appbar-action'}
-              href={action.href}
-            >
-              {#if action.icon}<Icon name={action.icon} size={16} />{/if}
-              <span class="appbar-action-label">{action.label}</span>
-            </a>
-          {:else if action.onClick}
-            <button
-              type="button"
-              class={action.variant === 'primary' ? 'btn-primary appbar-action' : action.variant === 'ghost' ? 'btn-ghost appbar-action' : 'btn-secondary appbar-action'}
-              onclick={action.onClick}
-            >
-              {#if action.icon}<Icon name={action.icon} size={16} />{/if}
-              <span class="appbar-action-label">{action.label}</span>
-            </button>
-          {/if}
-        {/each}
-      </div>
+      {/if}
     </div>
-  </header>
-{/if}
+  {/snippet}
+
+  {#snippet trailing()}
+    {#if !onSearchPage}
+      <a class="appbar-search-mobile" href="/search" aria-label={t('search.title')}>
+        <Icon name="search" size={20} strokeWidth={1.75} />
+      </a>
+    {/if}
+    <ReportBugButton app="music" {supabase} user={auth.user} {toast} />
+    {#each actions as action, i (action.label + i)}
+      {#if action.href}
+        <a
+          class={action.variant === 'primary' ? 'btn-primary appbar-action' : action.variant === 'ghost' ? 'btn-ghost appbar-action' : 'btn-secondary appbar-action'}
+          href={action.href}
+        >
+          {#if action.icon}<Icon name={action.icon} size={16} />{/if}
+          <span class="appbar-action-label">{action.label}</span>
+        </a>
+      {:else if action.onClick}
+        <button
+          type="button"
+          class={action.variant === 'primary' ? 'btn-primary appbar-action' : action.variant === 'ghost' ? 'btn-ghost appbar-action' : 'btn-secondary appbar-action'}
+          onclick={action.onClick}
+        >
+          {#if action.icon}<Icon name={action.icon} size={16} />{/if}
+          <span class="appbar-action-label">{action.label}</span>
+        </button>
+      {/if}
+    {/each}
+  {/snippet}
+</LifeOsAppBar>

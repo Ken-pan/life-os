@@ -55,6 +55,12 @@
       "svelte": "./src/svelte/app-shell/index.js",
       "default": "./src/svelte/app-shell/index.js"
     },
+    "./svelte/app-bar": {
+      "types": "./src/svelte/app-bar/index.d.ts",
+      "import": "./src/svelte/app-bar/index.js",
+      "svelte": "./src/svelte/app-bar/index.js",
+      "default": "./src/svelte/app-bar/index.js"
+    },
     "./svelte/settings/row": {
       "svelte": "./src/svelte/settings/SettingsRow.svelte",
       "default": "./src/svelte/settings/SettingsRow.svelte"

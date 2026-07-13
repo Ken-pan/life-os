@@ -1,6 +1,7 @@
 <script>
   import { Bell, Ellipsis, LogOut, Monitor, Moon, Sun } from '@lucide/svelte'
   import { lockScroll, unlockScroll } from '@life-os/theme'
+  import LifeOsAppBar from '@life-os/platform-web/svelte/app-bar'
   import AppBrand from '@life-os/platform-web/svelte/brand'
   import ReportBugButton from '@life-os/platform-web/svelte/feedback'
   import { supabase } from '$lib/supabase.js'
@@ -59,12 +60,11 @@
   })
 </script>
 
-<header class="appbar portal-appbar">
-  <div class="appbar-inner">
-    <div class="appbar-leading">
-      <AppBrand appId="portal" variant="appbar" ariaLabel="PORTAL.OS" />
-    </div>
-    <div class="appbar-trailing">
+<LifeOsAppBar barClass="portal-appbar">
+  {#snippet leading()}
+    <AppBrand appId="portal" variant="appbar" ariaLabel="PORTAL.OS" />
+  {/snippet}
+  {#snippet trailing()}
       {#if pendingBadge != null}
         <a
           href={plannerInboxUrl}
@@ -138,9 +138,8 @@
       >
         <Ellipsis size={18} strokeWidth={2} aria-hidden="true" />
       </button>
-    </div>
-  </div>
-</header>
+  {/snippet}
+</LifeOsAppBar>
 
 <PortalAppBarMoreSheet
   open={moreOpen}
