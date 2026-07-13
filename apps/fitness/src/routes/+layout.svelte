@@ -17,6 +17,7 @@
   import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
   import PortraitGate from '@life-os/platform-web/svelte/portrait-gate'
   import DocumentHead from '@life-os/platform-web/svelte/head'
+  import LifeOsAppShell from '@life-os/platform-web/svelte/app-shell'
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { ICONS } from '$lib/iconRegistry.js'
   import { subscribeSyncError } from '$lib/syncNotify.js'
@@ -161,26 +162,21 @@
 
 <DocumentHead appId="fitness" {pageTitle} locale={documentLocale} />
 
-<PortraitGate
-  enabled={S.settings.lockPortraitOnPhone !== false}
-  title={t('settings.rotatePortrait')}
-  hint={t('settings.rotatePortraitHint')}
-  ariaLabel={t('settings.rotatePortrait')}
-/>
+<LifeOsAppShell
+  navigationKey={page.url.pathname}
+  focusOnNavigate="main"
+  skipLinkLabel={t('common.skipToContent')}
+  testIdPrefix="fitness-shell"
+>
+  {#snippet navigation(projection)}
+    {#if projection === 'desktop'}
+      <SideNav />
+    {:else}
+      <BottomNav />
+    {/if}
+  {/snippet}
 
-<a class="skip-link" href="#main-content">{t('common.skipToContent')}</a>
-
-<div class="app-shell">
-  <div class="safari-chrome-tint-top" aria-hidden="true"></div>
-  <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
-  <SyncErrorBanner
-    subscribe={subscribeSyncError}
-    formatMessage={(reason) => t('sync.banner', { reason })}
-    dismissLabel={t('common.close')}
-  />
-  <SideNav />
-
-  <div class="main-wrap" data-mobile-chrome="tabbar">
+  {#snippet header()}
     <AppBar
       title={appBarTitle}
       subtitle={appBarSubtitle}
@@ -189,20 +185,33 @@
       backLabel={appBarBack?.label}
       hidden={appBarHidden}
     />
+  {/snippet}
 
-    <main id="main-content">
-      {@render children()}
-    </main>
-  </div>
-</div>
+  {#snippet main()}
+    {@render children()}
+  {/snippet}
 
-<TimerWidget />
-<div class="bottom-shell">
-  <BottomNav />
-</div>
-<WeightModal />
-<SetLogSheet />
-<SkipModal />
-<KnowledgeSheet />
-<FitnessToolSheet />
-<Toast />
+  {#snippet persistentOverlay()}
+    <TimerWidget />
+  {/snippet}
+
+  {#snippet transientOverlay()}
+    <SyncErrorBanner
+      subscribe={subscribeSyncError}
+      formatMessage={(reason) => t('sync.banner', { reason })}
+      dismissLabel={t('common.close')}
+    />
+    <PortraitGate
+      enabled={S.settings.lockPortraitOnPhone !== false}
+      title={t('settings.rotatePortrait')}
+      hint={t('settings.rotatePortraitHint')}
+      ariaLabel={t('settings.rotatePortrait')}
+    />
+    <WeightModal />
+    <SetLogSheet />
+    <SkipModal />
+    <KnowledgeSheet />
+    <FitnessToolSheet />
+    <Toast />
+  {/snippet}
+</LifeOsAppShell>
