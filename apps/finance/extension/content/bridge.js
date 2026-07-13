@@ -26,6 +26,7 @@
   let delivering = false;
   let retryTimer = null;
   let appReady = false;
+  const pendingOpIds = [];
 
   // 扩展重载后，残留在页面里的旧 content script 会失去 chrome.runtime（孤儿脚本）。
   // 所有与 background 的通信都必须先检查，否则页面消息一到就抛 TypeError。
@@ -169,7 +170,8 @@
 
   function onSyncResult(result) {
     if (!result || typeof result !== "object") return;
-    void sendToBackground({ type: "FOS_SYNC_RESULT", result });
+    const opId = pendingOpIds.shift();
+    void sendToBackground({ type: "FOS_SYNC_RESULT", result, operationId: opId });
   }
 
   window.addEventListener("message", (e) => {
@@ -195,6 +197,7 @@
       return;
     }
     if (msg?.type === "FOS_FORCE_DELIVER") {
+      if (msg.operationId) pendingOpIds.push(msg.operationId);
       requestSnapshotNow();
       void deliver();
     }

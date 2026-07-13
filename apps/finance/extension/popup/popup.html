@@ -536,7 +536,7 @@
         <button id="release-inflight" class="btn ghost" style="display:none">
           重置投递中并重试
         </button>
-        <div id="sync-health" class="sync-health ok">等待 Finance OS 页面响应…</div>
+        <div id="sync-health" class="sync-health ok" aria-live="polite">等待 Finance OS 页面响应…</div>
       </section>
       <section>
         <h2>主动抓取</h2>
@@ -570,6 +570,7 @@
       扩展 bridge 才能把数据写入。改完扩展后请「重新加载扩展」并刷新 Finance OS 标签页。
     </footer>
     <script src="debugLog.js"></script>
+    <script src="syncStateLogic.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>
