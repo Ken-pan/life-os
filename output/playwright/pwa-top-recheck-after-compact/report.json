@@ -1,0 +1,180 @@
+[
+  {
+    "app": "planner",
+    "route": "today",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/planner-today.png",
+    "metrics": {
+      "standalone": true,
+      "safeTop": "59px",
+      "appbar": null,
+      "inner": null,
+      "wrap": null,
+      "firstVisible": []
+    }
+  },
+  {
+    "app": "planner",
+    "route": "settings",
+    "path": "/settings",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5188/settings?pwa_sim=1&v=1783662481933\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5188/settings?pwa_sim=1&v=1783662481933\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/planner-settings.png",
+    "metrics": {}
+  },
+  {
+    "app": "planner",
+    "route": "calendar",
+    "path": "/calendar",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5188/calendar?pwa_sim=1&v=1783662481937\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5188/calendar?pwa_sim=1&v=1783662481937\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/planner-calendar.png",
+    "metrics": {}
+  },
+  {
+    "app": "fitness",
+    "route": "today",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/fitness-today.png",
+    "metrics": {
+      "standalone": true,
+      "safeTop": "59px",
+      "appbar": null,
+      "inner": null,
+      "wrap": null,
+      "firstVisible": []
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "program",
+    "path": "/program",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/program?pwa_sim=1&v=1783662483668\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4173/program?pwa_sim=1&v=1783662483668\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/fitness-program.png",
+    "metrics": {}
+  },
+  {
+    "app": "fitness",
+    "route": "discover",
+    "path": "/discover",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/discover?pwa_sim=1&v=1783662483670\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4173/discover?pwa_sim=1&v=1783662483670\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/fitness-discover.png",
+    "metrics": {}
+  },
+  {
+    "app": "fitness",
+    "route": "settings",
+    "path": "/settings",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:4173/settings?pwa_sim=1&v=1783662483700\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:4173/settings?pwa_sim=1&v=1783662483700\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/fitness-settings.png",
+    "metrics": {}
+  },
+  {
+    "app": "music",
+    "route": "home",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/music-home.png",
+    "metrics": {
+      "standalone": true,
+      "safeTop": "59px",
+      "appbar": null,
+      "inner": null,
+      "wrap": null,
+      "firstVisible": []
+    }
+  },
+  {
+    "app": "music",
+    "route": "library",
+    "path": "/library",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5191/library?pwa_sim=1&v=1783662485333\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5191/library?pwa_sim=1&v=1783662485333\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/music-library.png",
+    "metrics": {}
+  },
+  {
+    "app": "music",
+    "route": "settings",
+    "path": "/settings",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5191/settings?pwa_sim=1&v=1783662485336\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5191/settings?pwa_sim=1&v=1783662485336\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/music-settings.png",
+    "metrics": {}
+  },
+  {
+    "app": "finance",
+    "route": "home",
+    "path": "/home/today",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/finance-home.png",
+    "metrics": {
+      "standalone": true,
+      "safeTop": "59px",
+      "appbar": null,
+      "inner": null,
+      "wrap": null,
+      "firstVisible": []
+    }
+  },
+  {
+    "app": "finance",
+    "route": "settings",
+    "path": "/settings/app",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5180/settings/app?pwa_sim=1&v=1783662487009\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5180/settings/app?pwa_sim=1&v=1783662487009\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/finance-settings.png",
+    "metrics": {}
+  },
+  {
+    "app": "portal",
+    "route": "home",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/portal-home.png",
+    "metrics": {
+      "standalone": true,
+      "safeTop": "59px",
+      "appbar": null,
+      "inner": null,
+      "wrap": null,
+      "firstVisible": []
+    }
+  },
+  {
+    "app": "home",
+    "route": "overview",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/home-overview.png",
+    "metrics": {
+      "standalone": true,
+      "safeTop": "59px",
+      "appbar": null,
+      "inner": null,
+      "wrap": null,
+      "firstVisible": []
+    }
+  },
+  {
+    "app": "home",
+    "route": "plan",
+    "path": "/plan",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5196/plan?pwa_sim=1&v=1783662490239\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5196/plan?pwa_sim=1&v=1783662490239\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/home-plan.png",
+    "metrics": {}
+  },
+  {
+    "app": "home",
+    "route": "storage",
+    "path": "/storage",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5196/storage?pwa_sim=1&v=1783662490241\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5196/storage?pwa_sim=1&v=1783662490241\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/home-storage.png",
+    "metrics": {}
+  },
+  {
+    "app": "home",
+    "route": "settings",
+    "path": "/settings",
+    "status": "error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5196/settings?pwa_sim=1&v=1783662490270\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5196/settings?pwa_sim=1&v=1783662490270\", waiting until \"networkidle\"\u001b[22m\n",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck-after-compact/home-settings.png",
+    "metrics": {}
+  }
+]

@@ -1,0 +1,1465 @@
+[
+  {
+    "app": "planner",
+    "route": "/",
+    "name": "today",
+    "url": "http://127.0.0.1:5188/",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/planner-today.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 104,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 104,
+          "height": 495.3,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar.appbar--tools.appbar--list-menu",
+          "top": 0,
+          "text": "今天 阳光清单，轻松规划"
+        },
+        {
+          "selector": "button.appbar-menu",
+          "top": 16,
+          "text": ""
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 16,
+          "text": ""
+        },
+        {
+          "selector": "a.appbar-settings",
+          "top": 16,
+          "text": ""
+        },
+        {
+          "selector": "div.appbar-titles",
+          "top": 72,
+          "text": "今天 阳光清单，轻松规划"
+        },
+        {
+          "selector": "h1.page-title",
+          "top": 72,
+          "text": "今天"
+        },
+        {
+          "selector": "p.insight-banner-title",
+          "top": 123,
+          "text": "开始规划吧"
+        },
+        {
+          "selector": "button.insight-banner-dismiss",
+          "top": 123,
+          "text": ""
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "planner",
+    "route": "/settings",
+    "name": "settings",
+    "url": "http://127.0.0.1:5188/settings",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/planner-settings.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 1810.6,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 69,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 69,
+          "height": 1741.6,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar.appbar--back",
+          "top": 0,
+          "text": "返回 设置"
+        },
+        {
+          "selector": "button.appbar-back",
+          "top": 16,
+          "text": "返回"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 16,
+          "text": ""
+        },
+        {
+          "selector": "div.appbar-titles",
+          "top": 26.5,
+          "text": "设置"
+        },
+        {
+          "selector": "h1.page-title",
+          "top": 26.5,
+          "text": "设置"
+        },
+        {
+          "selector": "h3.block-title.sg-title",
+          "top": 94,
+          "text": "外观"
+        },
+        {
+          "selector": "button.on.active",
+          "top": 206.6,
+          "text": "中文"
+        },
+        {
+          "selector": "button",
+          "top": 206.6,
+          "text": "English"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "planner",
+    "route": "/calendar",
+    "name": "calendar",
+    "url": "http://127.0.0.1:5188/calendar",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/planner-calendar.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 1400.1,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 104,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 104,
+          "height": 1296.1,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "button.day-timeline-slot-hitbox",
+          "top": -563.1,
+          "text": ""
+        },
+        {
+          "selector": "header.appbar.appbar--tools",
+          "top": 0,
+          "text": "PLANNEROS  日历"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 16,
+          "text": ""
+        },
+        {
+          "selector": "a.appbar-settings",
+          "top": 16,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 22.9,
+          "text": "PLANNEROS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 22.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 22.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 23.3,
+          "text": "PLANNEROS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "/",
+    "name": "today",
+    "url": "http://127.0.0.1:4173/",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/fitness-today.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 2690.3,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 2452.3,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        ".main-wrap": {
+          "top": 0,
+          "height": 2690.3,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 2590.3,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar",
+          "top": 0,
+          "text": "FITNESSOS  今日    今天 · 胸"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-dark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 21.3,
+          "text": "FITNESS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "/program",
+    "name": "program",
+    "url": "http://127.0.0.1:4173/program",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/fitness-program.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 2383.2,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 2145.2,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        ".main-wrap": {
+          "top": 0,
+          "height": 2383.2,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 2283.2,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar",
+          "top": 0,
+          "text": "FITNESSOS  训练计划 胸 · 背 · 腿 · 臂 循环"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-dark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 21.3,
+          "text": "FITNESS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "/discover",
+    "name": "discover",
+    "url": "http://127.0.0.1:4173/discover",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/fitness-discover.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 549.1,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        ".main-wrap": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 744,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar",
+          "top": 0,
+          "text": "FITNESSOS  发现"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-dark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 21.3,
+          "text": "FITNESS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "/settings",
+    "name": "settings",
+    "url": "http://127.0.0.1:4173/settings",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/fitness-settings.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 2690.6,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 2452.6,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        ".main-wrap": {
+          "top": 0,
+          "height": 2690.6,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 2590.6,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar",
+          "top": 0,
+          "text": "FITNESSOS  设置"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-dark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 21.3,
+          "text": "FITNESS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "music",
+    "route": "/",
+    "name": "home",
+    "url": "http://127.0.0.1:5191/",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/music-home.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 478,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        ".main-wrap": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 744,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar.music-appbar",
+          "top": 0,
+          "text": "MUSICOS    ⌘K  此刻"
+        },
+        {
+          "selector": "a.appbar-search-mobile",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "MUSICOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "MUSICOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "MUSICOS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "music",
+    "route": "/library",
+    "name": "library",
+    "url": "http://127.0.0.1:5191/library",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/music-library.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 478,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        ".main-wrap": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 744,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar.music-appbar",
+          "top": 0,
+          "text": "MUSICOS    ⌘K  资料库"
+        },
+        {
+          "selector": "a.appbar-search-mobile",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "MUSICOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "MUSICOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "MUSICOS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "music",
+    "route": "/settings",
+    "name": "settings",
+    "url": "http://127.0.0.1:5191/settings",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/music-settings.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 3124.2,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 3024.2,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        ".main-wrap": {
+          "top": 0,
+          "height": 3124.2,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 3024.2,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar.music-appbar",
+          "top": 0,
+          "text": "MUSICOS    ⌘K  设置"
+        },
+        {
+          "selector": "a.appbar-search-mobile",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "MUSICOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "MUSICOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "MUSICOS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "finance",
+    "route": "/home/today",
+    "name": "home",
+    "url": "http://127.0.0.1:5180/home/today",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/finance-home.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".auth-screen": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "24px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "div.brand.auth-card__brand",
+          "top": 280,
+          "text": "FinanceOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 280,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 280,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 340,
+          "text": "FinanceOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 342,
+          "text": "FinanceOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 342,
+          "text": "Finance"
+        },
+        {
+          "selector": "span.brand-name-accent",
+          "top": 342,
+          "text": "OS"
+        },
+        {
+          "selector": "input.input",
+          "top": 408,
+          "text": ""
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "finance",
+    "route": "/settings/app",
+    "name": "settings",
+    "url": "http://127.0.0.1:5180/settings/app",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/finance-settings.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".auth-screen": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "24px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "div.brand.auth-card__brand",
+          "top": 280,
+          "text": "FinanceOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 280,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 280,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 340,
+          "text": "FinanceOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 342,
+          "text": "FinanceOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 342,
+          "text": "Finance"
+        },
+        {
+          "selector": "span.brand-name-accent",
+          "top": 342,
+          "text": "OS"
+        },
+        {
+          "selector": "input.input",
+          "top": 408,
+          "text": ""
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "portal",
+    "route": "/",
+    "name": "home",
+    "url": "http://127.0.0.1:5195/",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/portal-home.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 888,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "relative",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 73,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 97,
+          "height": 629,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 97,
+          "height": 629,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar.portal-appbar",
+          "top": 0,
+          "text": "PORTALOS     跟随系统"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "button.btn-secondary.portal-appbar-more-btn",
+          "top": 14.8,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "PORTALOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "PORTALOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "PORTALOS"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "home",
+    "route": "/",
+    "name": "overview",
+    "url": "http://127.0.0.1:5196/",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/home-overview.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 1715.8,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 1477.8,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 1477.8,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar",
+          "top": 0,
+          "text": "HOMEOS  空间概览 我的户型 · 储藏审计"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 21.3,
+          "text": "HOME"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "home",
+    "route": "/plan",
+    "name": "plan",
+    "url": "http://127.0.0.1:5196/plan",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/home-plan.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 844,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 68,
+          "paddingTop": "6px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 0,
+          "height": 706,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 0,
+          "height": 706,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "div.safari-chrome-tint-top",
+          "top": 0,
+          "text": ""
+        },
+        {
+          "selector": "main.wrap.plan-route",
+          "top": 0,
+          "text": "浏览 编辑   ?      − 94% +  看全图 铺满宽 双指捏合缩放 · 拖拽平移 · Ta"
+        },
+        {
+          "selector": "header.plan-top.svelte-16u7dbs",
+          "top": 0,
+          "text": "浏览 编辑   ?"
+        },
+        {
+          "selector": "div.plan-top-primary.svelte-16u7dbs",
+          "top": 7,
+          "text": "浏览 编辑   ?"
+        },
+        {
+          "selector": "button.mode-btn.svelte-16u7dbs.active",
+          "top": 12,
+          "text": "浏览"
+        },
+        {
+          "selector": "button.mode-btn.svelte-16u7dbs",
+          "top": 12,
+          "text": "编辑"
+        },
+        {
+          "selector": "button.help-btn.svelte-16u7dbs",
+          "top": 12,
+          "text": "?"
+        },
+        {
+          "selector": "button.plan-tool.svelte-vkjz6v",
+          "top": 89,
+          "text": "−"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "home",
+    "route": "/storage",
+    "name": "storage",
+    "url": "http://127.0.0.1:5196/storage",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/home-storage.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 2631.3,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 2393.3,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 2393.3,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar",
+          "top": 0,
+          "text": "HOMEOS  储藏审计 S1–S8 物品清单"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 21.3,
+          "text": "HOME"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  },
+  {
+    "app": "home",
+    "route": "/settings",
+    "name": "settings",
+    "url": "http://127.0.0.1:5196/settings",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/mobile-top-padding/home-settings.png",
+    "status": "ok",
+    "metrics": {
+      "data": {
+        ".app-shell": {
+          "top": 0,
+          "height": 2368.4,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "header": {
+          "top": 0,
+          "height": 100,
+          "paddingTop": "0px",
+          "marginTop": "0px",
+          "position": "sticky",
+          "overflowY": "visible"
+        },
+        ".wrap": {
+          "top": 100,
+          "height": 2130.4,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        },
+        "main": {
+          "top": 100,
+          "height": 2130.4,
+          "paddingTop": "8px",
+          "marginTop": "0px",
+          "position": "static",
+          "overflowY": "visible"
+        }
+      },
+      "firstVisible": [
+        {
+          "selector": "header.appbar",
+          "top": 0,
+          "text": "HOMEOS  设置"
+        },
+        {
+          "selector": "button.report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 12,
+          "text": ""
+        },
+        {
+          "selector": "div.brand.appbar-brand",
+          "top": 18.9,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.brand-icon-pair.appbar-brand-mark",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "img.brand-icon-light",
+          "top": 18.9,
+          "text": ""
+        },
+        {
+          "selector": "span.appbar-brand-copy",
+          "top": 19.3,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.appbar-brand-name",
+          "top": 21.3,
+          "text": "HOMEOS"
+        },
+        {
+          "selector": "span.brand-name-base",
+          "top": 21.3,
+          "text": "HOME"
+        }
+      ],
+      "safeAreaTop": null
+    }
+  }
+]

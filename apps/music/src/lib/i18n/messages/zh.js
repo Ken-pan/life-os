@@ -20,6 +20,7 @@ export default {
     save: '保存',
     cancel: '取消',
     close: '关闭',
+    skipToContent: '跳到主要内容',
     delete: '删除',
     sort: '排序',
     filter: '筛选',

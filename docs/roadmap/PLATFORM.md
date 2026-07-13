@@ -60,12 +60,12 @@ generator**(一键生成新的 Life OS app)。
 | **PLAT.SHELL.1**   | `PLAT-P0-1` | `LifeOsAppShell` 提取,Fitness 试点         | ✅ [`架构合同`](../architecture/life-os-app-shell.md)                                            |
 | **PLAT.SHELL.2**   | `PLAT-P0-2` | Home 采用验证(`locked` 模式 + `mainClass`)| ✅ **39/40** [`验证记录`](../architecture/life-os-app-shell-home-validation.md)                  |
 | **PLAT.SHELL.3**   | `PLAT-P0-3` | **合同冻结 v1** + 迁移指南                  | ✅ 2026-07-12 [`迁移指南`](../architecture/life-os-app-shell-migration-guide.md)                 |
-| **PLAT.SHELL.4**   | —           | 第三 app 采用冻结合同(候选:Planner/Music)| ⬜ 下一步;按迁移指南执行,补齐 stability gate 第 8 维                                           |
-| **PLAT.SHELL.5**   | —           | Starter template(新 app 骨架:shell + auth + i18n + theme + PWA + Netlify) | ⬜ 依赖 SHELL.4                                                    |
+| **PLAT.SHELL.4**   | —           | 第三 app 采用:Music(v1.1 增量 `shellClass`/`shellDataset`)| ✅ **39/40** 2026-07-12 [`验证记录`](../architecture/life-os-app-shell-music-validation.md) |
+| **PLAT.SHELL.5**   | —           | Starter template(新 app 骨架:shell + auth + i18n + theme + PWA + Netlify) | ⬜ 下一步;基于 v1.1 冻结面                                        |
 | **PLAT.SHELL.6**   | —           | AppManifest + generator(声明式生成新 app) | ⬜ 依赖 SHELL.5                                                                                   |
 
-**边界:** SHELL.4 之前不得开始 template/manifest/generator(PLAT.SHELL.2
-验证文档的明确约束)。
+**SHELL.4 遗留:** Music 播放态(mini player 可见 / utility pane / 沉浸
+now-playing)的真机运行 QA 待导入曲库后人工验收一次。
 
 ---
 

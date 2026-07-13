@@ -42,14 +42,18 @@
   /* Span mode: desktop workspace width + 32px gutters (mobile keeps --page-gutter via layout.css) */
   .main-col[data-content-mode='span'],
   .main-wrap[data-content-mode='span'],
-  .life-os-page-workspace[data-content-mode='span'] {
+  .life-os-page-workspace[data-content-mode='span'],
+  /* AppShell apps set the mode on the shell root via shellDataset (v1.1) */
+  .app-shell[data-content-mode='span'] .main-wrap {
     --content-max: min(var(--content-span-max, var(--content-span)), var(--content-span));
     --content-inline-pad: var(--page-gutter-desktop);
   }
 
   /* Chrome inner shares the same frame as page body */
   :is(.main-col, .main-wrap, .life-os-page-workspace)[data-content-mode='span']> :is(.appbar, header.appbar) .appbar-inner,
-  :is(.main-col, .main-wrap)[data-content-mode='span']>.page-header {
+  :is(.main-col, .main-wrap)[data-content-mode='span']>.page-header,
+  .app-shell[data-content-mode='span'] .main-wrap :is(.appbar, header.appbar) .appbar-inner,
+  .app-shell[data-content-mode='span'] .main-wrap>.page-header {
     width: 100%;
     max-width: var(--content-max);
     margin-inline: auto;
@@ -78,7 +82,8 @@
   /* Layout-level shell: Home main.wrap, Finance .content, Fitness/Music #main-content > .wrap */
   .main-col[data-content-mode='span']>.wrap:not(.plan-route),
   .main-wrap[data-content-mode='span']>.content,
-  .main-wrap[data-content-mode='span']>#main-content>.wrap {
+  .main-wrap[data-content-mode='span']>#main-content>.wrap,
+  .app-shell[data-content-mode='span'] .main-wrap>#main-content>.wrap {
     width: 100%;
     max-width: var(--content-max);
     margin-inline: auto;

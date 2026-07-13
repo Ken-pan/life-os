@@ -21,6 +21,8 @@
    *   mainId?: string,
    *   mainLabel?: string,
    *   mainClass?: string,
+   *   shellClass?: string,
+   *   shellDataset?: Record<string, string | undefined>,
    *   skipLinkLabel?: string,
    *   testIdPrefix?: string
    * }}
@@ -38,9 +40,21 @@
     mainId = 'main-content',
     mainLabel,
     mainClass = '',
+    shellClass = '',
+    shellDataset = {},
     skipLinkLabel = 'Skip to content',
     testIdPrefix = 'life-os-app-shell',
   } = $props()
+
+  const shellDataAttributes = $derived.by(() => {
+    /** @type {Record<string, string>} */
+    const attributes = {}
+    for (const [key, value] of Object.entries(shellDataset)) {
+      if (value === undefined || value === null) continue
+      attributes[key.startsWith('data-') ? key : `data-${key}`] = value
+    }
+    return attributes
+  })
 
   let shellElement
   let mainElement
@@ -120,6 +134,16 @@
     })
     window.visualViewport?.addEventListener('resize', updatePersistentInset)
     window.addEventListener('resize', updatePersistentInset)
+    // Overlays that show/hide via transform/opacity transitions keep their
+    // size, so remeasure when their transitions/animations settle.
+    persistentOverlayElement.addEventListener(
+      'transitionend',
+      updatePersistentInset,
+    )
+    persistentOverlayElement.addEventListener(
+      'animationend',
+      updatePersistentInset,
+    )
     observeChildren()
 
     return () => {
@@ -127,6 +151,14 @@
       resizeObserver.disconnect()
       window.visualViewport?.removeEventListener('resize', updatePersistentInset)
       window.removeEventListener('resize', updatePersistentInset)
+      persistentOverlayElement.removeEventListener(
+        'transitionend',
+        updatePersistentInset,
+      )
+      persistentOverlayElement.removeEventListener(
+        'animationend',
+        updatePersistentInset,
+      )
     }
   })
 
@@ -176,9 +208,10 @@
 
 <div
   bind:this={shellElement}
-  class="life-os-app-shell app-shell"
+  class={`life-os-app-shell app-shell ${shellClass}`.trim()}
   data-scroll-mode={scrollMode}
   data-testid={testIdPrefix}
+  {...shellDataAttributes}
 >
   <div class="safari-chrome-tint-top" aria-hidden="true"></div>
   <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>

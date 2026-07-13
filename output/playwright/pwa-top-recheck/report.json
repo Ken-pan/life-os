@@ -1,0 +1,1598 @@
+[
+  {
+    "app": "planner",
+    "route": "today",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/planner-today.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 124,
+        "height": 124,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "PLANNEROS 今天"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 123,
+        "height": 123,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "PLANNEROS 今天"
+      },
+      "wrap": {
+        "top": 124,
+        "bottom": 619.3,
+        "height": 495.3,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "添加 开始规划吧 添加任务并设置截止日期，Planner 会帮你提醒与整理。 添加第一个任务 暂无任务"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar.appbar--tools.appbar--list-menu",
+          "top": 0,
+          "height": 124,
+          "text": "PLANNEROS 今天"
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 59,
+          "height": 44,
+          "text": "PLANNEROS 今天"
+        },
+        {
+          "tag": "button",
+          "cls": "appbar-menu",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "appbar-settings",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 69,
+          "height": 24,
+          "text": "PLANNEROS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title.appbar-inline-title",
+          "top": 69.5,
+          "height": 23,
+          "text": "今天"
+        },
+        {
+          "tag": "button",
+          "cls": "insight-banner-dismiss",
+          "top": 143,
+          "height": 32,
+          "text": ""
+        }
+      ]
+    }
+  },
+  {
+    "app": "planner",
+    "route": "settings",
+    "path": "/settings",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/planner-settings.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 112,
+        "height": 112,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "返回 设置"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 111,
+        "height": 111,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "返回 设置"
+      },
+      "wrap": {
+        "top": 112,
+        "bottom": 1853.6,
+        "height": 1741.6,
+        "paddingTop": "8px",
+        "display": "grid",
+        "position": "static",
+        "text": "外观 语言 切换界面显示语言 中文English 明暗模式 选「跟随系统」时，会跟随设备的浅色 / 深色模式 浅色深色跟随系统 手机锁定竖屏 在手机上横屏时提示"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar.appbar--back",
+          "top": 0,
+          "height": 112,
+          "text": "返回 设置"
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 59,
+          "height": 44,
+          "text": "返回"
+        },
+        {
+          "tag": "button",
+          "cls": "appbar-back",
+          "top": 59,
+          "height": 44,
+          "text": "返回"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 69.5,
+          "height": 23,
+          "text": "设置"
+        },
+        {
+          "tag": "button",
+          "cls": "on.active",
+          "top": 249.6,
+          "height": 44,
+          "text": "中文"
+        },
+        {
+          "tag": "button",
+          "cls": "",
+          "top": 249.6,
+          "height": 44,
+          "text": "English"
+        },
+        {
+          "tag": "button",
+          "cls": "",
+          "top": 379.7,
+          "height": 44,
+          "text": "浅色"
+        }
+      ]
+    }
+  },
+  {
+    "app": "planner",
+    "route": "calendar",
+    "path": "/calendar",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/planner-calendar.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "PLANNEROS 日历"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "PLANNEROS 日历"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 1443.1,
+        "height": 1296.1,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "‹ 今天 › 6日周一7日周二8日周三9日周四10日周五11日周六12日周日 9日周四 有 0 个安排，节奏很轻。 9日周四 暂无任务 0 已安排 0 分钟 计"
+      },
+      "firstVisible": [
+        {
+          "tag": "button",
+          "cls": "day-timeline-slot-hitbox",
+          "top": -520.1,
+          "height": 1560,
+          "text": ""
+        },
+        {
+          "tag": "header",
+          "cls": "appbar.appbar--tools",
+          "top": 0,
+          "height": 147,
+          "text": "PLANNEROS 日历"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "appbar-settings",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "PLANNEROS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "PLANNEROS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "日历"
+        },
+        {
+          "tag": "button",
+          "cls": "calendar-week-nav-btn",
+          "top": 155,
+          "height": 48,
+          "text": "‹"
+        }
+      ]
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "today",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/fitness-today.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "FITNESSOS 今日 今天 · 胸"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "FITNESSOS 今日 今天 · 胸"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 2599.3,
+        "height": 2452.3,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "7月9日星期四· 胸 · 背 · 腿 · 臂 循环 今日推荐 胸 CHEST 胸 · 前束 · 三头协同 上次 暂无记录 · 本周 0 次 · 累计 0 次 ·"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar",
+          "top": 0,
+          "height": 147,
+          "text": "FITNESSOS 今日 今天 · 胸"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "FITNESSOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "今日"
+        },
+        {
+          "tag": "h1",
+          "cls": "hero-title",
+          "top": 205.7,
+          "height": 33.1,
+          "text": "胸 CHEST"
+        },
+        {
+          "tag": "a",
+          "cls": "btn-link",
+          "top": 280.5,
+          "height": 44,
+          "text": "详细统计"
+        },
+        {
+          "tag": "button",
+          "cls": "knowledge-trigger.",
+          "top": 628.5,
+          "height": 18,
+          "text": ""
+        }
+      ]
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "program",
+    "path": "/program",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/fitness-program.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "FITNESSOS 训练计划 胸 · 背 · 腿 · 臂 循环"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "FITNESSOS 训练计划 胸 · 背 · 腿 · 臂 循环"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 2292.2,
+        "height": 2145.2,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "计划 胸 · 背 · 腿 · 臂 循环 容量地标 增肌周期 胸 → 背 → 腿 → 臂 轮换，练完一天自动推荐下一天。点任意一天查看动作详情。 训练轮换 训练频"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar",
+          "top": 0,
+          "height": 147,
+          "text": "FITNESSOS 训练计划 胸 · 背 · 腿 · 臂 循环"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "FITNESSOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "训练计划"
+        },
+        {
+          "tag": "button",
+          "cls": "knowledge-trigger.",
+          "top": 193,
+          "height": 21,
+          "text": "容量地标"
+        },
+        {
+          "tag": "button",
+          "cls": "knowledge-trigger.",
+          "top": 193,
+          "height": 21,
+          "text": "增肌周期"
+        },
+        {
+          "tag": "a",
+          "cls": "btn-link",
+          "top": 262.4,
+          "height": 44,
+          "text": "自定义计划"
+        }
+      ]
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "discover",
+    "path": "/discover",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/fitness-discover.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "FITNESSOS 发现"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "FITNESSOS 发现"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 696.1,
+        "height": 549.1,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "训练知识、历史记录、趋势分析和实用计算器，都集中在这里。 训练资料 容量、RIR、恢复与加重原则 训练记录 按时间查看每次练了什么、完成多少组 健身工具 1RM"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar",
+          "top": 0,
+          "height": 147,
+          "text": "FITNESSOS 发现"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "FITNESSOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "发现"
+        },
+        {
+          "tag": "a",
+          "cls": "discover-card.motion-in.is-visible",
+          "top": 191.4,
+          "height": 84.2,
+          "text": "训练资料 容量、RIR、恢复与加重原则"
+        },
+        {
+          "tag": "a",
+          "cls": "discover-card.motion-in.is-visible",
+          "top": 285.6,
+          "height": 84.2,
+          "text": "训练记录 按时间查看每次练了什么、完成多少组"
+        },
+        {
+          "tag": "a",
+          "cls": "discover-card.motion-in.is-visible",
+          "top": 379.8,
+          "height": 84.2,
+          "text": "健身工具 1RM、凑重、BMI 等计算器"
+        }
+      ]
+    }
+  },
+  {
+    "app": "fitness",
+    "route": "settings",
+    "path": "/settings",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/fitness-settings.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "FITNESSOS 设置"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "FITNESSOS 设置"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 2599.6,
+        "height": 2452.6,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "外观 语言 切换界面显示语言 中文English 明暗模式 选「系统」时，会跟随设备的浅色 / 深色模式 浅色深色跟随系统 手机锁定竖屏 在手机上横屏时提示旋转"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar",
+          "top": 0,
+          "height": 147,
+          "text": "FITNESSOS 设置"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "FITNESSOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "FITNESSOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "设置"
+        },
+        {
+          "tag": "button",
+          "cls": "on.active",
+          "top": 285.6,
+          "height": 36,
+          "text": "中文"
+        },
+        {
+          "tag": "button",
+          "cls": "",
+          "top": 285.6,
+          "height": 36,
+          "text": "English"
+        },
+        {
+          "tag": "button",
+          "cls": "",
+          "top": 409.7,
+          "height": 36,
+          "text": "浅色"
+        }
+      ]
+    }
+  },
+  {
+    "app": "music",
+    "route": "home",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/music-home.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "MUSICOS ⌘K 此刻"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "MUSICOS ⌘K 此刻"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 625,
+        "height": 478,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "还没有音乐 导入本地文件，或登录后从云端同步资料库。 拖拽音频文件到这里 从文件夹导入"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar.music-appbar",
+          "top": 0,
+          "height": 147,
+          "text": "MUSICOS ⌘K 此刻"
+        },
+        {
+          "tag": "a",
+          "cls": "appbar-search-mobile",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "MUSICOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "MUSICOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "此刻"
+        },
+        {
+          "tag": "a",
+          "cls": "btn-primary",
+          "top": 357,
+          "height": 44,
+          "text": "从文件夹导入"
+        },
+        {
+          "tag": "input",
+          "cls": "seek-bar-input",
+          "top": 765,
+          "height": 44,
+          "text": ""
+        }
+      ]
+    }
+  },
+  {
+    "app": "music",
+    "route": "library",
+    "path": "/library",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/music-library.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "MUSICOS ⌘K 资料库"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "MUSICOS ⌘K 资料库"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 625,
+        "height": 478,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "还没有音乐 导入本地文件，或登录后从云端同步资料库。 导入音乐"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar.music-appbar",
+          "top": 0,
+          "height": 147,
+          "text": "MUSICOS ⌘K 资料库"
+        },
+        {
+          "tag": "a",
+          "cls": "appbar-search-mobile",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "MUSICOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "MUSICOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "资料库"
+        },
+        {
+          "tag": "a",
+          "cls": "btn-primary.svelte-c8k2rg",
+          "top": 347,
+          "height": 44,
+          "text": "导入音乐"
+        },
+        {
+          "tag": "input",
+          "cls": "seek-bar-input",
+          "top": 765,
+          "height": 44,
+          "text": ""
+        }
+      ]
+    }
+  },
+  {
+    "app": "music",
+    "route": "settings",
+    "path": "/settings",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/music-settings.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "MUSICOS ⌘K 设置"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "MUSICOS ⌘K 设置"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 3171.2,
+        "height": 3024.2,
+        "paddingTop": "8px",
+        "display": "grid",
+        "position": "static",
+        "text": "账号 登录 Life OS 账号 登录 / 注册 云同步 同步设置、歌单与曲目元数据（含歌词与封面链接）。音频需单独在下方「云备份」上传。 语言 界面语言 跨设"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar.music-appbar",
+          "top": 0,
+          "height": 147,
+          "text": "MUSICOS ⌘K 设置"
+        },
+        {
+          "tag": "a",
+          "cls": "appbar-search-mobile",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "MUSICOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "MUSICOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "设置"
+        },
+        {
+          "tag": "a",
+          "cls": "btn-primary",
+          "top": 238.9,
+          "height": 44,
+          "text": "登录 / 注册"
+        },
+        {
+          "tag": "button",
+          "cls": "on.active",
+          "top": 614.9,
+          "height": 44,
+          "text": "中文"
+        }
+      ]
+    }
+  },
+  {
+    "app": "finance",
+    "route": "home",
+    "path": "/home/today",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/finance-home.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": null,
+      "inner": null,
+      "wrap": {
+        "top": 0,
+        "bottom": 844,
+        "height": 844,
+        "paddingTop": "24px",
+        "display": "grid",
+        "position": "static",
+        "text": "FinanceOS 请使用你的账户登录。仅授权设备可访问。 登录"
+      },
+      "firstVisible": [
+        {
+          "tag": "form",
+          "cls": "auth-card",
+          "top": 251,
+          "height": 342,
+          "text": "FinanceOS 请使用你的账户登录。仅授权设备可访问。 登录"
+        },
+        {
+          "tag": "input",
+          "cls": "input",
+          "top": 408,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "input",
+          "cls": "input",
+          "top": 464,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "button",
+          "cls": "btn",
+          "top": 520,
+          "height": 44,
+          "text": "登录"
+        }
+      ]
+    }
+  },
+  {
+    "app": "finance",
+    "route": "settings",
+    "path": "/settings/app",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/finance-settings.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": null,
+      "inner": null,
+      "wrap": {
+        "top": 0,
+        "bottom": 844,
+        "height": 844,
+        "paddingTop": "24px",
+        "display": "grid",
+        "position": "static",
+        "text": "FinanceOS 请使用你的账户登录。仅授权设备可访问。 登录"
+      },
+      "firstVisible": [
+        {
+          "tag": "form",
+          "cls": "auth-card",
+          "top": 251,
+          "height": 342,
+          "text": "FinanceOS 请使用你的账户登录。仅授权设备可访问。 登录"
+        },
+        {
+          "tag": "input",
+          "cls": "input",
+          "top": 408,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "input",
+          "cls": "input",
+          "top": 464,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "button",
+          "cls": "btn",
+          "top": 520,
+          "height": 44,
+          "text": "登录"
+        }
+      ]
+    }
+  },
+  {
+    "app": "portal",
+    "route": "home",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/portal-home.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 120,
+        "height": 120,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "PORTALOS 跟随系统"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 119,
+        "height": 119,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "PORTALOS 跟随系统"
+      },
+      "wrap": {
+        "top": 144,
+        "bottom": 773,
+        "height": 629,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "static",
+        "text": "登录 Life OS 使用同一账号切换 Planner、Finance、Fitness 与 Music。 登录 注册 邮箱 密码 登录"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar.portal-appbar",
+          "top": 0,
+          "height": 120,
+          "text": "PORTALOS 跟随系统"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "button",
+          "cls": "btn-secondary.portal-appbar-more-btn",
+          "top": 61.8,
+          "height": 38.5,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "PORTALOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "PORTALOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "portal-unauth-title",
+          "top": 257,
+          "height": 31,
+          "text": "登录 Life OS"
+        },
+        {
+          "tag": "button",
+          "cls": "on",
+          "top": 384.3,
+          "height": 44,
+          "text": "登录"
+        },
+        {
+          "tag": "button",
+          "cls": "",
+          "top": 384.3,
+          "height": 44,
+          "text": "注册"
+        }
+      ]
+    }
+  },
+  {
+    "app": "home",
+    "route": "overview",
+    "path": "/",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/home-overview.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "HOMEOS 空间概览 我的户型 · 储藏审计"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "HOMEOS 空间概览 我的户型 · 储藏审计"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 706,
+        "height": 559,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "8 个储藏区 · 10 个房间 · 青灰斜纹 = 储藏区 户型 1 bed · 1 bath · 769 sqft 面积 769 sqft 状态 搬家 / 打包"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar",
+          "top": 0,
+          "height": 147,
+          "text": "HOMEOS 空间概览 我的户型 · 储藏审计"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "HOMEOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "HOMEOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "空间概览"
+        },
+        {
+          "tag": "button",
+          "cls": "home-btn.primary",
+          "top": 248.2,
+          "height": 42.1,
+          "text": "导出 HTML"
+        },
+        {
+          "tag": "button",
+          "cls": "home-btn",
+          "top": 248.2,
+          "height": 42.1,
+          "text": "导出 MHTML"
+        },
+        {
+          "tag": "a",
+          "cls": "home-btn",
+          "top": 248.2,
+          "height": 42.1,
+          "text": "储藏清单"
+        }
+      ]
+    }
+  },
+  {
+    "app": "home",
+    "route": "plan",
+    "path": "/plan",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/home-plan.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": null,
+      "inner": null,
+      "wrap": {
+        "top": 0,
+        "bottom": 706,
+        "height": 706,
+        "paddingTop": "0px",
+        "display": "flex",
+        "position": "static",
+        "text": "浏览 编辑 ? − 94% + 看全图 铺满宽 双指捏合缩放 · 拖拽平移 · Tab 聚焦储藏区 .grid line{stroke:var(--plan-g"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "plan-top.svelte-16u7dbs",
+          "top": 0,
+          "height": 68,
+          "text": "浏览 编辑 ?"
+        },
+        {
+          "tag": "button",
+          "cls": "mode-btn.svelte-16u7dbs.active",
+          "top": 12,
+          "height": 44,
+          "text": "浏览"
+        },
+        {
+          "tag": "button",
+          "cls": "mode-btn.svelte-16u7dbs",
+          "top": 12,
+          "height": 44,
+          "text": "编辑"
+        },
+        {
+          "tag": "button",
+          "cls": "help-btn.svelte-16u7dbs",
+          "top": 12,
+          "height": 44,
+          "text": "?"
+        },
+        {
+          "tag": "button",
+          "cls": "plan-tool.svelte-vkjz6v",
+          "top": 89,
+          "height": 44,
+          "text": "−"
+        },
+        {
+          "tag": "button",
+          "cls": "plan-tool.svelte-vkjz6v",
+          "top": 89,
+          "height": 44,
+          "text": "+"
+        },
+        {
+          "tag": "button",
+          "cls": "plan-tool.plan-tool-text.svelte-vkjz6v",
+          "top": 89,
+          "height": 44,
+          "text": "看全图"
+        },
+        {
+          "tag": "button",
+          "cls": "plan-tool.plan-tool-text.svelte-vkjz6v",
+          "top": 89,
+          "height": 44,
+          "text": "铺满宽"
+        }
+      ]
+    }
+  },
+  {
+    "app": "home",
+    "route": "storage",
+    "path": "/storage",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/home-storage.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "HOMEOS 储藏审计 S1–S8 物品清单"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "HOMEOS 储藏审计 S1–S8 物品清单"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 706,
+        "height": 559,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "平面图与清单联动：点击标注或卡片可高亮对应储藏区。 − 94% + 看全图 铺满宽 .grid line{stroke:var(--plan-grid,#dbe"
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar",
+          "top": 0,
+          "height": 147,
+          "text": "HOMEOS 储藏审计 S1–S8 物品清单"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "HOMEOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "HOMEOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "储藏审计"
+        },
+        {
+          "tag": "button",
+          "cls": "plan-tool.svelte-vkjz6v",
+          "top": 155,
+          "height": 44,
+          "text": "−"
+        },
+        {
+          "tag": "button",
+          "cls": "plan-tool.svelte-vkjz6v",
+          "top": 155,
+          "height": 44,
+          "text": "+"
+        },
+        {
+          "tag": "button",
+          "cls": "plan-tool.plan-tool-text.svelte-vkjz6v",
+          "top": 155,
+          "height": 44,
+          "text": "看全图"
+        }
+      ]
+    }
+  },
+  {
+    "app": "home",
+    "route": "settings",
+    "path": "/settings",
+    "status": "ok",
+    "screenshot": "/Users/kenpan/「Projects」/life-os/output/playwright/pwa-top-recheck/home-settings.png",
+    "metrics": {
+      "standalone": true,
+      "displayStandalone": false,
+      "appVh": "100vh",
+      "safeTop": "59px",
+      "pageHeaderH": "calc(88px + 59px)",
+      "appbarHVar": "calc(88px + 59px)",
+      "appbar": {
+        "top": 0,
+        "bottom": 147,
+        "height": 147,
+        "paddingTop": "0px",
+        "display": "block",
+        "position": "sticky",
+        "text": "HOMEOS 设置"
+      },
+      "inner": {
+        "top": 0,
+        "bottom": 146,
+        "height": 146,
+        "paddingTop": "59px",
+        "display": "grid",
+        "position": "static",
+        "text": "HOMEOS 设置"
+      },
+      "wrap": {
+        "top": 147,
+        "bottom": 706,
+        "height": 559,
+        "paddingTop": "8px",
+        "display": "block",
+        "position": "static",
+        "text": "Life OS 账号 邮箱 密码 登录 创建账号 外观 主题 跟随系统浅色深色 竖屏锁定（手机） 平面图更适合横屏查看；开启后竖持手机会提示旋转 户型编辑模式 "
+      },
+      "firstVisible": [
+        {
+          "tag": "header",
+          "cls": "appbar",
+          "top": 0,
+          "height": 147,
+          "text": "HOMEOS 设置"
+        },
+        {
+          "tag": "button",
+          "cls": "report-bug-trigger.tap-target-icon.btn-ghost",
+          "top": 59,
+          "height": 44,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "appbar-leading",
+          "top": 65.9,
+          "height": 30.3,
+          "text": "HOMEOS"
+        },
+        {
+          "tag": "div",
+          "cls": "brand.appbar-brand",
+          "top": 65.9,
+          "height": 24,
+          "text": "HOMEOS"
+        },
+        {
+          "tag": "h1",
+          "cls": "page-title",
+          "top": 115,
+          "height": 23,
+          "text": "设置"
+        },
+        {
+          "tag": "input",
+          "cls": "",
+          "top": 265.2,
+          "height": 43.7,
+          "text": ""
+        },
+        {
+          "tag": "input",
+          "cls": "",
+          "top": 375.6,
+          "height": 43.7,
+          "text": ""
+        },
+        {
+          "tag": "button",
+          "cls": "btn-primary",
+          "top": 435.3,
+          "height": 44,
+          "text": "登录"
+        }
+      ]
+    }
+  }
+]

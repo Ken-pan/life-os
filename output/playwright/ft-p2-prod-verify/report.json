@@ -1,0 +1,18 @@
+{
+  "capturedAt": "2026-07-11T02:20:49.430Z",
+  "account": "334452284ken@gmail.com",
+  "baseUrl": "http://127.0.0.1:5196",
+  "rpcFitness": {
+    "dayId": "back",
+    "lastDayId": "back",
+    "todayDayId": null,
+    "sessionDate": "2026-07-09",
+    "todayCompleted": false,
+    "workedOutToday": false,
+    "lastSessionDate": "2026-07-09"
+  },
+  "ui": {
+    "value": "今日尚未训练",
+    "detail": "上次：背 · 7/9"
+  }
+}

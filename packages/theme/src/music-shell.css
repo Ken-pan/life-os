@@ -30,18 +30,7 @@
   min-height: 0;
 }
 
-/* 有 mini player 时抬高主内容 / 底栏 */
-@media (--life-os-mobile) {
-
-  .main-wrap[data-player-chrome='mini'] #main-content,
-  .main-wrap[data-player-chrome='mini'] .wrap {
-    padding-bottom: calc(var(--page-block-gap) + var(--mobile-content-inset-tabbar) + var(--mini-player-h));
-  }
-
-  .music-app[data-page-route='now-playing'] .main-wrap[data-player-chrome='mini'] #main-content {
-    padding-bottom: 0;
-  }
-}
+/* mini player 底部清空由 AppShell persistent-overlay spacer 负责（PLAT.SHELL.4） */
 
 /* ── Mini Player（fixed 或 bottom-shell 内相对定位 — dock 式）── */
 .mini-player {
@@ -3112,15 +3101,6 @@ html:has(.np-ambient-back) .bottom-shell {
     border-left: 1px solid var(--border);
   }
 
-  /* 有 mini player 时给主内容留出底部空间，避免最后一屏被遮挡 */
-  .main-wrap[data-player-chrome='mini'] #main-content {
-    padding-bottom: calc(var(--page-block-gap) + var(--mini-player-h));
-  }
-
-  .music-app[data-page-route='now-playing'] .main-wrap[data-player-chrome='mini'] #main-content {
-    padding-bottom: 0;
-  }
-
   .now-playing {
     min-height: calc(100dvh - var(--page-header-h));
     padding-top: var(--content-pad-start);
@@ -3499,12 +3479,12 @@ html:has(.np-ambient-back) .bottom-shell {
 
   /* Wide routes: span frame is owned by content-frame.css via data-content-mode="span" on .main-wrap */
 
-  .music-app[data-wide-content='true'][data-utility-open='true'] .main-wrap[data-content-mode='span'] {
+  .music-app[data-wide-content='true'][data-utility-open='true'] .main-wrap {
     --content-span: calc(100cqw - var(--page-gutter-desktop) * 2 - var(--utility-pane-w, 0px));
   }
 
   @supports not (width: 100cqw) {
-    .music-app[data-wide-content='true'][data-utility-open='true'] .main-wrap[data-content-mode='span'] {
+    .music-app[data-wide-content='true'][data-utility-open='true'] .main-wrap {
       --content-span: calc(100% - var(--page-gutter-desktop) * 2 - var(--utility-pane-w, 0px));
     }
   }
@@ -3553,7 +3533,7 @@ html:has(.np-ambient-back) .bottom-shell {
 
 body.search-typeahead-open .main-wrap,
 body.search-typeahead-open .bottom-shell,
-body.search-typeahead-open .music-app>.sidebar {
+body.search-typeahead-open .music-app .sidebar {
   pointer-events: none;
   user-select: none;
 }

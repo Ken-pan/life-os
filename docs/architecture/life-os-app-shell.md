@@ -17,7 +17,14 @@ Frozen public surface (`@life-os/platform-web` `svelte/app-shell`):
   `main` (or `children`) · `persistentOverlay` · `transientOverlay`
 - **Props:** `scrollMode: 'content' | 'document' | 'locked'` ·
   `navigationKey` · `focusOnNavigate: 'main' | 'preserve'` · `mainId` ·
-  `mainLabel` · `mainClass` · `skipLinkLabel` · `testIdPrefix`
+  `mainLabel` · `mainClass` · `shellClass` · `shellDataset` ·
+  `skipLinkLabel` · `testIdPrefix`
+
+  *v1.1 additive (PLAT.SHELL.4, Music adoption):* `shellClass` forwards
+  app-owned public classes to the shell root; `shellDataset` exposes app-owned
+  root state as `data-*` attributes for CSS state selectors (immersive route,
+  persistent player, side pane open). Both are generic — the shell never reads
+  them — and follow the additive-only rule below.
 - **Stable test hooks:** `data-testid` values derived from `testIdPrefix`
   (shell, `-header`, `-navigation-desktop`, `-navigation-mobile`, `-main`,
   `-persistent-overlay`, `-transient-overlay`)
@@ -35,8 +42,9 @@ Change policy:
    every adopting app records a validation doc
    (`life-os-app-shell-<app>-validation.md`).
 
-Next in this line (not started): third-app adoption on the frozen contract,
-then starter template → AppManifest → generator. See
+Third-app adoption: Music (PLAT.SHELL.4, 39/40 —
+[`life-os-app-shell-music-validation.md`](./life-os-app-shell-music-validation.md)).
+Next in this line: starter template → AppManifest → generator. See
 [`../roadmap/PLATFORM.md`](../roadmap/PLATFORM.md) §PLAT.SHELL.
 
 ## Current-state map before migration

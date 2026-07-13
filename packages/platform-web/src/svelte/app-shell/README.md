@@ -37,6 +37,12 @@ usable.
 It is for page composition such as a reading wrapper or bounded workspace, not
 for targeting private AppShell selectors.
 
+`shellClass` (v1.1) forwards app-owned public classes to the shell root, and
+`shellDataset` (v1.1) exposes app-owned root state as `data-*` attributes
+(`undefined` values are omitted). Use them for CSS state selectors that must
+scope shared chrome — an immersive route, a docked player, an open side pane.
+The shell never reads either value, and they must not encode shell behavior.
+
 `focusOnNavigate="main"` focuses the main landmark when `navigationKey`
 changes, except while focus is in a form or dialog. The default is `preserve`.
 

@@ -14,6 +14,7 @@
   import ConnectivitySyncStatus from '$lib/components/ConnectivitySyncStatus.svelte'
   import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
   import DocumentHead from '@life-os/platform-web/svelte/head'
+  import LifeOsAppShell from '@life-os/platform-web/svelte/app-shell'
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { ICONS } from '$lib/iconRegistry.js'
   import { subscribeSyncError } from '$lib/syncNotify.js'
@@ -38,7 +39,6 @@
     bindViewportHeight,
     isLifeOsMobile,
     resetScrollLock,
-    LIFE_OS_CONTENT_FRAME,
   } from '@life-os/theme'
   import { flushPendingSync, syncBidirectional } from '$lib/sync.js'
   import { bindConnectivity } from '$lib/connectivity.svelte.js'
@@ -91,7 +91,26 @@
   const wideContent = $derived(isWideContentRoute(page.url.pathname))
   const onNowPlaying = $derived(page.url.pathname.startsWith('/now-playing'))
   const utilityOpen = $derived(utilityPane.open && !onNowPlaying)
-  const utilityPaneStyle = $derived(`--utility-pane-w: ${utilityPane.width}px`)
+
+  const shellDataset = $derived({
+    'page-route': pageRoute,
+    'immersive-mode': immersiveMode,
+    'wide-content': wideContent ? 'true' : undefined,
+    'content-mode': wideContent ? 'span' : undefined,
+    'utility-open': utilityOpen ? 'true' : undefined,
+    'player-chrome': playerChrome === 'mini' ? 'mini' : undefined,
+  })
+
+  /** UtilityPane 宽度是根级布局变量；AppShell 拥有根节点，改挂到 html 上 */
+  $effect(() => {
+    document.documentElement.style.setProperty(
+      '--utility-pane-w',
+      `${utilityPane.width}px`,
+    )
+    return () => {
+      document.documentElement.style.removeProperty('--utility-pane-w')
+    }
+  })
 
   $effect(() => {
     if (onNowPlaying && utilityPane.open) closeUtilityPane()
@@ -236,30 +255,23 @@
 
 <DocumentHead appId="music" {pageTitle} />
 
-<div
-  class="app-shell music-app"
-  style={utilityPaneStyle}
-  data-page-route={pageRoute}
-  data-immersive-mode={immersiveMode}
-  data-wide-content={wideContent ? 'true' : undefined}
-  data-utility-open={utilityOpen ? 'true' : undefined}
+<LifeOsAppShell
+  navigationKey={page.url.pathname}
+  focusOnNavigate="main"
+  shellClass="music-app"
+  {shellDataset}
+  skipLinkLabel={t('common.skipToContent')}
+  testIdPrefix="music-shell"
 >
-  <SideNav />
-  <div class="safari-chrome-tint-top" aria-hidden="true"></div>
-  <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
-  <ConnectivitySyncStatus />
-  <SyncErrorBanner
-    subscribe={subscribeSyncError}
-    formatMessage={(reason) => t('sync.banner', { reason })}
-    dismissLabel={t('common.close')}
-  />
+  {#snippet navigation(projection)}
+    {#if projection === 'desktop'}
+      <SideNav />
+    {:else}
+      <BottomNav />
+    {/if}
+  {/snippet}
 
-  <div
-    class="main-wrap"
-    data-mobile-chrome="tabbar"
-    data-player-chrome={playerChrome === 'mini' ? 'mini' : undefined}
-    data-content-mode={wideContent ? LIFE_OS_CONTENT_FRAME.modeSpan : undefined}
-  >
+  {#snippet header()}
     <AppBar
       hidden={appBarHidden}
       title={appBarHidden ? undefined : pageTitle}
@@ -268,18 +280,25 @@
       backLabel={appBarBackLabel}
       bind:searchRef={searchInput}
     />
-    <main id="main-content">{@render children()}</main>
-  </div>
+  {/snippet}
 
-  <UtilityPane />
-  <Toast />
-</div>
+  {#snippet main()}
+    {@render children()}
+  {/snippet}
 
-<div
-  class="bottom-shell"
-  data-player-chrome={playerChrome === 'mini' ? 'mini' : undefined}
->
-  <MiniPlayer />
-  <BottomNav />
-</div>
-<QueueDrawer />
+  {#snippet persistentOverlay()}
+    <MiniPlayer />
+  {/snippet}
+
+  {#snippet transientOverlay()}
+    <ConnectivitySyncStatus />
+    <SyncErrorBanner
+      subscribe={subscribeSyncError}
+      formatMessage={(reason) => t('sync.banner', { reason })}
+      dismissLabel={t('common.close')}
+    />
+    <UtilityPane />
+    <QueueDrawer />
+    <Toast />
+  {/snippet}
+</LifeOsAppShell>
