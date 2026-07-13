@@ -12,7 +12,7 @@
     activeProgramId
   } from '$lib/state.svelte.js';
   import { toast } from '$lib/ui.svelte.js';
-  import { notificationCapability, requestNotificationPermission, previewTimerChime } from '$lib/timer.svelte.js';
+  import { notificationCapability, requestNotifyPermission, previewTimerChime } from '$lib/timer.svelte.js';
   import { exportBackup, importBackup } from '$lib/backup.js';
   import { auth, signOut, authErrorMessage } from '$lib/auth.svelte.js';
   import { pushToCloud, pullFromCloud, withSyncNotify } from '$lib/sync.js';
@@ -84,7 +84,7 @@
   }
 
   async function enableNotifications() {
-    const result = await requestNotificationPermission();
+    const result = await requestNotifyPermission();
     if (result === true || result === 'granted') {
       S.settings.notifyRest = true;
       save();

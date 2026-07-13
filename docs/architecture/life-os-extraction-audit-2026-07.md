@@ -45,6 +45,23 @@ contracts/theme;auth store 与 `createLifeOsAuth` 同域,归 sync。
 home 7/7 · fitness 7/7 spec;三站构建产物 `build/sw.js` 均由模板生成、
 cache 名带 build id。
 
+## App 体检:清除各 app 自维护的无必要代码(PLAT.CORE.5,2026-07-12)✅
+
+逐 app 扫描「与共享包重复 / 零调用 / 来源已消失」的自维护代码:
+
+| 类别 | 清除项 |
+| --- | --- |
+| 孤儿组件 | music `AudioVisualizer.svelte`(全仓零引用)|
+| 零调用 @deprecated 别名 | fitness `syncThemeColor` · `autoSyncOnLogin` · `requestNotificationPermission`(调用方改用 `requestNotifyPermission`)· `dayDisplaySub`;music `buildNavItems` · `getHiddenEntityKeys` · `registerAudioElement` |
+| 死 CSS | theme `shell.css` / `music-shell.css` 的 `.bottom-shell .mini-player` 与 `[data-player-chrome]` 规则(PLAT.SHELL.4 后 mini-player 不再位于 bottom-shell)|
+| 失源脚本 | `scripts/sync-vendored-packages.sh` + `npm run sync:packages`(源 sibling 仓库 `life-os-theme`/`life-os-sync` 已不存在)|
+
+**体检确认为健康、保留的:** 各 app `state.svelte.js` 的持久化头部含真实
+schema 迁移 / undo 栈 / normalize 逻辑(fitness `migrate()`、home 三 key、
+music `normalizeSettings`)——是必要领域代码,不强改 persisted-state 工厂;
+planner/finance `localCache` 已是共享封装;music `settings.crossfade` 的
+deprecated 字段是数据兼容,保留。
+
 ## 剩余候选(未做)
 
 | 候选 | 证据 | 备注 |

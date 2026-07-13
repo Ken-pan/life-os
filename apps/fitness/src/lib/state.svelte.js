@@ -530,11 +530,6 @@ export function applyTheme() {
   applyResolvedTheme(resolveAppTheme(), THEME_APPLY_OPTIONS)
 }
 
-/** @deprecated 使用 applyTheme；保留别名避免外部引用断裂 */
-export function syncThemeColor() {
-  applyTheme()
-}
-
 /** @returns {() => void} */
 export function bindAppThemeSystemChange() {
   return bindSystemThemeChange(

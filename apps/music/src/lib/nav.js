@@ -111,12 +111,6 @@ export function buildMoreNavGroups(tr) {
   ]
 }
 
-/** @deprecated Use buildPrimaryNavItems + buildMoreNavGroups */
-/** @param {(key: string, params?: Record<string, unknown>) => string} tr */
-export function buildNavItems(tr) {
-  return [...buildPrimaryNavItems(tr), buildSettingsNavItem(tr)]
-}
-
 /** @param {string} pathname */
 export function resolvePrimaryNavTab(pathname) {
   if (pathname === '/') return 'home'

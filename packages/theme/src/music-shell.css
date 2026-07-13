@@ -223,23 +223,6 @@
 }
 
 @media (--life-os-mobile) {
-  .bottom-shell .mini-player {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    right: auto;
-  }
-
-  .bottom-shell .mini-player:not(.show) {
-    height: 0;
-    min-height: 0;
-    overflow: hidden;
-    border-top: none;
-    transform: none;
-    opacity: 0;
-    pointer-events: none;
-  }
-
   .bottom-shell .nav,
   .bottom-shell .bottom-nav {
     position: relative;

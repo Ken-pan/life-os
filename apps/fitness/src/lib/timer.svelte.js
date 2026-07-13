@@ -314,9 +314,6 @@ export async function requestNotifyPermission() {
   return result === 'granted'
 }
 
-/** @deprecated alias */
-export const requestNotificationPermission = requestNotifyPermission
-
 export function notificationStatus() {
   return notificationCapability().kind
 }

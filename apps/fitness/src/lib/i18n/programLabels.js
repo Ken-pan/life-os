@@ -31,11 +31,6 @@ export function dayDecorEn(day) {
   return day.name ?? null;
 }
 
-/** @deprecated Use dayDecorEn — kept for readability at call sites. */
-export function dayDisplaySub(day) {
-  return dayDecorEn(day);
-}
-
 /** Card/list title: "胸 · CHEST" (zh) or "Chest" (en). */
 export function dayDisplayFull(day) {
   if (!day) return '';

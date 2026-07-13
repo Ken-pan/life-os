@@ -124,13 +124,6 @@ export function setActiveAudioSlot(slot) {
   syncElementGains(slot, fadeForSlot(slot)?.gain.value ?? 1, false)
 }
 
-/** @deprecated Use registerAudioPool */
-/** @param {HTMLAudioElement} audio */
-export function registerAudioElement(audio) {
-  if (!browser) return
-  elementA = audio
-}
-
 /** @param {'a' | 'b'} slot @param {number} value */
 export function setSlotGainImmediate(slot, value) {
   const gain = fadeForSlot(slot)?.gain

@@ -349,8 +349,3 @@ const { syncBidirectional, scheduleBidirectionalSync, resetCooldown: resetSyncCo
   });
 
 export { syncBidirectional, scheduleBidirectionalSync, resetSyncCooldown, withSyncNotify };
-
-/** @deprecated 使用 syncBidirectional */
-export async function autoSyncOnLogin() {
-  return performBidirectionalSync();
-}

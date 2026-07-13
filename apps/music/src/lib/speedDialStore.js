@@ -62,11 +62,6 @@ export async function getBoardExcludedKeys() {
   return excluded
 }
 
-/** @deprecated Use getHiddenDownweights / getBoardExcludedKeys */
-export async function getHiddenEntityKeys() {
-  return getBoardExcludedKeys()
-}
-
 /**
  * @param {SpeedDialEntityType} entityType
  * @param {string} entityId
