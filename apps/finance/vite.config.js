@@ -1,39 +1,9 @@
 /// <reference types="vitest/config" />
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { sveltekit } from '@sveltejs/kit/vite'
+import { lifeOsBasicSwPlugin } from '@life-os/platform-web/pwa/basic-sw'
 import { defineConfig, loadEnv } from 'vite'
 import { handleKimiBrief } from './server/kimiBrief.ts'
 
-// Stamps a per-deploy build id into static/sw.js's cache name so a new deploy
-// gets a fresh cache instead of serving stale precached assets forever.
-// Same pattern as apps/music/vite.config.js's musicPwaCacheVersionPlugin.
-function financePwaCacheVersionPlugin() {
-  const buildId =
-    process.env.COMMIT_REF ||
-    process.env.DEPLOY_ID ||
-    process.env.VERCEL_GIT_COMMIT_SHA ||
-    `dev-${Date.now().toString(36)}`
-
-  return {
-    name: 'finance-pwa-cache-version',
-    apply: 'build',
-    closeBundle() {
-      const sw = readFileSync(join(process.cwd(), 'static/sw.js'), 'utf8').replaceAll(
-        '__FINANCE_BUILD_ID__',
-        buildId,
-      )
-      for (const outDir of [
-        join(process.cwd(), '.svelte-kit/output/client'),
-        join(process.cwd(), 'build'),
-      ]) {
-        const swPath = join(outDir, 'sw.js')
-        if (!existsSync(swPath)) continue
-        writeFileSync(swPath, sw)
-      }
-    },
-  }
-}
 
 function kimiBriefPlugin(apiKey) {
   return {
@@ -74,7 +44,20 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     sveltekit(),
     kimiBriefPlugin(loadEnv(mode, process.cwd(), '').KIMI_API_KEY),
-    financePwaCacheVersionPlugin(),
+    lifeOsBasicSwPlugin({
+      cachePrefix: 'financeos',
+      precache: [
+        '/',
+        '/manifest.webmanifest',
+        '/assets/brand/favicon-16.png',
+        '/assets/brand/favicon-32.png',
+        '/assets/brand/icon-192.png',
+        '/assets/brand/icon-512.png',
+        '/assets/brand/icon-512-maskable.png',
+        '/assets/brand/apple-touch-icon.png',
+      ],
+      navigationFallback: '/',
+    }),
   ],
   server: {
     proxy: {

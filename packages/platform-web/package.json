@@ -156,6 +156,12 @@
     "./svelte/card": {
       "import": "./src/svelte/card/index.js",
       "svelte": "./src/svelte/card/index.js"
+    },
+    "./pwa/basic-sw": {
+      "import": "./src/pwa/basicSwPlugin.mjs"
+    },
+    "./persisted-state": {
+      "import": "./src/persistedState.js"
     }
   },
   "dependencies": {

@@ -11,10 +11,13 @@ export interface AppAuthState {
   allowedAppKeys: string[] | null
 }
 
+/** 缺省 zh auth 错误文案；`errorLabels` 覆盖其中任意 key */
+export declare const DEFAULT_AUTH_ERROR_LABELS: Record<string, string>
+
 export interface CreateAppAuthStoreOptions {
   appId: 'finance' | 'fitness' | 'planner' | 'music' | 'portal' | 'home' | (string & {})
-  /** 静态对象，或函数形式以便接 i18n（随 locale 切换实时求值） */
-  errorLabels: Record<string, string> | (() => Record<string, string>)
+  /** 静态对象，或函数形式以便接 i18n（随 locale 切换实时求值）；缺省用内置 zh 文案 */
+  errorLabels?: Record<string, string> | (() => Record<string, string>)
   onSignedOut?: () => void
   onSyncSession?: (payload: { force?: boolean }) => void | Promise<unknown>
   /** store 字段更新后的后置钩子（如 Finance 的空会话清理） */

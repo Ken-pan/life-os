@@ -4,37 +4,24 @@ import {
   bindSystemThemeChange,
   resolveTheme,
 } from '@life-os/theme'
+import { createSettingsPersistence } from '@life-os/platform-web/persisted-state'
 
-const STORAGE_KEY = 'starteros_v1'
-
-const DEFAULTS = {
-  settings: {
-    theme: 'auto', // 'light' | 'dark' | 'auto'
-    locale: 'zh', // 'zh' | 'en'
+const persistence = createSettingsPersistence({
+  key: 'starteros_v1',
+  defaults: {
+    settings: {
+      theme: 'auto', // 'light' | 'dark' | 'auto'
+      locale: 'zh', // 'zh' | 'en'
+    },
   },
-}
+  serialize: (state) => ({ settings: state.settings }),
+})
 
-function load() {
-  if (!browser) return structuredClone(DEFAULTS)
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return structuredClone(DEFAULTS)
-    const parsed = JSON.parse(raw)
-    return {
-      settings: { ...DEFAULTS.settings, ...(parsed.settings ?? {}) },
-    }
-  } catch {
-    return structuredClone(DEFAULTS)
-  }
-}
-
-export const S = $state(load())
+export const S = $state(persistence.load())
 
 export function save() {
   if (!browser) return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ settings: S.settings }))
-  } catch {}
+  persistence.save(S)
 }
 
 const THEME_APPLY_OPTIONS = {

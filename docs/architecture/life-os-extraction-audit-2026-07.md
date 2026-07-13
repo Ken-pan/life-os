@@ -32,15 +32,28 @@ contracts/theme;auth store 与 `createLifeOsAuth` 同域,归 sync。
 `check:lifeos-boundaries` OK · music dev 实测(auth UI 渲染、无 console 错误)·
 `music-app-shell.spec.ts` 6/6(fresh build)。
 
-## 剩余候选 backlog(按 ROI 排序)
+## 第二批落地(PLAT.CORE.4,2026-07-12)✅
 
-| # | 候选 | 证据 | 方案 | 价值/风险 |
-| - | --- | --- | --- | --- |
-| 1 | **static/sw.js 统一生成** | 6 份手写 service worker(60–384 行)实现同一套 precache + 导航回退,各自漂移 | 共享 SW 模板 + 每 app 清单注入(构建脚本或 vite 插件);先从 portal/home/finance 三份 60–70 行的小实现合并起 | 高/中——SW 出错影响离线与更新,需逐 app PWA 验收 |
-| 2 | **AppBar 骨架组件** | 5 app 手写 `AppBar.svelte`,`appbar-inner/leading/titles/trailing` + AppBrand + ReportBugButton 结构相同,插槽内容不同 | platform-web `LifeOsAppBar`(snippet 化 leading/trailing);与 AppShell `header` 配套 | 中/低——纯结构组件,逐 app 迁移即可 |
-| 3 | **persisted-settings 工厂** | `state.svelte.js` ×5 的 `STORAGE_KEY + DEFAULTS 合并 + try/catch load/save` 头部逐字相同(领域状态之外的部分) | platform-web `createPersistedState({ key, defaults, migrate? })`;starter 已按此形状写好可反向对齐 | 中/低 |
-| 4 | **auth 错误文案 i18n 包** | zh 文案在 home/portal 静态重复,fitness/music/planner 的 `auth.err*` key 集合相同 | 共享默认 labels(zh/en)进 `auth-store`,`errorLabels` 变为可选覆盖 | 低/低——顺手 |
-| 5 | **Toast dismiss 一致性** | fitness 的 `Toast.svelte` 未接 `onDismiss/dismissLabel`(music 已接) | 对齐 music 写法 | 低/低——一致性修补 |
+| # | 候选 | 结果 |
+| - | --- | --- |
+| 1 | **static/sw.js 统一生成(简单三站)** | ✅ `@life-os/platform-web/pwa/basic-sw`:`renderBasicSw` 模板 + `lifeOsBasicSwPlugin` vite 插件。portal / home / finance 删除手写 `static/sw.js`,vite 配置声明 `cachePrefix + precache + navigationFallback`。**顺带修复 home 无 build-id 版本化的陈旧缓存隐患**。fitness / planner / music 的领域缓存 SW(215–384 行)不在模板范围,后续单独评估 |
+| 4 | **auth 缺省错误文案** | ✅ `DEFAULT_AUTH_ERROR_LABELS`(zh)进 auth-store,`errorLabels` 变可选覆盖;home / portal 薄封装缩至 7 行 |
+| 3 | **persisted-settings 工厂** | ✅ `@life-os/platform-web/persisted-state` `createSettingsPersistence({ key, defaults, merge?, serialize? })`;starter 已采用。fitness/music/home 的 `state.svelte.js` 头部可逐步反向对齐(非阻塞) |
+| 5 | **Toast dismiss 一致性** | ✅ fitness `Toast.svelte` 对齐 music(`onDismiss` + `dismissLabel`)|
+
+验证:7×check 0 错误 · 9×build 全过 · boundaries OK · starter 3/3 ·
+home 7/7 · fitness 7/7 spec;三站构建产物 `build/sw.js` 均由模板生成、
+cache 名带 build id。
+
+## 剩余候选(未做)
+
+| 候选 | 证据 | 备注 |
+| --- | --- | --- |
+| **AppBar 骨架组件** | 5 app 手写 `AppBar.svelte`,`appbar-inner/leading/titles/trailing` + AppBrand + ReportBugButton 结构相同 | platform-web `LifeOsAppBar`(snippet 化);逐 app 迁移,适合单独 session |
+| **复杂 SW 收编** | fitness(215)/ planner(230)/ music(384)各有领域缓存策略 | 评估能否「basic 模板 + 策略插槽」;需逐 app 离线 QA |
+| **app 侧 persisted-state 反向对齐** | fitness/music/home 的 load/save 头部 | 顺手活,随下次触碰各 state 文件时做 |
+| **全局错误捕获**(业界标配缺口)| 各 app 无 `unhandledrejection`/`window.onerror` 统一处理(仅 music player 内部有)| 可选:platform-web `bindGlobalErrorReporting`(console + toast);对单用户 QA 有用,无痛点证据前不强推 |
+| 不做:analytics / feature flags | 业界多 app 平台标配,但单用户场景过度设计 | — |
 
 **不建议提取:** `nav.js` IA 内容、settings 页面编排、`ui.svelte.js` 领域
 弹层状态(285 行 diff,纯 app 域)——它们的"形状"已由 contracts/设计系统约束,

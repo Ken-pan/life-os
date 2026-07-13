@@ -1,6 +1,18 @@
 import { createLifeOsAuth } from '../authController.js'
 import { mapAuthErrorMessage } from '../authErrorMessage.js'
 
+/** 缺省 zh 文案（home / portal 原静态对象上提）；带 i18n 的 app 用 errorLabels 覆盖 */
+export const DEFAULT_AUTH_ERROR_LABELS = {
+  invalidCredentials: '邮箱或密码不正确',
+  emailNotConfirmed: '请先完成邮箱验证后再登录',
+  alreadyRegistered: '该邮箱已注册，请直接登录',
+  passwordShort: '密码至少需要 6 个字符',
+  invalidEmail: '邮箱格式不正确',
+  rateLimit: '尝试次数过多，请稍后再试',
+  network: '网络异常，请检查连接后重试',
+  generic: '登录失败，请稍后重试',
+}
+
 /**
  * Life OS 统一 app auth store（Svelte 5 runes）。
  * 各 app 在自己的 auth.svelte.js 里实例化并 re-export，保持既有 import 路径 —
@@ -9,7 +21,7 @@ import { mapAuthErrorMessage } from '../authErrorMessage.js'
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {{
  *   appId: string,
- *   errorLabels:
+ *   errorLabels?:
  *     | Record<string, string>
  *     | (() => Record<string, string>),
  *   onSignedOut?: () => void,
@@ -56,7 +68,10 @@ export function createAppAuthStore(supabase, options) {
   function authErrorMessage(err) {
     const labels =
       typeof errorLabels === 'function' ? errorLabels() : errorLabels
-    return mapAuthErrorMessage(err, labels)
+    return mapAuthErrorMessage(err, {
+      ...DEFAULT_AUTH_ERROR_LABELS,
+      ...(labels ?? {}),
+    })
   }
 
   return {
