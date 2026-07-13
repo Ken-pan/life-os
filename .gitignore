@@ -29,3 +29,4 @@ apps/finance/.tmp/
 # Device-only CJK font assets (deployed to /home/root/paperos/fonts, not committed)
 /NotoSansCJKsc-Regular.otf
 .env.staging
+output/
