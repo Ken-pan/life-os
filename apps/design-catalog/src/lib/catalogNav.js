@@ -67,6 +67,12 @@ export const CATALOG_SECTIONS = [
     group: 'components',
     testId: 'showcase-command-palette',
   },
+  {
+    id: 'app-shell',
+    label: 'App shell',
+    group: 'components',
+    testId: 'showcase-app-shell',
+  },
 ]
 
 export const SHOWCASE_IDS = CATALOG_SECTIONS.map((s) => s.id)
