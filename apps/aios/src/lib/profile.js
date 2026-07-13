@@ -9,14 +9,36 @@
  * 两层内容不重复:画像放"他是谁",种子放"他做过什么"。
  */
 
+export const PROFILE_SCHEMA_VERSION = 2
+
+const LEGACY_TEMPORARY_PROFILE_LINES = [
+  '近期重心:冲刺个人作品集 portfolio2026(SvelteKit),准备"作品集马拉松"。',
+]
+
 export const DEFAULT_USER_PROFILE = `姓名:Ken Pan(潘俊丞),称呼 Ken,网名树冲;他/him。
 职业:Sr. Product Designer @ Ingram Micro(西雅图),"设计+代码"全栈设计师,专注 B2B 电商与信息密集型系统(搜索、对比、导航等决策流)。
 教育:清华大学 → IIT Institute of Design(The New Bauhaus)。
 生活:住西雅图(America/Los_Angeles);伴侣 Kevin Chen;养两只豆柴犬 Onyx 和 Sard。
 兴趣:摄影(Sony A7CR)、健身、烹饪、旅行。
 设备:M5 Max MacBook Pro;AIOS 与本地模型都跑在这台机器上。
-近期重心:冲刺个人作品集 portfolio2026(SvelteKit),准备"作品集马拉松"。
 沟通偏好:默认简体中文;先给结论再展开,直接具体,不要空洞客套。`
+
+/**
+ * 画像只保存长期稳定事实。v1 曾把 2026-03 的“近期重心”放进每轮常驻画像，
+ * 导致数月后仍拿旧项目主动寒暄。迁移只删除已知的旧默认行，用户自行编辑的
+ * 其他内容原样保留。
+ */
+export function migrateUserProfile(profile, fromVersion = 1) {
+  if (typeof profile !== 'string') return DEFAULT_USER_PROFILE
+  if (fromVersion >= PROFILE_SCHEMA_VERSION) return profile
+
+  const stale = new Set(LEGACY_TEMPORARY_PROFILE_LINES)
+  return profile
+    .split('\n')
+    .filter((line) => !stale.has(line.trim()))
+    .join('\n')
+    .trim()
+}
 
 export const SEED_MEMORIES = [
   'Ken 曾联合创办 Broadser(Superus),0→1 做到 3 万用户、1500 付费用户,Product Hunt 当日第一(2022-2023)',

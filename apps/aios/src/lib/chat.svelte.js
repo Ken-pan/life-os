@@ -148,13 +148,19 @@ export function stopStreaming() {
 
 async function buildSystemPrompt(conversation) {
   const now = new Date()
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '本地时区'
   const lines = [
     '你是 AI.OS,运行在用户本机上的私人 AI 助手。推理、记忆和数据全部在这台设备本地完成。',
-    `当前时间:${now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}。`,
+    `当前时间:${now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' })}(${timeZone};日期 ${now.toLocaleDateString('sv-SE')})。`,
     '回答使用 Markdown。代码放在带语言标注的代码块里。保持直接、具体,不要空洞客套。',
     '当用户要网页、可视化、动画、小游戏或 SVG 图形时,输出单文件自包含的 ```html 或 ```svg 代码块(内联 CSS/JS,不引外部资源)——界面会自动在旁边的预览面板实时渲染它。',
     '用户消息里的【附件文件:xxx】块就是该文件的完整内容(PDF/Word/Excel/PPT/音频转写等已在本地解析为文本)。直接依据它回答,不要说"无法读取附件"。',
   ]
+  if (S.settings.memory) {
+    lines.push(
+      '画像和长期记忆是历史记录,不自动代表现状。没有明确日期的“近期/正在/计划”不得当作当前事实,也不要拿旧项目主动寒暄;涉及当前进展时先开放地问。',
+    )
+  }
   if (S.settings.tools) {
     lines.push(
       '你可以调用工具:数学用 calculate,代码/数据处理用 run_javascript,时间用 get_time,需要记住或回忆用户信息用 save_memory / search_memory。浏览器工具(经用户的真实 Chrome,读网页首选):搜索用 browser_search;打开网页用 open_browser_page;深入阅读用 read_browser_page(part=text 读全文、links 列链接);翻页/滚动/点击用 browser_interact;页面上的图片、图表等视觉内容用 look_at_browser_page 看;出错先用 browser_status 诊断。做研究时的标准流程:browser_search → 挑 2-3 个结果 open_browser_page → read_browser_page(part=text)读细节 → 汇总并给出来源链接' +

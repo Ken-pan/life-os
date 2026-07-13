@@ -5,28 +5,61 @@ import {
   resolveTheme,
 } from '@life-os/theme'
 import { createSettingsPersistence } from '@life-os/platform-web/persisted-state'
-import { DEFAULT_USER_PROFILE } from '$lib/profile.js'
+import {
+  DEFAULT_USER_PROFILE,
+  PROFILE_SCHEMA_VERSION,
+  migrateUserProfile,
+} from '$lib/profile.js'
+
+const DEFAULTS = {
+  settings: {
+    theme: 'auto', // 'light' | 'dark' | 'auto'
+    locale: 'zh', // 'zh' | 'en'
+    model: 'llm-fast', // 'llm-fast' | 'llm-quality'
+    thinking: false, // 思考模式(qwen3.6 enable_thinking)
+    tools: true, // 原生工具调用 agent loop
+    webAccess: true, // fetch_url 网页阅读(经 r.jina.ai)
+    memory: true, // 长期记忆召回注入
+    temperature: 0.7,
+    customPrompt: '', // 自定义指令
+    userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)
+    userProfileVersion: PROFILE_SCHEMA_VERSION,
+  },
+}
 
 const persistence = createSettingsPersistence({
   key: 'aiosos_v1',
-  defaults: {
-    settings: {
-      theme: 'auto', // 'light' | 'dark' | 'auto'
-      locale: 'zh', // 'zh' | 'en'
-      model: 'llm-fast', // 'llm-fast' | 'llm-quality'
-      thinking: false, // 思考模式(qwen3.6 enable_thinking)
-      tools: true, // 原生工具调用 agent loop
-      webAccess: true, // fetch_url 网页阅读(经 r.jina.ai)
-      memory: true, // 长期记忆召回注入
-      temperature: 0.7,
-      customPrompt: '', // 自定义指令
-      userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)
-    },
+  defaults: DEFAULTS,
+  merge: (parsed, base) => {
+    if (!parsed || typeof parsed !== 'object') return base
+    const saved =
+      parsed.settings && typeof parsed.settings === 'object' ? parsed.settings : {}
+    const version = Number.isInteger(saved.userProfileVersion)
+      ? saved.userProfileVersion
+      : 1
+    return {
+      ...base,
+      ...parsed,
+      settings: {
+        ...base.settings,
+        ...saved,
+        userProfile: migrateUserProfile(
+          typeof saved.userProfile === 'string'
+            ? saved.userProfile
+            : base.settings.userProfile,
+          version,
+        ),
+        userProfileVersion: PROFILE_SCHEMA_VERSION,
+      },
+    }
   },
   serialize: (state) => ({ settings: state.settings }),
 })
 
 export const S = $state(persistence.load())
+
+// 把版本化迁移立即写回；否则用户不进入设置页时旧画像仍留在 localStorage。
+if (browser) persistence.save(S)
 
 export function save() {
   if (!browser) return
