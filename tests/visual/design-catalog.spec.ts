@@ -169,6 +169,26 @@ test.describe('design-catalog visual smoke', () => {
     await expect(guardedInput).toBeFocused()
   })
 
+  test('app shell — generic locked mode restores content scrolling', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(
+      catalogUrl('app-shell', 'home', 'light', 'desktop', { embed: '1' }),
+    )
+    const shell = page.getByTestId('catalog-app-shell')
+    const main = page.getByTestId('catalog-app-shell-main')
+
+    await expect(shell).toHaveAttribute('data-scroll-mode', 'content')
+    await expect(main).toHaveCSS('overflow-y', 'auto')
+    await page.getByRole('button', { name: 'Lock scroll' }).click()
+    await expect(shell).toHaveAttribute('data-scroll-mode', 'locked')
+    await expect(main).toHaveCSS('overflow-y', 'hidden')
+    await page.getByRole('button', { name: 'Unlock scroll' }).click()
+    await expect(shell).toHaveAttribute('data-scroll-mode', 'content')
+    await expect(main).toHaveCSS('overflow-y', 'auto')
+  })
+
   test('matrix — buttons grid with state rows', async ({ page }) => {
     await page.goto(catalogUrl('buttons', 'planner', 'light', 'desktop', { view: 'matrix' }))
     await expect(page.getByTestId('catalog-matrix')).toBeVisible()

@@ -1,7 +1,7 @@
 import type { Component, Snippet } from 'svelte'
 
 export type LifeOsNavigationProjection = 'desktop' | 'mobile'
-export type LifeOsScrollMode = 'content' | 'document'
+export type LifeOsScrollMode = 'content' | 'document' | 'locked'
 export type LifeOsFocusOnNavigate = 'main' | 'preserve'
 
 export interface LifeOsAppShellProps {
@@ -16,6 +16,7 @@ export interface LifeOsAppShellProps {
   focusOnNavigate?: LifeOsFocusOnNavigate
   mainId?: string
   mainLabel?: string
+  mainClass?: string
   skipLinkLabel?: string
   testIdPrefix?: string
 }

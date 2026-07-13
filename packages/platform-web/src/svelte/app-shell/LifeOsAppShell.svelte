@@ -4,7 +4,7 @@
   import './app-shell.css'
 
   /** @typedef {'desktop' | 'mobile'} LifeOsNavigationProjection */
-  /** @typedef {'content' | 'document'} LifeOsScrollMode */
+  /** @typedef {'content' | 'document' | 'locked'} LifeOsScrollMode */
   /** @typedef {'main' | 'preserve'} LifeOsFocusOnNavigate */
 
   /**
@@ -20,6 +20,7 @@
    *   focusOnNavigate?: LifeOsFocusOnNavigate,
    *   mainId?: string,
    *   mainLabel?: string,
+   *   mainClass?: string,
    *   skipLinkLabel?: string,
    *   testIdPrefix?: string
    * }}
@@ -36,6 +37,7 @@
     focusOnNavigate = 'preserve',
     mainId = 'main-content',
     mainLabel,
+    mainClass = '',
     skipLinkLabel = 'Skip to content',
     testIdPrefix = 'life-os-app-shell',
   } = $props()
@@ -199,7 +201,7 @@
     <main
       bind:this={mainElement}
       id={mainId}
-      class="life-os-app-shell__main life-os-scroll-surface"
+      class={`life-os-app-shell__main life-os-scroll-surface ${mainClass}`.trim()}
       aria-label={mainLabel}
       tabindex="-1"
       data-testid={`${testIdPrefix}-main`}

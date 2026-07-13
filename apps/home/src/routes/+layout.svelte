@@ -8,6 +8,7 @@
   import Toast from '$lib/components/Toast.svelte'
   import DocumentHead from '@life-os/platform-web/svelte/head'
   import PortraitGate from '@life-os/platform-web/svelte/portrait-gate'
+  import LifeOsAppShell from '@life-os/platform-web/svelte/app-shell'
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { ICONS } from '$lib/iconRegistry.js'
   import {
@@ -36,6 +37,11 @@
 
   const planRoute = $derived(page.url.pathname === '/plan')
   const planImmersive = $derived(planRoute && getPlanImmersiveEdit())
+  const mainClass = $derived(
+    planRoute
+      ? `wrap plan-route${planImmersive ? ' plan-immersive-edit' : ''}`
+      : 'wrap',
+  )
 
   const pageMeta = $derived.by(() => {
     const p = page.url.pathname
@@ -99,32 +105,44 @@
 
 <DocumentHead appId="home" pageTitle={pageMeta.title} />
 
-<a class="skip-link" href="#main-content">跳到主内容</a>
+<LifeOsAppShell
+  scrollMode={planImmersive ? 'locked' : 'content'}
+  navigationKey={page.url.pathname}
+  focusOnNavigate="main"
+  {mainClass}
+  mainLabel="HOME.OS 主内容"
+  skipLinkLabel="跳到主内容"
+  testIdPrefix="home-shell"
+>
+  {#snippet navigation(projection)}
+    {#if projection === 'desktop'}
+      <SideNav />
+    {:else}
+      <BottomNav hidden={planImmersive} />
+    {/if}
+  {/snippet}
 
-<div class="app-shell" class:plan-immersive-edit={planImmersive}>
-  <div class="safari-chrome-tint-top" aria-hidden="true"></div>
-  <SideNav />
-  <div class="main-col life-os-shell-column">
+  {#snippet header()}
     <AppBar
       title={pageMeta.title}
       subtitle={pageMeta.subtitle}
       hidden={planRoute}
     />
-    <main id="main-content" class="wrap" class:plan-route={planRoute}>
-      {@render children()}
-    </main>
-  </div>
-  <BottomNav hidden={planImmersive} />
-  <div class="safari-chrome-tint-bottom" aria-hidden="true"></div>
-</div>
+  {/snippet}
 
-<Toast />
+  {#snippet main()}
+    {@render children()}
+  {/snippet}
 
-{#if S.settings.lockPortraitOnPhone}
-  <PortraitGate
-    enabled={true}
-    title="请旋转设备"
-    hint="平面图在横屏下查看更清晰；可在设置中关闭竖屏锁定"
-    ariaLabel="竖屏锁定提示"
-  />
-{/if}
+  {#snippet transientOverlay()}
+    <Toast />
+    {#if S.settings.lockPortraitOnPhone}
+      <PortraitGate
+        enabled={true}
+        title="请旋转设备"
+        hint="平面图在横屏下查看更清晰；可在设置中关闭竖屏锁定"
+        ariaLabel="竖屏锁定提示"
+      />
+    {/if}
+  {/snippet}
+</LifeOsAppShell>
