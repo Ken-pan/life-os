@@ -111,13 +111,33 @@ const DEFS = [
       function: {
         name: 'fetch_url',
         description:
-          '读取一个网页并返回其正文(Markdown)。当用户给出链接、或问题需要查看某个具体网页时使用。',
+          '读取一个网页并返回其正文(Markdown)。当用户给出链接、或 web_search 的结果需要深入查看时使用。',
         parameters: {
           type: 'object',
           properties: {
             url: { type: 'string', description: '完整 URL,以 http(s):// 开头' },
           },
           required: ['url'],
+        },
+      },
+    },
+  },
+  {
+    key: 'web_search',
+    icon: 'search',
+    web: true,
+    def: {
+      type: 'function',
+      function: {
+        name: 'web_search',
+        description:
+          '在互联网上搜索。当问题涉及最新信息、新闻、你不确定的事实、或用户明确要求搜索时使用。返回结果列表(标题/链接/摘要);要看详情用 fetch_url 打开具体链接。',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '搜索关键词' },
+          },
+          required: ['query'],
         },
       },
     },
@@ -252,6 +272,61 @@ async function fetchUrl(url) {
   return text.length > 8000 ? `${text.slice(0, 8000)}\n\n[已截断,原文 ${text.length} 字符]` : text
 }
 
+/** Bing 跳转链接(/ck/a?…&u=a1<base64url>)→ 真实 URL */
+function decodeBingUrl(href) {
+  try {
+    const u = new URL(href).searchParams.get('u')
+    if (u?.startsWith('a1')) {
+      const b64 = u.slice(2).replaceAll('-', '+').replaceAll('_', '/')
+      const decoded = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))
+      if (/^https?:\/\//.test(decoded)) return decoded
+    }
+  } catch {
+    /* 解不开就保留原链接 */
+  }
+  return href
+}
+
+async function webSearch(query) {
+  // 主源:Bing HTML 经 CORS 代理;后备:Wikipedia opensearch(官方 CORS)
+  try {
+    const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}&setlang=zh-hans`
+    const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`, {
+      signal: AbortSignal.timeout(20000),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html')
+    const items = [...doc.querySelectorAll('li.b_algo')]
+      .slice(0, 6)
+      .map((li) => {
+        const a = li.querySelector('h2 a')
+        const title = a?.textContent.trim()
+        const href = a?.getAttribute('href')
+        const snippet = (
+          li.querySelector('.b_caption p, .b_lineclamp2, .b_paractl')?.textContent ?? ''
+        ).trim()
+        if (!title || !href) return null
+        return `- **${title}**\n  ${decodeBingUrl(href)}\n  ${snippet.slice(0, 200)}`
+      })
+      .filter(Boolean)
+    if (items.length) return `搜索「${query}」的结果:\n\n${items.join('\n')}`
+    throw new Error('无结果')
+  } catch {
+    const res = await fetch(
+      `https://zh.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&srlimit=5`,
+      { signal: AbortSignal.timeout(15000) },
+    )
+    if (!res.ok) throw new Error(`搜索失败 HTTP ${res.status}`)
+    const json = await res.json()
+    const hits = (json.query?.search ?? []).map(
+      (s) =>
+        `- **${s.title}**\n  https://zh.wikipedia.org/wiki/${encodeURIComponent(s.title)}\n  ${s.snippet.replaceAll(/<[^>]+>/g, '').slice(0, 200)}`,
+    )
+    if (!hits.length) return '没有找到结果。'
+    return `搜索「${query}」(维基百科后备源)的结果:\n\n${hits.join('\n')}`
+  }
+}
+
 /**
  * 执行一个工具调用,永远返回字符串(错误也以文本返回给模型)。
  * @param {string} name
@@ -295,6 +370,8 @@ export async function executeTool(name, argsJson) {
       }
       case 'fetch_url':
         return await fetchUrl(args.url)
+      case 'web_search':
+        return await webSearch(args.query)
       default:
         return `错误:未知工具 ${name}`
     }

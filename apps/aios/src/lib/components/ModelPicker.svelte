@@ -78,7 +78,7 @@
           </span>
           <span class="option-desc">{t('model.thinkingDesc')}</span>
         </span>
-        <span class="toggle" class:on={S.settings.thinking}></span>
+        <span class="switch" class:on={S.settings.thinking}></span>
       </button>
     </div>
   {/if}
@@ -176,7 +176,8 @@
     gap: 6px;
   }
 
-  .toggle {
+  /* 命名避开主题包全局 .toggle 组件(settings-ext.css),防止样式互相泄漏 */
+  .switch {
     flex: 0 0 auto;
     width: 34px;
     height: 20px;
@@ -185,7 +186,7 @@
     position: relative;
     transition: background var(--dur-fast, 120ms) var(--ease, ease);
   }
-  .toggle::after {
+  .switch::after {
     content: '';
     position: absolute;
     top: 2px;
@@ -197,10 +198,10 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     transition: transform var(--dur-fast, 120ms) var(--ease, ease);
   }
-  .toggle.on {
+  .switch.on {
     background: var(--accent);
   }
-  .toggle.on::after {
+  .switch.on::after {
     transform: translateX(14px);
   }
 </style>

@@ -2,13 +2,19 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
   import { renderMarkdown, splitThinking } from '$lib/markdown.js'
-  import { C, regenerate } from '$lib/chat.svelte.js'
+  import { C, regenerate, editUserMessage } from '$lib/chat.svelte.js'
   import { toolIcon } from '$lib/tools.js'
+  import { speak } from '$lib/localai.js'
 
-  /** @type {{ message: import('$lib/chat.svelte.js').ChatMessage, isLast?: boolean }} */
-  let { message, isLast = false } = $props()
+  /** @type {{ message: import('$lib/chat.svelte.js').ChatMessage, index?: number, isLast?: boolean }} */
+  let { message, index = 0, isLast = false } = $props()
 
   let copied = $state(false)
+  let editing = $state(false)
+  let editText = $state('')
+  let speaking = $state(false)
+  let ttsLoading = $state(false)
+  let audio = null
 
   const parts = $derived(splitThinking(message.content))
   const thinkingText = $derived(
@@ -30,6 +36,77 @@
       /* clipboard 权限被拒时忽略 */
     }
   }
+
+  /* —— 代码块复制(委托:按钮由 renderMarkdown 静态生成)—— */
+  async function onMdClick(event) {
+    const btn = event.target.closest?.('[data-md-copy]')
+    if (!btn) return
+    const code = btn.closest('.md-code')?.querySelector('code')?.textContent ?? ''
+    try {
+      await navigator.clipboard.writeText(code)
+      btn.textContent = '✓'
+      setTimeout(() => (btn.textContent = '⧉'), 1500)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /* —— 编辑并重发 —— */
+  function startEdit() {
+    editText = message.content
+    editing = true
+  }
+  async function saveEdit() {
+    editing = false
+    await editUserMessage(index, editText)
+  }
+  function onEditKeydown(event) {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+      event.preventDefault()
+      saveEdit()
+    } else if (event.key === 'Escape') {
+      editing = false
+    }
+  }
+
+  /* —— 朗读(本地 Kokoro TTS)—— */
+  function ttsText() {
+    return parts.answer
+      .replaceAll(/```[\s\S]*?```/g, ` ${t('chat.codeOmitted')} `)
+      .replaceAll(/`([^`]+)`/g, '$1')
+      .replaceAll(/[*#>|~\-=_[\]()]{1,}/g, ' ')
+      .replaceAll(/https?:\/\/\S+/g, '')
+      .replaceAll(/\s+/g, ' ')
+      .trim()
+  }
+  async function toggleSpeak() {
+    if (speaking) {
+      audio?.pause()
+      audio = null
+      speaking = false
+      return
+    }
+    if (ttsLoading) return
+    ttsLoading = true
+    try {
+      const blob = await speak(ttsText())
+      const url = URL.createObjectURL(blob)
+      audio = new Audio(url)
+      audio.onended = audio.onerror = () => {
+        URL.revokeObjectURL(url)
+        speaking = false
+        audio = null
+      }
+      speaking = true
+      await audio.play()
+    } catch {
+      speaking = false
+    } finally {
+      ttsLoading = false
+    }
+  }
+
+  $effect(() => () => audio?.pause())
 </script>
 
 {#if message.role === 'user'}
@@ -41,8 +118,34 @@
         {/each}
       </div>
     {/if}
-    {#if message.content}
-      <div class="bubble">{message.content}</div>
+    {#if editing}
+      <div class="edit-box">
+        <textarea bind:value={editText} rows="3" onkeydown={onEditKeydown}></textarea>
+        <div class="edit-actions">
+          <button type="button" class="edit-cancel" onclick={() => (editing = false)}>
+            {t('chat.cancel')}
+          </button>
+          <button type="button" class="edit-save" onclick={saveEdit}>
+            {t('chat.saveAndResend')}
+          </button>
+        </div>
+      </div>
+    {:else}
+      {#if message.content}
+        <div class="bubble">{message.content}</div>
+      {/if}
+      {#if !C.streaming}
+        <div class="user-actions">
+          <button
+            type="button"
+            title={t('chat.edit')}
+            aria-label={t('chat.edit')}
+            onclick={startEdit}
+          >
+            <Icon name="pencil" size={13} strokeWidth={1.75} />
+          </button>
+        </div>
+      {/if}
     {/if}
   </div>
 {:else}
@@ -85,7 +188,9 @@
     {/if}
 
     {#if parts.answer}
-      <div class="md">
+      <!-- 代码块复制按钮的点击委托;按钮本身可聚焦,容器无键盘语义 -->
+      <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+      <div class="md" onclick={onMdClick}>
         <!-- eslint-disable-next-line svelte/no-at-html-tags — renderMarkdown 全量转义,只输出白名单标签 -->
         {@html answerHtml}
       </div>
@@ -117,6 +222,17 @@
           >
             <Icon name={copied ? 'check' : 'copy'} size={14} strokeWidth={1.75} />
           </button>
+          <button
+            type="button"
+            class:speaking
+            title={speaking ? t('chat.stopSpeaking') : t('chat.readAloud')}
+            aria-label={speaking ? t('chat.stopSpeaking') : t('chat.readAloud')}
+            aria-pressed={speaking}
+            disabled={ttsLoading}
+            onclick={toggleSpeak}
+          >
+            <Icon name={speaking ? 'stop' : 'speaker'} size={14} strokeWidth={1.75} />
+          </button>
         {/if}
         {#if isLast && !C.streaming}
           <button
@@ -127,6 +243,9 @@
           >
             <Icon name="refresh" size={14} strokeWidth={1.75} />
           </button>
+        {/if}
+        {#if message.durationMs}
+          <span class="duration">{(message.durationMs / 1000).toFixed(1)}s</span>
         {/if}
       </div>
     {/if}
@@ -168,6 +287,80 @@
     line-height: 1.55;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+
+  .user-actions {
+    display: flex;
+    opacity: 0;
+    transition: opacity var(--dur-fast, 120ms) var(--ease, ease);
+  }
+  .row.user:hover .user-actions,
+  .user-actions:focus-within {
+    opacity: 1;
+  }
+  .user-actions button {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--t3);
+    cursor: pointer;
+  }
+  .user-actions button:hover {
+    background: var(--card);
+    color: var(--t1);
+  }
+  @media (hover: none) {
+    .user-actions {
+      opacity: 1;
+    }
+  }
+
+  .edit-box {
+    width: min(100%, 560px);
+    display: grid;
+    gap: 8px;
+    background: var(--card);
+    border-radius: 18px;
+    padding: 12px;
+  }
+  .edit-box textarea {
+    width: 100%;
+    border: none;
+    background: transparent;
+    resize: vertical;
+    outline: none;
+    color: var(--t1);
+    font: inherit;
+    font-size: var(--text-base, 15px);
+    line-height: 1.5;
+    min-height: 60px;
+  }
+  .edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .edit-cancel,
+  .edit-save {
+    border: none;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: var(--text-sm, 13px);
+    cursor: pointer;
+  }
+  .edit-cancel {
+    background: var(--bg);
+    color: var(--t1);
+    border: 1px solid var(--border-l);
+  }
+  .edit-save {
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 550;
   }
 
   .row.assistant {
@@ -324,14 +517,46 @@
     overflow: hidden;
     background: var(--bg-2);
   }
-  .md :global(.md-code[data-lang])::before {
-    content: attr(data-lang);
-    display: block;
-    padding: 6px 14px;
+  .md :global(.md-code-head) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px 4px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .md :global(.md-code-lang) {
     font-size: var(--text-xs, 11px);
     color: var(--t3);
-    border-bottom: 1px solid var(--border);
     font-family: var(--mono, ui-monospace, monospace);
+  }
+  .md :global(.md-copy) {
+    border: none;
+    background: transparent;
+    color: var(--t3);
+    font-size: 13px;
+    line-height: 1;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .md :global(.md-copy:hover) {
+    background: var(--card);
+    color: var(--t1);
+  }
+  .md :global(.tok-cmt) {
+    color: var(--t4);
+    font-style: italic;
+  }
+  .md :global(.tok-str) {
+    color: var(--t2);
+  }
+  .md :global(.tok-num) {
+    color: var(--t2);
+    font-weight: 600;
+  }
+  .md :global(.tok-kw) {
+    color: var(--t1);
+    font-weight: 700;
   }
   .md :global(pre) {
     margin: 0;
@@ -490,6 +715,25 @@
   .actions button:hover {
     background: var(--card);
     color: var(--t1);
+  }
+  .actions button.speaking {
+    color: var(--t1);
+    opacity: 1;
+  }
+  .actions button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .row.assistant:has(.actions button.speaking) .actions {
+    opacity: 1;
+  }
+
+  .duration {
+    align-self: center;
+    margin-inline-start: 4px;
+    font-size: var(--text-xs, 11px);
+    color: var(--t4);
+    font-variant-numeric: tabular-nums;
   }
 
   @media (hover: none) {

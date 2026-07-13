@@ -110,7 +110,7 @@
           <span class="toggle-desc">{item.desc}</span>
         </span>
         <span
-          class="toggle"
+          class="switch"
           class:on={S.settings[item.key]}
           role="switch"
           aria-checked={S.settings[item.key]}
@@ -346,7 +346,8 @@
     font-size: var(--text-xs, 12px);
     color: var(--t3);
   }
-  .toggle {
+  /* 命名避开主题包全局 .toggle 组件(settings-ext.css),防止样式互相泄漏 */
+  .switch {
     flex: 0 0 auto;
     width: 40px;
     height: 24px;
@@ -355,7 +356,7 @@
     position: relative;
     transition: background var(--dur-fast, 120ms) var(--ease, ease);
   }
-  .toggle::after {
+  .switch::after {
     content: '';
     position: absolute;
     top: 3px;
@@ -367,10 +368,10 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
     transition: transform var(--dur-fast, 120ms) var(--ease, ease);
   }
-  .toggle.on {
+  .switch.on {
     background: var(--accent);
   }
-  .toggle.on::after {
+  .switch.on::after {
     transform: translateX(16px);
   }
 

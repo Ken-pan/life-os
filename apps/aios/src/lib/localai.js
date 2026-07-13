@@ -214,14 +214,49 @@ export async function transcribe(blob) {
   form.append('model', TRANSCRIBE_MODEL)
   const ext = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm'
   form.append('file', blob, `recording.${ext}`)
-  const res = await fetch(`${GATEWAY}/v1/audio/transcriptions`, {
-    method: 'POST',
-    body: form,
-    signal: AbortSignal.timeout(120000),
-  })
+  const res = await fetchWithColdRetry(() =>
+    fetch(`${GATEWAY}/v1/audio/transcriptions`, {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout(120000),
+    }),
+  )
   if (!res.ok) throw new Error(`transcribe ${res.status}`)
   const json = await res.json()
   return (json.text ?? '').trim()
+}
+
+export const TTS_MODEL = 'mlx-community/Kokoro-82M-bf16'
+
+/** 语音壳冷启动偶发 500/502(mlx_audio 首载竞态),等 2s 重试一次 */
+async function fetchWithColdRetry(doFetch) {
+  let res = await doFetch()
+  if (res.status === 500 || res.status === 502) {
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    res = await doFetch()
+  }
+  return res
+}
+
+/**
+ * 文本转语音(Kokoro,本地)。返回 wav Blob。
+ * @param {string} text
+ * @returns {Promise<Blob>}
+ */
+export async function speak(text) {
+  // Kokoro 单线程壳:长文本合成分钟级且会阻塞队列,朗读取前 400 字
+  const input = text.slice(0, 400)
+  const langCode = /[一-鿿]/.test(input) ? 'z' : 'a'
+  const res = await fetchWithColdRetry(() =>
+    fetch(`${GATEWAY}/v1/audio/speech`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: TTS_MODEL, input, lang_code: langCode }),
+      signal: AbortSignal.timeout(180000),
+    }),
+  )
+  if (!res.ok) throw new Error(`tts ${res.status}`)
+  return await res.blob()
 }
 
 /**

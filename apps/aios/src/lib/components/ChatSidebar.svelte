@@ -7,6 +7,17 @@
 
   const onChatRoute = $derived(page.url.pathname === '/')
 
+  let query = $state('')
+  const filtered = $derived.by(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return C.conversations
+    return C.conversations.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        c.messages.some((m) => m.content?.toLowerCase().includes(q)),
+    )
+  })
+
   function openConversation(id) {
     selectConversation(id)
     if (!onChatRoute) goto('/')
@@ -32,11 +43,22 @@
     </button>
   </div>
 
+  {#if C.conversations.length > 3}
+    <div class="sidebar-search">
+      <input
+        type="search"
+        placeholder={t('chat.searchChats')}
+        bind:value={query}
+        aria-label={t('chat.searchChats')}
+      />
+    </div>
+  {/if}
+
   <div class="sidebar-body chat-list" role="list">
-    {#if C.conversations.length === 0}
-      <p class="chat-list-empty">{t('history.empty')}</p>
+    {#if filtered.length === 0}
+      <p class="chat-list-empty">{query ? t('chat.searchNoResults') : t('history.empty')}</p>
     {:else}
-      {#each C.conversations as conversation (conversation.id)}
+      {#each filtered as conversation (conversation.id)}
         <div
           class="chat-item"
           class:active={onChatRoute && C.activeId === conversation.id}
@@ -113,6 +135,27 @@
   }
   .icon-btn:hover {
     background: var(--sidebar-accent);
+  }
+
+  .sidebar-search {
+    padding: 0 var(--space-2, 8px) var(--space-1, 4px);
+  }
+  .sidebar-search input {
+    width: 100%;
+    border: 1px solid var(--sidebar-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--sidebar-foreground);
+    font: inherit;
+    font-size: var(--text-sm, 13px);
+    padding: 6px 10px;
+    outline: none;
+  }
+  .sidebar-search input::placeholder {
+    color: var(--sidebar-muted);
+  }
+  .sidebar-search input:focus {
+    border-color: var(--sidebar-muted);
   }
 
   .chat-list {

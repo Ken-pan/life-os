@@ -1,5 +1,10 @@
+import ArrowDown from '@lucide/svelte/icons/arrow-down'
 import ArrowUp from '@lucide/svelte/icons/arrow-up'
 import Brain from '@lucide/svelte/icons/brain'
+import Download from '@lucide/svelte/icons/download'
+import Pencil from '@lucide/svelte/icons/pencil'
+import Search from '@lucide/svelte/icons/search'
+import Volume2 from '@lucide/svelte/icons/volume-2'
 import Calculator from '@lucide/svelte/icons/calculator'
 import Check from '@lucide/svelte/icons/check'
 import ChevronDown from '@lucide/svelte/icons/chevron-down'
@@ -24,8 +29,13 @@ import X from '@lucide/svelte/icons/x'
 
 /** App 图标注册表：经 platform-web ICON_REGISTRY_CONTEXT_KEY 注入 Icon 组件 */
 export const ICONS = {
+  'arrow-down': ArrowDown,
   'arrow-up': ArrowUp,
   brain: Brain,
+  download: Download,
+  pencil: Pencil,
+  search: Search,
+  speaker: Volume2,
   calculator: Calculator,
   check: Check,
   'chevron-down': ChevronDown,

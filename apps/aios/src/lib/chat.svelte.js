@@ -144,7 +144,9 @@ async function buildSystemPrompt(conversation) {
   if (S.settings.tools) {
     lines.push(
       '你可以调用工具:数学用 calculate,代码/数据处理用 run_javascript,时间用 get_time,需要记住或回忆用户信息用 save_memory / search_memory' +
-        (S.settings.webAccess ? ',读取网页用 fetch_url' : '') +
+        (S.settings.webAccess
+          ? ';涉及最新信息或你不确定的事实,先 web_search 搜索,再用 fetch_url 打开值得深入的链接'
+          : '') +
         '。需要事实精度时优先用工具,不要凭感觉编造。',
     )
   }
@@ -267,6 +269,34 @@ export async function sendMessage(text, images = []) {
   await streamAssistantReply(conversation)
 }
 
+/** 编辑某条用户消息并从该处重发(丢弃其后所有消息,ChatGPT 语义) */
+export async function editUserMessage(index, newText) {
+  const conversation = activeConversation()
+  if (!conversation || C.streaming) return
+  const message = conversation.messages[index]
+  if (message?.role !== 'user') return
+  const trimmed = newText.trim()
+  if (!trimmed && !message.images?.length) return
+  conversation.messages.splice(index + 1)
+  message.content = trimmed
+  touch(conversation)
+  persist()
+  await streamAssistantReply(conversation)
+}
+
+/** 会话导出为 Markdown 文本 */
+export function conversationToMarkdown(conversation) {
+  const lines = [`# ${conversation.title}`, '']
+  for (const m of conversation.messages) {
+    if (m.role === 'user') {
+      lines.push(`**Ken:**`, '', m.content, '')
+    } else if (m.content) {
+      lines.push(`**AI.OS:**`, '', m.content, '')
+    }
+  }
+  return lines.join('\n')
+}
+
 /** 重新生成最后一条助手回复 */
 export async function regenerate() {
   const conversation = activeConversation()
@@ -299,6 +329,7 @@ async function streamAssistantReply(conversation) {
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
       const assistant = $state({ role: 'assistant', content: '', reasoning: '' })
       conversation.messages.push(assistant)
+      const startedAt = Date.now()
 
       const res = await streamChat({
         model,
@@ -313,6 +344,7 @@ async function streamAssistantReply(conversation) {
         },
       })
 
+      assistant.durationMs = Date.now() - startedAt
       if (!res.toolCalls.length) break
 
       // 执行工具(串行,保持网关/嵌入模型不打架),结果回填后进入下一轮
