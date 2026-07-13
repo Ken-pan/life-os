@@ -6,6 +6,8 @@
   import TaskGroup from '$lib/components/TaskGroup.svelte'
   import QuickAddBar from '$lib/components/QuickAddBar.svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
+  import AttachmentList from '$lib/components/attachments/AttachmentList.svelte'
+  import AttachmentUploader from '$lib/components/attachments/AttachmentUploader.svelte'
   import { S } from '$lib/state.svelte.js'
   import {
     deleteProject,
@@ -153,6 +155,24 @@
         e.preventDefault()
         saveProject()
       }}
+      onpaste={(e) => {
+        const items = e.clipboardData?.items
+        if (!items) return
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            const file = item.getAsFile()
+            if (file) {
+              e.preventDefault()
+              import('$lib/services/attachmentService.js').then(({ uploadAttachment }) => {
+                uploadAttachment('project', project.id, file, 'paste').catch((err) => {
+                  toast(err.message, 'error')
+                })
+              })
+              return
+            }
+          }
+        }
+      }}
     >
       <div class="field">
         <label for="project-title">{t('projects.fieldTitle')}</label>
@@ -192,6 +212,12 @@
           </div>
         {/if}
       </div>
+
+      <div class="field" style="margin-top: var(--space-2)">
+        <AttachmentList ownerType="project" ownerId={project.id} />
+        <AttachmentUploader ownerType="project" ownerId={project.id} />
+      </div>
+
       <div class="project-actions">
         <button type="submit" class="btn-primary" disabled={!title.trim()}>
           {t('common.save')}

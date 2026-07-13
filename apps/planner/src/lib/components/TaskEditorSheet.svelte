@@ -19,6 +19,8 @@
   import TimeField from './TimeField.svelte';
   import ProjectPicker from './ProjectPicker.svelte';
   import Icon from '@life-os/platform-web/svelte/icon';
+  import AttachmentList from './attachments/AttachmentList.svelte';
+  import AttachmentUploader from './attachments/AttachmentUploader.svelte';
 
   const ime = createImeGuard();
 
@@ -317,22 +319,40 @@
   ]);
 
   const canRemind = $derived(Boolean(draft?.dueDate));
+  function handleGlobalPaste(e) {
+    if (!draft || isNew) return
+    const items = e.clipboardData?.items
+    if (!items) return
+    
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) {
+          e.preventDefault()
+          import('$lib/services/attachmentService.js').then(({ uploadAttachment }) => {
+            uploadAttachment('task', draft.id, file, 'paste').catch((err) => {
+              toast(err.message, 'error')
+            })
+          })
+          return
+        }
+      }
+    }
+  }
 </script>
 
 {#if taskEditor.open && draft}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="sheet-bg" role="presentation" onclick={(e) => e.target === e.currentTarget && requestClose()}>
-    <div
-      bind:this={sheetEl}
-      class="sheet task-editor-sheet"
-      role="dialog"
-      tabindex="-1"
-      aria-modal="true"
+  <div class="sheet-bg" role="presentation" onclick={(e) => e.target === e.currentTarget && closeTaskEditor()}>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div 
+      class="sheet task-editor-sheet" 
+      role="dialog" 
+      aria-modal="true" 
       aria-labelledby="task-editor-title"
-      aria-describedby="task-editor-description"
-      onkeydown={handleDialogKeydown}
+      onpaste={handleGlobalPaste}
     >
-      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-handle"></div>
       <div class="sheet-header">
         <div>
           <h2 id="task-editor-title" class="sheet-title">{isNew ? t('task.createTitle') : t('task.editTitle')}</h2>
@@ -666,6 +686,14 @@
           <button type="button" class="btn-secondary ai-split-btn" disabled={aiBusy || !draft.title?.trim()} onclick={aiSplit}>
             {aiBusy ? t('task.aiSplitting') : t('task.aiSplit')}
           </button>
+          
+          {#if !isNew}
+            <div class="field">
+              <span class="field-label">{t('attachments.title', 'Attachments')}</span>
+              <AttachmentList ownerType="task" ownerId={draft.id} />
+              <AttachmentUploader ownerType="task" ownerId={draft.id} />
+            </div>
+          {/if}
         </div>
       {/if}
 

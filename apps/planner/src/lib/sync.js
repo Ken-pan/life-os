@@ -34,7 +34,7 @@ const AUTO_SYNC_DEBOUNCE_MS = 2500;
 
 // 墓碑也算数据：全部删光后仍需 merge + push 才能把删除传播到云端
 export function localHasData() {
-  return S.tasks.length > 0 || S.projects.length > 0 || S.lists.length > 1;
+  return S.tasks.length > 0 || S.projects.length > 0 || S.attachments.length > 0 || S.lists.length > 1;
 }
 
 function isOffline() {
@@ -72,10 +72,13 @@ function pruneExpiredTombstones() {
   if (projects.expiredIds.length) S.projects = projects.live;
   const lists = splitExpiredTombstones(S.lists, now);
   if (lists.expiredIds.length) S.lists = lists.live;
+  const attachments = splitExpiredTombstones(S.attachments, now);
+  if (attachments.expiredIds.length) S.attachments = attachments.live;
   return {
     taskIds: tasks.expiredIds,
     projectIds: projects.expiredIds,
-    listIds: lists.expiredIds
+    listIds: lists.expiredIds,
+    attachmentIds: attachments.expiredIds
   };
 }
 
