@@ -20,6 +20,11 @@
     "./bidirectional": {
       "types": "./src/index.d.ts",
       "import": "./src/bidirectional.js"
+    },
+    "./svelte/auth-store": {
+      "types": "./src/svelte/authStore.d.ts",
+      "svelte": "./src/svelte/authStore.svelte.js",
+      "default": "./src/svelte/authStore.svelte.js"
     }
   }
 }
