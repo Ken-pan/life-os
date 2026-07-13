@@ -62,7 +62,15 @@ generator**(一键生成新的 Life OS app)。
 | **PLAT.SHELL.3**   | `PLAT-P0-3` | **合同冻结 v1** + 迁移指南                  | ✅ 2026-07-12 [`迁移指南`](../architecture/life-os-app-shell-migration-guide.md)                 |
 | **PLAT.SHELL.4**   | —           | 第三 app 采用:Music(v1.1 增量 `shellClass`/`shellDataset`)| ✅ **39/40** 2026-07-12 [`验证记录`](../architecture/life-os-app-shell-music-validation.md) |
 | **PLAT.SHELL.5**   | —           | Starter template:`apps/starter` 活模板 + `scripts/create-life-os-app.mjs` | ✅ 2026-07-12 [`README`](../../apps/starter/README.md);shell+theme+i18n+PWA 骨架,workspace 常绿,spec 3/3 |
-| **PLAT.SHELL.6**   | —           | AppManifest + generator(声明式生成新 app;自动化晋升清单:brand/site-meta/switcher/PWA矩阵/netlify) | ⬜ 下一步                                                          |
+| **PLAT.SHELL.6**   | —           | AppManifest + generator(声明式生成新 app;自动化晋升清单:brand/site-meta/switcher/PWA矩阵/netlify) | ✅ 2026-07-12 `apps/<id>/app.manifest.json` + `scripts/promote-life-os-app.mjs`;16 个接线点幂等自动化,demo app E2E 全绿(check / boundaries / build / shell spec 3/3) |
+
+**SHELL.6 说明:** `create-life-os-app.mjs` 生成 app + 填好的 AppManifest;
+`promote-life-os-app.mjs <id>` 按 manifest 接线 siteMeta / launcher(origins+switcher)/
+brand accent / design-tokens(brands json + BRAND_APPS + theme exports)/ app.css
+品牌 @import / PWA 矩阵 / preview case / 根 scripts / launch.json / netlify.toml /
+shell 合同 spec,并跑 build:tokens + validate。仍属手动的外部操作(Netlify site
+创建、DNS、图标生成、Supabase env)由脚本结尾清单打印。顺带修复:`BRAND_APPS`
+补 `home`(此前 `generated/brands/home.css` 存在但不在构建/校验列表)。
 
 **SHELL.4 遗留:** Music 播放态(mini player 可见 / utility pane / 沉浸
 now-playing)的真机运行 QA 待导入曲库后人工验收一次。

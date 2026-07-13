@@ -29,17 +29,21 @@ npm exec --workspace reading-os -- vite dev
 `scrollMode="locked"`)见 `+layout.svelte` 内注释与
 [`docs/architecture/life-os-app-shell.md`](../../docs/architecture/life-os-app-shell.md)。
 
-## 晋升清单(模板 → 正式 app)
+## 晋升(模板 → 正式 app,PLAT.SHELL.6 已自动化)
 
-目前手动,`PLAT.SHELL.6` generator 的自动化目标:
+每个生成的 app 带 `app.manifest.json`(AppManifest,声明式注册信息;
+本目录的同名文件是 schema 示例)。按需改好 manifest(文案/主题色/路由/
+`experimental`)后一条命令接线全部注册表(幂等,可重复执行):
 
-1. **品牌**:token 迁 `packages/design-tokens/tokens/brands/<app>.json`,
-   `app.css` 改 `@import '@life-os/theme/brands/<app>.css'`;
-   `packages/theme/src/brand.js` + `documentMeta.js` 注册(之后可换用
-   `DocumentHead` / `AppBrand` / `AppBrandSwitcher`)。
-2. **登录/云同步**:接 `@life-os/platform-web` `createLifeOsAuth` +
-   Supabase(参考 fitness `src/lib/auth.svelte.js`)。
-3. **Portal**:`LIFE_OS_SWITCHER_APPS` 与 Portal 摘要。
-4. **PWA 矩阵**:`scripts/pwa/apps.config.mjs` 补 routes/clipPaths,
-   `pwaTestEnabled: true`;图标 `scripts/generate-life-os-brand-icons.py`。
-5. **部署**:根 `netlify.toml` · `.claude/launch.json` · `docs/ops/netlify.md`。
+```bash
+node scripts/promote-life-os-app.mjs <app-id>
+```
+
+自动接线:siteMeta · launcher(origins + switcher)· brand accent ·
+design-tokens(brands json + `BRAND_APPS` + theme exports)· `app.css`
+品牌 `@import` · PWA 矩阵 · preview case · 根 scripts · `launch.json` ·
+`netlify.toml` · shell 合同 spec,并跑 `build:tokens` + `validate:tokens`。
+
+仍属手动(脚本结尾会打印清单):品牌配色与图标、Netlify site 创建 + DNS +
+`docs/ops/netlify.md` 记录、登录/云同步(`createLifeOsAuth`,参考 fitness
+`src/lib/auth.svelte.js`)、上线后 `production: true`。
