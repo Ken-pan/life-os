@@ -2913,10 +2913,8 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     grid-column: 1 / -1;
   }
 
-  /* SCH-1/SCH-10: 移动端单一主滚动面（.life-os-page-workspace），时间轴不再内滚 */
-  .day-timeline-scroll {
-    max-height: none;
-    overflow: visible;
+  html:not(.standalone-pwa) .day-timeline-scroll {
+    max-height: 58vh;
   }
 
   /*
@@ -2988,7 +2986,17 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     font-size: var(--text-sm);
   }
 
-  /* SCH-1: 待排程内联在时间轴上方（原 fixed 浮层遮挡内容且与 FAB 冲突） */
+  html:not(.standalone-pwa) .calendar-page .day-timeline-scroll {
+    max-height: min(64vh, 680px);
+    padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+  }
+
+  html.standalone-pwa .calendar-page .day-timeline-scroll {
+    max-height: none;
+    padding-bottom: 0;
+    overflow: visible;
+  }
+
   .unscheduled-panel {
     padding: var(--space-2) var(--space-2-5);
     background: var(--card);
