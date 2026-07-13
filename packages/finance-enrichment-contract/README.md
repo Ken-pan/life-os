@@ -5,7 +5,7 @@ Single source of truth for purchase enrichment **clean vs review** classificatio
 ## Consumers
 
 - `apps/finance/src/engine/purchaseEnrichmentDisplay.ts` (Finance OS UI)
-- `tools/web-state-devtools/bridge/scripts/merchant-read-model-v1.mjs` (read model builder)
+- `../web-state-devtools/bridge/scripts/merchant-read-model-v1.mjs` (read model builder)
 
 ## Fixtures
 

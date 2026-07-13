@@ -14,7 +14,7 @@ import { isRefundCreditTxn } from '../src/engine/purchaseReturnStatus.ts'
 import {
   summaryHarvestSince,
   summaryHarvestUntil,
-} from '../../../tools/web-state-devtools/bridge/lib/orders-export.mjs'
+} from '../../../../web-state-devtools/bridge/lib/orders-export.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'iueozzuctstwvzbcxcyh'
@@ -76,7 +76,7 @@ async function main() {
     '--orders',
     path.resolve(
       __dirname,
-      '../../../tools/web-state-devtools/bridge/data/target-export/target-orders-2024-07-01_to_2026-07-07-raw.json',
+      '../../../../web-state-devtools/bridge/data/target-export/target-orders-2024-07-01_to_2026-07-07-raw.json',
     ),
   )
   const since = arg('--since', '2024-07-01')

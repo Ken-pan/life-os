@@ -2,7 +2,7 @@
  * Single source of truth for clean vs review classification.
  * Consumed by:
  * - apps/finance/src/engine/purchaseEnrichmentDisplay.ts (UI)
- * - tools/web-state-devtools/bridge/scripts/merchant-read-model-v1.mjs (read model)
+ * - ../web-state-devtools/bridge/scripts/merchant-read-model-v1.mjs (read model)
  */
 
 export const SUPPORTED_SOURCES = new Set(['amazon', 'bestbuy', 'target'])

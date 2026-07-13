@@ -16,7 +16,7 @@
     "build:music": "npm run build -w music-os",
     "build:portal": "npm run build -w portal",
     "build:home": "npm run build -w home-os",
-    "verify:web-state": "npm run verify --prefix tools/web-state-devtools/bridge",
+    "verify:web-state": "npm run verify --prefix ../web-state-devtools/bridge",
     "qa:mobile-scroll": "node scripts/life-os-mobile-scroll-qa.mjs",
     "qa:screenshots:prune": "node scripts/qa/prune-screenshots.mjs",
     "qa:screenshots:cleanup": "node scripts/qa/cleanup-legacy-screenshots.mjs",

@@ -11,7 +11,7 @@ import { execSync } from 'node:child_process'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const OUT = path.resolve(
   __dirname,
-  '../../../tools/web-state-devtools/bridge/data/bestbuy-export/bestbuy-orders-past-year-raw.json',
+  '../../../../web-state-devtools/bridge/data/bestbuy-export/bestbuy-orders-past-year-raw.json',
 )
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'iueozzuctstwvzbcxcyh'
 

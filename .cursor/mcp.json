@@ -10,7 +10,7 @@
     "web-state-devtools": {
       "command": "node",
       "args": [
-        "/Users/kenpan/「Projects」/life-os/tools/web-state-devtools/bridge/mcp-server.mjs"
+        "/Users/kenpan/「Projects」/web-state-devtools/bridge/mcp-server.mjs"
       ],
       "env": {
         "WEB_STATE_BRIDGE_URL": "http://127.0.0.1:17321",

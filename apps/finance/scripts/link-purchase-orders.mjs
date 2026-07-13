@@ -47,14 +47,14 @@ import {
   wouldWriteEnrichmentUpdate,
   enrichmentFieldChanges,
 } from '../src/engine/purchaseEnrichment.ts'
-import { deriveAmazonReturnInfoDecision } from '../../../tools/web-state-devtools/bridge/lib/amazon-orders-parser.mjs'
-import { parseVisibleDateText } from '../../../tools/web-state-devtools/bridge/lib/bestbuy-orders-parser.mjs'
+import { deriveAmazonReturnInfoDecision } from '../../../../web-state-devtools/bridge/lib/amazon-orders-parser.mjs'
+import { parseVisibleDateText } from '../../../../web-state-devtools/bridge/lib/bestbuy-orders-parser.mjs'
 import { isRefundCreditTxn } from '../src/engine/purchaseReturnStatus.ts'
 import {
   resolveOrdersRawPath,
   summaryHarvestSince,
   summaryHarvestUntil,
-} from '../../../tools/web-state-devtools/bridge/lib/orders-export.mjs'
+} from '../../../../web-state-devtools/bridge/lib/orders-export.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'iueozzuctstwvzbcxcyh'
@@ -65,7 +65,7 @@ const SOURCE_CONFIG = {
     merchantSql: `(merchant_name ilike '%amazon%' or merchant ilike '%amazon%')`,
     defaultOrders: path.resolve(
       __dirname,
-      '../../../tools/web-state-devtools/bridge/data/amazon-export/amazon-orders-2026-raw.json',
+      '../../../../web-state-devtools/bridge/data/amazon-export/amazon-orders-2026-raw.json',
     ),
     matchOrders: matchAmazonOrdersToTxns,
     matchRefunds: matchAmazonRefundsToOrders,
@@ -75,7 +75,7 @@ const SOURCE_CONFIG = {
     merchantSql: `(merchant_name ilike '%best buy%' or merchant_name ilike '%bestbuy%' or merchant ilike '%best buy%' or merchant ilike '%bestbuy%')`,
     defaultOrders: path.resolve(
       __dirname,
-      '../../../tools/web-state-devtools/bridge/data/bestbuy-export/bestbuy-orders-past-year-raw.json',
+      '../../../../web-state-devtools/bridge/data/bestbuy-export/bestbuy-orders-past-year-raw.json',
     ),
     matchOrders: matchBestBuyOrdersToTxns,
     matchRefunds: matchBestBuyRefundsToOrders,
@@ -85,7 +85,7 @@ const SOURCE_CONFIG = {
     merchantSql: `(merchant_name ilike '%target%' or merchant ilike '%target%')`,
     defaultOrders: path.resolve(
       __dirname,
-      '../../../tools/web-state-devtools/bridge/data/target-export/target-orders-past-year-raw.json',
+      '../../../../web-state-devtools/bridge/data/target-export/target-orders-past-year-raw.json',
     ),
     matchOrders: matchTargetOrdersToTxns,
     matchRefunds: matchTargetRefundsToOrders,

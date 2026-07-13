@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Web State DevTools + Cursor
 
-1. `npm run bridge` in `tools/web-state-devtools/bridge`
+1. `npm run bridge` in `/Users/kenpan/「Projects」/web-state-devtools/bridge`
 2. Extension → **Dev Agent Mode ON** → Capture page
 
 **Explore loop (v0.6)**

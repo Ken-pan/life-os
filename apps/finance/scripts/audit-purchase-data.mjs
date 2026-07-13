@@ -20,14 +20,14 @@ import {
   resolveOrdersRawPath,
   summaryHarvestSince,
   summaryHarvestUntil,
-} from '../../../tools/web-state-devtools/bridge/lib/orders-export.mjs'
+} from '../../../../web-state-devtools/bridge/lib/orders-export.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF || 'iueozzuctstwvzbcxcyh'
 
 const EXPORT_ROOT = path.resolve(
   __dirname,
-  '../../../tools/web-state-devtools/bridge/data',
+  '../../../../web-state-devtools/bridge/data',
 )
 function exportPathFor(source) {
   const dir = path.join(EXPORT_ROOT, `${source}-export`)
