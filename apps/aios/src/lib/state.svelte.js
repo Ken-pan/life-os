@@ -13,6 +13,12 @@ const persistence = createSettingsPersistence({
       theme: 'auto', // 'light' | 'dark' | 'auto'
       locale: 'zh', // 'zh' | 'en'
       model: 'llm-fast', // 'llm-fast' | 'llm-quality'
+      thinking: false, // 思考模式(qwen3.6 enable_thinking)
+      tools: true, // 原生工具调用 agent loop
+      webAccess: true, // fetch_url 网页阅读(经 r.jina.ai)
+      memory: true, // 长期记忆召回注入
+      temperature: 0.7,
+      customPrompt: '', // 自定义指令
     },
   },
   serialize: (state) => ({ settings: state.settings }),

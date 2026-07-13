@@ -3,6 +3,7 @@
   import { t } from '$lib/i18n/index.js'
   import { renderMarkdown, splitThinking } from '$lib/markdown.js'
   import { C, regenerate } from '$lib/chat.svelte.js'
+  import { toolIcon } from '$lib/tools.js'
 
   /** @type {{ message: import('$lib/chat.svelte.js').ChatMessage, isLast?: boolean }} */
   let { message, isLast = false } = $props()
@@ -33,7 +34,16 @@
 
 {#if message.role === 'user'}
   <div class="row user">
-    <div class="bubble">{message.content}</div>
+    {#if message.images?.length}
+      <div class="user-images">
+        {#each message.images as src, i (i)}
+          <img {src} alt={t('chat.attachedImage')} />
+        {/each}
+      </div>
+    {/if}
+    {#if message.content}
+      <div class="bubble">{message.content}</div>
+    {/if}
   </div>
 {:else}
   <div class="row assistant">
@@ -47,12 +57,39 @@
       </details>
     {/if}
 
+    {#if message.toolCalls?.length}
+      <div class="tools">
+        {#each message.toolCalls as tc (tc.id)}
+          <details class="tool">
+            <summary>
+              <span class="tool-icon" class:running={tc.running}>
+                <Icon name={toolIcon(tc.name)} size={13} strokeWidth={2} />
+              </span>
+              <span class="tool-name">{t(`tool.${tc.name}`)}</span>
+              {#if tc.running}
+                <span class="tool-status">{t('chat.toolRunning')}</span>
+              {/if}
+              <Icon name="chevron-down" size={12} strokeWidth={2} />
+            </summary>
+            <div class="tool-body">
+              {#if tc.arguments && tc.arguments !== '{}'}
+                <pre class="tool-args">{tc.arguments}</pre>
+              {/if}
+              {#if tc.result}
+                <pre class="tool-result">{tc.result.slice(0, 1500)}{tc.result.length > 1500 ? '…' : ''}</pre>
+              {/if}
+            </div>
+          </details>
+        {/each}
+      </div>
+    {/if}
+
     {#if parts.answer}
       <div class="md">
         <!-- eslint-disable-next-line svelte/no-at-html-tags — renderMarkdown 全量转义,只输出白名单标签 -->
         {@html answerHtml}
       </div>
-    {:else if streamingThis && !thinkingText}
+    {:else if streamingThis && !thinkingText && !message.toolCalls?.length}
       <div class="pending" aria-label={t('chat.loading')}>
         <span class="dot"></span>
       </div>
@@ -61,6 +98,7 @@
     {#if message.error}
       <div class="error" role="alert">
         <p>{t('chat.gatewayDown')}</p>
+        <p class="error-detail">{message.error}</p>
         <button type="button" onclick={() => regenerate()}>
           <Icon name="refresh" size={13} strokeWidth={2} />
           {t('chat.retry')}
@@ -103,6 +141,21 @@
 
   .row.user {
     align-items: flex-end;
+    gap: 8px;
+  }
+
+  .user-images {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .user-images img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    display: block;
   }
 
   .bubble {
@@ -120,6 +173,90 @@
   .row.assistant {
     align-items: stretch;
     gap: var(--space-2, 8px);
+  }
+
+  /* —— 工具调用卡片 —— */
+  .tools {
+    display: grid;
+    gap: 6px;
+    justify-items: start;
+  }
+  .tool {
+    max-width: 100%;
+  }
+  .tool summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--t2);
+    font-size: var(--text-sm, 13px);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .tool summary::-webkit-details-marker {
+    display: none;
+  }
+  .tool summary:hover {
+    border-color: var(--border-l);
+    color: var(--t1);
+  }
+  .tool-icon {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--card);
+    color: var(--t2);
+  }
+  .tool-icon.running {
+    animation: tool-pulse 1s ease-in-out infinite;
+  }
+  @keyframes tool-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+  .tool-name {
+    font-weight: 550;
+  }
+  .tool-status {
+    color: var(--t3);
+    font-size: var(--text-xs, 11px);
+  }
+  .tool-body {
+    margin-top: 6px;
+    display: grid;
+    gap: 6px;
+    max-width: 100%;
+  }
+  .tool-args,
+  .tool-result {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-2);
+    font-family: var(--mono, ui-monospace, monospace);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--t2);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .tool-result {
+    color: var(--t1);
   }
 
   /* —— markdown 正文 —— */
@@ -306,6 +443,11 @@
   }
   .error p {
     margin: 0;
+  }
+  .error-detail {
+    color: var(--t4);
+    font-family: var(--mono, ui-monospace, monospace);
+    font-size: 11px;
   }
   .error button {
     display: inline-flex;

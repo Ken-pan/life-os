@@ -11,18 +11,23 @@ export const MODELS = [
     id: 'llm-fast',
     nameKey: 'model.fastName',
     descKey: 'model.fastDesc',
-    // 低延迟对话必须关思考,否则先输出数百 token 推理
-    chatTemplateKwargs: { enable_thinking: false },
+    // qwen3.6 支持思考模式,由 chat_template_kwargs.enable_thinking 控制
+    thinkingSwitch: true,
   },
   {
     id: 'llm-quality',
     nameKey: 'model.qualityName',
     descKey: 'model.qualityDesc',
-    chatTemplateKwargs: null,
+    thinkingSwitch: false, // instruct 模型,无思考开关
   },
 ]
 
 export const DEFAULT_MODEL = 'llm-fast'
+
+/** 视觉路由:对话里出现图片时改走 VLM(VLM 同样能纯文本对话) */
+export const VISION_MODELS = { fast: 'vlm-fast', quality: 'vlm-quality' }
+
+export const TRANSCRIBE_MODEL = 'mlx-community/Qwen3-ASR-1.7B-8bit'
 
 export function modelById(id) {
   return MODELS.find((m) => m.id === id) ?? MODELS[0]
@@ -41,22 +46,45 @@ export async function pingGateway() {
 }
 
 /**
- * 流式对话。逐段 yield {content?, reasoning?}。
+ * 流式对话(支持工具调用 / 视觉消息 / 思考模式)。
+ *
  * @param {{
  *   model: string,
- *   messages: Array<{role: string, content: string}>,
+ *   messages: Array<object>,
  *   signal?: AbortSignal,
+ *   temperature?: number,
+ *   maxTokens?: number,
+ *   tools?: Array<object>,
+ *   thinking?: boolean,
+ *   onDelta?: (chunk: { content?: string, reasoning?: string }) => void,
  * }} options
+ * @returns {Promise<{
+ *   toolCalls: Array<{ id: string, name: string, arguments: string }>,
+ *   finishReason: string | null,
+ * }>}
  */
-export async function* streamChat({ model, messages, signal }) {
+export async function streamChat({
+  model,
+  messages,
+  signal,
+  temperature = 0.7,
+  maxTokens = 4096,
+  tools,
+  thinking = false,
+  onDelta,
+}) {
   const spec = modelById(model)
   const body = {
-    model: spec.id,
+    model,
     messages,
     stream: true,
-    max_tokens: 4096,
+    temperature,
+    max_tokens: maxTokens,
   }
-  if (spec.chatTemplateKwargs) body.chat_template_kwargs = spec.chatTemplateKwargs
+  if (spec.thinkingSwitch) {
+    body.chat_template_kwargs = { enable_thinking: Boolean(thinking) }
+  }
+  if (tools?.length) body.tools = tools
 
   const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
     method: 'POST',
@@ -67,6 +95,27 @@ export async function* streamChat({ model, messages, signal }) {
   if (!res.ok || !res.body) {
     throw new Error(`gateway ${res.status}`)
   }
+
+  // 部分后端(VLM 服务壳)忽略 stream 参数直接返回整块 JSON
+  const contentType = res.headers.get('content-type') ?? ''
+  if (!contentType.includes('text/event-stream')) {
+    const json = await res.json()
+    const message = json.choices?.[0]?.message
+    if (message?.reasoning_content) onDelta?.({ reasoning: message.reasoning_content })
+    if (message?.content) onDelta?.({ content: message.content })
+    return {
+      toolCalls: (message?.tool_calls ?? []).map((tc) => ({
+        id: tc.id ?? '',
+        name: tc.function?.name ?? '',
+        arguments: tc.function?.arguments ?? '',
+      })),
+      finishReason: json.choices?.[0]?.finish_reason ?? null,
+    }
+  }
+
+  /** @type {Map<number, { id: string, name: string, arguments: string }>} */
+  const toolCallsByIndex = new Map()
+  let finishReason = null
 
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
@@ -87,17 +136,92 @@ export async function* streamChat({ model, messages, signal }) {
         } catch {
           continue
         }
-        const delta = json.choices?.[0]?.delta
+        const choice = json.choices?.[0]
+        if (!choice) continue
+        if (choice.finish_reason) finishReason = choice.finish_reason
+        const delta = choice.delta
         if (!delta) continue
-        const chunk = {}
-        if (delta.content) chunk.content = delta.content
-        if (delta.reasoning_content) chunk.reasoning = delta.reasoning_content
-        if (chunk.content || chunk.reasoning) yield chunk
+        if (delta.content || delta.reasoning_content) {
+          onDelta?.({
+            content: delta.content || undefined,
+            reasoning: delta.reasoning_content || undefined,
+          })
+        }
+        // 工具调用增量:按 index 聚合(mlx-lm 通常整块到达,此处防御分片)
+        for (const tc of delta.tool_calls ?? []) {
+          const idx = tc.index ?? 0
+          const cur = toolCallsByIndex.get(idx) ?? {
+            id: '',
+            name: '',
+            arguments: '',
+          }
+          if (tc.id) cur.id = tc.id
+          if (tc.function?.name) cur.name = tc.function.name
+          if (tc.function?.arguments) cur.arguments += tc.function.arguments
+          toolCallsByIndex.set(idx, cur)
+        }
       }
     }
   } finally {
     reader.releaseLock()
   }
+
+  return {
+    toolCalls: [...toolCallsByIndex.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([, v]) => v)
+      .filter((v) => v.name),
+    finishReason,
+  }
+}
+
+/**
+ * 文本向量化(Qwen3-Embedding-8B,4096 维)。
+ * Matryoshka 截断到 keepDims 维并重新归一,便于 localStorage 存储。
+ * @returns {Promise<number[][]>}
+ */
+export async function embed(texts, keepDims = 512) {
+  const res = await fetch(`${GATEWAY}/v1/embeddings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'embeddings', input: texts }),
+    signal: AbortSignal.timeout(120000),
+  })
+  if (!res.ok) throw new Error(`embeddings ${res.status}`)
+  const json = await res.json()
+  return json.data.map((d) => {
+    const v = d.embedding.slice(0, keepDims)
+    const norm = Math.hypot(...v) || 1
+    return v.map((x) => Math.round((x / norm) * 1e4) / 1e4)
+  })
+}
+
+/** @returns {number} 余弦相似度(输入已归一时即点积) */
+export function cosine(a, b) {
+  const n = Math.min(a.length, b.length)
+  let dot = 0
+  for (let i = 0; i < n; i++) dot += a[i] * b[i]
+  return dot
+}
+
+/**
+ * 语音转写(Qwen3-ASR,中文最准)。
+ * @param {Blob} blob 录音数据
+ * @returns {Promise<string>}
+ */
+export async function transcribe(blob) {
+  const form = new FormData()
+  form.append('model', TRANSCRIBE_MODEL)
+  const ext = blob.type.includes('mp4') ? 'mp4' : blob.type.includes('ogg') ? 'ogg' : 'webm'
+  form.append('file', blob, `recording.${ext}`)
+  const res = await fetch(`${GATEWAY}/v1/audio/transcriptions`, {
+    method: 'POST',
+    body: form,
+    signal: AbortSignal.timeout(120000),
+  })
+  if (!res.ok) throw new Error(`transcribe ${res.status}`)
+  const json = await res.json()
+  return (json.text ?? '').trim()
 }
 
 /**

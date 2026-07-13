@@ -59,6 +59,27 @@
           {/if}
         </button>
       {/each}
+
+      <div class="divider"></div>
+
+      <button
+        type="button"
+        class="option"
+        aria-pressed={S.settings.thinking}
+        onclick={() => {
+          S.settings.thinking = !S.settings.thinking
+          save()
+        }}
+      >
+        <span class="option-text">
+          <span class="option-name thinking-name">
+            <Icon name="lightbulb" size={14} strokeWidth={2} />
+            {t('model.thinking')}
+          </span>
+          <span class="option-desc">{t('model.thinkingDesc')}</span>
+        </span>
+        <span class="toggle" class:on={S.settings.thinking}></span>
+      </button>
     </div>
   {/if}
 </div>
@@ -141,5 +162,45 @@
   .option-desc {
     font-size: var(--text-xs, 12px);
     color: var(--t3);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 6px;
+  }
+
+  .thinking-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .toggle {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--card-h);
+    position: relative;
+    transition: background var(--dur-fast, 120ms) var(--ease, ease);
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform var(--dur-fast, 120ms) var(--ease, ease);
+  }
+  .toggle.on {
+    background: var(--accent);
+  }
+  .toggle.on::after {
+    transform: translateX(14px);
   }
 </style>
