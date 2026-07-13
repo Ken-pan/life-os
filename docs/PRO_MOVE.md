@@ -3,41 +3,36 @@
 > **执行计划（产品 + 排期）：** [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md)
 > **差距核查：** [`PRO_MOVE_STATUS_VS_IDEAL.md`](./PRO_MOVE_STATUS_VS_IDEAL.md)
 > **UI 执行 SSOT：** [`qa/paperos-next-ui-update-guide.md`](./qa/paperos-next-ui-update-guide.md)
-> **Hub 优先级：** [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §Now — **PAPR.UI** · PAPR.WRITE.5 · PAPR.SYS.1 **paused**
-> **Ticket ID（canonical）：** [`roadmap/TICKET_NAMING.md`](./roadmap/TICKET_NAMING.md)
-> **生命周期导航：** [`qa/paperos-device-lifecycle/README.md`](./qa/paperos-device-lifecycle/README.md)
+> **Hub 优先级：** [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §Now — **P-MOVE-VERIFY** · **P-MOVE-UI** · P-MOVE-5
 
 `docs/PRO_MOVE_*.md` 为 **设备工程 gate 证据**（非路线图真源）。完成项保留供审计；活跃项以 hub §Now 为准。
 
 ## 入口（先读）
 
-| 文档                                                                     | 用途                                 |
-| ------------------------------------------------------------------------ | ------------------------------------ |
-| [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) | PAPR.DEV.1…7 执行计划 · 当前 blocker |
-| [`PRO_MOVE_STATUS_VS_IDEAL.md`](./PRO_MOVE_STATUS_VS_IDEAL.md)           | 外部差距报告逐项核实 + UI/UX 差距    |
-| [`PRO_MOVE_API_CONTRACT.md`](./PRO_MOVE_API_CONTRACT.md)                 | `/api/paper/*` 契约                  |
-| [`PRO_MOVE_DEVICE_ACCESS.md`](./PRO_MOVE_DEVICE_ACCESS.md)               | SSH · USB · 设备别名                 |
-| [`PRO_MOVE_SHELL_MVP_GATE.md`](./PRO_MOVE_SHELL_MVP_GATE.md)             | 6-tab Shell MVP（PASS · 已知 gaps）  |
+| 文档                                                                     | 用途                                |
+| ------------------------------------------------------------------------ | ----------------------------------- |
+| [`roadmap/apps/planner-pro-move.md`](./roadmap/apps/planner-pro-move.md) | P-MOVE-1…7 执行计划 · 当前 blocker  |
+| [`PRO_MOVE_STATUS_VS_IDEAL.md`](./PRO_MOVE_STATUS_VS_IDEAL.md)           | 外部差距报告逐项核实 + UI/UX 差距   |
+| [`PRO_MOVE_API_CONTRACT.md`](./PRO_MOVE_API_CONTRACT.md)                 | `/api/paper/*` 契约                 |
+| [`PRO_MOVE_DEVICE_ACCESS.md`](./PRO_MOVE_DEVICE_ACCESS.md)               | SSH · USB · 设备别名                |
+| [`PRO_MOVE_SHELL_MVP_GATE.md`](./PRO_MOVE_SHELL_MVP_GATE.md)             | 6-tab Shell MVP（PASS · 已知 gaps） |
 
-## 设备里程碑（PAPR._ · legacy `P-MOVE-_`）
+## 设备里程碑（P-MOVE-\*）
 
-| Gate                                                                                                     | 主题                                            | 状态                                                                                                                     |
-| -------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [`PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](./PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md)                 | Home-only launcher baseline                     | PASS                                                                                                                     |
-| [`PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](./PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md)                         | 离线 last-good cache                            | PASS                                                                                                                     |
-| [`PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md`](./PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md)                 | CJK 字体 + 硬分页                               | PASS                                                                                                                     |
-| [`PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](./PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md) | Exit · 崩溃恢复 · systemd                       | PASS                                                                                                                     |
-| [`PRO_MOVE_P_MOVE_BLOCK_GATE.md`](./PRO_MOVE_P_MOVE_BLOCK_GATE.md)                                       | 生产 Paper API（legacy **`PAPR.DATA.verify`**） | **PASS** → canonical **`PAPR.DATA.verify`**                                                                              |
-| [`qa/paperos-data-plane-verify-2026-07-11.md`](./qa/paperos-data-plane-verify-2026-07-11.md)             | 设备生产 sync E2E                               | **PASS** — 200 + schema + cache/UI refresh                                                                               |
-| **PAPR.SYS.0**                                                                                           | 生命周期发现                                    | **CONDITIONAL PASS accepted** — [`qa/paperos-device-lifecycle-discovery.md`](./qa/paperos-device-lifecycle-discovery.md) |
-| **PAPR.SYS.1a**                                                                                          | Triple-power launch                             | **BLOCKED / CLOSED**                                                                                                     |
-| **PAPR.SYS.1b.fs**                                                                                       | Filesystem launch signals                       | **BLOCKED / CLOSED**                                                                                                     |
-| **PAPR.SYS.1b.jrn**                                                                                      | Journal `EntityOpen` UUID                       | **CONDITIONAL PASS accepted**                                                                                            |
-| **PAPR.SYS.1/2/3**                                                                                       | enter/exit · sleep/wake · settings              | **PAPR.SYS.1 UNBLOCKED NOT STARTED (paused)** · PAPR.SYS.2 not started                                                   |
-| **PAPR.UI**                                                                                              | `PAPR.UI.1.1` 复验 → `PAPR.UI.2`                | **IN FLIGHT** — 真机合并等 PAPR.SYS.1                                                                                    |
-| **PAPR.SYNC.6**                                                                                          | Sync now + timers                               | **BLOCKED on PAPR.SYS.2**                                                                                                |
-| **PAPR.WRITE.5**                                                                                         | Controlled write staging                        | NEXT                                                                                                                     |
-| **PAPR.DEV.7**                                                                                           | Read-only 文档导出                              | PLANNED                                                                                                                  |
+| Gate                                                                                                     | 主题                               | 状态                                                      |
+| -------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------- |
+| [`PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md`](./PRO_MOVE_P_MOVE_1_DEVICE_SESSION_GATE.md)                 | Home-only launcher baseline        | PASS                                                      |
+| [`PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](./PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md)                         | 离线 last-good cache               | PASS                                                      |
+| [`PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md`](./PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md)                 | CJK 字体 + 硬分页                  | PASS                                                      |
+| [`PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](./PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md) | Exit · 崩溃恢复 · systemd          | PASS                                                      |
+| **P-MOVE-VERIFY**                                                                                        | 设备生产 sync E2E                  | **PENDING** — Line E · Codex                              |
+| **P-MOVE-SYS-0**                                                                                         | 生命周期发现                       | **PENDING** — 见 qa/paperos-device-lifecycle-discovery.md |
+| **P-MOVE-SYS-1/2/3**                                                                                     | enter/exit · sleep/wake · settings | **PLANNED** — SYS-0 后                                    |
+| **P-MOVE-UI**                                                                                            | Slice 1.1 复验 → Slice 2           | **IN FLIGHT** — 真机合并等 SYS-1                          |
+| **P-MOVE-6**                                                                                             | Sync now + timers                  | **BLOCKED on SYS-2**                                      |
+| **P-MOVE-5**                                                                                             | Controlled write staging           | NEXT                                                      |
+| **P-MOVE-6**                                                                                             | 定时 cache + Sync now              | PLANNED                                                   |
+| **P-MOVE-7**                                                                                             | Read-only 文档导出                 | PLANNED                                                   |
 
 ## 后端 PR 线（历史 gate）
 
@@ -63,21 +58,16 @@
 | [`PRO_MOVE_PHASE2A_DIRECT_INK_GATE.md`](./PRO_MOVE_PHASE2A_DIRECT_INK_GATE.md)                 | Direct ink gate          |
 | [`PRO_MOVE_LIVE_INK_LAUNCH_GATE.md`](./PRO_MOVE_LIVE_INK_LAUNCH_GATE.md)                       | Live ink launch          |
 
-## QA 分卷（PaperOS）
+## QA 分卷（PaperOS UI）
 
-**导航 hub：** [`qa/paperos/README.md`](./qa/paperos/README.md) · **生命周期：** [`qa/paperos-device-lifecycle/README.md`](./qa/paperos-device-lifecycle/README.md)
-
-| 文档                                                                                                 | 用途                       |
-| ---------------------------------------------------------------------------------------------------- | -------------------------- |
-| [`qa/paperos-next-ui-update-guide.md`](./qa/paperos-next-ui-update-guide.md)                         | **UI 执行 SSOT**           |
-| [`qa/paperos-device-lifecycle-discovery.md`](./qa/paperos-device-lifecycle-discovery.md)             | **`PAPR.SYS.*` 发现 SSOT** |
-| [`qa/paperos-device-lifecycle-gate.md`](./qa/paperos-device-lifecycle-gate.md)                       | PAPR.SYS.gate 用例         |
-| [`qa/paperos-data-plane-verify-2026-07-11.md`](./qa/paperos-data-plane-verify-2026-07-11.md)         | PAPR.DATA.verify PASS      |
-| [`qa/paperos-eink-uiux-agent-brief.md`](./qa/paperos-eink-uiux-agent-brief.md)                       | 长期产品 brief             |
-| [`qa/paperos-eink-uiux-gap-audit.md`](./qa/paperos-eink-uiux-gap-audit.md)                           | 差距审计                   |
-| [`qa/paperos-core-slice-1-integration-gate.md`](./qa/paperos-core-slice-1-integration-gate.md)       | Slice 1 integration        |
-| [`qa/paperos-core-slice-1-visual-gate.md`](./qa/paperos-core-slice-1-visual-gate.md)                 | Slice 1 visual             |
-| [`qa/paperos-core-slice-1-1-visual-delta-gate.md`](./qa/paperos-core-slice-1-1-visual-delta-gate.md) | Slice 1.1 QML delta        |
+| 文档                                                                                                 | 用途                |
+| ---------------------------------------------------------------------------------------------------- | ------------------- |
+| [`qa/paperos-next-ui-update-guide.md`](./qa/paperos-next-ui-update-guide.md)                         | **执行 SSOT**       |
+| [`qa/paperos-eink-uiux-agent-brief.md`](./qa/paperos-eink-uiux-agent-brief.md)                       | 长期产品 brief      |
+| [`qa/paperos-eink-uiux-gap-audit.md`](./qa/paperos-eink-uiux-gap-audit.md)                           | 差距审计            |
+| [`qa/paperos-core-slice-1-integration-gate.md`](./qa/paperos-core-slice-1-integration-gate.md)       | Slice 1 integration |
+| [`qa/paperos-core-slice-1-visual-gate.md`](./qa/paperos-core-slice-1-visual-gate.md)                 | Slice 1 visual      |
+| [`qa/paperos-core-slice-1-1-visual-delta-gate.md`](./qa/paperos-core-slice-1-1-visual-delta-gate.md) | Slice 1.1 QML delta |
 
 ## 代码锚点
 

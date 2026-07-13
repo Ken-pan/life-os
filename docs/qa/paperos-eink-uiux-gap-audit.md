@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-10
 **Status:** Baseline captured — ready for Antigravity review + Fable implementation
-**Workstream:** **PAPR.UI**
+**Workstream:** **P-MOVE-UI**
 **Execution SSOT:** [`paperos-next-ui-update-guide.md`](./paperos-next-ui-update-guide.md) (Slice 1.1 → 2 → deferred)
 **Long-term brief:** [`paperos-eink-uiux-agent-brief.md`](./paperos-eink-uiux-agent-brief.md)
 **Product north star:** _Paper canvas + contextual tools + temporary system surfaces_
@@ -20,7 +20,7 @@
 | **Device screenshot baseline** (2026-07-10) | `docs/ui-qa-screenshots/paperos/device/baseline-2026-07-10/`                                                                     | On-device reality via `paperctl` (gitignored; canonical local path) |
 | **Subsequent device captures**              | `docs/ui-qa-screenshots/paperos/device/latest/`                                                                                  | Rolling inventory for regression / Antigravity review               |
 | **Legacy capture copy**                     | `output/paperos-move-screenshots/`                                                                                               | Same baseline as above; kept for session convenience                |
-| **Shell MVP gate** (shipped baseline)       | [`../PRO_MOVE_SHELL_MVP_GATE.md`](../PRO_MOVE_SHELL_MVP_GATE.md)                                                                 | What PAPR.DEV.1–4 + shell modules delivered                           |
+| **Shell MVP gate** (shipped baseline)       | [`../PRO_MOVE_SHELL_MVP_GATE.md`](../PRO_MOVE_SHELL_MVP_GATE.md)                                                                 | What P-MOVE-1–4 + shell modules delivered                           |
 | **Technical gap report** (non-UI)           | [`../PRO_MOVE_STATUS_VS_IDEAL.md`](../PRO_MOVE_STATUS_VS_IDEAL.md)                                                               | Cache, launcher, sync, write path — complementary                   |
 | **Device access**                           | [`../PRO_MOVE_DEVICE_ACCESS.md`](../PRO_MOVE_DEVICE_ACCESS.md)                                                                   | SSH, paths, wake-before-deploy                                      |
 | **Test driver / screenshots**               | [`../../apps/planner-device/remarkable-lite/docs/test-driver.md`](../../apps/planner-device/remarkable-lite/docs/test-driver.md) | `paperctl` navigation + capture                                     |
@@ -327,7 +327,7 @@ Full checklist: [`paperos-eink-uiux-agent-brief.md` §14](./paperos-eink-uiux-ag
 
 ## 10. End-to-end flows to prove (brief §17)
 
-Before declaring PAPR.UI done, capture device evidence for each:
+Before declaring P-MOVE-UI done, capture device evidence for each:
 
 1. Open Notes from System drawer
 2. Find and open a notebook
@@ -352,7 +352,7 @@ Before declaring PAPR.UI done, capture device evidence for each:
 2. [`paperos-eink-uiux-agent-brief.md`](./paperos-eink-uiux-agent-brief.md)
 3. Device baseline: `docs/ui-qa-screenshots/paperos/device/baseline-2026-07-10/`
 4. Reference mockups: [`paperos/reference/2026-07-10/`](./paperos/reference/2026-07-10/) + [README](./paperos/reference/2026-07-10/README.md)
-5. [`../roadmap/apps/planner-pro-move.md`](../roadmap/apps/planner-pro-move.md) § PAPR.UI
+5. [`../roadmap/apps/planner-pro-move.md`](../roadmap/apps/planner-pro-move.md) § P-MOVE-UI
 
 ### Review questions
 
@@ -387,7 +387,7 @@ apps/planner-device/remarkable-lite/scripts/paperctl screenshot docs/ui-qa-scree
 | [`paperos-next-ui-update-guide.md`](./paperos-next-ui-update-guide.md) | **Execution SSOT** — Slice 1.1 / 2 |
 | [`paperos-eink-uiux-agent-brief.md`](./paperos-eink-uiux-agent-brief.md) | Long-term product brief |
 | [`paperos/reference/2026-07-10/README.md`](./paperos/reference/2026-07-10/README.md)                                             | Reference mockup usage rules                               |
-| [`../roadmap/apps/planner-pro-move.md`](../roadmap/apps/planner-pro-move.md)                                                     | PAPR.UI scope → points here                              |
+| [`../roadmap/apps/planner-pro-move.md`](../roadmap/apps/planner-pro-move.md)                                                     | P-MOVE-UI scope → points here                              |
 | [`../PRO_MOVE_STATUS_VS_IDEAL.md`](../PRO_MOVE_STATUS_VS_IDEAL.md)                                                               | Technical gaps; UI section added                           |
 | [`../roadmap/AGENT_WORKSTREAMS.md`](../roadmap/AGENT_WORKSTREAMS.md)                                                             | Line B sessions realigned                                  |
 | [`../../apps/planner-device/remarkable-lite/docs/test-driver.md`](../../apps/planner-device/remarkable-lite/docs/test-driver.md) | Screenshot workflow                                        |

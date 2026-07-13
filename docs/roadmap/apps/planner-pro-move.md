@@ -16,25 +16,26 @@ first functional provider for PaperOS.
 
 ## Current State
 
-| Area                        | Status                           | Evidence                                                                                                                                                                                                                         |
-| --------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Device access               | PASS                             | `ssh remarkable-pro-move` (USB, `10.11.99.1`); see [`../../PRO_MOVE_DEVICE_ACCESS.md`](../../PRO_MOVE_DEVICE_ACCESS.md)                                                                                                          |
-| Backend mock API            | PASS                             | PR-1 mock endpoints callable; see [`../../PRO_MOVE_PR1_FINAL_GATE.md`](../../PRO_MOVE_PR1_FINAL_GATE.md)                                                                                                                         |
-| Backend read API (prod)     | **PASS**                         | PAPR.DATA.verify 2026-07-11；见 [`../../qa/paperos-data-plane-verify-2026-07-11.md`](../../qa/paperos-data-plane-verify-2026-07-11.md)                                                                                           |
-| Backend action API          | Implemented, gated               | `/api/paper/actions`; real writes require `PAPER_ACTIONS_WRITE_ENABLED=true`; full local HTTP validation passed                                                                                                                  |
-| Device read cache           | PASS                             | `ApiClient` last-good cache (atomic write) + `refresh-cache.sh` sidecar; offline launch verified; see [`../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md)                                 |
-| CJK rendering               | PASS                             | Noto Sans CJK SC loaded at runtime from `/home/root/paperos/fonts/`; see [`../../PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md`](../../PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md)                                                      |
-| E-ink pagination            | PASS                             | Fixed 5-per-page, Prev/Next buttons, no flick/animation; operator-verified on device                                                                                                                                             |
-| Exit + crash recovery       | PASS                             | Exit button, hardened trap/recover scripts, systemd `ExecStopPost` auto-restores xochitl after `kill -9`; see [`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md) |
-| Device-side launcher        | PASS                             | `systemctl start paperos` (unit in `/home`, root-fs symlink only); survives SSH disconnect                                                                                                                                       |
-| Shell MVP (6 modules)       | PASS                             | Home/Today/Notes/Mail/Review/System + RefreshController + action queue + Quick Note v0; see [`../../PRO_MOVE_SHELL_MVP_GATE.md`](../../PRO_MOVE_SHELL_MVP_GATE.md)                                                               |
-| Marker input                | Phase 0 done, pen not usable yet | epaper QPA delivers touch only; pen node mapped — see [`../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md`](../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md); Phase 1 = `PenInputService`                                                      |
-| Production read API         | **PASS**                         | PAPR.DATA.verify 2026-07-11 — device 200 + schema + cache/UI；见 **PAPR.DATA.verify** 节                                                                                                                                         |
-| Production write enablement | Not enabled                      | Staging validation required before `PAPER_ACTIONS_WRITE_ENABLED=true`                                                                                                                                                            |
-| xochitl integration         | Out of scope                     | No xochitl patching, sidebar injection, or boot replacement                                                                                                                                                                      |
+| Area                        | Status                            | Evidence                                                                                                                                                                                                                         |
+| --------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Device access               | PASS                              | `ssh remarkable-pro-move` (USB, `10.11.99.1`); see [`../../PRO_MOVE_DEVICE_ACCESS.md`](../../PRO_MOVE_DEVICE_ACCESS.md)                                                                                                          |
+| Backend mock API            | PASS                              | PR-1 mock endpoints callable; see [`../../PRO_MOVE_PR1_FINAL_GATE.md`](../../PRO_MOVE_PR1_FINAL_GATE.md)                                                                                                                         |
+| Backend read API (prod)     | **ROUTE OK** — verify E2E         | `curl` → 401 without token (2026-07-10); device token fetch → **P-MOVE-VERIFY**                                                                                                                                                  |
+| Backend action API          | Implemented, gated                | `/api/paper/actions`; real writes require `PAPER_ACTIONS_WRITE_ENABLED=true`; full local HTTP validation passed                                                                                                                  |
+| Device read cache           | PASS                              | `ApiClient` last-good cache (atomic write) + `refresh-cache.sh` sidecar; offline launch verified; see [`../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md`](../../PRO_MOVE_P_MOVE_2_READ_CACHE_GATE.md)                                 |
+| CJK rendering               | PASS                              | Noto Sans CJK SC loaded at runtime from `/home/root/paperos/fonts/`; see [`../../PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md`](../../PRO_MOVE_P_MOVE_3_CJK_PAGINATION_GATE.md)                                                      |
+| E-ink pagination            | PASS                              | Fixed 5-per-page, Prev/Next buttons, no flick/animation; operator-verified on device                                                                                                                                             |
+| Exit + crash recovery       | PASS                              | Exit button, hardened trap/recover scripts, systemd `ExecStopPost` auto-restores xochitl after `kill -9`; see [`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md) |
+| Device-side launcher        | PASS                              | `systemctl start paperos` (unit in `/home`, root-fs symlink only); survives SSH disconnect                                                                                                                                       |
+| Shell MVP (6 modules)       | PASS                              | Home/Today/Notes/Mail/Review/System + RefreshController + action queue + Quick Note v0; see [`../../PRO_MOVE_SHELL_MVP_GATE.md`](../../PRO_MOVE_SHELL_MVP_GATE.md)                                                               |
+| Marker input                | Phase 0 done, pen not usable yet  | epaper QPA delivers touch only; pen node mapped — see [`../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md`](../../PRO_MOVE_MARKER_PHASE0_INPUT_MAP.md); Phase 1 = `PenInputService`                                                      |
+| Production read API         | **ROUTE OK** — device E2E pending | Offline cache PASS; `curl` → 401 without token (2026-07-10); see **P-MOVE-VERIFY**                                                                                                                                               |
+| Production write enablement | Not enabled                       | Staging validation required before `PAPER_ACTIONS_WRITE_ENABLED=true`                                                                                                                                                            |
+| xochitl integration         | Out of scope                      | No xochitl patching, sidebar injection, or boot replacement                                                                                                                                                                      |
 
 Gap-analysis cross-check against the "ideal e-ink experience" report:
 [`../../PRO_MOVE_STATUS_VS_IDEAL.md`](../../PRO_MOVE_STATUS_VS_IDEAL.md).
+Gate doc index: [`../../PRO_MOVE.md`](../../PRO_MOVE.md).
 
 ## Product Decision
 
@@ -80,9 +81,84 @@ Exit button, hardened launcher/recover scripts with exit-code logging,
 `ExecStopPost`, session survives SSH disconnect). See
 [`../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md`](../../PRO_MOVE_P_MOVE_4_EXIT_RECOVERY_LAUNCHER_GATE.md).
 
-### PAPR.DATA.verify — Device Production Sync · PASS (2026-07-11; was `P-MOVE.verify`)
+### P-MOVE-VERIFY — Device Production Sync · PENDING (was P-MOVE-BLOCK)
 
 **Goal:** confirm end-to-end device fetch against production (not "restore 404 route").
+
+**2026-07-10 production check:**
+
+```bash
+curl -sS -o /dev/null -w "%{http_code}\n" https://planner.kenos.space/api/paper/today
+# → 401 (unauthorized) — route + function alive
+```
+
+- `_redirects` maps `/api/paper/today` → `paper-today` function; repo root `netlify.toml` sets `functions.directory = apps/planner/netlify/functions`.
+- 2026-07-09 Shell MVP session logged a **transient 404** during live test; UI correctly fell back to offline cache. **Not reproduced** on 2026-07-10 curl.
+
+**Remaining acceptance:**
+
+- Device `ApiClient` in `real` mode → HTTP **200** with valid `PAPER_DEVICE_TOKEN`.
+- Netlify env: `PAPER_DEVICE_USER_ID` + `PAPER_DEVICE_TOKEN` (+ optional service role or `paper_device_snapshot` RPC path per `paperService.mjs`).
+- Offline cache refresh after successful fetch.
+
+**Agent:** Codex Terra + device operator tap.
+
+### P-MOVE-UI — Paper-First E-Ink OS UX · IN FLIGHT
+
+**Goal:** paper-native OS — canvas-first, contextual tools, temporary system surfaces.
+
+**Execution SSOT:** [`../../qa/paperos-next-ui-update-guide.md`](../../qa/paperos-next-ui-update-guide.md)
+**Long-term brief:** [`../../qa/paperos-eink-uiux-agent-brief.md`](../../qa/paperos-eink-uiux-agent-brief.md)
+**Gap audit:** [`../../qa/paperos-eink-uiux-gap-audit.md`](../../qa/paperos-eink-uiux-gap-audit.md)
+**Slice 1 gates:** [`../../qa/paperos-core-slice-1-integration-gate.md`](../../qa/paperos-core-slice-1-integration-gate.md) · [`../../qa/paperos-core-slice-1-visual-gate.md`](../../qa/paperos-core-slice-1-visual-gate.md)
+**Evidence:** `docs/ui-qa-screenshots/paperos/device/baseline-2026-07-10/` · [`../../qa/paperos/reference/2026-07-10/`](../../qa/paperos/reference/2026-07-10/)
+
+#### Shipped — Core Slice 1 (2026-07-10)
+
+System drawer · Notes Gallery · native ink chrome states · semantic `paperctl` capture · xochitl recovery.
+
+#### Now — Core Slice 1.1 · CODE COMPLETE · device re-verify
+
+**Native toolbar P0:** fixed in `52ae55e0` (`InkModeController` framebuffer sync).
+**QML visual:** fixed in `d7c52858`; Antigravity delta gate PASS — [`qa/paperos-core-slice-1-1-visual-delta-gate.md`](../../qa/paperos-core-slice-1-1-visual-delta-gate.md).
+
+**Before Slice 2:** operator device pass (toolbar + Gallery + recovery). Do **not** parallel Slice 2 in same PR.
+
+#### Next — Core Slice 2
+
+Merge Home + Today; drawer IA → `Today · Notes · Tasks · Documents · Settings · Return to reMarkable`. No fake Search.
+
+#### Deferred
+
+Multi-page · Page Overview · Templates · OCR/Search · Tags · Quick Switcher · Control Center — next guide §10.
+
+### P-MOVE-SYS — Device Shell Lifecycle · NEW 2026-07-11
+
+PaperOS is becoming the **primary device shell**, not a foreground app. P-MOVE-4 covered exit/crash via systemd; **SYS** extends to boot, sleep, wake, and daily use without Mac/SSH.
+
+**Launch mode (2026-07-11):** **Mode A — Xochitl default**; implement **A-default, B-ready** (`SYS-1` managed enter/exit first; `SYS-3` adds opt-in Beta auto-launch, default Off). See [`qa/paperos-device-lifecycle-discovery.md`](../../qa/paperos-device-lifecycle-discovery.md) §产品假设.
+
+**Agent:** Line B (Shell) — Codex + Ken + Cursor · **VERIFY belongs to Line E only**
+
+| ID           | Theme                   | Owner               | Estimate             | Deliverable                                                                                  |
+| ------------ | ----------------------- | ------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
+| **SYS-0**    | Lifecycle discovery     | Codex + Ken         | 0.5d + 45–60m device | [`qa/paperos-device-lifecycle-discovery.md`](../../qa/paperos-device-lifecycle-discovery.md) |
+| **SYS-1**    | enter / exit / recovery | Codex · Cursor menu | 1–1.5d               | `paperos-enter` · `paperos-exit` · `paperos-recover` · crash-loop → xochitl                  |
+| **SYS-2**    | sleep / wake / idle     | Codex               | 1–2d                 | pre-suspend flush · wake refresh · `lastSyncAt` catch-up                                     |
+| **SYS-3**    | Settings UI             | Cursor · Fable ≤30m | 0.5–1d               | auto-sleep · wake-to · **Launch after unlock [Beta] Off** · Desk mode                          |
+| **SYS-GATE** | Reliability matrix      | Ken + Codex         | —                    | [`qa/paperos-device-lifecycle-gate.md`](../../qa/paperos-device-lifecycle-gate.md)           |
+
+**SYS-1 System menu (minimum):** Sleep · Restart PaperOS · Return to reMarkable · Restart device · Shut down.
+
+**Dependency:**
+
+```text
+P-MOVE-VERIFY → P-MOVE-SYS-0 → SYS-1 → SYS-2 → SYS-3 → P-MOVE-6 → SYS-GATE
+```
+
+Slice 2 **IA** may start after Slice 1.1 PASS; Slice 2 **device merge** must not bypass **SYS-1**.
+
+---
 
 **2026-07-10 production check:**
 
@@ -181,6 +257,7 @@ Slice 2 **IA** may start after Slice 1.1 PASS; Slice 2 **device merge** must not
 **Goal:** allow one safe paper action from the device.
 
 Scope:
+
 - Keep backend default dry-run.
 - Enable `PAPER_ACTIONS_WRITE_ENABLED=true` only in staging first.
 - Device sends `task.complete` with `clientBatchId`, `clientActionId`, and `baseVersion`.
@@ -188,16 +265,17 @@ Scope:
 - UI: wire the mock checkbox to the action queue.
 
 Acceptance:
+
 - Fresh complete creates one `paper_device_actions` row.
 - Duplicate retry returns prior result without changing `completedAt`.
 - Stale or deleted task returns conflict/rejected and refreshes cache.
 - Production write switch remains off until staging passes.
 
-### PAPR.SYNC.6 — Scheduled Cache / Manual Sync · BLOCKED on PAPR.SYS.2
+### P-MOVE-6 — Scheduled Cache / Manual Sync · BLOCKED on SYS-2
 
 **Goal:** reduce Mac dependency while preserving stock boot.
 
-**Blocked until `PAPR.SYS.2`:** Linux system suspend freezes user-space timers; a naive "sync every 15 minutes" **does not run while suspended**.
+**Blocked until `P-MOVE-SYS-2`:** Linux system suspend freezes user-space timers; a naive "sync every 15 minutes" **does not run while suspended**.
 
 Scope (revised):
 
@@ -209,9 +287,10 @@ Scope (revised):
 6. Performance baseline in gate doc
 
 Acceptance:
-- Stock boot remains xochitl-first.
-- Timer can be disabled and removed with one documented rollback command.
-- Cache refresh never requires xochitl document-store mutation.
+
+- Stock boot remains xochitl-first until explicit Beta "launch PaperOS after startup"
+- Timer removable with one rollback command
+- Cache refresh never mutates xochitl document store
 
 Implementation and device checklist: [`../../PRO_MOVE_P_MOVE_6_SAFE_CACHE_SYNC_GATE.md`](../../PRO_MOVE_P_MOVE_6_SAFE_CACHE_SYNC_GATE.md).
 
@@ -220,11 +299,13 @@ Implementation and device checklist: [`../../PRO_MOVE_P_MOVE_6_SAFE_CACHE_SYNC_G
 **Goal:** explore xochitl-native discoverability without xochitl patching.
 
 Scope:
+
 - Generate a read-only Planner Today PDF/PNG from cached data.
 - Treat xochitl document-store mutation as a separate risk gate.
 - Prefer import/sync workflows over live local mutation while xochitl runs.
 
 Acceptance:
+
 - Exported document is readable offline.
 - Refresh behavior is explicit: last rendered timestamp is visible.
 - No live writes to xochitl storage while xochitl is running.
@@ -239,13 +320,12 @@ Acceptance:
 
 ## Remaining Before Daily Use
 
-- [x] **PAPR.DATA.verify** — PASS 2026-07-11: device production fetch 200 + schema + cache/UI refresh.
-- [ ] **PAPR.UI.1.1** — device re-verify after `52ae55e0` / `d7c52858` ([`qa/paperos-next-ui-update-guide.md`](../../qa/paperos-next-ui-update-guide.md)).
-- [x] **PAPR.SYS.0** — CONDITIONAL PASS accepted ([`qa/paperos-device-lifecycle-discovery.md`](../../qa/paperos-device-lifecycle-discovery.md)).
-- [x] **PAPR.SYS.1b** discovery — PAPR.SYS.1b.fs closed · PAPR.SYS.1b.jrn **CONDITIONAL PASS accepted** (2026-07-11).
-- [ ] **PAPR.SYS.1** — **UNBLOCKED BUT NOT STARTED — PAUSED BY OWNER**; no watcher/launcher/systemd implementation.
-- [ ] **PAPR.SYS.2** — **NOT STARTED** (hard blocked by PAPR.SYS.1 implementation verdict).
-- [ ] **PAPR.SYS.gate** — LC-01–LC-15 ([`qa/paperos-device-lifecycle-gate.md`](../../qa/paperos-device-lifecycle-gate.md)).
+- [ ] **P-MOVE-VERIFY** — device production fetch 200 + cache refresh (route OK per 2026-07-10 curl).
+- [ ] **P-MOVE-UI Slice 1.1** — device re-verify after `52ae55e0` / `d7c52858` ([`qa/paperos-next-ui-update-guide.md`](../../qa/paperos-next-ui-update-guide.md)).
+- [ ] **P-MOVE-SYS-0** — lifecycle discovery ([`qa/paperos-device-lifecycle-discovery.md`](../../qa/paperos-device-lifecycle-discovery.md)).
+- [ ] **P-MOVE-SYS-1** — managed enter/exit/recovery; Return to reMarkable restores xochitl + rm-sync.
+- [ ] **P-MOVE-SYS-2** — sleep/wake/idle; blocks P-MOVE-6.
+- [ ] **P-MOVE-SYS-GATE** — LC-01–LC-15 ([`qa/paperos-device-lifecycle-gate.md`](../../qa/paperos-device-lifecycle-gate.md)).
 - [ ] Marker Phase 1: `PenInputService` on `/dev/input/event2` (pen taps, pressure, eraser); until then PaperOS is touch-only.
 - [ ] Post-reboot step: re-run `systemctl link /home/root/paperos/paperos.service` (the `/etc` overlay drops the symlink); or fold into an OS-upgrade drill doc.
 - [x] Operator confirms Exit-button tap on screen (worked — the "frozen" report was an unsupervised bare-binary test session; see Shell MVP gate incident 1).

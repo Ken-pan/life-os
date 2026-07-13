@@ -23,9 +23,9 @@
 
 _当前无阻塞 Growth 项。_
 
-**近期已发货：** **GYMS.PORTAL.2** ✅（2026-07-10）— `portal_today_summary` 扩 `workedOutToday` / `todayCompleted` · Portal 卡文案 · migration `20260710203000` **远程已应用** · `verify-ft-p2-prod.mjs`。
+**近期已发货：** **FT-P2** ✅（2026-07-10）— `portal_today_summary` 扩 `workedOutToday` / `todayCompleted` · Portal 卡文案 · migration `20260710203000` **远程已应用** · `verify-ft-p2-prod.mjs`。
 
-_后续跨站摘要增量见 hub §Next（**PLNR.CORE.4**）。_
+_后续跨站摘要增量见 hub §Next（**P-P4**）。_
 
 ## UI 走查（2026-07-09 · 第五轮 · P-1–P-12 ✅）
 

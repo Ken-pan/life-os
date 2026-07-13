@@ -1,7 +1,7 @@
 # PaperOS UI Reference Mockups — 2026-07-10
 
 **Status:** Design-direction references (not literal visual specs)
-**Workstream:** PAPR.UI
+**Workstream:** P-MOVE-UI
 **Canonical index:** [`../../paperos-eink-uiux-gap-audit.md`](../../paperos-eink-uiux-gap-audit.md)
 
 These six PNGs capture the **target product language** for PaperOS on reMarkable Paper Pro Move portrait mode. They inform information architecture, chrome behavior, and hierarchy — they are **not** pixel-perfect implementation specs.
@@ -24,7 +24,7 @@ These six PNGs capture the **target product language** for PaperOS on reMarkable
 - Copy **structure and behavior**, not decorative chrome.
 - The target experience is: **paper canvas + contextual tools + temporary system surfaces**.
 - **Real device screenshots always override mockup assumptions** when they disagree.
-  See: [`docs/ui-qa-screenshots/paperos/device/baseline-2026-07-10/`](../../../../ui-qa-screenshots/paperos/device/baseline-2026-07-10/) (local; gitignored).
+  See: [`docs/ui-qa-screenshots/paperos/device/baseline-2026-07-10/`](../../../ui-qa-screenshots/paperos/device/baseline-2026-07-10/) (local; gitignored).
 
 ### Portrait layout vs Move framebuffer
 
@@ -65,13 +65,14 @@ The mockups were composed at a **941×1672** portrait canvas — close to the Mo
 - Fake page counts, timestamps, or demo notebook names as defaults
 - Yellow search highlighting
 - Permanent sync/status chrome when healthy
-- Any element that contradicts [`ui-spec.md`](../../ui-spec.md)
+- Any element that contradicts [`paperos-eink-uiux-agent-brief.md`](../../paperos-eink-uiux-agent-brief.md) §4–5
 
 ## Related evidence paths
 
 | Artifact                     | Path                                                                                                                                      |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Spec                         | [`../../ui-spec.md`](../../ui-spec.md)                                                        |
+| Spec                         | [`../../paperos-eink-uiux-agent-brief.md`](../../paperos-eink-uiux-agent-brief.md)                                                        |
+| Gap audit                    | [`../../paperos-eink-uiux-gap-audit.md`](../../paperos-eink-uiux-gap-audit.md)                                                            |
 | Device baseline (2026-07-10) | `docs/ui-qa-screenshots/paperos/device/baseline-2026-07-10/`                                                                              |
 | Subsequent captures          | `docs/ui-qa-screenshots/paperos/device/latest/`                                                                                           |
-| Capture workflow             | [`apps/planner-device/remarkable-lite/docs/test-driver.md`](../../../../../apps/planner-device/remarkable-lite/docs/test-driver.md) |
+| Capture workflow             | [`../../../apps/planner-device/remarkable-lite/docs/test-driver.md`](../../../../apps/planner-device/remarkable-lite/docs/test-driver.md) |

@@ -1,4 +1,4 @@
-# Planner Schedule UI/UX Baseline Report (PLNR.SCHED.0)
+# Planner Schedule UI/UX Baseline Report (P-SCHED-0)
 
 **Date**: 2026-07-10
 **Agent**: Antigravity (Browser QA Baseline)
@@ -14,7 +14,7 @@ When tested with canonical tasks (Scenario A), overlapping layouts function, and
 ## 2. Top Findings & Usability Blockers
 
 1. **Malformed Data Robustness (P0)**: Legacy tasks missing the `tags` array cause a total app crash (`task.tags is not iterable`). **Root cause:** `migrateTask()` in `apps/planner/src/lib/persist/migrate.js` spreads `...t` without defaulting `tags: []`; consumers (`taskIndex.js`, `filters.js`, etc.) iterate `task.tags` directly. Fix: normalize in `migrateTask` or guard at read sites.
-2. **Mobile Scroll Container (P1 · 待 PWA 复测)**: Antigravity baseline 在 **未**设置 `html.standalone-pwa` 的 Playwright mobile viewport 上采集到 `overflowY: visible`。`packages/theme/src/scroll-shell.css` 已在 `standalone-pwa` 下为 `.life-os-page-workspace` 配置 `overflow-y: auto`。**不能**直接等同真实 iOS PWA 缺陷 — 需 `npm run qa:pwa` 或 Simulator 复测（**PLNR.SCHED.10.pwa** / Ken **`PLNR.SCHED.10b.ios`**）。
+2. **Mobile Scroll Container (P1 · 待 PWA 复测)**: Antigravity baseline 在 **未**设置 `html.standalone-pwa` 的 Playwright mobile viewport 上采集到 `overflowY: visible`。`packages/theme/src/scroll-shell.css` 已在 `standalone-pwa` 下为 `.life-os-page-workspace` 配置 `overflow-y: auto`。**不能**直接等同真实 iOS PWA 缺陷 — 需 `npm run qa:pwa` 或 Simulator 复测（SCH-10）。
 3. **Missing `sparseHint` for Empty Days (P2)**: Empty days in the Calendar view do not display a clear call-to-action or sparse hint, leaving the UI looking empty.
 4. **Environment Noise**: `501 Not Implemented` for `/api/ai/plan` on load (recorded as environment noise; does not block scheduling interactions).
 
@@ -85,30 +85,3 @@ With the canonical fixtures unblocking the UI, the following scenarios successfu
 2.  `docs/qa/evidence/planner-schedule/2026-07-10/*` (Updated screenshots + traces)
 3.  `docs/qa/planner-schedule-antigravity-baseline.json` (Updated JSON extraction)
 4.  `docs/qa/planner-schedule-antigravity-baseline.md` (This report)
-
-## 9. Simulated Standalone CSS Gate (PLNR.SCHED.10a.sim)
-
-FINAL VERDICT:
-PASS simulated standalone CSS gate
-
-BASE_SHA: c4eb544824d76aca81072bdb78a8a7b88cec4086
-Routes tested: /today, /calendar, /settings
-Viewport: 390x664 (iPhone 13 simulated, Mobile Safari userAgent)
-Standalone class injected: YES
-
-Per-route measurements:
-- /today: Standalone class injected successfully. Main shell scroll container not present on this route layout.
-- /calendar: overflowY: auto, clientHeight: 560, scrollHeight: 1181, initialScrollTop: 0, finalScrollTop: 621, canReachEnd: true, tabBarObscures: false.
-- /settings: overflowY: auto, clientHeight: 595, scrollHeight: 1742, initialScrollTop: 0, finalScrollTop: 1147, canReachEnd: true, tabBarObscures: false.
-
-Artifacts:
-Screenshots: output/playwright/sch-10-planner/ (top-*.png, bottom-*.png)
-Report JSON: output/playwright/sch-10-planner/report.json
-Markdown evidence: docs/qa/planner-schedule-antigravity-baseline.md
-
-Code or CSS changed: NO
-Real iOS device tested: NO
-PLNR.SCHED.10.pwa closed: NO
-
-Observed blockers: None for standalone scroll behavior simulation.
-Recommended handoff to Cursor: Cursor or owner can proceed with real iOS device/simulator verification (PLNR.SCHED.10b.ios) to fully close PLNR.SCHED.10.pwa.

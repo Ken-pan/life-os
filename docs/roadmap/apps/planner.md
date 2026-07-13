@@ -9,37 +9,40 @@
 
 ## 当前能力（生产）
 
-| 域             | 状态 | 要点                                                                                                  |
-| -------------- | ---- | ----------------------------------------------------------------------------------------------------- |
-| 任务流         | ✅   | Today / Inbox / Upcoming / Calendar / Search / Lists / Completed                                      |
-| AI             | ✅   | Kimi 今日简报、任务拆分（`/api/ai/plan`）                                                             |
-| 云同步         | ✅   | `planner_tasks` / `planner_lists` / `planner_projects` + LWW                                          |
-| 项目管理       | ✅   | Projects 列表/详情 · Active/Paused/Shipped · 自动进度 · `@项目`                                       |
-| PWA            | ✅   | SW + IndexedDB 提醒 + 通知                                                                            |
-| Integration    | ✅   | SSO · `finance.bill_due` → `lifeEventsInbox.js`                                                       |
-| Insight        | ✅   | 批量排期 E2E **PLNR.CORE.2** desktop 22/22 ✅                                                         |
-| Paper Pro Move | 🟡   | PAPR.DEV.1–4 ✅ · **PAPR.DATA.verify** ✅ · PAPR.SYS.1 discovery ✅（impl paused）· PAPR.WRITE.5 next |
+| 域             | 状态 | 要点                                                             |
+| -------------- | ---- | ---------------------------------------------------------------- |
+| 任务流         | ✅   | Today / Inbox / Upcoming / Calendar / Search / Lists / Completed |
+| AI             | ✅   | Kimi 今日简报、任务拆分（`/api/ai/plan`）                        |
+| 云同步         | ✅   | `planner_tasks` / `planner_lists` / `planner_projects` + LWW     |
+| 项目管理       | ✅   | Projects 列表/详情 · Active/Paused/Shipped · 自动进度 · `@项目`  |
+| PWA            | ✅   | SW + IndexedDB 提醒 + 通知                                       |
+| Integration    | ✅   | SSO · `finance.bill_due` → `lifeEventsInbox.js`                  |
+| Insight        | ✅   | 批量排期 E2E **P-P2** desktop 22/22 ✅                           |
+| Paper Pro Move | 🟡   | P-MOVE-1–4 ✅；下一步 P-MOVE-5 controlled write staging gate     |
 
 ## Next（按 ROI）
 
-| ID                 | 主题                                                | ROI | 桶     | 投入 | 验收                                   | Hub                 |
-| ------------------ | --------------------------------------------------- | --- | ------ | ---- | -------------------------------------- | ------------------- |
-| **QA-P2** {#qa-p2} | Desktop E2E 侧栏/快捷键                             | ✅  | Infra  | —    | desktop **21/22** ✅                   | —                   |
-| **P-P2** {#p-p2}   | Insight「批量排期」（**P-1**）                      | ✅  | Core   | —    | desktop **22/22** ✅                   | §Shipped            |
-| **P-P3**           | Inbox `life_events` 来源徽章 + 深链 Finance/Fitness | ✅  | Growth | —    | `chip--life-event` · Finance `#/today` | §Shipped 2026-07-09 |
-| **P-P4**           | Today 计数与 `portal_today_summary` 对齐            | ◆   | Growth | 0.5d | 与 Portal 同账号任务数一致             | —                   |
-| **P-MOVE-1**       | Paper Pro Move home-only launcher baseline          | ✅  | Product | — | `/home/root/paperos` 已部署；启动/恢复 gate pass | [`planner-pro-move.md`](./planner-pro-move.md) |
-| **P-MOVE-2**       | PaperOS read path + offline cache                   | ◆   | Product | 1–2d | `/api/paper/today` → `cache.json`；离线可读 | [`planner-pro-move.md`](./planner-pro-move.md) |
-| **P-MOVE-3**       | Paper `task.complete` controlled write MVP          | ◆   | Product | 1d | 本地 HTTP A-E ✅；staging 写入通过；生产写开关默认关      | [`planner-pro-move.md`](./planner-pro-move.md) |
-| **P-PROJ-0**       | Project domain foundation                           | ◆◆  | Core   | 0.5–1d | `projects` state/table + LWW sync；`task.projectId` 保留 | — |
-| **P-PROJ-1**       | Projects 页面                                       | ◆◆  | Product | 1–2d | Active/Paused 分组；项目详情显示关联任务与下一条任务 | — |
-| **P-PROJ-2**       | 任务 `@项目` 关联                                   | ◆◆  | Product | 1d | 任务编辑器项目选择器；Quick Add token；TaskRow project chip | — |
-| **P-PROJ-3**       | Roadmap refs（只读）                                | ◆   | Integration | 1–2d | 手动 refs → generated roadmap index；Planner 不反写 Markdown | — |
-| **P-ATTACH-0**     | Task / Project 附件底座                             | ✅  | Core   | 1–2d | Supabase Storage + metadata；在线上传/删除/预览 | — |
-| **P-ATTACH-1**     | 图片与截图体验                                      | ✅  | Product | 1d | paste / drag-drop / mobile picker / thumbnail / retry | — |
-| **P-BUG-0**        | Bug Report 与 Task 联动                              | ✅  | Growth | 1d | 在线截图、环境信息注入、异常追踪                  | — |
-| **P-P5** {#p-p5}   | 消费 `fitness.workout_logged` → habit 打卡          | ✅  | Growth | —    | inbox 测试 7/7 · FT-P1 触发器          | §Shipped            |
-| **P-P6**           | 消除 `Multiple GoTrueClient` 警告（**P-3**）        | ✅  | Infra  | —    | `@life-os/sync` 浏览器单例缓存         | §Shipped 2026-07-08 |
+| ID                   | 主题                                       | ROI | 桶      | 投入  | Agent                       | 验收                                                                    | Hub      |
+| -------------------- | ------------------------------------------ | --- | ------- | ----- | --------------------------- | ----------------------------------------------------------------------- | -------- |
+| **P-SCHED-0**        | 日程视图 debug + 可用性闭环                | 🔥  | Product | 2–4d  | **Claude Fable**            | Antigravity baseline · Codex · Cursor Auto                              | §Now     |
+| **P-TASK-DISPLAY-0** | 任务行小字 + 类别视觉规范                  | ◆   | Product | —     | **并入 P-SCHED-0**          | [`planner-task-display-spec.md`](../../qa/planner-task-display-spec.md) | P-UIUX-0 |
+| **P-UIUX-0**         | 全站 UI/UX 走查（Today/Inbox/Projects 等） | ◆   | Product | 1–2d  | Fable（P-SCHED 后）         | 截图走查；含 P-TASK-DISPLAY 若未在 A 完成                               | §Next    |
+| **P-MOVE-UI**        | PaperOS Slice 1.1 设备复验 → Slice 2       | ◆◆  | Product | XL    | Cursor Auto + Codex         | 1.1 代码 ✅ `52ae55e0`/`d7c52858` · 见 pro-move 分卷                    | §Now     |
+| **P-MOVE-VERIFY**    | 设备生产 Paper sync 端到端复验        | ◆   | Infra   | 0.25d | Codex                       | token + env → fetch 200（路由已通）                                     | §Now     |
+| **P-MOVE-BLOCK**     | _(已更名 P-MOVE-VERIFY)_ 404 误判已纠正 | —   | —       | —     | —                           | 见 hub §深度复核                                                        | —        |
+| **P-P4**             | Today 计数与 `portal_today_summary` 对齐   | ◆   | Growth  | 0.5d  | Codex                       | 与 Portal 同账号任务数一致                                              | §Next    |
+| **P-MOVE-5**         | Controlled write staging gate              | ◆   | Product | 1d    | Codex                       | staging `task.complete` + 幂等；生产默认关闭                            | §Now     |
+| **P-MOVE-6**         | 定时缓存 + 手动 Sync now                   | ◆   | Product | 1–2d  | Codex                       | scheduled cache + 性能 baseline                                         | §Next    |
+| **P-ATTACH-0**       | Task / Project 附件底座                    | ◆◆  | Core    | 1–2d  | Codex                       | Supabase Storage + metadata；在线上传/删除/预览                         | §Next    |
+| **P-ATTACH-1**       | 图片与截图体验                             | ◆   | Product | 1d    | Fable                       | paste / drag-drop / mobile picker / thumbnail / retry                   | —        |
+
+### 近期已完成
+
+| ID                                | 结果                                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| QA-P2 / P-P2 / P-P3 / P-P5 / P-P6 | E2E、Insight、事件徽章/深链、Fitness 打卡与 Auth 单例均已发货                             |
+| P-MOVE-1–4                        | Launcher、离线读、CJK/分页、退出/崩溃恢复/systemd launcher 已通过                         |
+| P-PROJ-0–3                        | 项目实体与远程表、Projects 列表/详情、`@项目`、project chip 与只读 Roadmap/代码引用已落地 |
 
 ### Project / Attachment 设计边界
 
@@ -68,15 +71,15 @@ Planner 的项目系统只负责「当前执行状态」；repo roadmap 继续�
 
 | ID             | 文件 / 位置                                                                                                                                                          |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PLNR.CORE.2    | `tests/e2e.spec.js` · Insight CTA · Today 列表写入路径（legacy `QA-P2` / `P-P2`）                                                                                    |
-| PLNR.CORE.3    | `src/lib/services/lifeEventsInbox.js` · inbox UI                                                                                                                     |
-| PLNR.CORE.5    | `lifeEventsInbox.js` 扩 type 分支；依赖 `packages/contracts/src/events.ts`                                                                                           |
-| PLNR.CORE.6    | `packages/sync/src/supabaseClient.js` · `scripts/supabaseClient.test.mjs`                                                                                            |
-| PLNR.PROJ.0–3  | `src/lib/domain/projects.js` · `routes/projects/` · `QuickAddBar.svelte` · `TaskEditorSheet.svelte` · `TaskRow.svelte` · `supabase/migrations/*planner_projects.sql` |
-| PAPR           | [`paper-device/`](../../../apps/planner/paper-device/) templates · `/api/paper/*`（provider：**PLNR**）· `server/paperService.mjs`                                   |
-| PLNR.SCHED     | `routes/calendar/` · `components/schedule/*` · `domain/schedule.js` · **`persist/migrate.js` `migrateTask`（缺 `tags` 默认）**                                       |
+| QA-P2          | `tests/e2e.spec.js` · helper `quickAddTask`（FAB）→ 侧栏/快捷键                                                                                                      |
+| P-P2           | Insight CTA · Today 列表写入路径                                                                                                                                     |
+| P-P3           | `src/lib/services/lifeEventsInbox.js` · inbox UI                                                                                                                     |
+| P-P5           | `lifeEventsInbox.js` 扩 type 分支；依赖 `packages/contracts/src/events.ts`                                                                                           |
+| P-P6           | `packages/sync/src/supabaseClient.js` · `scripts/supabaseClient.test.mjs`                                                                                            |
+| P-PROJ-0–3     | `src/lib/domain/projects.js` · `routes/projects/` · `QuickAddBar.svelte` · `TaskEditorSheet.svelte` · `TaskRow.svelte` · `supabase/migrations/*planner_projects.sql` |
+| P-MOVE         | [`paper-device/`](../../../apps/planner/paper-device/) templates · `/api/paper/*` Netlify functions · `server/paperService.mjs`                                      |
+| P-SCHED        | `routes/calendar/` · `components/schedule/*` · `domain/schedule.js` · **`persist/migrate.js` `migrateTask`（缺 `tags` 默认）** |
 | P-TASK-DISPLAY | `TaskRow.svelte` · `domain/taskMetaLine.js` · `domain/taskKind.js` · `lifeEventSource.js`                                                                            |
-| PLNR.CAPTURE.0 | `QuickAddBar.svelte` · `TaskEditorSheet.svelte` · `Fab.svelte` · `taskEditorDefaults.js` · `ui.svelte.js` · [`planner-task-capture-spec.md`](../../qa/planner-task-capture-spec.md) |
 
 ## 验收命令
 
@@ -89,12 +92,12 @@ npm run test                                       # vitest 单元
 
 ## Parked / Not doing
 
-| ID          | 说明                                                                             |
-| ----------- | -------------------------------------------------------------------------------- |
-| PLNR.CORE.7 | CSV / 外部日历导入                                                               |
-| PLNR.CORE.8 | Planner 生产 `life_events`（需第二消费端）                                       |
-| —           | 合并他站业务表 · 全站 AI Agent · 页面级 token 迁移                               |
-| —           | xochitl patch / sidebar 注入 / boot replacement（Paper Pro Move track 明确不做） |
+| ID   | 说明                                                                             |
+| ---- | -------------------------------------------------------------------------------- |
+| P-P7 | CSV / 外部日历导入                                                               |
+| P-P8 | Planner 生产 `life_events`（需第二消费端）                                       |
+| —    | 合并他站业务表 · 全站 AI Agent · 页面级 token 迁移                               |
+| —    | xochitl patch / sidebar 注入 / boot replacement（Paper Pro Move track 明确不做） |
 
 ## 集成
 

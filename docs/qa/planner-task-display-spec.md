@@ -2,7 +2,7 @@
 
 > **Roadmap：** **P-TASK-DISPLAY-0**（并入 **PLNR.UIUX.0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
 > **代码锚点：** `TaskRow.svelte` · `taskMetaLine.js` · `taskKind.js` · `lifeEventSource.js`
-> **状态：** 2026-07-10 与 P-SCHED-0 直接相关的 Today / Calendar 切片已实现并通过回归
+> **状态：** 2026-07-10 与 P-SCHED-0 直接相关的 Today / Calendar 切片已实现并通过回归。**P-SCHED-0 整体仍为 BLOCKED**（见 [`planner-schedule-uiux-audit.md`](./planner-schedule-uiux-audit.md)）；本规范语义不变，待 P-UIUX-0 全站走查时继续验收非日程页面。
 
 ## 问题
 
