@@ -11,6 +11,7 @@ import {
   migrateUserProfile,
 } from '$lib/profile.js'
 import { DEFAULT_TTS_VOICE } from '$lib/localai.js'
+import { dataChanged } from '$lib/syncBus.js'
 
 const DEFAULTS = {
   settings: {
@@ -26,6 +27,9 @@ const DEFAULTS = {
     customPrompt: '', // 自定义指令
     userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)
     userProfileVersion: PROFILE_SCHEMA_VERSION,
+    // 云同步用:最后一次「用户主动改设置」的毫秒时间戳,整包设置 LWW 的依据。
+    // 0 = 从未改过(全默认);启动时的迁移写回不 bump 它,避免新设备用默认覆盖云端。
+    settingsUpdatedAt: 0,
   },
 }
 
@@ -61,11 +65,40 @@ const persistence = createSettingsPersistence({
 export const S = $state(persistence.load())
 
 // 把版本化迁移立即写回；否则用户不进入设置页时旧画像仍留在 localStorage。
+// 直接用 persistence.save(不走 save()),迁移写回不算「用户改设置」,不 bump 时间戳。
 if (browser) persistence.save(S)
 
+/** 用户主动改设置:落盘 + 打云同步时间戳 + 通知云同步。 */
 export function save() {
   if (!browser) return
+  S.settings.settingsUpdatedAt = Date.now()
   persistence.save(S)
+  dataChanged() // 云同步(若已登录)防抖跟进
+}
+
+/**
+ * 云端设置落地(cloud.svelte.js 拉到更新的远端设置时调用)。
+ * 静默写盘:不 bump 时间戳、不再触发 dataChanged,避免拉→推乒乓。
+ * @param {Record<string, unknown>} remoteSettings
+ * @param {number} remoteUpdatedAt
+ */
+export function applyCloudSettings(remoteSettings, remoteUpdatedAt) {
+  if (!browser || !remoteSettings || typeof remoteSettings !== 'object') return
+  const version = Number.isInteger(remoteSettings.userProfileVersion)
+    ? remoteSettings.userProfileVersion
+    : 1
+  Object.assign(S.settings, remoteSettings, {
+    userProfile: migrateUserProfile(
+      typeof remoteSettings.userProfile === 'string'
+        ? remoteSettings.userProfile
+        : S.settings.userProfile,
+      version,
+    ),
+    userProfileVersion: PROFILE_SCHEMA_VERSION,
+    settingsUpdatedAt: remoteUpdatedAt,
+  })
+  persistence.save(S)
+  applyTheme() // 主题即时生效;locale 由 layout 的 $effect 监听 S.settings.locale 自动应用
 }
 
 const THEME_APPLY_OPTIONS = {

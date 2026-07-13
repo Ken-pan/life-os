@@ -1,6 +1,7 @@
 import { browser } from '$app/environment'
 import { mapAuthErrorMessage } from '@life-os/sync'
 import { t } from '$lib/i18n/index.js'
+import { S, applyCloudSettings } from '$lib/state.svelte.js'
 import { supabase as sb, isSupabaseConfigured } from '$lib/supabase.js'
 import { C, persist as persistChats } from '$lib/chat.svelte.js'
 import { M, mergeRemoteMemories } from '$lib/memory.svelte.js'
@@ -156,6 +157,7 @@ export async function syncNow() {
   CLOUD.error = ''
   try {
     const snap = loadSnapshot()
+    await syncUserState()
     await syncConversations(snap)
     await syncMemories(snap)
     saveSnapshot(snap)
@@ -168,6 +170,35 @@ export async function syncNow() {
       pendingResync = false
       schedulePush()
     }
+  }
+}
+
+/**
+ * 设置 + 用户画像单例同步(整包 LWW)。
+ * 时间戳只在用户主动改设置时 bump(state.save),新设备默认设置 updatedAt=0,
+ * 云端有真实时间戳时云端赢,不会用默认覆盖云端画像。
+ */
+async function syncUserState() {
+  const localAt = Number(S.settings.settingsUpdatedAt ?? 0)
+  const { data: remote, error } = await sb
+    .from('user_state')
+    .select('settings, updated_at')
+    .maybeSingle()
+  if (error) throw error
+
+  const remoteAt = Number(remote?.updated_at ?? 0)
+  if (remote && remoteAt > localAt) {
+    // 云端更新:落地到本地(静默,不回推)
+    applyCloudSettings(remote.settings ?? {}, remoteAt)
+  } else if (localAt > remoteAt) {
+    // 本地更新(或云端还没有):推上去
+    const { error: e } = await sb
+      .from('user_state')
+      .upsert(
+        { settings: $state.snapshot(S.settings), updated_at: localAt },
+        { onConflict: 'user_id' },
+      )
+    if (e) throw e
   }
 }
 

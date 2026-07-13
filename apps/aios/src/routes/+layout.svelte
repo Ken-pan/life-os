@@ -8,13 +8,14 @@
   import LifeOsAppBar from '@life-os/platform-web/svelte/app-bar'
   import { ICON_REGISTRY_CONTEXT_KEY } from '@life-os/platform-web/icon-registry'
   import { bindViewportHeight, resetScrollLock } from '@life-os/theme'
+  import { bindVisibilitySync } from '@life-os/sync'
   import ChatSidebar from '$lib/components/ChatSidebar.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
   import { backfillVectors, seedDefaultMemories, dreamMemories } from '$lib/memory.svelte.js'
-  import { initCloud } from '$lib/cloud.svelte.js'
+  import { initCloud, syncNow, CLOUD } from '$lib/cloud.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
@@ -41,10 +42,15 @@
     const dreamTimer = setTimeout(() => dreamMemories(), 30000)
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
+    // 回到前台时拉一次云端:让别的设备的改动无需手动/刷新就收敛过来
+    const cleanupVisibility = bindVisibilitySync(() => syncNow(), {
+      when: () => !!CLOUD.user,
+    })
     return () => {
       clearTimeout(dreamTimer)
       cleanupTheme()
       cleanupViewport()
+      cleanupVisibility()
     }
   })
 
