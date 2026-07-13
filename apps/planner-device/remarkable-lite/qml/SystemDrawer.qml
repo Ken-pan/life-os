@@ -1,36 +1,17 @@
 import QtQuick
 import QtQuick.Layouts
 
-// System drawer — the temporary Layer-1 navigation surface (PAPR.UI.2 §1).
-// Final IA: Today / Notes / Tasks / Documents (primary) · Settings
-// (secondary) · Return to reMarkable (system transition, footer). Opens from
-// the shell menu button, closes after navigation or an outside tap. Discrete
-// show/hide only: no animation, no translucent scrim — the underlying page
-// stays quiet and a single ink100 edge marks the modal boundary. Home, Inbox,
-// Review, and the legacy System label are not user-visible destinations here;
-// their pages remain mounted internally for bridge/rollback compatibility
-// (PAPR.UI.2 §5).
+// System drawer — the temporary Layer-1 navigation surface (brief §7.2).
+// Replaces the permanent bottom tab bar. Opens from the shell menu button,
+// closes after navigation or an outside tap. Discrete show/hide only: no
+// animation, no translucent scrim — the underlying page stays quiet and a
+// single ink100 edge marks the modal boundary.
 Item {
     id: drawer
     objectName: "system.drawer"
 
     property bool open: false
     property int currentModule: 0
-    property bool navTraceEnabled: false
-
-    onOpenChanged: {
-        if (!navTraceEnabled)
-            return
-        if (open)
-            console.log("NAV_TRACE drawer_opened_true_in_qml " + Date.now())
-        else
-            console.log("NAV_TRACE drawer_opened_false_in_qml " + Date.now())
-    }
-
-    onVisibleChanged: {
-        if (navTraceEnabled)
-            console.log("NAV_TRACE drawer_visibleChanged_" + visible + " " + Date.now())
-    }
 
     signal navigate(int module)
 
@@ -43,7 +24,7 @@ Item {
     // dither badly on e-ink and force a large repaint.
     MouseArea {
         anchors.fill: parent
-        onPressed: drawer.dismiss()
+        onClicked: drawer.dismiss()
     }
 
     Rectangle {
@@ -108,23 +89,16 @@ Item {
                 MouseArea {
                     id: rowTap
                     anchors.fill: parent
-                    onPressed: {
-                        if (drawer.navTraceEnabled)
-                            console.log("NAV_TRACE +0ms drawer_item_pressed_" + row.module + " " + Date.now())
+                    onClicked: {
                         drawer.dismiss()
-                        if (drawer.navTraceEnabled)
-                            console.log("NAV_TRACE drawer_dismiss_called " + Date.now())
                         drawer.navigate(row.module)
-                        if (drawer.navTraceEnabled)
-                            console.log("NAV_TRACE drawer_navigate_called " + Date.now())
                     }
                 }
             }
 
-            DrawerRow { objectName: "drawer.today";     label: "Today";     module: 0 }
-            DrawerRow { objectName: "drawer.notes";     label: "Notes";     module: 1 }
-            DrawerRow { objectName: "drawer.tasks";     label: "Tasks";     module: 2 }
-            DrawerRow { objectName: "drawer.documents"; label: "Documents"; module: 3 }
+            DrawerRow { objectName: "drawer.home";  label: "Home";  module: 0 }
+            DrawerRow { objectName: "drawer.today"; label: "Today"; module: 1 }
+            DrawerRow { objectName: "drawer.notes"; label: "Notes"; module: 2 }
 
             Rectangle {
                 Layout.fillWidth: true
@@ -136,7 +110,9 @@ Item {
                 color: Ui.ink30
             }
 
-            DrawerRow { objectName: "drawer.settings"; label: "Settings"; module: 4 }
+            DrawerRow { objectName: "drawer.inbox";  label: "Inbox";  module: 3 }
+            DrawerRow { objectName: "drawer.review"; label: "Review"; module: 4 }
+            DrawerRow { objectName: "drawer.system"; label: "System"; module: 5 }
 
             Item { Layout.fillHeight: true }
 

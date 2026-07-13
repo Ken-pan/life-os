@@ -446,7 +446,7 @@ bool InkModeController::handleToolbarTap(const QPoint &point)
 
 QRect InkModeController::handleRect() const
 {
-    return QRect(12, 12, 88, 88).intersected(
+    return QRect(12, m_screenH - 100, 88, 88).intersected(
         QRect(0, 0, m_screenW, m_screenH));
 }
 

@@ -96,6 +96,11 @@ System drawer · Notes Gallery · native ink chrome states · semantic `paperctl
 **Native toolbar P0:** fixed in `52ae55e0` (`InkModeController` framebuffer sync).
 **QML visual:** fixed in `d7c52858`; Antigravity delta gate PASS — archived in [`../../archive/paperos/milestones-2026-07.md`](../../archive/paperos/milestones-2026-07.md).
 
+**Clean review stack:** `agent/papr-ui-1-1-clean` reconstructs the stable Slice 1.1
+foundation from the preserved checkpoint without importing the toolbar
+auto-retreat or trace experiments. The tool/color synchronization fix is kept
+as an isolated commit and still requires the operator pen/device gate.
+
 **Before Slice 2:** operator device pass (toolbar + Gallery + recovery). Do **not** parallel Slice 2 in same PR.
 
 #### Next — Core Slice 2
