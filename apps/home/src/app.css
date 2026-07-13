@@ -267,7 +267,7 @@ main.plan-route>.plan-top:first-child {
     padding-bottom: calc(var(--mobile-tabbar-total-h) + var(--safe-bottom-effective) + 6px);
   }
 
-  .app-shell.plan-immersive-edit main.plan-route {
+  main.plan-route.plan-immersive-edit {
     padding-bottom: calc(var(--safe-bottom-effective) + 8px);
   }
 }
@@ -275,31 +275,9 @@ main.plan-route>.plan-top:first-child {
 /* Plan edit immersive: hide bottom nav chrome, lift selection bars */
 @media (--life-os-phone) {
 
-  .app-shell.plan-immersive-edit .sel-bar,
-  .app-shell.plan-immersive-edit .graph-sel-bar,
-  .app-shell.plan-immersive-edit .graph-open-bar {
+  main.plan-immersive-edit .sel-bar,
+  main.plan-immersive-edit .graph-sel-bar,
+  main.plan-immersive-edit .graph-open-bar {
     bottom: calc(var(--safe-bottom-effective) + 14px);
   }
-}
-
-.skip-link {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  padding: 10px 16px;
-  background: var(--accent);
-  color: var(--on-accent, #fff);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  border-radius: 0 0 10px 0;
-  transform: translateY(-120%);
-  transition: transform var(--dur-fast, 0.15s) var(--ease-standard, ease);
-}
-
-.skip-link:focus-visible {
-  transform: translateY(0);
-  outline: 2px solid var(--on-accent, #fff);
-  outline-offset: 2px;
 }
