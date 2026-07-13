@@ -60,3 +60,38 @@ Any manual `netlify deploy` **must** include `CI=1` and `--filter <workspace>`
 
 - **Only** push to `Ken-pan/life-os` for production.
 - Legacy app repos on GitHub are **archived**; do not commit there.
+
+## Git policy — single branch, no worktrees (2026-07-12)
+
+**`master` is the only branch. Never create branches, worktrees, stashes, or
+checkpoint refs — not even for WIP.** This repo has one user; dirty/unfinished
+commits directly on `master` are acceptable and preferred over branch sprawl.
+(On 2026-07-12 all 26 in-flight branches were merged into `master` and deleted,
+local and remote.)
+
+Rules for every agent session:
+
+1. Work directly on `master` in this checkout. `git pull --rebase` before
+   starting, commit early and often, `git push origin master` when done.
+2. **Never** run `git checkout -b`, `git switch -c`, `git worktree add`,
+   `git stash`. If you are asked to "preserve" something, commit it to
+   `master` instead.
+3. **Parallel agents:** prefer one repo = one agent. Truly independent
+   projects live in sibling repos (e.g. PaperOS at `../paperos`) — run a
+   second agent there, not on a branch here.
+4. If two agents must run in life-os at the same time, each owns exactly one
+   `apps/<app>` directory:
+   - Stage only your own paths: `git add apps/<your-app> docs/<your-files>`.
+     Never `git add -A`, `git add .`, or `git commit -a`.
+   - Never run repo-wide destructive commands: `git reset --hard`,
+     `git checkout -- .`, `git clean`, `git restore .` — they destroy the
+     other agent's uncommitted work.
+   - Shared `packages/*` changes: only one agent touches `packages/*` in a
+     session; coordinate via commit messages.
+5. When an app outgrows the monorepo (its own device stack, runtime, or agent
+   lane — like PaperOS did), extract it into a sibling standalone repo with
+   `git filter-repo` instead of giving it branches here.
+
+PaperOS was extracted to `/Users/kenpan/「Projects」/paperos` (own repo, full
+history). The Planner-side provider API (`apps/planner/netlify/functions/paper-*`,
+`paperService.mjs`, Supabase paper migrations) stays here.
