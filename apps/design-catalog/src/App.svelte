@@ -19,6 +19,7 @@
   import ToastShowcase from './showcases/ToastShowcase.svelte'
   import CardsShowcase from './showcases/CardsShowcase.svelte'
   import CommandPaletteShowcase from './showcases/CommandPaletteShowcase.svelte'
+  import AppShellShowcase from './showcases/AppShellShowcase.svelte'
 
   const pages = {
     tokens: TokensShowcase,
@@ -33,6 +34,7 @@
     toast: ToastShowcase,
     cards: CardsShowcase,
     'command-palette': CommandPaletteShowcase,
+    'app-shell': AppShellShowcase,
   }
 
   let showcase = $state('tokens')

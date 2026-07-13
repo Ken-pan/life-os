@@ -6168,30 +6168,6 @@ body:has(.focus-view) #main-content {
   }
 }
 
-/* 跳过导航 — 键盘用户直达主内容 */
-.skip-link {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  padding: 10px 16px;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-family: var(--button);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-decoration: none;
-  border-radius: 0 0 10px 0;
-  transform: translateY(-120%);
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.skip-link:focus-visible {
-  transform: translateY(0);
-  outline: 2px solid var(--on-accent);
-  outline-offset: 2px;
-}
-
 /* ─────────── English locale typography ───────────
    Same Life OS font stacks as zh (Geist / Geist Mono / Noto Sans brand).
    EN: decorative labels use sans + sentence case; numerics stay tabular mono. */
@@ -6275,20 +6251,6 @@ html[lang="en"] .stat-card .stat-v {
 }
 
 @media (--life-os-desktop) {
-  body {
-    padding-bottom: 0;
-  }
-
-  .app-shell {
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
-  }
-
-  .sidebar {
-    display: flex !important;
-  }
-
   .toast {
     bottom: 24px;
   }

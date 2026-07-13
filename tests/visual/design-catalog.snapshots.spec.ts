@@ -51,4 +51,26 @@ test.describe('design-catalog pixel baselines @visual', () => {
       }
     }
   })
+
+  test.describe('app shell contract', () => {
+    test('desktop', async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await page.goto(catalogUrl('app-shell', 'fitness', 'light'))
+      await waitForCatalogEmbed(page, 'app-shell')
+      await expect(page.getByTestId('catalog-app-shell')).toHaveScreenshot(
+        'app-shell-fitness-light-desktop.png',
+        SNAPSHOT_OPTS,
+      )
+    })
+
+    test('393×852 mobile', async ({ page }) => {
+      await page.setViewportSize({ width: 393, height: 852 })
+      await page.goto(catalogUrl('app-shell', 'fitness', 'dark'))
+      await waitForCatalogEmbed(page, 'app-shell')
+      await expect(page.getByTestId('catalog-app-shell')).toHaveScreenshot(
+        'app-shell-fitness-dark-393x852.png',
+        SNAPSHOT_OPTS,
+      )
+    })
+  })
 })
