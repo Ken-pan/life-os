@@ -30,7 +30,7 @@ single source of truth。来源见文末。
 | **PLAT.GEN.1** | Manifest schema 校验 + `promote --check` 漂移守卫接 CI               | Nx `sync:check`    | ✅ 2026-07-12 |
 | **PLAT.GEN.2** | Day-2 部署自动化:Netlify site 创建/env/DNS 清单 + 图标生成参数化    | Backstage day-2    | ✅ 2026-07-12 |
 | **PLAT.GEN.3** | 模板版本戳 + `update-life-os-app`(starter 演进回灌旧 app)           | Copier/Cruft       | ⬜   |
-| **PLAT.GEN.4** | 注册表反转:六 app 注册信息迁入各自 manifest,注册表变生成物         | spec-driven SSOT   | ⬜   |
+| **PLAT.GEN.4** | 注册表反转:六 app 注册信息迁入各自 manifest,注册表变生成物         | spec-driven SSOT   | ✅ 2026-07-12 |
 | **PLAT.GEN.5** | Day-2 能力模块:`add-capability` auth/supabase/portal-card 可组合接入 | Backstage golden path | ⬜ |
 
 ### PLAT.GEN.1 — 校验与漂移守卫 ✅ 2026-07-12
@@ -78,20 +78,27 @@ single source of truth。来源见文末。
   shell/PWA 基座类文件(app.html、service worker、spec)优先。
 - 触发条件:starter 发生第二次跨 app 需要的修复时再做(YAGNI 守卫)。
 
-### PLAT.GEN.4 — 注册表反转,manifest 成为 SSOT（~1.5d,GEN.1 之后）
+### PLAT.GEN.4 — 注册表反转,manifest 成为 SSOT ✅ 2026-07-12
 
-- 现状方向是 manifest --codemod--> 手写注册表;反转为:
-  `scripts/build-app-registry.mjs` 扫 `apps/*/app.manifest.json` 生成
-  `packages/theme/src/generated/appRegistry.js`,`siteMeta.js` / `launcher.js` /
-  brand accent / `apps.config.mjs` 改为薄壳 re-export(同 design-tokens
-  `build:tokens` → `generated/` 的既有模式)。
-- 迁移:六个存量 app 补 `app.manifest.json`(从注册表反抽,一次性脚本),
-  验证生成物与现注册表逐字节一致后切换。
-- promote 从"16 处插入"退化为"放一个 manifest + build",锚点注释全部退役;
-  GEN.1 的漂移守卫变成 `build && git diff --exit-code`(staleness guard,
-  与 validate-tokens 第 6 条同款)。
-- 风险:`LifeOsAppId` typedef 由 union 变生成物,注意 jsconfig 消费端;
-  Finance(direct storageKind)等特例字段要全量建模进 schema。
+已发货:
+- `scripts/build-app-registry.mjs` 扫 `apps/*/app.manifest.json`(starter 除外)
+  生成 `packages/theme/src/generated/appRegistry.js`(siteMeta / origins /
+  switcher / wordmark accent+base+assetPrefix / PWA 原始矩阵 + `LifeOsAppId`
+  typedef);`--check` 为 staleness 守卫,即 `npm run check:app-manifests`
+  新实现(CI 不变)。
+- `siteMeta.js` / `launcher.js` / `brand.js` / `scripts/pwa/apps.config.mjs`
+  改为薄壳:只保留行为函数,数据 re-export 生成物;apps.config 按 shellType
+  计算 scroll selector 并手工保留 starter 调试条目。
+- 六个存量 app 反抽出 `app.manifest.json`;特例全部建模进 schema:
+  Finance(direct storageKind / brandAssetPrefix / wordmarkBase / favicon 路径 /
+  authGate / mainQuery)、fitness·music(devPort≠previewPort)、portal
+  (无 switcherOrder = 不进切换器)、pwaName 大小写、switcherOrder 显式排序。
+- **等价性门槛:** 反转前后对全部导出(siteMeta/origins/switcher/brand getter
+  视图/PWA_APPS)做键序不敏感深比较 — **零差异**后才切换。
+- promote 从 16 接线点缩到 11(注册表六步收敛为一次 build);全仓 typecheck
+  7/7 零错误;demo E2E(晋升→篡改→双守卫报漂移→再同步→playwright 3/3)。
+- 存量 app 的 launch.json 端口(5871–5875 段)是刻意与 e2e 隔离的历史约定,
+  不由 manifest 驱动 — promote 写模式只面向新 app。
 
 ### PLAT.GEN.5 — 能力模块 add-capability（~1d/项,按需）
 

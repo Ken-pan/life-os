@@ -1,0 +1,34 @@
+{
+  "id": "home",
+  "name": "HOME.OS",
+  "shortName": "HOME",
+  "description": {
+    "zh": "居家空间规划 · 平面审计与储藏区管理",
+    "en": "Home spatial planning · floor audit & storage zones"
+  },
+  "themeColor": { "light": "#eef1f4", "dark": "#14181c" },
+  "defaultTheme": "auto",
+  "locale": "zh-CN",
+  "storageKey": "homeos_spatial_v1",
+  "storageKind": "nested",
+  "settingsThemePath": ["settings", "theme"],
+  "categories": ["lifestyle", "utilities"],
+  "workspace": "home-os",
+  "devPort": 5196,
+  "domain": "home.kenos.space",
+  "shellType": "main-col-wrap",
+  "wordmarkAccent": { "light": "#7d93a8", "dark": "#7d93a8" },
+  "switcherOrder": 50,
+  "experimental": true,
+  "registryOrder": 5,
+  "production": true,
+  "pwaTestEnabled": false,
+  "routes": [
+    { "path": "/", "name": "overview" },
+    { "path": "/plan", "name": "plan" },
+    { "path": "/storage", "name": "storage" },
+    { "path": "/settings", "name": "settings" }
+  ],
+  "clipPaths": ["/settings"],
+  "scrollQaPath": "/settings"
+}

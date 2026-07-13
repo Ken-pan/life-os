@@ -1,0 +1,36 @@
+{
+  "id": "music",
+  "name": "MUSIC.OS",
+  "shortName": "MUSIC",
+  "description": {
+    "zh": "本地音乐，留在心里 · 离线播放与歌单",
+    "en": "Local music that stays with you · offline playback & playlists"
+  },
+  "themeColor": { "light": "#faf5f4", "dark": "#100a0c" },
+  "defaultTheme": "auto",
+  "locale": "zh-CN",
+  "storageKey": "musicos_v1",
+  "storageKind": "nested",
+  "settingsThemePath": ["settings", "theme"],
+  "categories": ["music", "entertainment", "utilities"],
+  "workspace": "music-os",
+  "devPort": 5189,
+  "previewPort": 5191,
+  "domain": "music.kenos.space",
+  "shellType": "main-wrap-main",
+  "wordmarkAccent": { "light": "#ff4d6d", "dark": "#ff4d6d" },
+  "switcherOrder": 40,
+  "registryOrder": 4,
+  "pwaName": "Music.OS",
+  "production": true,
+  "pwaTestEnabled": true,
+  "routes": [
+    { "path": "/", "name": "home" },
+    { "path": "/library", "name": "library" },
+    { "path": "/settings", "name": "settings" }
+  ],
+  "clipPaths": ["/"],
+  "scrollQaPath": "/settings",
+  "moreButton": ".mobile-tabbar button[aria-label=\"更多\"]",
+  "moreClose": ".mobile-more-close"
+}

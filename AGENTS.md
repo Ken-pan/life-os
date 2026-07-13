@@ -27,7 +27,8 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `./scripts/deploy-all-netlify.sh`                                 | CLI prod deploy 六站（含 Portal、Home）                         |
 | `node scripts/create-life-os-app.mjs <id> [--name --port]`        | 从 `apps/starter` 模板生成新 app + AppManifest(PLAT.SHELL.5/6)|
 | `node scripts/promote-life-os-app.mjs <id> [--check]`             | 按 `apps/<id>/app.manifest.json` 同步全部注册表(upsert,幂等);`--check` 只验不写 |
-| `npm run check:app-manifests`                                     | 全 app manifest↔注册表漂移守卫(PLAT.GEN.1,CI 已接)            |
+| `npm run build:app-registry`                                      | manifest → `packages/theme/src/generated/appRegistry.js`(PLAT.GEN.4) |
+| `npm run check:app-manifests`                                     | 全 manifest 校验 + 注册表 staleness 守卫(PLAT.GEN.1/4,CI 已接)|
 | `python3 scripts/generate-life-os-brand-icons.py [--app X\|--bootstrap X]` | 品牌图标派生;`--bootstrap` 新 app 占位全套(PLAT.GEN.2)  |
 | `node scripts/netlify-provision.mjs <id> [--apply]`               | Netlify site+env+接线供给,默认 dry-run(PLAT.GEN.2)            |
 | `npm run pwa:build`                                               | 五端 production build（PWA 验收用）                             |

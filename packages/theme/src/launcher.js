@@ -1,30 +1,14 @@
+/**
+ * PLAT.GEN.4：LIFE_OS_APP_ORIGINS / LIFE_OS_SWITCHER_APPS 由
+ * scripts/build-app-registry.mjs 从各 app.manifest.json 生成；
+ * 本文件只保留行为函数。
+ */
 import { getLifeOsBrand } from './brand.js'
+import { LIFE_OS_APP_ORIGINS } from './generated/appRegistry.js'
+
+export { LIFE_OS_APP_ORIGINS, LIFE_OS_SWITCHER_APPS } from './generated/appRegistry.js'
 
 /** @typedef {import('./siteMeta.js').LifeOsAppId} LifeOsAppId */
-
-/** @type {Record<LifeOsAppId, { production: string; devPort: number }>} */
-export const LIFE_OS_APP_ORIGINS = {
-  portal: { production: 'https://portal.kenos.space', devPort: 5195 },
-  planner: { production: 'https://planner.kenos.space', devPort: 5188 },
-  finance: { production: 'https://finance.kenos.space', devPort: 5180 },
-  fitness: { production: 'https://fitness.kenos.space', devPort: 5190 },
-  music: { production: 'https://music.kenos.space', devPort: 5189 },
-  home: { production: 'https://home.kenos.space', devPort: 5196 },
-  // [app-generator:app-origins] promote-life-os-app.mjs 在此行上方插入新 app
-}
-
-/**
- * Sidebar switcher order (product apps only — Portal is the launcher hub, not listed here).
- * @type {Array<{ id: LifeOsAppId; experimental?: boolean }>}
- */
-export const LIFE_OS_SWITCHER_APPS = [
-  { id: 'planner' },
-  { id: 'finance' },
-  { id: 'fitness' },
-  { id: 'music' },
-  { id: 'home', experimental: true },
-  // [app-generator:switcher-apps] promote-life-os-app.mjs 在此行上方插入新 app
-]
 
 /**
  * @param {LifeOsAppId} appId

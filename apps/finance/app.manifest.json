@@ -1,0 +1,40 @@
+{
+  "id": "finance",
+  "name": "FINANCE.OS",
+  "shortName": "FINANCE",
+  "description": {
+    "zh": "个人财务驾驶舱 · 现金流、资产与长期规划",
+    "en": "Personal finance cockpit · cash flow, assets & long-range planning"
+  },
+  "themeColor": { "light": "#f2f4f2", "dark": "#101211" },
+  "defaultTheme": "auto",
+  "locale": "zh-CN",
+  "storageKey": "fos-theme",
+  "storageKind": "direct",
+  "settingsThemePath": [],
+  "categories": ["finance", "utilities"],
+  "workspace": "finance-os",
+  "devPort": 5180,
+  "domain": "finance.kenos.space",
+  "shellType": "main-wrap-content",
+  "wordmarkAccent": { "light": "#c6f43d", "dark": "#b2dc37" },
+  "wordmarkBase": "Finance",
+  "brandAssetPrefix": "/assets/brand",
+  "favicon": { "light": "/assets/brand/favicon-32.png" },
+  "appleTouchIcon": "/assets/brand/apple-touch-icon.png",
+  "switcherOrder": 20,
+  "registryOrder": 3,
+  "pwaName": "Finance.OS",
+  "waitSelector": ".app-shell, .auth-screen",
+  "mainQuery": ".main-wrap > .content, .auth-screen",
+  "authGate": true,
+  "production": true,
+  "pwaTestEnabled": true,
+  "routes": [
+    { "path": "/home/today", "name": "home" },
+    { "path": "/settings/app", "name": "settings" }
+  ],
+  "scrollQaPath": "/home/today",
+  "moreButton": ".mobile-tabbar button[aria-label=\"更多\"]",
+  "moreClose": ".mobile-more-close"
+}

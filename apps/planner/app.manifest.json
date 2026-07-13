@@ -1,0 +1,35 @@
+{
+  "id": "planner",
+  "name": "PLANNER.OS",
+  "shortName": "PLANNER",
+  "description": {
+    "zh": "阳光感任务清单 · 轻松规划每一天",
+    "en": "Sunny tasks, calm planning"
+  },
+  "themeColor": { "light": "#f5f3f0", "dark": "#121110" },
+  "defaultTheme": "auto",
+  "locale": "zh-CN",
+  "storageKey": "planos_v1",
+  "storageKind": "nested",
+  "settingsThemePath": ["settings", "theme"],
+  "categories": ["productivity", "utilities"],
+  "workspace": "planner-os",
+  "devPort": 5188,
+  "domain": "planner.kenos.space",
+  "shellType": "main-col-wrap",
+  "wordmarkAccent": { "light": "#e9a832", "dark": "#f5b83d" },
+  "switcherOrder": 10,
+  "registryOrder": 1,
+  "pwaName": "Planner.OS",
+  "production": true,
+  "pwaTestEnabled": true,
+  "routes": [
+    { "path": "/", "name": "today" },
+    { "path": "/settings", "name": "settings" },
+    { "path": "/calendar", "name": "calendar" }
+  ],
+  "clipPaths": ["/"],
+  "scrollQaPath": "/settings",
+  "moreButton": ".nav button[aria-label=\"更多\"], .mobile-tabbar button[aria-label=\"更多\"]",
+  "moreClose": ".mobile-more-close, .sheet-bg"
+}

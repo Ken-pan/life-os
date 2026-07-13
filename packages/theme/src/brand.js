@@ -1,4 +1,14 @@
+/**
+ * PLAT.GEN.4：wordmark base / asset prefix / accent 数据由
+ * scripts/build-app-registry.mjs 从各 app.manifest.json 生成；
+ * 本文件只保留行为函数与展示常量。
+ */
 import { LIFE_OS_SITE_META } from './siteMeta.js'
+import {
+  LIFE_OS_APP_WORDMARK_ACCENT,
+  LIFE_OS_BRAND_ASSET_PREFIX,
+  LIFE_OS_WORDMARK_BASE,
+} from './generated/appRegistry.js'
 
 /** @typedef {import('./siteMeta.js').LifeOsAppId} LifeOsAppId */
 /** @typedef {'sidebar' | 'appbar' | 'header' | 'auth'} LifeOsBrandVariant */
@@ -9,20 +19,6 @@ export const LIFE_OS_BRAND_MARK_SIZE = {
   appbar: 24,
   header: 24,
   auth: 48,
-}
-
-/**
- * Display base for `XXX` + accent `OS` (no dot). Finance keeps title case.
- * @type {Partial<Record<LifeOsAppId, string>>}
- */
-const WORDMARK_BASE = {
-  finance: 'Finance',
-  portal: 'PORTAL',
-}
-
-/** @type {Partial<Record<LifeOsAppId, string>>} */
-const BRAND_ASSET_PREFIX = {
-  finance: '/assets/brand',
 }
 
 /**
@@ -44,29 +40,15 @@ export function getBrandIconPaths(assetPrefix = '') {
  */
 export function getLifeOsBrand(appId) {
   const meta = LIFE_OS_SITE_META[appId]
-  const assetPrefix = BRAND_ASSET_PREFIX[appId] ?? ''
+  const assetPrefix = LIFE_OS_BRAND_ASSET_PREFIX[appId] ?? ''
   return {
     appId,
-    wordmarkBase: WORDMARK_BASE[appId] ?? meta.shortName,
+    wordmarkBase: LIFE_OS_WORDMARK_BASE[appId] ?? meta.shortName,
     wordmarkAccent: 'OS',
     fullName: meta.name,
     assetPrefix,
     ...getBrandIconPaths(assetPrefix),
   }
-}
-
-/**
- * Wordmark accent (`OS`) colors per app — aligned with brand sidebar-primary tokens.
- * @type {Record<LifeOsAppId, { light: string; dark: string }>}
- */
-const LIFE_OS_APP_WORDMARK_ACCENT = {
-  portal: { light: '#3d9ed6', dark: '#5cb8ea' },
-  planner: { light: '#e9a832', dark: '#f5b83d' },
-  finance: { light: '#c6f43d', dark: '#b2dc37' },
-  fitness: { light: '#c42f0a', dark: '#ff4d2e' },
-  music: { light: '#ff4d6d', dark: '#ff4d6d' },
-  home: { light: '#7d93a8', dark: '#7d93a8' },
-  // [app-generator:wordmark-accent] promote-life-os-app.mjs 在此行上方插入新 app
 }
 
 /**

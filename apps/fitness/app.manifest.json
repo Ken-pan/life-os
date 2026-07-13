@@ -1,0 +1,38 @@
+{
+  "id": "fitness",
+  "name": "FITNESS.OS",
+  "shortName": "FITNESS",
+  "description": {
+    "zh": "胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先",
+    "en": "Four-day split training · arm circumference first"
+  },
+  "themeColor": { "light": "#f4f4f3", "dark": "#0d0d0e" },
+  "defaultTheme": "dark",
+  "locale": "zh-CN",
+  "storageKey": "fitos_v2",
+  "storageKind": "nested",
+  "settingsThemePath": ["settings", "theme"],
+  "categories": ["health", "fitness", "utilities"],
+  "workspace": "fitness-os",
+  "devPort": 5190,
+  "previewPort": 4173,
+  "domain": "fitness.kenos.space",
+  "shellType": "main-wrap-main",
+  "wordmarkAccent": { "light": "#c42f0a", "dark": "#ff4d2e" },
+  "switcherOrder": 30,
+  "registryOrder": 2,
+  "pwaName": "Fitness.OS",
+  "favicon": { "light": "/favicon-32.png" },
+  "production": true,
+  "pwaTestEnabled": true,
+  "routes": [
+    { "path": "/", "name": "today" },
+    { "path": "/program", "name": "program" },
+    { "path": "/discover", "name": "discover" },
+    { "path": "/settings", "name": "settings" }
+  ],
+  "clipPaths": ["/discover", "/program", "/"],
+  "scrollQaPath": "/settings",
+  "moreButton": ".mobile-tabbar button[aria-label=\"更多\"]",
+  "moreClose": ".mobile-more-close"
+}

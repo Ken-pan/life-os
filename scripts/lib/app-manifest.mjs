@@ -83,6 +83,32 @@ export function validateManifest(m) {
   need(m.moreButton == null || isStr(m.moreButton), 'moreButton：非空字符串选择器')
   need(m.moreClose == null || isStr(m.moreClose), 'moreClose：非空字符串选择器')
   need(m.authGate == null || isBool(m.authGate), 'authGate：布尔')
+  // —— PLAT.GEN.4 注册表反转字段（全部可选，缺省走派生默认） ——
+  need(
+    m.previewPort == null || (Number.isInteger(m.previewPort) && m.previewPort >= 1024 && m.previewPort <= 65535),
+    'previewPort：1024–65535 的整数（缺省 = devPort）',
+  )
+  need(m.wordmarkBase == null || isStr(m.wordmarkBase), 'wordmarkBase：非空字符串（缺省 = shortName）')
+  need(
+    m.brandAssetPrefix == null || (isStr(m.brandAssetPrefix) && m.brandAssetPrefix.startsWith('/')),
+    'brandAssetPrefix：以 / 开头',
+  )
+  need(
+    m.favicon == null ||
+      (isStr(m.favicon.light) &&
+        (m.favicon.id == null || isStr(m.favicon.id)) &&
+        (m.favicon.dark == null || isStr(m.favicon.dark))),
+    'favicon：{ light 必填, id?, dark? }',
+  )
+  need(
+    m.appleTouchIcon == null || (isStr(m.appleTouchIcon) && m.appleTouchIcon.startsWith('/')),
+    'appleTouchIcon：以 / 开头',
+  )
+  need(m.switcherOrder == null || Number.isInteger(m.switcherOrder), 'switcherOrder：整数（缺省 = 不进切换器）')
+  need(m.registryOrder == null || Number.isInteger(m.registryOrder), 'registryOrder：整数（注册表排序）')
+  need(m.pwaName == null || isStr(m.pwaName), 'pwaName：非空字符串（缺省 = name）')
+  need(m.waitSelector == null || isStr(m.waitSelector), 'waitSelector：非空字符串选择器')
+  need(m.mainQuery == null || isStr(m.mainQuery), 'mainQuery：非空字符串选择器')
   return e
 }
 

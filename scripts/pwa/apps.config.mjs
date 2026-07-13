@@ -1,6 +1,10 @@
 /**
- * Life OS PWA debug — single source of truth for all apps.
+ * Life OS PWA debug — 派生自 app 注册表（PLAT.GEN.4）。
  * Used by: playwright, mobile-scroll-qa, ios-sim scripts, healthcheck, docs.
+ *
+ * 数据源：apps/<id>/app.manifest.json → packages/theme/src/generated/appRegistry.js
+ * （npm run build:app-registry）。本文件负责按 shellType 计算 scroll selector，
+ * 并手工保留 starter 模板的调试条目（starter 不进注册表）。
  *
  * Scroll selectors: @life-os/theme shell.js (getScrollRootSelectorForShell)
  */
@@ -10,6 +14,7 @@ import {
   getScrollRootSelectorForShell,
   getScrollRootSelectorsForShell,
 } from '../../packages/theme/src/shell.js'
+import { LIFE_OS_PWA_APPS } from '../../packages/theme/src/generated/appRegistry.js'
 
 /** @typedef {import('@life-os/theme').LifeOsShellType} LifeOsShellType */
 
@@ -48,128 +53,20 @@ function scrollSelectorsFor(shellType) {
   return { scrollSelector, scrollSelectors, mainQuery: scrollSelector }
 }
 
+/** 注册表原始条目 → 完整 PwaAppConfig（补 scroll selector，mainQuery 覆盖优先） */
+function hydrate(raw) {
+  const { mainQuery, ...rest } = raw
+  return {
+    ...rest,
+    ...scrollSelectorsFor(raw.shellType),
+    ...(mainQuery != null ? { mainQuery } : {}),
+  }
+}
+
 /** @type {Record<string, PwaAppConfig>} */
 export const PWA_APPS = {
-  planner: {
-    id: 'planner',
-    name: 'Planner.OS',
-    workspace: 'planner-os',
-    port: 5188,
-    shellType: 'main-col-wrap',
-    waitSelector: '.app-shell',
-    ...scrollSelectorsFor('main-col-wrap'),
-    nestedWrapInMain: false,
-    routes: [
-      { path: '/', name: 'today' },
-      { path: '/settings', name: 'settings' },
-      { path: '/calendar', name: 'calendar' },
-    ],
-    clipPaths: ['/'],
-    scrollQaPath: '/settings',
-    moreButton:
-      '.nav button[aria-label="更多"], .mobile-tabbar button[aria-label="更多"]',
-    moreClose: '.mobile-more-close, .sheet-bg',
-    production: true,
-    pwaTestEnabled: true,
-  },
-  fitness: {
-    id: 'fitness',
-    name: 'Fitness.OS',
-    workspace: 'fitness-os',
-    port: 4173,
-    shellType: 'main-wrap-main',
-    waitSelector: '.app-shell',
-    ...scrollSelectorsFor('main-wrap-main'),
-    nestedWrapInMain: true,
-    routes: [
-      { path: '/', name: 'today' },
-      { path: '/program', name: 'program' },
-      { path: '/discover', name: 'discover' },
-      { path: '/settings', name: 'settings' },
-    ],
-    clipPaths: ['/discover', '/program', '/'],
-    scrollQaPath: '/settings',
-    moreButton: '.mobile-tabbar button[aria-label="更多"]',
-    moreClose: '.mobile-more-close',
-    production: true,
-    pwaTestEnabled: true,
-  },
-  music: {
-    id: 'music',
-    name: 'Music.OS',
-    workspace: 'music-os',
-    port: 5191,
-    shellType: 'main-wrap-main',
-    waitSelector: '.app-shell',
-    ...scrollSelectorsFor('main-wrap-main'),
-    nestedWrapInMain: true,
-    routes: [
-      { path: '/', name: 'home' },
-      { path: '/library', name: 'library' },
-      { path: '/settings', name: 'settings' },
-    ],
-    clipPaths: ['/'],
-    scrollQaPath: '/settings',
-    moreButton: '.mobile-tabbar button[aria-label="更多"]',
-    moreClose: '.mobile-more-close',
-    production: true,
-    pwaTestEnabled: true,
-  },
-  finance: {
-    id: 'finance',
-    name: 'Finance.OS',
-    workspace: 'finance-os',
-    port: 5180,
-    shellType: 'main-wrap-content',
-    waitSelector: '.app-shell, .auth-screen',
-    ...scrollSelectorsFor('main-wrap-content'),
-    mainQuery: '.main-wrap > .content, .auth-screen',
-    nestedWrapInMain: false,
-    routes: [
-      { path: '/home/today', name: 'home' },
-      { path: '/settings/app', name: 'settings' },
-    ],
-    scrollQaPath: '/home/today',
-    moreButton: '.mobile-tabbar button[aria-label="更多"]',
-    moreClose: '.mobile-more-close',
-    authGate: true,
-    production: true,
-    pwaTestEnabled: true,
-  },
-  portal: {
-    id: 'portal',
-    name: 'Life OS Portal',
-    workspace: 'portal',
-    port: 5195,
-    shellType: 'main-col-wrap',
-    waitSelector: '.app-shell, .portal-loading',
-    ...scrollSelectorsFor('main-col-wrap'),
-    nestedWrapInMain: false,
-    routes: [{ path: '/', name: 'home' }],
-    scrollQaPath: '/',
-    production: false,
-    pwaTestEnabled: true,
-  },
-  home: {
-    id: 'home',
-    name: 'HOME.OS',
-    workspace: 'home-os',
-    port: 5196,
-    shellType: 'main-col-wrap',
-    waitSelector: '.app-shell',
-    ...scrollSelectorsFor('main-col-wrap'),
-    nestedWrapInMain: false,
-    routes: [
-      { path: '/', name: 'overview' },
-      { path: '/plan', name: 'plan' },
-      { path: '/storage', name: 'storage' },
-      { path: '/settings', name: 'settings' },
-    ],
-    clipPaths: ['/settings'],
-    scrollQaPath: '/settings',
-    production: true,
-    pwaTestEnabled: false,
-  },
+  ...Object.fromEntries(Object.entries(LIFE_OS_PWA_APPS).map(([id, raw]) => [id, hydrate(raw)])),
+  // starter 是模板本体，不进 app 注册表；调试条目手工维护
   starter: {
     id: 'starter',
     name: 'STARTER.OS',
@@ -188,7 +85,6 @@ export const PWA_APPS = {
     production: false,
     pwaTestEnabled: false,
   },
-  // [app-generator:pwa-apps] promote-life-os-app.mjs 在此行上方插入新 app
 }
 
 /** @param {string} id */
