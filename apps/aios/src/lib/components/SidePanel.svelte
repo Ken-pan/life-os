@@ -12,7 +12,7 @@
   let embedMode = $state(false) // url 模式:阅读模式 ⇄ 内嵌网页
 
   const panelIcon = $derived(
-    { artifact: 'eye', code: 'code', url: 'globe', file: 'file' }[P.kind] ?? 'eye',
+    { artifact: 'eye', code: 'code', url: 'globe', file: 'file', image: 'image' }[P.kind] ?? 'eye',
   )
 
   /* —— 文件类附件的富预览:PDF 原生查看器 / 音频播放器(会话内存 blob)—— */
@@ -213,6 +213,17 @@
             <Icon name="external" size={15} strokeWidth={1.9} />
           </a>
         {/if}
+        {#if P.kind === 'image'}
+          <a
+            class="head-btn"
+            href={P.url}
+            download="aios-image.webp"
+            title={t('panel.download')}
+            aria-label={t('panel.download')}
+          >
+            <Icon name="download" size={15} strokeWidth={1.9} />
+          </a>
+        {/if}
         {#if P.code || P.text}
           <button
             type="button"
@@ -249,7 +260,11 @@
       class="panel-body"
       class:flush={(P.kind === 'artifact' && P.view === 'preview') || showPdf}
     >
-      {#if P.kind === 'artifact' && P.view === 'preview'}
+      {#if P.kind === 'image'}
+        <div class="image-view">
+          <img src={P.url} alt={P.title} />
+        </div>
+      {:else if P.kind === 'artifact' && P.view === 'preview'}
         <iframe class="frame" sandbox="allow-scripts" {srcdoc} title={P.title}></iframe>
       {:else if showPdf}
         <!-- Chrome 原生 PDF 查看器(会话内存 blob;刷新后自动降级为文本) -->
@@ -432,6 +447,19 @@
     flex: 1;
     border: none;
     background: #fff;
+  }
+
+  /* 生成图片查看 */
+  .image-view {
+    display: grid;
+    place-items: center;
+    min-height: 100%;
+  }
+  .image-view img {
+    max-width: 100%;
+    max-height: calc(100vh - 120px);
+    border-radius: 12px;
+    display: block;
   }
   .panel-body:not(.flush) .frame {
     min-height: 100%;

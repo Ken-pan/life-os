@@ -4,6 +4,7 @@
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
   import { C, startNewChat, selectConversation, deleteConversation } from '$lib/chat.svelte.js'
+  import { AG, openAgent, closeAgent } from '$lib/agents.svelte.js'
 
   const onChatRoute = $derived(page.url.pathname === '/')
 
@@ -19,12 +20,19 @@
   })
 
   function openConversation(id) {
+    closeAgent()
     selectConversation(id)
     if (!onChatRoute) goto('/')
   }
 
   function newChat() {
+    closeAgent()
     startNewChat()
+    if (!onChatRoute) goto('/')
+  }
+
+  function openAgentThread(key) {
+    openAgent(key)
     if (!onChatRoute) goto('/')
   }
 </script>
@@ -42,6 +50,28 @@
       <Icon name="compose" size={18} strokeWidth={1.75} />
     </button>
   </div>
+
+  {#if AG.available.length}
+    <div class="agent-section" role="list" aria-label="外部代理">
+      <p class="agent-label">外部代理</p>
+      {#each AG.available as a (a.key)}
+        <button
+          type="button"
+          class="agent-entry"
+          class:active={onChatRoute && AG.active === a.key}
+          role="listitem"
+          title={a.label}
+          onclick={() => openAgentThread(a.key)}
+        >
+          <Icon name={a.icon} size={15} strokeWidth={1.75} />
+          <span class="agent-entry-name">{a.short}</span>
+          {#if AG.threads[a.key]?.messages.length}
+            <span class="agent-entry-count">{AG.threads[a.key].messages.length}</span>
+          {/if}
+        </button>
+      {/each}
+    </div>
+  {/if}
 
   {#if C.conversations.length > 3}
     <div class="sidebar-search">
@@ -61,7 +91,7 @@
       {#each filtered as conversation (conversation.id)}
         <div
           class="chat-item"
-          class:active={onChatRoute && C.activeId === conversation.id}
+          class:active={onChatRoute && !AG.active && C.activeId === conversation.id}
           role="listitem"
         >
           <button
@@ -135,6 +165,51 @@
   }
   .icon-btn:hover {
     background: var(--sidebar-accent);
+  }
+
+  .agent-section {
+    padding: 0 var(--space-2, 8px) var(--space-1, 4px);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .agent-label {
+    margin: 0;
+    padding: 2px 10px 4px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--sidebar-muted);
+  }
+
+  .agent-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--sidebar-foreground);
+    font: inherit;
+    font-size: var(--text-sm, 13px);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .agent-entry:hover,
+  .agent-entry.active {
+    background: var(--sidebar-accent);
+  }
+
+  .agent-entry-name {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .agent-entry-count {
+    font-size: 10px;
+    color: var(--sidebar-muted);
   }
 
   .sidebar-search {

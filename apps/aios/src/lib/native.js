@@ -228,9 +228,13 @@ async function lookAtScreen({ question, app }) {
  * 每个适配器固化该 app 的激活方式、新建对话快捷键、composer 聚焦方式、
  * 以及读屏时给视觉模型的布局知识,让"发任务/读回复"对这三个 app 开箱即稳。 */
 
+// 用 bundle id 定位,显示名不可靠:这台机器上叫 "ChatGPT" 的 app 其实是 Codex 工作台
 const AI_APPS = {
   claude: {
-    appName: 'Claude',
+    appId: 'com.anthropic.claudefordesktop',
+    short: 'Claude',
+    icon: 'brain',
+    desc: '通用问答 · 写作 · 分析',
     label: 'Claude 桌面应用',
     // ⌘N 新对话(composer 自动聚焦);不新建时直接粘贴进当前对话输入框
     newChatKeys: 'keystroke "n" using command down',
@@ -239,7 +243,10 @@ const AI_APPS = {
       '屏幕上是 Claude 桌面应用(AI 对话界面,消息流居中)。请完整转录对话中最新一条 Claude 的回复;如果它还在生成(有停止按钮/光标在闪),说明"仍在生成中"并转录已有部分。',
   },
   cursor: {
-    appName: 'Cursor',
+    appId: 'com.todesktop.230313mzl4w4u92',
+    short: 'Cursor',
+    icon: 'code',
+    desc: '编辑器内改代码',
     label: 'Cursor 编辑器',
     // ⌘L 打开/聚焦右侧 AI 聊天面板
     newChatKeys: null,
@@ -248,12 +255,27 @@ const AI_APPS = {
       '屏幕上是 Cursor 代码编辑器,AI 聊天/Agent 面板通常在右侧。请转录面板中最新的 AI 回复与任务状态:它是否还在运行、正在改哪些文件、有没有等待确认的操作(如 Accept/Reject 按钮)。',
   },
   chatgpt: {
-    appName: 'ChatGPT',
-    label: 'ChatGPT 桌面应用',
+    appId: 'com.openai.chat',
+    short: 'ChatGPT',
+    icon: 'chat',
+    desc: '通用问答 · 联网搜索',
+    label: 'ChatGPT 聊天应用(ChatGPT Classic)',
     newChatKeys: 'keystroke "n" using command down',
     focusKeys: null,
     readHint:
-      '屏幕上是 ChatGPT 桌面应用(AI 对话界面)。请完整转录最新一条 ChatGPT 的回复;如果还在生成中,说明"仍在生成中"并转录已有部分。',
+      '屏幕上是 ChatGPT 聊天应用(AI 对话界面)。请完整转录最新一条 ChatGPT 的回复;如果还在生成中,说明"仍在生成中"并转录已有部分。',
+  },
+  codex: {
+    appId: 'com.openai.codex',
+    short: 'Codex',
+    icon: 'terminal',
+    desc: '云端编码任务',
+    label: 'Codex 编码工作台',
+    // Codex 里当前任务的输入框在底部("要求后续变更");新任务用 ⌘N
+    newChatKeys: 'keystroke "n" using command down',
+    focusKeys: null,
+    readHint:
+      '屏幕上是 OpenAI Codex 编码工作台(左侧项目/任务列表,中间是任务对话流)。请转录当前任务的最新进展:agent 说了什么、是否还在运行(有无计时/停止按钮)、改了哪些文件(右侧变更统计)、有没有等待用户确认的内容。',
   },
 }
 
@@ -264,7 +286,7 @@ async function aiAppSend({ app, message, new_chat = false }) {
 
   const lines = [
     `set the clipboard to ${q(message)}`,
-    `tell application ${q(a.appName)} to activate`,
+    `tell application id ${q(a.appId)} to activate`,
     'delay 1.0',
     'tell application "System Events"',
     ...(new_chat && a.newChatKeys ? [`  ${a.newChatKeys}`, '  delay 0.6'] : []),
@@ -284,7 +306,7 @@ async function aiAppSend({ app, message, new_chat = false }) {
 async function aiAppRead({ app, question }) {
   const a = AI_APPS[app]
   if (!a) return `错误:未知 app "${app}"(支持: ${Object.keys(AI_APPS).join('/')})`
-  await osa(`tell application ${q(a.appName)} to activate`)
+  await osa(`tell application id ${q(a.appId)} to activate`)
   await sleep(1000)
   const shot = await captureScreenB64()
   if (shot.error) return shot.error
@@ -391,11 +413,11 @@ export const NATIVE_DEFS = [
       function: {
         name: 'ai_app_send',
         description:
-          '把一个任务/问题发送给 Mac 上的 AI 应用(Claude、Cursor 或 ChatGPT)——这是针对这三个应用优化过的专用通道:自动激活应用、聚焦输入框、粘贴并发送。改代码的任务优先发给 cursor,通用问答/写作发给 claude 或 chatgpt。发送后用 ai_app_read 读它的回复。',
+          '把一个任务/问题发送给 Mac 上的 AI 应用(Claude / Cursor / ChatGPT / Codex)——针对这几个应用优化过的专用通道:自动激活、聚焦输入框、粘贴并发送。改代码的任务优先发给 cursor 或 codex(编码工作台),通用问答/写作发给 claude 或 chatgpt。发送后用 ai_app_read 读它的回复。注意 codex 里的任务是真实在改用户的项目代码,派任务前应确认用户意图明确。',
         parameters: {
           type: 'object',
           properties: {
-            app: { type: 'string', enum: ['claude', 'cursor', 'chatgpt'], description: '目标 AI 应用' },
+            app: { type: 'string', enum: ['claude', 'cursor', 'chatgpt', 'codex'], description: '目标 AI 应用' },
             message: { type: 'string', description: '发给它的完整任务描述或问题' },
             new_chat: { type: 'boolean', description: '是否先新建对话(默认 false,续用当前对话)' },
           },
@@ -412,11 +434,11 @@ export const NATIVE_DEFS = [
       function: {
         name: 'ai_app_read',
         description:
-          '读取 Claude / Cursor / ChatGPT 应用当前的回复内容和任务状态(自动前置应用+截屏+视觉模型转录,带各应用的界面布局知识)。用于查看 ai_app_send 发出的任务进展;回复未生成完可稍后再读。',
+          '读取 Claude / Cursor / ChatGPT / Codex 应用当前的回复内容和任务状态(自动前置应用+截屏+视觉模型转录,带各应用的界面布局知识)。用于查看 ai_app_send 发出的任务进展;回复未生成完可稍后再读。',
         parameters: {
           type: 'object',
           properties: {
-            app: { type: 'string', enum: ['claude', 'cursor', 'chatgpt'], description: '要读取的 AI 应用' },
+            app: { type: 'string', enum: ['claude', 'cursor', 'chatgpt', 'codex'], description: '要读取的 AI 应用' },
             question: { type: 'string', description: '额外想了解的点(可选),如 "它改了哪些文件"' },
           },
           required: ['app'],
@@ -502,6 +524,18 @@ export const NATIVE_DEFS = [
     },
   },
 ]
+
+/** 供 UI 的代理列表(代理会话侧栏用) */
+export const AI_APP_LIST = Object.entries(AI_APPS).map(([key, a]) => ({
+  key,
+  short: a.short,
+  icon: a.icon,
+  desc: a.desc,
+  label: a.label,
+}))
+
+/** 直连管道(代理会话用,不经过模型工具调用) */
+export { aiAppSend as aiAppSendDirect, aiAppRead as aiAppReadDirect }
 
 export function isNativeTool(name) {
   return isNative && NATIVE_DEFS.some((t) => t.key === name)

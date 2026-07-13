@@ -1,5 +1,6 @@
 <script>
   import '../app.css'
+  import 'katex/dist/katex.min.css'
   import { onMount, setContext } from 'svelte'
   import { afterNavigate } from '$app/navigation'
   import { page } from '$app/state'

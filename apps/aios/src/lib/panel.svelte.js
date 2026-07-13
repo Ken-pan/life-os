@@ -9,7 +9,7 @@
 
 export const P = $state({
   open: false,
-  /** @type {'artifact'|'code'|'url'|'file'|null} */
+  /** @type {'artifact'|'code'|'url'|'file'|'image'|null} */
   kind: null,
   title: '',
   lang: '',
@@ -92,6 +92,23 @@ export function openFile({ name, text, kind = 'text', blobId = '' }) {
     lang: '',
     code: '',
     url: '',
+    view: 'preview',
+  })
+}
+
+/** 查看生成的图片(src 为 data URL 或 http URL) */
+export function openImage({ src, title }) {
+  Object.assign(P, {
+    open: true,
+    kind: 'image',
+    url: src,
+    title: title || 'AI Image',
+    lang: '',
+    code: '',
+    text: '',
+    name: '',
+    fileKind: '',
+    blobId: '',
     view: 'preview',
   })
 }

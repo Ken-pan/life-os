@@ -10,6 +10,8 @@
   } from '$lib/chat.svelte.js'
   import Composer from '$lib/components/Composer.svelte'
   import Message from '$lib/components/Message.svelte'
+  import AgentThread from '$lib/components/AgentThread.svelte'
+  import { AG } from '$lib/agents.svelte.js'
   import ModelPicker from '$lib/components/ModelPicker.svelte'
   import SidePanel from '$lib/components/SidePanel.svelte'
   import { openArtifact } from '$lib/panel.svelte.js'
@@ -176,6 +178,9 @@
 
 <div class="chat">
   <div class="chat-main">
+  {#if AG.active}
+    <AgentThread />
+  {:else}
   <div class="chat-top">
     <ModelPicker />
     <div class="chat-top-actions">
@@ -251,6 +256,7 @@
         <p class="hint">{t('chat.hintLocal')}</p>
       </div>
     </div>
+  {/if}
   {/if}
   </div>
 

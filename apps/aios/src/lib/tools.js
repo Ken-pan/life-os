@@ -1,5 +1,6 @@
 import { GATEWAY } from '$lib/localai.js'
 import { addMemory, searchMemories } from '$lib/memory.svelte.js'
+import { startImageProgress, stopImageProgress } from '$lib/imageProgress.svelte.js'
 import { isNative, NATIVE_DEFS, isNativeTool, executeNativeTool } from '$lib/native.js'
 
 /**
@@ -1047,14 +1048,22 @@ async function generateImage(args) {
     seed: args.seed,
     response_format: 'b64_json',
   }
-  // 冷启动要加载 6-20B 模型,质量档 40 步生成本身要几分钟:超时给足
-  const res = await fetch(`${IMAGE_API}/v1/images/generations`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(900000),
-  })
-  const json = await res.json().catch(() => null)
+  // 冷启动要加载 6-20B 模型,质量档 30 步生成本身要几分钟:超时给足;
+  // 期间轮询 /progress,消息流里的进度卡(Message.svelte)实时显示阶段与步数
+  startImageProgress()
+  let res
+  let json
+  try {
+    res = await fetch(`${IMAGE_API}/v1/images/generations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(900000),
+    })
+    json = await res.json().catch(() => null)
+  } finally {
+    stopImageProgress()
+  }
   if (!res.ok) {
     throw new Error(json?.error?.message || `生图服务 HTTP ${res.status}`)
   }

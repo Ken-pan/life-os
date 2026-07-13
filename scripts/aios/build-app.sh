@@ -13,4 +13,6 @@ APP_SRC="$ROOT/apps/aios/src-tauri/target/release/bundle/macos/AIOS.app"
 APP_DST="$HOME/Applications/AIOS.app"
 rm -rf "$APP_DST"
 cp -R "$APP_SRC" "$APP_DST"
+# 删掉构建产物副本,避免 Spotlight 出现两个 AIOS.app
+rm -rf "$APP_SRC"
 echo "✔ 已安装 $APP_DST"

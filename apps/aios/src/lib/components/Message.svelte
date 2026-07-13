@@ -13,7 +13,8 @@
   import { toolIcon } from '$lib/tools.js'
   import { speak } from '$lib/localai.js'
   import { S } from '$lib/state.svelte.js'
-  import { openArtifact, openUrl, openFile } from '$lib/panel.svelte.js'
+  import { openArtifact, openUrl, openFile, openImage } from '$lib/panel.svelte.js'
+  import { IMG } from '$lib/imageProgress.svelte.js'
 
   /** @type {{ message: import('$lib/chat.svelte.js').ChatMessage, index?: number, isLast?: boolean }} */
   let { message, index = 0, isLast = false } = $props()
@@ -382,6 +383,32 @@
               {/if}
             </div>
           </details>
+          {#if tc.name === 'generate_image' && tc.running && IMG.active}
+            <!-- 生图实时进度:阶段 + 步数 + 用时 + 进度条(轮询生图服务 /progress) -->
+            <div class="img-progress" role="status">
+              <div class="img-progress-row">
+                <span class="img-progress-text shimmer">
+                  {IMG.phase === 'generating' && IMG.steps
+                    ? t('chat.imgGenerating', { step: IMG.step, steps: IMG.steps })
+                    : IMG.phase === 'saving'
+                      ? t('chat.imgSaving')
+                      : t('chat.imgLoading')}
+                </span>
+                <span class="img-progress-time">{IMG.elapsed}s</span>
+              </div>
+              <div
+                class="img-bar"
+                class:indeterminate={IMG.phase !== 'generating' || !IMG.steps}
+              >
+                <div
+                  class="img-bar-fill"
+                  style:width={IMG.phase === 'generating' && IMG.steps
+                    ? `${Math.round((IMG.step / IMG.steps) * 100)}%`
+                    : '35%'}
+                ></div>
+              </div>
+            </div>
+          {/if}
         {/each}
       </div>
     {/if}
@@ -389,9 +416,14 @@
     {#if genImages.length}
       <div class="gen-images">
         {#each genImages as src, i (i)}
-          <a href={src} download={`aios-image-${i + 1}.webp`} title={t('chat.downloadImage')}>
+          <button
+            type="button"
+            class="gen-image-btn"
+            title={t('chat.viewImage')}
+            onclick={() => openImage({ src, title: t('chat.generatedImage') })}
+          >
             <img {src} alt={t('chat.generatedImage')} loading="lazy" />
-          </a>
+          </button>
         {/each}
       </div>
     {/if}
@@ -852,9 +884,17 @@
     gap: 10px;
     flex-wrap: wrap;
   }
-  .gen-images a {
+  .gen-image-btn {
     display: block;
     line-height: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
+    border-radius: 14px;
+  }
+  .gen-image-btn:hover img {
+    border-color: var(--border-l);
   }
   .gen-images img {
     max-width: min(100%, 420px);
@@ -862,6 +902,61 @@
     border-radius: 14px;
     border: 1px solid var(--border);
     display: block;
+  }
+
+  /* —— 生图实时进度卡 —— */
+  .img-progress {
+    margin-top: 8px;
+    width: min(100%, 420px);
+    display: grid;
+    gap: 7px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-2);
+  }
+  .img-progress-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .img-progress-text {
+    font-size: var(--text-sm, 13px);
+  }
+  .img-progress-time {
+    color: var(--t4);
+    font-size: var(--text-xs, 11px);
+    font-variant-numeric: tabular-nums;
+  }
+  .img-bar {
+    position: relative;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--card);
+    overflow: hidden;
+  }
+  .img-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent, var(--t1));
+    transition: width 600ms ease;
+  }
+  .img-bar.indeterminate .img-bar-fill {
+    animation: img-bar-slide 1.4s ease-in-out infinite;
+  }
+  @keyframes img-bar-slide {
+    0% {
+      transform: translateX(-120%);
+    }
+    100% {
+      transform: translateX(340%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .img-bar.indeterminate .img-bar-fill {
+      animation: none;
+    }
   }
 
   /* —— markdown 正文 —— */
