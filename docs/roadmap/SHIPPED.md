@@ -4,7 +4,7 @@
 
 维护：每次完成 hub §Now 项后追加一行；不必复制整表。
 
-## 2026-07-10（深度复核 · FT-P2 · PaperOS 1.1 · P-SCHED-0 根因）
+## 2026-07-10（深度复核 · GYMS.PORTAL.2 · PaperOS 1.1 · PLNR.SCHED.0 根因）
 
 | 主线    | 发货项 / 里程碑 | 证据 |
 | ------- | --------------- | ---- |
@@ -33,8 +33,8 @@
 | Planner | **P-SCHED-0** Antigravity baseline 完成（Scenario A 通过；legacy `tags` + mobile scroll 待修） | [`qa/planner-schedule-antigravity-baseline.md`](../qa/planner-schedule-antigravity-baseline.md) · `docs/qa/evidence/planner-schedule/2026-07-10/` |
 | PaperOS | **Core Slice 1** System drawer · Gallery · native ink chrome · recovery gate | [`qa/paperos-core-slice-1-integration-gate.md`](../qa/paperos-core-slice-1-integration-gate.md) |
 | PaperOS | **Slice 1.1** QML 视觉 delta（Gallery / Drawer / `+`）Antigravity PASS | [`qa/paperos-core-slice-1-1-visual-delta-gate.md`](../qa/paperos-core-slice-1-1-visual-delta-gate.md) |
-| PaperOS | **P-MOVE-BLOCK** 当时登记 404 — **2026-07-10 复核改为 P-MOVE-VERIFY**（路由 401 正常） | 见 hub §深度复核 · [`planner-pro-move.md`](./apps/planner-pro-move.md) |
-| Docs    | Hub 优先级复核 → **P-SCHED-0** · P-MOVE-BLOCK · FT-P5 · F-P6 · P-MOVE-UI | [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) · [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) · [`PRO_MOVE.md`](../PRO_MOVE.md) |
+| PaperOS | **PAPR.DATA.verify** 当时登记 404 — **2026-07-10 复核改为路由 401 正常** | 见 hub §深度复核 · [`apps/paperos.md`](./apps/paperos.md) |
+| Docs    | Hub 优先级复核 → **PLNR.SCHED.0** · PAPR.DATA.verify · GYMS.SUB.5 · FINC.PURCHASE.6 · PAPR.UI | [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) · [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) · [`apps/paperos.md`](./apps/paperos.md) |
 
 ## 2026-07-10（Planner Projects · Home 墙图）
 
@@ -43,7 +43,7 @@
 | Planner | **P-PROJ-0–2** 项目实体 + structured sync、Projects 列表/详情、任务 `@项目` 与 project chip | `935a5b78` · `7bacded2` · `planner_projects` 远程表 |
 | Planner | **P-PROJ-3** 项目详情只读 Roadmap / repo refs；危险 URL 不渲染为链接；mobile + desktop E2E | `routes/projects/[id]/+page.svelte` · `project-references.spec.js` |
 | Home | **H-W3–W5** 手绘分区、家具/储藏指派、迁移/文档；H-W0–W5 全线完成 | `b06217fe` · `test:plan-edit` 13 checks |
-| PaperOS | **P-MOVE-1–4** launcher、离线读、CJK/分页、退出/恢复/systemd launcher | `51791a93` · `ea92f6dd` · `b662285a` |
+| PaperOS | **PAPR.DEV.1–4** launcher、离线读、CJK/分页、退出/恢复/systemd launcher | `51791a93` · `ea92f6dd` · `b662285a` |
 
 ---
 

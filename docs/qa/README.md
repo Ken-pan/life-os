@@ -6,21 +6,9 @@
 
 | 主题 | Hub |
 | --- | --- |
-| **PaperOS 全览** | [`paperos/README.md`](./paperos/README.md) |
-| **PaperOS 设备生命周期（`PAPR.SYS.*`）** | [`paperos/README.md`](./paperos/README.md) |
+| **PaperOS**（独立仓库） | [`../roadmap/apps/paperos.md`](../roadmap/apps/paperos.md) |
 | PWA / iOS | 下文 §PWA |
 | Planner 日程 / 捕获 | 下文 §Planner 日程 / 捕获 |
-
-## PaperOS（摘要）
-
-| 文档 | 用途 |
-| --- | --- |
-| [`paperos/lifecycle.md`](./paperos/lifecycle.md) | SYS 发现 SSOT · PAPR.SYS.1 **primary lane** |
-| [`paperos/lifecycle-gate.md`](./paperos/lifecycle-gate.md) | PAPR.SYS.gate LC-01–LC-15 |
-| [`paperos/data-plane-2026-07-11.md`](./paperos/data-plane-2026-07-11.md) | PAPR.DATA.verify PASS |
-| [`paperos/ui-spec.md`](./paperos/ui-spec.md) | UI 执行 SSOT · PR #27/#28 device gate BLOCKED（2026-07-12） |
-
-完整列表 → [`paperos/README.md`](./paperos/README.md)
 
 ## PWA
 
@@ -55,11 +43,8 @@
 | 路径                                                                                                                   | 说明                                                                  |
 | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | [`screenshot-output.md`](./screenshot-output.md)                                                                       | **截图输出规范**（路径 SSOT · `scripts/qa/screenshot-output.mjs`）    |
-| [`../ui-qa-screenshots/`](../ui-qa-screenshots/)                                                                       | 各 app QA 脚本输出的截图与 `manifest.json`（`{app}/{suite}/latest/`） |
-| [`../ui-qa-screenshots/portal/main/latest/`](../ui-qa-screenshots/portal/main/latest/)                                 | Portal 走查截图 + `mobile-launcher.png` + `manifest.json`             |
-| [`../ui-qa-screenshots/home/uiux-audit/2026-07-08/`](../ui-qa-screenshots/home/uiux-audit/2026-07-08/)                 | Home UI/UX 审核截图（2026-07-08）                                     |
-| [`evidence/planner-schedule/2026-07-10/`](./evidence/planner-schedule/2026-07-10/)                                     | P-SCHED-0 Antigravity 截图 + Playwright traces                        |
-| [`../ui-qa-screenshots/paperos/device/baseline-2026-07-10/`](../ui-qa-screenshots/paperos/device/baseline-2026-07-10/) | PaperOS 设备 UI baseline（2026-07-10）                                |
+| [`../ui-qa-screenshots/`](../ui-qa-screenshots/)                                                                       | 各 app QA 脚本输出的截图与 `manifest.json`（`{app}/{suite}/latest/`；gitignore，本地生成） |
+| [`evidence/planner-schedule/2026-07-10/`](./evidence/planner-schedule/2026-07-10/)                                     | PLNR.SCHED.0 Antigravity 截图 + Playwright traces                     |
 | `apps/*/docs/`                                                                                                         | App 专属 IA、audit export                                             |
 
 **SSOT 脚本：** [`scripts/pwa/apps.config.mjs`](../../scripts/pwa/apps.config.mjs)

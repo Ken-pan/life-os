@@ -2,7 +2,7 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后核对：** 2026-07-10（深度复核：生产 API · migrateTask · FT-P2 · Slice 1.1）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后核对：** 2026-07-12（PaperOS 抽取为独立仓库 · ticket 命名 v2 迁移）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
@@ -10,15 +10,13 @@
 
 | 焦点 | 主题                                                                     | 文档                                                             |
 | ---- | ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| Now  | **P-SCHED-0** · **FT-P5** · **F-P6** · **P-MOVE-UI** · **P-MOVE-VERIFY** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
-| Next | P-MOVE-5/6 · F-P1b · P-P4 · H-P7 · P-UIUX-0 · P-ATTACH-0                 | [`roadmap/apps/`](./roadmap/apps/README.md)                      |
+| Now  | **PLNR.SCHED.0** · **GYMS.SUB.5** · **FINC.PURCHASE.6** · **PAPR.UI**（独立仓库） | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
+| Next | FINC.SYNC.1b · PLNR.CORE.4 · HOME.PROJ.7 · PLNR.UIUX.0 · PLNR.ATTACH.0    | [`roadmap/apps/`](./roadmap/apps/README.md)                      |
 
 **2026-07-09 已验收：** Phase 6 **PORT.GROWTH.4b-H / HOME.PROJ.6a** · Portal UI 走查 **P-1–P-12** — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 **2026-07-09 已验收：** Phase 0–4 批次 — FINC.CORE.3 · PORT.GROWTH.4b-M · PORT.GROWTH.6 · PLNR.CORE.2 · GYMS.CORE.0/GYMS.EVENTS.1 · INTG.EVENTS.1b — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
-> **策略（2026-07-11 晚）：** 活跃 **3** lane（Ken · Fable · Codex T1）· Antigravity **10a Complete** · Codex T2 **Complete** · Cursor/Codex T3 Queued — 执行快照 [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) 文首表 · Prompt §7
-
-> **策略（2026-07-11）：** **Fable** 只关 P-SCHED-0 · **Codex** FT-P5 + VERIFY→**SYS-0** · **Ken** 设备 60–90min — [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
+> **协作模型（2026-07-12 起）：** 单分支，无 agent 专属 worktree — 见 [`AGENTS.md`](../AGENTS.md) §Git policy · 执行分线 [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
 
 **六 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
@@ -50,8 +48,7 @@ docs/
 ├── roadmap/             ← 分卷：INTEGRATION · GROWTH · PLATFORM · DESIGN · BACKLOG · SHIPPED · apps/
 ├── ops/                 ← Netlify · Supabase · canonical
 ├── architecture/        ← contracts · responsive-chrome · events-rfc · native-readiness
-├── qa/                  ← e2e · pwa · PaperOS gates · P-SCHED-0 baseline
-├── PRO_MOVE.md          ← PaperOS / reMarkable gate 文档索引（36+ gate 文件）
+├── qa/                  ← e2e · pwa · PLNR.SCHED.0 baseline（PaperOS gates → 独立仓库）
 ├── tooling/             ← cursor-page-bridge
 ├── assets/              ← life-os-logos
 ├── ui-qa-screenshots/   ← QA 脚本输出（证据，非计划真源）
@@ -74,9 +71,8 @@ docs/
 | 查响应式 / 页眉契约                | [`architecture/responsive-chrome.md`](./architecture/responsive-chrome.md)                     |
 | 查 life_events 格式                | [`architecture/events-rfc.md`](./architecture/events-rfc.md)                                   |
 | 调试 iOS PWA                       | [`qa/pwa-ios.md`](./qa/pwa-ios.md)                                                             |
-| Planner 日程 baseline（P-SCHED-0） | [`qa/planner-schedule-antigravity-baseline.md`](./qa/planner-schedule-antigravity-baseline.md) |
-| PaperOS 下一步 UI                  | [`qa/paperos-next-ui-update-guide.md`](./qa/paperos-next-ui-update-guide.md)                   |
-| PaperOS gate 索引                  | [`PRO_MOVE.md`](./PRO_MOVE.md)                                                                 |
+| Planner 日程 baseline（PLNR.SCHED.0） | [`qa/planner-schedule-antigravity-baseline.md`](./qa/planner-schedule-antigravity-baseline.md) |
+| PaperOS（独立仓库）                | [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)                                        |
 | 看 E2E 失败记录                    | [`qa/e2e-issues.md`](./qa/e2e-issues.md)                                                       |
 | Portal UI 截图走查（P-1–P-12 ✅）  | [`qa/portal-screenshot-audit.md`](./qa/portal-screenshot-audit.md)                             |
 

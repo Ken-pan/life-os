@@ -5,7 +5,7 @@
 > **跨站主线：** [`../INTEGRATION.md`](../INTEGRATION.md) · [`../GROWTH.md`](../GROWTH.md)
 > **E2E 证据：** [`../../qa/e2e-issues.md`](../../qa/e2e-issues.md)
 
-**脑暴日期：** 2026-07-09 · **复核：** 2026-07-11 · **Agent 分配：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md) §0
+**脑暴日期：** 2026-07-09 · **复核：** 2026-07-12 · **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md)
 
 执行顺序以 **hub §推荐执行顺序** 为准；下文不重复 Wave 全文。
 
@@ -15,7 +15,7 @@
 | ---------------- | ------- | ------------------------------------------------------------------------------------------ |
 | `P-P*` / `QA-P*` | Planner | `QA-P2` = desktop E2E                                                                      |
 | `P-MOVE-*`       | Planner | reMarkable Paper Pro Move / PaperOS device track                                           |
-| `FT-P*`          | Fitness | ≠ E2E 问题 **F-0**（端口冲突，已修）                                                       |
+| `FT-P*`          | Fitness | ≠ E2E 问题 **`QA-GYMS-0`**（端口冲突，已修）                                               |
 | `F-P*`           | Finance | `F-P0` = route smoke；≠ Fitness **F-0**                                                    |
 | `M-P*`           | Music   | `M-P1` ✅ 已发货                                                                           |
 | `G-P*`           | Portal  | Growth 跨站；`G-P4`–`G-P6` ✅                                                              |
@@ -61,12 +61,13 @@
 
 | App     | 层级   | Top Next                                            | 分卷                                                                      |
 | ------- | ------ | --------------------------------------------------- | ------------------------------------------------------------------------- |
-| Planner | 生产   | **P-SCHED-0** · **P-MOVE-VERIFY→SYS-0** · P-MOVE-UI | [planner.md](./planner.md) · [planner-pro-move.md](./planner-pro-move.md) |
-| Fitness | 生产   | **FT-P5** 替代动作 · FT-P2                          | [fitness.md](./fitness.md)                                                |
-| Finance | 生产   | **F-P6** 支出审核 · F-P1b                           | [finance.md](./finance.md)                                                |
-| Music   | 生产   | M-P5 ✅ · 维护 · M-P4 按需                          | [music.md](./music.md)                                                    |
-| Portal  | 启动器 | 维护 · UI 走查 P-1–P-12 ✅                          | [portal.md](./portal.md)                                                  |
-| Home    | 实验   | **H-P7** 多项目切换 · H-W0–W5 ✅                    | [home.md](./home.md)                                                      |
+| Planner | 生产   | **PLNR.SCHED.0** · Paper 数据 provider 维护          | [planner.md](./planner.md)                                                |
+| Fitness | 生产   | **GYMS.SUB.5** 替代动作 · GYMS.PORTAL.2             | [fitness.md](./fitness.md)                                                |
+| Finance | 生产   | **FINC.PURCHASE.6** 支出审核 · FINC.SYNC.1b         | [finance.md](./finance.md)                                                |
+| Music   | 生产   | MUSC.PIPE.5 ✅ · 维护 · MUSC.PIPE.4 按需            | [music.md](./music.md)                                                    |
+| Portal  | 启动器 | 维护 · UI 走查 P-1–P-12 ✅（走查序号，非 hub ticket） | [portal.md](./portal.md)                                                  |
+| Home    | 实验   | **HOME.PROJ.7** 多项目切换 · HOME.SPATIAL.0–5 ✅    | [home.md](./home.md)                                                      |
+| PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |
 
 ## 跨站集成矩阵（只读 / 事件）
 
@@ -85,24 +86,9 @@
 | Home 仅 localStorage              | ~~**PORT.GROWTH.4b** Home 卡~~             | ✅ **HOME.PROJ.6a** 元数据 + **PORT.GROWTH.4b-H** 第五卡（2026-07-09） |
 | `events.ts` 仅 `finance.bill_due` | ~~**INTG.EVENTS.1b** / **GYMS.EVENTS.1**~~ | ✅ 已扩 `fitness.workout_logged`（2026-07-09）                         |
 
-## 当前排序（→ hub §Now / §Next）
+## 当前排序 · Wave 投入估算
 
-| 序  | 项                        | 说明                                              |
-| --- | ------------------------- | ------------------------------------------------- |
-| 1   | **P-SCHED-0**             | 日程视图 debug + 可用性（Planner 最高产品优先级） |
-| 2   | **P-MOVE-VERIFY → SYS-0** | 数据面复验 + 生命周期发现（同一设备窗口）         |
-| 3   | **F-P6**                  | Finance 支出审核（商品级 + 后续处理）             |
-| 4   | **FT-P5**                 | Fitness 替代动作（Codex 实现）                    |
-| 5   | **P-MOVE-5**              | controlled write staging                          |
-| 6   | **F-P1b / P-P4**          | Codex · Cursor Auto（不用 Fable / Copilot Agent） |
-
-## Wave 投入估算（单人 · Phase 5+）
-
-| Phase | 项                                                       | 合计  |
-| ----- | -------------------------------------------------------- | ----- |
-| **7** | P-SCHED-0 + P-MOVE-BLOCK + F-P6a + P-MOVE-UI（Today 起） | ~4–6d |
-| **8** | FT-P5 + F-P6b + P-MOVE-5 + P-MOVE-6                      | ~4–5d |
-| **9** | F-P1b + FT-P2 + P-P4                                     | ~1–2d |
+当前排序以 **hub §推荐执行顺序** 为准（避免双源漂移，见 §何时更新）；本分卷不重复具体序号/估时。
 
 **已完成 Wave（2026-07-09）：** Phase 0–6 + Portal UI 走查 P-1–P-12 — 见 [`../SHIPPED.md`](../SHIPPED.md)
 

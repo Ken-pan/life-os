@@ -142,7 +142,7 @@ PAPR.DATA.verify ✅
 → PAPR.SYS.gate 🔒
 ```
 
-导航 hub：[`../qa/paperos-device-lifecycle/README.md`](../qa/paperos-device-lifecycle/README.md) · 执行分卷：[`apps/planner-pro-move.md`](./apps/planner-pro-move.md)
+执行分卷：[`apps/paperos.md`](./apps/paperos.md)（PaperOS 已迁出独立仓库，详见该文件）
 
 ### PLNR — Planner
 
@@ -204,6 +204,8 @@ PAPR.DATA.verify ✅
 | **HOME.PORTAL.1**        | `H-P1`        | —   |
 | **HOME.SSO.2**           | `H-P2`        | —   |
 | **HOME.SSO.3**           | `H-P3`        | —   |
+| **HOME.SYNC.4**          | `H-P4`        | Home 云同步（spatial 项目 Supabase 持久化）；搁置 |
+| **HOME.UIUX.5**          | `H-P5`        | Home 平面 UX 打磨；已发货 |
 | **HOME.ONBOARD.9**       | `H-P9`        | —   |
 | **HOME.SMOKE.10**        | `H-P10`       | —   |
 | **HOME.STORAGE.11**      | `H-P11`       | —   |
@@ -268,6 +270,6 @@ Status: PAUSED BY OWNER
 ## 相关
 
 - [`apps/README.md`](./apps/README.md) — 分卷对照
-- [`apps/planner-pro-move.md`](./apps/planner-pro-move.md) — PaperOS 执行计划（实现锚点）
-- [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) — Hub ID · §7 Prompt
+- [`apps/paperos.md`](./apps/paperos.md) — PaperOS 独立仓库指针
+- [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) — 执行分线与当前焦点
 - [`../MAINTENANCE.md`](../MAINTENANCE.md) — 文档维护
