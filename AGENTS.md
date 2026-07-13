@@ -28,6 +28,8 @@ cd apps/planner && npm run dev   # 5188 for planner e2e
 | `node scripts/create-life-os-app.mjs <id> [--name --port]`        | 从 `apps/starter` 模板生成新 app + AppManifest(PLAT.SHELL.5/6)|
 | `node scripts/promote-life-os-app.mjs <id> [--check]`             | 按 `apps/<id>/app.manifest.json` 同步全部注册表(upsert,幂等);`--check` 只验不写 |
 | `npm run check:app-manifests`                                     | 全 app manifest↔注册表漂移守卫(PLAT.GEN.1,CI 已接)            |
+| `python3 scripts/generate-life-os-brand-icons.py [--app X\|--bootstrap X]` | 品牌图标派生;`--bootstrap` 新 app 占位全套(PLAT.GEN.2)  |
+| `node scripts/netlify-provision.mjs <id> [--apply]`               | Netlify site+env+接线供给,默认 dry-run(PLAT.GEN.2)            |
 | `npm run pwa:build`                                               | 五端 production build（PWA 验收用）                             |
 | `npm run pwa:preview:{planner,fitness,music,finance,portal,home}` | 标准端口 preview（见 `apps.config.mjs`）                        |
 | `npm run test:pwa`                                                | 全 app Playwright PWA viewport（`PWA_APP=` 筛选）               |

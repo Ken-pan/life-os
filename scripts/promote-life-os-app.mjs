@@ -393,11 +393,12 @@ if (!CHECK && touchedRegistries) {
   npm run check:app-manifests && npm run check:lifeos-boundaries
   PWA_APP=<id> npx playwright test tests/pwa/<id>-app-shell.spec.ts
 
-剩余手动步骤（首次晋升）：
-  - 品牌：改 packages/design-tokens/tokens/brands/<id>.json 配色 → npm run build:tokens；
-    图标 scripts/generate-life-os-brand-icons.py → apps/<id>/static/
-  - Netlify：新建 site（package dir apps/<id>）+ 4 个 Supabase env + GoDaddy CNAME；
-    记录 docs/ops/netlify.md 六站表 + scripts/deploy-all-netlify.sh deploy_one
+Day-2（首次晋升，PLAT.GEN.2 已自动化）：
+  - 图标：python3 scripts/generate-life-os-brand-icons.py --bootstrap <id>
+    （占位 monogram 全套 + webmanifest；定稿品牌后换 master 重跑 --app <id>）
+  - 部署：node scripts/netlify-provision.mjs <id> --apply
+    （site 创建 + env 克隆 + deploy 脚本/文档接线；只剩 DNS 手动）
+  - 品牌：改 packages/design-tokens/tokens/brands/<id>.json 配色 → npm run build:tokens
   - 登录/云同步（如需）：@life-os/platform-web createLifeOsAuth（参考 fitness）
   - 上线后：manifest 设 production: true 再重跑本脚本`)
 }

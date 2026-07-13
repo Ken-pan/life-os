@@ -28,7 +28,7 @@ single source of truth。来源见文末。
 | Ticket         | 内容                                                                 | 模式来源           | 状态 |
 | -------------- | -------------------------------------------------------------------- | ------------------ | ---- |
 | **PLAT.GEN.1** | Manifest schema 校验 + `promote --check` 漂移守卫接 CI               | Nx `sync:check`    | ✅ 2026-07-12 |
-| **PLAT.GEN.2** | Day-2 部署自动化:Netlify site 创建/env/DNS 清单 + 图标生成参数化    | Backstage day-2    | ⬜   |
+| **PLAT.GEN.2** | Day-2 部署自动化:Netlify site 创建/env/DNS 清单 + 图标生成参数化    | Backstage day-2    | ✅ 2026-07-12 |
 | **PLAT.GEN.3** | 模板版本戳 + `update-life-os-app`(starter 演进回灌旧 app)           | Copier/Cruft       | ⬜   |
 | **PLAT.GEN.4** | 注册表反转:六 app 注册信息迁入各自 manifest,注册表变生成物         | spec-driven SSOT   | ⬜   |
 | **PLAT.GEN.5** | Day-2 能力模块:`add-capability` auth/supabase/portal-card 可组合接入 | Backstage golden path | ⬜ |
@@ -50,17 +50,23 @@ single source of truth。来源见文末。
   → promote 再同步(5 更新/11 未变)→ check 绿;坏 hex 与端口撞 planner
   均被拦;新端口全链路(preview/playwright 3/3)可用。
 
-### PLAT.GEN.2 — 部署 day-2 自动化（~1d）
+### PLAT.GEN.2 — 部署 day-2 自动化 ✅ 2026-07-12
 
-- `promote --netlify`(或独立 `scripts/netlify-provision.mjs <id>`):
-  `netlify sites:create` + Deploy Key 关联 monorepo + 4 个 Supabase env +
-  `deploy-all-netlify.sh` 追加 `deploy_one`(site id 自动写入)+
-  `docs/ops/netlify.md` 六站表加行(codemod,同 promote 锚点模式)。
-- DNS(GoDaddy CNAME)保持手动但打印精确指令;验证 `curl` 探活。
-- `generate-life-os-brand-icons.py` 参数化:`--app <id>` 从 manifest 读
-  wordmarkAccent 生成中性 favicon-32/apple-touch-icon/brand-circle-* 四件套
-  → `apps/<id>/static/`,starter webmanifest `icons` 数组随之填充。
-- 价值:晋升清单的"剩余手动步骤"从 5 条缩到 1 条(DNS)。
+已发货:
+- `scripts/netlify-provision.mjs <id>`:**dry-run 默认**,`--apply` 才创建
+  资源 — `sites:create`(`<id>os-ken`)+ `env:clone --force`(从 fitness 站
+  复制 4 个 Supabase 变量)+ `deploy-all-netlify.sh` 追加 `deploy_one`
+  (真实 site id)+ `docs/ops/netlify.md` 表加行;幂等预检(已接线拒绝
+  重复供给);DNS 与 Git 构建接线打印精确指令。CLI 部署路径不依赖 Git 接线。
+- `generate-life-os-brand-icons.py` 参数化:`--app <id>` 单 app 重建
+  (对 home 验证字节级一致);`--bootstrap <id>` 从 manifest 生成中性
+  占位 master(themeColor 底 + wordmarkAccent 首字母 monogram,字形落在
+  64% 圆裁剪安全区)→ 走既有派生管线出全套 19 文件 → 注入 webmanifest
+  (icons 数组 + PWA 必需字段),幂等。
+- create/promote 结尾清单改为指向两个 day-2 命令;剩余手动仅 DNS
+  (+可选 Git 自动构建)。
+- 验证:demo app bootstrap 实测(图标目检 + webmanifest 校验 + 重跑幂等)、
+  provision dry-run + codemod 在副本上验证、netlify CLI v26 flags 核对。
 
 ### PLAT.GEN.3 — 模板版本化与回灌（~1d,按痛感触发）
 

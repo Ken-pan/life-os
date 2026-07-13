@@ -90,7 +90,9 @@ console.log(`✅ apps/${id} 已生成（workspace ${id}-os · 端口 ${port} · 
   2. npm run check --workspace=${id}-os
   3. npm exec --workspace ${id}-os -- vite dev
 
-晋升为正式 app（自动接线 brand/site-meta/switcher/PWA 矩阵/netlify，PLAT.SHELL.6）：
+晋升为正式 app（PLAT.SHELL.6 + PLAT.GEN.2）：
   先按需修改 apps/${id}/app.manifest.json（描述文案 / 主题色 / 路由 / experimental），再：
-  node scripts/promote-life-os-app.mjs ${id}
+  node scripts/promote-life-os-app.mjs ${id}                      # 注册表接线（可重复同步）
+  python3 scripts/generate-life-os-brand-icons.py --bootstrap ${id}  # 占位图标全套
+  node scripts/netlify-provision.mjs ${id} --apply                # 部署供给（先 dry-run 看计划）
 `)

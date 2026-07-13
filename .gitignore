@@ -30,3 +30,4 @@ apps/finance/.tmp/
 /NotoSansCJKsc-Regular.otf
 .env.staging
 output/
+__pycache__/
