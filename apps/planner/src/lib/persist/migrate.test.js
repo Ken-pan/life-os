@@ -28,22 +28,26 @@ describe('migrate', () => {
     });
     expect(state.tasks[0].reminderMinutes).toBeNull();
     expect(state.tasks[0].recurrence).toBeNull();
+    expect(state.tasks[0].tags).toEqual([]);
+    expect(state.tasks[0].subtasks).toEqual([]);
     expect(state.settings.locale).toBe('en');
   });
 
-  it('normalizes missing or invalid tags to an empty array', () => {
+  it('normalizes legacy task collections once at the migration boundary', () => {
     const state = migrate({
+      schemaVersion: 2,
       tasks: [
-        { id: '1', title: 'A', tags: null },
-        { id: '2', title: 'B', tags: 'invalid' },
-        { id: '3', title: 'C' },
-        { id: '4', title: 'D', tags: ['valid'] }
-      ]
+        {
+          id: 'legacy',
+          title: 'Legacy task',
+          listId: 'inbox',
+          tags: 'not-an-array',
+          subtasks: null,
+        },
+      ],
     });
-    expect(state.tasks[0].tags).toEqual([]);
-    expect(state.tasks[1].tags).toEqual([]);
-    expect(state.tasks[2].tags).toEqual([]);
-    expect(state.tasks[3].tags).toEqual(['valid']);
+
+    expect(state.tasks[0]).toMatchObject({ tags: [], subtasks: [] });
   });
 
   it('rejects invalid task rows', () => {

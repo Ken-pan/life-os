@@ -2,6 +2,8 @@
   import { t } from '$lib/i18n/index.js';
   import { getTaskKind } from '$lib/domain/taskKind.js';
   import {
+    DAY_START_HOUR,
+    DAY_END_HOUR,
     blockLayout,
     taskDurationMinutes,
     formatTimeRange,
@@ -20,26 +22,30 @@
   /** @type {{
     task: import('$lib/types.js').Task,
     dateKey: string,
+    dayStart?: number,
+    dayEnd?: number,
     hasConflict?: boolean,
     column?: number,
     columns?: number,
-    desktopInteractive?: boolean,
     onReschedule?: () => void
   }} */
   let {
     task,
     dateKey,
+    dayStart = DAY_START_HOUR,
+    dayEnd = DAY_END_HOUR,
     hasConflict = false,
     column = 0,
     columns = 1,
-    desktopInteractive = false,
     onReschedule,
   } = $props();
 
   const kind = $derived(getTaskKind(task));
   const duration = $derived(taskDurationMinutes(task));
   const layout = $derived(
-    task.scheduledStart ? blockLayout(task.scheduledStart, duration) : null,
+    task.scheduledStart
+      ? blockLayout(task.scheduledStart, duration, { dayStart, dayEnd })
+      : null,
   );
 
   /** @type {{ startMinutes: number, durationMinutes: number } | null} */
@@ -51,6 +57,7 @@
       return blockLayout(
         formatMinutesAsTime(preview.startMinutes),
         preview.durationMinutes,
+        { dayStart, dayEnd },
       );
     }
     return layout;
@@ -64,7 +71,10 @@
   const columned = $derived(columns > 1);
   const compact = $derived(Boolean(activeLayout && activeLayout.height <= 56));
   const showRangeMeta = $derived(Boolean(rangeLabel));
-  const interactive = $derived(desktopInteractive && !task.completed);
+  // Pointer capture works for mouse, pen, and touch. Desktop capability still
+  // controls hover/create affordances in DayTimeline, but blocks themselves
+  // must remain movable and resizable on mobile.
+  const interactive = $derived(!task.completed);
 
   /** @param {PointerEvent} e @param {'move' | 'resize-top' | 'resize-bottom'} mode */
   function beginPointerDrag(e, mode) {
@@ -78,7 +88,7 @@
     const originY = e.clientY;
     const originStart = parseTimeToMinutes(task.scheduledStart);
     const originDuration = duration;
-    const bounds = dayBoundsMinutes();
+    const bounds = dayBoundsMinutes(dayStart, dayEnd);
     dragging = true;
     preview = { startMinutes: originStart, durationMinutes: originDuration };
 

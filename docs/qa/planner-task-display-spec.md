@@ -1,9 +1,8 @@
 # Planner 任务行（Ticket）展示规范 — 草案
 
-> **Roadmap：** **P-TASK-DISPLAY-0**（并入 **PLNR.UIUX.0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
+> **Roadmap：** **P-TASK-DISPLAY-0**（并入 **P-UIUX-0** 走查）· [`../roadmap/apps/planner.md`](../roadmap/apps/planner.md)
 > **代码锚点：** `TaskRow.svelte` · `taskMetaLine.js` · `taskKind.js` · `lifeEventSource.js`
-> **姊妹文档：** [`planner-task-capture-spec.md`](./planner-task-capture-spec.md) — 创建时哪些字段进主区；本规范定义创建后如何展示
-> **状态：** 2026-07-10 产品草案（待走查确认）
+> **状态：** 2026-07-10 与 P-SCHED-0 直接相关的 Today / Calendar 切片已实现并通过回归
 
 ## 问题
 
@@ -29,7 +28,6 @@
 2. **不重复页面已提供的上下文** — Today 列表不重复写「今天」
 3. **特别类别用形态区分** — 色条/图标/chip，不只靠 meta 文案
 4. **Compact 仍保留关键 chip** — 项目、life_event 来源在 Today 也必须可见
-5. **捕获–展示契约** — 在 [capture spec](./planner-task-capture-spec.md) Tier 0 主区暴露的字段，必须在对应页面列表可见（如 `projectId` → project chip）
 
 ---
 
@@ -102,7 +100,7 @@ else → unscheduledOnly
 
 ---
 
-## 与排程视图的关系（PLNR.SCHED.0）
+## 与排程视图的关系（P-SCHED-0）
 
 | 视图            | 任务行差异                                                                           |
 | --------------- | ------------------------------------------------------------------------------------ |
@@ -124,11 +122,17 @@ else → unscheduledOnly
 
 | 步  | 内容                                                         | 文件                           |
 | --- | ------------------------------------------------------------ | ------------------------------ |
-| 0   | 对齐 [capture spec](./planner-task-capture-spec.md) Tier 0 与 §7 契约表 | `planner-task-capture-spec.md` |
 | 1   | 重写 `buildTaskMetaLine` 视图矩阵 + 去掉 kind/priority 文字  | `taskMetaLine.js`              |
 | 2   | Focus 色条 + habit 图标 CSS                                  | `app.css` · `TaskRow.svelte`   |
 | 3   | `showSecondaryMeta` 在 compact 下仍显示 life_event + project | `TaskRow.svelte`               |
 | 4   | 子任务计数 `subtasks.filter(done).length`                    | `taskMetaLine.js` 或 `TaskRow` |
 | 5   | 截图 + 更新本规范                                            | QA                             |
 
-**Agent：** 并入 **PLNR.SCHED.0** Fable session（不单占额度）· Codex 单测
+**Agent：** 并入 **P-SCHED-0** Fable session（不单占额度）· Codex 单测
+
+## 2026-07-10 实现记录
+
+- Today / Calendar 的 meta line 去除 kind / priority 文字，保留排程时段、时长和子任务 `n/m`。
+- Focus 使用左侧 accent；循环任务使用图标 chip；compact 行保留来源、项目和循环关键 chip。
+- E2E 已改为验证 P0 checkbox accent 和 recurrence chip，不再断言已被产品规范移除的「高」/「每天」 meta 文字。
+- 证据见 `docs/ui-qa-screenshots/planner/achievement-schedule/latest/` 与 `playwright-audit/latest/`。

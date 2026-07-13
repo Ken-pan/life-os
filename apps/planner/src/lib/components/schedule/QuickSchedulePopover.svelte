@@ -98,14 +98,14 @@
   });
 
   function save() {
-    if (!task || !dateKey || !hasChanges) return;
-    applyTaskSchedule(task.id, { dateKey, start, durationMinutes: duration });
-    toast(t('toast.scheduledBlockDetailed', {
-      title: task.title,
-      date: formattedDate,
+    if (!task || !schedulePopover.dateKey) return;
+    const applied = applyTaskSchedule(task.id, {
+      dateKey: schedulePopover.dateKey,
       start,
-      end,
-    }), 'success', {
+      durationMinutes: duration,
+    });
+    if (!applied) return;
+    toast(t('toast.scheduledBlock', { title: task.title, start }), 'success', {
       key: `schedule-${task.id}`,
       dedupeMs: 2000,
     });

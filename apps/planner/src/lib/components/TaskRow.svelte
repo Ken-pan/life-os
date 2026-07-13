@@ -57,8 +57,12 @@
     buildTaskMetaLine(task, t, { contextDate, minimal: metaMinimal, overdue }),
   )
   const lifeEventSource = $derived(getLifeEventSource(task, t))
+  /* compact（Today/Calendar 列表）仍保留关键 chip：来源 · 项目 · 循环 */
+  const hasKeyChips = $derived(
+    Boolean(lifeEventSource || task.projectId || hasRecurrence),
+  )
   const showSecondaryMeta = $derived(
-    !metaMinimal && (!compact || Boolean(lifeEventSource || task.projectId)),
+    !metaMinimal && (!compact || hasKeyChips),
   )
   const showScheduleBtn = $derived(
     showScheduleAction &&
@@ -463,7 +467,7 @@
             {metaLine}
           </p>
         {/if}
-        {#if showSecondaryMeta && (lifeEventSource || task.projectId || task.reminderMinutes != null || list || task.tags.length)}
+        {#if showSecondaryMeta && (hasKeyChips || (!compact && (task.reminderMinutes != null || list || task.tags.length)))}
           <div class="task-meta">
             {#if lifeEventSource}
               <a
@@ -493,11 +497,16 @@
                 </span>
               {/if}
             {/if}
-            {#if !compact && task.reminderMinutes != null}
-              <span class="chip">🔔</span>
+            {#if hasRecurrence}
+              <span class="chip chip--recurrence" title={t('task.recurring')}>
+                <Icon name="repeat" size={11} strokeWidth={2.2} />
+              </span>
             {/if}
-            {#if !compact && list}<span class="chip">{listLabel(list)}</span>{/if}
             {#if !compact}
+              {#if task.reminderMinutes != null}
+                <span class="chip">🔔</span>
+              {/if}
+              {#if list}<span class="chip">{listLabel(list)}</span>{/if}
               {#each task.tags.filter( (tag) => String(tag || '').trim(), ) as tag}<span
                   class="chip tag">{tag}</span
                 >{/each}

@@ -59,7 +59,7 @@ export function scheduleSave() {
 export function flushSave() {
   clearTimeout(saveTimer)
   saveTimer = null
-  saveState(S)
+  return saveState(S)
 }
 
 /** Life OS 统一主题选项（与 FinanceOS / FitnessOS 对齐）
