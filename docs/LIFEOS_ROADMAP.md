@@ -91,6 +91,8 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 **PaperOS UI device gate（2026-07-12）：** PR #27 exact binary launch/Drawer/Gallery/recovery PASS，但 `pmUTC/amUTC` 与 physical stylus gate 阻塞；PR #28 routing/data/refresh PASS，但 note-tile whitespace、Today task truncation、Settings layout 与 locale FAIL。两 PR 均保持 draft。
 
+**PaperOS UI device gate（2026-07-12）：** PR #27 exact binary launch/Drawer/Gallery/recovery PASS，但 `pmUTC/amUTC` 与 physical stylus gate 阻塞；PR #28 routing/data/refresh PASS，但 note-tile whitespace、Today task truncation、Settings layout 与 locale FAIL。两 PR 均保持 draft。
+
 **2026-07-09 已验收（见 §Shipped）：** Phase 0–6 — **FINC.CORE.3** · **PORT.GROWTH.4b-M/H** · **PORT.GROWTH.6** · **PORT.GROWTH.8** · **PORT.GROWTH.9** · **MUSC.PIPE.5** · **HOME.PROJ.6a** · **PLNR.CORE.2** · **GYMS.CORE.0/GYMS.EVENTS.1** · **INTG.EVENTS.1b** · CI 接线。
 
 ### Next — 已排期
