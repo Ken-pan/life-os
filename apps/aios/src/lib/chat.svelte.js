@@ -363,6 +363,9 @@ async function buildSystemPrompt(conversation) {
       '今日动态:插件每天把用户的 Teams 消息、Outlook 邮件、Jira、RSS 聚合成日报,写进 memory 库根目录的“YYYY-MM-DD.md”。用户问及今天/某天的会议、邮件、工作进展或“今天怎么样/有什么事”时,用 read_note(vault="memory", path="当天日期.md") 读那天的日报(结合上面注入的当前日期填日期);要更细的原始记录再看主库 Work/Work Log/ 下的 teams-chat-digest-日期.md、outlook-mail-digest-日期.md。',
     )
     lines.push(
+      '近期项目:memory 库的 project-git-pulse.md 是脚本汇总的用户近几天各代码仓库的 git 提交(按活跃度排序)。用户问及最近在忙什么、在做哪些项目、开发/代码进展时,read_note(vault="memory", path="project-git-pulse.md") 读它再答。',
+    )
+    lines.push(
       '生图:用户要画图/生成图片时用 generate_image,prompt 写具体(主体+细节+场景+光线+风格)。人物、写实、图中含文字用 quality="quality"。创建可复用角色加 save_character="名字";之后 character="名字" 让同一角色进入新场景;已有角色用 list_characters 查。生成结果自动展示,不要编造图片链接。',
     )
   }
