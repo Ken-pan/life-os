@@ -51,15 +51,29 @@ function renderInline(raw) {
     return stashMath(tex)
   })
   text = escapeHtml(text)
+  // 链接:显式 [label](url) → 尖括号 <url> → 裸 url,统一抽成 NUL 占位符,放在加粗/斜体之前——
+  // 既避免裸链接自动识别误伤前两种已生成的 <a>,也保护 URL 里的 _ * 不被斜体/加粗规则啃掉。
+  // 复用 codeSpans 占位池。顺序要紧:先吃掉 [](url) 里的 url,裸链接规则才不会再碰它。
+  const stashLink = (href, label) =>
+    `\x00${codeSpans.push(`<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`) - 1}\x00`
+  text = text
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (_, label, href) => stashLink(href, label))
+    .replace(/&lt;(https?:\/\/[^\s<>]+?)&gt;/g, (_, href) => stashLink(href, href))
+    .replace(/(^|[\s(])(https?:\/\/[^\s<>()，。、；：！？（）【】「」『』《》〈〉“”‘’…]+)/g, (_, pre, url) => {
+      // 裸链接边界:字符类已排除中文标点(中文里 URL 常紧跟正文无空格);再剥掉结尾的 ASCII 标点
+      const trail = (url.match(/[.,;:!?]+$/) || [''])[0]
+      const href = trail ? url.slice(0, -trail.length) : url
+      return pre + stashLink(href, href) + trail
+    })
   text = text
     .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*\w])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
     .replace(/~~([^~]+)~~/g, '<del>$1</del>')
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (_, label, href) => {
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`
-    })
-  text = text.replace(/\x00(\d+)\x00/g, (_, i) => codeSpans[Number(i)] ?? '')
+  // 还原占位符:有界循环,兼顾链接 label 里嵌代码占位符的嵌套情形
+  for (let pass = 0; pass < 4 && text.includes('\x00'); pass++) {
+    text = text.replace(/\x00(\d+)\x00/g, (_, i) => codeSpans[Number(i)] ?? '')
+  }
   return text
 }
 
