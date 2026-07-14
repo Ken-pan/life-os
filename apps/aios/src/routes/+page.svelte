@@ -1,5 +1,5 @@
 <script>
-  import { tick, untrack } from 'svelte'
+  import { tick, untrack, onMount } from 'svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
   import {
@@ -16,18 +16,35 @@
   import SidePanel from '$lib/components/SidePanel.svelte'
   import { openArtifact } from '$lib/panel.svelte.js'
   import { CLOUD_BUILD } from '$lib/env.js'
+  import { generateDailySuggestions } from '$lib/dailySuggestions.js'
 
   const conversation = $derived(
     C.conversations.find((c) => c.id === C.activeId) ?? null,
   )
   const isEmpty = $derived(!conversation || conversation.messages.length === 0)
 
-  const suggestions = $derived([
+  // 首页建议:默认静态四个;「今日感知」素材可用时,后台用小模型生成随近况
+  // 变化的动态建议(会议/项目/所在地),算好后无缝替换,不出现加载态。
+  const STATIC_SUGGESTIONS = $derived([
     { icon: 'image', text: t('chat.suggestImage') },
     { icon: 'search', text: t('chat.suggestSearch') },
     { icon: 'code', text: t('chat.suggestCode') },
     { icon: 'lightbulb', text: t('chat.suggestBrainstorm') },
   ])
+  const DYN_ICONS = ['notebook', 'code', 'search', 'lightbulb']
+  let dynamicSuggestions = $state(null)
+  onMount(() => {
+    generateDailySuggestions()
+      .then((items) => {
+        if (items?.length) dynamicSuggestions = items
+      })
+      .catch(() => {})
+  })
+  const suggestions = $derived(
+    dynamicSuggestions
+      ? dynamicSuggestions.map((text, i) => ({ icon: DYN_ICONS[i % DYN_ICONS.length], text }))
+      : STATIC_SUGGESTIONS,
+  )
 
   // 追问建议(小模型生成,挂在最后一条助手消息上,空闲时展示)
   const followUps = $derived.by(() => {
