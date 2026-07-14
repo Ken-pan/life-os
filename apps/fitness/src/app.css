@@ -2239,11 +2239,20 @@ p {
 }
 
 .btn-danger {
-  color: var(--button-danger-text, var(--critical, var(--feedback-danger)));
-  border: 1px solid var(--button-danger-border, color-mix(in srgb, var(--critical, var(--feedback-danger)) 32%, var(--border)));
-  border-radius: 10px;
-  background: var(--button-danger-bg, var(--critical-subtle, var(--feedback-danger-bg)));
-  transition: background .15s;
+  --danger: var(--critical, var(--feedback-danger));
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 24%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--danger) 7%, transparent);
+  font-weight: 600;
+  transition: background .15s var(--ease-standard), border-color .15s var(--ease-standard);
+}
+
+/* 堆叠块内容左对齐:.set-row{display:flex;align-items:center} 会把 stack-block
+   撑成 flex column 居中,标题/描述都居中不符合阅读习惯。改为拉伸满宽 + 文本左起。 */
+.settings-row.set-row.settings-stack-block {
+  align-items: stretch;
+  text-align: start;
 }
 
 .set-row.settings-stack-block > .btn-danger,
@@ -2254,11 +2263,12 @@ p {
 }
 
 .btn-danger:hover {
-  background: color-mix(
-    in srgb,
-    var(--critical, var(--feedback-danger)) 10%,
-    var(--button-danger-bg, var(--critical-subtle, var(--feedback-danger-bg)))
-  );
+  background: color-mix(in srgb, var(--danger, var(--critical, var(--feedback-danger))) 14%, transparent);
+  border-color: color-mix(in srgb, var(--danger, var(--critical, var(--feedback-danger))) 42%, transparent);
+}
+
+.btn-danger:active {
+  background: color-mix(in srgb, var(--danger, var(--critical, var(--feedback-danger))) 20%, transparent);
 }
 
 .set-note {
