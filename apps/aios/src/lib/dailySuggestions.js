@@ -1,6 +1,8 @@
 import { browser } from '$app/environment'
 import { GATEWAY, pingGateway } from '$lib/localai.js'
 import { S } from '$lib/state.svelte.js'
+import { isCloudAuthorized } from '$lib/cloud.svelte.js'
+import { lifeOsToday } from '$lib/lifeos.js'
 
 /**
  * 首页动态建议:基于「今日感知」素材(今天的 Obsidian 日报 + 近期项目动态 +
@@ -64,14 +66,21 @@ export async function generateDailySuggestions() {
   // 网关不可达(云端只读版/网关没开)直接退回静态,不空等
   if (!(await pingGateway())) return null
 
+  // Life OS 今日快照(待办/财务/健身…)—— 登录后才有,失败或未登录静默跳过
+  const lifeOs = isCloudAuthorized()
+    ? await lifeOsToday().catch(() => '')
+    : ''
+  const hasLifeOs = lifeOs && !lifeOs.startsWith('需要') && !lifeOs.startsWith('暂无')
+
   const [brief, pulse] = await Promise.all([
     readNote('memory', `${today}.md`),
     readNote('memory', 'project-git-pulse.md'),
   ])
-  if (!brief && !pulse && !loc) return null // 没个性化素材
+  if (!brief && !pulse && !loc && !hasLifeOs) return null // 没个性化素材
 
   const ctx = [
     loc ? `所在地:${loc}` : '',
+    hasLifeOs ? lifeOs : '',
     brief ? `今日日报(会议/邮件/进展):\n${brief.slice(0, 1400)}` : '',
     pulse ? `近期项目动态:\n${pulse.slice(0, 1000)}` : '',
   ]
@@ -81,7 +90,8 @@ export async function generateDailySuggestions() {
   const raw = await complete(
     `今天是 ${today}。下面是用户的近况。据此想 4 个「用户此刻可能想让 AI 帮忙的事」,` +
       '做成首页可点击的建议:每个不超过 14 字、口语化、点了能直接发送,尽量具体到' +
-      '用户的会议/项目/所在地(不要泛泛的"帮我头脑风暴")。只输出 4 行,每行一个,' +
+      '用户的会议/项目/所在地/待办/花销(不要泛泛的"帮我头脑风暴";有逾期待办或' +
+      '异常花销时可以直接点出来)。只输出 4 行,每行一个,' +
       `不要编号或解释。\n\n${ctx}`,
   )
   if (!raw) return null

@@ -10,6 +10,7 @@ import {
 import { toolDefinitions, executeTool, consumePendingImages } from '$lib/tools.js'
 import { recallRelevant, M as MEM } from '$lib/memory.svelte.js'
 import { dataChanged } from '$lib/syncBus.js'
+import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 
 const STORAGE_KEY = 'aios_chats_v1'
 const MAX_CONVERSATIONS = 200
@@ -377,6 +378,14 @@ async function buildSystemPrompt(conversation) {
           : '') +
         '\n不要:在同一页面反复滚动重读(用 offset 续读);编造网页内容或链接。',
     )
+    if (isCloudAuthorized()) {
+      lines.push(
+        'Life OS 数据(用户自己的真实数据,涉及时必须用工具读、不要猜也不要说"看不到"):\n' +
+          '- 花销/收入/结余/某分类或商家花多少 → finance_summary(可传 period 或 from/to、category、merchant)\n' +
+          '- 待办/今天要做什么/有没有逾期/今天完成了什么 → planner_tasks(scope: today/overdue/open/completed_today)\n' +
+          '- "今天怎么样/我的近况" 这类综合近况 → life_os_today(一次拿到待办·财务·健身·音乐今日概览)',
+      )
+    }
     if (S.settings.memory) {
       // 刻意精简:小模型(尤其思考模式)会逐句反刍长指令,曾因此陷入复读循环;细节纪律在工具描述里
       lines.push(
