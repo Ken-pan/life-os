@@ -2,7 +2,7 @@
   // Port of StocksSummaryKpis from src/components/stocks/StocksSummaryKpis.tsx.
   import { t } from '$lib/i18n.svelte.js'
   import { money, signedMoney } from '$lib/format.js'
-  import { helpTipPosition } from '$lib/helpTipPosition.js'
+  import { keepPopoverInViewport } from '@life-os/platform-web/svelte/actions'
 
   /** @type {{
    *   scope: {
@@ -52,7 +52,12 @@
 {#snippet kpiLabel(text, tip)}
   <span class="label">
     {text}
-    <span class="help-tip" tabindex="0" aria-label={t('stocks.kpi.helpTipAria', { label: text })} use:helpTipPosition>
+    <span
+      class="help-tip"
+      tabindex="0"
+      aria-label={t('stocks.kpi.helpTipAria', { label: text })}
+      use:keepPopoverInViewport={{ selector: '.help-tip-pop' }}
+    >
       ?
       <span class="help-tip-pop">{tip}</span>
     </span>

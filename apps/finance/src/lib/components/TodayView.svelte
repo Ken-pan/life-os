@@ -37,7 +37,8 @@
     welcomeTitle,
   } from '@life-os/finance-core/copy/terminology'
   import { t } from '$lib/i18n.svelte.js'
-  import { helpTipPosition } from '$lib/helpTipPosition.js'
+  import { keepPopoverInViewport } from '@life-os/platform-web/svelte/actions'
+  import { ExplainPanel } from '@life-os/platform-web/svelte/explain-panel'
 
   /** @typedef {import('../../types.js').FinanceData} FinanceData */
   /** @typedef {import('$lib/dashboard.js').Dashboard} Dashboard */
@@ -82,8 +83,6 @@
   let calendarView = $state(/** @type {'agenda' | 'calendar'} */ ('agenda'))
   let monthOffset = $state(0)
   let showMoreQuickActions = $state(false)
-  let showStsExplain = $state(false)
-  let showSavingExplain = $state(false)
 
   const safeToSpend = $derived(safeToSpendLabel())
   const safeToSpendSub = $derived(safeToSpendSubtitle())
@@ -316,7 +315,13 @@
 </script>
 
 {#snippet helpTip(text)}
-  <span class="help-tip" tabindex="0" role="note" aria-label={text} use:helpTipPosition>
+  <span
+    class="help-tip"
+    tabindex="0"
+    role="note"
+    aria-label={text}
+    use:keepPopoverInViewport={{ selector: '.help-tip-pop' }}
+  >
     <HelpCircle size={14} aria-hidden="true" />
     <span class="help-tip-pop" role="tooltip">{text}</span>
   </span>
@@ -394,17 +399,9 @@
           {/if}
         {/if}
         <span class="sub">{safeToSpendSub}</span>
-        <button
-          type="button"
-          class="explain-toggle"
-          aria-expanded={showStsExplain}
-          onclick={() => (showStsExplain = !showStsExplain)}
-        >
-          {showStsExplain ? t('today.hideExplain') : t('today.showExplain')}
-        </button>
-        {#if showStsExplain}
-          <p class="explain-panel">{safeToSpendText(derived, outlook, privacy)}</p>
-        {/if}
+        <ExplainPanel label={t('today.showExplain')} hideLabel={t('today.hideExplain')}>
+          {safeToSpendText(derived, outlook, privacy)}
+        </ExplainPanel>
       </div>
 
       {#if cap.rationale === 'none'}
@@ -497,17 +494,9 @@
               </span>
             </div>
           </div>
-          <button
-            type="button"
-            class="explain-toggle"
-            aria-expanded={showSavingExplain}
-            onclick={() => (showSavingExplain = !showSavingExplain)}
-          >
-            {showSavingExplain ? t('today.hideExplain') : t('today.showExplain')}
-          </button>
-          {#if showSavingExplain}
-            <p class="explain-panel">{whyText}</p>
-          {/if}
+          <ExplainPanel label={t('today.showExplain')} hideLabel={t('today.hideExplain')}>
+            {whyText}
+          </ExplainPanel>
         </div>
       {/if}
     </div>

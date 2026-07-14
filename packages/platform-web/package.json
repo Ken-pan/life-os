@@ -61,6 +61,18 @@
       "svelte": "./src/svelte/app-bar/index.js",
       "default": "./src/svelte/app-bar/index.js"
     },
+    "./svelte/actions": {
+      "types": "./src/svelte/actions/index.d.ts",
+      "import": "./src/svelte/actions/index.js",
+      "svelte": "./src/svelte/actions/index.js",
+      "default": "./src/svelte/actions/index.js"
+    },
+    "./svelte/explain-panel": {
+      "types": "./src/svelte/explain-panel/index.d.ts",
+      "import": "./src/svelte/explain-panel/index.js",
+      "svelte": "./src/svelte/explain-panel/index.js",
+      "default": "./src/svelte/explain-panel/index.js"
+    },
     "./svelte/settings/row": {
       "svelte": "./src/svelte/settings/SettingsRow.svelte",
       "default": "./src/svelte/settings/SettingsRow.svelte"
