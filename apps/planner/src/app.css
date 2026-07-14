@@ -55,6 +55,72 @@ body {
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(196, 122, 8, 0.035), transparent 62%);
 }
 
+/* ===== 滚动条优化 ===== */
+/* 主滚动预留固定 gutter：短页/长页切换时内容不再左右跳 15px */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* 细化、主题化滚动条（内容区）——Firefox */
+html,
+.wrap,
+.task-editor-sheet,
+.sheet-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--t3) 42%, transparent) transparent;
+}
+
+/* 细化、主题化滚动条（内容区）——WebKit/Chromium */
+html::-webkit-scrollbar,
+.wrap::-webkit-scrollbar,
+.task-editor-sheet::-webkit-scrollbar,
+.sheet-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html::-webkit-scrollbar-track,
+.wrap::-webkit-scrollbar-track,
+.task-editor-sheet::-webkit-scrollbar-track,
+.sheet-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb,
+.wrap::-webkit-scrollbar-thumb,
+.task-editor-sheet::-webkit-scrollbar-thumb,
+.sheet-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--t3) 40%, transparent);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+html:hover::-webkit-scrollbar-thumb,
+.wrap:hover::-webkit-scrollbar-thumb,
+.task-editor-sheet:hover::-webkit-scrollbar-thumb,
+.sheet-scroll:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--t3) 62%, transparent);
+}
+
+/* 侧栏内滚动条：跟随侧栏前景色，深/浅侧栏都协调 */
+.sidebar-body {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--sidebar-foreground) 24%, transparent) transparent;
+}
+.sidebar-body::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-body::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--sidebar-foreground) 22%, transparent);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.sidebar-body:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--sidebar-foreground) 38%, transparent);
+}
+
 .appbar-back:focus-visible,
 .appbar-menu:focus-visible,
 .appbar-search:focus-visible,
