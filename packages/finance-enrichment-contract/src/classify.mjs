@@ -21,10 +21,20 @@ export const AMOUNT_TOLERANCE_CENTS = 1
 
 export function isCleanPurchaseStatus(status) {
   const s = String(status || '').toLowerCase().trim()
-  if (!s) return true
+  // Missing/unknown status is neutral, not a problem: Amazon data exports often
+  // omit status entirely (stored as null → 'unknown'). A matched order with line
+  // items and no status string is a normal purchase, not a review case.
+  if (!s || s === 'unknown') return true
   if (RETURN_STATUSES.test(s)) return false
   if (CLEAN_STATUSES.has(s)) return true
-  if (/deliver|shipped|ship|purchas|arrived|complete/.test(s) && !RETURN_STATUSES.test(s)) {
+  // Accept free-text fulfilment phrasings: "Delivered June 30", "Picked Up",
+  // "Arriving today", "Ready for pickup", "Order complete", etc.
+  if (
+    /deliver|shipp?ed|ship|purchas|arriv|complete|pick.?up|picked|ready|fulfil/.test(
+      s,
+    ) &&
+    !RETURN_STATUSES.test(s)
+  ) {
     return true
   }
   return false

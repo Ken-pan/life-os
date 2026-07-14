@@ -4,6 +4,7 @@ import {
   classifyCleanReasons,
   resolveDisplayState,
   buildDuplicateMaps,
+  isCleanPurchaseStatus,
 } from '@life-os/finance-enrichment-contract'
 import type { Txn } from './transactions'
 import {
@@ -123,5 +124,32 @@ describe('computePurchaseCoverage', () => {
     expect(stats.cleanItemCount).toBe(1)
     expect(stats.matchedReview).toBe(1)
     expect(stats.merchantOnly).toBe(1)
+  })
+})
+
+describe('isCleanPurchaseStatus — matching-quality fixes', () => {
+  it('treats missing / unknown status as clean (Amazon exports omit status)', () => {
+    // txnToNormalizedOrder coerces null → 'unknown'; that must not force review.
+    expect(isCleanPurchaseStatus(null)).toBe(true)
+    expect(isCleanPurchaseStatus('')).toBe(true)
+    expect(isCleanPurchaseStatus('unknown')).toBe(true)
+  })
+
+  it('accepts free-text fulfilment phrasings', () => {
+    expect(isCleanPurchaseStatus('Delivered June 30')).toBe(true)
+    expect(isCleanPurchaseStatus('Delivered today')).toBe(true)
+    expect(isCleanPurchaseStatus('Picked Up')).toBe(true) // space vs picked_up
+    expect(isCleanPurchaseStatus('Picked up')).toBe(true)
+    expect(isCleanPurchaseStatus('Purchased in Store')).toBe(true)
+    expect(isCleanPurchaseStatus('Ready for pickup')).toBe(true)
+    expect(isCleanPurchaseStatus('Arriving today')).toBe(true)
+  })
+
+  it('still flags returns / refunds / cancellations as non-clean', () => {
+    expect(isCleanPurchaseStatus('Returned')).toBe(false)
+    expect(isCleanPurchaseStatus('Return complete')).toBe(false)
+    expect(isCleanPurchaseStatus('Refund issued')).toBe(false)
+    expect(isCleanPurchaseStatus('Refunded')).toBe(false)
+    expect(isCleanPurchaseStatus('Cancelled')).toBe(false)
   })
 })
