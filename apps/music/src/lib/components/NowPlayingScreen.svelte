@@ -233,7 +233,9 @@
   onpointerdown={revealControls}
 >
   {#if track}
-    <NowPlayingAmbientBack artUrl={track.artUrl} resolve={artResolve} inline={overlay} />
+    {#if !overlay}
+      <NowPlayingAmbientBack artUrl={track.artUrl} resolve={artResolve} />
+    {/if}
 
     <button
       class="now-playing-handle"
@@ -388,9 +390,9 @@
             class="now-playing-sign-in-cue now-playing-sign-in-cue--desktop"
             href="/auth"
             aria-label={t('sync.signInFirst')}
+            title={t('sync.signInFirst')}
           >
             <Icon name="circle-user" size={18} strokeWidth={1.75} />
-            <span>{t('auth.signIn')}</span>
           </a>
         {/if}
 

@@ -1,7 +1,21 @@
 <script>
   import { onMount, tick } from 'svelte'
   import NowPlayingScreen from './NowPlayingScreen.svelte'
+  import NowPlayingAmbientBack from './NowPlayingAmbientBack.svelte'
+  import { player } from '$lib/player.svelte.js'
   import { nowPlaying, finalizeCloseNowPlaying } from '$lib/ui.svelte.js'
+
+  const track = $derived(player.queue[player.index] ?? null)
+  const ambResolve = $derived(
+    track
+      ? {
+          albumKey: track.albumKey,
+          artist: track.artist,
+          album: track.album,
+          title: track.title,
+        }
+      : undefined,
+  )
 
   /** Peak scrim opacity over the revealed page when the card is fully lifted. */
   const SCRIM_BASE = 0.5
@@ -70,6 +84,9 @@
   >
     <div class="np-overlay-scrim" style:opacity={scrimOpacity} aria-hidden="true"></div>
     <div class="np-overlay-sheet">
+      {#if track}
+        <NowPlayingAmbientBack artUrl={track.artUrl} resolve={ambResolve} inline />
+      {/if}
       <NowPlayingScreen
         overlay
         onDismiss={requestClose}
@@ -98,10 +115,8 @@
     transition: opacity 140ms ease;
   }
 
-  /* Entrance/exit + drag all ride on the padding-free sheet wrapper. Keeping
-     will-change:transform here makes it the containing block for the card's
-     fixed ambient background, so the ambient fills the full viewport (not the
-     card's padding box) AND moves together with everything on a drag. */
+  /* Entrance/exit + drag all ride on the padding-free sheet wrapper so its
+     background, ambient and content move as one and reveal the page behind. */
   .np-overlay-sheet {
     position: relative;
     z-index: 1;
@@ -120,7 +135,17 @@
     transform: none;
   }
 
+  /* Absolute (not fixed) so it reliably moves with the transformed sheet on
+     iOS Safari — a fixed descendant of a transformed ancestor is not honoured
+     there, which left the ambient pinned full-screen and hid the page. */
+  .np-overlay-sheet :global(.np-ambient-back--inline) {
+    position: absolute;
+    z-index: 0;
+  }
+
   .np-overlay-sheet :global(.now-playing) {
+    position: relative;
+    z-index: 1;
     flex: 1;
     min-height: 100dvh;
   }
