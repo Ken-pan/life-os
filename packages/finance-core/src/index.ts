@@ -32,3 +32,11 @@ export type {
   AutomationWriteCandidate,
   AutomationGateReason,
 } from './engine/purchaseReviewDecision.js'
+export {
+  detectAggregateMirrors,
+  isAggregateFeedAccount,
+} from './engine/aggregateMirror.js'
+export type {
+  MirrorCandidateRow,
+  MirrorMatch,
+} from './engine/aggregateMirror.js'

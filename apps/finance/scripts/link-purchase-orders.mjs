@@ -1371,6 +1371,11 @@ async function main() {
       and txn_date >= '${escSql(txnSince)}'
       and txn_date <= '${escSql(txnUntil)}'
       ${userId ? `and user_id = '${escSql(userId)}'` : ''}${accountScopeSql}
+      -- Never match orders to mirror/duplicate ledger rows. An aggregator (Rocket
+      -- Money etc.) re-imports card charges under an aggregate account; those rows
+      -- carry an exclude_reason and must not receive enrichment — otherwise one
+      -- order links to both the real charge and its shadow.
+      and exclude_reason is null
     order by txn_date desc;
   `)
 
@@ -1708,11 +1713,29 @@ async function main() {
     gitHead,
   })
 
+  // Cross-run one-order-one-charge guard. matchOrdersToPurchaseTxns enforces a
+  // 1:1 order↔txn assignment within a single run, but a later run can still link an
+  // order that a prior run already attached to a different transaction (e.g. a
+  // shadow row, or a genuine split charge). Track which txn already owns each order
+  // (from current DB state) so we never fan one order out across two ledger rows.
+  const orderOwner = new Map()
+  for (const t of txns) {
+    const oid = t.purchaseEnrichment?.orderId
+    if (oid && t.purchaseEnrichment?.source === cfg.label) orderOwner.set(oid, t.id)
+  }
+  let skippedDuplicateOrder = 0
+
   for (const m of effectivePurchaseMatches) {
     const existing = txns.find((t) => t.id === m.txnId)?.purchaseEnrichment
     if (onlyTxnIds && !onlyTxnIds.includes(m.txnId)) continue
     if (!wouldWriteEnrichmentUpdate(existing, updatesOnly)) continue
     if (insertsOnly && existing?.source) continue
+    // Order already linked to a different transaction — do not duplicate the link.
+    const owner = orderOwner.get(m.orderId)
+    if (owner && owner !== m.txnId) {
+      skippedDuplicateOrder++
+      continue
+    }
     // Manual-decision precedence: never overwrite a confirmed pairing, never
     // silently resurface a rejected candidate.
     const gate = purchaseReviewAutomationGate(
@@ -1755,7 +1778,15 @@ async function main() {
       before: existing ?? null,
       after: enrichment,
     })
+    orderOwner.set(m.orderId, m.txnId)
     updatedPurchase++
+  }
+  if (skippedDuplicateOrder > 0) {
+    console.log(
+      tag,
+      'skipped (order already linked to another txn):',
+      skippedDuplicateOrder,
+    )
   }
 
   for (const r of effectiveRefundLinks) {
