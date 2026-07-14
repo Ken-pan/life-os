@@ -2,6 +2,7 @@ import { GATEWAY } from '$lib/localai.js'
 import { addMemory, searchMemories } from '$lib/memory.svelte.js'
 import { startImageProgress, stopImageProgress } from '$lib/imageProgress.svelte.js'
 import { isNative, NATIVE_DEFS, isNativeTool, executeNativeTool } from '$lib/native.js'
+import { lifeOsToday, financeSummary, plannerTasks } from '$lib/lifeos.js'
 
 /**
  * 内置工具(OpenAI function calling 格式)。
@@ -299,6 +300,84 @@ const DEFS = [
         name: 'list_styles',
         description: '列出已注册的生图风格(名字、描述、参考图数量)。用户问"有哪些风格"或 generate_image 报风格不存在时使用。',
         parameters: { type: 'object', properties: {} },
+      },
+    },
+  },
+  {
+    key: 'life_os_today',
+    icon: 'dashboard',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'life_os_today',
+        description:
+          '获取 Life OS 今日跨 app 快照:待办(今日到期/逾期)、财务(本月收支结余)、健身(今天是否训练)、音乐、家务。用户问"今天怎么样""我的近况""有什么要做的"或需要综合当前生活状态时使用。数据来自用户本人账户,已登录才可用。',
+        parameters: { type: 'object', properties: {} },
+      },
+    },
+  },
+  {
+    key: 'finance_summary',
+    icon: 'wallet',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'finance_summary',
+        description:
+          '查询用户 Finance app 的收支汇总与分类/商家明细。用户问"这个月花了多少""在吃饭上花了多少""最近收入""XX 商家花了多少"等财务问题时使用。返回总支出/收入/结余 + 支出分类和商家 TOP。只读。',
+        parameters: {
+          type: 'object',
+          properties: {
+            period: {
+              type: 'string',
+              enum: [
+                'today',
+                'yesterday',
+                'last_7_days',
+                'this_month',
+                'last_month',
+                'last_30_days',
+                'this_year',
+                'all',
+              ],
+              description: '时间范围,默认 this_month(本月至今)。',
+            },
+            from: { type: 'string', description: '起始日期 YYYY-MM-DD(覆盖 period)' },
+            to: { type: 'string', description: '结束日期 YYYY-MM-DD(覆盖 period)' },
+            category: { type: 'string', description: '按支出分类过滤(模糊匹配,如「餐饮」)' },
+            merchant: { type: 'string', description: '按商家过滤(模糊匹配,如「星巴克」)' },
+          },
+        },
+      },
+    },
+  },
+  {
+    key: 'planner_tasks',
+    icon: 'list-todo',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'planner_tasks',
+        description:
+          '列出用户 Planner app 的待办任务。用户问"今天有什么要做的""有没有逾期""我的待办""今天完成了什么"时使用。只读。',
+        parameters: {
+          type: 'object',
+          properties: {
+            scope: {
+              type: 'string',
+              enum: ['today', 'overdue', 'open', 'completed_today', 'all'],
+              description:
+                'today=今天到期;overdue=已逾期;open=所有未完成(默认);completed_today=今天已完成;all=全部。',
+            },
+            area: {
+              type: 'string',
+              description: '按领域过滤:life/work/planner/fitness/finance/home/other',
+            },
+          },
+        },
       },
     },
   },
@@ -1328,6 +1407,12 @@ export async function executeTool(name, argsJson) {
         return await readNote(args.vault, args.path)
       case 'ask_notes':
         return await askNotes(args.query)
+      case 'life_os_today':
+        return await lifeOsToday()
+      case 'finance_summary':
+        return await financeSummary(args)
+      case 'planner_tasks':
+        return await plannerTasks(args)
       case 'browser_status':
         return await browserStatus()
       case 'read_browser_page':

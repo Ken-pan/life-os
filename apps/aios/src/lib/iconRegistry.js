@@ -35,6 +35,9 @@ import RefreshCw from '@lucide/svelte/icons/refresh-cw'
 import Settings from '@lucide/svelte/icons/settings'
 import SquareTerminal from '@lucide/svelte/icons/square-terminal'
 import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
+import Wallet from '@lucide/svelte/icons/wallet'
+import ListTodo from '@lucide/svelte/icons/list-todo'
+import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard'
 import Square from '@lucide/svelte/icons/square'
 import SquarePen from '@lucide/svelte/icons/square-pen'
 import Trash2 from '@lucide/svelte/icons/trash-2'
@@ -80,6 +83,9 @@ export const ICONS = {
   settings: Settings,
   terminal: SquareTerminal,
   github: GitPullRequest,
+  wallet: Wallet,
+  'list-todo': ListTodo,
+  dashboard: LayoutDashboard,
   stop: Square,
   compose: SquarePen,
   trash: Trash2,
