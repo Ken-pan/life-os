@@ -3264,6 +3264,7 @@ div.input {
 
 .lr-title {
   font-weight: 600;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3280,15 +3281,21 @@ div.input {
   color: var(--text-muted);
 }
 
+/* Holds the merchant title (+ the mobile-only inline amount). Must stay visible on
+   every breakpoint — hiding the head to drop the inline amount also hid the
+   merchant name, leaving desktop rows labelled only by their category. */
 .lr-main-head {
-  display: none;
+  display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-2);
   min-width: 0;
 }
 
+/* Desktop shows the amount in .lr-right (.lr-amt--stacked); this inline copy is a
+   mobile-only affordance, so it — not the whole head — is what gets hidden here. */
 .lr-amt--inline {
+  display: none;
   flex-shrink: 0;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -3845,8 +3852,8 @@ div.input {
 }
 
 @media (max-width: 720px) {
-  .lr-main-head {
-    display: flex;
+  .lr-amt--inline {
+    display: block;
   }
 
   .lr-amt--stacked {
