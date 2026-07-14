@@ -8,13 +8,34 @@ import {
   VISION_MODELS,
 } from '$lib/localai.js'
 import { toolDefinitions, executeTool, consumePendingImages } from '$lib/tools.js'
-import { recallRelevant } from '$lib/memory.svelte.js'
+import { recallRelevant, M as MEM } from '$lib/memory.svelte.js'
 import { dataChanged } from '$lib/syncBus.js'
 
 const STORAGE_KEY = 'aios_chats_v1'
 const MAX_CONVERSATIONS = 200
 const MAX_TOOL_ROUNDS = 10
 const HISTORY_CHAR_BUDGET = 28000
+
+/**
+ * 同一轮里可安全并发执行的工具:纯本地计算或独立的公网抓取,
+ * 既不经过本地网关(避免 llama-swap 模型抖动),也不共享浏览器标签页/GUI 焦点。
+ * 不在此集合的工具(生图/笔记 RAG/记忆检索/所有 browser_* 与原生 GUI 工具)保持串行。
+ */
+const PARALLEL_SAFE_TOOLS = new Set([
+  'get_time',
+  'calculate',
+  'run_javascript',
+  'fetch_url',
+  'web_search',
+])
+
+/**
+ * 记忆召回缓存:regenerate / continueGenerating 用同一条用户消息重建 system prompt 时命中,
+ * 省掉一次重复 embed 往返——以及它对网关的一次抖动(embedding 与主 LLM 是不同模型,
+ * llama-swap 会为此换出主模型再换回,秒级代价)。key 带记忆库条数,save_memory 等增删
+ * 会改变条数从而自动失效,不引入跨模块信号。
+ */
+let recallCache = { key: '', memories: /** @type {string[]} */ ([]) }
 
 /**
  * @typedef {{ id: string, name: string, arguments: string, result?: string, running?: boolean, images?: string[], imagePaths?: (string|null)[] }} ToolCallRecord
@@ -395,7 +416,15 @@ async function buildSystemPrompt(conversation) {
     // 情景记忆 = 语义召回:只注入与本轮相关的,控制小模型的上下文负担
     const lastUser = [...conversation.messages].reverse().find((m) => m.role === 'user')
     if (lastUser?.content) {
-      const memories = await recallRelevant(lastUser.content.slice(0, 300))
+      const query = lastUser.content.slice(0, 300)
+      const key = `${MEM.items.length}:${query}`
+      let memories
+      if (recallCache.key === key) {
+        memories = recallCache.memories
+      } else {
+        memories = await recallRelevant(query)
+        recallCache = { key, memories }
+      }
       if (memories.length) {
         lines.push(
           `与本轮相关的长期记忆(按相关度;记忆可能过时,与用户当前所说冲突时以对话为准):\n${memories.map((m) => `- ${m}`).join('\n')}`,
@@ -784,7 +813,7 @@ async function streamAssistantReply(conversation) {
         break
       }
 
-      // 执行工具(串行,保持网关/嵌入模型不打架),结果回填后进入下一轮
+      // 执行工具,结果回填后进入下一轮
       assistant.toolCalls = res.toolCalls.map((tc) => ({
         id: tc.id || crypto.randomUUID(),
         name: tc.name,
@@ -792,22 +821,33 @@ async function streamAssistantReply(conversation) {
         running: true,
       }))
       persist()
+      // 生图误触发兜底:文字/代码类需求拦下生图,提示模型直接用文字回答(格式自选)
       for (const tc of assistant.toolCalls) {
-        if (signal.aborted) break
-        // 生图误触发兜底:文字/代码类需求拦下生图,提示模型直接用文字回答(格式自选)
         if (tc.name === 'generate_image' && isBuildCodeAsk(lastUserText)) {
           tc.result =
             '[已跳过生图] 用户要的是文字/代码回答,不是一张图片,不要调用 generate_image。' +
             '请直接用 Markdown 正文回答(表格就用表格,列表就用列表);仅当用户明确要可运行的' +
             '网页/小游戏/应用时,才输出自包含的 ```html 代码块(内联 CSS/JS,不引外部资源)。'
           tc.running = false
-          continue
         }
+      }
+      // 无副作用、不经网关模型也不碰浏览器共享标签页的工具并发执行;其余保持串行——
+      // 网关(llama-swap)按 model 换出换入,并发不同档会抖动;浏览器工具共享 agentTab、
+      // GUI 工具抢焦点,并发会互相踩踏。多数轮只有一个工具,此分区对常见情况零影响。
+      const pending = assistant.toolCalls.filter((tc) => tc.result === undefined)
+      const runOne = async (tc) => {
         tc.result = await executeTool(tc.name, tc.arguments)
         // 生图类工具的产出图片挂到调用记录上,由 Message 直接渲染(不进模型上下文)
         const images = consumePendingImages()
         if (images.length) tc.images = images
         tc.running = false
+      }
+      const concurrent = pending.filter((tc) => PARALLEL_SAFE_TOOLS.has(tc.name))
+      if (concurrent.length && !signal.aborted) await Promise.all(concurrent.map(runOne))
+      for (const tc of pending) {
+        if (PARALLEL_SAFE_TOOLS.has(tc.name)) continue
+        if (signal.aborted) break
+        await runOne(tc)
       }
       persist()
       if (signal.aborted) break
@@ -859,11 +899,17 @@ async function streamAssistantReply(conversation) {
       !last.toolCalls?.length &&
       !last.error
     ) {
-      conversation.messages.pop()
-      // 工具轮结束后模型静默返回空:别无声无息,给用户重试入口
-      const prev = conversation.messages.at(-1)
-      if (!signal.aborted && prev?.role === 'assistant' && prev.toolCalls?.length && !prev.error) {
-        prev.error = '模型没有基于工具结果生成回答,可点重试'
+      if (signal.aborted) {
+        // 用户主动中断:静默清掉空壳
+        conversation.messages.pop()
+      } else {
+        // 模型静默返回空(如 VLM 壳在长对话/复杂上下文下会返回空 content):
+        // 别无声无息,就地把这条空壳变成带「重试」的错误气泡,给用户反馈与入口
+        const prev = conversation.messages.at(-2)
+        last.error =
+          prev?.role === 'assistant' && prev.toolCalls?.length
+            ? '模型没有基于工具结果生成回答,可点重试'
+            : '模型没有返回内容(图片或上下文可能过大;可试试开新对话再发),可点重试'
       }
     } else if (last?.role === 'assistant' && last.content && !last.error) {
       C.freshAssistant = { id: conversation.id, index: conversation.messages.length - 1 }

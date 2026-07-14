@@ -11,8 +11,8 @@
     activeConversation,
   } from '$lib/chat.svelte.js'
   import { toolIcon } from '$lib/tools.js'
-  import { speak } from '$lib/localai.js'
-  import { S } from '$lib/state.svelte.js'
+  import { createSpeechSession } from '$lib/localai.js'
+  import { S, save } from '$lib/state.svelte.js'
   import { openArtifact, openUrl, openFile, openImage } from '$lib/panel.svelte.js'
   import { IMG } from '$lib/imageProgress.svelte.js'
   import { imageUrlFromPath } from '$lib/cloud.svelte.js'
@@ -25,9 +25,13 @@
   let editText = $state('')
   let editArea = $state(null)
   let seenEditSignal = C.editSignal
-  let speaking = $state(false)
-  let ttsLoading = $state(false)
-  let audio = null
+  let ttsState = $state('idle') // 'idle' | 'loading' | 'playing' | 'paused'
+  let ttsSession = null // createSpeechSession 句柄
+  let ttsIndex = $state(0) // 当前朗读到第几句(0-based)
+  let ttsTotal = $state(0) // 总句数,进度显示用
+  let mdEl = $state(null) // .md 容器,逐句高亮的定位范围
+  let followScroll = true // 跟读自动滚动;用户手动滚动即脱离,直到下次朗读
+  let ttsAnnounce = $state('') // aria-live 播报文本
 
   const parts = $derived(splitThinking(message.content))
   const thinkingText = $derived(
@@ -90,6 +94,7 @@
       case 'web_search':
       case 'search_memory':
       case 'search_notes':
+      case 'ask_notes':
         return a.query ?? ''
       case 'open_browser_page':
       case 'fetch_url':
@@ -243,34 +248,153 @@
       .replaceAll(/\s+/g, ' ')
       .trim()
   }
-  async function toggleSpeak() {
-    if (speaking) {
-      audio?.pause()
-      audio = null
-      speaking = false
+  const TTS_RATES = [1, 1.25, 1.5, 2, 0.75]
+  const fmtRate = (r) => `${r}×`
+
+  function toggleSpeak() {
+    if (ttsState !== 'idle') {
+      ttsSession?.stop() // 触发 onEnd → endSpeak,统一收尾
       return
     }
-    if (ttsLoading) return
-    ttsLoading = true
+    ttsState = 'loading' // 等首句出声
+    ttsIndex = 0
+    ttsSession = createSpeechSession(ttsText(), {
+      voice: S.settings.ttsVoice,
+      rate: S.settings.ttsRate, // 记住的偏好速度
+      onStart() {
+        ttsState = 'playing'
+        ttsAnnounce = t('chat.speaking')
+        startFollow()
+      },
+      onSentence(i, sentence) {
+        ttsIndex = i
+        highlightSentence(sentence)
+      },
+      onStateChange(st) {
+        ttsState = st // 'playing' | 'paused'
+      },
+      onEnd: endSpeak,
+      onError: endSpeak,
+    })
+    ttsTotal = ttsSession.sentences.length
+  }
+
+  function endSpeak() {
+    ttsState = 'idle'
+    ttsSession = null
+    ttsAnnounce = t('chat.speechEnded')
+    clearHighlight()
+    stopFollow()
+  }
+
+  function togglePause() {
+    ttsSession?.togglePause()
+  }
+
+  function cycleRate() {
+    const cur = S.settings.ttsRate
+    const next = TTS_RATES[(TTS_RATES.indexOf(cur) + 1) % TTS_RATES.length]
+    S.settings.ttsRate = next
+    save() // 持久化 + 云同步:记住速度偏好
+    ttsSession?.setRate(next)
+  }
+
+  /* —— 逐句跟读高亮(CSS Custom Highlight API,不改 DOM;不支持则静默跳过)—— */
+  function clearHighlight() {
     try {
-      const blob = await speak(ttsText(), S.settings.ttsVoice)
-      const url = URL.createObjectURL(blob)
-      audio = new Audio(url)
-      audio.onended = audio.onerror = () => {
-        URL.revokeObjectURL(url)
-        speaking = false
-        audio = null
-      }
-      speaking = true
-      await audio.play()
+      window.CSS?.highlights?.delete('tts')
     } catch {
-      speaking = false
-    } finally {
-      ttsLoading = false
+      /* noop */
     }
   }
 
-  $effect(() => () => audio?.pause())
+  function highlightSentence(sentence) {
+    if (!mdEl || !window.CSS?.highlights || typeof Highlight === 'undefined') return
+    const range = findTextRange(mdEl, sentence)
+    clearHighlight()
+    if (!range) return // 该句在正文里定位不到(如原属代码块),不高亮但照常朗读
+    try {
+      CSS.highlights.set('tts', new Highlight(range))
+    } catch {
+      return
+    }
+    if (followScroll) scrollRangeIntoView(range)
+  }
+
+  // 在渲染后的正文里按"折叠空白后的文本"定位句子,返回 DOM Range。best-effort。
+  function findTextRange(root, needle) {
+    const target = (needle || '').replace(/\s+/g, ' ').trim()
+    if (target.length < 2) return null
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    let collapsed = ''
+    const map = [] // map[i] = { node, offset } 对应折叠串第 i 个字符
+    let prevSpace = true // 折叠前导空白
+    let node
+    while ((node = walker.nextNode())) {
+      const raw = node.nodeValue
+      for (let k = 0; k < raw.length; k++) {
+        if (/\s/.test(raw[k])) {
+          if (prevSpace) continue
+          prevSpace = true
+          collapsed += ' '
+        } else {
+          prevSpace = false
+          collapsed += raw[k]
+        }
+        map.push({ node, offset: k })
+      }
+    }
+    let pos = collapsed.indexOf(target)
+    if (pos === -1) {
+      // 整句匹配失败(句尾标点/被删的 URL 差异),退用前缀
+      const prefix = target.slice(0, 40)
+      if (prefix.length >= 12) pos = collapsed.indexOf(prefix)
+      if (pos === -1) return null
+    }
+    const startM = map[pos]
+    const endM = map[Math.min(pos + target.length, map.length) - 1]
+    if (!startM || !endM) return null
+    try {
+      const range = document.createRange()
+      range.setStart(startM.node, startM.offset)
+      range.setEnd(endM.node, endM.offset + 1)
+      return range
+    } catch {
+      return null
+    }
+  }
+
+  function scrollRangeIntoView(range) {
+    const rect = range.getBoundingClientRect()
+    if (!rect || (!rect.width && !rect.height)) return
+    const margin = 96
+    if (rect.top < margin || rect.bottom > window.innerHeight - margin) {
+      range.startContainer.parentElement?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      })
+    }
+  }
+
+  /* —— 跟读自动滚动:用户主动滚动(滚轮/触摸)即脱离,避免抢滚动 —— */
+  function breakFollow() {
+    followScroll = false
+  }
+  function startFollow() {
+    followScroll = true
+    window.addEventListener('wheel', breakFollow, { passive: true })
+    window.addEventListener('touchmove', breakFollow, { passive: true })
+  }
+  function stopFollow() {
+    window.removeEventListener('wheel', breakFollow)
+    window.removeEventListener('touchmove', breakFollow)
+  }
+
+  $effect(() => () => {
+    ttsSession?.stop()
+    stopFollow()
+    clearHighlight()
+  })
 </script>
 
 {#if message.role === 'user'}
@@ -471,10 +595,12 @@
     {#if parts.answer}
       <!-- 代码块复制按钮的点击委托;按钮本身可聚焦,容器无键盘语义 -->
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-      <div class="md" onclick={onMdClick}>
+      <div class="md" bind:this={mdEl} onclick={onMdClick}>
         <!-- eslint-disable-next-line svelte/no-at-html-tags — renderMarkdown 全量转义,只输出白名单标签 -->
         {@html answerHtml}
       </div>
+      <!-- 朗读状态给读屏用户的礼貌播报 -->
+      <div class="sr-only" aria-live="polite">{ttsAnnounce}</div>
     {:else if streamingThis && !thinkingText && !message.toolCalls?.length}
       <div class="pending" role="status" aria-label={t('chat.loading')}>
         <span class="shimmer">{coldStart ? t('chat.pendingCold') : t('chat.pending')}</span>
@@ -560,15 +686,67 @@
           </button>
           <button
             type="button"
-            class:speaking
-            title={speaking ? t('chat.stopSpeaking') : t('chat.readAloud')}
-            aria-label={speaking ? t('chat.stopSpeaking') : t('chat.readAloud')}
-            aria-pressed={speaking}
-            disabled={ttsLoading}
+            class:speaking={ttsState === 'playing' || ttsState === 'paused'}
+            class:tts-loading={ttsState === 'loading'}
+            title={ttsState === 'loading'
+              ? t('chat.preparingSpeech')
+              : ttsState !== 'idle'
+                ? t('chat.stopSpeaking')
+                : t('chat.readAloud')}
+            aria-label={ttsState === 'loading'
+              ? t('chat.preparingSpeech')
+              : ttsState !== 'idle'
+                ? t('chat.stopSpeaking')
+                : t('chat.readAloud')}
+            aria-pressed={ttsState !== 'idle'}
             onclick={toggleSpeak}
           >
-            <Icon name={speaking ? 'stop' : 'speaker'} size={14} strokeWidth={1.75} />
+            <Icon
+              name={ttsState === 'loading'
+                ? 'loader'
+                : ttsState !== 'idle'
+                  ? 'stop'
+                  : 'speaker'}
+              size={14}
+              strokeWidth={1.75}
+            />
           </button>
+          {#if ttsState === 'playing' || ttsState === 'paused'}
+            <button
+              type="button"
+              class="speaking"
+              title={ttsState === 'paused' ? t('chat.resumeSpeaking') : t('chat.pauseSpeaking')}
+              aria-label={ttsState === 'paused'
+                ? t('chat.resumeSpeaking')
+                : t('chat.pauseSpeaking')}
+              onclick={togglePause}
+            >
+              <Icon name={ttsState === 'paused' ? 'play' : 'pause'} size={14} strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              class="tts-rate speaking"
+              title={t('chat.playbackSpeed')}
+              aria-label={`${t('chat.playbackSpeed')} ${fmtRate(S.settings.ttsRate)}`}
+              onclick={cycleRate}
+            >
+              {fmtRate(S.settings.ttsRate)}
+            </button>
+            {#if ttsTotal > 1}
+              <span
+                class="tts-progress"
+                role="progressbar"
+                aria-valuemin="1"
+                aria-valuemax={ttsTotal}
+                aria-valuenow={ttsIndex + 1}
+                aria-label={t('chat.readingProgress')}
+                title={`${ttsIndex + 1} / ${ttsTotal}`}
+              >
+                <span class="tts-progress-bar" style="--p:{(ttsIndex + 1) / ttsTotal}"></span>
+                <span class="tts-progress-num">{ttsIndex + 1}/{ttsTotal}</span>
+              </span>
+            {/if}
+          {/if}
         {/if}
         {#if isLast && !C.streaming}
           <button
@@ -1401,12 +1579,88 @@
     color: var(--t1);
     opacity: 1;
   }
+  /* 等首块音频到达:图标旋转,表明「正在准备」而非卡住 */
+  .actions button.tts-loading {
+    color: var(--t1);
+    opacity: 1;
+  }
+  .actions button.tts-loading :global(svg) {
+    animation: tts-spin 0.8s linear infinite;
+  }
+  @keyframes tts-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .actions button.tts-loading :global(svg) {
+      animation-duration: 2s;
+    }
+  }
   .actions button:disabled {
     opacity: 0.4;
     cursor: default;
   }
-  .row.assistant:has(.actions button.speaking) .actions {
+  .row.assistant:has(.actions button.speaking) .actions,
+  .row.assistant:has(.actions button.tts-loading) .actions {
     opacity: 1;
+  }
+  /* 变速按钮:显示当前倍率(1×/1.5×…),等宽数字免抖动 */
+  .actions button.tts-rate {
+    width: auto;
+    padding: 0 6px;
+    font-size: var(--text-xs, 11px);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  /* 朗读进度:按句推进的细条 + N/总 计数,契合逐句合成架构(不伪造时间轴) */
+  .actions .tts-progress {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 1;
+    cursor: default;
+  }
+  .actions .tts-progress-bar {
+    position: relative;
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--t3) 40%, transparent);
+    overflow: hidden;
+  }
+  .actions .tts-progress-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: scaleX(var(--p, 0));
+    transform-origin: left;
+    background: var(--accent, currentColor);
+    border-radius: 2px;
+    transition: transform 0.25s ease;
+  }
+  .actions .tts-progress-num {
+    font-size: var(--text-xs, 11px);
+    color: var(--t3);
+    font-variant-numeric: tabular-nums;
+  }
+  /* 逐句跟读高亮(CSS Custom Highlight API,不改 DOM) */
+  ::highlight(tts) {
+    background-color: color-mix(in srgb, var(--accent, #4a9eff) 26%, transparent);
+    color: var(--t1);
+  }
+  /* 读屏专用:视觉隐藏但仍在无障碍树内 */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .duration {

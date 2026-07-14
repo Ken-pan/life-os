@@ -350,29 +350,283 @@ async function fetchWithColdRetry(doFetch) {
   return res
 }
 
+/** 朗读风格指令(按文本语言选中/英),决定语气·情绪·语速 */
+function ttsInstruct(text) {
+  return /[一-鿿]/.test(text)
+    ? '用轻松自然的语气说话,像朋友之间日常聊天,语速适中。'
+    : 'Speak in a relaxed, natural conversational tone, like chatting with a friend.'
+}
+
+function ttsRequestBody(text, voice) {
+  return {
+    model: TTS_MODEL,
+    input: text,
+    voice,
+    instruct: ttsInstruct(text),
+  }
+}
+
 /**
- * 文本转语音(Qwen3-TTS CustomVoice,本地)。返回 wav Blob。
- * instruct 是自然语言风格指令,决定语气/情绪/语速——按文本语言选中英文指令。
+ * 把一段文本切成"句",用于逐句合成 + 逐句高亮跟读。
+ * 规则:中英句末标点/换行处断句(保留标点);过短碎片并入上一句(免闪烁);
+ * 过长且无标点的按逗号或硬长度再切(单句音频不至于太久、跟读粒度更细)。
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function splitSentences(text) {
+  const clean = (text || '').replace(/\s+/g, ' ').trim()
+  if (!clean) return []
+  // 句末标点后断开:中(。!?;…)或 英(.!? 后需空白,避免切断小数/缩写)
+  const raw = clean.split(/(?<=[。!?!?;;…])|(?<=[.!?])\s+/)
+  const out = []
+  for (let seg of raw) {
+    seg = seg.trim()
+    if (!seg) continue
+    while (seg.length > 120) {
+      // 优先在逗号处切,退而求其次硬切
+      let cut = Math.max(seg.lastIndexOf('，', 120), seg.lastIndexOf(',', 120))
+      if (cut < 40) cut = 120
+      out.push(seg.slice(0, cut + 1).trim())
+      seg = seg.slice(cut + 1).trim()
+    }
+    if (!seg) continue
+    // 只并入极短碎片(如落单的标点/"OK.");中文短句本身是一句,保留以细化跟读粒度
+    if (out.length && seg.length < 4) out[out.length - 1] += ' ' + seg
+    else out.push(seg)
+  }
+  return out
+}
+
+/** 逐句合成时,把整句流式 PCM 累积成一个 AudioBuffer(顺序播,句界清晰、便于跟读高亮) */
+async function pcmStreamToBuffer(res, ctx) {
+  const sr = Number(res.headers.get('x-sample-rate')) || 24000
+  const reader = res.body.getReader()
+  const chunks = []
+  let total = 0
+  let carry = null
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    let bytes = value
+    if (carry) {
+      const m = new Uint8Array(carry.length + value.length)
+      m.set(carry)
+      m.set(value, carry.length)
+      bytes = m
+      carry = null
+    }
+    const usable = bytes.length - (bytes.length % 2)
+    if (usable < bytes.length) carry = bytes.slice(usable)
+    if (usable > 0) {
+      const aligned =
+        bytes.byteOffset === 0 && bytes.buffer.byteLength === usable
+          ? bytes.buffer
+          : bytes.slice(0, usable).buffer
+      chunks.push(new Int16Array(aligned, 0, usable / 2))
+      total += usable / 2
+    }
+  }
+  const buf = ctx.createBuffer(1, total || 1, sr)
+  const ch = buf.getChannelData(0)
+  let o = 0
+  for (const c of chunks) for (let k = 0; k < c.length; k++) ch[o++] = c[k] / 32768
+  return buf
+}
+
+/** 全局仅一个朗读会话在放:新会话开始前停掉上一个,避免两条人声叠着响 */
+let activeSpeech = null
+
+/**
+ * 创建一个朗读会话:逐句合成、顺序播放,支持暂停/续播、变速、逐句跟读回调。
+ *
+ * 每句单独走流式 TTS(首句 ~数百 ms 出声),播放中预取下一句;暖机后 RTF≈0.2,
+ * 合成远快于播放,句间基本无缝。暂停用 AudioContext.suspend(冻结播放时钟),
+ * 变速改 playbackRate(实时生效)。旧后端返回整段 WAV 时自动回退解码。
+ *
+ * 必须在用户手势(点击)内调用:AudioContext 的创建/恢复受自动播放策略约束。
+ *
+ * @param {string} text
+ * @param {{
+ *   voice?: string, rate?: number,
+ *   onStart?: () => void,                       // 首句开始出声(加载→播放)
+ *   onSentence?: (index: number, text: string) => void, // 每句开播时(驱动高亮/滚动)
+ *   onStateChange?: (state: 'playing'|'paused') => void,
+ *   onEnd?: () => void,                          // 自然播完 / 被停止 都会回调一次
+ *   onError?: (err: Error) => void,
+ * }} [opts]
+ * @returns {{
+ *   sentences: string[],
+ *   pause: () => void, resume: () => void, togglePause: () => void, isPaused: () => boolean,
+ *   setRate: (r: number) => void, getRate: () => number,
+ *   currentIndex: () => number, stop: () => void,
+ * }}
+ */
+export function createSpeechSession(text, opts = {}) {
+  const {
+    voice = DEFAULT_TTS_VOICE,
+    rate = 1,
+    onStart,
+    onSentence,
+    onStateChange,
+    onEnd,
+    onError,
+  } = opts
+  const sentences = splitSentences(text)
+  const ctx = new (window.AudioContext || window.webkitAudioContext)()
+  const buffers = new Map() // index -> Promise<AudioBuffer|null>
+  const aborters = new Map() // index -> AbortController
+  let idx = -1
+  let curSource = null
+  let curRate = rate
+  let paused = false
+  let started = false
+  let ended = false
+
+  const synth = (i) => {
+    if (i < 0 || i >= sentences.length) return Promise.resolve(null)
+    if (buffers.has(i)) return buffers.get(i)
+    const ac = new AbortController()
+    aborters.set(i, ac)
+    const p = (async () => {
+      const res = await fetch(`${GATEWAY}/v1/audio/speech`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...ttsRequestBody(sentences[i], voice), stream: true }),
+        signal: ac.signal,
+      })
+      if (!res.ok || !res.body) throw new Error(`tts ${res.status}`)
+      const ctype = res.headers.get('content-type') ?? ''
+      if (ctype.includes('audio/pcm')) return await pcmStreamToBuffer(res, ctx)
+      // 旧后端:整段 WAV
+      return await ctx.decodeAudioData(await (await res.blob()).arrayBuffer())
+    })().catch((e) => {
+      if (e?.name !== 'AbortError') console.warn('tts synth', e)
+      return null
+    })
+    buffers.set(i, p)
+    return p
+  }
+
+  const playFrom = async (i) => {
+    if (ended) return
+    idx = i
+    if (i >= sentences.length) {
+      terminate(true)
+      return
+    }
+    onSentence?.(i, sentences[i])
+    synth(i + 1) // 预取下一句,句间不断
+    const buf = await synth(i)
+    if (ended) return
+    if (!buf) {
+      playFrom(i + 1) // 这句合成失败,跳过继续
+      return
+    }
+    const src = ctx.createBufferSource()
+    src.buffer = buf
+    src.playbackRate.value = curRate
+    src.connect(ctx.destination)
+    src.onended = () => {
+      if (!ended && src === curSource) playFrom(i + 1)
+    }
+    curSource = src
+    if (!started) {
+      started = true
+      onStart?.()
+    }
+    src.start()
+  }
+
+  const cleanup = () => {
+    for (const ac of aborters.values()) {
+      try {
+        ac.abort()
+      } catch {
+        /* noop */
+      }
+    }
+    if (curSource) {
+      try {
+        curSource.onended = null
+        curSource.stop()
+      } catch {
+        /* 已结束 */
+      }
+    }
+    ctx.close().catch(() => {})
+  }
+
+  // 唯一收尾出口:自然播完 / 用户停止 / 被新会话顶掉 都经此,onEnd 只回调一次
+  const terminate = (notify) => {
+    if (ended) return
+    ended = true
+    cleanup()
+    if (activeSpeech === controller) activeSpeech = null
+    if (notify) onEnd?.()
+  }
+
+  const controller = {
+    sentences,
+    pause() {
+      if (paused || ended) return
+      paused = true
+      ctx.suspend()
+      onStateChange?.('paused')
+    },
+    resume() {
+      if (!paused || ended) return
+      paused = false
+      ctx.resume()
+      onStateChange?.('playing')
+    },
+    togglePause() {
+      paused ? this.resume() : this.pause()
+    },
+    isPaused: () => paused,
+    setRate(r) {
+      curRate = r
+      if (curSource) curSource.playbackRate.value = r
+    },
+    getRate: () => curRate,
+    currentIndex: () => idx,
+    stop: () => terminate(true),
+  }
+
+  activeSpeech?.stop()
+  activeSpeech = controller
+  ;(async () => {
+    if (!sentences.length) {
+      terminate(false)
+      onError?.(new Error('empty tts input'))
+      return
+    }
+    if (ctx.state === 'suspended') {
+      try {
+        await ctx.resume()
+      } catch {
+        /* 自动播放策略:点击手势内一般无碍 */
+      }
+    }
+    playFrom(0)
+  })()
+
+  return controller
+}
+
+/**
+ * 文本转语音(整段,非流式)。返回 wav Blob。保留给需要完整音频文件的场景。
+ * 交互朗读请用 {@link speakStream}(首声 ~100ms)。
  * @param {string} text
  * @param {string} [voice]
  * @returns {Promise<Blob>}
  */
 export async function speak(text, voice = DEFAULT_TTS_VOICE) {
-  // 语音壳单推理线程:超长文本会阻塞队列,朗读取前 600 字
-  const input = text.slice(0, 600)
-  const zh = /[一-鿿]/.test(input)
+  const input = text.slice(0, 2000)
   const res = await fetchWithColdRetry(() =>
     fetch(`${GATEWAY}/v1/audio/speech`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: TTS_MODEL,
-        input,
-        voice,
-        instruct: zh
-          ? '用轻松自然的语气说话,像朋友之间日常聊天,语速适中。'
-          : 'Speak in a relaxed, natural conversational tone, like chatting with a friend.',
-      }),
+      body: JSON.stringify(ttsRequestBody(input, voice)),
       signal: AbortSignal.timeout(180000),
     }),
   )

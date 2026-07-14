@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Tauri 会把本文件合并进最终 AIOS.app 的 Info.plist。
+	     自动化(Apple Events)授权框读取这条文案,向用户说明为什么 AIOS 要控制其它 app。 -->
+	<key>NSAppleEventsUsageDescription</key>
+	<string>AIOS 需要控制其它应用来帮你打开 app、粘贴任务、读取 AI 助手的回复。</string>
+</dict>
+</plist>

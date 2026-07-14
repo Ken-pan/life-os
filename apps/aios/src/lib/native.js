@@ -18,6 +18,12 @@ async function shell() {
   return await import('@tauri-apps/plugin-shell')
 }
 
+// 执行前预检权限;缺权限返回引导语,有权限返回 null。动态引入避免与 permissions 循环依赖。
+async function preflight(key) {
+  const { ensurePermission } = await import('$lib/permissions.svelte.js')
+  return await ensurePermission(key)
+}
+
 /* —— 委派任务注册表(随 app 生命周期,重启即清) —— */
 
 let nextId = 1
@@ -124,6 +130,8 @@ async function cancelTask({ task_id }) {
 
 async function runAppleScript({ script }) {
   if (!script?.trim()) return '错误:script 为空'
+  const denied = await preflight('automation')
+  if (denied) return denied
   const { Command } = await shell()
   const out = await Command.create('osascript', ['-e', script]).execute()
   if (out.code !== 0) return `AppleScript 失败(exit=${out.code}):\n${out.stderr || out.stdout}`
@@ -144,6 +152,8 @@ async function osa(script) {
 
 async function openMacApp({ name }) {
   if (!name?.trim()) return '错误:name 为空'
+  const denied = await preflight('automation')
+  if (denied) return denied
   const out = await osa(`tell application ${q(name)} to activate`)
   if (out.code !== 0) return `打开失败:${out.stderr || out.stdout}`
   return `已打开并前置「${name}」。可以用 type_into_app 输入,或 look_at_screen 查看它的界面。`
@@ -151,6 +161,8 @@ async function openMacApp({ name }) {
 
 async function typeIntoApp({ app, text, submit = true }) {
   if (!app?.trim() || !text?.trim()) return '错误:app 和 text 都必填'
+  const denied = await preflight('accessibility')
+  if (denied) return denied
   const lines = [
     `set the clipboard to ${q(text)}`,
     `tell application ${q(app)} to activate`,
@@ -162,19 +174,22 @@ async function typeIntoApp({ app, text, submit = true }) {
   ]
   const out = await osa(lines.join('\n'))
   if (out.code !== 0) {
-    return `输入失败(exit=${out.code}):${out.stderr || out.stdout}\n若是权限问题,需要在 系统设置→隐私与安全性→辅助功能 勾选 AIOS,并允许 AIOS 控制 System Events。`
+    return `输入失败(exit=${out.code}):${out.stderr || out.stdout}\n到 设置 → 权限 里授权「辅助功能」后重试。`
   }
   return `已把文字粘贴进「${app}」${submit ? '并按下回车' : '(未按回车)'}。稍等片刻后用 look_at_screen 查看它的反应。`
 }
 
 /** 截主屏 → 1280px jpg → base64;失败返回 {error} */
 async function captureScreenB64() {
+  // 预检屏幕录制:screencapture 缺权限时仍返回 exit 0(只截到壁纸),必须靠系统 API 判断
+  const denied = await preflight('screen')
+  if (denied) return { error: denied }
   const { Command } = await shell()
   const file = '/tmp/aios-look.jpg'
   let out = await Command.create('screencapture', ['-x', '-t', 'jpg', file]).execute()
   if (out.code !== 0) {
     return {
-      error: `截屏失败:${out.stderr}\n若是权限问题,需要在 系统设置→隐私与安全性→屏幕录制 勾选 AIOS 后重启 AIOS。`,
+      error: `截屏失败:${out.stderr}\n到 设置 → 权限 里授权「屏幕录制」并按提示重启 AIOS。`,
     }
   }
   await Command.create('sips', ['-Z', '1280', file]).execute()
@@ -283,6 +298,8 @@ async function aiAppSend({ app, message, new_chat = false }) {
   const a = AI_APPS[app]
   if (!a) return `错误:未知 app "${app}"(支持: ${Object.keys(AI_APPS).join('/')})`
   if (!message?.trim()) return '错误:message 为空'
+  const denied = await preflight('accessibility')
+  if (denied) return denied
 
   const lines = [
     `set the clipboard to ${q(message)}`,
@@ -298,7 +315,7 @@ async function aiAppSend({ app, message, new_chat = false }) {
   ]
   const out = await osa(lines.join('\n'))
   if (out.code !== 0) {
-    return `发送失败(exit=${out.code}):${out.stderr || out.stdout}\n若是权限问题,需要在 系统设置→隐私与安全性→辅助功能 勾选 AIOS,并允许 AIOS 控制 System Events。`
+    return `发送失败(exit=${out.code}):${out.stderr || out.stdout}\n到 设置 → 权限 里授权「辅助功能」和「自动化」后重试。`
   }
   return `已把任务发送给${a.label}${new_chat ? '(新对话)' : ''}。AI 应用生成回复需要时间,建议等 15-60 秒后用 ai_app_read 查看;复杂任务(如 Cursor 改代码)可多次轮询。`
 }

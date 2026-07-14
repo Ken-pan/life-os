@@ -22,6 +22,9 @@ import Globe from '@lucide/svelte/icons/globe'
 import History from '@lucide/svelte/icons/history'
 import Image from '@lucide/svelte/icons/image'
 import Lightbulb from '@lucide/svelte/icons/lightbulb'
+import LoaderCircle from '@lucide/svelte/icons/loader-circle'
+import Play from '@lucide/svelte/icons/play'
+import Pause from '@lucide/svelte/icons/pause'
 import MessageCircle from '@lucide/svelte/icons/message-circle'
 import Mic from '@lucide/svelte/icons/mic'
 import Monitor from '@lucide/svelte/icons/monitor'
@@ -64,6 +67,9 @@ export const ICONS = {
   history: History,
   image: Image,
   lightbulb: Lightbulb,
+  loader: LoaderCircle,
+  play: Play,
+  pause: Pause,
   chat: MessageCircle,
   mic: Mic,
   monitor: Monitor,

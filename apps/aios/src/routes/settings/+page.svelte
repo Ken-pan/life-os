@@ -7,6 +7,18 @@
   import { C, refreshGateway, clearAllConversations } from '$lib/chat.svelte.js'
   import { M, deleteMemory, clearMemories, addMemory } from '$lib/memory.svelte.js'
   import { CLOUD, signInCloud, signOutCloud, syncNow } from '$lib/cloud.svelte.js'
+  import { isNative } from '$lib/native.js'
+  import {
+    PERMS,
+    PERM_META,
+    refreshPermissions,
+    requestScreen,
+    requestAccessibility,
+    requestAutomation,
+    openPrivacyPane,
+    relaunchApp,
+  } from '$lib/permissions.svelte.js'
+  import { onMount } from 'svelte'
 
   const themeOptions = $derived([
     { value: 'light', label: t('settings.themeLight') },
@@ -75,6 +87,31 @@
   function lastSyncLabel(at) {
     if (!at) return t('settings.cloudNever')
     return new Date(at).toLocaleTimeString()
+  }
+
+  /* —— 权限中心(仅原生壳)——
+     挂载即静默探测;窗口重新聚焦时复查,用户从系统设置回来对勾会自动变绿。 */
+  let permBusy = $state('') // 正在请求的权限 key,禁用按钮防重复点
+  onMount(() => {
+    if (!isNative) return
+    refreshPermissions()
+    const onFocus = () => refreshPermissions()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  })
+
+  const PERM_REQ = {
+    screen: requestScreen,
+    accessibility: requestAccessibility,
+    automation: requestAutomation,
+  }
+  async function grantPerm(key) {
+    permBusy = key
+    try {
+      await PERM_REQ[key]()
+    } finally {
+      permBusy = ''
+    }
   }
 
   let newMemory = $state('')
@@ -163,8 +200,74 @@
         {/each}
       </select>
     </div>
+
+    <div class="row">
+      <span class="row-label">{t('settings.ttsRate')}</span>
+      <select
+        class="voice-select"
+        bind:value={S.settings.ttsRate}
+        onchange={save}
+        aria-label={t('settings.ttsRate')}
+      >
+        {#each [0.75, 1, 1.25, 1.5, 2] as r (r)}
+          <option value={r}>{r}×</option>
+        {/each}
+      </select>
+    </div>
     <p class="note">{t('settings.gatewayNote')}</p>
   </section>
+
+  {#if isNative}
+    <section class="card">
+      <h2>{t('settings.permissions')}</h2>
+      <p class="note">{t('settings.permissionsDesc')}</p>
+
+      {#each PERM_META as p (p.key)}
+        {@const st = PERMS[p.key]}
+        <div class="perm-row">
+          <span class="perm-icon"><Icon name={p.icon} size={18} /></span>
+          <span class="perm-text">
+            <span class="perm-label">
+              <span
+                class="status-dot"
+                class:ok={st === true}
+                class:down={st === false}
+              ></span>
+              {p.label}
+              <span class="perm-state">
+                {#if st === true}已授权
+                {:else if st === false}未授权
+                {:else}检测中…{/if}
+              </span>
+            </span>
+            <span class="perm-why">{p.why}</span>
+            {#if st !== true && p.needsRestart}
+              <span class="perm-why perm-hint">授权后需重启 AIOS 才对截屏生效。</span>
+            {/if}
+          </span>
+          <span class="perm-actions">
+            {#if st === true}
+              {#if p.needsRestart}
+                <button type="button" class="mini-btn" onclick={relaunchApp}>重启</button>
+              {/if}
+            {:else}
+              <button
+                type="button"
+                class="mini-btn primary"
+                disabled={permBusy === p.key}
+                onclick={() => grantPerm(p.key)}
+              >
+                {permBusy === p.key ? '请求中…' : '授权'}
+              </button>
+              <button type="button" class="mini-btn" onclick={() => openPrivacyPane(p.pane)}>
+                打开设置
+              </button>
+            {/if}
+          </span>
+        </div>
+      {/each}
+    </section>
+  {/if}
 
   <section class="card">
     <h2>{t('settings.intelligence')}</h2>
@@ -468,6 +571,58 @@
   }
   .mini-btn:disabled {
     opacity: 0.5;
+  }
+  .mini-btn.primary {
+    background: var(--accent);
+    border-color: transparent;
+    color: var(--on-accent);
+    font-weight: 500;
+  }
+  .mini-btn.primary:hover {
+    background: var(--accent-2);
+  }
+
+  /* —— 权限中心 —— */
+  .perm-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3, 12px);
+  }
+  .perm-icon {
+    flex: none;
+    margin-top: 2px;
+    color: var(--t2);
+  }
+  .perm-text {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+  .perm-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 500;
+  }
+  .perm-state {
+    font-size: var(--text-xs, 12px);
+    font-weight: 400;
+    color: var(--t3);
+  }
+  .perm-why {
+    font-size: var(--text-xs, 12px);
+    color: var(--t3);
+    line-height: 1.4;
+  }
+  .perm-hint {
+    color: var(--warning, #d29922);
+  }
+  .perm-actions {
+    flex: none;
+    display: flex;
+    gap: 6px;
+    align-items: center;
   }
 
   .note {

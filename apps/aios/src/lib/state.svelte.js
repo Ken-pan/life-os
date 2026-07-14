@@ -24,6 +24,7 @@ const DEFAULTS = {
     memory: true, // 长期记忆召回注入
     temperature: 0.7,
     ttsVoice: DEFAULT_TTS_VOICE, // 朗读音色(Qwen3-TTS 内置 9 声)
+    ttsRate: 1, // 朗读播放速度(迷你播放器里循环切换,记住偏好)
     customPrompt: '', // 自定义指令
     location: '', // 当前所在地(常驻注入,用于天气/本地/时区判断;跟随账号同步)
     userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)

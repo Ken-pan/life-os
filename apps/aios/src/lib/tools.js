@@ -187,6 +187,26 @@ const DEFS = [
     },
   },
   {
+    key: 'ask_notes',
+    icon: 'notebook',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'ask_notes',
+        description:
+          '直接向用户的 Obsidian 笔记库提问,得到一个基于笔记内容、带 [n] 引用的综合回答(全本地 RAG:混合检索 → 本地 LLM 依据资料作答)。当用户就自己记过的事实/决策/进展直接发问时用它(如"我上次定的X是什么""关于Y我的结论");需要多篇原始片段自己推理时改用 search_notes。',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '要问知识库的问题' },
+          },
+          required: ['query'],
+        },
+      },
+    },
+  },
+  {
     key: 'generate_image',
     icon: 'image',
     web: false,
@@ -522,27 +542,30 @@ export async function fetchUrl(url) {
   const target = String(url).trim()
   if (!/^https?:\/\//i.test(target)) throw new Error('URL 必须以 http(s):// 开头')
 
-  // 直连(站点开放 CORS 时最快)→ 失败按序回退 CORS 代理
-  const attempts = [
-    target,
-    `https://corsproxy.io/?url=${encodeURIComponent(target)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
-  ]
+  const get = async (u, ms) => {
+    const res = await fetch(u, { signal: AbortSignal.timeout(ms) })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.text()
+  }
+  // 直连(站点开放 CORS 时最快)超时给短;失败后并发打两个 CORS 代理取最先成功的,
+  // 把原先"3 源顺序 × 20s = 最坏 60s"收敛到"8s + 15s",卡住的源不再独吞整段超时
   let html = null
-  let lastError = null
-  for (const attemptUrl of attempts) {
+  try {
+    html = await get(target, 8000)
+  } catch {
+    const proxies = [
+      `https://corsproxy.io/?url=${encodeURIComponent(target)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+    ]
     try {
-      const res = await fetch(attemptUrl, { signal: AbortSignal.timeout(20000) })
-      if (res.ok) {
-        html = await res.text()
-        break
-      }
-      lastError = `HTTP ${res.status}`
+      html = await Promise.any(proxies.map((p) => get(p, 15000)))
     } catch (err) {
-      lastError = String(err?.message ?? err)
+      const reason =
+        err?.errors?.map((e) => e?.message ?? e).filter(Boolean).join(' / ') ||
+        String(err?.message ?? err)
+      throw new Error(`读取失败(${reason})`)
     }
   }
-  if (html === null) throw new Error(`读取失败(${lastError})`)
 
   const text = /<\s*(html|body|div|p|head)[\s>]/i.test(html) ? htmlToText(html) : html.trim()
   if (!text) throw new Error('页面没有可读文本')
@@ -693,8 +716,14 @@ async function browserStatus() {
   return lines.join('\n')
 }
 
+/** ensureExtension 的健康检查缓存:一次研究流里每个动作前都要确认扩展在线,
+ *  短 TTL 缓存掉重复的 /health 往返。扩展中途掉线时下一个真实动作自会报错,
+ *  代价仅一次失败调用,不影响正确性。browserStatus 走 bridgeHealth 不受此缓存影响。 */
+let extOkAt = 0
+
 /** bridge 冷启动后扩展最多要 20 秒左右才会重连,先等它在线 */
 async function ensureExtension() {
+  if (Date.now() - extOkAt < 15000) return
   let health = await bridgeHealth()
   for (let i = 0; i < 8 && !health.agent?.extensionConnected; i++) {
     await sleep(3000)
@@ -703,6 +732,7 @@ async function ensureExtension() {
   if (!health.agent?.extensionConnected) {
     throw new Error('Chrome 扩展未连接(Chrome 没在运行,或没有加载 Web State DevTools 扩展)')
   }
+  extOkAt = Date.now()
 }
 
 /** 经 /actions/run 同步执行一个扩展动作,返回 result */
@@ -1040,6 +1070,22 @@ async function readNote(vault, path) {
   return `# ${note.title}(${note.path})\n\n${note.content}`
 }
 
+async function askNotes(query) {
+  const res = await fetch(`${VAULT_API}/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, k: 6 }),
+    signal: AbortSignal.timeout(180000),
+  })
+  if (!res.ok) throw new Error(`vault 问答 HTTP ${res.status}(首次调用需等索引服务拉起)`)
+  const { answer, citations } = await res.json()
+  if (!answer) return '知识库里没有找到相关内容。'
+  const refs = (citations || [])
+    .map((c) => `[${c.n}] ${c.breadcrumb || c.title} — [在 Obsidian 打开](${c.obsidianUrl})`)
+    .join('\n')
+  return refs ? `${answer}\n\n**引用**\n${refs}` : answer
+}
+
 /* —— 本地生图(local-ai services/image,经网关 upstream)—— */
 
 const IMAGE_API = `${GATEWAY}/upstream/image`
@@ -1280,6 +1326,8 @@ export async function executeTool(name, argsJson) {
         return await searchNotes(args.query)
       case 'read_note':
         return await readNote(args.vault, args.path)
+      case 'ask_notes':
+        return await askNotes(args.query)
       case 'browser_status':
         return await browserStatus()
       case 'read_browser_page':

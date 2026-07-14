@@ -1,7 +1,15 @@
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  tauri::Builder::default()
+  let mut builder = tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
+    .plugin(tauri_plugin_process::init());
+
+  #[cfg(target_os = "macos")]
+  {
+    builder = builder.plugin(tauri_plugin_macos_permissions::init());
+  }
+
+  builder
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

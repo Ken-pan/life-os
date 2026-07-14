@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 构建原生 AIOS.app 并安装到 ~/Applications(覆盖旧版)。
+# 构建原生 AIOS.app 并安装到 /Applications(覆盖旧版)。
 # 前端改动后跑这一条即可:npm run app:aios
 set -euo pipefail
 
@@ -10,9 +10,11 @@ cd "$ROOT/apps/aios"
 npx tauri build
 
 APP_SRC="$ROOT/apps/aios/src-tauri/target/release/bundle/macos/AIOS.app"
-APP_DST="$HOME/Applications/AIOS.app"
+APP_DST="/Applications/AIOS.app"
 rm -rf "$APP_DST"
 cp -R "$APP_SRC" "$APP_DST"
 # 删掉构建产物副本,避免 Spotlight 出现两个 AIOS.app
 rm -rf "$APP_SRC"
+# 清掉旧的用户级副本,避免 Spotlight 出现两个 AIOS.app
+rm -rf "$HOME/Applications/AIOS.app"
 echo "✔ 已安装 $APP_DST"
