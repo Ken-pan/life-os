@@ -15,8 +15,6 @@
 | `architecture/*`       | 架构师                | 契约/边界变更时                |
 | `qa/e2e-issues.md`     | QA                    | 每次跑批 E2E 后                |
 | `qa/planner-schedule-*` | QA                   | P-SCHED-0 baseline / 走查关闭时 |
-| `qa/paperos-*`         | QA / PaperOS          | Slice gate 或 SSOT 变更时      |
-| `PRO_MOVE.md` + gates  | 设备工程              | 新 gate 或 blocker 变更时      |
 | `archive/*`            | —                     | **只读**，不更新               |
 
 ## 更新流程
@@ -43,7 +41,6 @@
 | 部署、DNS、env、canonical     | `docs/ops/`                              |
 | 契约、RFC、长期架构           | `docs/architecture/`                     |
 | 测试 playbook、失败记录       | `docs/qa/`                               |
-| PaperOS / 设备 gate 证据      | `docs/PRO_MOVE*.md` + 索引 `docs/PRO_MOVE.md` |
 | Cursor / 脚本工具             | `docs/tooling/`                          |
 | 品牌资产、manifest            | `docs/assets/`                           |
 | 已完成阶段史                  | `roadmap/SHIPPED.md` 或 `archive/`       |
@@ -52,7 +49,7 @@
 | 单 app 产品排期、脑暴         | `roadmap/apps/`                          |
 | 不确定归属                    | 先在 `roadmap/BACKLOG.md` 开一行，再归类 |
 
-PaperOS 遵循同一分层：排期进 `roadmap/apps/paperos.md`，契约进 `architecture/`，设备操作进 `ops/paperos-device.md`，仅活跃 gate 进 `qa/paperos/`。不再新建 `PRO_MOVE_*`、单 PR merge report 或重复 verdict 文档。已完成结论只追加到 `roadmap/SHIPPED.md` 和最小化 archive 摘要。
+PaperOS 已于 2026-07-12 迁出至独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库只保留 [`roadmap/apps/paperos.md`](roadmap/apps/paperos.md) 指针与 Planner 侧 provider API 状态；所有 PaperOS 排期/契约/设备文档到独立仓库维护。通用原则不变：不新建单 PR merge report 或重复 verdict 文档，已完成结论只追加到 `roadmap/SHIPPED.md` 和最小化 archive 摘要。
 
 ## AI / Agent 读取顺序
 

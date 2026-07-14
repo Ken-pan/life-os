@@ -3,7 +3,7 @@
 **日期：** 2026-07-09（第五轮）
 **环境：** `127.0.0.1:5198` preview · disposable QA account（由环境变量提供）
 **脚本：** `apps/portal/scripts/qa-screenshot.mjs` · `qa-smoke.mjs`（**五卡**）
-**证据目录：** [`ui-qa-screenshots/portal/main/latest/`](../ui-qa-screenshots/portal/main/latest/)（含 `manifest.json` · `mobile-launcher.png`）
+**证据目录：** `ui-qa-screenshots/portal/main/latest/`（截图为 gitignored 可重生成产物；跑 `qa-ui-screenshots.mjs` 重建）
 
 ## 验收范围
 
@@ -176,6 +176,6 @@ cd ../music && npm run qa:rec-behavior
 - [`roadmap/apps/portal.md`](../roadmap/apps/portal.md)
 - [`roadmap/SHIPPED.md`](../roadmap/SHIPPED.md) — Phase 5 PORT.GROWTH.8/PORT.GROWTH.9
 - [`e2e-issues.md`](./e2e-issues.md) — Portal §
-- [`../ui-qa-screenshots/portal/main/latest/manifest.json`](../ui-qa-screenshots/portal/main/latest/manifest.json)
+- `ui-qa-screenshots/portal/main/latest/manifest.json`（gitignored；`qa-ui-screenshots.mjs` 重建）
 
 _本文件随 Portal UI 走查更新；修 issue 后在对应条目标 ✅ 并注明日期。_

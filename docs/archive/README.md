@@ -17,6 +17,7 @@
 | `LIFEOS_P0_PR_PLAN.md`          | [`../roadmap/PLATFORM.md`](../roadmap/PLATFORM.md)                                                        |
 | `LIFEOS_CONTRACTS_P0.md`        | [`../architecture/contracts.md`](../architecture/contracts.md)                                            |
 | `LIFEOS_UI_CONTRACTS.md`        | [`../architecture/contracts.md`](../architecture/contracts.md) 附录                                       |
-| `paperos-ui-correction-slice-1-1-evaluation-2026-07-11.md` | [`../qa/paperos-next-ui-update-guide.md`](../qa/paperos-next-ui-update-guide.md) + [`../qa/paperos-core-slice-1-1-visual-delta-gate.md`](../qa/paperos-core-slice-1-1-visual-delta-gate.md)（tombstone：`qa/paperos-ui-correction-slice-1-1-evaluation.md`） |
 
-_2026-07-11（PaperOS PAPR.SYS.1 lifecycle checkpoint + UI evaluation 归档）_
+> 全部 PaperOS 归档（`paperos-*`、`archive/paperos/`）已随 PaperOS 于 2026-07-12 迁出至独立仓库，此处不再保留。
+
+_2026-07-12（PaperOS 抽取为独立仓库后精简）_

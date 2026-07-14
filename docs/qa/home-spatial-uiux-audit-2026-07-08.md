@@ -2,7 +2,7 @@
 
 > **日期：** 2026-07-08（HOME.SPATIAL.2c 后 · **Wave A/B/C UX** 2026-07-08 收尾）
 > **审核框架：** Nielsen 10 启发式 · WCAG 2.2 触达/对比 · CAD 编辑器惯例（RoomSketcher / Figma / Floor Plan Studio）
-> **截图：** [`docs/ui-qa-screenshots/home/uiux-audit/2026-07-08/`](../ui-qa-screenshots/home/uiux-audit/2026-07-08/)（初版；Wave B/C 后建议重跑 `qa-ui-screenshots.mjs`）
+> **截图：** `docs/ui-qa-screenshots/home/uiux-audit/2026-07-08/`（初版，gitignored；已被后续 Wave B/C 重跑覆盖，跑 `qa-ui-screenshots.mjs` 重建）
 > **前置修复：** UI-01–06、FN-01 已在 HOME.SPATIAL.2b/c 处理；**Wave A–C** 见下文「已修复」节
 
 ## 审核方法

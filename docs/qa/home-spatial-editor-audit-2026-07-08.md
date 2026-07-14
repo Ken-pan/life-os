@@ -1,7 +1,7 @@
 # Home 空间编辑 · 截图验收报告
 
 > **日期：** 2026-07-08 · **范围：** HOME.SPATIAL.0 / HOME.SPATIAL.1 / HOME.SPATIAL.2（本地 `http://127.0.0.1:5197`）
-> **截图目录：** [`apps/home/screenshots/qa-hw2/`](../../apps/home/screenshots/qa-hw2/)
+> **截图目录：** `apps/home/screenshots/qa-hw2/`（gitignored 可重生成产物；已随后续 QA 清理）
 > **执行方案：** [`../roadmap/apps/home-spatial-editor.md`](../roadmap/apps/home-spatial-editor.md)
 
 ## 验收方法
