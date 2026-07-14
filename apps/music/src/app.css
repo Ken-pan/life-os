@@ -268,12 +268,12 @@ html {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--accent-bg);
+  background: color-mix(in srgb, var(--t1, var(--text)) 8%, var(--card));
   display: grid;
   place-items: center;
   font-family: var(--disp);
   font-weight: 600;
-  color: var(--accent);
+  color: var(--t2, var(--text-secondary));
   flex-shrink: 0;
 }
 

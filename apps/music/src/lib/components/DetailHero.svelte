@@ -120,11 +120,11 @@
     font-family: var(--disp, var(--font-brand));
     font-size: clamp(3rem, 8vw, 4.5rem);
     font-weight: 600;
-    color: var(--on-accent, #fff);
+    color: var(--t1, var(--text));
     background: linear-gradient(
       145deg,
-      color-mix(in srgb, var(--accent) 78%, transparent),
-      color-mix(in srgb, var(--player-glow, var(--accent)) 55%, transparent)
+      color-mix(in srgb, var(--t1, var(--text)) 12%, var(--card)),
+      color-mix(in srgb, var(--t1, var(--text)) 5%, var(--card))
     );
   }
 
@@ -138,7 +138,7 @@
     font-size: var(--text-xs);
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--track-accent, var(--accent));
+    color: var(--t3, var(--text-tertiary, var(--text-secondary)));
     margin: 0 0 var(--space-2);
   }
 

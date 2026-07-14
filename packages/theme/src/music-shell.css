@@ -426,10 +426,19 @@
 }
 
 .track-action-btn.play {
-  background: var(--accent);
-  color: var(--on-accent);
+  color: var(--t1, var(--text));
   width: 44px;
   height: 44px;
+}
+
+/* 每行播放键默认中性，仅桌面 hover/聚焦时填充品牌色（触屏保持中性，减少满屏粉圈） */
+@media (hover: hover) and (pointer: fine) {
+  .track-row:hover .track-action-btn.play,
+  .track-action-btn.play:hover,
+  .track-action-btn.play:focus-visible {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
 }
 
 .like-btn {
@@ -2927,7 +2936,7 @@ html:has(.np-ambient-back) .bottom-shell {
   font-size: var(--text-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--track-accent, var(--accent));
+  color: var(--t3, var(--text-tertiary, var(--text-secondary)));
   margin-bottom: var(--space-2);
 }
 
@@ -4484,8 +4493,7 @@ html.utility-pane-resizing {
 .track-row--compact-actions .track-action-btn.play {
   width: var(--tap-min);
   height: var(--tap-min);
-  background: color-mix(in srgb, var(--track-accent, var(--accent)) 88%, var(--card));
-  color: var(--on-accent, #fff);
+  color: var(--t1, var(--text));
 }
 
 @media (hover: hover) and (pointer: fine) {
