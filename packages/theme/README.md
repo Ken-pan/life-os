@@ -82,4 +82,12 @@ if (isLifeOsMobile()) {
 - 横向 tab / chip 滚动：`.life-os-scroll-x` + 按需 `--snap`；勿重复写 overflow/scrollbar
 - `@life-os/theme` 是 web-only CSS/runtime 包，不依赖 `@life-os/contracts`。边界见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md)。
 
+## 跨 app 约定（踩过的坑）
+
+- **间距 utility 会被元素级规则静默覆盖**：单类工具如 `.mt-3`（特异性 0,0,1,0）敌不过 `.card h3 { margin: 0 }`（0,0,1,1）——app 内两者都未分层时，utility 会**悄悄失效且无报错**。要么把 app 自有 utility 放进靠后的 `@layer`，要么 `!important`，要么别写会打架的元素级卡片规则；改间距后**用 computed margin 验证**，别假设 utility 生效。
+- **图表高度跟随容器，别写死**：layerchart `<Chart>` 等若硬编码 `height={340}` 而 CSS 容器是响应式（如移动端 280），SVG 会溢出容器、底部轴标签压到下方文字。让图表从容器取高，或接受与容器 CSS 对齐的响应式 `height` prop。
+- **浮层 / 长解释先用共享原语**（别各自重造）：
+  - 靠近视口边缘会溢出裁切的 tooltip / 菜单 / popover → `keepPopoverInViewport`（`@life-os/platform-web/svelte/actions`）
+  - 长解释文字 → `ExplainPanel` 内联展开面板（`@life-os/platform-web/svelte/explain-panel`），比塞满整段的浮层 tooltip 移动端更友好
+
 同目录另有共享包 **`@life-os/sync`**（`packages/sync`）。
