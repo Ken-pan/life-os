@@ -158,6 +158,13 @@ export function classifyPurchaseDisplayState(
     return { state: 'merchant_only', reasons: [] }
   }
 
+  // Manual review verdict (FINC.PURCHASE.6.a) is authoritative over the automated
+  // classifier: a rejected pairing hides the order entirely; a confirmed pairing is
+  // clean (returns stay classified as returns). See hydrateReviewState.
+  if (t.reviewState === 'rejected') {
+    return { state: 'merchant_only', reasons: [] }
+  }
+
   const reasons = classifyCleanReasons(order, dupMaps) as PurchaseReviewReason[]
   const state = resolveDisplayState(order, reasons) as PurchaseDisplayState
 
@@ -166,6 +173,10 @@ export function classifyPurchaseDisplayState(
       state,
       reasons: reasons.filter((r) => r !== 'returned_or_refund_excluded'),
     }
+  }
+
+  if (t.reviewState === 'confirmed') {
+    return { state: 'clean_enriched', reasons: [] }
   }
 
   return { state, reasons }

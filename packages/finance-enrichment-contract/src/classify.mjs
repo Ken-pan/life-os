@@ -97,7 +97,9 @@ export function classifyCleanReasons(order, dupMaps, opts = {}) {
   if (!order.source || !SUPPORTED_SOURCES.has(order.source)) {
     reasons.push('invalid_source')
   }
-  if (order.merchantAccount === 'Unknown') reasons.push('unknown_account')
+  // Account name ('Unknown'/aggregate) is orthogonal to whether the item match is
+  // correct — a high-confidence exact-amount pairing is not more suspect just
+  // because the charge sits in an aggregate account. No longer demotes on its own.
   if (isReturnedOrCancelled(order)) reasons.push('returned_or_refund_excluded')
   if (!isCleanPurchaseStatus(order.status)) {
     if (RETURN_STATUSES.test(order.status || '')) {
@@ -106,8 +108,16 @@ export function classifyCleanReasons(order, dupMaps, opts = {}) {
       reasons.push('non_clean_status')
     }
   }
+  // Confidence gate: 'high' or a passed quality check is always clean. 'medium'
+  // is accepted as clean ONLY when the amount matches to the cent — for Amazon the
+  // charge routinely posts 3–7 days after the order (→ dayDiff pushes it to
+  // 'medium'), which is normal fulfilment lag, not a doubtful match. 'low', and
+  // any 'medium' with amount drift, still require review.
   const conf = order.matchConfidence
-  if (conf !== 'high' && !order.qualityPass) reasons.push('low_or_medium_confidence')
+  const amountExact = order.amountDiffCents === 0
+  const confOk =
+    conf === 'high' || order.qualityPass || (conf === 'medium' && amountExact)
+  if (!confOk) reasons.push('low_or_medium_confidence')
   if (order.transactionId && dupMaps.dupTxnIds?.has(order.transactionId)) {
     reasons.push('duplicate_risk')
   }
@@ -158,6 +168,10 @@ export function buildDuplicateMaps(orders) {
     if (o.transactionId) {
       txnIdCounts.set(o.transactionId, (txnIdCounts.get(o.transactionId) ?? 0) + 1)
     }
+    // A refund/return row legitimately reuses its purchase's orderId — that pairing
+    // is not a duplicate. Only count non-return rows so genuine double-matches (two
+    // purchase charges for one order) still surface as duplicate_risk.
+    if (isReturnedOrCancelled(o)) continue
     const oidKey = `${o.source}:${o.sourceOrderId || o.sourceReceiptId || ''}`
     if (o.sourceOrderId || o.sourceReceiptId) {
       dupOrderIdCounts.set(oidKey, (dupOrderIdCounts.get(oidKey) ?? 0) + 1)

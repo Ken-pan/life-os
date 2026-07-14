@@ -14,6 +14,7 @@ export const SB = {
     holdingPriceTrails: 'finance_holding_price_trails',
     holdingsSnapshots: 'finance_holdings_snapshots',
     merchantRules: 'finance_merchant_rules',
+    purchaseAssociations: 'purchase_associations',
     recurringItems: 'finance_recurring_items',
     reviewItems: 'finance_review_items',
     scenarioApplyAudits: 'finance_scenario_apply_audits',

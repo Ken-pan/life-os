@@ -43,6 +43,12 @@ export interface Txn {
   source?: "import" | "manual";
   /** 外部购买上下文（如 Amazon 订单明细）。 */
   purchaseEnrichment?: PurchaseEnrichment;
+  /**
+   * 人工复核结论（FINC.PURCHASE.6.a）：与本行 purchaseEnrichment 的 source+orderId
+   * 对应的 purchase_associations 状态。confirmed=已确认正确、rejected=已否决该关联。
+   * 由 loadTransactions 装填；决定显示态时优先于自动分类。
+   */
+  reviewState?: "confirmed" | "rejected";
 }
 
 /** 新建一笔时的输入（id/month 由系统补全）。 */

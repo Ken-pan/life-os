@@ -90,6 +90,62 @@ describe('classifyPurchaseDisplayState', () => {
     const ctx = buildPurchaseDisplayContext([t])
     expect(classifyPurchaseDisplayState(t, ctx).state).toBe('merchant_only')
   })
+
+  it('confirmed review verdict overrides review reasons → clean_enriched', () => {
+    const shared = {
+      source: 'bestbuy' as const,
+      orderId: 'BBY03-1',
+      orderTotal: 314.49,
+      status: 'Delivered',
+      matchConfidence: 'low' as const, // low + no items → would be matched_review
+      lineItems: [],
+    }
+    const t = txn({ id: 'a', amount: 314.49, purchaseEnrichment: shared })
+    const ctx = buildPurchaseDisplayContext([t])
+    // Without a verdict it is matched_review…
+    expect(classifyPurchaseDisplayState(t, ctx).state).toBe('matched_review')
+    // …and a manual confirm makes it clean.
+    const confirmed = { ...t, reviewState: 'confirmed' as const }
+    const state = classifyPurchaseDisplayState(confirmed, ctx).state
+    expect(state).toBe('clean_enriched')
+  })
+
+  it('confirmed verdict keeps genuine returns as return_refund', () => {
+    const t = txn({
+      id: 'r',
+      amount: 30,
+      reviewState: 'confirmed',
+      purchaseEnrichment: {
+        source: 'amazon',
+        orderId: 'ret-1',
+        orderTotal: 30,
+        status: 'Returned',
+        matchConfidence: 'high',
+        lineItems: [{ title: 'A', quantity: 1 }],
+        returnInfo: { status: 'returned' },
+      },
+    })
+    const ctx = buildPurchaseDisplayContext([t])
+    expect(classifyPurchaseDisplayState(t, ctx).state).toBe('return_refund')
+  })
+
+  it('rejected review verdict hides the order → merchant_only', () => {
+    const t = txn({
+      id: 'a',
+      amount: 12.31,
+      reviewState: 'rejected',
+      purchaseEnrichment: {
+        source: 'amazon',
+        orderId: 'rej-1',
+        orderTotal: 12.31,
+        status: 'Delivered',
+        matchConfidence: 'high',
+        lineItems: [{ title: 'A', quantity: 1 }],
+      },
+    })
+    const ctx = buildPurchaseDisplayContext([t])
+    expect(classifyPurchaseDisplayState(t, ctx).state).toBe('merchant_only')
+  })
 })
 
 describe('computePurchaseCoverage', () => {

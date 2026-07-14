@@ -1737,7 +1737,47 @@ async function fetchAllTxns(userId: string): Promise<Txn[]> {
 export async function loadTransactions(): Promise<Txn[]> {
   const userId = await currentUserId()
   if (!userId) return []
-  return fetchAllTxns(userId)
+  const txns = await fetchAllTxns(userId)
+  await hydrateReviewState(userId, txns)
+  return txns
+}
+
+/**
+ * Attach manual review verdicts (purchase_associations) to each transaction, keyed
+ * by the enrichment pairing (source + orderId) so a decision only applies to the
+ * order it was made about. A confirmed/rejected verdict overrides the automated
+ * display classification (see classifyPurchaseDisplayState). Best-effort: if the
+ * table is absent (pre-migration) or the query fails, transactions load unchanged.
+ */
+async function hydrateReviewState(userId: string, txns: Txn[]): Promise<void> {
+  const enriched = txns.filter((t) => t.id && t.purchaseEnrichment?.source)
+  if (enriched.length === 0) return
+  const { data, error } = await supabase()
+    .from(SB.finance.purchaseAssociations)
+    .select('transaction_id, source, external_order_id, state')
+    .eq('user_id', userId)
+    .in('state', ['confirmed', 'rejected'])
+  if (error || !data) return
+  const verdicts = new Map<string, 'confirmed' | 'rejected'>()
+  for (const r of data as Array<{
+    transaction_id: string
+    source: string
+    external_order_id: string
+    state: string
+  }>) {
+    if (r.state === 'confirmed' || r.state === 'rejected') {
+      verdicts.set(
+        `${r.transaction_id}|${r.source}|${r.external_order_id}`,
+        r.state,
+      )
+    }
+  }
+  if (verdicts.size === 0) return
+  for (const t of enriched) {
+    const e = t.purchaseEnrichment!
+    const verdict = verdicts.get(`${t.id}|${e.source}|${e.orderId ?? ''}`)
+    if (verdict) t.reviewState = verdict
+  }
 }
 
 /** 记一笔（手动）。返回写入后的完整行（含数据库生成的 id）。 */

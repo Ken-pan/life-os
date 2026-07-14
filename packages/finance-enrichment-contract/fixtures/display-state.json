@@ -47,9 +47,10 @@
       }
     },
     {
-      "id": "amazon-medium-confidence",
-      "expectedState": "matched_review",
-      "expectedReasons": ["low_or_medium_confidence"],
+      "id": "amazon-medium-confidence-exact-amount",
+      "expectedState": "clean_enriched",
+      "expectedReasons": [],
+      "note": "Charge posts 3-7d after order (→ medium), but amount matches to the cent → clean.",
       "order": {
         "transactionId": "amazon-review-1",
         "source": "amazon",
@@ -69,9 +70,56 @@
       }
     },
     {
-      "id": "unknown-account",
+      "id": "amazon-medium-confidence-amount-drift",
       "expectedState": "matched_review",
-      "expectedReasons": ["unknown_account"],
+      "expectedReasons": ["low_or_medium_confidence", "amount_mismatch"],
+      "note": "Medium confidence WITH amount drift still needs review.",
+      "order": {
+        "transactionId": "amazon-review-drift",
+        "source": "amazon",
+        "sourceView": "online",
+        "merchantAccount": "Chase Sapphire",
+        "sourceOrderId": "123-4567890-7654321",
+        "mergeKey": "amazon:123-4567890-7654321",
+        "status": "Delivered",
+        "matchConfidence": "medium",
+        "qualityPass": false,
+        "itemCount": 1,
+        "missingTitles": 0,
+        "missingQty": 0,
+        "totalCents": 2999,
+        "amountDiffCents": 40,
+        "hasReturnInfo": false
+      }
+    },
+    {
+      "id": "amazon-low-confidence",
+      "expectedState": "matched_review",
+      "expectedReasons": ["low_or_medium_confidence"],
+      "note": "Low confidence always needs review, even with an exact amount.",
+      "order": {
+        "transactionId": "amazon-low-1",
+        "source": "amazon",
+        "sourceView": "online",
+        "merchantAccount": "Chase Sapphire",
+        "sourceOrderId": "123-4567890-9990001",
+        "mergeKey": "amazon:123-4567890-9990001",
+        "status": "Delivered",
+        "matchConfidence": "low",
+        "qualityPass": false,
+        "itemCount": 1,
+        "missingTitles": 0,
+        "missingQty": 0,
+        "totalCents": 2999,
+        "amountDiffCents": 0,
+        "hasReturnInfo": false
+      }
+    },
+    {
+      "id": "unknown-account-clean",
+      "expectedState": "clean_enriched",
+      "expectedReasons": [],
+      "note": "Aggregate/Unknown account no longer demotes a high-confidence exact match.",
       "order": {
         "transactionId": "target-unknown-acct",
         "source": "target",
