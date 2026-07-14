@@ -502,6 +502,7 @@ function accountToRow(userId: string, a: Account): Row {
     credit_mode: a.creditMode ?? null,
     statement_balance: a.statementBalance ?? null,
     due_day: a.dueDay ?? null,
+    payment_day: a.paymentDay ?? null,
     auto_pay_mode: a.autoPayMode ?? null,
     payment_account_id: a.paymentAccountId ?? null,
     annual_fee: a.annualFee ?? null,
@@ -520,8 +521,6 @@ function accountToRow(userId: string, a: Account): Row {
         ? a.underlyingAllocation
         : null,
     updated_at: a.updatedAt ?? new Date().toISOString(),
-    // payment_day 仅在设置时写入：若目标库尚未应用迁移（缺列），省略可避免整表 upsert 失败。
-    ...(a.paymentDay != null ? { payment_day: a.paymentDay } : {}),
   }
 }
 

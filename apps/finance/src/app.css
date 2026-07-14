@@ -4239,29 +4239,9 @@ div.input {
   }
 }
 
-/* 页头右侧工具（更新时间 + 反馈按钮）容器：桌面 flex 里靠右，移动端占 grid 的 trailing（右上）。
-   否则裸子元素会被 theme 的移动端 .page-header grid 自动排进左上的 brand 格子。 */
-.page-header-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
 @media (--life-os-mobile) {
   .sidebar {
     display: none;
-  }
-
-  /* finance 移动端无品牌 logo（在隐藏的侧栏里），故把 theme 的两行页头
-     'brand trailing' / 'titles titles' 收成单行：标题在左、工具在右，
-     不再让标题独占第二行、顶行左侧留白。 */
-  .page-header {
-    grid-template-areas: 'titles trailing';
-  }
-
-  .page-header-actions {
-    grid-area: trailing;
-    justify-content: flex-end;
   }
 
   .page-tools .page-tool-label {

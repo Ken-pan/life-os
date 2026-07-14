@@ -285,7 +285,7 @@
         </div>
         <p class="muted-note">{t('settings.assumptionsIntro')}</p>
 
-        <h3 class="mb-2">{t('settings.assumptionsBasic')}</h3>
+        <h3 class="mb-2" style="margin-top: var(--space-4)">{t('settings.assumptionsBasic')}</h3>
         <div class="row">
           <PercentField
             label={t('settings.salaryGrowth')}

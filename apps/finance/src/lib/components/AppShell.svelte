@@ -37,8 +37,7 @@
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
   import { subscribeSyncError } from '$lib/syncNotify'
   import ExtensionSyncBridge from './ExtensionSyncBridge.svelte'
-  import ReportBugButton from '@life-os/platform-web/svelte/feedback'
-  import { supabase } from '$lib/supabase.js'
+  import AppBar from './AppBar.svelte'
   import { auth } from '$lib/auth.svelte.js'
   import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
 
@@ -234,19 +233,11 @@
   </aside>
 
   <div class="main-wrap" data-mobile-chrome="tabbar">
-    <header class="page-header">
-      <div class="titles">
-        <h1>{pageHeader.title}</h1>
-        <span class="subtitle">{pageHeader.subtitle}</span>
-      </div>
-      <span class="spacer"></span>
-      <div class="page-header-actions">
-        {#if updatedLabel}
-          <span class="updated">{updatedLabel}</span>
-        {/if}
-        <ReportBugButton app="finance" {supabase} user={auth.user} />
-      </div>
-    </header>
+    <AppBar
+      title={pageHeader.title}
+      subtitle={pageHeader.subtitle}
+      meta={updatedLabel || undefined}
+    />
 
     <main class="content">
       <SyncErrorBanner
