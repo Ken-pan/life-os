@@ -423,6 +423,11 @@ export default {
     actionDone: 'Done',
     actionArchive: 'Archive',
     archivedSuccess: 'Archived “{title}”',
+    paperLinks: 'PaperOS links',
+    paperLinkPage: 'Notebook page {page}',
+    copyPaperLink: 'Copy ref',
+    paperLinkCopied: 'PaperOS page reference copied',
+    paperLinkCopyFailed: 'Could not copy the PaperOS page reference',
   },
   recurrence: {
     none: 'Never',

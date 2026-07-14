@@ -72,6 +72,18 @@
  * @property {boolean} [needsSplit]
  * @property {number} [triagedAt] 最近一次完成快速处理的时间（毫秒）
  * @property {{ domain: 'finance', occurrenceId: string } | { domain: 'fitness', sessionId: string } | { domain: 'core', captureId: string }} [lifeEventRef] INTG.EVENTS.1.5 / PLNR.CORE.5 幂等键
+ * @property {PaperPageLink[]} [paperLinks] PaperOS 稳定页反向链接
+ */
+
+/**
+ * @typedef {Object} PaperPageLink
+ * @property {string} id
+ * @property {string} deviceId
+ * @property {string} noteId
+ * @property {string} pageId
+ * @property {number} pageIndex
+ * @property {string} noteTitle
+ * @property {number} linkedAt
  */
 
 /**
@@ -239,6 +251,7 @@ export function normalizeRecurrence(raw) {
  * @property {string|null} dueDate YYYY-MM-DD
  * @property {boolean} completed
  * @property {number} updatedAt
+ * @property {PaperPageLink[]} paperLinks
  */
 
 /**

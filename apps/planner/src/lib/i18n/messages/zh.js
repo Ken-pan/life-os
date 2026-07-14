@@ -419,6 +419,11 @@ export default {
     actionDone: '完成',
     actionArchive: '归档',
     archivedSuccess: '已归档「{title}」',
+    paperLinks: 'PaperOS 链接',
+    paperLinkPage: '笔记第 {page} 页',
+    copyPaperLink: '复制引用',
+    paperLinkCopied: '已复制 PaperOS 页面引用',
+    paperLinkCopyFailed: '无法复制 PaperOS 页面引用',
   },
   recurrence: {
     none: '不重复',

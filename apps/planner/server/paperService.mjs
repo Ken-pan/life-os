@@ -1,5 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { readSupabaseUrl, readSupabaseServiceRoleKey, readEnv } from './pushEnv.mjs';
+import {
+  normalizePaperLink,
+  serializePaperTask,
+  taskHasPaperLink,
+  upsertPaperLink,
+} from '../src/lib/paperLinks.js';
 
 /**
  * Initialize Supabase Client.
@@ -173,15 +179,7 @@ export async function loadPaperToday(userId) {
     return (b.updatedAt || 0) - (a.updatedAt || 0);
   });
 
-  const slicedTasks = todayTasks.slice(0, 30).map(t => ({
-    id: t.id,
-    title: t.title,
-    notes: t.notes || '',
-    priority: t.priority || 'P3',
-    dueDate: t.dueDate || null,
-    completed: Boolean(t.completed),
-    updatedAt: Number(t.updatedAt || t.createdAt || now.getTime())
-  }));
+  const slicedTasks = todayTasks.slice(0, 30).map(t => serializePaperTask(t, now.getTime()));
 
   // Determine currentFocus
   let currentFocus = null;
@@ -223,12 +221,7 @@ export async function loadPaperToday(userId) {
   }
 
   // Format focus return shape
-  const focusResponse = currentFocus ? {
-    id: currentFocus.id,
-    title: currentFocus.title,
-    notes: currentFocus.notes || '',
-    priority: currentFocus.priority || 'P3'
-  } : {};
+  const focusResponse = currentFocus ? serializePaperTask(currentFocus, now.getTime()) : {};
 
   // Compute cursor: max(updatedAt)
   const maxUpdatedAt = allTasks.reduce((max, t) => Math.max(max, t.updatedAt || 0), 0);
@@ -276,15 +269,9 @@ export async function loadPaperDelta(userId, cursorMs) {
   const allTasks = (taskRows || []).map((row) => ({ id: row.id, ...row.data }));
   const updatedTasks = allTasks.filter(t => (t.updatedAt || t.createdAt || 0) > cursorMs);
 
-  const upserted = updatedTasks.filter(t => !t.deletedAt).map(t => ({
-    id: t.id,
-    title: t.title,
-    notes: t.notes || '',
-    priority: t.priority || 'P3',
-    dueDate: t.dueDate || null,
-    completed: Boolean(t.completed),
-    updatedAt: Number(t.updatedAt || t.createdAt || Date.now())
-  }));
+  const upserted = updatedTasks
+    .filter(t => !t.deletedAt)
+    .map(t => serializePaperTask(t));
 
   const deleted = updatedTasks.filter(t => t.deletedAt).map(t => t.id);
 
@@ -324,7 +311,10 @@ export async function dryRunActions(userId, batch) {
       proposedChange: {
         completed: action.type === 'task.complete' ? true : undefined,
         dueDate: action.type === 'task.snooze' ? 'snoozed' : (action.type === 'task.moveTomorrow' ? 'tomorrow' : undefined),
-        createdTitle: action.type === 'task.create' ? action.title : undefined
+        createdTitle: action.type === 'task.create' ? action.title : undefined,
+        paperLink: action.type === 'paper.link.upsert'
+          ? normalizePaperLink(action, { deviceId: batch.deviceId })
+          : undefined
       }
     });
   }
@@ -404,8 +394,8 @@ async function handleExistingActionLog(supabase, userId, batch, action, existing
       break;
 
     case 'received':
-      // Log was inserted but mutation may have succeeded.
-      // Reconcile: check if task was actually completed.
+      // Log was inserted but mutation may have succeeded. Reconcile against
+      // the requested final state before retrying the mutation.
       const { data: taskRows } = await supabase
         .from('planner_tasks')
         .select('id, data')
@@ -433,7 +423,12 @@ async function handleExistingActionLog(supabase, userId, batch, action, existing
       } else {
         const task = { id: taskRows.id, ...taskRows.data };
 
-        if (task.completed) {
+        const paperLinkRecovered = action.type === 'paper.link.upsert'
+          && taskHasPaperLink(task, action, batch.deviceId || 'unknown');
+        const requestedStateRecovered = action.type === 'paper.link.upsert'
+          ? paperLinkRecovered
+          : task.completed;
+        if (requestedStateRecovered) {
           // Task is completed; this action succeeded before.
           // Update log to applied and mark as recovered.
           const now = new Date();
@@ -444,6 +439,9 @@ async function handleExistingActionLog(supabase, userId, batch, action, existing
               result: {
                 taskId: task.id,
                 completedAt: task.completedAt,
+                paperLink: paperLinkRecovered
+                  ? normalizePaperLink(action, { deviceId: batch.deviceId || 'unknown' })
+                  : undefined,
                 updatedAt: task.updatedAt,
                 recovered: true
               },
@@ -459,13 +457,16 @@ async function handleExistingActionLog(supabase, userId, batch, action, existing
             priorResult: {
               taskId: task.id,
               completedAt: task.completedAt,
+              paperLink: paperLinkRecovered
+                ? normalizePaperLink(action, { deviceId: batch.deviceId || 'unknown' })
+                : undefined,
               updatedAt: task.updatedAt,
               recovered: true
             },
             appliedAt: now
           });
         } else {
-          // Task not completed yet. Continue with task.complete.
+          // Requested final state is absent. Continue with the action.
           // Log is already inserted with status='received'.
           // This path is NOT returned; falls through to continue normal flow.
           return { shouldContinue: true, existingLogId: existingAction.id };
@@ -488,7 +489,7 @@ async function handleExistingActionLog(supabase, userId, batch, action, existing
 
 /**
  * Applies actions to PlannerOS with idempotency tracking (log-first pattern).
- * Supports task.complete only in PR-3B.
+ * Supports task completion and PaperOS page linking.
  * Rejects unsupported action types.
  * @param {string} userId
  * @param {object} batch
@@ -515,13 +516,14 @@ export async function applyActions(userId, batch) {
       continue;
     }
 
-    // Check if this action type is supported in PR-3B
-    if (action.type !== 'task.complete') {
+    const supportedAction = action.type === 'task.complete'
+      || action.type === 'paper.link.upsert';
+    if (!supportedAction) {
       rejected.push({
         clientActionId: action.clientActionId,
         status: 'rejected',
         reason: 'unsupported_action_type',
-        message: `Action type '${action.type}' is not yet supported. Only 'task.complete' is available in PR-3B.`
+        message: `Action type '${action.type}' is not supported.`
       });
       continue;
     }
@@ -531,7 +533,18 @@ export async function applyActions(userId, batch) {
         clientActionId: action.clientActionId,
         status: 'rejected',
         reason: 'missing_task_id',
-        message: 'task.complete requires a taskId.'
+        message: `${action.type} requires a taskId.`
+      });
+      continue;
+    }
+
+    if (action.type === 'paper.link.upsert'
+        && !normalizePaperLink(action, { deviceId: batch.deviceId || 'unknown' })) {
+      rejected.push({
+        clientActionId: action.clientActionId,
+        status: 'rejected',
+        reason: 'invalid_paper_link',
+        message: 'paper.link.upsert requires noteId, pageId, and a positive pageIndex.'
       });
       continue;
     }
@@ -695,6 +708,112 @@ export async function applyActions(userId, batch) {
         status: 'conflict',
         reason: 'task_deleted',
         details: { taskId: action.taskId, deletedAt: task.deletedAt }
+      });
+      continue;
+    }
+
+    if (action.type === 'paper.link.upsert') {
+      const updatedAt = now.getTime();
+      const updatedTask = upsertPaperLink(
+        task,
+        action,
+        batch.deviceId || 'unknown',
+        updatedAt,
+      );
+      const paperLink = normalizePaperLink(action, {
+        deviceId: batch.deviceId || 'unknown',
+        linkedAt: updatedAt,
+      });
+
+      if (!isRecovery) {
+        const { data: insertedLog, error: insertError } = await supabase
+          .from('paper_device_actions')
+          .insert({
+            user_id: userId,
+            device_id: batch.deviceId || 'unknown',
+            client_batch_id: batch.clientBatchId || '',
+            client_action_id: action.clientActionId,
+            action_type: action.type,
+            target_task_id: action.taskId,
+            payload: action,
+            base_version: action.baseVersion || null,
+            status: 'received',
+            created_at: now
+          })
+          .select('id')
+          .single();
+        if (insertError) {
+          if (insertError.code === '23505') {
+            const { data: retryAction } = await supabase
+              .from('paper_device_actions')
+              .select('*')
+              .eq('user_id', userId)
+              .eq('device_id', batch.deviceId || 'unknown')
+              .eq('client_action_id', action.clientActionId)
+              .maybeSingle();
+            if (retryAction) {
+              const retryResult = await handleExistingActionLog(
+                supabase, userId, batch, action, retryAction,
+              );
+              duplicates.push(...(retryResult.duplicates || []));
+              conflicts.push(...(retryResult.conflicts || []));
+              rejected.push(...(retryResult.rejected || []));
+              failed.push(...(retryResult.failed || []));
+              if (retryResult.shouldContinue) {
+                failed.push({
+                  clientActionId: action.clientActionId,
+                  status: 'failed',
+                  reason: 'action_in_progress',
+                  message: 'A matching PaperOS link action is still being applied.'
+                });
+              }
+              continue;
+            }
+          }
+          failed.push({
+            clientActionId: action.clientActionId,
+            status: 'failed',
+            reason: 'log_insert_error',
+            message: insertError.message
+          });
+          continue;
+        }
+        existingLogId = insertedLog.id;
+      }
+
+      const { error: updateError } = await supabase
+        .from('planner_tasks')
+        .update({ data: updatedTask })
+        .eq('user_id', userId)
+        .eq('id', action.taskId);
+      if (updateError) {
+        await supabase
+          .from('paper_device_actions')
+          .update({
+            status: 'failed',
+            result: { reason: 'task_update_error', message: updateError.message }
+          })
+          .eq('id', existingLogId);
+        failed.push({
+          clientActionId: action.clientActionId,
+          status: 'failed',
+          reason: 'task_update_error',
+          message: updateError.message
+        });
+        continue;
+      }
+
+      const result = { taskId: task.id, paperLink, updatedAt };
+      const { error: updateLogError } = await supabase
+        .from('paper_device_actions')
+        .update({ status: 'applied', result, applied_at: now })
+        .eq('id', existingLogId);
+      applied.push({
+        clientActionId: action.clientActionId,
+        status: 'applied',
+        ...result,
+        logUpdateError: updateLogError ? true : undefined,
+        recovered: isRecovery ? true : undefined,
       });
       continue;
     }

@@ -15,6 +15,7 @@
   import { SCHEDULE_DURATIONS, formatDurationLabel } from '$lib/domain/schedule.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
   import { activateFocusTrap, createImeGuard } from '@life-os/theme';
+  import { paperLinksForTask } from '$lib/paperLinks.js';
   import DateField from './DateField.svelte';
   import TimeField from './TimeField.svelte';
   import ProjectPicker from './ProjectPicker.svelte';
@@ -43,6 +44,7 @@
   const recurrenceRule = $derived(draft?.recurrence?.rule || 'none');
   const projects = $derived(selectableProjects());
   const canSave = $derived(Boolean(draft?.title?.trim()));
+  const paperLinks = $derived(paperLinksForTask(draft));
   const isDirty = $derived(
     Boolean(draft && taskEditor.initialDraft) &&
       JSON.stringify(draft) !== JSON.stringify(taskEditor.initialDraft)
@@ -339,6 +341,16 @@
       }
     }
   }
+
+  async function copyPaperReference(link) {
+    const value = `paperos://notebook/${encodeURIComponent(link.noteId)}?pageId=${encodeURIComponent(link.pageId)}&page=${link.pageIndex}`;
+    try {
+      await navigator.clipboard.writeText(value);
+      toast(t('task.paperLinkCopied'));
+    } catch {
+      toast(t('task.paperLinkCopyFailed'), 'warn');
+    }
+  }
 </script>
 
 {#if taskEditor.open && draft}
@@ -448,6 +460,27 @@
           }}
         />
       </div>
+
+      {#if paperLinks.length}
+        <section class="paper-links" aria-label={t('task.paperLinks')}>
+          <div class="paper-links-heading">
+            <span>{t('task.paperLinks')}</span>
+            <span>{paperLinks.length}</span>
+          </div>
+          {#each paperLinks as link (link.id)}
+            <div class="paper-link-row">
+              <Icon name="link" size={17} strokeWidth={1.8} />
+              <div>
+                <strong>{link.noteTitle}</strong>
+                <span>{t('task.paperLinkPage', { page: link.pageIndex })}</span>
+              </div>
+              <button type="button" onclick={() => copyPaperReference(link)}>
+                {t('task.copyPaperLink')}
+              </button>
+            </div>
+          {/each}
+        </section>
+      {/if}
 
       <button
         type="button"
@@ -772,6 +805,51 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+  .paper-links {
+    margin: 0 0 12px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .paper-links-heading,
+  .paper-link-row {
+    display: flex;
+    align-items: center;
+  }
+  .paper-links-heading {
+    justify-content: space-between;
+    padding: 10px 2px 7px;
+    color: var(--t3);
+    font-family: var(--mono);
+    font-size: var(--text-xs);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .paper-link-row {
+    gap: 10px;
+    min-height: 52px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  }
+  .paper-link-row > div {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+  }
+  .paper-link-row strong,
+  .paper-link-row span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .paper-link-row strong { color: var(--t1); font-size: var(--text-sm); }
+  .paper-link-row span { color: var(--t3); font-size: var(--text-xs); }
+  .paper-link-row button {
+    min-height: 40px;
+    padding: 0 8px;
+    color: var(--accent);
+    font-size: var(--text-sm);
+    font-weight: 600;
   }
   .ai-split-btn {
     width: 100%;

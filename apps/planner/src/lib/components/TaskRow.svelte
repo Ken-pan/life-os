@@ -20,6 +20,7 @@
   import { openSchedulePopover } from '$lib/ui.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
   import { getLifeEventSource } from '$lib/lifeEventSource.js'
+  import { paperLinksForTask } from '$lib/paperLinks.js'
   import Icon from '@life-os/platform-web/svelte/icon'
 
   /** @type {{ task: import('$lib/types.js').Task, compact?: boolean, metaMinimal?: boolean, ritualComplete?: boolean, showScheduleAction?: boolean, scheduleDate?: string, contextDate?: string, onToggle?: (id: string) => void, onEdit?: (task: import('$lib/types.js').Task) => void }} */
@@ -57,9 +58,10 @@
     buildTaskMetaLine(task, t, { contextDate, minimal: metaMinimal, overdue }),
   )
   const lifeEventSource = $derived(getLifeEventSource(task, t))
+  const paperLinks = $derived(paperLinksForTask(task))
   /* compact（Today/Calendar 列表）仍保留关键 chip：来源 · 项目 · 循环 */
   const hasKeyChips = $derived(
-    Boolean(lifeEventSource || task.projectId || hasRecurrence),
+    Boolean(lifeEventSource || task.projectId || hasRecurrence || paperLinks.length),
   )
   const showSecondaryMeta = $derived(
     !metaMinimal && (!compact || hasKeyChips),
@@ -500,6 +502,12 @@
             {#if hasRecurrence}
               <span class="chip chip--recurrence" title={t('task.recurring')}>
                 <Icon name="repeat" size={11} strokeWidth={2.2} />
+              </span>
+            {/if}
+            {#if paperLinks.length}
+              <span class="chip chip--paper" title={t('task.paperLinks')}>
+                <Icon name="link" size={11} strokeWidth={2.2} />
+                PaperOS·{paperLinks[0].pageIndex}
               </span>
             {/if}
             {#if !compact}
