@@ -363,7 +363,10 @@ async function buildSystemPrompt(conversation) {
       )
     }
     lines.push(
-      '用户有 Obsidian 笔记库(已全文索引):涉及他过往写下的判断、框架、决策、评审、项目细节或日常记录时,先 search_notes 检索,需要展开再 read_note;回答时给出笔记路径。',
+      '用户有 Obsidian 笔记库(已全文索引):涉及他过往写下的判断、框架、决策、评审、项目细节或日常记录时,先 search_notes 检索,需要展开再 read_note;回答时给出笔记路径。若用户就某个事实/决策/进展直接发问(如"我上次定的X是什么""关于Y我的结论"),用 ask_notes 一步拿到基于笔记、带 [n] 引用的综合答案。',
+    )
+    lines.push(
+      '策展笔记(每晚/每周自动生成,信号高,优先参考):Work/Digests/daily-summary-日期.md 每日工作摘要;Work/Topics/<主题>.md 跨天演进的主题线(含时间线与状态),_未决看板.md 汇总未决与停滞项;Work/People/<人名>.md 每个人涉及的主题;Work/Rollups/weekly-*.md、monthly-*.md 周报月报。问工作进展/某件事的来龙去脉/某人相关时,这些比原始 Work Log 更好用。',
     )
     lines.push(
       '今日动态:插件每天把用户的 Teams 消息、Outlook 邮件、Jira、RSS 聚合成日报,写进 memory 库根目录的“YYYY-MM-DD.md”。用户问及今天/某天的会议、邮件、工作进展或“今天怎么样/有什么事”时,用 read_note(vault="memory", path="当天日期.md") 读那天的日报(结合上面注入的当前日期填日期);要更细的原始记录再看主库 Work/Work Log/ 下的 teams-chat-digest-日期.md、outlook-mail-digest-日期.md。',
@@ -808,6 +811,33 @@ async function streamAssistantReply(conversation) {
       }
       persist()
       if (signal.aborted) break
+    }
+
+    // 轮次耗尽仍停在工具调用、没产出正文(模型一路检索没收尾,常见于笔记 RAG 打满 10 轮):
+    // 撤掉工具强制再作答一次,基于已积累的工具结果综合出答案,避免"检索一大堆却零回答"。
+    const stuck = conversation.messages.at(-1)
+    if (!signal.aborted && stuck?.role === 'assistant' && !stuck.content && stuck.toolCalls?.length) {
+      const wrap = $state({ role: 'assistant', content: '', reasoning: '' })
+      conversation.messages.push(wrap)
+      const startedAt = Date.now()
+      const reveal = createStreamReveal(wrap, startedAt)
+      const fin = await streamChat({
+        model,
+        messages: buildWireMessages(conversation, systemPrompt),
+        signal,
+        temperature: sampleTemp,
+        maxTokens: 4096,
+        tools: undefined, // 强制收尾:不再给工具,逼模型基于已有结果作答
+        thinking: false,
+        onDelta: (chunk) => reveal.push(chunk),
+      }).finally(() => reveal.finish())
+      wrap.durationMs = Date.now() - startedAt
+      wrap.finishReason = fin.finishReason
+      if (!wrap.content && !wrap.reasoning) {
+        // 收尾仍失败:清掉空壳,给上一条工具消息挂重试入口
+        conversation.messages.pop()
+        if (!stuck.error) stuck.error = '模型检索后没能综合出回答,可点重试'
+      }
     }
   } catch (err) {
     if (err?.name !== 'AbortError') {
