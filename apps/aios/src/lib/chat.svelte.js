@@ -360,6 +360,9 @@ async function buildSystemPrompt(conversation) {
       '用户有 Obsidian 笔记库(已全文索引):涉及他过往写下的判断、框架、决策、评审、项目细节或日常记录时,先 search_notes 检索,需要展开再 read_note;回答时给出笔记路径。',
     )
     lines.push(
+      '今日动态:插件每天把用户的 Teams 消息、Outlook 邮件、Jira、RSS 聚合成日报,写进 memory 库根目录的“YYYY-MM-DD.md”。用户问及今天/某天的会议、邮件、工作进展或“今天怎么样/有什么事”时,用 read_note(vault="memory", path="当天日期.md") 读那天的日报(结合上面注入的当前日期填日期);要更细的原始记录再看主库 Work/Work Log/ 下的 teams-chat-digest-日期.md、outlook-mail-digest-日期.md。',
+    )
+    lines.push(
       '生图:用户要画图/生成图片时用 generate_image,prompt 写具体(主体+细节+场景+光线+风格)。人物、写实、图中含文字用 quality="quality"。创建可复用角色加 save_character="名字";之后 character="名字" 让同一角色进入新场景;已有角色用 list_characters 查。生成结果自动展示,不要编造图片链接。',
     )
   }
