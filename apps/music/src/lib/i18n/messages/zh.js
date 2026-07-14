@@ -9,6 +9,7 @@ export default {
     play: '播放',
     playAll: '播放全部',
     playAlbum: '播放专辑',
+    shuffle: '随机播放',
     pause: '暂停',
     loading: '加载中',
     import: '导入音乐',

@@ -7,7 +7,7 @@
   import { visibleWarm } from '$lib/visibleWarm.js'
   import { t } from '$lib/i18n/index.js'
 
-  /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, queueMode?: boolean, richActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, onSelect?: (e: MouseEvent) => void }} */
+  /** @type {{ track: import('$lib/types.js').Track, tracks?: import('$lib/types.js').Track[], index?: number, showLike?: boolean, compactActions?: boolean, queueMode?: boolean, richActions?: boolean, selected?: boolean, playSource?: import('$lib/musicInteractions.js').PlaySource, subtitle?: 'full' | 'artist' | 'album' | 'none', onSelect?: (e: MouseEvent) => void }} */
   let {
     track,
     tracks = [],
@@ -18,8 +18,19 @@
     richActions = false,
     selected = false,
     playSource = 'home',
+    subtitle = 'full',
     onSelect,
   } = $props()
+
+  const subText = $derived(
+    subtitle === 'none'
+      ? ''
+      : subtitle === 'artist'
+        ? track.artist
+        : subtitle === 'album'
+          ? track.album
+          : `${track.artist} · ${track.album}`,
+  )
 
   /** @type {{ track: import('$lib/types.js').Track; x: number; y: number } | null} */
   let menu = $state(null)
@@ -92,7 +103,9 @@
   </button>
   <button type="button" class="track-row-body" onpointerdown={onPrewarm} onclick={onRowClick}>
     <div class="track-row-title">{track.title}</div>
-    <div class="track-row-sub">{track.artist} · {track.album}</div>
+    {#if subText}
+      <div class="track-row-sub">{subText}</div>
+    {/if}
   </button>
   {#if !queueMode}
   <div class="track-row-actions">

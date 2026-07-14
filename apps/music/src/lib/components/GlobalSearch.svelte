@@ -12,6 +12,7 @@
   import {
     searchState,
     setSearchDraft,
+    setSearchQuery,
     fetchSuggestions,
     goToFullSearch,
     clearSearchQuery,
@@ -160,7 +161,10 @@
 
   function onInput(e) {
     const value = e.currentTarget.value
-    setSearchDraft(value)
+    // On /search the omnibox IS the page's search field: commit (debounced) so
+    // the results panel tracks the query. Elsewhere keep draft-only (no navigate).
+    if (onSearchPage) setSearchQuery(value, { debounce: true, navigate: true })
+    else setSearchDraft(value)
     open = true
     activeIndex = -1
     if (ime.isComposing(/** @type {InputEvent} */ (e))) return
@@ -170,7 +174,8 @@
   /** @param {CompositionEvent} e */
   function onCompositionEnd(e) {
     ime.compositionend(e, (value) => {
-      setSearchDraft(value)
+      if (onSearchPage) setSearchQuery(value, { debounce: false, navigate: true })
+      else setSearchDraft(value)
       fetchSuggestions(value)
     })
   }

@@ -34,14 +34,16 @@ export function buildPrimaryNavItems(tr) {
       href: '/library',
       label: tr('nav.library'),
       icon: 'library',
-      match: (p) => p.startsWith('/library') || p.startsWith('/import'),
+      // /import 有独立导航项（More 组），不在此归入 library，避免侧栏双高亮
+      match: (p) => p.startsWith('/library'),
     },
     {
       tab: 'playlists',
       href: '/playlists',
       label: tr('nav.playlists'),
       icon: 'list',
-      match: (p) => p.startsWith('/playlists') || p.startsWith('/liked'),
+      // /liked 有独立导航项（More 组），不在此归入 playlists，避免侧栏双高亮
+      match: (p) => p.startsWith('/playlists'),
     },
   ]
 }
@@ -115,10 +117,9 @@ export function buildMoreNavGroups(tr) {
 export function resolvePrimaryNavTab(pathname) {
   if (pathname === '/') return 'home'
   if (pathname.startsWith('/search')) return 'search'
-  if (pathname.startsWith('/library') || pathname.startsWith('/import'))
-    return 'library'
-  if (pathname.startsWith('/playlists') || pathname.startsWith('/liked'))
-    return 'playlists'
+  if (pathname.startsWith('/library')) return 'library'
+  if (pathname.startsWith('/playlists')) return 'playlists'
+  // /import、/liked 属 More 组（与 /browse 一致）：底栏只点亮「更多」，不点亮 primary tab
   return ''
 }
 
