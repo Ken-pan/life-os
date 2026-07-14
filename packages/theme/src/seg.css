@@ -108,6 +108,21 @@
   font-weight: 600;
 }
 
+/*
+  首/末按钮外角随轨道圆角，避免方角按钮（--seg-btn-radius:0，见 .seg-track / Fitness）
+  在圆角轨道处「戳出」选中态填充块。对按钮圆角已≥轨道的变体（pill 轨道）是 no-op；
+  用补外角而非 .seg{overflow:hidden}，以免裁掉可横向滚动 seg 的内容与焦点环。
+*/
+.seg button:first-child {
+  border-start-start-radius: var(--seg-track-radius);
+  border-end-start-radius: var(--seg-track-radius);
+}
+
+.seg button:last-child {
+  border-start-end-radius: var(--seg-track-radius);
+  border-end-end-radius: var(--seg-track-radius);
+}
+
 @media (pointer: coarse) {
   .seg:not(.seg-icons) button {
     min-height: var(--tap-min);
