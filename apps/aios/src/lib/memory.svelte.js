@@ -2,6 +2,7 @@ import { browser } from '$app/environment'
 import { embed, cosine, tinyComplete } from '$lib/localai.js'
 import { SEED_MEMORIES } from '$lib/profile.js'
 import { dataChanged } from '$lib/syncBus.js'
+import { S } from '$lib/state.svelte.js'
 
 /**
  * 持久记忆(ChatGPT memory 风格):
@@ -191,6 +192,65 @@ export async function dreamMemories() {
   persist()
   backfillVectors()
   return true
+}
+
+/* —— 自动记忆萃取:对话后被动抓取用户稳定事实 —— */
+
+let extracting = false
+
+/**
+ * 每轮对话结束后被动萃取值得长期记住的**用户本人**事实,补上模型忘了
+ * 主动 save_memory 的情况。用常驻小模型判断,addMemory 自带语义去重,
+ * 不会重复堆积。设置关记忆、或本轮太短则跳过;并发有锁,一次最多入 2 条。
+ * fire-and-forget,失败静默,绝不阻塞对话。
+ * @param {string} userText @param {string} assistantText
+ */
+export async function autoExtractMemories(userText, assistantText) {
+  if (!browser || extracting) return
+  if (!S.settings.memory) return
+  const u = (userText || '').trim()
+  if (u.length < 12) return
+  extracting = true
+  try {
+    const convo =
+      `用户:${u.slice(0, 1500)}` +
+      (assistantText ? `\nAI:${String(assistantText).trim().slice(0, 800)}` : '')
+    const raw = await tinyComplete(
+      '从下面这轮对话里,抽取值得长期记住的、关于**用户本人**的稳定事实' +
+        '(偏好、背景、身份、长期目标、明确的决定或纠正)。只抽用户主动透露、' +
+        '跨对话仍然成立的;临时的一次性的、关于 AI 回答内容本身的、需要联网才知道' +
+        '真假的,都不要。没有值得记的就返回空数组 []。第三人称、每条一句、以“用户”' +
+        '开头、不超过 60 字。输出 JSON 字符串数组,最多 2 条,只输出 JSON。\n\n' +
+        convo,
+      { maxTokens: 300, temperature: 0.2, timeoutMs: 30000 },
+    )
+    if (!raw) return
+    let facts
+    try {
+      const jsonText = raw.replace(/^[\s\S]*?(\[[\s\S]*\])[\s\S]*$/, '$1')
+      const parsed = JSON.parse(jsonText)
+      if (!Array.isArray(parsed)) return
+      facts = parsed
+        .map((f) => (typeof f === 'string' ? f : typeof f?.text === 'string' ? f.text : null))
+        .map((f) => (f ? f.trim() : ''))
+        .filter((f) => f.length >= 4 && f.length <= 120)
+        // 高精度后过滤:关于用户的稳定事实不该提到 AI/助手,也不该是"查/搜…天气/新闻/
+        // 价格"这类一次性联网请求 —— 小模型偶尔会把当下请求误抽成"事实",这里兜底剔除。
+        .filter((f) => !/\b(AI|LLM)\b|助手|机器人/i.test(f))
+        .filter((f) => !/(查|搜|搜索|查询|看看|帮.{0,4}查).{0,6}(天气|新闻|价格|股价|汇率|比分|路况)/.test(f))
+        .slice(0, 2)
+    } catch {
+      return
+    }
+    for (const fact of facts) {
+      const text = /^(用户|Ken|他|她)/.test(fact) ? fact : `用户${fact}`
+      await addMemory(text) // 语义近重复会被 addMemory 内部替换,不重复堆积
+    }
+  } catch {
+    /* 静默 */
+  } finally {
+    extracting = false
+  }
 }
 
 /**

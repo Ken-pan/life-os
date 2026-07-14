@@ -8,7 +8,7 @@ import {
   VISION_MODELS,
 } from '$lib/localai.js'
 import { toolDefinitions, executeTool, consumePendingImages } from '$lib/tools.js'
-import { recallRelevant, M as MEM } from '$lib/memory.svelte.js'
+import { recallRelevant, autoExtractMemories, M as MEM } from '$lib/memory.svelte.js'
 import { dataChanged } from '$lib/syncBus.js'
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 
@@ -932,6 +932,18 @@ async function streamAssistantReply(conversation) {
   maybeTitle(conversation)
   maybeSuggest(conversation)
   maybeCompact(conversation)
+  maybeExtractMemories(conversation)
+}
+
+/** 回复完成后被动萃取用户稳定事实(补模型忘了 save_memory 的情况) */
+function maybeExtractMemories(conversation) {
+  const lastUser = [...conversation.messages].reverse().find((m) => m.role === 'user')
+  const lastAssistant = [...conversation.messages]
+    .reverse()
+    .find((m) => m.role === 'assistant' && m.content && !m.error)
+  if (!lastUser?.content) return
+  const answer = (lastAssistant?.content ?? '').replace(/^<think>[\s\S]*?<\/think>/, '').trim()
+  autoExtractMemories(lastUser.content, answer)
 }
 
 /** 首轮回复完成后,用常驻小模型起短标题(失败保留截断标题) */
