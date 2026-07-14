@@ -7,7 +7,7 @@ import {
 
 /** @typedef {'track' | 'artist' | 'album' | 'playlist' | 'collection' | 'mix'} EntityType */
 
-/** @typedef {'open' | 'play' | 'skip' | 'complete' | 'pin_speed_dial' | 'unpin_speed_dial' | 'hide_speed_dial'} InteractionAction */
+/** @typedef {'open' | 'play' | 'replay' | 'skip' | 'complete' | 'remove' | 'pin_speed_dial' | 'unpin_speed_dial' | 'hide_speed_dial'} InteractionAction */
 
 /** @typedef {'morning' | 'work' | 'evening' | 'late_night'} SessionTimeBucket */
 
@@ -38,7 +38,7 @@ import {
  * @property {string} [trackId] — 用于 Supabase play_events（默认 entityId）
  */
 
-/** @typedef {{ activeLaunches: number, passivePlays: number, skips: number, completes: number, timeMatches: number }} EntityPlaybackStats */
+/** @typedef {{ activeLaunches: number, passivePlays: number, skips: number, completes: number, replays: number, removes: number, timeMatches: number }} EntityPlaybackStats */
 
 export const SKIP_THRESHOLD_MS = 30_000
 
@@ -120,6 +120,8 @@ export async function getEntityPlaybackStats(days = 14) {
       passivePlays: 0,
       skips: 0,
       completes: 0,
+      replays: 0,
+      removes: 0,
       timeMatches: 0,
     }
 
@@ -127,6 +129,13 @@ export async function getEntityPlaybackStats(days = 14) {
       if (row.passive) cur.passivePlays += 1
       else cur.activeLaunches += 1
       if (hourMatchesBucket(row.hourOfDay, bucket)) cur.timeMatches += 1
+    } else if (row.action === 'replay') {
+      // Deliberate re-listen (repeat-one loop) — a strong affinity signal.
+      cur.replays += 1
+      if (hourMatchesBucket(row.hourOfDay, bucket)) cur.timeMatches += 1
+    } else if (row.action === 'remove') {
+      // User pruned this track from the queue — a rejection signal.
+      cur.removes += 1
     } else if (row.action === 'open' && !row.passive) {
       cur.activeLaunches += 0.65
       if (hourMatchesBucket(row.hourOfDay, bucket)) cur.timeMatches += 0.5
@@ -152,8 +161,10 @@ export async function getEntityLaunchScores(days = 14) {
     const score =
       s.activeLaunches * 0.35 +
       s.timeMatches * 0.15 +
-      s.completes * 0.1 -
+      s.completes * 0.1 +
+      Math.min(s.replays, 6) * 0.22 -
       s.skips * 0.25 -
+      s.removes * 0.3 -
       s.passivePlays * 0.05
     if (score > 0) scores.set(key, score)
   }
@@ -173,8 +184,10 @@ export function scoreFromStats(key, stats) {
   return (
     s.activeLaunches * 0.35 +
     s.timeMatches * 0.15 +
-    s.completes * 0.1 -
+    s.completes * 0.1 +
+    Math.min(s.replays, 6) * 0.22 -
     s.skips * 0.25 -
+    s.removes * 0.3 -
     s.passivePlays * 0.05
   )
 }
@@ -196,8 +209,10 @@ export function scoreNextPlay(key, stats, launchScores) {
   return (
     launch +
     s.activeLaunches * 0.42 +
-    s.completes * 0.18 -
-    s.skips * 0.28 +
+    s.completes * 0.18 +
+    Math.min(s.replays, 6) * 0.3 -
+    s.skips * 0.28 -
+    s.removes * 0.35 +
     s.timeMatches * 0.22 +
     completionRate * 0.25 -
     s.passivePlays * 0.04

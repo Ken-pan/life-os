@@ -24,6 +24,7 @@ export async function getQuickPicks(excludeTrackIds = [], limit = 6) {
     let score = 1
     if (s) {
       score += s.activeLaunches * 0.4 + s.completes * 0.15 - s.skips * 0.2
+      score += Math.min(s.replays, 6) * 0.25 - s.removes * 0.3
       if (bucket === 'late_night' && s.timeMatches > 0) score += 0.25
     }
     if (!ranked.some((r) => r.track.id === track.id)) {
@@ -40,7 +41,7 @@ export async function getQuickPicks(excludeTrackIds = [], limit = 6) {
   for (const { track } of ranked) {
     if (picks.length >= limit) break
     const albumKey = track.albumKey || track.id
-    if (seenAlbums.has(albumKey) && picks.length < 6) continue
+    if (seenAlbums.has(albumKey) && picks.length < limit) continue
     seenAlbums.add(albumKey)
     picks.push(track)
   }
@@ -55,7 +56,7 @@ export async function getQuickPicks(excludeTrackIds = [], limit = 6) {
       if (picks.length >= limit) break
       if (exclude.has(row.id) || picks.some((p) => p.id === row.id)) continue
       const albumKey = row.albumKey || row.id
-      if (seenAlbums.has(albumKey) && picks.length < 6) continue
+      if (seenAlbums.has(albumKey) && picks.length < limit) continue
       seenAlbums.add(albumKey)
       picks.push(row)
     }

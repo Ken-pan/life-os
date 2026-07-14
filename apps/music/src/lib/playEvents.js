@@ -174,8 +174,10 @@ export async function recordRecommendationQueueAdd(input) {
 /** @param {import('./musicInteractions.js').InteractionAction} action */
 export function interactionToPlayEvent(action) {
   if (action === 'play') return 'play'
+  if (action === 'replay') return 'replay'
   if (action === 'skip') return 'skip'
   if (action === 'complete') return 'complete'
+  if (action === 'remove') return 'remove_from_playlist'
   return null
 }
 

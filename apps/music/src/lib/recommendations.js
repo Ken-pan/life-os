@@ -194,6 +194,7 @@ async function pickSurpriseSeed(exclude) {
     let score = 0.35 + Math.random() * 0.65
     if (s) {
       score += s.completes * 0.28 - s.skips * 0.22 + s.activeLaunches * 0.12
+      score += Math.min(s.replays, 5) * 0.3 - s.removes * 0.35
       if (bucket === 'late_night' && s.timeMatches > 0) score += 0.35
       else if (s.timeMatches > 0) score += 0.15
     }
@@ -264,6 +265,7 @@ async function buildLocalSurpriseQueue(exclude, limit, seed = null) {
     let score = 0.4 + Math.random() * 0.6
     if (s) {
       score += s.completes * 0.25 - s.skips * 0.18
+      score += Math.min(s.replays, 5) * 0.28 - s.removes * 0.3
       if (bucket === 'late_night' && s.timeMatches > 0) score += 0.3
     }
     if (seed && track.artistKey === seed.artistKey) score += 0.12

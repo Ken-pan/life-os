@@ -1051,6 +1051,18 @@ function onAudioEnded(slot) {
   if (!audio) return
 
   if (player.repeat === 'one') {
+    const looped = getCurrentTrack()
+    if (looped && playSession.trackId === looped.id) {
+      void recordMusicInteraction({
+        entityType: 'track',
+        entityId: looped.id,
+        trackId: looped.id,
+        action: 'replay',
+        source: launchContext.source,
+        passive: playSession.passive,
+        durationMs: looped.duration ? looped.duration * 1000 : undefined,
+      })
+    }
     seek(0)
     void audio.play()
     return
@@ -1316,6 +1328,16 @@ function stopAudio() {
 export function removeFromQueue(index) {
   if (index < 0 || index >= player.queue.length) return
   const wasCurrent = index === player.index
+  const removed = player.queue[index]
+  if (removed?.id) {
+    void recordMusicInteraction({
+      entityType: 'track',
+      entityId: removed.id,
+      trackId: removed.id,
+      action: 'remove',
+      source: launchContext.source,
+    })
+  }
   const q = player.queue.filter((_, i) => i !== index)
   player.queue = q
   if (!q.length) {
