@@ -712,6 +712,8 @@ async function streamAssistantReply(conversation) {
 
   // 思考模式遇到复读循环熔断后,本次回复的后续轮次全部关思考重试(稳定优先)
   let useThinking = S.settings.thinking
+  // 复读重试时抬高采样温度打散退化循环(非思考模式没有"关思考"这条退路)
+  let sampleTemp = S.settings.temperature
 
   try {
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
@@ -731,7 +733,7 @@ async function streamAssistantReply(conversation) {
           model,
           messages: buildWireMessages(conversation, systemPrompt),
           signal,
-          temperature: S.settings.temperature,
+          temperature: sampleTemp,
           maxTokens: useThinking ? 8192 : 4096, // 思考通道占大头,给足预算避免正文被截断
           tools: lastRound ? undefined : tools,
           thinking: useThinking,
@@ -740,17 +742,15 @@ async function streamAssistantReply(conversation) {
       }
 
       let res = await doStream()
-      if (
-        res.finishReason === 'loop' &&
-        useThinking &&
-        !signal.aborted &&
-        !res.toolCalls.length
-      ) {
-        // 思考通道复读熔断:丢弃循环产物,关思考重试本轮
-        useThinking = false
+      // 复读熔断兜底:检测到退化循环(finishReason='loop')就丢弃循环产物、重试一次。
+      // 思考模式关思考重试;非思考模式抬高温度打散循环。isLooping 判定很保守(误报率极低),
+      // 一次重试的代价可接受,换掉"整屏复读的废输出"很值。
+      if (res.finishReason === 'loop' && !signal.aborted && !res.toolCalls.length) {
         assistant.reasoning = ''
         assistant.content = ''
         assistant.thinkingMs = undefined
+        if (useThinking) useThinking = false
+        else sampleTemp = Math.min((sampleTemp ?? 0.7) + 0.3, 1.2)
         res = await doStream()
       }
 
