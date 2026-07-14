@@ -87,14 +87,27 @@
   const dim = $derived(!txn.inSpending && txn.flow !== 'income')
   const display = $derived(classifyPurchaseDisplayState(txn, purchaseDisplayContext))
   const purchaseState = $derived(display.state)
-  const showProductStrip = $derived(purchaseState === 'clean_enriched')
+  // FINC.PURCHASE.6.a — show "what I bought" for every linked purchase that has
+  // line items, not just high-confidence `clean_enriched`. Uncertain matches
+  // (`matched_review`) still surface their products; the review badge + expandable
+  // Confirm/Reject let the user resolve the match.
+  const hasEnrichmentItems = $derived(
+    (txn.purchaseEnrichment?.lineItems?.length ?? 0) > 0,
+  )
+  const showsProducts = $derived(
+    purchaseState === 'clean_enriched' ||
+      purchaseState === 'matched_review' ||
+      purchaseState === 'return_refund',
+  )
+  const showProductStrip = $derived(showsProducts && hasEnrichmentItems)
   const showStateBadge = $derived(
     purchaseState === 'matched_review' ||
       purchaseState === 'return_refund' ||
       purchaseState === 'unsupported_source',
   )
   const showEnrichmentBlock = $derived(
-    purchaseState === 'clean_enriched' || (purchaseDebugMode && Boolean(txn.purchaseEnrichment)),
+    showsProducts ||
+      (purchaseDebugMode && Boolean(txn.purchaseEnrichment)),
   )
   const showEnrichmentUi = $derived(showProductStrip || showStateBadge || showEnrichmentBlock)
   const stateBadgeLabel = $derived(t(`history.purchaseState.${purchaseState}`))
