@@ -222,6 +222,19 @@
     <p class="note">{t('settings.memoriesDesc')}</p>
 
     <div class="field">
+      <span class="field-label">{t('settings.location')}</span>
+      <input
+        type="text"
+        class="cloud-input"
+        placeholder={t('settings.locationHint')}
+        bind:value={S.settings.location}
+        onblur={save}
+        aria-label={t('settings.location')}
+      />
+      <p class="note">{t('settings.locationDesc')}</p>
+    </div>
+
+    <div class="field">
       <span class="field-label">{t('settings.profile')}</span>
       <textarea
         rows="6"

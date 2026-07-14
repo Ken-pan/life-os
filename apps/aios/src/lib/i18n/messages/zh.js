@@ -190,6 +190,9 @@ export default {
     customPromptHint: '告诉 AI.OS 你希望它如何回答,例如语气、格式、身份背景…',
     memories: '记忆',
     memoriesDesc: '模型在对话中主动记下的事实,也可以手动添加。全部存在本机。',
+    location: '所在地',
+    locationHint: '如:西雅图,美国(留空则不注入)',
+    locationDesc: '常驻注入,天气/本地/时区相关问题据此判断;换城市改这里即可,跟随账号同步。',
     profile: '用户画像',
     profileHint: '关于你的稳定事实,每行一条…',
     profileDesc:

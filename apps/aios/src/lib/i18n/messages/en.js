@@ -195,6 +195,9 @@ export default {
     memoriesDesc:
       'Facts the model saved during chats; you can also add them manually. Stored on this device only.',
     memoriesEmpty: 'No memories yet. Say "remember…" in a chat to save one.',
+    location: 'Location',
+    locationHint: 'e.g. Seattle, USA (leave blank to skip)',
+    locationDesc: 'Always injected — used for weather / local / timezone questions. Update when you move; syncs with your account.',
     profile: 'User profile',
     profileHint: 'Stable facts about you, one per line…',
     profileDesc:

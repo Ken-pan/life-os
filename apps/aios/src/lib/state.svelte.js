@@ -25,6 +25,7 @@ const DEFAULTS = {
     temperature: 0.7,
     ttsVoice: DEFAULT_TTS_VOICE, // 朗读音色(Qwen3-TTS 内置 9 声)
     customPrompt: '', // 自定义指令
+    location: '', // 当前所在地(常驻注入,用于天气/本地/时区判断;跟随账号同步)
     userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)
     userProfileVersion: PROFILE_SCHEMA_VERSION,
     // 云同步用:最后一次「用户主动改设置」的毫秒时间戳,整包设置 LWW 的依据。
