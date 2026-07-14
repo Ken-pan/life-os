@@ -12,3 +12,4 @@ supabase/.temp/
 
 # Local Netlify folder
 .netlify
+.logo-cache/

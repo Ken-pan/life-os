@@ -3228,12 +3228,47 @@ div.input {
 
 .ledger-row {
   display: grid;
-  grid-template-columns: 52px 1fr 140px auto;
+  grid-template-columns: 52px 28px 1fr 140px auto;
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-2) 0;
   border-bottom: 1px solid var(--border);
   font-variant-numeric: tabular-nums;
+}
+
+/* 商户标识：官方 logo 或中性灰占位符（见 MerchantLogo.svelte）。 */
+.merchant-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--merchant-logo-size, 28px);
+  height: var(--merchant-logo-size, 28px);
+  flex: none;
+  align-self: start;
+  margin-top: 1px;
+}
+
+.merchant-logo-img,
+.merchant-logo-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+/* Logo 自带白底方块；描边让它在行背景上收边、不显得漂浮。 */
+.merchant-logo-img {
+  object-fit: contain;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.merchant-logo-fallback-bg {
+  fill: var(--surface-2);
+}
+
+.merchant-logo-fallback-mark {
+  stroke: var(--text-muted);
+  opacity: 0.75;
 }
 
 .ledger-row:last-child {
@@ -3570,6 +3605,9 @@ div.input {
 
 .ledger-row-edit {
   display: grid;
+  /* Only child of the .ledger-row grid — span every column, otherwise the whole
+     edit form is squeezed into the 52px date column. */
+  grid-column: 1 / -1;
   grid-template-columns: 1fr 2fr 1.3fr 1.3fr 1fr 0.9fr auto;
   gap: 6px;
   width: 100%;
@@ -3929,7 +3967,8 @@ div.input {
 
 @media (max-width: 720px) {
   .ledger-row {
-    grid-template-columns: 46px 1fr auto;
+    grid-template-columns: 46px 28px 1fr auto;
+    column-gap: var(--space-2);
   }
 
   .lr-acct {

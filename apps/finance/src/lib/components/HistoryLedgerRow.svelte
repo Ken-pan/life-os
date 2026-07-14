@@ -11,6 +11,7 @@
   import { ledgerAccountColumn, ledgerMetaLine, ledgerTitle } from '../../engine/ledgerDisplay.js'
   import PurchaseEnrichmentBlock from './PurchaseEnrichmentBlock.svelte'
   import LedgerProductStrip from './LedgerProductStrip.svelte'
+  import MerchantLogo from './MerchantLogo.svelte'
 
   const RETAIL_MERCHANT_ONLY_HINT =
     /shopping|grocer|dining|retail|store|market|amazon|target|best\s*buy|walmart|costco|safeway|merchant/i
@@ -165,6 +166,7 @@
     </div>
   {:else}
     <span class="lr-date">{txn.date.slice(5)}</span>
+    <MerchantLogo merchant={txn.merchant} />
     <div class="lr-main">
       <div class="lr-main-head">
         <span class="lr-title">{title}</span>
