@@ -6,7 +6,12 @@
 
 > **PaperOS 证据链接说明（2026-07-12）：** 下方历史条目中的 `qa/paperos/*`、`archive/paperos/*` 证据文件已随 PaperOS 迁出至独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库不再保留。相关行保留为历史记录，链接已去激活。
 
-## 2026-07-10（深度复核 · GYMS.PORTAL.2 · PaperOS 1.1 · PLNR.SCHED.0 根因）
+## 2026-07-13（GYMS.SUB.5 收割 · PLNR.SCHED.0 E2E 复绿）
+
+| 主线    | 发货项 / 里程碑 | 证据 |
+| ------- | --------------- | ---- |
+| Fitness | **GYMS.SUB.5** 替代动作完整训练流 — 工程 gate + 产品 UI/copy closure 全绿，正式收割 | closure #19 `67e72b81`（选中态 `aria-pressed`+checkmark · `done`-分支文案 · Summary `Replaced` · Focus `Switched from`）· `session-queue`+`substitution` specs **9/9** · [`FT-P5-substitution.md`](../../apps/fitness/docs/FT-P5-substitution.md) |
+| Planner | **PLNR.SCHED.0** desktop+mobile E2E 复跑修复 — 2 处 stale selector（`保存`→`创建任务`；schedule preset `下午` exact 匹配）修正后全绿 | `e2e.spec.js` · `screenshot-achievement-schedule.spec.js` · `schedule-usability` standalone guard 4/4 · **剩真机 iPhone 签收** |
 
 | 主线    | 发货项 / 里程碑 | 证据 |
 | ------- | --------------- | ---- |

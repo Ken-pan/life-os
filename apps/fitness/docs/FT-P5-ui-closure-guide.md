@@ -1,8 +1,10 @@
 # Fitness GYMS.SUB.5 — UI/Copy Closure Guide
 
-**Date:** 2026-07-11
-**Parent:** [`FT-P5-substitution.md`](./FT-P5-substitution.md)（工程 gate PASS · 产品 gate BLOCKED）
+**Date:** 2026-07-11 · **Closed:** 2026-07-13（方案 1 + 文案 + P2 Focus 标签全部实现于 #19 `67e72b81`）
+**Parent:** [`FT-P5-substitution.md`](./FT-P5-substitution.md)（工程 gate PASS · 产品 gate **PASS**）
 **Scope:** 产品 UI/copy closure 与下一步实施；**不**改动状态模型或归因逻辑。
+
+> **✅ 已完成（2026-07-13）：** 下述方案 1（P0 选中态 + `aria-pressed` + checkmark）、P1 文案（Modal/Summary）、P2 Focus `Switched from` 标签均已落地并合并（#19）。`substitution.spec.js` 断言选中态与文案，9/9 绿。本文保留为实施记录。
 
 ---
 
@@ -238,14 +240,14 @@ summary.viewed           { hasSubstitution: boolean }
 
 ## 验证清单（closure 完成定义）
 
-- [ ] `.skip-alt.active` 与未选中态肉眼可区分（背景 + 边框 + 非颜色指示）
-- [ ] `aria-pressed` 或 radiogroup 语义正确
-- [ ] 0 sets：Skip 文案；partial：Replace remaining sets / Confirm replacement
-- [ ] Summary：partial + substitute → Replaced；substitute 独立行
-- [ ] Focus：可选 Switched from 标签
-- [ ] `npx playwright test tests/session-queue.spec.js tests/substitution.spec.js` — 全绿
-- [ ] `npm run check` · `npm run build` — PASS
-- [ ] Targeted product re-review — PASS
+- [x] `.skip-alt.active` 与未选中态肉眼可区分（accent 背景 + 边框 + inset 阴影 + checkmark 指示）
+- [x] `aria-pressed` 语义正确（`SkipModal.svelte`）
+- [x] 0 sets：Skip 文案；partial：`replaceRemainingTitle` / `confirmReplacement`
+- [x] Summary：partial + substitute → `Replaced` badge（`SummaryView.svelte`）
+- [x] Focus：`Switched from …` 标签（`FocusSession.svelte`）
+- [x] `npx playwright test tests/session-queue.spec.js tests/substitution.spec.js` — **9/9 绿（2026-07-13）**
+- [x] `npm run check` · `npm run build` — PASS（#19 CI）
+- [x] Targeted product re-review — 闭环于 #19（selected state 现明显可辨）
 
 ---
 

@@ -47,16 +47,15 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 | 序  | ID                  | 主题                                         | App         | 桶      | ROI | 验收                                                                                                                                                                      |
 | --- | ------------------- | -------------------------------------------- | ----------- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **PLNR.SCHED.0**    | 日程视图 debug + 可用性闭环                  | Planner     | Product | 🔥  | migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** 待 Ken |
-| 2   | **GYMS.SUB.5**      | 替代动作完整训练流                           | Fitness     | Product | 🔥  | **✅ Complete** · Engineering PASS · Product gate PASS · #19 `67e72b81` |
-| 3   | **FINC.PURCHASE.6** | 支出审核（商品明细 + 后续处理）              | Finance     | Product | 🔥  | Discovery **CONDITIONAL PASS**（2026-07-11）；**`FINC.PURCHASE.6.a` BLOCKED** — [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md) |
-| 4   | **PLNR.CORE.4** / **FINC.SYNC.1b** | 快赢 — 计数对齐 / 扩展 sync 状态 | Planner / Finance | Growth | ◆ | ~0.5d 各                                                                                                                                              |
+| 2   | **FINC.PURCHASE.6** | 支出审核（商品明细 + 后续处理）              | Finance     | Product | 🔥  | Discovery **CONDITIONAL PASS**（2026-07-11）；**`FINC.PURCHASE.6.a` BLOCKED** — [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md) |
+| 3   | **PLNR.CORE.4** / **FINC.SYNC.1b** | 快赢 — 计数对齐 / 扩展 sync 状态 | Planner / Finance | Growth | ◆ | ~0.5d 各                                                                                                                                              |
 | —   | **PAPR.\*** | PaperOS 设备 Shell（含 PAPR.UI · PAPR.WRITE.5） | **PaperOS** | Product | —   | 已迁出独立仓库 — 见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)                                                                                  |
 
 **Agent 分线全文：** `[roadmap/AGENT_WORKSTREAMS.md](./roadmap/AGENT_WORKSTREAMS.md)`
 
-**PLNR.SCHED.0 进度：** Antigravity baseline ✅ · **PLNR.SCHED.0.migrate PASS** `cb11fbcc` · PWA harness `29f0c2ed` · Planner build/check/unit ✅ · desktop E2E **72 passed / 8 skipped** · PWA mobile sanity ✅ · **无已确认产品 P0**。阻塞：**standalone shell guard**（Today `display` 断言 / Settings·Calendar `Execution context was destroyed`）· **`qa:mobile-scroll`** 同类失败 · isolated `schedule-usability.spec.js` fixture 债务 · **真机 iPhone Home Screen standalone 未验** · 最终 sign-off 未完成。**FINC.PURCHASE.6.a / PLNR.UIUX.0 禁止开始。**
+**PLNR.SCHED.0 进度：** Antigravity baseline ✅ · **PLNR.SCHED.0.migrate PASS** `cb11fbcc` · PWA harness `29f0c2ed` · Planner build/check/unit ✅ · **desktop + mobile E2E 全绿**（2026-07-13 复跑：84→修 2 处 stale selector 后全通过；`schedule-usability` standalone guard 4/4 PASS）· **无已确认产品 P0**。**唯一剩余：真机 iPhone Home Screen standalone 签收（待 Ken）** → 合并后解锁 FINC.PURCHASE.6.a / PLNR.UIUX.0。
 
-**GYMS.SUB.5 进度：** 状态模型与归因工程 gate **PASS**（focused tests 8/8）；产品 gate **BLOCKED** — closure 指南 [`apps/fitness/docs/FT-P5-ui-closure-guide.md`](../apps/fitness/docs/FT-P5-ui-closure-guide.md)（推荐方案 1 · PR-A/B/C）。
+**GYMS.SUB.5 ✅ 已发货（2026-07-13 确认）：** 工程 gate PASS + 产品 UI/copy closure 全部落地于 #19 `67e72b81`（选中态 accent bg+border+checkmark+`aria-pressed`、`done`-分支文案、Summary `Replaced`、Focus `Switched from`）；`session-queue`+`substitution` specs **9/9 绿**。详见 [`apps/fitness/docs/FT-P5-substitution.md`](../apps/fitness/docs/FT-P5-substitution.md)。
 
 **PaperOS：** 设备 Shell、数据面 verify、系统生命周期、UI device gate 全部迁出独立仓库 — 详情见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)；Hub 只保留 Planner 侧 provider API 状态。
 

@@ -1,10 +1,10 @@
 # Fitness GYMS.SUB.5 — Substitution Flow (Canonical)
 
-**Verification date:** 2026-07-11
+**Verification date:** 2026-07-11 · **Closure verified:** 2026-07-13
 **Section:** GYMS.SUB.5 state model · engineering gate · product review
-**Overall release readiness:** **BLOCKED** — engineering complete; bounded UI/copy closure required before ship.
+**Overall release readiness:** **PASS (shipped)** — UI/copy closure landed in #19 `67e72b81`; all automated gates green.
 
-> **Do not mark GYMS.SUB.5 complete** because focused behavioral tests pass. The product gate remains blocked until substitute selection is visually perceptible and follow-up copy is corrected.
+> **Closed 2026-07-13.** The P0 blocker (substitute selected state imperceptible) and P1 copy items were implemented in #19 (`.skip-alt.active` accent bg + border + inset shadow + checkmark, `aria-pressed`, `done`-branched title/confirm copy, Summary `Replaced` badge, Focus `Switched from` label). Verified: `session-queue.spec.js` + `substitution.spec.js` **9/9 green** (incl. selection-state + copy assertions).
 
 ---
 
@@ -18,13 +18,13 @@
 | Queue identity | **PASS** | No deduplication by `exerciseId` |
 | Reload / next-back persistence | **PASS** | Substitute survives navigation and reload |
 | Summary / Stats / progression / Coach | **PASS** | Performance attributed to performed exercise |
-| Product understandability | **BLOCKED** | Substitute selected state imperceptible (P0) |
-| **GYMS.SUB.5 overall** | **BLOCKED** | UI/copy closure + targeted product re-review |
+| Product understandability | **PASS** | Selected state now accent bg + border + checkmark + `aria-pressed` (#19) |
+| **GYMS.SUB.5 overall** | **PASS** | UI/copy closure shipped in #19; specs 9/9 green (2026-07-13) |
 
 ```text
 GYMS.SUB.5 engineering gate: PASS
-GYMS.SUB.5 product gate: BLOCKED
-GYMS.SUB.5 overall release readiness: BLOCKED
+GYMS.SUB.5 product gate: PASS (closure #19; specs 9/9)
+GYMS.SUB.5 overall release readiness: PASS — shipped
 ```
 
 ---
@@ -35,17 +35,13 @@ GYMS.SUB.5 replaces the old skip-only bookkeeping with a stable **planned slot /
 
 **Engineering is complete and verified** by focused Playwright tests and build/check gates.
 
-**Product release is blocked** because the substitute option’s selected state in `SkipModal` is effectively identical to its unselected state. Additional P1 copy/terminology issues do not block the state model but must be closed before ship.
+**Product release closure shipped in #19 (`67e72b81`, 2026-07-13 verified):** the previously-blocking UI/copy items are all implemented and test-covered — see [`FT-P5-ui-closure-guide.md`](./FT-P5-ui-closure-guide.md).
 
-**Remaining work is bounded UI/copy closure** — not a broader Fitness redesign. **Implementation playbook:** [`FT-P5-ui-closure-guide.md`](./FT-P5-ui-closure-guide.md).
-
-1. Visible substitute selected state (P0) — **Scheme 1 recommended:** accent background + border + checkmark + `aria-pressed`
-2. Partial-completion modal terminology (P1) — Replace/Swap wording when `done > 0`
-3. Summary “Replaced” terminology (P1)
-4. Optional lightweight Focus relationship label (P2)
-5. Targeted product re-review
-
-**Quick fix (unblock P0 only):** CSS-only `.skip-alt.active` tint; copy changes can follow in PR-B.
+1. ✅ Visible substitute selected state (P0) — accent background + border + inset shadow + checkmark + `aria-pressed` (`SkipModal.svelte`, `app.css`)
+2. ✅ Partial-completion modal terminology (P1) — `done`-branched `replaceRemainingTitle` / `confirmReplacement`
+3. ✅ Summary “Replaced” terminology (P1) — `SummaryView.svelte` `replaced` badge
+4. ✅ Lightweight Focus relationship label (P2) — “Switched from …” (`FocusSession.svelte`)
+5. ✅ Automated closure verified — `substitution.spec.js` asserts selection state + copy; 9/9 green
 
 ---
 

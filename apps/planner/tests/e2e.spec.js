@@ -110,7 +110,7 @@ test.describe('PlannerOS E2E', () => {
     await dialog.locator('#task-due').fill(localDateOffset(0))
     await openAdvancedOptions(dialog)
     await dialog.locator('#task-priority').selectOption('P0')
-    await dialog.getByRole('button', { name: '保存' }).click()
+    await dialog.getByRole('button', { name: '创建任务' }).click()
     await page.goto('/')
     await expect(
       page.locator('.task-title', { hasText: '会议准备' }),
