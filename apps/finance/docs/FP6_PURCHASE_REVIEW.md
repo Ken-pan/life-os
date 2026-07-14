@@ -10,7 +10,9 @@
 > - ✅ **Decision engine (SSOT)** `packages/finance-core/src/engine/purchaseReviewDecision.ts` — state machine (proposed/confirmed/rejected), optimistic `association_version`, `action_key` idempotency, single-step latest-first Undo, automation precedence helpers. **Unit-tested 14/14** (`purchaseReviewDecision.test.ts`).
 > - ✅ **Migration deployed** `20260713120000_purchase_review_associations.sql` on prod `iueozzuctstwvzbcxcyh` (registered in `schema_migrations`): `purchase_associations` + append-only `purchase_decisions`, RLS enabled + 5 policies (owner + `has_app_access('finance')`), RPCs `purchase_review_get/_decide/_undo`, **273 transactions backfilled → `proposed`**.
 > - ✅ **RPC logic verified end-to-end on production** (self-cleaning round-trip, net-zero change): confirm→200 (v0→1), idempotent replay (no new decision), `not_proposed`→400, `version_conflict`→409, undo→200 (proposed, v→2, links confirm). Matches the tested engine 1:1.
-> - ⏳ **Still open:** RLS **cross-user denial** runtime proof (needs two real authenticated JWT sessions — the superuser Management-API path bypasses RLS, so only policy *definitions* are verified so far); matcher precedence wiring in `link-purchase-orders.mjs`; Antigravity visual baseline; UI Confirm/Reject/Undo.
+> - ✅ **(A) Matcher precedence wired** `link-purchase-orders.mjs` — `purchaseReviewAutomationGate` skips identity writes to `confirmed` transactions and refuses resurfacing `rejected` candidates; `fetchReviewPrecedence` degrades gracefully pre-migration. Engine gate unit-tested (18/18); precedence query validated on prod.
+> - ✅ **(B) UI Confirm/Reject/Undo** `PurchaseEnrichmentBlock.svelte` — lazy `purchase_review_get` on expand (404 self-hides), Confirm/Reject on `proposed`, decided state + 10s Undo affordance, optimistic echo + reconcile, explicit saving/stale(409)/unknown(timeout) outcomes. svelte-check 0 errors; app loads clean.
+> - ⏳ **Still open:** RLS **cross-user denial** runtime proof (needs two real authenticated JWT sessions — superuser API bypasses RLS); Antigravity visual baseline; **live UI eyeball** (needs owner login — Confirm→Undo on a real enriched History row).
 
 ---
 
@@ -25,8 +27,9 @@
 | Antigravity desktop/mobile visual baseline | **BLOCKED** | No valid isolated QA storage state |
 | FINC.PURCHASE.6 discovery / spec section | **PASS** | Product IA, mutation contract, blockers documented |
 | FINC.PURCHASE.6.a data foundation (engine + migration) | **DEPLOYED** | Engine 14/14; migration on prod (2026-07-13), 273 backfilled; RPC logic verified end-to-end |
+| FINC.PURCHASE.6.a matcher precedence (A) | **DONE** | `purchaseReviewAutomationGate` wired; gate unit-tested 18/18 |
+| FINC.PURCHASE.6.a UI Confirm/Reject/Undo (B) | **CODE DONE** | Wired to RPCs; svelte-check clean; live eyeball pending owner login |
 | FINC.PURCHASE.6.a RLS cross-user proof | **PENDING** | Policies defined + enabled; runtime denial needs two real JWT sessions |
-| FINC.PURCHASE.6.a UI mutations readiness | **BLOCKED** | RPCs live; UI Confirm/Reject/Undo + matcher precedence wiring next |
 
 ---
 
