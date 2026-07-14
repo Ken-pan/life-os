@@ -32,17 +32,22 @@ function renderMath(tex, display) {
 /** 行内语法:先转义,再按占位符保护 code span,最后套用其余规则 */
 function renderInline(raw) {
   const codeSpans = []
+  // 占位符用 NUL 包裹索引(\x00<index>\x00):NUL 不会出现在模型文本里,也不受
+  // 转义/加粗/斜体/链接规则影响。刻意不用「空格+数字+空格」——那会误伤正文里
+  // 空格分隔的普通数字(如中文「将 5 升桶」),把数字当占位符吞掉。
   let text = raw.replace(/`([^`]+)`/g, (_, code) => {
     codeSpans.push(`<code>${escapeHtml(code)}</code>`)
-    return ` ${codeSpans.length - 1} `
+    return `\x00${codeSpans.length - 1}\x00`
   })
-  // 行内公式(code span 之后、转义之前抽取;空格数字空格占位符不受转义/内联规则影响;复用 codeSpans 占位池,与其索引天然对齐)
-  const stashMath = (tex) => `  ${codeSpans.push(renderMath(tex, false)) - 1}  `
+  // 行内公式(code span 之后、转义之前抽取;NUL 占位符不受转义/内联规则影响;复用 codeSpans 占位池,与其索引天然对齐)
+  const stashMath = (tex) => `\x00${codeSpans.push(renderMath(tex, false)) - 1}\x00`
   text = text.replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => stashMath(tex))
   text = text.replace(/(?<!\\)\$([^\n$]+?)\$/g, (m, tex) => {
     const t = tex.trim()
-    // 防误判:空、含首尾空格(多为货币 "$5 and $")、或纯数字("$5")时保留原文
-    if (!t || t !== tex || /^[\d.,]+$/.test(t)) return m
+    // 防误判,以下情况保留原文不当公式:空、含首尾空格(多为货币 "$5 and $")、纯数字("$5")、
+    // 或含中日韩字符——真·LaTeX 几乎不含中文,含中文的多是货币/正文里两个 $ 恰好夹住
+    // (如定价 "$5/百万 token,$25/…"),误判成公式会渲染成乱码
+    if (!t || t !== tex || /^[\d.,]+$/.test(t) || /[一-鿿]/.test(t)) return m
     return stashMath(tex)
   })
   text = escapeHtml(text)
@@ -54,7 +59,7 @@ function renderInline(raw) {
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (_, label, href) => {
       return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`
     })
-  text = text.replace(/ (\d+) /g, (_, i) => codeSpans[Number(i)] ?? '')
+  text = text.replace(/\x00(\d+)\x00/g, (_, i) => codeSpans[Number(i)] ?? '')
   return text
 }
 
