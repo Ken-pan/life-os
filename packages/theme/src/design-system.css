@@ -13,6 +13,7 @@
 @import './tokens.css' layer(life-os.tokens);
 @import './generated/component.css' layer(life-os.tokens);
 @import './base.css' layer(life-os.base);
+@import './scrollbar.css' layer(life-os.base);
 @import './portrait-gate.css' layer(life-os.platform);
 @import './ios-safari.css' layer(life-os.platform);
 @import './layout.css' layer(life-os.layout);

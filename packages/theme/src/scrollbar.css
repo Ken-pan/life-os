@@ -1,0 +1,66 @@
+/*
+  Life OS 共享滚动条基线 —— 全线一致的细化、主题化滚动条。
+
+  设计要点：
+  - scrollbar-gutter: stable —— 短页/长页切换时主滚动不再左右跳（预留 gutter）。
+  - Token 驱动：内容区用 --t3，侧栏用 --sidebar-foreground；浅/深主题自动适配。
+  - 通过 --scrollbar-thumb / --scrollbar-thumb-hover 变量间接上色，任意滚动容器
+    可在自身作用域内覆盖这两个变量来改色（WebKit 伪元素会读取宿主元素的变量）。
+  - Firefox 用 scrollbar-width / scrollbar-color（在根上设置后向下继承）；
+    WebKit/Chromium 用 ::-webkit-scrollbar 一族。
+
+  覆盖关系：本文件位于 life-os.base 层，App 自己 app.css 里的非 layer 滚动条
+  规则会自然覆盖本基线（cascade），因此已定制的 App 不受影响，未处理的 App
+  自动获得统一的基线。
+*/
+
+:root {
+  --scrollbar-thumb: color-mix(in srgb, var(--t3, #808080) 40%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--t3, #808080) 62%, transparent);
+
+  /* 主滚动预留固定 gutter，消除页面间横向跳动 */
+  scrollbar-gutter: stable;
+
+  /* Firefox：根上设置后继承给所有滚动容器 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+/* WebKit / Chromium：统一细化 + 圆角 + 透明轨道 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 侧栏内滚动区：跟随侧栏前景色，深栏（浅 thumb）/ 浅栏（深 thumb）都协调。
+   仅覆盖 --scrollbar-thumb 变量与宽度，颜色规则复用上面的全局 ::-webkit 规则。 */
+.sidebar-body {
+  --scrollbar-thumb: color-mix(in srgb, var(--sidebar-foreground, #808080) 22%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--sidebar-foreground, #808080) 38%, transparent);
+  /* scrollbar-width 不继承，需在每个滚动容器显式声明（Firefox） */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.sidebar-body::-webkit-scrollbar {
+  width: 8px;
+}
