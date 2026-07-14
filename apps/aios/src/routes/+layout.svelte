@@ -63,6 +63,8 @@
     )
     // 早晨今日简报:运行时轮询 + 挂载即查(原生壳且开启才实际发通知)
     startDailyBriefScheduler()
+    // 外部 MCP server 工具发现(配置了才有;失败静默,不阻塞启动)
+    import('$lib/mcp.js').then((m) => m.refreshMcpTools()).catch(() => {})
     return () => {
       clearTimeout(dreamTimer)
       cleanupTheme()

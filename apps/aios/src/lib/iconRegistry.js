@@ -38,6 +38,7 @@ import GitPullRequest from '@lucide/svelte/icons/git-pull-request'
 import Wallet from '@lucide/svelte/icons/wallet'
 import ListTodo from '@lucide/svelte/icons/list-todo'
 import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard'
+import Plug from '@lucide/svelte/icons/plug'
 import Square from '@lucide/svelte/icons/square'
 import SquarePen from '@lucide/svelte/icons/square-pen'
 import Trash2 from '@lucide/svelte/icons/trash-2'
@@ -86,6 +87,7 @@ export const ICONS = {
   wallet: Wallet,
   'list-todo': ListTodo,
   dashboard: LayoutDashboard,
+  plug: Plug,
   stop: Square,
   compose: SquarePen,
   trash: Trash2,

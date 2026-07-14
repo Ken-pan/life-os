@@ -9,6 +9,14 @@
   import { CLOUD, signInCloud, signOutCloud, syncNow } from '$lib/cloud.svelte.js'
   import { isNative } from '$lib/native.js'
   import {
+    loadServers,
+    saveServers,
+    slugifyId,
+    refreshMcpTools,
+    testServer,
+    mcpToolCount,
+  } from '$lib/mcp.js'
+  import {
     PERMS,
     PERM_META,
     refreshPermissions,
@@ -58,6 +66,76 @@
     if (!S.settings.dailyBrief) S.settings.dailyBrief = { enabled: false, time: '08:00' }
     S.settings.dailyBrief.time = e.target.value || '08:00'
     save()
+  }
+
+  /* —— MCP servers（设备本地） —— */
+  let mcpServers = $state(loadServers())
+  let mcpToolN = $state(mcpToolCount())
+  let mcpDraft = $state({ name: '', url: '', token: '' })
+  let mcpStatus = $state('')
+  let mcpBusy = $state(false)
+
+  function persistMcp() {
+    saveServers($state.snapshot(mcpServers))
+  }
+
+  async function addMcpServer() {
+    const name = mcpDraft.name.trim()
+    const url = mcpDraft.url.trim()
+    if (!name || !url) {
+      mcpStatus = t('settings.mcpNeedNameUrl')
+      return
+    }
+    let id = slugifyId(name)
+    const taken = new Set(mcpServers.map((s) => s.id))
+    let base = id
+    let i = 2
+    while (taken.has(id)) id = `${base}_${i++}`
+    mcpServers = [
+      ...mcpServers,
+      { id, name, url, token: mcpDraft.token.trim() || undefined, enabled: true },
+    ]
+    persistMcp()
+    mcpDraft = { name: '', url: '', token: '' }
+    await refreshMcp()
+  }
+
+  function removeMcpServer(id) {
+    mcpServers = mcpServers.filter((s) => s.id !== id)
+    persistMcp()
+    refreshMcp()
+  }
+
+  function toggleMcpServer(id) {
+    mcpServers = mcpServers.map((s) =>
+      s.id === id ? { ...s, enabled: !s.enabled } : s,
+    )
+    persistMcp()
+    refreshMcp()
+  }
+
+  async function refreshMcp() {
+    mcpBusy = true
+    mcpStatus = t('settings.mcpRefreshing')
+    const { ok, failed } = await refreshMcpTools()
+    mcpToolN = mcpToolCount()
+    mcpBusy = false
+    mcpStatus = failed.length
+      ? t('settings.mcpSomeFailed', {
+          n: mcpToolN,
+          errs: failed.map((f) => `${f.name}: ${f.error}`).join('；'),
+        })
+      : t('settings.mcpRefreshed', { ok, n: mcpToolN })
+  }
+
+  async function testMcpServer(server) {
+    mcpBusy = true
+    mcpStatus = t('settings.mcpTesting', { name: server.name })
+    const r = await testServer($state.snapshot(server))
+    mcpBusy = false
+    mcpStatus = r.ok
+      ? t('settings.mcpTestOk', { name: server.name, n: r.tools.length, tools: r.tools.slice(0, 12).join(', ') })
+      : t('settings.mcpTestFail', { name: server.name, error: r.error })
   }
 
   let briefPreview = $state('')
@@ -383,6 +461,73 @@
       </div>
     </section>
   {/if}
+
+  <section class="card">
+    <h2>
+      {t('settings.mcp')}
+      {#if mcpToolN}<span class="count">{t('settings.mcpToolCount', { n: mcpToolN })}</span>{/if}
+    </h2>
+    <p class="note">{t('settings.mcpDesc')}</p>
+
+    {#each mcpServers as server (server.id)}
+      <div class="mcp-row">
+        <button
+          type="button"
+          class="switch"
+          class:on={server.enabled}
+          role="switch"
+          aria-checked={server.enabled}
+          aria-label={server.name}
+          onclick={() => toggleMcpServer(server.id)}
+        ></button>
+        <span class="mcp-meta">
+          <span class="mcp-name">{server.name}</span>
+          <span class="mcp-url">{server.url}</span>
+        </span>
+        <button type="button" class="mini-btn" disabled={mcpBusy} onclick={() => testMcpServer(server)}>
+          {t('settings.mcpTest')}
+        </button>
+        <button type="button" class="mini-btn" onclick={() => removeMcpServer(server.id)}>
+          {t('settings.mcpRemove')}
+        </button>
+      </div>
+    {/each}
+
+    <div class="field mcp-add">
+      <input
+        type="text"
+        class="cloud-input"
+        placeholder={t('settings.mcpNamePlaceholder')}
+        bind:value={mcpDraft.name}
+        aria-label={t('settings.mcpName')}
+      />
+      <input
+        type="url"
+        class="cloud-input"
+        placeholder="https://…/mcp"
+        bind:value={mcpDraft.url}
+        aria-label="URL"
+      />
+      <input
+        type="password"
+        class="cloud-input"
+        placeholder={t('settings.mcpTokenPlaceholder')}
+        bind:value={mcpDraft.token}
+        aria-label="Token"
+      />
+      <div class="mcp-actions">
+        <button type="button" class="mini-btn primary" disabled={mcpBusy} onclick={addMcpServer}>
+          {t('settings.mcpAdd')}
+        </button>
+        {#if mcpServers.length}
+          <button type="button" class="mini-btn" disabled={mcpBusy} onclick={refreshMcp}>
+            {t('settings.mcpRefresh')}
+          </button>
+        {/if}
+      </div>
+      {#if mcpStatus}<p class="note">{mcpStatus}</p>{/if}
+    </div>
+  </section>
 
   <section class="card">
     <h2>
@@ -894,5 +1039,38 @@
   }
   .danger-btn:hover {
     background: var(--card-h);
+  }
+
+  /* —— MCP servers —— */
+  .mcp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-l);
+  }
+  .mcp-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  .mcp-name {
+    font-size: var(--text-sm, 14px);
+    color: var(--t1);
+  }
+  .mcp-url {
+    font-size: var(--text-xs, 12px);
+    color: var(--t3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mcp-add {
+    gap: 8px;
+  }
+  .mcp-actions {
+    display: flex;
+    gap: 8px;
   }
 </style>

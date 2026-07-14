@@ -3,6 +3,7 @@ import { addMemory, searchMemories } from '$lib/memory.svelte.js'
 import { startImageProgress, stopImageProgress } from '$lib/imageProgress.svelte.js'
 import { isNative, NATIVE_DEFS, isNativeTool, executeNativeTool } from '$lib/native.js'
 import { lifeOsToday, financeSummary, plannerTasks, plannerAddTask } from '$lib/lifeos.js'
+import { mcpToolDefinitions, isMcpTool, executeMcpTool } from '$lib/mcp.js'
 
 /**
  * 内置工具(OpenAI function calling 格式)。
@@ -544,10 +545,13 @@ const DEFS = [
 export function toolDefinitions({ webAccess = true } = {}) {
   const defs = DEFS.filter((t) => (t.web ? webAccess : true))
   // 原生壳(Tauri)里追加 Mac 专属工具;浏览器里 isNative=false 自动不注册
-  return (isNative ? [...defs, ...NATIVE_DEFS] : defs).map((t) => t.def)
+  const builtin = (isNative ? [...defs, ...NATIVE_DEFS] : defs).map((t) => t.def)
+  // 外部 MCP server 发现的工具(已在 mcp.js 缓存;未配置则为空)
+  return [...builtin, ...mcpToolDefinitions()]
 }
 
 export function toolIcon(name) {
+  if (isMcpTool(name)) return 'plug'
   return (DEFS.find((t) => t.key === name) ?? NATIVE_DEFS.find((t) => t.key === name))?.icon ?? 'wrench'
 }
 
@@ -1380,6 +1384,9 @@ export async function executeTool(name, argsJson) {
     } catch (err) {
       return `原生工具执行失败:${err?.message ?? err}`
     }
+  }
+  if (isMcpTool(name)) {
+    return await executeMcpTool(name, args)
   }
   try {
     switch (name) {
