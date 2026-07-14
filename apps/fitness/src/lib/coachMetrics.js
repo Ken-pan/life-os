@@ -2,7 +2,7 @@ import { S, todayKey, daysBetween, sessionStats } from './state.svelte.js';
 import { effectiveDone } from './logs.js';
 import { getProgram } from './programRuntime.js';
 import { exerciseHistory } from './stats.js';
-import { EX_BY_ID, resolveExerciseId } from './data/exercises.js';
+import { EX_BY_ID, EX_GROUPS, resolveExerciseId } from './data/exercises.js';
 
 /* ═══════════════ 肌群归一化与周容量 ═══════════════ */
 
@@ -39,6 +39,61 @@ function groupOfExercise(ex) {
   return muscleGroupOf(rawM);
 }
 
+/* ───────── 分数容量（fractional volume）计数 ─────────
+ * RP / Israetel 的容量地标是按「主动肌 1 组 + 协同肌约 0.5 组」定义的。
+ * 若只数直接组，卧推不计三头/前束、划船不计二头、深蹲不计臀 —— 会系统性
+ * 低估间接受力大的肌群（手臂、臀、后链），把已练够的部位误报成「偏低」。
+ * 因此这里对复合动作补记 0.5 组间接容量，口径才与地标一致。
+ * 参考：Schoenfeld 容量-剂量反应；Israetel《Scientific Principles of Hypertrophy Training》。
+ */
+
+/** 动作 id → 目录分组（chest/back/shoulders/…），判断动作模式用 */
+const EX_BUCKET = {};
+for (const [bucket, list] of Object.entries(EX_GROUPS)) {
+  for (const e of list) EX_BUCKET[e.id] = bucket;
+}
+
+/** 直臂/耸肩类背部动作二头不参与，排除间接二头容量 */
+const PULL_NO_BICEPS = new Set(['b_straightarm', 'b_pullover', 'b_shrug']);
+/** 直立划船更偏肩/斜方，三头不参与 */
+const PRESS_NO_TRICEPS = new Set(['sh_upright']);
+
+/**
+ * 单个动作对各肌群的容量贡献（分数组）：主动肌 1.0、次要/间接肌 0.5。
+ * 来源：① m 里 "/" 后列出的次要区域；② 复合推→三头、复合拉→二头 的标准间接容量。
+ * 注意：肩（三角肌）合并了前/中/后束，为避免推举把侧束缺口掩盖成「达标」，
+ * 不给普通卧推补记前束间接容量（肩容量只认直接的推举/侧平举/后束动作）。
+ * @param {{ id?: string, m?: string }} ex
+ * @returns {Map<string, number>}
+ */
+function exerciseContributions(ex) {
+  const contrib = new Map();
+  const id = ex?.id ? resolveExerciseId(ex.id) : null;
+  const rawM = (id && EX_BY_ID[id]?.m) || ex?.m || '';
+  const parts = String(rawM)
+    .split('/')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const primary = muscleGroupOf(parts[0]);
+  if (primary) contrib.set(primary, 1);
+  for (const p of parts.slice(1)) {
+    const g = muscleGroupOf(p);
+    if (g && !contrib.has(g)) contrib.set(g, 0.5);
+  }
+
+  const bucket = id ? EX_BUCKET[id] : null;
+  const isChestPress = bucket === 'chest' && !/孤立|内侧/.test(rawM);
+  const isShoulderPress = bucket === 'shoulders' && parts[0] === '肩' && !PRESS_NO_TRICEPS.has(id);
+  const isBackPull =
+    bucket === 'back' && /背阔|中背|背厚|上背|背宽/.test(parts[0] || '') && !PULL_NO_BICEPS.has(id);
+
+  if ((isChestPress || isShoulderPress) && !contrib.has('三头')) contrib.set('三头', 0.5);
+  if (isBackPull && !contrib.has('二头')) contrib.set('二头', 0.5);
+
+  return contrib;
+}
+
 /**
  * 各肌群每周直接组数的科学容量地标（hypertrophy volume landmarks，RP 风格）：
  *   mev = 最低有效容量（低于此 → 增肌刺激不足）
@@ -73,13 +128,18 @@ export function muscleVolumeStatus(daysBack = 7) {
   const totals = weeklyMuscleVolume(daysBack);
   return LANDMARK_ORDER.map((group) => {
     const { mev, mav, mrv } = MUSCLE_LANDMARKS[group];
-    const sets = totals[group] || 0;
-    const status = sets < mev ? 'low' : sets > mrv ? 'high' : 'optimal';
+    const raw = totals[group] || 0;
+    const status = raw < mev ? 'low' : raw > mrv ? 'high' : 'optimal';
+    // 分数容量四舍五入到 0.5 组用于展示；状态判定用原始值
+    const sets = Math.round(raw * 2) / 2;
     return { group, sets, mev, mav, mrv, status };
   });
 }
 
-/** 近 N 天各主肌群的直接训练组数 */
+/**
+ * 近 N 天各肌群的分数容量（fractional sets）：主动肌记满、复合动作的协同肌记 0.5，
+ * 口径与 MUSCLE_LANDMARKS 一致（见上方 exerciseContributions 说明）。
+ */
 export function weeklyMuscleVolume(daysBack = 7) {
   const today = todayKey();
   const days = getProgram().days;
@@ -98,9 +158,9 @@ export function weeklyMuscleVolume(daysBack = 7) {
       if (!ex) return;
       const done = effectiveDone(entry, ex.sets);
       if (!done) return;
-      const g = groupOfExercise({ id: exId, m: ex.m });
-      if (!g) return;
-      totals[g] = (totals[g] || 0) + done;
+      for (const [g, frac] of exerciseContributions({ id: exId, m: ex.m })) {
+        totals[g] = (totals[g] || 0) + done * frac;
+      }
     });
   });
   return totals;

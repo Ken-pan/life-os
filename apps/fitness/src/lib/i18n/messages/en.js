@@ -668,7 +668,7 @@ export default {
       'No workouts yet. Complete a session to see it on the calendar.',
     volumeByDay: 'Working sets by day (4 weeks)',
     muscleVolume: 'Weekly volume by muscle',
-    muscleVolumeNote: 'Direct sets per week vs hypertrophy range',
+    muscleVolumeNote: 'Weekly volume vs hypertrophy range (synergists count 0.5)',
     mvTarget: 'Target {mev}–{mrv}',
     mvSets: '{n} sets',
     mvLow: 'Low',

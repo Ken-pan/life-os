@@ -633,7 +633,7 @@ export default {
     calendarEmpty: '暂无训练记录。完成一次训练后，日历上会显示对应日期。',
     volumeByDay: '近 4 周各日有效组数',
     muscleVolume: '本周各肌群容量',
-    muscleVolumeNote: '每周直接组数 vs 增肌容量区间',
+    muscleVolumeNote: '每周训练容量 vs 增肌区间（复合动作协同肌计 0.5 组）',
     mvTarget: '目标 {mev}–{mrv}',
     mvSets: '{n} 组',
     mvLow: '偏低',
