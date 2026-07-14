@@ -20,7 +20,7 @@ assert.doesNotMatch(
   /\.from\(['"](?:user_state|exercise_weights|workout_sessions|exercise_logs)['"]\)/,
   '应使用 FITNESS_TABLES 而非裸表名'
 );
-assert.match(authSrc, /createAuthSyncHandler/);
+assert.match(authSrc, /createAppAuthStore/);
 assert.match(authSrc, /syncBidirectional/);
 
 for (const name of Object.values(FITNESS_TABLES)) {
