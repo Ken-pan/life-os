@@ -44,6 +44,8 @@ FITNESS.OS 是一个面向个人训练管理的 Web 应用。基于 **SvelteKit 
 - **标记减载**：一键记录 `rotation.lastDeload`
 - **计划可配置**（`/program/edit`）：自定义组数/休息/reps、隐藏动作、导入导出 overrides
 - **Coach Lite**：本地规则引擎（周期、频率、加重、体态）→ 首页 / Focus / Summary
+- **自动调节（Readiness）**：近 7 天 RIR + 周期信号 → 今日可执行建议（疲劳 → 减 1 组/降 5–10%；恢复充分 → 绿灯冲 PR），并入 Coach（`readinessAssessment`）
+- **热身坡道**：凑重工具/Focus 里按工作重量给出 40/60/80% × 递减次数的热身阶梯，取整到可加载增量（`warmupRamp`）
 
 ### 基础能力
 

@@ -384,6 +384,39 @@ export function estimate1RM(weight, reps, rir = 0) {
 }
 
 /**
+ * 热身坡道：从（接近）空杆逐级升到工作重量，减少健身房心算。
+ * 方案 40% × 8 → 60% × 5 → 80% × 3（经典 ramp），四舍五入到可加载增量。
+ * 低于杆重的档并到空杆；等于/超过工作重量的档丢弃；相邻重复档去重。
+ * @param {number} workWeight 工作组总重（与 unit 一致）
+ * @param {number} barWeight 杆重（同单位）
+ * @param {{ unit?: 'lbs' | 'kg' }} [opts]
+ * @returns {{ pct: number, weight: number, reps: number }[]}
+ */
+export function warmupRamp(workWeight, barWeight = DEFAULT_BAR_LBS, opts = {}) {
+  const w = Number(workWeight);
+  const bar = Number(barWeight) || 0;
+  const inc = opts.unit === 'kg' ? 2.5 : 5; // 最小可加载总增量(每侧最小片×2)
+  // 工作重量至少要比杆重高出两级增量，否则没有热身空间
+  if (!(w > bar + inc * 2)) return [];
+  const scheme = [
+    { pct: 0.4, reps: 8 },
+    { pct: 0.6, reps: 5 },
+    { pct: 0.8, reps: 3 }
+  ];
+  const steps = [];
+  let prev = null;
+  for (const s of scheme) {
+    let weight = Math.round((w * s.pct) / inc) * inc;
+    if (weight < bar) weight = bar;
+    if (weight >= w) continue;
+    if (weight === prev) continue;
+    steps.push({ pct: Math.round(s.pct * 100), weight, reps: s.reps });
+    prev = weight;
+  }
+  return steps;
+}
+
+/**
  * 目标重量 → 每侧杠铃片组合（贪心）。
  * @param {number} targetWeight 总重（与 plates 同单位）
  * @param {number} [barWeight]

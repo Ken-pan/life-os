@@ -17,6 +17,46 @@ function listSep() {
 }
 
 /**
+ * 自动调节（readiness）：把已采集的 RIR + 周期信号转成「今天怎么练」的可执行判断。
+ * - low  = 疲劳偏高 → 建议今天减 1 组或降 5–10% 保动作质量
+ * - high = 恢复充分且强度在有效区 → 绿灯，可正常发力甚至冲 PR
+ * - normal / unknown = 无需特别调整或数据不足（RIR 记录 < 8 组）
+ * @returns {{ level: 'low'|'high'|'normal'|'unknown', avgRir?: number, failurePct?: number, nearDeload?: boolean, adjust?: { sets: number, pct: number } }}
+ */
+export function readinessAssessment() {
+  const rir = recentRirStats(7);
+  if (!rir || rir.sets < 8) return { level: 'unknown' };
+
+  const sinceDeload = sessionsSinceDeload();
+  const deepBlock = sinceDeload >= 8;
+  const stats = sessionStats();
+
+  // 疲劳偏高：贴着力竭练（平均 RIR < 1）或近半数组练到力竭
+  if (rir.avgRir < 1 || rir.failurePct >= 45) {
+    return {
+      level: 'low',
+      avgRir: rir.avgRir,
+      failurePct: rir.failurePct,
+      nearDeload: deepBlock,
+      adjust: { sets: -1, pct: deepBlock ? -0.1 : -0.05 }
+    };
+  }
+
+  // 绿灯：留有余量（2 ≤ RIR < 3.5，仍在有效刺激区）、极少力竭、未深陷周期、且已休息
+  const fresh =
+    rir.avgRir >= 2 &&
+    rir.avgRir < 3.5 &&
+    rir.failurePct <= 15 &&
+    !deepBlock &&
+    (stats.daysSince == null || stats.daysSince >= 1);
+  if (fresh) {
+    return { level: 'high', avgRir: rir.avgRir };
+  }
+
+  return { level: 'normal', avgRir: rir.avgRir };
+}
+
+/**
  * 本地 Coach Lite：纯规则引擎，不依赖外部 API。
  * 数据驱动的建议（疲劳、递进、容量、平台期）优先，
  * 静态科普提示只在没有更重要内容时补位。
@@ -41,30 +81,41 @@ export function coachBrief() {
     });
   }
 
+  const readiness = readinessAssessment();
+  if (readiness.level === 'low') {
+    const pct = Math.round(Math.abs(readiness.adjust.pct) * 100);
+    tips.push({
+      id: 'readiness-low',
+      priority: 2,
+      tone: 'action',
+      title: t('coach.readyLowTitle'),
+      body: t('coach.readyLowBody', {
+        avgRir: readiness.avgRir,
+        failurePct: readiness.failurePct,
+        pct,
+        extra: readiness.nearDeload ? t('coach.fatigueExtra') : ''
+      })
+    });
+  } else if (readiness.level === 'high') {
+    tips.push({
+      id: 'readiness-high',
+      priority: 3,
+      tone: 'success',
+      title: t('coach.readyHighTitle'),
+      body: t('coach.readyHighBody', { avgRir: readiness.avgRir })
+    });
+  }
+
+  // 强度长期过保守（离力竭太远）与疲劳是两条轴：单独提示。
   const rir = recentRirStats(7);
-  if (rir && rir.sets >= 8) {
-    if (rir.avgRir < 1) {
-      const nearDeload = !deload.shouldDeload && sessionsSinceDeload() >= 8;
-      tips.push({
-        id: 'fatigue',
-        priority: 2,
-        tone: 'warn',
-        title: t('coach.fatigueTitle'),
-        body: t('coach.fatigueBody', {
-          avgRir: rir.avgRir,
-          failurePct: rir.failurePct,
-          extra: nearDeload ? t('coach.fatigueExtra') : ''
-        })
-      });
-    } else if (rir.avgRir >= 3.5) {
-      tips.push({
-        id: 'intensity-low',
-        priority: 3,
-        tone: 'info',
-        title: t('coach.intensityLowTitle'),
-        body: t('coach.intensityLowBody', { avgRir: rir.avgRir })
-      });
-    }
+  if (rir && rir.sets >= 8 && rir.avgRir >= 3.5) {
+    tips.push({
+      id: 'intensity-low',
+      priority: 3,
+      tone: 'info',
+      title: t('coach.intensityLowTitle'),
+      body: t('coach.intensityLowBody', { avgRir: rir.avgRir })
+    });
   }
 
   if (stats.daysSince != null && stats.daysSince >= 4) {

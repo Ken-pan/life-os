@@ -14,6 +14,7 @@
     plateConfigFor,
     equipVariantsFor,
     equipHint,
+    warmupRamp,
     DEFAULT_BAR_LBS,
     DEFAULT_BAR_KG
   } from '$lib/tools/calculators.js';
@@ -51,6 +52,10 @@
   const denoms = $derived(plateInventoryFor(unit));
   const barOptions = $derived(unit === 'kg' ? [20, 15, 10, 0] : [45, 35, 25, 15, 0]);
   const currentVal = $derived(Number(value) || 0);
+  // 热身坡道：仅通用凑重（无动作）或可装片动作显示；哑铃/机械/绳索隐藏
+  const warmup = $derived(
+    !ex || plateCfg ? warmupRamp(currentVal, Number(bar) || 0, { unit }) : []
+  );
 
   const collapsedHint = $derived.by(() => {
     const v = Number(value) || 0;
@@ -242,6 +247,26 @@
       showBarPicker
       allowCustomBar
     />
+  {/if}
+
+  {#if warmup.length}
+    <div class="warmup-block">
+      <div class="warmup-head" data-ui-decor="section-label">{t('tools.warmupTitle')}</div>
+      <div class="warmup-list">
+        {#each warmup as s (s.pct)}
+          <div class="warmup-step">
+            <span class="warmup-pct">{s.pct}%</span>
+            <span class="warmup-wt">{s.weight}<span class="warmup-unit">{unitLabel}</span></span>
+            <span class="warmup-reps">×{s.reps}</span>
+          </div>
+        {/each}
+        <div class="warmup-step warmup-work">
+          <span class="warmup-pct">100%</span>
+          <span class="warmup-wt">{currentVal}<span class="warmup-unit">{unitLabel}</span></span>
+          <span class="warmup-reps">{t('tools.warmupWork')}</span>
+        </div>
+      </div>
+    </div>
   {/if}
 </div>
 

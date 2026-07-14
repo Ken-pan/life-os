@@ -318,6 +318,12 @@ export default {
     fatigueBody:
       'Last 7 days avg RIR is {avgRir} ({failurePct}% of sets to failure). Recovery is lagging — leave 1–2 RIR on most sets{extra}.',
     fatigueExtra: ', or schedule a deload early',
+    readyLowTitle: 'Ease off today',
+    readyLowBody:
+      'Avg RIR {avgRir} over the last 7 days, {failurePct}% of sets to failure — today drop one set per exercise or cut ~{pct}% load and keep form clean{extra}.',
+    readyHighTitle: 'Good to go',
+    readyHighBody:
+      'Avg {avgRir} RIR in reserve over 7 days and well recovered — push normally today, and chase a PR if it feels right.',
     intensityLowTitle: 'Intensity too easy',
     intensityLowBody:
       'Last 7 days avg RIR is {avgRir} — too far from failure for growth. Aim for RIR 0–3 on working sets.',
@@ -620,6 +626,8 @@ export default {
     tab1rm: '1RM',
     tabPlates: 'Plates',
     tabRest: 'Rest',
+    warmupTitle: 'Warm-up ramp',
+    warmupWork: 'work set',
     tabListAria: 'Tool type',
     targetWeight: 'Target weight',
     clear: 'Clear',

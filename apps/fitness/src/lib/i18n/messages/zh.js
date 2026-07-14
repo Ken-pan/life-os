@@ -306,6 +306,12 @@ export default {
     fatigueBody:
       '近 7 天平均 RIR 只有 {avgRir}（{failurePct}% 的组练到力竭）。恢复跟不上会影响增长，接下来几天多数组留 1–2 RIR{extra}。',
     fatigueExtra: '，或考虑提前安排减载',
+    readyLowTitle: '今天量力而行',
+    readyLowBody:
+      '近 7 天平均 RIR {avgRir}、{failurePct}% 的组练到力竭 —— 今天每个动作少做 1 组或降约 {pct}% 重量，把动作质量放第一{extra}。',
+    readyHighTitle: '状态在线',
+    readyHighBody:
+      '近 7 天平均留 {avgRir} RIR、恢复到位 —— 今天可以正常发力，状态好的话挑战一下 PR。',
     intensityLowTitle: '强度偏保守',
     intensityLowBody:
       '近 7 天平均 RIR 有 {avgRir}，离力竭太远刺激不足。正式组建议练到 RIR 0–3 区间。',
@@ -586,6 +592,8 @@ export default {
     tab1rm: '1RM',
     tabPlates: '凑重',
     tabRest: '休息',
+    warmupTitle: '热身坡道',
+    warmupWork: '工作组',
     tabListAria: '工具类型',
     targetWeight: '目标总重',
     clear: '清空',
