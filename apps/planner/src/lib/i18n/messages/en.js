@@ -39,6 +39,20 @@ export default {
     empty: 'No tasks yet',
     tasks: '{count} tasks',
   },
+  attachments: {
+    title: 'Attachments',
+    add: 'Add files',
+    uploading: 'Uploading…',
+    failed: 'Failed',
+    retry: 'Retry',
+    open: 'Open',
+    delete: 'Delete',
+    error: {
+      noOwner: 'Please save first before uploading attachments',
+      tooLarge: 'File is too large (max 25MB)',
+      forbiddenType: 'File type not allowed',
+    },
+  },
   home: {
     title: 'Today',
     overdue: 'Overdue',

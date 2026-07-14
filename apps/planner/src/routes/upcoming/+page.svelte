@@ -36,7 +36,7 @@
         hideCount
         tasks={groups.week}
         collapsible
-        defaultExpanded={false}
+        defaultExpanded={true}
         compactRows
         onToggle={completeTask}
         onEdit={editTask}
@@ -48,14 +48,11 @@
         hideCount
         tasks={groups.later}
         collapsible
-        defaultExpanded={false}
+        defaultExpanded={true}
         compactRows
         onToggle={completeTask}
         onEdit={editTask}
       />
-    {/if}
-    {#if totalCount <= 3}
-      <p class="page-hint">{t('upcoming.sparseHint')}</p>
     {/if}
   {/if}
 </div>

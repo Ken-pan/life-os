@@ -39,6 +39,20 @@ export default {
     empty: '暂无任务',
     tasks: '{count} 项',
   },
+  attachments: {
+    title: '附件',
+    add: '添加文件',
+    uploading: '上传中…',
+    failed: '上传失败',
+    retry: '重试',
+    open: '打开',
+    delete: '删除',
+    error: {
+      noOwner: '请先保存,再上传附件',
+      tooLarge: '文件过大(最大 25MB)',
+      forbiddenType: '不支持的文件类型',
+    },
+  },
   home: {
     title: '今天',
     overdue: '已过期',
