@@ -240,10 +240,12 @@
         <span class="subtitle">{pageHeader.subtitle}</span>
       </div>
       <span class="spacer"></span>
-      {#if updatedLabel}
-        <span class="updated">{updatedLabel}</span>
-      {/if}
-      <ReportBugButton app="finance" {supabase} user={auth.user} />
+      <div class="page-header-actions">
+        {#if updatedLabel}
+          <span class="updated">{updatedLabel}</span>
+        {/if}
+        <ReportBugButton app="finance" {supabase} user={auth.user} />
+      </div>
     </header>
 
     <main class="content">

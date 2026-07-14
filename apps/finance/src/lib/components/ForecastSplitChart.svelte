@@ -14,8 +14,9 @@
    *   inflation: number,
    *   horizonMonths: number,
    *   privacy: boolean,
+   *   height?: number,
    * }} */
-  let { baseline, displayMode, inflation, horizonMonths, privacy } = $props()
+  let { baseline, displayMode, inflation, horizonMonths, privacy, height = 340 } = $props()
 
   const months = $derived(Math.min(horizonMonths, baseline.length - 1))
   const step = $derived(months > 120 ? 3 : 1)
@@ -33,7 +34,7 @@
     yDomain={[0, null]}
     yNice
     padding={{ top: 10, right: 12, bottom: 24, left: 56 }}
-    height={340}
+    {height}
   >
     <Layer>
       <Axis

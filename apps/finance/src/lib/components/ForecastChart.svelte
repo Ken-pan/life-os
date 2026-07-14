@@ -20,6 +20,7 @@
    *   inflation: number,
    *   horizonMonths: number,
    *   privacy: boolean,
+   *   height?: number,
    *   goals?: import('../../types.js').Goal[],
    * }} */
   let {
@@ -32,6 +33,7 @@
     inflation,
     horizonMonths,
     privacy,
+    height = 340,
   } = $props()
 
   const months = $derived(Math.min(horizonMonths, baseline.length - 1))
@@ -62,7 +64,7 @@
     y="baseline"
     {yDomain}
     padding={{ top: 10, right: 12, bottom: 24, left: 56 }}
-    height={340}
+    {height}
   >
     <Layer>
       <Axis

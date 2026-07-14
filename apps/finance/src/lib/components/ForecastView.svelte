@@ -1,5 +1,6 @@
 <script>
   // Port of src/components/ForecastView.tsx.
+  import { onMount } from 'svelte'
   import { t } from '$lib/i18n.svelte.js'
   import {
     adjustForDisplay,
@@ -54,6 +55,17 @@
   let metric = $state(/** @type {ForecastMetric} */ ('accessible'))
   let chartMode = $state(/** @type {'trajectory' | 'composition'} */ ('trajectory'))
   let showMetricHint = $state(false)
+
+  // 图表高度需与 .forecast-chart-wrap 的 CSS 高度一致（桌面 340 / 移动 280），
+  // 否则固定高度的 SVG 会溢出容器、底部月份轴标签压到下方文字。
+  let chartHeight = $state(340)
+  onMount(() => {
+    const mq = window.matchMedia('(max-width: 720px)')
+    const sync = () => (chartHeight = mq.matches ? 280 : 340)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  })
 
   const read = $derived(metricValue(metric))
   const horizonMonths = $derived(years * 12)
@@ -323,6 +335,7 @@
           displayMode={a.displayMode}
           inflation={a.inflation}
           horizonMonths={horizonMonths}
+          height={chartHeight}
           {privacy}
         />
       {:else}
@@ -331,6 +344,7 @@
           displayMode={a.displayMode}
           inflation={a.inflation}
           horizonMonths={horizonMonths}
+          height={chartHeight}
           {privacy}
         />
       {/if}
