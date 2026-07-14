@@ -5,9 +5,9 @@
 */
 
 :root {
-  --mini-player-track-h: 2px;
+  --mini-player-track-h: 3px;
   --mini-player-h: calc(var(--mini-player-body-h) + var(--mini-player-track-h));
-  --mini-player-body-h: 76px;
+  --mini-player-body-h: 60px;
   --player-art-size: clamp(260px, min(74vw, 54vh), 400px);
   --player-stage-max: min(1080px, 100%);
   --player-art-radius: 22px;
@@ -18,7 +18,7 @@
   --seek-thumb: 10px;
   --seek-hit-h: var(--progress-h);
   --seek-thumb-color: var(--t1, var(--text));
-  --progress-bg: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
+  --progress-bg: color-mix(in srgb, var(--t1, var(--text)) 18%, transparent);
   --progress-fill: var(--track-accent, var(--accent));
   --queue-drawer-max-h: min(52dvh, 420px);
 }
@@ -83,12 +83,6 @@
 }
 
 @media (pointer: coarse) {
-  :root {
-    /* Compact touch strip — keeps the seek tappable without bloating the
-       floating card the way the old 44px strip did. */
-    --mini-player-track-h: 26px;
-  }
-
   .mini-player-top-progress {
     flex: 0 0 var(--mini-player-track-h);
     height: var(--mini-player-track-h);
@@ -214,6 +208,22 @@
   gap: 0;
 }
 
+/* Thin album-adaptive progress hairline flush at the card's top edge
+   (replaces the tall interactive seek strip — seeking lives in now-playing). */
+.mini-player-progress-line {
+  flex: 0 0 var(--mini-player-track-h);
+  height: var(--mini-player-track-h);
+  width: 100%;
+  border-radius: var(--radius-pill) var(--radius-pill) 0 0;
+  background: linear-gradient(
+    to right,
+    var(--track-accent, var(--accent)) var(--progress-pct, 0%),
+    color-mix(in srgb, var(--t1, var(--text)) 12%, transparent)
+      var(--progress-pct, 0%)
+  );
+  transition: none;
+}
+
 .mini-player-progress--inline {
   display: none;
 }
@@ -271,7 +281,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1) var(--space-3);
   padding-left: max(var(--space-3), var(--safe-left-effective));
   text-decoration: none;
   color: inherit;
@@ -4834,11 +4844,17 @@ html.utility-pane-resizing {
   }
 
   .music-app[data-page-route='now-playing'] .now-playing--apple-mobile .player-controls--quiet .ctrl,
-  .music-app[data-page-route='now-playing'] .now-playing--apple-mobile .player-controls--minimal.player-controls--quiet .ctrl,
-  .music-app[data-page-route='now-playing'] .now-playing--apple-mobile .player-controls--quiet .ctrl-main {
+  .music-app[data-page-route='now-playing'] .now-playing--apple-mobile .player-controls--minimal.player-controls--quiet .ctrl {
     color: #fff;
     background: transparent;
     box-shadow: none;
+  }
+
+  /* 主播放键：磨砂白填充圆，突出主操作（保持沉浸单色美学，不引入撞色） */
+  .music-app[data-page-route='now-playing'] .now-playing--apple-mobile .np-mobile-chrome .player-controls--quiet .ctrl-main {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.6);
   }
 
   .music-app[data-page-route='now-playing'] .now-playing--apple-mobile .np-mobile-action-btn {

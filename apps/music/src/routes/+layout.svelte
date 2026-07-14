@@ -11,6 +11,7 @@
   import QueueDrawer from '$lib/components/QueueDrawer.svelte'
   import UtilityPane from '$lib/components/UtilityPane.svelte'
   import Toast from '$lib/components/Toast.svelte'
+  import NowPlayingOverlay from '$lib/components/NowPlayingOverlay.svelte'
   import ConnectivitySyncStatus from '$lib/components/ConnectivitySyncStatus.svelte'
   import SyncErrorBanner from '@life-os/platform-web/svelte/sync-error'
   import DocumentHead from '@life-os/platform-web/svelte/head'
@@ -302,3 +303,5 @@
     <Toast />
   {/snippet}
 </LifeOsAppShell>
+
+<NowPlayingOverlay />

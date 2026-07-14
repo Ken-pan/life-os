@@ -1,6 +1,5 @@
 <script>
   import { onMount } from 'svelte'
-  import { goto } from '$app/navigation'
   import { t } from '$lib/i18n/index.js'
   import TrackRow from '$lib/components/TrackRow.svelte'
   import TrackArt from '$lib/components/TrackArt.svelte'
@@ -24,7 +23,7 @@
   } from '$lib/homeFilter.js'
   import { db } from '$lib/db.js'
   import { scheduleLibraryMaintenance } from '$lib/import.js'
-  import { librarySignals } from '$lib/state.svelte.js'
+  import { librarySignals, setImmersiveViewMode } from '$lib/state.svelte.js'
   import {
     playTracks,
     playTrack,
@@ -36,8 +35,7 @@
     resumeSession,
   } from '$lib/player.svelte.js'
   import { visibleWarm } from '$lib/visibleWarm.js'
-  import { markNowPlayingReturn } from '$lib/nav.js'
-  import { openUtilityPane } from '$lib/ui.svelte.js'
+  import { openUtilityPane, openNowPlaying } from '$lib/ui.svelte.js'
   import { prefetchTracksAudio } from '$lib/cloudAudio.js'
   import { scheduleHydrateRecentAudioCache } from '$lib/audioBlobStore.js'
 
@@ -164,8 +162,8 @@
       openUtilityPane('lyrics')
       return
     }
-    markNowPlayingReturn('/')
-    void goto('/now-playing')
+    setImmersiveViewMode('lyrics')
+    openNowPlaying()
   }
 </script>
 
@@ -226,13 +224,16 @@
               </button>
             </div>
             <div class="now-card-foot">
-              <a
+              <button
+                type="button"
                 class="btn-secondary now-card-foot-btn"
-                href="/now-playing"
-                onclick={() => markNowPlayingReturn('/')}
+                onclick={() => {
+                  setImmersiveViewMode('player')
+                  openNowPlaying()
+                }}
               >
                 {t('home.continueImmersion')}
-              </a>
+              </button>
               <button
                 type="button"
                 class="btn-ghost now-card-foot-btn"

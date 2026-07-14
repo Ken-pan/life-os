@@ -13,8 +13,13 @@ function isInteractiveGestureTarget(target) {
 /**
  * Vertical swipe-to-dismiss (art / header zone only — avoids progress scrub conflicts).
  * Supports touch + pointer for mobile and desktop trackpads.
+ *
+ * Listens on `node` but moves `surface` — the whole presented view (its
+ * background, grabber and content) so it dismisses as one cohesive card rather
+ * than the content sliding out of its own chrome. Pass `surfaceSelector` to
+ * transform an ancestor container instead of the listener element.
  * @param {HTMLElement} node
- * @param {{ onDismiss: () => void, threshold?: number }} opts
+ * @param {{ onDismiss: () => void, threshold?: number, surfaceSelector?: string, onProgress?: (p: number) => void }} opts
  */
 export function swipeDismiss(node, opts) {
   let startY = 0;
@@ -25,13 +30,33 @@ export function swipeDismiss(node, opts) {
   /** @type {number | null} */
   let rafId = null;
   let pendingDy = 0;
+  // Velocity estimate (px/ms), low-pass filtered for a stable read at release.
+  let lastY = 0;
+  let lastT = 0;
+  let velocity = 0;
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let springTimer = null;
 
-  /** Apply the drag transform once per frame (coalesces rapid touchmoves). */
+  /** The element actually transformed (whole card), not just the listener. */
+  const surface =
+    (opts.surfaceSelector &&
+      /** @type {HTMLElement | null} */ (node.closest(opts.surfaceSelector))) ||
+    node;
+
+  const now = () =>
+    typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const viewportH = () =>
+    typeof window !== 'undefined' ? window.innerHeight || 800 : 800;
+
+  /** Follow the finger 1:1; the sheet recedes (scale + fade) as it sinks. */
   function flushTransform() {
     rafId = null;
     if (!tracking) return;
-    node.style.transform = `translateY(${pendingDy}px)`;
-    node.style.opacity = String(Math.max(0.35, 1 - pendingDy / 420));
+    const p = Math.max(0, Math.min(1, pendingDy / viewportH()));
+    const scale = 1 - p * 0.12;
+    surface.style.transform = `translateY(${pendingDy}px) scale(${scale})`;
+    surface.style.opacity = String(1 - p * 0.35);
+    opts.onProgress?.(p);
   }
 
   function cancelPending() {
@@ -46,7 +71,16 @@ export function swipeDismiss(node, opts) {
     startY = y;
     startX = x;
     tracking = true;
-    node.style.transition = 'none';
+    lastY = y;
+    lastT = now();
+    velocity = 0;
+    if (springTimer != null) {
+      clearTimeout(springTimer);
+      springTimer = null;
+    }
+    surface.style.transition = 'none';
+    surface.style.transformOrigin = '50% 0%';
+    surface.style.willChange = 'transform, opacity';
   }
 
   /** @param {number} x @param {number} y */
@@ -54,10 +88,44 @@ export function swipeDismiss(node, opts) {
     if (!tracking) return;
     const dy = y - startY;
     const dx = x - startX;
-    if (dy > 8 && Math.abs(dx) < Math.abs(dy) * 0.75) {
+    const t = now();
+    const dt = t - lastT;
+    // Ignore sub-frame samples: a near-zero dt yields an astronomical
+    // instantaneous velocity that poisons the filter into a false flick
+    // (high-rate digitizers can emit two moves in the same millisecond).
+    if (dt >= 8) {
+      const inst = Math.max(-6, Math.min(6, (y - lastY) / dt));
+      velocity = velocity * 0.7 + inst * 0.3;
+      lastY = y;
+      lastT = t;
+    }
+    if (dy > 2 && Math.abs(dx) < Math.abs(dy) * 0.85) {
       pendingDy = dy;
       if (rafId == null) rafId = requestAnimationFrame(flushTransform);
     }
+  }
+
+  /** Ease the sheet back to rest with the design system's emphasized spring. */
+  function springBack() {
+    cancelPending();
+    opts.onProgress?.(0);
+    surface.style.transition =
+      'transform 340ms var(--ease-emphasized, cubic-bezier(0.2, 0.9, 0.3, 1)), opacity 240ms ease';
+    surface.style.transform = '';
+    surface.style.opacity = '';
+    const clear = () => {
+      surface.style.willChange = '';
+      surface.style.transformOrigin = '';
+      surface.style.transition = '';
+      if (springTimer != null) {
+        clearTimeout(springTimer);
+        springTimer = null;
+      }
+      surface.removeEventListener('transitionend', clear);
+    };
+    surface.addEventListener('transitionend', clear);
+    // Fallback: never leak will-change if transitionend doesn't fire.
+    springTimer = setTimeout(clear, 420);
   }
 
   /** @param {number} y */
@@ -67,10 +135,18 @@ export function swipeDismiss(node, opts) {
     pointerId = null;
     cancelPending();
     const dy = y - startY;
-    node.style.transition = '';
-    node.style.transform = '';
-    node.style.opacity = '';
-    if (dy > (opts.threshold ?? 88)) opts.onDismiss();
+    const dist = opts.threshold ?? 88;
+    // Dismiss on distance OR a fast downward flick (velocity in px/ms) — the
+    // flick path is what makes a short, quick swipe feel responsive.
+    const flick = velocity > 0.65;
+    if (dy > 6 && (dy >= dist || flick)) {
+      // Leave the transient transform in place; the route's view transition
+      // captures it and carries the exit. The node unmounts on navigate.
+      surface.style.willChange = '';
+      opts.onDismiss();
+    } else {
+      springBack();
+    }
   }
 
   /** @param {TouchEvent} e */
@@ -128,6 +204,7 @@ export function swipeDismiss(node, opts) {
   return {
     destroy() {
       cancelPending();
+      if (springTimer != null) clearTimeout(springTimer);
       node.removeEventListener('touchstart', onTouchStart);
       node.removeEventListener('touchmove', onTouchMove);
       node.removeEventListener('touchend', onTouchEnd);

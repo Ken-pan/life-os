@@ -1,7 +1,6 @@
 <script>
   import { browser } from '$app/environment';
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import Icon from '@life-os/platform-web/svelte/icon';
   import TrackArt from './TrackArt.svelte';
@@ -17,8 +16,8 @@
     setVolume,
     toggleMute
   } from '$lib/player.svelte.js';
-  import { openUtilityPane, toggleUtilityPane, openQueueDrawer } from '$lib/ui.svelte.js';
-  import { isMiniPlayerHidden, markNowPlayingReturn } from '$lib/nav.js';
+  import { openUtilityPane, toggleUtilityPane, openQueueDrawer, openNowPlaying as openNowPlayingOverlay } from '$lib/ui.svelte.js';
+  import { isMiniPlayerHidden } from '$lib/nav.js';
   import { swipeTrack } from '$lib/gestures.js';
   import { setImmersiveViewMode } from '$lib/state.svelte.js';
   import { t } from '$lib/i18n/index.js';
@@ -29,6 +28,11 @@
   const repeatIcon = $derived(player.repeat === 'one' ? 'repeat-1' : 'repeat');
   const volumeIcon = $derived(player.muted || player.volume === 0 ? 'volume-x' : 'volume-2');
   const statusHint = $derived(player.statusHint || '');
+  const progressPct = $derived(
+    player.duration > 0
+      ? Math.min(100, Math.max(0, (player.currentTime / player.duration) * 100))
+      : 0,
+  );
 
   let isDesktop = $state(browser && window.matchMedia('(min-width: 840px)').matches);
 
@@ -49,9 +53,8 @@
 
   /** @param {'player' | 'lyrics' | 'queue'} [mode] */
   function openNowPlaying(mode) {
-    markNowPlayingReturn(page.url.pathname);
     if (mode) setImmersiveViewMode(mode);
-    void goto('/now-playing');
+    openNowPlayingOverlay();
   }
 </script>
 
@@ -62,7 +65,11 @@
   aria-hidden={!visible}
 >
   {#if !isDesktop}
-    <SeekBar variant="mini-top" />
+    <div
+      class="mini-player-progress-line"
+      aria-hidden="true"
+      style={`--progress-pct: ${progressPct}%`}
+    ></div>
   {/if}
 
   <div class="mini-player-body">

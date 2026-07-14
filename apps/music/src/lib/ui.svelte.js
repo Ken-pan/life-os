@@ -27,6 +27,42 @@ export function toast(msg, toneOrOpts = 'success', maybeOpts = {}) {
   toastStore.toast(msg, toneOrOpts, maybeOpts)
 }
 
+/** Immersive now-playing as an overlay over the live page (reveals it on drag). */
+export const nowPlaying = $state({ open: false })
+let nowPlayingHistoryPushed = false
+
+export function openNowPlaying() {
+  if (nowPlaying.open) return
+  nowPlaying.open = true
+  if (typeof history !== 'undefined') {
+    try {
+      history.pushState({ ...(history.state || {}), npOverlay: true }, '')
+      nowPlayingHistoryPushed = true
+    } catch {
+      nowPlayingHistoryPushed = false
+    }
+  }
+}
+
+/**
+ * Unmount the overlay (called after its exit animation). When the close was
+ * driven by our own UI (not the browser back button) we pop the history entry
+ * we pushed so the URL/back-stack stays clean.
+ * @param {boolean} [fromPopstate]
+ */
+export function finalizeCloseNowPlaying(fromPopstate = false) {
+  if (!nowPlaying.open) return
+  nowPlaying.open = false
+  if (!fromPopstate && nowPlayingHistoryPushed && typeof history !== 'undefined') {
+    try {
+      history.back()
+    } catch {
+      /* ignore */
+    }
+  }
+  nowPlayingHistoryPushed = false
+}
+
 export const queueDrawerOpen = $state({ open: false })
 
 export function openQueueDrawer() {
