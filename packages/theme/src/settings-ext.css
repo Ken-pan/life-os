@@ -219,9 +219,18 @@
     width: 100%;
   }
 
-  .settings-row .pref-control > .seg button {
+  /* 2–3 项的普通 seg(语言/明暗)等分填满整行 */
+  .settings-row .pref-control > .seg:not(.seg--wrap) button {
     flex: 1 1 0;
     min-width: 0;
+  }
+
+  /* seg--wrap(如「切换计划」较长选项):basis 随内容(nowrap 保证标签不逐字断行)、
+     grow 均分剩余把整行填满;整行放不下时整体折到下一行(seg--wrap 的 flex-wrap:wrap)。
+     短标签(胸/背/腿/臂)因此仍等分填满,长标签(上下 4 日)也不再断成「上下 4 / 日」。 */
+  .settings-row .pref-control > .seg--wrap button {
+    flex: 1 1 auto;
+    white-space: nowrap;
   }
 
   .settings-row.set-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .pref-control > .seg {
