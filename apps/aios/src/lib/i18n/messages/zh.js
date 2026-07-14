@@ -42,6 +42,7 @@ export default {
     newChat: '新对话',
     retry: '重试',
     gatewayDown: '无法连接本地网关(127.0.0.1:18888)。请确认 LocalAI 服务已启动,然后重试。',
+    genError: '这一条没能生成完,可点重试。',
     toolRunning: '运行中…',
     sources: '来源',
     attachImage: '添加图片',

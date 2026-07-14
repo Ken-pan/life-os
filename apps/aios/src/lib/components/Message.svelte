@@ -492,7 +492,9 @@
               {#if ctx}
                 <span class="tool-ctx" title={ctx}>{ctx}</span>
               {/if}
-              <Icon name="chevron-down" size={12} strokeWidth={2} />
+              <span class="tool-chevron" aria-hidden="true">
+                <Icon name="chevron-down" size={12} strokeWidth={2} />
+              </span>
             </summary>
             <div class="tool-body">
               {#if tc.arguments && tc.arguments !== '{}'}
@@ -609,7 +611,9 @@
 
     {#if !streamingThis && parts.answer && sources.length}
       <div class="sources">
-        <span class="sources-label">{t('chat.sources')}</span>
+        <span class="sources-label"
+          >{t('chat.sources')}<span class="sources-count">{sources.length}</span></span
+        >
         <div class="sources-row">
           {#each sources as s, i (s.url)}
             <button
@@ -639,7 +643,9 @@
 
     {#if message.error}
       <div class="error" role="alert">
-        <p>{t('chat.gatewayDown')}</p>
+        <!-- 只有网关确实不可达才提示去重启 LocalAI;流超时/工具失败/检索没收尾等
+             网关健在的错误显示通用文案,避免误导用户白重启服务 -->
+        <p>{C.gatewayOk === false ? t('chat.gatewayDown') : t('chat.genError')}</p>
         <p class="error-detail">{message.error}</p>
         <button type="button" onclick={() => regenerate()}>
           <Icon name="refresh" size={13} strokeWidth={2} />
@@ -934,7 +940,7 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    padding: 5px 12px 5px 8px;
+    padding: 5px 10px 5px 7px;
     border: 1px solid var(--border);
     border-radius: 999px;
     background: var(--bg-2);
@@ -943,22 +949,40 @@
     cursor: pointer;
     list-style: none;
     user-select: none;
+    transition:
+      border-color 0.12s ease,
+      background 0.12s ease,
+      color 0.12s ease;
   }
   .tool summary::-webkit-details-marker {
     display: none;
   }
   .tool summary:hover {
     border-color: var(--border-l);
+    background: var(--card);
     color: var(--t1);
   }
   .tool-icon {
     display: grid;
     place-items: center;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--card);
     color: var(--t2);
+  }
+  .tool summary:hover .tool-icon {
+    background: var(--card-h);
+    color: var(--t1);
+  }
+  /* 折叠箭头:静止淡色,展开时旋转 180°(对齐 ChatGPT/Claude 的可展开工具卡) */
+  .tool-chevron {
+    display: inline-flex;
+    color: var(--t3);
+    transition: transform 0.18s ease;
+  }
+  .tool[open] > summary .tool-chevron {
+    transform: rotate(180deg);
   }
   .tool-icon.running {
     animation: tool-pulse 1s ease-in-out infinite;
@@ -1045,11 +1069,27 @@
     gap: 7px;
   }
   .sources-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--t3);
     font-size: var(--text-xs, 11px);
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+  .sources-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--t2);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0;
   }
   .sources-row {
     display: flex;
@@ -1059,36 +1099,39 @@
   .source-card {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    max-width: 220px;
-    padding: 5px 11px 5px 6px;
+    gap: 8px;
+    max-width: 240px;
+    padding: 6px 12px 6px 7px;
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: 10px;
     background: var(--bg-2);
     color: var(--t2);
     font-size: var(--text-xs, 12px);
     cursor: pointer;
     transition:
-      border-color 0.12s,
-      background 0.12s,
-      color 0.12s;
+      border-color 0.12s ease,
+      background 0.12s ease,
+      color 0.12s ease;
   }
   .source-card:hover {
     border-color: var(--border-l);
     background: var(--card);
     color: var(--t1);
   }
+  /* favicon 式站点小图:隐私上不拉取网络 favicon,用域名首字母单字。
+     配色贴合无彩色品牌——只掺一丝按域名散列的色相,既能区分来源又不喧宾夺主。 */
   .source-dot {
     display: grid;
     place-items: center;
     width: 20px;
     height: 20px;
     flex: none;
-    border-radius: 50%;
-    background: hsl(var(--hue) 55% 42%);
-    color: #fff;
+    border-radius: 6px;
+    background: color-mix(in srgb, hsl(var(--hue) 45% 50%) 16%, var(--card));
+    color: var(--t1);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 650;
+    line-height: 1;
   }
   .source-host {
     overflow: hidden;
@@ -1240,9 +1283,14 @@
   }
   .md :global(blockquote) {
     margin: 0 0 0.75em;
-    padding-inline-start: 12px;
-    border-inline-start: 2px solid var(--border-l);
+    padding: 0.5em 0.9em;
+    border-inline-start: 3px solid var(--border-l);
+    border-radius: 0 8px 8px 0;
+    background: var(--bg-2);
     color: var(--t2);
+  }
+  .md :global(blockquote > :last-child) {
+    margin-bottom: 0;
   }
   .md :global(hr) {
     border: none;

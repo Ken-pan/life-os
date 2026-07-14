@@ -615,7 +615,7 @@ export function createSpeechSession(text, opts = {}) {
 
 /**
  * 文本转语音(整段,非流式)。返回 wav Blob。保留给需要完整音频文件的场景。
- * 交互朗读请用 {@link speakStream}(首声 ~100ms)。
+ * 交互朗读请用 {@link createSpeechSession}(逐句流式,首声 ~数百 ms,可暂停/变速)。
  * @param {string} text
  * @param {string} [voice]
  * @returns {Promise<Blob>}

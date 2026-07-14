@@ -840,12 +840,24 @@ let extOkAt = 0
 async function ensureExtension() {
   if (Date.now() - extOkAt < 15000) return
   let health = await bridgeHealth()
+  // 扩展没连上,最常见的原因就是 Chrome 没开着 —— 原生壳里 best-effort 后台唤起它,
+  // 让扩展自动重连,browse 工具随之自愈,而不是干等 24 秒再把问题甩给用户。
+  if (!health.agent?.extensionConnected && isNative) {
+    try {
+      const { wakeChrome } = await import('$lib/native.js')
+      await wakeChrome()
+    } catch {
+      /* web 端或唤起失败:静默退回下面的等待循环 */
+    }
+  }
   for (let i = 0; i < 8 && !health.agent?.extensionConnected; i++) {
     await sleep(3000)
     health = await bridgeHealth()
   }
   if (!health.agent?.extensionConnected) {
-    throw new Error('Chrome 扩展未连接(Chrome 没在运行,或没有加载 Web State DevTools 扩展)')
+    throw new Error(
+      'Chrome 扩展未连接:请确认 Chrome 正在运行且已加载 Web State DevTools 扩展(扩展每 20 秒自动重连,稍等再试)。',
+    )
   }
   extOkAt = Date.now()
 }

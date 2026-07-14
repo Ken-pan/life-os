@@ -9,6 +9,7 @@ import {
 } from '$lib/localai.js'
 import { toolDefinitions, executeTool, consumePendingImages } from '$lib/tools.js'
 import { recallRelevant, autoExtractMemories, M as MEM } from '$lib/memory.svelte.js'
+import { isNative } from '$lib/native.js'
 import { dataChanged } from '$lib/syncBus.js'
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 
@@ -371,13 +372,23 @@ async function buildSystemPrompt(conversation) {
         '- 联网查资料:browser_search(结果自带摘要,先筛选)→ 挑 1-3 篇 open_browser_page(直接返回正文)→ 长文按结果尾部提示用 read_browser_page(part=text, offset=N) 续读 → 汇总并附来源链接\n' +
         '- 用户说"当前页面/我打开的这个网页":read_browser_page(不要 open)\n' +
         '- 页面上点击/填表/触发"加载更多":browser_interact;看页面里的图片/图表/布局:look_at_browser_page\n' +
-        '- browser 工具报错:browser_status 诊断,把提示转告用户\n' +
+        '- browser 工具偶发报错:先直接重试一次(工具会自动后台唤起 Chrome 让扩展重连);仍失败再 browser_status 诊断并把提示转告用户\n' +
         '- 算数 calculate;跑代码 run_javascript;日期时间 get_time' +
         (S.settings.webAccess
           ? '\n- 浏览器工具不可用时才退回 web_search / fetch_url(公共代理,较不稳定)'
           : '') +
         '\n不要:在同一页面反复滚动重读(用 offset 续读);编造网页内容或链接。',
     )
+    if (isNative) {
+      lines.push(
+        '本机原生能力(只有这台 Mac 上可用,按需伸手,别为简单问答滥用):\n' +
+          '- 改代码/修 bug/写脚本/跑测试/多文件工程:delegate_task 派给本机 Claude Code(默认)或 cursor,异步执行——派发后回复用户并用 check_task 跟进,别原地干等\n' +
+          '- 看桌面上有什么、某个原生 Mac 应用界面长什么样:look_at_screen(网页内容/网页里的图仍走 look_at_browser_page,别混用)\n' +
+          '- 打开/前置某个 Mac 应用 open_mac_app;往它输入文字 type_into_app\n' +
+          '- 把任务转交本机其它 AI 桌面应用(Claude/ChatGPT/Cursor/Codex)并取回复:ai_app_send 发出、隔十几秒到一分钟再 ai_app_read 读\n' +
+          '- GitHub 操作(PR/issue/仓库)github_cli;更底层的 macOS 自动化 run_applescript',
+      )
+    }
     if (isCloudAuthorized()) {
       lines.push(
         'Life OS 数据(用户自己的真实数据,涉及时必须用工具读、不要猜也不要说"看不到"):\n' +
@@ -726,7 +737,7 @@ export async function continueGenerating() {
 // 命中"构建/技术类名词 + 无明确图片意图"时,agent loop 拦下这次生图、提示模型直接用文字回答。
 // 刻意保守:凡出现画图/照片/插画/头像/图标/立绘/角色等图片意图词,一律放行,不误伤真·生图。
 const CODE_BUILD_RE =
-  /游戏|小游戏|网页|网站|页面|应用|程序|代码|脚本|表格|对比|贪吃蛇|计算器|俄罗斯方块|井字棋|扫雷|2048|待办|todo|html|css|canvas/i
+  /游戏|小游戏|网页|网站|页面|应用|程序|代码|脚本|表格|对比|图表|柱状图|条形图|饼图|折线图|曲线图|散点图|直方图|甘特图|流程图|思维导图|数据可视化|可视化|贪吃蛇|计算器|俄罗斯方块|井字棋|扫雷|2048|待办|todo|html|css|canvas/i
 const IMAGE_INTENT_RE =
   /画一|画个|画张|画幅|生成图片|生成一[张幅]|来[张幅]|照片|摄影|插画|海报|头像|壁纸|图标|logo|封面|配图|立绘|原画|概念图|角色|人物|形象|肖像|表情|贴纸|图片/i
 function isBuildCodeAsk(text) {

@@ -18,7 +18,8 @@
         { "name": "osascript", "cmd": "/usr/bin/osascript", "args": true },
         { "name": "screencapture", "cmd": "/usr/sbin/screencapture", "args": true },
         { "name": "sips", "cmd": "/usr/bin/sips", "args": true },
-        { "name": "base64", "cmd": "/usr/bin/base64", "args": true }
+        { "name": "base64", "cmd": "/usr/bin/base64", "args": true },
+        { "name": "open", "cmd": "/usr/bin/open", "args": true }
       ]
     },
     {

@@ -43,6 +43,7 @@ export default {
     retry: 'Retry',
     gatewayDown:
       'Cannot reach the local gateway (127.0.0.1:18888). Make sure LocalAI is running, then retry.',
+    genError: 'This reply didn’t finish generating. Tap retry.',
     toolRunning: 'Running…',
     sources: 'Sources',
     attachImage: 'Attach image',

@@ -168,6 +168,24 @@ export async function notify(title, body, subtitle = '') {
   }
 }
 
+/**
+ * best-effort 后台唤起用户的 Google Chrome —— 让 Web State DevTools 扩展重连,
+ * 使 browse 工具在 Chrome 没开着时自愈,而不是报错甩给用户。
+ * 用 `open -a … -g`:走 LaunchServices(不触发自动化权限弹窗)、-g 后台启动不抢焦点;
+ * Chrome 已在运行时near-no-op。web 端 / 失败静默返回 false。
+ * @returns {Promise<boolean>}
+ */
+export async function wakeChrome() {
+  if (!isNative) return false
+  try {
+    const { Command } = await shell()
+    const out = await Command.create('open', ['-g', '-a', 'Google Chrome']).execute()
+    return out.code === 0
+  } catch {
+    return false
+  }
+}
+
 async function openMacApp({ name }) {
   if (!name?.trim()) return '错误:name 为空'
   const denied = await preflight('automation')
