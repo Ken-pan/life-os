@@ -5588,16 +5588,5 @@ html.utility-pane-resizing {
   background: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
 }
 
-/* 段控激活（首页筛选 chip / 搜索 scope / 浏览分段 / 设置）：中性抬升态，去品牌粉填充 */
-.music-app .seg {
-  --seg-active-bg: color-mix(in srgb, var(--t1, var(--text)) 14%, transparent);
-  --seg-active-fg: var(--t1, var(--text));
-  --seg-active-border-token: color-mix(in srgb, var(--t1, var(--text)) 24%, var(--border));
-  /* 轨道细边去暖粉，统一为中性（部分变体带 1px 品牌色描边） */
-  border-color: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
-}
-
-.music-app .seg.seg-track {
-  --seg-active-bg: color-mix(in srgb, var(--t1, var(--text)) 18%, var(--card));
-  --seg-active-fg: var(--t1, var(--text));
-}
+/* 段控激活态已上升为共享的 `.seg-tone-calm`（seg.css），music 在根节点 opt-in
+   （shellClass="music-app seg-tone-calm"），此处不再局部覆盖。 */

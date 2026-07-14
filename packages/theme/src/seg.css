@@ -77,6 +77,28 @@
   padding: 0;
 }
 
+/*
+  Tone: calm —— 中性激活态（前景抬升，替代品牌强调色）。
+  设计原则：品牌强调色只留给"主操作"；分段控件的"选中"是导航/筛选状态，
+  用中性前景表达即可，避免满屏强调色。app 在根节点加 `seg-tone-calm` 即可全局 opt-in，
+  不影响未加的 app（默认仍走 --segment-active-* / 各变体的品牌色）。
+  置于各变体之后，靠源序覆盖 .seg-chips / .seg-track 的强调色激活态。
+*/
+.seg-tone-calm .seg {
+  --seg-active-bg: color-mix(in srgb, var(--t1, var(--text)) 14%, transparent);
+  --seg-active-fg: var(--t1, var(--text));
+  --seg-active-border-token: color-mix(
+    in srgb,
+    var(--t1, var(--text)) 24%,
+    var(--border)
+  );
+  border-color: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
+}
+
+.seg-tone-calm .seg.seg-track {
+  --seg-active-bg: color-mix(in srgb, var(--t1, var(--text)) 18%, var(--card));
+}
+
 .seg button {
   background: var(--seg-btn-bg);
   border: var(--seg-btn-border);

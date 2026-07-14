@@ -55,6 +55,24 @@
       </div>
     </CatalogStateBlock>
 
+    <CatalogStateBlock stateId="calm" label="Calm tone (.seg-tone-calm)">
+      <div class="seg-tone-calm">
+        <div class={segClass} role="group" aria-label="Calm segment">
+          {#each options as opt}
+            <button
+              type="button"
+              class:on={value === opt.value}
+              class:active={value === opt.value}
+              aria-pressed={value === opt.value}
+              onclick={() => (value = opt.value)}
+            >
+              {opt.label}
+            </button>
+          {/each}
+        </div>
+      </div>
+    </CatalogStateBlock>
+
     <CatalogStateBlock stateId="disabled" label="Disabled">
       <div
         class="{segClass} seg--disabled"

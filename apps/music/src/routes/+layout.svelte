@@ -264,7 +264,7 @@
 <LifeOsAppShell
   navigationKey={page.url.pathname}
   focusOnNavigate="main"
-  shellClass="music-app"
+  shellClass="music-app seg-tone-calm"
   {shellDataset}
   skipLinkLabel={t('common.skipToContent')}
   testIdPrefix="music-shell"
