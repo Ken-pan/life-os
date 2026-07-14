@@ -184,6 +184,8 @@
             displayState={purchaseState}
             showLineItemsInBody={false}
             debugMode={purchaseDebugMode}
+            transactionId={txn.id}
+            reviewEnabled
             onOpenChange={(v) => (enrichmentOpen = v)}
           />
         {/if}

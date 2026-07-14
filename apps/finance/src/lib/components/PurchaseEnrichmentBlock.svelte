@@ -7,6 +7,7 @@
     isReturnLikeEnrichment,
     returnStatusLabelKey,
   } from '$lib/engine/purchaseReturnStatus'
+  import { supabase, isSupabaseConfigured } from '$lib/supabase.js'
 
   let {
     enrichment,
@@ -17,6 +18,10 @@
     displayState = 'clean_enriched',
     debugMode = false,
     onOpenChange,
+    // FINC.PURCHASE.6.a — pass a transaction id + reviewEnabled to surface
+    // Confirm / Reject / Undo for the transaction↔order association.
+    transactionId = null,
+    reviewEnabled = false,
   } = $props()
 
   let open = $state(!compact)
@@ -47,6 +52,141 @@
           ? t('history.targetOrder')
           : t('history.purchaseOrder'),
   )
+
+  // ── FINC.PURCHASE.6.a — transaction↔order review actions ───────────────────
+  // Lazy: only load review state when the block is expanded, and self-gate on a
+  // 404 (no association). Server RPCs are authoritative; the UI keeps an
+  // optimistic echo and reconciles from each RPC's returned association.
+  const canReview = $derived(
+    reviewEnabled && !!transactionId && isSupabaseConfigured,
+  )
+  let reviewLoaded = $state(false)
+  let association = $state(null) // { id, state, association_version }
+  let lastDecisionId = $state(null)
+  let reviewStatus = $state('idle') // idle | loading | saving | stale | unknown
+  let undoVisible = $state(false)
+  let undoTimer = null
+
+  function clearUndoTimer() {
+    if (undoTimer) {
+      clearTimeout(undoTimer)
+      undoTimer = null
+    }
+  }
+
+  function openUndoWindow() {
+    // 10s client affordance only — the server decides Undo legality.
+    undoVisible = true
+    clearUndoTimer()
+    undoTimer = setTimeout(() => {
+      undoVisible = false
+      undoTimer = null
+    }, 10_000)
+  }
+
+  function applyReviewResult(payload) {
+    if (payload?.association) association = payload.association
+    if (payload?.decision?.id) lastDecisionId = payload.decision.id
+  }
+
+  async function loadReview() {
+    if (!canReview || reviewLoaded) return
+    reviewLoaded = true
+    reviewStatus = 'loading'
+    try {
+      const { data, error } = await supabase.rpc('purchase_review_get', {
+        p_transaction_id: transactionId,
+      })
+      if (error) throw error
+      if (data?.ok && data.association) {
+        association = data.association
+        const decided = (data.decisions ?? [])
+          .filter((d) => d.action_type !== 'undo')
+          .at(-1)
+        lastDecisionId = decided?.id ?? null
+      }
+      reviewStatus = 'idle'
+    } catch {
+      // Missing association / table, or offline: leave review UI hidden.
+      association = null
+      reviewStatus = 'idle'
+    }
+  }
+
+  async function decide(actionType) {
+    if (!association || association.state !== 'proposed' || reviewStatus === 'saving')
+      return
+    const prev = association
+    // Optimistic echo.
+    association = { ...association, state: actionType === 'confirm' ? 'confirmed' : 'rejected' }
+    reviewStatus = 'saving'
+    try {
+      const { data, error } = await supabase.rpc('purchase_review_decide', {
+        p_association_id: prev.id,
+        p_action_type: actionType,
+        p_expected_version: prev.association_version,
+        p_action_key: crypto.randomUUID(),
+      })
+      if (error) throw error
+      if (data?.ok) {
+        applyReviewResult(data)
+        reviewStatus = 'idle'
+        openUndoWindow()
+      } else if (data?.status === 409) {
+        association = prev
+        reviewStatus = 'stale'
+        reviewLoaded = false
+        await loadReview()
+      } else {
+        association = data?.association ?? prev
+        reviewStatus = 'idle'
+      }
+    } catch {
+      // Unknown result — reconcile from server rather than assume failure.
+      association = prev
+      reviewStatus = 'unknown'
+      reviewLoaded = false
+      await loadReview()
+    }
+  }
+
+  async function undo() {
+    if (!association || !lastDecisionId || reviewStatus === 'saving') return
+    const prev = association
+    reviewStatus = 'saving'
+    try {
+      const { data, error } = await supabase.rpc('purchase_review_undo', {
+        p_association_id: prev.id,
+        p_target_decision_id: lastDecisionId,
+        p_expected_version: prev.association_version,
+        p_action_key: crypto.randomUUID(),
+      })
+      if (error) throw error
+      if (data?.ok) {
+        applyReviewResult(data)
+        lastDecisionId = null
+        undoVisible = false
+        clearUndoTimer()
+        reviewStatus = 'idle'
+      } else if (data?.status === 409) {
+        reviewStatus = 'stale'
+        reviewLoaded = false
+        await loadReview()
+      } else {
+        reviewStatus = 'idle'
+      }
+    } catch {
+      association = prev
+      reviewStatus = 'unknown'
+      reviewLoaded = false
+      await loadReview()
+    }
+  }
+
+  $effect(() => {
+    if (open && canReview && !reviewLoaded) loadReview()
+  })
+  $effect(() => () => clearUndoTimer())
 </script>
 
 <div class="purchase-enrichment">
@@ -176,6 +316,51 @@
         {/if}
       {:else}
         <p class="muted-note text-sm">{noItemsMessage}</p>
+      {/if}
+
+      {#if canReview && association}
+        <div class="purchase-review" data-review-state={association.state}>
+          {#if association.state === 'proposed'}
+            <p class="purchase-review-q text-sm">{t('history.reviewQuestion')}</p>
+            <div class="purchase-review-actions">
+              <button
+                type="button"
+                class="purchase-review-btn purchase-review-btn--confirm"
+                disabled={reviewStatus === 'saving'}
+                onclick={() => decide('confirm')}
+              >{t('history.reviewConfirm')}</button>
+              <button
+                type="button"
+                class="purchase-review-btn purchase-review-btn--reject"
+                disabled={reviewStatus === 'saving'}
+                onclick={() => decide('reject')}
+              >{t('history.reviewReject')}</button>
+            </div>
+          {:else}
+            <div class="purchase-review-decided">
+              <span class="purchase-review-badge purchase-review-badge--{association.state}">
+                {association.state === 'confirmed'
+                  ? t('history.reviewConfirmed')
+                  : t('history.reviewRejected')}
+              </span>
+              {#if undoVisible}
+                <button
+                  type="button"
+                  class="purchase-review-btn purchase-review-btn--undo"
+                  disabled={reviewStatus === 'saving'}
+                  onclick={undo}
+                >{t('history.reviewUndo')}</button>
+              {/if}
+            </div>
+          {/if}
+          {#if reviewStatus === 'saving'}
+            <span class="purchase-review-note text-sm text-muted">{t('history.reviewSaving')}</span>
+          {:else if reviewStatus === 'stale'}
+            <span class="purchase-review-note purchase-review-note--warn text-sm" role="status">{t('history.reviewStale')}</span>
+          {:else if reviewStatus === 'unknown'}
+            <span class="purchase-review-note purchase-review-note--warn text-sm" role="status">{t('history.reviewUnknown')}</span>
+          {/if}
+        </div>
       {/if}
     </div>
   {/if}
