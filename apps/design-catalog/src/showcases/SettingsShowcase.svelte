@@ -95,6 +95,36 @@
         {/snippet}
       </SettingsRow>
     </CatalogStateBlock>
+
+    <!--
+      回归护栏:这两个态曾在生产被用户逮到。
+      1) toggle 行控件为空(如通知权限被拒)—— 标签/描述必须正常换行,不能被空控件挤成 0 宽逐字竖排。
+      2) seg--wrap 多个较长选项 —— 标签必须整体换行,不能在空格处把「上下 4 日」断成「上下 4 / 日」。
+      改动共享 seg/settings 样式时,这里一眼就能看出有没有回归。
+    -->
+    <CatalogStateBlock stateId="detail:edge" label="Edge cases (regression guards)">
+      <SettingsSection title="Edge cases">
+        <div class="settings-row set-row settings-row--toggle">
+          <div class="pref-copy">
+            <div class="sr-label pref-label">Rest reminder</div>
+            <div class="sr-desc pref-desc">
+              Notification permission denied — re-enable it in your browser / system settings
+            </div>
+          </div>
+          <div class="pref-control"></div>
+        </div>
+        <SettingsRow label="Program (long labels)">
+          {#snippet children()}
+            <div class="seg seg--wrap" role="group" aria-label="Program">
+              <button type="button" class="on active">四日分化</button>
+              <button type="button">上下 4 日</button>
+              <button type="button">PPL 6 日</button>
+              <button type="button">全身 3 日</button>
+            </div>
+          {/snippet}
+        </SettingsRow>
+      </SettingsSection>
+    </CatalogStateBlock>
   </div>
 </section>
 
