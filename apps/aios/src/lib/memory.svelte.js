@@ -226,21 +226,59 @@ export function clearMemories() {
  * 语义检索记忆。
  * @returns {Promise<Array<{ item: MemoryItem, score: number }>>}
  */
+/**
+ * 词法兜底评分:字符二元组重叠(对中文等价于词级重叠),外加整段包含加成。
+ * 用于没有向量的记忆(嵌入失败,或刚保存还没回填向量)——保证"刚说完立刻问"能召回,
+ * 不至于因为一次 embed 失败就让新记忆隐身到下次启动 backfill。返回 0~0.6。
+ */
+function lexicalScore(q, text) {
+  if (!q || !text) return 0
+  if (text.includes(q) || q.includes(text)) return 0.6
+  const grams = (s) => {
+    const g = new Set()
+    for (let i = 0; i < s.length - 1; i++) {
+      const bg = s.slice(i, i + 2)
+      if (!/\s/.test(bg)) g.add(bg)
+    }
+    if (s.length === 1) g.add(s)
+    return g
+  }
+  const qg = grams(q)
+  if (!qg.size) return 0
+  const tg = grams(text)
+  let hit = 0
+  for (const g of qg) if (tg.has(g)) hit++
+  return (hit / qg.size) * 0.55 // 上限 0.55:够过 search_memory 的 0.2 门槛,不越过被动注入的 0.5
+}
+
 export async function searchMemories(query, k = 5) {
   if (!M.items.length) return []
+  // 先补齐缺失向量:刚保存却 embed 失败(网关繁忙/冷启动)的记忆若只剩词法分,和 cosine 的
+  // 高基线不可比,会永远沉底——"刚说完立刻问"因此召回失败。查询时顺带把它们(通常就一两条)
+  // 一起 embed,拉回同一量纲公平竞争,并落盘自愈。网关彻底不可用时才退回下面的词法兜底。
   let queryVector = null
+  const missing = M.items.filter((m) => !m.vector).slice(0, 16)
   try {
-    ;[queryVector] = await embed([query])
+    if (missing.length) {
+      const vectors = await embed([query, ...missing.map((m) => m.text)])
+      queryVector = vectors[0]
+      missing.forEach((m, i) => {
+        if (vectors[i + 1]) m.vector = vectors[i + 1]
+      })
+      persist()
+    } else {
+      ;[queryVector] = await embed([query])
+    }
   } catch {
-    /* 降级为子串匹配 */
+    /* 降级为词法匹配 */
   }
   const q = query.toLowerCase()
   const scored = M.items.map((item) => {
     let score = 0
     if (queryVector && item.vector) {
       score = cosine(queryVector, item.vector)
-    } else if (item.text.toLowerCase().includes(q) || q.includes(item.text.toLowerCase())) {
-      score = 0.5
+    } else {
+      score = lexicalScore(q, item.text.toLowerCase())
     }
     return { item, score }
   })
