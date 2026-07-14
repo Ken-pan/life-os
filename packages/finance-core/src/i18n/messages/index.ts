@@ -1244,6 +1244,9 @@ export const zhCN: MessageTree = {
     dueDayLast: '每月最后一天',
     dueDayNth: '每月 {day} 号',
     dueDayLabel: '还款日',
+    paymentDayLabel: '实际扣款日',
+    paymentDayPlaceholder: '默认=到期日',
+    paymentDayHint: '常提前还款就填（1-28）；留空按到期日扣。影响现金低谷与「可放心花」。',
     dueDayDisabled: '每月最后一天',
     dueDayAppleHint:
       'Apple Card 等按账单周期结算的卡选这个；不要硬编码为 30/31，引擎会按每月实际天数结算。',
@@ -2870,6 +2873,9 @@ export const enUS: MessageTree = {
     dueDayLast: 'Last day of month',
     dueDayNth: 'Day {day} each month',
     dueDayLabel: 'Due day',
+    paymentDayLabel: 'Actual payment day',
+    paymentDayPlaceholder: '= due day',
+    paymentDayHint: 'Set (1-28) if you pay early; blank = pay on due day. Affects cash low point & safe-to-spend.',
     dueDayDisabled: 'Last day of month',
     dueDayAppleHint:
       'For Apple Card etc. billed on cycle end — engine uses actual month length.',

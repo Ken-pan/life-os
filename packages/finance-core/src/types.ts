@@ -41,6 +41,11 @@ export interface Account {
   statementBalance?: number;
   /** 信用卡/贷款：每月还款日 (1-28)，或 DUE_DAY_LAST_OF_MONTH 表示「每月最后一天」。 */
   dueDay?: number;
+  /**
+   * 信用卡：实际扣款日 (1-28 或 DUE_DAY_LAST_OF_MONTH)。用户常在到期日前提前还款，
+   * 现金会更早离开账户。设置后，现金流/日历/安全垫按此日建模；未设置则回退 dueDay。
+   */
+  paymentDay?: number;
   /** 信用卡：自动还款方式。 */
   autoPayMode?: AutoPayMode;
   /** 还款扣款账户 id (指向某个 checking/savings 账户)。 */

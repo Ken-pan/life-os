@@ -204,6 +204,26 @@
             step={50}
           />
           <DueDayField value={a.dueDay} onChange={(v) => set({ dueDay: v })} />
+          <div class="field">
+            <label>{t('accounts.paymentDayLabel')}</label>
+            <input
+              class="input"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="28"
+              value={a.paymentDay ?? ''}
+              placeholder={t('accounts.paymentDayPlaceholder')}
+              oninput={(e) => {
+                const raw = e.currentTarget.value.trim()
+                set({
+                  paymentDay:
+                    raw === '' ? undefined : Math.min(28, Math.max(1, Math.round(Number(raw)))),
+                })
+              }}
+            />
+            <span class="text-muted text-sm mt-1">{t('accounts.paymentDayHint')}</span>
+          </div>
           <SelectField
             label={t('accounts.autoPay')}
             value={a.autoPayMode ?? (a.creditMode === 'revolving' ? 'minimum' : 'statement')}

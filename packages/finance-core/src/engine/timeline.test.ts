@@ -70,6 +70,36 @@ describe("materializeOccurrenceDrafts", () => {
     expect(card[0].expectedAmount).toBe(-400);
   });
 
+  it("uses paymentDay (early payment) for card bill date, falling back to dueDay", () => {
+    const early: FinanceData = {
+      ...baseData,
+      accounts: [
+        { id: "chk", name: "Checking", type: "checking", balance: 5000 },
+        {
+          id: "cc",
+          name: "Visa",
+          type: "credit-card",
+          balance: 400,
+          statementBalance: 400,
+          dueDay: 19,
+          paymentDay: 5,
+        },
+      ],
+    };
+    const earlyCard = materializeOccurrenceDrafts(early, today, 90).filter(
+      (d) => d.sourceId === "cc",
+    );
+    expect(earlyCard.length).toBeGreaterThanOrEqual(1);
+    // 提前还款：账单落在 paymentDay(5)，而非 dueDay(19)
+    for (const c of earlyCard) expect(c.date.slice(8, 10)).toBe("05");
+
+    // 未设 paymentDay 时回退 dueDay(15)
+    const fallbackCard = materializeOccurrenceDrafts(baseData, today, 90).filter(
+      (d) => d.sourceId === "cc",
+    );
+    for (const c of fallbackCard) expect(c.date.slice(8, 10)).toBe("15");
+  });
+
   it("creates reserve-funded card bills with payment account id", () => {
     const data: FinanceData = {
       ...baseData,

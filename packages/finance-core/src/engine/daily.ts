@@ -316,7 +316,8 @@ export function projectDaily(
         const isSpendingCard = everydayOnCard && a.id === spendingCard?.id;
         if (payAmt > 0 || isSpendingCard) {
           const fromReserve = paysFromReserve(a, data.accounts);
-          const day = a.dueDay ?? 15;
+          // 实际扣款日优先（提前还款）；未设置回退到期日。
+          const day = a.paymentDay ?? a.dueDay ?? 15;
           let emittedFirst = false;
           for (const ym of months) {
             const d = dateOnDay(ym.year, ym.month, day);

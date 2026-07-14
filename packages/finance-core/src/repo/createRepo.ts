@@ -466,6 +466,7 @@ function accountFromRow(r: Row): Account {
     creditMode: ostr(r.credit_mode) as Account['creditMode'],
     statementBalance: onum(r.statement_balance),
     dueDay: onum(r.due_day),
+    paymentDay: onum(r.payment_day),
     autoPayMode: ostr(r.auto_pay_mode) as Account['autoPayMode'],
     paymentAccountId: ostr(r.payment_account_id),
     annualFee: onum(r.annual_fee),
@@ -519,6 +520,8 @@ function accountToRow(userId: string, a: Account): Row {
         ? a.underlyingAllocation
         : null,
     updated_at: a.updatedAt ?? new Date().toISOString(),
+    // payment_day 仅在设置时写入：若目标库尚未应用迁移（缺列），省略可避免整表 upsert 失败。
+    ...(a.paymentDay != null ? { payment_day: a.paymentDay } : {}),
   }
 }
 
