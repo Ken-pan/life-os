@@ -984,6 +984,25 @@ html {
   box-sizing: content-box;
 }
 
+/*
+  Tone: calm —— 底栏/tabbar"选中"用中性前景,替代品牌强调色（与 .seg-tone-calm 同原则:
+  强调色只留给主操作,导航/选中态用中性前景）。app 根节点加 `nav-tone-calm` 即 opt-in,
+  不加则默认完全不变（零破坏）。作用域特异性高于默认,稳定覆盖。
+*/
+.nav-tone-calm .nav .nav-item.on,
+.nav-tone-calm .nav .nav-item.active,
+.nav-tone-calm .nav .nav-item-more.on,
+.nav-tone-calm .mobile-tabbar .mobile-tab.active {
+  color: var(--t1, var(--text));
+}
+
+.nav-tone-calm .nav .nav-item.on svg,
+.nav-tone-calm .nav .nav-item.active svg,
+.nav-tone-calm .nav .nav-item-more.on svg,
+.nav-tone-calm .mobile-tabbar .mobile-tab.active svg {
+  background: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
+}
+
 .nav .nav-lbl,
 .mobile-tabbar .mobile-tab-label {
   font-family: var(--mono);

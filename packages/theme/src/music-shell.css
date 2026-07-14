@@ -5572,21 +5572,8 @@ html.utility-pane-resizing {
   }
 }
 
-/* ── Tier 4：激活态去粉 — 导航/段控用「中性前景」表达"当前"，品牌粉只留给主操作 ──
-   仅在 .music-app 作用域覆盖共享默认，不影响其它 app。 */
-
-/* 底栏激活 tab：前景色 + 中性抬升底，替代整块品牌粉 */
-.music-app .nav .nav-item.on,
-.music-app .nav .nav-item.active,
-.music-app .nav .nav-item-more.on {
-  color: var(--t1, var(--text));
-}
-
-.music-app .nav .nav-item.on svg,
-.music-app .nav .nav-item.active svg,
-.music-app .nav .nav-item-more.on svg {
-  background: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
-}
-
-/* 段控激活态已上升为共享的 `.seg-tone-calm`（seg.css），music 在根节点 opt-in
-   （shellClass="music-app seg-tone-calm"），此处不再局部覆盖。 */
+/* ── 激活态去粉：品牌色只留给主操作 ──
+   底栏/tabbar 激活态已上升为共享的 `.nav-tone-calm`（shell.css）、
+   段控激活态已上升为共享的 `.seg-tone-calm`（seg.css），
+   music 均在根节点 opt-in（shellClass="music-app seg-tone-calm nav-tone-calm"），
+   此处不再局部覆盖。侧栏指示条仍在 SideNav.svelte 内（music 专属组件）。 */
