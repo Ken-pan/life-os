@@ -236,9 +236,10 @@
 
 @media (--life-os-mobile) {
   :root {
-    /* Reserve the floating card's own lift so scroll content + toasts clear it. */
+    /* Compact docked bar — no floating lift; reserve just the bar height. */
+    --mini-player-body-h: 54px;
     --mini-player-h: calc(
-      var(--mini-player-body-h) + var(--mini-player-track-h) + var(--space-2)
+      var(--mini-player-body-h) + var(--mini-player-track-h)
     );
   }
 
@@ -250,27 +251,31 @@
     right: auto;
   }
 
-  /* Floating rounded card — benchmarked against Apple Music / Spotify mini player.
-     Detached from the edges, elevated, clipped to a rounded shell. */
+  /* Docked mini bar — attached flush above the tab bar, edge to edge.
+     Benchmarked against Apple Music: thin translucent material, hairline
+     progress at the top edge, square corners, no floating capsule. */
   .mini-player {
-    left: max(var(--space-2), var(--safe-left-effective));
-    right: max(var(--space-2), var(--safe-right-effective));
-    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-2));
-    border: 1px solid color-mix(in srgb, var(--border) 45%, rgba(255, 255, 255, 0.09));
-    border-radius: 20px;
+    left: 0;
+    right: 0;
+    bottom: var(--mobile-tabbar-total-h);
+    border: none;
+    border-top: 1px solid color-mix(in srgb, var(--border) 48%, rgba(255, 255, 255, 0.07));
+    border-radius: 0;
     overflow: hidden;
-    background: color-mix(in srgb, var(--card) 70%, #0f080b 30%);
-    backdrop-filter: blur(26px) saturate(1.5);
-    -webkit-backdrop-filter: blur(26px) saturate(1.5);
-    box-shadow:
-      0 12px 34px -10px rgba(0, 0, 0, 0.55),
-      0 4px 12px -4px rgba(0, 0, 0, 0.38),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    transform: translateY(140%);
+    background: color-mix(in srgb, var(--card) 84%, #0f080b 16%);
+    backdrop-filter: blur(28px) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
+    box-shadow: 0 -6px 20px -14px rgba(0, 0, 0, 0.5);
+    transform: translateY(110%);
   }
 
   .mini-player.show {
     transform: translateY(0);
+  }
+
+  /* Flush hairline at the bar's top edge — no inset rounding. */
+  .mini-player-progress-line {
+    border-radius: 0;
   }
 }
 
@@ -4058,7 +4063,24 @@ body.search-typeahead-open .music-appbar {
   .mini-player-link {
     flex: 1 1 auto;
     min-width: 0;
+    gap: var(--space-2);
+    padding-block: 0;
     padding-right: var(--space-1);
+  }
+
+  /* Compact art + tighter type for the docked bar. */
+  .mini-player-art {
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+  }
+
+  .mini-player-title {
+    font-size: var(--text-sm);
+  }
+
+  .mini-player-artist {
+    font-size: var(--text-xs);
   }
 
   .mini-player-actions {
