@@ -116,16 +116,17 @@ export async function streamChat({
     // Qwen 官方采样建议(mlx_lm 忽略不认识的字段):非思考 top_p 0.8 / top_k 20
     top_p: 0.8,
     top_k: 20,
+    // 轻度重复惩罚兜底所有通道:该模型(思考与非思考都)偶发整句/整词复读循环直到烧光 token,
+    // 1.05 很轻不伤质量,实测显著降低发生率。原先只加在思考通道,快速模式复读因此漏网。
+    repetition_penalty: 1.05,
+    repetition_context_size: 512,
   }
   if (spec.thinkingSwitch) {
     body.chat_template_kwargs = { enable_thinking: Boolean(thinking) }
     if (thinking) {
-      // 思考模式按官方推荐锁定采样(temp 0.6 / top_p 0.95),并加轻度重复惩罚:
-      // 实测该模型思考通道会陷入整句复读循环直到烧光 token,这组参数显著降低发生率
+      // 思考模式按官方推荐锁定采样(temp 0.6 / top_p 0.95)
       body.temperature = Math.min(temperature, 0.6)
       body.top_p = 0.95
-      body.repetition_penalty = 1.05
-      body.repetition_context_size = 512
     }
   }
   if (tools?.length) body.tools = tools

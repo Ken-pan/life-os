@@ -748,14 +748,24 @@ async function streamAssistantReply(conversation) {
       }
 
       let res = await doStream()
-      // 复读熔断兜底:检测到退化循环(finishReason='loop')就丢弃循环产物、重试一次。
-      // 思考模式关思考重试;非思考模式抬高温度打散循环。isLooping 判定很保守(误报率极低),
-      // 一次重试的代价可接受,换掉"整屏复读的废输出"很值。
-      if (res.finishReason === 'loop' && !signal.aborted && !res.toolCalls.length) {
+      // 模型抽风兜底:两类退化各重试一次(都很保守,误报代价仅一次重生成)——
+      //   ① 退化复读 finishReason='loop'(isLooping 判定极严);
+      //   ② "半截停":正常 stop 但正文短到只有一句引子、且以冒号/顿号收尾
+      //     (如"推导过程如下:"后戛然而止),几乎必然是抽风;无思考产物时才算,避免误伤。
+      const stub = (assistant.content || '').trim()
+      const isStubbedStop =
+        res.finishReason === 'stop' &&
+        !assistant.reasoning &&
+        stub.length > 0 &&
+        stub.length < 40 &&
+        /[:：,，、]$/.test(stub)
+      if ((res.finishReason === 'loop' || isStubbedStop) && !signal.aborted && !res.toolCalls.length) {
+        const looped = res.finishReason === 'loop'
         assistant.reasoning = ''
         assistant.content = ''
         assistant.thinkingMs = undefined
-        if (useThinking) useThinking = false
+        // 复读+思考:关思考重试(换条件);其余(复读快速模式 / 半截停):抬温打散
+        if (looped && useThinking) useThinking = false
         else sampleTemp = Math.min((sampleTemp ?? 0.7) + 0.3, 1.2)
         res = await doStream()
       }
