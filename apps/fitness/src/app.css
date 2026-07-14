@@ -2241,12 +2241,7 @@ p {
 /* 危险按钮配色/边框/hover 全部下沉到共享 token（--button-danger-*，见 theme），
    fitness 不再本地覆盖,保持设计系统单一真源。此处只留 fitness 布局相关。 */
 
-/* 堆叠块内容左对齐:.set-row{display:flex;align-items:center} 会把 stack-block
-   撑成 flex column 居中,标题/描述都居中不符合阅读习惯。改为拉伸满宽 + 文本左起。 */
-.settings-row.set-row.settings-stack-block {
-  align-items: stretch;
-  text-align: start;
-}
+/* 堆叠块左对齐已下沉到共享 theme(components.css),fitness 不再本地覆盖。 */
 
 .set-row.settings-stack-block > .btn-danger,
 .settings-row.set-row.settings-stack-block > .btn-danger {

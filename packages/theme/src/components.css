@@ -323,6 +323,32 @@ a.btn-danger {
   padding: var(--space-4) var(--inset-inline);
 }
 
+/*
+  堆叠块内容左对齐(不居中)。.settings-row{align-items:center} 会把 stack-block
+  的标题/描述/按钮全部居中,不符合阅读习惯,也与 toggle/action 行的左对齐不一致。
+  仅命中带 .settings-stack-block 的行,普通 toggle/action 行不受影响。
+  高特异性(0,2,0)+ 同 layer,压过 .settings-row(0,1,0)。
+*/
+.settings-row.settings-stack-block,
+.set-row.settings-stack-block {
+  align-items: stretch;
+  text-align: start;
+}
+
+/*
+  移动端非 toggle 行纵向堆叠时,内容左对齐(不居中)。
+  settings-ext.css 里同规则在更早的 settings layer,被本文件 .settings-row{align-items:center}
+  压过,导致 Export/Range/Import/Sign out 等行的标签/描述被居中。此处在 components layer 重申。
+  toggle 行(label 左 + 开关右)保持 flex-row,不受影响。
+*/
+@media (--life-os-mobile) {
+  .settings-row.set-row:not(.settings-row--toggle):not(:has(.settings-toggle)),
+  .set-row.settings-row:not(.settings-row--toggle):not(:has(.settings-toggle)) {
+    align-items: stretch;
+    text-align: start;
+  }
+}
+
 .pref-label {
   font-size: var(--text-base);
   font-weight: 500;
