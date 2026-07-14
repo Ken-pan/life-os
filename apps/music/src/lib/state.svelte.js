@@ -123,6 +123,13 @@ export const S = $state(load())
 /** Bumped after background cover repair so list pages can reload. */
 export const librarySignals = $state({ epoch: 0 })
 
+/**
+ * Live progress of the background library auto-maintenance (lyrics backfill).
+ * The settings page renders this as a progress bar instead of manual buttons.
+ * @type {{ running: boolean, done: number, total: number }}
+ */
+export const libraryMaintenance = $state({ running: false, done: 0, total: 0 })
+
 /** @type {ReturnType<typeof setTimeout> | null} */
 let bumpTimer = null
 

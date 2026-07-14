@@ -5,6 +5,7 @@
     applyTheme,
     setImmersiveViewMode,
     patchCloudSettings,
+    libraryMaintenance,
   } from '$lib/state.svelte.js'
   import {
     getCurrentTrack,
@@ -18,7 +19,7 @@
     rescanTrackMetadata,
     ensureArtRepaired,
     ensureMetadataRepaired,
-    repairMissingLyrics,
+    ensureLyricsRepaired,
   } from '$lib/import.js'
   import { trackCount, countTracksWithoutLyrics } from '$lib/db.js'
   import { auth, signOut } from '$lib/auth.svelte.js'
@@ -54,8 +55,6 @@
   let syncing = $state(false)
   let rescanning = $state(false)
   let rescanProgress = $state('')
-  let fetchingLyrics = $state(false)
-  let lyricsProgress = $state('')
   let uploading = $state(false)
   let uploadProgress = $state('')
   let uploadCurrent = $state('')
@@ -145,6 +144,22 @@
   $effect(() => {
     refreshCounts()
   })
+
+  // 打开设置页即在后台自动补全缺失歌词（一次性、幂等、限量）；进度经 libraryMaintenance 展示。
+  // 用一次性标记避免"抓不到的曲目 missing 恒 >0 → effect 反复触发"的死循环。
+  let autoLyricsKicked = false
+  $effect(() => {
+    if (!autoLyricsKicked && missingLyrics > 0 && !libraryMaintenance.running) {
+      autoLyricsKicked = true
+      void ensureLyricsRepaired().then(() => refreshCounts())
+    }
+  })
+
+  const lyricsPct = $derived(
+    libraryMaintenance.total > 0
+      ? Math.round((libraryMaintenance.done / libraryMaintenance.total) * 100)
+      : 0,
+  )
 
   function setTheme(theme) {
     patchCloudSettings({ theme })
@@ -314,36 +329,6 @@
     }
   }
 
-  async function onFetchLyrics() {
-    if (fetchingLyrics) return
-    fetchingLyrics = true
-    lyricsProgress = t('settings.fetchLyricsProgress', {
-      done: 0,
-      total: missingLyrics,
-    })
-    try {
-      const result = await repairMissingLyrics(
-        (done, total) => {
-          lyricsProgress = t('settings.fetchLyricsProgress', { done, total })
-        },
-        undefined,
-        { force: true },
-      )
-      if (!result.total) toast(t('settings.fetchLyricsEmpty'))
-      else
-        toast(
-          t('settings.fetchLyricsDone', {
-            total: result.total,
-            repaired: result.repaired,
-          }),
-        )
-      await refreshQueueMetadata()
-      await refreshCounts()
-    } finally {
-      fetchingLyrics = false
-      lyricsProgress = ''
-    }
-  }
 
   async function onRescan() {
     if (rescanning) return
@@ -700,55 +685,72 @@
       <div class="pref-copy">
         <div class="pref-label">{t('settings.library')}</div>
         <div class="pref-desc">{t('settings.libraryCount', { count })}</div>
-        {#if missingLyrics > 0}
-          <div
-            class="pref-desc"
-            style="margin-top:4px;color:var(--track-accent, var(--accent))"
-          >
-            {t('settings.missingLyrics', { count: missingLyrics })}
-          </div>
-        {/if}
       </div>
     </div>
+
+    <!-- 歌词后台自动补全：状态 + 进度条，取代手动「补抓歌词」按钮 -->
     <div class="settings-stack-block settings-library-actions">
-      <p class="pref-desc settings-action-hint">
-        {t('settings.rescanMetaDesc')}
-      </p>
-      <div class="settings-btn-group">
+      {#if libraryMaintenance.running}
+        <p class="pref-desc settings-action-hint">
+          {t('settings.lyricsAutoRunning')}{#if libraryMaintenance.total > 0}
+            · {libraryMaintenance.done}/{libraryMaintenance.total}{/if}
+        </p>
+        <div
+          class="settings-lyrics-progress"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow={lyricsPct}
+        >
+          <div
+            class="settings-lyrics-progress-fill"
+            style="width:{lyricsPct}%"
+          ></div>
+        </div>
+      {:else if missingLyrics > 0}
+        <p class="pref-desc settings-action-hint">
+          {t('settings.lyricsAutoPending', { count: missingLyrics })}
+        </p>
+      {:else}
+        <p class="pref-desc settings-action-hint">{t('settings.lyricsAutoDone')}</p>
+      {/if}
+
+      <!-- 高级手动工具：重扫本地文件 / 导出（后者是下载，天然手动） -->
+      <div class="settings-btn-group" style="margin-top:16px">
         <button
-          class="btn-primary"
+          class="btn-secondary"
           type="button"
           disabled={rescanning || count === 0}
           onclick={onRescan}
         >
           {rescanning ? t('auth.pleaseWait') : t('settings.rescanMeta')}
         </button>
-      </div>
-      {#if rescanProgress}
-        <p class="pref-desc" style="margin-top:12px">{rescanProgress}</p>
-      {/if}
-
-      <p class="pref-desc settings-action-hint" style="margin-top:16px">
-        {t('settings.fetchLyricsDesc')}
-      </p>
-      <div class="settings-btn-group">
-        <button
-          class="btn-secondary"
-          type="button"
-          disabled={fetchingLyrics || missingLyrics === 0}
-          onclick={onFetchLyrics}
-        >
-          {fetchingLyrics ? t('auth.pleaseWait') : t('settings.fetchLyrics')}
-        </button>
         <button class="btn-secondary" type="button" onclick={exportMeta}
           >{t('settings.export')}</button
         >
       </div>
-      {#if lyricsProgress}
-        <p class="pref-desc" style="margin-top:12px">{lyricsProgress}</p>
+      {#if rescanProgress}
+        <p class="pref-desc" style="margin-top:12px">{rescanProgress}</p>
       {/if}
     </div>
   </section>
 
   <p class="set-note">{t('settings.version')}</p>
 </div>
+
+<style>
+  .settings-lyrics-progress {
+    margin-top: 10px;
+    height: 6px;
+    border-radius: var(--radius-pill, 999px);
+    background: color-mix(in srgb, var(--t1, var(--text)) 12%, transparent);
+    overflow: hidden;
+  }
+
+  .settings-lyrics-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width 0.35s var(--ease-standard, ease);
+  }
+</style>

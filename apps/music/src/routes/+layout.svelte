@@ -34,7 +34,10 @@
     refreshImmersiveChrome,
   } from '$lib/trackAmbience.js'
   import { ensureBuiltinPlaylists, ensureAlbumArtCache } from '$lib/db.js'
-  import { scheduleLibraryMaintenance } from '$lib/import.js'
+  import {
+    scheduleLibraryMaintenance,
+    scheduleAutoLyricsBackfill,
+  } from '$lib/import.js'
   import { initAuth, auth } from '$lib/auth.svelte.js'
   import {
     bindViewportHeight,
@@ -135,6 +138,8 @@
     ensureAlbumArtCache()
       .then(() => scheduleLibraryMaintenance({ lyrics: false }))
       .catch(() => {})
+    // 后台自动补全歌词（幂等、限量、在线才跑）——取代设置里的手动按钮
+    scheduleAutoLyricsBackfill()
     registerShortcutHandlers({
       searchInput,
       focusSearch: () => {

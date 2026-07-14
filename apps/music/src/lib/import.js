@@ -419,27 +419,63 @@ export async function repairMissingLyrics(onProgress, trackIds, opts = {}) {
 /** @type {Promise<number> | null} */
 let lyricsRepairPromise = null
 
-/** Idempotent; fetches remote lyrics and syncs to Supabase when logged in. */
+/** Idempotent; fetches remote lyrics and syncs to Supabase when logged in.
+ *  Reports live progress to `libraryMaintenance` so the settings page can show
+ *  a progress bar instead of a manual "fetch lyrics" button. */
 export function ensureLyricsRepaired(opts = {}) {
   if (!lyricsRepairPromise) {
-    lyricsRepairPromise = repairMissingLyrics(undefined, undefined, {
-      limit: AUTO_LYRICS_BATCH_LIMIT,
-      ...opts,
-    })
-      .then(async ({ repaired }) => {
+    lyricsRepairPromise = (async () => {
+      const state = await import('./state.svelte.js')
+      const maint = state.libraryMaintenance
+      maint.running = true
+      maint.done = 0
+      maint.total = 0
+      try {
+        const { repaired } = await repairMissingLyrics(
+          (done, total) => {
+            maint.done = done
+            maint.total = total
+          },
+          undefined,
+          { limit: AUTO_LYRICS_BATCH_LIMIT, ...opts },
+        )
         if (repaired > 0) {
-          const { bumpLibraryEpoch } = await import('./state.svelte.js')
           const { refreshQueueMetadata } = await import('./player.svelte.js')
-          bumpLibraryEpoch()
+          state.bumpLibraryEpoch()
           await refreshQueueMetadata()
         }
         return repaired
-      })
-      .finally(() => {
+      } finally {
+        maint.running = false
         lyricsRepairPromise = null
-      })
+      }
+    })()
   }
   return lyricsRepairPromise
+}
+
+let autoLyricsScheduled = false
+
+/**
+ * Kick off one gentle background lyrics backfill per session, on idle and only
+ * when online. No-ops instantly when nothing needs lyrics (no network calls),
+ * so it's safe to call on every app boot. This replaces the manual settings
+ * "fetch lyrics" button — the library fills itself in the background.
+ * @param {number} [delayMs]
+ */
+export function scheduleAutoLyricsBackfill(delayMs = 4000) {
+  if (autoLyricsScheduled || typeof window === 'undefined') return
+  autoLyricsScheduled = true
+  const run = () => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+    void ensureLyricsRepaired().catch(() => 0)
+  }
+  const idle = /** @type {any} */ (window).requestIdleCallback
+  if (typeof idle === 'function') {
+    idle(() => setTimeout(run, delayMs), { timeout: delayMs + 2000 })
+  } else {
+    setTimeout(run, delayMs)
+  }
 }
 
 /** @type {ReturnType<typeof setTimeout> | null} */
