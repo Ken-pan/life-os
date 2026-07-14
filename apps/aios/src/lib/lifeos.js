@@ -90,6 +90,19 @@ const NEED_LOGIN =
 
 /* —————————————————————— 今日快照 —————————————————————— */
 
+/** 跨 app「今日」聚合的原始数据(RPC 返回对象),失败/未登录返回 null。 */
+export async function lifeOsTodayRaw() {
+  if (!isCloudAuthorized()) return null
+  try {
+    const sb = schemaClient('public')
+    const { data, error } = await sb.rpc('portal_today_summary')
+    if (error || !data || data.ok === false) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
 /** 跨 app「今日」聚合:planner + finance + fitness + music + home。走现成 RPC。 */
 export async function lifeOsToday() {
   if (!isCloudAuthorized()) return NEED_LOGIN

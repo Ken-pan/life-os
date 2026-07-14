@@ -48,6 +48,31 @@
     save()
   }
 
+  function toggleDailyBrief() {
+    if (!S.settings.dailyBrief) S.settings.dailyBrief = { enabled: false, time: '08:00' }
+    S.settings.dailyBrief.enabled = !S.settings.dailyBrief.enabled
+    save()
+  }
+
+  function setBriefTime(e) {
+    if (!S.settings.dailyBrief) S.settings.dailyBrief = { enabled: false, time: '08:00' }
+    S.settings.dailyBrief.time = e.target.value || '08:00'
+    save()
+  }
+
+  let briefPreview = $state('')
+  async function previewBrief() {
+    briefPreview = t('settings.briefPreviewing')
+    const { maybeSendDailyBrief } = await import('$lib/proactive.svelte.js')
+    const r = await maybeSendDailyBrief({ force: true })
+    briefPreview =
+      r === 'sent'
+        ? t('settings.briefPreviewSent')
+        : r === 'no-data'
+          ? t('settings.briefPreviewNoData')
+          : t('settings.briefPreviewUnavailable')
+  }
+
   let checking = $state(false)
   async function checkGateway() {
     checking = true
@@ -316,6 +341,48 @@
       ></textarea>
     </div>
   </section>
+
+  {#if isNative}
+    <section class="card">
+      <h2>{t('settings.proactive')}</h2>
+      <p class="note">{t('settings.proactiveDesc')}</p>
+
+      <button type="button" class="toggle-row" onclick={toggleDailyBrief}>
+        <span class="toggle-text">
+          <span class="toggle-label">{t('settings.dailyBrief')}</span>
+          <span class="toggle-desc">{t('settings.dailyBriefDesc')}</span>
+        </span>
+        <span
+          class="switch"
+          class:on={S.settings.dailyBrief?.enabled}
+          role="switch"
+          aria-checked={S.settings.dailyBrief?.enabled ?? false}
+          aria-label={t('settings.dailyBrief')}
+        ></span>
+      </button>
+
+      {#if S.settings.dailyBrief?.enabled}
+        <div class="field">
+          <span class="field-label">{t('settings.briefTime')}</span>
+          <input
+            type="time"
+            class="cloud-input"
+            value={S.settings.dailyBrief?.time ?? '08:00'}
+            onchange={setBriefTime}
+            aria-label={t('settings.briefTime')}
+          />
+          <p class="note">{t('settings.briefTimeDesc')}</p>
+        </div>
+      {/if}
+
+      <div class="field">
+        <button type="button" class="mini-btn" onclick={previewBrief}>
+          {t('settings.briefPreview')}
+        </button>
+        {#if briefPreview}<p class="note">{briefPreview}</p>{/if}
+      </div>
+    </section>
+  {/if}
 
   <section class="card">
     <h2>

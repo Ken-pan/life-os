@@ -150,6 +150,24 @@ async function osa(script) {
   return await Command.create('osascript', ['-e', script]).execute()
 }
 
+/**
+ * 发一条 macOS 原生通知(经 osascript display notification)。
+ * 不控制其它 app,不需要 automation 权限;浏览器里静默 no-op。
+ * @param {string} title @param {string} body @param {string} [subtitle]
+ * @returns {Promise<boolean>} 是否成功送出
+ */
+export async function notify(title, body, subtitle = '') {
+  if (!isNative) return false
+  try {
+    const parts = [`display notification ${q(body || '')} with title ${q(title || 'AI.OS')}`]
+    if (subtitle) parts.push(`subtitle ${q(subtitle)}`)
+    const out = await osa(parts.join(' '))
+    return out.code === 0
+  } catch {
+    return false
+  }
+}
+
 async function openMacApp({ name }) {
   if (!name?.trim()) return '错误:name 为空'
   const denied = await preflight('automation')

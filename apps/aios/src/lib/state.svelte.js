@@ -27,6 +27,7 @@ const DEFAULTS = {
     ttsRate: 1, // 朗读播放速度(迷你播放器里循环切换,记住偏好)
     customPrompt: '', // 自定义指令
     location: '', // 当前所在地(常驻注入,用于天气/本地/时区判断;跟随账号同步)
+    dailyBrief: { enabled: false, time: '08:00' }, // 早晨今日简报:开着 app 时定时/追让式原生通知
     userProfile: DEFAULT_USER_PROFILE, // 用户画像(常驻注入的核心记忆,设置页可编辑)
     userProfileVersion: PROFILE_SCHEMA_VERSION,
     // 云同步用:最后一次「用户主动改设置」的毫秒时间戳,整包设置 LWW 的依据。

@@ -16,6 +16,11 @@
   import { refreshGateway } from '$lib/chat.svelte.js'
   import { backfillVectors, seedDefaultMemories, dreamMemories } from '$lib/memory.svelte.js'
   import { initCloud, syncNow, CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
+  import {
+    startDailyBriefScheduler,
+    stopDailyBriefScheduler,
+    maybeSendDailyBrief,
+  } from '$lib/proactive.svelte.js'
   import { CLOUD_BUILD } from '$lib/env.js'
   import CloudGate from '$lib/components/CloudGate.svelte'
   import { t, applyLocale } from '$lib/i18n/index.js'
@@ -49,14 +54,21 @@
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
     // 回到前台时拉一次云端:让别的设备的改动无需手动/刷新就收敛过来
-    const cleanupVisibility = bindVisibilitySync(() => syncNow(), {
-      when: () => !!CLOUD.user,
-    })
+    const cleanupVisibility = bindVisibilitySync(
+      () => {
+        syncNow()
+        maybeSendDailyBrief() // 追让:当天首次切回时补送今日简报
+      },
+      { when: () => !!CLOUD.user },
+    )
+    // 早晨今日简报:运行时轮询 + 挂载即查(原生壳且开启才实际发通知)
+    startDailyBriefScheduler()
     return () => {
       clearTimeout(dreamTimer)
       cleanupTheme()
       cleanupViewport()
       cleanupVisibility()
+      stopDailyBriefScheduler()
     }
   })
 
