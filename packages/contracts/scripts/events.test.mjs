@@ -83,6 +83,32 @@ if (fitnessParsed.ok) {
   assert.equal(fitnessParsed.event.payload.session_date, '2026-07-08')
 }
 
+const captureRow = {
+  ...envelopeRow,
+  type: 'core.task_captured',
+  payload: {
+    capture_id: '880e8400-e29b-41d4-a716-446655440003',
+    title: '给妈妈打电话',
+    due_date: '2026-07-15',
+    source: 'aios',
+  },
+}
+const captureParsed = parseLifeEvent(captureRow)
+assert.equal(captureParsed.ok, true)
+if (captureParsed.ok) {
+  assert.equal(captureParsed.event.type, 'core.task_captured')
+  assert.equal(captureParsed.event.payload.title, '给妈妈打电话')
+  assert.equal(captureParsed.event.payload.due_date, '2026-07-15')
+}
+
+const captureNoTitle = parseLifeEvent({
+  ...envelopeRow,
+  type: 'core.task_captured',
+  payload: { capture_id: '880e8400-e29b-41d4-a716-446655440004', title: '' },
+})
+assert.equal(captureNoTitle.ok, false)
+if (!captureNoTitle.ok) assert.equal(captureNoTitle.reason, 'bad-payload')
+
 const badPayload = parseLifeEvent({
   ...envelopeRow,
   payload: { occurrence_id: 'x' },

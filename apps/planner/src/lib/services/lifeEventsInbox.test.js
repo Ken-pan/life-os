@@ -4,6 +4,8 @@ import {
   upsertTaskFromFinanceBillDue,
   findTaskByFitnessSessionId,
   upsertHabitFromFitnessWorkoutLogged,
+  findTaskByCaptureId,
+  upsertTaskFromCoreCapture,
   consumePendingLifeEvents,
 } from './lifeEventsInbox.js'
 import { S } from '../state.svelte.js'
@@ -48,6 +50,13 @@ const workoutPayload = {
   ended_at: '2026-07-08T12:00:00.000Z',
 }
 
+const capturePayload = {
+  capture_id: '880e8400-e29b-41d4-a716-446655440003',
+  title: '给妈妈打电话',
+  due_date: '2026-07-15',
+  source: 'aios',
+}
+
 beforeEach(() => {
   S.tasks = []
 })
@@ -89,6 +98,26 @@ describe('lifeEventsInbox', () => {
     upsertHabitFromFitnessWorkoutLogged(workoutPayload)
     expect(S.tasks).toHaveLength(1)
     expect(findTaskByFitnessSessionId(workoutPayload.session_id)?.id).toBe(S.tasks[0].id)
+  })
+
+  it('creates inbox task from core.task_captured payload', () => {
+    const task = upsertTaskFromCoreCapture(capturePayload)
+    expect(task.title).toBe('给妈妈打电话')
+    expect(task.dueDate).toBe('2026-07-15')
+    expect(task.listId).toBe('inbox')
+    expect(task.notes).toContain('aios')
+    expect(task.meta.lifeEventRef).toEqual({
+      domain: 'core',
+      captureId: capturePayload.capture_id,
+    })
+    expect(S.tasks).toHaveLength(1)
+  })
+
+  it('is idempotent by capture_id', () => {
+    upsertTaskFromCoreCapture(capturePayload)
+    upsertTaskFromCoreCapture(capturePayload)
+    expect(S.tasks).toHaveLength(1)
+    expect(findTaskByCaptureId(capturePayload.capture_id)?.id).toBe(S.tasks[0].id)
   })
 
   it('consumes pending events and marks processed', async () => {

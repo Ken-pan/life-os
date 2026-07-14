@@ -71,7 +71,7 @@
  * @property {'micro'|'standard'|'focus'|'habit'} [kind]
  * @property {boolean} [needsSplit]
  * @property {number} [triagedAt] 最近一次完成快速处理的时间（毫秒）
- * @property {{ domain: 'finance', occurrenceId: string } | { domain: 'fitness', sessionId: string }} [lifeEventRef] INTG.EVENTS.1.5 / PLNR.CORE.5 幂等键
+ * @property {{ domain: 'finance', occurrenceId: string } | { domain: 'fitness', sessionId: string } | { domain: 'core', captureId: string }} [lifeEventRef] INTG.EVENTS.1.5 / PLNR.CORE.5 幂等键
  */
 
 /**

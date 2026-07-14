@@ -34,6 +34,24 @@ export const FitnessWorkoutLoggedSchema = z.object({
 
 export type FitnessWorkoutLoggedEvent = z.infer<typeof FitnessWorkoutLoggedSchema>
 
+/**
+ * Core 任务捕获事件契约
+ * producer: 任意"捕获面"(如 AIOS 助手)—— 用户口述"加个待办",经此入 Planner 收件箱。
+ * 消费方 Planner 用自身 createTask 生成任务并回写整包,不直写结构化镜像表(避免被同步覆盖)。
+ */
+export const CoreTaskCapturedSchema = z.object({
+  type: z.literal('core.task_captured'),
+  payload: z.object({
+    capture_id: z.string().describe('捕获方生成的唯一键,用于消费端幂等去重'),
+    title: z.string().min(1),
+    notes: z.string().optional(),
+    due_date: dateYmd.optional().describe('YYYY-MM-DD 格式'),
+    source: z.string().optional().describe('捕获来源标记,如 aios'),
+  }),
+})
+
+export type CoreTaskCapturedEvent = z.infer<typeof CoreTaskCapturedSchema>
+
 // -----------------------------------------------------------------------------
 // Life Event 联合类型 (Single Source of Truth)
 // -----------------------------------------------------------------------------
@@ -41,6 +59,7 @@ export type FitnessWorkoutLoggedEvent = z.infer<typeof FitnessWorkoutLoggedSchem
 export const LifeEventSchema = z.discriminatedUnion('type', [
   FinanceBillDueSchema,
   FitnessWorkoutLoggedSchema,
+  CoreTaskCapturedSchema,
 ])
 
 export type LifeEvent = z.infer<typeof LifeEventSchema>

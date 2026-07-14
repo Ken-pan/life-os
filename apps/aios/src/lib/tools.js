@@ -2,7 +2,7 @@ import { GATEWAY } from '$lib/localai.js'
 import { addMemory, searchMemories } from '$lib/memory.svelte.js'
 import { startImageProgress, stopImageProgress } from '$lib/imageProgress.svelte.js'
 import { isNative, NATIVE_DEFS, isNativeTool, executeNativeTool } from '$lib/native.js'
-import { lifeOsToday, financeSummary, plannerTasks } from '$lib/lifeos.js'
+import { lifeOsToday, financeSummary, plannerTasks, plannerAddTask } from '$lib/lifeos.js'
 
 /**
  * 内置工具(OpenAI function calling 格式)。
@@ -377,6 +377,28 @@ const DEFS = [
               description: '按领域过滤:life/work/planner/fitness/finance/home/other',
             },
           },
+        },
+      },
+    },
+  },
+  {
+    key: 'planner_add_task',
+    icon: 'list-todo',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'planner_add_task',
+        description:
+          '给用户的 Planner 加一条待办(投递到 Planner 收件箱 Inbox)。用户明确想记一件事/加个待办/提醒自己做某事时使用。仅在用户意图明确时调用,调用后把加了什么、到期日复述给用户确认。任务会在用户下次打开 Planner 时出现。只能新建,不能改/删已有任务。',
+        parameters: {
+          type: 'object',
+          properties: {
+            title: { type: 'string', description: '待办标题(必填,简洁一句话)' },
+            notes: { type: 'string', description: '备注/细节(可选)' },
+            dueDate: { type: 'string', description: '到期日 YYYY-MM-DD(可选,只接受这个格式)' },
+          },
+          required: ['title'],
         },
       },
     },
@@ -1413,6 +1435,8 @@ export async function executeTool(name, argsJson) {
         return await financeSummary(args)
       case 'planner_tasks':
         return await plannerTasks(args)
+      case 'planner_add_task':
+        return await plannerAddTask(args)
       case 'browser_status':
         return await browserStatus()
       case 'read_browser_page':

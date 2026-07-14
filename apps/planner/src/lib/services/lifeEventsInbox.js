@@ -6,7 +6,11 @@ import { supabase, isSupabaseConfigured } from '../supabase.js'
 
 const BATCH_LIMIT = 50
 
-const CONSUMED_EVENT_TYPES = ['finance.bill_due', 'fitness.workout_logged']
+const CONSUMED_EVENT_TYPES = [
+  'finance.bill_due',
+  'fitness.workout_logged',
+  'core.task_captured',
+]
 
 const FITNESS_DAY_LABELS = /** @type {Record<string, string>} */ ({
   chest: '胸',
@@ -74,6 +78,45 @@ export function upsertTaskFromFinanceBillDue(payload) {
 }
 
 /**
+ * @param {string} captureId
+ * @returns {import('../types.js').Task | undefined}
+ */
+export function findTaskByCaptureId(captureId) {
+  return S.tasks.find(
+    (task) =>
+      !task.deletedAt &&
+      task.meta?.lifeEventRef?.domain === 'core' &&
+      task.meta.lifeEventRef.captureId === captureId,
+  )
+}
+
+/**
+ * @param {import('@life-os/contracts/events').CoreTaskCapturedEvent['payload']} payload
+ * @returns {import('../types.js').Task}
+ */
+export function upsertTaskFromCoreCapture(payload) {
+  const existing = findTaskByCaptureId(payload.capture_id)
+  if (existing) return existing
+
+  const src = payload.source ? `来自 ${payload.source}` : ''
+  const notes = [payload.notes, src].filter(Boolean).join('\n')
+
+  return createTask({
+    title: payload.title,
+    dueDate: payload.due_date ?? null,
+    listId: SYSTEM_LIST_INBOX,
+    notes,
+    meta: {
+      kind: 'standard',
+      lifeEventRef: {
+        domain: 'core',
+        captureId: payload.capture_id,
+      },
+    },
+  })
+}
+
+/**
  * @param {import('@life-os/contracts/events').FitnessWorkoutLoggedEvent['payload']} payload
  * @returns {import('../types.js').Task}
  */
@@ -124,6 +167,9 @@ function applyLifeEvent(event) {
   }
   if (event.type === 'fitness.workout_logged') {
     return upsertHabitFromFitnessWorkoutLogged(event.payload)
+  }
+  if (event.type === 'core.task_captured') {
+    return upsertTaskFromCoreCapture(event.payload)
   }
   return null
 }

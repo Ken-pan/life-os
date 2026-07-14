@@ -1,6 +1,6 @@
 import { createLifeOsSupabaseClient } from '@life-os/sync'
 import { createClient } from '@supabase/supabase-js'
-import { isCloudAuthorized } from '$lib/cloud.svelte.js'
+import { CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
 
 /**
  * Life OS 跨 app 数据读取。
@@ -287,4 +287,35 @@ export async function plannerTasks(args = {}) {
     lines.push(`${t.completed ? '☑' : '☐'} ${t.title || '(无标题)'}${meta ? ' ' + meta : ''}`)
   }
   return lines.join('\n')
+}
+
+/* —————————————————————— 写:加待办 —————————————————————— */
+
+/**
+ * 给 Planner 加一条待办。走 life_events 收件箱(core.task_captured):
+ * AIOS 不直写 planner_tasks(会被 Planner 整包同步覆盖),而是投递一条事件,
+ * Planner 下次打开/同步时用自己的 createTask 落地并回写整包 —— 架构安全、不丢。
+ * @param {{title?:string, notes?:string, dueDate?:string}} args
+ */
+export async function plannerAddTask(args = {}) {
+  if (!isCloudAuthorized()) return NEED_LOGIN
+  const title = String(args.title ?? '').trim()
+  if (!title) return '错误:待办标题不能为空。'
+  const userId = CLOUD.user?.id
+  if (!userId) return NEED_LOGIN
+
+  const payload = { capture_id: crypto.randomUUID(), title, source: 'aios' }
+  if (args.notes && String(args.notes).trim()) payload.notes = String(args.notes).trim()
+  if (args.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(args.dueDate)) payload.due_date = args.dueDate
+
+  const sb = schemaClient('public')
+  const { error } = await sb.from('life_events').insert({
+    user_id: userId,
+    type: 'core.task_captured',
+    payload,
+  })
+  if (error) return `加待办失败:${error.message}`
+
+  const due = payload.due_date ? `,到期 ${payload.due_date}` : ''
+  return `已把「${title}」${due}投递到 Planner 收件箱,下次打开 Planner 会自动出现在 Inbox。`
 }

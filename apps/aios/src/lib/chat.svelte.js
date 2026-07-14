@@ -383,7 +383,8 @@ async function buildSystemPrompt(conversation) {
         'Life OS 数据(用户自己的真实数据,涉及时必须用工具读、不要猜也不要说"看不到"):\n' +
           '- 花销/收入/结余/某分类或商家花多少 → finance_summary(可传 period 或 from/to、category、merchant)\n' +
           '- 待办/今天要做什么/有没有逾期/今天完成了什么 → planner_tasks(scope: today/overdue/open/completed_today)\n' +
-          '- "今天怎么样/我的近况" 这类综合近况 → life_os_today(一次拿到待办·财务·健身·音乐今日概览)',
+          '- "今天怎么样/我的近况" 这类综合近况 → life_os_today(一次拿到待办·财务·健身·音乐今日概览)\n' +
+          '- 用户明确要记一件事/加待办/提醒自己 → planner_add_task(投递到 Planner 收件箱);仅意图明确时调,调用后复述加了什么',
       )
     }
     if (S.settings.memory) {
