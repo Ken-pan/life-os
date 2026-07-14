@@ -206,8 +206,11 @@
     flex-shrink: 0;
   }
 
-  .set-row .pref-control,
-  .set-row .seg {
+  /* 控件占满整行仅用于堆叠式(非 toggle)行，如整宽 seg。
+     toggle 行保持横向、控件靠右 auto 宽：否则权限被拒等「控件为空」的 toggle 行，
+     空 .pref-control 会被撑成 100% 宽，把 .pref-copy 文本挤成 0 宽(中文逐字竖排)。 */
+  .set-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .pref-control,
+  .set-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .seg {
     width: 100%;
   }
 
