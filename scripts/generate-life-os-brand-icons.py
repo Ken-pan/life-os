@@ -222,6 +222,11 @@ def main() -> None:
             "light": REPO / "apps/home/static/icon-light.png",
             "out": REPO / "apps/home/static",
         },
+        "aios": {
+            "dark": REPO / "apps/aios/static/icon-dark.png",
+            "light": REPO / "apps/aios/static/icon-light.png",
+            "out": REPO / "apps/aios/static",
+        },
     }
 
     if args.app:

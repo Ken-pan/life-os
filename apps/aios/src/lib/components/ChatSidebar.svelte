@@ -39,7 +39,13 @@
 
 <aside class="sidebar chat-sidebar" aria-label={t('nav.mainAria')}>
   <div class="sidebar-head">
-    <span class="brand-word">AI<span class="brand-dot">.</span>OS</span>
+    <span class="brand-lockup">
+      <span class="brand-mark" aria-hidden="true">
+        <img src="/brand-square-light-96.png" class="mark-light" width="24" height="24" alt="" />
+        <img src="/brand-square-dark-96.png" class="mark-dark" width="24" height="24" alt="" />
+      </span>
+      <span class="brand-word">AI<span class="brand-accent">OS</span></span>
+    </span>
     <button
       type="button"
       class="icon-btn"
@@ -141,6 +147,35 @@
     padding: var(--space-3, 12px) var(--space-3, 12px) var(--space-2, 8px);
   }
 
+  .brand-lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .brand-mark {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 24px;
+    height: 24px;
+  }
+  .brand-mark img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+  .brand-mark .mark-dark {
+    display: none;
+  }
+  :global([data-theme='dark']) .brand-mark .mark-light {
+    display: none;
+  }
+  :global([data-theme='dark']) .brand-mark .mark-dark {
+    display: block;
+  }
   .brand-word {
     font-family: var(--font-brand, var(--font));
     font-weight: 700;
@@ -148,7 +183,7 @@
     letter-spacing: 0.04em;
     color: var(--sidebar-foreground);
   }
-  .brand-dot {
+  .brand-accent {
     color: var(--sidebar-muted);
   }
 
