@@ -673,6 +673,18 @@ export async function continueGenerating() {
   }
 }
 
+// 生图误触发兜底:小模型常把"写一个贪吃蛇小游戏 / 做个网页 / 对比语言给张表"这类
+// 文字/代码需求错调 generate_image(生图慢,且用户要的是文字或可运行代码,不是一张图)。
+// 命中"构建/技术类名词 + 无明确图片意图"时,agent loop 拦下这次生图、提示模型直接用文字回答。
+// 刻意保守:凡出现画图/照片/插画/头像/图标/立绘/角色等图片意图词,一律放行,不误伤真·生图。
+const CODE_BUILD_RE =
+  /游戏|小游戏|网页|网站|页面|应用|程序|代码|脚本|表格|对比|贪吃蛇|计算器|俄罗斯方块|井字棋|扫雷|2048|待办|todo|html|css|canvas/i
+const IMAGE_INTENT_RE =
+  /画一|画个|画张|画幅|生成图片|生成一[张幅]|来[张幅]|照片|摄影|插画|海报|头像|壁纸|图标|logo|封面|配图|立绘|原画|概念图|角色|人物|形象|肖像|表情|贴纸|图片/i
+function isBuildCodeAsk(text) {
+  return !!text && CODE_BUILD_RE.test(text) && !IMAGE_INTENT_RE.test(text)
+}
+
 /** agent loop:流式回复,遇到 tool_calls 就执行并继续,最多 MAX_TOOL_ROUNDS 轮 */
 async function streamAssistantReply(conversation) {
   C.streaming = true
@@ -680,6 +692,8 @@ async function streamAssistantReply(conversation) {
   const signal = controller.signal
 
   const useVision = conversationHasImages(conversation)
+  const lastUserText =
+    [...conversation.messages].reverse().find((m) => m.role === 'user')?.content ?? ''
   const model = resolveModel(conversation)
   const useTools = S.settings.tools && !useVision
   const tools = useTools ? toolDefinitions({ webAccess: S.settings.webAccess }) : undefined
@@ -761,6 +775,15 @@ async function streamAssistantReply(conversation) {
       persist()
       for (const tc of assistant.toolCalls) {
         if (signal.aborted) break
+        // 生图误触发兜底:文字/代码类需求拦下生图,提示模型直接用文字回答(格式自选)
+        if (tc.name === 'generate_image' && isBuildCodeAsk(lastUserText)) {
+          tc.result =
+            '[已跳过生图] 用户要的是文字/代码回答,不是一张图片,不要调用 generate_image。' +
+            '请直接用 Markdown 正文回答(表格就用表格,列表就用列表);仅当用户明确要可运行的' +
+            '网页/小游戏/应用时,才输出自包含的 ```html 代码块(内联 CSS/JS,不引外部资源)。'
+          tc.running = false
+          continue
+        }
         tc.result = await executeTool(tc.name, tc.arguments)
         // 生图类工具的产出图片挂到调用记录上,由 Message 直接渲染(不进模型上下文)
         const images = consumePendingImages()
