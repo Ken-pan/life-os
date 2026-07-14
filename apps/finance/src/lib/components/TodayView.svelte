@@ -37,6 +37,7 @@
     welcomeTitle,
   } from '@life-os/finance-core/copy/terminology'
   import { t } from '$lib/i18n.svelte.js'
+  import { helpTipPosition } from '$lib/helpTipPosition.js'
 
   /** @typedef {import('../../types.js').FinanceData} FinanceData */
   /** @typedef {import('$lib/dashboard.js').Dashboard} Dashboard */
@@ -81,6 +82,8 @@
   let calendarView = $state(/** @type {'agenda' | 'calendar'} */ ('agenda'))
   let monthOffset = $state(0)
   let showMoreQuickActions = $state(false)
+  let showStsExplain = $state(false)
+  let showSavingExplain = $state(false)
 
   const safeToSpend = $derived(safeToSpendLabel())
   const safeToSpendSub = $derived(safeToSpendSubtitle())
@@ -313,7 +316,7 @@
 </script>
 
 {#snippet helpTip(text)}
-  <span class="help-tip" tabindex="0" role="note" aria-label={text}>
+  <span class="help-tip" tabindex="0" role="note" aria-label={text} use:helpTipPosition>
     <HelpCircle size={14} aria-hidden="true" />
     <span class="help-tip-pop" role="tooltip">{text}</span>
   </span>
@@ -340,13 +343,9 @@
   </div>
 {:else}
   <div class="grid gap-4">
-    <p class="muted-note mb-1">{t('today.intro', { safeToSpend })}</p>
     <div class="life-os-grid life-os-grid--kpi life-os-grid--kpi-2 today-headline">
       <div class="card kpi kpi-accent today-hero">
-        <span class="label">
-          {safeToSpend}
-          {@render helpTip(safeToSpendText(derived, outlook, privacy))}
-        </span>
+        <span class="label">{safeToSpend}</span>
         <span class="value">{money(derived.safeToSpend, privacy)}</span>
         {#if derived.safeToSpend <= 0}
           {#if cap.capacity > 0}
@@ -395,6 +394,17 @@
           {/if}
         {/if}
         <span class="sub">{safeToSpendSub}</span>
+        <button
+          type="button"
+          class="explain-toggle"
+          aria-expanded={showStsExplain}
+          onclick={() => (showStsExplain = !showStsExplain)}
+        >
+          {showStsExplain ? t('today.hideExplain') : t('today.showExplain')}
+        </button>
+        {#if showStsExplain}
+          <p class="explain-panel">{safeToSpendText(derived, outlook, privacy)}</p>
+        {/if}
       </div>
 
       {#if cap.rationale === 'none'}
@@ -447,10 +457,7 @@
         })}
         <div class="card today-hero">
           <div class="today-card-head">
-            <h3 class="today-hero-title">
-              {t('today.savingCapacityTitle')}
-              {@render helpTip(whyText)}
-            </h3>
+            <h3 class="today-hero-title">{t('today.savingCapacityTitle')}</h3>
             <div class="today-card-actions">
               <button class="btn outline compact" onclick={() => onGoTab('forecast', 'scenarios')}>
                 {t('today.manageSavingPlan')}
@@ -490,6 +497,17 @@
               </span>
             </div>
           </div>
+          <button
+            type="button"
+            class="explain-toggle"
+            aria-expanded={showSavingExplain}
+            onclick={() => (showSavingExplain = !showSavingExplain)}
+          >
+            {showSavingExplain ? t('today.hideExplain') : t('today.showExplain')}
+          </button>
+          {#if showSavingExplain}
+            <p class="explain-panel">{whyText}</p>
+          {/if}
         </div>
       {/if}
     </div>

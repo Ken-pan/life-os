@@ -768,12 +768,22 @@
                       ? t('decisionStudio.unarchive')
                       : t('decisionStudio.archive')}
                   </button>
-                  <button class="btn danger" onclick={() => store.removeScenario(s.id)}>
+                  <button
+                    class="btn danger"
+                    onclick={() => {
+                      if (window.confirm(t('decisionStudio.confirmDeleteScenario', { name: s.name })))
+                        store.removeScenario(s.id)
+                    }}
+                  >
                     {t('decisionStudio.delete')}
                   </button>
                 </div>
               </div>
             </div>
+          </div>
+        {:else}
+          <div class="card card-compact">
+            <p class="muted-note mb-0">{t('decisionStudio.savedEmpty')}</p>
           </div>
         {/each}
       </div>
@@ -848,6 +858,7 @@
                 <button
                   class="btn danger"
                   onclick={() => {
+                    if (!window.confirm(t('decisionStudio.confirmDeleteRecord'))) return
                     void repo.deleteDecisionRecord(r.id)
                     records = records.filter((x) => x.id !== r.id)
                   }}
@@ -856,6 +867,10 @@
                 </button>
               </div>
             </div>
+          </div>
+        {:else}
+          <div class="card card-compact">
+            <p class="muted-note mb-0">{t('decisionStudio.logEmpty')}</p>
           </div>
         {/each}
       </div>

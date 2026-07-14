@@ -225,8 +225,9 @@
     try {
       const result = await restoreFinancialBackup(restoreCandidate)
       await txns.reload()
-      dataActionResult = backupRestoreDoneMessage(result.schemaVersion, result.restoredAt)
-      window.location.reload()
+      dataActionResult = `${backupRestoreDoneMessage(result.schemaVersion, result.restoredAt)}${t('settings.reloadingHint')}`
+      // 先让结果文案可见，再刷新（否则立即 reload 会盖掉反馈）
+      setTimeout(() => window.location.reload(), 1600)
     } catch (error) {
       dataActionResult = t('settings.resultRestoreFailed', {
         error: error instanceof Error ? error.message : String(error),
@@ -244,12 +245,13 @@
     dataActionBusy = true
     try {
       const result = await deleteAllFinancialData()
-      dataActionResult = t('settings.resultDeleted', {
+      dataActionResult = `${t('settings.resultDeleted', {
         details: Object.entries(result.deleted)
           .map(([table, count]) => `${table}:${count}`)
           .join('，'),
-      })
-      window.location.reload()
+      })}${t('settings.reloadingHint')}`
+      // 先让结果文案可见，再刷新（否则立即 reload 会盖掉反馈）
+      setTimeout(() => window.location.reload(), 1600)
     } catch (error) {
       dataActionResult = t('settings.resultDeleteFailed', {
         error: error instanceof Error ? error.message : String(error),

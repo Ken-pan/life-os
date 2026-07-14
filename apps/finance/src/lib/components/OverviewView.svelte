@@ -200,6 +200,7 @@
           </button>
         </div>
         <div class="list">
+          <div class="kv-subhead">{t('overview.moneyGroupSplit')}</div>
           <div class="kv">
             <span class="k">{t('overview.accessibleAfterTax', { accessible })}</span>
             <span>{money(summary.accessible, privacy)}</span>
@@ -211,6 +212,7 @@
           <p class="muted-note mb-1-5">
             {t('overview.waterfallFormula', { accessible, liquidCash, locked })}
           </p>
+          <div class="kv-subhead">{t('overview.moneyGroupBreakdown')}</div>
           <div class="kv">
             <span class="k">{t('overview.liquidBreakdown', { liquidCash })}</span>
             <span>{money(derived.liquidCash, privacy)}</span>
@@ -253,6 +255,7 @@
             <span class="k">{t('overview.investedTotal')}</span>
             <span>{money(summary.invested, privacy)}</span>
           </div>
+          <div class="kv-subhead">{t('overview.moneyGroupCashflow')}</div>
           <div class="kv">
             <span class="k">{t('overview.monthlySurplusAvg')}</span>
             <span class={depositDeltaClass(summary.monthlySurplus)}>
