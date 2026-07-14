@@ -314,6 +314,8 @@ export default {
     lyricsAutoRunning: '正在自动补全歌词',
     lyricsAutoPending: '还有 {count} 首待补全 · 已在后台自动处理',
     lyricsAutoDone: '歌词已全部补全',
+    maintArt: '正在补全封面',
+    maintMetadata: '正在整理元数据',
     rescanMeta: '补扫 ID3 元数据',
     rescanMetaDesc: '从本地音频文件重新读取标签、封面与内嵌歌词',
     rescanning: '正在补扫 {done}/{total}…',

@@ -300,19 +300,20 @@ export function ensureMetadataRepaired(opts = {}) {
   if (!opts.force && Date.now() - lastMetadataRepairAt < METADATA_REPAIR_MIN_GAP_MS)
     return Promise.resolve(0)
   if (!metaRepairPromise) {
-    metaRepairPromise = repairFilenameMetadata()
-      .then(() => repairGarbledMetadata())
-      .then(async (repaired) => {
+    metaRepairPromise = (async () => {
+      const state = await import('./state.svelte.js')
+      state.maintBegin('metadata')
+      try {
+        await repairFilenameMetadata()
+        const repaired = await repairGarbledMetadata()
         lastMetadataRepairAt = Date.now()
-        if (repaired > 0) {
-          const { bumpLibraryEpoch } = await import('./state.svelte.js')
-          bumpLibraryEpoch()
-        }
+        if (repaired > 0) state.bumpLibraryEpoch()
         return repaired
-      })
-      .finally(() => {
+      } finally {
+        state.maintEnd('metadata')
         metaRepairPromise = null
-      })
+      }
+    })()
   }
   return metaRepairPromise
 }
@@ -426,16 +427,10 @@ export function ensureLyricsRepaired(opts = {}) {
   if (!lyricsRepairPromise) {
     lyricsRepairPromise = (async () => {
       const state = await import('./state.svelte.js')
-      const maint = state.libraryMaintenance
-      maint.running = true
-      maint.done = 0
-      maint.total = 0
+      state.maintBegin('lyrics')
       try {
         const { repaired } = await repairMissingLyrics(
-          (done, total) => {
-            maint.done = done
-            maint.total = total
-          },
+          (done, total) => state.maintProgress(done, total),
           undefined,
           { limit: AUTO_LYRICS_BATCH_LIMIT, ...opts },
         )
@@ -446,7 +441,7 @@ export function ensureLyricsRepaired(opts = {}) {
         }
         return repaired
       } finally {
-        maint.running = false
+        state.maintEnd('lyrics')
         lyricsRepairPromise = null
       }
     })()
@@ -512,19 +507,22 @@ let artRepairPromise = null
 export function ensureArtRepaired() {
   if (artRepairPromise) return artRepairPromise
 
-  artRepairPromise = repairMissingArt()
-    .then(async (repaired) => {
+  artRepairPromise = (async () => {
+    const state = await import('./state.svelte.js')
+    state.maintBegin('art')
+    try {
+      const repaired = await repairMissingArt()
       if (repaired > 0) {
-        const { bumpLibraryEpoch } = await import('./state.svelte.js')
         const { refreshQueueMetadata } = await import('./player.svelte.js')
-        bumpLibraryEpoch()
+        state.bumpLibraryEpoch()
         await refreshQueueMetadata()
       }
       return repaired
-    })
-    .finally(() => {
+    } finally {
+      state.maintEnd('art')
       artRepairPromise = null
-    })
+    }
+  })()
 
   return artRepairPromise
 }

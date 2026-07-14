@@ -94,10 +94,21 @@
       "$type": "color",
       "$value": "color-mix(in srgb, var(--t1, var(--text)) 5%, transparent)"
     },
-    "dangerBg": { "$type": "color", "$value": "var(--critical-subtle)" },
+    "dangerBg": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--critical) 8%, transparent)"
+    },
+    "dangerBgHover": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--critical) 15%, transparent)"
+    },
     "dangerBorder": {
       "$type": "color",
-      "$value": "color-mix(in srgb, var(--critical) 32%, var(--border))"
+      "$value": "color-mix(in srgb, var(--critical) 24%, transparent)"
+    },
+    "dangerBorderHover": {
+      "$type": "color",
+      "$value": "color-mix(in srgb, var(--critical) 42%, transparent)"
     },
     "dangerText": { "$type": "color", "$value": "var(--critical)" },
     "disabledOpacity": { "$type": "number", "$value": "0.42" },

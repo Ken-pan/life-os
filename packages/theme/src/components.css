@@ -80,12 +80,8 @@
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: color-mix(
-    in srgb,
-    var(--critical, var(--feedback-danger)) 10%,
-    var(--button-danger-bg, var(--critical-subtle))
-  );
-  border-color: color-mix(in srgb, var(--critical, var(--feedback-danger)) 42%, var(--border));
+  background: var(--button-danger-bg-hover, color-mix(in srgb, var(--critical, var(--feedback-danger)) 15%, transparent));
+  border-color: var(--button-danger-border-hover, color-mix(in srgb, var(--critical, var(--feedback-danger)) 42%, transparent));
 }
 
 .btn-secondary:active:not(:disabled),

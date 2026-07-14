@@ -124,11 +124,62 @@ export const S = $state(load())
 export const librarySignals = $state({ epoch: 0 })
 
 /**
- * Live progress of the background library auto-maintenance (lyrics backfill).
- * The settings page renders this as a progress bar instead of manual buttons.
- * @type {{ running: boolean, done: number, total: number }}
+ * Live status of the background library auto-maintenance (lyrics / art / metadata
+ * backfill). The settings page renders this as a progress bar instead of manual
+ * buttons. `phase` names what's running; `total > 0` means a determinate bar,
+ * otherwise show an indeterminate one.
+ * @type {{ running: boolean, phase: '' | 'lyrics' | 'art' | 'metadata', done: number, total: number }}
  */
-export const libraryMaintenance = $state({ running: false, done: 0, total: 0 })
+export const libraryMaintenance = $state({
+  running: false,
+  phase: '',
+  done: 0,
+  total: 0,
+})
+
+// Phases can overlap (art/metadata run while lyrics fetches). Count each phase
+// independently and derive the displayed phase by priority — lyrics wins because
+// it's the slow, informative one with a real per-item count.
+const maintActive = { lyrics: 0, art: 0, metadata: 0 }
+
+function recomputeMaintenance() {
+  const phase = maintActive.lyrics
+    ? 'lyrics'
+    : maintActive.art
+      ? 'art'
+      : maintActive.metadata
+        ? 'metadata'
+        : ''
+  libraryMaintenance.phase = phase
+  libraryMaintenance.running = phase !== ''
+  // Only lyrics carries a determinate count; other phases show indeterminate.
+  if (phase !== 'lyrics') {
+    libraryMaintenance.done = 0
+    libraryMaintenance.total = 0
+  }
+}
+
+/** @param {'lyrics' | 'art' | 'metadata'} phase */
+export function maintBegin(phase) {
+  maintActive[phase] += 1
+  if (phase === 'lyrics') {
+    libraryMaintenance.done = 0
+    libraryMaintenance.total = 0
+  }
+  recomputeMaintenance()
+}
+
+/** @param {number} done @param {number} total */
+export function maintProgress(done, total) {
+  libraryMaintenance.done = done
+  libraryMaintenance.total = total
+}
+
+/** @param {'lyrics' | 'art' | 'metadata'} phase */
+export function maintEnd(phase) {
+  maintActive[phase] = Math.max(0, maintActive[phase] - 1)
+  recomputeMaintenance()
+}
 
 /** @type {ReturnType<typeof setTimeout> | null} */
 let bumpTimer = null

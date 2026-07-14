@@ -160,6 +160,13 @@
       ? Math.round((libraryMaintenance.done / libraryMaintenance.total) * 100)
       : 0,
   )
+  const maintLabel = $derived(
+    libraryMaintenance.phase === 'art'
+      ? t('settings.maintArt')
+      : libraryMaintenance.phase === 'metadata'
+        ? t('settings.maintMetadata')
+        : t('settings.lyricsAutoRunning'),
+  )
 
   function setTheme(theme) {
     patchCloudSettings({ theme })
@@ -692,11 +699,13 @@
     <div class="settings-stack-block settings-library-actions">
       {#if libraryMaintenance.running}
         <p class="pref-desc settings-action-hint">
-          {t('settings.lyricsAutoRunning')}{#if libraryMaintenance.total > 0}
+          {maintLabel}{#if libraryMaintenance.total > 0}
             · {libraryMaintenance.done}/{libraryMaintenance.total}{/if}
         </p>
         <div
           class="settings-lyrics-progress"
+          class:settings-lyrics-progress--indeterminate={libraryMaintenance.total ===
+            0}
           role="progressbar"
           aria-valuemin="0"
           aria-valuemax="100"
@@ -704,7 +713,7 @@
         >
           <div
             class="settings-lyrics-progress-fill"
-            style="width:{lyricsPct}%"
+            style={libraryMaintenance.total > 0 ? `width:${lyricsPct}%` : ''}
           ></div>
         </div>
       {:else if missingLyrics > 0}
@@ -752,5 +761,29 @@
     border-radius: inherit;
     background: var(--accent);
     transition: width 0.35s var(--ease-standard, ease);
+  }
+
+  /* 封面/元数据修复无逐项进度 → 不定态滑块 */
+  .settings-lyrics-progress--indeterminate .settings-lyrics-progress-fill {
+    width: 40%;
+    transition: none;
+    animation: settings-maint-indeterminate 1.2s ease-in-out infinite;
+  }
+
+  @keyframes settings-maint-indeterminate {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(250%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .settings-lyrics-progress--indeterminate .settings-lyrics-progress-fill {
+      animation: none;
+      width: 100%;
+      opacity: 0.5;
+    }
   }
 </style>

@@ -2238,15 +2238,8 @@ p {
   font-size: var(--text-sm);
 }
 
-.btn-danger {
-  --danger: var(--critical, var(--feedback-danger));
-  color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 24%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--danger) 7%, transparent);
-  font-weight: 600;
-  transition: background .15s var(--ease-standard), border-color .15s var(--ease-standard);
-}
+/* 危险按钮配色/边框/hover 全部下沉到共享 token（--button-danger-*，见 theme），
+   fitness 不再本地覆盖,保持设计系统单一真源。此处只留 fitness 布局相关。 */
 
 /* 堆叠块内容左对齐:.set-row{display:flex;align-items:center} 会把 stack-block
    撑成 flex column 居中,标题/描述都居中不符合阅读习惯。改为拉伸满宽 + 文本左起。 */
@@ -2260,15 +2253,6 @@ p {
   width: 100%;
   padding: 13px;
   letter-spacing: .08em;
-}
-
-.btn-danger:hover {
-  background: color-mix(in srgb, var(--danger, var(--critical, var(--feedback-danger))) 14%, transparent);
-  border-color: color-mix(in srgb, var(--danger, var(--critical, var(--feedback-danger))) 42%, transparent);
-}
-
-.btn-danger:active {
-  background: color-mix(in srgb, var(--danger, var(--critical, var(--feedback-danger))) 20%, transparent);
 }
 
 .set-note {
