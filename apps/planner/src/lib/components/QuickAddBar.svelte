@@ -8,6 +8,7 @@
   import { getProjectById, selectableProjects } from '$lib/domain/projects.js';
   import {
     filterCaptureProjects,
+    parseQuickAddTokens,
     projectQueryFromTitle,
     titleWithoutProjectQuery,
   } from '$lib/domain/taskCapture.js';
@@ -60,12 +61,17 @@
 
   function submit() {
     if (ime.isComposing()) return;
-    const title = cleanTitle() || text.trim();
-    if (!title) return;
+    const base = cleanTitle() || text.trim();
+    if (!base) return;
+    const parsed = parseQuickAddTokens(base, todayKey());
+    // 若整串都是语法 token，回退用原文，避免创建空标题
+    const title = parsed.title || base;
     const created = createTask({
       title,
       listId: listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
-      dueDate,
+      dueDate: parsed.dueDate ?? dueDate,
+      priority: parsed.priority ?? undefined,
+      tags: parsed.tags.length ? parsed.tags : undefined,
       projectId: selectedProjectId || null
     });
     text = '';

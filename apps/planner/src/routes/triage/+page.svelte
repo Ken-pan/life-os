@@ -16,21 +16,16 @@
         !l.deletedAt &&
         (l.title?.toLowerCase() === 'archive' || l.title === '归档'),
     )
-    const today = todayKey()
     return S.tasks.filter((t) => {
       // Exclude completed or deleted
       if (t.completed || t.deletedAt) return false
       // Exclude archived
       if (archive && t.listId === archive.id) return false
+      // Exclude anything already triaged
       if (t.meta?.triagedAt) return false
-      
-      const isUnscheduled = !t.dueDate
-      const isOverdue = t.dueDate && t.dueDate < today
-      const isMissingPriority = !t.priority
-      const isMissingSize = !t.size
-      const isMissingNextAction = !t.nextAction || !t.nextAction.trim()
-      
-      return isUnscheduled || isOverdue || isMissingPriority || isMissingSize || isMissingNextAction
+      // 只处理收件箱 / 未整理项：还没排日期的任务（与收件箱视图口径一致）。
+      // 已排好日期的任务视为已安排，不再进入引导式快速处理。
+      return !t.dueDate
     })
   })
 

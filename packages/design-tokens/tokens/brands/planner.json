@@ -63,31 +63,31 @@
         },
         "sidebar": {
           "$type": "color",
-          "$value": "#161412"
+          "$value": "#efeae2"
         },
         "sidebar-foreground": {
           "$type": "color",
-          "$value": "#f5f0ea"
+          "$value": "#1f1c18"
         },
         "sidebar-muted": {
           "$type": "color",
-          "$value": "rgba(245, 240, 234, 0.55)"
+          "$value": "rgba(31, 28, 24, 0.55)"
         },
         "sidebar-accent": {
           "$type": "color",
-          "$value": "#221f1c"
+          "$value": "#e6e0d6"
         },
         "sidebar-primary": {
           "$type": "color",
-          "$value": "#e9a832"
+          "$value": "{color.planner.amber.600}"
         },
         "sidebar-primary-foreground": {
           "$type": "color",
-          "$value": "#1a1408"
+          "$value": "#ffffff"
         },
         "sidebar-border": {
           "$type": "color",
-          "$value": "rgba(255, 255, 255, 0.08)"
+          "$value": "rgba(31, 28, 24, 0.1)"
         },
         "appbar-bg": {
           "$type": "color",
