@@ -34,6 +34,8 @@
 | `20260710160000` | `life_os_baseline`                     | 折叠 legacy 链 + 全站 DDL（含 Planner/Paper 读路径） |
 | `20260710161000` | `fitness_signup_membership`            | Auth signup 隔离 + `app_memberships`      |
 | `20260710203000` | `portal_today_summary_fitness_today` | **GYMS.PORTAL.2** · Portal Fitness 卡字段 |
+| `20260712200000` | `portal_today_summary_timezone_and_tombstones` | **PLNR.CORE.4** · tz + tombstone 对齐 |
+| `20260713120000` | `purchase_review_associations`         | **FINC.PURCHASE.6.a** · `purchase_associations`+`purchase_decisions`+RLS+3 RPC；273 回填 proposed（2026-07-13 部署 + 生产 RPC 往返验证） |
 
 Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **语义吸收**；勿重复 apply 单文件 legacy migration。
 

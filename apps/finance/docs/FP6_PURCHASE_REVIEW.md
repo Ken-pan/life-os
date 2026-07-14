@@ -6,10 +6,11 @@
 
 > **CONDITIONAL PASS** means this phase successfully answered *how the product should work* and *why the current architecture cannot implement it safely*. It does **not** mean FINC.PURCHASE.6.a is ready to ship or that Confirm/Reject/Undo may be added to the existing JSONB write path.
 
-> **2026-07-13 — FINC.PURCHASE.6.a data foundation, slice 1:**
+> **2026-07-13 — FINC.PURCHASE.6.a data foundation, slice 1 (DEPLOYED to production, owner-authorized):**
 > - ✅ **Decision engine (SSOT)** `packages/finance-core/src/engine/purchaseReviewDecision.ts` — state machine (proposed/confirmed/rejected), optimistic `association_version`, `action_key` idempotency, single-step latest-first Undo, automation precedence helpers. **Unit-tested 14/14** (`purchaseReviewDecision.test.ts`).
-> - ✅ **Migration authored** `apps/finance/supabase/migrations/20260713120000_purchase_review_associations.sql` — `purchase_associations` + append-only `purchase_decisions`, RLS (owner + `has_app_access('finance')`), RPCs `purchase_review_get/_decide/_undo` mirroring the engine, idempotent JSONB→proposed backfill. **Convention-checked, NOT yet deployed.**
-> - ⏳ **Still gated (no isolated QA Supabase creds; production forbidden):** RPC/RLS integration + cross-user denial proof, matcher precedence wiring in `link-purchase-orders.mjs`, Antigravity visual baseline, UI Confirm/Reject/Undo.
+> - ✅ **Migration deployed** `20260713120000_purchase_review_associations.sql` on prod `iueozzuctstwvzbcxcyh` (registered in `schema_migrations`): `purchase_associations` + append-only `purchase_decisions`, RLS enabled + 5 policies (owner + `has_app_access('finance')`), RPCs `purchase_review_get/_decide/_undo`, **273 transactions backfilled → `proposed`**.
+> - ✅ **RPC logic verified end-to-end on production** (self-cleaning round-trip, net-zero change): confirm→200 (v0→1), idempotent replay (no new decision), `not_proposed`→400, `version_conflict`→409, undo→200 (proposed, v→2, links confirm). Matches the tested engine 1:1.
+> - ⏳ **Still open:** RLS **cross-user denial** runtime proof (needs two real authenticated JWT sessions — the superuser Management-API path bypasses RLS, so only policy *definitions* are verified so far); matcher precedence wiring in `link-purchase-orders.mjs`; Antigravity visual baseline; UI Confirm/Reject/Undo.
 
 ---
 
@@ -23,8 +24,9 @@
 | Isolated QA runtime verification | **PENDING** | No QA project credentials supplied; bootstrap ×2 not run |
 | Antigravity desktop/mobile visual baseline | **BLOCKED** | No valid isolated QA storage state |
 | FINC.PURCHASE.6 discovery / spec section | **PASS** | Product IA, mutation contract, blockers documented |
-| FINC.PURCHASE.6.a data foundation (engine + migration) | **PARTIAL** | Engine unit-tested 14/14; migration authored (2026-07-13). Deploy + RPC integration gated on QA Supabase |
-| FINC.PURCHASE.6.a UI mutations readiness | **BLOCKED** | Needs deployed RPCs + isolated QA runtime before Confirm/Reject/Undo |
+| FINC.PURCHASE.6.a data foundation (engine + migration) | **DEPLOYED** | Engine 14/14; migration on prod (2026-07-13), 273 backfilled; RPC logic verified end-to-end |
+| FINC.PURCHASE.6.a RLS cross-user proof | **PENDING** | Policies defined + enabled; runtime denial needs two real JWT sessions |
+| FINC.PURCHASE.6.a UI mutations readiness | **BLOCKED** | RPCs live; UI Confirm/Reject/Undo + matcher precedence wiring next |
 
 ---
 
