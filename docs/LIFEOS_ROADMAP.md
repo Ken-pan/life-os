@@ -62,6 +62,8 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 **FINC.PURCHASE.6.a 商品明细覆盖（2026-07-13）：** History 记录页原先只有 `clean_enriched`（105 笔）显示商品，`matched_review`/`return_refund` 只显示徽章、把已解析明细藏起来。改为凡有 `lineItems` 的 clean/review/refund 都显示商品条 + 可展开明细（含 Confirm/Reject）。实测生产 273 笔真实分类器：**显示商品 105 → 251（新增 146 笔）**。`HistoryLedgerRow.svelte`。
 
+**FINC.PURCHASE.6.a matching 质量优化（2026-07-13）：** 诊断发现不确定匹配主因是 `non_clean_status`（87/100）—— Amazon 导出常无 status（99 笔 null→字面量 'unknown' 被误判非 clean）+ "Picked Up"(空格) 漏配 `picked_up`。修 `isCleanPurchaseStatus`（SSOT，UI+read-model 共用）：unknown/缺失视为中性 clean、放宽履约措辞、退款仍非 clean。实测 **clean 105→176 · matched_review 100→29 · refund 68 不变**（71 笔升为可信 clean，审核负担降 71%）。纯客户端分类，无需重跑 matcher/改 DB。`classify.mjs`；`isCleanPurchaseStatus` 3 组断言。剩 29 笔 review 主因 low_confidence(20)/unknown_account(8)，属合理审核，边际递减。
+
 **FINC.PURCHASE.6.a 数据地基 slice 1（2026-07-13，已部署生产）：** 决策引擎 `purchaseReviewDecision.ts`（proposed/confirmed/rejected 状态机 + 乐观版本 + `action_key` 幂等 + 单步 Undo + 自动化优先级）**单测 14/14**；迁移 `20260713120000` **已部署生产** `iueozzuctstwvzbcxcyh`（两表 + RLS 5 策略 + 3 RPC；**273 笔回填为 proposed**），并在生产做**自清理 RPC 往返验证**（confirm/replay/not_proposed/version_conflict/undo 全部正确，数据净零变更）。**仍开放：** RLS 跨用户拒绝运行时证明（需两个真实 JWT 会话，超级用户 API 绕过 RLS）、matcher 优先级接线、Antigravity 基线、UI Confirm/Reject/Undo。详见 [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md)。
 
 **PaperOS：** 设备 Shell、数据面 verify、系统生命周期、UI device gate 全部迁出独立仓库 — 详情见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)；Hub 只保留 Planner 侧 provider API 状态。
