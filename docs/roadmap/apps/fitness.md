@@ -23,6 +23,8 @@ _**GYMS.PORTAL.2** 已发货（2026-07-10）— Portal Fitness 卡 `workedOutTod
 
 _**GYMS.SUB.5** 已发货（2026-07-13）— 替代动作完整训练流；工程 + 产品 UI/copy closure 全绿（#19 `67e72b81`），`session-queue`+`substitution` specs 9/9。详见 [`../../../apps/fitness/docs/FT-P5-substitution.md`](../../../apps/fitness/docs/FT-P5-substitution.md)。_
 
+_**GYMS.VOL.6 + GYMS.BW.7** 已发货（2026-07-14）— Stats 两块高 ROI 面板：① 每周各肌群容量 vs 增肌区间（MEV–MRV，三态着色，复用 `coachMetrics` 现成数据）；② 体重记录 + 30 天趋势（`settings.bodyweight`，随 settings 云同步）。顺带修复 `coachMetrics` 在英文 locale 下容量统计因 `ex.m` 被本地化而全部落空的既有 bug。`svelte-check` 0 error，中英/lbs·kg 双语双单位已验。_
+
 | ID              | 主题                             | ROI | 桶       | 投入 | Agent                            | 验收                                                   | Hub   |
 | --------------- | -------------------------------- | --- | -------- | ---- | -------------------------------- | ------------------------------------------------------ | ----- |
 | **GYMS.MEDIA.3** | 动作示意图                      | ○   | Product  | 2–3d | Fable                            | Focus 流可见缩略图                                     | —     |

@@ -35,6 +35,8 @@ FITNESS.OS 是一个面向个人训练管理的 Web 应用。基于 **SvelteKit 
 - **跳过/替代**：器械占用 / 身体不适 / 其他 + 可选替代动作
 - **后台通知**：Service Worker + 系统 Notification（设置页开启）
 - **统计面板**（`/stats`）：周频次、月历、容量、完成率、趋势
+- **每周肌群容量仪表盘**（`/stats`）：各肌群本周直接组数 vs 科学增肌区间（MEV–MRV），偏低/达标/偏高三态着色，暴露欠练肌群
+- **体重记录 + 趋势**（`/stats`）：每日称重、近 30 天变化、趋势图；存于 `settings.bodyweight`（canonical lbs），随 settings 云同步，多设备按日期并集合并
 
 ### 周期与计划（P2）
 
@@ -72,6 +74,8 @@ src/lib/
 ├─ logs.js              日志结构 normalize / getDoneCount
 ├─ session.js           训练 session API（completeSet / progress）
 ├─ progression.js       加重建议 + PR 检测
+├─ coachMetrics.js      周肌群容量 + 容量地标(MEV/MAV/MRV) + 疲劳/平台期
+├─ bodyweight.js        体重记录 / 趋势 / 变化 (canonical lbs)
 ├─ phase.js             周期 / deload 提醒
 ├─ programRuntime.js    默认计划 + 用户 overrides 合并
 ├─ coach.js             本地 Coach Lite 规则引擎

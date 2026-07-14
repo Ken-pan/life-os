@@ -48,6 +48,7 @@ const defaultState = () => ({
     plateCollarLbs: 0,
     plateCollarKg: 0,
     equipModes: {},
+    bodyweight: [],
   },
   weights: {},
   logs: {},
@@ -190,11 +191,26 @@ function load() {
   return defaultState()
 }
 
+/**
+ * 体重记录按日期并集合并：同一天取时间戳更新的一条（无 ts 视为更旧），
+ * 保证多设备各自的打点都不丢失。
+ */
+function mergeBodyweight(a, b) {
+  const byDate = new Map()
+  for (const e of [...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])]) {
+    if (!e || !e.date || !(Number(e.w) > 0)) continue
+    const prev = byDate.get(e.date)
+    if (!prev || String(e.ts || '') >= String(prev.ts || '')) byDate.set(e.date, e)
+  }
+  return [...byDate.values()].sort((x, y) => x.date.localeCompare(y.date))
+}
+
 /** 导入或恢复状态（replace = 覆盖，merge = 合并日志/重量/历史） */
 export function applyState(data, mode = 'replace') {
   const next = migrate(data)
   if (mode === 'merge') {
     S.settings = { ...next.settings, ...S.settings }
+    S.settings.bodyweight = mergeBodyweight(next.settings?.bodyweight, S.settings?.bodyweight)
     S.weights = { ...next.weights, ...S.weights }
     const mergedLogs = { ...(S.logs || {}) }
     for (const [k, dayLog] of Object.entries(next.logs || {})) {

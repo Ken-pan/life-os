@@ -48,6 +48,26 @@ export function exerciseMuscle(exOrId) {
   return exercisesEn[id]?.m || EX_BY_ID[id]?.m || '';
 }
 
+/** 归一化肌群组名（coachMetrics GROUP_RULES）的英文标签 */
+const MUSCLE_GROUP_EN = {
+  胸: 'Chest',
+  背: 'Back',
+  肩: 'Shoulders',
+  二头: 'Biceps',
+  三头: 'Triceps',
+  股四: 'Quads',
+  腘绳: 'Hamstrings',
+  臀: 'Glutes',
+  小腿: 'Calves',
+  核心: 'Core'
+};
+
+/** @param {string} group 归一化肌群组名 */
+export function muscleGroupLabel(group) {
+  if (resolveLocale(S.settings.locale) === 'zh') return group;
+  return MUSCLE_GROUP_EN[group] || group;
+}
+
 /**
  * Return a shallow copy with localized name / muscle / alternatives for display.
  * @template {Record<string, unknown>} T

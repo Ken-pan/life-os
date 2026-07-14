@@ -2873,6 +2873,264 @@ body:has(.focus-view) .toast {
   transition: width 700ms var(--ease-emphasized);
 }
 
+/* ── 每周肌群容量仪表盘 ── */
+.mv-note {
+  font-size: var(--text-xs);
+  color: var(--t3);
+  margin: 0 0 14px;
+}
+
+.mv-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.mv-row:last-of-type {
+  border-bottom: none;
+}
+
+.mv-name {
+  font-family: var(--disp);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  min-width: 44px;
+}
+
+html[lang='en'] .mv-name {
+  min-width: 78px;
+  font-size: var(--text-sm);
+}
+
+.mv-track {
+  position: relative;
+  flex: 1;
+  height: 9px;
+  background: var(--border-l);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* 目标容量区间（MEV→MRV）底纹 */
+.mv-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in oklab, var(--t3) 22%, transparent);
+  border-radius: 2px;
+}
+
+.mv-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 5px;
+  transition: width 700ms var(--ease-emphasized);
+}
+
+.mv-fill.mv-low {
+  background: var(--feedback-warning);
+}
+
+.mv-fill.mv-optimal {
+  background: var(--feedback-success);
+}
+
+.mv-fill.mv-high {
+  background: var(--feedback-danger);
+}
+
+.mv-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 62px;
+  line-height: 1.25;
+}
+
+.mv-count {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.mv-target {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--t3);
+}
+
+.mv-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 14px 0 0;
+  font-size: var(--text-xs);
+  color: var(--t3);
+}
+
+.mv-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
+.mv-dot.mv-low {
+  background: var(--feedback-warning);
+}
+
+.mv-dot.mv-optimal {
+  background: var(--feedback-success);
+}
+
+.mv-dot.mv-high {
+  background: var(--feedback-danger);
+}
+
+/* ── 体重记录 ── */
+.bw-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bw-current {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.bw-val {
+  font-family: var(--disp);
+  font-size: var(--text-4xl);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.bw-empty-val {
+  color: var(--t3);
+}
+
+.bw-unit {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--t3);
+}
+
+.bw-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.bw-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--t2);
+}
+
+.bw-latest {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--t3);
+}
+
+.bw-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.bw-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  color: var(--t1);
+  background: var(--chip-bg);
+  border: 1px solid var(--border-l);
+  border-radius: 10px;
+}
+
+.bw-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--btn-focus-ring);
+}
+
+.bw-input-unit {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--t3);
+}
+
+.bw-btn {
+  padding: 10px 18px;
+  font-family: var(--disp);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--sel-fg);
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 160ms var(--ease-emphasized);
+}
+
+.bw-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.bw-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-top: 18px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.bw-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 22px;
+}
+
+.bw-bar {
+  width: 100%;
+  max-width: 26px;
+  background: var(--accent);
+  border-radius: 4px 4px 0 0;
+  transition: height 700ms var(--ease-emphasized);
+}
+
+.bw-bar-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--t3);
+  white-space: nowrap;
+}
+
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

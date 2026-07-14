@@ -1,5 +1,5 @@
 <script>
-  import { S, sessionStats, displayWeight } from '$lib/state.svelte.js';
+  import { S, sessionStats, displayWeight, todayKey } from '$lib/state.svelte.js';
   import {
     sessionDates,
     sessionsByWeek,
@@ -10,8 +10,17 @@
     exerciseHistory,
     exercisePR
   } from '$lib/stats.js';
+  import { muscleVolumeStatus } from '$lib/coachMetrics.js';
+  import {
+    bodyweightSeries,
+    bodyweightDelta,
+    latestBodyweight,
+    logBodyweight,
+    displayBodyweight
+  } from '$lib/bodyweight.js';
   import { progressionAdvice, formatProgressionWeight } from '$lib/progression.js';
   import { findExercise } from '$lib/programRuntime.js';
+  import { muscleGroupLabel } from '$lib/i18n/exerciseLabels.js';
   import { reveal } from '$lib/actions/reveal.js';
   import Icon from '@life-os/platform-web/svelte/icon';
   import BackButton from '$lib/components/BackButton.svelte';
@@ -20,12 +29,40 @@
   import { messages } from '$lib/i18n/messages/index.js';
 
   let expandedEx = $state(null);
+  let bwInput = $state('');
+
+  const bwSeries = $derived(bodyweightSeries(120));
+  const bwLatest = $derived(latestBodyweight());
+  const bwDelta = $derived(bodyweightDelta(30));
+  const bwRange = $derived.by(() => {
+    if (bwSeries.length < 2) return null;
+    const ws = bwSeries.map((e) => e.w);
+    const lo = Math.min(...ws);
+    const hi = Math.max(...ws);
+    return { lo, hi, span: hi - lo || 1 };
+  });
+
+  const bwLoggedToday = $derived(bwLatest?.date === todayKey());
+
+  function saveBodyweight() {
+    const v = parseFloat(bwInput);
+    if (!(v > 0)) return;
+    if (logBodyweight(v)) bwInput = '';
+  }
+
+  function bwBarHeight(w) {
+    if (!bwRange) return 32;
+    return Math.round(10 + ((w - bwRange.lo) / bwRange.span) * 46);
+  }
 
   const overview = $derived(sessionStats());
   const weeks = $derived(sessionsByWeek(4));
   const maxWeek = $derived(Math.max(...weeks.map((w) => w.count), 1));
   const volume = $derived(volumeByDayType(28));
   const maxVol = $derived(Math.max(...volume.map((v) => v.sets), 1));
+  const muscleVol = $derived(muscleVolumeStatus(7));
+  const muscleVolActive = $derived(muscleVol.some((m) => m.sets > 0));
+  const mvScaleMax = $derived(Math.max(...muscleVol.map((m) => Math.max(m.sets, m.mrv)), 1));
   const weights = $derived(customWeightsList());
   const exercises = $derived(exerciseCompletion(28));
   const cal = $derived(monthCalendar());
@@ -90,6 +127,79 @@
     </div>
 
     <div class="set-group" use:reveal>
+      <div class="sg-title" data-ui-decor="section-label">{t('stats.bodyweight')}</div>
+      <div class="set-row" style="display:block">
+        <div class="bw-head">
+          <div class="bw-current">
+            {#if bwLatest}
+              <span class="bw-val">{displayBodyweight(bwLatest.w)}</span>
+              <span class="bw-unit">{unitLabel}</span>
+            {:else}
+              <span class="bw-val bw-empty-val">—</span>
+            {/if}
+          </div>
+          <div class="bw-meta">
+            {#if bwDelta}
+              {@const up = bwDelta.deltaDisplay > 0}
+              {@const flat = bwDelta.deltaDisplay === 0}
+              <span class="bw-delta">
+                {#if flat}
+                  {t('stats.bwFlat', { days: bwDelta.days })}
+                {:else}
+                  <Icon name={up ? 'trending-up' : 'trending-down'} size={12} />
+                  {t('stats.bwDelta', {
+                    days: bwDelta.days,
+                    sign: up ? '+' : '−',
+                    delta: Math.abs(bwDelta.deltaDisplay),
+                    unit: unitLabel
+                  })}
+                {/if}
+              </span>
+            {/if}
+            {#if bwLatest}
+              <span class="bw-latest">{t('stats.bwLatest', { date: bwLatest.date.slice(5) })}</span>
+            {/if}
+          </div>
+        </div>
+
+        <div class="bw-input-row">
+          <input
+            class="bw-input"
+            type="number"
+            inputmode="decimal"
+            step="0.1"
+            min="0"
+            placeholder={t('stats.bwPlaceholder')}
+            bind:value={bwInput}
+            onkeydown={(e) => e.key === 'Enter' && saveBodyweight()}
+            aria-label={t('stats.bwPlaceholder')}
+          />
+          <span class="bw-input-unit">{unitLabel}</span>
+          <button type="button" class="bw-btn" onclick={saveBodyweight} disabled={!(parseFloat(bwInput) > 0)}>
+            {bwLoggedToday ? t('stats.bwUpdate') : t('stats.bwLog')}
+          </button>
+        </div>
+
+        {#if bwSeries.length >= 2}
+          <div class="bw-chart" role="img" aria-label={t('stats.bodyweight')}>
+            {#each bwSeries as e (e.date)}
+              <div class="bw-col">
+                <div
+                  class="bw-bar"
+                  style="height:{bwBarHeight(e.w)}px"
+                  title="{e.date}: {displayBodyweight(e.w)} {unitLabel}"
+                ></div>
+                <span class="bw-bar-label">{e.date.slice(5)}</span>
+              </div>
+            {/each}
+          </div>
+        {:else if !bwLatest}
+          <p class="sr-desc" style="margin-top:12px">{t('stats.bwEmpty')}</p>
+        {/if}
+      </div>
+    </div>
+
+    <div class="set-group" use:reveal>
       <div class="sg-title" data-ui-decor="section-label">{t('stats.weeklyCount')}</div>
       <div class="set-row" style="display:block;padding-bottom:18px">
         <div class="week-bars">
@@ -146,6 +256,42 @@
         </div>
       </div>
     {/if}
+
+    <div class="set-group" use:reveal>
+      <div class="sg-title" data-ui-decor="section-label">{t('stats.muscleVolume')}</div>
+      <div class="set-row" style="display:block">
+        <p class="mv-note">{t('stats.muscleVolumeNote')}</p>
+        {#if muscleVolActive}
+          {#each muscleVol as m (m.group)}
+            {@const zoneL = (m.mev / mvScaleMax) * 100}
+            {@const zoneR = (m.mrv / mvScaleMax) * 100}
+            {@const fillW = (m.sets / mvScaleMax) * 100}
+            <div class="mv-row">
+              <span class="mv-name">{muscleGroupLabel(m.group)}</span>
+              <div
+                class="mv-track"
+                role="img"
+                aria-label={t('stats.mvSets', { n: m.sets }) + ' · ' + t('stats.mvTarget', { mev: m.mev, mrv: m.mrv })}
+              >
+                <span class="mv-zone" style="left:{zoneL}%;width:{Math.max(0, zoneR - zoneL)}%"></span>
+                <span class="mv-fill mv-{m.status}" style="width:{fillW}%"></span>
+              </div>
+              <span class="mv-meta">
+                <span class="mv-count">{m.sets}</span>
+                <span class="mv-target">{t('stats.mvTarget', { mev: m.mev, mrv: m.mrv })}</span>
+              </span>
+            </div>
+          {/each}
+          <p class="mv-legend">
+            <span class="mv-dot mv-low"></span>{t('stats.mvLow')}
+            <span class="mv-dot mv-optimal"></span>{t('stats.mvOptimal')}
+            <span class="mv-dot mv-high"></span>{t('stats.mvHigh')}
+          </p>
+        {:else}
+          <p class="sr-desc" style="margin-top:4px">{t('stats.mvEmpty')}</p>
+        {/if}
+      </div>
+    </div>
 
     {#if exercises.length}
       <div class="set-group" use:reveal>
