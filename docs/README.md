@@ -2,7 +2,7 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后核对：** 2026-07-12（PaperOS 抽取为独立仓库 · ticket 命名 v2 迁移）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后核对：** 2026-07-13（全量文档检查：清理过时导出 · 修 PaperOS 迁出死链 · 收缩冗余）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
