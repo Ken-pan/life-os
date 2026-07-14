@@ -16,6 +16,7 @@ export {
   applyPurchaseReviewDecision,
   automationMayOverwriteCandidate,
   automationMayResurface,
+  purchaseReviewAutomationGate,
   PURCHASE_REVIEW_ERROR_STATUS,
 } from './engine/purchaseReviewDecision.js'
 export type {
@@ -26,4 +27,8 @@ export type {
   PurchaseReviewErrorCode,
   PurchaseReviewRequest,
   PurchaseReviewResult,
+  PurchaseReviewPrecedenceEntry,
+  PurchaseReviewPrecedenceIndex,
+  AutomationWriteCandidate,
+  AutomationGateReason,
 } from './engine/purchaseReviewDecision.js'

@@ -3,10 +3,12 @@ import {
   applyPurchaseReviewDecision,
   automationMayOverwriteCandidate,
   automationMayResurface,
+  purchaseReviewAutomationGate,
   PURCHASE_REVIEW_ERROR_STATUS,
   type PurchaseAssociation,
   type PurchaseDecision,
   type PurchaseReviewRequest,
+  type PurchaseReviewPrecedenceIndex,
 } from './purchaseReviewDecision.js'
 
 function assoc(overrides: Partial<PurchaseAssociation> = {}): PurchaseAssociation {
@@ -223,5 +225,45 @@ describe('automation precedence', () => {
     expect(automationMayResurface({ state: 'proposed' })).toBe(true)
     expect(automationMayResurface({ state: 'confirmed' })).toBe(true)
     expect(automationMayResurface({ state: 'rejected' })).toBe(false)
+  })
+})
+
+describe('purchaseReviewAutomationGate (matcher precedence)', () => {
+  const index: PurchaseReviewPrecedenceIndex = new Map([
+    ['txn-confirmed', [{ state: 'confirmed', source: 'amazon', externalOrderId: 'A1' }]],
+    ['txn-rejected', [{ state: 'rejected', source: 'bestbuy', externalOrderId: 'B9' }]],
+  ])
+
+  it('allows a write to a transaction with no decided association', () => {
+    const g = purchaseReviewAutomationGate(
+      { transactionId: 'txn-fresh', source: 'amazon', externalOrderId: 'A1' },
+      index,
+    )
+    expect(g.blocked).toBe(false)
+    expect(g.reason).toBeNull()
+  })
+
+  it('blocks any identity write to a confirmed transaction (even same candidate)', () => {
+    const g = purchaseReviewAutomationGate(
+      { transactionId: 'txn-confirmed', source: 'amazon', externalOrderId: 'A1' },
+      index,
+    )
+    expect(g).toEqual({ blocked: true, reason: 'confirmed_locked' })
+  })
+
+  it('blocks resurfacing the SAME rejected candidate', () => {
+    const g = purchaseReviewAutomationGate(
+      { transactionId: 'txn-rejected', source: 'bestbuy', externalOrderId: 'B9' },
+      index,
+    )
+    expect(g).toEqual({ blocked: true, reason: 'rejected_no_resurface' })
+  })
+
+  it('allows a DIFFERENT candidate on a transaction that rejected another order', () => {
+    const g = purchaseReviewAutomationGate(
+      { transactionId: 'txn-rejected', source: 'bestbuy', externalOrderId: 'B-OTHER' },
+      index,
+    )
+    expect(g.blocked).toBe(false)
   })
 })

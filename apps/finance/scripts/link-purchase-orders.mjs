@@ -50,6 +50,7 @@ import {
 import { deriveAmazonReturnInfoDecision } from '../../../../web-state-devtools/bridge/lib/amazon-orders-parser.mjs'
 import { parseVisibleDateText } from '../../../../web-state-devtools/bridge/lib/bestbuy-orders-parser.mjs'
 import { isRefundCreditTxn } from '../src/engine/purchaseReturnStatus.ts'
+import { purchaseReviewAutomationGate } from '../src/engine/purchaseReviewDecision.ts'
 import {
   resolveOrdersRawPath,
   summaryHarvestSince,
@@ -328,6 +329,50 @@ function mergeTxnLists(primary, extra) {
   const byId = new Map(primary.map((t) => [t.id, t]))
   for (const t of extra) byId.set(t.id, t)
   return [...byId.values()]
+}
+
+// FINC.PURCHASE.6.a — build the manual-decision precedence index for a set of
+// transactions. Manual Confirm/Reject (purchase_associations) outranks automated
+// enrichment: `purchaseReviewAutomationGate` uses this to skip identity writes to
+// confirmed transactions and refuse resurfacing rejected candidates.
+// Defensive: if the table is absent (pre-migration env) it returns an empty index
+// so the matcher keeps working with no gating.
+async function fetchReviewPrecedence(ids, userId) {
+  const uniq = [...new Set((ids ?? []).filter(Boolean))]
+  const index = new Map()
+  if (!uniq.length) return index
+  const inClause = uniq.map((id) => `'${escSql(id)}'`).join(', ')
+  let rows
+  try {
+    rows = await runSql(`
+      select transaction_id, source, external_order_id, state
+      from public.purchase_associations
+      where state in ('confirmed', 'rejected')
+        and transaction_id in (${inClause})
+        ${userId ? `and user_id = '${escSql(userId)}'` : ''};
+    `)
+  } catch (err) {
+    const msg = String(err?.message ?? err)
+    if (/purchase_associations/.test(msg) && /exist|relation/i.test(msg)) {
+      console.warn(
+        '  review precedence: purchase_associations not found — skipping gating (pre-migration env)',
+      )
+      return index
+    }
+    throw err
+  }
+  for (const r of rows ?? []) {
+    const txnId = String(r.transaction_id)
+    const entry = {
+      state: String(r.state),
+      source: String(r.source),
+      externalOrderId: String(r.external_order_id),
+    }
+    const list = index.get(txnId)
+    if (list) list.push(entry)
+    else index.set(txnId, [entry])
+  }
+  return index
 }
 
 function buildOrderDecisionMap(orders) {
@@ -1634,6 +1679,14 @@ async function main() {
   let updatedRefund = 0
   let updatedPurchaseReturn = 0
   let uploadedImages = 0
+  let skippedByReviewPrecedence = 0
+
+  // FINC.PURCHASE.6.a — manual Confirm/Reject on a transaction outranks automated
+  // enrichment. Load the precedence index once for every candidate transaction.
+  const reviewPrecedence = await fetchReviewPrecedence(
+    effectivePurchaseMatches.map((m) => m.txnId),
+    userId,
+  )
 
   let gitHead = ''
   try {
@@ -1660,6 +1713,16 @@ async function main() {
     if (onlyTxnIds && !onlyTxnIds.includes(m.txnId)) continue
     if (!wouldWriteEnrichmentUpdate(existing, updatesOnly)) continue
     if (insertsOnly && existing?.source) continue
+    // Manual-decision precedence: never overwrite a confirmed pairing, never
+    // silently resurface a rejected candidate.
+    const gate = purchaseReviewAutomationGate(
+      { transactionId: m.txnId, source: cfg.label, externalOrderId: m.orderId },
+      reviewPrecedence,
+    )
+    if (gate.blocked) {
+      skippedByReviewPrecedence++
+      continue
+    }
     if (
       !wouldUpdateEnrichment(
         existing,
@@ -1763,6 +1826,9 @@ async function main() {
     updatedPurchaseReturn,
     '| rows with stored images:',
     uploadedImages,
+    skippedByReviewPrecedence > 0
+      ? `| skipped (manual review precedence): ${skippedByReviewPrecedence}`
+      : '',
     skippedImageUpload > 0
       ? `| image uploads skipped (no service role): ${skippedImageUpload}`
       : '',

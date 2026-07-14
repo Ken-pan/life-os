@@ -261,3 +261,58 @@ export function automationMayResurface(
 ): boolean {
   return association.state !== 'rejected'
 }
+
+/** One decided association on a transaction, as seen by the automated matcher. */
+export interface PurchaseReviewPrecedenceEntry {
+  state: PurchaseReviewState
+  source: PurchaseEnrichmentSource
+  externalOrderId: string
+}
+
+/** transaction_id → its confirmed/rejected associations (proposed rows are irrelevant here). */
+export type PurchaseReviewPrecedenceIndex = Map<
+  string,
+  readonly PurchaseReviewPrecedenceEntry[]
+>
+
+export interface AutomationWriteCandidate {
+  transactionId: string
+  source: PurchaseEnrichmentSource
+  externalOrderId: string
+}
+
+export type AutomationGateReason = 'confirmed_locked' | 'rejected_no_resurface' | null
+
+/**
+ * Precedence gate for the automated matcher (`link-purchase-orders.mjs`): given a
+ * candidate identity-bearing enrichment write and the transaction's decided
+ * associations, decide whether automation must stand down.
+ *
+ * - A `confirmed` association on the transaction LOCKS automated identity writes
+ *   (automation must not change/overwrite a human-confirmed pairing).
+ * - A `rejected` association for the SAME candidate must not be silently
+ *   resurfaced. A rejected *different* candidate does not block a new one.
+ *
+ * Mirrors `automationMayOverwriteCandidate` / `automationMayResurface` but scoped
+ * to a concrete transaction↔candidate write. Pure + unit-tested.
+ */
+export function purchaseReviewAutomationGate(
+  candidate: AutomationWriteCandidate,
+  index: PurchaseReviewPrecedenceIndex,
+): { blocked: boolean; reason: AutomationGateReason } {
+  const entries = index.get(candidate.transactionId) ?? []
+  if (entries.some((e) => e.state === 'confirmed')) {
+    return { blocked: true, reason: 'confirmed_locked' }
+  }
+  if (
+    entries.some(
+      (e) =>
+        e.state === 'rejected' &&
+        e.source === candidate.source &&
+        e.externalOrderId === candidate.externalOrderId,
+    )
+  ) {
+    return { blocked: true, reason: 'rejected_no_resurface' }
+  }
+  return { blocked: false, reason: null }
+}
