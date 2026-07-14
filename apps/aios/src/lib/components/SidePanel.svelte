@@ -1,7 +1,7 @@
 <script>
   import Icon from '@life-os/platform-web/svelte/icon'
   import { t } from '$lib/i18n/index.js'
-  import { P, closePanel } from '$lib/panel.svelte.js'
+  import { P, closePanel, saveCanvasEdit, resetCanvas } from '$lib/panel.svelte.js'
   import { renderMarkdown, highlightCode } from '$lib/markdown.js'
   import { fetchUrl } from '$lib/tools.js'
   import { getBlob } from '$lib/fileImport.js'
@@ -204,7 +204,10 @@
             <button
               type="button"
               class:on={P.view === 'preview'}
-              onclick={() => (P.view = 'preview')}
+              onclick={() => {
+                saveCanvasEdit()
+                P.view = 'preview'
+              }}
             >
               {t('panel.preview')}
             </button>
@@ -213,9 +216,20 @@
               class:on={P.view === 'code'}
               onclick={() => (P.view = 'code')}
             >
-              {t('panel.code')}
+              {t('panel.edit')}
             </button>
           </span>
+          {#if P.canvasEdited}
+            <button
+              type="button"
+              class="head-btn"
+              title={t('panel.resetCanvas')}
+              aria-label={t('panel.resetCanvas')}
+              onclick={resetCanvas}
+            >
+              <Icon name="refresh" size={15} strokeWidth={1.9} />
+            </button>
+          {/if}
         {/if}
         {#if P.kind === 'url'}
           <button
@@ -301,7 +315,7 @@
 
     <div
       class="panel-body"
-      class:flush={(P.kind === 'artifact' && P.view === 'preview') || showPdf}
+      class:flush={(P.kind === 'artifact' && (P.view === 'preview' || P.view === 'code')) || showPdf}
     >
       {#if P.kind === 'image'}
         <div class="image-view">
@@ -355,6 +369,17 @@
             {@html bodyHtml}
           </div>
         {/if}
+      {:else if P.kind === 'artifact' && P.view === 'code'}
+        <!-- 可编辑 Canvas:改代码 → 切到预览实时生效 → 关掉再开仍在(按 hash 持久化) -->
+        <textarea
+          class="canvas-edit"
+          bind:value={P.code}
+          onblur={saveCanvasEdit}
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          aria-label={P.title}
+        ></textarea>
       {:else if bodyHtml}
         <div class="md-body">
           <!-- eslint-disable-next-line svelte/no-at-html-tags — renderMarkdown 全量转义 -->
@@ -585,6 +610,22 @@
     color: var(--t1);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+  .canvas-edit {
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    border: 0;
+    resize: none;
+    background: var(--bg);
+    color: var(--t1);
+    font-family: var(--mono, ui-monospace, monospace);
+    font-size: 12.5px;
+    line-height: 1.6;
+    padding: 14px 16px;
+    outline: none;
+    tab-size: 2;
   }
   .code-body :global(.tok-cmt) {
     color: var(--t4);

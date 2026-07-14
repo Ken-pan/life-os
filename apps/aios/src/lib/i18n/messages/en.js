@@ -102,6 +102,8 @@ export default {
     transcript: 'Transcript',
     preview: 'Preview',
     code: 'Code',
+    edit: 'Edit',
+    resetCanvas: 'Revert to original',
     close: 'Close panel',
     download: 'Download',
     openExternal: 'Open in system browser',

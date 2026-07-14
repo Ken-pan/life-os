@@ -101,6 +101,8 @@ export default {
     transcript: '转写文本',
     preview: '预览',
     code: '代码',
+    edit: '编辑',
+    resetCanvas: '还原到原始版本',
     close: '关闭面板',
     download: '下载',
     openExternal: '在系统浏览器打开',
