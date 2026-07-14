@@ -175,7 +175,6 @@
 <LifeOsAppShell
   navigationKey={page.url.pathname}
   focusOnNavigate="main"
-  shellClass="seg-tone-calm nav-tone-calm"
   skipLinkLabel={t('common.skipToContent')}
   testIdPrefix="fitness-shell"
 >
