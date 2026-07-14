@@ -592,7 +592,17 @@ function runInSandbox(code, timeoutMs = 8000) {
       console.log = console.info = console.warn = console.error = (...a) => __logs.push(a.map(__fmt).join(' '));
       self.onmessage = (e) => {
         let result, error;
-        try { result = eval(e.data) } catch (err) { error = String(err && err.message || err) }
+        try {
+          result = eval(e.data)
+        } catch (err) {
+          // 模型常写顶层 return(eval 里非法);自动用 IIFE 包裹重试,两种写法都能跑
+          if (err instanceof SyntaxError && /return/i.test(String(err.message))) {
+            try { result = eval('(function(){\\n' + e.data + '\\n})()') }
+            catch (err2) { error = String(err2 && err2.message || err2) }
+          } else {
+            error = String(err && err.message || err)
+          }
+        }
         let resultText;
         try { resultText = result === undefined ? undefined : __fmt(result) } catch { resultText = String(result) }
         self.postMessage({ logs: __logs.slice(0, 200), result: resultText, error });
