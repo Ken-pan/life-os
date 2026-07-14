@@ -5571,3 +5571,33 @@ html.utility-pane-resizing {
     opacity: 0.22;
   }
 }
+
+/* ── Tier 4：激活态去粉 — 导航/段控用「中性前景」表达"当前"，品牌粉只留给主操作 ──
+   仅在 .music-app 作用域覆盖共享默认，不影响其它 app。 */
+
+/* 底栏激活 tab：前景色 + 中性抬升底，替代整块品牌粉 */
+.music-app .nav .nav-item.on,
+.music-app .nav .nav-item.active,
+.music-app .nav .nav-item-more.on {
+  color: var(--t1, var(--text));
+}
+
+.music-app .nav .nav-item.on svg,
+.music-app .nav .nav-item.active svg,
+.music-app .nav .nav-item-more.on svg {
+  background: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
+}
+
+/* 段控激活（首页筛选 chip / 搜索 scope / 浏览分段 / 设置）：中性抬升态，去品牌粉填充 */
+.music-app .seg {
+  --seg-active-bg: color-mix(in srgb, var(--t1, var(--text)) 14%, transparent);
+  --seg-active-fg: var(--t1, var(--text));
+  --seg-active-border-token: color-mix(in srgb, var(--t1, var(--text)) 24%, var(--border));
+  /* 轨道细边去暖粉，统一为中性（部分变体带 1px 品牌色描边） */
+  border-color: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
+}
+
+.music-app .seg.seg-track {
+  --seg-active-bg: color-mix(in srgb, var(--t1, var(--text)) 18%, var(--card));
+  --seg-active-fg: var(--t1, var(--text));
+}

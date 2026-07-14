@@ -95,6 +95,6 @@
     width: 2px;
     height: 55%;
     border-radius: 0 2px 2px 0;
-    background: var(--sidebar-primary);
+    background: var(--sidebar-foreground);
   }
 </style>
