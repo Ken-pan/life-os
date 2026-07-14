@@ -60,6 +60,8 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 
 **PLNR.CORE.4 ✅ 已发货（2026-07-13 确认）：** Portal `portal_today_summary` 与 Planner Today 计数口径对齐 —— tz + tombstone 迁移 `ce475c75`（`20260712200000`）；客户端 `selectTodayGroups` 与 RPC 谓词逐项一致（active=非完成非删除 · today=`dueDate==today` · overdue=`<today`），新增 `selectors.test.js` 跨应用 parity 契约锁定不漂移（**9/9 绿**）。
 
+**FINC.PURCHASE.6.a 商品明细覆盖（2026-07-13）：** History 记录页原先只有 `clean_enriched`（105 笔）显示商品，`matched_review`/`return_refund` 只显示徽章、把已解析明细藏起来。改为凡有 `lineItems` 的 clean/review/refund 都显示商品条 + 可展开明细（含 Confirm/Reject）。实测生产 273 笔真实分类器：**显示商品 105 → 251（新增 146 笔）**。`HistoryLedgerRow.svelte`。
+
 **FINC.PURCHASE.6.a 数据地基 slice 1（2026-07-13，已部署生产）：** 决策引擎 `purchaseReviewDecision.ts`（proposed/confirmed/rejected 状态机 + 乐观版本 + `action_key` 幂等 + 单步 Undo + 自动化优先级）**单测 14/14**；迁移 `20260713120000` **已部署生产** `iueozzuctstwvzbcxcyh`（两表 + RLS 5 策略 + 3 RPC；**273 笔回填为 proposed**），并在生产做**自清理 RPC 往返验证**（confirm/replay/not_proposed/version_conflict/undo 全部正确，数据净零变更）。**仍开放：** RLS 跨用户拒绝运行时证明（需两个真实 JWT 会话，超级用户 API 绕过 RLS）、matcher 优先级接线、Antigravity 基线、UI Confirm/Reject/Undo。详见 [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md)。
 
 **PaperOS：** 设备 Shell、数据面 verify、系统生命周期、UI device gate 全部迁出独立仓库 — 详情见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)；Hub 只保留 Planner 侧 provider API 状态。
