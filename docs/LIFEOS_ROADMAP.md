@@ -48,7 +48,6 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 | --- | ------------------- | -------------------------------------------- | ----------- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **PLNR.SCHED.0**    | 日程视图 debug + 可用性闭环                  | Planner     | Product | 🔥  | migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** 待 Ken |
 | 2   | **FINC.PURCHASE.6** | 支出审核（商品明细 + 后续处理）              | Finance     | Product | 🔥  | Discovery **CONDITIONAL PASS**（2026-07-11）；**`FINC.PURCHASE.6.a` BLOCKED** — [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md) |
-| 3   | **PLNR.CORE.4** / **FINC.SYNC.1b** | 快赢 — 计数对齐 / 扩展 sync 状态 | Planner / Finance | Growth | ◆ | ~0.5d 各                                                                                                                                              |
 | —   | **PAPR.\*** | PaperOS 设备 Shell（含 PAPR.UI · PAPR.WRITE.5） | **PaperOS** | Product | —   | 已迁出独立仓库 — 见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)                                                                                  |
 
 **Agent 分线全文：** `[roadmap/AGENT_WORKSTREAMS.md](./roadmap/AGENT_WORKSTREAMS.md)`
@@ -56,6 +55,10 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 **PLNR.SCHED.0 进度：** Antigravity baseline ✅ · **PLNR.SCHED.0.migrate PASS** `cb11fbcc` · PWA harness `29f0c2ed` · Planner build/check/unit ✅ · **desktop + mobile E2E 全绿**（2026-07-13 复跑：84→修 2 处 stale selector 后全通过；`schedule-usability` standalone guard 4/4 PASS）· **无已确认产品 P0**。**唯一剩余：真机 iPhone Home Screen standalone 签收（待 Ken）** → 合并后解锁 FINC.PURCHASE.6.a / PLNR.UIUX.0。
 
 **GYMS.SUB.5 ✅ 已发货（2026-07-13 确认）：** 工程 gate PASS + 产品 UI/copy closure 全部落地于 #19 `67e72b81`（选中态 accent bg+border+checkmark+`aria-pressed`、`done`-分支文案、Summary `Replaced`、Focus `Switched from`）；`session-queue`+`substitution` specs **9/9 绿**。详见 [`apps/fitness/docs/FT-P5-substitution.md`](../apps/fitness/docs/FT-P5-substitution.md)。
+
+**FINC.SYNC.1b ✅ 已发货（2026-07-13 确认）：** 扩展 popup `renderSyncHealth` 显示上次同步 timestamp + 脱敏失败原因（token/hash/URL/stack 全遮蔽）+ 重试按钮；`extensionSyncHealth.test.js` **18/18 绿**（含并发锁）。剩：Chrome 装载后 live retry 手动抽验（可选）。
+
+**PLNR.CORE.4 ✅ 已发货（2026-07-13 确认）：** Portal `portal_today_summary` 与 Planner Today 计数口径对齐 —— tz + tombstone 迁移 `ce475c75`（`20260712200000`）；客户端 `selectTodayGroups` 与 RPC 谓词逐项一致（active=非完成非删除 · today=`dueDate==today` · overdue=`<today`），新增 `selectors.test.js` 跨应用 parity 契约锁定不漂移（**9/9 绿**）。
 
 **PaperOS：** 设备 Shell、数据面 verify、系统生命周期、UI device gate 全部迁出独立仓库 — 详情见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)；Hub 只保留 Planner 侧 provider API 状态。
 
@@ -68,8 +71,6 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 | ------------------- | --------------------------------- | ------- | ------- | --- | ------------------------------------------------------------------------------ |
 | **PLNR.UIUX.0**     | Planner 全站 UI/UX 走查（非日程）          | Planner | Product | ◆   | **禁止开始** — 须 PLNR.SCHED.0 合并关闭后；Today/Inbox/Projects 截图走查                     |
 | **PLNR.ATTACH.0**   | Task / Project 附件底座               | Planner | Core    | ◆◆  | Supabase Storage + metadata；在线上传/删除/预览                                         |
-| **PLNR.CORE.4**     | Today 与 Portal 今日任务计数对齐           | Planner | Growth  | ◆   | 同账号、同日期口径一致                                                                    |
-| **FINC.SYNC.1b**    | Finance 扩展 last sync + retry      | Finance | Growth  | ◆   | popup 显示 timestamp、失败原因与重试                                                     |
 | **HOME.PROJ.7**     | Home 多项目 localStorage 切换          | Home    | Product | ◆   | HOME.SPATIAL.0–5 发货后的下一项                                                       |
 
 **PaperOS（`PAPR.*`）后续排期已迁出独立仓库** — 见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)。
@@ -87,8 +88,8 @@ Phase 7 — 日程 + 训练 + 审核（本周 🔥）
 Phase 8 — PaperOS
   设备生命周期 + 写路径已迁出独立仓库，见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)
 
-Phase 9 — 半天级跨站快赢
-  FINC.SYNC.1b · PLNR.CORE.4
+Phase 9 — 半天级跨站快赢 ✅ 已发货（2026-07-13）
+  FINC.SYNC.1b（popup last sync + retry, 18/18）· PLNR.CORE.4（Today↔Portal 计数对齐, parity 9/9）
 
 Phase 10 — 产品增量
   PLNR.UIUX.0 Planner 走查 · PLNR.ATTACH.0 附件 · HOME.PROJ.7 Home 多项目

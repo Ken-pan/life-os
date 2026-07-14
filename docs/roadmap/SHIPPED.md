@@ -12,6 +12,8 @@
 | ------- | --------------- | ---- |
 | Fitness | **GYMS.SUB.5** 替代动作完整训练流 — 工程 gate + 产品 UI/copy closure 全绿，正式收割 | closure #19 `67e72b81`（选中态 `aria-pressed`+checkmark · `done`-分支文案 · Summary `Replaced` · Focus `Switched from`）· `session-queue`+`substitution` specs **9/9** · [`FT-P5-substitution.md`](../../apps/fitness/docs/FT-P5-substitution.md) |
 | Planner | **PLNR.SCHED.0** desktop+mobile E2E 复跑修复 — 2 处 stale selector（`保存`→`创建任务`；schedule preset `下午` exact 匹配）修正后全绿 | `e2e.spec.js` · `screenshot-achievement-schedule.spec.js` · `schedule-usability` standalone guard 4/4 · **剩真机 iPhone 签收** |
+| Finance | **FINC.SYNC.1b** 扩展 popup last sync + 重试 — timestamp + 脱敏失败原因 + retry 按钮 | `popup/popup.js` `renderSyncHealth` · `syncStateLogic.js` · `extensionSyncHealth.test.js` **18/18** |
+| Planner/Portal | **PLNR.CORE.4** Today ↔ Portal 今日计数口径对齐（tz + tombstone + `dueDate==today`） | migration `ce475c75`（`20260712200000`）· `selectors.test.js` 跨应用 parity 契约 **9/9** |
 
 | 主线    | 发货项 / 里程碑 | 证据 |
 | ------- | --------------- | ---- |

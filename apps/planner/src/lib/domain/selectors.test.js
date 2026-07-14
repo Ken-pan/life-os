@@ -122,6 +122,54 @@ describe('selectTodayGroups', () => {
   })
 })
 
+// PLNR.CORE.4 — Planner Today ↔ Portal `portal_today_summary` 计数口径一致契约。
+// Portal RPC (apps/finance/supabase/migrations/20260712200000_*.sql) 计数谓词：
+//   todayOpen : completed=false AND deletedAt IS NULL AND dueDate == today
+//   overdue   : completed=false AND deletedAt IS NULL AND dueDate IS NOT NULL AND dueDate < today
+// 该测试用同一谓词的 JS 复刻，锁定 Planner selectors 与 RPC 不漂移。
+describe('PLNR.CORE.4 Portal today-count parity', () => {
+  const TODAY = '2026-07-05'
+
+  /** Portal RPC `todayOpen` 谓词的 JS 复刻 */
+  const portalTodayOpen = (list) =>
+    list.filter(
+      (t) => !t.completed && !t.deletedAt && t.dueDate === TODAY,
+    ).length
+  /** Portal RPC `overdue` 谓词的 JS 复刻 */
+  const portalOverdue = (list) =>
+    list.filter(
+      (t) => !t.completed && !t.deletedAt && t.dueDate && t.dueDate < TODAY,
+    ).length
+
+  const base = tasks[0]
+  const fixture = [
+    { ...base, id: 'due-today-open', dueDate: TODAY, completed: false },
+    { ...base, id: 'due-today-done', dueDate: TODAY, completed: true, completedAt: 1 },
+    { ...base, id: 'due-today-deleted', dueDate: TODAY, completed: false, deletedAt: 1 },
+    { ...base, id: 'overdue-open', dueDate: '2026-07-03', completed: false },
+    { ...base, id: 'overdue-deleted', dueDate: '2026-07-02', completed: false, deletedAt: 1 },
+    { ...base, id: 'tomorrow', dueDate: '2026-07-06', completed: false },
+    { ...base, id: 'no-date', dueDate: null, completed: false },
+  ]
+
+  it('groups.today count equals Portal todayOpen; overdue matches; excludes done/deleted', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 5, 12, 0, 0))
+    const groups = selectTodayGroups(buildTaskIndex(fixture))
+
+    // 只有 due-today-open 计入今日（done/deleted 排除）
+    expect(groups.today).toHaveLength(1)
+    expect(groups.today.map((t) => t.id)).toEqual(['due-today-open'])
+    // 只有 overdue-open 计入逾期
+    expect(groups.overdue.map((t) => t.id)).toEqual(['overdue-open'])
+
+    // 与 Portal RPC 谓词逐项一致
+    expect(groups.today.length).toBe(portalTodayOpen(fixture))
+    expect(groups.overdue.length).toBe(portalOverdue(fixture))
+    vi.useRealTimers()
+  })
+})
+
 describe('selectCompletedToday + selectTodayProgress', () => {
   it('counts today plan progress', () => {
     vi.useFakeTimers()

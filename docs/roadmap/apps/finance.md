@@ -16,7 +16,7 @@
 | 历史/预测/决策  | ✅   | 交易 · 图表 · Decision Studio                                                                |
 | Chrome 扩展     | ✅   | DOM → `ExtensionSyncBridge`                                                                  |
 | Integration     | ✅   | SSO · outbox · Portal PORT.GROWTH.4                                                          |
-| FINC.GROWTH.1   | ✅   | 主站 toast；popup last sync 🟡                                                               |
+| FINC.GROWTH.1   | ✅   | 主站 toast；**FINC.SYNC.1b** popup last sync + retry ✅（2026-07-13, 18/18）                  |
 | E2E             | ✅   | `qa:ia-nav` 31/31 · `qa:ia-routes` 22/22 ✅（FINC.CORE.0）                                   |
 | 订单 enrichment | 🟡   | `purchase_enrichment` 三商家；History 可展示 line items；**168 笔待审核**（read model v1.1） |
 
@@ -37,7 +37,7 @@
 | ID              | 主题                                | ROI | 桶      | 投入   | Agent                    | 验收                                     | Hub   |
 | --------------- | ----------------------------------- | --- | ------- | ------ | ------------------------ | ---------------------------------------- | ----- |
 | **FINC.PURCHASE.6**  | **支出审核**（商品明细 + 后续处理） | 🔥  | Product | 3–5d   | **Claude Fable** · Codex | 审核队列可操作；商品级主路径；退货链可见 | §Now  |
-| **FINC.SYNC.1b**     | 扩展 popup last sync + 重试         | ◆   | Growth  | 0.5–1d | Codex                    | popup 可见 timestamp                     | §Next |
+| ~~**FINC.SYNC.1b**~~ | ~~扩展 popup last sync + 重试~~ ✅ 已发货 2026-07-13 | ◆ | Growth | — | Codex | popup timestamp + 失败原因 + retry；`extensionSyncHealth.test.js` 18/18 | ✅ |
 | **FINC.GROWTH.4**    | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | Codex                    | pending 与 UI 一致                       | —     |
 | **FINC.IMPORT.5**    | History CSV 最小导入                | ○   | Product | 3–5d   | Codex                    | `/review/import` 可上传                  | —     |
 

@@ -28,7 +28,7 @@
 | **P-TASK-DISPLAY-0** | 任务行小字 + 类别视觉规范                  | ◆   | Product | —    | **并入 PLNR.SCHED.0**  | [`planner-task-display-spec.md`](../../qa/planner-task-display-spec.md) | PLNR.UIUX.0 |
 | **PLNR.UIUX.0**      | 全站 UI/UX 走查（Today/Inbox/Projects 等） | ◆   | Product | 1–2d | Fable（PLNR.SCHED 后） | 截图走查；含 P-TASK-DISPLAY 若未在 A 完成                               | §Next       |
 | **PLNR.CAPTURE.0**   | iOS/移动端任务捕获统一 | ◆   | Product | gate | Code ✅ · Ken iOS | unit/E2E/截图 ✅；真机 IME + 键盘 gate ⏳ | PLNR.UIUX.0 |
-| **PLNR.CORE.4**      | Today 计数与 `portal_today_summary` 对齐   | ◆   | Growth  | 0.5d | Cursor / Codex（快赢） | RPC ✅ · **计数口径未对齐**（`todayOpen` vs `remaining`）             | §Next Open  |
+| ~~**PLNR.CORE.4**~~  | Today 计数与 `portal_today_summary` 对齐   | ◆   | Growth  | —    | Cursor / Codex（快赢） | ✅ 已发货 2026-07-13 — RPC tz+tombstone (`ce475c75`) · `selectTodayGroups` 谓词与 RPC `todayOpen`/`overdue` 逐项一致（Portal 分行展示今日/逾期，与 Planner 分组同口径）· `selectors.test.js` parity 契约 9/9 | ✅ |
 | **PLNR.ATTACH.0**    | Task / Project 附件底座                    | ◆◆  | Core    | 1–2d | Codex                  | Supabase Storage + metadata；在线上传/删除/预览                         | §Next       |
 | **PLNR.ATTACH.1**    | 图片与截图体验                             | ◆   | Product | 1d   | Fable                  | paste / drag-drop / mobile picker / thumbnail / retry                   | —           |
 
