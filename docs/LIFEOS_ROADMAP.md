@@ -47,7 +47,7 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 | 序  | ID                  | 主题                                         | App         | 桶      | ROI | 验收                                                                                                                                                                      |
 | --- | ------------------- | -------------------------------------------- | ----------- | ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **PLNR.SCHED.0**    | 日程视图 debug + 可用性闭环                  | Planner     | Product | 🔥  | migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** 待 Ken |
-| 2   | **FINC.PURCHASE.6** | 支出审核（商品明细 + 后续处理）              | Finance     | Product | 🔥  | Discovery **CONDITIONAL PASS**（2026-07-11）；**`FINC.PURCHASE.6.a` BLOCKED** — [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md) |
+| 2   | **FINC.PURCHASE.6** | 支出审核（商品明细 + 后续处理）              | Finance     | Product | 🔥  | Discovery PASS；**`FINC.PURCHASE.6.a` 数据地基 slice 1 已落地**（决策引擎 14/14 + 迁移已成文，2026-07-13）；RPC 集成 / UI 待隔离 QA Supabase — [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md) |
 | —   | **PAPR.\*** | PaperOS 设备 Shell（含 PAPR.UI · PAPR.WRITE.5） | **PaperOS** | Product | —   | 已迁出独立仓库 — 见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)                                                                                  |
 
 **Agent 分线全文：** `[roadmap/AGENT_WORKSTREAMS.md](./roadmap/AGENT_WORKSTREAMS.md)`
@@ -59,6 +59,8 @@ Life OS 是 **六 app 个人生活平台**（Planner / Fitness / Finance / Music
 **FINC.SYNC.1b ✅ 已发货（2026-07-13 确认）：** 扩展 popup `renderSyncHealth` 显示上次同步 timestamp + 脱敏失败原因（token/hash/URL/stack 全遮蔽）+ 重试按钮；`extensionSyncHealth.test.js` **18/18 绿**（含并发锁）。剩：Chrome 装载后 live retry 手动抽验（可选）。
 
 **PLNR.CORE.4 ✅ 已发货（2026-07-13 确认）：** Portal `portal_today_summary` 与 Planner Today 计数口径对齐 —— tz + tombstone 迁移 `ce475c75`（`20260712200000`）；客户端 `selectTodayGroups` 与 RPC 谓词逐项一致（active=非完成非删除 · today=`dueDate==today` · overdue=`<today`），新增 `selectors.test.js` 跨应用 parity 契约锁定不漂移（**9/9 绿**）。
+
+**FINC.PURCHASE.6.a 数据地基 slice 1（2026-07-13）：** 决策引擎 `purchaseReviewDecision.ts`（proposed/confirmed/rejected 状态机 + 乐观版本 + `action_key` 幂等 + 单步 Undo + 自动化优先级）**单测 14/14**；迁移 `20260713120000_purchase_review_associations.sql`（`purchase_associations`+`purchase_decisions`+RLS+`purchase_review_get/_decide/_undo`+JSONB backfill）**已成文并对齐引擎语义**，未部署。**仍 gated（无隔离 QA Supabase 凭据 · 禁生产）：** RPC/RLS 集成、matcher 优先级接线、Antigravity 基线、UI Confirm/Reject/Undo。详见 [`apps/finance/docs/FP6_PURCHASE_REVIEW.md`](../apps/finance/docs/FP6_PURCHASE_REVIEW.md)。
 
 **PaperOS：** 设备 Shell、数据面 verify、系统生命周期、UI device gate 全部迁出独立仓库 — 详情见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)；Hub 只保留 Planner 侧 provider API 状态。
 

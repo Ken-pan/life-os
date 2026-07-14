@@ -1,11 +1,13 @@
 # Finance FINC.PURCHASE.6 Purchase Review — Data Contract Audit
 
-**Status:** **BLOCKED** (structural — 2026-07-11)
+**Status:** **PARTIAL** — data foundation slice 1 landed 2026-07-13 (was structurally BLOCKED 2026-07-11)
 **Owner:** Codex (data layer)
 **Canonical index:** [FP6_PURCHASE_REVIEW.md](./FP6_PURCHASE_REVIEW.md)
 **Product semantics:** [Product contract](./FP6_PURCHASE_REVIEW_PRODUCT_CONTRACT.md)
 
-This document describes **verified current state** and **approved design direction**. Nothing in the “Required future data foundation” section is implemented unless explicitly marked otherwise.
+This document describes **verified current state** and **approved design direction**. The “Required future data foundation” design below is now **partially implemented** — see the status note.
+
+> **Implementation status (2026-07-13).** The association + decision model, state machine, versioning, idempotency and Undo are implemented as a tested pure engine (`packages/finance-core/src/engine/purchaseReviewDecision.ts`, 14/14) and an authored migration (`apps/finance/supabase/migrations/20260713120000_purchase_review_associations.sql`: `purchase_associations`, `purchase_decisions`, RLS, `purchase_review_get/_decide/_undo`, JSONB→proposed backfill). The migration is **not yet deployed** and RPC/RLS integration + matcher precedence wiring + UI remain gated on an isolated QA Supabase project (production forbidden). Field/name specifics below are the design intent; the shipped engine/migration are the source of truth for exact shapes.
 
 ---
 

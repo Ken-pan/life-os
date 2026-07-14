@@ -36,7 +36,7 @@
 
 | ID              | 主题                                | ROI | 桶      | 投入   | Agent                    | 验收                                     | Hub   |
 | --------------- | ----------------------------------- | --- | ------- | ------ | ------------------------ | ---------------------------------------- | ----- |
-| **FINC.PURCHASE.6**  | **支出审核**（商品明细 + 后续处理） | 🔥  | Product | 3–5d   | **Claude Fable** · Codex | 审核队列可操作；商品级主路径；退货链可见 | §Now  |
+| **FINC.PURCHASE.6**  | **支出审核**（商品明细 + 后续处理） | 🔥  | Product | 3–5d   | **Claude Fable** · Codex | 审核队列可操作；商品级主路径；退货链可见；**6.a 数据地基 slice 1 已落地（引擎 14/14 + 迁移成文，2026-07-13）** | §Now  |
 | ~~**FINC.SYNC.1b**~~ | ~~扩展 popup last sync + 重试~~ ✅ 已发货 2026-07-13 | ◆ | Growth | — | Codex | popup timestamp + 失败原因 + retry；`extensionSyncHealth.test.js` 18/18 | ✅ |
 | **FINC.GROWTH.4**    | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | Codex                    | pending 与 UI 一致                       | —     |
 | **FINC.IMPORT.5**    | History CSV 最小导入                | ○   | Product | 3–5d   | Codex                    | `/review/import` 可上传                  | —     |

@@ -1,10 +1,15 @@
 # Finance FINC.PURCHASE.6 Purchase Review — Canonical Index
 
-**Verification date:** 2026-07-11
+**Verification date:** 2026-07-11 · **6.a data-foundation slice 1:** 2026-07-13
 **Section:** FINC.PURCHASE.6 discovery / product & data contract
-**Overall section closure:** **CONDITIONAL PASS** — discovery can close; **implementation is not authorized.**
+**Overall section closure:** **CONDITIONAL PASS** — discovery closed; **FINC.PURCHASE.6.a data foundation slice 1 landed (engine + migration authored)**; RPC integration / RLS proof / UI mutations still gated.
 
 > **CONDITIONAL PASS** means this phase successfully answered *how the product should work* and *why the current architecture cannot implement it safely*. It does **not** mean FINC.PURCHASE.6.a is ready to ship or that Confirm/Reject/Undo may be added to the existing JSONB write path.
+
+> **2026-07-13 — FINC.PURCHASE.6.a data foundation, slice 1:**
+> - ✅ **Decision engine (SSOT)** `packages/finance-core/src/engine/purchaseReviewDecision.ts` — state machine (proposed/confirmed/rejected), optimistic `association_version`, `action_key` idempotency, single-step latest-first Undo, automation precedence helpers. **Unit-tested 14/14** (`purchaseReviewDecision.test.ts`).
+> - ✅ **Migration authored** `apps/finance/supabase/migrations/20260713120000_purchase_review_associations.sql` — `purchase_associations` + append-only `purchase_decisions`, RLS (owner + `has_app_access('finance')`), RPCs `purchase_review_get/_decide/_undo` mirroring the engine, idempotent JSONB→proposed backfill. **Convention-checked, NOT yet deployed.**
+> - ⏳ **Still gated (no isolated QA Supabase creds; production forbidden):** RPC/RLS integration + cross-user denial proof, matcher precedence wiring in `link-purchase-orders.mjs`, Antigravity visual baseline, UI Confirm/Reject/Undo.
 
 ---
 
@@ -18,7 +23,8 @@
 | Isolated QA runtime verification | **PENDING** | No QA project credentials supplied; bootstrap ×2 not run |
 | Antigravity desktop/mobile visual baseline | **BLOCKED** | No valid isolated QA storage state |
 | FINC.PURCHASE.6 discovery / spec section | **PASS** | Product IA, mutation contract, blockers documented |
-| FINC.PURCHASE.6.a implementation readiness | **BLOCKED** | Requires data foundation before UI mutations |
+| FINC.PURCHASE.6.a data foundation (engine + migration) | **PARTIAL** | Engine unit-tested 14/14; migration authored (2026-07-13). Deploy + RPC integration gated on QA Supabase |
+| FINC.PURCHASE.6.a UI mutations readiness | **BLOCKED** | Needs deployed RPCs + isolated QA runtime before Confirm/Reject/Undo |
 
 ---
 

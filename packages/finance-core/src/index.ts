@@ -12,3 +12,18 @@ export {
   loadFinanceData,
 } from './repo/createRepo.js'
 export { setPurchaseImageBaseUrl } from './engine/purchaseEnrichment.js'
+export {
+  applyPurchaseReviewDecision,
+  automationMayOverwriteCandidate,
+  automationMayResurface,
+  PURCHASE_REVIEW_ERROR_STATUS,
+} from './engine/purchaseReviewDecision.js'
+export type {
+  PurchaseReviewState,
+  PurchaseReviewActionType,
+  PurchaseAssociation,
+  PurchaseDecision,
+  PurchaseReviewErrorCode,
+  PurchaseReviewRequest,
+  PurchaseReviewResult,
+} from './engine/purchaseReviewDecision.js'
