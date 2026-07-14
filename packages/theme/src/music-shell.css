@@ -84,7 +84,9 @@
 
 @media (pointer: coarse) {
   :root {
-    --mini-player-track-h: 44px;
+    /* Compact touch strip — keeps the seek tappable without bloating the
+       floating card the way the old 44px strip did. */
+    --mini-player-track-h: 26px;
   }
 
   .mini-player-top-progress {
@@ -223,12 +225,42 @@
 }
 
 @media (--life-os-mobile) {
+  :root {
+    /* Reserve the floating card's own lift so scroll content + toasts clear it. */
+    --mini-player-h: calc(
+      var(--mini-player-body-h) + var(--mini-player-track-h) + var(--space-2)
+    );
+  }
+
   .bottom-shell .nav,
   .bottom-shell .bottom-nav {
     position: relative;
     bottom: auto;
     left: auto;
     right: auto;
+  }
+
+  /* Floating rounded card — benchmarked against Apple Music / Spotify mini player.
+     Detached from the edges, elevated, clipped to a rounded shell. */
+  .mini-player {
+    left: max(var(--space-2), var(--safe-left-effective));
+    right: max(var(--space-2), var(--safe-right-effective));
+    bottom: calc(var(--mobile-tabbar-total-h) + var(--space-2));
+    border: 1px solid color-mix(in srgb, var(--border) 45%, rgba(255, 255, 255, 0.09));
+    border-radius: 20px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--card) 70%, #0f080b 30%);
+    backdrop-filter: blur(26px) saturate(1.5);
+    -webkit-backdrop-filter: blur(26px) saturate(1.5);
+    box-shadow:
+      0 12px 34px -10px rgba(0, 0, 0, 0.55),
+      0 4px 12px -4px rgba(0, 0, 0, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transform: translateY(140%);
+  }
+
+  .mini-player.show {
+    transform: translateY(0);
   }
 }
 
@@ -295,12 +327,15 @@
 }
 
 .mini-player-art {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   object-fit: cover;
   background: var(--accent-bg, color-mix(in srgb, var(--accent) 12%, var(--card)));
   flex-shrink: 0;
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .mini-player-art.placeholder {
@@ -354,6 +389,16 @@
   color: var(--on-accent);
   width: 44px;
   height: 44px;
+  box-shadow:
+    0 4px 12px -2px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 1px 3px rgba(0, 0, 0, 0.3);
+  transition:
+    transform var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+.mini-player-btn.play:active {
+  transform: scale(0.92);
 }
 
 /* Track row + like toggle actions */

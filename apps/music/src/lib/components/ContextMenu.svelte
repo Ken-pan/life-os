@@ -1,7 +1,7 @@
 <script>
   import { t } from '$lib/i18n/index.js';
   import { appendToQueue, insertAfterCurrent, playTrack, getCurrentTrack } from '$lib/player.svelte.js';
-  import { toggleLike, db } from '$lib/db.js';
+  import { toggleLike, deleteTrack } from '$lib/db.js';
   import { clampPopoverPosition } from '@life-os/theme';
   import { tick } from 'svelte';
 
@@ -43,7 +43,7 @@
   });
 
   async function onDelete() {
-    await db.tracks.delete(track.id);
+    await deleteTrack(track.id);
     onClose();
   }
 

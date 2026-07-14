@@ -377,6 +377,9 @@ function applyThemeFromCloud() {
   import('./state.svelte.js').then(({ applyTheme }) => applyTheme())
 }
 
+/** @type {Promise<void> | null} */
+let inFlightSync = null
+
 /** @param {{ silent?: boolean, force?: boolean }} [opts] */
 async function syncBidirectionalInternal(opts = {}) {
   if (!browser) return
@@ -390,6 +393,18 @@ async function syncBidirectionalInternal(opts = {}) {
     markSyncPending()
     throw new OfflineSyncError()
   }
+  // Coalesce overlapping runs (manual + debounced auto-sync). Two concurrent
+  // passes would race markSyncing()/markSynced() and duplicate push+pull work.
+  if (inFlightSync) return inFlightSync
+  const job = runSyncOnce(opts).finally(() => {
+    inFlightSync = null
+  })
+  inFlightSync = job
+  return job
+}
+
+/** @param {{ silent?: boolean, force?: boolean }} opts */
+async function runSyncOnce(opts) {
   markSyncing(true)
   const user = await requireUser()
   try {

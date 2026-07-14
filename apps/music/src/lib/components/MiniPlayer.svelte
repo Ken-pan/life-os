@@ -19,6 +19,7 @@
   } from '$lib/player.svelte.js';
   import { openUtilityPane, toggleUtilityPane, openQueueDrawer } from '$lib/ui.svelte.js';
   import { isMiniPlayerHidden, markNowPlayingReturn } from '$lib/nav.js';
+  import { swipeTrack } from '$lib/gestures.js';
   import { setImmersiveViewMode } from '$lib/state.svelte.js';
   import { t } from '$lib/i18n/index.js';
 
@@ -72,6 +73,12 @@
         e.preventDefault();
         openNowPlaying('player');
       }}
+      use:swipeTrack={{
+        onPrev: prevTrack,
+        onNext: nextTrack,
+        onSwipeUp: () => openNowPlaying('player'),
+        touchOnly: true,
+      }}
     >
       {#if track}
         <TrackArt artUrl={track.artUrl} seed={track.id} class="mini-player-art" shared />
@@ -83,9 +90,6 @@
           <p class="mini-player-status-hint" role="status">{statusHint}</p>
         {/if}
       </div>
-      {#if !isDesktop}
-        <Icon name="chevron-up" size={16} class="mini-player-expand" />
-      {/if}
     </a>
 
     <div class="mini-player-center">

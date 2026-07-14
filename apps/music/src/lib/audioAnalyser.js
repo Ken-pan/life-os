@@ -19,6 +19,8 @@ let elementB = null
 /** @type {'a' | 'b'} */
 let activeSlot = 'a'
 let graphReady = false
+/** @type {Promise<boolean> | null} */
+let graphBuildInflight = null
 
 function isStandalonePwa() {
   return (
@@ -63,6 +65,19 @@ function fadeForSlot(slot) {
 export async function ensurePlaybackGraph() {
   if (!browser || !elementA || graphReady) return graphReady
   if (shouldPreferNativeMediaOutput()) return false
+  // Serialize concurrent builds. Rapid skips can call this reentrantly and a
+  // second pass would rebuild fadeA/fadeB while sourceA is still wired to the
+  // old gains — silent output. One in-flight build wins; others await it.
+  if (graphBuildInflight) return graphBuildInflight
+  graphBuildInflight = buildPlaybackGraph().finally(() => {
+    graphBuildInflight = null
+  })
+  return graphBuildInflight
+}
+
+/** @returns {Promise<boolean>} */
+async function buildPlaybackGraph() {
+  if (graphReady) return true
   if (!audioContext) {
     const Ctx = window.AudioContext || window.webkitAudioContext
     if (!Ctx) return false
@@ -81,14 +96,15 @@ export async function ensurePlaybackGraph() {
     fadeA = audioContext.createGain()
     fadeB = audioContext.createGain()
 
-    if (!sourceA) {
-      sourceA = audioContext.createMediaElementSource(elementA)
-      sourceA.connect(fadeA)
-    }
+    // A media element can only ever have one source node, so reuse any created
+    // by a prior (possibly partial) build and always (re)connect it to the
+    // fresh gains — otherwise a retry leaves the source wired to a dead gain.
+    if (!sourceA) sourceA = audioContext.createMediaElementSource(elementA)
     if (elementB && !sourceB) {
       sourceB = audioContext.createMediaElementSource(elementB)
-      sourceB.connect(fadeB)
     }
+    sourceA.connect(fadeA)
+    if (sourceB) sourceB.connect(fadeB)
 
     fadeA.connect(audioContext.destination)
     fadeB.connect(audioContext.destination)

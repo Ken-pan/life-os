@@ -27,6 +27,8 @@
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let longPressTimer
   let longPressTriggered = $state(false)
+  let touchStartX = 0
+  let touchStartY = 0
 
   const coverSeed = $derived(cell.coverSeeds[0] || cell.id)
   const coverUrl = $derived(cell.coverUrls[0])
@@ -81,11 +83,26 @@
     longPressTriggered = false
     const touch = e.touches[0]
     if (!touch) return
+    touchStartX = touch.clientX
+    touchStartY = touch.clientY
     clearTimeout(longPressTimer)
     longPressTimer = setTimeout(() => {
       longPressTriggered = true
-      openMenuAt(touch.clientX, touch.clientY)
+      openMenuAt(touchStartX, touchStartY)
     }, 480)
+  }
+
+  /** Cancel the long-press once the finger moves — it's a scroll, not a hold. */
+  /** @param {TouchEvent} e */
+  function onTouchMove(e) {
+    const touch = e.touches[0]
+    if (!touch) return
+    if (
+      Math.abs(touch.clientX - touchStartX) > 10 ||
+      Math.abs(touch.clientY - touchStartY) > 10
+    ) {
+      clearTimeout(longPressTimer)
+    }
   }
 
   function onTouchEnd() {
@@ -174,6 +191,7 @@
     onclick={onActivate}
     oncontextmenu={onContextMenu}
     ontouchstart={onTouchStart}
+    ontouchmove={onTouchMove}
     ontouchend={onTouchEnd}
     ontouchcancel={onTouchEnd}
   >

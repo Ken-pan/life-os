@@ -44,7 +44,8 @@ export function updateMediaSession(track, playing) {
 
 /** @param {HTMLAudioElement | null | undefined} audio */
 export function updatePositionState(audio) {
-  if (!audio || !('setPositionState' in navigator.mediaSession)) return;
+  if (!audio || !('mediaSession' in navigator)) return;
+  if (!('setPositionState' in navigator.mediaSession)) return;
   const duration = audio.duration;
   const position = audio.currentTime;
   if (!Number.isFinite(duration) || duration <= 0 || !Number.isFinite(position)) return;

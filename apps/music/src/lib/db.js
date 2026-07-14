@@ -6,7 +6,11 @@ import {
   ensureAlbumArtCache,
   peekAlbumArt,
 } from './albumArtStore.js'
-import { objectUrlForBlob } from './artUrlCache.js'
+import {
+  objectUrlForBlob,
+  localAudioObjectUrl,
+  revokeLocalAudioObjectUrl,
+} from './artUrlCache.js'
 
 export const db = new Dexie('musicos_library')
 
@@ -115,7 +119,7 @@ export function trackWords(track) {
 export function hydrateTrack(track) {
   if (!track) return track
   if (track.audioBlob && !track.objectUrl) {
-    track.objectUrl = URL.createObjectURL(track.audioBlob)
+    track.objectUrl = localAudioObjectUrl(track.id, track.audioBlob)
   }
 
   const fromAlbum = artUrlForAlbumKey(track.albumKey)
@@ -443,6 +447,24 @@ export async function recordPlay(trackId) {
   const track = await db.tracks.get(trackId)
   if (track)
     await db.tracks.update(trackId, { playCount: (track.playCount || 0) + 1 })
+}
+
+/**
+ * Delete a track and all its local traces so it can't linger in playlists,
+ * recents, the blob cache, or as a dangling object URL.
+ * @param {string} trackId
+ */
+export async function deleteTrack(trackId) {
+  if (!trackId) return
+  revokeLocalAudioObjectUrl(trackId)
+  await db.tracks.delete(trackId)
+  await Promise.allSettled([
+    db.audioBlobs.delete(trackId),
+    db.recent.delete(trackId),
+    db.playlistTracks.where('trackId').equals(trackId).delete(),
+  ])
+  const { bumpLibraryEpoch } = await import('./state.svelte.js')
+  bumpLibraryEpoch()
 }
 
 /** @returns {Promise<number>} */

@@ -564,11 +564,12 @@ function pagesFromBoard(board, overflow = []) {
   const pages = [{ id: 'personal', label: '个人', cells: primary }]
 
   if (overflow.length) {
+    // Surprise lives only on the first page — overflow pages carry real cells.
     for (let i = 0; i < overflow.length; i += BOARD_SIZE) {
       pages.push({
         id: `more-${i / BOARD_SIZE + 1}`,
         label: '更多',
-        cells: [...overflow.slice(i, i + BOARD_SIZE), surpriseCell()],
+        cells: [...overflow.slice(i, i + BOARD_SIZE)],
       })
     }
   }

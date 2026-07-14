@@ -32,3 +32,31 @@ export function revokeObjectUrlKey(key) {
     objectUrlByKey.delete(key)
   }
 }
+
+/**
+ * Persistent object URLs for local track audio blobs, keyed by the track's
+ * content-hash id. Not LRU-evicted: a track id maps to identical bytes forever,
+ * and the currently-playing element holds a live reference we must never revoke
+ * out from under it. Deduping to one URL per id turns the previous unbounded
+ * leak (a fresh URL on every db read / library render) into O(library size).
+ * @type {Map<string, string>}
+ */
+const audioObjectUrlById = new Map()
+
+/** @param {string} trackId @param {Blob} blob @returns {string} */
+export function localAudioObjectUrl(trackId, blob) {
+  const cached = audioObjectUrlById.get(trackId)
+  if (cached) return cached
+  const url = URL.createObjectURL(blob)
+  audioObjectUrlById.set(trackId, url)
+  return url
+}
+
+/** @param {string} trackId */
+export function revokeLocalAudioObjectUrl(trackId) {
+  const url = audioObjectUrlById.get(trackId)
+  if (url) {
+    URL.revokeObjectURL(url)
+    audioObjectUrlById.delete(trackId)
+  }
+}

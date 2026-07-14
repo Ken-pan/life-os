@@ -1002,7 +1002,13 @@ async function loadAndPlay(opts = {}) {
   }
   if (opts.autoplay !== false) markUrlResolved(urlSource)
 
-  if (token !== loadToken || getCurrentTrack()?.id !== track.id) return
+  // The queue advanced (e.g. gapless/crossfade handoff to a preloaded track)
+  // while we were resolving the URL. That path never bumps loadToken, so clear
+  // our own loading flag before bailing or the spinner sticks forever.
+  if (token !== loadToken || getCurrentTrack()?.id !== track.id) {
+    if (token === loadToken) player.loading = false
+    return
+  }
   player.duration = track.duration || 0
   updateMediaSession(track, false)
 

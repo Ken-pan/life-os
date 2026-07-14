@@ -5,6 +5,7 @@ import { MUSIC_TABLES as T } from './supabaseTables.js'
 import { db, getAllTracks } from './db.js'
 import { t } from './i18n/index.js'
 import { loadCachedAudioUrl, peekCachedAudioUrl } from './audioBlobStore.js'
+import { localAudioObjectUrl } from './artUrlCache.js'
 import { getPrefetchLimit, getWarmByteMode } from './networkPolicy.js'
 
 export const MUSIC_BUCKET = 'music'
@@ -307,7 +308,7 @@ export function resolvePlayUrlSync(track) {
   if (!track) return ''
   if (track.objectUrl) return track.objectUrl
   if (track.audioBlob && browser) {
-    track.objectUrl = URL.createObjectURL(track.audioBlob)
+    track.objectUrl = localAudioObjectUrl(track.id, track.audioBlob)
     return track.objectUrl
   }
   const cached = peekCachedAudioUrl(track.id)

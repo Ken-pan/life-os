@@ -28,6 +28,7 @@
   import { fetchLyricsForTrack } from '$lib/lyricsFetch.js'
   import { scheduleAutoCloudPush } from '$lib/sync.js'
   import { createScreenWakeLock } from '@life-os/platform-web/wake-lock'
+  import { bindLifeOsMedia, lifeOsMobileMq } from '@life-os/theme'
   import { S, setImmersiveViewMode, librarySignals } from '$lib/state.svelte.js'
   import { auth } from '$lib/auth.svelte.js'
 
@@ -234,7 +235,11 @@
         {#if panelMode === 'player'}
           <div
             class="np-mobile-cover-stage"
-            use:swipeTrack={{ onPrev: prevTrack, onNext: nextTrack }}
+            use:swipeTrack={{
+              onPrev: prevTrack,
+              onNext: nextTrack,
+              onSwipeUp: () => setMode('lyrics'),
+            }}
           >
             <div class="np-mobile-art-wrap">
               <div class="now-playing-art-aura" aria-hidden="true"></div>

@@ -18,14 +18,31 @@
 
   onMount(() => {
     if (!carouselEl) return
-    const onScroll = () => {
-      if (!carouselEl) return
-      const width = carouselEl.clientWidth
-      if (!width) return
-      activePage = Math.round(carouselEl.scrollLeft / width)
+    // Cache page width (only changes on resize) and coalesce active-page
+    // updates to one per frame — the raw scroll event fires far faster and
+    // reading clientWidth on each one thrashes layout mid-swipe.
+    let pageWidth = carouselEl.clientWidth
+    let ticking = false
+    const measure = () => {
+      if (carouselEl) pageWidth = carouselEl.clientWidth
     }
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        ticking = false
+        if (!carouselEl || !pageWidth) return
+        activePage = Math.round(carouselEl.scrollLeft / pageWidth)
+      })
+    }
+    const ro =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    ro?.observe(carouselEl)
     carouselEl.addEventListener('scroll', onScroll, { passive: true })
-    return () => carouselEl?.removeEventListener('scroll', onScroll)
+    return () => {
+      carouselEl?.removeEventListener('scroll', onScroll)
+      ro?.disconnect()
+    }
   })
 
   /** @param {number} index */
