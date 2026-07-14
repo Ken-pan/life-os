@@ -403,8 +403,44 @@ export function displayWeight(w) {
 
 export const ORDER = () => getProgramById(activeProgramId()).rotationOrder
 
+/**
+ * 最近一次真实练过的轮换日：取 rotation.history（含今日已「完成并轮换」的）
+ * 与「过去且有有效组数」的日志中日期最新者。今日仅有记录、尚未完成的 session 不计，
+ * 避免训练进行中推荐被提前翻页。
+ * @returns {{ date: string, dayId: string } | null}
+ */
+function lastTrainedRotationDay() {
+  const order = ORDER()
+  const today = todayKey()
+  /** @type {{ date: string, dayId: string } | null} */
+  let best = null
+  const consider = (date, dayId) => {
+    if (!date || !order.includes(dayId)) return
+    if (!best || date > best.date) best = { date, dayId }
+  }
+  // 过去且有有效组数的日志：补记逻辑漏推指针时兜住
+  for (const k of Object.keys(S.logs || {})) {
+    const [date, dayId] = k.split('|')
+    if (!date || date >= today || !order.includes(dayId)) continue
+    const log = S.logs[k]
+    if (log && Object.values(log).some((v) => effectiveDone(v, Infinity) > 0)) consider(date, dayId)
+  }
+  // 轮换历史（completeDay / 补记写入，含今日已完成）
+  for (const h of S.rotation.history || []) consider(h.date, h.dayId)
+  return best
+}
+
+/**
+ * 今日推荐轮换日。以「真实最近一次训练的下一天」为准，让推荐始终跟随实际训练；
+ * rotation.next 指针仅作兜底（无任何训练记录、或用户在设置里手动指定起点时）。
+ * 修复：练完某天若没走完成流 / 补记漏推指针 / 云端 merge 带回旧指针，
+ * 会导致推荐与「上次练的是 X」脱节（如练完胸却推荐腿）。
+ */
 export function todayDayId() {
-  return ORDER()[(S.rotation.next || 0) % ORDER().length]
+  const order = ORDER()
+  const last = lastTrainedRotationDay()
+  if (last) return order[(order.indexOf(last.dayId) + 1) % order.length]
+  return order[(S.rotation.next || 0) % order.length]
 }
 
 /**
