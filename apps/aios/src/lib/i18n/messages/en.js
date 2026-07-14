@@ -51,6 +51,7 @@ export default {
     downloadImage: 'Download image',
     viewImage: 'View full size',
     imgLoading: 'Waking the image model…',
+    imgLoadingSlow: 'Loading the image model — first run or high-quality tier takes a bit…',
     imgGenerating: 'Painting — step {step}/{steps}',
     imgSaving: 'Saving…',
     removeImage: 'Remove image',

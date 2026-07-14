@@ -404,7 +404,9 @@
                     ? t('chat.imgGenerating', { step: IMG.step, steps: IMG.steps })
                     : IMG.phase === 'saving'
                       ? t('chat.imgSaving')
-                      : t('chat.imgLoading')}
+                      : IMG.elapsed >= 15
+                        ? t('chat.imgLoadingSlow')
+                        : t('chat.imgLoading')}
                 </span>
                 <span class="img-progress-time">{IMG.elapsed}s</span>
               </div>

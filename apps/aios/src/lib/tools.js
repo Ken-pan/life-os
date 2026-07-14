@@ -195,10 +195,13 @@ const DEFS = [
       function: {
         name: 'generate_image',
         description:
-          '本地 AI 生图(支持中文提示词与图中中文文字)。用户要画图、生成图片、海报、插画、头像、场景时使用。' +
+          '本地 AI 生图(支持中文提示词与图中中文文字)。用户要一张全新的位图图像(画图、生成图片、海报、插画、头像、场景)时使用。' +
+          '不要用于:讨论/分析用户已有或刚发的图片、画图表/流程图/示意图/数据可视化(那用 ```html/```svg 代码块)、或用户只想要文字(文案/描述/创意)时。' +
           'prompt 用具体、丰富的描述(主体+外观细节+动作+场景+光线+风格)。' +
           'quality:fast=秒级出图(草图/插画/快速预览);quality=高质量(人物、写实摄影、图中含文字、用户要求精细时必用,约 1-3 分钟)。' +
+          '两步走建议:构思阶段先用 fast + n=4 出多个方案让用户挑,选定后用 quality、传上一张的 seed 定稿。' +
           '角色一致性:save_character="角色名" 会把本次生成注册为可复用角色;之后传 character="角色名" 可让同一角色出现在新的场景/动作/服装中(此时 prompt 描述新场景即可)。' +
+          '风格一致性:save_style="风格名" 把本次画面的视觉风格注册为可复用风格;之后传 style="风格名" 可让新内容沿用同一套色调/笔触/质感。角色与风格可同时传。' +
           '生成的图片会自动展示给用户,不要在回答里编造图片链接。',
         parameters: {
           type: 'object',
@@ -214,6 +217,16 @@ const DEFS = [
               enum: ['1:1', '16:9', '9:16', '4:3', '3:4'],
               description: '画幅比例,默认 1:1',
             },
+            n: {
+              type: 'number',
+              description:
+                '一次生成的张数(1-4),默认 1;用户要「多来几张/多个方案/挑一个」时设 2-4(仅 fast 档批量,quality 逐张较慢)',
+            },
+            enhance_prompt: {
+              type: 'boolean',
+              description:
+                '是否让本地模型把 prompt 自动扩写成结构化丰富描述(主体/光线/构图/风格/画质)。用户给的描述简短模糊时设 true 提升画质;已经写得很详细、或要严格照原样时设 false。默认对过短的 prompt 自动扩写。',
+            },
             negative_prompt: {
               type: 'string',
               description: '不想出现的元素(已内置解剖/手部质量兜底,只需补充场景相关的)',
@@ -225,6 +238,14 @@ const DEFS = [
             save_character: {
               type: 'string',
               description: '把本次生成的形象注册为角色,供之后 character 参数复用',
+            },
+            style: {
+              type: 'string',
+              description: '使用已注册风格的名字,让新内容沿用该视觉风格(色调/笔触/质感)',
+            },
+            save_style: {
+              type: 'string',
+              description: '把本次画面的视觉风格注册为风格,供之后 style 参数复用',
             },
             seed: { type: 'number', description: '随机种子;复现或微调上一张时传入其 seed' },
           },
@@ -242,6 +263,19 @@ const DEFS = [
       function: {
         name: 'list_characters',
         description: '列出已注册的生图角色(名字、描述、参考图数量)。用户问"有哪些角色"或 generate_image 报角色不存在时使用。',
+        parameters: { type: 'object', properties: {} },
+      },
+    },
+  },
+  {
+    key: 'list_styles',
+    icon: 'image',
+    web: false,
+    def: {
+      type: 'function',
+      function: {
+        name: 'list_styles',
+        description: '列出已注册的生图风格(名字、描述、参考图数量)。用户问"有哪些风格"或 generate_image 报风格不存在时使用。',
         parameters: { type: 'object', properties: {} },
       },
     },
@@ -1035,16 +1069,76 @@ async function pngToWebpDataUrl(b64) {
   }
 }
 
+/**
+ * 用本地 LLM 把简短/模糊的生图提示扩写成结构化丰富描述(FLUX/GPT-Image 式)。
+ * 覆盖主体/外观/动作/场景/光线/构图/风格/画质。失败时返回 null,由调用方回退原文,绝不阻断生成。
+ */
+async function enhancePrompt(prompt) {
+  const sys =
+    '你是生图提示词工程师。把用户给的简短或模糊的画面描述扩写成一段结构化、细节丰富的生图提示词,' +
+    '覆盖:主体及外观细节、动作或姿态、场景与背景、光线与氛围、镜头与构图、艺术风格、画质。' +
+    '严格保持用户的原意和主体,不要新增用户没暗示的核心元素。用中文输出(可保留必要的英文风格术语),' +
+    '80-150 字,只输出提示词本身,不要任何解释、前缀、编号或引号。'
+  try {
+    const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llm-fast',
+        messages: [
+          { role: 'system', content: sys },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 400,
+        stream: false,
+        // instruct 式单轮扩写,关思考省时
+        chat_template_kwargs: { enable_thinking: false },
+      }),
+      signal: AbortSignal.timeout(60000),
+    })
+    if (!res.ok) return null
+    const json = await res.json()
+    let out = json.choices?.[0]?.message?.content?.trim()
+    if (!out) return null
+    out = out.replace(/^["“「『]+/, '').replace(/["”」』]+$/, '').trim()
+    // 扩写理应更长;若模型没听话(更短/空),回退原文
+    return out.length > prompt.length ? out : null
+  } catch {
+    return null
+  }
+}
+
 async function generateImage(args) {
-  const prompt = String(args.prompt ?? '').trim()
-  if (!prompt) return '错误:prompt 不能为空'
+  const rawPrompt = String(args.prompt ?? '').trim()
+  if (!rawPrompt) return '错误:prompt 不能为空'
+
+  // Prompt 智能改写:纯 text2img 且(显式要求 或 提示过短)时,用本地 LLM 扩写。
+  // 角色/风格模式下 prompt 是「场景增量」,扩写会稀释条件,故跳过。
+  const isEdit = Boolean(args.character || args.style)
+  let prompt = rawPrompt
+  let enhancedFrom = null
+  const wantEnhance =
+    !isEdit &&
+    (args.enhance_prompt === true || (args.enhance_prompt !== false && [...rawPrompt].length < 40))
+  if (wantEnhance) {
+    const better = await enhancePrompt(rawPrompt)
+    if (better) {
+      prompt = better
+      enhancedFrom = rawPrompt
+    }
+  }
+
   const body = {
     model: args.quality === 'quality' ? 'image-quality' : 'image-fast',
     prompt,
+    n: args.n,
     aspect: args.aspect,
     negative_prompt: args.negative_prompt,
     character: args.character,
     save_character: args.save_character,
+    style: args.style,
+    save_style: args.save_style,
     seed: args.seed,
     response_format: 'b64_json',
   }
@@ -1068,6 +1162,9 @@ async function generateImage(args) {
     throw new Error(json?.error?.message || `生图服务 HTTP ${res.status}`)
   }
   const lines = []
+  if (enhancedFrom) {
+    lines.push(`已把简短提示「${enhancedFrom}」自动扩写为:${prompt}`)
+  }
   for (const item of json.data ?? []) {
     if (item.b64_json) {
       pendingImages.push(await pngToWebpDataUrl(item.b64_json))
@@ -1078,6 +1175,11 @@ async function generateImage(args) {
     if (item.character_saved) {
       lines.push(
         `已注册角色「${item.character_saved.name}」(参考图 ${item.character_saved.refs} 张),之后可用 character="${item.character_saved.name}" 复用该角色。`,
+      )
+    }
+    if (item.style_saved) {
+      lines.push(
+        `已注册风格「${item.style_saved.name}」(参考图 ${item.style_saved.refs} 张),之后可用 style="${item.style_saved.name}" 复用该风格。`,
       )
     }
   }
@@ -1095,6 +1197,18 @@ async function listCharacters() {
   }
   return characters
     .map((c) => `- ${c.name}(参考图 ${c.refs} 张)${c.description ? `:${c.description}` : ''}`)
+    .join('\n')
+}
+
+async function listStyles() {
+  const res = await fetch(`${IMAGE_API}/styles`, { signal: AbortSignal.timeout(60000) })
+  if (!res.ok) throw new Error(`生图服务 HTTP ${res.status}`)
+  const { styles } = await res.json()
+  if (!styles?.length) {
+    return '风格库为空。可在 generate_image 时传 save_style="风格名" 注册风格。'
+  }
+  return styles
+    .map((s) => `- ${s.name}(参考图 ${s.refs} 张)${s.description ? `:${s.description}` : ''}`)
     .join('\n')
 }
 
@@ -1158,6 +1272,8 @@ export async function executeTool(name, argsJson) {
         return await generateImage(args)
       case 'list_characters':
         return await listCharacters()
+      case 'list_styles':
+        return await listStyles()
       case 'search_notes':
         return await searchNotes(args.query)
       case 'read_note':

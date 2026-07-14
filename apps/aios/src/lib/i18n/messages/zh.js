@@ -50,6 +50,7 @@ export default {
     downloadImage: '下载图片',
     viewImage: '查看大图',
     imgLoading: '正在唤醒生图模型…',
+    imgLoadingSlow: '正在加载生图模型,首次或高质量档需要一会儿…',
     imgGenerating: '正在绘制 {step}/{steps} 步',
     imgSaving: '正在保存…',
     removeImage: '移除图片',
