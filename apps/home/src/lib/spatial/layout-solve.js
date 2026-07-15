@@ -113,6 +113,108 @@ export function minWallGapIn(box, segs) {
   return best / PX_PER_IN
 }
 
+// ---- 专业设计规范(NKBA 类住宅标准,全部几何可算) ----
+
+/** 床的下床空间:至少两侧留出这么宽(英寸)才睡得像样 */
+const BED_SIDE_IN = 20
+/** 高家具(英寸):贴墙压住窗户跨度会挡采光 */
+const TALL_IN = 40
+/** 视线遮挡判定:这么高的家具会挡住坐姿视线(电视↔沙发) */
+const SIGHT_BLOCK_IN = 30
+
+/** 门窗在墙上的跨度段(wallGraph 户型;508 返回空 —— 罚分自然为 0) */
+export function openingSegments(project) {
+  const graph = project.wallGraph
+  /** @type {Array<{ vertical: boolean, at: number, lo: number, hi: number, cx: number, cy: number, spanIn: number, type: string, style?: string }>} */
+  const out = []
+  if (!graph || !project.graphOpenings?.length) return out
+  const vById = Object.fromEntries(graph.vertices.map((v) => [v.id, v]))
+  for (const op of project.graphOpenings) {
+    if (op.hidden) continue
+    const edge = graph.edges.find((e) => e.id === op.edgeId)
+    const a = edge && vById[edge.a]
+    const b = edge && vById[edge.b]
+    if (!a || !b) continue
+    const len = Math.hypot(b.x - a.x, b.y - a.y)
+    if (!len) continue
+    const t0 = (op.offsetIn * PX_PER_IN) / len
+    const t1 = ((op.offsetIn + op.spanIn) * PX_PER_IN) / len
+    const p0 = { x: a.x + (b.x - a.x) * t0, y: a.y + (b.y - a.y) * t0 }
+    const p1 = { x: a.x + (b.x - a.x) * t1, y: a.y + (b.y - a.y) * t1 }
+    const vertical = Math.abs(a.x - b.x) < 1.5
+    out.push({
+      vertical,
+      at: vertical ? a.x : a.y,
+      lo: vertical ? Math.min(p0.y, p1.y) : Math.min(p0.x, p1.x),
+      hi: vertical ? Math.max(p0.y, p1.y) : Math.max(p0.x, p1.x),
+      cx: (p0.x + p1.x) / 2,
+      cy: (p0.y + p1.y) / 2,
+      spanIn: op.spanIn,
+      type: op.type,
+      style: op.style,
+    })
+  }
+  return out
+}
+
+/** 点到轴对齐矩形的距离(px) */
+function distToBox(px, py, b) {
+  const dx = Math.max(b.x - px, 0, px - (b.x + b.w))
+  const dy = Math.max(b.y - py, 0, py - (b.y + b.h))
+  return Math.hypot(dx, dy)
+}
+
+/**
+ * 线段是否穿过轴对齐矩形。视线判定用 —— 沿线每 ~6in 采样一个点判在盒内,
+ * 比精确相交数学稳(不怕恰好擦角的退化),精度对「挡不挡视线」绰绰有余。
+ */
+export function segIntersectsBox(x1, y1, x2, y2, b) {
+  const len = Math.hypot(x2 - x1, y2 - y1)
+  const steps = Math.max(2, Math.ceil(len / (6 * PX_PER_IN)))
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    const x = x1 + (x2 - x1) * t
+    const y = y1 + (y2 - y1) * t
+    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return true
+  }
+  return false
+}
+
+/**
+ * 盒子某一侧的可用净深(英寸):沿该侧外法向,到最近障碍(家具/墙)的距离。
+ * 只算横向搭上 ≥6in 的障碍 —— 斜对面的东西不挡这一侧的使用。
+ * @param {{x:number,y:number,w:number,h:number}} box
+ * @param {'n'|'s'|'e'|'w'} side
+ * @param {Array<{x:number,y:number,w:number,h:number}>} obstacles
+ * @param {ReturnType<typeof wallAnchorSegments>} segs
+ */
+export function sideFreeDepthIn(box, side, obstacles, segs) {
+  const horiz = side === 'e' || side === 'w'
+  const crossLo = horiz ? box.y : box.x
+  const crossHi = horiz ? box.y + box.h : box.x + box.w
+  const face =
+    side === 'n' ? box.y : side === 's' ? box.y + box.h : side === 'w' ? box.x : box.x + box.w
+  const sign = side === 'n' || side === 'w' ? -1 : 1
+  let free = 96 * PX_PER_IN // 8ft 封顶,再远没意义
+
+  for (const ob of obstacles) {
+    const oLo = horiz ? ob.y : ob.x
+    const oHi = horiz ? ob.y + ob.h : ob.x + ob.w
+    if (Math.min(crossHi, oHi) - Math.max(crossLo, oLo) < 6 * PX_PER_IN) continue
+    const near = sign > 0 ? (horiz ? ob.x : ob.y) : (horiz ? ob.x + ob.w : ob.y + ob.h)
+    const gap = sign * (near - face)
+    if (gap >= -1 && gap < free) free = gap
+  }
+  for (const seg of segs) {
+    // 挡住这一侧的是**法向垂直**的墙:侧向(e/w)被竖墙挡,纵向(n/s)被横墙挡
+    if (seg.vertical !== horiz) continue
+    if (Math.min(crossHi, seg.hi) - Math.max(crossLo, seg.lo) < 6 * PX_PER_IN) continue
+    const gap = sign * (seg.at - face)
+    if (gap >= -1 && gap < free) free = gap
+  }
+  return Math.max(0, free) / PX_PER_IN
+}
+
 /**
  * 认对:每件 a 类在**同分区**里找最近的 b 类(当前布局定义「谁属于谁」——
  * 你的椅子跟你的桌子,不是跟别人家的)。b 可以是钉死件(洗衣机):
@@ -176,6 +278,123 @@ export function affinityPenaltyIn(boxById, pairs, segs, huggers) {
       const gap = minWallGapIn(box, segs)
       const p = gap === Infinity ? WALL_PENALTY_CAP : Math.max(0, gap - WALL_GAP_FREE_IN)
       total += Math.min(p, WALL_PENALTY_CAP)
+    }
+  }
+  return total
+}
+
+/**
+ * 一次求解的设计上下文:认对/贴墙/净空需求/门窗段/视线对/静态障碍,
+ * 全部只算一次,每次评估复用。
+ */
+export function buildDesignContext(project, placements, zones) {
+  const segs = wallAnchorSegments(project.wallGraph)
+  const pairs = detectPairs(placements, zones)
+  const huggers = placements
+    .filter((pl) => WALL_HUGGERS.has(pl.kind) && !pl.fixed)
+    .map((pl) => ({ id: pl.id, kind: pl.kind }))
+
+  // 使用净空需求:词表标了 clearance 的(柜/桌前留操作深度)+ 床(下床空间)
+  const access = []
+  for (const pl of placements) {
+    if (pl.kind === 'rug' || pl.kind === 'yoga_mat' || pl.kind === 'mat') continue
+    const spec = placementSpec(pl.kind)
+    if ((spec?.mount ?? 'floor') !== 'floor') continue
+    const isBed = String(pl.kind).startsWith('bed')
+    const clearance = spec?.clearance ?? 0
+    if (clearance > 0 || isBed) access.push({ id: pl.id, clearance, isBed })
+  }
+
+  const openings = openingSegments(project)
+  const windows = openings.filter((o) => o.type === 'window')
+  // 推拉/口袋门没有开门弧,不占地
+  const doors = openings.filter(
+    (o) => o.type === 'door' && o.style !== 'sliding' && o.style !== 'pocket' && o.style !== 'bypass',
+  )
+  const sightPairs = pairs.filter((p) => p.zh === '电视与沙发观看距离')
+
+  /** 静态障碍(评估里不变):固定设施 */
+  const fixtureBoxes = (project.fixtures ?? []).map((f) => f.bounds).filter(Boolean)
+  /** 高家具表(挡视线/挡窗判定用) */
+  const tallOf = new Map(
+    placements.map((pl) => [pl.id, placementSpec(pl.kind)?.tall ?? 30]),
+  )
+  return { segs, pairs, huggers, access, windows, doors, sightPairs, fixtureBoxes, tallOf }
+}
+
+/**
+ * 一个布局的**设计规范总偏差**(英寸,越低越专业):
+ * 配对/贴墙(affinityPenaltyIn)+ 使用净空 + 门扇开启区 + 窗前采光 + 视线通透。
+ * @param {ReturnType<typeof buildDesignContext>} ctx
+ * @param {Map<string, {x:number,y:number,w:number,h:number}>} boxById
+ */
+export function designPenaltyIn(ctx, boxById) {
+  let total = affinityPenaltyIn(boxById, ctx.pairs, ctx.segs, ctx.huggers)
+
+  // 障碍集 = 全部家具盒子 + 固定设施(净空计算里「自己」要排掉)
+  const allBoxes = [...boxById.values(), ...ctx.fixtureBoxes]
+
+  // 1) 使用净空:柜门打得开、桌前坐得下、床两侧下得去
+  for (const need of ctx.access) {
+    const box = boxById.get(need.id)
+    if (!box) continue
+    const others = allBoxes.filter((b) => b !== box)
+    const depth = {
+      n: sideFreeDepthIn(box, 'n', others, ctx.segs),
+      s: sideFreeDepthIn(box, 's', others, ctx.segs),
+      e: sideFreeDepthIn(box, 'e', others, ctx.segs),
+      w: sideFreeDepthIn(box, 'w', others, ctx.segs),
+    }
+    if (need.isBed) {
+      // 至少两侧 ≥20in(一长边 + 床尾是常态;床头贴墙不算)
+      const okSides = Object.values(depth).filter((d) => d >= BED_SIDE_IN).length
+      if (okSides < 2) total += (2 - okSides) * BED_SIDE_IN
+    }
+    if (need.clearance > 0) {
+      // 净空要开在**长边**:柜子只有窄端露着不算「能用」
+      const longSides = box.w >= box.h ? [depth.n, depth.s] : [depth.e, depth.w]
+      const bestLong = Math.max(...longSides)
+      total += Math.min(Math.max(0, need.clearance - bestLong), need.clearance)
+    }
+  }
+
+  // 2) 门扇开启区:平开门弧内的家具按侵入深度罚
+  for (const door of ctx.doors) {
+    const radius = door.spanIn * PX_PER_IN
+    for (const box of boxById.values()) {
+      const d = distToBox(door.cx, door.cy, box)
+      if (d < radius) total += Math.min((radius - d) / PX_PER_IN, 24)
+    }
+  }
+
+  // 3) 窗前采光:高家具贴着窗户所在墙且横跨窗户跨度
+  for (const win of ctx.windows) {
+    for (const [id, box] of boxById) {
+      if ((ctx.tallOf.get(id) ?? 30) < TALL_IN) continue
+      const lo = win.vertical ? box.y : box.x
+      const hi = win.vertical ? box.y + box.h : box.x + box.w
+      const overlap = Math.min(hi, win.hi) - Math.max(lo, win.lo)
+      if (overlap < 6 * PX_PER_IN) continue
+      const faceLo = win.vertical ? box.x : box.y
+      const faceHi = win.vertical ? box.x + box.w : box.y + box.h
+      const gap = Math.min(Math.abs(faceLo - win.at), Math.abs(win.at - faceHi))
+      if (gap < 8 * PX_PER_IN) total += Math.min(overlap / PX_PER_IN, 24)
+    }
+  }
+
+  // 4) 视线通透:电视↔沙发的连线不该被高家具切断
+  for (const pair of ctx.sightPairs) {
+    const a = boxById.get(pair.aId)
+    const b = boxById.get(pair.bId)
+    if (!a || !b) continue
+    const ax = a.x + a.w / 2
+    const ay = a.y + a.h / 2
+    const bx = b.x + b.w / 2
+    const by = b.y + b.h / 2
+    for (const [id, box] of boxById) {
+      if (id === pair.aId || id === pair.bId) continue
+      if ((ctx.tallOf.get(id) ?? 30) < SIGHT_BLOCK_IN) continue
+      if (segIntersectsBox(ax, ay, bx, by, box)) total += 30
     }
   }
   return total
@@ -324,9 +543,11 @@ export function circMetrics(circ) {
     : CLEARANCE.comfortable
   let freeSum = 0
   let tightSum = 0
+  let openSum = 0
   for (const z of circ.zoneStats) {
     freeSum += z.freeSqft
     tightSum += z.tightRatio * z.freeSqft
+    openSum += (z.maxClearIn ?? 0) * z.freeSqft
   }
   return {
     blocked: circ.blockedDoors.length,
@@ -335,6 +556,9 @@ export function circMetrics(circ) {
     minWidthIn,
     freeSqft: circ.totals.freeSqft,
     tight: freeSum > 0 ? tightSum / freeSum : 0,
+    /** 开阔度:各区最大空旷圆直径(英寸)按可站面积加权 —— 现代布局讲究
+     * 负空间聚成整块,而不是碎在家具缝里 */
+    openIn: freeSum > 0 ? openSum / freeSum : 0,
   }
 }
 
@@ -363,6 +587,7 @@ function scoreState({ profileKey, m, base, wallFt, baseWallFt, moveCost, affinit
         problemGain * 1.5 +
         affinityGain * 5 +
         (base.tight - m.tight) * 900 +
+        (m.openIn - base.openIn) * 4 +
         (m.freeSqft - base.freeSqft) * 3 -
         moveCost * 8
       )
@@ -429,16 +654,12 @@ export async function solveLayout(project, profileKey, opts = {}) {
   const base = circMetrics(baseCirc)
   const baseWallFt = freeWallFt(project, placements)
 
-  // 摆放逻辑基线:伴随对按当前布局认对(你的椅子跟你的桌子),
-  // 贴墙偏好只评能动的件(钉死件的位置本来就是既成事实)
-  const wallSegs = wallAnchorSegments(project.wallGraph)
-  const pairs = detectPairs(placements, zones)
-  const huggers = placements
-    .filter((pl) => WALL_HUGGERS.has(pl.kind) && !pl.fixed)
-    .map((pl) => ({ id: pl.id, kind: pl.kind }))
+  // 设计规范基线:认对/贴墙/净空/门窗/视线,上下文只建一次
+  const ctx = buildDesignContext(project, placements, zones)
+  const pairs = ctx.pairs
   const boxByIdOf = (plist) =>
     new Map(plist.map((p) => [p.id, { x: p.x, y: p.y, w: p.w, h: p.h }]))
-  const baseAffinity = affinityPenaltyIn(boxByIdOf(placements), pairs, wallSegs, huggers)
+  const baseAffinity = designPenaltyIn(ctx, boxByIdOf(placements))
 
   // 伴随对协同移动表:anchor(b)动,follower(a)保持相对位置跟着动
   const movIdxByPlId = new Map(movables.map((m, i) => [m.pl.id, i]))
@@ -509,7 +730,7 @@ export async function solveLayout(project, profileKey, opts = {}) {
     const candidate = { ...project, placements: nextPlacements }
     const circ = analyzeCirculation(candidate)
     if (!circ.ok) return -Infinity
-    const affinity = affinityPenaltyIn(boxByIdOf(nextPlacements), pairs, wallSegs, huggers)
+    const affinity = designPenaltyIn(ctx, boxByIdOf(nextPlacements))
     return scoreState({
       profileKey: profile.key,
       m: circMetrics(circ),
@@ -618,9 +839,7 @@ export async function solveLayout(project, profileKey, opts = {}) {
     after: {
       ...circMetrics(finalCirc),
       wallFt: freeWallFt(project, finalPlacements),
-      affinityIn: Math.round(
-        affinityPenaltyIn(boxByIdOf(finalPlacements), pairs, wallSegs, huggers),
-      ),
+      affinityIn: Math.round(designPenaltyIn(ctx, boxByIdOf(finalPlacements))),
     },
   }
 }

@@ -126,9 +126,11 @@
       parts.push(`紧张通道 ${pct(b.tight)}→${pct(a.tight)}`)
     if (a.wallFt > b.wallFt) parts.push(`可用贴墙 ${b.wallFt}→${a.wallFt} ft`)
     if (a.freeSqft > b.freeSqft + 1) parts.push(`可活动 +${Math.round(a.freeSqft - b.freeSqft)} sqft`)
-    // 摆放逻辑(伴随对间距 + 该贴墙的贴墙):罚分英寸,降 = 更合理
+    if (Math.round(a.openIn) > Math.round(b.openIn) + 2)
+      parts.push(`开阔区 ${Math.round(b.openIn)}→${Math.round(a.openIn)} in`)
+    // 设计规范偏差(配对/贴墙/使用净空/门扇/窗前/视线):英寸,降 = 更专业
     if (a.affinityIn < b.affinityIn - 2)
-      parts.push(`摆放更合理(配对/贴墙 ${b.affinityIn}→${a.affinityIn} in 偏差)`)
+      parts.push(`更符合设计规范(偏差 ${b.affinityIn}→${a.affinityIn} in)`)
     return parts.length ? parts.join(' · ') : '与现状指标接近'
   }
 </script>

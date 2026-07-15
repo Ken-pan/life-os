@@ -423,11 +423,15 @@ export function analyzeCirculation(project) {
     let free = 0
     let furniture = 0
     let tight = 0
+    let maxClear = 0
     for (let i = 0; i < cell.length; i++) {
       if (zoneOf[i] !== zi) continue
       if (cell[i] === 1) {
         free++
         if (dist[i] * GRID_IN * 2 < CLEARANCE.tight) tight++
+        // 开阔度:区内最大空旷圆直径。门洞格被 gateBoost 抬过,不算 ——
+        // 门口敞亮不代表屋里有整块可活动的负空间
+        if (!gateCells.has(i) && dist[i] > maxClear) maxClear = dist[i]
       } else if (cell[i] === 2) furniture++
     }
     const area = (free + furniture) * cellSqft
@@ -439,6 +443,7 @@ export function analyzeCirculation(project) {
       freeSqft: round1(free * cellSqft),
       usedRatio: area > 0 ? round2(furniture / (free + furniture)) : 0,
       tightRatio: free > 0 ? round2(tight / free) : 0,
+      maxClearIn: Math.round(maxClear * GRID_IN * 2),
     }
   })
 

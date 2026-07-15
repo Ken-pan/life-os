@@ -9,13 +9,18 @@ import assert from 'node:assert/strict'
 import {
   affinityPenaltyIn,
   boxGapIn,
+  buildDesignContext,
   candidateSlots,
   circMetrics,
+  designPenaltyIn,
   detectPairs,
   directionZh,
   freeWallFt,
   LAYOUT_PROFILES,
   minWallGapIn,
+  openingSegments,
+  segIntersectsBox,
+  sideFreeDepthIn,
   solveAllProfiles,
   solveLayout,
 } from '../src/lib/spatial/layout-solve.js'
@@ -337,6 +342,88 @@ for (const s of slots) {
   const gap = boxGapIn(dk, oc)
   assert.ok(gap <= 24, `椅子该回到桌边(还差 ${Math.round(gap)}in)`)
   assert.ok(res.after.affinityIn < res.before.affinityIn, '摆放逻辑分要改善')
+}
+
+/* ---- 专业设计规范:几何原语 ---- */
+{
+  // 侧向净深:柜子(北墙下)南侧 3ft 外有张桌子 → 南侧净深 36in
+  const cab = { x: 100, y: 0, w: 108, h: 60 }
+  const desk = { x: 100, y: 168, w: 108, h: 60 }
+  const segs = [{ edgeId: 'n', vertical: false, at: 0, lo: 0, hi: 720 }]
+  assert.equal(sideFreeDepthIn(cab, 's', [desk], segs), 36)
+  assert.equal(sideFreeDepthIn(cab, 'n', [desk], segs), 0, '背贴墙,北侧净深 0')
+  // 横向没搭上的障碍不算
+  const aside = { x: 400, y: 168, w: 60, h: 60 }
+  assert.equal(sideFreeDepthIn(cab, 's', [aside], segs), 96, '斜对面的不挡')
+
+  // 线段穿盒
+  assert.ok(segIntersectsBox(0, 0, 100, 100, { x: 40, y: 40, w: 20, h: 20 }))
+  assert.ok(!segIntersectsBox(0, 0, 100, 0, { x: 40, y: 40, w: 20, h: 20 }))
+}
+
+/* ---- 门窗段解析 + 设计罚分(净空/门扇/窗前/视线) ---- */
+{
+  const p = baseProject({
+    placements: [
+      // wardrobe 需要 36in 前净空(词表);把一张桌子怼到它长边正前方 8in
+      { id: 'wd', kind: 'wardrobe', label: '衣柜', x: 24 + ft(1), y: 24 + 6, w: ft(4), h: ft(2), rotation: 0, zoneId: 'z-1' },
+      { id: 'tb', kind: 'table', label: '桌', x: 24 + ft(1), y: 24 + 6 + ft(2) + 24, w: ft(4), h: ft(3), rotation: 0, zoneId: 'z-1' },
+    ],
+  })
+  const segsAll = openingSegments(p)
+  assert.equal(segsAll.length, 1, '一道门要解析出来')
+  assert.equal(segsAll[0].type, 'door')
+
+  const ctx = buildDesignContext(p, p.placements, p.zones)
+  assert.ok(ctx.access.some((a) => a.id === 'wd' && a.clearance >= 24), '衣柜有净空需求')
+  const boxes = new Map(p.placements.map((x) => [x.id, { x: x.x, y: x.y, w: x.w, h: x.h }]))
+  const jammed = designPenaltyIn(ctx, boxes)
+  assert.ok(jammed > 10, `衣柜前净空被桌子吃掉,要罚(got ${jammed})`)
+
+  // 把桌子挪远 → 罚分下降
+  boxes.set('tb', { x: 24 + ft(1), y: 24 + ft(7), w: ft(4), h: ft(3) })
+  const freed = designPenaltyIn(ctx, boxes)
+  assert.ok(freed < jammed, `净空放开罚分要降(${jammed} → ${freed})`)
+}
+
+/* ---- 求解器会把「柜门打不开」当问题解掉 ---- */
+{
+  const p = baseProject({
+    placements: [
+      { id: 'wd', kind: 'wardrobe', label: '衣柜', x: 24 + ft(1), y: 24 + 6, w: ft(4), h: ft(2), rotation: 0, zoneId: 'z-1' },
+      { id: 'tb', kind: 'table', label: '桌', x: 24 + ft(1), y: 24 + 6 + ft(2) + 24, w: ft(4), h: ft(3), rotation: 0, zoneId: 'z-1' },
+    ],
+  })
+  const res = await solveLayout(p, 'best_flow', { iterations: 260, seed: 21 })
+  assert.ok(res.ok, `净空问题可解:${res.reason ?? ''}`)
+  assert.ok(res.after.affinityIn < res.before.affinityIn, '设计偏差要下降')
+  // 解完衣柜长边前至少 30in(允许比标准 36 略紧,但必须能开门)
+  const wd = res.project.placements.find((x) => x.id === 'wd')
+  const others = res.project.placements.filter((x) => x.id !== 'wd')
+  const southDepth = sideFreeDepthIn(
+    wd,
+    wd.y < 24 + ft(5) ? 's' : 'n',
+    others.map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h })),
+    [],
+  )
+  assert.ok(southDepth >= 30, `衣柜开门侧要留出净空(got ${Math.round(southDepth)}in)`)
+}
+
+/* ---- circMetrics 开阔度:空房 > 摆满的房 ---- */
+{
+  const empty = circMetrics(analyzeCirculation(baseProject()))
+  const full = circMetrics(
+    analyzeCirculation(
+      baseProject({
+        placements: [
+          { id: 'pl1', kind: 'sofa', label: '沙发', x: 24 + ft(12), y: 24, w: ft(8), h: ft(3), rotation: 0, zoneId: 'z-2' },
+          { id: 'pl2', kind: 'cabinet', label: '柜', x: 24 + ft(13), y: 24 + ft(4.5), w: ft(7), h: ft(5.5), rotation: 0, zoneId: 'z-2' },
+        ],
+      }),
+    ),
+  )
+  assert.ok(empty.openIn > full.openIn, `空房更开阔(${empty.openIn} vs ${full.openIn})`)
+  assert.ok(empty.openIn > 40, `12ft 房间的开阔圆该有几英尺(got ${empty.openIn})`)
 }
 
 console.log('layout-solve-unit: all assertions passed')
