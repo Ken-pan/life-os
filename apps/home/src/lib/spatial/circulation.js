@@ -231,7 +231,7 @@ export function buildCirculationBase(project) {
       base[r * cols + c] = 1
     }
   }
-  return { cols, rows, minX, minY, base, zoneOf, gates, zones }
+  return { cols, rows, minX, minY, base, zoneOf, gates, zones, walls }
 }
 
 /**
@@ -574,14 +574,20 @@ export function analyzeCirculation(project, opts = {}) {
     }
     const nx = minX + (narrow % cols) * GRID_PX
     const ny = minY + (((narrow / cols) | 0)) * GRID_PX
+    // 亚格精化:栅格 BFS 的宽度只有 12in 分辨率(格距×2),「只剩 24 英寸」
+    // 实际可能是 19-29 —— 在窄点邻域对真实几何(家具矩形+墙线)重算精确间隙。
+    // 精化后其实够宽(≥次通道)的是量化伪影,不报。
+    const exactIn = exactWidthIn(nx, ny, g.rects, g.walls ?? [])
+    const finalIn = Math.round(Math.min(widthIn + GRID_IN * 2, Math.max(exactIn, 6)))
+    if (finalIn >= CLEARANCE.tight) return
     perZone.set(z.id, {
       x: nx,
       y: ny,
-      widthIn: Math.round(widthIn),
+      widthIn: finalIn,
       zoneId: z.id,
       nameZh: z.nameZh,
       // 「拓宽通道」是废话 —— 得说清楚挪哪件、挪多少
-      blockers: blockersAt(nx, ny, widthIn, rects),
+      blockers: blockersAt(nx, ny, finalIn, rects),
     })
   })
   const bottlenecks = [...perZone.values()].sort((a, b) => a.widthIn - b.widthIn)
@@ -600,6 +606,51 @@ export function analyzeCirculation(project, opts = {}) {
       usedRatio: areaSqft > 0 ? round2((areaSqft - freeSqft) / areaSqft) : 0,
     },
   }
+}
+
+/**
+ * 瓶颈点的精确通道宽(英寸):对真实几何(家具矩形面 + 墙面)取间隙,
+ * 不受 6in 栅格量化。窄点邻域采样取最大 —— 真实路径会走缝隙正中,
+ * 格心不一定在正中。墙按中心线减半厚(与栅格化的 WALL_HALF_IN 同源)。
+ * @param {number} x 瓶颈点(px)
+ * @param {number} y
+ * @param {Array<{x:number,y:number,w:number,h:number}>} rects
+ * @param {Array<{a:{x:number,y:number},b:{x:number,y:number}}>} walls
+ */
+function exactWidthIn(x, y, rects, walls) {
+  const clearAt = (px, py) => {
+    let d = Infinity
+    for (const rc of rects) {
+      const dx = Math.max(rc.x - px, 0, px - (rc.x + rc.w))
+      const dy = Math.max(rc.y - py, 0, py - (rc.y + rc.h))
+      d = Math.min(d, Math.hypot(dx, dy))
+    }
+    const p = { x: px, y: py }
+    for (const w of walls) {
+      d = Math.min(d, Math.max(0, distToSegment(p, w.a, w.b) - WALL_HALF_IN * PX_PER_IN))
+    }
+    return d
+  }
+  // 窄格中心到缝隙正中最多差半格 + 对角(~4.5in),采样环要密到能落在正中
+  let best = 0
+  for (const rIn of [0, 1.5, 3, 4.5, 6]) {
+    const r = rIn * PX_PER_IN
+    for (const [ox, oy] of rIn === 0
+      ? [[0, 0]]
+      : [
+          [r, 0],
+          [-r, 0],
+          [0, r],
+          [0, -r],
+          [r, r],
+          [-r, -r],
+          [r, -r],
+          [-r, r],
+        ]) {
+      best = Math.max(best, clearAt(x + ox, y + oy))
+    }
+  }
+  return (best * 2) / PX_PER_IN
 }
 
 /**

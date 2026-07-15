@@ -28,7 +28,8 @@ payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 | `attrs.measuredWIn` / `attrs.measuredHIn` | LiDAR 实测平面脚印（英寸，与落盘时 w/h 一致）。w/h 之后可被用户拖改，这两个是不动的真值，网页端「恢复实测」靠它 |
 | `attrs.elevIn` | LiDAR 实测底面离地高度（英寸，2026-07 加法式）。省略 = 落地；≥5cm 才导出（吊柜/挂墙电视/窗式空调…）。网页端叠放判定（桌下柜不算撞、on_top_of/under 关系）靠它 |
 | `attrs.confidence` | RoomPlan 识别置信度 `high\|medium\|low` |
-| `attrs.colorHex` | 主色 `#RRGGBB`（设备端抓拍图 k-means，VLM 识别后覆盖） |
+| `attrs.colorHex` | 主色 `#RRGGBB`（设备端抓拍图 k-means；网页端拉取时若有 ≥2 个方位照片会用 **CIELAB 分量中位数聚合**覆盖——单视角白平衡漂移拽不动结果，2026-07-15） |
+| `attrs.colorSpreadE` | 多视角主色离散度（ΔE76，网页端派生）：>12 = 光线不稳，这件的颜色别太当真（能力18 的分维置信度） |
 | `attrs.photoPath` | 家具抓拍图（最佳一张）桶内路径；网页端拉取后换成本地 `attrs.photoRef`（IndexedDB），`photoPath` 不落地 |
 | `attrs.photoHash` | 最佳抓拍图的感知哈希（dHash，16 位 hex；2026-07-15）。**网页端拉取照片时派生**（iPhone 不发），跨扫描身份匹配的外观特征——尺寸抖动的柜子靠它认回来（汉明 ≤10 强加分、≥26 轻罚不否决），见 `spatial/photo-hash.js` |
 | `attrs.photos[]` | 多视角证据包：`{ path, azimuthDeg }`，按方位分 4 桶每桶最佳、分数降序（第一张 = photoPath 那张）；桶内定名 `obj-{id}-{k}.jpg`；网页端逐张换成 `photos[].photoRef` |

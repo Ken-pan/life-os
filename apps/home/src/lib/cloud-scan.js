@@ -28,6 +28,8 @@ import {
   mergeContainerBindings,
 } from './spatial/container-scan.js'
 import { dhashFromBlob } from './spatial/photo-hash.js'
+import { aggregateLabs, dominantLabFromBlob } from './spatial/color-lab.js'
+import { getPhotoBlob } from './photo-store.js'
 
 export { validateScanPayload, buildProjectFromScan }
 
@@ -163,7 +165,37 @@ export async function resolveScanPhotos(payload, onProgress) {
     },
   )
   await Promise.all(workers)
+
+  // 3) 主色多视角聚合(能力8):iOS 的单张 k-means 会跟着白平衡漂 ——
+  //    ≥2 个方位的照片各提主色转 CIELAB 取分量中位数,一个偏色视角
+  //    拽不动结果;spreadE 大 = 光线不稳,颜色别太当真。失败静默保留原值。
+  await refineFurnitureColors(payload)
   return { total: jobs.length, failed }
+}
+
+/** @param {any} payload 就地更新 attrs.colorHex / attrs.colorSpreadE */
+async function refineFurnitureColors(payload) {
+  const h = payload?.homeos
+  for (const o of [...(h?.placements ?? []), ...(h?.fixtures ?? [])]) {
+    const refs = (o?.attrs?.photos ?? []).map((p) => p?.photoRef).filter(Boolean)
+    if (refs.length < 2) continue
+    try {
+      const labs = []
+      for (const ref of refs) {
+        const blob = await getPhotoBlob(ref)
+        if (!blob) continue
+        const lab = await dominantLabFromBlob(blob)
+        if (lab) labs.push(lab)
+      }
+      if (labs.length < 2) continue
+      const agg = aggregateLabs(labs)
+      if (!agg) continue
+      o.attrs.colorHex = agg.hex
+      o.attrs.colorSpreadE = agg.spreadE
+    } catch {
+      /* 颜色是增强特征,单件失败不拖垮拉取 */
+    }
+  }
 }
 
 /** 往回翻多少次扫描找柜内数据。柜内测量是低频动作,8 次早够覆盖 */

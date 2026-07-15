@@ -122,6 +122,29 @@ function baseProject(overrides = {}) {
   ok('瓶颈宽度 < 30in', bn && bn.widthIn < CLEARANCE.tight, `got=${bn?.widthIn}`)
 }
 
+// ---- 瓶颈亚格精化:21in 的缝要报 21,不是栅格化的 24 ----
+{
+  // 沙发贴北墙(3ft 深),柜子顶到南墙,中间缝隙恰 21in(63px)且横贯全宽
+  const gapPx = 21 * 3
+  const sofaH = ft(3)
+  const p = baseProject({
+    placements: [
+      { id: 'pl1', kind: 'sofa', label: '沙发', x: 24 + ft(12), y: 24, w: ft(8), h: sofaH, rotation: 0, zoneId: 'z-2' },
+      { id: 'pl2', kind: 'cabinet', label: '柜', x: 24 + ft(13), y: 24 + sofaH + gapPx, w: ft(7), h: ft(10) - 3 - (sofaH + gapPx) / 36 * 3, rotation: 0, zoneId: 'z-2' },
+    ],
+  })
+  // 柜子高度手算容易错,直接按剩余空间铺满:从缝隙下沿到南墙
+  p.placements[1].h = 24 + ft(10) - (24 + sofaH + gapPx) - 6
+  const r = analyzeCirculation(p)
+  const bn = r.bottlenecks.find((b) => b.nameZh === '客厅')
+  ok('21in 缝隙报出瓶颈', Boolean(bn))
+  ok(
+    '精化后宽度 ≈21in(±2),不是 12in 栅格的整倍数恭维',
+    bn && Math.abs(bn.widthIn - 21) <= 2,
+    `got=${bn?.widthIn}`,
+  )
+}
+
 // ---- 家具与墙之间的缝隙:绕得开 → 不是瓶颈(此前误报) ----
 {
   // 书桌离北墙 1ft(12in 缝),但桌子两侧都是开阔地,人不会去钻那条缝
