@@ -118,6 +118,9 @@ struct HomeOSProject: Codable {
         var rotation: Int   // 0 | 90 | 180 | 270
         var zoneId: String?
         var attrs: ObjectAttrs?
+        /// 公寓自带、钉死(优化副本才带;iPhone 扫描不发,可选字段编码时省略)。
+        /// 设备端「现实核对」用它:钉死件没扫到不算「消失」
+        var fixed: Bool?
     }
 
     struct Fixture: Codable {

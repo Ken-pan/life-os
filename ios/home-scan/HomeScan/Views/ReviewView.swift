@@ -43,13 +43,67 @@ struct ReviewView: View {
                         }
                     }
 
-                    Section("家具与设施(实测尺寸)") {
+                    if let rc = model.realityCheck {
+                        Section {
+                            let unchanged = rc.recognized.filter { !$0.moved }.count
+                            let moved = rc.recognized.filter(\.moved)
+                            Label(
+                                "认出 \(rc.recognized.count) 件(\(unchanged) 件原位)",
+                                systemImage: "checkmark.seal"
+                            )
+                            ForEach(moved, id: \.scanPlacementId) { r in
+                                Label(
+                                    String(format: "「%@」挪了 %.1f ft", r.label, r.movedFt),
+                                    systemImage: "arrow.left.arrow.right"
+                                )
+                                .font(.footnote)
+                            }
+                            if !rc.added.isEmpty {
+                                Label(
+                                    "新发现 \(rc.added.count) 件:\(rc.added.map(\.label).joined(separator: "、"))",
+                                    systemImage: "plus.circle"
+                                )
+                                .font(.footnote)
+                            }
+                            if !rc.missing.isEmpty {
+                                Label(
+                                    "没扫到:\(rc.missing.joined(separator: "、"))",
+                                    systemImage: "questionmark.circle"
+                                )
+                                .font(.footnote)
+                                .foregroundStyle(.orange)
+                            }
+                            if rc.possiblySame > 0 {
+                                Text("\(rc.possiblySame) 件证据不足没敢认,先按新件处理")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        } header: {
+                            Text("现实核对")
+                        } footer: {
+                            Text("已对齐永久户型(残差 \(Int(rc.registeredCm ?? 0))cm)。认出的家具直接用了你起的名字;「没扫到」可能是被挡住,不影响上传。")
+                        }
+                    }
+
+                    Section {
                         ForEach(p.placements, id: \.id) { pl in
                             row(name: pl.label, w: pl.w, h: pl.h)
+                                .contextMenu {
+                                    // RoomPlan 认错类别时当场改,不用等网页端
+                                    ForEach(Self.kindChoices, id: \.kind) { c in
+                                        Button(c.label) {
+                                            model.correctPlacement(id: pl.id, kind: c.kind, label: c.label)
+                                        }
+                                    }
+                                }
                         }
                         ForEach(p.fixtures, id: \.id) { fx in
                             row(name: "\(fx.label)(固定)", w: fx.bounds.w, h: fx.bounds.h)
                         }
+                    } header: {
+                        Text("家具与设施(实测尺寸)")
+                    } footer: {
+                        Text("类别认错了?长按那一行直接改。")
                     }
 
                     if !p.viewpoints.isEmpty {
@@ -80,6 +134,15 @@ struct ReviewView: View {
             }
         }
     }
+
+    /// 长按改类别的候选(kind 必须在网页 PLACEMENT_KINDS 词表内)
+    static let kindChoices: [(kind: String, label: String)] = [
+        ("cabinet", "柜"), ("shelf", "架子"), ("wire_rack", "金属置物架"),
+        ("table", "桌"), ("coffee_table", "茶几"), ("desk", "书桌"),
+        ("chair", "椅"), ("office_chair", "办公椅"),
+        ("sofa", "沙发"), ("armchair", "单人沙发"), ("bed", "床"),
+        ("tv", "电视"), ("washer", "洗衣机"), ("dryer", "烘干机"),
+    ]
 
     private func summary(_ p: HomeOSProject) -> String {
         var parts = [

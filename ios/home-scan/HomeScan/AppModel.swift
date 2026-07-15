@@ -125,11 +125,44 @@ final class AppModel {
         convertedProject = projection.project
         objectPhotoFiles = projection.objectPhotos
         photoFiles = scene.poses.map(\.photoFileURL)
+        runRealityCheck()
         route = .reviewing
-        // 落盘:从这一刻起,断网/被杀都不丢这次扫描(上传成功才清)。
-        // 后台拷,几十张照片 ~0.2s,别卡预览页出场
+        persistPending()
+    }
+
+    /// 现实核对结果(预览页「现实核对」区;nil = 没有户型副本或配准没过门)
+    var realityCheck: RealityCheck.Result?
+
+    /// 扫描 → 与永久户型比对:认出的换真名,分类进 realityCheck
+    @MainActor
+    private func runRealityCheck() {
+        realityCheck = nil
+        guard var project = convertedProject,
+              let home = CanonicalHomeCache.load(),
+              let rc = RealityCheck.run(scan: project, home: home) else { return }
+        RealityCheck.adoptLabels(into: &project, result: rc)
+        convertedProject = project
+        realityCheck = rc
+    }
+
+    /// 预览页里改类别(RoomPlan 认错时长按修正),改完重新落盘
+    @MainActor
+    func correctPlacement(id: String, kind: String, label: String) {
+        guard var project = convertedProject,
+              let i = project.placements.firstIndex(where: { $0.id == id }) else { return }
+        project.placements[i].kind = kind
+        project.placements[i].label = label
+        convertedProject = project
+        persistPending()
+    }
+
+    /// 落盘:从转换完成起,断网/被杀都不丢这次扫描(上传成功才清)。
+    /// 后台拷,几十张照片 ~0.2s,别卡预览页出场
+    @MainActor
+    private func persistPending() {
+        guard let project = convertedProject else { return }
         let snapshot = (
-            scanId: scanId, project: projection.project, photos: photoFiles,
+            scanId: scanId, project: project, photos: photoFiles,
             objects: objectPhotoFiles, structure: structureJSON, model: modelFileURL
         )
         Task.detached(priority: .utility) {
@@ -159,6 +192,7 @@ final class AppModel {
         structureJSON = r.structureJSON
         modelFileURL = r.modelFileURL
         pendingScan = nil
+        runRealityCheck() // 落盘副本恢复后重算现实核对(采纳真名幂等)
         route = .reviewing
     }
 

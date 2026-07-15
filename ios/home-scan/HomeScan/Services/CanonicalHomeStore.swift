@@ -7,6 +7,8 @@ import Supabase
 struct CanonicalHome: Codable {
     var wallGraph: HomeOSProject.WallGraph
     var zones: [HomeOSProject.Zone]
+    /// 户型里的家具(带人性化名字/fixed/attrs)—— 设备端「现实核对」的比对基准
+    var placements: [HomeOSProject.Placement] = []
 }
 
 enum CanonicalHomeCache {
@@ -38,6 +40,7 @@ extension SupabaseService {
             struct Homeos: Decodable {
                 let wallGraph: HomeOSProject.WallGraph?
                 let zones: [HomeOSProject.Zone]?
+                let placements: [HomeOSProject.Placement]?
             }
         }
         do {
@@ -51,7 +54,11 @@ extension SupabaseService {
                 .execute()
                 .value
             if let h = rows.first?.payload.homeos, let wg = h.wallGraph {
-                let home = CanonicalHome(wallGraph: wg, zones: h.zones ?? [])
+                let home = CanonicalHome(
+                    wallGraph: wg,
+                    zones: h.zones ?? [],
+                    placements: h.placements ?? []
+                )
                 CanonicalHomeCache.save(home)
                 return home
             }
