@@ -77,6 +77,27 @@ describe('merchantBrandKey', () => {
     }
   })
 
+  it('resolves descriptors that never name the brand', () => {
+    // Robinhood Gold bills as a bare "Gold Annual Subscription" ($50/yr on the
+    // Robinhood card) — no brand token anywhere in the string.
+    expect(merchantBrandKey('Gold Annual Subscription')).toBe('robinhood')
+    expect(merchantBrandKey('CL *Chase Travel')).toBe('chase')
+  })
+
+  it('does not over-reach on the bare "Gold" descriptor', () => {
+    // Only the exact phrase is Robinhood; a restaurant that merely starts with
+    // "Gold" must not inherit the logo.
+    expect(merchantBrandKey('TST* 19 GOLD TAIWANESE RE')).toBeNull()
+    expect(merchantBrandKey('Gold Annual Subscription Renewal')).toBeNull()
+    expect(merchantBrandKey('Golden Corral')).toBeNull()
+  })
+
+  it('matches DoorDash with either separator the feeds use', () => {
+    expect(merchantBrandKey('DD *DOORDASH JAMBAJUIC')).toBe('doordash')
+    expect(merchantBrandKey('DD DOORDASH TIANFU')).toBe('doordash')
+    expect(merchantBrandKey('DOORDASH*ORDER')).toBe('doordash')
+  })
+
   it('keeps H Mart and H&M apart', () => {
     expect(merchantBrandKey('H Mart')).toBe('h-mart')
     expect(merchantBrandKey('HMART SEATTLE')).toBe('h-mart')

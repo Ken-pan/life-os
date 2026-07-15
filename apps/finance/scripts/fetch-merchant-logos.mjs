@@ -120,6 +120,11 @@ const SOURCES = {
   obsidian: { kind: 'simple', slug: 'obsidian' },
   todoist: { kind: 'simple', slug: 'todoist' },
   mta: { kind: 'simple', slug: 'mta' },
+  // 第三轮：账本里已有规则、之前缺图的
+  cursor: { kind: 'simple', slug: 'cursor' },
+  godaddy: { kind: 'simple', slug: 'godaddy' },
+  google: { kind: 'simple', slug: 'google' },
+  'uber-eats': { kind: 'simple', slug: 'ubereats' },
 
   // ── Wikimedia Commons（全彩官方标识，保持原色）───────────────────────
   amazon: { kind: 'wiki', file: 'Amazon icon.svg' }, // 符号版，方形下可读
@@ -156,6 +161,7 @@ const SOURCES = {
   kiehls: { kind: 'wiki', file: "Kiehl's SVG logo.svg" },
   daiso: { kind: 'wiki', file: 'ダイソー.svg' },
   'h-mart': { kind: 'wiki', file: 'H Mart logo.svg' },
+  panera: { kind: 'wiki', file: 'Panera Bread wordmark.svg' },
 
   // ── 官方 CDN ────────────────────────────────────────────────────────────
   'rocket-money': {
@@ -169,6 +175,19 @@ const SOURCES = {
     kind: 'png',
     url: 'https://www.chipotle.com/etc.clientlibs/cmgaemacs/clientlibs/clientlib-base/resources/apple-touch-icon-180x180.png',
   },
+  'paris-baguette': {
+    kind: 'png',
+    url: 'https://parisbaguette.com/wp-content/uploads/2024/04/cropped-paris-baguette-favicon-192x192.png',
+  },
+  // 只有 32px，在 28px 显示位上够用（视网膜下略软），但确实是官方「99」花环标识。
+  '99-ranch': { kind: 'png', url: 'https://www.99ranch.com/apple-touch-icon.png' },
+  // 查过但**不采用**：
+  // - westin：官网 favicon 是灰方块+黄条，根本不是标识
+  // - hungrypanda(43 笔)：官网那张是地图针 map-icon-y.png
+  // - king-county-metro：Commons 只有 RapidRide（旗下另一品牌）
+  // - mod-pizza：Commons 的 "Mod Logo.svg" 来路不明
+  // - rei / qfc / arcteryx / dicks / panda-express / supercuts：均无可用官方方形图
+  // 放错 logo 比留占位符更糟，宁缺毋滥。
   // 无自由版权矢量标识（Commons 查无）：chipotle / supercuts / united-airlines /
   // fantuan / hungrypanda / asian-family-market —— 一律回落中性占位符，不编造。
 }

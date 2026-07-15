@@ -48,7 +48,8 @@ const BRAND_RULES: Array<[RegExp, string]> = [
   [/^starbucks|^weixin\*shanghai starbu/i, 'starbucks'],
   [/^mcdonald/i, 'mcdonalds'],
   [/^chipotle/i, 'chipotle'],
-  [/^(dd \*|doordash|door dash)/i, 'doordash'],
+  // Feeds write DoorDash both ways: "DD *DOORDASH JAMBAJUIC" and "DD DOORDASH TIANFU".
+  [/^(dd[ *]+doordash|doordash|door dash)/i, 'doordash'],
   [/^uber ?eats/i, 'uber-eats'],
   [/^fantuan/i, 'fantuan'],
   [/^hungrypanda/i, 'hungrypanda'],
@@ -101,7 +102,13 @@ const BRAND_RULES: Array<[RegExp, string]> = [
   [/^rocket money/i, 'rocket-money'],
   [/^(bps\*)?bilt/i, 'bilt'],
   [/^robinhood/i, 'robinhood'],
+  // Robinhood Gold's $50/yr bills as a bare "Gold Annual Subscription" with no
+  // brand name at all — confirmed by the charge landing on the Robinhood card.
+  // Anchored end-to-end because the phrase is only unambiguous as a whole string.
+  [/^gold annual subscription$/i, 'robinhood'],
+  [/^(cl \*)?chase travel/i, 'chase'],
   [/^chase/i, 'chase'],
+  [/^panera/i, 'panera'],
 
   // ── 扩展批次 ────────────────────────────────────────────────────────────
   // 注意：短/通用词（gap、ross、x、lg、hp、mint、bolt）故意不做规则——它们会在
