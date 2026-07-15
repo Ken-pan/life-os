@@ -22,7 +22,31 @@ function featureSeedState(opts = {}) {
   const yesterday = localDateOffset(-1)
   const twoDaysAgo = localDateOffset(-2)
   const now = Date.now()
-  const hourAgo = now - 60 * 60 * 1000
+
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+  const todayStart = startOfToday.getTime()
+
+  /**
+   * 「mins 分钟前」，但**保证仍落在今天**。
+   *
+   * app 判定「今日完成」是 `dateKeyOf(completedAt) === today`
+   * （`src/lib/domain/selectors.js`）。直接用 `now - mins` 在午夜后不足 mins 分钟时
+   * 会掉到昨天 → 任务不计入今日完成 → 庆祝卡不渲染 → `.today-closed` 永远等不到。
+   * seed 的最早偏移是 90 分钟，所以每天 **00:00–01:30 是必挂窗口**
+   * （2026-07-15 00:0x 连挂 3 次 CI，与被测代码无关）。
+   *
+   * 午夜后不足 mins 分钟时，把整组时间按比例压缩进 [todayStart, now]，
+   * **保持任务之间的先后顺序**（mins 越大越早）。
+   */
+  function minsAgoToday(mins) {
+    const t = now - mins * 60 * 1000
+    if (t >= todayStart) return t
+    const span = now - todayStart
+    return todayStart + Math.round((span * (90 - mins)) / 90)
+  }
+
+  const hourAgo = minsAgoToday(60)
 
   const todayOpen = !opts.allTodayDone
 
@@ -112,7 +136,7 @@ function featureSeedState(opts = {}) {
       tags: [],
       subtasks: [],
       completed: true,
-      completedAt: hourAgo - 30 * 60 * 1000,
+      completedAt: minsAgoToday(90),
       meta: { kind: 'micro' },
       createdAt: now,
       updatedAt: now,
@@ -154,7 +178,7 @@ function featureSeedState(opts = {}) {
       tags: [],
       subtasks: [],
       completed: todayOpen ? false : true,
-      completedAt: todayOpen ? null : hourAgo - 15 * 60 * 1000,
+      completedAt: todayOpen ? null : minsAgoToday(75),
       meta: { kind: 'habit' },
       createdAt: now,
       updatedAt: now,
