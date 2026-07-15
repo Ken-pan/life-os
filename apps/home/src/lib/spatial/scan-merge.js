@@ -593,6 +593,19 @@ const boxCenter = (o) => {
  *   added: number, removed: string[], possiblySame: number,
  * } }}
  */
+/**
+ * 「扫描出身」的家具/设施:有跨扫描永久身份,重扫时走 scan-identity 配对
+ * (保 id/保名字/合 attrs),而不是被当手录的顶掉。两种长相:
+ * - 直接拉取的扫描件:id 是 `scan-` 前缀
+ * - 服务端优化副本(replace 整包落地)里的:id 被重铸成 `pl-*`,
+ *   但带着只有扫描才有的实测 attrs
+ * @param {{ id: string, attrs?: any }} o
+ */
+const scanBorn = (o) =>
+  String(o.id).startsWith('scan-') ||
+  o.attrs?.measuredWIn != null ||
+  o.attrs?.confidence != null
+
 export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const replaceNearby = opts.replaceNearby !== false
   const identity = { unchanged: 0, moved: [], added: 0, removed: [], possiblySame: 0 }
@@ -614,7 +627,7 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
 
   /** 上次扫描件 → 身份匹配 → 新几何 + 旧 id/旧成果 */
   const reconcile = (prevAll, incoming) => {
-    const prevScan = (prevAll ?? []).filter((o) => String(o.id).startsWith('scan-'))
+    const prevScan = (prevAll ?? []).filter(scanBorn)
     const m = matchScanObjects(prevScan, incoming)
     const prevById = Object.fromEntries(prevScan.map((o) => [o.id, o]))
     const pairByNext = Object.fromEntries(m.pairs.map((p) => [p.nextId, p]))
@@ -651,6 +664,9 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
       return {
         ...n,
         id: prev.id, // 永久身份:重扫不换 id(已预先占位)
+        // 名字跟着身份走:用户/服务端起的名(「洗手台下柜」)不被新扫描的
+        // 通用名(「柜」)冲掉 —— 扫描认得出这是同一件,就没资格给它改名
+        label: prev.label ?? n.label,
         attrs: { ...prev.attrs, ...n.attrs },
       }
     })
@@ -664,7 +680,7 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   /** 丢掉上次扫描的;手录的按是否被实测件顶掉决定 */
   const keepLocal = (arr, incoming) =>
     (arr ?? []).filter((o) => {
-      if (String(o.id).startsWith('scan-')) return false
+      if (scanBorn(o)) return false
       if (!replaceNearby) return true
       const c = boxCenter(o)
       return !incoming.some((m) => {
@@ -700,7 +716,7 @@ export function describeReplacements(project, mapped) {
   const out = []
   const scan = (locals, incoming) => {
     for (const local of locals ?? []) {
-      if (String(local.id).startsWith('scan-')) continue
+      if (scanBorn(local)) continue
       const c = boxCenter(local)
       let best = null
       let bestD = Infinity

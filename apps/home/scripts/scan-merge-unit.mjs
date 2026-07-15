@@ -516,6 +516,40 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
     bad.homeos.placements.find((p) => p.id === 'pl-1').w === 300)
 }
 
+// ---- 名字跟着身份走 + 优化副本(pl-* id)的家具也有身份 ----
+{
+  const { mergeFurnitureWithIdentity } = await import('../src/lib/spatial/scan-merge.js')
+  // 服务端优化副本落地后的项目:id 是 pl-*(非 scan- 前缀),但带实测 attrs;
+  // 名字是人起的(「电视格子柜」),重扫不许改回「柜」
+  const prevProject = {
+    ...SAMPLE_508,
+    placements: [
+      { id: 'pl-10', kind: 'cabinet', label: '电视格子柜', x: 700, y: 300, w: 158, h: 59, rotation: 0,
+        attrs: { measuredWIn: 52.7, measuredHIn: 19.7, confidence: 'high', colorHex: '#FFFFFF' } },
+      // 手录的(无实测 attrs)仍是手录语义
+      { id: 'p-manual', kind: 'rug', label: 'Onyx', x: 100, y: 700, w: 60, h: 48, rotation: 0 },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  const incoming = {
+    placements: [
+      { id: 'scan-pl-3', kind: 'cabinet', label: '柜', x: 702, y: 302, w: 156, h: 60, rotation: 0,
+        attrs: { measuredWIn: 52, measuredHIn: 20, confidence: 'high', colorHex: '#F8F8F8' } },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  const { project: p2, identity } = mergeFurnitureWithIdentity(prevProject, incoming)
+  const cab = p2.placements.find((p) => p.kind === 'cabinet')
+  ok('优化副本的 pl-* id 参与身份配对(不被当手录顶掉)', cab?.id === 'pl-10', cab?.id)
+  ok('自定义名字不被新扫描的通用名冲掉', cab?.label === '电视格子柜', cab?.label)
+  ok('几何仍取新扫描', cab?.w === 156 && cab?.x === 702)
+  ok('配对判原位', identity.unchanged === 1, JSON.stringify(identity))
+  ok('无实测 attrs 的手录件保留', p2.placements.some((p) => p.id === 'p-manual'))
+  ok('柜不重复出现', p2.placements.filter((p) => p.kind === 'cabinet').length === 1)
+}
+
 // ---- 没分区的扫描 ----
 {
   const m = mapScanIntoLayout(SAMPLE_508, { zones: [], placements: [], fixtures: [], viewpoints: [] })
