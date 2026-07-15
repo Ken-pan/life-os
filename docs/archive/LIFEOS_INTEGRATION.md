@@ -169,7 +169,7 @@ Finance→Planner、Music↔Planner、Finance→AI 等；待 INTG.EVENTS.1.5 稳
 | ------------- | ----------------------------------------- |
 | Identity 验收 | `./scripts/verify-life-os-identity-p0.sh` |
 | SQL           | `./scripts/supabase-sql.sh`               |
-| 部署          | [`NETLIFY.md`](./NETLIFY.md)              |
+| 部署          | [`NETLIFY.md`](../NETLIFY.md)              |
 
 ---
 

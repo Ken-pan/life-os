@@ -1,7 +1,7 @@
 # LifeOS Shared Boundaries
 
 > 跨 Surface 产品系统边界（Web/PWA + future iOS native）
-> 关联文档：[`LIFEOS_NATIVE_READINESS.md`](./LIFEOS_NATIVE_READINESS.md), [`LIFEOS_P0_PR_PLAN.md`](./LIFEOS_P0_PR_PLAN.md), [`LIFEOS_CONTRACTS_P0.md`](./LIFEOS_CONTRACTS_P0.md), [`LIFEOS_P1_PREP.md`](./LIFEOS_P1_PREP.md), [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md)
+> 关联文档：[`LIFEOS_NATIVE_READINESS.md`](../LIFEOS_NATIVE_READINESS.md), [`LIFEOS_P0_PR_PLAN.md`](./LIFEOS_P0_PR_PLAN.md), [`LIFEOS_CONTRACTS_P0.md`](./LIFEOS_CONTRACTS_P0.md), [`LIFEOS_P1_PREP.md`](./LIFEOS_P1_PREP.md), [`LIFEOS_INTEGRATION_ROADMAP.md`](./LIFEOS_INTEGRATION_ROADMAP.md)
 > 文档入口：[`README.md`](./README.md)
 
 ---
@@ -163,7 +163,7 @@ apps/*                      ← web apps import theme；native 不 import theme
 ## 相关文件
 
 - P0 契约类型：[`LIFEOS_CONTRACTS_P0.md`](./LIFEOS_CONTRACTS_P0.md)
-- Native 机会与 future types：[`LIFEOS_NATIVE_READINESS.md`](./LIFEOS_NATIVE_READINESS.md)
+- Native 机会与 future types：[`LIFEOS_NATIVE_READINESS.md`](../LIFEOS_NATIVE_READINESS.md)
 - PR 计划：[`LIFEOS_P0_PR_PLAN.md`](./LIFEOS_P0_PR_PLAN.md)
 - P1 pilot 准备：[`LIFEOS_P1_PREP.md`](./LIFEOS_P1_PREP.md)
 - UI presentation map：[`LIFEOS_UI_CONTRACTS.md`](./LIFEOS_UI_CONTRACTS.md)

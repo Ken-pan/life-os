@@ -161,7 +161,7 @@ Planner 消费 → 完成 habit / 任务
 | Identity 验收    | `./scripts/verify-life-os-identity-p0.sh`    |
 | SQL 执行         | `./scripts/supabase-sql.sh`                  |
 | Auth redirect 源 | `apps/finance/supabase/config.toml` `[auth]` |
-| 部署矩阵         | [`NETLIFY.md`](./NETLIFY.md)                 |
+| 部署矩阵         | [`NETLIFY.md`](../NETLIFY.md)                 |
 
 ---
 

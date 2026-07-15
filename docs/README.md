@@ -2,7 +2,7 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后核对：** 2026-07-13（全量文档检查：清理过时导出 · 修 PaperOS 迁出死链 · 收缩冗余）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后核对：** 2026-07-14（新增 AIOS 第七 app 分卷 · 同步 07-14 发货到 SHIPPED · 对齐 last_verified）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
@@ -13,20 +13,22 @@
 | Now  | **PLNR.SCHED.0** · **GYMS.SUB.5** · **FINC.PURCHASE.6** · **PAPR.UI**（独立仓库） | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
 | Next | FINC.SYNC.1b · PLNR.CORE.4 · HOME.PROJ.7 · PLNR.UIUX.0 · PLNR.ATTACH.0    | [`roadmap/apps/`](./roadmap/apps/README.md)                      |
 
-**2026-07-09 已验收：** Phase 6 **PORT.GROWTH.4b-H / HOME.PROJ.6a** · Portal UI 走查 **P-1–P-12** — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
-**2026-07-09 已验收：** Phase 0–4 批次 — FINC.CORE.3 · PORT.GROWTH.4b-M · PORT.GROWTH.6 · PLNR.CORE.2 · GYMS.CORE.0/GYMS.EVENTS.1 · INTG.EVENTS.1b — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-14 已验收：** AIOS.20–25 跨 app 打通 · GYMS.VOL.6/6a · GYMS.READY.8/WARMUP.9 · Finance payment_day · Music 推荐闭环 · 全线 DS 走查收敛 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-13 已验收：** GYMS.SUB.5 收割 · PLNR.SCHED.0 E2E 复绿 · FINC.SYNC.1b · PLNR.CORE.4 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-09 已验收：** Phase 0–6 批次（PORT.GROWTH.4b-H / HOME.PROJ.6a · Portal UI 走查 P-1–P-12 等）— 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
 > **协作模型（2026-07-12 起）：** 单分支，无 agent 专属 worktree — 见 [`AGENTS.md`](../AGENTS.md) §Git policy · 执行分线 [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
 
-**六 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
+**七 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)
 
-## 六 app + 插件（一览）
+## 七 app + 插件（一览）
 
 | App / 插件                          | 层级                  | 文档                                                                       |
 | ----------------------------------- | --------------------- | -------------------------------------------------------------------------- |
 | Planner · Fitness · Finance · Music | 生产四站              | [`roadmap/apps/`](./roadmap/apps/README.md)                                |
 | Portal                              | 启动器                | [`roadmap/apps/portal.md`](./roadmap/apps/portal.md)                       |
 | Home                                | 实验第六站            | [`roadmap/apps/home.md`](./roadmap/apps/home.md)                           |
+| AIOS                                | 实验第七站（本地优先，原生 Mac app） | [`roadmap/apps/aios.md`](./roadmap/apps/aios.md)             |
 | Finance OS Sync                     | Chrome 扩展（非 app） | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md#f-p1) · `apps/finance/extension` |
 
 ## 文档地图（单人团队四层）
@@ -91,9 +93,10 @@ npm run test:design-catalog:snapshots    # 80 pixel baselines
 
 | 类型          | 文档位置                                                                 |
 | ------------- | ------------------------------------------------------------------------ |
-| 共享包        | `packages/{contracts,sync,theme,platform-web,design-tokens}/README.md`   |
+| 共享包        | `packages/{contracts,sync,theme,platform-web,design-tokens,mcp-server}/README.md` |
 | 生产 + Portal | `apps/{planner,fitness,finance,music,portal}/README.md`                  |
 | Home 实验     | `apps/home/` · [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0) |
+| AIOS 实验     | `apps/aios/README.md` · [`roadmap/apps/aios.md`](./roadmap/apps/aios.md) |
 | App 专属证据  | `apps/*/docs/`（非全局计划真源）                                         |
 
 ## 根目录旧文件名

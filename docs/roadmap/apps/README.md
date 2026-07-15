@@ -1,11 +1,11 @@
-# 六 App Roadmap 分卷
+# 七 App Roadmap 分卷
 
 > **Hub 真源：** [`../../LIFEOS_ROADMAP.md`](../../LIFEOS_ROADMAP.md) §Now / §Next / §推荐执行顺序
 > **本目录：** 各 app **产品向**排期细节（能力表 · 实现锚点 · 验收命令）
 > **跨站主线：** [`../INTEGRATION.md`](../INTEGRATION.md) · [`../GROWTH.md`](../GROWTH.md)
 > **E2E 证据：** [`../../qa/e2e-issues.md`](../../qa/e2e-issues.md)
 
-**脑暴日期：** 2026-07-09 · **复核：** 2026-07-12 · **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md)
+**脑暴日期：** 2026-07-09 · **复核：** 2026-07-14（新增 AIOS 第七分卷）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md)
 
 执行顺序以 **hub §推荐执行顺序** 为准；下文不重复 Wave 全文。
 
@@ -21,6 +21,7 @@
 | `G-P*`           | Portal  | Growth 跨站；`G-P4`–`G-P6` ✅                                                              |
 | `H-P*`           | Home    | Integration `H-P1–H-P5` 见 INTEGRATION                                                     |
 | `H-W*`           | Home    | 空间编辑主线（墙图三步编辑器）≠ `H-P*`；[home-spatial-editor.md](./home-spatial-editor.md) |
+| `AIOS.*`         | AIOS    | 本地优先 AI 助手（原生 Mac app）；[aios.md](./aios.md)                                     |
 
 | APP3     | App                    | Workspace             | Legacy v1（勿在新 ticket 使用）               |
 | -------- | ---------------------- | --------------------- | --------------------------------------------- |
@@ -31,6 +32,7 @@
 | **MUSC** | Music                  | `music-os`            | `M-*`                                         |
 | **PORT** | Portal / Growth        | `portal`              | `G-*`                                         |
 | **HOME** | Home                   | `home-os`             | `H-P*` · `H-W*` → `HOME.SPATIAL.*`            |
+| **AIOS** | AIOS 本地 AI 助手      | `aios-os`             | —（2026-07-13 新建，无 legacy）               |
 | **INTG** | Integration            | —                     | `I-*`                                         |
 
 **E2E 问题码：** Fitness 端口冲突 **`QA-GYMS-0`**（legacy `F-0` · ~~`QA-FITN-0`~~；≠ Finance `FINC.*`）。
@@ -67,17 +69,18 @@
 | Music   | 生产   | MUSC.PIPE.5 ✅ · 维护 · MUSC.PIPE.4 按需            | [music.md](./music.md)                                                    |
 | Portal  | 启动器 | 维护 · UI 走查 P-1–P-12 ✅（走查序号，非 hub ticket） | [portal.md](./portal.md)                                                  |
 | Home    | 实验   | **HOME.PROJ.7** 多项目切换 · HOME.SPATIAL.0–5 ✅    | [home.md](./home.md)                                                      |
+| AIOS    | 实验/本地优先 | 高速迭代中（AIOS.1–25）· Portal 接入待研判       | [aios.md](./aios.md)                                                      |
 | PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |
 
 ## 跨站集成矩阵（只读 / 事件）
 
-|                               | Planner | Fitness          | Finance | Music    | Portal             | Home     |
-| ----------------------------- | ------- | ---------------- | ------- | -------- | ------------------ | -------- |
-| **读 `core_*`**               | ✅      | ✅               | ✅      | ✅       | ✅                 | ✅       |
-| **`life_events` 生产**        | —       | ✅ GYMS.EVENTS.1 | ✅      | —        | —                  | —        |
-| **`life_events` 消费**        | ✅      | —                | —       | —        | 角标 PORT.GROWTH.2 | —        |
-| **Portal 摘要 PORT.GROWTH.4** | ✅ 任务 | ✅ 训练          | ✅ 结余 | ✅ Music | ✅ Home            | —        |
-| **业务数据云**                | ✅      | ✅               | ✅      | ✅       | —                  | ❌ local |
+|                               | Planner | Fitness          | Finance | Music    | Portal             | Home     | AIOS          |
+| ----------------------------- | ------- | ---------------- | ------- | -------- | ------------------ | -------- | ------------- |
+| **读 `core_*`**               | ✅      | ✅               | ✅      | ✅       | ✅                 | ✅       | ✅ AIOS.20    |
+| **`life_events` 生产**        | —       | ✅ GYMS.EVENTS.1 | ✅      | —        | —                  | —        | ✅ AIOS.21    |
+| **`life_events` 消费**        | ✅      | —                | —       | —        | 角标 PORT.GROWTH.2 | —        | —             |
+| **Portal 摘要 PORT.GROWTH.4** | ✅ 任务 | ✅ 训练          | ✅ 结余 | ✅ Music | ✅ Home            | —        | ❌ 未接入     |
+| **业务数据云**                | ✅      | ✅               | ✅      | ✅       | —                  | ❌ local | ✅ 本地优先+云只读 |
 
 ## 已知阻塞（排期前必读）
 

@@ -56,6 +56,13 @@ Svelte + Finance React       → theme/brand 数据 + 各栈薄壳；或 ui-reac
 
 各 app **`sync.js` 引擎**（表语义不同）、**`nav.js` 内容**、**`state.svelte.js`**、**`iconRegistry.js` 图标集**（仅共享 context key）、**`supabaseTables.js`**、recommendation scoring、业务行级 UI（TaskRow / TxnRow / TrackRow）。
 
+**反向规则 —— 单 app 私有壳层不进 `packages/theme`（2026-07-14 立）：** 共享包只放
+**≥2 个 app 真正共用**的样式。踩过的坑：`music-shell.css`（5601 行、选择器全是
+`.music-app` / `.now-playing-*` / `.mini-player-*` 等 music 专属、消费者只有 music
+一个）从初始 commit 起就躺在 `packages/theme`，占了共享 theme **59%** 的体量，
+谁维护 theme 都得先趟过它 —— 已迁回 `apps/music/src/music-shell.css`（theme
+9442→3841 行）。**判据：数一下消费者；只有 1 个就该放回那个 app。**
+
 ---
 
 ## 已共享薄包装（勿误提取）

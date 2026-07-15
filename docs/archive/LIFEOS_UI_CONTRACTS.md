@@ -69,7 +69,7 @@
 | ----------------- | -------------------------------------------------------- |
 | `SegControlModel` | `.seg`, `.seg-scroll`, `.seg-chips` / app token variants |
 
-IME guard: **web-only**, not part of Seg contract — see [`INPUT_IME.md`](./INPUT_IME.md).
+IME guard: **web-only**, not part of Seg contract — see [`INPUT_IME.md`](../INPUT_IME.md).
 
 ---
 

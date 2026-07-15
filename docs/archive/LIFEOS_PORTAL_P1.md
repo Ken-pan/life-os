@@ -30,7 +30,7 @@
 | 决策         | 建议                                           | 理由                                       |
 | ------------ | ---------------------------------------------- | ------------------------------------------ |
 | 框架         | **SvelteKit**（`apps/portal` 或 `apps/home`）  | 与 Planner/Fitness/Music 一致；静态 deploy |
-| 部署         | Netlify 新站 `homeos-ken` → `home.kenos.space` | 对齐 [`NETLIFY.md`](./NETLIFY.md) 四站模式 |
+| 部署         | Netlify 新站 `homeos-ken` → `home.kenos.space` | 对齐 [`NETLIFY.md`](../NETLIFY.md) 四站模式 |
 | Auth         | 同 Supabase project + `life_os_auth`           | INTG.IDENTITY.0 已统一                                |
 | 样式         | `@life-os/theme`                               | 视觉一致                                   |
 | 身份 API     | `core_profiles` + `core_user_app_settings`     | INTG.IDENTITY.0 已建                                  |

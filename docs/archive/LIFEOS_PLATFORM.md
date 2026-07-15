@@ -102,14 +102,14 @@ apps/*                 ← 禁止互引
 | Fitness | coach/progression      | app-only |
 | Web     | IME guard, Dexie keys  | web-only |
 
-完整矩阵：[`LIFEOS_NATIVE_READINESS.md`](./LIFEOS_NATIVE_READINESS.md)
+完整矩阵：[`LIFEOS_NATIVE_READINESS.md`](../LIFEOS_NATIVE_READINESS.md)
 
 ---
 
 ## 类型与 UI 映射
 
-- **契约白名单：** [`LIFEOS_CONTRACTS.md`](./LIFEOS_CONTRACTS.md)（源码 `packages/contracts/src/`）
-- **iOS future：** [`LIFEOS_NATIVE_READINESS.md`](./LIFEOS_NATIVE_READINESS.md)
+- **契约白名单：** [`LIFEOS_CONTRACTS.md`](../LIFEOS_CONTRACTS.md)（源码 `packages/contracts/src/`）
+- **iOS future：** [`LIFEOS_NATIVE_READINESS.md`](../LIFEOS_NATIVE_READINESS.md)
 
 ---
 

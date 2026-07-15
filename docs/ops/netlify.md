@@ -17,6 +17,8 @@
 | portal-ken    | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://portal.kenos.space  | 启动器   |
 | homeos-ken    | `apps/home`       | `npm run build -w home-os`    | `apps/home/build`    | https://home.kenos.space    | **实验** |
 
+> **AIOS 云端只读版（非上表六站，命名不同）：** `aios-kenos.netlify.app`，`npm run build -w aios-os`（`VITE_AIOS_CLOUD=1`）。AIOS 是本地优先原生 Mac app，云端仅登录后查看已同步对话/记忆/图片的**只读查看器**，无自定义 `kenos.space` 子域。详见 [`../roadmap/apps/aios.md`](../roadmap/apps/aios.md)。
+
 **Base directory 留空**（repo 根目录 `npm install`）。
 
 各 app 的 `netlify.toml` 含 **ignore build**：仅当该 app 或 `packages/*` 变更时触发。

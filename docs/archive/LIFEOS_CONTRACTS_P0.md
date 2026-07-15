@@ -36,7 +36,7 @@
 
 | Type                       | 文档位置                     | 原因                      |
 | -------------------------- | ---------------------------- | ------------------------- |
-| `WidgetSnapshot`           | [`LIFEOS_NATIVE_READINESS.md`](./LIFEOS_NATIVE_READINESS.md) | 等 iOS MVP                |
+| `WidgetSnapshot`           | [`LIFEOS_NATIVE_READINESS.md`](../LIFEOS_NATIVE_READINESS.md) | 等 iOS MVP                |
 | `LiveActivitySession`      | 同上                         | ActivityKit 未定型        |
 | `WorkoutSessionSummary`    | 同上                         | HealthKit 未定型          |
 | `PlaybackState`            | 同上                         | AVFoundation 未定型       |

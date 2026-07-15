@@ -6,6 +6,21 @@
 
 > **PaperOS 证据链接说明（2026-07-12）：** 下方历史条目中的 `qa/paperos/*`、`archive/paperos/*` 证据文件已随 PaperOS 迁出至独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库不再保留。相关行保留为历史记录，链接已去激活。
 
+## 2026-07-14（AIOS 跨 app 打通 · GYMS 自动调节 · Finance payment_day · 全线 DS/走查收敛）
+
+| 主线    | 发货项 / 里程碑 | 证据 |
+| ------- | --------------- | ---- |
+| AIOS    | **AIOS.20–25** 第七 app 接入 Life OS：读 `core_*` 今日快照/财务/待办注入系统提示 · 经 `life_events` 收件箱写 Planner · 早晨简报原生通知 · MCP 客户端(HTTP) · 可编辑 Canvas · 对话后自动记忆萃取 | `25d619b4` · `075789f1` · `da16e23b` · `0f050cc9` · `c304af0d` · `bdfa7fcd` · [`apps/aios.md`](./apps/aios.md) |
+| Fitness | **GYMS.VOL.6 + GYMS.BW.7** 每周肌群容量仪表盘 + 体重趋势 · **GYMS.VOL.6a** 分数容量科学性修正 · **GYMS.READY.8 + GYMS.WARMUP.9** Readiness 自动调节建议 + 热身坡道 · **GYMS.FIX** 今日推荐轮换 + 日历移动端溢出 | `fb988ca4` · `79be79b0` · `fd447af1` · `8bd5f106` |
+| Finance | **payment_day** 信用卡实际扣款日 / 提前还款建模 · 页头迁共享 `LifeOsAppBar` · UI/UX 走查修复 · 全页面终检修复 | `5e2d8b9f` · `c60e96bd` · `85156a2b` · `8db05048` |
+| Music   | 推荐行为闭环通电（`recommendation_events` 在线学习回读）· 沉浸播放改覆盖式 overlay · 歌词补全全自动化 · mini player 移动端吸底 dock · 品牌色收敛 Tier 2–4 · UIUX 走查 | `02938780` · `c422c686` · `b9304113` · `1455b11f` · `34cc0c61` · `9f3b08f7` |
+| Planner | 快速添加自然语言解析 + 快速处理收窄 + 浅色侧栏 · UIUX 走查修复 | `aadc5fb2` · `3ce2ceab` |
+| DS/Theme | 中性激活态上升共享原语 `.seg-tone-calm` / `.nav-tone-calm`（opt-in）· 浮层边缘定位 + 内联展开共享原语 · 滚动条基线上升共享层 · settings 内容全局左对齐 | `ce7d6e19` · `fd342cef` · `7e9a2628` · `f0b324b5` · `24ffdf2e` |
+| CI 🔴→🟢 | **修复 master CI 长红（design-catalog job）** —— 根因两层：① `f0b324b5`「危险按钮重做」把 `.btn-danger` 底色改为 `color-mix()` tint，浏览器 computed 值变成 `color(srgb … / 0.08)` 语法，而 a11y 助手 `parseRgb` 只认 `rgb()` → 返回 null → `contrastRatio` 返回 **0.00:1 假失败**（btn-danger 真实对比度 **5.04:1，本就达标**）；② a11y 先挂导致 **snapshots 步骤从未执行**，掩盖了 `f0b324b5` 滚动条 `scrollbar-gutter: stable` 造成的 82 张基线过期（1440→1430px）。修：a11y 助手补 `color(srgb)` 解析 + **沿祖先链合成半透明背景**（对比度本就该这么量）；全部 98 张基线在 canonical docker 重生成 | `tests/visual/design-catalog.a11y.helpers.ts` · 数学对已知真值自检（黑白 21:1 · 50% 黑合成白=127）· **CI 容器内实测 smoke 213 / a11y 48 / snapshots 98 全绿** |
+| DS/Catalog | **补覆盖：Modal + ExplainPanel 两个 showcase**（`modal.css` 是核心原语却 0 覆盖；`explain-panel` 是 07-14 刚上升的共享原语，上线即裸奔）· 新增 16 张像素基线 | `ModalShowcase.svelte` · `ExplainPanelShowcase.svelte` · `.catalog-doc-preview--modal` 收容 fixed 覆盖层 · 浏览器实测 ExplainPanel 展开/aria-expanded 契约 |
+| DS/Catalog | **showcase 列表收敛为单一真源** —— `MATRIX_SHOWCASES`/`APPS`/`MODES` 原硬编码在 `catalogNav.js` + `helpers.ts` + `spec.ts` **三处**（加一个 showcase 要改 5~6 处，漏改不报错只静默少跑）；现 helpers 从 catalog 自身注册表派生、spec 从 helpers 导入。`SNAPSHOT_DEFAULT_STATE` 手维护表**整个删除**改为派生（核对 9/9 与原值吻合 → 既有基线 **0 churn**） | `tests/visual/design-catalog.helpers.ts` · 验证：只改 `catalogNav.js` → 测试自动从 182 收集到 214 |
+| DS/Theme | **`music-shell.css` 迁回 apps/music**（5601 行 · 占共享 theme 59% · 消费者仅 music 一个 · 属初始 commit 的遗留摆放）—— theme 9442→3841 行（−59%）；正文与移动前**逐字节 0 差异**；`design-system.css` 文件头修正（自称「三端」实为 10 个消费者）+ 补边界规则 | `packages/theme/package.json` 去 `./music-shell.css` 导出 · music build/check 0 error · design-catalog **181 passed** · 浏览器实测 241 条 shell 规则生效、自定义媒体查询 `(--life-os-desktop)` 正常 |
+
 ## 2026-07-13（GYMS.SUB.5 收割 · PLNR.SCHED.0 E2E 复绿）
 
 | 主线    | 发货项 / 里程碑 | 证据 |
