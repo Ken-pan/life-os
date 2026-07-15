@@ -152,6 +152,9 @@ struct ScanView: View {
                 }
             }
         }
+        // 扫描要举着手机好几分钟,息屏会直接打断 ARSession —— 全程保持常亮
+        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
     }
 }
 

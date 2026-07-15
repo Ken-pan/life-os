@@ -14,5 +14,8 @@ struct UploadView: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
+        // 照片几十张逐张传,息屏会把 App 挂起打断上传 —— 上传期间保持常亮
+        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
+        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
     }
 }
