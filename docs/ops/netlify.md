@@ -1,6 +1,6 @@
 # Netlify 部署说明
 
-**最后与代码同步：** 2026-07-10
+**最后与代码同步：** 2026-07-15
 
 **Planner Paper API：** 函数目录在 repo 根 `netlify.toml` → `apps/planner/netlify/functions`（非 `apps/planner/netlify.toml` 内的相对路径 alone）。生产 `GET /api/paper/today` 无 token → **401**（2026-07-10）。
 
@@ -17,13 +17,24 @@
 | portal-ken    | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://portal.kenos.space  | 启动器   |
 | homeos-ken    | `apps/home`       | `npm run build -w home-os`    | `apps/home/build`    | https://home.kenos.space    | **实验** |
 
-> **AIOS 云端只读版（非上表六站，命名不同）：** `aios-kenos.netlify.app`，`npm run build -w aios-os`（`VITE_AIOS_CLOUD=1`）。AIOS 是本地优先原生 Mac app，云端仅登录后查看已同步对话/记忆/图片的**只读查看器**，无自定义 `kenos.space` 子域。详见 [`../roadmap/apps/aios.md`](../roadmap/apps/aios.md)。
+> **AIOS 云端只读版（命名不同，但接线方式与上表一致）：** `aios-kenos.netlify.app`（site id `5bfa64b2-7108-479d-b9e2-45f9c4d9f791`），package directory `apps/aios`，`npm run build -w aios-os`（`VITE_AIOS_CLOUD=1` 由 `apps/aios/netlify.toml` 注入）。AIOS 是本地优先原生 Mac app，云端仅登录后查看已同步对话/记忆/图片的**只读查看器**，无自定义 `kenos.space` 子域（代码里 `aios.kenos.space` 的 production URL 目前无 DNS，不解析）。详见 [`../roadmap/apps/aios.md`](../roadmap/apps/aios.md)。
 
 **Base directory 留空**（repo 根目录 `npm install`）。
 
 各 app 的 `netlify.toml` 含 **ignore build**：仅当该 app 或 `packages/*` 变更时触发。
+**watch 列表必须是依赖闭包**（含传递依赖，如 `platform-web` → `contracts`），漏一个 → 那个包的改动不会重建此站，静默落后。
 
 Push 到 `life-os` 的 `master` 分支 → Netlify 自动构建对应 Site。
+
+> **⚠️ 2026-07-15 修复：`homeos-ken` 与 `aios-kenos` 此前从未接 Git**，`build_settings.repo_url` 为 null、历史 deploy 的 `commit_ref` 全是 null —— push 到 master 对它们毫无作用，生产静默停在上次手动 CLI 部署的时间点（发现时 home 落后 48 个 commit / 2 天）。两站现已按上表方式接线。
+>
+> **接线要点：** 用 API 改接线时，`updateSite` 的 **`build_settings` key 会被静默忽略**（返回 200 但不生效），必须写在 **`repo`** key 里；且必须设 `package_path: apps/<app>`（`base` 留空），否则 `apps/<app>/netlify.toml` 根本不会被读到。
+>
+> **体检（新站上线后务必做一次）：**
+> ```bash
+> npx netlify api getSite --data '{"site_id":"<id>"}' | grep -o '"repo_url":"[^"]*"'
+> # 为 null = 没接 Git = push 不会上线
+> ```
 
 ### 本地验证
 
