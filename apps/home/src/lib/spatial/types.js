@@ -240,6 +240,8 @@
  * @property {Rect} bounds
  * @property {0 | 90 | 180 | 270} [rotation]
  * @property {PlacementAttrs} [attrs]
+ * @property {boolean} [fixed] 公寓自带、钉死(马桶/冰箱/内嵌橱柜…):
+ *   扫描配对时几何一律以本地为准,扫不到也不消失,不参与「被顶掉」
  */
 
 /**
@@ -306,6 +308,9 @@
  * @property {string} [zoneId]
  * @property {PlacementAttrs} [attrs]
  * @property {WallAnchor} [wallAnchor] 与最近墙面的实测关系;见 {@link WallAnchor}
+ * @property {boolean} [fixed] 公寓自带、钉死(洗衣机/烘干机/内嵌柜/窗式空调…):
+ *   扫描永远动不了它(几何以本地为准、扫不到也不消失、不被顶掉);
+ *   UI 上结构锁定时挪/转/删都被拦,解锁结构编辑才能动
  */
 
 /**

@@ -30,6 +30,7 @@
     getBrowseFloorPlan,
     isOpeningDisabled,
     isStructureLocked,
+    isPlacementPinned,
     isWallGraphMode,
     getLastDoorStyle,
     getLastWindowStyle,
@@ -1528,6 +1529,9 @@
         previewPlacements = project.placements ?? []
       }}
       onPlacementDrag={(id, pt, zoom, mods) => {
+        // 钉死的连预览都不跟手 —— 跟着拖再弹回去像 bug;不动 + 松手时
+        // commitPlacementMove 的报错说清原因
+        if (isPlacementPinned(id)) return
         const r = snapPlacementAt(id, pt, zoom, mods)
         if (!r) return
         snapGuides = r.snap.guides

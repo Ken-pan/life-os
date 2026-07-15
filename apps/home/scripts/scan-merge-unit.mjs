@@ -482,6 +482,9 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
         attrs: { confidence: 'high' } },
       // base 独有的:保留
       { id: 'pl-3', kind: 'chair', label: '椅', x: 150, y: 500, w: 60, h: 60, rotation: 0 },
+      // 公寓钉死的:另一次扫描置信度再高也没得融
+      { id: 'pl-9', kind: 'washer', label: '洗衣机', x: 130, y: 420, w: 80, h: 90, rotation: 0,
+        fixed: true, attrs: { confidence: 'low' } },
     ],
     fixtures: [],
     viewpoints: [],
@@ -493,6 +496,9 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
       { id: 'o-1', kind: 'cabinet', label: '柜', x: 190, y: 112, w: 240, h: 58, rotation: 0,
         attrs: { confidence: 'medium', heightIn: 36 } },
       { id: 'o-2', kind: 'sofa', label: '沙发', x: 292, y: 302, w: 238, h: 102, rotation: 0,
+        attrs: { confidence: 'high' } },
+      // 洗衣机在 other 帧里(整体 +80)且「测得」更大、位置漂了 20px、置信度 high
+      { id: 'o-9', kind: 'washer', label: '洗衣机', x: 230, y: 425, w: 90, h: 95, rotation: 0,
         attrs: { confidence: 'high' } },
     ],
     fixtures: [],
@@ -510,6 +516,10 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   ok('融合:原位沙发位置取中点', Math.abs(sofa.x + sofa.w / 2 - 325.5) <= 1.5 && report.averaged >= 1,
     `cx=${sofa.x + sofa.w / 2}`)
   ok('融合:独有件保留', homeos.placements.some((p) => p.id === 'pl-3'))
+  const fixedWasher = homeos.placements.find((p) => p.id === 'pl-9')
+  ok('融合:钉死的洗衣机几何纹丝不动(高置信度也不采)',
+    fixedWasher.x === 130 && fixedWasher.w === 80 && fixedWasher.attrs.confidence === 'low',
+    JSON.stringify(fixedWasher))
   // 对不齐的两次扫描不硬融
   const bad = fuseScans(base, { ...other, wallGraph: { pxPerFt: 36, margin: { x: 0, y: 0 }, vertices: [], edges: [] } })
   ok('融合:没墙就不融,原样返回', bad.report.registration.status === 'needs_rescan' &&
@@ -548,6 +558,50 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   ok('配对判原位', identity.unchanged === 1, JSON.stringify(identity))
   ok('无实测 attrs 的手录件保留', p2.placements.some((p) => p.id === 'p-manual'))
   ok('柜不重复出现', p2.placements.filter((p) => p.kind === 'cabinet').length === 1)
+}
+
+// ---- 公寓钉死(fixed):扫描永远动不了、扫不到也不消失、不长第二台 ----
+{
+  const { mergeFurnitureWithIdentity } = await import('../src/lib/spatial/scan-merge.js')
+  const prevProject = {
+    ...SAMPLE_508,
+    placements: [
+      // 钉死 + 手录(无实测 attrs):洗衣机 —— 也要进配对池
+      { id: 'pl-22', kind: 'washer', label: '洗衣机', x: 300, y: 380, w: 81, h: 90, rotation: 0,
+        fixed: true },
+      // 钉死 + 扫描出身:内嵌下柜
+      { id: 'pl-3', kind: 'cabinet', label: '厨房下柜', x: 400, y: 800, w: 224, h: 78, rotation: 0,
+        fixed: true, attrs: { measuredWIn: 74.7, confidence: 'high' } },
+      // 钉死但这次没扫到
+      { id: 'pl-31', kind: 'air_purifier', label: '窗式空调', x: 1188, y: 604, w: 24, h: 78, rotation: 0,
+        fixed: true },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  const incoming = {
+    placements: [
+      // 扫描说洗衣机挪了约 3ft、还变大了 —— 对钉死的东西这只能是噪声
+      { id: 'scan-a', kind: 'washer', label: '洗衣机', x: 400, y: 390, w: 85, h: 92, rotation: 0,
+        attrs: { confidence: 'high', colorHex: '#EEEEEE' } },
+      { id: 'scan-b', kind: 'cabinet', label: '柜', x: 405, y: 803, w: 230, h: 80, rotation: 0,
+        attrs: { measuredWIn: 76.7, confidence: 'high' } },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  const { project: p2, identity } = mergeFurnitureWithIdentity(prevProject, incoming)
+  const washer = p2.placements.find((p) => p.kind === 'washer')
+  ok('钉死的洗衣机几何纹丝不动', washer?.x === 300 && washer?.w === 81 && washer?.id === 'pl-22',
+    JSON.stringify(washer))
+  ok('钉死件不报「挪过」', identity.moved.length === 0, JSON.stringify(identity.moved))
+  ok('扫描的 attrs 仍并进钉死件(照片/颜色不浪费)', washer?.attrs?.colorHex === '#EEEEEE')
+  const cab = p2.placements.find((p) => p.kind === 'cabinet')
+  ok('钉死的下柜几何/名字都不动', cab?.x === 400 && cab?.label === '厨房下柜')
+  ok('没扫到的钉死件不消失', p2.placements.some((p) => p.id === 'pl-31'))
+  ok('没扫到的钉死件不进 removed', !identity.removed.includes('窗式空调'),
+    JSON.stringify(identity.removed))
+  ok('洗衣机没长出第二台', p2.placements.filter((p) => p.kind === 'washer').length === 1)
 }
 
 // ---- 没分区的扫描 ----

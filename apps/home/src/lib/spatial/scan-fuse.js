@@ -60,6 +60,8 @@ export function fuseScans(baseHomeos, otherHomeos) {
     const otherById = Object.fromEntries(otherInBase.map((o) => [o.id, o]))
     const pairByNext = Object.fromEntries(m.pairs.map((p) => [p.nextId, p]))
     return (baseList ?? []).map((b) => {
+      // 公寓钉死的:base(整备好的副本)几何就是真值,另一次扫描没得融
+      if (b.fixed) return b
       const pair = pairByNext[b.id]
       if (!pair || pair.state === 'possibly_same') return b
       const o = otherById[pair.prevId]

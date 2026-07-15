@@ -627,7 +627,9 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
 
   /** 上次扫描件 → 身份匹配 → 新几何 + 旧 id/旧成果 */
   const reconcile = (prevAll, incoming) => {
-    const prevScan = (prevAll ?? []).filter(scanBorn)
+    // 钉死的(即使是手录、没实测 attrs)也进配对池:新扫描扫到同一台
+    // 洗衣机时应该被旧身份吸收(照片/attrs 并进来),而不是长出第二台
+    const prevScan = (prevAll ?? []).filter((o) => scanBorn(o) || o.fixed)
     const m = matchScanObjects(prevScan, incoming)
     const prevById = Object.fromEntries(prevScan.map((o) => [o.id, o]))
     const pairByNext = Object.fromEntries(m.pairs.map((p) => [p.nextId, p]))
@@ -654,6 +656,13 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         return { ...n, id: uniq(n.id) }
       }
       const prev = prevById[pair.prevId]
+      // 公寓钉死的(马桶/内嵌橱柜/洗衣机…):扫描认出是同一件就够了,
+      // 几何一律以本地为准 —— RoomPlan 的位置抖动对钉死的东西只能是噪声,
+      // 不许它把马桶挪了 3 寸再报一条「挪过」吓人
+      if (prev.fixed) {
+        identity.unchanged++
+        return { ...prev, attrs: { ...prev.attrs, ...n.attrs } }
+      }
       if (pair.state === 'same_unchanged') identity.unchanged++
       else {
         const entry = { label: n.label ?? n.kind, movedFt: pair.movedFt }
@@ -670,17 +679,26 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         attrs: { ...prev.attrs, ...n.attrs },
       }
     })
-    identity.removed.push(...droppedPrevIds.map((id) => prevById[id]?.label ?? id))
+    // 钉死的没扫到也不消失:公寓固定件不会自己走掉,只可能是这次没扫全
+    const outIds = new Set(out.map((o) => o.id))
+    out.push(...prevScan.filter((o) => o.fixed && !outIds.has(o.id)))
+    identity.removed.push(
+      ...droppedPrevIds.filter((id) => !prevById[id]?.fixed).map((id) => prevById[id]?.label ?? id),
+    )
     return out
   }
 
   const nextPlacements = reconcile(project.placements, mapped.placements)
   const nextFixtures = reconcile(project.fixtures, mapped.fixtures)
 
-  /** 丢掉上次扫描的;手录的按是否被实测件顶掉决定 */
-  const keepLocal = (arr, incoming) =>
-    (arr ?? []).filter((o) => {
+  /** 丢掉上次扫描的;手录的按是否被实测件顶掉决定;钉死的谁也顶不掉 */
+  const keepLocal = (arr, incoming) => {
+    const nextIds = new Set((incoming ?? []).map((m) => m.id))
+    return (arr ?? []).filter((o) => {
+      // 已被 reconcile 以同 id 收编(钉死件必然如此)—— 别留两份
+      if (nextIds.has(o.id)) return false
       if (scanBorn(o)) return false
+      if (o.fixed) return true
       if (!replaceNearby) return true
       const c = boxCenter(o)
       return !incoming.some((m) => {
@@ -688,6 +706,7 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         return Math.hypot(mc.x - c.x, mc.y - c.y) < REPLACE_DIST_PX
       })
     })
+  }
 
   const next = {
     ...project,
@@ -716,7 +735,7 @@ export function describeReplacements(project, mapped) {
   const out = []
   const scan = (locals, incoming) => {
     for (const local of locals ?? []) {
-      if (scanBorn(local)) continue
+      if (scanBorn(local) || local.fixed) continue
       const c = boxCenter(local)
       let best = null
       let bestD = Infinity
