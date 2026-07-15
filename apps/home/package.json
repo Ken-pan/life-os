@@ -28,6 +28,7 @@
     "test:container-scan": "node scripts/container-scan-unit.mjs",
     "test:layout-solve": "node scripts/layout-solve-unit.mjs",
     "test:events": "node scripts/event-derive-unit.mjs",
+    "test:photo-hash": "node scripts/photo-hash-unit.mjs",
     "test:cloud-scan": "node scripts/cloud-scan-unit.mjs",
     "test:circulation": "node scripts/circulation-unit.mjs",
     "test:scan-merge": "node scripts/scan-merge-unit.mjs",

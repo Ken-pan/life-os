@@ -85,6 +85,14 @@ export function scanObjectPhotoEntries(payload) {
           // 最佳一张兼容旧消费方:photoPath 对应的就是 photos[0]
           if (attrs.photoPath === ph.path) attrs.photoRef = ref
         },
+        // 最佳那张顺手算感知哈希(attrs.photoHash,加法式)——
+        // 跨扫描身份匹配的外观特征,尺寸抖动的柜子靠它认回来
+        assignHash:
+          attrs.photoPath === ph.path
+            ? (hash) => {
+                attrs.photoHash = hash
+              }
+            : undefined,
       })
     }
     // 没有 photos 数组的旧 payload:单图路径单独下载
@@ -93,6 +101,9 @@ export function scanObjectPhotoEntries(payload) {
         path: attrs.photoPath,
         assign: (ref) => {
           attrs.photoRef = ref
+        },
+        assignHash: (hash) => {
+          attrs.photoHash = hash
         },
       })
     }

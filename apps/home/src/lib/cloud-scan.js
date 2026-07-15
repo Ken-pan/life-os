@@ -27,6 +27,7 @@ import {
   resolveScanContainers,
   mergeContainerBindings,
 } from './spatial/container-scan.js'
+import { dhashFromBlob } from './spatial/photo-hash.js'
 
 export { validateScanPayload, buildProjectFromScan }
 
@@ -137,6 +138,11 @@ export async function resolveScanPhotos(payload, onProgress) {
       const blob = await resp.blob()
       const { ref } = await putPhoto(blob)
       job.assign(ref)
+      // 感知哈希(外观特征,scan-identity 用):失败置 null 不拖垮下载
+      if (job.assignHash) {
+        const hash = await dhashFromBlob(blob)
+        if (hash) job.assignHash(hash)
+      }
     } catch {
       failed += 1
     }

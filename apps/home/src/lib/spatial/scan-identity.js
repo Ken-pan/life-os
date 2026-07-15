@@ -13,6 +13,7 @@
  * - possibly_same   证据不足以裁决(第二候选太接近)—— 保守当新件,但报出来
  * - new / removed   新增 / 消失
  */
+import { hammingHex, HASH_SAME_MAX, HASH_DIFF_MIN } from './photo-hash.js'
 
 /** 尺寸差在 4″ 或 15% 以内才可能是同一件(LiDAR 重复测量的正常抖动) */
 const SIZE_TOL_PX = 12
@@ -69,6 +70,20 @@ function colorDist(a, b) {
   return Math.hypot(va[0] - vb[0], va[1] - vb[1], va[2] - vb[2])
 }
 
+/**
+ * 外观项(照片 dHash,attrs.photoHash,网页端拉取时算好):
+ * RoomPlan 对扫不全的柜子包围盒抖 7-28in,尺寸+位置分把同一件拆成
+ * 「消失+新增」 —— 但两次扫描里它的照片长得一样,靠这项认回来。
+ * 强像加大分;明显不像只轻罚(拍摄方位/光照会抬升汉明距离,不一票否决)。
+ */
+function hashBonus(a, b) {
+  const d = hammingHex(a?.attrs?.photoHash, b?.attrs?.photoHash)
+  if (d === null) return 0
+  if (d <= HASH_SAME_MAX) return 0.2
+  if (d >= HASH_DIFF_MIN) return -0.1
+  return 0
+}
+
 /** 0..1+bonuses;kind 不同但同族(样式精化翻转)可匹配,跨族一票否决 */
 function matchScore(prev, next) {
   let penalty = 0
@@ -94,6 +109,7 @@ function matchScore(prev, next) {
   const cd = colorDist(prev, next)
   if (cd !== null && cd <= 60) bonus += 0.15
   if (prev.attrs?.styleZh && prev.attrs.styleZh === next.attrs?.styleZh) bonus += 0.1
+  bonus += hashBonus(prev, next)
   return 0.45 * sizeScore + 0.45 * posScore + bonus - penalty
 }
 

@@ -30,6 +30,7 @@ payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 | `attrs.confidence` | RoomPlan 识别置信度 `high\|medium\|low` |
 | `attrs.colorHex` | 主色 `#RRGGBB`（设备端抓拍图 k-means，VLM 识别后覆盖） |
 | `attrs.photoPath` | 家具抓拍图（最佳一张）桶内路径；网页端拉取后换成本地 `attrs.photoRef`（IndexedDB），`photoPath` 不落地 |
+| `attrs.photoHash` | 最佳抓拍图的感知哈希（dHash，16 位 hex；2026-07-15）。**网页端拉取照片时派生**（iPhone 不发），跨扫描身份匹配的外观特征——尺寸抖动的柜子靠它认回来（汉明 ≤10 强加分、≥26 轻罚不否决），见 `spatial/photo-hash.js` |
 | `attrs.photos[]` | 多视角证据包：`{ path, azimuthDeg }`，按方位分 4 桶每桶最佳、分数降序（第一张 = photoPath 那张）；桶内定名 `obj-{id}-{k}.jpg`；网页端逐张换成 `photos[].photoRef` |
 | `homeos.storageZones[]` | 储藏区规划（加法式，2026-07）：仅 `server-optimized` 优化副本携带（iPhone 不发）；replace 模式拉取时随户型落地，`placementId` 引用同 payload 的 placement id |
 | `homeos.meta.scanScope` | `"full"`(缺省)/`"partial"`(2026-07 加法式)。partial = 房间更新:网页端合并时只动扫描 coverage(配准后的扫描分区多边形)里的家具,片外原封不动、不算「消失」;**只在配准过门时生效**,比例回退按 full 处理 |
