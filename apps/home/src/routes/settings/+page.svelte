@@ -29,6 +29,7 @@
   } from '$lib/auth.svelte.js'
   import { isSupabaseConfigured } from '$lib/supabase.js'
   import { toast } from '$lib/ui.svelte.js'
+  import CloudScanPicker from '$lib/components/CloudScanPicker.svelte'
 
   const themeOptions = [
     { value: 'auto', label: '跟随系统' },
@@ -280,6 +281,14 @@
       onchange={onImportLayout}
     />
   </SettingsRow>
+  {#if auth.user}
+    <SettingsStackBlock label="云端扫描">
+      <CloudScanPicker />
+    </SettingsStackBlock>
+    <p class="block-desc">
+      用 iPhone 上的 HomeScan(RoomPlan)扫描全屋后在这里拉取;将整包替换当前户型、家具与机位。
+    </p>
+  {/if}
   <SettingsActionRow
     label="恢复默认"
     desc="覆盖当前户型尺寸参数"

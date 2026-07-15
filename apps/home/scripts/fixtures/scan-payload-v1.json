@@ -1,0 +1,119 @@
+{
+  "formatVersion": 1,
+  "scanId": "0f9d2c1a-0000-4000-8000-fixture00001",
+  "homeos": {
+    "wallGraph": {
+      "pxPerFt": 36,
+      "margin": { "x": 24, "y": 24 },
+      "vertices": [
+        { "id": "v-1", "x": 24, "y": 24 },
+        { "id": "v-2", "x": 456, "y": 24 },
+        { "id": "v-3", "x": 456, "y": 384 },
+        { "id": "v-4", "x": 24, "y": 384 },
+        { "id": "v-5", "x": 744, "y": 24 },
+        { "id": "v-6", "x": 744, "y": 384 }
+      ],
+      "edges": [
+        { "id": "e-1", "a": "v-1", "b": "v-2", "exterior": true },
+        { "id": "e-2", "a": "v-2", "b": "v-5", "exterior": true },
+        { "id": "e-3", "a": "v-5", "b": "v-6", "exterior": true },
+        { "id": "e-4", "a": "v-6", "b": "v-3", "exterior": true },
+        { "id": "e-5", "a": "v-3", "b": "v-4", "exterior": true },
+        { "id": "e-6", "a": "v-4", "b": "v-1", "exterior": true },
+        { "id": "e-7", "a": "v-2", "b": "v-3" }
+      ]
+    },
+    "graphOpenings": [
+      {
+        "id": "op-1",
+        "edgeId": "e-7",
+        "offsetIn": 40,
+        "spanIn": 32,
+        "type": "door",
+        "style": "swing",
+        "swing": "in"
+      },
+      {
+        "id": "op-2",
+        "edgeId": "e-1",
+        "offsetIn": 30,
+        "spanIn": 36,
+        "type": "window",
+        "style": "sliding"
+      }
+    ],
+    "zones": [
+      {
+        "id": "z-1",
+        "nameZh": "卧室",
+        "polygon": [
+          { "x": 24, "y": 24 },
+          { "x": 456, "y": 24 },
+          { "x": 456, "y": 384 },
+          { "x": 24, "y": 384 }
+        ]
+      },
+      {
+        "id": "z-2",
+        "nameZh": "书房",
+        "polygon": [
+          { "x": 456, "y": 24 },
+          { "x": 744, "y": 24 },
+          { "x": 744, "y": 384 },
+          { "x": 456, "y": 384 }
+        ]
+      }
+    ],
+    "placements": [
+      {
+        "id": "pl-1",
+        "kind": "bed",
+        "label": "双人床",
+        "x": 60,
+        "y": 60,
+        "w": 180,
+        "h": 240,
+        "rotation": 0,
+        "zoneId": "z-1"
+      }
+    ],
+    "fixtures": [
+      {
+        "id": "fx-1",
+        "kind": "toilet",
+        "label": "马桶",
+        "bounds": { "x": 600, "y": 60, "w": 60, "h": 84 },
+        "rotation": 0
+      }
+    ],
+    "viewpoints": [
+      {
+        "id": "vp-1",
+        "x": 120,
+        "y": 320,
+        "heading": 30,
+        "fovDeg": 69.4,
+        "headingSource": "arkit",
+        "takenAt": "2026-07-14T20:00:00Z",
+        "camera": "iPhone 17 Pro",
+        "photoPath": "00000000-0000-4000-8000-user00000001/0f9d2c1a-0000-4000-8000-fixture00001/photo-1.jpg"
+      },
+      {
+        "id": "vp-2",
+        "x": 640,
+        "y": 200,
+        "heading": 270,
+        "fovDeg": 69.4,
+        "headingSource": "arkit"
+      }
+    ],
+    "meta": {
+      "id": "scan-fixture-1",
+      "nameZh": "测试扫描",
+      "scanWarnings": []
+    }
+  },
+  "raw": {
+    "structurePath": "00000000-0000-4000-8000-user00000001/0f9d2c1a-0000-4000-8000-fixture00001/structure.json"
+  }
+}

@@ -234,6 +234,10 @@
   <span class="graph-sel-title" class:graph-sel-title-compact={compact}>
     {viewpoint.label ?? '视角'}
     {#if !viewpoint.photoRef}<span class="vp-empty-tag">· 未挂照片</span>
+    {:else if viewpoint.headingSource === 'arkit'}
+      <span class="vp-exact-tag" title="来自 iOS 扫描时的 ARKit 相机位姿，与墙体同一坐标系 — 最可信"
+        >· AR 姿态</span
+      >
     {:else if viewpoint.headingSource === 'anchor'}
       <span class="vp-exact-tag" title="朝向由 VLM 认出的家具几何解出，未经罗盘 — 最可信"
         >· 朝向已定位</span

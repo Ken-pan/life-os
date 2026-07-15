@@ -2184,4 +2184,42 @@ export function importLayoutJson(raw) {
   }
 }
 
+/**
+ * 云端扫描替换前的旧项目(仅会话内存,刷新即失)。
+ * 扫描替换是整包破坏性操作,给一次「拉错了马上回去」的机会;
+ * 更持久的后悔药是拉取确认里提示的「先导出 JSON」。
+ * @type {SpatialProject | null}
+ */
+let cloudScanReplacedProject = null
+
+/**
+ * 应用一次云端扫描(HOME.SYNC.4)。project 由 cloud-scan.js 的
+ * buildProjectFromScan 组装,已是完整 SpatialProject —— 不走 importLayoutJson
+ * (那条路会丢 zones/placements/fixtures/viewpoints)。
+ * @param {SpatialProject} project
+ */
+export function applyCloudScan(project) {
+  cloudScanReplacedProject = S.projects[S.activeProjectId] ?? null
+  layoutUndoStack = []
+  layoutRedoStack = []
+  graphUndoStack = []
+  graphRedoStack = []
+  persistUndoStacks()
+  persistGraphUndoStacks()
+  setActiveProject(project)
+  toast('云端扫描已应用')
+}
+
+export function canUndoCloudScan() {
+  return cloudScanReplacedProject != null
+}
+
+export function undoCloudScan() {
+  if (!cloudScanReplacedProject) return
+  const prev = cloudScanReplacedProject
+  cloudScanReplacedProject = null
+  setActiveProject(prev)
+  toast('已还原扫描前的户型')
+}
+
 export { deserializeProject }

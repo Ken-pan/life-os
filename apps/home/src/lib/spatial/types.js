@@ -240,7 +240,8 @@
  * @property {string} [takenAt] ISO 时间
  * @property {string} [note]
  * @property {string} [camera] EXIF 机型
- * @property {'manual'|'exif'|'compass'|'anchor'|'solved'} [headingSource] 朝向/位置哪来的，按可信度：
+ * @property {'manual'|'exif'|'compass'|'anchor'|'solved'|'arkit'} [headingSource] 朝向/位置哪来的，按可信度：
+ *   **arkit** — iOS HomeScan 扫描时的 ARKit 相机位姿，厘米/度级，与扫描墙体同一坐标系 — 最可信。
  *   **solved** — 三边定位：≥2 件**固定设施**的已知尺寸 + 画面占宽 → 距离 → 交点解出机位与朝向。
  *     实测 ~32cm/7.2°（目录尺寸）、~11cm/1.75°（尺寸量准后）。见 spatial/localize.js。
  *   **anchor** — 只认出画面正中那件固定设施 → 朝向 = 机位→它；位置仍是分区中心。
