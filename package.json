@@ -51,7 +51,9 @@
     "test:design-catalog:snapshots:canonical": "bash scripts/design-catalog-snapshots-docker.sh",
     "test:design-catalog:all": "playwright test -c playwright.design-catalog.config.ts",
     "build:tokens": "node packages/design-tokens/scripts/build-css.mjs",
-    "validate:tokens": "node packages/design-tokens/scripts/validate-tokens.mjs"
+    "validate:tokens": "node packages/design-tokens/scripts/validate-tokens.mjs",
+    "ios:add": "node scripts/ios/add-ios.mjs",
+    "ios:device": "node scripts/ios/deploy-device.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

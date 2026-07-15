@@ -1,0 +1,9 @@
+{
+  "appId": "os.lifeos.music",
+  "appName": "MUSIC.OS",
+  "webDir": "build",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0d0d0e"
+  }
+}

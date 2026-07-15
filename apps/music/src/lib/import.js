@@ -76,7 +76,8 @@ export async function importAudioFiles(files, onProgress) {
 
     const albumKey = slugKey(`${artist}::${album}`)
 
-    const id = await hashFile(file)
+    const fileBuf = await file.arrayBuffer()
+    const id = await hashBuffer(fileBuf)
     const existing = await db.tracks.get(id)
     if (existing?.objectUrl) URL.revokeObjectURL(existing.objectUrl)
 
@@ -97,7 +98,9 @@ export async function importAudioFiles(files, onProgress) {
       lyrics: tags.lyrics || existing?.lyrics,
       fileName: file.name,
       words: [],
-      audioBlob: file,
+      // 物化为按值存储的 Blob：iOS 上直接存 File 会以底层临时文件引用入库，
+      // 选择器的临时拷贝被系统回收后 IndexedDB 读回的就是空 blob
+      audioBlob: new Blob([fileBuf], { type: file.type || 'audio/mpeg' }),
     }
     track.words = trackWords(track)
     await db.tracks.put(track)
@@ -545,9 +548,8 @@ async function readDuration(file) {
   })
 }
 
-/** @param {File} file */
-async function hashFile(file) {
-  const buf = await file.arrayBuffer()
+/** @param {ArrayBuffer} buf */
+async function hashBuffer(buf) {
   const digest = await crypto.subtle.digest('SHA-256', buf)
   return [...new Uint8Array(digest)]
     .map((b) => b.toString(16).padStart(2, '0'))

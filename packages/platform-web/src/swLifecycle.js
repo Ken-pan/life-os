@@ -9,6 +9,17 @@
  */
 
 /**
+ * Capacitor 原生壳（capacitor:// scheme）不支持也不需要 SW——资源已打包本地。
+ * 只做检测，不依赖 @capacitor/core：原生壳里 bridge 必定注入 window.Capacitor 全局。
+ */
+function isNativeShell() {
+  return (
+    typeof window !== 'undefined' &&
+    Boolean(/** @type {any} */ (window).Capacitor?.isNativePlatform?.())
+  )
+}
+
+/**
  * Register a service worker and manage the "new version is waiting" lifecycle:
  * activating the waiting worker (and the resulting page reload) is deferred
  * while the tab is hidden or `shouldDeferUpdate()` returns true (e.g. audio is
@@ -31,6 +42,7 @@ export function registerServiceWorker(options = {}) {
 
   if (
     !enabled ||
+    isNativeShell() ||
     typeof navigator === 'undefined' ||
     !('serviceWorker' in navigator) ||
     typeof document === 'undefined'

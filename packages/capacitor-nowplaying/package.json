@@ -1,0 +1,27 @@
+{
+  "name": "@life-os/capacitor-nowplaying",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Life OS Capacitor 插件：iOS 锁屏/控制中心 Now Playing 桥接 + 音频会话中断/路由事件",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "ios",
+    "Package.swift"
+  ],
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  }
+}

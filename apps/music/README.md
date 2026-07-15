@@ -18,6 +18,24 @@ npm install
 npm run dev
 ```
 
+## iOS 应用（Capacitor）
+
+同一套 Web 代码经 Capacitor 打包为原生 iOS 应用（`ios/`，SPM 模式，无需 CocoaPods）：
+
+- **真后台播放**：`UIBackgroundModes: audio` + `AVAudioSession(.playback)`，锁屏/切后台不再被 Safari 挂起（模拟器实测：锁屏后整曲播完）
+- **锁屏/控制中心/灵动岛控制 + 来电中断/拔耳机处理**：共享插件 [`@life-os/capacitor-nowplaying`](../../packages/capacitor-nowplaying)，`cap sync` 自动注册；Web 侧分支在 `src/lib/mediaSession.js`
+- 原生壳内自动跳过 service worker（`@life-os/platform-web/sw-lifecycle` 内建）
+
+平台级 iOS 工作流与新 app 接入见 [`docs/ops/ios.md`](../../docs/ops/ios.md)。
+
+```bash
+npm run ios:sync       # 构建 Web 产物并同步进原生工程
+npm run ios:open       # 在 Xcode 中打开（真机部署/签名）
+npm run ios:build:sim  # 命令行构建模拟器包
+```
+
+真机安装：`ios:open` 后在 Xcode 里选择自己的开发者账号签名，连接 iPhone 运行。
+
 ## 设计系统
 
 ```css

@@ -1,4 +1,10 @@
 import { browser } from '$app/environment';
+import {
+  isNativeShell,
+  nativeUpdateMediaSession,
+  nativeUpdatePosition,
+  bindNativeMediaHandlers,
+} from '@life-os/capacitor-nowplaying';
 
 /** Tell iOS/Safari this page is a media player (enables lock-screen + background routing). */
 export function declarePlaybackSession() {
@@ -27,6 +33,10 @@ function artworkForTrack(track) {
 
 /** @param {import('./types.js').Track | null | undefined} track @param {boolean} playing */
 export function updateMediaSession(track, playing) {
+  if (isNativeShell()) {
+    nativeUpdateMediaSession(track, playing);
+    return;
+  }
   if (!('mediaSession' in navigator)) return;
   if (!track) {
     navigator.mediaSession.metadata = null;
@@ -44,7 +54,12 @@ export function updateMediaSession(track, playing) {
 
 /** @param {HTMLAudioElement | null | undefined} audio */
 export function updatePositionState(audio) {
-  if (!audio || !('mediaSession' in navigator)) return;
+  if (!audio) return;
+  if (isNativeShell()) {
+    nativeUpdatePosition(audio);
+    return;
+  }
+  if (!('mediaSession' in navigator)) return;
   if (!('setPositionState' in navigator.mediaSession)) return;
   const duration = audio.duration;
   const position = audio.currentTime;
@@ -71,6 +86,11 @@ export function updatePositionState(audio) {
  * }} handlers
  */
 export function bindMediaSessionHandlers(handlers) {
+  if (isNativeShell()) {
+    // 只走原生命令通道，避免 WebKit 将来支持 mediaSession 后出现双重触发
+    bindNativeMediaHandlers(handlers);
+    return;
+  }
   if (!('mediaSession' in navigator)) return;
 
   const bind = (action, handler) => {

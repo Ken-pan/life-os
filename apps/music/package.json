@@ -16,19 +16,26 @@
     "qa:import": "node scripts/qa-import-e2e.mjs",
     "qa:rec-behavior": "node scripts/qa-recommendation-behavior.mjs",
     "test:e2e": "node scripts/qa-ui-flow.mjs",
+    "ios:sync": "npm run build && cap sync ios",
+    "ios:open": "cap open ios",
+    "ios:build:sim": "npm run ios:sync && xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json"
   },
   "devDependencies": {
-    "playwright": "^1.61.1",
+    "@capacitor/cli": "^8.4.2",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.68.0",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "playwright": "^1.61.1",
     "postcss-custom-media": "^12.0.1",
     "svelte": "^5.56.4",
     "svelte-check": "^4.7.1",
     "vite": "^8.1.0"
   },
   "dependencies": {
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
+    "@life-os/capacitor-nowplaying": "*",
     "@life-os/contracts": "*",
     "@life-os/platform-web": "*",
     "@life-os/sync": "*",
