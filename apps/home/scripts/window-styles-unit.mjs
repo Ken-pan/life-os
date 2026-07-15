@@ -22,6 +22,8 @@ import {
 } from '../src/lib/spatial/placements.js'
 import { furnitureSymbol } from '../src/lib/spatial/furniture-symbols.js'
 import { hydrateProject } from '../src/lib/spatial/model.js'
+import { renderFloorPlanSvg } from '../src/lib/spatial/render-svg.js'
+import { SAMPLE_508 } from '../src/lib/spatial/sample-508.js'
 
 assert.equal(WINDOW_STYLE_ORDER.length, 4)
 assert.equal(windowStyleLabel('casement'), '平开')
@@ -155,12 +157,35 @@ for (const s of WINDOW_STYLE_ORDER) {
 
 // Every catalogue entry resolves to a real symbol builder and every group is
 // reachable from the UI helper.
+// Onyx and Sard are hand-drawn artwork, not procedural glyphs: they carry their
+// own palette and deliberately opt out of the tint pipeline. Every rule below
+// that says "inherit your colour" is written for glyphs, so name the exception
+// here rather than let it pass by accident — their paths have no `furn-body`
+// class, so the inheritance assertion simply never matches them and would look
+// upheld while saying nothing. Their real invariants are asserted further down.
+const ART_KINDS = new Set(['dog_onyx', 'dog_sard'])
+
 const boxed = { x: 0, y: 0, w: 80, h: 60 }
 for (const [kind, spec] of Object.entries(PLACEMENT_KINDS)) {
   assert.ok(spec.w > 0 && spec.h > 0, `${kind}: bad size`)
-  const svg = furnitureSymbol(spec.symbol, boxed)
-  assert.ok(svg.length > 0, `${kind}: symbol '${spec.symbol}' produced nothing`)
-  assert.ok(!/NaN|undefined/.test(svg), `${kind}: bad symbol markup`)
+  const { body, detail } = furnitureSymbol(spec.symbol, boxed)
+  assert.ok(
+    body.length + detail.length > 0,
+    `${kind}: symbol '${spec.symbol}' produced nothing`,
+  )
+  assert.ok(!/NaN|undefined/.test(body + detail), `${kind}: bad symbol markup`)
+  if (ART_KINDS.has(kind)) continue
+  // The body inherits fill/stroke from the caller's <g> — that inheritance is
+  // what carries the scanned colour and the selected state onto the silhouette.
+  // A body that hard-codes either would go colour-blind and stop highlighting.
+  assert.ok(
+    !/<(rect|path|circle|ellipse)[^>]*class="furn-body"[^>]*\s(fill|stroke)=/.test(body),
+    `${kind}: body pins its own fill/stroke instead of inheriting`,
+  )
+  assert.ok(
+    !/fill="#/.test(body),
+    `${kind}: only the hand-drawn dogs may hard-code colours — everything else is tinted`,
+  )
 }
 assert.equal(
   placementKindsByGroup().flat().length,
@@ -212,9 +237,153 @@ assert.equal(placementSpec('shower').clearance, 24)
 // A ceiling fan's blades must clear 7ft.
 assert.ok(placementSpec('ceiling_fan').elev >= 84)
 
-// Tiny footprints drop the detail rather than drawing mud.
-assert.equal(furnitureSymbol('bed', { x: 0, y: 0, w: 10, h: 10 }), '')
-assert.equal(furnitureSymbol('nope', boxed), '')
+// Tiny footprints drop the detail rather than drawing mud, but keep the
+// silhouette: a shape stays legible well after its interior stops being.
+const small = furnitureSymbol('bed', { x: 0, y: 0, w: 10, h: 10 })
+assert.equal(small.detail, '', 'detail must drop out below the legibility floor')
+assert.ok(small.body.length > 0, 'the silhouette should survive a small footprint')
+// Below the body floor there is nothing honest left to draw.
+assert.deepEqual(furnitureSymbol('bed', { x: 0, y: 0, w: 6, h: 6 }), { body: '', detail: '' })
+assert.deepEqual(furnitureSymbol('nope', boxed), { body: '', detail: '' })
+assert.deepEqual(furnitureSymbol(undefined, boxed), { body: '', detail: '' })
+
+// Seating is why this module owns its outline: a chair whose body is the bare
+// footprint is the box-with-a-line this rewrite existed to kill. Assert the
+// silhouette is built from more than one piece (backrest + seat).
+for (const seat of ['chair', 'officeChair', 'sofa', 'loveseat', 'armchair']) {
+  const { body } = furnitureSymbol(seat, boxed)
+  const shapes = body.match(/class="furn-body/g) ?? []
+  assert.ok(shapes.length >= 2, `${seat}: silhouette is a single shape — reads as a box`)
+}
+
+// Hollow pieces must render hollow.
+//
+// This assertion used to be `body === ''`, which asserted the builder's *intent*
+// and passed while every one of these drew as a solid slab: an empty body makes
+// the caller fall back to a plain filled rect. Assert the marker that actually
+// reaches the DOM instead, and prove the renderer honours it below.
+for (const soft of ['rug', 'mat', 'petPen', 'rod']) {
+  const { body } = furnitureSymbol(soft, boxed)
+  assert.ok(body.length > 0, `${soft}: empty body falls back to a filled rect — the opposite`)
+  assert.ok(body.includes('furn-body-hollow'), `${soft}: must be hollow, floor shows through`)
+}
+
+// A pet pen sits below the ~5ft cut plane and you cannot walk through it, so its
+// enclosure is a SOLID outline. Dashed would say overhead-or-hidden — "step over
+// me" — which is the one thing a pen is not.
+{
+  const { body } = furnitureSymbol('petPen', boxed)
+  assert.ok(!/stroke-dasharray/.test(body), 'pet pen enclosure must not be dashed')
+  assert.ok(body.includes('<circle'), 'pet pen needs posts — a bare rect reads as a rug')
+}
+
+// Hollow is for barriers around floor, NOT for anything cage-shaped. A crate or
+// a bird cage is a container with its own base: it occupies the floor exactly
+// like a cabinet, and drawing it hollow would claim the room's floor runs
+// through it. The 54in wooden dog crate in this house is catalogued as
+// `cabinet` — keep every one of these solid.
+for (const container of ['cabinet', 'wardrobe', 'wireRack', 'cubeShelf', 'basket', 'shelf']) {
+  const { body } = furnitureSymbol(container, boxed)
+  assert.ok(
+    !body.includes('furn-body-hollow'),
+    `${container}: containers are solid — only a barrier around real floor is hollow`,
+  )
+}
+
+// End-to-end: the hollow marker has to survive into the rendered plan, and the
+// stylesheet has to actually unfill it. Either half alone is worthless.
+{
+  const project = hydrateProject({
+    ...SAMPLE_508,
+    placements: [
+      { id: 'p1', kind: 'pet_pen', label: '宠物围栏', x: 200, y: 200, w: 108, h: 108, rotation: 0 },
+    ],
+  })
+  const svg = renderFloorPlanSvg(project)
+  const style = svg.slice(svg.indexOf('<style>'), svg.indexOf('</style>'))
+  assert.ok(svg.includes('furn-body-hollow'), 'the pen lost its hollow marker on the way out')
+  assert.ok(style.includes('.furn-body-hollow{fill:none}'), 'nothing actually unfills a hollow body')
+}
+
+// The emitted stylesheet must survive the HTML parser.
+//
+// This style element sits inside the SVG, which is foreign content: style is not
+// a raw-text element there, so the first thing resembling a tag is parsed as an
+// element and **every rule after it is silently dropped**. A tag name written
+// inside a CSS comment once cost .placement-on and .placement-clash — furniture
+// still drew, so nothing looked broken; selection and the clash warning were just
+// quietly dead. Assert the sheet is free of angle brackets and that the states
+// that would vanish first are still in it.
+{
+  const svg = renderFloorPlanSvg(hydrateProject(SAMPLE_508), { interactive: true })
+  const style = svg.slice(svg.indexOf('<style>') + 7, svg.indexOf('</style>'))
+  const stray = style.match(/[<>]/)
+  assert.equal(
+    stray,
+    null,
+    `stylesheet contains '${stray?.[0]}' — every rule after it is dropped by the parser`,
+  )
+  for (const rule of ['.placement-item', '.placement-on', '.placement-clash', '.furn-body', '.furn-line']) {
+    assert.ok(style.includes(`${rule}{`), `stylesheet lost ${rule}`)
+  }
+  // Order is load-bearing: the tint feeds .placement-item through custom
+  // properties, so the states must come later to override it by cascade.
+  assert.ok(
+    style.indexOf('.placement-on{') > style.indexOf('.placement-item{'),
+    'selected state must come after .placement-item or the tint outranks it',
+  )
+  assert.ok(
+    style.indexOf('.placement-clash{') > style.indexOf('.placement-item{'),
+    'clash state must come after .placement-item or the tint outranks it',
+  )
+}
+
+// —— Onyx 和 Sard:唯一的成品画,规矩和别的符号相反 ——
+{
+  for (const [kind, which] of [
+    ['dog_onyx', 'shibaOnyx'],
+    ['dog_sard', 'shibaSard'],
+  ]) {
+    const { body } = furnitureSymbol(which, boxed)
+    // 自带多色:元素上的 fill 会盖过从 .placement-item 继承的染色,这是故意的。
+    assert.ok(/fill="#[0-9A-Fa-f]{6}"/.test(body), `${kind}: 画丢了自己的颜色`)
+    // 不描边:不挡住继承来的 stroke,每条 path 都会被描一圈,画就糊了。
+    assert.ok(body.includes('stroke="none"'), `${kind}: 没挡住继承的描边,画会被描糊`)
+    assert.ok(!body.includes('furn-body'), `${kind}: 画不该走 furn-body 那套染色`)
+  }
+
+  // 等比是硬要求:非等比会把狗压扁。给一个极端长条的框,scale 必须仍是单值。
+  const squished = furnitureSymbol('shibaOnyx', { x: 0, y: 0, w: 400, h: 40 }).body
+  const m = squished.match(/scale\(([-\d.]+)\)/)
+  assert.ok(m, '画必须走单一 scale —— scale(sx, sy) 就是在压狗')
+  // 压扁的框里,狗按高度缩,并在宽度上居中,而不是被抻宽。
+  // 容差 1e-5:系数按 5dp 输出(2dp 会把小尺寸的狗舍没,见 shiba-art.js 的 rs)。
+  const s = Number(m[1])
+  assert.ok(Math.abs(s - 40 / 480) < 1e-5, `等比缩放算错了:${s}`)
+  // 缩略图尺寸下狗不能被舍成 0 —— 那就是凭空消失。
+  const tiny = furnitureSymbol('shibaOnyx', { x: 0, y: 0, w: 3, h: 3 }).body
+  if (tiny) assert.ok(Number(tiny.match(/scale\(([-\d.]+)\)/)[1]) > 0, '小尺寸把狗缩没了')
+  const t = squished.match(/translate\(([-\d.]+) ([-\d.]+)\)/)
+  assert.ok(Number(t[1]) > 0, '窄边方向该留白居中,不该顶格')
+
+  // 两只必须真的不一样 —— 一黑一金就是它们的身份。
+  const onyx = furnitureSymbol('shibaOnyx', boxed).body
+  const sard = furnitureSymbol('shibaSard', boxed).body
+  assert.notEqual(onyx, sard, 'Onyx 和 Sard 画成了同一只')
+  assert.ok(sard.includes('#FBA455'), 'Sard 的金色没了')
+  assert.ok(onyx.includes('#473F38'), 'Onyx 的黑色没了')
+
+  // 画要能一路活到平面图里,并且带着自己的颜色。
+  const project = hydrateProject({
+    ...SAMPLE_508,
+    placements: [
+      { id: 'd1', kind: 'dog_onyx', label: 'Onyx', x: 300, y: 300, w: 66, h: 66, rotation: 0 },
+      { id: 'd2', kind: 'dog_sard', label: 'Sard', x: 400, y: 300, w: 66, h: 66, rotation: 90 },
+    ],
+  })
+  const svg = renderFloorPlanSvg(project)
+  assert.ok(svg.includes('#FBA455') && svg.includes('#473F38'), '两只狗的颜色没进平面图')
+}
 
 // createPlacement converts catalogue inches into plan px.
 const zones = []

@@ -5,6 +5,8 @@ import { polygonPointsAttr, zoneCentroid } from './zones.js'
 import { viewpointConePath, viewpointHandlePoint } from './viewpoints.js'
 import { wallStrokePx } from './wall-standards.js'
 import { furnitureSymbol } from './furniture-symbols.js'
+import { furnitureVars } from './furniture-tint.js'
+import { ART_SYMBOLS } from './shiba-art.js'
 import { PLACEMENT_KINDS } from './placements.js'
 import {
   isEditableWall,
@@ -200,9 +202,34 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .zone-chain{stroke:var(--graph-accent,#1d6b42);stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
  .zone-chain-vert{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;pointer-events:none}
  .zone-vertex-hit{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;cursor:grab;pointer-events:all}
- .fixture-item{fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1.1;cursor:help}
- .placement-item{fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1.2}
- .furn-line{fill:none;stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1;stroke-linejoin:round;opacity:.85;pointer-events:none}
+ /* NOTE: never write a raw angle bracket anywhere in this stylesheet, comments
+    included. This style element lives inside the SVG, which the HTML parser
+    treats as foreign content — style is NOT a raw-text element there, so the
+    first thing that looks like a tag is parsed as an element and every rule
+    after it silently vanishes. A stray tag name in a comment here cost the
+    selected and clash states once already. */
+ /* --furn-fill / --furn-stroke are set per placement from its scanned colour
+    (furniture-tint.js). Custom properties rather than an inline fill on purpose:
+    an inline fill would outrank .placement-clash / .placement-on below and eat
+    the warning and selected states. This way those classes still win normally. */
+ .fixture-item{fill:var(--furn-fill,var(--plan-furn,#c5ced8));stroke:var(--furn-stroke,var(--plan-furn-stroke,#8a929c));stroke-width:1.1;cursor:help}
+ .placement-item{fill:var(--furn-fill,var(--plan-furn,#c5ced8));stroke:var(--furn-stroke,var(--plan-furn-stroke,#8a929c));stroke-width:1.2}
+ /* Silhouettes carry no fill/stroke of their own — they inherit from the
+    .placement-item / .fixture-item group, which is what lets one group colour
+    every shape of a multi-part symbol at once. */
+ .furn-body{stroke-linejoin:round}
+ /* Above the cut plane, or walk-over: never read as a floor obstruction. */
+ .furn-body-overhead{fill-opacity:.3}
+ /* Seen-but-not-cut, and you can see the floor through it: a pet pen's
+    enclosure, a rug, a closet rod. The plan cut plane is ~5ft, so a 32in pen is
+    below it — drawn as a light SOLID outline, never poché-filled (that is
+    reserved for what the plane actually cuts) and never dashed (that would say
+    it is overhead, i.e. step right over it). The floor inside is still floor. */
+ .furn-body-hollow{fill:none}
+ /* Detail takes the piece's own stroke, not the group's: it must stay legible
+    on a tinted body (a mid-grey line on a dark sofa is an invisible line), and
+    it must not turn green-dashed with the outline when the piece is selected. */
+ .furn-line{fill:none;stroke:var(--furn-stroke,var(--plan-furn-stroke,#8a929c));stroke-width:1;stroke-linejoin:round;opacity:.85;pointer-events:none}
  .placement-on{stroke:var(--graph-accent,#1d6b42);stroke-width:2.5;stroke-dasharray:6 4;animation:plan-sel-pulse 1.15s ease-in-out infinite}
  .placement-clash{fill:var(--plan-danger-fill,#e9c4bc);stroke:var(--plan-danger,#a3341f);stroke-width:2}
  .placement-label{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
@@ -412,10 +439,17 @@ export function renderFloorPlanSvg(project, opts = {}) {
         w: turned ? f.bounds.h : f.bounds.w,
         h: turned ? f.bounds.w : f.bounds.h,
       }
+      const { body, detail } = furnitureSymbol(f.kind, box)
+      const vars = furnitureVars(f.attrs?.colorHex)
       parts.push(
         `<g transform="rotate(${rot} ${cx} ${cy})">`,
-        `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="2" class="fixture-item"><title>${esc(f.label)}</title></rect>`,
-        furnitureSymbol(f.kind, box),
+        `<g class="fixture-item"${vars ? ` style="${vars}"` : ''}>`,
+        // No silhouette of its own — a plain rect is the honest fallback.
+        body ||
+          `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="2" class="furn-body"/>`,
+        detail,
+        `<title>${esc(f.label)}</title>`,
+        `</g>`,
         `</g>`,
       )
     }
@@ -439,14 +473,24 @@ export function renderFloorPlanSvg(project, opts = {}) {
         w: turned ? p.h : p.w,
         h: turned ? p.w : p.h,
       }
-      const symbol = furnitureSymbol(PLACEMENT_KINDS[p.kind]?.symbol, box)
+      const symbol = PLACEMENT_KINDS[p.kind]?.symbol
+      const { body, detail } = furnitureSymbol(symbol, box)
+      const vars = furnitureVars(p.attrs?.colorHex)
+      // Hand-drawn pieces take their label *under* the footprint. Everything else
+      // is a flat glyph a name can sit on top of; stamping "Onyx" across a drawn
+      // face is just defacing it.
+      const art = ART_SYMBOLS.has(symbol)
+      const labelY = art ? p.y + p.h + 11 : cy + 4
       parts.push(
         `<g transform="rotate(${rot} ${cx} ${cy})">`,
-        `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="3" class="placement-item${opts.clashPlacement === p.id ? ' placement-clash' : ''}${on ? ' placement-on' : ''}"/>`,
-        symbol,
+        `<g class="placement-item${opts.clashPlacement === p.id ? ' placement-clash' : ''}${on ? ' placement-on' : ''}"${vars ? ` style="${vars}"` : ''}>`,
+        body ||
+          `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="3" class="furn-body"/>`,
+        detail,
+        `</g>`,
         `</g>`,
         // Label sits outside the rotation so it stays upright at 90°/270°.
-        `<text x="${cx}" y="${cy + 4}" text-anchor="middle" class="placement-label">${esc(p.label)}</text>`,
+        `<text x="${cx}" y="${labelY}" text-anchor="middle" class="placement-label">${esc(p.label)}</text>`,
       )
     }
     parts.push('</g>')

@@ -19,6 +19,7 @@
     "test:plan-edit": "node scripts/plan-edit-smoke.mjs",
     "test:doors": "node scripts/door-styles-unit.mjs",
     "test:windows": "node scripts/window-styles-unit.mjs",
+    "test:furniture-tint": "node scripts/furniture-tint-unit.mjs",
     "test:photo-coverage": "node scripts/photo-coverage-unit.mjs",
     "test:rooms": "node scripts/rooms-detect-test.mjs",
     "test:snap": "node scripts/snap-test.mjs",
