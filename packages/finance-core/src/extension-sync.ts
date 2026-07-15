@@ -761,15 +761,75 @@ function planOneBalance(
 // ===================== 交易流水 =====================
 
 /** capture 行 → 交易 flow 类型（先看类别，再看方向）。 */
-export function flowForCaptureRow(row: CapturedTxnRow): Txn['flow'] {
+/**
+ * 工资/直存的名称信号。银行原始描述通常带 PAYROLL / DIRECT DEP / SALARY，
+ * 即使聚合器把类别猜错也还在（实测 "INGRAM MICRO PAYROLL PPD ID: 1621644402"）。
+ */
+const PAYROLL_NAME_RE =
+  /\b(payroll|direct\s*dep(osit)?|salary|wages|paycheck)\b|工资|薪资|薪酬/i
+
+/** 判断一行 capture 的资金流向时可用的历史上下文。 */
+export interface CaptureFlowContext {
+  /** 该商户在历史账本里是否为纯收入来源（发钱给你的地方，而不是你消费的地方）。 */
+  isIncomeMerchant?: (merchant: string) => boolean
+}
+
+/**
+ * capture 行 → flow。
+ *
+ * 兜底那条 `credit → refund_or_reversal` 有个致命前提：聚合器把收入行的类别标成
+ * Income。实测并非如此——Rocket Money 把 Ingram Micro（IT 分销商）的工资标成
+ * "Software & Tech"，于是每两周一笔的工资被当成退款：既冲掉 Software & Tech 的
+ * 花销（算成 -$6,476），又让「收入合计」常年显示 $0。
+ *
+ * 两条补救，都不依赖聚合器的类别：
+ * 1. 名称含 payroll/direct deposit/salary → 收入。银行的原始描述通常留着这些词。
+ * 2. 该商户在历史账本里是纯收入来源 → 收入。退款的前提是你先在那儿花过钱；
+ *    从没有过一笔支出的商户给你打钱，那是收入，不是退款。
+ */
+export function flowForCaptureRow(
+  row: CapturedTxnRow,
+  ctx?: CaptureFlowContext,
+): Txn['flow'] {
   const cat = normalize(row.category)
   if (cat === 'income') return 'income'
   if (cat === 'internal transfers' || cat === 'savings transfer')
     return 'internal_transfer'
   if (cat === 'credit card payment') return 'credit_card_payment'
   if (cat === 'ignore') return 'ignored'
-  if (row.credit) return 'refund_or_reversal'
+  if (row.credit) {
+    const name = `${row.merchant ?? ''} ${row.statement ?? ''}`
+    if (PAYROLL_NAME_RE.test(name)) return 'income'
+    const merchant = resolveCaptureMerchant(row)
+    if (ctx?.isIncomeMerchant?.(merchant)) return 'income'
+    return 'refund_or_reversal'
+  }
   return 'expense'
+}
+
+/**
+ * 从历史账本建「纯收入来源」索引：只有既收过钱、又从没花过钱的商户才算。
+ *
+ * 只花一次钱就退款的商户（Amazon 之流）因此不会被误判成收入；反过来，
+ * 工资商户名在不同数据源写法不一（"Ingram Micro" vs
+ * "Ingram Micro PAYROLL PPD ID: 1621644402"），所以用 nameMatches 做词边界模糊匹配。
+ */
+export function buildIncomeMerchantIndex(
+  existing: Txn[],
+): (merchant: string) => boolean {
+  const incomeNames = new Set<string>()
+  const spendNames = new Set<string>()
+  for (const t of existing) {
+    if (t.flow === 'income') incomeNames.add(t.merchant)
+    else if (t.flow === 'expense') spendNames.add(t.merchant)
+  }
+  const pure = [...incomeNames].filter(
+    (n) => ![...spendNames].some((s) => nameMatches(n, s)),
+  )
+  return (merchant: string) => {
+    if (!merchant) return false
+    return pure.some((n) => nameMatches(n, merchant))
+  }
 }
 
 function txnKey(date: string, merchant: string, amount: number): string {
@@ -789,6 +849,10 @@ export function planNewTransactions(
   existing: Txn[],
 ): { txns: NewTxn[]; skippedPending: number; skippedDuplicate: number } {
   const data = env.data as TransactionsCaptureData
+  // 历史里的纯收入商户：聚合器把工资类别标错时，用它把「进账」认回收入而非退款。
+  const flowCtx: CaptureFlowContext = {
+    isIncomeMerchant: buildIncomeMerchantIndex(existing),
+  }
   // key → 已有该组合的剩余「配额」；capture 行先消耗配额（视为重复），配额耗尽才是新交易。
   const existingCount = new Map<string, number>()
   for (const t of existing) {
@@ -809,7 +873,7 @@ export function planNewTransactions(
       if (seenPlatformIds.has(row.platformId)) continue
       seenPlatformIds.add(row.platformId)
     }
-    const txn = captureRowToTxn(row, env.source)
+    const txn = captureRowToTxn(row, env.source, flowCtx)
     const key = txnKey(txn.date, txn.merchant, txn.amount)
     // 无 platformId 的行分不清「两笔一样的真交易」还是「同一行抓了两次」：
     // 同一 capture 内相同 key 只收第一条，保守防重。
@@ -831,9 +895,13 @@ export function planNewTransactions(
   return { txns: out, skippedPending, skippedDuplicate }
 }
 
-function captureRowToTxn(row: CapturedTxnRow, _source: CaptureSource): NewTxn {
+function captureRowToTxn(
+  row: CapturedTxnRow,
+  _source: CaptureSource,
+  ctx?: CaptureFlowContext,
+): NewTxn {
   const abs = Math.abs(row.amount)
-  const flow = flowForCaptureRow(row)
+  const flow = flowForCaptureRow(row, ctx)
   const base = {
     date: row.date,
     merchant: resolveCaptureMerchant(row),

@@ -4,6 +4,7 @@ import type { Txn } from './engine/transactions.js'
 import {
   accountRowUnchangedInApp,
   buildAppSnapshot,
+  buildIncomeMerchantIndex,
   computeEnvelopePayloadHashSync,
   filterNewCaptureTxnRows,
   flowForCaptureRow,
@@ -673,6 +674,16 @@ describe('planNewTransactions', () => {
 
 describe('flowForCaptureRow', () => {
   const base = { date: '2026-07-01', merchant: 'x', amount: 1, pending: false }
+  /** @param over 覆盖字段 */
+  const txn = (over: Partial<Txn> & Pick<Txn, 'date' | 'merchant' | 'flow' | 'amount'>): Txn => ({
+    month: over.date.slice(0, 7),
+    category: 'C',
+    account: 'A',
+    budgetImpact: over.flow === 'expense' ? -over.amount : 0,
+    inSpending: over.flow === 'expense',
+    inCashFlow: true,
+    ...over,
+  })
   it('按类别与方向映射 flow', () => {
     expect(
       flowForCaptureRow({ ...base, category: 'Income', credit: true }),
@@ -697,6 +708,69 @@ describe('flowForCaptureRow', () => {
     expect(
       flowForCaptureRow({ ...base, category: 'Shopping', credit: false }),
     ).toBe('expense')
+  })
+
+  it('名称带 payroll 的进账是收入，哪怕聚合器把类别标成别的', () => {
+    // 实测:Rocket Money 把 Ingram Micro(IT 分销商)的工资标成 Software & Tech。
+    expect(
+      flowForCaptureRow({
+        ...base,
+        merchant: 'Ingram Micro PAYROLL PPD ID: 1621644402',
+        category: 'Software & Tech',
+        credit: true,
+      }),
+    ).toBe('income')
+    // 名字没带,但银行原始描述带 —— 一样认。
+    expect(
+      flowForCaptureRow({
+        ...base,
+        merchant: 'Ingram Micro',
+        statement: 'INGRAM MICRO DIRECT DEP',
+        category: 'Software & Tech',
+        credit: true,
+      }),
+    ).toBe('income')
+  })
+
+  it('历史上是纯收入来源的商户，进账算收入不算退款', () => {
+    const history: Txn[] = [
+      txn({ date: '2026-05-22', merchant: 'Ingram Micro PAYROLL PPD ID: 1621644402', flow: 'income', amount: -3322.74 }),
+      txn({ date: '2026-06-05', merchant: 'Ingram Micro Payroll', flow: 'income', amount: -3322.74 }),
+    ]
+    const ctx = { isIncomeMerchant: buildIncomeMerchantIndex(history) }
+    // Rocket Money 的显示名短一截,靠词边界模糊匹配认回来。
+    expect(
+      flowForCaptureRow(
+        { ...base, merchant: 'Ingram Micro', category: 'Software & Tech', credit: true },
+        ctx,
+      ),
+    ).toBe('income')
+  })
+
+  it('花过钱的商户的进账仍是退款——退款的前提就是先花过钱', () => {
+    const history: Txn[] = [
+      txn({ date: '2026-05-01', merchant: 'Amazon', flow: 'expense', amount: 50 }),
+      // 即便 Amazon 也给过你一笔「收入」(误分类的返现),只要它同时是消费的地方,
+      // 就不能算纯收入来源。
+      txn({ date: '2026-05-02', merchant: 'Amazon', flow: 'income', amount: -5 }),
+    ]
+    const ctx = { isIncomeMerchant: buildIncomeMerchantIndex(history) }
+    expect(
+      flowForCaptureRow(
+        { ...base, merchant: 'Amazon', category: 'Shopping', credit: true },
+        ctx,
+      ),
+    ).toBe('refund_or_reversal')
+  })
+
+  it('没有历史时保持原兜底：进账 = 退款', () => {
+    const ctx = { isIncomeMerchant: buildIncomeMerchantIndex([]) }
+    expect(
+      flowForCaptureRow(
+        { ...base, merchant: 'Some Store', category: 'Shopping', credit: true },
+        ctx,
+      ),
+    ).toBe('refund_or_reversal')
   })
 })
 
