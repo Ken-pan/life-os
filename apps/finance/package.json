@@ -16,6 +16,7 @@
     "link:amazon": "node --experimental-strip-types scripts/link-amazon-orders.mjs",
     "link:purchase": "node --experimental-strip-types scripts/link-purchase-orders.mjs",
     "fix:legacy-txns": "node scripts/fix-legacy-import-txns.mjs",
+    "dedupe:mirrors": "node --experimental-strip-types scripts/dedupe-aggregate-mirrors.mjs",
     "qa:amazon-enrichment": "node scripts/amazon-enrichment-screenshot-qa.mjs",
     "qa:fp6:bootstrap": "node scripts/finance-qa-bootstrap.mjs",
     "qa:fp6:teardown": "node scripts/finance-qa-bootstrap.mjs --teardown",

@@ -11,6 +11,8 @@ import {
   buildPurchaseDisplayContext,
   classifyPurchaseDisplayState,
   computePurchaseCoverage,
+  rankCoverageSources,
+  type PurchaseCoverageStats,
 } from './purchaseEnrichmentDisplay'
 
 function txn(
@@ -207,5 +209,54 @@ describe('isCleanPurchaseStatus — matching-quality fixes', () => {
     expect(isCleanPurchaseStatus('Refund issued')).toBe(false)
     expect(isCleanPurchaseStatus('Refunded')).toBe(false)
     expect(isCleanPurchaseStatus('Cancelled')).toBe(false)
+  })
+})
+
+describe('rankCoverageSources', () => {
+  function stats(
+    cleanBySource: PurchaseCoverageStats['cleanBySource'],
+  ): PurchaseCoverageStats {
+    return {
+      total: 0,
+      enrichedAny: 0,
+      cleanEnriched: 0,
+      cleanItemCount: 0,
+      matchedReview: 0,
+      returnRefund: 0,
+      merchantOnly: 0,
+      cleanBySource,
+    }
+  }
+
+  it('ranks by coverage, not by a hardcoded merchant', () => {
+    // The regression this guards: copy used to claim "mostly Target" while
+    // Amazon led 104 to 82.
+    expect(
+      rankCoverageSources(stats({ amazon: 104, target: 82, bestbuy: 12 })),
+    ).toEqual(['amazon', 'target', 'bestbuy'])
+  })
+
+  it('follows the leader when it changes', () => {
+    expect(
+      rankCoverageSources(stats({ amazon: 3, target: 90, bestbuy: 12 })),
+    ).toEqual(['target', 'bestbuy', 'amazon'])
+  })
+
+  it('omits sources with no item detail', () => {
+    expect(
+      rankCoverageSources(stats({ amazon: 5, target: 0, bestbuy: 0 })),
+    ).toEqual(['amazon'])
+  })
+
+  it('returns empty when nothing is covered', () => {
+    expect(
+      rankCoverageSources(stats({ amazon: 0, target: 0, bestbuy: 0 })),
+    ).toEqual([])
+  })
+
+  it('breaks ties deterministically', () => {
+    expect(
+      rankCoverageSources(stats({ amazon: 7, target: 7, bestbuy: 7 })),
+    ).toEqual(['target', 'amazon', 'bestbuy'])
   })
 })

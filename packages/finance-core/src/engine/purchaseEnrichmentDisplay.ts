@@ -229,4 +229,37 @@ export function computePurchaseCoverage(
   return stats
 }
 
+/** Stable display order for enrichment sources; also the tie-break order. */
+export const COVERAGE_SOURCE_ORDER: readonly PurchaseEnrichmentSource[] = [
+  'target',
+  'amazon',
+  'bestbuy',
+]
+
+/** Sources that actually carry item detail, in stable display order. */
+export function coveredSources(
+  stats: PurchaseCoverageStats,
+): PurchaseEnrichmentSource[] {
+  return COVERAGE_SOURCE_ORDER.filter((s) => (stats.cleanBySource[s] ?? 0) > 0)
+}
+
+/**
+ * Sources that actually carry item detail, best-covered first.
+ *
+ * Callers use this to name the leading merchant in coverage copy. Deriving the
+ * ranking beats naming a merchant in the copy itself: the leader changes as
+ * coverage shifts, and static copy silently goes stale when it does.
+ *
+ * Ties fall back to COVERAGE_SOURCE_ORDER so the copy is stable across renders.
+ */
+export function rankCoverageSources(
+  stats: PurchaseCoverageStats,
+): PurchaseEnrichmentSource[] {
+  return coveredSources(stats).sort(
+    (a, b) =>
+      (stats.cleanBySource[b] ?? 0) - (stats.cleanBySource[a] ?? 0) ||
+      COVERAGE_SOURCE_ORDER.indexOf(a) - COVERAGE_SOURCE_ORDER.indexOf(b),
+  )
+}
+
 export { AMOUNT_TOLERANCE_CENTS }

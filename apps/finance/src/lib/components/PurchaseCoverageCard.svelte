@@ -1,11 +1,12 @@
 <script>
   // Port of src/components/PurchaseCoverageCard.tsx.
-  import { t } from '$lib/i18n.svelte.js'
+  import { intlLocaleTag, t } from '$lib/i18n.svelte.js'
   import { purchaseSourceLabel } from '$lib/purchaseSourceLabel.js'
+  import {
+    coveredSources,
+    rankCoverageSources,
+  } from '../../engine/purchaseEnrichmentDisplay.js'
   import MerchantLogo from './MerchantLogo.svelte'
-
-  /** @type {import('../../engine/purchaseEnrichment.js').PurchaseEnrichmentSource[]} */
-  const SOURCE_ORDER = ['target', 'amazon', 'bestbuy']
 
   // Enrichment source key → a merchant string MerchantLogo can resolve. Kept
   // explicit rather than reusing the (localized) chip label, and because the
@@ -35,7 +36,36 @@
     { key: 'return', label: t('history.coverageStatReturn'), value: stats.returnRefund, preset: 'purchase:return' },
   ])
 
-  const sourceChips = $derived(SOURCE_ORDER.filter((s) => (stats.cleanBySource[s] ?? 0) > 0))
+  // Chips keep the stable display order; only the lead copy ranks by coverage.
+  const sourceChips = $derived(coveredSources(stats))
+  const rankedSources = $derived(rankCoverageSources(stats))
+
+  // Labels are Latin brand names ('Target', 'Best Buy'), so Intl's unspaced zh
+  // conjunction ('Target和Best Buy') reads cramped against the rest of the zh copy,
+  // which spaces Latin tokens out. Pad it back; safe because no label contains 和.
+  function joinSourceLabels(labels) {
+    const tag = intlLocaleTag()
+    const joined = new Intl.ListFormat(tag, {
+      style: 'long',
+      type: 'conjunction',
+    }).format(labels)
+    return tag.startsWith('zh') ? joined.replace(/和/g, ' 和 ') : joined
+  }
+
+  // Derived from the live per-source counts rather than hardcoded: the previous
+  // static copy named whichever merchant led when it was written and went stale
+  // every time coverage shifted.
+  const coverageLead = $derived.by(() => {
+    if (rankedSources.length === 0) return ''
+    const top = purchaseSourceLabel(rankedSources[0], t)
+    if (rankedSources.length === 1) {
+      return t('history.coverageLeadSingle', { top })
+    }
+    const rest = joinSourceLabels(
+      rankedSources.slice(1).map((s) => purchaseSourceLabel(s, t)),
+    )
+    return t('history.coverageLead', { top, rest })
+  })
 </script>
 
 <div class="card purchase-coverage-card">
@@ -46,7 +76,9 @@
       items: stats.cleanItemCount.toLocaleString(),
     })}
   </p>
-  <p class="muted-note text-sm mb-2">{t('history.coverageLead')}</p>
+  {#if coverageLead}
+    <p class="muted-note text-sm mb-2">{coverageLead}</p>
+  {/if}
   {#if stats.matchedReview > 0 || stats.returnRefund > 0}
     <p class="muted-note text-sm mb-2">
       {t('history.coverageSecondary', {

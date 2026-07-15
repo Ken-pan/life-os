@@ -732,7 +732,8 @@ export const zhCN: MessageTree = {
     purchaseRelatedOrder: '关联订单',
     coverageTitle: '商品明细',
     coverageHeadline: '已识别 {bills} 笔账单里的 {items} 个商品',
-    coverageLead: '主要来自 Target；Amazon 和 Best Buy 仍在扩展。',
+    coverageLead: '主要来自 {top}；{rest} 仍在扩展。',
+    coverageLeadSingle: '目前仅覆盖 {top}。',
     coverageSecondary:
       '另有 {review} 笔订单匹配待确认，{returns} 笔退货/退款已单独排除。',
     coverageStatClean: '已识别商品明细',
@@ -2347,8 +2348,8 @@ export const enUS: MessageTree = {
     purchaseRelatedOrder: 'Related order',
     coverageTitle: 'Item detail',
     coverageHeadline: '{items} items across {bills} bills',
-    coverageLead:
-      'Best coverage on Target; Amazon and Best Buy still expanding.',
+    coverageLead: 'Best coverage on {top}; {rest} still expanding.',
+    coverageLeadSingle: 'Item detail currently covers {top} only.',
     coverageSecondary:
       '{review} bills need match review; {returns} return/refund rows excluded.',
     coverageStatClean: 'With item detail',
