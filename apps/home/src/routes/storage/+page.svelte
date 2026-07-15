@@ -13,6 +13,7 @@
   } from '$lib/spatial/storage-items.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import StorageZoneCard from '$lib/components/StorageZoneCard.svelte'
+  import InventoryImport from '$lib/components/InventoryImport.svelte'
   import FloorPlanViewer from '$lib/components/FloorPlanViewer.svelte'
   import PlanLegend from '$lib/components/PlanLegend.svelte'
 
@@ -134,6 +135,8 @@
   {project.storageZones.length} 个储藏区 · {itemCount} 件物品 ·
   搜索或点击标注可定位到平面图。
 </p>
+
+<InventoryImport />
 
 <div class="search-bar">
   <span class="search-icon"><ICONS.search size={15} /></span>

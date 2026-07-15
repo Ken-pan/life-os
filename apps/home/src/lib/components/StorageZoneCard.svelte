@@ -54,6 +54,16 @@
 
   const matched = $derived(new Set(matchedItemIds))
 
+  /**
+   * 商品图来自远端公开桶(FinanceOS),链接会失效、离线也拉不到。
+   * 拉不到就把 img 摘掉 —— 浏览器的碎图图标比干脆没有图更难看,也更让人以为坏了。
+   * @param {Event} e
+   */
+  function hideBrokenThumb(e) {
+    const img = /** @type {HTMLImageElement} */ (e.currentTarget)
+    img.remove()
+  }
+
   /** @param {SpatialStorageItem} item */
   function startEdit(item) {
     editingId = item.id
@@ -205,6 +215,17 @@
             aria-label={`编辑 ${item.name}`}
             onclick={() => startEdit(item)}
           >
+            {#if item.purchase?.imageUrl}
+              <!-- 装饰性:名字就在旁边,alt 再念一遍等于让读屏听两遍。
+                   加载失败就把自己摘掉 —— 一个碎图图标比没有图更糟。 -->
+              <img
+                class="thumb"
+                src={item.purchase.imageUrl}
+                alt=""
+                loading="lazy"
+                onerror={hideBrokenThumb}
+              />
+            {/if}
             <span class="item-name">{item.name}</span>
             {#if item.qty && item.qty > 1}
               <span class="qty-badge">×{item.qty}</span>
@@ -218,6 +239,15 @@
           </button>
         {:else}
           <div class="item-row static">
+            {#if item.purchase?.imageUrl}
+              <img
+                class="thumb"
+                src={item.purchase.imageUrl}
+                alt=""
+                loading="lazy"
+                onerror={hideBrokenThumb}
+              />
+            {/if}
             <span class="item-name">{item.name}</span>
             {#if item.qty && item.qty > 1}
               <span class="qty-badge">×{item.qty}</span>
@@ -416,6 +446,18 @@
     /* 长型号 / URL 没有断点，不打断就会顶破卡片 */
     overflow-wrap: anywhere;
     min-width: 0;
+  }
+
+  /* 买来的东西的商品图。刻意小：它是帮你认出「哦是那个」的线索，不是画廊。
+     flex: none —— 不给缩，被压扁的缩略图既认不出东西又白占一行。 */
+  .thumb {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    border: 1px solid var(--border, #d5dde5);
+    object-fit: cover;
+    background: var(--bg, #f2f4f7);
   }
 
   .qty-badge {

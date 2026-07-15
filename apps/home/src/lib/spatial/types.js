@@ -129,6 +129,26 @@
  */
 
 /**
+ * 这件东西是怎么进这个家的 —— FinanceOS 的购买记录。
+ *
+ * 来源:finance_transactions.purchase_enrichment(Life OS Supabase)按
+ * placements.js 的分类法匹配出的居家商品,人工分拣"还有没有"之后导入
+ * (见 spatial/inventory-import.js)。手摆/扫描来的东西没有这个字段。
+ *
+ * 全部可选:匹配质量参差,缺字段是常态,不是错误。
+ *
+ * @typedef {object} PurchaseInfo
+ * @property {string} [orderId] 商家订单号 —— 回 FinanceOS 对账的锚点
+ * @property {'amazon'|'target'|'bestbuy'|string} [src] 购买渠道
+ * @property {string} [date] 下单日 YYYY-MM-DD
+ * @property {number} [amount] 实付金额(正数,美元)
+ * @property {string} [title] 商家原始标题(英文长句;name 是人话短名)
+ * @property {string} [imageUrl] 商品图 —— 公开桶,不落本机
+ * @property {string} [productUrl] 商品页
+ * @property {'A'|'B'|'C'|string} [tier] 分拣时标的重要度
+ */
+
+/**
  * One physical thing stored in a zone. Schema v3 held bare strings; v4 promotes
  * them to entities so they can be edited, moved and searched.
  * @typedef {object} SpatialStorageItem
@@ -138,6 +158,7 @@
  * @property {string[]} [tags]
  * @property {string} [note]
  * @property {number} [updatedAt] epoch ms;迁移数据为 0
+ * @property {PurchaseInfo} [purchase] 买来的东西才有;见 {@link PurchaseInfo}
  */
 
 /**
@@ -230,6 +251,7 @@
  * @property {string} [material] 材质(VLM 识别:布艺/皮革/实木…)
  * @property {string} [colorZh] 颜色的人话(VLM 识别:深棕/米白…)
  * @property {string} [describedAt] 上次 VLM 识别时间 ISO
+ * @property {PurchaseInfo} [purchase] 这件家具是买来的哪一单;见 {@link PurchaseInfo}
  */
 
 /**

@@ -94,6 +94,7 @@ import {
   patchStorageItem,
   syncStorageItemIdSeq,
 } from './spatial/storage-items.js'
+import { planInventoryImport } from './spatial/inventory-import.js'
 import { toast } from './ui.svelte.js'
 
 /** @typedef {import('./spatial/types.js').SpatialProject} SpatialProject */
@@ -1171,6 +1172,79 @@ export function removeStorageItem(code, itemId) {
         return restored
       }),
     duration: 8000,
+  })
+}
+
+/**
+ * 算一次 FinanceOS 清单导入会做什么。**不写任何东西** —— 交给调用方预览。
+ *
+ * id 序号必须在这里同步:plan 里的物品是真 id、直接落库的,而
+ * normalizeStorageItems 的快路径不再推进计数器,不同步就会拿 si-1 盖掉已有的
+ * si-1(与 addStorageItem 同一个坑,同一个解法)。
+ *
+ * @param {unknown} raw 解析好的 JSON
+ * @returns {ReturnType<typeof planInventoryImport>}
+ */
+export function previewInventoryImport(raw) {
+  const p = S.projects[S.activeProjectId] ?? SAMPLE_508
+  syncStorageItemIdSeq(p.storageZones ?? [])
+  return planInventoryImport(raw, {
+    zones: normalizeZoneItems(p.storageZones ?? []),
+    placements: p.placements ?? [],
+    pxPerFt: p.wallGraph?.pxPerFt ?? p.layoutConfig?.pxPerFt ?? 36,
+    viewport: p.viewport,
+  })
+}
+
+/**
+ * 落库一次清单导入:认领已有家具、新建缺的家具、把杂物写进各储藏区。
+ *
+ * 自带撤销,不走几何撤销栈,原因有两条,任一条都足以致命:
+ *   1. `pushGraphUndo` 在没有墙图时**直接 return** —— 508 参数户型压根不压栈;
+ *   2. 撤销快照只存 storageBindings、**不存物品**(有意的,否则挪个墙就把这期间
+ *      新增的物品一起冲掉)。靠它撤销会撤掉家具、留下杂物,一半一半最难收拾。
+ * 所以这里自己扣住改动前的两份数组,撤销就是原样放回去。
+ *
+ * @param {ReturnType<typeof planInventoryImport>} plan
+ */
+export function applyInventoryImport(plan) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const before = {
+    placements: raw.placements ?? [],
+    storageZones: raw.storageZones ?? [],
+  }
+
+  // 认领:把购买信息贴到扫描已经摆好的那件上,位置一动不动。
+  const claimed = new Map(plan.claims.map((c) => [c.id, c.purchase]))
+  let placements = before.placements.map((p) =>
+    claimed.has(p.id) ? { ...p, attrs: { ...(p.attrs ?? {}), purchase: claimed.get(p.id) } } : p,
+  )
+
+  // 新建:plan 里的 id 只是预览用的占位,落库要真 id。
+  syncPlacementIdSeq(placements)
+  placements = [...placements, ...plan.creates.map((c) => ({ ...c, id: createPlacementId() }))]
+
+  const byZone = new Map()
+  for (const { zoneCode, item } of plan.items) {
+    byZone.set(zoneCode, [...(byZone.get(zoneCode) ?? []), item])
+  }
+  const storageZones = normalizeZoneItems(before.storageZones).map((z) =>
+    byZone.has(z.code) ? { ...z, items: [...z.items, ...byZone.get(z.code)] } : z,
+  )
+
+  setActiveProject(hydrateProject({ ...raw, placements, storageZones }))
+
+  const bits = []
+  if (plan.items.length) bits.push(`${plan.items.length} 件杂物`)
+  if (plan.claims.length) bits.push(`认领 ${plan.claims.length} 件家具`)
+  if (plan.creates.length) bits.push(`新建 ${plan.creates.length} 件家具`)
+  toast(`已导入 ${bits.join(' · ')}`, {
+    actionLabel: '撤销',
+    onAction: () => {
+      const now = S.projects[S.activeProjectId] ?? SAMPLE_508
+      setActiveProject(hydrateProject({ ...now, ...before }))
+    },
+    duration: 10000,
   })
 }
 

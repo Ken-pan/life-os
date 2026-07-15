@@ -238,4 +238,62 @@ const savedIds = saved[0].items.map((i) => i.id)
 assert.ok(!savedIds.includes(fresh.id), `new id ${fresh.id} collides with ${savedIds}`)
 assert.equal(fresh.id, 'si-8', 'counter resumes past the highest saved id')
 
+// —— purchase(FinanceOS 溯源)必须活过 normalize ——
+//
+// toStorageItem 返回的是**全新对象**:没在里面点名的字段一律丢掉。而
+// normalizeStorageItems 只要发现**一件**脏数据就重建整个数组 —— 也就是说
+// 一件坏数据能顺手抹掉同区所有物品的购买记录,且悄无声息。这一组就是钉死它。
+{
+  const buy = {
+    orderId: 'ORD-9',
+    src: 'amazon',
+    date: '2026-06-26',
+    amount: 97.4,
+    title: 'FXW Dog Gate Extra Wide',
+    imageUrl: 'https://x/y.jpg',
+    productUrl: 'https://a/b',
+    tier: 'A',
+  }
+  const withBuy = createStorageItem('宠物围栏', { purchase: buy })
+  assert.deepEqual(withBuy.purchase, buy, 'createStorageItem 要收下 purchase')
+
+  // 干净数据走快路径:数组原样返回,purchase 自然还在
+  const clean = normalizeStorageItems([withBuy], 'z1')
+  assert.equal(clean[0].purchase.orderId, 'ORD-9')
+
+  // 关键:同区有一件脏数据 → 全数组重建。purchase 必须挺过这一次。
+  const dirty = normalizeStorageItems([withBuy, { name: '裸字符串式的脏数据' }], 'z1')
+  assert.equal(dirty.length, 2)
+  assert.equal(
+    dirty[0].purchase?.orderId,
+    'ORD-9',
+    '一件脏数据触发重建时,同区其它物品的购买记录被抹掉了',
+  )
+
+  // legacy 字符串照旧,不该凭空长出 purchase
+  assert.equal(normalizeStorageItems(['旧字符串'], 'z1')[0].purchase, undefined)
+
+  // 编辑物品不能顺手丢掉溯源
+  const edited = patchStorageItem(withBuy, { name: '改个名' })
+  assert.equal(edited.purchase?.orderId, 'ORD-9', '改名把购买记录改没了')
+
+  // 白名单:外部 JSON 的杂field 不许糊进空间数据
+  const noisy = createStorageItem('x', {
+    purchase: { orderId: 'A', 内部字段: '不该存', amount: -50 },
+  })
+  assert.deepEqual(Object.keys(noisy.purchase).sort(), ['amount', 'orderId'])
+  assert.equal(noisy.purchase.amount, 50, '金额要取正')
+
+  // 全空的 purchase 不该留个空壳
+  assert.equal(createStorageItem('y', { purchase: {} }).purchase, undefined)
+  assert.equal(createStorageItem('y', { purchase: null }).purchase, undefined)
+
+  // 搜索要能命中商家原始标题 —— name 是人话短名,搜不到你在商品页看见的词
+  const found = searchStorageItems(
+    [{ id: 'z1', code: 'S1', nameZh: '区', items: [withBuy] }],
+    'dog gate',
+  )
+  assert.equal(found.total, 1, '搜不到商家标题')
+}
+
 console.log('storage-items unit: all assertions passed')

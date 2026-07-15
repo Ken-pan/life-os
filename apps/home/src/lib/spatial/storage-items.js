@@ -83,6 +83,58 @@ function normalizeQty(raw) {
   return Math.min(n, MAX_QTY)
 }
 
+/** {@link PurchaseInfo} 的字段,逐个白名单 —— 见 normalizePurchase。 */
+const PURCHASE_STR_KEYS = ['orderId', 'src', 'date', 'title', 'imageUrl', 'productUrl', 'tier']
+
+/**
+ * 归一 FinanceOS 带来的购买信息。
+ *
+ * 这里是白名单而不是原样透传:导入的是外部生成的 JSON,原样存进 localStorage
+ * 会把整条购买记录(可能含无关字段)糊进空间数据里,并且以后没人说得清哪些字段
+ * 是真在用的。缺字段是常态,不是错误 —— 匹配质量参差。
+ *
+ * @param {unknown} raw
+ * @returns {import('./types.js').PurchaseInfo | undefined} 一个字段都没有则 undefined
+ */
+function normalizePurchase(raw) {
+  if (!raw || typeof raw !== 'object') return undefined
+  const src = /** @type {Record<string, unknown>} */ (raw)
+  /** @type {Record<string, unknown>} */
+  const out = {}
+  for (const k of PURCHASE_STR_KEYS) {
+    const v = src[k]
+    if (typeof v === 'string' && v.trim()) out[k] = v.trim()
+  }
+  // 金额存正数:退款/负数记账是 FinanceOS 的事,这里只关心"这东西多少钱"。
+  const amount = Number(src.amount)
+  if (Number.isFinite(amount) && amount !== 0) out.amount = Math.abs(amount)
+  return Object.keys(out).length ? out : undefined
+}
+
+/**
+ * True when `p` is already exactly what {@link normalizePurchase} would return.
+ * @param {unknown} p
+ */
+function isNormalizedPurchase(p) {
+  if (p === undefined) return true
+  if (!p || typeof p !== 'object') return false
+  const src = /** @type {Record<string, unknown>} */ (p)
+  const keys = Object.keys(src)
+  if (!keys.length) return false
+  for (const k of keys) {
+    if (k === 'amount') {
+      if (!(typeof src.amount === 'number' && Number.isFinite(src.amount) && src.amount > 0)) {
+        return false
+      }
+      continue
+    }
+    if (!PURCHASE_STR_KEYS.includes(k)) return false
+    const v = src[k]
+    if (typeof v !== 'string' || !v || v !== v.trim()) return false
+  }
+  return true
+}
+
 /**
  * True when `raw` is already exactly what {@link toStorageItem} would return, so
  * the caller can skip rebuilding it. Pure comparison, allocates nothing — this is
@@ -118,6 +170,10 @@ function isNormalizedItem(raw) {
     return false
   }
   if (typeof i.updatedAt !== 'number' || !Number.isFinite(i.updatedAt)) return false
+  // Must be checked here, not just carried in toStorageItem: this predicate is
+  // what decides whether the array passes through untouched. Miss it and a
+  // half-normalized purchase would be declared clean and never repaired.
+  if (!isNormalizedPurchase(i.purchase)) return false
   return true
 }
 
@@ -147,6 +203,11 @@ function toStorageItem(raw, zoneId, index) {
     tags: normalizeTags(src.tags),
     note: note || undefined,
     updatedAt: Number(src.updatedAt) || 0,
+    // Rebuilt explicitly, because this function returns a *fresh* object: any
+    // field not named here is dropped. One dirty item makes normalizeStorageItems
+    // rebuild the whole array, so forgetting this line would silently erase the
+    // purchase history of every item in the zone the first time one went stale.
+    purchase: normalizePurchase(src.purchase),
   }
 }
 
@@ -211,7 +272,7 @@ export function normalizeZoneItems(zones) {
 
 /**
  * @param {string} name
- * @param {{ qty?: number, tags?: string[], note?: string }} [fields]
+ * @param {{ qty?: number, tags?: string[], note?: string, purchase?: import('./types.js').PurchaseInfo }} [fields]
  * @param {number} [now] epoch ms — injected so callers control the clock
  * @returns {SpatialStorageItem | null}
  */
@@ -226,6 +287,7 @@ export function createStorageItem(name, fields = {}, now = Date.now()) {
     tags: normalizeTags(fields.tags),
     note: note || undefined,
     updatedAt: now,
+    purchase: normalizePurchase(fields.purchase),
   }
 }
 
@@ -248,9 +310,16 @@ export function patchStorageItem(item, patch, now = Date.now()) {
   }
 }
 
-/** @param {SpatialStorageItem} item */
+/**
+ * @param {SpatialStorageItem} item
+ * Includes the merchant's original title: `name` is the short human one
+ * ("ASUS ROG Strix 27″ 4K OLED"), so without it searching the wording you
+ * actually remember off the product page finds nothing.
+ */
 function haystack(item) {
-  return [item.name, item.note ?? '', ...(item.tags ?? [])].join(' ').toLowerCase()
+  return [item.name, item.note ?? '', item.purchase?.title ?? '', ...(item.tags ?? [])]
+    .join(' ')
+    .toLowerCase()
 }
 
 /**
