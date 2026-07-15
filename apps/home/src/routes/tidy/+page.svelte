@@ -4,6 +4,7 @@
   import { getActiveProject, isTidyTaskDone, setTidyTaskDone, clearTidyProgress } from '$lib/state.svelte.js'
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
   import { buildTidyPlan, EFFORT_LABEL } from '$lib/spatial/tidy-plan.js'
+  import { scoreClutter } from '$lib/spatial/clutter-score.js'
   import { getPhotoBlob } from '$lib/photo-store.js'
   import { ICONS } from '$lib/iconRegistry.js'
 
@@ -26,6 +27,7 @@
 
   const project = $derived(getActiveProject())
   const circ = $derived(analyzeCirculation(project))
+  const clutter = $derived(scoreClutter(project, circ))
   const plan = $derived(
     buildTidyPlan(project, circ, { minutes: budgetMin, effort: effortCap }),
   )
@@ -73,6 +75,33 @@
 <svelte:head><title>整理 · HOME.OS</title></svelte:head>
 
 <div class="tidy-page">
+  {#if clutter.zones.length}
+    <section class="block">
+      <h2 class="block-title">杂乱指数</h2>
+      <ul class="clutter-list">
+        {#each clutter.zones as z (z.zoneId)}
+          <li class="clutter-row" class:clutter-worst={z.zoneId === clutter.worst?.zoneId && z.score >= 40}>
+            <span class="clutter-score" class:score-high={z.score >= 60} class:score-mid={z.score >= 35 && z.score < 60}>
+              {z.score}
+            </span>
+            <div class="clutter-body">
+              <span class="clutter-name">
+                {z.nameZh}
+                {#if !z.described}<span class="clutter-blind" title="这一区还没做照片识别,分数只含几何指标">未识别</span>{/if}
+              </span>
+              <span class="clutter-why">
+                {z.parts.filter((p) => p.score > 2).map((p) => p.detail).join(' · ') || '状态良好'}
+              </span>
+            </div>
+          </li>
+        {/each}
+      </ul>
+      <p class="block-desc">
+        分数由可解释指标合成:家具占地 + 通道紧张 + 动线受阻 + 照片识别的现场状态,不是模型凭感觉。
+      </p>
+    </section>
+  {/if}
+
   <section class="block">
     <h2 class="block-title">空间利用率</h2>
     {#if !circ.ok}
@@ -214,6 +243,75 @@
 </div>
 
 <style>
+  .clutter-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .clutter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .clutter-worst {
+    border-color: color-mix(in srgb, #b45309 45%, var(--border));
+  }
+
+  .clutter-score {
+    min-width: 44px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--t2);
+  }
+
+  .clutter-score.score-mid {
+    color: #b45309;
+  }
+
+  .clutter-score.score-high {
+    color: #dc2626;
+  }
+
+  .clutter-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .clutter-name {
+    font-size: 14px;
+    font-weight: 650;
+    color: var(--t1);
+  }
+
+  .clutter-blind {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--t2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1px 6px;
+    cursor: help;
+  }
+
+  .clutter-why {
+    font-size: 12px;
+    color: var(--t2);
+  }
+
   .tidy-page {
     display: flex;
     flex-direction: column;

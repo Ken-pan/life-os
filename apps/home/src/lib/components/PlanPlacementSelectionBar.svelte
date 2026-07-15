@@ -62,20 +62,31 @@
       .join(' · '),
   )
 
-  // 家具实拍缩略图(IndexedDB blob URL,换家具时换图)
-  let photoUrl = $state('')
+  // 多视角证据包的 ref 列表(旧数据只有单张 photoRef 也兼容)
+  const photoRefs = $derived.by(() => {
+    const list = (attrs?.photos ?? [])
+      .map((p) => p.photoRef)
+      .filter(Boolean)
+    if (list.length) return list.slice(0, 4)
+    return attrs?.photoRef ? [attrs.photoRef] : []
+  })
+
+  // 家具实拍缩略图组(IndexedDB blob URL,换家具时换图)
+  let photoUrls = $state(/** @type {string[]} */ ([]))
+  const photoUrl = $derived(photoUrls[0] ?? '')
   $effect(() => {
-    const ref = attrs?.photoRef
-    photoUrl = ''
-    if (!ref) return
+    const refs = photoRefs
+    photoUrls = []
+    if (!refs.length) return
     let alive = true
-    getPhotoUrl(ref).then((url) => {
-      if (alive) photoUrl = url
-      else URL.revokeObjectURL(url)
-    }).catch(() => {})
+    Promise.all(refs.map((r) => getPhotoUrl(r).catch(() => ''))).then((urls) => {
+      const got = urls.filter(Boolean)
+      if (alive) photoUrls = got
+      else got.forEach((u) => URL.revokeObjectURL(u))
+    })
     return () => {
       alive = false
-      if (photoUrl) URL.revokeObjectURL(photoUrl)
+      photoUrls.forEach((u) => URL.revokeObjectURL(u))
     }
   })
 
@@ -87,13 +98,15 @@
   })
 
   async function describeLook() {
-    const ref = attrs?.photoRef
-    if (!ref || describing) return
+    if (!photoRefs.length || describing) return
     describing = true
     try {
-      const blob = await getPhotoBlob(ref)
-      if (!blob) return
-      const look = await describeFurniture(blob, placement.label)
+      // 多视角证据一起喂:一张照片看不出 L 形沙发的另一侧
+      const blobs = (
+        await Promise.all(photoRefs.map((r) => getPhotoBlob(r).catch(() => null)))
+      ).filter(Boolean)
+      if (!blobs.length) return
+      const look = await describeFurniture(blobs, placement.label)
       if (!look) return
       updatePlacement(placement.id, {
         attrs: {
@@ -152,22 +165,28 @@
     {/if}
   {/if}
 
-  {#if (!compact || detailsOpen) && (photoUrl || (attrs?.photoRef && vlmReady))}
+  {#if (!compact || detailsOpen) && (photoUrls.length || (photoRefs.length && vlmReady))}
     <div class="look-row">
-      {#if photoUrl}
-        <img class="look-photo" src={photoUrl} alt="{placement.label} 实拍" />
-      {/if}
+      {#each photoUrls as url, i (url)}
+        <img
+          class="look-photo"
+          src={url}
+          alt="{placement.label} 实拍视角 {i + 1}"
+          title={attrs?.photos?.[i]?.azimuthDeg != null ? `方位 ${Math.round(attrs.photos[i].azimuthDeg)}°` : ''}
+        />
+      {/each}
       {#if compact && (lookText || tallIn)}
         <span class="look-line">
           {lookText}{lookText && tallIn ? ' · ' : ''}{tallIn ? `高 ${tallIn}″` : ''}
         </span>
       {/if}
-      {#if attrs?.photoRef && vlmReady}
+      {#if photoRefs.length && vlmReady}
         <button
           type="button"
           class="graph-sel-btn graph-sel-accent"
           disabled={describing}
           onclick={describeLook}
+          title={photoRefs.length > 1 ? `综合 ${photoRefs.length} 个视角识别` : ''}
         >{describing ? '识别中…' : '识别外观'}</button>
       {/if}
     </div>

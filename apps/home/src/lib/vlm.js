@@ -288,16 +288,21 @@ export async function locateObjects(photo, targets) {
  */
 
 /**
- * 读一张**家具特写**（iOS 扫描自动抓拍的裁剪图），回答外观三件事：
+ * 读**家具特写**（iOS 扫描自动抓拍的裁剪图），回答外观三件事：
  * 颜色、材质、款式。设备端 k-means 主色会被墙面/阴影污染，VLM 认的
  * 「这件家具本身」更准 —— 有 VLM 就让它覆盖。
- * @param {Blob} photo
+ * 支持多视角证据包：传数组时最多取 3 张不同方位一起看 ——
+ * 一张照片看不出 L 形沙发的另一侧、分不清材质还是反光。
+ * @param {Blob | Blob[]} photos 单张或多视角照片
  * @param {string} label 家具名（给模型上下文，如「L形沙发」）
  * @returns {Promise<FurnitureLook | null>}
  */
-export async function describeFurniture(photo, label) {
+export async function describeFurniture(photos, label) {
   if (!(await probeVlm())) return null
-  const dataUrl = await toDataUrl(photo)
+  const list = (Array.isArray(photos) ? photos : [photos]).filter(Boolean).slice(0, 3)
+  if (!list.length) return null
+  const dataUrls = await Promise.all(list.map(toDataUrl))
+  const multi = dataUrls.length > 1
   const body = {
     model: MODEL,
     max_tokens: 200,
@@ -306,11 +311,13 @@ export async function describeFurniture(photo, label) {
       {
         role: 'user',
         content: [
-          { type: 'image_url', image_url: { url: dataUrl } },
+          ...dataUrls.map((url) => ({ type: 'image_url', image_url: { url } })),
           {
             type: 'text',
             text:
-              `这是从住宅扫描里裁出的一件家具（${label}）的照片，画面可能带少量背景。` +
+              (multi
+                ? `这 ${dataUrls.length} 张照片是**同一件家具（${label}）**从不同方位拍的，画面可能带少量背景。综合所有角度，`
+                : `这是从住宅扫描里裁出的一件家具（${label}）的照片，画面可能带少量背景。`) +
               `只看这件家具本身，回答：\n` +
               `1. 主色（十六进制 #RRGGBB，取家具主体面料/板材的颜色，别取阴影或背景）\n` +
               `2. 颜色的人话（如 深棕/米白/浅灰，不超过 6 字）\n` +
