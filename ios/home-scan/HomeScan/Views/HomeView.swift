@@ -6,6 +6,8 @@ struct HomeView: View {
     @Environment(AppModel.self) private var model
     /// 「柜内扫描」选中的扫描(sheet 里再挑柜子)
     @State private var containerTarget: SupabaseService.ScanRow?
+    /// AR 寻物 sheet
+    @State private var showFindItem = false
 
     private var scanSupported: Bool {
         RoomCaptureSession.isSupported
@@ -85,6 +87,22 @@ struct HomeView: View {
                     }
                 }
 
+                if model.canonicalHome != nil, containerScanAvailable {
+                    Section {
+                        Button {
+                            showFindItem = true
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Label("寻找物品", systemImage: "location.magnifyingglass")
+                                    .font(.headline)
+                                Text("搜柜内物品或家具,AR 箭头带路")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
                 Section {
                     if model.scans.isEmpty {
                         Text("还没有扫描").foregroundStyle(.secondary)
@@ -142,6 +160,11 @@ struct HomeView: View {
             .refreshable { await model.refreshScans() }
             .sheet(item: $containerTarget) { scan in
                 ContainerPickView(scan: scan)
+            }
+            .sheet(isPresented: $showFindItem) {
+                if let home = model.canonicalHome {
+                    FindItemView(home: home)
+                }
             }
         }
     }

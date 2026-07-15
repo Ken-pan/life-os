@@ -9,6 +9,25 @@ struct CanonicalHome: Codable {
     var zones: [HomeOSProject.Zone]
     /// 户型里的家具(带人性化名字/fixed/attrs)—— 设备端「现实核对」的比对基准
     var placements: [HomeOSProject.Placement] = []
+    /// 储藏区(S1-S12)与柜内物品 —— AR 寻物的检索空间(旧缓存没有则为 nil)
+    var storageZones: [StorageZone]?
+
+    /// 优化副本 storageZones 的瘦身解码(只取寻物需要的字段,契约加法式)
+    struct StorageZone: Codable {
+        var id: String
+        var code: String
+        var nameZh: String
+        var locationZh: String?
+        var marker: HomeOSProject.Point?
+        var placementId: String?
+        var items: [Item]?
+
+        struct Item: Codable {
+            var name: String
+            /// 在柜内哪一层(0 = 最下层;柜内实测同步后才有)
+            var level: Int?
+        }
+    }
 }
 
 enum CanonicalHomeCache {
@@ -41,6 +60,7 @@ extension SupabaseService {
                 let wallGraph: HomeOSProject.WallGraph?
                 let zones: [HomeOSProject.Zone]?
                 let placements: [HomeOSProject.Placement]?
+                let storageZones: [CanonicalHome.StorageZone]?
             }
         }
         do {
@@ -57,7 +77,8 @@ extension SupabaseService {
                 let home = CanonicalHome(
                     wallGraph: wg,
                     zones: h.zones ?? [],
-                    placements: h.placements ?? []
+                    placements: h.placements ?? [],
+                    storageZones: h.storageZones
                 )
                 CanonicalHomeCache.save(home)
                 return home

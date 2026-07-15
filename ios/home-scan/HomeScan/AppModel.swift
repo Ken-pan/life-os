@@ -268,9 +268,13 @@ final class AppModel {
         pendingScan = PendingScanStore.load()
         route = restored ? .home : .signedOut
         if restored { await refreshScans() }
-        // 永久户型(优化副本):设备端重定位与漏扫检测的基准;断网退本地缓存
-        scanController.setCanonicalHome(await supabase.fetchCanonicalHome())
+        // 永久户型(优化副本):设备端重定位/漏扫检测/AR 寻物的基准;断网退本地缓存
+        canonicalHome = await supabase.fetchCanonicalHome()
+        scanController.setCanonicalHome(canonicalHome)
     }
+
+    /// 永久户型(启动拉取,断网退缓存)—— AR 寻物与现实核对共用
+    var canonicalHome: CanonicalHome?
 
     @MainActor
     func signIn(email: String, password: String) async {

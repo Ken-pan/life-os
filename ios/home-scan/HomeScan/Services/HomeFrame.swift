@@ -431,6 +431,24 @@ enum HomeFrame {
         )
     }
 
+    /// toHome 的精确逆:家坐标(米)→ ARKit 世界系俯视点。AR 寻物指路用 ——
+    /// 目标在户型里的位置,要画回相机所在的世界系
+    static func fromHome(_ h: SIMD2<Double>, _ r: Registration) -> SIMD2<Double> {
+        var v = h
+        // 先撤精修
+        if r.refineTheta != 0 || r.refineDx != 0 || r.refineDy != 0 {
+            let d = SIMD2(v.x - r.refineDx - r.refineCx, v.y - r.refineDy - r.refineCy)
+            let ct = cos(-r.refineTheta)
+            let st = sin(-r.refineTheta)
+            v = SIMD2(r.refineCx + d.x * ct - d.y * st, r.refineCy + d.x * st + d.y * ct)
+        }
+        // 撤平移与量化 yaw
+        let q = rotate((360 - r.yawDeg) % 360, SIMD2(v.x - r.tx, v.y - r.ty))
+        // 撤主方向拉平
+        let rot = SIMD2(cos(-r.phi), sin(-r.phi))
+        return SIMD2(q.x * rot.x - q.y * rot.y, q.x * rot.y + q.y * rot.x)
+    }
+
     // MARK: - 房间覆盖(漏扫检测)
 
     /// 配准成功后:已扫墙的端点投到家坐标,离房间多边形 ≤tol 或落在里面就算「到过」。

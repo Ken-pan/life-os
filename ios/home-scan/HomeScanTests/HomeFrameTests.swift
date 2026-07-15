@@ -120,6 +120,30 @@ final class HomeFrameTests: XCTestCase {
         XCTAssertLessThan(dist, 0.05, "端点应落回家坐标,实际 \(p)")
     }
 
+    func testFromHomeIsExactInverse() {
+        // 世界系歪 9° + 平移的配准 → toHome 后 fromHome 应回到原点(AR 寻物指路)
+        let theta = 9.0 * .pi / 180
+        let rot = SIMD2(cos(theta), sin(theta))
+        let offset = SIMD2(2.4, -1.1)
+        func world(_ p: SIMD2<Double>) -> SIMD2<Double> {
+            SIMD2(p.x * rot.x - p.y * rot.y, p.x * rot.y + p.y * rot.x) + offset
+        }
+        let walls = [
+            (a: world(SIMD2(0, 0)), b: world(SIMD2(6, 0))),
+            (a: world(SIMD2(6, 0)), b: world(SIMD2(6, 4))),
+            (a: world(SIMD2(6, 4)), b: world(SIMD2(0, 4))),
+            (a: world(SIMD2(0, 4)), b: world(SIMD2(0, 0))),
+            (a: world(SIMD2(3.5, 0)), b: world(SIMD2(3.5, 2.2))),
+        ]
+        let (segs, phi) = HomeFrame.axisAlign(walls: walls)
+        let reg = HomeFrame.register(scan: segs, home: homeSegs(), phi: phi)
+        XCTAssertTrue(reg.ok, reg.reason ?? "")
+        for p in [SIMD2(1.0, 1.0), SIMD2(5.2, 3.7), SIMD2(0.1, 2.9)] {
+            let roundTrip = HomeFrame.fromHome(HomeFrame.toHome(p, reg), reg)
+            XCTAssertLessThan(length(roundTrip - p), 1e-9, "\(p) → \(roundTrip)")
+        }
+    }
+
     func testUncoveredRooms() {
         // 户型两个房间(px,36px/ft):只扫了左边那间 → 右边报「没扫到」
         let pxPerFt = 36.0
