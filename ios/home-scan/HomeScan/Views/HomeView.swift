@@ -8,6 +8,8 @@ struct HomeView: View {
     @State private var containerTarget: SupabaseService.ScanRow?
     /// AR 寻物 sheet
     @State private var showFindItem = false
+    /// 扫描语音引导开关(与 VoiceGuide.enabledKey 同一把钥匙)
+    @AppStorage(VoiceGuide.enabledKey) private var voiceGuide = true
 
     private var scanSupported: Bool {
         RoomCaptureSession.isSupported
@@ -136,6 +138,25 @@ struct HomeView: View {
                     if containerScanAvailable, !model.scans.isEmpty {
                         Text("「柜内」:打开柜门测内宽/内深/内高和层板,数据挂在这次扫描的柜子上。")
                     }
+                }
+
+                Section {
+                    Toggle(isOn: $voiceGuide) {
+                        Label("扫描语音引导", systemImage: "speaker.wave.2")
+                    }
+                    Button {
+                        CanonicalHomeCache.clear()
+                        Task {
+                            model.canonicalHome = await model.supabase.fetchCanonicalHome()
+                            model.scanController.setCanonicalHome(model.canonicalHome)
+                        }
+                    } label: {
+                        Label("刷新本机户型缓存", systemImage: "arrow.clockwise")
+                    }
+                } header: {
+                    Text("设置")
+                } footer: {
+                    Text("照片与扫描只上传到你自己的私有存储桶(按账号隔离,他人不可见);本机只缓存户型副本与未上传的扫描,上传成功即清理。")
                 }
 
                 if let err = model.lastError {

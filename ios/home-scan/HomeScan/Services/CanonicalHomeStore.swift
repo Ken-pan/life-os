@@ -46,6 +46,10 @@ enum CanonicalHomeCache {
         guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(CanonicalHome.self, from: data)
     }
+
+    static func clear() {
+        try? FileManager.default.removeItem(at: url)
+    }
 }
 
 extension SupabaseService {

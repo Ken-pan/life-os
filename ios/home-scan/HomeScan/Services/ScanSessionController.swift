@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import ARKit
 import RoomPlan
+import UIKit
 
 /// 多房间扫描:一个共享 ARSession 贯穿全程(所有房间与拍照位姿同一世界坐标),
 /// 每个房间一个 RoomCaptureSession;房间之间 stop(pauseARSession: false) 保持
@@ -75,6 +76,11 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     private var shotTimer: Timer?
     /// HUD 用:已抓到照片的家具件数
     private(set) var objectShotCount = 0
+    /// 降级采集中(低电量/过热)的 HUD 说明;nil = 正常
+    private(set) var degradedReason: String?
+    private var tickCount = 0
+    /// 上一轮配准是否已对齐(只在「对上了」那一刻触感+播报一次)
+    private var wasAligned = false
 
     /// 家具认出后先自然扫这么久,还缺证据才开始引导
     static let evidenceGraceS: TimeInterval = 15
@@ -98,12 +104,22 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         guard shotTimer == nil else { return }
         let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self, let frame = self.arSession.currentFrame else { return }
+            // 低电量/过热降级:采集降到 1Hz、证据照不走 12MP 高清帧(编码是发热大户)。
+            // 扫描不中断 —— 慢一点也比在 38° 的手机上硬撑到系统杀进程强
+            self.tickCount += 1
+            let thermal = ProcessInfo.processInfo.thermalState
+            let lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+            let degraded = lowPower || thermal == .serious || thermal == .critical
+            self.degradedReason = degraded
+                ? (lowPower ? "省电模式:已降速采集" : "手机偏热:已降速采集,歇几秒更快")
+                : nil
+            if degraded && self.tickCount % 2 == 1 { return }
             if !self.liveObjects.isEmpty {
                 // 传 session:证据照走 12MP 带外高清帧(拿不到自动回退视频帧)
                 self.shotCapture.consider(
                     objects: self.liveObjects,
                     frame: frame,
-                    session: self.arSession
+                    session: degraded ? nil : self.arSession
                 )
                 self.objectShotCount = self.shotCapture.count
             }
@@ -125,6 +141,11 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
                 self.hudHint = (hint, .viewpoint)
             } else {
                 self.hudHint = nil
+            }
+            // 语音引导:人在走动没法盯屏幕 —— 要人动起来的提示念出来
+            // (机位站位太碎不念;VoiceGuide 自带去重与冷却)
+            if let hint = self.hudHint, hint.kind != .viewpoint {
+                VoiceGuide.shared.speak(hint.text)
             }
 
             // Home Frame 重定位:每 2s 一次(几十段墙的 1D 投票,毫秒级)。
@@ -165,6 +186,14 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         let (segs, phi) = HomeFrame.axisAlign(walls: walls)
         let reg = HomeFrame.register(scan: segs, home: canonicalSegments, phi: phi)
         homeFrame = reg
+        // 「对上了」那一刻给一次成功触感 + 播报 —— 从此扫的东西都落在户型坐标里
+        if reg.ok, !wasAligned {
+            wasAligned = true
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            VoiceGuide.shared.speak("已对齐户型坐标", minInterval: 0)
+        } else if !reg.ok {
+            wasAligned = false
+        }
         if reg.ok, let home = canonicalHome {
             uncoveredRooms = HomeFrame.uncoveredRooms(
                 zones: home.zones,
@@ -291,6 +320,9 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         homeFrame = nil
         uncoveredRooms = []
         lastRegisterAt = 0
+        degradedReason = nil
+        tickCount = 0
+        wasAligned = false
         arSession.pause()
     }
 

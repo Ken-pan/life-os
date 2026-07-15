@@ -53,6 +53,16 @@ struct ScanView: View {
                 Spacer()
 
                 // 实时引导:跟踪异常(橙色) > 家具补拍走位 > 机位站位
+                // 降级采集提示(低电量/过热):慢一点也比被系统杀进程强
+                if let reason = model.scanController.degradedReason {
+                    Label(reason, systemImage: "thermometer.sun")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                        .padding(6)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .padding(.bottom, 2)
+                }
+
                 // Home Frame 徽标:对齐上了就一直亮着 —— 「我知道我在户型的哪里」
                 if let reg = model.scanController.homeFrame, reg.ok {
                     Label(String(format: "已对齐户型 · 残差 %.0fcm", reg.medianCm), systemImage: "scope")
