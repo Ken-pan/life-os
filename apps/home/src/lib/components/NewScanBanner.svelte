@@ -46,26 +46,54 @@
     scan = null
   }
 
+  /** 优化副本是「整包」性质(含墙体/储藏区),摆家具式合并会做出两套户型的乱炖 */
+  const isOptimizedCopy = $derived(scan?.device === 'server-optimized')
+
   async function place() {
     if (!scan || pulling) return
+    const mode = isOptimizedCopy ? 'replace' : 'furniture'
+    if (mode === 'replace' && !confirm(
+      `应用「${scan.label || '优化副本'}」将整包替换当前户型(墙体、家具、储藏区)。可撤销。继续?`,
+    )) return
     pulling = true
     progress = '拉取中…'
     try {
       const res = await pullScan(getActiveProject(), scan.id, {
-        mode: 'furniture',
+        mode,
         onProgress: (done, total) => {
           progress = `下载照片 ${done}/${total}…`
         },
       })
+      // 摆家具必须建立在配准成功之上 —— 对不齐时拒绝合并,
+      // 而不是让比例回退把家具摆出两套坐标系的乱炖(实测撞过)
+      const reg = res.report?.registration
+      if (mode === 'furniture' && reg && reg.status !== 'ok') {
+        localStorage.setItem(SEEN_SCAN_KEY, scan.id)
+        scan = null
+        toast(
+          `这次扫描与当前户型对不上(${reg.reason ?? '配准未过门'}),已取消自动摆入。` +
+            '如果要整包换成这次扫描,去 设置 → 云端扫描。',
+          'error',
+        )
+        return
+      }
       applyCloudScan(res.project)
       localStorage.setItem(SEEN_SCAN_KEY, scan.id)
-      const { main, warns } = describeFurniturePull(res)
-      for (const w of warns) toast(w, 'error')
-      toast(main, {
-        actionLabel: '撤销',
-        onAction: () => undoCloudScan(),
-        duration: 10000,
-      })
+      if (mode === 'replace') {
+        toast('已应用优化副本(户型+家具+储藏区)', {
+          actionLabel: '撤销',
+          onAction: () => undoCloudScan(),
+          duration: 10000,
+        })
+      } else {
+        const { main, warns } = describeFurniturePull(res)
+        for (const w of warns) toast(w, 'error')
+        toast(main, {
+          actionLabel: '撤销',
+          onAction: () => undoCloudScan(),
+          duration: 10000,
+        })
+      }
       scan = null
     } catch (err) {
       toast(err instanceof Error ? err.message : String(err), 'error')
@@ -79,12 +107,16 @@
 {#if scan}
   <div class="new-scan-banner" role="note">
     <div class="new-scan-copy">
-      <strong>新扫描{when ? ` · ${when}` : ''}</strong>
-      <span>实测家具与照片还没进这张图 —— 墙体不动,一键摆进来,可撤销。</span>
+      <strong>{isOptimizedCopy ? '优化副本' : '新扫描'}{when ? ` · ${when}` : ''}</strong>
+      <span>
+        {isOptimizedCopy
+          ? '整包应用:墙体、家具、储藏区一起换成整备好的版本,可撤销。'
+          : '实测家具与照片还没进这张图 —— 墙体不动,一键摆进来,可撤销。'}
+      </span>
     </div>
     <div class="new-scan-actions">
       <button type="button" class="new-scan-cta" disabled={pulling} onclick={place}>
-        {pulling ? progress || '拉取中…' : '摆进户型'}
+        {pulling ? progress || '拉取中…' : isOptimizedCopy ? '应用优化副本' : '摆进户型'}
       </button>
       <button
         type="button"
