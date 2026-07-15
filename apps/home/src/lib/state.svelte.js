@@ -1787,14 +1787,20 @@ export function getActiveProject() {
 /** 浏览页固定显示 508 参数化户型，不受墙图编辑态干扰。 */
 export function getBrowseFloorPlan() {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  // 户型本体就是墙图(扫描替换/已转换)时,浏览就看它本身 —— 此前无条件
+  // 降级成 508 参数模式,会把扫描墙丢掉、用开发商图纸重建房间,再叠上
+  // 扫描坐标系的家具:两套户型大乱炖(2026-07-15 用户实测撞上)。
+  if (raw.layoutMode === 'wallGraph' && raw.wallGraph) {
+    return hydrateProject(raw)
+  }
   return hydrateProject({
     ...raw,
     layoutMode: 'parametric508',
     wallGraph: undefined,
     graphOpenings: [],
     zones: [],
-    // placements 留着:墙图编辑的产物不该带进浏览视图,但**家具**要 ——
-    // 扫描摆进来的实测家具就靠它显示,清掉的话平面图永远是空房。
+    // placements 留着:508 上未转正的墙图编辑不该带进浏览视图,但**家具**
+    // 要 —— 扫描摆进来的实测家具就靠它显示,清掉的话平面图永远是空房。
   })
 }
 
