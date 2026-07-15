@@ -222,7 +222,16 @@
   let snapFlashTimer
   let zoomChromeExpanded = $state(false)
 
-  const planEditing = $derived(editMode || graphEditMode)
+  // Every wall-graph layer counts, not just walls: this only decides whether the
+  // zoom chrome collapses out of the way, and having it expand in 画区 but shrink
+  // to a chip in 建墙 made one control change shape per tool for no reason.
+  const planEditing = $derived(
+    editMode ||
+      graphEditMode ||
+      zoneEditMode ||
+      placementEditMode ||
+      viewpointEditMode,
+  )
   const zoomChromeCollapsed = $derived(
     planEditing && !toolbarMinimal && !zoomChromeExpanded,
   )
@@ -857,7 +866,6 @@
   class="plan-shell"
   class:compact
   class:edit-mode={editMode}
-  class:plan-editing={planEditing}
   class:canvas-priority={canvasPriority}
   class:toolbar-minimal={toolbarMinimal}
 >
@@ -1057,9 +1065,12 @@
       flex: 1 1 auto;
     }
 
+    /* Sits above the 详情 FAB rather than beside it: the FAB owns the
+       bottom-right corner (z-index 48), and overlapping it made 放大 —— the
+       button nearest the corner —— impossible to tap. */
     .plan-shell.canvas-priority.toolbar-minimal .plan-toolbar {
       top: auto;
-      bottom: var(--space-2-5);
+      bottom: calc(var(--space-2-5) + 52px);
       right: var(--space-2-5);
       left: auto;
       flex-wrap: nowrap;
@@ -1096,14 +1107,11 @@
     box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.35);
   }
 
-  @media (min-width: 600px) {
-    .plan-shell.canvas-priority.plan-editing .plan-toolbar {
-      top: auto;
-      bottom: var(--stack-tight);
-      right: var(--stack-tight);
-      left: auto;
-    }
-  }
+  /* Desktop editing used to move this toolbar to the bottom-right, where it
+     landed underneath the 详情 FAB (z-index 48 vs 4) — the zoom control was
+     completely unclickable while 建墙/门窗/选择 or 508 editing was armed.
+     The canvas top-right is free now that the edit header is a single row, so
+     zoom simply stays where browse mode already puts it. */
 
   .plan-toolbar-collapsed {
     padding: 3px 6px;

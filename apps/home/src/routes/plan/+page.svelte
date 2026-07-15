@@ -1661,10 +1661,32 @@
       class="placement-kinds-picker plan-modal-picker"
       aria-labelledby="placement-kinds-title"
       onclose={() => (placementKindsOpen = false)}
+      onclick={(e) => {
+        // A <dialog> gets the click even when it lands on the ::backdrop, so
+        // compare against its box to tell "outside" from "on a kind button".
+        if (e.target !== e.currentTarget) return
+        const r = e.currentTarget.getBoundingClientRect()
+        const outside =
+          e.clientX < r.left ||
+          e.clientX > r.right ||
+          e.clientY < r.top ||
+          e.clientY > r.bottom
+        if (outside) placementKindsOpen = false
+      }}
     >
-      <p id="placement-kinds-title" class="storage-picker-title">
-        选择家具类型
-      </p>
+      <!-- Sticky, with its own ×: the list is 54 items tall, so a 取消 at the
+           bottom means scrolling ~1000px to dismiss — and a phone has no Esc. -->
+      <div class="placement-kinds-head">
+        <p id="placement-kinds-title" class="storage-picker-title">
+          选择家具类型
+        </p>
+        <button
+          type="button"
+          class="plan-drawer-close"
+          aria-label="关闭家具类型选择"
+          onclick={() => (placementKindsOpen = false)}>×</button
+        >
+      </div>
       {#each PLACEMENT_GROUP_ORDER as group (group)}
         <p class="placement-kinds-group">{group}</p>
         <div class="storage-picker-grid placement-kinds-grid">
@@ -2462,6 +2484,26 @@
     box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.35);
     min-width: min(320px, calc(100% - 32px));
     max-width: calc(100% - 32px);
+  }
+
+  .placement-kinds-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    /* Cancels the dialog's own padding so the sticky bar spans the full width
+       and nothing scrolls visibly past its edges. */
+    margin: -16px -16px 0;
+    padding: 12px 16px 8px;
+    background: color-mix(in srgb, var(--card) 96%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  }
+
+  .placement-kinds-head .storage-picker-title {
+    margin: 0;
   }
 
   .storage-picker::backdrop,
