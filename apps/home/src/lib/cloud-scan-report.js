@@ -6,6 +6,10 @@
 /** 最近处理过(拉取/忽略)的扫描 —— 新扫描横幅据此判断「有没有新货」 */
 export const SEEN_SCAN_KEY = 'homeos_seen_scan_v1'
 
+/** 最近**应用过**的优化副本(id@updatedAt)。设过之后 = 订阅:
+ * 云端副本再更新,打开页面自动跟进(强制推送语义),不再逐次点确认。 */
+export const APPLIED_COPY_KEY = 'homeos_applied_copy_v1'
+
 /**
  * 「已处理」标记值:id + 更新时间。同一份副本在云端被原地更新
  * (比如服务端补墙后 bump updated_at)也要重新提示。

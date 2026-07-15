@@ -4,7 +4,7 @@
   // 只在登录后出现;拉过/忽略过的扫描(SEEN_SCAN_KEY)不再提示。
   import { auth } from '$lib/auth.svelte.js'
   import { listScans, pullScan } from '$lib/cloud-scan.js'
-  import { describeFurniturePull, SEEN_SCAN_KEY, scanSeenValue } from '$lib/cloud-scan-report.js'
+  import { describeFurniturePull, SEEN_SCAN_KEY, APPLIED_COPY_KEY, scanSeenValue } from '$lib/cloud-scan-report.js'
   import {
     applyCloudScan,
     getActiveProject,
@@ -17,6 +17,9 @@
   let pulling = $state(false)
   let progress = $state('')
 
+  /** 本次页面已尝试过自动跟进(失败也不再重试,防循环) */
+  let autoTried = false
+
   $effect(() => {
     if (!auth.user) {
       scan = null
@@ -26,8 +29,26 @@
     listScans()
       .then((rows) => {
         if (!alive || !rows?.length) return
+        const newest = rows[0]
         const seen = localStorage.getItem(SEEN_SCAN_KEY)
-        if (scanSeenValue(rows[0]) !== seen) scan = rows[0]
+        const applied = localStorage.getItem(APPLIED_COPY_KEY)
+        // 强制推送:应用过任意一版优化副本(= 订阅)的设备,云端副本
+        // 一更新就自动整包跟进 —— 不用每台设备逐次点「应用」。可撤销。
+        const subscribed =
+          applied ||
+          /server-optimized/.test(getActiveProject()?.meta?.sourceNote ?? '')
+        if (
+          newest.device === 'server-optimized' &&
+          subscribed &&
+          scanSeenValue(newest) !== applied &&
+          !autoTried
+        ) {
+          autoTried = true
+          scan = newest
+          place({ auto: true })
+          return
+        }
+        if (scanSeenValue(newest) !== seen) scan = newest
       })
       .catch(() => {}) // 网络/权限问题不打扰画图
     return () => {
@@ -49,10 +70,11 @@
   /** 优化副本是「整包」性质(含墙体/储藏区),摆家具式合并会做出两套户型的乱炖 */
   const isOptimizedCopy = $derived(scan?.device === 'server-optimized')
 
-  async function place() {
+  async function place({ auto = false } = {}) {
     if (!scan || pulling) return
     const mode = isOptimizedCopy ? 'replace' : 'furniture'
-    if (mode === 'replace' && !confirm(
+    // 自动跟进(订阅态)不弹确认 —— 用户已在首次应用时给过授权;可撤销
+    if (!auto && mode === 'replace' && !confirm(
       `应用「${scan.label || '优化副本'}」将整包替换当前户型(墙体、家具、储藏区)。可撤销。继续?`,
     )) return
     pulling = true
@@ -80,7 +102,9 @@
       applyCloudScan(res.project)
       localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
       if (mode === 'replace') {
-        toast('已应用优化副本(户型+家具+储藏区)', {
+        // 订阅标记:此后云端每次更新副本,本设备自动跟进
+        localStorage.setItem(APPLIED_COPY_KEY, scanSeenValue(scan))
+        toast(auto ? '户型已自动更新到最新优化副本' : '已应用优化副本(户型+家具+储藏区)', {
           actionLabel: '撤销',
           onAction: () => undoCloudScan(),
           duration: 10000,
