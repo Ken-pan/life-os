@@ -1,0 +1,43 @@
+# HomeScan · HomeOS 的 iOS 扫描伴侣应用（RoomPlan → Supabase → HomeOS 网页端）
+# 生成工程:xcodegen generate（.xcodeproj 不入库）
+# 真机部署:在 Xcode 里选自己的 Team(Signing & Capabilities),或设 DEVELOPMENT_TEAM
+name: HomeScan
+options:
+  bundleIdPrefix: space.kenos
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: 2.5.0
+targets:
+  HomeScan:
+    type: application
+    platform: iOS
+    sources: [HomeScan]
+    dependencies:
+      - package: Supabase
+        product: Supabase
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.homescan
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: false
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+    info:
+      path: HomeScan/Info.plist
+      properties:
+        CFBundleDisplayName: HomeScan
+        NSCameraUsageDescription: 扫描房间结构与拍摄机位照片需要使用相机
+        UIRequiredDeviceCapabilities: [arkit]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+  HomeScanTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [HomeScanTests]
+    dependencies:
+      - target: HomeScan
