@@ -20,7 +20,7 @@
     getAngleSnapDeg,
     setAngleSnapDeg,
   } from '$lib/state.svelte.js'
-  import { getActiveProject } from '$lib/state.svelte.js'
+  import { getActiveProject, isStructureLocked } from '$lib/state.svelte.js'
   import {
     auth,
     signIn,
@@ -50,6 +50,8 @@
   }
 
   const project = $derived(getActiveProject())
+  /** 结构锁定(扫描实测户型):改户型的入口全部收起,见 state.isStructureLocked */
+  const structureLocked = $derived(isStructureLocked())
   const wallGraphMode = $derived(isWallGraphMode())
 
   function onConvertToWallGraph() {
@@ -276,7 +278,7 @@
   <SettingsRow label="储藏区">
     <span class="settings-value">{project.storageZones.length} 处</span>
   </SettingsRow>
-  <SettingsRow label="编辑户型">
+  <SettingsRow label="平面图">
     <a class="settings-link" href="/plan">前往平面图 →</a>
   </SettingsRow>
   <SettingsRow label="布局备份">
@@ -284,29 +286,33 @@
       >导出 JSON</button
     >
   </SettingsRow>
-  <SettingsRow label="布局恢复">
-    <SettingsFileButton
-      label="导入 JSON"
-      accept="application/json,.json"
-      onchange={onImportLayout}
-    />
-  </SettingsRow>
+  {#if !structureLocked}
+    <SettingsRow label="布局恢复">
+      <SettingsFileButton
+        label="导入 JSON"
+        accept="application/json,.json"
+        onchange={onImportLayout}
+      />
+    </SettingsRow>
+  {/if}
   {#if auth.user}
     <SettingsStackBlock label="云端扫描">
       <CloudScanPicker />
     </SettingsStackBlock>
     <p class="block-desc">
-      用 iPhone 上的 HomeScan(RoomPlan)扫描全屋后在这里拉取。默认只并入机位照片 ——
-      你这份户型是量过的,比扫描准,不会被动。初次可选「摆家具」，让实测家具各就各位。
+      用 iPhone 上的 HomeScan(RoomPlan)扫描全屋后在这里拉取。日常用「摆家具」：
+      墙体不动,只更新家具位置尺寸与照片。也可以直接在平面图顶部的「新扫描」横幅一键摆入。
     </p>
   {/if}
-  <SettingsActionRow
-    label="恢复默认"
-    desc="覆盖当前户型尺寸参数"
-    buttonLabel="默认户型尺寸"
-    variant="danger"
-    onclick={onReset508Layout}
-  />
+  {#if !structureLocked}
+    <SettingsActionRow
+      label="恢复默认"
+      desc="覆盖当前户型尺寸参数"
+      buttonLabel="默认户型尺寸"
+      variant="danger"
+      onclick={onReset508Layout}
+    />
+  {/if}
 </SettingsSection>
 
 <style>

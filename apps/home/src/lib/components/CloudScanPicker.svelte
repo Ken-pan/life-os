@@ -10,6 +10,7 @@
     canUndoCloudScan,
     undoCloudScan,
     getActiveProject,
+    isStructureLocked,
   } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
 
@@ -21,18 +22,23 @@
   let error = $state('')
   let undoAvailable = $state(false)
   /** @type {import('$lib/cloud-scan.js').PullMode} */
-  let mode = $state('photos')
+  let mode = $state('furniture')
+  /** 结构锁定时「整包替换」不该出现 —— 它会拿扫描墙覆盖已确定的户型 */
+  const structureLocked = $derived(isStructureLocked())
+  const modes = $derived(
+    structureLocked ? MODES.filter((m) => m.value !== 'replace') : MODES,
+  )
 
   const MODES = [
     {
-      value: 'photos',
-      label: '只加照片与状态',
-      desc: '户型和家具都不动，只把这次拍的机位照片并进来（日常用这个）',
-    },
-    {
       value: 'furniture',
       label: '照片 + 摆家具',
-      desc: '墙体仍不动；把实测家具摆进现有户型，位置重合的手录家具让位给实测的',
+      desc: '墙体不动；按实测更新家具位置与尺寸，并并入照片（日常用这个）',
+    },
+    {
+      value: 'photos',
+      label: '只加照片与状态',
+      desc: '户型和家具都不动，只把这次拍的机位照片并进来',
     },
     {
       value: 'replace',
@@ -57,6 +63,8 @@
   /** @param {import('$lib/cloud-scan.js').ScanRow} scan */
   async function onPull(scan) {
     if (pullingId) return
+    // 结构锁定时绝不整包替换 —— 户型已按实测确定,只更新搭在上面的家具
+    if (structureLocked && mode === 'replace') mode = 'furniture'
     const name = scan.label || '未命名扫描'
     const confirmMsg = {
       photos: `把「${name}」的机位照片并进来?户型与家具不变。`,
@@ -134,7 +142,7 @@
   {:else}
     <fieldset class="modes">
       <legend class="modes-legend">拉取方式</legend>
-      {#each MODES as m (m.value)}
+      {#each modes as m (m.value)}
         <label class="mode" class:mode-on={mode === m.value}>
           <input type="radio" name="pullmode" value={m.value} bind:group={mode} />
           <span class="mode-text">
