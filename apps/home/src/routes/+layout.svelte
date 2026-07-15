@@ -72,6 +72,11 @@
   onMount(() => {
     applyTheme()
     const cleanupAuth = initAuth()
+    // 开发免登录同步:未登录的 localhost 窗口自动跟进云端优化副本
+    // (生产构建 DEV=false,动态 import 连 chunk 都不会打进去)
+    if (import.meta.env.DEV) {
+      void import('$lib/dev-canonical.js').then((m) => m.maybeDevSyncCanonical())
+    }
     const cleanupViewport = bindViewportHeight()
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupSw = registerServiceWorker()
