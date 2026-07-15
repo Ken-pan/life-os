@@ -14,7 +14,13 @@
  * 每步候选都跑一次完整 analyzeCirculation(6in 栅格,毫秒级),分数是真几何,
  * 不是启发式近似 —— 这正是「LLM 解释,几何引擎裁决」的架构分工。
  */
-import { analyzeCirculation, CLEARANCE, pointInPolygon, roomsAsZones } from './circulation.js'
+import {
+  analyzeCirculation,
+  buildCirculationBase,
+  CLEARANCE,
+  pointInPolygon,
+  roomsAsZones,
+} from './circulation.js'
 import { placementSpec } from './placements.js'
 import { wallAnchorSegments } from './wall-anchor.js'
 
@@ -638,7 +644,10 @@ export async function solveLayout(project, profileKey, opts = {}) {
 
   const zones = zonesOf(project)
   const placements = project.placements ?? []
-  const baseCirc = analyzeCirculation(project)
+  // 静态底图(分区/墙/门的栅格分类)只算一次:每步评估只有家具变,
+  // 复用底图砍掉栅格化大头 —— 省下的时间直接变成更多迭代 = 更优解
+  const circBase = buildCirculationBase(project)
+  const baseCirc = analyzeCirculation(project, { base: circBase })
   if (!baseCirc.ok) return { ok: false, reason: baseCirc.reason ?? '没有可分析的户型', profile, moves: [] }
 
   const movables = placements
@@ -728,7 +737,7 @@ export async function solveLayout(project, profileKey, opts = {}) {
   const evaluate = (state) => {
     const nextPlacements = materialize(state)
     const candidate = { ...project, placements: nextPlacements }
-    const circ = analyzeCirculation(candidate)
+    const circ = analyzeCirculation(candidate, { base: circBase })
     if (!circ.ok) return -Infinity
     const affinity = designPenaltyIn(ctx, boxByIdOf(nextPlacements))
     return scoreState({
@@ -794,7 +803,7 @@ export async function solveLayout(project, profileKey, opts = {}) {
 
   const finalPlacements = materialize(best)
   const finalProject = { ...project, placements: finalPlacements }
-  const finalCirc = analyzeCirculation(finalProject)
+  const finalCirc = analyzeCirculation(finalProject, { base: circBase })
   const moves = []
   for (let i = 0; i < best.length; i++) {
     const s = best[i]

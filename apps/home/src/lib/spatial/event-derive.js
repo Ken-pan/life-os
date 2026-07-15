@@ -218,6 +218,63 @@ export function isKnownEventType(type) {
   return TYPE_SET.has(type)
 }
 
+/**
+ * 一件家具的尺寸测量史(object_observed/moved 的 scan 源带 wIn/hIn)。
+ * RoomPlan 对扫不全的物体给「偏小包围盒 + 低置信度」,单次测量差 7-28in
+ * 是实测常态 —— 攒 ≥3 次后中位数远比「最近一次」可靠(能力5 的免点云
+ * 路线),spread 大 = 这件的尺寸别太当真(能力18 的分维置信度)。
+ * 90° 互换按就近配对(同一件家具可能被转着扫)。
+ * @param {any[]} events
+ * @returns {Map<string, {
+ *   samples: number,
+ *   medianWIn: number, medianHIn: number,
+ *   spreadWIn: number, spreadHIn: number,
+ * }>} placementId → 统计(至少 1 个样本才有条目)
+ */
+export function dimensionStats(events) {
+  /** @type {Map<string, Array<{ w: number, h: number }>>} */
+  const samplesBy = new Map()
+  for (const e of events) {
+    if (!isValidEvent(e)) continue
+    if (e.type !== 'object_observed' && e.type !== 'object_moved') continue
+    if (e.type === 'object_moved' && e.data?.source !== 'scan') continue
+    const id = e.subject?.placementId
+    const w = e.data?.wIn
+    const h = e.data?.hIn
+    if (!id || !Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) continue
+    const list = samplesBy.get(id) ?? []
+    // 90° 互换归一:与首个样本就近对齐,转着扫的同一件不该被拆成两组数
+    if (list.length) {
+      const ref = list[0]
+      const direct = Math.abs(w - ref.w) + Math.abs(h - ref.h)
+      const swapped = Math.abs(h - ref.w) + Math.abs(w - ref.h)
+      list.push(direct <= swapped ? { w, h } : { w: h, h: w })
+    } else {
+      list.push({ w, h })
+    }
+    samplesBy.set(id, list)
+  }
+
+  const median = (nums) => {
+    const s = [...nums].sort((a, b) => a - b)
+    const mid = s.length >> 1
+    return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2
+  }
+  const out = new Map()
+  for (const [id, list] of samplesBy) {
+    const ws = list.map((s) => s.w)
+    const hs = list.map((s) => s.h)
+    out.set(id, {
+      samples: list.length,
+      medianWIn: median(ws),
+      medianHIn: median(hs),
+      spreadWIn: Math.max(...ws) - Math.min(...ws),
+      spreadHIn: Math.max(...hs) - Math.min(...hs),
+    })
+  }
+  return out
+}
+
 /** 相对时间人话:「今天 / 昨天 / N 天前」(找东西答案里的「上次确认」) */
 export function daysAgoLabel(ts, now = Date.now()) {
   if (!Number.isFinite(ts) || ts <= 0) return ''

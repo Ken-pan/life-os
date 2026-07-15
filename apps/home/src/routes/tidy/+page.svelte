@@ -149,9 +149,11 @@
     proposals = null
     try {
       // 分块异步:每 16 次迭代让出事件循环 —— 真实户型一套要几秒,
-      // 同步跑会把整个页面(和被节流的定时器)一起冻住
+      // 同步跑会把整个页面(和被节流的定时器)一起冻住。
+      // 静态底图缓存(buildCirculationBase)8× 提速后,把省下的时间换成
+      // 更多迭代 = 更优解:400×3 实测 ~9s,仍比原来的 160×3(30s)快
       proposals = await solveAllProfiles(getActiveProject(), {
-        iterations: 160,
+        iterations: 400,
         seed: 42,
         yieldFn: () => new Promise((r) => setTimeout(r)),
         onProgress: (pi, frac) => {

@@ -43,6 +43,31 @@ export function distanceFromWidth(realW, boxWpx, imgW, hFovDeg) {
 }
 
 /**
+ * 锚点尺寸:有 LiDAR 实测真值(attrs.measuredWIn/HIn,英寸)就用它,
+ * 没有才退回 bounds —— 定位精度上限就是锚点尺寸(见文件头:目录尺寸
+ * ~32cm/7.2°,实测尺寸 ~11cm/1.75°),bounds 可能被拖改或来自图纸。
+ * 旋转后 w/h 可能互换:按与当前 bounds 的就近朝向选原样还是交换
+ * (与「恢复实测」同一手法)。
+ *
+ * @param {{ w: number, h: number }} bounds plan px
+ * @param {{ measuredWIn?: number, measuredHIn?: number } | undefined} attrs
+ * @param {number} [pxPerIn]
+ * @returns {{ w: number, h: number }}
+ */
+export function preferMeasuredDims(bounds, attrs, pxPerIn = 3) {
+  const mw = attrs?.measuredWIn
+  const mh = attrs?.measuredHIn
+  if (!Number.isFinite(mw) || !Number.isFinite(mh) || mw <= 0 || mh <= 0) {
+    return { w: bounds.w, h: bounds.h }
+  }
+  const mwPx = mw * pxPerIn
+  const mhPx = mh * pxPerIn
+  const direct = Math.abs(mwPx - bounds.w) + Math.abs(mhPx - bounds.h)
+  const swapped = Math.abs(mwPx - bounds.h) + Math.abs(mhPx - bounds.w)
+  return direct <= swapped ? { w: mwPx, h: mhPx } : { w: mhPx, h: mwPx }
+}
+
+/**
  * 矩形家具在某个视线方向下的**轮廓宽度**（垂直于视线的投影）。
  *
  * 家具是有朝向的矩形：正对着看是 w，斜 45° 看是 (w+h)/√2。不算这一步，

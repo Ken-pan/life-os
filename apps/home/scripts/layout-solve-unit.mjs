@@ -24,7 +24,11 @@ import {
   solveAllProfiles,
   solveLayout,
 } from '../src/lib/spatial/layout-solve.js'
-import { analyzeCirculation, CLEARANCE } from '../src/lib/spatial/circulation.js'
+import {
+  analyzeCirculation,
+  buildCirculationBase,
+  CLEARANCE,
+} from '../src/lib/spatial/circulation.js'
 import { buildFromWallGraph } from '../src/lib/spatial/wall-graph.js'
 
 const PX = 36
@@ -424,6 +428,45 @@ for (const s of slots) {
   )
   assert.ok(empty.openIn > full.openIn, `空房更开阔(${empty.openIn} vs ${full.openIn})`)
   assert.ok(empty.openIn > 40, `12ft 房间的开阔圆该有几英尺(got ${empty.openIn})`)
+}
+
+/* ---- 静态底图复用:与全量重算结果全等,且明显更快 ---- */
+{
+  const p = baseProject({
+    placements: [
+      { id: 'pl1', kind: 'sofa', label: '沙发', x: 24 + ft(12), y: 24, w: ft(8), h: ft(3), rotation: 0, zoneId: 'z-2' },
+      { id: 'pl2', kind: 'cabinet', label: '柜', x: 24 + ft(13), y: 24 + ft(4.5), w: ft(7), h: ft(5.5), rotation: 0, zoneId: 'z-2' },
+      { id: 'pl3', kind: 'bed', label: '床', x: 24 + ft(1), y: 24 + ft(1), w: ft(5), h: ft(6.6), rotation: 0, zoneId: 'z-1' },
+    ],
+  })
+  const base = buildCirculationBase(p)
+  const full = analyzeCirculation(p)
+  const reused = analyzeCirculation(p, { base })
+  assert.deepEqual(reused, full, '复用底图必须与全量重算逐字段全等')
+
+  // 家具变了、底图不变:换个摆法仍然全等
+  const moved = {
+    ...p,
+    placements: p.placements.map((x) =>
+      x.id === 'pl2' ? { ...x, x: 24 + ft(12), y: 24 + ft(6) } : x,
+    ),
+  }
+  assert.deepEqual(
+    analyzeCirculation(moved, { base }),
+    analyzeCirculation(moved),
+    '挪家具后复用底图仍全等',
+  )
+
+  // 提速:同一 project 评估 60 次,复用底图要明显快于全量
+  const N = 60
+  const t0 = Date.now()
+  for (let i = 0; i < N; i++) analyzeCirculation(p)
+  const fullMs = Date.now() - t0
+  const t1 = Date.now()
+  for (let i = 0; i < N; i++) analyzeCirculation(p, { base })
+  const reuseMs = Date.now() - t1
+  console.log(`analyzeCirculation ×${N}: 全量 ${fullMs}ms vs 复用底图 ${reuseMs}ms`)
+  assert.ok(reuseMs * 2 < fullMs, `复用底图至少 2× 提速(${fullMs} vs ${reuseMs})`)
 }
 
 console.log('layout-solve-unit: all assertions passed')

@@ -189,6 +189,23 @@ const HEADING = 350 // 大致朝上
   near('占满画面 → 距离 = (W/2)/tan(半FOV)', d, 50 / Math.tan((HFOV * Math.PI) / 360), 0.01)
 }
 
+// —— H. 锚点尺寸:实测真值优先(定位精度上限所在) ——
+{
+  const { preferMeasuredDims } = await import('../src/lib/spatial/localize.js')
+  // 无实测 → 原样
+  const noAttrs = preferMeasuredDims({ w: 90, h: 60 }, undefined)
+  ok('无实测退回 bounds', noAttrs.w === 90 && noAttrs.h === 60)
+  // 有实测(英寸×3=px):32in×24in → 96×72px,bounds 被拖歪成 90×60 → 用实测
+  const measured = preferMeasuredDims({ w: 90, h: 60 }, { measuredWIn: 32, measuredHIn: 24 })
+  ok('实测覆盖拖改后的 bounds', measured.w === 96 && measured.h === 72)
+  // 旋转 90° 后 bounds 变 60×90:实测按就近朝向交换
+  const rotated = preferMeasuredDims({ w: 60, h: 90 }, { measuredWIn: 32, measuredHIn: 24 })
+  ok('旋转后实测就近交换', rotated.w === 72 && rotated.h === 96)
+  // 半残实测(只有 w)不用 —— 宁可退回 bounds 也不混搭
+  const partial = preferMeasuredDims({ w: 90, h: 60 }, { measuredWIn: 32 })
+  ok('半残实测不混搭', partial.w === 90 && partial.h === 60)
+}
+
 console.log(`\n${pass + fails.length} checks, ${fails.length} failures`)
 if (fails.length) {
   for (const f of fails) console.log('FAIL ' + f)

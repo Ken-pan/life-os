@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 import {
   clutterRecurrence,
   daysAgoLabel,
+  dimensionStats,
   isValidEvent,
   lastObservedAt,
   makeEvent,
@@ -110,6 +111,33 @@ const NOW = 1_800_000_000_000
   assert.equal(s.rejectedCount, 1)
   assert.equal(s.tidyDoneCount, 1)
   assert.equal(s.sinceDays, 9)
+}
+
+/* ---- 尺寸测量史:中位数 + 离散度,90° 互换归一 ---- */
+{
+  const events = [
+    // 问题柜:三次扫描测出 30/34/58in(最后一次是包围盒抖动的离群值)
+    makeEvent('object_observed', { placementId: 'p1' }, { wIn: 30, hIn: 16 }, NOW - 3 * DAY),
+    makeEvent('object_observed', { placementId: 'p1' }, { wIn: 34, hIn: 15 }, NOW - 2 * DAY),
+    makeEvent('object_moved', { placementId: 'p1' }, { source: 'scan', wIn: 58, hIn: 17 }, NOW - 1 * DAY),
+    // 转着扫的桌子:第二次 w/h 互换,应归一回同一组
+    makeEvent('object_observed', { placementId: 'p2' }, { wIn: 60, hIn: 30 }, NOW - 2 * DAY),
+    makeEvent('object_observed', { placementId: 'p2' }, { wIn: 31, hIn: 59 }, NOW - 1 * DAY),
+    // layout 源的挪动不带测量语义
+    makeEvent('object_moved', { placementId: 'p3' }, { source: 'layout', wIn: 40, hIn: 20 }, NOW),
+    // 无尺寸的观测不产生样本
+    makeEvent('object_observed', { placementId: 'p4' }, {}, NOW),
+  ]
+  const stats = dimensionStats(events)
+  const p1 = stats.get('p1')
+  assert.equal(p1.samples, 3)
+  assert.equal(p1.medianWIn, 34, '中位数扛住离群值(58 被压掉)')
+  assert.equal(p1.spreadWIn, 28, '离散度如实报出(这件的尺寸别太当真)')
+  const p2 = stats.get('p2')
+  assert.equal(p2.samples, 2)
+  assert.equal(p2.medianWIn, 59.5, '90° 互换归一后再取中位')
+  assert.ok(!stats.has('p3'), 'layout 源不算测量')
+  assert.ok(!stats.has('p4'), '无尺寸不产生样本')
 }
 
 /* ---- 相对时间人话 ---- */

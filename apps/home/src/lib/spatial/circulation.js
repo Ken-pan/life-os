@@ -166,7 +166,14 @@ export function roomsAsZones(project) {
  * 栅格化户型。
  * @param {SpatialProject} project
  */
-function buildGrid(project) {
+/**
+ * 静态底图:分区归属 + 墙 + 门洞的栅格分类 —— 只跟户型有关,与家具无关。
+ * 这是栅格化的全部重头(每格对每个分区做 point-in-polygon、对每段墙算距离);
+ * 布局求解器每步只挪一件家具,静态底图一次算好反复复用(见 analyzeCirculation
+ * 的 opts.base),实测把单步评估的大头砍掉。
+ * @param {SpatialProject} project
+ */
+export function buildCirculationBase(project) {
   const zones = project.zones?.length ? project.zones : roomsAsZones(project)
   const polys = zones.map((z) => z.polygon)
   const all = polys.flat()
@@ -179,7 +186,6 @@ function buildGrid(project) {
   const cols = Math.ceil((maxX - minX) / GRID_PX) + 1
   const rows = Math.ceil((maxY - minY) / GRID_PX) + 1
 
-  const rects = obstacleRects(project)
   // walls 两种 layoutMode 都有(hydrate 时派生),比 wallGraph.edges 更通用。
   // 只有 kind==='wall' 是障碍:'gap' 是开口,'threshold' 是门槛(地面过渡条,
   // 人照走不误)—— 把门槛当墙会把洗衣间这类房间整个封死。
@@ -188,8 +194,8 @@ function buildGrid(project) {
     .map((w) => ({ a: w.from, b: w.to }))
   const gates = doorGates(project)
 
-  /** 0=区外/墙, 1=可站, 2=家具占据 */
-  const cell = new Uint8Array(cols * rows)
+  /** 0=区外/墙, 1=可站(未叠家具) */
+  const base = new Uint8Array(cols * rows)
   /** 每格所属 zone 下标(-1 无) */
   const zoneOf = new Int16Array(cols * rows).fill(-1)
 
@@ -222,15 +228,38 @@ function buildGrid(project) {
         )
         if (nearWall) continue // 0 = 墙
       }
-
-      const onFurniture = rects.some(
-        (rc) =>
-          p.x >= rc.x && p.x <= rc.x + rc.w && p.y >= rc.y && p.y <= rc.y + rc.h,
-      )
-      cell[r * cols + c] = onFurniture ? 2 : 1
+      base[r * cols + c] = 1
     }
   }
-  return { cols, rows, minX, minY, cell, zoneOf, gates, rects, zones }
+  return { cols, rows, minX, minY, base, zoneOf, gates, zones }
+}
+
+/**
+ * 底图 + 家具 → 本次分析用的完整栅格。
+ * 家具按矩形直接盖章(与逐格 point-in-rect 等价:格点在矩形内即占据),
+ * 只扫每件家具覆盖的格子范围,不再全屋跑一遍。
+ * @param {SpatialProject} project
+ * @param {ReturnType<typeof buildCirculationBase> | null} [reuseBase]
+ */
+function buildGrid(project, reuseBase = null) {
+  const b = reuseBase ?? buildCirculationBase(project)
+  if (!b) return null
+  const { cols, rows, minX, minY } = b
+  const rects = obstacleRects(project)
+  const cell = b.base.slice()
+  for (const rc of rects) {
+    const c0 = Math.max(0, Math.ceil((rc.x - minX) / GRID_PX))
+    const c1 = Math.min(cols - 1, Math.floor((rc.x + rc.w - minX) / GRID_PX))
+    const r0 = Math.max(0, Math.ceil((rc.y - minY) / GRID_PX))
+    const r1 = Math.min(rows - 1, Math.floor((rc.y + rc.h - minY) / GRID_PX))
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const i = r * cols + c
+        if (cell[i] === 1) cell[i] = 2
+      }
+    }
+  }
+  return { ...b, cell, rects }
 }
 
 /**
@@ -387,8 +416,13 @@ function cellsNear(g, x, y, radiusPx) {
  *   isolatedZones: Array<{ zoneId: string, nameZh: string }>,
  *   totals: { areaSqft: number, freeSqft: number, usedRatio: number },
  * }}
+ * @param {SpatialProject} project
+ * @param {{ base?: ReturnType<typeof buildCirculationBase> | null }} [opts]
+ *   base:预先算好的静态底图(buildCirculationBase)。布局求解器每步只挪
+ *   家具、户型不变 —— 复用底图把每步评估的栅格化大头砍掉。
+ *   ⚠️ 传入的 base 必须来自同一 project 的墙/分区/门,否则结果错得悄无声息。
  */
-export function analyzeCirculation(project) {
+export function analyzeCirculation(project, opts = {}) {
   const empty = {
     ok: false,
     zoneStats: [],
@@ -397,7 +431,7 @@ export function analyzeCirculation(project) {
     isolatedZones: [],
     totals: { areaSqft: 0, freeSqft: 0, usedRatio: 0 },
   }
-  const g = buildGrid(project)
+  const g = buildGrid(project, opts.base ?? null)
   if (!g) return { ...empty, reason: '没有房间数据,先从 iPhone 扫描或手动画分区' }
   const { cols, rows, cell, zoneOf, minX, minY, zones, gates, rects } = g
 
@@ -481,6 +515,20 @@ export function analyzeCirculation(project) {
       blockedDoors.push({ id: gate.id, reason: '门口被家具占住' })
     } else if (!near.some((i) => seen[i])) {
       blockedDoors.push({ id: gate.id, reason: '从主通道走不到这道门' })
+    } else {
+      // 分侧检查:门连着两个区,只堵住一侧时另一侧照样可达,整体检查会放行 ——
+      // 但这道门实际已经废了(实测漏报过:柜子贴着门的客厅侧,卧室侧畅通)。
+      // 按所属分区分组:哪一侧有可站格却全都走不到,就是单侧被堵。
+      /** @type {Map<number, boolean>} zone 下标 → 这一侧是否有可达格 */
+      const sides = new Map()
+      for (const i of near) {
+        const zi = zoneOf[i]
+        if (zi < 0) continue
+        sides.set(zi, (sides.get(zi) ?? false) || Boolean(seen[i]))
+      }
+      if (sides.size >= 2 && [...sides.values()].some((reachable) => !reachable)) {
+        blockedDoors.push({ id: gate.id, reason: '门的一侧被家具堵死' })
+      }
     }
   }
 

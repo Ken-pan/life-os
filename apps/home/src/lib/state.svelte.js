@@ -86,7 +86,7 @@ import {
   refineFovDeg,
 } from './photo-exif.js'
 import { describeScene, locateObjects, probeVlm } from './vlm.js'
-import { solveFix } from './spatial/localize.js'
+import { preferMeasuredDims, solveFix } from './spatial/localize.js'
 import { snapGraphPoint } from './spatial/wall-graph.js'
 import {
   createStorageItem,
@@ -741,13 +741,16 @@ function anchorsByZone(raw, zones) {
     const c = { x: b.x + b.w / 2, y: b.y + b.h / 2 }
     const zone = zones.find((z) => z.polygon?.length && pointInPolygon(c, z.polygon))
     if (!zone) continue
+    // 三边定位的精度上限就是锚点尺寸 —— 有 LiDAR 实测真值就不用可拖改的
+    // bounds(localize.js 实测:目录尺寸 ~32cm,实测尺寸 ~11cm)
+    const dims = preferMeasuredDims(b, f.attrs)
     map.get(zone.id)?.push({
       id: f.id,
       label: f.label,
       x: b.x,
       y: b.y,
-      w: b.w,
-      h: b.h,
+      w: dims.w,
+      h: dims.h,
       rotation: f.rotation ?? 0,
     })
   }
@@ -2013,7 +2016,17 @@ export async function syncContainerScans() {
 export function logScanIdentityEvents(identity) {
   if (!identity) return
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
-  const labelOf = new Map((raw.placements ?? []).map((p) => [p.id, p.label]))
+  const byId = new Map((raw.placements ?? []).map((p) => [p.id, p]))
+  const labelOf = (id) => byId.get(id)?.label
+  // 这次扫描的实测尺寸(合并后 attrs 已是最新测量)—— 一起进事件:
+  // 尺寸测量史攒起来才能做「跨扫描中位数融合」,治 RoomPlan 对扫不全
+  // 物体的 7-28in 包围盒抖动(能力5 的免点云路线)
+  const dimsOf = (id) => {
+    const a = byId.get(id)?.attrs
+    return Number.isFinite(a?.measuredWIn) && Number.isFinite(a?.measuredHIn)
+      ? { wIn: a.measuredWIn, hIn: a.measuredHIn, heightIn: a.heightIn }
+      : {}
+  }
   /** @type {Array<{ type: string, subject: Record<string,string>, data: Record<string,any> }>} */
   const entries = []
   for (const pair of identity.pairs ?? []) {
@@ -2021,21 +2034,30 @@ export function logScanIdentityEvents(identity) {
       entries.push({
         type: 'object_moved',
         subject: { placementId: pair.prevId },
-        data: { source: 'scan', movedFt: pair.movedFt ?? 0, label: labelOf.get(pair.prevId) },
+        data: {
+          source: 'scan',
+          movedFt: pair.movedFt ?? 0,
+          label: labelOf(pair.prevId),
+          ...dimsOf(pair.prevId),
+        },
       })
     } else if (pair.state === 'same_unchanged') {
       entries.push({
         type: 'object_observed',
         subject: { placementId: pair.prevId },
-        data: { label: labelOf.get(pair.prevId) },
+        data: { label: labelOf(pair.prevId), ...dimsOf(pair.prevId) },
       })
     }
   }
   for (const id of identity.added ?? []) {
-    entries.push({ type: 'object_added', subject: { placementId: id }, data: { label: labelOf.get(id) } })
+    entries.push({
+      type: 'object_added',
+      subject: { placementId: id },
+      data: { label: labelOf(id), ...dimsOf(id) },
+    })
   }
   for (const id of identity.removed ?? []) {
-    entries.push({ type: 'object_removed', subject: { placementId: id }, data: { label: labelOf.get(id) } })
+    entries.push({ type: 'object_removed', subject: { placementId: id }, data: { label: labelOf(id) } })
   }
   if (entries.length) void logEvents(entries)
 }
