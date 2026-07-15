@@ -181,6 +181,12 @@ export interface MonthPoint {
   spending: number;
   net: number;
   count: number;
+  /**
+   * 该 bucket 的商户构成，按金额降序（dailySeries 填充）。
+   * 「这天花了 $558」本身没有回答问题，「$558，其中 Best Buy $530」才有；
+   * tooltip 取前几名展示，余下的自己汇总成「+N 家」。
+   */
+  merchants?: { merchant: string; amount: number; count: number }[];
 }
 
 /** 月度收入/花销/净额时间序列（按月份升序）。 */
@@ -209,6 +215,9 @@ export function dailySeries(
     map.set(day, { month: day, income: 0, spending: 0, net: 0, count: 0 });
   }
 
+  /** date -> merchant -> {amount, count}，用于给出当天的商户构成。 */
+  const byMerchant = new Map<string, Map<string, { amount: number; count: number }>>();
+
   for (const t of txns) {
     if (t.date < opts.from || t.date > opts.to) continue;
     const p = map.get(t.date);
@@ -217,6 +226,15 @@ export function dailySeries(
     if (out > 0) {
       p.spending += out;
       p.count += 1;
+      let m = byMerchant.get(t.date);
+      if (!m) {
+        m = new Map();
+        byMerchant.set(t.date, m);
+      }
+      const agg = m.get(t.merchant) ?? { amount: 0, count: 0 };
+      agg.amount += out;
+      agg.count += 1;
+      m.set(t.merchant, agg);
     }
     p.income += incomeOf(t);
   }
@@ -226,10 +244,75 @@ export function dailySeries(
     p.income = round2(p.income);
     p.spending = round2(p.spending);
     p.net = round2(p.income - p.spending);
+    const merchants = byMerchant.get(p.month);
+    if (merchants) {
+      p.merchants = [...merchants.entries()]
+        .map(([merchant, agg]) => ({
+          merchant,
+          amount: round2(agg.amount),
+          count: agg.count,
+        }))
+        .sort((a, b) => b.amount - a.amount);
+    }
   }
   return out;
 }
 
+export interface CoverageGap {
+  from: string;
+  to: string;
+  days: number;
+}
+
+/**
+ * 在 [from, to]（含端点）里找「连续 minRun 天以上一条记录都没有」的日期段。
+ *
+ * 判据是所有 flow：单日没消费很正常，但连一笔转账/还款/进账都没有的长空窗，
+ * 更像导入/同步缺口而不是节俭。日图把这种日子画成 $0 会撒谎（「这十天没花钱」），
+ * 调用方应把这些段落明示为「无数据」。
+ */
+export function coverageGaps(
+  txns: Txn[],
+  opts: { from: string; to: string; minRun?: number },
+): CoverageGap[] {
+  const minRun = opts.minRun ?? 5;
+  const has = new Set<string>();
+  for (const t of txns) {
+    if (t.date >= opts.from && t.date <= opts.to) has.add(t.date);
+  }
+  const gaps: CoverageGap[] = [];
+  let runStart: string | null = null;
+  let runEnd = "";
+  let runDays = 0;
+  const flush = () => {
+    if (runStart && runDays >= minRun) {
+      gaps.push({ from: runStart, to: runEnd, days: runDays });
+    }
+    runStart = null;
+    runDays = 0;
+  };
+  for (
+    let d = new Date(`${opts.from}T12:00:00`);
+    d.toISOString().slice(0, 10) <= opts.to;
+    d.setDate(d.getDate() + 1)
+  ) {
+    const day = d.toISOString().slice(0, 10);
+    if (has.has(day)) {
+      flush();
+    } else {
+      if (!runStart) runStart = day;
+      runEnd = day;
+      runDays += 1;
+    }
+  }
+  flush();
+  return gaps;
+}
+
+// 月度也用 outflowOf：整个「记录」页的「花销」只有一个含义——真正花出去的钱。
+// 之前月度是净额（退款冲抵）、日度是流出，同一页切个范围数字含义就变；一笔被
+// 误分类成退款的大额进账还能把整个月的柱子压扁。net 仍是 income - spending，
+// 即「到账收入 - 花出去的钱」，真实退货会让它略偏低——比让每张卡各说各话强。
 export function monthlySeries(txns: Txn[]): MonthPoint[] {
   const map = new Map<string, MonthPoint>();
   for (const t of txns) {
@@ -238,9 +321,9 @@ export function monthlySeries(txns: Txn[]): MonthPoint[] {
       p = { month: t.month, income: 0, spending: 0, net: 0, count: 0 };
       map.set(t.month, p);
     }
-    const s = spendingOf(t);
-    if (countsAsSpending(t)) {
-      p.spending += s;
+    const out = outflowOf(t);
+    if (out > 0) {
+      p.spending += out;
       p.count += 1;
     }
     p.income += incomeOf(t);
@@ -266,18 +349,21 @@ export function categoryBreakdown(
   txns: Txn[],
   opts: { from?: string; to?: string } = {}
 ): CategorySlice[] {
+  // outflowOf，与 KPI/趋势图同口径：退款不冲抵。之前用净额，一批被误分类成
+  // 退款的工资把 Software & Tech 算成 -$6,476，分类占比里其他类的百分比全部
+  // 超过 100%——「花在什么上」列出一个负数分类回答不了任何问题。
   const map = new Map<string, { amount: number; count: number }>();
   let total = 0;
   for (const t of txns) {
-    if (!countsAsSpending(t)) continue;
     if (opts.from && t.date < opts.from) continue;
     if (opts.to && t.date > opts.to) continue;
-    const s = spendingOf(t);
+    const out = outflowOf(t);
+    if (out <= 0) continue;
     const cur = map.get(t.category) ?? { amount: 0, count: 0 };
-    cur.amount += s;
+    cur.amount += out;
     cur.count += 1;
     map.set(t.category, cur);
-    total += s;
+    total += out;
   }
   return [...map.entries()]
     .map(([category, v]) => ({
@@ -286,7 +372,6 @@ export function categoryBreakdown(
       count: v.count,
       pct: total !== 0 ? v.amount / total : 0,
     }))
-    .filter((s) => s.amount !== 0)
     .sort((a, b) => b.amount - a.amount);
 }
 
@@ -301,19 +386,20 @@ export function topMerchants(
   txns: Txn[],
   opts: { from?: string; to?: string; limit?: number } = {}
 ): MerchantSlice[] {
+  // outflowOf，与分类占比/KPI/趋势图同口径（含趋势图 tooltip 的当日商户榜）。
   const map = new Map<string, { amount: number; count: number }>();
   for (const t of txns) {
-    if (!countsAsSpending(t)) continue;
     if (opts.from && t.date < opts.from) continue;
     if (opts.to && t.date > opts.to) continue;
+    const out = outflowOf(t);
+    if (out <= 0) continue;
     const cur = map.get(t.merchant) ?? { amount: 0, count: 0 };
-    cur.amount += spendingOf(t);
+    cur.amount += out;
     cur.count += 1;
     map.set(t.merchant, cur);
   }
   return [...map.entries()]
     .map(([merchant, v]) => ({ merchant, amount: round2(v.amount), count: v.count }))
-    .filter((m) => m.amount > 0)
     .sort((a, b) => b.amount - a.amount)
     .slice(0, opts.limit ?? 12);
 }

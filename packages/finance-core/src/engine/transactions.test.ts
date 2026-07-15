@@ -6,6 +6,7 @@ import {
   computeRecurring,
   computeStatistics,
   monthlySeries,
+  coverageGaps,
   dailySeries,
   categoryBreakdown,
   topMerchants,
@@ -118,6 +119,25 @@ describe('月度聚合', () => {
       expect(p.net).toBeCloseTo(p.income - p.spending, 1)
     }
   })
+
+  it('退款不冲抵月度花销——与日度/KPI 同口径', () => {
+    const withRefund: Txn[] = [
+      {
+        id: 'm1', date: '2026-05-02', month: '2026-05', merchant: 'Store',
+        category: 'Shopping', account: 'Amex', flow: 'expense',
+        amount: 100, budgetImpact: -100, inSpending: true, inCashFlow: true,
+      },
+      {
+        // 误分类成退款的大额进账曾把整月柱子压成负数——它不该动「花销」。
+        id: 'm2', date: '2026-05-03', month: '2026-05', merchant: 'Ingram Micro',
+        category: 'Software & Tech', account: 'Chase', flow: 'refund_or_reversal',
+        amount: -6645, budgetImpact: 6645, inSpending: true, inCashFlow: true,
+      },
+    ]
+    const out = monthlySeries(withRefund)
+    expect(out[0].spending).toBe(100)
+    expect(out[0].count).toBe(1)
+  })
 })
 
 describe('类别构成', () => {
@@ -134,6 +154,26 @@ describe('类别构成', () => {
     const slices = categoryBreakdown(sample)
     const sum = slices.reduce((a, s) => a + s.pct, 0)
     expect(sum).toBeCloseTo(1, 2)
+  })
+
+  it('退款不产生负数分类，也不搅乱其他类的占比', () => {
+    const txns: Txn[] = [
+      {
+        id: 'c1', date: '2026-07-01', month: '2026-07', merchant: 'A',
+        category: 'Groceries', account: 'Amex', flow: 'expense',
+        amount: 100, budgetImpact: -100, inSpending: true, inCashFlow: true,
+      },
+      {
+        id: 'c2', date: '2026-07-02', month: '2026-07', merchant: 'Ingram Micro',
+        category: 'Software & Tech', account: 'Chase', flow: 'refund_or_reversal',
+        amount: -6476, budgetImpact: 6476, inSpending: true, inCashFlow: true,
+      },
+    ]
+    const slices = categoryBreakdown(txns)
+    // 之前：Software & Tech -$6,476，Groceries 占比 -1.6%——全是噪音。
+    expect(slices).toEqual([
+      { category: 'Groceries', amount: 100, count: 1, pct: 1 },
+    ])
   })
 })
 
@@ -189,6 +229,43 @@ describe('dailySeries', () => {
     expect(out[0].count).toBe(2)
   })
 
+  it('给出当天的商户构成（按金额降序）——tooltip 要回答「这笔钱花哪了」', () => {
+    const out = dailySeries(days, { from: '2026-07-01', to: '2026-07-04' })
+    // 07-01: A $30 + B $12，按金额降序
+    expect(out[0].merchants).toEqual([
+      { merchant: 'A', amount: 30, count: 1 },
+      { merchant: 'B', amount: 12, count: 1 },
+    ])
+    // 没有花销的日子没有商户构成
+    expect(out[1].merchants).toBeUndefined()
+  })
+
+  it('同商户当天多笔要合并后再比大小', () => {
+    const split: Txn[] = [
+      {
+        id: 's1', date: '2026-07-01', month: '2026-07', merchant: 'Costco',
+        category: 'Groceries', account: 'Amex', flow: 'expense',
+        amount: 20, budgetImpact: -20, inSpending: true, inCashFlow: true,
+      },
+      {
+        id: 's2', date: '2026-07-01', month: '2026-07', merchant: 'Costco',
+        category: 'Groceries', account: 'Amex', flow: 'expense',
+        amount: 20, budgetImpact: -20, inSpending: true, inCashFlow: true,
+      },
+      {
+        id: 's3', date: '2026-07-01', month: '2026-07', merchant: 'Uniqlo',
+        category: 'Shopping', account: 'Amex', flow: 'expense',
+        amount: 35, budgetImpact: -35, inSpending: true, inCashFlow: true,
+      },
+    ]
+    // Costco 两笔合计 $40 > Uniqlo 单笔 $35——不合并会排错序。
+    const out = dailySeries(split, { from: '2026-07-01', to: '2026-07-01' })
+    expect(out[0].merchants).toEqual([
+      { merchant: 'Costco', amount: 40, count: 2 },
+      { merchant: 'Uniqlo', amount: 35, count: 1 },
+    ])
+  })
+
   it('窗口外的交易不计入', () => {
     const out = dailySeries(days, { from: '2026-07-02', to: '2026-07-05' })
     expect(out.reduce((a, p) => a + p.spending, 0)).toBe(50)
@@ -235,6 +312,47 @@ describe('dailySeries', () => {
     ]
     const out = dailySeries(withIncome, { from: '2026-07-01', to: '2026-07-05' })
     expect(out.find((p) => p.month === '2026-07-02')?.spending).toBe(0)
+  })
+})
+
+describe('coverageGaps', () => {
+  /** @param {string} date @param {number} i */
+  const txnOn = (date, i) => ({
+    id: `g${i}`, date, month: date.slice(0, 7), merchant: 'A',
+    category: 'Groceries', account: 'Amex', flow: 'expense',
+    amount: 10, budgetImpact: -10, inSpending: true, inCashFlow: true,
+  })
+
+  it('连续无记录的长空窗被报成缺口，短空窗不报', () => {
+    // 6/1、6/2 有记录，6/3–6/9 七天全空，6/10 恢复——像导入缺口。
+    const txns = [txnOn('2026-06-01', 1), txnOn('2026-06-02', 2), txnOn('2026-06-10', 3)]
+    const gaps = coverageGaps(txns, { from: '2026-06-01', to: '2026-06-12', minRun: 5 })
+    expect(gaps).toEqual([{ from: '2026-06-03', to: '2026-06-09', days: 7 }])
+    // 6/11–12 只空两天（< minRun），不该被当成缺口。
+  })
+
+  it('任何 flow 的记录都算覆盖——转账也证明那天有数据', () => {
+    const transfer = {
+      id: 't1', date: '2026-06-05', month: '2026-06', merchant: 'Chase',
+      category: 'Transfer', account: 'Chase', flow: 'internal_transfer',
+      amount: 100, budgetImpact: 0, inSpending: false, inCashFlow: false,
+    }
+    const txns = [txnOn('2026-06-01', 1), transfer, txnOn('2026-06-09', 2)]
+    const gaps = coverageGaps(txns, { from: '2026-06-01', to: '2026-06-09', minRun: 3 })
+    // 6/5 的转账把 6/2–6/8 的空窗劈成两段各 3 天。
+    expect(gaps).toEqual([
+      { from: '2026-06-02', to: '2026-06-04', days: 3 },
+      { from: '2026-06-06', to: '2026-06-08', days: 3 },
+    ])
+  })
+
+  it('贴着窗口两端的空窗也要报——缺口不总在中间', () => {
+    const txns = [txnOn('2026-06-10', 1)]
+    const gaps = coverageGaps(txns, { from: '2026-06-01', to: '2026-06-20', minRun: 5 })
+    expect(gaps).toEqual([
+      { from: '2026-06-01', to: '2026-06-09', days: 9 },
+      { from: '2026-06-11', to: '2026-06-20', days: 10 },
+    ])
   })
 })
 

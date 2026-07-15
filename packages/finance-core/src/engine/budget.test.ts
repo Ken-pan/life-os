@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { budgetProgress, dailySpendSeries, plannedMonthlyBudget } from "./budget";
+import {
+  budgetProgress,
+  dailySpendSeries,
+  discretionaryMonthlyBudget,
+  plannedMonthlyBudget,
+} from "./budget";
+import type { CashFlowItem } from "../types.js";
 import type { Txn } from "./transactions";
 
 function txn(over: Partial<Txn> & Pick<Txn, "date" | "budgetImpact">): Txn {
@@ -85,5 +91,61 @@ describe("budgetProgress", () => {
     const p = budgetProgress(txns, 0, "2026-07-10");
     expect(p.pace).toBe("on");
     expect(p.spentRatio).toBe(0);
+  });
+});
+
+describe("discretionaryMonthlyBudget", () => {
+  /** @param over 覆盖字段 */
+  const flow = (over: Partial<CashFlowItem> & Pick<CashFlowItem, "name" | "amount">): CashFlowItem => ({
+    id: over.name,
+    type: "expense",
+    frequency: "monthly",
+    ...over,
+  });
+
+  it("剔除 401(k)/房租，保留水电/订阅等走流水的固定小额项", () => {
+    const flows: CashFlowItem[] = [
+      flow({ name: "401(k) 员工税前供款", amount: 1392.61 }),
+      flow({ name: "401(k) 雇主 match", amount: 348.68 }),
+      flow({ name: "房租 (一个人住)", amount: 2200 }),
+      flow({ name: "外食 / 娱乐 (dining & fun)", amount: 800 }),
+      flow({ name: "买菜 / 日用 (groceries)", amount: 600 }),
+      flow({ name: "偶尔购物 / 杂项", amount: 500 }),
+      flow({ name: "水电网 + 手机话费 (utilities)", amount: 300 }),
+      flow({ name: "交通 (无车通勤/打车)", amount: 200 }),
+      flow({ name: "订阅 (subscriptions)", amount: 100 }),
+      flow({ name: "税后到手工资", amount: 7600, type: "income" }),
+    ];
+    const b = discretionaryMonthlyBudget(flows);
+    expect(b.monthly).toBe(2500);
+    expect(b.excludedMonthly).toBeCloseTo(3941.29, 2);
+    expect(b.excluded.map((e) => e.name)).toEqual([
+      "401(k) 员工税前供款",
+      "401(k) 雇主 match",
+      "房租 (一个人住)",
+    ]);
+  });
+
+  it("lockbox-contribution 类别不看名字直接剔除；年度项折成月", () => {
+    const flows: CashFlowItem[] = [
+      flow({ name: "Payroll deduction", amount: 500, category: "lockbox-contribution" }),
+      flow({ name: "Mortgage", amount: 3000 }),
+      flow({ name: "Car insurance", amount: 1200, frequency: "annual" }),
+    ];
+    const b = discretionaryMonthlyBudget(flows);
+    // 保险不是住房/供款，保留；1200/年 → 100/月。
+    expect(b.monthly).toBe(100);
+    expect(b.excludedMonthly).toBe(3500);
+  });
+
+  it("Rent 关键词按词边界匹配——parent 不是房租", () => {
+    const flows: CashFlowItem[] = [
+      flow({ name: "Parents allowance", amount: 200 }),
+      flow({ name: "Parent gift", amount: 100 }),
+      flow({ name: "Rent", amount: 1800 }),
+    ];
+    const b = discretionaryMonthlyBudget(flows);
+    expect(b.monthly).toBe(300);
+    expect(b.excluded.map((e) => e.name)).toEqual(["Rent"]);
   });
 });

@@ -43,6 +43,57 @@ export function plannedMonthlyBudget(cashFlows: CashFlowItem[]): number {
     .reduce((a, c) => a + (c.frequency === "annual" ? c.amount / 12 : c.amount), 0);
 }
 
+/**
+ * 税前 payroll 供款：优先看 lockbox-contribution 类别；旧数据/手填项没有类别，
+ * 按名称兜底识别 401(k)/HSA/IRA/pension。
+ */
+function isPayrollContribution(c: CashFlowItem): boolean {
+  if (c.category === LOCKBOX_CONTRIBUTION_CATEGORY) return true;
+  return /401\s*\(?k\)?|\bhsa\b|\bira\b|pension|退休|公积金/i.test(c.name);
+}
+
+/** 房租/房贷这类超大额住房承诺：金额不随日常消费决策变化，也基本不走日常流水。 */
+function isHousingCommitment(c: CashFlowItem): boolean {
+  return /房租|房贷|\brent\b|mortgage|housing/i.test(c.name);
+}
+
+export interface DiscretionaryBudget {
+  /** 可自由支配的月预算（日预算的分子）。 */
+  monthly: number;
+  /** 被剔除的固定项及其月化金额。 */
+  excluded: { name: string; monthly: number }[];
+  excludedMonthly: number;
+}
+
+/**
+ * 可自由支配（可变）月预算 —— 业界 daily-budget / safe-to-spend 公式的分子：
+ * 「每天能花多少」只对日常可调的消费有意义，所以剔除两类固定承诺：
+ *
+ * 1. 税前 payroll 供款（401(k)/HSA 等）：从工资单直接划走，从不出现在流水里；
+ * 2. 住房（房租/房贷）：超大额、按月一次，不是任何一天的「消费决策」。
+ *
+ * 水电/订阅这类小额固定项保留在预算里：它们真实地走日常流水（会出现在每日
+ * 花销柱子里），从预算里剔掉会让预算线和柱子比的不是同一种钱。
+ */
+export function discretionaryMonthlyBudget(cashFlows: CashFlowItem[]): DiscretionaryBudget {
+  const monthlyOf = (c: CashFlowItem) => (c.frequency === "annual" ? c.amount / 12 : c.amount);
+  let monthly = 0;
+  const excluded: { name: string; monthly: number }[] = [];
+  for (const c of cashFlows) {
+    if (c.type !== "expense") continue;
+    if (isPayrollContribution(c) || isHousingCommitment(c)) {
+      excluded.push({ name: c.name, monthly: Math.round(monthlyOf(c) * 100) / 100 });
+    } else {
+      monthly += monthlyOf(c);
+    }
+  }
+  return {
+    monthly: Math.round(monthly * 100) / 100,
+    excluded,
+    excludedMonthly: Math.round(excluded.reduce((a, e) => a + e.monthly, 0) * 100) / 100,
+  };
+}
+
 export type BudgetPace = "under" | "on" | "over";
 
 export interface BudgetProgress {
