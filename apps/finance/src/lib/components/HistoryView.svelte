@@ -28,6 +28,7 @@
   import PurchaseCoverageCard from './PurchaseCoverageCard.svelte'
   import MerchantOrderCatalogSection from './MerchantOrderCatalogSection.svelte'
   import HistoryLedger from './HistoryLedger.svelte'
+  import MerchantLogo from './MerchantLogo.svelte'
 
   /** @typedef {'month' | '3m' | '12m' | 'all'} Window */
 
@@ -363,6 +364,7 @@
             <div class="list recurring-list">
               {#each recurring as r (r.merchant)}
                 <div class="item">
+                  <MerchantLogo merchant={r.merchant} size={24} />
                   <div class="grow">
                     <div class="name">{r.merchant}</div>
                     <div class="meta">
@@ -391,6 +393,7 @@
               {#each merchants.slice(0, merchantLimit) as m, i (m.merchant)}
                 <div class="merchant-cell">
                   <span class="merchant-rank">{i + 1}</span>
+                  <MerchantLogo merchant={m.merchant} size={24} />
                   <div class="grow">
                     <div class="name">{m.merchant}</div>
                     <div class="meta">{t('history.merchantMeta', { count: m.count })}</div>

@@ -2,9 +2,15 @@
   // Port of src/components/PurchaseCoverageCard.tsx.
   import { t } from '$lib/i18n.svelte.js'
   import { purchaseSourceLabel } from '$lib/purchaseSourceLabel.js'
+  import MerchantLogo from './MerchantLogo.svelte'
 
   /** @type {import('../../engine/purchaseEnrichment.js').PurchaseEnrichmentSource[]} */
   const SOURCE_ORDER = ['target', 'amazon', 'bestbuy']
+
+  // Enrichment source key → a merchant string MerchantLogo can resolve. Kept
+  // explicit rather than reusing the (localized) chip label, and because the
+  // enrichment key 'bestbuy' differs from the brand id 'best-buy'.
+  const SOURCE_BRAND = { target: 'Target', amazon: 'Amazon', bestbuy: 'Best Buy' }
 
   /** @type {{
    *   stats: import('../../engine/purchaseEnrichmentDisplay.js').PurchaseCoverageStats,
@@ -86,6 +92,7 @@
           class="purchase-source-chip{sourceFilter === source ? ' is-active' : ''}"
           onclick={() => onSourceFilterChange(source)}
         >
+          <MerchantLogo merchant={SOURCE_BRAND[source]} size={16} />
           {purchaseSourceLabel(source, t)} {stats.cleanBySource[source]}
         </button>
       {/each}

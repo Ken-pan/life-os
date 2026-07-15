@@ -3494,6 +3494,9 @@ div.input {
 }
 
 .purchase-source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
   border: 1px solid var(--border);
   background: var(--surface-1);
   color: var(--text-secondary);
@@ -3501,6 +3504,11 @@ div.input {
   padding: 0.25rem 0.75rem;
   font-size: var(--text-xs);
   cursor: pointer;
+}
+
+/* 小尺寸(chip/列表)下不需要描边环——太密反而脏。 */
+.purchase-source-chip .merchant-logo-img {
+  box-shadow: none;
 }
 
 .purchase-source-chip.is-active {

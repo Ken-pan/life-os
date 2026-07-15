@@ -3,6 +3,7 @@
   import { t } from '$lib/i18n.svelte.js'
   import { rankTxnCandidates } from '../../engine/timeline.js'
   import { signedMoney, depositDeltaClass } from '$lib/format.js'
+  import MerchantLogo from './MerchantLogo.svelte'
 
   /** @type {{
    *   occ: import('../../engine/timeline.js').ExpectedOccurrence,
@@ -23,6 +24,7 @@
     <div class="list">
       {#each candidates as txn (txn.id)}
         <button type="button" class="oneoff-link-row" onclick={() => txn.id && onPick(txn.id)}>
+          <MerchantLogo merchant={txn.merchant} size={24} />
           <span class="grow">
             <span class="name">{txn.merchant || txn.category || t('futureCashflow.txnFallback')}</span>
             <span class="meta">{txn.date}</span>
