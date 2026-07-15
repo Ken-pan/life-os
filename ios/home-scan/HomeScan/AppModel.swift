@@ -50,8 +50,12 @@ final class AppModel {
         return "全屋 · \(df.string(from: now))"
     }
 
+    /// 本次扫描的范围:full 全屋 / partial 房间更新(网页端只动扫到的那片)
+    var scanScope: String = "full"
+
     @MainActor
-    func startScanning() {
+    func startScanning(scope: String = "full") {
+        scanScope = scope
         // 每次扫描用**全新的 ARSession**:上次扫描(尤其是取消)会把共享
         // session 停死,在死 session 上重开 RoomCaptureSession 起不来 ——
         // 实测「取消后再扫,取景一直黑屏」就是它。
@@ -120,7 +124,8 @@ final class AppModel {
         let projection = PlanProjector.projectScene(
             scene,
             scanId: scanId.uuidString.lowercased(),
-            nameZh: "扫描 \(df.string(from: Date()))"
+            nameZh: "扫描 \(df.string(from: Date()))",
+            scanScope: scanScope == "partial" ? "partial" : nil
         )
         convertedProject = projection.project
         objectPhotoFiles = projection.objectPhotos

@@ -99,11 +99,23 @@ enum RealityCheck {
             return (pair.nextId, pl.label)
         }
         // 没扫到:只点名「扫描出身且没钉死」的 —— 钉死件(马桶/内嵌柜)扫不到
-        // 是常态,手录件(围挡/地毯)RoomPlan 本来就认不出,点名只会狼来了
+        // 是常态,手录件(围挡/地毯)RoomPlan 本来就认不出,点名只会狼来了。
+        // 房间更新(partial)再多一道:只看这次扫描 coverage 里的 —— 扫一间
+        // 卫生间,不该把全屋家具都喊「没扫到」
+        let partial = project.meta.scanScope == "partial"
+        let coverage: [[SIMD2<Double>]] = partial
+            ? project.zones.map { z in z.polygon.map { toHomePx(SIMD2($0.x, $0.y)) } }
+            : []
+        func inCoverage(_ pl: HomeOSProject.Placement) -> Bool {
+            guard partial else { return true }
+            let c = SIMD2(pl.x + pl.w / 2, pl.y + pl.h / 2)
+            return coverage.contains { HomeFrame.contains($0, c) }
+        }
         let missing = m.removed.compactMap { id -> String? in
             guard let pl = prevById[id],
                   pl.fixed != true,
-                  pl.attrs?.measuredWIn != nil else { return nil }
+                  pl.attrs?.measuredWIn != nil,
+                  inCoverage(pl) else { return nil }
             return pl.label
         }
 

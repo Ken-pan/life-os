@@ -34,7 +34,12 @@ enum PlanProjector {
         projectScene(scene, scanId: scanId, nameZh: nameZh).project
     }
 
-    static func projectScene(_ scene: FlatScene, scanId: String, nameZh: String) -> Projection {
+    static func projectScene(
+        _ scene: FlatScene,
+        scanId: String,
+        nameZh: String,
+        scanScope: String? = nil
+    ) -> Projection {
         var warnings = scene.warnings
 
         // 1) 主方向旋转:让多数墙轴对齐
@@ -286,7 +291,8 @@ enum PlanProjector {
                 nameZh: nameZh,
                 sqft: sqft > 0 ? round1(sqft) : nil,
                 scanWarnings: warnings,
-                sourceNote: "iOS HomeScan · RoomPlan 实测"
+                sourceNote: "iOS HomeScan · RoomPlan 实测",
+                scanScope: scanScope
             )
         )
         return Projection(project: project, objectPhotos: objectPhotos)

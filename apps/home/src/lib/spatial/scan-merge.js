@@ -256,7 +256,7 @@ export function mapScanIntoLayout(project, scanHomeos) {
     rooms: [],
   }
   if (!rooms.length || !scanZones.length) {
-    return { placements: [], fixtures: [], viewpoints: [], report }
+    return { placements: [], fixtures: [], viewpoints: [], report, scope: 'full', coverage: [] }
   }
   // 扫描侧的实测墙体 —— 配准与墙距精修的依据(旧 payload 没有就走比例回退)
   const scanWalls = wallSegments(scanHomeos.wallGraph)
@@ -276,7 +276,7 @@ export function mapScanIntoLayout(project, scanHomeos) {
     reason: reg.reason,
   }
   if (reg.status === 'ok') {
-    return mapRegistered({
+    const out = mapRegistered({
       scanHomeos,
       rooms,
       localSegs,
@@ -285,6 +285,17 @@ export function mapScanIntoLayout(project, scanHomeos) {
       report,
       useZoneIds: Boolean(project.zones?.length),
     })
+    // 房间更新(scanScope=partial):只动扫到的那片。coverage = 扫描分区
+    // 多边形变换到本地坐标 —— 合并时片外家具原封不动、也不算「消失」。
+    // 只有配准过门才敢给 partial 语义:对不齐时说不清「片内片外」。
+    if (scanHomeos.meta?.scanScope === 'partial') {
+      out.scope = 'partial'
+      out.coverage = (scanHomeos.zones ?? []).map((z) => z.polygon.map((p) => reg.apply(p)))
+    } else {
+      out.scope = 'full'
+      out.coverage = []
+    }
+    return out
   }
 
   const scanOuter = scanZones
@@ -417,7 +428,9 @@ export function mapScanIntoLayout(project, scanHomeos) {
   for (const [nameZh, count] of perRoom) {
     report.rooms.push({ nameZh, from: '', count })
   }
-  return { placements, fixtures, viewpoints, report }
+  // scope/coverage 由 mapScanIntoLayout 的配准分支覆写;这里(mapRegistered
+  // 与比例回退共用的收尾)默认 full —— 比例回退没有可信的「片内片外」边界
+  return { placements, fixtures, viewpoints, report, scope: 'full', coverage: [] }
 }
 
 /**
@@ -540,7 +553,9 @@ function mapRegistered({ scanHomeos, rooms, localSegs, scanWalls, reg, report, u
   for (const [nameZh, count] of perRoom) {
     report.rooms.push({ nameZh, from: '', count })
   }
-  return { placements, fixtures, viewpoints, report }
+  // scope/coverage 由 mapScanIntoLayout 的配准分支覆写;这里(mapRegistered
+  // 与比例回退共用的收尾)默认 full —— 比例回退没有可信的「片内片外」边界
+  return { placements, fixtures, viewpoints, report, scope: 'full', coverage: [] }
 }
 
 /**
@@ -609,6 +624,12 @@ const scanBorn = (o) =>
 export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const replaceNearby = opts.replaceNearby !== false
   const identity = { unchanged: 0, moved: [], added: 0, removed: [], possiblySame: 0 }
+
+  // 房间更新(partial):只有扫描 coverage 里的东西参与身份配对与替换,
+  // 片外家具原封不动、不算「消失」。扫一次卫生间不该把卧室的家具判没了。
+  const partial = mapped.scope === 'partial' && (mapped.coverage?.length ?? 0) > 0
+  const inCoverage = (o) =>
+    !partial || mapped.coverage.some((poly) => pointInPoly(boxCenter(o), poly))
 
   // 墙锚裁决的墙段:本地墙图(结构锁定后不变)。能这么量的前提是配准有验收门
   // (过门才走这条路)+ 墙距精修已把 ≤5cm 的残差对齐 —— 此时本地坐标系里的
@@ -688,8 +709,19 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
     return out
   }
 
-  const nextPlacements = reconcile(project.placements, mapped.placements)
-  const nextFixtures = reconcile(project.fixtures, mapped.fixtures)
+  /** partial 时按 coverage 分片:片外整层跳过合并逻辑 */
+  const split = (arr) =>
+    partial
+      ? {
+          inside: (arr ?? []).filter(inCoverage),
+          outside: (arr ?? []).filter((o) => !inCoverage(o)),
+        }
+      : { inside: arr ?? [], outside: [] }
+  const sp = split(project.placements)
+  const sf = split(project.fixtures)
+
+  const nextPlacements = reconcile(sp.inside, mapped.placements)
+  const nextFixtures = reconcile(sf.inside, mapped.fixtures)
 
   /** 丢掉上次扫描的;手录的按是否被实测件顶掉决定;钉死的谁也顶不掉 */
   const keepLocal = (arr, incoming) => {
@@ -710,10 +742,15 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
 
   const next = {
     ...project,
-    placements: [...keepLocal(project.placements, nextPlacements), ...nextPlacements],
-    fixtures: [...keepLocal(project.fixtures, nextFixtures), ...nextFixtures],
+    placements: [...sp.outside, ...keepLocal(sp.inside, nextPlacements), ...nextPlacements],
+    fixtures: [...sf.outside, ...keepLocal(sf.inside, nextFixtures), ...nextFixtures],
     viewpoints: [
-      ...(project.viewpoints ?? []).filter((v) => !String(v.id).startsWith('scan-')),
+      // partial 时片外的旧扫描机位也留着 —— 房间更新不该抹掉别处的照片
+      ...(project.viewpoints ?? []).filter(
+        (v) =>
+          !String(v.id).startsWith('scan-') ||
+          (partial && !inCoverage({ x: v.x, y: v.y, w: 0, h: 0 })),
+      ),
       ...mapped.viewpoints,
     ],
   }

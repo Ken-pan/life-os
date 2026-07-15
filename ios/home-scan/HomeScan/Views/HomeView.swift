@@ -47,8 +47,25 @@ struct HomeView: View {
                     Button {
                         model.startScanning()
                     } label: {
-                        Label("开始扫描", systemImage: "camera.metering.matrix")
-                            .font(.headline)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Label("全屋扫描", systemImage: "camera.metering.matrix")
+                                .font(.headline)
+                            Text("第一次建模 / 大调整后 · 约 8-15 分钟")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .disabled(!scanSupported)
+                    Button {
+                        model.startScanning(scope: "partial")
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Label("房间更新", systemImage: "arrow.triangle.2.circlepath.camera")
+                                .font(.headline)
+                            Text("挪过家具 / 整理完一间 · 1-3 分钟,只动扫到的区域")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .disabled(!scanSupported)
                     #if DEBUG

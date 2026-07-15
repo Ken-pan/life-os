@@ -157,5 +157,7 @@ struct HomeOSProject: Codable {
         var sqft: Double?
         var scanWarnings: [String]
         var sourceNote: String?
+        /// "full"(缺省)/"partial":房间更新 —— 网页端只动扫到的那片
+        var scanScope: String?
     }
 }
