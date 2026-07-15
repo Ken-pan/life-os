@@ -34,7 +34,12 @@ enum PendingScanStore {
 
     private static var manifestURL: URL { dir.appendingPathComponent("manifest.json") }
 
-    /// 落盘(覆盖旧的)。单张照片拷贝失败只丢那一张,不拖垮整次落盘。
+    /// 落盘。单张照片拷贝失败只丢那一张,不拖垮整次落盘。
+    ///
+    /// **增量语义**:同一 scanId 重复落盘(预览页改类别后)只重写 manifest ——
+    /// 同一次扫描内照片内容不变,已在盘上的同名文件直接算成功,不重拷几十 MB;
+    /// 顺带免疫「temp 源文件已被系统清掉」(恢复后再改类别时源就是盘上副本自己)。
+    /// 换了 scanId 才整目录清掉重来(只保留最新一次,全量语义)。
     static func save(
         scanId: UUID,
         project: HomeOSProject,
@@ -44,8 +49,23 @@ enum PendingScanStore {
         modelFileURL: URL?
     ) throws {
         let fm = FileManager.default
-        try? fm.removeItem(at: dir)
-        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        let incremental = load()?.scanId == scanId
+        if !incremental {
+            try? fm.removeItem(at: dir)
+            try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+
+        /// 拷进落盘目录;已存在(增量)直接算成功,源丢了但盘上有也算成功
+        func persist(_ src: URL, as name: String) -> Bool {
+            let dst = dir.appendingPathComponent(name)
+            if fm.fileExists(atPath: dst.path) { return true }
+            do {
+                try fm.copyItem(at: src, to: dst)
+                return true
+            } catch {
+                return fm.fileExists(atPath: dst.path)
+            }
+        }
 
         var photoNames: [String?] = []
         for (i, url) in photoFiles.enumerated() {
@@ -54,12 +74,7 @@ enum PendingScanStore {
                 continue
             }
             let name = "vp-\(i).jpg"
-            do {
-                try fm.copyItem(at: url, to: dir.appendingPathComponent(name))
-                photoNames.append(name)
-            } catch {
-                photoNames.append(nil)
-            }
+            photoNames.append(persist(url, as: name) ? name : nil)
         }
 
         var objectRefs: [String: [ShotRef]] = [:]
@@ -67,20 +82,18 @@ enum PendingScanStore {
             var refs: [ShotRef] = []
             for (k, asset) in assets.enumerated() {
                 let name = "obj-\(id)-\(k).jpg"
-                do {
-                    try fm.copyItem(at: asset.url, to: dir.appendingPathComponent(name))
-                    refs.append(ShotRef(name: name, azimuthDeg: asset.azimuthDeg))
-                } catch { continue }
+                guard persist(asset.url, as: name) else { continue }
+                refs.append(ShotRef(name: name, azimuthDeg: asset.azimuthDeg))
             }
             if !refs.isEmpty { objectRefs[id] = refs }
         }
 
-        if let structureJSON {
+        if let structureJSON, !fm.fileExists(atPath: dir.appendingPathComponent("structure.json").path) {
             try? structureJSON.write(to: dir.appendingPathComponent("structure.json"), options: .atomic)
         }
         var hasModel = false
         if let modelFileURL {
-            hasModel = (try? fm.copyItem(at: modelFileURL, to: dir.appendingPathComponent("model.usdz"))) != nil
+            hasModel = persist(modelFileURL, as: "model.usdz")
         }
 
         let manifest = Manifest(

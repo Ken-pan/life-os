@@ -23,8 +23,16 @@ struct FindItemView: View {
         var homePointM: SIMD2<Double>
     }
 
-    /// 检索空间:柜内物品(带层号)+ 户型家具
-    private var targets: [FindTarget] {
+    /// 检索空间:柜内物品(带层号)+ 户型家具。
+    /// 静态数据建一次 —— 计算属性会在每次输入字符重渲染时整表重建
+    private let allTargets: [FindTarget]
+
+    init(home: CanonicalHome) {
+        self.home = home
+        self.allTargets = Self.buildTargets(home)
+    }
+
+    private static func buildTargets(_ home: CanonicalHome) -> [FindTarget] {
         let mPerPx = 0.3048 / home.wallGraph.pxPerFt
         let placementById = Dictionary(uniqueKeysWithValues: home.placements.map { ($0.id, $0) })
         var out: [FindTarget] = []
@@ -60,8 +68,8 @@ struct FindItemView: View {
 
     private var filtered: [FindTarget] {
         let q = query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return targets }
-        return targets.filter { $0.title.localizedCaseInsensitiveContains(q) || $0.subtitle.localizedCaseInsensitiveContains(q) }
+        guard !q.isEmpty else { return allTargets }
+        return allTargets.filter { $0.title.localizedCaseInsensitiveContains(q) || $0.subtitle.localizedCaseInsensitiveContains(q) }
     }
 
     var body: some View {

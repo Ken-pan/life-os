@@ -52,6 +52,35 @@ final class PendingScanStoreTests: XCTestCase {
         XCTAssertNil(PendingScanStore.load(), "清理后不再有未传扫描")
     }
 
+    func testIncrementalResaveSurvivesTempCleanup() throws {
+        // 同一 scanId 二次落盘(预览页改类别):照片源(temp)已被系统清掉
+        // 也不丢 —— 盘上副本就是真相,只重写 manifest
+        let projection = PlanProjector.projectScene(MockScan.scene(), scanId: "t", nameZh: "测试")
+        let tmp = FileManager.default.temporaryDirectory
+        let photo = tmp.appendingPathComponent("pending-incr-photo.jpg")
+        try Data([0xFF, 0xD8, 0xFF, 0x01, 0x02]).write(to: photo)
+        let scanId = UUID()
+        try PendingScanStore.save(
+            scanId: scanId, project: projection.project,
+            photoFiles: [], objectPhotoFiles: ["pl-1": [.init(url: photo, azimuthDeg: 90)]],
+            structureJSON: nil, modelFileURL: nil
+        )
+        try FileManager.default.removeItem(at: photo) // temp 被清
+
+        var edited = projection.project
+        edited.meta.nameZh = "改过类别之后"
+        try PendingScanStore.save(
+            scanId: scanId, project: edited,
+            photoFiles: [], objectPhotoFiles: ["pl-1": [.init(url: photo, azimuthDeg: 90)]],
+            structureJSON: nil, modelFileURL: nil
+        )
+        let m = try XCTUnwrap(PendingScanStore.load())
+        XCTAssertEqual(m.project.meta.nameZh, "改过类别之后", "manifest 更新了")
+        let r = PendingScanStore.restore(m)
+        let url = try XCTUnwrap(r.objectPhotoFiles["pl-1"]?.first?.url, "照片没因源丢失而消失")
+        XCTAssertEqual(try Data(contentsOf: url).count, 5)
+    }
+
     func testNewSaveReplacesOld() throws {
         let projection = PlanProjector.projectScene(MockScan.scene(), scanId: "t", nameZh: "测试")
         let a = UUID()

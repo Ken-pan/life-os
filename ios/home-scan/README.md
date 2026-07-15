@@ -6,6 +6,8 @@ Supabase（`home.scans` + 私有桶 `home-scan-photos`），在 HomeOS 网页版
 （home.kenos.space → 设置 → 云端扫描）拉取并替换当前户型。
 
 本目录在 npm workspaces / turbo 之外，是独立的 Xcode 工程。
+**动代码前先读 [ARCHITECTURE.md](ARCHITECTURE.md)**：分层铁律、线程规则、
+双端同源契约表、加新能力的清单。
 
 ## 构建
 
