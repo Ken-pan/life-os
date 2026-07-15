@@ -8,6 +8,7 @@
 | [`netlify.md`](./netlify.md)           | 六站 Netlify（四生产 + Portal + Home 实验）、env、CLI deploy |
 | [`supabase.md`](./supabase.md)         | 共享 DB migration、`supabase-sql.sh`、Auth redirect          |
 | [`legacy-local.md`](./legacy-local.md) | 已删除的本地 sibling 克隆路径                                |
+| [`scheduled-jobs.md`](./scheduled-jobs.md) | 本机 launchd 定时任务（镜像去重）、装法、排障            |
 
 > PaperOS 设备运维已随 PaperOS 于 2026-07-12 迁出至独立仓库 → [`../roadmap/apps/paperos.md`](../roadmap/apps/paperos.md)。
 
