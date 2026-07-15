@@ -29,6 +29,11 @@ import {
   transformSegments,
 } from './scan-register.js'
 import { matchScanObjects } from './scan-identity.js'
+import {
+  computeWallAnchor,
+  diffWallAnchors,
+  wallAnchorSegments,
+} from './wall-anchor.js'
 
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
@@ -574,17 +579,38 @@ const boxCenter = (o) => {
  * - 手录的、实测没扫到的(洗衣机、挂杆…)原样保留 —— 扫描漏检不等于东西不在
  * - storageZones 不动:它靠 bounds/zoneId 定位,与家具无关
  *
+ * 「挪过」的家具再过一道**墙锚裁决**(wall-anchor.js):中心位移大但墙距没变,
+ * 多半是配准残差/包围盒抖动而不是真挪了 —— `wall.verdict` 把这两种情况分开,
+ * 附在 moved 条目上交给上层展示,不在这里替用户改判。
+ *
  * @param {SpatialProject} project
  * @param {{ placements: any[], fixtures: any[], viewpoints: any[] }} mapped
  * @param {{ replaceNearby?: boolean }} [opts]
  * @returns {{ project: SpatialProject, identity: {
- *   unchanged: number, moved: Array<{ label: string, movedFt: number }>,
+ *   unchanged: number,
+ *   moved: Array<{ label: string, movedFt: number,
+ *     wall?: import('./wall-anchor.js').WallAnchorDiff }>,
  *   added: number, removed: string[], possiblySame: number,
  * } }}
  */
 export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const replaceNearby = opts.replaceNearby !== false
   const identity = { unchanged: 0, moved: [], added: 0, removed: [], possiblySame: 0 }
+
+  // 墙锚裁决的墙段:本地墙图(结构锁定后不变)。能这么量的前提是配准有验收门
+  // (过门才走这条路)+ 墙距精修已把 ≤5cm 的残差对齐 —— 此时本地坐标系里的
+  // 墙距就是 LiDAR 实测墙距;更大的整体漂移根本过不了配准门,轮不到这里裁决。
+  // 设施是装死的,不参与。
+  const anchorSegs = wallAnchorSegments(project.wallGraph)
+  const anchorPxPerFt = project.wallGraph?.pxPerFt ?? 36
+  const wallVerdict = (prev, next) => {
+    if (!anchorSegs.length || prev.bounds || next.bounds) return null
+    const prevAnchor =
+      prev.wallAnchor ?? computeWallAnchor(prev, prev.rotation, anchorSegs, anchorPxPerFt)
+    const nextAnchor = computeWallAnchor(next, next.rotation, anchorSegs, anchorPxPerFt)
+    const d = diffWallAnchors(prevAnchor, nextAnchor)
+    return d.verdict === 'unknown' ? null : d
+  }
 
   /** 上次扫描件 → 身份匹配 → 新几何 + 旧 id/旧成果 */
   const reconcile = (prevAll, incoming) => {
@@ -616,7 +642,12 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
       }
       const prev = prevById[pair.prevId]
       if (pair.state === 'same_unchanged') identity.unchanged++
-      else identity.moved.push({ label: n.label ?? n.kind, movedFt: pair.movedFt })
+      else {
+        const entry = { label: n.label ?? n.kind, movedFt: pair.movedFt }
+        const wall = wallVerdict(prev, n)
+        if (wall) entry.wall = wall
+        identity.moved.push(entry)
+      }
       return {
         ...n,
         id: prev.id, // 永久身份:重扫不换 id(已预先占位)

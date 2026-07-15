@@ -233,6 +233,27 @@
  */
 
 /**
+ * 一个轴上的墙锚:家具哪一侧、贴的哪面墙、离多远、在墙上什么位置。
+ * @typedef {object} WallAnchorAxis
+ * @property {string} edgeId 锚定的墙边 id(wallGraph.edges;结构锁定后是稳定身份)
+ * @property {'left'|'right'|'up'|'down'} side 家具哪一侧贴墙
+ * @property {number} gapIn 离墙缝隙(垂直于墙,英寸,0.1 精度)
+ * @property {number} alongIn 沿墙距离:墙段 lo 端 → 家具近端(英寸,可为负)
+ */
+
+/**
+ * 家具与最近墙面的空间关系 —— 「桌子真的被挪了 40cm」判断的地基:
+ * 中心点位移分不清「扫描漂了」和「家具挪了」,而墙不会动(结构锁定),
+ * 墙距是免疫全局漂移的局部真值。只对贴墙(≤30″)的轴记录,居中家具没有
+ * 这个字段。由 hydrateProject 在墙图模式下自动维护(纯几何推导,幂等),
+ * 不手工编辑;跨扫描比对见 spatial/wall-anchor.js 的 diffWallAnchors。
+ * @typedef {object} WallAnchor
+ * @property {WallAnchorAxis} [x] 横向锚(左/右墙)
+ * @property {WallAnchorAxis} [y] 纵向锚(上/下墙)
+ * @property {0 | 90 | 180 | 270} rotation 锚定时的朝向 —— 相对墙的朝向由 side × rotation 完全决定
+ */
+
+/**
  * @typedef {object} SpatialPlacement
  * @property {string} id
  * @property {string} kind
@@ -244,6 +265,7 @@
  * @property {0 | 90 | 180 | 270} rotation
  * @property {string} [zoneId]
  * @property {PlacementAttrs} [attrs]
+ * @property {WallAnchor} [wallAnchor] 与最近墙面的实测关系;见 {@link WallAnchor}
  */
 
 /**

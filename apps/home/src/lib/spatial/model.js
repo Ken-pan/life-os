@@ -3,6 +3,7 @@
 import { build508Project, default508Config, merge508Config } from './layout-508.js'
 import { clampPlacementRect, placementsToFurniture } from './placements.js'
 import { buildFromWallGraph } from './wall-graph.js'
+import { refreshWallAnchors } from './wall-anchor.js'
 
 /** 同一件东西的两份记录:实测件落在内置件这么近以内,就认为是同一个(3ft) */
 const FIXTURE_REPLACE_PX = 108
@@ -94,6 +95,20 @@ function rescueStrayPlacements(project) {
 }
 
 /**
+ * 维护家具的墙相对锚点(能力 6)—— 每次 hydrate 都跑,靠 refreshWallAnchors
+ * 的幂等约定(没变化时返回原数组)保证不 churn 响应式。只在墙图模式做:
+ * 508 参数模式的墙是手录近似,量出来的"墙距"不配当跨扫描比对的真值。
+ *
+ * @param {SpatialProject} project
+ * @returns {SpatialProject}
+ */
+function refreshProjectWallAnchors(project) {
+  if (!project.placements?.length) return project
+  const placements = refreshWallAnchors(project.placements, project.wallGraph)
+  return placements === project.placements ? project : { ...project, placements }
+}
+
+/**
  * Rebuild derived geometry from layoutConfig or wallGraph source of truth.
  * @param {SpatialProject} raw
  * @returns {SpatialProject}
@@ -101,7 +116,9 @@ function rescueStrayPlacements(project) {
 export function hydrateProject(raw) {
   const project = migratePlacementScale(raw)
   if (project.layoutMode === 'wallGraph' && project.wallGraph) {
-    return rescueStrayPlacements(buildFromWallGraph(project.wallGraph, project))
+    return refreshProjectWallAnchors(
+      rescueStrayPlacements(buildFromWallGraph(project.wallGraph, project)),
+    )
   }
   const config = project.layoutConfig
     ? merge508Config(default508Config(), project.layoutConfig)
