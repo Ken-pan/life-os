@@ -253,7 +253,7 @@
     font-size: var(--text-sm);
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     .project-picker-trigger {
       min-height: 52px;
     }

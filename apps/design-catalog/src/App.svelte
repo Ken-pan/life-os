@@ -291,7 +291,7 @@
     background: var(--catalog-chrome-workspace-bg);
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     .catalog-app {
       grid-template-columns: 1fr;
     }

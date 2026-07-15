@@ -237,13 +237,13 @@
     color: var(--t1);
   }
 
-  @media (--life-os-desktop) {
+  @media (min-width: 840px) {
     .shell-demo-persistent {
       bottom: 18px;
     }
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     .shell-demo-header__inner {
       align-items: flex-start;
       flex-direction: column;

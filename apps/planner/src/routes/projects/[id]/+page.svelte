@@ -485,7 +485,7 @@
     cursor: not-allowed;
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     .project-summary {
       flex-direction: column;
     }

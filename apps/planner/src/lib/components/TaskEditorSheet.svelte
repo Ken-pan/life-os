@@ -988,13 +988,13 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  @media (--life-os-desktop) {
+  @media (min-width: 840px) {
     :global(.task-editor-sheet) .sheet-handle {
       display: none;
     }
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     :global(.task-editor-sheet) {
       border-radius: 28px 28px 0 0;
       padding: 12px 24px calc(16px + env(safe-area-inset-bottom));

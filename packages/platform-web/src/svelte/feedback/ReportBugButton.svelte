@@ -612,7 +612,8 @@
     color: var(--t1, inherit);
   }
 
-  @media (--life-os-desktop) {
+  /* --life-os-desktop; Svelte 组件样式不过 @custom-media 展开,须写字面量 */
+  @media (min-width: 840px) {
     .bug-report-backdrop {
       align-items: center;
       padding: 20px;

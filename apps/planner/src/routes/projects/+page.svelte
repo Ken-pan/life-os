@@ -230,7 +230,7 @@
     font-size: var(--text-xs);
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     .project-create {
       grid-template-columns: 1fr;
     }

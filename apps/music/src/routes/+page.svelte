@@ -778,7 +778,7 @@
     opacity: 0.72;
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     .home-filters button {
       min-height: var(--tap-min);
     }
@@ -792,7 +792,7 @@
     }
   }
 
-  @media (--life-os-narrow) {
+  @media (max-width: 380px) {
     .home-filters button {
       padding-inline: var(--space-3);
       font-size: var(--text-xs);

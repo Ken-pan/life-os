@@ -662,7 +662,7 @@
     overflow: hidden;
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     .search-scopes-wrap {
       margin-inline: calc(-1 * var(--page-gutter, var(--space-4)));
     }
@@ -688,7 +688,7 @@
     );
   }
 
-  @media (--life-os-mobile) {
+  @media (max-width: 839px) {
     .search-scopes {
       padding: 4px var(--page-gutter, var(--space-4));
       scroll-padding-inline: var(--page-gutter, var(--space-4));
