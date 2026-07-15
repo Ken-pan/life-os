@@ -84,7 +84,9 @@
   let trendWindow = $state('month')
   /** @type {Window} */
   let catWindow = $state('month')
-  let showInsights = $state(false)
+  // 这是「洞察」页：分类占比、Top 商户和趋势就是它存在的理由，默认展开。
+  // 之前默认折叠，于是整个标签页只剩下一条 5,000+ 行的原始流水。
+  let showInsights = $state(true)
 
   const trendSeries = $derived.by(() => {
     if (trendWindow === 'all') return series
@@ -153,58 +155,6 @@
         })}
       </p>
     </details>
-
-    <PurchaseCoverageCard
-      stats={purchaseCoverage}
-      debugMode={purchaseDebugMode}
-      sourceFilter={purchaseSourceFilter}
-      onSourceFilterChange={(source) => {
-        purchaseSourceFilter = source
-        if (source !== 'all') purchaseStateFilter = 'clean'
-        scrollToLedger()
-      }}
-      onFilter={(preset) => {
-        if (preset === 'purchase:clean') purchaseStateFilter = 'clean'
-        else if (preset === 'purchase:review') purchaseStateFilter = 'review'
-        else if (preset === 'purchase:return') purchaseStateFilter = 'return'
-        purchaseSourceFilter = 'all'
-        scrollToLedger()
-      }}
-      onViewCleanBills={() => {
-        purchaseStateFilter = 'clean'
-        purchaseSourceFilter = 'all'
-        scrollToLedger()
-      }}
-    />
-
-    <div bind:this={ledgerRef} id="history-ledger">
-      <HistoryLedger
-        {privacy}
-        txns={txStore.txns}
-        {categoryList}
-        {accountList}
-        {purchaseDisplayContext}
-        {purchaseStateFilter}
-        {purchaseSourceFilter}
-        {purchaseDebugMode}
-        onPurchaseStateFilterChange={(f) => {
-          purchaseStateFilter = f
-          if (f !== 'clean') purchaseSourceFilter = 'all'
-        }}
-        onEdit={(txn) => txStore.editTxn(txn)}
-        onDelete={(id) => txStore.removeTxn(id)}
-        initialSearch={jumpLedgerSearch ?? initialLedgerSearch}
-        onInitialSearchConsumed={() => {
-          jumpLedgerSearch = undefined
-          onLedgerSearchConsumed?.()
-        }}
-      />
-    </div>
-
-    <section class="history-summary-secondary">
-      <BudgetPulseCard {data} {onQuickAdd} compact />
-      <MerchantOrderCatalogSection catalog={data.merchantOrderCatalog} {privacy} debugMode={purchaseDebugMode} />
-    </section>
 
     <div class="history-insights-toggle">
       <button
@@ -406,6 +356,58 @@
         </div>
       {/if}
     </div>
+
+    <PurchaseCoverageCard
+      stats={purchaseCoverage}
+      debugMode={purchaseDebugMode}
+      sourceFilter={purchaseSourceFilter}
+      onSourceFilterChange={(source) => {
+        purchaseSourceFilter = source
+        if (source !== 'all') purchaseStateFilter = 'clean'
+        scrollToLedger()
+      }}
+      onFilter={(preset) => {
+        if (preset === 'purchase:clean') purchaseStateFilter = 'clean'
+        else if (preset === 'purchase:review') purchaseStateFilter = 'review'
+        else if (preset === 'purchase:return') purchaseStateFilter = 'return'
+        purchaseSourceFilter = 'all'
+        scrollToLedger()
+      }}
+      onViewCleanBills={() => {
+        purchaseStateFilter = 'clean'
+        purchaseSourceFilter = 'all'
+        scrollToLedger()
+      }}
+    />
+
+    <div bind:this={ledgerRef} id="history-ledger">
+      <HistoryLedger
+        {privacy}
+        txns={txStore.txns}
+        {categoryList}
+        {accountList}
+        {purchaseDisplayContext}
+        {purchaseStateFilter}
+        {purchaseSourceFilter}
+        {purchaseDebugMode}
+        onPurchaseStateFilterChange={(f) => {
+          purchaseStateFilter = f
+          if (f !== 'clean') purchaseSourceFilter = 'all'
+        }}
+        onEdit={(txn) => txStore.editTxn(txn)}
+        onDelete={(id) => txStore.removeTxn(id)}
+        initialSearch={jumpLedgerSearch ?? initialLedgerSearch}
+        onInitialSearchConsumed={() => {
+          jumpLedgerSearch = undefined
+          onLedgerSearchConsumed?.()
+        }}
+      />
+    </div>
+
+    <section class="history-summary-secondary">
+      <BudgetPulseCard {data} {onQuickAdd} compact />
+      <MerchantOrderCatalogSection catalog={data.merchantOrderCatalog} {privacy} debugMode={purchaseDebugMode} />
+    </section>
 
     <p class="muted-note">
       {t('history.footnote', {

@@ -479,6 +479,18 @@ function wouldUpdateEnrichment(
   if (replace) return true
   if (refreshImages && existing?.source === sourceLabel) return true
   if (existing?.source !== sourceLabel) return true
+  // Newly-available line items must also count as a change. Only returnInfo was
+  // compared, which left an order linked BEFORE its detail page was parseable
+  // permanently empty: the row already exists (so it is not an insert) and its
+  // returnInfo is unchanged (so it was not an update either). Every in-store
+  // Best Buy receipt sat in exactly that state — linked, but with no products —
+  // until the purchase-details route was fixed. Narrow by design: this only
+  // fires when we have items and the stored row has none, so it can never
+  // overwrite existing products with a worse parse.
+  const gainedLineItems =
+    (incoming?.lineItems?.length ?? 0) > 0 &&
+    (existing?.lineItems?.length ?? 0) === 0
+  if (gainedLineItems) return true
   const action = classifyReturnInfoMerge(existing, incoming, false)
   return action === 'clear' || action === 'update'
 }

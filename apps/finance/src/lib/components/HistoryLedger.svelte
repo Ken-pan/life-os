@@ -2,7 +2,7 @@
   // Ledger from HistoryView.tsx.
   import { t } from '$lib/i18n.svelte.js'
   import { moneyPrecise } from '$lib/format.js'
-  import { searchTxns } from '../../engine/transactions.js'
+  import { isMoneyMovement, searchTxns } from '../../engine/transactions.js'
   import { classifyPurchaseDisplayState } from '../../engine/purchaseEnrichmentDisplay.js'
   import HistoryLedgerRow from './HistoryLedgerRow.svelte'
 
@@ -73,6 +73,10 @@
   /** @type {import('../../engine/transactions.js').FlowType | 'all'} */
   let flow = $state('all')
   let spendingOnly = $state(false)
+  // 默认隐藏内部转账 / 信用卡还款 / 镜像重复：它们只是钱在自己账户间搬运，
+  // 混在流水里会把「钱花在哪」冲淡（本账本 5,445 行里有相当一部分是这类）。
+  // 可关闭，且隐藏了多少行会明示，避免看起来像数据缺失。
+  let hideMoneyMovement = $state(true)
   let page = $state(0)
   let showFilters = $state(false)
   let editingId = $state(null)
@@ -92,11 +96,19 @@
       account: account || undefined,
       flow,
       spendingOnly,
+      hideMoneyMovement,
     })
     return searched.filter((txn) =>
       matchesPurchaseStateFilter(txn, purchaseStateFilter, purchaseSourceFilter, purchaseDisplayContext),
     )
   })
+
+  // 明示被隐藏的行数，而不是让账本静静地少掉几千行。
+  const hiddenMovementCount = $derived(
+    hideMoneyMovement && (!flow || flow === 'all')
+      ? txns.filter((t) => isMoneyMovement(t)).length
+      : 0,
+  )
 
   const totalSpending = $derived(
     results.reduce((a, txn) => a + (txn.inSpending ? -txn.budgetImpact : 0), 0),
@@ -124,6 +136,16 @@
           onclick={() => onPurchaseStateFilterChange('all')}
         >
           {t('history.purchaseFilterClear')}
+        </button>
+      {/if}
+      {#if hiddenMovementCount > 0}
+        <button
+          type="button"
+          class="btn ghost text-sm"
+          onclick={() => reset(() => (hideMoneyMovement = false))}
+          title={t('history.moneyMovementHiddenHint')}
+        >
+          {t('history.moneyMovementHidden', { count: hiddenMovementCount.toLocaleString() })}
         </button>
       {/if}
       <span class="text-muted text-sm">
@@ -168,6 +190,14 @@
           onchange={() => (page = 0)}
         />
         {t('history.expensesOnly')}
+      </label>
+      <label class="ledger-check">
+        <input
+          type="checkbox"
+          bind:checked={hideMoneyMovement}
+          onchange={() => (page = 0)}
+        />
+        {t('history.hideMoneyMovement')}
       </label>
     </div>
     <div class="ledger-filter-actions">

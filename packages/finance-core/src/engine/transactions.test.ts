@@ -167,6 +167,125 @@ describe('流水检索', () => {
     expect(res.every((t) => t.inSpending)).toBe(true)
   })
 
+  describe('hideMoneyMovement', () => {
+    const movement: Txn[] = [
+      {
+        id: 'cc',
+        date: '2026-05-20',
+        month: '2026-05',
+        merchant: 'Chase Credit Card',
+        category: 'Credit Card Payment',
+        account: 'Chase Checking',
+        flow: 'credit_card_payment',
+        amount: 800,
+        budgetImpact: 0,
+        inSpending: false,
+        inCashFlow: true,
+      },
+      {
+        id: 'tr',
+        date: '2026-05-19',
+        month: '2026-05',
+        merchant: 'Transfer to Savings',
+        category: 'Transfer',
+        account: 'Chase Checking',
+        flow: 'internal_transfer',
+        amount: 500,
+        budgetImpact: 0,
+        inSpending: false,
+        inCashFlow: true,
+      },
+      {
+        id: 'mirror',
+        date: '2026-05-18',
+        month: '2026-05',
+        merchant: 'Mirrored row',
+        category: 'Shopping',
+        account: 'Amex',
+        flow: 'expense',
+        amount: 40,
+        budgetImpact: 0,
+        inSpending: false,
+        inCashFlow: false,
+        excludeReason: 'aggregate-mirror-duplicate',
+      },
+      {
+        id: 'pay',
+        date: '2026-05-15',
+        month: '2026-05',
+        merchant: 'Employer',
+        category: 'Income',
+        account: 'Chase Checking',
+        flow: 'income',
+        amount: -5000,
+        budgetImpact: 0,
+        inSpending: false,
+        inCashFlow: true,
+      },
+      {
+        id: 'buy',
+        date: '2026-05-14',
+        month: '2026-05',
+        merchant: 'Whole Foods',
+        category: 'Groceries',
+        account: 'Amex',
+        flow: 'expense',
+        amount: 60,
+        budgetImpact: -60,
+        inSpending: true,
+        inCashFlow: true,
+      },
+    ]
+
+    it('滤掉内部转账、信用卡还款与镜像重复', () => {
+      const ids = searchTxns(movement, { hideMoneyMovement: true }).map((t) => t.id)
+      expect(ids).not.toContain('cc')
+      expect(ids).not.toContain('tr')
+      expect(ids).not.toContain('mirror')
+    })
+
+    it('保留收入——收入的 inSpending 也是 false，但它不是资金搬运', () => {
+      const ids = searchTxns(movement, { hideMoneyMovement: true }).map((t) => t.id)
+      expect(ids).toContain('pay')
+      expect(ids).toContain('buy')
+      // 这正是不能直接用 spendingOnly 的原因。
+      expect(searchTxns(movement, { spendingOnly: true }).map((t) => t.id)).not.toContain('pay')
+    })
+
+    it('取现算资金搬运：去向不明，且多用于信用卡还款（还款已另计）', () => {
+      const withdrawal: Txn = {
+        id: 'atm',
+        date: '2026-05-13',
+        month: '2026-05',
+        merchant: 'Withdrawal 05/13',
+        category: 'Cash & Checks',
+        account: 'Chase Checking',
+        flow: 'expense',
+        amount: 2451,
+        budgetImpact: -2451,
+        // 聚合器把取现导入成 expense，所以 inSpending 是 true——
+        // 正因如此，只看 inSpending 的分类图会让它霸榜。
+        inSpending: true,
+        inCashFlow: true,
+      }
+      const list = [withdrawal, ...movement]
+
+      expect(searchTxns(list, { hideMoneyMovement: true }).map((t) => t.id)).not.toContain('atm')
+      // 账本藏了、图表却还算它，会让同一个页面自相矛盾。
+      expect(categoryBreakdown(list, {}).map((c) => c.category)).not.toContain('Cash & Checks')
+      expect(topMerchants(list, {}).map((m) => m.merchant)).not.toContain('Withdrawal 05/13')
+      expect(monthlySeries(list).find((m) => m.month === '2026-05')?.spending).toBe(60)
+    })
+
+    it('显式选中某个 flow 时不再隐藏该 flow', () => {
+      const ids = searchTxns(movement, {
+        hideMoneyMovement: true,
+        flow: 'internal_transfer',
+      }).map((t) => t.id)
+      expect(ids).toEqual(['tr'])
+    })
+  })
+
   it('按 purchaseEnrichment 商品标题检索（Best Buy / Target）', () => {
     const enriched: Txn = {
       id: 'bb',

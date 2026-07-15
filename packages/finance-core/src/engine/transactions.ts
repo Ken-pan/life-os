@@ -58,9 +58,40 @@ export type NewTxn = Omit<Txn, "id" | "month"> & {
 };
 
 
+/**
+ * 计入「钱花在哪」的行：计入花销分析、且不是资金搬运。
+ * 花销总额、月度趋势、分类占比、商户榜都必须用这一个口径，否则同一个页面里
+ * 会出现「账本已隐藏取现，但分类图里它仍是最大项」这种自相矛盾。
+ */
+export function countsAsSpending(t: Txn): boolean {
+  return t.inSpending && !isMoneyMovement(t);
+}
+
 /** 单笔交易计入花销分析的「净花销额」（支出为正、退款为负）。 */
 export function spendingOf(t: Txn): number {
-  return t.inSpending ? -t.budgetImpact : 0;
+  return countsAsSpending(t) ? -t.budgetImpact : 0;
+}
+
+/**
+ * 聚合器给取现/支票的分类。取现被导入成 flow=expense，于是计入花销分析——
+ * 但它只是把钱从账户挪成现金，去向不明，且很大一部分最终用于信用卡还款
+ * （已另行计入）。留在「花在哪」里会盖过真实消费：实测某月一笔 $2,451 取现
+ * 同时霸占了最大分类（占 73%）和商户榜首，而真实消费是 Bills $189 / Shopping $182。
+ */
+const CASH_MOVEMENT_CATEGORIES = new Set(["Cash & Checks"]);
+
+/**
+ * 资金搬运：钱在自己的账户之间移动或变成现金，不是花销。
+ * 内部转账、信用卡还款、取现/支票，以及为对账保留、已被排除出分析的镜像重复行。
+ *
+ * 注意与 `spendingOnly`（= !inSpending）的区别：收入的 inSpending 同样是 false，
+ * 但收入不是资金搬运。想回答「钱花在哪」时要滤掉的是这里定义的搬运行，
+ * 用 spendingOnly 会连收入一起藏掉。
+ */
+export function isMoneyMovement(t: Txn): boolean {
+  if (t.flow === "internal_transfer" || t.flow === "credit_card_payment") return true;
+  if (CASH_MOVEMENT_CATEGORIES.has(t.category)) return true;
+  return !t.inSpending && t.flow !== "income" && Boolean(t.excludeReason);
 }
 
 /**
@@ -148,7 +179,7 @@ export function monthlySeries(txns: Txn[]): MonthPoint[] {
       map.set(t.month, p);
     }
     const s = spendingOf(t);
-    if (t.inSpending) {
+    if (countsAsSpending(t)) {
       p.spending += s;
       p.count += 1;
     }
@@ -178,7 +209,7 @@ export function categoryBreakdown(
   const map = new Map<string, { amount: number; count: number }>();
   let total = 0;
   for (const t of txns) {
-    if (!t.inSpending) continue;
+    if (!countsAsSpending(t)) continue;
     if (opts.from && t.date < opts.from) continue;
     if (opts.to && t.date > opts.to) continue;
     const s = spendingOf(t);
@@ -212,7 +243,7 @@ export function topMerchants(
 ): MerchantSlice[] {
   const map = new Map<string, { amount: number; count: number }>();
   for (const t of txns) {
-    if (!t.inSpending) continue;
+    if (!countsAsSpending(t)) continue;
     if (opts.from && t.date < opts.from) continue;
     if (opts.to && t.date > opts.to) continue;
     const cur = map.get(t.merchant) ?? { amount: 0, count: 0 };
@@ -345,8 +376,10 @@ export interface LedgerQuery {
   category?: string;
   account?: string;
   flow?: FlowType | "all";
-  /** 仅显示计入花销分析的行。 */
+  /** 仅显示计入花销分析的行。注意这会同时藏掉收入。 */
   spendingOnly?: boolean;
+  /** 滤掉内部转账 / 信用卡还款 / 镜像重复；保留收入与花销。 */
+  hideMoneyMovement?: boolean;
   from?: string;
   to?: string;
 }
@@ -356,6 +389,9 @@ export function searchTxns(txns: Txn[], q: LedgerQuery): Txn[] {
   const needle = q.search?.trim().toLowerCase();
   return txns.filter((t) => {
     if (q.spendingOnly && !t.inSpending) return false;
+    // 显式按 flow 查询时不过滤：用户主动选「内部转账」就该看到内部转账。
+    if (q.hideMoneyMovement && (!q.flow || q.flow === "all") && isMoneyMovement(t))
+      return false;
     if (q.category && t.category !== q.category) return false;
     if (q.account && t.account !== q.account) return false;
     if (q.flow && q.flow !== "all" && t.flow !== q.flow) return false;

@@ -34,6 +34,6 @@
     "./copy/metrics": "./src/copy/metrics.ts",
     "./copy/terminology": "./src/copy/terminology.ts",
     "./format/date": "./src/format/date.ts",
-    "./engine/*": "./src/engine/*"
+    "./engine/*": "./src/engine/*.ts"
   }
 }
