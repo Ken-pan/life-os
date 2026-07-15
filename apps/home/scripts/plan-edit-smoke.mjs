@@ -125,24 +125,40 @@ async function dragSvg(page, x1, y1, x2, y2) {
   await page.mouse.up()
 }
 
+/**
+ * Arm a palette tool. Scoped to the 绘制工具 rail on purpose: several tool names
+ * (家具, 选择) are reused by the tool-options strip beside it, so an unscoped
+ * getByRole would be a strict-mode violation.
+ * @param {import('playwright').Page} page @param {string} name
+ */
+function tool(page, name) {
+  return page
+    .getByRole('toolbar', { name: '绘制工具' })
+    .getByRole('button', { name, exact: true })
+}
+
+/** @param {import('playwright').Page} page @param {string} name */
+async function pickTool(page, name) {
+  await tool(page, name).click()
+  await page.waitForTimeout(200)
+}
+
 /** @param {import('playwright').Page} page */
 async function enterGraphEdit(page) {
   await page.getByRole('button', { name: '编辑', exact: true }).click()
   await page.waitForTimeout(300)
-  await page.getByRole('button', { name: '建墙', exact: true }).click()
-  await page.waitForTimeout(200)
+  await pickTool(page, '建墙')
 }
 
 /**
- * Delete a wall the way desktop actually offers it: 选择 tool → click the wall →
- * 删除 on the selection bar. There is no 删墙 tool outside the <599px compact select.
+ * Delete a wall the way the editor offers it: 选择 tool → click the wall →
+ * 删除 on the selection bar. There is deliberately no armed 删墙 mode.
  * Pick a point clear of openings (hit rect = bounds + 18px pad) and vertices (r=6),
  * or the click selects those instead and the bar never shows.
  * @param {import('playwright').Page} page @param {number} svgX @param {number} svgY
  */
 async function removeWallAt(page, svgX, svgY) {
-  await page.getByRole('button', { name: '选择', exact: true }).click()
-  await page.waitForTimeout(200)
+  await pickTool(page, '选择')
   await clickSvg(page, svgX, svgY)
   await page.waitForTimeout(250)
   const bar = page.getByRole('toolbar', { name: '墙段快捷操作' })
@@ -198,23 +214,7 @@ async function storageS1Assigned(page) {
 
 /** @param {import('playwright').Page} page */
 async function enterZoneEdit(page) {
-  await page.getByRole('button', { name: '② 划分', exact: true }).click()
-  await page.waitForTimeout(300)
-  await page.getByRole('button', { name: '画区', exact: true }).click()
-  await page.waitForTimeout(200)
-}
-
-/** @param {import('playwright').Page} page */
-async function enterPlaceEdit(page) {
-  await page.getByRole('button', { name: '③ 布置', exact: true }).click()
-  await page.waitForTimeout(300)
-}
-
-/** @param {import('playwright').Page} page @param {string} name */
-function placeTool(page, name) {
-  return page
-    .getByRole('group', { name: '布置工具' })
-    .getByRole('button', { name, exact: true })
+  await pickTool(page, '画区')
 }
 
 /** @param {import('playwright').Page} page */
@@ -286,8 +286,7 @@ push({
   detail: `edges=${initial}`,
 })
 
-await page.getByRole('button', { name: '建墙', exact: true }).click()
-await page.waitForTimeout(200)
+await pickTool(page, '建墙')
 await clickSvg(page, 120, 120)
 await page.waitForTimeout(150)
 await clickSvg(page, 120, 360)
@@ -300,8 +299,7 @@ push({
   detail: `${initial} → ${afterAdd}`,
 })
 
-await page.getByRole('button', { name: '门窗', exact: true }).click()
-await page.waitForTimeout(200)
+await pickTool(page, '门窗')
 await clickSvg(page, 240, 120)
 await page.waitForTimeout(400)
 
@@ -314,8 +312,7 @@ push({
 })
 
 const offsetBeforeDrag = await firstOpeningOffset(page)
-await page.getByRole('button', { name: '选择', exact: true }).click()
-await page.waitForTimeout(200)
+await pickTool(page, '选择')
 await dragSvg(page, 240, 120, 300, 120)
 await page.waitForTimeout(400)
 const offsetAfterDrag = await firstOpeningOffset(page)
@@ -390,8 +387,6 @@ push({
   detail: `zones=${zonesAfterZoneReload}`,
 })
 
-await page.getByRole('button', { name: '① 墙体', exact: true }).click()
-await page.waitForTimeout(200)
 await removeWallAt(page, 170, 120)
 const staleAfterWall = await firstZoneStale(page)
 push({
@@ -400,21 +395,17 @@ push({
   detail: `stale=${staleAfterWall}`,
 })
 
-await enterPlaceEdit(page)
-// 家具 also names a tool in the floating toolbar, hence the 布置工具 scope. Entering
-// ③ 布置 already sets placementTool='place' (syncEditStepSideEffects), so it is
-// normally active on arrival — clicking it regardless races the mode-switch
-// re-render and detaches the node out from under Playwright.
-const furnitureBtn = placeTool(page, '家具')
-await furnitureBtn.waitFor({ state: 'visible', timeout: 10000 })
-if ((await furnitureBtn.getAttribute('aria-pressed')) !== 'true') {
-  await furnitureBtn.click()
-  await page.waitForTimeout(200)
-}
-// Kind buttons are aria-label'd `${group} · ${label}`, so '柜' alone is neither
-// the accessible name nor unique (床头柜/五斗柜/衣柜/电视柜).
-await page.getByRole('button', { name: '储物 · 柜', exact: true }).click()
-await page.waitForTimeout(200)
+await pickTool(page, '家具')
+// The kind picker is a modal opened from the tool-options strip; it replaced a
+// 54-item scroller that used to live in the page header.
+await page.locator('.pt-opt-btn-wide').click()
+await page.locator('.placement-kinds-picker').waitFor({ state: 'visible', timeout: 5000 })
+// '柜' alone is not unique (床头柜/五斗柜/衣柜/电视柜) — match the exact label.
+await page
+  .locator('.placement-kinds-picker .storage-picker-btn')
+  .filter({ hasText: /^柜$/ })
+  .click()
+await page.waitForTimeout(300)
 await clickSvg(page, 240, 150)
 await page.waitForTimeout(400)
 const placementsAfter = await placementCount(page)
@@ -424,8 +415,7 @@ push({
   detail: `placements=${placementsAfter}`,
 })
 
-await placeTool(page, '标储藏').click()
-await page.waitForTimeout(200)
+await pickTool(page, '标储藏')
 const plCenter = await page.evaluate((key) => {
   const raw = localStorage.getItem(key)
   if (!raw) return null

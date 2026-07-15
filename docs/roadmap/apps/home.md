@@ -10,7 +10,7 @@
 
 | 域           | 状态 | 要点                                       |
 | ------------ | ---- | ------------------------------------------ |
-| `/plan`      | ✅   | 508 浏览/编辑 · 墙图三步壳 · HOME.PROJ.5 `test:viewport` |
+| `/plan`      | ✅   | 508 浏览/编辑 · 墙图单工具面板 · HOME.PROJ.5 `test:viewport` |
 | `/plan` 墙图 | ✅   | HOME.SPATIAL.0–W5 ✅ · Wave A/B/C UX · `test:plan-edit`（**13 checks**） |
 | `/storage`   | ✅   | 储藏区卡片 · `?zone=` 深链 · **HOME.STORAGE.12 物品实体化 + 搜索定位 + CRUD** |
 | SSO / Portal | ✅   | HOME.PORTAL.1–HOME.SSO.3 · HOME.PROJ.6 储藏卡                    |
@@ -19,7 +19,8 @@
 
 ## 空间编辑 Workstream（H-W，主线）
 
-三步编辑器：**① 墙体（graph）→ ② 划分（手绘分区）→ ③ 布置（家具 + 储藏指派）**。墙图为 SSOT，门窗挂墙边（`graphOpenings`）。  
+编辑器：**一个工具面板**（选择 / 建墙 / 门窗 / 画区 / 家具 / 标储藏 / 视角），按工作流分组。墙图为 SSOT，门窗挂墙边（`graphOpenings`）。  
+> **2026-07-14 UI 重构：** 原「① 墙体 → ② 划分 → ③ 布置」步骤段已移除 —— 它与浮动面板是同一份状态的两个控件，且 ② 的「删区 / 自动识别房间」在桌面端根本点不到。现由 `activeTool` 单一真源驱动，步骤语义降为内部 `$derived`。详见 [`apps/home/README.md` §工具面板](../../../apps/home/README.md)。  
 执行方案 → **[home-spatial-editor.md](./home-spatial-editor.md)**  
 功能验收 → **[home-spatial-editor-audit-2026-07-08.md](../../qa/home-spatial-editor-audit-2026-07-08.md)**  
 UI/UX 验收 → **[home-spatial-uiux-audit-2026-07-08.md](../../qa/home-spatial-uiux-audit-2026-07-08.md)**

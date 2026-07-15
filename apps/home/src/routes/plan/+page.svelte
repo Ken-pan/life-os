@@ -101,20 +101,29 @@
 
   /** @type {'browse' | 'edit'} */
   let planMode = $state('browse')
-  /** @type {'walls' | 'zones' | 'place' | 'view'} */
-  let editStep = $state('walls')
-  /** @type {import('$lib/plan-graph-edit.js').GraphTool} */
-  let graphTool = $state('wallAdd')
+
+  /**
+   * The single source of truth for what is armed. Everything below — editStep,
+   * graphTool, zoneTool, placementTool, viewpointTool — is *derived* from this
+   * and never assigned directly, so no two controls can disagree about the
+   * active tool (they used to: the ①②③④ step segment and the palette both wrote
+   * this state from opposite ends).
+   * @type {PlanTool}
+   */
+  let activeTool = $state('select')
+
+  /**
+   * Which layer 选择 acts on. Kept explicit and surfaced in the tool options
+   * strip rather than inferred from history — an invisible mode that silently
+   * changes what a click selects is exactly the mode error to avoid.
+   * @type {'walls' | 'zones' | 'place' | 'view'}
+   */
+  let selectLayer = $state('walls')
+
   /** @type {'door' | 'window'} 门窗工具放置哪一种 */
   let openingKind = $state('door')
-  /** @type {import('$lib/plan-zone-edit.js').ZoneTool} */
-  let zoneTool = $state('zoneAdd')
-  /** @type {import('$lib/plan-placement-edit.js').PlacementTool} */
-  let placementTool = $state('place')
   /** @type {keyof typeof PLACEMENT_KINDS} */
   let placementKind = $state('cabinet')
-  /** @type {import('$lib/plan-viewpoint-edit.js').ViewpointTool} */
-  let viewpointTool = $state('viewAdd')
   let selectedViewpoint = $state('')
   /** @type {import('$lib/spatial/types.js').SpatialViewpoint[] | null} */
   let previewViewpoints = $state(null)
@@ -189,6 +198,53 @@
   let convertBannerDismissed = $state(false)
 
   const CONVERT_BANNER_KEY = 'home_plan_convert_banner_dismissed'
+
+  /**
+   * @typedef {'select' | 'wall' | 'opening' | 'zone' | 'furniture' | 'storage' | 'viewpoint'} PlanTool
+   */
+
+  /** Each tool belongs to exactly one layer; 选择 borrows `selectLayer`. */
+  const TOOL_LAYER = /** @type {const} */ ({
+    wall: 'walls',
+    opening: 'walls',
+    zone: 'zones',
+    furniture: 'place',
+    storage: 'place',
+    viewpoint: 'view',
+  })
+
+  /** Number-key order must match PlanEditToolbar's rail. */
+  const TOOL_KEYS = /** @type {const} */ ([
+    'select',
+    'wall',
+    'opening',
+    'zone',
+    'furniture',
+    'storage',
+    'viewpoint',
+  ])
+
+  const editStep = $derived(
+    activeTool === 'select' ? selectLayer : TOOL_LAYER[activeTool],
+  )
+  /** @type {import('$lib/plan-graph-edit.js').GraphTool} */
+  const graphTool = $derived(
+    activeTool === 'wall' ? 'wallAdd' : activeTool === 'opening' ? 'opening' : 'select',
+  )
+  /** @type {import('$lib/plan-zone-edit.js').ZoneTool} */
+  const zoneTool = $derived(activeTool === 'zone' ? 'zoneAdd' : 'zoneSelect')
+  /** @type {import('$lib/plan-placement-edit.js').PlacementTool} */
+  const placementTool = $derived(
+    activeTool === 'furniture'
+      ? 'place'
+      : activeTool === 'storage'
+        ? 'storage'
+        : 'select',
+  )
+  /** @type {import('$lib/plan-viewpoint-edit.js').ViewpointTool} */
+  const viewpointTool = $derived(
+    activeTool === 'viewpoint' ? 'viewAdd' : 'viewSelect',
+  )
 
   const editMode508 = $derived(planMode === 'edit' && !wallGraph)
   const graphEditMode = $derived(
@@ -283,61 +339,71 @@
     return project
   })
 
+  /** 选择工具在各层里选的是什么 —— 供 hint 与选项条共用 */
+  const SELECT_LAYER_LABEL = /** @type {const} */ ({
+    walls: '墙体',
+    zones: '分区',
+    place: '家具',
+    view: '机位',
+  })
+
   const modeHint = $derived.by(() => {
     if (planMode === 'browse') {
       return '双指缩放平移 · 储藏清单见左侧「储藏」'
     }
-    if (wallGraph && editStep === 'walls') {
-      if (graphTool === 'wallAdd') {
-        return '建墙：点击拐点连线 · Shift 正交 · 1″ 吸附 · Esc 断链'
-      }
-      if (graphTool === 'remove') return '删墙：点击墙段删除'
-      if (graphTool === 'opening') {
-        if (openingKind === 'window') {
-          const style = getLastWindowStyle()
-          return `门窗：点击墙段放置窗（${windowStyleLabel(style)} ${defaultWindowSpanIn(style)}″）`
-        }
-        const style = getLastDoorStyle()
-        return `门窗：点击墙段放置门（${doorStyleLabel(style)} ${defaultDoorSpanIn(style)}″）`
-      }
-      return '选择：点墙段/门窗 · 拖顶点或沿墙移动 · Delete 删除'
+    if (!wallGraph) return '拖曳内墙与门窗调整户型 · Delete 隐藏门窗'
+    if (activeTool === 'wall') {
+      return '建墙：点击拐点连线 · Shift 正交 · 1″ 吸附 · Esc 断链'
     }
-    if (wallGraph && editStep === 'zones') {
-      if (zoneTool === 'zoneAdd') {
-        return '画区：逐点落顶点 · 点击首点或 Enter 闭合 · Esc 取消'
+    if (activeTool === 'opening') {
+      if (openingKind === 'window') {
+        const style = getLastWindowStyle()
+        return `门窗：点击墙段放置窗（${windowStyleLabel(style)} ${defaultWindowSpanIn(style)}″）`
       }
-      if (zoneTool === 'zoneRemove') return '删区：点击分区删除'
-      return '选区：点分区改名/换色 · 拖顶点微调 · 需核对时点确认'
+      const style = getLastDoorStyle()
+      return `门窗：点击墙段放置门（${doorStyleLabel(style)} ${defaultDoorSpanIn(style)}″）`
     }
-    if (wallGraph && editStep === 'place') {
-      return '布置：选家具类型后点画布放置 · 标储藏指派 S1–S8'
+    if (activeTool === 'zone') {
+      return '画区：逐点落顶点 · 点击首点或 Enter 闭合 · Esc 取消'
     }
-    if (wallGraph && editStep === 'view') {
-      if (viewpointTool === 'viewAdd') {
-        return '视角：点画布放机位 · 拖圆点改位置 · 拖手柄转朝向 · 选中后挂照片'
-      }
-      return '视角：点机位选中 · 拖圆点改位置 · 拖手柄转朝向 · Delete 删除'
+    if (activeTool === 'furniture') {
+      return `家具：点画布放置「${PLACEMENT_KINDS[placementKind].label}」· 拖动移动 · 方向键微调`
     }
-    return '拖曳内墙与门窗调整户型 · Delete 隐藏门窗'
+    if (activeTool === 'storage') {
+      return '标储藏：点分区或家具指派 S1–S8'
+    }
+    if (activeTool === 'viewpoint') {
+      return '视角：点画布放机位 · 拖圆点改位置 · 拖手柄转朝向 · 选中后挂照片'
+    }
+    if (selectLayer === 'walls') {
+      return '选择墙体：点墙段/门窗 · 拖顶点或沿墙移动 · Delete 删除'
+    }
+    if (selectLayer === 'zones') {
+      return '选择分区：点分区改名/换色 · 拖顶点微调 · 需核对时点确认'
+    }
+    if (selectLayer === 'place') {
+      return '选择家具：点家具拖动 · 方向键微调 · ⌘D 复制 · Delete 删除'
+    }
+    return '选择机位：点机位选中 · 拖圆点改位置 · 拖手柄转朝向 · Delete 删除'
   })
 
   /** AppBar 单行副标题（沉浸式编辑时由 layout 隐藏） */
   const appBarSubtitle = $derived.by(() => {
     if (planMode === 'browse') return '浏览 508 户型'
-    if (graphEditMode) {
-      if (graphTool === 'wallAdd') return '墙图 · 建墙'
-      if (graphTool === 'opening') return '墙图 · 门窗'
-      if (graphTool === 'remove') return '墙图 · 删墙'
-      return '墙图 · 选择'
-    }
-    if (zoneEditMode) {
-      if (zoneTool === 'zoneAdd') return '墙图 · 画区'
-      if (zoneTool === 'zoneRemove') return '墙图 · 删区'
-      return '墙图 · 选区'
-    }
-    if (placeEditMode) return '墙图 · 布置'
     if (editMode508) return '508 参数编辑'
-    return '编辑'
+    if (!wallGraph) return '编辑'
+    if (activeTool === 'select') {
+      return `墙图 · 选择${SELECT_LAYER_LABEL[selectLayer]}`
+    }
+    const label = {
+      wall: '建墙',
+      opening: '门窗',
+      zone: '画区',
+      furniture: '家具',
+      storage: '标储藏',
+      viewpoint: '视角',
+    }[activeTool]
+    return `墙图 · ${label}`
   })
 
   function bumpFit(
@@ -353,15 +419,11 @@
     convertBannerDismissed = sessionStorage.getItem(CONVERT_BANNER_KEY) === '1'
     const mq = window.matchMedia('(max-width: 599px)')
     compactPlanChrome = mq.matches
+    // Both breakpoints now drive the same `activeTool` through the same palette,
+    // so crossing the breakpoint no longer has orphan tools to scrub.
     /** @param {MediaQueryListEvent} e */
     const onMq = (e) => {
       compactPlanChrome = e.matches
-      // Desktop has no erase-mode chrome (select → Delete / selection bar).
-      // Clear orphan remove tools left over from compact.
-      if (!e.matches) {
-        if (graphTool === 'remove') setGraphTool('select')
-        if (zoneTool === 'zoneRemove') setZoneTool('zoneSelect')
-      }
     }
     mq.addEventListener('change', onMq)
     return () => mq.removeEventListener('change', onMq)
@@ -421,18 +483,12 @@
     if (id) selectedSpatialZone = id
   }
 
-  /** @param {import('$lib/plan-placement-edit.js').PlacementTool} tool */
-  function setPlacementTool(tool) {
-    placementTool = tool
-    previewPlacements = null
-    storagePickerOpen = false
-    placementKindsOpen = false
-  }
-
+  /** Picking a kind arms the furniture tool — that is the only reason to pick one. */
   /** @param {keyof typeof PLACEMENT_KINDS} kind */
   function setPlacementKind(kind) {
     placementKind = kind
     placementKindsOpen = false
+    setTool('furniture')
   }
 
   /**
@@ -490,12 +546,6 @@
     return { placement, snap }
   }
 
-  /** @param {import('$lib/plan-viewpoint-edit.js').ViewpointTool} tool */
-  function setViewpointTool(tool) {
-    viewpointTool = tool
-    previewViewpoints = null
-  }
-
   /** @param {{ x: number, y: number }} pt */
   function onViewpointPoint(pt) {
     if (viewpointTool !== 'viewAdd') return
@@ -503,7 +553,9 @@
     if (id) {
       selectedViewpoint = id
       // 放完就转选择态 —— 否则下一次点击（想选中它）又会再放一个。
-      setViewpointTool('viewSelect')
+      // 不走 setTool：它会清掉刚刚选中的这个机位。
+      activeTool = 'select'
+      selectLayer = 'view'
     }
   }
 
@@ -562,13 +614,6 @@
       dialog.close()
     }
   })
-
-  /** @param {import('$lib/plan-zone-edit.js').ZoneTool} tool */
-  function setZoneTool(tool) {
-    zoneTool = tool
-    clearZoneChain()
-    previewZones = null
-  }
 
   /**
    * 解析画墙落点：顶点 > 对齐 > 角度 > 网格。
@@ -709,8 +754,8 @@
   function setPlanMode(mode) {
     planMode = mode
     if (mode === 'edit' && wallGraph) {
-      editStep = 'walls'
-      graphTool = 'wallAdd'
+      activeTool = 'select'
+      selectLayer = 'walls'
     }
     if (mode !== 'edit') {
       clearSelection()
@@ -719,15 +764,30 @@
     if (mode === 'browse') drawerOpen = false
     graphPreviewGraph = null
     graphPreviewOpenings = null
-    if (mode === 'edit' && compactPlanChrome && wallGraph) {
-      bumpFit(false, 'contain')
-    } else {
-      bumpFit(false)
-    }
+    bumpFit(false, 'contain')
   }
 
-  /** Side effects after edit step changes (compact select uses bind:value). */
-  function syncEditStepSideEffects() {
+  /**
+   * The one entry point for arming a tool. Every in-flight interaction belongs
+   * to the tool that started it, so switching always drops chains, previews and
+   * selection rather than leaving a half-drawn wall attached to the zone tool.
+   *
+   * Note it does *not* re-fit the canvas: the header no longer grows per tool,
+   * so the viewport must stay exactly where the user left it.
+   * @param {PlanTool} id
+   */
+  function setTool(id) {
+    if (!wallGraph) {
+      // 508 has no palette; the only way in is to convert first.
+      convertToWallGraph()
+      return
+    }
+    if (planMode !== 'edit') setPlanMode('edit')
+    const prevLayer = editStep
+    activeTool = id
+    // 选择 inherits the layer you were just working in — switching 家具 → 选择
+    // keeps selecting furniture, which is what the last action implies.
+    if (id === 'select') selectLayer = prevLayer
     clearSelection()
     clearGraphChain()
     clearZoneChain()
@@ -736,34 +796,15 @@
     previewZones = null
     previewPlacements = null
     previewViewpoints = null
-    if (editStep === 'zones') zoneTool = 'zoneAdd'
-    if (editStep === 'place') placementTool = 'place'
-    if (editStep === 'view') viewpointTool = 'viewAdd'
-    if (
-      compactPlanChrome &&
-      (editStep === 'walls' || editStep === 'place' || editStep === 'view')
-    ) {
-      bumpFit(false, 'contain')
-    } else {
-      bumpFit(false)
-    }
+    storagePickerOpen = false
+    placementKindsOpen = false
   }
 
-  /** @param {'walls' | 'zones' | 'place' | 'view'} step */
-  function setEditStep(step) {
-    if (!wallGraph && step !== 'walls') return
-    if ((step === 'place' || step === 'view') && !wallGraph) return
-    const prev = editStep
-    editStep = step
-    if (prev !== step) syncEditStepSideEffects()
-  }
-
-  /** @param {import('$lib/plan-graph-edit.js').GraphTool} tool */
-  function setGraphTool(tool) {
-    graphTool = tool
-    clearGraphChain()
-    graphPreviewGraph = null
-    graphPreviewOpenings = null
+  /** @param {'walls' | 'zones' | 'place' | 'view'} layer */
+  function setSelectLayer(layer) {
+    selectLayer = layer
+    activeTool = 'select'
+    clearSelection()
   }
 
   function rebuildGraphFromLayout() {
@@ -784,84 +825,17 @@
 
   function convertToWallGraph() {
     activateWallGraphMode()
-    editStep = 'walls'
-    graphTool = 'wallAdd'
+    activeTool = 'select'
+    selectLayer = 'walls'
     if (planMode !== 'edit') planMode = 'edit'
     convertBannerDismissed = true
     if (browser) sessionStorage.setItem(CONVERT_BANNER_KEY, '1')
-    bumpFit(false)
+    bumpFit(false, 'contain')
   }
 
   function dismissConvertBanner() {
     convertBannerDismissed = true
     if (browser) sessionStorage.setItem(CONVERT_BANNER_KEY, '1')
-  }
-
-  /** 浮动工具栏当前高亮的工具 */
-  const toolbarActiveTool = $derived.by(() => {
-    if (planMode !== 'edit' || !wallGraph) return null
-    if (editStep === 'walls') {
-      if (graphTool === 'wallAdd') return 'wall'
-      if (graphTool === 'opening') return 'opening'
-      if (graphTool === 'select') return 'select'
-      return null
-    }
-    if (editStep === 'zones') {
-      if (zoneTool === 'zoneAdd') return 'zone'
-      if (zoneTool === 'zoneSelect') return 'select'
-      return null
-    }
-    if (editStep === 'place') {
-      return placementTool === 'place' ? 'furniture' : null
-    }
-    if (editStep === 'view') {
-      return viewpointTool === 'viewAdd' ? 'viewpoint' : 'select'
-    }
-    return null
-  })
-
-  /** @param {'select' | 'wall' | 'opening' | 'zone' | 'furniture' | 'viewpoint'} id */
-  function activateToolbarTool(id) {
-    if (!wallGraph) {
-      convertToWallGraph()
-    } else if (planMode !== 'edit') {
-      setPlanMode('edit')
-    }
-    if (id === 'select') {
-      if (editStep === 'zones') {
-        setZoneTool('zoneSelect')
-      } else if (editStep === 'view') {
-        setViewpointTool('viewSelect')
-      } else {
-        setEditStep('walls')
-        setGraphTool('select')
-      }
-      return
-    }
-    if (id === 'wall') {
-      setEditStep('walls')
-      setGraphTool('wallAdd')
-      return
-    }
-    if (id === 'opening') {
-      setEditStep('walls')
-      setGraphTool('opening')
-      return
-    }
-    if (id === 'zone') {
-      setEditStep('zones')
-      setZoneTool('zoneAdd')
-      return
-    }
-    if (id === 'furniture') {
-      setEditStep('place')
-      setPlacementTool('place')
-      return
-    }
-    if (id === 'viewpoint') {
-      setEditStep('view')
-      setViewpointTool('viewAdd')
-    }
   }
 
   function restoreDefaultLayout() {
@@ -881,19 +855,10 @@
     )
     if (!ok) return
     if (!resetToOuterShell()) return
-    clearSelection()
-    clearGraphChain()
-    clearZoneChain()
-    graphPreviewGraph = null
-    graphPreviewOpenings = null
-    previewZones = null
-    previewPlacements = null
-    if (planMode !== 'edit') {
-      setPlanMode('edit')
-    } else {
-      setEditStep('walls')
-    }
-    graphTool = 'wallAdd'
+    drawerOpen = false
+    if (planMode !== 'edit') setPlanMode('edit')
+    // Land on 建墙: the shell is bare, so drawing is the only useful next move.
+    setTool('wall')
     convertBannerDismissed = true
     if (browser) sessionStorage.setItem(CONVERT_BANNER_KEY, '1')
     bumpFit(false, 'contain')
@@ -976,35 +941,38 @@
           drawerOpen = false
           return
         }
-        if (graphEditMode) {
-          if (selectedOpening) selectedOpening = ''
-          else if (selectedEdge) selectedEdge = ''
-          else if (wallChainFrom) clearGraphChain()
-          else if (graphPreviewGraph || graphPreviewOpenings) {
+        // One escape ladder for every layer: selection → in-flight work →
+        // disarm the tool → leave edit. It used to differ per layer (视角's Esc
+        // even armed 放机位 instead of disarming), so Esc was unpredictable.
+        if (wallGraphEditMode) {
+          if (
+            selectedOpening ||
+            selectedEdge ||
+            selectedSpatialZone ||
+            selectedPlacement ||
+            selectedViewpoint
+          ) {
+            clearSelection()
+          } else if (wallChainFrom || zoneChainPoints.length) {
+            clearGraphChain()
+            clearZoneChain()
+          } else if (
+            graphPreviewGraph ||
+            graphPreviewOpenings ||
+            previewZones ||
+            previewPlacements ||
+            previewViewpoints
+          ) {
             graphPreviewGraph = null
             graphPreviewOpenings = null
-          } else setPlanMode('browse')
-          return
-        }
-        if (zoneEditMode) {
-          if (selectedSpatialZone) selectedSpatialZone = ''
-          else if (zoneChainPoints.length) clearZoneChain()
-          else if (previewZones) previewZones = null
-          else setPlanMode('browse')
-          return
-        }
-        if (placeEditMode) {
-          if (selectedPlacement) selectedPlacement = ''
-          else if (placementTool === 'storage') setPlacementTool('place')
-          else if (previewPlacements) previewPlacements = null
-          else setPlanMode('browse')
-          return
-        }
-        if (viewEditMode) {
-          if (selectedViewpoint) selectedViewpoint = ''
-          else if (previewViewpoints) previewViewpoints = null
-          else if (viewpointTool === 'viewSelect') setViewpointTool('viewAdd')
-          else setPlanMode('browse')
+            previewZones = null
+            previewPlacements = null
+            previewViewpoints = null
+          } else if (activeTool !== 'select') {
+            setTool('select')
+          } else {
+            setPlanMode('browse')
+          }
           return
         }
         if (planMode === 'edit') {
@@ -1123,12 +1091,18 @@
         return
       }
 
-      // Align with PlanEditToolbar: select / wall / opening (delete = select + Delete / bar)
-      if (!inField && graphEditMode && ['1', '2', '3'].includes(e.key)) {
+      // 1–7 match PlanEditToolbar's rail order, top to bottom. The wall-length
+      // digit capture above takes precedence while a chain is live.
+      if (
+        !inField &&
+        wallGraphEditMode &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        /^[1-7]$/.test(e.key)
+      ) {
         e.preventDefault()
-        if (e.key === '1') setGraphTool('select')
-        if (e.key === '2') setGraphTool('wallAdd')
-        if (e.key === '3') setGraphTool('opening')
+        setTool(TOOL_KEYS[Number(e.key) - 1])
         return
       }
 
@@ -1194,200 +1168,6 @@
         </button>
       </div>
 
-      {#if planMode === 'edit' && compactPlanChrome}
-        <div class="edit-chrome-wrap edit-chrome-compact">
-          <label class="plan-tool-select-wrap">
-            <span class="sr-only">编辑步骤</span>
-            <select
-              class="plan-tool-select"
-              aria-label="编辑步骤"
-              value={editStep}
-              onchange={(e) =>
-                setEditStep(
-                  /** @type {'walls' | 'zones' | 'place' | 'view'} */ (
-                    /** @type {HTMLSelectElement} */ (e.currentTarget).value
-                  ),
-                )}
-            >
-              <option value="walls">① 墙体</option>
-              <option value="zones" disabled={!wallGraph}>② 划分</option>
-              <option value="place" disabled={!wallGraph}>③ 布置</option>
-              <option value="view" disabled={!wallGraph}>④ 视角</option>
-            </select>
-          </label>
-
-          {#if viewEditMode}
-            <label class="plan-tool-select-wrap">
-              <span class="sr-only">视角工具</span>
-              <select
-                class="plan-tool-select"
-                aria-label="视角工具"
-                value={viewpointTool}
-                onchange={(e) =>
-                  setViewpointTool(
-                    /** @type {import('$lib/plan-viewpoint-edit.js').ViewpointTool} */ (
-                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
-                    ),
-                  )}
-              >
-                <option value="viewAdd">放机位</option>
-                <option value="viewSelect">选择</option>
-              </select>
-            </label>
-            <button
-              type="button"
-              class="mode-undo-btn"
-              disabled={Boolean(bulkProgress)}
-              onclick={() => bulkInput?.click()}
-              title="一次导入多张"
-            >
-              {bulkProgress || '导入'}
-            </button>
-            <button
-              type="button"
-              class="mode-undo-btn"
-              onclick={() => (northCalOpen = true)}
-              title="校准平面图北向 — EXIF/罗盘朝向的前提"
-            >
-              北向{planNorthLabel}
-            </button>
-          {/if}
-
-          {#if graphEditMode}
-            <label class="plan-tool-select-wrap">
-              <span class="sr-only">墙图工具</span>
-              <select
-                class="plan-tool-select"
-                aria-label="墙图工具"
-                value={graphTool}
-                onchange={(e) =>
-                  setGraphTool(
-                    /** @type {import('$lib/plan-graph-edit.js').GraphTool} */ (
-                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
-                    ),
-                  )}
-              >
-                <option value="select">选择</option>
-                <option value="wallAdd">建墙</option>
-                <option value="opening">门窗</option>
-                <option value="remove">删墙</option>
-              </select>
-            </label>
-            {#if graphTool === 'opening'}
-              <label class="plan-tool-select-wrap">
-                <span class="sr-only">放置门还是窗</span>
-                <select
-                  class="plan-tool-select"
-                  aria-label="放置门还是窗"
-                  value={openingKind}
-                  onchange={(e) =>
-                    (openingKind = /** @type {'door' | 'window'} */ (
-                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
-                    ))}
-                >
-                  <option value="door">门</option>
-                  <option value="window">窗</option>
-                </select>
-              </label>
-            {/if}
-            {#if graphTool === 'wallAdd' && wallChainFrom}
-              <label class="plan-len-wrap">
-                <span class="sr-only">墙段精确长度</span>
-                <input
-                  bind:this={lengthInputEl}
-                  class="plan-len-input"
-                  type="text"
-                  inputmode="text"
-                  aria-label="墙段精确长度"
-                  placeholder={chainLengthLabel || '长度'}
-                  bind:value={lengthDraft}
-                  onkeydown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      commitChainLength()
-                    } else if (e.key === 'Escape') {
-                      e.preventDefault()
-                      lengthDraft = ''
-                      lengthInputEl?.blur()
-                    }
-                    e.stopPropagation()
-                  }}
-                />
-              </label>
-            {/if}
-          {:else if zoneEditMode}
-            <label class="plan-tool-select-wrap">
-              <span class="sr-only">分区工具</span>
-              <select
-                class="plan-tool-select"
-                aria-label="分区工具"
-                value={zoneTool}
-                onchange={(e) =>
-                  setZoneTool(
-                    /** @type {import('$lib/plan-zone-edit.js').ZoneTool} */ (
-                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
-                    ),
-                  )}
-              >
-                <option value="zoneAdd">画区</option>
-                <option value="zoneSelect">选区</option>
-                <option value="zoneRemove">删区</option>
-              </select>
-            </label>
-            <button
-              type="button"
-              class="plan-inline-btn plan-detect-btn"
-              title="按墙体闭合环自动生成分区，已有分区的房间会跳过"
-              onclick={runRoomDetect}
-            >
-              自动识别房间
-            </button>
-          {:else if placeEditMode}
-            <label class="plan-tool-select-wrap">
-              <span class="sr-only">布置工具</span>
-              <select
-                class="plan-tool-select"
-                aria-label="布置工具"
-                value={placementTool}
-                onchange={(e) =>
-                  setPlacementTool(
-                    /** @type {import('$lib/plan-placement-edit.js').PlacementTool} */ (
-                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
-                    ),
-                  )}
-              >
-                <option value="place">家具</option>
-                <option value="storage">标储藏</option>
-              </select>
-            </label>
-            {#if placementTool === 'place'}
-              <label class="plan-tool-select-wrap">
-                <span class="sr-only">家具类型</span>
-                <select
-                  class="plan-tool-select"
-                  aria-label="家具类型"
-                  value={placementKind}
-                  onchange={(e) =>
-                    setPlacementKind(
-                      /** @type {keyof typeof PLACEMENT_KINDS} */ (
-                        /** @type {HTMLSelectElement} */ (e.currentTarget).value
-                      ),
-                    )}
-                >
-                  {#each PLACEMENT_GROUP_ORDER as group (group)}
-                    <optgroup label={group}>
-                      {#each Object.entries(PLACEMENT_KINDS).filter(([, s]) => s.group === group) as [kind, spec] (kind)}
-                        <option value={kind}>{spec.label}</option>
-                      {/each}
-                    </optgroup>
-                  {/each}
-                </select>
-              </label>
-            {/if}
-          {/if}
-        </div>
-      {/if}
-
       {#if editMode508 || (wallGraphEditMode && compactPlanChrome)}
         <div class="mode-history" role="group" aria-label="编辑历史">
           <button
@@ -1406,15 +1186,6 @@
             aria-label="重做"
             onclick={performRedo}>↷</button
           >
-          {#if wallGraphEditMode && compactPlanChrome}
-            <button
-              type="button"
-              class="mode-undo-btn mode-reset-btn"
-              title="清空户型"
-              aria-label="清空户型"
-              onclick={handleResetToShell}>清空</button
-            >
-          {/if}
         </div>
       {/if}
 
@@ -1428,148 +1199,6 @@
         ?
       </button>
     </div>
-
-    {#if planMode === 'edit' && !compactPlanChrome}
-      <div class="edit-chrome-wrap">
-        <div class="step-segment" role="group" aria-label="编辑步骤">
-          <button
-            type="button"
-            class="step-btn"
-            class:active={editStep === 'walls'}
-            aria-pressed={editStep === 'walls'}
-            onclick={() => setEditStep('walls')}
-          >
-            ① 墙体
-          </button>
-          <button
-            type="button"
-            class="step-btn"
-            class:active={editStep === 'zones'}
-            aria-pressed={editStep === 'zones'}
-            disabled={!wallGraph}
-            title={wallGraph ? '手绘分区' : '请先转换为墙图'}
-            onclick={() => setEditStep('zones')}
-          >
-            ② 划分
-          </button>
-          <button
-            type="button"
-            class="step-btn"
-            class:active={editStep === 'place'}
-            aria-pressed={editStep === 'place'}
-            disabled={!wallGraph}
-            title={wallGraph ? '家具与储藏指派' : '请先转换为墙图'}
-            onclick={() => setEditStep('place')}
-          >
-            ③ 布置
-          </button>
-          <button
-            type="button"
-            class="step-btn"
-            class:active={editStep === 'view'}
-            aria-pressed={editStep === 'view'}
-            disabled={!wallGraph}
-            title={wallGraph ? '实拍照片机位' : '请先转换为墙图'}
-            onclick={() => setEditStep('view')}
-          >
-            ④ 视角
-          </button>
-        </div>
-
-        {#if viewEditMode}
-          <div class="tool-segment-scroll" data-scroll-hint="tools">
-            <div class="tool-segment" role="group" aria-label="视角工具">
-              <button
-                type="button"
-                class="step-btn"
-                class:active={viewpointTool === 'viewAdd'}
-                aria-pressed={viewpointTool === 'viewAdd'}
-                onclick={() => setViewpointTool('viewAdd')}
-              >
-                放机位
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                class:active={viewpointTool === 'viewSelect'}
-                aria-pressed={viewpointTool === 'viewSelect'}
-                onclick={() => setViewpointTool('viewSelect')}
-              >
-                选择
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                disabled={Boolean(bulkProgress)}
-                onclick={() => bulkInput?.click()}
-                title="一次导入多张：自动读 EXIF、VLM 定分区与朝向"
-              >
-                {bulkProgress || '批量导入'}
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                onclick={() => (northCalOpen = true)}
-                title="校准平面图北向 — EXIF/罗盘朝向的前提"
-              >
-                北向{planNorthLabel}
-              </button>
-            </div>
-          </div>
-        {/if}
-
-        {#if placeEditMode}
-          <div class="tool-segment-scroll" data-scroll-hint="tools">
-            <div class="tool-segment" role="group" aria-label="布置工具">
-              <button
-                type="button"
-                class="step-btn"
-                class:active={placementTool === 'place'}
-                aria-pressed={placementTool === 'place'}
-                onclick={() => setPlacementTool('place')}
-              >
-                家具
-              </button>
-              <button
-                type="button"
-                class="step-btn"
-                class:active={placementTool === 'storage'}
-                aria-pressed={placementTool === 'storage'}
-                onclick={() => setPlacementTool('storage')}
-              >
-                标储藏
-              </button>
-            </div>
-          </div>
-          {#if placementTool === 'place'}
-            <div class="tool-segment-scroll" data-scroll-hint="kinds">
-              <div class="tool-segment" role="group" aria-label="家具类型">
-                {#each PLACEMENT_GROUP_ORDER as group (group)}
-                  <span class="tool-segment-group" aria-hidden="true"
-                    >{group}</span
-                  >
-                  {#each Object.entries(PLACEMENT_KINDS).filter(([, s]) => s.group === group) as [kind, spec] (kind)}
-                    <button
-                      type="button"
-                      class="step-btn step-btn-compact"
-                      class:active={placementKind === kind}
-                      aria-pressed={placementKind === kind}
-                      aria-label={`${group} · ${spec.label}`}
-                      onclick={() =>
-                        setPlacementKind(
-                          /** @type {keyof typeof PLACEMENT_KINDS} */ (kind),
-                        )}
-                    >
-                      {spec.label}
-                    </button>
-                  {/each}
-                {/each}
-              </div>
-            </div>
-          {/if}
-        {/if}
-      </div>
-    {/if}
 
     {#if editMode508 && !convertBannerDismissed}
       <div class="plan-convert-banner" role="note">
@@ -1750,9 +1379,11 @@
       onPlaceOpening={(pt, edgeId) => {
         const id = addGraphOpening(edgeId, pt, openingKind)
         if (id) {
+          // 放完转选择态并保留选中 —— 不走 setTool（它会清选中）。
+          activeTool = 'select'
+          selectLayer = 'walls'
           selectedOpening = id
           selectedEdge = ''
-          setGraphTool('select')
         }
       }}
       onGraphSelectEdge={(id) => {
@@ -1819,18 +1450,114 @@
       }}
       {onBlankContextMenu}
     />
+    <!-- Shown on every breakpoint: mobile used to get a separate stack of
+         <select>s, which was a second implementation of this same state. -->
     <PlanEditToolbar
-      activeTool={toolbarActiveTool}
+      {activeTool}
       {canUndo}
       {canRedo}
-      hidden={planMode !== 'edit' || editMode508 || compactPlanChrome}
-      {openingKind}
-      onTool={activateToolbarTool}
-      onOpeningKind={(kind) => (openingKind = kind)}
+      hidden={planMode !== 'edit' || editMode508}
+      onTool={setTool}
       onUndo={performUndo}
       onRedo={performRedo}
-      onReset={handleResetToShell}
-    />
+    >
+      {#snippet options()}
+        {#if activeTool === 'select'}
+          <span class="pt-opt-label">选择</span>
+          {#each Object.entries(SELECT_LAYER_LABEL) as [layer, label] (layer)}
+            <button
+              type="button"
+              class="pt-opt-btn"
+              class:active={selectLayer === layer}
+              aria-pressed={selectLayer === layer}
+              onclick={() =>
+                setSelectLayer(
+                  /** @type {'walls' | 'zones' | 'place' | 'view'} */ (layer),
+                )}
+            >
+              {label}
+            </button>
+          {/each}
+        {:else if activeTool === 'opening'}
+          <span class="pt-opt-label">放置</span>
+          {#each /** @type {const} */ ([['door', '门'], ['window', '窗']]) as [kind, label] (kind)}
+            <button
+              type="button"
+              class="pt-opt-btn"
+              class:active={openingKind === kind}
+              aria-pressed={openingKind === kind}
+              onclick={() => (openingKind = kind)}
+            >
+              {label}
+            </button>
+          {/each}
+        {:else if activeTool === 'wall'}
+          {#if wallChainFrom}
+            <label class="pt-opt-label" for="plan-len-input">长度</label>
+            <input
+              id="plan-len-input"
+              bind:this={lengthInputEl}
+              class="pt-opt-input"
+              type="text"
+              inputmode="text"
+              aria-label="墙段精确长度"
+              placeholder={chainLengthLabel || '如 12\'6"'}
+              bind:value={lengthDraft}
+              onkeydown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  commitChainLength()
+                } else if (e.key === 'Escape') {
+                  e.preventDefault()
+                  lengthDraft = ''
+                  lengthInputEl?.blur()
+                }
+                e.stopPropagation()
+              }}
+            />
+          {:else}
+            <span class="pt-opt-label">点击拐点连线 · Shift 正交</span>
+          {/if}
+        {:else if activeTool === 'zone'}
+          <button type="button" class="pt-opt-btn" onclick={runRoomDetect}>
+            自动识别房间
+          </button>
+          <span class="pt-opt-label">或逐点圈出 · Enter 闭合</span>
+        {:else if activeTool === 'furniture'}
+          <span class="pt-opt-label">放置</span>
+          <button
+            type="button"
+            class="pt-opt-btn pt-opt-btn-wide"
+            aria-haspopup="dialog"
+            onclick={() => (placementKindsOpen = true)}
+          >
+            {PLACEMENT_KINDS[placementKind].group} · {PLACEMENT_KINDS[
+              placementKind
+            ].label} ▾
+          </button>
+        {:else if activeTool === 'storage'}
+          <span class="pt-opt-label">点分区或家具指派 S1–S8</span>
+        {:else if activeTool === 'viewpoint'}
+          <button
+            type="button"
+            class="pt-opt-btn"
+            disabled={Boolean(bulkProgress)}
+            onclick={() => bulkInput?.click()}
+            title="一次导入多张：自动读 EXIF、VLM 定分区与朝向"
+          >
+            {bulkProgress || '批量导入'}
+          </button>
+          <button
+            type="button"
+            class="pt-opt-btn"
+            onclick={() => (northCalOpen = true)}
+            title="校准平面图北向 — EXIF/罗盘朝向的前提"
+          >
+            北向{planNorthLabel}
+          </button>
+        {/if}
+      {/snippet}
+    </PlanEditToolbar>
     {#if showSelectionBar}
       <PlanSelectionBar
         {selectedWall}
@@ -2107,6 +1834,30 @@
                 </p>
               {/if}
             </section>
+          {:else if viewEditMode}
+            <!-- Without this branch the 视角 layer fell through to the 508
+                 RoomDimensionsEditor, which edits parameters the wall graph
+                 does not even read. -->
+            <section class="graph-aside" aria-label="视角编辑">
+              <p class="graph-aside-lead">
+                已标 {project.viewpoints?.length ?? 0} 个机位 · 北向{planNorthLabel}
+              </p>
+              <button
+                type="button"
+                class="graph-aside-btn"
+                onclick={() => (northCalOpen = true)}
+              >
+                校准平面图北向
+              </button>
+              <button
+                type="button"
+                class="graph-aside-btn"
+                disabled={Boolean(bulkProgress)}
+                onclick={() => bulkInput?.click()}
+              >
+                {bulkProgress || '批量导入实拍照片'}
+              </button>
+            </section>
           {:else if editMode508}
             <PlanEditInspector
               {selectedWall}
@@ -2115,6 +1866,23 @@
             />
           {:else}
             <RoomDimensionsEditor />
+          {/if}
+
+          {#if wallGraphEditMode}
+            <!-- 清空 used to sit in the tool palette (and on mobile it was the
+                 highest-contrast control on screen, right next to undo). A
+                 whole-layout wipe does not belong one stray tap from 建墙. -->
+            <section class="plan-danger" aria-label="危险操作">
+              <p class="plan-danger-title">危险操作</p>
+              <button
+                type="button"
+                class="graph-aside-btn plan-danger-btn"
+                title="删除所有内墙、门窗与分区，仅保留最外围墙"
+                onclick={handleResetToShell}
+              >
+                清空户型
+              </button>
+            </section>
           {/if}
         </div>
       </aside>
@@ -2164,97 +1932,6 @@
     min-width: 0;
   }
 
-  .edit-chrome-wrap {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    flex: 1 1 100%;
-  }
-
-  .plan-tool-select-wrap {
-    display: flex;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .plan-tool-select {
-    width: 100%;
-    min-height: 44px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--t1);
-    font-size: 13px;
-    font-weight: 600;
-    font-family: inherit;
-  }
-
-  .plan-len-wrap {
-    display: flex;
-    flex: 0 1 116px;
-    min-width: 88px;
-  }
-
-  .plan-len-input {
-    width: 100%;
-    min-height: 44px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid var(--graph-accent, #1d6b42);
-    background: var(--bg);
-    color: var(--t1);
-    font-size: 13px;
-    font-weight: 600;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-
-  .plan-len-input::placeholder {
-    color: var(--t3, var(--t2));
-    font-weight: 500;
-  }
-
-  .plan-detect-btn {
-    flex: 0 0 auto;
-    min-height: 44px;
-    white-space: nowrap;
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .tool-segment-scroll {
-    position: relative;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .tool-segment-scroll::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 20px;
-    pointer-events: none;
-    background: linear-gradient(
-      to left,
-      color-mix(in srgb, var(--card) 96%, transparent),
-      transparent
-    );
-    opacity: 0;
-    transition: opacity 0.15s ease;
-  }
 
   .mode-segment {
     display: inline-flex;
@@ -2291,70 +1968,6 @@
     background: var(--accent);
     color: #f5f8fa;
     box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--accent) 50%, transparent);
-  }
-
-  .step-segment {
-    display: inline-flex;
-    padding: 3px;
-    border-radius: 10px;
-    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
-    gap: 2px;
-  }
-
-  .tool-segment {
-    display: inline-flex;
-    padding: 3px;
-    border-radius: 10px;
-    border: 1px solid color-mix(in srgb, var(--graph-accent) 25%, var(--border));
-    background: color-mix(in srgb, var(--graph-accent) 6%, var(--bg));
-    gap: 2px;
-  }
-
-  .tool-segment-group {
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
-    padding: 0 6px 0 8px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    white-space: nowrap;
-    color: color-mix(in srgb, var(--graph-accent) 60%, var(--t2));
-  }
-
-  .tool-segment-group:not(:first-child) {
-    border-left: 1px solid
-      color-mix(in srgb, var(--graph-accent) 20%, var(--border));
-    margin-left: 4px;
-  }
-
-  .step-btn {
-    font-size: 12px;
-    font-weight: 600;
-    min-height: 34px;
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: var(--t2);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .step-btn:disabled {
-    opacity: 0.42;
-    cursor: not-allowed;
-  }
-
-  .step-btn.active {
-    background: color-mix(in srgb, var(--accent) 14%, var(--card));
-    color: var(--accent);
-  }
-
-  .tool-segment .step-btn.active {
-    background: color-mix(in srgb, var(--graph-accent) 14%, var(--card));
-    color: var(--graph-accent);
   }
 
   .plan-convert-banner {
@@ -2451,6 +2064,99 @@
     border-color: color-mix(in srgb, #b45309 35%, var(--border));
   }
 
+  /* Tool options — rendered into PlanEditToolbar's `options` snippet, so these
+     rules must live here: Svelte scopes by where the markup is authored. */
+  .pt-opt-label {
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--t3);
+    white-space: nowrap;
+  }
+
+  .pt-opt-btn {
+    min-height: 32px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--t2);
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .pt-opt-btn:not(:disabled):hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--t1);
+  }
+
+  .pt-opt-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .pt-opt-btn.active {
+    background: var(--accent);
+    color: #f5f8fa;
+  }
+
+  .pt-opt-btn:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+  }
+
+  .pt-opt-btn-wide {
+    border-color: var(--border);
+  }
+
+  .pt-opt-input {
+    width: 108px;
+    min-height: 32px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t1);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pt-opt-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .plan-danger {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .plan-danger-title {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--t3);
+  }
+
+  .plan-danger-btn {
+    color: #b45309;
+    border-color: color-mix(in srgb, #b45309 35%, var(--border));
+  }
+
+  @media (max-width: 599px) {
+    .pt-opt-btn,
+    .pt-opt-input {
+      min-height: 38px;
+      flex-shrink: 0;
+    }
+  }
 
   .help-btn {
     width: 36px;
@@ -2490,21 +2196,6 @@
 
   .mode-undo-btn:not(:disabled):hover {
     background: color-mix(in srgb, var(--accent) 10%, var(--card));
-  }
-
-  .mode-reset-btn {
-    width: auto;
-    min-width: 44px;
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: 650;
-    color: #b45309;
-    border-color: color-mix(in srgb, #b45309 35%, var(--border));
-  }
-
-  .mode-reset-btn:not(:disabled):hover {
-    background: color-mix(in srgb, #b45309 10%, var(--card));
-    color: #b45309;
   }
 
   .plan-empty-wallgraph {
@@ -2683,59 +2374,6 @@
       flex: 1 1 100%;
     }
 
-    .plan-top-edit .edit-chrome-compact {
-      flex: 0 0 auto;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .plan-top-edit .edit-chrome-compact .plan-tool-select-wrap {
-      flex: 0 0 auto;
-      width: 100%;
-    }
-
-    .plan-top-edit .edit-chrome-wrap:not(.edit-chrome-compact) {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 6px;
-    }
-
-    .plan-top-edit .step-segment {
-      width: 100%;
-      justify-content: space-between;
-    }
-
-    .plan-top-edit .step-segment .step-btn {
-      flex: 1 1 0;
-      padding-inline: 8px;
-    }
-
-    .plan-top-edit .tool-segment-scroll {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      padding-bottom: 2px;
-    }
-
-    .plan-top-edit .tool-segment-scroll::-webkit-scrollbar {
-      display: none;
-    }
-
-    .plan-top-edit .tool-segment {
-      flex-shrink: 0;
-      width: max-content;
-    }
-
-    .plan-top-edit .tool-segment-scroll::after {
-      opacity: 1;
-    }
-
-    .plan-top-edit .step-btn {
-      min-height: 44px;
-    }
-
     .plan-convert-banner {
       font-size: 11px;
       padding: 6px 8px;
@@ -2808,11 +2446,6 @@
         var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 148px
       );
     }
-  }
-
-  .step-btn-compact {
-    font-size: 11px;
-    padding-inline: 8px;
   }
 
   .plan-modal-picker {

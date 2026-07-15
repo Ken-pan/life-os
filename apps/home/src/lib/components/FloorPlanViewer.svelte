@@ -91,7 +91,7 @@
    *   onZoneVertexDrag?: (zoneId: string, index: number, pt: { x: number, y: number }) => void,
    *   onZoneVertexDrop?: (zoneId: string, index: number, pt: { x: number, y: number }) => void,
    *   placementEditMode?: boolean,
-   *   placementTool?: 'place' | 'storage',
+   *   placementTool?: import('$lib/plan-placement-edit.js').PlacementTool,
    *   selectedPlacement?: string,
    *   onPlacementPoint?: (pt: { x: number, y: number }, zoom: number) => void,
    *   onSelectPlacement?: (id: string) => void,

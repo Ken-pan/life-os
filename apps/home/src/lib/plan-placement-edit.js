@@ -1,4 +1,9 @@
-/** @typedef {'place' | 'storage'} PlacementTool */
+/**
+ * `select` picks and drags existing pieces without arming placement — clicking
+ * empty canvas does nothing. It needs no branch of its own below: a hit on a
+ * piece already selects regardless of tool, and the `place` guard just won't fire.
+ * @typedef {'place' | 'storage' | 'select'} PlacementTool
+ */
 
 /**
  * @param {HTMLElement} el
