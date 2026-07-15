@@ -336,6 +336,73 @@ export interface SpendingSummary {
  * 排除「当前不完整月」(数据 asOf 所在月)，仅用其之前的 12 个完整月，
  * 这样均值不会被尚未走完的当月拉低。
  */
+export interface RangeSummary {
+  /** 区间内花出去的钱（outflowOf，不被退款/进账冲抵）。 */
+  spending: number;
+  /** 区间内到账收入。 */
+  income: number;
+  /** 区间天数（含端点）。 */
+  days: number;
+  /** 日均花销。 */
+  avgPerDay: number;
+  /** 花得最多的一天。 */
+  peakDay: { date: string; spending: number } | null;
+  /** 区间内有花销的天数。 */
+  activeDays: number;
+}
+
+/**
+ * 区间统计。KPI 卡原本写死 trailing 12 个完整月（spendingSummary），
+ * 和顶部的范围控件直接矛盾：选「本月」时，上面写着「近 12 月平均」。
+ *
+ * from 省略 = 不限起点（「全部」）。
+ */
+export function rangeSummary(
+  txns: Txn[],
+  opts: { from?: string; to: string } = { to: "9999-12-31" },
+): RangeSummary {
+  const byDay = new Map<string, number>();
+  let spending = 0;
+  let income = 0;
+  let earliest = opts.to;
+
+  for (const t of txns) {
+    if (opts.from && t.date < opts.from) continue;
+    if (t.date > opts.to) continue;
+    if (t.date < earliest) earliest = t.date;
+    const out = outflowOf(t);
+    if (out > 0) {
+      spending += out;
+      byDay.set(t.date, (byDay.get(t.date) ?? 0) + out);
+    }
+    income += incomeOf(t);
+  }
+
+  const from = opts.from ?? earliest;
+  const days =
+    Math.max(
+      1,
+      Math.round(
+        (Date.parse(`${opts.to}T12:00:00`) - Date.parse(`${from}T12:00:00`)) /
+          86_400_000,
+      ) + 1,
+    );
+
+  let peakDay: RangeSummary["peakDay"] = null;
+  for (const [date, amount] of byDay) {
+    if (!peakDay || amount > peakDay.spending) peakDay = { date, spending: round2(amount) };
+  }
+
+  return {
+    spending: round2(spending),
+    income: round2(income),
+    days,
+    avgPerDay: round2(spending / days),
+    peakDay,
+    activeDays: byDay.size,
+  };
+}
+
 export function spendingSummary(series: MonthPoint[]): SpendingSummary {
   if (series.length === 0) {
     return {

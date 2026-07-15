@@ -10,6 +10,7 @@ import {
   categoryBreakdown,
   topMerchants,
   spendingSummary,
+  rangeSummary,
   searchTxns,
   type Txn,
 } from './transactions'
@@ -234,6 +235,61 @@ describe('dailySeries', () => {
     ]
     const out = dailySeries(withIncome, { from: '2026-07-01', to: '2026-07-05' })
     expect(out.find((p) => p.month === '2026-07-02')?.spending).toBe(0)
+  })
+})
+
+describe('rangeSummary', () => {
+  const days: Txn[] = [
+    {
+      id: 'a', date: '2026-07-01', month: '2026-07', merchant: 'A',
+      category: 'Groceries', account: 'Amex', flow: 'expense',
+      amount: 30, budgetImpact: -30, inSpending: true, inCashFlow: true,
+    },
+    {
+      id: 'b', date: '2026-07-04', month: '2026-07', merchant: 'B',
+      category: 'Shopping', account: 'Amex', flow: 'expense',
+      amount: 50, budgetImpact: -50, inSpending: true, inCashFlow: true,
+    },
+    {
+      id: 'pay', date: '2026-07-02', month: '2026-07', merchant: 'Employer',
+      category: 'Income', account: 'Chase', flow: 'income',
+      amount: -5000, budgetImpact: 0, inSpending: false, inCashFlow: true,
+    },
+    {
+      id: 'ref', date: '2026-07-03', month: '2026-07', merchant: 'Store',
+      category: 'Shopping', account: 'Amex', flow: 'refund_or_reversal',
+      amount: -6645, budgetImpact: 6645, inSpending: true, inCashFlow: true,
+    },
+  ]
+
+  it('花销是流出，不被退款或工资冲抵', () => {
+    const s = rangeSummary(days, { from: '2026-07-01', to: '2026-07-05' })
+    expect(s.spending).toBe(80)
+    expect(s.income).toBe(5000)
+  })
+
+  it('日均按区间总天数算，不是按有花销的天数', () => {
+    const s = rangeSummary(days, { from: '2026-07-01', to: '2026-07-05' })
+    expect(s.days).toBe(5)
+    expect(s.activeDays).toBe(2)
+    expect(s.avgPerDay).toBe(16) // 80 / 5，而不是 80 / 2
+  })
+
+  it('找出花得最多的一天', () => {
+    const s = rangeSummary(days, { from: '2026-07-01', to: '2026-07-05' })
+    expect(s.peakDay).toEqual({ date: '2026-07-04', spending: 50 })
+  })
+
+  it('区间外的交易不计入', () => {
+    const s = rangeSummary(days, { from: '2026-07-02', to: '2026-07-03' })
+    expect(s.spending).toBe(0)
+    expect(s.peakDay).toBe(null)
+  })
+
+  it('省略 from = 全部，起点取最早一笔', () => {
+    const s = rangeSummary(days, { to: '2026-07-05' })
+    expect(s.spending).toBe(80)
+    expect(s.days).toBe(5) // 07-01..07-05
   })
 })
 

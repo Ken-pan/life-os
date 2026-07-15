@@ -16,7 +16,7 @@
     monthlySeries,
     dailySeries,
     searchTxns,
-    spendingSummary,
+    rangeSummary,
     topMerchants,
   } from '../../engine/transactions.js'
   import {
@@ -31,7 +31,7 @@
   import HistoryLedger from './HistoryLedger.svelte'
   import MerchantLogo from './MerchantLogo.svelte'
 
-  /** @typedef {'month' | '3m' | '12m' | 'all'} Window */
+  /** @typedef {'month' | '30d' | '3m' | '12m' | 'all'} Window */
 
   /** @param {string} asOf @param {number} n */
   function monthsBeforeAsOf(asOf, n) {
@@ -42,12 +42,27 @@
     return `${yy}-${String(mm).padStart(2, '0')}-${String(d).padStart(2, '0')}`
   }
 
-  /** @param {string} asOf @param {Window} w */
+  /** @param {string} asOf @param {number} n */
+  function daysBeforeAsOf(asOf, n) {
+    const d = new Date(`${asOf}T12:00:00`)
+    d.setDate(d.getDate() - n + 1)
+    return d.toISOString().slice(0, 10)
+  }
+
+  /**
+   * `month` is month-to-date (07-01..07-13 = 13 days); `30d` is a rolling
+   * 30-day window. They answer different questions — "how am I doing this
+   * month" vs "what does a normal month of mine cost" — and early in a month
+   * they differ a lot.
+   * @param {string} asOf @param {Window} w
+   */
   function windowRange(asOf, w) {
     const to = asOf
     switch (w) {
       case 'month':
         return { from: `${asOf.slice(0, 7)}-01`, to, label: t('history.windowMonthLong') }
+      case '30d':
+        return { from: daysBeforeAsOf(asOf, 30), to, label: t('history.window30dLong') }
       case '3m':
         return { from: monthsBeforeAsOf(asOf, 3), to, label: t('history.window3mLong') }
       case '12m':
@@ -75,7 +90,6 @@
   const privacy = $derived(data.privacy)
 
   const series = $derived(monthlySeries(txStore.txns))
-  const summary = $derived(spendingSummary(series))
   const recurring = $derived(computeRecurring(txStore.txns, { limit: 12 }))
   const txnStatistics = $derived(computeStatistics(txStore.txns))
   const categoryList = $derived(categoriesOf(txStore.txns))
@@ -88,24 +102,39 @@
   /** @type {Window} */
   let trendWindow = $state('month')
   const catWindow = $derived(trendWindow)
+
+  const WINDOWS = $derived([
+    { id: 'month', label: t('history.windowMonth') },
+    { id: '30d', label: t('history.window30d') },
+    { id: '3m', label: t('history.window3m') },
+    { id: '12m', label: t('history.window12m') },
+    { id: 'all', label: t('history.windowAll') },
+  ])
   // 这是「洞察」页：分类占比、Top 商户和趋势就是它存在的理由，默认展开。
   // 之前默认折叠，于是整个标签页只剩下一条 5,000+ 行的原始流水。
   let showInsights = $state(true)
 
-  // 「本月」按天，其余按月。月粒度下「本月」只剩一个点——一根柱子既画不出
-  // 趋势，也答不了「这个月钱花在哪几天」。
+  const catRange = $derived(windowRange(txStore.meta.asOf, catWindow))
+  // The KPI card follows the range control like every other card. It used to be
+  // pinned to trailing-12-months, so picking 本月 left "近 12 月平均月花销"
+  // sitting above a chart of 13 days.
+  const rangeStats = $derived(
+    rangeSummary(txStore.txns, { from: catRange.from, to: catRange.to ?? txStore.meta.asOf }),
+  )
+
+  // Short ranges are drawn per day, longer ones per month: a month or 30 days
+  // aggregated monthly is one or two bars, which is not a trend. Both take their
+  // bounds from catRange so the chart and the cards below cannot describe
+  // different periods.
+  const trendDaily = $derived(trendWindow === 'month' || trendWindow === '30d')
   const trendSeries = $derived.by(() => {
-    if (trendWindow === 'month') {
-      const asOf = txStore.meta.asOf
-      return dailySeries(txStore.txns, { from: `${asOf.slice(0, 7)}-01`, to: asOf })
+    if (trendDaily && catRange.from) {
+      return dailySeries(txStore.txns, { from: catRange.from, to: catRange.to })
     }
     if (trendWindow === 'all') return series
     const n = trendWindow === '3m' ? 3 : 12
     return series.slice(-n - 1)
   })
-  const trendDaily = $derived(trendWindow === 'month')
-
-  const catRange = $derived(windowRange(txStore.meta.asOf, catWindow))
   const categories = $derived(
     categoryBreakdown(txStore.txns, { from: catRange.from, to: catRange.to }),
   )
@@ -115,8 +144,11 @@
   const maxCat = $derived(categories[0]?.amount ?? 1)
   const categoryLimit = $derived(catWindow === 'month' ? 8 : 14)
   const merchantLimit = $derived(catWindow === 'month' ? 8 : 12)
-  const latest = $derived(summary.latestMonth)
-  const thisMonthSpending = $derived(latest?.spending ?? 0)
+  // Plan-vs-reality compares against a MONTHLY budget, so it only makes sense for
+  // ranges that are about one month. Under 近3月/近12月/全部 the comparison would
+  // put a multi-month total next to a single month's plan.
+  const planComparable = $derived(trendWindow === 'month' || trendWindow === '30d')
+  const rangeSpending = $derived(rangeStats.spending)
   const purchaseDisplayContext = $derived(buildPurchaseDisplayContext(txStore.txns))
   const purchaseCoverage = $derived(computePurchaseCoverage(txStore.txns, purchaseDisplayContext))
   const purchaseDebugMode = $derived(isPurchaseEnrichmentDebugMode())
@@ -134,7 +166,7 @@
       .filter((c) => c.type === 'expense')
       .reduce((a, c) => a + toMonthly(c.amount, c.frequency), 0),
   )
-  const planDiff = $derived(thisMonthSpending - plannedMonthly)
+  const planDiff = $derived(rangeSpending - plannedMonthly)
   const planOverspend = $derived(planDiff > 0)
   const planRatio = $derived(plannedMonthly > 0 ? planDiff / plannedMonthly : 0)
   const planMeaningful = $derived(Math.abs(planRatio) >= 0.05)
@@ -179,12 +211,7 @@
       </button>
       {#if showInsights}
         <div class="seg" role="group" aria-label={t('history.rangeAria')}>
-          {#each [
-            { id: 'month', label: t('history.windowMonth') },
-            { id: '3m', label: t('history.window3m') },
-            { id: '12m', label: t('history.window12m') },
-            { id: 'all', label: t('history.windowAll') },
-          ] as w (w.id)}
+          {#each WINDOWS as w (w.id)}
             <button
               type="button"
               class={trendWindow === w.id ? 'active' : ''}
@@ -201,44 +228,49 @@
     <div class="history-insights{showInsights ? ' open' : ''}">
       {#if showInsights}
         <div class="card history-kpi-card">
-          <h3>{t('history.extendedKpiTitle')}</h3>
+          <h3>{t('history.rangeKpiTitle', { range: catRange.label })}</h3>
           <div class="grid history-kpi-grid mt-2-5">
             <div class="history-kpi-cell">
-              <span class="label">{t('history.kpiAvgSpending')}</span>
-              <span class="value records-metric">{money(summary.avgMonthlySpending, privacy)}</span>
+              <span class="label">{t('history.kpiRangeSpending')}</span>
+              <span class="value records-metric">{money(rangeStats.spending, privacy)}</span>
               <span class="sub">
-                {summary.monthsCounted === 1
-                  ? t('history.kpiAvgSpendingSubOne')
-                  : t('history.kpiAvgSpendingSub', { months: summary.monthsCounted })}
+                {t('history.kpiRangeSpendingSub', { days: rangeStats.days })}
               </span>
             </div>
             <div class="history-kpi-cell">
-              <span class="label">{t('history.kpiAvgIncome')}</span>
-              <span class="value records-metric">{money(summary.avgMonthlyIncome, privacy)}</span>
-              <span class="sub">{t('history.kpiAvgIncomeSub')}</span>
-            </div>
-            <div class="history-kpi-cell">
-              <span class="label">{t('history.kpiThisMonth', { month: latest?.month ?? '—' })}</span>
-              <span class="value records-metric">{money(latest?.spending ?? 0, privacy)}</span>
+              <span class="label">{t('history.kpiRangeIncome')}</span>
+              <span class="value records-metric">{money(rangeStats.income, privacy)}</span>
               <span class="sub">
-                {latest
-                  ? t('history.kpiNetSub', { amount: signedMoney(latest.net, privacy) })
-                  : t('history.kpiNoData')}
-              </span>
-            </div>
-            <div class="history-kpi-cell">
-              <span class="label">{t('history.kpiTrailing12')}</span>
-              <span class="value records-metric">{money(summary.trailing12mSpending, privacy)}</span>
-              <span class="sub">
-                {t('history.kpiHighestMonth', {
-                  amount: money(summary.highestMonth?.spending ?? 0, privacy),
+                {t('history.kpiRangeNetSub', {
+                  amount: signedMoney(rangeStats.income - rangeStats.spending, privacy),
                 })}
+              </span>
+            </div>
+            <div class="history-kpi-cell">
+              <span class="label">{t('history.kpiAvgPerDay')}</span>
+              <span class="value records-metric">{money(rangeStats.avgPerDay, privacy)}</span>
+              <span class="sub">
+                {t('history.kpiAvgPerDaySub', {
+                  active: rangeStats.activeDays,
+                  days: rangeStats.days,
+                })}
+              </span>
+            </div>
+            <div class="history-kpi-cell">
+              <span class="label">{t('history.kpiPeakDay')}</span>
+              <span class="value records-metric">
+                {money(rangeStats.peakDay?.spending ?? 0, privacy)}
+              </span>
+              <span class="sub">
+                {rangeStats.peakDay
+                  ? rangeStats.peakDay.date
+                  : t('history.kpiNoData')}
               </span>
             </div>
           </div>
         </div>
 
-        {#if plannedMonthly > 0 && thisMonthSpending > 0}
+        {#if planComparable && plannedMonthly > 0 && rangeSpending > 0}
           <div class="card">
             <h3>{t('history.planRealityTitle')}</h3>
             <div class="grid plan-reality-grid gap-3">
@@ -247,8 +279,10 @@
                 <span class="pr-value records-metric">{money(plannedMonthly, privacy)}</span>
               </div>
               <div class="kv-stack">
-                <span class="text-secondary">{t('history.actualThisMonth')}</span>
-                <span class="pr-value records-metric">{money(thisMonthSpending, privacy)}</span>
+                <span class="text-secondary">
+                  {t('history.actualThisMonth', { range: catRange.label })}
+                </span>
+                <span class="pr-value records-metric">{money(rangeSpending, privacy)}</span>
               </div>
               <div class="kv-stack">
                 <span class="text-secondary">{t('history.diff')}</span>
@@ -269,7 +303,11 @@
 
         <div class="card">
           <div class="card-head">
-            <h3>{trendDaily ? t('history.trendTitleDaily') : t('history.trendTitle')}</h3>
+            <h3>
+              {trendDaily
+                ? t('history.trendTitleDaily', { range: catRange.label })
+                : t('history.trendTitle')}
+            </h3>
           </div>
           <SpendingTrendChart series={trendSeries} {privacy} daily={trendDaily} />
           <p class="muted-note mt-2">
