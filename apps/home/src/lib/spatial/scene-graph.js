@@ -136,8 +136,10 @@ export function buildSceneGraph(project, circ) {
       movable: true,
       storable: Boolean(spec?.storable),
       mount: spec?.mount ?? 'floor',
-      elevIn: spec?.elev ?? 0,
-      tallIn: spec?.tall ?? 0,
+      // 实测优先:扫描带回的 attrs.elevIn/heightIn 比 kind 规格准
+      elevIn: p.attrs?.elevIn ?? spec?.elev ?? 0,
+      tallIn: p.attrs?.heightIn ?? spec?.tall ?? 0,
+      clearUnderIn: spec?.clearUnder ?? 0,
       attrs: p.attrs,
       zoneId: p.zoneId,
     })
@@ -152,8 +154,9 @@ export function buildSceneGraph(project, circ) {
       movable: false,
       storable: false,
       mount: 'floor',
-      elevIn: 0,
-      tallIn: 0,
+      elevIn: f.attrs?.elevIn ?? 0,
+      tallIn: f.attrs?.heightIn ?? 0,
+      clearUnderIn: 0,
       attrs: f.attrs,
       zoneId: undefined,
     })
@@ -168,9 +171,12 @@ export function buildSceneGraph(project, circ) {
     if (room) edges.push({ type: 'in_room', from: fu.id, to: room.id })
   }
 
-  // on_top_of:上层底面(elev)接在下层顶面(elev+tall)附近 + 平面重叠够大
+  // on_top_of:上层底面(elev)接在下层顶面(elev+tall)附近 + 平面重叠够大。
+  // raised 除了规格挂墙/台面的,还包括**实测架空**的(elevIn>0:格子柜上的电视)
   const floors = furniture.filter((f) => f.mount === 'floor' && f.tallIn > 0)
-  const raised = furniture.filter((f) => f.mount === 'wall' || f.mount === 'counter')
+  const raised = furniture.filter(
+    (f) => f.mount === 'wall' || f.mount === 'counter' || f.elevIn > 0,
+  )
   for (const top of raised) {
     for (const base of floors) {
       if (top.id === base.id) continue
@@ -182,6 +188,21 @@ export function buildSceneGraph(project, circ) {
         top.elevIn <= seat + ON_TOP_SEAT_TOL_IN.above
       ) {
         edges.push({ type: 'on_top_of', from: top.id, to: base.id })
+      }
+    }
+  }
+
+  // under:落地件塞进带净空的家具下面(桌下收纳柜、床下收纳箱)——
+  // 脚印大半进对方脚印 + 自己顶面不超过净空板底(容 2″ 蹭板)
+  const hosts = furniture.filter((f) => f.clearUnderIn > 0)
+  for (const item of furniture) {
+    if (item.mount !== 'floor' || item.elevIn > 0 || item.tallIn <= 0) continue
+    for (const host of hosts) {
+      if (host.id === item.id) continue
+      const ov = overlapArea(item.box, host.box)
+      if (ov < item.box.w * item.box.h * ON_TOP_OVERLAP) continue
+      if (item.elevIn + item.tallIn <= host.clearUnderIn + 2) {
+        edges.push({ type: 'under', from: item.id, to: host.id })
       }
     }
   }

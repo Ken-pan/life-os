@@ -157,11 +157,19 @@ enum PlanProjector {
                     depthPx: item.depthM * pxPerM,
                     draftIdx: di,
                     heightIn: item.heightM > 0 ? round1(item.heightM * 39.3700787) : nil,
+                    // 离地 <5cm 视为落地噪声不导出;≥5cm 才是真架空(吊柜/挂墙件)
+                    elevIn: item.elevM >= 0.05 ? round1(item.elevM * 39.3700787) : nil,
                     confidence: item.confidence,
                     styleKeys: item.styleKeys.isEmpty ? nil : item.styleKeys,
                     styleZh: styled.styleZh,
                     colorHex: item.colorHex,
-                    photos: item.photos.isEmpty ? nil : item.photos
+                    photos: item.photos.isEmpty ? nil : item.photos,
+                    requiredShots: {
+                        let side = max(item.widthM, item.depthM)
+                        if side >= 0.9 { return 3 }
+                        if side >= 0.45 { return 2 }
+                        return 1
+                    }()
                 )
             },
             warnings: &warnings
@@ -193,6 +201,7 @@ enum PlanProjector {
                 styleKeys: m.styleKeys,
                 styleZh: m.styleZh,
                 heightIn: m.heightIn,
+                elevIn: m.elevIn,
                 // 实测脚印真值(英寸,gridPx=3px/in):w/h 之后随用户编辑漂,这两个不动
                 measuredWIn: round1(fw / gridPx),
                 measuredHIn: round1(fh / gridPx),
@@ -213,7 +222,9 @@ enum PlanProjector {
                     )
                 )
                 if let ph = m.photos, !ph.isEmpty {
-                    objectPhotos[id] = ph.map { .init(url: $0.fileURL, azimuthDeg: $0.azimuthDeg) }
+                    // 证据需求之外的方位不上传:小件 1 张就够,别灌满 4 桶浪费桶空间
+                    objectPhotos[id] = ph.prefix(m.requiredShots)
+                        .map { .init(url: $0.fileURL, azimuthDeg: $0.azimuthDeg) }
                 }
             } else {
                 let id = "pl-\(placements.count + 1)"
@@ -232,7 +243,8 @@ enum PlanProjector {
                     )
                 )
                 if let ph = m.photos, !ph.isEmpty {
-                    objectPhotos[id] = ph.map { .init(url: $0.fileURL, azimuthDeg: $0.azimuthDeg) }
+                    objectPhotos[id] = ph.prefix(m.requiredShots)
+                        .map { .init(url: $0.fileURL, azimuthDeg: $0.azimuthDeg) }
                 }
             }
         }
@@ -358,11 +370,15 @@ enum PlanProjector {
         var draftIdx: Int?
         // 外观/实测补充(→ attrs)
         var heightIn: Double?
+        var elevIn: Double?
         var confidence: String?
         var styleKeys: [String]?
         var styleZh: String?
         var colorHex: String?
         var photos: [FlatScene.ObjectPhoto]?
+        /// 证据需求(EvidenceGuide 同一套分级:大件 3 / 中件 2 / 小件 1)——
+        /// 上传的照片按它裁剪,多余方位不进桶(省流量省空间)
+        var requiredShots: Int = 1
     }
 
     /// 同 **kind** 且中心距 <0.6m 视为同一件。谁的尺寸可信:
@@ -421,6 +437,7 @@ enum PlanProjector {
     private static func mergedAttrs(into winner: MappedItem, from loser: MappedItem) -> MappedItem {
         var out = winner
         out.heightIn = out.heightIn ?? loser.heightIn
+        out.elevIn = out.elevIn ?? loser.elevIn
         out.confidence = out.confidence ?? loser.confidence
         out.styleKeys = out.styleKeys ?? loser.styleKeys
         out.styleZh = out.styleZh ?? loser.styleZh

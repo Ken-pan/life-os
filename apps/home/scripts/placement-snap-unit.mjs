@@ -380,4 +380,33 @@ const walls = [
   )
 }
 
+// ---- 立体叠放:桌下柜/柜上电视在竖直方向互相让开,不算压 ----
+{
+  const { verticalBlockRangeIn, verticallyClear } = await import(
+    '../src/lib/spatial/placements.js'
+  )
+  const table = { kind: 'table' }
+  const rt = verticalBlockRangeIn(table)
+  assert.deepEqual(rt, { lo: 26, hi: 30 }, '桌子只占台面那层板(净空 26″)')
+
+  const fileCab = { kind: 'cabinet', attrs: { heightIn: 26.5 } }
+  assert.equal(verticallyClear(fileCab, table), true, '26.5″ 文件柜塞得进桌下(蹭 0.5″ 容忍)')
+
+  const tallCab = { kind: 'cabinet', attrs: { heightIn: 60 } }
+  assert.equal(verticallyClear(tallCab, table), false, '60″ 高柜塞不进桌下')
+
+  assert.equal(
+    verticallyClear({ kind: 'cabinet' }, { kind: 'cabinet' }),
+    false,
+    '两个落地柜没有让开一说',
+  )
+
+  const tv = { kind: 'tv', attrs: { elevIn: 31, heightIn: 29 } }
+  const kallax = { kind: 'cabinet', attrs: { heightIn: 30.4 } }
+  assert.equal(verticallyClear(tv, kallax), true, '实测架空的电视(31″ 起)与 30″ 格子柜让开')
+
+  const bin = { kind: 'storage_box', attrs: { heightIn: 6 } }
+  assert.equal(verticallyClear(bin, { kind: 'bed' }), true, '6″ 收纳箱塞得进床下(净空 7″)')
+}
+
 console.log('placement-snap-unit: ok')

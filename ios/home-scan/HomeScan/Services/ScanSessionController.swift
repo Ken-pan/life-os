@@ -49,6 +49,8 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     private var liveObjects: [CapturedRoom.Object] = []
     /// 当前房间的实时墙段(俯视 2D,米)—— 证据引导用它剔掉「靠墙拍不到」的方位
     private var liveWalls: [EvidenceGuide.Wall] = []
+    /// 实时地面 y(米,ARKit 世界系)—— 「藏在桌下」判定的基准
+    private var liveFloorY: Double = 0
     /// 每件家具第一次被 RoomPlan 认出的时刻 —— 刚认出的先别催,给自然扫描留时间
     private var firstSeen: [UUID: TimeInterval] = [:]
     /// 证据引导锁定的目标(缺口没补上就不换目标,防 HUD 来回跳)
@@ -155,7 +157,9 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
                     center: SIMD2(Double(t.x), Double(t.z)),
                     widthM: Double(object.dimensions.x),
                     depthM: Double(object.dimensions.z),
-                    binsCovered: Set((shotCapture.shots[object.identifier] ?? [:]).keys)
+                    binsCovered: Set((shotCapture.shots[object.identifier] ?? [:]).keys),
+                    heightM: Double(object.dimensions.y),
+                    elevM: max(0, Double(t.y) - Double(object.dimensions.y) / 2 - liveFloorY)
                 )
             )
         }
@@ -227,6 +231,8 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
 
     nonisolated func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
         let objects = room.objects
+        // 地面高度(叠放判定的基准):地板面最低 y。没识别出地板就保持旧值
+        let floorY = room.floors.map { Double($0.transform.columns.3.y) }.min()
         // 墙中心 ± 局部 x 轴 × 半宽 → 俯视 2D 线段(与 StructureFlattener 同一套数学)
         let walls = room.walls.map { wall -> EvidenceGuide.Wall in
             let t = wall.transform
@@ -240,6 +246,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         Task { @MainActor in
             self.liveObjects = objects
             self.liveWalls = walls
+            if let floorY { self.liveFloorY = floorY }
         }
     }
 

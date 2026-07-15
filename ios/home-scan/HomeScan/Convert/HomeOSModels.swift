@@ -76,6 +76,9 @@ struct HomeOSProject: Codable {
         var styleZh: String? = nil
         /// LiDAR 实测高度(英寸)
         var heightIn: Double? = nil
+        /// LiDAR 实测底面离地高度(英寸)。省略/0 = 落地;>0 = 架空
+        /// (吊柜/挂墙电视…)—— 网页端叠放关系(桌下柜、柜上电视)靠它
+        var elevIn: Double? = nil
         /// LiDAR 实测平面脚印(英寸,与落盘时的 w/h 一致)。
         /// w/h 之后可能被用户拖改,这两个字段是**永远不动的真值**,
         /// 网页端「恢复实测尺寸」靠它。
@@ -97,7 +100,7 @@ struct HomeOSProject: Codable {
         }
 
         var isEmpty: Bool {
-            styleKeys == nil && styleZh == nil && heightIn == nil
+            styleKeys == nil && styleZh == nil && heightIn == nil && elevIn == nil
                 && measuredWIn == nil && measuredHIn == nil
                 && confidence == nil && colorHex == nil && photoPath == nil
                 && photos == nil

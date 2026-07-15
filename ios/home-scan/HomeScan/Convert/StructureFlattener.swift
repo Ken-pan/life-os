@@ -36,10 +36,18 @@ enum StructureFlattener {
             scene.openings.append(opening(surface, kind: .opening, wallIndexById: wallIndexById))
         }
 
+        // 地面高度:取所有地板面的最低 y(整层扫描通常一块地板)。
+        // 物体底面减它 = 离地高度,是叠放关系(桌下柜/柜上电视)的原始证据
+        let floorY = structure.floors
+            .map { Double($0.transform.columns.3.y) }
+            .min() ?? 0
+
         for object in structure.objects {
             let t = object.transform
             let axis = normalize2(SIMD2(Double(t.columns.0.x), Double(t.columns.0.z)))
             let center = translation2(t)
+            let bottomY = Double(t.columns.3.y) - Double(object.dimensions.y) / 2
+            let elevM = max(0, bottomY - floorY)
             let category = categoryName(object.category)
             let shotList = shotIndex.match(
                 identifier: object.identifier,
@@ -54,6 +62,7 @@ enum StructureFlattener {
                     widthM: Double(object.dimensions.x),
                     depthM: Double(object.dimensions.z),
                     heightM: Double(object.dimensions.y),
+                    elevM: elevM,
                     confidence: confidenceName(object.confidence),
                     styleKeys: styleKeys(of: object),
                     photoFileURL: shotList.first?.photoFileURL,

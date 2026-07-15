@@ -130,6 +130,35 @@ ok('508 建图:家具都有房间归属(容忍个别户型外)',
 const clutter508 = scoreClutter(SAMPLE_508, analyzeCirculation(SAMPLE_508))
 ok('508 杂乱指数可算', clutter508.zones.length > 0 && clutter508.worst !== null)
 
+// ---- under:桌下收纳柜;实测架空(elevIn)的 on_top_of ----
+{
+  const stub2 = {
+    meta: { nameZh: '叠放屋' },
+    zones: [
+      { id: 'z-1', nameZh: '书房', polygon: [
+        { x: 0, y: 0 }, { x: 600, y: 0 }, { x: 600, y: 400 }, { x: 0, y: 400 } ] },
+    ],
+    placements: [
+      { id: 'p-desk', kind: 'table', label: '工作大桌', x: 100, y: 100, w: 234, h: 100, rotation: 0, zoneId: 'z-1' },
+      // 文件柜整个在桌脚印里,实测高 26.5″ < 净空 26″+2″ 容忍
+      { id: 'p-file', kind: 'cabinet', label: '桌下文件柜', x: 240, y: 120, w: 48, h: 60, rotation: 0, zoneId: 'z-1',
+        attrs: { heightIn: 26.5 } },
+      // 格子柜 + 实测架空的电视:on_top_of 不再只认规格挂墙件
+      { id: 'p-kallax', kind: 'cabinet', label: '格子柜', x: 400, y: 100, w: 158, h: 59, rotation: 0, zoneId: 'z-1',
+        attrs: { heightIn: 30.4 } },
+      { id: 'p-tv', kind: 'tv', label: '电视', x: 410, y: 110, w: 140, h: 12, rotation: 0, zoneId: 'z-1',
+        attrs: { elevIn: 31, heightIn: 29 } },
+    ],
+    fixtures: [], viewpoints: [], walls: [],
+  }
+  const g2 = buildSceneGraph(stub2)
+  ok('桌下文件柜 → under 桌', g2.edges.some((e) => e.type === 'under' && e.from === 'p-file' && e.to === 'p-desk'),
+    JSON.stringify(g2.edges.filter((e) => e.type === 'under')))
+  ok('实测架空电视 → on_top_of 格子柜', g2.edges.some((e) => e.type === 'on_top_of' && e.from === 'p-tv' && e.to === 'p-kallax'),
+    JSON.stringify(g2.edges.filter((e) => e.type === 'on_top_of')))
+  ok('文件柜不算 on_top_of', !g2.edges.some((e) => e.type === 'on_top_of' && e.from === 'p-file'))
+}
+
 if (fails.length) {
   console.error(`FAIL ${fails.length} (pass ${pass})`)
   for (const f of fails) console.error('  ✗', f)

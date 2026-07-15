@@ -36,6 +36,9 @@ struct FlatScene {
         var widthM: Double   // 物体局部 x 向尺寸
         var depthM: Double   // 物体局部 z 向尺寸
         var heightM: Double = 0  // 物体局部 y 向尺寸(实测高)
+        /// 底面离地高度(米)。0 = 落地;>0 = 架空(吊柜/挂墙电视/桌下净空里的东西)——
+        /// 叠放关系(桌下柜、柜上电视)在网页端靠它判「立体上互相让开」
+        var elevM: Double = 0
         /// RoomPlan 识别置信度("high"/"medium"/"low";mock 为 nil)
         var confidence: String? = nil
         /// RoomPlan iOS 17 样式属性,带类型前缀防跨枚举撞名

@@ -25,6 +25,7 @@ payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 | `attrs.styleZh` | 样式的人话（「L形」「圆形餐桌」「转椅」…）；VLM「识别外观」也会写 |
 | `attrs.heightIn` | LiDAR 实测高度（英寸，`dimensions.y`） |
 | `attrs.measuredWIn` / `attrs.measuredHIn` | LiDAR 实测平面脚印（英寸，与落盘时 w/h 一致）。w/h 之后可被用户拖改，这两个是不动的真值，网页端「恢复实测」靠它 |
+| `attrs.elevIn` | LiDAR 实测底面离地高度（英寸，2026-07 加法式）。省略 = 落地；≥5cm 才导出（吊柜/挂墙电视/窗式空调…）。网页端叠放判定（桌下柜不算撞、on_top_of/under 关系）靠它 |
 | `attrs.confidence` | RoomPlan 识别置信度 `high\|medium\|low` |
 | `attrs.colorHex` | 主色 `#RRGGBB`（设备端抓拍图 k-means，VLM 识别后覆盖） |
 | `attrs.photoPath` | 家具抓拍图（最佳一张）桶内路径；网页端拉取后换成本地 `attrs.photoRef`（IndexedDB），`photoPath` 不落地 |

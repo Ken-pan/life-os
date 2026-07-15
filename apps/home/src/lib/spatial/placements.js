@@ -48,13 +48,16 @@ import { findZoneAtPoint, polygonBbox, zoneCentroid } from './zones.js'
  * @property {number} [elev] default 0
  * @property {boolean} [storable] default false
  * @property {number} [clearance] default 0
+ * @property {number} [clearUnder] 台面/床板下的净空高度(英寸):桌腿之间、床底
+ *   都是能塞东西的空间 —— 它的「实际占据」只有 [clearUnder, tall] 这一层板。
+ *   没有该字段 = 从地到顶都是实心(柜子/冰箱)。叠放判定(桌下柜)靠它。
  * @type {Record<string, PlacementKind>}
  */
 export const PLACEMENT_KINDS = {
-  bed: { label: '双人床 Queen', w: 60, h: 80, group: '卧室', symbol: 'bed', tall: 25 },
-  bed_twin: { label: '单人床 Twin', w: 39, h: 75, group: '卧室', symbol: 'bed', tall: 25 },
-  bed_full: { label: '双人床 Full', w: 54, h: 75, group: '卧室', symbol: 'bed', tall: 25 },
-  bed_king: { label: '大床 King', w: 76, h: 80, group: '卧室', symbol: 'bed', tall: 25 },
+  bed: { label: '双人床 Queen', w: 60, h: 80, group: '卧室', symbol: 'bed', tall: 25, clearUnder: 7 },
+  bed_twin: { label: '单人床 Twin', w: 39, h: 75, group: '卧室', symbol: 'bed', tall: 25, clearUnder: 7 },
+  bed_full: { label: '双人床 Full', w: 54, h: 75, group: '卧室', symbol: 'bed', tall: 25, clearUnder: 7 },
+  bed_king: { label: '大床 King', w: 76, h: 80, group: '卧室', symbol: 'bed', tall: 25, clearUnder: 7 },
   nightstand: {
     label: '床头柜',
     w: 22,
@@ -140,8 +143,8 @@ export const PLACEMENT_KINDS = {
     tall: 20,
     storable: true,
   },
-  desk: { label: '书桌', w: 60, h: 30, group: '客厅', symbol: 'table', tall: 30 },
-  table: { label: '餐桌', w: 60, h: 36, group: '客厅', symbol: 'table', tall: 30 },
+  desk: { label: '书桌', w: 60, h: 30, group: '客厅', symbol: 'table', tall: 30, clearUnder: 26 },
+  table: { label: '餐桌', w: 60, h: 36, group: '客厅', symbol: 'table', tall: 30, clearUnder: 26 },
   chair: { label: '椅', w: 18, h: 18, group: '客厅', symbol: 'chair', tall: 34 },
   // 地毯和瑜伽垫 tall: 1 不是凑数 —— 它们确实只有一指厚，而这正是「踩得过去」
   // 与「绕得开」的分界：高度是这个判断唯一的依据。
@@ -522,6 +525,42 @@ export function placementSpec(kind) {
   const spec = PLACEMENT_KINDS[kind]
   if (!spec) return null
   return { mount: 'floor', elev: 0, storable: false, clearance: 0, ...spec }
+}
+
+/** 竖直方向没实测也没规格时按矮件处理的默认高度(英寸) */
+const DEFAULT_TALL_IN = 30
+
+/**
+ * 一件家具「实际占据」的竖直区间(英寸)—— 叠放判定的地基。
+ * 实测优先(attrs.elevIn 底面离地、attrs.heightIn 实测高),没实测退
+ * 规格的 elev/tall。带 clearUnder 的(桌/床)腿下是净空,占据只有
+ * 台面那一层板:[clearUnder, top]。
+ * @param {{ kind: string, attrs?: { elevIn?: number, heightIn?: number } }} p
+ * @returns {{ lo: number, hi: number }}
+ */
+export function verticalBlockRangeIn(p) {
+  const spec = placementSpec(p.kind)
+  const elev = p.attrs?.elevIn ?? spec?.elev ?? 0
+  const hi = elev + (p.attrs?.heightIn ?? spec?.tall ?? DEFAULT_TALL_IN)
+  // 台面下净空:实测的 elevIn(桌腿贴地 ≈0)在这里会撒谎,规格优先
+  const lo = Math.max(elev, spec?.clearUnder ?? 0)
+  return { lo, hi: Math.max(hi, lo) }
+}
+
+/** 竖直重叠超过它才算真的撞(英寸)—— 桌下柜顶蹭到桌面板不算 */
+const VERTICAL_OVERLAP_TOL_IN = 2
+
+/**
+ * 两件家具在竖直方向是否互相让开(桌下柜、格子柜上的电视、台面上方的吊柜):
+ * 让开 = 平面重叠也不算「压在一起」。
+ * @param {{ kind: string, attrs?: any }} a
+ * @param {{ kind: string, attrs?: any }} b
+ */
+export function verticallyClear(a, b) {
+  const ra = verticalBlockRangeIn(a)
+  const rb = verticalBlockRangeIn(b)
+  const overlap = Math.min(ra.hi, rb.hi) - Math.max(ra.lo, rb.lo)
+  return overlap <= VERTICAL_OVERLAP_TOL_IN
 }
 
 /**

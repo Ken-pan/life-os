@@ -9,7 +9,9 @@ final class EvidenceGuideTests: XCTestCase {
         center: SIMD2<Double> = .zero,
         w: Double = 2.0,
         d: Double = 0.9,
-        bins: Set<Int> = []
+        bins: Set<Int> = [],
+        h: Double = 0,
+        elev: Double = 0
     ) -> EvidenceGuide.Furniture {
         EvidenceGuide.Furniture(
             id: UUID(),
@@ -17,8 +19,38 @@ final class EvidenceGuideTests: XCTestCase {
             center: center,
             widthM: w,
             depthM: d,
-            binsCovered: bins
+            binsCovered: bins,
+            heightM: h,
+            elevM: elev
         )
+    }
+
+    // MARK: - 藏在别的家具下面(桌下收纳柜)
+
+    func testHiddenUnderDeskNeedsOnlyOneShot() {
+        // 1.8×0.9 桌(高 0.75)罩着 0.4×0.5 的柜(高 0.65),柜中心在桌脚印内
+        let desk = furniture(category: "table", center: SIMD2(0, 0), w: 1.8, d: 0.9, h: 0.75)
+        let cab = furniture(category: "storage", center: SIMD2(0.3, 0.1), w: 0.4, d: 0.5, h: 0.65)
+        let host = EvidenceGuide.hiddenHost(cab, among: [desk, cab])
+        XCTAssertEqual(host?.id, desk.id, "柜藏在桌下")
+        XCTAssertNil(EvidenceGuide.hiddenHost(desk, among: [desk, cab]), "桌自己不算藏")
+
+        let shorts = EvidenceGuide.deficits(furnitures: [desk, cab], walls: [])
+        let cabDef = shorts.first { $0.furniture.id == cab.id }
+        XCTAssertEqual(cabDef?.required, 1, "藏起来的一张就算完备")
+        XCTAssertNotNil(cabDef?.hiddenUnder)
+        let g = EvidenceGuide.guidance(
+            deficits: shorts.filter { $0.furniture.id == cab.id },
+            cameraPos: SIMD2(3, 0),
+            cameraForwardDeg: 180
+        )
+        XCTAssertTrue(g?.text.contains("蹲低") ?? false, "引导词是蹲低拍,不是绕方位: \(g?.text ?? "nil")")
+    }
+
+    func testHeightUnknownNeverGuessedHidden() {
+        let desk = furniture(category: "table", center: SIMD2(0, 0), w: 1.8, d: 0.9, h: 0.75)
+        let cab = furniture(category: "storage", center: SIMD2(0.3, 0.1), w: 0.4, d: 0.5) // h=0 未知
+        XCTAssertNil(EvidenceGuide.hiddenHost(cab, among: [desk, cab]), "高度未知不瞎猜")
     }
 
     // MARK: - 视角要求分级

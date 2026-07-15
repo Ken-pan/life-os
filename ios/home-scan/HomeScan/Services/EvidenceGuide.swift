@@ -18,6 +18,10 @@ enum EvidenceGuide {
         var depthM: Double
         /// 已有照片的方位桶(0-3)
         var binsCovered: Set<Int>
+        /// 实测高(米,0 = 未知)—— 叠放判定用
+        var heightM: Double = 0
+        /// 底面离地(米)—— 吊柜/挂墙件 >0
+        var elevM: Double = 0
     }
 
     struct Wall {
@@ -28,6 +32,10 @@ enum EvidenceGuide {
     /// 一件家具的证据缺口
     struct Deficit {
         var furniture: Furniture
+        /// 它藏在哪件更大的家具下面(桌下收纳柜…);nil = 正常可见。
+        /// 藏起来的只要 1 张照片,且引导词换成「蹲低拍」——
+        /// 要求它 3 个方位是在为难人
+        var hiddenUnder: String? = nil
         /// 已覆盖桶数(含碰巧拍到的「不可达」桶)
         var covered: Int
         /// 对这件的要求(已按可达桶数收缩)
@@ -91,10 +99,28 @@ enum EvidenceGuide {
         clearStandpoint(f, bin: bin, walls: walls) != nil
     }
 
+    /// f 是否藏在另一件更大家具的下面/里面(桌下收纳柜、床下收纳箱…):
+    /// 中心落进对方脚印、自己明显更小、顶面低于对方顶面。
+    /// 高度未知(0)不判 —— 宁可正常引导,不瞎猜。
+    static func hiddenHost(_ f: Furniture, among all: [Furniture]) -> Furniture? {
+        guard f.heightM > 0 else { return nil }
+        let topF = f.elevM + f.heightM
+        return all.first { host in
+            guard host.id != f.id, host.heightM > 0 else { return false }
+            let d = f.center - host.center
+            let within = abs(d.x) < host.widthM / 2 && abs(d.y) < host.depthM / 2
+            let smaller = f.widthM * f.depthM < host.widthM * host.depthM * 0.6
+            // 5cm 余量:桌下柜顶到桌面常只差 6-9cm,卡 10cm 会漏掉真实场景
+            let below = topF < host.elevM + host.heightM - 0.05
+            return within && smaller && below
+        }
+    }
+
     /// 全部家具的证据缺口(covered ≥ required 的不出现在结果里)
     static func deficits(furnitures: [Furniture], walls: [Wall]) -> [Deficit] {
         var out: [Deficit] = []
         for f in furnitures {
+            let host = hiddenHost(f, among: furnitures)
             var missing: [(bin: Int, standpoint: SIMD2<Double>)] = []
             var reachableBins: Set<Int> = []
             for bin in 0..<4 {
@@ -106,11 +132,15 @@ enum EvidenceGuide {
             }
             // 碰巧从「不可达」方位拍到的照片一样是证据,计入分母上限
             let attainable = reachableBins.union(f.binsCovered)
-            let required = min(requiredBins(f), attainable.count)
+            // 藏在别的家具下面的,有一张就算完备 —— 别引导人绕着桌子拍柜子
+            let required = host != nil
+                ? min(1, max(attainable.count, 1))
+                : min(requiredBins(f), attainable.count)
             guard f.binsCovered.count < required else { continue }
             out.append(
                 Deficit(
                     furniture: f,
+                    hiddenUnder: host.map { zhName($0.category) },
                     covered: f.binsCovered.count,
                     required: required,
                     missing: missing
@@ -179,6 +209,12 @@ enum EvidenceGuide {
     ) -> String {
         let name = zhName(deficit.furniture.category)
         let dist = simd_length(stand - cameraPos)
+        // 藏在别的家具下面的:重点不是绕方位,是蹲低让镜头看进去
+        if let host = deficit.hiddenUnder {
+            return dist < 1.2
+                ? "「\(name)」藏在「\(host)」下面 —— 蹲低一点,对准空档稳住 2 秒"
+                : "「\(name)」藏在「\(host)」下面:走近后蹲低,对准空档拍一张"
+        }
         if dist < 0.8 {
             return "就在这里:对准「\(name)」稳住 2 秒,补上这一侧"
         }
@@ -232,7 +268,9 @@ enum EvidenceGuide {
                 depthM: item.depthM,
                 binsCovered: Set(item.photos.compactMap { p in
                     p.azimuthDeg.map { min(3, max(0, Int($0 / 90))) }
-                })
+                }),
+                heightM: item.heightM,
+                elevM: item.elevM
             )
         }
         let short = deficits(furnitures: furnitures, walls: walls)

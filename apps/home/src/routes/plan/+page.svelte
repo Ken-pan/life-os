@@ -87,6 +87,7 @@
     PLACEMENT_KINDS,
     pxToInches,
     STORAGE_CODES,
+    verticallyClear,
   } from '$lib/spatial/placements.js'
   import { resolvePlacementSnap, overlapsAny } from '$lib/spatial/placement-snap.js'
   import { wallStrokePx } from '$lib/spatial/wall-standards.js'
@@ -657,10 +658,15 @@
       thicknessFor: (w) => wallStrokePx(w.role ?? 'interior', planPxPerFt),
       free: mods.altKey, // Alt 临时脱开吸附,与建墙工具同一手势
     })
-    // 压在别人身上不拦(床下塞收纳盒是常态),但要当场说出来 —— 压着而不自知才是错
+    // 压在别人身上不拦(床下塞收纳盒是常态),但要当场说出来 —— 压着而不自知才是错。
+    // 立体上互相让开的组合(桌下柜、格子柜上的电视、台面上方的吊柜)不算压:
+    // 那是真实世界的正常叠放,标红反而在骗人
+    const solidOthers = (project.placements ?? [])
+      .filter((x) => x.id !== id && !verticallyClear(placement, x))
+      .map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h }))
     const overlap = overlapsAny(
       { x: snap.x, y: snap.y, w: placement.w, h: placement.h },
-      others,
+      solidOthers,
     )
     return { placement, snap, overlap }
   }
