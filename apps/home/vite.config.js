@@ -56,6 +56,71 @@ function devCanonicalScanPlugin() {
     name: 'homeos-dev-canonical-scan',
     apply: /** @type {const} */ ('serve'),
     configureServer(server) {
+      // 柜内实测(iOS 柜内扫描的桶内 JSON):同 canonical-scan,node 侧持钥。
+      // 返回 [{ scanId, containers: [json…], homeos }](homeos 供 identity 兜底配准)。
+      server.middlewares.use('/__dev/container-scans', async (_req, res) => {
+        try {
+          const key = await serviceKey();
+          const headers = { apikey: key, Authorization: `Bearer ${key}` };
+          const restHeaders = { ...headers, 'Accept-Profile': 'home' };
+          const q =
+            'select=id,user_id,updated_at&deleted=eq.false&order=updated_at.desc&limit=8';
+          const r = await fetch(`https://${SUPA_REF}.supabase.co/rest/v1/scans?${q}`, {
+            headers: restHeaders,
+          });
+          if (!r.ok) throw new Error(`scans ${r.status}`);
+          const rows = await r.json();
+          const out = [];
+          for (const row of Array.isArray(rows) ? rows : []) {
+            const prefix = `${row.user_id}/${row.id}`;
+            const lr = await fetch(
+              `https://${SUPA_REF}.supabase.co/storage/v1/object/list/home-scan-photos`,
+              {
+                method: 'POST',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prefix, limit: 200 }),
+              },
+            );
+            if (!lr.ok) continue;
+            const files = await lr.json();
+            const names = (Array.isArray(files) ? files : [])
+              .map((f) => f?.name ?? '')
+              .filter((n) => /^container-.+\.json$/.test(n));
+            if (!names.length) continue;
+            const containers = [];
+            for (const name of names) {
+              const dr = await fetch(
+                `https://${SUPA_REF}.supabase.co/storage/v1/object/home-scan-photos/${prefix}/${name}`,
+                { headers },
+              );
+              if (!dr.ok) continue;
+              try {
+                containers.push(await dr.json());
+              } catch {
+                /* 单份脏 JSON 跳过 */
+              }
+            }
+            if (!containers.length) continue;
+            const pr = await fetch(
+              `https://${SUPA_REF}.supabase.co/rest/v1/scans?select=payload&id=eq.${row.id}&limit=1`,
+              { headers: restHeaders },
+            );
+            const prow = pr.ok ? await pr.json() : [];
+            out.push({
+              scanId: row.id,
+              containers,
+              homeos: prow?.[0]?.payload?.homeos ?? null,
+            });
+          }
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(out));
+        } catch (err) {
+          res.statusCode = 503;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: String(err instanceof Error ? err.message : err) }));
+        }
+      });
+
       server.middlewares.use('/__dev/canonical-scan', async (_req, res) => {
         try {
           if (!cache.body || Date.now() - cache.at > 10_000) {

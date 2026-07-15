@@ -1,6 +1,11 @@
 <script>
   import { ICONS } from '$lib/iconRegistry.js'
   import { formatTagInput, parseTagInput } from '$lib/spatial/storage-items.js'
+  import {
+    containerSummary,
+    levelLabel,
+    levelOptions,
+  } from '$lib/spatial/container-scan.js'
 
   /** @typedef {import('$lib/spatial/types.js').SpatialStorageItem} SpatialStorageItem */
 
@@ -12,6 +17,7 @@
    *   formZh: string,
    *   items: SpatialStorageItem[],
    *   inferred?: boolean,
+   *   container?: import('$lib/spatial/types.js').ContainerScanInfo,
    *   selected?: boolean,
    *   onSelect?: () => void,
    *   id?: string,
@@ -20,7 +26,7 @@
    *   highlightItemId?: string,
    *   matchedItemIds?: string[],
    *   onAddItem?: (name: string) => void,
-   *   onUpdateItem?: (itemId: string, patch: Partial<SpatialStorageItem>) => void,
+   *   onUpdateItem?: (itemId: string, patch: Partial<SpatialStorageItem> & { level?: number | null }) => void,
    *   onRemoveItem?: (itemId: string) => void,
    *   onMoveItem?: (itemId: string, toCode: string) => void,
    * }}
@@ -32,6 +38,7 @@
     formZh,
     items,
     inferred = false,
+    container = undefined,
     selected = false,
     onSelect,
     id = undefined,
@@ -50,7 +57,11 @@
   let draftQty = $state(1)
   let draftTags = $state('')
   let draftNote = $state('')
+  /** 编辑中的层号;'' = 未分层(提交时转 null 清除) */
+  let draftLevel = $state('')
   let newName = $state('')
+
+  const levels = $derived(levelOptions(container))
 
   const matched = $derived(new Set(matchedItemIds))
 
@@ -71,6 +82,7 @@
     draftQty = item.qty ?? 1
     draftTags = formatTagInput(item)
     draftNote = item.note ?? ''
+    draftLevel = item.level === undefined ? '' : String(item.level)
   }
 
   function cancelEdit() {
@@ -84,6 +96,8 @@
       qty: draftQty,
       tags: parseTagInput(draftTags),
       note: draftNote,
+      // '' = 未分层 → null 显式清除(undefined 会被 patch 当「不动」)
+      level: draftLevel === '' ? null : Number(draftLevel),
     })
     editingId = ''
   }
@@ -122,6 +136,20 @@
     <span class="count" title={`${items.length} 件物品`}>{items.length}</span>
   </header>
   <p class="meta"><b>位置</b> {locationZh} · <b>形式</b> {formZh}</p>
+  {#if container}
+    <!-- iOS 柜内扫描量出来的真实内腔 —— 有它,「放进柜子」才能说成「放进第几层」 -->
+    <p class="meta container-meta">
+      <b>柜内实测</b>
+      {containerSummary(container)}
+      {#if container.compartments.length > 1}
+        <span class="container-levels"
+          >(每层高 {container.compartments
+            .map((lv) => `${Math.round(lv.heightIn * 2.54)}`)
+            .join('/')} cm)</span
+        >
+      {/if}
+    </p>
+  {/if}
 
   <ul>
     {#each items as item (item.id)}
@@ -166,6 +194,21 @@
               placeholder="备注"
               aria-label="备注"
             />
+            {#if levels.length > 1}
+              <label class="level-label">
+                哪一层
+                <select
+                  class="field level-select"
+                  bind:value={draftLevel}
+                  aria-label={`「${item.name}」在柜内哪一层`}
+                >
+                  <option value="">未分层</option>
+                  {#each levels as lv (lv.value)}
+                    <option value={String(lv.value)}>{lv.label}</option>
+                  {/each}
+                </select>
+              </label>
+            {/if}
             <div class="edit-actions">
               <button type="button" class="mini primary" onclick={commitEdit}>
                 保存
@@ -227,6 +270,9 @@
               />
             {/if}
             <span class="item-name">{item.name}</span>
+            {#if item.level !== undefined}
+              <span class="level-chip">{levelLabel(item.level)}</span>
+            {/if}
             {#if item.qty && item.qty > 1}
               <span class="qty-badge">×{item.qty}</span>
             {/if}
@@ -249,6 +295,9 @@
               />
             {/if}
             <span class="item-name">{item.name}</span>
+            {#if item.level !== undefined}
+              <span class="level-chip">{levelLabel(item.level)}</span>
+            {/if}
             {#if item.qty && item.qty > 1}
               <span class="qty-badge">×{item.qty}</span>
             {/if}
@@ -382,6 +431,40 @@
   .meta b {
     color: var(--t2);
     font-weight: 600;
+  }
+
+  .container-meta {
+    margin-top: -5px;
+  }
+
+  .container-meta b {
+    color: var(--storage-accent);
+  }
+
+  .container-levels {
+    color: var(--t3);
+  }
+
+  .level-chip {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--storage-accent);
+    border: 1px solid var(--storage-accent);
+    padding: 1px 6px;
+    border-radius: 999px;
+    flex: none;
+  }
+
+  .level-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--t3);
+  }
+
+  .level-select {
+    flex: 1;
   }
 
   ul {

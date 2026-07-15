@@ -25,6 +25,7 @@
     "test:rooms": "node scripts/rooms-detect-test.mjs",
     "test:snap": "node scripts/snap-test.mjs",
     "test:storage": "node scripts/storage-items-unit.mjs",
+    "test:container-scan": "node scripts/container-scan-unit.mjs",
     "test:cloud-scan": "node scripts/cloud-scan-unit.mjs",
     "test:circulation": "node scripts/circulation-unit.mjs",
     "test:scan-merge": "node scripts/scan-merge-unit.mjs",

@@ -5,12 +5,14 @@
     getActiveProject,
     moveStorageItem,
     removeStorageItem,
+    syncContainerScans,
     updateStorageItem,
   } from '$lib/state.svelte.js'
   import {
     countStorageItems,
     searchStorageItems,
   } from '$lib/spatial/storage-items.js'
+  import { levelLabel } from '$lib/spatial/container-scan.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import StorageZoneCard from '$lib/components/StorageZoneCard.svelte'
   import InventoryImport from '$lib/components/InventoryImport.svelte'
@@ -23,6 +25,41 @@
   let selected = $state('')
   let query = $state('')
   let focusedItemId = $state('')
+
+  // ---- 柜内实测同步(iOS 柜内扫描 → 储藏区.container) ----
+  /** @type {'idle'|'running'|'done'|'error'} */
+  let containerSync = $state('idle')
+  let containerSyncMsg = $state('')
+
+  async function runContainerSync() {
+    if (containerSync === 'running') return
+    containerSync = 'running'
+    containerSyncMsg = ''
+    try {
+      const res = await syncContainerScans()
+      const parts = []
+      if (res.bound.length) parts.push(`${res.bound.length} 个柜子已挂内腔实测`)
+      if (res.noZone.length) {
+        // 匹配到了家具但它还没有储藏区 —— 让用户去绑定,而不是静默丢掉
+        const names = res.noZone
+          .map((b) => b.placementLabel || '未命名家具')
+          .slice(0, 3)
+          .join('、')
+        parts.push(`${res.noZone.length} 份数据对应的家具(${names})还没绑定储藏区`)
+      }
+      if (res.unmatched) parts.push(`${res.unmatched} 份对不上当前户型`)
+      containerSyncMsg = parts.length ? parts.join(' · ') : '云端还没有柜内扫描数据'
+      containerSync = 'done'
+    } catch (e) {
+      containerSyncMsg = e instanceof Error ? e.message : String(e)
+      containerSync = 'error'
+    }
+  }
+
+  // 进页面静默同步一次:iPhone 刚扫完柜内,打开储物页就该看到
+  $effect(() => {
+    if (containerSync === 'idle') void runContainerSync()
+  })
 
   /** @param {Event} e */
   function onQueryInput(e) {
@@ -134,6 +171,19 @@
 <p class="page-sub home-lead">
   {project.storageZones.length} 个储藏区 · {itemCount} 件物品 ·
   搜索或点击标注可定位到平面图。
+  <button
+    type="button"
+    class="sync-btn"
+    onclick={runContainerSync}
+    disabled={containerSync === 'running'}
+  >
+    {containerSync === 'running' ? '同步柜内实测…' : '同步柜内实测'}
+  </button>
+  {#if containerSyncMsg}
+    <span class="sync-msg" class:error={containerSync === 'error'} role="status">
+      {containerSyncMsg}
+    </span>
+  {/if}
 </p>
 
 <InventoryImport />
@@ -183,7 +233,9 @@
               {/if}
               <span class="hit-where">
                 <span class="hit-code">{hit.zoneCode}</span>
-                {hit.zoneNameZh}
+                {hit.zoneNameZh}{#if hit.item.level !== undefined}<span
+                    class="hit-level">{levelLabel(hit.item.level)}</span
+                  >{/if}
               </span>
             </button>
           </li>
@@ -225,6 +277,7 @@
       formZh={zone.formZh}
       items={zone.items}
       inferred={zone.inferred}
+      container={zone.container}
       selected={selected === zone.code}
       onSelect={() => toggle(zone.code)}
       editable
@@ -244,6 +297,45 @@
 <style>
   .home-lead {
     margin: 0 0 14px;
+  }
+
+  .sync-btn {
+    font: inherit;
+    font-size: 12px;
+    margin-left: 6px;
+    padding: 2px 10px;
+    color: var(--t2);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .sync-btn:hover:not(:disabled) {
+    color: var(--t1);
+    border-color: var(--storage-accent);
+  }
+
+  .sync-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .sync-msg {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 12px;
+    color: var(--t3);
+  }
+
+  .sync-msg.error {
+    color: var(--warn, #c46a3f);
+  }
+
+  .hit-level {
+    margin-left: 4px;
+    font-weight: 600;
+    color: var(--storage-accent);
   }
 
   .search-bar {

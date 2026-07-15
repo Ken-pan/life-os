@@ -159,6 +159,23 @@
  * @property {string} [note]
  * @property {number} [updatedAt] epoch ms;迁移数据为 0
  * @property {PurchaseInfo} [purchase] 买来的东西才有;见 {@link PurchaseInfo}
+ * @property {number} [level] 在柜内哪一层(0 = 最下层)。柜内实测
+ *   ({@link ContainerScanInfo})同步后才有意义,但字段独立存在 ——
+ *   没实测过也可以手填「第 2 层」
+ */
+
+/**
+ * iOS 柜内扫描(能力11)同步进来的内腔实测。来源是桶里的
+ * `container-{placementId}.json`(契约见 apps/home/supabase/README.md),
+ * 经 scan-identity 匹配挂到储藏区。尺寸英寸,与 attrs.heightIn 一致。
+ * @typedef {object} ContainerScanInfo
+ * @property {string} scanId 来自哪次扫描
+ * @property {string} [capturedAt] ISO 时间
+ * @property {{ w: number, d: number, h: number }} interiorIn 内宽/内深/内高
+ * @property {{ w: number, d: number, h: number }} [measuredInteriorIn] 用户微调过才有:AR 原始实测
+ * @property {number[]} shelfHeightsIn 层板高度(相对内底,自下而上)
+ * @property {Array<{ level: number, y0In: number, y1In: number, heightIn: number }>} compartments 自下而上的「层」
+ * @property {number} [volumeL] 内腔容积(升)
  */
 
 /**
@@ -174,6 +191,7 @@
  * @property {boolean} [inferred]
  * @property {string} [zoneId]
  * @property {string} [placementId]
+ * @property {ContainerScanInfo} [container] 柜内实测(同步来的;items[].level 以它的层为准)
  */
 
 /**

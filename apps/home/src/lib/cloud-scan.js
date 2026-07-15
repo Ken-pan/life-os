@@ -22,6 +22,11 @@ import {
   mergeFurnitureWithIdentity,
   describeReplacements,
 } from './spatial/scan-merge.js'
+import {
+  normalizeContainerPayload,
+  resolveScanContainers,
+  mergeContainerBindings,
+} from './spatial/container-scan.js'
 
 export { validateScanPayload, buildProjectFromScan }
 
@@ -153,6 +158,126 @@ export async function resolveScanPhotos(payload, onProgress) {
   )
   await Promise.all(workers)
   return { total: jobs.length, failed }
+}
+
+/** 往回翻多少次扫描找柜内数据。柜内测量是低频动作,8 次早够覆盖 */
+const CONTAINER_SCAN_LOOKBACK = 8
+
+/**
+ * @typedef {object} ContainerGroup 一次扫描的柜内数据(原始 JSON)+ 该扫描的 homeos
+ * @property {any[]} containers
+ * @property {any} [homeos] identity 兜底配准用;拿不到为 null
+ */
+
+/** 登录路径:直接从 home.scans + 私有桶拉 @param {string} uid @returns {Promise<{ groups: ContainerGroup[], scansChecked: number }>} */
+async function fetchContainerGroupsAuthed(uid) {
+  const scans = (await listScans()).slice(0, CONTAINER_SCAN_LOOKBACK)
+  /** @type {ContainerGroup[]} */
+  const groups = []
+  for (const scan of scans) {
+    const prefix = `${uid}/${scan.id}`
+    const { data: files, error } = await supabase.storage.from(BUCKET).list(prefix)
+    if (error || !files?.length) continue
+    const names = files
+      .map((f) => f?.name ?? '')
+      .filter((n) => /^container-.+\.json$/.test(n))
+    if (!names.length) continue
+
+    /** @type {any[]} */
+    const containers = []
+    for (const name of names) {
+      const { data: blob, error: dlErr } = await supabase.storage
+        .from(BUCKET)
+        .download(`${prefix}/${name}`)
+      if (dlErr || !blob) continue
+      try {
+        containers.push(JSON.parse(await blob.text()))
+      } catch {
+        /* 单份脏 JSON 跳过,别拖垮整次同步 */
+      }
+    }
+    if (!containers.length) continue
+
+    let homeos = null
+    try {
+      const payload = await fetchScanPayload(scan.id)
+      if (!validateScanPayload(payload)) homeos = payload.homeos
+    } catch {
+      /* homeos 只是兜底输入,拿不到时 id 直连仍可用 */
+    }
+    groups.push({ containers, homeos })
+  }
+  return { groups, scansChecked: scans.length }
+}
+
+/** 开发免登录路径:vite 中间件持钥代拉(见 vite.config.js /__dev/container-scans) */
+async function fetchContainerGroupsDev() {
+  const res = await fetch('/__dev/container-scans')
+  if (!res.ok) throw new Error('未登录,拉不到柜内数据')
+  const rows = await res.json()
+  if (!Array.isArray(rows)) throw new Error('未登录,拉不到柜内数据')
+  return {
+    groups: rows.map((r) => ({ containers: r?.containers ?? [], homeos: r?.homeos ?? null })),
+    scansChecked: rows.length,
+  }
+}
+
+/**
+ * 拉取全部柜内实测(iOS「柜内扫描」上传的 container-{placementId}.json),
+ * 匹配到当前户型的储藏区。**不写任何东西** —— 返回绑定表交给 state 层落库。
+ *
+ * 匹配路径见 spatial/container-scan.js 头注:id 直连优先,identity 兜底
+ * (兜底前先用 mapScanIntoLayout 把该扫描的家具配准进家坐标系)。
+ * 扫描新→旧遍历,同一件家具新数据赢。
+ *
+ * @param {SpatialProject} project 当前户型(hydrate 过的)
+ * @returns {Promise<{
+ *   byZoneId: Record<string, import('./spatial/types.js').ContainerScanInfo>,
+ *   bound: any[], noZone: any[], unmatched: number, scansChecked: number,
+ * }>}
+ */
+export async function pullContainerScans(project) {
+  const { data: userData } = await supabase.auth.getUser().catch(() => ({ data: null }))
+  const uid = userData?.user?.id
+  let fetched
+  if (uid) {
+    fetched = await fetchContainerGroupsAuthed(uid)
+  } else if (import.meta.env.DEV) {
+    fetched = await fetchContainerGroupsDev()
+  } else {
+    throw new Error('未登录,拉不到柜内数据')
+  }
+
+  /** @type {any[][]} 每次扫描的绑定(新→旧) */
+  const perScan = []
+  for (const group of fetched.groups) {
+    const containers = group.containers
+      .map((raw) => normalizeContainerPayload(raw))
+      .filter(Boolean)
+    if (!containers.length) continue
+
+    // identity 兜底要用配准进家坐标系的扫描家具;配准失败传 [],
+    // id 直连(replace 模式拉过这次扫描)仍然可用
+    let scanPlacements = []
+    try {
+      if (group.homeos) {
+        const mapped = mapScanIntoLayout(project, group.homeos)
+        scanPlacements = mapped.placements?.length ? mapped.placements : []
+      }
+    } catch {
+      /* 见上 */
+    }
+
+    perScan.push(
+      resolveScanContainers({
+        containers,
+        scanPlacements,
+        projectPlacements: project.placements ?? [],
+        zones: project.storageZones ?? [],
+      }),
+    )
+  }
+  return { ...mergeContainerBindings(perScan), scansChecked: fetched.scansChecked }
 }
 
 /**

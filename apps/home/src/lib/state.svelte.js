@@ -1858,6 +1858,37 @@ export function getActiveProject() {
   return hydrateProject(raw)
 }
 
+/**
+ * 同步柜内实测(iOS「柜内扫描」→ 储藏区.container)。
+ * IO 与匹配在 cloud-scan.js;这里只负责把绑定落进 storageZones ——
+ * 走 updateStorageZones(不碰几何、不进撤销栈,与物品编辑同一条安全路)。
+ * @returns {Promise<{ bound: any[], noZone: any[], unmatched: number, scansChecked: number, changed: number }>}
+ */
+export async function syncContainerScans() {
+  const { pullContainerScans } = await import('./cloud-scan.js')
+  const res = await pullContainerScans(getActiveProject())
+  let changed = 0
+  if (Object.keys(res.byZoneId).length) {
+    updateStorageZones((zones) =>
+      zones.map((z) => {
+        const c = res.byZoneId[z.id]
+        if (!c) return z
+        // 同一份数据重复同步不动引用,免得白写一次 localStorage/云
+        if (
+          z.container &&
+          z.container.scanId === c.scanId &&
+          z.container.capturedAt === c.capturedAt
+        ) {
+          return z
+        }
+        changed += 1
+        return { ...z, container: c }
+      }),
+    )
+  }
+  return { ...res, changed }
+}
+
 /** 浏览页固定显示 508 参数化户型，不受墙图编辑态干扰。 */
 /**
  * 户型结构锁:墙体已按扫描实测确定后,建墙/门窗/画区/返回508 这些

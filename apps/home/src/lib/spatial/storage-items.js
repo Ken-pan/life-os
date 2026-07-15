@@ -83,6 +83,22 @@ function normalizeQty(raw) {
   return Math.min(n, MAX_QTY)
 }
 
+/** 层号上限:防脏数据把 UI 撑爆(现实里没有 100 层的柜子) */
+const MAX_LEVEL = 99
+
+/**
+ * 归一「在柜内哪一层」(0 = 最下层)。null/负数/非整数 → undefined(未分层)——
+ * 编辑器用 null 显式清除。
+ * @param {unknown} raw
+ * @returns {number | undefined}
+ */
+export function normalizeLevel(raw) {
+  if (raw === null || raw === undefined || raw === '') return undefined
+  const n = Number(raw)
+  if (!Number.isInteger(n) || n < 0) return undefined
+  return Math.min(n, MAX_LEVEL)
+}
+
 /** {@link PurchaseInfo} 的字段,逐个白名单 —— 见 normalizePurchase。 */
 const PURCHASE_STR_KEYS = ['orderId', 'src', 'date', 'title', 'imageUrl', 'productUrl', 'tier']
 
@@ -169,6 +185,14 @@ function isNormalizedItem(raw) {
   ) {
     return false
   }
+  // level 同 purchase:漏在这里的话,一件脏数据触发整区重建时,
+  // 全区物品的「第几层」会被 toStorageItem 静默抹掉。
+  if (
+    i.level !== undefined &&
+    !(Number.isInteger(i.level) && i.level >= 0 && i.level <= MAX_LEVEL)
+  ) {
+    return false
+  }
   if (typeof i.updatedAt !== 'number' || !Number.isFinite(i.updatedAt)) return false
   // Must be checked here, not just carried in toStorageItem: this predicate is
   // what decides whether the array passes through untouched. Miss it and a
@@ -202,6 +226,7 @@ function toStorageItem(raw, zoneId, index) {
     qty: normalizeQty(src.qty),
     tags: normalizeTags(src.tags),
     note: note || undefined,
+    level: normalizeLevel(src.level),
     updatedAt: Number(src.updatedAt) || 0,
     // Rebuilt explicitly, because this function returns a *fresh* object: any
     // field not named here is dropped. One dirty item makes normalizeStorageItems
@@ -272,7 +297,7 @@ export function normalizeZoneItems(zones) {
 
 /**
  * @param {string} name
- * @param {{ qty?: number, tags?: string[], note?: string, purchase?: import('./types.js').PurchaseInfo }} [fields]
+ * @param {{ qty?: number, tags?: string[], note?: string, level?: number, purchase?: import('./types.js').PurchaseInfo }} [fields]
  * @param {number} [now] epoch ms — injected so callers control the clock
  * @returns {SpatialStorageItem | null}
  */
@@ -286,14 +311,16 @@ export function createStorageItem(name, fields = {}, now = Date.now()) {
     qty: normalizeQty(fields.qty),
     tags: normalizeTags(fields.tags),
     note: note || undefined,
+    level: normalizeLevel(fields.level),
     updatedAt: now,
     purchase: normalizePurchase(fields.purchase),
   }
 }
 
 /**
+ * `patch.level` 传 null 表示清除(回到「未分层」);undefined 表示不动。
  * @param {SpatialStorageItem} item
- * @param {Partial<SpatialStorageItem>} patch
+ * @param {Partial<SpatialStorageItem> & { level?: number | null }} patch
  * @param {number} [now]
  * @returns {SpatialStorageItem}
  */
@@ -306,6 +333,7 @@ export function patchStorageItem(item, patch, now = Date.now()) {
     qty: patch.qty === undefined ? item.qty : normalizeQty(patch.qty),
     tags: patch.tags === undefined ? item.tags : normalizeTags(patch.tags),
     note: note || undefined,
+    level: patch.level === undefined ? item.level : normalizeLevel(patch.level),
     updatedAt: now,
   }
 }
