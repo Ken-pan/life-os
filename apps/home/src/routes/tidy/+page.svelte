@@ -5,6 +5,7 @@
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
   import { buildTidyPlan, EFFORT_LABEL } from '$lib/spatial/tidy-plan.js'
   import { scoreClutter } from '$lib/spatial/clutter-score.js'
+  import { assessPhotoCoverage, COVERAGE_ACTION } from '$lib/spatial/photo-coverage.js'
   import { getPhotoBlob } from '$lib/photo-store.js'
   import { ICONS } from '$lib/iconRegistry.js'
 
@@ -28,6 +29,9 @@
   const project = $derived(getActiveProject())
   const circ = $derived(analyzeCirculation(project))
   const clutter = $derived(scoreClutter(project, circ))
+  /** 页面打开那一刻的时钟就够了 —— 过期判断按天算,不需要逐秒刷新 */
+  const nowMs = Date.now()
+  const coverage = $derived(assessPhotoCoverage(project, { now: nowMs }))
   const plan = $derived(
     buildTidyPlan(project, circ, { minutes: budgetMin, effort: effortCap }),
   )
@@ -75,6 +79,33 @@
 <svelte:head><title>整理 · HOME.OS</title></svelte:head>
 
 <div class="tidy-page">
+  {#if coverage.needs.length}
+    <section class="block">
+      <h2 class="block-title">
+        拍照任务
+        <span class="shoot-count">{coverage.needs.length}</span>
+      </h2>
+      <ul class="shoot-list">
+        {#each coverage.needs as n (n.zoneId)}
+          <li class="shoot-row">
+            <span class="shoot-dot" class:dot-blind={n.status === 'missing' || n.status === 'noPhoto'}></span>
+            <div class="shoot-body">
+              <span class="shoot-name">{n.nameZh}</span>
+              <span class="shoot-why">{n.reason}</span>
+            </div>
+            <a class="shoot-go" href={`/plan?shoot=${encodeURIComponent(n.zoneId)}`}>
+              {COVERAGE_ACTION[n.status]}
+            </a>
+          </li>
+        {/each}
+      </ul>
+      <p class="block-desc">
+        这些分区系统还看不清。点进去平面图会标好站位和朝向 —— 走过去按快门就行,
+        识别完杂乱指数和整理计划自动变准。
+      </p>
+    </section>
+  {/if}
+
   {#if clutter.zones.length}
     <section class="block">
       <h2 class="block-title">杂乱指数</h2>
@@ -243,6 +274,86 @@
 </div>
 
 <style>
+  .shoot-count {
+    display: inline-block;
+    min-width: 20px;
+    padding: 0 6px;
+    margin-left: 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, #b45309 16%, var(--bg));
+    color: #b45309;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: 2px;
+  }
+
+  .shoot-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .shoot-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .shoot-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #b45309;
+  }
+
+  .shoot-dot.dot-blind {
+    background: #dc2626;
+  }
+
+  .shoot-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .shoot-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .shoot-why {
+    font-size: 12.5px;
+    color: var(--t2);
+  }
+
+  .shoot-go {
+    flex: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg2, var(--bg));
+    color: var(--t1, inherit);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .shoot-go:active {
+    transform: scale(0.97);
+  }
+
   .clutter-list {
     list-style: none;
     margin: 0;

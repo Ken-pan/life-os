@@ -51,6 +51,7 @@
     splitGraphWall,
     undoGraphEdit,
     undoLayoutEdit,
+    updateViewpoint,
   } from '$lib/state.svelte.js'
   import { buildFromWallGraph } from '$lib/spatial/wall-graph.js'
   import { snapGraphPoint } from '$lib/spatial/wall-graph.js'
@@ -76,6 +77,8 @@
   import PlanViewpointSelectionBar from '$lib/components/PlanViewpointSelectionBar.svelte'
   import PlanNorthCalibrator from '$lib/components/PlanNorthCalibrator.svelte'
   import { headingFromPoint } from '$lib/spatial/viewpoints.js'
+  import { assessPhotoCoverage, coverageForZone } from '$lib/spatial/photo-coverage.js'
+  import { page } from '$app/state'
   import {
     inchesToPx,
     isStorable,
@@ -445,9 +448,86 @@
     fitRequest = { token: fitRequest.token + 1, cycle, mode }
   }
 
+  // —— 拍照任务模式:从 /tidy 深链进入,拍完一张点「下一个」串到下一区,
+  //    不用来回切页。任务清单是响应式的 —— 挂上照片跑完识别,该区自动出列。
+  let shootMode = $state(false)
+  /** 当前任务落点的区 —— 完成态由 needs 里还有没有它来判断 */
+  let shootZoneId = $state('')
+  /** 过期判断按天算,进页那一刻的时钟够用了 */
+  const shootMountMs = Date.now()
+  const shootCoverage = $derived(
+    shootMode ? assessPhotoCoverage(project, { now: shootMountMs }) : null,
+  )
+  const shootNeeds = $derived(shootCoverage?.needs ?? [])
+  const shootCurrent = $derived(
+    shootNeeds.find((n) => n.zoneId === shootZoneId) ?? null,
+  )
+
+  /**
+   * 落一个拍照任务:该区已有机位就直接选中它(拍照/识别都在选择条上);
+   * 全盲区则按 photo-coverage 的建议站位放一个新机位并选中。
+   * 建议站位是确定性的,同一点位附近已有机位就复用 —— 重复进入不重复放。
+   * @param {import('$lib/spatial/photo-coverage.js').CoverageEntry} entry
+   */
+  function startShootTask(entry) {
+    if (planMode !== 'edit') setPlanMode('edit')
+    // setPlanMode 在墙图模式下会把选择层拨回 walls,必须在它之后再拨到机位层
+    activeTool = 'select'
+    selectLayer = 'view'
+    shootMode = true
+    shootZoneId = entry.zoneId
+    if (entry.viewpointId) {
+      selectedViewpoint = entry.viewpointId
+      return
+    }
+    const s = entry.suggestion
+    if (!s) return
+    const near = (project.viewpoints ?? []).find(
+      (v) => Math.hypot(v.x - s.x, v.y - s.y) < 6,
+    )
+    if (near) {
+      selectedViewpoint = near.id
+      return
+    }
+    const id = addViewpoint(s.x, s.y)
+    if (id) {
+      updateViewpoint(id, { heading: s.heading, label: `${entry.nameZh} 拍照点` })
+      selectedViewpoint = id
+    }
+  }
+
+  /** 跳到下一个还没完成的区;全清了就退出任务模式。 */
+  function nextShootTask() {
+    const needs = assessPhotoCoverage(getActiveProject(), { now: Date.now() }).needs
+    const next = needs.find((n) => n.zoneId !== shootZoneId) ?? needs[0] ?? null
+    if (!next) {
+      exitShootMode()
+      toast('拍照任务全部完成 —— 杂乱指数和整理计划已经变准')
+      return
+    }
+    startShootTask(next)
+    toast(`${next.nameZh}:${next.reason}`)
+  }
+
+  function exitShootMode() {
+    shootMode = false
+    shootZoneId = ''
+  }
+
+  /** /tidy 拍照任务深链:`?shoot=<zoneId>` 进任务模式并落到该区。 */
+  function applyShootParam() {
+    const zoneId = page.url.searchParams.get('shoot')
+    if (!zoneId) return
+    const entry = coverageForZone(getActiveProject(), zoneId, { now: Date.now() })
+    if (!entry) return
+    startShootTask(entry)
+    toast(`${entry.nameZh}:${entry.reason}`)
+  }
+
   onMount(() => {
     bumpFit(false, 'contain')
     if (!browser) return
+    applyShootParam()
     convertBannerDismissed = sessionStorage.getItem(CONVERT_BANNER_KEY) === '1'
     const mq = window.matchMedia('(max-width: 599px)')
     compactPlanChrome = mq.matches
@@ -1286,6 +1366,45 @@
     {/if}
 
     <NewScanBanner />
+
+    {#if shootMode}
+      <div class="shoot-banner" role="note">
+        <div class="shoot-banner-copy">
+          {#if shootNeeds.length}
+            <strong>拍照任务 · 剩 {shootNeeds.length} 个</strong>
+            <span>
+              {shootCurrent
+                ? `${shootCurrent.nameZh}:${shootCurrent.reason}`
+                : '这一区已完成 —— 点「下一个」继续'}
+            </span>
+          {:else}
+            <strong>拍照任务全部完成</strong>
+            <span>杂乱指数和整理计划已经变准 —— 回整理页看针对性步骤</span>
+          {/if}
+        </div>
+        <div class="shoot-banner-actions">
+          {#if shootNeeds.length}
+            <button type="button" class="shoot-banner-cta" onclick={nextShootTask}>
+              下一个
+            </button>
+            <button type="button" class="shoot-banner-dismiss" onclick={exitShootMode}>
+              退出
+            </button>
+          {:else}
+            <button
+              type="button"
+              class="shoot-banner-cta"
+              onclick={() => {
+                exitShootMode()
+                goto('/tidy')
+              }}
+            >
+              回整理页
+            </button>
+          {/if}
+        </div>
+      </div>
+    {/if}
   </header>
 
   <PlanShortcutsHelp
@@ -2306,6 +2425,66 @@
     font-weight: 600;
     color: var(--accent);
     text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* 拍照任务条 —— 结构对齐 NewScanBanner,换主题强调色区分「采集中」 */
+  .shoot-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--accent, #4f7c66) 45%, var(--border));
+    background: color-mix(in srgb, var(--accent, #4f7c66) 8%, var(--card));
+  }
+
+  .shoot-banner-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .shoot-banner-copy strong {
+    font-size: 13px;
+    color: var(--t1);
+  }
+
+  .shoot-banner-copy span {
+    font-size: 12px;
+    color: var(--t2);
+  }
+
+  .shoot-banner-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .shoot-banner-cta {
+    font-size: 13px;
+    font-weight: 650;
+    min-height: 36px;
+    padding: 6px 14px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--accent, #4f7c66) 55%, var(--border));
+    background: color-mix(in srgb, var(--accent, #4f7c66) 18%, var(--bg));
+    color: var(--t1);
+    cursor: pointer;
+  }
+
+  .shoot-banner-dismiss {
+    font-size: 12px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t2);
     cursor: pointer;
   }
 

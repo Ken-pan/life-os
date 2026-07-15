@@ -144,8 +144,9 @@ function inGate(p, g) {
 /**
  * 没有 zones 时(手工的 508 参数户型就没有)拿 rooms 顶上:
  * 每个房间的 bounds 当作矩形分区。通行区/承重墙不算房间。
+ * photo-coverage 也用它 —— 拍照任务和动线分析必须看到同一套分区。
  */
-function roomsAsZones(project) {
+export function roomsAsZones(project) {
   return (project.rooms ?? [])
     .filter((r) => r.kind !== 'structural' && r.bounds)
     .map((r) => ({
