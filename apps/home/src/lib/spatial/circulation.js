@@ -78,30 +78,87 @@ function obstacleRects(project) {
   return rects
 }
 
-/** 门的通行口:开口中点 + 半宽,落在墙线上 */
+/**
+ * 门的通行口。两种 layoutMode 的 openings 形状不一样,得分开取:
+ * - **wallGraph**(扫描来的):派生的 door 只有 `pathD`(开门弧线),没有 rect ——
+ *   位置只能回到 graphOpenings 沿宿主边按 offsetIn 算。
+ * - **parametric508**(手工的):openings 带 rect/hitRect,直接取中心。
+ */
 function doorGates(project) {
-  const graph = project.wallGraph
-  if (!graph) return []
-  const vById = Object.fromEntries(graph.vertices.map((v) => [v.id, v]))
+  const disabled = new Set(project.layoutConfig?.disabledOpenings ?? [])
   const gates = []
-  for (const op of project.graphOpenings ?? []) {
-    if (op.type !== 'door' || op.hidden) continue
-    const edge = graph.edges.find((e) => e.id === op.edgeId)
-    if (!edge) continue
-    const a = vById[edge.a]
-    const b = vById[edge.b]
-    if (!a || !b) continue
-    const len = Math.hypot(b.x - a.x, b.y - a.y)
-    if (!len) continue
-    const t = ((op.offsetIn + op.spanIn / 2) * PX_PER_IN) / len
+  const graph = project.wallGraph
+  if (graph && project.graphOpenings?.length) {
+    const vById = Object.fromEntries(graph.vertices.map((v) => [v.id, v]))
+    for (const op of project.graphOpenings) {
+      if (op.type !== 'door' || op.hidden || disabled.has(op.id)) continue
+      const edge = graph.edges.find((e) => e.id === op.edgeId)
+      const a = edge && vById[edge.a]
+      const b = edge && vById[edge.b]
+      if (!a || !b) continue
+      const len = Math.hypot(b.x - a.x, b.y - a.y)
+      if (!len) continue
+      const t = ((op.offsetIn + op.spanIn / 2) * PX_PER_IN) / len
+      gates.push({
+        id: op.id,
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        spanIn: op.spanIn,
+        dir: { x: (b.x - a.x) / len, y: (b.y - a.y) / len },
+      })
+    }
+    return gates
+  }
+  for (const op of project.openings ?? []) {
+    if (op.type !== 'door' || disabled.has(op.id)) continue
+    const r = op.hitRect ?? op.rect
+    if (!r) continue
+    // 门洞是扁矩形:长边是门宽方向,短边是墙厚方向
+    const horizontal = r.w >= r.h
     gates.push({
       id: op.id,
-      x: a.x + (b.x - a.x) * t,
-      y: a.y + (b.y - a.y) * t,
-      spanIn: op.spanIn,
+      x: r.x + r.w / 2,
+      y: r.y + r.h / 2,
+      spanIn: Math.max(r.w, r.h) / PX_PER_IN,
+      dir: horizontal ? { x: 1, y: 0 } : { x: 0, y: 1 },
     })
   }
   return gates
+}
+
+/** 墙厚方向的放行半径:够打通墙缝,又不会误开旁边的墙 */
+const GATE_ACROSS_PX = 18
+
+/**
+ * 点是否在门洞内。沿墙方向按门宽、垂直方向只放墙厚那一点点 ——
+ * 用圆形半径会把门附近的**其他**墙一起开了(洗衣间北墙就这么被误开过)。
+ */
+function inGate(p, g) {
+  const dx = p.x - g.x
+  const dy = p.y - g.y
+  const along = Math.abs(dx * g.dir.x + dy * g.dir.y)
+  const across = Math.abs(-dx * g.dir.y + dy * g.dir.x)
+  return along <= (g.spanIn / 2) * PX_PER_IN && across <= GATE_ACROSS_PX
+}
+
+/**
+ * 没有 zones 时(手工的 508 参数户型就没有)拿 rooms 顶上:
+ * 每个房间的 bounds 当作矩形分区。通行区/承重墙不算房间。
+ */
+function roomsAsZones(project) {
+  return (project.rooms ?? [])
+    .filter((r) => r.kind !== 'structural' && r.bounds)
+    .map((r) => ({
+      id: r.id,
+      // 508 里有无名的过道区,列表上显示成空白很怪
+      nameZh: r.nameZh || (r.kind === 'circulation' ? '通道' : '房间'),
+      polygon: [
+        { x: r.bounds.x, y: r.bounds.y },
+        { x: r.bounds.x + r.bounds.w, y: r.bounds.y },
+        { x: r.bounds.x + r.bounds.w, y: r.bounds.y + r.bounds.h },
+        { x: r.bounds.x, y: r.bounds.y + r.bounds.h },
+      ],
+    }))
 }
 
 /**
@@ -109,7 +166,7 @@ function doorGates(project) {
  * @param {SpatialProject} project
  */
 function buildGrid(project) {
-  const zones = project.zones ?? []
+  const zones = project.zones?.length ? project.zones : roomsAsZones(project)
   const polys = zones.map((z) => z.polygon)
   const all = polys.flat()
   if (!all.length) return null
@@ -122,16 +179,12 @@ function buildGrid(project) {
   const rows = Math.ceil((maxY - minY) / GRID_PX) + 1
 
   const rects = obstacleRects(project)
-  const walls = project.wallGraph
-    ? project.wallGraph.edges
-        .map((e) => {
-          const vs = Object.fromEntries(
-            project.wallGraph.vertices.map((v) => [v.id, v]),
-          )
-          return { a: vs[e.a], b: vs[e.b] }
-        })
-        .filter((w) => w.a && w.b)
-    : []
+  // walls 两种 layoutMode 都有(hydrate 时派生),比 wallGraph.edges 更通用。
+  // 只有 kind==='wall' 是障碍:'gap' 是开口,'threshold' 是门槛(地面过渡条,
+  // 人照走不误)—— 把门槛当墙会把洗衣间这类房间整个封死。
+  const walls = (project.walls ?? [])
+    .filter((w) => w.kind === 'wall' && w.from && w.to)
+    .map((w) => ({ a: w.from, b: w.to }))
   const gates = doorGates(project)
 
   /** 0=区外/墙, 1=可站, 2=家具占据 */
@@ -141,22 +194,32 @@ function buildGrid(project) {
 
   const at = (c, r) => ({ x: minX + c * GRID_PX, y: minY + r * GRID_PX })
 
+  // 508 的 rooms 是矩形近似,彼此会重叠(厨房那块矩形盖住了整个玄关) ——
+  // 一格归属取**最小**的那个房间:小房间更具体,大房间只是它的背景。
+  const polyAreas = polys.map((poly) => Math.abs(shoelace(poly)))
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const p = at(c, r)
-      const zi = polys.findIndex((poly) => pointInPolygon(p, poly))
-      if (zi < 0) continue
-      zoneOf[r * cols + c] = zi
+      let zi = -1
+      let bestArea = Infinity
+      for (let k = 0; k < polys.length; k++) {
+        if (polyAreas[k] >= bestArea) continue
+        if (!pointInPolygon(p, polys[k])) continue
+        zi = k
+        bestArea = polyAreas[k]
+      }
+      const onGate = gates.some((g) => inGate(p, g))
+      // 门洞格可能落在所有房间矩形之外 —— 508 的房间矩形之间隔着墙厚,
+      // 门正卡在那道缝里。不放行的话洗衣间这种房间会与邻居完全隔离。
+      if (zi < 0 && !onGate) continue
+      if (zi >= 0) zoneOf[r * cols + c] = zi
 
-      // 墙上(含门口放行):门洞是墙上的缺口,人能过
-      const nearWall = walls.some(
-        (w) => distToSegment(p, w.a, w.b) < WALL_HALF_IN * PX_PER_IN,
-      )
-      if (nearWall) {
-        const inGate = gates.some(
-          (g) => Math.hypot(p.x - g.x, p.y - g.y) < (g.spanIn / 2) * PX_PER_IN,
+      if (!onGate) {
+        const nearWall = walls.some(
+          (w) => distToSegment(p, w.a, w.b) < WALL_HALF_IN * PX_PER_IN,
         )
-        if (!inGate) continue // 0 = 墙
+        if (nearWall) continue // 0 = 墙
       }
 
       const onFurniture = rects.some(
@@ -334,7 +397,7 @@ export function analyzeCirculation(project) {
     totals: { areaSqft: 0, freeSqft: 0, usedRatio: 0 },
   }
   const g = buildGrid(project)
-  if (!g) return { ...empty, reason: '没有分区数据,先从 iPhone 扫描或手动画分区' }
+  if (!g) return { ...empty, reason: '没有房间数据,先从 iPhone 扫描或手动画分区' }
   const { cols, rows, cell, zoneOf, minX, minY, zones, gates } = g
 
   const dist = clearanceField(g)
@@ -415,9 +478,11 @@ export function analyzeCirculation(project) {
     }
   }
 
-  // 走不到的区
+  // 走不进去的区。可站面积 < 6 sqft 的不报:那是柜子/设备位(508 的洗衣机柜
+  // 就塞了两台机器),人本来就不进去,报「走不进去」是误导。
   const isolatedZones = []
   zones.forEach((z, zi) => {
+    if ((zoneStats[zi]?.freeSqft ?? 0) < 6) return
     let hasFree = false
     let hasSeen = false
     for (let i = 0; i < cell.length; i++) {
@@ -477,6 +542,17 @@ export function analyzeCirculation(project) {
       usedRatio: areaSqft > 0 ? round2((areaSqft - freeSqft) / areaSqft) : 0,
     },
   }
+}
+
+/** 多边形有向面积×2 的绝对值/2(鞋带公式) */
+function shoelace(poly) {
+  let s = 0
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i]
+    const b = poly[(i + 1) % poly.length]
+    s += a.x * b.y - b.x * a.y
+  }
+  return s / 2
 }
 
 const round1 = (v) => Math.round(v * 10) / 10

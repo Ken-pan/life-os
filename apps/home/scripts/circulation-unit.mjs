@@ -10,6 +10,7 @@
  */
 import { analyzeCirculation, CLEARANCE } from '../src/lib/spatial/circulation.js'
 import { buildTidyPlan } from '../src/lib/spatial/tidy-plan.js'
+import { buildFromWallGraph } from '../src/lib/spatial/wall-graph.js'
 
 let pass = 0
 const fails = []
@@ -18,73 +19,73 @@ const ok = (n, c, d = '') => (c ? pass++ : fails.push(`${n}${d ? ` — ${d}` : '
 const PX = 36 // px/ft
 const ft = (v) => v * PX
 
-/** 12x10ft 卧室 + 8x10ft 客厅,中间隔墙带门 */
+/**
+ * 12x10ft 卧室 + 8x10ft 客厅,中间隔墙带 32in 门。
+ * 走 buildFromWallGraph 而非手搓 —— 那是运行时唯一的入口(扫描拉取、刷新恢复
+ * 都汇到它),walls/openings 由它派生;手搓 fixture 会漏掉这些派生字段,
+ * 测试就测不到真实数据的形状。
+ */
 function baseProject(overrides = {}) {
   const W = ft(20)
   const H = ft(10)
   const midX = ft(12)
-  return {
-    schemaVersion: 5,
-    meta: { id: 'test', nameZh: '测试' },
-    viewport: { width: W + 48, height: H + 48 },
-    rooms: [],
-    walls: [],
-    openings: [],
-    furniture: [],
-    furnitureInventory: [],
-    storageZones: [],
-    layoutMode: 'wallGraph',
-    wallGraph: {
-      pxPerFt: PX,
-      margin: { x: 24, y: 24 },
-      vertices: [
-        { id: 'v1', x: 24, y: 24 },
-        { id: 'v2', x: 24 + W, y: 24 },
-        { id: 'v3', x: 24 + W, y: 24 + H },
-        { id: 'v4', x: 24, y: 24 + H },
-        { id: 'v5', x: 24 + midX, y: 24 },
-        { id: 'v6', x: 24 + midX, y: 24 + H },
-      ],
-      edges: [
-        { id: 'e1', a: 'v1', b: 'v5' },
-        { id: 'e1b', a: 'v5', b: 'v2' },
-        { id: 'e2', a: 'v2', b: 'v3' },
-        { id: 'e3', a: 'v3', b: 'v6' },
-        { id: 'e3b', a: 'v6', b: 'v4' },
-        { id: 'e4', a: 'v4', b: 'v1' },
-        { id: 'e5', a: 'v5', b: 'v6' }, // 隔墙
+  const graph = {
+    pxPerFt: PX,
+    margin: { x: 24, y: 24 },
+    vertices: [
+      { id: 'v1', x: 24, y: 24 },
+      { id: 'v2', x: 24 + W, y: 24 },
+      { id: 'v3', x: 24 + W, y: 24 + H },
+      { id: 'v4', x: 24, y: 24 + H },
+      { id: 'v5', x: 24 + midX, y: 24 },
+      { id: 'v6', x: 24 + midX, y: 24 + H },
+    ],
+    edges: [
+      { id: 'e1', a: 'v1', b: 'v5' },
+      { id: 'e1b', a: 'v5', b: 'v2' },
+      { id: 'e2', a: 'v2', b: 'v3' },
+      { id: 'e3', a: 'v3', b: 'v6' },
+      { id: 'e3b', a: 'v6', b: 'v4' },
+      { id: 'e4', a: 'v4', b: 'v1' },
+      { id: 'e5', a: 'v5', b: 'v6' }, // 隔墙
+    ],
+  }
+  const zones = [
+    {
+      id: 'z-1',
+      nameZh: '卧室',
+      polygon: [
+        { x: 24, y: 24 },
+        { x: 24 + midX, y: 24 },
+        { x: 24 + midX, y: 24 + H },
+        { x: 24, y: 24 + H },
       ],
     },
-    // 隔墙中段一道 32in 门
-    graphOpenings: [
-      { id: 'op1', edgeId: 'e5', offsetIn: 54, spanIn: 32, type: 'door', style: 'swing' },
-    ],
-    zones: [
-      {
-        id: 'z-1',
-        nameZh: '卧室',
-        polygon: [
-          { x: 24, y: 24 },
-          { x: 24 + midX, y: 24 },
-          { x: 24 + midX, y: 24 + H },
-          { x: 24, y: 24 + H },
-        ],
-      },
-      {
-        id: 'z-2',
-        nameZh: '客厅',
-        polygon: [
-          { x: 24 + midX, y: 24 },
-          { x: 24 + W, y: 24 },
-          { x: 24 + W, y: 24 + H },
-          { x: 24 + midX, y: 24 + H },
-        ],
-      },
-    ],
-    placements: [],
-    fixtures: [],
-    viewpoints: [],
-    ...overrides,
+    {
+      id: 'z-2',
+      nameZh: '客厅',
+      polygon: [
+        { x: 24 + midX, y: 24 },
+        { x: 24 + W, y: 24 },
+        { x: 24 + W, y: 24 + H },
+        { x: 24 + midX, y: 24 + H },
+      ],
+    },
+  ]
+  const { placements, fixtures, viewpoints, storageZones, ...rest } = overrides
+  return {
+    ...buildFromWallGraph(graph, {
+      graphOpenings: [
+        { id: 'op1', edgeId: 'e5', offsetIn: 54, spanIn: 32, type: 'door', style: 'swing' },
+      ],
+      zones,
+      placements: placements ?? [],
+      fixtures: fixtures ?? [],
+      viewpoints: viewpoints ?? [],
+      storageZones: storageZones ?? [],
+      meta: { id: 'test', nameZh: '测试' },
+    }),
+    ...rest,
   }
 }
 
@@ -154,6 +155,35 @@ function baseProject(overrides = {}) {
   ok('衣柜堵门被抓到', r.blockedDoors.length === 1, JSON.stringify(r.blockedDoors))
 }
 
+// ---- 重叠矩形:归属取最小的房间(508 的 rooms 是矩形近似,会互相盖) ----
+{
+  const p = baseProject({ zones: [] })
+  // 手工塞一个盖住整个卧室的大矩形「客厅」——508 的厨房矩形就是这么盖住玄关的
+  p.rooms = [
+    ...p.rooms,
+    { id: 'big', nameZh: '大区', bounds: { x: 24, y: 24, w: ft(20), h: ft(10) } },
+  ]
+  const r = analyzeCirculation(p)
+  const bed = r.zoneStats.find((z) => z.nameZh === '卧室')
+  ok('小房间不被大矩形吞掉', bed && bed.areaSqft > 90, `got=${bed?.areaSqft}`)
+}
+
+// ---- 塞满设备的小柜子不报「走不进去」 ----
+{
+  // 3ft x 3ft 的柜子,被设备占满 → 可站面积 <6sqft → 是设备位,不是活动空间
+  const p = baseProject({
+    fixtures: [
+      { id: 'f1', kind: 'appliance', label: '洗衣机', bounds: { x: 24 + ft(12), y: 24, w: ft(8), h: ft(9.4) }, rotation: 0 },
+    ],
+  })
+  const r = analyzeCirculation(p)
+  ok(
+    '设备位不报走不进去',
+    !r.isolatedZones.some((z) => z.nameZh === '客厅'),
+    JSON.stringify(r.isolatedZones),
+  )
+}
+
 // ---- 地毯不算障碍 ----
 {
   const p = baseProject({
@@ -166,10 +196,17 @@ function baseProject(overrides = {}) {
   ok('地毯不占通行面积', bed.usedRatio === 0, `got=${bed.usedRatio}`)
 }
 
-// ---- 无分区 ----
+// ---- 无 zones 时回退到 rooms(手工的 508 参数户型就没 zones) ----
 {
   const r = analyzeCirculation(baseProject({ zones: [] }))
-  ok('无分区时给出理由', !r.ok && /分区/.test(r.reason ?? ''), r.reason ?? '')
+  ok('无 zones 时用 rooms 顶上', r.ok && r.zoneStats.length === 2, r.reason ?? '')
+  ok('回退后房间名还在', r.zoneStats.some((z) => z.nameZh === '卧室'))
+}
+
+// ---- zones/rooms 都没有 ----
+{
+  const r = analyzeCirculation(baseProject({ zones: [], rooms: [] }))
+  ok('全无房间数据时给出理由', !r.ok && /房间/.test(r.reason ?? ''), r.reason ?? '')
 }
 
 // ---- 整理计划:VLM 状态驱动 ----
@@ -267,6 +304,20 @@ function baseProject(overrides = {}) {
   ok('多件储物区生成梳理任务', Boolean(t))
   ok('储物任务列出物品', t.items.length === 6, `got=${t?.items.length}`)
   ok('储物任务耗时随件数', t.estMinutes === 29, `got=${t?.estMinutes}`)
+}
+
+// ---- 真实的 508 参数户型:手工规划的好户型,不该报出任何动线问题 ----
+{
+  const { SAMPLE_508 } = await import('../src/lib/spatial/sample-508.js')
+  const r = analyzeCirculation(SAMPLE_508)
+  ok('508 能分析(无 zones,靠 rooms)', r.ok && r.zoneStats.length >= 9, `zones=${r.zoneStats.length}`)
+  // 房间矩形之间隔着墙厚,门正卡在那道缝里 —— 门洞不放行的话洗衣间会被隔离
+  ok('508 无孤岛区', r.isolatedZones.length === 0, JSON.stringify(r.isolatedZones))
+  ok('508 无堵门', r.blockedDoors.length === 0, JSON.stringify(r.blockedDoors))
+  // 厨房的矩形盖住整个玄关,归属取小房间才还得回来(否则玄关只剩 0.8 sqft)
+  const entry = r.zoneStats.find((z) => z.nameZh === '玄关')
+  ok('玄关面积没被厨房吞掉', entry && entry.areaSqft > 12, `got=${entry?.areaSqft}`)
+  ok('508 总面积合理', Math.abs(r.totals.areaSqft - 640) < 40, `got=${r.totals.areaSqft}`)
 }
 
 // ---- 汇报 ----

@@ -115,7 +115,28 @@ export function buildTidyPlan(project, circ) {
     })
   }
 
-  // 2) 动线瓶颈 —— 通道窄到侧身才能过
+  // 2) 走不进去的区 —— 和堵门一样是通行问题,得先解决
+  for (const z of circ?.isolatedZones ?? []) {
+    tasks.push({
+      id: `isolated-${z.zoneId}`,
+      kind: 'blockedDoor',
+      title: `打通${z.nameZh}`,
+      priority: P.blockedDoor,
+      estMinutes: 20,
+      zoneId: z.zoneId,
+      zoneName: z.nameZh,
+      reason: '从主通道走不进这个区域 —— 多半是家具把入口整个堵死了',
+      steps: [
+        '在平面图上看这个区域的入口在哪',
+        '把堵在入口的家具挪开或转向',
+        '确认能从客厅/走廊一路走进去',
+      ],
+      items: [],
+      photoRef: null,
+    })
+  }
+
+  // 3) 动线瓶颈 —— 通道窄到侧身才能过
   for (const b of circ?.bottlenecks ?? []) {
     if (b.widthIn >= 30) continue
     const tight = b.widthIn < 24
