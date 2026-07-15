@@ -26,6 +26,9 @@ final class ObjectShotCapture {
         var score: Double
         var photoFileURL: URL
         var colorHex: String?
+        /// 清晰度(裁剪图灰度拉普拉斯方差;越大越清楚)。
+        /// 角速度门控挡不住「手稳但对焦没跟上」的糊图,这个挡。
+        var sharpness: Double = 0
         /// 拍摄方位:物体中心 → 相机的俯视角(度,0..360)。
         /// 多视角证据的核心 —— 一张照片看不出 L 形沙发的另一侧。
         var azimuthDeg: Double
@@ -43,6 +46,9 @@ final class ObjectShotCapture {
     static let maxAngularVelocity = 0.7
     /// 环境光低于它(lumen)不抓拍:暗光下曝光时间长(糊)且白平衡漂(偏色)
     static let minAmbientIntensity: CGFloat = 250
+    /// 清晰度下限(96px 灰度拉普拉斯方差):已有照片时,低于它的新图不许顶位;
+    /// 桶里还空着则糊图也先留(有总比没有强,之后有清楚的自然顶掉)
+    static let minSharpness = 15.0
 
     /// 只在主线程读写:objectId → (方位桶 → 该桶最佳一张)
     private(set) var shots: [UUID: [Int: Shot]] = [:]
@@ -159,8 +165,13 @@ final class ObjectShotCapture {
             DispatchQueue.main.async {
                 self.encodeBusy = false
                 guard let out else { return }
-                // 编码期间可能已有更好的一张进来(理论上 busy 挡住了;稳妥再比一次)
-                if let existing = self.shots[objectId]?[bin], existing.score > score { return }
+                if let existing = self.shots[objectId]?[bin] {
+                    // 编码期间可能已有更好的一张进来(理论上 busy 挡住了;稳妥再比一次)
+                    if existing.score > score { return }
+                    // 取景分再高,糊图也不许顶掉已有的清楚图(对焦没跟上时常见)
+                    if out.sharpness < Self.minSharpness,
+                       existing.sharpness >= out.sharpness { return }
+                }
                 self.shots[objectId, default: [:]][bin] = Shot(
                     objectId: objectId,
                     category: category,
@@ -168,6 +179,7 @@ final class ObjectShotCapture {
                     score: score,
                     photoFileURL: out.url,
                     colorHex: out.colorHex,
+                    sharpness: out.sharpness,
                     azimuthDeg: (az * 10).rounded() / 10,
                     bin: bin
                 )
@@ -274,7 +286,7 @@ final class ObjectShotCapture {
         imageHeight: CGFloat,
         objectId: UUID,
         bin: Int
-    ) -> (url: URL, colorHex: String?)? {
+    ) -> (url: URL, colorHex: String?, sharpness: Double)? {
         let ciCrop = CGRect(
             x: crop.origin.x,
             y: imageHeight - crop.origin.y - crop.height,
@@ -283,6 +295,7 @@ final class ObjectShotCapture {
         )
         var image = CIImage(cvPixelBuffer: pixelBuffer).cropped(to: ciCrop)
         let colorHex = dominantColorHex(of: image)
+        let sharpness = laplacianVariance(of: image)
 
         // 竖持方向 + 限长边
         image = image.oriented(.right)
@@ -303,10 +316,53 @@ final class ObjectShotCapture {
             .appendingPathComponent("obj-\(objectId.uuidString.lowercased())-b\(bin).jpg")
         do {
             try data.write(to: url, options: .atomic)
-            return (url, colorHex)
+            return (url, colorHex, sharpness)
         } catch {
             return nil
         }
+    }
+
+    /// 清晰度:灰度拉普拉斯方差(长边缩到 96px 再算,糊图纹理被抹平 → 方差小)。
+    /// 后台队列跑,9k 像素级别,微秒–毫秒级。
+    private func laplacianVariance(of image: CIImage) -> Double {
+        guard image.extent.width > 8, image.extent.height > 8 else { return 0 }
+        let target = 96.0
+        let scale = target / Double(max(image.extent.width, image.extent.height))
+        let small = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let w = max(8, Int(small.extent.width.rounded(.down)))
+        let h = max(8, Int(small.extent.height.rounded(.down)))
+        var pixels = [UInt8](repeating: 0, count: w * h * 4)
+        ciContext.render(
+            small,
+            toBitmap: &pixels,
+            rowBytes: w * 4,
+            bounds: CGRect(
+                x: small.extent.origin.x, y: small.extent.origin.y,
+                width: CGFloat(w), height: CGFloat(h)
+            ),
+            format: .RGBA8,
+            colorSpace: CGColorSpace(name: CGColorSpace.sRGB)
+        )
+        var luma = [Double](repeating: 0, count: w * h)
+        for i in 0..<(w * h) {
+            let o = i * 4
+            luma[i] = 0.299 * Double(pixels[o]) + 0.587 * Double(pixels[o + 1]) + 0.114 * Double(pixels[o + 2])
+        }
+        var sum = 0.0
+        var sum2 = 0.0
+        var n = 0
+        for y in 1..<(h - 1) {
+            for x in 1..<(w - 1) {
+                let i = y * w + x
+                let lap = 4 * luma[i] - luma[i - 1] - luma[i + 1] - luma[i - w] - luma[i + w]
+                sum += lap
+                sum2 += lap * lap
+                n += 1
+            }
+        }
+        guard n > 0 else { return 0 }
+        let mean = sum / Double(n)
+        return sum2 / Double(n) - mean * mean
     }
 
     /// 主色:只采样**中央 72% 区域**(裁剪框带 12% 外扩,中央基本是物体本体),

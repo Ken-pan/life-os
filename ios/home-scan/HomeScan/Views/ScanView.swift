@@ -52,10 +52,11 @@ struct ScanView: View {
 
                 Spacer()
 
-                // 自动拍照的站位引导(这间迟迟没拍上时才出现)
-                if !betweenRooms, let hint = model.scanController.autoHint {
-                    Label(hint, systemImage: "camera.viewfinder")
+                // 实时引导:跟踪异常(橙色) > 家具补拍走位 > 机位站位
+                if !betweenRooms, let hint = model.scanController.hudHint {
+                    Label(hint.text, systemImage: hint.kind.icon)
                         .font(.footnote)
+                        .foregroundStyle(hint.kind == .tracking ? Color.orange : Color.primary)
                         .padding(8)
                         .background(.ultraThinMaterial, in: Capsule())
                         .padding(.bottom, 4)

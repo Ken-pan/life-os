@@ -28,7 +28,8 @@ open HomeScan.xcodeproj    # 或 xcodebuild -scheme HomeScan -destination 'platf
 | `HomeScan/Services/ScanSessionController.swift` | 共享 ARSession + 逐房 RoomCaptureSession + StructureBuilder 合并 |
 | `HomeScan/Services/ViewpointCapture.swift` | 扫描中拍照：ARFrame 位姿 + JPEG（≤2048px） |
 | `HomeScan/Services/AutoViewpointCapture.swift` | 机位自动拍照：视角稳/看得全/够新颖就自己拍（每间 ≤4 张），拍不上给站位引导 —— 扫描无脑化 |
-| `HomeScan/Services/ObjectShotCapture.swift` | 家具自动抓拍：2Hz 给每件家具的当前视角打分（全身入画/占幅/居中/不甩动），最佳帧裁图 + k-means 提主色 |
+| `HomeScan/Services/ObjectShotCapture.swift` | 家具自动抓拍：2Hz 给每件家具的当前视角打分（全身入画/占幅/居中/不甩动），按 90° 方位桶每桶留最佳帧（裁图 + k-means 主色 + 拉普拉斯清晰度门控——糊图不许顶掉清楚图） |
+| `HomeScan/Services/EvidenceGuide.swift` | 证据完备度（纯几何，单测全覆盖）：大件家具要 ≥3 个方位的照片、中件 2、小件 1；实时墙体剔掉「靠墙拍不到」的方位（站位半径从理想值往里退着找）；产出具体走位引导与扫后汇总警告 |
 | `HomeScan/Convert/` | CapturedStructure → HomeOS plan-px（契约见 `apps/home/supabase/README.md`）；iOS 17 样式属性 → 细分 kind/attrs |
 | `HomeScan/Views/` | 登录 / 主页 / 扫描 / 预览 / 上传 |
 | `HomeScan/Mock/` | 模拟器 mock 扫描（fixture 走全链路） |
@@ -58,3 +59,11 @@ HomeOS 网页 设置 → 云端扫描 → 拉取(照片落 IndexedDB,重铸 phot
 5. 家具自动抓拍：扫描 HUD 的「N 件家具照」应随扫描增长；上传后网页端
    选中家具能看到实拍缩略图、主色点、样式（L形沙发/茶几/转椅…）与实测高；
    本地 VLM 在线时「识别外观」能补出材质/颜色人话
+6. 实时 HUD 引导（优先级：跟踪异常 > 补拍走位 > 机位站位）：
+   - 对着白墙快速甩手机，应出现橙色跟踪提示（「移动太快」/「特征太少」），
+     恢复平稳后提示消失
+   - 大件家具（床/沙发）只从一侧扫，认出约 15 秒后应出现
+     「「床」还缺一个侧面：朝右前方走约 X 米…」，距离随走动实时刷新，
+     绕过去拍到后提示消失或换目标；家具贴墙的那一侧**不应**被引导
+   - 扫完仍有家具证据不足时，预览页「提醒」区应有汇总
+     （「N 件家具照片证据不足：床 1/3 个方位…」），该警告随 scanWarnings 上传

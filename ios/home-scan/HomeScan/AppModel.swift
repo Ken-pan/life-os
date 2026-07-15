@@ -91,6 +91,10 @@ final class AppModel {
     /// FlatScene → HomeOSProject(mock 与真扫共用的汇合点)
     @MainActor
     func applyScene(_ scene: FlatScene) {
+        // 证据完备度把关:哪些家具的多视角照片没凑够,进预览页「提醒」区
+        // (跟着 scanWarnings 一起上传 —— 网页端也能看到这次扫描的证据短板)
+        var scene = scene
+        scene.warnings += EvidenceGuide.sceneWarnings(scene)
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd"
         let projection = PlanProjector.projectScene(
