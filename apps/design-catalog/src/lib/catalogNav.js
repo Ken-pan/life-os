@@ -25,6 +25,12 @@ export const CATALOG_SECTIONS = [
     testId: 'showcase-utilities',
   },
   {
+    id: 'modal',
+    label: 'Modal',
+    group: 'theme',
+    testId: 'showcase-modal',
+  },
+  {
     id: 'settings',
     label: 'Settings',
     group: 'components',
@@ -62,6 +68,12 @@ export const CATALOG_SECTIONS = [
     testId: 'showcase-cards',
   },
   {
+    id: 'explain-panel',
+    label: 'Explain panel',
+    group: 'components',
+    testId: 'showcase-explain-panel',
+  },
+  {
     id: 'command-palette',
     label: 'Command palette',
     group: 'components',
@@ -83,11 +95,13 @@ export const MATRIX_SHOWCASES = CATALOG_SECTIONS.filter((s) =>
     'buttons',
     'segments',
     'utilities',
+    'modal',
     'settings',
     'navigation',
     'feedback',
     'toast',
     'cards',
+    'explain-panel',
     'command-palette',
   ].includes(s.id),
 )

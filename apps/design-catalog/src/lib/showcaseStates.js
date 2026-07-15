@@ -17,10 +17,18 @@ export const SHOWCASE_STATE_REGISTRY = {
     { id: 'critical', label: 'Critical' },
     { id: 'portrait-gate', label: 'Portrait gate' },
   ],
+  modal: [
+    { id: 'default', label: 'Default' },
+    { id: 'destructive', label: 'Destructive' },
+  ],
   settings: [
     { id: 'default', label: 'Default' },
     { id: 'disabled', label: 'Disabled' },
     { id: 'destructive', label: 'Destructive' },
+  ],
+  'explain-panel': [
+    { id: 'collapsed', label: 'Collapsed' },
+    { id: 'expanded', label: 'Expanded' },
   ],
   navigation: [
     { id: 'default', label: 'BackButton' },
@@ -69,7 +77,9 @@ const MATRIX_IFRAME_HEIGHTS = {
   buttons: 168,
   segments: 196,
   utilities: { default: 168, 'portrait-gate': 220 },
+  modal: 320,
   settings: { default: 268, disabled: 228, destructive: 248 },
+  'explain-panel': { collapsed: 168, expanded: 260 },
   navigation: { default: 132, 'sheet-open': 300 },
   feedback: 196,
   toast: 176,

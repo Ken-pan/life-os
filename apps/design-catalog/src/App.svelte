@@ -11,7 +11,9 @@
   import ButtonsShowcase from './showcases/ButtonsShowcase.svelte'
   import SegmentsShowcase from './showcases/SegmentsShowcase.svelte'
   import UtilitiesShowcase from './showcases/UtilitiesShowcase.svelte'
+  import ModalShowcase from './showcases/ModalShowcase.svelte'
   import SettingsShowcase from './showcases/SettingsShowcase.svelte'
+  import ExplainPanelShowcase from './showcases/ExplainPanelShowcase.svelte'
   import BrandShowcase from './showcases/BrandShowcase.svelte'
   import NavigationShowcase from './showcases/NavigationShowcase.svelte'
   import IconShowcase from './showcases/IconShowcase.svelte'
@@ -26,6 +28,7 @@
     buttons: ButtonsShowcase,
     segments: SegmentsShowcase,
     utilities: UtilitiesShowcase,
+    modal: ModalShowcase,
     settings: SettingsShowcase,
     brand: BrandShowcase,
     navigation: NavigationShowcase,
@@ -33,6 +36,7 @@
     feedback: FeedbackShowcase,
     toast: ToastShowcase,
     cards: CardsShowcase,
+    'explain-panel': ExplainPanelShowcase,
     'command-palette': CommandPaletteShowcase,
     'app-shell': AppShellShowcase,
   }

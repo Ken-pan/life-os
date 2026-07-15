@@ -114,6 +114,25 @@
   box-shadow: none;
 }
 
+/* Inline modal fixture — .modal-bg 是 position: fixed，收容进预览框才能截图 */
+.catalog-doc-preview--modal {
+  position: relative;
+  min-height: 260px;
+  overflow: hidden;
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg, var(--surface-1));
+}
+
+.catalog-doc-preview--modal .modal-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  padding: var(--space-4, 16px);
+  /* 预览框内不做背景模糊：blur 在不同 GPU 上像素级不稳，会让基线抖动 */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* Inline mobile sheet fixture for catalog screenshots */
 .catalog-doc-preview--sheet {
   position: relative;

@@ -1,33 +1,32 @@
-export const APPS = ['planner', 'fitness', 'finance', 'music'] as const
-export const MODES = ['light', 'dark'] as const
+import {
+  APPS as NAV_APPS,
+  MATRIX_SHOWCASES as NAV_MATRIX_SECTIONS,
+  MODES as NAV_MODES,
+} from '../../apps/design-catalog/src/lib/catalogNav.js'
+import { getShowcaseStates } from '../../apps/design-catalog/src/lib/showcaseStates.js'
 
-export const MATRIX_SHOWCASES = [
-  'buttons',
-  'segments',
-  'utilities',
-  'settings',
-  'navigation',
-  'feedback',
-  'toast',
-  'cards',
-  'command-palette',
-] as const
+/**
+ * 单一真源（2026-07-14）：app / mode / showcase 列表与默认状态全部从 catalog 自身的
+ * 注册表派生，测试侧不再手抄。以前这三份列表同时硬编码在 catalogNav.js、本文件、
+ * design-catalog.spec.ts —— 加一个 showcase 要改 5~6 处，且漏改不会报错、只是静默少跑。
+ * 现在加 showcase 只需改 catalogNav.js + showcaseStates.js，测试自动跟上。
+ */
+export const APPS = NAV_APPS
+export const MODES = NAV_MODES
 
-/** Default matrix state per showcase — matches showcaseStates.js registry. */
-export const SNAPSHOT_DEFAULT_STATE: Record<
-  (typeof MATRIX_SHOWCASES)[number],
-  string
-> = {
-  buttons: 'default',
-  segments: 'default',
-  utilities: 'info',
-  settings: 'default',
-  navigation: 'default',
-  feedback: 'sync-error',
-  toast: 'success',
-  cards: 'surface',
-  'command-palette': 'default',
-}
+/** catalogNav 的 MATRIX_SHOWCASES 是 section 对象数组；测试只要 id。 */
+export const MATRIX_SHOWCASES: string[] = NAV_MATRIX_SECTIONS.map(
+  (s: { id: string }) => s.id,
+)
+
+/**
+ * 每个 showcase 的默认状态 = 其状态注册表的第一项（2026-07-14 核对：9/9 与原手维护表吻合，
+ * 故基线文件名不变）。改注册表顺序会改基线名 —— 届时快照缺失会直接报错，不会静默漂移。
+ */
+export const SNAPSHOT_DEFAULT_STATE: Record<string, string> =
+  Object.fromEntries(
+    MATRIX_SHOWCASES.map((id) => [id, getShowcaseStates(id)[0].id]),
+  )
 
 export function catalogUrl(
   showcase: string,

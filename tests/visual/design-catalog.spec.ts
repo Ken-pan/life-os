@@ -1,20 +1,8 @@
 import { expect, test } from '@playwright/test'
+import { APPS, MATRIX_SHOWCASES, MODES } from './design-catalog.helpers.js'
 
-const APPS = ['planner', 'fitness', 'finance', 'music'] as const
-const MODES = ['light', 'dark'] as const
-
-const MATRIX_SHOWCASES = [
-  'buttons',
-  'segments',
-  'utilities',
-  'settings',
-  'navigation',
-  'feedback',
-  'toast',
-  'cards',
-  'command-palette',
-] as const
-
+// APPS / MODES / MATRIX_SHOWCASES 从 helpers 来（helpers 再从 catalog 自身注册表派生）。
+// 本文件的 catalogUrl 与 helpers 的不同：smoke 走非 embed 模式且带 viewport 参数，故保留。
 function catalogUrl(
   showcase: string,
   app: string,
