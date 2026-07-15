@@ -155,6 +155,34 @@ if (existsSync(swiftPayloadPath)) {
   console.log('(跳过 Swift 跨端复验:先跑 iOS 单测生成 /tmp/homescan-mock-payload.json)')
 }
 
+// ---- 拉取结果文案(设置页与 /plan 新扫描横幅共用) ----
+{
+  const { describeFurniturePull } = await import('../src/lib/cloud-scan-report.js')
+  const res = describeFurniturePull({
+    report: {
+      mapped: 24,
+      refined: 17,
+      skipped: 1,
+      anchored: 0,
+      conflicts: [{ label: '柜', side: 'up', cm: 12 }],
+      registration: { status: 'ok', medianCm: 2.9, p95Cm: 8, matchedWalls: 27 },
+    },
+    replaced: [{ label: '马桶' }],
+    identity: { unchanged: 20, moved: [{ label: '椅', movedFt: 3 }], added: 6, removed: ['柜'], possiblySame: 0 },
+    photos: { failed: 2 },
+  })
+  ok(
+    '文案含配准/身份/微调',
+    res.main.includes('墙体配准 ✓') && res.main.includes('20 件原位') && res.main.includes('17 件按实测墙距微调'),
+    res.main,
+  )
+  ok('警告含冲突与照片失败', res.warns.length === 2, JSON.stringify(res.warns))
+  const fallback = describeFurniturePull({
+    report: { mapped: 5, registration: { status: 'needs_rescan' }, anchored: 3 },
+  })
+  ok('配准失败时文案说清粗对齐', fallback.main.includes('配准未过门') && fallback.main.includes('3 件按实测墙距锚定'), fallback.main)
+}
+
 // ---- 汇报 ----
 if (fails.length) {
   console.error(`FAIL ${fails.length} (pass ${pass})`)

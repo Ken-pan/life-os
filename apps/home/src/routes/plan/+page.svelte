@@ -71,6 +71,7 @@
   import PlanGraphOpeningSelectionBar from '$lib/components/PlanGraphOpeningSelectionBar.svelte'
   import PlanZoneSelectionBar from '$lib/components/PlanZoneSelectionBar.svelte'
   import PlanPlacementSelectionBar from '$lib/components/PlanPlacementSelectionBar.svelte'
+  import NewScanBanner from '$lib/components/NewScanBanner.svelte'
   import PlanViewpointSelectionBar from '$lib/components/PlanViewpointSelectionBar.svelte'
   import PlanNorthCalibrator from '$lib/components/PlanNorthCalibrator.svelte'
   import { headingFromPoint } from '$lib/spatial/viewpoints.js'
@@ -1269,6 +1270,8 @@
         </div>
       </div>
     {/if}
+
+    <NewScanBanner />
   </header>
 
   <PlanShortcutsHelp

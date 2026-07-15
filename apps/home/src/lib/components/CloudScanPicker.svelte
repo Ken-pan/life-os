@@ -4,6 +4,7 @@
   // 「摆家具」把实测家具映射进现有户型(墙体不动);「整包替换」才动户型,慎用。
   // 三种模式都可在会话内一键还原。
   import { listScans, pullScan } from '$lib/cloud-scan.js'
+  import { describeFurniturePull, SEEN_SCAN_KEY } from '$lib/cloud-scan-report.js'
   import {
     applyCloudScan,
     canUndoCloudScan,
@@ -80,33 +81,14 @@
       )
       applyCloudScan(project)
       undoAvailable = canUndoCloudScan()
-      if (photos.failed > 0) {
-        toast(`${photos.failed} 张照片下载失败,对应机位保留为空视角`, 'error')
-      }
+      // 处理过就别再在 /plan 弹「新扫描」横幅了
+      localStorage.setItem(SEEN_SCAN_KEY, scan.id)
       if (mode === 'furniture' && report) {
-        const reg = report.registration
-        const parts = [`摆了 ${report.mapped} 件`]
-        if (reg?.status === 'ok') {
-          parts.push(`墙体配准 ✓(残差中位 ${reg.medianCm}cm)`)
-          if (report.refined) parts.push(`${report.refined} 件按实测墙距微调`)
-        } else if (reg) {
-          parts.push('配准未过门,按分区粗对齐')
-        }
-        if (report.anchored) parts.push(`${report.anchored} 件按实测墙距锚定`)
-        if (identity && (identity.unchanged || identity.moved.length)) {
-          const idParts = [`${identity.unchanged} 件原位`]
-          if (identity.moved.length) {
-            idParts.push(`${identity.moved.length} 件挪过(${identity.moved.map((m) => `${m.label} ${m.movedFt}ft`).join('、')})`)
-          }
-          parts.push(idParts.join('、'))
-        }
-        if (identity?.removed?.length) parts.push(`${identity.removed.length} 件上次有这次没扫到`)
-        if (replaced.length) parts.push(`顶掉 ${replaced.length} 件手录的`)
-        if (report.skipped) parts.push(`跳过 ${report.skipped} 件`)
-        if (report.conflicts?.length) {
-          toast(`${report.conflicts.length} 件墙距与扫描不一致(可能被挪过),未自动吸附`, 'error')
-        }
-        toast(parts.join(' · '))
+        const { main, warns } = describeFurniturePull({ report, replaced, identity, photos })
+        for (const w of warns) toast(w, 'error')
+        toast(main)
+      } else if (photos.failed > 0) {
+        toast(`${photos.failed} 张照片下载失败,对应机位保留为空视角`, 'error')
       }
     } catch (err) {
       error = err instanceof Error ? err.message : String(err)
