@@ -1,6 +1,12 @@
 [build]
   command = "npm run build -w portal"
-  publish = "build"
+  # No `publish` here on purpose. Unlike the other apps (adapter-static), portal
+  # uses adapter-netlify, which parses this file itself and resolves `publish`
+  # relative to apps/portal — while Netlify resolves it from the repo root. No
+  # single value satisfies both: "build" makes Netlify look in /opt/build/repo/build,
+  # and "apps/portal/build" makes the adapter emit apps/portal/apps/portal/build.
+  # Omitting it makes the adapter default to apps/portal/build and leaves Netlify
+  # on the UI publish directory, which is set to apps/portal/build.
   ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/portal packages/contracts packages/platform-web packages/sync packages/theme"
 
 [build.environment]
