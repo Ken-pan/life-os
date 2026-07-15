@@ -658,8 +658,11 @@ export const zhCN: MessageTree = {
     collapseInsights: '收起深入分析',
     expandInsights: '展开深入分析（趋势 / 分类 / 历史对比）',
     trendTitle: '月度花销 vs 收入',
+    trendTitleDaily: '本月每日花销',
     trendNote:
       '蓝柱为当月真实花销，绿线为到账收入。柱高于线的月份是「净流出」月。',
+    trendNoteDaily:
+      '每根柱子是当天的真实花销（已排除内部转账、信用卡还款与取现）。绿色向下的柱子表示当天退款多于消费。没有柱子的日子代表当天没有花销。',
     categoriesTitle: '花在什么上（{range}）',
     noSpendingInRange: '该时间段没有花销记录。',
     categoryMeta: '{pct}% · {count} 笔',
@@ -2274,8 +2277,11 @@ export const enUS: MessageTree = {
     collapseInsights: 'Hide deep dive',
     expandInsights: 'Show trends, categories & history',
     trendTitle: 'Monthly spending vs income',
+    trendTitleDaily: 'Spending per day this month',
     trendNote:
       'Green bars = spending, green line = income. Bars above the line are net outflow months.',
+    trendNoteDaily:
+      'Each bar is that day’s real spending (internal transfers, card payments and cash withdrawals excluded). A green bar below the line means refunds outweighed purchases that day. No bar means nothing was spent.',
     categoriesTitle: 'Spending by category ({range})',
     noSpendingInRange: 'No spending in this period.',
     categoryMeta: '{pct}% · {count} txns',

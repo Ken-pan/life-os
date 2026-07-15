@@ -162,6 +162,8 @@ export function computeStatistics(txns: Txn[]): TxnStatistics {
 }
 
 export interface MonthPoint {
+  /** Bucket label. A month ("2026-07") from monthlySeries, a day ("2026-07-09")
+   *  from dailySeries — the chart only uses it as an x-axis key. */
   month: string;
   income: number;
   spending: number;
@@ -170,6 +172,48 @@ export interface MonthPoint {
 }
 
 /** 月度收入/花销/净额时间序列（按月份升序）。 */
+/**
+ * 按天聚合 [from, to]（含端点，YYYY-MM-DD）。
+ *
+ * 「本月」用月粒度只会得到一个点——一根柱子画不出趋势，也看不出钱花在哪几天。
+ *
+ * 没有交易的日子补 0 而不是跳过：图表按索引等距排 x 轴，缺日会把 7-01 和 7-09
+ * 画成相邻两点，让间隔失真、看起来像天天在花钱。
+ */
+export function dailySeries(
+  txns: Txn[],
+  opts: { from: string; to: string },
+): MonthPoint[] {
+  const map = new Map<string, MonthPoint>();
+  for (
+    let d = new Date(`${opts.from}T12:00:00`);
+    d.toISOString().slice(0, 10) <= opts.to;
+    d.setDate(d.getDate() + 1)
+  ) {
+    const day = d.toISOString().slice(0, 10);
+    map.set(day, { month: day, income: 0, spending: 0, net: 0, count: 0 });
+  }
+
+  for (const t of txns) {
+    if (t.date < opts.from || t.date > opts.to) continue;
+    const p = map.get(t.date);
+    if (!p) continue;
+    if (countsAsSpending(t)) {
+      p.spending += spendingOf(t);
+      p.count += 1;
+    }
+    p.income += incomeOf(t);
+  }
+
+  const out = [...map.values()].sort((a, b) => a.month.localeCompare(b.month));
+  for (const p of out) {
+    p.income = round2(p.income);
+    p.spending = round2(p.spending);
+    p.net = round2(p.income - p.spending);
+  }
+  return out;
+}
+
 export function monthlySeries(txns: Txn[]): MonthPoint[] {
   const map = new Map<string, MonthPoint>();
   for (const t of txns) {

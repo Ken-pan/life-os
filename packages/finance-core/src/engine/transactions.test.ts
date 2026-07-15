@@ -6,6 +6,7 @@ import {
   computeRecurring,
   computeStatistics,
   monthlySeries,
+  dailySeries,
   categoryBreakdown,
   topMerchants,
   spendingSummary,
@@ -150,6 +151,59 @@ describe('商户与汇总', () => {
     expect(s.avgMonthlySpending).toBeGreaterThan(0)
     expect(s.monthsCounted).toBeGreaterThan(0)
     expect(s.monthsCounted).toBeLessThanOrEqual(12)
+  })
+})
+
+describe('dailySeries', () => {
+  const days: Txn[] = [
+    {
+      id: 'd1', date: '2026-07-01', month: '2026-07', merchant: 'A',
+      category: 'Groceries', account: 'Amex', flow: 'expense',
+      amount: 30, budgetImpact: -30, inSpending: true, inCashFlow: true,
+    },
+    {
+      id: 'd2', date: '2026-07-01', month: '2026-07', merchant: 'B',
+      category: 'Dining & Drinks', account: 'Amex', flow: 'expense',
+      amount: 12, budgetImpact: -12, inSpending: true, inCashFlow: true,
+    },
+    {
+      id: 'd3', date: '2026-07-04', month: '2026-07', merchant: 'C',
+      category: 'Shopping', account: 'Amex', flow: 'expense',
+      amount: 50, budgetImpact: -50, inSpending: true, inCashFlow: true,
+    },
+  ]
+
+  it('每天一个点，空白日补 0 而不是跳过', () => {
+    const out = dailySeries(days, { from: '2026-07-01', to: '2026-07-05' })
+    // 5 天全在，含没有交易的 07-02/03/05 —— 缺日会让 x 轴间距失真。
+    expect(out.map((p) => p.month)).toEqual([
+      '2026-07-01', '2026-07-02', '2026-07-03', '2026-07-04', '2026-07-05',
+    ])
+    expect(out.map((p) => p.spending)).toEqual([42, 0, 0, 50, 0])
+  })
+
+  it('同一天多笔累加', () => {
+    const out = dailySeries(days, { from: '2026-07-01', to: '2026-07-01' })
+    expect(out[0].spending).toBe(42)
+    expect(out[0].count).toBe(2)
+  })
+
+  it('窗口外的交易不计入', () => {
+    const out = dailySeries(days, { from: '2026-07-02', to: '2026-07-05' })
+    expect(out.reduce((a, p) => a + p.spending, 0)).toBe(50)
+  })
+
+  it('资金搬运不计入——与分类图/商户榜同一口径', () => {
+    const withMovement: Txn[] = [
+      ...days,
+      {
+        id: 'atm', date: '2026-07-02', month: '2026-07', merchant: 'Withdrawal',
+        category: 'Cash & Checks', account: 'Chase', flow: 'expense',
+        amount: 300, budgetImpact: -300, inSpending: true, inCashFlow: true,
+      },
+    ]
+    const out = dailySeries(withMovement, { from: '2026-07-01', to: '2026-07-05' })
+    expect(out.find((p) => p.month === '2026-07-02')?.spending).toBe(0)
   })
 })
 

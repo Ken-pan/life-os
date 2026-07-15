@@ -192,9 +192,12 @@ a {
   height: 340px;
 }
 
+/* Height comes from the SVG, which sizes itself off this element's measured
+   width. A fixed 300px here left ~100px of dead space under a 200px chart, and
+   the 250px mobile override left 90px under a 160px one. */
 .spending-chart-wrap {
   width: 100%;
-  height: 300px;
+  line-height: 0;
 }
 
 /* ===== 段控件 / 图标按钮 ===== */
@@ -4506,9 +4509,8 @@ div.input {
     height: 280px;
   }
 
-  .spending-chart-wrap {
-    height: 250px;
-  }
+  /* .spending-chart-wrap intentionally has no height override — the SVG picks
+     its own (160px under 520px wide) off the measured container. */
 
   .ledger-filter-toggle {
     display: inline-flex;

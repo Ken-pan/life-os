@@ -14,6 +14,7 @@
     computeStatistics,
     categoryBreakdown,
     monthlySeries,
+    dailySeries,
     searchTxns,
     spendingSummary,
     topMerchants,
@@ -88,11 +89,18 @@
   // 之前默认折叠，于是整个标签页只剩下一条 5,000+ 行的原始流水。
   let showInsights = $state(true)
 
+  // 「本月」按天，其余按月。月粒度下「本月」只剩一个点——一根柱子既画不出
+  // 趋势，也答不了「这个月钱花在哪几天」。
   const trendSeries = $derived.by(() => {
+    if (trendWindow === 'month') {
+      const asOf = txStore.meta.asOf
+      return dailySeries(txStore.txns, { from: `${asOf.slice(0, 7)}-01`, to: asOf })
+    }
     if (trendWindow === 'all') return series
-    const n = trendWindow === 'month' ? 1 : trendWindow === '3m' ? 3 : 12
-    return series.slice(-n - (trendWindow === 'month' ? 0 : 1))
+    const n = trendWindow === '3m' ? 3 : 12
+    return series.slice(-n - 1)
   })
+  const trendDaily = $derived(trendWindow === 'month')
 
   const catRange = $derived(windowRange(txStore.meta.asOf, catWindow))
   const categories = $derived(
@@ -238,7 +246,7 @@
 
         <div class="card">
           <div class="card-head">
-            <h3>{t('history.trendTitle')}</h3>
+            <h3>{trendDaily ? t('history.trendTitleDaily') : t('history.trendTitle')}</h3>
             <div class="seg">
               {#each [
                 { id: 'month', label: t('history.windowMonth') },
@@ -256,8 +264,10 @@
               {/each}
             </div>
           </div>
-          <SpendingTrendChart series={trendSeries} {privacy} />
-          <p class="muted-note mt-2">{t('history.trendNote')}</p>
+          <SpendingTrendChart series={trendSeries} {privacy} daily={trendDaily} />
+          <p class="muted-note mt-2">
+            {trendDaily ? t('history.trendNoteDaily') : t('history.trendNote')}
+          </p>
         </div>
 
         <div class="grid cols-2">
