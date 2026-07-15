@@ -83,8 +83,14 @@ function assessSession(ex, log) {
   };
 }
 
-function roundLoad(w) {
-  return Math.max(0, Math.round(w / 2.5) * 2.5);
+/**
+ * 建议重量必须落在该动作自己的步进格上（与 +/- 按钮、加重建议同一格）。
+ * 降重走百分比（×0.9 / ×0.93）会算出任意小数，按 2.5 取整会给出杠铃根本装不出的
+ * 总重 —— 双边杠铃最小片 2.5 → 总重每格 5，167.5 意味着每侧 61.25，没有 1.25 的片。
+ */
+function roundLoad(w, inc = 2.5) {
+  const step = Number(inc) > 0 ? Number(inc) : 2.5;
+  return Math.max(0, Math.round((Math.round(w / step) * step) * 100) / 100);
 }
 
 export function progressionAdvice(exId) {
@@ -137,7 +143,7 @@ export function progressionAdvice(exId) {
 
   if (deloadAdvice().shouldDeload) {
     const cur = exWeight(ex);
-    const suggested = roundLoad(cur * 0.9);
+    const suggested = roundLoad(cur * 0.9, weightDelta(ex));
     if (cur > 0 && suggested < cur) {
       return {
         action: 'decrease',
@@ -204,7 +210,7 @@ export function progressionAdvice(exId) {
 
     if (a1.failed && a2.failed) {
       const cur = exWeight(ex);
-      const suggested = roundLoad(cur * 0.93);
+      const suggested = roundLoad(cur * 0.93, weightDelta(ex));
       if (cur > 0 && suggested < cur) {
         return {
           action: 'decrease',
@@ -344,7 +350,7 @@ export function recommendNextWeight(exId) {
   }
 
   if (result.suggestedWeight) {
-    result.suggestedWeight = roundLoad(result.suggestedWeight);
+    result.suggestedWeight = roundLoad(result.suggestedWeight, weightDelta(ex));
   }
 
   return result;
