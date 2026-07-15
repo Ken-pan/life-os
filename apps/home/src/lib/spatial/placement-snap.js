@@ -113,10 +113,27 @@ const CENTER_REFS = /** @type {const} */ (['center'])
  * @param {Rect} rect the dragged placement's proposed footprint
  * @param {SpatialWall[]} walls
  * @param {Rect[]} others other placements' footprints
- * @param {{ pxPerFt: number, zoom?: number, thicknessFor: (w: SpatialWall) => number }} opts
+ * @param {{
+ *   pxPerFt: number,
+ *   zoom?: number,
+ *   thicknessFor: (w: SpatialWall) => number,
+ *   free?: boolean,
+ * }} opts `free` = Alt 按住:只留 1″ 网格,不贴墙不对齐
  * @returns {PlacementSnapResult}
  */
 export function resolvePlacementSnap(rect, walls, others, opts) {
+  // Alt 临时脱开吸附 —— 建墙工具早有这个手势(freeAngle),家具却没有,同一张画布
+  // 上两套规矩。留 1″ 网格:完全自由会落在分数英寸上,之后每次微调都继承那个零头。
+  if (opts.free) {
+    const s = opts.pxPerFt / 12
+    return {
+      x: Math.round(rect.x / s) * s,
+      y: Math.round(rect.y / s) * s,
+      guides: [],
+      snappedX: false,
+      snappedY: false,
+    }
+  }
   const tol = SNAP_TOL_PX / Math.max(0.2, opts.zoom ?? 1)
   const lines = wallLines(walls, opts.thicknessFor)
 
@@ -188,4 +205,24 @@ export function resolvePlacementSnap(rect, walls, others, opts) {
   }
 
   return { x, y, guides, snappedX: Boolean(sx), snappedY: Boolean(sy) }
+}
+
+/** 只压住一点点不算撞:吸附落位常有 1px 级的接缝 */
+const OVERLAP_SLACK_PX = 2
+
+/**
+ * 落位是否压在别的家具身上。**不阻止**,只据实相告 —— 沙发压茶几可能是真的
+ * (床下收纳盒、餐桌塞椅子),软件不该替用户否决现实;但压着不知道就是错的。
+ * @param {Rect} rect
+ * @param {Rect[]} others
+ * @returns {boolean}
+ */
+export function overlapsAny(rect, others) {
+  return others.some(
+    (o) =>
+      rect.x + rect.w - OVERLAP_SLACK_PX > o.x &&
+      o.x + o.w - OVERLAP_SLACK_PX > rect.x &&
+      rect.y + rect.h - OVERLAP_SLACK_PX > o.y &&
+      o.y + o.h - OVERLAP_SLACK_PX > rect.y,
+  )
 }

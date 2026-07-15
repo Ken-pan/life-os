@@ -332,4 +332,52 @@ const walls = [
   assert.equal(partly.placements[0].x, -10, 'partly-visible is left alone')
 }
 
+// ---- Alt 临时脱开吸附(free) ----
+// 建墙工具早有这个手势;家具没有的话,同一张画布上两套规矩。
+{
+  const nearWall = { x: 100 + extHalf + 2, y: 300, w: IN(30), h: IN(20) }
+  const snapped = snap(nearWall, walls)
+  assert.ok(snapped.snappedX, '常规拖拽:贴住墙面')
+
+  const free = resolvePlacementSnap(nearWall, walls, [], {
+    pxPerFt,
+    thicknessFor,
+    free: true,
+  })
+  assert.equal(free.snappedX, false, 'Alt 按住:不贴墙')
+  assert.equal(free.guides.length, 0, 'Alt 按住:不画对齐线')
+  // 仍落在 1″ 网格:完全自由会留下分数英寸,之后每次微调都继承那个零头
+  const step = pxPerFt / 12
+  assert.equal(free.x % step, 0, 'Alt 按住仍吸 1″ 网格(x)')
+  assert.equal(free.y % step, 0, 'Alt 按住仍吸 1″ 网格(y)')
+}
+
+// ---- 重叠检测:据实相告,不阻止 ----
+{
+  const { overlapsAny } = await import('../src/lib/spatial/placement-snap.js')
+  const bed = { x: 200, y: 200, w: IN(60), h: IN(80) }
+  assert.equal(overlapsAny(bed, []), false, '空房不撞')
+  assert.equal(
+    overlapsAny(bed, [{ x: 400, y: 400, w: IN(30), h: IN(30) }]),
+    false,
+    '离得远不撞',
+  )
+  assert.equal(
+    overlapsAny(bed, [{ x: 220, y: 220, w: IN(30), h: IN(30) }]),
+    true,
+    '压在身上要报',
+  )
+  // 吸附落位常留 1px 级接缝,那不算撞 —— 否则贴边摆放会一直红着
+  assert.equal(
+    overlapsAny(bed, [{ x: 200 + IN(60) - 1, y: 200, w: IN(30), h: IN(30) }]),
+    false,
+    '紧挨着(1px 接缝)不算撞',
+  )
+  assert.equal(
+    overlapsAny(bed, [{ x: 200 + IN(60), y: 200, w: IN(30), h: IN(30) }]),
+    false,
+    '正好贴边不算撞',
+  )
+}
+
 console.log('placement-snap-unit: ok')

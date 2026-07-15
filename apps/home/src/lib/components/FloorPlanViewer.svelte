@@ -93,11 +93,12 @@
    *   placementEditMode?: boolean,
    *   placementTool?: import('$lib/plan-placement-edit.js').PlacementTool,
    *   selectedPlacement?: string,
+   *   clashPlacement?: string,
    *   onPlacementPoint?: (pt: { x: number, y: number }, zoom: number) => void,
    *   onSelectPlacement?: (id: string) => void,
    *   onAssignStorage?: (pt: { x: number, y: number }) => void,
-   *   onPlacementDrag?: (id: string, pt: { x: number, y: number }, zoom: number) => void,
-   *   onPlacementDrop?: (id: string, pt: { x: number, y: number }, zoom: number) => void,
+   *   onPlacementDrag?: (id: string, pt: { x: number, y: number }, zoom: number, mods: { altKey: boolean }) => void,
+   *   onPlacementDrop?: (id: string, pt: { x: number, y: number }, zoom: number, mods: { altKey: boolean }) => void,
    *   viewpointEditMode?: boolean,
    *   viewpointTool?: 'viewAdd' | 'viewSelect',
    *   selectedViewpoint?: string,
@@ -170,6 +171,7 @@
     placementEditMode = false,
     placementTool = 'place',
     selectedPlacement = '',
+    clashPlacement = '',
     onPlacementPoint,
     onSelectPlacement,
     onAssignStorage,
@@ -346,6 +348,7 @@
       placementEditMode,
       placementTool,
       selectedPlacement,
+      clashPlacement,
       viewpointEditMode,
       viewpointTool,
       selectedViewpoint,
@@ -725,8 +728,8 @@
       onPlacementDragStart: (id) => onPlacementDragStart?.(id),
       // zoom rides along so the caller can size its snap tolerance in screen
       // px rather than plan px — it lives in this component.
-      onPlacementDrag: (id, pt) => onPlacementDrag?.(id, pt, zoom),
-      onPlacementDrop: (id, pt) => onPlacementDrop?.(id, pt, zoom),
+      onPlacementDrag: (id, pt, mods) => onPlacementDrag?.(id, pt, zoom, mods),
+      onPlacementDrop: (id, pt, mods) => onPlacementDrop?.(id, pt, zoom, mods),
     })
     return () => action.destroy()
   })

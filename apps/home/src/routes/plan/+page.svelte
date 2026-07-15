@@ -82,7 +82,7 @@
     pxToInches,
     STORAGE_CODES,
   } from '$lib/spatial/placements.js'
-  import { resolvePlacementSnap } from '$lib/spatial/placement-snap.js'
+  import { resolvePlacementSnap, overlapsAny } from '$lib/spatial/placement-snap.js'
   import { wallStrokePx } from '$lib/spatial/wall-standards.js'
   import PlanContextMenu from '$lib/components/PlanContextMenu.svelte'
   import PlanEditToolbar from '$lib/components/PlanEditToolbar.svelte'
@@ -195,6 +195,8 @@
   let previewZones = $state(null)
   /** @type {import('$lib/spatial/types.js').SpatialPlacement[] | null} */
   let previewPlacements = $state(null)
+  /** 正压在别的家具上的那件(拖拽中)。不阻止落位,只标红提示。 */
+  let dragOverlapId = $state('')
   /** @type {import('$lib/spatial/types.js').WallGraph | null} */
   let graphPreviewGraph = $state(null)
   /** @type {import('$lib/spatial/types.js').GraphOpening[] | null} */
@@ -545,7 +547,7 @@
    * @param {{ x: number, y: number }} pt target centre
    * @param {number} [zoom] current view zoom — snap tolerance is screen-space
    */
-  function snapPlacementAt(id, pt, zoom = 1) {
+  function snapPlacementAt(id, pt, zoom = 1, mods = {}) {
     const placement = (project.placements ?? []).find((x) => x.id === id)
     if (!placement) return null
     const rect = {
@@ -561,8 +563,14 @@
       pxPerFt: planPxPerFt,
       zoom,
       thicknessFor: (w) => wallStrokePx(w.role ?? 'interior', planPxPerFt),
+      free: mods.altKey, // Alt 临时脱开吸附,与建墙工具同一手势
     })
-    return { placement, snap }
+    // 压在别人身上不拦(床下塞收纳盒是常态),但要当场说出来 —— 压着而不自知才是错
+    const overlap = overlapsAny(
+      { x: snap.x, y: snap.y, w: placement.w, h: placement.h },
+      others,
+    )
+    return { placement, snap, overlap }
   }
 
   /** @param {{ x: number, y: number }} pt */
@@ -1057,6 +1065,12 @@
           if (id) selectedPlacement = id
           return
         }
+        // R 原地转 90° —— 摆家具时转向和挪位一样高频,不该每次都去点选择栏
+        if (e.key.toLowerCase() === 'r' && !e.metaKey && !e.ctrlKey) {
+          e.preventDefault()
+          rotatePlacementById(selectedPlacement)
+          return
+        }
       }
 
       if (
@@ -1366,6 +1380,7 @@
       }}
       placementEditMode={placeEditMode}
       {placementTool}
+      clashPlacement={dragOverlapId}
       {selectedPlacement}
       showFurniture={placeEditMode || viewEditMode || planMode === 'browse'}
       onPlacementPoint={placeEditMode ? onPlacementPoint : undefined}
@@ -1376,18 +1391,20 @@
       onPlacementDragStart={() => {
         previewPlacements = project.placements ?? []
       }}
-      onPlacementDrag={(id, pt, zoom) => {
-        const r = snapPlacementAt(id, pt, zoom)
+      onPlacementDrag={(id, pt, zoom, mods) => {
+        const r = snapPlacementAt(id, pt, zoom, mods)
         if (!r) return
         snapGuides = r.snap.guides
+        dragOverlapId = r.overlap ? id : ''
         previewPlacements = (project.placements ?? []).map((item) =>
           item.id === id ? { ...item, x: r.snap.x, y: r.snap.y } : item,
         )
       }}
-      onPlacementDrop={(id, pt, zoom) => {
-        const r = snapPlacementAt(id, pt, zoom)
+      onPlacementDrop={(id, pt, zoom, mods) => {
+        const r = snapPlacementAt(id, pt, zoom, mods)
         previewPlacements = null
         snapGuides = []
+        dragOverlapId = ''
         // Commit exactly what the preview showed — snapPlacementAt already
         // applied the grid on any axis that didn't catch a wall or neighbour.
         if (r) {

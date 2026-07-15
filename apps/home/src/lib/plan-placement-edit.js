@@ -15,9 +15,13 @@
  *   onAssignStorage?: (pt: { x: number, y: number }) => void,
  *   getPlacementRect?: (id: string) => { x: number, y: number, w: number, h: number } | null,
  *   onPlacementDragStart?: (id: string) => void,
- *   onPlacementDrag?: (id: string, pt: { x: number, y: number }) => void,
- *   onPlacementDrop?: (id: string, pt: { x: number, y: number }) => void,
+ *   onPlacementDrag?: (id: string, pt: { x: number, y: number }, mods: DragMods) => void,
+ *   onPlacementDrop?: (id: string, pt: { x: number, y: number }, mods: DragMods) => void,
  * }} opts
+ */
+/**
+ * 拖拽时按住的键。Alt 临时脱开吸附 —— 与建墙工具同一手势,也是这类编辑器的通例。
+ * @typedef {{ altKey: boolean }} DragMods
  */
 export function bindPlanPlacementEdit(el, opts) {
   /** @type {string | null} */
@@ -100,14 +104,14 @@ export function bindPlanPlacementEdit(el, opts) {
   function move(e) {
     if (!dragId) return
     e.preventDefault()
-    opts.onPlacementDrag?.(dragId, centerPoint(e))
+    opts.onPlacementDrag?.(dragId, centerPoint(e), { altKey: e.altKey })
   }
 
   /** @param {PointerEvent} e */
   function up(e) {
     if (!dragId) return
     const pt = centerPoint(e)
-    opts.onPlacementDrop?.(dragId, pt)
+    opts.onPlacementDrop?.(dragId, pt, { altKey: e.altKey })
     dragId = null
     dragOffset = null
     if (capturePointerId != null && el.hasPointerCapture(capturePointerId)) {

@@ -58,6 +58,7 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   placementEditMode?: boolean,
  *   placementTool?: 'place' | 'storage',
  *   selectedPlacement?: string,
+ *   clashPlacement?: string, 正压在别的家具上的那件 —— 标红,但不阻止落位
  *   viewpointEditMode?: boolean,
  *   viewpointTool?: 'viewAdd' | 'viewSelect',
  *   selectedViewpoint?: string,
@@ -203,8 +204,10 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .placement-item{fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1.2}
  .furn-line{fill:none;stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1;stroke-linejoin:round;opacity:.85;pointer-events:none}
  .placement-on{stroke:var(--graph-accent,#1d6b42);stroke-width:2.5;stroke-dasharray:6 4;animation:plan-sel-pulse 1.15s ease-in-out infinite}
+ .placement-clash{fill:var(--plan-danger-fill,#e9c4bc);stroke:var(--plan-danger,#a3341f);stroke-width:2}
  .placement-label{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
- .placement-hit{fill:transparent;stroke:none;cursor:pointer;pointer-events:all}
+ .placement-hit{fill:transparent;stroke:none;cursor:grab;pointer-events:all}
+ .placement-hit:active{cursor:grabbing}
  .vp-cone{fill:var(--plan-accent,#5c758c);fill-opacity:.14;stroke:var(--plan-accent,#5c758c);stroke-opacity:.5;stroke-width:1.2;pointer-events:none}
  .vp-cone-on{fill:var(--graph-accent,#1d6b42);fill-opacity:.2;stroke:var(--graph-accent,#1d6b42);stroke-opacity:.85}
  .vp-dot{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.6}
@@ -439,7 +442,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const symbol = furnitureSymbol(PLACEMENT_KINDS[p.kind]?.symbol, box)
       parts.push(
         `<g transform="rotate(${rot} ${cx} ${cy})">`,
-        `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="3" class="placement-item${on ? ' placement-on' : ''}"/>`,
+        `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="3" class="placement-item${opts.clashPlacement === p.id ? ' placement-clash' : ''}${on ? ' placement-on' : ''}"/>`,
         symbol,
         `</g>`,
         // Label sits outside the rotation so it stays upright at 90°/270°.
