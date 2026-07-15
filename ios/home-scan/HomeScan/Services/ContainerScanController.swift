@@ -52,12 +52,23 @@ final class ContainerScanController: NSObject, ARSessionDelegate {
         )
     }
 
+    /// 打点进行中的「已测出几维」(HUD 实时读数 —— 点歪当场发现)
+    var partialDims: ContainerGeometry.PartialDims {
+        ContainerGeometry.partialDims(taps)
+    }
+
     private weak var arView: ARView?
     /// ARKit 认出的水平面(id → 锚点中心);层板常被认成小水平面
     private var horizontalPlanes: [UUID: SIMD3<Double>] = [:]
     /// 打点的可视标记,撤销/重测时移除
     private var markers: [Step: AnchorEntity] = [:]
     private var shelfMarkers: [AnchorEntity] = []
+    /// 内腔线框(拟合成功后画出来 —— 框没框对一眼可见)
+    private var wireframeAnchors: [AnchorEntity] = []
+    /// 层板半透明面(自动识别的也画,用户看得见才敢信)
+    private var shelfPlaneAnchors: [AnchorEntity] = []
+    /// 上次画层板用的 y 集合(变化 >1cm 才重画,防 didUpdate 高频闪烁)
+    private var renderedShelfYs: [Double] = []
 
     // MARK: - 会话
 
@@ -94,6 +105,10 @@ final class ContainerScanController: NSObject, ARSessionDelegate {
         Task { @MainActor in
             for (id, center) in horizontal {
                 self.horizontalPlanes[id] = center
+            }
+            // 层板步:自动候选一变,半透明面跟着刷新(节流见 renderShelfPlanes)
+            if self.step == .shelves {
+                self.renderShelfPlanes()
             }
         }
     }
@@ -135,6 +150,7 @@ final class ContainerScanController: NSObject, ARSessionDelegate {
             let marker = makeMarker(at: hit, color: .systemTeal)
             shelfMarkers.append(marker)
             arView.scene.addAnchor(marker)
+            renderShelfPlanes()
         case .photoFront, .photoSide, .confirm:
             break
         }
@@ -173,6 +189,8 @@ final class ContainerScanController: NSObject, ARSessionDelegate {
                 return
             }
             box = fitted
+            renderWireframe()
+            renderShelfPlanes()
         }
         step = next
     }
@@ -195,8 +213,10 @@ final class ContainerScanController: NSObject, ARSessionDelegate {
                 if let marker = shelfMarkers.popLast() {
                     arView?.scene.removeAnchor(marker)
                 }
+                renderShelfPlanes()
             } else {
                 box = nil
+                clearFitVisuals()
                 step = .front
                 clear(.front)
             }
@@ -239,6 +259,7 @@ final class ContainerScanController: NSObject, ARSessionDelegate {
         for m in shelfMarkers { arView?.scene.removeAnchor(m) }
         markers = [:]
         shelfMarkers = []
+        clearFitVisuals()
     }
 
     @MainActor
@@ -314,6 +335,87 @@ final class ContainerScanController: NSObject, ARSessionDelegate {
             materials: [SimpleMaterial(color: color, isMetallic: false)]
         )
         anchor.addChild(sphere)
+        return anchor
+    }
+
+    // MARK: - 拟合结果可视化(线框 + 层板面)
+
+    /// 内腔 12 条棱画成黄色细棒 —— 框歪了/框到柜外一眼可见
+    @MainActor
+    private func renderWireframe() {
+        guard let arView, let box else { return }
+        for a in wireframeAnchors { arView.scene.removeAnchor(a) }
+        wireframeAnchors = []
+        for edge in ContainerGeometry.wireframeEdges(box) {
+            let anchor = lineAnchor(from: edge.a, to: edge.b, color: .systemYellow)
+            wireframeAnchors.append(anchor)
+            arView.scene.addAnchor(anchor)
+        }
+    }
+
+    /// 层板(自动候选 + 手动)画成青色半透明面;y 集合变化 >1cm 才重画
+    @MainActor
+    func renderShelfPlanes() {
+        guard let arView, let box else { return }
+        let ys = shelfYs
+        let changed = ys.count != renderedShelfYs.count
+            || zip(ys, renderedShelfYs).contains { abs($0 - $1) > 0.01 }
+        guard changed else { return }
+        renderedShelfYs = ys
+
+        for a in shelfPlaneAnchors { arView.scene.removeAnchor(a) }
+        shelfPlaneAnchors = []
+        for y in ys {
+            let place = ContainerGeometry.shelfPlacement(y: y, box: box)
+            let anchor = AnchorEntity(world: SIMD3(
+                Float(place.center.x), Float(place.center.y), Float(place.center.z)
+            ))
+            let plane = ModelEntity(
+                mesh: .generatePlane(
+                    width: Float(box.widthM),
+                    depth: Float(box.depthM)
+                ),
+                materials: [UnlitMaterial(color: UIColor.systemTeal.withAlphaComponent(0.35))]
+            )
+            plane.orientation = simd_quatf(angle: Float(place.yawRad), axis: [0, 1, 0])
+            anchor.addChild(plane)
+            shelfPlaneAnchors.append(anchor)
+            arView.scene.addAnchor(anchor)
+        }
+    }
+
+    @MainActor
+    private func clearFitVisuals() {
+        for a in wireframeAnchors { arView?.scene.removeAnchor(a) }
+        for a in shelfPlaneAnchors { arView?.scene.removeAnchor(a) }
+        wireframeAnchors = []
+        shelfPlaneAnchors = []
+        renderedShelfYs = []
+    }
+
+    /// 两点之间一根细棒(线框用)。方向对齐用四元数;反平行时退化,
+    /// 我们的棱方向可控,补一个绕 y 的 180° 兜底即可。
+    private func lineAnchor(
+        from a: SIMD3<Double>,
+        to b: SIMD3<Double>,
+        color: UIColor
+    ) -> AnchorEntity {
+        let av = SIMD3<Float>(Float(a.x), Float(a.y), Float(a.z))
+        let bv = SIMD3<Float>(Float(b.x), Float(b.y), Float(b.z))
+        let v = bv - av
+        let len = simd_length(v)
+        let anchor = AnchorEntity(world: (av + bv) / 2)
+        guard len > 1e-4 else { return anchor }
+        let bar = ModelEntity(
+            mesh: .generateBox(size: [len, 0.004, 0.004]),
+            materials: [UnlitMaterial(color: color)]
+        )
+        let dir = v / len
+        let dot = simd_dot(SIMD3<Float>(1, 0, 0), dir)
+        bar.orientation = dot < -0.999
+            ? simd_quatf(angle: .pi, axis: [0, 1, 0])
+            : simd_quatf(from: [1, 0, 0], to: dir)
+        anchor.addChild(bar)
         return anchor
     }
 }

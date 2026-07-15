@@ -14,6 +14,8 @@ struct ContainerPickView: View {
     @State private var placements: [HomeOSProject.Placement]?
     @State private var loadError: String?
     @State private var target: HomeOSProject.Placement?
+    /// 已有柜内数据的柜子(placementId → payload)—— 标「已扫」+ 尺寸摘要
+    @State private var scanned: [String: ContainerGeometry.Payload] = [:]
 
     var body: some View {
         NavigationStack {
@@ -39,11 +41,21 @@ struct ContainerPickView: View {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(pl.label)
-                                        Text("外部 \(cm(pl.w)) × \(cm(pl.h)) cm")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                        if let done = scanned[pl.id] {
+                                            // 已扫:内腔摘要,一眼看出还剩哪些没扫
+                                            Text("已扫:内 \(dimsCm(done.interiorIn)) · \(done.compartments.count) 层")
+                                                .font(.caption)
+                                                .foregroundStyle(.teal)
+                                        } else {
+                                            Text("外部 \(cm(pl.w)) × \(cm(pl.h)) cm · 未扫内部")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
                                     }
                                     Spacer()
+                                    Text(scanned[pl.id] == nil ? "去扫" : "重测")
+                                        .font(.caption)
+                                        .foregroundStyle(scanned[pl.id] == nil ? .blue : .secondary)
                                     Image(systemName: "chevron.right")
                                         .foregroundStyle(.tertiary)
                                 }
@@ -62,22 +74,35 @@ struct ContainerPickView: View {
                     Button("关闭") { dismiss() }
                 }
             }
-            .task {
-                do {
-                    placements = try await model.supabase.storagePlacements(scanId: scan.id)
-                } catch {
-                    loadError = error.localizedDescription
-                }
-            }
-            .fullScreenCover(item: $target) { pl in
+            .task { await load() }
+            .fullScreenCover(item: $target, onDismiss: {
+                // 扫完回来刷新「已扫」标记(上传成功后摘要立刻可见)
+                Task { scanned = (try? await model.supabase.containerPayloads(scanId: scan.id)) ?? scanned }
+            }) { pl in
                 ContainerScanView(scanId: scan.id, placement: pl)
             }
+        }
+    }
+
+    private func load() async {
+        do {
+            // 家具清单是硬依赖;已扫标记拉不到不挡路(只是少了摘要)
+            placements = try await model.supabase.storagePlacements(scanId: scan.id)
+            scanned = (try? await model.supabase.containerPayloads(scanId: scan.id)) ?? [:]
+        } catch {
+            loadError = error.localizedDescription
         }
     }
 
     /// plan px → cm(3 px = 1 英寸)
     private func cm(_ px: Double) -> String {
         String(format: "%.0f", px / 3 * 2.54)
+    }
+
+    /// 英寸三维 → 「80×35×190cm」
+    private func dimsCm(_ d: ContainerGeometry.Payload.Dims) -> String {
+        let c = { (v: Double) in String(format: "%.0f", v * 2.54) }
+        return "\(c(d.w))×\(c(d.d))×\(c(d.h))cm"
     }
 }
 
@@ -91,6 +116,11 @@ struct ContainerScanView: View {
     @State private var uploading = false
     @State private var uploadStatus = ""
     @State private var uploadError: String?
+    /// 确认页微调值(cm)—— 卷尺量出偏差时不用重测;实测原值仍随 payload 保留
+    @State private var adjW: Double = 0
+    @State private var adjD: Double = 0
+    @State private var adjH: Double = 0
+    @State private var adjSeeded = false
 
     private var arSupported: Bool {
         ARWorldTrackingConfiguration.isSupported
@@ -160,16 +190,42 @@ struct ContainerScanView: View {
     }
 
     private var instructionHUD: some View {
-        Label(
-            controller.step.instruction
-                .replacingOccurrences(of: "**", with: ""),
-            systemImage: controller.step == .photoFront || controller.step == .photoSide
-                ? "camera.viewfinder" : "hand.point.up.left"
-        )
-        .font(.footnote)
-        .padding(8)
-        .background(.ultraThinMaterial, in: Capsule())
+        VStack(spacing: 6) {
+            Label(
+                stepPrefix + controller.step.instruction
+                    .replacingOccurrences(of: "**", with: ""),
+                systemImage: controller.step == .photoFront || controller.step == .photoSide
+                    ? "camera.viewfinder" : "hand.point.up.left"
+            )
+            .font(.footnote)
+            .padding(8)
+            .background(.ultraThinMaterial, in: Capsule())
+
+            // 边点边出数:点歪了(比如 3cm 的「内宽」)当场看见,不用等确认页
+            if let dims = liveDimsText {
+                Text(dims)
+                    .font(.caption.monospacedDigit())
+                    .padding(6)
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
+        }
         .padding(.bottom, 4)
+    }
+
+    /// 打点步显示「第 N/6 点」
+    private var stepPrefix: String {
+        let i = controller.step.rawValue
+        return i <= ContainerScanController.Step.front.rawValue ? "第 \(i + 1)/6 点:" : ""
+    }
+
+    private var liveDimsText: String? {
+        let d = controller.partialDims
+        var parts: [String] = []
+        if let w = d.widthM { parts.append("内宽 \(Int((w * 100).rounded()))") }
+        if let dp = d.depthM { parts.append("内深 \(Int((dp * 100).rounded()))") }
+        if let h = d.heightM { parts.append("内高 \(Int((h * 100).rounded()))") }
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: " · ") + " cm"
     }
 
     @ViewBuilder
@@ -211,9 +267,12 @@ struct ContainerScanView: View {
     private var confirmPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let box = controller.box {
-                Text("内腔实测").font(.headline)
-                Text("内宽 \(cmText(box.widthM)) · 内深 \(cmText(box.depthM)) · 内高 \(cmText(box.heightM))")
-                    .monospacedDigit()
+                Text("内腔实测(可微调)").font(.headline)
+                // 卷尺核对出小偏差直接在这里改;实测原值仍随 payload 上传
+                adjustRow("内宽", value: $adjW, measured: box.widthM)
+                adjustRow("内深", value: $adjD, measured: box.depthM)
+                adjustRow("内高", value: $adjH, measured: box.heightM)
+
                 let levels = ContainerGeometry.compartments(
                     shelfYs: controller.shelfYs, box: box
                 )
@@ -227,9 +286,23 @@ struct ContainerScanView: View {
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
-                Text("容积约 \(String(format: "%.0f", box.widthM * box.depthM * box.heightM * 1000)) 升 · 照片 \(controller.photoURLs.count) 张")
+                Text("容积约 \(String(format: "%.0f", adjW * adjD * adjH / 1000)) 升")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                if !controller.photoURLs.isEmpty {
+                    HStack(spacing: 8) {
+                        ForEach(controller.photoURLs, id: \.self) { url in
+                            if let img = UIImage(contentsOfFile: url.path) {
+                                Image(uiImage: img)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 56, height: 74)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                        }
+                    }
+                }
             }
 
             if uploading {
@@ -263,6 +336,39 @@ struct ContainerScanView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
         .padding()
+        .onAppear { seedAdjust() }
+        .onDisappear { adjSeeded = false } // 重新测量后回来,微调值重播新实测
+    }
+
+    /// 一维的微调行:显示当前值 + stepper;偏离实测时标出实测原值
+    private func adjustRow(
+        _ name: String,
+        value: Binding<Double>,
+        measured: Double
+    ) -> some View {
+        HStack {
+            Text(name)
+            Text("\(Int(value.wrappedValue.rounded())) cm")
+                .monospacedDigit()
+                .frame(minWidth: 56, alignment: .trailing)
+            if abs(value.wrappedValue - measured * 100) > 0.5 {
+                Text("(实测 \(Int((measured * 100).rounded())))")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Stepper("", value: value, in: 1...350, step: 1)
+                .labelsHidden()
+        }
+        .font(.subheadline)
+    }
+
+    private func seedAdjust() {
+        guard !adjSeeded, controller.step == .confirm, let box = controller.box else { return }
+        adjW = (box.widthM * 100).rounded()
+        adjD = (box.depthM * 100).rounded()
+        adjH = (box.heightM * 100).rounded()
+        adjSeeded = true
     }
 
     private func cmText(_ m: Double) -> String {
@@ -280,7 +386,8 @@ struct ContainerScanView: View {
             capturedAt: ISO8601DateFormatter().string(from: Date()),
             device: "\(UIDevice.current.name) / iOS \(UIDevice.current.systemVersion)",
             box: box,
-            shelfYs: controller.shelfYs
+            shelfYs: controller.shelfYs,
+            adjustedM: (w: adjW / 100, d: adjD / 100, h: adjH / 100)
         )
         let photos = controller.photoURLs
         Task {

@@ -94,6 +94,78 @@ enum ContainerGeometry {
         )
     }
 
+    /// 打点过程中的「已测出几维」—— 边点边给用户看,点歪当场发现
+    struct PartialDims {
+        var widthM: Double?
+        var depthM: Double?
+        var heightM: Double?
+    }
+
+    static func partialDims(_ taps: Taps) -> PartialDims {
+        var out = PartialDims()
+        if let bottom = taps.bottom, let top = taps.top {
+            out.heightM = abs(top.y - bottom.y)
+        }
+        guard !taps.forwards.isEmpty else { return out }
+        var sum = SIMD2<Double>.zero
+        for f in taps.forwards { sum += f }
+        let len = simd_length(sum)
+        guard len > 1e-9 else { return out }
+        let normal = -sum / len
+        let lateral = SIMD2(-normal.y, normal.x)
+        func flat(_ p: SIMD3<Double>) -> SIMD2<Double> { SIMD2(p.x, p.z) }
+        if let l = taps.left, let r = taps.right {
+            out.widthM = abs(simd_dot(flat(r) - flat(l), lateral))
+        }
+        if let b = taps.back, let f = taps.front {
+            out.depthM = abs(simd_dot(flat(f) - flat(b), normal))
+        }
+        return out
+    }
+
+    /// 内腔盒子的 12 条棱(世界系线段)—— AR 里画线框,用户一眼核对框没框对
+    static func wireframeEdges(
+        _ box: InteriorBox
+    ) -> [(a: SIMD3<Double>, b: SIMD3<Double>)] {
+        // 8 角:lateral × depth × y 各取区间两端
+        func corner(_ l: Double, _ n: Double, _ y: Double) -> SIMD3<Double> {
+            let flat = box.lateral * l + box.normal * n
+            return SIMD3(flat.x, y, flat.y)
+        }
+        let ls = [box.lateralRange.lowerBound, box.lateralRange.upperBound]
+        let ns = [box.depthRange.lowerBound, box.depthRange.upperBound]
+        let ys = [box.bottomY, box.topY]
+        var edges: [(SIMD3<Double>, SIMD3<Double>)] = []
+        // 竖棱 ×4
+        for l in ls {
+            for n in ns {
+                edges.append((corner(l, n, ys[0]), corner(l, n, ys[1])))
+            }
+        }
+        // 横棱(沿 lateral)×4 + 进深棱(沿 normal)×4
+        for y in ys {
+            for n in ns {
+                edges.append((corner(ls[0], n, y), corner(ls[1], n, y)))
+            }
+            for l in ls {
+                edges.append((corner(l, ns[0], y), corner(l, ns[1], y)))
+            }
+        }
+        return edges.map { (a: $0.0, b: $0.1) }
+    }
+
+    /// 一块层板面的位置与朝向(AR 半透明面):中心、绕 +y 的偏航角
+    static func shelfPlacement(
+        y: Double,
+        box: InteriorBox
+    ) -> (center: SIMD3<Double>, yawRad: Double) {
+        let l = (box.lateralRange.lowerBound + box.lateralRange.upperBound) / 2
+        let n = (box.depthRange.lowerBound + box.depthRange.upperBound) / 2
+        let flat = box.lateral * l + box.normal * n
+        // RealityKit 平面局部 +x 要对齐 box.lateral:绕 y 转 -atan2(lat.y, lat.x)
+        return (SIMD3(flat.x, y, flat.y), -atan2(box.lateral.y, box.lateral.x))
+    }
+
     /// 一个候选点(ARKit 水平面锚点中心/手动打点)是不是这个柜子的层板:
     /// y 在内腔中段、水平位置落在内腔脚印(允许小外扩)里。
     static func isShelfCandidate(
@@ -167,8 +239,11 @@ enum ContainerGeometry {
         var placementLabel: String?
         var capturedAt: String
         var device: String
+        /// 最终内腔尺寸(用户在确认页微调过的话就是调整值)
         var interiorIn: Dims
-        /// 层板高度(相对内底,英寸,自下而上)
+        /// 用户微调过才有:AR 原始实测(能力19 —— 修改值与原始测量都留)
+        var measuredInteriorIn: Dims?
+        /// 层板高度(相对内底,英寸,自下而上;始终是实测,不随微调缩放)
         var shelfHeightsIn: [Double]
         var compartments: [Level]
         var interiorVolumeL: Double
@@ -191,7 +266,10 @@ enum ContainerGeometry {
 
     static let mToIn = 1 / 0.0254
 
-    /// 盒子 + 层板 → 上传 payload(photos 上传时回填)
+    /// 盒子 + 层板 → 上传 payload(photos 上传时回填)。
+    /// `adjustedM` 传用户在确认页微调后的米制尺寸;确认页以整 cm 播种
+    /// (舍入本身带来 ≤5mm 差),所以差 >6mm 才算真调过 ——
+    /// interiorIn 用调整值、实测进 measuredInteriorIn,容积随最终值。
     static func payload(
         scanId: String,
         placementId: String,
@@ -199,21 +277,35 @@ enum ContainerGeometry {
         capturedAt: String,
         device: String,
         box: InteriorBox,
-        shelfYs: [Double]
+        shelfYs: [Double],
+        adjustedM: (w: Double, d: Double, h: Double)? = nil
     ) -> Payload {
         let levels = compartments(shelfYs: shelfYs, box: box)
         let round1 = { (v: Double) in (v * 10).rounded() / 10 }
+        let dims = { (w: Double, d: Double, h: Double) in
+            Payload.Dims(w: round1(w * mToIn), d: round1(d * mToIn), h: round1(h * mToIn))
+        }
+        let measured = dims(box.widthM, box.depthM, box.heightM)
+        let final: (w: Double, d: Double, h: Double)
+        var measuredKept: Payload.Dims?
+        if let adj = adjustedM,
+           abs(adj.w - box.widthM) > 0.006
+            || abs(adj.d - box.depthM) > 0.006
+            || abs(adj.h - box.heightM) > 0.006 {
+            final = adj
+            measuredKept = measured
+        } else {
+            final = (box.widthM, box.depthM, box.heightM)
+            measuredKept = nil
+        }
         return Payload(
             scanId: scanId,
             placementId: placementId,
             placementLabel: placementLabel,
             capturedAt: capturedAt,
             device: device,
-            interiorIn: .init(
-                w: round1(box.widthM * mToIn),
-                d: round1(box.depthM * mToIn),
-                h: round1(box.heightM * mToIn)
-            ),
+            interiorIn: dims(final.w, final.d, final.h),
+            measuredInteriorIn: measuredKept,
             shelfHeightsIn: mergedShelfYs(shelfYs, box: box)
                 .map { round1(($0 - box.bottomY) * mToIn) },
             compartments: levels.map {
@@ -224,7 +316,7 @@ enum ContainerGeometry {
                     heightIn: round1($0.heightM * mToIn)
                 )
             },
-            interiorVolumeL: (box.widthM * box.depthM * box.heightM * 1000 * 10).rounded() / 10,
+            interiorVolumeL: (final.w * final.d * final.h * 1000 * 10).rounded() / 10,
             photos: []
         )
     }

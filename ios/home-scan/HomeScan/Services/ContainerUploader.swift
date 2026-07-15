@@ -42,6 +42,26 @@ extension SupabaseService {
         return placements.filter { Self.containerKinds.contains($0.kind) }
     }
 
+    /// 这次扫描已有的柜内测量(placementId → payload)。
+    /// 挑柜页用它标「已扫 + 尺寸摘要」,不然用户不记得扫过哪些柜子。
+    /// 单个 JSON 解析失败只跳过那一个(别因一条脏数据全列表空白)。
+    func containerPayloads(scanId: UUID) async throws -> [String: ContainerGeometry.Payload] {
+        guard let uid = currentUserId else { return [:] }
+        let storage = client.storage.from(Config.scanPhotoBucket)
+        let prefix = "\(uid.uuidString.lowercased())/\(scanId.uuidString.lowercased())"
+        let files = try await storage.list(path: prefix)
+        var out: [String: ContainerGeometry.Payload] = [:]
+        for file in files
+        where file.name.hasPrefix("container-") && file.name.hasSuffix(".json") {
+            guard
+                let data = try? await storage.download(path: "\(prefix)/\(file.name)"),
+                let payload = try? JSONDecoder().decode(ContainerGeometry.Payload.self, from: data)
+            else { continue }
+            out[payload.placementId] = payload
+        }
+        return out
+    }
+
     /// 照片先传(定名幂等),JSON 最后写 —— 桶里出现 container JSON 即数据完整
     func uploadContainer(
         scanId: UUID,

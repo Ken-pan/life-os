@@ -1,4 +1,5 @@
 import XCTest
+import simd
 @testable import HomeScan
 
 /// 柜内测量几何单测:六点拟合、开口朝向、层板合并与分层、payload 单位换算。
@@ -121,5 +122,90 @@ final class ContainerGeometryTests: XCTestCase {
         XCTAssertNotNil(obj["shelfHeightsIn"])
         XCTAssertNotNil(obj["compartments"])
         XCTAssertNotNil(obj["interiorVolumeL"])
+        XCTAssertNil(obj["measuredInteriorIn"], "没微调不该有实测备份字段")
+    }
+
+    func testPayloadUserAdjustmentKeepsMeasured() {
+        var taps = wardrobeTaps()
+        taps.forwards = [SIMD2(0, -1)]
+        taps.right = SIMD3(0.4, 0.3, -0.2)
+        taps.front = SIMD3(0.0, 1.2, 0.0)
+        let box = ContainerGeometry.fitBox(taps)!
+
+        // 确认页整 cm 播种带来的 ≤5mm 舍入差:不算人工修正
+        let seeded = ContainerGeometry.payload(
+            scanId: "s", placementId: "p", placementLabel: nil,
+            capturedAt: "t", device: "d", box: box, shelfYs: [],
+            adjustedM: (w: 0.80, d: 0.35, h: 1.90)
+        )
+        XCTAssertNil(seeded.measuredInteriorIn)
+
+        // 真调过(内宽 +2cm):interiorIn 用调整值,实测保留,容积随最终值
+        let adjusted = ContainerGeometry.payload(
+            scanId: "s", placementId: "p", placementLabel: nil,
+            capturedAt: "t", device: "d", box: box, shelfYs: [],
+            adjustedM: (w: 0.82, d: 0.35, h: 1.90)
+        )
+        XCTAssertNotNil(adjusted.measuredInteriorIn)
+        XCTAssertEqual(adjusted.interiorIn.w, 32.3, accuracy: 0.1) // 0.82m
+        XCTAssertEqual(adjusted.measuredInteriorIn!.w, 31.5, accuracy: 0.1)
+        XCTAssertEqual(adjusted.interiorVolumeL, 0.82 * 0.35 * 1.9 * 1000, accuracy: 1)
+    }
+
+    func testPartialDimsProgressive() {
+        var taps = ContainerGeometry.Taps()
+        XCTAssertNil(ContainerGeometry.partialDims(taps).widthM)
+
+        // 只有底+顶:先出内高(不依赖朝向)
+        taps.bottom = SIMD3(0.1, 0.0, -0.2)
+        taps.top = SIMD3(-0.1, 1.9, -0.25)
+        var d = ContainerGeometry.partialDims(taps)
+        XCTAssertEqual(d.heightM!, 1.9, accuracy: 1e-9)
+        XCTAssertNil(d.widthM)
+
+        // 左右 + 朝向:出内宽;后+前沿:出内深
+        taps.left = SIMD3(-0.4, 0.9, -0.2)
+        taps.right = SIMD3(0.4, 0.3, -0.2)
+        taps.forwards = [SIMD2(0, -1)]
+        d = ContainerGeometry.partialDims(taps)
+        XCTAssertEqual(d.widthM!, 0.8, accuracy: 1e-9)
+        XCTAssertNil(d.depthM)
+
+        taps.back = SIMD3(0.0, 1.0, -0.35)
+        taps.front = SIMD3(0.0, 1.2, 0.0)
+        d = ContainerGeometry.partialDims(taps)
+        XCTAssertEqual(d.depthM!, 0.35, accuracy: 1e-9)
+    }
+
+    func testWireframeEdges() {
+        var taps = wardrobeTaps()
+        taps.forwards = [SIMD2(0, -1)]
+        taps.left = SIMD3(-0.4, 0.9, -0.2)
+        taps.right = SIMD3(0.4, 0.3, -0.2)
+        taps.front = SIMD3(0.0, 1.2, 0.0)
+        let box = ContainerGeometry.fitBox(taps)!
+        let edges = ContainerGeometry.wireframeEdges(box)
+        XCTAssertEqual(edges.count, 12)
+        // 棱长分布:4 条竖棱 = 内高,4 条横棱 = 内宽,4 条进深棱 = 内深
+        let lengths = edges
+            .map { simd_length($0.b - $0.a) }
+            .sorted()
+        XCTAssertEqual(lengths.filter { abs($0 - 1.9) < 0.01 }.count, 4)
+        XCTAssertEqual(lengths.filter { abs($0 - 0.8) < 0.01 }.count, 4)
+        XCTAssertEqual(lengths.filter { abs($0 - 0.35) < 0.01 }.count, 4)
+    }
+
+    func testShelfPlacementCentered() {
+        var taps = wardrobeTaps()
+        taps.forwards = [SIMD2(0, -1)]
+        taps.left = SIMD3(-0.4, 0.9, -0.2)
+        taps.right = SIMD3(0.4, 0.3, -0.2)
+        taps.front = SIMD3(0.0, 1.2, 0.0)
+        let box = ContainerGeometry.fitBox(taps)!
+        let place = ContainerGeometry.shelfPlacement(y: 0.62, box: box)
+        // 开口朝 +z 的柜子:中心 x=0,z 在 (-0.35+0)/2 = -0.175
+        XCTAssertEqual(place.center.x, 0.0, accuracy: 0.01)
+        XCTAssertEqual(place.center.y, 0.62, accuracy: 1e-9)
+        XCTAssertEqual(place.center.z, -0.175, accuracy: 0.01)
     }
 }
