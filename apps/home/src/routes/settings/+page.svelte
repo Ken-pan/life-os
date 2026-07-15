@@ -286,7 +286,8 @@
       <CloudScanPicker />
     </SettingsStackBlock>
     <p class="block-desc">
-      用 iPhone 上的 HomeScan(RoomPlan)扫描全屋后在这里拉取;将整包替换当前户型、家具与机位。
+      用 iPhone 上的 HomeScan(RoomPlan)扫描全屋后在这里拉取。默认只并入机位照片 ——
+      你这份户型是量过的,比扫描准,不会被动。初次可选「摆家具」，让实测家具各就各位。
     </p>
   {/if}
   <SettingsActionRow

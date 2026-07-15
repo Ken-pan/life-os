@@ -24,6 +24,7 @@
     "test:storage": "node scripts/storage-items-unit.mjs",
     "test:cloud-scan": "node scripts/cloud-scan-unit.mjs",
     "test:circulation": "node scripts/circulation-unit.mjs",
+    "test:scan-merge": "node scripts/scan-merge-unit.mjs",
     "test:storage-ui": "node scripts/storage-smoke.mjs",
     "test:placement-snap": "node scripts/placement-snap-unit.mjs",
     "test:fuzz": "node scripts/plan-edit-fuzz.mjs",

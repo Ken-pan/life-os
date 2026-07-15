@@ -15,6 +15,12 @@ import {
   validateScanPayload,
   buildProjectFromScan,
 } from './spatial/scan-payload.js'
+import {
+  mapScanIntoLayout,
+  mergeViewpointsOnly,
+  mergeFurnitureAndViewpoints,
+  describeReplacements,
+} from './spatial/scan-merge.js'
 
 export { validateScanPayload, buildProjectFromScan }
 
@@ -93,17 +99,53 @@ export async function resolveScanPhotos(payload, onProgress) {
 }
 
 /**
- * 全流程:拉 payload → 校验 → 照片落库 → 组装项目。
- * 调用方拿到 project 后自行走 applyCloudScan(确认/撤销在 UI 层)。
- * @param {string} id
- * @param {(done: number, total: number) => void} [onProgress]
- * @returns {Promise<{ project: SpatialProject, photos: { total: number, failed: number } }>}
+ * 拉取模式:
+ * - `photos` —— 日常。只把机位照片/状态并进来,户型与家具一概不动。
+ * - `furniture` —— 初始摆家具。照片 + 把实测家具摆进现有户型(墙体仍不动)。
+ * - `replace` —— 整包替换成扫描的户型。**慎用**:RoomPlan 有漂移,
+ *   手工量过的户型通常比它准。
+ * @typedef {'photos' | 'furniture' | 'replace'} PullMode
  */
-export async function pullScan(id, onProgress) {
+
+/**
+ * 全流程:拉 payload → 校验 → 照片落库 → 按模式并进当前户型。
+ * 调用方拿到 project 后自行走 applyCloudScan(确认/撤销在 UI 层)。
+ *
+ * ⚠️ 默认**不碰户型**:墙体/房间/储藏区都是用户一寸寸量的,比扫描准。
+ * @param {SpatialProject} current 当前户型
+ * @param {string} id
+ * @param {{ mode?: PullMode, onProgress?: (done: number, total: number) => void }} [opts]
+ * @returns {Promise<{
+ *   project: SpatialProject,
+ *   photos: { total: number, failed: number },
+ *   report: { mapped: number, skipped: number, rooms: any[] } | null,
+ *   replaced: Array<{ label: string, byLabel: string, movedFt: number }>,
+ * }>}
+ */
+export async function pullScan(current, id, opts = {}) {
+  const mode = opts.mode ?? 'photos'
   const payload = await fetchScanPayload(id)
   const invalid = validateScanPayload(payload)
   if (invalid) throw new Error(invalid)
-  const photos = await resolveScanPhotos(payload, onProgress)
-  const project = buildProjectFromScan(payload)
-  return { project, photos }
+  const photos = await resolveScanPhotos(payload, opts.onProgress)
+
+  if (mode === 'replace') {
+    return { project: buildProjectFromScan(payload), photos, report: null, replaced: [] }
+  }
+
+  const mapped = mapScanIntoLayout(current, payload.homeos)
+  if (mode === 'furniture') {
+    return {
+      project: mergeFurnitureAndViewpoints(current, mapped),
+      photos,
+      report: mapped.report,
+      replaced: describeReplacements(current, mapped),
+    }
+  }
+  return {
+    project: mergeViewpointsOnly(current, mapped.viewpoints),
+    photos,
+    report: { ...mapped.report, mapped: mapped.viewpoints.length },
+    replaced: [],
+  }
 }

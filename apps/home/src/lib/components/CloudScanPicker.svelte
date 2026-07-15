@@ -1,11 +1,14 @@
 <script>
   // 云端扫描列表 + 拉取(设置页「当前户型」区内使用,登录后可见)。
-  // 拉取 = 破坏性整包替换,confirm 提示先导出 JSON;会话内可一键还原。
+  // 默认只并机位照片:手工量过的户型比 RoomPlan 准,不该被扫描覆盖。
+  // 「摆家具」把实测家具映射进现有户型(墙体不动);「整包替换」才动户型,慎用。
+  // 三种模式都可在会话内一键还原。
   import { listScans, pullScan } from '$lib/cloud-scan.js'
   import {
     applyCloudScan,
     canUndoCloudScan,
     undoCloudScan,
+    getActiveProject,
   } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
 
@@ -16,6 +19,26 @@
   let progress = $state('')
   let error = $state('')
   let undoAvailable = $state(false)
+  /** @type {import('$lib/cloud-scan.js').PullMode} */
+  let mode = $state('photos')
+
+  const MODES = [
+    {
+      value: 'photos',
+      label: '只加照片与状态',
+      desc: '户型和家具都不动，只把这次拍的机位照片并进来（日常用这个）',
+    },
+    {
+      value: 'furniture',
+      label: '照片 + 摆家具',
+      desc: '墙体仍不动；把实测家具摆进现有户型，位置重合的手录家具让位给实测的',
+    },
+    {
+      value: 'replace',
+      label: '整包换成扫描户型',
+      desc: '连墙体一起替换。扫描有漂移，量过的户型通常更准 —— 除非你想重来',
+    },
+  ]
 
   async function refresh() {
     loading = true
@@ -34,24 +57,37 @@
   async function onPull(scan) {
     if (pullingId) return
     const name = scan.label || '未命名扫描'
-    if (
-      !confirm(
-        `将用「${name}」替换当前户型与家具布局(储物区将清空)。\n建议先在下方「布局备份」导出 JSON。继续?`,
-      )
-    ) {
-      return
-    }
+    const confirmMsg = {
+      photos: `把「${name}」的机位照片并进来?户型与家具不变。`,
+      furniture: `把「${name}」的实测家具摆进当前户型?墙体不动;位置重合的手录家具会让位给实测的。\n建议先在下方「布局备份」导出 JSON。`,
+      replace: `⚠️ 将用「${name}」整包替换当前户型(墙体、家具、储物区全换)。\n扫描有漂移,量过的户型通常更准。务必先导出 JSON 备份。确定?`,
+    }[mode]
+    if (!confirm(confirmMsg)) return
+
     pullingId = scan.id
     progress = '拉取中…'
     error = ''
     try {
-      const { project, photos } = await pullScan(scan.id, (done, total) => {
-        progress = `下载照片 ${done}/${total}…`
-      })
+      const { project, photos, report, replaced } = await pullScan(
+        getActiveProject(),
+        scan.id,
+        {
+          mode,
+          onProgress: (done, total) => {
+            progress = `下载照片 ${done}/${total}…`
+          },
+        },
+      )
       applyCloudScan(project)
       undoAvailable = canUndoCloudScan()
       if (photos.failed > 0) {
         toast(`${photos.failed} 张照片下载失败,对应机位保留为空视角`, 'error')
+      }
+      if (mode === 'furniture' && report) {
+        const parts = [`摆了 ${report.mapped} 件`]
+        if (replaced.length) parts.push(`顶掉 ${replaced.length} 件手录的`)
+        if (report.skipped) parts.push(`跳过 ${report.skipped} 件`)
+        toast(parts.join(' · '))
       }
     } catch (err) {
       error = err instanceof Error ? err.message : String(err)
@@ -95,6 +131,19 @@
     <p class="scan-empty">云端还没有扫描。用 iPhone 上的 HomeScan 扫一次再来。</p>
     <button type="button" class="btn-secondary" onclick={refresh}>刷新</button>
   {:else}
+    <fieldset class="modes">
+      <legend class="modes-legend">拉取方式</legend>
+      {#each MODES as m (m.value)}
+        <label class="mode" class:mode-on={mode === m.value}>
+          <input type="radio" name="pullmode" value={m.value} bind:group={mode} />
+          <span class="mode-text">
+            <span class="mode-label">{m.label}</span>
+            <span class="mode-desc">{m.desc}</span>
+          </span>
+        </label>
+      {/each}
+    </fieldset>
+
     <ul class="scan-list">
       {#each scans as scan (scan.id)}
         <li class="scan-item">
@@ -147,6 +196,56 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+  }
+
+  .modes {
+    border: 1px solid var(--line, rgba(128, 128, 128, 0.25));
+    border-radius: 8px;
+    padding: 8px 10px 10px;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .modes-legend {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--t3, var(--t2));
+    padding: 0 4px;
+  }
+
+  .mode {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+  }
+
+  .mode-on {
+    background: rgba(128, 128, 128, 0.1);
+  }
+
+  .mode-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .mode-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--t1);
+  }
+
+  .mode-desc {
+    font-size: 11px;
+    color: var(--t3, var(--t2));
+    line-height: 1.4;
   }
 
   .scan-item {
