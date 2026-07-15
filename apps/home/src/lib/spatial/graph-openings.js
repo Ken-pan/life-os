@@ -4,32 +4,71 @@
 /** @typedef {import('./types.js').SpatialWall} SpatialWall */
 /** @typedef {import('./types.js').SpatialOpening} SpatialOpening */
 
-import {
-  bifoldHorizontalUp,
-  bifoldVerticalLeft,
-  bifoldVerticalRight,
-  bypassSlidingHorizontal,
-  bypassSlidingVertical,
-  doubleSwingHorizontalDown,
-  doubleSwingHorizontalUp,
-  doubleSwingVerticalLeft,
-  doubleSwingVerticalRight,
-  pocketHorizontal,
-  pocketVertical,
-  slidingHorizontal,
-  slidingVertical,
-  swingHorizontalDown,
-  swingHorizontalUp,
-  swingVerticalLeft,
-  swingVerticalRight,
-} from './doors.js'
+import { doorPath } from './doors.js'
+import { windowPath } from './windows.js'
 import { defaultDoorSpanIn, doorStyleLabel } from './door-styles.js'
+import { defaultWindowSpanIn, windowStyleLabel } from './window-styles.js'
+import { wallStrokePx } from './wall-standards.js'
 import { pickWallEdgeAt } from './wall-graph.js'
 
 let openingSeq = 1
 
 function nextOpeningId(prefix = 'go') {
   return `${prefix}-${openingSeq++}`
+}
+
+/** 只认自动生成的 go-N：convert508Openings 会原样保留 door-main / win-living 这类 508 id。 */
+const OPENING_ID_RE = /^go-(\d+)$/
+
+/**
+ * 把门窗 id 计数器推到已有 id 之上。理由同 wall-graph.js 的 syncGraphIdSeq：
+ * openingSeq 刷新归零，存档里的 go-N 不会，不同步则刷新后新建的门窗会与旧门窗撞 id。
+ * 幂等、只增不减；convert508Openings 仍会先重置回 1。
+ * @param {GraphOpening[]} graphOpenings
+ */
+export function syncOpeningIdSeq(graphOpenings) {
+  let max = 0
+  for (const o of graphOpenings ?? []) {
+    const m = OPENING_ID_RE.exec(o.id ?? '')
+    if (m) max = Math.max(max, Number(m[1]))
+  }
+  if (max >= openingSeq) openingSeq = max + 1
+}
+
+/**
+ * 丢掉挂在已不存在墙段上的门窗。
+ *
+ * 孤儿门窗渲染时会被 deriveWallsAndOpenings 静默跳过，却永远留在 state/localStorage 里；
+ * 等 id 复用时又会漂到一面毫不相干的新墙上。
+ * @param {WallGraph} graph
+ * @param {GraphOpening[]} graphOpenings
+ */
+export function pruneOrphanOpenings(graph, graphOpenings) {
+  const edgeIds = new Set(graph.edges.map((e) => e.id))
+  return (graphOpenings ?? []).filter((o) => edgeIds.has(o.edgeId))
+}
+
+/**
+ * 把门窗对齐回墙图：丢掉孤儿，并把越出墙段的门窗收回墙内。
+ *
+ * 拖顶点、分割墙都会改变墙段的存在与长度，却不会顺手管上面的门窗，
+ * 所以统一在这里兜底 —— 同时也会把历史存档里已经坏掉的数据治好。
+ * 引用相等性有意保留：没变化时原样返回原数组/原对象，避免 hydrate 每帧制造新引用。
+ * @param {WallGraph} graph
+ * @param {GraphOpening[]} graphOpenings
+ */
+export function reconcileOpeningsWithGraph(graph, graphOpenings) {
+  const kept = pruneOrphanOpenings(graph, graphOpenings)
+  let changed = kept.length !== (graphOpenings?.length ?? 0)
+  const fitted = kept.map((o) => {
+    const next = fitGraphOpeningOnEdge(graph, o)
+    if (next.spanIn !== o.spanIn || next.offsetIn !== o.offsetIn) {
+      changed = true
+      return next
+    }
+    return o
+  })
+  return changed ? fitted : graphOpenings
 }
 
 /**
@@ -194,93 +233,17 @@ export function convert508Openings(project, graph) {
  * @param {GraphOpening} go
  * @param {import('./types.js').Point} p0
  * @param {import('./types.js').Point} p1
- * @param {boolean} horizontal
+ * @param {number} thickness host wall thickness in px
  * @returns {string}
  */
-function doorPathForGraphOpening(go, p0, p1, horizontal) {
-  const style = go.style ?? 'swing'
-  const inward = go.swing === 'in'
-
-  if (style === 'sliding') {
-    if (horizontal) {
-      const x1 = Math.min(p0.x, p1.x)
-      const x2 = Math.max(p0.x, p1.x)
-      return slidingHorizontal({ x1, x2, y: p0.y })
-    }
-    const y1 = Math.min(p0.y, p1.y)
-    const y2 = Math.max(p0.y, p1.y)
-    return slidingVertical({ x: p0.x, y1, y2 })
-  }
-
-  if (style === 'bypass') {
-    if (horizontal) {
-      const x1 = Math.min(p0.x, p1.x)
-      const x2 = Math.max(p0.x, p1.x)
-      return bypassSlidingHorizontal({ x1, x2, y: p0.y })
-    }
-    const y1 = Math.min(p0.y, p1.y)
-    const y2 = Math.max(p0.y, p1.y)
-    return bypassSlidingVertical({ x: p0.x, y1, y2 })
-  }
-
-  if (style === 'pocket') {
-    const slideH = inward ? 'right' : 'left'
-    const slideV = inward ? 'down' : 'up'
-    if (horizontal) {
-      const x1 = Math.min(p0.x, p1.x)
-      const x2 = Math.max(p0.x, p1.x)
-      return pocketHorizontal({ x1, x2, y: p0.y, slide: slideH })
-    }
-    const y1 = Math.min(p0.y, p1.y)
-    const y2 = Math.max(p0.y, p1.y)
-    return pocketVertical({ x: p0.x, y1, y2, slide: slideV })
-  }
-
-  if (style === 'bifold') {
-    if (horizontal) {
-      const x1 = Math.min(p0.x, p1.x)
-      const x2 = Math.max(p0.x, p1.x)
-      return bifoldHorizontalUp({ x1, x2, y: p0.y })
-    }
-    const y1 = Math.min(p0.y, p1.y)
-    const y2 = Math.max(p0.y, p1.y)
-    return inward
-      ? bifoldVerticalLeft({ x: p0.x, y1, y2 })
-      : bifoldVerticalRight({ x: p0.x, y1, y2 })
-  }
-
-  if (style === 'double') {
-    if (horizontal) {
-      const x1 = Math.min(p0.x, p1.x)
-      const x2 = Math.max(p0.x, p1.x)
-      const y = p0.y
-      return inward
-        ? doubleSwingHorizontalDown({ x1, x2, y })
-        : doubleSwingHorizontalUp({ x1, x2, y })
-    }
-    const y1 = Math.min(p0.y, p1.y)
-    const y2 = Math.max(p0.y, p1.y)
-    const x = p0.x
-    return inward
-      ? doubleSwingVerticalLeft({ x, y1, y2 })
-      : doubleSwingVerticalRight({ x, y1, y2 })
-  }
-
-  if (horizontal) {
-    const x1 = Math.min(p0.x, p1.x)
-    const x2 = Math.max(p0.x, p1.x)
-    const y = p0.y
-    return inward
-      ? swingHorizontalDown({ x1, x2, y })
-      : swingHorizontalUp({ x1, x2, y })
-  }
-
-  const y1 = Math.min(p0.y, p1.y)
-  const y2 = Math.max(p0.y, p1.y)
-  const x = p0.x
-  return inward
-    ? swingVerticalLeft({ x, y1, y2 })
-    : swingVerticalRight({ x, y1, y2 })
+function doorPathForGraphOpening(go, p0, p1, thickness) {
+  // doorPath works in the wall's own frame, so this is correct at any wall
+  // angle. Handing comes from argument order (hinge first); `swing` picks the
+  // side, which is relative to the hinge->latch direction.
+  return doorPath(go.style ?? 'swing', p0, p1, {
+    thickness,
+    side: go.swing === 'in' ? 'right' : 'left',
+  })
 }
 
 /**
@@ -288,14 +251,23 @@ function doorPathForGraphOpening(go, p0, p1, horizontal) {
  * @param {import('./types.js').Point} p0
  * @param {import('./types.js').Point} p1
  * @param {boolean} horizontal
+ * @param {number} [thickness] host wall thickness in px
  * @returns {SpatialOpening}
  */
-function graphOpeningToSpatial(go, p0, p1, horizontal) {
+function graphOpeningToSpatial(go, p0, p1, horizontal, thickness = 6) {
   const id = go.id
   if (go.type === 'window') {
+    const style = /** @type {any} */ (go.style ?? 'fixed')
     return {
       id,
       type: 'window',
+      windowStyle: style,
+      // windowPath works in the wall's own frame, so this is correct at any
+      // wall angle. Doors still dispatch on horizontal/vertical below.
+      pathD: windowPath(style, p0, p1, {
+        thickness,
+        out: go.swing !== 'in',
+      }),
       from: p0,
       to: p1,
     }
@@ -306,7 +278,7 @@ function graphOpeningToSpatial(go, p0, p1, horizontal) {
     id,
     type: 'door',
     doorStyle,
-    pathD: doorPathForGraphOpening(go, p0, p1, horizontal),
+    pathD: doorPathForGraphOpening(go, p0, p1, thickness),
   }
 }
 
@@ -328,6 +300,8 @@ export function deriveWallsAndOpenings(graph, graphOpenings) {
     const dx = vb.x - va.x
     const dy = vb.y - va.y
     const horizontal = Math.abs(dx) >= Math.abs(dy)
+    const role = /** @type {const} */ (edge.exterior ? 'exterior' : 'interior')
+    const thickness = wallStrokePx(role, graph.pxPerFt)
 
     const edgeOpenings = graphOpenings
       .filter((o) => o.edgeId === edge.id && !o.hidden)
@@ -339,6 +313,7 @@ export function deriveWallsAndOpenings(graph, graphOpenings) {
         from: { x: va.x, y: va.y },
         to: { x: vb.x, y: vb.y },
         kind: 'wall',
+        role,
       })
       continue
     }
@@ -357,13 +332,14 @@ export function deriveWallsAndOpenings(graph, graphOpenings) {
           from: w0,
           to: w1,
           kind: 'wall',
+          role,
         })
       }
       const t0 = startIn / lenIn
       const t1 = endIn / lenIn
       const p0 = pointOnEdge(va, vb, t0)
       const p1 = pointOnEdge(va, vb, t1)
-      openings.push(graphOpeningToSpatial(go, p0, p1, horizontal))
+      openings.push(graphOpeningToSpatial(go, p0, p1, horizontal, thickness))
       cursorIn = endIn
     }
     if (cursorIn < lenIn - 0.01) {
@@ -374,6 +350,7 @@ export function deriveWallsAndOpenings(graph, graphOpenings) {
         from: w0,
         to: { x: vb.x, y: vb.y },
         kind: 'wall',
+        role,
       })
     }
   }
@@ -427,31 +404,40 @@ export function remapOpeningsAfterSplit(
  * @param {string} edgeId
  * @param {import('./types.js').Point} pt
  * @param {'door' | 'window'} [type]
- * @param {GraphOpening['style']} [doorStyle]
+ * @param {GraphOpening['style']} [style] door or window style, per `type`
  * @returns {GraphOpening | null}
  */
-export function createOpeningAtPoint(
-  graph,
-  edgeId,
-  pt,
-  type = 'door',
-  doorStyle = 'swing',
-) {
+export function createOpeningAtPoint(graph, edgeId, pt, type = 'door', style) {
   const proj = projectPointOnEdge(graph, edgeId, pt)
   if (!proj) return null
-  const spanIn =
-    type === 'window' ? 48 : defaultDoorSpanIn(doorStyle ?? 'swing')
-  let offsetIn = Math.max(0, proj.offsetIn - spanIn / 2)
-  if (proj.lenIn > 0) {
-    offsetIn = Math.min(offsetIn, Math.max(0, proj.lenIn - spanIn))
-  }
+  // 墙比最小门宽还短就放不下：硬塞的话 spanIn 会被 MIN_OPENING_SPAN_IN 托底，
+  // 结果是一个比墙还宽的洞（整面墙都没了）。宁可拒绝，也不造非法几何。
+  if (proj.lenIn < MIN_OPENING_SPAN_IN) return null
+  const resolved =
+    style ?? (type === 'window' ? 'fixed' : /** @type {const} */ ('swing'))
+  const defaultSpanIn =
+    type === 'window'
+      ? defaultWindowSpanIn(/** @type {any} */ (resolved))
+      : defaultDoorSpanIn(/** @type {any} */ (resolved))
+  // 墙比默认门/窗宽度还短时要收到墙长 —— 切换门窗型、循环样式走的都是
+  // fitGraphOpeningOnEdge，唯独新建这条路径以前没收，于是能建出比墙还宽的门窗：
+  // 渲染被 clamp 成整面墙都是洞，选中条却显示默认宽度，点击热区也溢出墙外。
+  const spanIn = Math.max(
+    MIN_OPENING_SPAN_IN,
+    Math.min(defaultSpanIn, proj.lenIn),
+  )
+  const offsetIn = clampGraphOpeningOffset(
+    proj.offsetIn - spanIn / 2,
+    spanIn,
+    proj.lenIn,
+  )
   return {
     id: nextOpeningId(),
     edgeId,
     offsetIn,
     spanIn,
     type,
-    style: type === 'door' ? doorStyle : undefined,
+    style: resolved,
     swing: 'out',
   }
 }
@@ -459,6 +445,17 @@ export function createOpeningAtPoint(
 export const MIN_OPENING_SPAN_IN = 24
 
 export { cycleDoorStyleOpening, doorStyleLabel } from './door-styles.js'
+export { cycleWindowStyleOpening, windowStyleLabel } from './window-styles.js'
+
+/**
+ * Style label for either opening type.
+ * @param {GraphOpening} go
+ */
+export function openingStyleLabel(go) {
+  return go.type === 'window'
+    ? windowStyleLabel(/** @type {any} */ (go.style))
+    : doorStyleLabel(/** @type {any} */ (go.style))
+}
 
 /**
  * @param {number} offsetIn
@@ -639,13 +636,23 @@ function formatInchesLabel(inches) {
  */
 export function toggleGraphOpeningType(go) {
   const nextType = go.type === 'door' ? 'window' : 'door'
-  const spanIn = nextType === 'window' ? Math.max(go.spanIn, 48) : go.spanIn
+  // 'sliding' is the one style both types share, so it survives the toggle.
+  const sliding = go.style === 'sliding'
+  if (nextType === 'window') {
+    return {
+      ...go,
+      type: 'window',
+      spanIn: Math.max(go.spanIn, 48),
+      style: /** @type {const} */ (sliding ? 'sliding' : 'fixed'),
+      swing: go.swing ?? 'out',
+    }
+  }
   return {
     ...go,
-    type: nextType,
-    spanIn,
-    style: nextType === 'door' ? go.style ?? 'swing' : undefined,
-    swing: nextType === 'door' ? go.swing ?? 'out' : undefined,
+    type: 'door',
+    spanIn: go.spanIn,
+    style: /** @type {const} */ (sliding ? 'sliding' : 'swing'),
+    swing: go.swing ?? 'out',
   }
 }
 
@@ -654,7 +661,9 @@ export function toggleGraphOpeningType(go) {
  * @returns {GraphOpening}
  */
 export function flipGraphOpeningSwing(go) {
-  if (go.type !== 'door') return go
+  // Windows only have a hinge side when they're casement; every other style
+  // reads identically flipped.
+  if (go.type === 'window' && go.style !== 'casement') return go
   return {
     ...go,
     swing: go.swing === 'in' ? 'out' : 'in',

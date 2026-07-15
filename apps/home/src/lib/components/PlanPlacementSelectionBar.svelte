@@ -1,9 +1,11 @@
 <script>
   import {
+    getActiveProject,
     removePlacement,
     rotatePlacementById,
     updatePlacement,
   } from '$lib/state.svelte.js'
+  import { inchesToPx, pxToInches } from '$lib/spatial/placements.js'
 
   /** @type {{
    *   placement: import('$lib/spatial/types.js').SpatialPlacement,
@@ -16,18 +18,30 @@
   let wDraft = $state('')
   let hDraft = $state('')
 
+  // Placements are stored in plan px; this bar talks inches throughout.
+  // getActiveProject() rebuilds the whole plan, so bind it once.
+  const project = $derived(getActiveProject())
+  const pxPerFt = $derived(
+    project.wallGraph?.pxPerFt ?? project.layoutConfig?.pxPerFt ?? 36,
+  )
+  const wIn = $derived(Math.round(pxToInches(placement.w, pxPerFt)))
+  const hIn = $derived(Math.round(pxToInches(placement.h, pxPerFt)))
+
   $effect(() => {
-    wDraft = String(Math.round(placement.w))
-    hDraft = String(Math.round(placement.h))
+    wDraft = String(wIn)
+    hDraft = String(hIn)
     detailsOpen = false
   })
 
   function commitSize() {
-    const w = Math.max(8, Math.round(Number(wDraft)))
-    const h = Math.max(8, Math.round(Number(hDraft)))
-    if (!Number.isFinite(w) || !Number.isFinite(h)) return
-    if (w === placement.w && h === placement.h) return
-    updatePlacement(placement.id, { w, h })
+    const wInNext = Math.max(4, Math.round(Number(wDraft)))
+    const hInNext = Math.max(4, Math.round(Number(hDraft)))
+    if (!Number.isFinite(wInNext) || !Number.isFinite(hInNext)) return
+    if (wInNext === wIn && hInNext === hIn) return
+    updatePlacement(placement.id, {
+      w: inchesToPx(wInNext, pxPerFt),
+      h: inchesToPx(hInNext, pxPerFt),
+    })
   }
 </script>
 
@@ -40,7 +54,7 @@
 >
   {#if compact}
     <span class="graph-sel-title graph-sel-title-compact">
-      {placement.label} · {Math.round(placement.w)}″×{Math.round(placement.h)}″
+      {placement.label} · {wIn}″×{hIn}″
     </span>
   {:else}
     <span class="graph-sel-title">{placement.label}</span>

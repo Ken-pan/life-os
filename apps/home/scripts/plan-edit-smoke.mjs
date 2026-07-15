@@ -4,7 +4,7 @@
  */
 import { chromium } from 'playwright'
 
-const BASE = process.argv[2] ?? 'http://127.0.0.1:5197'
+const BASE = process.argv[2] ?? 'http://127.0.0.1:5874'
 const SKEY = 'homeos_spatial_v1'
 const isMac = process.platform === 'darwin'
 
@@ -46,6 +46,22 @@ async function prime(page) {
 /** @param {import('playwright').Page} page */
 async function edgeCount(page) {
   return page.locator('[data-edge-id]').count()
+}
+
+/**
+ * edgeCount reads DOM nodes, so a re-render still in flight under the fixed
+ * sleeps reads 0 (flaky on a cold dev server). Poll until it settles, but return
+ * the last count regardless so a genuine mismatch still fails the check.
+ * @param {import('playwright').Page} page @param {number} expected @param {number} timeout
+ */
+async function edgeCountSettled(page, expected, timeout = 4000) {
+  const deadline = Date.now() + timeout
+  let n = await edgeCount(page)
+  while (n !== expected && Date.now() < deadline) {
+    await page.waitForTimeout(100)
+    n = await edgeCount(page)
+  }
+  return n
 }
 
 /** @param {import('playwright').Page} page @param {number} svgX @param {number} svgY */
@@ -117,6 +133,24 @@ async function enterGraphEdit(page) {
   await page.waitForTimeout(200)
 }
 
+/**
+ * Delete a wall the way desktop actually offers it: 选择 tool → click the wall →
+ * 删除 on the selection bar. There is no 删墙 tool outside the <599px compact select.
+ * Pick a point clear of openings (hit rect = bounds + 18px pad) and vertices (r=6),
+ * or the click selects those instead and the bar never shows.
+ * @param {import('playwright').Page} page @param {number} svgX @param {number} svgY
+ */
+async function removeWallAt(page, svgX, svgY) {
+  await page.getByRole('button', { name: '选择', exact: true }).click()
+  await page.waitForTimeout(200)
+  await clickSvg(page, svgX, svgY)
+  await page.waitForTimeout(250)
+  const bar = page.getByRole('toolbar', { name: '墙段快捷操作' })
+  await bar.waitFor({ state: 'visible', timeout: 5000 })
+  await bar.getByRole('button', { name: '删除', exact: true }).click()
+  await page.waitForTimeout(400)
+}
+
 /** @param {import('playwright').Page} page */
 async function zoneCount(page) {
   return page.evaluate((key) => {
@@ -174,6 +208,13 @@ async function enterZoneEdit(page) {
 async function enterPlaceEdit(page) {
   await page.getByRole('button', { name: '③ 布置', exact: true }).click()
   await page.waitForTimeout(300)
+}
+
+/** @param {import('playwright').Page} page @param {string} name */
+function placeTool(page, name) {
+  return page
+    .getByRole('group', { name: '布置工具' })
+    .getByRole('button', { name, exact: true })
 }
 
 /** @param {import('playwright').Page} page */
@@ -238,7 +279,7 @@ await page.setViewportSize({ width: 1280, height: 900 })
 
 await prime(page)
 await enterGraphEdit(page)
-const initial = await edgeCount(page)
+const initial = await edgeCountSettled(page, 1)
 push({
   name: 'prime wallGraph',
   ok: initial === 1,
@@ -252,7 +293,7 @@ await page.waitForTimeout(150)
 await clickSvg(page, 120, 360)
 await page.waitForTimeout(400)
 
-const afterAdd = await edgeCount(page)
+const afterAdd = await edgeCountSettled(page, initial + 1)
 push({
   name: 'wallAdd +1 edge',
   ok: afterAdd === initial + 1,
@@ -296,12 +337,9 @@ push({
   detail: `type=${typeAfterToggle}`,
 })
 
-await page.getByRole('button', { name: '删墙', exact: true }).click()
-await page.waitForTimeout(200)
-await clickSvg(page, 240, 120)
-await page.waitForTimeout(400)
+await removeWallAt(page, 170, 120)
 
-const afterRemove = await edgeCount(page)
+const afterRemove = await edgeCountSettled(page, initial)
 const openingsAfterWallDelete = await graphOpeningCount(page)
 push({
   name: 'remove wall cascades opening',
@@ -311,7 +349,7 @@ push({
 
 await undo(page, 2)
 await page.waitForTimeout(400)
-const afterUndo = await edgeCount(page)
+const afterUndo = await edgeCountSettled(page, afterAdd)
 push({
   name: 'undo x2 restore edges',
   ok: afterUndo === afterAdd,
@@ -321,7 +359,7 @@ push({
 await page.reload({ waitUntil: 'networkidle' })
 await enterGraphEdit(page)
 await page.waitForTimeout(300)
-const afterReload = await edgeCount(page)
+const afterReload = await edgeCountSettled(page, afterAdd)
 push({
   name: 'persist after reload',
   ok: afterReload === afterAdd,
@@ -354,10 +392,7 @@ push({
 
 await page.getByRole('button', { name: '① 墙体', exact: true }).click()
 await page.waitForTimeout(200)
-await page.getByRole('button', { name: '删墙', exact: true }).click()
-await page.waitForTimeout(200)
-await clickSvg(page, 240, 120)
-await page.waitForTimeout(400)
+await removeWallAt(page, 170, 120)
 const staleAfterWall = await firstZoneStale(page)
 push({
   name: 'zone stale after wall change',
@@ -366,9 +401,19 @@ push({
 })
 
 await enterPlaceEdit(page)
-await page.getByRole('button', { name: '家具', exact: true }).click()
-await page.waitForTimeout(200)
-await page.getByRole('button', { name: '柜', exact: true }).click()
+// 家具 also names a tool in the floating toolbar, hence the 布置工具 scope. Entering
+// ③ 布置 already sets placementTool='place' (syncEditStepSideEffects), so it is
+// normally active on arrival — clicking it regardless races the mode-switch
+// re-render and detaches the node out from under Playwright.
+const furnitureBtn = placeTool(page, '家具')
+await furnitureBtn.waitFor({ state: 'visible', timeout: 10000 })
+if ((await furnitureBtn.getAttribute('aria-pressed')) !== 'true') {
+  await furnitureBtn.click()
+  await page.waitForTimeout(200)
+}
+// Kind buttons are aria-label'd `${group} · ${label}`, so '柜' alone is neither
+// the accessible name nor unique (床头柜/五斗柜/衣柜/电视柜).
+await page.getByRole('button', { name: '储物 · 柜', exact: true }).click()
 await page.waitForTimeout(200)
 await clickSvg(page, 240, 150)
 await page.waitForTimeout(400)
@@ -379,7 +424,7 @@ push({
   detail: `placements=${placementsAfter}`,
 })
 
-await page.getByRole('button', { name: '标储藏', exact: true }).click()
+await placeTool(page, '标储藏').click()
 await page.waitForTimeout(200)
 const plCenter = await page.evaluate((key) => {
   const raw = localStorage.getItem(key)

@@ -17,6 +17,8 @@
     activateWallGraphMode,
     revertToParametric508,
     reconvertGraphOpenings,
+    getAngleSnapDeg,
+    setAngleSnapDeg,
   } from '$lib/state.svelte.js'
   import { getActiveProject } from '$lib/state.svelte.js'
   import {
@@ -33,6 +35,18 @@
     { value: 'light', label: '浅色' },
     { value: 'dark', label: '深色' },
   ]
+
+  const angleSnapOptions = [
+    { value: '0', label: '关闭' },
+    { value: '15', label: '15°' },
+    { value: '45', label: '45°' },
+    { value: '90', label: '正交' },
+  ]
+
+  /** @param {string} v */
+  function onAngleSnap(v) {
+    setAngleSnapDeg(Number(v))
+  }
 
   const project = $derived(getActiveProject())
   const wallGraphMode = $derived(isWallGraphMode())
@@ -218,6 +232,17 @@
       onclick={reconvertGraphOpenings}
     />
   {/if}
+  <SettingsRow label="画墙角度吸附">
+    <SettingsSegment
+      options={angleSnapOptions}
+      value={String(getAngleSnapDeg())}
+      onchange={onAngleSnap}
+      ariaLabel="画墙角度吸附"
+    />
+  </SettingsRow>
+  <p class="block-desc">
+    画墙时按增量吸住角度，斜墙也能画准。Shift 临时强制正交，Alt 临时脱开吸附。
+  </p>
 </SettingsSection>
 
 <SettingsSection title="当前户型">

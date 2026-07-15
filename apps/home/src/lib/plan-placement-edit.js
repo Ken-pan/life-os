@@ -8,6 +8,7 @@
  *   onPlacePoint?: (pt: { x: number, y: number }) => void,
  *   onSelectPlacement?: (id: string) => void,
  *   onAssignStorage?: (pt: { x: number, y: number }) => void,
+ *   getPlacementRect?: (id: string) => { x: number, y: number, w: number, h: number } | null,
  *   onPlacementDragStart?: (id: string) => void,
  *   onPlacementDrag?: (id: string, pt: { x: number, y: number }) => void,
  *   onPlacementDrop?: (id: string, pt: { x: number, y: number }) => void,
@@ -18,7 +19,12 @@ export function bindPlanPlacementEdit(el, opts) {
   let dragId = null
   /** @type {number | null} */
   let capturePointerId = null
-  /** @type {{ x: number, y: number } | null} */
+  /**
+   * Where inside the piece the grab landed. Reported drag points are corrected
+   * by this so the piece keeps its position relative to the cursor — without
+   * it, grabbing a King bed near its edge teleports it up to half its width.
+   * @type {{ x: number, y: number } | null}
+   */
   let dragOffset = null
 
   /** @param {Element | null | undefined} target */
@@ -54,6 +60,10 @@ export function bindPlanPlacementEdit(el, opts) {
       e.preventDefault()
       e.stopPropagation()
       dragId = id
+      const rect = opts.getPlacementRect?.(id)
+      dragOffset = rect
+        ? { x: pt.x - (rect.x + rect.w / 2), y: pt.y - (rect.y + rect.h / 2) }
+        : { x: 0, y: 0 }
       capturePointerId = e.pointerId
       el.setPointerCapture(e.pointerId)
       opts.onSelectPlacement?.(id)
@@ -70,18 +80,28 @@ export function bindPlanPlacementEdit(el, opts) {
     }
   }
 
+  /**
+   * The pointer position expressed as where the piece's *centre* should go,
+   * which is what the drag callbacks consume.
+   * @param {PointerEvent} e
+   */
+  function centerPoint(e) {
+    const pt = opts.clientToSvg(e.clientX, e.clientY)
+    if (!dragOffset) return pt
+    return { x: pt.x - dragOffset.x, y: pt.y - dragOffset.y }
+  }
+
   /** @param {PointerEvent} e */
   function move(e) {
     if (!dragId) return
     e.preventDefault()
-    const pt = opts.clientToSvg(e.clientX, e.clientY)
-    opts.onPlacementDrag?.(dragId, pt)
+    opts.onPlacementDrag?.(dragId, centerPoint(e))
   }
 
   /** @param {PointerEvent} e */
   function up(e) {
     if (!dragId) return
-    const pt = opts.clientToSvg(e.clientX, e.clientY)
+    const pt = centerPoint(e)
     opts.onPlacementDrop?.(dragId, pt)
     dragId = null
     dragOffset = null

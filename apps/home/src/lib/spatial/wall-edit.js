@@ -331,8 +331,17 @@ export function defaultOpenings() {
     bathDoor: { offset: { ft: 2, in: 4 }, span: { ft: 2, in: 10 } },
     linenDoor: { offset: { ft: 0, in: 4 }, span: { ft: 2, in: 4 } },
     laundryDoor: { offset: { ft: 0, in: 4 }, span: { ft: 5, in: 0 } },
-    entryDoor: { offsetFromRight: { ft: 5, in: 6 }, span: { ft: 3, in: 0 } },
+    // 入户门紧贴结构柱东侧（assumptions 记录的实测意图，开发商效果图也显示门西侧
+    // 紧邻构件、无空档）。柱东缘 = 浴室宽 8'5" + 洗衣间宽 3'7" = 12'0"，加 3'0" 门宽
+    // 后距东墙 = 24'4" − 12'0" − 3'0" = 9'4"。若上述房间宽度变了，这个数要跟着重算。
+    entryDoor: { offsetFromRight: { ft: 9, in: 4 }, span: { ft: 3, in: 0 } },
     balconyDoor: { offset: { ft: 0, in: 4 }, span: { ft: 2, in: 8 } },
+    // Glazing insets, measured off the developer render (wa802-a9-769sf-dci).
+    // The render is a perspective 3D view, so a wall's height shifts where its
+    // openings project — exact offsets are NOT recoverable from it. What is
+    // unambiguous there is the *count*: the living room's north glazing is two
+    // units with a mullion, and the bedroom has a single window rather than the
+    // full-width band this model used to draw.
     livingWindow: {
       offset: { ft: 0, in: 0 },
       span: { ft: 0, in: 0 },
@@ -342,8 +351,8 @@ export function defaultOpenings() {
     bedroomWindow: {
       offset: { ft: 0, in: 0 },
       span: { ft: 0, in: 0 },
-      insetLeft: { ft: 2, in: 0 },
-      insetRight: { ft: 2, in: 0 },
+      insetLeft: { ft: 2, in: 6 },
+      insetRight: { ft: 6, in: 0 },
     },
   }
 }

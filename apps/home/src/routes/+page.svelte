@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation'
   import { getActiveProject } from '$lib/state.svelte.js'
   import { projectStats } from '$lib/spatial/model.js'
+  import { countStorageItems } from '$lib/spatial/storage-items.js'
   import FloorPlanPreview from '$lib/components/FloorPlanPreview.svelte'
   import PlanLegend from '$lib/components/PlanLegend.svelte'
   import StorageZoneCard from '$lib/components/StorageZoneCard.svelte'
@@ -14,6 +15,7 @@
 
   const project = $derived(getActiveProject())
   const stats = $derived(projectStats(project))
+  const itemCount = $derived(countStorageItems(project.storageZones))
   const roomCount = $derived(project.rooms.filter((r) => r.kind !== 'circulation').length)
   const previewZones = $derived(
     ['s6', 's5', 's8']
@@ -43,7 +45,8 @@
 </script>
 
 <p class="page-sub home-lead">
-  {stats.storageZones} 个储藏区 · {roomCount} 个房间 · 青灰斜纹 = 储藏区
+  {stats.storageZones} 个储藏区 · {itemCount} 件物品 · {roomCount} 个房间 ·
+  青灰斜纹 = 储藏区
 </p>
 
 <div class="home-chips">

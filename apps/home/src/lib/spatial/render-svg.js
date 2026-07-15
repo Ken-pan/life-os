@@ -2,7 +2,10 @@
 import { formatFtIn } from './dimensions.js'
 import { graphOpeningBounds, graphOpeningHitRect } from './graph-openings.js'
 import { polygonPointsAttr, zoneCentroid } from './zones.js'
+import { viewpointConePath, viewpointHandlePoint } from './viewpoints.js'
 import { wallStrokePx } from './wall-standards.js'
+import { furnitureSymbol } from './furniture-symbols.js'
+import { PLACEMENT_KINDS } from './placements.js'
 import {
   isEditableWall,
   OPENING_EDIT_BINDINGS,
@@ -44,6 +47,7 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   selectedEdge?: string,
  *   wallChainFrom?: { x: number, y: number } | null,
  *   wallChainHover?: { x: number, y: number } | null,
+ *   snapGuides?: (import('./snap.js').SnapGuide | import('./placement-snap.js').PlacementGuide)[],
  *   zoneEditMode?: boolean,
  *   zoneTool?: 'zoneAdd' | 'zoneSelect' | 'zoneRemove',
  *   selectedSpatialZone?: string,
@@ -54,6 +58,11 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   placementEditMode?: boolean,
  *   placementTool?: 'place' | 'storage',
  *   selectedPlacement?: string,
+ *   viewpointEditMode?: boolean,
+ *   viewpointTool?: 'viewAdd' | 'viewSelect',
+ *   selectedViewpoint?: string,
+ *   previewViewpoints?: import('./types.js').SpatialViewpoint[] | null,
+ *   showViewpoints?: boolean,
  *   showFurniture?: boolean,
  *   showRoomEnglish?: boolean,
  *   hideStorageZones?: boolean,
@@ -82,6 +91,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
   const hasSpatialZones = spatialZones.length > 0
   const hideFurniture = opts.hideFurniture && !opts.showFurniture
   const hideStorageZones = opts.hideStorageZones ?? false
+  // 视角只在编辑「视角」步骤或显式开启时画 —— 平时浏览不该被一堆扇形糊住。
+  const showViewpoints = opts.showViewpoints ?? opts.viewpointEditMode ?? false
 
   const parts = []
   parts.push(
@@ -104,7 +115,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .door-cad,.door-bifold,.door-pocket{fill:none;stroke:var(--plan-door,#8a929c);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
  .door-pocket{stroke-dasharray:5 3}
  .dim-tag{font:${compact ? 8 : 9}px var(--mono,monospace);fill:var(--plan-dim,#6a727c);pointer-events:none}
- .win{stroke:var(--plan-window,#5b6470);stroke-width:1.6}
+ .win{fill:none;stroke:var(--plan-window,#5b6470);stroke-width:1.6}
+ .win-cad{fill:none;stroke:var(--plan-window,#5b6470);stroke-width:1.3;stroke-linecap:square;stroke-linejoin:miter}
  .room-zh{font:650 ${compact ? 11 : 14}px var(--font,system-ui,sans-serif);fill:var(--plan-text,#3a4048);pointer-events:none}
  .room-en{font:${compact ? 9 : 11}px var(--mono,monospace);fill:var(--plan-muted,#8a929c);letter-spacing:.14em;pointer-events:none}
  .room-circ{stroke:var(--plan-circ,#c5cdd6);stroke-width:1;stroke-dasharray:4 3;fill:var(--plan-circ-fill,rgba(238,236,230,.45))}
@@ -163,6 +175,11 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .graph-vert{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.5}
  .graph-chain{stroke:var(--graph-accent,#1d6b42);stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
  .graph-chain-vert{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;pointer-events:none}
+ .snap-guide{stroke:var(--snap-guide,#b45309);stroke-width:1;stroke-dasharray:3 3;opacity:.85;pointer-events:none}
+ .snap-guide-midpoint{stroke-dasharray:1 4}
+ .chain-badge{pointer-events:none}
+ .chain-badge-bg{fill:var(--graph-accent,#1d6b42);opacity:.92}
+ .chain-badge-text{fill:#fff;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}
  .graph-vertex-hit{fill:color-mix(in srgb,var(--graph-accent,#1d6b42) 85%,transparent);stroke:#fff;stroke-width:1.5;cursor:grab;pointer-events:all}
  .graph-vertex-hit:hover{fill:var(--graph-accent,#1d6b42)}
  .graph-open-hit{fill:var(--graph-accent-muted,color-mix(in srgb,#1d6b42 8%,transparent));stroke:color-mix(in srgb,var(--graph-accent,#1d6b42) 35%,transparent);stroke-width:2;cursor:grab;pointer-events:all}
@@ -182,10 +199,24 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .zone-chain{stroke:var(--graph-accent,#1d6b42);stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
  .zone-chain-vert{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;pointer-events:none}
  .zone-vertex-hit{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.5;cursor:grab;pointer-events:all}
+ .fixture-item{fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1.1;cursor:help}
  .placement-item{fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1.2}
+ .furn-line{fill:none;stroke:var(--plan-furn-stroke,#8a929c);stroke-width:1;stroke-linejoin:round;opacity:.85;pointer-events:none}
  .placement-on{stroke:var(--graph-accent,#1d6b42);stroke-width:2.5;stroke-dasharray:6 4;animation:plan-sel-pulse 1.15s ease-in-out infinite}
  .placement-label{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
  .placement-hit{fill:transparent;stroke:none;cursor:pointer;pointer-events:all}
+ .vp-cone{fill:var(--plan-accent,#5c758c);fill-opacity:.14;stroke:var(--plan-accent,#5c758c);stroke-opacity:.5;stroke-width:1.2;pointer-events:none}
+ .vp-cone-on{fill:var(--graph-accent,#1d6b42);fill-opacity:.2;stroke:var(--graph-accent,#1d6b42);stroke-opacity:.85}
+ .vp-dot{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.6}
+ .vp-dot-on{fill:var(--graph-accent,#1d6b42)}
+ .vp-dot-empty{fill:var(--plan-paper,#eef1f4);stroke:var(--plan-accent,#5c758c);stroke-width:2;stroke-dasharray:3 2}
+ .vp-label{font:600 ${compact ? 8 : 9}px var(--mono,monospace);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
+ .vp-state-dot{stroke:#fff;stroke-width:1.2;pointer-events:none}
+ .vp-state-t{font:700 ${compact ? 7 : 8}px var(--sans,system-ui,sans-serif);fill:#fff;pointer-events:none}
+ .vp-hit{fill:transparent;stroke:none;cursor:grab;pointer-events:all}
+ .vp-handle{fill:var(--graph-accent,#1d6b42);stroke:#fff;stroke-width:1.6;cursor:crosshair;pointer-events:all}
+ .vp-handle-stem{stroke:var(--graph-accent,#1d6b42);stroke-width:1.2;stroke-dasharray:3 2;pointer-events:none}
+ .plan-interactive .vp-dot{cursor:pointer}
  .storage-unassigned{stroke-dasharray:4 3;opacity:.85}
  @keyframes plan-sel-pulse{0%,100%{stroke-opacity:1}50%{stroke-opacity:.45}}
 </style>`)
@@ -307,7 +338,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
             : op.doorStyle === 'pocket'
               ? 'door door-cad door-pocket'
               : 'door door-cad'
-          : 'win'
+          : 'win-cad'
       parts.push(`<path d="${op.pathD}" class="${cls}"/>`)
     }
     if (op.rect) {
@@ -320,22 +351,28 @@ export function renderFloorPlanSvg(project, opts = {}) {
           `<text x="${x + w / 2}" y="${y + h + 22}" text-anchor="middle" class="tiny">${esc(op.label)}</text>`,
         )
     }
-    if (op.type === 'window' && op.from && op.to) {
+    if (op.type === 'window' && op.from && op.to && !op.pathD) {
+      // Legacy windows carry endpoints only. Offset the sill line across the
+      // wall, which means along y for a horizontal wall and along x for a
+      // vertical one.
+      const horizontal =
+        Math.abs(op.to.x - op.from.x) >= Math.abs(op.to.y - op.from.y)
+      const ox = horizontal ? 0 : 4
+      const oy = horizontal ? 4 : 0
       parts.push(
         `<line x1="${op.from.x}" y1="${op.from.y}" x2="${op.to.x}" y2="${op.to.y}" class="win"/>`,
       )
       parts.push(
-        `<line x1="${op.from.x}" y1="${op.from.y + 4}" x2="${op.to.x}" y2="${op.to.y + 4}" class="win"/>`,
+        `<line x1="${op.from.x + ox}" y1="${op.from.y + oy}" x2="${op.to.x + ox}" y2="${op.to.y + oy}" class="win"/>`,
       )
     }
   }
 
-  if (project.outerBounds) {
-    const { x, y, w, h } = project.outerBounds
-    parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="var(--plan-wall,#20242b)" stroke-width="${extStroke}"/>`,
-    )
-  }
+  // outerBounds is NOT stroked. Both builders already emit the perimeter as
+  // real wall segments, split around their openings — re-stroking the bounds as
+  // a closed rect drew the perimeter a second time, unbroken, painting over
+  // every window and door cut into an exterior wall. It stays on the model
+  // because wall-edit uses it for bounds math.
 
   if (hasSpatialZones) {
     parts.push('<g class="spatial-zones" aria-label="手绘分区">')
@@ -354,6 +391,34 @@ export function renderFloorPlanSvg(project, opts = {}) {
     parts.push('</g>')
   }
 
+  // Built-in fixtures — appliances, plumbing, fixed shelving. Always drawn:
+  // they are part of the unit, not the user's furniture, so they neither hide
+  // with the furniture toggle nor yield to placements.
+  if (project.fixtures?.length) {
+    parts.push('<g class="fixtures" aria-label="固定设施">')
+    for (const f of project.fixtures) {
+      const rot = f.rotation ?? 0
+      const cx = f.bounds.x + f.bounds.w / 2
+      const cy = f.bounds.y + f.bounds.h / 2
+      // Same convention as placements: bounds is the *rotated* AABB, so the
+      // symbol is built unrotated and turned back onto it.
+      const turned = rot === 90 || rot === 270
+      const box = {
+        x: cx - (turned ? f.bounds.h : f.bounds.w) / 2,
+        y: cy - (turned ? f.bounds.w : f.bounds.h) / 2,
+        w: turned ? f.bounds.h : f.bounds.w,
+        h: turned ? f.bounds.w : f.bounds.h,
+      }
+      parts.push(
+        `<g transform="rotate(${rot} ${cx} ${cy})">`,
+        `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="2" class="fixture-item"><title>${esc(f.label)}</title></rect>`,
+        furnitureSymbol(f.kind, box),
+        `</g>`,
+      )
+    }
+    parts.push('</g>')
+  }
+
   if (!hideFurniture && project.placements?.length) {
     parts.push('<g class="placements" aria-label="家具布置">')
     for (const p of project.placements) {
@@ -361,12 +426,53 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const rot = p.rotation ?? 0
       const cx = p.x + p.w / 2
       const cy = p.y + p.h / 2
+      // x/y/w/h is the *rotated* footprint (rotatePlacement swaps w/h), so the
+      // symbol has to be built in the unrotated frame and turned back onto it —
+      // otherwise rotate() would undo the swap and land back at 0°.
+      const turned = rot === 90 || rot === 270
+      const box = {
+        x: cx - (turned ? p.h : p.w) / 2,
+        y: cy - (turned ? p.w : p.h) / 2,
+        w: turned ? p.h : p.w,
+        h: turned ? p.w : p.h,
+      }
+      const symbol = furnitureSymbol(PLACEMENT_KINDS[p.kind]?.symbol, box)
       parts.push(
         `<g transform="rotate(${rot} ${cx} ${cy})">`,
-        `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" class="placement-item${on ? ' placement-on' : ''}"/>`,
-        `<text x="${cx}" y="${cy + 4}" text-anchor="middle" class="placement-label">${esc(p.label)}</text>`,
+        `<rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="3" class="placement-item${on ? ' placement-on' : ''}"/>`,
+        symbol,
         `</g>`,
+        // Label sits outside the rotation so it stays upright at 90°/270°.
+        `<text x="${cx}" y="${cy + 4}" text-anchor="middle" class="placement-label">${esc(p.label)}</text>`,
       )
+    }
+    parts.push('</g>')
+  }
+
+  const viewpoints = opts.previewViewpoints ?? project.viewpoints ?? []
+  if (showViewpoints && viewpoints.length) {
+    parts.push('<g class="viewpoints" aria-label="照片视角">')
+    for (const vp of viewpoints) {
+      const on = opts.selectedViewpoint === vp.id
+      const dotR = Math.max(3.5, 4.5 * touchScale)
+      parts.push(
+        `<path d="${viewpointConePath(vp, pxPerFt)}" class="vp-cone${on ? ' vp-cone-on' : ''}"/>`,
+        `<circle cx="${vp.x}" cy="${vp.y}" r="${dotR}" class="vp-dot${on ? ' vp-dot-on' : ''}${vp.photoRef ? '' : ' vp-dot-empty'}"/>`,
+      )
+      // 状态点贴在机位右上：一眼扫过全图就知道哪块该收拾了，不用逐个点开。
+      if (vp.state) {
+        const sx = vp.x + dotR + 3
+        const sy = vp.y - dotR - 3
+        parts.push(
+          `<circle cx="${sx}" cy="${sy}" r="${dotR * 1.25}" class="vp-state-dot" fill="${stateColor(vp.state)}"/>`,
+          `<text x="${sx}" y="${sy + 3}" text-anchor="middle" class="vp-state-t">${esc(vp.state.slice(0, 1))}</text>`,
+        )
+      }
+      if (!compact && vp.label) {
+        parts.push(
+          `<text x="${vp.x}" y="${vp.y - dotR - 4}" text-anchor="middle" class="vp-label">${esc(vp.label)}</text>`,
+        )
+      }
     }
     parts.push('</g>')
   }
@@ -432,10 +538,45 @@ export function renderFloorPlanSvg(project, opts = {}) {
         `<circle cx="${opts.wallChainFrom.x}" cy="${opts.wallChainFrom.y}" r="5" class="graph-chain-vert"/>`,
       )
       if (opts.wallChainHover) {
+        const a = opts.wallChainFrom
+        const b = opts.wallChainHover
         parts.push(
-          `<line x1="${opts.wallChainFrom.x}" y1="${opts.wallChainFrom.y}" x2="${opts.wallChainHover.x}" y2="${opts.wallChainHover.y}" class="graph-chain"/>`,
+          `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="graph-chain"/>`,
         )
+        // 长度 / 角度徽标——贴在链线中点侧上方
+        const pxPerFt = project.wallGraph?.pxPerFt ?? 36
+        const lenPx = Math.hypot(b.x - a.x, b.y - a.y)
+        if (lenPx > 2) {
+          const totalIn = Math.round((lenPx / pxPerFt) * 12)
+          const ft = Math.floor(totalIn / 12)
+          const inch = totalIn % 12
+          const lenTxt = ft === 0 ? `${inch}"` : inch === 0 ? `${ft}'` : `${ft}'${inch}"`
+          let deg = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI
+          // atan2 已落在 (-180,180]，只有正西向可能回 -180，翻正读作 180° 更自然
+          if (deg <= -180) deg += 360
+          const degTxt = `${Math.round(deg)}°`
+          const mx = (a.x + b.x) / 2
+          const my = (a.y + b.y) / 2
+          // 沿链线法向偏移，避免徽标压在线上
+          const nx = lenPx > 0 ? -(b.y - a.y) / lenPx : 0
+          const ny = lenPx > 0 ? (b.x - a.x) / lenPx : -1
+          const bx = mx + nx * 14
+          const by = my + ny * 14
+          const label = `${lenTxt} · ${degTxt}`
+          const w = label.length * 6.5 + 10
+          parts.push(
+            `<g class="chain-badge" transform="translate(${bx} ${by})">`,
+            `<rect x="${-w / 2}" y="-9" width="${w}" height="18" rx="4" class="chain-badge-bg"/>`,
+            `<text x="0" y="4" text-anchor="middle" class="chain-badge-text">${esc(label)}</text>`,
+            `</g>`,
+          )
+        }
       }
+    } else if (opts.graphTool === 'wallAdd' && opts.wallChainHover) {
+      // 链未起头：给链首那一点也画个吸附落点预览
+      parts.push(
+        `<circle cx="${opts.wallChainHover.x}" cy="${opts.wallChainHover.y}" r="4" class="graph-chain-vert" opacity=".7"/>`,
+      )
     }
     if (opts.graphTool === 'select' && project.wallGraph) {
       const vr = 6 * touchScale
@@ -713,6 +854,38 @@ export function renderFloorPlanSvg(project, opts = {}) {
     parts.push('</g>')
   }
 
+  if (opts.viewpointEditMode && viewpoints.length) {
+    parts.push('<g class="edit-layer viewpoint-edit-layer" aria-label="视角编辑">')
+    const hitR = Math.max(11, 13 * touchScale)
+    for (const vp of viewpoints) {
+      const on = opts.selectedViewpoint === vp.id
+      parts.push(
+        `<circle cx="${vp.x}" cy="${vp.y}" r="${hitR}" class="vp-hit" data-viewpoint-id="${vp.id}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(vp.label ?? '视角')} — 拖动改位置</title></circle>`,
+      )
+      // 转角手柄只给选中的那个 —— 全画出来会互相挡住命中区。
+      if (on) {
+        const h = viewpointHandlePoint(vp, pxPerFt)
+        parts.push(
+          `<line x1="${vp.x}" y1="${vp.y}" x2="${h.x}" y2="${h.y}" class="vp-handle-stem"/>`,
+          `<circle cx="${h.x}" cy="${h.y}" r="${Math.max(6, 7 * touchScale)}" class="vp-handle" data-viewpoint-rotate="${vp.id}"><title>拖动改朝向</title></circle>`,
+        )
+      }
+    }
+    parts.push('</g>')
+  }
+
+  // Alignment guides sit above every edit layer so they stay readable over the
+  // thing being aligned. Both wall drawing and furniture placement feed these.
+  if (opts.snapGuides?.length) {
+    parts.push('<g class="snap-guides" aria-hidden="true">')
+    for (const g of opts.snapGuides) {
+      parts.push(
+        `<line x1="${g.from.x}" y1="${g.from.y}" x2="${g.to.x}" y2="${g.to.y}" class="snap-guide snap-guide-${g.source}"/>`,
+      )
+    }
+    parts.push('</g>')
+  }
+
   parts.push('</svg>')
   return parts.join('\n')
 }
@@ -794,6 +967,25 @@ function appendResizeGrip(parts, openingId, hit, touchScale = 1) {
 }
 
 /** @param {string} s */
+/**
+ * 状态色阶：整洁→堆满 由冷到暖。与 PlanViewpointSelectionBar 的徽章同色。
+ * @param {string} state
+ */
+function stateColor(state) {
+  switch (state) {
+    case '整洁':
+      return '#1d6b42'
+    case '杂乱':
+      return '#b45309'
+    case '堆满':
+      return '#a3341f'
+    case '空置':
+      return '#5c758c'
+    default:
+      return '#8a929c'
+  }
+}
+
 function esc(s) {
   return s
     .replace(/&/g, '&amp;')

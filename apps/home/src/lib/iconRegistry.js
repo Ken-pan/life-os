@@ -11,6 +11,12 @@ import FileText from '@lucide/svelte/icons/file-text'
 import Map from '@lucide/svelte/icons/map'
 import Box from '@lucide/svelte/icons/box'
 import Ruler from '@lucide/svelte/icons/ruler'
+import Search from '@lucide/svelte/icons/search'
+import Plus from '@lucide/svelte/icons/plus'
+import Pencil from '@lucide/svelte/icons/pencil'
+import Trash from '@lucide/svelte/icons/trash-2'
+import MoveRight from '@lucide/svelte/icons/corner-up-right'
+import X from '@lucide/svelte/icons/x'
 
 /** @type {Record<string, import('svelte').Component>} */
 export const ICONS = {
@@ -24,4 +30,10 @@ export const ICONS = {
   map: Map,
   box: Box,
   ruler: Ruler,
+  search: Search,
+  plus: Plus,
+  pencil: Pencil,
+  trash: Trash,
+  'move-right': MoveRight,
+  x: X,
 }

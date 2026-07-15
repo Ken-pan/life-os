@@ -7,7 +7,7 @@
     toggleGraphOpeningKind,
   } from '$lib/state.svelte.js'
   import { formatFtIn } from '$lib/spatial/dimensions.js'
-  import { doorStyleLabel } from '$lib/spatial/door-styles.js'
+  import { openingStyleLabel } from '$lib/spatial/graph-openings.js'
 
   /** @type {{
    *   selectedOpening?: string,
@@ -31,20 +31,25 @@
   const title = $derived.by(() => {
     if (!opening) return ''
     const kind = opening.type === 'window' ? '窗' : '门'
-    const style =
-      opening.type === 'door' ? doorStyleLabel(opening.style) : ''
+    const style = openingStyleLabel(opening)
     const size = spanLabel(opening.spanIn)
     return style ? `${kind} · ${style} · ${size}` : `${kind} · ${size}`
   })
 
   const flipLabel = $derived.by(() => {
-    if (!opening || opening.type !== 'door') return '翻转'
+    if (!opening) return '翻转'
     const style = opening.style ?? 'swing'
     if (style === 'pocket' || style === 'bypass' || style === 'sliding') {
       return '反向'
     }
     return '翻转'
   })
+
+  // Only casement windows have a hinge side worth flipping; the rest read the
+  // same either way.
+  const canFlip = $derived(
+    opening?.type === 'door' || opening?.style === 'casement',
+  )
 </script>
 
 {#if opening && title}
@@ -68,14 +73,14 @@
       >
         {opening.type === 'door' ? '改窗' : '改门'}
       </button>
-      {#if opening.type === 'door'}
-        <button
-          type="button"
-          class="graph-open-btn"
-          onclick={() => cycleGraphOpeningStyle(opening.id)}
-        >
-          门型
-        </button>
+      <button
+        type="button"
+        class="graph-open-btn"
+        onclick={() => cycleGraphOpeningStyle(opening.id)}
+      >
+        {opening.type === 'window' ? '窗型' : '门型'}
+      </button>
+      {#if canFlip}
         <button
           type="button"
           class="graph-open-btn"

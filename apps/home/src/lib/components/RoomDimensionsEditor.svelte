@@ -8,7 +8,11 @@
     undoLayoutEdit,
     updateRoomDimension,
   } from '$lib/state.svelte.js'
-  import { EDITABLE_ROOM_KEYS, validate508Config } from '$lib/spatial/layout-508.js'
+  import {
+    COLUMN_LOCKED_WIDTH,
+    EDITABLE_ROOM_KEYS,
+    validate508Config,
+  } from '$lib/spatial/layout-508.js'
   import { formatFtIn } from '$lib/spatial/dimensions.js'
   import { roomAreaSqft, summarize508Areas } from '$lib/spatial/room-areas.js'
 
@@ -95,6 +99,7 @@
       {#each EDITABLE_ROOM_KEYS as [key, label] (key)}
         {@const room = config.rooms[/** @type {keyof typeof config.rooms} */ (key)]}
         {#if room && 'w' in room && 'h' in room}
+          {@const lockedCol = COLUMN_LOCKED_WIDTH[key]}
           <div class="dim-card">
             <div class="dim-card-head">
               <span class="dim-card-name">{label}</span>
@@ -111,6 +116,7 @@
                     min="0"
                     max="30"
                     aria-label="{label} 宽度 英尺"
+                    disabled={Boolean(lockedCol)}
                     value={room.w.ft}
                     oninput={(e) =>
                       onDimInput(key, 'w', 'ft', /** @type {HTMLInputElement} */ (e.currentTarget).value)}
@@ -121,6 +127,7 @@
                     min="0"
                     max="11"
                     aria-label="{label} 宽度 英寸"
+                    disabled={Boolean(lockedCol)}
                     value={room.w.in ?? 0}
                     oninput={(e) =>
                       onDimInput(key, 'w', 'in', /** @type {HTMLInputElement} */ (e.currentTarget).value)}
@@ -154,6 +161,11 @@
                 </span>
               </label>
             </div>
+            {#if lockedCol}
+              <p class="dim-note">
+                宽随{lockedCol === 'leftCol' ? '左' : '右'}列联动 · 在「编辑」里拖分隔墙调整
+              </p>
+            {/if}
             {#if key === 'bedCloset'}
               <p class="dim-note">推拉门宽 {formatFtIn(room.door.w)} · 朝向：走廊</p>
             {/if}
@@ -324,6 +336,14 @@
     background: var(--card);
     color: var(--t1);
     text-align: right;
+  }
+
+  /* 列联动的宽度：置灰而不是假装能改 —— 输进去也会被 leftCol/rightCol 覆盖 */
+  .dim-inputs input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg);
+    color: var(--t3);
   }
 
   .dim-unit {

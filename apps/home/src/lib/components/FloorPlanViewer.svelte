@@ -6,10 +6,12 @@
   import { bindPlanGraphEdit } from '$lib/plan-graph-edit.js'
   import { bindPlanZoneEdit } from '$lib/plan-zone-edit.js'
   import { bindPlanPlacementEdit } from '$lib/plan-placement-edit.js'
+  import { bindPlanViewpointEdit } from '$lib/plan-viewpoint-edit.js'
   import { hydrateProject } from '$lib/spatial/model.js'
   import {
     commitLayoutDrag,
     getLastDoorStyle,
+    getLastWindowStyle,
     previewLayoutDrag,
     setLayoutDragPreview,
   } from '$lib/state.svelte.js'
@@ -29,6 +31,10 @@
   } from '$lib/plan-viewport.js'
   import { bindPlanSvgTooltip } from '$lib/plan-svg-tooltip.js'
   import { defaultDoorSpanIn, doorStyleLabel } from '$lib/spatial/door-styles.js'
+  import {
+    defaultWindowSpanIn,
+    windowStyleLabel,
+  } from '$lib/spatial/window-styles.js'
 
   /** @type {{
    *   project: import('$lib/spatial/types.js').SpatialProject,
@@ -40,6 +46,7 @@
    *   measureMode?: boolean,
    *   graphEditMode?: boolean,
    *   graphTool?: import('$lib/plan-graph-edit.js').GraphTool,
+   *   openingKind?: 'door' | 'window',
    *   toolbarMinimal?: boolean,
    *   hideFurniture?: boolean,
    *   hideStorageZones?: boolean,
@@ -56,7 +63,7 @@
    *   onSelectWall?: (id: string) => void,
    *   onSelectOpening?: (id: string) => void,
    *   onMeasurePoint?: (pt: { x: number, y: number }) => void,
-   *   onGraphWallPoint?: (pt: { x: number, y: number }) => void,
+   *   onGraphWallPoint?: (pt: { x: number, y: number }, mods?: { shiftKey: boolean, altKey: boolean, zoom: number }) => void,
    *   onGraphRemoveEdge?: (edgeId: string) => void,
    *   onGraphSelectEdge?: (edgeId: string) => void,
    *   onGraphSelectOpening?: (openingId: string) => void,
@@ -64,7 +71,8 @@
    *   onOpeningDrag?: (openingId: string, pt: { x: number, y: number }, mode: 'move' | 'resize-start' | 'resize-end', clientX: number, clientY: number) => void,
    *   onOpeningDrop?: (openingId: string, pt: { x: number, y: number }, mode: 'move' | 'resize-start' | 'resize-end') => void,
    *   onPlaceOpening?: (pt: { x: number, y: number }, edgeId: string) => void,
-   *   onGraphHover?: (pt: { x: number, y: number } | null, shiftKey?: boolean) => void,
+   *   onGraphHover?: (pt: { x: number, y: number } | null, mods?: { shiftKey: boolean, altKey: boolean, zoom: number }) => void,
+   *   snapGuides?: (import('$lib/spatial/snap.js').SnapGuide | import('$lib/spatial/placement-snap.js').PlacementGuide)[],
    *   onVertexDragStart?: (vertexId: string) => void,
    *   onVertexDrag?: (vertexId: string, pt: { x: number, y: number }) => void,
    *   onVertexDrop?: (vertexId: string, pt: { x: number, y: number }) => void,
@@ -85,11 +93,23 @@
    *   placementEditMode?: boolean,
    *   placementTool?: 'place' | 'storage',
    *   selectedPlacement?: string,
-   *   onPlacementPoint?: (pt: { x: number, y: number }) => void,
+   *   onPlacementPoint?: (pt: { x: number, y: number }, zoom: number) => void,
    *   onSelectPlacement?: (id: string) => void,
    *   onAssignStorage?: (pt: { x: number, y: number }) => void,
-   *   onPlacementDrag?: (id: string, pt: { x: number, y: number }) => void,
-   *   onPlacementDrop?: (id: string, pt: { x: number, y: number }) => void,
+   *   onPlacementDrag?: (id: string, pt: { x: number, y: number }, zoom: number) => void,
+   *   onPlacementDrop?: (id: string, pt: { x: number, y: number }, zoom: number) => void,
+   *   viewpointEditMode?: boolean,
+   *   viewpointTool?: 'viewAdd' | 'viewSelect',
+   *   selectedViewpoint?: string,
+   *   previewViewpoints?: import('$lib/spatial/types.js').SpatialViewpoint[] | null,
+   *   showViewpoints?: boolean,
+   *   onViewpointPoint?: (pt: { x: number, y: number }) => void,
+   *   onSelectViewpoint?: (id: string) => void,
+   *   onViewpointDragStart?: (id: string) => void,
+   *   onViewpointDrag?: (id: string, pt: { x: number, y: number }) => void,
+   *   onViewpointDrop?: (id: string, pt: { x: number, y: number }) => void,
+   *   onViewpointRotate?: (id: string, pt: { x: number, y: number }) => void,
+   *   onViewpointRotateDrop?: (id: string, pt: { x: number, y: number }) => void,
    *   showFurniture?: boolean,
    *   overrideProject?: import('$lib/spatial/types.js').SpatialProject,
    * }} */
@@ -103,6 +123,7 @@
     measureMode = false,
     graphEditMode = false,
     graphTool = 'select',
+    openingKind = 'door',
     toolbarMinimal = false,
     hideFurniture = true,
     hideStorageZones = false,
@@ -111,6 +132,7 @@
     selectedEdge = '',
     wallChainFrom = null,
     wallChainHover = null,
+    snapGuides = [],
     measurePoints = { a: null, b: null },
     fitRequest = { token: 0, cycle: false },
     onZoneSelect,
@@ -154,6 +176,18 @@
     onPlacementDragStart,
     onPlacementDrag,
     onPlacementDrop,
+    viewpointEditMode = false,
+    viewpointTool = 'viewAdd',
+    selectedViewpoint = '',
+    previewViewpoints = null,
+    showViewpoints = false,
+    onViewpointPoint,
+    onSelectViewpoint,
+    onViewpointDragStart,
+    onViewpointDrag,
+    onViewpointDrop,
+    onViewpointRotate,
+    onViewpointRotateDrop,
     showFurniture = false,
     overrideProject,
   } = $props()
@@ -207,6 +241,10 @@
     }
     if (graphTool === 'remove') return '删墙：点击墙段删除'
     if (graphTool === 'opening') {
+      if (openingKind === 'window') {
+        const style = getLastWindowStyle()
+        return `门窗：点击墙段放置窗（${windowStyleLabel(style)} ${defaultWindowSpanIn(style)}″）`
+      }
       const style = getLastDoorStyle()
       return `门窗：点击墙段放置门（${doorStyleLabel(style)} ${defaultDoorSpanIn(style)}″）`
     }
@@ -252,7 +290,11 @@
 
   const touchScale = $derived.by(() => {
     if (
-      (!editMode && !graphEditMode && !zoneEditMode && !placementEditMode) ||
+      (!editMode &&
+        !graphEditMode &&
+        !zoneEditMode &&
+        !placementEditMode &&
+        !viewpointEditMode) ||
       !viewportEl
     )
       return 1
@@ -284,6 +326,7 @@
       selectedEdge,
       wallChainFrom,
       wallChainHover,
+      snapGuides,
       zoneEditMode,
       zoneTool,
       selectedSpatialZone,
@@ -294,6 +337,11 @@
       placementEditMode,
       placementTool,
       selectedPlacement,
+      viewpointEditMode,
+      viewpointTool,
+      selectedViewpoint,
+      previewViewpoints,
+      showViewpoints,
       showFurniture,
     }),
   )
@@ -570,7 +618,8 @@
       getZoom: () => zoom,
       getTool: () => graphTool,
       clientToSvg,
-      onWallChainPoint: (pt) => onGraphWallPoint?.(pt),
+      onWallChainPoint: (pt, mods) =>
+        onGraphWallPoint?.(pt, { ...mods, zoom }),
       onRemoveEdge: (id) => onGraphRemoveEdge?.(id),
       onSelectEdge: (id) => onGraphSelectEdge?.(id),
       onSelectOpening: (id) => onGraphSelectOpening?.(id),
@@ -604,11 +653,16 @@
     })
     /** @param {PointerEvent} e */
     function onMove(e) {
-      if (graphTool !== 'wallAdd' || !wallChainFrom) {
+      if (graphTool !== 'wallAdd') {
         onGraphHover?.(null)
         return
       }
-      onGraphHover?.(clientToSvg(e.clientX, e.clientY), e.shiftKey)
+      // 链未起头时也要报 hover——链首那一点同样要吃顶点/对齐吸附
+      onGraphHover?.(clientToSvg(e.clientX, e.clientY), {
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        zoom,
+      })
     }
     el.addEventListener('pointermove', onMove)
     return () => {
@@ -654,12 +708,34 @@
     const action = bindPlanPlacementEdit(el, {
       getTool: () => placementTool,
       clientToSvg,
-      onPlacePoint: (pt) => onPlacementPoint?.(pt),
+      getPlacementRect: (id) =>
+        (displayProject.placements ?? []).find((p) => p.id === id) ?? null,
+      onPlacePoint: (pt) => onPlacementPoint?.(pt, zoom),
       onSelectPlacement: (id) => onSelectPlacement?.(id),
       onAssignStorage: (pt) => onAssignStorage?.(pt),
       onPlacementDragStart: (id) => onPlacementDragStart?.(id),
-      onPlacementDrag: (id, pt) => onPlacementDrag?.(id, pt),
-      onPlacementDrop: (id, pt) => onPlacementDrop?.(id, pt),
+      // zoom rides along so the caller can size its snap tolerance in screen
+      // px rather than plan px — it lives in this component.
+      onPlacementDrag: (id, pt) => onPlacementDrag?.(id, pt, zoom),
+      onPlacementDrop: (id, pt) => onPlacementDrop?.(id, pt, zoom),
+    })
+    return () => action.destroy()
+  })
+
+  $effect(() => {
+    const el = viewportEl
+    if (!viewpointEditMode || !el) return
+    const action = bindPlanViewpointEdit(el, {
+      getTool: () => viewpointTool,
+      clientToSvg,
+      onAddPoint: (pt) => onViewpointPoint?.(pt),
+      onSelect: (id) => onSelectViewpoint?.(id),
+      onMoveStart: (id) => onViewpointDragStart?.(id),
+      onMove: (id, pt) => onViewpointDrag?.(id, pt),
+      onMoveDrop: (id, pt) => onViewpointDrop?.(id, pt),
+      onRotateStart: (id) => onViewpointDragStart?.(id),
+      onRotate: (id, pt) => onViewpointRotate?.(id, pt),
+      onRotateDrop: (id, pt) => onViewpointRotateDrop?.(id, pt),
     })
     return () => action.destroy()
   })

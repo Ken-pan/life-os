@@ -9,7 +9,9 @@
    *   canUndo?: boolean,
    *   canRedo?: boolean,
    *   hidden?: boolean,
-   *   onTool?: (id: 'select' | 'wall' | 'opening' | 'zone' | 'furniture') => void,
+   *   openingKind?: 'door' | 'window',
+   *   onTool?: (id: 'select' | 'wall' | 'opening' | 'zone' | 'furniture' | 'viewpoint') => void,
+   *   onOpeningKind?: (kind: 'door' | 'window') => void,
    *   onUndo?: () => void,
    *   onRedo?: () => void,
    *   onReset?: () => void,
@@ -20,7 +22,9 @@
     canUndo = false,
     canRedo = false,
     hidden = false,
+    openingKind = 'door',
     onTool,
+    onOpeningKind,
     onUndo,
     onRedo,
     onReset,
@@ -32,6 +36,7 @@
     { id: 'opening', label: '门窗', hint: '点击墙段放置门窗' },
     { id: 'zone', label: '画区', hint: '逐点圈出房间分区 · Enter 闭合' },
     { id: 'furniture', label: '家具', hint: '点击画布放置家具' },
+    { id: 'viewpoint', label: '视角', hint: '标注实拍照片是对着哪儿拍的' },
   ])
 </script>
 
@@ -113,7 +118,7 @@
                 fill="currentColor"
               /></svg
             >
-          {:else}
+          {:else if tool.id === 'furniture'}
             <svg viewBox="0 0 20 20"
               ><path
                 d="M4 15v-4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"
@@ -127,11 +132,39 @@
                 stroke-width="1.5"
               /><path d="M4 15h12" stroke="currentColor" stroke-width="1.8" /></svg
             >
+          {:else}
+            <svg viewBox="0 0 20 20"
+              ><path
+                d="M10 15 L3.5 5.2 A 8 8 0 0 1 16.5 5.2 Z"
+                fill="currentColor"
+                fill-opacity="0.18"
+                stroke="currentColor"
+                stroke-width="1.3"
+                stroke-linejoin="round"
+              /><circle cx="10" cy="15" r="2.2" fill="currentColor" /></svg
+            >
           {/if}
         </span>
         <span class="pt-label">{tool.label}</span>
       </button>
     {/each}
+
+    {#if activeTool === 'opening'}
+      <div class="pt-sub" role="group" aria-label="放置门还是窗">
+        {#each /** @type {const} */ ([['door', '门'], ['window', '窗']]) as [kind, label] (kind)}
+          <button
+            type="button"
+            class="pt-sub-btn"
+            class:active={openingKind === kind}
+            aria-pressed={openingKind === kind}
+            title={kind === 'door' ? '点击墙段放置门' : '点击墙段放置窗'}
+            onclick={() => onOpeningKind?.(kind)}
+          >
+            {label}
+          </button>
+        {/each}
+      </div>
+    {/if}
   </div>
 
   <div class="pt-sep" aria-hidden="true"></div>
@@ -291,6 +324,39 @@
   .pt-btn.active {
     background: var(--accent);
     border-color: transparent;
+    color: #f5f8fa;
+  }
+
+  /* Door/window choice — a modifier of the active opening tool, so it sits
+     inside the tool group rather than reading as a seventh tool. */
+  .pt-sub {
+    display: flex;
+    gap: 2px;
+    margin: 2px 3px 0;
+    padding: 2px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .pt-sub-btn {
+    flex: 1;
+    min-height: 28px;
+    padding: 2px 4px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--t2);
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .pt-sub-btn:hover {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+
+  .pt-sub-btn.active {
+    background: var(--accent);
     color: #f5f8fa;
   }
 

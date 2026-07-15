@@ -19,7 +19,7 @@ export function exportAuditHtml(project, opts = {}) {
       (z) => `<article class="card">
       <header><span class="tag">${esc(z.code)}</span><h3>${esc(z.nameZh)}</h3></header>
       <p class="meta"><b>位置</b> ${esc(z.locationZh)} · <b>形式</b> ${esc(z.formZh)}${z.inferred ? ' · <b>推测</b>' : ''}</p>
-      <ul>${z.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
+      <ul>${z.items.map((i) => `<li>${esc(i.name)}${i.qty && i.qty > 1 ? ` <b class="qty">×${i.qty}</b>` : ''}${i.tags?.length ? ` <span class="tag-inline">${esc(i.tags.join(' · '))}</span>` : ''}${i.note ? `<br><small>${esc(i.note)}</small>` : ''}</li>`).join('')}</ul>
     </article>`,
     )
     .join('')
@@ -66,6 +66,10 @@ h2{font-size:13px;font-family:var(--mono);letter-spacing:.24em;text-transform:up
 .card h3{font-size:15px;margin:0}
 .card .meta{font-size:12px;color:var(--mut);margin:0 0 9px}
 .card ul{margin:0;padding-left:17px;font-size:13px}
+.card li{margin:2px 0}
+.card .qty{font-family:var(--mono);font-size:11px;color:var(--accent)}
+.card .tag-inline{font-size:10px;color:var(--mut);border:1px solid var(--line);padding:1px 6px;border-radius:999px}
+.card small{color:var(--mut);font-size:11px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
 th{font-family:var(--mono);font-size:11px;color:var(--accent)}

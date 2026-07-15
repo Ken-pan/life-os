@@ -4,7 +4,7 @@
  */
 import { chromium } from 'playwright'
 
-const BASE = process.argv[2] ?? 'http://127.0.0.1:5197'
+const BASE = process.argv[2] ?? 'http://127.0.0.1:5874'
 const SKEY = 'homeos_spatial_v1'
 
 /** @typedef {{ name: string, ok: boolean, detail: string }} Row */

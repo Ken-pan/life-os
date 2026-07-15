@@ -1,241 +1,149 @@
 /**
  * Procedural door symbols for floor plans (CAD-style: strokes + arcs, no fill).
+ *
+ * The standard plan symbol for a swinging door is a *leaf* drawn perpendicular
+ * to the wall at the hinge, plus a quarter-circle arc **centred on the hinge**
+ * whose radius is the leaf's width — sweeping from the open leaf back to the
+ * closed position against the far jamb. The arc must pass through the far jamb,
+ * not through the hinge.
+ *
+ * Symbols are built in the wall's own frame (`t` runs hinge→latch, `s` across
+ * the wall), so they sit correctly on a wall at any angle — the wall graph
+ * allows free-angle walls, where an axis-aligned symbol would float off.
+ *
+ * Handing is expressed by argument order: pass the hinge jamb first. Which side
+ * the door opens to is `side`, relative to the hinge→latch direction.
  */
+
+/** @typedef {import('./types.js').Point} Point */
+/** @typedef {'swing' | 'double' | 'sliding' | 'bypass' | 'bifold' | 'pocket'} DoorStyle */
 
 /**
- * @param {number} x1
- * @param {number} x2
- * @param {number} y
- * @param {number} [radius]
+ * Wall-local frame. `u` runs hinge→latch; `n` is 90° clockwise from `u` in
+ * screen coords (y-down), i.e. to the *right* of travel. The basis is a pure
+ * rotation (det = +1), which keeps SVG's arc sweep flag meaning the same at any
+ * wall angle.
+ * @param {Point} a
+ * @param {Point} b
  */
-export function swingHorizontalUp({ x1, x2, y, radius = 40 }) {
-  const r = Math.min(radius, x2 - x1 - 2)
-  return [
-    `M ${x1} ${y} L ${x2} ${y}`,
-    `M ${x1} ${y} A ${r} ${r} 0 0 1 ${x1 + r} ${y - r}`,
-  ].join(' ')
-}
-
-/** South-wall entry — hinge on right jamb, swings up and left into unit */
-export function swingHorizontalUpFromRight({ x1, x2, y, radius = 40 }) {
-  const r = Math.min(radius, x2 - x1 - 2)
-  return [
-    `M ${x1} ${y} L ${x2} ${y}`,
-    `M ${x2} ${y} A ${r} ${r} 0 0 0 ${x2 - r} ${y - r}`,
-  ].join(' ')
-}
-
-/** South-wall bedroom — hinge on right jamb, swings down into hall */
-export function swingHorizontalDownFromRight({ x1, x2, y, radius = 40 }) {
-  const r = Math.min(radius, x2 - x1 - 2)
-  return [
-    `M ${x1} ${y} L ${x2} ${y}`,
-    `M ${x2} ${y} A ${r} ${r} 0 0 1 ${x2 - r} ${y + r}`,
-  ].join(' ')
-}
-
-/**
- * @param {number} x1
- * @param {number} x2
- * @param {number} y
- * @param {number} [radius]
- */
-export function swingHorizontalDown({ x1, x2, y, radius = 40 }) {
-  const r = Math.min(radius, x2 - x1 - 2)
-  return [
-    `M ${x1} ${y} L ${x2} ${y}`,
-    `M ${x1} ${y} A ${r} ${r} 0 0 0 ${x1 + r} ${y + r}`,
-  ].join(' ')
+function frame(a, b) {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const len = Math.hypot(dx, dy) || 1
+  const ux = dx / len
+  const uy = dy / len
+  return { ux, uy, nx: -uy, ny: ux, len }
 }
 
 /**
- * @param {number} x
- * @param {number} y1
- * @param {number} y2
- * @param {number} [radius]
+ * Point at `t` along the wall and `s` across it.
+ * @param {Point} o
+ * @param {ReturnType<typeof frame>} f
+ * @param {number} t
+ * @param {number} s
  */
-export function swingVerticalRight({ x, y1, y2, radius = 36 }) {
-  const r = Math.min(radius, y2 - y1 - 2)
-  return [
-    `M ${x} ${y1} L ${x} ${y2}`,
-    `M ${x} ${y1} A ${r} ${r} 0 0 0 ${x + r} ${y1 + r}`,
-  ].join(' ')
+function at(o, f, t, s) {
+  return { x: o.x + f.ux * t + f.nx * s, y: o.y + f.uy * t + f.ny * s }
+}
+
+/** @param {number} n */
+function r2(n) {
+  return Math.round(n * 100) / 100
+}
+
+/** @param {Point} a @param {Point} b */
+function seg(a, b) {
+  return `M ${r2(a.x)} ${r2(a.y)} L ${r2(b.x)} ${r2(b.y)}`
 }
 
 /**
- * @param {number} x
- * @param {number} y1
- * @param {number} y2
- * @param {number} [radius]
+ * Quarter arc of radius `rad` from `from` to `to`.
+ * @param {Point} from
+ * @param {Point} to
+ * @param {number} rad
+ * @param {number} sweep
  */
-export function swingVerticalLeft({ x, y1, y2, radius = 32 }) {
-  const r = Math.min(radius, y2 - y1 - 2)
-  return [
-    `M ${x} ${y1} L ${x} ${y2}`,
-    `M ${x} ${y1} A ${r} ${r} 0 0 1 ${x - r} ${y1 + r}`,
-  ].join(' ')
-}
-
-/** Vertical wall — hinge on bottom jamb, swings up and left */
-export function swingVerticalLeftFromBottom({ x, y1, y2, radius = 32 }) {
-  const r = Math.min(radius, y2 - y1 - 2)
-  return [
-    `M ${x} ${y1} L ${x} ${y2}`,
-    `M ${x} ${y2} A ${r} ${r} 0 0 0 ${x - r} ${y2 - r}`,
-  ].join(' ')
+function arc(from, to, rad, sweep) {
+  return `M ${r2(from.x)} ${r2(from.y)} A ${r2(rad)} ${r2(rad)} 0 0 ${sweep} ${r2(to.x)} ${r2(to.y)}`
 }
 
 /**
- * Double hinged (French) on horizontal wall — arcs swing toward smaller y.
- * @param {{ x1: number, x2: number, y: number, radius?: number }} opts
+ * Plan symbol for a door filling the opening from `hinge` to `latch`.
+ *
+ * @param {DoorStyle | undefined} style
+ * @param {Point} hinge jamb the door is hinged on (or the leading jamb for
+ *   sliding styles)
+ * @param {Point} latch the opposite jamb
+ * @param {{ thickness?: number, side?: 'left' | 'right' }} [opts]
+ *   `side` is which way the leaf opens, relative to the hinge→latch direction.
+ * @returns {string} SVG path data in absolute plan coordinates
  */
-export function doubleSwingHorizontalUp({ x1, x2, y, radius = 36 }) {
-  const mid = (x1 + x2) / 2
-  const r = Math.min(radius, (mid - x1) * 0.92)
-  return [
-    `M ${x1} ${y} L ${mid} ${y}`,
-    `M ${x1} ${y} A ${r} ${r} 0 0 1 ${x1 + r} ${y - r}`,
-    `M ${x2} ${y} L ${mid} ${y}`,
-    `M ${x2} ${y} A ${r} ${r} 0 0 0 ${x2 - r} ${y - r}`,
-  ].join(' ')
-}
+export function doorPath(style, hinge, latch, opts = {}) {
+  const thickness = opts.thickness ?? 6
+  const dir = opts.side === 'right' ? 1 : -1
+  // Travelling hinge→latch, +n is to the right, so a right-hand swing sweeps
+  // counter-clockwise on screen and a left-hand one clockwise.
+  const sweep = dir < 0 ? 1 : 0
+  const f = frame(hinge, latch)
+  const L = f.len
+  const parts = []
 
-/** @param {{ x1: number, x2: number, y: number, radius?: number }} opts */
-export function doubleSwingHorizontalDown({ x1, x2, y, radius = 36 }) {
-  const mid = (x1 + x2) / 2
-  const r = Math.min(radius, (mid - x1) * 0.92)
-  return [
-    `M ${x1} ${y} L ${mid} ${y}`,
-    `M ${x1} ${y} A ${r} ${r} 0 0 0 ${x1 + r} ${y + r}`,
-    `M ${x2} ${y} L ${mid} ${y}`,
-    `M ${x2} ${y} A ${r} ${r} 0 0 1 ${x2 - r} ${y + r}`,
-  ].join(' ')
-}
+  if (style === 'sliding' || style === 'bypass') {
+    // Panels ride on tracks offset from the wall centreline. A bypass has two
+    // that overlap at mid-span; a single slider has one covering the opening.
+    const off = thickness * 0.28
+    if (style === 'bypass') {
+      parts.push(seg(at(hinge, f, 0, -off), at(hinge, f, L * 0.55, -off)))
+      parts.push(seg(at(hinge, f, L * 0.45, off), at(hinge, f, L, off)))
+    } else {
+      parts.push(seg(at(hinge, f, 0, -off), at(hinge, f, L, -off)))
+    }
+    // Jamb ticks so the opening reads as an opening, not a gap in the wall.
+    parts.push(seg(at(hinge, f, 0, -thickness / 2), at(hinge, f, 0, thickness / 2)))
+    parts.push(seg(at(hinge, f, L, -thickness / 2), at(hinge, f, L, thickness / 2)))
+    return parts.join(' ')
+  }
 
-/** @param {{ x: number, y1: number, y2: number, radius?: number }} opts */
-export function doubleSwingVerticalRight({ x, y1, y2, radius = 32 }) {
-  const mid = (y1 + y2) / 2
-  const r = Math.min(radius, (mid - y1) * 0.92)
-  return [
-    `M ${x} ${y1} L ${x} ${mid}`,
-    `M ${x} ${y1} A ${r} ${r} 0 0 0 ${x + r} ${y1 + r}`,
-    `M ${x} ${y2} L ${x} ${mid}`,
-    `M ${x} ${y2} A ${r} ${r} 0 0 1 ${x + r} ${y2 - r}`,
-  ].join(' ')
-}
+  if (style === 'pocket') {
+    // Panel half-drawn out of a cavity inside the wall; the hidden half is
+    // dashed by the .door-pocket class.
+    const off = thickness * 0.2
+    parts.push(seg(at(hinge, f, 0, -off), at(hinge, f, L * 0.55, -off)))
+    parts.push(seg(at(hinge, f, L * 0.55, -off), at(hinge, f, L, -off)))
+    parts.push(seg(at(hinge, f, 0, -thickness / 2), at(hinge, f, 0, thickness / 2)))
+    parts.push(seg(at(hinge, f, L, -thickness / 2), at(hinge, f, L, thickness / 2)))
+    return parts.join(' ')
+  }
 
-/** @param {{ x: number, y1: number, y2: number, radius?: number }} opts */
-export function doubleSwingVerticalLeft({ x, y1, y2, radius = 32 }) {
-  const mid = (y1 + y2) / 2
-  const r = Math.min(radius, (mid - y1) * 0.92)
-  return [
-    `M ${x} ${y1} L ${x} ${mid}`,
-    `M ${x} ${y1} A ${r} ${r} 0 0 1 ${x - r} ${y1 + r}`,
-    `M ${x} ${y2} L ${x} ${mid}`,
-    `M ${x} ${y2} A ${r} ${r} 0 0 0 ${x - r} ${y2 - r}`,
-  ].join(' ')
-}
+  if (style === 'bifold') {
+    // Double bifold: a shallow V folding out of each jamb, meeting at mid-span.
+    const depth = L * 0.42
+    const mid = at(hinge, f, L / 2, 0)
+    parts.push(seg(at(hinge, f, 0, 0), at(hinge, f, L * 0.25, dir * depth)))
+    parts.push(seg(at(hinge, f, L * 0.25, dir * depth), mid))
+    parts.push(seg(at(hinge, f, L, 0), at(hinge, f, L * 0.75, dir * depth)))
+    parts.push(seg(at(hinge, f, L * 0.75, dir * depth), mid))
+    return parts.join(' ')
+  }
 
-/** Single-track sliding / patio — line across opening */
-export function slidingHorizontal({ x1, x2, y }) {
-  return `M ${x1} ${y} L ${x2} ${y}`
-}
+  if (style === 'double') {
+    // Two leaves, each half the opening, hinged at opposite jambs.
+    const half = L / 2
+    const tipA = at(hinge, f, 0, dir * half)
+    const midPt = at(hinge, f, half, 0)
+    parts.push(seg(at(hinge, f, 0, 0), tipA))
+    parts.push(arc(tipA, midPt, half, sweep))
+    const tipB = at(hinge, f, L, dir * half)
+    parts.push(seg(at(hinge, f, L, 0), tipB))
+    // Leaf B is hinged at the far jamb, so its sweep is mirrored.
+    parts.push(arc(tipB, midPt, half, sweep ? 0 : 1))
+    return parts.join(' ')
+  }
 
-/** Bypass (two-track) sliding door — parallel panels */
-export function bypassSlidingHorizontal({ x1, x2, y, gap = 4 }) {
-  const arrow = `M ${x1 + 10} ${y - gap - 5} L ${x1 + 18} ${y - gap - 5} L ${x1 + 18} ${y - gap - 1}`
-  return [
-    `M ${x1} ${y - gap} L ${x2} ${y - gap}`,
-    `M ${x1} ${y + gap} L ${x2} ${y + gap}`,
-    arrow,
-  ].join(' ')
-}
-
-/** Pocket door — panel + dashed pocket cavity in wall */
-export function pocketHorizontal({ x1, x2, y, slide = 'left', depth = 8 }) {
-  const w = x2 - x1
-  const panelW = w * 0.58
-  const panelX1 = slide === 'left' ? x1 : x2 - panelW
-  const panelX2 = panelX1 + panelW
-  const cavityX1 = slide === 'left' ? x2 - panelW * 0.9 : x1
-  const cavityX2 = slide === 'left' ? x2 : x1 + panelW * 0.9
-  const cy = y - depth
-  return [
-    `M ${panelX1} ${y} L ${panelX2} ${y}`,
-    `M ${cavityX1} ${cy} L ${cavityX2} ${cy}`,
-    `M ${cavityX1} ${cy - 4} L ${cavityX2} ${cy - 4}`,
-  ].join(' ')
-}
-
-/**
- * Double bifold closet door on a horizontal wall segment.
- * @param {{ x1: number, x2: number, y: number, depth?: number }} opts
- */
-export function bifoldHorizontalUp({ x1, x2, y, depth = 26 }) {
-  const mid = (x1 + x2) / 2
-  const w = x2 - x1
-  const q = w * 0.22
-  return [
-    `M ${x1} ${y} L ${x1 + q} ${y - depth} L ${mid - 4} ${y}`,
-    `M ${x2} ${y} L ${x2 - q} ${y - depth} L ${mid + 4} ${y}`,
-    `M ${mid - 4} ${y} L ${mid} ${y - depth * 0.55} L ${mid + 4} ${y}`,
-  ].join(' ')
-}
-
-/** Sliding door on vertical wall */
-export function slidingVertical({ x, y1, y2 }) {
-  return `M ${x} ${y1} L ${x} ${y2}`
-}
-
-/** Bypass sliding on vertical wall */
-export function bypassSlidingVertical({ x, y1, y2, gap = 4 }) {
-  const arrow = `M ${x - gap - 5} ${y1 + 10} L ${x - gap - 5} ${y1 + 18} L ${x - gap - 1} ${y1 + 18}`
-  return [
-    `M ${x - gap} ${y1} L ${x - gap} ${y2}`,
-    `M ${x + gap} ${y1} L ${x + gap} ${y2}`,
-    arrow,
-  ].join(' ')
-}
-
-/** Pocket door on vertical wall */
-export function pocketVertical({ x, y1, y2, slide = 'up', depth = 8 }) {
-  const h = y2 - y1
-  const panelH = h * 0.58
-  const panelY1 = slide === 'up' ? y1 : y2 - panelH
-  const panelY2 = panelY1 + panelH
-  const cavityY1 = slide === 'up' ? y2 - panelH * 0.9 : y1
-  const cavityY2 = slide === 'up' ? y2 : y1 + panelH * 0.9
-  const cx = x - depth
-  return [
-    `M ${x} ${panelY1} L ${x} ${panelY2}`,
-    `M ${cx} ${cavityY1} L ${cx} ${cavityY2}`,
-    `M ${cx - 4} ${cavityY1} L ${cx - 4} ${cavityY2}`,
-  ].join(' ')
-}
-
-/**
- * Double bifold closet door on a vertical wall segment.
- * @param {{ x: number, y1: number, y2: number, depth?: number }} opts
- */
-export function bifoldVerticalLeft({ x, y1, y2, depth = 26 }) {
-  const mid = (y1 + y2) / 2
-  const h = y2 - y1
-  const q = h * 0.22
-  return [
-    `M ${x} ${y1} L ${x - depth} ${y1 + q} L ${x} ${mid - 4}`,
-    `M ${x} ${y2} L ${x - depth} ${y2 - q} L ${x} ${mid + 4}`,
-    `M ${x} ${mid - 4} L ${x - depth * 0.55} ${mid} L ${x} ${mid + 4}`,
-  ].join(' ')
-}
-
-/** @param {{ x: number, y1: number, y2: number, depth?: number }} opts */
-export function bifoldVerticalRight({ x, y1, y2, depth = 26 }) {
-  const mid = (y1 + y2) / 2
-  const h = y2 - y1
-  const q = h * 0.22
-  return [
-    `M ${x} ${y1} L ${x + depth} ${y1 + q} L ${x} ${mid - 4}`,
-    `M ${x} ${y2} L ${x + depth} ${y2 - q} L ${x} ${mid + 4}`,
-    `M ${x} ${mid - 4} L ${x + depth * 0.55} ${mid} L ${x} ${mid + 4}`,
-  ].join(' ')
+  // Single swing: leaf perpendicular at the hinge + arc centred on the hinge,
+  // radius = leaf width, closing onto the far jamb.
+  const tip = at(hinge, f, 0, dir * L)
+  parts.push(seg(at(hinge, f, 0, 0), tip))
+  parts.push(arc(tip, latch, L, sweep))
+  return parts.join(' ')
 }

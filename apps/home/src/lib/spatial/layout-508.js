@@ -3,22 +3,18 @@
 /** @typedef {import('./dimensions.js').FtIn} FtIn */
 import { SPATIAL_SCHEMA_VERSION } from './types.js'
 import { dimPx, formatFtIn, toInches, fromInches } from './dimensions.js'
-import {
-  bypassSlidingHorizontal,
-  doubleSwingVerticalRight,
-  swingHorizontalDown,
-  swingHorizontalUp,
-  swingVerticalLeftFromBottom,
-  swingVerticalRight,
-} from './doors.js'
+import { doorPath } from './doors.js'
 import {
   defaultOpenings,
   openingHitAlongH,
   openingHitAlongV,
 } from './wall-edit.js'
+import { normalizeZoneItems } from './storage-items.js'
+import { wallStrokePx } from './wall-standards.js'
+import { windowPath } from './windows.js'
 
 /** Bump when default topology changes — stale saved configs are discarded. */
-export const LAYOUT_508_VERSION = 4
+export const LAYOUT_508_VERSION = 6
 
 /** @param {FtIn} d @param {number} px */
 function px(d, px) {
@@ -26,10 +22,21 @@ function px(d, px) {
 }
 
 /**
- * Avalon #508 dimensions, re-traced 2026-07 from the developer floor plan
- * (red-line audit): balcony door off the living room, bedroom door on the
- * south wall, west-wall storage closet, open-concept living/kitchen,
- * solid structural core under the laundry.
+ * Avalon #508.
+ *
+ * Two sources, and they are not interchangeable:
+ *  - Room sizes come from the printed labels on the developer render
+ *    (A9-769sf-DCI) — the only hard numbers it carries. Rooms it does not
+ *    label keep the earlier red-line field values; kitchen depth is derived
+ *    from the column-sum constraint.
+ *  - Door offsets and hinge sides come from the red-line field audit. The
+ *    render is a 3D perspective, so opening positions are NOT recoverable
+ *    from it — only counts, walls and orientation are.
+ *
+ * Topology: balcony door off the living room, bedroom door on the south wall,
+ * bedroom closet sliding into the bedroom, west-wall storage closet,
+ * open-concept living/kitchen, solid structural core under the laundry with
+ * the entry door tight against its east face.
  * @returns {Layout508Config}
  */
 export function default508Config() {
@@ -37,11 +44,11 @@ export function default508Config() {
     layoutVersion: LAYOUT_508_VERSION,
     pxPerFt: 36,
     margin: { x: 40, y: 40 },
-    leftCol: { ft: 12, in: 0 },
-    rightCol: { ft: 12, in: 4 },
+    leftCol: { ft: 12, in: 6 },
+    rightCol: { ft: 11, in: 10 },
     rooms: {
-      balcony: { w: { ft: 12, in: 0 }, h: { ft: 4, in: 6 } },
-      bedroom: { w: { ft: 12, in: 0 }, h: { ft: 12, in: 9 } },
+      balcony: { w: { ft: 12, in: 6 }, h: { ft: 4, in: 6 } },
+      bedroom: { w: { ft: 12, in: 6 }, h: { ft: 10, in: 11 } },
       bedCloset: {
         w: { ft: 7, in: 0 },
         h: { ft: 2, in: 2 },
@@ -50,12 +57,30 @@ export function default508Config() {
       linenCloset: { w: { ft: 2, in: 8 }, h: { ft: 3, in: 6 } },
       bathroom: { w: { ft: 8, in: 5 }, h: { ft: 7, in: 8 } },
       laundry: { w: { ft: 3, in: 7 }, h: { ft: 6, in: 0 } },
-      living: { w: { ft: 12, in: 4 }, h: { ft: 13, in: 10 } },
-      kitchen: { w: { ft: 12, in: 4 }, h: { ft: 16, in: 9 } },
+      living: { w: { ft: 11, in: 10 }, h: { ft: 16, in: 9 } },
+      // Depth is derived, not measured: the render labels only the bedroom and
+      // the living room, and both columns must span the same overall depth.
+      // Left = 4'6" + 10'11" + 2'2" + 3'6" + 7'8" = 28'9", so kitchen takes
+      // whatever the living room leaves: 28'9" − 16'9" = 12'0".
+      kitchen: { w: { ft: 11, in: 10 }, h: { ft: 12, in: 0 } },
       entry: { w: { ft: 5, in: 0 }, h: { ft: 3, in: 4 } },
     },
     openings: defaultOpenings(),
   }
+}
+
+/**
+ * 深拷贝 config。
+ *
+ * **不能用 structuredClone** —— 调用方传进来的往往是 S 里的 Svelte $state 代理，
+ * 而 structuredClone 遇到 Proxy 直接抛 DataCloneError。config 全是数字/字符串，
+ * JSON 往返足够，也正是 wall-edit.js 的 cloneConfig 一直在用的办法。
+ * @template T
+ * @param {T} config
+ * @returns {T}
+ */
+function cloneConfig(config) {
+  return JSON.parse(JSON.stringify(config))
 }
 
 /**
@@ -67,7 +92,7 @@ export function merge508Config(base, patch) {
   // Saved configs from an older topology (pre red-line re-trace) carry
   // offsets whose semantics changed — discard them wholesale.
   if ((patch?.layoutVersion ?? 1) < (base.layoutVersion ?? 1)) {
-    return structuredClone(base)
+    return cloneConfig(base)
   }
   const rooms = /** @type {Layout508Config['rooms']} */ ({})
   for (const key of Object.keys(base.rooms)) {
@@ -143,6 +168,41 @@ export function build508Project(config, carry = {}) {
   const kitCounterDepth = px(COUNTER_DEPTH, P)
   const kitCounterX = X_END - kitCounterDepth
   const op = { ...defaultOpenings(), ...(config.openings ?? {}) }
+
+  // The developer render shows the living room's north glazing as two units
+  // split by a mullion, not one continuous pane.
+  const livWinX1 = X_DIV + px(op.livingWindow.insetLeft ?? { ft: 2, in: 0 }, P)
+  const livWinX2 = X_END - px(op.livingWindow.insetRight ?? { ft: 2, in: 0 }, P)
+  const livWinMid = (livWinX1 + livWinX2) / 2
+  const MULLION_HALF = px({ ft: 0, in: 1 }, P) / 2
+  const bedWinX1 = X0 + px(op.bedroomWindow.insetLeft ?? { ft: 2, in: 0 }, P)
+  const bedWinX2 = X0 + LEFT_W - px(op.bedroomWindow.insetRight ?? { ft: 2, in: 0 }, P)
+  const extThick = wallStrokePx('exterior', P)
+  const intThick = wallStrokePx('interior', P)
+
+  /**
+   * Windows sit ON the wall centreline and the host wall is split around them
+   * (the same way the doors are). Drawing a window over an unbroken wall just
+   * hides it under the wall's own stroke — which is why this plan never showed
+   * its windows at all.
+   * @param {string} id
+   * @param {number} x1
+   * @param {number} x2
+   * @param {number} y
+   * @param {number} thickness
+   */
+  const windowOpening = (id, x1, x2, y, thickness) => ({
+    id,
+    type: /** @type {const} */ ('window'),
+    // Style is NOT recoverable from the developer render — a 3D view can't
+    // distinguish a slider from a hung sash. Each unit reads as two stacked
+    // panes there, so 'hung' is the closest inference.
+    windowStyle: /** @type {const} */ ('hung'),
+    from: { x: x1, y },
+    to: { x: x2, y },
+    pathD: windowPath('hung', { x: x1, y }, { x: x2, y }, { thickness }),
+  })
+
 
   const yBalconyBot = Y0 + balconyH
   const yBedroomBot = yBalconyBot + bedroomH
@@ -262,6 +322,21 @@ export function build508Project(config, carry = {}) {
       dimensions: { w: r.entry.w, h: r.entry.h },
     },
     {
+      // 卧室门的落脚处：壁橱以东、卧室与走廊之间的一条。此前没有任何房间盖到，
+      // 渲染出来是一块空白，看着就像墙断了。
+      id: 'hall-bed-landing',
+      nameZh: '',
+      nameEn: '',
+      kind: 'circulation',
+      bounds: {
+        x: X0 + bedClosetW,
+        y: yBedroomBot,
+        w: X_DIV - (X0 + bedClosetW),
+        h: bedClosetH,
+      },
+      fill: 'transparent',
+    },
+    {
       id: 'hall',
       nameZh: '走廊',
       nameEn: 'Circulation',
@@ -300,6 +375,21 @@ export function build508Project(config, carry = {}) {
     {
       id: 'w-outer-top',
       from: { x: X0, y: Y0 },
+      to: { x: livWinX1, y: Y0 },
+      kind: 'wall',
+      role: 'exterior',
+    },
+    // Mullion stub between the two living-room window units.
+    {
+      id: 'w-outer-top-mullion',
+      from: { x: livWinMid - MULLION_HALF, y: Y0 },
+      to: { x: livWinMid + MULLION_HALF, y: Y0 },
+      kind: 'wall',
+      role: 'exterior',
+    },
+    {
+      id: 'w-outer-top-e',
+      from: { x: livWinX2, y: Y0 },
       to: { x: X_END, y: Y0 },
       kind: 'wall',
       role: 'exterior',
@@ -369,6 +459,13 @@ export function build508Project(config, carry = {}) {
     {
       id: 'w-balcony',
       from: { x: X0, y: yBalconyBot },
+      to: { x: bedWinX1, y: yBalconyBot },
+      kind: 'wall',
+      role: 'interior',
+    },
+    {
+      id: 'w-balcony-e',
+      from: { x: bedWinX2, y: yBalconyBot },
       to: { x: X_DIV, y: yBalconyBot },
       kind: 'wall',
       role: 'interior',
@@ -377,6 +474,20 @@ export function build508Project(config, carry = {}) {
     {
       id: 'w-bed-south-l',
       from: { x: X0, y: yBedroomBot },
+      to: { x: cdX1, y: yBedroomBot },
+      kind: 'wall',
+      role: 'interior',
+    },
+    // 壁橱推拉门开在卧室这侧（衣柜从卧室进，不是从走廊）
+    {
+      id: 'g-bed-closet',
+      from: { x: cdX1, y: yBedroomBot },
+      to: { x: cdX2, y: yBedroomBot },
+      kind: 'gap',
+    },
+    {
+      id: 'w-bed-south-m',
+      from: { x: cdX2, y: yBedroomBot },
       to: { x: bedDoorX1, y: yBedroomBot },
       kind: 'wall',
       role: 'interior',
@@ -400,7 +511,7 @@ export function build508Project(config, carry = {}) {
       kind: 'wall',
       role: 'interior',
     },
-    // Bed closet — east cheek wall + sliding front facing the hall
+    // Bed closet — east cheek wall; sliding front faces the BEDROOM
     {
       id: 'w-closet-v',
       from: { x: X0 + bedClosetW, y: yBedroomBot },
@@ -409,21 +520,9 @@ export function build508Project(config, carry = {}) {
       role: 'interior',
     },
     {
-      id: 'w-closet-face-l',
+      // 壁橱背面 —— 门在卧室那侧，这面是整堵墙
+      id: 'w-closet-back',
       from: { x: X0, y: yClosetBandBot },
-      to: { x: cdX1, y: yClosetBandBot },
-      kind: 'wall',
-      role: 'interior',
-    },
-    {
-      id: 'g-bed-closet',
-      from: { x: cdX1, y: yClosetBandBot },
-      to: { x: cdX2, y: yClosetBandBot },
-      kind: 'gap',
-    },
-    {
-      id: 'w-closet-face-r',
-      from: { x: cdX2, y: yClosetBandBot },
       to: { x: X0 + bedClosetW, y: yClosetBandBot },
       kind: 'wall',
       role: 'interior',
@@ -565,30 +664,9 @@ export function build508Project(config, carry = {}) {
 
   /** @type {SpatialProject['openings']} */
   const openings = [
-    {
-      id: 'win-living',
-      type: 'window',
-      from: {
-        x: X_DIV + px(op.livingWindow.insetLeft ?? { ft: 2, in: 0 }, P),
-        y: Y0 - 2,
-      },
-      to: {
-        x: X_END - px(op.livingWindow.insetRight ?? { ft: 2, in: 0 }, P),
-        y: Y0 - 2,
-      },
-    },
-    {
-      id: 'win-bedroom',
-      type: 'window',
-      from: {
-        x: X0 + px(op.bedroomWindow.insetLeft ?? { ft: 2, in: 0 }, P),
-        y: yBalconyBot - 2,
-      },
-      to: {
-        x: X0 + LEFT_W - px(op.bedroomWindow.insetRight ?? { ft: 2, in: 0 }, P),
-        y: yBalconyBot - 2,
-      },
-    },
+    windowOpening('win-living', livWinX1, livWinMid - MULLION_HALF, Y0, extThick),
+    windowOpening('win-living-2', livWinMid + MULLION_HALF, livWinX2, Y0, extThick),
+    windowOpening('win-bedroom', bedWinX1, bedWinX2, yBalconyBot, intThick),
     {
       id: 'ac-living',
       type: 'ac',
@@ -601,12 +679,13 @@ export function build508Project(config, carry = {}) {
       doorStyle: 'swing',
       opensInto: 'balcony',
       hitRect: openingHitAlongV(X_DIV, balcDoorY1, balcDoorY2),
-      pathD: swingVerticalLeftFromBottom({
-        x: X_DIV,
-        y1: balcDoorY1,
-        y2: balcDoorY2,
-        radius: balcDoorY2 - balcDoorY1,
-      }),
+      // 底铰链、向西开进阳台
+      pathD: doorPath(
+        'swing',
+        { x: X_DIV, y: balcDoorY2 },
+        { x: X_DIV, y: balcDoorY1 },
+        { thickness: intThick, side: 'left' },
+      ),
     },
     {
       id: 'door-bedroom',
@@ -614,20 +693,27 @@ export function build508Project(config, carry = {}) {
       doorStyle: 'swing',
       opensInto: 'hall',
       hitRect: openingHitAlongH(bedDoorX1, bedDoorX2, yBedroomBot),
-      pathD: swingHorizontalDown({
-        x1: bedDoorX1,
-        x2: bedDoorX2,
-        y: yBedroomBot,
-        radius: bedDoorX2 - bedDoorX1,
-      }),
+      // 西铰链、向南开进走廊
+      pathD: doorPath(
+        'swing',
+        { x: bedDoorX1, y: yBedroomBot },
+        { x: bedDoorX2, y: yBedroomBot },
+        { thickness: intThick, side: 'right' },
+      ),
     },
     {
       id: 'door-bed-closet',
       type: 'door',
       doorStyle: 'bypass',
-      opensInto: 'hall',
-      hitRect: openingHitAlongH(cdX1, cdX2, yClosetBandBot),
-      pathD: bypassSlidingHorizontal({ x1: cdX1, x2: cdX2, y: yClosetBandBot }),
+      opensInto: 'bedroom',
+      hitRect: openingHitAlongH(cdX1, cdX2, yBedroomBot),
+      // 推拉门开在卧室这侧
+      pathD: doorPath(
+        'bypass',
+        { x: cdX1, y: yBedroomBot },
+        { x: cdX2, y: yBedroomBot },
+        { thickness: intThick },
+      ),
     },
     {
       id: 'door-linen',
@@ -635,12 +721,13 @@ export function build508Project(config, carry = {}) {
       doorStyle: 'swing',
       opensInto: 'hall',
       hitRect: openingHitAlongV(linenE, linenDoorY1, linenDoorY2),
-      pathD: swingVerticalRight({
-        x: linenE,
-        y1: linenDoorY1,
-        y2: linenDoorY2,
-        radius: linenDoorY2 - linenDoorY1,
-      }),
+      // 北铰链、向东开进走廊
+      pathD: doorPath(
+        'swing',
+        { x: linenE, y: linenDoorY1 },
+        { x: linenE, y: linenDoorY2 },
+        { thickness: intThick, side: 'left' },
+      ),
     },
     {
       id: 'door-bath',
@@ -648,12 +735,13 @@ export function build508Project(config, carry = {}) {
       doorStyle: 'swing',
       opensInto: 'hall',
       hitRect: openingHitAlongH(bathDoorX1, bathDoorX2, yBathTop),
-      pathD: swingHorizontalUp({
-        x1: bathDoorX1,
-        x2: bathDoorX2,
-        y: yBathTop,
-        radius: bathDoorX2 - bathDoorX1,
-      }),
+      // 西铰链、向北开进走廊
+      pathD: doorPath(
+        'swing',
+        { x: bathDoorX1, y: yBathTop },
+        { x: bathDoorX2, y: yBathTop },
+        { thickness: intThick, side: 'left' },
+      ),
     },
     {
       id: 'door-laundry',
@@ -661,25 +749,150 @@ export function build508Project(config, carry = {}) {
       doorStyle: 'double',
       opensInto: 'hall',
       hitRect: openingHitAlongV(laundryE, laundryDoorY1, laundryDoorY2),
-      pathD: doubleSwingVerticalRight({
-        x: laundryE,
-        y1: laundryDoorY1,
-        y2: laundryDoorY2,
-      }),
+      // 双开、向东开进玄关走廊
+      pathD: doorPath(
+        'double',
+        { x: laundryE, y: laundryDoorY1 },
+        { x: laundryE, y: laundryDoorY2 },
+        { thickness: intThick, side: 'left' },
+      ),
     },
     {
       id: 'door-entry',
       type: 'door',
       doorStyle: 'swing',
       hitRect: openingHitAlongH(entryX1, entryX2, Y_BOT),
-      pathD: swingHorizontalUp({
-        x1: entryX1,
-        x2: entryX2,
-        y: Y_BOT,
-        radius: entryX2 - entryX1,
-      }),
+      // 西铰链、向北开进屋内
+      pathD: doorPath(
+        'swing',
+        { x: entryX1, y: Y_BOT },
+        { x: entryX2, y: Y_BOT },
+        { thickness: extThick, side: 'left' },
+      ),
     },
   ].filter((op) => !(config.disabledOpenings ?? []).includes(op.id))
+
+  /**
+   * Built-in fixtures, laid out per the developer render (A9-769sf-DCI):
+   * a galley along the kitchen's east wall running DW → sink → cooktop → fridge
+   * north-to-south, the bathroom's tub against the west wall with the toilet and
+   * vanity east of it, the laundry pair stacked north-south, and fixed shelving
+   * in both closets.
+   *
+   * The render is a 3D perspective, so it fixes the *wall and the order*, not
+   * exact offsets — these are laid out against this model's own geometry
+   * (counter run, room faces) and spaced evenly. Treat the positions as
+   * approximate; the wall each one sits on is what the render actually pins.
+   *
+   * @type {SpatialProject['fixtures']}
+   */
+  const fixtures = []
+  {
+    const IN = (n) => (n / 12) * P
+    /** Appliances in the galley face west, so their width runs north-south. */
+    const galley = (id, kind, label, wIn, dIn, cy) => {
+      const w = IN(wIn) // along the wall (north-south)
+      const d = IN(dIn) // into the room (east-west)
+      fixtures.push({
+        id,
+        kind,
+        label,
+        rotation: /** @type {const} */ (90),
+        // bounds is the rotated AABB: width runs north-south here.
+        bounds: { x: X_END - d, y: cy - w / 2, w: d, h: w },
+      })
+    }
+    // Evenly spaced down the counter run, in the render's order.
+    const galleyTop = yLivKit + IN(6)
+    const galleyBot = Y_BOT - IN(6)
+    const slots = 4
+    const pitch = (galleyBot - galleyTop) / slots
+    const at = (i) => galleyTop + pitch * (i + 0.5)
+    galley('fx-dw', 'dishwasher', 'DW', 24, 24, at(0))
+    galley('fx-ksink', 'kitchenSink', '水槽', 30, 22, at(1))
+    galley('fx-range', 'stove', '灶台', 30, 25, at(2))
+    galley('fx-fridge', 'fridge', '冰箱', 33, 30, at(3))
+
+    // Bathroom, per the developer render: a walk-in shower (curved glass door,
+    // tiled pan, drain — NOT a tub) in the west alcove running north-south, and
+    // the vanity + toilet both against the east wall with the vanity to the
+    // north. A 30x60 alcove is the standard footprint (30" is the code minimum
+    // width); the bath door is on the *north* wall and swings out to the hall,
+    // so it does not constrain a shower in the south-west corner.
+    // Fixtures sit against wall *faces*, not centrelines — a wall is stroked at
+    // its real thickness, so the usable face is half a thickness in.
+    const bathE = X0 + bathW
+    const bathEFace = bathE - intThick / 2
+    const bathWFace = X0 + extThick / 2
+    const bathSFace = Y_BOT - extThick / 2
+    const bathNFace = yBathTop + intThick / 2
+
+    fixtures.push({
+      id: 'fx-shower',
+      kind: 'shower',
+      label: '淋浴',
+      bounds: { x: bathWFace, y: bathSFace - IN(60), w: IN(30), h: IN(60) },
+    })
+
+    // Vanity and toilet both back onto the EAST wall, vanity to the north.
+    // rotation 90 turns each symbol's back (drawn "up" unrotated) to the east —
+    // at rotation 0 they would back onto the north wall instead, which is the
+    // wall they are nowhere near.
+    const vanityY = bathNFace + IN(4)
+    fixtures.push({
+      id: 'fx-vanity',
+      kind: 'vanity',
+      label: '洗手台',
+      rotation: /** @type {const} */ (90),
+      // bounds is the rotated AABB: 30" of width now runs north-south.
+      bounds: { x: bathEFace - IN(21), y: vanityY, w: IN(21), h: IN(30) },
+    })
+    fixtures.push({
+      id: 'fx-toilet',
+      kind: 'toilet',
+      label: '马桶',
+      rotation: /** @type {const} */ (90),
+      // 15" from the toilet's centreline to the nearest obstruction each side is
+      // the code clearance; the vanity above is what it has to clear here.
+      bounds: {
+        x: bathEFace - IN(28),
+        y: vanityY + IN(35),
+        w: IN(28),
+        h: IN(20),
+      },
+    })
+
+    // Laundry pair, stacked north-south inside the closet.
+    const laundryCx = laundryX + laundryW / 2
+    fixtures.push({
+      id: 'fx-dryer',
+      kind: 'appliance',
+      label: '烘干机',
+      bounds: { x: laundryCx - IN(13.5), y: yLaundryTop + IN(2), w: IN(27), h: IN(27) },
+    })
+    fixtures.push({
+      id: 'fx-washer',
+      kind: 'appliance',
+      label: '洗衣机',
+      bounds: { x: laundryCx - IN(13.5), y: yLaundryTop + IN(31), w: IN(27), h: IN(27) },
+    })
+
+    // Fixed shelving: a hanging rod across the bedroom closet, wire shelves in
+    // the linen closet. These are built in, not furniture.
+    fixtures.push({
+      id: 'fx-bed-closet-rod',
+      kind: 'rod',
+      label: '挂杆',
+      bounds: { x: X0 + IN(3), y: yBedroomBot + IN(3), w: bedClosetW - IN(6), h: bedClosetH - IN(6) },
+    })
+    fixtures.push({
+      id: 'fx-linen-shelves',
+      kind: 'shelf',
+      label: '储物架',
+      rotation: /** @type {const} */ (90),
+      bounds: { x: X0 + IN(3), y: yClosetBandBot + IN(3), w: linenW - IN(6), h: linenH - IN(6) },
+    })
+  }
 
   /** @type {SpatialProject['furniture']} */
   const furniture = []
@@ -694,26 +907,35 @@ export function build508Project(config, carry = {}) {
     yClosetBandBot,
     yBathTop,
     yLaundryTop,
+    yLivKit,
+    Y_BOT,
     laundryX,
     livingH,
     LEFT_W,
     bedClosetW,
+    kitCounterX,
+    kitCounterDepth,
+    // Zones that *are* a built-in are derived from that built-in's own
+    // footprint, so the two can never drift apart.
+    fixture: (id) => fixtures.find((f) => f.id === id)?.bounds ?? null,
     P,
   })
 
-  const storageZones = (carry.storageZones ?? defaultZones).map((z) => {
-    const built = defaultZones.find((d) => d.id === z.id)
-    return built
-      ? {
-          ...built,
-          items: z.items,
-          nameZh: built.nameZh,
-          locationZh: built.locationZh,
-          formZh: built.formZh,
-          inferred: built.inferred ?? z.inferred,
-        }
-      : z
-  })
+  const storageZones = normalizeZoneItems(
+    (carry.storageZones ?? defaultZones).map((z) => {
+      const built = defaultZones.find((d) => d.id === z.id)
+      return built
+        ? {
+            ...built,
+            items: z.items,
+            nameZh: built.nameZh,
+            locationZh: built.locationZh,
+            formZh: built.formZh,
+            inferred: built.inferred ?? z.inferred,
+          }
+        : z
+    }),
+  )
 
   return {
     schemaVersion: SPATIAL_SCHEMA_VERSION,
@@ -729,12 +951,13 @@ export function build508Project(config, carry = {}) {
         'https://resource.avalonbay.com//floorplans/wa037/wa802-a9-769sf-dci.png',
       scaleLabel: `${config.pxPerFt} px/ft · 北向上 · 可编辑尺寸`,
       assumptions: [
-        '<b>平面来源</b>：2026-07 按手绘红线重描 v4 — 墙线比例、门铰链/开向逐一校准。',
+        '<b>平面来源</b>：v6 尺寸改用开发商图纸 A9-769sf-DCI 的标注 — 卧室 12′6″×10′11″、客厅 11′10″×16′9″。其余房间该图<b>没有标注</b>，沿用此前红线实测值；厨房进深由列高反推。',
+        '<b>门窗精度</b>：该图为 3D 透视效果图，墙有高度会使开口投影偏移，<b>门窗的精确偏移/跨度无法从中还原</b>。图上可确证的只有数量与朝向：客厅北墙两扇窗（中间竖梃）、卧室北墙单扇窗、阳台门自客厅向阳台开。门的偏移与铰链方向仍是此前逐一校准的值。',
         '<b>墙厚</b>：美国公寓惯例 — 外墙 6″、内隔墙 4.5″（2×4 + 双面石膏板）。',
-        '<b>阳台</b>：仅由客厅西北角平开门进入（底铰链向阳台开）；卧室北墙为整幅窗、无门。',
+        '<b>阳台</b>：仅由客厅西北角平开门进入（底铰链向阳台开）；卧室北墙为单扇窗、无门。',
         '<b>卧室门</b>：在南墙偏东（距东角约 1′），西铰链向走廊下开。',
-        '<b>壁橱</b>：卧室壁橱推拉门朝走廊；走廊储物柜贴西墙 2′8″ 深 × 3′6″ 高，门向走廊外开。',
-        '<b>浴室</b>：西南角，门在北墙、向走廊外开；东墙与洗衣间西墙共线。',
+        '<b>壁橱</b>：卧室壁橱推拉门<b>朝卧室开</b>（衣柜从卧室进，背面朝走廊是整墙）；内为挂杆 + 上层板。走廊储物柜贴西墙 2′8″ 深 × 3′6″ 高，门向走廊外开，内为多层钢丝层架。',
+        '<b>浴室</b>：西南角，门在北墙、向走廊外开；东墙与洗衣间西墙共线。洁具按开发商图：西侧为<b>步入式淋浴（弧形玻璃门，非浴缸）</b>30″×60″ 壁龛；洗手台在东墙北端，马桶在其正下方、中心线距东墙 18″。',
         '<b>洗衣间</b>：双开门朝东向玄关走廊；正下方结构柱实心不可进，直落南墙。',
         '<b>入户门</b>：南墙紧贴结构柱东侧，西铰链向内开。',
         '<b>厨房</b>：与客厅开放贯通、无隔墙；东墙橱柜条深 2′4″ 直达南墙。',
@@ -749,6 +972,7 @@ export function build508Project(config, carry = {}) {
     rooms,
     walls,
     openings,
+    fixtures,
     furniture,
     storageZones,
     furnitureInventory: [],
@@ -771,7 +995,7 @@ function defaultStorageZones(config, L) {
       code: 'S1',
       nameZh: '走廊储物柜',
       locationZh: `走廊西侧 · ${formatFtIn(r.linenCloset.w)}×${formatFtIn(r.linenCloset.h)}`,
-      formZh: 'Linen / Storage Closet',
+      formZh: '走廊储物柜 · 多层钢丝层架',
       bounds: {
         x: L.X0,
         y: L.yClosetBandBot,
@@ -796,15 +1020,17 @@ function defaultStorageZones(config, L) {
       nameZh: '厨房橱柜 + 干货',
       locationZh: '厨房 · 东墙橱柜',
       formZh: '上柜 + 下柜 + 台面',
+      // The counter run itself — upper + lower cabinets flank the appliances,
+      // so the zone is the whole galley strip rather than a floating box.
       bounds: {
-        x: L.X_END - px({ ft: 2, in: 4 }, P),
-        y: L.Y0 + L.livingH + 20,
-        w: px({ ft: 2, in: 0 }, P),
-        h: px({ ft: 11, in: 0 }, P),
+        x: L.kitCounterX,
+        y: L.yLivKit,
+        w: L.kitCounterDepth,
+        h: L.Y_BOT - L.yLivKit,
       },
       marker: {
-        x: L.X_END - px({ ft: 1, in: 4 }, P),
-        y: L.Y0 + L.livingH + px({ ft: 6, in: 0 }, P),
+        x: L.kitCounterX + L.kitCounterDepth / 2,
+        y: L.yLivKit + (L.Y_BOT - L.yLivKit) / 2,
       },
       items: [
         '餐具 / 玻璃杯 / 干货',
@@ -853,16 +1079,20 @@ function defaultStorageZones(config, L) {
       nameZh: '浴室层架 + 洗手台',
       locationZh: `浴室 · ${formatFtIn(r.bathroom.w)}×${formatFtIn(r.bathroom.h)}`,
       formZh: '壁挂层板 + 台下',
-      bounds: {
+      // Sits on the vanity — the storage here is the cabinet under the basin
+      // plus the shelf above it, so it tracks fx-vanity rather than floating.
+      bounds: L.fixture('fx-vanity') ?? {
         x: L.X0 + px({ ft: 4, in: 0 }, P),
         y: L.yBathTop + px({ ft: 2, in: 0 }, P),
         w: px({ ft: 2, in: 0 }, P),
         h: px({ ft: 3, in: 0 }, P),
       },
-      marker: {
-        x: L.X0 + px({ ft: 5, in: 0 }, P),
-        y: L.yBathTop + px({ ft: 3, in: 6 }, P),
-      },
+      marker: (() => {
+        const b = L.fixture('fx-vanity')
+        return b
+          ? { x: b.x + b.w / 2, y: b.y + b.h / 2 }
+          : { x: L.X0 + px({ ft: 5, in: 0 }, P), y: L.yBathTop + px({ ft: 3, in: 6 }, P) }
+      })(),
       items: ['护肤 / 洗漱', '毛巾 · 纸品', '清洁工具', '体脂秤'],
     },
     {
@@ -870,7 +1100,7 @@ function defaultStorageZones(config, L) {
       code: 'S6',
       nameZh: '卧室壁橱',
       locationZh: `卧室下 · ${formatFtIn(r.bedCloset.w)}×${formatFtIn(r.bedCloset.h)}`,
-      formZh: '推拉门 · 朝走廊开启',
+      formZh: '推拉门 · 朝卧室开启 · 挂杆 + 上层板',
       bounds: {
         x: L.X0,
         y: L.yBedroomBot,
@@ -906,7 +1136,7 @@ function defaultStorageZones(config, L) {
       code: 'S8',
       nameZh: '洗衣 / 走廊杂物',
       locationZh: `洗衣间 · ${formatFtIn(r.laundry.w)}×${formatFtIn(r.laundry.h)}`,
-      formZh: 'W/D + 清洁囤货',
+      formZh: '洗衣机 + 烘干机 · 上方囤货',
       bounds: {
         x: L.laundryX,
         y: L.yLaundryTop,
@@ -936,13 +1166,28 @@ export const EDITABLE_ROOM_KEYS = [
 ]
 
 /**
+ * 这些房间的「宽」不是独立参数，而是跟着所在的列走 —— 见下面 setRoomDimension
+ * 结尾的联动：写完立刻被 leftCol / rightCol 覆盖回去。要改只能拖分隔墙（w-div）。
+ *
+ * 导出是为了让尺寸编辑器把这几个宽度框置灰：不然用户输进去的数字会留在框里、
+ * 却永远不生效，看着像编辑器坏了。改了下面的联动记得同步这张表。
+ * @type {Record<string, 'leftCol' | 'rightCol'>}
+ */
+export const COLUMN_LOCKED_WIDTH = {
+  balcony: 'leftCol',
+  bedroom: 'leftCol',
+  living: 'rightCol',
+  kitchen: 'rightCol',
+}
+
+/**
  * @param {Layout508Config} config
  * @param {string} roomKey
  * @param {'w' | 'h'} axis
  * @param {{ ft: number, in: number }} value
  */
 export function setRoomDimension(config, roomKey, axis, value) {
-  const next = structuredClone(config)
+  const next = cloneConfig(config)
   const room = /** @type {Record<string, { w: FtIn, h: FtIn }>} */ (next.rooms)[
     roomKey
   ]

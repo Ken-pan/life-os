@@ -1,5 +1,30 @@
 <script>
-  /** @type {{ code: string, nameZh: string, locationZh: string, formZh: string, items: string[], inferred?: boolean, selected?: boolean, onSelect?: () => void, id?: string }} */
+  import { ICONS } from '$lib/iconRegistry.js'
+  import { formatTagInput, parseTagInput } from '$lib/spatial/storage-items.js'
+
+  /** @typedef {import('$lib/spatial/types.js').SpatialStorageItem} SpatialStorageItem */
+
+  /**
+   * @type {{
+   *   code: string,
+   *   nameZh: string,
+   *   locationZh: string,
+   *   formZh: string,
+   *   items: SpatialStorageItem[],
+   *   inferred?: boolean,
+   *   selected?: boolean,
+   *   onSelect?: () => void,
+   *   id?: string,
+   *   editable?: boolean,
+   *   moveTargets?: { code: string, nameZh: string }[],
+   *   highlightItemId?: string,
+   *   matchedItemIds?: string[],
+   *   onAddItem?: (name: string) => void,
+   *   onUpdateItem?: (itemId: string, patch: Partial<SpatialStorageItem>) => void,
+   *   onRemoveItem?: (itemId: string) => void,
+   *   onMoveItem?: (itemId: string, toCode: string) => void,
+   * }}
+   */
   let {
     code,
     nameZh,
@@ -10,42 +35,240 @@
     selected = false,
     onSelect,
     id = undefined,
+    editable = false,
+    moveTargets = [],
+    highlightItemId = '',
+    matchedItemIds = [],
+    onAddItem,
+    onUpdateItem,
+    onRemoveItem,
+    onMoveItem,
   } = $props()
+
+  let editingId = $state('')
+  let draftName = $state('')
+  let draftQty = $state(1)
+  let draftTags = $state('')
+  let draftNote = $state('')
+  let newName = $state('')
+
+  const matched = $derived(new Set(matchedItemIds))
+
+  /** @param {SpatialStorageItem} item */
+  function startEdit(item) {
+    editingId = item.id
+    draftName = item.name
+    draftQty = item.qty ?? 1
+    draftTags = formatTagInput(item)
+    draftNote = item.note ?? ''
+  }
+
+  function cancelEdit() {
+    editingId = ''
+  }
+
+  function commitEdit() {
+    if (!draftName.trim()) return
+    onUpdateItem?.(editingId, {
+      name: draftName,
+      qty: draftQty,
+      tags: parseTagInput(draftTags),
+      note: draftNote,
+    })
+    editingId = ''
+  }
+
+  function commitAdd() {
+    const name = newName.trim()
+    if (!name) return
+    onAddItem?.(name)
+    newName = ''
+  }
+
+  /** @param {KeyboardEvent} e */
+  function onEditKey(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      commitEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelEdit()
+    }
+  }
 </script>
 
-{#snippet body()}
+<article class="storage-card" class:selected {id}>
   <header>
-    <span class="tag">{code}</span>
-    <h3>{nameZh}</h3>
+    {#if onSelect}
+      <button type="button" class="zone-toggle" onclick={() => onSelect()}>
+        <span class="tag">{code}</span>
+        <h3>{nameZh}</h3>
+      </button>
+    {:else}
+      <span class="tag">{code}</span>
+      <h3>{nameZh}</h3>
+    {/if}
     {#if inferred}<span class="badge">推测</span>{/if}
+    <span class="count" title={`${items.length} 件物品`}>{items.length}</span>
   </header>
   <p class="meta"><b>位置</b> {locationZh} · <b>形式</b> {formZh}</p>
-  <ul>
-    {#each items as item}
-      <li>{item}</li>
-    {/each}
-  </ul>
-{/snippet}
 
-{#if onSelect}
-  <button
-    type="button"
-    class="storage-card"
-    class:selected
-    {id}
-    onclick={() => onSelect()}
-  >
-    {@render body()}
-  </button>
-{:else}
-  <article class="storage-card" class:selected {id}>
-    {@render body()}
-  </article>
-{/if}
+  <ul>
+    {#each items as item (item.id)}
+      <li
+        class:highlight={item.id === highlightItemId}
+        class:matched={matched.has(item.id)}
+      >
+        {#if editingId === item.id}
+          <div class="edit-form">
+            <!-- svelte-ignore a11y_autofocus -->
+            <input
+              class="field"
+              bind:value={draftName}
+              onkeydown={onEditKey}
+              placeholder="名称"
+              aria-label="名称"
+              autofocus
+            />
+            <div class="edit-row">
+              <label class="qty-label">
+                数量
+                <input
+                  class="field qty"
+                  type="number"
+                  min="1"
+                  bind:value={draftQty}
+                  onkeydown={onEditKey}
+                />
+              </label>
+              <input
+                class="field"
+                bind:value={draftTags}
+                onkeydown={onEditKey}
+                placeholder="标签(空格分隔)"
+                aria-label="标签"
+              />
+            </div>
+            <input
+              class="field"
+              bind:value={draftNote}
+              onkeydown={onEditKey}
+              placeholder="备注"
+              aria-label="备注"
+            />
+            <div class="edit-actions">
+              <button type="button" class="mini primary" onclick={commitEdit}>
+                保存
+              </button>
+              <button type="button" class="mini" onclick={cancelEdit}>
+                取消
+              </button>
+              <div class="spacer"></div>
+              {#if moveTargets.length}
+                <select
+                  class="move-select"
+                  aria-label={`把「${item.name}」移到其他储藏区`}
+                  value=""
+                  onchange={(e) => {
+                    const to = e.currentTarget.value
+                    e.currentTarget.value = ''
+                    if (to) {
+                      editingId = ''
+                      onMoveItem?.(item.id, to)
+                    }
+                  }}
+                >
+                  <option value="">移动到…</option>
+                  {#each moveTargets as t (t.code)}
+                    <option value={t.code}>{t.code} · {t.nameZh}</option>
+                  {/each}
+                </select>
+              {/if}
+              <button
+                type="button"
+                class="icon-btn danger"
+                title="删除"
+                aria-label={`删除 ${item.name}`}
+                onclick={() => {
+                  editingId = ''
+                  onRemoveItem?.(item.id)
+                }}
+              >
+                <ICONS.trash size={14} />
+              </button>
+            </div>
+          </div>
+        {:else if editable}
+          <button
+            type="button"
+            class="item-row"
+            aria-label={`编辑 ${item.name}`}
+            onclick={() => startEdit(item)}
+          >
+            <span class="item-name">{item.name}</span>
+            {#if item.qty && item.qty > 1}
+              <span class="qty-badge">×{item.qty}</span>
+            {/if}
+            {#each item.tags ?? [] as tag (tag)}
+              <span class="chip">{tag}</span>
+            {/each}
+            {#if item.note}
+              <span class="item-note">{item.note}</span>
+            {/if}
+          </button>
+        {:else}
+          <div class="item-row static">
+            <span class="item-name">{item.name}</span>
+            {#if item.qty && item.qty > 1}
+              <span class="qty-badge">×{item.qty}</span>
+            {/if}
+            {#each item.tags ?? [] as tag (tag)}
+              <span class="chip">{tag}</span>
+            {/each}
+            {#if item.note}
+              <span class="item-note">{item.note}</span>
+            {/if}
+          </div>
+        {/if}
+      </li>
+    {/each}
+    {#if !items.length}
+      <li class="empty">还没有登记物品</li>
+    {/if}
+  </ul>
+
+  {#if editable}
+    <form
+      class="add-row"
+      onsubmit={(e) => {
+        e.preventDefault()
+        commitAdd()
+      }}
+    >
+      <input
+        class="field"
+        bind:value={newName}
+        placeholder={`添加物品到 ${code}`}
+        aria-label={`添加物品到 ${code}`}
+      />
+      <button
+        type="submit"
+        class="icon-btn add"
+        title="添加"
+        aria-label={`添加物品到 ${code}`}
+      >
+        <ICONS.plus size={14} />
+      </button>
+    </form>
+  {/if}
+</article>
 
 <style>
   .storage-card {
-    display: block;
+    /* column + margin-top:auto on .add-row keeps every card's 添加 input
+       aligned along the row, since the grid stretches cards to equal height */
+    display: flex;
+    flex-direction: column;
     width: 100%;
     text-align: left;
     font: inherit;
@@ -56,10 +279,6 @@
     transition:
       border-color 0.15s,
       box-shadow 0.15s;
-  }
-
-  button.storage-card {
-    cursor: pointer;
   }
 
   .storage-card.selected {
@@ -76,6 +295,20 @@
     flex-wrap: wrap;
   }
 
+  .zone-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
   .tag {
     font-family: var(--mono);
     font-weight: 700;
@@ -84,6 +317,7 @@
     background: var(--storage-accent, #5c758c);
     padding: 3px 8px;
     border-radius: 6px;
+    flex: none;
   }
 
   h3 {
@@ -102,6 +336,13 @@
     border-radius: 999px;
   }
 
+  .count {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--t3);
+  }
+
   .meta {
     font-size: 12px;
     color: var(--t3);
@@ -115,12 +356,242 @@
 
   ul {
     margin: 0;
-    padding-left: 17px;
+    padding: 0;
+    list-style: none;
     font-size: 13px;
     color: var(--t2);
   }
 
   li {
-    margin: 2px 0;
+    border-radius: 7px;
+  }
+
+  li.matched {
+    background: color-mix(
+      in srgb,
+      var(--storage-accent, #5c758c) 9%,
+      transparent
+    );
+  }
+
+  li.highlight {
+    background: color-mix(
+      in srgb,
+      var(--storage-accent, #5c758c) 22%,
+      transparent
+    );
+  }
+
+  li.empty {
+    color: var(--t3);
+    font-style: italic;
+    padding: 4px 2px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 5px 6px;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    color: var(--t2);
+    background: none;
+    border: 0;
+    border-radius: 7px;
+  }
+
+  button.item-row {
+    cursor: pointer;
+  }
+
+  button.item-row:hover {
+    background: color-mix(in srgb, var(--t1) 7%, transparent);
+  }
+
+  .item-name {
+    /* 长型号 / URL 没有断点，不打断就会顶破卡片 */
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  .qty-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--t1);
+    background: var(--border);
+    padding: 1px 5px;
+    border-radius: 4px;
+    flex: none;
+  }
+
+  .chip {
+    font-size: 10px;
+    color: var(--t3);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 999px;
+    flex: none;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .item-note {
+    flex-basis: 100%;
+    font-size: 11px;
+    color: var(--t3);
+    overflow-wrap: anywhere;
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: none;
+    color: var(--t3);
+    cursor: pointer;
+  }
+
+  .icon-btn:hover {
+    border-color: var(--border);
+    color: var(--t1);
+  }
+
+  .icon-btn.danger:hover {
+    color: #d4553f;
+    border-color: #d4553f;
+  }
+
+  .icon-btn.add {
+    border-color: var(--border);
+  }
+
+  .move-select {
+    font: inherit;
+    font-size: 12px;
+    max-width: 108px;
+    padding: 3px 4px;
+    color: var(--t2);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .field {
+    font: inherit;
+    font-size: 13px;
+    width: 100%;
+    min-width: 0;
+    padding: 6px 8px;
+    color: var(--t1);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .field:focus-visible {
+    outline: 2px solid var(--storage-accent, #5c758c);
+    outline-offset: -1px;
+  }
+
+  .edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .edit-row {
+    display: flex;
+    gap: 5px;
+  }
+
+  .qty-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--t3);
+    flex: none;
+  }
+
+  .field.qty {
+    width: 60px;
+  }
+
+  .edit-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .mini {
+    font: inherit;
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--t1);
+    cursor: pointer;
+  }
+
+  .mini.primary {
+    background: var(--storage-accent, #5c758c);
+    border-color: var(--storage-accent, #5c758c);
+    color: #f5f8fa;
+  }
+
+  .add-row {
+    display: flex;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+
+  /* 手机上整行是「编辑」的点击目标，桌面的 30px 行高够不上拇指。
+     599px = @life-os/theme 的 --life-os-phone；此处必须写字面值：Svelte 的
+     <style> 单独过 PostCSS，看不到 layout.css @import 进来的 @custom-media
+     定义，写 (--life-os-phone) 会原样输出、被浏览器整块忽略。 */
+  @media (max-width: 599px) {
+    .item-row {
+      padding-top: 9px;
+      padding-bottom: 9px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+    }
+
+    .field {
+      padding: 9px 10px;
+    }
+
+    .move-select {
+      font-size: 13px;
+      padding: 8px 6px;
+      max-width: 132px;
+    }
+
+    .mini {
+      padding: 8px 14px;
+    }
   }
 </style>

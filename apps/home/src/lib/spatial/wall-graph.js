@@ -8,19 +8,53 @@ import {
   default508Config,
   merge508Config,
 } from './layout-508.js'
-import { deriveWallsAndOpenings } from './graph-openings.js'
+import {
+  deriveWallsAndOpenings,
+  reconcileOpeningsWithGraph,
+  syncOpeningIdSeq,
+} from './graph-openings.js'
 import { zonesToRooms } from './zones.js'
 import { SPATIAL_SCHEMA_VERSION } from './types.js'
 import {
   placementsToFurniture,
   resolveStorageZoneBounds,
 } from './placements.js'
+import { normalizeZoneItems } from './storage-items.js'
 
 const VERTEX_TOL_PX = 3
 let idSeq = 1
 
 function nextId(prefix) {
   return `${prefix}-${idSeq++}`
+}
+
+/** 只认本文件生成器的前缀：508 转换会保留 door-main 这类外来 id，不能拿它们喂计数器。 */
+const GRAPH_ID_RE = /^(?:v|wg)-(\d+)$/
+
+/**
+ * 把 id 计数器推到已有 id 之上。
+ *
+ * idSeq 是模块级的，刷新页面就归零，但 localStorage 里存回来的墙图 id 不会。
+ * 不同步的话，刷新后画的第一条墙必然拿到 v-1/v-2 —— 正好是首条边的两个端点，
+ * 于是要么被 addWallSegment 的去重判成「墙段已存在」（toast 却报成功）、
+ * 要么自环报「墙段过短」，新墙根本画不出来。
+ *
+ * 幂等、只增不减，所以 hydrate 每次都跑也没有副作用；
+ * export508ToWallGraph 仍会先重置回 1，迁移 id 的确定性不受影响。
+ * 同 viewpoints.js 的 syncViewpointIdSeq、storage-items.js 的 syncStorageItemIdSeq。
+ *
+ * @param {WallGraph} graph
+ */
+export function syncGraphIdSeq(graph) {
+  let max = 0
+  for (const id of [
+    ...graph.vertices.map((v) => v.id),
+    ...graph.edges.map((e) => e.id),
+  ]) {
+    const m = GRAPH_ID_RE.exec(id)
+    if (m) max = Math.max(max, Number(m[1]))
+  }
+  if (max >= idSeq) idSeq = max + 1
 }
 
 /** @param {number} x @param {number} y @param {number} pxPerFt */
@@ -228,20 +262,49 @@ function snapshot508Rooms(carry) {
 }
 
 /**
+ * 清掉指向已删除分区的 zoneId。
+ *
+ * 删分区只过滤 zones 本身，不管谁在引用它，于是家具/视角会记着一个不存在的分区
+ * （家具因此被归到一个没有的房间下）。zoneId 本来就是派生数据 —— 拖动时会用
+ * findZoneAtPoint 重算 —— 所以这里清掉是安全的。
+ * 没变化时原样返回原数组，避免 hydrate 每帧制造新引用。
+ *
+ * @template {{ zoneId?: string }} T
+ * @param {T[]} items
+ * @param {{ id: string }[]} zones
+ * @returns {T[]}
+ */
+function dropDeadZoneRefs(items, zones) {
+  const ids = new Set(zones.map((z) => z.id))
+  let changed = false
+  const next = items.map((it) => {
+    if (!it.zoneId || ids.has(it.zoneId)) return it
+    changed = true
+    return { ...it, zoneId: undefined }
+  })
+  return changed ? next : items
+}
+
+/**
  * @param {WallGraph} graph
  * @param {Partial<SpatialProject>} [carry]
  * @returns {SpatialProject}
  */
 export function buildFromWallGraph(graph, carry = {}) {
-  const graphOpenings = carry.graphOpenings ?? []
+  // 每条「墙图进入运行时」的路径都汇到这里（含刷新后从 localStorage 恢复），
+  // 所以计数器同步和门窗兜底都放这儿。
+  syncGraphIdSeq(graph)
+  syncOpeningIdSeq(carry.graphOpenings ?? [])
+  const graphOpenings = reconcileOpeningsWithGraph(graph, carry.graphOpenings ?? [])
   const { walls, openings } = deriveWallsAndOpenings(graph, graphOpenings)
 
   const { width, height, outerBounds } = graphViewport(graph)
 
   const zones = carry.zones ?? []
-  const placements = carry.placements ?? []
+  const placements = dropDeadZoneRefs(carry.placements ?? [], zones)
+  const viewpoints = dropDeadZoneRefs(carry.viewpoints ?? [], zones)
   const storageZones = resolveStorageZoneBounds(
-    carry.storageZones ?? [],
+    normalizeZoneItems(carry.storageZones ?? []),
     zones,
     placements,
   )
@@ -263,6 +326,10 @@ export function buildFromWallGraph(graph, carry = {}) {
     outerBounds,
     openings,
     furniture: placementsToFurniture(placements),
+    // Built-in fixtures ride along unchanged. They were positioned against the
+    // 508 geometry this graph was exported from, so they are correct right after
+    // a rebuild; if the user then moves a wall they stay put, same as placements.
+    fixtures: carry.fixtures ?? [],
     storageZones,
     furnitureInventory: [],
     layoutMode: 'wallGraph',
@@ -270,6 +337,7 @@ export function buildFromWallGraph(graph, carry = {}) {
     graphOpenings,
     zones,
     placements,
+    viewpoints,
     layoutConfig: carry.layoutConfig,
   }
 }

@@ -3,13 +3,21 @@
   import { goto } from '$app/navigation'
   import {
     activateWallGraphMode,
+    rebuildWallGraphFrom508,
     addGraphWall,
+    applyDetectedZones,
+    detectRoomCandidates,
+    getAngleSnapDeg,
     addGraphOpening,
     addPlacement,
+    addViewpoint,
     addZone,
+    importViewpointPhotos,
     assignStorageZone,
     commitGraphOpeningEdit,
     commitPlacementMove,
+    commitViewpointHeading,
+    commitViewpointMove,
     commitZoneVertexMove,
     removeGraphOpening,
     previewGraphOpeningDrag,
@@ -23,11 +31,15 @@
     isOpeningDisabled,
     isWallGraphMode,
     getLastDoorStyle,
+    getLastWindowStyle,
     previewGraphVertexMove,
     redoGraphEdit,
     redoLayoutEdit,
     removeGraphWall,
+    duplicatePlacement,
+    nudgePlacement,
     removePlacement,
+    removeViewpoint,
     removeZone,
     resetToOuterShell,
     reset508Layout,
@@ -42,6 +54,13 @@
   import { buildFromWallGraph } from '$lib/spatial/wall-graph.js'
   import { snapGraphPoint } from '$lib/spatial/wall-graph.js'
   import { canClosePolygon, findZoneAtPoint } from '$lib/spatial/zones.js'
+  import {
+    resolveSnap,
+    pointAtLength,
+    parseLengthInput,
+  } from '$lib/spatial/snap.js'
+  import { formatFtIn, pxToFtIn } from '$lib/spatial/dimensions.js'
+  import { toast } from '$lib/ui.svelte.js'
   import { browser } from '$app/environment'
   import FloorPlanViewer from '$lib/components/FloorPlanViewer.svelte'
   import RoomDimensionsEditor from '$lib/components/RoomDimensionsEditor.svelte'
@@ -52,27 +71,75 @@
   import PlanGraphOpeningSelectionBar from '$lib/components/PlanGraphOpeningSelectionBar.svelte'
   import PlanZoneSelectionBar from '$lib/components/PlanZoneSelectionBar.svelte'
   import PlanPlacementSelectionBar from '$lib/components/PlanPlacementSelectionBar.svelte'
-  import { PLACEMENT_KINDS, STORAGE_CODES } from '$lib/spatial/placements.js'
+  import PlanViewpointSelectionBar from '$lib/components/PlanViewpointSelectionBar.svelte'
+  import PlanNorthCalibrator from '$lib/components/PlanNorthCalibrator.svelte'
+  import { headingFromPoint } from '$lib/spatial/viewpoints.js'
+  import {
+    inchesToPx,
+    isStorable,
+    PLACEMENT_GROUP_ORDER,
+    PLACEMENT_KINDS,
+    pxToInches,
+    STORAGE_CODES,
+  } from '$lib/spatial/placements.js'
+  import { resolvePlacementSnap } from '$lib/spatial/placement-snap.js'
+  import { wallStrokePx } from '$lib/spatial/wall-standards.js'
   import PlanContextMenu from '$lib/components/PlanContextMenu.svelte'
   import PlanEditToolbar from '$lib/components/PlanEditToolbar.svelte'
   import PlanShortcutsHelp from '$lib/components/PlanShortcutsHelp.svelte'
   import { defaultDoorSpanIn, doorStyleLabel } from '$lib/spatial/door-styles.js'
+  import {
+    defaultWindowSpanIn,
+    windowStyleLabel,
+  } from '$lib/spatial/window-styles.js'
 
   const project = $derived(getActiveProject())
+  const planPxPerFt = $derived(
+    project.wallGraph?.pxPerFt ?? project.layoutConfig?.pxPerFt ?? 36,
+  )
   const wallGraph = $derived(isWallGraphMode())
 
   /** @type {'browse' | 'edit'} */
   let planMode = $state('browse')
-  /** @type {'walls' | 'zones' | 'place'} */
+  /** @type {'walls' | 'zones' | 'place' | 'view'} */
   let editStep = $state('walls')
   /** @type {import('$lib/plan-graph-edit.js').GraphTool} */
   let graphTool = $state('wallAdd')
+  /** @type {'door' | 'window'} 门窗工具放置哪一种 */
+  let openingKind = $state('door')
   /** @type {import('$lib/plan-zone-edit.js').ZoneTool} */
   let zoneTool = $state('zoneAdd')
   /** @type {import('$lib/plan-placement-edit.js').PlacementTool} */
   let placementTool = $state('place')
   /** @type {keyof typeof PLACEMENT_KINDS} */
   let placementKind = $state('cabinet')
+  /** @type {import('$lib/plan-viewpoint-edit.js').ViewpointTool} */
+  let viewpointTool = $state('viewAdd')
+  let selectedViewpoint = $state('')
+  /** @type {import('$lib/spatial/types.js').SpatialViewpoint[] | null} */
+  let previewViewpoints = $state(null)
+  let northCalOpen = $state(false)
+  /** @type {HTMLInputElement | null} */
+  let bulkInput = $state(null)
+  /** @type {string} */
+  let bulkProgress = $state('')
+
+  /** @param {Event} e */
+  async function onBulkPick(e) {
+    const input = /** @type {HTMLInputElement} */ (e.currentTarget)
+    const files = [...(input.files ?? [])]
+    input.value = ''
+    if (!files.length) return
+    bulkProgress = `准备 0/${files.length}`
+    try {
+      const { added } = await importViewpointPhotos(files, (done, total, label) => {
+        bulkProgress = `${label}（${done}/${total}）`
+      })
+      if (added.length) selectedViewpoint = added[added.length - 1]
+    } finally {
+      bulkProgress = ''
+    }
+  }
   let selectedWall = $state('')
   let selectedOpening = $state('')
   let selectedEdge = $state('')
@@ -94,6 +161,16 @@
   let wallChainFrom = $state(null)
   /** @type {{ x: number, y: number } | null} */
   let wallChainHover = $state(null)
+  /**
+   * Alignment guides for the live drag — wall drawing and furniture placement
+   * both feed this one channel.
+   * @type {(import('$lib/spatial/snap.js').SnapGuide | import('$lib/spatial/placement-snap.js').PlacementGuide)[]}
+   */
+  let snapGuides = $state([])
+  /** 精确长度输入框的草稿；空 = 显示实时长度 */
+  let lengthDraft = $state('')
+  /** @type {HTMLInputElement | null} */
+  let lengthInputEl = $state(null)
   /** @type {{ x: number, y: number }[]} */
   let zoneChainPoints = $state([])
   /** @type {{ x: number, y: number } | null} */
@@ -123,8 +200,11 @@
   const placeEditMode = $derived(
     wallGraph && planMode === 'edit' && editStep === 'place',
   )
+  const viewEditMode = $derived(
+    wallGraph && planMode === 'edit' && editStep === 'view',
+  )
   const wallGraphEditMode = $derived(
-    graphEditMode || zoneEditMode || placeEditMode,
+    graphEditMode || zoneEditMode || placeEditMode || viewEditMode,
   )
   const canUndo = $derived(wallGraphEditMode ? canUndoGraph() : canUndoLayout())
   const canRedo = $derived(wallGraphEditMode ? canRedoGraph() : canRedoLayout())
@@ -157,12 +237,24 @@
   const showPlacementSelectionBar = $derived(
     placeEditMode && Boolean(selectedPlacementObj),
   )
+  const selectedViewpointObj = $derived(
+    (project.viewpoints ?? []).find((v) => v.id === selectedViewpoint) ?? null,
+  )
+  const showViewpointSelectionBar = $derived(
+    viewEditMode && Boolean(selectedViewpointObj),
+  )
+  // 未校准时按钮带个 ! ——「罗盘」和 EXIF 朝向在此之前都是死的，得让人看见。
+  const planNorthLabel = $derived.by(() => {
+    const n = project.meta?.planNorthDeg
+    return typeof n === 'number' ? ` ${Math.round(n)}°` : ' !'
+  })
   const hideFabForBar = $derived(
     showSelectionBar ||
       showGraphSelectionBar ||
       showGraphOpeningSelectionBar ||
       showZoneSelectionBar ||
-      showPlacementSelectionBar,
+      showPlacementSelectionBar ||
+      showViewpointSelectionBar,
   )
   const drawerLabel = $derived('详情')
 
@@ -201,6 +293,10 @@
       }
       if (graphTool === 'remove') return '删墙：点击墙段删除'
       if (graphTool === 'opening') {
+        if (openingKind === 'window') {
+          const style = getLastWindowStyle()
+          return `门窗：点击墙段放置窗（${windowStyleLabel(style)} ${defaultWindowSpanIn(style)}″）`
+        }
         const style = getLastDoorStyle()
         return `门窗：点击墙段放置门（${doorStyleLabel(style)} ${defaultDoorSpanIn(style)}″）`
       }
@@ -215,6 +311,12 @@
     }
     if (wallGraph && editStep === 'place') {
       return '布置：选家具类型后点画布放置 · 标储藏指派 S1–S8'
+    }
+    if (wallGraph && editStep === 'view') {
+      if (viewpointTool === 'viewAdd') {
+        return '视角：点画布放机位 · 拖圆点改位置 · 拖手柄转朝向 · 选中后挂照片'
+      }
+      return '视角：点机位选中 · 拖圆点改位置 · 拖手柄转朝向 · Delete 删除'
     }
     return '拖曳内墙与门窗调整户型 · Delete 隐藏门窗'
   })
@@ -276,6 +378,7 @@
     selectedEdge = ''
     selectedSpatialZone = ''
     selectedPlacement = ''
+    selectedViewpoint = ''
   }
 
   function clearZoneChain() {
@@ -286,6 +389,8 @@
   function clearGraphChain() {
     wallChainFrom = null
     wallChainHover = null
+    snapGuides = []
+    lengthDraft = ''
   }
 
   /** @param {{ x: number, y: number }} pt */
@@ -330,11 +435,76 @@
     placementKindsOpen = false
   }
 
-  /** @param {{ x: number, y: number }} pt */
-  function onPlacementPoint(pt) {
+  /**
+   * @param {{ x: number, y: number }} pt
+   * @param {number} [zoom]
+   */
+  function onPlacementPoint(pt, zoom = 1) {
     if (placementTool !== 'place') return
-    const id = addPlacement(placementKind, pt.x, pt.y)
+    // Placing runs the same snap as dragging — otherwise the very first action
+    // on a piece is the one that ignores walls, and it lands on a fractional
+    // inch that every later nudge inherits.
+    const spec = PLACEMENT_KINDS[placementKind]
+    const w = inchesToPx(spec.w, planPxPerFt)
+    const h = inchesToPx(spec.h, planPxPerFt)
+    const snap = resolvePlacementSnap(
+      { x: pt.x - w / 2, y: pt.y - h / 2, w, h },
+      project.walls ?? [],
+      (project.placements ?? []).map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h })),
+      {
+        pxPerFt: planPxPerFt,
+        zoom,
+        thicknessFor: (wall) =>
+          wallStrokePx(wall.role ?? 'interior', planPxPerFt),
+      },
+    )
+    const id = addPlacement(placementKind, snap.x + w / 2, snap.y + h / 2)
     if (id) selectedPlacement = id
+  }
+
+  /**
+   * Resolve where a dragged placement should actually land: flush to a wall
+   * face, aligned to a neighbour, or on the 1″ grid. Shared by the drag preview
+   * and the drop commit so what you see is what you get.
+   * @param {string} id
+   * @param {{ x: number, y: number }} pt target centre
+   * @param {number} [zoom] current view zoom — snap tolerance is screen-space
+   */
+  function snapPlacementAt(id, pt, zoom = 1) {
+    const placement = (project.placements ?? []).find((x) => x.id === id)
+    if (!placement) return null
+    const rect = {
+      x: pt.x - placement.w / 2,
+      y: pt.y - placement.h / 2,
+      w: placement.w,
+      h: placement.h,
+    }
+    const others = (project.placements ?? [])
+      .filter((x) => x.id !== id)
+      .map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h }))
+    const snap = resolvePlacementSnap(rect, project.walls ?? [], others, {
+      pxPerFt: planPxPerFt,
+      zoom,
+      thicknessFor: (w) => wallStrokePx(w.role ?? 'interior', planPxPerFt),
+    })
+    return { placement, snap }
+  }
+
+  /** @param {import('$lib/plan-viewpoint-edit.js').ViewpointTool} tool */
+  function setViewpointTool(tool) {
+    viewpointTool = tool
+    previewViewpoints = null
+  }
+
+  /** @param {{ x: number, y: number }} pt */
+  function onViewpointPoint(pt) {
+    if (viewpointTool !== 'viewAdd') return
+    const id = addViewpoint(pt.x, pt.y)
+    if (id) {
+      selectedViewpoint = id
+      // 放完就转选择态 —— 否则下一次点击（想选中它）又会再放一个。
+      setViewpointTool('viewSelect')
+    }
   }
 
   /** @param {{ x: number, y: number }} pt */
@@ -344,6 +514,10 @@
     /** @type {{ zoneId?: string, placementId?: string }} */
     const target = {}
     for (const p of placements) {
+      // 装不了东西的家具（吊扇、地毯、滑板车…）不接储藏指派，而且必须是
+      // 「穿透」而不是「拦下」：否则点在铺满半个客厅的地毯上，底下的分区就
+      // 永远够不着了。
+      if (!isStorable(p.kind)) continue
       if (
         pt.x >= p.x &&
         pt.x <= p.x + p.w &&
@@ -396,24 +570,88 @@
     previewZones = null
   }
 
-  /** @param {{ x: number, y: number }} from @param {{ x: number, y: number }} to */
-  function orthoPoint(from, to) {
-    const dx = Math.abs(to.x - from.x)
-    const dy = Math.abs(to.y - from.y)
-    return dx > dy ? { x: to.x, y: from.y } : { x: from.x, y: to.y }
+  /**
+   * 解析画墙落点：顶点 > 对齐 > 角度 > 网格。
+   * @param {{ x: number, y: number }} pt
+   * @param {{ shiftKey?: boolean, altKey?: boolean, zoom?: number }} [mods]
+   */
+  function snapWallPoint(pt, mods = {}) {
+    const graph = project.wallGraph
+    if (!graph) return null
+    return resolveSnap(wallChainFrom, pt, graph, {
+      angleSnapDeg: getAngleSnapDeg(),
+      ortho: mods.shiftKey, // Shift 仍是强制正交，保住肌肉记忆
+      freeAngle: mods.altKey, // Alt 临时脱开角度吸附
+      zoom: mods.zoom ?? 1,
+    })
   }
 
-  /** @param {{ x: number, y: number }} pt */
-  function onGraphWallPoint(pt) {
+  /**
+   * @param {{ x: number, y: number }} pt
+   * @param {{ shiftKey?: boolean, altKey?: boolean, zoom?: number }} [mods]
+   */
+  function onGraphWallPoint(pt, mods = {}) {
     if (graphTool !== 'wallAdd') return
-    const target = wallChainFrom && wallChainHover ? wallChainHover : pt
+    // 触屏没有 hover，落点这里自己算一次；鼠标下与 hover 结果一致
+    const snap = snapWallPoint(pt, mods)
+    const target = snap ? { x: snap.x, y: snap.y } : pt
     if (!wallChainFrom) {
       wallChainFrom = target
+      wallChainHover = null
+      snapGuides = []
       return
     }
     if (addGraphWall(wallChainFrom.x, wallChainFrom.y, target.x, target.y)) {
       wallChainFrom = target
+      lengthDraft = ''
     }
+  }
+
+  /** 按精确长度提交当前链段（沿 hover 方向）。 */
+  function commitChainLength() {
+    const lengthIn = parseLengthInput(lengthDraft)
+    if (lengthIn == null) {
+      toast('长度无法识别，例：12\'6" · 150" · 12.5（英尺）', 'warn')
+      return
+    }
+    if (!wallChainFrom || !wallChainHover) {
+      toast('先移动指针定出墙的方向', 'warn')
+      return
+    }
+    const pxPerFt = project.wallGraph?.pxPerFt ?? 36
+    const target = pointAtLength(wallChainFrom, wallChainHover, lengthIn, pxPerFt)
+    if (!target) {
+      // lengthIn 已保证 > 0，走到这只可能是 hover 与起点重合、方向无法确定
+      toast('先移动指针定出墙的方向', 'warn')
+      return
+    }
+    if (addGraphWall(wallChainFrom.x, wallChainFrom.y, target.x, target.y)) {
+      wallChainFrom = target
+      wallChainHover = null
+      snapGuides = []
+      lengthDraft = ''
+    }
+  }
+
+  /** 链段实时长度，作为长度输入框的 placeholder */
+  const chainLengthLabel = $derived.by(() => {
+    if (!wallChainFrom || !wallChainHover) return ''
+    const pxPerFt = project.wallGraph?.pxPerFt ?? 36
+    const px = Math.hypot(
+      wallChainHover.x - wallChainFrom.x,
+      wallChainHover.y - wallChainFrom.y,
+    )
+    return formatFtIn(pxToFtIn(px, pxPerFt))
+  })
+
+  /** ② 划分：墙图闭合环 → 分区 */
+  function runRoomDetect() {
+    const found = detectRoomCandidates()
+    if (!found.length) {
+      toast('未识别到新的闭合房间——检查墙是否首尾相接', 'warn')
+      return
+    }
+    applyDetectedZones(found)
   }
 
   function performUndo() {
@@ -497,19 +735,24 @@
     graphPreviewOpenings = null
     previewZones = null
     previewPlacements = null
+    previewViewpoints = null
     if (editStep === 'zones') zoneTool = 'zoneAdd'
     if (editStep === 'place') placementTool = 'place'
-    if (compactPlanChrome && (editStep === 'walls' || editStep === 'place')) {
+    if (editStep === 'view') viewpointTool = 'viewAdd'
+    if (
+      compactPlanChrome &&
+      (editStep === 'walls' || editStep === 'place' || editStep === 'view')
+    ) {
       bumpFit(false, 'contain')
     } else {
       bumpFit(false)
     }
   }
 
-  /** @param {'walls' | 'zones' | 'place'} step */
+  /** @param {'walls' | 'zones' | 'place' | 'view'} step */
   function setEditStep(step) {
     if (!wallGraph && step !== 'walls') return
-    if (step === 'place' && !wallGraph) return
+    if ((step === 'place' || step === 'view') && !wallGraph) return
     const prev = editStep
     editStep = step
     if (prev !== step) syncEditStepSideEffects()
@@ -521,6 +764,22 @@
     clearGraphChain()
     graphPreviewGraph = null
     graphPreviewOpenings = null
+  }
+
+  function rebuildGraphFromLayout() {
+    // Destructive: hand edits to the graph are the whole reason this isn't
+    // automatic, so make the cost explicit before doing it.
+    const ok =
+      !browser ||
+      window.confirm(
+        '按最新户型重建墙图？\n\n会丢弃：你在墙图上的手工改动（建删墙、拖顶点、挪门窗）。\n会保留：家具、储藏清单、视角；手绘分区会被标记「需核对」。',
+      )
+    if (!ok) return
+    rebuildWallGraphFrom508()
+    selectedEdge = ''
+    selectedOpening = ''
+    clearGraphChain()
+    bumpFit(false)
   }
 
   function convertToWallGraph() {
@@ -555,10 +814,13 @@
     if (editStep === 'place') {
       return placementTool === 'place' ? 'furniture' : null
     }
+    if (editStep === 'view') {
+      return viewpointTool === 'viewAdd' ? 'viewpoint' : 'select'
+    }
     return null
   })
 
-  /** @param {'select' | 'wall' | 'opening' | 'zone' | 'furniture'} id */
+  /** @param {'select' | 'wall' | 'opening' | 'zone' | 'furniture' | 'viewpoint'} id */
   function activateToolbarTool(id) {
     if (!wallGraph) {
       convertToWallGraph()
@@ -568,6 +830,8 @@
     if (id === 'select') {
       if (editStep === 'zones') {
         setZoneTool('zoneSelect')
+      } else if (editStep === 'view') {
+        setViewpointTool('viewSelect')
       } else {
         setEditStep('walls')
         setGraphTool('select')
@@ -592,6 +856,11 @@
     if (id === 'furniture') {
       setEditStep('place')
       setPlacementTool('place')
+      return
+    }
+    if (id === 'viewpoint') {
+      setEditStep('view')
+      setViewpointTool('viewAdd')
     }
   }
 
@@ -673,6 +942,23 @@
         return
       }
 
+      // 画墙时直接敲数字就开始输长度——业界惯例是不用先去点输入框
+      if (
+        graphEditMode &&
+        graphTool === 'wallAdd' &&
+        wallChainFrom &&
+        !inField &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        /^[0-9]$/.test(e.key)
+      ) {
+        e.preventDefault()
+        lengthDraft = e.key
+        lengthInputEl?.focus()
+        return
+      }
+
       if (e.key === 'Escape') {
         if (showHelp) {
           showHelp = false
@@ -714,6 +1000,13 @@
           else setPlanMode('browse')
           return
         }
+        if (viewEditMode) {
+          if (selectedViewpoint) selectedViewpoint = ''
+          else if (previewViewpoints) previewViewpoints = null
+          else if (viewpointTool === 'viewSelect') setViewpointTool('viewAdd')
+          else setPlanMode('browse')
+          return
+        }
         if (planMode === 'edit') {
           if (selectedWall || selectedOpening) clearSelection()
           else setPlanMode('browse')
@@ -742,6 +1035,41 @@
         e.preventDefault()
         removePlacement(selectedPlacement)
         selectedPlacement = ''
+        return
+      }
+
+      if (placeEditMode && selectedPlacement && !inField) {
+        const NUDGE = {
+          ArrowLeft: [-1, 0],
+          ArrowRight: [1, 0],
+          ArrowUp: [0, -1],
+          ArrowDown: [0, 1],
+        }
+        const dir = NUDGE[e.key]
+        if (dir) {
+          e.preventDefault()
+          // Shift jumps a foot — the same modifier convention as the wall tools.
+          const step = e.shiftKey ? 12 : 1
+          nudgePlacement(selectedPlacement, dir[0] * step, dir[1] * step)
+          return
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') {
+          e.preventDefault()
+          const id = duplicatePlacement(selectedPlacement)
+          if (id) selectedPlacement = id
+          return
+        }
+      }
+
+      if (
+        (e.key === 'Delete' || e.key === 'Backspace') &&
+        viewEditMode &&
+        selectedViewpoint &&
+        !inField
+      ) {
+        e.preventDefault()
+        removeViewpoint(selectedViewpoint)
+        selectedViewpoint = ''
         return
       }
 
@@ -876,7 +1204,7 @@
               value={editStep}
               onchange={(e) =>
                 setEditStep(
-                  /** @type {'walls' | 'zones' | 'place'} */ (
+                  /** @type {'walls' | 'zones' | 'place' | 'view'} */ (
                     /** @type {HTMLSelectElement} */ (e.currentTarget).value
                   ),
                 )}
@@ -884,8 +1212,46 @@
               <option value="walls">① 墙体</option>
               <option value="zones" disabled={!wallGraph}>② 划分</option>
               <option value="place" disabled={!wallGraph}>③ 布置</option>
+              <option value="view" disabled={!wallGraph}>④ 视角</option>
             </select>
           </label>
+
+          {#if viewEditMode}
+            <label class="plan-tool-select-wrap">
+              <span class="sr-only">视角工具</span>
+              <select
+                class="plan-tool-select"
+                aria-label="视角工具"
+                value={viewpointTool}
+                onchange={(e) =>
+                  setViewpointTool(
+                    /** @type {import('$lib/plan-viewpoint-edit.js').ViewpointTool} */ (
+                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
+                    ),
+                  )}
+              >
+                <option value="viewAdd">放机位</option>
+                <option value="viewSelect">选择</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              class="mode-undo-btn"
+              disabled={Boolean(bulkProgress)}
+              onclick={() => bulkInput?.click()}
+              title="一次导入多张"
+            >
+              {bulkProgress || '导入'}
+            </button>
+            <button
+              type="button"
+              class="mode-undo-btn"
+              onclick={() => (northCalOpen = true)}
+              title="校准平面图北向 — EXIF/罗盘朝向的前提"
+            >
+              北向{planNorthLabel}
+            </button>
+          {/if}
 
           {#if graphEditMode}
             <label class="plan-tool-select-wrap">
@@ -907,6 +1273,48 @@
                 <option value="remove">删墙</option>
               </select>
             </label>
+            {#if graphTool === 'opening'}
+              <label class="plan-tool-select-wrap">
+                <span class="sr-only">放置门还是窗</span>
+                <select
+                  class="plan-tool-select"
+                  aria-label="放置门还是窗"
+                  value={openingKind}
+                  onchange={(e) =>
+                    (openingKind = /** @type {'door' | 'window'} */ (
+                      /** @type {HTMLSelectElement} */ (e.currentTarget).value
+                    ))}
+                >
+                  <option value="door">门</option>
+                  <option value="window">窗</option>
+                </select>
+              </label>
+            {/if}
+            {#if graphTool === 'wallAdd' && wallChainFrom}
+              <label class="plan-len-wrap">
+                <span class="sr-only">墙段精确长度</span>
+                <input
+                  bind:this={lengthInputEl}
+                  class="plan-len-input"
+                  type="text"
+                  inputmode="text"
+                  aria-label="墙段精确长度"
+                  placeholder={chainLengthLabel || '长度'}
+                  bind:value={lengthDraft}
+                  onkeydown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      commitChainLength()
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault()
+                      lengthDraft = ''
+                      lengthInputEl?.blur()
+                    }
+                    e.stopPropagation()
+                  }}
+                />
+              </label>
+            {/if}
           {:else if zoneEditMode}
             <label class="plan-tool-select-wrap">
               <span class="sr-only">分区工具</span>
@@ -926,6 +1334,14 @@
                 <option value="zoneRemove">删区</option>
               </select>
             </label>
+            <button
+              type="button"
+              class="plan-inline-btn plan-detect-btn"
+              title="按墙体闭合环自动生成分区，已有分区的房间会跳过"
+              onclick={runRoomDetect}
+            >
+              自动识别房间
+            </button>
           {:else if placeEditMode}
             <label class="plan-tool-select-wrap">
               <span class="sr-only">布置工具</span>
@@ -958,8 +1374,12 @@
                       ),
                     )}
                 >
-                  {#each Object.entries(PLACEMENT_KINDS) as [kind, spec] (kind)}
-                    <option value={kind}>{spec.label}</option>
+                  {#each PLACEMENT_GROUP_ORDER as group (group)}
+                    <optgroup label={group}>
+                      {#each Object.entries(PLACEMENT_KINDS).filter(([, s]) => s.group === group) as [kind, spec] (kind)}
+                        <option value={kind}>{spec.label}</option>
+                      {/each}
+                    </optgroup>
                   {/each}
                 </select>
               </label>
@@ -1043,7 +1463,60 @@
           >
             ③ 布置
           </button>
+          <button
+            type="button"
+            class="step-btn"
+            class:active={editStep === 'view'}
+            aria-pressed={editStep === 'view'}
+            disabled={!wallGraph}
+            title={wallGraph ? '实拍照片机位' : '请先转换为墙图'}
+            onclick={() => setEditStep('view')}
+          >
+            ④ 视角
+          </button>
         </div>
+
+        {#if viewEditMode}
+          <div class="tool-segment-scroll" data-scroll-hint="tools">
+            <div class="tool-segment" role="group" aria-label="视角工具">
+              <button
+                type="button"
+                class="step-btn"
+                class:active={viewpointTool === 'viewAdd'}
+                aria-pressed={viewpointTool === 'viewAdd'}
+                onclick={() => setViewpointTool('viewAdd')}
+              >
+                放机位
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                class:active={viewpointTool === 'viewSelect'}
+                aria-pressed={viewpointTool === 'viewSelect'}
+                onclick={() => setViewpointTool('viewSelect')}
+              >
+                选择
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                disabled={Boolean(bulkProgress)}
+                onclick={() => bulkInput?.click()}
+                title="一次导入多张：自动读 EXIF、VLM 定分区与朝向"
+              >
+                {bulkProgress || '批量导入'}
+              </button>
+              <button
+                type="button"
+                class="step-btn"
+                onclick={() => (northCalOpen = true)}
+                title="校准平面图北向 — EXIF/罗盘朝向的前提"
+              >
+                北向{planNorthLabel}
+              </button>
+            </div>
+          </div>
+        {/if}
 
         {#if placeEditMode}
           <div class="tool-segment-scroll" data-scroll-hint="tools">
@@ -1071,19 +1544,25 @@
           {#if placementTool === 'place'}
             <div class="tool-segment-scroll" data-scroll-hint="kinds">
               <div class="tool-segment" role="group" aria-label="家具类型">
-                {#each Object.entries(PLACEMENT_KINDS) as [kind, spec] (kind)}
-                  <button
-                    type="button"
-                    class="step-btn step-btn-compact"
-                    class:active={placementKind === kind}
-                    aria-pressed={placementKind === kind}
-                    onclick={() =>
-                      setPlacementKind(
-                        /** @type {keyof typeof PLACEMENT_KINDS} */ (kind),
-                      )}
+                {#each PLACEMENT_GROUP_ORDER as group (group)}
+                  <span class="tool-segment-group" aria-hidden="true"
+                    >{group}</span
                   >
-                    {spec.label}
-                  </button>
+                  {#each Object.entries(PLACEMENT_KINDS).filter(([, s]) => s.group === group) as [kind, spec] (kind)}
+                    <button
+                      type="button"
+                      class="step-btn step-btn-compact"
+                      class:active={placementKind === kind}
+                      aria-pressed={placementKind === kind}
+                      aria-label={`${group} · ${spec.label}`}
+                      onclick={() =>
+                        setPlacementKind(
+                          /** @type {keyof typeof PLACEMENT_KINDS} */ (kind),
+                        )}
+                    >
+                      {spec.label}
+                    </button>
+                  {/each}
                 {/each}
               </div>
             </div>
@@ -1150,6 +1629,7 @@
       {graphEditMode}
       toolbarMinimal={compactPlanChrome && planMode === 'edit'}
       {graphTool}
+      {openingKind}
       {fitRequest}
       {selectedWall}
       {selectedOpening}
@@ -1192,10 +1672,43 @@
         previewZones = null
         commitZoneVertexMove(zoneId, index, pt.x, pt.y)
       }}
+      viewpointEditMode={viewEditMode}
+      {viewpointTool}
+      {selectedViewpoint}
+      {previewViewpoints}
+      showViewpoints={viewEditMode}
+      onViewpointPoint={viewEditMode ? onViewpointPoint : undefined}
+      onSelectViewpoint={(id) => {
+        selectedViewpoint = id
+      }}
+      onViewpointDragStart={() => {
+        previewViewpoints = project.viewpoints ?? []
+      }}
+      onViewpointDrag={(id, pt) => {
+        previewViewpoints = (project.viewpoints ?? []).map((v) =>
+          v.id === id ? { ...v, x: pt.x, y: pt.y } : v,
+        )
+      }}
+      onViewpointDrop={(id, pt) => {
+        previewViewpoints = null
+        commitViewpointMove(id, pt.x, pt.y)
+      }}
+      onViewpointRotate={(id, pt) => {
+        previewViewpoints = (project.viewpoints ?? []).map((v) =>
+          v.id === id
+            ? { ...v, heading: headingFromPoint(v.x, v.y, pt.x, pt.y) }
+            : v,
+        )
+      }}
+      onViewpointRotateDrop={(id, pt) => {
+        const v = (project.viewpoints ?? []).find((x) => x.id === id)
+        previewViewpoints = null
+        if (v) commitViewpointHeading(id, headingFromPoint(v.x, v.y, pt.x, pt.y))
+      }}
       placementEditMode={placeEditMode}
       {placementTool}
       {selectedPlacement}
-      showFurniture={placeEditMode || planMode === 'browse'}
+      showFurniture={placeEditMode || viewEditMode || planMode === 'browse'}
       onPlacementPoint={placeEditMode ? onPlacementPoint : undefined}
       onAssignStorage={placeEditMode ? onAssignStorageAt : undefined}
       onSelectPlacement={(id) => {
@@ -1204,18 +1717,30 @@
       onPlacementDragStart={() => {
         previewPlacements = project.placements ?? []
       }}
-      onPlacementDrag={(id, pt) => {
-        const p = (project.placements ?? []).find((x) => x.id === id)
-        if (!p) return
+      onPlacementDrag={(id, pt, zoom) => {
+        const r = snapPlacementAt(id, pt, zoom)
+        if (!r) return
+        snapGuides = r.snap.guides
         previewPlacements = (project.placements ?? []).map((item) =>
-          item.id === id
-            ? { ...item, x: pt.x - item.w / 2, y: pt.y - item.h / 2 }
-            : item,
+          item.id === id ? { ...item, x: r.snap.x, y: r.snap.y } : item,
         )
       }}
-      onPlacementDrop={(id, pt) => {
+      onPlacementDrop={(id, pt, zoom) => {
+        const r = snapPlacementAt(id, pt, zoom)
         previewPlacements = null
-        commitPlacementMove(id, pt.x, pt.y)
+        snapGuides = []
+        // Commit exactly what the preview showed — snapPlacementAt already
+        // applied the grid on any axis that didn't catch a wall or neighbour.
+        if (r) {
+          commitPlacementMove(
+            id,
+            r.snap.x + r.placement.w / 2,
+            r.snap.y + r.placement.h / 2,
+            { exact: true },
+          )
+        } else {
+          commitPlacementMove(id, pt.x, pt.y)
+        }
       }}
       hideStorageZones={planMode === 'browse'}
       onZoneSelect={undefined}
@@ -1223,7 +1748,7 @@
       onGraphWallPoint={graphEditMode ? onGraphWallPoint : undefined}
       onGraphRemoveEdge={(id) => removeGraphWall(id)}
       onPlaceOpening={(pt, edgeId) => {
-        const id = addGraphOpening(edgeId, pt, 'door')
+        const id = addGraphOpening(edgeId, pt, openingKind)
         if (id) {
           selectedOpening = id
           selectedEdge = ''
@@ -1255,14 +1780,17 @@
         graphPreviewOpenings = null
         commitGraphOpeningEdit(id, pt, mode)
       }}
-      onGraphHover={(pt, shiftKey) => {
-        if (!pt || !wallChainFrom) {
-          wallChainHover = pt
+      onGraphHover={(pt, mods) => {
+        if (!pt) {
+          wallChainHover = null
+          snapGuides = []
           return
         }
-        wallChainHover =
-          shiftKey && wallChainFrom ? orthoPoint(wallChainFrom, pt) : pt
+        const snap = snapWallPoint(pt, mods ?? {})
+        wallChainHover = snap ? { x: snap.x, y: snap.y } : pt
+        snapGuides = snap?.guides ?? []
       }}
+      {snapGuides}
       onVertexDragStart={() => {
         graphPreviewGraph = project.wallGraph ?? null
       }}
@@ -1296,7 +1824,9 @@
       {canUndo}
       {canRedo}
       hidden={planMode !== 'edit' || editMode508 || compactPlanChrome}
+      {openingKind}
       onTool={activateToolbarTool}
+      onOpeningKind={(kind) => (openingKind = kind)}
       onUndo={performUndo}
       onRedo={performRedo}
       onReset={handleResetToShell}
@@ -1341,6 +1871,38 @@
         }}
       />
     {/if}
+    {#if showViewpointSelectionBar && selectedViewpointObj}
+      <PlanViewpointSelectionBar
+        viewpoint={selectedViewpointObj}
+        compact={compactPlanChrome}
+        onClear={() => {
+          selectedViewpoint = ''
+        }}
+        onCalibrateNorth={() => (northCalOpen = true)}
+        onPreview={(patch) => {
+          // 罗盘/滑杆的连续输入只画预览，不写 store —— 见 PlanViewpointSelectionBar 注释。
+          if (!patch) {
+            previewViewpoints = null
+            return
+          }
+          const id = selectedViewpoint
+          previewViewpoints = (project.viewpoints ?? []).map((v) =>
+            v.id === id ? { ...v, ...patch } : v,
+          )
+        }}
+      />
+    {/if}
+    {#if northCalOpen}
+      <PlanNorthCalibrator onClose={() => (northCalOpen = false)} />
+    {/if}
+    <input
+      type="file"
+      accept="image/*"
+      multiple
+      bind:this={bulkInput}
+      onchange={onBulkPick}
+      hidden
+    />
     <dialog
       bind:this={storagePickerDialog}
       class="storage-picker plan-modal-picker"
@@ -1376,22 +1938,25 @@
       <p id="placement-kinds-title" class="storage-picker-title">
         选择家具类型
       </p>
-      <div class="storage-picker-grid placement-kinds-grid">
-        {#each Object.entries(PLACEMENT_KINDS) as [kind, spec] (kind)}
-          <button
-            type="button"
-            class="storage-picker-btn"
-            class:active={placementKind === kind}
-            aria-pressed={placementKind === kind}
-            onclick={() =>
-              setPlacementKind(
-                /** @type {keyof typeof PLACEMENT_KINDS} */ (kind),
-              )}
-          >
-            {spec.label}
-          </button>
-        {/each}
-      </div>
+      {#each PLACEMENT_GROUP_ORDER as group (group)}
+        <p class="placement-kinds-group">{group}</p>
+        <div class="storage-picker-grid placement-kinds-grid">
+          {#each Object.entries(PLACEMENT_KINDS).filter(([, s]) => s.group === group) as [kind, spec] (kind)}
+            <button
+              type="button"
+              class="storage-picker-btn"
+              class:active={placementKind === kind}
+              aria-pressed={placementKind === kind}
+              onclick={() =>
+                setPlacementKind(
+                  /** @type {keyof typeof PLACEMENT_KINDS} */ (kind),
+                )}
+            >
+              {spec.label}
+            </button>
+          {/each}
+        </div>
+      {/each}
       <button
         type="button"
         class="storage-picker-cancel"
@@ -1473,6 +2038,14 @@
                   }}>分割选中墙段</button
                 >
               {/if}
+              <button
+                type="button"
+                class="graph-aside-btn graph-aside-btn-warn"
+                title="墙图是编辑模式的事实来源，户型定义更新后不会自动跟进"
+                onclick={rebuildGraphFromLayout}
+              >
+                按最新户型重建墙图
+              </button>
             </section>
           {:else if zoneEditMode}
             <section class="graph-aside" aria-label="分区编辑">
@@ -1505,8 +2078,10 @@
               {#if selectedPlacementObj}
                 <p class="graph-aside-lead">
                   {selectedPlacementObj.label} · {Math.round(
-                    selectedPlacementObj.w,
-                  )}″×{Math.round(selectedPlacementObj.h)}″
+                    pxToInches(selectedPlacementObj.w, planPxPerFt),
+                  )}″×{Math.round(
+                    pxToInches(selectedPlacementObj.h, planPxPerFt),
+                  )}″
                 </p>
                 <button
                   type="button"
@@ -1616,6 +2191,36 @@
     font-family: inherit;
   }
 
+  .plan-len-wrap {
+    display: flex;
+    flex: 0 1 116px;
+    min-width: 88px;
+  }
+
+  .plan-len-input {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--graph-accent, #1d6b42);
+    background: var(--bg);
+    color: var(--t1);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .plan-len-input::placeholder {
+    color: var(--t3, var(--t2));
+    font-weight: 500;
+  }
+
+  .plan-detect-btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
   .sr-only {
     position: absolute;
     width: 1px;
@@ -1704,6 +2309,24 @@
     border: 1px solid color-mix(in srgb, var(--graph-accent) 25%, var(--border));
     background: color-mix(in srgb, var(--graph-accent) 6%, var(--bg));
     gap: 2px;
+  }
+
+  .tool-segment-group {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 6px 0 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--graph-accent) 60%, var(--t2));
+  }
+
+  .tool-segment-group:not(:first-child) {
+    border-left: 1px solid
+      color-mix(in srgb, var(--graph-accent) 20%, var(--border));
+    margin-left: 4px;
   }
 
   .step-btn {
@@ -1820,6 +2443,14 @@
     color: var(--t1);
     cursor: pointer;
   }
+
+  /* Destructive — drops hand edits to the graph. Must come AFTER
+     .graph-aside-btn: same specificity, so source order decides. */
+  .graph-aside-btn-warn {
+    color: #b45309;
+    border-color: color-mix(in srgb, #b45309 35%, var(--border));
+  }
+
 
   .help-btn {
     width: 36px;
@@ -2259,6 +2890,18 @@
 
   .placement-kinds-grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .placement-kinds-group {
+    margin: 10px 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--t3, var(--t2));
+  }
+
+  .placement-kinds-group:first-of-type {
+    margin-top: 2px;
   }
 
   @media (max-width: 599px) {

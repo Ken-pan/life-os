@@ -5,14 +5,29 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "dev:lan": "vite dev --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
     "pwa:preview": "vite preview -- --host 0.0.0.0 --port 5196",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+    "test:viewpoint": "node scripts/viewpoint-unit.mjs",
+    "test:localize": "node scripts/localize-unit.mjs",
+    "test:viewpoint-ui": "node scripts/viewpoint-smoke.mjs",
     "test:viewport": "node scripts/plan-viewport-stress.mjs",
-    "test:plan-edit": "node scripts/plan-edit-smoke.mjs"
+    "test:plan-edit": "node scripts/plan-edit-smoke.mjs",
+    "test:doors": "node scripts/door-styles-unit.mjs",
+    "test:windows": "node scripts/window-styles-unit.mjs",
+    "test:rooms": "node scripts/rooms-detect-test.mjs",
+    "test:snap": "node scripts/snap-test.mjs",
+    "test:storage": "node scripts/storage-items-unit.mjs",
+    "test:storage-ui": "node scripts/storage-smoke.mjs",
+    "test:placement-snap": "node scripts/placement-snap-unit.mjs",
+    "test:fuzz": "node scripts/plan-edit-fuzz.mjs",
+    "test:storage-undo": "node scripts/storage-undo-smoke.mjs",
+    "test:508-drag": "node scripts/plan-508-drag-fuzz.mjs",
+    "test:reload": "node scripts/plan-edit-reload-fuzz.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",
@@ -30,6 +45,8 @@
     "@life-os/sync": "*",
     "@life-os/theme": "*",
     "@lucide/svelte": "^1.22.0",
-    "@supabase/supabase-js": "^2.110.0"
+    "@supabase/supabase-js": "^2.110.0",
+    "exifr": "^7.1.3",
+    "heic-to": "^1.5.2"
   }
 }

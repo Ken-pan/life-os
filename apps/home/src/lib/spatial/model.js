@@ -1,16 +1,79 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
 import { build508Project, default508Config, merge508Config } from './layout-508.js'
+import { clampPlacementRect } from './placements.js'
 import { buildFromWallGraph } from './wall-graph.js'
 
 /**
- * Rebuild derived geometry from layoutConfig or wallGraph source of truth.
+ * v5: placement w/h were authored in inches (the catalogue and the inspector's
+ * ″ both say so) but stored and drawn as plan px, so all furniture rendered at
+ * 1/3 real size. Rescale about each piece's centre so its position survives.
+ *
+ * Keyed on schemaVersion and run before the builders — they stamp the current
+ * version on the way out, so a project only ever migrates once even though
+ * hydrateProject runs on every edit.
+ *
  * @param {SpatialProject} project
  * @returns {SpatialProject}
  */
-export function hydrateProject(project) {
+function migratePlacementScale(project) {
+  if ((project.schemaVersion ?? 0) >= 5) return project
+  if (!project.placements?.length) return project
+  const pxPerFt =
+    project.wallGraph?.pxPerFt ?? project.layoutConfig?.pxPerFt ?? 36
+  const k = pxPerFt / 12
+  if (k === 1) return project
+  return {
+    ...project,
+    placements: project.placements.map((p) => {
+      const cx = p.x + p.w / 2
+      const cy = p.y + p.h / 2
+      const w = p.w * k
+      const h = p.h * k
+      return { ...p, x: cx - w / 2, y: cy - h / 2, w, h }
+    }),
+  }
+}
+
+/**
+ * Pull placements that sit *entirely* outside the canvas back into view.
+ *
+ * Such a piece is invisible and unclickable — its hit rect is outside the
+ * viewBox too — so the clamp on the movement paths can never rescue it: you
+ * can't select what you can't click. Undo is the only other way back, and undo
+ * doesn't survive a reload.
+ *
+ * Deliberately only rescues the fully-lost. A piece with any part on canvas is
+ * still grabbable and therefore the user's business, not ours to move. Runs
+ * after the builders because they're what compute the viewport.
+ *
+ * @param {SpatialProject} project
+ * @returns {SpatialProject}
+ */
+function rescueStrayPlacements(project) {
+  const vp = project.viewport
+  const placements = project.placements
+  if (!vp || !placements?.length) return project
+  let changed = false
+  const next = placements.map((p) => {
+    const lost =
+      p.x + p.w <= 0 || p.y + p.h <= 0 || p.x >= vp.width || p.y >= vp.height
+    if (!lost) return p
+    changed = true
+    return { ...p, ...clampPlacementRect(p.x, p.y, p.w, p.h, vp) }
+  })
+  return changed ? { ...project, placements: next } : project
+}
+
+/**
+ * Rebuild derived geometry from layoutConfig or wallGraph source of truth.
+ * @param {SpatialProject} raw
+ * @returns {SpatialProject}
+ */
+export function hydrateProject(raw) {
+  const project = migratePlacementScale(raw)
   if (project.layoutMode === 'wallGraph' && project.wallGraph) {
-    return buildFromWallGraph(project.wallGraph, project)
+    return rescueStrayPlacements(buildFromWallGraph(project.wallGraph, project))
   }
   if (!project.layoutConfig) {
     const built = build508Project(default508Config(), project)
@@ -20,6 +83,7 @@ export function hydrateProject(project) {
       wallGraph: undefined,
       furniture: [],
       furnitureInventory: [],
+      viewpoints: project.viewpoints ?? [],
     }
   }
   const config = merge508Config(default508Config(), project.layoutConfig)
@@ -30,6 +94,7 @@ export function hydrateProject(project) {
     wallGraph: undefined,
     furniture: [],
     furnitureInventory: [],
+    viewpoints: project.viewpoints ?? [],
   }
 }
 

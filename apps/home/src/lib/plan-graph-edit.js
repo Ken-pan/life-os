@@ -7,7 +7,7 @@
  *   getZoom: () => number,
  *   getTool: () => GraphTool,
  *   clientToSvg: (clientX: number, clientY: number) => { x: number, y: number },
- *   onWallChainPoint: (pt: { x: number, y: number }) => void,
+ *   onWallChainPoint: (pt: { x: number, y: number }, mods: { shiftKey: boolean, altKey: boolean }) => void,
  *   onRemoveEdge: (edgeId: string) => void,
  *   onSelectEdge: (edgeId: string) => void,
  *   onSelectOpening?: (openingId: string) => void,
@@ -70,7 +70,7 @@ export function bindPlanGraphEdit(el, opts) {
       e.preventDefault()
       e.stopPropagation()
       const pt = opts.clientToSvg(e.clientX, e.clientY)
-      opts.onWallChainPoint(pt)
+      opts.onWallChainPoint(pt, { shiftKey: e.shiftKey, altKey: e.altKey })
       el.dataset.dragged = '1'
       return
     }
