@@ -265,6 +265,32 @@ function baseProject(overrides = {}) {
   ok('总耗时 = 各项之和', plan.totalMinutes === plan.tasks.reduce((s, x) => s + x.estMinutes, 0))
   ok('摘要含项数', /项/.test(plan.summary), plan.summary)
   ok('已跑 VLM 不再提示', plan.needsVlm === false)
+  ok('每项都有体力档', plan.tasks.every((x) => ['light', 'medium', 'heavy'].includes(x.effort)))
+
+  // ---- 今天只有 15 分钟 ----
+  const short = buildTidyPlan(p, circ, { minutes: 15 })
+  ok('15 分钟:总耗时不超预算', short.totalMinutes <= 15, `got=${short.totalMinutes}`)
+  ok('15 分钟:比不限时少', short.tasks.length < plan.tasks.length)
+  ok('15 分钟:剩下的记在账上', short.dropped > 0, `dropped=${short.dropped}`)
+  // 塞不下时光说「做不完」等于把人堵在门口 —— 得说差多少
+  ok(
+    '塞不下时告知最短要多久',
+    short.tasks.length ? true : /最短的也要 \d+ 分钟/.test(short.summary),
+    short.summary,
+  )
+
+  // ---- 时间够做一件事 ----
+  const some = buildTidyPlan(p, circ, { minutes: 60 })
+  ok('60 分钟:排得进事', some.tasks.length > 0, some.summary)
+  ok('60 分钟:不超预算', some.totalMinutes <= 60, `got=${some.totalMinutes}`)
+
+  // ---- 今天只想干轻活 ----
+  const light = buildTidyPlan(p, circ, { effort: 'light' })
+  ok(
+    '只想轻活:不派重活(通行类除外)',
+    light.tasks.every((x) => x.effort === 'light' || x.priority <= 1),
+    light.tasks.map((x) => `${x.kind}:${x.effort}`).join(','),
+  )
 }
 
 // ---- 整理计划:没跑 VLM 时只有几何任务 ----

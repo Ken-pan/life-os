@@ -23,6 +23,28 @@ const P = {
 }
 
 /**
+ * 体力档。挪家具和收桌面是两回事:累的时候给一屋子「搬柜子」,
+ * 结果就是一件也不做。
+ * @typedef {'light' | 'medium' | 'heavy'} Effort
+ */
+const EFFORT = /** @type {Record<string, Effort>} */ ({
+  blockedDoor: 'heavy', // 得搬动挡路的家具
+  bottleneck: 'heavy',
+  overflow: 'medium', // 弯腰、分类、来回走
+  messy: 'light', // 收表面、归位
+  storage: 'medium',
+  rescan: 'light',
+})
+
+const EFFORT_RANK = { light: 1, medium: 2, heavy: 3 }
+
+export const EFFORT_LABEL = /** @type {const} */ ({
+  light: '轻',
+  medium: '中',
+  heavy: '重',
+})
+
+/**
  * 物品关键词 → 该去哪类家具。命中后按「就近」原则挑同区/最近的那件。
  * 关键词取自 VLM 的 items 输出(中文短词,≤12 字)。
  */
@@ -81,20 +103,28 @@ function zoneArea(stats, zoneId) {
  * 生成整理计划。
  * @param {SpatialProject} project
  * @param {ReturnType<import('./circulation.js').analyzeCirculation>} circ
+ * @param {{ minutes?: number|null, effort?: Effort|null }} [opts] 今天有多少时间/多少力气
  * @returns {{
  *   tasks: Array<{
  *     id: string, title: string, priority: number, estMinutes: number,
  *     zoneId: string|null, zoneName: string|null, reason: string,
  *     steps: string[], items: string[], photoRef: string|null, kind: string,
+ *     effort: Effort,
  *   }>,
  *   totalMinutes: number,
  *   summary: string,
  *   needsVlm: boolean,
+ *   dropped: number,
+ *   allCount: number,
  * }}
  */
-export function buildTidyPlan(project, circ) {
+export function buildTidyPlan(project, circ, opts = {}) {
   const tasks = []
-  const zonesById = Object.fromEntries((project.zones ?? []).map((z) => [z.id, z]))
+  // 两种 layoutMode 的房间来源不同:扫描来的用 zones,手工 508 用 rooms。
+  // 只认 zones 的话,508 上的任务全成了「整理这个区域」——人得自己猜是哪。
+  const zonesById = Object.fromEntries(
+    [...(project.zones ?? []), ...(project.rooms ?? [])].map((z) => [z.id, z]),
+  )
   const viewpoints = project.viewpoints ?? []
   const stats = circ?.zoneStats ?? []
 
@@ -140,6 +170,11 @@ export function buildTidyPlan(project, circ) {
   for (const b of circ?.bottlenecks ?? []) {
     if (b.widthIn >= 30) continue
     const tight = b.widthIn < 24
+    // 说清楚挪哪件、挪多少 ——「把家具挪开」这种话,人站在屋里也不知道该动哪个
+    const blockers = b.blockers ?? []
+    const howto = blockers.length
+      ? blockers.map((k) => `把「${k.label}」往边上挪 ${k.moveIn} 英寸(任挪一件即可)`)
+      : ['看看是哪件家具/杂物卡住了通道', tight ? '把占道的家具挪开或换个朝向' : '把地面杂物清走']
     tasks.push({
       id: `flow-${b.zoneId ?? 'x'}-${Math.round(b.x)}`,
       kind: 'bottleneck',
@@ -149,11 +184,7 @@ export function buildTidyPlan(project, circ) {
       zoneId: b.zoneId,
       zoneName: b.nameZh,
       reason: `此处只剩 ${b.widthIn} 英寸宽${tight ? '(不足 24in,得侧身挤)' : '(不足 30in,单人勉强)'}`,
-      steps: [
-        '看看是哪件家具/杂物卡住了通道',
-        tight ? '把占道的家具挪开或换个朝向' : '把地面杂物清走',
-        '目标:主通道 36 英寸、次通道至少 30 英寸',
-      ],
+      steps: [...howto, '目标:主通道 36 英寸、次通道至少 30 英寸'],
       items: [],
       photoRef: null,
     })
@@ -250,19 +281,62 @@ export function buildTidyPlan(project, circ) {
     })
   }
 
+  for (const t of tasks) t.effort = EFFORT[t.kind] ?? 'medium'
   tasks.sort((a, b) => a.priority - b.priority || b.estMinutes - a.estMinutes)
-  const totalMinutes = tasks.reduce((s, t) => s + t.estMinutes, 0)
+
+  const all = tasks.slice()
+  const picked = pickWithinBudget(tasks, opts)
+  const totalMinutes = picked.reduce((s, t) => s + t.estMinutes, 0)
   const needsVlm = viewpoints.length > 0 && !viewpoints.some((v) => v.state)
+  const dropped = all.length - picked.length
 
   let summary
-  if (!tasks.length) {
+  if (!all.length) {
     summary = circ?.ok
       ? '动线通畅,也没发现杂乱区 —— 暂时没什么要整的'
       : '数据不足:先扫描或画好分区'
+  } else if (!picked.length) {
+    // 光说「做不完」等于把人堵在门口 —— 告诉他差多少,好决定是挤时间还是改天
+    const min = Math.min(...all.filter((t) => t.kind !== 'rescan').map((t) => t.estMinutes))
+    summary = `这点时间做不完任何一项 —— 最短的也要 ${min} 分钟(共 ${all.length} 项待办)`
   } else {
     const h = Math.floor(totalMinutes / 60)
     const m = totalMinutes % 60
-    summary = `${tasks.length} 项 · 预计 ${h ? `${h} 小时 ` : ''}${m} 分钟`
+    summary = `${picked.length} 项 · 约 ${h ? `${h} 小时 ` : ''}${m ? `${m} 分钟` : ''}`
+    if (dropped) summary += ` · 另 ${dropped} 项留着下次`
   }
-  return { tasks, totalMinutes, summary, needsVlm }
+  return { tasks: picked, totalMinutes, summary, needsVlm, dropped, allCount: all.length }
+}
+
+/**
+ * 按今天有多少时间/多少力气挑任务。
+ *
+ * 不是简单截断:**通行类**(堵门/瓶颈)再累也得先做 —— 门被堵着不是整洁问题,
+ * 是每天都要绕的问题。其余按优先级塞进预算,塞不下的留着下次。
+ * 复扫收尾只在真做了事情时才留。
+ * @param {any[]} tasks 已按优先级排好
+ * @param {{ minutes?: number|null, effort?: Effort|null }} opts
+ */
+function pickWithinBudget(tasks, opts = {}) {
+  const budget = opts.minutes ?? null
+  const cap = opts.effort ? EFFORT_RANK[opts.effort] : null
+  if (!budget && !cap) return tasks
+
+  const fits = (t) =>
+    !cap || EFFORT_RANK[t.effort] <= cap || t.priority <= P.bottleneck
+
+  const out = []
+  let spent = 0
+  for (const t of tasks) {
+    if (t.kind === 'rescan') continue // 收尾任务最后单独议
+    if (!fits(t)) continue
+    if (budget && spent + t.estMinutes > budget) continue
+    out.push(t)
+    spent += t.estMinutes
+  }
+  const rescan = tasks.find((t) => t.kind === 'rescan')
+  if (rescan && out.length && (!budget || spent + rescan.estMinutes <= budget)) {
+    out.push(rescan)
+  }
+  return out
 }

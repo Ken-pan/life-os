@@ -3,13 +3,32 @@
   // 数据来自当前户型 —— 扫描拉取后自动跟着变。
   import { getActiveProject, isTidyTaskDone, setTidyTaskDone, clearTidyProgress } from '$lib/state.svelte.js'
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
-  import { buildTidyPlan } from '$lib/spatial/tidy-plan.js'
+  import { buildTidyPlan, EFFORT_LABEL } from '$lib/spatial/tidy-plan.js'
   import { getPhotoBlob } from '$lib/photo-store.js'
   import { ICONS } from '$lib/iconRegistry.js'
 
+  /** @type {number|null} 今天有多少时间(分钟);null = 不限 */
+  let budgetMin = $state(null)
+  /** @type {'light'|'medium'|'heavy'|null} 今天有多少力气;null = 不限 */
+  let effortCap = $state(null)
+
+  const TIME_OPTS = [
+    { v: 15, label: '15 分钟' },
+    { v: 30, label: '30 分钟' },
+    { v: 60, label: '1 小时' },
+    { v: null, label: '不限' },
+  ]
+  const EFFORT_OPTS = [
+    { v: 'light', label: '只想轻的' },
+    { v: 'medium', label: '中等' },
+    { v: null, label: '不限' },
+  ]
+
   const project = $derived(getActiveProject())
   const circ = $derived(analyzeCirculation(project))
-  const plan = $derived(buildTidyPlan(project, circ))
+  const plan = $derived(
+    buildTidyPlan(project, circ, { minutes: budgetMin, effort: effortCap }),
+  )
   const doneCount = $derived(plan.tasks.filter((t) => isTidyTaskDone(t.id)).length)
   const remainMinutes = $derived(
     plan.tasks.filter((t) => !isTidyTaskDone(t.id)).reduce((s, t) => s + t.estMinutes, 0),
@@ -122,6 +141,29 @@
       {/if}
     </div>
 
+    {#if plan.allCount}
+      <div class="budget">
+        <span class="budget-label">今天有</span>
+        {#each TIME_OPTS as o (o.label)}
+          <button
+            type="button"
+            class="chip"
+            class:chip-on={budgetMin === o.v}
+            onclick={() => (budgetMin = o.v)}>{o.label}</button
+          >
+        {/each}
+        <span class="budget-label budget-gap">力气</span>
+        {#each EFFORT_OPTS as o (o.label)}
+          <button
+            type="button"
+            class="chip"
+            class:chip-on={effortCap === o.v}
+            onclick={() => (effortCap = o.v)}>{o.label}</button
+          >
+        {/each}
+      </div>
+    {/if}
+
     {#if !plan.tasks.length}
       <p class="empty">{plan.summary}</p>
     {:else}
@@ -145,7 +187,7 @@
               {#if KIND_TAGS[t.kind]}
                 <span class="tag {KIND_TAGS[t.kind].cls}">{KIND_TAGS[t.kind].zh}</span>
               {/if}
-              <span class="task-min">{t.estMinutes} 分</span>
+              <span class="task-min">{EFFORT_LABEL[t.effort]} · {t.estMinutes} 分</span>
             </label>
             <p class="task-reason">{t.reason}</p>
             <div class="task-body">
@@ -311,6 +353,40 @@
     font-size: 12px;
     color: var(--t2);
     font-variant-numeric: tabular-nums;
+  }
+
+  .budget {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 12px;
+  }
+
+  .budget-label {
+    font-size: 12px;
+    color: var(--t3, var(--t2));
+  }
+
+  .budget-gap {
+    margin-left: 8px;
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line, rgba(128, 128, 128, 0.3));
+    background: transparent;
+    color: var(--t2);
+    cursor: pointer;
+  }
+
+  .chip-on {
+    background: var(--accent, #4a7ba7);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 600;
   }
 
   .task {

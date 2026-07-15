@@ -398,7 +398,7 @@ export function analyzeCirculation(project) {
   }
   const g = buildGrid(project)
   if (!g) return { ...empty, reason: '没有房间数据,先从 iPhone 扫描或手动画分区' }
-  const { cols, rows, cell, zoneOf, minX, minY, zones, gates } = g
+  const { cols, rows, cell, zoneOf, minX, minY, zones, gates, rects } = g
 
   const dist = clearanceField(g)
 
@@ -518,12 +518,16 @@ export function analyzeCirculation(project) {
       if (dist[i] < dist[narrow]) narrow = i
       if (from[i] < 0) break
     }
+    const nx = minX + (narrow % cols) * GRID_PX
+    const ny = minY + (((narrow / cols) | 0)) * GRID_PX
     perZone.set(z.id, {
-      x: minX + (narrow % cols) * GRID_PX,
-      y: minY + (((narrow / cols) | 0)) * GRID_PX,
+      x: nx,
+      y: ny,
       widthIn: Math.round(widthIn),
       zoneId: z.id,
       nameZh: z.nameZh,
+      // 「拓宽通道」是废话 —— 得说清楚挪哪件、挪多少
+      blockers: blockersAt(nx, ny, widthIn, rects),
     })
   })
   const bottlenecks = [...perZone.values()].sort((a, b) => a.widthIn - b.widthIn)
@@ -542,6 +546,40 @@ export function analyzeCirculation(project) {
       usedRatio: areaSqft > 0 ? round2((areaSqft - freeSqft) / areaSqft) : 0,
     },
   }
+}
+
+/**
+ * 卡住这个瓶颈的是哪两件家具,各自让开多少就够。
+ *
+ * 「把家具挪开」这种话等于没说 —— 人站在屋里也不知道是挪沙发还是挪柜子、
+ * 挪一寸还是挪一尺。取瓶颈点两侧最近的家具,算出补齐到舒适通道所缺的距离:
+ * 让**任意一件**让开这么多就够(不是每件都挪)。
+ *
+ * @param {number} x 瓶颈点
+ * @param {number} y
+ * @param {number} widthIn 此处现有通道宽
+ * @param {{x:number,y:number,w:number,h:number,id:string,label:string}[]} rects
+ * @returns {Array<{ id: string, label: string, moveIn: number }>}
+ */
+function blockersAt(x, y, widthIn, rects) {
+  const needIn = Math.max(0, CLEARANCE.comfortable - widthIn)
+  if (!needIn) return []
+  // 瓶颈点半径内的家具就是元凶:通道窄正是因为它们夹着
+  const reach = (CLEARANCE.comfortable / 2 + 6) * PX_PER_IN
+  return rects
+    .map((r) => {
+      const cx = Math.max(r.x, Math.min(r.x + r.w, x))
+      const cy = Math.max(r.y, Math.min(r.y + r.h, y))
+      return { r, d: Math.hypot(cx - x, cy - y) }
+    })
+    .filter((e) => e.d <= reach)
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 2)
+    .map((e) => ({
+      id: e.r.id,
+      label: e.r.label ?? '家具',
+      moveIn: Math.round(needIn),
+    }))
 }
 
 /** 多边形有向面积×2 的绝对值/2(鞋带公式) */
