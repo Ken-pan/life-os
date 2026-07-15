@@ -9,6 +9,7 @@ RoomPlan 扫描，网页端设置页拉取。
 | 对象 | 用途 |
 |---|---|
 | `home.scans` | 一行一次完整扫描；`payload` jsonb = 转换后的 HomeOS partial project（formatVersion 1）；复合 PK `(user_id, id)`、客户端毫秒 `updated_at`、墓碑 `deleted` |
+| `home.events` | 事件流（能力17，2026-07-15）：扫描确认/挪动/整理/收纳的**追加日志**。只有 select/insert 策略——**数据库层面强制 append-only**（改不了删不了，历史即事实）。本地 IndexedDB `homeos_events` 是第一落点，云端是跨设备镜像；同步靠 `on conflict do nothing` 幂等续传（localStorage 游标 + 1 分钟重叠），**不需要 LWW**。契约与 `apps/home/src/lib/spatial/event-derive.js` 同源：`id 'ev-{ts}-{seq}'`、`ts` 客户端毫秒、`type` 白名单、`subject`/`data` jsonb、`v=1` |
 | Storage `home-scan-photos`（私有） | `{uid}/{scanId}/{uuid}.jpg` 机位照片；`{uid}/{scanId}/obj-{placementId}.jpg` 家具自动抓拍图（幂等定名）；`{uid}/{scanId}/structure.json` 原始 CapturedStructure；`{uid}/{scanId}/model.usdz` 3D 模型（真实空间模式，payload.raw.modelPath 指向）；RLS 按路径首段 = auth.uid() |
 
 payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端

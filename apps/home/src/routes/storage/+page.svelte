@@ -13,6 +13,8 @@
     searchStorageItems,
   } from '$lib/spatial/storage-items.js'
   import { levelLabel } from '$lib/spatial/container-scan.js'
+  import { listEvents } from '$lib/event-log.js'
+  import { daysAgoLabel, lastObservedAt } from '$lib/spatial/event-derive.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import StorageZoneCard from '$lib/components/StorageZoneCard.svelte'
   import InventoryImport from '$lib/components/InventoryImport.svelte'
@@ -25,6 +27,22 @@
   let selected = $state('')
   let query = $state('')
   let focusedItemId = $state('')
+
+  // 事件流(能力17):柜子「上次被扫描确认」的时刻 —— 找东西答案的可信度事实
+  /** @type {Map<string, number>} placementId → ts */
+  let observedAt = $state(new Map())
+  $effect(() => {
+    listEvents().then((events) => {
+      observedAt = lastObservedAt(events)
+    })
+  })
+
+  /** @param {import('$lib/spatial/types.js').SpatialStorageZone} zone */
+  function zoneConfirmedLabel(zone) {
+    if (!zone.placementId) return ''
+    const ts = observedAt.get(zone.placementId)
+    return ts ? daysAgoLabel(ts) : ''
+  }
 
   // ---- 柜内实测同步(iOS 柜内扫描 → 储藏区.container) ----
   /** @type {'idle'|'running'|'done'|'error'} */
@@ -235,6 +253,8 @@
                 <span class="hit-code">{hit.zoneCode}</span>
                 {hit.zoneNameZh}{#if hit.item.level !== undefined}<span
                     class="hit-level">{levelLabel(hit.item.level)}</span
+                  >{/if}{#if hit.item.updatedAt}<span class="hit-when"
+                    >· 登记于{daysAgoLabel(hit.item.updatedAt)}</span
                   >{/if}
               </span>
             </button>
@@ -278,6 +298,7 @@
       items={zone.items}
       inferred={zone.inferred}
       container={zone.container}
+      confirmedLabel={zoneConfirmedLabel(zone)}
       selected={selected === zone.code}
       onSelect={() => toggle(zone.code)}
       editable
@@ -336,6 +357,11 @@
     margin-left: 4px;
     font-weight: 600;
     color: var(--storage-accent);
+  }
+
+  .hit-when {
+    margin-left: 4px;
+    color: var(--t3);
   }
 
   .search-bar {

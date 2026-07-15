@@ -18,6 +18,7 @@
    *   items: SpatialStorageItem[],
    *   inferred?: boolean,
    *   container?: import('$lib/spatial/types.js').ContainerScanInfo,
+   *   confirmedLabel?: string,
    *   selected?: boolean,
    *   onSelect?: () => void,
    *   id?: string,
@@ -39,6 +40,7 @@
     items,
     inferred = false,
     container = undefined,
+    confirmedLabel = '',
     selected = false,
     onSelect,
     id = undefined,
@@ -135,7 +137,16 @@
     {#if inferred}<span class="badge">推测</span>{/if}
     <span class="count" title={`${items.length} 件物品`}>{items.length}</span>
   </header>
-  <p class="meta"><b>位置</b> {locationZh} · <b>形式</b> {formZh}</p>
+  <p class="meta">
+    <b>位置</b>
+    {locationZh} · <b>形式</b>
+    {formZh}{#if confirmedLabel}<span
+        class="confirmed"
+        title="这件柜子上次被扫描确认还在原位的时间"
+      >
+        · 扫描确认于{confirmedLabel}</span
+      >{/if}
+  </p>
   {#if container}
     <!-- iOS 柜内扫描量出来的真实内腔 —— 有它,「放进柜子」才能说成「放进第几层」 -->
     <p class="meta container-meta">
@@ -435,6 +446,10 @@
 
   .container-meta {
     margin-top: -5px;
+  }
+
+  .confirmed {
+    color: var(--t3);
   }
 
   .container-meta b {

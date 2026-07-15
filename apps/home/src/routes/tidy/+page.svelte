@@ -4,7 +4,7 @@
   import { applyLayoutProposal, getActiveProject, isTidyTaskDone, setTidyTaskDone, clearTidyProgress } from '$lib/state.svelte.js'
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
   import { solveAllProfiles } from '$lib/spatial/layout-solve.js'
-  import { listEvents, logEvent } from '$lib/event-log.js'
+  import { listEvents, logEvent, syncEvents } from '$lib/event-log.js'
   import {
     recentlyMarkedCluttered,
     rejectedSignatures,
@@ -90,8 +90,12 @@
 
   $effect(() => {
     if (events === null) {
-      listEvents().then((list) => {
+      listEvents().then(async (list) => {
         events = list
+        // 云同步(append-only 镜像):拉到别的设备的事件就刷新洞察;
+        // 未登录/离线静默跳过,不挡本地
+        const res = await syncEvents()
+        if (res.pulled > 0) events = await listEvents()
       })
     }
   })

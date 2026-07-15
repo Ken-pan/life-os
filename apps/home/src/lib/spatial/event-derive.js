@@ -217,3 +217,12 @@ export function recentlyMarkedCluttered(events, zoneId, now, debounceDays = 7) {
 export function isKnownEventType(type) {
   return TYPE_SET.has(type)
 }
+
+/** 相对时间人话:「今天 / 昨天 / N 天前」(找东西答案里的「上次确认」) */
+export function daysAgoLabel(ts, now = Date.now()) {
+  if (!Number.isFinite(ts) || ts <= 0) return ''
+  const days = Math.floor((now - ts) / DAY_MS)
+  if (days <= 0) return '今天'
+  if (days === 1) return '昨天'
+  return `${days} 天前`
+}

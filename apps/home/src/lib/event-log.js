@@ -138,6 +138,83 @@ export async function listEvents() {
   }
 }
 
+// ---- 云同步(home.events 表,append-only 镜像) ----
+// 本地 IndexedDB 是第一落点;云端保住两件事:跨设备汇流、浏览器数据被清后
+// 历史不丢。append-only 幂等:重推 on conflict do nothing,不需要 LWW。
+// 游标存 localStorage,往回多带 1 分钟重叠 —— 重复由主键吃掉,漏才是真丢。
+
+const PUSH_CURSOR_KEY = 'homeos_events_push_cursor'
+const PULL_CURSOR_KEY = 'homeos_events_pull_cursor'
+const CURSOR_OVERLAP_MS = 60_000
+const SYNC_BATCH = 200
+
+/**
+ * 双向同步一次(未登录/离线静默跳过)。
+ * @returns {Promise<{ pushed: number, pulled: number }>}
+ */
+export async function syncEvents() {
+  if (!idbAvailable() || typeof localStorage === 'undefined') return { pushed: 0, pulled: 0 }
+  try {
+    const { supabase } = await import('./supabase.js')
+    const { data: userData } = await supabase.auth.getUser()
+    if (!userData?.user) return { pushed: 0, pulled: 0 }
+
+    // 推:本地新事件 → 云(insert-or-ignore)
+    const all = await listEvents()
+    const pushCursor = Number(localStorage.getItem(PUSH_CURSOR_KEY)) || 0
+    const toPush = all.filter((e) => e.ts > pushCursor - CURSOR_OVERLAP_MS)
+    let pushed = 0
+    for (let i = 0; i < toPush.length; i += SYNC_BATCH) {
+      const batch = toPush.slice(i, i + SYNC_BATCH).map((e) => ({
+        id: e.id,
+        ts: e.ts,
+        type: e.type,
+        subject: e.subject ?? {},
+        data: e.data ?? {},
+        v: e.v ?? 1,
+      }))
+      const { error } = await supabase
+        .schema('home')
+        .from('events')
+        .upsert(batch, { onConflict: 'user_id,id', ignoreDuplicates: true })
+      if (error) throw error
+      pushed += batch.length
+    }
+    if (toPush.length) {
+      localStorage.setItem(PUSH_CURSOR_KEY, String(Math.max(...toPush.map((e) => e.ts))))
+    }
+
+    // 拉:别的设备写的事件 → 本地(put 幂等:同 id 同内容)
+    const pullCursor = Number(localStorage.getItem(PULL_CURSOR_KEY)) || 0
+    const { data: rows, error: pullErr } = await supabase
+      .schema('home')
+      .from('events')
+      .select('id, ts, type, subject, data, v')
+      .gt('ts', pullCursor - CURSOR_OVERLAP_MS)
+      .order('ts', { ascending: true })
+      .limit(2000)
+    if (pullErr) throw pullErr
+    let pulled = 0
+    if (rows?.length) {
+      const db = await openDb()
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite')
+        const store = tx.objectStore(STORE)
+        for (const row of rows) store.put(row)
+        tx.oncomplete = () => resolve(undefined)
+        tx.onerror = () => reject(tx.error)
+        tx.onabort = () => reject(tx.error ?? new Error('tx abort'))
+      })
+      pulled = rows.length
+      localStorage.setItem(PULL_CURSOR_KEY, String(Math.max(...rows.map((r) => r.ts))))
+    }
+    return { pushed, pulled }
+  } catch (e) {
+    console.warn('[event-log] 云同步失败(忽略):', e)
+    return { pushed: 0, pulled: 0 }
+  }
+}
+
 /** 事件总数(设置页/调试用) */
 export async function countEvents() {
   if (!idbAvailable()) return 0

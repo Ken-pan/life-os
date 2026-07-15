@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict'
 import {
   clutterRecurrence,
+  daysAgoLabel,
   isValidEvent,
   lastObservedAt,
   makeEvent,
@@ -109,6 +110,15 @@ const NOW = 1_800_000_000_000
   assert.equal(s.rejectedCount, 1)
   assert.equal(s.tidyDoneCount, 1)
   assert.equal(s.sinceDays, 9)
+}
+
+/* ---- 相对时间人话 ---- */
+{
+  assert.equal(daysAgoLabel(NOW - 2 * 60 * 60 * 1000, NOW), '今天')
+  assert.equal(daysAgoLabel(NOW - 1 * DAY - 1000, NOW), '昨天')
+  assert.equal(daysAgoLabel(NOW - 3 * DAY, NOW), '3 天前')
+  assert.equal(daysAgoLabel(0, NOW), '', '无时间戳不显示')
+  assert.equal(daysAgoLabel(undefined, NOW), '')
 }
 
 console.log('event-derive-unit: all assertions passed')
