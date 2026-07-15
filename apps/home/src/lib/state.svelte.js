@@ -1,4 +1,5 @@
 import { browser } from '$app/environment'
+import { logEvent, logEvents } from './event-log.js'
 import {
   applyResolvedTheme,
   bindSystemThemeChange,
@@ -1180,6 +1181,7 @@ export function addStorageItem(code, name, fields = {}) {
   }
   updateZoneItems(code, (items) => [...items, item])
   toast(`已添加「${item.name}」到 ${code}`)
+  void logEvent('item_added', { itemId: item.id, zoneCode: code }, { name: item.name })
   return item.id
 }
 
@@ -1192,6 +1194,14 @@ export function updateStorageItem(code, itemId, patch) {
   updateZoneItems(code, (items) =>
     items.map((i) => (i.id === itemId ? patchStorageItem(i, patch) : i)),
   )
+  // 指定「第几层」是一次有信息量的确认(物品位置精度提升),值得进日志
+  if (patch.level !== undefined) {
+    void logEvent(
+      'item_level_set',
+      { itemId, zoneCode: code },
+      { level: patch.level === null ? null : Number(patch.level) },
+    )
+  }
 }
 
 /**
@@ -1206,6 +1216,7 @@ export function removeStorageItem(code, itemId) {
   const removed = items[index]
   if (!removed) return
   updateZoneItems(code, (list) => list.filter((i) => i.id !== itemId))
+  void logEvent('item_removed', { itemId, zoneCode: code }, { name: removed.name })
   toast(`已删除「${removed.name}」`, {
     actionLabel: '撤销',
     onAction: () =>
@@ -1320,6 +1331,11 @@ export function moveStorageItem(fromCode, itemId, toCode) {
     onAction: () => moveStorageItem(toCode, itemId, fromCode),
     duration: 8000,
   })
+  void logEvent(
+    'item_moved',
+    { itemId, zoneCode: toCode },
+    { name: moved.name, from: fromCode, to: toCode },
+  )
 }
 
 /**
@@ -1937,6 +1953,15 @@ export function applyLayoutProposal(moves, profileNameZh) {
     { placements },
     { toastMsg: `已应用「${profileNameZh}」布局,搬 ${applied} 件(顶栏可撤销)` },
   )
+  // 事件流(能力17):布局变更是事实,进追加日志(fire-and-forget)
+  void logEvents([
+    { type: 'layout_applied', subject: {}, data: { profile: profileNameZh, moves: applied } },
+    ...moves.map((m) => ({
+      type: 'object_moved',
+      subject: { placementId: m.id },
+      data: { source: 'layout', label: m.label, movedFt: m.movedFt },
+    })),
+  ])
 }
 
 /**
@@ -1967,7 +1992,52 @@ export async function syncContainerScans() {
       }),
     )
   }
+  if (res.bound.length) {
+    void logEvents(
+      res.bound.map((b) => ({
+        type: 'container_synced',
+        subject: { zoneCode: b.zoneCode ?? '', placementId: b.projectPlacementId ?? '' },
+        data: { label: b.placementLabel },
+      })),
+    )
+  }
   return { ...res, changed }
+}
+
+/**
+ * 把一次扫描合并的跨扫描身份结论记进事件流(能力17):
+ * 「这次扫描确认了什么」是最有价值的事实 —— 上次确认时间、真挪动历史
+ * 全从这里派生。由拉取扫描的 UI 在合并成功后调用。
+ * @param {{ pairs?: Array<{ prevId: string, state: string, movedFt?: number }>, added?: string[], removed?: string[] } | null} identity
+ */
+export function logScanIdentityEvents(identity) {
+  if (!identity) return
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const labelOf = new Map((raw.placements ?? []).map((p) => [p.id, p.label]))
+  /** @type {Array<{ type: string, subject: Record<string,string>, data: Record<string,any> }>} */
+  const entries = []
+  for (const pair of identity.pairs ?? []) {
+    if (pair.state === 'same_moved') {
+      entries.push({
+        type: 'object_moved',
+        subject: { placementId: pair.prevId },
+        data: { source: 'scan', movedFt: pair.movedFt ?? 0, label: labelOf.get(pair.prevId) },
+      })
+    } else if (pair.state === 'same_unchanged') {
+      entries.push({
+        type: 'object_observed',
+        subject: { placementId: pair.prevId },
+        data: { label: labelOf.get(pair.prevId) },
+      })
+    }
+  }
+  for (const id of identity.added ?? []) {
+    entries.push({ type: 'object_added', subject: { placementId: id }, data: { label: labelOf.get(id) } })
+  }
+  for (const id of identity.removed ?? []) {
+    entries.push({ type: 'object_removed', subject: { placementId: id }, data: { label: labelOf.get(id) } })
+  }
+  if (entries.length) void logEvents(entries)
 }
 
 /** 浏览页固定显示 508 参数化户型，不受墙图编辑态干扰。 */
@@ -2454,11 +2524,24 @@ export function isTidyTaskDone(taskId) {
  * @param {string} taskId
  * @param {boolean} done
  */
-export function setTidyTaskDone(taskId, done) {
+/**
+ * @param {string} taskId
+ * @param {boolean} done
+ * @param {{ zoneId?: string|null, zoneName?: string|null }} [meta] 事件流用:
+ *   完成的是哪个区的任务 —— 「整理后又乱」的根因推导靠它对上时间线
+ */
+export function setTidyTaskDone(taskId, done, meta = {}) {
   if (!S.settings.tidyDone) S.settings.tidyDone = {}
   if (done) S.settings.tidyDone[taskId] = new Date().toISOString()
   else delete S.settings.tidyDone[taskId]
   persist()
+  if (done) {
+    void logEvent(
+      'tidy_done',
+      meta.zoneId ? { zoneId: meta.zoneId } : {},
+      { taskId, nameZh: meta.zoneName ?? undefined },
+    )
+  }
 }
 
 export function clearTidyProgress() {

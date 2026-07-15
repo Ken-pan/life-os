@@ -8,6 +8,7 @@
   import {
     applyCloudScan,
     getActiveProject,
+    logScanIdentityEvents,
     undoCloudScan,
   } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
@@ -110,6 +111,8 @@
           duration: 10000,
         })
       } else {
+        // 事件流(能力17):这次扫描确认/发现了什么,进追加日志
+        logScanIdentityEvents(res.identity)
         const { main, warns } = describeFurniturePull(res)
         for (const w of warns) toast(w, 'error')
         toast(main, {

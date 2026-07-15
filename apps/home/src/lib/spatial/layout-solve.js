@@ -872,10 +872,10 @@ export async function solveAllProfiles(project, opts = {}) {
       .sort()
       .join('|')
     if (seen.has(sig)) {
-      out.push({ ...res, duplicateOfZh: seen.get(sig) })
+      out.push({ ...res, signature: sig, duplicateOfZh: seen.get(sig) })
     } else {
       seen.set(sig, profile.nameZh)
-      out.push(res)
+      out.push({ ...res, signature: sig })
     }
   }
   return out

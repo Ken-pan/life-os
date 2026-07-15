@@ -4,6 +4,12 @@
   import { applyLayoutProposal, getActiveProject, isTidyTaskDone, setTidyTaskDone, clearTidyProgress } from '$lib/state.svelte.js'
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
   import { solveAllProfiles } from '$lib/spatial/layout-solve.js'
+  import { listEvents, logEvent } from '$lib/event-log.js'
+  import {
+    recentlyMarkedCluttered,
+    rejectedSignatures,
+    summarizeEvents,
+  } from '$lib/spatial/event-derive.js'
   import { buildTidyPlan, EFFORT_LABEL } from '$lib/spatial/tidy-plan.js'
   import { scoreClutter } from '$lib/spatial/clutter-score.js'
   import { assessPhotoCoverage, COVERAGE_ACTION } from '$lib/spatial/photo-coverage.js'
@@ -74,6 +80,53 @@
     messy: { zh: '杂乱', cls: 'tag-warn' },
     storage: { zh: '储物', cls: 'tag-info' },
     rescan: { zh: '复扫', cls: 'tag-info' },
+  }
+
+  // ---- 事件流(能力17:追加日志,不覆盖历史) ----
+  /** @type {any[] | null} */
+  let events = $state(null)
+  const insights = $derived(events ? summarizeEvents(events) : null)
+  const rejected = $derived(events ? rejectedSignatures(events) : new Map())
+
+  $effect(() => {
+    if (events === null) {
+      listEvents().then((list) => {
+        events = list
+      })
+    }
+  })
+
+  // 杂乱越线 → 记事件(7 天去抖:分数在阈值上方波动不刷屏)。
+  // 「反复变乱」的时间线就是这么攒出来的。
+  const CLUTTER_EVENT_THRESHOLD = 60
+  let clutterLogged = false
+  $effect(() => {
+    if (clutterLogged || events === null || !clutter.zones.length) return
+    clutterLogged = true
+    const now = Date.now()
+    const entries = clutter.zones
+      .filter(
+        (z) =>
+          z.score >= CLUTTER_EVENT_THRESHOLD &&
+          !recentlyMarkedCluttered(events, z.zoneId, now),
+      )
+      .map((z) => ({ zoneId: z.zoneId, nameZh: z.nameZh, score: z.score }))
+    for (const e of entries) {
+      void logEvent('zone_cluttered', { zoneId: e.zoneId }, { nameZh: e.nameZh, score: e.score })
+    }
+  })
+
+  /** 忽略一套布局方案:记事件,同款签名以后不再推 */
+  function rejectProposal(prop) {
+    void logEvent(
+      'layout_rejected',
+      { signature: prop.signature ?? '' },
+      { profile: prop.profile.nameZh, moves: prop.moves.length },
+    )
+    events = [
+      ...(events ?? []),
+      { id: `local-${Date.now()}`, ts: Date.now(), type: 'layout_rejected', subject: { signature: prop.signature ?? '' }, data: {}, v: 1 },
+    ]
   }
 
   // ---- 布局方案(能力14:约束求解,几何裁决) ----
@@ -277,6 +330,9 @@
               </header>
               {#if !prop.ok}
                 <p class="proposal-none">{prop.reason}</p>
+              {:else if prop.signature && rejected.has(prop.signature)}
+                <!-- 能力17:你否决过的方案不再重复推销 -->
+                <p class="proposal-none">这套方案你之前忽略过,不再推荐(重新计算可能给出新解)</p>
               {:else if prop.duplicateOfZh}
                 <p class="proposal-none">与「{prop.duplicateOfZh}」方案完全相同</p>
               {:else}
@@ -294,9 +350,19 @@
                     </li>
                   {/each}
                 </ul>
-                <button type="button" class="apply-btn" onclick={() => applyProposal(prop)}>
-                  应用此方案({prop.moves.length} 件,可撤销)
-                </button>
+                <div class="proposal-actions">
+                  <button type="button" class="apply-btn" onclick={() => applyProposal(prop)}>
+                    应用此方案({prop.moves.length} 件,可撤销)
+                  </button>
+                  <button
+                    type="button"
+                    class="reject-btn"
+                    title="记住这个偏好:同款方案以后不再推荐"
+                    onclick={() => rejectProposal(prop)}
+                  >
+                    忽略
+                  </button>
+                </div>
               {/if}
             </article>
           {/each}
@@ -306,6 +372,43 @@
           跨扫描身份会把「真挪了」确认下来。
         </p>
       {/if}
+    </section>
+  {/if}
+
+  {#if insights && insights.total > 0}
+    <section class="block">
+      <h2 class="block-title">长期观察</h2>
+      <ul class="insight-list">
+        {#each insights.recurrence as r (r.zoneId)}
+          <li class="insight insight-warn">
+            🔁 <b>{r.nameZh}</b> 近 30 天变乱 {r.times} 次{#if r.afterTidy > 0},其中
+              {r.afterTidy} 次发生在整理完成后一周内 ——
+              问题可能不是「没整理」,而是这里的收纳位置不符合使用习惯{/if}
+          </li>
+        {/each}
+        {#each insights.frequentMovers as m (m.placementId)}
+          <li class="insight">
+            📦 「{m.label}」被挪动 {m.count} 次(累计 {Math.round(m.totalFt)} ft)——
+            它可能还没有真正合适的固定位置
+          </li>
+        {/each}
+        {#if insights.rejectedCount > 0}
+          <li class="insight">
+            🚫 已记住 {insights.rejectedCount} 套被你忽略的布局方案,不再重复推荐
+          </li>
+        {/if}
+        {#if !insights.recurrence.length && !insights.frequentMovers.length && insights.rejectedCount === 0}
+          <li class="insight">
+            📈 已记录 {insights.total} 条事件(扫描确认/整理/收纳),还没攒出模式 ——
+            继续正常使用,反复变乱的区域和总在漂的家具会在这里现形
+          </li>
+        {/if}
+      </ul>
+      <p class="block-desc">
+        每次扫描、整理和收纳修改都会成为事件,只追加不覆盖 ——
+        系统学的是行为事实(哪里反复变乱、什么总被挪),不是凭感觉画像。
+        共 {insights.total} 条,{insights.sinceDays} 天。
+      </p>
     </section>
   {/if}
 
@@ -359,7 +462,11 @@
               <input
                 type="checkbox"
                 checked={done}
-                onchange={(e) => setTidyTaskDone(t.id, e.currentTarget.checked)}
+                onchange={(e) =>
+                  setTidyTaskDone(t.id, e.currentTarget.checked, {
+                    zoneId: t.zoneId,
+                    zoneName: t.zoneName,
+                  })}
               />
               <span class="task-title">{t.title}</span>
               {#if KIND_TAGS[t.kind]}
@@ -773,9 +880,53 @@
     font-weight: 600;
   }
 
-  .apply-btn {
+  .proposal-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-top: auto;
+  }
+
+  .apply-btn {
     align-self: flex-start;
+  }
+
+  .reject-btn {
+    font: inherit;
+    font-size: 12px;
+    padding: 4px 10px;
+    color: var(--t3);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .reject-btn:hover {
+    color: var(--t1);
+  }
+
+  .insight-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .insight {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--t2);
+  }
+
+  .insight b {
+    color: var(--t1);
+  }
+
+  .insight-warn {
+    color: var(--t1);
   }
 
   .plan-sum {

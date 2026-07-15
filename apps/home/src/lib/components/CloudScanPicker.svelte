@@ -8,6 +8,7 @@
   import {
     applyCloudScan,
     canUndoCloudScan,
+    logScanIdentityEvents,
     undoCloudScan,
     getActiveProject,
     isStructureLocked,
@@ -96,6 +97,8 @@
         localStorage.setItem(APPLIED_COPY_KEY, scanSeenValue(scan))
       }
       if (mode === 'furniture' && report) {
+        // 事件流(能力17):扫描确认/挪动/新增/消失都是事实,进追加日志
+        logScanIdentityEvents(identity)
         const { main, warns } = describeFurniturePull({ report, replaced, identity, photos })
         for (const w of warns) toast(w, 'error')
         toast(main)
