@@ -8,6 +8,17 @@ import {
 } from '../src/lib/paperLinks.js';
 
 /**
+ * Ceiling on tasks[] in the /api/paper/today payload.
+ *
+ * The device renders its pager straight from tasks.length ("Showing 1-10 of
+ * 29"), so a bare slice makes a truncated list indistinguishable from a
+ * complete one — at 31 tasks the device would report "of 30" forever and
+ * neither it nor the reader could tell a task had been dropped. The payload
+ * therefore ships taskWindow alongside, so the device can say so.
+ */
+const PAPER_TASK_LIMIT = 30;
+
+/**
  * Initialize Supabase Client.
  */
 export function getSupabaseClient() {
@@ -179,7 +190,7 @@ export async function loadPaperToday(userId) {
     return (b.updatedAt || 0) - (a.updatedAt || 0);
   });
 
-  const slicedTasks = todayTasks.slice(0, 30).map(t => serializePaperTask(t, now.getTime()));
+  const slicedTasks = todayTasks.slice(0, PAPER_TASK_LIMIT).map(t => serializePaperTask(t, now.getTime()));
 
   // Determine currentFocus
   let currentFocus = null;
@@ -245,6 +256,15 @@ export async function loadPaperToday(userId) {
       scheduleBlocks
     },
     tasks: slicedTasks,
+    // What tasks[] is a window onto. `total` counts the selected today-view
+    // set before the limit, so the device can distinguish "exactly 30" from
+    // "30 of 42" instead of silently reporting the cap as the truth.
+    taskWindow: {
+      total: todayTasks.length,
+      returned: slicedTasks.length,
+      limit: PAPER_TASK_LIMIT,
+      truncated: todayTasks.length > slicedTasks.length
+    },
     inbox: {
       count: inboxCount
     },
