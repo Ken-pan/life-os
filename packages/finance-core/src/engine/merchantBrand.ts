@@ -102,10 +102,11 @@ const BRAND_RULES: Array<[RegExp, string]> = [
   [/^rocket money/i, 'rocket-money'],
   [/^(bps\*)?bilt/i, 'bilt'],
   [/^robinhood/i, 'robinhood'],
-  // Robinhood Gold's $50/yr bills as a bare "Gold Annual Subscription" with no
-  // brand name at all — confirmed by the charge landing on the Robinhood card.
-  // Anchored end-to-end because the phrase is only unambiguous as a whole string.
-  [/^gold annual subscription$/i, 'robinhood'],
+  // Robinhood Gold's $50/yr bills as a bare "Gold Annual Subscription[ Fee]" with
+  // no brand name at all — confirmed by the charges landing on the Robinhood card.
+  // Anchored end-to-end because the phrase is only unambiguous as a whole string:
+  // "TST* 19 GOLD TAIWANESE RE" and "Golden Corral" must not inherit the logo.
+  [/^gold annual subscription( fee)?$/i, 'robinhood'],
   [/^(cl \*)?chase travel/i, 'chase'],
   [/^chase/i, 'chase'],
   [/^panera/i, 'panera'],

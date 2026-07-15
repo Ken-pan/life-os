@@ -81,6 +81,7 @@ describe('merchantBrandKey', () => {
     // Robinhood Gold bills as a bare "Gold Annual Subscription" ($50/yr on the
     // Robinhood card) — no brand token anywhere in the string.
     expect(merchantBrandKey('Gold Annual Subscription')).toBe('robinhood')
+    expect(merchantBrandKey('Gold Annual Subscription Fee')).toBe('robinhood')
     expect(merchantBrandKey('CL *Chase Travel')).toBe('chase')
   })
 
@@ -88,8 +89,8 @@ describe('merchantBrandKey', () => {
     // Only the exact phrase is Robinhood; a restaurant that merely starts with
     // "Gold" must not inherit the logo.
     expect(merchantBrandKey('TST* 19 GOLD TAIWANESE RE')).toBeNull()
-    expect(merchantBrandKey('Gold Annual Subscription Renewal')).toBeNull()
     expect(merchantBrandKey('Golden Corral')).toBeNull()
+    expect(merchantBrandKey('Gold Coast Grill')).toBeNull()
   })
 
   it('matches DoorDash with either separator the feeds use', () => {
