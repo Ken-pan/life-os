@@ -31,6 +31,20 @@ const UNMOVED_PX = 30
 const ACCEPT_SCORE = 0.5
 const AMBIGUITY_MARGIN = 0.08
 
+/**
+ * 样式精化会翻 kind:同一把椅子这次认出 swivel → office_chair,下次样式
+ * 属性没触发 → chair(508 真扫实测)。这些翻转都来自 KindMaps.applyStyle
+ * 的固定映射,所以同族之间允许匹配(小罚分),跨族仍然一票否决。
+ */
+const KIND_FAMILY = [
+  ['chair', 'office_chair'],
+  ['sofa', 'armchair'],
+  ['table', 'coffee_table'],
+  ['cabinet', 'shelf'],
+]
+const familyOf = (kind) => KIND_FAMILY.find((f) => f.includes(kind))
+const CROSS_KIND_PENALTY = 0.05
+
 const boxOf = (o) => o.bounds ?? { x: o.x, y: o.y, w: o.w, h: o.h }
 const centerOf = (o) => {
   const b = boxOf(o)
@@ -55,9 +69,14 @@ function colorDist(a, b) {
   return Math.hypot(va[0] - vb[0], va[1] - vb[1], va[2] - vb[2])
 }
 
-/** 0..1+bonuses;不同 kind 直接 0(样式精化可能翻 kind,那种情况宁可当新件) */
+/** 0..1+bonuses;kind 不同但同族(样式精化翻转)可匹配,跨族一票否决 */
 function matchScore(prev, next) {
-  if (prev.kind !== next.kind) return 0
+  let penalty = 0
+  if (prev.kind !== next.kind) {
+    const fam = familyOf(prev.kind)
+    if (!fam || !fam.includes(next.kind)) return 0
+    penalty = CROSS_KIND_PENALTY
+  }
   const A = boxOf(prev)
   const sd = sizeDiff(prev, next)
   const lowConf =
@@ -75,7 +94,7 @@ function matchScore(prev, next) {
   const cd = colorDist(prev, next)
   if (cd !== null && cd <= 60) bonus += 0.15
   if (prev.attrs?.styleZh && prev.attrs.styleZh === next.attrs?.styleZh) bonus += 0.1
-  return 0.45 * sizeScore + 0.45 * posScore + bonus
+  return 0.45 * sizeScore + 0.45 * posScore + bonus - penalty
 }
 
 /**

@@ -427,6 +427,18 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   )
   ok('高置信度不放宽尺寸容差', highConfSame.pairs.length === 0, JSON.stringify(highConfSame.pairs))
 
+  // 样式精化翻 kind(转椅↔椅,508 真扫实测)不该拆成两件;跨族(椅↔柜)仍否决
+  const kindFlip = matchScanObjects(
+    [{ id: 'scan-k1', kind: 'office_chair', x: 100, y: 100, w: 66, h: 75, attrs: { confidence: 'low' } }],
+    [{ id: 'scan-k2', kind: 'chair', x: 130, y: 110, w: 78, h: 84, attrs: { confidence: 'low' } }],
+  )
+  ok('转椅↔椅 同族可匹配', kindFlip.pairs.length === 1, JSON.stringify(kindFlip))
+  const crossFamily = matchScanObjects(
+    [{ id: 'scan-k1', kind: 'chair', x: 100, y: 100, w: 66, h: 75 }],
+    [{ id: 'scan-k2', kind: 'cabinet', x: 100, y: 100, w: 66, h: 75 }],
+  )
+  ok('椅↔柜 跨族否决', crossFamily.pairs.length === 0)
+
   // 歧义:两把同尺寸椅子距离接近同一把新椅 → 不敢认,possibly_same
   const amb = matchScanObjects(
     [
