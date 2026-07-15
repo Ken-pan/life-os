@@ -1,0 +1,12 @@
+# HomeOS · Supabase 本地开发配置(生产为 Life OS 统一项目 iueozzuctstwvzbcxcyh)
+# 生产部署不走 `supabase db push`(多 app 迁移历史冲突),用 ../../scripts/supabase-sql.sh,
+# 步骤见 README.md 与 docs/ops/supabase.md。
+project_id = "home"
+
+[api]
+enabled = true
+port = 54321
+# `home` schema 必须同时出现在生产 PostgREST 的 Exposed schemas 里(已于 2026-07-14 配置)。
+schemas = ["public", "graphql_public", "home"]
+extra_search_path = ["public", "extensions", "home"]
+max_rows = 1000

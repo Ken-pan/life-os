@@ -37,7 +37,12 @@
 | `20260712200000` | `portal_today_summary_timezone_and_tombstones` | **PLNR.CORE.4** · tz + tombstone 对齐 |
 | `20260713120000` | `purchase_review_associations`         | **FINC.PURCHASE.6.a** · `purchase_associations`+`purchase_decisions`+RLS+3 RPC；273 回填 proposed（2026-07-13 部署 + 生产 RPC 往返验证） |
 
+| `20260714201817` | `home_scan_sync`                       | **HOME.SYNC.4** · `home` schema + `home.scans`（iOS RoomPlan 扫描同步；2026-07-14 部署 + REST 探针验证） |
+| `20260714201818` | `home_scan_storage`                    | **HOME.SYNC.4** · 私有桶 `home-scan-photos`（机位照片 + structure.json） |
+
 Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **语义吸收**；勿重复 apply 单文件 legacy migration。
+
+**新 schema 部署必做**：PostgREST Exposed schemas 追加名字（`GET` 后 `PATCH /v1/projects/<ref>/postgrest` 的 `db_schema` 与 `db_extra_search_path`，勿覆盖现值）。当前列表：`public,graphql_public,music,fitness,aios,home`（2026-07-14）。漏这步 = 该 schema 所有 REST 调用 PGRST106。
 
 指纹与 rollout 细节 → [`../security/supabase-production-fingerprint.md`](../security/supabase-production-fingerprint.md)
 
