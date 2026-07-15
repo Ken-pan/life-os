@@ -6,6 +6,7 @@ export function buildPrimaryNavItems() {
     { tab: 'home', href: '/', label: '概览', icon: 'home' },
     { tab: 'plan', href: '/plan', label: '平面', icon: 'layout-grid' },
     { tab: 'storage', href: '/storage', label: '储藏', icon: 'archive' },
+    { tab: 'tidy', href: '/tidy', label: '整理', icon: 'list-checks' },
   ]
 }
 
@@ -24,6 +25,7 @@ export function resolveNavTab(pathname) {
   if (pathname === '/') return 'home'
   if (pathname.startsWith('/plan')) return 'plan'
   if (pathname.startsWith('/storage')) return 'storage'
+  if (pathname.startsWith('/tidy')) return 'tidy'
   if (pathname.startsWith('/settings')) return 'settings'
   return ''
 }

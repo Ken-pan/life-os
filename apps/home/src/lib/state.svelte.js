@@ -1698,6 +1698,8 @@ const defaultState = () => ({
     locale: 'zh',
     lockPortraitOnPhone: false,
     angleSnapDeg: DEFAULT_ANGLE_SNAP_DEG,
+    /** @type {Record<string, string>} 整理任务 id → 完成时间 ISO */
+    tidyDone: {},
   },
   activeProjectId: SAMPLE_508.meta.id,
   projects: {
@@ -2220,6 +2222,32 @@ export function undoCloudScan() {
   cloudScanReplacedProject = null
   setActiveProject(prev)
   toast('已还原扫描前的户型')
+}
+
+/**
+ * 整理任务的完成状态(/tidy 页勾选)。任务 id 由 buildTidyPlan 按内容派生,
+ * 所以重新扫描后同一处的任务 id 不变、勾选还在;而问题消失了任务本身就不再生成。
+ * @param {string} taskId
+ * @returns {boolean}
+ */
+export function isTidyTaskDone(taskId) {
+  return Boolean(S.settings.tidyDone?.[taskId])
+}
+
+/**
+ * @param {string} taskId
+ * @param {boolean} done
+ */
+export function setTidyTaskDone(taskId, done) {
+  if (!S.settings.tidyDone) S.settings.tidyDone = {}
+  if (done) S.settings.tidyDone[taskId] = new Date().toISOString()
+  else delete S.settings.tidyDone[taskId]
+  persist()
+}
+
+export function clearTidyProgress() {
+  S.settings.tidyDone = {}
+  persist()
 }
 
 export { deserializeProject }
