@@ -54,6 +54,9 @@ export function buildProjectFromScan(payload) {
     placements: (h.placements ?? []).map(stripAttrsPhotoPath),
     fixtures: (h.fixtures ?? []).map(stripAttrsPhotoPath),
     viewpoints: (h.viewpoints ?? []).map(stripPhotoPath),
+    // 加法式契约(2026-07):server-optimized 优化副本可以带储藏区规划;
+    // iPhone 扫描不发这个字段,照常置空(placementId 引用在新扫描里不存在)
+    storageZones: h.storageZones ?? [],
     meta,
   })
 }

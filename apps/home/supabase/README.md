@@ -29,6 +29,7 @@ payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 | `attrs.colorHex` | 主色 `#RRGGBB`（设备端抓拍图 k-means，VLM 识别后覆盖） |
 | `attrs.photoPath` | 家具抓拍图（最佳一张）桶内路径；网页端拉取后换成本地 `attrs.photoRef`（IndexedDB），`photoPath` 不落地 |
 | `attrs.photos[]` | 多视角证据包：`{ path, azimuthDeg }`，按方位分 4 桶每桶最佳、分数降序（第一张 = photoPath 那张）；桶内定名 `obj-{id}-{k}.jpg`；网页端逐张换成 `photos[].photoRef` |
+| `homeos.storageZones[]` | 储藏区规划（加法式，2026-07）：仅 `server-optimized` 优化副本携带（iPhone 不发）；replace 模式拉取时随户型落地，`placementId` 引用同 payload 的 placement id |
 
 样式属性同时用于精化 kind：L形沙发→`sofa`、单人沙发→`armchair`、
 茶几→`coffee_table`、转椅→`office_chair`、开放架→`shelf`（细分 kind

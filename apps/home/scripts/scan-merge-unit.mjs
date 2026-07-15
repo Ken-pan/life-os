@@ -450,6 +450,72 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   ok('双胞胎椅子不硬认', amb.pairs.every((p) => p.state === 'possibly_same'), JSON.stringify(amb.pairs))
 }
 
+// ---- 双扫描融合:置信度高的尺寸赢,原位家具位置取中点 ----
+{
+  const { fuseScans } = await import('../src/lib/spatial/scan-fuse.js')
+  const rect = (idBase, x, y, w, h) => ({
+    vertices: [
+      { id: `${idBase}-1`, x, y }, { id: `${idBase}-2`, x: x + w, y },
+      { id: `${idBase}-3`, x: x + w, y: y + h }, { id: `${idBase}-4`, x, y: y + h },
+    ],
+    edges: [
+      { id: `${idBase}-e1`, a: `${idBase}-1`, b: `${idBase}-2` },
+      { id: `${idBase}-e2`, a: `${idBase}-2`, b: `${idBase}-3` },
+      { id: `${idBase}-e3`, a: `${idBase}-3`, b: `${idBase}-4` },
+      { id: `${idBase}-e4`, a: `${idBase}-4`, b: `${idBase}-1` },
+    ],
+  })
+  const walls = (dx) => ({
+    pxPerFt: 36, margin: { x: 24, y: 24 },
+    vertices: [...rect('a', 100 + dx, 100, 400, 300).vertices, ...rect('b', 100 + dx, 400, 400, 250).vertices],
+    edges: [...rect('a', 100 + dx, 100, 400, 300).edges, ...rect('b', 100 + dx, 400, 400, 250).edges],
+  })
+  const base = {
+    wallGraph: walls(0),
+    zones: [],
+    placements: [
+      // 问题柜:base 低置信度量成 300px 宽;other 用 medium 量成 220px → 该采 220
+      { id: 'pl-1', kind: 'cabinet', label: '柜', x: 110, y: 110, w: 300, h: 60, rotation: 0,
+        attrs: { confidence: 'low' } },
+      // 沙发:两次都原位,中心差 12px → 融合后取中点
+      { id: 'pl-2', kind: 'sofa', label: '沙发', x: 200, y: 300, w: 240, h: 100, rotation: 0,
+        attrs: { confidence: 'high' } },
+      // base 独有的:保留
+      { id: 'pl-3', kind: 'chair', label: '椅', x: 150, y: 500, w: 60, h: 60, rotation: 0 },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  const other = {
+    wallGraph: walls(80), // 整体平移 80px 的另一次扫描
+    zones: [],
+    placements: [
+      { id: 'o-1', kind: 'cabinet', label: '柜', x: 190, y: 112, w: 240, h: 58, rotation: 0,
+        attrs: { confidence: 'medium', heightIn: 36 } },
+      { id: 'o-2', kind: 'sofa', label: '沙发', x: 292, y: 302, w: 238, h: 102, rotation: 0,
+        attrs: { confidence: 'high' } },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  const { homeos, report } = fuseScans(base, other)
+  ok('融合:配准 ok', report.registration.status === 'ok', JSON.stringify(report.registration))
+  const cab = homeos.placements.find((p) => p.id === 'pl-1')
+  ok('融合:低置信度尺寸被 medium 的替换', Math.abs(cab.w - 240) <= 1, `w=${cab.w}`)
+  ok('融合:置信度跟着升级', cab.attrs.confidence === 'medium' && cab.attrs.heightIn === 36)
+  ok('融合:实测真值同步更新', Math.abs(cab.attrs.measuredWIn - 240 / 3) <= 0.2, `mW=${cab.attrs.measuredWIn}`)
+  ok('融合:尺寸分歧留了备注', report.adopted.length === 1, JSON.stringify(report.adopted))
+  const sofa = homeos.placements.find((p) => p.id === 'pl-2')
+  // base 中心 (320,350),other 变换后中心 (331,353) → 中点 (325.5,351.5)
+  ok('融合:原位沙发位置取中点', Math.abs(sofa.x + sofa.w / 2 - 325.5) <= 1.5 && report.averaged >= 1,
+    `cx=${sofa.x + sofa.w / 2}`)
+  ok('融合:独有件保留', homeos.placements.some((p) => p.id === 'pl-3'))
+  // 对不齐的两次扫描不硬融
+  const bad = fuseScans(base, { ...other, wallGraph: { pxPerFt: 36, margin: { x: 0, y: 0 }, vertices: [], edges: [] } })
+  ok('融合:没墙就不融,原样返回', bad.report.registration.status === 'needs_rescan' &&
+    bad.homeos.placements.find((p) => p.id === 'pl-1').w === 300)
+}
+
 // ---- 没分区的扫描 ----
 {
   const m = mapScanIntoLayout(SAMPLE_508, { zones: [], placements: [], fixtures: [], viewpoints: [] })
