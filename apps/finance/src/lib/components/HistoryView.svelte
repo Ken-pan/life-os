@@ -15,6 +15,7 @@
     categoryBreakdown,
     monthlySeries,
     dailySeries,
+    coverageGaps,
     searchTxns,
     rangeSummary,
     topMerchants,
@@ -29,6 +30,8 @@
   import PurchaseCoverageCard from './PurchaseCoverageCard.svelte'
   import MerchantOrderCatalogSection from './MerchantOrderCatalogSection.svelte'
   import HistoryLedger from './HistoryLedger.svelte'
+  import { discretionaryMonthlyBudget } from '../../engine/budget.js'
+  import { readBackfillState } from '$lib/txnBackfill.js'
   import MerchantLogo from './MerchantLogo.svelte'
 
   /** @typedef {'month' | '30d' | '3m' | '12m' | 'all'} Window */
@@ -73,11 +76,6 @@
     }
   }
 
-  /** @param {number} amount @param {'monthly' | 'annual'} frequency */
-  function toMonthly(amount, frequency) {
-    return frequency === 'annual' ? amount / 12 : amount
-  }
-
   /** @type {{
    *   data: import('../../types.js').FinanceData,
    *   initialLedgerSearch?: string,
@@ -90,7 +88,6 @@
   const privacy = $derived(data.privacy)
 
   const series = $derived(monthlySeries(txStore.txns))
-  const recurring = $derived(computeRecurring(txStore.txns, { limit: 12 }))
   const txnStatistics = $derived(computeStatistics(txStore.txns))
   const categoryList = $derived(categoriesOf(txStore.txns))
   const accountList = $derived(accountNamesOf(txStore.txns))
@@ -115,6 +112,22 @@
   let showInsights = $state(true)
 
   const catRange = $derived(windowRange(txStore.meta.asOf, catWindow))
+  // 范围控件统辖整页：账本、商品覆盖、周期账单都吃同一份切好范围的流水，
+  // 而不是各自为政（之前只有概览/趋势/分类/商户跟随，账本永远是全历史）。
+  const rangeTxns = $derived(
+    catRange.from
+      ? txStore.txns.filter(
+          (txn) => txn.date >= catRange.from && txn.date <= (catRange.to ?? txStore.meta.asOf),
+        )
+      : txStore.txns,
+  )
+  // 周期性检测需要跨月历史才能认出「连续多月同商户」，所以在全量上算、
+  // 再按「本范围内有过扣款」过滤展示——本月视图只看本月还在扣的订阅。
+  const recurring = $derived.by(() => {
+    const all = computeRecurring(txStore.txns, { limit: 12 })
+    if (!catRange.from) return all
+    return all.filter((r) => r.lastSeen >= catRange.from)
+  })
   // The KPI card follows the range control like every other card. It used to be
   // pinned to trailing-12-months, so picking 本月 left "近 12 月平均月花销"
   // sitting above a chart of 13 days.
@@ -150,7 +163,9 @@
   const planComparable = $derived(trendWindow === 'month' || trendWindow === '30d')
   const rangeSpending = $derived(rangeStats.spending)
   const purchaseDisplayContext = $derived(buildPurchaseDisplayContext(txStore.txns))
-  const purchaseCoverage = $derived(computePurchaseCoverage(txStore.txns, purchaseDisplayContext))
+  // 上下文用全量建（订单匹配需要完整目录），覆盖统计只数范围内的——
+  // 摘要里的数字要和下面同样被范围切过的账本对得上。
+  const purchaseCoverage = $derived(computePurchaseCoverage(rangeTxns, purchaseDisplayContext))
   const purchaseDebugMode = $derived(isPurchaseEnrichmentDebugMode())
 
   /** @type {HTMLDivElement | null} */
@@ -161,18 +176,71 @@
   /** @type {'all' | import('../../engine/purchaseEnrichment.js').PurchaseEnrichmentSource} */
   let purchaseSourceFilter = $state('all')
 
-  const plannedMonthly = $derived(
-    data.cashFlows
-      .filter((c) => c.type === 'expense')
-      .reduce((a, c) => a + toMonthly(c.amount, c.frequency), 0),
+  // 日预算 = 可变月预算 ÷ 当月天数（业界 daily-budget/safe-to-spend 公式）。
+  // 「每天能花多少」只对日常可调的消费有意义：401(k) 等 payroll 供款从不出现在
+  // 流水里、房租超大额且不是任何一天的消费决策，都由 discretionaryMonthlyBudget
+  // 剔除；水电/订阅这类走日常流水的固定小额项保留，保证预算线和柱子比的是
+  // 同一种钱。预算对比卡用同一个分子，两把尺子不打架。
+  const discBudget = $derived(discretionaryMonthlyBudget(data.cashFlows))
+  const daysInAsOfMonth = $derived.by(() => {
+    const [y, m] = txStore.meta.asOf.split('-').map(Number)
+    return new Date(y, m, 0).getDate()
+  })
+  const dailyBudget = $derived(discBudget.monthly > 0 ? discBudget.monthly / daysInAsOfMonth : 0)
+  const overBudgetDays = $derived(
+    trendDaily && dailyBudget > 0
+      ? trendSeries.filter((p) => p.spending > dailyBudget).length
+      : 0,
   )
-  const planDiff = $derived(rangeSpending - plannedMonthly)
+
+  // 连续多天一条记录都没有（含转账）更像导入缺口而不是没花钱。图上那些 $0
+  // 柱子会撒谎，这里把它点破；日均和预算对比也要把这些天摘出去，否则 10 天
+  // 缺口能把日均稀释三分之一、把「预测偏保守」的错误结论坐实。
+  const rangeGaps = $derived(
+    coverageGaps(txStore.txns, {
+      from: catRange.from ?? txStore.meta.dateRange.start,
+      to: catRange.to ?? txStore.meta.asOf,
+      minRun: 5,
+    }),
+  )
+  const gapDays = $derived(rangeGaps.reduce((a, g) => a + g.days, 0))
+  // 有数据可言的天数：窗口天数减去已知缺口，至少 1 天防除零。
+  const effectiveDays = $derived(Math.max(1, rangeStats.days - gapDays))
+  const adjustedAvgPerDay = $derived(rangeStats.spending / effectiveDays)
+
+  // 预测对比按「范围内有数据的天数」折算月支出假设。之前拿 13 天的实际花销
+  // 去比整月假设，月中永远显示「低约 73%，预测偏保守」——那不是洞察，是除错了分母。
+  const plannedForRange = $derived(dailyBudget * effectiveDays)
+  const planDiff = $derived(rangeSpending - plannedForRange)
   const planOverspend = $derived(planDiff > 0)
-  const planRatio = $derived(plannedMonthly > 0 ? planDiff / plannedMonthly : 0)
+  const planRatio = $derived(plannedForRange > 0 ? planDiff / plannedForRange : 0)
   const planMeaningful = $derived(Math.abs(planRatio) >= 0.05)
+
+  // 缺口提示是否可以追加「已安排回读」：ExtensionSyncBridge 发现缺口时会随
+  // 快照向扩展发一次性回读请求并记账在 localStorage（见 txnBackfill.js）。
+  /** @param {{ from: string, to: string }} gap */
+  function backfillArmedFor(gap) {
+    const s = readBackfillState()
+    return s?.status === 'pending' && s.from <= gap.from && s.to >= gap.to
+  }
 
   function scrollToLedger() {
     ledgerRef?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  // Clicking a bar answers "what did I buy that day" with the ledger itself —
+  // the tooltip's top merchants are a preview, not the answer.
+  /** @type {{ from: string, to: string, label: string } | null} */
+  let ledgerDateFilter = $state(null)
+  /** @param {string} bucket YYYY-MM-DD from the daily chart, YYYY-MM from the monthly one */
+  function drillToBucket(bucket) {
+    ledgerDateFilter =
+      bucket.length === 7
+        ? // "-31" over-covers short months, but the filter is a lexicographic
+          // string comparison, so real dates like 02-28 still fall inside.
+          { from: `${bucket}-01`, to: `${bucket}-31`, label: bucket }
+        : { from: bucket, to: bucket, label: bucket }
+    scrollToLedger()
   }
 </script>
 
@@ -248,8 +316,11 @@
             </div>
             <div class="history-kpi-cell">
               <span class="label">{t('history.kpiAvgPerDay')}</span>
-              <span class="value records-metric">{money(rangeStats.avgPerDay, privacy)}</span>
+              <span class="value records-metric">{money(adjustedAvgPerDay, privacy)}</span>
               <span class="sub">
+                {#if gapDays > 0}
+                  {t('history.kpiAvgPerDayGap', { gap: gapDays })}
+                {/if}
                 {t('history.kpiAvgPerDaySub', {
                   active: rangeStats.activeDays,
                   days: rangeStats.days,
@@ -270,13 +341,15 @@
           </div>
         </div>
 
-        {#if planComparable && plannedMonthly > 0 && rangeSpending > 0}
+        {#if planComparable && discBudget.monthly > 0 && rangeSpending > 0}
           <div class="card">
             <h3>{t('history.planRealityTitle')}</h3>
             <div class="grid plan-reality-grid gap-3">
               <div class="kv-stack">
-                <span class="text-secondary">{t('history.plannedMonthly')}</span>
-                <span class="pr-value records-metric">{money(plannedMonthly, privacy)}</span>
+                <span class="text-secondary">
+                  {t('history.plannedForRange', { days: effectiveDays })}
+                </span>
+                <span class="pr-value records-metric">{money(plannedForRange, privacy)}</span>
               </div>
               <div class="kv-stack">
                 <span class="text-secondary">
@@ -298,6 +371,14 @@
                   ? t('history.planOverspend', { pct: (planRatio * 100).toFixed(0) })
                   : t('history.planUnderspend', { pct: (Math.abs(planRatio) * 100).toFixed(0) })}
             </p>
+            {#if discBudget.excluded.length > 0}
+              <p class="muted-note mt-1">
+                {t('history.planExcludedNote', {
+                  items: discBudget.excluded.map((e) => e.name).join('、'),
+                  amount: money(discBudget.excludedMonthly, privacy),
+                })}
+              </p>
+            {/if}
           </div>
         {/if}
 
@@ -309,7 +390,34 @@
                 : t('history.trendTitle')}
             </h3>
           </div>
-          <SpendingTrendChart series={trendSeries} {privacy} daily={trendDaily} />
+          <SpendingTrendChart
+            series={trendSeries}
+            {privacy}
+            daily={trendDaily}
+            budgetPerDay={trendDaily ? dailyBudget : 0}
+            onSelectPoint={drillToBucket}
+          />
+          {#if trendDaily}
+            {#each rangeGaps.slice(0, 2) as g (g.from)}
+              <p class="muted-note chart-gap-note mt-2">
+                {t('history.coverageGapNote', { from: g.from, to: g.to, days: g.days })}
+                {#if backfillArmedFor(g)}
+                  {t('history.coverageGapArmed')}
+                {/if}
+              </p>
+            {/each}
+          {/if}
+          {#if trendDaily && dailyBudget > 0}
+            <p class="muted-note mt-2">
+              {t('history.budgetRelationNote', {
+                budget: money(dailyBudget, privacy),
+                monthly: money(discBudget.monthly, privacy),
+                excluded: money(discBudget.excludedMonthly, privacy),
+                over: overBudgetDays,
+                days: trendSeries.length,
+              })}
+            </p>
+          {/if}
           <p class="muted-note mt-2">
             {trendDaily ? t('history.trendNoteDaily') : t('history.trendNote')}
           </p>
@@ -348,7 +456,7 @@
           </div>
 
           <div class="card">
-            <h3>{t('history.recurringTitle')}</h3>
+            <h3>{t('history.recurringTitle', { range: catRange.label })}</h3>
             <p class="muted-note mb-2-5">{t('history.recurringNote')}</p>
             <div class="list recurring-list">
               {#each recurring as r (r.merchant)}
@@ -434,7 +542,7 @@
     <div bind:this={ledgerRef} id="history-ledger">
       <HistoryLedger
         {privacy}
-        txns={txStore.txns}
+        txns={rangeTxns}
         {categoryList}
         {accountList}
         {purchaseDisplayContext}
@@ -447,6 +555,8 @@
         }}
         onEdit={(txn) => txStore.editTxn(txn)}
         onDelete={(id) => txStore.removeTxn(id)}
+        dateFilter={ledgerDateFilter}
+        onDateFilterClear={() => (ledgerDateFilter = null)}
         initialSearch={jumpLedgerSearch ?? initialLedgerSearch}
         onInitialSearchConsumed={() => {
           jumpLedgerSearch = undefined

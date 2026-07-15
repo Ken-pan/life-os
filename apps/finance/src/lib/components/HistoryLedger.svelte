@@ -2,7 +2,7 @@
   // Ledger from HistoryView.tsx.
   import { t } from '$lib/i18n.svelte.js'
   import { moneyPrecise } from '$lib/format.js'
-  import { isMoneyMovement, searchTxns } from '../../engine/transactions.js'
+  import { isMoneyMovement, outflowOf, searchTxns } from '../../engine/transactions.js'
   import { classifyPurchaseDisplayState } from '../../engine/purchaseEnrichmentDisplay.js'
   import HistoryLedgerRow from './HistoryLedgerRow.svelte'
 
@@ -46,6 +46,8 @@
    *   onPurchaseStateFilterChange: (f: 'all' | 'clean' | 'review' | 'return') => void,
    *   onEdit: (t: import('../../engine/transactions.js').Txn) => Promise<void>,
    *   onDelete: (id: string) => Promise<void>,
+   *   dateFilter?: { from: string, to: string, label: string } | null,
+   *   onDateFilterClear?: () => void,
    *   initialSearch?: string,
    *   onInitialSearchConsumed?: () => void,
    * }} */
@@ -61,6 +63,8 @@
     onPurchaseStateFilterChange,
     onEdit,
     onDelete,
+    dateFilter = null,
+    onDateFilterClear,
     initialSearch,
     onInitialSearchConsumed,
   } = $props()
@@ -89,11 +93,20 @@
     onInitialSearchConsumed?.()
   })
 
+  // The date filter arrives from outside (chart click); page 3 of last week's
+  // results is not a view of the newly chosen day.
+  $effect(() => {
+    void dateFilter
+    page = 0
+  })
+
   const results = $derived.by(() => {
     const searched = searchTxns(txns, {
       search: search || undefined,
       category: category || undefined,
       account: account || undefined,
+      from: dateFilter?.from,
+      to: dateFilter?.to,
       flow,
       spendingOnly,
       hideMoneyMovement,
@@ -110,9 +123,10 @@
       : 0,
   )
 
-  const totalSpending = $derived(
-    results.reduce((a, txn) => a + (txn.inSpending ? -txn.budgetImpact : 0), 0),
-  )
+  // outflowOf，与页面其他卡同口径：退款不冲抵、取现等资金搬运不算花销。
+  // 之前把可见行的 budgetImpact 直接求和，被误分类的退款能把「匹配花销合计」
+  // 拉成负数，和上方 KPI 各说各话。
+  const totalSpending = $derived(results.reduce((a, txn) => a + outflowOf(txn), 0))
 
   const pageCount = $derived(Math.max(1, Math.ceil(results.length / PAGE_SIZE)))
   const safePage = $derived(Math.min(page, pageCount - 1))
@@ -129,6 +143,18 @@
   <div class="card-head">
     <h3>{t('history.ledgerTitle', { count: results.length.toLocaleString() })}</h3>
     <div class="section-head-actions">
+      {#if dateFilter}
+        <!-- The chart set this filter from another card; without a visible,
+             dismissable chip the ledger just looks mysteriously short. -->
+        <button
+          type="button"
+          class="btn ghost text-sm ledger-date-chip"
+          onclick={() => reset(() => onDateFilterClear?.())}
+          title={t('history.ledgerDateChipClear')}
+        >
+          {t('history.ledgerDateChip', { date: dateFilter.label })} ✕
+        </button>
+      {/if}
       {#if purchaseStateFilter !== 'all' || purchaseSourceFilter !== 'all'}
         <button
           type="button"
