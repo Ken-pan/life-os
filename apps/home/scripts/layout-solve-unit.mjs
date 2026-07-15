@@ -7,11 +7,15 @@
  */
 import assert from 'node:assert/strict'
 import {
+  affinityPenaltyIn,
+  boxGapIn,
   candidateSlots,
   circMetrics,
+  detectPairs,
   directionZh,
   freeWallFt,
   LAYOUT_PROFILES,
+  minWallGapIn,
   solveAllProfiles,
   solveLayout,
 } from '../src/lib/spatial/layout-solve.js'
@@ -232,6 +236,107 @@ for (const s of slots) {
   assert.ok(empty > 0, '空房应有可用贴墙长度')
   assert.ok(empty >= withFurniture, `清空只多不少(${empty} vs ${withFurniture})`)
   assert.ok(empty - withFurniture >= 5, '7ft 贴墙柜挪走应释放明显贴墙长度')
+}
+
+/* ---- fixed 钉死件绝不参与移动 ---- */
+{
+  // 场景 B 的堵门柜标成 fixed:唯一能解堵门的件动不了 → 必须如实说解不动,
+  // 而不是把公寓自带的柜子搬走
+  const p = baseProject({
+    placements: [
+      { id: 'pl1', kind: 'cabinet', label: '内嵌柜', x: 24 + ft(12) - 6, y: 180, w: ft(3), h: ft(3), rotation: 0, zoneId: 'z-2', fixed: true },
+    ],
+  })
+  const before = circMetrics(analyzeCirculation(p))
+  assert.ok(before.blocked > 0, '前置:门确实被堵')
+  const res = await solveLayout(p, 'min_effort', { iterations: 150, seed: 5 })
+  if (res.ok) {
+    assert.ok(!res.moves.some((m) => m.id === 'pl1'), '钉死件绝不该出现在搬动清单里')
+  } else {
+    assert.ok(res.reason.length > 0)
+  }
+}
+
+/* ---- 摆放逻辑:纯函数 ---- */
+{
+  // 边到边间距
+  assert.equal(boxGapIn({ x: 0, y: 0, w: 30, h: 30 }, { x: 36, y: 0, w: 30, h: 30 }), 2)
+  assert.equal(boxGapIn({ x: 0, y: 0, w: 30, h: 30 }, { x: 10, y: 10, w: 30, h: 30 }), 0)
+
+  // 认对:床头柜认最近的床(同分区)
+  const zones = [squareZone]
+  const placements = [
+    { id: 'b1', kind: 'bed', label: '床', x: 12, y: 12, w: 150, h: 200, rotation: 0, zoneId: 'z1' },
+    { id: 'n1', kind: 'nightstand', label: '床头柜', x: 168, y: 12, w: 45, h: 45, rotation: 0, zoneId: 'z1' },
+    { id: 'c1', kind: 'chair', label: '孤儿椅', x: 300, y: 300, w: 54, h: 54, rotation: 0, zoneId: 'z1' },
+  ]
+  const pairs = detectPairs(placements, zones)
+  assert.ok(pairs.some((p2) => p2.aId === 'n1' && p2.bId === 'b1'), '床头柜↔床要认上')
+  assert.ok(!pairs.some((p2) => p2.aId === 'c1'), '没有桌子,椅子不硬凑对')
+
+  // 罚分:贴着 = 0;拉开 4ft 就有账
+  const segs = [{ edgeId: 'e', vertical: false, at: 0, lo: 0, hi: 432 }]
+  const near = new Map([
+    ['b1', { x: 12, y: 0, w: 150, h: 200 }],
+    ['n1', { x: 168, y: 0, w: 45, h: 45 }],
+  ])
+  const far = new Map([
+    ['b1', { x: 12, y: 0, w: 150, h: 200 }],
+    ['n1', { x: 330, y: 280, w: 45, h: 45 }],
+  ])
+  const huggers = [{ id: 'b1', kind: 'bed' }]
+  const pNear = affinityPenaltyIn(near, pairs, segs, huggers)
+  const pFar = affinityPenaltyIn(far, pairs, segs, huggers)
+  assert.equal(pNear, 0, `贴着不该罚(got ${pNear})`)
+  assert.ok(pFar > 20, `拆散要罚(got ${pFar})`)
+
+  // 贴墙:床贴北墙 gap 0;推到 y=60(20in)要罚
+  assert.equal(minWallGapIn({ x: 12, y: 0, w: 150, h: 200 }, segs), 0)
+  assert.equal(minWallGapIn({ x: 12, y: 60, w: 150, h: 200 }, segs), 20)
+}
+
+/* ---- 伴随对协同移动:解瓶颈时床头柜跟着床走,不许被拆散 ---- */
+{
+  // 卧室:床横在房中央堵住通道(床 5×6.6ft 放房间正中),床头柜贴床右侧。
+  // 解法必然要挪床 —— 床头柜必须跟着,解完两件仍然贴着。
+  const p = baseProject({
+    placements: [
+      { id: 'bed', kind: 'bed', label: '床', x: 24 + ft(3.5), y: 24 + ft(2), w: ft(5), h: ft(6.6), rotation: 0, zoneId: 'z-1' },
+      { id: 'ns', kind: 'nightstand', label: '床头柜', x: 24 + ft(8.6), y: 24 + ft(2), w: ft(1.5), h: ft(1.5), rotation: 0, zoneId: 'z-1' },
+    ],
+  })
+  const basePairs = detectPairs(p.placements, p.zones)
+  assert.ok(basePairs.length === 1, '前置:认出床头柜↔床')
+  const gap0 = boxGapIn(
+    { x: 24 + ft(3.5), y: 24 + ft(2), w: ft(5), h: ft(6.6) },
+    { x: 24 + ft(8.6), y: 24 + ft(2), w: ft(1.5), h: ft(1.5) },
+  )
+  assert.ok(gap0 <= 8, `前置:现在是贴着的(${gap0}in)`)
+
+  const res = await solveLayout(p, 'best_flow', { iterations: 260, seed: 13 })
+  if (res.ok && res.moves.some((m) => m.id === 'bed')) {
+    const bedBox = res.project.placements.find((x) => x.id === 'bed')
+    const nsBox = res.project.placements.find((x) => x.id === 'ns')
+    const gapAfter = boxGapIn(bedBox, nsBox)
+    assert.ok(gapAfter <= 12, `床挪了,床头柜必须还贴着(拆到 ${Math.round(gapAfter)}in)`)
+  }
+}
+
+/* ---- 流浪家具归位:办公椅漂在房间另一头,best_flow 把它带回桌边 ---- */
+{
+  const p = baseProject({
+    placements: [
+      { id: 'dk', kind: 'desk', label: '书桌', x: 24 + ft(12) + 6, y: 24 + 6, w: ft(5), h: ft(2.5), rotation: 0, zoneId: 'z-2' },
+      { id: 'oc', kind: 'office_chair', label: '办公椅', x: 24 + ft(18), y: 24 + ft(8), w: ft(2), h: ft(2), rotation: 0, zoneId: 'z-2' },
+    ],
+  })
+  const res = await solveLayout(p, 'best_flow', { iterations: 260, seed: 17 })
+  assert.ok(res.ok, `流浪椅是可解的问题:${res.reason ?? ''}`)
+  const dk = res.project.placements.find((x) => x.id === 'dk')
+  const oc = res.project.placements.find((x) => x.id === 'oc')
+  const gap = boxGapIn(dk, oc)
+  assert.ok(gap <= 24, `椅子该回到桌边(还差 ${Math.round(gap)}in)`)
+  assert.ok(res.after.affinityIn < res.before.affinityIn, '摆放逻辑分要改善')
 }
 
 console.log('layout-solve-unit: all assertions passed')

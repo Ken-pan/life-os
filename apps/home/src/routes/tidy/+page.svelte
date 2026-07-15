@@ -126,6 +126,9 @@
       parts.push(`紧张通道 ${pct(b.tight)}→${pct(a.tight)}`)
     if (a.wallFt > b.wallFt) parts.push(`可用贴墙 ${b.wallFt}→${a.wallFt} ft`)
     if (a.freeSqft > b.freeSqft + 1) parts.push(`可活动 +${Math.round(a.freeSqft - b.freeSqft)} sqft`)
+    // 摆放逻辑(伴随对间距 + 该贴墙的贴墙):罚分英寸,降 = 更合理
+    if (a.affinityIn < b.affinityIn - 2)
+      parts.push(`摆放更合理(配对/贴墙 ${b.affinityIn}→${a.affinityIn} in 偏差)`)
     return parts.length ? parts.join(' · ') : '与现状指标接近'
   }
 </script>
@@ -282,7 +285,8 @@
                       <span class="move-name">{mv.label}</span>
                       <span class="move-how">
                         {mv.directionZh}挪 {mv.movedFt} ft{#if mv.rotated}
-                          · 转 90°{/if}{#if mv.heavy}
+                          · 转 90°{/if}{#if mv.withZh}
+                          · 跟着{mv.withZh}{/if}{#if mv.heavy}
                           · <b class="move-heavy">建议两人</b>{/if}
                       </span>
                     </li>

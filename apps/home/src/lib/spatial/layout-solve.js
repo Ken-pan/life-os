@@ -42,12 +42,143 @@ export const LAYOUT_PROFILES = [
   },
 ]
 
-/** 这些不参与移动:踩得过去的、有腿的(狗),以及非落地件 */
+/** 这些不参与移动:钉死的(公寓自带)、踩得过去的、有腿的(狗),以及非落地件 */
 function isMovable(pl) {
-  if (!pl || pl.kind === 'rug' || pl.kind === 'yoga_mat' || pl.kind === 'mat') return false
+  if (!pl || pl.fixed) return false
+  if (pl.kind === 'rug' || pl.kind === 'yoga_mat' || pl.kind === 'mat') return false
   if (String(pl.kind).startsWith('dog')) return false
   const spec = placementSpec(pl.kind)
   return (spec?.mount ?? 'floor') === 'floor'
+}
+
+// ---- 摆放逻辑:很多家具的位置不是独立的 ----
+
+/**
+ * 伴随对:a 类家具功能上属于 b 类(同分区内按「谁离谁最近」认对)。
+ * gapIn = [最近, 最远] 边到边英寸;超出范围按超出量罚分(每对封顶,
+ * 免得一对烂账淹没全局)。电视有下限 —— 贴脸看不是「近」是错。
+ */
+const COMPANION_RULES = [
+  { a: ['nightstand'], b: ['bed', 'bed_twin', 'bed_full', 'bed_king'], gapIn: [0, 8], zh: '床头柜跟床' },
+  { a: ['office_chair'], b: ['desk', 'standing_desk'], gapIn: [0, 12], zh: '办公椅跟桌' },
+  { a: ['chair'], b: ['table', 'folding_table'], gapIn: [0, 12], zh: '餐椅跟餐桌' },
+  { a: ['coffee_table'], b: ['sofa', 'loveseat'], gapIn: [8, 36], zh: '茶几在沙发前' },
+  { a: ['tv'], b: ['sofa', 'loveseat', 'armchair'], gapIn: [54, 160], zh: '电视与沙发观看距离' },
+  { a: ['floor_lamp'], b: ['sofa', 'loveseat', 'armchair', 'bed', 'desk'], gapIn: [0, 24], zh: '落地灯在座位旁' },
+  { a: ['laundry_basket'], b: ['washer', 'dryer'], gapIn: [0, 48], zh: '洗衣篮在洗衣机旁' },
+]
+
+/** 每对罚分封顶(英寸):一对再烂也不该盖过一个真瓶颈 */
+const PAIR_PENALTY_CAP = 60
+
+/** 背靠墙才像话的家具:漂在房间中央按离墙距离罚分 */
+const WALL_HUGGERS = new Set([
+  'bed', 'bed_twin', 'bed_full', 'bed_king',
+  'sofa', 'loveseat', 'dresser', 'wardrobe',
+  'cabinet', 'shelf', 'bookshelf', 'cube_shelf', 'wire_rack', 'shoe_cabinet',
+  'tv', 'desk', 'standing_desk', 'coat_rack', 'floor_mirror',
+])
+
+/** 离墙超过它(英寸)才开始罚 —— 贴墙留缝走线是正常的 */
+const WALL_GAP_FREE_IN = 6
+/** 离墙罚分封顶(英寸) */
+const WALL_PENALTY_CAP = 36
+
+/** 两个盒子的边到边间距(英寸;重叠/相邻为 0) */
+export function boxGapIn(a, b) {
+  const dx = Math.max(0, Math.max(a.x - (b.x + b.w), b.x - (a.x + a.w)))
+  const dy = Math.max(0, Math.max(a.y - (b.y + b.h), b.y - (a.y + a.h)))
+  return Math.hypot(dx, dy) / PX_PER_IN
+}
+
+/**
+ * 盒子到最近「正对墙」的间距(英寸):只认与盒子某边平行且跨度搭上
+ * ≥2ft(或整边)的墙段 —— 斜对着房间另一头的墙不算「靠」。
+ * 找不到返回 Infinity。
+ * @param {{x:number,y:number,w:number,h:number}} box
+ * @param {ReturnType<typeof wallAnchorSegments>} segs
+ */
+export function minWallGapIn(box, segs) {
+  let best = Infinity
+  for (const seg of segs) {
+    const spanLo = seg.vertical ? box.y : box.x
+    const spanHi = seg.vertical ? box.y + box.h : box.x + box.w
+    const overlap = Math.min(spanHi, seg.hi) - Math.max(spanLo, seg.lo)
+    if (overlap < Math.min(spanHi - spanLo, 24 * PX_PER_IN)) continue
+    const lo = seg.vertical ? box.x : box.y
+    const hi = seg.vertical ? box.x + box.w : box.y + box.h
+    const gap = Math.min(Math.abs(lo - seg.at), Math.abs(seg.at - hi))
+    best = Math.min(best, gap)
+  }
+  return best / PX_PER_IN
+}
+
+/**
+ * 认对:每件 a 类在**同分区**里找最近的 b 类(当前布局定义「谁属于谁」——
+ * 你的椅子跟你的桌子,不是跟别人家的)。b 可以是钉死件(洗衣机):
+ * 罚分会把 a 拉回去,b 反正不动。
+ * @param {SpatialPlacement[]} placements
+ * @param {any[]} zones
+ * @returns {Array<{ aId: string, bId: string, gapIn: [number, number], zh: string }>}
+ */
+export function detectPairs(placements, zones) {
+  const out = []
+  const zoneIdOf = (pl) => zoneOfPlacement(pl, zones)?.id ?? null
+  for (const rule of COMPANION_RULES) {
+    for (const a of placements) {
+      if (!rule.a.includes(a.kind)) continue
+      const az = zoneIdOf(a)
+      if (!az) continue
+      let best = null
+      let bestD = Infinity
+      for (const b of placements) {
+        if (b === a || !rule.b.includes(b.kind)) continue
+        if (zoneIdOf(b) !== az) continue
+        const d = Math.hypot(
+          a.x + a.w / 2 - (b.x + b.w / 2),
+          a.y + a.h / 2 - (b.y + b.h / 2),
+        )
+        if (d < bestD) {
+          bestD = d
+          best = b
+        }
+      }
+      if (best) out.push({ aId: a.id, bId: best.id, gapIn: rule.gapIn, zh: rule.zh })
+    }
+  }
+  return out
+}
+
+/**
+ * 一个布局的「摆放逻辑」总罚分(英寸计,越低越合理):
+ * 伴随对超出理想间距的量 + 该贴墙的家具离墙的量。
+ * @param {Map<string, {x:number,y:number,w:number,h:number}>} boxById
+ * @param {ReturnType<typeof detectPairs>} pairs
+ * @param {ReturnType<typeof wallAnchorSegments>} segs
+ * @param {Array<{ id: string, kind: string }>} huggers 该贴墙的家具(id+kind 预筛)
+ */
+export function affinityPenaltyIn(boxById, pairs, segs, huggers) {
+  let total = 0
+  for (const pair of pairs) {
+    const a = boxById.get(pair.aId)
+    const b = boxById.get(pair.bId)
+    if (!a || !b) continue
+    const g = boxGapIn(a, b)
+    let p = 0
+    if (g > pair.gapIn[1]) p = g - pair.gapIn[1]
+    else if (g < pair.gapIn[0]) p = pair.gapIn[0] - g
+    total += Math.min(p, PAIR_PENALTY_CAP)
+  }
+  if (segs.length) {
+    for (const h of huggers) {
+      const box = boxById.get(h.id)
+      if (!box) continue
+      const gap = minWallGapIn(box, segs)
+      const p = gap === Infinity ? WALL_PENALTY_CAP : Math.max(0, gap - WALL_GAP_FREE_IN)
+      total += Math.min(p, WALL_PENALTY_CAP)
+    }
+  }
+  return total
 }
 
 /** 大件(床/沙发/衣柜级):搬动建议两人,劳动量权重更高 */
@@ -146,8 +277,13 @@ export function freeWallFt(project, placements) {
   const segs = wallAnchorSegments(project.wallGraph)
   if (!segs.length) return 0
   const zones = zonesOf(project)
+  // 占墙的是**所有落地件**(含钉死的洗衣机/内嵌柜 —— 它们不动,但墙确实被占着),
+  // 只豁免踩得过去的地毯垫子
   const boxes = (placements ?? [])
-    .filter((pl) => isMovable(pl) || String(pl.kind).startsWith('dog'))
+    .filter((pl) => {
+      if (pl.kind === 'rug' || pl.kind === 'yoga_mat' || pl.kind === 'mat') return false
+      return (placementSpec(pl.kind)?.mount ?? 'floor') === 'floor'
+    })
     .map((pl) => ({ x: pl.x, y: pl.y, w: pl.w, h: pl.h }))
   for (const fx of project.fixtures ?? []) {
     if (fx.bounds) boxes.push(fx.bounds)
@@ -205,8 +341,10 @@ export function circMetrics(circ) {
 /**
  * 一个布局状态的分数(越高越好;违反硬约束返回 -Infinity)。
  * 硬门槛对三个 profile 一致:不许新增堵门/孤岛、全屋最窄通道不许更窄。
+ * `affinityGain` = 摆放逻辑罚分的改善量(英寸,正 = 更合理):
+ * 拆散床头柜/把柜子丢到房间中央的方案,通道再宽也不是好方案。
  */
-function scoreState({ profileKey, m, base, wallFt, baseWallFt, moveCost }) {
+function scoreState({ profileKey, m, base, wallFt, baseWallFt, moveCost, affinityGain }) {
   if (m.blocked > base.blocked || m.isolated > base.isolated) return -Infinity
   if (m.minWidthIn < base.minWidthIn) return -Infinity
 
@@ -218,10 +356,12 @@ function scoreState({ profileKey, m, base, wallFt, baseWallFt, moveCost }) {
 
   switch (profileKey) {
     case 'min_effort':
-      return problemGain * 3 - moveCost * 60
+      // 归位一件流浪的椅子也是「解决问题」—— 权重要压得过它自己的搬动成本
+      return problemGain * 3 + affinityGain * 10 - moveCost * 60
     case 'best_flow':
       return (
         problemGain * 1.5 +
+        affinityGain * 5 +
         (base.tight - m.tight) * 900 +
         (m.freeSqft - base.freeSqft) * 3 -
         moveCost * 8
@@ -229,6 +369,7 @@ function scoreState({ profileKey, m, base, wallFt, baseWallFt, moveCost }) {
     case 'max_storage':
       return (
         problemGain * 0.5 +
+        affinityGain * 4 +
         (wallFt - baseWallFt) * 30 +
         (base.tight - m.tight) * 200 -
         moveCost * 8
@@ -288,6 +429,29 @@ export async function solveLayout(project, profileKey, opts = {}) {
   const base = circMetrics(baseCirc)
   const baseWallFt = freeWallFt(project, placements)
 
+  // 摆放逻辑基线:伴随对按当前布局认对(你的椅子跟你的桌子),
+  // 贴墙偏好只评能动的件(钉死件的位置本来就是既成事实)
+  const wallSegs = wallAnchorSegments(project.wallGraph)
+  const pairs = detectPairs(placements, zones)
+  const huggers = placements
+    .filter((pl) => WALL_HUGGERS.has(pl.kind) && !pl.fixed)
+    .map((pl) => ({ id: pl.id, kind: pl.kind }))
+  const boxByIdOf = (plist) =>
+    new Map(plist.map((p) => [p.id, { x: p.x, y: p.y, w: p.w, h: p.h }]))
+  const baseAffinity = affinityPenaltyIn(boxByIdOf(placements), pairs, wallSegs, huggers)
+
+  // 伴随对协同移动表:anchor(b)动,follower(a)保持相对位置跟着动
+  const movIdxByPlId = new Map(movables.map((m, i) => [m.pl.id, i]))
+  /** @type {Map<number, number[]>} */
+  const followersOf = new Map()
+  for (const pair of pairs) {
+    const ai = movIdxByPlId.get(pair.aId)
+    const bi = movIdxByPlId.get(pair.bId)
+    if (ai === undefined || bi === undefined) continue
+    if (!followersOf.has(bi)) followersOf.set(bi, [])
+    followersOf.get(bi).push(ai)
+  }
+
   /** 当前状态:每件家具的 {x,y,w,h,rotDelta} */
   let cur = movables.map((m) => ({ x: m.pl.x, y: m.pl.y, w: m.pl.w, h: m.pl.h, rotDelta: 0 }))
   let curScore = 0 // 现状分数按定义为 0(所有 delta 为 0)
@@ -345,6 +509,7 @@ export async function solveLayout(project, profileKey, opts = {}) {
     const candidate = { ...project, placements: nextPlacements }
     const circ = analyzeCirculation(candidate)
     if (!circ.ok) return -Infinity
+    const affinity = affinityPenaltyIn(boxByIdOf(nextPlacements), pairs, wallSegs, huggers)
     return scoreState({
       profileKey: profile.key,
       m: circMetrics(circ),
@@ -352,6 +517,7 @@ export async function solveLayout(project, profileKey, opts = {}) {
       wallFt: profile.key === 'max_storage' ? freeWallFt(project, nextPlacements) : baseWallFt,
       baseWallFt,
       moveCost: moveCostOf(state),
+      affinityGain: baseAffinity - affinity,
     })
   }
 
@@ -369,7 +535,24 @@ export async function solveLayout(project, profileKey, opts = {}) {
     if (slot.x === prev.x && slot.y === prev.y && slot.rotDelta === prev.rotDelta) continue
     if (collides(cur, mi, slot)) continue
 
+    /** @type {Array<[number, typeof prev]>} 本步动过的全部件(拒绝时整体回滚) */
+    const changed = [[mi, prev]]
     cur[mi] = { x: slot.x, y: slot.y, w: slot.w, h: slot.h, rotDelta: slot.rotDelta }
+
+    // 伴随家具跟着一起挪(保持相对位置):否则「先拆散再归位」要跨两步,
+    // 退火的容忍窗迈不过中间那道分数谷 —— 床永远带不动床头柜
+    const dx = slot.x - prev.x
+    const dy = slot.y - prev.y
+    for (const fi of followersOf.get(mi) ?? []) {
+      const f = cur[fi]
+      const nb = { x: f.x + dx, y: f.y + dy, w: f.w, h: f.h }
+      const fZone = movables[fi].zone
+      if (!fZone || !boxInPolygon(nb, fZone.polygon)) continue
+      if (collides(cur, fi, nb)) continue
+      changed.push([fi, f])
+      cur[fi] = { ...f, x: nb.x, y: nb.y }
+    }
+
     const s = evaluate(cur)
     // 退火:前期容忍小倒退跳出局部最优,后期只收严格改进
     if (s > curScore - temp * 12) {
@@ -379,7 +562,7 @@ export async function solveLayout(project, profileKey, opts = {}) {
         best = cur.map((v) => ({ ...v }))
       }
     } else {
-      cur[mi] = prev
+      for (const [idx, prevState] of changed) cur[idx] = prevState
     }
   }
 
@@ -412,14 +595,33 @@ export async function solveLayout(project, profileKey, opts = {}) {
   }
   moves.sort((a, b) => b.movedFt - a.movedFt)
 
+  // 成对搬动的标出来:「床头柜 向西挪 2.9 ft · 跟着床」——
+  // 用户一看就懂这步不是乱挪,是保持配对
+  const moveById = new Map(moves.map((m) => [m.id, m]))
+  for (const pair of pairs) {
+    const ma = moveById.get(pair.aId)
+    const mb = moveById.get(pair.bId)
+    if (!ma || !mb || ma.withZh) continue
+    const dRel =
+      Math.abs(ma.from.x - mb.from.x - (ma.to.x - mb.to.x)) +
+      Math.abs(ma.from.y - mb.from.y - (ma.to.y - mb.to.y))
+    if (dRel < 6 * PX_PER_IN) ma.withZh = mb.label
+  }
+
   return {
     ok: true,
     profile,
     moves,
     project: finalProject,
     score: Math.round(bestScore),
-    before: { ...base, wallFt: baseWallFt },
-    after: { ...circMetrics(finalCirc), wallFt: freeWallFt(project, finalPlacements) },
+    before: { ...base, wallFt: baseWallFt, affinityIn: Math.round(baseAffinity) },
+    after: {
+      ...circMetrics(finalCirc),
+      wallFt: freeWallFt(project, finalPlacements),
+      affinityIn: Math.round(
+        affinityPenaltyIn(boxByIdOf(finalPlacements), pairs, wallSegs, huggers),
+      ),
+    },
   }
 }
 
