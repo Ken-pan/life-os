@@ -42,6 +42,11 @@ final class AppModel {
 
     @MainActor
     func startScanning() {
+        // 每次扫描用**全新的 ARSession**:上次扫描(尤其是取消)会把共享
+        // session 停死,在死 session 上重开 RoomCaptureSession 起不来 ——
+        // 实测「取消后再扫,取景一直黑屏」就是它。
+        scanController.reset()
+        scanController = ScanSessionController()
         poses = []
         convertedProject = nil
         photoFiles = []
