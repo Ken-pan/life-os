@@ -1,7 +1,13 @@
 /*
-  Life OS Music 播放器壳层
-  供 MusicOS 引入：@import '@life-os/theme/music-shell.css';
-  依赖 design-system.css（layout / shell / components / ios-safari）
+  MUSIC.OS 播放器壳层（app 私有）
+  由 apps/music/src/app.css 引入：@import './music-shell.css';
+  依赖 @life-os/theme/design-system.css（layout / shell / components / ios-safari），
+  必须在其之后引入。
+
+  2026-07-14 从 packages/theme 迁回本 app：选择器全部是 music 专属
+  （.music-app / .now-playing-* / .player-progress / .mini-player-* / .seek-bar-* /
+  .utility-pane），消费者只有 music 一个，却占共享 theme 的 59%。共享包只放
+  ≥2 app 真正共用的东西——见 docs/roadmap/BACKLOG.md §不提取。
 */
 
 :root {

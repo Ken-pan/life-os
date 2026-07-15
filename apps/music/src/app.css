@@ -1,5 +1,5 @@
 @import '@life-os/theme/design-system.css';
-@import '@life-os/theme/music-shell.css';
+@import './music-shell.css';
 @import '@life-os/theme/brands/music.css';
 
 /*
