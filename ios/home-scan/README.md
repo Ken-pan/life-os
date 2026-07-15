@@ -30,6 +30,10 @@ open HomeScan.xcodeproj    # 或 xcodebuild -scheme HomeScan -destination 'platf
 | `HomeScan/Services/AutoViewpointCapture.swift` | 机位自动拍照：视角稳/看得全/够新颖就自己拍（每间 ≤4 张），拍不上给站位引导 —— 扫描无脑化 |
 | `HomeScan/Services/ObjectShotCapture.swift` | 家具自动抓拍：2Hz 给每件家具的当前视角打分（全身入画/占幅/居中/不甩动），按 90° 方位桶每桶留最佳帧（裁图 + k-means 主色 + 拉普拉斯清晰度门控——糊图不许顶掉清楚图） |
 | `HomeScan/Services/EvidenceGuide.swift` | 证据完备度（纯几何，单测全覆盖）：大件家具要 ≥3 个方位的照片、中件 2、小件 1；实时墙体剔掉「靠墙拍不到」的方位（站位半径从理想值往里退着找）；产出具体走位引导与扫后汇总警告 |
+| `HomeScan/Services/ContainerGeometry.swift` | 柜内扫描几何（纯数学，单测全覆盖）：六个引导点拟合内腔盒子、层板 y 合并去重、切「层」、payload 契约（英寸） |
+| `HomeScan/Services/ContainerScanController.swift` | 柜内扫描 AR 会话：raycast 打点 + 可视标记 + 水平面锚点自动识层板 + 证据照；与主扫描不同世界系，只取相对尺寸 |
+| `HomeScan/Services/ContainerUploader.swift` | 柜内数据上云：`container-{placementId}.json` + 证据照进 `home-scan-photos` 桶（与扫描同前缀，幂等定名） |
+| `HomeScan/Views/ContainerScanView.swift` | 柜内扫描 UI：挑柜子（从已上传扫描的 placements 里筛柜/架/衣柜）→ AR 引导 → 确认尺寸/层数 → 上传 |
 | `HomeScan/Convert/` | CapturedStructure → HomeOS plan-px（契约见 `apps/home/supabase/README.md`）；iOS 17 样式属性 → 细分 kind/attrs |
 | `HomeScan/Views/` | 登录 / 主页 / 扫描 / 预览 / 上传 |
 | `HomeScan/Mock/` | 模拟器 mock 扫描（fixture 走全链路） |
@@ -59,7 +63,12 @@ HomeOS 网页 设置 → 云端扫描 → 拉取(照片落 IndexedDB,重铸 phot
 5. 家具自动抓拍：扫描 HUD 的「N 件家具照」应随扫描增长；上传后网页端
    选中家具能看到实拍缩略图、主色点、样式（L形沙发/茶几/转椅…）与实测高；
    本地 VLM 在线时「识别外观」能补出材质/颜色人话
-6. 实时 HUD 引导（优先级：跟踪异常 > 补拍走位 > 机位站位）：
+6. 柜内扫描：主页已上传扫描点「柜内」→ 挑一个柜子 → 打开柜门，
+   按引导点六个位置（左壁/右壁/内底/内顶/后壁/门框前沿）→ 层板
+   （自动识别 + 手动点前沿补）→ 正面/斜侧两张照 → 核对内宽/内深/内高
+   与层数 → 上传。拿卷尺对比内腔三维（目标 ±3cm）与每层高；
+   桶里应出现 `container-{placementId}.json` + 两张 jpg
+7. 实时 HUD 引导（优先级：跟踪异常 > 补拍走位 > 机位站位）：
    - 对着白墙快速甩手机，应出现橙色跟踪提示（「移动太快」/「特征太少」），
      恢复平稳后提示消失
    - 大件家具（床/沙发）只从一侧扫，认出约 15 秒后应出现

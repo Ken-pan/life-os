@@ -35,6 +35,42 @@ payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 茶几→`coffee_table`、转椅→`office_chair`、开放架→`shelf`（细分 kind
 必须仍在 `placements.js PLACEMENT_KINDS` 词表内）。
 
+### 柜内扫描（2026-07-15 加法式，桶内 JSON，不动表结构）
+
+iOS「柜内扫描」（能力11：柜→层容器层级）把开柜门实测的内腔数据存进
+`home-scan-photos` 桶、与扫描同前缀，**没有新表**——网页端按路径拉即可：
+
+| 路径 | 内容 |
+|---|---|
+| `{uid}/{scanId}/container-{placementId}.json` | 柜内测量（formatVersion 1，见下）；重测同一柜子原地覆盖 |
+| `{uid}/{scanId}/container-{placementId}-{k}.jpg` | 证据照（k=0 正面、k=1 斜侧） |
+
+JSON 形状（源码 `ios/home-scan/HomeScan/Services/ContainerGeometry.swift` 的
+`Payload`，改动需两处同步）：
+
+```json
+{
+  "formatVersion": 1,
+  "scanId": "…", "placementId": "p7", "placementLabel": "柜",
+  "capturedAt": "2026-07-15T04:00:00Z", "device": "…",
+  "interiorIn": { "w": 31.5, "d": 13.8, "h": 74.8 },
+  "shelfHeightsIn": [24.4],
+  "compartments": [
+    { "level": 0, "y0In": 0, "y1In": 24.4, "heightIn": 24.4 },
+    { "level": 1, "y0In": 24.4, "y1In": 74.8, "heightIn": 50.4 }
+  ],
+  "interiorVolumeL": 532,
+  "photos": ["{uid}/{scanId}/container-p7-0.jpg", "…-1.jpg"]
+}
+```
+
+- 单位英寸（与 `attrs.heightIn` 等一致）；`shelfHeightsIn`/`compartments`
+  自内底向上；无层板时 `compartments` 只有一层。
+- 这次 AR 会话与主扫描**不同世界系**——JSON 里只有相对尺寸可信，
+  与户型的绑定完全靠 `placementId`（网页端合并家具时保持 id 稳定即可续接）。
+- 网页端消费（待做）：储物区/收纳规划读该 JSON 即可回答「放进哪一层」；
+  未来加字段走加法式（如 `openingSide`、`accessDifficulty`、用户修正值）。
+
 ## 部署状态
 
 - 2026-07-14：两个迁移已用 `scripts/supabase-sql.sh -f` 应用到生产并注册进
