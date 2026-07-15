@@ -19,8 +19,8 @@
  * 半个墙厚(2–3cm),验收阈值已覆盖;后续可按墙厚建模消掉。
  */
 
-/** px/cm(36px=1ft) */
-const PX_PER_CM = 36 / 30.48
+import { PX_PER_CM } from './dimensions.js'
+import { wallGraphSegments } from './wall-segments.js'
 /** 平移候选聚类容差:10cm */
 const SHIFT_CLUSTER_PX = 10 * PX_PER_CM
 /** 墙段配对的长度比范围 */
@@ -39,25 +39,7 @@ const ACCEPT = {
  * @returns {Array<{ vertical: boolean, at: number, lo: number, hi: number, len: number }>}
  */
 export function wallSegments(wallGraph) {
-  const byId = Object.fromEntries(
-    (wallGraph?.vertices ?? []).map((v) => [v.id, v]),
-  )
-  const out = []
-  for (const e of wallGraph?.edges ?? []) {
-    const a = byId[e.a]
-    const b = byId[e.b]
-    if (!a || !b) continue
-    if (Math.abs(a.x - b.x) < 1.5) {
-      const lo = Math.min(a.y, b.y)
-      const hi = Math.max(a.y, b.y)
-      out.push({ vertical: true, at: a.x, lo, hi, len: hi - lo })
-    } else if (Math.abs(a.y - b.y) < 1.5) {
-      const lo = Math.min(a.x, b.x)
-      const hi = Math.max(a.x, b.x)
-      out.push({ vertical: false, at: a.y, lo, hi, len: hi - lo })
-    }
-  }
-  return out.filter((s) => s.len > 1)
+  return wallGraphSegments(wallGraph)
 }
 
 /** 房间矩形 bounds → 四边墙段(508 参数模式没有 wallGraph 时的本地墙来源) */

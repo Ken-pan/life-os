@@ -23,12 +23,12 @@ import {
 } from './circulation.js'
 import { placementSpec } from './placements.js'
 import { wallAnchorSegments } from './wall-anchor.js'
+import { PX_PER_FT, PX_PER_IN } from './dimensions.js'
+import { boxesOverlap, pointToRectDistance } from './geometry.js'
 
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 /** @typedef {import('./types.js').SpatialPlacement} SpatialPlacement */
 
-const PX_PER_IN = 3
-const PX_PER_FT = 36
 
 export const LAYOUT_PROFILES = [
   {
@@ -161,13 +161,6 @@ export function openingSegments(project) {
     })
   }
   return out
-}
-
-/** 点到轴对齐矩形的距离(px) */
-function distToBox(px, py, b) {
-  const dx = Math.max(b.x - px, 0, px - (b.x + b.w))
-  const dy = Math.max(b.y - py, 0, py - (b.y + b.h))
-  return Math.hypot(dx, dy)
 }
 
 /**
@@ -368,7 +361,7 @@ export function designPenaltyIn(ctx, boxById) {
   for (const door of ctx.doors) {
     const radius = door.spanIn * PX_PER_IN
     for (const box of boxById.values()) {
-      const d = distToBox(door.cx, door.cy, box)
+      const d = pointToRectDistance(door.cx, door.cy, box)
       if (d < radius) total += Math.min((radius - d) / PX_PER_IN, 24)
     }
   }
@@ -481,11 +474,6 @@ function makeRng(seed) {
     s = (s * 1664525 + 1013904223) >>> 0
     return s / 4294967296
   }
-}
-
-/** @param {{x:number,y:number,w:number,h:number}} a @param {{x:number,y:number,w:number,h:number}} b */
-function boxesOverlap(a, b) {
-  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 }
 
 /** 盒子是否整个落在多边形内(四角 + 中心;缩 1px 容忍贴边) */

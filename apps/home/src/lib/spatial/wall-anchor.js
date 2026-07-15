@@ -23,6 +23,7 @@
 /** @typedef {import('./types.js').WallGraph} WallGraph */
 /** @typedef {import('./types.js').WallAnchor} WallAnchor */
 /** @typedef {import('./types.js').WallAnchorAxis} WallAnchorAxis */
+import { wallGraphSegments } from './wall-segments.js'
 
 /** 贴墙判定上限(30″)—— 与 scan-merge.js 的 ANCHOR_MAX_PX 同一语义 */
 const ANCHOR_MAX_IN = 30
@@ -47,23 +48,8 @@ const round1 = (v) => Math.round(v * 10) / 10
  * @returns {Array<{ edgeId: string, vertical: boolean, at: number, lo: number, hi: number }>}
  */
 export function wallAnchorSegments(wallGraph) {
-  const byId = Object.fromEntries((wallGraph?.vertices ?? []).map((v) => [v.id, v]))
-  const out = []
-  for (const e of wallGraph?.edges ?? []) {
-    const a = byId[e.a]
-    const b = byId[e.b]
-    if (!a || !b) continue
-    if (Math.abs(a.x - b.x) < 1.5) {
-      const lo = Math.min(a.y, b.y)
-      const hi = Math.max(a.y, b.y)
-      if (hi - lo > 1) out.push({ edgeId: e.id, vertical: true, at: a.x, lo, hi })
-    } else if (Math.abs(a.y - b.y) < 1.5) {
-      const lo = Math.min(a.x, b.x)
-      const hi = Math.max(a.x, b.x)
-      if (hi - lo > 1) out.push({ edgeId: e.id, vertical: false, at: a.y, lo, hi })
-    }
-  }
-  return out
+  // 与配准共用同一份提取逻辑(wall-segments.js);多出的 len 字段无害
+  return wallGraphSegments(wallGraph)
 }
 
 /**

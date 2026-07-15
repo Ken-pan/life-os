@@ -1,4 +1,5 @@
 /** @typedef {import('./types.js').Point} Point */
+import { pointInPolygon } from './geometry.js'
 /** @typedef {import('./types.js').SpatialZone} SpatialZone */
 /** @typedef {import('./types.js').SpatialRoom} SpatialRoom */
 /** @typedef {import('./types.js').WallGraph} WallGraph */
@@ -47,25 +48,8 @@ export function nextZoneColor(zones, index = zones.length) {
   return ZONE_COLORS[index % ZONE_COLORS.length]
 }
 
-/**
- * @param {Point} pt
- * @param {Point[]} polygon
- */
-export function pointInPolygon(pt, polygon) {
-  if (polygon.length < 3) return false
-  let inside = false
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i].x
-    const yi = polygon[i].y
-    const xj = polygon[j].x
-    const yj = polygon[j].y
-    const intersect =
-      yi > pt.y !== yj > pt.y &&
-      pt.x < ((xj - xi) * (pt.y - yi)) / (yj - yi) + xi
-    if (intersect) inside = !inside
-  }
-  return inside
-}
+// 兼容 re-export(photo-coverage 等老消费方);新代码请直接 import geometry.js
+export { pointInPolygon }
 
 /**
  * @param {Point[]} polygon

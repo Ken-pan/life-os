@@ -1,5 +1,14 @@
 /** @typedef {{ ft: number, in?: number }} FtIn */
 
+// ---- 平面图标尺(全库唯一权威定义;此前 circulation/layout-solve/
+// scan-register 各自 const 一份,改标尺要翻好几处) ----
+/** 3 px = 1 英寸 */
+export const PX_PER_IN = 3
+/** 36 px = 1 英尺 */
+export const PX_PER_FT = 36
+/** px / 厘米(≈1.181) */
+export const PX_PER_CM = PX_PER_IN / 2.54
+
 /** @param {FtIn} d */
 export function toInches(d) {
   return d.ft * 12 + (d.in ?? 0)

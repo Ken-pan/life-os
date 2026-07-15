@@ -14,7 +14,12 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 /** @typedef {import('./types.js').Point} Point */
 
-const PX_PER_IN = 3
+import { PX_PER_IN } from './dimensions.js'
+import { distToSegment, pointInPolygon, pointToRectDistance } from './geometry.js'
+
+// 兼容 re-export:老消费方从这里拿 pointInPolygon;新代码请直接 import geometry.js
+export { pointInPolygon }
+
 /** 栅格步长(英寸)。6in 够分辨通道,全屋约 60×80 格,BFS 毫秒级。 */
 export const GRID_IN = 6
 const GRID_PX = GRID_IN * PX_PER_IN
@@ -28,38 +33,6 @@ export const CLEARANCE = {
   tight: 30,
   /** 极限:侧身挤过 */
   minimum: 24,
-}
-
-/**
- * @param {Point} p
- * @param {Point[]} poly
- * @returns {boolean}
- */
-export function pointInPolygon(p, poly) {
-  if (!poly || poly.length < 3) return false
-  let inside = false
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const a = poly[i]
-    const b = poly[j]
-    if (
-      a.y > p.y !== b.y > p.y &&
-      p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x
-    ) {
-      inside = !inside
-    }
-  }
-  return inside
-}
-
-/** 点到线段距离(px) */
-function distToSegment(p, a, b) {
-  const dx = b.x - a.x
-  const dy = b.y - a.y
-  const len2 = dx * dx + dy * dy
-  if (len2 === 0) return Math.hypot(p.x - a.x, p.y - a.y)
-  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2
-  t = Math.max(0, Math.min(1, t))
-  return Math.hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
 }
 
 /** 家具/设施的占地矩形(px);placements 的 w/h 已按 rotation 调整过,即 AABB */
@@ -621,9 +594,7 @@ function exactWidthIn(x, y, rects, walls) {
   const clearAt = (px, py) => {
     let d = Infinity
     for (const rc of rects) {
-      const dx = Math.max(rc.x - px, 0, px - (rc.x + rc.w))
-      const dy = Math.max(rc.y - py, 0, py - (rc.y + rc.h))
-      d = Math.min(d, Math.hypot(dx, dy))
+      d = Math.min(d, pointToRectDistance(px, py, rc))
     }
     const p = { x: px, y: py }
     for (const w of walls) {
