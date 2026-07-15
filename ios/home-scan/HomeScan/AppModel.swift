@@ -39,6 +39,16 @@ final class AppModel {
     var modelFileURL: URL?
     var scanId = UUID()
     var uploadStatus = ""
+    /// 照片上传进度 0..1(UploadView 的进度条;0 = 未知/准备中)
+    var uploadProgress: Double = 0
+
+    /// 默认扫描名:「全屋 · 7月15日 14:30」—— 桶里一排「未命名扫描」谁也分不清
+    static func defaultScanLabel(now: Date = Date()) -> String {
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "zh_CN")
+        df.dateFormat = "M月d日 HH:mm"
+        return "全屋 · \(df.string(from: now))"
+    }
 
     @MainActor
     func startScanning() {
@@ -133,6 +143,7 @@ final class AppModel {
         guard let project = convertedProject else { return }
         route = .uploading
         uploadStatus = "准备上传…"
+        uploadProgress = 0
         do {
             try await supabase.uploadScan(
                 scanId: scanId,
@@ -143,7 +154,8 @@ final class AppModel {
                 modelFileURL: modelFileURL,
                 label: label,
                 device: "\(UIDevice.current.name) / iOS \(UIDevice.current.systemVersion)",
-                onProgress: { [weak self] msg in self?.uploadStatus = msg }
+                onProgress: { [weak self] msg in self?.uploadStatus = msg },
+                onFraction: { [weak self] f in self?.uploadProgress = f }
             )
             uploadStatus = ""
             convertedProject = nil

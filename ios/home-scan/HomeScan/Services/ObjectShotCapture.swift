@@ -172,6 +172,11 @@ final class ObjectShotCapture {
                     if out.sharpness < Self.minSharpness,
                        existing.sharpness >= out.sharpness { return }
                 }
+                // 新方位第一次拍到 → 轻触一下:用户不用盯 HUD 也知道「这件拍上了」。
+                // 只在新桶响,顶替更好一张的静默 —— 否则同一件家具嗒嗒响个不停
+                if self.shots[objectId]?[bin] == nil {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
                 self.shots[objectId, default: [:]][bin] = Shot(
                     objectId: objectId,
                     category: category,

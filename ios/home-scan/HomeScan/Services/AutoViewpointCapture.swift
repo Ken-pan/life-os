@@ -133,6 +133,8 @@ final class AutoViewpointCapture {
                 self.capturedInRoom += 1
                 var pose = poseNoPhoto
                 pose.photoFileURL = url
+                // 自动快门有触感:不然用户全程不知道 App 拍没拍、拍了几张
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 onCapture(pose)
             }
         }

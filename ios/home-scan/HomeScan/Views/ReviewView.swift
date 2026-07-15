@@ -71,9 +71,10 @@ struct ReviewView: View {
             }
             .quickLookPreview($previewModelURL)
             .alert("命名这次扫描", isPresented: $showUploadSheet) {
-                TextField("如:全屋 2026-07-14", text: $label)
+                TextField(AppModel.defaultScanLabel(), text: $label)
                 Button("上传") {
-                    Task { await model.upload(label: label.isEmpty ? "未命名扫描" : label) }
+                    // 不填就用「全屋 · 7月15日 14:30」—— 一排「未命名扫描」谁也分不清
+                    Task { await model.upload(label: label.isEmpty ? AppModel.defaultScanLabel() : label) }
                 }
                 Button("取消", role: .cancel) {}
             }
