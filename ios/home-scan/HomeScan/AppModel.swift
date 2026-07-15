@@ -33,6 +33,8 @@ final class AppModel {
     var photoFiles: [URL?] = []
     /// 原始 CapturedRoom JSON(备重处理);mock 模式为 nil
     var structureJSON: Data?
+    /// RoomPlan 导出的 USDZ 3D 模型(真实空间模式);mock/导出失败为 nil
+    var modelFileURL: URL?
     var scanId = UUID()
     var uploadStatus = ""
 
@@ -42,6 +44,7 @@ final class AppModel {
         convertedProject = nil
         photoFiles = []
         structureJSON = nil
+        modelFileURL = nil
         scanId = UUID()
         route = .scanning
     }
@@ -52,6 +55,11 @@ final class AppModel {
         do {
             let structure = try await scanController.mergeAll()
             structureJSON = try? JSONEncoder().encode(structure.rooms)
+            // 真实空间模式:导出带家具网格的 USDZ,预览页可 3D 查看/AR/分享
+            let usdz = FileManager.default.temporaryDirectory
+                .appendingPathComponent("scan-\(scanId.uuidString.lowercased()).usdz")
+            try? structure.export(to: usdz, exportOptions: .model)
+            modelFileURL = FileManager.default.fileExists(atPath: usdz.path) ? usdz : nil
             var scene = StructureFlattener.flatten(rooms: structure.rooms)
             scene.poses = poses
             applyScene(scene)
@@ -85,6 +93,7 @@ final class AppModel {
         let scene = MockScan.scene()
         poses = scene.poses
         structureJSON = nil
+        modelFileURL = nil
         applyScene(scene)
     }
     #endif
@@ -107,6 +116,7 @@ final class AppModel {
                 project: project,
                 photoFiles: photoFiles,
                 structureJSON: structureJSON,
+                modelFileURL: modelFileURL,
                 label: label,
                 device: "\(UIDevice.current.name) / iOS \(UIDevice.current.systemVersion)",
                 onProgress: { [weak self] msg in self?.uploadStatus = msg }

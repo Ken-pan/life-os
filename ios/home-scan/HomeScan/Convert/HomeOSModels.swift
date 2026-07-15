@@ -10,7 +10,9 @@ struct ScanPayload: Codable {
     var raw: RawRefs?
 
     struct RawRefs: Codable {
-        var structurePath: String
+        var structurePath: String?
+        /// RoomPlan 导出的 USDZ 3D 模型(真实空间模式),桶内路径
+        var modelPath: String?
     }
 }
 

@@ -27,6 +27,7 @@ extension SupabaseService {
         project: HomeOSProject,
         photoFiles: [URL?],
         structureJSON: Data?,
+        modelFileURL: URL?,
         label: String,
         device: String,
         onProgress: @escaping @MainActor (String) -> Void
@@ -55,8 +56,8 @@ extension SupabaseService {
             done += 1
         }
 
-        // 2) 原始结构 JSON(备将来重处理)
-        var raw: ScanPayload.RawRefs?
+        // 2) 原始结构 JSON(备将来重处理) + USDZ 3D 模型(真实空间模式)
+        var raw = ScanPayload.RawRefs()
         if let structureJSON {
             await onProgress("上传原始结构…")
             let path = "\(prefix)/structure.json"
@@ -65,8 +66,20 @@ extension SupabaseService {
                 data: structureJSON,
                 options: FileOptions(contentType: "application/json", upsert: true)
             )
-            raw = .init(structurePath: path)
+            raw.structurePath = path
         }
+        if let modelFileURL, let modelData = try? Data(contentsOf: modelFileURL) {
+            await onProgress("上传 3D 模型(\(modelData.count / 1_048_576) MB)…")
+            let path = "\(prefix)/model.usdz"
+            try await storage.upload(
+                path,
+                data: modelData,
+                options: FileOptions(contentType: "model/vnd.usdz+zip", upsert: true)
+            )
+            raw.modelPath = path
+        }
+        let rawRefs: ScanPayload.RawRefs? =
+            (raw.structurePath == nil && raw.modelPath == nil) ? nil : raw
 
         // 3) scans 行(最后写)
         await onProgress("写入扫描记录…")
@@ -79,7 +92,7 @@ extension SupabaseService {
             payload: ScanPayload(
                 scanId: scanId.uuidString.lowercased(),
                 homeos: project,
-                raw: raw
+                raw: rawRefs
             )
         )
         try await client.schema("home").from("scans").upsert(row, onConflict: "user_id,id").execute()

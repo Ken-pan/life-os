@@ -1,11 +1,14 @@
 import SwiftUI
+import QuickLook
 
 /// 扫描结果预览:用**转换后的 plan-px 数据**画 2D 顶视图(等于在验证转换),
-/// 家具清单带真实尺寸;确认后进上传。
+/// 家具清单带真实尺寸;真机扫描另有 USDZ 3D 模型(QuickLook 可旋转/AR/分享);
+/// 确认后进上传。
 struct ReviewView: View {
     @Environment(AppModel.self) private var model
     @State private var label = ""
     @State private var showUploadSheet = false
+    @State private var previewModelURL: URL?
 
     var body: some View {
         NavigationStack {
@@ -17,6 +20,18 @@ struct ReviewView: View {
                             .listRowInsets(EdgeInsets())
                     } footer: {
                         Text(summary(p))
+                    }
+
+                    if model.modelFileURL != nil {
+                        Section {
+                            Button {
+                                previewModelURL = model.modelFileURL
+                            } label: {
+                                Label("查看 3D 模型(真实空间)", systemImage: "cube.transparent")
+                            }
+                        } footer: {
+                            Text("可旋转查看、AR 摆回现场,分享按钮可 AirDrop 给别人。上传时会一并存入云端。")
+                        }
                     }
 
                     if !p.meta.scanWarnings.isEmpty {
@@ -54,6 +69,7 @@ struct ReviewView: View {
                         .buttonStyle(.borderedProminent)
                 }
             }
+            .quickLookPreview($previewModelURL)
             .alert("命名这次扫描", isPresented: $showUploadSheet) {
                 TextField("如:全屋 2026-07-14", text: $label)
                 Button("上传") {

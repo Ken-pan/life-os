@@ -9,7 +9,7 @@ RoomPlan 扫描，网页端设置页拉取。
 | 对象 | 用途 |
 |---|---|
 | `home.scans` | 一行一次完整扫描；`payload` jsonb = 转换后的 HomeOS partial project（formatVersion 1）；复合 PK `(user_id, id)`、客户端毫秒 `updated_at`、墓碑 `deleted` |
-| Storage `home-scan-photos`（私有） | `{uid}/{scanId}/{uuid}.jpg` 机位照片；`{uid}/{scanId}/structure.json` 原始 CapturedStructure；RLS 按路径首段 = auth.uid() |
+| Storage `home-scan-photos`（私有） | `{uid}/{scanId}/{uuid}.jpg` 机位照片；`{uid}/{scanId}/structure.json` 原始 CapturedStructure；`{uid}/{scanId}/model.usdz` 3D 模型（真实空间模式，payload.raw.modelPath 指向）；RLS 按路径首段 = auth.uid() |
 
 payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 `apps/home/src/lib/cloud-scan.js` 三处同源，改动需三处同步。
