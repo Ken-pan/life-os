@@ -3,8 +3,17 @@
  * 结果文案与「已处理」标记 —— 设置页与 /plan 新扫描横幅共用。
  */
 
-/** 最近处理过(拉取/忽略)的扫描 id —— 新扫描横幅据此判断「有没有新货」 */
+/** 最近处理过(拉取/忽略)的扫描 —— 新扫描横幅据此判断「有没有新货」 */
 export const SEEN_SCAN_KEY = 'homeos_seen_scan_v1'
+
+/**
+ * 「已处理」标记值:id + 更新时间。同一份副本在云端被原地更新
+ * (比如服务端补墙后 bump updated_at)也要重新提示。
+ * @param {{ id: string, updated_at?: number }} scan
+ */
+export function scanSeenValue(scan) {
+  return `${scan.id}@${scan.updated_at ?? ''}`
+}
 
 /**
  * 「摆家具」拉取结果 → 人话(设置页与 /plan 新扫描横幅共用一份文案)。

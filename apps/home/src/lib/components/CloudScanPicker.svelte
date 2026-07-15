@@ -4,7 +4,7 @@
   // 「摆家具」把实测家具映射进现有户型(墙体不动);「整包替换」才动户型,慎用。
   // 三种模式都可在会话内一键还原。
   import { listScans, pullScan } from '$lib/cloud-scan.js'
-  import { describeFurniturePull, SEEN_SCAN_KEY } from '$lib/cloud-scan-report.js'
+  import { describeFurniturePull, SEEN_SCAN_KEY, scanSeenValue } from '$lib/cloud-scan-report.js'
   import {
     applyCloudScan,
     canUndoCloudScan,
@@ -90,7 +90,7 @@
       applyCloudScan(project)
       undoAvailable = canUndoCloudScan()
       // 处理过就别再在 /plan 弹「新扫描」横幅了
-      localStorage.setItem(SEEN_SCAN_KEY, scan.id)
+      localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
       if (mode === 'furniture' && report) {
         const { main, warns } = describeFurniturePull({ report, replaced, identity, photos })
         for (const w of warns) toast(w, 'error')

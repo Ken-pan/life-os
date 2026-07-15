@@ -4,7 +4,7 @@
   // 只在登录后出现;拉过/忽略过的扫描(SEEN_SCAN_KEY)不再提示。
   import { auth } from '$lib/auth.svelte.js'
   import { listScans, pullScan } from '$lib/cloud-scan.js'
-  import { describeFurniturePull, SEEN_SCAN_KEY } from '$lib/cloud-scan-report.js'
+  import { describeFurniturePull, SEEN_SCAN_KEY, scanSeenValue } from '$lib/cloud-scan-report.js'
   import {
     applyCloudScan,
     getActiveProject,
@@ -27,7 +27,7 @@
       .then((rows) => {
         if (!alive || !rows?.length) return
         const seen = localStorage.getItem(SEEN_SCAN_KEY)
-        if (rows[0].id !== seen) scan = rows[0]
+        if (scanSeenValue(rows[0]) !== seen) scan = rows[0]
       })
       .catch(() => {}) // 网络/权限问题不打扰画图
     return () => {
@@ -42,7 +42,7 @@
   })
 
   function dismiss() {
-    if (scan) localStorage.setItem(SEEN_SCAN_KEY, scan.id)
+    if (scan) localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
     scan = null
   }
 
@@ -68,7 +68,7 @@
       // 而不是让比例回退把家具摆出两套坐标系的乱炖(实测撞过)
       const reg = res.report?.registration
       if (mode === 'furniture' && reg && reg.status !== 'ok') {
-        localStorage.setItem(SEEN_SCAN_KEY, scan.id)
+        localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
         scan = null
         toast(
           `这次扫描与当前户型对不上(${reg.reason ?? '配准未过门'}),已取消自动摆入。` +
@@ -78,7 +78,7 @@
         return
       }
       applyCloudScan(res.project)
-      localStorage.setItem(SEEN_SCAN_KEY, scan.id)
+      localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
       if (mode === 'replace') {
         toast('已应用优化副本(户型+家具+储藏区)', {
           actionLabel: '撤销',
