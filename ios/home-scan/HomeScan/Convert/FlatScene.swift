@@ -44,6 +44,14 @@ struct FlatScene {
         var points: [SIMD2<Double>]
     }
 
+    /// RoomPlan 的功能区中心点(kitchen/bedroom/bathroom/unidentified)。
+    /// 实测:全屋扫描常只给 1 块地板 + 多个 section —— 分区只能靠它切,
+    /// 否则家具全挤进同一个区,zoneId 失去意义。
+    struct Section {
+        var label: String
+        var center: SIMD2<Double>
+    }
+
     struct CameraPose {
         var pos: SIMD2<Double>
         /// 相机前向(-z)在俯视图上的角度(度,atan2 惯例,自 +x 逆时针)
@@ -59,6 +67,7 @@ struct FlatScene {
     var openings: [Opening] = []
     var items: [Item] = []
     var rooms: [RoomPoly] = []
+    var sections: [Section] = []
     var poses: [CameraPose] = []
     var warnings: [String] = []
 }

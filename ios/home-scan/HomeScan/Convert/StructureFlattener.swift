@@ -4,73 +4,72 @@ import simd
 
 /// RoomPlan 采集结果 → FlatScene(俯视 2D,米)。
 /// ARKit 世界系 y 朝上;俯视图取 (x, z):x 右、z 作画面向下 —— 与楼层平面同手性。
-/// 多房间共享同一 ARSession,坐标系天然一致,这里直接合并不做配准。
+///
+/// ⚠️ 只吃 **CapturedStructure 顶层**的 walls/doors/objects/floors/sections ——
+/// 那是 StructureBuilder 跨房间合并去重后的结果。早期版本遍历 `structure.rooms`,
+/// 同一件家具在重叠房间里会被数两遍。
 enum StructureFlattener {
-    static func flatten(rooms: [CapturedRoom]) -> FlatScene {
+    static func flatten(structure: CapturedStructure) -> FlatScene {
         var scene = FlatScene()
 
-        // 门窗宿主要按 surface identifier 找墙,先全屋建索引
+        // 门窗宿主要按 surface identifier 找墙,先建索引
         var wallIndexById: [UUID: Int] = [:]
-
-        for room in rooms {
-            for wall in room.walls {
-                let seg = wallSegment(wall)
-                wallIndexById[wall.identifier] = scene.walls.count
-                scene.walls.append(
-                    FlatScene.WallSeg(
-                        a: seg.a,
-                        b: seg.b,
-                        confidenceLow: wall.confidence == .low
-                    )
-                )
-            }
+        for wall in structure.walls {
+            let seg = wallSegment(wall)
+            wallIndexById[wall.identifier] = scene.walls.count
+            scene.walls.append(
+                FlatScene.WallSeg(a: seg.a, b: seg.b, confidenceLow: wall.confidence == .low)
+            )
         }
 
-        for room in rooms {
-            for surface in room.doors {
-                scene.openings.append(opening(surface, kind: .door, wallIndexById: wallIndexById))
-            }
-            for surface in room.windows {
-                scene.openings.append(opening(surface, kind: .window, wallIndexById: wallIndexById))
-            }
-            for surface in room.openings {
-                scene.openings.append(opening(surface, kind: .opening, wallIndexById: wallIndexById))
-            }
+        for surface in structure.doors {
+            scene.openings.append(opening(surface, kind: .door, wallIndexById: wallIndexById))
+        }
+        for surface in structure.windows {
+            scene.openings.append(opening(surface, kind: .window, wallIndexById: wallIndexById))
+        }
+        for surface in structure.openings {
+            scene.openings.append(opening(surface, kind: .opening, wallIndexById: wallIndexById))
+        }
 
-            for object in room.objects {
-                let t = object.transform
-                let axis = normalize2(SIMD2(Double(t.columns.0.x), Double(t.columns.0.z)))
-                scene.items.append(
-                    FlatScene.Item(
-                        category: categoryName(object.category),
-                        center: translation2(t),
-                        axisDeg: atan2(axis.y, axis.x) * 180 / .pi,
-                        widthM: Double(object.dimensions.x),
-                        depthM: Double(object.dimensions.z)
-                    )
+        for object in structure.objects {
+            let t = object.transform
+            let axis = normalize2(SIMD2(Double(t.columns.0.x), Double(t.columns.0.z)))
+            scene.items.append(
+                FlatScene.Item(
+                    category: categoryName(object.category),
+                    center: translation2(t),
+                    axisDeg: atan2(axis.y, axis.x) * 180 / .pi,
+                    widthM: Double(object.dimensions.x),
+                    depthM: Double(object.dimensions.z)
                 )
-            }
+            )
+        }
 
-            // 地板多边形 → 分区;收齐中心点落在多边形内的全部 section
-            // (一次扫描常横跨厨房+客厅,命名交给 PlanProjector 拼接)
-            let sections = room.sections.map {
-                (label: String(describing: $0.label), center: SIMD2(Double($0.center.x), Double($0.center.z)))
-            }
-            for floor in room.floors {
-                let poly = floorPolygon(floor)
-                guard poly.count >= 3 else { continue }
-                var labels = sections
-                    .filter { PlanProjector.pointInPolygon($0.center, poly) }
-                    .map(\.label)
-                if labels.isEmpty, let first = sections.first?.label {
-                    labels = [first]
-                }
-                scene.rooms.append(FlatScene.RoomPoly(labels: labels, points: poly))
-            }
+        // 功能区中心 —— 分区切分的依据(见 PlanProjector.zonesFromSections)
+        scene.sections = structure.sections.map {
+            FlatScene.Section(
+                label: String(describing: $0.label),
+                center: SIMD2(Double($0.center.x), Double($0.center.z))
+            )
+        }
 
-            if room.walls.contains(where: { $0.confidence == .low }) {
-                scene.warnings.append("有低置信度墙段(镜面/玻璃干扰?),建议核对尺寸")
+        // 地板多边形。全屋扫描常只给一整块,靠 sections 再切;
+        // labels 仅在 sections 缺失时兜底命名。
+        for floor in structure.floors {
+            let poly = floorPolygon(floor)
+            guard poly.count >= 3 else { continue }
+            var labels = scene.sections
+                .filter { PlanProjector.pointInPolygon($0.center, poly) }
+                .map(\.label)
+            if labels.isEmpty, let first = scene.sections.first?.label {
+                labels = [first]
             }
+            scene.rooms.append(FlatScene.RoomPoly(labels: labels, points: poly))
+        }
+
+        if structure.walls.contains(where: { $0.confidence == .low }) {
+            scene.warnings.append("有低置信度墙段(镜面/玻璃干扰?),建议核对尺寸")
         }
         return scene
     }

@@ -54,13 +54,13 @@ final class AppModel {
     func finishScanning() async {
         do {
             let structure = try await scanController.mergeAll()
-            structureJSON = try? JSONEncoder().encode(structure.rooms)
+            structureJSON = try? JSONEncoder().encode(structure)
             // 真实空间模式:导出带家具网格的 USDZ,预览页可 3D 查看/AR/分享
             let usdz = FileManager.default.temporaryDirectory
                 .appendingPathComponent("scan-\(scanId.uuidString.lowercased()).usdz")
             try? structure.export(to: usdz, exportOptions: .model)
             modelFileURL = FileManager.default.fileExists(atPath: usdz.path) ? usdz : nil
-            var scene = StructureFlattener.flatten(rooms: structure.rooms)
+            var scene = StructureFlattener.flatten(structure: structure)
             scene.poses = poses
             applyScene(scene)
         } catch {

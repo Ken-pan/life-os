@@ -6,10 +6,12 @@ import Foundation
 enum KindMaps {
     /// 固定设施(水电位,不可拖):RoomPlan 类目 → (furniture-symbols key, 中文名)。
     /// 这些是网页端照片定位(localize.js)的锚点,所以宁可归为 fixture。
+    /// ⚠️ 多个类目可映射到同一 kind(oven/stove 都→stove) —— 去重必须在**映射后**
+    /// 按 kind 比,否则烤箱灶一体机会在同一坐标画两遍(实测踩过)。
     static let fixtureKinds: [String: (kind: String, label: String)] = [
         "toilet": ("toilet", "马桶"),
         "bathtub": ("tub", "浴缸"),
-        "sink": ("kitchenSink", "水槽"),
+        "sink": ("kitchenSink", "水槽"), // 卫生间的 sink 由 sinkKind(inBathroom:) 改判
         "stove": ("stove", "灶台"),
         "oven": ("stove", "烤箱"),
         "refrigerator": ("fridge", "冰箱"),
@@ -27,6 +29,11 @@ enum KindMaps {
         "television": ("tv", "电视"),
     ]
 
+    /// RoomPlan 的 sink 不分厨卫,靠所在功能区改判:卫生间的是洗手台。
+    static func sinkKind(inBathroom: Bool) -> (kind: String, label: String) {
+        inBathroom ? ("vanity", "洗手台") : ("kitchenSink", "水槽")
+    }
+
     /// 没有对应符号的类目 —— 跳过并记 scanWarnings
     static let skippedCategories: Set<String> = ["fireplace", "stairs"]
 
@@ -37,17 +44,32 @@ enum KindMaps {
         "kitchen": "厨房",
         "bathroom": "卫生间",
         "diningRoom": "餐厅",
-        "unidentified": "房间",
     ]
 
     /// 多 section 地板拼名:["kitchen","livingRoom"] → "厨房·客厅"(去重,最多 3 段)。
     static func zoneName(for labels: [String]) -> String {
         var names: [String] = []
         for label in labels {
-            let name = sectionNames[label] ?? "房间"
-            if name != "房间", !names.contains(name) { names.append(name) }
+            guard let name = sectionNames[label] else { continue }
+            if !names.contains(name) { names.append(name) }
         }
         guard !names.isEmpty else { return "房间" }
         return names.prefix(3).joined(separator: "·")
+    }
+
+    /// RoomPlan 认不出功能的区(label=unidentified,实测一次扫描能有 2 个),
+    /// 按区内家具反推 —— 总比一律叫「房间」强。
+    /// 返回**候选序列**(强信号在前),调用方挑第一个没被占用的:
+    /// 真扫有个带{桌,椅,灶台}的区,厨房已被真 section 占了,它其实是餐区。
+    static func inferredNames(fromKinds kinds: [String]) -> [String] {
+        let set = Set(kinds)
+        var out: [String] = []
+        if set.contains("bed") { out.append("卧室") }
+        if set.contains("sofa") || set.contains("tv") { out.append("客厅") }
+        if set.contains("toilet") || set.contains("tub") || set.contains("vanity") { out.append("卫生间") }
+        if set.contains("table") && set.contains("chair") { out.append("餐区") }
+        if set.contains("stove") || set.contains("fridge") || set.contains("kitchenSink") { out.append("厨房") }
+        if set.contains("cabinet") { out.append("储物区") }
+        return out
     }
 }

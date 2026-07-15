@@ -41,12 +41,21 @@ enum MockScan {
             .init(category: "refrigerator", center: r(8.5, 0.5), axisDeg: rot * 180 / .pi, widthM: 0.7, depthM: 0.7),
             // 同一台冰箱被第二次扫描重复识别(中心差 20cm) —— 应被去重合并
             .init(category: "refrigerator", center: r(8.6, 0.65), axisDeg: rot * 180 / .pi, widthM: 0.72, depthM: 0.68),
+            // 烤箱灶一体机:RoomPlan 报 stove + oven 两个类目、几乎同坐标,
+            // 但都映射成 kind "stove" —— 真扫这里画成了两个重合的灶台
+            .init(category: "stove", center: r(8.5, 1.6), axisDeg: rot * 180 / .pi, widthM: 0.76, depthM: 0.65),
+            .init(category: "oven", center: r(8.5, 1.6), axisDeg: rot * 180 / .pi, widthM: 0.76, depthM: 0.65),
             .init(category: "stairs", center: r(5, 2), axisDeg: 0, widthM: 1, depthM: 2), // 应被跳过并告警
         ]
 
+        // 真机实测:全屋扫描只给**一整块**地板 + 多个 section,分区靠 sections 切。
+        // mock 照此复现,免得只在「一房一地板」的理想数据上验证。
         s.rooms = [
-            .init(labels: ["bedroom"], points: [r(0, 0), r(4, 0), r(4, 3), r(0, 3)]),
-            .init(labels: ["livingRoom", "kitchen"], points: [r(4, 0), r(9, 0), r(9, 4), r(4, 4)]),
+            .init(labels: [], points: [r(0, 0), r(9, 0), r(9, 4), r(4, 4), r(4, 3), r(0, 3)])
+        ]
+        s.sections = [
+            .init(label: "bedroom", center: r(2, 1.5)),
+            .init(label: "livingRoom", center: r(6.5, 2)),
         ]
 
         // 机位:卧室看床(朝 -y 即户型上方),客厅看沙发

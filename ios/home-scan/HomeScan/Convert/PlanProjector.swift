@@ -71,69 +71,106 @@ enum PlanProjector {
             )
         }
 
-        // 5) 分区:重叠的扫描地板合并(同一空间扫两遍会得到两块互相覆盖的地板,
-        //    直接双算面积、房间填充也会叠)——重叠 >60% 的并进大块,标签合并
+        // 5) 分区:全屋扫描常只给**一整块地板 + 多个功能区**(真扫实测 1 floor /
+        //    5 sections),不切就会得到一个「厨房·卧室·卫生间」巨区,zoneId 失去意义。
+        //    → 先按 sections 做 Voronoi 半平面裁切,再合并真正重叠的地板。
+        let planSections = scene.sections.map {
+            (label: $0.label, center: toPlan($0.center))
+        }
         var zoneDrafts: [(labels: [String], poly: [SIMD2<Double>])] = []
         for (i, room) in scene.rooms.enumerated() {
             let poly = rawRooms[i].map { $0 + shift }
             guard poly.count >= 3 else { continue }
-            zoneDrafts.append((labels: room.labels, poly: poly))
+            let mine = planSections.filter { pointInPolygon($0.center, poly) }
+            if mine.count > 1 {
+                for cell in voronoiCells(floor: poly, sections: mine) {
+                    zoneDrafts.append((labels: [cell.label], poly: cell.poly))
+                }
+            } else {
+                let labels = mine.isEmpty ? room.labels : mine.map(\.label)
+                zoneDrafts.append((labels: labels, poly: poly))
+            }
         }
         zoneDrafts = mergeOverlappingZones(zoneDrafts, warnings: &warnings)
-        let zones = zoneDrafts.enumerated().map { i, d in
-            HomeOSProject.Zone(
-                id: "z-\(i + 1)",
-                nameZh: KindMaps.zoneName(for: d.labels),
-                polygon: d.poly.map { .init(x: round1($0.x), y: round1($0.y)) }
-            )
-        }
-        if zones.isEmpty { warnings.append("扫描未识别出房间地板,平面图分区为空") }
+        if zoneDrafts.isEmpty { warnings.append("扫描未识别出房间地板,平面图分区为空") }
 
-        // 6) 物体 → placements / fixtures(先跨房间去重:重叠区域同一件家具会被
-        //    两次扫描各记一遍,真扫实测灶台×4、冰箱×2)
+        // 6) 物体:先映射 kind(sink 按所在区改判厨房水槽/卫生间洗手台),
+        //    再按**映射后的 kind** 去重 —— oven 与 stove 同映射成 stove,
+        //    一体机会在同一坐标画两遍(真扫实测 0px 重合);按原始类目比是抓不到的。
+        let mapped = dedupMapped(
+            scene.items.compactMap { item -> MappedItem? in
+                let c = toPlan(item.center)
+                let di = zoneDrafts.firstIndex { pointInPolygon(c, $0.poly) }
+                let inBathroom = di.map { zoneDrafts[$0].labels.contains("bathroom") } ?? false
+                var mapping: (kind: String, label: String)?
+                var isFixture = true
+                if item.category == "sink" {
+                    mapping = KindMaps.sinkKind(inBathroom: inBathroom)
+                } else if let fx = KindMaps.fixtureKinds[item.category] {
+                    mapping = fx
+                } else if let pl = KindMaps.placementKinds[item.category] {
+                    mapping = pl
+                    isFixture = false
+                }
+                guard let m = mapping else {
+                    warnings.append(
+                        KindMaps.skippedCategories.contains(item.category)
+                            ? "跳过不支持的物体:\(item.category)"
+                            : "未知物体类目:\(item.category),已跳过"
+                    )
+                    return nil
+                }
+                return MappedItem(
+                    kind: m.kind,
+                    label: m.label,
+                    isFixture: isFixture,
+                    center: c,
+                    axisDeg: item.axisDeg + phi * 180 / .pi,
+                    widthPx: item.widthM * pxPerM,
+                    depthPx: item.depthM * pxPerM,
+                    draftIdx: di
+                )
+            },
+            warnings: &warnings
+        )
+
+        // 7) RoomPlan 认不出功能的区(unidentified),按区内家具反推名字;同名加序号
+        let zones = namedZones(drafts: zoneDrafts, items: mapped)
+
+        // 8) 物体 → placements / fixtures
         var placements: [HomeOSProject.Placement] = []
         var fixtures: [HomeOSProject.Fixture] = []
-        for item in dedupItems(scene.items, warnings: &warnings) {
-            let c = toPlan(item.center)
-            let axis = item.axisDeg + phi * 180 / .pi
-            let snapped = snappedRotation(axisDeg: axis)
-            let wPx = item.widthM * pxPerM
-            let dPx = item.depthM * pxPerM
+        for m in mapped {
+            let snapped = snappedRotation(axisDeg: m.axisDeg)
             // 局部 x 轴贴屏幕横向(0/180)时,footprint 宽=物宽;竖向(90/270)时对调
-            let fw = (snapped == 0 || snapped == 180) ? wPx : dPx
-            let fh = (snapped == 0 || snapped == 180) ? dPx : wPx
-            let x = round1(c.x - fw / 2)
-            let y = round1(c.y - fh / 2)
-            if let fx = KindMaps.fixtureKinds[item.category] {
+            let fw = (snapped == 0 || snapped == 180) ? m.widthPx : m.depthPx
+            let fh = (snapped == 0 || snapped == 180) ? m.depthPx : m.widthPx
+            let x = round1(m.center.x - fw / 2)
+            let y = round1(m.center.y - fh / 2)
+            if m.isFixture {
                 fixtures.append(
                     HomeOSProject.Fixture(
                         id: "fx-\(fixtures.count + 1)",
-                        kind: fx.kind,
-                        label: fx.label,
+                        kind: m.kind,
+                        label: m.label,
                         bounds: .init(x: x, y: y, w: round1(fw), h: round1(fh)),
                         rotation: snapped
                     )
                 )
-            } else if let pl = KindMaps.placementKinds[item.category] {
+            } else {
                 placements.append(
                     HomeOSProject.Placement(
                         id: "pl-\(placements.count + 1)",
-                        kind: pl.kind,
-                        label: pl.label,
+                        kind: m.kind,
+                        label: m.label,
                         x: x,
                         y: y,
                         w: round1(fw),
                         h: round1(fh),
                         rotation: snapped,
-                        zoneId: zoneId(containing: c, zones: zones)
+                        zoneId: m.draftIdx.map { "z-\($0 + 1)" }
                     )
                 )
-            } else {
-                if KindMaps.skippedCategories.contains(item.category) {
-                    warnings.append("跳过不支持的物体:\(item.category)")
-                } else {
-                    warnings.append("未知物体类目:\(item.category),已跳过")
-                }
             }
         }
 
@@ -242,33 +279,135 @@ enum PlanProjector {
         return out
     }
 
-    // MARK: - 物体去重
+    // MARK: - 物体映射与去重
 
-    /// 同类物体中心距 <0.6m 视为同一件(两次扫描的重叠区域各记了一遍),
-    /// 保留脚印更大的那件。
-    static func dedupItems(
-        _ items: [FlatScene.Item],
+    /// 已定 kind 的物体(plan px)。去重、命名推断、落盘都基于它。
+    struct MappedItem {
+        var kind: String
+        var label: String
+        var isFixture: Bool
+        var center: SIMD2<Double>
+        var axisDeg: Double
+        var widthPx: Double
+        var depthPx: Double
+        /// 所属 zoneDrafts 下标(区外为 nil)
+        var draftIdx: Int?
+    }
+
+    /// 同 **kind** 且中心距 <0.6m 视为同一件,保留脚印更大的那件。
+    /// 按 kind 而非原始类目:oven/stove 都映射成 stove,一体机否则会重合两遍。
+    static func dedupMapped(
+        _ items: [MappedItem],
         warnings: inout [String]
-    ) -> [FlatScene.Item] {
-        let mergeDistM = 0.6
-        var kept: [FlatScene.Item] = []
+    ) -> [MappedItem] {
+        let mergeDistPx = 0.6 * pxPerM
+        var kept: [MappedItem] = []
         var dropped = 0
         for item in items {
             if let i = kept.firstIndex(where: { other in
-                other.category == item.category
-                    && length(other.center - item.center) < mergeDistM
+                other.kind == item.kind && length(other.center - item.center) < mergeDistPx
             }) {
                 dropped += 1
-                let old = kept[i]
-                if item.widthM * item.depthM > old.widthM * old.depthM {
+                if item.widthPx * item.depthPx > kept[i].widthPx * kept[i].depthPx {
                     kept[i] = item
                 }
             } else {
                 kept.append(item)
             }
         }
-        if dropped > 0 { warnings.append("合并 \(dropped) 件重复识别的物体(扫描重叠区)") }
+        if dropped > 0 { warnings.append("合并 \(dropped) 件重复识别的物体(同位重合/扫描重叠区)") }
         return kept
+    }
+
+    // MARK: - 分区命名
+
+    /// unidentified 区按区内家具反推;同名区加序号(卧室 1 / 卧室 2)。
+    static func namedZones(
+        drafts: [(labels: [String], poly: [SIMD2<Double>])],
+        items: [MappedItem]
+    ) -> [HomeOSProject.Zone] {
+        var names = drafts.map { KindMaps.zoneName(for: $0.labels) }
+        // 真实 section 名先占位,推断名避开它们(否则真厨房旁边又冒一个「厨房」)
+        var used = Set(names.filter { $0 != "房间" })
+        for i in names.indices where names[i] == "房间" {
+            let kinds = items.filter { $0.draftIdx == i }.map(\.kind)
+            let candidates = KindMaps.inferredNames(fromKinds: kinds)
+            guard let pick = candidates.first(where: { !used.contains($0) }) ?? candidates.first
+            else { continue }
+            names[i] = pick
+            used.insert(pick)
+        }
+        var counts: [String: Int] = [:]
+        for n in names { counts[n, default: 0] += 1 }
+        var seen: [String: Int] = [:]
+        return drafts.enumerated().map { i, d in
+            var name = names[i]
+            if (counts[name] ?? 0) > 1 {
+                seen[name, default: 0] += 1
+                name = "\(name) \(seen[name]!)"
+            }
+            return HomeOSProject.Zone(
+                id: "z-\(i + 1)",
+                nameZh: name,
+                polygon: d.poly.map { .init(x: round1($0.x), y: round1($0.y)) }
+            )
+        }
+    }
+
+    // MARK: - 功能区切分(Voronoi)
+
+    /// 把一整块地板按 sections 切成各自的 Voronoi cell:
+    /// cell_i = 地板 ∩ (所有 j≠i 的「离 i 更近」半平面)。
+    /// 用 Sutherland-Hodgman 逐条垂直平分线裁剪;太碎的(<12 ft²)丢弃。
+    static func voronoiCells(
+        floor: [SIMD2<Double>],
+        sections: [(label: String, center: SIMD2<Double>)]
+    ) -> [(label: String, poly: [SIMD2<Double>])] {
+        guard sections.count > 1 else {
+            return sections.first.map { [(label: $0.label, poly: floor)] } ?? []
+        }
+        let minCellPx2 = 12.0 * pxPerFt * pxPerFt
+        var out: [(label: String, poly: [SIMD2<Double>])] = []
+        for (i, s) in sections.enumerated() {
+            var poly = floor
+            for (j, other) in sections.enumerated() where j != i {
+                poly = clipByBisector(poly, keep: s.center, other: other.center)
+                if poly.count < 3 { break }
+            }
+            guard poly.count >= 3, abs(shoelace(poly)) >= minCellPx2 else { continue }
+            out.append((label: s.label, poly: poly))
+        }
+        return out
+    }
+
+    /// 用 keep/other 的垂直平分线裁多边形,保留 keep 一侧(Sutherland-Hodgman)
+    static func clipByBisector(
+        _ poly: [SIMD2<Double>],
+        keep: SIMD2<Double>,
+        other: SIMD2<Double>
+    ) -> [SIMD2<Double>] {
+        guard poly.count >= 3 else { return [] }
+        let mid = (keep + other) / 2
+        let dir = other - keep // 法向:>0 侧离 other 更近
+        func side(_ p: SIMD2<Double>) -> Double { dot(p - mid, dir) }
+        var out: [SIMD2<Double>] = []
+        for i in poly.indices {
+            let cur = poly[i]
+            let prev = poly[(i + poly.count - 1) % poly.count]
+            let dCur = side(cur)
+            let dPrev = side(prev)
+            if dCur <= 0 {
+                if dPrev > 0 {
+                    let t = dPrev / (dPrev - dCur)
+                    out.append(prev + (cur - prev) * t)
+                }
+                out.append(cur)
+            } else if dPrev <= 0 {
+                let t = dPrev / (dPrev - dCur)
+                out.append(prev + (cur - prev) * t)
+            }
+        }
+        return out
     }
 
     // MARK: - 分区合并

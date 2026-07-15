@@ -196,15 +196,103 @@ final class PlanProjectorTests: XCTestCase {
         XCTAssertTrue(p.meta.scanWarnings.contains { $0.contains("碎墙") })
     }
 
+    // MARK: - 真扫核心缺陷:一整块地板 + 多 section 必须切开
+
+    /// 真扫实测:RoomPlan 全屋只给 1 块地板 + 5 个 section,不切就是一个
+    /// 「厨房·卧室·卫生间」巨区,家具 zoneId 全指同一个,毫无意义。
+    func testSingleFloorSplitBySections() {
+        var s = baseScene()
+        s.rooms = [
+            .init(labels: [], points: [SIMD2(0, 0), SIMD2(8, 0), SIMD2(8, 3), SIMD2(0, 3)])
+        ]
+        // 左半卧室、右半厨房
+        s.sections = [
+            .init(label: "bedroom", center: SIMD2(2, 1.5)),
+            .init(label: "kitchen", center: SIMD2(6, 1.5)),
+        ]
+        let p = project(s)
+        XCTAssertEqual(p.zones.count, 2, "一整块地板应按 section 切成 2 区")
+        XCTAssertEqual(Set(p.zones.map(\.nameZh)), ["卧室", "厨房"])
+        // 分界应在 x=4m 的垂直平分线上:床(x=1m)归卧室
+        guard let bed = p.placements.first(where: { $0.kind == "bed" }) else {
+            return XCTFail("床丢了")
+        }
+        let bedroomId = p.zones.first { $0.nameZh == "卧室" }!.id
+        XCTAssertEqual(bed.zoneId, bedroomId, "床应归属卧室区,而非一个巨区")
+        // 切开后面积不重不漏:两区合计 ≈ 8×3m = 258 ft²
+        XCTAssertEqual(p.meta.sqft ?? 0, 258.3, accuracy: 4)
+    }
+
+    /// RoomPlan 的 sink 不分厨卫,靠所在区改判(真扫两个 sink 全成了厨房水槽)
+    func testBathroomSinkBecomesVanity() {
+        var s = baseScene()
+        s.rooms = [
+            .init(labels: [], points: [SIMD2(0, 0), SIMD2(8, 0), SIMD2(8, 3), SIMD2(0, 3)])
+        ]
+        s.sections = [
+            .init(label: "bathroom", center: SIMD2(2, 1.5)),
+            .init(label: "kitchen", center: SIMD2(6, 1.5)),
+        ]
+        s.items = [
+            .init(category: "sink", center: SIMD2(1, 0.5), axisDeg: 0, widthM: 0.5, depthM: 0.4),
+            .init(category: "sink", center: SIMD2(7, 0.5), axisDeg: 0, widthM: 0.8, depthM: 0.5),
+        ]
+        let p = project(s)
+        XCTAssertEqual(p.fixtures.count, 2, "两个水槽相距远,不该被去重")
+        XCTAssertEqual(p.fixtures.filter { $0.kind == "vanity" }.count, 1, "卫生间的 sink → 洗手台")
+        XCTAssertEqual(p.fixtures.filter { $0.kind == "kitchenSink" }.count, 1, "厨房的 sink → 水槽")
+    }
+
+    /// label=unidentified 的区(真扫 5 个 section 里有 2 个)按家具反推名字
+    func testUnidentifiedZoneNamedFromFurniture() {
+        var s = baseScene()
+        s.rooms = [
+            .init(labels: [], points: [SIMD2(0, 0), SIMD2(8, 0), SIMD2(8, 3), SIMD2(0, 3)])
+        ]
+        s.sections = [
+            .init(label: "unidentified", center: SIMD2(2, 1.5)),
+            .init(label: "kitchen", center: SIMD2(6, 1.5)),
+        ]
+        // 床在左区(x=1m) → 该区应被推断为卧室
+        let p = project(s)
+        XCTAssertTrue(p.zones.contains { $0.nameZh == "卧室" }, "有床的 unidentified 区应推断为卧室")
+        XCTAssertFalse(p.zones.contains { $0.nameZh == "房间" }, "不该留下无名区")
+    }
+
+    /// 推断名必须避开真 section 已占的名字:真扫那个带{桌,椅,灶台}的区
+    /// 若也叫「厨房」,就会和真厨房撞成「厨房 1 / 厨房 2」——它其实是餐区。
+    func testInferredNameAvoidsRealSectionName() {
+        var s = baseScene()
+        s.rooms = [
+            .init(labels: [], points: [SIMD2(0, 0), SIMD2(8, 0), SIMD2(8, 3), SIMD2(0, 3)])
+        ]
+        s.sections = [
+            .init(label: "kitchen", center: SIMD2(6, 1.5)),
+            .init(label: "unidentified", center: SIMD2(2, 1.5)),
+        ]
+        s.items = [
+            .init(category: "stove", center: SIMD2(7, 0.5), axisDeg: 0, widthM: 0.7, depthM: 0.6),
+            // 左区:桌+椅+另一台灶台(开放式厨房常见)→ 候选[餐区,厨房],厨房已占 → 餐区
+            .init(category: "table", center: SIMD2(1.5, 1.5), axisDeg: 0, widthM: 1.2, depthM: 0.8),
+            .init(category: "chair", center: SIMD2(2.5, 1.5), axisDeg: 0, widthM: 0.5, depthM: 0.5),
+            .init(category: "stove", center: SIMD2(1, 0.4), axisDeg: 0, widthM: 0.7, depthM: 0.6),
+        ]
+        let p = project(s)
+        XCTAssertEqual(Set(p.zones.map(\.nameZh)), ["厨房", "餐区"])
+        XCTAssertFalse(p.zones.contains { $0.nameZh.hasSuffix(" 1") }, "不该退化成带序号的重名区")
+    }
+
     // MARK: - Mock 场景全链路(含跳过告警 + 契约序列化)
 
     func testMockSceneRoundTrip() throws {
         let p = project(MockScan.scene())
-        XCTAssertEqual(p.zones.count, 2)
+        XCTAssertEqual(p.zones.count, 2, "一整块地板应按 2 个 section 切成 2 区")
         XCTAssertTrue(p.zones.contains { $0.nameZh == "卧室" })
-        XCTAssertTrue(p.zones.contains { $0.nameZh == "客厅·厨房" }, "多 section 地板应拼名")
+        XCTAssertTrue(p.zones.contains { $0.nameZh == "客厅" })
         XCTAssertEqual(p.placements.count, 2, "床+沙发")
-        XCTAssertEqual(p.fixtures.count, 1, "两次识别的冰箱应去重成一台固定设施")
+        XCTAssertEqual(p.fixtures.count, 2, "冰箱(去重后 1)+ 灶台/烤箱一体机(去重后 1)")
+        XCTAssertEqual(p.fixtures.filter { $0.kind == "stove" }.count, 1, "oven 与 stove 同位应合并")
+        XCTAssertEqual(p.fixtures.filter { $0.kind == "fridge" }.count, 1)
         XCTAssertTrue(
             p.meta.scanWarnings.contains { $0.contains("stairs") },
             "stairs 应被跳过并告警"
