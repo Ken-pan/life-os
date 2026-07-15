@@ -36,20 +36,11 @@
       ...data.map((d) => (daily ? d.spending : Math.max(d.spending, d.income))),
     ),
   )
-  // A day can be net-negative when refunds outweigh purchases. Clamping the
-  // baseline to 0 drew those as nothing — identical to a day with no activity —
-  // so a month that nets negative still looked like steady spending.
-  //
-  // But letting one refund set the floor is just as unreadable in the other
-  // direction: a real month here runs $10–$558/day next to a single -$6,645
-  // reversal, which squashes every ordinary day into a hairline. Floor the axis
-  // at one chart-height below zero and clip the outlier, marking it so the
-  // clipping is visible rather than silent.
-  const rawMin = $derived(daily ? Math.min(0, ...data.map((d) => d.spending)) : 0)
-  const minY = $derived(rawMin < -maxY ? -maxY : rawMin)
-  const span = $derived(maxY - minY || 1)
-  /** @param {number} v */
-  const isClipped = (v) => v < minY
+  // Bars are spending, which is never negative — dailySeries reports outflow, not
+  // net-of-refunds. (An earlier pass drew refund days as downward bars; that put
+  // a misclassified $6,645 deposit on the chart and squashed every real day to a
+  // hairline. Refunds and income are not spending; they do not belong here.)
+  const span = $derived(maxY || 1)
   const chartH = $derived(compact ? 160 : 200)
   // The y-axis gutter is sized for its widest label ("-$7k" vs "$1,234"); on a
   // phone a fixed 56px gutter is a sixth of the whole chart.
@@ -67,8 +58,7 @@
 
   /** @param {number} v */
   function yScale(v) {
-    const clamped = Math.max(minY, Math.min(maxY, v))
-    return padT + innerH - ((clamped - minY) / span) * innerH
+    return padT + innerH - (Math.max(0, v) / span) * innerH
   }
 
   /** @param {number} i */
@@ -134,56 +124,21 @@
         fill="var(--border-strong)"
         font-size="10"
       >
-        {privacy ? '•' : moneyCompact(minY + span * tick)}
+        {privacy ? '•' : moneyCompact(span * tick)}
       </text>
     {/each}
 
-    {#if minY < 0}
-      <line
-        x1={padL}
-        y1={yScale(0)}
-        x2={chartW - padR}
-        y2={yScale(0)}
-        stroke="var(--border-strong)"
-      />
-    {/if}
-
     {#each data as d, i (d.month)}
       {@const cx = xCenter(i)}
-      {@const zeroY = yScale(0)}
-      {@const barY = Math.min(yScale(d.spending), zeroY)}
-      {@const barH = Math.abs(yScale(d.spending) - zeroY)}
+      {@const barH = Math.max(0, innerH - (yScale(d.spending) - padT))}
       <rect
         x={cx - barW / 2}
-        y={barY}
+        y={yScale(d.spending)}
         width={barW}
         height={barH}
         rx="3"
-        fill={d.spending < 0 ? 'var(--positive)' : 'var(--accent-dim)'}
+        fill="var(--accent-dim)"
       />
-      <!-- Clipped outlier: hatch the cut end so a truncated bar can never be
-           mistaken for one that simply reaches the axis floor. -->
-      {#if isClipped(d.spending)}
-        {#each [0, 3, 6] as off (off)}
-          <line
-            x1={cx - barW / 2}
-            y1={padT + innerH - off}
-            x2={cx + barW / 2}
-            y2={padT + innerH - off}
-            stroke="var(--bg)"
-            stroke-width="1.5"
-          />
-        {/each}
-        <text
-          x={cx}
-          y={padT + innerH - 12}
-          text-anchor="middle"
-          fill="var(--bg)"
-          font-size="9"
-        >
-          {privacy ? '•' : moneyCompact(d.spending)}
-        </text>
-      {/if}
       <text x={cx} y={chartH - 6} text-anchor="middle" fill="var(--border-strong)" font-size="10">
         {xLabel(d, i)}
       </text>

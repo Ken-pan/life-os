@@ -205,6 +205,36 @@ describe('dailySeries', () => {
     const out = dailySeries(withMovement, { from: '2026-07-01', to: '2026-07-05' })
     expect(out.find((p) => p.month === '2026-07-02')?.spending).toBe(0)
   })
+
+  it('退款不冲抵花销——「哪天花了钱」问的是流出，不是净额', () => {
+    const withRefund: Txn[] = [
+      ...days,
+      {
+        id: 'ref', date: '2026-07-04', month: '2026-07', merchant: 'Store',
+        category: 'Shopping', account: 'Amex', flow: 'refund_or_reversal',
+        amount: -6645, budgetImpact: 6645, inSpending: true, inCashFlow: true,
+      },
+    ]
+    const out = dailySeries(withRefund, { from: '2026-07-01', to: '2026-07-05' })
+    const d4 = out.find((p) => p.month === '2026-07-04')
+    // 当天确实花了 $50；退款不该把它冲成 -$6,595。
+    expect(d4?.spending).toBe(50)
+    // 也不该出现负值——负柱子画的不是花销。
+    expect(out.every((p) => p.spending >= 0)).toBe(true)
+  })
+
+  it('工资/进账不计入花销', () => {
+    const withIncome: Txn[] = [
+      ...days,
+      {
+        id: 'pay', date: '2026-07-02', month: '2026-07', merchant: 'Ingram Micro',
+        category: 'Software & Tech', account: 'Unknown', flow: 'income',
+        amount: -3322.74, budgetImpact: 0, inSpending: false, inCashFlow: true,
+      },
+    ]
+    const out = dailySeries(withIncome, { from: '2026-07-01', to: '2026-07-05' })
+    expect(out.find((p) => p.month === '2026-07-02')?.spending).toBe(0)
+  })
 })
 
 describe('流水检索', () => {

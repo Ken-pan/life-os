@@ -73,6 +73,18 @@ export function spendingOf(t: Txn): number {
 }
 
 /**
+ * 当天/当期真正花出去的钱：只算支出本身，不把退款冲抵进来。
+ *
+ * 「这个月花了多少」（净额，spendingOf）和「哪天花了钱」是两个问题。后者要的是
+ * 流出本身：一笔 7/1 买、7/3 退的消费，7/1 确实花了钱，7/3 并没有「花掉负数」。
+ * 把退款混进来还会让单笔异常主导整张图——实测某天一笔 $6,645 的进账被误分类成
+ * refund_or_reversal，直接把当月「花销」翻成负数，而真实消费是每天 $10–$558。
+ */
+export function outflowOf(t: Txn): number {
+  return t.flow === "expense" && countsAsSpending(t) ? -t.budgetImpact : 0;
+}
+
+/**
  * 聚合器给取现/支票的分类。取现被导入成 flow=expense，于是计入花销分析——
  * 但它只是把钱从账户挪成现金，去向不明，且很大一部分最终用于信用卡还款
  * （已另行计入）。留在「花在哪」里会盖过真实消费：实测某月一笔 $2,451 取现
@@ -177,6 +189,9 @@ export interface MonthPoint {
  *
  * 「本月」用月粒度只会得到一个点——一根柱子画不出趋势，也看不出钱花在哪几天。
  *
+ * spending 用 outflowOf 而非 spendingOf：这张图回答的是「哪天花了钱」，退款和
+ * 工资不是花销，混进来只会让异常值主导（见 outflowOf 注释）。
+ *
  * 没有交易的日子补 0 而不是跳过：图表按索引等距排 x 轴，缺日会把 7-01 和 7-09
  * 画成相邻两点，让间隔失真、看起来像天天在花钱。
  */
@@ -198,8 +213,9 @@ export function dailySeries(
     if (t.date < opts.from || t.date > opts.to) continue;
     const p = map.get(t.date);
     if (!p) continue;
-    if (countsAsSpending(t)) {
-      p.spending += spendingOf(t);
+    const out = outflowOf(t);
+    if (out > 0) {
+      p.spending += out;
       p.count += 1;
     }
     p.income += incomeOf(t);
