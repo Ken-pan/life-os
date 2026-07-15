@@ -22,8 +22,14 @@ struct RootView: View {
             ProgressView("正在恢复会话…")
         case .signedOut:
             SignInView()
-        case .home, .scanning, .reviewing, .uploading:
+        case .home:
             HomeView()
+        case .scanning:
+            ScanView()
+        case .reviewing:
+            ReviewView()
+        case .uploading:
+            UploadView()
         }
     }
 }

@@ -84,6 +84,23 @@ ok(
 ok('储物区置空', p.storageZones.length === 0, `got=${p.storageZones.length}`)
 ok('viewport 已算出', p.viewport.width > 0 && p.viewport.height > 0)
 
+// ---- 跨端一致性(可选):iOS 单测落盘的 Swift 产出 payload ----
+// 先跑 ios/home-scan 的 xcodebuild test(会写 /tmp/homescan-mock-payload.json),
+// 再跑本脚本,即验证 Swift 转换器输出能被网页端原样消化。
+import { existsSync } from 'node:fs'
+const swiftPayloadPath = '/tmp/homescan-mock-payload.json'
+if (existsSync(swiftPayloadPath)) {
+  const swift = JSON.parse(readFileSync(swiftPayloadPath, 'utf8'))
+  ok('Swift payload 通过校验', validateScanPayload(swift) === null, validateScanPayload(swift) ?? '')
+  const sp = buildProjectFromScan(swift)
+  ok('Swift payload 组装成功', sp.schemaVersion === 5 && sp.layoutMode === 'wallGraph')
+  ok('Swift 分区进房间', sp.rooms.length === swift.homeos.zones.length)
+  ok('Swift 家具齐活', sp.placements.length === swift.homeos.placements.length)
+  console.log(`(含 Swift 跨端 payload 复验:${swiftPayloadPath})`)
+} else {
+  console.log('(跳过 Swift 跨端复验:先跑 iOS 单测生成 /tmp/homescan-mock-payload.json)')
+}
+
 // ---- 汇报 ----
 if (fails.length) {
   console.error(`FAIL ${fails.length} (pass ${pass})`)

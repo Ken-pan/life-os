@@ -1,8 +1,10 @@
 import Foundation
 import Observation
+import RoomPlan
+import UIKit
 
 /// App 全局状态机。扫描/上传阶段的细分状态由各自控制器持有,
-/// 这里只管「人在哪个屏」。
+/// 这里只管「人在哪个屏」和跨屏数据(位姿、转换结果)。
 @Observable
 final class AppModel {
     enum Route {
@@ -20,6 +22,105 @@ final class AppModel {
     var lastError: String?
 
     let supabase = SupabaseService.shared
+
+    // ---- 扫描流程 ----
+    var scanController = ScanSessionController()
+    /// 扫描全程攒下的拍照机位(与墙体同一 ARKit 世界坐标)
+    var poses: [FlatScene.CameraPose] = []
+    /// 转换结果(ReviewView 画它,UploadView 传它)
+    var convertedProject: HomeOSProject?
+    /// 与 convertedProject.viewpoints 按下标对齐的本机照片
+    var photoFiles: [URL?] = []
+    /// 原始 CapturedRoom JSON(备重处理);mock 模式为 nil
+    var structureJSON: Data?
+    var scanId = UUID()
+    var uploadStatus = ""
+
+    @MainActor
+    func startScanning() {
+        poses = []
+        convertedProject = nil
+        photoFiles = []
+        structureJSON = nil
+        scanId = UUID()
+        route = .scanning
+    }
+
+    /// 「全部完成」:合并房间 → 压平 → 投影 → 预览
+    @MainActor
+    func finishScanning() async {
+        do {
+            let structure = try await scanController.mergeAll()
+            structureJSON = try? JSONEncoder().encode(structure.rooms)
+            var scene = StructureFlattener.flatten(rooms: structure.rooms)
+            scene.poses = poses
+            applyScene(scene)
+        } catch {
+            lastError = "合并扫描失败:\(error.localizedDescription)"
+            route = .home
+        }
+        scanController.reset()
+    }
+
+    /// FlatScene → HomeOSProject(mock 与真扫共用的汇合点)
+    @MainActor
+    func applyScene(_ scene: FlatScene) {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        let project = PlanProjector.project(
+            scene,
+            scanId: scanId.uuidString.lowercased(),
+            nameZh: "扫描 \(df.string(from: Date()))"
+        )
+        convertedProject = project
+        photoFiles = scene.poses.map(\.photoFileURL)
+        route = .reviewing
+    }
+
+    #if DEBUG
+    /// 模拟器联调:跳过 RoomPlan,用 MockScan 的 FlatScene 走转换→预览→上传全链路
+    @MainActor
+    func loadMockScan() {
+        scanId = UUID()
+        let scene = MockScan.scene()
+        poses = scene.poses
+        structureJSON = nil
+        applyScene(scene)
+    }
+    #endif
+
+    @MainActor
+    func cancelScanning() {
+        scanController.reset()
+        poses = []
+        route = .home
+    }
+
+    @MainActor
+    func upload(label: String) async {
+        guard let project = convertedProject else { return }
+        route = .uploading
+        uploadStatus = "准备上传…"
+        do {
+            try await supabase.uploadScan(
+                scanId: scanId,
+                project: project,
+                photoFiles: photoFiles,
+                structureJSON: structureJSON,
+                label: label,
+                device: "\(UIDevice.current.name) / iOS \(UIDevice.current.systemVersion)",
+                onProgress: { [weak self] msg in self?.uploadStatus = msg }
+            )
+            uploadStatus = ""
+            convertedProject = nil
+            route = .home
+            await refreshScans()
+        } catch {
+            uploadStatus = ""
+            lastError = "上传失败:\(error.localizedDescription)"
+            route = .reviewing
+        }
+    }
 
     @MainActor
     func bootstrap() async {

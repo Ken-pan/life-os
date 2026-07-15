@@ -39,5 +39,8 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources: [HomeScanTests]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: HomeScan

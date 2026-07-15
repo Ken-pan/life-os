@@ -13,12 +13,21 @@ struct HomeView: View {
             List {
                 Section {
                     Button {
-                        model.route = .scanning
+                        model.startScanning()
                     } label: {
                         Label("开始扫描", systemImage: "camera.metering.matrix")
                             .font(.headline)
                     }
                     .disabled(!scanSupported)
+                    #if DEBUG
+                    if !scanSupported {
+                        Button {
+                            model.loadMockScan()
+                        } label: {
+                            Label("载入模拟扫描(联调)", systemImage: "wand.and.stars")
+                        }
+                    }
+                    #endif
                 } footer: {
                     if !scanSupported {
                         Text("此设备不支持 RoomPlan(需要带 LiDAR 的 iPhone Pro / iPad Pro)。")
