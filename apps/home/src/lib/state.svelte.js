@@ -481,10 +481,47 @@ export function addPlacement(kind, x, y) {
 }
 
 /**
+ * 公寓自带、钉死的家具(fixed):结构锁定时不许挪/转/删/改尺寸 ——
+ * 马桶、内嵌橱柜、洗衣机不是「布置」的对象,手滑也不该拖得动。
+ * 设置里解锁结构编辑后放行(和墙体同一把锁)。
+ * @param {string} placementId
+ */
+export function isPlacementPinned(placementId) {
+  if (!isStructureLocked()) return false
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  return Boolean((raw.placements ?? []).find((p) => p.id === placementId)?.fixed)
+}
+
+/**
+ * 拦下对钉死家具的改动并解释原因。返回 true = 已拦,调用方直接放弃。
+ * @param {string} placementId
+ * @param {string} verb 挪/转/删/改 —— 报错文案里用
+ */
+function blockPinned(placementId, verb) {
+  if (!isPlacementPinned(placementId)) return false
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const label =
+    (raw.placements ?? []).find((p) => p.id === placementId)?.label ?? '这件'
+  toast(
+    `「${label}」是公寓自带的固定件,${verb}不了 —— 真要动:设置 → 解锁结构编辑`,
+    'error',
+  )
+  return true
+}
+
+/** 几何字段 —— 钉死家具只锁这些;label/attrs(改名、VLM 成果)照常可写 */
+const PLACEMENT_GEOM_KEYS = ['x', 'y', 'w', 'h', 'rotation']
+
+/**
  * @param {string} placementId
  * @param {Partial<import('./spatial/types.js').SpatialPlacement>} patch
  */
 export function updatePlacement(placementId, patch) {
+  if (
+    PLACEMENT_GEOM_KEYS.some((k) => k in patch) &&
+    blockPinned(placementId, '改')
+  )
+    return
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const placements = (raw.placements ?? []).map((p) =>
     p.id === placementId ? { ...p, ...patch } : p,
@@ -494,6 +531,7 @@ export function updatePlacement(placementId, patch) {
 
 /** @param {string} placementId */
 export function removePlacement(placementId) {
+  if (blockPinned(placementId, '删')) return
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const placements = (raw.placements ?? []).filter((p) => p.id !== placementId)
   // 指向它的储藏区由 resolveStorageZoneBounds 统一解绑 —— 在这里手动清 placementId
@@ -963,6 +1001,7 @@ export async function pruneViewpointPhotos() {
  * @param {number} dyIn
  */
 export function nudgePlacement(placementId, dxIn, dyIn) {
+  if (blockPinned(placementId, '挪')) return
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const pxPerFt = raw.wallGraph?.pxPerFt ?? raw.layoutConfig?.pxPerFt ?? 36
   const zones = raw.zones ?? []
@@ -1014,6 +1053,8 @@ export function duplicatePlacement(placementId) {
     y: at.y + src.h / 2,
   })
   const copy = { ...src, id: createPlacementId(), ...at, zoneId: zone?.id }
+  // 复制品不是公寓自带的 —— 钉死属性不传染,否则克隆出来就动不了
+  delete copy.fixed
   applyEditSource(
     { placements: [...existing, copy] },
     { toastMsg: `已复制 ${copy.label}` },
@@ -1023,6 +1064,7 @@ export function duplicatePlacement(placementId) {
 
 /** @param {string} placementId */
 export function rotatePlacementById(placementId) {
+  if (blockPinned(placementId, '转')) return
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const placements = (raw.placements ?? []).map((p) =>
     p.id === placementId ? rotatePlacement(p) : p,
@@ -1039,6 +1081,7 @@ export function rotatePlacementById(placementId) {
  *   face, which sits off-grid for interior walls).
  */
 export function commitPlacementMove(placementId, x, y, opts = {}) {
+  if (blockPinned(placementId, '挪')) return
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const graph = raw.wallGraph
   const pxPerFt = graph?.pxPerFt ?? 36
@@ -1856,6 +1899,44 @@ export function persist() {
 export function getActiveProject() {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   return hydrateProject(raw)
+}
+
+/**
+ * 应用一套布局方案(layout-solve.js 的 moves)。
+ * 按 move 目标改**当前** raw 的 placements(不用方案里整包 project ——
+ * 用户在算完与应用之间可能又编辑过别的);rotation 变 90°/270° 时同步
+ * 交换 w/h(placements 的 w/h 是 AABB)。走 applyEditSource:进几何撤销栈,
+ * 一步撤销整套方案。
+ * @param {Array<{ id: string, to: { x: number, y: number, rotation: number } }>} moves
+ * @param {string} profileNameZh
+ */
+export function applyLayoutProposal(moves, profileNameZh) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const byId = new Map(moves.map((m) => [m.id, m]))
+  let applied = 0
+  const placements = (raw.placements ?? []).map((pl) => {
+    const mv = byId.get(pl.id)
+    if (!mv) return pl
+    applied += 1
+    const rotDelta = ((mv.to.rotation - (pl.rotation ?? 0)) % 360 + 360) % 360
+    const swap = rotDelta % 180 === 90
+    return {
+      ...pl,
+      x: mv.to.x,
+      y: mv.to.y,
+      rotation: mv.to.rotation,
+      w: swap ? pl.h : pl.w,
+      h: swap ? pl.w : pl.h,
+    }
+  })
+  if (!applied) {
+    toast('方案里的家具在当前户型里找不到了(可能刚被删改),请重新计算', 'warn')
+    return
+  }
+  applyEditSource(
+    { placements },
+    { toastMsg: `已应用「${profileNameZh}」布局,搬 ${applied} 件(顶栏可撤销)` },
+  )
 }
 
 /**

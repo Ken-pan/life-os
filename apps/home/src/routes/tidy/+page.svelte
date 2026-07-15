@@ -1,8 +1,9 @@
 <script>
   // 整理页:动线与利用率(纯几何,总是可算)+ 分步整理计划(勾了就记住)。
   // 数据来自当前户型 —— 扫描拉取后自动跟着变。
-  import { getActiveProject, isTidyTaskDone, setTidyTaskDone, clearTidyProgress } from '$lib/state.svelte.js'
+  import { applyLayoutProposal, getActiveProject, isTidyTaskDone, setTidyTaskDone, clearTidyProgress } from '$lib/state.svelte.js'
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
+  import { solveAllProfiles } from '$lib/spatial/layout-solve.js'
   import { buildTidyPlan, EFFORT_LABEL } from '$lib/spatial/tidy-plan.js'
   import { scoreClutter } from '$lib/spatial/clutter-score.js'
   import { assessPhotoCoverage, COVERAGE_ACTION } from '$lib/spatial/photo-coverage.js'
@@ -73,6 +74,59 @@
     messy: { zh: '杂乱', cls: 'tag-warn' },
     storage: { zh: '储物', cls: 'tag-info' },
     rescan: { zh: '复扫', cls: 'tag-info' },
+  }
+
+  // ---- 布局方案(能力14:约束求解,几何裁决) ----
+  /** @type {Awaited<ReturnType<typeof solveAllProfiles>> | null} */
+  let proposals = $state(null)
+  let solving = $state(false)
+  let solveProgress = $state('')
+  let solveError = $state('')
+
+  const PROFILE_COUNT = 3
+
+  async function runSolver() {
+    if (solving) return
+    solving = true
+    solveError = ''
+    proposals = null
+    try {
+      // 分块异步:每 16 次迭代让出事件循环 —— 真实户型一套要几秒,
+      // 同步跑会把整个页面(和被节流的定时器)一起冻住
+      proposals = await solveAllProfiles(getActiveProject(), {
+        iterations: 160,
+        seed: 42,
+        yieldFn: () => new Promise((r) => setTimeout(r)),
+        onProgress: (pi, frac) => {
+          solveProgress = `${Math.round(((pi + frac) / PROFILE_COUNT) * 100)}%`
+        },
+      })
+    } catch (e) {
+      solveError = e instanceof Error ? e.message : String(e)
+    } finally {
+      solving = false
+      solveProgress = ''
+    }
+  }
+
+  /** @param {any} prop */
+  function applyProposal(prop) {
+    applyLayoutProposal(prop.moves, prop.profile.nameZh)
+    proposals = null // 布局变了,旧方案作废 —— 想再看重新算
+  }
+
+  /** @param {any} prop 方案的前后对比人话 */
+  function proposalDelta(prop) {
+    const parts = []
+    const { before: b, after: a } = prop
+    if (a.blocked < b.blocked) parts.push(`解开 ${b.blocked - a.blocked} 道堵住的门`)
+    if (a.minWidthIn > b.minWidthIn) parts.push(`最窄通道 ${b.minWidthIn}→${a.minWidthIn} in`)
+    else if (a.bottlenecks < b.bottlenecks) parts.push(`瓶颈 ${b.bottlenecks}→${a.bottlenecks} 处`)
+    if (Math.round(a.tight * 100) < Math.round(b.tight * 100))
+      parts.push(`紧张通道 ${pct(b.tight)}→${pct(a.tight)}`)
+    if (a.wallFt > b.wallFt) parts.push(`可用贴墙 ${b.wallFt}→${a.wallFt} ft`)
+    if (a.freeSqft > b.freeSqft + 1) parts.push(`可活动 +${Math.round(a.freeSqft - b.freeSqft)} sqft`)
+    return parts.length ? parts.join(' · ') : '与现状指标接近'
   }
 </script>
 
@@ -188,6 +242,64 @@
           </li>
         {/each}
       </ul>
+    </section>
+  {/if}
+
+  {#if circ.ok}
+    <section class="block">
+      <div class="plan-head">
+        <h2 class="block-title">布局方案</h2>
+        <button type="button" class="solve-btn" onclick={runSolver} disabled={solving}>
+          {solving ? `计算中 ${solveProgress}` : proposals ? '重新计算' : '算三套方案'}
+        </button>
+      </div>
+      {#if solveError}
+        <p class="proposal-none">求解失败:{solveError}</p>
+      {/if}
+      {#if !proposals && !solving && !solveError}
+        <p class="block-desc">
+          用现有家具求解更好的摆法(几何引擎裁决:不重叠、不堵门、动线只许更好)。
+          三个目标:最少折腾 / 最佳动线 / 最大收纳。
+        </p>
+      {/if}
+      {#if proposals}
+        <div class="proposal-grid">
+          {#each proposals as prop (prop.profile.key)}
+            <article class="proposal" class:proposal-idle={!prop.ok}>
+              <header class="proposal-head">
+                <b>{prop.profile.nameZh}</b>
+                <span class="proposal-desc">{prop.profile.desc}</span>
+              </header>
+              {#if !prop.ok}
+                <p class="proposal-none">{prop.reason}</p>
+              {:else if prop.duplicateOfZh}
+                <p class="proposal-none">与「{prop.duplicateOfZh}」方案完全相同</p>
+              {:else}
+                <p class="proposal-delta">{proposalDelta(prop)}</p>
+                <ul class="move-list">
+                  {#each prop.moves as mv (mv.id)}
+                    <li class="move-row">
+                      <span class="move-name">{mv.label}</span>
+                      <span class="move-how">
+                        {mv.directionZh}挪 {mv.movedFt} ft{#if mv.rotated}
+                          · 转 90°{/if}{#if mv.heavy}
+                          · <b class="move-heavy">建议两人</b>{/if}
+                      </span>
+                    </li>
+                  {/each}
+                </ul>
+                <button type="button" class="apply-btn" onclick={() => applyProposal(prop)}>
+                  应用此方案({prop.moves.length} 件,可撤销)
+                </button>
+              {/if}
+            </article>
+          {/each}
+        </div>
+        <p class="block-desc">
+          应用后家具位置立即更新(平面页可一步撤销);搬完实物后重扫一次,
+          跨扫描身份会把「真挪了」确认下来。
+        </p>
+      {/if}
     </section>
   {/if}
 
@@ -556,6 +668,108 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 8px;
+  }
+
+  .solve-btn,
+  .apply-btn {
+    font: inherit;
+    font-size: 12px;
+    padding: 4px 12px;
+    color: var(--t1);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .solve-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .solve-btn:hover:not(:disabled),
+  .apply-btn:hover {
+    border-color: var(--tidy-accent, var(--t2));
+  }
+
+  .proposal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    margin: 10px 0 8px;
+  }
+
+  .proposal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .proposal-idle {
+    opacity: 0.75;
+  }
+
+  .proposal-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .proposal-desc {
+    font-size: 11px;
+    color: var(--t3);
+  }
+
+  .proposal-none {
+    margin: 0;
+    font-size: 12px;
+    color: var(--t3);
+  }
+
+  .proposal-delta {
+    margin: 0;
+    font-size: 12px;
+    color: var(--t2);
+  }
+
+  .move-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .move-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .move-name {
+    font-weight: 600;
+  }
+
+  .move-how {
+    color: var(--t3);
+    text-align: right;
+  }
+
+  .move-heavy {
+    color: var(--warn, #c46a3f);
+    font-weight: 600;
+  }
+
+  .apply-btn {
+    margin-top: auto;
+    align-self: flex-start;
   }
 
   .plan-sum {
