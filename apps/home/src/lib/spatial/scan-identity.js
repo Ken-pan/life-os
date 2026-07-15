@@ -17,10 +17,16 @@
 /** 尺寸差在 4″ 或 15% 以内才可能是同一件(LiDAR 重复测量的正常抖动) */
 const SIZE_TOL_PX = 12
 const SIZE_TOL_RATIO = 0.15
+/**
+ * 低置信度物体的尺寸容差放大倍数。508 真扫实测:low 置信度柜子两次测量
+ * 能差 7–28″(RoomPlan 对扫不全的物体包围盒极不稳定),按正常容差打分
+ * 会把同一件柜子拆成「消失+新增」,用户积累全清零。
+ */
+const LOW_CONF_SIZE_FACTOR = 2.5
 /** 位置评分的归一化距离:6ft(挪得再远,靠尺寸+外观仍可判同一件) */
 const DIST_NORM_PX = 216
-/** ≤6″ 视为没挪 */
-const UNMOVED_PX = 18
+/** ≤10″ 视为没挪:低置信度包围盒的尺寸抖动会把中心推走半个差值 */
+const UNMOVED_PX = 30
 /** 总分门槛与「第二候选太接近」的歧义边距 */
 const ACCEPT_SCORE = 0.5
 const AMBIGUITY_MARGIN = 0.08
@@ -54,7 +60,11 @@ function matchScore(prev, next) {
   if (prev.kind !== next.kind) return 0
   const A = boxOf(prev)
   const sd = sizeDiff(prev, next)
-  const sizeLimit = Math.max(SIZE_TOL_PX, SIZE_TOL_RATIO * Math.max(A.w, A.h))
+  const lowConf =
+    prev.attrs?.confidence === 'low' || next.attrs?.confidence === 'low'
+  const sizeLimit =
+    Math.max(SIZE_TOL_PX, SIZE_TOL_RATIO * Math.max(A.w, A.h)) *
+    (lowConf ? LOW_CONF_SIZE_FACTOR : 1)
   if (sd > sizeLimit * 2) return 0
   const sizeScore = Math.max(0, 1 - sd / sizeLimit)
   const ca = centerOf(prev)

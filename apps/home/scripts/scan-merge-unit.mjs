@@ -406,6 +406,27 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   ok('台灯是新增', identity.added === 1 && p2.placements.some((p) => p.kind === 'floor_lamp'))
   ok('椅不再留在项目里', !p2.placements.some((p) => p.kind === 'chair'))
 
+  // 低置信度尺寸抖动(508 真扫:low 柜子两次测量差 7-28″)不该拆成「消失+新增」
+  const lowConfWobble = matchScanObjects(
+    [{ id: 'scan-w1', kind: 'cabinet', x: 100, y: 100, w: 300, h: 60,
+       attrs: { confidence: 'low' } }],
+    [{ id: 'scan-w2', kind: 'cabinet', x: 110, y: 102, w: 354, h: 53,
+       attrs: { confidence: 'low' } }],
+  )
+  ok(
+    '低置信度尺寸抖动仍认同一件',
+    lowConfWobble.pairs.length === 1 && lowConfWobble.added.length === 0,
+    JSON.stringify(lowConfWobble),
+  )
+  // 同样的抖动在高置信度下不放宽(高置信度尺寸差 18″ 更可能真是两件)
+  const highConfSame = matchScanObjects(
+    [{ id: 'scan-w1', kind: 'cabinet', x: 100, y: 100, w: 300, h: 60,
+       attrs: { confidence: 'high' } }],
+    [{ id: 'scan-w2', kind: 'cabinet', x: 110, y: 102, w: 354, h: 53,
+       attrs: { confidence: 'high' } }],
+  )
+  ok('高置信度不放宽尺寸容差', highConfSame.pairs.length === 0, JSON.stringify(highConfSame.pairs))
+
   // 歧义:两把同尺寸椅子距离接近同一把新椅 → 不敢认,possibly_same
   const amb = matchScanObjects(
     [

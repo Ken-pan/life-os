@@ -103,7 +103,9 @@ final class ObjectShotCapture {
 
         var best: (object: CapturedRoom.Object, rect: CGRect, score: Double, gain: Double, az: Double, bin: Int)?
         for object in objects {
-            guard object.confidence != .low else { continue }
+            // 低置信度**更需要**照片证据(508 真扫:7 件 low 全是零照片,网页端
+            // 没法人工复核) —— 不再跳过,只抬高取景门槛防误检刷屏
+            let minScore = object.confidence == .low ? 0.18 : 0.05
             guard let framing = framing(of: object, in: frame) else { continue }
 
             // 拍摄方位 → 90° 一桶;每桶独立竞争,凑齐多视角
@@ -120,7 +122,7 @@ final class ObjectShotCapture {
                 }
             }
 
-            guard framing.score > max(0.05, current * Self.improveFactor) else { continue }
+            guard framing.score > max(minScore, current * Self.improveFactor) else { continue }
             let gain = framing.score - current
             if best == nil || gain > best!.gain {
                 best = (object, framing.rect, framing.score, gain, az, bin)
