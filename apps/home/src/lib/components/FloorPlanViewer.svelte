@@ -1032,26 +1032,15 @@
   }
 
   @media (min-width: 768px) {
+    /* No flex/max-height centering here: computePlanFit owns both scale and
+       centering, and it assumes the SVG lays out at width:100% of the canvas
+       with the canvas anchored top-left. The old `:global(svg) max-height:100%;
+       width:auto` made the SVG pre-shrink itself to the viewport, and the fit
+       zoom then scaled that already-fitted SVG a second time — the plan showed
+       at roughly half the size the zoom label claimed. */
     .plan-shell.canvas-priority .plan-viewer:not(.compact) {
       flex: 1 1 auto;
       min-height: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .plan-shell.canvas-priority .plan-viewer:not(.compact) .plan-canvas {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .plan-shell.canvas-priority .plan-viewer:not(.compact) :global(svg) {
-      max-height: 100%;
-      width: auto;
-      max-width: 100%;
     }
   }
 

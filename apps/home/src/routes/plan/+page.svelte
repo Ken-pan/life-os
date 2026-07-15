@@ -609,7 +609,16 @@
     const dialog = placementKindsDialog
     if (!dialog || !browser) return
     if (placementKindsOpen) {
-      if (!dialog.open) dialog.showModal()
+      if (!dialog.open) {
+        dialog.showModal()
+        // 54 类里当前选中的可能在第 40 位 —— 打开就让它在视野内,
+        // 否则「换个类型」先要凭记忆滚过 1000px。
+        requestAnimationFrame(() => {
+          dialog
+            .querySelector('.storage-picker-btn.active')
+            ?.scrollIntoView({ block: 'center' })
+        })
+      }
     } else if (dialog.open) {
       dialog.close()
     }
@@ -2431,6 +2440,19 @@
 
     .plan-page-immersive .plan-drawer-fab {
       bottom: calc(var(--safe-bottom-effective) + 14px);
+    }
+
+    /* 选中条铺满底部时,缩放控件和图例会被整条盖住却仍可聚焦 ——
+       跟 FAB 的 hide-for-bar 同一策略:让位,取消选中即回来。 */
+    .plan-stage:has(:global(.sel-bar)) :global(.plan-toolbar),
+    .plan-stage:has(:global(.graph-sel-bar)) :global(.plan-toolbar),
+    .plan-stage:has(:global(.graph-open-bar)) :global(.plan-toolbar),
+    .plan-stage:has(:global(.sel-bar)) :global(.plan-legend-wrap.overlay),
+    .plan-stage:has(:global(.graph-sel-bar)) :global(.plan-legend-wrap.overlay),
+    .plan-stage:has(:global(.graph-open-bar)) :global(.plan-legend-wrap.overlay) {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
     }
   }
 

@@ -53,6 +53,16 @@ npm run check
 - **没有「删墙 / 删区」这类常驻删除模式**：一律 选择 → 点中 → `Delete` 或选中条的「删除」。
 - **顶栏永远只有一行**：工具选项挂在面板旁，不进页头 —— 页头一长高，画布就跟着缩，切工具时视口会跳。
 - **破坏性操作（清空户型）只在「详情」抽屉的「危险操作」区**，不进工具面板。
+- **缩放只有一个主人：`computePlanFit`。** SVG 恒定 `width:100%`、画布锚定左上，缩放与居中全部由
+  fit 算出的 `zoom/pan` 完成 —— **不要再给 `.floor-plan-svg` 加 `max-height`/`width:auto` 这类
+  自适应 CSS**。2026-07 之前正是这样一条桌面端规则让 SVG 先自缩一次、fit 再缩一次，
+  「看全图」实际只有应有尺寸的一半。
+- **toast 与底部选中条共用底边时,toast 让位**（`app.css` 的 `body:has(... .graph-sel-bar)` 规则）；
+  手机端选中条出现时缩放控件/图例/FAB 一并隐身（与 FAB `hide-for-bar` 同一策略），
+  取消选中即恢复 —— 底部只允许一层可交互控件。
+- **画布 hover 提示必须跟当前工具说同一句话**：`render-svg.js` 里 edge/zone/placement 的
+  `data-plan-tip` 按 `graphTool`/`zoneTool`/`placementTool` 分支（建墙时墙段干脆不出提示）——
+  「点击选中」出现在点击并不会选中的模式里,比没有提示更误导。
 
 ## ④ 视角：把实拍照片钉到平面图上
 

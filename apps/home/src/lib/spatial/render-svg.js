@@ -515,13 +515,22 @@ export function renderFloorPlanSvg(project, opts = {}) {
         ]
           .filter(Boolean)
           .join(' ')
+        // 提示必须跟当前工具说同一句话:建墙时点击是落点、门窗时点击是放置,
+        // 都不是「选中」—— 说错话的提示比没有提示更误导。
         const tip = cascade
           ? `墙段 — 点击删除 · 含 ${openingsByEdge.get(edge.id)} 个门窗`
           : rmMode
             ? '墙段 — 点击删除'
-            : '墙段 — 点击选中'
+            : opts.graphTool === 'wallAdd'
+              ? ''
+              : opts.graphTool === 'opening'
+                ? '墙段 — 点击放置门窗'
+                : '墙段 — 点击选中'
+        const tipAttrs = tip
+          ? ` data-plan-tip="${esc(tip)}"`
+          : ''
         parts.push(
-          `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="${edgeCls}" data-edge-id="${edge.id}" data-plan-tip="${esc(tip)}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(tip)}</title></line>`,
+          `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="${edgeCls}" data-edge-id="${edge.id}"${tipAttrs} aria-selected="${on ? 'true' : 'false'}">${tip ? `<title>${esc(tip)}</title>` : ''}</line>`,
         )
       }
     } else {
@@ -809,7 +818,11 @@ export function renderFloorPlanSvg(project, opts = {}) {
       ]
         .filter(Boolean)
         .join(' ')
-      const tip = rmMode ? `${z.nameZh} — 点击删除` : `${z.nameZh} — 点击选中`
+      const tip = rmMode
+        ? `${z.nameZh} — 点击删除`
+        : opts.zoneTool === 'zoneAdd'
+          ? `${z.nameZh} — 画区中 · 点击落顶点`
+          : `${z.nameZh} — 点击选中`
       parts.push(
         `<polygon points="${pts}" class="${hitCls}" data-spatial-zone-id="${z.id}" data-plan-tip="${esc(tip)}" data-zone-stale="${z.stale ? '1' : '0'}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(tip)}</title></polygon>`,
       )
@@ -845,10 +858,16 @@ export function renderFloorPlanSvg(project, opts = {}) {
     parts.push(
       '<g class="edit-layer placement-edit-layer" aria-label="家具编辑">',
     )
+    const placementHint =
+      opts.placementTool === 'place'
+        ? '放置中 · 点击画布落新家具'
+        : opts.placementTool === 'storage'
+          ? '点击指派储藏区'
+          : '点击选中'
     for (const p of project.placements) {
       const on = opts.selectedPlacement === p.id
       parts.push(
-        `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" class="placement-hit${on ? ' placement-on' : ''}" data-placement-id="${p.id}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(p.label)} — 点击选中</title></rect>`,
+        `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" class="placement-hit${on ? ' placement-on' : ''}" data-placement-id="${p.id}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(p.label)} — ${placementHint}</title></rect>`,
       )
     }
     parts.push('</g>')

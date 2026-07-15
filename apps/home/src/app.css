@@ -281,3 +281,15 @@ main.plan-route>.plan-top:first-child {
     bottom: calc(var(--safe-bottom-effective) + 14px);
   }
 }
+
+/* /plan:底部选中条在场时,toast 上移到条的上方 —— 画布类编辑器的惯例是
+   通知让位于底部浮动操作条,否则「已放置 沙发」正好盖住刚出现的 宽/深/旋转。 */
+body:has(main .sel-bar, main .graph-sel-bar, main .graph-open-bar) .toast {
+  bottom: calc(var(--nav-h, var(--mobile-tabbar-h)) + var(--space-5) + var(--safe-bottom-effective) + 118px);
+}
+
+@media (--life-os-phone) {
+  body:has(main .sel-bar, main .graph-sel-bar, main .graph-open-bar) .toast {
+    bottom: calc(var(--safe-bottom-effective) + 152px);
+  }
+}
