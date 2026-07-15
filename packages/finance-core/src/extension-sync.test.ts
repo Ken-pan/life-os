@@ -794,6 +794,32 @@ describe('resolveTxnScrollStopBefore', () => {
     expect(resolveTxnScrollStopBefore(snap, '2026-07-01')).toBe('2026-06-28')
     expect(resolveTxnScrollStopBefore(null, undefined)).toBeUndefined()
   })
+
+  it('回读请求把停点放宽到缺口起点之前，水位线不作数', () => {
+    const txn = {
+      date: '2026-07-10',
+      month: '2026-07',
+      merchant: 'x',
+      category: 'x',
+      account: 'Rocket Money',
+      flow: 'expense' as const,
+      amount: 1,
+      budgetImpact: -1,
+      inSpending: true,
+      inCashFlow: true,
+    }
+    const snap = buildAppSnapshot([], [txn], [], [], {
+      txnBackfill: { from: '2026-06-05', to: '2026-06-23' },
+    })
+    expect(snap.txnBackfill).toEqual({ from: '2026-06-05', to: '2026-06-23' })
+    // 常规停点是 07-07（newest - 3d），watermark 更晚也一样：必须滚到 06-02。
+    expect(resolveTxnScrollStopBefore(snap, '2026-07-12')).toBe('2026-06-02')
+    // 回读停点（from - buffer）晚于常规停点时保持常规行为，不无谓缩短抓取范围。
+    const lateBackfill = buildAppSnapshot([], [txn], [], [], {
+      txnBackfill: { from: '2026-07-12', to: '2026-07-12' },
+    })
+    expect(resolveTxnScrollStopBefore(lateBackfill, undefined)).toBe('2026-07-07')
+  })
 })
 
 describe('filterNewCaptureTxnRows', () => {

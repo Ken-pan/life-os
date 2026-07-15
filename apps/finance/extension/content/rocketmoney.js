@@ -388,6 +388,9 @@
   const TXN_SCROLL_FRAME_FALLBACK_MS = 90
   const TXN_LOAD_MORE_TIMEOUT_MS = 3000
   const TXN_LOAD_MORE_SETTLE_MS = 160
+  // 无限滚动追加下一批要走网络：实测 1–3 秒，取 5 秒留余量。这个等待是
+  // 「到底」判定的唯一依据，宁可慢也不能早退——早退会被当成「历史抓完了」。
+  const TXN_INFINITE_TIMEOUT_MS = 5000
   const CRAWL_PHASE_PROGRESS = {
     starting: 2,
     dashboard: 12,
@@ -730,8 +733,15 @@
   /** 表格底部的「Load More」分页按钮（列表加载完一页后出现，点击拉取下一批）。 */
   function findLoadMoreButton() {
     for (const btn of document.querySelectorAll('button')) {
-      if (/^load\s*more$/i.test(btn.textContent.trim()) && !btn.disabled)
-        return btn
+      const label = btn.textContent.trim()
+      // 「See More」也算：Rocket Money 的文案不是 Load More，只认后者等于永远
+      // 找不到按钮。
+      if (!/^(load|see|show)\s*more$/i.test(label) || btn.disabled) continue
+      // 但要跳过 0x0 的隐形按钮：RM 的交易表里就挂着一个 aria-label="See More"
+      // 的零尺寸按钮，点它不会加载任何东西（实测 scrollHeight 纹丝不动）。
+      const r = btn.getBoundingClientRect()
+      if (r.width === 0 || r.height === 0) continue
+      return btn
     }
     return null
   }
@@ -816,6 +826,21 @@
         }
       }
       return { rows: [...collected.values()], complete: false }
+    }
+    // 必须从列表顶部开始：收集是「从当前位置往下」的单向扫描，如果页面停在
+    // 中间（用户刚浏览过），视口上方的行会被整段跳过——而停止条件（滚过
+    // stopBefore）照样满足，complete=true 推进水位线，漏掉的段落从此不会再补。
+    // 实测漏过 6/13–6/23 共 14+ 笔，包括一笔 $319 的 Best Buy。
+    if (scroller.scrollTop > 0) {
+      appendCrawlLog('info', '列表不在顶部，先回到顶部再开始收集', {
+        scrollTop: scroller.scrollTop,
+      })
+      await waitForScrollRender(scroller, () => {
+        scroller.scrollTop = 0
+      })
+      await sleep(250)
+      collected.clear()
+      addVisibleRows()
     }
     appendCrawlLog('info', '找到交易表滚动容器，开始滚动收集', {
       initialRows: collected.size,
@@ -903,9 +928,33 @@
           idleSteps = 0
           continue
         }
+        // Rocket Money 没有分页按钮，滚到底是异步追加下一批（页面上转 spinner）。
+        // 加载中的状态和「真的到底了」在 DOM 上一模一样：没有新行、scrollTop 也
+        // 不再变。唯一的区别是再等一会儿 scrollHeight 会长高。
+        //
+        // 之前 3 个 idle step（不到 1 秒）就断言 complete=true，而这一批实测要
+        // 1–3 秒才到 —— 于是「还在加载」被当成「历史抓完了」，水位线照常推进，
+        // 中间整段（实测 6/14–6/23，14+ 笔含一笔 $319 Best Buy）永久丢失。
+        const shBeforeWait = scroller.scrollHeight
+        await waitForMutationOrTimeout(
+          scroller,
+          TXN_INFINITE_TIMEOUT_MS,
+          TXN_LOAD_MORE_SETTLE_MS,
+        )
+        const grew = scroller.scrollHeight > shBeforeWait
+        const lateRows = addVisibleRows()
+        if (grew || lateRows > 0) {
+          appendCrawlLog('info', '无限滚动追加了下一批，继续收集', {
+            rows: collected.size,
+            added: lateRows,
+            grewBy: scroller.scrollHeight - shBeforeWait,
+          })
+          idleSteps = 0
+          continue
+        }
         idleSteps += 1
         if (idleSteps >= 3) {
-          complete = true // 真正到底：整个历史都收集到了
+          complete = true // 真正到底：等过网络仍无新数据，整个历史都收集到了
           stopReason = 'bottom'
           appendCrawlLog('info', '交易列表已到底', {
             rows: collected.size,

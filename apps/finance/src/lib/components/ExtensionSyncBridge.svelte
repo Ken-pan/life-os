@@ -17,6 +17,8 @@
     planRecurringUpdates,
   } from '$lib/extensionSync.js'
   import { EXTENSION_REANCHOR_NOTE } from '$lib/cashReanchor.js'
+  import { coverageGaps } from '../../engine/transactions.js'
+  import { planTxnBackfill, markBackfillRead } from '$lib/txnBackfill.js'
   import { finalizeExtensionSync } from '$lib/repo.js'
   import { t } from '$lib/i18n.svelte.js'
   import { getFinanceStore } from '$lib/finance.svelte.js'
@@ -162,6 +164,9 @@
           missing: plan.missing.length,
         })
       } else {
+        // 一批交易抓取已经送达：悬着的回读请求就此关单（哪怕这批里没有
+        // 缺口段的行——那段可能确实没消费，「只读一次」以读过为准）。
+        markBackfillRead()
         const known = [...transactions.txns, ...sessionTxns]
         const plan = planNewTransactions(env, known)
         const payloadHash = await computeEnvelopePayloadHash(env)
@@ -381,12 +386,27 @@
     }
 
     const emitSnapshot = () => {
+      // 最近 120 天里连续 5 天以上零记录 → 随快照请求一次性回读。更老的
+      // 空窗多半是当年账户还没接入，不值得让扩展深翻。只请求一次的记账在
+      // planTxnBackfill 里（localStorage）。
+      let txnBackfill = null
+      const newest = transactions.txns.reduce((m, t) => (t.date > m ? t.date : m), '')
+      if (newest) {
+        const d = new Date(`${newest}T12:00:00`)
+        d.setDate(d.getDate() - 120)
+        const gaps = coverageGaps(transactions.txns, {
+          from: d.toISOString().slice(0, 10),
+          to: newest,
+          minRun: 5,
+        })
+        txnBackfill = planTxnBackfill(gaps)
+      }
       const snap = buildAppSnapshot(
         finance.data.accounts,
         transactions.txns,
         finance.data.cashFlows,
         finance.data.holdingsSnapshots,
-        { privacy: finance.data.privacy },
+        { privacy: finance.data.privacy, txnBackfill },
       )
       const payload = { type: BRIDGE_MSG.snapshot, snapshot: snap }
       window.postMessage(payload, window.location.origin)

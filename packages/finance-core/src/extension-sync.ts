@@ -201,6 +201,12 @@ export interface AppSnapshot {
   txnFastStopBefore?: string
   /** 滚动收集交易时，滚到该日期之前可停（含 buffer，扩展侧直接用）。 */
   txnScrollStopBefore?: string
+  /**
+   * 一次性回读请求：app 侧发现历史里有连续多天完全没有记录的缺口时带上，
+   * 让扩展下一次抓取把停点放宽到 from 之前，把这段补回来。app 侧负责
+   * 「只请求一次」的记账；扩展只管照做。
+   */
+  txnBackfill?: { from: string; to: string }
   cashFlows: AppSnapshotCashFlow[]
   holdings: AppSnapshotHoldings[]
 }
@@ -232,7 +238,7 @@ export function buildAppSnapshot(
   txns: Txn[],
   cashFlows: CashFlowItem[],
   holdingsSnapshots: HoldingsSnapshot[],
-  options: { privacy?: boolean } = {},
+  options: { privacy?: boolean; txnBackfill?: { from: string; to: string } | null } = {},
 ): AppSnapshot {
   const sorted = [...txns].sort((a, b) =>
     a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
@@ -269,6 +275,7 @@ export function buildAppSnapshot(
     txnNewestDate,
     txnFastStopBefore,
     txnScrollStopBefore,
+    txnBackfill: options.txnBackfill ?? undefined,
     cashFlows: options.privacy
       ? []
       : cashFlows.map((c) => ({
@@ -318,8 +325,14 @@ export function resolveTxnScrollStopBefore(
     stops.push(isoMinusDays(snapshot.txnNewestDate, bufferDays))
   else if (snapshot?.txnScrollStopBefore)
     stops.push(snapshot.txnScrollStopBefore)
-  if (stops.length === 0) return undefined
-  return stops.sort()[stops.length - 1]
+  const normal = stops.length === 0 ? undefined : stops.sort()[stops.length - 1]
+  // 回读请求要求这一次滚过缺口起点，水位线在这里不作数——它记录的是
+  // 「新数据同步到哪」，回答不了「历史里缺了哪一段」。
+  if (snapshot?.txnBackfill?.from) {
+    const backfillStop = isoMinusDays(snapshot.txnBackfill.from, bufferDays)
+    if (!normal || backfillStop < normal) return backfillStop
+  }
+  return normal
 }
 
 /** 扩展侧预过滤：去掉 app 里已有的交易行（与 planNewTransactions 同键）。 */
@@ -724,8 +737,12 @@ function planOneBalance(
   if (Math.abs(account.balance - next) < epsilon) {
     return { updates: [], notes }
   }
+  // 近似值要在报告里说清楚：126000.00 看着精确到分，实际来自 "$126K"，
+  // 真值在 ±500 内。不标注的话用户会拿它当精确余额核对。
   notes.push(
-    `「${account.name}」余额 ${account.balance.toFixed(2)} → ${next.toFixed(2)}`,
+    approximate
+      ? `「${account.name}」余额 ${account.balance.toFixed(2)} → ≈${next.toFixed(2)}（平台缩写值，精确余额待该机构下次直连同步校准）`
+      : `「${account.name}」余额 ${account.balance.toFixed(2)} → ${next.toFixed(2)}`,
   )
   // updatedAt 记「数据抓取时刻」而非写入时刻：同一批爬取里 Dashboard 先落库后，
   // 几分钟后抓的 Net Worth capture 仍然比它新，不会被上面的时序保护误拦。

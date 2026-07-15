@@ -75,8 +75,14 @@
     if (snapshot?.txnFastStopBefore) stops.push(snapshot.txnFastStopBefore);
     else if (snapshot?.txnNewestDate) stops.push(isoMinusDays(snapshot.txnNewestDate, bufferDays));
     else if (snapshot?.txnScrollStopBefore) stops.push(snapshot.txnScrollStopBefore);
-    if (stops.length === 0) return undefined;
-    return stops.sort()[stops.length - 1];
+    const normal = stops.length === 0 ? undefined : stops.sort()[stops.length - 1];
+    // 回读请求（app 发现历史缺口时随快照带上）要求这一次滚过缺口起点，
+    // 水位线在这里不作数——它只回答「新数据同步到哪」。
+    if (snapshot?.txnBackfill?.from) {
+      const backfillStop = isoMinusDays(snapshot.txnBackfill.from, bufferDays);
+      if (!normal || backfillStop < normal) return backfillStop;
+    }
+    return normal;
   }
 
   function filterNewCaptureTxnRows(rows, snapshot, _source) {
