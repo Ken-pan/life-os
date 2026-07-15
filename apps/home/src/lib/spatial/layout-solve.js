@@ -402,8 +402,66 @@ export function designPenaltyIn(ctx, boxById) {
       if ((ctx.tallOf.get(id) ?? 30) < SIGHT_BLOCK_IN) continue
       if (segIntersectsBox(ax, ay, bx, by, box)) total += 30
     }
+    // 观看角先验(Make It Home 的 visibility 项):电视该在沙发**正前方**,
+    // 不是斜对角。沙发的前向 = 背离最近的墙(沙发是贴墙件,front 可推);
+    // 电视偏离前向超过 30° 按度数罚 —— 斜 60° 看电视脖子最清楚。
+    total += viewingAnglePenaltyIn(b, a, ctx.segs)
   }
   return total
+}
+
+/**
+ * 座位(沙发)看目标(电视)的偏角罚分:
+ * 前向取「背离最近正对墙」的那个轴向;偏角 ≤30° 免罚,之后每度 0.5(封顶 30)。
+ * 沙发不贴墙(找不到正对墙)时不罚 —— 前向猜不准就不装懂。
+ * @param {{x:number,y:number,w:number,h:number}} seat
+ * @param {{x:number,y:number,w:number,h:number}} target
+ * @param {ReturnType<typeof wallAnchorSegments>} segs
+ */
+export function viewingAnglePenaltyIn(seat, target, segs) {
+  // 找离沙发最近的正对墙在哪一侧
+  let bestGap = Infinity
+  /** @type {'n'|'s'|'e'|'w'|null} */
+  let wallSide = null
+  for (const seg of segs) {
+    const spanLo = seg.vertical ? seat.y : seat.x
+    const spanHi = seg.vertical ? seat.y + seat.h : seat.x + seat.w
+    const overlap = Math.min(spanHi, seg.hi) - Math.max(spanLo, seg.lo)
+    if (overlap < Math.min(spanHi - spanLo, 24 * PX_PER_IN)) continue
+    if (seg.vertical) {
+      const gapW = Math.abs(seat.x - seg.at)
+      const gapE = Math.abs(seg.at - (seat.x + seat.w))
+      if (gapW < bestGap && seg.at <= seat.x) {
+        bestGap = gapW
+        wallSide = 'w'
+      }
+      if (gapE < bestGap && seg.at >= seat.x + seat.w) {
+        bestGap = gapE
+        wallSide = 'e'
+      }
+    } else {
+      const gapN = Math.abs(seat.y - seg.at)
+      const gapS = Math.abs(seg.at - (seat.y + seat.h))
+      if (gapN < bestGap && seg.at <= seat.y) {
+        bestGap = gapN
+        wallSide = 'n'
+      }
+      if (gapS < bestGap && seg.at >= seat.y + seat.h) {
+        bestGap = gapS
+        wallSide = 's'
+      }
+    }
+  }
+  if (!wallSide || bestGap > 18 * PX_PER_IN) return 0
+
+  const front = { n: [0, 1], s: [0, -1], w: [1, 0], e: [-1, 0] }[wallSide]
+  const dx = target.x + target.w / 2 - (seat.x + seat.w / 2)
+  const dy = target.y + target.h / 2 - (seat.y + seat.h / 2)
+  const len = Math.hypot(dx, dy)
+  if (len < 1e-6) return 0
+  const cos = (dx * front[0] + dy * front[1]) / len
+  const angleDeg = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI
+  return Math.min(Math.max(0, angleDeg - 30) * 0.5, 30)
 }
 
 /** 大件(床/沙发/衣柜级):搬动建议两人,劳动量权重更高 */
@@ -784,8 +842,13 @@ export async function solveLayout(project, profileKey, opts = {}) {
     }
 
     const s = evaluate(cur)
-    // 退火:前期容忍小倒退跳出局部最优,后期只收严格改进
-    if (s > curScore - temp * 12) {
+    // Metropolis-Hastings 接受准则(Make It Home 同款):改进必收;
+    // 劣解按 exp(Δ/T) 概率接受 —— 比线性容忍窗更标准地跳局部最优,
+    // 后期 T→0 自然收敛。rng 是种子化的,确定性不变。
+    const delta = s - curScore
+    const accept =
+      delta >= 0 || (s > -Infinity && rng() < Math.exp(delta / Math.max(1e-6, temp * 40)))
+    if (accept) {
       curScore = s
       if (s > bestScore) {
         bestScore = s

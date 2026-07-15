@@ -604,10 +604,120 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   ok('洗衣机没长出第二台', p2.placements.filter((p) => p.kind === 'washer').length === 1)
 }
 
+// ---- 房间更新(scanScope=partial):只动扫到的那片 ----
+{
+  const { mergeFurnitureWithIdentity } = await import('../src/lib/spatial/scan-merge.js')
+  const prevProject = {
+    ...SAMPLE_508,
+    placements: [
+      // 片内(coverage 覆盖 0..400 × 0..400):扫描出身的柜,这次没扫到 → 应消失并点名
+      { id: 'pl-in', kind: 'cabinet', label: '片内柜', x: 100, y: 100, w: 60, h: 60, rotation: 0,
+        attrs: { measuredWIn: 20, confidence: 'high' } },
+      // 片外:扫描出身的床 —— 房间更新绝不能动它、更不能说它消失了
+      { id: 'pl-out', kind: 'bed', label: '片外床', x: 700, y: 700, w: 258, h: 225, rotation: 0,
+        attrs: { measuredWIn: 86, confidence: 'high' } },
+      // 片外手录件也原样
+      { id: 'p-hand', kind: 'rug', label: '片外地毯', x: 900, y: 200, w: 60, h: 48, rotation: 0 },
+    ],
+    fixtures: [],
+    viewpoints: [
+      { id: 'scan-vp-out', x: 800, y: 800, heading: 0, fovDeg: 69 },
+    ],
+  }
+  const mapped = {
+    scope: 'partial',
+    coverage: [[{ x: 0, y: 0 }, { x: 400, y: 0 }, { x: 400, y: 400 }, { x: 0, y: 400 }]],
+    placements: [
+      { id: 'scan-new', kind: 'chair', label: '椅', x: 200, y: 200, w: 20, h: 20, rotation: 0,
+        attrs: { confidence: 'high' } },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  const { project: p2, identity } = mergeFurnitureWithIdentity(prevProject, mapped)
+  ok('片外扫描件原封不动', p2.placements.some((p) => p.id === 'pl-out' && p.x === 700))
+  ok('片外不算消失', !identity.removed.includes('片外床'), JSON.stringify(identity.removed))
+  ok('片内没扫到的算消失', identity.removed.includes('片内柜'), JSON.stringify(identity.removed))
+  ok('片内新件进来了', p2.placements.some((p) => p.id === 'scan-new'))
+  ok('片外手录件保留', p2.placements.some((p) => p.id === 'p-hand'))
+  ok('片外旧扫描机位保留', p2.viewpoints.some((v) => v.id === 'scan-vp-out'))
+
+  // 同一份数据按 full 合并:片外床没被新扫描匹配 → 应消失(对照组,证明 partial 生效)
+  const full = mergeFurnitureWithIdentity(prevProject, { ...mapped, scope: 'full', coverage: [] })
+  ok('对照:full 语义下片外床会消失', full.identity.removed.includes('片外床'),
+    JSON.stringify(full.identity.removed))
+}
+
 // ---- 没分区的扫描 ----
 {
   const m = mapScanIntoLayout(SAMPLE_508, { zones: [], placements: [], fixtures: [], viewpoints: [] })
   ok('空扫描不炸', m.report.mapped === 0 && m.placements.length === 0)
+}
+
+// —— 点到线小角度精修:手持扫描残余 1.2° 角差要被补掉 ——
+// 真实管线里 wallGraph 顶点已被主方向拉直(轴对齐),残余角差的形态是
+// 「墙位置随所在方位带系统性错位」:把每段墙独立顶点化,at 值按该段
+// 中点被 1.2° 旋转后的位移偏移 —— 这正是精修要解的病。
+{
+  const { registerScanToHome, wallSegments } = await import(
+    '../src/lib/spatial/scan-register.js'
+  )
+  const mk = (vertices, edges) => ({ pxPerFt: PX, margin: { x: 0, y: 0 }, vertices, edges })
+  // 本地:20×10ft 矩形(每面墙拆两段,中点偏离旋转中心 —— θ 才可观测;
+  // 整段墙的中点全落在旋转中心轴上时,旋转对 at 无影响,精修无从解起)
+  const localWalls = [
+    { vertical: false, at: 0, lo: 0, hi: 340 },
+    { vertical: false, at: 0, lo: 380, hi: 720 },
+    { vertical: false, at: 360, lo: 0, hi: 340 },
+    { vertical: false, at: 360, lo: 380, hi: 720 },
+    { vertical: true, at: 0, lo: 0, hi: 170 },
+    { vertical: true, at: 0, lo: 190, hi: 360 },
+    { vertical: true, at: 720, lo: 0, hi: 170 },
+    { vertical: true, at: 720, lo: 190, hi: 360 },
+    { vertical: true, at: 432, lo: 0, hi: 360 },
+  ]
+  const graphFromSegs = (segs) =>
+    mk(
+      segs.flatMap((s, i) =>
+        s.vertical
+          ? [
+              { id: `v${i}a`, x: s.at, y: s.lo },
+              { id: `v${i}b`, x: s.at, y: s.hi },
+            ]
+          : [
+              { id: `v${i}a`, x: s.lo, y: s.at },
+              { id: `v${i}b`, x: s.hi, y: s.at },
+            ],
+      ),
+      segs.map((_, i) => ({ id: `e${i}`, a: `v${i}a`, b: `v${i}b` })),
+    )
+
+  const theta = (1.2 * Math.PI) / 180
+  const ccx = 360
+  const ccy = 180
+  const rotShift = (x, y) => ({
+    dx: (x - ccx) * Math.cos(theta) - (y - ccy) * Math.sin(theta) + ccx - x + 30,
+    dy: (x - ccx) * Math.sin(theta) + (y - ccy) * Math.cos(theta) + ccy - y + 18,
+  })
+  const scanWalls = localWalls.map((s) => {
+    const midX = s.vertical ? s.at : (s.lo + s.hi) / 2
+    const midY = s.vertical ? (s.lo + s.hi) / 2 : s.at
+    const { dx, dy } = rotShift(midX, midY)
+    return {
+      ...s,
+      at: s.at + (s.vertical ? dx : dy),
+      lo: s.lo + (s.vertical ? dy : dx),
+      hi: s.hi + (s.vertical ? dy : dx),
+    }
+  })
+  const localGraph = graphFromSegs(localWalls)
+  const reg = registerScanToHome(graphFromSegs(scanWalls), wallSegments(localGraph))
+  ok('小角场景配准成功', reg.status === 'ok', reg.reason ?? '')
+  ok('精修角度被解出(≈-1.2°)', Math.abs(reg.refineDeg + 1.2) < 0.5, `got ${reg.refineDeg}`)
+  ok('精修后中位残差 <3cm', reg.medianCm < 3, `got ${reg.medianCm}`)
+  // 尺寸永不缩放:精修后盒子 w/h 原样
+  const box = reg.applyBox({ x: 100, y: 100, w: 90, h: 60 })
+  ok('精修后盒子尺寸不变', Math.abs(box.w - 90) < 1e-6 && Math.abs(box.h - 60) < 1e-6)
 }
 
 if (fails.length) {

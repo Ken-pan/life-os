@@ -80,7 +80,10 @@ final class ObjectShotCapture {
 
     /// 一次评估(主线程):对每件置信度不低的物体打分,值得就抓拍。
     /// 本帧只挑**提升最大**的一件送去编码 —— 一次一个 buffer。
-    func consider(objects: [CapturedRoom.Object], frame: ARFrame) {
+    /// `session` 传入时用 12MP 带外高清帧(captureHighResolutionFrame)拍证据 ——
+    /// 远处柜子的裁剪区像素数翻几倍,主色/清晰度/后续识别全受益;
+    /// 拿不到(格式不支持/失败)回退视频帧,证据不断供。
+    func consider(objects: [CapturedRoom.Object], frame: ARFrame, session: ARSession? = nil) {
         guard case .normal = frame.camera.trackingState else { return }
 
         // 暗光:曝光拉长必糊、白平衡漂移偏色,这帧的颜色不可信
@@ -153,16 +156,52 @@ final class ObjectShotCapture {
         let bin = pick.bin
         let pixelBuffer = frame.capturedImage // 只带走 buffer,不留整个 ARFrame
 
-        encodeQueue.async { [weak self] in
+        // 编码入口:视频帧与高清帧共用(高清帧分辨率不同,裁剪框按比例缩放)
+        let encode: (CVPixelBuffer, CGRect, CGFloat) -> Void = { [weak self] buffer, cropRect, imageH in
             guard let self else { return }
-            let out = self.writeCrop(
-                pixelBuffer: pixelBuffer,
-                cropTopLeftOrigin: crop,
-                imageHeight: imgH,
-                objectId: objectId,
-                bin: bin
-            )
-            DispatchQueue.main.async {
+            self.encodeQueue.async { [weak self] in
+                guard let self else { return }
+                let out = self.writeCrop(
+                    pixelBuffer: buffer,
+                    cropTopLeftOrigin: cropRect,
+                    imageHeight: imageH,
+                    objectId: objectId,
+                    bin: bin
+                )
+                self.finishShot(
+                    out: out, objectId: objectId, category: category,
+                    center: center, score: score, az: az, bin: bin
+                )
+            }
+        }
+
+        if let session {
+            // 高清帧几十 ms 后才到,取景框仍用打分那一帧的投影 —— 物体是静物,
+            // 裁剪框带 12% 外扩,这点延迟吃得下
+            session.captureHighResolutionFrame { hiFrame, _ in
+                if let hiFrame {
+                    let s = hiFrame.camera.imageResolution.width / imgW
+                    let scaled = CGRect(
+                        x: crop.origin.x * s, y: crop.origin.y * s,
+                        width: crop.width * s, height: crop.height * s
+                    ).integral
+                    encode(hiFrame.capturedImage, scaled, imgH * s)
+                } else {
+                    encode(pixelBuffer, crop, imgH)
+                }
+            }
+        } else {
+            encode(pixelBuffer, crop, imgH)
+        }
+    }
+
+    /// 编码完成的主线程收尾(视频/高清两条路共用)
+    private func finishShot(
+        out: (url: URL, colorHex: String?, sharpness: Double)?,
+        objectId: UUID, category: String, center: SIMD2<Double>,
+        score: Double, az: Double, bin: Int
+    ) {
+        DispatchQueue.main.async {
                 self.encodeBusy = false
                 guard let out else { return }
                 if let existing = self.shots[objectId]?[bin] {
@@ -188,7 +227,6 @@ final class ObjectShotCapture {
                     azimuthDeg: (az * 10).rounded() / 10,
                     bin: bin
                 )
-            }
         }
     }
 

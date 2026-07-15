@@ -31,9 +31,24 @@ enum HomeFrame {
         var p95Cm: Double
         var matchedWalls: Int
         var reason: String?
-        /// 主方向拉平角(弧度)—— 完整变换 = rotate(phi) → rotate(yaw) → +t
+        /// 主方向拉平角(弧度)—— 完整变换 = rotate(phi) → rotate(yaw) → +t → 精修
         var phi: Double
+        /// 点到线小角精修(与 scan-register.js 同源,改动两处同步):
+        /// 量化 yaw 只到 90° 网格,手持残余 0.5-1.5° 由这一步补掉。
+        /// 全 0 = 没精修或没变好。绕 (refineCx, refineCy) 转 refineTheta 再平移。
+        var refineTheta: Double = 0
+        var refineCx: Double = 0
+        var refineCy: Double = 0
+        var refineDx: Double = 0
+        var refineDy: Double = 0
+        /// 展示用(度)
+        var refineDeg: Double = 0
     }
+
+    /// 精修的小角度上限(弧度):超过说明配错了,别让精修焊死错误
+    static let refineMaxRad = 3.0 * .pi / 180
+    /// 精修最少采样点(≈2 段墙)
+    static let refineMinSamples = 6
 
     // 验收门与聚类参数(米;与 scan-register.js 的 px 常数一一对应)
     static let shiftClusterM = 0.10
@@ -166,20 +181,138 @@ enum HomeFrame {
     }
 
     private static func score(_ scanSegs: [Segment], _ homeSegs: [Segment], yaw: Int, tx: Double, ty: Double) -> Score {
+        let segs = scanSegs.map { raw -> Segment in
+            let s = rotateSeg(yaw, raw)
+            return Segment(
+                vertical: s.vertical,
+                at: s.at + (s.vertical ? tx : ty),
+                lo: s.lo + (s.vertical ? ty : tx),
+                hi: s.hi + (s.vertical ? ty : tx)
+            )
+        }
+        return scoreSegs(segs, homeSegs)
+    }
+
+    /// 量化解之后的点到线小角精修(与 scan-register.js refineTransform 同源):
+    /// 匹配墙段采样(两端+中点)对目标墙线做加权最小二乘,解 (θ, dx, dy),
+    /// 绕采样质心转(大坐标绕原点解病态)。样本不足/解奇异返回 nil。
+    private static func refine(
+        _ scanSegs: [Segment], _ homeSegs: [Segment], yaw: Int, tx: Double, ty: Double
+    ) -> (theta: Double, dx: Double, dy: Double, cx: Double, cy: Double)? {
+        struct Sample {
+            var x: Double
+            var y: Double
+            var vertical: Bool
+            var target: Double
+            var w: Double
+        }
+        var samples: [Sample] = []
+        for raw in scanSegs {
+            let s0 = rotateSeg(yaw, raw)
+            let at = s0.at + (s0.vertical ? tx : ty)
+            let lo = s0.lo + (s0.vertical ? ty : tx)
+            let hi = s0.hi + (s0.vertical ? ty : tx)
+            var bestL: Segment?
+            var bestD: Double?
+            for l in homeSegs where l.vertical == s0.vertical {
+                let overlap = min(l.hi, hi) - max(l.lo, lo)
+                guard overlap >= s0.len * minOverlap else { continue }
+                let d = abs(l.at - at)
+                if bestD == nil || d < bestD! {
+                    bestD = d
+                    bestL = l
+                }
+            }
+            // 离群墙(超 P95 门)不进精修 —— 会把最小二乘拽歪
+            guard let target = bestL?.at, let d = bestD, d <= acceptP95M else { continue }
+            let w = s0.len / 3
+            for t in [lo, (lo + hi) / 2, hi] {
+                samples.append(
+                    s0.vertical
+                        ? Sample(x: at, y: t, vertical: true, target: target, w: w)
+                        : Sample(x: t, y: at, vertical: false, target: target, w: w)
+                )
+            }
+        }
+        guard samples.count >= refineMinSamples else { return nil }
+
+        var wSum = 0.0
+        var cx = 0.0
+        var cy = 0.0
+        for p in samples {
+            wSum += p.w
+            cx += p.x * p.w
+            cy += p.y * p.w
+        }
+        cx /= wSum
+        cy /= wSum
+
+        // 未知量 u = [θ, dx, dy];竖墙行 [-(y-cy),1,0]·u = target-x,
+        // 横墙行 [(x-cx),0,1]·u = target-y。加权正规方程 3×3。
+        var A = [[0.0, 0, 0], [0.0, 0, 0], [0.0, 0, 0]]
+        var b = [0.0, 0, 0]
+        for p in samples {
+            let row = p.vertical ? [-(p.y - cy), 1, 0] : [p.x - cx, 0, 1]
+            let rhs = p.vertical ? p.target - p.x : p.target - p.y
+            for i in 0..<3 {
+                for j in 0..<3 { A[i][j] += p.w * row[i] * row[j] }
+                b[i] += p.w * row[i] * rhs
+            }
+        }
+        guard let u = solve3x3(A, b) else { return nil }
+        return (u[0], u[1], u[2], cx, cy)
+    }
+
+    /// 3×3 线性方程组(带主元高斯消元);奇异返回 nil
+    private static func solve3x3(_ A: [[Double]], _ b: [Double]) -> [Double]? {
+        var m = A.enumerated().map { $0.element + [b[$0.offset]] }
+        for col in 0..<3 {
+            var pivot = col
+            for r in (col + 1)..<3 where abs(m[r][col]) > abs(m[pivot][col]) { pivot = r }
+            guard abs(m[pivot][col]) > 1e-9 else { return nil }
+            m.swapAt(col, pivot)
+            for r in 0..<3 where r != col {
+                let f = m[r][col] / m[col][col]
+                for c in col..<4 { m[r][c] -= f * m[col][c] }
+            }
+        }
+        return [m[0][3] / m[0][0], m[1][3] / m[1][1], m[2][3] / m[2][2]]
+    }
+
+    /// 精修后的打分:精确旋转端点,按主方向重建(近)轴对齐段再对墙线打分
+    private static func scoreRefined(
+        _ scanSegs: [Segment], _ homeSegs: [Segment],
+        apply: (SIMD2<Double>) -> SIMD2<Double>
+    ) -> Score {
+        var segs: [Segment] = []
+        for raw in scanSegs {
+            let p1 = raw.vertical ? SIMD2(raw.at, raw.lo) : SIMD2(raw.lo, raw.at)
+            let p2 = raw.vertical ? SIMD2(raw.at, raw.hi) : SIMD2(raw.hi, raw.at)
+            let q1 = apply(p1)
+            let q2 = apply(p2)
+            let vertical = abs(q2.x - q1.x) < abs(q2.y - q1.y)
+            segs.append(Segment(
+                vertical: vertical,
+                at: vertical ? (q1.x + q2.x) / 2 : (q1.y + q2.y) / 2,
+                lo: vertical ? min(q1.y, q2.y) : min(q1.x, q2.x),
+                hi: vertical ? max(q1.y, q2.y) : max(q1.x, q2.x)
+            ))
+        }
+        return scoreSegs(segs, homeSegs)
+    }
+
+    /// 一组(近)轴对齐段对户型墙打分 —— score/scoreRefined 共用
+    private static func scoreSegs(_ segs: [Segment], _ homeSegs: [Segment]) -> Score {
         var residuals: [(value: Double, weight: Double)] = []
         var matchedLen = 0.0
         var matchedV = 0
         var matchedH = 0
-        for raw in scanSegs {
-            let s = rotateSeg(yaw, raw)
-            let at = s.at + (s.vertical ? tx : ty)
-            let lo = s.lo + (s.vertical ? ty : tx)
-            let hi = s.hi + (s.vertical ? ty : tx)
+        for s in segs {
             var best: Double?
             for l in homeSegs where l.vertical == s.vertical {
-                let overlap = min(l.hi, hi) - max(l.lo, lo)
+                let overlap = min(l.hi, s.hi) - max(l.lo, s.lo)
                 guard overlap >= s.len * minOverlap else { continue }
-                let d = abs(l.at - at)
+                let d = abs(l.at - s.at)
                 if best == nil || d < best! { best = d }
             }
             guard let best else { continue }
@@ -228,27 +361,56 @@ enum HomeFrame {
         }
         guard let best else { return fail("与户型墙体对不上(朝向差异过大或缺扫)") }
 
-        let matchedWalls = best.score.matchedV + best.score.matchedH
+        // 点到线小角精修:只有真把中位残差降下来才收(与 scan-register.js 同源)
+        var finalScore = best.score
+        var refined: (theta: Double, dx: Double, dy: Double, cx: Double, cy: Double)?
+        if let ref = refine(scanSegs, homeSegs, yaw: best.yaw, tx: best.tx, ty: best.ty),
+           abs(ref.theta) <= refineMaxRad {
+            let ct = cos(ref.theta)
+            let st = sin(ref.theta)
+            let applyRefined: (SIMD2<Double>) -> SIMD2<Double> = { p0 in
+                let q = rotate(best.yaw, p0)
+                let v = SIMD2(q.x + best.tx, q.y + best.ty)
+                let d = v - SIMD2(ref.cx, ref.cy)
+                return SIMD2(
+                    ref.cx + d.x * ct - d.y * st + ref.dx,
+                    ref.cy + d.x * st + d.y * ct + ref.dy
+                )
+            }
+            let refinedScore = scoreRefined(scanSegs, homeSegs, apply: applyRefined)
+            if refinedScore.medianM < best.score.medianM {
+                finalScore = refinedScore
+                refined = ref
+            }
+        }
+
+        let matchedWalls = finalScore.matchedV + finalScore.matchedH
         var reason: String?
         if matchedWalls < acceptMinWalls {
             reason = "匹配墙段太少(\(matchedWalls))"
-        } else if best.score.matchedV < 1 || best.score.matchedH < 1 {
+        } else if finalScore.matchedV < 1 || finalScore.matchedH < 1 {
             reason = "只有单一朝向的墙匹配上"
-        } else if best.score.medianM > acceptMedianM {
-            reason = String(format: "墙面中位残差 %.0fcm 超过 7cm", best.score.medianM * 100)
-        } else if best.score.p95M > acceptP95M {
-            reason = String(format: "墙面 P95 残差 %.0fcm 超过 15cm", best.score.p95M * 100)
+        } else if finalScore.medianM > acceptMedianM {
+            reason = String(format: "墙面中位残差 %.0fcm 超过 7cm", finalScore.medianM * 100)
+        } else if finalScore.p95M > acceptP95M {
+            reason = String(format: "墙面 P95 残差 %.0fcm 超过 15cm", finalScore.p95M * 100)
         }
         return Registration(
             ok: reason == nil,
             yawDeg: best.yaw,
             tx: best.tx,
             ty: best.ty,
-            medianCm: (best.score.medianM * 1000).rounded() / 10,
-            p95Cm: (best.score.p95M * 1000).rounded() / 10,
+            medianCm: (finalScore.medianM * 1000).rounded() / 10,
+            p95Cm: (finalScore.p95M * 1000).rounded() / 10,
             matchedWalls: matchedWalls,
             reason: reason,
-            phi: phi
+            phi: phi,
+            refineTheta: refined?.theta ?? 0,
+            refineCx: refined?.cx ?? 0,
+            refineCy: refined?.cy ?? 0,
+            refineDx: refined?.dx ?? 0,
+            refineDy: refined?.dy ?? 0,
+            refineDeg: refined.map { ($0.theta * 180 / .pi * 100).rounded() / 100 } ?? 0
         )
     }
 
@@ -257,7 +419,16 @@ enum HomeFrame {
         let rot = SIMD2(cos(r.phi), sin(r.phi))
         let q = SIMD2(p.x * rot.x - p.y * rot.y, p.x * rot.y + p.y * rot.x)
         let y = rotate(r.yawDeg, q)
-        return SIMD2(y.x + r.tx, y.y + r.ty)
+        let v = SIMD2(y.x + r.tx, y.y + r.ty)
+        // 精修(有才应用):绕质心小角旋转 + 平移
+        guard r.refineTheta != 0 || r.refineDx != 0 || r.refineDy != 0 else { return v }
+        let ct = cos(r.refineTheta)
+        let st = sin(r.refineTheta)
+        let d = v - SIMD2(r.refineCx, r.refineCy)
+        return SIMD2(
+            r.refineCx + d.x * ct - d.y * st + r.refineDx,
+            r.refineCy + d.x * st + d.y * ct + r.refineDy
+        )
     }
 
     // MARK: - 房间覆盖(漏扫检测)

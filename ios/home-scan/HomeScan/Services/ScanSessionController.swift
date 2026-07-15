@@ -99,7 +99,12 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self, let frame = self.arSession.currentFrame else { return }
             if !self.liveObjects.isEmpty {
-                self.shotCapture.consider(objects: self.liveObjects, frame: frame)
+                // 传 session:证据照走 12MP 带外高清帧(拿不到自动回退视频帧)
+                self.shotCapture.consider(
+                    objects: self.liveObjects,
+                    frame: frame,
+                    session: self.arSession
+                )
                 self.objectShotCount = self.shotCapture.count
             }
             // 机位自动拍照:没家具的房间(玄关/走廊)也要评估,别卡在空列表上

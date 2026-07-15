@@ -23,6 +23,7 @@ import {
   sideFreeDepthIn,
   solveAllProfiles,
   solveLayout,
+  viewingAnglePenaltyIn,
 } from '../src/lib/spatial/layout-solve.js'
 import {
   analyzeCirculation,
@@ -428,6 +429,22 @@ for (const s of slots) {
   )
   assert.ok(empty.openIn > full.openIn, `空房更开阔(${empty.openIn} vs ${full.openIn})`)
   assert.ok(empty.openIn > 40, `12ft 房间的开阔圆该有几英尺(got ${empty.openIn})`)
+}
+
+/* ---- 观看角先验:电视该在沙发正前方,不是斜对角 ---- */
+{
+  // 沙发背贴北墙(y=0),前向朝南(+y)
+  const segs = [{ edgeId: 'n', vertical: false, at: 0, lo: 0, hi: 720 }]
+  const sofa = { x: 200, y: 3, w: 252, h: 108 }
+  // 电视在正南 8ft:偏角 0 → 免罚
+  const front = viewingAnglePenaltyIn(sofa, { x: 290, y: 350, w: 72, h: 18 }, segs)
+  assert.equal(front, 0, `正前方免罚(got ${front})`)
+  // 电视几乎在正东(偏角 ~87°):罚接近封顶
+  const side = viewingAnglePenaltyIn(sofa, { x: 650, y: 40, w: 18, h: 72 }, segs)
+  assert.ok(side > 25, `斜到侧面要重罚(got ${side})`)
+  // 沙发不贴墙 → 前向猜不准,不罚
+  const floating = viewingAnglePenaltyIn({ x: 200, y: 150, w: 252, h: 108 }, { x: 650, y: 40, w: 18, h: 72 }, segs)
+  assert.equal(floating, 0, '不贴墙不装懂')
 }
 
 /* ---- 静态底图复用:与全量重算结果全等,且明显更快 ---- */

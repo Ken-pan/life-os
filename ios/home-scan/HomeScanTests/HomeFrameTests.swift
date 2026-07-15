@@ -145,4 +145,49 @@ final class HomeFrameTests: XCTestCase {
         )
         XCTAssertEqual(missing, ["阳台"])
     }
+
+    // MARK: - 点到线小角精修(与 scan-register.js 同源,场景与其单测对应)
+
+    func testRefineRecoversResidualRotation() {
+        // 户型:6×3m 矩形,每面墙拆两段(中点偏离旋转中心,θ 才可观测)+ 一道竖隔墙
+        let home: [HomeFrame.Segment] = [
+            .init(vertical: false, at: 0, lo: 0, hi: 2.8),
+            .init(vertical: false, at: 0, lo: 3.2, hi: 6),
+            .init(vertical: false, at: 3, lo: 0, hi: 2.8),
+            .init(vertical: false, at: 3, lo: 3.2, hi: 6),
+            .init(vertical: true, at: 0, lo: 0, hi: 1.4),
+            .init(vertical: true, at: 0, lo: 1.6, hi: 3),
+            .init(vertical: true, at: 6, lo: 0, hi: 1.4),
+            .init(vertical: true, at: 6, lo: 1.6, hi: 3),
+            .init(vertical: true, at: 3.6, lo: 0, hi: 3),
+        ]
+        // 扫描 = 每段的 at/lo/hi 按该段中点被 1.2° 旋转(绕房中心)后的位移偏移
+        // —— 主方向拉直后残余角差在真实数据里就是这个形态
+        let theta = 1.2 * Double.pi / 180
+        let c = SIMD2(3.0, 1.5)
+        func shift(_ x: Double, _ y: Double) -> SIMD2<Double> {
+            let d = SIMD2(x, y) - c
+            let r = SIMD2(d.x * cos(theta) - d.y * sin(theta), d.x * sin(theta) + d.y * cos(theta))
+            return r - d + SIMD2(0.25, 0.15) // 外加一点平移
+        }
+        let scan = home.map { s -> HomeFrame.Segment in
+            let midX = s.vertical ? s.at : (s.lo + s.hi) / 2
+            let midY = s.vertical ? (s.lo + s.hi) / 2 : s.at
+            let d = shift(midX, midY)
+            return .init(
+                vertical: s.vertical,
+                at: s.at + (s.vertical ? d.x : d.y),
+                lo: s.lo + (s.vertical ? d.y : d.x),
+                hi: s.hi + (s.vertical ? d.y : d.x)
+            )
+        }
+        let reg = HomeFrame.register(scan: scan, home: home)
+        XCTAssertTrue(reg.ok, reg.reason ?? "")
+        XCTAssertEqual(reg.refineDeg, -1.2, accuracy: 0.5, "精修应解出 ≈-1.2°")
+        XCTAssertLessThan(reg.medianCm, 3, "精修后中位残差 <3cm")
+        // toHome 应用精修:扫描墙中点投回后离目标墙 <3cm
+        let sample = SIMD2(scan[8].at, (scan[8].lo + scan[8].hi) / 2)
+        let p = HomeFrame.toHome(sample, reg)
+        XCTAssertEqual(p.x, 3.6, accuracy: 0.03)
+    }
 }
