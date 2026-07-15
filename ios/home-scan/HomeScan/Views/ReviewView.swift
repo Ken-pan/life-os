@@ -92,6 +92,9 @@ struct ReviewView: View {
         if let sqft = p.meta.sqft {
             parts.append(String(format: "%.0f sqft", sqft))
         }
+        if let reg = model.lastHomeFrame, reg.ok {
+            parts.append(String(format: "已对齐永久户型 ✓(残差 %.0fcm)", reg.medianCm))
+        }
         return parts.joined(separator: " · ")
     }
 

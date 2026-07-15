@@ -23,6 +23,26 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             List {
+                if let pending = model.pendingScan {
+                    Section {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("有一次没传完的扫描", systemImage: "tray.and.arrow.up")
+                                .font(.headline)
+                            Text(pendingSummary(pending))
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            HStack {
+                                Button("继续") { model.restorePendingScan() }
+                                    .buttonStyle(.borderedProminent)
+                                Button("丢弃", role: .destructive) { model.discardPendingScan() }
+                                    .buttonStyle(.bordered)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    } footer: {
+                        Text("扫描结果已落盘保存 —— 断网、退出 App 都不会丢,传完自动清理。")
+                    }
+                }
                 Section {
                     Button {
                         model.startScanning()
@@ -107,6 +127,13 @@ struct HomeView: View {
                 ContainerPickView(scan: scan)
             }
         }
+    }
+
+    private func pendingSummary(_ m: PendingScanStore.Manifest) -> String {
+        let photos = m.photoNames.compactMap { $0 }.count
+            + m.objectPhotos.values.reduce(0) { $0 + $1.count }
+        let when = m.savedAt.formatted(date: .abbreviated, time: .shortened)
+        return "\(when) · \(m.project.placements.count + m.project.fixtures.count) 件家具 · \(photos) 张照片"
     }
 
     static func dateLabel(ms: Int64) -> String {

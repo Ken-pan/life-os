@@ -53,6 +53,16 @@ struct ScanView: View {
                 Spacer()
 
                 // 实时引导:跟踪异常(橙色) > 家具补拍走位 > 机位站位
+                // Home Frame 徽标:对齐上了就一直亮着 —— 「我知道我在户型的哪里」
+                if let reg = model.scanController.homeFrame, reg.ok {
+                    Label(String(format: "已对齐户型 · 残差 %.0fcm", reg.medianCm), systemImage: "scope")
+                        .font(.caption2)
+                        .foregroundStyle(.green)
+                        .padding(6)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .padding(.bottom, 2)
+                }
+
                 if !betweenRooms, let hint = model.scanController.hudHint {
                     Label(hint.text, systemImage: hint.kind.icon)
                         .font(.footnote)
@@ -71,6 +81,19 @@ struct ScanView: View {
                 }
 
                 if betweenRooms {
+                    // 漏扫提示:配准成功才敢说「哪间没到过」——没对齐时闭嘴,别瞎指
+                    if let reg = model.scanController.homeFrame, reg.ok,
+                       !model.scanController.uncoveredRooms.isEmpty {
+                        Label(
+                            "还没扫到:\(model.scanController.uncoveredRooms.joined(separator: "、"))",
+                            systemImage: "location.slash"
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                        .padding(8)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .padding(.bottom, 4)
+                    }
                     HStack(spacing: 16) {
                         // 房间之间 ARSession 还活着 —— 补拍不需要「再扫一间」,
                         // 在这里直接拍(此前退回去补拍,取景重建像丢了建模,

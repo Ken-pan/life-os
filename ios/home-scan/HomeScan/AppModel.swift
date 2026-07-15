@@ -57,6 +57,8 @@ final class AppModel {
         // 实测「取消后再扫,取景一直黑屏」就是它。
         scanController.reset()
         scanController = ScanSessionController()
+        // 新控制器要重新喂永久户型(内存丢了就读本地缓存,不等网络)
+        scanController.setCanonicalHome(CanonicalHomeCache.load())
         // 自动机位拍照:拍到就并进 poses;「视角新不新」与全部已有机位比
         scanController.onAutoPose = { [weak self] pose in
             self?.poses.append(pose)
@@ -74,9 +76,13 @@ final class AppModel {
         route = .scanning
     }
 
+    /// 现场 Home Frame 配准结果(扫描结束时从控制器接走,预览页显示)
+    var lastHomeFrame: HomeFrame.Registration?
+
     /// 「全部完成」:合并房间 → 压平 → 投影 → 预览
     @MainActor
     func finishScanning() async {
+        lastHomeFrame = scanController.homeFrame
         do {
             let structure = try await scanController.mergeAll()
             structureJSON = try? JSONEncoder().encode(structure)
@@ -105,6 +111,10 @@ final class AppModel {
         // (跟着 scanWarnings 一起上传 —— 网页端也能看到这次扫描的证据短板)
         var scene = scene
         scene.warnings += EvidenceGuide.sceneWarnings(scene)
+        // 现场没对齐永久户型 → 提醒但不拦(网页端拉取时的全局配准是最终把关)
+        if let reg = lastHomeFrame, !reg.ok, let reason = reg.reason {
+            scene.warnings.append("现场未对齐永久户型(\(reason))—— 不影响上传,网页端配准会再把关")
+        }
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd"
         let projection = PlanProjector.projectScene(
@@ -116,6 +126,46 @@ final class AppModel {
         objectPhotoFiles = projection.objectPhotos
         photoFiles = scene.poses.map(\.photoFileURL)
         route = .reviewing
+        // 落盘:从这一刻起,断网/被杀都不丢这次扫描(上传成功才清)。
+        // 后台拷,几十张照片 ~0.2s,别卡预览页出场
+        let snapshot = (
+            scanId: scanId, project: projection.project, photos: photoFiles,
+            objects: objectPhotoFiles, structure: structureJSON, model: modelFileURL
+        )
+        Task.detached(priority: .utility) {
+            try? PendingScanStore.save(
+                scanId: snapshot.scanId,
+                project: snapshot.project,
+                photoFiles: snapshot.photos,
+                objectPhotoFiles: snapshot.objects,
+                structureJSON: snapshot.structure,
+                modelFileURL: snapshot.model
+            )
+        }
+    }
+
+    /// 上次没传完的扫描(冷启动从盘上捞的)—— 首页给「继续上传」入口
+    var pendingScan: PendingScanStore.Manifest?
+
+    /// 恢复落盘的扫描 → 直接进预览页(照片用落盘副本)
+    @MainActor
+    func restorePendingScan() {
+        guard let m = pendingScan else { return }
+        let r = PendingScanStore.restore(m)
+        scanId = m.scanId
+        convertedProject = m.project
+        photoFiles = r.photoFiles
+        objectPhotoFiles = r.objectPhotoFiles
+        structureJSON = r.structureJSON
+        modelFileURL = r.modelFileURL
+        pendingScan = nil
+        route = .reviewing
+    }
+
+    @MainActor
+    func discardPendingScan() {
+        PendingScanStore.clear()
+        pendingScan = nil
     }
 
     #if DEBUG
@@ -135,6 +185,8 @@ final class AppModel {
     func cancelScanning() {
         scanController.reset()
         poses = []
+        // 预览页「放弃」= 明确不要这次扫描,盘上副本一起丢
+        PendingScanStore.clear()
         route = .home
     }
 
@@ -159,6 +211,7 @@ final class AppModel {
             )
             uploadStatus = ""
             convertedProject = nil
+            PendingScanStore.clear() // 传完了,盘上的保险副本使命结束
             route = .home
             await refreshScans()
         } catch {
@@ -172,8 +225,12 @@ final class AppModel {
     func bootstrap() async {
         let restored = await supabase.restoreSession()
         userEmail = supabase.currentUserEmail
+        // 上次有没传完的扫描?登录态无关 —— 先捞出来,首页给恢复入口
+        pendingScan = PendingScanStore.load()
         route = restored ? .home : .signedOut
         if restored { await refreshScans() }
+        // 永久户型(优化副本):设备端重定位与漏扫检测的基准;断网退本地缓存
+        scanController.setCanonicalHome(await supabase.fetchCanonicalHome())
     }
 
     @MainActor

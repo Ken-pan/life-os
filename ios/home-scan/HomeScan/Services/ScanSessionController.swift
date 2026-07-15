@@ -45,6 +45,21 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     /// HUD 统一提示(nil = 不显示)
     private(set) var hudHint: (text: String, kind: HintKind)?
 
+    // ---- Home Frame 重定位(设备端) ----
+    /// 永久户型(优化副本);nil = 云端还没有(第一次建家),扫描照常
+    private var canonicalHome: CanonicalHome?
+    private var canonicalSegments: [HomeFrame.Segment] = []
+    /// 最近一次配准结果(HUD 徽标 + 预览页;nil = 墙还不够/没有户型基准)
+    private(set) var homeFrame: HomeFrame.Registration?
+    /// 配准成功后对照户型分区算出的「还没扫到的房间」
+    private(set) var uncoveredRooms: [String] = []
+    private var lastRegisterAt: TimeInterval = 0
+
+    func setCanonicalHome(_ home: CanonicalHome?) {
+        canonicalHome = home
+        canonicalSegments = home.map { HomeFrame.segments(fromWallGraph: $0.wallGraph) } ?? []
+    }
+
     /// RoomPlan 实时快照里的物体(didUpdate 喂进来,抓拍定时器消费)
     private var liveObjects: [CapturedRoom.Object] = []
     /// 当前房间的实时墙段(俯视 2D,米)—— 证据引导用它剔掉「靠墙拍不到」的方位
@@ -106,9 +121,53 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             } else {
                 self.hudHint = nil
             }
+
+            // Home Frame 重定位:每 2s 一次(几十段墙的 1D 投票,毫秒级)。
+            // 对齐上了 = 扫的东西直接落进永久户型坐标;对不上只是没徽标,不打扰
+            self.updateHomeFrame(now: frame.timestamp)
         }
         timer.tolerance = 0.15 // 打分不挑时刻,给系统合并唤醒的余地
         shotTimer = timer
+    }
+
+    /// 已完成房间 + 当前房间的全部墙(世界系俯视线段)
+    private func allWorldWalls() -> [(a: SIMD2<Double>, b: SIMD2<Double>)] {
+        var out: [(a: SIMD2<Double>, b: SIMD2<Double>)] = []
+        for room in capturedRooms {
+            for wall in room.walls { out.append(Self.wallLine(wall)) }
+        }
+        out.append(contentsOf: liveWalls.map { (a: $0.a, b: $0.b) })
+        return out
+    }
+
+    /// 墙面 → 俯视线段(与 didUpdate/StructureFlattener 同一套数学)
+    private static func wallLine(_ wall: CapturedRoom.Surface) -> (a: SIMD2<Double>, b: SIMD2<Double>) {
+        let t = wall.transform
+        let center = SIMD2(Double(t.columns.3.x), Double(t.columns.3.z))
+        var axis = SIMD2(Double(t.columns.0.x), Double(t.columns.0.z))
+        let len = simd_length(axis)
+        axis = len > 1e-9 ? axis / len : SIMD2(1, 0)
+        let half = Double(wall.dimensions.x) / 2
+        return (a: center - axis * half, b: center + axis * half)
+    }
+
+    /// Home Frame 配准(节流 2s;几十段墙的量化 1D 投票,毫秒级)
+    private func updateHomeFrame(now: TimeInterval) {
+        guard !canonicalSegments.isEmpty, now - lastRegisterAt > 2 else { return }
+        lastRegisterAt = now
+        let walls = allWorldWalls()
+        guard walls.count >= 3 else { return }
+        let (segs, phi) = HomeFrame.axisAlign(walls: walls)
+        let reg = HomeFrame.register(scan: segs, home: canonicalSegments, phi: phi)
+        homeFrame = reg
+        if reg.ok, let home = canonicalHome {
+            uncoveredRooms = HomeFrame.uncoveredRooms(
+                zones: home.zones,
+                pxPerFt: home.wallGraph.pxPerFt,
+                liveWalls: walls,
+                registration: reg
+            )
+        }
     }
 
     /// 跟踪质量监控:恶化持续 >1.5s 才提示(镜头一晃就闪警告太吵)。
@@ -224,6 +283,9 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         autoViewpoint.reset()
         hudHint = nil
         objectShotCount = 0
+        homeFrame = nil
+        uncoveredRooms = []
+        lastRegisterAt = 0
         arSession.pause()
     }
 
