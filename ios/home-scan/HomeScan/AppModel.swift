@@ -31,6 +31,8 @@ final class AppModel {
     var convertedProject: HomeOSProject?
     /// 与 convertedProject.viewpoints 按下标对齐的本机照片
     var photoFiles: [URL?] = []
+    /// placement/fixture id → 扫描中自动抓拍的多视角家具照片(本机临时文件)
+    var objectPhotoFiles: [String: [PlanProjector.Projection.ShotAsset]] = [:]
     /// 原始 CapturedRoom JSON(备重处理);mock 模式为 nil
     var structureJSON: Data?
     /// RoomPlan 导出的 USDZ 3D 模型(真实空间模式);mock/导出失败为 nil
@@ -43,6 +45,7 @@ final class AppModel {
         poses = []
         convertedProject = nil
         photoFiles = []
+        objectPhotoFiles = [:]
         structureJSON = nil
         modelFileURL = nil
         scanId = UUID()
@@ -60,7 +63,10 @@ final class AppModel {
                 .appendingPathComponent("scan-\(scanId.uuidString.lowercased()).usdz")
             try? structure.export(to: usdz, exportOptions: .model)
             modelFileURL = FileManager.default.fileExists(atPath: usdz.path) ? usdz : nil
-            var scene = StructureFlattener.flatten(structure: structure)
+            var scene = StructureFlattener.flatten(
+                structure: structure,
+                shots: scanController.shotCapture.allShots
+            )
             scene.poses = poses
             applyScene(scene)
         } catch {
@@ -75,12 +81,13 @@ final class AppModel {
     func applyScene(_ scene: FlatScene) {
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd"
-        let project = PlanProjector.project(
+        let projection = PlanProjector.projectScene(
             scene,
             scanId: scanId.uuidString.lowercased(),
             nameZh: "扫描 \(df.string(from: Date()))"
         )
-        convertedProject = project
+        convertedProject = projection.project
+        objectPhotoFiles = projection.objectPhotos
         photoFiles = scene.poses.map(\.photoFileURL)
         route = .reviewing
     }
@@ -115,6 +122,7 @@ final class AppModel {
                 scanId: scanId,
                 project: project,
                 photoFiles: photoFiles,
+                objectPhotoFiles: objectPhotoFiles,
                 structureJSON: structureJSON,
                 modelFileURL: modelFileURL,
                 label: label,

@@ -16,7 +16,25 @@ enum PlanProjector {
 
     // MARK: - 入口
 
+    /// 投影结果:payload 本体 + 「placement/fixture id → 本机多视角抓拍图」
+    /// (照片是本地临时文件,不进 payload;上传时换成桶内路径回填
+    /// attrs.photoPath / attrs.photos)
+    struct Projection {
+        var project: HomeOSProject
+        var objectPhotos: [String: [ShotAsset]]
+
+        struct ShotAsset {
+            var url: URL
+            var azimuthDeg: Double?
+        }
+    }
+
+    /// 兼容旧签名(单测/预览只关心 payload 本体)
     static func project(_ scene: FlatScene, scanId: String, nameZh: String) -> HomeOSProject {
+        projectScene(scene, scanId: scanId, nameZh: nameZh).project
+    }
+
+    static func projectScene(_ scene: FlatScene, scanId: String, nameZh: String) -> Projection {
         var warnings = scene.warnings
 
         // 1) 主方向旋转:让多数墙轴对齐
@@ -31,7 +49,10 @@ enum PlanProjector {
         let rawRooms = scene.rooms.map { r in r.points.map { rotate($0, phi) * pxPerM } }
         for r in rawRooms { pts.append(contentsOf: r) }
         guard !pts.isEmpty else {
-            return emptyProject(scanId: scanId, nameZh: nameZh, warnings: ["扫描里没有墙体"])
+            return Projection(
+                project: emptyProject(scanId: scanId, nameZh: nameZh, warnings: ["扫描里没有墙体"]),
+                objectPhotos: [:]
+            )
         }
         let minX = pts.map(\.x).min()!
         let minY = pts.map(\.y).min()!
@@ -120,15 +141,27 @@ enum PlanProjector {
                     )
                     return nil
                 }
+                // 样式属性精化:L形沙发/茶几/转椅/开放架…(细分 kind 仍在网页词表内)
+                let styled = KindMaps.applyStyle(
+                    baseKind: m.kind,
+                    baseLabel: m.label,
+                    styleKeys: item.styleKeys
+                )
                 return MappedItem(
-                    kind: m.kind,
-                    label: m.label,
+                    kind: styled.kind,
+                    label: styled.label,
                     isFixture: isFixture,
                     center: c,
                     axisDeg: item.axisDeg + phi * 180 / .pi,
                     widthPx: item.widthM * pxPerM,
                     depthPx: item.depthM * pxPerM,
-                    draftIdx: di
+                    draftIdx: di,
+                    heightIn: item.heightM > 0 ? round1(item.heightM * 39.3700787) : nil,
+                    confidence: item.confidence,
+                    styleKeys: item.styleKeys.isEmpty ? nil : item.styleKeys,
+                    styleZh: styled.styleZh,
+                    colorHex: item.colorHex,
+                    photos: item.photos.isEmpty ? nil : item.photos
                 )
             },
             warnings: &warnings
@@ -137,9 +170,18 @@ enum PlanProjector {
         // 7) RoomPlan 认不出功能的区(unidentified),按区内家具反推名字;同名加序号
         let zones = namedZones(drafts: zoneDrafts, items: mapped)
 
-        // 8) 物体 → placements / fixtures
+        // 低置信度的尺寸不许静默进图 —— 点名提示补扫(分米级承诺的另一半)
+        let shaky = mapped.filter { $0.confidence == "low" }.map(\.label)
+        if !shaky.isEmpty {
+            warnings.append(
+                "低置信度识别:\(Set(shaky).sorted().joined(separator: "、")) —— 尺寸可能不准,建议贴近补扫几秒"
+            )
+        }
+
+        // 8) 物体 → placements / fixtures(外观信息进 attrs,抓拍图按 id 带出)
         var placements: [HomeOSProject.Placement] = []
         var fixtures: [HomeOSProject.Fixture] = []
+        var objectPhotos: [String: [Projection.ShotAsset]] = [:]
         for m in mapped {
             let snapped = snappedRotation(axisDeg: m.axisDeg)
             // 局部 x 轴贴屏幕横向(0/180)时,footprint 宽=物宽;竖向(90/270)时对调
@@ -147,20 +189,37 @@ enum PlanProjector {
             let fh = (snapped == 0 || snapped == 180) ? m.depthPx : m.widthPx
             let x = round1(m.center.x - fw / 2)
             let y = round1(m.center.y - fh / 2)
+            let attrs = HomeOSProject.ObjectAttrs(
+                styleKeys: m.styleKeys,
+                styleZh: m.styleZh,
+                heightIn: m.heightIn,
+                // 实测脚印真值(英寸,gridPx=3px/in):w/h 之后随用户编辑漂,这两个不动
+                measuredWIn: round1(fw / gridPx),
+                measuredHIn: round1(fh / gridPx),
+                confidence: m.confidence,
+                colorHex: m.colorHex,
+                photoPath: nil // 上传时回填桶内路径
+            )
             if m.isFixture {
+                let id = "fx-\(fixtures.count + 1)"
                 fixtures.append(
                     HomeOSProject.Fixture(
-                        id: "fx-\(fixtures.count + 1)",
+                        id: id,
                         kind: m.kind,
                         label: m.label,
                         bounds: .init(x: x, y: y, w: round1(fw), h: round1(fh)),
-                        rotation: snapped
+                        rotation: snapped,
+                        attrs: attrs.isEmpty ? nil : attrs
                     )
                 )
+                if let ph = m.photos, !ph.isEmpty {
+                    objectPhotos[id] = ph.map { .init(url: $0.fileURL, azimuthDeg: $0.azimuthDeg) }
+                }
             } else {
+                let id = "pl-\(placements.count + 1)"
                 placements.append(
                     HomeOSProject.Placement(
-                        id: "pl-\(placements.count + 1)",
+                        id: id,
                         kind: m.kind,
                         label: m.label,
                         x: x,
@@ -168,9 +227,13 @@ enum PlanProjector {
                         w: round1(fw),
                         h: round1(fh),
                         rotation: snapped,
-                        zoneId: m.draftIdx.map { "z-\($0 + 1)" }
+                        zoneId: m.draftIdx.map { "z-\($0 + 1)" },
+                        attrs: attrs.isEmpty ? nil : attrs
                     )
                 )
+                if let ph = m.photos, !ph.isEmpty {
+                    objectPhotos[id] = ph.map { .init(url: $0.fileURL, azimuthDeg: $0.azimuthDeg) }
+                }
             }
         }
 
@@ -199,7 +262,7 @@ enum PlanProjector {
             acc + abs(shoelace(z.polygon.map { SIMD2($0.x, $0.y) })) / (pxPerFt * pxPerFt)
         }
 
-        return HomeOSProject(
+        let project = HomeOSProject(
             wallGraph: graph.toModel(),
             graphOpenings: openings,
             zones: zones,
@@ -214,6 +277,7 @@ enum PlanProjector {
                 sourceNote: "iOS HomeScan · RoomPlan 实测"
             )
         )
+        return Projection(project: project, objectPhotos: objectPhotos)
     }
 
     // MARK: - 主方向
@@ -292,15 +356,26 @@ enum PlanProjector {
         var depthPx: Double
         /// 所属 zoneDrafts 下标(区外为 nil)
         var draftIdx: Int?
+        // 外观/实测补充(→ attrs)
+        var heightIn: Double?
+        var confidence: String?
+        var styleKeys: [String]?
+        var styleZh: String?
+        var colorHex: String?
+        var photos: [FlatScene.ObjectPhoto]?
     }
 
-    /// 同 **kind** 且中心距 <0.6m 视为同一件,保留脚印更大的那件。
+    /// 同 **kind** 且中心距 <0.6m 视为同一件。谁的尺寸可信:
+    /// **置信度高的赢**(RoomPlan 对扫得不全的物体给偏小的包围盒,同时置信度掉级,
+    /// 盲取更大的会把「误检的大框」当真);同级才取脚印更大(更完整)的那件。
+    /// 两次测量差 >10cm 时留告警 —— 这正是「该补扫一圈」的信号。
     /// 按 kind 而非原始类目:oven/stove 都映射成 stove,一体机否则会重合两遍。
     static func dedupMapped(
         _ items: [MappedItem],
         warnings: inout [String]
     ) -> [MappedItem] {
         let mergeDistPx = 0.6 * pxPerM
+        let disagreePx = 0.10 * pxPerM // 10cm:分米级承诺的红线
         var kept: [MappedItem] = []
         var dropped = 0
         for item in items {
@@ -308,15 +383,50 @@ enum PlanProjector {
                 other.kind == item.kind && length(other.center - item.center) < mergeDistPx
             }) {
                 dropped += 1
-                if item.widthPx * item.depthPx > kept[i].widthPx * kept[i].depthPx {
-                    kept[i] = item
+                let old = kept[i]
+                let dw = abs(old.widthPx - item.widthPx)
+                let dd = abs(old.depthPx - item.depthPx)
+                if max(dw, dd) > disagreePx {
+                    let cm = Int((max(dw, dd) / pxPerM * 100).rounded())
+                    warnings.append("「\(old.label)」两次测量尺寸差 \(cm)cm,已取更可信一次;建议对着它补扫确认")
                 }
+                let oldRank = confidenceRank(old.confidence)
+                let newRank = confidenceRank(item.confidence)
+                let newWins = newRank != oldRank
+                    ? newRank > oldRank
+                    : item.widthPx * item.depthPx > old.widthPx * old.depthPx
+                kept[i] = newWins
+                    ? mergedAttrs(into: item, from: old)
+                    : mergedAttrs(into: old, from: item)
             } else {
                 kept.append(item)
             }
         }
         if dropped > 0 { warnings.append("合并 \(dropped) 件重复识别的物体(同位重合/扫描重叠区)") }
         return kept
+    }
+
+    /// nil(mock/未知)排在 low 之上、medium 之下:没证据说它差,但也不该赢过实测 high。
+    static func confidenceRank(_ c: String?) -> Int {
+        switch c {
+        case "high": return 3
+        case "medium": return 2
+        case nil: return 1
+        default: return 0 // low
+        }
+    }
+
+    /// 去重时别把外观信息丢了:winner 缺的字段从 loser 补
+    /// (烤箱灶一体机常常只有其中一个类目抓到了照片)。
+    private static func mergedAttrs(into winner: MappedItem, from loser: MappedItem) -> MappedItem {
+        var out = winner
+        out.heightIn = out.heightIn ?? loser.heightIn
+        out.confidence = out.confidence ?? loser.confidence
+        out.styleKeys = out.styleKeys ?? loser.styleKeys
+        out.styleZh = out.styleZh ?? loser.styleZh
+        out.colorHex = out.colorHex ?? loser.colorHex
+        out.photos = out.photos ?? loser.photos
+        return out
     }
 
     // MARK: - 分区命名

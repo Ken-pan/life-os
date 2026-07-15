@@ -20,7 +20,7 @@ struct ScanView: View {
                     Button("取消") { model.cancelScanning() }
                         .buttonStyle(.bordered)
                     Spacer()
-                    Text("已扫 \(model.scanController.roomCount) 间 · \(model.poses.count) 张机位")
+                    Text("已扫 \(model.scanController.roomCount) 间 · \(model.poses.count) 张机位 · \(model.scanController.objectShotCount) 件家具照")
                         .font(.footnote)
                         .padding(6)
                         .background(.ultraThinMaterial, in: Capsule())

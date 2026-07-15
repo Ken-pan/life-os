@@ -35,6 +35,26 @@ struct FlatScene {
         var axisDeg: Double
         var widthM: Double   // 物体局部 x 向尺寸
         var depthM: Double   // 物体局部 z 向尺寸
+        var heightM: Double = 0  // 物体局部 y 向尺寸(实测高)
+        /// RoomPlan 识别置信度("high"/"medium"/"low";mock 为 nil)
+        var confidence: String? = nil
+        /// RoomPlan iOS 17 样式属性,带类型前缀防跨枚举撞名
+        /// (如 "SofaType.lShaped"、"TableType.coffee" —— 见 KindMaps.applyStyle)
+        var styleKeys: [String] = []
+        /// 扫描中自动抓拍的这件家具的照片(最佳视角裁剪;无则 nil)
+        var photoFileURL: URL? = nil
+        /// 从抓拍图提出的主色(#RRGGBB)
+        var colorHex: String? = nil
+        /// 多视角证据包(分数降序,第一张 = photoFileURL 那张)
+        var photos: [ObjectPhoto] = []
+    }
+
+    /// 一张家具抓拍图 + 它是从哪个方位拍的
+    struct ObjectPhoto {
+        var fileURL: URL
+        /// 物体中心 → 相机的俯视方位角(度,0..360;mock 可为 nil)
+        var azimuthDeg: Double?
+        var score: Double = 0
     }
 
     struct RoomPoly {

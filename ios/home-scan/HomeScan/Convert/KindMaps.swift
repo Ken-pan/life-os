@@ -34,6 +34,62 @@ enum KindMaps {
         inBathroom ? ("vanity", "洗手台") : ("kitchenSink", "水槽")
     }
 
+    /// iOS 17 样式属性 → 更细的 kind/中文名。key 带枚举类型前缀
+    /// ("SofaType.lShaped"),因为 rawValue 会跨枚举撞名(dining 既是椅也是桌)。
+    /// 细分 kind 必须仍在 PLACEMENT_KINDS 里(armchair/coffee_table/office_chair/shelf 都有)。
+    static func applyStyle(
+        baseKind: String,
+        baseLabel: String,
+        styleKeys: [String]
+    ) -> (kind: String, label: String, styleZh: String?) {
+        let keys = Set(styleKeys)
+        var kind = baseKind
+        var label = baseLabel
+        var styleZh: String?
+
+        switch baseKind {
+        case "sofa":
+            if keys.contains("SofaType.singleSeat") {
+                kind = "armchair"; label = "单人沙发"; styleZh = "单人"
+            } else if keys.contains("SofaType.lShaped") || keys.contains("SofaType.lShapedExtension") {
+                label = "L形沙发"; styleZh = "L形"
+            } else if keys.contains("SofaType.rectangular") {
+                label = "沙发"; styleZh = "直排"
+            }
+        case "table":
+            let round = keys.contains("TableShapeType.circularElliptic")
+            if keys.contains("TableType.coffee") {
+                kind = "coffee_table"; label = "茶几"; styleZh = round ? "圆形茶几" : "茶几"
+            } else if keys.contains("TableType.dining") {
+                label = round ? "圆餐桌" : "餐桌"; styleZh = round ? "圆形餐桌" : "餐桌"
+            } else if round {
+                label = "圆桌"; styleZh = "圆形"
+            } else if keys.contains("TableShapeType.lShaped") {
+                label = "转角桌"; styleZh = "L形"
+            }
+        case "chair":
+            if keys.contains("ChairType.swivel") {
+                kind = "office_chair"; label = "转椅"; styleZh = "转椅"
+            } else if keys.contains("ChairType.stool") {
+                label = "凳子"; styleZh = "凳"
+            } else if keys.contains("ChairType.dining") {
+                label = "餐椅"; styleZh = "餐椅"
+            }
+            if keys.contains("ChairArmType.existing"), styleZh != nil {
+                styleZh! += "·带扶手"
+            }
+        case "cabinet":
+            if keys.contains("StorageType.shelf") {
+                kind = "shelf"; label = "架子"; styleZh = "开放架"
+            } else if keys.contains("StorageType.cabinet") {
+                styleZh = "封闭柜"
+            }
+        default:
+            break
+        }
+        return (kind, label, styleZh)
+    }
+
     /// 没有对应符号的类目 —— 跳过并记 scanWarnings
     static let skippedCategories: Set<String> = ["fireplace", "stairs"]
 

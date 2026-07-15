@@ -20,6 +20,14 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     private var captureView: RoomCaptureView?
     private let roomBuilder = RoomBuilder(options: [.beautifyObjects])
 
+    /// 家具自动抓拍:跨房间共用一个(同一 ARSession 同一世界系)
+    let shotCapture = ObjectShotCapture()
+    /// RoomPlan 实时快照里的物体(didUpdate 喂进来,抓拍定时器消费)
+    private var liveObjects: [CapturedRoom.Object] = []
+    private var shotTimer: Timer?
+    /// HUD 用:已抓到照片的家具件数
+    private(set) var objectShotCount = 0
+
     var roomCount: Int { capturedRooms.count }
 
     /// ScanView 每一代调用一次;RoomCaptureView 挂共享 ARSession
@@ -29,7 +37,22 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         view.captureSession.delegate = self
         view.captureSession.run(configuration: RoomCaptureSession.Configuration())
         captureView = view
+        startShotTimer()
         return view
+    }
+
+    /// 2Hz 评估当前帧 —— 打分轻(24 次矩阵乘/件),只有明显更好的一眼才真裁图。
+    @MainActor
+    private func startShotTimer() {
+        guard shotTimer == nil else { return }
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            guard let self, !self.liveObjects.isEmpty,
+                  let frame = self.arSession.currentFrame else { return }
+            self.shotCapture.consider(objects: self.liveObjects, frame: frame)
+            self.objectShotCount = self.shotCapture.count
+        }
+        timer.tolerance = 0.15 // 打分不挑时刻,给系统合并唤醒的余地
+        shotTimer = timer
     }
 
     private var pendingCompletion: CheckedContinuation<Void, Never>?
@@ -63,16 +86,31 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         capturedRooms = []
         roomGeneration = 0
         lastError = nil
+        shotTimer?.invalidate()
+        shotTimer = nil
+        liveObjects = []
+        shotCapture.reset()
+        objectShotCount = 0
         arSession.pause()
     }
 
     // MARK: - RoomCaptureSessionDelegate
+
+    nonisolated func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
+        let objects = room.objects
+        Task { @MainActor in
+            self.liveObjects = objects
+        }
+    }
 
     nonisolated func captureSession(
         _ session: RoomCaptureSession,
         didEndWith data: CapturedRoomData,
         error: (any Error)?
     ) {
+        Task { @MainActor in
+            self.liveObjects = []  // 房间收尾,别再对着旧快照抓拍
+        }
         if let error {
             Task { @MainActor in
                 self.lastError = "本房间扫描失败:\(error.localizedDescription)"

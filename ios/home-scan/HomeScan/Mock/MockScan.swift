@@ -35,10 +35,32 @@ enum MockScan {
             .init(kind: .window, center: r(2, 0), widthM: 1.2, wallIndex: 0),
         ]
 
+        // 家具证据包:床一张、沙发两个方位(多视角链路要有真文件可走)
+        var bedPhotos: [FlatScene.ObjectPhoto] = []
+        if let u = mockPhoto(hue: 0.55) { bedPhotos.append(.init(fileURL: u, azimuthDeg: 90, score: 0.7)) }
+        var sofaPhotos: [FlatScene.ObjectPhoto] = []
+        if let u = mockPhoto(hue: 0.08) { sofaPhotos.append(.init(fileURL: u, azimuthDeg: 45, score: 0.8)) }
+        if let u = mockPhoto(hue: 0.12) { sofaPhotos.append(.init(fileURL: u, azimuthDeg: 170, score: 0.55)) }
+
         s.items = [
-            .init(category: "bed", center: r(1.2, 1.5), axisDeg: rot * 180 / .pi + 90, widthM: 1.5, depthM: 2.0),
-            .init(category: "sofa", center: r(6.5, 3.2), axisDeg: rot * 180 / .pi, widthM: 2.2, depthM: 0.9),
-            .init(category: "refrigerator", center: r(8.5, 0.5), axisDeg: rot * 180 / .pi, widthM: 0.7, depthM: 0.7),
+            .init(
+                category: "bed", center: r(1.2, 1.5), axisDeg: rot * 180 / .pi + 90,
+                widthM: 1.5, depthM: 2.0, heightM: 0.6, confidence: "high",
+                photoFileURL: bedPhotos.first?.fileURL, colorHex: "#7A8CA3",
+                photos: bedPhotos
+            ),
+            // L 形沙发:iOS 17 样式属性 + 多视角证据包 + 主色,走通外观全链路
+            .init(
+                category: "sofa", center: r(6.5, 3.2), axisDeg: rot * 180 / .pi,
+                widthM: 2.2, depthM: 0.9, heightM: 0.82, confidence: "high",
+                styleKeys: ["SofaType.lShaped"],
+                photoFileURL: sofaPhotos.first?.fileURL, colorHex: "#B08968",
+                photos: sofaPhotos
+            ),
+            .init(
+                category: "refrigerator", center: r(8.5, 0.5), axisDeg: rot * 180 / .pi,
+                widthM: 0.7, depthM: 0.7, heightM: 1.7, confidence: "medium"
+            ),
             // 同一台冰箱被第二次扫描重复识别(中心差 20cm) —— 应被去重合并
             .init(category: "refrigerator", center: r(8.6, 0.65), axisDeg: rot * 180 / .pi, widthM: 0.72, depthM: 0.68),
             // 烤箱灶一体机:RoomPlan 报 stove + oven 两个类目、几乎同坐标,

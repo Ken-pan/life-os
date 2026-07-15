@@ -26,6 +26,7 @@ extension SupabaseService {
         scanId: UUID,
         project: HomeOSProject,
         photoFiles: [URL?],
+        objectPhotoFiles: [String: [PlanProjector.Projection.ShotAsset]] = [:],
         structureJSON: Data?,
         modelFileURL: URL?,
         label: String,
@@ -39,13 +40,15 @@ extension SupabaseService {
         let storage = client.storage.from(Config.scanPhotoBucket)
         let prefix = "\(uid.uuidString.lowercased())/\(scanId.uuidString.lowercased())"
 
-        // 1) 照片逐张(与 viewpoints 按下标对齐)
+        // 1) 照片逐张(与 viewpoints 按下标对齐)。
+        //    路径按机位 id 确定性定名 —— 断点重传原地覆盖(upsert),
+        //    不会像随机 UUID 那样每次重试都在桶里攒一份孤儿文件。
         let withPhotos = photoFiles.enumerated().filter { $0.element != nil }
         var done = 0
         for (i, fileURL) in withPhotos {
             guard let fileURL, i < project.viewpoints.count else { continue }
             let data = try Data(contentsOf: fileURL)
-            let path = "\(prefix)/\(UUID().uuidString.lowercased()).jpg"
+            let path = "\(prefix)/\(project.viewpoints[i].id).jpg"
             await onProgress("上传照片 \(done + 1)/\(withPhotos.count)…")
             try await storage.upload(
                 path,
@@ -54,6 +57,41 @@ extension SupabaseService {
             )
             project.viewpoints[i].photoPath = path
             done += 1
+        }
+
+        // 1b) 家具多视角证据包(按 placement/fixture id + 序号定名 ——
+        //     幂等,断点重传不脏)。单张失败跳过:证据少一张不该拖垮整次上传。
+        let objectShots = objectPhotoFiles.sorted { $0.key < $1.key }
+        let totalShots = objectShots.reduce(0) { $0 + $1.value.count }
+        var objDone = 0
+        for (id, assets) in objectShots {
+            var uploaded: [HomeOSProject.ObjectAttrs.ObjectPhoto] = []
+            for (k, asset) in assets.enumerated() {
+                guard let data = try? Data(contentsOf: asset.url) else { continue }
+                let path = "\(prefix)/obj-\(id)-\(k).jpg"
+                objDone += 1
+                await onProgress("上传家具照片 \(objDone)/\(totalShots)…")
+                do {
+                    try await storage.upload(
+                        path,
+                        data: data,
+                        options: FileOptions(contentType: "image/jpeg", upsert: true)
+                    )
+                } catch { continue }
+                uploaded.append(.init(path: path, azimuthDeg: asset.azimuthDeg))
+            }
+            guard !uploaded.isEmpty else { continue }
+            if let i = project.placements.firstIndex(where: { $0.id == id }) {
+                var attrs = project.placements[i].attrs ?? HomeOSProject.ObjectAttrs()
+                attrs.photoPath = uploaded[0].path
+                attrs.photos = uploaded
+                project.placements[i].attrs = attrs
+            } else if let i = project.fixtures.firstIndex(where: { $0.id == id }) {
+                var attrs = project.fixtures[i].attrs ?? HomeOSProject.ObjectAttrs()
+                attrs.photoPath = uploaded[0].path
+                attrs.photos = uploaded
+                project.fixtures[i].attrs = attrs
+            }
         }
 
         // 2) 原始结构 JSON(备将来重处理) + USDZ 3D 模型(真实空间模式)

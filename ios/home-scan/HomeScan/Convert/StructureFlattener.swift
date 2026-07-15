@@ -9,8 +9,12 @@ import simd
 /// 那是 StructureBuilder 跨房间合并去重后的结果。早期版本遍历 `structure.rooms`,
 /// 同一件家具在重叠房间里会被数两遍。
 enum StructureFlattener {
-    static func flatten(structure: CapturedStructure) -> FlatScene {
+    static func flatten(
+        structure: CapturedStructure,
+        shots: [ObjectShotCapture.Shot] = []
+    ) -> FlatScene {
         var scene = FlatScene()
+        let shotIndex = ShotIndex(shots)
 
         // 门窗宿主要按 surface identifier 找墙,先建索引
         var wallIndexById: [UUID: Int] = [:]
@@ -35,13 +39,32 @@ enum StructureFlattener {
         for object in structure.objects {
             let t = object.transform
             let axis = normalize2(SIMD2(Double(t.columns.0.x), Double(t.columns.0.z)))
+            let center = translation2(t)
+            let category = categoryName(object.category)
+            let shotList = shotIndex.match(
+                identifier: object.identifier,
+                category: category,
+                center: center
+            )
             scene.items.append(
                 FlatScene.Item(
-                    category: categoryName(object.category),
-                    center: translation2(t),
+                    category: category,
+                    center: center,
                     axisDeg: atan2(axis.y, axis.x) * 180 / .pi,
                     widthM: Double(object.dimensions.x),
-                    depthM: Double(object.dimensions.z)
+                    depthM: Double(object.dimensions.z),
+                    heightM: Double(object.dimensions.y),
+                    confidence: confidenceName(object.confidence),
+                    styleKeys: styleKeys(of: object),
+                    photoFileURL: shotList.first?.photoFileURL,
+                    colorHex: shotList.first?.colorHex,
+                    photos: shotList.map {
+                        FlatScene.ObjectPhoto(
+                            fileURL: $0.photoFileURL,
+                            azimuthDeg: $0.azimuthDeg,
+                            score: $0.score
+                        )
+                    }
                 )
             )
         }
@@ -110,6 +133,55 @@ enum StructureFlattener {
     /// String(describing:) 对无关联值的 enum case 就是 case 名,与 KindMaps 键一致。
     private static func categoryName(_ category: CapturedRoom.Object.Category) -> String {
         String(describing: category)
+    }
+
+    private static func confidenceName(_ c: CapturedRoom.Confidence) -> String {
+        String(describing: c) // high / medium / low
+    }
+
+    /// iOS 17 样式属性 → "枚举类型.rawValue" 键(如 "SofaType.lShaped")。
+    /// rawValue 跨枚举撞名(dining 既是椅型也是桌型),必须带类型前缀。
+    private static func styleKeys(of object: CapturedRoom.Object) -> [String] {
+        object.attributes.compactMap { attr in
+            let raw = attr.rawValue
+            guard raw != "unidentified" else { return nil }
+            return "\(String(describing: type(of: attr))).\(raw)"
+        }
+    }
+
+    /// 抓拍图检索:identifier 直查;StructureBuilder 合并可能换 id,
+    /// 兜底按「同类目 + 中心距 <0.75m」找最近的一件的整个证据包。
+    /// 返回按分数降序的多视角照片列表(空 = 没抓到)。
+    private struct ShotIndex {
+        private var byId: [UUID: [ObjectShotCapture.Shot]]
+
+        init(_ shots: [ObjectShotCapture.Shot]) {
+            byId = Dictionary(grouping: shots, by: \.objectId)
+                .mapValues { $0.sorted { $0.score > $1.score } }
+        }
+
+        func match(
+            identifier: UUID,
+            category: String,
+            center: SIMD2<Double>
+        ) -> [ObjectShotCapture.Shot] {
+            if let hit = byId[identifier] { return hit }
+            var best: [ObjectShotCapture.Shot] = []
+            var bestD = 0.75
+            for list in byId.values {
+                guard let head = list.first, head.category == category else { continue }
+                let d = length(head.worldCenter - center)
+                if d < bestD {
+                    bestD = d
+                    best = list
+                }
+            }
+            return best
+        }
+
+        private func length(_ v: SIMD2<Double>) -> Double {
+            (v.x * v.x + v.y * v.y).squareRoot()
+        }
     }
 
     private static func translation2(_ t: simd_float4x4) -> SIMD2<Double> {

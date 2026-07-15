@@ -282,6 +282,135 @@ final class PlanProjectorTests: XCTestCase {
         XCTAssertFalse(p.zones.contains { $0.nameZh.hasSuffix(" 1") }, "不该退化成带序号的重名区")
     }
 
+    // MARK: - 外观属性(attrs):样式精化 / 高度换算 / 照片映射
+
+    func testStyleRefinement() {
+        var s = baseScene()
+        s.items = [
+            .init(category: "sofa", center: SIMD2(1, 1), axisDeg: 0, widthM: 2.4, depthM: 1.6,
+                  heightM: 0.8, confidence: "high", styleKeys: ["SofaType.lShaped"]),
+            .init(category: "sofa", center: SIMD2(3, 1), axisDeg: 0, widthM: 0.9, depthM: 0.9,
+                  styleKeys: ["SofaType.singleSeat"]),
+            .init(category: "table", center: SIMD2(1, 2.2), axisDeg: 0, widthM: 1.1, depthM: 0.6,
+                  styleKeys: ["TableType.coffee"]),
+            .init(category: "table", center: SIMD2(3, 2.2), axisDeg: 0, widthM: 1.4, depthM: 1.4,
+                  styleKeys: ["TableType.dining", "TableShapeType.circularElliptic"]),
+            .init(category: "chair", center: SIMD2(2, 2.6), axisDeg: 0, widthM: 0.6, depthM: 0.6,
+                  styleKeys: ["ChairType.swivel"]),
+            .init(category: "storage", center: SIMD2(0.5, 2.6), axisDeg: 0, widthM: 0.8, depthM: 0.4,
+                  styleKeys: ["StorageType.shelf"]),
+        ]
+        let p = project(s)
+        let byLabel = Dictionary(uniqueKeysWithValues: p.placements.map { ($0.label, $0) })
+
+        XCTAssertEqual(byLabel["L形沙发"]?.kind, "sofa")
+        XCTAssertEqual(byLabel["L形沙发"]?.attrs?.styleZh, "L形")
+        XCTAssertEqual(byLabel["L形沙发"]?.attrs?.confidence, "high")
+        // 0.8m → 31.5 英寸
+        XCTAssertEqual(byLabel["L形沙发"]?.attrs?.heightIn ?? 0, 31.5, accuracy: 0.2)
+        XCTAssertEqual(byLabel["单人沙发"]?.kind, "armchair", "单人沙发应细分为 armchair")
+        XCTAssertEqual(byLabel["茶几"]?.kind, "coffee_table")
+        XCTAssertEqual(byLabel["圆餐桌"]?.kind, "table")
+        XCTAssertEqual(byLabel["转椅"]?.kind, "office_chair")
+        XCTAssertEqual(byLabel["架子"]?.kind, "shelf", "开放架应细分为 shelf")
+        // 没样式属性也没实测高的物体不该背一个空 attrs
+        XCTAssertNil(byLabel["架子"]?.attrs?.heightIn)
+    }
+
+    func testObjectPhotoAndColorFlowIntoAttrs() throws {
+        var s = baseScene()
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test-obj-\(UUID().uuidString).jpg")
+        try Data([0xFF, 0xD8, 0xFF]).write(to: tmp)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        s.items = [
+            .init(category: "bed", center: SIMD2(1, 0.75), axisDeg: 0, widthM: 1.5, depthM: 1.2,
+                  heightM: 0.55, confidence: "high",
+                  photoFileURL: tmp, colorHex: "#8899AA",
+                  photos: [
+                    .init(fileURL: tmp, azimuthDeg: 45, score: 0.8),
+                    .init(fileURL: tmp, azimuthDeg: 170, score: 0.5),
+                  ])
+        ]
+        let projection = PlanProjector.projectScene(s, scanId: "t", nameZh: "测试")
+        let bed = try XCTUnwrap(projection.project.placements.first)
+        XCTAssertEqual(bed.attrs?.colorHex, "#8899AA")
+        XCTAssertNil(bed.attrs?.photoPath, "photoPath 该由上传阶段回填,投影阶段必须为空")
+        XCTAssertNil(bed.attrs?.photos, "photos 桶内路径也该由上传阶段回填")
+        let assets = try XCTUnwrap(projection.objectPhotos[bed.id], "证据包应按 placement id 带出")
+        XCTAssertEqual(assets.count, 2)
+        XCTAssertEqual(assets[0].url, tmp)
+        XCTAssertEqual(assets[0].azimuthDeg ?? 0, 45, accuracy: 0.01, "分数最高的一张在前")
+    }
+
+    /// 实测脚印真值:w/h 之后可能被用户拖改,attrs.measuredWIn/HIn 是不动的底账
+    func testMeasuredDimsInAttrs() throws {
+        let p = project(baseScene())
+        let bed = try XCTUnwrap(p.placements.first)
+        // 1.5m × 1.2m → 59.1″ × 47.2″
+        XCTAssertEqual(bed.attrs?.measuredWIn ?? 0, 59.1, accuracy: 0.15)
+        XCTAssertEqual(bed.attrs?.measuredHIn ?? 0, 47.2, accuracy: 0.15)
+        // 真值必须与落盘 w/h 一致(px→in 换算 3px/in)
+        XCTAssertEqual(bed.attrs?.measuredWIn ?? 0, bed.w / 3, accuracy: 0.06)
+        XCTAssertEqual(bed.attrs?.measuredHIn ?? 0, bed.h / 3, accuracy: 0.06)
+    }
+
+    /// 去重取谁的尺寸:置信度高的赢(哪怕更小)—— RoomPlan 扫不全时
+    /// 会给偏小包围盒+低置信度,盲取更大的会把误检大框当真。
+    func testDedupPrefersHigherConfidence() {
+        var s = baseScene()
+        s.items = [
+            .init(category: "sofa", center: SIMD2(2, 1.5), axisDeg: 0,
+                  widthM: 2.3, depthM: 0.9, confidence: "low"),
+            .init(category: "sofa", center: SIMD2(2.2, 1.5), axisDeg: 0,
+                  widthM: 2.0, depthM: 0.9, confidence: "high"),
+        ]
+        let p = project(s)
+        XCTAssertEqual(p.placements.count, 1)
+        let sofa = p.placements[0]
+        XCTAssertEqual(sofa.w, 2.0 * Self.pxPerM, accuracy: 2, "该取 high 置信度的 2.0m,不是更大的 2.3m")
+        XCTAssertEqual(sofa.attrs?.confidence, "high")
+        // 两次测量差 30cm > 10cm,必须有告警提示补扫
+        XCTAssertTrue(
+            p.meta.scanWarnings.contains { $0.contains("测量尺寸差") },
+            p.meta.scanWarnings.joined(separator: " / ")
+        )
+    }
+
+    /// 低置信度的尺寸不许静默进图:点名提示补扫
+    func testLowConfidenceWarning() {
+        var s = baseScene()
+        s.items = [
+            .init(category: "storage", center: SIMD2(2, 1.5), axisDeg: 0,
+                  widthM: 0.8, depthM: 0.4, confidence: "low")
+        ]
+        let p = project(s)
+        XCTAssertTrue(
+            p.meta.scanWarnings.contains { $0.contains("低置信度") && $0.contains("柜") },
+            p.meta.scanWarnings.joined(separator: " / ")
+        )
+    }
+
+    /// 去重合并时外观信息不能丢:灶台无照片、烤箱有照片 → 合并后照片仍在
+    func testDedupKeepsAttrsFromLoser() {
+        var s = baseScene()
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("test-obj-\(UUID().uuidString).jpg")
+        try? Data([0xFF]).write(to: tmp)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        s.items = [
+            .init(category: "stove", center: SIMD2(2, 1.5), axisDeg: 0, widthM: 0.76, depthM: 0.65),
+            .init(category: "oven", center: SIMD2(2, 1.55), axisDeg: 0, widthM: 0.7, depthM: 0.6,
+                  heightM: 0.9, photoFileURL: tmp, colorHex: "#222222",
+                  photos: [.init(fileURL: tmp, azimuthDeg: 10, score: 0.6)]),
+        ]
+        let projection = PlanProjector.projectScene(s, scanId: "t", nameZh: "测试")
+        XCTAssertEqual(projection.project.fixtures.filter { $0.kind == "stove" }.count, 1)
+        let stove = projection.project.fixtures.first { $0.kind == "stove" }!
+        XCTAssertEqual(stove.attrs?.colorHex, "#222222", "被合并那件的颜色应保留")
+        XCTAssertEqual(projection.objectPhotos[stove.id]?.first?.url, tmp, "被合并那件的照片应保留")
+    }
+
     // MARK: - Mock 场景全链路(含跳过告警 + 契约序列化)
 
     func testMockSceneRoundTrip() throws {
@@ -316,6 +445,14 @@ final class PlanProjectorTests: XCTestCase {
         }
         let wg = try XCTUnwrap(homeos["wallGraph"] as? [String: Any])
         XCTAssertEqual(wg["pxPerFt"] as? Double, 36)
+
+        // attrs 加法式扩展:有外观信息的家具要带 attrs,且 photoPath 上传前为空
+        let placements = try XCTUnwrap(homeos["placements"] as? [[String: Any]])
+        let sofa = try XCTUnwrap(placements.first { ($0["label"] as? String) == "L形沙发" })
+        let attrs = try XCTUnwrap(sofa["attrs"] as? [String: Any], "L形沙发应带 attrs")
+        XCTAssertEqual(attrs["styleZh"] as? String, "L形")
+        XCTAssertEqual(attrs["colorHex"] as? String, "#B08968")
+        XCTAssertNil(attrs["photoPath"], "photoPath 由上传阶段回填")
 
         // 跨端一致性:把 Swift 产出的 payload 落盘,供网页端
         // scan-payload.js 的校验器复验(scripts/cloud-scan-unit.mjs --swift)。
