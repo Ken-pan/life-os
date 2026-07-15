@@ -200,6 +200,7 @@
  * @property {string} label
  * @property {Rect} bounds
  * @property {0 | 90 | 180 | 270} [rotation]
+ * @property {PlacementAttrs} [attrs]
  */
 
 /**
@@ -209,6 +210,26 @@
  * @property {string} [color]
  * @property {Point[]} polygon
  * @property {boolean} [stale]
+ */
+
+/**
+ * 家具外观/实测补充信息 —— iOS HomeScan 扫描带来(2026-07 契约加法式扩展),
+ * 网页端 VLM「识别外观」也可以补写。全部可选:手摆的家具一个都没有。
+ * @typedef {object} PlacementAttrs
+ * @property {string[]} [styleKeys] RoomPlan 样式属性(带枚举前缀,如 "SofaType.lShaped")
+ * @property {string} [styleZh] 样式的人话("L形"/"圆形餐桌"/"转椅"…)
+ * @property {number} [heightIn] LiDAR 实测高度(英寸)
+ * @property {number} [measuredWIn] LiDAR 实测脚印宽(英寸)—— w/h 会被用户拖改,这是不动的真值
+ * @property {number} [measuredHIn] LiDAR 实测脚印深(英寸)
+ * @property {'high'|'medium'|'low'} [confidence] RoomPlan 识别置信度
+ * @property {string} [colorHex] 主色 #RRGGBB(设备端抓拍图聚类,或 VLM 识别)
+ * @property {string} [photoRef] 这件家具的实拍裁剪照片(最佳一张;IndexedDB,见 photo-store.js)
+ * @property {Array<{ photoRef?: string, azimuthDeg?: number }>} [photos]
+ *   多视角证据包(按方位分桶,分数降序,第一张 = photoRef 那张)——
+ *   一张照片看不出 L 形沙发的另一侧;多视角融合与 VLM 复核都吃它
+ * @property {string} [material] 材质(VLM 识别:布艺/皮革/实木…)
+ * @property {string} [colorZh] 颜色的人话(VLM 识别:深棕/米白…)
+ * @property {string} [describedAt] 上次 VLM 识别时间 ISO
  */
 
 /**
@@ -222,6 +243,7 @@
  * @property {number} h
  * @property {0 | 90 | 180 | 270} rotation
  * @property {string} [zoneId]
+ * @property {PlacementAttrs} [attrs]
  */
 
 /**

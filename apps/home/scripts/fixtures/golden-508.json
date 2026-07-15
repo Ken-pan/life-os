@@ -1,0 +1,19 @@
+{
+  "_说明": [
+    "508 Golden Ground Truth —— 用卷尺/激光测距仪手工量出的真值,单位一律英寸。",
+    "填好后跑 `npm run test:scan-accuracy -- <payload.json>` 即可给任意一次扫描打分。",
+    "furniture 按 label 与扫描 placements/fixtures 对上(label 要与扫描产出一致,如「L形沙发」「冰箱」)。",
+    "gapIn 是家具外缘到最近正对墙面的垂直距离:west=西(平面图左)、east=东、north=北(上)、south=南。",
+    "量不到/不适用的字段留 null,脚本自动跳过。建议至少覆盖 20 件主要家具。"
+  ],
+  "measuredAt": null,
+  "measuredBy": null,
+  "walls": [
+    { "label": "示例:客厅北墙", "lengthIn": null }
+  ],
+  "furniture": [
+    { "label": "L形沙发", "kind": "sofa", "wIn": null, "dIn": null, "hIn": null, "gapIn": { "west": null, "north": null, "east": null, "south": null }, "note": "" },
+    { "label": "床", "kind": "bed", "wIn": null, "dIn": null, "hIn": null, "gapIn": { "west": null, "north": null, "east": null, "south": null }, "note": "" },
+    { "label": "冰箱", "kind": "fridge", "wIn": null, "dIn": null, "hIn": null, "gapIn": { "west": null, "north": null, "east": null, "south": null }, "note": "" }
+  ]
+}

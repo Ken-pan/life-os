@@ -14,11 +14,12 @@ import { putPhoto } from './photo-store.js'
 import {
   validateScanPayload,
   buildProjectFromScan,
+  scanObjectPhotoEntries,
 } from './spatial/scan-payload.js'
 import {
   mapScanIntoLayout,
   mergeViewpointsOnly,
-  mergeFurnitureAndViewpoints,
+  mergeFurnitureWithIdentity,
   describeReplacements,
 } from './spatial/scan-merge.js'
 
@@ -65,37 +66,93 @@ export async function fetchScanPayload(id) {
   return data?.payload
 }
 
+/** 同时在天上飞的照片下载数。3 够把往返延迟叠起来,又不会挤爆弱网 */
+const PHOTO_CONCURRENCY = 3
+
 /**
- * 把 payload 里带 photoPath 的机位照片逐张下载进 IndexedDB,重铸 photoRef。
- * 逐张串行(照片可能几十张,并发签名+下载会拥塞),失败的照片跳过并计数,
- * 机位本身保留(变成无照片视角)。
- * @param {any} payload 会被就地更新(viewpoints[].photoRef)
+ * 把 payload 里带 photoPath 的照片下载进 IndexedDB,重铸 photoRef。
+ * 两类:机位照片(viewpoints[].photoPath)+ 家具抓拍图(placements/fixtures
+ * 的 attrs.photoPath,iOS 扫描时自动挑最佳视角裁的)。
+ *
+ * 签名用 createSignedUrls **一次批量拿全**(几十张照片省几十个串行往返),
+ * 下载限并发 3;单张失败跳过并计数,宿主本身保留(机位变无照片视角;
+ * 家具只是没缩略图)。
+ * @param {any} payload 会被就地更新(viewpoints[].photoRef / attrs.photoRef)
  * @param {(done: number, total: number) => void} [onProgress]
  * @returns {Promise<{ total: number, failed: number }>}
  */
 export async function resolveScanPhotos(payload, onProgress) {
   const viewpoints = payload?.homeos?.viewpoints ?? []
-  const withPhoto = viewpoints.filter((vp) => vp.photoPath)
+  /** @type {Array<{ path: string, assign: (ref: string) => void }>} */
+  const jobs = [
+    ...viewpoints
+      .filter((vp) => vp.photoPath)
+      .map((vp) => ({
+        path: vp.photoPath,
+        assign: (ref) => {
+          vp.photoRef = ref
+        },
+      })),
+    ...scanObjectPhotoEntries(payload),
+  ]
+  if (!jobs.length) return { total: 0, failed: 0 }
+
+  // 1) 批量签名(单请求)。整批失败(网断/权限)时退化为逐张签名,
+  //    让下载环节自己报失败数,而不是这里直接全军覆没。
+  /** @type {Map<string, string>} path → signedUrl */
+  const signed = new Map()
+  try {
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrls(jobs.map((j) => j.path), SIGNED_URL_TTL_S)
+    if (error) throw error
+    for (const row of data ?? []) {
+      // 返回行带 path/signedUrl/error;单行 error 表示该文件不存在或无权
+      if (row?.signedUrl && row.path) signed.set(row.path, row.signedUrl)
+    }
+  } catch {
+    /* signed 留空,下面逐张兜底 */
+  }
+
   let done = 0
   let failed = 0
-  for (const vp of withPhoto) {
+  /** @param {{ path: string, assign: (ref: string) => void }} job */
+  const run = async (job) => {
     try {
-      const { data, error } = await supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(vp.photoPath, SIGNED_URL_TTL_S)
-      if (error || !data?.signedUrl) throw error ?? new Error('无签名 URL')
-      const resp = await fetch(data.signedUrl)
+      let url = signed.get(job.path)
+      if (!url) {
+        const { data, error } = await supabase.storage
+          .from(BUCKET)
+          .createSignedUrl(job.path, SIGNED_URL_TTL_S)
+        if (error || !data?.signedUrl) throw error ?? new Error('无签名 URL')
+        url = data.signedUrl
+      }
+      const resp = await fetch(url)
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const blob = await resp.blob()
       const { ref } = await putPhoto(blob)
-      vp.photoRef = ref
+      job.assign(ref)
     } catch {
       failed += 1
     }
     done += 1
-    onProgress?.(done, withPhoto.length)
+    onProgress?.(done, jobs.length)
   }
-  return { total: withPhoto.length, failed }
+
+  // 2) 有界并发下载:固定 3 条工人流水,谁闲谁领下一张
+  let next = 0
+  const workers = Array.from(
+    { length: Math.min(PHOTO_CONCURRENCY, jobs.length) },
+    async () => {
+      while (next < jobs.length) {
+        const job = jobs[next]
+        next += 1
+        await run(job)
+      }
+    },
+  )
+  await Promise.all(workers)
+  return { total: jobs.length, failed }
 }
 
 /**
@@ -135,11 +192,13 @@ export async function pullScan(current, id, opts = {}) {
 
   const mapped = mapScanIntoLayout(current, payload.homeos)
   if (mode === 'furniture') {
+    const merged = mergeFurnitureWithIdentity(current, mapped)
     return {
-      project: mergeFurnitureAndViewpoints(current, mapped),
+      project: merged.project,
       photos,
       report: mapped.report,
       replaced: describeReplacements(current, mapped),
+      identity: merged.identity,
     }
   }
   return {
@@ -147,5 +206,6 @@ export async function pullScan(current, id, opts = {}) {
     photos,
     report: { ...mapped.report, mapped: mapped.viewpoints.length },
     replaced: [],
+    identity: null,
   }
 }

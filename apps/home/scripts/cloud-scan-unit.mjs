@@ -17,6 +17,7 @@ import {
   SCAN_PAYLOAD_FORMAT_VERSION,
   validateScanPayload,
   buildProjectFromScan,
+  scanObjectPhotoEntries,
 } from '../src/lib/spatial/scan-payload.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -83,6 +84,59 @@ ok(
 
 ok('储物区置空', p.storageZones.length === 0, `got=${p.storageZones.length}`)
 ok('viewport 已算出', p.viewport.width > 0 && p.viewport.height > 0)
+
+// ---- attrs(家具外观,2026-07 加法式契约) ----
+{
+  const bed = p.placements[0]
+  ok('attrs 透传', bed.attrs?.colorHex === '#7A8CA3' && bed.attrs?.heightIn === 21.7)
+  ok(
+    '实测脚印真值透传',
+    bed.attrs?.measuredWIn === 60 && bed.attrs?.measuredHIn === 80,
+    JSON.stringify([bed.attrs?.measuredWIn, bed.attrs?.measuredHIn]),
+  )
+  ok('attrs.photoPath 已剥掉', !('photoPath' in (bed.attrs ?? {})), JSON.stringify(bed.attrs))
+  ok('fixture attrs 透传', p.fixtures[0].attrs?.confidence === 'medium')
+  ok('fixture attrs.photoPath 已剥掉', !('photoPath' in (p.fixtures[0].attrs ?? {})))
+
+  // 家具照片任务清单:床的证据包 2 张 + 马桶单图 1 张
+  const raw = fixture()
+  const entries = scanObjectPhotoEntries(raw)
+  ok('家具照片任务齐活(2+1)', entries.length === 3, `got=${entries.length}`)
+  // 模拟 resolve:逐张回填 ref
+  entries.forEach((e, i) => e.assign(`local-${i}`))
+  ok(
+    '最佳一张同时回填单图 photoRef',
+    raw.homeos.placements[0].attrs.photoRef === 'local-0',
+    raw.homeos.placements[0].attrs.photoRef,
+  )
+  const resolved = buildProjectFromScan(raw)
+  const bedAttrs = resolved.placements[0].attrs
+  ok(
+    'photoRef 保留、photoPath 剥掉',
+    bedAttrs?.photoRef === 'local-0' && !('photoPath' in bedAttrs),
+  )
+  ok(
+    '证据包保留 ref+方位、剥掉桶路径',
+    bedAttrs?.photos?.length === 2 &&
+      bedAttrs.photos[0].photoRef === 'local-0' &&
+      bedAttrs.photos[1].azimuthDeg === 170 &&
+      bedAttrs.photos.every((p) => !('path' in p)),
+    JSON.stringify(bedAttrs?.photos),
+  )
+  // 没 attrs 的旧 payload 照常工作
+  const legacy = fixture()
+  delete legacy.homeos.placements[0].attrs
+  delete legacy.homeos.fixtures[0].attrs
+  ok('无 attrs 旧 payload 兼容', validateScanPayload(legacy) === null)
+  ok('无 attrs 时照片清单为空', scanObjectPhotoEntries(legacy).length === 0)
+  // 只有单图 photoPath 的过渡 payload(上一版 iOS)也能下载
+  const single = fixture()
+  delete single.homeos.placements[0].attrs.photos
+  ok(
+    '单图旧契约兼容',
+    scanObjectPhotoEntries(single).some((e) => e.path.endsWith('obj-pl-1-0.jpg')),
+  )
+}
 
 // ---- 跨端一致性(可选):iOS 单测落盘的 Swift 产出 payload ----
 // 先跑 ios/home-scan 的 xcodebuild test(会写 /tmp/homescan-mock-payload.json),

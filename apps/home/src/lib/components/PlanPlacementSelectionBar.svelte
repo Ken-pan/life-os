@@ -6,6 +6,8 @@
     updatePlacement,
   } from '$lib/state.svelte.js'
   import { inchesToPx, pxToInches } from '$lib/spatial/placements.js'
+  import { getPhotoBlob, getPhotoUrl } from '$lib/photo-store.js'
+  import { probeVlm, describeFurniture } from '$lib/vlm.js'
 
   /** @type {{
    *   placement: import('$lib/spatial/types.js').SpatialPlacement,
@@ -27,11 +29,86 @@
   const wIn = $derived(Math.round(pxToInches(placement.w, pxPerFt)))
   const hIn = $derived(Math.round(pxToInches(placement.h, pxPerFt)))
 
-  $effect(() => {
-    wDraft = String(wIn)
-    hDraft = String(hIn)
-    detailsOpen = false
+  // 扫描带来的外观信息(没有就整段不显示)
+  const attrs = $derived(placement.attrs ?? null)
+  const tallIn = $derived(
+    attrs?.heightIn ? Math.round(attrs.heightIn) : null,
+  )
+
+  // LiDAR 实测脚印真值(英寸)。用户旋转过的话 w/h 已互换,
+  // 按「哪个朝向更接近当前值」决定比对/恢复的方向。
+  const measured = $derived.by(() => {
+    const mW = attrs?.measuredWIn
+    const mH = attrs?.measuredHIn
+    if (!mW || !mH) return null
+    const direct = Math.abs(wIn - mW) + Math.abs(hIn - mH)
+    const swapped = Math.abs(wIn - mH) + Math.abs(hIn - mW)
+    const [w, h] = swapped < direct ? [mH, mW] : [mW, mH]
+    return { w, h, drifted: Math.abs(wIn - w) > 0.5 || Math.abs(hIn - h) > 0.5 }
   })
+  const lowConfidence = $derived(attrs?.confidence === 'low')
+
+  function restoreMeasured() {
+    if (!measured) return
+    updatePlacement(placement.id, {
+      w: inchesToPx(measured.w, pxPerFt),
+      h: inchesToPx(measured.h, pxPerFt),
+    })
+  }
+  /** 外观一行话:样式 · 材质 · 颜色(有什么拼什么) */
+  const lookText = $derived(
+    [attrs?.styleZh, attrs?.material, attrs?.colorZh]
+      .filter(Boolean)
+      .join(' · '),
+  )
+
+  // 家具实拍缩略图(IndexedDB blob URL,换家具时换图)
+  let photoUrl = $state('')
+  $effect(() => {
+    const ref = attrs?.photoRef
+    photoUrl = ''
+    if (!ref) return
+    let alive = true
+    getPhotoUrl(ref).then((url) => {
+      if (alive) photoUrl = url
+      else URL.revokeObjectURL(url)
+    }).catch(() => {})
+    return () => {
+      alive = false
+      if (photoUrl) URL.revokeObjectURL(photoUrl)
+    }
+  })
+
+  // 本地 VLM 可用且有实拍图 → 提供「识别外观」
+  let vlmReady = $state(false)
+  let describing = $state(false)
+  $effect(() => {
+    probeVlm().then((ok) => (vlmReady = ok))
+  })
+
+  async function describeLook() {
+    const ref = attrs?.photoRef
+    if (!ref || describing) return
+    describing = true
+    try {
+      const blob = await getPhotoBlob(ref)
+      if (!blob) return
+      const look = await describeFurniture(blob, placement.label)
+      if (!look) return
+      updatePlacement(placement.id, {
+        attrs: {
+          ...placement.attrs,
+          ...(look.colorHex ? { colorHex: look.colorHex } : {}),
+          ...(look.colorZh ? { colorZh: look.colorZh } : {}),
+          ...(look.material ? { material: look.material } : {}),
+          ...(look.styleZh ? { styleZh: look.styleZh } : {}),
+          describedAt: new Date().toISOString(),
+        },
+      })
+    } finally {
+      describing = false
+    }
+  }
 
   function commitSize() {
     const wInNext = Math.max(4, Math.round(Number(wDraft)))
@@ -54,10 +131,67 @@
 >
   {#if compact}
     <span class="graph-sel-title graph-sel-title-compact">
-      {placement.label} · {wIn}″×{hIn}″
+      {#if attrs?.colorHex}<span
+          class="look-dot"
+          style:background={attrs.colorHex}
+          title={attrs.colorZh ?? attrs.colorHex}
+        ></span>{/if}{placement.label} · {wIn}″×{hIn}″
     </span>
   {:else}
-    <span class="graph-sel-title">{placement.label}</span>
+    <span class="graph-sel-title">
+      {#if attrs?.colorHex}<span
+          class="look-dot"
+          style:background={attrs.colorHex}
+          title={attrs.colorZh ?? attrs.colorHex}
+        ></span>{/if}{placement.label}
+    </span>
+    {#if lookText || tallIn}
+      <span class="look-line">
+        {lookText}{lookText && tallIn ? ' · ' : ''}{tallIn ? `高 ${tallIn}″` : ''}
+      </span>
+    {/if}
+  {/if}
+
+  {#if (!compact || detailsOpen) && (photoUrl || (attrs?.photoRef && vlmReady))}
+    <div class="look-row">
+      {#if photoUrl}
+        <img class="look-photo" src={photoUrl} alt="{placement.label} 实拍" />
+      {/if}
+      {#if compact && (lookText || tallIn)}
+        <span class="look-line">
+          {lookText}{lookText && tallIn ? ' · ' : ''}{tallIn ? `高 ${tallIn}″` : ''}
+        </span>
+      {/if}
+      {#if attrs?.photoRef && vlmReady}
+        <button
+          type="button"
+          class="graph-sel-btn graph-sel-accent"
+          disabled={describing}
+          onclick={describeLook}
+        >{describing ? '识别中…' : '识别外观'}</button>
+      {/if}
+    </div>
+  {/if}
+
+  {#if lowConfidence}
+    <span
+      class="look-warn"
+      title="扫描时识别置信度低,尺寸可能不准 —— 建议贴近这件家具补扫几秒"
+    >⚠ 置信度低</span>
+  {/if}
+
+  {#if (!compact || detailsOpen) && measured}
+    <span class="look-line" title="LiDAR 实测脚印,不随手动改尺寸变化">
+      实测 {Math.round(measured.w)}″×{Math.round(measured.h)}″
+    </span>
+    {#if measured.drifted}
+      <button
+        type="button"
+        class="graph-sel-btn graph-sel-accent"
+        title="把宽/深恢复成 LiDAR 实测值"
+        onclick={restoreMeasured}
+      >恢复实测</button>
+    {/if}
   {/if}
 
   {#if !compact || detailsOpen}
@@ -152,6 +286,51 @@
     max-width: min(160px, 38vw);
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  /* 扫描带来的家具主色 —— 名字前一个小色点 */
+  .look-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 5px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    vertical-align: baseline;
+  }
+
+  /* 样式 · 材质 · 颜色 · 高 —— 一行小字 */
+  .look-line {
+    font-size: 12px;
+    color: var(--t2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: min(280px, 60vw);
+  }
+
+  .look-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 低置信度尺寸的黄牌 */
+  .look-warn {
+    font-size: 12px;
+    font-weight: 600;
+    color: #b45309;
+    white-space: nowrap;
+    cursor: help;
+  }
+
+  /* 扫描自动抓拍的实拍缩略图 */
+  .look-photo {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border);
   }
 
   .placement-size-fields {

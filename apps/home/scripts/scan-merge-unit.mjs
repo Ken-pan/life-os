@@ -49,7 +49,32 @@ function fakeScan() {
       { x, y: y + h },
     ],
   })
+  // 扫描侧的实测墙体(与 zones 同一坐标系):墙距锚定的依据。
+  // 只围出卧室/厨房/卫生间三个矩形,客厅故意不给墙 —— 走比例回退分支。
+  const rect = (idBase, x, y, w, h) => ({
+    vertices: [
+      { id: `${idBase}-1`, x, y },
+      { id: `${idBase}-2`, x: x + w, y },
+      { id: `${idBase}-3`, x: x + w, y: y + h },
+      { id: `${idBase}-4`, x, y: y + h },
+    ],
+    edges: [
+      { id: `${idBase}-e1`, a: `${idBase}-1`, b: `${idBase}-2` },
+      { id: `${idBase}-e2`, a: `${idBase}-2`, b: `${idBase}-3` },
+      { id: `${idBase}-e3`, a: `${idBase}-3`, b: `${idBase}-4` },
+      { id: `${idBase}-e4`, a: `${idBase}-4`, b: `${idBase}-1` },
+    ],
+  })
+  const r1 = rect('w1', 24, 185, 411, 565)
+  const r3 = rect('w3', 334, 620, 520, 578)
+  const r4 = rect('w4', 31, 739, 483, 461)
   return {
+    wallGraph: {
+      pxPerFt: 36,
+      margin: { x: 24, y: 24 },
+      vertices: [...r1.vertices, ...r3.vertices, ...r4.vertices],
+      edges: [...r1.edges, ...r3.edges, ...r4.edges],
+    },
     zones: [
       zone('z-1', '卧室', 24, 185, 411, 565),
       zone('z-2', '客厅', 414, 256, 440, 396),
@@ -57,7 +82,7 @@ function fakeScan() {
       zone('z-4', '卫生间', 31, 739, 483, 461),
     ],
     placements: [
-      { id: 'pl-1', kind: 'bed', label: '床', x: 60, y: 300, w: 258, h: 225, rotation: 0, zoneId: 'z-1' },
+      { id: 'pl-1', kind: 'bed', label: '床', x: 60, y: 300, w: 258, h: 225, rotation: 0, zoneId: 'z-1', attrs: { heightIn: 22, colorHex: '#7A8CA3', photoRef: 'ph-bed' } },
       { id: 'pl-2', kind: 'cabinet', label: '柜', x: 250, y: 960, w: 78, h: 159, rotation: 0, zoneId: 'z-4' },
     ],
     fixtures: [
@@ -81,6 +106,30 @@ ok('全部映射成功', mapped.report.mapped === 7 && mapped.report.skipped ===
   const bed = mapped.placements.find((p) => p.kind === 'bed')
   ok('床进卧室', roomOf(bed.x + bed.w / 2, bed.y + bed.h / 2) === '卧室', roomOf(bed.x + bed.w / 2, bed.y + bed.h / 2))
   ok('床尺寸不变(实测值最准)', bed.w === 258 && bed.h === 225)
+  ok(
+    '外观 attrs 跟着家具走',
+    bed.attrs?.colorHex === '#7A8CA3' && bed.attrs?.photoRef === 'ph-bed' && bed.attrs?.heightIn === 22,
+    JSON.stringify(bed.attrs),
+  )
+
+  // ---- 墙距锚定:贴墙家具按实测墙距落位,不吃分区比例的漂移 ----
+  // 床在扫描里离卧室西墙 36px(12″)→ 本地也必须正好离卧室西墙 12″
+  const bedroom = SAMPLE_508.rooms.find((r) => r.nameZh === '卧室')
+  ok(
+    '床按实测墙距锚定西墙',
+    Math.abs(bed.x - (bedroom.bounds.x + 36)) < 0.5,
+    `bed.x=${bed.x} 期望=${bedroom.bounds.x + 36}`,
+  )
+  // 浴缸在扫描里贴死西墙(gap 0)、贴死南墙(gap 1px)→ 本地钉在浴室西南角
+  const bathroom = SAMPLE_508.rooms.find((r) => r.nameZh === '浴室')
+  const tubM = mapped.fixtures.find((f) => f.kind === 'tub')
+  ok(
+    '浴缸钉在浴室西南角(双向锚定)',
+    Math.abs(tubM.bounds.x - bathroom.bounds.x) < 0.5 &&
+      Math.abs(tubM.bounds.y + tubM.bounds.h - (bathroom.bounds.y + bathroom.bounds.h - 1)) < 1.5,
+    JSON.stringify({ tub: tubM.bounds, room: bathroom.bounds }),
+  )
+  ok('锚定计数进报告', mapped.report.anchored >= 4, `anchored=${mapped.report.anchored}`)
   const toilet = mapped.fixtures.find((f) => f.kind === 'toilet')
   const tc = { x: toilet.bounds.x + toilet.bounds.w / 2, y: toilet.bounds.y + toilet.bounds.h / 2 }
   // 扫描的「卫生间」分区罩住了 508 的浴室+洗衣间+走廊一整片。
@@ -173,6 +222,199 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   const h2 = hydrateProject(h1)
   ok('重复 hydrate 幂等', h2.fixtures.length === h1.fixtures.length && h2.placements.length === h1.placements.length,
     `fx ${h1.fixtures.length}→${h2.fixtures.length}`)
+}
+
+// ---- 全局刚性配准路径(墙不变 → 一次变换全体家具,墙距只做有界精修) ----
+{
+  const rect = (idBase, x, y, w, h) => ({
+    vertices: [
+      { id: `${idBase}-1`, x, y },
+      { id: `${idBase}-2`, x: x + w, y },
+      { id: `${idBase}-3`, x: x + w, y: y + h },
+      { id: `${idBase}-4`, x, y: y + h },
+    ],
+    edges: [
+      { id: `${idBase}-e1`, a: `${idBase}-1`, b: `${idBase}-2` },
+      { id: `${idBase}-e2`, a: `${idBase}-2`, b: `${idBase}-3` },
+      { id: `${idBase}-e3`, a: `${idBase}-3`, b: `${idBase}-4` },
+      { id: `${idBase}-e4`, a: `${idBase}-4`, b: `${idBase}-1` },
+    ],
+  })
+  const graphOf = (...rects) => ({
+    pxPerFt: 36,
+    margin: { x: 24, y: 24 },
+    vertices: rects.flatMap((r) => r.vertices),
+    edges: rects.flatMap((r) => r.edges),
+  })
+  // 极简本地户型:三个矩形房(客厅/卧室/厨房),无 wallGraph → 墙取房间 bounds
+  const localStub = {
+    rooms: [
+      { id: 'r-a', nameZh: '客厅', kind: 'living', bounds: { x: 100, y: 100, w: 400, h: 300 } },
+      { id: 'r-b', nameZh: '卧室', kind: 'living', bounds: { x: 500, y: 100, w: 300, h: 300 } },
+      { id: 'r-c', nameZh: '厨房', kind: 'living', bounds: { x: 100, y: 400, w: 400, h: 250 } },
+    ],
+  }
+  const zoneStub = [{ id: 'z-x', nameZh: '扫描区', polygon: [
+    { x: 190, y: 55 }, { x: 890, y: 55 }, { x: 890, y: 605 }, { x: 190, y: 605 } ] }]
+
+  // 扫描 = 本地整体平移 (+90, -45);厨房西墙故意偏 4px(配准级小误差 → 自动精修),
+  // 卧室西墙故意偏 18px(>10cm → 必须报冲突,不许吸附)
+  const scanA = {
+    wallGraph: graphOf(
+      rect('a', 190, 55, 400, 300),
+      rect('b', 608, 55, 282, 300),
+      rect('c', 194, 355, 396, 250),
+    ),
+    zones: zoneStub,
+    placements: [
+      // 沙发:扫描里贴死客厅西墙(gap 0)→ 家坐标必须正好贴本地客厅西墙
+      { id: 'p-sofa', kind: 'sofa', label: '沙发', x: 190, y: 155, w: 80, h: 40, rotation: 0 },
+      // 柜:贴死厨房西墙(该墙在扫描里偏 4px)→ 自动精修回本地墙面
+      { id: 'p-cab', kind: 'cabinet', label: '柜', x: 194, y: 455, w: 60, h: 40, rotation: 0 },
+      // 床:贴死卧室西墙(该墙偏 18px ≈ 15cm)→ 冲突上报,位置不吸附
+      { id: 'p-bed', kind: 'bed', label: '床', x: 608, y: 155, w: 100, h: 80, rotation: 0 },
+    ],
+    fixtures: [],
+    viewpoints: [
+      { id: 'v-1', x: 300, y: 200, heading: 30, fovDeg: 69, headingSource: 'arkit' },
+    ],
+  }
+  const mA = mapScanIntoLayout(localStub, scanA)
+  ok('配准:状态 ok', mA.report.registration?.status === 'ok', JSON.stringify(mA.report.registration))
+  ok('配准:识别为纯平移(yaw 0)', mA.report.registration?.yawDeg === 0)
+  const sofa = mA.placements.find((p) => p.kind === 'sofa')
+  const cab = mA.placements.find((p) => p.kind === 'cabinet')
+  const bedA = mA.placements.find((p) => p.kind === 'bed')
+  ok('配准:贴墙沙发精确回到本地墙面', Math.abs(sofa.x - 100) <= 1, `x=${sofa.x}`)
+  ok('配准:4px 墙差被自动精修', Math.abs(cab.x - 100) <= 1, `x=${cab.x}`)
+  ok('配准:精修计数', mA.report.refined >= 1, `refined=${mA.report.refined}`)
+  ok(
+    '配准:18px 墙差报冲突且不吸附',
+    mA.report.conflicts.some((c) => c.label === '床') && Math.abs(bedA.x - 518) <= 2.5,
+    `x=${bedA.x} conflicts=${JSON.stringify(mA.report.conflicts)}`,
+  )
+  ok('配准:房间归属正确', sofa.zoneId === undefined && mA.report.rooms.some((r) => r.nameZh === '客厅'))
+  const vpA = mA.viewpoints[0]
+  ok('配准:机位统一变换', Math.abs(vpA.x - 210) <= 2.5 && Math.abs(vpA.y - 245) <= 2.5 && Math.abs(vpA.heading - 30) <= 0.5,
+    JSON.stringify(vpA))
+
+  // ---- 旋转 90° 的扫描:恢复 yaw,家具脚印互换、朝向/heading 跟着转 ----
+  const t = { x: 60, y: 30 }
+  // 正变换 home = rot90(scan)+t,rot90(p)=(-y,x);构造扫描 = 逆变换本地
+  const toScan = (p) => ({ x: p.y - t.y, y: -(p.x - t.x) })
+  const rectFromCorners = (idBase, c1, c2) => rect(
+    idBase,
+    Math.min(c1.x, c2.x),
+    Math.min(c1.y, c2.y),
+    Math.abs(c2.x - c1.x),
+    Math.abs(c2.y - c1.y),
+  )
+  const scanRect = (idBase, b) => rectFromCorners(
+    idBase,
+    toScan({ x: b.x, y: b.y }),
+    toScan({ x: b.x + b.w, y: b.y + b.h }),
+  )
+  const bedHome = { x: 500 + 36, y: 100 + 120, w: 100, h: 80 }
+  const bedScan = rectFromCorners('bb', toScan({ x: bedHome.x, y: bedHome.y }),
+    toScan({ x: bedHome.x + bedHome.w, y: bedHome.y + bedHome.h }))
+  const bs = {
+    x: Math.min(...bedScan.vertices.map((v) => v.x)),
+    y: Math.min(...bedScan.vertices.map((v) => v.y)),
+    w: Math.abs(bedScan.vertices[1].x - bedScan.vertices[0].x) || Math.abs(bedScan.vertices[2].x - bedScan.vertices[1].x),
+  }
+  const scanB = {
+    wallGraph: graphOf(
+      scanRect('a', localStub.rooms[0].bounds),
+      scanRect('b', localStub.rooms[1].bounds),
+      scanRect('c', localStub.rooms[2].bounds),
+    ),
+    zones: zoneStub,
+    placements: [
+      { id: 'p-bed', kind: 'bed', label: '床', x: bs.x, y: bs.y, w: bedHome.h, h: bedHome.w, rotation: 270 },
+    ],
+    fixtures: [],
+    viewpoints: [
+      { id: 'v-1', x: toScan({ x: 300, y: 200 }).x, y: toScan({ x: 300, y: 200 }).y, heading: 270, fovDeg: 69, headingSource: 'arkit' },
+    ],
+  }
+  const mB = mapScanIntoLayout(localStub, scanB)
+  ok('旋转配准:恢复 yaw 90', mB.report.registration?.status === 'ok' && mB.report.registration?.yawDeg === 90,
+    JSON.stringify(mB.report.registration))
+  const bedB = mB.placements[0]
+  ok(
+    '旋转配准:床落回原位且脚印互换',
+    Math.abs(bedB.x - bedHome.x) <= 2.5 && Math.abs(bedB.y - bedHome.y) <= 2.5 &&
+      Math.abs(bedB.w - bedHome.w) <= 1 && Math.abs(bedB.h - bedHome.h) <= 1,
+    JSON.stringify({ bedB, bedHome }),
+  )
+  ok('旋转配准:rotation 归位', bedB.rotation === 0, `rot=${bedB.rotation}`)
+  ok('旋转配准:heading 跟转', Math.abs(mB.viewpoints[0].heading - 0) <= 0.5, `h=${mB.viewpoints[0].heading}`)
+
+  // ---- 拉伸的扫描必须被验收门拦下(fakeScan 的 y 向 14% 拉伸)----
+  ok(
+    '拉伸扫描被配准门拦下,走比例回退',
+    mapped.report.registration?.status === 'needs_rescan',
+    JSON.stringify(mapped.report.registration),
+  )
+}
+
+// ---- 跨扫描物体身份:重扫不换 id,挪动被量化,消失被点名 ----
+{
+  const { mergeFurnitureWithIdentity } = await import('../src/lib/spatial/scan-merge.js')
+  const { matchScanObjects } = await import('../src/lib/spatial/scan-identity.js')
+
+  // 第一次合并出的项目:两件扫描家具(带 VLM 成果)+ 一件后来消失的椅子
+  const prevProject = {
+    ...SAMPLE_508,
+    placements: [
+      { id: 'scan-pl-1', kind: 'sofa', label: '沙发', x: 400, y: 300, w: 261, h: 108, rotation: 0,
+        attrs: { colorHex: '#B08968', material: '布艺', styleZh: 'L形', describedAt: '2026-07-14' } },
+      { id: 'scan-pl-2', kind: 'cabinet', label: '柜', x: 700, y: 300, w: 78, h: 159, rotation: 0,
+        attrs: { colorHex: '#EEEEEE' } },
+      { id: 'scan-pl-3', kind: 'chair', label: '椅', x: 500, y: 500, w: 50, h: 50, rotation: 0 },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  // 新一轮扫描映射结果:沙发原位(尺寸微抖 2px)、柜挪了 4ft、椅没扫到、新增台灯
+  const incoming = {
+    placements: [
+      { id: 'scan-pl-9', kind: 'sofa', label: '沙发', x: 402, y: 301, w: 259, h: 108, rotation: 0,
+        attrs: { colorHex: '#B29070', measuredWIn: 86.3, measuredHIn: 36 } },
+      { id: 'scan-pl-8', kind: 'cabinet', label: '柜', x: 700, y: 444, w: 80, h: 160, rotation: 0,
+        attrs: { colorHex: '#F0F0F0' } },
+      { id: 'scan-pl-7', kind: 'floor_lamp', label: '落地灯', x: 300, y: 300, w: 20, h: 20, rotation: 0 },
+    ],
+    fixtures: [],
+    viewpoints: [],
+  }
+  const { project: p2, identity } = mergeFurnitureWithIdentity(prevProject, incoming)
+  const sofa2 = p2.placements.find((p) => p.kind === 'sofa')
+  const cab2 = p2.placements.find((p) => p.kind === 'cabinet')
+  ok('同一件沙发保住旧 id', sofa2?.id === 'scan-pl-1', sofa2?.id)
+  ok('沙发几何取新扫描', sofa2?.w === 259 && sofa2?.x === 402)
+  ok(
+    '旧 VLM 成果不被重扫抹掉',
+    sofa2?.attrs?.material === '布艺' && sofa2?.attrs?.describedAt === '2026-07-14',
+    JSON.stringify(sofa2?.attrs),
+  )
+  ok('新扫描的实测真值并入', sofa2?.attrs?.measuredWIn === 86.3)
+  ok('沙发判原位', identity.unchanged >= 1, JSON.stringify(identity))
+  ok('柜保住旧 id 且判挪动', cab2?.id === 'scan-pl-2' && identity.moved.some((m) => m.label === '柜' && m.movedFt === 4),
+    JSON.stringify(identity.moved))
+  ok('椅消失被点名', identity.removed.includes('椅'), JSON.stringify(identity.removed))
+  ok('台灯是新增', identity.added === 1 && p2.placements.some((p) => p.kind === 'floor_lamp'))
+  ok('椅不再留在项目里', !p2.placements.some((p) => p.kind === 'chair'))
+
+  // 歧义:两把同尺寸椅子距离接近同一把新椅 → 不敢认,possibly_same
+  const amb = matchScanObjects(
+    [
+      { id: 'scan-c1', kind: 'chair', x: 100, y: 100, w: 50, h: 50 },
+      { id: 'scan-c2', kind: 'chair', x: 160, y: 100, w: 50, h: 50 },
+    ],
+    [{ id: 'scan-n1', kind: 'chair', x: 130, y: 100, w: 50, h: 50 }],
+  )
+  ok('双胞胎椅子不硬认', amb.pairs.every((p) => p.state === 'possibly_same'), JSON.stringify(amb.pairs))
 }
 
 // ---- 没分区的扫描 ----

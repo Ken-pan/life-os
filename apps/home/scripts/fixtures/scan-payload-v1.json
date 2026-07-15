@@ -74,7 +74,21 @@
         "w": 180,
         "h": 240,
         "rotation": 0,
-        "zoneId": "z-1"
+        "zoneId": "z-1",
+        "attrs": {
+          "styleKeys": [],
+          "styleZh": null,
+          "heightIn": 21.7,
+          "measuredWIn": 60,
+          "measuredHIn": 80,
+          "confidence": "high",
+          "colorHex": "#7A8CA3",
+          "photoPath": "00000000-0000-4000-8000-user00000001/0f9d2c1a-0000-4000-8000-fixture00001/obj-pl-1-0.jpg",
+          "photos": [
+            { "path": "00000000-0000-4000-8000-user00000001/0f9d2c1a-0000-4000-8000-fixture00001/obj-pl-1-0.jpg", "azimuthDeg": 45 },
+            { "path": "00000000-0000-4000-8000-user00000001/0f9d2c1a-0000-4000-8000-fixture00001/obj-pl-1-1.jpg", "azimuthDeg": 170 }
+          ]
+        }
       }
     ],
     "fixtures": [
@@ -83,7 +97,12 @@
         "kind": "toilet",
         "label": "马桶",
         "bounds": { "x": 600, "y": 60, "w": 60, "h": 84 },
-        "rotation": 0
+        "rotation": 0,
+        "attrs": {
+          "heightIn": 30.5,
+          "confidence": "medium",
+          "photoPath": "00000000-0000-4000-8000-user00000001/0f9d2c1a-0000-4000-8000-fixture00001/obj-fx-1.jpg"
+        }
       }
     ],
     "viewpoints": [

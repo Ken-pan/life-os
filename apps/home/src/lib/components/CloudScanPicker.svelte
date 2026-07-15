@@ -68,7 +68,7 @@
     progress = '拉取中…'
     error = ''
     try {
-      const { project, photos, report, replaced } = await pullScan(
+      const { project, photos, report, replaced, identity } = await pullScan(
         getActiveProject(),
         scan.id,
         {
@@ -84,9 +84,28 @@
         toast(`${photos.failed} 张照片下载失败,对应机位保留为空视角`, 'error')
       }
       if (mode === 'furniture' && report) {
+        const reg = report.registration
         const parts = [`摆了 ${report.mapped} 件`]
+        if (reg?.status === 'ok') {
+          parts.push(`墙体配准 ✓(残差中位 ${reg.medianCm}cm)`)
+          if (report.refined) parts.push(`${report.refined} 件按实测墙距微调`)
+        } else if (reg) {
+          parts.push('配准未过门,按分区粗对齐')
+        }
+        if (report.anchored) parts.push(`${report.anchored} 件按实测墙距锚定`)
+        if (identity && (identity.unchanged || identity.moved.length)) {
+          const idParts = [`${identity.unchanged} 件原位`]
+          if (identity.moved.length) {
+            idParts.push(`${identity.moved.length} 件挪过(${identity.moved.map((m) => `${m.label} ${m.movedFt}ft`).join('、')})`)
+          }
+          parts.push(idParts.join('、'))
+        }
+        if (identity?.removed?.length) parts.push(`${identity.removed.length} 件上次有这次没扫到`)
         if (replaced.length) parts.push(`顶掉 ${replaced.length} 件手录的`)
         if (report.skipped) parts.push(`跳过 ${report.skipped} 件`)
+        if (report.conflicts?.length) {
+          toast(`${report.conflicts.length} 件墙距与扫描不一致(可能被挪过),未自动吸附`, 'error')
+        }
         toast(parts.join(' · '))
       }
     } catch (err) {

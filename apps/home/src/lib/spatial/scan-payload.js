@@ -34,7 +34,7 @@ export function validateScanPayload(payload) {
 }
 
 /**
- * payload → 完整 SpatialProject。机位照片必须已换成本地 photoRef
+ * payload → 完整 SpatialProject。机位/家具照片必须已换成本地 photoRef
  * (photoPath 在 cloud-scan.js 的 resolveScanPhotos 里消化),这里只丢弃该字段。
  * storageZones 有意置空 —— 其 placementId 引用在新扫描里已不存在。
  * @param {any} payload 已通过 validateScanPayload
@@ -51,15 +51,67 @@ export function buildProjectFromScan(payload) {
   return buildFromWallGraph(h.wallGraph, {
     graphOpenings: h.graphOpenings ?? [],
     zones: h.zones ?? [],
-    placements: h.placements ?? [],
-    fixtures: h.fixtures ?? [],
+    placements: (h.placements ?? []).map(stripAttrsPhotoPath),
+    fixtures: (h.fixtures ?? []).map(stripAttrsPhotoPath),
     viewpoints: (h.viewpoints ?? []).map(stripPhotoPath),
     meta,
   })
+}
+
+/**
+ * 家具/设施照片的下载任务清单(iOS 自动抓拍,2026-07 加法式契约):
+ * 单图 attrs.photoPath(兼容)+ 多视角证据包 attrs.photos[].path。
+ * resolveScanPhotos 按它逐张下载,把 ref 写回对应位置(就地更新)。
+ * @param {any} payload
+ * @returns {Array<{ path: string, assign: (ref: string) => void }>}
+ */
+export function scanObjectPhotoEntries(payload) {
+  const h = payload?.homeos
+  /** @type {Array<{ path: string, assign: (ref: string) => void }>} */
+  const jobs = []
+  for (const o of [...(h?.placements ?? []), ...(h?.fixtures ?? [])]) {
+    const attrs = o?.attrs
+    if (!attrs) continue
+    const photos = Array.isArray(attrs.photos) ? attrs.photos : []
+    for (const ph of photos) {
+      if (!ph?.path) continue
+      jobs.push({
+        path: ph.path,
+        assign: (ref) => {
+          ph.photoRef = ref
+          // 最佳一张兼容旧消费方:photoPath 对应的就是 photos[0]
+          if (attrs.photoPath === ph.path) attrs.photoRef = ref
+        },
+      })
+    }
+    // 没有 photos 数组的旧 payload:单图路径单独下载
+    if (attrs.photoPath && !photos.some((p) => p?.path === attrs.photoPath)) {
+      jobs.push({
+        path: attrs.photoPath,
+        assign: (ref) => {
+          attrs.photoRef = ref
+        },
+      })
+    }
+  }
+  return jobs
 }
 
 /** @param {any} vp */
 function stripPhotoPath(vp) {
   const { photoPath, ...rest } = vp
   return rest
+}
+
+/** 家具照片没下载成功也不能把桶内路径带进本地项目(它对别的设备毫无意义) */
+function stripAttrsPhotoPath(obj) {
+  if (!obj?.attrs) return obj
+  const { photoPath, photos, ...attrs } = obj.attrs
+  const kept = Array.isArray(photos)
+    ? photos
+        .filter((p) => p?.photoRef)
+        .map(({ path, ...rest }) => rest)
+    : undefined
+  if (kept?.length) attrs.photos = kept
+  return { ...obj, attrs }
 }

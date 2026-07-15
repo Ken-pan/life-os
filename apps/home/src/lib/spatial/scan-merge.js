@@ -11,14 +11,109 @@
  * 2. 每个本地房间:源 bbox(认领它的扫描分区合起来) → 目标 bbox(房间自己)
  * 3. 家具按**相对位置**映射过去(u,v 比例),**尺寸原样保留** —— 尺寸是 LiDAR
  *    实测的,比任何缩放都准
+ * 4. **墙距锚定**(比例回退路径内):扫描侧墙距 ≤30″ 的贴墙家具,按实测
+ *    墙距钉到本地房间对应墙面;居中家具保持比例。
  *
- * 结果是「大致对、能用」:家具落在正确房间的正确角落,细节靠用户在 /plan 拖两下。
+ * **首选路径是全局刚性配准**(见 scan-register.js):墙不再变,所以先用
+ * 整个墙体结构求一次 SE(2) 变换(禁止缩放),把**所有家具统一变换**过来,
+ * 墙距只做 ≤5cm 的局部精修与一致性检查 —— 5–10cm 只建议、>10cm 标记
+ * 「家具可能被挪过/扫描冲突」,绝不静默吸附。配准不过验收门(残差大/
+ * 匹配墙太少)才回退到上面的分区比例路径。
+ *
+ * 结果:配准成功时全屋家具厘米级落位且误差不被打散;失败时「大致对、能用」。
  */
+import {
+  registerScanToHome,
+  wallSegments,
+  roomBoundsSegments,
+  transformSegments,
+} from './scan-register.js'
+import { matchScanObjects } from './scan-identity.js'
 
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
 /** 分区认领房间时,中心距超过这个就认为没对应(px;36px=1ft) */
 const CLAIM_MAX_DIST_PX = 400
+
+/** 扫描侧墙距 ≤ 这个值(30″=90px)视为「贴墙摆放」,参与锚定/精修 */
+const ANCHOR_MAX_PX = 90
+/** 墙段要正对家具:垂直向重叠 ≥ 家具对应边长的这个比例,才算「面前的墙」 */
+const WALL_FACE_OVERLAP = 0.3
+/** 扫描清洗会让家具与墙轻微穿模,容忍到 2″;更深说明找错墙了 */
+const WALL_SINK_TOL_PX = -6
+/** 配准后的墙距精修上限:≤5cm 自动修,5–10cm 只建议,>10cm 标记冲突 */
+const PX_PER_CM = 36 / 30.48
+const REFINE_AUTO_PX = 5 * PX_PER_CM
+const REFINE_FLAG_PX = 10 * PX_PER_CM
+
+/**
+ * 家具某一侧到最近正对墙面的距离(扫描坐标系,px)。找不到返回 null。
+ * (导出给 scan-accuracy 校验脚本量墙距)
+ * @param {ReturnType<typeof wallSegments>} segs
+ * @param {{x:number,y:number,w:number,h:number}} box
+ * @param {'left'|'right'|'up'|'down'} side
+ */
+export function gapToWall(segs, box, side) {
+  const horizontalSide = side === 'left' || side === 'right'
+  const spanLo = horizontalSide ? box.y : box.x
+  const spanHi = horizontalSide ? box.y + box.h : box.x + box.w
+  const span = spanHi - spanLo
+  let best = null
+  for (const s of segs) {
+    if (s.vertical !== horizontalSide) continue
+    const overlap = Math.min(s.hi, spanHi) - Math.max(s.lo, spanLo)
+    if (overlap < span * WALL_FACE_OVERLAP) continue
+    let gap
+    if (side === 'left') gap = box.x - s.at
+    else if (side === 'right') gap = s.at - (box.x + box.w)
+    else if (side === 'up') gap = box.y - s.at
+    else gap = s.at - (box.y + box.h)
+    if (gap < WALL_SINK_TOL_PX) continue
+    if (best === null || gap < best) best = gap
+  }
+  return best === null ? null : Math.max(0, best)
+}
+
+/**
+ * 墙距锚定:某轴向上,扫描侧离墙 ≤30″ 的那一侧,按**实测墙距**贴到
+ * 本地房间对应墙面(房间 bounds 边 = 墙内面)。两侧都贴墙取更近的
+ * (窄空间里那一侧才是真锚点)。不贴墙的轴保持传入的比例映射值。
+ * @param {{x:number,y:number,w:number,h:number}} srcBox 扫描坐标系
+ * @param {{x:number,y:number}} pos 比例映射出的本地左上角
+ * @param {{x:number,y:number,w:number,h:number}} roomBounds
+ * @param {ReturnType<typeof wallSegments>} segs
+ * @returns {{ x: number, y: number, anchored: boolean }}
+ */
+function anchorToWalls(srcBox, pos, roomBounds, segs) {
+  let { x, y } = pos
+  let anchored = false
+
+  const gl = gapToWall(segs, srcBox, 'left')
+  const gr = gapToWall(segs, srcBox, 'right')
+  const pickL = gl !== null && gl <= ANCHOR_MAX_PX && (gr === null || gl <= gr)
+  const pickR = !pickL && gr !== null && gr <= ANCHOR_MAX_PX
+  if (pickL) {
+    x = roomBounds.x + gl
+    anchored = true
+  } else if (pickR) {
+    x = roomBounds.x + roomBounds.w - gr - srcBox.w
+    anchored = true
+  }
+
+  const gu = gapToWall(segs, srcBox, 'up')
+  const gd = gapToWall(segs, srcBox, 'down')
+  const pickU = gu !== null && gu <= ANCHOR_MAX_PX && (gd === null || gu <= gd)
+  const pickD = !pickU && gd !== null && gd <= ANCHOR_MAX_PX
+  if (pickU) {
+    y = roomBounds.y + gu
+    anchored = true
+  } else if (pickD) {
+    y = roomBounds.y + roomBounds.h - gd - srcBox.h
+    anchored = true
+  }
+
+  return { x, y, anchored }
+}
 
 const bboxOfPoly = (poly) => {
   const xs = poly.map((p) => p.x)
@@ -137,15 +232,54 @@ function clampToRoom(x, y, w, h, room) {
  * @param {any} scanHomeos payload.homeos(已通过 validateScanPayload)
  * @returns {{
  *   placements: any[], fixtures: any[], viewpoints: any[],
- *   report: { mapped: number, skipped: number, rooms: Array<{ nameZh: string, from: string, count: number }> },
+ *   report: { mapped: number, skipped: number, anchored: number, rooms: Array<{ nameZh: string, from: string, count: number }> },
  * }}
  */
 export function mapScanIntoLayout(project, scanHomeos) {
   const rooms = targetRooms(project)
   const scanZones = scanHomeos.zones ?? []
-  const report = { mapped: 0, skipped: 0, rooms: [] }
+  const report = {
+    mapped: 0,
+    skipped: 0,
+    anchored: 0,
+    refined: 0,
+    suggested: 0,
+    /** @type {Array<{ label: string, side: string, cm: number }>} */
+    conflicts: [],
+    /** @type {any} */
+    registration: null,
+    rooms: [],
+  }
   if (!rooms.length || !scanZones.length) {
     return { placements: [], fixtures: [], viewpoints: [], report }
+  }
+  // 扫描侧的实测墙体 —— 配准与墙距精修的依据(旧 payload 没有就走比例回退)
+  const scanWalls = wallSegments(scanHomeos.wallGraph)
+
+  // 首选:全局刚性配准(墙不再变 → 每次扫描是重新定位到同一个家)。
+  // 过验收门就统一变换所有家具;不过门绝不强行吸附,回退分区比例路径。
+  const localSegs = project.wallGraph
+    ? wallSegments(project.wallGraph)
+    : roomBoundsSegments(rooms)
+  const reg = registerScanToHome(scanHomeos.wallGraph, localSegs)
+  report.registration = {
+    status: reg.status,
+    yawDeg: reg.yawDeg,
+    medianCm: reg.medianCm,
+    p95Cm: reg.p95Cm,
+    matchedWalls: reg.matchedWalls,
+    reason: reg.reason,
+  }
+  if (reg.status === 'ok') {
+    return mapRegistered({
+      scanHomeos,
+      rooms,
+      localSegs,
+      scanWalls,
+      reg,
+      report,
+      useZoneIds: Boolean(project.zones?.length),
+    })
   }
 
   const scanOuter = scanZones
@@ -209,9 +343,16 @@ export function mapScanIntoLayout(project, scanHomeos) {
       ? mapPoint(pt, bboxOfPoly(zoneById[zoneId].polygon), hit.dstBox)
       : toLocal(pt)
     const room = roomOfPoint(c, hit?.rooms) ?? roomOfPoint(c)
-    const pos = room
-      ? clampToRoom(c.x - box.w / 2, c.y - box.h / 2, box.w, box.h, room)
-      : { x: c.x - box.w / 2, y: c.y - box.h / 2 }
+    let pos = { x: c.x - box.w / 2, y: c.y - box.h / 2 }
+    if (room) {
+      // 贴墙家具按实测墙距钉到房间墙面(机位是点,不锚定 —— 墙距对它没有摆放语义)
+      if (box.w > 0 && box.h > 0 && scanWalls.length) {
+        const a = anchorToWalls(box, pos, room.bounds, scanWalls)
+        if (a.anchored) report.anchored++
+        pos = a
+      }
+      pos = clampToRoom(pos.x, pos.y, box.w, box.h, room)
+    }
     const name = room?.nameZh ?? '(户型外)'
     perRoom.set(name, (perRoom.get(name) ?? 0) + 1)
     return { ...pos, room, srcZone: zoneId }
@@ -275,6 +416,129 @@ export function mapScanIntoLayout(project, scanHomeos) {
 }
 
 /**
+ * 配准成功后的映射:所有对象吃同一个刚性变换(尺寸原封不动),
+ * 贴墙对象再做**有界**墙距精修 —— 修正量来自「实测墙距 vs 本地墙距」之差:
+ * ≤5cm 自动修(配准残差级别的小误差),5–10cm 只计数建议,
+ * >10cm 记入 conflicts(家具可能真被挪过,不是扫描错 —— 交给用户/身份层裁决)。
+ */
+function mapRegistered({ scanHomeos, rooms, localSegs, scanWalls, reg, report, useZoneIds }) {
+  // 刚性变换保距,变换后的扫描墙段上量出的墙距 = LiDAR 实测墙距
+  const measuredSegs = transformSegments(scanWalls, reg.apply)
+  const perRoom = new Map()
+
+  const roomAt = (pt) => {
+    let best = null
+    let bestArea = Infinity
+    for (const r of rooms) {
+      const b = r.bounds
+      const area = b.w * b.h
+      if (
+        pt.x >= b.x && pt.x <= b.x + b.w &&
+        pt.y >= b.y && pt.y <= b.y + b.h &&
+        area < bestArea
+      ) {
+        best = r
+        bestArea = area
+      }
+    }
+    return best
+  }
+
+  /** 单轴精修:实测墙距与本地墙距之差,按上限分级处理 */
+  const refineAxis = (box, sides, label) => {
+    const gaps = sides.map((side) => gapToWall(measuredSegs, box, side))
+    let side = null
+    let measured = null
+    for (let i = 0; i < sides.length; i++) {
+      if (gaps[i] === null || gaps[i] > ANCHOR_MAX_PX) continue
+      if (measured === null || gaps[i] < measured) {
+        measured = gaps[i]
+        side = sides[i]
+      }
+    }
+    if (side === null) return 0
+    const localGap = gapToWall(localSegs, box, side)
+    if (localGap === null) return 0
+    const delta = localGap - measured
+    const mag = Math.abs(delta)
+    if (mag <= REFINE_AUTO_PX) {
+      // 让本地墙距 = 实测墙距:靠墙侧在 左/上 时向负方向挪 delta
+      return side === 'left' || side === 'up' ? -delta : delta
+    }
+    if (mag <= REFINE_FLAG_PX) {
+      report.suggested++
+      return 0
+    }
+    report.conflicts.push({
+      label,
+      side,
+      cm: Math.round((mag / PX_PER_CM) * 10) / 10,
+    })
+    return 0
+  }
+
+  const place = (srcBox, label) => {
+    let box = reg.applyBox(srcBox)
+    const dx = refineAxis(box, ['left', 'right'], label)
+    const dy = refineAxis({ ...box, x: box.x + dx }, ['up', 'down'], label)
+    if (dx !== 0 || dy !== 0) report.refined++
+    box = { ...box, x: round1(box.x + dx), y: round1(box.y + dy) }
+    const room = roomAt({ x: box.x + box.w / 2, y: box.y + box.h / 2 })
+    const name = room?.nameZh ?? '(户型外)'
+    perRoom.set(name, (perRoom.get(name) ?? 0) + 1)
+    report.mapped++
+    return { box, room }
+  }
+
+  const rot = (r) => /** @type {0|90|180|270} */ (((r ?? 0) + reg.yawDeg) % 360)
+
+  const placements = (scanHomeos.placements ?? []).map((pl) => {
+    const m = place({ x: pl.x, y: pl.y, w: pl.w, h: pl.h }, pl.label ?? pl.kind)
+    return {
+      ...pl,
+      id: `scan-${pl.id}`,
+      x: m.box.x,
+      y: m.box.y,
+      w: round1(m.box.w),
+      h: round1(m.box.h),
+      rotation: rot(pl.rotation),
+      zoneId: useZoneIds ? m.room?.id : undefined,
+    }
+  })
+
+  const fixtures = (scanHomeos.fixtures ?? [])
+    .filter((fx) => fx.bounds)
+    .map((fx) => {
+      const m = place(fx.bounds, fx.label ?? fx.kind)
+      return {
+        ...fx,
+        id: `scan-${fx.id}`,
+        bounds: { x: m.box.x, y: m.box.y, w: round1(m.box.w), h: round1(m.box.h) },
+        rotation: rot(fx.rotation),
+      }
+    })
+
+  const viewpoints = (scanHomeos.viewpoints ?? []).map((vp) => {
+    const p = reg.apply({ x: vp.x, y: vp.y })
+    const room = roomAt(p)
+    report.mapped++
+    return {
+      ...vp,
+      id: `scan-${vp.id}`,
+      x: round1(p.x),
+      y: round1(p.y),
+      heading: Math.round((((vp.heading ?? 0) + reg.yawDeg) % 360) * 10) / 10,
+      zoneId: useZoneIds ? room?.id : undefined,
+    }
+  })
+
+  for (const [nameZh, count] of perRoom) {
+    report.rooms.push({ nameZh, from: '', count })
+  }
+  return { placements, fixtures, viewpoints, report }
+}
+
+/**
  * 只把机位照片/状态并进现有项目 —— 日常用法:户型和家具都不动,
  * 只是「今天这里长这样」。同一 photoPath 的机位视为同一处,覆盖更新。
  * @param {SpatialProject} project
@@ -301,7 +565,10 @@ const boxCenter = (o) => {
 /**
  * 家具 + 机位一起并进来(初始摆家具用)。
  *
- * - 上次扫描留下的(id 前缀 `scan-`)整批换掉 —— 重扫就是重新对一次,不该越堆越多
+ * - 上次扫描留下的(id 前缀 `scan-`)先做**身份匹配**(scan-identity.js):
+ *   认出是同一件的,**保留旧 id**并沿用旧 attrs 里扫描给不了的成果
+ *   (VLM 识别的材质/颜色人话等),几何取新扫描;没匹配上的旧扫描件才丢
+ *   (identity.removed 里可见)—— 同一张沙发不再因为重扫变成"新家具"
  * - 手录的设施若与实测件**位置重合**(3ft 内),让实测的顶掉:LiDAR 量的比手录准
  *   (实测 508 里的马桶偏了 2.5ft,淋浴其实是浴缸)
  * - 手录的、实测没扫到的(洗衣机、挂杆…)原样保留 —— 扫描漏检不等于东西不在
@@ -310,10 +577,59 @@ const boxCenter = (o) => {
  * @param {SpatialProject} project
  * @param {{ placements: any[], fixtures: any[], viewpoints: any[] }} mapped
  * @param {{ replaceNearby?: boolean }} [opts]
- * @returns {SpatialProject}
+ * @returns {{ project: SpatialProject, identity: {
+ *   unchanged: number, moved: Array<{ label: string, movedFt: number }>,
+ *   added: number, removed: string[], possiblySame: number,
+ * } }}
  */
-export function mergeFurnitureAndViewpoints(project, mapped, opts = {}) {
+export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const replaceNearby = opts.replaceNearby !== false
+  const identity = { unchanged: 0, moved: [], added: 0, removed: [], possiblySame: 0 }
+
+  /** 上次扫描件 → 身份匹配 → 新几何 + 旧 id/旧成果 */
+  const reconcile = (prevAll, incoming) => {
+    const prevScan = (prevAll ?? []).filter((o) => String(o.id).startsWith('scan-'))
+    const m = matchScanObjects(prevScan, incoming)
+    const prevById = Object.fromEntries(prevScan.map((o) => [o.id, o]))
+    const pairByNext = Object.fromEntries(m.pairs.map((p) => [p.nextId, p]))
+    /** 认不准的旧件也算 removed —— 不许静默消失 */
+    const droppedPrevIds = [
+      ...m.removed,
+      ...m.pairs.filter((p) => p.state === 'possibly_same').map((p) => p.prevId),
+    ]
+    // 永久身份优先占 id:先给匹配上的保留旧 id,新件再避让(否则新件可能抢注)
+    const usedIds = new Set(
+      m.pairs.filter((p) => p.state !== 'possibly_same').map((p) => p.prevId),
+    )
+    const uniq = (id) => {
+      let v = id
+      while (usedIds.has(v)) v = `${v}-b`
+      usedIds.add(v)
+      return v
+    }
+    const out = incoming.map((n) => {
+      const pair = pairByNext[n.id]
+      if (!pair || pair.state === 'possibly_same') {
+        if (pair?.state === 'possibly_same') identity.possiblySame++
+        else identity.added++
+        return { ...n, id: uniq(n.id) }
+      }
+      const prev = prevById[pair.prevId]
+      if (pair.state === 'same_unchanged') identity.unchanged++
+      else identity.moved.push({ label: n.label ?? n.kind, movedFt: pair.movedFt })
+      return {
+        ...n,
+        id: prev.id, // 永久身份:重扫不换 id(已预先占位)
+        attrs: { ...prev.attrs, ...n.attrs },
+      }
+    })
+    identity.removed.push(...droppedPrevIds.map((id) => prevById[id]?.label ?? id))
+    return out
+  }
+
+  const nextPlacements = reconcile(project.placements, mapped.placements)
+  const nextFixtures = reconcile(project.fixtures, mapped.fixtures)
+
   /** 丢掉上次扫描的;手录的按是否被实测件顶掉决定 */
   const keepLocal = (arr, incoming) =>
     (arr ?? []).filter((o) => {
@@ -326,15 +642,21 @@ export function mergeFurnitureAndViewpoints(project, mapped, opts = {}) {
       })
     })
 
-  return {
+  const next = {
     ...project,
-    placements: [...keepLocal(project.placements, mapped.placements), ...mapped.placements],
-    fixtures: [...keepLocal(project.fixtures, mapped.fixtures), ...mapped.fixtures],
+    placements: [...keepLocal(project.placements, nextPlacements), ...nextPlacements],
+    fixtures: [...keepLocal(project.fixtures, nextFixtures), ...nextFixtures],
     viewpoints: [
       ...(project.viewpoints ?? []).filter((v) => !String(v.id).startsWith('scan-')),
       ...mapped.viewpoints,
     ],
   }
+  return { project: next, identity }
+}
+
+/** 兼容旧调用:只要合并结果 */
+export function mergeFurnitureAndViewpoints(project, mapped, opts = {}) {
+  return mergeFurnitureWithIdentity(project, mapped, opts).project
 }
 
 /**

@@ -278,6 +278,85 @@ export async function locateObjects(photo, targets) {
   return found
 }
 
+/**
+ * @typedef {object} FurnitureLook
+ * @property {string | null} colorHex 主色 #RRGGBB
+ * @property {string | null} colorZh 颜色的人话（深棕/米白…，≤6 字）
+ * @property {string | null} material 材质（布艺/皮革/实木/金属/塑料…，≤6 字）
+ * @property {string | null} styleZh 款式一句话（≤14 字）
+ * @property {number} confidence
+ */
+
+/**
+ * 读一张**家具特写**（iOS 扫描自动抓拍的裁剪图），回答外观三件事：
+ * 颜色、材质、款式。设备端 k-means 主色会被墙面/阴影污染，VLM 认的
+ * 「这件家具本身」更准 —— 有 VLM 就让它覆盖。
+ * @param {Blob} photo
+ * @param {string} label 家具名（给模型上下文，如「L形沙发」）
+ * @returns {Promise<FurnitureLook | null>}
+ */
+export async function describeFurniture(photo, label) {
+  if (!(await probeVlm())) return null
+  const dataUrl = await toDataUrl(photo)
+  const body = {
+    model: MODEL,
+    max_tokens: 200,
+    temperature: 0,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: dataUrl } },
+          {
+            type: 'text',
+            text:
+              `这是从住宅扫描里裁出的一件家具（${label}）的照片，画面可能带少量背景。` +
+              `只看这件家具本身，回答：\n` +
+              `1. 主色（十六进制 #RRGGBB，取家具主体面料/板材的颜色，别取阴影或背景）\n` +
+              `2. 颜色的人话（如 深棕/米白/浅灰，不超过 6 字）\n` +
+              `3. 材质（布艺/皮革/实木/板材/金属/塑料/藤编 之一，认不出填 null）\n` +
+              `4. 款式一句话（不超过 12 字，如「三人位直排布艺沙发」）\n\n` +
+              `只输出 JSON，不要解释、不要代码块：\n` +
+              `{"colorHex": "#RRGGBB", "colorZh": "...", "material": "...", ` +
+              `"styleZh": "...", "confidence": <0-1>}`,
+          },
+        ],
+      },
+    ],
+  }
+  try {
+    const ctl = new AbortController()
+    const t = setTimeout(() => ctl.abort(), 60000)
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: ctl.signal,
+    })
+    clearTimeout(t)
+    if (!res.ok) return null
+    const data = await res.json()
+    const raw = parseJsonLoose(data?.choices?.[0]?.message?.content ?? '')
+    if (!raw) return null
+    const hex = /^#[0-9a-fA-F]{6}$/.test(String(raw.colorHex ?? ''))
+      ? String(raw.colorHex).toUpperCase()
+      : null
+    const trim = (v, n) => {
+      const s = String(v ?? '').trim()
+      return s && s !== 'null' ? s.slice(0, n) : null
+    }
+    return {
+      colorHex: hex,
+      colorZh: trim(raw.colorZh, 6),
+      material: trim(raw.material, 6),
+      styleZh: trim(raw.styleZh, 14),
+      confidence: clamp01(raw.confidence),
+    }
+  } catch {
+    return null
+  }
+}
+
 /** 模型偶尔会裹 ```json 或前后带话，容错抠出第一个 JSON 对象。 */
 function parseJsonLoose(text) {
   if (!text) return null
