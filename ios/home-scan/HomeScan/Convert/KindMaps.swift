@@ -40,8 +40,14 @@ enum KindMaps {
         "unidentified": "房间",
     ]
 
-    static func zoneName(for label: String?) -> String {
-        guard let label, !label.isEmpty else { return "房间" }
-        return sectionNames[label] ?? "房间"
+    /// 多 section 地板拼名:["kitchen","livingRoom"] → "厨房·客厅"(去重,最多 3 段)。
+    static func zoneName(for labels: [String]) -> String {
+        var names: [String] = []
+        for label in labels {
+            let name = sectionNames[label] ?? "房间"
+            if name != "房间", !names.contains(name) { names.append(name) }
+        }
+        guard !names.isEmpty else { return "房间" }
+        return names.prefix(3).joined(separator: "·")
     }
 }

@@ -38,8 +38,9 @@ struct FlatScene {
     }
 
     struct RoomPoly {
-        /// RoomPlan section label 原文(如 "bedroom"),无则 nil
-        var label: String?
+        /// 落在此地板内的全部 RoomPlan section label(如 ["kitchen","livingRoom"])。
+        /// 一次扫描常横跨多个功能区,单标签会把整层误命名成第一个撞上的。
+        var labels: [String] = []
         var points: [SIMD2<Double>]
     }
 

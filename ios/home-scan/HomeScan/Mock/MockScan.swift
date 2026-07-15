@@ -39,12 +39,14 @@ enum MockScan {
             .init(category: "bed", center: r(1.2, 1.5), axisDeg: rot * 180 / .pi + 90, widthM: 1.5, depthM: 2.0),
             .init(category: "sofa", center: r(6.5, 3.2), axisDeg: rot * 180 / .pi, widthM: 2.2, depthM: 0.9),
             .init(category: "refrigerator", center: r(8.5, 0.5), axisDeg: rot * 180 / .pi, widthM: 0.7, depthM: 0.7),
+            // 同一台冰箱被第二次扫描重复识别(中心差 20cm) —— 应被去重合并
+            .init(category: "refrigerator", center: r(8.6, 0.65), axisDeg: rot * 180 / .pi, widthM: 0.72, depthM: 0.68),
             .init(category: "stairs", center: r(5, 2), axisDeg: 0, widthM: 1, depthM: 2), // 应被跳过并告警
         ]
 
         s.rooms = [
-            .init(label: "bedroom", points: [r(0, 0), r(4, 0), r(4, 3), r(0, 3)]),
-            .init(label: "livingRoom", points: [r(4, 0), r(9, 0), r(9, 4), r(4, 4)]),
+            .init(labels: ["bedroom"], points: [r(0, 0), r(4, 0), r(4, 3), r(0, 3)]),
+            .init(labels: ["livingRoom", "kitchen"], points: [r(4, 0), r(9, 0), r(9, 4), r(4, 4)]),
         ]
 
         // 机位:卧室看床(朝 -y 即户型上方),客厅看沙发

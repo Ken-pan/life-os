@@ -23,6 +23,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.homescan
         CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 93NJ4CAU8B
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_MACCATALYST: false

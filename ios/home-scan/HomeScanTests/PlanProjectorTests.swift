@@ -31,7 +31,7 @@ final class PlanProjectorTests: XCTestCase {
             .init(category: "bed", center: r(1, 0.75), axisDeg: rotDeg, widthM: 1.5, depthM: 1.2)
         ]
         s.rooms = [
-            .init(label: "bedroom", points: [r(0, 0), r(4, 0), r(4, 3), r(0, 3)])
+            .init(labels: ["bedroom"], points: [r(0, 0), r(4, 0), r(4, 3), r(0, 3)])
         ]
         // 相机 (2, 2.5) 朝北(-y):画面应看向房间上部
         s.poses = [
@@ -154,18 +154,64 @@ final class PlanProjectorTests: XCTestCase {
         XCTAssertEqual(p.meta.sourceNote, "iOS HomeScan · RoomPlan 实测")
     }
 
+    // MARK: - 真扫暴露的缺陷:重叠地板合并 / 近轴拉直 / 偏轴噪声过滤
+
+    func testOverlappingFloorsMerge() {
+        var s = baseScene()
+        // 同一房间扫了第二遍:地板几乎重合(略小),带上另一个 section 标签
+        s.rooms.append(
+            .init(labels: ["kitchen"], points: [
+                SIMD2(0.2, 0.2), SIMD2(3.8, 0.2), SIMD2(3.8, 2.8), SIMD2(0.2, 2.8),
+            ])
+        )
+        let p = project(s)
+        XCTAssertEqual(p.zones.count, 1, "重叠 >60% 的地板应合并")
+        XCTAssertEqual(p.zones[0].nameZh, "卧室·厨房", "合并后标签拼接")
+        // 面积不再双算:仍 ≈ 129 ft²
+        XCTAssertEqual(p.meta.sqft ?? 0, 129.2, accuracy: 3)
+        XCTAssertTrue(p.meta.scanWarnings.contains { $0.contains("重叠") })
+    }
+
+    func testNearAxisWallsStraightened() {
+        var s = baseScene()
+        // 北墙一端翘起 8cm(≈1.1°,RoomPlan 常态)→ 应拉平成水平
+        s.walls[0] = .init(a: SIMD2(0, 0), b: SIMD2(4, 0.08))
+        let p = project(s)
+        for e in p.wallGraph.edges {
+            let a = p.wallGraph.vertices.first { $0.id == e.a }!
+            let b = p.wallGraph.vertices.first { $0.id == e.b }!
+            XCTAssertTrue(
+                abs(a.x - b.x) < 1 || abs(a.y - b.y) < 1,
+                "近轴墙应被拉直:\(e.id) (\(a.x),\(a.y))-(\(b.x),\(b.y))"
+            )
+        }
+    }
+
+    func testOffAxisNoiseDropped() {
+        var s = baseScene()
+        // 25cm 长、30° 歪的碎墙 —— 扫描噪声,应被滤掉
+        s.walls.append(.init(a: SIMD2(2, 1), b: SIMD2(2.22, 1.13)))
+        let p = project(s)
+        XCTAssertEqual(p.wallGraph.edges.count, 4, "偏轴碎墙应被过滤")
+        XCTAssertTrue(p.meta.scanWarnings.contains { $0.contains("碎墙") })
+    }
+
     // MARK: - Mock 场景全链路(含跳过告警 + 契约序列化)
 
     func testMockSceneRoundTrip() throws {
         let p = project(MockScan.scene())
         XCTAssertEqual(p.zones.count, 2)
         XCTAssertTrue(p.zones.contains { $0.nameZh == "卧室" })
-        XCTAssertTrue(p.zones.contains { $0.nameZh == "客厅" })
+        XCTAssertTrue(p.zones.contains { $0.nameZh == "客厅·厨房" }, "多 section 地板应拼名")
         XCTAssertEqual(p.placements.count, 2, "床+沙发")
-        XCTAssertEqual(p.fixtures.count, 1, "冰箱是固定设施")
+        XCTAssertEqual(p.fixtures.count, 1, "两次识别的冰箱应去重成一台固定设施")
         XCTAssertTrue(
             p.meta.scanWarnings.contains { $0.contains("stairs") },
             "stairs 应被跳过并告警"
+        )
+        XCTAssertTrue(
+            p.meta.scanWarnings.contains { $0.contains("重复识别") },
+            "冰箱去重应留告警"
         )
         XCTAssertEqual(p.viewpoints.count, 2)
 

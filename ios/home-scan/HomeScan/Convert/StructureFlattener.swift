@@ -51,16 +51,21 @@ enum StructureFlattener {
                 )
             }
 
-            // 地板多边形 → 分区;房名取中心点落在多边形内的 section
+            // 地板多边形 → 分区;收齐中心点落在多边形内的全部 section
+            // (一次扫描常横跨厨房+客厅,命名交给 PlanProjector 拼接)
             let sections = room.sections.map {
                 (label: String(describing: $0.label), center: SIMD2(Double($0.center.x), Double($0.center.z)))
             }
             for floor in room.floors {
                 let poly = floorPolygon(floor)
                 guard poly.count >= 3 else { continue }
-                let label = sections.first { PlanProjector.pointInPolygon($0.center, poly) }?.label
-                    ?? sections.first?.label
-                scene.rooms.append(FlatScene.RoomPoly(label: label, points: poly))
+                var labels = sections
+                    .filter { PlanProjector.pointInPolygon($0.center, poly) }
+                    .map(\.label)
+                if labels.isEmpty, let first = sections.first?.label {
+                    labels = [first]
+                }
+                scene.rooms.append(FlatScene.RoomPoly(labels: labels, points: poly))
             }
 
             if room.walls.contains(where: { $0.confidence == .low }) {

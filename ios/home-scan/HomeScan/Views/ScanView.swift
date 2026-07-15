@@ -7,6 +7,7 @@ struct ScanView: View {
     @Environment(AppModel.self) private var model
     @State private var betweenRooms = false
     @State private var busy = false
+    @State private var confirmNoPhotos = false
 
     var body: some View {
         ZStack {
@@ -47,10 +48,10 @@ struct ScanView: View {
                         .buttonStyle(.borderedProminent)
 
                         Button {
-                            busy = true
-                            Task {
-                                await model.finishScanning()
-                                busy = false
+                            if model.poses.isEmpty {
+                                confirmNoPhotos = true
+                            } else {
+                                finishAll()
                             }
                         } label: {
                             if busy {
@@ -64,6 +65,15 @@ struct ScanView: View {
                         .disabled(busy || model.scanController.roomCount == 0)
                     }
                     .padding(.bottom, 32)
+                    .alert("还没拍机位照片", isPresented: $confirmNoPhotos) {
+                        Button("继续扫,去拍几张") {
+                            model.scanController.startNextRoom()
+                            betweenRooms = false
+                        }
+                        Button("不拍了,直接完成", role: .destructive) { finishAll() }
+                    } message: {
+                        Text("机位照片会带着精确位置和朝向进 HomeOS,是网页端标注房间状态的底料。建议每个房间拍 2-3 张。")
+                    }
                 } else {
                     HStack(spacing: 16) {
                         Button {
@@ -98,6 +108,16 @@ struct ScanView: View {
                     .padding(.bottom, 32)
                 }
             }
+        }
+    }
+}
+
+extension ScanView {
+    private func finishAll() {
+        busy = true
+        Task {
+            await model.finishScanning()
+            busy = false
         }
     }
 }
