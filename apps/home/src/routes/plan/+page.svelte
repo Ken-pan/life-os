@@ -1262,7 +1262,7 @@
     <FloorPlanViewer
       project={viewerProject}
       canvasPriority
-      hideFurniture
+      hideFurniture={false}
       editMode={editMode508}
       {graphEditMode}
       toolbarMinimal={compactPlanChrome && planMode === 'edit'}

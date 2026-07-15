@@ -157,6 +157,24 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   ok('报告带挪动距离', rep.every((r) => typeof r.movedFt === 'number'))
 }
 
+// ---- 家具必须活过 hydrate(508 参数模式曾把它整个丢掉) ----
+{
+  const { hydrateProject } = await import('../src/lib/spatial/model.js')
+  const merged = mergeFurnitureAndViewpoints(SAMPLE_508, mapped)
+  const h1 = hydrateProject(merged)
+  // 此前 508 分支硬编码 furniture:[] 且不 carry placements ——
+  // setActiveProject 当场看得见,刷新一次(load→hydrate)家具就蒸发了
+  ok('hydrate 后家具还在', h1.placements.length === merged.placements.length, `${merged.placements.length}→${h1.placements.length}`)
+  ok('hydrate 派生出渲染用 furniture', h1.furniture.length === h1.placements.length)
+  ok('hydrate 后实测设施还在', h1.fixtures.some((f) => String(f.id).startsWith('scan-')))
+  ok('hydrate 不动户型', h1.walls.length === SAMPLE_508.walls.length && h1.rooms.length === SAMPLE_508.rooms.length)
+  ok('hydrate 不动储藏区', h1.storageZones.length === SAMPLE_508.storageZones.length)
+  // 内置设施每次重新生成,重复 hydrate 不能让它们越并越多
+  const h2 = hydrateProject(h1)
+  ok('重复 hydrate 幂等', h2.fixtures.length === h1.fixtures.length && h2.placements.length === h1.placements.length,
+    `fx ${h1.fixtures.length}→${h2.fixtures.length}`)
+}
+
 // ---- 没分区的扫描 ----
 {
   const m = mapScanIntoLayout(SAMPLE_508, { zones: [], placements: [], fixtures: [], viewpoints: [] })

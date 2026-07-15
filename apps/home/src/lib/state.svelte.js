@@ -1790,7 +1790,8 @@ export function getBrowseFloorPlan() {
     wallGraph: undefined,
     graphOpenings: [],
     zones: [],
-    placements: [],
+    // placements 留着:墙图编辑的产物不该带进浏览视图,但**家具**要 ——
+    // 扫描摆进来的实测家具就靠它显示,清掉的话平面图永远是空房。
   })
 }
 

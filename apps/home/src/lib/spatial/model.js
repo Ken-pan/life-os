@@ -1,8 +1,36 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
 import { build508Project, default508Config, merge508Config } from './layout-508.js'
-import { clampPlacementRect } from './placements.js'
+import { clampPlacementRect, placementsToFurniture } from './placements.js'
 import { buildFromWallGraph } from './wall-graph.js'
+
+/** 同一件东西的两份记录:实测件落在内置件这么近以内,就认为是同一个(3ft) */
+const FIXTURE_REPLACE_PX = 108
+
+const centerOfBox = (o) => {
+  const b = o.bounds ?? o
+  return { x: b.x + b.w / 2, y: b.y + b.h / 2 }
+}
+
+/**
+ * 508 参数户型的内置设施是每次 hydrate 现搭的,直接用会把扫描来的实测件冲掉。
+ * 这里让外来件(id 前缀 `scan-`)顶掉与它重合的内置件,其余内置件照旧。
+ * 幂等:外来件只存在于 carry 里,内置件每次重生成,所以重复 hydrate 结果一样。
+ * @param {SpatialProject['fixtures']} builtin
+ * @param {SpatialProject['fixtures']} carried
+ */
+function mergeBuiltinFixtures(builtin, carried) {
+  const extra = (carried ?? []).filter((f) => String(f.id).startsWith('scan-'))
+  if (!extra.length) return builtin
+  const kept = (builtin ?? []).filter((f) => {
+    const c = centerOfBox(f)
+    return !extra.some((e) => {
+      const ec = centerOfBox(e)
+      return Math.hypot(ec.x - c.x, ec.y - c.y) < FIXTURE_REPLACE_PX
+    })
+  })
+  return [...kept, ...extra]
+}
 
 /**
  * v5: placement w/h were authored in inches (the catalogue and the inspector's
@@ -75,24 +103,21 @@ export function hydrateProject(raw) {
   if (project.layoutMode === 'wallGraph' && project.wallGraph) {
     return rescueStrayPlacements(buildFromWallGraph(project.wallGraph, project))
   }
-  if (!project.layoutConfig) {
-    const built = build508Project(default508Config(), project)
-    return {
-      ...built,
-      layoutMode: 'parametric508',
-      wallGraph: undefined,
-      furniture: [],
-      furnitureInventory: [],
-      viewpoints: project.viewpoints ?? [],
-    }
-  }
-  const config = merge508Config(default508Config(), project.layoutConfig)
+  const config = project.layoutConfig
+    ? merge508Config(default508Config(), project.layoutConfig)
+    : default508Config()
   const built = build508Project(config, project)
+  // 508 参数模式此前把 placements 整个丢掉、furniture 写死成空 —— 扫描摆好的家具
+  // 一刷新就没了(setActiveProject 当场能看到,load() 再 hydrate 就蒸发)。
+  // 户型仍由 config 说了算,家具只是搭在上面的一层,carry 过来即可。
+  const placements = project.placements ?? []
   return {
     ...built,
     layoutMode: 'parametric508',
     wallGraph: undefined,
-    furniture: [],
+    placements,
+    fixtures: mergeBuiltinFixtures(built.fixtures, project.fixtures),
+    furniture: placementsToFurniture(placements),
     furnitureInventory: [],
     viewpoints: project.viewpoints ?? [],
   }
