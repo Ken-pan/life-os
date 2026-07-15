@@ -362,6 +362,7 @@ export default {
     noData: '记录几次实际次数后，教练才能判断配重',
     longGap: '距上次练该动作已久，先用上次重量找感觉',
     deloadDecrease: '处于减载期，建议重量降 10% 优先恢复动作质量',
+    deloadHold: '已减到位，减载期内保持这个重量，练完点「我已减载完成」',
     gapHoldLong: '距上次训练较久，今天先用原重量找回状态，别急着加重',
     gapHoldShort: '距上次训练几天了，今天先稳原重量，留 2–3 RIR 再考虑加重',
     toppedIncrease:

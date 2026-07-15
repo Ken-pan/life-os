@@ -93,6 +93,26 @@ function roundLoad(w, inc = 2.5) {
   return Math.max(0, Math.round((Math.round(w / step) * step) * 100) / 100);
 }
 
+/**
+ * 减载基准 = 近期实际练过的最重 与 当前工作重量 取大者。
+ *
+ * 不能只用当前工作重量：采纳减载后它就变成减载后的重量，下次打开弹窗又按它再减
+ * 10%（200 → 180 → 160 → 145…），一路滚下去。锚到练过的最重就幂等了 —— 采纳后
+ * 建议值不变，而 `suggested < cur` 不再成立，横幅自然消失。
+ *
+ * 窗口(8)比评估窗口(4)宽是故意的：减载周里练的那几场记的都是减载后的重量，窗口
+ * 太窄会让基准跟着掉下去，减载就又触发一轮 —— 雪球换个地方接着滚。
+ */
+const DELOAD_BASELINE_SESSIONS = 8;
+
+function deloadBaseline(ex, exId) {
+  const top = recentSessionsForEx(exId, DELOAD_BASELINE_SESSIONS).reduce((m, s) => {
+    const sets = (s.log?.sets || []).filter(Boolean);
+    return sets.reduce((n, x) => Math.max(n, Number(x.weight) || 0), m);
+  }, 0);
+  return Math.max(exWeight(ex) || 0, top);
+}
+
 export function progressionAdvice(exId) {
   const ex = findEx(exId);
   if (!ex) {
@@ -143,7 +163,7 @@ export function progressionAdvice(exId) {
 
   if (deloadAdvice().shouldDeload) {
     const cur = exWeight(ex);
-    const suggested = roundLoad(cur * 0.9, weightDelta(ex));
+    const suggested = roundLoad(deloadBaseline(ex, exId) * 0.9, weightDelta(ex));
     if (cur > 0 && suggested < cur) {
       return {
         action: 'decrease',
@@ -155,6 +175,15 @@ export function progressionAdvice(exId) {
         eligible: true
       };
     }
+    // 已经减到位：减载期内不能往下走(滚雪球)，也不能往上劝(刚采纳完减载就被推着
+    // 加回去，等于把减载抵消掉)。停在这里，等用户点「我已减载完成」。
+    return {
+      action: 'hold',
+      delta: 0,
+      reason: t('progression.deloadHold'),
+      reasonKey: 'deloadHold',
+      eligible: true
+    };
   }
 
   const { daysSince } = sessionStats();

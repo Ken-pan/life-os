@@ -148,8 +148,12 @@
   const adviceShown = $derived.by(() => {
     if (!advice) return null;
     const target = toDisplay(advice.suggestedWeight);
-    if (Math.abs(target - (parseFloat(String(val)) || 0)) < 0.01) return null;
-    return { ...advice, target };
+    const cur = parseFloat(String(val)) || 0;
+    if (Math.abs(target - cur) < 0.01) return null;
+    /* 箭头/文案按「当前编辑值 → 目标」算，不能直接用 advice.action：
+       建议是拿已保存的工作重量算的，用户可能已经手动调到目标另一侧（比如点了
+       快速选择 160），此时沿用 action 会显示「↓ 建议降重 180」——180 比 160 还高。 */
+    return { ...advice, target, dir: target > cur ? 'increase' : 'decrease' };
   });
 
   function applyAdvice() {
@@ -317,14 +321,14 @@
       <button
         type="button"
         class="wtm-advice"
-        class:up={adviceShown.action === 'increase'}
-        class:down={adviceShown.action === 'decrease'}
+        class:up={adviceShown.dir === 'increase'}
+        class:down={adviceShown.dir === 'decrease'}
         onclick={applyAdvice}
         title={adviceShown.reason}
       >
-        <Icon name={adviceShown.action === 'increase' ? 'trending-up' : 'trending-down'} size={14} />
+        <Icon name={adviceShown.dir === 'increase' ? 'trending-up' : 'trending-down'} size={14} />
         <span class="wtm-advice-text">
-          {adviceShown.action === 'increase' ? t('weight.suggestIncrease') : t('weight.suggestDecrease')}
+          {adviceShown.dir === 'increase' ? t('weight.suggestIncrease') : t('weight.suggestDecrease')}
           <b>{adviceShown.target}</b> {unitLabel}
         </span>
         <span class="wtm-advice-apply">{t('common.adopt')}</span>

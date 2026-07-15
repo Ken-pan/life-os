@@ -381,6 +381,7 @@ export default {
     longGap:
       'Long time since this exercise — use last weight to find your groove',
     deloadDecrease: 'Deload week — drop ~10% and prioritize form',
+    deloadHold: 'Already deloaded — hold this weight, then tap "Deload done"',
     gapHoldLong:
       'Long break since last workout — hold weight today, find your rhythm first',
     gapHoldShort:
