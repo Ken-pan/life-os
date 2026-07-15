@@ -81,10 +81,13 @@
   const categoryList = $derived(categoriesOf(txStore.txns))
   const accountList = $derived(accountNamesOf(txStore.txns))
 
+  // One range for the whole tab. The trend chart and the category/merchant
+  // cards each carried their own identical 本月/近3月/近12月/全部 control, so the
+  // same question was asked twice on one screen and the two could silently
+  // disagree — a chart showing this month above a breakdown showing all time.
   /** @type {Window} */
   let trendWindow = $state('month')
-  /** @type {Window} */
-  let catWindow = $state('month')
+  const catWindow = $derived(trendWindow)
   // 这是「洞察」页：分类占比、Top 商户和趋势就是它存在的理由，默认展开。
   // 之前默认折叠，于是整个标签页只剩下一条 5,000+ 行的原始流水。
   let showInsights = $state(true)
@@ -164,6 +167,7 @@
       </p>
     </details>
 
+    <!-- One range control for the tab, top-right. Every card below reads it. -->
     <div class="history-insights-toggle">
       <button
         type="button"
@@ -173,6 +177,25 @@
       >
         {showInsights ? t('history.collapseInsights') : t('history.expandInsights')}
       </button>
+      {#if showInsights}
+        <div class="seg" role="group" aria-label={t('history.rangeAria')}>
+          {#each [
+            { id: 'month', label: t('history.windowMonth') },
+            { id: '3m', label: t('history.window3m') },
+            { id: '12m', label: t('history.window12m') },
+            { id: 'all', label: t('history.windowAll') },
+          ] as w (w.id)}
+            <button
+              type="button"
+              class={trendWindow === w.id ? 'active' : ''}
+              aria-pressed={trendWindow === w.id}
+              onclick={() => (trendWindow = w.id)}
+            >
+              {w.label}
+            </button>
+          {/each}
+        </div>
+      {/if}
     </div>
 
     <div class="history-insights{showInsights ? ' open' : ''}">
@@ -247,22 +270,6 @@
         <div class="card">
           <div class="card-head">
             <h3>{trendDaily ? t('history.trendTitleDaily') : t('history.trendTitle')}</h3>
-            <div class="seg">
-              {#each [
-                { id: 'month', label: t('history.windowMonth') },
-                { id: '3m', label: t('history.window3m') },
-                { id: '12m', label: t('history.window12m') },
-                { id: 'all', label: t('history.windowAll') },
-              ] as w (w.id)}
-                <button
-                  type="button"
-                  class={trendWindow === w.id ? 'active' : ''}
-                  onclick={() => (trendWindow = w.id)}
-                >
-                  {w.label}
-                </button>
-              {/each}
-            </div>
           </div>
           <SpendingTrendChart series={trendSeries} {privacy} daily={trendDaily} />
           <p class="muted-note mt-2">
@@ -274,22 +281,6 @@
           <div class="card">
             <div class="card-head">
               <h3>{t('history.categoriesTitle', { range: catRange.label })}</h3>
-              <div class="seg">
-                {#each [
-                  { id: 'month', label: t('history.windowMonth') },
-                  { id: '3m', label: t('history.window3m') },
-                  { id: '12m', label: t('history.window12m') },
-                  { id: 'all', label: t('history.windowAll') },
-                ] as w (w.id)}
-                  <button
-                    type="button"
-                    class={catWindow === w.id ? 'active' : ''}
-                    onclick={() => (catWindow = w.id)}
-                  >
-                    {w.label}
-                  </button>
-                {/each}
-              </div>
             </div>
             {#if categories.length === 0}
               <p class="muted-note">{t('history.noSpendingInRange')}</p>
@@ -367,28 +358,40 @@
       {/if}
     </div>
 
-    <PurchaseCoverageCard
-      stats={purchaseCoverage}
-      debugMode={purchaseDebugMode}
-      sourceFilter={purchaseSourceFilter}
-      onSourceFilterChange={(source) => {
-        purchaseSourceFilter = source
-        if (source !== 'all') purchaseStateFilter = 'clean'
-        scrollToLedger()
-      }}
-      onFilter={(preset) => {
-        if (preset === 'purchase:clean') purchaseStateFilter = 'clean'
-        else if (preset === 'purchase:review') purchaseStateFilter = 'review'
-        else if (preset === 'purchase:return') purchaseStateFilter = 'return'
-        purchaseSourceFilter = 'all'
-        scrollToLedger()
-      }}
-      onViewCleanBills={() => {
-        purchaseStateFilter = 'clean'
-        purchaseSourceFilter = 'all'
-        scrollToLedger()
-      }}
-    />
+    <!-- Purchase coverage is a ledger FILTER (its actions all scroll to the
+         ledger), not an insight, so it does not earn a full card in the main
+         flow. Collapsed by default and parked directly above the ledger it
+         filters — one click away, out of the way. -->
+    <details class="history-coverage-details">
+      <summary class="history-coverage-summary">
+        {t('history.coverageSummary', {
+          bills: (purchaseCoverage.cleanEnriched ?? 0).toLocaleString(),
+          items: (purchaseCoverage.cleanItemCount ?? 0).toLocaleString(),
+        })}
+      </summary>
+      <PurchaseCoverageCard
+        stats={purchaseCoverage}
+        debugMode={purchaseDebugMode}
+        sourceFilter={purchaseSourceFilter}
+        onSourceFilterChange={(source) => {
+          purchaseSourceFilter = source
+          if (source !== 'all') purchaseStateFilter = 'clean'
+          scrollToLedger()
+        }}
+        onFilter={(preset) => {
+          if (preset === 'purchase:clean') purchaseStateFilter = 'clean'
+          else if (preset === 'purchase:review') purchaseStateFilter = 'review'
+          else if (preset === 'purchase:return') purchaseStateFilter = 'return'
+          purchaseSourceFilter = 'all'
+          scrollToLedger()
+        }}
+        onViewCleanBills={() => {
+          purchaseStateFilter = 'clean'
+          purchaseSourceFilter = 'all'
+          scrollToLedger()
+        }}
+      />
+    </details>
 
     <div bind:this={ledgerRef} id="history-ledger">
       <HistoryLedger

@@ -657,6 +657,8 @@ export const zhCN: MessageTree = {
     actualThisMonth: '本月实际花销',
     collapseInsights: '收起深入分析',
     expandInsights: '展开深入分析（趋势 / 分类 / 历史对比）',
+    rangeAria: '统计时间范围',
+    coverageSummary: '商品明细：已识别 {bills} 笔账单里的 {items} 个商品',
     trendTitle: '月度花销 vs 收入',
     trendTitleDaily: '本月每日花销',
     trendNote:
@@ -2276,6 +2278,8 @@ export const enUS: MessageTree = {
     actualThisMonth: 'Spent this month (actual)',
     collapseInsights: 'Hide deep dive',
     expandInsights: 'Show trends, categories & history',
+    rangeAria: 'Time range',
+    coverageSummary: 'Item details: {items} products across {bills} matched bills',
     trendTitle: 'Monthly spending vs income',
     trendTitleDaily: 'Spending per day this month',
     trendNote:

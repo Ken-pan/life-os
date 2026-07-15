@@ -2875,12 +2875,47 @@ div.input {
   border-bottom: none;
 }
 
+/* Collapse control on the left, the tab's single range control pinned right. */
 .history-insights-toggle {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .history-insights-toggle .btn {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+}
+
+.history-insights-toggle .seg {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Purchase coverage: a ledger filter, not an insight. Reads as a quiet line
+   until opened. */
+.history-coverage-summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  list-style: none;
+  padding: var(--space-2) 0;
+}
+
+.history-coverage-summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-coverage-summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: var(--space-2);
+  transition: transform 0.15s ease;
+}
+
+.history-coverage-details[open] > .history-coverage-summary::before {
+  transform: rotate(90deg);
 }
 
 .history-insights {
