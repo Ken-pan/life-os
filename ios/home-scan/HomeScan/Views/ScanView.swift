@@ -52,6 +52,15 @@ struct ScanView: View {
 
                 Spacer()
 
+                // 自动拍照的站位引导(这间迟迟没拍上时才出现)
+                if !betweenRooms, let hint = model.scanController.autoHint {
+                    Label(hint, systemImage: "camera.viewfinder")
+                        .font(.footnote)
+                        .padding(8)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .padding(.bottom, 4)
+                }
+
                 if let err = model.scanController.lastError {
                     Text(err)
                         .font(.footnote)

@@ -47,6 +47,13 @@ final class AppModel {
         // 实测「取消后再扫,取景一直黑屏」就是它。
         scanController.reset()
         scanController = ScanSessionController()
+        // 自动机位拍照:拍到就并进 poses;「视角新不新」与全部已有机位比
+        scanController.onAutoPose = { [weak self] pose in
+            self?.poses.append(pose)
+        }
+        scanController.existingPoses = { [weak self] in
+            self?.poses ?? []
+        }
         poses = []
         convertedProject = nil
         photoFiles = []

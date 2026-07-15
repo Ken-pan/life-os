@@ -27,6 +27,7 @@ open HomeScan.xcodeproj    # 或 xcodebuild -scheme HomeScan -destination 'platf
 | `HomeScan/Services/SupabaseService.swift` | 登录、`home.scans` 读写、Storage 上传 |
 | `HomeScan/Services/ScanSessionController.swift` | 共享 ARSession + 逐房 RoomCaptureSession + StructureBuilder 合并 |
 | `HomeScan/Services/ViewpointCapture.swift` | 扫描中拍照：ARFrame 位姿 + JPEG（≤2048px） |
+| `HomeScan/Services/AutoViewpointCapture.swift` | 机位自动拍照：视角稳/看得全/够新颖就自己拍（每间 ≤4 张），拍不上给站位引导 —— 扫描无脑化 |
 | `HomeScan/Services/ObjectShotCapture.swift` | 家具自动抓拍：2Hz 给每件家具的当前视角打分（全身入画/占幅/居中/不甩动），最佳帧裁图 + k-means 提主色 |
 | `HomeScan/Convert/` | CapturedStructure → HomeOS plan-px（契约见 `apps/home/supabase/README.md`）；iOS 17 样式属性 → 细分 kind/attrs |
 | `HomeScan/Views/` | 登录 / 主页 / 扫描 / 预览 / 上传 |

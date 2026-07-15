@@ -10,9 +10,16 @@ enum ViewpointCapture {
     static let maxEdgePx: CGFloat = 2048
     static let jpegQuality: CGFloat = 0.8
 
-    /// 从共享 ARSession 抓一张机位。失败(无帧/编码失败)返回 nil。
+    /// 从共享 ARSession 抓一张机位(手动快门,同步编码)。失败返回 nil。
     static func capture(from session: ARSession) -> FlatScene.CameraPose? {
         guard let frame = session.currentFrame else { return nil }
+        let photoURL = writeJpeg(frame.capturedImage)
+        return pose(from: frame, photoFileURL: photoURL, camera: UIDevice.current.model)
+    }
+
+    /// 位姿字段(不碰像素):AutoViewpointCapture 复用 —— 位姿在主线程抓,
+    /// 像素编码丢后台。
+    static func pose(from frame: ARFrame, photoFileURL: URL?, camera: String) -> FlatScene.CameraPose {
         let cam = frame.camera
         let t = cam.transform
 
@@ -26,20 +33,18 @@ enum ViewpointCapture {
         let imgW = Double(cam.imageResolution.width)
         let fovDeg = 2 * atan(imgW / (2 * fx)) * 180 / .pi
 
-        let photoURL = writeJpeg(frame.capturedImage)
-
         return FlatScene.CameraPose(
             pos: pos,
             forwardDeg: forwardDeg,
             fovDeg: fovDeg,
             takenAt: Date(),
-            camera: UIDevice.current.model,
-            photoFileURL: photoURL
+            camera: camera,
+            photoFileURL: photoFileURL
         )
     }
 
     /// CVPixelBuffer(横向) → 竖持方向 JPEG(长边 ≤2048),写进临时目录。
-    private static func writeJpeg(_ pixelBuffer: CVPixelBuffer) -> URL? {
+    static func writeJpeg(_ pixelBuffer: CVPixelBuffer) -> URL? {
         var image = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
         let longEdge = max(image.extent.width, image.extent.height)
         if longEdge > maxEdgePx {

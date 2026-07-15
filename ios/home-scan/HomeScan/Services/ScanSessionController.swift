@@ -22,6 +22,14 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
 
     /// 家具自动抓拍:跨房间共用一个(同一 ARSession 同一世界系)
     let shotCapture = ObjectShotCapture()
+    /// 机位自动拍照:视角好就自己拍,不需要用户按快门
+    let autoViewpoint = AutoViewpointCapture()
+    /// 自动拍到一张机位时回调(AppModel 接走,并进 poses)
+    var onAutoPose: ((FlatScene.CameraPose) -> Void)?
+    /// 已有机位(含手动拍的)—— 自动拍照的「视角新不新」要跟它们比
+    var existingPoses: (() -> [FlatScene.CameraPose])?
+    /// HUD 站位引导(这间迟迟拍不上时提示怎么站;nil = 不显示)
+    private(set) var autoHint: String?
     /// RoomPlan 实时快照里的物体(didUpdate 喂进来,抓拍定时器消费)
     private var liveObjects: [CapturedRoom.Object] = []
     private var shotTimer: Timer?
@@ -46,10 +54,20 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     private func startShotTimer() {
         guard shotTimer == nil else { return }
         let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self, !self.liveObjects.isEmpty,
-                  let frame = self.arSession.currentFrame else { return }
-            self.shotCapture.consider(objects: self.liveObjects, frame: frame)
-            self.objectShotCount = self.shotCapture.count
+            guard let self, let frame = self.arSession.currentFrame else { return }
+            if !self.liveObjects.isEmpty {
+                self.shotCapture.consider(objects: self.liveObjects, frame: frame)
+                self.objectShotCount = self.shotCapture.count
+            }
+            // 机位自动拍照:没家具的房间(玄关/走廊)也要评估,别卡在空列表上
+            self.autoViewpoint.consider(
+                frame: frame,
+                objects: self.liveObjects,
+                existingPoses: self.existingPoses?() ?? []
+            ) { [weak self] pose in
+                self?.onAutoPose?(pose)
+            }
+            self.autoHint = self.autoViewpoint.hint
         }
         timer.tolerance = 0.15 // 打分不挑时刻,给系统合并唤醒的余地
         shotTimer = timer
@@ -71,6 +89,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     @MainActor
     func startNextRoom() {
         roomGeneration += 1
+        autoViewpoint.roomChanged() // 每间的自动拍照配额/引导重新计
     }
 
     /// 全部房间 → CapturedStructure
@@ -90,6 +109,8 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         shotTimer = nil
         liveObjects = []
         shotCapture.reset()
+        autoViewpoint.reset()
+        autoHint = nil
         objectShotCount = 0
         arSession.pause()
     }
