@@ -1,7 +1,7 @@
 [build]
   command = "npm run build -w portal"
   publish = "build"
-  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/portal packages/theme packages/sync packages/contracts packages/platform-web"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/portal packages/contracts packages/platform-web packages/sync packages/theme"
 
 [build.environment]
   NODE_VERSION = "22"
