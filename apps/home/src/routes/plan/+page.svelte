@@ -120,6 +120,13 @@
    */
   let selectLayer = $state('walls')
 
+  // 508 参数户型没有墙体/分区层可选,停在 walls 会让「选择」什么也点不中
+  $effect(() => {
+    if (!wallGraph && (selectLayer === 'walls' || selectLayer === 'zones')) {
+      selectLayer = 'place'
+    }
+  })
+
   /** @type {'door' | 'window'} 门窗工具放置哪一种 */
   let openingKind = $state('door')
   /** @type {keyof typeof PLACEMENT_KINDS} */
@@ -224,6 +231,12 @@
     'viewpoint',
   ])
 
+  /**
+   * 508 参数户型下放出的工具:墙由参数生成、分区它没有,所以只留搭在户型上的那层。
+   * 家具/机位两种模式通用 —— 扫描把实测家具摆进 508 后,总得能挪。
+   */
+  const PARAMETRIC_TOOLS = ['select', 'furniture', 'storage', 'viewpoint']
+
   const editStep = $derived(
     activeTool === 'select' ? selectLayer : TOOL_LAYER[activeTool],
   )
@@ -253,12 +266,11 @@
   const zoneEditMode = $derived(
     wallGraph && planMode === 'edit' && editStep === 'zones',
   )
-  const placeEditMode = $derived(
-    wallGraph && planMode === 'edit' && editStep === 'place',
-  )
-  const viewEditMode = $derived(
-    wallGraph && planMode === 'edit' && editStep === 'view',
-  )
+  // 家具与机位是搭在户型上的一层,两种 layoutMode 都该能编 —— 此前写死要墙图,
+  // 508 参数户型上的家具只能看不能动(扫描摆进来后第一时间就撞上了)。
+  // 画墙/分区仍然只在墙图模式:508 的墙由参数生成,分区它压根没有。
+  const placeEditMode = $derived(planMode === 'edit' && editStep === 'place')
+  const viewEditMode = $derived(planMode === 'edit' && editStep === 'view')
   const wallGraphEditMode = $derived(
     graphEditMode || zoneEditMode || placeEditMode || viewEditMode,
   )
@@ -346,6 +358,13 @@
     place: '家具',
     view: '机位',
   })
+
+  /** 508 参数户型只有家具/机位这两层可选(墙走它自己的尺寸编辑器,分区它没有) */
+  const selectLayers = $derived(
+    Object.entries(SELECT_LAYER_LABEL).filter(
+      ([layer]) => wallGraph || layer === 'place' || layer === 'view',
+    ),
+  )
 
   const modeHint = $derived.by(() => {
     if (planMode === 'browse') {
@@ -786,8 +805,10 @@
    * @param {PlanTool} id
    */
   function setTool(id) {
-    if (!wallGraph) {
-      // 508 has no palette; the only way in is to convert first.
+    // 508 参数户型:家具/储藏/机位是搭在户型上的一层,不需要墙图,直接切。
+    // 只有建墙/门窗/画区才必须先转换 —— 此前点**任何**工具都会把户型翻成墙图,
+    // 挪一下沙发就把量过的 508 参数变成了不可回写的墙图。
+    if (!wallGraph && !PARAMETRIC_TOOLS.includes(id)) {
       convertToWallGraph()
       return
     }
@@ -1465,7 +1486,8 @@
       {activeTool}
       {canUndo}
       {canRedo}
-      hidden={planMode !== 'edit' || editMode508}
+      hidden={planMode !== 'edit'}
+      enabledTools={wallGraph ? null : PARAMETRIC_TOOLS}
       onTool={setTool}
       onUndo={performUndo}
       onRedo={performRedo}
@@ -1473,7 +1495,7 @@
       {#snippet options()}
         {#if activeTool === 'select'}
           <span class="pt-opt-label">选择</span>
-          {#each Object.entries(SELECT_LAYER_LABEL) as [layer, label] (layer)}
+          {#each selectLayers as [layer, label] (layer)}
             <button
               type="button"
               class="pt-opt-btn"

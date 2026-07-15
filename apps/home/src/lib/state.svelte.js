@@ -369,7 +369,10 @@ export function applyEditSource(patch, opts = {}) {
   }
   const next = hydrateProject({
     ...raw,
-    layoutMode: 'wallGraph',
+    // 只有真的有墙图时才是墙图模式。此前无条件写死 'wallGraph' —— 在 508 参数
+    // 户型上挪一下家具,整个户型就被翻成墙图,而墙图改动**不回写 508 参数**,
+    // 用户量了半天的尺寸就此失去真相源。家具是搭在户型上的一层,不该改户型模式。
+    layoutMode: nextGraph ? 'wallGraph' : (raw.layoutMode ?? 'parametric508'),
     wallGraph: nextGraph,
     graphOpenings: patch.graphOpenings ?? raw.graphOpenings ?? [],
     zones,

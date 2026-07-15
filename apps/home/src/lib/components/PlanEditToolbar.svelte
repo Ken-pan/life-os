@@ -28,6 +28,12 @@
     canUndo = false,
     canRedo = false,
     hidden = false,
+    /**
+     * 只放出这些工具(null = 全部)。508 参数户型没有墙图/分区可画,
+     * 亮着点不动的按钮比不给更糟。
+     * @type {string[] | null}
+     */
+    enabledTools = null,
     onTool,
     onUndo,
     onRedo,
@@ -51,19 +57,30 @@
     btn?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   })
 
-  const tools = /** @type {const} */ ([
+  const ALL_TOOLS = /** @type {const} */ ([
     { id: 'select', label: '选择', key: '1', hint: '选择并编辑已有对象 · Delete 删除' },
-    { sep: '结构' },
+    { sep: '结构', needs: ['wall', 'opening'] },
     { id: 'wall', label: '建墙', key: '2', hint: '点击拐点连线建墙 · Shift 正交 · Esc 断链' },
     { id: 'opening', label: '门窗', key: '3', hint: '点击墙段放置门或窗' },
-    { sep: '划分' },
+    { sep: '划分', needs: ['zone'] },
     { id: 'zone', label: '画区', key: '4', hint: '逐点圈出房间分区 · Enter 闭合' },
-    { sep: '布置' },
+    { sep: '布置', needs: ['furniture', 'storage'] },
     { id: 'furniture', label: '家具', key: '5', hint: '点击画布放置家具' },
     { id: 'storage', label: '标储藏', key: '6', hint: '点击分区或家具指派 S1–S8' },
-    { sep: '记录' },
+    { sep: '记录', needs: ['viewpoint'] },
     { id: 'viewpoint', label: '视角', key: '7', hint: '标注实拍照片是对着哪儿拍的' },
   ])
+
+  // 分组标题跟着组里的工具一起消失,否则会留下空标题
+  const tools = $derived(
+    enabledTools === null
+      ? ALL_TOOLS
+      : ALL_TOOLS.filter((t) =>
+          t.sep
+            ? (t.needs ?? []).some((id) => enabledTools.includes(id))
+            : enabledTools.includes(t.id),
+        ),
+  )
 </script>
 
 <div class="plan-tools" class:hidden inert={hidden}>
