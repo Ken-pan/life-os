@@ -112,7 +112,7 @@ async function primeWallGraph(page, opts = {}) {
       const raw = localStorage.getItem(key)
       const base = raw
         ? JSON.parse(raw)
-        : { settings: {}, projects: {}, activeProjectId: 'avalon-508' }
+        : { settings: { structureUnlocked: true }, projects: {}, activeProjectId: 'avalon-508' }
       const pid = base.activeProjectId ?? 'avalon-508'
       base.projects[pid] = {
         ...(base.projects[pid] ?? {}),

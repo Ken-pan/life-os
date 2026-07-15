@@ -221,17 +221,27 @@
         {project.placements?.length ?? 0} 家具</span
       >
     </SettingsRow>
-    <SettingsActionRow
-      label="恢复"
-      desc="墙图改动不会回写 508 参数"
-      buttonLabel="返回 508 参数模式"
-      onclick={onRevertTo508}
+    <SettingsToggleRow
+      label="解锁结构编辑"
+      desc="户型已按扫描实测确定,建墙/门窗/画区默认收起。只在真的要改墙时解锁"
+      checked={Boolean(S.settings.structureUnlocked)}
+      onchange={(v) => {
+        import('$lib/state.svelte.js').then((m) => m.setStructureUnlocked(v))
+      }}
     />
-    <SettingsActionRow
-      label="门窗"
-      buttonLabel="重新识别门窗"
-      onclick={reconvertGraphOpenings}
-    />
+    {#if S.settings.structureUnlocked}
+      <SettingsActionRow
+        label="恢复"
+        desc="墙图改动不会回写 508 参数"
+        buttonLabel="返回 508 参数模式"
+        onclick={onRevertTo508}
+      />
+      <SettingsActionRow
+        label="门窗"
+        buttonLabel="重新识别门窗"
+        onclick={reconvertGraphOpenings}
+      />
+    {/if}
   {/if}
   <SettingsRow label="画墙角度吸附">
     <SettingsSegment

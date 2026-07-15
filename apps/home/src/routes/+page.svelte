@@ -88,7 +88,12 @@
 </div>
 
 <div class="home-notes" style="margin-top: 24px">
-  <b>按开发商户型图等比重建。</b> 房间尺寸为图面标注；储藏区为物品审计映射。
+  {#if project.layoutMode === 'wallGraph'}
+    <b>按 iPhone LiDAR 扫描实测重建。</b>
+    {project.meta.sourceNote ?? ''} 储藏区为物品审计映射。
+  {:else}
+    <b>按开发商户型图等比重建。</b> 房间尺寸为图面标注；储藏区为物品审计映射。
+  {/if}
   {#if project.meta.floorplanUrl}
     <a
       class="home-inline-link"

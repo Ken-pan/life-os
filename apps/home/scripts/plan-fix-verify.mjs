@@ -18,7 +18,7 @@ async function prime(page, studio) {
       const raw = localStorage.getItem(key)
       const base = raw
         ? JSON.parse(raw)
-        : { settings: {}, projects: {}, activeProjectId: 'avalon-508' }
+        : { settings: { structureUnlocked: true }, projects: {}, activeProjectId: 'avalon-508' }
       base.settings = { ...(base.settings ?? {}), spatialStudio: on }
       const pid = base.activeProjectId ?? 'avalon-508'
       const proj = base.projects?.[pid] ?? {}

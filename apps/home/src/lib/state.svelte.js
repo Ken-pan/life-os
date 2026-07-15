@@ -1785,6 +1785,26 @@ export function getActiveProject() {
 }
 
 /** 浏览页固定显示 508 参数化户型，不受墙图编辑态干扰。 */
+/**
+ * 户型结构锁:墙体已按扫描实测确定后,建墙/门窗/画区/返回508 这些
+ * 「重做户型」的功能默认收起 —— 户型不再变,留着只会误触改坏实测墙。
+ * 设置页可显式解锁(structureUnlocked)。
+ */
+export function isStructureLocked() {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  return (
+    raw.layoutMode === 'wallGraph' &&
+    Boolean(raw.wallGraph) &&
+    !S.settings.structureUnlocked
+  )
+}
+
+/** @param {boolean} on true = 解锁结构编辑 */
+export function setStructureUnlocked(on) {
+  S.settings.structureUnlocked = on ? true : undefined
+  persist()
+}
+
 export function getBrowseFloorPlan() {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   // 户型本体就是墙图(扫描替换/已转换)时,浏览就看它本身 —— 此前无条件

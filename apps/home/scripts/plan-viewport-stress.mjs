@@ -14,7 +14,7 @@ async function prime(page) {
   await page.goto(`${BASE}/plan`, { waitUntil: 'domcontentloaded' })
   await page.evaluate((key) => {
     const raw = localStorage.getItem(key)
-    const base = raw ? JSON.parse(raw) : { settings: {}, projects: {}, activeProjectId: 'avalon-508' }
+    const base = raw ? JSON.parse(raw) : { settings: { structureUnlocked: true }, projects: {}, activeProjectId: 'avalon-508' }
     base.settings = { ...(base.settings ?? {}), spatialStudio: true }
     const pid = base.activeProjectId ?? 'avalon-508'
     const proj = base.projects?.[pid] ?? {}

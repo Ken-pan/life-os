@@ -29,6 +29,7 @@
     getActiveProject,
     getBrowseFloorPlan,
     isOpeningDisabled,
+    isStructureLocked,
     isWallGraphMode,
     getLastDoorStyle,
     getLastWindowStyle,
@@ -121,9 +122,13 @@
    */
   let selectLayer = $state('walls')
 
-  // 508 参数户型没有墙体/分区层可选,停在 walls 会让「选择」什么也点不中
+  // 508 参数户型没有墙体/分区层可选,停在 walls 会让「选择」什么也点不中;
+  // 结构锁定时同理 —— 墙体/分区层已收起
   $effect(() => {
-    if (!wallGraph && (selectLayer === 'walls' || selectLayer === 'zones')) {
+    if (
+      (!wallGraph || structureLocked) &&
+      (selectLayer === 'walls' || selectLayer === 'zones')
+    ) {
       selectLayer = 'place'
     }
   })
@@ -239,6 +244,10 @@
    * 家具/机位两种模式通用 —— 扫描把实测家具摆进 508 后,总得能挪。
    */
   const PARAMETRIC_TOOLS = ['select', 'furniture', 'storage', 'viewpoint']
+  /** 结构已锁定(扫描实测户型):建墙/门窗/画区收起,防误触改坏实测墙 */
+  const structureLocked = $derived(isStructureLocked())
+  const STRUCTURE_TOOLS = ['wall', 'opening', 'zone']
+  const LOCKED_TOOLS = ['select', 'furniture', 'storage', 'viewpoint']
 
   const editStep = $derived(
     activeTool === 'select' ? selectLayer : TOOL_LAYER[activeTool],
@@ -365,7 +374,8 @@
   /** 508 参数户型只有家具/机位这两层可选(墙走它自己的尺寸编辑器,分区它没有) */
   const selectLayers = $derived(
     Object.entries(SELECT_LAYER_LABEL).filter(
-      ([layer]) => wallGraph || layer === 'place' || layer === 'view',
+      ([layer]) =>
+        (wallGraph && !structureLocked) || layer === 'place' || layer === 'view',
     ),
   )
 
@@ -819,6 +829,10 @@
     // 挪一下沙发就把量过的 508 参数变成了不可回写的墙图。
     if (!wallGraph && !PARAMETRIC_TOOLS.includes(id)) {
       convertToWallGraph()
+      return
+    }
+    if (structureLocked && STRUCTURE_TOOLS.includes(id)) {
+      toast('户型结构已锁定(扫描实测)。要改墙体/分区,去 设置 → 户型编辑模式 解锁。')
       return
     }
     if (planMode !== 'edit') setPlanMode('edit')
@@ -1507,7 +1521,7 @@
       {canUndo}
       {canRedo}
       hidden={planMode !== 'edit'}
-      enabledTools={wallGraph ? null : PARAMETRIC_TOOLS}
+      enabledTools={wallGraph ? (structureLocked ? LOCKED_TOOLS : null) : PARAMETRIC_TOOLS}
       onTool={setTool}
       onUndo={performUndo}
       onRedo={performRedo}
