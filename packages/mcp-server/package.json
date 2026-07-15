@@ -1,0 +1,16 @@
+{
+  "name": "@life-os/mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "把一组工具暴露成 AIOS 可发现的 MCP server(Streamable HTTP + JSON-RPC 2.0 子集)",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "scripts": {
+    "test": "node scripts/mcpHandler.test.mjs"
+  },
+  "files": ["src"]
+}

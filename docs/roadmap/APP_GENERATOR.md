@@ -3,9 +3,11 @@
 PLAT.SHELL.1–6 之后的 generator 深化路线。Hub 状态见
 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)；前置：[`PLATFORM.md`](./PLATFORM.md) §PLAT.SHELL。
 
-**现状（2026-07-12）：** `create-life-os-app.mjs` 生成 app + AppManifest；
-`promote-life-os-app.mjs` 按 manifest 幂等接线 16 个注册点。剩余手动：Netlify
-site/DNS、图标、品牌配色、auth 接入、模板演进不回灌旧 app。
+**现状（2026-07-14）：** `create-life-os-app.mjs` 生成 app + AppManifest；
+`promote-life-os-app.mjs` 按 manifest 幂等接线 11 个注册点（GEN.4 后注册表六步
+收敛为一次 build）；`add-capability.mjs` 接 day-2 能力（auth / supabase-table /
+portal-card / mcp-server，GEN.5+6）。**剩余手动：** DNS、品牌配色、Portal 卡的
+RPC+渲染、`/api/mcp` 重定向、登录 UI、模板演进不回灌旧 app（GEN.3）。
 
 **业界对标（2026-07 调研）：** Nx sync generators 的 `sync:check` CI 漂移守卫；
 Copier/Cruft 的模板版本戳 + `update` 三方合并回灌；Backstage golden path 的
@@ -31,7 +33,8 @@ single source of truth。来源见文末。
 | **PLAT.GEN.2** | Day-2 部署自动化:Netlify site 创建/env/DNS 清单 + 图标生成参数化    | Backstage day-2    | ✅ 2026-07-12 |
 | **PLAT.GEN.3** | 模板版本戳 + `update-life-os-app`(starter 演进回灌旧 app)           | Copier/Cruft       | ⬜   |
 | **PLAT.GEN.4** | 注册表反转:六 app 注册信息迁入各自 manifest,注册表变生成物         | spec-driven SSOT   | ✅ 2026-07-12 |
-| **PLAT.GEN.5** | Day-2 能力模块:`add-capability` auth/supabase/portal-card 可组合接入 | Backstage golden path | ⬜ |
+| **PLAT.GEN.5** | Day-2 能力模块:`add-capability` auth/supabase-table/portal-card 可组合接入 | Backstage golden path | ✅ 2026-07-14 |
+| **PLAT.GEN.6** | `mcp-server` 能力 + `@life-os/mcp-server`:新 app 从 day-1 被 AIOS 发现 | MCP / 编排层 | ✅ 2026-07-14 |
 
 ### PLAT.GEN.1 — 校验与漂移守卫 ✅ 2026-07-12
 
@@ -100,17 +103,67 @@ single source of truth。来源见文末。
 - 存量 app 的 launch.json 端口(5871–5875 段)是刻意与 e2e 隔离的历史约定,
   不由 manifest 驱动 — promote 写模式只面向新 app。
 
-### PLAT.GEN.5 — 能力模块 add-capability（~1d/项,按需）
+### PLAT.GEN.5 — 能力模块 add-capability ✅ 2026-07-14
 
-- `scripts/add-capability.mjs <id> <cap>`,可组合、幂等,同 promote 锚点模式:
-  - `auth`:`createLifeOsAuth` + Supabase 接线(照 fitness
-    `src/lib/auth.svelte.js` 派生),`.env.example`、登录路由、settings 卡。
-  - `supabase-table`:表 + RLS migration 骨架(走 `supabase-sql.sh` 流程)。
-  - `portal-card`:Portal 摘要卡注册(晋升清单最后一条手动项)。
-  - `production`:上线开关(apps.config `production: true` + PWA 矩阵
-    `pwaTestEnabled` 复核 + hub 六站表提醒)。
-- 价值:starter 保持薄(不预置 auth,避免每个 app 删代码),能力按需长出;
-  Backstage 经验:day 2–50 的引导式操作比 day-1 生成影响更大。
+已发货 —— `scripts/add-capability.mjs <id> <cap> [extra] [--check]`(`npm run add:capability`),
+幂等 + `--check` 漂移守卫,与 promote 同构(文件类产物只创建从不覆盖):
+
+| cap | 接线点 | 备注 |
+| --- | --- | --- |
+| `auth` | `src/lib/supabase.js`(`createLifeOsSupabaseClient`)· `src/lib/auth.svelte.js`(`createAppAuthStore`)· `.env.example` · package.json deps | 4 点。`createAppAuthStore` 自带缺省 zh 文案,**不依赖 app i18n key**;同步引擎/登录 UI 仍手工(照 fitness)。supabase-js 版本**从现役 app 派生**(`fleetDepVersion`),不硬编码以免随时间落后 |
+| `supabase-table <t>` | `apps/<id>/supabase/migrations/<ts>_<id>_<t>.sql` | 逐用户 RLS 四策略 + schema/grants;幂等靠 `*_<id>_<t>.sql` 存在性。**只生成不推送** — 安全推送见 `ops/supabase.md`(共享库多 app 迁移会互卡) |
+| `portal-card` | **不生成文件**,只打印真实锚点 | 见下 |
+| `mcp-server` | `apps/<id>/netlify/functions/mcp.js` + dep | 见 PLAT.GEN.6 |
+
+**id 连字符归一化(踩过的坑):** `create-life-os-app` 允许 `meal-log` 这类带连字符的
+id,但连字符在 Postgres 标识符里非法(`meal-log` 被解析成 `meal` 减 `log`)。
+`sqlIdent()` 统一把 schema 归一化为 `meal_log`,且 **auth 生成的 `supabase.js` 与
+supabase-table 生成的 migration 必须用同一个值**(否则前端连不上自己的表)——
+两者已在带连字符 id 上实测一致。
+
+**`portal-card` 为什么只引导不生成:** Portal 的卡不是「一 app 一文件」,而是
+`todaySummaryFormat.js` 里的 copy 函数(`{kicker, value, detail, empty}`)+
+**两处重复定义的 `SummaryAppId` 联合类型**(`todaySummaryFormat.js:1` 与
+`PortalTodaySummary.svelte:14`)+ 一个硬编码可见列表(`:53`);卡片显示什么是
+app 专属产品决策。生成一个形状不对的 stub 比不生成更糟(把人往错方向带),
+所以脚本只打印这五处真实锚点。
+
+价值:starter 保持薄(不预置 auth,避免每个 app 删代码),能力按需长出;
+Backstage 经验:day 2–50 的引导式操作比 day-1 生成影响更大。
+
+**未纳入:** `production` 上线开关 —— manifest 已有 `production` 字段且由
+`build-app-registry` 派生(PLAT.GEN.4),改 manifest 重跑即可,无需独立 cap。
+
+### PLAT.GEN.6 — MCP server 能力（新 app day-1 被 AIOS 发现）✅ 2026-07-14
+
+**为什么:** AIOS.20/21 的跨 app 集成是**手写**的 —— 每加一个集成要改 AIOS 源码,
+不 scalable。反转成:app 暴露工具,AIOS 的 MCP 客户端(AIOS.23)自动发现。
+于是**新增跨 app 能力 = 写几个工具 handler**,AIOS 零改动。
+
+- `packages/mcp-server`(`@life-os/mcp-server`):`createMcpHandler({ name, tools })`
+  → 一个 Web Fetch `(Request) => Response`,可直接作 Netlify Function v2 default export。
+  协议子集与 `apps/aios/src/lib/mcp.js` 客户端**逐字对齐**:Streamable HTTP +
+  JSON-RPC 2.0,`initialize → notifications/initialized → tools/list → tools/call`,
+  protocolVersion `2025-06-18`,无状态(不签发 Mcp-Session-Id),含 CORS 预检。
+- `add-capability <id> mcp-server` scaffold `netlify/functions/mcp.js`(含 `ping`
+  示例工具)+ 依赖;`/api/mcp` 重定向片段打印出来手工接 —— **刻意不自动改
+  netlify.toml**:函数目录接线依站点 base dir,planner 的函数就挂在 repo 根
+  netlify.toml(见 `ops/netlify.md`),自动改可能改错文件。
+- **架构定位:** app 是 `adapter-static` 纯前端不能常驻进程,但都有 Netlify
+  Functions —— 把现有 Supabase RPC 包成工具挂 `/api/mcp` 即可。这尊重「apps 禁止
+  互引」硬规则:AIOS 仍是唯一跨站行为者,只经 `core_*`/`life_events`/MCP 走。
+- **安全模型:** helper 只管协议不做鉴权;数据工具从 `Authorization: Bearer <jwt>`
+  取用户 JWT 转发 Supabase,**靠 RLS 逐用户鉴权**;写路径走 `life_events` 收件箱
+  (提议 → app 校验),不碰裸 DB。
+- **回归测试:** `packages/mcp-server/scripts/mcpHandler.test.mjs`(`npm test -w
+  @life-os/mcp-server`)—— 每条断言对应 AIOS 客户端的一处解析(pv/serverInfo ·
+  notification 202 空 body · `inputSchema` 缺省补全 · `content[].text` · 非字符串
+  返回值 JSON 化 · handler 抛错与未知工具走 `isError` **而非** RPC error ·
+  未知方法 -32601 · 坏 JSON -32700 · 非 POST 405 · CORS 预检)。已做**变异验证**:
+  改坏 `PROTOCOL_VERSION` 测试即红,还原即绿(非空测试)。
+- **验证(2026-07-14):** 普通 id 与**带连字符 id** 两条路径各跑全量 cap +
+  `--check` 幂等全绿;生成文件语法自检;`check:app-manifests`(7 app)+
+  `check:lifeos-boundaries` 全绿;测试 app 已清理无残留。
 
 ---
 
