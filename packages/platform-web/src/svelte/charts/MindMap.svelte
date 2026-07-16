@@ -145,7 +145,9 @@
   let lastFitKey = /** @type {any} */ (Symbol('init'))
   let panning = $state(false)
   let moved = false
+  let panPointerId = /** @type {number | null} */ (null)
   let panStart = { x: 0, y: 0, tx: 0, ty: 0 }
+  const PAN_THRESHOLD = 6 // 超过才算拖拽,否则视为点击(避免抖动误判)
 
   // ── tooltip 状态 ──
   let hover = $state(/** @type {{ label: string, note: string } | null} */ (null))
@@ -202,25 +204,31 @@
     if (!zoomable) return
     panning = true
     moved = false
+    panPointerId = e.pointerId
     panStart = { x: e.clientX, y: e.clientY, tx, ty }
-    svgEl?.setPointerCapture?.(e.pointerId)
+    // 关键:此处不 setPointerCapture。立即 capture 会把 pointerup 夺给 svg,
+    // 导致节点收不到 click(点不动)。只有确认拖拽后才 capture。
   }
   function onCanvasMove(e) {
     if (!panning) return
     const dx = e.clientX - panStart.x
     const dy = e.clientY - panStart.y
-    if (!moved && Math.abs(dx) + Math.abs(dy) > 3) {
+    if (!moved && Math.abs(dx) + Math.abs(dy) > PAN_THRESHOLD) {
       moved = true
       hover = null // 拖拽开始就收起 tooltip
+      svgEl?.setPointerCapture?.(panPointerId)
     }
     if (moved) {
       tx = panStart.tx + dx
       ty = panStart.ty + dy
     }
   }
-  function onCanvasUp(e) {
+  function onCanvasUp() {
+    if (moved && panPointerId != null) {
+      svgEl?.releasePointerCapture?.(panPointerId)
+    }
     panning = false
-    svgEl?.releasePointerCapture?.(e.pointerId)
+    panPointerId = null
   }
 
   $effect(() => {
