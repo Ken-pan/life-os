@@ -8,6 +8,7 @@ export { default as Sparkline } from './Sparkline.svelte'
 export { default as Heatmap } from './Heatmap.svelte'
 export { default as Treemap } from './Treemap.svelte'
 export { default as MindMap } from './MindMap.svelte'
+export { default as TimelineChart } from './TimelineChart.svelte'
 export { default as ChartLegend } from './ChartLegend.svelte'
 export {
   compactNumber,

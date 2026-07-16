@@ -8,6 +8,7 @@
     Heatmap,
     Treemap,
     MindMap,
+    TimelineChart,
   } from '@life-os/platform-web/svelte/charts'
 
   // ── 示例数据(贴近真实 app 场景) ──
@@ -70,6 +71,38 @@
     { label: '宠物', value: 150, meta: '3 笔' },
     { label: '礼物', value: 120, meta: '1 笔' },
     { label: '其它杂项', value: 90, meta: '4 笔' },
+  ]
+
+  const DAY = 86400000
+  const demoToday = new Date(2026, 6, 16).getTime() // 固定快照,截图/对照稳定
+  const timelineRows = [
+    {
+      label: '图表组件族',
+      start: demoToday - 30 * DAY,
+      end: demoToday + 14 * DAY,
+      progress: 0.72,
+      meta: '13/18 任务',
+      milestones: [
+        { at: demoToday - 12 * DAY, done: true },
+        { at: demoToday - 2 * DAY, done: true },
+        { at: demoToday + 10 * DAY, done: false },
+      ],
+    },
+    {
+      label: '搬家筹备',
+      start: demoToday - 10 * DAY,
+      end: demoToday + 45 * DAY,
+      progress: 0.2,
+      meta: '2/10 任务',
+      milestones: [{ at: demoToday + 30 * DAY, done: false }],
+    },
+    {
+      label: '健身备赛 12 周',
+      start: demoToday - 56 * DAY,
+      end: demoToday + 28 * DAY,
+      progress: 0.66,
+      meta: '8/12 任务',
+    },
   ]
 
   const mindmapTree = {
@@ -232,6 +265,16 @@
       <div class="charts-demo-card charts-demo-card--wide">
         <h3 class="charts-demo-card__title">Life OS 模块地图</h3>
         <MindMap root={mindmapTree} />
+      </div>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock
+      stateId="timeline"
+      label="TimelineChart — Gantt-lite(进度填充 + 里程碑菱形 + 今日线)"
+    >
+      <div class="charts-demo-card charts-demo-card--wide">
+        <h3 class="charts-demo-card__title">项目规划</h3>
+        <TimelineChart rows={timelineRows} today={demoToday} />
       </div>
     </CatalogStateBlock>
   </div>

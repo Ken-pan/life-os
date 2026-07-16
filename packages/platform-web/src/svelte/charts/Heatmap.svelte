@@ -16,6 +16,7 @@
    *   cellSize?: number,
    *   format?: (v: number) => string,
    *   colEvery?: number,
+   *   cellLabel?: (r: number, c: number) => string,
    *   ariaLabel?: string,
    * }}
    */
@@ -26,6 +27,7 @@
     cellSize = 16,
     format = compactNumber,
     colEvery = 1,
+    cellLabel = (r, c) => [rows[r], cols[c]].filter(Boolean).join(' · '),
     ariaLabel = '',
   } = $props()
 
@@ -98,7 +100,7 @@
           height={cellSize}
           rx={RADIUS}
           fill={t === 0
-            ? 'transparent'
+            ? 'color-mix(in srgb, var(--t3, var(--text-muted, #898781)) 10%, transparent)'
             : `color-mix(in srgb, var(--chart-heat, var(--chart-line, var(--accent))) ${Math.round(t * 100)}%, var(--chart-surface, var(--card, transparent)))`}
           onpointermove={(e) => onCellPointer(e, r, c)}
         />
@@ -127,7 +129,7 @@
       ? []
       : [
           {
-            label: `${rows[hover.r]} · ${cols[hover.c]}`,
+            label: cellLabel(hover.r, hover.c),
             value:
               values[hover.r]?.[hover.c] == null
                 ? '—'
@@ -155,10 +157,7 @@
   .heatmap__cell {
     transition: opacity 100ms ease;
   }
-  .heatmap__cell--empty {
-    stroke: var(--chart-grid, rgba(0, 0, 0, 0.08));
-    stroke-width: 1;
-  }
+  /* 零值格用淡填充(GitHub 式);描边在整年 300+ 格的尺度下太吵 */
   .heatmap__cell--active {
     stroke: var(--t1, var(--text, #0b0b0b));
     stroke-width: 1.5;

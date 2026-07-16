@@ -63,6 +63,7 @@ export declare const Heatmap: Component<{
   cellSize?: number
   format?: (v: number) => string
   colEvery?: number
+  cellLabel?: (r: number, c: number) => string
   ariaLabel?: string
 }>
 
@@ -86,6 +87,28 @@ export declare const MindMap: Component<{
   collapsible?: boolean
   defaultCollapsedDepth?: number
   onSelect?: (node: { id: string; label: string; depth: number }) => void
+  ariaLabel?: string
+}>
+
+export interface TimelineMilestone {
+  at: number
+  label?: string
+  done?: boolean
+}
+
+export declare const TimelineChart: Component<{
+  rows: {
+    label: string
+    start: number
+    end: number
+    progress?: number
+    milestones?: TimelineMilestone[]
+    meta?: string
+    color?: string
+  }[]
+  formatDate?: (ms: number) => string
+  today?: number
+  todayLabel?: string
   ariaLabel?: string
 }>
 

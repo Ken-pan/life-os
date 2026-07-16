@@ -31,6 +31,7 @@
   import StatShowcase from './showcases/StatShowcase.svelte'
   import SelectionShowcase from './showcases/SelectionShowcase.svelte'
   import TabsShowcase from './showcases/TabsShowcase.svelte'
+  import ChartsShowcase from './showcases/ChartsShowcase.svelte'
   import ListsShowcase from './showcases/ListsShowcase.svelte'
   import DisplayShowcase from './showcases/DisplayShowcase.svelte'
   import DisclosureShowcase from './showcases/DisclosureShowcase.svelte'
@@ -48,6 +49,7 @@
     lists: ListsShowcase,
     display: DisplayShowcase,
     disclosure: DisclosureShowcase,
+    charts: ChartsShowcase,
     settings: SettingsShowcase,
     menu: MenuShowcase,
     overlay: OverlayShowcase,

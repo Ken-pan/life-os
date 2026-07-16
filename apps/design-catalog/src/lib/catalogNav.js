@@ -73,6 +73,12 @@ export const CATALOG_SECTIONS = [
     testId: 'showcase-disclosure',
   },
   {
+    id: 'charts',
+    label: 'Charts',
+    group: 'components',
+    testId: 'showcase-charts',
+  },
+  {
     id: 'settings',
     label: 'Settings',
     group: 'components',

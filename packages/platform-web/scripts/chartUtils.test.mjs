@@ -112,6 +112,29 @@ assert.equal(seriesColor(1, 5, 'red'), 'red')
   assert.deepEqual(out[1][1], { y0: 5, y1: 5 }) // 负值不产生反向段
 }
 
+// monthTicks:落在窗口内的每月 1 号、按宽度抽稀、跨年带年份
+{
+  const { monthTicks } = await import('../src/svelte/charts/chartUtils.js')
+  const start = new Date(2026, 2, 15).getTime() // 2026-03-15
+  const end = new Date(2026, 6, 10).getTime() // 2026-07-10
+  const ticks = monthTicks(start, end, 600)
+  assert.deepEqual(
+    ticks.map((t) => t.label),
+    ['4月', '5月', '6月', '7月'],
+  )
+  for (const t of ticks) {
+    assert.ok(t.at >= start && t.at <= end)
+    assert.equal(new Date(t.at).getDate(), 1)
+  }
+  // 跨年:1 月带年份
+  const y = monthTicks(new Date(2025, 10, 1).getTime(), new Date(2026, 1, 5).getTime(), 600)
+  assert.ok(y.some((t) => t.label === '2026/1'), JSON.stringify(y))
+  // 窄容器抽稀
+  const narrow = monthTicks(new Date(2025, 0, 1).getTime(), new Date(2026, 0, 1).getTime(), 200)
+  assert.ok(narrow.length <= Math.floor(200 / 56) + 1)
+  assert.deepEqual(monthTicks(5, 5, 300), [])
+}
+
 // ── treemapLayout ──
 {
   const { treemapLayout } = await import(

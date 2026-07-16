@@ -187,6 +187,36 @@ export function xLabelFilter(count, innerW, labelW = 44) {
 }
 
 /**
+ * 时间轴月刻度:返回落在 [start, end] 内的每月 1 号(本地时区),
+ * 按可用宽度抽稀(每个标签预算 labelW 像素),始终保留首尾覆盖感。
+ * @param {number} start ms @param {number} end ms
+ * @param {number} innerW 可用像素宽 @param {number} [labelW]
+ * @returns {{ at: number, label: string }[]}
+ */
+export function monthTicks(start, end, innerW, labelW = 56) {
+  if (!(end > start)) return []
+  const ticks = []
+  const d = new Date(start)
+  d.setHours(0, 0, 0, 0)
+  d.setDate(1)
+  if (d.getTime() < start) d.setMonth(d.getMonth() + 1)
+  while (d.getTime() <= end) {
+    ticks.push({
+      at: d.getTime(),
+      label:
+        d.getMonth() === 0
+          ? `${d.getFullYear()}/1`
+          : `${d.getMonth() + 1}月`,
+    })
+    d.setMonth(d.getMonth() + 1)
+  }
+  const maxLabels = Math.max(2, Math.floor(innerW / labelW))
+  if (ticks.length <= maxLabels) return ticks
+  const every = Math.ceil(ticks.length / maxLabels)
+  return ticks.filter((_, i) => i % every === 0)
+}
+
+/**
  * 堆叠布局:每个 label 位置把各系列值(≥0)叠成 [y0, y1) 区间。
  * @param {number[][]} rows rows[seriesIdx][labelIdx]
  * @returns {{ y0: number, y1: number }[][]} [seriesIdx][labelIdx]
