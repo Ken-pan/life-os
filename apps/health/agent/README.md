@@ -19,10 +19,24 @@ HealthOS Focus 模块(vibe coding 防沉迷)的检测与干预核心,由 vibegua
 | `GET /sessions` | Build Session 历史(`sessions.jsonl`,净累积 ≥1 分钟起算) |
 | `GET /events` | 干预记录(`events.jsonl`:预警/赎回/休息/暂停…) |
 | `GET /config` | 生效配置 |
+| `GET /health` | Apple Health 导入的近 30 天测量数据(睡眠/静息心率/HRV/步数) |
 | `POST /action` | `{"type":"break"\|"pause30"\|"pause2h"\|"pauseToday"\|"resume"}` |
+| `POST /policy` | HLT-3 自适应窗口:`{limitSeconds, reason}` 设当日覆盖(5–60 分钟钳制,按日过期),`{clear:true}` 清除 |
+
+`GET /state` 额外暴露 `limitSeconds`(生效窗口=自适应覆盖优先)、`baseLimitSeconds`(config 基准)、`policyReason`。
 
 原则:`Raw observation ≠ Interpretation ≠ Recommendation`——代理只输出观察与相位,
 解释和建议在 app 层生成;其他 OS 未来经 contracts 事件消费,不直读这些文件。
+
+## Apple Health 导入(macOS 无 HealthKit,唯一现实路径)
+
+```bash
+# iOS「健康」→ 头像 → 导出所有健康数据 → 解压出 export.xml → 拷到 Mac:
+"$HOME/Library/Application Support/HealthOS/bin/healthos-focus-agent" \
+  --import-health ~/Downloads/apple_health_export/export.xml
+```
+
+流式(SAX)解析,内存恒定;结果写 `health.jsonl`。详见 [`../docs/data-sources.md`](../docs/data-sources.md)。
 
 ## 安装 / 更新
 

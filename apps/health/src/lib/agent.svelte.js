@@ -12,6 +12,8 @@ export const A = $state({
   sessions: [],
   events: [],
   config: null,
+  /** GET /health:Apple Health 导入的近 30 天测量数据 */
+  health: [],
   lastError: null,
 })
 
@@ -35,16 +37,36 @@ export async function refreshState() {
 export async function refreshDetails() {
   if (!A.online) return
   try {
-    const [sessions, events, config] = await Promise.all([
+    const [sessions, events, config, health] = await Promise.all([
       getJson('/sessions'),
       getJson('/events'),
       getJson('/config'),
+      getJson('/health'),
     ])
     A.sessions = sessions.sessions ?? []
     A.events = events.events ?? []
     A.config = config
+    A.health = health.days ?? []
   } catch (err) {
     A.lastError = String(err?.message ?? err)
+  }
+}
+
+/** HLT-3:把 State Engine 推荐的当日专注窗口(分钟)推给代理;driver 为 null 时清除覆盖 */
+export async function pushPolicy(limitMinutes, reason) {
+  const body =
+    reason == null
+      ? { clear: true }
+      : { limitSeconds: Math.round(limitMinutes * 60), reason }
+  try {
+    await fetch(`${AGENT_BASE}/policy`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(1500),
+    })
+  } finally {
+    await refreshState()
   }
 }
 

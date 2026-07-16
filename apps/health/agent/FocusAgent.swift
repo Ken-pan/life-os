@@ -197,6 +197,79 @@ final class AgentServer {
     }
 }
 
+// MARK: - Apple Health export.xml 流式解析
+
+/// SAX 解析 iOS 健康导出的 <Record>,按天聚合睡眠/静息心率/HRV/步数。
+/// 内存恒定(不建 DOM),百万级记录也扛得住。
+final class HealthExportDelegate: NSObject, XMLParserDelegate {
+    private let cutoffStr: String                 // "yyyy-MM-dd",早于此的记录直接跳过
+    private let df = DateFormatter()               // 解析 "yyyy-MM-dd HH:mm:ss Z"
+    private let dayFmt = DateFormatter()
+    private let asleep: Set<String> = [
+        "HKCategoryValueSleepAnalysisAsleepUnspecified",
+        "HKCategoryValueSleepAnalysisAsleepCore",
+        "HKCategoryValueSleepAnalysisAsleepDeep",
+        "HKCategoryValueSleepAnalysisAsleepREM",
+    ]
+    private var sleepSec: [String: Double] = [:]
+    private var hr: [String: (sum: Double, n: Int)] = [:]
+    private var hrv: [String: (sum: Double, n: Int)] = [:]
+    private var steps: [String: Double] = [:]
+
+    init(cutoff: Date) {
+        df.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
+        df.locale = Locale(identifier: "en_US_POSIX")
+        dayFmt.dateFormat = "yyyy-MM-dd"
+        dayFmt.locale = Locale(identifier: "en_US_POSIX")
+        let c = DateFormatter()
+        c.dateFormat = "yyyy-MM-dd"
+        cutoffStr = c.string(from: cutoff)
+        super.init()
+    }
+
+    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?,
+                qualifiedName qName: String?, attributes a: [String: String]) {
+        guard elementName == "Record", let type = a["type"], let startStr = a["startDate"] else { return }
+        if startStr.count >= 10, String(startStr.prefix(10)) < cutoffStr { return }  // ISO 字典序早筛
+
+        switch type {
+        case "HKCategoryTypeIdentifierSleepAnalysis":
+            guard let v = a["value"], asleep.contains(v), let endStr = a["endDate"],
+                  let s = df.date(from: startStr), let e = df.date(from: endStr) else { return }
+            let dur = e.timeIntervalSince(s)
+            guard dur > 0, dur <= 16 * 3600 else { return }
+            // 一夜归到醒来那天 ≈ 入睡 + 6 小时的日期
+            sleepSec[dayFmt.string(from: s.addingTimeInterval(6 * 3600)), default: 0] += dur
+        case "HKQuantityTypeIdentifierRestingHeartRate":
+            guard let v = a["value"].flatMap({ Double($0) }), let s = df.date(from: startStr) else { return }
+            let k = dayFmt.string(from: s); let c = hr[k] ?? (0, 0); hr[k] = (c.sum + v, c.n + 1)
+        case "HKQuantityTypeIdentifierHeartRateVariabilitySDNN":
+            guard let v = a["value"].flatMap({ Double($0) }), let s = df.date(from: startStr) else { return }
+            let k = dayFmt.string(from: s); let c = hrv[k] ?? (0, 0); hrv[k] = (c.sum + v, c.n + 1)
+        case "HKQuantityTypeIdentifierStepCount":
+            guard let v = a["value"].flatMap({ Double($0) }), let s = df.date(from: startStr) else { return }
+            steps[dayFmt.string(from: s), default: 0] += v
+        default: break
+        }
+    }
+
+    /// 按天合并成 [{date, sleepHours?, restingHR?, hrv?, steps?}],按日期升序
+    func finish() -> [[String: Any]] {
+        var keys = Set(sleepSec.keys)
+        keys.formUnion(hr.keys); keys.formUnion(hrv.keys); keys.formUnion(steps.keys)
+        var rows: [[String: Any]] = []
+        for k in keys.sorted() where k >= cutoffStr {
+            var row: [String: Any] = ["date": k]
+            if let s = sleepSec[k] { row["sleepHours"] = (s / 3600 * 10).rounded() / 10 }
+            if let c = hr[k], c.n > 0 { row["restingHR"] = (c.sum / Double(c.n)).rounded() }
+            if let c = hrv[k], c.n > 0 { row["hrv"] = (c.sum / Double(c.n)).rounded() }
+            if let st = steps[k] { row["steps"] = Int(st) }
+            rows.append(row)
+        }
+        return rows
+    }
+}
+
 // MARK: - 主程序
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -248,12 +321,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var warnNumLabel: NSTextField?
     var warnRing: CAShapeLayer?
 
+    // HLT-3 自适应策略:State Engine 按当日状态推来的专注窗口覆盖(当日有效,按日过期)
+    var policyLimitSeconds: Int?
+    var policyReason: String?
+    var policyDate: String?
+
     var testMode = false
 
     func applicationDidFinishLaunching(_ note: Notification) {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         let args = CommandLine.arguments
+        // Apple Health 导出导入(离线,无需运行守护):
+        //   healthos-focus-agent --import-health ~/Downloads/apple_health_export/export.xml
+        if let i = args.firstIndex(of: "--import-health") {
+            let path = args.count > i + 1 ? args[i + 1] : ""
+            let n = importAppleHealth(path: path)
+            FileHandle.standardOutput.write("imported \(n) days → \(dir.appendingPathComponent("health.jsonl").path)\n".data(using: .utf8)!)
+            exit(n >= 0 ? 0 : 1)
+        }
+        loadPolicy()
         if let i = args.firstIndex(of: "--test-break") {
             testMode = true
             let secs = args.count > i + 1 ? (Double(args[i + 1]) ?? 8) : 8
@@ -282,7 +369,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         wc.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             self?.resetScore(reason: "系统唤醒", kind: "sleep")
         }
-        log("healthos-focus-agent v3.0 启动 (limit=\(config.limitSeconds)s rest=\(config.restSeconds)s warn=\(config.warnSeconds)s http=\(config.httpPort))")
+        log("healthos-focus-agent v3.1 启动 (limit=\(config.limitSeconds)s rest=\(config.restSeconds)s warn=\(config.warnSeconds)s http=\(config.httpPort))")
         logEvent("agent_started", detail: nil)
     }
 
@@ -309,6 +396,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         case ("GET", "/config"):
             let data = (try? Data(contentsOf: dir.appendingPathComponent("config.json"))) ?? Data("{}".utf8)
             return (200, data)
+        case ("GET", "/health"):
+            return (200, json(["days": readJsonl("health.jsonl", limit: 30)]))
+        case ("POST", "/policy"):
+            // HLT-3:State Engine 推来当日专注窗口覆盖 {limitSeconds, reason}。清除传 {clear:true}
+            guard let body,
+                  let obj = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+            else { return (400, json(["ok": false])) }
+            if obj["clear"] as? Bool == true {
+                clearPolicy()
+            } else if let lim = (obj["limitSeconds"] as? NSNumber)?.intValue {
+                setPolicy(limitSeconds: lim, reason: obj["reason"] as? String)
+            } else {
+                return (400, json(["ok": false, "error": "limitSeconds required"]))
+            }
+            return (200, json(["ok": true, "effectiveLimitSeconds": effectiveLimit()]))
         case ("POST", "/action"):
             guard let body,
                   let obj = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
@@ -343,11 +445,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         return [
             "agent": "healthos-focus-agent",
-            "version": "3.0",
+            "version": "3.1",
             "phase": phaseStr,
             "phaseEndsAt": phaseEndsAt,
             "score": Int(score),
-            "limitSeconds": config.limitSeconds,
+            "limitSeconds": effectiveLimit(),
+            "baseLimitSeconds": config.limitSeconds,
+            "policyReason": policyReason as Any? ?? NSNull(),
             "warnSeconds": config.warnSeconds,
             "restSeconds": config.restSeconds,
             "active": lastSampleActive,
@@ -358,6 +462,90 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             "session": session,
             "updatedAt": Date().timeIntervalSince1970,
         ]
+    }
+
+    // MARK: HLT-3 自适应策略
+
+    func todayStr() -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: Date())
+    }
+
+    /// 生效专注窗口:当日策略覆盖优先,否则回落 config;覆盖按日过期
+    func effectiveLimit() -> Int {
+        if let lim = policyLimitSeconds, policyDate == todayStr() { return lim }
+        return config.limitSeconds
+    }
+
+    func setPolicy(limitSeconds: Int, reason: String?) {
+        let clamped = max(5 * 60, min(60 * 60, limitSeconds))
+        policyLimitSeconds = clamped
+        policyReason = reason
+        policyDate = todayStr()
+        persistPolicy()
+        log("自适应策略:今日专注窗口 \(clamped / 60) 分钟(\(reason ?? "—"))")
+        logEvent("policy_set", detail: "\(clamped / 60)min · \(reason ?? "")")
+    }
+
+    func clearPolicy() {
+        policyLimitSeconds = nil
+        policyReason = nil
+        policyDate = nil
+        try? FileManager.default.removeItem(at: dir.appendingPathComponent("policy.json"))
+        logEvent("policy_cleared", detail: nil)
+    }
+
+    func persistPolicy() {
+        let obj: [String: Any] = [
+            "date": policyDate ?? "",
+            "limitSeconds": policyLimitSeconds ?? config.limitSeconds,
+            "reason": policyReason ?? "",
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: obj, options: .prettyPrinted) {
+            try? data.write(to: dir.appendingPathComponent("policy.json"))
+        }
+    }
+
+    func loadPolicy() {
+        guard let data = try? Data(contentsOf: dir.appendingPathComponent("policy.json")),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return }
+        // 只认当日策略,隔日自动失效
+        if (obj["date"] as? String) == todayStr(), let lim = (obj["limitSeconds"] as? NSNumber)?.intValue {
+            policyLimitSeconds = lim
+            policyDate = todayStr()
+            policyReason = obj["reason"] as? String
+        }
+    }
+
+    // MARK: Apple Health 导出导入(export.xml → health.jsonl)
+    //
+    // macOS 没有 HealthKit,唯一现实路径是导入 iOS「健康」导出的 export.xml。
+    // 流式(SAX)解析,内存恒定;抽取近 N 天睡眠时长 / 静息心率 / HRV / 步数,
+    // 按天聚合成 health.jsonl,供 State Engine 用测量数据替代手动睡眠。
+    // 返回写入的天数;失败返回 -1。
+    func importAppleHealth(path: String, days: Int = 30) -> Int {
+        let url = URL(fileURLWithPath: (path as NSString).expandingTildeInPath)
+        guard let stream = InputStream(url: url) else {
+            FileHandle.standardError.write("找不到文件:\(url.path)\n".data(using: .utf8)!)
+            return -1
+        }
+        let cutoff = Date().addingTimeInterval(-Double(days) * 86400)
+        let parser = XMLParser(stream: stream)
+        let delegate = HealthExportDelegate(cutoff: cutoff)
+        parser.delegate = delegate
+        guard parser.parse() else {
+            FileHandle.standardError.write("解析失败:\(parser.parserError?.localizedDescription ?? "?")\n".data(using: .utf8)!)
+            return -1
+        }
+        let rows = delegate.finish()
+        let out = rows.map { (try? JSONSerialization.data(withJSONObject: $0)).flatMap { String(data: $0, encoding: .utf8) } ?? "" }
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+        try? (out + (out.isEmpty ? "" : "\n")).data(using: .utf8)?
+            .write(to: dir.appendingPathComponent("health.jsonl"))
+        return rows.count
     }
 
     // MARK: 事件与 session 落盘
@@ -459,8 +647,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func statusText() -> String {
         switch phase {
         case .normal:
-            let m = Int(score) / 60, lim = config.limitSeconds / 60
-            return "vibe coding 净累积 \(m) / \(lim) 分钟"
+            let m = Int(score) / 60, lim = effectiveLimit() / 60
+            let suffix = policyReason != nil && policyDate == todayStr() ? " · 自适应" : ""
+            return "vibe coding 净累积 \(m) / \(lim) 分钟\(suffix)"
         case .warning(let t):
             return "⚠️ \(max(0, Int(t.timeIntervalSinceNow))) 秒后休息(停手 \(config.warnCancelSeconds) 秒可取消)"
         case .breaking(let t):
@@ -476,7 +665,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         switch phase {
         case .normal:
-            let remain = max(0.0, Double(config.limitSeconds) - score)
+            let remain = max(0.0, Double(effectiveLimit()) - score)
             setStatus(symbol: "figure.mind.and.body", fallback: "🧘",
                       text: score < 60 ? "" : "\(Int(ceil(remain / 60)))m")
         case .warning(let t):
@@ -546,7 +735,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         switch phase {
         case .normal:
             if ticks % config.sampleInterval == 0 { sampleActivity() }
-            if Int(score) >= config.limitSeconds - config.warnSeconds {
+            if Int(score) >= effectiveLimit() - config.warnSeconds {
                 phase = .warning(endsAt: Date().addingTimeInterval(TimeInterval(config.warnSeconds)))
                 warnInactiveSeconds = 0
                 showWarnPanel()
@@ -564,7 +753,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     if warnInactiveSeconds >= config.warnCancelSeconds {
                         closeWarnPanel()
                         phase = .normal
-                        score = min(score, Double(config.limitSeconds - config.warnSeconds - 120))
+                        score = min(score, Double(effectiveLimit() - config.warnSeconds - 120))
                         log("你停手了,本次休息取消(净累积回拉至 \(Int(score) / 60) 分钟)")
                         logEvent("warn_cancelled", detail: nil)
                         if testMode { NSApp.terminate(nil) }
@@ -729,7 +918,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         warnNumLabel = num
         blur.addSubview(ringBox)
 
-        let title = NSTextField(labelWithString: "该收尾了 · 快满 \(config.limitSeconds / 60) 分钟")
+        let title = NSTextField(labelWithString: "该收尾了 · 快满 \(effectiveLimit() / 60) 分钟")
         title.font = .systemFont(ofSize: 13.5, weight: .semibold)
         title.textColor = P.rgb(240, 242, 248)
         title.lineBreakMode = .byTruncatingTail

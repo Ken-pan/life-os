@@ -1,7 +1,14 @@
 // State Engine v0 纯函数测试(零 $lib/$app 依赖,node --test 直接跑)
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { deriveState, latestCheckin, recentSleeps, DIMENSION_ORDER } from './stateEngine.core.js'
+import {
+  deriveState,
+  latestCheckin,
+  recentSleeps,
+  healthDaysToSleepObs,
+  recommendPolicy,
+  DIMENSION_ORDER,
+} from './stateEngine.core.js'
 
 const NOW = Date.parse('2026-07-16T14:00:00')
 const HOUR = 3600 * 1000
@@ -126,4 +133,58 @@ test('选择器:过期 check-in 不算;睡眠 24h 外不算昨晚', () => {
   const old = [{ ts: NOW - 30 * HOUR, type: 'sleep', hours: 8 }]
   assert.equal(recentSleeps(old, NOW).last, null)
   assert.equal(recentSleeps(old, NOW).recent.length, 1)
+})
+
+test('测量睡眠优先于手动:同一晚 health 覆盖 manual', () => {
+  const night = Date.parse('2026-07-16T08:00:00')
+  const obs = [
+    { ts: night, type: 'sleep', hours: 8, source: undefined }, // 手动高报
+    { ts: night + 60_000, type: 'sleep', hours: 5.5, source: 'health' }, // 测量偏低
+  ]
+  const { last, recent } = recentSleeps(obs, night + 2 * HOUR)
+  assert.equal(recent.length, 1, '同一晚只留一条')
+  assert.equal(last.source, 'health')
+  assert.equal(last.hours, 5.5)
+})
+
+test('healthDaysToSleepObs:只取有 sleepHours 的天,标 source', () => {
+  const obs = healthDaysToSleepObs([
+    { date: '2026-07-15', sleepHours: 6.5, restingHR: 57 },
+    { date: '2026-07-14', restingHR: 58 }, // 无睡眠 → 跳过
+  ])
+  assert.equal(obs.length, 1)
+  assert.equal(obs[0].type, 'sleep')
+  assert.equal(obs[0].source, 'health')
+  assert.equal(obs[0].hours, 6.5)
+})
+
+test('recommendPolicy:状态好不覆盖;睡眠债 bad → 12 分钟', () => {
+  const good = recommendPolicy(
+    { sleepDebt: { level: 'good' }, stress: { level: 'ok' }, recovery: { level: 'good' }, energy: { level: 'good' } },
+    20,
+  )
+  assert.equal(good.driver, null)
+  assert.equal(good.limitMinutes, 20)
+
+  const debt = recommendPolicy(
+    { sleepDebt: { level: 'bad' }, stress: { level: 'ok' }, recovery: { level: 'good' }, energy: { level: 'good' } },
+    20,
+  )
+  assert.equal(debt.driver, 'sleepDebt')
+  assert.equal(debt.limitMinutes, 12)
+
+  const watch = recommendPolicy(
+    { sleepDebt: { level: 'good' }, stress: { level: 'watch' }, recovery: { level: 'good' }, energy: { level: 'good' } },
+    20,
+  )
+  assert.equal(watch.driver, 'stress')
+  assert.equal(watch.limitMinutes, 16)
+})
+
+test('recommendPolicy:unknown 不触发收紧', () => {
+  const rec = recommendPolicy(
+    { sleepDebt: { level: 'unknown' }, stress: { level: 'unknown' }, recovery: { level: 'unknown' }, energy: { level: 'unknown' } },
+    20,
+  )
+  assert.equal(rec.driver, null)
 })

@@ -30,12 +30,66 @@ export function latestCheckin(list, now) {
   return null
 }
 
-/** 最近的睡眠记录(24h 内算“昨晚”),以及用于均值的最近几晚 */
+function dayKey(ts) {
+  const d = new Date(ts)
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+}
+
+/**
+ * 最近的睡眠记录(24h 内算“昨晚”)+ 用于均值的最近几晚。
+ * 同一晚可能同时有手动记录和 Apple Health 测量值 → 按日去重,measured(source:'health')优先。
+ */
 export function recentSleeps(list, now, n = 3) {
-  const sleeps = list.filter((o) => o.type === 'sleep').slice(-n)
-  sleeps.reverse() // 最新在前
-  const last = sleeps[0] && now - sleeps[0].ts <= 24 * HOUR ? sleeps[0] : null
-  return { last, recent: sleeps }
+  const byDate = new Map()
+  for (const o of list) {
+    if (o.type !== 'sleep') continue
+    const k = dayKey(o.ts)
+    const prev = byDate.get(k)
+    const better =
+      !prev ||
+      (o.source === 'health' && prev.source !== 'health') ||
+      (o.source === prev.source && o.ts > prev.ts)
+    if (better) byDate.set(k, o)
+  }
+  const merged = [...byDate.values()].sort((a, b) => a.ts - b.ts) // 旧→新
+  const recent = merged.slice(-n).reverse() // 新在前
+  const last = recent[0] && now - recent[0].ts <= 24 * HOUR ? recent[0] : null
+  return { last, recent }
+}
+
+/** Apple Health /health 天数据 → 睡眠观察数据(measured),喂进 State Engine */
+export function healthDaysToSleepObs(days) {
+  if (!Array.isArray(days)) return []
+  return days
+    .filter((d) => d && d.date && typeof d.sleepHours === 'number')
+    .map((d) => ({
+      ts: new Date(`${d.date}T08:00:00`).getTime(),
+      type: 'sleep',
+      hours: d.sleepHours,
+      source: 'health',
+    }))
+}
+
+/**
+ * HLT-3 自适应专注窗口:睡眠债/压力/恢复/精力越差,窗口越紧。
+ * 纯函数,返回建议分钟数 + 驱动维度(null = 用基准,不覆盖)。
+ * @param {Record<string,{level:string}>} dims
+ * @param {number} baseMinutes 代理基准窗口(config)
+ */
+export function recommendPolicy(dims, baseMinutes = 20) {
+  const rank = { good: 0, ok: 0, unknown: 0, watch: 1, bad: 2 }
+  let sev = 0
+  let driver = null
+  for (const k of ['sleepDebt', 'stress', 'recovery', 'energy']) {
+    const r = rank[dims?.[k]?.level] ?? 0
+    if (r > sev) {
+      sev = r
+      driver = k
+    }
+  }
+  if (sev === 0) return { limitMinutes: baseMinutes, driver: null }
+  const limitMinutes = Math.min(baseMinutes, sev >= 2 ? 12 : 16)
+  return { limitMinutes, driver }
 }
 
 // ---------- 推导 ----------
@@ -175,7 +229,8 @@ export function deriveState({ now, observations, agent }) {
       dims.sleepDebt = { level: 'unknown', reasons: [{ k: 'state.r_noSleep' }] }
     } else {
       const h = sleepLast.hours
-      const reasons = [{ k: 'state.r_sleepLast', p: { hours: h } }]
+      const sleepKey = sleepLast.source === 'health' ? 'state.r_sleepLastMeasured' : 'state.r_sleepLast'
+      const reasons = [{ k: sleepKey, p: { hours: h } }]
       let level = h >= 7 ? 'good' : h >= 6 ? 'ok' : h >= 5 ? 'watch' : 'bad'
       if (sleeps.length >= 2) {
         const avg = sleeps.reduce((s, o) => s + o.hours, 0) / sleeps.length
@@ -199,7 +254,10 @@ export function deriveState({ now, observations, agent }) {
         level: levelFromFive(Math.round(avg)),
         reasons: [
           { k: 'state.r_derived' },
-          { k: 'state.r_sleepLast', p: { hours: sleepLast.hours } },
+          {
+            k: sleepLast.source === 'health' ? 'state.r_sleepLastMeasured' : 'state.r_sleepLast',
+            p: { hours: sleepLast.hours },
+          },
         ],
       }
     }

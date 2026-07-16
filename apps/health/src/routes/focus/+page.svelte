@@ -172,8 +172,8 @@
     box-shadow: 0 0 0 4px var(--accent-bg);
   }
   .pulse[data-phase='warning'] {
-    background: var(--warning, #e2a13d);
-    box-shadow: 0 0 0 4px rgba(226, 161, 61, 0.18);
+    background: var(--warning);
+    box-shadow: 0 0 0 4px var(--warning-subtle);
   }
   .pulse[data-phase='breaking'] {
     background: var(--t4);

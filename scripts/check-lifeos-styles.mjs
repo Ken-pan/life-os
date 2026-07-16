@@ -36,6 +36,7 @@ const SCAN_ROOTS = [
   'apps/music/src',
   'apps/portal/src',
   'apps/home/src',
+  'apps/health/src',
   'apps/aios/src',
   'apps/starter/src',
   'apps/design-catalog/src',

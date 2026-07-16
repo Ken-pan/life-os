@@ -1,9 +1,14 @@
 <script>
   import { onMount } from 'svelte'
   import { t } from '$lib/i18n/index.js'
-  import { A, act, pollState, refreshDetails } from '$lib/agent.svelte.js'
+  import { A, act, pushPolicy, pollState, refreshDetails } from '$lib/agent.svelte.js'
   import { OBS, logCheckin, logSleep } from '$lib/stateEngine.svelte.js'
-  import { deriveState, DIMENSION_ORDER } from '$lib/stateEngine.core.js'
+  import {
+    deriveState,
+    healthDaysToSleepObs,
+    recommendPolicy,
+    DIMENSION_ORDER,
+  } from '$lib/stateEngine.core.js'
 
   let nowMs = $state(Date.now())
 
@@ -55,9 +60,33 @@
     }
   })
 
+  // Observe:手动观察 + Apple Health 测量睡眠(measured 在引擎里按日覆盖 manual)
+  const mergedObs = $derived([...OBS.list, ...healthDaysToSleepObs(A.health)])
+
   const engine = $derived(
-    deriveState({ now: nowMs, observations: OBS.list, agent: agentInput }),
+    deriveState({ now: nowMs, observations: mergedObs, agent: agentInput }),
   )
+
+  // HLT-3:按当日状态推荐专注窗口,变化时推给代理(driver 决定收紧或回到基准)
+  const baseMinutes = $derived(Math.max(1, Math.round((s?.baseLimitSeconds ?? 1200) / 60)))
+  const policy = $derived(recommendPolicy(engine.dims, baseMinutes))
+  let lastPushed = $state(null)
+
+  $effect(() => {
+    if (!A.online || paused) return
+    const desiredReason = policy.driver ? t(`now.policyReason_${policy.driver}`) : null
+    const key = policy.driver ? `${policy.limitMinutes}:${policy.driver}` : 'base'
+    // 只在推荐变化、且与代理当前生效状态不一致时推送,避免每帧打接口
+    const agentEffMin = Math.round((s?.limitSeconds ?? 1200) / 60)
+    const agentHasPolicy = Boolean(s?.policyReason)
+    const inSync = policy.driver
+      ? agentEffMin === policy.limitMinutes && agentHasPolicy
+      : !agentHasPolicy
+    if (key !== lastPushed && !inSync) {
+      lastPushed = key
+      pushPolicy(policy.limitMinutes, desiredReason)
+    }
+  })
 
   const headline = $derived.by(() => {
     if (!A.online && OBS.list.length === 0) return t('now.stateOffline')
@@ -162,8 +191,13 @@
         </div>
       </div>
     </div>
-    <div>
+    <div class="checkin-foot">
       <button class="btn primary" onclick={saveCheckin}>{t('now.saveCheckin')}</button>
+      {#if A.health.length > 0}
+        <span class="health-chip" title={t('now.healthConnected')}>
+          <i class="chip-dot"></i>{fmt('now.healthConnected', { n: A.health.length })}
+        </span>
+      {/if}
     </div>
   </section>
 
@@ -180,6 +214,16 @@
         <div class="meter-fill" style:width={`${frac * 100}%`}></div>
       </div>
       <dl class="facts">
+        <div>
+          <dt>{t('now.adaptiveWindow')}</dt>
+          <dd>
+            {#if s?.policyReason}
+              {fmt('now.adaptiveTightened', { min: limitMinutes, reason: s.policyReason })}
+            {:else}
+              {fmt('now.adaptiveBase', { min: limitMinutes })}
+            {/if}
+          </dd>
+        </div>
         <div>
           <dt>{t('now.signalNow')}</dt>
           <dd>{s?.note ?? '—'}</dd>
@@ -299,13 +343,13 @@
     border-radius: 50%;
     background: var(--t4);
   }
-  .dim[data-level='good'] .dot { background: #34d399; }
+  .dim[data-level='good'] .dot { background: var(--positive); }
   .dim[data-level='ok'] .dot { background: var(--accent); }
-  .dim[data-level='watch'] .dot { background: #e2a13d; }
-  .dim[data-level='bad'] .dot { background: #f87171; }
-  .dim[data-level='good'] .dim-level { color: #34d399; }
-  .dim[data-level='watch'] .dim-level { color: #e2a13d; }
-  .dim[data-level='bad'] .dim-level { color: #f87171; }
+  .dim[data-level='watch'] .dot { background: var(--warning); }
+  .dim[data-level='bad'] .dot { background: var(--critical); }
+  .dim[data-level='good'] .dim-level { color: var(--positive); }
+  .dim[data-level='watch'] .dim-level { color: var(--warning); }
+  .dim[data-level='bad'] .dim-level { color: var(--critical); }
   .dim-reasons {
     display: grid;
     gap: 2px;
@@ -374,6 +418,27 @@
   }
   .ck-seg.wide { align-items: center; }
 
+  .checkin-foot {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3, 12px);
+    flex-wrap: wrap;
+  }
+  .health-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.75rem;
+    color: var(--t3);
+  }
+  .chip-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--positive);
+    box-shadow: 0 0 0 3px var(--positive-subtle);
+  }
+
   /* —— Focus 负荷 —— */
   .meter-head {
     display: flex;
@@ -404,7 +469,7 @@
     background: var(--accent);
     transition: width 0.6s ease;
   }
-  .meter-card[data-tone='hot'] .meter-fill { background: #e2a13d; }
+  .meter-card[data-tone='hot'] .meter-fill { background: var(--warning); }
   .meter-card[data-tone='break'] .meter-fill { background: var(--t4); }
 
   .facts {
