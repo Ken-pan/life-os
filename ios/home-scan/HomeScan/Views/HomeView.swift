@@ -27,6 +27,8 @@ struct HomeView: View {
     @State private var renameText = ""
     /// 「丢弃没传完的扫描」的确认 —— 它删的是本机唯一一份副本
     @State private var confirmDiscardPending = false
+    /// 导出的诊断日志文件(非 nil 时弹分享)
+    @State private var diagnosticsFile: URL?
     /// 图标块要跟着动态字体一起长 —— 写死 34pt 的话,字号调到辅助功能档时
     /// 文字撑满整行、图标还是原来那颗小方块,比例整个垮掉(HIG:控件随字号缩放)
     @ScaledMetric(relativeTo: .headline) private var iconTile: CGFloat = 34
@@ -86,6 +88,18 @@ struct HomeView: View {
             .sheet(isPresented: $showFindItem) {
                 if let home = model.canonicalHome {
                     FindItemView(home: home)
+                }
+            }
+            // 诊断日志分享:AirDrop/微信/邮件都行 —— 真机现场不插线也能交证据
+            .sheet(
+                isPresented: .init(
+                    get: { diagnosticsFile != nil },
+                    set: { if !$0 { diagnosticsFile = nil } }
+                )
+            ) {
+                if let url = diagnosticsFile {
+                    ActivityShareSheet(items: [url])
+                        .presentationDetents([.medium, .large])
                 }
             }
             // 删除是不可逆的(立墓碑),必须点名删的是哪一个
@@ -353,10 +367,17 @@ struct HomeView: View {
             } label: {
                 Label("刷新本机户型缓存", systemImage: "arrow.clockwise")
             }
+            // 诊断日志:扫描/上传的结构化事件(JSONL)。真机不插线也能把
+            // 现场证据(卡顿/发热降速/门控拒绝/上传失败)发出来
+            Button {
+                diagnosticsFile = model.exportDiagnostics()
+            } label: {
+                Label("导出诊断日志", systemImage: "stethoscope")
+            }
         } header: {
             Text("设置")
         } footer: {
-            Text("照片与扫描只上传到你自己的私有存储桶(按账号隔离,他人不可见);本机只缓存户型副本与未上传的扫描,上传成功即清理。")
+            Text("照片与扫描只上传到你自己的私有存储桶(按账号隔离,他人不可见);本机只缓存户型副本与未上传的扫描,上传成功即清理。诊断日志只记录性能与操作事件,不含照片。")
         }
     }
 
@@ -417,4 +438,16 @@ struct HomeView: View {
     static func dateLabel(ms: Int64) -> String {
         dateLabel(Date(timeIntervalSince1970: TimeInterval(ms) / 1000))
     }
+}
+
+/// UIActivityViewController 的最小包装(SwiftUI 的 ShareLink 要求渲染时就有
+/// 值,而诊断文件是点击才拼的 —— 用 sheet + 包装,导出动作保持惰性)
+private struct ActivityShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }

@@ -1,0 +1,71 @@
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/brands/knowledge.json
+  Rebuild: npm run build:tokens
+*/
+
+[data-app='knowledge'] {
+  --bg: #f7f6f2;
+  --bg-2: #fffdf9;
+  --card: #ffffff;
+  --card-h: #efedf7;
+  --border: #dedbe4;
+  --border-l: #c8c4d4;
+  --t1: #191823;
+  --t2: #4e4c5e;
+  --t3: #6f6d80;
+  --t4: #918fa0;
+  --accent: #4d55c7;
+  --accent-2: #3a41a8;
+  --accent-bg: rgba(77, 85, 199, 0.1);
+  --on-accent: #ffffff;
+  --sidebar: #1a1926;
+  --sidebar-foreground: #efeef6;
+  --sidebar-muted: rgba(239, 238, 246, 0.55);
+  --sidebar-accent: #242236;
+  --sidebar-primary: #9aa2ff;
+  --sidebar-primary-foreground: #12121c;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --appbar-bg: rgba(247, 246, 242, 0.88);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --seg-display: flex;
+  --seg-flex-wrap: wrap;
+  --seg-gap: 8px;
+  --seg-track-bg: transparent;
+  --seg-track-border: none;
+  --seg-track-padding: 0;
+  --seg-btn-bg: var(--card);
+  --seg-btn-border: 1px solid var(--border);
+  --seg-active-bg: var(--accent-bg);
+  --seg-active-fg: var(--accent);
+  --seg-active-border-token: var(--accent);
+  color-scheme: light;
+}
+
+[data-app='knowledge'][data-mode='dark'],
+[data-app='knowledge'][data-theme='dark'] {
+  --bg: #101017;
+  --bg-2: #16161f;
+  --card: #1b1b27;
+  --card-h: #232331;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-l: rgba(255, 255, 255, 0.13);
+  --t1: #eeedf6;
+  --t2: #a7a5ba;
+  --t3: #75738a;
+  --t4: rgba(238, 237, 246, 0.38);
+  --accent: #9aa2ff;
+  --accent-2: #b6bcff;
+  --accent-bg: rgba(154, 162, 255, 0.14);
+  --on-accent: #12121c;
+  --appbar-bg: rgba(16, 16, 23, 0.92);
+  --nav-bg: rgba(16, 16, 23, 0.94);
+  --sidebar: #101017;
+  --sidebar-foreground: #eeedf6;
+  --sidebar-muted: #a7a5ba;
+  --sidebar-accent: #16161f;
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
+}

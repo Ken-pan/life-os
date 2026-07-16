@@ -11,7 +11,7 @@ export const THEME_SRC = join(REPO_ROOT, 'packages', 'theme', 'src')
 export const GENERATED_DIR = join(THEME_SRC, 'generated')
 
 // [app-generator:brand-apps] promote-life-os-app.mjs 会向此数组追加新 app
-export const BRAND_APPS = ['planner', 'fitness', 'finance', 'music', 'home']
+export const BRAND_APPS = ['planner', 'fitness', 'finance', 'music', 'home', 'aios', 'portal', 'knowledge']
 
 export function loadJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'))

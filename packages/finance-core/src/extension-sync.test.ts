@@ -5,6 +5,8 @@ import {
   accountRowUnchangedInApp,
   buildAppSnapshot,
   buildIncomeMerchantIndex,
+  collectUnenrichedMerchantTxns,
+  planMerchantOrderEnrichment,
   computeEnvelopePayloadHashSync,
   filterNewCaptureTxnRows,
   flowForCaptureRow,
@@ -1147,5 +1149,156 @@ describe('sanitizeExtensionSyncTxnPayload', () => {
       amount: 0,
       include_in_spending_analytics: false,
     })
+  })
+})
+
+describe('merchant_orders：新购买检测与标注计划', () => {
+  /** @returns 一笔可标注的 Best Buy 交易 */
+  function merchantTxn(over: Partial<Txn> = {}): Txn {
+    return {
+      id: 'txn-bby-1',
+      date: '2026-06-22',
+      month: '2026-06',
+      merchant: 'Best Buy',
+      category: 'Shopping',
+      account: 'CREDIT CARD',
+      flow: 'expense',
+      amount: 309.9,
+      budgetImpact: -309.9,
+      inSpending: true,
+      inCashFlow: true,
+      ...over,
+    }
+  }
+
+  it('isCaptureEnvelope 接受 merchant_orders envelope', () => {
+    expect(
+      isCaptureEnvelope({
+        v: 1,
+        id: 'bestbuy_merchant_orders_x',
+        source: 'bestbuy',
+        kind: 'merchant_orders',
+        capturedAt: '2026-07-16T00:00:00Z',
+        asOfDate: '2026-07-16',
+        data: { merchant: 'bestbuy', orders: [] },
+      }),
+    ).toBe(true)
+  })
+
+  it('collectUnenrichedMerchantTxns 只挑窗口内未标注的三商家交易', () => {
+    const txns: Txn[] = [
+      merchantTxn(),
+      merchantTxn({
+        id: 'txn-amz-1',
+        merchant: 'Amazon Purchase',
+        date: '2026-07-01',
+        amount: 38.76,
+      }),
+      // 已有标注 → 不算新购买
+      merchantTxn({
+        id: 'txn-bby-old',
+        date: '2026-06-20',
+        purchaseEnrichment: {
+          source: 'bestbuy',
+          orderId: 'BBY01-1',
+          matchConfidence: 'high',
+        },
+      }),
+      // 非目标商家
+      merchantTxn({ id: 'txn-coffee', merchant: 'Coffee', date: '2026-07-02' }),
+      // 窗口外（最新交易 2026-07-01，45 天窗）
+      merchantTxn({ id: 'txn-bby-ancient', date: '2025-01-01' }),
+    ]
+    const out = collectUnenrichedMerchantTxns(txns)
+    expect(out.map((t) => t.id)).toEqual(['txn-amz-1', 'txn-bby-1'])
+    expect(out[0].source).toBe('amazon')
+    expect(out[1].source).toBe('bestbuy')
+  })
+
+  it('buildAppSnapshot 带上 unenrichedMerchantTxns，隐私模式不带', () => {
+    const txns = [merchantTxn()]
+    expect(buildAppSnapshot([], txns, [], []).unenrichedMerchantTxns).toHaveLength(1)
+    expect(
+      buildAppSnapshot([], txns, [], [], { privacy: true })
+        .unenrichedMerchantTxns,
+    ).toBeUndefined()
+  })
+
+  it('planMerchantOrderEnrichment 挑最 match 的订单并给出标注', () => {
+    const plan = planMerchantOrderEnrichment(
+      {
+        merchant: 'bestbuy',
+        orders: [
+          {
+            orderId: 'BBY01-807200442663',
+            orderDate: 'June 20, 2026',
+            orderTotal: '$309.90',
+            status: 'Delivered',
+            lineItems: [{ title: 'Sony WH-1000XM5' }],
+          },
+        ],
+      },
+      [merchantTxn(), merchantTxn({ id: 'txn-other', amount: 55, date: '2026-06-22' })],
+    )
+    expect(plan.updates).toHaveLength(1)
+    expect(plan.updates[0].txnId).toBe('txn-bby-1')
+    expect(plan.updates[0].orderId).toBe('BBY01-807200442663')
+    expect(plan.updates[0].enrichment.source).toBe('bestbuy')
+    expect(plan.updates[0].confidence).toBe('high')
+  })
+
+  it('已有标注的交易与已占用的订单不重复标注（幂等）', () => {
+    const order = {
+      orderId: 'BBY01-807200442663',
+      orderDate: 'June 20, 2026',
+      orderTotal: '$309.90',
+      status: 'Delivered',
+    }
+    // 交易已带同源标注 → skippedExisting
+    const planA = planMerchantOrderEnrichment({ merchant: 'bestbuy', orders: [order] }, [
+      merchantTxn({
+        purchaseEnrichment: {
+          source: 'bestbuy',
+          orderId: 'BBY01-807200442663',
+          matchConfidence: 'high',
+        },
+      }),
+    ])
+    expect(planA.updates).toHaveLength(0)
+    expect(planA.skippedExisting).toBe(1)
+
+    // 订单已标注在另一笔交易上 → 不允许再挂到第二笔
+    const planB = planMerchantOrderEnrichment({ merchant: 'bestbuy', orders: [order] }, [
+      merchantTxn(),
+      merchantTxn({
+        id: 'txn-bby-2',
+        date: '2026-06-21',
+        purchaseEnrichment: {
+          source: 'bestbuy',
+          orderId: 'BBY01-807200442663',
+          matchConfidence: 'high',
+        },
+      }),
+    ])
+    expect(planB.updates).toHaveLength(0)
+    expect(planB.skippedDuplicateOrder + planB.skippedExisting).toBeGreaterThan(0)
+  })
+
+  it('低置信匹配默认不落', () => {
+    const plan = planMerchantOrderEnrichment(
+      {
+        merchant: 'bestbuy',
+        orders: [
+          {
+            orderId: 'BBY01-2',
+            orderDate: 'June 10, 2026',
+            orderTotal: '$309.00',
+            status: 'Delivered',
+          },
+        ],
+      },
+      [merchantTxn()],
+    )
+    expect(plan.updates).toHaveLength(0)
   })
 })

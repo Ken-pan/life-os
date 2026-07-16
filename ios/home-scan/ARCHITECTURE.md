@@ -27,6 +27,9 @@ Services(有状态控制器 + 纯函数核)
   │      (漏扫分区就近认领 400px 同源 scan-merge.js / 门窗掉到七成 / 分区状态照 <2)
   │  本机存储:PendingScanStore / CanonicalHomeCache
   │  IO:SupabaseService(+ScanUploader/+ContainerUploader/+CanonicalHome)
+  │  诊断:ScanLog —— 结构化事件 JSONL(性能/UX/错误),任何线程可调;
+  │    摘要随 payload 上传(meta.scanDiagnostics),首页「导出诊断日志」可分享;
+  │    编码/轮换/聚合是纯函数(ScanLogTests)。新 catch 一律走 ScanLog.error
   ▼
 Convert(纯管线,CapturedStructure → HomeOS plan px)
      StructureFlattener → FlatScene → PlanProjector → HomeOSModels(契约类型)

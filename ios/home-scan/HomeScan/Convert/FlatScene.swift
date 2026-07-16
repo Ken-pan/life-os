@@ -8,6 +8,8 @@ struct FlatScene {
     struct WallSeg {
         var a: SIMD2<Double>
         var b: SIMD2<Double>
+        /// 墙板高度(米,RoomPlan dimensions.y)。全屋中位数 = 吊顶高
+        var heightM: Double = 0
         /// RoomPlan 未标注内外;先全按非承重内墙处理,导出时 exterior 留空
         var confidenceLow: Bool = false
     }
@@ -23,6 +25,10 @@ struct FlatScene {
         var kind: OpeningKind
         var center: SIMD2<Double>
         var widthM: Double
+        /// 洞口高度(米,dimensions.y);0 = 未知
+        var heightM: Double = 0
+        /// 底边离地(米):窗 = 窗台高;门通常 ≈0
+        var elevM: Double = 0
         /// 宿主墙在 walls 数组里的下标;RoomPlan parentIdentifier 缺失时为 nil,投影时找最近共线墙
         var wallIndex: Int?
     }

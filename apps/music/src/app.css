@@ -81,8 +81,7 @@ html {
   --critical-subtle: #3d1820;
   --info: #9ec5ff;
   --info-subtle: #1a2438;
-  --toast-bg: color-mix(in srgb, var(--card-h) 88%, var(--positive) 12%);
-  --toast-border: color-mix(in srgb, var(--positive) 28%, var(--border-l));
+  /* toast 覆盖已删（2026-07-16）：共享 toast 改为中性卡片 + 语义圆点，用默认即可 */
 }
 
 /* Music 领域 UI */

@@ -16,6 +16,7 @@
 | musicos-ken   | `apps/music`      | `npm run build -w music-os`   | `apps/music/build`   | https://music.kenos.space   | 生产     |
 | portal-ken    | `apps/portal`     | `npm run build -w portal`     | `apps/portal/build`  | https://portal.kenos.space  | 启动器   |
 | homeos-ken    | `apps/home`       | `npm run build -w home-os`    | `apps/home/build`    | https://home.kenos.space    | **实验** |
+| knowledgeos-ken | `apps/knowledge` | `npm run build -w knowledge-os` | `apps/knowledge/build` | https://knowledge.kenos.space（DNS 待加） | **实验** |
 
 > **AIOS 云端只读版（命名不同，但接线方式与上表一致）：** `aios-kenos.netlify.app`（site id `5bfa64b2-7108-479d-b9e2-45f9c4d9f791`），package directory `apps/aios`，`npm run build -w aios-os`（`VITE_AIOS_CLOUD=1` 由 `apps/aios/netlify.toml` 注入）。AIOS 是本地优先原生 Mac app，云端仅登录后查看已同步对话/记忆/图片的**只读查看器**，无自定义 `kenos.space` 子域（代码里 `aios.kenos.space` 的 production URL 目前无 DNS，不解析）。详见 [`../roadmap/apps/aios.md`](../roadmap/apps/aios.md)。
 

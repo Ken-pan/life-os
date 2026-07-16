@@ -207,48 +207,9 @@ a {
   position: relative;
 }
 
-/* ===== 段控件 / 图标按钮 ===== */
-.horizontal-tabs {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-5);
-  border-bottom: 1px solid var(--border);
-}
-
-.horizontal-tab {
-  position: relative;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: var(--space-2) var(--space-0-5) var(--space-2-5);
-  font-size: var(--text-base);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.horizontal-tab:hover {
-  color: var(--text);
-}
-
-.horizontal-tab::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  transition: background-color var(--motion-fast) var(--ease);
-}
-
-.horizontal-tab.active {
-  color: var(--primary);
-}
-
-.horizontal-tab.active::after {
-  background: var(--primary);
-}
+/* ===== 段控件 / 图标按钮 =====
+   页签基座（.tabs/.tab）已下沉 @life-os/theme components.css；
+   这里只留 finance 特有的上下文覆盖（.records-view、移动端断点）。 */
 
 .icon-btn {
   display: inline-flex;
@@ -1290,32 +1251,7 @@ h3.flush,
   margin-bottom: var(--space-3);
 }
 
-.date-field-zh {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-
-.date-field-wrap {
-  position: relative;
-}
-
-.date-field-wrap.is-empty .date-field-placeholder {
-  position: absolute;
-  left: var(--space-3);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  font-size: var(--text-md);
-  pointer-events: none;
-}
-
-.date-field-wrap.is-empty input[type="date"] {
-  color: transparent;
-}
-
-.date-field-wrap.is-empty input[type="date"]::-webkit-datetime-edit {
-  opacity: 0;
-}
+/* date-field-wrap / date-field-placeholder / field-affix 已上提 @life-os/theme components.css */
 
 .baseline-kpi-pair {
   grid-template-columns: repeat(2, 1fr);
@@ -1325,20 +1261,6 @@ h3.flush,
   display: block;
   margin-top: var(--space-1);
   font-size: var(--text-xs);
-}
-
-.field-affix {
-  position: relative;
-}
-
-.field-affix__suffix {
-  position: absolute;
-  right: var(--space-2-5);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  pointer-events: none;
 }
 
 .field-inline-check {
@@ -1417,73 +1339,10 @@ div.input {
   color: var(--text);
 }
 
-/* 可拖动滑块 */
-.slider-field {
-  gap: var(--space-2);
-}
-
-.slider-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-2);
-}
-
+/* 可拖动滑块：基座（.slider / .slider-label / .slider-value）已下沉
+   @life-os/theme components.css；finance 只留 value 的强调色覆盖。 */
 .slider-value {
-  font-size: var(--text-base);
-  font-weight: 700;
   color: var(--accent-foreground);
-  font-variant-numeric: tabular-nums;
-}
-
-.slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 6px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(to right,
-      var(--accent) var(--pct, 0%),
-      var(--border-strong) var(--pct, 0%));
-  outline: none;
-  cursor: pointer;
-}
-
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--card);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-  cursor: grab;
-}
-
-.slider::-webkit-slider-thumb:active {
-  cursor: grabbing;
-}
-
-.slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--card);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-  cursor: grab;
-}
-
-.slider:focus-visible {
-  box-shadow: var(--shadow-focus);
-}
-
-.slider-hint {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
 }
 
 /* 目标存款桶 */
@@ -3076,7 +2935,7 @@ div.input {
   min-width: 0;
 }
 
-.records-view .horizontal-tabs {
+.records-view .tabs {
   margin-bottom: var(--space-1);
 }
 
@@ -4543,7 +4402,7 @@ div.input {
     padding: var(--card-padding-mobile);
   }
 
-  .horizontal-tabs {
+  .tabs {
     display: flex;
     width: 100%;
     gap: var(--stack-tight);
@@ -4552,7 +4411,7 @@ div.input {
     margin-bottom: var(--space-1);
   }
 
-  .horizontal-tab {
+  .tab {
     padding: var(--space-2-5) var(--space-0-5) var(--space-3);
     font-size: var(--text-md);
     min-height: var(--tap-min, 44px);
@@ -4920,11 +4779,11 @@ div.input {
     flex-shrink: 0;
   }
 
-  .horizontal-tabs {
+  .tabs {
     gap: var(--space-3);
   }
 
-  .horizontal-tab {
+  .tab {
     font-size: var(--text-md);
   }
 

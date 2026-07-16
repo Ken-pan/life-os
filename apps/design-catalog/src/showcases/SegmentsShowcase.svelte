@@ -96,11 +96,11 @@
   }
   .catalog-section__title {
     margin: 0 0 20px;
-    font-size: 22px;
+    font-size: var(--text-2xl);
   }
   .catalog-section__lead {
     margin: -8px 0 16px;
     color: var(--t2, var(--text-secondary));
-    font-size: 13px;
+    font-size: var(--text-md);
   }
 </style>

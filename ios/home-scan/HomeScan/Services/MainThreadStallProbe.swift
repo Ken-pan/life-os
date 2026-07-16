@@ -11,12 +11,14 @@ import Foundation
 /// 这个 timer **就轮不上**,下一次打卡会迟到。迟到多久 = 冻了多久。
 /// 这是直接测「UI 有没有反应」,不是测「我以为它有反应」。
 ///
-/// 只在 DEBUG 编译。用 print 而不是 os.Logger:`devicectl --console` 抓的是
-/// stdout,os_log 走统一日志系统,那条路在这台机器上拉不下来(macOS 的
-/// `log stream` 已经不支持 --device-name)。要的是能落到手边的证据。
+/// 证据双通道(探针本身开销可忽略,所以 release 也开着):
+/// - print 走 stdout(仅 DEBUG):插线联调 `devicectl --console` 实时看。
+///   用 print 而不是 os.Logger:统一日志那条路在这台机器上拉不下来
+///   (macOS 的 `log stream` 已经不支持 --device-name)。
+/// - ScanLog(始终):卡顿事件 + 收尾汇总落 JSONL,峰值累进
+///   `stall_worst_ms` 随 payload 上传 —— TestFlight 现场也能回溯。
 final class MainThreadStallProbe {
     private let label: String
-    #if DEBUG
     private var timer: Timer?
     private var lastTick = Date()
     private var worst: TimeInterval = 0
@@ -24,7 +26,6 @@ final class MainThreadStallProbe {
     /// 超过这个就算「人能感觉到卡」。250ms 是个保守线:
     /// 低于它像"有点顿",高于它就是"这 App 是不是死了"。
     private let stallThreshold: TimeInterval = 0.25
-    #endif
 
     init(label: String) {
         self.label = label
@@ -32,7 +33,6 @@ final class MainThreadStallProbe {
 
     @MainActor
     func start() {
-        #if DEBUG
         started = Date()
         lastTick = Date()
         worst = 0
@@ -44,11 +44,19 @@ final class MainThreadStallProbe {
             self.lastTick = now
             if gap > self.worst { self.worst = gap }
             if gap > self.stallThreshold {
-                print("⚠️ [\(self.label)] 主线程卡了 \(Int(gap * 1000))ms")
+                let ms = Double(Int(gap * 1000))
+                #if DEBUG
+                print("⚠️ [\(self.label)] 主线程卡了 \(Int(ms))ms")
+                #endif
+                ScanLog.shared.log("perf", "main_stall", [
+                    "label": .string(self.label), "ms": .num(ms),
+                ])
+                ScanLog.shared.counter { $0.peak("stall_worst_ms", ms) }
             }
         }
         RunLoop.main.add(t, forMode: .common)
         timer = t
+        #if DEBUG
         print("⏱ [\(label)] 开始")
         #endif
     }
@@ -58,19 +66,29 @@ final class MainThreadStallProbe {
         #if DEBUG
         print("⏱ [\(label)] \(String(format: "%.2f", Date().timeIntervalSince(started)))s → \(step)")
         #endif
+        ScanLog.shared.log("perf", "stage", [
+            "label": .string(label), "step": .string(step),
+            "atMs": .num((Date().timeIntervalSince(started) * 1000).rounded()),
+        ])
     }
 
     @MainActor
     func stop() {
-        #if DEBUG
         timer?.invalidate()
         timer = nil
         let total = Date().timeIntervalSince(started)
         let worstMs = Int(worst * 1000)
+        #if DEBUG
         let verdict = worst > stallThreshold
             ? "❌ 最长卡顿 \(worstMs)ms —— 重活还在主线程上"
             : "✅ 最长间隔 \(worstMs)ms(<\(Int(stallThreshold * 1000))ms)—— 主线程全程没被占住"
         print("⏱ [\(label)] 结束 · 总耗时 \(String(format: "%.2f", total))s · \(verdict)")
         #endif
+        ScanLog.shared.log("perf", "probe_done", [
+            "label": .string(label),
+            "totalMs": .num((total * 1000).rounded()),
+            "worstMs": .num(Double(worstMs)),
+            "stalled": .bool(worst > stallThreshold),
+        ])
     }
 }

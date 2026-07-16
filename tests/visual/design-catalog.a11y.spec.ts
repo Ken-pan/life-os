@@ -42,6 +42,18 @@ test.describe('design-catalog a11y gates @a11y', () => {
           )
         })
 
+        test(`chip tag — ${app} / ${mode}`, async ({ page }) => {
+          await gotoCatalog(page, 'chips', app, mode)
+          const chip = page.locator('.chip.tag').first()
+          const { color, backgroundColor } = await readPairContrast(chip)
+          assertContrast(
+            `chip.tag ${app}/${mode}`,
+            color,
+            backgroundColor,
+            WCAG_AA_UI,
+          )
+        })
+
         test(`toast message — ${app} / ${mode}`, async ({ page }) => {
           await gotoCatalog(page, 'toast', app, mode)
           const toast = page.locator('.toast.show, .toast').first()
@@ -94,6 +106,29 @@ test.describe('design-catalog a11y gates @a11y', () => {
         )
       })
 
+      test(`checkbox — planner / ${mode}`, async ({ page }) => {
+        await gotoCatalog(page, 'selection', 'planner', mode)
+        await assertFocusRing(page.locator('.checkbox').first(), 'checkbox')
+      })
+
+      test(`tab — planner / ${mode}`, async ({ page }) => {
+        await gotoCatalog(page, 'tabs', 'planner', mode)
+        await assertFocusRing(page.locator('[role="tab"]').first(), 'tab')
+      })
+
+      test(`filter chip — planner / ${mode}`, async ({ page }) => {
+        await gotoCatalog(page, 'chips', 'planner', mode)
+        await assertFocusRing(page.locator('button.chip').first(), 'filter-chip')
+      })
+
+      test(`pagination — planner / ${mode}`, async ({ page }) => {
+        await gotoCatalog(page, 'lists', 'planner', mode)
+        await assertFocusRing(
+          page.locator('.pagination__btn[aria-current="page"]').first(),
+          'pagination-current',
+        )
+      })
+
       test(`settings action — planner / ${mode}`, async ({ page }) => {
         await gotoCatalog(page, 'settings', 'planner', mode)
         await assertFocusRing(
@@ -133,6 +168,30 @@ test.describe('design-catalog a11y gates @a11y', () => {
           `toast-dismiss ${app}`,
         )
       })
+
+      test(`option row — ${app}`, async ({ page }) => {
+        await gotoCatalog(page, 'selection', app, 'light')
+        await assertMinTouchTarget(
+          page.locator('.option-row').first(),
+          `option-row ${app}`,
+        )
+      })
+
+      test(`list item — ${app}`, async ({ page }) => {
+        await gotoCatalog(page, 'lists', app, 'light')
+        await assertMinTouchTarget(
+          page.locator('.list-item').first(),
+          `list-item ${app}`,
+        )
+      })
+
+      test(`accordion summary — ${app}`, async ({ page }) => {
+        await gotoCatalog(page, 'disclosure', app, 'light')
+        await assertMinTouchTarget(
+          page.locator('.accordion summary').first(),
+          `accordion-summary ${app}`,
+        )
+      })
     }
   })
 
@@ -147,6 +206,15 @@ test.describe('design-catalog a11y gates @a11y', () => {
       await page.emulateMedia({ reducedMotion: 'reduce' })
       await gotoCatalog(page, 'toast', 'planner', 'light')
       await assertReducedMotion(page, '.toast')
+    })
+
+    test('indeterminate progress animation disabled', async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await gotoCatalog(page, 'progress', 'planner', 'light')
+      await assertReducedMotion(
+        page,
+        '.progress--indeterminate .progress__fill',
+      )
     })
 
     test('command palette animation disabled', async ({ page }) => {

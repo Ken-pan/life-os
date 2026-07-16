@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build -w knowledge-os"
+  publish = "apps/knowledge/build"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/knowledge packages/theme packages/sync"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

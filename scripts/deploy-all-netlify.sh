@@ -23,6 +23,7 @@ deploy_one fc92f305-8dcf-46c3-82f5-ef511597df1c finance-os apps/finance/build
 deploy_one 83dfdf84-095a-4b8a-955d-106d046a314b music-os apps/music/build netlify/functions
 deploy_one a5df5c3e-0e42-4f82-aca8-8d6802da357f portal apps/portal/build .netlify/functions-internal
 deploy_one 69d4c072-d153-499c-90a8-57909df461a4 home-os apps/home/build
+deploy_one db79c378-38a9-401c-8108-1cf46bb7fce8 knowledge-os apps/knowledge/build
 # [app-generator:deploy-one] netlify-provision.mjs 在此行上方追加新站
 
 echo "All Life OS sites deployed."

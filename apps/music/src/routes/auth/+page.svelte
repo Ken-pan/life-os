@@ -4,6 +4,7 @@
   import { syncBidirectionalSafe } from '$lib/sync.js';
   import { toast } from '$lib/ui.svelte.js';
   import { t } from '$lib/i18n/index.js';
+  import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group';
 
   let email = $state('');
   let password = $state('');
@@ -41,14 +42,16 @@
   {#if auth.user}
     <section class="settings-block set-group">
       <h3 class="block-title sg-title">{t('auth.signedIn')}</h3>
-      <div class="set-row settings-row" style="display:block">
-        <div class="pref-label">{auth.user.email}</div>
-        <p class="pref-desc">{t('auth.signedInDesc')}</p>
-        <div class="settings-btn-group" style="margin-top:12px">
-          <a class="btn-secondary" href="/settings">{t('auth.goSettings')}</a>
-          <button class="btn-danger" type="button" onclick={onSignOut}>{t('settings.signOut')}</button>
+      <div class="set-row settings-row">
+        <div class="pref-copy">
+          <div class="pref-label">{auth.user.email}</div>
+          <p class="pref-desc">{t('auth.signedInDesc')}</p>
         </div>
       </div>
+      <SettingsButtonGroup>
+        <a class="btn-secondary" href="/settings">{t('auth.goSettings')}</a>
+        <button class="btn-danger" type="button" onclick={onSignOut}>{t('settings.signOut')}</button>
+      </SettingsButtonGroup>
     </section>
   {:else}
     <section class="settings-block set-group">

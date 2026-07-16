@@ -627,6 +627,7 @@ async function buildStatusPayload() {
     queue: obj[QUEUE_KEY] ?? [],
     history: obj[HISTORY_KEY] ?? [],
     snapshot: obj[SNAPSHOT_KEY] ?? null,
+    merchantPending: summarizeMerchantPending(obj[SNAPSHOT_KEY]),
     txnWatermark: obj.fos_txn_watermark ?? null,
     dlq: obj[DLQ_KEY] ?? [],
     rhEnrich: obj[RH_ENRICH_STATE_KEY] ?? null,
@@ -756,10 +757,127 @@ async function openRobinhoodListTab() {
   return { tab: created, navigated: true }
 }
 
+// ---------- 商家订单定向抓取（Amazon / Target / Best Buy 最新订单 → 购买标注） ----------
+
+// Amazon 用 last30 服务端过滤：最新订单一页拿全，不用翻年度列表。
+const MERCHANT_ORDER_URLS = {
+  amazon:
+    'https://www.amazon.com/your-orders/orders?timeFilter=last30&ref_=ppx_yo2ov_dt_b_filter_all_last30',
+  target: 'https://www.target.com/orders',
+  bestbuy: 'https://www.bestbuy.com/purchasehistory/purchases',
+}
+const MERCHANT_ORDER_PAGE_RE = {
+  amazon: /amazon\.com\/(?:your-orders|gp\/css\/order-history)/i,
+  target: /target\.com\/orders/i,
+  bestbuy: /bestbuy\.com\/purchasehistory/i,
+}
+const MERCHANT_CAPTURE_TIMEOUT_MS = 25000
+
+/** 等待某 tab 的 merchantOrders.js 报告抓取完成。 */
+function waitForMerchantCaptured(merchant, tabId, timeoutMs) {
+  return new Promise((resolve) => {
+    let settled = false
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      chrome.runtime.onMessage.removeListener(onMessage)
+      resolve(result)
+    }
+    const onMessage = (m, sender) => {
+      if (m?.type !== 'FOS_MERCHANT_ORDERS_CAPTURED') return
+      if (m.merchant !== merchant) return
+      if (sender.tab?.id !== tabId) return
+      finish({ ok: true, orders: m.orders ?? 0 })
+    }
+    const timer = setTimeout(
+      () => finish({ ok: false, reason: 'timeout' }),
+      timeoutMs,
+    )
+    chrome.runtime.onMessage.addListener(onMessage)
+  })
+}
+
+/**
+ * 打开（或复用）商家订单页后台标签，等 content script 抓到最新订单入队。
+ * 只复用已经停在订单页的标签；用户正在用的普通商家页面绝不劫持。
+ */
+async function fetchMerchantOrdersFor(merchant) {
+  const url = MERCHANT_ORDER_URLS[merchant]
+  if (!url) return { ok: false, reason: 'unknown_merchant' }
+  const host = new URL(url).hostname
+  const tabs = await chrome.tabs.query({ url: `https://${host}/*` })
+  const existing = tabs.find((t) =>
+    MERCHANT_ORDER_PAGE_RE[merchant].test(t.url ?? ''),
+  )
+  let tabId
+  let created = false
+  if (existing?.id != null) {
+    tabId = existing.id
+    const waitPromise = waitForMerchantCaptured(
+      merchant,
+      tabId,
+      MERCHANT_CAPTURE_TIMEOUT_MS,
+    )
+    await safeTabsUpdate(tabId, { url, active: false })
+    return { ...(await waitPromise), tabId, reused: true }
+  }
+  const tab = await safeTabsCreate({ url, active: false })
+  if (tab?.id == null) return { ok: false, reason: 'no_tab' }
+  tabId = tab.id
+  created = true
+  const result = await waitForMerchantCaptured(
+    merchant,
+    tabId,
+    MERCHANT_CAPTURE_TIMEOUT_MS,
+  )
+  if (created) {
+    try {
+      await safeTabsRemove(tabId)
+    } catch {
+      // ignore
+    }
+  }
+  return { ...result, tabId }
+}
+
+/** 快照里的未标注商家交易 → popup 的「新购买待标注」摘要。 */
+function summarizeMerchantPending(snapshot) {
+  const rows = snapshot?.unenrichedMerchantTxns
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  const bySource = {}
+  for (const r of rows) {
+    if (!r?.source) continue
+    bySource[r.source] = (bySource[r.source] ?? 0) + 1
+  }
+  return { total: rows.length, bySource }
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   ;(async () => {
     try {
       switch (msg?.type) {
+        case 'FOS_FETCH_MERCHANT_ORDERS': {
+          const { [SNAPSHOT_KEY]: snap } =
+            await chrome.storage.local.get(SNAPSHOT_KEY)
+          const pending = summarizeMerchantPending(snap)
+          const requested = Array.isArray(msg.merchants)
+            ? msg.merchants.filter((m) => MERCHANT_ORDER_URLS[m])
+            : null
+          // 默认只抓有新购买的商家；快照没有信号时三家都抓。
+          const merchants =
+            requested ??
+            (pending ? Object.keys(pending.bySource) : Object.keys(MERCHANT_ORDER_URLS))
+          const results = {}
+          for (const merchant of merchants) {
+            results[merchant] = await fetchMerchantOrdersFor(merchant)
+          }
+          // 订单 envelope 已入队，让 Finance OS 页面完成匹配与标注。
+          const tab = await focusFinanceOsTab()
+          await nudgeFinanceOsTab(tab)
+          sendResponse({ ok: true, merchants, results })
+          break
+        }
         case 'FOS_ENQUEUE': {
           const capture = msg.capture
           if (!capture?.id) {
@@ -967,6 +1085,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
               url: 'https://app.rocketmoney.com/dashboard',
             })
           }
+          sendResponse({ ok: true })
+          break
+        }
+        case 'FOS_MERCHANT_ORDERS_CAPTURED': {
+          // 定向抓取时由 waitForMerchantCaptured 的临时监听消费；
+          // 被动抓取时到这里只需应答，避免 content script 收到 unknown message。
           sendResponse({ ok: true })
           break
         }

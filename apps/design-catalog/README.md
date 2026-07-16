@@ -109,7 +109,7 @@ Spec：`tests/visual/design-catalog.a11y.spec.ts`（`@a11y` tag）
 
 | 参数       | 值                                                                                                               |
 | ---------- | ---------------------------------------------------------------------------------------------------------------- |
-| `showcase` | tokens, buttons, segments, utilities, modal, primitives, settings, menu, brand, navigation, icon, feedback, toast, cards, explain-panel, command-palette, app-shell |
+| `showcase` | tokens, buttons, segments, utilities, modal, primitives, progress, chips, stat, lists, display, disclosure, charts, settings, menu, overlay, forms, selection, tabs, brand, navigation, icon, feedback, toast, cards, explain-panel, command-palette, app-shell |
 | `app`      | planner, fitness, finance, music                                                                                 |
 | `mode`     | light, dark                                                                                                      |
 | `viewport` | desktop (1440), tablet (768), mobile (390)                                                                       |
@@ -127,6 +127,16 @@ Spec：`tests/visual/design-catalog.a11y.spec.ts`（`@a11y` tag）
 | primitives                     | `@life-os/theme` `.skeleton`/`.spinner`/`.badge`/`.empty-*`/`.life-os-popover` | 共享状态原语（2026-07-15 新增） |
 | settings                       | `@life-os/platform-web/svelte/settings/*`     | P3b `--control-*`；含 ButtonGroup-in-Section 组合护栏 |
 | menu                           | `@life-os/platform-web/svelte/menu`           | 行为组件，外观走 `.life-os-popover`（2026-07-15 新增） |
+| overlay                        | `@life-os/platform-web/svelte/overlay`        | LifeOsSheet / LifeOsDialog 行为组件（2026-07-16 新增） |
+| forms                          | `@life-os/platform-web/svelte/form`           | 受控表单字段（含 SearchField），外观走 theme `.field` 族（2026-07-16 新增） |
+| progress                       | `@life-os/theme` `.progress` 族               | determinate 进度条原语（2026-07-16 新增）  |
+| chips                          | `@life-os/theme` `.chip` 族                   | 静态 + filter（aria-pressed）+ removable（2026-07-16 新增） |
+| stat                           | `@life-os/theme` `.stat` 族                   | KPI 瓦片（label/value/delta/sub），栅格用 `.life-os-grid--kpi`（2026-07-16 新增） |
+| lists                          | `@life-os/theme` `.list` / `.table` 族        | 通用列表行 + 数据表，未来 app 预铺（2026-07-16 新增） |
+| display                        | `@life-os/theme`                              | `.avatar` / `.rating` / `.timeline` / `.breadcrumbs`（2026-07-16 新增） |
+| disclosure                     | `@life-os/theme`                              | `.accordion`（native details）+ `[data-life-os-tooltip]`（2026-07-16 新增） |
+| selection                      | `@life-os/platform-web/svelte/form`           | CheckboxField / RadioGroupField / SliderField，外观走 theme `.checkbox`/`.radio`/`.option-row`/`.slider`（2026-07-16 新增） |
+| tabs                           | `@life-os/platform-web/svelte/tabs`           | LifeOsTabs / LifeOsTabPanel（finance HorizontalTabs 下沉，2026-07-16 新增） |
 | brand / icon                   | `@life-os/platform-web/svelte/brand\|icon`    | 无独立色值                             |
 | navigation                     | `@life-os/platform-web/svelte/navigation/*`   | BackButton + MobileMoreSheet           |
 | feedback                       | `SyncErrorBanner` + `Toast`                   | `--feedback-*`                         |

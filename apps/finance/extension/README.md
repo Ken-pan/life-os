@@ -41,6 +41,30 @@
 | Rocket Money | Transactions | 交易行（日期/商户/类别/金额/pending/平台ID） | 新交易（跳过 pending 与重复） |
 | Fidelity | Portfolio Summary | 左侧账户列表（账户名/账号/全精度余额/分组） | retirement/hsa/brokerage 匹配的账户余额 |
 | Fidelity | Positions | 持仓 + 账户总值（尽力解析） | 持仓快照 + 账户余额 |
+| Amazon | Your Orders（含 last30 过滤页 / 订单详情） | 最新订单（订单号/日期/金额/商品/缩略图/退货态） | `merchant_orders` capture → app 侧匹配交易写 `purchase_enrichment` |
+| Target | /orders（在线 + 门店） | 同上 | 同上 |
+| Best Buy | Purchase History（含订单详情） | 同上 | 同上 |
+
+## 定向抓单 → 购买标注（v0.3.0）
+
+Finance OS 快照会带上**近 45 天未标注的三商家交易**（`unenrichedMerchantTxns`，
+隐私模式不带）。popup 检测到「有新购买待标注」后，点
+「抓取最新订单做购买标注」：
+
+1. background 只对**有新交易的商家**后台开订单页（Amazon 用 `timeFilter=last30`
+   直达最新订单，Target/Best Buy 开列表首页；新开的标签抓完自动关闭，
+   已停在订单页的标签只做复用刷新，绝不劫持普通商家页面）；
+2. `content/merchantOrders.js` 用 `vendor/` 里的 Web State DevTools 解析器
+   （见 [vendor/README.md](vendor/README.md)）抓当前渲染出的订单，
+   入队 `merchant_orders` envelope —— 只抓最新一两页，全量历史仍走 WST harvest；
+3. 打开 Finance OS 后，`ExtensionSyncBridge` 调 `planMerchantOrderEnrichment`
+   （finance-core）按金额差/日期差挑**最 match** 的订单，默认只落 high 置信，
+   已标注交易与已占用订单一律跳过（幂等），写入 `purchase_enrichment`，
+   History 页即可看到商品明细。
+
+用户自己浏览三家订单页时也会被动抓取，效果相同。
+前提：Chrome 已登录对应商家；app 侧需要部署了 `merchant_orders` 协议的
+Finance OS（旧版页面会把该 envelope 忽略进 DLQ，不会误写）。
 
 ## 安装
 

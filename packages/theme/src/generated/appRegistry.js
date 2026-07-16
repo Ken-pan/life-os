@@ -4,7 +4,7 @@
  * 改 manifest 后运行 npm run build:app-registry。
  */
 
-/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'home' | 'portal' | 'aios'} LifeOsAppId */
+/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'home' | 'portal' | 'aios' | 'knowledge'} LifeOsAppId */
 
 /**
  * @type {Record<LifeOsAppId, {
@@ -179,6 +179,28 @@ export const LIFE_OS_SITE_META = {
     appleTouchIcon: "/apple-touch-icon.png",
     categories: ["utilities"],
   },
+  knowledge: {
+    id: "knowledge",
+    name: "KNOWLEDGE.OS",
+    shortName: "KNOWLEDGE",
+    description: {
+      zh: "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
+      en: "Second brain · capture, connect, recall — the long-term memory layer of Life OS",
+    },
+    themeColor: {
+      light: "#f7f6f2",
+      dark: "#101017",
+    },
+    defaultTheme: "auto",
+    locale: "zh-CN",
+    storageKey: "knowledgeos_v1",
+    storageKind: "nested",
+    settingsThemePath: ["settings","theme"],
+    favicon: {"id":"app-favicon","light":"/favicon-32.png","dark":"/favicon-32.png"},
+    manifest: "/manifest.webmanifest",
+    appleTouchIcon: "/apple-touch-icon.png",
+    categories: ["productivity"],
+  },
 }
 
 /** @type {Record<LifeOsAppId, { production: string; devPort: number }>} */
@@ -190,6 +212,7 @@ export const LIFE_OS_APP_ORIGINS = {
   home: { production: "https://home.kenos.space", devPort: 5196 },
   portal: { production: "https://portal.kenos.space", devPort: 5195 },
   aios: { production: "https://aios.kenos.space", devPort: 5197 },
+  knowledge: { production: "https://knowledge.kenos.space", devPort: 5879 },
 }
 
 /**
@@ -202,6 +225,7 @@ export const LIFE_OS_SWITCHER_APPS = [
   { id: "fitness" },
   { id: "music" },
   { id: "home", experimental: true },
+  { id: "knowledge", experimental: true },
   { id: "aios", experimental: true },
 ]
 
@@ -214,6 +238,7 @@ export const LIFE_OS_APP_WORDMARK_ACCENT = {
   home: { light: "#7d93a8", dark: "#7d93a8" },
   portal: { light: "#3d9ed6", dark: "#5cb8ea" },
   aios: { light: "#5d5d5d", dark: "#b4b4b4" },
+  knowledge: { light: "#4d55c7", dark: "#9aa2ff" },
 }
 
 /** wordmark 主体覆盖（缺省 = shortName） @type {Partial<Record<LifeOsAppId, string>>} */
@@ -332,6 +357,20 @@ export const LIFE_OS_PWA_APPS = {
     waitSelector: ".app-shell",
     nestedWrapInMain: true,
     routes: [{"path":"/","name":"chat"},{"path":"/history","name":"history"},{"path":"/settings","name":"settings"}],
+    clipPaths: ["/"],
+    scrollQaPath: "/settings",
+    production: false,
+    pwaTestEnabled: true,
+  },
+  knowledge: {
+    id: "knowledge",
+    name: "KNOWLEDGE.OS",
+    workspace: "knowledge-os",
+    port: 5879,
+    shellType: "main-wrap-main",
+    waitSelector: ".app-shell",
+    nestedWrapInMain: true,
+    routes: [{"path":"/","name":"inbox"},{"path":"/library","name":"library"},{"path":"/timeline","name":"timeline"},{"path":"/settings","name":"settings"}],
     clipPaths: ["/"],
     scrollQaPath: "/settings",
     production: false,

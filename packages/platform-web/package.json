@@ -5,7 +5,7 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs && node scripts/chartUtils.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
@@ -121,6 +121,26 @@
       "svelte": "./src/svelte/menu/Menu.svelte",
       "default": "./src/svelte/menu/Menu.svelte"
     },
+    "./svelte/overlay": {
+      "types": "./src/svelte/overlay/index.d.ts",
+      "svelte": "./src/svelte/overlay/index.js",
+      "default": "./src/svelte/overlay/index.js"
+    },
+    "./svelte/tabs": {
+      "types": "./src/svelte/tabs/index.d.ts",
+      "svelte": "./src/svelte/tabs/index.js",
+      "default": "./src/svelte/tabs/index.js"
+    },
+    "./svelte/form": {
+      "types": "./src/svelte/form/index.d.ts",
+      "svelte": "./src/svelte/form/index.js",
+      "default": "./src/svelte/form/index.js"
+    },
+    "./svelte/status": {
+      "types": "./src/svelte/status/index.d.ts",
+      "svelte": "./src/svelte/status/index.js",
+      "default": "./src/svelte/status/index.js"
+    },
     "./svelte/toast": {
       "svelte": "./src/svelte/toast/Toast.svelte",
       "default": "./src/svelte/toast/Toast.svelte"
@@ -175,14 +195,17 @@
       "svelte": "./src/svelte/navigation/MobileMoreSheet.svelte",
       "default": "./src/svelte/navigation/MobileMoreSheet.svelte"
     },
+    "./svelte/navigation/bottom-nav": {
+      "svelte": "./src/svelte/navigation/LifeOsBottomNav.svelte",
+      "default": "./src/svelte/navigation/LifeOsBottomNav.svelte"
+    },
+    "./svelte/navigation/side-nav": {
+      "svelte": "./src/svelte/navigation/LifeOsSideNav.svelte",
+      "default": "./src/svelte/navigation/LifeOsSideNav.svelte"
+    },
     "./svelte/card": {
       "import": "./src/svelte/card/index.js",
       "svelte": "./src/svelte/card/index.js"
-    },
-    "./svelte/charts": {
-      "types": "./src/svelte/charts/index.d.ts",
-      "svelte": "./src/svelte/charts/index.js",
-      "default": "./src/svelte/charts/index.js"
     },
     "./pwa/basic-sw": {
       "import": "./src/pwa/basicSwPlugin.mjs"

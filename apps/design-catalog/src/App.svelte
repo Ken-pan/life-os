@@ -24,18 +24,36 @@
   import AppShellShowcase from './showcases/AppShellShowcase.svelte'
   import PrimitivesShowcase from './showcases/PrimitivesShowcase.svelte'
   import MenuShowcase from './showcases/MenuShowcase.svelte'
+  import OverlayShowcase from './showcases/OverlayShowcase.svelte'
+  import FormsShowcase from './showcases/FormsShowcase.svelte'
+  import ProgressShowcase from './showcases/ProgressShowcase.svelte'
+  import ChipsShowcase from './showcases/ChipsShowcase.svelte'
+  import StatShowcase from './showcases/StatShowcase.svelte'
+  import SelectionShowcase from './showcases/SelectionShowcase.svelte'
+  import TabsShowcase from './showcases/TabsShowcase.svelte'
+  import ListsShowcase from './showcases/ListsShowcase.svelte'
+  import DisplayShowcase from './showcases/DisplayShowcase.svelte'
+  import DisclosureShowcase from './showcases/DisclosureShowcase.svelte'
 
-  import ChartsShowcase from './showcases/ChartsShowcase.svelte'
   const pages = {
-    charts: ChartsShowcase,
     tokens: TokensShowcase,
     buttons: ButtonsShowcase,
     segments: SegmentsShowcase,
     utilities: UtilitiesShowcase,
     modal: ModalShowcase,
     primitives: PrimitivesShowcase,
+    progress: ProgressShowcase,
+    chips: ChipsShowcase,
+    stat: StatShowcase,
+    lists: ListsShowcase,
+    display: DisplayShowcase,
+    disclosure: DisclosureShowcase,
     settings: SettingsShowcase,
     menu: MenuShowcase,
+    overlay: OverlayShowcase,
+    forms: FormsShowcase,
+    selection: SelectionShowcase,
+    tabs: TabsShowcase,
     brand: BrandShowcase,
     navigation: NavigationShowcase,
     icon: IconShowcase,
@@ -219,7 +237,7 @@
 
   .catalog-embed {
     min-height: 100vh;
-    background: var(--bg, #eceae6);
+    background: var(--bg);
   }
 
   .catalog-app {
@@ -252,18 +270,18 @@
 
   .catalog-nav__head h1 {
     margin: 0;
-    font-size: 18px;
+    font-size: var(--text-2xl);
   }
 
   .catalog-nav__head p {
     margin: 4px 0 16px;
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: var(--catalog-chrome-text-muted);
   }
 
   .catalog-nav__group {
     margin: 16px 8px 6px;
-    font-size: 11px;
+    font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--catalog-chrome-text-subtle);
@@ -279,7 +297,7 @@
     padding: 8px 10px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--text-base);
   }
 
   .catalog-nav__link:hover {
@@ -288,7 +306,7 @@
 
   .catalog-nav__link--active {
     background: var(--catalog-chrome-surface-active);
-    color: #fff;
+    color: var(--catalog-chrome-text);
   }
 
   .catalog-main {

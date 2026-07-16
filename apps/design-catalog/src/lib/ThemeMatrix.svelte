@@ -91,7 +91,7 @@
     background: var(--catalog-chrome-surface);
     border-bottom: 1px solid var(--catalog-chrome-border);
     color: var(--catalog-chrome-text);
-    font-size: 13px;
+    font-size: var(--text-md);
   }
 
   .theme-matrix label {

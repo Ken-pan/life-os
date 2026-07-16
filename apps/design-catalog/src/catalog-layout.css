@@ -99,8 +99,9 @@
   transform: none;
   opacity: 1;
   pointer-events: auto;
-  width: 100%;
-  max-width: 100%;
+  /* 按生产形态展示：width:max-content + max-width 上限，别拉满预览框 */
+  width: max-content;
+  max-width: min(100%, var(--toast-max-width));
   margin-top: var(--space-2);
 }
 
@@ -131,6 +132,30 @@
   /* 预览框内不做背景模糊：blur 在不同 GPU 上像素级不稳，会让基线抖动 */
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+/* Inline bottom-sheet fixture — theme .sheet-bg 是 position: fixed，收容进预览框 */
+.catalog-doc-preview--bottom-sheet {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg, var(--surface-1));
+}
+
+.catalog-doc-preview--bottom-sheet .sheet-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /* 预览框统一贴底展示（desktop 断点会把 .sheet-bg 改居中） */
+  align-items: flex-end;
+  /* 预览框内不做背景模糊：blur 在不同 GPU 上像素级不稳，会让基线抖动 */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.catalog-doc-preview--bottom-sheet .sheet {
+  max-height: 88%;
 }
 
 /* Inline mobile sheet fixture for catalog screenshots */
@@ -350,7 +375,7 @@
 
 .catalog-cp-empty-fixture .cp-search-icon {
   color: var(--t3, var(--text-muted));
-  font-size: 18px;
+  font-size: var(--text-2xl);
   line-height: 1;
 }
 

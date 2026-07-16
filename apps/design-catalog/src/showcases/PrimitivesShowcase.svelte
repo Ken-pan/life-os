@@ -1,4 +1,5 @@
 <script>
+  import { EmptyState, ErrorState } from '@life-os/platform-web/svelte/status'
   import CatalogStateBlock from '../lib/CatalogStateBlock.svelte'
 </script>
 
@@ -41,19 +42,38 @@
       </div>
     </CatalogStateBlock>
 
-    <CatalogStateBlock stateId="empty" label="Empty state">
-      <div class="empty">
-        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-          <rect x="3" y="7" width="18" height="13" rx="2" />
-          <path d="M3 11h18M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-        </svg>
-        <h3 class="empty-title">还没有任何记录</h3>
-        <p class="empty-desc">导入数据或创建第一条记录后，这里会展示你的内容。</p>
-        <div class="empty-actions">
+    <CatalogStateBlock stateId="empty" label="Empty state（EmptyState 组件）">
+      <EmptyState
+        title="还没有任何记录"
+        description="导入数据或创建第一条记录后，这里会展示你的内容。"
+      >
+        {#snippet media()}
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="3" y="7" width="18" height="13" rx="2" />
+            <path d="M3 11h18M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+          </svg>
+        {/snippet}
+        {#snippet actions()}
           <button type="button" class="btn-primary">新建记录</button>
           <button type="button" class="btn-secondary">导入</button>
-        </div>
-      </div>
+        {/snippet}
+      </EmptyState>
+    </CatalogStateBlock>
+
+    <CatalogStateBlock stateId="error" label="Error state（ErrorState 组件）">
+      <ErrorState
+        title="同步失败"
+        description="网络不可达，稍后可以重试；本地改动不会丢失。"
+        retryLabel="重试"
+        onRetry={() => {}}
+      >
+        {#snippet media()}
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 8v5M12 16.5v.5" />
+          </svg>
+        {/snippet}
+      </ErrorState>
     </CatalogStateBlock>
 
     <CatalogStateBlock stateId="detail:popover" label="Popover 面板基座（静态外观）">

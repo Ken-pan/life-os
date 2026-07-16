@@ -1,0 +1,38 @@
+# KNOWLEDGE.OS — 第二大脑 · Life OS 的长期记忆层
+
+> 2026-07-16 用当日补全的设计系统地基（22+ theme 原语 / 12 表单组件）经
+> `create-life-os-app` + `promote-life-os-app` 管线搭出。端口 5879，
+> workspace `knowledge-os`，品牌 indigo（`design-tokens/tokens/brands/knowledge.json`）。
+
+## v1 已实现（本地优先，零后端）
+
+| 视图 | 能力 | 用到的设计系统件 |
+| --- | --- | --- |
+| 收集箱 `/` | 快速收集（首行为题、`#标签`自动抽取、纯 URL 识别为链接、⌘Enter 提交）；.md/.txt 拖放导入；概览 | `.stat` / `.kbd` / `.divider` / `.dropzone` / `.list` / EmptyState |
+| 知识库 `/library` | 实时全文检索（题/正文/URL/标签）+ 标签 filter chips（多选交集）+ 置顶排序 | `SearchField` / `button.chip` / `.list` / LifeOsSheet 编辑（TextField/TextareaField） |
+| 时间线 `/timeline` | 按天分组回看，节点色区分类型（笔记/链接/摘录） | `.timeline` / `.divider` / `.chip.tag` |
+| 设置 `/settings` | 主题/语言（starter 基座）+ JSON 导出/按 id 合并导入 | `.seg` / `.badge` |
+
+数据模型：`KItem { id, type: note|link|clip, title, body, url, tags[], pinned, createdAt, updatedAt }`，
+localStorage key `knowledgeos_v1`（`createSettingsPersistence`）。
+
+## 路线图（KnowledgeOS 愿景 → 阶段化）
+
+1. **云同步**：接 `@life-os/sync` 统一 Supabase（LWW + 墓碑，同 aios 模式），登录即用。
+2. **Understand**：接本地 AI 网关（llama-swap）做自动摘要 / 自动标签 / embedding。
+3. **Recall / Knowledge Chat**：语义检索 + 「问自己的知识库」（引用溯源）。
+4. **Graph**：实体-关系图（catalog 已有 charts/mindmap 可视件可复用）。
+5. **跨 OS 引用**：Planner 任务 / HomeOS 物品 / Finance 保修 → 引用 knowledge 条目，
+   KnowledgeOS 成为全 Life OS 唯一 Knowledge Layer。
+6. **Collections / Evolution**：AI 自动合集、知识过期与缺口提醒。
+
+## 命令
+
+```bash
+npm exec --workspace knowledge-os -- vite dev   # 或 preview_start "knowledge"（端口 5879）
+npm run build -w knowledge-os
+npm run check -w knowledge-os
+```
+
+Day-2（尚未做）：品牌图标 `generate-life-os-brand-icons.py --bootstrap knowledge`、
+Netlify 供给 `netlify-provision.mjs knowledge`、上线后 manifest `production: true`。

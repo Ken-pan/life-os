@@ -1,34 +1,19 @@
 <script>
+  // 薄封装：共享 LifeOsBottomNav 骨架 + aios 的 IA/active 判定。
   import { page } from '$app/state'
-  import Icon from '@life-os/platform-web/svelte/icon'
+  import LifeOsBottomNav from '@life-os/platform-web/svelte/navigation/bottom-nav'
   import { t } from '$lib/i18n/index.js'
 
-  const items = $derived([
-    { href: '/', icon: 'chat', label: t('nav.chat') },
-    { href: '/history', icon: 'history', label: t('nav.history') },
-    { href: '/settings', icon: 'settings', label: t('nav.settings') },
-  ])
+  const isActive = (href) =>
+    href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href)
 
-  const isActive = (item) =>
-    item.href === '/'
-      ? page.url.pathname === '/'
-      : page.url.pathname.startsWith(item.href)
+  const items = $derived(
+    [
+      { href: '/', icon: 'chat', label: t('nav.chat') },
+      { href: '/history', icon: 'history', label: t('nav.history') },
+      { href: '/settings', icon: 'settings', label: t('nav.settings') },
+    ].map((item) => ({ ...item, active: isActive(item.href) })),
+  )
 </script>
 
-<nav class="nav bottom-nav" aria-label={t('nav.mainAria')}>
-  <div class="nav-inner">
-    {#each items as item (item.href)}
-      <a
-        class="nav-item"
-        class:on={isActive(item)}
-        href={item.href}
-        data-sveltekit-noscroll
-        aria-current={isActive(item) ? 'page' : undefined}
-        aria-label={item.label}
-      >
-        <Icon name={item.icon} size={21} strokeWidth={1.5} />
-        <span class="nav-lbl">{item.label}</span>
-      </a>
-    {/each}
-  </div>
-</nav>
+<LifeOsBottomNav {items} ariaLabel={t('nav.mainAria')} navClass="bottom-nav" />

@@ -21,6 +21,7 @@
 
 ;(() => {
   const {
+    extAlive,
     parseMoney,
     parseAbbrevMoney,
     monthDayToISO,
@@ -45,12 +46,16 @@
   }
 
   async function loadAppSnapshot() {
+    // 孤儿脚本（扩展已重载）时 chrome.storage 为 undefined，直接读会抛
+    // "Cannot read properties of undefined (reading 'local')"。
+    if (!extAlive()) return null
     const { fos_app_snapshot: snap } =
       await chrome.storage.local.get('fos_app_snapshot')
     return snap?.v === 1 ? snap : null
   }
 
   async function loadScrollStopBefore() {
+    if (!extAlive()) return null
     const [{ fos_txn_watermark: watermark }, snap] = await Promise.all([
       chrome.storage.local.get('fos_txn_watermark'),
       loadAppSnapshot(),
@@ -612,6 +617,7 @@
       clampProgress(options.progress) ??
       CRAWL_PHASE_PROGRESS[phase] ??
       CRAWL_PHASE_PROGRESS.starting
+    if (!extAlive()) return
     void chrome.storage.local.set({
       fos_crawl_state: {
         v: 1,

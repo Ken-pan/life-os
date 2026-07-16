@@ -2,6 +2,25 @@
 
 `@life-os/theme` 是全线 Web 应用（Planner / Fitness / Finance / Music / Portal / Home / AIOS，+ starter 模板与 design-catalog）的 **Web CSS 与设计 token** 包。
 
+## 组件选型决策表（要做 X → 用 Y，别自己写）
+
+| 要做的事                     | 用这个                                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| 底部弹层 / 居中确认框        | `@life-os/platform-web/svelte/overlay` → `LifeOsSheet` / `LifeOsDialog`（行为内置）      |
+| 表单字段（文本/数字/下拉/日期） | `@life-os/platform-web/svelte/form` → `TextField` 等六件；错误/提示/label-for 内置     |
+| 空列表 / 加载失败画面        | `@life-os/platform-web/svelte/status` → `EmptyState` / `ErrorState`                      |
+| 移动底栏 / 桌面侧栏          | `@life-os/platform-web/svelte/navigation/bottom-nav` / `side-nav`（IA/active 留 app）    |
+| 顶栏 / 返回                  | `@life-os/platform-web/svelte/app-bar` → `LifeOsAppBar`                                  |
+| 下拉菜单                     | `@life-os/platform-web/svelte/menu` → `Menu`                                             |
+| 设置页行/开关/分组           | `@life-os/platform-web/svelte/settings/*`                                                |
+| 卡片                         | `@life-os/platform-web/svelte/card`                                                      |
+| Toast / Banner               | `@life-os/platform-web/svelte/toast` + theme `.banner`                                   |
+| 图表配色/网格/轴/tooltip     | token：`--chart-grid` / `--chart-axis` / `--chart-tooltip-*` / `--chart-line*` / 语义色  |
+| 品牌色                       | `packages/design-tokens/tokens/brands/<app>.json` → `npm run build:tokens`，**不手写**   |
+| 新 app                       | `node scripts/create-life-os-app.mjs` + `promote-life-os-app.mjs`（全注册表接线）        |
+
+新增 catalog showcase 的四处注册由 `npm run check:design-catalog-registry` 机器对账（进 CI）。
+
 > **边界**：theme 是 **web-only** 层，**不依赖** `@life-os/contracts`。跨 Surface 产品语义见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) 与 [`../../docs/architecture/contracts.md`](../../docs/architecture/contracts.md)。Future iOS native 使用 SwiftUI DesignTokens（映射 token 命名，不 import 本包 CSS）。
 
 ## 安装
@@ -42,6 +61,7 @@
 | `portrait-gate.css` | 移动端横屏提示门                                                                       |
 | `utilities.css`     | `.life-os-pad-inline` / `.life-os-scroll-x*` 等工具类（`@layer life-os.utilities`）    |
 | `app-themes.css`    | 品牌主题聚合（re-export `generated/app-themes.css`，真源在 design-tokens）             |
+| `reduced-transparency.css` | `prefers-reduced-transparency` 降级：chrome 转不透明 + 全局关 backdrop-filter（不进 @layer，特异度压过 brand CSS） |
 | `design-system.css` | 上述全部 `@import`（music 播放器壳 2026-07-14 已迁回 `apps/music`）                    |
 
 ## 各 App 职责
@@ -61,7 +81,7 @@
 | 分段  | `seg.css`                             | `.seg`、`.seg-scroll`、`.seg-chips` / `.seg-track` 修饰符    |
 | 设置  | `settings-ext.css` + `components.css` | 设置页网格、分组卡片、toggle                                 |
 | Modal | `modal.css`                           | 居中对话框壳；领域内容（如 Fitness 重量 stepper）留各 app    |
-| 组件  | `components.css`                      | 按钮、Sheet、Toast（`--toast-*` token）、Banner、状态原语（`.skeleton` / `.spinner` / `.badge` / `.empty-*`）、`.life-os-popover` 面板基座（行为组件：platform-web `svelte/menu`） |
+| 组件  | `components.css`                      | 按钮、Sheet、Toast（`--toast-*` token）、Banner、状态原语（`.skeleton` / `.spinner` / `.badge` / `.empty-*`）、`.life-os-popover` 面板基座（行为组件：platform-web `svelte/menu`）、进度条 `.progress`（含 `--indeterminate`）、选择控件 `.checkbox` / `.radio` / `.option-row` / `.slider` / `.stepper`、页签 `.tabs` / `.tab`（行为：platform-web `svelte/tabs`）、搜索框 `.field-search`、图标按钮 `.icon-btn`、KPI 瓦片 `.stat`、chip 交互态 `button.chip` / `.chip__remove` / `.chip-row`、头像 `.avatar`（组叠 `.avatar-group`）、数据表 `.table` / `.table-wrap`、列表 `.list` / `.list-item`、手风琴 `.accordion`、时间线 `.timeline`、面包屑 `.breadcrumbs`、星级 `.rating`、悬停提示 `[data-life-os-tooltip]`、向导步骤 `.steps`、页码 `.pagination`、拖放区 `.dropzone`、键帽 `.kbd`、分隔线 `.divider` |
 | 品牌  | 各 app `:root`                        | 色板、图表色、Finance `--primary` / Fitness `--text-hero` 等 |
 
 ### 圆角阶梯（2026-07-15 起）
@@ -92,7 +112,8 @@
 
 ### Toast token
 
-各 app 可通过 `:root` 覆盖 `--toast-radius`、`--toast-bg`、`--toast-border`、`--toast-font`；Fitness focus 视图抬高位置保留在 app 层 override。
+**2026-07-16 重做**：toast 默认为**中性浮层卡片**（`--card` 底 / `--border-l` 边 / `--radius-lg` 12px / 深色模式抬 `--card-h`），tone 由 `.toast-dot` 语义色圆点表达（success/error/warn/info → `--feedback-*`），不再整条 tint 底 + pill。
+各 app 仍可通过 `:root` 覆盖 `--toast-radius`、`--toast-bg`、`--toast-border`、`--toast-font`（music 的旧 tint 覆盖已删，走默认）；Fitness focus 视图抬高位置保留在 app 层 override。
 
 ### iOS / Safari 集成清单
 

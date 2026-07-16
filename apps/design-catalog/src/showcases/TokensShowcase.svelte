@@ -33,11 +33,11 @@
   }
   .catalog-section__title {
     margin: 0 0 8px;
-    font-size: 22px;
+    font-size: var(--text-2xl);
   }
   .catalog-section__desc {
     margin: 0 0 20px;
     color: var(--t3, var(--text-muted));
-    font-size: 14px;
+    font-size: var(--text-base);
   }
 </style>

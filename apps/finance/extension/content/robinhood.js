@@ -2,7 +2,8 @@
 // 缺失详情时由 background 复用已有 tab 批量补齐后再入队。
 
 ;(() => {
-  const { makeEnvelope, enqueue, captureWhenStable, onUrlChange } = window.FOS
+  const { extAlive, makeEnvelope, enqueue, captureWhenStable, onUrlChange } =
+    window.FOS
   const FOS_RH = window.FOS_RH
   const RH = window.RH_PROBES
   if (!FOS_RH || !RH) {
@@ -12,12 +13,14 @@
   const RH_DETAILS_KEY = FOS_RH.RH_DETAILS_KEY
 
   async function loadCachedDetails() {
+    // 孤儿脚本（扩展已重载）时 chrome.storage 为 undefined，见 common.js extAlive。
+    if (!extAlive()) return {}
     const obj = await chrome.storage.local.get(RH_DETAILS_KEY)
     return obj[RH_DETAILS_KEY] ?? {}
   }
 
   async function savePositionDetail(detail) {
-    if (!detail?.ticker) return null
+    if (!detail?.ticker || !extAlive()) return null
     const cache = await loadCachedDetails()
     const key = String(detail.ticker).trim().toUpperCase()
     cache[key] = {
@@ -55,7 +58,7 @@
     const tickers = merged.map((p) => p.ticker)
     const stale = FOS_RH.tickersNeedingEnrich(tickers, cache)
     await enqueue(makeEnvelope('robinhood', 'holdings', holdingsPayload))
-    if (stale.length > 0) {
+    if (stale.length > 0 && extAlive()) {
       chrome.runtime.sendMessage({
         type: 'FOS_RH_START_ENRICH',
         tickers: stale,

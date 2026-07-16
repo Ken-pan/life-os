@@ -17,7 +17,10 @@ if (!args.includes("--source")) {
   args.unshift("--source", "amazon");
 }
 
-const result = spawnSync(process.execPath, [path.join(__dirname, "link-purchase-orders.mjs"), ...args], {
+// link-purchase-orders 引用 finance-core 的无扩展名 TS 导入，须经 vite-node 运行。
+const viteNode = path.resolve(__dirname, "../../../node_modules/.bin/vite-node");
+const result = spawnSync(viteNode, [path.join(__dirname, "link-purchase-orders.mjs"), "--", ...args], {
   stdio: "inherit",
+  cwd: path.resolve(__dirname, ".."),
 });
 process.exit(result.status ?? 1);

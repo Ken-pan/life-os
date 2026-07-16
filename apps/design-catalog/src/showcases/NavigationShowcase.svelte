@@ -52,6 +52,6 @@
   }
   .catalog-section__title {
     margin: 0 0 20px;
-    font-size: 22px;
+    font-size: var(--text-2xl);
   }
 </style>

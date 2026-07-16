@@ -2,13 +2,20 @@ const SOURCE_LABEL = {
   robinhood: 'Robinhood',
   rocketmoney: 'Rocket Money',
   fidelity: 'Fidelity',
+  amazon: 'Amazon',
+  target: 'Target',
+  bestbuy: 'Best Buy',
 }
 const KIND_LABEL = {
   holdings: '持仓快照',
   accounts: '账户余额',
   transactions: '交易流水',
   recurring: '订阅账单',
+  merchant_orders: '商家订单',
 }
+
+/** 定向抓单进行中：暂停用快照覆盖 merchant-orders-state 的进度文案。 */
+let merchantFetchRunning = false
 
 function fmtTime(iso) {
   if (!iso) return ''
@@ -22,6 +29,8 @@ function summarize(capture) {
   if (capture.kind === 'accounts') return `${(d.accounts ?? []).length} 组余额`
   if (capture.kind === 'transactions') return `${(d.rows ?? []).length} 笔交易`
   if (capture.kind === 'recurring') return `${(d.rows ?? []).length} 项订阅`
+  if (capture.kind === 'merchant_orders')
+    return `${(d.orders ?? []).length} 个订单`
   return ''
 }
 
@@ -460,6 +469,20 @@ async function renderSnapshotPlan(snapshot, txnWatermark) {
     `<div class="meta">下次抓取会跳过已在 app 的余额/订阅/交易</div>`
 }
 
+/** 「新购买待标注」提示（数据来自 app 快照 unenrichedMerchantTxns）。 */
+function renderMerchantPending(pending) {
+  const el = document.getElementById('merchant-orders-state')
+  if (!el || merchantFetchRunning) return
+  if (!pending || pending.total === 0) {
+    el.textContent = ''
+    return
+  }
+  const parts = Object.entries(pending.bySource).map(
+    ([source, n]) => `${SOURCE_LABEL[source] ?? source} ${n} 笔`,
+  )
+  el.textContent = `检测到 ${pending.total} 笔新购买待标注：${parts.join(' · ')}`
+}
+
 async function refresh() {
   const res = await chrome.runtime.sendMessage({ type: 'FOS_STATUS' })
   if (!res?.ok) return
@@ -468,6 +491,7 @@ async function refresh() {
   const dlq = res.dlq ?? []
   await renderCrawlState(queue)
   renderRhEnrichState(res.rhEnrich, res.rhDetailsCount ?? 0)
+  renderMerchantPending(res.merchantPending)
   await renderSnapshotPlan(res.snapshot, res.txnWatermark)
   renderSyncHealth(res.lastSync, inFlight, queue.length, dlq.length)
   renderInFlightList(inFlight)
@@ -588,6 +612,41 @@ document
     }
     await refresh()
     if (btn) btn.disabled = false
+  })
+
+document
+  .getElementById('fetch-merchant-orders')
+  ?.addEventListener('click', async () => {
+    const btn = document.getElementById('fetch-merchant-orders')
+    const el = document.getElementById('merchant-orders-state')
+    if (btn) btn.disabled = true
+    merchantFetchRunning = true
+    if (el)
+      el.textContent =
+        '后台打开商家订单页抓取最新订单…（需已登录 Amazon/Target/Best Buy）'
+    try {
+      const res = await chrome.runtime.sendMessage({
+        type: 'FOS_FETCH_MERCHANT_ORDERS',
+      })
+      if (el) {
+        if (!res?.ok) {
+          el.textContent = `抓取失败：${res?.error ?? '未知错误'}`
+        } else {
+          const parts = Object.entries(res.results ?? {}).map(([m, r]) =>
+            r?.ok
+              ? `${SOURCE_LABEL[m] ?? m} ${r.orders} 单`
+              : `${SOURCE_LABEL[m] ?? m} 失败(${r?.reason ?? '超时'}，可能未登录)`,
+          )
+          el.textContent =
+            `已入队：${parts.join(' · ')}。` +
+            '打开 Finance OS 页面完成匹配与标注。'
+        }
+      }
+    } finally {
+      merchantFetchRunning = false
+      if (btn) btn.disabled = false
+      await refresh()
+    }
   })
 
 document.getElementById('download-log').addEventListener('click', async () => {

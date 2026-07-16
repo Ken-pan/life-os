@@ -4,6 +4,25 @@
 ;(() => {
   if (window.FOS) return
 
+  // 扩展重载/更新后，残留在页面里的旧 content script 会失去 chrome.runtime 与
+  // chrome.storage（孤儿脚本），任何 chrome.* 访问都会抛
+  // "Cannot read properties of undefined"。与 bridge.js 的 extAlive 同一手法：
+  // 所有触碰 chrome.* 的入口先检查，孤儿态静默停止，提示用户刷新页面。
+  let orphanNotified = false
+  function extAlive() {
+    let alive = false
+    try {
+      alive = !!chrome.runtime?.id && !!chrome.storage?.local
+    } catch {
+      alive = false
+    }
+    if (!alive && !orphanNotified) {
+      orphanNotified = true
+      console.info('[FOS] 扩展已重载/更新，本页旧脚本停止抓取；刷新页面恢复。')
+    }
+    return alive
+  }
+
   /** "$1,234.56" / "-$7,104" / "+$5.60" → 数值；解析失败返回 null。 */
   function parseMoney(text) {
     if (!text) return null
@@ -126,11 +145,17 @@
     }
   }
 
-  function enqueue(envelope) {
-    return chrome.runtime.sendMessage({
-      type: 'FOS_ENQUEUE',
-      capture: envelope,
-    })
+  async function enqueue(envelope) {
+    if (!extAlive()) return null
+    try {
+      return await chrome.runtime.sendMessage({
+        type: 'FOS_ENQUEUE',
+        capture: envelope,
+      })
+    } catch (e) {
+      console.debug('[FOS] sendMessage 失败 — 扩展可能已重载，请刷新本页', e)
+      return null
+    }
   }
 
   /**
@@ -175,6 +200,10 @@
 
     const evaluate = () => {
       if (cancelled) return
+      if (!extAlive()) {
+        cancel() // 孤儿脚本：断开 observer，不再触发任何 capture
+        return
+      }
       lastEvalAt = Date.now()
       let result
       try {
@@ -320,6 +349,7 @@
   }
 
   window.FOS = {
+    extAlive,
     parseMoney,
     parseAbbrevMoney,
     parseShares,

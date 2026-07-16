@@ -1,0 +1,31 @@
+/*
+  prefers-reduced-transparency 降级层（iOS「降低透明度」/ macOS Reduce transparency）。
+
+  两件事：
+  1. 半透明 chrome（AppBar / 底栏 / --chrome-frost 磨砂配方）转不透明纯色；
+  2. 全局关掉 backdrop-filter —— 含 app 层玻璃质感（home glass 等），
+     所以用 * + !important 作 kill-switch（该媒体特性下这是标准做法）。
+
+  注意：本文件**不进 @layer**（design-system.css 里 layered 的样式会被任何
+  未分层 app/brand CSS 覆盖）；对 --appbar-bg / --nav-bg 的覆盖用
+  :root[data-app][data-theme] 抬高特异度，压过 brand CSS 的
+  [data-app='x'][data-theme='dark']（(0,2,0)）。
+
+  未来 prefers-contrast: more 的高对比覆盖也放这一层（同样的特异度手法）。
+*/
+
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  :root[data-app],
+  :root[data-app][data-theme],
+  :root[data-app][data-mode] {
+    --chrome-frost: none;
+    --appbar-bg: var(--bg);
+    --nav-bg: var(--bg-2, var(--bg));
+  }
+
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}

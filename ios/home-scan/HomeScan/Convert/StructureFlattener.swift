@@ -17,30 +17,36 @@ enum StructureFlattener {
         let shotIndex = ShotIndex(shots)
 
         // 门窗宿主要按 surface identifier 找墙,先建索引
+        // 地面高度:取所有地板面的最低 y(整层扫描通常一块地板)。
+        // 物体底面减它 = 离地高度,是叠放关系(桌下柜/柜上电视)的原始证据;
+        // 窗底面减它 = 窗台高(窗下能不能放矮柜的依据)
+        let floorY = structure.floors
+            .map { Double($0.transform.columns.3.y) }
+            .min() ?? 0
+
         var wallIndexById: [UUID: Int] = [:]
         for wall in structure.walls {
             let seg = wallSegment(wall)
             wallIndexById[wall.identifier] = scene.walls.count
             scene.walls.append(
-                FlatScene.WallSeg(a: seg.a, b: seg.b, confidenceLow: wall.confidence == .low)
+                FlatScene.WallSeg(
+                    a: seg.a,
+                    b: seg.b,
+                    heightM: Double(wall.dimensions.y),
+                    confidenceLow: wall.confidence == .low
+                )
             )
         }
 
         for surface in structure.doors {
-            scene.openings.append(opening(surface, kind: .door, wallIndexById: wallIndexById))
+            scene.openings.append(opening(surface, kind: .door, wallIndexById: wallIndexById, floorY: floorY))
         }
         for surface in structure.windows {
-            scene.openings.append(opening(surface, kind: .window, wallIndexById: wallIndexById))
+            scene.openings.append(opening(surface, kind: .window, wallIndexById: wallIndexById, floorY: floorY))
         }
         for surface in structure.openings {
-            scene.openings.append(opening(surface, kind: .opening, wallIndexById: wallIndexById))
+            scene.openings.append(opening(surface, kind: .opening, wallIndexById: wallIndexById, floorY: floorY))
         }
-
-        // 地面高度:取所有地板面的最低 y(整层扫描通常一块地板)。
-        // 物体底面减它 = 离地高度,是叠放关系(桌下柜/柜上电视)的原始证据
-        let floorY = structure.floors
-            .map { Double($0.transform.columns.3.y) }
-            .min() ?? 0
 
         for object in structure.objects {
             let t = object.transform
@@ -120,12 +126,18 @@ enum StructureFlattener {
     private static func opening(
         _ surface: CapturedRoom.Surface,
         kind: FlatScene.OpeningKind,
-        wallIndexById: [UUID: Int]
+        wallIndexById: [UUID: Int],
+        floorY: Double
     ) -> FlatScene.Opening {
-        FlatScene.Opening(
+        // 底边离地 = 中心高 − 半高 − 地面。窗给的是窗台高;门贴地(≈0)
+        let bottomY = Double(surface.transform.columns.3.y)
+            - Double(surface.dimensions.y) / 2
+        return FlatScene.Opening(
             kind: kind,
             center: translation2(surface.transform),
             widthM: Double(surface.dimensions.x),
+            heightM: Double(surface.dimensions.y),
+            elevM: max(0, bottomY - floorY),
             wallIndex: surface.parentIdentifier.flatMap { wallIndexById[$0] }
         )
     }

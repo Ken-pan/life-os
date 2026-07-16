@@ -1,7 +1,10 @@
 <script>
-  import { SUPPORTED_LOCALES } from '@life-os/finance-core/i18n/types'
+  import { SUPPORTED_LOCALES, isAppLocale } from '@life-os/finance-core/i18n/types'
+  import SettingsSection from '@life-os/platform-web/svelte/settings/section'
+  import SettingsRow from '@life-os/platform-web/svelte/settings/row'
+  import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
+  import SettingsToggleRow from '@life-os/platform-web/svelte/settings/toggle-row'
   import { t, locale, setLocale } from '$lib/i18n.svelte.js'
-  import SettingsPrefRow from './SettingsPrefRow.svelte'
 
   /** @typedef {import('../../../lib/themePreference').ThemePreference} ThemePreference */
 
@@ -23,67 +26,56 @@
   /** @type {ThemePreference[]} */
   const THEME_OPTIONS = ['light', 'dark', 'auto']
 
-  /** @param {import('@life-os/finance-core/i18n/types').AppLocale} next */
+  const themeOptions = $derived(
+    THEME_OPTIONS.map((value) => ({
+      value,
+      label: t(
+        value === 'light'
+          ? 'settings.themeLight'
+          : value === 'dark'
+            ? 'settings.themeDark'
+            : 'settings.themeAuto',
+      ),
+    })),
+  )
+
+  /** @param {string} next */
   function pickLocale(next) {
-    setLocale(next)
+    if (isAppLocale(next)) setLocale(next)
+  }
+
+  /** @param {string} value */
+  function pickTheme(value) {
+    if (value === 'light' || value === 'dark' || value === 'auto') {
+      onThemePreferenceChange(value)
+    }
   }
 </script>
 
-<div class="card settings-section" data-testid="settings-appearance">
-  <h3>{title}</h3>
-  <SettingsPrefRow label={t('settings.language')} desc={t('settings.languageDesc')}>
-    <div class="seg" role="group" aria-label={t('settings.language')}>
-      {#each SUPPORTED_LOCALES as opt (opt.value)}
-        <button
-          type="button"
-          class={locale() === opt.value ? 'active' : ''}
-          aria-pressed={locale() === opt.value}
-          onclick={() => pickLocale(opt.value)}
-        >
-          {opt.label}
-        </button>
-      {/each}
-    </div>
-  </SettingsPrefRow>
-  <SettingsPrefRow label={t('settings.theme')} desc={t('settings.themeDesc')}>
-    <div class="seg" role="group" aria-label={t('settings.theme')}>
-      {#each THEME_OPTIONS as value (value)}
-        <button
-          type="button"
-          class={themePreference === value ? 'active' : ''}
-          aria-pressed={themePreference === value}
-          onclick={() => onThemePreferenceChange(value)}
-        >
-          {t(
-            value === 'light'
-              ? 'settings.themeLight'
-              : value === 'dark'
-                ? 'settings.themeDark'
-                : 'settings.themeAuto',
-          )}
-        </button>
-      {/each}
-    </div>
-  </SettingsPrefRow>
+<SettingsSection {title} testId="settings-appearance">
+  <SettingsRow label={t('settings.language')} desc={t('settings.languageDesc')}>
+    <SettingsSegment
+      options={SUPPORTED_LOCALES}
+      value={locale()}
+      onchange={pickLocale}
+      ariaLabel={t('settings.language')}
+    />
+  </SettingsRow>
+  <SettingsRow label={t('settings.theme')} desc={t('settings.themeDesc')}>
+    <SettingsSegment
+      options={themeOptions}
+      value={themePreference}
+      onchange={pickTheme}
+      ariaLabel={t('settings.theme')}
+    />
+  </SettingsRow>
   {#if onLockPortraitOnPhoneChange}
-    <SettingsPrefRow
+    <SettingsToggleRow
       label={t('settings.lockPortraitOnPhone')}
       desc={t('settings.lockPortraitOnPhoneDesc')}
-    >
-      <div
-        class="toggle settings-toggle{lockPortraitOnPhone ? ' on' : ''}"
-        role="switch"
-        aria-checked={lockPortraitOnPhone}
-        aria-label={t('settings.lockPortraitOnPhone')}
-        tabindex="0"
-        onclick={() => onLockPortraitOnPhoneChange(!lockPortraitOnPhone)}
-        onkeydown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            onLockPortraitOnPhoneChange(!lockPortraitOnPhone)
-          }
-        }}
-      ></div>
-    </SettingsPrefRow>
+      checked={lockPortraitOnPhone}
+      ariaLabel={t('settings.lockPortraitOnPhone')}
+      onchange={onLockPortraitOnPhoneChange}
+    />
   {/if}
-</div>
+</SettingsSection>

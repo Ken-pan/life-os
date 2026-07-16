@@ -86,4 +86,5 @@ node scripts/audit-purchase-data.mjs --source all
 finance_expected_occurrences ──trigger──► finance.bill_due ──► Planner
 portal_today_summary ──read──► finance_transactions 月收支
 extension / link-purchase-orders ──► purchase_enrichment ──► History 支出审核 (FINC.PURCHASE.6)
+enrich-latest-purchases（检测新购买 → WST 定向抓单 → 最优匹配 → 标注）──► 同上，一条命令闭环
 ```

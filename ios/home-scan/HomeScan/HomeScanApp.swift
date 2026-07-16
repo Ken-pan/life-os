@@ -3,12 +3,32 @@ import SwiftUI
 @main
 struct HomeScanApp: App {
     @State private var model = AppModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(model)
-                .task { await model.bootstrap() }
+                .task {
+                    // 日志会话先立起来,后面 bootstrap 的失败才有处落
+                    ScanLog.shared.beginSession(kind: "app", env: ScanLog.envSnapshot())
+                    ScanLog.shared.markLaunch()
+                    await model.bootstrap()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    // 进后台视作善终(iOS 随时可能无声回收后台进程,那不是事故);
+                    // 回前台重新立 flag —— 前台死掉才是要追查的崩溃/OOM
+                    switch phase {
+                    case .background:
+                        ScanLog.shared.log("app", "background")
+                        ScanLog.shared.markCleanExit()
+                    case .active:
+                        ScanLog.shared.log("app", "active")
+                        ScanLog.shared.markActive()
+                    default:
+                        break
+                    }
+                }
         }
     }
 }

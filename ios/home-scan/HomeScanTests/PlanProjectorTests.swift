@@ -458,4 +458,56 @@ final class PlanProjectorTests: XCTestCase {
         // scan-payload.js 的校验器复验(scripts/cloud-scan-unit.mjs --swift)。
         try? data.write(to: URL(fileURLWithPath: "/tmp/homescan-mock-payload.json"))
     }
+
+    // MARK: - 纵向实测(2026-07 加法式:吊顶高/窗台高/洞口高)
+
+    func testCeilingHeightIsMedianWallHeight() {
+        var s = baseScene()
+        // 三面 2.5m 标准墙 + 一面 1.2m 半墙:中位数必须不被半墙拽低
+        s.walls[0].heightM = 2.5
+        s.walls[1].heightM = 2.5
+        s.walls[2].heightM = 2.5
+        s.walls[3].heightM = 1.2
+        let p = project(s)
+        XCTAssertEqual(p.meta.ceilingHeightIn ?? 0, 2.5 * 39.3700787, accuracy: 0.2)
+    }
+
+    func testCeilingHeightNilWhenUnknown() {
+        // 墙高全 0(旧扫描/mock)→ 不发,别编造一个 0 英寸的天花板
+        XCTAssertNil(project(baseScene()).meta.ceilingHeightIn)
+    }
+
+    func testWindowSillAndHeight() {
+        var s = baseScene()
+        // 南墙加一扇窗:窗台 0.9m、窗高 1.2m
+        s.openings.append(
+            .init(kind: .window, center: SIMD2(2.5, 3), widthM: 1.0,
+                  heightM: 1.2, elevM: 0.9, wallIndex: 2)
+        )
+        let p = project(s)
+        let win = p.graphOpenings.first { $0.type == "window" }
+        XCTAssertEqual(win?.sillIn ?? 0, 0.9 * 39.3700787, accuracy: 0.2)
+        XCTAssertEqual(win?.heightIn ?? 0, 1.2 * 39.3700787, accuracy: 0.2)
+        // 门:heightM 没喂(0)就不发,更不该有窗台
+        let door = p.graphOpenings.first { $0.type == "door" }
+        XCTAssertNil(door?.heightIn)
+        XCTAssertNil(door?.sillIn)
+    }
+
+    // MARK: - 偏轴朝向(rotation 量化丢掉的真值)
+
+    func testYawDegCarriesOffAxisOrientation() {
+        var s = baseScene()
+        // 斜摆 20°:rotation 量化到 0,真朝向靠 attrs.yawDeg 补回
+        s.items[0].axisDeg = 20
+        let p = project(s)
+        let bed = p.placements[0]
+        XCTAssertEqual(bed.rotation, 0)
+        XCTAssertEqual(bed.attrs?.yawDeg ?? 0, 20, accuracy: 1.5)
+    }
+
+    func testYawDegOmittedWhenAxisAligned() {
+        // 贴轴(基准场景 axisDeg=0)→ 不发,payload 不背噪声
+        XCTAssertNil(project(baseScene()).placements[0].attrs?.yawDeg)
+    }
 }

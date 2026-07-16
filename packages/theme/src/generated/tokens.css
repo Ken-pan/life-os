@@ -192,6 +192,18 @@
   --info: #2b65b1;
   --info-subtle: #eaf2fc;
 
+  /* Chart 共享默认（var() 派生，品牌可在 app 层覆盖） */
+  --chart-grid: color-mix(in srgb, var(--t3, var(--text-muted)) 22%, transparent);
+  --chart-axis: var(--t3, var(--text-muted));
+  --chart-tooltip-bg: var(--card);
+  --chart-tooltip-border: var(--border-l, var(--border));
+  --chart-line: var(--accent);
+  --chart-line-2: var(--accent-2, var(--accent));
+  --chart-positive: var(--positive);
+  --chart-warning: var(--warning);
+  --chart-critical: var(--critical);
+  --chart-info: var(--info);
+
   /* Chart categorical 系列色板（固定槽位顺序，已过 CVD 验证） */
   --chart-series-1: #2a78d6;
   --chart-series-2: #1baf7a;

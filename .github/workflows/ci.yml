@@ -52,6 +52,7 @@ jobs:
             process.exit(1)
           })
           NODE
+      - run: npm run check:design-catalog-registry
       - run: npm run build -w design-catalog
       - run: npm run test:design-catalog
       - run: npm run test:design-catalog:a11y

@@ -1,6 +1,8 @@
 <script>
-  import HorizontalTabs from './HorizontalTabs.svelte'
-  import TabPanel from './TabPanel.svelte'
+  import {
+    LifeOsTabs as HorizontalTabs,
+    LifeOsTabPanel as TabPanel,
+  } from '@life-os/platform-web/svelte/tabs'
   import TodayView from './TodayView.svelte'
   import OverviewView from './OverviewView.svelte'
   import { t } from '$lib/i18n.svelte.js'

@@ -705,7 +705,7 @@
               <span class="field-label">{t('task.subtasks')}</span>
               {#each draft.subtasks as sub (sub.id)}
                 <div class="subtask-row">
-                  <input type="checkbox" checked={sub.done} onchange={() => toggleDraftSubtask(sub.id)} />
+                  <input class="checkbox" type="checkbox" checked={sub.done} onchange={() => toggleDraftSubtask(sub.id)} />
                   <span class:done-text={sub.done}>{sub.title}</span>
                 </div>
               {/each}

@@ -6,6 +6,26 @@
 
 > **PaperOS 证据链接说明（2026-07-12）：** 下方历史条目中的 `qa/paperos/*`、`archive/paperos/*` 证据文件已随 PaperOS 迁出至独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库不再保留。相关行保留为历史记录，链接已去激活。
 
+## 2026-07-16（DS 平台化批量推进：品牌 7 站 · 行为组件三族 · 护栏/基线扩容）
+
+| 主线       | 发货项 / 里程碑 | 证据 |
+| ---------- | --------------- | ---- |
+| DS/Tokens  | **AIOS + Portal 品牌收编**：`brands/aios.json`（无彩灰阶）+ `brands/portal.json`（天蓝）；BRAND_APPS 7 站，portal `<html>` 补 `data-app`；两 app 的 app.css 品牌块删除改 `@import` | `packages/design-tokens/tokens/brands/{aios,portal}.json` · validate:tokens 绿 · 浏览器实测双端 token 生效 |
+| DS/Tokens  | **Chart token 层**：`semantic.json` `chart` 域 → `--chart-grid/axis/tooltip-*/line*/positive…`（var() 派生全品牌自适应）；finance 既有同名定义成为合法品牌覆盖 | `generated/tokens.css` |
+| DS/Theme   | **`prefers-reduced-transparency` 降级层**（新 `reduced-transparency.css`，不进 @layer）：`--chrome-frost` 清空 + appbar/nav 转不透明 + 全局关 backdrop-filter；CDP 模拟实测生效 | `packages/theme/src/reduced-transparency.css` |
+| DS/Platform | **Overlay 行为组件**：`svelte/overlay` → `LifeOsSheet` / `LifeOsDialog`（backdrop/Escape/focus trap/滚动锁/ARIA/入场过渡）；fitness `SkipModal` 迁为薄封装 | catalog Interactive 状态实测 trap+滚动锁开合链路 |
+| DS/Platform | **表单原语**：`svelte/form` → `TextField/NumberField/SelectField/TextareaField/DateField/DateTriggerField`（label-for/aria-invalid/hint/error 内置）；finance 四个 field + planner DateField 迁为薄封装，`.field-affix`/`.date-field-wrap` CSS 上提 theme | forms showcase + finance/planner build 绿 |
+| DS/Platform | **导航骨架**：`svelte/navigation/bottom-nav` + `side-nav`；六 app 十份 BottomNav/SideNav 全部迁为薄封装（IA/active/More sheet 留 app 侧） | fitness/home/music/starter app-shell spec 全绿（fitness 1 failure 为 master 存量，已用 stash 对照证实与迁移无关） |
+| DS/Platform | **空态/错误态**：`svelte/status` → `EmptyState` / `ErrorState`（`.empty--error` + 重试位）；planner EmptyState 迁薄封装；primitives showcase 补 error 状态 | catalog 实测 |
+| DS/CI      | **showcase 注册完整性护栏** `check:design-catalog-registry`（catalogNav/showcaseStates/App.svelte/文件 四处对账，负向测试验证）进 CI design-catalog job | `scripts/check-design-catalog-registry.mjs` |
+| DS/QA      | **DSGN.CATALOG.7 生产四站共享 primitive a11y 抽检** `qa:prod-a11y`：标题/导航对比度 + 44px 触控 + focus-visible × light/dark；首跑 62 pass / 0 fail（planner dark 导航 3.57 记 warn） | `scripts/lifeos-prod-a11y-spotcheck.mjs` |
+| DS/QA      | **像素基线 114→162 张**：overlay/forms 两个新 showcase + **32 张 393×852 mobile 基线**（navigation sheet-open / overlay sheet / settings / toast × 4 app × 2 mode）；全部 canonical docker 生成并复跑验证 | `tests/visual/design-catalog.snapshots.spec.ts` §mobile |
+| DS/护栏    | **棘轮第一批清零**：portal/starter/design-catalog/platform-web 六桶 raw-hex/font-size/motion → 0（catalog 35 处裸字号全部 token 化），基线 707→664 收紧；planner/fitness/music/finance/aios 余量多为领域常量（杠铃片配色/mask 渐变/var 兜底），留档分批 | `scripts/lifeos-styles-baseline.json` |
+| DS/Docs    | **组件选型决策表**（要做 X → 用 Y）进 `DESIGN_SYSTEM.md`；platform-web README 导出索引补 overlay/form/status/nav 骨架 | `packages/theme/DESIGN_SYSTEM.md` |
+| DS/Theme   | **Toast 视觉重做**（用户反馈旧样式丑）：整条 tint 底 + pill → 中性浮层卡片（`--card`/`--border-l`/12px，暗色抬 `--card-h`）+ `.toast-dot` 语义色圆点；music 旧 tint 覆盖删除走默认；catalog 收容改按生产宽度展示（不再拉满 100%） | `packages/theme/src/components.css` §toast · `Toast.svelte` · 浏览器实测 4 tone × 明暗 |
+
+验证：8 workspace check + 10 task build 全绿 · catalog smoke 276 + a11y 48 · snapshots 162/162（canonical docker 复跑）· 样式/边界/manifest 护栏绿。Home 玻璃质感 token 化清偿因与并发 home 重构会话冲突而推迟。
+
 ## 2026-07-15（DS/Theme 视觉现代化 · 圆角阶梯 · 共享状态原语 · 样式护栏）
 
 | 主线       | 发货项 / 里程碑 | 证据 |

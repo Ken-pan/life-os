@@ -23,7 +23,16 @@ final class AppModel {
     }
 
     // ---- 账号与导航 ----
-    var route: Route = .loading
+    /// didSet 是全 App 页面流转的单点日志:哪一步→哪一步(含失败弹回),
+    /// 拼出用户旅程时间线,不用在每个赋值点各记一笔
+    var route: Route = .loading {
+        didSet {
+            guard oldValue != route else { return }
+            ScanLog.shared.log("ux", "route", [
+                "from": .string("\(oldValue)"), "to": .string("\(route)"),
+            ])
+        }
+    }
     /// 冷启动等超过 3 秒 —— 让 .loading 那个纯转圈能说句人话,并给个「跳过」出口
     var bootstrapSlow = false
     var userEmail: String?
@@ -132,6 +141,13 @@ final class AppModel {
         userEmail = nil
         scans = []
         route = .signedOut
+    }
+
+    /// 首页「导出诊断日志」:拼最近几个会话的 JSONL 给 share sheet。
+    /// 记一条导出事件本身 —— 用户来要日志,通常说明刚出过事
+    func exportDiagnostics() -> URL? {
+        ScanLog.shared.log("ux", "diagnostics_exported")
+        return ScanLog.shared.exportFile()
     }
 
     /// 删除一次扫描(立墓碑)。先在本地摘掉再发请求 —— 列表立刻有反应,

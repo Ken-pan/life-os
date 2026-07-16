@@ -45,6 +45,7 @@
   import { setLocale } from '$lib/i18n/index.js'
   import SettingsRow from '@life-os/platform-web/svelte/settings/row'
   import SettingsSegment from '@life-os/platform-web/svelte/settings/segment'
+  import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
 
   let count = $state(0)
   let missingLyrics = $state(0)
@@ -374,20 +375,18 @@
           <div class="pref-desc">{t('auth.signedInDesc')}</div>
         </div>
       </div>
-      <div class="settings-stack-block settings-stack-block--pad-x">
-        <div class="settings-btn-group">
-          <button
-            class="btn-primary"
-            type="button"
-            disabled={syncing}
-            onclick={onSync}
-            >{syncing ? t('auth.pleaseWait') : t('sync.now')}</button
-          >
-          <button class="btn-secondary" type="button" onclick={onSignOut}
-            >{t('settings.signOut')}</button
-          >
-        </div>
-      </div>
+      <SettingsButtonGroup>
+        <button
+          class="btn-primary"
+          type="button"
+          disabled={syncing}
+          onclick={onSync}
+          >{syncing ? t('auth.pleaseWait') : t('sync.now')}</button
+        >
+        <button class="btn-secondary" type="button" onclick={onSignOut}
+          >{t('settings.signOut')}</button
+        >
+      </SettingsButtonGroup>
     {:else}
       <div class="settings-stack-block settings-stack-block--pad-x">
         <p class="pref-desc" style="margin-bottom:12px">
@@ -703,17 +702,18 @@
             · {libraryMaintenance.done}/{libraryMaintenance.total}{/if}
         </p>
         <div
-          class="settings-lyrics-progress"
-          class:settings-lyrics-progress--indeterminate={libraryMaintenance.total ===
-            0}
+          class="progress settings-lyrics-progress"
+          class:progress--indeterminate={libraryMaintenance.total === 0}
           role="progressbar"
           aria-valuemin="0"
           aria-valuemax="100"
           aria-valuenow={lyricsPct}
         >
           <div
-            class="settings-lyrics-progress-fill"
-            style={libraryMaintenance.total > 0 ? `width:${lyricsPct}%` : ''}
+            class="progress__fill"
+            style={libraryMaintenance.total > 0
+              ? `--progress-value:${lyricsPct}%`
+              : ''}
           ></div>
         </div>
       {:else if missingLyrics > 0}
@@ -725,7 +725,7 @@
       {/if}
 
       <!-- 高级手动工具：重扫本地文件 / 导出（后者是下载，天然手动） -->
-      <div class="settings-btn-group" style="margin-top:16px">
+      <SettingsButtonGroup>
         <button
           class="btn-secondary"
           type="button"
@@ -737,7 +737,7 @@
         <button class="btn-secondary" type="button" onclick={exportMeta}
           >{t('settings.export')}</button
         >
-      </div>
+      </SettingsButtonGroup>
       {#if rescanProgress}
         <p class="pref-desc" style="margin-top:12px">{rescanProgress}</p>
       {/if}
@@ -748,42 +748,8 @@
 </div>
 
 <style>
+  /* 进度条基座（.progress，含不定态）已下沉 @life-os/theme；这里只留间距 */
   .settings-lyrics-progress {
     margin-top: 10px;
-    height: 6px;
-    border-radius: var(--radius-pill, 999px);
-    background: color-mix(in srgb, var(--t1, var(--text)) 12%, transparent);
-    overflow: hidden;
-  }
-
-  .settings-lyrics-progress-fill {
-    height: 100%;
-    border-radius: inherit;
-    background: var(--accent);
-    transition: width 0.35s var(--ease-standard, ease);
-  }
-
-  /* 封面/元数据修复无逐项进度 → 不定态滑块 */
-  .settings-lyrics-progress--indeterminate .settings-lyrics-progress-fill {
-    width: 40%;
-    transition: none;
-    animation: settings-maint-indeterminate 1.2s ease-in-out infinite;
-  }
-
-  @keyframes settings-maint-indeterminate {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(250%);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .settings-lyrics-progress--indeterminate .settings-lyrics-progress-fill {
-      animation: none;
-      width: 100%;
-      opacity: 0.5;
-    }
   }
 </style>

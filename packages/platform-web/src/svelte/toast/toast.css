@@ -1,11 +1,12 @@
 /*
-  Toast tone hooks — reasserts component feedback tokens when Toast mounts.
+  Toast tone hooks — reasserts component tokens when Toast mounts.
   Layout and animation remain in @life-os/theme components.css.
+  2026-07-16 起 toast 为中性浮层卡片，tone 由 .toast-dot 语义色圆点表达。
 */
 
 .toast:not(.toast--error):not(.toast--warn):not(.toast--info) {
-  background: var(--toast-bg, var(--feedback-success-bg));
-  border-color: var(--toast-border, var(--feedback-success-border));
+  background: var(--toast-bg, var(--card));
+  border-color: var(--toast-border, var(--border-l, var(--border)));
 }
 
 .toast-action {

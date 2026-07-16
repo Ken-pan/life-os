@@ -52,6 +52,35 @@ test.describe('design-catalog pixel baselines @visual', () => {
     }
   })
 
+  /**
+   * Mobile 393×852 基线（2026-07-16）：mobile-first 体系此前只有 app-shell 一张
+   * 移动基线；壳层/弹层/设置这些移动端主战场组件补上像素护栏。
+   * state 选移动端最有信息量的那个（导航→sheet-open、overlay→sheet）。
+   */
+  test.describe('mobile 393×852 showcases', () => {
+    const MOBILE_SNAPSHOT_STATES: Record<string, string> = {
+      navigation: 'sheet-open',
+      overlay: 'sheet',
+      settings: 'default',
+      toast: 'success',
+    }
+    for (const [showcase, state] of Object.entries(MOBILE_SNAPSHOT_STATES)) {
+      for (const app of APPS) {
+        for (const mode of MODES) {
+          test(`${showcase} — ${app} / ${mode} @ 393×852`, async ({ page }) => {
+            await page.setViewportSize({ width: 393, height: 852 })
+            await page.goto(catalogUrl(showcase, app, mode, { state }))
+            await waitForCatalogEmbed(page, showcase)
+            await expect(page.getByTestId('catalog-shell')).toHaveScreenshot(
+              `${showcase}-${state}-${app}-${mode}-393x852.png`,
+              SNAPSHOT_OPTS,
+            )
+          })
+        }
+      }
+    }
+  })
+
   test.describe('app shell contract', () => {
     test('desktop', async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 800 })

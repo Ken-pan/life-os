@@ -91,6 +91,12 @@ final class AutoViewpointCapture {
         )
         switch verdict {
         case .wait(let block):
+            // 拒绝分布进摘要(2Hz 逐条记会刷屏):哪道门拦得最多 = ViewpointGate
+            // 常数该往哪边调;换门那一下记一条事件,现场时间线可读
+            ScanLog.shared.counter { $0.count("gate_\(block)") }
+            if block != lastBlock {
+                ScanLog.shared.log("ux", "vp_gate", ["block": .string("\(block)")])
+            }
             lastBlock = block
             return
         case .capture:
@@ -109,9 +115,16 @@ final class AutoViewpointCapture {
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.busy = false
-                guard let url else { return }
+                guard let url else {
+                    ScanLog.shared.log("error", "vp_jpeg_failed")
+                    return
+                }
                 self.lastCaptureAt = now
                 self.capturedInRoom += 1
+                ScanLog.shared.log("scan", "vp_auto_captured", [
+                    "inRoom": .num(Double(self.capturedInRoom)),
+                ])
+                ScanLog.shared.counter { $0.count("vp_auto") }
                 var pose = poseNoPhoto
                 pose.photoFileURL = url
                 // 自动快门有触感:不然用户全程不知道 App 拍没拍、拍了几张

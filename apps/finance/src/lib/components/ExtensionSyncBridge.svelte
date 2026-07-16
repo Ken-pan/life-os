@@ -8,11 +8,13 @@
     computeEnvelopePayloadHash,
     holdingsCaptureToSnapshot,
     isCaptureEnvelope,
+    isMerchantOrdersCaptureData,
     loadProcessedIds,
     markProcessed,
     newTxnToExtensionSyncPayload,
     planAccountsBalanceUpdate,
     planHoldingsBalanceUpdate,
+    planMerchantOrderEnrichment,
     planNewTransactions,
     planRecurringUpdates,
   } from '$lib/extensionSync.js'
@@ -36,6 +38,9 @@
     robinhood: 'Robinhood',
     rocketmoney: 'Rocket Money',
     fidelity: 'Fidelity',
+    amazon: 'Amazon',
+    target: 'Target',
+    bestbuy: 'Best Buy',
   }
 
   const DRAIN_RETRY_MS = 1500
@@ -163,6 +168,33 @@
           updated: plan.updates.length,
           missing: plan.missing.length,
         })
+      } else if (env.kind === 'merchant_orders') {
+        // 定向抓单：商家订单页最新订单 → 挑最 match 的交易写 purchase_enrichment。
+        if (!isMerchantOrdersCaptureData(env.data)) {
+          throw new Error('merchant_orders capture 数据格式不合法')
+        }
+        const plan = planMerchantOrderEnrichment(env.data, transactions.txns)
+        const byId = new Map(transactions.txns.map((x) => [x.id, x]))
+        let linked = 0
+        for (const u of plan.updates) {
+          const txn = byId.get(u.txnId)
+          if (!txn) continue
+          await transactions.editTxn({ ...txn, purchaseEnrichment: u.enrichment })
+          linked += 1
+          notes.push(
+            `${txn.date} ${txn.merchant} $${Math.abs(txn.amount).toFixed(2)} → ${u.orderId}`,
+          )
+        }
+        summary =
+          linked > 0
+            ? t('extension.merchantOrdersSummary', {
+                linked,
+                orders: plan.ordersConsidered,
+                skipped: plan.skippedExisting,
+              })
+            : t('extension.merchantOrdersNone', {
+                orders: plan.ordersConsidered,
+              })
       } else {
         // 一批交易抓取已经送达：悬着的回读请求就此关单（哪怕这批里没有
         // 缺口段的行——那段可能确实没消费，「只读一次」以读过为准）。

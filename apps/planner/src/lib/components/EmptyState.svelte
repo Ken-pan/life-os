@@ -1,20 +1,19 @@
 <script>
+  // 薄封装：共享 EmptyState（@life-os/platform-web/svelte/status）+ planner 的
+  // 太阳图标与原有文案层级（message 为普通段落，hint 为小字）。
   import { t } from '$lib/i18n/index.js';
-  import Icon from '@life-os/platform-web/svelte/icon';
+  import { EmptyState } from '@life-os/platform-web/svelte/status';
 
   /** @type {{ message?: string, hint?: string }} */
   let { message = t('common.empty'), hint = '' } = $props();
 </script>
 
-<div class="empty">
-  <div class="empty-icon">
-    <Icon name="sun" size={48} strokeWidth={1.5} />
-  </div>
+<EmptyState icon="sun">
   <p>{message}</p>
   {#if hint}
     <p class="empty-hint">{hint}</p>
   {/if}
-</div>
+</EmptyState>
 
 <style>
   .empty-hint {

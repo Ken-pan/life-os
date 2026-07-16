@@ -40,14 +40,14 @@
     </div>
 
     <div
-      class="today-progress-bar"
+      class="progress progress--sm"
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={total}
       aria-valuenow={done}
       aria-label={t('home.progressCount', { done, total })}
     >
-      <div class="today-progress-fill" style:width="{pct}%"></div>
+      <div class="progress__fill" style="--progress-value: {pct}%"></div>
     </div>
   {/if}
 

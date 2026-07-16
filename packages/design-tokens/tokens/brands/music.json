@@ -124,18 +124,6 @@
         "seg-active-fg-token": {
           "$type": "cssValue",
           "$value": "var(--on-accent)"
-        },
-        "toast-radius": {
-          "$type": "dimension",
-          "$value": "22px"
-        },
-        "toast-bg": {
-          "$type": "cssValue",
-          "$value": "var(--card-h)"
-        },
-        "toast-border": {
-          "$type": "cssValue",
-          "$value": "var(--border-l)"
         }
       }
     },

@@ -1,14 +1,9 @@
 <script>
-  // Port of SelectField from src/components/fields.tsx.
+  // 薄封装：共享 SelectField（@life-os/platform-web/svelte/form）+ finance 的 .input 视觉。
+  import { SelectField } from '@life-os/platform-web/svelte/form'
+
   /** @type {{ label?: string, value: string, options: { value: string, label: string }[], onChange: (v: string) => void }} */
   let { label, value, options, onChange } = $props()
 </script>
 
-<div class="field">
-  {#if label}<label>{label}</label>{/if}
-  <select class="input" {value} onchange={(e) => onChange(e.currentTarget.value)}>
-    {#each options as o (o.value)}
-      <option value={o.value}>{o.label}</option>
-    {/each}
-  </select>
-</div>
+<SelectField {label} {value} {options} {onChange} inputClass="input" />

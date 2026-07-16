@@ -1,0 +1,72 @@
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/brands/aios.json
+  Rebuild: npm run build:tokens
+*/
+
+[data-app='aios'] {
+  --bg: #ffffff;
+  --bg-2: #f9f9f9;
+  --card: #f4f4f4;
+  --card-h: #ececec;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-l: rgba(0, 0, 0, 0.14);
+  --t1: #0d0d0d;
+  --t2: #5d5d5d;
+  --t3: #8f8f8f;
+  --t4: #b4b4b4;
+  --accent: #0d0d0d;
+  --accent-2: #2f2f2f;
+  --accent-strong: #000000;
+  --accent-bg: rgba(13, 13, 13, 0.06);
+  --on-accent: #ffffff;
+  --sidebar: #f9f9f9;
+  --sidebar-foreground: #0d0d0d;
+  --sidebar-muted: rgba(13, 13, 13, 0.55);
+  --sidebar-accent: #ececec;
+  --sidebar-primary: #0d0d0d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --appbar-bg: rgba(255, 255, 255, 0.88);
+  --nav-bg: rgba(249, 249, 249, 0.92);
+  --seg-track-bg: #ececec;
+  --seg-active-bg: #ffffff;
+  --seg-active-fg: #0d0d0d;
+  --sb-thumb: rgba(0, 0, 0, 0.18);
+  --sb-thumb-hover: rgba(0, 0, 0, 0.32);
+  color-scheme: light;
+}
+
+[data-app='aios'][data-mode='dark'],
+[data-app='aios'][data-theme='dark'] {
+  --bg: #212121;
+  --bg-2: #171717;
+  --card: #2f2f2f;
+  --card-h: #383838;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-l: rgba(255, 255, 255, 0.15);
+  --t1: #ececec;
+  --t2: #b4b4b4;
+  --t3: #8f8f8f;
+  --t4: rgba(236, 236, 236, 0.4);
+  --accent: #ececec;
+  --accent-2: #ffffff;
+  --accent-strong: #ffffff;
+  --accent-bg: rgba(236, 236, 236, 0.1);
+  --on-accent: #0d0d0d;
+  --sidebar: #171717;
+  --sidebar-foreground: #ececec;
+  --sidebar-muted: rgba(236, 236, 236, 0.55);
+  --sidebar-accent: #242424;
+  --sidebar-primary: #ececec;
+  --sidebar-primary-foreground: #0d0d0d;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --appbar-bg: rgba(33, 33, 33, 0.88);
+  --nav-bg: rgba(23, 23, 23, 0.92);
+  --seg-track-bg: #212121;
+  --seg-active-bg: #4a4a4a;
+  --seg-active-fg: #ececec;
+  --sb-thumb: rgba(255, 255, 255, 0.16);
+  --sb-thumb-hover: rgba(255, 255, 255, 0.3);
+  color-scheme: dark;
+}

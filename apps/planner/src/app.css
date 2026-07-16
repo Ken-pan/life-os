@@ -413,20 +413,11 @@ body {
   transform: scale(1.05);
 }
 
-.today-progress-bar {
-  height: 4px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--t1) 8%, transparent);
-  overflow: hidden;
-}
-
-.today-progress-fill {
-  height: 100%;
-  border-radius: inherit;
+/* 进度条基座（.progress）已下沉 @life-os/theme；planner 只留暖色渐变填充覆盖 */
+.today-progress .progress__fill {
   background: linear-gradient(90deg,
       color-mix(in srgb, var(--accent) 88%, #f5a623),
       var(--accent));
-  transition: width 280ms var(--ease, ease);
 }
 
 .today-progress-copy {

@@ -36,6 +36,12 @@ This package contains thin web-only adapters. P0 PR 3 adds appearance and page-m
 | `@life-os/platform-web/svelte/actions`                    | `keepPopoverInViewport()` — 浮层视口内定位 action                                                          |
 | `@life-os/platform-web/svelte/explain-panel`              | `ExplainPanel.svelte`（内联展开说明；外观见 `@life-os/theme` `.explain-panel`）                            |
 | `@life-os/platform-web/svelte/menu`                       | `Menu.svelte`（下拉菜单行为：开合/外点关闭/Escape/方向键循环；外观走 `@life-os/theme` `.life-os-popover`） |
+| `@life-os/platform-web/svelte/overlay`                    | `LifeOsSheet` / `LifeOsDialog`（弹层行为：backdrop 关闭/Escape/focus trap/滚动锁/ARIA；外观走 theme `.sheet-*` / `.modal-*`） |
+| `@life-os/platform-web/svelte/form`                       | `TextField` / `NumberField` / `SelectField` / `TextareaField` / `DateField` / `DateTriggerField` / `CheckboxField` / `RadioGroupField` / `SliderField` / `SearchField` / `QuantityStepper`（受控表单字段；外观走 theme `.field` / `.option-row` / `.slider` / `.field-search` / `.stepper` 族） |
+| `@life-os/platform-web/svelte/tabs`                       | `LifeOsTabs` / `LifeOsTabPanel`（下划线页签行为：roving tabindex、方向键/Home/End；finance HorizontalTabs 下沉；外观走 theme `.tabs` / `.tab`） |
+| `@life-os/platform-web/svelte/status`                     | `EmptyState` / `ErrorState`（空态/错误态基座；外观走 theme `.empty-*`）                                    |
+| `@life-os/platform-web/svelte/navigation/bottom-nav`      | `LifeOsBottomNav.svelte`（移动底栏骨架；active/IA/More sheet 留 app 侧）                                   |
+| `@life-os/platform-web/svelte/navigation/side-nav`        | `LifeOsSideNav.svelte`（桌面侧栏骨架；brand snippet 注入品牌位）                                           |
 | `@life-os/platform-web/svelte/feedback`                   | `ReportBugButton.svelte`                                                                                    |
 | `@life-os/platform-web/svelte/card`                       | `Card` / `CardHeader` / `CardTitle` / `CardDescription` / `CardContent` / `CardFooter` / `CardMedia` / `CardActions`（Card 组合家族） |
 | `@life-os/platform-web/local-cache`                       | `createLocalCache({ prefix })` — planner/finance SWR 快照                                                  |

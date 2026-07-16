@@ -17,8 +17,10 @@
   import SelectField from './fields/SelectField.svelte'
   import TextField from './fields/TextField.svelte'
   import * as repo from '$lib/repo.js'
-  import HorizontalTabs from './HorizontalTabs.svelte'
-  import TabPanel from './TabPanel.svelte'
+  import {
+    LifeOsTabs as HorizontalTabs,
+    LifeOsTabPanel as TabPanel,
+  } from '@life-os/platform-web/svelte/tabs'
   import {
     getTemplates,
     getTemplateFieldConfig,
@@ -554,6 +556,7 @@
               {#each savedScenarios.slice(0, 12) as s (s.id)}
                 <label class="item" style="min-width: 180px">
                   <input
+                    class="checkbox"
                     type="checkbox"
                     checked={selectedIds.includes(s.id)}
                     onchange={(e) => {
@@ -595,6 +598,7 @@
               {#each applyEvents as e (e.id)}
                 <label class="item">
                   <input
+                    class="checkbox"
                     type="checkbox"
                     checked={applySelectedIds.includes(e.id)}
                     onchange={(ev) => {
@@ -642,6 +646,7 @@
             </div>
             <label class="item mt-2">
               <input
+                class="checkbox"
                 type="checkbox"
                 checked={applyAck}
                 onchange={(e) => {
@@ -653,6 +658,7 @@
             {#if previewComparison && previewComparison.confidence !== 'Ready to compare'}
               <label class="item">
                 <input
+                  class="checkbox"
                   type="checkbox"
                   checked={staleAck}
                   onchange={(e) => {

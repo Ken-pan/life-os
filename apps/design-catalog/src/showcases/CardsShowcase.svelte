@@ -149,21 +149,21 @@
   }
   .catalog-section__title {
     margin: 0 0 8px;
-    font-size: 22px;
+    font-size: var(--text-2xl);
   }
   .catalog-section__lead {
     margin: 0 0 20px;
     color: var(--t2, var(--text-secondary));
-    font-size: 14px;
+    font-size: var(--text-base);
   }
   .catalog-section__hint {
     margin: -4px 0 12px;
     color: var(--t3, var(--text-muted));
-    font-size: 13px;
+    font-size: var(--text-md);
   }
   .catalog-subtitle {
     margin: 28px 0 12px;
-    font-size: 16px;
+    font-size: var(--text-xl);
   }
   .catalog-grid {
     display: grid;

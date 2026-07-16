@@ -69,6 +69,7 @@
     </label>
     <label class="portal-settings-row portal-settings-row--checkbox">
       <input
+        class="checkbox"
         type="checkbox"
         checked={skipAutoRedirect}
         disabled={savingSkip || !portalPreferences.prefsReady}

@@ -20,6 +20,17 @@
         <button type="button" class="btn-ghost banner-close">Dismiss</button>
       </div>
     </CatalogStateBlock>
+    <CatalogStateBlock stateId="text" label="Divider / Kbd">
+      <div style="max-width: 420px">
+        <p style="margin: 0">上方内容</p>
+        <div class="divider">或</div>
+        <p style="margin: 0 0 16px">
+          按 <span class="kbd">⌘</span><span class="kbd">K</span> 打开命令面板，
+          <span class="kbd">Esc</span> 关闭
+        </p>
+        <hr class="divider" />
+      </div>
+    </CatalogStateBlock>
     <CatalogStateBlock stateId="portrait-gate" label="Portrait gate">
       <div class="utilities-portrait-preview" aria-hidden="true">
         <div class="life-os-portrait-gate utilities-portrait-preview__gate">
@@ -48,7 +59,7 @@
   }
   .catalog-section__title {
     margin: 0 0 20px;
-    font-size: 22px;
+    font-size: var(--text-2xl);
   }
   .utilities-portrait-preview {
     position: relative;

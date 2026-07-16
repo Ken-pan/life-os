@@ -33,6 +33,7 @@ targets:
       properties:
         CFBundleDisplayName: HomeScan
         NSCameraUsageDescription: 扫描房间结构与拍摄机位照片需要使用相机
+        NSLocationWhenInUseUsageDescription: 记录住址经纬度与朝向,供平面图的阳光模拟计算太阳角度;只随扫描上传,不做任何追踪
         UIRequiredDeviceCapabilities: [arkit]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false

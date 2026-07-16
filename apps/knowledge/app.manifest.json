@@ -1,0 +1,58 @@
+{
+  "id": "knowledge",
+  "name": "KNOWLEDGE.OS",
+  "shortName": "KNOWLEDGE",
+  "description": {
+    "zh": "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
+    "en": "Second brain · capture, connect, recall — the long-term memory layer of Life OS"
+  },
+  "themeColor": {
+    "light": "#f7f6f2",
+    "dark": "#101017"
+  },
+  "defaultTheme": "auto",
+  "locale": "zh-CN",
+  "storageKey": "knowledgeos_v1",
+  "storageKind": "nested",
+  "settingsThemePath": [
+    "settings",
+    "theme"
+  ],
+  "categories": [
+    "productivity"
+  ],
+  "workspace": "knowledge-os",
+  "devPort": 5879,
+  "domain": "knowledge.kenos.space",
+  "shellType": "main-wrap-main",
+  "wordmarkAccent": {
+    "light": "#4d55c7",
+    "dark": "#9aa2ff"
+  },
+  "experimental": true,
+  "switcherOrder": 55,
+  "production": false,
+  "pwaTestEnabled": true,
+  "routes": [
+    {
+      "path": "/",
+      "name": "inbox"
+    },
+    {
+      "path": "/library",
+      "name": "library"
+    },
+    {
+      "path": "/timeline",
+      "name": "timeline"
+    },
+    {
+      "path": "/settings",
+      "name": "settings"
+    }
+  ],
+  "clipPaths": [
+    "/"
+  ],
+  "scrollQaPath": "/settings"
+}

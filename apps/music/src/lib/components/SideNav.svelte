@@ -1,9 +1,10 @@
 <script>
+  // 薄封装：共享 LifeOsSideNav 骨架 + music 的分组 IA、品牌位与激活态样式。
   import { page } from '$app/state'
   import { t } from '$lib/i18n/index.js'
   import { auth } from '$lib/auth.svelte.js'
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
-  import Icon from '@life-os/platform-web/svelte/icon'
+  import LifeOsSideNav from '@life-os/platform-web/svelte/navigation/side-nav'
   import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
   import {
     buildSidebarNavGroups,
@@ -11,22 +12,38 @@
     isNavChromeHidden,
   } from '$lib/nav.js'
 
-  const groups = $derived(buildSidebarNavGroups(t))
-  const settingsItem = $derived(buildSettingsNavItem(t))
   const pathname = $derived(page.url.pathname)
-  const hidden = $derived(isNavChromeHidden(page.url.pathname))
+
+  /** @param {import('$lib/nav.js').NavItem} item */
+  const toSkeletonItem = (item) => ({
+    key: item.tab,
+    href: item.href,
+    icon: item.icon,
+    label: item.label,
+    active: item.match(pathname),
+  })
+
+  const groups = $derived(
+    buildSidebarNavGroups(t).map((group) => ({
+      label: group.label,
+      items: group.items.map(toSkeletonItem),
+    })),
+  )
+  const footItem = $derived(toSkeletonItem(buildSettingsNavItem(t)))
+  const hidden = $derived(isNavChromeHidden(pathname))
   const canSwitchApps = $derived(
     auth.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL,
   )
-
-  /** @param {import('$lib/nav.js').NavItem} item */
-  function isActive(item) {
-    return item.match(pathname)
-  }
 </script>
 
-{#if !hidden}
-  <aside class="sidebar music-sidebar" aria-label={t('nav.mainAria')}>
+<LifeOsSideNav
+  {groups}
+  {footItem}
+  {hidden}
+  ariaLabel={t('nav.mainAria')}
+  sideClass="music-sidebar"
+>
+  {#snippet brand()}
     <AppBrandSwitcher
       appId="music"
       tagline={t('app.tagline')}
@@ -34,42 +51,11 @@
       allowedAppIds={auth.allowedAppKeys}
       canSwitch={canSwitchApps}
     />
-
-    <div class="sidebar-body">
-      {#each groups as group (group.label)}
-        <div class="nav-group">
-          <p class="nav-group-label">{group.label}</p>
-          {#each group.items as item (item.tab)}
-            <a
-              class="nav-item"
-              class:active={isActive(item)}
-              href={item.href}
-              data-sveltekit-noscroll
-              aria-current={isActive(item) ? 'page' : undefined}
-            >
-              <Icon name={item.icon} size={18} strokeWidth={1.75} />
-              <span class="nav-lbl">{item.label}</span>
-            </a>
-          {/each}
-        </div>
-      {/each}
-    </div>
-
-    <a
-      class="nav-item sidebar-foot-item"
-      class:active={isActive(settingsItem)}
-      href={settingsItem.href}
-      data-sveltekit-noscroll
-      aria-current={isActive(settingsItem) ? 'page' : undefined}
-    >
-      <Icon name={settingsItem.icon} size={18} strokeWidth={1.75} />
-      <span class="nav-lbl">{settingsItem.label}</span>
-    </a>
-  </aside>
-{/if}
+  {/snippet}
+</LifeOsSideNav>
 
 <style>
-  .music-sidebar .nav-group-label {
+  :global(.music-sidebar .nav-group-label) {
     font-size: var(--text-2xs);
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -79,14 +65,14 @@
     margin: 0;
   }
 
-  .music-sidebar .nav-item.active {
+  :global(.music-sidebar .nav-item.active) {
     position: relative;
     font-weight: 600;
     background: color-mix(in srgb, var(--sidebar-foreground) 6%, transparent);
     color: var(--sidebar-foreground);
   }
 
-  .music-sidebar .nav-item.active::before {
+  :global(.music-sidebar .nav-item.active)::before {
     content: '';
     position: absolute;
     left: 0;

@@ -16,7 +16,15 @@ extension AppModel {
     }
 
     func upload(label: String) async {
-        guard let project = convertedProject else { return }
+        guard var project = convertedProject else { return }
+        // 扫描诊断摘要随行上传:网页端(和以后的自己)不用连手机也能看到
+        // 这次扫描热不热、卡没卡、门控拦了多少 —— 调参数不再靠回忆
+        project.meta.scanDiagnostics = ScanLog.shared.diagnosticsSummary()
+        ScanLog.shared.log("upload", "upload_started", [
+            "photos": .num(Double(photoFiles.compactMap { $0 }.count)),
+            "objectAssets": .num(Double(objectPhotoFiles.values.reduce(0) { $0 + $1.count })),
+            "hasModel": .bool(modelFileURL != nil),
+        ])
         route = .uploading
         // 重试前先清掉上次的失败,否则传成功了预览页那行红字还挂着
         lastError = nil
@@ -57,7 +65,10 @@ extension AppModel {
                 || error is CancellationError
                 || (error as? URLError)?.code == .cancelled
             if !cancelled {
+                ScanLog.shared.error("upload", "upload_failed", error)
                 lastError = "上传失败:\(error.localizedDescription)"
+            } else {
+                ScanLog.shared.log("ux", "upload_cancelled")
             }
             route = .reviewing
         }

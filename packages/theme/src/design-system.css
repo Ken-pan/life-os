@@ -32,3 +32,5 @@
 @import './modal.css' layer(life-os.modal);
 @import './components.css' layer(life-os.components);
 @import './utilities.css' layer(life-os.utilities);
+/* 不分层：需要压过 app/brand 的未分层 CSS（见文件头注释） */
+@import './reduced-transparency.css';

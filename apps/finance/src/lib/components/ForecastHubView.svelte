@@ -1,8 +1,10 @@
 <script>
   // Port of src/components/ForecastHubView.tsx.
   import { t } from '$lib/i18n.svelte.js'
-  import HorizontalTabs from './HorizontalTabs.svelte'
-  import TabPanel from './TabPanel.svelte'
+  import {
+    LifeOsTabs as HorizontalTabs,
+    LifeOsTabPanel as TabPanel,
+  } from '@life-os/platform-web/svelte/tabs'
   import ForecastView from './ForecastView.svelte'
   import ScenariosView from './ScenariosView.svelte'
 

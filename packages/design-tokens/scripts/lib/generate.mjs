@@ -293,6 +293,14 @@ export function tokensCss(primitive, semantic, structural) {
   for (const [key, node] of Object.entries(semantic.status.light)) {
     emitVar(lines, key, node.$value)
   }
+  if (semantic.chart) {
+    lines.push('')
+    lines.push('  /* Chart 共享默认（var() 派生，品牌可在 app 层覆盖） */')
+    for (const [key, node] of Object.entries(semantic.chart)) {
+      if (key.startsWith('$')) continue
+      emitVar(lines, `chart-${key}`, node.$value)
+    }
+  }
   if (semantic.chartSeries) {
     lines.push('')
     lines.push('  /* Chart categorical 系列色板（固定槽位顺序，已过 CVD 验证） */')

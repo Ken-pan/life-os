@@ -4,8 +4,10 @@
   import { computeBaselineWindows } from '$lib/engine/realityLoop'
   import { getFinanceStore } from '$lib/finance.svelte.js'
   import { getTransactionsStore } from '$lib/transactions.svelte.js'
-  import HorizontalTabs from './HorizontalTabs.svelte'
-  import TabPanel from './TabPanel.svelte'
+  import {
+    LifeOsTabs as HorizontalTabs,
+    LifeOsTabPanel as TabPanel,
+  } from '@life-os/platform-web/svelte/tabs'
   import AccountReconcileView from './AccountReconcileView.svelte'
   import ImportWizard from './review/ImportWizard.svelte'
   import ReviewQueue from './review/ReviewQueue.svelte'

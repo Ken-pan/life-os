@@ -23,6 +23,8 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
 
     /// 家具自动抓拍:跨房间共用一个(同一 ARSession 同一世界系)
     let shotCapture = ObjectShotCapture()
+    /// 地理上下文(GPS + 罗盘北向初值),跟扫描同生共死;摘要进 payload.meta.geo
+    let geo = GeoContext()
     /// 机位自动拍照:视角好就自己拍,不需要用户按快门
     let autoViewpoint = AutoViewpointCapture()
     /// 自动拍到一张机位时回调(AppModel 接走,并进 poses)
@@ -106,6 +108,10 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     private(set) var objectShotCount = 0
     /// 降级采集中(低电量/过热)的 HUD 说明;nil = 正常
     private(set) var degradedReason: String?
+    // 日志去抖:只有状态**变化**才落一条(ScanLog 事件是给人翻的,不是采样流)
+    private var degradedLogged = false
+    private var hintLogged: String?
+    private var regOkLogged: Bool?
     private var tickCount = 0
     /// 上一轮配准是否已对齐(只在「对上了」那一刻触感+播报一次)
     private var wasAligned = false
@@ -131,6 +137,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         view.captureSession.delegate = self
         view.captureSession.run(configuration: RoomCaptureSession.Configuration())
         captureView = view
+        geo.start()
         startShotTimer()
         return view
     }
@@ -150,6 +157,26 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             self.degradedReason = degraded
                 ? (lowPower ? "省电模式:已降速采集" : "手机偏热:已降速采集,歇几秒更快")
                 : nil
+            // 降级进入/退出各记一次(何时热到降速 = 调采集参数的第一手数据);
+            // 降级时长累进摘要 —— 一次扫描热降 3 分钟和 30 秒是两种体验
+            if degraded != self.degradedLogged {
+                self.degradedLogged = degraded
+                ScanLog.shared.log("perf", "degraded", [
+                    "on": .bool(degraded),
+                    "thermal": .string(ScanLog.thermalName(thermal)),
+                    "lowPower": .bool(lowPower),
+                ])
+            }
+            if degraded { ScanLog.shared.counter { $0.add("degraded_s", 0.5) } }
+            // 罗盘北向采样:相机水平朝向(场景系,x 右、z 作 y 向下)配对
+            // 最近的罗盘真北读数。相机近乎垂直朝下(扫地面)时水平朝向没意义,跳过
+            let ct = frame.camera.transform
+            let fx = -Double(ct.columns.2.x)
+            let fz = -Double(ct.columns.2.z)
+            if fx * fx + fz * fz > 0.04 {
+                let sceneYawDeg = GeoContext.normalizeDeg(atan2(fx, -fz) * 180 / .pi)
+                self.geo.recordSample(cameraSceneYawDeg: sceneYawDeg)
+            }
             if degraded && self.tickCount % 2 == 1 { return }
             if !self.liveObjects.isEmpty {
                 // 传 session:证据照走 12MP 带外高清帧(拿不到自动回退视频帧)
@@ -179,6 +206,21 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
                 self.hudHint = (hint, .viewpoint)
             } else {
                 self.hudHint = nil
+            }
+            // 引导提示的每次**变化**都留档:用户被什么提示轰炸、跟踪坏了多久,
+            // 是调门槛常数(EvidenceGuide/ViewpointGate)最缺的现场数据
+            let hintKey = self.hudHint.map { "\($0.kind)|\($0.text)" }
+            if hintKey != self.hintLogged {
+                self.hintLogged = hintKey
+                if let h = self.hudHint {
+                    ScanLog.shared.log("ux", "hint", [
+                        "kind": .string("\(h.kind)"), "text": .string(h.text),
+                    ])
+                    ScanLog.shared.counter { $0.count("hint_\(h.kind)") }
+                }
+            }
+            if self.hudHint?.kind == .tracking {
+                ScanLog.shared.counter { $0.add("tracking_limited_s", degraded ? 1 : 0.5) }
             }
             // 目标标记跟着引导走:evidenceHint 已经把 evidenceTarget 定下来了
             self.updateGuideMarker(frame)
@@ -226,6 +268,17 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         let (segs, phi) = HomeFrame.axisAlign(walls: walls)
         let reg = HomeFrame.register(scan: segs, home: canonicalSegments, phi: phi)
         homeFrame = reg
+        // 配准状态翻转才记(2s 一次全记会刷屏):失败原因分布 = HomeFrame
+        // 验收门(常数)是否太苛/太松的依据
+        if reg.ok != regOkLogged {
+            regOkLogged = reg.ok
+            ScanLog.shared.log("scan", "home_frame", [
+                "ok": .bool(reg.ok),
+                "reason": .string(reg.reason ?? ""),
+                "medianCm": .num(reg.medianCm),
+                "matchedWalls": .num(Double(reg.matchedWalls)),
+            ])
+        }
         // 「对上了」那一刻给一次成功触感 + 播报 —— 从此扫的东西都落在户型坐标里
         if reg.ok, !wasAligned {
             wasAligned = true
@@ -429,8 +482,12 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         uncoveredRooms = []
         lastRegisterAt = 0
         degradedReason = nil
+        degradedLogged = false
+        hintLogged = nil
+        regOkLogged = nil
         tickCount = 0
         wasAligned = false
+        geo.stop()
         arSession.pause()
     }
 
@@ -473,6 +530,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         }
         if let error {
             Task { @MainActor in
+                ScanLog.shared.error("scan", "room_capture_failed", error)
                 self.lastError = "本房间扫描失败:\(error.localizedDescription)"
                 self.pendingCompletion?.resume()
                 self.pendingCompletion = nil
@@ -487,9 +545,24 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
                 self.pendingCompletion = nil
             }
             do {
+                // 逐房后处理耗时(RoomBuilder 也是重活,和 mergeAll 分开计)
+                let end = ScanLog.shared.time("perf", "room_build")
                 let room = try await self.roomBuilder.capturedRoom(from: data)
                 self.capturedRooms.append(room)
+                end([
+                    "index": .num(Double(self.capturedRooms.count)),
+                    "objects": .num(Double(room.objects.count)),
+                    "walls": .num(Double(room.walls.count)),
+                    "doors": .num(Double(room.doors.count)),
+                    "windows": .num(Double(room.windows.count)),
+                    "sqft": .num((self.liveRoomAreaSqFt ?? -1).rounded()),
+                ])
+                ScanLog.shared.counter {
+                    $0.count("rooms")
+                    $0.add("objects_detected", Double(room.objects.count))
+                }
             } catch {
+                ScanLog.shared.error("scan", "room_build_failed", error)
                 self.lastError = "房间处理失败:\(error.localizedDescription)"
             }
         }

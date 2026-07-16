@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Finance OS Sync",
-  "version": "0.2.7",
-  "description": "从 Robinhood / Rocket Money / Fidelity 页面抓取持仓、余额与交易，同步到 Finance OS（Life OS / Supabase public schema）。",
+  "version": "0.3.0",
+  "description": "从 Robinhood / Rocket Money / Fidelity 抓取持仓、余额与交易，并定向抓取 Amazon / Target / Best Buy 最新订单做购买标注，同步到 Finance OS（Life OS / Supabase public schema）。",
   "permissions": ["storage", "activeTab", "tabs"],
   "icons": {
     "16": "icons/icon16.png",
@@ -51,6 +51,40 @@
         "https://oltx.fidelity.com/*"
       ],
       "js": ["content/common.js", "content/fidelity.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.amazon.com/your-orders/*",
+        "https://www.amazon.com/gp/your-account/order-details*",
+        "https://www.amazon.com/gp/css/order-history*"
+      ],
+      "js": [
+        "content/common.js",
+        "vendor/amazon-orders.js",
+        "content/merchantOrders.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.target.com/orders*"],
+      "js": [
+        "content/common.js",
+        "vendor/target-orders.js",
+        "content/merchantOrders.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.bestbuy.com/purchasehistory/*",
+        "https://www.bestbuy.com/profile/ss/orders/*"
+      ],
+      "js": [
+        "content/common.js",
+        "vendor/bestbuy-orders.js",
+        "content/merchantOrders.js"
+      ],
       "run_at": "document_idle"
     },
     {

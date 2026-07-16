@@ -235,7 +235,17 @@ final class ObjectShotCapture {
                 // 只在新桶响,顶替更好一张的静默 —— 否则同一件家具嗒嗒响个不停
                 if self.shots[objectId]?[bin] == nil {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    ScanLog.shared.counter { $0.count("object_shot_bins") }
                 }
+                // 每张真正入库的证据照都留档:分数/清晰度分布是打分门槛
+                // (minScore/minSharpness)长期调优的数据底座
+                ScanLog.shared.log("scan", "shot_stored", [
+                    "category": .string(category),
+                    "bin": .num(Double(bin)),
+                    "score": .num((score * 100).rounded() / 100),
+                    "sharpness": .num((out.sharpness * 100).rounded() / 100),
+                    "replaced": .bool(self.shots[objectId]?[bin] != nil),
+                ])
                 self.shots[objectId, default: [:]][bin] = Shot(
                     objectId: objectId,
                     category: category,

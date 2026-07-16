@@ -5,8 +5,10 @@
   import { defaultAssumptions } from '@life-os/finance-core/defaults'
   import NumberField from '$lib/components/fields/NumberField.svelte'
   import PercentField from '$lib/components/fields/PercentField.svelte'
-  import HorizontalTabs from '$lib/components/HorizontalTabs.svelte'
-  import TabPanel from '$lib/components/TabPanel.svelte'
+  import {
+    LifeOsTabs as HorizontalTabs,
+    LifeOsTabPanel as TabPanel,
+  } from '@life-os/platform-web/svelte/tabs'
   import {
     clearLegacyLocalFinanceKeys,
     migrateLegacyLocalFinanceToCloud,
@@ -32,10 +34,10 @@
   import { formatDateTimeForIntl } from '$lib/format.js'
   import { getFinanceStore } from '$lib/finance.svelte.js'
   import { getTransactionsStore } from '$lib/transactions.svelte.js'
+  import SettingsSection from '@life-os/platform-web/svelte/settings/section'
+  import SettingsRow from '@life-os/platform-web/svelte/settings/row'
+  import SettingsButtonGroup from '@life-os/platform-web/svelte/settings/button-group'
   import SettingsAppearanceSection from './settings/SettingsAppearanceSection.svelte'
-  import SettingsSection from './settings/SettingsSection.svelte'
-  import SettingsPrefRow from './settings/SettingsPrefRow.svelte'
-  import SettingsButtonGroup from './settings/SettingsButtonGroup.svelte'
   import HelpCenterView from './HelpCenterView.svelte'
   import AnalyticsPanel from './settings/AnalyticsPanel.svelte'
   import DeviceManager from './DeviceManager.svelte'
@@ -425,7 +427,7 @@
         {onLockPortraitOnPhoneChange}
       />
       <SettingsSection title={t('settings.uiPrefs')}>
-        <SettingsPrefRow label={t('settings.amountDisplay')} desc={t('settings.amountDisplayDesc')}>
+        <SettingsRow label={t('settings.amountDisplay')} desc={t('settings.amountDisplayDesc')}>
           <button
             class="icon-btn"
             onclick={() => store.setPrivacy(!store.data.privacy)}
@@ -439,144 +441,134 @@
             {/if}
             {store.data.privacy ? t('settings.showAmounts') : t('settings.hideAmounts')}
           </button>
-        </SettingsPrefRow>
+        </SettingsRow>
       </SettingsSection>
       <SettingsSection title={t('settings.dataTitle')} testId="settings-backup">
-        <p class="muted-note">{t('settings.dataIntro', { product })}</p>
-        <p class="muted-note">{t('settings.dataBackupWarning')}</p>
-        <p class="muted-note">{t('settings.dataBackupScope', { backupNote })}</p>
+        <p class="block-desc">{t('settings.dataIntro', { product })}</p>
+        <p class="block-desc">{t('settings.dataBackupWarning')}</p>
+        <p class="block-desc">{t('settings.dataBackupScope', { backupNote })}</p>
         {#if store.data.privacy}
-          <p class="muted-note">{t('settings.dataPrivacyBackupNote')}</p>
+          <p class="block-desc">{t('settings.dataPrivacyBackupNote')}</p>
         {/if}
         {#if lastBackupAt}
-          <p class="muted-note">
+          <p class="block-desc">
             {t('settings.lastBackup', { date: formatDateTimeForIntl(lastBackupAt) })}
           </p>
         {/if}
 
-        <SettingsPrefRow label={t('settings.exportBackup')} desc={t('settings.exportJsonHint')}>
+        <SettingsRow label={t('settings.exportBackup')} desc={t('settings.exportJsonHint')}>
           <SettingsButtonGroup>
             <button class="btn ghost" onclick={() => void downloadBackup()} disabled={dataActionBusy}>
               {t('settings.exportJson')}
             </button>
           </SettingsButtonGroup>
-        </SettingsPrefRow>
+        </SettingsRow>
 
-        <div class="list">
-          <div class="kv kv-top">
-            <span class="k">{t('settings.restoreBackup')}</span>
-            <div class="kv-actions">
+        <SettingsRow label={t('settings.restoreBackup')}>
+          <div class="kv-actions">
+            <input
+              class="input"
+              type="file"
+              accept="application/json"
+              onchange={(e) => void selectRestoreFile(e.currentTarget.files?.[0])}
+              disabled={dataActionBusy}
+            />
+            {#if restoreCandidate}
+              <span class="text-secondary" style="text-align: right; max-width: 380px">
+                {t('settings.restoreSummary', {
+                  accounts: summarizeBackupPayload(restoreCandidate).accounts,
+                  cashFlows: summarizeBackupPayload(restoreCandidate).cashFlows,
+                  events: summarizeBackupPayload(restoreCandidate).events,
+                  goals: summarizeBackupPayload(restoreCandidate).goals,
+                  transactions: summarizeBackupPayload(restoreCandidate).transactions,
+                  extra:
+                    restoreCandidate.schemaVersion >= 2
+                      ? t('settings.restoreSummaryExtra', {
+                          scenarios: summarizeBackupPayload(restoreCandidate).scenarios,
+                          holdings: summarizeBackupPayload(restoreCandidate).holdingsSnapshots,
+                        })
+                      : '',
+                })}
+              </span>
               <input
                 class="input"
-                type="file"
-                accept="application/json"
-                onchange={(e) => void selectRestoreFile(e.currentTarget.files?.[0])}
+                value={restoreConfirmText}
+                oninput={(e) => (restoreConfirmText = e.currentTarget.value)}
+                placeholder={t('settings.restoreConfirmPlaceholder')}
                 disabled={dataActionBusy}
               />
-              {#if restoreCandidate}
-                <span class="text-secondary" style="text-align: right; max-width: 380px">
-                  {t('settings.restoreSummary', {
-                    accounts: summarizeBackupPayload(restoreCandidate).accounts,
-                    cashFlows: summarizeBackupPayload(restoreCandidate).cashFlows,
-                    events: summarizeBackupPayload(restoreCandidate).events,
-                    goals: summarizeBackupPayload(restoreCandidate).goals,
-                    transactions: summarizeBackupPayload(restoreCandidate).transactions,
-                    extra:
-                      restoreCandidate.schemaVersion >= 2
-                        ? t('settings.restoreSummaryExtra', {
-                            scenarios: summarizeBackupPayload(restoreCandidate).scenarios,
-                            holdings: summarizeBackupPayload(restoreCandidate).holdingsSnapshots,
-                          })
-                        : '',
-                  })}
-                </span>
-                <input
-                  class="input"
-                  value={restoreConfirmText}
-                  oninput={(e) => (restoreConfirmText = e.currentTarget.value)}
-                  placeholder={t('settings.restoreConfirmPlaceholder')}
-                  disabled={dataActionBusy}
-                />
-                <button class="btn danger" onclick={() => void confirmRestore()} disabled={dataActionBusy}>
-                  {t('settings.restoreConfirm')}
-                </button>
-              {/if}
-            </div>
-          </div>
-          <div class="kv kv-top">
-            <span class="k">{t('settings.deleteAllTitle')}</span>
-            <div class="kv-actions">
-              <input
-                class="input"
-                value={deleteConfirmText}
-                oninput={(e) => (deleteConfirmText = e.currentTarget.value)}
-                placeholder={t('settings.deleteConfirmPlaceholder')}
-                disabled={dataActionBusy}
-              />
-              <button class="btn danger" onclick={() => void confirmDeleteAll()} disabled={dataActionBusy}>
-                {t('settings.deleteAll')}
+              <button class="btn danger" onclick={() => void confirmRestore()} disabled={dataActionBusy}>
+                {t('settings.restoreConfirm')}
               </button>
-            </div>
+            {/if}
           </div>
-        </div>
-        {#if legacyBlobPresent && legacyPreview}
-          <div class="card mt-3">
-            <h3>{t('settings.legacyTitle')}</h3>
-            <p class="muted-note">
-              {t('settings.legacyDetected', {
-                version: legacyPreview.version,
-                date: formatDateTimeForIntl(legacyPreview.updatedAt),
-              })}
-            </p>
-            <p class="muted-note">
-              {t('settings.legacySummary', {
-                accounts: summarizeLegacyLocalFinance(legacyPreview).accounts,
-                cashFlows: summarizeLegacyLocalFinance(legacyPreview).cashFlows,
-                events: summarizeLegacyLocalFinance(legacyPreview).events,
-                goals: summarizeLegacyLocalFinance(legacyPreview).goals,
-                holdings: summarizeLegacyLocalFinance(legacyPreview).holdingsSnapshots,
-              })}
-            </p>
-            <div class="list">
-              <div class="kv">
-                <span class="k">{t('settings.legacyExport')}</span>
-                <button class="btn ghost" type="button" onclick={downloadLegacyBlob} disabled={dataActionBusy}>
-                  {t('settings.legacyDownload')}
-                </button>
-              </div>
-              <div class="kv">
-                <span class="k">{t('settings.legacyUpload')}</span>
-                <button
-                  class="btn ghost"
-                  type="button"
-                  onclick={() => void uploadLegacyToCloud()}
-                  disabled={dataActionBusy}
-                >
-                  {t('settings.legacyUploadHint')}
-                </button>
-              </div>
-              <div class="kv kv-top">
-                <span class="k">{t('settings.legacyClear')}</span>
-                <div class="kv-actions">
-                  <input
-                    class="input"
-                    value={legacyConfirmText}
-                    oninput={(e) => (legacyConfirmText = e.currentTarget.value)}
-                    placeholder={t('settings.legacyConfirmPlaceholder')}
-                    disabled={dataActionBusy}
-                  />
-                  <button class="btn danger" type="button" onclick={clearLegacyBlob} disabled={dataActionBusy}>
-                    {t('settings.legacyClearConfirm')}
-                  </button>
-                </div>
-              </div>
-            </div>
+        </SettingsRow>
+        <SettingsRow label={t('settings.deleteAllTitle')}>
+          <div class="kv-actions">
+            <input
+              class="input"
+              value={deleteConfirmText}
+              oninput={(e) => (deleteConfirmText = e.currentTarget.value)}
+              placeholder={t('settings.deleteConfirmPlaceholder')}
+              disabled={dataActionBusy}
+            />
+            <button class="btn danger" onclick={() => void confirmDeleteAll()} disabled={dataActionBusy}>
+              {t('settings.deleteAll')}
+            </button>
           </div>
-        {/if}
+        </SettingsRow>
         {#if dataActionResult}
-          <p class="muted-note mb-0">{dataActionResult}</p>
+          <p class="block-desc">{dataActionResult}</p>
         {/if}
       </SettingsSection>
+      {#if legacyBlobPresent && legacyPreview}
+        <SettingsSection title={t('settings.legacyTitle')}>
+          <p class="block-desc">
+            {t('settings.legacyDetected', {
+              version: legacyPreview.version,
+              date: formatDateTimeForIntl(legacyPreview.updatedAt),
+            })}
+          </p>
+          <p class="block-desc">
+            {t('settings.legacySummary', {
+              accounts: summarizeLegacyLocalFinance(legacyPreview).accounts,
+              cashFlows: summarizeLegacyLocalFinance(legacyPreview).cashFlows,
+              events: summarizeLegacyLocalFinance(legacyPreview).events,
+              goals: summarizeLegacyLocalFinance(legacyPreview).goals,
+              holdings: summarizeLegacyLocalFinance(legacyPreview).holdingsSnapshots,
+            })}
+          </p>
+          <SettingsRow label={t('settings.legacyExport')}>
+            <button class="btn ghost" type="button" onclick={downloadLegacyBlob} disabled={dataActionBusy}>
+              {t('settings.legacyDownload')}
+            </button>
+          </SettingsRow>
+          <SettingsRow label={t('settings.legacyUpload')}>
+            <button
+              class="btn ghost"
+              type="button"
+              onclick={() => void uploadLegacyToCloud()}
+              disabled={dataActionBusy}
+            >
+              {t('settings.legacyUploadHint')}
+            </button>
+          </SettingsRow>
+          <SettingsRow label={t('settings.legacyClear')}>
+            <div class="kv-actions">
+              <input
+                class="input"
+                value={legacyConfirmText}
+                oninput={(e) => (legacyConfirmText = e.currentTarget.value)}
+                placeholder={t('settings.legacyConfirmPlaceholder')}
+                disabled={dataActionBusy}
+              />
+              <button class="btn danger" type="button" onclick={clearLegacyBlob} disabled={dataActionBusy}>
+                {t('settings.legacyClearConfirm')}
+              </button>
+            </div>
+          </SettingsRow>
+        </SettingsSection>
+      {/if}
       <AnalyticsPanel />
       <DeviceManager />
     </TabPanel>

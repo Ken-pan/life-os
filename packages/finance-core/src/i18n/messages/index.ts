@@ -1615,6 +1615,9 @@ export const zhCN: MessageTree = {
     recurringSummary: '订阅对账：更新 {updated} 项，未收录 {missing} 项',
     alreadySynced: '已同步过（跳过重复 {count} 笔）',
     newTxns: '新交易 {inserted} 笔（跳过 pending {pending}、重复 {dup}）',
+    merchantOrdersSummary:
+      '订单标注 {linked} 笔（{orders} 个订单，跳过已标注 {skipped}）',
+    merchantOrdersNone: '订单 {orders} 个，无新的高置信匹配',
   },
   format: {
     monthsOnly: '{m} 个月',
@@ -3302,6 +3305,9 @@ export const enUS: MessageTree = {
     alreadySynced: 'Already synced (skipped {count} duplicates)',
     newTxns:
       '{inserted} new transactions (skipped pending {pending}, dup {dup})',
+    merchantOrdersSummary:
+      'Annotated {linked} purchases ({orders} orders, {skipped} already annotated)',
+    merchantOrdersNone: '{orders} orders, no new high-confidence matches',
   },
   format: {
     monthsOnly: '{m} mo',

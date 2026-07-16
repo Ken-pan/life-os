@@ -113,6 +113,13 @@ export function buildBrowseNavItems(tr) {
       match: (p) => p.startsWith('/projects'),
     },
     {
+      tab: 'insights',
+      href: '/insights',
+      label: tr('nav.insights'),
+      icon: 'trending-up',
+      match: (p) => p.startsWith('/insights'),
+    },
+    {
       tab: 'calendar',
       href: '/calendar',
       label: tr('nav.calendar'),
@@ -203,6 +210,13 @@ export function buildMoreNavGroups(tr, lists, listLabelFn) {
         icon: 'folder',
         match: (p) => p.startsWith('/projects'),
       },
+      {
+        tab: 'insights',
+        href: '/insights',
+        label: tr('nav.insights'),
+        icon: 'trending-up',
+        match: (p) => p.startsWith('/insights'),
+      },
     ],
   })
 
@@ -242,6 +256,7 @@ export function isMoreNavActive(pathname, search = '') {
   if (pathname.startsWith('/settings')) return true
   if (pathname.startsWith('/auth')) return true
   if (pathname.startsWith('/projects')) return true
+  if (pathname.startsWith('/insights')) return true
   return false
 }
 
@@ -288,6 +303,7 @@ export function resolveMobileChromeInset(pathname, search = '') {
   if (
     pathname.startsWith('/settings') ||
     pathname.startsWith('/projects') ||
+    pathname.startsWith('/insights') ||
     pathname.startsWith('/search') ||
     pathname.startsWith('/completed') ||
     pathname.startsWith('/inbox')

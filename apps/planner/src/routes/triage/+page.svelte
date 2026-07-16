@@ -162,14 +162,17 @@
           <strong>{t('triage.remaining', { count: triageTasks.length })}</strong>
         </div>
         <div
-          class="progress-track"
+          class="progress progress--sm"
           role="progressbar"
           aria-label={t('triage.progressLabel')}
           aria-valuemin="0"
           aria-valuemax={Math.max(initialQueueCount, triageTasks.length)}
           aria-valuenow={processedCount}
         >
-          <span style:width={`${Math.min(100, (processedCount / Math.max(initialQueueCount, 1)) * 100)}%`}></span>
+          <div
+            class="progress__fill"
+            style="--progress-value: {Math.min(100, (processedCount / Math.max(initialQueueCount, 1)) * 100)}%"
+          ></div>
         </div>
       </div>
 
@@ -265,8 +268,9 @@
               {/each}
               </div>
             </fieldset>
-            <label class="checkbox-container">
+            <label class="option-row">
               <input
+                class="checkbox"
                 type="checkbox"
                 checked={Boolean(currentTask.meta?.needsSplit)}
                 onchange={(e) => setNeedsSplit(e.currentTarget.checked)}
@@ -485,15 +489,7 @@
   .text-input:focus {
     outline: 2px solid color-mix(in srgb, var(--accent) 42%, transparent);
   }
-  .checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: var(--text-sm);
-    color: var(--t2);
-    min-height: var(--tap-min);
-  }
+  /* 选项行基座（.option-row/.checkbox）已下沉 @life-os/theme */
   .checkbox-label {
     user-select: none;
   }
@@ -571,21 +567,6 @@
     font-weight: 650;
   }
 
-  .progress-track {
-    height: 3px;
-    overflow: hidden;
-    border-radius: var(--radius-pill);
-    background: var(--border);
-  }
-
-  .progress-track span {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--accent);
-    transition: width var(--dur-fast) var(--ease-standard);
-  }
-
   .field-hint,
   .session-summary {
     color: var(--t3);
@@ -626,7 +607,7 @@
   }
 
   .more-details .meta-field,
-  .more-details .checkbox-container {
+  .more-details :global(.option-row) {
     margin-inline: var(--space-3);
   }
 

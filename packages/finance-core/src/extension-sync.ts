@@ -19,6 +19,11 @@ import {
   resolveCaptureAccount,
   resolveCaptureMerchant,
 } from './engine/ledgerDisplay.js'
+import type { PurchaseEnrichment, PurchaseEnrichmentSource } from './engine/purchaseEnrichment.js'
+import type { MerchantOrderRecord, PurchaseMatchResult } from './engine/purchaseOrderMatch.js'
+import { isAmazonMerchant, matchAmazonOrdersToTxns } from './engine/amazonOrderMatch.js'
+import { isTargetMerchant, matchTargetOrdersToTxns } from './engine/targetOrderMatch.js'
+import { isBestBuyMerchant, matchBestBuyOrdersToTxns } from './engine/bestbuyOrderMatch.js'
 
 // ===================== 消息协议 =====================
 
@@ -51,8 +56,19 @@ export interface BridgeSyncResult {
   failedEnvelopeIds?: string[]
 }
 
-export type CaptureSource = 'robinhood' | 'rocketmoney' | 'fidelity'
-export type CaptureKind = 'holdings' | 'accounts' | 'transactions' | 'recurring'
+export type CaptureSource =
+  | 'robinhood'
+  | 'rocketmoney'
+  | 'fidelity'
+  | 'amazon'
+  | 'target'
+  | 'bestbuy'
+export type CaptureKind =
+  | 'holdings'
+  | 'accounts'
+  | 'transactions'
+  | 'recurring'
+  | 'merchant_orders'
 
 export interface CapturedPosition {
   ticker: string
@@ -131,6 +147,12 @@ export interface TransactionsCaptureData {
   complete?: boolean
 }
 
+/** 商家订单页定向抓取（Amazon / Target / Best Buy 最新订单 → 购买标注）。 */
+export interface MerchantOrdersCaptureData {
+  merchant: PurchaseEnrichmentSource
+  orders: MerchantOrderRecord[]
+}
+
 export interface CaptureEnvelope {
   v: 1
   /** 扩展生成的唯一 id，app 用它做幂等 + ACK。 */
@@ -147,6 +169,7 @@ export interface CaptureEnvelope {
     | AccountsCaptureData
     | TransactionsCaptureData
     | RecurringCaptureData
+    | MerchantOrdersCaptureData
 }
 
 /** 应用一个 capture 后的执行报告（用于 UI toast 与调试）。 */
@@ -209,10 +232,62 @@ export interface AppSnapshot {
   txnBackfill?: { from: string; to: string }
   cashFlows: AppSnapshotCashFlow[]
   holdings: AppSnapshotHoldings[]
+  /**
+   * 近期未做购买标注的三商家交易（Amazon / Target / Best Buy）。
+   * 扩展 popup 据此提示「有新购买待标注」，并只对有新交易的商家定向抓单。
+   * 隐私模式下不导出。
+   */
+  unenrichedMerchantTxns?: UnenrichedMerchantTxn[]
+}
+
+export interface UnenrichedMerchantTxn {
+  source: PurchaseEnrichmentSource
+  id: string
+  date: string
+  merchant: string
+  amount: number
 }
 
 const SNAPSHOT_TXN_KEY_MAX = 4000
 const SCROLL_BUFFER_DAYS = 3
+const UNENRICHED_MERCHANT_WINDOW_DAYS = 45
+const UNENRICHED_MERCHANT_MAX = 50
+
+function merchantEnrichSource(
+  merchant: string | undefined,
+): PurchaseEnrichmentSource | null {
+  if (isAmazonMerchant(merchant)) return 'amazon'
+  if (isBestBuyMerchant(merchant)) return 'bestbuy'
+  if (isTargetMerchant(merchant)) return 'target'
+  return null
+}
+
+/** 近窗口内、三商家、尚无购买标注的交易（新购买检测信号）。 */
+export function collectUnenrichedMerchantTxns(
+  txns: Txn[],
+  windowDays = UNENRICHED_MERCHANT_WINDOW_DAYS,
+): UnenrichedMerchantTxn[] {
+  const newest = txns.reduce((m, t) => (t.date > m ? t.date : m), '')
+  if (!newest) return []
+  const since = isoMinusDays(newest, windowDays)
+  const out: UnenrichedMerchantTxn[] = []
+  for (const t of txns) {
+    if (!t.id || t.date < since) continue
+    if (t.purchaseEnrichment) continue
+    const source = merchantEnrichSource(t.merchant)
+    if (!source) continue
+    out.push({
+      source,
+      id: t.id,
+      date: t.date,
+      merchant: t.merchant,
+      amount: t.amount,
+    })
+  }
+  return out
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+    .slice(0, UNENRICHED_MERCHANT_MAX)
+}
 
 /** 与 planNewTransactions 一致的去重键（导出供扩展侧 JS 复用同一算法）。 */
 export function txnDedupKey(
@@ -297,6 +372,9 @@ export function buildAppSnapshot(
             tickers: s.positions.map((p) => p.ticker),
             positionCount: s.positionCount,
           })),
+    unenrichedMerchantTxns: options.privacy
+      ? undefined
+      : collectUnenrichedMerchantTxns(txns),
   }
 }
 
@@ -1260,13 +1338,135 @@ export function isCaptureEnvelope(v: unknown): v is CaptureEnvelope {
     typeof e.id === 'string' &&
     (e.source === 'robinhood' ||
       e.source === 'rocketmoney' ||
-      e.source === 'fidelity') &&
+      e.source === 'fidelity' ||
+      e.source === 'amazon' ||
+      e.source === 'target' ||
+      e.source === 'bestbuy') &&
     (e.kind === 'holdings' ||
       e.kind === 'accounts' ||
       e.kind === 'transactions' ||
-      e.kind === 'recurring') &&
+      e.kind === 'recurring' ||
+      e.kind === 'merchant_orders') &&
     typeof e.asOfDate === 'string' &&
     typeof e.data === 'object' &&
     e.data !== null
   )
+}
+
+// ===================== 商家订单 → 购买标注 =====================
+
+const MERCHANT_ORDER_MATCHERS: Record<
+  PurchaseEnrichmentSource,
+  (
+    orders: MerchantOrderRecord[],
+    txns: Parameters<typeof matchAmazonOrdersToTxns>[1],
+    options?: { minConfidence?: 'high' | 'medium' | 'low' },
+  ) => PurchaseMatchResult[]
+> = {
+  amazon: matchAmazonOrdersToTxns,
+  target: matchTargetOrdersToTxns,
+  bestbuy: matchBestBuyOrdersToTxns,
+}
+
+export interface MerchantOrderEnrichmentUpdate {
+  txnId: string
+  orderId: string
+  confidence: 'high' | 'medium' | 'low'
+  enrichment: PurchaseEnrichment
+}
+
+export interface MerchantOrderEnrichmentPlan {
+  updates: MerchantOrderEnrichmentUpdate[]
+  skippedExisting: number
+  skippedLowConfidence: number
+  skippedDuplicateOrder: number
+  ordersConsidered: number
+}
+
+export function isMerchantOrdersCaptureData(
+  v: unknown,
+): v is MerchantOrdersCaptureData {
+  if (typeof v !== 'object' || v === null) return false
+  const d = v as Partial<MerchantOrdersCaptureData>
+  return (
+    (d.merchant === 'amazon' ||
+      d.merchant === 'target' ||
+      d.merchant === 'bestbuy') &&
+    Array.isArray(d.orders)
+  )
+}
+
+/**
+ * 商家订单 capture → 交易标注计划。挑最 match 的订单（金额差/日期差排序在各
+ * matcher 内），默认只落 high 置信；已有标注的交易与已被其它交易占用的订单一律
+ * 跳过（与 link-purchase-orders 批量守卫同一原则），保证幂等、不覆盖历史。
+ */
+export function planMerchantOrderEnrichment(
+  data: MerchantOrdersCaptureData,
+  txns: Txn[],
+  options: { minConfidence?: 'high' | 'medium' } = {},
+): MerchantOrderEnrichmentPlan {
+  const minConfidence = options.minConfidence ?? 'high'
+  const matcher = MERCHANT_ORDER_MATCHERS[data.merchant]
+  const orders = (data.orders ?? []).filter((o) => o && o.orderId)
+
+  const candidates = txns.flatMap((t) => {
+    if (!t.id || merchantEnrichSource(t.merchant) !== data.merchant) return []
+    return [
+      {
+        id: t.id,
+        date: t.date,
+        amount: t.amount,
+        merchant: t.merchant,
+        flow: t.flow,
+        purchaseEnrichment: t.purchaseEnrichment ?? null,
+      },
+    ]
+  })
+
+  // 已被账本里任意交易占用的订单不允许再标注到第二笔交易上。
+  const usedOrderIds = new Set(
+    txns.map((t) => t.purchaseEnrichment?.orderId).filter(Boolean) as string[],
+  )
+
+  const matches = matcher(orders, candidates, { minConfidence: 'low' })
+  const confRank = { high: 3, medium: 2, low: 1 } as const
+  const minRank = confRank[minConfidence]
+
+  const plan: MerchantOrderEnrichmentPlan = {
+    updates: [],
+    skippedExisting: 0,
+    skippedLowConfidence: 0,
+    skippedDuplicateOrder: 0,
+    ordersConsidered: orders.length,
+  }
+  const usedTxnIds = new Set<string>()
+  const sorted = [...matches].sort(
+    (a, b) => confRank[b.confidence] - confRank[a.confidence],
+  )
+  for (const m of sorted) {
+    const txn = candidates.find((t) => t.id === m.txnId)
+    if (!txn) continue
+    if (txn.purchaseEnrichment) {
+      plan.skippedExisting += 1
+      continue
+    }
+    if (confRank[m.confidence] < minRank) {
+      plan.skippedLowConfidence += 1
+      continue
+    }
+    if (usedOrderIds.has(m.orderId) || usedTxnIds.has(m.txnId)) {
+      plan.skippedDuplicateOrder += 1
+      continue
+    }
+    usedOrderIds.add(m.orderId)
+    usedTxnIds.add(m.txnId)
+    plan.updates.push({
+      txnId: m.txnId,
+      orderId: m.orderId,
+      confidence: m.confidence,
+      enrichment: m.enrichment,
+    })
+  }
+  return plan
 }

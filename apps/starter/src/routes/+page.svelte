@@ -20,6 +20,6 @@
     gap: var(--space-2, 8px);
   }
   .muted {
-    color: var(--text-secondary, var(--muted, #888));
+    color: var(--t2, var(--text-secondary));
   }
 </style>

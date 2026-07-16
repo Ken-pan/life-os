@@ -26,9 +26,9 @@ describe('nav', () => {
     expect(resolvePrimaryNavTab('/lists/abc')).toBe('tasks')
   })
 
-  it('browse group has projects, calendar and search', () => {
+  it('browse group has projects, insights, calendar and search', () => {
     const items = buildBrowseNavItems(tr)
-    expect(items.map((i) => i.tab)).toEqual(['projects', 'calendar', 'search'])
+    expect(items.map((i) => i.tab)).toEqual(['projects', 'insights', 'calendar', 'search'])
   })
 
   it('highlights calendar and search as primary; more only for settings', () => {

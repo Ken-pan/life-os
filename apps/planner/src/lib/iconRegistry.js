@@ -23,6 +23,7 @@ import TriangleAlert from '@lucide/svelte/icons/triangle-alert'
 import GripVertical from '@lucide/svelte/icons/grip-vertical'
 import Menu from '@lucide/svelte/icons/menu'
 import Folder from '@lucide/svelte/icons/folder'
+import TrendingUp from '@lucide/svelte/icons/trending-up'
 
 /** @type {Record<string, import('svelte').Component>} */
 export const ICONS = {
@@ -51,4 +52,5 @@ export const ICONS = {
   'grip-vertical': GripVertical,
   menu: Menu,
   folder: Folder,
+  'trending-up': TrendingUp,
 }

@@ -39,7 +39,8 @@ enum PlanProjector {
         scanId: String,
         nameZh: String,
         scanScope: String? = nil,
-        canonicalHome: CanonicalHome? = nil
+        canonicalHome: CanonicalHome? = nil,
+        geo: GeoContext.Summary? = nil
     ) -> Projection {
         var warnings = scene.warnings
 
@@ -98,7 +99,11 @@ enum PlanProjector {
                     spanIn: round1(spanIn),
                     type: op.kind == .window ? "window" : "door",
                     style: op.kind == .window ? "sliding" : (op.kind == .door ? "swing" : nil),
-                    swing: op.kind == .door ? "in" : nil
+                    swing: op.kind == .door ? "in" : nil,
+                    // 洞口纵向实测(LiDAR):窗台高是「窗下能放多高柜子」的答案
+                    heightIn: op.heightM > 0 ? round1(op.heightM * 39.3700787) : nil,
+                    sillIn: op.kind == .window && op.elevM > 0.05
+                        ? round1(op.elevM * 39.3700787) : nil
                 )
             )
         }
@@ -211,6 +216,9 @@ enum PlanProjector {
             let fh = (snapped == 0 || snapped == 180) ? m.depthPx : m.widthPx
             let x = round1(m.center.x - fw / 2)
             let y = round1(m.center.y - fh / 2)
+            // 与 90° 网格的偏角:rotation 量化后斜摆家具的真朝向就靠它了。
+            // 折到 (-45,45](snappedRotation 取的是最近档);≤3° 视为贴轴噪声不发
+            let yawDev = normalizeDeg(m.axisDeg - Double(snapped) + 180) - 180
             let attrs = HomeOSProject.ObjectAttrs(
                 styleKeys: m.styleKeys,
                 styleZh: m.styleZh,
@@ -221,7 +229,8 @@ enum PlanProjector {
                 measuredHIn: round1(fh / gridPx),
                 confidence: m.confidence,
                 colorHex: m.colorHex,
-                photoPath: nil // 上传时回填桶内路径
+                photoPath: nil, // 上传时回填桶内路径
+                yawDeg: abs(yawDev) > 3 ? round1(yawDev) : nil
             )
             if m.isFixture {
                 let id = "fx-\(fixtures.count + 1)"
@@ -288,6 +297,11 @@ enum PlanProjector {
             acc + abs(shoelace(z.polygon.map { SIMD2($0.x, $0.y) })) / (pxPerFt * pxPerFt)
         }
 
+        // 吊顶高:墙板高中位数(LiDAR 实测)。中位数不吃半墙/矮隔断的偏差
+        let wallHeights = scene.walls.map(\.heightM).filter { $0 > 0 }.sorted()
+        let ceilingHeightIn = wallHeights.isEmpty
+            ? nil : round1(wallHeights[wallHeights.count / 2] * 39.3700787)
+
         let project = HomeOSProject(
             wallGraph: graph.toModel(),
             graphOpenings: openings,
@@ -301,7 +315,9 @@ enum PlanProjector {
                 sqft: sqft > 0 ? round1(sqft) : nil,
                 scanWarnings: warnings,
                 sourceNote: "iOS HomeScan · RoomPlan 实测",
-                scanScope: scanScope
+                scanScope: scanScope,
+                ceilingHeightIn: ceilingHeightIn,
+                geo: geoMeta(geo, phi: phi)
             )
         )
         return Projection(project: project, objectPhotos: objectPhotos)
@@ -1025,6 +1041,40 @@ enum PlanProjector {
     static func snappedRotation(axisDeg: Double) -> Int {
         let n = Int((normalizeDeg(axisDeg) / 90).rounded()) % 4
         return n * 90
+    }
+
+    // MARK: - 地理上下文
+
+    /// 罗盘偏移 + 投影主方向旋转 → 平面图北向。
+    /// GeoContext 给的是「场景系航向 → 真实方位」的偏移(bearing = sceneYaw +
+    /// offset);投影又把场景整体转了 phi 对齐墙轴 —— 平面图正上 (0,-1) 对应
+    /// 场景方向 rotate((0,-1), -phi),它的真实方位就是 planNorthDeg。
+    static func planNorthDeg(offsetDeg: Double, phi: Double) -> Double {
+        let u = rotate(SIMD2(0, -1), -phi)
+        let sceneYaw = atan2(u.x, -u.y) * 180 / .pi
+        return normalizeDeg(sceneYaw + offsetDeg)
+    }
+
+    /// GeoContext 摘要 → payload 的 meta.geo。没定位就整个不发(加法式字段)。
+    static func geoMeta(
+        _ geo: GeoContext.Summary?, phi: Double
+    ) -> HomeOSProject.Meta.Geo? {
+        guard let geo else { return nil }
+        return .init(
+            lat: round5(geo.lat),
+            lon: round5(geo.lon),
+            elevM: geo.elevM.map { round1($0) },
+            horizAccM: geo.horizAccM.map { round1($0) },
+            planNorthDeg: geo.offsetDeg.map {
+                round1(planNorthDeg(offsetDeg: $0, phi: phi))
+            },
+            headingAccDeg: geo.headingAccDeg.map { round1($0) }
+        )
+    }
+
+    /// 经纬度保留 5 位小数(~1.1m),再多是虚假精度、还徒增隐私面
+    private static func round5(_ v: Double) -> Double {
+        (v * 100000).rounded() / 100000
     }
 
     static func normalizeDeg(_ d: Double) -> Double {

@@ -1,15 +1,8 @@
 <script>
-  // 端口自 src/components/fields.tsx 的 TextField。
+  // 薄封装：共享 TextField（@life-os/platform-web/svelte/form）+ finance 的 .input 视觉。
+  import { TextField } from '@life-os/platform-web/svelte/form'
+
   let { label, value, onChange, placeholder } = $props()
 </script>
 
-<div class="field">
-  {#if label}<label>{label}</label>{/if}
-  <input
-    class="input"
-    type="text"
-    {value}
-    {placeholder}
-    onchange={(e) => onChange(e.currentTarget.value)}
-  />
-</div>
+<TextField {label} {value} {onChange} {placeholder} inputClass="input" />

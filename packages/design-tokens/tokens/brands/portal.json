@@ -1,0 +1,81 @@
+{
+  "app": "portal",
+  "defaultMode": "light",
+  "modes": {
+    "light": {
+      "colorScheme": "light",
+      "vars": {
+        "bg": { "$type": "color", "$value": "#f3f6f8" },
+        "bg-2": { "$type": "color", "$value": "#fafbfd" },
+        "card": { "$type": "color", "$value": "#ffffff" },
+        "card-h": { "$type": "color", "$value": "#e8f3fa" },
+        "border": { "$type": "color", "$value": "#d4e4f0" },
+        "border-l": { "$type": "color", "$value": "#b8d4e8" },
+        "t1": { "$type": "color", "$value": "#1a2834" },
+        "t2": { "$type": "color", "$value": "#4a6278" },
+        "t3": { "$type": "color", "$value": "#6a8296" },
+        "t4": { "$type": "color", "$value": "#8aa0b0" },
+        "text": { "$type": "cssValue", "$value": "var(--t1)" },
+        "text-secondary": { "$type": "cssValue", "$value": "var(--t2)" },
+        "text-muted": { "$type": "cssValue", "$value": "var(--t3)" },
+        "accent": { "$type": "color", "$value": "#3d9ed6" },
+        "accent-2": { "$type": "color", "$value": "#5cb8ea" },
+        "accent-bg": { "$type": "color", "$value": "rgba(61, 158, 214, 0.12)" },
+        "on-accent": { "$type": "color", "$value": "#ffffff" },
+        "sidebar": { "$type": "color", "$value": "#fafbfd" },
+        "sidebar-foreground": { "$type": "color", "$value": "#1a2834" },
+        "sidebar-muted": {
+          "$type": "color",
+          "$value": "rgba(26, 40, 52, 0.55)"
+        },
+        "sidebar-accent": { "$type": "color", "$value": "#e8f3fa" },
+        "sidebar-primary": { "$type": "cssValue", "$value": "var(--accent)" },
+        "sidebar-primary-foreground": {
+          "$type": "cssValue",
+          "$value": "var(--on-accent)"
+        },
+        "sidebar-border": { "$type": "color", "$value": "#d4e4f0" },
+        "appbar-bg": { "$type": "color", "$value": "rgba(243, 246, 248, 0.9)" }
+      }
+    },
+    "dark": {
+      "colorScheme": "dark",
+      "vars": {
+        "bg": { "$type": "color", "$value": "#14161a" },
+        "bg-2": { "$type": "color", "$value": "#1a1e24" },
+        "card": { "$type": "color", "$value": "#1c2432" },
+        "card-h": { "$type": "color", "$value": "#223044" },
+        "border": { "$type": "color", "$value": "rgba(126, 203, 245, 0.12)" },
+        "border-l": { "$type": "color", "$value": "rgba(126, 203, 245, 0.18)" },
+        "t1": { "$type": "color", "$value": "#edf4fa" },
+        "t2": { "$type": "color", "$value": "#a8bdd0" },
+        "t3": { "$type": "color", "$value": "#7a92a8" },
+        "t4": { "$type": "color", "$value": "#5c7488" },
+        "text": { "$type": "cssValue", "$value": "var(--t1)" },
+        "text-secondary": { "$type": "cssValue", "$value": "var(--t2)" },
+        "text-muted": { "$type": "cssValue", "$value": "var(--t3)" },
+        "accent": { "$type": "color", "$value": "#5cb8ea" },
+        "accent-2": { "$type": "color", "$value": "#7ecbf5" },
+        "accent-bg": { "$type": "color", "$value": "rgba(92, 184, 234, 0.16)" },
+        "on-accent": { "$type": "color", "$value": "#0d1a28" },
+        "sidebar": { "$type": "color", "$value": "#1a1e24" },
+        "sidebar-foreground": { "$type": "color", "$value": "#edf4fa" },
+        "sidebar-muted": {
+          "$type": "color",
+          "$value": "rgba(237, 244, 250, 0.55)"
+        },
+        "sidebar-accent": { "$type": "color", "$value": "#1c2432" },
+        "sidebar-primary": { "$type": "cssValue", "$value": "var(--accent)" },
+        "sidebar-primary-foreground": {
+          "$type": "cssValue",
+          "$value": "var(--on-accent)"
+        },
+        "sidebar-border": {
+          "$type": "color",
+          "$value": "rgba(126, 203, 245, 0.12)"
+        },
+        "appbar-bg": { "$type": "color", "$value": "rgba(20, 22, 26, 0.9)" }
+      }
+    }
+  }
+}

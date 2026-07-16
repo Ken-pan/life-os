@@ -72,6 +72,10 @@ npm run validate:tokens   # refs / 契约 / 重复 key / generated CSS staleness
 - **P2 已完成（2026-07-08）**：四个 production app 均在 `<html>` 上带静态 `data-app`，通过
   `@import '@life-os/theme/brands/<app>.css'` 消费品牌 token；app CSS 不得再手写品牌色，
   只保留 app 专属扩展（shadows / 领域语义 / 图表色 / z-index / chrome）。
+- **2026-07-16 起品牌管线覆盖 7 站**：planner / fitness / finance / music / home + **aios / portal**
+  全部走 brands json；aios/portal 不进 catalog 矩阵（同 home，snapshot 只跑四生产站）。
+- **Chart token（2026-07-16）**：`semantic.json` 的 `chart` 域生成 `--chart-grid/axis/tooltip-*/line*` 等
+  共享默认值（var() 派生、全品牌自适应）；finance 在 app.css 里的同名定义是合法品牌覆盖。
 - 生成的非默认 mode 同时输出 `[data-mode]`（catalog 用）与 `[data-theme]`（apps 用）双选择器。
 - `packages/theme/src/tokens.css` 为薄 re-export → `./generated/tokens.css`（**D-P2 结构层收尾 ✅**）。
 - 新增品牌变量需满足 `semantic.json` 里的 contract（bg / card / border / accent / on-accent / sidebar + 一套文本层级）。

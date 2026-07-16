@@ -35,9 +35,6 @@
   --seg-track-radius: var(--radius-pill);
   --seg-active-bg-token: var(--accent);
   --seg-active-fg-token: var(--on-accent);
-  --toast-radius: 22px;
-  --toast-bg: var(--card-h);
-  --toast-border: var(--border-l);
   color-scheme: light;
 }
 

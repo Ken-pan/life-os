@@ -26,6 +26,7 @@
   aria-live={isAssertive ? 'assertive' : 'polite'}
   aria-atomic="true"
 >
+  <span class="toast-dot" aria-hidden="true"></span>
   <span class="toast-msg">{state.msg}</span>
   {#if state.actionLabel && state.onAction}
     <button type="button" class="toast-action" onclick={handleAction}>{state.actionLabel}</button>

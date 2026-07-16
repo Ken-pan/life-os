@@ -62,11 +62,11 @@
   }
   .catalog-section__title {
     margin: 0 0 8px;
-    font-size: 22px;
+    font-size: var(--text-2xl);
   }
   .catalog-section__lead {
     margin: 0 0 20px;
     color: var(--t2, var(--text-secondary));
-    font-size: 13px;
+    font-size: var(--text-md);
   }
 </style>

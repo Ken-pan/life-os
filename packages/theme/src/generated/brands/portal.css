@@ -1,0 +1,64 @@
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/brands/portal.json
+  Rebuild: npm run build:tokens
+*/
+
+[data-app='portal'] {
+  --bg: #f3f6f8;
+  --bg-2: #fafbfd;
+  --card: #ffffff;
+  --card-h: #e8f3fa;
+  --border: #d4e4f0;
+  --border-l: #b8d4e8;
+  --t1: #1a2834;
+  --t2: #4a6278;
+  --t3: #6a8296;
+  --t4: #8aa0b0;
+  --text: var(--t1);
+  --text-secondary: var(--t2);
+  --text-muted: var(--t3);
+  --accent: #3d9ed6;
+  --accent-2: #5cb8ea;
+  --accent-bg: rgba(61, 158, 214, 0.12);
+  --on-accent: #ffffff;
+  --sidebar: #fafbfd;
+  --sidebar-foreground: #1a2834;
+  --sidebar-muted: rgba(26, 40, 52, 0.55);
+  --sidebar-accent: #e8f3fa;
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-border: #d4e4f0;
+  --appbar-bg: rgba(243, 246, 248, 0.9);
+  color-scheme: light;
+}
+
+[data-app='portal'][data-mode='dark'],
+[data-app='portal'][data-theme='dark'] {
+  --bg: #14161a;
+  --bg-2: #1a1e24;
+  --card: #1c2432;
+  --card-h: #223044;
+  --border: rgba(126, 203, 245, 0.12);
+  --border-l: rgba(126, 203, 245, 0.18);
+  --t1: #edf4fa;
+  --t2: #a8bdd0;
+  --t3: #7a92a8;
+  --t4: #5c7488;
+  --text: var(--t1);
+  --text-secondary: var(--t2);
+  --text-muted: var(--t3);
+  --accent: #5cb8ea;
+  --accent-2: #7ecbf5;
+  --accent-bg: rgba(92, 184, 234, 0.16);
+  --on-accent: #0d1a28;
+  --sidebar: #1a1e24;
+  --sidebar-foreground: #edf4fa;
+  --sidebar-muted: rgba(237, 244, 250, 0.55);
+  --sidebar-accent: #1c2432;
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-border: rgba(126, 203, 245, 0.12);
+  --appbar-bg: rgba(20, 22, 26, 0.9);
+  color-scheme: dark;
+}

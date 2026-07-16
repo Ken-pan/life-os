@@ -58,6 +58,10 @@ struct HomeOSProject: Codable {
         var type: String    // door | window
         var style: String?  // swing / sliding / fixed …
         var swing: String?  // in | out
+        /// 洞口高度(英寸,LiDAR 实测,2026-07 加法式)
+        var heightIn: Double? = nil
+        /// 窗台高(英寸,底边离地,2026-07 加法式):窗下家具规划的依据;门不发
+        var sillIn: Double? = nil
     }
 
     struct Zone: Codable {
@@ -99,11 +103,16 @@ struct HomeOSProject: Codable {
             var azimuthDeg: Double?
         }
 
+        /// 真实朝向与 90° 网格的偏角(度,2026-07 加法式):rotation 只有
+        /// 0/90/180/270,斜摆家具(转角钢琴/斜置沙发)的真朝向靠它;
+        /// 基本贴轴(≤3°)不发。语义:真朝向 = rotation + yawDeg
+        var yawDeg: Double? = nil
+
         var isEmpty: Bool {
             styleKeys == nil && styleZh == nil && heightIn == nil && elevIn == nil
                 && measuredWIn == nil && measuredHIn == nil
                 && confidence == nil && colorHex == nil && photoPath == nil
-                && photos == nil
+                && photos == nil && yawDeg == nil
         }
     }
 
@@ -159,5 +168,30 @@ struct HomeOSProject: Codable {
         var sourceNote: String?
         /// "full"(缺省)/"partial":房间更新 —— 网页端只动扫到的那片
         var scanScope: String?
+        /// 扫描诊断摘要(2026-07 加法式,ScanLog 聚合):阶段耗时/卡顿峰值/
+        /// 内存峰值/降级秒数/门控拒绝分布/上传流量… 纯数值键值对。
+        /// 网页端只透传展示,不参与任何合并逻辑。契约三处同源:此处 +
+        /// apps/home/supabase/README.md + web scan-payload.js(meta 展开透传)
+        var scanDiagnostics: [String: Double]?
+        /// 吊顶高(英寸,墙板高中位数,LiDAR 实测,2026-07 加法式):
+        /// 吊柜/高架储物规划与 3D 视图的纵向标尺
+        var ceilingHeightIn: Double?
+        /// 扫描现场地理上下文(2026-07 加法式):GPS + 平面图北向初值。
+        /// 网页端「阳光模拟」的太阳角与窗户朝向靠它免手填;
+        /// planNorthDeg 是罗盘初值(室内有磁偏),仅在网页端北向未校准时回填
+        var geo: Geo?
+
+        struct Geo: Codable {
+            var lat: Double
+            var lon: Double
+            /// 海拔(米,GPS 垂直通道有效时才发)
+            var elevM: Double?
+            /// GPS 水平精度(米)
+            var horizAccM: Double?
+            /// 平面图正上方对应的真实方位角(0=北,顺时针)
+            var planNorthDeg: Double?
+            /// 罗盘样本精度中位数(度) —— 网页端据此措辞"仅供参考"
+            var headingAccDeg: Double?
+        }
     }
 }

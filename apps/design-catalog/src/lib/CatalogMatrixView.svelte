@@ -88,20 +88,20 @@
 
   .catalog-matrix__title {
     margin: 0 0 var(--space-1);
-    font-size: 22px;
+    font-size: var(--text-2xl);
   }
 
   .catalog-matrix__lead {
     margin: 0;
     color: var(--t2, var(--text-secondary));
-    font-size: 13px;
+    font-size: var(--text-md);
   }
 
   .catalog-matrix__picker {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: 13px;
+    font-size: var(--text-md);
     color: var(--t2, var(--text-secondary));
   }
 

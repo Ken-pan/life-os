@@ -21,8 +21,27 @@
       "info-subtle": { "$type": "color", "$value": "#1a2d42" }
     }
   },
+  "chart": {
+    "$description": "Shared chart defaults — var()-derived so they adapt to every brand/mode; apps may override per-brand (finance tunes grid/axis in app.css).",
+    "grid": {
+      "$type": "cssValue",
+      "$value": "color-mix(in srgb, var(--t3, var(--text-muted)) 22%, transparent)"
+    },
+    "axis": { "$type": "cssValue", "$value": "var(--t3, var(--text-muted))" },
+    "tooltip-bg": { "$type": "cssValue", "$value": "var(--card)" },
+    "tooltip-border": {
+      "$type": "cssValue",
+      "$value": "var(--border-l, var(--border))"
+    },
+    "line": { "$type": "cssValue", "$value": "var(--accent)" },
+    "line-2": { "$type": "cssValue", "$value": "var(--accent-2, var(--accent))" },
+    "positive": { "$type": "cssValue", "$value": "var(--positive)" },
+    "warning": { "$type": "cssValue", "$value": "var(--warning)" },
+    "critical": { "$type": "cssValue", "$value": "var(--critical)" },
+    "info": { "$type": "cssValue", "$value": "var(--info)" }
+  },
   "chartSeries": {
-    "$description": "Categorical 系列色板(多系列图表用,固定槽位顺序即 CVD 安全机制,禁止循环取色)。亮暗各自选定,已用 dataviz 六项检查验证:light on #ffffff worst adjacent ΔE 24.2;dark on #141815 worst 10.3(floor band——组件必须带图例/直接标注/2px 间隙作次级编码)。单系列图表不走槽位,用品牌 accent。",
+    "$description": "Categorical 系列色板(多系列图表用,固定槽位顺序即 CVD 安全机制,禁止循环取色)。亮暗各自选定,已用 dataviz 六项检查验证:light on #ffffff worst adjacent ΔE 24.2;dark on #141815 worst 10.3(floor band——组件必须带图例/直接标注/2px 间隙作次级编码)。单系列图表不走槽位,用 --chart-line(品牌 accent)。",
     "light": {
       "1": { "$type": "color", "$value": "#2a78d6" },
       "2": { "$type": "color", "$value": "#1baf7a" },
