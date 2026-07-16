@@ -119,6 +119,7 @@ export default {
     emptyTitle: 'No projects yet',
     emptyHint: 'Create a project first, then group related tasks under it.',
     mapTitle: 'Project map',
+    mapRootNote: '{count} active projects · hover any node for details',
     cardMeta: '{count} open tasks',
     cardMetaWithNext: '{count} open · Next: {title}',
     status_active: 'Active',

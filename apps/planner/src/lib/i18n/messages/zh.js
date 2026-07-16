@@ -119,6 +119,7 @@ export default {
     emptyTitle: '还没有项目',
     emptyHint: '先创建一个项目，再把相关任务聚合起来。',
     mapTitle: '项目鸟瞰',
+    mapRootNote: '{count} 个进行中项目 · 悬浮任意节点看说明',
     cardMeta: '{count} 个未完成任务',
     cardMetaWithNext: '{count} 个未完成 · 下一步：{title}',
     status_active: '进行中',

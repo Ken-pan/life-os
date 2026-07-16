@@ -107,36 +107,46 @@
 
   const mindmapTree = {
     label: 'Life OS',
+    note: '个人生活操作系统 · 5 个模块',
     children: [
       {
         label: 'Finance',
+        note: '个人财务驾驶舱 · 记账 / 持仓 / 预测',
         children: [
-          { label: '记账与回顾' },
-          { label: '持仓组合', children: [{ label: '再平衡建议' }, { label: '快照对比' }] },
+          { label: '记账与回顾', note: '每日花销、分类支出 Treemap、周期账单识别' },
+          {
+            label: '持仓组合',
+            note: '资产配置、再平衡建议、快照对比',
+            children: [{ label: '再平衡建议' }, { label: '快照对比' }],
+          },
           { label: '订阅管理' },
         ],
       },
       {
         label: 'Fitness',
+        note: '训练伴侣 · 计划 / 统计 / 动作示范',
         children: [
           { label: '训练计划' },
-          { label: '统计与 PR' },
+          { label: '统计与 PR', note: '周训练容量、体重趋势、个人纪录' },
           { label: '体重追踪' },
         ],
       },
       {
         label: 'Home',
+        note: '户型扫描与布置',
         children: [
-          { label: '户型扫描', children: [{ label: 'RoomPlan 导入' }] },
+          { label: '户型扫描', note: 'RoomPlan → home schema → 网页拉取', children: [{ label: 'RoomPlan 导入' }] },
           { label: '家具布置' },
         ],
       },
       {
         label: 'Music',
+        note: '本地曲库播放器',
         children: [{ label: '本地曲库' }, { label: '歌词与队列' }],
       },
       {
         label: 'Planner',
+        note: '阳光清单 · 任务与项目规划',
         children: [{ label: '今日节奏' }, { label: '周回顾' }],
       },
     ],
@@ -261,7 +271,7 @@
       </div>
     </CatalogStateBlock>
 
-    <CatalogStateBlock stateId="mindmap" label="MindMap — 层级鸟瞰(分支各占一个槽位色,点击折叠)">
+    <CatalogStateBlock stateId="mindmap" label="MindMap — 层级鸟瞰(分支各占槽位色,点击折叠,悬浮看 note 说明)">
       <div class="charts-demo-card charts-demo-card--wide">
         <h3 class="charts-demo-card__title">Life OS 模块地图</h3>
         <MindMap root={mindmapTree} />

@@ -12,6 +12,7 @@
   import { t } from '$lib/i18n/index.js'
   import { toast } from '$lib/ui.svelte.js'
   import { MindMap } from '@life-os/platform-web/svelte/charts'
+  import { buildTaskMetaLine } from '$lib/domain/taskMetaLine.js'
 
   let title = $state('')
   let summary = $state('')
@@ -19,17 +20,37 @@
   const projects = $derived(visibleProjects())
   const activeProjects = $derived(projects.filter((project) => project.status === 'active'))
 
+  // 鸟瞰图任务节点的说明:备注优先,其次(有日期时)排期/截止元信息
+  function taskNote(task) {
+    const notes = task.notes?.trim()
+    const meta = task.dueDate || task.scheduledStart ? buildTaskMetaLine(task, t) : ''
+    return [notes, meta].filter(Boolean).join('\n') || undefined
+  }
+
   // 项目鸟瞰:活跃项目 → 前 5 个未完成任务(长尾折进省略节点,点项目节点可折叠)
+  // 每个节点带 note 说明:项目用真实 summary,任务用备注/元信息,省略节点列出被折叠的任务
   const MAP_TASK_LIMIT = 5
   const projectTree = $derived({
     label: t('projects.title'),
+    note: t('projects.mapRootNote', { count: activeProjects.length }),
     children: activeProjects.map((project) => {
       const open = projectOpenTasks(project)
-      const children = open.slice(0, MAP_TASK_LIMIT).map((task) => ({ label: task.title }))
+      const children = open.slice(0, MAP_TASK_LIMIT).map((task) => ({
+        label: task.title,
+        note: taskNote(task),
+      }))
       if (open.length > MAP_TASK_LIMIT) {
-        children.push({ label: `… +${open.length - MAP_TASK_LIMIT}` })
+        const rest = open.slice(MAP_TASK_LIMIT)
+        children.push({
+          label: `… +${rest.length}`,
+          note: rest.map((task) => `· ${task.title}`).join('\n'),
+        })
       }
-      return { label: project.title, children }
+      return {
+        label: project.title,
+        note: project.summary?.trim() || undefined,
+        children,
+      }
     }),
   })
   const pausedProjects = $derived(projects.filter((project) => project.status === 'paused'))

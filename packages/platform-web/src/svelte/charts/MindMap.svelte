@@ -9,7 +9,7 @@
   import { seriesColor, px, MAX_SERIES } from './chartUtils.js'
 
   /**
-   * @typedef {{ label: string, children?: MindInput[] }} MindInput
+   * @typedef {{ label: string, note?: string, children?: MindInput[] }} MindInput
    * @type {{
    *   root: MindInput,
    *   split?: boolean,
@@ -96,9 +96,76 @@
   }
 
   const computedAria = $derived(ariaLabel || `思维导图:${root.label}`)
+
+  // 节点说明:节点 id(路径式 "0.1.2")→ note 文本
+  const noteMap = $derived.by(() => {
+    const m = new Map()
+    ;(function walk(n, id) {
+      if (n.note) m.set(id, String(n.note))
+      n.children?.forEach((c, i) => walk(c, `${id}.${i}`))
+    })(root, '0')
+    return m
+  })
+
+  /** 该节点是否值得弹 tooltip:有说明,或标签被截断(需看全名) */
+  function nodeTip(node) {
+    const note = noteMap.get(node.id) ?? ''
+    const clipped = String(node.label).length > MAX_CHARS
+    return note || clipped ? { label: String(node.label), note } : null
+  }
+
+  let wrapEl = $state(null)
+  let hover = $state(/** @type {{ label: string, note: string } | null} */ (null))
+  let tipXY = $state({ x: 0, y: 0 })
+  let tipEl = $state(null)
+  let tipW = $state(160)
+  let tipH = $state(40)
+  $effect(() => {
+    if (!tipEl || !hover) return
+    const r = tipEl.getBoundingClientRect()
+    tipW = r.width
+    tipH = r.height
+  })
+
+  function onNodePointer(e, node) {
+    const tip = nodeTip(node)
+    if (!tip) {
+      hover = null
+      return
+    }
+    hover = tip
+    if (!wrapEl) return
+    const r = wrapEl.getBoundingClientRect()
+    // .mindmap 可横向滚动;绝对定位子元素随内容滚动,坐标要含 scroll 偏移
+    tipXY = {
+      x: e.clientX - r.left + wrapEl.scrollLeft,
+      y: e.clientY - r.top + wrapEl.scrollTop,
+    }
+  }
+
+  const TIP_OFF = 14
+  const tipLeft = $derived.by(() => {
+    if (!wrapEl) return tipXY.x + TIP_OFF
+    const rightBound = wrapEl.scrollLeft + wrapEl.clientWidth
+    const wantRight = tipXY.x + TIP_OFF
+    return wantRight + tipW > rightBound
+      ? Math.max(wrapEl.scrollLeft, tipXY.x - TIP_OFF - tipW)
+      : wantRight
+  })
+  const tipTop = $derived.by(() => {
+    const floor = wrapEl?.scrollTop ?? 0
+    const above = tipXY.y - tipH - TIP_OFF
+    return above < floor ? tipXY.y + TIP_OFF : above
+  })
 </script>
 
-<div class="mindmap" role="tree" aria-label={computedAria}>
+<div
+  class="mindmap"
+  bind:this={wrapEl}
+  role="tree"
+  aria-label={computedAria}
+  onpointerleave={() => (hover = null)}
+>
   <svg
     width={layout.width + PAD * 2}
     height={layout.height + PAD * 2}
@@ -123,6 +190,7 @@
         aria-selected="false"
         tabindex="0"
         onclick={() => toggle(node)}
+        onpointermove={(e) => onNodePointer(e, node)}
         onkeydown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
@@ -130,6 +198,7 @@
           }
         }}
       >
+        <title>{node.label}{noteMap.get(node.id) ? ` — ${noteMap.get(node.id)}` : ''}</title>
         {#if isRoot}
           <rect
             class="mindmap__root-pill"
@@ -187,13 +256,55 @@
       </g>
     {/each}
   </svg>
+
+  {#if hover}
+    <div
+      bind:this={tipEl}
+      class="mindmap__tip"
+      style:transform={`translate(${Math.round(tipLeft)}px, ${Math.round(tipTop)}px)`}
+      role="status"
+    >
+      <div class="mindmap__tip-title">{hover.label}</div>
+      {#if hover.note}
+        <div class="mindmap__tip-note">{hover.note}</div>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>
   .mindmap {
+    position: relative;
     width: 100%;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  .mindmap__tip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+    pointer-events: none;
+    max-width: 260px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--chart-tooltip-bg, var(--card, #fff));
+    border: 1px solid var(--chart-tooltip-border, var(--border, rgba(0, 0, 0, 0.1)));
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.06),
+      0 8px 24px rgba(0, 0, 0, 0.1);
+    font-size: var(--text-xs, 11px);
+    line-height: 1.5;
+    will-change: transform;
+  }
+  .mindmap__tip-title {
+    color: var(--t1, var(--text, #0b0b0b));
+    font-weight: 650;
+  }
+  .mindmap__tip-note {
+    margin-top: 2px;
+    color: var(--t3, var(--text-muted, #898781));
+    white-space: pre-line;
   }
   svg {
     display: block;
