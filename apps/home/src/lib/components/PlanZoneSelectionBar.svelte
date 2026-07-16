@@ -1,6 +1,7 @@
 <script>
   import { confirmZone, removeZone, updateZone } from '$lib/state.svelte.js'
   import { ZONE_COLORS } from '$lib/spatial/zones.js'
+  import { FLOOR_MATERIALS } from '$lib/spatial/floor-materials.js'
 
   /** @type {{
    *   zone: import('$lib/spatial/types.js').SpatialZone,
@@ -65,6 +66,23 @@
           ></button>
         {/each}
       </div>
+      <!-- 地板材质给真实贴图模式用(浏览态可见);「自动」= 按分区名推断。 -->
+      <select
+        class="zone-floor-select"
+        aria-label="地板材质"
+        value={zone.floor ?? ''}
+        onchange={(e) => {
+          const v = e.currentTarget.value
+          updateZone(zone.id, {
+            floor: v === '' ? undefined : /** @type {any} */ (v),
+          })
+        }}
+      >
+        <option value="">地板:自动</option>
+        {#each FLOOR_MATERIALS as m (m.value)}
+          <option value={m.value}>地板:{m.label}</option>
+        {/each}
+      </select>
     </div>
   {/if}
 
@@ -176,6 +194,17 @@
   .zone-colors {
     display: inline-flex;
     gap: 4px;
+  }
+
+  .zone-floor-select {
+    font-size: 12px;
+    min-height: 36px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t2);
+    cursor: pointer;
   }
 
   .zone-color-swatch {

@@ -21,6 +21,17 @@ import { pointInPolygon } from './geometry.js'
 /** @typedef {'wood' | 'carpet' | 'tile' | 'deck'} FloorMaterial */
 
 /**
+ * 材质选项(UI 选择器用)。value 对应 pattern 名,顺序按常用度。
+ * @type {{ value: FloorMaterial, label: string }[]}
+ */
+export const FLOOR_MATERIALS = [
+  { value: 'wood', label: '木地板' },
+  { value: 'tile', label: '瓷砖' },
+  { value: 'carpet', label: '地毯' },
+  { value: 'deck', label: '户外板' },
+]
+
+/**
  * 房间名 → 材质的推断规则,自上而下第一条命中即用。
  * 显式 room.floor / zone.floor 优先于推断。
  * @type {Array<{ re: RegExp, mat: FloorMaterial }>}
