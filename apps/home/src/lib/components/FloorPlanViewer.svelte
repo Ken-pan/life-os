@@ -7,6 +7,7 @@
     markPlanViewTouched,
     releasePlanView,
   } from '$lib/plan-view.svelte.js'
+  import { getPlanStyle, setPlanTextured } from '$lib/plan-style.svelte.js'
   import { bindPlanEditDrag } from '$lib/plan-edit-drag.js'
   import { bindPlanGraphEdit } from '$lib/plan-graph-edit.js'
   import { bindPlanZoneEdit } from '$lib/plan-zone-edit.js'
@@ -198,6 +199,7 @@
   // 平面页要还在那儿。这里取的是**初值** —— 组件内部照旧用局部 zoom/panX/panY 读写
   // (下面几十处引用一个都不用改),变化由后面那个 $effect 同步回去。
   const planView = getPlanView()
+  const planStyle = getPlanStyle()
   let zoom = $state(planView.zoom)
   let panX = $state(planView.panX)
   let panY = $state(planView.panY)
@@ -365,6 +367,7 @@
       previewViewpoints,
       showViewpoints,
       showFurniture,
+      textured: planStyle.textured,
     }),
   )
 
@@ -1029,6 +1032,20 @@
           >
             铺满宽
             <kbd class="plan-zoom-kbd">F</kbd>
+          </button>
+          <div class="plan-zoom-sep" role="separator"></div>
+          <button
+            type="button"
+            role="menuitemcheckbox"
+            aria-checked={planStyle.textured}
+            class="plan-zoom-item"
+            class:checked={planStyle.textured}
+            onclick={() => {
+              setPlanTextured(!planStyle.textured)
+              zoomMenuOpen = false
+            }}
+          >
+            真实地板贴图
           </button>
           <div class="plan-zoom-sep" role="separator"></div>
           {#each ZOOM_PRESETS as pct (pct)}

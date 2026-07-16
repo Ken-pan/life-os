@@ -1,5 +1,6 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 import { formatFtIn } from './dimensions.js'
+import { detectRooms } from './rooms-from-graph.js'
 import { graphOpeningBounds, graphOpeningHitRect } from './graph-openings.js'
 import { polygonPointsAttr, zoneCentroid } from './zones.js'
 import { viewpointConePath, viewpointHandlePoint } from './viewpoints.js'
@@ -25,6 +26,13 @@ import {
   supportsDoorWidthResize,
 } from './wall-edit.js'
 import { distanceFt, formatMeasureFt } from '../plan-measure.js'
+import {
+  floorFillForFace,
+  floorFillForRoom,
+  floorFillForZone,
+  floorPatternDefs,
+  wetFixturePoints,
+} from './floor-materials.js'
 
 /**
  * @param {SpatialProject} project
@@ -75,6 +83,9 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   showFurniture?: boolean,
  *   showRoomEnglish?: boolean,
  *   hideStorageZones?: boolean,
+ *   textured?: boolean,
+ *     真实贴图模式:房间地面按材质铺程序化纹理(木/砖/毯/户外板),
+ *     网格纸退场 —— 看「家」不看「图纸」。见 floor-materials.js
  *   focus?: { x: number, y: number, rect?: { x: number, y: number, w: number, h: number }, spanFt?: number } | null,
  *     整理任务定位:viewBox 收到焦点周围一圈并画脉冲标记 —— 裁的是取景框,
  *     内容仍完整渲染,周围的墙和家具上下文都在
@@ -112,6 +123,10 @@ export function renderFloorPlanSvg(project, opts = {}) {
       opts.placementEditMode ||
       opts.viewpointEditMode,
   )
+  // 真实贴图只属于浏览态:编辑是「画图」,线稿 + 网格才是对的工作面。
+  const textured = Boolean(opts.textured) && !editingAny
+  // 板材方向整图定一次(沿户型长轴通铺),门洞两侧不换向。
+  const floorHorizontal = width >= height
   // 储藏编号(S1…)是内部主键,默认不上图:标储藏工具需要对码时才全量显示,
   // 其余场合只有选中的那个区亮出编号。
   const showStorageCodes =
@@ -142,13 +157,14 @@ export function renderFloorPlanSvg(project, opts = {}) {
 
   const parts = []
   parts.push(
-    `<svg class="floor-plan-svg${editModeOn}${interactiveOn}" viewBox="${box.x} ${box.y} ${box.w} ${box.h}" preserveAspectRatio="xMidYMid meet" role="${svgRole}" aria-label="${esc(svgLabel)}" xmlns="http://www.w3.org/2000/svg">`,
+    `<svg class="floor-plan-svg${editModeOn}${interactiveOn}${textured ? ' plan-textured' : ''}" viewBox="${box.x} ${box.y} ${box.w} ${box.h}" preserveAspectRatio="xMidYMid meet" role="${svgRole}" aria-label="${esc(svgLabel)}" xmlns="http://www.w3.org/2000/svg">`,
   )
   parts.push(`<defs>
   <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
     <rect width="7" height="7" fill="var(--plan-hatch-bg,#edf1f5)"/>
     <line x1="0" y1="0" x2="0" y2="7" stroke="var(--plan-hatch-line,#9aadc0)" stroke-width="2.4"/>
   </pattern>
+${textured ? floorPatternDefs(pxPerFt) : ''}
 </defs>`)
   parts.push(`<style>
  .grid line{stroke:var(--plan-grid,#dbe1e6);stroke-width:1}
@@ -300,19 +316,54 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .vp-handle-stem{stroke:var(--graph-accent,#1d6b42);stroke-width:1.2;stroke-dasharray:3 2;pointer-events:none}
  .plan-interactive .vp-dot{cursor:pointer}
  .storage-unassigned{stroke-dasharray:4 3;opacity:.85}
+ /* 贴图模式:文字压在纹理上,给一圈纸色描边当光环,否则木纹里的小字会糊。
+    paint-order 先描边后填色,描边只朝外扩。 */
+ .plan-textured .room-zh,.plan-textured .spatial-zone-label{stroke:var(--plan-label-halo,rgba(255,255,255,.72));stroke-width:3.5px;paint-order:stroke fill}
+ .plan-textured .room-en,.plan-textured .circ-label,.plan-textured .dim-tag,.plan-textured .furn,.plan-textured .placement-label,.plan-textured .tiny{stroke:var(--plan-label-halo,rgba(255,255,255,.72));stroke-width:2.5px;paint-order:stroke fill}
+ /* 走廊在贴图模式下就是一段木地板,虚线框会把它读成「区域标注」。 */
+ .plan-textured .room-circ{stroke:none}
  @keyframes plan-sel-pulse{0%,100%{stroke-opacity:1}50%{stroke-opacity:.45}}
 </style>`)
 
   // 浏览态:隔行采样 + 低透明度,网格退成背景纸纹;编辑态:全密度可吸附网格。
-  const gridStep = editingAny ? step : step * 2
-  parts.push(`<g class="grid${editingAny ? '' : ' grid-soft'}">`)
-  for (let x = gridStep; x < width; x += gridStep) {
-    parts.push(`<line x1="${x}" y1="${step}" x2="${x}" y2="${height - step}"/>`)
+  // 贴图模式下网格整个退场 —— 地板纹理本身就是「地」,工程纸格会穿帮。
+  if (!textured) {
+    const gridStep = editingAny ? step : step * 2
+    parts.push(`<g class="grid${editingAny ? '' : ' grid-soft'}">`)
+    for (let x = gridStep; x < width; x += gridStep) {
+      parts.push(
+        `<line x1="${x}" y1="${step}" x2="${x}" y2="${height - step}"/>`,
+      )
+    }
+    for (let y = gridStep; y < height; y += gridStep) {
+      parts.push(
+        `<line x1="${step}" y1="${y}" x2="${width - step}" y2="${y}"/>`,
+      )
+    }
+    parts.push('</g>')
   }
-  for (let y = gridStep; y < height; y += gridStep) {
-    parts.push(`<line x1="${step}" y1="${y}" x2="${width - step}" y2="${y}"/>`)
+
+  // 贴图模式的墙图户型:围合面即地板。手绘分区往往只盖住一部分地面,
+  // 先把墙图追出的每个封闭多边形铺上默认木地板打底,命名分区随后画在
+  // 上面覆写各自的材质 —— 这样整个家的地面都是「地」,不会露出纸白。
+  // bridgeGapIn 放宽到 60″:分区检测不敢跨门洞(会把两间房焊成一间),
+  // 铺地板恰恰要跨 —— 门洞两侧的地面本来就是连续的,宽到滑门/通道也要过。
+  if (textured && project.wallGraph) {
+    const faces = detectRooms(project.wallGraph, {
+      minSqFt: 4,
+      bridgeGapIn: 60,
+    })
+    if (faces.length) {
+      const wetPts = wetFixturePoints(project.fixtures)
+      parts.push('<g class="floor-base" aria-hidden="true">')
+      for (const f of faces) {
+        parts.push(
+          `<polygon points="${polygonPointsAttr(f.polygon)}" fill="${floorFillForFace(f, wetPts, floorHorizontal)}"/>`,
+        )
+      }
+      parts.push('</g>')
+    }
   }
-  parts.push('</g>')
 
   for (const room of project.rooms) {
     if (hasSpatialZones) continue
@@ -331,8 +382,14 @@ export function renderFloorPlanSvg(project, opts = {}) {
     }
     if (isCirc) {
       const circTip = `动线 · ${room.nameZh}`
+      // 贴图模式:走廊铺和干区一样的木地板(class 里保留 room-circ 语义,
+      // 虚线框由 .plan-textured 样式关掉)。内联 style 而非 fill 属性:
+      // .room-circ 的 CSS fill 规则会压过 presentation attribute。
+      const circFill = textured
+        ? ` style="fill:${floorFillForRoom(room, floorHorizontal)}"`
+        : ''
       parts.push(
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-circ room-fill" data-plan-tip="${esc(circTip)}"/>`,
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-circ room-fill" data-plan-tip="${esc(circTip)}"${circFill}/>`,
       )
       if (!compact) {
         parts.push(
@@ -341,9 +398,12 @@ export function renderFloorPlanSvg(project, opts = {}) {
       }
       continue
     }
-    const roomTip = `房间 · ${room.nameZh}（浅色仅区分房间）`
+    const roomTip = textured
+      ? `房间 · ${room.nameZh}`
+      : `房间 · ${room.nameZh}（浅色仅区分房间）`
+    const roomFill = textured ? floorFillForRoom(room, floorHorizontal) : fill
     parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-fill" fill="${fill}" stroke="var(--plan-room-stroke,#cdd4da)" stroke-width="1" data-plan-tip="${esc(roomTip)}"/>`,
+      `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="room-fill" fill="${roomFill}" stroke="var(--plan-room-stroke,#cdd4da)" stroke-width="1" data-plan-tip="${esc(roomTip)}"/>`,
     )
     const cx = x + w / 2
     const cy = y + h / 2 - (compact ? 6 : 8)
@@ -466,9 +526,22 @@ export function renderFloorPlanSvg(project, opts = {}) {
       const fill = z.color ?? 'var(--plan-room,#e8edf1)'
       const staleCls = z.stale ? ' spatial-zone-stale' : ''
       const c = zoneCentroid(z.polygon)
-      parts.push(
-        `<polygon points="${pts}" class="spatial-zone${staleCls}" fill="${fill}" fill-opacity="0.18" data-zone-stale="${z.stale ? '1' : '0'}"/>`,
-      )
+      if (textured) {
+        // 地板贴图打底,分区自己的颜色降成一层极淡的罩色 —— 语义色还在,
+        // 但地面材质才是主视觉。
+        parts.push(
+          `<polygon points="${pts}" class="spatial-zone${staleCls}" fill="${floorFillForZone(z, floorHorizontal)}" data-zone-stale="${z.stale ? '1' : '0'}"/>`,
+        )
+        if (z.color) {
+          parts.push(
+            `<polygon points="${pts}" fill="${z.color}" fill-opacity="0.08" pointer-events="none"/>`,
+          )
+        }
+      } else {
+        parts.push(
+          `<polygon points="${pts}" class="spatial-zone${staleCls}" fill="${fill}" fill-opacity="0.18" data-zone-stale="${z.stale ? '1' : '0'}"/>`,
+        )
+      }
       parts.push(
         `<text x="${c.x}" y="${c.y}" text-anchor="middle" class="spatial-zone-label${dimmed}">${esc(z.nameZh)}${z.stale ? ' · 需核对' : ''}</text>`,
       )

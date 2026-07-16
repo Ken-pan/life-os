@@ -89,6 +89,8 @@
  * @property {string} [fill]
  * @property {'room' | 'circulation' | 'structural'} [kind]
  * @property {RoomDimensions} [dimensions]
+ * @property {import('./floor-materials.js').FloorMaterial} [floor]
+ *   地板材质(真实贴图模式用);省略则按房间名推断
  */
 
 /**
@@ -277,6 +279,8 @@
  * @property {string} [color]
  * @property {Point[]} polygon
  * @property {boolean} [stale]
+ * @property {import('./floor-materials.js').FloorMaterial} [floor]
+ *   地板材质(真实贴图模式用);省略则按分区名推断
  */
 
 /**
