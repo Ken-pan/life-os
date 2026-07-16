@@ -5,6 +5,7 @@
  * apps/home/supabase/README.md · 这里。
  */
 import { buildFromWallGraph } from './wall-graph.js'
+import { normalizeScanZones } from './zone-normalize.js'
 
 export const SCAN_PAYLOAD_FORMAT_VERSION = 1
 
@@ -45,12 +46,29 @@ export function buildProjectFromScan(payload) {
   const meta = {
     id: h.meta?.id ?? `scan-${String(payload.scanId ?? 'unknown')}`,
     nameZh: h.meta?.nameZh ?? '扫描户型',
+    // ...h.meta 展开顺带透传 meta.scanDiagnostics(iOS ScanLog 的扫描诊断
+    // 摘要,2026-07 加法式,纯数值键值对)—— 只展示不参与合并
     ...h.meta,
     sourceNote: h.meta?.sourceNote ?? 'iOS HomeScan · RoomPlan 实测',
   }
+  // 现场罗盘北向(meta.geo,2026-07 加法式)提为正式的北向校准 —— 只是初值,
+  // 用户在网页端重校会直接覆盖 meta.planNorthDeg,geo 原始值仍留档
+  if (
+    meta.planNorthDeg == null &&
+    Number.isFinite(h.meta?.geo?.planNorthDeg)
+  ) {
+    meta.planNorthDeg = h.meta.geo.planNorthDeg
+  }
+  // 扫描来的分区常斜穿墙体(按房间种子就近瓜分地面的产物)——吸附到墙图
+  // 检测出的房间面;吸不上又明显跨面的标 stale 走「待确认」。见 zone-normalize.js
+  const { zones } = normalizeScanZones({
+    wallGraph: h.wallGraph,
+    zones: h.zones ?? [],
+    placements: h.placements ?? [],
+  })
   return buildFromWallGraph(h.wallGraph, {
     graphOpenings: h.graphOpenings ?? [],
-    zones: h.zones ?? [],
+    zones,
     placements: (h.placements ?? []).map(stripAttrsPhotoPath),
     fixtures: (h.fixtures ?? []).map(stripAttrsPhotoPath),
     viewpoints: (h.viewpoints ?? []).map(stripPhotoPath),

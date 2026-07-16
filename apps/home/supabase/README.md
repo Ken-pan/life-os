@@ -28,6 +28,7 @@ payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 | `attrs.measuredWIn` / `attrs.measuredHIn` | LiDAR 实测平面脚印（英寸，与落盘时 w/h 一致）。w/h 之后可被用户拖改，这两个是不动的真值，网页端「恢复实测」靠它 |
 | `attrs.elevIn` | LiDAR 实测底面离地高度（英寸，2026-07 加法式）。省略 = 落地；≥5cm 才导出（吊柜/挂墙电视/窗式空调…）。网页端叠放判定（桌下柜不算撞、on_top_of/under 关系）靠它 |
 | `attrs.confidence` | RoomPlan 识别置信度 `high\|medium\|low` |
+| `attrs.yawDeg` | 真实朝向与 90° 网格的偏角(度,(-45,45],2026-07-16 加法式):`rotation` 只有 0/90/180/270,斜摆家具(转角钢琴/斜置沙发)真朝向 = rotation + yawDeg;贴轴(≤3°)不发。网页端当前忽略,渲染斜置家具时启用 |
 | `attrs.colorHex` | 主色 `#RRGGBB`（设备端抓拍图 k-means；网页端拉取时若有 ≥2 个方位照片会用 **CIELAB 分量中位数聚合**覆盖——单视角白平衡漂移拽不动结果，2026-07-15） |
 | `attrs.colorSpreadE` | 多视角主色离散度（ΔE76，网页端派生）：>12 = 光线不稳，这件的颜色别太当真（能力18 的分维置信度） |
 | `attrs.photoPath` | 家具抓拍图（最佳一张）桶内路径；网页端拉取后换成本地 `attrs.photoRef`（IndexedDB），`photoPath` 不落地 |
@@ -35,6 +36,10 @@ payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 | `attrs.photos[]` | 多视角证据包：`{ path, azimuthDeg }`，按方位分 4 桶每桶最佳、分数降序（第一张 = photoPath 那张）；桶内定名 `obj-{id}-{k}.jpg`；网页端逐张换成 `photos[].photoRef` |
 | `homeos.storageZones[]` | 储藏区规划（加法式，2026-07）：仅 `server-optimized` 优化副本携带（iPhone 不发）；replace 模式拉取时随户型落地，`placementId` 引用同 payload 的 placement id |
 | `homeos.meta.scanScope` | `"full"`(缺省)/`"partial"`(2026-07 加法式)。partial = 房间更新:网页端合并时只动扫描 coverage(配准后的扫描分区多边形)里的家具,片外原封不动、不算「消失」;**只在配准过门时生效**,比例回退按 full 处理 |
+| `homeos.meta.scanDiagnostics` | 扫描诊断摘要(2026-07-16 加法式,iOS ScanLog 聚合):纯数值键值对 —— 阶段耗时峰值(`merge_all_ms`/`export_flatten_ms`/`upload_total_ms`…)、`stall_worst_ms` 主线程卡顿峰值、`mem_peak_mb`、`degraded_s` 热/省电降速时长、`tracking_limited_s`、`gate_*` 机位门控拒绝分布、`rooms`/`objects_detected`/`vp_auto`/`object_shot_bins`、`upload_kb`/`upload_retries`、`review_kind_fixes`(用户改类别次数=检测认错次数)、`battery_start_pct`/`battery_end_pct`(一次扫描的续航成本)、`errors`。网页端只透传展示,不参与合并;调 iOS 采集参数的现场数据 |
+| `homeos.meta.ceilingHeightIn` | 吊顶高(英寸,墙板高中位数,LiDAR 实测,2026-07-16 加法式):吊柜/高架储物规划与 3D 视图的纵向标尺。网页端当前透传不消费 |
+| `homeos.meta.geo` | 扫描现场地理上下文(2026-07-16 加法式,GeoContext 采集):`{ lat, lon, elevM?, horizAccM?, planNorthDeg?, headingAccDeg? }`。经纬度 5 位小数(~1.1m);`planNorthDeg` = 平面图正上方的真实方位角,罗盘全程采样配对相机朝向的圆均值(室内有磁偏,只当初值);`headingAccDeg` = 样本精度中位数。网页端 buildProjectFromScan 把 `planNorthDeg` 提为 `meta.planNorthDeg`(仅当未校准),applyCloudScan 在阳光模拟位置仍是出厂默认时用 GPS 回填 `settings.sunLat/sunLon/sunElevM`。拿不到定位时整个字段不发 |
+| `graphOpenings[].heightIn` / `.sillIn` | 洞口纵向实测(英寸,2026-07-16 加法式):`heightIn` 门窗高;`sillIn` 窗台高(底边离地,仅窗发)—— 「窗下能放多高的柜子」的答案。网页端 `fitGraphOpeningOnEdge` 用 `{...go}` 展开透传,当前不消费 |
 | `placement.fixed` / `fixture.fixed` | 公寓自带、钉死（马桶/内嵌橱柜/洗衣烘干/窗式空调…，2026-07）：仅优化副本携带，iPhone 不发、iOS 解码忽略。网页端语义：扫描合并/融合时几何一律以本地为准、扫不到也不消失、不被顶掉；结构锁定时 UI 挪/转/删全拦（解锁结构编辑放行） |
 
 样式属性同时用于精化 kind：L形沙发→`sofa`、单人沙发→`armchair`、

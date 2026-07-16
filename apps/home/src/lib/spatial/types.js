@@ -243,6 +243,11 @@
  * @property {string[]} [assumptions]
  * @property {string} [sourceNote]
  * @property {number} [planNorthDeg] 平面图正上方对应的真实方位角；罗盘/EXIF 朝向靠它换算。未校准则为空
+ * @property {{ lat: number, lon: number, elevM?: number, horizAccM?: number,
+ *   planNorthDeg?: number, headingAccDeg?: number }} [geo]
+ *   扫描现场地理上下文(iOS 采集,2026-07 加法式):GPS + 罗盘北向初值。
+ *   阳光模拟的太阳角与窗户朝向靠它免手填;planNorthDeg 在
+ *   buildProjectFromScan 里提为正式北向(仅当未校准),原始值留档
  */
 
 /**

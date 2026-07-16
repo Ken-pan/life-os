@@ -2580,7 +2580,27 @@ let cloudScanReplacedProject = null
  * @param {SpatialProject} project
  */
 export function applyCloudScan(project) {
-  cloudScanReplacedProject = S.projects[S.activeProjectId] ?? null
+  const prev = S.projects[S.activeProjectId] ?? null
+  cloudScanReplacedProject = prev
+  // 双向保全:整包替换不该抹掉「用户在网页端补的、扫描测不出的」那层 ——
+  // 北向校准和分区地板材质都是人工判断,新扫描里没有对应数据源。
+  if (prev) {
+    // 北向:用户手工校准 > 本次扫描罗盘初值 > 旧值。扫描的 geo.planNorthDeg
+    // 已在 buildProjectFromScan 提为 meta.planNorthDeg,这里只兜「新扫描
+    // 没带、旧图有」的情况
+    if (project.meta.planNorthDeg == null && prev.meta?.planNorthDeg != null) {
+      project.meta.planNorthDeg = prev.meta.planNorthDeg
+    }
+    // 分区地板材质按名字认亲:「卫生间」还是那个卫生间,木地板设置跟着走
+    const prevFloor = new Map(
+      (prev.zones ?? [])
+        .filter((z) => z.floor)
+        .map((z) => [z.nameZh, z.floor]),
+    )
+    for (const z of project.zones ?? []) {
+      if (!z.floor && prevFloor.has(z.nameZh)) z.floor = prevFloor.get(z.nameZh)
+    }
+  }
   layoutUndoStack = []
   layoutRedoStack = []
   graphUndoStack = []
@@ -2588,7 +2608,22 @@ export function applyCloudScan(project) {
   persistUndoStacks()
   persistGraphUndoStacks()
   setActiveProject(project)
-  toast('云端扫描已应用')
+  // GPS 回填阳光模拟位置:只在设置仍是出厂默认时动 —— 手填过的坐标是
+  // 用户的判断,现场一次性 GPS 精度未必更好
+  const geo = project.meta?.geo
+  const atDefaults =
+    S.settings.sunLat === 47.823 &&
+    S.settings.sunLon === -122.27 &&
+    S.settings.sunElevM === 150
+  let geoNote = ''
+  if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lon) && atDefaults) {
+    setSunLocation({ lat: geo.lat, lon: geo.lon, elevM: geo.elevM })
+    geoNote = ',已带回现场定位'
+  }
+  if (project.meta.planNorthDeg != null && prev?.meta?.planNorthDeg == null) {
+    geoNote += ',北向已按罗盘初校(可在平面图重校)'
+  }
+  toast(`云端扫描已应用${geoNote}`)
 }
 
 export function canUndoCloudScan() {

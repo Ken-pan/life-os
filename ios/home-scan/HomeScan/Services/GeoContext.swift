@@ -14,7 +14,9 @@ import Foundation
 ///   2. 精度差的样本(headingAccuracy > 30° 或无效)直接丢;
 ///   3. 圆均值聚合(角度不能算术平均:359° 和 1° 的均值是 0° 不是 180°);
 ///   4. 产出只当**初值**:网页端仅在北向未校准时回填,用户随时可改。
-@MainActor
+/// 非 @MainActor:CLLocationManager 在创建线程(主线程)回调,采样也来自
+/// 主线程的帧定时器 —— 全程单线程访问,加隔离只会跟 ScanSessionController
+/// 的非隔离定时器闭包打架。
 final class GeoContext: NSObject, CLLocationManagerDelegate {
     /// 一次扫描的地理摘要。offsetDeg 为空 = 罗盘样本不够,只有 GPS。
     struct Summary {
@@ -117,29 +119,25 @@ final class GeoContext: NSObject, CLLocationManagerDelegate {
 
     // MARK: - CLLocationManagerDelegate
 
-    nonisolated func locationManager(
+    func locationManager(
         _ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]
     ) {
         guard let loc = locations.last, loc.horizontalAccuracy >= 0 else { return }
-        Task { @MainActor in
-            // 留最准的一发 —— 公寓楼里 GPS 精度起伏大,别让晚到的差读数顶掉好的
-            if let best = self.bestLocation,
-               best.horizontalAccuracy <= loc.horizontalAccuracy {
-                return
-            }
-            self.bestLocation = loc
+        // 留最准的一发 —— 公寓楼里 GPS 精度起伏大,别让晚到的差读数顶掉好的
+        if let best = bestLocation,
+           best.horizontalAccuracy <= loc.horizontalAccuracy {
+            return
         }
+        bestLocation = loc
     }
 
-    nonisolated func locationManager(
+    func locationManager(
         _ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading
     ) {
-        Task { @MainActor in
-            self.latestHeading = newHeading
-        }
+        latestHeading = newHeading
     }
 
-    nonisolated func locationManager(
+    func locationManager(
         _ manager: CLLocationManager, didFailWithError error: Error
     ) {
         // 拿不到定位不是错误路径:摘要为 nil,payload 里就没有 geo,网页端照旧
