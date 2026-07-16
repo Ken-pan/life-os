@@ -293,10 +293,22 @@ export function tokensCss(primitive, semantic, structural) {
   for (const [key, node] of Object.entries(semantic.status.light)) {
     emitVar(lines, key, node.$value)
   }
+  if (semantic.chartSeries) {
+    lines.push('')
+    lines.push('  /* Chart categorical 系列色板（固定槽位顺序，已过 CVD 验证） */')
+    for (const [key, node] of Object.entries(semantic.chartSeries.light)) {
+      emitVar(lines, `chart-series-${key}`, node.$value)
+    }
+  }
   lines.push('}', '')
   lines.push(":root[data-theme='dark'] {")
   for (const [key, node] of Object.entries(semantic.status.dark)) {
     emitVar(lines, key, node.$value)
+  }
+  if (semantic.chartSeries) {
+    for (const [key, node] of Object.entries(semantic.chartSeries.dark)) {
+      emitVar(lines, `chart-series-${key}`, node.$value)
+    }
   }
   lines.push('}', '')
   lines.push('@supports (padding: max(0px, 1px)) {')

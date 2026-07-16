@@ -25,7 +25,9 @@
   import PrimitivesShowcase from './showcases/PrimitivesShowcase.svelte'
   import MenuShowcase from './showcases/MenuShowcase.svelte'
 
+  import ChartsShowcase from './showcases/ChartsShowcase.svelte'
   const pages = {
+    charts: ChartsShowcase,
     tokens: TokensShowcase,
     buttons: ButtonsShowcase,
     segments: SegmentsShowcase,

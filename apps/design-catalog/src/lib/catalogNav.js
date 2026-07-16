@@ -37,6 +37,12 @@ export const CATALOG_SECTIONS = [
     testId: 'showcase-primitives',
   },
   {
+    id: 'charts',
+    label: 'Charts',
+    group: 'components',
+    testId: 'showcase-charts',
+  },
+  {
     id: 'settings',
     label: 'Settings',
     group: 'components',

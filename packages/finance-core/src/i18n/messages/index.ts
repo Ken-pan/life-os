@@ -699,6 +699,8 @@ export const zhCN: MessageTree = {
     noSpendingInRange: '该时间段没有花销记录。',
     categoryMeta: '{pct}% · {count} 笔',
     categoryMetaOne: '{pct}% · 1 笔',
+    categoryCount: '{count} 笔',
+    categoryOthers: '其他',
     recurringTitle: '疑似周期性账单 / 订阅（{range}内有扣款）',
     recurringNote:
       '连续多月在同一商户的扣款，常见于房租、健身、流媒体、网络等。可据此核对固定开销。',
@@ -2353,6 +2355,8 @@ export const enUS: MessageTree = {
     noSpendingInRange: 'No spending in this period.',
     categoryMeta: '{pct}% · {count} txns',
     categoryMetaOne: '{pct}% · 1 txn',
+    categoryCount: '{count} txns',
+    categoryOthers: 'Others',
     recurringTitle: 'Likely recurring bills / subscriptions (charged within {range})',
     recurringNote:
       'Same merchant charged across multiple months — rent, gym, streaming, internet, etc. Use to verify fixed expenses.',

@@ -26,6 +26,7 @@
   } from '../../engine/purchaseEnrichmentDisplay.js'
   import { isPurchaseEnrichmentDebugMode } from '../../lib/purchaseDebugMode.js'
   import SpendingTrendChart from './SpendingTrendChart.svelte'
+  import { Treemap } from '@life-os/platform-web/svelte/charts'
   import BudgetPulseCard from './BudgetPulseCard.svelte'
   import PurchaseCoverageCard from './PurchaseCoverageCard.svelte'
   import MerchantOrderCatalogSection from './MerchantOrderCatalogSection.svelte'
@@ -154,8 +155,6 @@
   const merchants = $derived(
     topMerchants(txStore.txns, { from: catRange.from, to: catRange.to, limit: 12 }),
   )
-  const maxCat = $derived(categories[0]?.amount ?? 1)
-  const categoryLimit = $derived(catWindow === 'month' ? 8 : 14)
   const merchantLimit = $derived(catWindow === 'month' ? 8 : 12)
   // Plan-vs-reality compares against a MONTHLY budget, so it only makes sense for
   // ranges that are about one month. Under 近3月/近12月/全部 the comparison would
@@ -431,27 +430,17 @@
             {#if categories.length === 0}
               <p class="muted-note">{t('history.noSpendingInRange')}</p>
             {:else}
-              <div class="cat-list">
-                {#each categories.slice(0, categoryLimit) as c (c.category)}
-                  <div class="cat-row">
-                    <div class="cat-top">
-                      <span class="cat-name">{c.category}</span>
-                      <span class="cat-amt">{money(c.amount, privacy)}</span>
-                    </div>
-                    <div class="cat-bar">
-                      <div
-                        class="cat-bar-fill"
-                        style:width="{Math.max(2, (c.amount / maxCat) * 100)}%"
-                      ></div>
-                    </div>
-                    <div class="cat-meta">
-                      {c.count === 1
-                        ? t('history.categoryMetaOne', { pct: (c.pct * 100).toFixed(1) })
-                        : t('history.categoryMeta', { pct: (c.pct * 100).toFixed(1), count: c.count })}
-                    </div>
-                  </div>
-                {/each}
-              </div>
+              <Treemap
+                items={categories.map((c) => ({
+                  label: c.category,
+                  value: c.amount,
+                  meta: t('history.categoryCount', { count: c.count }),
+                }))}
+                height={300}
+                format={(v) => money(v, privacy)}
+                otherLabel={t('history.categoryOthers')}
+                ariaLabel={t('history.categoriesTitle', { range: catRange.label })}
+              />
             {/if}
           </div>
 

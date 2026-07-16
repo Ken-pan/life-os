@@ -23,6 +23,7 @@
   import { muscleGroupLabel } from '$lib/i18n/exerciseLabels.js';
   import { reveal } from '$lib/actions/reveal.js';
   import Icon from '@life-os/platform-web/svelte/icon';
+  import { LineChart, BarChart } from '@life-os/platform-web/svelte/charts';
   import BackButton from '$lib/components/BackButton.svelte';
   import { t, resolveLocale } from '$lib/i18n/index.js';
   import { dayDisplayFull } from '$lib/i18n/programLabels.js';
@@ -34,13 +35,6 @@
   const bwSeries = $derived(bodyweightSeries(120));
   const bwLatest = $derived(latestBodyweight());
   const bwDelta = $derived(bodyweightDelta(30));
-  const bwRange = $derived.by(() => {
-    if (bwSeries.length < 2) return null;
-    const ws = bwSeries.map((e) => e.w);
-    const lo = Math.min(...ws);
-    const hi = Math.max(...ws);
-    return { lo, hi, span: hi - lo || 1 };
-  });
 
   const bwLoggedToday = $derived(bwLatest?.date === todayKey());
 
@@ -50,14 +44,8 @@
     if (logBodyweight(v)) bwInput = '';
   }
 
-  function bwBarHeight(w) {
-    if (!bwRange) return 32;
-    return Math.round(10 + ((w - bwRange.lo) / bwRange.span) * 46);
-  }
-
   const overview = $derived(sessionStats());
   const weeks = $derived(sessionsByWeek(4));
-  const maxWeek = $derived(Math.max(...weeks.map((w) => w.count), 1));
   const volume = $derived(volumeByDayType(28));
   const maxVol = $derived(Math.max(...volume.map((v) => v.sets), 1));
   const muscleVol = $derived(muscleVolumeStatus(7));
@@ -181,17 +169,21 @@
         </div>
 
         {#if bwSeries.length >= 2}
-          <div class="bw-chart" role="img" aria-label={t('stats.bodyweight')}>
-            {#each bwSeries as e (e.date)}
-              <div class="bw-col">
-                <div
-                  class="bw-bar"
-                  style="height:{bwBarHeight(e.w)}px"
-                  title="{e.date}: {displayBodyweight(e.w)} {unitLabel}"
-                ></div>
-                <span class="bw-bar-label">{e.date.slice(5)}</span>
-              </div>
-            {/each}
+          <div class="bw-linechart">
+            <LineChart
+              labels={bwSeries.map((e) => e.date.slice(5))}
+              series={[
+                {
+                  label: t('stats.bodyweight'),
+                  values: bwSeries.map((e) => displayBodyweight(e.w))
+                }
+              ]}
+              area
+              height={150}
+              baseline="auto"
+              format={(v) => `${Math.round(v * 10) / 10}${unitLabel}`}
+              ariaLabel={t('stats.bodyweight')}
+            />
           </div>
         {:else if !bwLatest}
           <p class="sr-desc" style="margin-top:12px">{t('stats.bwEmpty')}</p>
@@ -201,16 +193,14 @@
 
     <div class="set-group" use:reveal>
       <div class="sg-title" data-ui-decor="section-label">{t('stats.weeklyCount')}</div>
-      <div class="set-row" style="display:block;padding-bottom:18px">
-        <div class="week-bars">
-          {#each weeks as w (w.label)}
-            <div class="week-bar">
-              <div class="bar-label">{w.count}</div>
-              <div class="bar" style="height:{Math.max(8, (w.count / maxWeek) * 72)}px"></div>
-              <div class="bar-sub">{w.label}</div>
-            </div>
-          {/each}
-        </div>
+      <div class="set-row" style="display:block;padding-bottom:14px">
+        <BarChart
+          labels={weeks.map((w) => w.label)}
+          series={[{ label: t('stats.weeklyCount'), values: weeks.map((w) => w.count) }]}
+          height={150}
+          showValues="always"
+          ariaLabel={t('stats.weeklyCount')}
+        />
       </div>
     </div>
 
@@ -361,3 +351,9 @@
     </div>
   </div>
 </section>
+
+<style>
+  .bw-linechart {
+    margin-top: 14px;
+  }
+</style>

@@ -5,7 +5,7 @@
   "description": "Life OS web-only platform adapters",
   "type": "module",
   "scripts": {
-    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs"
+    "test": "node scripts/appearance.test.mjs && node scripts/i18n.test.mjs && node scripts/syncErrorPresentation.test.mjs && node scripts/toastCore.test.mjs && node scripts/backup.test.mjs && node scripts/localCache.test.mjs && node scripts/networkResume.test.mjs && node scripts/appShell.test.mjs && node scripts/chartUtils.test.mjs"
   },
   "types": "./src/index.d.ts",
   "exports": {
@@ -178,6 +178,11 @@
     "./svelte/card": {
       "import": "./src/svelte/card/index.js",
       "svelte": "./src/svelte/card/index.js"
+    },
+    "./svelte/charts": {
+      "types": "./src/svelte/charts/index.d.ts",
+      "svelte": "./src/svelte/charts/index.js",
+      "default": "./src/svelte/charts/index.js"
     },
     "./pwa/basic-sw": {
       "import": "./src/pwa/basicSwPlugin.mjs"

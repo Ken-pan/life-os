@@ -191,6 +191,16 @@
   --critical-subtle: #fcedef;
   --info: #2b65b1;
   --info-subtle: #eaf2fc;
+
+  /* Chart categorical 系列色板（固定槽位顺序，已过 CVD 验证） */
+  --chart-series-1: #2a78d6;
+  --chart-series-2: #1baf7a;
+  --chart-series-3: #eda100;
+  --chart-series-4: #008300;
+  --chart-series-5: #4a3aa7;
+  --chart-series-6: #e34948;
+  --chart-series-7: #e87ba4;
+  --chart-series-8: #eb6834;
 }
 
 :root[data-theme='dark'] {
@@ -202,6 +212,14 @@
   --critical-subtle: #4a2028;
   --info: #8db8f4;
   --info-subtle: #1a2d42;
+  --chart-series-1: #3987e5;
+  --chart-series-2: #199e70;
+  --chart-series-3: #c98500;
+  --chart-series-4: #008300;
+  --chart-series-5: #9085e9;
+  --chart-series-6: #e66767;
+  --chart-series-7: #d55181;
+  --chart-series-8: #d95926;
 }
 
 @supports (padding: max(0px, 1px)) {

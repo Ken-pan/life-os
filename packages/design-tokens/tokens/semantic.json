@@ -21,6 +21,29 @@
       "info-subtle": { "$type": "color", "$value": "#1a2d42" }
     }
   },
+  "chartSeries": {
+    "$description": "Categorical 系列色板(多系列图表用,固定槽位顺序即 CVD 安全机制,禁止循环取色)。亮暗各自选定,已用 dataviz 六项检查验证:light on #ffffff worst adjacent ΔE 24.2;dark on #141815 worst 10.3(floor band——组件必须带图例/直接标注/2px 间隙作次级编码)。单系列图表不走槽位,用品牌 accent。",
+    "light": {
+      "1": { "$type": "color", "$value": "#2a78d6" },
+      "2": { "$type": "color", "$value": "#1baf7a" },
+      "3": { "$type": "color", "$value": "#eda100" },
+      "4": { "$type": "color", "$value": "#008300" },
+      "5": { "$type": "color", "$value": "#4a3aa7" },
+      "6": { "$type": "color", "$value": "#e34948" },
+      "7": { "$type": "color", "$value": "#e87ba4" },
+      "8": { "$type": "color", "$value": "#eb6834" }
+    },
+    "dark": {
+      "1": { "$type": "color", "$value": "#3987e5" },
+      "2": { "$type": "color", "$value": "#199e70" },
+      "3": { "$type": "color", "$value": "#c98500" },
+      "4": { "$type": "color", "$value": "#008300" },
+      "5": { "$type": "color", "$value": "#9085e9" },
+      "6": { "$type": "color", "$value": "#e66767" },
+      "7": { "$type": "color", "$value": "#d55181" },
+      "8": { "$type": "color", "$value": "#d95926" }
+    }
+  },
   "contract": {
     "$description": "Semantic vars every brand's default mode must define. Text tiers accept either the t1..t4 stack (planner/fitness/music) or the text/text-secondary/text-muted stack (finance/fitness).",
     "requiredBrandVars": ["bg", "card", "border", "accent", "on-accent", "sidebar"],
