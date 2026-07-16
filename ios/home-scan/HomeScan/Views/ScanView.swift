@@ -368,6 +368,8 @@ extension ScanView {
         Button {
             if let pose = ViewpointCapture.capture(from: model.scanController.arSession) {
                 model.poses.append(pose)
+                // 手动拍的也算这间的状态照(离房催拍别对刚按过快门的人喊)
+                model.scanController.autoViewpoint.manualPoseCaptured()
                 shutterOK += 1
             } else {
                 shutterFail += 1

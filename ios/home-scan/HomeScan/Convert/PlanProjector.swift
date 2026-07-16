@@ -494,6 +494,26 @@ enum PlanProjector {
         a == b || (ScanIdentity.kindFamily.first { $0.contains(a) }?.contains(b) ?? false)
     }
 
+    /// 跨 kind 同位判重的足迹 IoU 门槛(比权威纠正的 geomIoUMin 0.3 严:
+    /// 没有权威背书,只有几何自己说话,得压得更实才敢判重)
+    static let storageDupIoUMin = 0.5
+
+    /// 设备端同位去重的跨 kind 判定(真扫实测:同一台架子被同时检成
+    /// shelf 与 cabinet,按 kind 比对漏网,导出成两件):
+    /// 双方 kind 同属储物族(ScanIdentity.storageFamily 单一权威)、
+    /// 足迹 IoU ≥0.5、且 elev 高度带相容(差 ≤18″,缺省视为 0 落地 ——
+    /// 阈值与 ScanIdentity 的 elev 项同一约定)。
+    /// 高度带是防误杀叠放的防线:电视架在格子柜上、吊柜在地柜正上方
+    /// 都是合法同位不同物,一实测架空一落地(差 >18″)就不判重。
+    static func storageColocatedDup(_ a: MappedItem, _ b: MappedItem) -> Bool {
+        guard a.kind != b.kind,
+              ScanIdentity.storageFamily.contains(a.kind),
+              ScanIdentity.storageFamily.contains(b.kind),
+              abs((a.elevIn ?? 0) - (b.elevIn ?? 0)) <= ScanIdentity.elevDiffMinIn
+        else { return false }
+        return footprintIoU(footprint(of: a), footprint(of: b)) >= storageDupIoUMin
+    }
+
     // MARK: - 物体映射与去重
 
     /// 已定 kind 的物体(plan px)。去重、命名推断、落盘都基于它。
@@ -538,6 +558,8 @@ enum PlanProjector {
     /// 方向反了。此时:权威副本里有几何吻合的已知件 → 取与权威尺寸更接近的那次;
     /// 没有权威参照 → 置信度高者赢,同级取**更小**的那件(RoomPlan 的误检偏大不偏小)。
     /// 按 kind 而非原始类目:oven/stove 都映射成 stove,一体机否则会重合两遍。
+    /// 储物族补跨 kind 判定(storageColocatedDup):shelf+cabinet 同位重复识别
+    /// 走同一套仲裁与合并,置信度优先保留。
     static func dedupMapped(
         _ items: [MappedItem],
         refs: [CanonicalRef] = [],
@@ -549,7 +571,8 @@ enum PlanProjector {
         var dropped = 0
         for item in items {
             if let i = kept.firstIndex(where: { other in
-                other.kind == item.kind && length(other.center - item.center) < mergeDistPx
+                (other.kind == item.kind && length(other.center - item.center) < mergeDistPx)
+                    || storageColocatedDup(other, item)
             }) {
                 dropped += 1
                 let old = kept[i]

@@ -49,6 +49,19 @@ final class ObjectShotCapture {
     /// 清晰度下限(96px 灰度拉普拉斯方差):已有照片时,低于它的新图不许顶位;
     /// 桶里还空着则糊图也先留(有总比没有强,之后有清楚的自然顶掉)
     static let minSharpness = 15.0
+    /// 方位桶数(每 90° 一桶,0-3)
+    static let binCount = 4
+
+    /// 这件家具的证据配额满了吗(4 桶各有一张)—— 满了就跳过打分。
+    /// 代价是放弃「更好一张」的顶位;换来的是主线程不再为它空转
+    /// (真扫一轮 gate_quotaFull=607 的教训:满了还逐 tick 打分全是白烧)。
+    static func quotaFull(binsCovered: Int) -> Bool { binsCovered >= binCount }
+
+    /// 全场家具配额全满 → 整个打分 tick 可短路。空列表不算满
+    /// (没家具的帧还有别的消费方,不该走这条短路)。
+    static func allQuotasFull(binsCovered: [Int]) -> Bool {
+        !binsCovered.isEmpty && binsCovered.allSatisfy { quotaFull(binsCovered: $0) }
+    }
 
     /// 只在主线程读写:objectId → (方位桶 → 该桶最佳一张)
     private(set) var shots: [UUID: [Int: Shot]] = [:]
@@ -91,6 +104,16 @@ final class ObjectShotCapture {
         lastFrameTime = 0
     }
 
+    /// 位置仍在精化:这件家具已有各桶证据的世界中心记新(合并兜底匹配用)。
+    /// 主线程调用(shots 只在主线程读写)。
+    private func refreshWorldCenters(of object: CapturedRoom.Object, center: SIMD2<Double>? = nil) {
+        guard shots[object.identifier] != nil else { return }
+        let c = center ?? topCenter(object)
+        for key in shots[object.identifier]!.keys {
+            shots[object.identifier]![key]!.worldCenter = c
+        }
+    }
+
     /// 一次评估(主线程):对每件置信度不低的物体打分,值得就抓拍。
     /// 本帧只挑**提升最大**的一件送去编码 —— 一次一个 buffer。
     /// `session` 传入时用 12MP 带外高清帧(captureHighResolutionFrame)拍证据 ——
@@ -116,6 +139,14 @@ final class ObjectShotCapture {
             lastFrameTime = now
         }
 
+        // 全场家具的方位桶都满了:整个打分循环短路(世界中心仍跟着精化 ——
+        // 合并兜底匹配靠它)。省掉的打分按件计入 gate_allBinsFull,下轮日志可验证
+        if Self.allQuotasFull(binsCovered: objects.map { shots[$0.identifier]?.count ?? 0 }) {
+            for object in objects { refreshWorldCenters(of: object) }
+            ScanLog.shared.counter { $0.add("gate_allBinsFull", Double(objects.count)) }
+            return
+        }
+
         let imgW = frame.camera.imageResolution.width
         let imgH = frame.camera.imageResolution.height
         let camPos = SIMD2(
@@ -123,10 +154,17 @@ final class ObjectShotCapture {
             Double(frame.camera.transform.columns.3.z)
         )
 
+        var skippedFull = 0
         var best: (object: CapturedRoom.Object, rect: CGRect, score: Double, gain: Double, az: Double, bin: Int)?
         /// 引导锁定的那件这一帧能不能拍 —— 能就无条件用它顶掉增益冠军
         var priority: (object: CapturedRoom.Object, rect: CGRect, score: Double, gain: Double, az: Double, bin: Int)?
         for object in objects {
+            // 配额满(4 桶各有一张)的家具不再进打分,只跟新世界中心
+            if Self.quotaFull(binsCovered: shots[object.identifier]?.count ?? 0) {
+                refreshWorldCenters(of: object)
+                skippedFull += 1
+                continue
+            }
             // 低置信度**更需要**照片证据(508 真扫:7 件 low 全是零照片,网页端
             // 没法人工复核) —— 不再跳过,只抬高取景门槛防误检刷屏
             let minScore = object.confidence == .low ? 0.18 : 0.05
@@ -140,11 +178,7 @@ final class ObjectShotCapture {
 
             let current = shots[object.identifier]?[bin]?.score ?? 0
             // 位置仍在更新,顺手把已有各桶的中心记新(合并兜底匹配用)
-            if shots[object.identifier] != nil {
-                for key in shots[object.identifier]!.keys {
-                    shots[object.identifier]![key]!.worldCenter = center
-                }
-            }
+            refreshWorldCenters(of: object, center: center)
 
             guard framing.score > max(minScore, current * Self.improveFactor) else { continue }
             let gain = framing.score - current
@@ -155,6 +189,9 @@ final class ObjectShotCapture {
             if best == nil || gain > best!.gain {
                 best = hit
             }
+        }
+        if skippedFull > 0 {
+            ScanLog.shared.counter { $0.add("gate_allBinsFull", Double(skippedFull)) }
         }
         // 引导正指着的那件优先 —— 让「对准它」这句话说话算数
         guard let pick = priority ?? best, !encodeBusy else { return }
@@ -188,6 +225,9 @@ final class ObjectShotCapture {
                     objectId: objectId,
                     bin: bin
                 )
+                // 内存大头取证(真扫 mem_peak_mb=1642 偏高):照片编码队列侧峰值,
+                // 与 RoomPlan 逐房构建侧(mem_peak_roombuild_mb)对照定位
+                ScanLog.shared.counter { $0.peak("mem_peak_encode_mb", ScanLog.memoryFootprintMB()) }
                 self.finishShot(
                     out: out, objectId: objectId, category: category,
                     center: center, score: score, az: az, bin: bin

@@ -88,6 +88,8 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     private var liveObjects: [CapturedRoom.Object] = []
     /// 当前房间的实时墙段(俯视 2D,米)—— 证据引导用它剔掉「靠墙拍不到」的方位
     private var liveWalls: [EvidenceGuide.Wall] = []
+    /// 当前房间的实时功能区(RoomPlan sections)—— 离开零状态照分区的催拍用
+    private var liveSections: [SectionExitNudge.Section] = []
     /// 实时地面 y(米,ARKit 世界系)—— 「藏在桌下」判定的基准
     private var liveFloorY: Double = 0
     /// 当前房间地板面积(sqft)—— 机位配额按它伸缩(大房多拍,小卫生间少拍)。
@@ -191,15 +193,20 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             self.autoViewpoint.consider(
                 frame: frame,
                 objects: self.liveObjects,
+                sections: self.liveSections,
                 roomAreaSqFt: self.liveRoomAreaSqFt,
                 existingPoses: self.existingPoses?() ?? []
             ) { [weak self] pose in
                 self?.onAutoPose?(pose)
             }
 
-            // HUD 优先级:跟踪异常(数据正在变坏) > 补拍走位 > 机位站位
+            // HUD 优先级:跟踪异常(数据正在变坏) > 补拍走位 > 机位站位。
+            // 离开零状态照分区的催拍与「补拍走位」同级 —— 人已经在往外走,
+            // 这句先说(错过就真没了),走位引导下一 tick 自然接上
             if let tracking = self.trackingHint(frame) {
                 self.hudHint = (tracking, .tracking)
+            } else if let nudge = self.autoViewpoint.exitNudge {
+                self.hudHint = (nudge, .evidence)
             } else if let guide = self.evidenceHint(frame) {
                 self.hudHint = (guide, .evidence)
             } else if let hint = self.autoViewpoint.hint {
@@ -468,6 +475,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         shotTimer = nil
         liveObjects = []
         liveWalls = []
+        liveSections = []
         liveRoomAreaSqFt = nil
         firstSeen = [:]
         clearEvidenceTarget()
@@ -512,9 +520,17 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             let half = Double(wall.dimensions.x) / 2
             return EvidenceGuide.Wall(a: center - axis * half, b: center + axis * half)
         }
+        // 功能区中心(与 StructureFlattener 同一套取数):离房催拍的归属依据
+        let sections = room.sections.map {
+            SectionExitNudge.Section(
+                label: String(describing: $0.label),
+                center: SIMD2(Double($0.center.x), Double($0.center.z))
+            )
+        }
         Task { @MainActor in
             self.liveObjects = objects
             self.liveWalls = walls
+            self.liveSections = sections
             if let floorY { self.liveFloorY = floorY }
             if let areaSqFt { self.liveRoomAreaSqFt = areaSqFt }
         }
@@ -527,6 +543,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     ) {
         Task { @MainActor in
             self.liveObjects = []  // 房间收尾,别再对着旧快照抓拍
+            self.liveSections = [] // 分区归属同理(下一间的 didUpdate 再喂)
         }
         if let error {
             Task { @MainActor in
@@ -548,6 +565,9 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
                 // 逐房后处理耗时(RoomBuilder 也是重活,和 mergeAll 分开计)
                 let end = ScanLog.shared.time("perf", "room_build")
                 let room = try await self.roomBuilder.capturedRoom(from: data)
+                // 内存大头取证(真扫 mem_peak_mb=1642 偏高):RoomPlan 逐房构建侧
+                // 峰值,与照片编码队列侧(mem_peak_encode_mb)对照定位
+                ScanLog.shared.counter { $0.peak("mem_peak_roombuild_mb", ScanLog.memoryFootprintMB()) }
                 self.capturedRooms.append(room)
                 end([
                     "index": .num(Double(self.capturedRooms.count)),

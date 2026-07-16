@@ -19,6 +19,9 @@ enum ScanIdentity {
         var styleZh: String?
         /// 底面离地高度(英寸,attrs.elevIn)。nil 视为 0(落地)—— 见 elev 项
         var elevIn: Double? = nil
+        /// 权威侧 attrs.identityLocked(用户手工校对过的一等身份)。
+        /// 只对 prev 有意义:锁定件跳过尺寸一票否决(见 matchScore)
+        var identityLocked: Bool = false
     }
 
     enum State {
@@ -47,13 +50,20 @@ enum ScanIdentity {
     static let unmovedPx = 30.0
     static let acceptScore = 0.5
     static let ambiguityMargin = 0.08
+    /// 储物族(单一权威,三处引用:下面 kindFamily 的跨 kind 打分 /
+    /// PlanProjector 设备端同位去重 / 网页端 scan-identity.js 同名常量)。
+    /// RoomPlan 把吊柜/拉篮架/推车统统检成 cabinet 是常态(真扫实测:
+    /// 「冰箱顶吊柜」「拉篮架 wire_rack」都被检成 cabinet,跨族一票否决
+    /// 就认不回来了)。pet_crate 形似柜但不入族 —— 宠物笼不是储物家具。
+    static let storageFamily = [
+        "cabinet", "shelf", "wall_cabinet", "wire_rack",
+        "cube_shelf", "utility_cart", "equipment_rack",
+    ]
     static let kindFamily: [[String]] = [
         ["chair", "office_chair"],
         ["sofa", "armchair"],
         ["table", "coffee_table"],
-        // wall_cabinet 也在柜族:RoomPlan 把吊柜检成 cabinet 是常态
-        // (真扫实测:「冰箱顶吊柜」被检成 cabinet,跨族一票否决就认不回来了)
-        ["cabinet", "shelf", "wall_cabinet"],
+        storageFamily,
     ]
     static let crossKindPenalty = 0.05
     /// elev 项(与 scan-identity.js 的 ELEV_SAME_MAX_IN / ELEV_SAME_BONUS /
@@ -108,7 +118,10 @@ enum ScanIdentity {
         let lowConf = prev.confidence == "low" || next.confidence == "low"
         let sizeLimit = max(sizeTolPx, sizeTolRatio * max(prev.w, prev.h))
             * (lowConf ? lowConfSizeFactor : 1)
-        if sd > sizeLimit * 2 { return 0 }
+        // 尺寸一票否决 —— 但权威侧 identityLocked(用户手工锁定的身份)豁免:
+        // 折叠长桌展开态被 RoomPlan 扫出近两倍长,锁定件不许因此判 0;
+        // sizeScore 仍按原公式算(此时通常已是 0,只剩位置分说话)
+        if sd > sizeLimit * 2, !prev.identityLocked { return 0 }
         let sizeScore = max(0, 1 - sd / sizeLimit)
         let ca = center(prev)
         let cb = center(next)

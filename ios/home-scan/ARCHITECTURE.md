@@ -71,7 +71,7 @@ Convert(纯管线,CapturedStructure → HomeOS plan px)
 |---|---|---|
 | `Convert/HomeOSModels.swift` | web `spatial/scan-payload.js` + `apps/home/supabase/README.md` | payload 契约,formatVersion 1,只加可选字段 |
 | `Services/HomeFrame.swift` | web `spatial/scan-register.js` | 墙体配准:常数/验收门/精修逐行对应(单位 米 vs px) |
-| `Services/ScanIdentity.swift` | web `spatial/scan-identity.js` | 跨扫描身份:打分/同族(cabinet 族含 wall_cabinet)/elev 项(双方实测且差 ≤6″ 才 +0.1;差 >18″ −0.15,一方缺省视为 0 落地;都缺 → 0)/歧义边距逐行对应 |
+| `Services/ScanIdentity.swift` | web `spatial/scan-identity.js` | 跨扫描身份:打分/同族(储物族 storageFamily:cabinet/shelf/wall_cabinet/wire_rack/cube_shelf/utility_cart/equipment_rack,pet_crate 不入族)/权威侧 identityLocked 跳过尺寸一票否决/elev 项(双方实测且差 ≤6″ 才 +0.1;差 >18″ −0.15,一方缺省视为 0 落地;都缺 → 0)/歧义边距逐行对应 |
 | `attrs.scanAliases` / `attrs.identityLocked`(权威件) | web 优化副本同名字段 | 检测陷阱契约(用户纠正一等数据),三端同名不许改;iOS 侧 CanonicalHomeStore 透传 → PlanProjector 认亲/压制 |
 | `Services/ContainerGeometry.swift` 的 Payload | `apps/home/supabase/README.md` 柜内节 | 桶内 JSON 契约 |
 | `Services/CoverageDiff.swift` 的 claimMaxDistPx | web `spatial/scan-merge.js` 的 CLAIM_MAX_DIST_PX | 分区就近认领半径(400 plan px) |

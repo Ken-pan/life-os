@@ -22,10 +22,22 @@ final class AutoViewpointCapture {
     /// 这一刻真正拦住自动拍照的那道门(HUD 用);nil = 没被拦(正要拍/刚拍完)
     private(set) var lastBlock: ViewpointGate.Block?
 
+    // ---- 房间感知的状态照下限(SectionExitNudge 纯函数判定,这里只接线) ----
+    /// 当前所在 RoomPlan section 及其状态照计数
+    private var sectionState: SectionExitNudge.State?
+    /// 催拍提示(HUD 用,级别同「补拍走位」);出现后展示 nudgeShowS 秒
+    private(set) var exitNudge: String?
+    private var exitNudgeUntil: TimeInterval = 0
+    /// 催拍提示的展示时长(秒)—— 人已经在走了,一闪而过等于没说
+    static let nudgeShowS: TimeInterval = 8
+
     func roomChanged() {
         capturedInRoom = 0
         roomStartedAt = Date()
         lastBlock = nil
+        sectionState = nil
+        exitNudge = nil
+        exitNudgeUntil = 0
         // lastCaptureAt 故意不清:6 秒冷却是防「走一步拍一张」,
         // 跨房间一样成立(过了门就是另一间,但手还是那只手)。
     }
@@ -35,6 +47,11 @@ final class AutoViewpointCapture {
         lastCaptureAt = 0
         lastTransform = nil
         lastTime = 0
+    }
+
+    /// 手动快门也算这间的状态照 —— 催拍别对着刚按过快门的人喊
+    func manualPoseCaptured() {
+        sectionState?.photos += 1
     }
 
     private var secondsInRoom: Double { Date().timeIntervalSince(roomStartedAt) }
@@ -54,6 +71,7 @@ final class AutoViewpointCapture {
     func consider(
         frame: ARFrame,
         objects: [CapturedRoom.Object],
+        sections: [SectionExitNudge.Section],
         roomAreaSqFt: Double?,
         existingPoses: [FlatScene.CameraPose],
         onCapture: @escaping (FlatScene.CameraPose) -> Void
@@ -63,6 +81,9 @@ final class AutoViewpointCapture {
         guard case .normal = frame.camera.trackingState else { return }
 
         let now = frame.timestamp
+
+        // 房间感知下限:即将离开零状态照的分区 → 催一拍(不强拍不阻塞)
+        trackSection(frame: frame, sections: sections, now: now)
 
         // 角速度要两帧才算得出。第一帧只记状态 —— 但**不能**顺手把 lastBlock
         // 清掉,否则 HUD 会在有原因/没原因之间闪。
@@ -121,6 +142,7 @@ final class AutoViewpointCapture {
                 }
                 self.lastCaptureAt = now
                 self.capturedInRoom += 1
+                self.sectionState?.photos += 1
                 ScanLog.shared.log("scan", "vp_auto_captured", [
                     "inRoom": .num(Double(self.capturedInRoom)),
                 ])
@@ -132,6 +154,26 @@ final class AutoViewpointCapture {
                 onCapture(pose)
             }
         }
+    }
+
+    /// 分区跟踪 + 离开催拍(判定在 SectionExitNudge 纯函数里,这里只取数/出话)
+    private func trackSection(
+        frame: ARFrame,
+        sections: [SectionExitNudge.Section],
+        now: TimeInterval
+    ) {
+        if exitNudge != nil, now >= exitNudgeUntil { exitNudge = nil }
+        let t = frame.camera.transform
+        let pos = SIMD2(Double(t.columns.3.x), Double(t.columns.3.z))
+        let (next, leaving) = SectionExitNudge.track(sectionState, pos: pos, sections: sections, now: now)
+        sectionState = next
+        guard let leaving else { return }
+        let name = KindMaps.zoneName(for: [leaving.label])
+        // 只催不拍:配额/光线各道门照旧,手动快门也随时能补
+        exitNudge = "「\(name)」还没有一张状态照 —— 转身对着它拍一张再走"
+        exitNudgeUntil = now + Self.nudgeShowS
+        ScanLog.shared.log("ux", "section_exit_nudge", ["label": .string(leaving.label)])
+        ScanLog.shared.counter { $0.count("section_exit_nudge") }
     }
 
     /// 画面中央 84% 区域内、且在相机前方的家具件数

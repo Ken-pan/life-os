@@ -69,7 +69,9 @@ enum RealityCheck {
                 confidence: pl.attrs?.confidence,
                 colorHex: pl.attrs?.colorHex,
                 styleZh: pl.attrs?.styleZh,
-                elevIn: pl.attrs?.elevIn
+                elevIn: pl.attrs?.elevIn,
+                // 锁定件跳过尺寸一票否决(折叠桌展开态也要认得回来)
+                identityLocked: home.identityHints?[pl.id]?.identityLocked ?? false
             )
         }
 

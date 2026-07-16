@@ -101,6 +101,64 @@ final class CanonicalIdentityTests: XCTestCase {
         XCTAssertEqual(ScanIdentity.elevDiffPenalty, 0.15)
     }
 
+    // MARK: - ScanIdentity:储物族扩容 + identityLocked 跳过尺寸否决(2026-07-16 真扫)
+
+    /// 储物族契约锚(与网页端 scan-identity.js 一字不差)+ 真机实证:
+    /// 权威「拉篮架」wire_rack 46×136px 被 RoomPlan 检成 cabinet 51×148px
+    /// (距 0.7ft)—— 扩容前跨族一票否决,现在必须认回来。
+    func testStorageFamilyMirrorsWebContract() {
+        XCTAssertEqual(
+            ScanIdentity.storageFamily,
+            ["cabinet", "shelf", "wall_cabinet", "wire_rack",
+             "cube_shelf", "utility_cart", "equipment_rack"],
+            "储物族成员与顺序是双端契约,一字不许差"
+        )
+        XCTAssertFalse(ScanIdentity.storageFamily.contains("pet_crate"), "pet_crate 形似柜但不入族")
+        XCTAssertTrue(ScanIdentity.kindFamily.contains(ScanIdentity.storageFamily), "kindFamily 引用同一权威")
+
+        let prev = ScanIdentity.Object(
+            id: "pl-40", kind: "wire_rack", label: "拉篮架",
+            x: 100, y: 100, w: 46, h: 136,
+            confidence: nil, colorHex: nil, styleZh: nil
+        )
+        // 中心距恰 0.7ft(25.2px)
+        let next = ScanIdentity.Object(
+            id: "s-9", kind: "cabinet", label: "柜",
+            x: 100 + 25.2 - (51 - 46) / 2, y: 100 - (148 - 136) / 2, w: 51, h: 148,
+            confidence: nil, colorHex: nil, styleZh: nil
+        )
+        let score = ScanIdentity.matchScore(prev, next)
+        XCTAssertGreaterThan(score, ScanIdentity.acceptScore, "拉篮架应认回储物族的 cabinet 检测")
+        let m = ScanIdentity.match(prev: [prev], next: [next])
+        XCTAssertEqual(m.pairs.first?.prevId, "pl-40")
+
+        // 不入族的仍一票否决
+        var crate = prev
+        crate.kind = "pet_crate"
+        XCTAssertEqual(ScanIdentity.matchScore(crate, next), 0, "pet_crate 跨族必须 0 分")
+    }
+
+    /// 真机实证:折叠长桌收起时权威 106×139(用户已锁定身份),展开态扫出
+    /// 110×217 —— sd=78 > sizeLimit×2≈41.7,以前直接判 0。锁定件跳过否决,
+    /// sizeScore 仍按原公式(此时为 0),只剩位置分说话。
+    func testIdentityLockedSkipsSizeVeto() {
+        func table(_ w: Double, _ h: Double, locked: Bool = false) -> ScanIdentity.Object {
+            // 同中心(200,200):位置分满分,只考尺寸路径
+            .init(
+                id: "t", kind: "table", label: "折叠长桌",
+                x: 200 - w / 2, y: 200 - h / 2, w: w, h: h,
+                confidence: nil, colorHex: nil, styleZh: nil,
+                identityLocked: locked
+            )
+        }
+        let scan = table(110, 217)
+        XCTAssertEqual(ScanIdentity.matchScore(table(106, 139), scan), 0,
+                       "没锁仍一票否决(既有行为不变)")
+        XCTAssertEqual(ScanIdentity.matchScore(table(106, 139, locked: true), scan), 0.45,
+                       accuracy: 0.001,
+                       "锁定后跳过否决:sizeScore=0 + posScore 满分 ×0.45")
+    }
+
     // MARK: - dedupMapped:>100cm 仲裁三分支
 
     /// 真机实证还原:厨房上柜整排被检成一只 12.3ft 巨柜(441.6px)+ 另一次
@@ -152,6 +210,70 @@ final class CanonicalIdentityTests: XCTestCase {
         XCTAssertEqual(kept[0].widthPx, 130, accuracy: 0.1, "差 ~25cm(<100cm)同级仍取更大")
         XCTAssertTrue(warnings.contains { $0.contains("已取更可信一次") })
         XCTAssertFalse(warnings.contains { $0.contains("疑似整排柜") })
+    }
+
+    // MARK: - dedupMapped:跨 kind 同位去重(储物族,2026-07-16 真扫漏网修复)
+
+    /// 真机实证:同一台架子被同时检成 shelf 与 cabinet(同位,IoU≈0.83),
+    /// 按 kind 比对漏网导出成两件(28 detected → 22 placements 里的那对)。
+    /// 现在同族 + IoU ≥0.5 + 高度带相容判重,置信度优先保留。
+    func testStorageCrossKindColocatedDedup() {
+        let shelf = item("shelf", "架子", cx: 400, cy: 800, w: 46, d: 136, conf: "high")
+        let cab = item("cabinet", "柜", cx: 400, cy: 800, w: 51, d: 148, conf: "medium")
+        var warnings: [String] = []
+        let kept = PlanProjector.dedupMapped([shelf, cab], refs: [], warnings: &warnings)
+        XCTAssertEqual(kept.count, 1, "shelf+cabinet 同位重复该合并成一件")
+        XCTAssertEqual(kept[0].kind, "shelf", "high > medium,置信度高者保留")
+        XCTAssertTrue(warnings.contains { $0.contains("合并 1 件重复识别") },
+                      warnings.joined(separator: " / "))
+    }
+
+    /// 同级(low vs low)沿用既有规则:取更大(更完整)的那件
+    func testStorageCrossKindSameRankKeepsLarger() {
+        let shelf = item("shelf", "架子", cx: 400, cy: 800, w: 46, d: 136, conf: "low")
+        let cab = item("cabinet", "柜", cx: 400, cy: 800, w: 51, d: 148, conf: "low")
+        var warnings: [String] = []
+        let kept = PlanProjector.dedupMapped([shelf, cab], refs: [], warnings: &warnings)
+        XCTAssertEqual(kept.count, 1)
+        XCTAssertEqual(kept[0].kind, "cabinet", "同级取脚印更大的 51×148")
+    }
+
+    /// ⚠️ 不误杀叠放(规格钦点的用例):电视(elev 32.8″)架在落地格子柜上 ——
+    /// tv 不入储物族,且高度带差 >18″,两道防线都拦
+    func testStackedTvOnCubeShelfNotDeduped() {
+        let tv = item("tv", "电视", cx: 400, cy: 800, w: 40, d: 12, elevIn: 32.8)
+        let cube = item("cube_shelf", "格子柜", cx: 400, cy: 800, w: 44, d: 15)
+        var warnings: [String] = []
+        let kept = PlanProjector.dedupMapped([cube, tv], refs: [], warnings: &warnings)
+        XCTAssertEqual(kept.count, 2, "TV(elev 32.8)+柜(落地)是叠放,不许去重")
+    }
+
+    /// 高度带防线单独考(双方都在储物族、IoU=1):吊柜(实测 elev 66″)
+    /// 在落地柜正上方 —— 一方实测架空一方缺省落地,差 >18″ 不判重
+    func testStackedWallCabinetOnBaseCabinetNotDeduped() {
+        let hanging = item("wall_cabinet", "吊柜", cx: 400, cy: 800, w: 100, d: 45, elevIn: 66)
+        let base = item("cabinet", "柜", cx: 400, cy: 800, w: 100, d: 45)
+        var warnings: [String] = []
+        let kept = PlanProjector.dedupMapped([base, hanging], refs: [], warnings: &warnings)
+        XCTAssertEqual(kept.count, 2, "同族同位但高度带差 66″ >18″ —— 叠放不是重复")
+    }
+
+    /// 八格架架在桌上:table 不入储物族 → 不判重(叠放合法)
+    func testCubeShelfOnTableNotDeduped() {
+        let cube = item("cube_shelf", "八格架", cx: 400, cy: 800, w: 47, d: 12, elevIn: 30)
+        let table = item("table", "桌", cx: 400, cy: 800, w: 60, d: 30)
+        var warnings: [String] = []
+        let kept = PlanProjector.dedupMapped([table, cube], refs: [], warnings: &warnings)
+        XCTAssertEqual(kept.count, 2)
+    }
+
+    /// 并排不重叠(IoU≈0)的同族两件不判重 —— 跨 kind 走 IoU,不走中心距
+    func testAdjacentStorageNotDeduped() {
+        let shelf = item("shelf", "架子", cx: 400, cy: 800, w: 46, d: 136)
+        let cab = item("cabinet", "柜", cx: 452, cy: 800, w: 51, d: 148)
+        var warnings: [String] = []
+        let kept = PlanProjector.dedupMapped([shelf, cab], refs: [], warnings: &warnings)
+        XCTAssertEqual(kept.count, 2, "挨着摆的架子和柜(中心距 52px 但不重叠)是两件")
     }
 
     // MARK: - reconcileWithCanonical:别名认亲 + 锁定压制
