@@ -10,4 +10,5 @@ const syncNotify = createSyncNotify({
     })
 });
 
-export const { subscribeSyncError, syncErrorMessage, notifySyncError, withSyncNotify } = syncNotify;
+export const { subscribeSyncError, syncErrorMessage, notifySyncError, clearSyncError, withSyncNotify } =
+  syncNotify;

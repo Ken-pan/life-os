@@ -13,7 +13,7 @@ import { S, save, applyState, activeProgramId, SCHEMA_VERSION } from './state.sv
 import { sessionHasActivity, exLogHasActivity } from './session.js';
 import { t } from './i18n/index.js';
 import { toast } from './ui.svelte.js';
-import { notifySyncError, withSyncNotify } from './syncNotify.js';
+import { notifySyncError, clearSyncError, withSyncNotify } from './syncNotify.js';
 
 const APP_ID = 'fitness';
 
@@ -244,6 +244,7 @@ const cloudPush = createDebouncedTask(async (options = {}) => {
 
   try {
     const result = await pushToCloud();
+    clearSyncError();
     if (toastOnResult) {
       const { toast } = await import('./ui.svelte.js');
       toast(t('sync.workoutUploaded', result), 'success', { key: 'sync-workout-uploaded' });
@@ -334,14 +335,7 @@ export async function toastManualSyncResult(result) {
 
 const { syncBidirectional, scheduleBidirectionalSync, resetCooldown: resetSyncCooldown } =
   createBidirectionalSync({
-    performSync: async () => {
-      try {
-        return await performBidirectionalSync();
-      } catch (err) {
-        notifySyncError(err);
-        throw err;
-      }
-    },
+    performSync: () => withSyncNotify(performBidirectionalSync),
     onSilentPull: async () => {
       const { applyTheme } = await import('./state.svelte.js');
       applyTheme();

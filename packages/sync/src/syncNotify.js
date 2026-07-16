@@ -25,17 +25,28 @@ export function createSyncNotify({ formatError }) {
   }
 
   /**
+   * 一次同步成功后清掉横幅。没有这一步,横幅只在用户手动点「关闭」或
+   * 刷新页面时消失 —— 一次瞬时失败(锁屏时后台推送掉线之类)留下的横幅
+   * 会一直挂着,哪怕之后的同步早就成功了,看起来像「同步坏了」。
+   */
+  function clearSyncError() {
+    for (const fn of listeners) fn(null);
+  }
+
+  /**
    * @template T
    * @param {() => Promise<T>} fn
    */
   async function withSyncNotify(fn) {
     try {
-      return await fn();
+      const result = await fn();
+      clearSyncError();
+      return result;
     } catch (e) {
       notifySyncError(e);
       throw e;
     }
   }
 
-  return { subscribeSyncError, syncErrorMessage, notifySyncError, withSyncNotify };
+  return { subscribeSyncError, syncErrorMessage, notifySyncError, clearSyncError, withSyncNotify };
 }
