@@ -210,6 +210,26 @@ export function monthTicks(start, end, innerW, labelW = 56) {
     })
     d.setMonth(d.getMonth() + 1)
   }
+  // 短域(不足两个月边界)回退为周刻度(每周一,M/D),否则轴上没有参照
+  if (ticks.length < 2 && end - start < 90 * 86400000) {
+    const w = new Date(start)
+    w.setHours(0, 0, 0, 0)
+    w.setDate(w.getDate() + ((8 - w.getDay()) % 7 || 7))
+    const weekly = []
+    while (w.getTime() <= end) {
+      weekly.push({
+        at: w.getTime(),
+        label: `${w.getMonth() + 1}/${w.getDate()}`,
+      })
+      w.setDate(w.getDate() + 7)
+    }
+    if (weekly.length >= 2) {
+      const maxW = Math.max(2, Math.floor(innerW / labelW))
+      const everyW = Math.ceil(weekly.length / maxW)
+      return weekly.filter((_, i) => i % everyW === 0)
+    }
+    return ticks
+  }
   const maxLabels = Math.max(2, Math.floor(innerW / labelW))
   if (ticks.length <= maxLabels) return ticks
   const every = Math.ceil(ticks.length / maxLabels)

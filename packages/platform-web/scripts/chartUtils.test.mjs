@@ -133,6 +133,15 @@ assert.equal(seriesColor(1, 5, 'red'), 'red')
   const narrow = monthTicks(new Date(2025, 0, 1).getTime(), new Date(2026, 0, 1).getTime(), 200)
   assert.ok(narrow.length <= Math.floor(200 / 56) + 1)
   assert.deepEqual(monthTicks(5, 5, 300), [])
+  // 短域(<2 个月边界)回退周刻度:每周一,M/D 标签
+  const short = monthTicks(
+    new Date(2026, 6, 5).getTime(),
+    new Date(2026, 6, 19).getTime(),
+    600,
+  )
+  assert.ok(short.length >= 2, JSON.stringify(short))
+  for (const tk of short) assert.equal(new Date(tk.at).getDay(), 1)
+  assert.ok(short.some((tk) => tk.label === '7/6'))
 }
 
 // ── treemapLayout ──
