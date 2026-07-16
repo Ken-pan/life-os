@@ -6,6 +6,20 @@
 
 > **PaperOS 证据链接说明（2026-07-12）：** 下方历史条目中的 `qa/paperos/*`、`archive/paperos/*` 证据文件已随 PaperOS 迁出至独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库不再保留。相关行保留为历史记录，链接已去激活。
 
+## 2026-07-15（DS/Theme 视觉现代化 · 圆角阶梯 · 共享状态原语 · 样式护栏）
+
+| 主线       | 发货项 / 里程碑 | 证据 |
+| ---------- | --------------- | ---- |
+| DS/Theme   | **AppShell/AppBar/底栏/切换器菜单磨砂配方收敛**为 `--chrome-frost` 组件 token；按钮/FAB/Sheet/Modal/Toggle/Seg 补投影层次；移除高亮条式激活态（用户明确反馈：圆角+高亮条不好看，已入 [[no-accent-rail-on-rounded-nav]] 记忆） | `48d191f6` |
+| DS/Theme   | **圆角阶梯**：`primitive.json` 收敛为 control 8 / surface 12（`--radius-sm` 并入 `--radius-lg`，消除此前 14px>12px 的倒挂）/ overlay 20（新增 `--radius-overlay`）/ pill；旧名保留别名，Sheet/Modal 硬编码 20px 全部 token 化 | `48d191f6` · `packages/design-tokens/tokens/primitive.json` |
+| DS/Theme   | **共享状态原语**新增：`.skeleton`（+ text/title/circle 变体，扫光动效）、`.spinner`、`.badge`（6 语气）、`.empty-title/-desc/-actions`、`.life-os-popover` 面板基座、`.life-os-spin` 工具类；六 app 手写的骨架屏/图标自旋(portal/finance/music/planner/aios)迁移到共享原语，删除本地重复 keyframes(顺带修复 finance 一处引用已删 keyframes 的死动画) | `48d191f6` · `55be3e00` |
+| DS/Platform | 新增 **Menu 组件**（`svelte/menu`，键盘导航 + 外点关闭 + Escape，外观走 `.life-os-popover`） | `48d191f6` · `packages/platform-web/src/svelte/menu/Menu.svelte` |
+| DS/CI      | 新增 **`check:lifeos-styles` 护栏**（棘轮基线）：裸 hex 色 / 裸 px 字号 / transition 字面量时长 / `.svelte` 内 `@custom-media`（对应 [[svelte-style-no-custom-media]] 已知坑，现在是 CI 硬线）；接入 CI，紧邻 `check:lifeos-boundaries` | `48d191f6` · `scripts/check-lifeos-styles.mjs` |
+| DS/App 采纳 | planner/fitness/finance/music/portal/aios 的 `transition` 字面量迁移到 `--dur-*`/`--ease-*` token（保留 linear/自定义 easing/功能性长时长）；删除 finance React 时代遗留 `src/index.css`（6952 行，SvelteKit 版从未引用） | `55be3e00` |
+| DS/Catalog | design-catalog 新增 **Primitives** + **Menu** showcase（17 个 showcase）；Settings showcase 补组合护栏用例（ButtonGroup 直挂 Section 的对齐契约，此前曾全线错位） | `48d191f6` · `PrimitivesShowcase.svelte` · `MenuShowcase.svelte` |
+
+验证：token 校验 + 七个 app（含 design-catalog）构建全绿；theme 单测 9/9；浏览器实测（home，深浅双主题）壳层磨砂/圆角/激活态/骨架屏均生效，控制台零报错。
+
 ## 2026-07-14（AIOS 跨 app 打通 · GYMS 自动调节 · Finance payment_day · 全线 DS/走查收敛）
 
 | 主线    | 发货项 / 里程碑 | 证据 |

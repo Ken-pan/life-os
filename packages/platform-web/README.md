@@ -31,6 +31,13 @@ This package contains thin web-only adapters. P0 PR 3 adds appearance and page-m
 | `@life-os/platform-web/svelte/brand/mark`                 | `BrandMark.svelte` 子路径                                                                                  |
 | `@life-os/platform-web/svelte/brand/wordmark`             | `AppBrandWordmark.svelte` 子路径                                                                           |
 | `@life-os/platform-web/svelte/portrait-gate`              | `PortraitGate.svelte`（竖屏锁定；样式在 `@life-os/theme`）                                                 |
+| `@life-os/platform-web/svelte/app-shell`                  | `LifeOsAppShell.svelte`（PLAT.SHELL 冻结契约，见 `docs/architecture/life-os-app-shell.md`）              |
+| `@life-os/platform-web/svelte/app-bar`                    | `LifeOsAppBar.svelte`                                                                                       |
+| `@life-os/platform-web/svelte/actions`                    | `keepPopoverInViewport()` — 浮层视口内定位 action                                                          |
+| `@life-os/platform-web/svelte/explain-panel`              | `ExplainPanel.svelte`（内联展开说明；外观见 `@life-os/theme` `.explain-panel`）                            |
+| `@life-os/platform-web/svelte/menu`                       | `Menu.svelte`（下拉菜单行为：开合/外点关闭/Escape/方向键循环；外观走 `@life-os/theme` `.life-os-popover`） |
+| `@life-os/platform-web/svelte/feedback`                   | `ReportBugButton.svelte`                                                                                    |
+| `@life-os/platform-web/svelte/card`                       | `Card` / `CardHeader` / `CardTitle` / `CardDescription` / `CardContent` / `CardFooter` / `CardMedia` / `CardActions`（Card 组合家族） |
 | `@life-os/platform-web/local-cache`                       | `createLocalCache({ prefix })` — planner/finance SWR 快照                                                  |
 | `@life-os/platform-web/svelte/toast`                      | `Toast.svelte`                                                                                             |
 | `@life-os/platform-web/svelte/toast-store`                | `createToastStore`                                                                                         |

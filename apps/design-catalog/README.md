@@ -109,7 +109,7 @@ Spec：`tests/visual/design-catalog.a11y.spec.ts`（`@a11y` tag）
 
 | 参数       | 值                                                                                                               |
 | ---------- | ---------------------------------------------------------------------------------------------------------------- |
-| `showcase` | tokens, buttons, segments, utilities, settings, brand, navigation, icon, feedback, toast, cards, command-palette |
+| `showcase` | tokens, buttons, segments, utilities, modal, primitives, settings, menu, brand, navigation, icon, feedback, toast, cards, explain-panel, command-palette, app-shell |
 | `app`      | planner, fitness, finance, music                                                                                 |
 | `mode`     | light, dark                                                                                                      |
 | `viewport` | desktop (1440), tablet (768), mobile (390)                                                                       |
@@ -123,13 +123,18 @@ Spec：`tests/visual/design-catalog.a11y.spec.ts`（`@a11y` tag）
 | ------------------------------ | --------------------------------------------- | -------------------------------------- |
 | tokens                         | `@life-os/theme` generated                    | 品牌 token 预览                        |
 | buttons / segments / utilities | `@life-os/theme` CSS 类                       | theme 层 primitive                     |
-| settings                       | `@life-os/platform-web/svelte/settings/*`     | P3b `--control-*`                      |
+| modal                          | `@life-os/theme` `.modal-bg`/`.modal`         | 居中 Modal 壳                          |
+| primitives                     | `@life-os/theme` `.skeleton`/`.spinner`/`.badge`/`.empty-*`/`.life-os-popover` | 共享状态原语（2026-07-15 新增） |
+| settings                       | `@life-os/platform-web/svelte/settings/*`     | P3b `--control-*`；含 ButtonGroup-in-Section 组合护栏 |
+| menu                           | `@life-os/platform-web/svelte/menu`           | 行为组件，外观走 `.life-os-popover`（2026-07-15 新增） |
 | brand / icon                   | `@life-os/platform-web/svelte/brand\|icon`    | 无独立色值                             |
 | navigation                     | `@life-os/platform-web/svelte/navigation/*`   | BackButton + MobileMoreSheet           |
 | feedback                       | `SyncErrorBanner` + `Toast`                   | `--feedback-*`                         |
 | toast                          | `@life-os/platform-web/svelte/toast`          | co-located `toast.css`                 |
 | cards                          | `@life-os/platform-web/svelte/card`           | co-located `card.css`                  |
+| explain-panel                  | `@life-os/platform-web/svelte/explain-panel`  | 内联展开说明                           |
 | command-palette                | `@life-os/platform-web/CommandPalette.svelte` | default live；empty 用 catalog fixture |
+| app-shell                      | `@life-os/platform-web/svelte/app-shell`      | PLAT.SHELL 冻结契约 fixture            |
 
 **Catalog 预览约定：**
 

@@ -21,6 +21,11 @@ export const SHOWCASE_STATE_REGISTRY = {
     { id: 'default', label: 'Default' },
     { id: 'destructive', label: 'Destructive' },
   ],
+  primitives: [
+    { id: 'default', label: 'Skeleton' },
+    { id: 'empty', label: 'Empty state' },
+  ],
+  menu: [{ id: 'default', label: 'Default' }],
   settings: [
     { id: 'default', label: 'Default' },
     { id: 'disabled', label: 'Disabled' },
@@ -78,6 +83,8 @@ const MATRIX_IFRAME_HEIGHTS = {
   segments: 196,
   utilities: { default: 168, 'portrait-gate': 220 },
   modal: 320,
+  primitives: { default: 260, empty: 320 },
+  menu: 260,
   settings: { default: 268, disabled: 228, destructive: 248 },
   'explain-panel': { collapsed: 168, expanded: 260 },
   navigation: { default: 132, 'sheet-open': 300 },
