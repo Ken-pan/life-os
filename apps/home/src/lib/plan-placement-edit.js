@@ -100,16 +100,42 @@ export function bindPlanPlacementEdit(el, opts) {
     return { x: pt.x - dragOffset.x, y: pt.y - dragOffset.y }
   }
 
+  // 每次 raw pointermove 都会经 onPlacementDrag → 全户型 buildFromWallGraph +
+  // renderFloorPlanSvg,高刷设备一秒 120+ 次就是这么卡的。用 rAF 合并成一帧一次:
+  // 只留最后一个坐标,松手(up)前取消挂起的那一帧,避免落位后又补一次陈旧的 move。
+  /** @type {number | null} */
+  let moveRaf = null
+  /** @type {{ pt: { x: number, y: number }, altKey: boolean } | null} */
+  let pendingMove = null
+
+  function flushMove() {
+    moveRaf = null
+    if (!dragId || !pendingMove) return
+    const { pt, altKey } = pendingMove
+    pendingMove = null
+    opts.onPlacementDrag?.(dragId, pt, { altKey })
+  }
+
+  function cancelPendingMove() {
+    if (moveRaf != null) {
+      cancelAnimationFrame(moveRaf)
+      moveRaf = null
+    }
+    pendingMove = null
+  }
+
   /** @param {PointerEvent} e */
   function move(e) {
     if (!dragId) return
     e.preventDefault()
-    opts.onPlacementDrag?.(dragId, centerPoint(e), { altKey: e.altKey })
+    pendingMove = { pt: centerPoint(e), altKey: e.altKey }
+    if (moveRaf == null) moveRaf = requestAnimationFrame(flushMove)
   }
 
   /** @param {PointerEvent} e */
   function up(e) {
     if (!dragId) return
+    cancelPendingMove()
     const pt = centerPoint(e)
     opts.onPlacementDrop?.(dragId, pt, { altKey: e.altKey })
     dragId = null
@@ -126,6 +152,7 @@ export function bindPlanPlacementEdit(el, opts) {
   el.addEventListener('pointercancel', up)
   return {
     destroy() {
+      cancelPendingMove()
       el.removeEventListener('pointerdown', down, { capture: true })
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)

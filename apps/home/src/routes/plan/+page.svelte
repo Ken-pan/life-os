@@ -97,6 +97,8 @@
   import PlanContextMenu from '$lib/components/PlanContextMenu.svelte'
   import PlanEditToolbar from '$lib/components/PlanEditToolbar.svelte'
   import PlanShortcutsHelp from '$lib/components/PlanShortcutsHelp.svelte'
+  import HomeTopBar from '$lib/components/HomeTopBar.svelte'
+  import InspectorPanel from '$lib/components/InspectorPanel.svelte'
   import { defaultDoorSpanIn, doorStyleLabel } from '$lib/spatial/door-styles.js'
   import {
     defaultWindowSpanIn,
@@ -1296,21 +1298,20 @@
   class="plan-page"
   class:plan-page-immersive={planMode === 'edit' && compactPlanChrome}
 >
-  <!-- 统一页面顶栏(HomeOS Spatial Workspace):标题 + 状态副题在左,
-       模式/历史/帮助/详情归右 —— 控件不再散落在画布四角,画布从顶栏下沿开始。 -->
-  <header class="plan-topbar" aria-label="平面工具栏">
-    <div class="plan-topbar-lead">
-      <h1 class="plan-topbar-title">平面</h1>
-      <p class="plan-topbar-sub">
-        {project.meta?.nameZh ? `${project.meta.nameZh} · ` : ''}{appBarSubtitle}
-      </p>
-    </div>
-    <div class="plan-topbar-actions">
-      <div class="mode-segment" role="group" aria-label="浏览或编辑">
+  <!-- 统一页面顶栏(HomeOS Spatial Workspace,与 /storage /tidy 共用 HomeTopBar):
+       标题 + 状态副题在左,模式/历史/帮助/详情归右 —— 控件不再散落在画布四角,
+       画布从顶栏下沿开始。 -->
+  <HomeTopBar
+    title="平面"
+    ariaLabel="平面工具栏"
+    class="plan-topbar"
+    subtitle={`${project.meta?.nameZh ? `${project.meta.nameZh} · ` : ''}${appBarSubtitle}`}
+  >
+    {#snippet actions()}
+      <div class="seg seg-track" role="group" aria-label="浏览或编辑">
         <button
           type="button"
-          class="mode-btn"
-          class:active={planMode === 'browse'}
+          class:on={planMode === 'browse'}
           aria-pressed={planMode === 'browse'}
           onclick={() => setPlanMode('browse')}
         >
@@ -1318,8 +1319,7 @@
         </button>
         <button
           type="button"
-          class="mode-btn"
-          class:active={planMode === 'edit'}
+          class:on={planMode === 'edit'}
           aria-pressed={planMode === 'edit'}
           onclick={() => setPlanMode('edit')}
         >
@@ -1369,8 +1369,8 @@
       >
         {drawerOpen ? '收起详情' : '详情'}
       </button>
-    </div>
-  </header>
+    {/snippet}
+  </HomeTopBar>
 
   <!-- 通知与控件簇分开:横幅是整条的,塞回控件簇里会把那一小撮按钮撑成一条横栏 -->
   <div class="plan-notices">
@@ -1990,16 +1990,11 @@
         role="presentation"
       ></div>
       <aside id="plan-drawer" class="plan-drawer" aria-label="平面侧面板">
-        <header class="plan-drawer-head">
-          <h2 class="plan-drawer-title">{drawerLabel}</h2>
-          <button
-            type="button"
-            class="plan-drawer-close"
-            onclick={() => (drawerOpen = false)}
-            aria-label="关闭面板">×</button
-          >
-        </header>
-        <div class="plan-drawer-body">
+        <InspectorPanel
+          title={drawerLabel}
+          onClose={() => (drawerOpen = false)}
+          bodyPad="0"
+        >
           {#if graphEditMode}
             <section class="graph-aside" aria-label="墙图编辑">
               <p class="graph-aside-lead">
@@ -2142,7 +2137,7 @@
               </button>
             </section>
           {/if}
-        </div>
+        </InspectorPanel>
       </aside>
     {/if}
   </div>
@@ -2166,53 +2161,6 @@
     min-width: 0;
     min-height: 0;
     height: 0;
-  }
-
-  /* 统一顶栏:在流里,画布从它下沿开始 —— 不再是浮在画布上的胶囊。 */
-  .plan-topbar {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px 16px;
-    min-height: 54px;
-    padding: 8px max(14px, var(--safe-right-effective)) 8px
-      max(14px, var(--safe-left-effective));
-    padding-top: calc(var(--safe-top-effective) + 8px);
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-    background: var(--bg);
-  }
-
-  .plan-topbar-lead {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-  }
-
-  .plan-topbar-title {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    color: var(--t1);
-    line-height: 1.2;
-  }
-
-  .plan-topbar-sub {
-    margin: 0;
-    font-size: 11.5px;
-    color: var(--t3);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .plan-topbar-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
   }
 
   .topbar-detail-btn {
@@ -2252,43 +2200,6 @@
 
   .plan-notices:empty {
     display: none;
-  }
-
-  .mode-segment {
-    display: inline-flex;
-    padding: 3px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    gap: 3px;
-  }
-
-  .mode-btn {
-    font-size: 13px;
-    font-weight: 650;
-    min-height: 32px;
-    min-width: 64px;
-    padding: 5px 16px;
-    border-radius: 999px;
-    border: none;
-    background: transparent;
-    color: var(--t2);
-    cursor: pointer;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease,
-      box-shadow 0.15s ease;
-  }
-
-  .mode-btn:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .mode-btn.active {
-    background: var(--accent);
-    color: #f5f8fa;
-    box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--accent) 50%, transparent);
   }
 
   .plan-convert-banner {
@@ -2726,23 +2637,7 @@
     overflow: hidden;
   }
 
-  .plan-drawer-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .plan-drawer-title {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 650;
-    color: var(--t1);
-  }
-
+  /* .plan-drawer-close 仍被家具类型选择弹窗复用,见下方 placement-kinds-head */
   .plan-drawer-close {
     width: 36px;
     height: 36px;
@@ -2755,21 +2650,19 @@
     cursor: pointer;
   }
 
-  .plan-drawer-body {
-    flex: 1;
+  .plan-drawer :global(.inspector-panel) {
+    flex: 1 1 auto;
     min-height: 0;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
-  .plan-drawer-body :global(.inspector),
-  .plan-drawer-body :global(.dim-editor) {
+  .plan-drawer :global(.inspector-panel-body .inspector),
+  .plan-drawer :global(.inspector-panel-body .dim-editor) {
     border: none;
     border-radius: 0;
     box-shadow: none;
   }
 
-  .plan-drawer-body :global(.dim-grid) {
+  .plan-drawer :global(.inspector-panel-body .dim-grid) {
     grid-template-columns: 1fr;
   }
 
@@ -2810,14 +2703,15 @@
       border-radius: 14px 14px 0 0;
     }
 
-    /* 顶栏在手机上收紧:副题让位给控件 */
-    .plan-topbar {
+    /* 顶栏在手机上收紧:副题让位给控件。类名在 HomeTopBar 上,只能用 :global
+       命中 —— 但只有 /plan 传了 class="plan-topbar",不会波及 /storage /tidy。 */
+    :global(.plan-topbar) {
       gap: 8px;
       padding-left: max(10px, var(--safe-left-effective));
       padding-right: max(10px, var(--safe-right-effective));
     }
 
-    .plan-topbar-sub {
+    :global(.plan-topbar .home-topbar-sub) {
       display: none;
     }
 
@@ -2826,7 +2720,7 @@
       padding: 6px 8px;
     }
 
-    .mode-btn {
+    .seg.seg-track button {
       min-height: 40px;
       min-width: 60px;
       font-size: 13px;

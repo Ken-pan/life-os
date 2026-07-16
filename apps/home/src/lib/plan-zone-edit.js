@@ -85,17 +85,41 @@ export function bindPlanZoneEdit(el, opts) {
     }
   }
 
+  // 拖分区顶点会重建预览并重拼 SVG —— rAF 合并成一帧一次,只处理最后一个坐标。
+  /** @type {number | null} */
+  let moveRaf = null
+  /** @type {{ clientX: number, clientY: number } | null} */
+  let pendingMove = null
+
+  function flushMove() {
+    moveRaf = null
+    if (dragZoneId == null || dragVertexIndex == null || !pendingMove) return
+    const { clientX, clientY } = pendingMove
+    pendingMove = null
+    const pt = opts.clientToSvg(clientX, clientY)
+    opts.onZoneVertexDrag?.(dragZoneId, dragVertexIndex, pt)
+  }
+
+  function cancelPendingMove() {
+    if (moveRaf != null) {
+      cancelAnimationFrame(moveRaf)
+      moveRaf = null
+    }
+    pendingMove = null
+  }
+
   /** @param {PointerEvent} e */
   function move(e) {
     if (dragZoneId == null || dragVertexIndex == null) return
     e.preventDefault()
-    const pt = opts.clientToSvg(e.clientX, e.clientY)
-    opts.onZoneVertexDrag?.(dragZoneId, dragVertexIndex, pt)
+    pendingMove = { clientX: e.clientX, clientY: e.clientY }
+    if (moveRaf == null) moveRaf = requestAnimationFrame(flushMove)
   }
 
   /** @param {PointerEvent} e */
   function up(e) {
     if (dragZoneId == null || dragVertexIndex == null) return
+    cancelPendingMove()
     const pt = opts.clientToSvg(e.clientX, e.clientY)
     opts.onZoneVertexDrop?.(dragZoneId, dragVertexIndex, pt)
     dragZoneId = null
@@ -112,6 +136,7 @@ export function bindPlanZoneEdit(el, opts) {
   el.addEventListener('pointercancel', up)
   return {
     destroy() {
+      cancelPendingMove()
       el.removeEventListener('pointerdown', down, { capture: true })
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)

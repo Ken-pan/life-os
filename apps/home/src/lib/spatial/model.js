@@ -108,12 +108,34 @@ function refreshProjectWallAnchors(project) {
   return placements === project.placements ? project : { ...project, placements }
 }
 
+// hydrate 是重活(buildFromWallGraph / build508Project 全量重建几何),而
+// getActiveProject() 每次读项目都调它,一个用户动作会触发很多次读(多个组件、
+// 多个 $derived)。按输入对象身份缓存:同一个 raw 引用直接复用上次结果。
+// 安全前提:每次项目改动都**整对象替换**(setActiveProject: S.projects[id] = 新对象),
+// 从不原地改子字段 —— 所以 raw 引用没变就等价于内容没变。WeakMap 让旧项目可回收。
+/** @type {WeakMap<object, SpatialProject>} */
+const hydrateCache = new WeakMap()
+
 /**
  * Rebuild derived geometry from layoutConfig or wallGraph source of truth.
  * @param {SpatialProject} raw
  * @returns {SpatialProject}
  */
 export function hydrateProject(raw) {
+  if (raw && typeof raw === 'object') {
+    const cached = hydrateCache.get(raw)
+    if (cached) return cached
+  }
+  const result = hydrateProjectUncached(raw)
+  if (raw && typeof raw === 'object') hydrateCache.set(raw, result)
+  return result
+}
+
+/**
+ * @param {SpatialProject} raw
+ * @returns {SpatialProject}
+ */
+function hydrateProjectUncached(raw) {
   const project = migratePlacementScale(raw)
   if (project.layoutMode === 'wallGraph' && project.wallGraph) {
     return refreshProjectWallAnchors(

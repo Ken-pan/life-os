@@ -24,6 +24,7 @@
   import StorageZoneCard from '$lib/components/StorageZoneCard.svelte'
   import FloorPlanViewer from '$lib/components/FloorPlanViewer.svelte'
   import PlanLegend from '$lib/components/PlanLegend.svelte'
+  import HomeTopBar from '$lib/components/HomeTopBar.svelte'
 
   const project = $derived(getActiveProject())
 
@@ -297,35 +298,39 @@
 </script>
 
 <div class="storage-page">
-  <!-- 统一页面顶栏(与 /plan 同一套骨架):标题 + 统计在左,视图切换在右 -->
-  <header class="storage-topbar" aria-label="储藏工具栏">
-    <div class="storage-topbar-lead">
-      <h1 class="storage-topbar-title">储藏</h1>
-      <p class="storage-topbar-sub">
-        {project.storageZones.length} 个储藏区 · {itemCount} 件物品
-      </p>
-    </div>
-    <div class="storage-view-seg" role="group" aria-label="空间或清单视图">
-      <button
-        type="button"
-        class="view-btn"
-        class:active={view === 'map'}
-        aria-pressed={view === 'map'}
-        onclick={() => (view = 'map')}
+  <!-- 统一页面顶栏(与 /plan /tidy 同一个 HomeTopBar):标题 + 统计在左,视图切换在右 -->
+  <HomeTopBar
+    title="储藏"
+    ariaLabel="储藏工具栏"
+    class="storage-topbar"
+    subtitle={`${project.storageZones.length} 个储藏区 · ${itemCount} 件物品`}
+  >
+    {#snippet actions()}
+      <div
+        class="seg seg-track storage-seg"
+        role="group"
+        aria-label="空间或清单视图"
+        style="--seg-active-bg: var(--storage-accent)"
       >
-        空间
-      </button>
-      <button
-        type="button"
-        class="view-btn"
-        class:active={view === 'list'}
-        aria-pressed={view === 'list'}
-        onclick={() => (view = 'list')}
-      >
-        清单
-      </button>
-    </div>
-  </header>
+        <button
+          type="button"
+          class:on={view === 'map'}
+          aria-pressed={view === 'map'}
+          onclick={() => (view = 'map')}
+        >
+          空间
+        </button>
+        <button
+          type="button"
+          class:on={view === 'list'}
+          aria-pressed={view === 'list'}
+          onclick={() => (view = 'list')}
+        >
+          清单
+        </button>
+      </div>
+    {/snippet}
+  </HomeTopBar>
 
   <div class="storage-body" class:list-mode={view === 'list'} bind:this={stageEl}>
   <div class="storage-canvas">
@@ -529,78 +534,13 @@
     height: 0;
   }
 
-  /* 统一页面顶栏(与 /plan 的 plan-topbar 同一套语言) */
-  .storage-topbar {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px 16px;
-    min-height: 54px;
-    padding: 8px max(14px, var(--safe-right-effective)) 8px
-      max(14px, var(--safe-left-effective));
-    padding-top: calc(var(--safe-top-effective) + 8px);
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-    background: var(--bg);
-  }
-
-  .storage-topbar-lead {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-  }
-
-  .storage-topbar-title {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    color: var(--t1);
-    line-height: 1.2;
-  }
-
-  .storage-topbar-sub {
-    margin: 0;
-    font-size: 11.5px;
-    color: var(--t3);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .storage-view-seg {
-    display: inline-flex;
-    padding: 3px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    gap: 3px;
+  /* 顶栏本体已交给共享 HomeTopBar(与 /plan /tidy 同一套语言);storage-seg 只
+     覆盖强调色 —— 分段控件的按钮结构/间距来自 packages/theme/src/seg.css */
+  .storage-seg {
     flex-shrink: 0;
   }
 
-  .view-btn {
-    font-size: 13px;
-    font-weight: 650;
-    min-height: 32px;
-    min-width: 64px;
-    padding: 5px 16px;
-    border-radius: 999px;
-    border: none;
-    background: transparent;
-    color: var(--t2);
-    cursor: pointer;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease;
-  }
-
-  .view-btn.active {
-    background: var(--storage-accent);
-    color: #f5f8fa;
-  }
-
-  .view-btn:focus-visible {
+  .storage-seg :global(button:focus-visible) {
     outline: 2px solid var(--storage-accent);
     outline-offset: 2px;
   }
@@ -828,7 +768,7 @@
 
   .zone-group-stats {
     font-family: var(--mono);
-    font-size: 10.5px;
+    font-size: 12px;
     color: var(--t3);
     white-space: nowrap;
   }
@@ -879,7 +819,7 @@
   }
 
   .zone-meta {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--t3);
     white-space: nowrap;
     overflow: hidden;
@@ -1078,7 +1018,7 @@
   /* ---- 移动:底部抽屉(Apple Maps 的搜索位),收起时只剩把手 + 搜索框 ---- */
   @media (max-width: 767px) {
     /* 移动端没有清单视图(底部抽屉就是清单),切换器收起 */
-    .storage-view-seg {
+    .storage-seg {
       display: none;
     }
 

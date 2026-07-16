@@ -52,23 +52,48 @@ export function bindPlanEditDrag(el, opts) {
     if (active) opts.onSelect(active)
   }
 
-  /** @param {PointerEvent} e */
-  function move(e) {
-    if (!active) return
-    const dx = (e.clientX - startX) / opts.getZoom()
-    const dy = (e.clientY - startY) / opts.getZoom()
-    moved += Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY)
+  // onPreview 会重拼整张平面图 SVG,raw pointermove 直连太贵 —— rAF 合并成一帧一次,
+  // 只画最后一个位置。moved(拖动判定阈值)仍每次累加,便宜且不能丢。
+  /** @type {number | null} */
+  let moveRaf = null
+  /** @type {{ clientX: number, clientY: number } | null} */
+  let pendingMove = null
+
+  function flushMove() {
+    moveRaf = null
+    if (!active || !pendingMove) return
+    const { clientX, clientY } = pendingMove
+    pendingMove = null
+    const dx = (clientX - startX) / opts.getZoom()
+    const dy = (clientY - startY) / opts.getZoom()
     const deltaPx =
       active.kind === 'wall'
         ? pickWallDelta(active.id, dx, dy)
         : pickOpeningDelta(active.id, dx, dy, active.mode)
-    opts.onPreview(active, deltaPx, e.clientX, e.clientY)
+    opts.onPreview(active, deltaPx, clientX, clientY)
+  }
+
+  function cancelPendingMove() {
+    if (moveRaf != null) {
+      cancelAnimationFrame(moveRaf)
+      moveRaf = null
+    }
+    pendingMove = null
+  }
+
+  /** @param {PointerEvent} e */
+  function move(e) {
+    if (!active) return
+    moved += Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY)
+    pendingMove = { clientX: e.clientX, clientY: e.clientY }
+    if (moveRaf == null) moveRaf = requestAnimationFrame(flushMove)
     e.preventDefault()
   }
 
   /** @param {PointerEvent} e */
   function up(e) {
     if (!active) return
+    cancelPendingMove()
     const dx = (e.clientX - startX) / opts.getZoom()
     const dy = (e.clientY - startY) / opts.getZoom()
     const deltaPx =
@@ -95,6 +120,7 @@ export function bindPlanEditDrag(el, opts) {
 
   return {
     destroy() {
+      cancelPendingMove()
       el.removeEventListener('pointerdown', down)
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)

@@ -31,6 +31,7 @@
   import { buildTidyPlan, EFFORT_LABEL } from '$lib/spatial/tidy-plan.js'
   import { getPhotoBlob } from '$lib/photo-store.js'
   import { ICONS } from '$lib/iconRegistry.js'
+  import { onDestroy } from 'svelte'
 
   const project = $derived(getActiveProject())
   const circ = $derived(analyzeCirculation(project))
@@ -73,6 +74,11 @@
     getPhotoBlob(ref).then((blob) => {
       if (blob) photoUrls = { ...photoUrls, [ref]: URL.createObjectURL(blob) }
     })
+  })
+
+  // objectURL 不 revoke 就是内存泄漏:离开专注模式时浏览器不会自动回收这些缩略图。
+  onDestroy(() => {
+    for (const url of Object.values(photoUrls)) URL.revokeObjectURL(url)
   })
 
   /**

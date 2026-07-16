@@ -228,6 +228,15 @@
   min-width: 520px;
 }
 
+/* /tidy:桌面双栏需要比全站默认的 820px 阅读列更宽(1180px)。共享壳层的
+   .wrap 靠 --content-inline-pad 把内容永远挤成 ~820px 居中列(见
+   packages/theme/src/generated/tokens.css 的 --content-max:820px 公式),
+   这里覆盖那个 token 让 .wrap 只留一圈小 gutter,真正的宽度上限交给页面自己
+   的 .tidy-layout(max-width:1180px)决定。 */
+main.tidy-route {
+  --content-inline-pad: max(16px, var(--safe-left-effective));
+}
+
 /* 地图型路由(/plan 与 /storage):画布满高、全出血,所有控件浮在它上面。
    AppBar 由 layout 隐藏,页内的浮动控件簇各自带 safe-area 缩进 —— 容器本身
    一点留白都不留,否则「沉浸」就变成了「一张带边距的图」。 */

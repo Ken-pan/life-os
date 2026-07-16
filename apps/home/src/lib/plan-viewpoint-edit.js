@@ -75,18 +75,42 @@ export function bindPlanViewpointEdit(el, opts) {
     }
   }
 
+  // 拖机位/转朝向都会更新预览并重拼 SVG —— rAF 合并成一帧一次,只处理最后一个坐标。
+  /** @type {number | null} */
+  let moveRaf = null
+  /** @type {{ clientX: number, clientY: number } | null} */
+  let pendingMove = null
+
+  function flushMove() {
+    moveRaf = null
+    if (!dragId || !pendingMove) return
+    const { clientX, clientY } = pendingMove
+    pendingMove = null
+    const pt = opts.clientToSvg(clientX, clientY)
+    if (dragKind === 'rotate') opts.onRotate?.(dragId, pt)
+    else opts.onMove?.(dragId, pt)
+  }
+
+  function cancelPendingMove() {
+    if (moveRaf != null) {
+      cancelAnimationFrame(moveRaf)
+      moveRaf = null
+    }
+    pendingMove = null
+  }
+
   /** @param {PointerEvent} e */
   function move(e) {
     if (!dragId) return
     e.preventDefault()
-    const pt = opts.clientToSvg(e.clientX, e.clientY)
-    if (dragKind === 'rotate') opts.onRotate?.(dragId, pt)
-    else opts.onMove?.(dragId, pt)
+    pendingMove = { clientX: e.clientX, clientY: e.clientY }
+    if (moveRaf == null) moveRaf = requestAnimationFrame(flushMove)
   }
 
   /** @param {PointerEvent} e */
   function up(e) {
     if (!dragId) return
+    cancelPendingMove()
     const pt = opts.clientToSvg(e.clientX, e.clientY)
     if (dragKind === 'rotate') opts.onRotateDrop?.(dragId, pt)
     else opts.onMoveDrop?.(dragId, pt)
@@ -104,6 +128,7 @@ export function bindPlanViewpointEdit(el, opts) {
   el.addEventListener('pointercancel', up)
   return {
     destroy() {
+      cancelPendingMove()
       el.removeEventListener('pointerdown', down, { capture: true })
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)

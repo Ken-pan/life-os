@@ -1911,8 +1911,10 @@ export const S = $state(load())
 /** 配额告警只提示一次，否则每次编辑都弹 */
 let persistFailed = false
 
-export function persist() {
+/** 立即同步落盘 —— JSON.stringify(整个 S) 是重活,只在防抖尾部/离页兜底时调。 */
+function persistNow() {
   if (!browser) return
+  persistScheduled = false
   try {
     localStorage.setItem(SKEY, JSON.stringify(S))
     persistFailed = false
@@ -1924,6 +1926,41 @@ export function persist() {
       toast('保存失败：本地存储已满，改动刷新后会丢失', 'warn')
     }
   }
+}
+
+// 每次编辑(挪家具、勾选步骤、改分区…)以前都同步 JSON.stringify(整个 S) 落盘,
+// 按住方向键微调时每秒跑很多次,是主线程卡顿的一大来源。改成尾部防抖:一串连续
+// 编辑只在停手后写一次;切后台/关页时强制 flush,保证不丢数据。
+const PERSIST_DEBOUNCE_MS = 400
+/** @type {ReturnType<typeof setTimeout> | null} */
+let persistTimer = null
+let persistScheduled = false
+
+export function persist() {
+  if (!browser) return
+  persistScheduled = true
+  if (persistTimer != null) clearTimeout(persistTimer)
+  persistTimer = setTimeout(() => {
+    persistTimer = null
+    persistNow()
+  }, PERSIST_DEBOUNCE_MS)
+}
+
+/** 有挂起的写就立刻落盘(离页/切后台兜底、测试同步点)。 */
+export function flushPersist() {
+  if (persistTimer != null) {
+    clearTimeout(persistTimer)
+    persistTimer = null
+  }
+  if (persistScheduled) persistNow()
+}
+
+if (browser) {
+  // 页面隐藏是「可能再也回不来」的最后时机(移动端切走常直接冻结),必须同步 flush。
+  addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPersist()
+  })
+  addEventListener('pagehide', flushPersist)
 }
 
 /** @returns {SpatialProject} */

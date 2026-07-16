@@ -141,22 +141,47 @@ export function bindPlanGraphEdit(el, opts) {
     }
   }
 
-  /** @param {PointerEvent} e */
-  function move(e) {
+  // 拖顶点/门窗都会重建墙图并重拼 SVG,raw pointermove 直连太贵 —— rAF 合并成一帧
+  // 一次,只处理最后一个坐标;松手前取消挂起的那一帧,避免落位后补一次陈旧的 drag。
+  /** @type {number | null} */
+  let moveRaf = null
+  /** @type {{ clientX: number, clientY: number } | null} */
+  let pendingMove = null
+
+  function flushMove() {
+    moveRaf = null
+    if (!pendingMove) return
+    const { clientX, clientY } = pendingMove
+    pendingMove = null
     if (dragOpeningId && dragOpeningMode) {
-      e.preventDefault()
-      const pt = opts.clientToSvg(e.clientX, e.clientY)
-      opts.onOpeningDrag?.(dragOpeningId, pt, dragOpeningMode, e.clientX, e.clientY)
+      const pt = opts.clientToSvg(clientX, clientY)
+      opts.onOpeningDrag?.(dragOpeningId, pt, dragOpeningMode, clientX, clientY)
       return
     }
     if (!dragVertexId) return
-    e.preventDefault()
-    const pt = opts.clientToSvg(e.clientX, e.clientY)
+    const pt = opts.clientToSvg(clientX, clientY)
     opts.onVertexDrag?.(dragVertexId, pt)
+  }
+
+  function cancelPendingMove() {
+    if (moveRaf != null) {
+      cancelAnimationFrame(moveRaf)
+      moveRaf = null
+    }
+    pendingMove = null
+  }
+
+  /** @param {PointerEvent} e */
+  function move(e) {
+    if (!dragOpeningId && !dragVertexId) return
+    e.preventDefault()
+    pendingMove = { clientX: e.clientX, clientY: e.clientY }
+    if (moveRaf == null) moveRaf = requestAnimationFrame(flushMove)
   }
 
   /** @param {PointerEvent} e */
   function up(e) {
+    cancelPendingMove()
     if (dragOpeningId && dragOpeningMode) {
       const pt = opts.clientToSvg(e.clientX, e.clientY)
       opts.onOpeningDrop?.(dragOpeningId, pt, dragOpeningMode)
@@ -184,6 +209,7 @@ export function bindPlanGraphEdit(el, opts) {
   el.addEventListener('pointercancel', up)
   return {
     destroy() {
+      cancelPendingMove()
       el.removeEventListener('pointerdown', down, { capture: true })
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)

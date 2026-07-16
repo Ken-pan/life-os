@@ -39,11 +39,16 @@
   // /storage 也是「地图页」:满屏画布 + 浮动搜索/清单面板,AppBar 让位给沉浸式,
   // 与 /plan 共用 plan-route 这套全出血骨架。
   const storageRoute = $derived(page.url.pathname === '/storage')
+  // /tidy 现在自己有页内顶栏(HomeTopBar,与 /plan /storage 同一套语言),
+  // 全局 AppBar(居中样式)让位,否则标题会出现两遍且视觉不统一。
+  const tidyRoute = $derived(page.url.pathname === '/tidy')
   const planImmersive = $derived(planRoute && getPlanImmersiveEdit())
   const mainClass = $derived(
     planRoute || storageRoute
       ? `wrap plan-route${planImmersive ? ' plan-immersive-edit' : ''}`
-      : 'wrap',
+      : tidyRoute
+        ? 'wrap tidy-route'
+        : 'wrap',
   )
 
   const pageMeta = $derived.by(() => {
@@ -140,7 +145,7 @@
     <AppBar
       title={pageMeta.title}
       subtitle={pageMeta.subtitle}
-      hidden={planRoute || storageRoute}
+      hidden={planRoute || storageRoute || tidyRoute}
     />
   {/snippet}
 

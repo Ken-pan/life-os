@@ -13,7 +13,8 @@
   import { applyLayoutProposal, getActiveProject, isTidyTaskDone, setTidyTaskDone, isTidyStepDone, setTidyStepDone, clearTidyProgress } from '$lib/state.svelte.js'
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
   import { renderFloorPlanSvg } from '$lib/spatial/render-svg.js'
-  import { solveAllProfiles } from '$lib/spatial/layout-solve.js'
+  // layout-solve.js(~945 行几何求解器)只在折叠洞察区里点「算三套方案」才用得上,
+  // 静态 import 会把它压进整理页首屏 JS。改成用到时才动态加载。
   import { listEvents, logEvent, syncEvents } from '$lib/event-log.js'
   import {
     recentlyMarkedCluttered,
@@ -24,6 +25,9 @@
   import { scoreClutter } from '$lib/spatial/clutter-score.js'
   import { assessPhotoCoverage } from '$lib/spatial/photo-coverage.js'
   import { getPhotoBlob } from '$lib/photo-store.js'
+  import { onDestroy } from 'svelte'
+  import HomeTopBar from '$lib/components/HomeTopBar.svelte'
+  import InspectorPanel from '$lib/components/InspectorPanel.svelte'
 
   /** @type {number|null} 今天有多少时间(分钟);null = 不限 */
   let budgetMin = $state(null)
@@ -60,6 +64,10 @@
   const remainMinutes = $derived(
     plan.tasks.filter((t) => !isTidyTaskDone(t.id)).reduce((s, t) => s + t.estMinutes, 0),
   )
+  /** 顶栏副标题 —— 与页内「整理计划」卡片头部的 plan-sum 是同一句话 */
+  const topbarSubtitle = $derived(
+    plan.tasks.length ? `${doneCount}/${plan.tasks.length} 完成 · 剩 ${dur(remainMinutes)}` : '',
+  )
 
   /** hero 的主角:第一件没做完的任务。整个页面围绕它一件事展开 */
   const nextTask = $derived(plan.tasks.find((t) => !isTidyTaskDone(t.id)) ?? null)
@@ -88,6 +96,11 @@
         if (blob) photoUrls = { ...photoUrls, [ref]: URL.createObjectURL(blob) }
       })
     }
+  })
+
+  // objectURL 不 revoke 就是内存泄漏:每次进整理页都新建一批,离开时浏览器不会自动回收。
+  onDestroy(() => {
+    for (const url of Object.values(photoUrls)) URL.revokeObjectURL(url)
   })
 
   /** @param {number} min */
@@ -286,6 +299,7 @@
     solveError = ''
     proposals = null
     try {
+      const { solveAllProfiles } = await import('$lib/spatial/layout-solve.js')
       // 分块异步:每 16 次迭代让出事件循环 —— 真实户型一套要几秒,
       // 同步跑会把整个页面(和被节流的定时器)一起冻住。
       // 静态底图缓存(buildCirculationBase)8× 提速后,把省下的时间换成
@@ -334,7 +348,17 @@
 
 <svelte:head><title>整理 · HOME.OS</title></svelte:head>
 
-<div class="tidy-page">
+<div class="tidy-page plan-top">
+  <!-- 统一页面顶栏(与 /plan /storage 同一个 HomeTopBar)。此前 /tidy 没有页内
+       header,靠全局 AppBar 顶着标题(居中样式),是三页顶栏不统一的根源之一。 -->
+  <HomeTopBar title="整理" ariaLabel="整理工具栏" subtitle={topbarSubtitle} />
+
+  <!-- 桌面双栏:主列(下面全部内容)+ 右侧情境列(当前空间小平面图,sticky)。
+       窄屏(<1080px)时右列收起,起点定位图回到 hero 内部原来的位置 —— 两处各自
+       渲染一次 renderFloorPlanSvg,靠 CSS 切换显示哪个,不让同一个 {@html} 节点
+       跨断点在 DOM 里搬家。 -->
+  <div class="tidy-layout">
+  <div class="tidy-main">
   <!-- ① 今日建议 hero —— 页面唯一的主角。回答的是「我现在最该做什么」,
        不是「系统分析了什么」。视觉上比其余一切都大、都松。 -->
   <section class="hero">
@@ -815,6 +839,31 @@
     {/if}
   </div>
   {/if}
+  </div>
+
+  {#if nextTask?.focus}
+    <aside class="tidy-aside">
+      <InspectorPanel title="当前空间" bodyPad="0">
+        <a
+          class="aside-map"
+          href="/plan"
+          data-sveltekit-noscroll
+          aria-label="在平面图上查看起点"
+        >
+          <span class="aside-map-frame">
+            {@html renderFloorPlanSvg(project, {
+              compact: true,
+              showFurniture: true,
+              hideStorageZones: true,
+              focus: nextTask.focus,
+            })}
+          </span>
+          <span class="aside-map-cap">📍 从这里开始</span>
+        </a>
+      </InspectorPanel>
+    </aside>
+  {/if}
+  </div>
 </div>
 
 <style>
@@ -827,10 +876,80 @@
   .tidy-page {
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    padding: 20px 16px 56px;
+  }
+
+  /* 主列(下面全部内容)+ 右侧情境列的外层容器。默认单列;≥1080px 才变双栏
+     (见下方媒体查询) —— 桌面内容宽度这才从原来居中的 880px 单列跨过去。 */
+  .tidy-layout {
+    width: 100%;
     max-width: 880px;
     margin: 0 auto;
+    padding: 20px 16px 56px;
+  }
+
+  .tidy-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+  }
+
+  /* 桌面双栏时的右侧情境列;窄屏下即使渲染了也不显示 —— 见 hero-map 那份
+     mini-map 承担窄屏展示,两处各自渲染,不共用一个跨断点搬家的 DOM 节点。 */
+  .tidy-aside {
+    display: none;
+  }
+
+  .aside-map {
+    display: block;
+    text-decoration: none;
+    background: var(--plan-paper, #eef1f4);
+  }
+
+  .aside-map:hover {
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  .aside-map-frame {
+    display: block;
+    pointer-events: none;
+  }
+
+  .aside-map-frame :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .aside-map-cap {
+    display: block;
+    padding: 9px 12px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  @media (min-width: 1080px) {
+    .tidy-layout {
+      max-width: 1180px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      align-items: start;
+      gap: 24px;
+    }
+
+    .tidy-aside {
+      display: block;
+      position: sticky;
+      top: 20px;
+    }
+
+    /* 起点定位图已经挪到右侧常驻列,hero 内的那份收起,避免重复。 */
+    .hero-map {
+      display: none;
+    }
   }
 
   /* 卡片的公共语言:无边框,浅浮起。暗色下 --card(#1f252b)本身就比 --bg 亮一档,
@@ -1890,9 +2009,12 @@
 
   /* 组件 style 里不能用 @custom-media —— 会原样进产物被浏览器忽略,必须写字面量 */
   @media (max-width: 640px) {
-    .tidy-page {
-      gap: 18px;
+    .tidy-layout {
       padding: 14px 12px 56px;
+    }
+
+    .tidy-main {
+      gap: 18px;
     }
 
     /* hero 竖排:文字在上,定位图铺满宽度在下 */
