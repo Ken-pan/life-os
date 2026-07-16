@@ -1,0 +1,322 @@
+{
+  "note": "真实数据锚点子集(只读拷贝,勿手改数值):canonical = 云端权威副本 v16(server-optimized,用户逐件校对);scan = 2026-07-15 21:31 真机扫描 payload。用于跨扫描身份匹配单测(吊柜认亲/巨柜拉开/鸟笼压制)。",
+  "source": "/tmp/homeos-scan-analysis/{canonical-v16,latest-scan}.json · 2026-07-15",
+  "canonical": {
+    "placements": [
+      {
+        "h": 78,
+        "w": 224.4,
+        "x": 335,
+        "y": 773.7,
+        "id": "pl-3",
+        "kind": "cabinet",
+        "attrs": {
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/ce72b155-1a9e-41ac-9b75-0e2ca0ae992a/obj-pl-3-0.jpg",
+              "azimuthDeg": 281
+            }
+          ],
+          "colorZh": "白色",
+          "styleZh": "橱柜下柜连排(含水槽位)",
+          "colorHex": "#FFFFFF",
+          "heightIn": 34.9,
+          "material": "板材",
+          "styleKeys": [
+            "StorageType.cabinet"
+          ],
+          "confidence": "medium",
+          "describedAt": "2026-07-15T17:39:48.039Z",
+          "measuredHIn": 74.8,
+          "measuredWIn": 26
+        },
+        "fixed": true,
+        "label": "厨房下柜",
+        "zoneId": "z-2",
+        "rotation": 180
+      },
+      {
+        "h": 73,
+        "w": 56.6,
+        "x": 28.1,
+        "y": 777.5,
+        "id": "pl-7",
+        "kind": "cabinet",
+        "attrs": {
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/ce72b155-1a9e-41ac-9b75-0e2ca0ae992a/obj-pl-7-0.jpg",
+              "azimuthDeg": 256.8
+            }
+          ],
+          "colorZh": "银灰",
+          "styleZh": "双开门不锈钢冰箱（与固定设施 fx-2 为同一物体）",
+          "colorHex": "#C0C0C0",
+          "heightIn": 67.6,
+          "material": "金属",
+          "styleKeys": [
+            "StorageType.cabinet"
+          ],
+          "confidence": "medium",
+          "describedAt": "2026-07-15T17:39:48.039Z",
+          "measuredHIn": 18.9,
+          "measuredWIn": 24.3
+        },
+        "fixed": true,
+        "label": "冰箱储藏标记",
+        "zoneId": "z-2",
+        "rotation": 180
+      },
+      {
+        "h": 51.9,
+        "w": 104,
+        "x": 86.2,
+        "y": 794.6,
+        "id": "pl-18",
+        "kind": "wall_cabinet",
+        "attrs": {
+          "elevIn": 66,
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/ce72b155-1a9e-41ac-9b75-0e2ca0ae992a/obj-pl-18-0.jpg",
+              "azimuthDeg": 214.5
+            }
+          ],
+          "colorZh": "白色",
+          "styleZh": "冰箱上方双门吊柜",
+          "colorHex": "#F5F5F5",
+          "heightIn": 22,
+          "material": "板材",
+          "styleKeys": [
+            "StorageType.cabinet"
+          ],
+          "confidence": "low",
+          "describedAt": "2026-07-15T17:39:48.039Z",
+          "measuredHIn": 34.7,
+          "measuredWIn": 17.3
+        },
+        "fixed": true,
+        "label": "冰箱顶吊柜",
+        "zoneId": "z-2",
+        "rotation": 180
+      },
+      {
+        "h": 116.3,
+        "w": 111.7,
+        "x": 1100.3,
+        "y": 735.7,
+        "id": "pl-26",
+        "kind": "bird_cage",
+        "attrs": {
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/ce72b155-1a9e-41ac-9b75-0e2ca0ae992a/obj-fx-1-0.jpg",
+              "azimuthDeg": 175.1
+            }
+          ],
+          "colorZh": "深红",
+          "styleZh": "鸟笼",
+          "colorHex": "#330000",
+          "heightIn": 65.1,
+          "material": "塑料",
+          "confidence": "low",
+          "describedAt": "2026-07-15T17:39:48.039Z",
+          "measuredHIn": 37.2,
+          "measuredWIn": 38.8
+        },
+        "label": "鸟笼",
+        "zoneId": "z-1",
+        "rotation": 0
+      },
+      {
+        "h": 42,
+        "w": 294,
+        "x": 335,
+        "y": 810,
+        "id": "pl-32",
+        "kind": "wall_cabinet",
+        "attrs": {
+          "elevIn": 54,
+          "styleZh": "橱柜上柜连排(水槽上方,白色双开门)"
+        },
+        "fixed": true,
+        "label": "厨房上柜",
+        "rotation": 0
+      }
+    ],
+    "fixtures": [
+      {
+        "id": "fx-2",
+        "kind": "fridge",
+        "attrs": {
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/ce72b155-1a9e-41ac-9b75-0e2ca0ae992a/obj-fx-2-0.jpg",
+              "azimuthDeg": 212.9
+            }
+          ],
+          "colorZh": "银灰色",
+          "styleZh": "双开门不锈钢冰箱",
+          "colorHex": "#808080",
+          "heightIn": 67.6,
+          "material": "金属",
+          "confidence": "medium",
+          "describedAt": "2026-07-15T17:39:48.039Z",
+          "measuredHIn": 34.1,
+          "measuredWIn": 33.7
+        },
+        "fixed": true,
+        "label": "冰箱",
+        "bounds": {
+          "h": 101.2,
+          "w": 102.2,
+          "x": 87.3,
+          "y": 748.3
+        },
+        "rotation": 180
+      }
+    ]
+  },
+  "scan": {
+    "placements": [
+      {
+        "h": 51,
+        "w": 441.6,
+        "x": 185.7,
+        "y": 802.2,
+        "id": "pl-3",
+        "kind": "cabinet",
+        "attrs": {
+          "elevIn": 54.8,
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/f3302c5e-8cfc-4a8e-9522-67168da76f2b/obj-pl-3-0.jpg",
+              "azimuthDeg": 252.5
+            }
+          ],
+          "styleZh": "封闭柜",
+          "colorHex": "#D5CEC0",
+          "heightIn": 35.4,
+          "styleKeys": [
+            "StorageType.cabinet"
+          ],
+          "confidence": "low",
+          "measuredHIn": 17,
+          "measuredWIn": 147.2
+        },
+        "label": "柜",
+        "zoneId": "z-1",
+        "rotation": 180
+      },
+      {
+        "h": 76.7,
+        "w": 55.5,
+        "x": 31.4,
+        "y": 776.5,
+        "id": "pl-7",
+        "kind": "cabinet",
+        "attrs": {
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/f3302c5e-8cfc-4a8e-9522-67168da76f2b/obj-pl-7-0.jpg",
+              "azimuthDeg": 13.7
+            }
+          ],
+          "styleZh": "封闭柜",
+          "colorHex": "#CAC7BF",
+          "heightIn": 90.2,
+          "styleKeys": [
+            "StorageType.cabinet"
+          ],
+          "confidence": "low",
+          "measuredHIn": 25.6,
+          "measuredWIn": 18.5
+        },
+        "label": "冰箱储藏标记",
+        "zoneId": "z-1",
+        "rotation": 180
+      },
+      {
+        "h": 47.7,
+        "w": 106.8,
+        "x": 79.1,
+        "y": 790.7,
+        "id": "pl-18",
+        "kind": "cabinet",
+        "attrs": {
+          "elevIn": 69.5,
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/f3302c5e-8cfc-4a8e-9522-67168da76f2b/obj-pl-18-0.jpg",
+              "azimuthDeg": 330.4
+            }
+          ],
+          "styleZh": "封闭柜",
+          "colorHex": "#DBD6CA",
+          "heightIn": 20.7,
+          "styleKeys": [
+            "StorageType.cabinet"
+          ],
+          "confidence": "low",
+          "measuredHIn": 15.9,
+          "measuredWIn": 35.6
+        },
+        "label": "柜",
+        "zoneId": "z-1",
+        "rotation": 180
+      }
+    ],
+    "fixtures": [
+      {
+        "id": "fx-1",
+        "kind": "fridge",
+        "attrs": {
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/f3302c5e-8cfc-4a8e-9522-67168da76f2b/obj-fx-1-0.jpg",
+              "azimuthDeg": 263.9
+            }
+          ],
+          "colorHex": "#2E1022",
+          "heightIn": 64.2,
+          "confidence": "low",
+          "measuredHIn": 41.5,
+          "measuredWIn": 35
+        },
+        "label": "冰箱",
+        "bounds": {
+          "h": 124.5,
+          "w": 104.9,
+          "x": 1064.3,
+          "y": 688.8
+        },
+        "rotation": 90
+      },
+      {
+        "id": "fx-2",
+        "kind": "fridge",
+        "attrs": {
+          "photos": [
+            {
+              "path": "c2831538-94b0-4a57-b034-5e873a53c42e/f3302c5e-8cfc-4a8e-9522-67168da76f2b/obj-fx-2-0.jpg",
+              "azimuthDeg": 10.1
+            }
+          ],
+          "colorHex": "#68645E",
+          "heightIn": 68,
+          "confidence": "medium",
+          "measuredHIn": 32.8,
+          "measuredWIn": 32.9
+        },
+        "label": "冰箱",
+        "bounds": {
+          "h": 98.4,
+          "w": 98.6,
+          "x": 88.7,
+          "y": 748.1
+        },
+        "rotation": 180
+      }
+    ]
+  }
+}

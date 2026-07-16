@@ -21,6 +21,7 @@ import {
   mergeViewpointsOnly,
   mergeFurnitureWithIdentity,
   describeReplacements,
+  backfillAppearanceAttrs,
 } from './spatial/scan-merge.js'
 import {
   normalizeContainerPayload,
@@ -364,10 +365,21 @@ export async function pullScan(current, id, opts = {}) {
       identity: merged.identity,
     }
   }
+  // photos 模式的「外观增强」:机位照片照旧只并机位;家具几何/kind/label
+  // 一概不动,只把身份匹配上的扫描件 photoHash(及项目件缺失的主色)写回
+  // 项目件 —— 权威副本长出外观特征的唯一通道(见 backfillAppearanceAttrs)。
+  const enhanced = backfillAppearanceAttrs(
+    mergeViewpointsOnly(current, mapped.viewpoints),
+    mapped,
+  )
   return {
-    project: mergeViewpointsOnly(current, mapped.viewpoints),
+    project: enhanced.project,
     photos,
-    report: { ...mapped.report, mapped: mapped.viewpoints.length },
+    report: {
+      ...mapped.report,
+      mapped: mapped.viewpoints.length,
+      appearanceBackfilled: enhanced.backfilled,
+    },
     replaced: [],
     identity: null,
   }

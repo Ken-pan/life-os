@@ -36,15 +36,61 @@ const AMBIGUITY_MARGIN = 0.08
  * 样式精化会翻 kind:同一把椅子这次认出 swivel → office_chair,下次样式
  * 属性没触发 → chair(508 真扫实测)。这些翻转都来自 KindMaps.applyStyle
  * 的固定映射,所以同族之间允许匹配(小罚分),跨族仍然一票否决。
+ *
+ * wall_cabinet 属 cabinet 族:RoomPlan 只认得 storage(→cabinet),吊柜
+ * 是服务端/用户精化出来的 kind —— 2026-07-15 真扫实测,扫描「柜」
+ * (3.0×1.3ft,elevIn 69.5)与权威「冰箱顶吊柜」(wall_cabinet,2.9×1.4ft,
+ * elevIn 66)明明是同一件,却被跨族一票否决拆散。
+ * ⚠️ iOS 端 ScanIdentity.swift 的 kindFamily 由另一并行会话同步镜像,
+ * 改这里必须同步改那边(本会话不动任何 Swift 文件)。
  */
 const KIND_FAMILY = [
   ['chair', 'office_chair'],
   ['sofa', 'armchair'],
   ['table', 'coffee_table'],
-  ['cabinet', 'shelf'],
+  ['cabinet', 'shelf', 'wall_cabinet'],
 ]
 const familyOf = (kind) => KIND_FAMILY.find((f) => f.includes(kind))
 const CROSS_KIND_PENALTY = 0.05
+
+/**
+ * 高度带(attrs.elevIn,离地安装高度,英寸;平面 px 换算 36px/ft=3px/in):
+ * 同尺寸的吊柜和落地柜在俯视图里长得一模一样,只有安装高度分得开它们。
+ * 真实锚点(2026-07-15 真扫 vs 权威副本 v16):
+ * - 冰箱顶吊柜 elevIn 66 vs 扫描 69.5,差 3.5″ ≤6″ → 加分,必须认亲;
+ * - 12.3ft 巨柜(elevIn 54.8)vs 落地柜(缺 elevIn 视为落地 0,差 54.8″
+ *   >18″)→ 罚分,不得因高度项攀亲。
+ * 6″ 容 RoomPlan 对包围盒底沿的重复测量抖动;>18″ 已跨半个身位,
+ * 只可能是安装高度真不同的两件。加分只给**双方都实测过** elevIn 的
+ * (双方都缺 = 都默认落地,不算证据,否则全场落地家具白涨 0.1 分)。
+ * ⚠️ 与 iOS ScanIdentity.swift 的约定,一字不差:
+ * 加分 +0.1、罚分 -0.15、阈值 6″/18″、缺省视为 0。
+ */
+const ELEV_SAME_MAX_IN = 6
+const ELEV_DIFF_MIN_IN = 18
+const ELEV_BONUS = 0.1
+const ELEV_PENALTY = -0.15
+
+/** 高度带评分项(见上方常数注释;返回 ELEV_BONUS / ELEV_PENALTY / 0) */
+function elevScore(a, b) {
+  const ea = a?.attrs?.elevIn
+  const eb = b?.attrs?.elevIn
+  if (ea == null && eb == null) return 0 // 都没实测:默认都落地,不算证据
+  const d = Math.abs((ea ?? 0) - (eb ?? 0)) // 一方缺 elevIn 视为落地 0
+  if (d > ELEV_DIFF_MIN_IN) return ELEV_PENALTY
+  if (ea != null && eb != null && d <= ELEV_SAME_MAX_IN) return ELEV_BONUS
+  return 0
+}
+
+/**
+ * 用户纠正的一等数据(attrs.scanAliases,与 iOS 端字段名完全一致):
+ * 「扫描惯把这件误检成哪些 kind」。真实案例:鸟笼(bird_cage)每轮都被
+ * RoomPlan 认成冰箱/电视,用户 v16 就纠正过,但纠正只活在 scanWarnings
+ * 文字里,匹配器读不到,每轮重犯。scan kind ∈ prev 的 aliases 时视同
+ * 同 kind 参与打分 —— 不吃跨族否决、不吃 CROSS_KIND_PENALTY。
+ */
+const aliasHit = (prev, next) =>
+  Array.isArray(prev?.attrs?.scanAliases) && prev.attrs.scanAliases.includes(next.kind)
 
 const boxOf = (o) => o.bounds ?? { x: o.x, y: o.y, w: o.w, h: o.h }
 const centerOf = (o) => {
@@ -84,10 +130,13 @@ function hashBonus(a, b) {
   return 0
 }
 
-/** 0..1+bonuses;kind 不同但同族(样式精化翻转)可匹配,跨族一票否决 */
+/**
+ * 0..1+bonuses;kind 不同但同族(样式精化翻转)可匹配,跨族一票否决。
+ * prev 的 scanAliases 命中 next.kind 时视同同 kind(用户纠正 > 扫描惯性误检)。
+ */
 function matchScore(prev, next) {
   let penalty = 0
-  if (prev.kind !== next.kind) {
+  if (prev.kind !== next.kind && !aliasHit(prev, next)) {
     const fam = familyOf(prev.kind)
     if (!fam || !fam.includes(next.kind)) return 0
     penalty = CROSS_KIND_PENALTY
@@ -110,6 +159,7 @@ function matchScore(prev, next) {
   if (cd !== null && cd <= 60) bonus += 0.15
   if (prev.attrs?.styleZh && prev.attrs.styleZh === next.attrs?.styleZh) bonus += 0.1
   bonus += hashBonus(prev, next)
+  bonus += elevScore(prev, next)
   return 0.45 * sizeScore + 0.45 * posScore + bonus - penalty
 }
 

@@ -60,6 +60,14 @@ tidy-plan.js  container-scan.js  event-derive.js  photo-coverage.js
   都踩过,单测锁死)。
 - 结构锁(`isStructureLocked()`):改户型的功能一律挂在 `!structureLocked`
   后面;`fixed` 钉死件几何一律以本地为准。
+- 跨扫描身份的数据权威分三层(`scan-merge.js`):`fixed` 钉死件几何以本地
+  为准;`attrs.identityLocked` 锁定件(用户逐件校对过)kind/label/几何都以
+  本地为准、只吸收照片等外观 attrs、没扫到也不消失,且会**跨 placements/
+  fixtures 压制**与其足迹强重叠(IoU ≥0.3 或中心互含)的惯性误检
+  (`attrs.scanAliases` 记录「惯被误检成哪些 kind」,如鸟笼 → 冰箱/电视);
+  photos 模式拉取走 `backfillAppearanceAttrs`,只把匹配上的扫描件
+  photoHash(及项目件缺失的主色)写回权威模型 —— 这是权威副本长出
+  外观特征的唯一通道,几何/kind/label 一概不动。
 - 事件流(`event-log.js`)只增不改;云表 home.events 在 DB 层没有
   update/delete 策略。事件是增强层:IDB 失败静默降级,绝不打断操作。
 
@@ -69,6 +77,7 @@ tidy-plan.js  container-scan.js  event-derive.js  photo-coverage.js
 |---|---|
 | payload(formatVersion 1) | iOS `Convert/HomeOSModels.swift` ↔ `spatial/scan-payload.js` ↔ supabase/README.md |
 | 配准数学(含点到线精修) | iOS `Services/HomeFrame.swift` ↔ `spatial/scan-register.js` |
+| 身份匹配(kind 族 / elevIn 阈值 6″/18″、加分 +0.1 罚分 -0.15、缺省视为 0 / `attrs.scanAliases`+`attrs.identityLocked` 字段名) | iOS `Services/ScanIdentity.swift` ↔ `spatial/scan-identity.js` |
 | 柜内 JSON | iOS `Services/ContainerGeometry.swift` ↔ `spatial/container-scan.js` |
 | 事件形状 | `spatial/event-derive.js` ↔ home.events 表(supabase/README.md) |
 
@@ -78,6 +87,9 @@ tidy-plan.js  container-scan.js  event-derive.js  photo-coverage.js
   **单测是唯一防线**:svelte-check 抓不到未导入引用,`vite build` 才抓得到。
 - 改 circulation/scan-merge/placements 系:必跑
   `test:scan-merge test:circulation test:placement-snap test:plan-edit test:508-drag`。
+- 改 scan-identity:加跑 `node scripts/scan-identity-unit.mjs`(真实 payload
+  锚点:吊柜认亲/巨柜拉开/鸟笼 aliases),并检查 iOS `ScanIdentity.swift`
+  是否需要同步镜像(上表同源点)。
 - 改储物:`test:storage test:storage-ui test:storage-undo test:container-scan`。
 - 浏览器验证走**用户真实路径**(浏览模式/真实页面),编辑模式和离线 SVG
   都绕过了渲染主线 —— 曾因此漏过「两套户型混渲染」。

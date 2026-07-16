@@ -606,6 +606,7 @@ const boxCenter = (o) => {
  *   moved: Array<{ label: string, movedFt: number,
  *     wall?: import('./wall-anchor.js').WallAnchorDiff }>,
  *   added: number, removed: string[], possiblySame: number,
+ *   suppressed: Array<{ label: string, byLabel: string, byKind: string }>,
  * } }}
  */
 /**
@@ -621,9 +622,61 @@ const scanBorn = (o) =>
   o.attrs?.measuredWIn != null ||
   o.attrs?.confidence != null
 
+/**
+ * 锁定件(attrs.identityLocked,字段名与 iOS 端约定完全一致):用户逐件
+ * 校对过身份的家具/设施 —— kind/label/几何以本地为准,扫描无权改,
+ * 只允许吸收照片等外观 attrs;没扫到也不消失(纠正过的东西不会自己走掉)。
+ * @param {{ attrs?: any }} [o]
+ */
+const isIdentityLocked = (o) => o?.attrs?.identityLocked === true
+
+/**
+ * 外观类 attrs:锁定件合并与 photos 模式回填唯一允许写入的字段 ——
+ * 照片本身 + 由照片派生的特征。几何/种类/名字/储物绑定都不在内。
+ */
+const APPEARANCE_ATTR_KEYS = ['photoRef', 'photoPath', 'photos', 'photoHash', 'colorHex', 'colorSpreadE']
+const pickAppearanceAttrs = (attrs) => {
+  /** @type {Record<string, any>} */
+  const out = {}
+  for (const k of APPEARANCE_ATTR_KEYS) {
+    if (attrs?.[k] != null) out[k] = attrs[k]
+  }
+  return out
+}
+
+/**
+ * 足迹强重叠(锁定件压制惯性误检用):IoU ≥0.3,或任一中心落在对方盒内。
+ * 中心互含兜住「同一件东西、包围盒抖出去一截」的形态 —— 真实案例:
+ * 扫描 fx-1「冰箱」与权威鸟笼 IoU 只有 0.26,但冰箱中心在鸟笼盒内。
+ */
+const SUPPRESS_IOU = 0.3
+const footprintOf = (o) => o.bounds ?? { x: o.x, y: o.y, w: o.w, h: o.h }
+function strongOverlap(a, b) {
+  const ix = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)
+  const iy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)
+  const inter = Math.max(0, ix) * Math.max(0, iy)
+  const union = a.w * a.h + b.w * b.h - inter
+  if (union > 0 && inter / union >= SUPPRESS_IOU) return true
+  const inBox = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h
+  return (
+    inBox({ x: a.x + a.w / 2, y: a.y + a.h / 2 }, b) ||
+    inBox({ x: b.x + b.w / 2, y: b.y + b.h / 2 }, a)
+  )
+}
+
 export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const replaceNearby = opts.replaceNearby !== false
-  const identity = { unchanged: 0, moved: [], added: 0, removed: [], possiblySame: 0 }
+  const identity = {
+    unchanged: 0,
+    moved: [],
+    added: 0,
+    removed: [],
+    possiblySame: 0,
+    /** 被锁定件压制的惯性误检 @type {Array<{ label: string, byLabel: string, byKind: string }>} */
+    suppressed: [],
+  }
+  /** 本轮判为「新增」的 id(压制检查只看它们:匹配上的不是误检) */
+  const addedIds = new Set()
 
   // 房间更新(partial):只有扫描 coverage 里的东西参与身份配对与替换,
   // 片外家具原封不动、不算「消失」。扫一次卫生间不该把卧室的家具判没了。
@@ -648,9 +701,9 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
 
   /** 上次扫描件 → 身份匹配 → 新几何 + 旧 id/旧成果 */
   const reconcile = (prevAll, incoming) => {
-    // 钉死的(即使是手录、没实测 attrs)也进配对池:新扫描扫到同一台
-    // 洗衣机时应该被旧身份吸收(照片/attrs 并进来),而不是长出第二台
-    const prevScan = (prevAll ?? []).filter((o) => scanBorn(o) || o.fixed)
+    // 钉死的/锁定的(即使是手录、没实测 attrs)也进配对池:新扫描扫到
+    // 同一台洗衣机时应该被旧身份吸收(照片/attrs 并进来),而不是长出第二台
+    const prevScan = (prevAll ?? []).filter((o) => scanBorn(o) || o.fixed || isIdentityLocked(o))
     const m = matchScanObjects(prevScan, incoming)
     const prevById = Object.fromEntries(prevScan.map((o) => [o.id, o]))
     const pairByNext = Object.fromEntries(m.pairs.map((p) => [p.nextId, p]))
@@ -674,9 +727,18 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
       if (!pair || pair.state === 'possibly_same') {
         if (pair?.state === 'possibly_same') identity.possiblySame++
         else identity.added++
-        return { ...n, id: uniq(n.id) }
+        const id = uniq(n.id)
+        if (!pair) addedIds.add(id)
+        return { ...n, id }
       }
       const prev = prevById[pair.prevId]
+      // 用户锁定身份的(identityLocked):kind/label/几何以本地为准,扫描
+      // 无权改 —— 匹配上只说明「扫描又看见它了」,吸收照片/photoHash 等
+      // 外观 attrs 即止(几何取本地,位移只是包围盒抖动,不报「挪过」)
+      if (isIdentityLocked(prev)) {
+        identity.unchanged++
+        return { ...prev, attrs: { ...prev.attrs, ...pickAppearanceAttrs(n.attrs) } }
+      }
       // 公寓钉死的(马桶/内嵌橱柜/洗衣机…):扫描认出是同一件就够了,
       // 几何一律以本地为准 —— RoomPlan 的位置抖动对钉死的东西只能是噪声,
       // 不许它把马桶挪了 3 寸再报一条「挪过」吓人
@@ -700,11 +762,16 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         attrs: { ...prev.attrs, ...n.attrs },
       }
     })
-    // 钉死的没扫到也不消失:公寓固定件不会自己走掉,只可能是这次没扫全
+    // 钉死的/锁定的没扫到也不消失:公寓固定件不会自己走掉,用户纠正过
+    // 身份的更不会 —— 只可能是这次没扫到或又被误检成了别的
     const outIds = new Set(out.map((o) => o.id))
-    out.push(...prevScan.filter((o) => o.fixed && !outIds.has(o.id)))
+    out.push(
+      ...prevScan.filter((o) => (o.fixed || isIdentityLocked(o)) && !outIds.has(o.id)),
+    )
     identity.removed.push(
-      ...droppedPrevIds.filter((id) => !prevById[id]?.fixed).map((id) => prevById[id]?.label ?? id),
+      ...droppedPrevIds
+        .filter((id) => !prevById[id]?.fixed && !isIdentityLocked(prevById[id]))
+        .map((id) => prevById[id]?.label ?? id),
     )
     return out
   }
@@ -720,17 +787,43 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const sp = split(project.placements)
   const sf = split(project.fixtures)
 
-  const nextPlacements = reconcile(sp.inside, mapped.placements)
-  const nextFixtures = reconcile(sf.inside, mapped.fixtures)
+  let nextPlacements = reconcile(sp.inside, mapped.placements)
+  let nextFixtures = reconcile(sf.inside, mapped.fixtures)
 
-  /** 丢掉上次扫描的;手录的按是否被实测件顶掉决定;钉死的谁也顶不掉 */
+  // 锁定件压制惯性误检:扫描把鸟笼认成冰箱这类错误每轮都重犯(RoomPlan
+  // 的分类惯性),用户在权威副本里纠正过一次就够了 —— 没匹配上任何旧件的
+  // 「新件」若与某锁定件足迹强重叠,不进项目,记入 identity.suppressed。
+  // placements 与 fixtures 两个列表都查、且跨列表比(真实案例:鸟笼是
+  // placement,误检的「冰箱」以 fixture 进来)。
+  const lockedAll = [...(project.placements ?? []), ...(project.fixtures ?? [])].filter(
+    isIdentityLocked,
+  )
+  if (lockedAll.length) {
+    const dropMisdetect = (list) =>
+      list.filter((o) => {
+        if (!addedIds.has(o.id)) return true
+        const hit = lockedAll.find((L) => strongOverlap(footprintOf(o), footprintOf(L)))
+        if (!hit) return true
+        identity.suppressed.push({
+          label: o.label ?? o.kind,
+          byLabel: hit.label ?? hit.kind,
+          byKind: hit.kind,
+        })
+        identity.added--
+        return false
+      })
+    nextPlacements = dropMisdetect(nextPlacements)
+    nextFixtures = dropMisdetect(nextFixtures)
+  }
+
+  /** 丢掉上次扫描的;手录的按是否被实测件顶掉决定;钉死的/锁定的谁也顶不掉 */
   const keepLocal = (arr, incoming) => {
     const nextIds = new Set((incoming ?? []).map((m) => m.id))
     return (arr ?? []).filter((o) => {
       // 已被 reconcile 以同 id 收编(钉死件必然如此)—— 别留两份
       if (nextIds.has(o.id)) return false
       if (scanBorn(o)) return false
-      if (o.fixed) return true
+      if (o.fixed || isIdentityLocked(o)) return true
       if (!replaceNearby) return true
       const c = boxCenter(o)
       return !incoming.some((m) => {
@@ -760,6 +853,62 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
 /** 兼容旧调用:只要合并结果 */
 export function mergeFurnitureAndViewpoints(project, mapped, opts = {}) {
   return mergeFurnitureWithIdentity(project, mapped, opts).project
+}
+
+/**
+ * photos 模式的「外观增强」—— 权威模型长出外观特征的唯一通道。
+ *
+ * 为什么必须有:权威副本(server-optimized)的家具是服务端补录的,没走
+ * 网页拉取路径,attrs.photoHash 全空 → scan-identity 的 hashBonus 恒 0,
+ * 外观认亲对最重要的那份数据完全休眠;而日常拉取默认 photos 模式只并
+ * 机位,hash 永远回填不进去。
+ *
+ * 做法:对 mapped 家具与项目家具跑一遍身份匹配,匹配上的**只**回填
+ * attrs.photoHash(扫描侧照片更新鲜,覆盖写)与项目件缺主色时的
+ * colorHex/colorSpreadE。几何/kind/label/zoneId 一概不动。务必保守:
+ * 配对状态非 same_* 的一律不写 —— 宁可这轮不长特征,也不错认。
+ *
+ * @param {SpatialProject} project
+ * @param {{ placements: any[], fixtures: any[] }} mapped 已过 mapScanIntoLayout
+ * @returns {{ project: SpatialProject, backfilled: number }}
+ */
+export function backfillAppearanceAttrs(project, mapped) {
+  let backfilled = 0
+  const enhance = (prevAll, incoming) => {
+    const list = prevAll ?? []
+    if (!list.length || !incoming?.length) return list
+    // 配对池与 mergeFurnitureWithIdentity.reconcile 同口径
+    const pool = list.filter((o) => scanBorn(o) || o.fixed || isIdentityLocked(o))
+    const m = matchScanObjects(pool, incoming)
+    const nextById = Object.fromEntries(incoming.map((o) => [o.id, o]))
+    const pairByPrev = Object.fromEntries(
+      m.pairs.filter((p) => p.state !== 'possibly_same').map((p) => [p.prevId, p]),
+    )
+    return list.map((o) => {
+      const pair = pairByPrev[o.id]
+      const src = pair ? nextById[pair.nextId]?.attrs : null
+      if (!src) return o
+      /** @type {Record<string, any>} */
+      const patch = {}
+      if (src.photoHash) patch.photoHash = src.photoHash
+      // 主色只补缺:项目件已有的主色是多视角聚合/用户校对过的,不许单轮覆盖
+      if (src.colorHex && !o.attrs?.colorHex) {
+        patch.colorHex = src.colorHex
+        if (src.colorSpreadE != null) patch.colorSpreadE = src.colorSpreadE
+      }
+      if (!Object.keys(patch).length) return o
+      backfilled++
+      return { ...o, attrs: { ...o.attrs, ...patch } }
+    })
+  }
+  return {
+    project: {
+      ...project,
+      placements: enhance(project.placements, mapped.placements),
+      fixtures: enhance(project.fixtures, mapped.fixtures),
+    },
+    backfilled,
+  }
 }
 
 /**

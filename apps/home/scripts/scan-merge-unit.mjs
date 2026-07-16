@@ -5,6 +5,7 @@
  * 核心不变量:**户型永远不动**(墙体/房间/储藏区),扫描只贡献家具位置与照片。
  * 用真实的 508 户型跑,因为坑都是真实数据形状带出来的。
  */
+import { readFileSync } from 'node:fs'
 import { SAMPLE_508 } from '../src/lib/spatial/sample-508.js'
 import {
   mapScanIntoLayout,
@@ -718,6 +719,166 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   // 尺寸永不缩放:精修后盒子 w/h 原样
   const box = reg.applyBox({ x: 100, y: 100, w: 90, h: 60 })
   ok('精修后盒子尺寸不变', Math.abs(box.w - 90) < 1e-6 && Math.abs(box.h - 60) < 1e-6)
+}
+
+// ---- 用户纠正落成一等数据:identityLocked / scanAliases / 跨列表压制 ----
+// 真实数据驱动(fixtures/scan-identity-real.json,抽自 2026-07-15 真机扫描
+// 与权威副本 v16):鸟笼(placement)每轮被 RoomPlan 误检成冰箱(fixture),
+// 用户 v16 就纠正过,但纠正只活在 scanWarnings 文字里 —— 这组测试锁死
+// 「纠正一次,轮轮生效」。
+{
+  const { mergeFurnitureWithIdentity } = await import('../src/lib/spatial/scan-merge.js')
+  const real = JSON.parse(
+    readFileSync(new URL('./fixtures/scan-identity-real.json', import.meta.url), 'utf8'),
+  )
+  const bird = real.canonical.placements.find((o) => o.id === 'pl-26')
+  const lockedBird = {
+    ...bird,
+    attrs: { ...bird.attrs, scanAliases: ['fridge', 'tv'], identityLocked: true },
+  }
+  const canonFridge = real.canonical.fixtures.find((o) => o.id === 'fx-2')
+  const scanFakeFridge = real.scan.fixtures.find((o) => o.id === 'fx-1') // 其实是鸟笼
+  const scanRealFridge = real.scan.fixtures.find((o) => o.id === 'fx-2')
+
+  // A. 误检以 placement 进来且匹配上(aliases 认领)→ 锁定件只吸收外观
+  {
+    const prevProject = { ...SAMPLE_508, placements: [lockedBird], fixtures: [], viewpoints: [] }
+    const incoming = {
+      placements: [{
+        id: 'scan-pl-x', kind: 'fridge', label: '冰箱', rotation: 90,
+        x: scanFakeFridge.bounds.x, y: scanFakeFridge.bounds.y,
+        w: scanFakeFridge.bounds.w, h: scanFakeFridge.bounds.h,
+        attrs: { ...scanFakeFridge.attrs, photoHash: 'a1b2c3d4e5f60718' },
+      }],
+      fixtures: [], viewpoints: [],
+    }
+    const { project: p2, identity } = mergeFurnitureWithIdentity(prevProject, incoming)
+    const b2 = p2.placements.find((p) => p.id === 'pl-26')
+    ok('锁定件:kind/label 以本地为准', b2?.kind === 'bird_cage' && b2?.label === '鸟笼',
+      JSON.stringify({ kind: b2?.kind, label: b2?.label }))
+    ok('锁定件:几何以本地为准(扫描位置只是抖动)', b2?.x === bird.x && b2?.w === bird.w,
+      JSON.stringify({ x: b2?.x, w: b2?.w }))
+    ok('锁定件:吸收外观 photoHash', b2?.attrs?.photoHash === 'a1b2c3d4e5f60718')
+    ok('锁定件:非外观 attrs 不吸收(实测尺寸保本地)',
+      b2?.attrs?.measuredWIn === bird.attrs.measuredWIn, `${b2?.attrs?.measuredWIn}`)
+    ok('锁定件:不报「挪过」、判原位', identity.moved.length === 0 && identity.unchanged === 1,
+      JSON.stringify(identity))
+    ok('锁定件:项目里没长出第二件', p2.placements.length === 1, `${p2.placements.length}`)
+  }
+
+  // B. 误检以 fixture 进来(真实形态)→ 跨列表压制,不进项目
+  {
+    const prevProject = {
+      ...SAMPLE_508,
+      placements: [lockedBird],
+      fixtures: [canonFridge],
+      viewpoints: [],
+    }
+    const mapped = {
+      placements: [],
+      fixtures: [
+        { ...scanFakeFridge, id: 'scan-fx-1' },
+        { ...scanRealFridge, id: 'scan-fx-2' },
+      ],
+      viewpoints: [],
+    }
+    const { project: p2, identity } = mergeFurnitureWithIdentity(prevProject, mapped)
+    ok('鸟笼压制:误检冰箱不进项目(跨列表:placement 锁定件压 fixture 新件)',
+      !p2.fixtures.some((f) => f.id === 'scan-fx-1'),
+      JSON.stringify(p2.fixtures.map((f) => f.id)))
+    ok('鸟笼压制:全屋只剩一台真冰箱', p2.fixtures.filter((f) => f.kind === 'fridge').length === 1,
+      JSON.stringify(p2.fixtures.map((f) => `${f.id}:${f.kind}`)))
+    ok('鸟笼压制:真冰箱身份照常吸收(保 id)', p2.fixtures.some((f) => f.id === 'fx-2'))
+    ok('鸟笼压制:记入 identity.suppressed(label+byKind)',
+      identity.suppressed.length === 1 &&
+        identity.suppressed[0].label === '冰箱' &&
+        identity.suppressed[0].byKind === 'bird_cage' &&
+        identity.suppressed[0].byLabel === '鸟笼',
+      JSON.stringify(identity.suppressed))
+    ok('鸟笼压制:added 计数随之归零', identity.added === 0, `added=${identity.added}`)
+    ok('锁定件没扫到(placements 侧空)也不消失', p2.placements.some((p) => p.id === 'pl-26'))
+    ok('锁定件不进 removed', !identity.removed.includes('鸟笼'), JSON.stringify(identity.removed))
+  }
+
+  // C. 与锁定件不重叠的真新件不受压制(压制只打足迹强重叠的误检)
+  {
+    const prevProject = { ...SAMPLE_508, placements: [lockedBird], fixtures: [], viewpoints: [] }
+    const mapped = {
+      placements: [],
+      fixtures: [{ ...scanRealFridge, id: 'scan-fx-2' }], // 离鸟笼 ~27ft
+      viewpoints: [],
+    }
+    const { project: p2, identity } = mergeFurnitureWithIdentity(prevProject, mapped)
+    ok('不重叠的新件照常进来', p2.fixtures.some((f) => f.id === 'scan-fx-2'))
+    ok('不重叠的新件不进 suppressed', identity.suppressed.length === 0 && identity.added === 1,
+      JSON.stringify(identity))
+  }
+}
+
+// ---- photos 模式外观增强:photoHash 回填进权威模型(唯一通道) ----
+{
+  const { backfillAppearanceAttrs } = await import('../src/lib/spatial/scan-merge.js')
+  const real = JSON.parse(
+    readFileSync(new URL('./fixtures/scan-identity-real.json', import.meta.url), 'utf8'),
+  )
+  const canonHung = real.canonical.placements.find((o) => o.id === 'pl-18') // 有 colorHex,无 photoHash
+  const canonFridge = real.canonical.fixtures.find((o) => o.id === 'fx-2')
+  const scanHung = real.scan.placements.find((o) => o.id === 'pl-18')
+  const scanFridge = real.scan.fixtures.find((o) => o.id === 'fx-2')
+
+  const project = {
+    ...SAMPLE_508,
+    placements: [canonHung],
+    fixtures: [
+      // 主色补缺路径:去掉权威冰箱的 colorHex
+      { ...canonFridge, attrs: { ...canonFridge.attrs, colorHex: undefined } },
+    ],
+    viewpoints: [{ id: 'vp-keep', x: 0, y: 0, heading: 0, fovDeg: 69 }],
+  }
+  delete project.fixtures[0].attrs.colorHex
+  const mapped = {
+    placements: [{ ...scanHung, id: 'scan-pl-18',
+      attrs: { ...scanHung.attrs, photoHash: 'ff00ff00ff00ff00' } }],
+    fixtures: [{ ...scanFridge, id: 'scan-fx-2',
+      attrs: { ...scanFridge.attrs, photoHash: '0123456789abcdef', colorSpreadE: 4.2 } }],
+    viewpoints: [],
+  }
+  const { project: p2, backfilled } = backfillAppearanceAttrs(project, mapped)
+  const hung2 = p2.placements.find((p) => p.id === 'pl-18')
+  const fr2 = p2.fixtures.find((f) => f.id === 'fx-2')
+  ok('回填:photoHash 写进权威吊柜(真实数据认亲)', hung2?.attrs?.photoHash === 'ff00ff00ff00ff00',
+    JSON.stringify(hung2?.attrs))
+  ok('回填:项目件已有主色不被单轮扫描覆盖', hung2?.attrs?.colorHex === canonHung.attrs.colorHex,
+    hung2?.attrs?.colorHex)
+  ok('回填:几何/kind/label/zoneId 一概不动',
+    hung2?.x === canonHung.x && hung2?.w === canonHung.w &&
+      hung2?.kind === 'wall_cabinet' && hung2?.label === canonHung.label,
+    JSON.stringify({ x: hung2?.x, kind: hung2?.kind }))
+  ok('回填:缺主色的项目件补上 colorHex/colorSpreadE',
+    fr2?.attrs?.colorHex === scanFridge.attrs.colorHex && fr2?.attrs?.colorSpreadE === 4.2,
+    JSON.stringify(fr2?.attrs))
+  ok('回填:计数带回', backfilled === 2, `backfilled=${backfilled}`)
+  ok('回填:机位/户型不参与', p2.viewpoints === project.viewpoints && p2.walls === project.walls)
+
+  // possibly_same(双胞胎)一律不写 —— 宁可这轮不长特征,也不错认
+  const twinProject = {
+    ...SAMPLE_508,
+    placements: [
+      { id: 'tw-1', kind: 'chair', label: '椅A', x: 100, y: 100, w: 50, h: 50, rotation: 0,
+        attrs: { confidence: 'high' } },
+      { id: 'tw-2', kind: 'chair', label: '椅B', x: 160, y: 100, w: 50, h: 50, rotation: 0,
+        attrs: { confidence: 'high' } },
+    ],
+    fixtures: [], viewpoints: [],
+  }
+  const twinMapped = {
+    placements: [{ id: 'scan-tw', kind: 'chair', label: '椅', x: 130, y: 100, w: 50, h: 50,
+      rotation: 0, attrs: { confidence: 'high', photoHash: 'deadbeefdeadbeef' } }],
+    fixtures: [], viewpoints: [],
+  }
+  const twin = backfillAppearanceAttrs(twinProject, twinMapped)
+  ok('回填:possibly_same 一律不写', twin.backfilled === 0 &&
+    twin.project.placements.every((p) => !p.attrs?.photoHash), JSON.stringify(twin.project.placements))
 }
 
 if (fails.length) {
