@@ -70,7 +70,9 @@ extension AppModel {
             scene,
             scanId: scanId.uuidString.lowercased(),
             nameZh: "扫描 \(df.string(from: Date()))",
-            scanScope: scanScope == "partial" ? "partial" : nil
+            scanScope: scanScope == "partial" ? "partial" : nil,
+            // 权威副本喂给投影:去重仲裁 + 检测陷阱纠正(别名认亲/误检压制)
+            canonicalHome: canonicalHome ?? CanonicalHomeCache.load()
         )
         convertedProject = projection.project
         objectPhotoFiles = projection.objectPhotos

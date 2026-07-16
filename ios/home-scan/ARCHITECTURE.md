@@ -52,7 +52,8 @@ Convert(纯管线,CapturedStructure → HomeOS plan px)
 |---|---|---|
 | `Convert/HomeOSModels.swift` | web `spatial/scan-payload.js` + `apps/home/supabase/README.md` | payload 契约,formatVersion 1,只加可选字段 |
 | `Services/HomeFrame.swift` | web `spatial/scan-register.js` | 墙体配准:常数/验收门/精修逐行对应(单位 米 vs px) |
-| `Services/ScanIdentity.swift` | web `spatial/scan-identity.js` | 跨扫描身份:打分/同族/歧义边距逐行对应 |
+| `Services/ScanIdentity.swift` | web `spatial/scan-identity.js` | 跨扫描身份:打分/同族(cabinet 族含 wall_cabinet)/elev 项(双方实测且差 ≤6″ 才 +0.1;差 >18″ −0.15,一方缺省视为 0 落地;都缺 → 0)/歧义边距逐行对应 |
+| `attrs.scanAliases` / `attrs.identityLocked`(权威件) | web 优化副本同名字段 | 检测陷阱契约(用户纠正一等数据),三端同名不许改;iOS 侧 CanonicalHomeStore 透传 → PlanProjector 认亲/压制 |
 | `Services/ContainerGeometry.swift` 的 Payload | `apps/home/supabase/README.md` 柜内节 | 桶内 JSON 契约 |
 | `Config.swift` | `packages/sync/src/supabaseClient.js` | Supabase URL/key |
 
@@ -65,6 +66,8 @@ RoomPlan 逐房(共享 ARSession) ─合并→ CapturedStructure
   └ 实时:HomeFrame 配准(2s 节流)→ HUD 徽标 + 漏扫房间
 StructureFlattener → FlatScene(米,含 elevM)
 PlanProjector → HomeOSProject(plan px)+ 证据包裁剪(大3/中2/小1)
+  └ 权威副本(CanonicalHome)配准进扫描帧:去重 >100cm 仲裁(靠权威尺寸,
+    无参照同级取更小)+ scanAliases 认亲(跨列表)+ identityLocked 误检压制
 RealityCheck(配准+身份)→ 认出换真名/新发现/没扫到
 PendingScanStore.save(先落盘,后上传 —— 断网被杀不丢)
 ScanUploader(3 路并发,桶清单续传,photos 全成才写 scans 行)

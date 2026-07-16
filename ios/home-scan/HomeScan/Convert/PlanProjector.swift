@@ -38,7 +38,8 @@ enum PlanProjector {
         _ scene: FlatScene,
         scanId: String,
         nameZh: String,
-        scanScope: String? = nil
+        scanScope: String? = nil,
+        canonicalHome: CanonicalHome? = nil
     ) -> Projection {
         var warnings = scene.warnings
 
@@ -73,6 +74,11 @@ enum PlanProjector {
             warnings: &warnings
         )
         let graph = buildGraph(segments: cleaned)
+
+        // 3.5) 权威参照:把永久户型配准进扫描帧,供去重仲裁与检测陷阱纠正
+        //     (配准不过验收门 → 空列表,权威值不掺和这次扫描)
+        let identityRefs = canonicalHome
+            .map { canonicalRefs(scanGraph: graph.toModel(), home: $0) } ?? []
 
         // 4) 门窗投影到宿主边
         var openings: [HomeOSProject.GraphOpening] = []
@@ -123,7 +129,8 @@ enum PlanProjector {
         // 6) 物体:先映射 kind(sink 按所在区改判厨房水槽/卫生间洗手台),
         //    再按**映射后的 kind** 去重 —— oven 与 stove 同映射成 stove,
         //    一体机会在同一坐标画两遍(真扫实测 0px 重合);按原始类目比是抓不到的。
-        let mapped = dedupMapped(
+        //    去重后过一遍权威纠正(别名认亲/误检压制,见 reconcileWithCanonical)。
+        let deduped = dedupMapped(
             scene.items.compactMap { item -> MappedItem? in
                 let c = toPlan(item.center)
                 let di = zoneDrafts.firstIndex { pointInPolygon(c, $0.poly) }
@@ -177,8 +184,10 @@ enum PlanProjector {
                     }()
                 )
             },
+            refs: identityRefs,
             warnings: &warnings
         )
+        let mapped = reconcileWithCanonical(deduped, refs: identityRefs, warnings: &warnings)
 
         // 7) RoomPlan 认不出功能的区(unidentified),按区内家具反推名字;同名加序号
         let zones = namedZones(drafts: zoneDrafts, items: mapped)
@@ -361,6 +370,114 @@ enum PlanProjector {
         return out
     }
 
+    // MARK: - 权威参照(检测陷阱纠正)
+
+    /// 几何吻合门槛:footprint IoU ≥0.3(或中心互含)才算「同一个位置的东西」——
+    /// 与网页端并行实现同一判据
+    static let geomIoUMin = 0.3
+    /// 同位同 kind 两次测量差超过它(100cm)= 「整排柜被并成一件」量级,
+    /// 不再走普通去重仲裁(真扫连续两轮:厨房上柜整排被检成一只 12.3ft 巨柜)
+    static let splitSuspectPx = 1.0 * pxPerM
+
+    /// 轴对齐脚印(plan px)—— 几何吻合判定的最小单元
+    struct BoxPx {
+        var x: Double
+        var y: Double
+        var w: Double
+        var h: Double
+        var cx: Double { x + w / 2 }
+        var cy: Double { y + h / 2 }
+
+        func contains(_ px: Double, _ py: Double) -> Bool {
+            px >= x && px <= x + w && py >= y && py <= y + h
+        }
+    }
+
+    /// 权威副本里的一件已知物,已配准到**扫描 px 帧**。
+    /// scanAliases / identityLocked 是三端同源契约字段(权威件 attrs 下):
+    /// 扫描惯把这件误检成哪些 kind / kind·label·几何以权威为准。
+    struct CanonicalRef {
+        var id: String
+        var kind: String
+        var label: String
+        var box: BoxPx
+        var elevIn: Double?
+        /// 权威件住在哪个列表(认亲跨列表跟着走:鸟笼是 placement,
+        /// 误检进来的「冰箱」是 fixture,认作鸟笼后要落回 placements)
+        var isFixture: Bool
+        var scanAliases: [String]
+        var identityLocked: Bool
+    }
+
+    /// 把权威副本配准到扫描帧 → 参照列表。配准不过门(HomeFrame 验收门)
+    /// 返回空:几何都对不上时,不许拿权威值硬改这次扫描。
+    static func canonicalRefs(
+        scanGraph: HomeOSProject.WallGraph,
+        home: CanonicalHome
+    ) -> [CanonicalRef] {
+        let scanSegs = HomeFrame.segments(fromWallGraph: scanGraph)
+        let homeSegs = HomeFrame.segments(fromWallGraph: home.wallGraph)
+        let reg = HomeFrame.register(scan: scanSegs, home: homeSegs)
+        guard reg.ok else { return [] }
+        let homeMPerPx = 0.3048 / home.wallGraph.pxPerFt
+        let scanPxPerM = scanGraph.pxPerFt / 0.3048
+        // 家坐标(px)→ 扫描帧(px):toHome 的精确逆
+        func toScanPx(_ p: SIMD2<Double>) -> SIMD2<Double> {
+            HomeFrame.fromHome(p * homeMPerPx, reg) * scanPxPerM
+        }
+        func box(_ x: Double, _ y: Double, _ w: Double, _ h: Double) -> BoxPx {
+            let a = toScanPx(SIMD2(x, y))
+            let b = toScanPx(SIMD2(x + w, y + h))
+            return BoxPx(
+                x: min(a.x, b.x), y: min(a.y, b.y),
+                w: abs(b.x - a.x), h: abs(b.y - a.y)
+            )
+        }
+        func hint(_ id: String) -> CanonicalHome.IdentityHint {
+            home.identityHints?[id] ?? CanonicalHome.IdentityHint()
+        }
+        var out: [CanonicalRef] = []
+        for pl in home.placements {
+            let hi = hint(pl.id)
+            out.append(CanonicalRef(
+                id: pl.id, kind: pl.kind, label: pl.label,
+                box: box(pl.x, pl.y, pl.w, pl.h),
+                elevIn: pl.attrs?.elevIn, isFixture: false,
+                scanAliases: hi.scanAliases, identityLocked: hi.identityLocked
+            ))
+        }
+        for fx in home.fixtures ?? [] {
+            let hi = hint(fx.id)
+            out.append(CanonicalRef(
+                id: fx.id, kind: fx.kind, label: fx.label,
+                box: box(fx.bounds.x, fx.bounds.y, fx.bounds.w, fx.bounds.h),
+                elevIn: fx.attrs?.elevIn, isFixture: true,
+                scanAliases: hi.scanAliases, identityLocked: hi.identityLocked
+            ))
+        }
+        return out
+    }
+
+    static func footprintIoU(_ a: BoxPx, _ b: BoxPx) -> Double {
+        let ix = max(0, min(a.x + a.w, b.x + b.w) - max(a.x, b.x))
+        let iy = max(0, min(a.y + a.h, b.y + b.h) - max(a.y, b.y))
+        let inter = ix * iy
+        let union = a.w * a.h + b.w * b.h - inter
+        guard union > 0 else { return 0 }
+        return inter / union
+    }
+
+    /// 几何吻合(与网页端同一契约判据):footprint IoU ≥0.3 或中心互含
+    static func geomMatch(_ a: BoxPx, _ b: BoxPx) -> Bool {
+        footprintIoU(a, b) >= geomIoUMin
+            || (a.contains(b.cx, b.cy) && b.contains(a.cx, a.cy))
+    }
+
+    /// 同 kind 或同族(cabinet/shelf/wall_cabinet…,族表与 ScanIdentity 单一权威)
+    static func sameKindOrFamily(_ a: String, _ b: String) -> Bool {
+        a == b || (ScanIdentity.kindFamily.first { $0.contains(a) }?.contains(b) ?? false)
+    }
+
     // MARK: - 物体映射与去重
 
     /// 已定 kind 的物体(plan px)。去重、命名推断、落盘都基于它。
@@ -387,13 +504,27 @@ enum PlanProjector {
         var requiredShots: Int = 1
     }
 
+    /// MappedItem 落盘时的轴对齐脚印(与第 8 步 placements/fixtures 的框同一算法)
+    static func footprint(of m: MappedItem) -> BoxPx {
+        let snapped = snappedRotation(axisDeg: m.axisDeg)
+        let fw = (snapped == 0 || snapped == 180) ? m.widthPx : m.depthPx
+        let fh = (snapped == 0 || snapped == 180) ? m.depthPx : m.widthPx
+        return BoxPx(x: m.center.x - fw / 2, y: m.center.y - fh / 2, w: fw, h: fh)
+    }
+
     /// 同 **kind** 且中心距 <0.6m 视为同一件。谁的尺寸可信:
     /// **置信度高的赢**(RoomPlan 对扫得不全的物体给偏小的包围盒,同时置信度掉级,
     /// 盲取更大的会把「误检的大框」当真);同级才取脚印更大(更完整)的那件。
     /// 两次测量差 >10cm 时留告警 —— 这正是「该补扫一圈」的信号。
+    ///
+    /// 例外:两次测量差 >100cm(`splitSuspectPx`)不再简单二选一 —— 真扫连续两轮,
+    /// 厨房上柜整排被 RoomPlan 检成一只 12.3ft 巨柜,在 low-vs-low 对决里「大框」获胜,
+    /// 方向反了。此时:权威副本里有几何吻合的已知件 → 取与权威尺寸更接近的那次;
+    /// 没有权威参照 → 置信度高者赢,同级取**更小**的那件(RoomPlan 的误检偏大不偏小)。
     /// 按 kind 而非原始类目:oven/stove 都映射成 stove,一体机否则会重合两遍。
     static func dedupMapped(
         _ items: [MappedItem],
+        refs: [CanonicalRef] = [],
         warnings: inout [String]
     ) -> [MappedItem] {
         let mergeDistPx = 0.6 * pxPerM
@@ -408,15 +539,30 @@ enum PlanProjector {
                 let old = kept[i]
                 let dw = abs(old.widthPx - item.widthPx)
                 let dd = abs(old.depthPx - item.depthPx)
-                if max(dw, dd) > disagreePx {
-                    let cm = Int((max(dw, dd) / pxPerM * 100).rounded())
-                    warnings.append("「\(old.label)」两次测量尺寸差 \(cm)cm,已取更可信一次;建议对着它补扫确认")
-                }
                 let oldRank = confidenceRank(old.confidence)
                 let newRank = confidenceRank(item.confidence)
-                let newWins = newRank != oldRank
-                    ? newRank > oldRank
-                    : item.widthPx * item.depthPx > old.widthPx * old.depthPx
+                let newWins: Bool
+                if max(dw, dd) > splitSuspectPx {
+                    let cm = Int((max(dw, dd) / pxPerM * 100).rounded())
+                    warnings.append("「\(old.label)」两次测量尺寸差 \(cm)cm,疑似整排柜被并成一件,建议网页端拆分核对")
+                    if let ref = arbitrationRef(old: old, new: item, refs: refs) {
+                        // 权威副本是用户逐件校对过的一等数据:尺寸更接近它的那次赢
+                        newWins = sizeDeltaToRef(item, ref) < sizeDeltaToRef(old, ref)
+                    } else if newRank != oldRank {
+                        newWins = newRank > oldRank
+                    } else {
+                        // 同级取更小:低置信度大框不许自动赢
+                        newWins = item.widthPx * item.depthPx < old.widthPx * old.depthPx
+                    }
+                } else {
+                    if max(dw, dd) > disagreePx {
+                        let cm = Int((max(dw, dd) / pxPerM * 100).rounded())
+                        warnings.append("「\(old.label)」两次测量尺寸差 \(cm)cm,已取更可信一次;建议对着它补扫确认")
+                    }
+                    newWins = newRank != oldRank
+                        ? newRank > oldRank
+                        : item.widthPx * item.depthPx > old.widthPx * old.depthPx
+                }
                 kept[i] = newWins
                     ? mergedAttrs(into: item, from: old)
                     : mergedAttrs(into: old, from: item)
@@ -426,6 +572,111 @@ enum PlanProjector {
         }
         if dropped > 0 { warnings.append("合并 \(dropped) 件重复识别的物体(同位重合/扫描重叠区)") }
         return kept
+    }
+
+    /// >100cm 仲裁用的权威参照:同 kind/同族、且与任一次测量几何吻合;
+    /// 多个命中取 IoU 最大的
+    private static func arbitrationRef(
+        old: MappedItem,
+        new: MappedItem,
+        refs: [CanonicalRef]
+    ) -> CanonicalRef? {
+        let boxes = [footprint(of: old), footprint(of: new)]
+        var best: (ref: CanonicalRef, iou: Double)?
+        for ref in refs where sameKindOrFamily(old.kind, ref.kind) {
+            guard boxes.contains(where: { geomMatch($0, ref.box) }) else { continue }
+            let iou = boxes.map { footprintIoU($0, ref.box) }.max() ?? 0
+            if best == nil || iou > best!.iou { best = (ref, iou) }
+        }
+        return best?.ref
+    }
+
+    /// 测量与权威尺寸的差(忽略 90° 朝向差,与 ScanIdentity.sizeDiff 同思路)
+    private static func sizeDeltaToRef(_ m: MappedItem, _ ref: CanonicalRef) -> Double {
+        let box = footprint(of: m)
+        let direct = max(abs(box.w - ref.box.w), abs(box.h - ref.box.h))
+        let swapped = max(abs(box.w - ref.box.h), abs(box.h - ref.box.w))
+        return min(direct, swapped)
+    }
+
+    /// 检测陷阱纠正(权威件的用户纠正一等数据,去重之后、命名/落盘之前):
+    ///
+    /// 1) **别名认亲**:检测 kind ∈ 某权威件 `scanAliases` 且几何吻合
+    ///    (IoU ≥0.3 或中心互含)→ 认作该件,沿用权威 kind 与 label;
+    ///    跨列表跟着权威走(鸟笼是 placement,误检成 fixture「冰箱」也落回
+    ///    placements);`identityLocked` 时尺寸也用权威值。
+    ///    每个权威件至多认一件(几何最吻合者),多余的进第 2 步。
+    /// 2) **压制**:认不上、却压在 identityLocked 件足迹上的跨族检测,
+    ///    直接不进 payload —— 真扫实测:鸟笼被检成「冰箱」,认亲被跨 kind
+    ///    否决拦不住,payload 里就出现了两台冰箱。跨列表也查(不能只比同列表)。
+    ///    双方 elev 差 >18″ 不压制:吊柜叠在冰箱正上方是合法共存
+    ///    (缺省视为 0 落地,阈值与 ScanIdentity 的 elev 项同一约定)。
+    static func reconcileWithCanonical(
+        _ items: [MappedItem],
+        refs: [CanonicalRef],
+        warnings: inout [String]
+    ) -> [MappedItem] {
+        guard !refs.isEmpty else { return items }
+
+        // 1) 别名认亲:贪心按 IoU 配对,一个权威件只认一件
+        struct Cand {
+            var ii: Int
+            var ri: Int
+            var iou: Double
+        }
+        var cands: [Cand] = []
+        for (ii, m) in items.enumerated() {
+            let box = footprint(of: m)
+            for (ri, ref) in refs.enumerated()
+            where ref.scanAliases.contains(m.kind) && geomMatch(box, ref.box) {
+                cands.append(Cand(ii: ii, ri: ri, iou: footprintIoU(box, ref.box)))
+            }
+        }
+        cands.sort { $0.iou > $1.iou }
+        var adoption: [Int: Int] = [:] // item idx → ref idx
+        var usedRefs = Set<Int>()
+        for c in cands where adoption[c.ii] == nil && !usedRefs.contains(c.ri) {
+            adoption[c.ii] = c.ri
+            usedRefs.insert(c.ri)
+        }
+        var out = items
+        for (ii, ri) in adoption {
+            let ref = refs[ri]
+            out[ii].kind = ref.kind
+            out[ii].label = ref.label
+            out[ii].isFixture = ref.isFixture
+            if ref.identityLocked {
+                // 尺寸以权威为准:按落盘旋转对齐宽深,footprint 恰为权威框
+                let snapped = snappedRotation(axisDeg: out[ii].axisDeg)
+                if snapped == 90 || snapped == 270 {
+                    out[ii].widthPx = ref.box.h
+                    out[ii].depthPx = ref.box.w
+                } else {
+                    out[ii].widthPx = ref.box.w
+                    out[ii].depthPx = ref.box.h
+                }
+            }
+        }
+
+        // 2) 压制疑似误检
+        var suppressed = Set<Int>()
+        for (ii, m) in out.enumerated() where adoption[ii] == nil {
+            let box = footprint(of: m)
+            for (ri, ref) in refs.enumerated() where ref.identityLocked {
+                guard geomMatch(box, ref.box) else { continue }
+                // 同 kind/同族是「它本人」,交给正常身份匹配,不压
+                if sameKindOrFamily(m.kind, ref.kind) { continue }
+                // 别名候选只是没抢到未占用的权威件 → 权威件空着就不压
+                if ref.scanAliases.contains(m.kind), !usedRefs.contains(ri) { continue }
+                // 立体分层共存(吊柜 vs 冰箱):elev 差 >18″ 不压
+                if abs((m.elevIn ?? 0) - (ref.elevIn ?? 0)) > ScanIdentity.elevDiffMinIn { continue }
+                suppressed.insert(ii)
+                warnings.append("压制 1 件疑似误检(\(m.label) → \(ref.label),权威已锁定)")
+                break
+            }
+        }
+        guard !suppressed.isEmpty else { return out }
+        return out.enumerated().filter { !suppressed.contains($0.offset) }.map(\.element)
     }
 
     /// nil(mock/未知)排在 low 之上、medium 之下:没证据说它差,但也不该赢过实测 high。

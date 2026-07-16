@@ -17,6 +17,8 @@ enum ScanIdentity {
         var confidence: String?
         var colorHex: String?
         var styleZh: String?
+        /// 底面离地高度(英寸,attrs.elevIn)。nil 视为 0(落地)—— 见 elev 项
+        var elevIn: Double? = nil
     }
 
     enum State {
@@ -49,9 +51,21 @@ enum ScanIdentity {
         ["chair", "office_chair"],
         ["sofa", "armchair"],
         ["table", "coffee_table"],
-        ["cabinet", "shelf"],
+        // wall_cabinet 也在柜族:RoomPlan 把吊柜检成 cabinet 是常态
+        // (真扫实测:「冰箱顶吊柜」被检成 cabinet,跨族一票否决就认不回来了)
+        ["cabinet", "shelf", "wall_cabinet"],
     ]
     static let crossKindPenalty = 0.05
+    /// elev 项(与 scan-identity.js 的 ELEV_SAME_MAX_IN / ELEV_SAME_BONUS /
+    /// ELEV_DIFF_MIN_IN / ELEV_DIFF_PENALTY 一一对应)。两端约定:
+    /// 加分 +0.1 仅当**双方都实测过**(两个 elevIn 都非 nil)且差 ≤6″;
+    /// 罚分 -0.15 在差 >18″ 时,一方缺省视为 0(落地);双方都缺 → 0 ——
+    /// 「都默认落地」不算证据,全场落地家具白涨 0.1 会顶翻既有打分边界。
+    /// 落地柜与吊柜(差 5ft+)靠罚分分开;吊柜重扫抖 2-3″ 靠加分认回来。
+    static let elevSameMaxIn = 6.0
+    static let elevSameBonus = 0.1
+    static let elevDiffMinIn = 18.0
+    static let elevDiffPenalty = 0.15
 
     private static func center(_ o: Object) -> (x: Double, y: Double) {
         (o.x + o.w / 2, o.y + o.h / 2)
@@ -103,6 +117,12 @@ enum ScanIdentity {
         var bonus = 0.0
         if let cd = colorDist(prev, next), cd <= 60 { bonus += 0.15 }
         if let s = prev.styleZh, s == next.styleZh { bonus += 0.1 }
+        // elev 项:加分只认双方实测;罚分把缺省当 0(落地);都缺 → 0(常数见上)
+        if let pe = prev.elevIn, let ne = next.elevIn, abs(pe - ne) <= elevSameMaxIn {
+            bonus += elevSameBonus
+        } else if abs((prev.elevIn ?? 0) - (next.elevIn ?? 0)) > elevDiffMinIn {
+            bonus -= elevDiffPenalty
+        }
         return 0.45 * sizeScore + 0.45 * posScore + bonus - penalty
     }
 

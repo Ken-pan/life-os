@@ -56,7 +56,8 @@ enum RealityCheck {
                 h: abs(b.y - a.y),
                 confidence: pl.attrs?.confidence,
                 colorHex: pl.attrs?.colorHex,
-                styleZh: pl.attrs?.styleZh
+                styleZh: pl.attrs?.styleZh,
+                elevIn: pl.attrs?.elevIn
             )
         }
         let prev = home.placements.map { pl in
@@ -67,7 +68,8 @@ enum RealityCheck {
                 x: pl.x, y: pl.y, w: pl.w, h: pl.h,
                 confidence: pl.attrs?.confidence,
                 colorHex: pl.attrs?.colorHex,
-                styleZh: pl.attrs?.styleZh
+                styleZh: pl.attrs?.styleZh,
+                elevIn: pl.attrs?.elevIn
             )
         }
 
