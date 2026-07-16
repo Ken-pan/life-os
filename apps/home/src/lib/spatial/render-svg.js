@@ -31,6 +31,7 @@ import {
   floorFillForRoom,
   floorFillForZone,
   floorPatternDefs,
+  texturedFurnitureHex,
   wetFixturePoints,
 } from './floor-materials.js'
 
@@ -568,7 +569,11 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
         h: turned ? f.bounds.w : f.bounds.h,
       }
       const { body, detail } = furnitureSymbol(f.kind, box)
-      const vars = furnitureVars(f.attrs?.colorHex)
+      // 贴图模式:没有扫描主色的设施按类型兜底(灶台金属、洁具瓷白),
+      // 仍走驯化管线,标签可读性不受影响。
+      const vars = furnitureVars(
+        f.attrs?.colorHex ?? (textured ? texturedFurnitureHex(f.kind) : undefined),
+      )
       parts.push(
         `<g transform="rotate(${rot} ${cx} ${cy})">`,
         `<g class="fixture-item"${vars ? ` style="${vars}"` : ''}>`,
@@ -605,7 +610,11 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
       // 狗狗围栏画成「未知家具」的实心方块
       const symbol = PLACEMENT_KINDS[canonicalPlacementKind(p.kind)]?.symbol
       const { body, detail } = furnitureSymbol(symbol, box)
-      const vars = furnitureVars(p.attrs?.colorHex)
+      // 贴图模式:没有扫描主色的家具按类型兜底(木桌木色、沙发织物色),
+      // 见 floor-materials 的 TEXTURED_FURN_HEX。
+      const vars = furnitureVars(
+        p.attrs?.colorHex ?? (textured ? texturedFurnitureHex(symbol) : undefined),
+      )
       // Hand-drawn pieces take their label *under* the footprint. Everything else
       // is a flat glyph a name can sit on top of; stamping "Onyx" across a drawn
       // face is just defacing it.

@@ -18,7 +18,7 @@
 
 import { pointInPolygon } from './geometry.js'
 
-/** @typedef {'wood' | 'carpet' | 'tile' | 'deck'} FloorMaterial */
+/** @typedef {'wood' | 'carpet' | 'tile' | 'deck' | 'steel'} FloorMaterial */
 
 /**
  * 材质选项(UI 选择器用)。value 对应 pattern 名,顺序按常用度。
@@ -29,6 +29,7 @@ export const FLOOR_MATERIALS = [
   { value: 'tile', label: '瓷砖' },
   { value: 'carpet', label: '地毯' },
   { value: 'deck', label: '户外板' },
+  { value: 'steel', label: '钢架' },
 ]
 
 /**
@@ -64,7 +65,7 @@ export function floorMaterial(...names) {
  * @param {boolean} horizontal
  */
 function patternRef(mat, horizontal) {
-  if (mat === 'wood' || mat === 'deck') {
+  if (mat === 'wood' || mat === 'deck' || mat === 'steel') {
     return `url(#floor-${mat}-${horizontal ? 'h' : 'v'})`
   }
   return `url(#floor-${mat})`
@@ -181,6 +182,38 @@ function deckPattern(id, inch, vertical) {
 }
 
 /**
+ * 钢架地面(阳台钢结构):深色金属板,12" 板缝 + 板内极细的防滑纹。
+ * 深色地面是刻意的例外 —— 阳台在户型边缘、面积小,一块深色反而把
+ * 室内外分开;标签有纸色描边,压在深底上仍可读。
+ * @param {string} id
+ * @param {number} inch
+ * @param {boolean} vertical
+ */
+function steelPattern(id, inch, vertical) {
+  const sw = 12 * inch // 金属板宽
+  const len = 24 * inch
+  const seam = 'var(--plan-steel-seam,#4b5257)'
+  const rib = 'var(--plan-steel-rib,#7d858b)'
+  const transform = vertical ? ' patternTransform="rotate(90)"' : ''
+  const ribs = []
+  // 板内 3 条防滑压纹,细而淡,远看只是金属的哑光质感
+  for (let i = 1; i <= 3; i++) {
+    const y = fmt((sw * i) / 4)
+    ribs.push(
+      `<line x1="0" y1="${y}" x2="${fmt(len)}" y2="${y}" stroke="${rib}" stroke-width="0.6" stroke-opacity="0.4"/>`,
+    )
+  }
+  return (
+    `<pattern id="${id}" width="${fmt(len)}" height="${fmt(sw)}" patternUnits="userSpaceOnUse"${transform}>` +
+    `<rect width="${fmt(len)}" height="${fmt(sw)}" fill="var(--plan-steel-a,#666d72)"/>` +
+    ribs.join('') +
+    `<line x1="0" y1="${fmt(sw)}" x2="${fmt(len)}" y2="${fmt(sw)}" stroke="${seam}" stroke-width="1.2" stroke-opacity="0.8"/>` +
+    `<line x1="${fmt(len)}" y1="0" x2="${fmt(len)}" y2="${fmt(sw)}" stroke="${seam}" stroke-width="1" stroke-opacity="0.5"/>` +
+    `</pattern>`
+  )
+}
+
+/**
  * 浴室/湿区瓷砖:12" 方砖,2×2 一组做极浅的棋盘明度差 + 砖缝。
  * @param {number} inch
  */
@@ -199,22 +232,91 @@ function tilePattern(inch) {
 }
 
 /**
- * 地毯:细密错位圆点模拟绒面,两档大小/深浅,远看是均匀的织物灰调。
+ * 短毛地毯:细密错位圆点模拟绒面。格 2.5"、点更小更淡 —— 远看是均匀的
+ * 织物灰调,放大才看出细绒,不会变成波点桌布。
  * @param {number} inch
  */
 function carpetPattern(inch) {
-  const c = 4 * inch
+  const c = 2.5 * inch
   const s = fmt(c)
   const q = (f) => fmt(c * f)
   return (
     `<pattern id="floor-carpet" width="${s}" height="${s}" patternUnits="userSpaceOnUse">` +
     `<rect width="${s}" height="${s}" fill="var(--plan-carpet-bg,#eae5d9)"/>` +
-    `<circle cx="${q(0.25)}" cy="${q(0.25)}" r="${q(0.07)}" fill="var(--plan-carpet-dot,#d8d1c0)"/>` +
-    `<circle cx="${q(0.75)}" cy="${q(0.75)}" r="${q(0.07)}" fill="var(--plan-carpet-dot,#d8d1c0)"/>` +
-    `<circle cx="${q(0.75)}" cy="${q(0.25)}" r="${q(0.05)}" fill="var(--plan-carpet-dot2,#e0dacb)"/>` +
-    `<circle cx="${q(0.25)}" cy="${q(0.75)}" r="${q(0.05)}" fill="var(--plan-carpet-dot2,#e0dacb)"/>` +
+    `<circle cx="${q(0.25)}" cy="${q(0.25)}" r="${q(0.06)}" fill="var(--plan-carpet-dot,#dcd5c5)"/>` +
+    `<circle cx="${q(0.75)}" cy="${q(0.75)}" r="${q(0.06)}" fill="var(--plan-carpet-dot,#dcd5c5)"/>` +
+    `<circle cx="${q(0.75)}" cy="${q(0.25)}" r="${q(0.045)}" fill="var(--plan-carpet-dot2,#e2dccd)"/>` +
+    `<circle cx="${q(0.25)}" cy="${q(0.75)}" r="${q(0.045)}" fill="var(--plan-carpet-dot2,#e2dccd)"/>` +
     `</pattern>`
   )
+}
+
+// ---- 家具默认材质色(贴图模式) --------------------------------------
+// 扫描来的家具带真实主色(attrs.colorHex),走 furniture-tint 的驯化管线;
+// 手摆的没有颜色,线稿里回落图纸灰没问题,贴图模式里灰块压在木地板上就
+// 出戏了。这里按家具类型给一个"材质常识色",喂进**同一条**驯化管线 ——
+// 饱和度/明度夹取、主题混色、标签可读性全部照旧。
+const T_WOOD = '#9c7b52' // 木质:桌/柜/架
+const T_FABRIC = '#b3a184' // 织物:床/沙发/地毯
+const T_METAL = '#78838c' // 金属架/器材
+const T_PORCELAIN = '#eef2f2' // 洁具瓷白
+const T_APPLIANCE = '#dbe1e5' // 家电亮金属
+
+/** @type {Record<string, string>} 键 = furniture-symbols 的 symbol 名 */
+const TEXTURED_FURN_HEX = {
+  cabinet: T_WOOD,
+  chair: T_WOOD,
+  coatRack: T_WOOD,
+  counter: T_WOOD,
+  cubeShelf: T_WOOD,
+  divider: T_WOOD,
+  island: T_WOOD,
+  shelf: T_WOOD,
+  table: T_WOOD,
+  wallCabinet: T_WOOD,
+  wardrobe: T_WOOD,
+  armchair: T_FABRIC,
+  bed: T_FABRIC,
+  loveseat: T_FABRIC,
+  mat: T_FABRIC,
+  rug: T_FABRIC,
+  sofa: T_FABRIC,
+  basket: T_METAL,
+  bathScale: T_METAL,
+  floorLamp: T_METAL,
+  monitor: T_METAL,
+  officeChair: T_METAL,
+  petPen: T_METAL,
+  scooter: T_METAL,
+  studioLight: T_METAL,
+  trash: T_METAL,
+  utilityCart: T_METAL,
+  wireRack: T_METAL,
+  kitchenSink: T_PORCELAIN,
+  mirror: T_PORCELAIN,
+  shower: T_PORCELAIN,
+  toilet: T_PORCELAIN,
+  tub: T_PORCELAIN,
+  tubShower: T_PORCELAIN,
+  vanity: T_PORCELAIN,
+  appliance: T_APPLIANCE,
+  ceilingFan: T_APPLIANCE,
+  dishwasher: T_APPLIANCE,
+  fridge: T_APPLIANCE,
+  microwave: T_APPLIANCE,
+  purifier: T_APPLIANCE,
+  rangeHood: T_APPLIANCE,
+  stove: T_APPLIANCE,
+}
+
+/**
+ * 贴图模式下这类家具的兜底材质色;没有常识色(手绘狗狗等)返回 undefined,
+ * 调用方回落图纸灰。
+ * @param {string | undefined} symbol furniture-symbols 的 symbol 名
+ * @returns {string | undefined}
+ */
+export function texturedFurnitureHex(symbol) {
+  return symbol ? TEXTURED_FURN_HEX[symbol] : undefined
 }
 
 /**
@@ -229,6 +331,8 @@ export function floorPatternDefs(pxPerFt) {
     woodPattern('floor-wood-v', inch, true),
     deckPattern('floor-deck-h', inch, false),
     deckPattern('floor-deck-v', inch, true),
+    steelPattern('floor-steel-h', inch, false),
+    steelPattern('floor-steel-v', inch, true),
     tilePattern(inch),
     carpetPattern(inch),
   ].join('\n')
