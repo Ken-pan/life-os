@@ -9,13 +9,16 @@
   import { seriesColor, px, MAX_SERIES } from './chartUtils.js'
 
   /**
-   * @typedef {{ label: string, note?: string, children?: MindInput[] }} MindInput
+   * @typedef {{ label: string, note?: string, data?: any, children?: MindInput[] }} MindInput
    * @type {{
    *   root: MindInput,
    *   split?: boolean,
    *   collapsible?: boolean,
    *   defaultCollapsedDepth?: number,
-   *   onSelect?: (node: { id: string, label: string, depth: number }) => void,
+   *   height?: number,
+   *   zoomable?: boolean,
+   *   fitKey?: any,
+   *   onSelect?: (node: { id: string, label: string, depth: number, data?: any }) => void,
    *   ariaLabel?: string,
    * }}
    */
@@ -24,6 +27,9 @@
     split = true,
     collapsible = true,
     defaultCollapsedDepth = 0,
+    height = 420,
+    zoomable = true,
+    fitKey = null,
     onSelect,
     ariaLabel = '',
   } = $props()
@@ -32,7 +38,8 @@
   const ROOT_H = 36
   const FS = 12
   const ROOT_FS = 13.5
-  const MAX_CHARS = 18
+  const MAX_CHARS = 22
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
   function clip(label) {
     const s = String(label)
@@ -66,13 +73,17 @@
     return set
   }
 
-  const PAD = 12
   const layout = $derived(
     mindmapLayout(root, { measure, split, collapsed }),
   )
 
   function toggle(node) {
-    onSelect?.({ id: node.id, label: node.label, depth: node.depth })
+    onSelect?.({
+      id: node.id,
+      label: node.label,
+      depth: node.depth,
+      data: dataMap.get(node.id),
+    })
     if (!collapsible || !node.hasChildren || node.depth === 0) return
     const next = new Set(collapsed)
     if (next.has(node.id)) next.delete(node.id)
@@ -107,6 +118,16 @@
     return m
   })
 
+  // 节点业务数据:id → data(透传给 onSelect,宿主用来做联动/下钻)
+  const dataMap = $derived.by(() => {
+    const m = new Map()
+    ;(function walk(n, id) {
+      if (n.data !== undefined) m.set(id, n.data)
+      n.children?.forEach((c, i) => walk(c, `${id}.${i}`))
+    })(root, '0')
+    return m
+  })
+
   /** 该节点是否值得弹 tooltip:有说明,或标签被截断(需看全名) */
   function nodeTip(node) {
     const note = noteMap.get(node.id) ?? ''
@@ -114,12 +135,94 @@
     return note || clipped ? { label: String(node.label), note } : null
   }
 
+  // ── 视口状态(固定视口 + 内部 g transform 做 zoom/pan)──
   let wrapEl = $state(null)
+  let svgEl = $state(null)
+  let vw = $state(600)
+  let k = $state(1)
+  let tx = $state(0)
+  let ty = $state(0)
+  let lastFitKey = /** @type {any} */ (Symbol('init'))
+  let panning = $state(false)
+  let moved = false
+  let panStart = { x: 0, y: 0, tx: 0, ty: 0 }
+
+  // ── tooltip 状态 ──
   let hover = $state(/** @type {{ label: string, note: string } | null} */ (null))
   let tipXY = $state({ x: 0, y: 0 })
   let tipEl = $state(null)
   let tipW = $state(160)
   let tipH = $state(40)
+
+  const ZOOM_MIN = 0.3
+  const ZOOM_MAX = 3
+
+  /** 适配:让整图居中铺满视口 */
+  function fitView() {
+    const cw = layout.width
+    const ch = layout.height
+    if (!cw || !ch || !vw) return
+    const k0 = clamp(Math.min((vw - 32) / cw, (height - 32) / ch, 1.3), ZOOM_MIN, ZOOM_MAX)
+    k = k0
+    tx = (vw - cw * k0) / 2
+    ty = (height - ch * k0) / 2
+  }
+
+  // 首次就绪、以及 fitKey 变化(如切换聚焦项目)时重新适配;
+  // 用户手动 zoom/pan 期间 fitKey 不变,不会被拉回。
+  $effect(() => {
+    const key = fitKey
+    const ready = layout.width && layout.height && vw
+    if (ready && key !== lastFitKey) {
+      lastFitKey = key
+      fitView()
+    }
+  })
+
+  /** 以视口内 (mx,my) 为锚点缩放,该点在缩放前后屏幕位置不动 */
+  function zoomAt(mx, my, factor) {
+    const nk = clamp(k * factor, ZOOM_MIN, ZOOM_MAX)
+    tx = mx - (mx - tx) * (nk / k)
+    ty = my - (my - ty) * (nk / k)
+    k = nk
+  }
+
+  function onWheel(e) {
+    if (!zoomable) return
+    e.preventDefault()
+    const r = svgEl.getBoundingClientRect()
+    zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12)
+  }
+
+  function zoomBtn(factor) {
+    zoomAt(vw / 2, height / 2, factor)
+  }
+
+  function onCanvasDown(e) {
+    if (!zoomable) return
+    panning = true
+    moved = false
+    panStart = { x: e.clientX, y: e.clientY, tx, ty }
+    svgEl?.setPointerCapture?.(e.pointerId)
+  }
+  function onCanvasMove(e) {
+    if (!panning) return
+    const dx = e.clientX - panStart.x
+    const dy = e.clientY - panStart.y
+    if (!moved && Math.abs(dx) + Math.abs(dy) > 3) {
+      moved = true
+      hover = null // 拖拽开始就收起 tooltip
+    }
+    if (moved) {
+      tx = panStart.tx + dx
+      ty = panStart.ty + dy
+    }
+  }
+  function onCanvasUp(e) {
+    panning = false
+    svgEl?.releasePointerCapture?.(e.pointerId)
+  }
+
   $effect(() => {
     if (!tipEl || !hover) return
     const r = tipEl.getBoundingClientRect()
@@ -128,6 +231,7 @@
   })
 
   function onNodePointer(e, node) {
+    if (panning) return // 拖拽平移时不弹 tooltip
     const tip = nodeTip(node)
     if (!tip) {
       hover = null
@@ -136,41 +240,41 @@
     hover = tip
     if (!wrapEl) return
     const r = wrapEl.getBoundingClientRect()
-    // .mindmap 可横向滚动;绝对定位子元素随内容滚动,坐标要含 scroll 偏移
-    tipXY = {
-      x: e.clientX - r.left + wrapEl.scrollLeft,
-      y: e.clientY - r.top + wrapEl.scrollTop,
-    }
+    tipXY = { x: e.clientX - r.left, y: e.clientY - r.top }
   }
 
   const TIP_OFF = 14
-  const tipLeft = $derived.by(() => {
-    if (!wrapEl) return tipXY.x + TIP_OFF
-    const rightBound = wrapEl.scrollLeft + wrapEl.clientWidth
-    const wantRight = tipXY.x + TIP_OFF
-    return wantRight + tipW > rightBound
-      ? Math.max(wrapEl.scrollLeft, tipXY.x - TIP_OFF - tipW)
-      : wantRight
-  })
-  const tipTop = $derived.by(() => {
-    const floor = wrapEl?.scrollTop ?? 0
-    const above = tipXY.y - tipH - TIP_OFF
-    return above < floor ? tipXY.y + TIP_OFF : above
-  })
+  const tipLeft = $derived(
+    tipXY.x + TIP_OFF + tipW > vw
+      ? Math.max(4, tipXY.x - TIP_OFF - tipW)
+      : tipXY.x + TIP_OFF,
+  )
+  const tipTop = $derived(
+    tipXY.y - tipH - TIP_OFF < 0 ? tipXY.y + TIP_OFF : tipXY.y - tipH - TIP_OFF,
+  )
 </script>
 
 <div
   class="mindmap"
+  class:mindmap--grabbing={panning}
   bind:this={wrapEl}
+  bind:clientWidth={vw}
+  style:height="{height}px"
   role="tree"
   aria-label={computedAria}
   onpointerleave={() => (hover = null)}
 >
   <svg
-    width={layout.width + PAD * 2}
-    height={layout.height + PAD * 2}
-    viewBox={`${-PAD} ${-PAD} ${layout.width + PAD * 2} ${layout.height + PAD * 2}`}
+    bind:this={svgEl}
+    width={vw}
+    {height}
+    onwheel={onWheel}
+    onpointerdown={onCanvasDown}
+    onpointermove={onCanvasMove}
+    onpointerup={onCanvasUp}
+    onpointercancel={onCanvasUp}
   >
+    <g transform={`translate(${px(tx)} ${px(ty)}) scale(${k})`}>
     {#each layout.links as link (link.to.id)}
       <path
         class="mindmap__link"
@@ -189,7 +293,9 @@
         aria-expanded={node.hasChildren ? !node.collapsed : undefined}
         aria-selected="false"
         tabindex="0"
-        onclick={() => toggle(node)}
+        onclick={() => {
+          if (!moved) toggle(node)
+        }}
         onpointermove={(e) => onNodePointer(e, node)}
         onkeydown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -255,7 +361,34 @@
         {/if}
       </g>
     {/each}
+    </g>
   </svg>
+
+  {#if zoomable}
+    <div class="mindmap__zoom">
+      <button type="button" aria-label="放大" onclick={() => zoomBtn(1.3)}>
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+          <path d="M8 3.5v9M3.5 8h9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </button>
+      <button type="button" aria-label="缩小" onclick={() => zoomBtn(1 / 1.3)}>
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+          <path d="M3.5 8h9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </button>
+      <button type="button" aria-label="适应" onclick={fitView}>
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+          <path
+            d="M3 6V3.5A0.5 0.5 0 0 1 3.5 3H6M13 6V3.5A0.5 0.5 0 0 0 12.5 3H10M3 10v2.5a0.5 0.5 0 0 0 0.5 0.5H6M13 10v2.5a0.5 0.5 0 0 1-0.5 0.5H10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+  {/if}
 
   {#if hover}
     <div
@@ -276,8 +409,43 @@
   .mindmap {
     position: relative;
     width: 100%;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .mindmap--grabbing {
+    cursor: grabbing;
+  }
+  .mindmap__zoom {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mindmap__zoom button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+    border-radius: 8px;
+    background: var(--card, #fff);
+    color: var(--t2, var(--text-muted, #555));
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  .mindmap__zoom button:hover {
+    background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+    color: var(--t1, var(--text, #000));
+  }
+  .mindmap__zoom button:active {
+    transform: translateY(0.5px);
   }
   .mindmap__tip {
     position: absolute;
@@ -308,7 +476,7 @@
   }
   svg {
     display: block;
-    margin: 0 auto;
+    touch-action: none;
   }
   .mindmap__link {
     fill: none;

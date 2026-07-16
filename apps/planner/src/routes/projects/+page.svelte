@@ -13,12 +13,19 @@
   import { toast } from '$lib/ui.svelte.js'
   import { MindMap } from '@life-os/platform-web/svelte/charts'
   import { buildTaskMetaLine } from '$lib/domain/taskMetaLine.js'
+  import { editTask } from '$lib/taskUi.js'
 
   let title = $state('')
   let summary = $state('')
 
   const projects = $derived(visibleProjects())
   const activeProjects = $derived(projects.filter((project) => project.status === 'active'))
+
+  // ── 鸟瞰图联动:全景 ↔ 单项目聚焦 ──
+  let focusId = $state(/** @type {string | null} */ (null))
+  const focusProject = $derived(
+    focusId ? projects.find((p) => p.id === focusId) ?? null : null,
+  )
 
   // 鸟瞰图任务节点的说明:备注优先,其次(有日期时)排期/截止元信息
   function taskNote(task) {
@@ -27,16 +34,28 @@
     return [notes, meta].filter(Boolean).join('\n') || undefined
   }
 
-  // 项目鸟瞰:活跃项目 → 前 5 个未完成任务(长尾折进省略节点,点项目节点可折叠)
-  // 每个节点带 note 说明:项目用真实 summary,任务用备注/元信息,省略节点列出被折叠的任务
+  // 从任务备注/标题智能推断推进状态图标。
+  // ACTIVE(自身在推进)优先于 BLOCKED——备注常以自身状态开头,
+  // 提到某依赖 blocked 不代表这条任务本身受阻。
+  function taskStatusIcon(task) {
+    if (task.completed) return '✅'
+    const n = `${task.notes || ''} ${task.title || ''}`.toUpperCase()
+    if (/ACTIVE|进行中|IN PROGRESS|DISCOVERY|复验/.test(n)) return '🟢'
+    if (/BLOCKED|阻塞|受阻/.test(n)) return '🔴'
+    if (/QUEUED|暂缓|PENDING|待做|待修|等 SYS|等待|待排/.test(n)) return '🟡'
+    return '⚪'
+  }
+
+  // 全景:活跃项目 → 前 5 个未完成任务预览(点项目节点聚焦进去)
   const MAP_TASK_LIMIT = 5
-  const projectTree = $derived({
+  const overviewTree = $derived({
     label: t('projects.title'),
     note: t('projects.mapRootNote', { count: activeProjects.length }),
     children: activeProjects.map((project) => {
       const open = projectOpenTasks(project)
       const children = open.slice(0, MAP_TASK_LIMIT).map((task) => ({
         label: task.title,
+        data: { kind: 'task', id: task.id },
         note: taskNote(task),
       }))
       if (open.length > MAP_TASK_LIMIT) {
@@ -48,11 +67,46 @@
       }
       return {
         label: project.title,
+        data: { kind: 'project', id: project.id },
         note: project.summary?.trim() || undefined,
         children,
       }
     }),
   })
+
+  // 聚焦:单项目 → 全部任务(带状态图标),未完成在前、已完成在后
+  const focusTree = $derived.by(() => {
+    const p = focusProject
+    if (!p) return null
+    const all = S.tasks.filter((tk) => tk.projectId === p.id && !tk.deletedAt)
+    const open = all.filter((tk) => !tk.completed)
+    const done = all.filter((tk) => tk.completed)
+    return {
+      label: `← ${p.title}`,
+      data: { kind: 'back' },
+      note: p.summary?.trim() || t('projects.mapBackHint'),
+      children: [...open, ...done].map((task) => ({
+        label: `${taskStatusIcon(task)} ${task.title}`,
+        data: { kind: 'task', id: task.id },
+        note: taskNote(task),
+      })),
+    }
+  })
+
+  const mapTree = $derived(focusProject ? focusTree : overviewTree)
+
+  function onMapSelect(node) {
+    const d = node.data
+    if (!d) return
+    if (d.kind === 'project') {
+      focusId = d.id
+    } else if (d.kind === 'back') {
+      focusId = null
+    } else if (d.kind === 'task') {
+      const task = S.tasks.find((tk) => tk.id === d.id)
+      if (task) editTask(task)
+    }
+  }
   const pausedProjects = $derived(projects.filter((project) => project.status === 'paused'))
   const shippedProjects = $derived(projects.filter((project) => project.status === 'shipped'))
 
@@ -107,7 +161,14 @@
     <section class="project-section project-map">
       <h2>{t('projects.mapTitle')}</h2>
       <div class="project-map-card">
-        <MindMap root={projectTree} ariaLabel={t('projects.mapTitle')} />
+        <MindMap
+          root={mapTree}
+          height={480}
+          collapsible={false}
+          fitKey={focusId ?? '__root__'}
+          onSelect={onMapSelect}
+          ariaLabel={t('projects.mapTitle')}
+        />
       </div>
     </section>
   {/if}
