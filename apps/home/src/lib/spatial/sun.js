@@ -145,6 +145,12 @@ function translucent(go) {
 /** 光斑最大进深(英尺):太阳贴地平线时不至于拉出无限长的光带。 */
 const MAX_DEPTH_FT = 26
 
+/** 这个分区是户外(阳台/露台)吗 —— 光可以从这里出发,但不给它画光斑。 */
+function outdoorZone(z) {
+  if (z.floor === 'deck' || z.floor === 'steel') return true
+  return /阳台|露台|balcony|patio|terrace|deck/i.test(z.nameZh ?? '')
+}
+
 /** 透光开口 + 围合面,光斑计算的静态几何 —— 热力图按天采样时只算一次。 */
 function sunGeometry(project) {
   const graph = project.wallGraph
@@ -154,11 +160,44 @@ function sunGeometry(project) {
   // 与铺地板同一套围合面(跨门洞搭桥),光斑不越出房间
   const faces = detectRooms(graph, { minSqFt: 4, bridgeGapIn: 60 })
   if (!faces.length) return null
+  // 户外面(阳台):光的合法来源,但不是光斑的画布 —— 阳台自身的日照
+  // 还要算建筑自遮挡,不在这个模型里,画了反而错
+  const outdoorPolys = (project.zones ?? [])
+    .filter(outdoorZone)
+    .map((z) => z.polygon)
+    .filter((p) => p?.length >= 3)
+  const facesTagged = faces.map((f) => {
+    const c = faceInteriorPoint(f.polygon)
+    const outdoor = outdoorPolys.some((poly) => pointInPolygon(c, poly))
+    return { ...f, outdoor }
+  })
   // 开口端点也只解一次
   const segs = openings
     .map((go) => ({ go, b: graphOpeningBounds(graph, go) }))
     .filter((s) => s.b)
-  return { graph, segs, faces, pxPerFt: graph.pxPerFt || 36 }
+  return { graph, segs, faces: facesTagged, pxPerFt: graph.pxPerFt || 36 }
+}
+
+/** 简易内点:顶点均值落在面内就用它,否则退回第一个顶点内侧的微移点。 */
+function faceInteriorPoint(poly) {
+  let sx = 0
+  let sy = 0
+  for (const p of poly) {
+    sx += p.x
+    sy += p.y
+  }
+  const c = { x: sx / poly.length, y: sy / poly.length }
+  if (pointInPolygon(c, poly)) return c
+  // 凹形兜底:取一条边中点向内法向各试一小步
+  const a = poly[0]
+  const b = poly[1]
+  const mx = (a.x + b.x) / 2
+  const my = (a.y + b.y) / 2
+  const len = Math.hypot(b.x - a.x, b.y - a.y) || 1
+  const nx = -(b.y - a.y) / len
+  const ny = (b.x - a.x) / len
+  const p1 = { x: mx + nx * 3, y: my + ny * 3 }
+  return pointInPolygon(p1, poly) ? p1 : { x: mx - nx * 3, y: my - ny * 3 }
 }
 
 /**
@@ -174,6 +213,14 @@ function poolsForSun(geo, sun) {
   /** @type {{ points: {x:number,y:number}[], low: boolean }[]} */
   const pools = []
   for (const { go, b } of geo.segs) {
+    // 朝向把关:光要能进这个口,太阳必须在它的**室外侧** —— 上游一小步
+    // (逆着光线方向)落在室内面里,说明光得先穿过整栋楼,物理上不存在。
+    // 落在户外面(阳台)或所有面之外(真室外)才放行。
+    const mx = (b.p0.x + b.p1.x) / 2
+    const my = (b.p0.y + b.p1.y) / 2
+    const up = { x: mx - L.x * 9, y: my - L.y * 9 } // 9px = 3 英寸
+    const upFace = geo.faces.find((f) => pointInPolygon(up, f.polygon))
+    if (upFace && !upFace.outdoor) continue
     const depthPx =
       Math.min(MAX_DEPTH_FT, openingHeadFt(go) / Math.max(tanAlt, 0.02)) *
       geo.pxPerFt
@@ -187,6 +234,7 @@ function poolsForSun(geo, sun) {
     ]
     if (Math.abs(signedArea(quad)) < 4) continue // 光线几乎平行于墙,没有光斑
     for (const face of geo.faces) {
+      if (face.outdoor) continue // 户外面不画光斑,见 sunGeometry
       const clipped = clipToConvex(face.polygon, quad)
       if (clipped.length >= 3 && Math.abs(signedArea(clipped)) > 4) {
         pools.push({ points: clipped, low })
@@ -237,6 +285,7 @@ export function sunDayHeatmap(project, opts) {
   /** @type {Map<string, { x: number, y: number, hours: number }>} */
   const cells = new Map()
   for (const face of geo.faces) {
+    if (face.outdoor) continue // 阳台不进热力图,理由见 sunGeometry
     let x1 = Infinity
     let x2 = -Infinity
     let y1 = Infinity
