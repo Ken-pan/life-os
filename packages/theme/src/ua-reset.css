@@ -1,0 +1,32 @@
+/* UA 默认样式清零(语义排版元素)。
+ *
+ * base.css 的 reset 面刻意收窄(box-sizing / html·body / 表单 / a / img / h1-h3),
+ * 语义标签的浏览器默认 margin/padding(p 的 1em 上下距、ul/ol 的 40px 左 padding、
+ * dd 的 40px 左缩进…)不在其内——组件里用语义标签排版时会泄漏成幽灵缩进/错位
+ * (HealthOS Focus 页首踩:HLT-1)。
+ *
+ * 本文件按 app 粒度可选引入,必须挂在 life-os.base 层,否则未分层样式会压过
+ * 设计系统的分层规则:
+ *
+ *   @import '@life-os/theme/design-system.css';
+ *   @import '@life-os/theme/ua-reset.css' layer(life-os.base);
+ *
+ * starter 模板(及其生成的新 app)默认引入;存量 app 迁移前先做视觉回归——
+ * 老页面可能在无意间依赖这些 UA 默认值撑间距。
+ */
+
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}

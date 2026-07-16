@@ -1,4 +1,6 @@
 @import '@life-os/theme/design-system.css';
+/* 语义元素 UA 默认清零(p/ul/dl/dd…),必须挂 life-os.base 层,见文件头注释 */
+@import '@life-os/theme/ua-reset.css' layer(life-os.base);
 
 /* [app-generator:brand-placeholder:start]
   STARTER.OS 品牌层（模板占位）

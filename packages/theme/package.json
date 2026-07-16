@@ -14,6 +14,7 @@
     "./layout.css": "./src/layout.css",
     "./media.css": "./src/media.css",
     "./design-system.css": "./src/design-system.css",
+    "./ua-reset.css": "./src/ua-reset.css",
     "./utilities.css": "./src/utilities.css",
     "./ios-safari.css": "./src/ios-safari.css",
     "./scroll-shell.css": "./src/scroll-shell.css",
