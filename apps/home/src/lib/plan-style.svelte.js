@@ -8,9 +8,17 @@
 import { browser } from '$app/environment'
 
 const KEY = 'homeos.plan.textured'
+const SUN_KEY = 'homeos.plan.sun'
 
 const style = $state({
   textured: browser && localStorage.getItem(KEY) === '1',
+  sun: browser && localStorage.getItem(SUN_KEY) === '1',
+  /**
+   * 日照模拟的「一天中的第几分钟」;null = 跟随当前时间。
+   * 会话态不持久 —— 拖到下午三点看看光斑是探索,不是要把图定格在下午三点。
+   * @type {number | null}
+   */
+  sunMinutes: null,
 })
 
 /** 读共享的显示风格。返回 $state 代理本身。 */
@@ -22,4 +30,15 @@ export function getPlanStyle() {
 export function setPlanTextured(on) {
   style.textured = on
   if (browser) localStorage.setItem(KEY, on ? '1' : '0')
+}
+
+/** @param {boolean} on */
+export function setPlanSun(on) {
+  style.sun = on
+  if (browser) localStorage.setItem(SUN_KEY, on ? '1' : '0')
+}
+
+/** @param {number | null} minutes 0–1439;null = 回到「现在」 */
+export function setPlanSunMinutes(minutes) {
+  style.sunMinutes = minutes
 }

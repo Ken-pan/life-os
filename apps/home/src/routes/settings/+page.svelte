@@ -19,6 +19,7 @@
     reconvertGraphOpenings,
     getAngleSnapDeg,
     setAngleSnapDeg,
+    setSunLocation,
   } from '$lib/state.svelte.js'
   import { getActiveProject, isStructureLocked } from '$lib/state.svelte.js'
   import {
@@ -201,6 +202,43 @@
   />
 </SettingsSection>
 
+<SettingsSection title="阳光模拟">
+  <SettingsRow label="纬度">
+    <input
+      class="settings-num"
+      type="number"
+      step="0.0001"
+      value={S.settings.sunLat}
+      onchange={(e) => setSunLocation({ lat: Number(e.currentTarget.value) })}
+      aria-label="纬度(北纬为正)"
+    />
+  </SettingsRow>
+  <SettingsRow label="经度">
+    <input
+      class="settings-num"
+      type="number"
+      step="0.0001"
+      value={S.settings.sunLon}
+      onchange={(e) => setSunLocation({ lon: Number(e.currentTarget.value) })}
+      aria-label="经度(东经为正,西经为负)"
+    />
+  </SettingsRow>
+  <SettingsRow label="海拔(米)">
+    <input
+      class="settings-num"
+      type="number"
+      step="1"
+      value={S.settings.sunElevM}
+      onchange={(e) => setSunLocation({ elevM: Number(e.currentTarget.value) })}
+      aria-label="海拔米数"
+    />
+  </SettingsRow>
+  <p class="block-desc">
+    供平面图「阳光模拟」计算太阳角度;经度西经为负。窗户朝向来自平面图的
+    北向校准(浏览态图上角的 N),没校准时按「图上方=正北」处理。
+  </p>
+</SettingsSection>
+
 <SettingsSection title="户型编辑模式">
   <SettingsRow label="当前模式">
     <span class="settings-value">{wallGraphMode ? '墙图' : '508 参数'}</span>
@@ -335,6 +373,19 @@
     color: var(--t1);
     font-variant-numeric: tabular-nums;
     text-align: end;
+  }
+
+  .settings-num {
+    width: 130px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    min-height: 36px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t1);
   }
 
   .settings-link {

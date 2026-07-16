@@ -34,6 +34,7 @@ import {
   texturedFurnitureHex,
   wetFixturePoints,
 } from './floor-materials.js'
+import { sunLightPools, sunLightPlanDir } from './sun.js'
 
 /**
  * @param {SpatialProject} project
@@ -87,6 +88,10 @@ import {
  *   textured?: boolean,
  *     真实贴图模式:房间地面按材质铺程序化纹理(木/砖/毯/户外板),
  *     网格纸退场 —— 看「家」不看「图纸」。见 floor-materials.js
+ *   sun?: { azimuthDeg: number, altitudeDeg: number, planNorthDeg: number | null,
+ *     aboveHorizon: boolean } | null,
+ *     日照模拟:从透光开口投光斑 + 图缘太阳指示。位置/时间 → 角度的换算
+ *     在调用方(FloorPlanViewer),几何在 sun.js;浏览态专属
  *   focus?: { x: number, y: number, rect?: { x: number, y: number, w: number, h: number }, spanFt?: number } | null,
  *     整理任务定位:viewBox 收到焦点周围一圈并画脉冲标记 —— 裁的是取景框,
  *     内容仍完整渲染,周围的墙和家具上下文都在
@@ -323,6 +328,13 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
  .plan-textured .room-en,.plan-textured .circ-label,.plan-textured .dim-tag,.plan-textured .furn,.plan-textured .placement-label,.plan-textured .tiny{stroke:var(--plan-label-halo,rgba(255,255,255,.72));stroke-width:2.5px;paint-order:stroke fill}
  /* 走廊在贴图模式下就是一段木地板,虚线框会把它读成「区域标注」。 */
  .plan-textured .room-circ{stroke:none}
+ /* 日照:光斑是半透明暖色罩,盖在地板与家具上、被墙截断(画在墙之前)。
+    低角度斜照(高度角小于 15°)换更暖的夕照色。 */
+ .sun-pool{fill:var(--plan-sun,#ffd27a);fill-opacity:.28;pointer-events:none}
+ .sun-pool-low{fill:var(--plan-sun-low,#ffab52)}
+ .sun-glyph{fill:var(--plan-sun-glyph,#f2a93b);pointer-events:none}
+ .sun-glyph-ray{stroke:var(--plan-sun-glyph,#f2a93b);stroke-width:1.6;stroke-linecap:round;pointer-events:none}
+ .sun-glyph-arrow{stroke:var(--plan-sun-glyph,#f2a93b);stroke-width:1.4;fill:none;stroke-dasharray:5 4;opacity:.75;pointer-events:none}
  @keyframes plan-sel-pulse{0%,100%{stroke-opacity:1}50%{stroke-opacity:.45}}
 </style>`)
 
@@ -660,6 +672,45 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
         )
       }
     }
+    parts.push('</g>')
+  }
+
+  // 日照:光斑压在地板/家具上,但画在墙之前 —— 墙是被切开的结构,按制图
+  // 惯例保持纯黑,不被光染色;顺带让墙线盖掉光斑贴墙的毛边。
+  if (opts.sun && !editingAny && opts.sun.aboveHorizon) {
+    const pools = sunLightPools(project, opts.sun)
+    if (pools.length) {
+      parts.push('<g class="sun-light" aria-label="日照光斑">')
+      for (const pool of pools) {
+        parts.push(
+          `<polygon points="${pool.points.map((p) => `${Math.round(p.x * 10) / 10},${Math.round(p.y * 10) / 10}`).join(' ')}" class="sun-pool${pool.low ? ' sun-pool-low' : ''}"/>`,
+        )
+      }
+      parts.push('</g>')
+    }
+    // 图缘太阳指示:太阳在图外哪个方向,一眼即知;虚线箭头 = 光的走向
+    const L = sunLightPlanDir(opts.sun.azimuthDeg, opts.sun.planNorthDeg)
+    const cx0 = box.x + box.w / 2
+    const cy0 = box.y + box.h / 2
+    const rx = box.w / 2 - 34
+    const ry = box.h / 2 - 34
+    const t = Math.min(
+      Math.abs(L.x) > 1e-6 ? rx / Math.abs(L.x) : Infinity,
+      Math.abs(L.y) > 1e-6 ? ry / Math.abs(L.y) : Infinity,
+    )
+    const sx = cx0 - L.x * t
+    const sy = cy0 - L.y * t
+    parts.push('<g class="sun-badge" aria-label="太阳方位">')
+    parts.push(`<circle cx="${sx}" cy="${sy}" r="7" class="sun-glyph"/>`)
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4
+      parts.push(
+        `<line x1="${sx + Math.cos(a) * 10}" y1="${sy + Math.sin(a) * 10}" x2="${sx + Math.cos(a) * 14}" y2="${sy + Math.sin(a) * 14}" class="sun-glyph-ray"/>`,
+      )
+    }
+    parts.push(
+      `<line x1="${sx + L.x * 20}" y1="${sy + L.y * 20}" x2="${sx + L.x * 52}" y2="${sy + L.y * 52}" class="sun-glyph-arrow"/>`,
+    )
     parts.push('</g>')
   }
 

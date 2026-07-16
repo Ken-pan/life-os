@@ -7,7 +7,14 @@
     markPlanViewTouched,
     releasePlanView,
   } from '$lib/plan-view.svelte.js'
-  import { getPlanStyle, setPlanTextured } from '$lib/plan-style.svelte.js'
+  import {
+    getPlanStyle,
+    setPlanSun,
+    setPlanSunMinutes,
+    setPlanTextured,
+  } from '$lib/plan-style.svelte.js'
+  import { sunPosition } from '$lib/spatial/sun.js'
+  import { getPlanNorth, getSunLocation } from '$lib/state.svelte.js'
   import { bindPlanEditDrag } from '$lib/plan-edit-drag.js'
   import { bindPlanGraphEdit } from '$lib/plan-graph-edit.js'
   import { bindPlanZoneEdit } from '$lib/plan-zone-edit.js'
@@ -200,6 +207,37 @@
   // (下面几十处引用一个都不用改),变化由后面那个 $effect 同步回去。
   const planView = getPlanView()
   const planStyle = getPlanStyle()
+
+  // ---- 日照模拟 ----------------------------------------------------
+  const anyEditActive = $derived(
+    editMode ||
+      graphEditMode ||
+      zoneEditMode ||
+      placementEditMode ||
+      viewpointEditMode,
+  )
+  // 跟随「现在」时每分钟走一格 —— 光斑本来就是分钟级变化,再快是浪费重渲
+  let sunNowMs = $state(Date.now())
+  $effect(() => {
+    if (!planStyle.sun || planStyle.sunMinutes != null || anyEditActive) return
+    const id = setInterval(() => (sunNowMs = Date.now()), 60_000)
+    return () => clearInterval(id)
+  })
+  const sunDate = $derived.by(() => {
+    if (planStyle.sunMinutes == null) return new Date(sunNowMs)
+    const d = new Date(sunNowMs)
+    d.setHours(0, planStyle.sunMinutes, 0, 0)
+    return d
+  })
+  const sunOpt = $derived.by(() => {
+    if (!planStyle.sun || anyEditActive) return null
+    const loc = getSunLocation()
+    const pos = sunPosition(sunDate, loc.lat, loc.lon, loc.elevM)
+    return { ...pos, planNorthDeg: getPlanNorth() }
+  })
+  const sunTimeLabel = $derived(
+    `${String(sunDate.getHours()).padStart(2, '0')}:${String(sunDate.getMinutes()).padStart(2, '0')}`,
+  )
   let zoom = $state(planView.zoom)
   let panX = $state(planView.panX)
   let panY = $state(planView.panY)
@@ -368,6 +406,7 @@
       showViewpoints,
       showFurniture,
       textured: planStyle.textured,
+      sun: sunOpt,
     }),
   )
 
@@ -1047,6 +1086,19 @@
           >
             真实地板贴图
           </button>
+          <button
+            type="button"
+            role="menuitemcheckbox"
+            aria-checked={planStyle.sun}
+            class="plan-zoom-item"
+            class:checked={planStyle.sun}
+            onclick={() => {
+              setPlanSun(!planStyle.sun)
+              zoomMenuOpen = false
+            }}
+          >
+            阳光模拟
+          </button>
           <div class="plan-zoom-sep" role="separator"></div>
           {#each ZOOM_PRESETS as pct (pct)}
             <button
@@ -1059,6 +1111,41 @@
             </button>
           {/each}
         </div>
+      {/if}
+    </div>
+  {/if}
+
+  {#if planStyle.sun && !anyEditActive && sunOpt}
+    <div class="plan-sun-chip" role="group" aria-label="阳光模拟时间">
+      <span class="plan-sun-time">☀ {sunTimeLabel}</span>
+      <input
+        type="range"
+        class="plan-sun-slider"
+        min="0"
+        max="1435"
+        step="5"
+        value={planStyle.sunMinutes ??
+          sunDate.getHours() * 60 + sunDate.getMinutes()}
+        oninput={(e) => setPlanSunMinutes(Number(e.currentTarget.value))}
+        aria-label="一天中的时刻"
+      />
+      <span class="plan-sun-readout">
+        {#if sunOpt.aboveHorizon}
+          高度 {Math.round(sunOpt.altitudeDeg)}° · 方位 {Math.round(
+            sunOpt.azimuthDeg,
+          )}°
+        {:else}
+          夜间 · 太阳在地平线下
+        {/if}
+      </span>
+      {#if planStyle.sunMinutes != null}
+        <button
+          type="button"
+          class="plan-sun-now"
+          onclick={() => setPlanSunMinutes(null)}
+        >
+          现在
+        </button>
       {/if}
     </div>
   {/if}
@@ -1231,6 +1318,72 @@
 
   .plan-shell:not(.canvas-priority) {
     position: relative;
+  }
+
+  /* 阳光模拟时间芯片:底部居中悬浮(左=图例,中=时间,右=缩放),
+     只在浏览态出现,不与任何编辑选中条同屏。 */
+  .plan-sun-chip {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100% - 24px);
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--card) 92%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.3);
+    font-size: 12px;
+    color: var(--t2);
+    white-space: nowrap;
+  }
+
+  .plan-sun-time {
+    font-weight: 650;
+    color: var(--t1);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .plan-sun-slider {
+    width: 170px;
+    accent-color: #f2a93b;
+  }
+
+  .plan-sun-readout {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .plan-sun-now {
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 28px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t2);
+    cursor: pointer;
+  }
+
+  @media (max-width: 599px) {
+    .plan-sun-slider {
+      width: 96px;
+    }
+
+    .plan-sun-readout {
+      display: none;
+    }
+
+    .plan-sun-chip {
+      bottom: calc(
+        var(--bottom-nav-height, 64px) + var(--safe-bottom-effective, 0px) + 12px
+      );
+    }
   }
 
   .plan-zoom-trigger {

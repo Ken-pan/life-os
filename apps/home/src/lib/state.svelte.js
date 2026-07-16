@@ -1851,6 +1851,11 @@ const defaultState = () => ({
     angleSnapDeg: DEFAULT_ANGLE_SNAP_DEG,
     /** @type {Record<string, string>} 整理任务 id → 完成时间 ISO */
     tidyDone: {},
+    // 日照模拟的地理位置。默认值是这套公寓所在的 Lynnwood, WA 一带,
+    // 精确坐标去设置页改 —— 差几公里对太阳角度的影响不到 0.1°。
+    sunLat: 47.823,
+    sunLon: -122.27,
+    sunElevM: 150,
   },
   activeProjectId: SAMPLE_508.meta.id,
   projects: {
@@ -2129,6 +2134,23 @@ export function isStructureLocked() {
 /** @param {boolean} on true = 解锁结构编辑 */
 export function setStructureUnlocked(on) {
   S.settings.structureUnlocked = on ? true : undefined
+  persist()
+}
+
+/** 日照模拟的地理位置(经纬度 + 海拔米)。 */
+export function getSunLocation() {
+  return {
+    lat: S.settings.sunLat ?? 47.823,
+    lon: S.settings.sunLon ?? -122.27,
+    elevM: S.settings.sunElevM ?? 150,
+  }
+}
+
+/** @param {{ lat?: number, lon?: number, elevM?: number }} patch NaN/空值忽略 */
+export function setSunLocation(patch) {
+  if (Number.isFinite(patch.lat)) S.settings.sunLat = patch.lat
+  if (Number.isFinite(patch.lon)) S.settings.sunLon = patch.lon
+  if (Number.isFinite(patch.elevM)) S.settings.sunElevM = patch.elevM
   persist()
 }
 
