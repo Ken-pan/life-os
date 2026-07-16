@@ -181,6 +181,7 @@ export const MATRIX_SHOWCASES = CATALOG_SECTIONS.filter((s) =>
     'lists',
     'display',
     'disclosure',
+    'charts',
     'settings',
     'menu',
     'overlay',

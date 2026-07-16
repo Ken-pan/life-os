@@ -70,8 +70,9 @@ Commit 锚点 → [`SHIPPED.md`](./SHIPPED.md) §Design
 | **D-P8** | Storybook / Chromatic          | 团队协作压力（现阶段否决）                                                      |
 
 **2026-07-16 追加护栏：** `npm run check:design-catalog-registry`（showcase 四处注册机器对账，进 CI）；
-像素基线扩到 **226 张**（新增 overlay/forms showcase + 32 张 393×852 mobile 基线；
-同日 ROI 补全加 progress/selection/tabs 24 张、chips/stat 16 张、lists/display/disclosure 24 张）。
+像素基线扩到 **234 张**（新增 overlay/forms showcase + 32 张 393×852 mobile 基线；
+同日 ROI 补全加 progress/selection/tabs 24 张、chips/stat 16 张、lists/display/disclosure 24 张、
+charts 进 matrix 8 张——charts showcase 用固定日期快照保证像素稳定）。
 
 **2026-07-16 前瞻组件波（为 healthos/brainos/noteos/shopos 预铺，对照 Material/HIG/Polaris）：**
 theme 新增 9 组展示/结构原语——`.avatar`（尺寸/首字母/组叠）、`.stepper`（配 platform-web
