@@ -30,6 +30,7 @@
   import { isSupabaseConfigured } from '$lib/supabase.js'
   import { toast } from '$lib/ui.svelte.js'
   import CloudScanPicker from '$lib/components/CloudScanPicker.svelte'
+  import InventoryImport from '$lib/components/InventoryImport.svelte'
 
   const themeOptions = [
     { value: 'auto', label: '跟随系统' },
@@ -304,6 +305,18 @@
       墙体不动,只更新家具位置尺寸与照片。也可以直接在平面图顶部的「新扫描」横幅一键摆入。
     </p>
   {/if}
+  <!-- 从储藏页搬过来的。它原先钉在「东西放哪」的第一屏,而那一屏该回答的是
+       「我的压力锅放哪了」—— 结果开头是一个要你先去别处搬数据的按钮:0 件物品,
+       外加一个待办。导入是**一次性**的,它的产物(物品)才是那一页的主角。
+       这里是它的同类聚居地:布局备份/恢复、云端扫描,都是「把数据搬进搬出」。 -->
+  <SettingsStackBlock label="物品清单">
+    <InventoryImport />
+  </SettingsStackBlock>
+  <p class="block-desc">
+    从 FinanceOS 的购买记录导入「还在家里」的那批东西。家具会尽量认领平面图上扫描
+    出来的那一件(认不准就新建到暂存网格),杂物按线索归进储藏区 —— 导入前有预览,
+    确认了才落库。
+  </p>
   {#if !structureLocked}
     <SettingsActionRow
       label="恢复默认"

@@ -81,7 +81,10 @@
   import { assessPhotoCoverage, coverageForZone } from '$lib/spatial/photo-coverage.js'
   import { page } from '$app/state'
   import {
+    FENCE_BAND_IN,
+    fenceBandRects,
     inchesToPx,
+    isFence,
     isStorable,
     PLACEMENT_GROUP_ORDER,
     PLACEMENT_KINDS,
@@ -407,7 +410,7 @@
       return `家具：点画布放置「${PLACEMENT_KINDS[placementKind].label}」· 拖动移动 · 方向键微调`
     }
     if (activeTool === 'storage') {
-      return '标储藏：点分区或家具指派 S1–S8'
+      return '标储藏：点分区或家具指派储藏区'
     }
     if (activeTool === 'viewpoint') {
       return '视角：点画布放机位 · 拖圆点改位置 · 拖手柄转朝向 · 选中后挂照片'
@@ -660,14 +663,20 @@
     })
     // 压在别人身上不拦(床下塞收纳盒是常态),但要当场说出来 —— 压着而不自知才是错。
     // 立体上互相让开的组合(桌下柜、格子柜上的电视、台面上方的吊柜)不算压:
-    // 那是真实世界的正常叠放,标红反而在骗人
+    // 那是真实世界的正常叠放,标红反而在骗人。
+    // 围栏只有边框是实体:狗和狗窝住在围栏**里面**是它存在的意义,不是压叠 ——
+    // 双方(被拖的、旁边的)谁是围栏,都只拿边框参与判定
+    const bandPx = inchesToPx(FENCE_BAND_IN, planPxPerFt)
+    const solidRectsOf = (p, rect) => (isFence(p.kind) ? fenceBandRects(rect, bandPx) : [rect])
     const solidOthers = (project.placements ?? [])
       .filter((x) => x.id !== id && !verticallyClear(placement, x))
-      .map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h }))
-    const overlap = overlapsAny(
-      { x: snap.x, y: snap.y, w: placement.w, h: placement.h },
-      solidOthers,
-    )
+      .flatMap((x) => solidRectsOf(x, { x: x.x, y: x.y, w: x.w, h: x.h }))
+    const overlap = solidRectsOf(placement, {
+      x: snap.x,
+      y: snap.y,
+      w: placement.w,
+      h: placement.h,
+    }).some((r) => overlapsAny(r, solidOthers))
     return { placement, snap, overlap }
   }
 
@@ -1287,12 +1296,16 @@
   class="plan-page"
   class:plan-page-immersive={planMode === 'edit' && compactPlanChrome}
 >
-  <header
-    class="plan-top"
-    class:plan-top-edit={planMode === 'edit'}
-    aria-label="平面图模式"
-  >
-    <div class="plan-top-primary">
+  <!-- 统一页面顶栏(HomeOS Spatial Workspace):标题 + 状态副题在左,
+       模式/历史/帮助/详情归右 —— 控件不再散落在画布四角,画布从顶栏下沿开始。 -->
+  <header class="plan-topbar" aria-label="平面工具栏">
+    <div class="plan-topbar-lead">
+      <h1 class="plan-topbar-title">平面</h1>
+      <p class="plan-topbar-sub">
+        {project.meta?.nameZh ? `${project.meta.nameZh} · ` : ''}{appBarSubtitle}
+      </p>
+    </div>
+    <div class="plan-topbar-actions">
       <div class="mode-segment" role="group" aria-label="浏览或编辑">
         <button
           type="button"
@@ -1344,8 +1357,23 @@
       >
         ?
       </button>
-    </div>
 
+      <!-- 桌面端 Inspector 的开关(移动端仍走右下 FAB,CSS 二选一显示) -->
+      <button
+        type="button"
+        class="topbar-detail-btn"
+        class:open={drawerOpen}
+        aria-expanded={drawerOpen}
+        aria-controls="plan-drawer"
+        onclick={() => (drawerOpen = !drawerOpen)}
+      >
+        {drawerOpen ? '收起详情' : '详情'}
+      </button>
+    </div>
+  </header>
+
+  <!-- 通知与控件簇分开:横幅是整条的,塞回控件簇里会把那一小撮按钮撑成一条横栏 -->
+  <div class="plan-notices">
     {#if editMode508 && !convertBannerDismissed}
       <div class="plan-convert-banner" role="note">
         <div class="plan-convert-copy">
@@ -1412,7 +1440,7 @@
         </div>
       </div>
     {/if}
-  </header>
+  </div>
 
   <PlanShortcutsHelp
     open={showHelp}
@@ -1422,6 +1450,7 @@
     onClose={() => (showHelp = false)}
   />
 
+  <div class="plan-body">
   <div class="plan-stage">
     {#if wallGraphEmpty}
       <p class="plan-empty-wallgraph" role="status">
@@ -1445,7 +1474,6 @@
       {graphEditMode}
       toolbarMinimal={compactPlanChrome && planMode === 'edit'}
       {graphTool}
-      {openingKind}
       {fitRequest}
       {selectedWall}
       {selectedOpening}
@@ -1730,7 +1758,7 @@
             ].label} ▾
           </button>
         {:else if activeTool === 'storage'}
-          <span class="pt-opt-label">点分区或家具指派 S1–S8</span>
+          <span class="pt-opt-label">点分区或家具指派储藏区</span>
         {:else if activeTool === 'viewpoint'}
           <button
             type="button"
@@ -1926,6 +1954,20 @@
       {placeEditMode}
     />
 
+    <!-- 当前工具的操作提示,常显在画布底部 —— 此前只藏在 ? 帮助弹窗里,
+         等于每换一个工具都要现学。被动展示,不写任何工具态;选中条出现时让位。
+         手机屏幕底部已被选择条/缩放/FAB 占满,提示继续走帮助弹窗。 -->
+    {#if planMode === 'edit' && !compactPlanChrome && !hideFabForBar}
+      <button
+        type="button"
+        class="plan-hint-chip"
+        title="查看全部快捷键（?）"
+        onclick={() => (showHelp = true)}
+      >
+        {modeHint}
+      </button>
+    {/if}
+
     <button
       type="button"
       class="plan-drawer-fab"
@@ -1937,6 +1979,7 @@
     >
       {drawerOpen ? '收起' : drawerLabel}
     </button>
+  </div>
 
     {#if drawerOpen}
       <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -2045,8 +2088,7 @@
                 </button>
               {:else}
                 <p class="graph-aside-lead">
-                  选中画布上的家具可在此编辑；「标储藏」点击分区或家具指派
-                  S1–S8。
+                  选中画布上的家具可在此编辑；「标储藏」点击分区或家具指派储藏区。
                 </p>
               {/if}
             </section>
@@ -2116,6 +2158,7 @@
 
 <style>
   .plan-page {
+    position: relative;
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
@@ -2125,45 +2168,107 @@
     height: 0;
   }
 
-  .plan-top {
+  /* 统一顶栏:在流里,画布从它下沿开始 —— 不再是浮在画布上的胶囊。 */
+  .plan-topbar {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 10px;
-    padding: var(--stack-tight) var(--stack-section);
-    flex-shrink: 0;
-    border-radius: 14px;
-    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-    background: color-mix(in srgb, var(--card) 90%, transparent);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 4px 20px -12px rgba(0, 0, 0, 0.18);
+    justify-content: space-between;
+    gap: 10px 16px;
+    min-height: 54px;
+    padding: 8px max(14px, var(--safe-right-effective)) 8px
+      max(14px, var(--safe-left-effective));
+    padding-top: calc(var(--safe-top-effective) + 8px);
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    background: var(--bg);
   }
 
-  .plan-top-primary {
+  .plan-topbar-lead {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 1px;
     min-width: 0;
   }
 
+  .plan-topbar-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--t1);
+    line-height: 1.2;
+  }
+
+  .plan-topbar-sub {
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--t3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .plan-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .topbar-detail-btn {
+    font-size: 13px;
+    font-weight: 650;
+    min-height: 36px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--accent);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .topbar-detail-btn.open {
+    background: var(--accent);
+    color: #f5f8fa;
+    border-color: transparent;
+  }
+
+  .topbar-detail-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* 通知栈:在流里,顶栏之下、画布之上 —— 横幅不再遮画布 */
+  .plan-notices {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 6px max(10px, var(--safe-right-effective)) 0
+      max(10px, var(--safe-left-effective));
+    max-width: 640px;
+  }
+
+  .plan-notices:empty {
+    display: none;
+  }
 
   .mode-segment {
     display: inline-flex;
-    padding: 4px;
+    padding: 3px;
     border-radius: 999px;
     border: 1px solid var(--border);
-    background: var(--bg);
+    background: var(--card);
     gap: 3px;
   }
 
   .mode-btn {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 650;
-    min-height: 40px;
-    min-width: 72px;
-    padding: 8px 18px;
+    min-height: 32px;
+    min-width: 64px;
+    padding: 5px 16px;
     border-radius: 999px;
     border: none;
     background: transparent;
@@ -2187,10 +2292,9 @@
   }
 
   .plan-convert-banner {
-    flex: 1 1 100%;
     margin: 0;
     padding: 10px 12px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -2201,6 +2305,9 @@
     color: var(--t2);
     background: color-mix(in srgb, var(--accent) 8%, var(--card));
     border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4);
   }
 
   .plan-convert-copy {
@@ -2291,9 +2398,9 @@
   }
 
   .pt-opt-btn {
-    min-height: 32px;
-    padding: 4px 10px;
-    border-radius: 8px;
+    min-height: 30px;
+    padding: 3px 10px;
+    border-radius: 7px;
     border: 1px solid transparent;
     background: transparent;
     color: var(--t2);
@@ -2329,8 +2436,8 @@
 
   .pt-opt-input {
     width: 108px;
-    min-height: 32px;
-    padding: 4px 8px;
+    min-height: 30px;
+    padding: 3px 8px;
     border-radius: 8px;
     border: 1px solid var(--border);
     background: var(--bg);
@@ -2445,11 +2552,13 @@
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
-    margin-top: 8px;
     padding: 10px 14px;
     border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--accent, #4f7c66) 45%, var(--border));
     background: color-mix(in srgb, var(--accent, #4f7c66) 8%, var(--card));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4);
   }
 
   .shoot-banner-copy {
@@ -2498,21 +2607,65 @@
     cursor: pointer;
   }
 
+  /* 画布 + Inspector 的横向骨架:中间空间画布,右侧情境面板(桌面) */
+  .plan-body {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    height: 0;
+  }
+
   .plan-stage {
     position: relative;
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
-    width: 100%;
+    width: auto;
     min-width: 0;
     min-height: 0;
-    height: 0;
     overflow: hidden;
   }
 
   .plan-stage :global(.plan-shell) {
     flex: 1 1 auto;
     min-height: 0;
+  }
+
+  .plan-hint-chip {
+    position: absolute;
+    z-index: 40;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    max-width: min(64vw, 640px);
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    background: color-mix(in srgb, var(--card) 90%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.4);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--t2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .plan-hint-chip:hover {
+    color: var(--t1);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  }
+
+  .plan-hint-chip:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .plan-drawer-fab {
@@ -2620,13 +2773,30 @@
     grid-template-columns: 1fr;
   }
 
+  /* 桌面(≥900px):Inspector 驻留在画布右侧,是布局的一列而不是浮层;
+     开关在顶栏(详情),右下角不再挂孤零零的 FAB。 */
   @media (min-width: 900px) {
     .plan-drawer-fab {
-      bottom: calc(var(--safe-bottom-effective) + 20px);
+      display: none;
     }
 
     .plan-drawer {
-      bottom: calc(var(--safe-bottom-effective) + 16px);
+      position: static;
+      flex: 0 0 320px;
+      width: 320px;
+      max-height: none;
+      margin: 0;
+      border: none;
+      border-left: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+      border-radius: 0;
+      box-shadow: none;
+      background: var(--bg);
+    }
+  }
+
+  @media (max-width: 899px) {
+    .topbar-detail-btn {
+      display: none;
     }
   }
 
@@ -2640,14 +2810,15 @@
       border-radius: 14px 14px 0 0;
     }
 
-    .plan-top {
-      gap: 6px;
-      padding: 6px 8px;
-      margin-bottom: 6px;
+    /* 顶栏在手机上收紧:副题让位给控件 */
+    .plan-topbar {
+      gap: 8px;
+      padding-left: max(10px, var(--safe-left-effective));
+      padding-right: max(10px, var(--safe-right-effective));
     }
 
-    .plan-top-edit .plan-top-primary {
-      flex: 1 1 100%;
+    .plan-topbar-sub {
+      display: none;
     }
 
     .plan-convert-banner {
@@ -2656,20 +2827,20 @@
     }
 
     .mode-btn {
-      min-height: 44px;
-      min-width: 64px;
+      min-height: 40px;
+      min-width: 60px;
       font-size: 13px;
       padding: 8px 14px;
     }
 
     .help-btn {
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
     }
 
     .mode-undo-btn {
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
     }
 
     .plan-page-immersive .plan-stage {
@@ -2689,9 +2860,9 @@
 
     /* 选中条铺满底部时,缩放控件和图例会被整条盖住却仍可聚焦 ——
        跟 FAB 的 hide-for-bar 同一策略:让位,取消选中即回来。 */
-    .plan-stage:has(:global(.sel-bar)) :global(.plan-toolbar),
-    .plan-stage:has(:global(.graph-sel-bar)) :global(.plan-toolbar),
-    .plan-stage:has(:global(.graph-open-bar)) :global(.plan-toolbar),
+    .plan-stage:has(:global(.sel-bar)) :global(.plan-zoom),
+    .plan-stage:has(:global(.graph-sel-bar)) :global(.plan-zoom),
+    .plan-stage:has(:global(.graph-open-bar)) :global(.plan-zoom),
     .plan-stage:has(:global(.sel-bar)) :global(.plan-legend-wrap.overlay),
     .plan-stage:has(:global(.graph-sel-bar)) :global(.plan-legend-wrap.overlay),
     .plan-stage:has(:global(.graph-open-bar)) :global(.plan-legend-wrap.overlay) {
@@ -2705,7 +2876,10 @@
     .plan-drawer-backdrop {
       display: none;
     }
+  }
 
+  /* 600–899px:没有右列的空间,Inspector 是底部居中的浮层 */
+  @media (min-width: 600px) and (max-width: 899px) {
     .plan-drawer {
       top: auto;
       left: 50%;
@@ -2718,19 +2892,9 @@
       max-height: min(42vh, 400px);
     }
 
-    .plan-stage:has(:global(.sel-bar)) .plan-drawer {
-      bottom: calc(
-        var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 148px
-      );
-    }
-
-    .plan-stage:has(:global(.graph-open-bar)) .plan-drawer {
-      bottom: calc(
-        var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 148px
-      );
-    }
-
-    .plan-stage:has(:global(.graph-sel-bar)) .plan-drawer {
+    .plan-body:has(:global(.sel-bar)) .plan-drawer,
+    .plan-body:has(:global(.graph-open-bar)) .plan-drawer,
+    .plan-body:has(:global(.graph-sel-bar)) .plan-drawer {
       bottom: calc(
         var(--bottom-nav-height, 64px) + var(--safe-bottom-effective) + 148px
       );

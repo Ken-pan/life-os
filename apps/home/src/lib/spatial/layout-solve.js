@@ -21,7 +21,7 @@ import {
   pointInPolygon,
   roomsAsZones,
 } from './circulation.js'
-import { placementSpec } from './placements.js'
+import { isFence, placementSpec } from './placements.js'
 import { wallAnchorSegments } from './wall-anchor.js'
 import { PX_PER_FT, PX_PER_IN } from './dimensions.js'
 import { boxesOverlap, pointToRectDistance } from './geometry.js'
@@ -53,6 +53,9 @@ function isMovable(pl) {
   if (!pl || pl.fixed) return false
   if (pl.kind === 'rug' || pl.kind === 'yoga_mat' || pl.kind === 'mat') return false
   if (String(pl.kind).startsWith('dog')) return false
+  // 围栏是圈狗的边界,不是一件摆得更好的家具:狗不参与移动,单独把围栏
+  // 搬走等于把狗放出来。人挪围栏是连狗带窝整体挪 —— 求解器做不到,就别动
+  if (isFence(pl.kind)) return false
   const spec = placementSpec(pl.kind)
   return (spec?.mount ?? 'floor') === 'floor'
 }

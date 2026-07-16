@@ -941,7 +941,9 @@ export function build508Project(config, carry = {}) {
     schemaVersion: SPATIAL_SCHEMA_VERSION,
     meta: {
       id: 'avalon-508',
-      nameZh: '我的户型 · 储藏审计',
+      // 「· 储藏审计」去掉了:nameZh 是**这个家的名字**,不是这个家在系统里被做了
+      // 什么处理。它会当作平面页的副标题显示(见 routes/+layout.svelte)。
+      nameZh: '我的户型',
       unitId: '001-508',
       building: 'Avalon Alderwood Place',
       sqft: carry.meta?.sqft ?? 769,
@@ -963,7 +965,7 @@ export function build508Project(config, carry = {}) {
         '<b>厨房</b>：与客厅开放贯通、无隔墙；东墙橱柜条深 2′4″ 直达南墙。',
       ],
       sourceNote:
-        carry.meta?.sourceNote ?? 'HOME.OS · 参数化户型 · 储藏清单来自现场审计',
+        carry.meta?.sourceNote ?? 'HOME.OS · 参数化户型 · 储藏清单来自现场记录',
       ...(carry.meta ?? {}),
     },
     viewport: { width: X_END - X0 + 80, height: outerH + 80 },

@@ -514,6 +514,17 @@ function blockPinned(placementId, verb) {
 const PLACEMENT_GEOM_KEYS = ['x', 'y', 'w', 'h', 'rotation']
 
 /**
+ * 挪过 = 安家:摘掉清单导入的暂存标(staged),这件从此参与动线/占地分析。
+ * 拖拽和方向键微调两条路都要走这里 —— 漏一条,键盘党摆好的家具就永远是"幻影"。
+ * @param {import('./spatial/types.js').SpatialPlacement} p
+ */
+function unstagePlacement(p) {
+  if (!p.attrs?.staged) return p
+  const { staged, ...attrs } = p.attrs
+  return { ...p, attrs }
+}
+
+/**
  * @param {string} placementId
  * @param {Partial<import('./spatial/types.js').SpatialPlacement>} patch
  */
@@ -802,6 +813,7 @@ export async function describeViewpoint(viewpointId, opts = {}) {
   /** @type {Partial<import('./spatial/types.js').SpatialViewpoint>} */
   const patch = {
     state: res.state,
+    observations: res.observations,
     items: res.items,
     note: res.summary || undefined,
     describedAt: new Date().toISOString(),
@@ -1020,7 +1032,7 @@ export function nudgePlacement(placementId, dxIn, dyIn) {
       x: at.x + p.w / 2,
       y: at.y + p.h / 2,
     })
-    return { ...p, x: at.x, y: at.y, zoneId: zone?.id }
+    return unstagePlacement({ ...p, x: at.x, y: at.y, zoneId: zone?.id })
   })
   if (!moved) return
   // Key by placement so switching pieces starts its own undo entry.
@@ -1104,7 +1116,7 @@ export function commitPlacementMove(placementId, x, y, opts = {}) {
       x: at.x + p.w / 2,
       y: at.y + p.h / 2,
     })
-    return { ...p, x: at.x, y: at.y, zoneId: zone?.id }
+    return unstagePlacement({ ...p, x: at.x, y: at.y, zoneId: zone?.id })
   })
   applyEditSource({ placements }, { silent: true })
 }
@@ -2566,8 +2578,31 @@ export function setTidyTaskDone(taskId, done, meta = {}) {
   }
 }
 
+/**
+ * 单步勾选:任务勾完一半放下手机,回来还接得上。
+ * 不进事件流 —— 事件记的是「整理完成」这种行为事实,不是每一小步。
+ * @param {string} taskId
+ * @param {number} idx
+ */
+export function isTidyStepDone(taskId, idx) {
+  return Boolean(S.settings.tidyStepDone?.[`${taskId}#${idx}`])
+}
+
+/**
+ * @param {string} taskId
+ * @param {number} idx
+ * @param {boolean} done
+ */
+export function setTidyStepDone(taskId, idx, done) {
+  if (!S.settings.tidyStepDone) S.settings.tidyStepDone = {}
+  if (done) S.settings.tidyStepDone[`${taskId}#${idx}`] = 1
+  else delete S.settings.tidyStepDone[`${taskId}#${idx}`]
+  persist()
+}
+
 export function clearTidyProgress() {
   S.settings.tidyDone = {}
+  S.settings.tidyStepDone = {}
   persist()
 }
 

@@ -35,10 +35,15 @@
       </span>
       <span class="plan-legend-item" role="listitem">
         <i class="sw store" aria-hidden="true"></i>
+        <!-- 「S1–S8」去掉了。它是写死的:508 样板户型正好 8 个区,而真实扫描出来的
+             这个家有 21 个 —— 图例一直在说 S1–S8,清单里排到 S21。
+             也没有改成动态的「S1–S{n}」:图例回答的是「这个符号代表什么」,不是
+             「编号从几到几」。编号是内部主键,它在卡片和标注上有用(那儿有上下文),
+             印在图例里只是噪音 —— 而且是会过期的噪音。 -->
         {#if interactive}
           斜线区 = 储藏区（悬停见名称 · 点击进清单）
         {:else}
-          斜线区 = 储藏区 S1–S8
+          斜线区 = 储藏区
         {/if}
       </span>
       <span class="plan-legend-item" role="listitem">
@@ -88,7 +93,7 @@
           <i class="sw placement" aria-hidden="true"></i> 矩形 = 家具放置
         </span>
         <span class="plan-legend-item plan-legend-edit" role="listitem">
-          <i class="sw store" aria-hidden="true"></i> 标储藏 = 指派 S1–S8
+          <i class="sw store" aria-hidden="true"></i> 标储藏 = 指派储藏区
         </span>
         <span class="plan-legend-item plan-legend-edit" role="listitem">
           <i class="sw delete-hint" aria-hidden="true"></i> Delete 删除选中家具
@@ -108,7 +113,7 @@
         </span>
       {:else if interactive}
         <span class="plan-legend-item" role="listitem">
-          <i class="sw zone-dot" aria-hidden="true"></i> 圆点 S1–S8 = 储藏入口
+          <i class="sw zone-dot" aria-hidden="true"></i> 圆点 = 储藏入口
         </span>
       {/if}
       {#if !graphEditMode && !zoneEditMode && !placeEditMode && !editMode}

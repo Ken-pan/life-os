@@ -31,6 +31,31 @@ export const ROOM_STATES = /** @type {const} */ ([
   '空置',
 ])
 
+/**
+ * 现场观察的**分轴**评级（0–3）。
+ *
+ * 为什么不能只有一个 `state`:一个词概括不了一间屋子,而整理计划要的恰恰是被这个词
+ * 抹掉的那些区别 ——
+ * - **脏 ≠ 乱**:地板落灰和地板堆东西是两件事,一个要拖地、一个要收纳。
+ *   老的五档(整洁/一般/杂乱/堆满)全是「占没占地方」,压根没有脏污这根轴,
+ *   于是「扫地/拖地」这类任务**永远生不出来** —— 屋子再脏,系统也只会说「整洁」。
+ * - **台面 ≠ 地面**:桌上堆东西和地上堆东西是两个动作、两种体力。
+ * - **垃圾/碗筷/衣物**要单拎:它们是卫生隐患,专业整理法(KC Davis 五件事)一致
+ *   要求最先清走,而且清起来最快、进度最看得见。混在「杂乱」里就没法优先。
+ *
+ * 分档定义写进提示词,保证模型和这里对同一把尺子:
+ *   0 = 没有 / 干净   1 = 少量   2 = 较多   3 = 很多 / 满
+ */
+export const OBSERVATION_AXES = /** @type {const} */ ([
+  { key: 'trash', label: '垃圾', zh: '垃圾、空包装、废纸' },
+  { key: 'dishes', label: '碗筷', zh: '脏碗碟、杯子、外卖盒' },
+  { key: 'laundry', label: '衣物', zh: '散落的衣服、毛巾' },
+  { key: 'surfaces', label: '台面堆积', zh: '桌面/台面/柜面上堆的东西' },
+  { key: 'floorClutter', label: '地面杂物', zh: '地上堆放的东西' },
+  { key: 'floorDirt', label: '地面脏污', zh: '灰尘、毛发、碎屑、污渍（脏,不是乱）' },
+  { key: 'storageMess', label: '收纳凌乱', zh: '可见的柜子/开放架上东西塞得乱七八糟' },
+])
+
 /** @type {boolean | null} */
 let available = null
 
@@ -82,12 +107,18 @@ function toDataUrl(blob) {
  */
 
 /**
+ * 分轴观察值:{@link OBSERVATION_AXES} 的 key → 0–3。
+ * @typedef {Record<string, number>} SceneObservations
+ */
+
+/**
  * @typedef {object} SceneResult
  * @property {string | null} zoneId
  * @property {number} confidence
  * @property {string | null} anchorId 画面正中那件**固定物**的 fixture id
  * @property {number} anchorConfidence
- * @property {string} state ROOM_STATES 之一
+ * @property {string} state ROOM_STATES 之一 —— 只是给人看的标题;打分/派任务一律用 observations
+ * @property {SceneObservations} observations 分轴评级;见 {@link OBSERVATION_AXES}
  * @property {string} summary 一句话
  * @property {string[]} items 看到的东西
  * @property {string} reason
@@ -131,16 +162,22 @@ export async function describeScene(photo, zones) {
             type: 'text',
             text:
               `这是一张住宅室内实拍照片。房子的分区与**固定设施**（灶台/水槽/马桶这类装死的）如下：\n${menu}\n\n` +
-              `回答四件事：\n` +
+              `回答五件事：\n` +
               `1. 照片拍的是哪个分区（只能选列表里的序号，认不出填 0）\n` +
               `2. 画面**正中央**最显著的那件**固定设施**是列表里的哪一件（填 "序号.子序号"，` +
               `如 "2.1"；画面中央不是列表里的固定设施、或看不清，填 null）\n` +
-              `3. 这块地方的状态，只能从这五个里选一个：整洁 / 一般 / 杂乱 / 堆满 / 空置\n` +
-              `4. 看到的主要物品（最多 6 个词）\n\n` +
+              `3. 这块地方的整体状态，只能从这五个里选一个：整洁 / 一般 / 杂乱 / 堆满 / 空置\n` +
+              `4. **逐项**打分，每项都用 0-3：0=没有/干净，1=少量，2=较多，3=很多/满。\n` +
+              OBSERVATION_AXES.map((a) => `   - ${a.key}（${a.label}）：${a.zh}`).join('\n') +
+              `\n   注意：floorDirt 说的是**脏**（灰尘/毛发/碎屑/污渍），跟地上堆没堆东西无关 —— ` +
+              `地面很空但落了灰，floorClutter=0 而 floorDirt 要给分。看不清地面就填 0。\n` +
+              `5. 看到的主要物品（最多 6 个词）\n\n` +
               `只输出 JSON，不要解释、不要代码块：\n` +
               `{"zone": <序号，认不出填 0>, "zoneConfidence": <0-1>, ` +
               `"anchor": "<序号.子序号 或 null>", "anchorConfidence": <0-1>, ` +
-              `"state": "<五选一>", "summary": "<不超过20字>", ` +
+              `"state": "<五选一>", ` +
+              OBSERVATION_AXES.map((a) => `"${a.key}": <0-3>`).join(', ') +
+              `, "summary": "<不超过20字>", ` +
               `"items": ["..."], "reason": "<不超过15字>"}`,
           },
         ],
@@ -192,12 +229,19 @@ function normalizeScene(raw, zones) {
 
   const state = ROOM_STATES.includes(raw.state) ? raw.state : '一般'
 
+  // 分轴:缺项当 0(没看见就是没有),而不是丢掉整个 observations —— 8B 偶尔漏一两个键,
+  // 因为漏了一项就把七项全扔掉,等于让最不稳的那一项决定其余六项的命运。
+  /** @type {SceneObservations} */
+  const observations = {}
+  for (const a of OBSERVATION_AXES) observations[a.key] = clampLevel(raw[a.key])
+
   return {
     zoneId: zone?.id ?? null,
     confidence: clamp01(raw.zoneConfidence),
     anchorId,
     anchorConfidence: clamp01(raw.anchorConfidence),
     state,
+    observations,
     summary: String(raw.summary ?? '').slice(0, 40),
     items: Array.isArray(raw.items)
       ? raw.items.map((s) => String(s).slice(0, 12)).slice(0, 6)
@@ -209,6 +253,12 @@ function normalizeScene(raw, zones) {
 function clamp01(v) {
   const n = Number(v)
   return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0
+}
+
+/** 分轴评级:整数 0–3。认不出/缺项 = 0(没看见就是没有,不硬凑一个中间值)。 */
+function clampLevel(v) {
+  const n = Math.round(Number(v))
+  return Number.isFinite(n) ? Math.max(0, Math.min(3, n)) : 0
 }
 
 /**

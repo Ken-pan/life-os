@@ -146,6 +146,8 @@
  * @property {string} [imageUrl] 商品图 —— 公开桶,不落本机
  * @property {string} [productUrl] 商品页
  * @property {'A'|'B'|'C'|string} [tier] 分拣时标的重要度
+ * @property {'maybe'|string} [disp] 退货存疑(同单被标退货,分不清退的哪件)才落档;
+ *   确定退掉/取消的在导入时就被拦下,不会带着这个字段进库
  */
 
 /**
@@ -179,6 +181,29 @@
  */
 
 /**
+ * 柜体规格中的一组尺寸。尺寸继续用 RoomPlan 的英寸单位存储，
+ * UI 统一换算为厘米；来源和 approximate 不可省略地显示，避免把照片估算
+ * 冒充成实测。
+ * @typedef {object} StorageMeasurement
+ * @property {string} labelZh
+ * @property {number} [wIn]
+ * @property {number} [dIn]
+ * @property {number} [hIn]
+ * @property {'roomplan'|'container-scan'|'floorplan'|'product'|'photo-estimate'} source
+ * @property {boolean} [approximate]
+ */
+
+/**
+ * 照片 + RoomPlan + 柜内扫描合并得到的「这个储物区到底有多大、怎么用」。
+ * @typedef {object} StorageZoneSpec
+ * @property {string} summaryZh 例：「1 组三抽地柜」
+ * @property {StorageMeasurement[]} [measurements]
+ * @property {string[]} [structureZh] 门/抽屉/层板等可数结构
+ * @property {string} [storagePlanZh] 适合放什么
+ * @property {string} [ergonomicsZh] 人体工学与动线约束
+ */
+
+/**
  * @typedef {object} SpatialStorageZone
  * @property {string} id
  * @property {string} code
@@ -192,6 +217,7 @@
  * @property {string} [zoneId]
  * @property {string} [placementId]
  * @property {ContainerScanInfo} [container] 柜内实测(同步来的;items[].level 以它的层为准)
+ * @property {StorageZoneSpec} [spec] 柜体数量、尺寸与收纳动线规划
  */
 
 /**
@@ -272,6 +298,8 @@
  * @property {string} [colorZh] 颜色的人话(VLM 识别:深棕/米白…)
  * @property {string} [describedAt] 上次 VLM 识别时间 ISO
  * @property {PurchaseInfo} [purchase] 这件家具是买来的哪一单;见 {@link PurchaseInfo}
+ * @property {boolean} [staged] 清单导入新建、还在画布左上暂存网格里没安家。
+ *   动线/占地分析和归位建议都跳过它;用户拖到位(commitPlacementMove)时摘掉
  */
 
 /**
@@ -340,8 +368,15 @@
  * @property {string} [anchorId] 定朝向所用的 fixture id
  * @property {number} [fixResidual] 三边定位残差（平面 px）；⚠️ 系统性尺寸偏差下残差会偏小，不能当唯一可信度
  * @property {number} [fixUsed] 参与解算的家具数
- * @property {string} [state] 这块地方的状态（见 vlm.js ROOM_STATES）
- * @property {string[]} [items] VLM 看到的主要物品
+ * @property {string} [state] 这块地方的状态（见 vlm.js ROOM_STATES）—— 只是给人看的标题,
+ *   打分/派任务一律用 {@link SpatialViewpoint.observations}
+ * @property {Record<string, number>} [observations] 分轴观察(见 vlm.js OBSERVATION_AXES):
+ *   垃圾/碗筷/衣物/台面堆积/地面杂物/地面脏污/收纳凌乱,各 0–3。
+ *   ⚠️ 轴名之间用「/」分隔,别给某个轴套星号强调 —— 星号紧挨着分隔斜杠会拼出
+ *      注释结束符,块注释就地闭合,整个 types.js 变语法错误、全 app 起不来
+ *      (2026-07-15 真踩过)。要强调请改用「」引号。
+ *   一个 `state` 概括不了一间屋子:脏和乱是两根轴(地面很空但落灰 → 要拖地,不是要收纳),
+ *   台面和地面是两个动作。老数据只有 state、没有这个字段 —— 消费方须能退化(见 clutter-score.js)
  * @property {string} [describedAt] 上次 VLM 识别时间 ISO
  */
 

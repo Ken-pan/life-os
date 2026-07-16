@@ -100,7 +100,7 @@ export function normalizeLevel(raw) {
 }
 
 /** {@link PurchaseInfo} 的字段,逐个白名单 —— 见 normalizePurchase。 */
-const PURCHASE_STR_KEYS = ['orderId', 'src', 'date', 'title', 'imageUrl', 'productUrl', 'tier']
+const PURCHASE_STR_KEYS = ['orderId', 'src', 'date', 'title', 'imageUrl', 'productUrl', 'tier', 'disp']
 
 /**
  * 归一 FinanceOS 带来的购买信息。

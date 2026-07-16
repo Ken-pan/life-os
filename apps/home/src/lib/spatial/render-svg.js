@@ -7,7 +7,13 @@ import { wallStrokePx } from './wall-standards.js'
 import { furnitureSymbol } from './furniture-symbols.js'
 import { furnitureVars } from './furniture-tint.js'
 import { ART_SYMBOLS } from './shiba-art.js'
-import { PLACEMENT_KINDS } from './placements.js'
+import {
+  canonicalPlacementKind,
+  FENCE_BAND_IN,
+  fenceBandRects,
+  isFence,
+  PLACEMENT_KINDS,
+} from './placements.js'
 import {
   isEditableWall,
   OPENING_EDIT_BINDINGS,
@@ -69,6 +75,9 @@ import { distanceFt, formatMeasureFt } from '../plan-measure.js'
  *   showFurniture?: boolean,
  *   showRoomEnglish?: boolean,
  *   hideStorageZones?: boolean,
+ *   focus?: { x: number, y: number, rect?: { x: number, y: number, w: number, h: number }, spanFt?: number } | null,
+ *     整理任务定位:viewBox 收到焦点周围一圈并画脉冲标记 —— 裁的是取景框,
+ *     内容仍完整渲染,周围的墙和家具上下文都在
  * }} [opts]
  */
 export function renderFloorPlanSvg(project, opts = {}) {
@@ -94,12 +103,46 @@ export function renderFloorPlanSvg(project, opts = {}) {
   const hasSpatialZones = spatialZones.length > 0
   const hideFurniture = opts.hideFurniture && !opts.showFurniture
   const hideStorageZones = opts.hideStorageZones ?? false
+  // 浏览态是「看家」,编辑态才是「画图」:网格只在编辑时全密度出现,
+  // 浏览时退成大格淡线 —— 先看到家,再看到工程纸。
+  const editingAny = Boolean(
+    opts.editMode ||
+      opts.graphEditMode ||
+      opts.zoneEditMode ||
+      opts.placementEditMode ||
+      opts.viewpointEditMode,
+  )
+  // 储藏编号(S1…)是内部主键,默认不上图:标储藏工具需要对码时才全量显示,
+  // 其余场合只有选中的那个区亮出编号。
+  const showStorageCodes =
+    opts.placementEditMode && opts.placementTool === 'storage'
+  // 小件家具的名字在整屋视图里只是噪声 —— 标成 label-minor,由外层按缩放层级
+  // 显隐(FloorPlanViewer 在 zoom 过阈值时给容器挂 data-zoom-tier)。
+  const minorAreaPx = 6.25 * pxPerFt * pxPerFt // 约 2.5ft × 2.5ft
   // 视角只在编辑「视角」步骤或显式开启时画 —— 平时浏览不该被一堆扇形糊住。
   const showViewpoints = opts.showViewpoints ?? opts.viewpointEditMode ?? false
 
+  // 任务定位:取景框收到焦点周围一圈。给了 rect(整个储藏柜)就框住它再留边,
+  // 只有点(门/瓶颈)就按 spanFt 开窗;都夹紧在户型内,焦点贴边时不会裁出空白。
+  let box = { x: 0, y: 0, w: width, h: height }
+  if (opts.focus) {
+    const fr = opts.focus.rect
+    const cx = fr ? fr.x + fr.w / 2 : opts.focus.x
+    const cy = fr ? fr.y + fr.h / 2 : opts.focus.y
+    const spanPx = (opts.focus.spanFt ?? 14) * pxPerFt
+    const w2 = Math.min(width, Math.max(spanPx, (fr?.w ?? 0) + pxPerFt * 5))
+    const h2 = Math.min(height, Math.max(spanPx * 0.72, (fr?.h ?? 0) + pxPerFt * 5))
+    box = {
+      x: Math.max(0, Math.min(width - w2, cx - w2 / 2)),
+      y: Math.max(0, Math.min(height - h2, cy - h2 / 2)),
+      w: w2,
+      h: h2,
+    }
+  }
+
   const parts = []
   parts.push(
-    `<svg class="floor-plan-svg${editModeOn}${interactiveOn}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="${svgRole}" aria-label="${esc(svgLabel)}" xmlns="http://www.w3.org/2000/svg">`,
+    `<svg class="floor-plan-svg${editModeOn}${interactiveOn}" viewBox="${box.x} ${box.y} ${box.w} ${box.h}" preserveAspectRatio="xMidYMid meet" role="${svgRole}" aria-label="${esc(svgLabel)}" xmlns="http://www.w3.org/2000/svg">`,
   )
   parts.push(`<defs>
   <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
@@ -109,6 +152,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
 </defs>`)
   parts.push(`<style>
  .grid line{stroke:var(--plan-grid,#dbe1e6);stroke-width:1}
+ .grid-soft line{opacity:.5}
+ .label-minor{transition:opacity .18s ease}
  .wall{stroke:var(--plan-wall,#20242b);stroke-linecap:square}
  .wall-exterior{stroke-width:${extStroke}}
  .wall-interior{stroke-width:${intStroke}}
@@ -130,9 +175,16 @@ export function renderFloorPlanSvg(project, opts = {}) {
  .furn{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
  .furn-item{cursor:help;fill:var(--plan-furn,#c5ced8);stroke:var(--plan-furn-stroke,#8a929c)}
  .storage-zone{pointer-events:none}
+ .task-focus .focus-ring{fill:none;stroke:var(--plan-danger,#d3572b);stroke-width:3}
+ .task-focus .focus-dot{fill:var(--plan-danger,#d3572b);stroke:var(--plan-paper,#fff);stroke-width:2}
+ .task-focus .focus-rect{fill:none;stroke:var(--plan-danger,#d3572b);stroke-width:2.5;stroke-dasharray:7 4}
  .tiny{font:10px var(--mono,monospace);fill:var(--plan-dim,#6a727c)}
  .mk{fill:var(--plan-accent,#5c758c);stroke:#fff;stroke-width:1.5}
  .mk-t{pointer-events:none;font:700 ${compact ? 9 : 11}px var(--mono,monospace);fill:#f5f8fa}
+ .mk-halo{fill:none;stroke:var(--plan-accent,#5c758c);stroke-width:2;stroke-opacity:.4;pointer-events:none}
+ .mk-hit{fill:transparent;stroke:none;pointer-events:all}
+ .plan-interactive .mk-hit{cursor:pointer}
+ .plan-interactive .mk-hit:hover ~ .mk,.plan-interactive .mk-hit:focus-visible ~ .mk{stroke:var(--plan-accent,#5c758c);stroke-width:3}
  .plan-interactive .mk{cursor:pointer}
  .scale{stroke:var(--plan-text,#3a4048);stroke-width:1.6;fill:var(--plan-text,#3a4048)}
  .scale-seg{stroke:var(--plan-text,#3a4048);stroke-width:1}
@@ -251,11 +303,13 @@ export function renderFloorPlanSvg(project, opts = {}) {
  @keyframes plan-sel-pulse{0%,100%{stroke-opacity:1}50%{stroke-opacity:.45}}
 </style>`)
 
-  parts.push('<g class="grid">')
-  for (let x = step; x < width; x += step) {
+  // 浏览态:隔行采样 + 低透明度,网格退成背景纸纹;编辑态:全密度可吸附网格。
+  const gridStep = editingAny ? step : step * 2
+  parts.push(`<g class="grid${editingAny ? '' : ' grid-soft'}">`)
+  for (let x = gridStep; x < width; x += gridStep) {
     parts.push(`<line x1="${x}" y1="${step}" x2="${x}" y2="${height - step}"/>`)
   }
-  for (let y = step; y < height; y += step) {
+  for (let y = gridStep; y < height; y += gridStep) {
     parts.push(`<line x1="${step}" y1="${y}" x2="${width - step}" y2="${y}"/>`)
   }
   parts.push('</g>')
@@ -324,7 +378,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
       )
       if (!compact || w > 36) {
         parts.push(
-          `<text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" class="furn">${esc(item.label)}</text>`,
+          `<text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" class="furn${w * h < minorAreaPx ? ' label-minor' : ''}">${esc(item.label)}</text>`,
         )
       }
     }
@@ -340,7 +394,8 @@ export function renderFloorPlanSvg(project, opts = {}) {
       parts.push(
         `<rect x="${x}" y="${y}" width="${w}" height="${h}" class="storage-zone${dash}" fill="url(#hatch)" stroke="var(--plan-accent,#5c758c)" stroke-width="1.8" rx="3" stroke-dasharray="5 3"/>`,
       )
-      if (!compact && w > 40 && h > 22) {
+      // 编号默认不上图(内部主键):标储藏对码、或该区被选中时才有意义
+      if (!compact && w > 40 && h > 22 && (showStorageCodes || on)) {
         parts.push(
           `<text x="${x + 6}" y="${y + 14}" class="zone-glyph" pointer-events="none">${esc(zone.code)}</text>`,
         )
@@ -378,7 +433,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
       )
       if (op.label && !compact)
         parts.push(
-          `<text x="${x + w / 2}" y="${y + h + 22}" text-anchor="middle" class="tiny">${esc(op.label)}</text>`,
+          `<text x="${x + w / 2}" y="${y + h + 22}" text-anchor="middle" class="tiny label-minor">${esc(op.label)}</text>`,
         )
     }
     if (op.type === 'window' && op.from && op.to && !op.pathD) {
@@ -473,7 +528,9 @@ export function renderFloorPlanSvg(project, opts = {}) {
         w: turned ? p.h : p.w,
         h: turned ? p.w : p.h,
       }
-      const symbol = PLACEMENT_KINDS[p.kind]?.symbol
+      // 过别名再查:云端优化会自造 kind(pet_fence),直接查表会把
+      // 狗狗围栏画成「未知家具」的实心方块
+      const symbol = PLACEMENT_KINDS[canonicalPlacementKind(p.kind)]?.symbol
       const { body, detail } = furnitureSymbol(symbol, box)
       const vars = furnitureVars(p.attrs?.colorHex)
       // Hand-drawn pieces take their label *under* the footprint. Everything else
@@ -490,7 +547,7 @@ export function renderFloorPlanSvg(project, opts = {}) {
         `</g>`,
         `</g>`,
         // Label sits outside the rotation so it stays upright at 90°/270°.
-        `<text x="${cx}" y="${labelY}" text-anchor="middle" class="placement-label">${esc(p.label)}</text>`,
+        `<text x="${cx}" y="${labelY}" text-anchor="middle" class="placement-label${p.w * p.h < minorAreaPx ? ' label-minor' : ''}">${esc(p.label)}</text>`,
       )
     }
     parts.push('</g>')
@@ -773,19 +830,37 @@ export function renderFloorPlanSvg(project, opts = {}) {
     for (const zone of project.storageZones) {
       if (!zone.marker) continue
       const { x, y } = zone.marker
-      const r = compact ? 8 : 11
+      const on = opts.highlightZone === zone.code
+      // 编号是内部主键:默认标记只是一个小圆点(位置本身才是信息),
+      // 选中的那个区、或标储藏工具需要对码时,才放大并亮出编号。
+      const badge = on || showStorageCodes
+      const r = badge ? (compact ? 8 : 11) : compact ? 3.5 : 4.5
       const markerTitle = opts.interactive
-        ? `${zone.code} · ${zone.nameZh} — 点击查看储藏清单`
-        : `${zone.code} · ${zone.nameZh}`
+        ? `${zone.nameZh}（${zone.code}）— 点击查看储藏清单`
+        : `${zone.nameZh}（${zone.code}）`
       const markerA11y = opts.interactive
         ? ` tabindex="0" role="button" aria-label="${esc(markerTitle)}"`
         : ''
+      // 点击热区始终按可点的尺寸给,视觉尺寸再小也不该考验指尖。
+      // 每个标记一个 g:hover 用的兄弟选择器只能看见自己组里的点。
+      parts.push('<g class="mk-g">')
       parts.push(
-        `<circle cx="${x}" cy="${y}" r="${r}" class="mk zone-marker" data-zone="${zone.code}" data-plan-tip="${esc(markerTitle)}"${markerA11y}><title>${esc(markerTitle)}</title></circle>`,
+        `<circle cx="${x}" cy="${y}" r="${compact ? 11 : 14}" class="mk-hit zone-marker" data-zone="${zone.code}" data-plan-tip="${esc(markerTitle)}"${markerA11y}><title>${esc(markerTitle)}</title></circle>`,
       )
+      if (on) {
+        parts.push(
+          `<circle cx="${x}" cy="${y}" r="${r + 4.5}" class="mk-halo"/>`,
+        )
+      }
       parts.push(
-        `<text x="${x}" y="${y + (compact ? 2.8 : 3.6)}" text-anchor="middle" class="mk-t">${esc(zone.code)}</text>`,
+        `<circle cx="${x}" cy="${y}" r="${r}" class="mk" pointer-events="none"/>`,
       )
+      if (badge) {
+        parts.push(
+          `<text x="${x}" y="${y + (compact ? 2.8 : 3.6)}" text-anchor="middle" class="mk-t">${esc(zone.code)}</text>`,
+        )
+      }
+      parts.push('</g>')
     }
   }
 
@@ -913,9 +988,16 @@ export function renderFloorPlanSvg(project, opts = {}) {
           : '点击选中'
     for (const p of project.placements) {
       const on = opts.selectedPlacement === p.id
-      parts.push(
-        `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="3" class="placement-hit${on ? ' placement-on' : ''}" data-placement-id="${p.id}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(p.label)} — ${placementHint}</title></rect>`,
-      )
+      // 围栏的命中区只有边框:整块矩形会把住在里面的狗盖住 —— 围栏后放的
+      // 狗永远点不中。选围栏就点栏板,和现实里伸手扶的是同一处。
+      const hitRects = isFence(p.kind)
+        ? fenceBandRects(p, (FENCE_BAND_IN / 12) * pxPerFt)
+        : [p]
+      for (const hr of hitRects) {
+        parts.push(
+          `<rect x="${hr.x}" y="${hr.y}" width="${hr.w}" height="${hr.h}" rx="3" class="placement-hit${on ? ' placement-on' : ''}" data-placement-id="${p.id}" aria-selected="${on ? 'true' : 'false'}"><title>${esc(p.label)} — ${placementHint}</title></rect>`,
+        )
+      }
     }
     parts.push('</g>')
   }
@@ -949,6 +1031,25 @@ export function renderFloorPlanSvg(project, opts = {}) {
         `<line x1="${g.from.x}" y1="${g.from.y}" x2="${g.to.x}" y2="${g.to.y}" class="snap-guide snap-guide-${g.source}"/>`,
       )
     }
+    parts.push('</g>')
+  }
+
+  // 任务定位标记画在最上层:脉冲圆环指着「去这」。rect 模式(储藏柜)再加一圈
+  // 虚线框住整件家具 —— 光一个点说不清"梳理的是哪个柜"。
+  if (opts.focus) {
+    const fr = opts.focus.rect
+    const fx = fr ? fr.x + fr.w / 2 : opts.focus.x
+    const fy = fr ? fr.y + fr.h / 2 : opts.focus.y
+    parts.push('<g class="task-focus" aria-hidden="true">')
+    if (fr) {
+      parts.push(
+        `<rect x="${fr.x - 4}" y="${fr.y - 4}" width="${fr.w + 8}" height="${fr.h + 8}" rx="6" class="focus-rect"/>`,
+      )
+    }
+    parts.push(
+      `<circle cx="${fx}" cy="${fy}" r="8" class="focus-dot"/>`,
+      `<circle cx="${fx}" cy="${fy}" r="16" class="focus-ring"><animate attributeName="r" values="13;28;13" dur="2.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.12;1" dur="2.2s" repeatCount="indefinite"/></circle>`,
+    )
     parts.push('</g>')
   }
 

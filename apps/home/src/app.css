@@ -228,7 +228,9 @@
   min-width: 520px;
 }
 
-/* Plan route: give the floor plan canvas a stable flex height */
+/* 地图型路由(/plan 与 /storage):画布满高、全出血,所有控件浮在它上面。
+   AppBar 由 layout 隐藏,页内的浮动控件簇各自带 safe-area 缩进 —— 容器本身
+   一点留白都不留,否则「沉浸」就变成了「一张带边距的图」。 */
 main.plan-route {
   display: flex;
   flex-direction: column;
@@ -236,39 +238,19 @@ main.plan-route {
   min-height: 0;
   height: 0;
   max-height: 100dvh;
-  padding-top: 0;
-  padding-inline:
-    max(8px, var(--safe-left-effective)) max(8px, var(--safe-right-effective));
-  padding-bottom: calc(var(--safe-bottom-effective) + var(--content-pad-start));
-}
-
-main.plan-route>.plan-top:first-child {
-  margin-top: calc(var(--safe-top-effective) + var(--content-pad-start));
-  margin-bottom: var(--header-block-end);
-}
-
-@media (--life-os-desktop) {
-
-  /* Plan: shell AppBar hidden; in-page plan-top + full-width canvas */
-  main.plan-route {
-    --content-inline-pad: var(--page-gutter-desktop);
-    padding-inline:
-      max(var(--content-inline-pad), var(--safe-left-effective)) max(var(--content-inline-pad), var(--safe-right-effective));
-    padding-bottom: calc(var(--safe-bottom-effective) + var(--content-pad-start));
-  }
-
-  main.plan-route>.plan-top:first-child {
-    margin-top: var(--content-pad-start);
-  }
+  padding: 0;
 }
 
 @media (--life-os-mobile) {
+  /* 画布全出血,但 tabbar 还在:内容区在 tabbar 上沿结束,
+     抽屉/图例/选中条就不用各自再躲一遍导航 */
   main.plan-route {
-    padding-bottom: calc(var(--mobile-tabbar-total-h) + var(--safe-bottom-effective) + 6px);
+    padding-bottom: calc(var(--mobile-tabbar-total-h) + var(--safe-bottom-effective));
   }
 
+  /* 沉浸式编辑把 tabbar 也收了,画布顶到底 */
   main.plan-route.plan-immersive-edit {
-    padding-bottom: calc(var(--safe-bottom-effective) + 8px);
+    padding-bottom: var(--safe-bottom-effective);
   }
 }
 

@@ -2,6 +2,11 @@
   import { browser } from '$app/environment'
   import { renderFloorPlanSvg } from '$lib/spatial/render-svg.js'
   import { planPanZoom } from '$lib/plan-pan-zoom.js'
+  import {
+    getPlanView,
+    markPlanViewTouched,
+    releasePlanView,
+  } from '$lib/plan-view.svelte.js'
   import { bindPlanEditDrag } from '$lib/plan-edit-drag.js'
   import { bindPlanGraphEdit } from '$lib/plan-graph-edit.js'
   import { bindPlanZoneEdit } from '$lib/plan-zone-edit.js'
@@ -30,11 +35,6 @@
     panForZoomAtPoint,
   } from '$lib/plan-viewport.js'
   import { bindPlanSvgTooltip } from '$lib/plan-svg-tooltip.js'
-  import { defaultDoorSpanIn, doorStyleLabel } from '$lib/spatial/door-styles.js'
-  import {
-    defaultWindowSpanIn,
-    windowStyleLabel,
-  } from '$lib/spatial/window-styles.js'
 
   /** @type {{
    *   project: import('$lib/spatial/types.js').SpatialProject,
@@ -46,7 +46,6 @@
    *   measureMode?: boolean,
    *   graphEditMode?: boolean,
    *   graphTool?: import('$lib/plan-graph-edit.js').GraphTool,
-   *   openingKind?: 'door' | 'window',
    *   toolbarMinimal?: boolean,
    *   hideFurniture?: boolean,
    *   hideStorageZones?: boolean,
@@ -57,6 +56,7 @@
    *   wallChainHover?: { x: number, y: number } | null,
    *   measurePoints?: { a: { x: number, y: number } | null, b: { x: number, y: number } | null },
    *   fitRequest?: { token: number, cycle?: boolean, mode?: 'contain' | 'width' },
+   *   focusRequest?: { token: number, x: number, y: number, zoom?: number, centerX?: number, centerY?: number },
    *   onZoneSelect?: (code: string) => void,
    *   onClearSelection?: () => void,
    *   onBlankContextMenu?: (pt: { x: number, y: number, svgX: number, svgY: number }) => void,
@@ -124,7 +124,6 @@
     measureMode = false,
     graphEditMode = false,
     graphTool = 'select',
-    openingKind = 'door',
     toolbarMinimal = false,
     hideFurniture = true,
     hideStorageZones = false,
@@ -136,6 +135,7 @@
     snapGuides = [],
     measurePoints = { a: null, b: null },
     fitRequest = { token: 0, cycle: false },
+    focusRequest = { token: 0, x: 0, y: 0 },
     onZoneSelect,
     onClearSelection,
     onBlankContextMenu,
@@ -194,11 +194,15 @@
     overrideProject,
   } = $props()
 
-  let zoom = $state(1)
-  let panX = $state(0)
-  let panY = $state(0)
+  // 视角跨页面共享(见 plan-view.svelte.js):在储藏页缩放定位到一个柜子,切到
+  // 平面页要还在那儿。这里取的是**初值** —— 组件内部照旧用局部 zoom/panX/panY 读写
+  // (下面几十处引用一个都不用改),变化由后面那个 $effect 同步回去。
+  const planView = getPlanView()
+  let zoom = $state(planView.zoom)
+  let panX = $state(planView.panX)
+  let panY = $state(planView.panY)
   /** @type {'contain' | 'width'} */
-  let fitMode = $state('contain')
+  let fitMode = $state(planView.fitMode)
   let fitRaf = 0
   /** @type {HTMLElement | null} */
   let viewportEl = $state(null)
@@ -222,11 +226,7 @@
   let dragPending = null
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let snapFlashTimer
-  let zoomChromeExpanded = $state(false)
 
-  // Every wall-graph layer counts, not just walls: this only decides whether the
-  // zoom chrome collapses out of the way, and having it expand in 画区 but shrink
-  // to a chip in 建墙 made one control change shape per tool for no reason.
   const planEditing = $derived(
     editMode ||
       graphEditMode ||
@@ -234,40 +234,50 @@
       placementEditMode ||
       viewpointEditMode,
   )
-  const zoomChromeCollapsed = $derived(
-    planEditing && !toolbarMinimal && !zoomChromeExpanded,
-  )
+
+  /**
+   * 缩放控件收在一个芯片里,点开才是菜单 —— 画布类工具的通行做法
+   * (Figma 的缩放控件收起态就只有一个百分比数字)。此前这里是一整条常驻的
+   * 「− 94% + 看全图 铺满宽 + 一行操作提示」,横着占掉画布顶部三分之一,
+   * 而其中真正每次都要用的只有那个百分比。
+   *
+   * 提示文字整条删掉了,不是搬走:同一句话另有两处副本 —— PlanEditToolbar 每个
+   * 工具按钮的 title,以及 ? 面板的 contextHint(页面传的 modeHint 与这里逐字
+   * 相同)。浏览态那句讲的是双指缩放/拖拽平移,是所有地图都一样的手势。
+   */
+  let zoomMenuOpen = $state(false)
+  /** @type {HTMLElement | null} */
+  let zoomMenuEl = $state(null)
+
+  const ZOOM_PRESETS = /** @type {const} */ ([0.5, 1, 2])
 
   $effect(() => {
-    if (!planEditing) zoomChromeExpanded = false
+    if (!zoomMenuOpen || !browser) return
+    /** @param {PointerEvent} e */
+    function onDown(e) {
+      if (e.target instanceof Node && zoomMenuEl?.contains(e.target)) return
+      zoomMenuOpen = false
+    }
+    /** @param {KeyboardEvent} e */
+    function onKey(e) {
+      if (e.key !== 'Escape') return
+      // 捕获阶段吃掉:否则这一下 Esc 会顺着冒到页面的退出阶梯,
+      // 关菜单的同时把画布上的选中/工具一起清了
+      e.stopPropagation()
+      zoomMenuOpen = false
+    }
+    window.addEventListener('pointerdown', onDown, true)
+    window.addEventListener('keydown', onKey, true)
+    return () => {
+      window.removeEventListener('pointerdown', onDown, true)
+      window.removeEventListener('keydown', onKey, true)
+    }
   })
 
-  function toggleZoomChrome() {
-    zoomChromeExpanded = !zoomChromeExpanded
-  }
-
-  const graphToolbarHint = $derived.by(() => {
-    if (graphTool === 'wallAdd') {
-      return '建墙：点击拐点连线 · Shift 正交 · 1″ 吸附 · Esc 断链'
-    }
-    if (graphTool === 'remove') return '删墙：点击墙段删除'
-    if (graphTool === 'opening') {
-      if (openingKind === 'window') {
-        const style = getLastWindowStyle()
-        return `门窗：点击墙段放置窗（${windowStyleLabel(style)} ${defaultWindowSpanIn(style)}″）`
-      }
-      const style = getLastDoorStyle()
-      return `门窗：点击墙段放置门（${doorStyleLabel(style)} ${defaultDoorSpanIn(style)}″）`
-    }
-    return '选择：拖门窗沿墙移动 · 端点改宽 · Delete 删除'
-  })
-
-  const toolbarHint = $derived.by(() => {
-    if (graphEditMode) return graphToolbarHint
-    if (measureMode) return '点击两点测距 · 第三次点击重新开始'
-    if (editMode) return '拖曳编辑 · 点空白取消选中 · 长按/右键菜单'
-    if (!compact) return '双指捏合缩放 · 拖拽平移 · Tab 聚焦储藏区'
-    return ''
+  // 编辑态开合、工具切换都该让菜单收起 —— 它是临时浮层,不是模式
+  $effect(() => {
+    planEditing
+    zoomMenuOpen = false
   })
 
   const dragOverlay = $derived.by(() => {
@@ -359,7 +369,10 @@
   )
 
   const canvasStyle = $derived(
-    `transform: translate(${panX}px, ${panY}px) scale(${zoom}); transform-origin: 0 0;`,
+    `transform: translate(${panX}px, ${panY}px) scale(${zoom}); transform-origin: 0 0;` +
+      (focusFlying
+        ? ' transition: transform 0.55s cubic-bezier(0.25, 0.8, 0.3, 1);'
+        : ''),
   )
 
   function getPlanSvg() {
@@ -368,6 +381,7 @@
   }
 
   function applyZoomAt(clientX, clientY, nextZoom) {
+    markPlanViewTouched()
     if (!viewportEl) {
       zoom = clampPlanZoom(nextZoom)
       return
@@ -528,7 +542,22 @@
     )
   }
 
+  /** 跳到一个确定的倍数(菜单里的 50/100/200%),以视口中心为锚点 */
+  /** @param {number} next */
+  function setZoomPct(next) {
+    zoomMenuOpen = false
+    if (!viewportEl) {
+      markPlanViewTouched()
+      zoom = clampPlanZoom(next)
+      return
+    }
+    const rect = viewportEl.getBoundingClientRect()
+    applyZoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, next)
+  }
+
+  // 显式重置 —— 同样把视角交回自动挡
   function resetView() {
+    releasePlanView('contain')
     if (canvasPriority) {
       fitMode = 'contain'
       scheduleFit()
@@ -540,8 +569,11 @@
   }
 
   /** @param {'contain' | 'width'} [mode] */
+  // 「看全图」/「铺满宽」是用户**显式**要求重新 fit —— 把视角交回自动挡,
+  // 否则 touched 一直挂着,这两个按钮就再也按不动了。
   function applyFit(mode) {
     if (mode) fitMode = mode
+    releasePlanView(mode)
     scheduleFit()
   }
 
@@ -575,6 +607,39 @@
     sessionStorage.removeItem('home-plan-fit-mode')
   })
 
+  // —— 定位飞行(focusRequest):把一个 SVG 坐标点平滑居中到画布,地图应用的
+  //    「点搜索结果 → 飞过去」。只吃 token 变化;读了 zoom/viewportEl 也不会
+  //    在用户捏合时重放(lastFocusToken 挡住了)。
+  let focusFlying = $state(false)
+  let lastFocusToken = 0
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let focusTimer
+  $effect(() => {
+    const req = focusRequest
+    const el = viewportEl
+    if (!req?.token || req.token === lastFocusToken || !el) return
+    const vbW = displayProject.viewport.width
+    if (!vbW) return
+    lastFocusToken = req.token
+    const { contentW, contentH } = getViewportContentBox(el)
+    // SVG 以 width:100% 排版:1 viewBox 单位 = contentW/vbW 画布 px
+    const scale = contentW / vbW
+    const targetZoom = clampPlanZoom(req.zoom ?? Math.max(zoom, 1.2))
+    markPlanViewTouched()
+    focusFlying = true
+    zoom = targetZoom
+    // centerX/centerY:落点在视口里的位置(0–1,默认正中)。浮动面板/底部抽屉
+    // 盖住一块画布时,调用方用它把目标挪进真正可见的那条区域
+    panX = contentW * (req.centerX ?? 0.5) - req.x * scale * targetZoom
+    panY = contentH * (req.centerY ?? 0.5) - req.y * scale * targetZoom
+    clearTimeout(focusTimer)
+    focusTimer = setTimeout(() => {
+      focusFlying = false
+    }, 580)
+  })
+
+  $effect(() => () => clearTimeout(focusTimer))
+
   $effect(() => {
     if (!fitRequest.token) return
     if (fitRequest.cycle) {
@@ -582,21 +647,38 @@
     } else if (fitRequest.mode === 'contain' || fitRequest.mode === 'width') {
       fitMode = fitRequest.mode
     }
+    // 同 applyFit:外部按钮发来的 fit 也是显式请求,得把 touched 清掉
+    releasePlanView(fitMode)
     scheduleFit()
+  })
+
+  // 局部视角 → 共享视角。放在这里(而不是每个赋值点手写一遍)是因为写点太多:
+  // fitToView、applyZoomAt、planPanZoom 的 setScale/setPan 都在改它们。
+  $effect(() => {
+    planView.zoom = zoom
+    planView.panX = panX
+    planView.panY = panY
+    planView.fitMode = fitMode
   })
 
   $effect(() => {
     displayProject.viewport.width
     displayProject.viewport.height
     svgHtml
+    // 用户亲手捏出来的视角不许自动 fit 覆盖 —— 否则「跨页面保持视角」在挂载后的
+    // 下一帧就被冲掉,而且拖一件家具(svgHtml 变)也会把他看的地方弹回全图。
+    if (planView.touched) return
     scheduleFit()
   })
 
   $effect(() => {
     const el = viewportEl
     if (!canvasPriority || !el) return
-    scheduleFit()
-    const ro = new ResizeObserver(() => scheduleFit())
+    if (!planView.touched) scheduleFit()
+    const ro = new ResizeObserver(() => {
+      if (planView.touched) return
+      scheduleFit()
+    })
     ro.observe(el)
     return () => {
       ro.disconnect()
@@ -610,10 +692,12 @@
     const action = planPanZoom(el, {
       getScale: () => zoom,
       setScale: (n) => {
+        markPlanViewTouched()
         zoom = n
       },
       getPan: () => ({ x: panX, y: panY }),
       setPan: (p) => {
+        markPlanViewTouched()
         panX = p.x
         panY = p.y
       },
@@ -873,74 +957,91 @@
   class:toolbar-minimal={toolbarMinimal}
 >
   {#if zoomable}
-    <div
-      class="plan-toolbar"
-      class:plan-toolbar-collapsed={zoomChromeCollapsed}
-      aria-label="平面图缩放"
-    >
-      {#if zoomChromeCollapsed}
-        <button
-          type="button"
-          class="plan-tool plan-zoom-chip"
-          onclick={toggleZoomChrome}
-          aria-expanded="false"
-          aria-label="展开缩放控件"
-          title="展开缩放"
-        >
-          {Math.round(zoom * 100)}%
-        </button>
-      {:else}
-        <button
-          type="button"
-          class="plan-tool"
-          onclick={zoomOut}
-          aria-label="缩小">−</button
-        >
-        <span class="plan-zoom-pct">{Math.round(zoom * 100)}%</span>
-        <button
-          type="button"
-          class="plan-tool"
-          onclick={zoomIn}
-          aria-label="放大">+</button
-        >
-        {#if planEditing && !toolbarMinimal}
+    <div class="plan-zoom" bind:this={zoomMenuEl}>
+      <button
+        type="button"
+        class="plan-zoom-trigger"
+        class:open={zoomMenuOpen}
+        onclick={() => (zoomMenuOpen = !zoomMenuOpen)}
+        aria-expanded={zoomMenuOpen}
+        aria-haspopup="menu"
+        aria-label="缩放与视图"
+        title="缩放与视图"
+      >
+        <span class="plan-zoom-value">{Math.round(zoom * 100)}%</span>
+        <svg class="plan-zoom-caret" viewBox="0 0 10 6" aria-hidden="true">
+          <path
+            d="M1 1.5 5 5 9 1.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+
+      {#if zoomMenuOpen}
+        <div class="plan-zoom-menu" role="menu" aria-label="缩放与视图">
           <button
             type="button"
-            class="plan-tool plan-tool-text plan-zoom-collapse"
-            onclick={toggleZoomChrome}
-            aria-label="收起缩放控件"
-            title="收起"
+            role="menuitem"
+            class="plan-zoom-item"
+            onclick={zoomIn}
           >
-            收起
+            放大
           </button>
-        {/if}
-        {#if !toolbarMinimal}
           <button
             type="button"
-            class="plan-tool plan-tool-text"
-            class:active={fitMode === 'contain'}
-            onclick={() => applyFit('contain')}
-            aria-pressed={fitMode === 'contain'}
-            title="默认：完整显示整张户型">看全图</button
+            role="menuitem"
+            class="plan-zoom-item"
+            onclick={zoomOut}
           >
+            缩小
+          </button>
+          <div class="plan-zoom-sep" role="separator"></div>
           <button
             type="button"
-            class="plan-tool plan-tool-text"
-            class:active={fitMode === 'width'}
-            onclick={() => applyFit('width')}
-            aria-pressed={fitMode === 'width'}
-            title="放大到铺满宽度，上下需滑动">铺满宽</button
+            role="menuitemradio"
+            aria-checked={fitMode === 'contain'}
+            class="plan-zoom-item"
+            class:checked={fitMode === 'contain'}
+            onclick={() => {
+              zoomMenuOpen = false
+              applyFit('contain')
+            }}
           >
-        {/if}
-        {#if toolbarHint && !toolbarMinimal}
-          <span
-            class="plan-hint"
-            class:plan-hint-graph={graphEditMode}
-            class:plan-hint-measure={measureMode}
-            class:plan-hint-edit={editMode && !graphEditMode}
-            >{toolbarHint}</span
+            看全图
+            <!-- F 是页面真有的绑定(bumpFit(true) 在两种 fit 之间切)。
+                 放大/缩小没有键位,就不编一个挂在那儿骗人。 -->
+            <kbd class="plan-zoom-kbd">F</kbd>
+          </button>
+          <button
+            type="button"
+            role="menuitemradio"
+            aria-checked={fitMode === 'width'}
+            class="plan-zoom-item"
+            class:checked={fitMode === 'width'}
+            onclick={() => {
+              zoomMenuOpen = false
+              applyFit('width')
+            }}
           >
-        {/if}
+            铺满宽
+            <kbd class="plan-zoom-kbd">F</kbd>
+          </button>
+          <div class="plan-zoom-sep" role="separator"></div>
+          {#each ZOOM_PRESETS as pct (pct)}
+            <button
+              type="button"
+              role="menuitem"
+              class="plan-zoom-item"
+              onclick={() => setZoomPct(pct)}
+            >
+              {pct * 100}%
+            </button>
+          {/each}
+        </div>
       {/if}
     </div>
   {/if}
@@ -951,6 +1052,7 @@
     class:edit-mode={editMode}
     class:measure-mode={measureMode}
     class:graph-edit-mode={graphEditMode}
+    data-zoom-tier={zoom < 1.15 ? 'far' : 'near'}
     bind:this={viewportEl}
     role={onZoneSelect && !editMode && !measureMode && !graphEditMode
       ? 'group'
@@ -1057,21 +1159,19 @@
       flex: 1 1 auto;
     }
 
-    /* Sits above the 详情 FAB rather than beside it: the FAB owns the
-       bottom-right corner (z-index 48), and overlapping it made 放大 —— the
-       button nearest the corner —— impossible to tap. */
-    .plan-shell.canvas-priority.toolbar-minimal .plan-toolbar {
+    /* 手机编辑态:工具鱼骨横铺在顶部整条,芯片得让开它,落到 详情 FAB 上方
+       (FAB 占着右下角,z-index 48)。菜单跟着朝上开。 */
+    .plan-shell.canvas-priority.toolbar-minimal .plan-zoom {
       top: auto;
       bottom: calc(var(--space-2-5) + 52px);
       right: var(--space-2-5);
       left: auto;
-      flex-wrap: nowrap;
-      padding: 3px 5px;
     }
 
-    .plan-shell.canvas-priority.toolbar-minimal .plan-tool {
-      min-width: 40px;
-      min-height: 40px;
+    .plan-shell.canvas-priority.toolbar-minimal .plan-zoom-menu {
+      top: auto;
+      bottom: calc(100% + 6px);
+      transform-origin: bottom right;
     }
   }
 
@@ -1081,101 +1181,172 @@
     gap: 8px;
   }
 
-  .plan-shell.canvas-priority .plan-toolbar {
+  /* 缩放芯片。canvas-priority 时浮在画布右上角;非 canvas-priority(卡片式
+     嵌入)时贴在图的右上,不占一行。 */
+  .plan-zoom {
     position: absolute;
     top: 10px;
     right: 10px;
-    z-index: 4;
-    pointer-events: none;
-    display: flex;
+    z-index: 6;
+  }
+
+  /* 渐进披露:整屋视图(缩放没过阈值)不显示小件家具/门窗的名字 ——
+     那个层级它们本来就读不清,只剩噪声;拉近后再淡入。 */
+  .plan-viewer[data-zoom-tier='far'] :global(.label-minor) {
+    opacity: 0;
+  }
+
+  /* 桌面地图惯例:缩放控件在右下角(底部左=图例,中=提示,右=缩放)。
+     移动端底部被选择条/FAB 占用,芯片留在原位(toolbar-minimal 已有专门处理)。 */
+  @media (min-width: 900px) {
+    .plan-shell.canvas-priority .plan-zoom {
+      top: auto;
+      bottom: 12px;
+      right: 12px;
+    }
+
+    .plan-shell.canvas-priority .plan-zoom-menu {
+      top: auto;
+      bottom: calc(100% + 6px);
+      transform-origin: bottom right;
+    }
+  }
+
+  .plan-shell:not(.canvas-priority) {
+    position: relative;
+  }
+
+  .plan-zoom-trigger {
+    display: inline-flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 6px 8px;
-    padding: 4px 6px;
-    border-radius: 10px;
-    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    gap: 5px;
+    min-height: 34px;
+    padding: 0 9px 0 11px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
     background: color-mix(in srgb, var(--card) 88%, transparent);
     backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--t2);
+    cursor: pointer;
+    box-shadow: 0 3px 12px -6px rgba(0, 0, 0, 0.25);
+    transition:
+      color 0.12s ease,
+      border-color 0.12s ease;
   }
 
-  /* Desktop editing used to move this toolbar to the bottom-right, where it
-     landed underneath the 详情 FAB (z-index 48 vs 4) — the zoom control was
-     completely unclickable while 建墙/门窗/选择 or 508 editing was armed.
-     The canvas top-right is free now that the edit header is a single row, so
-     zoom simply stays where browse mode already puts it. */
-
-  .plan-toolbar-collapsed {
-    padding: 3px 6px;
+  .plan-zoom-trigger:hover,
+  .plan-zoom-trigger.open {
+    color: var(--t1);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
   }
 
-  .plan-zoom-chip {
-    min-width: 52px;
+  .plan-zoom-value {
     font-family: var(--mono);
     font-size: 12px;
     font-weight: 650;
     font-variant-numeric: tabular-nums;
+    /* 94% → 100% 不该让芯片和它的边框跟着抖 */
+    min-width: 34px;
+    text-align: right;
   }
 
-  .plan-zoom-collapse {
-    color: var(--t3);
-    border-color: transparent;
-    background: transparent;
+  .plan-zoom-caret {
+    width: 9px;
+    height: 5px;
+    flex: 0 0 auto;
+    opacity: 0.75;
+    transition: transform 0.15s ease;
   }
 
-  .plan-toolbar {
+  .plan-zoom-trigger.open .plan-zoom-caret {
+    transform: rotate(180deg);
+  }
+
+  .plan-zoom-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 168px;
+    padding: 5px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    background: color-mix(in srgb, var(--card) 96%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 18px 44px -16px rgba(0, 0, 0, 0.5);
+    transform-origin: top right;
+    animation: plan-zoom-pop 0.13s ease-out;
+  }
+
+  @keyframes plan-zoom-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(-3px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plan-zoom-menu {
+      animation: none;
+    }
+
+    .plan-zoom-caret {
+      transition: none;
+    }
+  }
+
+  .plan-zoom-item {
+    position: relative;
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 6px 8px;
-    align-self: flex-end;
-  }
-
-  .plan-tool {
-    pointer-events: auto;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0 8px;
+    gap: 8px;
+    min-height: 34px;
+    padding: 0 9px 0 24px;
+    border: 0;
     border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--card);
+    background: none;
     color: var(--t1);
-    font-size: 16px;
-    font-weight: 600;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    white-space: nowrap;
     cursor: pointer;
   }
 
-  .plan-tool-text {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 0 10px;
+  .plan-zoom-item:hover {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
 
-  .plan-tool-text.active {
-    background: var(--accent);
-    color: #f5f8fa;
-    border-color: transparent;
+  .plan-zoom-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
 
-  .plan-zoom-pct {
-    pointer-events: none;
-    font-family: var(--mono);
+  /* 勾在左侧留白里 —— 选中与否不改变文字的起始位置 */
+  .plan-zoom-item.checked::before {
+    content: '✓';
+    position: absolute;
+    margin-left: -15px;
     font-size: 11px;
-    color: var(--t3);
-    min-width: 40px;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .plan-hint {
-    pointer-events: none;
-    font-size: 11px;
-    color: var(--t3);
-    font-family: var(--mono);
-  }
-
-  .plan-hint-edit {
+    font-weight: 700;
     color: var(--accent);
+  }
+
+  .plan-zoom-kbd {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--t3);
+  }
+
+  .plan-zoom-sep {
+    height: 1px;
+    margin: 4px 6px;
+    background: color-mix(in srgb, var(--border) 70%, transparent);
   }
 
   .plan-shell.canvas-priority .plan-viewer {
@@ -1195,7 +1366,7 @@
     cursor: grab;
   }
 
-  .plan-tool:focus-visible,
+  .plan-zoom-trigger:focus-visible,
   .plan-viewer:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -1206,19 +1377,11 @@
     border-color: color-mix(in srgb, var(--graph-accent) 60%, var(--accent));
   }
 
-  .plan-hint-graph {
-    color: var(--graph-accent);
-  }
-
   .plan-viewer.measure-mode {
     cursor: crosshair;
     border-color: color-mix(in srgb, var(--graph-accent) 55%, var(--accent));
     box-shadow: 0 0 0 1px
       color-mix(in srgb, var(--graph-accent) 30%, transparent);
-  }
-
-  .plan-hint-measure {
-    color: var(--graph-accent);
   }
 
   .plan-viewer.edit-mode {
@@ -1249,11 +1412,6 @@
   .plan-viewer.compact {
     min-height: 200px;
     max-height: none;
-  }
-
-  .plan-shell.compact .plan-toolbar {
-    align-self: stretch;
-    justify-content: flex-end;
   }
 
   .drag-hud {

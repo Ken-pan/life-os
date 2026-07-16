@@ -12,13 +12,32 @@
 
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
-/** 任务优先级:数越小越先做 */
+import { canonicalPlacementKind } from './placements.js'
+
+/**
+ * 任务优先级:数越小越先做。
+ *
+ * 这个顺序**就是方法论**,不是随手排的:
+ * - 通行(0-1)第一 —— 门被堵不是整洁问题,是每天都要绕的问题。
+ * - 卫生(2)紧随 —— KC Davis 五件事法:垃圾/碗筷/衣物最先出屋,它们是卫生隐患,
+ *   而且清起来最快、进度立刻看得见,可见进度本身就是继续下去的动力。
+ * - 台面(3) → 地面杂物(4) → 归位(5-6):先腾出平面,才有地方铺开分类。
+ * - 储物(7):柜子里的存量,属于「有空再说」那一档。
+ * - **地面清洁(8)倒数第二** —— 保洁金律:地面永远最后。先扫地,等会儿收台面时
+ *   灰和碎屑又落一地,等于白扫。这条排序是整个链路里最容易被写反的一条。
+ * - 复扫(9)收尾。
+ */
 const P = {
+  prep: -1, // 备好箱子和垃圾袋 —— 空手进屋就会开始「拿着一件东西满屋找地方放」
   blockedDoor: 0,
   bottleneck: 1,
-  overflow: 2, // 堆满
-  messy: 3, // 杂乱
-  storage: 4,
+  hygiene: 2, // 垃圾/碗筷/衣物
+  surfaces: 3, // 台面堆积
+  floorClutter: 4, // 地面杂物
+  overflow: 5, // 堆满(泛化任务:只有老数据的 state 时才出)
+  messy: 6, // 杂乱(同上)
+  storage: 7,
+  floorClean: 8, // 扫地/拖地 —— 必须在所有收拾之后
   rescan: 9,
 }
 
@@ -28,11 +47,16 @@ const P = {
  * @typedef {'light' | 'medium' | 'heavy'} Effort
  */
 const EFFORT = /** @type {Record<string, Effort>} */ ({
+  prep: 'light',
   blockedDoor: 'heavy', // 得搬动挡路的家具
   bottleneck: 'heavy',
-  overflow: 'medium', // 弯腰、分类、来回走
-  messy: 'light', // 收表面、归位
+  hygiene: 'light', // 装袋、端一趟 —— 最累的时候也做得动
+  surfaces: 'light', // 站着收表面
+  floorClutter: 'medium', // 弯腰、来回走
+  overflow: 'medium',
+  messy: 'light',
   storage: 'medium',
+  floorClean: 'medium', // 扫+拖是体力活
   rescan: 'light',
 })
 
@@ -48,15 +72,26 @@ export const EFFORT_LABEL = /** @type {const} */ ({
  * 物品关键词 → 该去哪类家具。命中后按「就近」原则挑同区/最近的那件。
  * 关键词取自 VLM 的 items 输出(中文短词,≤12 字)。
  */
+/**
+ * 物品关键词 → 该去哪类家具。
+ *
+ * `zone` 是**房间线索**,存在的理由是一条实测出来的荒谬建议:「归位:碗 → 桌下文件柜」。
+ * 成因是 kinds 里的通用 `cabinet` —— 文件柜和厨房下柜都是 cabinet,而「就近」原则
+ * 一算距离,离餐桌最近的正是桌下那个文件柜。碗当然不进文件柜。
+ *
+ * 所以带 zone 线索的规则**先把候选限制在对的房间里**,再在房间内就近;那个房间
+ * 压根不存在时才退回全屋就近(公寓没有独立卫生间时,毛巾总得有个去处)。
+ * 没有 zone 线索的(书、充电线)本来就没有固定房间,继续纯就近。
+ */
 const HOMES = [
   // 容器类先匹配:「纸箱」是箱子不是文件,先撞上「纸」就会被送去书架
   { match: ['箱', '盒', '袋', '杂物'], kinds: ['cabinet', 'shelf', 'wire_rack'], zh: '储物柜' },
-  { match: ['衣', '裤', '外套', '袜'], kinds: ['wardrobe', 'dresser', 'cabinet'], zh: '衣柜/五斗柜' },
+  { match: ['衣', '裤', '外套', '袜'], kinds: ['wardrobe', 'dresser', 'cabinet'], zh: '衣柜/五斗柜', zone: /卧室|衣帽/ },
   { match: ['书', '杂志', '文件'], kinds: ['bookshelf', 'shelf', 'desk'], zh: '书架' },
   { match: ['电脑', '键盘', '鼠标', '充电', '数据线', '耳机'], kinds: ['desk', 'standing_desk', 'cabinet'], zh: '办公桌附近' },
-  { match: ['碗', '盘', '锅', '杯', '食材', '调料'], kinds: ['base_cabinet', 'wall_cabinet', 'island', 'cabinet'], zh: '厨柜' },
-  { match: ['毛巾', '洗发', '沐浴', '牙'], kinds: ['vanity', 'cabinet', 'shelf'], zh: '洗手台下' },
-  { match: ['鞋'], kinds: ['shoe_cabinet', 'cabinet'], zh: '鞋柜' },
+  { match: ['碗', '盘', '锅', '杯', '食材', '调料'], kinds: ['base_cabinet', 'wall_cabinet', 'island', 'cabinet'], zh: '厨柜', zone: /厨房|餐/ },
+  { match: ['毛巾', '洗发', '沐浴', '牙'], kinds: ['vanity', 'cabinet', 'shelf'], zh: '洗手台下', zone: /卫生|浴室|洗手/ },
+  { match: ['鞋'], kinds: ['shoe_cabinet', 'cabinet'], zh: '鞋柜', zone: /玄关|门厅|入户/ },
   { match: ['玩具', '宠物', '猫', '狗'], kinds: ['pet_pen', 'cabinet', 'shelf'], zh: '宠物用品区' },
 ]
 
@@ -72,10 +107,20 @@ const center = (o) => {
 function suggestHome(itemName, project, from) {
   const rule = HOMES.find((h) => h.match.some((m) => itemName.includes(m)))
   if (!rule) return null
-  const candidates = [
-    ...(project.placements ?? []).filter((p) => rule.kinds.includes(p.kind)),
-    ...(project.fixtures ?? []).filter((f) => rule.kinds.includes(f.kind)),
+  const zones = project.zones ?? []
+  const all = [
+    // 暂存(导入还没安家)的家具不算去处 —— 「把杂物归位到画布左上那个飘着的柜子」是句空话
+    // kind 过别名再比:云端数据里的狗狗围栏是 pet_fence,不解析就永远配不上 pet_pen 规则
+    ...(project.placements ?? []).filter(
+      (p) => rule.kinds.includes(canonicalPlacementKind(p.kind)) && !p.attrs?.staged,
+    ),
+    ...(project.fixtures ?? []).filter((f) => rule.kinds.includes(canonicalPlacementKind(f.kind))),
   ]
+  // 有房间线索就先按房间筛 —— 否则「就近」会把碗送进餐桌底下的文件柜(实测)。
+  // 筛空了(这个家没有那种房间)才退回全屋就近,总比没有去处强。
+  const zoneNameOf = (o) => zones.find((z) => z.id === o.zoneId)?.nameZh ?? ''
+  const inZone = rule.zone ? all.filter((o) => rule.zone.test(zoneNameOf(o))) : []
+  const candidates = inZone.length ? inZone : all
   if (!candidates.length) return { label: rule.zh, zh: rule.zh }
   let best = null
   let bestD = Infinity
@@ -108,8 +153,9 @@ function zoneArea(stats, zoneId) {
  *   tasks: Array<{
  *     id: string, title: string, priority: number, estMinutes: number,
  *     zoneId: string|null, zoneName: string|null, reason: string,
- *     steps: string[], items: string[], photoRef: string|null, kind: string,
+ *     steps: string[], doneWhen: string[], items: string[], photoRef: string|null, kind: string,
  *     effort: Effort,
+ *     focus: { x: number, y: number, rect?: { x: number, y: number, w: number, h: number } } | null,
  *   }>,
  *   totalMinutes: number,
  *   summary: string,
@@ -128,25 +174,51 @@ export function buildTidyPlan(project, circ, opts = {}) {
   const viewpoints = project.viewpoints ?? []
   const stats = circ?.zoneStats ?? []
 
-  // 1) 堵死的门 —— 安全与通行第一
+  // 1) 堵死的门 —— 安全与通行第一。
+  // 必须点名是哪道门、被什么挡住(circulation 已经查好了):「疏通被挡住的门」
+  // 这种话,人拿着任务在屋里转一圈都不知道看哪 —— 实测用户就是这么问回来的。
   for (const d of circ?.blockedDoors ?? []) {
+    const blockers = d.blockers ?? []
+    const howto = blockers.length
+      ? blockers.map((b) =>
+          /^pet_/.test(b.kind ?? '')
+            ? `「${b.label}」把门圈进去了 —— 给围栏留出这道门的开口,或整体往旁挪`
+            : `把「${b.label}」挪到不影响开合的位置`,
+        )
+      : ['找出挡在门口的东西', '挪到不影响开合的位置']
     tasks.push({
       id: `door-${d.id}`,
       kind: 'blockedDoor',
-      title: '疏通被挡住的门',
+      title: `疏通${d.nameZh ?? '被挡住的门'}`,
       priority: P.blockedDoor,
       estMinutes: 10,
-      zoneId: null,
-      zoneName: null,
-      reason: d.reason,
-      steps: ['找出挡在门口的东西', '挪到不影响开合的位置', '确认门能完全打开'],
+      zoneId: d.zoneId ?? null,
+      zoneName: d.zoneNameZh ?? null,
+      reason: blockers.length
+        ? `${d.reason} —— 元凶:${blockers.map((b) => `「${b.label}」`).join('')}`
+        : d.reason,
+      steps: [...howto, '确认门能完全打开、人能一路走到门前'],
+      doneWhen: [
+        '门能 90° 完全打开,不碰到任何东西',
+        '从主通道能一路走到门前,不用侧身、不用跨',
+        ...blockers.map((b) => `「${b.label}」不再压在门的开合范围里`),
+      ],
       items: [],
       photoRef: null,
+      focus: Number.isFinite(d.x) ? { x: d.x, y: d.y } : null,
     })
   }
 
   // 2) 走不进去的区 —— 和堵门一样是通行问题,得先解决
   for (const z of circ?.isolatedZones ?? []) {
+    // 圈出这个区,专注模式才有图可看 —— 「打通阳台」光看字还得自己在图上找阳台
+    const poly = zonesById[z.zoneId]?.polygon
+    const focus = poly?.length
+      ? {
+          x: poly.reduce((s, p) => s + p.x, 0) / poly.length,
+          y: poly.reduce((s, p) => s + p.y, 0) / poly.length,
+        }
+      : null
     tasks.push({
       id: `isolated-${z.zoneId}`,
       kind: 'blockedDoor',
@@ -161,8 +233,13 @@ export function buildTidyPlan(project, circ, opts = {}) {
         '把堵在入口的家具挪开或转向',
         '确认能从客厅/走廊一路走进去',
       ],
+      doneWhen: [
+        `从主通道能一路走进${z.nameZh},中途不用侧身、不用跨东西`,
+        '入口至少留出 30 英寸(约 76 cm)',
+      ],
       items: [],
       photoRef: null,
+      focus,
     })
   }
 
@@ -185,59 +262,215 @@ export function buildTidyPlan(project, circ, opts = {}) {
       zoneName: b.nameZh,
       reason: `此处只剩 ${b.widthIn} 英寸宽${tight ? '(不足 24in,得侧身挤)' : '(不足 30in,单人勉强)'}`,
       steps: [...howto, '目标:主通道 36 英寸、次通道至少 30 英寸'],
+      // 完成标准给可量的数,不给「变宽敞」——拿卷尺一量就知道做完没有
+      doneWhen: [
+        `拿卷尺量这处最窄的地方:至少 30 英寸(约 76 cm),现在是 ${b.widthIn} 英寸`,
+        '正面走过去不用侧身',
+      ],
       items: [],
       photoRef: null,
+      focus: { x: b.x, y: b.y },
     })
   }
 
-  // 3) 按机位状态:VLM 认出的杂乱/堆满区
-  /** @type {Map<string, { state: string, items: string[], photoRef: string|null, x: number, y: number }>} */
+  // 3) 现场观察:每根轴各出各的任务。
+  //
+  // 为什么不是一个「整理 X 区」大任务:一个词概括不了一间屋子,而人要的恰恰是被那个词
+  // 抹掉的区别 —— 收碗筷(轻,5 分钟)和拖地(中,20 分钟)是两件事,累的时候只做得动
+  // 前者;更要命的是**地面清洁必须排在最后**(见 P 表),混在一个任务里就没法排序了。
+  /** @type {Map<string, { axes: Record<string, number>, legacy: boolean, state: string, items: string[], photoRef: string|null, x: number, y: number, at: string }>} */
   const worst = new Map()
   for (const vp of viewpoints) {
-    if (!vp.state || !vp.zoneId) continue
-    const rank = { 堆满: 4, 杂乱: 3, 一般: 2, 整洁: 1, 空置: 0 }
+    if (!vp.zoneId) continue
+    const obs = vp.observations
+    const hasObs = obs && typeof obs === 'object' && Object.keys(obs).length
+    if (!hasObs && !vp.state) continue
     const prev = worst.get(vp.zoneId)
-    if (!prev || (rank[vp.state] ?? 0) > (rank[prev.state] ?? 0)) {
-      worst.set(vp.zoneId, {
-        state: vp.state,
-        items: vp.items ?? [],
-        photoRef: vp.photoRef ?? null,
-        x: vp.x,
-        y: vp.y,
+    // 以最新识别的那次为准 —— 同一个区几个机位时,旧的那次不该盖掉刚拍的
+    if (prev && (prev.at ?? '') > (vp.describedAt ?? '')) continue
+    worst.set(vp.zoneId, {
+      axes: hasObs ? obs : {},
+      legacy: !hasObs,
+      state: vp.state ?? '',
+      items: vp.items ?? [],
+      photoRef: vp.photoRef ?? null,
+      x: vp.x,
+      y: vp.y,
+      at: vp.describedAt ?? '',
+    })
+  }
+
+  const LEVEL_ZH = ['没有', '少量', '较多', '很多']
+
+  for (const [zoneId, info] of worst) {
+    const zone = zonesById[zoneId]
+    const zoneName = zone?.nameZh ?? '这个区域'
+    const area = zoneArea(stats, zoneId)
+    const from = { x: info.x, y: info.y }
+    const a = info.axes
+    const lvl = (k) => Number(a[k]) || 0
+
+    // 老数据只有五档 state、没有分轴 —— 退化成原来那个泛化任务。
+    // 不能拿 state 硬编出分轴:「杂乱」说的是占没占地方,从它推出「地板脏」是凭空编。
+    if (info.legacy) {
+      if (info.state !== '堆满' && info.state !== '杂乱') continue
+      const overflow = info.state === '堆满'
+      const homes = info.items
+        .map((it) => {
+          const h = suggestHome(it, project, from)
+          return h ? `${it} → ${h.zh}` : null
+        })
+        .filter(Boolean)
+      tasks.push({
+        id: `tidy-${zoneId}`,
+        kind: overflow ? 'overflow' : 'messy',
+        title: `整理${zoneName}`,
+        priority: overflow ? P.overflow : P.messy,
+        estMinutes: Math.round((overflow ? 20 : 10) + area / (overflow ? 10 : 15)),
+        zoneId,
+        zoneName: zone?.nameZh ?? null,
+        reason: `照片显示这里${info.state}${info.items.length ? `,主要是:${info.items.join('、')}` : ''}(旧版识别,重跑一次可拆成具体任务)`,
+        // 顺序按 KC Davis 五件事法 + 保洁金律,理由见 P 表
+        steps: [
+          '带一个垃圾袋和一个「归位篮」进屋',
+          '先捡垃圾装袋,放到门口 —— 卫生隐患最先出屋,进度也立刻看得见',
+          '杯盘餐具收进篮一趟送回水槽,脏衣物归洗衣篮',
+          ...(homes.length ? homes.map((h) => `归位:${h}`) : ['有固定位置的东西按类送回各自的柜子']),
+          '拿不准归属的进「临时箱」,别卡在这 —— 回头再统一给它们定家',
+          '台面从高到低擦一遍(灰尘往下掉,先擦低处等于白擦)',
+          '最后才扫/吸地,从最里角落退着往门口;要拖地放在吸尘之后',
+        ],
+        items: info.items,
+        photoRef: info.photoRef,
+        focus: { x: info.x, y: info.y },
+      })
+      continue
+    }
+
+    // —— ① 卫生:垃圾 / 碗筷 / 衣物。见到一点就派 —— 这三样最快、最该先清 ——
+    const hyg = Math.max(lvl('trash'), lvl('dishes'), lvl('laundry'))
+    if (hyg >= 1) {
+      const seen = []
+      if (lvl('trash')) seen.push(`垃圾${LEVEL_ZH[lvl('trash')]}`)
+      if (lvl('dishes')) seen.push(`碗筷${LEVEL_ZH[lvl('dishes')]}`)
+      if (lvl('laundry')) seen.push(`衣物${LEVEL_ZH[lvl('laundry')]}`)
+      const steps = ['带一个垃圾袋和一个「归位篮」进屋 —— 一趟收完,别来回跑']
+      if (lvl('trash')) steps.push('垃圾装袋,直接放到门口 —— 卫生隐患先出屋')
+      if (lvl('dishes')) steps.push('杯盘碗筷装篮,一趟端回水槽')
+      if (lvl('laundry')) steps.push('散落的衣物毛巾丢进洗衣篮')
+      steps.push('这一步别停下来分类 —— 见到什么装什么,进度快才有动力做下一件')
+      tasks.push({
+        id: `hygiene-${zoneId}`,
+        kind: 'hygiene',
+        title: `清走${zoneName}的${lvl('trash') >= lvl('dishes') ? '垃圾' : '碗筷'}杂物`,
+        priority: P.hygiene,
+        estMinutes: 5 + hyg * 3,
+        zoneId,
+        zoneName: zone?.nameZh ?? null,
+        reason: `照片看到:${seen.join('、')}`,
+        steps,
+        doneWhen: [
+          ...(lvl('trash') ? ['垃圾袋已经在门口(或已经扔了)'] : []),
+          ...(lvl('dishes') ? ['这个区域看不到一只脏碗碟杯子'] : []),
+          ...(lvl('laundry') ? ['地面和椅背上没有衣物'] : []),
+        ],
+        items: info.items,
+        photoRef: info.photoRef,
+        focus: { x: info.x, y: info.y },
       })
     }
-  }
-  for (const [zoneId, info] of worst) {
-    if (info.state !== '堆满' && info.state !== '杂乱') continue
-    const zone = zonesById[zoneId]
-    const area = zoneArea(stats, zoneId)
-    const overflow = info.state === '堆满'
-    const from = { x: info.x, y: info.y }
-    const homes = info.items
-      .map((it) => {
-        const h = suggestHome(it, project, from)
-        return h ? `${it} → ${h.zh}` : null
+
+    // —— ② 台面 ——
+    if (lvl('surfaces') >= 2) {
+      const homes = info.items
+        .map((it) => {
+          const h = suggestHome(it, project, from)
+          return h ? `${it} → ${h.zh}` : null
+        })
+        .filter(Boolean)
+      tasks.push({
+        id: `surfaces-${zoneId}`,
+        kind: 'surfaces',
+        title: `清空${zoneName}的台面`,
+        priority: P.surfaces,
+        estMinutes: 10 + lvl('surfaces') * 5,
+        zoneId,
+        zoneName: zone?.nameZh ?? null,
+        reason: `照片显示桌面/台面堆积${LEVEL_ZH[lvl('surfaces')]}${info.items.length ? `,主要是:${info.items.join('、')}` : ''}`,
+        steps: [
+          '把台面上的东西按类堆到一起(先分类,别急着放)',
+          ...(homes.length ? homes.map((h) => `归位:${h}`) : ['有固定位置的东西按类送回各自的柜子']),
+          '拿不准归属的进「临时箱」,别卡在这',
+          '台面空了再擦 —— 从高到低,灰尘往下掉',
+        ],
+        doneWhen: [
+          '台面至少 70% 是空的 —— 站远一点看,空的地方要明显多过占着的',
+          '留在台面上的,只有每天都要用的东西',
+          '没有「等会儿再收」的东西 —— 那就是它会留一个月的意思',
+        ],
+        items: info.items,
+        photoRef: info.photoRef,
+        focus: { x: info.x, y: info.y },
       })
-      .filter(Boolean)
-    tasks.push({
-      id: `tidy-${zoneId}`,
-      kind: overflow ? 'overflow' : 'messy',
-      title: `整理${zone?.nameZh ?? '这个区域'}`,
-      priority: overflow ? P.overflow : P.messy,
-      estMinutes: Math.round((overflow ? 20 : 10) + area / (overflow ? 10 : 15)),
-      zoneId,
-      zoneName: zone?.nameZh ?? null,
-      reason: `照片显示这里${info.state}${info.items.length ? `,主要是:${info.items.join('、')}` : ''}`,
-      steps: [
-        '先清空地面 —— 地面通了,后面才好铺开分类',
-        info.items.length ? '把同类物品堆到一起(先分类,别急着放)' : '把散落的东西堆到一处分类',
-        ...(homes.length ? homes.map((h) => `归位:${h}`) : ['按类别送回各自的柜子']),
-        '拿不准归属的先进「临时箱」,别卡在这',
-        '最后擦一遍台面/地面',
-      ],
-      items: info.items,
-      photoRef: info.photoRef,
-    })
+    }
+
+    // —— ③ 地面杂物(是「堆着东西」,不是「脏」)——
+    if (lvl('floorClutter') >= 2) {
+      tasks.push({
+        id: `floor-${zoneId}`,
+        kind: 'floorClutter',
+        title: `清空${zoneName}的地面`,
+        priority: P.floorClutter,
+        estMinutes: Math.round(10 + area / 15 + lvl('floorClutter') * 5),
+        zoneId,
+        zoneName: zone?.nameZh ?? null,
+        reason: `照片显示地上堆放${LEVEL_ZH[lvl('floorClutter')]} —— 地面通了,后面才好铺开分类,也才扫得动`,
+        steps: [
+          '先把地上的东西全部拿起来,按类堆到一处',
+          '大件、能立刻归位的先送走',
+          '剩下没家的进「临时箱」—— 地面清空优先于给每件东西定家',
+          '目标:能一路走过去,而且扫地机/吸尘器推得动',
+        ],
+        doneWhen: [
+          '地面 0 件长期堆放的东西 —— 地面不是仓库',
+          '推着吸尘器能一路走完全程,不用弯腰搬开任何东西',
+          '留在地上的容器都有固定的停靠位,不是随手一放',
+        ],
+        items: [],
+        photoRef: info.photoRef,
+        focus: { x: info.x, y: info.y },
+      })
+    }
+
+    // —— ④ 地面清洁:脏,不是乱。这是老的五档状态**根本看不见**的一根轴 ——
+    // 优先级排在最后(P.floorClean=8):先扫地,等会儿收台面时灰又落一地,等于白扫。
+    if (lvl('floorDirt') >= 2) {
+      const dirty = lvl('floorDirt')
+      tasks.push({
+        id: `clean-${zoneId}`,
+        kind: 'floorClean',
+        title: `扫${dirty >= 3 ? '并拖' : ''}${zoneName}的地`,
+        priority: P.floorClean,
+        estMinutes: Math.round(8 + area / 12 + (dirty >= 3 ? 10 : 0)),
+        zoneId,
+        zoneName: zone?.nameZh ?? null,
+        reason: `照片显示地面灰尘/毛发/污渍${LEVEL_ZH[dirty]} —— 这是「脏」不是「乱」,收拾完才轮到它`,
+        steps: [
+          '确认台面和地面都已经收空 —— 没收完就扫,等于白扫',
+          '先干后湿:先扫/吸,把浮灰毛发带走',
+          '从最里的角落退着往门口扫,别把自己扫进死角',
+          ...(dirty >= 3 ? ['吸完再拖,拖把拧到不滴水;拖完开窗/开风扇让它干透'] : []),
+        ],
+        doneWhen: [
+          '蹲下平视地面,看不到毛发和碎屑',
+          '墙角和家具腿旁边也扫到了 —— 那是最容易跳过的地方',
+          ...(dirty >= 3 ? ['拖过的地方已经干透,不留水痕'] : []),
+        ],
+        items: [],
+        photoRef: info.photoRef,
+        focus: { x: info.x, y: info.y },
+      })
+    }
   }
 
   // 4) 储物区:件数多的先梳理
@@ -254,12 +487,60 @@ export function buildTidyPlan(project, circ, opts = {}) {
       zoneName: zonesById[sz.zoneId]?.nameZh ?? sz.locationZh ?? null,
       reason: `这里记了 ${n} 件东西,已经到了容易找不着的量`,
       steps: [
-        '全部取出,过一遍',
-        '一年没用过的挑出来:送人/卖掉/扔掉',
-        '常用的放在伸手可及的一层',
-        '同类归同格,给格子贴个标签',
+        '备好三个袋/箱:留下 · 送人或卖 · 扔掉',
+        '全部取出过一遍,每件只过一次手、当场进一个袋',
+        '一年没用过的别回柜:进「送人/卖」或「扔」',
+        '留下的常用放伸手可及的一层,同类归同格',
+        '给格子贴标签,顺手擦一遍空柜再放回',
+      ],
+      doneWhen: [
+        '柜里留出 10–20% 空位 —— 塞满的柜子下周一定会外溢到地面',
+        '每一格只有一个主类别,说得出这格叫什么',
+        '「送人/卖」那袋已经离开这个柜子(最好已经出门)',
       ],
       items: (sz.items ?? []).slice(0, 6).map((i) => i.name),
+      photoRef: null,
+      // 框住整个柜体 —— 光一个点说不清「梳理的是哪个柜」
+      focus: sz.bounds
+        ? { x: sz.bounds.x + sz.bounds.w / 2, y: sz.bounds.y + sz.bounds.h / 2, rect: sz.bounds }
+        : null,
+    })
+  }
+
+  // 4.5) 开场:先备好容器。
+  //
+  // 空手进屋的下场是「拿着一件东西满屋找地方放」—— 每件东西都变成一次跨房间往返,
+  // 十分钟就累了,而屋子看起来更乱(因为东西全被翻出来摊着)。备好箱子,每件东西
+  // 只需要「扔进对的那个箱」这一个动作,分类和搬运分成两趟,进度才快得起来。
+  //
+  // 只在真有东西要收时才派 —— 只是挪个柜子拓通道的话,不需要五个箱子。
+  const NEEDS_BINS = new Set(['hygiene', 'surfaces', 'floorClutter', 'overflow', 'messy', 'storage'])
+  if (tasks.some((t) => NEEDS_BINS.has(t.kind))) {
+    tasks.push({
+      id: 'prep',
+      kind: 'prep',
+      title: '先备好箱子和垃圾袋,再开始',
+      priority: P.prep,
+      estMinutes: 10,
+      zoneId: null,
+      zoneName: null,
+      reason: '空手进屋 = 拿着一件东西满屋找地方放。备好容器,每件东西只需要一个动作',
+      steps: [
+        '一个黑色垃圾袋 —— 垃圾',
+        '一个纸箱/袋 —— 回收(纸盒、包装)',
+        '一个衣篮 —— 待洗衣物',
+        '一个箱 —— 厨房与食品',
+        '一个箱 —— 电子、线材、文件',
+        '一个箱 —— 卫浴与清洁',
+        // 步骤是纯文本渲染的,别写 markdown —— 星号会原样显示出来
+        '一个「待决定箱」,只能有一个 —— 犹豫超过 30 秒的东西丢进去,别站在那想',
+      ],
+      doneWhen: [
+        '所有容器都在手边,不用中途去找',
+        '「待决定箱」只有一个 —— 有第二个就意味着你在给自己造新的黑洞',
+        '今天不买任何新收纳盒 —— 先用现有的,买了也不知道该买多大',
+      ],
+      items: [],
       photoRef: null,
     })
   }
@@ -276,12 +557,16 @@ export function buildTidyPlan(project, circ, opts = {}) {
       zoneName: null,
       reason: '扫完在设置页拉取,新旧两版可以直接比对家具位置与状态变化',
       steps: ['拿 iPhone 逐间重扫', '每间补 2-3 张机位照片', '上传后回网页端拉取'],
+      doneWhen: ['新扫描已经拉进网页端', '杂乱指数比整理前低了 —— 这就是今天的收据'],
       items: [],
       photoRef: null,
     })
   }
 
-  for (const t of tasks) t.effort = EFFORT[t.kind] ?? 'medium'
+  for (const t of tasks) {
+    t.effort = EFFORT[t.kind] ?? 'medium'
+    t.focus ??= null
+  }
   tasks.sort((a, b) => a.priority - b.priority || b.estMinutes - a.estMinutes)
 
   const all = tasks.slice()
@@ -313,7 +598,11 @@ export function buildTidyPlan(project, circ, opts = {}) {
  *
  * 不是简单截断:**通行类**(堵门/瓶颈)再累也得先做 —— 门被堵着不是整洁问题,
  * 是每天都要绕的问题。其余按优先级塞进预算,塞不下的留着下次。
- * 复扫收尾只在真做了事情时才留。
+ *
+ * prep(备箱子)和 rescan(复扫)是**配角**,不参与抢预算,最后单独议:
+ * 两者都只在有正片的时候才有意义。prep 尤其不能进主循环 —— 它排在最前、又要 10 分钟,
+ * 15 分钟预算下它会先把位子占掉,把真正要干的活挤出去,用户打开计划只看到
+ * 「备好箱子」一条,备完了没事干。
  * @param {any[]} tasks 已按优先级排好
  * @param {{ minutes?: number|null, effort?: Effort|null }} opts
  */
@@ -328,12 +617,23 @@ function pickWithinBudget(tasks, opts = {}) {
   const out = []
   let spent = 0
   for (const t of tasks) {
-    if (t.kind === 'rescan') continue // 收尾任务最后单独议
+    if (t.kind === 'rescan' || t.kind === 'prep') continue // 配角最后单独议
     if (!fits(t)) continue
     if (budget && spent + t.estMinutes > budget) continue
     out.push(t)
     spent += t.estMinutes
   }
+
+  // prep 只在真有东西要收(而不是只挪家具)时才值得占那 10 分钟
+  const prep = tasks.find((t) => t.kind === 'prep')
+  const needsBins = out.some((t) =>
+    ['hygiene', 'surfaces', 'floorClutter', 'overflow', 'messy', 'storage'].includes(t.kind),
+  )
+  if (prep && needsBins && (!budget || spent + prep.estMinutes <= budget)) {
+    out.unshift(prep)
+    spent += prep.estMinutes
+  }
+
   const rescan = tasks.find((t) => t.kind === 'rescan')
   if (rescan && out.length && (!budget || spent + rescan.estMinutes <= budget)) {
     out.push(rescan)

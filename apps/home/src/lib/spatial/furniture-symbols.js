@@ -131,6 +131,32 @@ function r(n) {
 /** Corner radius that stays proportional but never swallows a thin piece. */
 const soft = (w, h, f = 0.12) => Math.min(w, h) * f
 
+/**
+ * Curved backrest band for a seat facing down (+y): crown at `yMid`, ends sweeping
+ * forward to `yEnd`, `t` thick.
+ *
+ * The curve is the point. A back wraps the sitter, so its centre sits furthest
+ * back and its ends come forward — and that shape reads as a back even where it
+ * touches the seat. The straight pill this replaced could not: butted against the
+ * seat the two merged into one square outline, so it had to be held off by a gap,
+ * and a bar floating in a gap reads as a shelf behind a box. Curved, it can touch.
+ *
+ * Callers pass fractions of their own box, so the band scales with the footprint
+ * like everything else here.
+ */
+function backBand(cx, halfW, yMid, yEnd, t) {
+  const x0 = cx - halfW
+  const x1 = cx + halfW
+  // A quadratic's midpoint is (start + 2*ctrl + end)/4, so this is the control
+  // point that lands the crown exactly on yMid. It sits outside the box — that is
+  // arithmetic, not a bug: the curve itself never goes near it.
+  const ctrl = 2 * yMid - yEnd
+  return bPath(
+    `M${r(x0)},${r(yEnd)}Q${r(cx)},${r(ctrl)} ${r(x1)},${r(yEnd)}` +
+      `L${r(x1)},${r(yEnd + t)}Q${r(cx)},${r(ctrl + t)} ${r(x0)},${r(yEnd + t)}Z`,
+  )
+}
+
 // —— 卧室 ——
 
 /**
@@ -195,18 +221,17 @@ function wardrobe({ x, y, w, h }) {
  * @returns {Symbol}
  */
 function chair({ x, y, w, h }) {
-  const backH = h * 0.14
-  const gap = h * 0.07
-  const seatY = y + backH + gap
+  const seatY = y + h * 0.18
   const seatH = h - (seatY - y)
-  const seatInset = w * 0.12
+  const seatInset = w * 0.1
   return {
-    // The gap between backrest and seat is doing the work: without it the two
-    // merge into one square outline and the whole thing reads as a box again.
-    // The back is also left wider than the seat, which is what your eye uses to
-    // tell the front of the chair from the back at a glance.
+    // The curve is what says "front" now. This used to be a straight bar held off
+    // the seat by a gap, because butted together the two merged into one square
+    // outline — but the gap made the bar read as a shelf standing behind a box.
+    // A curved back can touch: its ends wrap forward past the seat's top corners
+    // and get covered by the seat, so the two read as one chair facing you.
     body: [
-      bRect(x, y, w, backH, backH * 0.5),
+      backBand(x + w / 2, w * 0.44, y + h * 0.02, y + h * 0.13, h * 0.1),
       bRect(x + seatInset, seatY, w - seatInset * 2, seatH, soft(w, seatH, 0.26)),
     ].join(''),
     detail: '',
@@ -269,28 +294,78 @@ function armchair(b) {
 }
 
 /**
- * Office chair — seat and back like a dining chair, over the five-star base.
- * The base is detail, not body: it is under the seat, and filling it would read
- * as a solid slab instead of legs you can see the floor between.
+ * Task chair — five-star caster base under a seat, wrapped by a curved back, with
+ * an armrest down each side.
+ *
+ * **The base is drawn first and the seat covers it.** That ordering is the symbol.
+ * The base used to be `detail`, on the theory that a filled star would read as a
+ * slab rather than legs with floor between them — but detail paints *over* the
+ * body, so five strokes ran clean across the seat and the chair read as a pizza
+ * sliced into five. Laid down first, the star is occluded exactly where the real
+ * seat occludes it, and what survives is what you actually see from above: five
+ * casters peeking out from under the seat. Legs you can see the floor between,
+ * which was the original goal, now for the right reason.
+ *
+ * The seat is deliberately big and set high in the box. That is what lets the two
+ * rear casters fall under it: they land at ~0.24h, inside the seat, so three
+ * casters show — front and both sides — exactly what you see standing over a real
+ * chair. Shrink the seat and they crawl out into the gap below the back as two
+ * loose bumps, which is worse than either hiding or showing them properly.
+ *
+ * The arms overlap the seat and get covered too, so they read as attached. They
+ * are most of what separates this from a stool.
  * @param {Box} b
  * @returns {Symbol}
  */
 function officeChair({ x, y, w, h }) {
   const cx = x + w / 2
-  const rad = Math.min(w, h) / 2
-  const hub = y + h * 0.58
-  const backH = h * 0.15
-  const legs = []
+  const hub = y + h * 0.54
+  // The star is a circle, so it takes whichever half-dimension is tighter. Scaling
+  // it per axis would splay the legs into an ellipse — a squashed footprint would
+  // read as a collapsed chair rather than a narrow one.
+  //
+  // Sized against the seat, not the footprint: `hub - reach*cos36 - caster` is
+  // where the rear casters land, and it has to stay below seatY or they surface in
+  // the gap between seat and back. Widening the star past this is what puts a
+  // long lonely spoke out the front, too — the base would outrun the seat forward.
+  const reach = Math.min(w * 0.44, h * 0.36)
+  const caster = reach * 0.12
+  const seatW = w * 0.64
+  const seatH = h * 0.62
+  const seatY = y + h * 0.2
+  const armW = w * 0.17
+  const armH = h * 0.3
+  const armY = y + h * 0.28
+
+  const base = []
   for (let i = 0; i < 5; i++) {
     const a = (i * 2 * Math.PI) / 5 + Math.PI / 2
-    legs.push(line(cx, hub, cx + Math.cos(a) * rad * 0.82, hub + Math.sin(a) * rad * 0.82))
+    const ux = Math.cos(a)
+    const uy = Math.sin(a)
+    const tx = cx + ux * reach
+    const ty = hub + uy * reach
+    // Each leg tapers hub → caster, like the real aluminium spider. (-uy, ux) is
+    // the unit normal, so these four corners are the leg's own width, not the box's.
+    const hw = reach * 0.1
+    const tw = reach * 0.05
+    base.push(
+      bPath(
+        `M${r(cx - uy * hw)},${r(hub + ux * hw)}L${r(tx - uy * tw)},${r(ty + ux * tw)}` +
+          `L${r(tx + uy * tw)},${r(ty - ux * tw)}L${r(cx + uy * hw)},${r(hub - ux * hw)}Z`,
+      ),
+      bCircle(tx, ty, caster),
+    )
   }
+
   return {
     body: [
-      bRect(x + w * 0.08, y, w * 0.84, backH, backH * 0.45),
-      bEllipse(cx, hub, w * 0.34, h * 0.3),
+      ...base,
+      backBand(cx, w * 0.3, y + h * 0.02, y + h * 0.14, h * 0.09),
+      bRect(cx - w * 0.47, armY, armW, armH, soft(armW, armH, 0.4)),
+      bRect(cx + w * 0.47 - armW, armY, armW, armH, soft(armW, armH, 0.4)),
+      bRect(cx - seatW / 2, seatY, seatW, seatH, soft(seatW, seatH, 0.3)),
     ].join(''),
-    detail: [...legs, circle(cx, hub, rad * 0.12)].join(''),
+    detail: '',
   }
 }
 
@@ -377,6 +452,24 @@ function wireRack({ x, y, w, h }) {
     for (const py of [y + post, y + h - post]) parts.push(circle(px, py, post))
   }
   return { body: bRect(x, y, w, h, 1), detail: parts.join('') }
+}
+
+/** Rolling utility cart — inset tray and four casters make it distinct from a fixed rack. @param {Box} b @returns {Symbol} */
+function utilityCart({ x, y, w, h }) {
+  const inset = Math.min(w, h) * 0.13
+  const wheel = Math.min(w, h) * 0.07
+  return {
+    body: bRect(x, y, w, h, soft(w, h, 0.12)),
+    detail: [
+      rect(x + inset, y + inset, w - inset * 2, h - inset * 2, inset * 0.4),
+      ...[
+        [x + inset, y + inset],
+        [x + w - inset, y + inset],
+        [x + inset, y + h - inset],
+        [x + w - inset, y + h - inset],
+      ].map(([cx, cy]) => circle(cx, cy, wheel)),
+    ].join(''),
+  }
 }
 
 /** Cube shelf (Kallax-style) — equal cubbies against a back panel. @param {Box} b @returns {Symbol} */
@@ -693,6 +786,33 @@ function floorLamp({ x, y, w, h }) {
   }
 }
 
+/** Studio softbox on a tripod — three legs plus the directional lamp head. @param {Box} b @returns {Symbol} */
+function studioLight({ x, y, w, h }) {
+  const cx = x + w / 2
+  const cy = y + h / 2
+  const rad = Math.min(w, h) * 0.42
+  const hub = rad * 0.14
+  return {
+    body: bCircle(cx, cy, rad),
+    detail: [
+      line(cx, cy, cx, cy - rad),
+      line(cx, cy, cx - rad * 0.87, cy + rad * 0.5),
+      line(cx, cy, cx + rad * 0.87, cy + rad * 0.5),
+      circle(cx, cy, hub),
+      rect(cx - rad * 0.34, cy - rad * 0.92, rad * 0.68, rad * 0.24, rad * 0.05),
+    ].join(''),
+  }
+}
+
+/** Bathroom scale — low rounded platform with the display window at its head. @param {Box} b @returns {Symbol} */
+function bathScale({ x, y, w, h }) {
+  const inset = Math.min(w, h) * 0.12
+  return {
+    body: bRect(x, y, w, h, soft(w, h, 0.18)),
+    detail: rect(x + w * 0.34, y + inset, w * 0.32, h * 0.16, h * 0.04),
+  }
+}
+
 /**
  * Ceiling fan — hub, blades, and the sweep circle, all overhead: it must not
  * read as floor obstruction.
@@ -899,11 +1019,14 @@ const BUILDERS = {
   monitor,
   divider,
   wireRack,
+  utilityCart,
   cubeShelf,
   mirror,
   rug,
   mat,
   floorLamp,
+  studioLight,
+  bathScale,
   ceilingFan,
   purifier,
   trash,

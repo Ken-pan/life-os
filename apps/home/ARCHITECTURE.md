@@ -36,8 +36,13 @@ circulation.js  scan-register.js  scan-identity.js  photo-hash.js  color-lab.js
     ↑
 scan-merge.js  scan-fuse.js  layout-solve.js  scene-graph.js  clutter-score.js
     ↑
-tidy-plan.js  container-scan.js  event-derive.js  photo-coverage.js
+tidy-plan.js  storage-plan.js  container-scan.js  event-derive.js  photo-coverage.js
 ```
+
+- **「这个柜子该放什么」的权威是 `storage-plan.js`**,两条判据各有唯一来源:
+  竖直区间走 `placements.js` 的 `verticalBlockRangeIn`(实测 elevIn/heightIn
+  优先、退规格 elev/tall —— 别再从 attrs 里手推,吊柜会被算成「未知」);
+  类目按**同房间内**到作业点的距离定。跨房间的直线距离是穿墙量的,不作数。
 
 - **几何原语只写在 `geometry.js`**(pointInPolygon/distToSegment/
   pointToRectDistance/boxesOverlap)。circulation/zones 里的同名导出是

@@ -51,6 +51,9 @@ import { findZoneAtPoint, polygonBbox, zoneCentroid } from './zones.js'
  * @property {number} [clearUnder] 台面/床板下的净空高度(英寸):桌腿之间、床底
  *   都是能塞东西的空间 —— 它的「实际占据」只有 [clearUnder, tall] 这一层板。
  *   没有该字段 = 从地到顶都是实心(柜子/冰箱)。叠放判定(桌下柜)靠它。
+ * @property {boolean} [fence] 围栏:实体只有四条边框,内部是圈起来的**地板**。
+ *   w×h 是圈起来的范围,不是一块实心物 —— 狗和狗窝就住在里面,重叠判定、
+ *   占地统计都只能算边框(见 fenceBandRects),把内部当实体是一串 bug 的根。
  * @type {Record<string, PlacementKind>}
  */
 export const PLACEMENT_KINDS = {
@@ -172,6 +175,7 @@ export const PLACEMENT_KINDS = {
     group: '客厅',
     symbol: 'petPen',
     tall: 24,
+    fence: true,
   },
 
   // 两条柴犬。它们占地、会挪窝,而一张没有它们的平面图画的是别人家。
@@ -214,6 +218,17 @@ export const PLACEMENT_KINDS = {
     elev: 30,
     tall: 20,
   },
+  // 照片里是带大型柔光罩的三脚摄影灯，不是贴墙落地灯。
+  // 30″ 记的是三脚架完全展开后的占地；这件东西真会绊脚，
+  // 不能只画成一根灯杆。
+  studio_light: {
+    label: '大型摄影灯',
+    w: 30,
+    h: 30,
+    group: '办公',
+    symbol: 'studioLight',
+    tall: 84,
+  },
   divider: {
     label: '隔音隔断',
     w: 48,
@@ -238,6 +253,26 @@ export const PLACEMENT_KINDS = {
     symbol: 'wireRack',
     tall: 72,
     storable: true,
+  },
+  utility_cart: {
+    label: '三层小推车',
+    w: 31,
+    h: 15,
+    group: '办公',
+    symbol: 'utilityCart',
+    tall: 32,
+    storable: true,
+    clearance: 12,
+  },
+  equipment_rack: {
+    label: '创作设备架',
+    w: 47,
+    h: 24,
+    group: '办公',
+    symbol: 'wireRack',
+    tall: 72,
+    storable: true,
+    clearance: 24,
   },
   // IKEA Kallax 2×2 的实测尺寸，高度同样是实测的 30″。
   cube_shelf: {
@@ -411,6 +446,14 @@ export const PLACEMENT_KINDS = {
     tall: 78,
     clearance: 24,
   },
+  bath_scale: {
+    label: '体重秤',
+    w: 12,
+    h: 12,
+    group: '卫浴',
+    symbol: 'bathScale',
+    tall: 1,
+  },
 
   coat_rack: {
     label: '挂衣架',
@@ -510,6 +553,21 @@ export const PLACEMENT_KINDS = {
 }
 
 /**
+ * kind 别名 → 目录键。云端扫描优化/VLM 导入会自造 kind —— 实测:狗狗围栏在
+ * server-optimized 副本里写的是 `pet_fence`,目录查不到时整条链路一起退化:
+ * 符号画成实心方块、围栏语义(isFence)失效、叠放高度按默认 30″ 实心算。
+ * 存量数据不迁移(payload 每次重新优化都可能再冒出同一个词),在读取层
+ * 解析一次到位 —— 所有按 kind 认家具的地方都要过 {@link canonicalPlacementKind}。
+ * @type {Record<string, string>}
+ */
+export const PLACEMENT_KIND_ALIASES = { pet_fence: 'pet_pen' }
+
+/** @param {string} kind @returns {string} 目录键(没有别名时原样返回) */
+export function canonicalPlacementKind(kind) {
+  return PLACEMENT_KIND_ALIASES[kind] ?? kind
+}
+
+/**
  * A catalogue entry with its defaults filled in.
  *
  * Every consumer needs the same four fallbacks, and `PLACEMENT_KINDS` omits
@@ -522,7 +580,7 @@ export const PLACEMENT_KINDS = {
  * @returns {(PlacementKind & { mount: PlacementMount, elev: number, storable: boolean, clearance: number }) | null}
  */
 export function placementSpec(kind) {
-  const spec = PLACEMENT_KINDS[kind]
+  const spec = PLACEMENT_KINDS[canonicalPlacementKind(kind)]
   if (!spec) return null
   return { mount: 'floor', elev: 0, storable: false, clearance: 0, ...spec }
 }
@@ -569,6 +627,41 @@ export function verticallyClear(a, b) {
  */
 export function isStorable(kind) {
   return placementSpec(kind)?.storable ?? false
+}
+
+/**
+ * 围栏类(宠物围栏):实体只有边框,内部是圈起来的地板。
+ * @param {string} kind
+ */
+export function isFence(kind) {
+  return placementSpec(kind)?.fence ?? false
+}
+
+/**
+ * 围栏「实体」名义宽度(英寸)。真实铁丝网板不到 1″,取 6″ 是两个消费方共同的
+ * 下限:动线栅格(circulation.js GRID_IN=6)按格点盖章,窄于一格的边框会整段
+ * 漏判成可穿行;编辑器里贴着栏板 6″ 内的东西也确实和围栏打架。改小它之前先看
+ * 这两处。
+ */
+export const FENCE_BAND_IN = 6
+
+/**
+ * 围栏的实体矩形:四条边框(px),内部不在其中 —— 狗、狗窝、水碗就摆在里面,
+ * 拿整个 w×h 判重叠/算占地,等于宣称那 ~9 sqft 地板是一块实心家具。
+ * 边框宽到吃掉内部时退化成整块实心(超小围栏,没有「里面」可言)。
+ * @param {{ x: number, y: number, w: number, h: number }} rect
+ * @param {number} bandPx 边框宽(px)—— 调用方按自己的比例尺换算 FENCE_BAND_IN
+ * @returns {Array<{ x: number, y: number, w: number, h: number }>}
+ */
+export function fenceBandRects(rect, bandPx) {
+  const { x, y, w, h } = rect
+  if (!(bandPx > 0) || Math.min(w, h) <= bandPx * 2) return [{ x, y, w, h }]
+  return [
+    { x, y, w, h: bandPx },
+    { x, y: y + h - bandPx, w, h: bandPx },
+    { x, y: y + bandPx, w: bandPx, h: h - bandPx * 2 },
+    { x: x + w - bandPx, y: y + bandPx, w: bandPx, h: h - bandPx * 2 },
+  ]
 }
 
 /** @type {PlacementGroup[]} */

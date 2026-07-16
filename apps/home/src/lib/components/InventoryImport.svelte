@@ -79,9 +79,10 @@
   {#if open}
     <div class="import-panel">
       <p class="hint">
-        贴入分拣好的 JSON（<code>有</code> / <code>没有</code>）。带
-        <code>kind</code> 的进平面图当家具，其余按类型自动归到储藏区 —— 归区是猜的，
-        导入后会标「待核对」。
+        贴入分拣好的 JSON（<code>有</code> / <code>没有</code>，或 FinanceOS 的
+        <code>items</code>）。带 <code>kind</code> 的进平面图当家具，其余按类型自动归到
+        储藏区 —— 归区是猜的，导入后会标「待核对」。标了 <code>disp: returned /
+        cancelled</code> 的已退货、不导入；<code>maybe</code> 照导但标「退货存疑」。
       </p>
 
       <textarea
@@ -117,7 +118,10 @@
               <summary>认领已有家具 · {plan.claims.length}</summary>
               <ul>
                 {#each plan.claims as c (c.id)}
-                  <li><span class="tag tag-claim">认领</span>{c.name} → 图上的「{c.label}」</li>
+                  <li>
+                    <span class="tag tag-claim">认领</span>{c.name} → 图上的「{c.label}」
+                    {#if c.purchase?.disp === 'maybe'}<span class="guess">退货存疑</span>{/if}
+                  </li>
                 {/each}
               </ul>
             </details>
@@ -131,6 +135,7 @@
                   <li>
                     <span class="tag">{it.zoneCode}</span>{it.item.name}
                     <span class="zone-name">{it.zoneNameZh}</span>
+                    {#if it.item.purchase?.disp === 'maybe'}<span class="guess">退货存疑</span>{/if}
                     {#if it.guessed}<span class="guess">待核对</span>{/if}
                   </li>
                 {/each}
@@ -143,7 +148,10 @@
               <summary>新建家具 · {plan.creates.length}</summary>
               <ul>
                 {#each plan.creates as c (c.id)}
-                  <li><span class="tag tag-new">新</span>{c.label}</li>
+                  <li>
+                    <span class="tag tag-new">新</span>{c.label}
+                    {#if c.attrs?.purchase?.disp === 'maybe'}<span class="guess">退货存疑</span>{/if}
+                  </li>
                 {/each}
               </ul>
             </details>

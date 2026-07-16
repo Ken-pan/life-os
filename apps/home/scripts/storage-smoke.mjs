@@ -20,12 +20,33 @@ function push(row) {
 /**
  * Read a zone's items from the DOM — that is what the user actually sees, and
  * it works before the app has written localStorage for the first time.
+ * 沉浸式改版后卡片只在详情态渲染,读之前先 openZone。
  * @param {import('playwright').Page} page
  */
 const items = (page, code) =>
   page.$$eval(`#zone-${code} .item-name`, (els) =>
     els.map((e) => e.textContent ?? ''),
   )
+
+/**
+ * 打开某区的详情卡。地图页是「列表 → 详情」模型:先退回列表
+ * (详情态点返回、搜索态点清除),再点区行。
+ * @param {import('playwright').Page} page
+ */
+async function openZone(page, code) {
+  if (await page.locator(`#zone-${code}`).count()) return
+  if (await page.locator('.back-btn').count()) {
+    await page.locator('.back-btn').click()
+    await page.waitForTimeout(150)
+  }
+  if (await page.locator('.clear-btn').count()) {
+    await page.locator('.clear-btn').click()
+    await page.waitForTimeout(150)
+  }
+  await page.locator(`.zone-row[data-code="${code}"]`).click()
+  await page.waitForSelector(`#zone-${code}`)
+  await page.waitForTimeout(150)
+}
 
 /** @param {import('playwright').Page} page */
 const layoutMode = (page) =>
@@ -38,6 +59,7 @@ const layoutMode = (page) =>
 
 /** @param {import('playwright').Page} page */
 async function addItem(page, code, name) {
+  await openZone(page, code)
   const card = page.locator(`#zone-${code}`)
   await card.locator('.add-row .field').fill(name)
   await card.locator('.add-row .icon-btn.add').click()
@@ -79,7 +101,9 @@ async function main() {
     )
   }, SKEY)
   await page.reload({ waitUntil: 'networkidle' })
-  await page.waitForSelector('#zone-S1')
+  await page.waitForSelector('.zone-row[data-code="S1"]')
+  const zoneCount = await page.locator('.zone-row').count()
+  await openZone(page, 'S1')
 
   // --- v3 → v4 migration from a legacy save ---
   const s1Legacy = await items(page, 'S1')
@@ -113,7 +137,6 @@ async function main() {
   })
 
   const modeBefore = await layoutMode(page)
-  const zoneCount = await page.locator('.storage-card').count()
 
   // --- add ---
   await addItem(page, 'S3', 'QA三脚架')
@@ -134,6 +157,7 @@ async function main() {
   })
 
   // --- edit: qty / tags / note ---
+  await openZone(page, 'S3')
   const row = page.locator('#zone-S3 button.item-row', { hasText: 'QA三脚架' })
   await row.click()
   const form = page.locator('#zone-S3 .edit-form')
@@ -170,12 +194,12 @@ async function main() {
     detail: `${hitCount} hit · ${hitText.replace(/\s+/g, ' ')}`,
   })
 
-  // --- search filters the zone list ---
-  const visible = await page.locator('.storage-card').count()
+  // --- search swaps the zone list for the hits panel ---
+  const listRows = await page.locator('.zone-row').count()
   push({
-    name: 'search filters zone cards',
-    ok: visible === 1,
-    detail: `${visible} card visible`,
+    name: 'search swaps zone list for hits',
+    ok: listRows === 0 && hitCount === 1,
+    detail: `${listRows} rows visible while searching`,
   })
 
   // --- clicking a hit highlights the zone + the matched item ---
@@ -200,19 +224,22 @@ async function main() {
 
   await page.locator('.clear-btn').click()
   await page.waitForTimeout(200)
-  const restored = await page.locator('.storage-card').count()
+  const restored = await page.locator('.zone-row').count()
   push({
-    name: 'clear restores every zone',
+    name: 'clear restores the zone list',
     ok: restored === zoneCount,
-    detail: `${restored}/${zoneCount} cards`,
+    detail: `${restored}/${zoneCount} rows`,
   })
 
   // --- move between zones ---
+  await openZone(page, 'S3')
   await page.locator('#zone-S3 button.item-row', { hasText: 'QA碳纤三脚架' }).click()
   await page.locator('#zone-S3 .edit-form .move-select').selectOption('S1')
   await page.waitForTimeout(250)
-  const s1 = await items(page, 'S1')
+  // 详情一次只开一张卡:先读还开着的 S3,再切到 S1 读
   s3 = await items(page, 'S3')
+  await openZone(page, 'S1')
+  const s1 = await items(page, 'S1')
   push({
     name: 'move item across zones',
     ok: s1.includes('QA碳纤三脚架') && !s3.includes('QA碳纤三脚架'),
@@ -228,6 +255,7 @@ async function main() {
   })
 
   // --- delete + undo ---
+  await openZone(page, 'S1')
   const beforeDelete = await items(page, 'S1')
   await page.locator('#zone-S1 button.item-row', { hasText: 'QA碳纤三脚架' }).click()
   await page.locator('#zone-S1 .edit-form .icon-btn.danger').click()
@@ -246,7 +274,8 @@ async function main() {
 
   // --- survives reload ---
   await page.reload({ waitUntil: 'networkidle' })
-  await page.waitForSelector('#zone-S1')
+  await page.waitForSelector('.zone-row[data-code="S1"]')
+  await openZone(page, 'S1')
   push({
     name: 'survives reload',
     ok: (await items(page, 'S1')).includes('QA碳纤三脚架'),
@@ -348,7 +377,8 @@ async function main() {
   // all bind local $state and only commit on submit — keep it that way.
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.reload({ waitUntil: 'networkidle' })
-  await page.waitForSelector('#zone-S1')
+  await page.waitForSelector('.zone-row[data-code="S1"]')
+  await openZone(page, 'S1')
   const typing = await page.evaluate(async () => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
     const setVal = (el, v) => {
@@ -368,14 +398,8 @@ async function main() {
       localStorage.getItem('homeos_wall_graph_undo_v1') ?? '{"undo":[]}',
     ).undo.length
 
-    const search = document.querySelector('input[type=search]')
-    for (const q of ['咖', '咖啡', '咖啡机']) {
-      setVal(search, q)
-      await sleep(25)
-    }
-    setVal(search, '')
-    await sleep(50)
-
+    // 先在打开的 S1 详情里敲添加/编辑字段;搜索最后敲 —— 沉浸式改版后
+    // 输入搜索词会切回结果视图,把详情卡卸载掉
     const add = document.querySelector('#zone-S1 .add-row .field')
     for (const s of ['测', '测试', '测试物']) {
       setVal(add, s)
@@ -392,6 +416,14 @@ async function main() {
     }
     document.querySelector('#zone-S1 .edit-form .mini:not(.primary)').click()
     await sleep(60)
+
+    const search = document.querySelector('input[type=search]')
+    for (const q of ['咖', '咖啡', '咖啡机']) {
+      setVal(search, q)
+      await sleep(25)
+    }
+    setVal(search, '')
+    await sleep(50)
 
     Storage.prototype.setItem = orig
     const undoAfter = JSON.parse(

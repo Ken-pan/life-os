@@ -409,4 +409,38 @@ const walls = [
   assert.equal(verticallyClear(bin, { kind: 'bed' }), true, '6″ 收纳箱塞得进床下(净空 7″)')
 }
 
+// ---- 围栏:实体只有四条边框,内部是圈起来的地板 ----
+// 狗住在围栏**里面**是它存在的意义 —— 拿整个 w×h 当实心判重叠,
+// 狗一进围栏就标红,这正是它「不是一个实体」的全部含义。
+{
+  const { FENCE_BAND_IN, fenceBandRects, isFence, placementSpec } = await import(
+    '../src/lib/spatial/placements.js'
+  )
+  const { overlapsAny } = await import('../src/lib/spatial/placement-snap.js')
+  assert.equal(isFence('pet_pen'), true, '宠物围栏是围栏')
+  assert.equal(isFence('cabinet'), false, '柜子不是围栏')
+  // 云端优化副本里的真实 kind(实测):目录靠别名认它,否则符号/围栏语义全失效
+  assert.equal(isFence('pet_fence'), true, 'pet_fence 走别名也是围栏')
+  assert.equal(placementSpec('pet_fence')?.symbol, 'petPen', 'pet_fence 画围栏符号,不是实心方块')
+
+  const bandPx = IN(FENCE_BAND_IN)
+  const bands = fenceBandRects({ x: 0, y: 0, w: IN(36), h: IN(36) }, bandPx)
+  assert.equal(bands.length, 4, '36″ 围栏拆成四条边框')
+  // 面积守恒:边框互不重叠,合起来 = 全框 − 内部
+  const area = bands.reduce((s, b) => s + b.w * b.h, 0)
+  assert.equal(Math.round(area), Math.round(IN(36) ** 2 - IN(24) ** 2), '边框面积 = 全框 − 内部')
+
+  const dog = { x: IN(7), y: IN(7), w: IN(22), h: IN(22) }
+  assert.equal(overlapsAny(dog, bands), false, '狗在围栏里不算压叠')
+  const straddling = { x: IN(-6), y: IN(12), w: IN(12), h: IN(12) }
+  assert.equal(overlapsAny(straddling, bands), true, '骑在栏板上要报')
+
+  // 小到没有「里面」的围栏退化成整块实心
+  assert.equal(
+    fenceBandRects({ x: 0, y: 0, w: IN(10), h: IN(10) }, bandPx).length,
+    1,
+    '10″ 围栏没有内部,按实心算',
+  )
+}
+
 console.log('placement-snap-unit: ok')

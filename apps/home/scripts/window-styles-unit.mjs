@@ -256,6 +256,21 @@ for (const seat of ['chair', 'officeChair', 'sofa', 'loveseat', 'armchair']) {
   assert.ok(shapes.length >= 2, `${seat}: silhouette is a single shape — reads as a box`)
 }
 
+// A task chair's caster base belongs UNDER its seat, which in a flat SVG means
+// earlier in `body` — the seat then covers the hub and only the casters peek out.
+// Detail paints over the body, so a star built there runs five strokes clean
+// across the seat and the chair reads as a pizza sliced into five. That is what
+// this symbol used to do, and nothing but this assertion would notice it coming
+// back: the markup stays valid, the shape count stays right, it just looks wrong.
+{
+  const { body, detail } = furnitureSymbol('officeChair', boxed)
+  assert.equal(detail, '', 'office chair: no interior strokes — the base is not detail')
+  assert.ok(
+    (body.match(/<circle[^>]*class="furn-body"/g) ?? []).length === 5,
+    'office chair: five casters, drawn as body so the seat can occlude them',
+  )
+}
+
 // Hollow pieces must render hollow.
 //
 // This assertion used to be `body === ''`, which asserted the builder's *intent*

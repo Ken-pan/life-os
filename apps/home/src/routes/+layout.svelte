@@ -36,9 +36,12 @@
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   const planRoute = $derived(page.url.pathname === '/plan')
+  // /storage 也是「地图页」:满屏画布 + 浮动搜索/清单面板,AppBar 让位给沉浸式,
+  // 与 /plan 共用 plan-route 这套全出血骨架。
+  const storageRoute = $derived(page.url.pathname === '/storage')
   const planImmersive = $derived(planRoute && getPlanImmersiveEdit())
   const mainClass = $derived(
-    planRoute
+    planRoute || storageRoute
       ? `wrap plan-route${planImmersive ? ' plan-immersive-edit' : ''}`
       : 'wrap',
   )
@@ -46,25 +49,31 @@
   const pageMeta = $derived.by(() => {
     const p = page.url.pathname
     const project = getActiveProject()
-    if (p === '/') {
-      return {
-        title: '空间概览',
-        subtitle: project.meta.nameZh,
-      }
-    }
-    if (p === '/plan') {
+    // 「/」是通往 /plan 的重定向;重定向落地前的那一帧用同一份标题,免得标题栏闪一下
+    if (p === '/' || p === '/plan') {
       const custom = getPlanSubtitle()
       return {
         title: '顶视平面',
-        subtitle: planImmersive ? '' : custom || '储藏区可点击',
+        subtitle: planImmersive ? '' : custom || project.meta.nameZh || '储藏区可点击',
       }
     }
+    // 「储藏审计」→「东西放哪」。没有人想审计自己的家 —— 审计是这个系统内部的说法
+    // (它确实在做一件审计的事:把买过的东西和柜子对上)。但用户打开这一页时脑子里
+    // 的句子是「我那个压力锅放哪了」,标题就该是那句话。
+    // 副标题原本是「S1–S21 物品清单」:S1–S21 是储藏区的内部编号,第一次看见的人
+    // 只会愣住 —— 编号在卡片和平面图上有用,当副标题就是拿内部主键当介绍词。
     if (p === '/storage') {
+      // 页面标题是「储藏」;「东西放哪」这句口语留给页内搜索当引导文案
       return {
-        title: '储藏审计',
-        subtitle: `S1–S${project.storageZones.length} 物品清单`,
+        title: '储藏',
+        subtitle: '每个柜子里有什么',
       }
     }
+    // /tidy 曾经漏在这张表外,标题一直落到最下面那个兜底的「HOME.OS」—— 别的页都有
+    // 正经标题,就它顶着产品名。兜底值长得像个正常标题,是这个 bug 能活这么久的原因:
+    // 它不像缺失,像设计。往这张表加路由时记得连标题一起加。
+    if (p === '/tidy') return { title: '整理', subtitle: '按顺序做,一次一件' }
+    if (p === '/tidy/go') return { title: '专注模式', subtitle: '' }
     if (p === '/settings') return { title: '设置', subtitle: '' }
     return { title: 'HOME.OS', subtitle: '' }
   })
@@ -131,7 +140,7 @@
     <AppBar
       title={pageMeta.title}
       subtitle={pageMeta.subtitle}
-      hidden={planRoute}
+      hidden={planRoute || storageRoute}
     />
   {/snippet}
 

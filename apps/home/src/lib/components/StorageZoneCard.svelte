@@ -8,6 +8,7 @@
   } from '$lib/spatial/container-scan.js'
 
   /** @typedef {import('$lib/spatial/types.js').SpatialStorageItem} SpatialStorageItem */
+  /** @typedef {import('$lib/spatial/types.js').StorageMeasurement} StorageMeasurement */
 
   /**
    * @type {{
@@ -18,6 +19,7 @@
    *   items: SpatialStorageItem[],
    *   inferred?: boolean,
    *   container?: import('$lib/spatial/types.js').ContainerScanInfo,
+   *   spec?: import('$lib/spatial/types.js').StorageZoneSpec,
    *   confirmedLabel?: string,
    *   selected?: boolean,
    *   onSelect?: () => void,
@@ -40,6 +42,7 @@
     items,
     inferred = false,
     container = undefined,
+    spec = undefined,
     confirmedLabel = '',
     selected = false,
     onSelect,
@@ -66,6 +69,33 @@
   const levels = $derived(levelOptions(container))
 
   const matched = $derived(new Set(matchedItemIds))
+
+  const measurementSourceZh = {
+    roomplan: 'RoomPlan 实测',
+    'container-scan': '柜内扫描',
+    floorplan: '户型图',
+    product: '商品规格',
+    'photo-estimate': '照片估算',
+  }
+
+  /** @param {StorageMeasurement} measurement */
+  function formatMeasurement(measurement) {
+    const axes = [
+      ['wIn', '宽'],
+      ['dIn', '深'],
+      ['hIn', '高'],
+    ]
+    const present = axes.filter(
+      ([key]) => Number.isFinite(measurement[key]),
+    )
+    if (!present.length) return '待测量'
+    const values = present.map(([key]) =>
+      Math.round(Number(measurement[key]) * 2.54),
+    )
+    return `${measurement.approximate ? '约 ' : ''}${values.join(' × ')} cm（${present
+      .map(([, label]) => label)
+      .join('×')}）`
+  }
 
   /**
    * 商品图来自远端公开桶(FinanceOS),链接会失效、离线也拉不到。
@@ -160,6 +190,38 @@
         >
       {/if}
     </p>
+  {/if}
+  {#if spec}
+    <section class="zone-spec" aria-label="柜体规格与收纳建议">
+      <!-- summaryZh 是柜体结构描述(「1 组三抽地柜」),要照片或柜内扫描才知道 ——
+           算出来的 spec 只有存放/动线两项,没有它。不守着的话会渲染出一个后面
+           空着的「柜体」标签。 -->
+      {#if spec.summaryZh}
+        <p class="spec-summary"><b>柜体</b>{spec.summaryZh}</p>
+      {/if}
+      {#each spec.measurements ?? [] as measurement, index (`${measurement.labelZh}-${index}`)}
+        <p class="measurement">
+          <span>{measurement.labelZh} · {formatMeasurement(measurement)}</span>
+          <span class="source" class:estimated={measurement.approximate}
+            >{measurementSourceZh[measurement.source] ?? measurement.source}</span
+          >
+        </p>
+      {/each}
+      {#if spec.structureZh?.length || spec.storagePlanZh || spec.ergonomicsZh}
+        <details>
+          <summary>查看结构与收纳建议</summary>
+          {#if spec.structureZh?.length}
+            <p><b>结构</b>{spec.structureZh.join('；')}</p>
+          {/if}
+          {#if spec.storagePlanZh}
+            <p><b>存放</b>{spec.storagePlanZh}</p>
+          {/if}
+          {#if spec.ergonomicsZh}
+            <p><b>动线</b>{spec.ergonomicsZh}</p>
+          {/if}
+        </details>
+      {/if}
+    </section>
   {/if}
 
   <ul>
@@ -458,6 +520,79 @@
 
   .container-levels {
     color: var(--t3);
+  }
+
+  .zone-spec {
+    margin: 0 0 10px;
+    padding: 9px 10px;
+    color: var(--t2);
+    background: color-mix(
+      in srgb,
+      var(--storage-accent, #5c758c) 6%,
+      var(--card)
+    );
+    border: 1px solid
+      color-mix(in srgb, var(--storage-accent, #5c758c) 20%, var(--border));
+    border-radius: 9px;
+  }
+
+  .zone-spec p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .zone-spec p + p {
+    margin-top: 4px;
+  }
+
+  .zone-spec b {
+    margin-right: 6px;
+    color: var(--storage-accent);
+    font-weight: 650;
+  }
+
+  .spec-summary {
+    font-size: 12px !important;
+    color: var(--t1);
+  }
+
+  .measurement {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .source {
+    flex: none;
+    padding: 1px 5px;
+    color: var(--t3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 9px;
+  }
+
+  .source.estimated {
+    color: var(--warn, #a86434);
+    border-style: dashed;
+  }
+
+  .zone-spec details {
+    margin-top: 7px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  .zone-spec summary {
+    color: var(--t3);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .zone-spec details p {
+    margin-top: 6px;
   }
 
   .level-chip {

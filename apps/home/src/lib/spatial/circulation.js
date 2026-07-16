@@ -16,6 +16,7 @@
 
 import { PX_PER_IN } from './dimensions.js'
 import { distToSegment, pointInPolygon, pointToRectDistance } from './geometry.js'
+import { FENCE_BAND_IN, fenceBandRects, isFence } from './placements.js'
 
 // 兼容 re-export:老消费方从这里拿 pointInPolygon;新代码请直接 import geometry.js
 export { pointInPolygon }
@@ -41,12 +42,26 @@ function obstacleRects(project) {
   for (const pl of project.placements ?? []) {
     // 地毯/瑜伽垫这类踩得上去的不算障碍
     if (pl.kind === 'rug' || pl.kind === 'yoga_mat' || pl.kind === 'mat') continue
-    rects.push({ x: pl.x, y: pl.y, w: pl.w, h: pl.h, id: pl.id, label: pl.label })
+    // 导入暂存(还没安家)的不算:它们叠在画布左上角,不是屋里的真实障碍 ——
+    // 算进去会凭空堵门、抬高占地率,还把真实瓶颈藏进"走不到"的区域
+    if (pl.attrs?.staged) continue
+    // kind/fixed 是给堵门报告认元凶用的:固定件(马桶/洗衣机)不可能是"该挪开的东西"
+    const meta = { id: pl.id, label: pl.label, kind: pl.kind, fixed: !!pl.fixed }
+    // 围栏不是实体:只有边框挡路,内部是狗的地板。整块盖章会把 ~9 sqft 记成
+    // 家具占地、把围栏里的地面从统计里抹掉(内部本来就与外界不连通,BFS 自己
+    // 会把它算成走不到 —— 不需要靠「当成实心」来堵)。
+    if (isFence(pl.kind)) {
+      for (const band of fenceBandRects(pl, FENCE_BAND_IN * PX_PER_IN)) {
+        rects.push({ ...band, ...meta })
+      }
+      continue
+    }
+    rects.push({ x: pl.x, y: pl.y, w: pl.w, h: pl.h, ...meta })
   }
   for (const fx of project.fixtures ?? []) {
     const b = fx.bounds
     if (!b) continue
-    rects.push({ x: b.x, y: b.y, w: b.w, h: b.h, id: fx.id, label: fx.label })
+    rects.push({ x: b.x, y: b.y, w: b.w, h: b.h, id: fx.id, label: fx.label, kind: fx.kind, fixed: true })
   }
   return rects
 }
@@ -385,7 +400,7 @@ function cellsNear(g, x, y, radiusPx) {
  *   reason?: string,
  *   zoneStats: Array<{ zoneId: string, nameZh: string, areaSqft: number, furnitureSqft: number, freeSqft: number, usedRatio: number, tightRatio: number }>,
  *   bottlenecks: Array<{ x: number, y: number, widthIn: number, zoneId: string|null, nameZh: string|null }>,
- *   blockedDoors: Array<{ id: string, reason: string }>,
+ *   blockedDoors: Array<{ id: string, reason: string, x: number, y: number, nameZh: string, zoneId: string|null, zoneNameZh: string|null, blockers: Array<{ label: string, kind: string|null }> }>,
  *   isolatedZones: Array<{ zoneId: string, nameZh: string }>,
  *   totals: { areaSqft: number, freeSqft: number, usedRatio: number },
  * }}
@@ -473,21 +488,85 @@ export function analyzeCirculation(project, opts = {}) {
     start >= 0 ? reachableFrom(g, [start]) : new Uint8Array(cols * rows)
 
   // 堵门:门口那格本身被家具压住,或从主通道根本走不过去
+  //
+  // 每条都带「这是哪道门、被什么挡住」:光说"疏通被挡住的门",人拿着任务在屋里
+  // 转一圈都不知道看哪。门的身份 = 两侧沿墙法线各探几格认分区;认不出的那一侧
+  // (洗衣位这类设备区不设分区)拿门后最近的固定件当地标 ——「厨房通往烘干机的门」
+  // 比「一道门」有用得多。元凶 = 门口 24in 内的**可动**家具;固定件(马桶/洗衣机)
+  // 本来就不是"该挪开的东西",列出来只会让人想搬洗衣机。
+  // 认分区不走 cellsNear:它只回可走格,而门口那格常被(挡门的)家具压成 cell=2 ——
+  // 被柜子压住的格子照样属于厨房。zoneOf 来自分区多边形,与家具无关,直接查。
+  const gateZoneAt = (px, py) => {
+    const c = Math.round((px - minX) / GRID_PX)
+    const r = Math.round((py - minY) / GRID_PX)
+    if (c < 0 || r < 0 || c >= cols || r >= rows) return null
+    const zi = zoneOf[r * cols + c]
+    return zi >= 0 ? zones[zi] : null
+  }
+  const describeGate = (gate) => {
+    const nx = -gate.dir.y
+    const ny = gate.dir.x
+    const probe = (s, dGrid) => gateZoneAt(gate.x + nx * GRID_PX * dGrid * s, gate.y + ny * GRID_PX * dGrid * s)
+    const zA = probe(1, 2) ?? probe(1, 4) ?? probe(1, 6)
+    const zB = probe(-1, 2) ?? probe(-1, 4) ?? probe(-1, 6)
+    // 认不出分区的那一侧,拿最近的家具/设施当地标(6ft 内,最多两件)。
+    // 按 id 去重:围栏在 rects 里是四条边框,不去重会报成「宠物围栏/宠物围栏」
+    const landmarks = (s) =>
+      dedupeById(
+        rects
+          .map((rc) => {
+            const cx = rc.x + rc.w / 2
+            const cy = rc.y + rc.h / 2
+            return { rc, side: (cx - gate.x) * nx + (cy - gate.y) * ny, d: Math.hypot(cx - gate.x, cy - gate.y) }
+          })
+          .filter((e) => e.side * s > 0 && e.d < 72 * PX_PER_IN)
+          .sort((a, b) => a.d - b.d),
+        (e) => e.rc.id,
+      )
+        .slice(0, 2)
+        .map((e) => e.rc.label)
+    let nameZh
+    if (zA && zB && zA.id !== zB.id) nameZh = `${zA.nameZh}与${zB.nameZh}之间的门`
+    else if (zA || zB) {
+      const z = zA ?? zB
+      const lm = landmarks(zA ? -1 : 1)
+      nameZh = lm.length ? `${z.nameZh}通往${lm.join('/')}的门` : `${z.nameZh}的门`
+    } else nameZh = '一道门'
+    const M = 24 * PX_PER_IN
+    const blockers = dedupeById(
+      rects.filter(
+        (rc) =>
+          !rc.fixed &&
+          gate.x >= rc.x - M &&
+          gate.x <= rc.x + rc.w + M &&
+          gate.y >= rc.y - M &&
+          gate.y <= rc.y + rc.h + M,
+      ),
+      (rc) => rc.id,
+    )
+      .slice(0, 3)
+      .map((rc) => ({ label: rc.label, kind: rc.kind ?? null }))
+    const z = zA ?? zB
+    return { nameZh, zoneId: z?.id ?? null, zoneNameZh: z?.nameZh ?? null, blockers }
+  }
   const blockedDoors = []
+  // x/y 是门洞中心 —— 整理任务的定位小图靠它把取景框对准这道门
+  const pushBlocked = (gate, reason) =>
+    blockedDoors.push({ id: gate.id, reason, x: gate.x, y: gate.y, ...describeGate(gate) })
   for (const gate of gates) {
     const c = Math.round((gate.x - minX) / GRID_PX)
     const r = Math.round((gate.y - minY) / GRID_PX)
     const gi = r * cols + c
     const inRange = c >= 0 && r >= 0 && c < cols && r < rows
     if (inRange && cell[gi] === 2) {
-      blockedDoors.push({ id: gate.id, reason: '门口被家具占住' })
+      pushBlocked(gate, '门口被家具占住')
       continue
     }
     const near = cellsNear(g, gate.x, gate.y, GRID_PX * 2)
     if (!near.length) {
-      blockedDoors.push({ id: gate.id, reason: '门口被家具占住' })
+      pushBlocked(gate, '门口被家具占住')
     } else if (!near.some((i) => seen[i])) {
-      blockedDoors.push({ id: gate.id, reason: '从主通道走不到这道门' })
+      pushBlocked(gate, '从主通道走不到这道门')
     } else {
       // 分侧检查:门连着两个区,只堵住一侧时另一侧照样可达,整体检查会放行 ——
       // 但这道门实际已经废了(实测漏报过:柜子贴着门的客厅侧,卧室侧畅通)。
@@ -499,8 +578,10 @@ export function analyzeCirculation(project, opts = {}) {
         if (zi < 0) continue
         sides.set(zi, (sides.get(zi) ?? false) || Boolean(seen[i]))
       }
-      if (sides.size >= 2 && [...sides.values()].some((reachable) => !reachable)) {
-        blockedDoors.push({ id: gate.id, reason: '门的一侧被家具堵死' })
+      const stuck = [...sides.entries()].find(([, reachable]) => !reachable)
+      if (sides.size >= 2 && stuck) {
+        const sideName = zones[stuck[0]]?.nameZh
+        pushBlocked(gate, sideName ? `门的${sideName}一侧被家具堵死` : '门的一侧被家具堵死')
       }
     }
   }
@@ -642,20 +723,41 @@ function blockersAt(x, y, widthIn, rects) {
   if (!needIn) return []
   // 瓶颈点半径内的家具就是元凶:通道窄正是因为它们夹着
   const reach = (CLEARANCE.comfortable / 2 + 6) * PX_PER_IN
-  return rects
-    .map((r) => {
-      const cx = Math.max(r.x, Math.min(r.x + r.w, x))
-      const cy = Math.max(r.y, Math.min(r.y + r.h, y))
-      return { r, d: Math.hypot(cx - x, cy - y) }
-    })
-    .filter((e) => e.d <= reach)
-    .sort((a, b) => a.d - b.d)
+  return dedupeById(
+    rects
+      .map((r) => {
+        const cx = Math.max(r.x, Math.min(r.x + r.w, x))
+        const cy = Math.max(r.y, Math.min(r.y + r.h, y))
+        return { r, d: Math.hypot(cx - x, cy - y) }
+      })
+      .filter((e) => e.d <= reach)
+      .sort((a, b) => a.d - b.d),
+    (e) => e.r.id,
+  )
     .slice(0, 2)
     .map((e) => ({
       id: e.r.id,
       label: e.r.label ?? '家具',
       moveIn: Math.round(needIn),
     }))
+}
+
+/**
+ * 按 key 去重,保留首个(列表已按相关性排过序时即「最相关的那条」)。
+ * 存在的理由:围栏在 obstacleRects 里是同 id 的四条边框 —— 任何拿 rects
+ * 数条目当「几件家具」用的地方都得先合回一件。
+ * @template T
+ * @param {T[]} list
+ * @param {(item: T) => string} keyOf
+ */
+function dedupeById(list, keyOf) {
+  const seen = new Set()
+  return list.filter((item) => {
+    const k = keyOf(item)
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
 }
 
 /** 多边形有向面积×2 的绝对值/2(鞋带公式) */

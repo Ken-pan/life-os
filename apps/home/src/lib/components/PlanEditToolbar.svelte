@@ -66,7 +66,7 @@
     { id: 'zone', label: '画区', key: '4', hint: '逐点圈出房间分区 · Enter 闭合' },
     { sep: '布置', needs: ['furniture', 'storage'] },
     { id: 'furniture', label: '家具', key: '5', hint: '点击画布放置家具' },
-    { id: 'storage', label: '标储藏', key: '6', hint: '点击分区或家具指派 S1–S8' },
+    { id: 'storage', label: '标储藏', key: '6', hint: '点击分区或家具指派储藏区' },
     { sep: '记录', needs: ['viewpoint'] },
     { id: 'viewpoint', label: '视角', key: '7', hint: '标注实拍照片是对着哪儿拍的' },
   ])
@@ -95,11 +95,14 @@
       {#if tool.sep}
         <div class="pt-sep" role="separator" aria-label={tool.sep}></div>
       {:else}
+        <!-- 图标式按钮:文字标签收进 tooltip/aria-label(smoke 按可及名找按钮,
+             aria-label 必须与原文字标签逐字一致) -->
         <button
           type="button"
           class="pt-btn"
           class:active={activeTool === tool.id}
           aria-pressed={activeTool === tool.id}
+          aria-label={tool.label}
           title={`${tool.label}（${tool.key}）— ${tool.hint}`}
           onclick={() => onTool?.(tool.id)}
         >
@@ -208,7 +211,6 @@
               >
             {/if}
           </span>
-          <span class="pt-label">{tool.label}</span>
         </button>
       {/if}
     {/each}
@@ -284,12 +286,14 @@
 </div>
 
 <style>
+  /* 顶对齐而非垂直居中:居中的轨高度一变顶端就漂移,贴着它的选项条会
+     滑进画布中部拦截点击(画区的链点正好点进「自动识别房间」)。
+     顶左角是设计工具工具轨的常规锚位,也离画布主体最远。 */
   .plan-tools {
     position: absolute;
     z-index: 44;
     left: var(--stack-tight, 10px);
-    top: 50%;
-    transform: translateY(-50%);
+    top: var(--stack-tight, 12px);
     transition: opacity 0.15s ease;
   }
 
@@ -302,14 +306,14 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 4px;
+    gap: 2px;
     width: max-content;
-    padding: 6px;
-    border-radius: 14px;
+    padding: 4px;
+    border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     background: color-mix(in srgb, var(--card) 94%, transparent);
     backdrop-filter: blur(12px);
-    box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.32);
+    box-shadow: 0 4px 16px -8px rgba(0, 0, 0, 0.22);
   }
 
   .pt-history {
@@ -335,30 +339,30 @@
   .pt-options {
     position: absolute;
     top: 0;
-    left: calc(100% + 8px);
+    left: calc(100% + 6px);
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     width: max-content;
     max-width: 62vw;
-    padding: 5px;
-    border-radius: 12px;
+    min-height: 38px;
+    padding: 3px 5px;
+    border-radius: 10px;
     border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     background: color-mix(in srgb, var(--card) 94%, transparent);
     backdrop-filter: blur(12px);
-    box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.32);
+    box-shadow: 0 4px 16px -8px rgba(0, 0, 0, 0.22);
   }
 
+  /* 图标式:38px 方块,标签在 tooltip 里 —— 设计工具的紧凑轨 */
   .pt-btn {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    min-width: 48px;
-    min-height: 48px;
-    padding: 5px 6px;
-    border-radius: 10px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    border-radius: 9px;
     border: 1px solid transparent;
     background: transparent;
     color: var(--t2);
@@ -390,27 +394,20 @@
   }
 
   .pt-btn-slim {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 32px;
+    min-height: 32px;
     flex: 1 1 0;
   }
 
   .pt-icon {
     display: inline-flex;
-    width: 20px;
-    height: 20px;
+    width: 19px;
+    height: 19px;
   }
 
   .pt-icon svg {
     width: 100%;
     height: 100%;
-  }
-
-  .pt-label {
-    font-size: 10px;
-    font-weight: 650;
-    line-height: 1;
-    white-space: nowrap;
   }
 
   /* Mobile: same palette, same tool ids, same labels — only the axis changes.
@@ -447,9 +444,10 @@
       flex-shrink: 0;
     }
 
+    /* 触屏保住 44px 目标;图标式后不再需要更宽 */
     .pt-btn {
-      min-width: 46px;
-      min-height: 46px;
+      min-width: 44px;
+      min-height: 44px;
       flex-shrink: 0;
     }
 
