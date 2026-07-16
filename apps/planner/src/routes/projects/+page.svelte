@@ -11,12 +11,27 @@
   } from '$lib/domain/projects.js'
   import { t } from '$lib/i18n/index.js'
   import { toast } from '$lib/ui.svelte.js'
+  import { MindMap } from '@life-os/platform-web/svelte/charts'
 
   let title = $state('')
   let summary = $state('')
 
   const projects = $derived(visibleProjects())
   const activeProjects = $derived(projects.filter((project) => project.status === 'active'))
+
+  // 项目鸟瞰:活跃项目 → 前 5 个未完成任务(长尾折进省略节点,点项目节点可折叠)
+  const MAP_TASK_LIMIT = 5
+  const projectTree = $derived({
+    label: t('projects.title'),
+    children: activeProjects.map((project) => {
+      const open = projectOpenTasks(project)
+      const children = open.slice(0, MAP_TASK_LIMIT).map((task) => ({ label: task.title }))
+      if (open.length > MAP_TASK_LIMIT) {
+        children.push({ label: `… +${open.length - MAP_TASK_LIMIT}` })
+      }
+      return { label: project.title, children }
+    }),
+  })
   const pausedProjects = $derived(projects.filter((project) => project.status === 'paused'))
   const shippedProjects = $derived(projects.filter((project) => project.status === 'shipped'))
 
@@ -66,6 +81,15 @@
       <span>{t('projects.create')}</span>
     </button>
   </form>
+
+  {#if activeProjects.length}
+    <section class="project-section project-map">
+      <h2>{t('projects.mapTitle')}</h2>
+      <div class="project-map-card">
+        <MindMap root={projectTree} ariaLabel={t('projects.mapTitle')} />
+      </div>
+    </section>
+  {/if}
 
   {#if projects.length}
     {@render projectSection(t('projects.active'), activeProjects)}
@@ -161,6 +185,13 @@
     font-weight: 650;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+
+  .project-map-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius, 12px);
+    padding: var(--space-3);
   }
 
   .project-list {

@@ -117,6 +117,7 @@ export default {
     newSummaryPlaceholder: '一句话说明',
     emptyTitle: '还没有项目',
     emptyHint: '先创建一个项目，再把相关任务聚合起来。',
+    mapTitle: '项目鸟瞰',
     cardMeta: '{count} 个未完成任务',
     cardMetaWithNext: '{count} 个未完成 · 下一步：{title}',
     status_active: '进行中',
@@ -281,6 +282,8 @@ export default {
     empty: '还没有已完成的任务',
     logTitle: '完成记录',
     recapTitle: '节奏回顾',
+    trendTitle: '完成趋势（近 14 天）',
+    trendSeries: '完成任务',
   },
   search: {
     title: '搜索',

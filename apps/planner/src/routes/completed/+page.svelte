@@ -13,6 +13,8 @@
   import { completeTask, editTask } from '$lib/taskUi.js'
   import { S } from '$lib/state.svelte.js'
   import { t, localeTag } from '$lib/i18n/index.js'
+  import { dateKeyOf } from '$lib/persist/migrate.js'
+  import { BarChart } from '@life-os/platform-web/svelte/charts'
 
   const index = $derived(taskIndex())
   const groups = $derived(selectDoneLogGroups(index))
@@ -20,6 +22,21 @@
   const rhythm = $derived(
     computeRhythmSummary(S.tasks, S.settings, progress, localeTag()),
   )
+
+  // 近 14 天每日完成数(补零日,groups 只含有记录的日期)
+  const trend = $derived.by(() => {
+    const byDate = new Map(groups.map(([key, tasks]) => [key, tasks.length]))
+    const labels = []
+    const values = []
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const key = dateKeyOf(d)
+      labels.push(key.slice(5))
+      values.push(byDate.get(key) ?? 0)
+    }
+    return { labels, values, total: values.reduce((a, b) => a + b, 0) }
+  })
 </script>
 
 <AppBar title={t('completed.title')} />
@@ -41,6 +58,20 @@
           />
         </section>
 
+        {#if trend.total > 0}
+          <section class="completed-trend">
+            <h2 class="completed-section-title">{t('completed.trendTitle')}</h2>
+            <div class="completed-trend-card">
+              <BarChart
+                labels={trend.labels}
+                series={[{ label: t('completed.trendSeries'), values: trend.values }]}
+                height={150}
+                ariaLabel={t('completed.trendTitle')}
+              />
+            </div>
+          </section>
+        {/if}
+
         <section class="completed-log">
           <h2 class="completed-section-title">{t('completed.logTitle')}</h2>
           {#if groups.length}
@@ -59,3 +90,12 @@
     />
   </div>
 </div>
+
+<style>
+  .completed-trend-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius, 12px);
+    padding: var(--card-padding, 16px);
+  }
+</style>

@@ -117,6 +117,7 @@ export default {
     newSummaryPlaceholder: 'One-line summary',
     emptyTitle: 'No projects yet',
     emptyHint: 'Create a project first, then group related tasks under it.',
+    mapTitle: 'Project map',
     cardMeta: '{count} open tasks',
     cardMetaWithNext: '{count} open · Next: {title}',
     status_active: 'Active',
@@ -282,6 +283,8 @@ export default {
     empty: 'No completed tasks yet',
     logTitle: 'Done log',
     recapTitle: 'Rhythm recap',
+    trendTitle: 'Completion trend (last 14 days)',
+    trendSeries: 'Done',
   },
   search: {
     title: 'Search',

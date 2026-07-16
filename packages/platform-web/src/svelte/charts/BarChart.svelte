@@ -204,11 +204,13 @@
             >
               {xFormat(label, j)}
             </text>
-            <path
-              class="bar-chart__mark"
-              d={barPath(padL, y, Math.max(w, 1), BAR_H, RADIUS, 'right')}
-              fill={seriesColor(0, drawn.length, drawn[0]?.color)}
-            />
+            {#if v !== 0}
+              <path
+                class="bar-chart__mark"
+                d={barPath(padL, y, Math.max(w, 1), BAR_H, RADIUS, 'right')}
+                fill={seriesColor(0, drawn.length, drawn[0]?.color)}
+              />
+            {/if}
             {#if directValues}
               <text
                 class="bar-chart__value"
@@ -279,12 +281,15 @@
                 {@const y = up ? yScale(v) : zeroY}
                 {@const h = Math.abs(yScale(v) - zeroY)}
                 {@const segDim = legendHover != null && legendHover !== si}
-                <path
-                  class="bar-chart__mark"
-                  class:bar-chart__mark--dim={segDim}
-                  d={barPath(x, y, barW, Math.max(h, 1), RADIUS, up ? 'up' : 'down')}
-                  fill={seriesColor(si, drawn.length, s.color)}
-                />
+                <!-- 零值不画柱:1px 残条会误读成"有值";没柱子即为零 -->
+                {#if v !== 0}
+                  <path
+                    class="bar-chart__mark"
+                    class:bar-chart__mark--dim={segDim}
+                    d={barPath(x, y, barW, Math.max(h, 1), RADIUS, up ? 'up' : 'down')}
+                    fill={seriesColor(si, drawn.length, s.color)}
+                  />
+                {/if}
               {/each}
               {#if directValues && rows[0][j] >= 0}
                 <text
