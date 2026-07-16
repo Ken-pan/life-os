@@ -92,6 +92,10 @@ import { sunLightPools, sunLightPlanDir } from './sun.js'
  *     aboveHorizon: boolean } | null,
  *     日照模拟:从透光开口投光斑 + 图缘太阳指示。位置/时间 → 角度的换算
  *     在调用方(FloorPlanViewer),几何在 sun.js;浏览态专属
+ *   sunHeat?: { cells: { x: number, y: number, hours: number }[], cellPx: number,
+ *     maxHours: number } | null,
+ *     全天直射热力图(sun.js 的 sunDayHeatmap 算好传入),与 sun 光斑二选一;
+ *     颜色透明度按 hours/maxHours 走,谁晒得久谁深
  *   focus?: { x: number, y: number, rect?: { x: number, y: number, w: number, h: number }, spanFt?: number } | null,
  *     整理任务定位:viewBox 收到焦点周围一圈并画脉冲标记 —— 裁的是取景框,
  *     内容仍完整渲染,周围的墙和家具上下文都在
@@ -335,6 +339,7 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
  .sun-glyph{fill:var(--plan-sun-glyph,#f2a93b);pointer-events:none}
  .sun-glyph-ray{stroke:var(--plan-sun-glyph,#f2a93b);stroke-width:1.6;stroke-linecap:round;pointer-events:none}
  .sun-glyph-arrow{stroke:var(--plan-sun-glyph,#f2a93b);stroke-width:1.4;fill:none;stroke-dasharray:5 4;opacity:.75;pointer-events:none}
+ .sun-heat-cell{fill:var(--plan-sun-heat,#ff8a2e);pointer-events:none}
  @keyframes plan-sel-pulse{0%,100%{stroke-opacity:1}50%{stroke-opacity:.45}}
 </style>`)
 
@@ -671,6 +676,20 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
           `<text x="${vp.x}" y="${vp.y - dotR - 4}" text-anchor="middle" class="vp-label">${esc(vp.label)}</text>`,
         )
       }
+    }
+    parts.push('</g>')
+  }
+
+  // 全天热力图:格子透明度 = 直射时长占当日最大值的比例。同光斑一样画在
+  // 墙之前,墙线盖住贴墙格子的毛边。
+  if (opts.sunHeat?.cells.length && !editingAny) {
+    const { cells, cellPx, maxHours } = opts.sunHeat
+    parts.push('<g class="sun-heat" aria-label="全天直射热力">')
+    for (const cell of cells) {
+      const a = 0.08 + 0.5 * (cell.hours / Math.max(maxHours, 0.1))
+      parts.push(
+        `<rect x="${Math.round(cell.x * 10) / 10}" y="${Math.round(cell.y * 10) / 10}" width="${Math.round(cellPx * 10) / 10}" height="${Math.round(cellPx * 10) / 10}" class="sun-heat-cell" fill-opacity="${Math.round(a * 100) / 100}"/>`,
+      )
     }
     parts.push('</g>')
   }

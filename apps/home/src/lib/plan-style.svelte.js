@@ -19,6 +19,17 @@ const style = $state({
    * @type {number | null}
    */
   sunMinutes: null,
+  /**
+   * 日照模拟取哪一天(YYYY-MM-DD);null = 今天。会话态,理由同上 ——
+   * 翻到冬至对比是探索,不是要让图从此活在十二月。
+   * @type {string | null}
+   */
+  sunDateISO: null,
+  /**
+   * live = 某一时刻的光斑;heat = 全天直射热力图(选盆栽位/工位用)。
+   * @type {'live' | 'heat'}
+   */
+  sunMode: 'live',
 })
 
 /** 读共享的显示风格。返回 $state 代理本身。 */
@@ -41,4 +52,14 @@ export function setPlanSun(on) {
 /** @param {number | null} minutes 0–1439;null = 回到「现在」 */
 export function setPlanSunMinutes(minutes) {
   style.sunMinutes = minutes
+}
+
+/** @param {string | null} iso YYYY-MM-DD;null = 今天 */
+export function setPlanSunDate(iso) {
+  style.sunDateISO = iso
+}
+
+/** @param {'live' | 'heat'} mode */
+export function setPlanSunMode(mode) {
+  style.sunMode = mode
 }

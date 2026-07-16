@@ -14,6 +14,7 @@
 
 import { detectRooms } from './rooms-from-graph.js'
 import { graphOpeningBounds } from './graph-openings.js'
+import { pointInPolygon } from './geometry.js'
 
 const RAD = Math.PI / 180
 
@@ -141,35 +142,38 @@ function translucent(go) {
 /** 光斑最大进深(英尺):太阳贴地平线时不至于拉出无限长的光带。 */
 const MAX_DEPTH_FT = 26
 
-/**
- * 全部透光开口的光斑多边形(平面图 px 坐标)。
- * @param {import('./types.js').SpatialProject} project
- * @param {{ azimuthDeg: number, altitudeDeg: number, planNorthDeg: number | null }} sun
- * @returns {{ points: {x:number,y:number}[], low: boolean }[]}
- *   low = 低角度斜照(高度角 < 15°,配色更暖)
- */
-export function sunLightPools(project, sun) {
+/** 透光开口 + 围合面,光斑计算的静态几何 —— 热力图按天采样时只算一次。 */
+function sunGeometry(project) {
   const graph = project.wallGraph
-  if (!graph || sun.altitudeDeg <= 0.3) return []
+  if (!graph) return null
   const openings = (project.graphOpenings ?? []).filter(translucent)
-  if (!openings.length) return []
+  if (!openings.length) return null
+  // 与铺地板同一套围合面(跨门洞搭桥),光斑不越出房间
+  const faces = detectRooms(graph, { minSqFt: 4, bridgeGapIn: 60 })
+  if (!faces.length) return null
+  // 开口端点也只解一次
+  const segs = openings
+    .map((go) => ({ go, b: graphOpeningBounds(graph, go) }))
+    .filter((s) => s.b)
+  return { graph, segs, faces, pxPerFt: graph.pxPerFt || 36 }
+}
 
-  const pxPerFt = graph.pxPerFt || 36
+/**
+ * 某一时刻的光斑多边形。
+ * @param {ReturnType<typeof sunGeometry>} geo
+ * @param {{ azimuthDeg: number, altitudeDeg: number, planNorthDeg: number | null }} sun
+ */
+function poolsForSun(geo, sun) {
+  if (!geo || sun.altitudeDeg <= 0.3) return []
   const L = sunLightPlanDir(sun.azimuthDeg, sun.planNorthDeg)
   const tanAlt = Math.tan(sun.altitudeDeg * RAD)
   const low = sun.altitudeDeg < 15
-  // 与铺地板同一套围合面(跨门洞搭桥),光斑不越出房间
-  const faces = detectRooms(graph, { minSqFt: 4, bridgeGapIn: 60 })
-  if (!faces.length) return []
-
   /** @type {{ points: {x:number,y:number}[], low: boolean }[]} */
   const pools = []
-  for (const go of openings) {
-    const b = graphOpeningBounds(graph, go)
-    if (!b) continue
+  for (const { go, b } of geo.segs) {
     const depthPx =
       Math.min(MAX_DEPTH_FT, openingHeadFt(go) / Math.max(tanAlt, 0.02)) *
-      pxPerFt
+      geo.pxPerFt
     const dx = L.x * depthPx
     const dy = L.y * depthPx
     const quad = [
@@ -179,7 +183,7 @@ export function sunLightPools(project, sun) {
       { x: b.p0.x + dx, y: b.p0.y + dy },
     ]
     if (Math.abs(signedArea(quad)) < 4) continue // 光线几乎平行于墙,没有光斑
-    for (const face of faces) {
+    for (const face of geo.faces) {
       const clipped = clipToConvex(face.polygon, quad)
       if (clipped.length >= 3 && Math.abs(signedArea(clipped)) > 4) {
         pools.push({ points: clipped, low })
@@ -187,4 +191,124 @@ export function sunLightPools(project, sun) {
     }
   }
   return pools
+}
+
+/**
+ * 全部透光开口的光斑多边形(平面图 px 坐标)。
+ * @param {import('./types.js').SpatialProject} project
+ * @param {{ azimuthDeg: number, altitudeDeg: number, planNorthDeg: number | null }} sun
+ * @returns {{ points: {x:number,y:number}[], low: boolean }[]}
+ *   low = 低角度斜照(高度角 < 15°,配色更暖)
+ */
+export function sunLightPools(project, sun) {
+  if (sun.altitudeDeg <= 0.3) return []
+  return poolsForSun(sunGeometry(project), sun)
+}
+
+/**
+ * 全天直射热力图:这一天里,地面上每个格子被太阳直射了多少小时。
+ * 选盆栽位、挪工位、判断哪面窗帘最要紧,靠的就是这张图。
+ *
+ * 做法与专业日照分析一致:整天按固定步长采样太阳位置,每个采样时刻的
+ * 光斑多边形做点包含测试,格子命中一次累计一个步长。格径 0.75ft ——
+ * 比它细肉眼分不出,比它粗读不出窗边/屋深的梯度。
+ *
+ * @param {import('./types.js').SpatialProject} project
+ * @param {{
+ *   latDeg: number, lonDeg: number, elevM: number,
+ *   planNorthDeg: number | null,
+ *   date: Date, 取这一天(本地时区)
+ *   stepMin?: number, 采样步长(分钟),默认 20
+ *   cellFt?: number, 格径(英尺),默认 0.75
+ * }} opts
+ * @returns {{ cells: { x: number, y: number, hours: number }[], cellPx: number,
+ *   maxHours: number, stepMin: number } | null} x/y 为格子左上角
+ */
+export function sunDayHeatmap(project, opts) {
+  const geo = sunGeometry(project)
+  if (!geo) return null
+  const stepMin = opts.stepMin ?? 20
+  const cellPx = (opts.cellFt ?? 0.75) * geo.pxPerFt
+
+  // 格子取自围合面内部(格心判定),跨面去重
+  /** @type {Map<string, { x: number, y: number, hours: number }>} */
+  const cells = new Map()
+  for (const face of geo.faces) {
+    let x1 = Infinity
+    let x2 = -Infinity
+    let y1 = Infinity
+    let y2 = -Infinity
+    for (const p of face.polygon) {
+      x1 = Math.min(x1, p.x)
+      x2 = Math.max(x2, p.x)
+      y1 = Math.min(y1, p.y)
+      y2 = Math.max(y2, p.y)
+    }
+    const ix0 = Math.floor(x1 / cellPx)
+    const iy0 = Math.floor(y1 / cellPx)
+    for (let iy = iy0; iy * cellPx < y2; iy++) {
+      for (let ix = ix0; ix * cellPx < x2; ix++) {
+        const key = `${ix},${iy}`
+        if (cells.has(key)) continue
+        const c = { x: (ix + 0.5) * cellPx, y: (iy + 0.5) * cellPx }
+        if (pointInPolygon(c, face.polygon)) {
+          cells.set(key, { x: ix * cellPx, y: iy * cellPx, hours: 0 })
+        }
+      }
+    }
+  }
+  if (!cells.size) return null
+
+  const base = new Date(opts.date)
+  base.setHours(0, 0, 0, 0)
+  const stepH = stepMin / 60
+  for (let m = 0; m < 1440; m += stepMin) {
+    const t = new Date(base.getTime() + m * 60000)
+    const pos = sunPosition(t, opts.latDeg, opts.lonDeg, opts.elevM)
+    if (pos.altitudeDeg <= 0.3) continue
+    const pools = poolsForSun(geo, {
+      azimuthDeg: pos.azimuthDeg,
+      altitudeDeg: pos.altitudeDeg,
+      planNorthDeg: opts.planNorthDeg,
+    })
+    // 同一时刻两个窗的光斑可能叠在同一格 —— 直射时长按「这一刻晒到了」
+    // 记一次,不按光斑数量翻倍
+    const hitThisSample = new Set()
+    for (const pool of pools) {
+      // 光斑 bbox 预筛,点包含只跑可能命中的格子
+      let px1 = Infinity
+      let px2 = -Infinity
+      let py1 = Infinity
+      let py2 = -Infinity
+      for (const p of pool.points) {
+        px1 = Math.min(px1, p.x)
+        px2 = Math.max(px2, p.x)
+        py1 = Math.min(py1, p.y)
+        py2 = Math.max(py2, p.y)
+      }
+      for (const [key, cell] of cells) {
+        if (hitThisSample.has(key)) continue
+        const cx = cell.x + cellPx / 2
+        const cy = cell.y + cellPx / 2
+        if (cx < px1 || cx > px2 || cy < py1 || cy > py2) continue
+        if (pointInPolygon({ x: cx, y: cy }, pool.points)) {
+          hitThisSample.add(key)
+        }
+      }
+    }
+    for (const key of hitThisSample) {
+      const cell = cells.get(key)
+      if (cell) cell.hours += stepH
+    }
+  }
+
+  let maxHours = 0
+  const out = []
+  for (const cell of cells.values()) {
+    if (cell.hours <= 0) continue
+    cell.hours = Math.round(cell.hours * 10) / 10
+    maxHours = Math.max(maxHours, cell.hours)
+    out.push(cell)
+  }
+  return { cells: out, cellPx, maxHours, stepMin }
 }

@@ -10,10 +10,12 @@
   import {
     getPlanStyle,
     setPlanSun,
+    setPlanSunDate,
     setPlanSunMinutes,
+    setPlanSunMode,
     setPlanTextured,
   } from '$lib/plan-style.svelte.js'
-  import { sunPosition } from '$lib/spatial/sun.js'
+  import { sunDayHeatmap, sunPosition } from '$lib/spatial/sun.js'
   import { getPlanNorth, getSunLocation } from '$lib/state.svelte.js'
   import { bindPlanEditDrag } from '$lib/plan-edit-drag.js'
   import { bindPlanGraphEdit } from '$lib/plan-graph-edit.js'
@@ -224,19 +226,40 @@
     return () => clearInterval(id)
   })
   const sunDate = $derived.by(() => {
-    if (planStyle.sunMinutes == null) return new Date(sunNowMs)
-    const d = new Date(sunNowMs)
-    d.setHours(0, planStyle.sunMinutes, 0, 0)
+    // 换了日期就取那天的同一时刻;"现在"模式下换日期没有意义,时刻也定住正午
+    const d = planStyle.sunDateISO
+      ? new Date(`${planStyle.sunDateISO}T12:00:00`)
+      : new Date(sunNowMs)
+    if (planStyle.sunMinutes != null) d.setHours(0, planStyle.sunMinutes, 0, 0)
     return d
   })
   const sunOpt = $derived.by(() => {
-    if (!planStyle.sun || anyEditActive) return null
+    if (!planStyle.sun || anyEditActive || planStyle.sunMode !== 'live')
+      return null
     const loc = getSunLocation()
     const pos = sunPosition(sunDate, loc.lat, loc.lon, loc.elevM)
     return { ...pos, planNorthDeg: getPlanNorth() }
   })
+  // 全天热力图:一天几十次采样 × 光斑点包含,几十毫秒量级的一次性计算 ——
+  // 只在 heat 模式下算,日期/位置/户型变了才重算
+  const sunHeat = $derived.by(() => {
+    if (!planStyle.sun || anyEditActive || planStyle.sunMode !== 'heat')
+      return null
+    const loc = getSunLocation()
+    return sunDayHeatmap(displayProject, {
+      latDeg: loc.lat,
+      lonDeg: loc.lon,
+      elevM: loc.elevM,
+      planNorthDeg: getPlanNorth(),
+      date: sunDate,
+    })
+  })
   const sunTimeLabel = $derived(
     `${String(sunDate.getHours()).padStart(2, '0')}:${String(sunDate.getMinutes()).padStart(2, '0')}`,
+  )
+  const sunDateValue = $derived(
+    planStyle.sunDateISO ??
+      `${sunDate.getFullYear()}-${String(sunDate.getMonth() + 1).padStart(2, '0')}-${String(sunDate.getDate()).padStart(2, '0')}`,
   )
   let zoom = $state(planView.zoom)
   let panX = $state(planView.panX)
@@ -407,6 +430,7 @@
       showFurniture,
       textured: planStyle.textured,
       sun: sunOpt,
+      sunHeat,
     }),
   )
 
@@ -1115,34 +1139,77 @@
     </div>
   {/if}
 
-  {#if planStyle.sun && !anyEditActive && sunOpt}
-    <div class="plan-sun-chip" role="group" aria-label="阳光模拟时间">
-      <span class="plan-sun-time">☀ {sunTimeLabel}</span>
+  {#if planStyle.sun && !anyEditActive}
+    <div class="plan-sun-chip" role="group" aria-label="阳光模拟">
+      <div class="plan-sun-modes" role="group" aria-label="日照视图">
+        <button
+          type="button"
+          class="plan-sun-mode"
+          class:active={planStyle.sunMode === 'live'}
+          aria-pressed={planStyle.sunMode === 'live'}
+          onclick={() => setPlanSunMode('live')}
+        >
+          实时
+        </button>
+        <button
+          type="button"
+          class="plan-sun-mode"
+          class:active={planStyle.sunMode === 'heat'}
+          aria-pressed={planStyle.sunMode === 'heat'}
+          onclick={() => setPlanSunMode('heat')}
+        >
+          全天
+        </button>
+      </div>
       <input
-        type="range"
-        class="plan-sun-slider"
-        min="0"
-        max="1435"
-        step="5"
-        value={planStyle.sunMinutes ??
-          sunDate.getHours() * 60 + sunDate.getMinutes()}
-        oninput={(e) => setPlanSunMinutes(Number(e.currentTarget.value))}
-        aria-label="一天中的时刻"
+        type="date"
+        class="plan-sun-date"
+        value={sunDateValue}
+        onchange={(e) => {
+          const v = e.currentTarget.value
+          setPlanSunDate(v || null)
+        }}
+        aria-label="日照模拟日期"
       />
-      <span class="plan-sun-readout">
-        {#if sunOpt.aboveHorizon}
-          高度 {Math.round(sunOpt.altitudeDeg)}° · 方位 {Math.round(
-            sunOpt.azimuthDeg,
-          )}°
-        {:else}
-          夜间 · 太阳在地平线下
-        {/if}
-      </span>
-      {#if planStyle.sunMinutes != null}
+      {#if planStyle.sunMode === 'live' && sunOpt}
+        <span class="plan-sun-time">☀ {sunTimeLabel}</span>
+        <input
+          type="range"
+          class="plan-sun-slider"
+          min="0"
+          max="1435"
+          step="5"
+          value={planStyle.sunMinutes ??
+            sunDate.getHours() * 60 + sunDate.getMinutes()}
+          oninput={(e) => setPlanSunMinutes(Number(e.currentTarget.value))}
+          aria-label="一天中的时刻"
+        />
+        <span class="plan-sun-readout">
+          {#if sunOpt.aboveHorizon}
+            高度 {Math.round(sunOpt.altitudeDeg)}° · 方位 {Math.round(
+              sunOpt.azimuthDeg,
+            )}°
+          {:else}
+            夜间 · 太阳在地平线下
+          {/if}
+        </span>
+      {:else if planStyle.sunMode === 'heat'}
+        <span class="plan-sun-readout">
+          {#if sunHeat?.cells.length}
+            当日直射最长 {sunHeat.maxHours} 小时 · 颜色越深晒得越久
+          {:else}
+            这一天没有直射(或户型无透光开口)
+          {/if}
+        </span>
+      {/if}
+      {#if planStyle.sunMinutes != null || planStyle.sunDateISO != null}
         <button
           type="button"
           class="plan-sun-now"
-          onclick={() => setPlanSunMinutes(null)}
+          onclick={() => {
+            setPlanSunMinutes(null)
+            setPlanSunDate(null)
+          }}
         >
           现在
         </button>
@@ -1347,6 +1414,40 @@
     font-weight: 650;
     color: var(--t1);
     font-variant-numeric: tabular-nums;
+  }
+
+  .plan-sun-modes {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .plan-sun-mode {
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 26px;
+    padding: 2px 10px;
+    border: none;
+    background: transparent;
+    color: var(--t2);
+    cursor: pointer;
+  }
+
+  .plan-sun-mode.active {
+    background: color-mix(in srgb, #f2a93b 22%, var(--bg));
+    color: var(--t1);
+  }
+
+  .plan-sun-date {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    min-height: 28px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t1);
   }
 
   .plan-sun-slider {
