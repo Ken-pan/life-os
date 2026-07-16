@@ -21,6 +21,8 @@ Services(有状态控制器 + 纯函数核)
   │    ARLocateController   —— 寻物定位(竖直平面当墙)
   │  纯函数核(无 IO,模拟器单测全覆盖):
   │    HomeFrame / ScanIdentity / RealityCheck / EvidenceGuide / ContainerGeometry
+  │    ViewpointGate —— 自动机位「拍不拍 + 为什么不拍」;配额随房间面积伸缩
+  │      (≈每 80 sqft 1 张,夹 [2,6];面积未知退 4 —— 650 sqft 只给 4 张的真机教训)
   │    CoverageDiff —— 上传前覆盖差报:对照权威副本报「这轮少了什么」
   │      (漏扫分区就近认领 400px 同源 scan-merge.js / 门窗掉到七成 / 分区状态照 <2)
   │  本机存储:PendingScanStore / CanonicalHomeCache
@@ -48,6 +50,18 @@ Convert(纯管线,CapturedStructure → HomeOS plan px)
 - 控制器的 Timer 挂主 RunLoop;`reset()` 必须 invalidate 并清全部派生状态
   (新增状态字段时**同步补 reset**,漏了会串场到下一次扫描)。
 
+## 采集引导的两条铁律
+
+「引导」和「抓拍」是两套独立的判据,极易各说各话 —— 卡死就是这么来的:
+
+1. **引导不许承诺抓拍做不到的事**。`EvidenceGuide.standRadius` 必须算得出
+   ObjectShotCapture 真能过 `visFrac` 门的距离(所以它要吃**高度**:竖直视场
+   比水平窄,2m 高的柜比 2m 宽的床更难拍全)。把人叫到拍不成的位置干等,
+   是用户唯一无法自救的状态。改任一侧前先读另一侧的门槛常数。
+2. **拒绝必须有名字,且不许永久**。每一道 `return` 都要能变成一句「你该干嘛」
+   (见 `ViewpointGate.Block`);再加一道兜底超时(引导 30s 换目标 /
+   机位 40s 强拍)。几何算得准,现场的意外(挡住/反光/太暗)算不准。
+
 ## 同源契约(改一处必须同步改另一处)
 
 | iOS | 对应 | 说明 |
@@ -65,13 +79,15 @@ Convert(纯管线,CapturedStructure → HomeOS plan px)
 ```
 RoomPlan 逐房(共享 ARSession) ─合并→ CapturedStructure
   ├ 抓拍:ObjectShotCapture(方位桶/清晰度门控/12MP 高清帧)
-  ├ 机位:AutoViewpointCapture(稳/亮/新颖自动快门)
+  ├ 机位:AutoViewpointCapture(稳/亮/新颖自动快门;配额按地板面积伸缩)
   └ 实时:HomeFrame 配准(2s 节流)→ HUD 徽标 + 漏扫房间
 StructureFlattener → FlatScene(米,含 elevM)
 PlanProjector → HomeOSProject(plan px)+ 证据包裁剪(大3/中2/小1)
   └ 权威副本(CanonicalHome)配准进扫描帧:去重 >100cm 仲裁(靠权威尺寸,
     无参照同级取更小)+ scanAliases 认亲(跨列表)+ identityLocked 误检压制
 RealityCheck(配准+身份)→ 认出换真名/新发现/没扫到
+CoverageDiff(复核页对照权威副本)→ 漏扫分区/门窗/机位缺口 → 「提醒」区
+  + 追加 meta.scanWarnings 随 payload 上传;副本不可用整个静默跳过,不挡上传
 PendingScanStore.save(先落盘,后上传 —— 断网被杀不丢)
 ScanUploader(3 路并发,桶清单续传,photos 全成才写 scans 行)
 ```

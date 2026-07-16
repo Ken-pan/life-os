@@ -95,4 +95,80 @@ final class PendingScanStoreTests: XCTestCase {
         )
         XCTAssertEqual(PendingScanStore.load()?.scanId, b, "只保留最新一次(全量语义)")
     }
+
+    /// 取消一次**新**扫描,不许删掉上一次还没传完的那份。
+    ///
+    /// 回归锁:cancelScanning() 曾经无条件 clear(),而 startScanning() 根本不碰
+    /// 盘上副本 —— 首页挂着没传完的 A、你点开扫描又立刻取消(hasProgress=false,
+    /// 连确认都不弹),A 的照片就没了,首页还继续显示「继续」骗你点进一个空壳。
+    @MainActor
+    func testCancellingFreshScanKeepsEarlierPendingScan() async throws {
+        let projection = PlanProjector.projectScene(MockScan.scene(), scanId: "t", nameZh: "测试")
+        let older = UUID()
+        try PendingScanStore.save(
+            scanId: older, project: projection.project,
+            photoFiles: [], objectPhotoFiles: [:], structureJSON: nil, modelFileURL: nil
+        )
+
+        let model = AppModel()
+        model.pendingScan = PendingScanStore.load()
+        // 新开一次扫描:scanId 换新,盘上仍是上一次的 older
+        model.scanId = UUID()
+        model.cancelScanning()
+        // 清理判断在后台 Task 里(要先等落盘收尾),让它跑完
+        await Task.yield()
+        try await Task.sleep(for: .milliseconds(120))
+
+        XCTAssertEqual(
+            PendingScanStore.load()?.scanId, older,
+            "取消新扫描不该删掉上一次没传完的副本"
+        )
+        XCTAssertNotNil(model.pendingScan, "首页的「继续」入口要留着 —— 副本还在")
+    }
+
+    /// 进了预览页,首页就不该再挂着「继续上传」——那份扫描已经在你眼前了。
+    ///
+    /// 回归锁:落盘只留最新一次(换 scanId 会整目录清掉重来),所以新扫描一落盘,
+    /// 上一次没传完的 A 的照片就没了。这时内存里的 pendingScan 若还是 A,
+    /// 它就是个指向已删文件的幽灵。
+    @MainActor
+    func testEnteringReviewClearsPendingPointer() async throws {
+        let older = UUID()
+        try PendingScanStore.save(
+            scanId: older,
+            project: PlanProjector.projectScene(MockScan.scene(), scanId: "t", nameZh: "旧").project,
+            photoFiles: [], objectPhotoFiles: [:], structureJSON: nil, modelFileURL: nil
+        )
+        let model = AppModel()
+        model.pendingScan = PendingScanStore.load()
+        XCTAssertNotNil(model.pendingScan, "前提:首页此刻确实挂着上一次没传完的")
+
+        // 新扫一次 → 进预览页
+        model.scanId = UUID()
+        model.applyScene(MockScan.scene())
+
+        XCTAssertEqual(model.route, .reviewing)
+        XCTAssertNil(model.pendingScan, "扫描已摊在预览页上,不该再是「待恢复」")
+    }
+
+    /// 反面:放弃的就是盘上那一份时,才真清掉(否则会留幽灵)
+    @MainActor
+    func testCancellingOwnScanClearsItsCopy() async throws {
+        let projection = PlanProjector.projectScene(MockScan.scene(), scanId: "t", nameZh: "测试")
+        let mine = UUID()
+        try PendingScanStore.save(
+            scanId: mine, project: projection.project,
+            photoFiles: [], objectPhotoFiles: [:], structureJSON: nil, modelFileURL: nil
+        )
+
+        let model = AppModel()
+        model.pendingScan = PendingScanStore.load()
+        model.scanId = mine // 预览页「放弃」:盘上这份就是我这次扫的
+        model.cancelScanning()
+        await Task.yield()
+        try await Task.sleep(for: .milliseconds(120))
+
+        XCTAssertNil(PendingScanStore.load(), "明确放弃自己这次扫描时才清盘")
+        XCTAssertNil(model.pendingScan, "首页不该再显示「继续」")
+    }
 }

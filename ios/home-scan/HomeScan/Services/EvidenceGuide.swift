@@ -49,9 +49,39 @@ enum EvidenceGuide {
     static let minWallClearance = 0.35
     /// 退无可退:比它还近就拍不出有效视角了
     static let minStandRadius = 0.7
-    /// 理想站位半径:家具越大退得越远才能全身入画
+
+    /// 相机视场(iPhone 广角在 ARKit `capturedImage` 横向帧上的近似):
+    /// 水平半视场 ≈ 32.6°(tan 0.64)、**竖直半视场 ≈ 22.8°(tan 0.42)**。
+    /// 竖直比水平窄 —— 2m 高的衣柜比 2m 宽的床更难装进画面。
+    static let halfFovTanH = 0.64
+    static let halfFovTanV = 0.42
+    /// 取景余量:ObjectShotCapture 要求包围盒 ≥55% 落在画面里,裁剪还要外扩 12%。
+    /// 站到「刚好装下」的距离等于卡在门槛上反复失败,留 25% 富余。
+    static let framingMargin = 1.25
+
+    /// 理想站位半径:家具越大退得越远才能全身入画。
+    ///
+    /// **必须带上高度**(含离地高度:吊柜挂在 1.5m 上,镜头要退得更远)。
+    /// 只看平面尺寸是上一版的致命伤 —— 0.8m 宽、2m 高的衣柜按占地算只要退
+    /// 1.4m,而那个距离竖直方向只装得下 1.18m,ObjectShotCapture 的 visFrac
+    /// 门(0.55)在那里**永远过不了**:抓拍每帧静默拒绝,HUD 还在喊「对准它」,
+    /// 用户照做也拍不上,只能干等 —— 这就是「站着不动它还卡着」的真身。
+    ///
+    /// 实测佐证(拿真实扫描的实测尺寸逐件代入旧公式):22 件带实测高度的家具里
+    /// **8 件**的旧站位半径装不下自身高度 —— 银色高柜 2.35m 高却只把人引到
+    /// 1.22m(那里只装得下 1.02m)、补给货架 1.96m/1.80m(装得下 1.51m)、
+    /// 宠物用品架、鸟笼、浴室壁挂架、两把办公椅、杂物台同理。
+    ///
+    /// 注:这些家具**并非**一张照片都没有 —— 自然扫描时人会走远,抓拍照样
+    /// 逮得到机会。坏的是**引导**:它把人叫到一个必然拍不成的位置干等。
     static func standRadius(_ f: Furniture) -> Double {
-        min(max(1.0, 0.6 + max(f.widthM, f.depthM)), 2.4)
+        let plan = max(f.widthM, f.depthM)
+        // 装下平面尺寸要退多远 / 装下总高要退多远 —— 取更苛刻的那个
+        let byPlan = plan / (2 * halfFovTanH)
+        let byHeight = (f.elevM + f.heightM) / (2 * halfFovTanV)
+        let fit = max(byPlan, byHeight) * framingMargin
+        // 上限 3m:再远就超出多数房间的对角线,也超出 LiDAR 的可靠深度
+        return min(max(1.0, max(0.6 + plan, fit)), 3.0)
     }
 
     /// 按平面尺寸分级的视角要求:大件(床/沙发/柜)3 桶,中件 2 桶,小件 1 桶
@@ -209,14 +239,17 @@ enum EvidenceGuide {
     ) -> String {
         let name = zhName(deficit.furniture.category)
         let dist = simd_length(stand - cameraPos)
-        // 藏在别的家具下面的:重点不是绕方位,是蹲低让镜头看进去
+        // 「稳住 2 秒」是上一版的谎:代码里没有任何停留计时,抓拍只是在
+        // 每一帧碰运气 —— 取景不达标时站到天亮也不会拍,达标时半秒就拍了。
+        // 说清楚真正的条件(把它整个放进画面),用户才知道该怎么救自己。
         if let host = deficit.hiddenUnder {
+            // 藏在别的家具下面的:重点不是绕方位,是蹲低让镜头看进去
             return dist < 1.2
-                ? "「\(name)」藏在「\(host)」下面 —— 蹲低一点,对准空档稳住 2 秒"
-                : "「\(name)」藏在「\(host)」下面:走近后蹲低,对准空档拍一张"
+                ? "「\(name)」藏在「\(host)」下面 —— 蹲低一点,让镜头看进空档"
+                : "「\(name)」藏在「\(host)」下面:走近后蹲低,对准空档"
         }
         if dist < 0.8 {
-            return "就在这里:对准「\(name)」稳住 2 秒,补上这一侧"
+            return "就在这里:把「\(name)」整个放进画面,拍到就自动记一张"
         }
         let dir = relativeDirection(
             from: cameraPos,
@@ -227,7 +260,7 @@ enum EvidenceGuide {
         let distText = meters == meters.rounded()
             ? String(format: "%.0f", meters)
             : String(format: "%.1f", meters)
-        return "「\(name)」还缺一个侧面:朝\(dir)走约 \(distText) 米,对准它稳住 2 秒"
+        return "「\(name)」还缺一个侧面:朝\(dir)走约 \(distText) 米,让它整个进画面"
     }
 
     /// 目标相对相机朝向的人话方向。

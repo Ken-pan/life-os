@@ -52,6 +52,13 @@ final class ObjectShotCapture {
 
     /// 只在主线程读写:objectId → (方位桶 → 该桶最佳一张)
     private(set) var shots: [UUID: [Int: Shot]] = [:]
+
+    /// EvidenceGuide 当前锁定引导的目标 —— 本帧优先拍它。
+    ///
+    /// 没有它,HUD 喊「对准床」而抓拍每帧只挑**增益最大**的一件:床旁边
+    /// 任何一件没拍过的家具都会把机会抢走,用户对准了也拍不上,HUD 就一直
+    /// 喊同一句。引导说了话,抓拍就得认账 —— 这是两者唯一的耦合点。
+    var priorityTarget: (objectId: UUID, bin: Int)?
     private let encodeQueue = DispatchQueue(label: "homescan.objectshot.encode", qos: .utility)
     /// 后台是否正拿着一个 pixelBuffer(至多 1 个 —— 保护 ARKit 缓冲池)
     private var encodeBusy = false
@@ -65,6 +72,12 @@ final class ObjectShotCapture {
     /// 一件家具的证据包:分数降序(第一张 = 最佳,兼容单图消费方)
     func shotList(for objectId: UUID) -> [Shot] {
         (shots[objectId] ?? [:]).values.sorted { $0.score > $1.score }
+    }
+
+    /// 这一帧「取景达标了吗」—— HUD 的准星用它变绿:达标 = 下一拍就是它。
+    /// 光有箭头指着还不够,用户得知道**已经对准了、可以停手了**。
+    func isWellFramed(_ object: CapturedRoom.Object, in frame: ARFrame) -> Bool {
+        framing(of: object, in: frame) != nil
     }
 
     /// 全部证据(压平),给 StructureFlattener 做合并后匹配
@@ -111,6 +124,8 @@ final class ObjectShotCapture {
         )
 
         var best: (object: CapturedRoom.Object, rect: CGRect, score: Double, gain: Double, az: Double, bin: Int)?
+        /// 引导锁定的那件这一帧能不能拍 —— 能就无条件用它顶掉增益冠军
+        var priority: (object: CapturedRoom.Object, rect: CGRect, score: Double, gain: Double, az: Double, bin: Int)?
         for object in objects {
             // 低置信度**更需要**照片证据(508 真扫:7 件 low 全是零照片,网页端
             // 没法人工复核) —— 不再跳过,只抬高取景门槛防误检刷屏
@@ -133,11 +148,16 @@ final class ObjectShotCapture {
 
             guard framing.score > max(minScore, current * Self.improveFactor) else { continue }
             let gain = framing.score - current
+            let hit = (object, framing.rect, framing.score, gain, az, bin)
+            if let pt = priorityTarget, pt.objectId == object.identifier, pt.bin == bin {
+                priority = hit
+            }
             if best == nil || gain > best!.gain {
-                best = (object, framing.rect, framing.score, gain, az, bin)
+                best = hit
             }
         }
-        guard let pick = best, !encodeBusy else { return }
+        // 引导正指着的那件优先 —— 让「对准它」这句话说话算数
+        guard let pick = priority ?? best, !encodeBusy else { return }
 
         // 裁剪框:投影 bbox 外扩 12%,夹回画面
         let margin = 0.12 * max(pick.rect.width, pick.rect.height)

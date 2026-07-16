@@ -6,24 +6,11 @@ import UIKit
 /// 自动机位拍照 —— 让扫描「无脑」:App 自己判断「现在这个视角值得留一张
 /// 房间状态照」,不需要用户按快门。
 ///
-/// 什么算「值得拍」(全部满足才拍):
-/// - 画面稳:追踪 normal、相机没在甩(阈值比家具抓拍更严 —— 整屋照片糊了没得裁)
-/// - 光线够:暗光下颜色/状态都不可信
-/// - 看得全:画面里能数出 ≥2 件家具(≈ 对着房间而不是对着墙角);
-///   本房间第一张放宽到 ≥1 件,免得空房/玄关永远拍不上
-/// - 视角新:与已有机位(含手动拍的)相比,移动 ≥1m 或转向 ≥40°
-/// - 不轰炸:每间最多 4 张、两张之间 ≥6 秒
-///
-/// 拍不上时它会给出**站位引导**(hint),ScanView 显示在 HUD 上 ——
-/// 「引导用户到某个位置,然后自己拍」就是这两件事的组合。
+/// 拍不拍由 `ViewpointGate`(纯函数)裁决,这里只负责取数、编码、落盘。
+/// 判定与提示同源:HUD 说的就是**这一刻真正拦住它的那道门**。上一版
+/// 六道门各自静默 `return`,提示却只有一句「站稳就会自动拍」—— 用户照做,
+/// 而拦路的其实是「太暗」或「这个角度拍过了」,站到天亮也不会拍。
 final class AutoViewpointCapture {
-    static let minIntervalS: TimeInterval = 6
-    static let minTravelM = 1.0
-    static let minHeadingDeltaDeg = 40.0
-    static let maxPerRoom = 4
-    static let minAmbient: CGFloat = 250
-    static let maxAngularVelocity = 0.5
-
     private(set) var capturedInRoom = 0
     private var roomStartedAt = Date()
     private var lastCaptureAt: TimeInterval = 0
@@ -32,9 +19,15 @@ final class AutoViewpointCapture {
     private var busy = false
     private let queue = DispatchQueue(label: "homescan.autoviewpoint", qos: .utility)
 
+    /// 这一刻真正拦住自动拍照的那道门(HUD 用);nil = 没被拦(正要拍/刚拍完)
+    private(set) var lastBlock: ViewpointGate.Block?
+
     func roomChanged() {
         capturedInRoom = 0
         roomStartedAt = Date()
+        lastBlock = nil
+        // lastCaptureAt 故意不清:6 秒冷却是防「走一步拍一张」,
+        // 跨房间一样成立(过了门就是另一间,但手还是那只手)。
     }
 
     func reset() {
@@ -44,78 +37,66 @@ final class AutoViewpointCapture {
         lastTime = 0
     }
 
-    /// 站位引导:这间迟迟拍不上时告诉用户怎么站(nil = 不用提示)
+    private var secondsInRoom: Double { Date().timeIntervalSince(roomStartedAt) }
+
+    /// 站位引导:这间迟迟拍不上时,告诉用户**到底是什么**拦着(nil = 不用提示)。
+    ///
+    /// 8 秒就说话(上一版 15 秒):既然现在说得出原因,就没必要让人先干等
+    /// 一段再看一句没用的话。
     var hint: String? {
-        let elapsed = Date().timeIntervalSince(roomStartedAt)
-        guard capturedInRoom == 0, elapsed > 15 else { return nil }
-        return "退到能看到大半个房间的位置,平稳停一秒 —— 会自动拍照"
+        guard capturedInRoom == 0, secondsInRoom > 8, let block = lastBlock else { return nil }
+        return ViewpointGate.hintText(for: block)
     }
 
     /// 一次评估(主线程,来自 ScanSessionController 的 0.5s 定时器)。
     /// 决定拍时:位姿当场抓,像素编码丢后台,完成回主线程回调。
+    /// `roomAreaSqFt`:当前房间地板面积 —— 配额按它伸缩(nil = 还没扫出地板,退 4)。
     func consider(
         frame: ARFrame,
         objects: [CapturedRoom.Object],
+        roomAreaSqFt: Double?,
         existingPoses: [FlatScene.CameraPose],
         onCapture: @escaping (FlatScene.CameraPose) -> Void
     ) {
-        guard !busy, capturedInRoom < Self.maxPerRoom else { return }
+        guard !busy else { return }
+        // 跟踪异常有它自己的 HUD 提示(更具体),这里不抢话
         guard case .normal = frame.camera.trackingState else { return }
 
         let now = frame.timestamp
-        guard now - lastCaptureAt > Self.minIntervalS else { return }
-        if let lux = frame.lightEstimate?.ambientIntensity, lux < Self.minAmbient { return }
 
-        // 相机在甩 → 糊,跳过这帧
-        if let last = lastTransform, now > lastTime {
-            let w = angularDelta(last, frame.camera.transform) / (now - lastTime)
+        // 角速度要两帧才算得出。第一帧只记状态 —— 但**不能**顺手把 lastBlock
+        // 清掉,否则 HUD 会在有原因/没原因之间闪。
+        guard let last = lastTransform, now > lastTime else {
             lastTransform = frame.camera.transform
             lastTime = now
-            if w > Self.maxAngularVelocity { return }
-        } else {
-            lastTransform = frame.camera.transform
-            lastTime = now
-            return // 第一帧没有速度参考,下个 tick 再说
+            return
         }
+        let omega = angularDelta(last, frame.camera.transform) / (now - lastTime)
+        lastTransform = frame.camera.transform
+        lastTime = now
 
-        // 看得全:画面里能数出几件家具(中央 84% 区域内、在相机前方)
-        let res = frame.camera.imageResolution
-        let inv = frame.camera.transform.inverse
-        var inView = 0
-        for object in objects {
-            let c = object.transform.columns.3
-            let cam = inv * SIMD4(c.x, c.y, c.z, 1)
-            guard cam.z < -0.5 else { continue }
-            let p = frame.camera.projectPoint(
-                SIMD3(c.x, c.y, c.z),
-                orientation: .landscapeRight,
-                viewportSize: res
+        let (nearestD, nearestDH) = Self.nearestPose(to: frame, among: existingPoses)
+        let verdict = ViewpointGate.evaluate(
+            ViewpointGate.Input(
+                lux: frame.lightEstimate.map { Double($0.ambientIntensity) },
+                angularVelocity: omega,
+                inViewCount: Self.countInView(objects: objects, frame: frame),
+                capturedInRoom: capturedInRoom,
+                roomAreaSqFt: roomAreaSqFt,
+                secondsInRoom: secondsInRoom,
+                secondsSinceLastCapture: now - lastCaptureAt,
+                nearestPoseDistanceM: nearestD,
+                nearestPoseHeadingDeltaDeg: nearestDH
             )
-            if p.x >= res.width * 0.08, p.x <= res.width * 0.92,
-               p.y >= res.height * 0.08, p.y <= res.height * 0.92 {
-                inView += 1
-            }
-        }
-        let need = capturedInRoom == 0 ? 1 : 2
-        // 空房兜底:这间 20 秒还一件家具都框不到(玄关/走廊),放它拍环境照
-        let emptyRoomFallback =
-            capturedInRoom == 0 && Date().timeIntervalSince(roomStartedAt) > 20
-        guard inView >= need || emptyRoomFallback else { return }
-
-        // 视角新:与已有机位(含手动)比,挪得够远或转得够多
-        let t = frame.camera.transform
-        let pos = SIMD2(Double(t.columns.3.x), Double(t.columns.3.z))
-        let fwd = SIMD2(-Double(t.columns.2.x), -Double(t.columns.2.z))
-        let heading = atan2(fwd.y, fwd.x) * 180 / .pi
-        for pose in existingPoses {
-            let d = pose.pos - pos
-            let dist = (d.x * d.x + d.y * d.y).squareRoot()
-            var dh = abs(pose.forwardDeg - heading).truncatingRemainder(dividingBy: 360)
-            if dh > 180 { dh = 360 - dh }
-            if dist < Self.minTravelM && dh < Self.minHeadingDeltaDeg { return }
+        )
+        switch verdict {
+        case .wait(let block):
+            lastBlock = block
+            return
+        case .capture:
+            lastBlock = nil
         }
 
-        // 值得拍:位姿主线程抓好,像素编码丢后台(一次只保留 1 个 buffer)
         busy = true
         let pixelBuffer = frame.capturedImage
         let poseNoPhoto = ViewpointCapture.pose(
@@ -138,6 +119,52 @@ final class AutoViewpointCapture {
                 onCapture(pose)
             }
         }
+    }
+
+    /// 画面中央 84% 区域内、且在相机前方的家具件数
+    private static func countInView(objects: [CapturedRoom.Object], frame: ARFrame) -> Int {
+        let res = frame.camera.imageResolution
+        let inv = frame.camera.transform.inverse
+        var n = 0
+        for object in objects {
+            let c = object.transform.columns.3
+            let cam = inv * SIMD4(c.x, c.y, c.z, 1)
+            guard cam.z < -0.5 else { continue }
+            let p = frame.camera.projectPoint(
+                SIMD3(c.x, c.y, c.z),
+                orientation: .landscapeRight,
+                viewportSize: res
+            )
+            if p.x >= res.width * 0.08, p.x <= res.width * 0.92,
+               p.y >= res.height * 0.08, p.y <= res.height * 0.92 {
+                n += 1
+            }
+        }
+        return n
+    }
+
+    /// 与已有机位里「最像」的那个的距离与朝向差。
+    /// 取最小距离的那个 —— 视角新度是拿它跟最近的邻居比。
+    private static func nearestPose(
+        to frame: ARFrame,
+        among poses: [FlatScene.CameraPose]
+    ) -> (Double?, Double?) {
+        let t = frame.camera.transform
+        let pos = SIMD2(Double(t.columns.3.x), Double(t.columns.3.z))
+        let fwd = SIMD2(-Double(t.columns.2.x), -Double(t.columns.2.z))
+        let heading = atan2(fwd.y, fwd.x) * 180 / .pi
+        var bestD = Double.infinity
+        var bestDH: Double?
+        for pose in poses {
+            let d = pose.pos - pos
+            let dist = (d.x * d.x + d.y * d.y).squareRoot()
+            guard dist < bestD else { continue }
+            var dh = abs(pose.forwardDeg - heading).truncatingRemainder(dividingBy: 360)
+            if dh > 180 { dh = 360 - dh }
+            bestD = dist
+            bestDH = dh
+        }
+        return bestD.isFinite ? (bestD, bestDH) : (nil, nil)
     }
 
     private func angularDelta(_ a: simd_float4x4, _ b: simd_float4x4) -> Double {

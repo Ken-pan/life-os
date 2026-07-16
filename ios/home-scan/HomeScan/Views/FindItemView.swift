@@ -15,6 +15,10 @@ struct FindItemView: View {
     @State private var controller = ARLocateController()
     @State private var query = ""
     @State private var target: FindTarget?
+    /// 方向箭头和下面的距离文字是一个整体 —— 一起缩放。
+    /// (它跟 ScanView 的准星不一样:那个锚在 AR 目标上、必须固定;
+    ///  这个是面板里的一个图示,跟着文字走才对。)
+    @ScaledMetric(relativeTo: .largeTitle) private var arrow: CGFloat = 44
 
     struct FindTarget: Identifiable {
         var id: String
@@ -66,38 +70,89 @@ struct FindItemView: View {
         return out
     }
 
+    /// 没搜时给最近登记的一批,不是全量。
+    ///
+    /// 「找东西」的前提是**你已经知道要找什么** —— 开屏甩一份上百条的全清单
+    /// (柜内每一件 + 每件家具),等于逼人滚着找,而搜索框才是这一屏的正路。
+    /// 给一小撮当"手边常用",其余交给搜索。
     private var filtered: [FindTarget] {
         let q = query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return allTargets }
-        return allTargets.filter { $0.title.localizedCaseInsensitiveContains(q) || $0.subtitle.localizedCaseInsensitiveContains(q) }
+        guard !q.isEmpty else { return Array(allTargets.prefix(Self.browseLimit)) }
+        return allTargets.filter {
+            $0.title.localizedCaseInsensitiveContains(q)
+                || $0.subtitle.localizedCaseInsensitiveContains(q)
+        }
     }
+
+    private static let browseLimit = 12
 
     var body: some View {
         NavigationStack {
             if let target {
                 guide(target)
             } else {
-                List(filtered) { t in
-                    Button {
-                        controller.targetHomeM = t.homePointM
-                        self.target = t
-                        controller.start(home: home)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(t.title)
-                            Text(t.subtitle)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                picker
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var picker: some View {
+        let hits = filtered
+        List {
+            if hits.isEmpty {
+                // 搜了没结果 vs 家里本来就没登记东西,是两种处境、两种下一步
+                ContentUnavailableView {
+                    Label(
+                        allTargets.isEmpty ? "还没有可找的东西" : "没找到「\(query)」",
+                        systemImage: "location.magnifyingglass"
+                    )
+                } description: {
+                    Text(allTargets.isEmpty
+                         ? "去网页端的储藏页把物品登记进柜子,这里就能搜了。"
+                         : "换个说法试试 —— 也可以搜柜子名(如「格子柜」)。")
+                }
+                .listRowBackground(Color.clear)
+            } else {
+                Section {
+                    ForEach(hits) { t in
+                        Button {
+                            controller.targetHomeM = t.homePointM
+                            self.target = t
+                            controller.start(home: home)
+                        } label: {
+                            HStack(spacing: HS.Space.snug) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(t.title)
+                                        .foregroundStyle(.primary)
+                                    Text(t.subtitle)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "location.north.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(HS.accent)
+                            }
+                            .contentShape(.rect)
                         }
+                        .hsLabel("\(t.title),在 \(t.subtitle)", hint: "开始 AR 导航")
+                    }
+                } footer: {
+                    // 截断了就得说。不说的话,人会以为家里登记的东西就这 12 件 ——
+                    // 悄悄少给是最容易让人误判的一种"贴心"。
+                    if query.isEmpty, allTargets.count > hits.count {
+                        Text("共 \(allTargets.count) 件已登记 —— 上面搜就能找到其余的。")
                     }
                 }
-                .searchable(text: $query, prompt: "搜物品或家具(如:滤镜 / 格子柜)")
-                .navigationTitle("寻找物品")
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("关闭") { dismiss() }
-                    }
-                }
+            }
+        }
+        .searchable(text: $query, prompt: "搜物品或家具(如:滤镜 / 格子柜)")
+        .navigationTitle("寻找物品")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("关闭") { dismiss() }
             }
         }
     }
@@ -108,35 +163,48 @@ struct FindItemView: View {
             ARPassthroughView(session: controller.session)
                 .ignoresSafeArea()
             TimelineView(.periodic(from: .now, by: 0.3)) { _ in
-                VStack(spacing: 10) {
+                VStack(spacing: HS.Space.snug) {
                     if let g = controller.guidance() {
-                        Image(systemName: "location.north.fill")
-                            .font(.system(size: 44))
-                            .rotationEffect(.degrees(g.bearingDeg))
-                            .foregroundStyle(.green)
-                        if g.distanceM < 0.8 {
+                        let arrived = g.distanceM < 0.8
+                        Image(systemName: arrived ? "checkmark.circle.fill" : "location.north.fill")
+                            .font(.system(size: arrow))
+                            // 到了就别再转箭头 —— 近距离下方位角会疯狂抖动,
+                            // 一个乱甩的箭头比不给箭头更让人不知所措
+                            .rotationEffect(.degrees(arrived ? 0 : g.bearingDeg))
+                            .foregroundStyle(HS.good)
+                            .animation(.snappy, value: arrived)
+                        if arrived {
                             Text("就在这里:\(t.subtitle)")
                                 .font(.headline)
+                                .multilineTextAlignment(.center)
                         } else {
                             Text("\(g.direction) \(String(format: "%.1f", g.distanceM)) 米")
-                                .font(.headline.monospacedDigit())
+                                .font(.title3.weight(.semibold).monospacedDigit())
+                                .contentTransition(.numericText())
                         }
                         Text("「\(t.title)」· \(t.subtitle)")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                     } else {
                         ProgressView()
                         Text("对着墙缓慢环视,让我认出你在户型里的位置…")
                             .font(.subheadline)
+                            .multilineTextAlignment(.center)
                         Text("已识别 \(controller.wallCount) 面墙\(controller.registration?.reason.map { " · \($0)" } ?? "")")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .contentTransition(.numericText())
                     }
                 }
-                .padding(16)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-                .padding()
+                .hsPanel()
+                .padding(HS.Space.base)
+                // 举着手机找东西时人不看屏幕 —— 这块必须能被念出来
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.updatesFrequently)
             }
         }
         .navigationTitle(t.title)

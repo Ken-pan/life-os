@@ -30,27 +30,58 @@ extension AppModel {
         route = .scanning
     }
 
-    /// 「全部完成」:合并房间 → 压平 → 投影 → 预览
+    /// 「全部完成」:合并房间 → 压平 → 投影 → 预览。
+    ///
+    /// ⚠️ 这里的重活**必须**待在主线程之外。AppModel 整类 @MainActor,而
+    /// USDZ 导出 / JSON 编码 / 压平都是同步调用 —— 直接写在这个方法里就是拿主线程
+    /// 去跑它们。一整套房子的网格导出是秒级的,那十几秒里 App 是**真的冻住**:
+    /// 按钮上那个转圈只是 CA 在渲染进程里空转,点什么都没反应,看着就是崩了。
+    /// (ARCHITECTURE.md 的「后台工作用 Task.detached 带值快照出去」说的就是这个,
+    /// 落盘那条路一直照做,最重的这条以前反而没做。)
+    ///
+    /// DEBUG 下带**主线程卡顿探针**:这条路只有真机 + 真实房间才走得到
+    /// (模拟器没 LiDAR,mergeAll 拿不到数据),模拟器和单测都验不了它 ——
+    /// 所以让它自己把证据打出来,别靠嘴说「我挪到后台了」。
     func finishScanning() async {
         lastHomeFrame = scanController.homeFrame
+        let rooms = scanController.roomCount
+        let probe = MainThreadStallProbe(label: "finishScanning")
+        probe.start()
+        defer { probe.stop() }
         do {
+            probe.mark("合并 \(rooms) 间")
+            processingStatus = rooms > 1 ? "正在合并 \(rooms) 个房间…" : "正在处理这个房间…"
             let structure = try await scanController.mergeAll()
-            structureJSON = try? JSONEncoder().encode(structure)
-            // 真实空间模式:导出带家具网格的 USDZ,预览页可 3D 查看/AR/分享
-            let usdz = FileManager.default.temporaryDirectory
-                .appendingPathComponent("scan-\(scanId.uuidString.lowercased()).usdz")
-            try? structure.export(to: usdz, exportOptions: .model)
-            modelFileURL = FileManager.default.fileExists(atPath: usdz.path) ? usdz : nil
-            var scene = StructureFlattener.flatten(
-                structure: structure,
-                shots: scanController.shotCapture.allShots
-            )
+
+            probe.mark("导模型+压平(后台)")
+            processingStatus = "正在生成 3D 模型与平面图…"
+            // 值快照带出去,不捎带 self
+            let shots = scanController.shotCapture.allShots
+            let id = scanId
+            let out = await Task.detached(priority: .userInitiated) {
+                () -> (json: Data?, model: URL?, scene: FlatScene) in
+                let json = try? JSONEncoder().encode(structure)
+                // 真实空间模式:导出带家具网格的 USDZ,预览页可 3D 查看/AR/分享
+                let usdz = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("scan-\(id.uuidString.lowercased()).usdz")
+                try? structure.export(to: usdz, exportOptions: .model)
+                let model = FileManager.default.fileExists(atPath: usdz.path) ? usdz : nil
+                let scene = StructureFlattener.flatten(structure: structure, shots: shots)
+                return (json, model, scene)
+            }.value
+
+            probe.mark("投影+落盘(主线程)")
+            structureJSON = out.json
+            modelFileURL = out.model
+            var scene = out.scene
             scene.poses = poses
             applyScene(scene)
+            probe.mark("进预览页")
         } catch {
             lastError = "合并扫描失败:\(error.localizedDescription)"
             route = .home
         }
+        processingStatus = nil
         scanController.reset()
     }
 
@@ -79,6 +110,14 @@ extension AppModel {
         photoFiles = scene.poses.map(\.photoFileURL)
         runRealityCheck()
         route = .reviewing
+        // pendingScan 的语义是「首页那个『继续上传』该指向谁」。这次扫描已经
+        // 摊在预览页上了 —— 它不是"待恢复"的,它就在你眼前,所以这里必须是 nil。
+        //
+        // 不清的话会留下一个**指向已删文件**的幽灵:落盘只留最新一次(persistPending
+        // 换 scanId 时会整目录清掉重来),上一次没传完的 A 的照片此刻已经没了,
+        // 而内存里的 pendingScan 还是 A。目前从预览页出去的三条路都会各自纠正它,
+        // 所以看不见 —— 但那是巧合,不是设计。让不变式一直成立。
+        pendingScan = nil
         persistPending()
     }
 
@@ -104,11 +143,28 @@ extension AppModel {
         persistPending()
     }
 
+    /// 放弃**这一次**扫描。
+    ///
+    /// ⚠️ 「这一次」三个字是要害。以前这里无条件 `PendingScanStore.clear()`,而
+    /// `startScanning` 根本不碰盘上副本 —— 于是:首页挂着上次没传完的扫描 A,
+    /// 你点「全屋扫描」,一间还没扫就点「取消」(此时 hasProgress=false,连确认
+    /// 都不弹),**A 的照片就被删光了**。内存里的 pendingScan 还是 A,首页继续
+    /// 显示「有一次没传完的扫描 · 继续」,点进去是个照片全空的壳子。
+    /// 所以只清盘上副本确实属于本次 scanId 的情况。
     func cancelScanning() {
         scanController.reset()
         poses = []
-        // 预览页「放弃」= 明确不要这次扫描,盘上副本一起丢
-        PendingScanStore.clear()
+        let id = scanId
+        let saving = pendingSaveTask
+        // 落盘是后台跑的:必须等它收尾再判断,否则它会在我们清完之后才落地,
+        // 留下一个「你明明放弃了、首页还问你要不要继续」的幽灵副本。
+        // 视图层不必等 —— 立刻回首页。
+        Task {
+            await saving?.value
+            guard PendingScanStore.load()?.scanId == id else { return }
+            PendingScanStore.clear()
+            pendingScan = nil
+        }
         route = .home
     }
 

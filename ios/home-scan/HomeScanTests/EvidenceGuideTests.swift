@@ -61,6 +61,47 @@ final class EvidenceGuideTests: XCTestCase {
         XCTAssertEqual(EvidenceGuide.requiredBins(furniture(w: 0.3, d: 0.3)), 1, "小件一张就够")
     }
 
+    // MARK: - 站位半径必须装得下高度
+
+    /// 「站着不动它还卡着」的真身:竖直视场(~46°)比水平(~65°)窄,
+    /// 2m 高的衣柜比 2m 宽的床更难拍全。只按占地算半径 → 把人引到 1.4m →
+    /// 那里 visFrac 门永远过不了 → 抓拍静默拒每一帧,HUD 还在喊「对准它」。
+    /// (真实扫描里 22 件带实测高度的家具,8 件的旧站位半径装不下自身高度)
+    func testStandRadiusAccountsForHeight() {
+        let wardrobe = furniture(category: "storage", w: 0.8, d: 0.6, h: 2.0)
+        let r = EvidenceGuide.standRadius(wardrobe)
+        XCTAssertGreaterThan(r, 1.4, "只看占地会把人引到根本拍不到的距离")
+        // 引导到的这个距离必须真的装得下 2m —— 这是引导对抓拍的承诺
+        let visibleHeight = 2 * r * EvidenceGuide.halfFovTanV
+        XCTAssertGreaterThan(visibleHeight, 2.0, "退到 \(r)m 仍装不下 2m 高的衣柜")
+    }
+
+    func testTallerFurnitureNeedsMoreRoom() {
+        let short = furniture(category: "storage", w: 0.8, d: 0.6, h: 0.8)
+        let tall = furniture(category: "storage", w: 0.8, d: 0.6, h: 2.0)
+        XCTAssertGreaterThan(
+            EvidenceGuide.standRadius(tall),
+            EvidenceGuide.standRadius(short)
+        )
+    }
+
+    func testWallCabinetElevationCountsTowardHeight() {
+        // 吊柜挂在 1.5m 上、自身 0.7m 高 → 顶面 2.2m,要退得比落地柜更远
+        let onFloor = furniture(category: "storage", w: 0.8, d: 0.4, h: 0.7)
+        let onWall = furniture(category: "storage", w: 0.8, d: 0.4, h: 0.7, elev: 1.5)
+        XCTAssertGreaterThan(
+            EvidenceGuide.standRadius(onWall),
+            EvidenceGuide.standRadius(onFloor),
+            "离地高度算不进去,冰箱顶吊柜永远拍不到"
+        )
+    }
+
+    func testHeightUnknownFallsBackToPlanSize() {
+        // 手摆/旧数据没有高度(h=0):不该因此把人推到 3m 外
+        let f = furniture(category: "chair", w: 0.5, d: 0.5, h: 0)
+        XCTAssertEqual(EvidenceGuide.standRadius(f), 1.1, accuracy: 1e-9)
+    }
+
     // MARK: - 方位桶几何(与 ObjectShotCapture 的 az/bin 定义一致)
 
     func testStandpointMatchesBinCenter() {

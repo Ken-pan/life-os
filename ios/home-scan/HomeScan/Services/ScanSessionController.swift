@@ -46,6 +46,27 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     /// HUD 统一提示(nil = 不显示)
     private(set) var hudHint: (text: String, kind: HintKind)?
 
+    /// ScanView 的画布尺寸(点)—— 目标标记要投成屏幕坐标,得知道画布多大。
+    /// SwiftUI 的 GeometryReader 喂进来。
+    var viewportSize: CGSize = .zero
+
+    /// 「他让我拍的到底是哪一件」—— HUD 的目标标记。
+    ///
+    /// 一句「朝右前方走 2 米,对准床」在真实房间里是不够的:屋里两张床、
+    /// 三个柜子时,用户并不知道说的是哪一件,只能挨个试。指给他看。
+    struct GuideMarker: Equatable {
+        var label: String
+        /// 目标在画面里的位置(ScanView 点坐标);nil = 在画面外/身后
+        var screen: CGPoint?
+        /// 相对当前朝向的方位(度,0 = 正前/屏幕正上,正 = 右手边)——
+        /// 画面外时照它在屏幕边缘画箭头
+        var relativeDeg: Double
+        var distanceM: Double
+        /// 取景已达标 = 下一拍就是它。准星变绿,用户可以停手了
+        var framed: Bool
+    }
+    private(set) var guideMarker: GuideMarker?
+
     // ---- Home Frame 重定位(设备端) ----
     /// 永久户型(优化副本);nil = 云端还没有(第一次建家),扫描照常
     private var canonicalHome: CanonicalHome?
@@ -67,10 +88,17 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     private var liveWalls: [EvidenceGuide.Wall] = []
     /// 实时地面 y(米,ARKit 世界系)—— 「藏在桌下」判定的基准
     private var liveFloorY: Double = 0
+    /// 当前房间地板面积(sqft)—— 机位配额按它伸缩(大房多拍,小卫生间少拍)。
+    /// nil = RoomPlan 还没认出地板(扫描头几秒的常态),配额退旧值 4
+    private var liveRoomAreaSqFt: Double?
     /// 每件家具第一次被 RoomPlan 认出的时刻 —— 刚认出的先别催,给自然扫描留时间
     private var firstSeen: [UUID: TimeInterval] = [:]
     /// 证据引导锁定的目标(缺口没补上就不换目标,防 HUD 来回跳)
     private var evidenceTarget: (objectId: UUID, bin: Int)?
+    /// 锁定的起点 —— 超时就换人(见 evidenceTargetTimeoutS)
+    private var evidenceTargetSince: TimeInterval?
+    /// 这次扫描里已经放弃引导的目标:拍不到的就别一直喊同一句
+    private var parkedTargets: Set<UUID> = []
     /// 跟踪质量恶化的起点(去抖:持续 >1.5s 才上 HUD)
     private var limitedSince: TimeInterval?
     private var shotTimer: Timer?
@@ -84,6 +112,15 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
 
     /// 家具认出后先自然扫这么久,还缺证据才开始引导
     static let evidenceGraceS: TimeInterval = 15
+
+    /// 一个目标引导这么久还没补上 → 放弃它,换下一件。
+    ///
+    /// 几何门槛可以算准(见 EvidenceGuide.standRadius),现场的意外算不准:
+    /// 家具被人挡着、那一侧有强反光、深度图在玻璃上打滑…… 任何一件
+    /// 「怎么都拍不到」的家具都会把 HUD 永久钉死在同一句上,而用户看到的
+    /// 就是「我照着做了,它还是卡着」。这是最后一道兜底 —— 宁可少一个侧面,
+    /// 不可把人锁在原地。
+    static let evidenceTargetTimeoutS: TimeInterval = 30
 
     var roomCount: Int { capturedRooms.count }
 
@@ -127,6 +164,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             self.autoViewpoint.consider(
                 frame: frame,
                 objects: self.liveObjects,
+                roomAreaSqFt: self.liveRoomAreaSqFt,
                 existingPoses: self.existingPoses?() ?? []
             ) { [weak self] pose in
                 self?.onAutoPose?(pose)
@@ -142,6 +180,8 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             } else {
                 self.hudHint = nil
             }
+            // 目标标记跟着引导走:evidenceHint 已经把 evidenceTarget 定下来了
+            self.updateGuideMarker(frame)
             // 语音引导:人在走动没法盯屏幕 —— 要人动起来的提示念出来
             // (机位站位太碎不念;VoiceGuide 自带去重与冷却)
             if let hint = self.hudHint, hint.kind != .viewpoint {
@@ -257,7 +297,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             )
         }
         guard !furnitures.isEmpty else {
-            evidenceTarget = nil
+            clearEvidenceTarget()
             return nil
         }
 
@@ -265,13 +305,77 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         let pos = SIMD2(Double(cam.columns.3.x), Double(cam.columns.3.z))
         let fwd = SIMD2(-Double(cam.columns.2.x), -Double(cam.columns.2.z))
         let guide = EvidenceGuide.guidance(
-            deficits: EvidenceGuide.deficits(furnitures: furnitures, walls: liveWalls),
+            deficits: EvidenceGuide.deficits(furnitures: furnitures, walls: liveWalls)
+                .filter { !parkedTargets.contains($0.furniture.id) },
             cameraPos: pos,
             cameraForwardDeg: atan2(fwd.y, fwd.x) * 180 / .pi,
             holdTarget: evidenceTarget
         )
-        evidenceTarget = guide.map { ($0.objectId, $0.bin) }
-        return guide?.text
+        guard let guide else {
+            clearEvidenceTarget()
+            return nil
+        }
+        if evidenceTarget?.objectId != guide.objectId || evidenceTarget?.bin != guide.bin {
+            evidenceTarget = (guide.objectId, guide.bin)
+            evidenceTargetSince = now
+        } else if now - (evidenceTargetSince ?? now) > Self.evidenceTargetTimeoutS {
+            // 喊了 30 秒还没拍上 —— 这一件这个方位现场就是拍不到。
+            // 停止引导它,让位给下一件(下一 tick 自然选出)。
+            parkedTargets.insert(guide.objectId)
+            clearEvidenceTarget()
+            return nil
+        }
+        // 抓拍认这个账:本帧优先拍引导指着的那件(见 ObjectShotCapture.priorityTarget)
+        shotCapture.priorityTarget = evidenceTarget
+        return guide.text
+    }
+
+    private func clearEvidenceTarget() {
+        evidenceTarget = nil
+        evidenceTargetSince = nil
+        shotCapture.priorityTarget = nil
+    }
+
+    /// 目标标记:把引导锁定的那件投到屏幕上(HUD 画准星/边缘箭头)。
+    private func updateGuideMarker(_ frame: ARFrame) {
+        guard let target = evidenceTarget,
+              let object = liveObjects.first(where: { $0.identifier == target.objectId }),
+              viewportSize.width > 1, viewportSize.height > 1
+        else {
+            guideMarker = nil
+            return
+        }
+        let c = object.transform.columns.3
+        let cam = frame.camera.transform
+        let inCam = cam.inverse * SIMD4(c.x, c.y, c.z, 1)
+        // 竖屏显示 → .portrait + 视图尺寸,拿到的直接就是 ScanView 的点坐标
+        let p = frame.camera.projectPoint(
+            SIMD3(c.x, c.y, c.z),
+            orientation: .portrait,
+            viewportSize: viewportSize
+        )
+        let onScreen = inCam.z < -0.1
+            && p.x >= 0 && p.x <= viewportSize.width
+            && p.y >= 0 && p.y <= viewportSize.height
+
+        // 屏外箭头的角度用**世界系方位**算,不用投影点:目标在身后时
+        // projectPoint 会翻转乱飞,照它画的箭头会指反。
+        let camPos = SIMD2(Double(cam.columns.3.x), Double(cam.columns.3.z))
+        let objPos = SIMD2(Double(c.x), Double(c.z))
+        let fwd = SIMD2(-Double(cam.columns.2.x), -Double(cam.columns.2.z))
+        let forwardDeg = atan2(fwd.y, fwd.x) * 180 / .pi
+        let bearing = atan2(objPos.y - camPos.y, objPos.x - camPos.x) * 180 / .pi
+        var rel = (bearing - forwardDeg).truncatingRemainder(dividingBy: 360)
+        if rel > 180 { rel -= 360 }
+        if rel < -180 { rel += 360 }
+
+        guideMarker = GuideMarker(
+            label: EvidenceGuide.zhName(String(describing: object.category)),
+            screen: onScreen ? p : nil,
+            relativeDeg: rel,
+            distanceM: simd_length(objPos - camPos),
+            framed: shotCapture.isWellFramed(object, in: frame)
+        )
     }
 
     private var pendingCompletion: CheckedContinuation<Void, Never>?
@@ -291,6 +395,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     func startNextRoom() {
         roomGeneration += 1
         autoViewpoint.roomChanged() // 每间的自动拍照配额/引导重新计
+        liveRoomAreaSqFt = nil      // 面积是上一间的,新一间重测(nil 期配额退 4)
     }
 
     /// 全部房间 → CapturedStructure
@@ -310,8 +415,11 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         shotTimer = nil
         liveObjects = []
         liveWalls = []
+        liveRoomAreaSqFt = nil
         firstSeen = [:]
-        evidenceTarget = nil
+        clearEvidenceTarget()
+        parkedTargets = []
+        guideMarker = nil
         limitedSince = nil
         shotCapture.reset()
         autoViewpoint.reset()
@@ -332,6 +440,11 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         let objects = room.objects
         // 地面高度(叠放判定的基准):地板面最低 y。没识别出地板就保持旧值
         let floorY = room.floors.map { Double($0.transform.columns.3.y) }.min()
+        // 地板面积(sqft)—— 机位配额的伸缩依据。地板是平面 Surface,
+        // dimensions.x/y 就是两条面内边长(z 是厚度,可忽略);多块地板求和
+        let areaSqFt = room.floors.isEmpty ? nil : room.floors
+            .map { Double($0.dimensions.x) * Double($0.dimensions.y) * 10.7639 }
+            .reduce(0, +)
         // 墙中心 ± 局部 x 轴 × 半宽 → 俯视 2D 线段(与 StructureFlattener 同一套数学)
         let walls = room.walls.map { wall -> EvidenceGuide.Wall in
             let t = wall.transform
@@ -346,6 +459,7 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             self.liveObjects = objects
             self.liveWalls = walls
             if let floorY { self.liveFloorY = floorY }
+            if let areaSqFt { self.liveRoomAreaSqFt = areaSqFt }
         }
     }
 
