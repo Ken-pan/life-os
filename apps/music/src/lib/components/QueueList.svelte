@@ -413,7 +413,7 @@
     border: none;
     padding: 0;
     opacity: 0.42;
-    transition: opacity 160ms ease;
+    transition: opacity var(--dur-fast) var(--ease-standard);
   }
 
   .queue-drag-spacer {
@@ -437,7 +437,7 @@
     background: none;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 160ms ease;
+    transition: opacity var(--dur-fast) var(--ease-standard);
   }
 
   .queue-row:hover .queue-move-controls,

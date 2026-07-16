@@ -45,7 +45,7 @@
             
             {#if att.status === 'uploading'}
               <div class="status-overlay">
-                <Icon name="loader" class="spin" />
+                <Icon name="loader" class="life-os-spin" />
               </div>
             {:else if att.status === 'failed'}
               <div class="status-overlay error" title={att.errorCode}>
@@ -238,12 +238,5 @@
   .close-btn:hover {
     background: rgba(255,255,255,0.2);
   }
-  
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  :global(.spin) {
-    animation: spin 1s linear infinite;
-  }
+  /* 加载自旋走 @life-os/theme 的 .life-os-spin */
 </style>

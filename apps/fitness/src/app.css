@@ -1776,7 +1776,7 @@ p {
   padding: 8px 36px 8px 12px;
   font-size: var(--text-sm);
   outline: none;
-  transition: border-color .16s, background .16s, box-shadow .16s;
+  transition: border-color var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast);
 }
 
 .lib-search-clear {
@@ -1791,7 +1791,7 @@ p {
   height: 28px;
   border-radius: 999px;
   color: var(--t3);
-  transition: color .16s, background .16s;
+  transition: color var(--dur-fast), background var(--dur-fast);
 }
 
 .lib-search-clear:hover,
@@ -1856,7 +1856,7 @@ p {
   letter-spacing: .06em;
   white-space: nowrap;
   cursor: pointer;
-  transition: border-color .16s, background .16s, color .16s, box-shadow .16s;
+  transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast);
 }
 
 .lib-chip:hover {
@@ -1948,7 +1948,7 @@ p {
   background: var(--card);
   color: var(--t2);
   font-size: var(--text-sm);
-  transition: border-color .16s, color .16s;
+  transition: border-color var(--dur-fast), color var(--dur-fast);
 }
 
 .lib-empty-clear:hover,
@@ -1990,7 +1990,7 @@ p {
   -webkit-backdrop-filter: blur(10px);
   color: var(--t2);
   box-shadow: var(--shadow-soft);
-  transition: border-color .16s, color .16s, transform .16s;
+  transition: border-color var(--dur-fast), color var(--dur-fast), transform var(--dur-fast);
 }
 
 .lib-top-fab:hover,
@@ -2223,7 +2223,7 @@ p {
   width: 36px;
   height: 36px;
   color: var(--t2);
-  transition: background .14s;
+  transition: background var(--dur-fast);
 }
 
 .stepper button:hover {
@@ -2447,7 +2447,7 @@ p {
   letter-spacing: .12em;
   color: var(--t3);
   text-transform: uppercase;
-  transition: color .25s;
+  transition: color var(--dur-base);
 }
 
 .tw-ring-wrap.warn .tw-sub {
@@ -2542,7 +2542,7 @@ p {
   border: 1px solid var(--border-l);
   color: var(--t1);
   background: var(--bg-2);
-  transition: all .14s;
+  transition: all var(--dur-fast);
 }
 
 .wt-stepper button:hover {
@@ -2595,7 +2595,7 @@ p {
   flex: 1;
   padding: 12px;
   border-radius: 10px;
-  transition: all .14s;
+  transition: all var(--dur-fast);
 }
 
 .ma-cancel {
@@ -4723,7 +4723,7 @@ body:has(.focus-view) #main-content {
   font-weight: 600;
   font-size: var(--text-3xl);
   letter-spacing: .04em;
-  transition: filter 200ms, transform 200ms, box-shadow 200ms;
+  transition: filter var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast);
   margin-bottom: 10px;
 }
 
@@ -6550,7 +6550,9 @@ html[lang="en"] .stat-card .stat-v {
   min-height: var(--btn-h-lg);
 }
 
-.import-row .btn-secondary {
+/* .settings-btn-group：共享 SettingsButtonGroup 已不再带 .import-row 钩子 */
+.import-row .btn-secondary,
+.settings-btn-group .btn-secondary {
   flex: 1;
   min-width: 140px;
   margin-top: 0;

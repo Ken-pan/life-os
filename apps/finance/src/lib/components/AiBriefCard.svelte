@@ -152,7 +152,7 @@
           aria-label={refreshing ? t('aiBrief.generating') : t('aiBrief.regenerate')}
           title={refreshing ? t('aiBrief.generating') : t('aiBrief.refresh')}
         >
-          <RefreshCw size={14} class={refreshing ? 'ai-brief-spin' : undefined} />
+          <RefreshCw size={14} class={refreshing ? 'life-os-spin' : undefined} />
         </button>
       </div>
     </div>
@@ -168,9 +168,9 @@
       </div>
     {:else if refreshing}
       <div class="ai-brief-skeleton" aria-hidden="true">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span class="skeleton skeleton--text"></span>
+        <span class="skeleton skeleton--text"></span>
+        <span class="skeleton skeleton--text"></span>
       </div>
     {:else}
       <p class="muted-note">{t('aiBrief.failed')}</p>

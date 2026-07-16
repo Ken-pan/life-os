@@ -115,7 +115,7 @@
           onclick={togglePlay}
         >
           {#if player.loading}
-            <Icon name="loader-circle" size={20} strokeWidth={2} class="ctrl-main-spin" />
+            <Icon name="loader-circle" size={20} strokeWidth={2} class="life-os-spin" />
           {:else}
             <Icon name={player.playing ? 'pause' : 'play'} size={20} strokeWidth={2} />
           {/if}
@@ -193,7 +193,7 @@
       onclick={togglePlay}
     >
       {#if player.loading}
-        <Icon name="loader-circle" size={20} strokeWidth={2} class="ctrl-main-spin" />
+        <Icon name="loader-circle" size={20} strokeWidth={2} class="life-os-spin" />
       {:else}
         <Icon name={player.playing ? 'pause' : 'play'} size={20} strokeWidth={2} />
       {/if}

@@ -1526,7 +1526,7 @@ div.input {
   height: 100%;
   border-radius: var(--radius-pill);
   background: var(--accent);
-  transition: width 0.2s ease;
+  transition: width var(--dur-fast) var(--ease-standard);
 }
 
 .goal-progress-meta {
@@ -2692,7 +2692,7 @@ div.input {
 
 .oneoff-event-row {
   border-radius: var(--radius-lg);
-  transition: box-shadow 0.25s ease, background 0.25s ease;
+  transition: box-shadow var(--dur-base) var(--ease-standard), background var(--dur-base) var(--ease-standard);
 }
 
 .oneoff-event-row.is-focused {
@@ -2705,15 +2705,6 @@ div.input {
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
-}
-
-.card.settings-section>.pref-row+.pref-row,
-.card.settings-section>.list {
-  margin-top: var(--space-1);
-}
-
-.card.settings-section>.pref-row+.list {
-  margin-top: var(--space-3);
 }
 
 /* ===== 支出历史页 ===== */
@@ -3050,7 +3041,7 @@ div.input {
   content: '▸';
   display: inline-block;
   margin-right: var(--space-2);
-  transition: transform 0.15s ease;
+  transition: transform var(--dur-fast) var(--ease-standard);
 }
 
 .history-coverage-details[open] > .history-coverage-summary::before {
@@ -6232,7 +6223,7 @@ div.input {
   font-size: var(--text-md);
   line-height: 1;
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
 }
 
 .chip:hover {
@@ -6435,7 +6426,7 @@ div.input {
   height: 100%;
   border-radius: var(--radius-pill);
   background: var(--accent);
-  transition: width 0.3s ease;
+  transition: width var(--dur-base) var(--ease-standard);
 }
 
 .budget-pulse-fill.budget-pace-over {
@@ -6792,18 +6783,10 @@ div.input {
   font-size: var(--text-xs);
 }
 
+/* 骨架视觉走 @life-os/theme 的 .skeleton--text 原语，这里只留布局；自旋用 .life-os-spin */
 .ai-brief-skeleton {
   display: grid;
   gap: var(--space-2);
-}
-
-.ai-brief-skeleton span {
-  display: block;
-  height: 12px;
-  border-radius: var(--radius-xs);
-  background: linear-gradient(90deg, var(--border) 25%, var(--bg-subtle, var(--bg)) 50%, var(--border) 75%);
-  background-size: 200% 100%;
-  animation: ai-brief-shimmer 1.4s ease-in-out infinite;
 }
 
 .ai-brief-skeleton span:nth-child(2) {
@@ -6812,26 +6795,6 @@ div.input {
 
 .ai-brief-skeleton span:nth-child(3) {
   width: 60%;
-}
-
-@keyframes ai-brief-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-.ai-brief-spin {
-  animation: ai-brief-rotate 1s linear infinite;
-}
-
-@keyframes ai-brief-rotate {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* ===== 登录 / 授权页（与主 App 共用令牌）===== */
@@ -7159,12 +7122,9 @@ div.input {
   line-height: 1.5;
 }
 
+/* 视觉走 @life-os/theme 的 .skeleton 原语（标记处加 class），这里只留尺寸 */
 .ai-signal-brief .ai-loading-row {
   height: 20px;
-  border-radius: var(--radius-xs);
-  background: linear-gradient(90deg, var(--border) 25%, var(--bg-subtle, var(--bg)) 50%, var(--border) 75%);
-  background-size: 200% 100%;
-  animation: ai-brief-shimmer 1.4s ease-in-out infinite;
 }
 
 @media (--life-os-compact) {

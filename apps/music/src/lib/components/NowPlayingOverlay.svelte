@@ -112,7 +112,7 @@
     z-index: 0;
     background: #000;
     pointer-events: none;
-    transition: opacity 140ms ease;
+    transition: opacity var(--dur-fast) var(--ease-standard);
   }
 
   /* Entrance/exit + drag all ride on the padding-free sheet wrapper so its

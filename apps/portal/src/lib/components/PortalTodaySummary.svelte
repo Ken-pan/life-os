@@ -102,7 +102,7 @@
       <div class="portal-summary-grid" aria-busy="true" aria-live="polite">
         {#each visibleSummaryAppIds as id (id)}
           <div class="portal-summary-card portal-summary-card--loading">
-            <span class="portal-summary-skeleton" aria-hidden="true"></span>
+            <span class="skeleton portal-summary-skeleton" aria-hidden="true"></span>
           </div>
         {/each}
       </div>

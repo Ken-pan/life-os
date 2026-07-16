@@ -81,7 +81,7 @@
 <style>
   .planner-attachment-uploader {
     margin-top: 8px;
-    transition: all 0.2s ease;
+    transition: all var(--dur-fast) var(--ease-standard);
     border-radius: 8px;
   }
   .planner-attachment-uploader.dragging {
@@ -100,7 +100,7 @@
     color: var(--text-secondary);
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--dur-fast);
   }
   .upload-btn:hover {
     background: var(--surface-1);

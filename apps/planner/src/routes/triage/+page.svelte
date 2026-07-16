@@ -443,7 +443,7 @@
     font-size: var(--text-sm);
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--dur-fast) var(--ease-standard);
   }
   .selector-btn:hover {
     background: color-mix(in srgb, var(--t1) 4%, transparent);
@@ -528,7 +528,7 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    transition: all 0.15s ease;
+    transition: all var(--dur-fast) var(--ease-standard);
   }
   .action-btn:hover {
     background: color-mix(in srgb, var(--t1) 6%, transparent);
@@ -583,7 +583,7 @@
     height: 100%;
     border-radius: inherit;
     background: var(--accent);
-    transition: width 180ms ease-out;
+    transition: width var(--dur-fast) var(--ease-standard);
   }
 
   .field-hint,

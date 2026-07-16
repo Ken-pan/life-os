@@ -366,10 +366,10 @@
   color: inherit;
   border-left: 3px solid var(--portal-app-accent, var(--accent));
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    background-color 0.15s ease,
-    transform 0.15s ease;
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
 }
 
 .portal-app-card:last-child {
@@ -407,7 +407,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s ease, transform 0.15s ease;
+  transition: color var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
 }
 
 .portal-app-card:hover .portal-app-chevron {
@@ -514,10 +514,10 @@
   color: inherit;
   border-left: 3px solid var(--portal-app-accent, var(--accent));
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    background-color 0.15s ease,
-    transform 0.15s ease;
+    border-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
 }
 
 .portal-summary-card:hover {
@@ -537,27 +537,11 @@
   pointer-events: none;
 }
 
+/* 视觉走 @life-os/theme 的 .skeleton 原语，这里只留尺寸 */
 .portal-summary-skeleton {
   display: block;
   width: 100%;
   height: 56px;
-  border-radius: 8px;
-  background: linear-gradient(90deg,
-      color-mix(in srgb, var(--border) 70%, transparent) 0%,
-      color-mix(in srgb, var(--border) 35%, transparent) 50%,
-      color-mix(in srgb, var(--border) 70%, transparent) 100%);
-  background-size: 200% 100%;
-  animation: portal-summary-shimmer 1.2s ease-in-out infinite;
-}
-
-@keyframes portal-summary-shimmer {
-  0% {
-    background-position: 100% 0;
-  }
-
-  100% {
-    background-position: -100% 0;
-  }
 }
 
 .portal-summary-mark {

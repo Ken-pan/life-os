@@ -40,7 +40,7 @@
     onclick={togglePlay}
   >
     {#if player.loading}
-      <Icon name="loader-circle" size={minimal ? 24 : 28} strokeWidth={apple ? 2.5 : 2} class="ctrl-main-spin" />
+      <Icon name="loader-circle" size={minimal ? 24 : 28} strokeWidth={apple ? 2.5 : 2} class="life-os-spin" />
     {:else}
       <Icon name={player.playing ? 'pause' : 'play'} size={minimal ? 24 : 28} strokeWidth={apple ? 2.5 : 2} />
     {/if}

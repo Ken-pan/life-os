@@ -159,7 +159,7 @@
 
   .detail-hero-sub--link {
     text-decoration: none;
-    transition: color 0.15s ease;
+    transition: color var(--dur-fast) var(--ease-standard);
   }
 
   .detail-hero-sub--link:hover {

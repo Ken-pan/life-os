@@ -344,7 +344,7 @@
     {#if searchState.pending && hasQuery}
       <div class="search-page-skeleton" aria-hidden="true">
         {#each Array(4) as _, i (i)}
-          <div class="search-skeleton-row"></div>
+          <div class="skeleton search-skeleton-row"></div>
         {/each}
       </div>
     {:else if !hasQuery}
@@ -837,26 +837,9 @@
     margin-top: var(--space-2);
   }
 
+  /* 视觉走 @life-os/theme 的 .skeleton 原语，这里只留尺寸 */
   .search-skeleton-row {
     height: 56px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--border) 60%, transparent) 0%,
-      color-mix(in srgb, var(--border) 30%, transparent) 50%,
-      color-mix(in srgb, var(--border) 60%, transparent) 100%
-    );
-    background-size: 200% 100%;
-    animation: search-shimmer 1.2s ease-in-out infinite;
-  }
-
-  @keyframes search-shimmer {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
   }
 
   .search-page-empty {

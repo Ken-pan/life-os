@@ -1265,9 +1265,7 @@ body {
 
 @media (--life-os-compact) {
 
-  .task-row,
-  .insight-card:not(.insight-ai),
-  .insight-ai {
+  .task-row {
     padding: var(--card-padding-mobile);
   }
 }
@@ -3248,7 +3246,7 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--dur-fast) var(--ease-standard);
   line-height: 1.25;
 }
 

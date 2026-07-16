@@ -136,7 +136,7 @@
   {#if loading}
     <div class="library-skeleton" aria-busy="true" aria-label={t('common.loading')}>
       {#each { length: 8 } as _}
-        <div class="library-skeleton-row"></div>
+        <div class="skeleton library-skeleton-row"></div>
       {/each}
     </div>
   {:else if isDesktop && tracks.length}
@@ -205,31 +205,8 @@
     gap: var(--space-2);
   }
 
+  /* 视觉走 @life-os/theme 的 .skeleton 原语，这里只留尺寸 */
   .library-skeleton-row {
     height: 56px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(
-      90deg,
-      var(--card) 25%,
-      color-mix(in srgb, var(--accent) 10%, var(--card)) 50%,
-      var(--card) 75%
-    );
-    background-size: 200% 100%;
-    animation: library-skeleton-shimmer 1.4s ease-in-out infinite;
-  }
-
-  @keyframes library-skeleton-shimmer {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .library-skeleton-row {
-      animation: none;
-    }
   }
 </style>

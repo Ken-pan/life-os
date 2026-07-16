@@ -321,7 +321,7 @@
               aria-label={t('stocks.advisor.ai.refreshAria')}
               title={t('stocks.advisor.ai.refreshTitle')}
             >
-              <RefreshCw size={13} class={aiRefreshing ? 'ai-brief-spin' : undefined} />
+              <RefreshCw size={13} class={aiRefreshing ? 'life-os-spin' : undefined} />
             </button>
           </div>
         </div>
@@ -339,9 +339,9 @@
 
         {#if !briefData && aiRefreshing}
           <div class="ai-signals">
-            <div class="ai-signal-row ai-loading-row"></div>
-            <div class="ai-signal-row ai-loading-row" style="animation-delay: 200ms"></div>
-            <div class="ai-signal-row ai-loading-row" style="animation-delay: 400ms"></div>
+            <div class="skeleton ai-signal-row ai-loading-row"></div>
+            <div class="skeleton ai-signal-row ai-loading-row"></div>
+            <div class="skeleton ai-signal-row ai-loading-row"></div>
           </div>
         {:else if briefData}
           {#if briefData.heroConclusion}

@@ -321,21 +321,7 @@
   color: var(--on-accent);
 }
 
-@keyframes musicos-ctrl-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.ctrl-main-spin {
-  animation: musicos-ctrl-spin 0.75s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ctrl-main-spin {
-    animation: none;
-  }
-}
+/* 控件加载自旋已迁 @life-os/theme 的 .life-os-spin（utilities.css） */
 
 .mini-player-status-hint {
   margin-top: 2px;
@@ -5266,7 +5252,7 @@ html.utility-pane-resizing {
 
 .music-app[data-page-route='now-playing'] .now-playing--immersive .queue-move-controls {
   opacity: 0;
-  transition: opacity 160ms ease;
+  transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
 .music-app[data-page-route='now-playing'] .now-playing--immersive .queue-row:hover .queue-move-controls,

@@ -715,6 +715,7 @@
                   : 'speaker'}
               size={14}
               strokeWidth={1.75}
+              class={ttsState === 'loading' ? 'life-os-spin' : undefined}
             />
           </button>
           {#if ttsState === 'playing' || ttsState === 'paused'}
@@ -950,9 +951,9 @@
     list-style: none;
     user-select: none;
     transition:
-      border-color 0.12s ease,
-      background 0.12s ease,
-      color 0.12s ease;
+      border-color var(--dur-fast) var(--ease-standard),
+      background var(--dur-fast) var(--ease-standard),
+      color var(--dur-fast) var(--ease-standard);
   }
   .tool summary::-webkit-details-marker {
     display: none;
@@ -979,7 +980,7 @@
   .tool-chevron {
     display: inline-flex;
     color: var(--t3);
-    transition: transform 0.18s ease;
+    transition: transform var(--dur-fast) var(--ease-standard);
   }
   .tool[open] > summary .tool-chevron {
     transform: rotate(180deg);
@@ -1109,9 +1110,9 @@
     font-size: var(--text-xs, 12px);
     cursor: pointer;
     transition:
-      border-color 0.12s ease,
-      background 0.12s ease,
-      color 0.12s ease;
+      border-color var(--dur-fast) var(--ease-standard),
+      background var(--dur-fast) var(--ease-standard),
+      color var(--dur-fast) var(--ease-standard);
   }
   .source-card:hover {
     border-color: var(--border-l);
@@ -1201,7 +1202,7 @@
     height: 100%;
     border-radius: 999px;
     background: var(--accent, var(--t1));
-    transition: width 600ms ease;
+    transition: width 600ms var(--ease-standard);
   }
   .img-bar.indeterminate .img-bar-fill {
     animation: img-bar-slide 1.4s ease-in-out infinite;
@@ -1627,23 +1628,10 @@
     color: var(--t1);
     opacity: 1;
   }
-  /* 等首块音频到达:图标旋转,表明「正在准备」而非卡住 */
+  /* 等首块音频到达:图标旋转（.life-os-spin）表明「正在准备」而非卡住 */
   .actions button.tts-loading {
     color: var(--t1);
     opacity: 1;
-  }
-  .actions button.tts-loading :global(svg) {
-    animation: tts-spin 0.8s linear infinite;
-  }
-  @keyframes tts-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .actions button.tts-loading :global(svg) {
-      animation-duration: 2s;
-    }
   }
   .actions button:disabled {
     opacity: 0.4;
@@ -1686,7 +1674,7 @@
     transform-origin: left;
     background: var(--accent, currentColor);
     border-radius: 2px;
-    transition: transform 0.25s ease;
+    transition: transform var(--dur-base) var(--ease-standard);
   }
   .actions .tts-progress-num {
     font-size: var(--text-xs, 11px);
