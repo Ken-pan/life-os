@@ -1,0 +1,54 @@
+{
+  "id": "health",
+  "name": "HEALTH.OS",
+  "shortName": "HEALTH",
+  "description": {
+    "zh": "个人健康与状态调节中枢 · Focus 防沉迷 · 本地优先",
+    "en": "Personal health & state regulation hub · Focus guard · local-first"
+  },
+  "themeColor": {
+    "light": "#f4f5f7",
+    "dark": "#0b0e14"
+  },
+  "defaultTheme": "auto",
+  "locale": "zh-CN",
+  "storageKey": "healthos_v1",
+  "storageKind": "nested",
+  "settingsThemePath": [
+    "settings",
+    "theme"
+  ],
+  "categories": [
+    "utilities"
+  ],
+  "workspace": "health-os",
+  "devPort": 5192,
+  "domain": "health.kenos.space",
+  "shellType": "main-wrap-main",
+  "wordmarkAccent": {
+    "light": "#5b6cff",
+    "dark": "#8fa3ff"
+  },
+  "experimental": true,
+  "switcherOrder": 60,
+  "production": false,
+  "pwaTestEnabled": true,
+  "routes": [
+    {
+      "path": "/",
+      "name": "now"
+    },
+    {
+      "path": "/focus",
+      "name": "focus"
+    },
+    {
+      "path": "/settings",
+      "name": "settings"
+    }
+  ],
+  "clipPaths": [
+    "/"
+  ],
+  "scrollQaPath": "/settings"
+}

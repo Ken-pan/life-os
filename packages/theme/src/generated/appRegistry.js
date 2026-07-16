@@ -4,7 +4,7 @@
  * 改 manifest 后运行 npm run build:app-registry。
  */
 
-/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'home' | 'portal' | 'aios' | 'knowledge'} LifeOsAppId */
+/** @typedef {'planner' | 'fitness' | 'finance' | 'music' | 'home' | 'portal' | 'aios' | 'health' | 'knowledge'} LifeOsAppId */
 
 /**
  * @type {Record<LifeOsAppId, {
@@ -179,6 +179,28 @@ export const LIFE_OS_SITE_META = {
     appleTouchIcon: "/apple-touch-icon.png",
     categories: ["utilities"],
   },
+  health: {
+    id: "health",
+    name: "HEALTH.OS",
+    shortName: "HEALTH",
+    description: {
+      zh: "个人健康与状态调节中枢 · Focus 防沉迷 · 本地优先",
+      en: "Personal health & state regulation hub · Focus guard · local-first",
+    },
+    themeColor: {
+      light: "#f4f5f7",
+      dark: "#0b0e14",
+    },
+    defaultTheme: "auto",
+    locale: "zh-CN",
+    storageKey: "healthos_v1",
+    storageKind: "nested",
+    settingsThemePath: ["settings","theme"],
+    favicon: {"id":"app-favicon","light":"/favicon-32.png","dark":"/favicon-32.png"},
+    manifest: "/manifest.webmanifest",
+    appleTouchIcon: "/apple-touch-icon.png",
+    categories: ["utilities"],
+  },
   knowledge: {
     id: "knowledge",
     name: "KNOWLEDGE.OS",
@@ -212,6 +234,7 @@ export const LIFE_OS_APP_ORIGINS = {
   home: { production: "https://home.kenos.space", devPort: 5196 },
   portal: { production: "https://portal.kenos.space", devPort: 5195 },
   aios: { production: "https://aios.kenos.space", devPort: 5197 },
+  health: { production: "https://health.kenos.space", devPort: 5192 },
   knowledge: { production: "https://knowledge.kenos.space", devPort: 5879 },
 }
 
@@ -227,6 +250,7 @@ export const LIFE_OS_SWITCHER_APPS = [
   { id: "home", experimental: true },
   { id: "knowledge", experimental: true },
   { id: "aios", experimental: true },
+  { id: "health", experimental: true },
 ]
 
 /** @type {Record<LifeOsAppId, { light: string; dark: string }>} */
@@ -238,6 +262,7 @@ export const LIFE_OS_APP_WORDMARK_ACCENT = {
   home: { light: "#7d93a8", dark: "#7d93a8" },
   portal: { light: "#3d9ed6", dark: "#5cb8ea" },
   aios: { light: "#5d5d5d", dark: "#b4b4b4" },
+  health: { light: "#5b6cff", dark: "#8fa3ff" },
   knowledge: { light: "#4d55c7", dark: "#9aa2ff" },
 }
 
@@ -357,6 +382,20 @@ export const LIFE_OS_PWA_APPS = {
     waitSelector: ".app-shell",
     nestedWrapInMain: true,
     routes: [{"path":"/","name":"chat"},{"path":"/history","name":"history"},{"path":"/settings","name":"settings"}],
+    clipPaths: ["/"],
+    scrollQaPath: "/settings",
+    production: false,
+    pwaTestEnabled: true,
+  },
+  health: {
+    id: "health",
+    name: "HEALTH.OS",
+    workspace: "health-os",
+    port: 5192,
+    shellType: "main-wrap-main",
+    waitSelector: ".app-shell",
+    nestedWrapInMain: true,
+    routes: [{"path":"/","name":"now"},{"path":"/focus","name":"focus"},{"path":"/settings","name":"settings"}],
     clipPaths: ["/"],
     scrollQaPath: "/settings",
     production: false,

@@ -17,6 +17,7 @@ case "$APP" in
   home)    WORKSPACE="home-os";    PORT=5196; BUILD_DIR="apps/home/build" ;;
   starter) WORKSPACE="starter-os"; PORT=5875; BUILD_DIR="apps/starter/build" ;;
   knowledge) WORKSPACE="knowledge-os"; PORT=5879; BUILD_DIR="apps/knowledge/build" ;;
+  health) WORKSPACE="health-os"; PORT=5192; BUILD_DIR="apps/health/build" ;;
   # [app-generator:preview-case] promote-life-os-app.mjs 在此行上方插入新 app
   *)
     echo "Unknown app: $APP (planner|fitness|music|finance|portal|home|starter)"

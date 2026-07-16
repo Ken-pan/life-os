@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "HealthOS 主窗口:纯展示壳,只需 core 权限;数据经 fetch 走本地 Focus 代理(127.0.0.1:5193)",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

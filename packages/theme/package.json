@@ -29,6 +29,7 @@
     "./brands/aios.css": "./src/generated/brands/aios.css",
     "./brands/portal.css": "./src/generated/brands/portal.css",
     "./brands/knowledge.css": "./src/generated/brands/knowledge.css",
+    "./brands/health.css": "./src/generated/brands/health.css",
     "./brand": {
       "types": "./src/index.d.ts",
       "import": "./src/brand.js"

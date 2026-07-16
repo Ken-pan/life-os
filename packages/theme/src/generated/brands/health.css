@@ -1,0 +1,71 @@
+/*
+  GENERATED FILE — do not edit by hand.
+  Source: packages/design-tokens/tokens/brands/health.json
+  Rebuild: npm run build:tokens
+*/
+
+[data-app='health'] {
+  --bg: #0b0e14;
+  --bg-2: #12151d;
+  --card: #161a24;
+  --card-h: #1c2130;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-l: rgba(255, 255, 255, 0.12);
+  --t1: #eef1f4;
+  --t2: #a6afb9;
+  --t3: #717b85;
+  --t4: rgba(238, 241, 244, 0.38);
+  --accent: #8fa3ff;
+  --accent-2: #aab9ff;
+  --accent-bg: rgba(143, 163, 255, 0.14);
+  --on-accent: #0b0e14;
+  --appbar-bg: rgba(11, 14, 20, 0.92);
+  --nav-bg: rgba(11, 14, 20, 0.94);
+  --sidebar: #0b0e14;
+  --sidebar-foreground: #eef1f4;
+  --sidebar-muted: #a6afb9;
+  --sidebar-accent: #12151d;
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
+}
+
+[data-app='health'][data-mode='light'],
+[data-app='health'][data-theme='light'] {
+  --bg: #f4f4f3;
+  --bg-2: #ffffff;
+  --card: #ffffff;
+  --card-h: #e9eaec;
+  --border: #d6d9dd;
+  --border-l: #c0c5cb;
+  --t1: #17181c;
+  --t2: #4c5560;
+  --t3: #6c757f;
+  --t4: #8b939b;
+  --accent: #5b6cff;
+  --accent-2: #4353e0;
+  --accent-bg: rgba(91, 108, 255, 0.10);
+  --on-accent: #ffffff;
+  --sidebar: #1b1f23;
+  --sidebar-foreground: #eef1f4;
+  --sidebar-muted: rgba(238, 241, 244, 0.55);
+  --sidebar-accent: #252a2f;
+  --sidebar-primary: #8fa3ff;
+  --sidebar-primary-foreground: #101418;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --appbar-bg: rgba(244, 244, 243, 0.88);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+  --seg-display: flex;
+  --seg-flex-wrap: wrap;
+  --seg-gap: 8px;
+  --seg-track-bg: transparent;
+  --seg-track-border: none;
+  --seg-track-padding: 0;
+  --seg-btn-bg: var(--card);
+  --seg-btn-border: 1px solid var(--border);
+  --seg-active-bg: var(--accent-bg);
+  --seg-active-fg: var(--accent);
+  --seg-active-border-token: var(--accent);
+  color-scheme: light;
+}
