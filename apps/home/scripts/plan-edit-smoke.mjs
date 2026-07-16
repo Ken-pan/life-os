@@ -64,6 +64,24 @@ async function edgeCountSettled(page, expected, timeout = 4000) {
   return n
 }
 
+/**
+ * Persist is a 400ms tail debounce (PERSIST_DEBOUNCE_MS in state.svelte.js), so
+ * localStorage lags each edit and a fixed sleep races the write. Poll until the
+ * predicate holds, but return the last value regardless so a genuine failure
+ * still reports the actual persisted state.
+ * @template T
+ * @param {() => Promise<T>} read @param {(v: T) => boolean} ok @param {number} timeout
+ */
+async function settledRead(read, ok, timeout = 3000) {
+  const deadline = Date.now() + timeout
+  let v = await read()
+  while (!ok(v) && Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 100))
+    v = await read()
+  }
+  return v
+}
+
 /** @param {import('playwright').Page} page @param {number} svgX @param {number} svgY */
 async function clickSvg(page, svgX, svgY) {
   const screen = await svgToScreen(page, svgX, svgY)
@@ -303,7 +321,10 @@ await pickTool(page, '门窗')
 await clickSvg(page, 240, 120)
 await page.waitForTimeout(400)
 
-const openingsAfterPlace = await graphOpeningCount(page)
+const openingsAfterPlace = await settledRead(
+  () => graphOpeningCount(page),
+  (n) => n >= 1,
+)
 const doorsAfterPlace = await doorPathCount(page)
 push({
   name: 'opening place on wall',
@@ -315,7 +336,10 @@ const offsetBeforeDrag = await firstOpeningOffset(page)
 await pickTool(page, '选择')
 await dragSvg(page, 240, 120, 300, 120)
 await page.waitForTimeout(400)
-const offsetAfterDrag = await firstOpeningOffset(page)
+const offsetAfterDrag = await settledRead(
+  () => firstOpeningOffset(page),
+  (v) => offsetBeforeDrag != null && v != null && v > offsetBeforeDrag,
+)
 push({
   name: 'opening drag along wall',
   ok:
@@ -326,8 +350,10 @@ push({
 })
 
 await page.getByRole('button', { name: '改窗', exact: true }).click()
-await page.waitForTimeout(300)
-const typeAfterToggle = await firstOpeningType(page)
+const typeAfterToggle = await settledRead(
+  () => firstOpeningType(page),
+  (t) => t === 'window',
+)
 push({
   name: 'toggle door to window',
   ok: typeAfterToggle === 'window',
@@ -337,7 +363,10 @@ push({
 await removeWallAt(page, 170, 120)
 
 const afterRemove = await edgeCountSettled(page, initial)
-const openingsAfterWallDelete = await graphOpeningCount(page)
+const openingsAfterWallDelete = await settledRead(
+  () => graphOpeningCount(page),
+  (n) => n === 0,
+)
 push({
   name: 'remove wall cascades opening',
   ok: afterRemove === initial && openingsAfterWallDelete === 0,
@@ -370,7 +399,10 @@ await clickSvg(page, 380, 200)
 await page.keyboard.press('Enter')
 await page.waitForTimeout(500)
 
-const zonesAfterDraw = await zoneCount(page)
+const zonesAfterDraw = await settledRead(
+  () => zoneCount(page),
+  (n) => n >= 1,
+)
 push({
   name: 'zone draw 3pt + Enter',
   ok: zonesAfterDraw >= 1,
@@ -388,7 +420,10 @@ push({
 })
 
 await removeWallAt(page, 170, 120)
-const staleAfterWall = await firstZoneStale(page)
+const staleAfterWall = await settledRead(
+  () => firstZoneStale(page),
+  (v) => v === true,
+)
 push({
   name: 'zone stale after wall change',
   ok: staleAfterWall === true,
@@ -408,7 +443,10 @@ await page
 await page.waitForTimeout(300)
 await clickSvg(page, 240, 150)
 await page.waitForTimeout(400)
-const placementsAfter = await placementCount(page)
+const placementsAfter = await settledRead(
+  () => placementCount(page),
+  (n) => n >= 1,
+)
 push({
   name: 'placement add cabinet',
   ok: placementsAfter >= 1,
@@ -430,7 +468,10 @@ await page.waitForTimeout(300)
 await page.locator('.storage-picker').waitFor({ state: 'visible', timeout: 5000 })
 await page.locator('.storage-picker-btn').filter({ hasText: 'S1' }).click()
 await page.waitForTimeout(400)
-const s1Assigned = await storageS1Assigned(page)
+const s1Assigned = await settledRead(
+  () => storageS1Assigned(page),
+  (v) => v === true,
+)
 push({
   name: 'storage assign S1 to placement',
   ok: s1Assigned,

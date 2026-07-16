@@ -7,11 +7,14 @@
  * 方案文档 D2 把「墙闭合环自动检测」列为后续增强，这里补上。业界同构做法见
  * Blueprint3D 的 half-edge / smallest-cycle；学术侧是平面图的面检测 + 对偶图。
  *
- * 三步：
+ * 四步：
  *   1. planarize —— 在交叉处切分。用户可以画出两面交叉却不共享顶点的墙，
  *      而面检测**要求**真正的平面嵌入，否则环会穿过交点连错。只用于检测，不写回 SSOT。
- *   2. pruneDangling —— 反复剥掉度为 1 的顶点。悬空墙围不出房间，留着只会让面多出尖刺。
- *   3. traceFaces —— 半边遍历：next(u→v) = 在 v 处、从反向边 v→u 起顺时针数的下一条边。
+ *   2. bridgeGaps —— 给悬空端点搭桥：扫描来的墙图常差几英寸不闭合（508 实测卧室
+ *      门侧缝隙 9.5″），这些缺口会让整段墙被下一步当悬空墙剥掉、房间漏检。
+ *      只桥接 < 24″（最窄可通行门洞）的缺口，真正的门洞和半墙保持敞开。
+ *   3. pruneDangling —— 反复剥掉度为 1 的顶点。悬空墙围不出房间，留着只会让面多出尖刺。
+ *   4. traceFaces —— 半边遍历：next(u→v) = 在 v 处、从反向边 v→u 起顺时针数的下一条边。
  *      该规则下内部面的有向面积恒为正、外部面为负（与 SVG 的 y 轴朝下无关，
  *      因为鞋带公式只看坐标数值），据此过滤掉外轮廓。
  */
@@ -21,6 +24,12 @@ const EPS = 1e-6
 const TJUNCTION_TOL_PX = 1.5
 /** 小于此面积的环不算房间（衣柜约 6 sq ft，留足余量）。 */
 const MIN_ROOM_SQFT = 3
+/**
+ * 悬空端点搭桥的缺口上限（英寸）。必须 < 24″（CLEARANCE.minimum，最窄可
+ * 通行门洞）：比它小的缺口人过不去，只能是扫描/手绘没对齐，桥掉是纠错；
+ * 到了门洞尺寸就是真开口，桥掉等于把两个房间焊死。
+ */
+const GAP_BRIDGE_IN = 18
 
 /**
  * @param {Point[]} poly
@@ -148,6 +157,75 @@ function planarize(graph) {
     return true
   })
   return { vertices, edges: deduped }
+}
+
+/**
+ * 给悬空端点搭桥：度为 1 的顶点若在 maxGapPx 内够得着别的顶点、或别的边的
+ * 投影点，就补一条虚拟边（只用于检测，不写回 SSOT）。
+ *
+ * 返回补的桥段；调用方拿到非空结果后需**重跑 planarize**——桥可能落在边
+ * 内部（T 型），不切分的话面检测照样连错。
+ *
+ * @param {{ vertices: { id: string, x: number, y: number }[], edges: { id: string, a: string, b: string }[] }} g
+ * @param {number} maxGapPx
+ * @returns {{ a: { x: number, y: number }, b: { x: number, y: number } }[]}
+ */
+function bridgeGaps(g, maxGapPx) {
+  /** @type {Map<string, number>} */
+  const deg = new Map()
+  for (const e of g.edges) {
+    deg.set(e.a, (deg.get(e.a) ?? 0) + 1)
+    deg.set(e.b, (deg.get(e.b) ?? 0) + 1)
+  }
+  const pos = new Map(g.vertices.map((v) => [v.id, v]))
+  /** 悬空端点各自的邻居（桥回邻居 = 原地折返，必须排除） */
+  const nbrOf = new Map()
+  for (const e of g.edges) {
+    nbrOf.set(e.a, e.b)
+    nbrOf.set(e.b, e.a)
+  }
+
+  /** @type {{ a: { x: number, y: number }, b: { x: number, y: number } }[]} */
+  const bridges = []
+  for (const [vid, d] of deg) {
+    if (d !== 1) continue
+    const v = pos.get(vid)
+    if (!v) continue
+    let best = null
+    let bestD = maxGapPx
+
+    // 候选 1：别的顶点（含另一个悬空端点——两段墙差一条缝的常见形态）
+    for (const u of g.vertices) {
+      if (u.id === vid || u.id === nbrOf.get(vid)) continue
+      const dist = Math.hypot(u.x - v.x, u.y - v.y)
+      if (dist < EPS || dist > bestD) continue
+      bestD = dist
+      best = { x: u.x, y: u.y }
+    }
+
+    // 候选 2：非邻接边的投影点（墙头顶到另一面墙中段差一点没碰上）
+    for (const e of g.edges) {
+      if (e.a === vid || e.b === vid) continue
+      const a = pos.get(e.a)
+      const b = pos.get(e.b)
+      if (!a || !b) continue
+      const dx = b.x - a.x
+      const dy = b.y - a.y
+      const len2 = dx * dx + dy * dy
+      if (len2 < EPS) continue
+      const t = ((v.x - a.x) * dx + (v.y - a.y) * dy) / len2
+      if (t <= EPS || t >= 1 - EPS) continue // 端点在候选 1 里比过了
+      const px = a.x + t * dx
+      const py = a.y + t * dy
+      const dist = Math.hypot(px - v.x, py - v.y)
+      if (dist < EPS || dist > bestD) continue
+      bestD = dist
+      best = { x: px, y: py }
+    }
+
+    if (best) bridges.push({ a: { x: v.x, y: v.y }, b: best })
+  }
+  return bridges
 }
 
 /**
@@ -313,18 +391,59 @@ export function polygonInteriorPoint(poly) {
 /**
  * 检测墙图围合出的房间候选。
  * @param {WallGraph} graph
- * @param {{ minSqFt?: number }} [opts]
+ * @param {{
+ *   minSqFt?: number,
+ *   bridgeGapIn?: number,
+ *   extraSegments?: { a: Point, b: Point }[],
+ * }} [opts]
+ *   - bridgeGapIn:悬空缺口搭桥上限（英寸），0 关闭，默认 GAP_BRIDGE_IN
+ *   - extraSegments:额外虚拟墙段（如围栏隔断），只进检测、不写回 SSOT
  * @returns {{ polygon: Point[], areaSqFt: number }[]} 按面积降序
  */
 export function detectRooms(graph, opts = {}) {
   if (!graph?.edges?.length) return []
   const minSqFt = opts.minSqFt ?? MIN_ROOM_SQFT
-  const planar = pruneDangling(planarize(graph))
-  if (!planar.edges.length) return []
-
   const pxPerFt = graph.pxPerFt || 36
+
+  let work = graph
+  const extra = opts.extraSegments ?? []
+  if (extra.length) {
+    let seq = 0
+    const vertices = graph.vertices.slice()
+    const edges = graph.edges.slice()
+    for (const s of extra) {
+      const a = { id: `xv-${seq++}`, x: s.a.x, y: s.a.y }
+      const b = { id: `xv-${seq++}`, x: s.b.x, y: s.b.y }
+      vertices.push(a, b)
+      edges.push({ id: `xe-${seq++}`, a: a.id, b: b.id })
+    }
+    work = { ...graph, vertices, edges }
+  }
+
+  let planar = planarize(work)
+  // 搭桥后重新平面化（桥可能 T 在边中段）；桥又可能让下一个端点够得着，
+  // 最多两轮——真实缺口都是一轮了事，两轮纯粹兜底。
+  const maxGapPx = ((opts.bridgeGapIn ?? GAP_BRIDGE_IN) / 12) * pxPerFt
+  for (let round = 0; round < 2 && maxGapPx > 0; round++) {
+    const bridges = bridgeGaps(planar, maxGapPx)
+    if (!bridges.length) break
+    let seq = 0
+    const vertices = planar.vertices.slice()
+    const edges = planar.edges.slice()
+    for (const brg of bridges) {
+      const a = { id: `bv-${round}-${seq++}`, x: brg.a.x, y: brg.a.y }
+      const b = { id: `bv-${round}-${seq++}`, x: brg.b.x, y: brg.b.y }
+      vertices.push(a, b)
+      edges.push({ id: `be-${round}-${seq++}`, a: a.id, b: b.id })
+    }
+    planar = planarize({ vertices, edges })
+  }
+
+  const pruned = pruneDangling(planar)
+  if (!pruned.edges.length) return []
+
   const sqPx = pxPerFt * pxPerFt
-  return traceFaces(planar)
+  return traceFaces(pruned)
     .map((polygon) => ({
       polygon: dedupeCollinear(polygon),
       areaSqFt: signedArea(polygon) / sqPx,

@@ -9,7 +9,9 @@
  *
  * 硬约束(违反即弃):家具不出自己的分区、不与其他家具/固定设施重叠、
  * 堵门数/孤岛区不得多于现状、全屋最窄通道不得比现状更窄、固定设施
- * 与地毯/宠物不参与移动。
+ * 与地毯/宠物不参与移动。用户锁定件(placement.locked)同样不动 ——
+ * 锁定后重跑即「围绕锁定件局部重算」:锁定件仍是碰撞/净空/配对的一等公民,
+ * 只是从可移动集合里退场。
  *
  * 每步候选都跑一次完整 analyzeCirculation(6in 栅格,毫秒级),分数是真几何,
  * 不是启发式近似 —— 这正是「LLM 解释,几何引擎裁决」的架构分工。
@@ -21,6 +23,8 @@ import {
   pointInPolygon,
   roomsAsZones,
 } from './circulation.js'
+import { auditLayout } from './layout-audit.js'
+import { computeTaskRoutes } from './task-routes.js'
 import { isFence, placementSpec } from './placements.js'
 import { wallAnchorSegments } from './wall-anchor.js'
 import { PX_PER_FT, PX_PER_IN } from './dimensions.js'
@@ -48,9 +52,9 @@ export const LAYOUT_PROFILES = [
   },
 ]
 
-/** 这些不参与移动:钉死的(公寓自带)、踩得过去的、有腿的(狗),以及非落地件 */
+/** 这些不参与移动:钉死的(公寓自带)、用户锁定的、踩得过去的、有腿的(狗),以及非落地件 */
 function isMovable(pl) {
-  if (!pl || pl.fixed) return false
+  if (!pl || pl.fixed || pl.locked) return false
   if (pl.kind === 'rug' || pl.kind === 'yoga_mat' || pl.kind === 'mat') return false
   if (String(pl.kind).startsWith('dog')) return false
   // 围栏是圈狗的边界,不是一件摆得更好的家具:狗不参与移动,单独把围栏
@@ -288,6 +292,10 @@ export function affinityPenaltyIn(boxById, pairs, segs, huggers) {
 /**
  * 一次求解的设计上下文:认对/贴墙/净空需求/门窗段/视线对/静态障碍,
  * 全部只算一次,每次评估复用。
+ *
+ * 关系不只来自 COMPANION_RULES 词表:每件家具可以带用户指定的
+ * `relations`(near/far_from + 目标件 + 间距),与自动认对同权重进罚分 ——
+ * 「宠物粮靠近围栏」「鸟笼远离床」这类家规,词表猜不出来,只能用户说。
  */
 export function buildDesignContext(project, placements, zones) {
   const segs = wallAnchorSegments(project.wallGraph)
@@ -296,14 +304,31 @@ export function buildDesignContext(project, placements, zones) {
     .filter((pl) => WALL_HUGGERS.has(pl.kind) && !pl.fixed)
     .map((pl) => ({ id: pl.id, kind: pl.kind }))
 
-  // 使用净空需求:词表标了 clearance 的(柜/桌前留操作深度)+ 床(下床空间)
+  // 用户指定关系:near 并进 pairs(同一套间距罚分);far_from 单独一张表
+  /** @type {Array<{ aId: string, bId: string, minGapIn: number, zh: string }>} */
+  const farPairs = []
+  const idSet = new Set(placements.map((p) => p.id))
+  for (const pl of placements) {
+    for (const rel of pl.relations ?? []) {
+      if (!idSet.has(rel.targetId)) continue // 目标件被删了:关系静默失效,不报错
+      const zh = rel.zh ?? `「${pl.label}」与目标`
+      if (rel.type === 'near') {
+        pairs.push({ aId: pl.id, bId: rel.targetId, gapIn: rel.gapIn ?? [0, 24], zh })
+      } else if (rel.type === 'far_from') {
+        farPairs.push({ aId: pl.id, bId: rel.targetId, minGapIn: rel.gapIn?.[0] ?? 72, zh })
+      }
+    }
+  }
+
+  // 使用净空需求:词表标了 clearance 的(柜/桌前留操作深度)+ 床(下床空间)。
+  // 每件可用 attrs.clearanceIn 覆写词表 —— 实测过「这台洗衣机门要 26in」就以实测为准
   const access = []
   for (const pl of placements) {
     if (pl.kind === 'rug' || pl.kind === 'yoga_mat' || pl.kind === 'mat') continue
     const spec = placementSpec(pl.kind)
     if ((spec?.mount ?? 'floor') !== 'floor') continue
     const isBed = String(pl.kind).startsWith('bed')
-    const clearance = spec?.clearance ?? 0
+    const clearance = pl.attrs?.clearanceIn ?? spec?.clearance ?? 0
     if (clearance > 0 || isBed) access.push({ id: pl.id, clearance, isBed })
   }
 
@@ -321,7 +346,7 @@ export function buildDesignContext(project, placements, zones) {
   const tallOf = new Map(
     placements.map((pl) => [pl.id, placementSpec(pl.kind)?.tall ?? 30]),
   )
-  return { segs, pairs, huggers, access, windows, doors, sightPairs, fixtureBoxes, tallOf }
+  return { segs, pairs, farPairs, huggers, access, windows, doors, sightPairs, fixtureBoxes, tallOf }
 }
 
 /**
@@ -332,6 +357,16 @@ export function buildDesignContext(project, placements, zones) {
  */
 export function designPenaltyIn(ctx, boxById) {
   let total = affinityPenaltyIn(boxById, ctx.pairs, ctx.segs, ctx.huggers)
+
+  // 用户指定的 far_from:比最小间距近多少罚多少(封顶同伴随对)——
+  // 「鸟笼远离床」被塞到床头,通道再宽也不是好方案
+  for (const pair of ctx.farPairs ?? []) {
+    const a = boxById.get(pair.aId)
+    const b = boxById.get(pair.bId)
+    if (!a || !b) continue
+    const g = boxGapIn(a, b)
+    if (g < pair.minGapIn) total += Math.min(pair.minGapIn - g, PAIR_PENALTY_CAP)
+  }
 
   // 障碍集 = 全部家具盒子 + 固定设施(净空计算里「自己」要排掉)
   const allBoxes = [...boxById.values(), ...ctx.fixtureBoxes]
@@ -683,8 +718,13 @@ export function directionZh(dx, dy) {
  * @returns {Promise<{
  *   ok: boolean, reason?: string, profile: typeof LAYOUT_PROFILES[number],
  *   moves: any[], project?: SpatialProject, score?: number,
+ *   status?: 'certified' | 'provisional', lowConfidence?: string[],
+ *   slackIn?: number, fragile?: boolean,
  *   before?: any, after?: any,
  * }>}
+ * `status`:certified = 独立复检通过且无低置信度输入;provisional = 有搬动件
+ * 尺寸来自低置信度扫描,建议补测后执行。`slackIn` = 最窄通道距侧身极限(24in)
+ * 的余量;`fragile` = 余量小于 4in,实测误差可能吃掉它。
  */
 export async function solveLayout(project, profileKey, opts = {}) {
   const profile = LAYOUT_PROFILES.find((p) => p.key === profileKey) ?? LAYOUT_PROFILES[0]
@@ -857,6 +897,20 @@ export async function solveLayout(project, profileKey, opts = {}) {
 
   const finalPlacements = materialize(best)
   const finalProject = { ...project, placements: finalPlacements }
+
+  // 独立复检:交付前对最终状态做与搜索路径无关的全量硬约束验收。
+  // 理论上退火的硬门槛已保证这里必过 —— 正因如此,复检不过就是求解器有 bug,
+  // 宁可如实拒发方案,也不把一套没验过的摆法说成「已验证」。
+  const audit = auditLayout(project, finalProject, { base: circBase })
+  if (!audit.ok) {
+    return {
+      ok: false,
+      reason: `复检未过(疑似求解器缺陷,请反馈):${audit.violations.map((v) => v.zh).join(';')}`,
+      profile,
+      moves: [],
+    }
+  }
+
   const finalCirc = analyzeCirculation(finalProject, { base: circBase })
   const moves = []
   for (let i = 0; i < best.length; i++) {
@@ -892,18 +946,40 @@ export async function solveLayout(project, profileKey, opts = {}) {
     if (dRel < 6 * PX_PER_IN) ma.withZh = mb.label
   }
 
+  // 日常任务路径:只在首尾各算一次(两次栅格 BFS,毫秒级),不进退火评分 ——
+  // 先作为如实汇报的指标;等权重被真实行为数据校准过再考虑参与优化
+  const baseWalk = computeTaskRoutes(project, { base: circBase }).dailyWalkFt
+  const afterWalk = computeTaskRoutes(finalProject, { base: circBase }).dailyWalkFt
+
+  const after = {
+    ...circMetrics(finalCirc),
+    wallFt: freeWallFt(project, finalPlacements),
+    affinityIn: Math.round(designPenaltyIn(ctx, boxByIdOf(finalPlacements))),
+    walkFtPerDay: afterWalk,
+  }
+
+  // 状态分级 + 余量:方案不只说「通过」,还说**凭什么信、信到什么程度**。
+  // provisional = 有搬动件的尺寸来自低置信度扫描 —— 图上通过不等于现场通过。
+  const movedIds = new Set(moves.map((m) => m.id))
+  const lowConfidence = finalPlacements
+    .filter((p) => movedIds.has(p.id) && p.attrs?.confidence === 'low')
+    .map((p) => p.label)
+  // slack = 方案里全屋最窄通道距「侧身极限」还剩几英寸。数字虽然「通过」,
+  // 余量小于常见的扫描/手测误差(~1.5in)时按脆弱标记,别让绿灯骗人
+  const slackIn = Math.round((after.minWidthIn - CLEARANCE.minimum) * 10) / 10
+
   return {
     ok: true,
     profile,
     moves,
     project: finalProject,
     score: Math.round(bestScore),
-    before: { ...base, wallFt: baseWallFt, affinityIn: Math.round(baseAffinity) },
-    after: {
-      ...circMetrics(finalCirc),
-      wallFt: freeWallFt(project, finalPlacements),
-      affinityIn: Math.round(designPenaltyIn(ctx, boxByIdOf(finalPlacements))),
-    },
+    status: lowConfidence.length ? 'provisional' : 'certified',
+    lowConfidence,
+    slackIn,
+    fragile: slackIn < 4,
+    before: { ...base, wallFt: baseWallFt, affinityIn: Math.round(baseAffinity), walkFtPerDay: baseWalk },
+    after,
   }
 }
 

@@ -3,6 +3,7 @@
     getActiveProject,
     removePlacement,
     rotatePlacementById,
+    togglePlacementLocked,
     updatePlacement,
   } from '$lib/state.svelte.js'
   import { inchesToPx, pxToInches } from '$lib/spatial/placements.js'
@@ -255,6 +256,18 @@
         {detailsOpen ? '收起' : '尺寸'}
       </button>
     {/if}
+    {#if !placement.fixed}
+      <button
+        type="button"
+        class="graph-sel-btn"
+        class:graph-sel-locked={placement.locked}
+        aria-pressed={!!placement.locked}
+        title={placement.locked
+          ? '已锁定:布局方案不会挪它(你自己仍可拖动)。点击解锁'
+          : '锁定位置:摆到满意后锁住,重算方案时其余家具围绕它优化'}
+        onclick={() => togglePlacementLocked(placement.id)}
+      >{placement.locked ? '🔒 已锁定' : '锁定'}</button>
+    {/if}
     <button
       type="button"
       class="graph-sel-btn graph-sel-accent"
@@ -417,6 +430,14 @@
   .graph-sel-accent {
     color: var(--graph-accent);
     border-color: color-mix(in srgb, var(--graph-accent) 35%, var(--border));
+  }
+
+  /* 锁定态:实底强调 —— 这是一个「已生效的约束」,不是普通按钮 */
+  .graph-sel-locked {
+    color: var(--card);
+    background: var(--graph-accent);
+    border-color: var(--graph-accent);
+    font-weight: 700;
   }
 
   @media (max-width: 599px) {

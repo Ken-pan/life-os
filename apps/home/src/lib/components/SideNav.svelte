@@ -1,8 +1,9 @@
 <script>
+  // 薄封装：共享 LifeOsSideNav 骨架 + home 的 IA/active 判定与品牌位。
   import { page } from '$app/state'
   import { auth } from '$lib/auth.svelte.js'
   import AppBrandSwitcher from '@life-os/platform-web/svelte/brand/switcher'
-  import Icon from '@life-os/platform-web/svelte/icon'
+  import LifeOsSideNav from '@life-os/platform-web/svelte/navigation/side-nav'
   import { LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
   import {
     buildPrimaryNavItems,
@@ -11,17 +12,36 @@
     isNavChromeHidden,
   } from '$lib/nav.js'
 
-  const primaryItems = $derived(buildPrimaryNavItems())
-  const settingsItem = $derived(buildSettingsNavItem())
   const current = $derived(resolveNavTab(page.url.pathname))
+  const groups = $derived([
+    {
+      items: buildPrimaryNavItems().map((item) => ({
+        key: item.tab,
+        href: item.href,
+        icon: item.icon,
+        label: item.label,
+        active: current === item.tab,
+      })),
+    },
+  ])
+  const footItem = $derived.by(() => {
+    const item = buildSettingsNavItem()
+    return {
+      key: item.tab,
+      href: item.href,
+      icon: item.icon,
+      label: item.label,
+      active: current === item.tab,
+    }
+  })
   const hidden = $derived(isNavChromeHidden(page.url.pathname))
   const canSwitchApps = $derived(
     auth.user?.email?.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL,
   )
 </script>
 
-{#if !hidden}
-  <aside class="sidebar" aria-label="侧栏导航">
+<LifeOsSideNav {groups} {footItem} {hidden} ariaLabel="侧栏导航" labelDecor>
+  {#snippet brand()}
     <AppBrandSwitcher
       appId="home"
       tagline="居家空间规划"
@@ -29,34 +49,5 @@
       allowedAppIds={auth.allowedAppKeys}
       canSwitch={canSwitchApps}
     />
-
-    <div class="sidebar-body">
-      <div class="nav-group">
-        {#each primaryItems as item (item.tab)}
-          <a
-            class="nav-item"
-            class:active={current === item.tab}
-            href={item.href}
-            data-sveltekit-noscroll
-            aria-current={current === item.tab ? 'page' : undefined}
-          >
-            <Icon name={item.icon} size={18} strokeWidth={1.75} />
-            <span class="nav-lbl" data-ui-decor="nav-label">{item.label}</span>
-          </a>
-        {/each}
-      </div>
-    </div>
-
-    <a
-      class="nav-item sidebar-foot-item"
-      class:active={current === settingsItem.tab}
-      href={settingsItem.href}
-      data-sveltekit-noscroll
-      aria-current={current === settingsItem.tab ? 'page' : undefined}
-    >
-      <Icon name={settingsItem.icon} size={18} strokeWidth={1.75} />
-      <span class="nav-lbl" data-ui-decor="nav-label">{settingsItem.label}</span
-      >
-    </a>
-  </aside>
-{/if}
+  {/snippet}
+</LifeOsSideNav>

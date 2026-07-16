@@ -664,6 +664,44 @@ export function fenceBandRects(rect, bandPx) {
   ]
 }
 
+/**
+ * 围栏「隔断」的厚度上限（英寸）。比这薄的围栏摆出来是一道栏板——把空间切成
+ * 两半（狗过不去），而不是围一个圈；胖矩形才是圈（pet_pen 默认 36×36）。
+ * 隔断在功能上等价于一堵矮墙，房间识别把它的中轴线当虚拟墙段用。
+ */
+export const FENCE_DIVIDER_MAX_THICK_IN = 12
+
+/**
+ * 摆出来当隔断用的围栏 → 中轴线段（px），喂给 detectRooms 的 extraSegments，
+ * 让「识别房间」和分区归一化把围栏切出的区域当独立空间。
+ *
+ * 只认细长围栏；围成圈的（w、h 都超过隔断厚度）不算——用户圈的是狗的活动区，
+ * 不是在划分区。隔断两端差几英寸没顶到墙没关系，detectRooms 的缺口搭桥
+ * （GAP_BRIDGE_IN）会接上；真离墙很远的自然被当悬空段剥掉，不误伤。
+ *
+ * @param {SpatialPlacement[]} placements
+ * @param {number} pxPerFt
+ * @returns {{ a: { x: number, y: number }, b: { x: number, y: number } }[]}
+ */
+export function fenceDividerSegments(placements, pxPerFt) {
+  const maxThickPx = inchesToPx(FENCE_DIVIDER_MAX_THICK_IN, pxPerFt)
+  /** @type {{ a: { x: number, y: number }, b: { x: number, y: number } }[]} */
+  const segs = []
+  for (const pl of placements ?? []) {
+    if (!isFence(pl.kind)) continue
+    if (pl.attrs?.staged) continue // 导入暂存区里的不在屋里
+    const thin = Math.min(pl.w, pl.h)
+    if (thin > maxThickPx || thin <= 0) continue
+    const mid = thin / 2
+    segs.push(
+      pl.w >= pl.h
+        ? { a: { x: pl.x, y: pl.y + mid }, b: { x: pl.x + pl.w, y: pl.y + mid } }
+        : { a: { x: pl.x + mid, y: pl.y }, b: { x: pl.x + mid, y: pl.y + pl.h } },
+    )
+  }
+  return segs
+}
+
 /** @type {PlacementGroup[]} */
 export const PLACEMENT_GROUP_ORDER = [
   '卧室',

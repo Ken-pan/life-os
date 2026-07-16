@@ -10,8 +10,9 @@
   //   5. 更多洞察(默认折叠)—— 利用率/完整杂乱榜/动线/布局方案/长期观察
   // 之前 1–5 全是同级卡片平铺:页面在汇报「系统有什么」,不是「你现在干什么」。
   // 所有指标一个没删,只是把「凭什么」收进了折叠区 —— 想核对依据的人展开就在。
-  import { applyLayoutProposal, getActiveProject, isTidyTaskDone, setTidyTaskDone, isTidyStepDone, setTidyStepDone, clearTidyProgress } from '$lib/state.svelte.js'
+  import { applyLayoutProposal, getActiveProject, isTidyTaskDone, setTidyTaskDone, isTidyStepDone, setTidyStepDone, clearTidyProgress, togglePlacementLocked } from '$lib/state.svelte.js'
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
+  import { computeTaskRoutes } from '$lib/spatial/task-routes.js'
   import { renderFloorPlanSvg } from '$lib/spatial/render-svg.js'
   // layout-solve.js(~945 行几何求解器)只在折叠洞察区里点「算三套方案」才用得上,
   // 静态 import 会把它压进整理页首屏 JS。改成用到时才动态加载。
@@ -53,6 +54,8 @@
 
   const project = $derived(getActiveProject())
   const circ = $derived(analyzeCirculation(project))
+  /** 日常任务路径(常识频率估算;栅格 BFS 毫秒级,户型变了自动重算) */
+  const taskRoutes = $derived(computeTaskRoutes(project))
   const clutter = $derived(scoreClutter(project, circ))
   /** 页面打开那一刻的时钟就够了 —— 过期判断按天算,不需要逐秒刷新 */
   const nowMs = Date.now()
@@ -326,6 +329,49 @@
     proposals = null // 布局变了,旧方案作废 —— 想再看重新算
   }
 
+  /** 用户锁定的家具数(方案不会挪它们;在平面图选中家具可锁/解锁) */
+  const lockedCount = $derived(
+    (project.placements ?? []).filter((p) => p.locked).length,
+  )
+
+  /**
+   * 「这件不动」:锁在**现在的位置**(方案还没应用,家具没挪过),
+   * 然后立刻重算 —— 其余家具围绕它重新优化。TestFit 式局部重算的入口。
+   * @param {{ id: string }} mv
+   */
+  async function lockAndResolve(mv) {
+    togglePlacementLocked(mv.id)
+    await runSolver()
+  }
+
+  /**
+   * 方案缩略图:方案后的摆法 + 搬动示意(幽灵框 = 原位置,箭头指新位置)。
+   * 全部数据取自方案自身(moves.from + 方案 placements),不依赖当前户型 ——
+   * 算完之后用户又编辑过别的,缩略图也不会画错。
+   * @param {any} prop
+   */
+  function proposalSvg(prop) {
+    const nextById = new Map(prop.project.placements.map((p) => [p.id, p]))
+    const moveOverlay = prop.moves
+      .map((m) => {
+        const next = nextById.get(m.id)
+        if (!next) return null
+        // 转过 90° 的件,原脚印的宽深与现在互换
+        const fw = m.rotated ? next.h : next.w
+        const fh = m.rotated ? next.w : next.h
+        return {
+          from: { x: m.from.x, y: m.from.y, w: fw, h: fh },
+          to: { x: next.x, y: next.y, w: next.w, h: next.h },
+        }
+      })
+      .filter(Boolean)
+    return renderFloorPlanSvg(prop.project, {
+      compact: true,
+      hideStorageZones: true,
+      moveOverlay,
+    })
+  }
+
   /** @param {any} prop 方案的前后对比人话 */
   function proposalDelta(prop) {
     const parts = []
@@ -342,6 +388,15 @@
     // 设计规范偏差(配对/贴墙/使用净空/门扇/窗前/视线):英寸,降 = 更专业
     if (a.affinityIn < b.affinityIn - 2)
       parts.push(`更符合设计规范(偏差 ${b.affinityIn}→${a.affinityIn} in)`)
+    // 日常步行:求解器不优化它,所以变好变坏都如实说(>5% 才值得提)
+    if (a.walkFtPerDay != null && b.walkFtPerDay != null) {
+      const diff = a.walkFtPerDay - b.walkFtPerDay
+      if (Math.abs(diff) > b.walkFtPerDay * 0.05) {
+        parts.push(
+          `日常步行 ${b.walkFtPerDay}→${a.walkFtPerDay} ft/天(${diff < 0 ? '省' : '多'} ${Math.abs(Math.round((diff / b.walkFtPerDay) * 100))}%)`,
+        )
+      }
+    }
     return parts.length ? parts.join(' · ') : '与现状指标接近'
   }
 </script>
@@ -729,6 +784,26 @@
       </section>
     {/if}
 
+    {#if taskRoutes.ok && taskRoutes.routes.length}
+      <section class="block">
+        <h2 class="block-title">日常路径</h2>
+        <ul class="issue-list">
+          {#each taskRoutes.routes as r (r.key)}
+            <li class="issue" class:issue-urgent={r.lengthFt === null}>
+              {r.lengthFt === null ? '🚧' : '👣'} {r.zh}:{r.lengthFt === null
+                ? '走不通 —— 路被家具堵死了'
+                : `${r.lengthFt} ft`}
+              <span class="issue-hint">约 {r.perDay} 次/天</span>
+            </li>
+          {/each}
+        </ul>
+        <p class="block-desc">
+          按常识频率估算的高频任务链,合计约 {taskRoutes.dailyWalkFt ?? '—'} ft/天(含往返)。
+          布局方案对比里的「日常步行」就来自这套链路;等使用记录攒够后会换成你家的实测频率。
+        </p>
+      </section>
+    {/if}
+
     {#if circ.ok}
       <section class="block">
         <div class="plan-head">
@@ -744,6 +819,12 @@
           <p class="block-desc">
             想从根本上改善?用现有家具求解更好的摆法(几何引擎裁决:不重叠、不堵门、动线只许更好)。
             三个目标:最少折腾 / 最佳动线 / 最大收纳。
+            不想被挪的家具,在平面图选中它点「锁定」—— 方案会围绕锁定件优化其余家具。
+          </p>
+        {/if}
+        {#if lockedCount > 0}
+          <p class="locked-hint">
+            🔒 已锁定 {lockedCount} 件 —— 方案不会挪它们(平面图选中家具可解锁)
           </p>
         {/if}
         {#if proposals}
@@ -762,7 +843,21 @@
                 {:else if prop.duplicateOfZh}
                   <p class="proposal-none">与「{prop.duplicateOfZh}」方案完全相同</p>
                 {:else}
+                  <!-- 一眼看懂方案:虚线框 = 现在在哪,箭头指向建议的新位置 -->
+                  <div class="proposal-thumb" aria-label="方案平面预览">
+                    {@html proposalSvg(prop)}
+                  </div>
                   <p class="proposal-delta">{proposalDelta(prop)}</p>
+                  {#if prop.fragile}
+                    <p class="proposal-warn">
+                      ⚠ 最窄通道距侧身极限只剩 {prop.slackIn} in —— 尺寸稍有实测误差就可能不够,执行前建议现场量一下
+                    </p>
+                  {/if}
+                  {#if prop.status === 'provisional'}
+                    <p class="proposal-warn">
+                      ⏳ 暂定方案:{prop.lowConfidence.map((l) => `「${l}」`).join('')}的尺寸来自低置信度扫描 —— 建议补测后再照着搬
+                    </p>
+                  {/if}
                   <ul class="move-list">
                     {#each prop.moves as mv (mv.id)}
                       <li class="move-row">
@@ -773,6 +868,13 @@
                             · 跟着{mv.withZh}{/if}{#if mv.heavy}
                             · <b class="move-heavy">建议两人</b>{/if}
                         </span>
+                        <button
+                          type="button"
+                          class="move-lock-btn"
+                          disabled={solving}
+                          title="不想挪这件?锁在现在的位置,立刻重算 —— 其余家具围绕它优化"
+                          onclick={() => lockAndResolve(mv)}
+                        >🔒 不挪它</button>
                       </li>
                     {/each}
                   </ul>
@@ -1955,6 +2057,61 @@
   .move-heavy {
     color: #b45309;
     font-weight: 600;
+  }
+
+  /* 「不挪它」:锁定这件并立刻重算 —— 与「忽略整套方案」是两个粒度 */
+  .move-lock-btn {
+    flex-shrink: 0;
+    font: inherit;
+    font-size: 11px;
+    padding: 2px 8px;
+    color: var(--t3);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .move-lock-btn:hover:not(:disabled) {
+    color: var(--t1);
+    border-color: var(--t3);
+  }
+
+  .move-lock-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .locked-hint {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--t2);
+  }
+
+  /* 方案缩略平面图:虚线幽灵框 = 原位置,箭头 = 搬去哪。等比缩进卡片宽度 */
+  .proposal-thumb {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .proposal-thumb :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* 方案的诚实注脚:通过≠稳妥。脆弱余量 / 低置信度输入都要说出来 */
+  .proposal-warn {
+    margin: 0;
+    padding: 6px 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #b45309;
+    background: color-mix(in srgb, #b45309 8%, transparent);
+    border-radius: 8px;
   }
 
   .proposal-actions {

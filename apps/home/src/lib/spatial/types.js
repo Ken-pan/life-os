@@ -309,6 +309,8 @@
  * @property {PurchaseInfo} [purchase] 这件家具是买来的哪一单;见 {@link PurchaseInfo}
  * @property {boolean} [staged] 清单导入新建、还在画布左上暂存网格里没安家。
  *   动线/占地分析和归位建议都跳过它;用户拖到位(commitPlacementMove)时摘掉
+ * @property {number} [clearanceIn] 使用净空覆写(英寸):实测过「这台洗衣机门要 26in」
+ *   就以实测为准,布局求解不再用词表默认值
  */
 
 /**
@@ -348,6 +350,14 @@
  * @property {boolean} [fixed] 公寓自带、钉死(洗衣机/烘干机/内嵌柜/窗式空调…):
  *   扫描永远动不了它(几何以本地为准、扫不到也不消失、不被顶掉);
  *   UI 上结构锁定时挪/转/删都被拦,解锁结构编辑才能动
+ * @property {boolean} [locked] 用户锁定位置:布局求解器不许挪它(仍算碰撞障碍),
+ *   用户自己照常可拖动/旋转/删除 —— 与 `fixed`(物理钉死)是两回事。
+ *   典型用法:把折叠桌拖到想要的位置 → 锁定 → 重算,其余家具围着它重新优化
+ * @property {Array<{ type: 'near' | 'far_from', targetId: string, gapIn?: [number, number], zh?: string }>} [relations]
+ *   用户指定的家规关系,布局求解按间距罚分:near = 边到边保持在 gapIn 区间
+ *   (缺省 [0,24]),far_from = 至少隔开 gapIn[0](缺省 72)。
+ *   「宠物粮靠近围栏」「鸟笼远离床」这类词表猜不出的约束写在这里;
+ *   目标件被删时关系静默失效
  */
 
 /**

@@ -268,6 +268,43 @@ for (const s of slots) {
   }
 }
 
+/* ---- locked 用户锁定件:不参与移动,但仍是碰撞障碍(局部重算) ---- */
+{
+  // 场景 A 的瓶颈房,把柜子锁死:求解器只能围绕它挪沙发
+  const p = baseProject({
+    placements: [
+      { id: 'pl1', kind: 'sofa', label: '沙发', x: 24 + ft(12), y: 24, w: ft(8), h: ft(3), rotation: 0, zoneId: 'z-2' },
+      { id: 'pl2', kind: 'cabinet', label: '锁定柜', x: 24 + ft(13), y: 24 + ft(4.5), w: ft(7), h: ft(5.5), rotation: 0, zoneId: 'z-2', locked: true },
+    ],
+  })
+  const res = await solveLayout(p, 'best_flow', { iterations: 200, seed: 7 })
+  if (res.ok) {
+    assert.ok(!res.moves.some((m) => m.id === 'pl2'), '锁定件绝不该出现在搬动清单里')
+    const cab = res.project.placements.find((x) => x.id === 'pl2')
+    assert.equal(cab.x, 24 + ft(13), '锁定件 x 原地不动')
+    assert.equal(cab.y, 24 + ft(4.5), '锁定件 y 原地不动')
+    // 锁定件仍是碰撞障碍:挪过的沙发不许压上来
+    const sofa = res.project.placements.find((x) => x.id === 'pl1')
+    const overlap =
+      sofa.x < cab.x + cab.w && sofa.x + sofa.w > cab.x &&
+      sofa.y < cab.y + cab.h && sofa.y + sofa.h > cab.y
+    assert.ok(!overlap, '沙发不许压到锁定柜上')
+  } else {
+    assert.ok(res.reason.length > 0)
+  }
+
+  // 全部锁死 → 如实说没有可移动的家具,不硬编方案
+  const allLocked = baseProject({
+    placements: [
+      { id: 'pl1', kind: 'sofa', label: '沙发', x: 24 + ft(12), y: 24, w: ft(8), h: ft(3), rotation: 0, zoneId: 'z-2', locked: true },
+      { id: 'pl2', kind: 'cabinet', label: '柜', x: 24 + ft(13), y: 24 + ft(4.5), w: ft(7), h: ft(5.5), rotation: 0, zoneId: 'z-2', locked: true },
+    ],
+  })
+  const none = await solveLayout(allLocked, 'best_flow', { iterations: 60, seed: 7 })
+  assert.ok(!none.ok, '全锁死不该硬凑方案')
+  assert.ok(none.reason.includes('可移动'), none.reason)
+}
+
 /* ---- 摆放逻辑:纯函数 ---- */
 {
   // 边到边间距
@@ -485,6 +522,57 @@ for (const s of slots) {
   const reuseMs = Date.now() - t1
   console.log(`analyzeCirculation ×${N}: 全量 ${fullMs}ms vs 复用底图 ${reuseMs}ms`)
   assert.ok(reuseMs * 2 < fullMs, `复用底图至少 2× 提速(${fullMs} vs ${reuseMs})`)
+}
+
+/* ---- 用户指定关系(relations)与净空覆写(attrs.clearanceIn) ---- */
+{
+  // far_from:鸟笼(shelf 客串)贴着床 → 罚;隔开 6ft+ → 不罚
+  const mk = (x) => ({
+    id: 'cage', kind: 'shelf', label: '鸟笼',
+    x, y: 24 + ft(1), w: ft(2), h: ft(2), rotation: 0, zoneId: 'z-1',
+    relations: [{ type: 'far_from', targetId: 'bed', gapIn: [72, 999], zh: '鸟笼远离床' }],
+  })
+  const bed = { id: 'bed', kind: 'bed', label: '床', x: 24 + ft(1), y: 24 + ft(3.5), w: ft(5), h: ft(6.5), rotation: 0, zoneId: 'z-1' }
+
+  const near = baseProject({ placements: [mk(24 + ft(1)), bed] })
+  const ctxNear = buildDesignContext(near, near.placements, near.zones)
+  assert.equal(ctxNear.farPairs.length, 1, 'far_from 关系要进上下文')
+  const boxesOf = (p) => new Map(p.placements.map((x) => [x.id, { x: x.x, y: x.y, w: x.w, h: x.h }]))
+  const pNear = designPenaltyIn(ctxNear, boxesOf(near))
+
+  const far = baseProject({ placements: [mk(24 + ft(9.5)), bed] })
+  const ctxFar = buildDesignContext(far, far.placements, far.zones)
+  const pFar = designPenaltyIn(ctxFar, boxesOf(far))
+  assert.ok(pNear > pFar + 30, `贴着床要重罚(near=${pNear} far=${pFar})`)
+
+  // near:宠物粮桶(box 客串)指定靠近围栏目标 —— 拆散要罚
+  const food = (x) => ({
+    id: 'food', kind: 'storage_box', label: '宠物粮',
+    x, y: 24 + ft(8), w: ft(1.5), h: ft(1.5), rotation: 0, zoneId: 'z-1',
+    relations: [{ type: 'near', targetId: 'bed', gapIn: [0, 12], zh: '测试靠近' }],
+  })
+  const together = baseProject({ placements: [food(24 + ft(1)), bed] })
+  const apart = baseProject({ placements: [food(24 + ft(10)), bed] })
+  const ctxT = buildDesignContext(together, together.placements, together.zones)
+  const ctxA = buildDesignContext(apart, apart.placements, apart.zones)
+  assert.ok(ctxT.pairs.some((p2) => p2.zh === '测试靠近'), '用户 near 关系并进 pairs')
+  const pT = designPenaltyIn(ctxT, boxesOf(together))
+  const pA = designPenaltyIn(ctxA, boxesOf(apart))
+  assert.ok(pA > pT, `拆散指定的 near 要罚(together=${pT} apart=${pA})`)
+
+  // 目标件不存在:关系静默失效,不炸
+  const orphan = baseProject({
+    placements: [{ ...mk(24 + ft(1)), relations: [{ type: 'far_from', targetId: 'ghost' }] }],
+  })
+  const ctxO = buildDesignContext(orphan, orphan.placements, orphan.zones)
+  assert.equal(ctxO.farPairs.length, 0, '悬空关系不进上下文')
+
+  // 净空覆写:同一台洗衣机,attrs.clearanceIn 说了算
+  const washer = baseProject({
+    placements: [{ id: 'w1', kind: 'washer', label: '洗衣机', x: 24 + ft(1), y: 24 + ft(1), w: ft(2.5), h: ft(2.5), rotation: 0, zoneId: 'z-1', attrs: { clearanceIn: 26 } }],
+  })
+  const ctxW = buildDesignContext(washer, washer.placements, washer.zones)
+  assert.equal(ctxW.access.find((a) => a.id === 'w1')?.clearance, 26, '实测净空覆写词表')
 }
 
 console.log('layout-solve-unit: all assertions passed')

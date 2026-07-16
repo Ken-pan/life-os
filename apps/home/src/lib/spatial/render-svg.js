@@ -99,6 +99,9 @@ import { sunLightPools, sunLightPlanDir } from './sun.js'
  *   focus?: { x: number, y: number, rect?: { x: number, y: number, w: number, h: number }, spanFt?: number } | null,
  *     整理任务定位:viewBox 收到焦点周围一圈并画脉冲标记 —— 裁的是取景框,
  *     内容仍完整渲染,周围的墙和家具上下文都在
+ *   moveOverlay?: Array<{ from: { x: number, y: number, w: number, h: number }, to: { x: number, y: number, w: number, h: number } }>,
+ *     布局方案预览:每条 = 一件家具的搬动。旧脚印画虚线幽灵框,箭头从旧中心
+ *     指到新中心 —— project 传方案后的摆法,幽灵框自然指回「原来在哪」
  * }} [opts]
  */
 export function renderFloorPlanSvg(project, opts = {}) {
@@ -311,6 +314,12 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
  .placement-on{stroke:var(--graph-accent,#1d6b42);stroke-width:2.5;stroke-dasharray:6 4;animation:plan-sel-pulse 1.15s ease-in-out infinite}
  .placement-clash{fill:var(--plan-danger-fill,#e9c4bc);stroke:var(--plan-danger,#a3341f);stroke-width:2}
  .placement-label{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
+ .placement-lock-badge{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);pointer-events:none;opacity:.85}
+ .move-ghost{fill:rgba(232,89,12,.08);stroke:#e8590c;stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
+ .move-to{fill:none;stroke:#e8590c;stroke-width:2.5;pointer-events:none}
+ .move-arrow{stroke:#e8590c;stroke-width:3;stroke-linecap:round;pointer-events:none}
+ .move-arrow-halo{stroke:rgba(255,255,255,.85);stroke-width:5.5;stroke-linecap:round;pointer-events:none}
+ .move-arrow-head{fill:#e8590c;stroke:rgba(255,255,255,.85);stroke-width:1;pointer-events:none}
  .placement-hit{fill:transparent;stroke:none;cursor:grab;pointer-events:all}
  .placement-hit:active{cursor:grabbing}
  .vp-cone{fill:var(--plan-accent,#5c758c);fill-opacity:.14;stroke:var(--plan-accent,#5c758c);stroke-opacity:.5;stroke-width:1.2;pointer-events:none}
@@ -648,6 +657,12 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
         // Label sits outside the rotation so it stays upright at 90°/270°.
         `<text x="${cx}" y="${labelY}" text-anchor="middle" class="placement-label${p.w * p.h < minorAreaPx ? ' label-minor' : ''}">${esc(p.label)}</text>`,
       )
+      // 用户锁定件(布局方案不许挪):右上角一枚锁,画在旋转组外保持直立
+      if (p.locked) {
+        parts.push(
+          `<text x="${p.x + p.w - 3}" y="${p.y + 10}" text-anchor="end" class="placement-lock-badge">🔒</text>`,
+        )
+      }
     }
     parts.push('</g>')
   }
@@ -1181,6 +1196,38 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
     for (const g of opts.snapGuides) {
       parts.push(
         `<line x1="${g.from.x}" y1="${g.from.y}" x2="${g.to.x}" y2="${g.to.y}" class="snap-guide snap-guide-${g.source}"/>`,
+      )
+    }
+    parts.push('</g>')
+  }
+
+  // 布局方案的搬动示意:虚线幽灵框 = 原位置,箭头指到新中心。画在最上层;
+  // 箭头三角按角度现算顶点,不用 marker defs(defs 在 {@html} 多实例页面里会撞 id)
+  if (opts.moveOverlay?.length) {
+    parts.push('<g class="move-overlay" aria-hidden="true">')
+    for (const mv of opts.moveOverlay) {
+      const { from, to } = mv
+      parts.push(
+        `<rect x="${from.x}" y="${from.y}" width="${from.w}" height="${from.h}" rx="3" class="move-ghost"/>`,
+        `<rect x="${to.x}" y="${to.y}" width="${to.w}" height="${to.h}" rx="3" class="move-to"/>`,
+      )
+      const x1 = from.x + from.w / 2
+      const y1 = from.y + from.h / 2
+      const x2 = to.x + to.w / 2
+      const y2 = to.y + to.h / 2
+      const len = Math.hypot(x2 - x1, y2 - y1)
+      if (len < 4) continue
+      const ux = (x2 - x1) / len
+      const uy = (y2 - y1) / len
+      const ah = Math.min(14, len * 0.4)
+      const aw = ah * 0.55
+      const bx = x2 - ux * ah
+      const by = y2 - uy * ah
+      // 白色光晕垫底再画橙色箭身:深浅家具底色上都读得出
+      parts.push(
+        `<line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" class="move-arrow-halo"/>`,
+        `<line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" class="move-arrow"/>`,
+        `<polygon points="${x2},${y2} ${bx - uy * aw},${by + ux * aw} ${bx + uy * aw},${by - ux * aw}" class="move-arrow-head"/>`,
       )
     }
     parts.push('</g>')

@@ -229,7 +229,7 @@ export function buildCirculationBase(project) {
  * @param {SpatialProject} project
  * @param {ReturnType<typeof buildCirculationBase> | null} [reuseBase]
  */
-function buildGrid(project, reuseBase = null) {
+export function buildGrid(project, reuseBase = null) {
   const b = reuseBase ?? buildCirculationBase(project)
   if (!b) return null
   const { cols, rows, minX, minY } = b

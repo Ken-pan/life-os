@@ -61,6 +61,7 @@ import {
   clampPlacementRect,
   createPlacement,
   createPlacementId,
+  fenceDividerSegments,
   inchesToPx,
   placementsToFurniture,
   rotatePlacement,
@@ -539,6 +540,28 @@ export function updatePlacement(placementId, patch) {
     p.id === placementId ? { ...p, ...patch } : p,
   )
   applyEditSource({ placements }, { silent: true })
+}
+
+/**
+ * 锁定/解锁一件家具的位置(placement.locked)。锁定只约束**布局求解器**
+ * (方案不许挪它、应用旧方案时跳过它);用户自己拖动/旋转/删除不受影响 ——
+ * 与 `fixed`(公寓钉死件,连用户都动不了)是两回事。
+ * @param {string} placementId
+ */
+export function togglePlacementLocked(placementId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const pl = (raw.placements ?? []).find((p) => p.id === placementId)
+  if (!pl) return
+  const locked = !pl.locked
+  const placements = (raw.placements ?? []).map((p) =>
+    p.id === placementId ? { ...p, locked } : p,
+  )
+  applyEditSource({ placements }, { silent: true })
+  toast(
+    locked
+      ? `已锁定「${pl.label}」—— 布局方案不会挪它,重算即围绕它优化其余家具`
+      : `已解锁「${pl.label}」,重新参与布局优化`,
+  )
 }
 
 /** @param {string} placementId */
@@ -1806,6 +1829,7 @@ export function setAngleSnapDeg(deg) {
 /**
  * 墙图闭合环 → 房间候选。已被现有分区覆盖的环会被滤掉，
  * 所以反复点「识别」只会补新增的房间，不会造重复分区。
+ * 细长围栏（隔断,非围圈）算虚拟墙——狗狗围栏切出的活动区也是候选房间。
  * @returns {{ polygon: import('./spatial/types.js').Point[], areaSqFt: number }[]}
  */
 export function detectRoomCandidates() {
@@ -1813,7 +1837,11 @@ export function detectRoomCandidates() {
   const graph = raw.wallGraph
   if (!graph) return []
   const zones = raw.zones ?? []
-  return detectRooms(graph).filter((room) => {
+  const extraSegments = fenceDividerSegments(
+    raw.placements ?? [],
+    graph.pxPerFt || 36,
+  )
+  return detectRooms(graph, { extraSegments }).filter((room) => {
     // 必须用保证在内部的点：顶点均值对 L/U 形房间会落到多边形外，
     // 判定永远为「没分区」→ 每点一次识别就重复建区。
     const c = polygonInteriorPoint(room.polygon)
@@ -1987,9 +2015,15 @@ export function applyLayoutProposal(moves, profileNameZh) {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
   const byId = new Map(moves.map((m) => [m.id, m]))
   let applied = 0
+  let skippedLocked = 0
   const placements = (raw.placements ?? []).map((pl) => {
     const mv = byId.get(pl.id)
     if (!mv) return pl
+    // 方案是算出来之后用户才锁定的 —— 锁定以用户为准,这一步不执行
+    if (pl.locked) {
+      skippedLocked += 1
+      return pl
+    }
     applied += 1
     const rotDelta = ((mv.to.rotation - (pl.rotation ?? 0)) % 360 + 360) % 360
     const swap = rotDelta % 180 === 90
@@ -2008,16 +2042,26 @@ export function applyLayoutProposal(moves, profileNameZh) {
   }
   applyEditSource(
     { placements },
-    { toastMsg: `已应用「${profileNameZh}」布局,搬 ${applied} 件(顶栏可撤销)` },
+    {
+      toastMsg: `已应用「${profileNameZh}」布局,搬 ${applied} 件${
+        skippedLocked ? `,跳过 ${skippedLocked} 件已锁定` : ''
+      }(顶栏可撤销)`,
+    },
   )
-  // 事件流(能力17):布局变更是事实,进追加日志(fire-and-forget)
+  // 事件流(能力17):布局变更是事实,进追加日志(fire-and-forget)。
+  // 被锁定跳过的件没真挪 —— 记进去会污染「谁总在漂」的长期观察
+  const lockedIds = new Set(
+    (raw.placements ?? []).filter((p) => p.locked).map((p) => p.id),
+  )
   void logEvents([
     { type: 'layout_applied', subject: {}, data: { profile: profileNameZh, moves: applied } },
-    ...moves.map((m) => ({
-      type: 'object_moved',
-      subject: { placementId: m.id },
-      data: { source: 'layout', label: m.label, movedFt: m.movedFt },
-    })),
+    ...moves
+      .filter((m) => !lockedIds.has(m.id))
+      .map((m) => ({
+        type: 'object_moved',
+        subject: { placementId: m.id },
+        data: { source: 'layout', label: m.label, movedFt: m.movedFt },
+      })),
   ])
 }
 
