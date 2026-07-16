@@ -92,7 +92,7 @@ const PHOTO_CONCURRENCY = 3
  */
 export async function resolveScanPhotos(payload, onProgress) {
   const viewpoints = payload?.homeos?.viewpoints ?? []
-  /** @type {Array<{ path: string, assign: (ref: string) => void }>} */
+  /** @type {Array<{ path: string, assign: (ref: string) => void, assignHash?: (hash: string) => void }>} */
   const jobs = [
     ...viewpoints
       .filter((vp) => vp.photoPath)
@@ -125,7 +125,7 @@ export async function resolveScanPhotos(payload, onProgress) {
 
   let done = 0
   let failed = 0
-  /** @param {{ path: string, assign: (ref: string) => void }} job */
+  /** @param {{ path: string, assign: (ref: string) => void, assignHash?: (hash: string) => void }} job */
   const run = async (job) => {
     try {
       let url = signed.get(job.path)

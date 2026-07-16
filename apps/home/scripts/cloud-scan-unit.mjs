@@ -138,6 +138,63 @@ ok('viewport 已算出', p.viewport.width > 0 && p.viewport.height > 0)
   )
 }
 
+// ---- photoHash 回填链路上半段(权威副本外观特征的源头,2026-07-16) ----
+// server-optimized 权威副本 v21 起,家具 attrs.photoPath/photos 指向桶内照片;
+// 网页 replace 拉取时 resolveScanPhotos 按 entries 的 assignHash 派生感知哈希,
+// buildProjectFromScan 再把 photoHash 带进项目件 —— 这是 scan-identity hashBonus
+// 的数据源头。下半段(photos 模式 backfillAppearanceAttrs 认亲回填)在
+// scan-merge-unit.mjs;这里锁上半段:断了 hashBonus 会静默休眠且 svelte-check
+// 抓不到,单测是唯一防线。
+{
+  const raw = fixture()
+  const entries = scanObjectPhotoEntries(raw)
+  ok(
+    'assignHash 只挂最佳一张与旧契约单图(床 photos[0] + 马桶单图)',
+    entries.filter((e) => e.assignHash).length === 2,
+    JSON.stringify(entries.map((e) => [e.path.slice(-16), Boolean(e.assignHash)])),
+  )
+  // 模拟 resolveScanPhotos:每张下载成功 → assign(ref),最佳一张再 assignHash(dhash)
+  entries.forEach((e, i) => {
+    e.assign(`local-${i}`)
+    e.assignHash?.(`${i}f`.padStart(16, '0'))
+  })
+  ok(
+    'payload 侧 photoHash 已派生(placement + fixture 都要)',
+    Boolean(raw.homeos.placements[0].attrs.photoHash) &&
+      Boolean(raw.homeos.fixtures[0].attrs.photoHash),
+    JSON.stringify([
+      raw.homeos.placements[0].attrs.photoHash,
+      raw.homeos.fixtures[0].attrs.photoHash,
+    ]),
+  )
+  const built = buildProjectFromScan(raw)
+  const bed = built.placements[0]
+  const toilet = built.fixtures[0]
+  ok(
+    '项目侧家具带 photoHash(replace 拉权威副本 = 权威模型长出外观特征)',
+    bed.attrs?.photoHash === raw.homeos.placements[0].attrs.photoHash &&
+      toilet.attrs?.photoHash === raw.homeos.fixtures[0].attrs.photoHash,
+    JSON.stringify([bed.attrs?.photoHash, toilet.attrs?.photoHash]),
+  )
+  ok(
+    'photoHash 保留的同时桶路径照剥(photoPath / photos[].path)',
+    !('photoPath' in bed.attrs) &&
+      !('photoPath' in toilet.attrs) &&
+      (bed.attrs.photos ?? []).every((ph) => !('path' in ph)),
+    JSON.stringify(bed.attrs),
+  )
+  // 照片下载失败(没 assign 到 ref)时 photoHash 也不该长:哈希只来自下载成功的 blob
+  const broken = fixture()
+  const brokenEntries = scanObjectPhotoEntries(broken)
+  brokenEntries.forEach(() => {}) // 全部失败:既不 assign 也不 assignHash
+  const builtBroken = buildProjectFromScan(broken)
+  ok(
+    '全部下载失败时不长 photoHash(哈希只来自真 blob)',
+    builtBroken.placements[0].attrs?.photoHash == null &&
+      builtBroken.fixtures[0].attrs?.photoHash == null,
+  )
+}
+
 // ---- 跨端一致性(可选):iOS 单测落盘的 Swift 产出 payload ----
 // 先跑 ios/home-scan 的 xcodebuild test(会写 /tmp/homescan-mock-payload.json),
 // 再跑本脚本,即验证 Swift 转换器输出能被网页端原样消化。

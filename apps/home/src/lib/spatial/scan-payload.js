@@ -82,13 +82,15 @@ export function buildProjectFromScan(payload) {
 /**
  * 家具/设施照片的下载任务清单(iOS 自动抓拍,2026-07 加法式契约):
  * 单图 attrs.photoPath(兼容)+ 多视角证据包 attrs.photos[].path。
- * resolveScanPhotos 按它逐张下载,把 ref 写回对应位置(就地更新)。
+ * resolveScanPhotos 按它逐张下载,把 ref 写回对应位置(就地更新);
+ * 最佳一张带 assignHash —— photoHash(scan-identity hashBonus 的数据源头)
+ * 只在下载成功的 blob 上派生。
  * @param {any} payload
- * @returns {Array<{ path: string, assign: (ref: string) => void }>}
+ * @returns {Array<{ path: string, assign: (ref: string) => void, assignHash?: (hash: string) => void }>}
  */
 export function scanObjectPhotoEntries(payload) {
   const h = payload?.homeos
-  /** @type {Array<{ path: string, assign: (ref: string) => void }>} */
+  /** @type {Array<{ path: string, assign: (ref: string) => void, assignHash?: (hash: string) => void }>} */
   const jobs = []
   for (const o of [...(h?.placements ?? []), ...(h?.fixtures ?? [])]) {
     const attrs = o?.attrs
