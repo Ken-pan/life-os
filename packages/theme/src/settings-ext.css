@@ -158,19 +158,23 @@
   border-top: none;
 }
 
-.settings-btn-group>.btn,
-.settings-btn-group>.btn.ghost,
-.settings-btn-group>.btn-primary,
-.settings-btn-group>.btn-secondary,
-.settings-btn-group>.btn-danger,
-.settings-btn-group>.file-input-btn {
-  flex: 1;
-  min-width: 140px;
+/* .settings-btn-group 及其子项/修饰符统一定义在 components.css（单一权威） */
+
+/*
+  组合契约：.set-group 卡片是「容器零内边距、行自担 --inset-inline」模式。
+  按钮组（SettingsButtonGroup / 裸 .settings-btn-group）在此上下文中必须
+  与 .set-row 的内容对齐，否则按钮会顶到卡片边缘（宽于同卡的输入框）。
+  在 padded 的普通 .settings-block 内不命中，行为不变。
+*/
+.set-group .settings-btn-group,
+.set-group .settings-actions {
+  padding-inline: var(--inset-inline);
 }
 
-.settings-btn-group--flat {
-  margin-bottom: 0;
-  gap: var(--space-2-5);
+/* 已在自担 inset 的行（.set-row / SettingsStackBlock）内时豁免，避免双重缩进 */
+.set-group .set-row .settings-btn-group,
+.set-group .set-row .settings-actions {
+  padding-inline: 0;
 }
 
 .auth-link {
@@ -300,6 +304,7 @@
   height: var(--toggle-track-h);
   border-radius: 20px;
   background: var(--control-toggle-track);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
   transform: translate(-50%, -50%);
   transition: background var(--dur-base) var(--ease-standard);
   pointer-events: none;
@@ -320,6 +325,9 @@
   height: var(--toggle-thumb-size);
   border-radius: 50%;
   background: var(--control-toggle-thumb);
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px rgba(0, 0, 0, 0.04);
   transition: transform var(--dur-base) var(--ease-emphasized);
   transform: translateY(-50%);
   pointer-events: none;

@@ -125,6 +125,31 @@
         </SettingsRow>
       </SettingsSection>
     </CatalogStateBlock>
+
+    <!--
+      组合护栏:ButtonGroup 直挂 Section(auth 表单形态,home/fitness/finance 全在用)。
+      契约:.set-group 内按钮组自动补 --inset-inline,按钮左右缘必须与上方输入框对齐;
+      包在 StackBlock(.set-row)里时豁免,不得双重缩进。曾因契约缺失全线错位(2026-07-15)。
+    -->
+    <CatalogStateBlock stateId="detail:composition" label="Composition: form + ButtonGroup in Section">
+      <SettingsSection title="Account (auth form)">
+        <form onsubmit={(e) => e.preventDefault()}>
+          <SettingsRow label="Email">
+            {#snippet children()}
+              <input type="email" placeholder="you@example.com" />
+            {/snippet}
+          </SettingsRow>
+          <SettingsRow label="Password">
+            {#snippet children()}
+              <input type="password" placeholder="••••••" />
+            {/snippet}
+          </SettingsRow>
+          <SettingsButtonGroup>
+            <button type="submit" class="btn-primary">Sign in</button>
+          </SettingsButtonGroup>
+        </form>
+      </SettingsSection>
+    </CatalogStateBlock>
   </div>
 </section>
 

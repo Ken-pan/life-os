@@ -78,3 +78,15 @@
   background: linear-gradient(to right, transparent, var(--life-os-scroll-fade-bg, var(--bg)));
   pointer-events: none;
 }
+
+/* 图标自旋（加载态）：加在 Icon/svg 上即可；独立圆环加载用 components.css 的 .spinner */
+.life-os-spin {
+  animation: life-os-spin 800ms linear infinite;
+}
+
+/* reduced-motion：减速而非停转——静止的加载图标读作「卡死」（源自 AIOS TTS 的实践） */
+@media (prefers-reduced-motion: reduce) {
+  .life-os-spin {
+    animation-duration: 2s;
+  }
+}

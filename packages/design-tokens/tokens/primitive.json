@@ -64,8 +64,9 @@
   },
   "radius": {
     "control": { "$type": "dimension", "$value": "8px" },
-    "sm": { "$type": "dimension", "$value": "14px" },
+    "sm": { "$type": "dimension", "$value": "12px" },
     "lg": { "$type": "dimension", "$value": "12px" },
+    "overlay": { "$type": "dimension", "$value": "20px" },
     "pill": { "$type": "dimension", "$value": "999px" }
   },
   "text": {

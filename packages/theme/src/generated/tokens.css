@@ -91,11 +91,12 @@
   --text-display-lg: clamp(44px, 6vw + 12px, 64px);
 
   --control-h: 44px;
-  --control-radius: 10px;
+  --control-radius: var(--radius-control);
   --control-pad-x: 16px;
   --radius-control: 8px;
-  --radius-sm: 14px;
+  --radius-sm: 12px;
   --radius-lg: 12px;
+  --radius-overlay: 20px;
   --radius-pill: 999px;
   --btn-h-sm: 32px;
   --btn-h-md: 36px;

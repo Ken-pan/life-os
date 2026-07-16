@@ -22,6 +22,8 @@
   import CardsShowcase from './showcases/CardsShowcase.svelte'
   import CommandPaletteShowcase from './showcases/CommandPaletteShowcase.svelte'
   import AppShellShowcase from './showcases/AppShellShowcase.svelte'
+  import PrimitivesShowcase from './showcases/PrimitivesShowcase.svelte'
+  import MenuShowcase from './showcases/MenuShowcase.svelte'
 
   const pages = {
     tokens: TokensShowcase,
@@ -29,7 +31,9 @@
     segments: SegmentsShowcase,
     utilities: UtilitiesShowcase,
     modal: ModalShowcase,
+    primitives: PrimitivesShowcase,
     settings: SettingsShowcase,
+    menu: MenuShowcase,
     brand: BrandShowcase,
     navigation: NavigationShowcase,
     icon: IconShowcase,

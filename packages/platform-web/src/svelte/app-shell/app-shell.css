@@ -77,10 +77,11 @@
   left: 0;
   z-index: 11000;
   padding: 10px 16px;
-  border-radius: 0 0 10px 0;
+  border-radius: 0 0 var(--radius-lg, 12px) 0;
   background: var(--accent);
   color: var(--on-accent, #fff);
   font: 600 var(--text-sm, 14px) / 1.4 var(--button, sans-serif);
+  box-shadow: var(--shadow-elevated, 0 12px 32px rgba(0, 0, 0, 0.18));
   transform: translateY(-120%);
   transition: transform var(--dur-fast, 120ms) var(--ease-standard, ease);
 }

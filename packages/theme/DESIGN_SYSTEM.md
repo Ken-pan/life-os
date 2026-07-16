@@ -1,6 +1,6 @@
 # Life OS Design System
 
-`@life-os/theme` 是四端 Web 应用（Planner / Fitness / Finance / Music）的 **Web CSS 与设计 token** 包。
+`@life-os/theme` 是全线 Web 应用（Planner / Fitness / Finance / Music / Portal / Home / AIOS，+ starter 模板与 design-catalog）的 **Web CSS 与设计 token** 包。
 
 > **边界**：theme 是 **web-only** 层，**不依赖** `@life-os/contracts`。跨 Surface 产品语义见 [`../../docs/LIFEOS_ROADMAP.md`](../../docs/LIFEOS_ROADMAP.md) 与 [`../../docs/architecture/contracts.md`](../../docs/architecture/contracts.md)。Future iOS native 使用 SwiftUI DesignTokens（映射 token 命名，不 import 本包 CSS）。
 
@@ -38,8 +38,11 @@
 | `seg.css`           | 分段控件 `.seg`（Finance pill / Planner chips / Fitness track，经 `:root` token 切换） |
 | `settings-ext.css`  | 设置页布局、`.set-group`、`.toggle` / `.settings-toggle`                               |
 | `modal.css`         | 居中 Modal 壳（`.modal-bg` / `.modal`）                                                |
-| `music-shell.css`   | MusicOS 播放器壳：Mini Player、Now Playing、进度条、专辑网格                           |
-| `design-system.css` | 上述全部 `@import`                                                                     |
+| `scrollbar.css`     | 共享滚动条基线（thin + 圆角 + `--scrollbar-thumb*` 主题化）                            |
+| `portrait-gate.css` | 移动端横屏提示门                                                                       |
+| `utilities.css`     | `.life-os-pad-inline` / `.life-os-scroll-x*` 等工具类（`@layer life-os.utilities`）    |
+| `app-themes.css`    | 品牌主题聚合（re-export `generated/app-themes.css`，真源在 design-tokens）             |
+| `design-system.css` | 上述全部 `@import`（music 播放器壳 2026-07-14 已迁回 `apps/music`）                    |
 
 ## 各 App 职责
 
@@ -58,8 +61,19 @@
 | 分段  | `seg.css`                             | `.seg`、`.seg-scroll`、`.seg-chips` / `.seg-track` 修饰符    |
 | 设置  | `settings-ext.css` + `components.css` | 设置页网格、分组卡片、toggle                                 |
 | Modal | `modal.css`                           | 居中对话框壳；领域内容（如 Fitness 重量 stepper）留各 app    |
-| 组件  | `components.css`                      | 按钮、Sheet、Toast（`--toast-*` token）、Banner              |
+| 组件  | `components.css`                      | 按钮、Sheet、Toast（`--toast-*` token）、Banner、状态原语（`.skeleton` / `.spinner` / `.badge` / `.empty-*`）、`.life-os-popover` 面板基座（行为组件：platform-web `svelte/menu`） |
 | 品牌  | 各 app `:root`                        | 色板、图表色、Finance `--primary` / Fitness `--text-hero` 等 |
+
+### 圆角阶梯（2026-07-15 起）
+
+| 层级    | Token                                  | 值    | 用途                          |
+| ------- | -------------------------------------- | ----- | ----------------------------- |
+| control | `--radius-control`（=`--control-radius`） | 8px   | 按钮、输入框、seg、nav-item   |
+| surface | `--radius-lg`（=`--radius-sm`，已收敛） | 12px  | 卡片、banner、popover、面板   |
+| overlay | `--radius-overlay`                     | 20px  | Sheet、Modal、More Sheet      |
+| pill    | `--radius-pill`                        | 999px | chip、badge、FAB、开关        |
+
+`--radius-sm`/`--control-radius` 为兼容别名，新代码一律用左列语义名；不要再写字面量圆角。
 
 ### 文本色兼容
 

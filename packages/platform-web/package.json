@@ -117,6 +117,10 @@
       "svelte": "./src/svelte/settings/SettingsSyncBlock.svelte",
       "default": "./src/svelte/settings/SettingsSyncBlock.svelte"
     },
+    "./svelte/menu": {
+      "svelte": "./src/svelte/menu/Menu.svelte",
+      "default": "./src/svelte/menu/Menu.svelte"
+    },
     "./svelte/toast": {
       "svelte": "./src/svelte/toast/Toast.svelte",
       "default": "./src/svelte/toast/Toast.svelte"

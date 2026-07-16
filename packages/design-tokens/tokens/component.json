@@ -185,7 +185,7 @@
     "backPaddingInlineEnd": { "$type": "cssValue", "$value": "0" },
     "backIconSize": { "$type": "dimension", "$value": "13px" },
     "sheetBg": { "$type": "color", "$value": "var(--card)" },
-    "sheetRadius": { "$type": "dimension", "$value": "20px" }
+    "sheetRadius": { "$type": "dimension", "$value": "var(--radius-overlay, 20px)" }
   },
   "commandPalette": {
     "containerBg": { "$type": "color", "$value": "var(--card)" },
@@ -229,7 +229,7 @@
     "emptyText": { "$type": "color", "$value": "var(--t3, var(--text-muted))" },
     "contentMaxHeight": { "$type": "cssValue", "$value": "400px" },
     "mobileContentMaxHeight": { "$type": "cssValue", "$value": "60vh" },
-    "mobileSheetRadius": { "$type": "cssValue", "$value": "20px 20px 0 0" }
+    "mobileSheetRadius": { "$type": "cssValue", "$value": "var(--radius-overlay, 20px) var(--radius-overlay, 20px) 0 0" }
   },
   "portraitGate": {
     "overlayBg": { "$type": "color", "$value": "var(--bg)" },

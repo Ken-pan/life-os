@@ -1,5 +1,10 @@
 /* Life OS App Shell：侧栏 + 主列 + 底栏 */
 
+/* 壳层 chrome 磨砂配方（AppBar / 底栏 / 切换器菜单共用）；app 可整体覆盖 */
+:root {
+  --chrome-frost: blur(20px) saturate(1.7);
+}
+
 .app-shell,
 .app {
   min-height: var(--app-vh, 100dvh);
@@ -102,7 +107,8 @@
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--sidebar) 96%, #fff 4%) 0%, var(--sidebar) 100%);
   color: var(--sidebar-foreground);
-  border-right: 1px solid var(--sidebar-border);
+  border-right: 1px solid color-mix(in srgb, var(--sidebar-border) 82%, transparent);
+  box-shadow: 1px 0 0 color-mix(in srgb, #fff 3%, transparent);
 }
 
 .sidebar .brand {
@@ -167,6 +173,7 @@
 .sidebar .nav-item:active {
   background: color-mix(in srgb, var(--sidebar-foreground) 14%, var(--sidebar-accent));
   color: var(--sidebar-foreground);
+  transform: scale(0.985);
 }
 
 .brand-switcher-trigger:focus-visible {
@@ -194,7 +201,9 @@
   padding: var(--space-1);
   border-radius: var(--command-palette-container-radius, var(--radius-lg));
   border: 1px solid var(--command-palette-container-border, var(--sidebar-border));
-  background: var(--sidebar);
+  background: color-mix(in srgb, var(--sidebar) 94%, transparent);
+  -webkit-backdrop-filter: var(--chrome-frost);
+  backdrop-filter: var(--chrome-frost);
   box-shadow: var(--command-palette-container-shadow, var(--shadow-elevated));
   overflow: hidden;
 }
@@ -420,7 +429,8 @@
   position: static;
   transition:
     color var(--motion-fast, var(--dur-fast)) var(--ease),
-    background-color var(--motion-fast, var(--dur-fast)) var(--ease);
+    background-color var(--motion-fast, var(--dur-fast)) var(--ease),
+    transform var(--motion-fast, var(--dur-fast)) var(--ease);
 }
 
 .sidebar .nav-item svg {
@@ -445,10 +455,19 @@
   color: var(--sidebar-foreground);
 }
 
+.sidebar .nav-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 .sidebar .nav-item.active {
   background: color-mix(in srgb, var(--sidebar-primary) 16%, var(--sidebar-accent));
   color: var(--sidebar-foreground);
   font-weight: 600;
+}
+
+.sidebar .nav-item.active svg {
+  color: var(--sidebar-primary);
 }
 
 .sidebar .nav-spacer {
@@ -482,10 +501,10 @@
   top: 0;
   z-index: var(--z-nav);
   width: 100%;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  -webkit-backdrop-filter: var(--chrome-frost);
+  backdrop-filter: var(--chrome-frost);
 }
 
 :root {
@@ -913,10 +932,10 @@ html {
   right: 0;
   bottom: 0;
   z-index: var(--z-nav, var(--z-mobile-tabbar, 30));
-  background: var(--nav-bg, var(--bg-elevated, var(--bg-2)));
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--nav-bg, var(--bg-elevated, var(--bg-2))) 88%, transparent);
+  -webkit-backdrop-filter: var(--chrome-frost);
+  backdrop-filter: var(--chrome-frost);
+  border-top: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
   padding:
     var(--space-2) var(--inset-inline-end) var(--mobile-tabbar-safe-padding, max(var(--space-2), env(safe-area-inset-bottom, 0px))) var(--inset-inline-start);
   transition: opacity var(--dur-fast) var(--ease-standard);
@@ -982,6 +1001,34 @@ html {
   border-radius: var(--radius-control);
   background: var(--accent-bg);
   box-sizing: content-box;
+  animation: life-os-tab-pop var(--dur-base) var(--ease-emphasized);
+}
+
+.nav .nav-item.on .nav-lbl,
+.nav .nav-item.active .nav-lbl,
+.nav .nav-item-more.on .nav-lbl,
+.mobile-tabbar .mobile-tab.active .mobile-tab-label {
+  font-weight: 600;
+}
+
+@keyframes life-os-tab-pop {
+  from {
+    transform: scale(0.82);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .nav .nav-item.on svg,
+  .nav .nav-item.active svg,
+  .nav .nav-item-more.on svg,
+  .mobile-tabbar .mobile-tab.active svg {
+    animation: none;
+  }
 }
 
 /*
@@ -1034,8 +1081,8 @@ html {
     inset: 0;
     z-index: var(--z-more-sheet);
     background: var(--overlay-backdrop);
-    -webkit-backdrop-filter: blur(1px);
-    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     animation: life-os-fade-in var(--dur-fast) var(--ease-standard);
   }
 
@@ -1191,7 +1238,6 @@ html {
 
   .mobile-more-row.active {
     background: var(--navigation-item-bg-active);
-    box-shadow: inset 3px 0 0 var(--navigation-item-text-active);
   }
 
   .mobile-more-row.active .mobile-more-row-icon {

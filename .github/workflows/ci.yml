@@ -67,6 +67,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check:lifeos-boundaries
+      - run: npm run check:lifeos-styles
       - run: npm run check:app-manifests
       - name: Outbox structural + optional remote smoke
         env:

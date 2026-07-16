@@ -4,8 +4,8 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: var(--z-sheet, 100);
   display: flex;
   align-items: center;
@@ -28,13 +28,14 @@
 
 .modal {
   background: var(--card);
-  border: 1px solid var(--border-l, var(--border-strong, var(--border)));
-  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border-l, var(--border-strong, var(--border))) 85%, transparent);
+  border-radius: var(--radius-overlay);
   padding: 24px;
   width: 100%;
   max-width: 340px;
   margin: auto;
   flex-shrink: 0;
+  box-shadow: var(--shadow-elevated, 0 24px 64px rgba(0, 0, 0, 0.26));
   transform: translateY(10px) scale(0.96);
   transition: transform var(--dur-base) var(--ease-emphasized);
 }

@@ -22,6 +22,7 @@
     "qa:screenshots:prune": "node scripts/qa/prune-screenshots.mjs",
     "qa:screenshots:cleanup": "node scripts/qa/cleanup-legacy-screenshots.mjs",
     "check:lifeos-boundaries": "node scripts/check-lifeos-boundaries.mjs",
+    "check:lifeos-styles": "node scripts/check-lifeos-styles.mjs",
     "check:app-manifests": "node scripts/build-app-registry.mjs --check",
     "build:app-registry": "node scripts/build-app-registry.mjs",
     "add:capability": "node scripts/add-capability.mjs",

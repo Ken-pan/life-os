@@ -68,7 +68,7 @@
   "heading": { "$type": "cssValue", "$value": "var(--font)" },
   "button": { "$type": "cssValue", "$value": "var(--font)" },
   "control-h": { "$type": "dimension", "$value": "44px" },
-  "control-radius": { "$type": "dimension", "$value": "10px" },
+  "control-radius": { "$type": "cssValue", "$value": "var(--radius-control)" },
   "control-pad-x": { "$type": "dimension", "$value": "16px" },
   "btn-h-sm": { "$type": "dimension", "$value": "32px" },
   "btn-h-md": { "$type": "dimension", "$value": "36px" },

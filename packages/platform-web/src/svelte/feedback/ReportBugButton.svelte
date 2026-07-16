@@ -605,7 +605,7 @@
     place-items: center;
     color: var(--t2, inherit);
     border-radius: var(--radius-pill, 9999px);
-    transition: background 0.15s, color 0.15s;
+    transition: background var(--dur-fast), color var(--dur-fast);
   }
   .report-bug-trigger:hover {
     background: var(--control-bg-hover, rgba(0,0,0,0.05));

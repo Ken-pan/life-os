@@ -80,7 +80,7 @@
   --navigation-back-padding-inline-end: 0;
   --navigation-back-icon-size: 13px;
   --navigation-sheet-bg: var(--card);
-  --navigation-sheet-radius: 20px;
+  --navigation-sheet-radius: var(--radius-overlay, 20px);
   --command-palette-container-bg: var(--card);
   --command-palette-container-radius: 16px;
   --command-palette-container-border: var(--border-l, var(--border-strong, var(--border)));
@@ -101,7 +101,7 @@
   --command-palette-empty-text: var(--t3, var(--text-muted));
   --command-palette-content-max-height: 400px;
   --command-palette-mobile-content-max-height: 60vh;
-  --command-palette-mobile-sheet-radius: 20px 20px 0 0;
+  --command-palette-mobile-sheet-radius: var(--radius-overlay, 20px) var(--radius-overlay, 20px) 0 0;
   --portrait-gate-overlay-bg: var(--bg);
   --portrait-gate-overlay-text: var(--t1, var(--text));
   --portrait-gate-hint-text: var(--t2, var(--text-secondary));

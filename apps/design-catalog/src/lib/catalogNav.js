@@ -31,10 +31,22 @@ export const CATALOG_SECTIONS = [
     testId: 'showcase-modal',
   },
   {
+    id: 'primitives',
+    label: 'Status primitives',
+    group: 'theme',
+    testId: 'showcase-primitives',
+  },
+  {
     id: 'settings',
     label: 'Settings',
     group: 'components',
     testId: 'showcase-settings',
+  },
+  {
+    id: 'menu',
+    label: 'Menu',
+    group: 'components',
+    testId: 'showcase-menu',
   },
   {
     id: 'brand',
