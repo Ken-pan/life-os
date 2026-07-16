@@ -21,6 +21,8 @@ Services(有状态控制器 + 纯函数核)
   │    ARLocateController   —— 寻物定位(竖直平面当墙)
   │  纯函数核(无 IO,模拟器单测全覆盖):
   │    HomeFrame / ScanIdentity / RealityCheck / EvidenceGuide / ContainerGeometry
+  │    CoverageDiff —— 上传前覆盖差报:对照权威副本报「这轮少了什么」
+  │      (漏扫分区就近认领 400px 同源 scan-merge.js / 门窗掉到七成 / 分区状态照 <2)
   │  本机存储:PendingScanStore / CanonicalHomeCache
   │  IO:SupabaseService(+ScanUploader/+ContainerUploader/+CanonicalHome)
   ▼
@@ -55,6 +57,7 @@ Convert(纯管线,CapturedStructure → HomeOS plan px)
 | `Services/ScanIdentity.swift` | web `spatial/scan-identity.js` | 跨扫描身份:打分/同族(cabinet 族含 wall_cabinet)/elev 项(双方实测且差 ≤6″ 才 +0.1;差 >18″ −0.15,一方缺省视为 0 落地;都缺 → 0)/歧义边距逐行对应 |
 | `attrs.scanAliases` / `attrs.identityLocked`(权威件) | web 优化副本同名字段 | 检测陷阱契约(用户纠正一等数据),三端同名不许改;iOS 侧 CanonicalHomeStore 透传 → PlanProjector 认亲/压制 |
 | `Services/ContainerGeometry.swift` 的 Payload | `apps/home/supabase/README.md` 柜内节 | 桶内 JSON 契约 |
+| `Services/CoverageDiff.swift` 的 claimMaxDistPx | web `spatial/scan-merge.js` 的 CLAIM_MAX_DIST_PX | 分区就近认领半径(400 plan px) |
 | `Config.swift` | `packages/sync/src/supabaseClient.js` | Supabase URL/key |
 
 ## 数据流(一次全屋扫描)
