@@ -258,6 +258,8 @@
  * @property {number} spanIn 开口宽度（英寸）
  * @property {'door' | 'window'} type
  * @property {'swing' | 'sliding' | 'bifold' | 'double' | 'bypass' | 'pocket' | 'fixed' | 'casement' | 'hung'} [style] 门型或窗型，按 type 取值
+ * @property {boolean} [opaque] 不透光覆写(网页端人工标):阳光模拟不从这里进光。
+ *   衣柜推拉门被扫成 sliding、镜面误检成窗时用;跨扫描按中点就近保全
  * @property {'in' | 'out'} [swing]
  * @property {boolean} [hidden]
  */

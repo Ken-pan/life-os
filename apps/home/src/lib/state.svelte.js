@@ -37,6 +37,7 @@ import {
   filterOpeningsForEdge,
   flipGraphOpeningSwing,
   fitGraphOpeningOnEdge,
+  graphOpeningBounds,
   previewGraphOpeningEdit,
   pruneOrphanOpenings,
   remapOpeningsAfterSplit,
@@ -1716,6 +1717,26 @@ export function toggleGraphOpeningKind(openingId) {
   applyEditSource({ graphOpenings }, { toastMsg: '已切换门窗类型' })
 }
 
+/**
+ * 标记/取消「不透光」(opening.opaque)。日照模拟默认把窗和推拉门当玻璃 ——
+ * 但扫描常把室内推拉衣柜门也标成 sliding、把镜面误检成窗,这类件对着走廊
+ * 或衣柜,现实里没有光。人比检测懂自己家,给一个一键覆写。
+ * @param {string} openingId
+ */
+export function toggleGraphOpeningOpaque(openingId) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  let opaque = false
+  const graphOpenings = (raw.graphOpenings ?? []).map((o) => {
+    if (o.id !== openingId) return o
+    opaque = !o.opaque
+    return { ...o, opaque: opaque || undefined }
+  })
+  applyEditSource(
+    { graphOpenings },
+    { toastMsg: opaque ? '已标不透光 —— 阳光模拟不再从这里进光' : '已恢复透光' },
+  )
+}
+
 /** @param {string} openingId */
 export function flipGraphOpeningDirection(openingId) {
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
@@ -2643,6 +2664,27 @@ export function applyCloudScan(project) {
     )
     for (const z of project.zones ?? []) {
       if (!z.floor && prevFloor.has(z.nameZh)) z.floor = prevFloor.get(z.nameZh)
+    }
+    // 门窗「不透光」标记按中点认亲:新扫描的开口 id 全新,几何位置才是
+    // 身份(扫描已过全局配准,同一扇门中点漂移在英寸级)。容差 1ft
+    if (prev.wallGraph && project.wallGraph) {
+      const prevOpaque = (prev.graphOpenings ?? [])
+        .filter((o) => o.opaque)
+        .map((o) => graphOpeningBounds(prev.wallGraph, o))
+        .filter(Boolean)
+        .map((b) => ({ x: (b.p0.x + b.p1.x) / 2, y: (b.p0.y + b.p1.y) / 2 }))
+      if (prevOpaque.length) {
+        for (const o of project.graphOpenings ?? []) {
+          if (o.opaque) continue
+          const b = graphOpeningBounds(project.wallGraph, o)
+          if (!b) continue
+          const cx = (b.p0.x + b.p1.x) / 2
+          const cy = (b.p0.y + b.p1.y) / 2
+          if (prevOpaque.some((p) => Math.hypot(p.x - cx, p.y - cy) < 36)) {
+            o.opaque = true
+          }
+        }
+      }
     }
   }
   layoutUndoStack = []

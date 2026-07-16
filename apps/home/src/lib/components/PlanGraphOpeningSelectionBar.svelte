@@ -5,6 +5,7 @@
     getActiveProject,
     removeGraphOpening,
     toggleGraphOpeningKind,
+    toggleGraphOpeningOpaque,
   } from '$lib/state.svelte.js'
   import { formatFtIn } from '$lib/spatial/dimensions.js'
   import { openingStyleLabel } from '$lib/spatial/graph-openings.js'
@@ -87,6 +88,19 @@
           onclick={() => flipGraphOpeningDirection(opening.id)}
         >
           {flipLabel}
+        </button>
+      {/if}
+      {#if opening.type === 'window' || opening.style === 'sliding'}
+        <!-- 只有会被日照模拟当玻璃的件才给这个开关:衣柜推拉门/误检的
+             镜面窗对着室内,现实里没有光,标了阳光就不从这儿进 -->
+        <button
+          type="button"
+          class="graph-open-btn"
+          class:graph-open-accent={opening.opaque}
+          aria-pressed={Boolean(opening.opaque)}
+          onclick={() => toggleGraphOpeningOpaque(opening.id)}
+        >
+          {opening.opaque ? '不透光' : '透光'}
         </button>
       {/if}
       <button

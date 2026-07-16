@@ -132,9 +132,12 @@ function openingHeadFt(go) {
   return go.type === 'window' ? 7 : 6.67 // 推拉玻璃门 6'8"
 }
 
-/** 这个开口透光吗:窗都透,门只有推拉玻璃门透。 */
+/**
+ * 这个开口透光吗:窗都透,门只有推拉玻璃门透;opaque 是人工覆写 ——
+ * 扫描会把室内推拉衣柜门标成 sliding、把镜面误检成窗,标了就不进光。
+ */
 function translucent(go) {
-  if (go.hidden) return false
+  if (go.hidden || go.opaque) return false
   if (go.type === 'window') return true
   return go.type === 'door' && go.style === 'sliding'
 }
