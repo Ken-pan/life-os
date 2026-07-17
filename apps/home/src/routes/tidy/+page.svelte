@@ -606,7 +606,7 @@
                         <span class="step-bar-fill" style:width={`${(stepsDone / t.steps.length) * 100}%`}></span>
                       </div>
                     {/if}
-                    <ol class="steps">
+                    <ol class="task-steps">
                       {#each t.steps as s, i}
                         {@const sDone = isTidyStepDone(t.id, i)}
                         <li class="step" class:step-done={sDone}>
@@ -854,9 +854,24 @@
                     </p>
                   {/if}
                   {#if prop.status === 'provisional'}
-                    <p class="proposal-warn">
-                      ⏳ 暂定方案:{prop.lowConfidence.map((l) => `「${l}」`).join('')}的尺寸来自低置信度扫描 —— 建议补测后再照着搬
-                    </p>
+                    <div class="proposal-warn">
+                      <b>⏳ 暂定方案 —— 建议先补确认再照着搬:</b>
+                      <ul class="warn-list">
+                        {#each prop.provisionalReasons ?? [] as r (r.code + r.label)}
+                          <li>{r.zh}</li>
+                        {/each}
+                      </ul>
+                    </div>
+                  {/if}
+                  {#if prop.unmetRelations?.length}
+                    <div class="proposal-note">
+                      🎯 你的家规,这套尽力了但没完全满足:
+                      <ul class="warn-list">
+                        {#each prop.unmetRelations as u (u.label + u.targetLabel + u.type)}
+                          <li>{u.zh}</li>
+                        {/each}
+                      </ul>
+                    </div>
                   {/if}
                   <ul class="move-list">
                     {#each prop.moves as mv (mv.id)}
@@ -1576,7 +1591,10 @@
     transition: width 0.2s;
   }
 
-  .steps {
+  /* 竖排任务步骤清单。类名不能叫 .steps —— 那是 lifeOS 设计系统保留给
+     「向导步骤」横向 stepper 的组件类(theme/components.css),全局 display:flex
+     会漏进来把这份竖清单压成横向多列(2026-07 踩过)。 */
+  .task-steps {
     margin: 0;
     padding: 0;
     list-style: none;
@@ -2063,7 +2081,7 @@
   .move-lock-btn {
     flex-shrink: 0;
     font: inherit;
-    font-size: 11px;
+    font-size: var(--text-xs);
     padding: 2px 8px;
     color: var(--t3);
     background: none;
@@ -2085,7 +2103,7 @@
 
   .locked-hint {
     margin: 0 0 8px;
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: var(--t2);
   }
 
@@ -2103,15 +2121,35 @@
     height: auto;
   }
 
-  /* 方案的诚实注脚:通过≠稳妥。脆弱余量 / 低置信度输入都要说出来 */
+  /* 方案的诚实注脚:通过≠稳妥。脆弱余量 / 低置信度输入 / 关系缺口都要说出来 */
   .proposal-warn {
     margin: 0;
     padding: 6px 8px;
-    font-size: 12px;
+    font-size: var(--text-sm);
     line-height: 1.5;
-    color: #b45309;
-    background: color-mix(in srgb, #b45309 8%, transparent);
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 8%, transparent);
     border-radius: 8px;
+  }
+
+  /* 家规没满足的取舍附言:比暂定弱一档,灰底不是黄底 —— 它不是「别信」,是「知情」 */
+  .proposal-note {
+    margin: 0;
+    padding: 6px 8px;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: var(--t2);
+    background: color-mix(in srgb, var(--t4) 10%, transparent);
+    border-radius: 8px;
+  }
+
+  .warn-list {
+    margin: 4px 0 0;
+    padding-left: 18px;
+  }
+
+  .warn-list li {
+    margin-top: 2px;
   }
 
   .proposal-actions {

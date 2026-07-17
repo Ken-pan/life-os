@@ -48,7 +48,11 @@ const KIND_FAMILY = [
   ['chair', 'office_chair'],
   ['sofa', 'armchair'],
   ['table', 'coffee_table'],
-  ['cabinet', 'shelf', 'wall_cabinet'],
+  // 储物族:wire_rack/cube_shelf/utility_cart/equipment_rack 都是服务端/用户
+  // 精化 kind,RoomPlan 只会给 storage(→cabinet)或 shelf —— 2026-07-16 真扫
+  // 实测三件(拉篮架←cabinet、工作八格架←shelf+cabinet)全被跨族一票否决拆散。
+  // pet_crate 不入族:它的误检形态是 table(顶面木板),跨语义太远,走 scanAliases。
+  ['cabinet', 'shelf', 'wall_cabinet', 'wire_rack', 'cube_shelf', 'utility_cart', 'equipment_rack'],
 ]
 const familyOf = (kind) => KIND_FAMILY.find((f) => f.includes(kind))
 const CROSS_KIND_PENALTY = 0.05
@@ -148,7 +152,10 @@ function matchScore(prev, next) {
   const sizeLimit =
     Math.max(SIZE_TOL_PX, SIZE_TOL_RATIO * Math.max(A.w, A.h)) *
     (lowConf ? LOW_CONF_SIZE_FACTOR : 1)
-  if (sd > sizeLimit * 2) return 0
+  // 锁定件(用户确认过几何)免尺寸一票否决:合并时它反正不吃扫描几何,
+  // 该让位置+照片说话 —— 2026-07-16 真扫,折叠长桌(锁定 6ft)因桌下纸箱
+  // 遮挡量得 3.9ft 被 REJECT。仅免否决不抬分:sizeScore 照公式可为 0。
+  if (sd > sizeLimit * 2 && prev.attrs?.identityLocked !== true) return 0
   const sizeScore = Math.max(0, 1 - sd / sizeLimit)
   const ca = centerOf(prev)
   const cb = centerOf(next)

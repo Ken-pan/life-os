@@ -11,6 +11,7 @@ import {
   mapScanIntoLayout,
   mergeViewpointsOnly,
   mergeFurnitureAndViewpoints,
+  mergeFurnitureWithIdentity,
   describeReplacements,
 } from '../src/lib/spatial/scan-merge.js'
 
@@ -879,6 +880,136 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
   const twin = backfillAppearanceAttrs(twinProject, twinMapped)
   ok('回填:possibly_same 一律不写', twin.backfilled === 0 &&
     twin.project.placements.every((p) => !p.attrs?.photoHash), JSON.stringify(twin.project.placements))
+}
+
+// ---- 逐项确认(decisions):每处修改都能单独拒绝 ----
+{
+  const full = mergeFurnitureWithIdentity(SAMPLE_508, mapped)
+  ok('确认清单:新增件带 id/mappedId',
+    full.identity.addedItems.some((a) => a.mappedId === 'scan-pl-1' && a.id),
+    JSON.stringify(full.identity.addedItems))
+  ok('确认清单:被顶掉的手录件带双方 id',
+    full.identity.replaced.some((r) => r.byId?.startsWith('scan-') && r.id),
+    JSON.stringify(full.identity.replaced))
+
+  // 拒绝新增:床不进项目,其余照常
+  const noBed = mergeFurnitureWithIdentity(SAMPLE_508, mapped, {
+    decisions: { adds: { 'scan-pl-1': false } },
+  })
+  ok('拒绝新增:床不进项目', !noBed.project.placements.some((p) => p.id === 'scan-pl-1'))
+  ok('拒绝新增:计数进报告', noBed.identity.rejected === 1, `rejected=${noBed.identity.rejected}`)
+  ok('拒绝新增:柜照常进来', noBed.project.placements.some((p) => p.id === 'scan-pl-2'))
+
+  // 拒绝替换:手录马桶保留(实测的也在 —— 用户自己决定去留)
+  const toiletLocal = SAMPLE_508.fixtures.find((f) => f.kind === 'toilet')
+  const keepToilet = mergeFurnitureWithIdentity(SAMPLE_508, mapped, {
+    decisions: { replaces: { [toiletLocal.id]: false } },
+  })
+  ok('拒绝替换:手录马桶保留',
+    keepToilet.project.fixtures.some((f) => f.id === toiletLocal.id),
+    JSON.stringify(keepToilet.project.fixtures.map((f) => f.id)))
+
+  // 拒绝挪动:重扫时床挪了 60px,拒绝后几何保持上次位置,外观照收
+  const once = mergeFurnitureWithIdentity(SAMPLE_508, mapped).project
+  const bedBefore = once.placements.find((p) => p.id === 'scan-pl-1')
+  const mapped2 = {
+    ...mapped,
+    placements: mapped.placements.map((p) =>
+      p.id === 'scan-pl-1'
+        ? { ...p, x: p.x + 60, attrs: { ...p.attrs, photoHash: 'ffff0000ffff0000' } }
+        : p,
+    ),
+  }
+  const accepted = mergeFurnitureWithIdentity(once, mapped2)
+  ok('挪动(对照):接受时床吃新位置',
+    Math.abs(accepted.project.placements.find((p) => p.id === 'scan-pl-1').x - (bedBefore.x + 60)) < 0.5)
+  ok('挪动(对照):moved 报告带 prevId',
+    accepted.identity.moved.some((mv) => mv.prevId === 'scan-pl-1'),
+    JSON.stringify(accepted.identity.moved))
+  const rejected = mergeFurnitureWithIdentity(once, mapped2, {
+    decisions: { moves: { 'scan-pl-1': false } },
+  })
+  const bedKept = rejected.project.placements.find((p) => p.id === 'scan-pl-1')
+  ok('拒绝挪动:几何保持本地', Math.abs(bedKept.x - bedBefore.x) < 0.5, `x=${bedKept.x}`)
+  ok('拒绝挪动:外观(photoHash)照收', bedKept.attrs?.photoHash === 'ffff0000ffff0000')
+  ok('拒绝挪动:不再报 moved', !rejected.identity.moved.some((mv) => mv.prevId === 'scan-pl-1'))
+}
+
+// ---- 配准路径:fixture 冲突静音 + 分区缝隙就近认领(2026-07-16 真扫锚点) ----
+{
+  const rect = (idBase, x, y, w, h) => ({
+    vertices: [
+      { id: `${idBase}-1`, x, y },
+      { id: `${idBase}-2`, x: x + w, y },
+      { id: `${idBase}-3`, x: x + w, y: y + h },
+      { id: `${idBase}-4`, x, y: y + h },
+    ],
+    edges: [
+      { id: `${idBase}-e1`, a: `${idBase}-1`, b: `${idBase}-2` },
+      { id: `${idBase}-e2`, a: `${idBase}-2`, b: `${idBase}-3` },
+      { id: `${idBase}-e3`, a: `${idBase}-3`, b: `${idBase}-4` },
+      { id: `${idBase}-e4`, a: `${idBase}-4`, b: `${idBase}-1` },
+    ],
+  })
+  const graphOf = (...rects) => ({
+    pxPerFt: 36,
+    margin: { x: 0, y: 0 },
+    vertices: rects.flatMap((r) => r.vertices),
+    edges: rects.flatMap((r) => r.edges),
+  })
+  // 本地:两个分区隔 24px 的缝(门洞/墙厚),项目带 zones → useZoneIds
+  const local = {
+    zones: [
+      { id: 'z-a', nameZh: '客厅', polygon: [
+        { x: 100, y: 100 }, { x: 500, y: 100 }, { x: 500, y: 400 }, { x: 100, y: 400 } ] },
+      { id: 'z-b', nameZh: '卧室', polygon: [
+        { x: 524, y: 100 }, { x: 824, y: 100 }, { x: 824, y: 400 }, { x: 524, y: 400 } ] },
+    ],
+    rooms: [],
+    wallGraph: graphOf(
+      rect('la', 100, 100, 400, 300),
+      rect('lb', 524, 100, 300, 300),
+      rect('lc', 100, 424, 400, 200),
+    ),
+  }
+  // 扫描:客厅原样(配准必过),卧室西墙整体偏 18px(>10cm)——贴这面墙的
+  // 床(placement)与浴缸(fixture)都会量出 13px 墙距差,走同一条冲突路径
+  const scan = {
+    wallGraph: graphOf(
+      rect('sa', 100, 100, 400, 300),
+      rect('sb', 537, 100, 287, 300),
+      rect('sc', 100, 424, 400, 200),
+    ),
+    zones: [
+      { id: 'z-1', nameZh: '客厅', polygon: [
+        { x: 100, y: 100 }, { x: 500, y: 100 }, { x: 500, y: 400 }, { x: 100, y: 400 } ] },
+    ],
+    placements: [
+      // 中心 (512,250) 落在两分区之间的缝里(离 z-a 12px、z-b 12px ≤2ft)
+      // → 就近认领,不许 zoneId 为空(2026-07-16 真扫:升降边桌漏分区)
+      { id: 'p-seam', kind: 'table', label: '升降边桌', x: 482, y: 220, w: 60, h: 60, rotation: 0 },
+      // 中心离两分区都 >2ft → 真户型外,照旧不认领
+      { id: 'p-out', kind: 'chair', label: '户型外椅', x: 100, y: 520, w: 40, h: 40, rotation: 0 },
+      // 床贴死扫描卧室西墙(该墙偏 13px):家具冲突照报(对照组)
+      { id: 'p-bed', kind: 'bed', label: '床', x: 537, y: 150, w: 100, h: 80, rotation: 0 },
+    ],
+    fixtures: [
+      // 浴缸贴同一面偏 13px 的墙:设施装死,不许进 conflicts
+      { id: 'f-tub', kind: 'tub', label: '浴缸', bounds: { x: 537, y: 260, w: 60, h: 120 }, rotation: 0 },
+    ],
+    viewpoints: [],
+  }
+  const m = mapScanIntoLayout(local, scan)
+  ok('缝隙认领:配准 ok', m.report.registration?.status === 'ok', JSON.stringify(m.report.registration))
+  const seam = m.placements.find((p) => p.id === 'scan-p-seam')
+  ok('缝隙认领:分区缝里的家具就近拿到 zoneId', seam?.zoneId === 'z-a' || seam?.zoneId === 'z-b',
+    `zoneId=${seam?.zoneId}`)
+  const out = m.placements.find((p) => p.id === 'scan-p-out')
+  ok('缝隙认领:>2ft 户型外仍不认领', out?.zoneId === undefined, `zoneId=${out?.zoneId}`)
+  ok('fixture 静音:浴缸 13px 墙差不进 conflicts',
+    !m.report.conflicts.some((c) => c.label === '浴缸'), JSON.stringify(m.report.conflicts))
+  ok('fixture 静音:家具冲突照报(床 13px)',
+    m.report.conflicts.some((c) => c.label === '床'), JSON.stringify(m.report.conflicts))
 }
 
 if (fails.length) {

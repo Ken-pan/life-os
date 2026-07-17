@@ -31,6 +31,7 @@
     "test:layout-audit": "node scripts/layout-audit-unit.mjs",
     "test:golden-homes": "node scripts/golden-homes-unit.mjs",
     "test:task-routes": "node scripts/task-routes-unit.mjs",
+    "test:plan-readiness": "node scripts/plan-readiness-unit.mjs",
     "test:events": "node scripts/event-derive-unit.mjs",
     "test:photo-hash": "node scripts/photo-hash-unit.mjs",
     "test:color-lab": "node scripts/color-lab-unit.mjs",

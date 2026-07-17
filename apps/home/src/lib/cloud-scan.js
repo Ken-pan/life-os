@@ -356,13 +356,19 @@ export async function pullScan(current, id, opts = {}) {
 
   const mapped = mapScanIntoLayout(current, payload.homeos)
   if (mode === 'furniture') {
-    const merged = mergeFurnitureWithIdentity(current, mapped)
+    const merged = mergeFurnitureWithIdentity(current, mapped, {
+      decisions: opts.decisions,
+    })
     return {
       project: merged.project,
       photos,
       report: mapped.report,
       replaced: describeReplacements(current, mapped),
       identity: merged.identity,
+      // 逐项确认 UI 的二段流:先看清单再合并 —— 拿着 mapped 用
+      // mergeFurnitureWithIdentity(current, mapped, { decisions }) 重算,
+      // 照片已在本地 photo-store,不用重新下载
+      mapped,
     }
   }
   // photos 模式的「外观增强」:机位照片照旧只并机位;家具几何/kind/label

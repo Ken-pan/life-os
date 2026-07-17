@@ -5,6 +5,7 @@
   import { auth } from '$lib/auth.svelte.js'
   import { listScans, pullScan } from '$lib/cloud-scan.js'
   import { describeFurniturePull, SEEN_SCAN_KEY, APPLIED_COPY_KEY, scanSeenValue } from '$lib/cloud-scan-report.js'
+  import { mergeFurnitureWithIdentity } from '$lib/spatial/scan-merge.js'
   import {
     applyCloudScan,
     getActiveProject,
@@ -12,11 +13,14 @@
     undoCloudScan,
   } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
+  import ScanMergeReview from './ScanMergeReview.svelte'
 
   /** @type {import('$lib/cloud-scan.js').ScanRow | null} */
   let scan = $state(null)
   let pulling = $state(false)
   let progress = $state('')
+  /** 逐项确认:摆家具前把每处修改摆出来等用户勾选(res = pullScan 全接受结果) */
+  let review = $state(null)
 
   /** 本次页面已尝试过自动跟进(失败也不再重试,防循环) */
   let autoTried = false
@@ -100,9 +104,9 @@
         )
         return
       }
-      applyCloudScan(res.project)
-      localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
       if (mode === 'replace') {
+        applyCloudScan(res.project)
+        localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
         // 订阅标记:此后云端每次更新副本,本设备自动跟进
         localStorage.setItem(APPLIED_COPY_KEY, scanSeenValue(scan))
         toast(auto ? '户型已自动更新到最新优化副本' : '已应用优化副本(户型+家具+储藏区)', {
@@ -110,18 +114,19 @@
           onAction: () => undoCloudScan(),
           duration: 10000,
         })
-      } else {
-        // 事件流(能力17):这次扫描确认/发现了什么,进追加日志
-        logScanIdentityEvents(res.identity)
-        const { main, warns } = describeFurniturePull(res)
-        for (const w of warns) toast(w, 'error')
-        toast(main, {
-          actionLabel: '撤销',
-          onAction: () => undoCloudScan(),
-          duration: 10000,
-        })
+        scan = null
+        return
       }
-      scan = null
+      // 摆家具:有实质修改(挪动/新增/替换)先逐项确认,一件不落地;
+      // 只有照片/原位确认这类无争议更新才直接应用
+      const id = res.identity
+      const actionable =
+        (id?.moved?.length ?? 0) + (id?.addedItems?.length ?? 0) + (id?.replaced?.length ?? 0)
+      if (actionable > 0) {
+        review = res
+        return
+      }
+      applyFurniture(res)
     } catch (err) {
       toast(err instanceof Error ? err.message : String(err), 'error')
     } finally {
@@ -129,7 +134,48 @@
       progress = ''
     }
   }
+
+  /** 摆家具落地(直接应用或逐项确认后):@param res pullScan 结果(或重算后的等价物) */
+  function applyFurniture(res) {
+    applyCloudScan(res.project)
+    if (scan) localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
+    // 事件流(能力17):这次扫描确认/发现了什么,进追加日志
+    logScanIdentityEvents(res.identity)
+    const { main, warns } = describeFurniturePull(res)
+    for (const w of warns) toast(w, 'error')
+    toast(main, {
+      actionLabel: '撤销',
+      onAction: () => undoCloudScan(),
+      duration: 10000,
+    })
+    scan = null
+    review = null
+  }
+
+  /** 逐项确认收尾:按用户勾选重算合并(照片已在本地,不重新下载) */
+  function confirmReview(decisions) {
+    if (!review) return
+    const hasReject =
+      Object.keys(decisions.moves ?? {}).length ||
+      Object.keys(decisions.adds ?? {}).length ||
+      Object.keys(decisions.replaces ?? {}).length
+    if (!hasReject) {
+      applyFurniture(review)
+      return
+    }
+    const merged = mergeFurnitureWithIdentity(getActiveProject(), review.mapped, { decisions })
+    applyFurniture({ ...review, project: merged.project, identity: merged.identity })
+  }
 </script>
+
+{#if review}
+  <ScanMergeReview
+    identity={review.identity}
+    registration={review.report?.registration}
+    onConfirm={confirmReview}
+    onCancel={() => (review = null)}
+  />
+{/if}
 
 {#if scan}
   <div class="new-scan-banner" role="note">
@@ -138,7 +184,7 @@
       <span>
         {isOptimizedCopy
           ? '整包应用:墙体、家具、储藏区一起换成整备好的版本,可撤销。'
-          : '实测家具与照片还没进这张图 —— 墙体不动,一键摆进来,可撤销。'}
+          : '实测家具与照片还没进这张图 —— 墙体不动,每处修改过目确认后摆进来,可撤销。'}
       </span>
     </div>
     <div class="new-scan-actions">

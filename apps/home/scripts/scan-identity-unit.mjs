@@ -138,6 +138,81 @@ const ok = (n, c, d = '') => (c ? pass++ : fails.push(`${n}${d ? ` — ${d}` : '
     JSON.stringify(border.pairs))
 }
 
+// ---- 4. 储物族扩容(2026-07-16 真扫锚点) ----
+// wire_rack/cube_shelf/utility_cart/equipment_rack 是服务端/用户精化 kind,
+// RoomPlan 只会给 cabinet/shelf;补族前这三对全被跨族一票否决拆散。
+{
+  // 权威「拉篮架」wire_rack 45.5×135.9 @(1000.9,275.6) vs
+  // 本轮扫描 cabinet 50.8×148.4 @(975,277) conf high —— 配准后中心距 0.7ft
+  const rack = {
+    id: 'pl-11', kind: 'wire_rack', label: '拉篮架',
+    x: 1000.9, y: 275.6, w: 45.5, h: 135.9, rotation: 90,
+    attrs: { confidence: 'low' },
+  }
+  const scanCab = {
+    id: 'scan-pl-7', kind: 'cabinet',
+    x: 975, y: 277, w: 50.8, h: 148.4, rotation: 90,
+    attrs: { confidence: 'high' },
+  }
+  const m = matchScanObjects([rack], [scanCab])
+  ok('拉篮架(wire_rack)↔ 扫描 cabinet 同族认亲', m.pairs.length === 1, JSON.stringify(m))
+
+  // 权威「工作八格架」cube_shelf 90×45 @(635,430) vs
+  // 本轮扫描 cabinet 94.9×57.6 @(589,436) conf low —— 中心距 1.3ft
+  const cube = {
+    id: 'pl-36', kind: 'cube_shelf', label: '工作八格架',
+    x: 635, y: 430, w: 90, h: 45, rotation: 0,
+    attrs: { confidence: 'medium' },
+  }
+  const scanCab2 = {
+    id: 'scan-pl-15', kind: 'cabinet',
+    x: 589, y: 436, w: 94.9, h: 57.6, rotation: 270,
+    attrs: { confidence: 'low' },
+  }
+  const m2 = matchScanObjects([cube], [scanCab2])
+  ok('工作八格架(cube_shelf)↔ 扫描 cabinet 同族认亲', m2.pairs.length === 1, JSON.stringify(m2))
+
+  // 跨族仍一票否决:cube_shelf ↔ table 同足迹也不许认
+  const cross = matchScanObjects([cube], [{ ...scanCab2, kind: 'table' }])
+  ok('跨族(cube_shelf ↔ table)仍否决', cross.pairs.length === 0)
+
+  // utility_cart / equipment_rack 同样入族(合成同足迹对)
+  const cart = { id: 'p-cart', kind: 'utility_cart', x: 100, y: 100, w: 45, h: 93, rotation: 0 }
+  const mc = matchScanObjects([cart], [{ id: 's-1', kind: 'cabinet', x: 105, y: 102, w: 48, h: 90, rotation: 0 }])
+  ok('utility_cart ↔ cabinet 同族认亲', mc.pairs.length === 1)
+  const rig = { id: 'p-rig', kind: 'equipment_rack', x: 100, y: 100, w: 132, h: 60, rotation: 0 }
+  const mr = matchScanObjects([rig], [{ id: 's-2', kind: 'shelf', x: 104, y: 98, w: 128, h: 63, rotation: 0 }])
+  ok('equipment_rack ↔ shelf 同族认亲', mr.pairs.length === 1)
+}
+
+// ---- 5. identityLocked 免尺寸一票否决(2026-07-16 真扫锚点) ----
+// 折叠长桌锁定 6ft(用户确认),本轮因桌下纸箱遮挡量得 3.9ft(差 26″,
+// 超 lim*2)被 REJECT。锁定件合并时不吃扫描几何,免否决让位置+照片说话;
+// 但仅免否决不抬分 —— sizeScore 为 0 时还得靠 photoHash 把总分抬过线。
+{
+  const mk = (locked, hashed) => {
+    const prev = {
+      id: 'pl-6', kind: 'table', label: '折叠长桌',
+      x: 641.8, y: 634.3, w: 110.1, h: 217.4, rotation: 90,
+      attrs: {
+        confidence: 'high',
+        ...(locked ? { identityLocked: true } : {}),
+        ...(hashed ? { photoHash: 'aabbccddeeff0011' } : {}),
+      },
+    }
+    const next = {
+      id: 'scan-pl-8', kind: 'table',
+      x: 646, y: 636, w: 106.2, h: 138.7, rotation: 180,
+      attrs: { confidence: 'high', ...(hashed ? { photoHash: 'aabbccddeeff0011' } : {}) },
+    }
+    return matchScanObjects([prev], [next])
+  }
+  ok('未锁定 + 尺寸差 26″:照旧否决', mk(false, true).pairs.length === 0)
+  ok('锁定但无照片证据:免否决仍不过线(不白抬分)', mk(true, false).pairs.length === 0)
+  ok('锁定 + photoHash 强像:认回折叠长桌', mk(true, true).pairs.length === 1,
+    JSON.stringify(mk(true, true)))
+}
+
 if (fails.length) {
   console.error(`FAIL ${fails.length} (pass ${pass})`)
   for (const f of fails) console.error('  ✗', f)

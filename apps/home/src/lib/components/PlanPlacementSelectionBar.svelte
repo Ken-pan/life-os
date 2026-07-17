@@ -1,7 +1,9 @@
 <script>
   import {
+    addPlacementRelation,
     getActiveProject,
     removePlacement,
+    removePlacementRelation,
     rotatePlacementById,
     togglePlacementLocked,
     updatePlacement,
@@ -29,6 +31,27 @@
   )
   const wIn = $derived(Math.round(pxToInches(placement.w, pxPerFt)))
   const hIn = $derived(Math.round(pxToInches(placement.h, pxPerFt)))
+
+  // 家规关系:布局求解会照此优化(near/far_from 另一件家具)。
+  const relations = $derived(placement.relations ?? [])
+  const labelById = $derived(
+    new Map((project.placements ?? []).map((p) => [p.id, p.label])),
+  )
+  // 可作为关系目标的其它家具(排掉自己;暂存件不算)
+  const relationTargets = $derived(
+    (project.placements ?? []).filter(
+      (p) => p.id !== placement.id && !p.attrs?.staged,
+    ),
+  )
+  let relOpen = $state(false)
+  let relType = $state(/** @type {'near'|'far_from'} */ ('far_from'))
+  let relTargetId = $state('')
+
+  function commitRelation() {
+    if (!relTargetId) return
+    addPlacementRelation(placement.id, relType, relTargetId)
+    relTargetId = ''
+  }
 
   // 扫描带来的外观信息(没有就整段不显示)
   const attrs = $derived(placement.attrs ?? null)
@@ -245,6 +268,61 @@
     </div>
   {/if}
 
+  {#if !compact || detailsOpen}
+    <!-- 家规关系:布局求解照此优化。词表猜不出「鸟笼远离床」这类家规,只能用户说 -->
+    <div class="rel-block">
+      <div class="rel-head">
+        <span class="rel-title">家规</span>
+        {#if relations.length}
+          <div class="rel-chips">
+            {#each relations as rel, i (rel.type + rel.targetId)}
+              <span class="rel-chip" class:rel-chip-far={rel.type === 'far_from'}>
+                {rel.type === 'near' ? '靠近' : '远离'}
+                {labelById.get(rel.targetId) ?? '(已删)'}
+                <button
+                  type="button"
+                  class="rel-chip-x"
+                  aria-label="删除这条关系"
+                  onclick={() => removePlacementRelation(placement.id, i)}
+                >×</button>
+              </span>
+            {/each}
+          </div>
+        {/if}
+      </div>
+      {#if relationTargets.length}
+        {#if relOpen}
+          <div class="rel-add">
+            <select class="rel-select" bind:value={relType} aria-label="关系类型">
+              <option value="far_from">远离</option>
+              <option value="near">靠近</option>
+            </select>
+            <select class="rel-select rel-target" bind:value={relTargetId} aria-label="目标家具">
+              <option value="" disabled>选一件家具…</option>
+              {#each relationTargets as t (t.id)}
+                <option value={t.id}>{t.label}</option>
+              {/each}
+            </select>
+            <button
+              type="button"
+              class="graph-sel-btn graph-sel-accent"
+              disabled={!relTargetId}
+              onclick={commitRelation}
+            >添加</button>
+            <button type="button" class="graph-sel-btn" onclick={() => (relOpen = false)}>取消</button>
+          </div>
+        {:else}
+          <button
+            type="button"
+            class="rel-add-btn"
+            title="让求解器知道这件该靠近或远离谁"
+            onclick={() => (relOpen = true)}
+          >+ 加一条</button>
+        {/if}
+      {/if}
+    </div>
+  {/if}
+
   <div class="graph-sel-actions">
     {#if compact}
       <button
@@ -438,6 +516,104 @@
     background: var(--graph-accent);
     border-color: var(--graph-accent);
     font-weight: 700;
+  }
+
+  /* 家规关系块 */
+  .rel-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-basis: 100%;
+  }
+
+  .rel-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .rel-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--t2);
+  }
+
+  .rel-chips {
+    display: inline-flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .rel-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-xs);
+    padding: 3px 4px 3px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--graph-accent) 12%, transparent);
+    color: var(--graph-accent);
+    border: 1px solid color-mix(in srgb, var(--graph-accent) 30%, var(--border));
+  }
+
+  .rel-chip-far {
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    color: var(--warning);
+    border-color: color-mix(in srgb, var(--warning) 30%, var(--border));
+  }
+
+  .rel-chip-x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: inherit;
+    font-size: var(--text-base);
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .rel-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .rel-select {
+    min-height: 36px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t1);
+    font-size: var(--text-sm);
+  }
+
+  .rel-target {
+    max-width: 140px;
+  }
+
+  .rel-add-btn {
+    align-self: flex-start;
+    font-size: var(--text-sm);
+    padding: 4px 10px;
+    color: var(--t2);
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 599px) {
+    .rel-select {
+      min-height: 44px;
+    }
   }
 
   @media (max-width: 599px) {

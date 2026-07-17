@@ -50,6 +50,8 @@ const WALL_SINK_TOL_PX = -6
 const PX_PER_CM = 36 / 30.48
 const REFINE_AUTO_PX = 5 * PX_PER_CM
 const REFINE_FLAG_PX = 10 * PX_PER_CM
+/** 分区缝隙认领上限:中心离最近分区 ≤2ft 才退化认领,再远视为户型外 */
+const NEAR_ZONE_MAX_PX = 72
 
 /**
  * 家具某一侧到最近正对墙面的距离(扫描坐标系,px)。找不到返回 null。
@@ -459,11 +461,27 @@ function mapRegistered({ scanHomeos, rooms, localSegs, scanWalls, reg, report, u
         bestArea = area
       }
     }
-    return best
+    if (best) return best
+    // 分区之间有缝(门洞/墙厚):中心落缝里的对象退化到最近分区,否则
+    // zoneId 为空会让储物/整理链路按分区聚合时漏掉它(2026-07-16 真扫:
+    // 升降边桌落在卧室分区边缘缝里)。上限 2ft —— 真在户型外的照旧不认领。
+    let nearest = null
+    let nearestD = Infinity
+    for (const r of rooms) {
+      const b = r.bounds
+      const dx = Math.max(b.x - pt.x, 0, pt.x - (b.x + b.w))
+      const dy = Math.max(b.y - pt.y, 0, pt.y - (b.y + b.h))
+      const d = Math.hypot(dx, dy)
+      if (d < nearestD) {
+        nearestD = d
+        nearest = r
+      }
+    }
+    return nearestD <= NEAR_ZONE_MAX_PX ? nearest : null
   }
 
   /** 单轴精修:实测墙距与本地墙距之差,按上限分级处理 */
-  const refineAxis = (box, sides, label) => {
+  const refineAxis = (box, sides, label, muteConflicts = false) => {
     const gaps = sides.map((side) => gapToWall(measuredSegs, box, side))
     let side = null
     let measured = null
@@ -487,18 +505,20 @@ function mapRegistered({ scanHomeos, rooms, localSegs, scanWalls, reg, report, u
       report.suggested++
       return 0
     }
-    report.conflicts.push({
-      label,
-      side,
-      cm: Math.round((mag / PX_PER_CM) * 10) / 10,
-    })
+    if (!muteConflicts) {
+      report.conflicts.push({
+        label,
+        side,
+        cm: Math.round((mag / PX_PER_CM) * 10) / 10,
+      })
+    }
     return 0
   }
 
-  const place = (srcBox, label) => {
+  const place = (srcBox, label, muteConflicts = false) => {
     let box = reg.applyBox(srcBox)
-    const dx = refineAxis(box, ['left', 'right'], label)
-    const dy = refineAxis({ ...box, x: box.x + dx }, ['up', 'down'], label)
+    const dx = refineAxis(box, ['left', 'right'], label, muteConflicts)
+    const dy = refineAxis({ ...box, x: box.x + dx }, ['up', 'down'], label, muteConflicts)
     if (dx !== 0 || dy !== 0) report.refined++
     box = { ...box, x: round1(box.x + dx), y: round1(box.y + dy) }
     const room = roomAt({ x: box.x + box.w / 2, y: box.y + box.h / 2 })
@@ -527,7 +547,9 @@ function mapRegistered({ scanHomeos, rooms, localSegs, scanWalls, reg, report, u
   const fixtures = (scanHomeos.fixtures ?? [])
     .filter((fx) => fx.bounds)
     .map((fx) => {
-      const m = place(fx.bounds, fx.label ?? fx.kind)
+      // 设施装死(合并时几何一律以本地为准),墙距差不进 conflicts ——
+      // 浴缸包围盒每轮抖 70cm+,报出来只是噪音,家具的冲突照报
+      const m = place(fx.bounds, fx.label ?? fx.kind, true)
       return {
         ...fx,
         id: `scan-${fx.id}`,
@@ -664,8 +686,16 @@ function strongOverlap(a, b) {
   )
 }
 
+/**
+ * @typedef {object} MergeDecisions 逐项确认(缺省/true=接受,false=拒绝)
+ * @property {Record<string, boolean>} [moves] 键=旧件 id:拒绝时几何/名字保持本地,只收编外观
+ * @property {Record<string, boolean>} [adds] 键=映射件 id(scan-*):拒绝时该扫描件不进项目
+ * @property {Record<string, boolean>} [replaces] 键=手录件 id:拒绝时手录件保留不让位
+ */
 export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const replaceNearby = opts.replaceNearby !== false
+  /** @type {MergeDecisions} */
+  const decisions = opts.decisions ?? {}
   const identity = {
     unchanged: 0,
     moved: [],
@@ -674,6 +704,12 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
     possiblySame: 0,
     /** 被锁定件压制的惯性误检 @type {Array<{ label: string, byLabel: string, byKind: string }>} */
     suppressed: [],
+    /** 判「新增」的扫描件(逐项确认 UI 用) @type {Array<{ id: string, mappedId: string, kind: string, label?: string, zoneId?: string }>} */
+    addedItems: [],
+    /** 被实测件顶掉的手录件(逐项确认 UI 用) @type {Array<{ id: string, label: string, byId: string, byLabel: string }>} */
+    replaced: [],
+    /** 被逐项确认拒绝的变更计数 */
+    rejected: 0,
   }
   /** 本轮判为「新增」的 id(压制检查只看它们:匹配上的不是误检) */
   const addedIds = new Set()
@@ -725,10 +761,24 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
     const out = incoming.map((n) => {
       const pair = pairByNext[n.id]
       if (!pair || pair.state === 'possibly_same') {
+        // 逐项确认:用户拒绝的「新增」不进项目(键=映射 id,uniq 前,稳定)
+        if (!pair && decisions.adds?.[n.id] === false) {
+          identity.rejected++
+          return null
+        }
         if (pair?.state === 'possibly_same') identity.possiblySame++
         else identity.added++
         const id = uniq(n.id)
-        if (!pair) addedIds.add(id)
+        if (!pair) {
+          addedIds.add(id)
+          identity.addedItems.push({
+            id,
+            mappedId: n.id,
+            kind: n.kind,
+            label: n.label,
+            zoneId: n.zoneId,
+          })
+        }
         return { ...n, id }
       }
       const prev = prevById[pair.prevId]
@@ -746,9 +796,16 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         identity.unchanged++
         return { ...prev, attrs: { ...prev.attrs, ...n.attrs } }
       }
+      // 逐项确认:用户拒绝的「挪动」几何/名字保持本地,只收编外观
+      // (语义同锁定件:扫描又看见它了,但这次不采信它量出的新位置)
+      if (pair.state === 'same_moved' && decisions.moves?.[prev.id] === false) {
+        identity.rejected++
+        identity.unchanged++
+        return { ...prev, attrs: { ...prev.attrs, ...pickAppearanceAttrs(n.attrs) } }
+      }
       if (pair.state === 'same_unchanged') identity.unchanged++
       else {
-        const entry = { label: n.label ?? n.kind, movedFt: pair.movedFt }
+        const entry = { label: n.label ?? n.kind, movedFt: pair.movedFt, prevId: prev.id }
         const wall = wallVerdict(prev, n)
         if (wall) entry.wall = wall
         identity.moved.push(entry)
@@ -762,10 +819,12 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         attrs: { ...prev.attrs, ...n.attrs },
       }
     })
+    // 拒绝的新增已置 null,收尾前清掉
+    const kept = out.filter(Boolean)
     // 钉死的/锁定的没扫到也不消失:公寓固定件不会自己走掉,用户纠正过
     // 身份的更不会 —— 只可能是这次没扫到或又被误检成了别的
-    const outIds = new Set(out.map((o) => o.id))
-    out.push(
+    const outIds = new Set(kept.map((o) => o.id))
+    kept.push(
       ...prevScan.filter((o) => (o.fixed || isIdentityLocked(o)) && !outIds.has(o.id)),
     )
     identity.removed.push(
@@ -773,7 +832,7 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         .filter((id) => !prevById[id]?.fixed && !isIdentityLocked(prevById[id]))
         .map((id) => prevById[id]?.label ?? id),
     )
-    return out
+    return kept
   }
 
   /** partial 时按 coverage 分片:片外整层跳过合并逻辑 */
@@ -810,6 +869,8 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
           byKind: hit.kind,
         })
         identity.added--
+        // 被压制的不再是「新增」:逐项确认列表同步剔除
+        identity.addedItems = identity.addedItems.filter((a) => a.id !== o.id)
         return false
       })
     nextPlacements = dropMisdetect(nextPlacements)
@@ -826,10 +887,23 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
       if (o.fixed || isIdentityLocked(o)) return true
       if (!replaceNearby) return true
       const c = boxCenter(o)
-      return !incoming.some((m) => {
+      const by = incoming.find((m) => {
         const mc = boxCenter(m)
         return Math.hypot(mc.x - c.x, mc.y - c.y) < REPLACE_DIST_PX
       })
+      if (!by) return true
+      // 逐项确认:用户拒绝替换 → 手录件保留不让位
+      if (decisions.replaces?.[o.id] === false) {
+        identity.rejected++
+        return true
+      }
+      identity.replaced.push({
+        id: o.id,
+        label: o.label ?? o.kind,
+        byId: by.id,
+        byLabel: by.label ?? by.kind,
+      })
+      return false
     })
   }
 

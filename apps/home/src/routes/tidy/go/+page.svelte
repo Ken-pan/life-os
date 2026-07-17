@@ -256,7 +256,7 @@
           怎么做
           {#if stepsDone}<span class="block-n">{stepsDone}/{task.steps.length}</span>{/if}
         </h2>
-        <ol class="steps">
+        <ol class="task-steps">
           {#each task.steps as s, i}
             {@const sDone = isTidyStepDone(task.id, i)}
             <li class="step" class:step-done={sDone}>
@@ -478,7 +478,9 @@
     color: var(--accent, #4a6278);
   }
 
-  .steps {
+  /* 竖排任务步骤清单。不能叫 .steps —— 撞 lifeOS 设计系统保留的横向 stepper 组件
+     (theme/components.css),全局 display:flex 会漏进来把竖清单压横。 */
+  .task-steps {
     margin: 0;
     padding: 0;
     list-style: none;

@@ -25,6 +25,7 @@ import {
 } from './circulation.js'
 import { auditLayout } from './layout-audit.js'
 import { computeTaskRoutes } from './task-routes.js'
+import { assessRelationReadiness } from './plan-readiness.js'
 import { isFence, placementSpec } from './placements.js'
 import { wallAnchorSegments } from './wall-anchor.js'
 import { PX_PER_FT, PX_PER_IN } from './dimensions.js'
@@ -719,12 +720,15 @@ export function directionZh(dx, dy) {
  *   ok: boolean, reason?: string, profile: typeof LAYOUT_PROFILES[number],
  *   moves: any[], project?: SpatialProject, score?: number,
  *   status?: 'certified' | 'provisional', lowConfidence?: string[],
+ *   provisionalReasons?: Array<{ code: string, label: string, zh: string }>,
+ *   unmetRelations?: Array<{ label: string, targetLabel: string, type: string, gapIn: number, wantIn: number, zh: string }>,
  *   slackIn?: number, fragile?: boolean,
  *   before?: any, after?: any,
  * }>}
- * `status`:certified = 独立复检通过且无低置信度输入;provisional = 有搬动件
- * 尺寸来自低置信度扫描,建议补测后执行。`slackIn` = 最窄通道距侧身极限(24in)
- * 的余量;`fragile` = 余量小于 4in,实测误差可能吃掉它。
+ * `status`:certified = 独立复检通过、无低置信度输入、无关系完整度缺口;
+ * provisional = 有搬动件尺寸来自低置信度扫描,或搬动件的家规目标已被删(约束被静默丢)——
+ * 见 `provisionalReasons`(逐条人话)。`unmetRelations` = 家规有效但最优解没满足的取舍附言
+ * (不降级 status)。`slackIn` = 最窄通道距侧身极限(24in)的余量;`fragile` = 余量 <4in。
  */
 export async function solveLayout(project, profileKey, opts = {}) {
   const profile = LAYOUT_PROFILES.find((p) => p.key === profileKey) ?? LAYOUT_PROFILES[0]
@@ -959,11 +963,22 @@ export async function solveLayout(project, profileKey, opts = {}) {
   }
 
   // 状态分级 + 余量:方案不只说「通过」,还说**凭什么信、信到什么程度**。
-  // provisional = 有搬动件的尺寸来自低置信度扫描 —— 图上通过不等于现场通过。
+  // provisional 有两条来路,都属于「方案建立在缺失语义上」:
+  //   ① 有搬动件尺寸来自低置信度扫描 —— 图上通过不等于现场通过;
+  //   ② 关系完整度门禁:搬动件的家规目标已被删,约束被静默丢掉(见 plan-readiness.js)。
   const movedIds = new Set(moves.map((m) => m.id))
   const lowConfidence = finalPlacements
     .filter((p) => movedIds.has(p.id) && p.attrs?.confidence === 'low')
     .map((p) => p.label)
+  const readiness = assessRelationReadiness(finalProject, movedIds)
+  const provisionalReasons = [
+    ...lowConfidence.map((l) => ({
+      code: 'low_confidence',
+      label: l,
+      zh: `「${l}」尺寸来自低置信度扫描,建议补测后再照着搬`,
+    })),
+    ...readiness.provisionalReasons,
+  ]
   // slack = 方案里全屋最窄通道距「侧身极限」还剩几英寸。数字虽然「通过」,
   // 余量小于常见的扫描/手测误差(~1.5in)时按脆弱标记,别让绿灯骗人
   const slackIn = Math.round((after.minWidthIn - CLEARANCE.minimum) * 10) / 10
@@ -974,8 +989,11 @@ export async function solveLayout(project, profileKey, opts = {}) {
     moves,
     project: finalProject,
     score: Math.round(bestScore),
-    status: lowConfidence.length ? 'provisional' : 'certified',
-    lowConfidence,
+    status: provisionalReasons.length ? 'provisional' : 'certified',
+    lowConfidence, // 兼容旧消费方;新代码读 provisionalReasons
+    provisionalReasons,
+    // unmet:家规有效、进了求解,但最优解仍没满足 —— Pareto 取舍,不降级,只如实附言
+    unmetRelations: readiness.unmetRelations,
     slackIn,
     fragile: slackIn < 4,
     before: { ...base, wallFt: baseWallFt, affinityIn: Math.round(baseAffinity), walkFtPerDay: baseWalk },

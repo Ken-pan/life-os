@@ -5,6 +5,7 @@
   // 三种模式都可在会话内一键还原。
   import { listScans, pullScan } from '$lib/cloud-scan.js'
   import { describeFurniturePull, SEEN_SCAN_KEY, APPLIED_COPY_KEY, scanSeenValue } from '$lib/cloud-scan-report.js'
+  import { mergeFurnitureWithIdentity } from '$lib/spatial/scan-merge.js'
   import {
     applyCloudScan,
     canUndoCloudScan,
@@ -14,6 +15,7 @@
     isStructureLocked,
   } from '$lib/state.svelte.js'
   import { toast } from '$lib/ui.svelte.js'
+  import ScanMergeReview from './ScanMergeReview.svelte'
 
   /** @type {import('$lib/cloud-scan.js').ScanRow[] | null} */
   let scans = $state(null)
@@ -24,6 +26,8 @@
   let undoAvailable = $state(false)
   /** @type {import('$lib/cloud-scan.js').PullMode} */
   let mode = $state('furniture')
+  /** 逐项确认:摆家具有实质修改时先弹清单({ res, scan }) */
+  let review = $state(null)
   /** 结构锁定时「整包替换」不该出现 —— 它会拿扫描墙覆盖已确定的户型 */
   const structureLocked = $derived(isStructureLocked())
   const modes = $derived(
@@ -34,7 +38,7 @@
     {
       value: 'furniture',
       label: '照片 + 摆家具',
-      desc: '墙体不动；按实测更新家具位置与尺寸，并并入照片（日常用这个）',
+      desc: '墙体不动；每处修改（挪动/新增/替换）逐项确认后才落地（日常用这个）',
     },
     {
       value: 'photos',
@@ -67,28 +71,38 @@
     // 结构锁定时绝不整包替换 —— 户型已按实测确定,只更新搭在上面的家具
     if (structureLocked && mode === 'replace') mode = 'furniture'
     const name = scan.label || '未命名扫描'
-    const confirmMsg = {
-      photos: `把「${name}」的机位照片并进来?户型与家具不变。`,
-      furniture: `把「${name}」的实测家具摆进当前户型?墙体不动;位置重合的手录家具会让位给实测的。\n建议先在下方「布局备份」导出 JSON。`,
-      replace: `⚠️ 将用「${name}」整包替换当前户型(墙体、家具、储物区全换)。\n扫描有漂移,量过的户型通常更准。务必先导出 JSON 备份。确定?`,
-    }[mode]
-    if (!confirm(confirmMsg)) return
+    // 摆家具不再用一句话大包大揽地 confirm:拉取后每处修改逐项确认
+    if (mode !== 'furniture') {
+      const confirmMsg = {
+        photos: `把「${name}」的机位照片并进来?户型与家具不变。`,
+        replace: `⚠️ 将用「${name}」整包替换当前户型(墙体、家具、储物区全换)。\n扫描有漂移,量过的户型通常更准。务必先导出 JSON 备份。确定?`,
+      }[mode]
+      if (!confirm(confirmMsg)) return
+    }
 
     pullingId = scan.id
     progress = '拉取中…'
     error = ''
     try {
-      const { project, photos, report, replaced, identity } = await pullScan(
-        getActiveProject(),
-        scan.id,
-        {
-          mode,
-          onProgress: (done, total) => {
-            progress = `下载照片 ${done}/${total}…`
-          },
+      const res = await pullScan(getActiveProject(), scan.id, {
+        mode,
+        onProgress: (done, total) => {
+          progress = `下载照片 ${done}/${total}…`
         },
-      )
-      applyCloudScan(project)
+      })
+      if (mode === 'furniture') {
+        // 有实质修改(挪动/新增/替换)先逐项确认,一件不落地
+        const id = res.identity
+        const actionable =
+          (id?.moved?.length ?? 0) + (id?.addedItems?.length ?? 0) + (id?.replaced?.length ?? 0)
+        if (actionable > 0) {
+          review = { res, scan }
+          return
+        }
+        applyFurniture(res, scan)
+        return
+      }
+      applyCloudScan(res.project)
       undoAvailable = canUndoCloudScan()
       // 处理过就别再在 /plan 弹「新扫描」横幅了
       localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
@@ -96,14 +110,8 @@
       if (mode === 'replace' && scan.device === 'server-optimized') {
         localStorage.setItem(APPLIED_COPY_KEY, scanSeenValue(scan))
       }
-      if (mode === 'furniture' && report) {
-        // 事件流(能力17):扫描确认/挪动/新增/消失都是事实,进追加日志
-        logScanIdentityEvents(identity)
-        const { main, warns } = describeFurniturePull({ report, replaced, identity, photos })
-        for (const w of warns) toast(w, 'error')
-        toast(main)
-      } else if (photos.failed > 0) {
-        toast(`${photos.failed} 张照片下载失败,对应机位保留为空视角`, 'error')
+      if (res.photos.failed > 0) {
+        toast(`${res.photos.failed} 张照片下载失败,对应机位保留为空视角`, 'error')
       }
     } catch (err) {
       error = err instanceof Error ? err.message : String(err)
@@ -111,6 +119,35 @@
       pullingId = ''
       progress = ''
     }
+  }
+
+  /** 摆家具落地(直接或逐项确认后) */
+  function applyFurniture(res, scan) {
+    applyCloudScan(res.project)
+    undoAvailable = canUndoCloudScan()
+    localStorage.setItem(SEEN_SCAN_KEY, scanSeenValue(scan))
+    // 事件流(能力17):扫描确认/挪动/新增/消失都是事实,进追加日志
+    logScanIdentityEvents(res.identity)
+    const { main, warns } = describeFurniturePull(res)
+    for (const w of warns) toast(w, 'error')
+    toast(main)
+    review = null
+  }
+
+  /** 逐项确认收尾:按勾选重算合并(照片已在本地,不重新下载) */
+  function confirmReview(decisions) {
+    if (!review) return
+    const { res, scan } = review
+    const hasReject =
+      Object.keys(decisions.moves ?? {}).length ||
+      Object.keys(decisions.adds ?? {}).length ||
+      Object.keys(decisions.replaces ?? {}).length
+    if (!hasReject) {
+      applyFurniture(res, scan)
+      return
+    }
+    const merged = mergeFurnitureWithIdentity(getActiveProject(), res.mapped, { decisions })
+    applyFurniture({ ...res, project: merged.project, identity: merged.identity }, scan)
   }
 
   function onUndo() {
@@ -132,6 +169,15 @@
     }
   }
 </script>
+
+{#if review}
+  <ScanMergeReview
+    identity={review.res.identity}
+    registration={review.res.report?.registration}
+    onConfirm={confirmReview}
+    onCancel={() => (review = null)}
+  />
+{/if}
 
 <div class="scan-picker">
   {#if scans === null}

@@ -575,4 +575,32 @@ for (const s of slots) {
   assert.equal(ctxW.access.find((a) => a.id === 'w1')?.clearance, 26, '实测净空覆写词表')
 }
 
+/* ---- 关系完整度门禁串到求解器:悬空关系的搬动件 → provisional ---- */
+{
+  // 堵门柜带一条目标已不存在的家规;它必须被挪(解堵门)→ provisional + 逐条理由
+  const p = baseProject({
+    placements: [
+      { id: 'pl1', kind: 'cabinet', label: '堵门柜', x: 24 + ft(12) - 6, y: 180, w: ft(3), h: ft(3), rotation: 0, zoneId: 'z-2', relations: [{ type: 'far_from', targetId: 'ghost', zh: '远离「床」' }] },
+    ],
+  })
+  const res = await solveLayout(p, 'min_effort', { iterations: 150, seed: 5 })
+  if (res.ok && res.moves.some((m) => m.id === 'pl1')) {
+    assert.equal(res.status, 'provisional', '搬了带悬空家规的件 → 暂定')
+    assert.ok(res.provisionalReasons.some((r) => r.code === 'dangling_relation'), '要给出悬空关系理由')
+  }
+
+  // 无关系、非低置信度 → certified,且 unmetRelations 为空数组
+  const clean = baseProject({
+    placements: [
+      { id: 'pl1', kind: 'sofa', label: '沙发', x: 24 + ft(12), y: 24, w: ft(8), h: ft(3), rotation: 0, zoneId: 'z-2' },
+      { id: 'pl2', kind: 'cabinet', label: '柜', x: 24 + ft(13), y: 24 + ft(4.5), w: ft(7), h: ft(5.5), rotation: 0, zoneId: 'z-2' },
+    ],
+  })
+  const cres = await solveLayout(clean, 'best_flow', { iterations: 200, seed: 7 })
+  assert.ok(cres.ok)
+  assert.equal(cres.status, 'certified')
+  assert.deepEqual(cres.unmetRelations, [])
+  assert.deepEqual(cres.provisionalReasons, [])
+}
+
 console.log('layout-solve-unit: all assertions passed')

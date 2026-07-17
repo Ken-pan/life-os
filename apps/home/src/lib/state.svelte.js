@@ -565,6 +565,47 @@ export function togglePlacementLocked(placementId) {
   )
 }
 
+/**
+ * 给一件家具加一条家规关系(near/far_from 另一件),布局求解按间距罚分。
+ * 与自动认对(床↔床头柜那类词表)同权重,但这是用户说的、词表猜不出的:
+ * 「鸟笼远离床」「宠物粮靠近围栏」。同一对 (targetId,type) 已存在则不重复加。
+ * @param {string} placementId
+ * @param {'near'|'far_from'} type
+ * @param {string} targetId
+ */
+export function addPlacementRelation(placementId, type, targetId) {
+  if (placementId === targetId) return
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const list = raw.placements ?? []
+  const pl = list.find((p) => p.id === placementId)
+  const target = list.find((p) => p.id === targetId)
+  if (!pl || !target) return
+  const existing = pl.relations ?? []
+  if (existing.some((r) => r.type === type && r.targetId === targetId)) return
+  const zh = `${type === 'near' ? '靠近' : '远离'}「${target.label}」`
+  const relations = [...existing, { type, targetId, zh }]
+  const placements = list.map((p) => (p.id === placementId ? { ...p, relations } : p))
+  applyEditSource({ placements }, { silent: true })
+  toast(`已记住:让「${pl.label}」${zh} —— 重算布局时会照此优化`)
+}
+
+/**
+ * 删掉一件家具的第 index 条关系。
+ * @param {string} placementId
+ * @param {number} index
+ */
+export function removePlacementRelation(placementId, index) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const list = raw.placements ?? []
+  const pl = list.find((p) => p.id === placementId)
+  if (!pl || !pl.relations?.[index]) return
+  const relations = pl.relations.filter((_, i) => i !== index)
+  const placements = list.map((p) =>
+    p.id === placementId ? { ...p, relations: relations.length ? relations : undefined } : p,
+  )
+  applyEditSource({ placements }, { silent: true })
+}
+
 /** @param {string} placementId */
 export function removePlacement(placementId) {
   if (blockPinned(placementId, '删')) return
