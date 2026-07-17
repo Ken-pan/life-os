@@ -487,6 +487,7 @@
     { key: 'divider', icon: Minus, label: () => t('editor.slDivider'), desc: () => t('editor.slDividerD'), type: 'divider' },
   ]
   let slash = $state({ open: false, x: 0, y: 0, query: '', index: 0, blockId: null })
+  let slashViaPlus = false // 本次斜杠菜单是否由「+」按钮开启（决定放弃时是否清裸「/」）
   const slashFiltered = $derived(
     slash.query
       ? SLASH_ITEMS.filter((it) => it.label().toLowerCase().includes(slash.query.toLowerCase()))
@@ -525,11 +526,12 @@
     if (e.key === 'ArrowDown') { e.preventDefault(); slash.index = (slash.index + 1) % Math.max(1, slashFiltered.length); return true }
     if (e.key === 'ArrowUp') { e.preventDefault(); slash.index = (slash.index - 1 + slashFiltered.length) % Math.max(1, slashFiltered.length); return true }
     if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); pickSlash(slashFiltered[slash.index]); return true }
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); slash = { ...slash, open: false }; return true }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSlash(); return true }
     return false
   }
   function pickSlash(sel) {
     if (!sel) return
+    slashViaPlus = false
     const el = nodes.get(slash.blockId)
     const i = indexOfBlock(slash.blockId)
     slash = { ...slash, open: false }
@@ -571,6 +573,7 @@
 
   function closeMenus() {
     slash = { ...slash, open: false }
+    slashViaPlus = false
     link = { ...link, open: false }
     toolbar = { ...toolbar, open: false }
   }
@@ -600,11 +603,31 @@
     blocks = blocks
     scheduleSave()
   }
-  function addBlockAfter(block) {
+  // 点「+」= 在下方插入新块并直接唤出「块类型菜单」（复用斜杠菜单：同一套 hover/键盘/Esc/slash）。
+  // 预置一个「/」等同用户在新块打斜杠；菜单锚定到加号右下方（非漂在正文中部）。
+  function addBlockAfter(block, ev) {
     const i = indexOfBlock(block.id)
-    const nb = makeBlock('paragraph', '')
+    const nb = makeBlock('paragraph', '/')
     blocks.splice(i + 1, 0, nb)
-    pendingFocus = { id: nb.id, at: 'start' }
+    pendingFocus = { id: nb.id, at: 'end' }
+    const r = ev?.currentTarget?.getBoundingClientRect()
+    slashViaPlus = true
+    tick().then(() => {
+      slash = { open: true, x: r ? r.left : 0, y: r ? r.bottom + 6 : 0, query: '', index: 0, blockId: nb.id }
+    })
+  }
+  /** 关闭斜杠菜单；若是「+」开启且新块只剩裸「/」，清掉避免残留用户没打过的字符。 */
+  function closeSlash() {
+    const bid = slash.blockId
+    slash = { ...slash, open: false }
+    if (slashViaPlus) {
+      const i = indexOfBlock(bid)
+      if (i >= 0 && blocks[i].text === '/') {
+        replaceBlock(i, 'paragraph', '')
+        pendingFocus = { id: blocks[i].id, at: 'start' }
+      }
+    }
+    slashViaPlus = false
   }
 
   /* ============ 双模切换 ============ */
@@ -755,7 +778,7 @@
                 role="listitem"
               >
                 <div class="ed-gutter">
-                  <button type="button" class="ed-handle" title={t('editor.addBlock')} onclick={() => addBlockAfter(block)} tabindex="-1"><Plus size={15} /></button>
+                  <button type="button" class="ed-handle" title={t('editor.addBlock')} onclick={(e) => addBlockAfter(block, e)} tabindex="-1"><Plus size={15} /></button>
                   <button
                     type="button" class="ed-handle ed-handle--grip" title={t('editor.dragBlock')} tabindex="-1"
                     draggable="true"

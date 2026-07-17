@@ -21,15 +21,35 @@
   let query = $state('')
   let activeTags = $state(new Set())
   let activeFolder = $state('')
-  let showAllTags = $state(false)
 
-  const TAG_CAP = 24
   const folders = $derived(allFolders())
   const contextItems = $derived(
     activeFolder ? S.items.filter((i) => i.id.startsWith(activeFolder + '/')) : S.items,
   )
   const tags = $derived(allTags(contextItems))
-  const visibleTags = $derived(showAllTags ? tags : tags.slice(0, TAG_CAP))
+  // 行内只放「近期」少量标签（已选优先，保证激活的过滤始终可见），其余进「更多」popover
+  const RECENT_CAP = 6
+  const inlineTags = $derived.by(() => {
+    const sel = tags.filter((tg) => activeTags.has(tg))
+    const rest = tags.filter((tg) => !activeTags.has(tg))
+    return [...sel, ...rest].slice(0, Math.max(RECENT_CAP, sel.length))
+  })
+  // 标签 overflow popover（门户到 body，避免被列表列 overflow 裁切）
+  let tagPanelOpen = $state(false)
+  let tagPanelPos = $state({ x: 0, y: 0 })
+  let tagPanelQuery = $state('')
+  const panelTags = $derived(
+    tagPanelQuery
+      ? tags.filter((tg) => tg.toLowerCase().includes(tagPanelQuery.toLowerCase()))
+      : tags,
+  )
+  function openTagPanel(e) {
+    const r = e.currentTarget.getBoundingClientRect()
+    tagPanelPos = { x: Math.min(r.left, window.innerWidth - 320), y: r.bottom + 6 }
+    tagPanelQuery = ''
+    tagPanelOpen = true
+  }
+  function portal(node) { document.body.appendChild(node); return { destroy() { node.remove() } } }
   const results = $derived.by(() => {
     S.items.length // 触响应式
     let matched = searchItems(query, activeTags)
@@ -158,14 +178,14 @@
       {#if tags.length > 0}
         <div class="chip-row nw-chips" role="group" aria-label={t('library.filterAria')}>
           <span class="nw-filter-label">{t('library.filterLabel')}</span>
-          {#each visibleTags as tag (tag)}
+          {#each inlineTags as tag (tag)}
             <button type="button" class="chip" aria-pressed={activeTags.has(tag)} onclick={() => toggleTag(tag)}>
               {tag}
             </button>
           {/each}
-          {#if tags.length > TAG_CAP}
-            <button type="button" class="chip tags-toggle" onclick={() => (showAllTags = !showAllTags)}>
-              {showAllTags ? t('library.tagsLess') : `+${tags.length - TAG_CAP}`}
+          {#if tags.length > inlineTags.length}
+            <button type="button" class="chip nw-tagmore" onclick={openTagPanel} aria-haspopup="dialog" aria-expanded={tagPanelOpen}>
+              {t('library.filterMore')} ({tags.length}) ▾
             </button>
           {/if}
           {#if activeTags.size > 0}
@@ -244,6 +264,32 @@
       onkeydown={keyResize}
     ></div>
   </div>
+
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && tagPanelOpen) tagPanelOpen = false }} />
+
+{#if tagPanelOpen}
+  <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+  <div class="nw-tagpop__backdrop" use:portal onclick={() => (tagPanelOpen = false)}></div>
+  <div class="nw-tagpop" use:portal style="left:{tagPanelPos.x}px; top:{tagPanelPos.y}px" role="dialog" aria-label={t('library.filterAria')}>
+    <input
+      class="nw-tagpop__search"
+      type="search"
+      placeholder={t('library.tagSearch')}
+      bind:value={tagPanelQuery}
+    />
+    <div class="nw-tagpop__list">
+      {#each panelTags as tag (tag)}
+        <button type="button" class="chip" aria-pressed={activeTags.has(tag)} onclick={() => toggleTag(tag)}>{tag}</button>
+      {/each}
+      {#if panelTags.length === 0}
+        <p class="nw-tagpop__empty">{t('library.noTagMatch')}</p>
+      {/if}
+    </div>
+    {#if activeTags.size > 0}
+      <button type="button" class="nw-tagpop__clear" onclick={() => (activeTags = new Set())}>{t('library.filterClear')}</button>
+    {/if}
+  </div>
+{/if}
 
 <style>
   /* 空库时列表列内的引导（方案A：外壳不变，列表体给欢迎+CTA） */
@@ -384,9 +430,67 @@
   }
   /* 列表列窄 —— 卡片单列堆叠 */
   .nw-list :global(.note-grid) { grid-template-columns: 1fr; }
-  .tags-toggle {
-    font-family: var(--mono);
+  .nw-tagmore {
+    color: var(--t2, var(--text-secondary));
+    font-weight: 600;
+  }
+  /* 标签 overflow popover（门户到 body） */
+  :global(.nw-tagpop__backdrop) {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+  }
+  :global(.nw-tagpop) {
+    position: fixed;
+    z-index: 61;
+    width: 300px;
+    max-width: calc(100vw - 24px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 8px);
+    padding: var(--space-3, 12px);
+    border-radius: var(--radius-panel, 12px);
+    background: var(--surface, var(--bg));
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-pop, 0 8px 28px rgba(0, 0, 0, 0.22));
+  }
+  :global(.nw-tagpop__search) {
+    width: 100%;
+    height: 32px;
+    padding: 0 var(--space-2, 8px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control, 8px);
+    background: var(--field-bg, transparent);
+    color: var(--t1, var(--text));
+    font: inherit;
+    font-size: var(--text-sm, 12px);
+    outline: none;
+  }
+  :global(.nw-tagpop__search:focus) { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  :global(.nw-tagpop__list) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1-5, 6px);
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  :global(.nw-tagpop__empty) {
+    margin: 0;
+    padding: var(--space-2, 8px);
+    font-size: var(--text-sm, 12px);
     color: var(--t3, var(--text-muted));
+  }
+  :global(.nw-tagpop__clear) {
+    align-self: flex-start;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: var(--text-sm, 12px);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 0;
   }
   /* 「筛选」前缀标签——把这排 chip 明确成过滤控件，而非被动标签 */
   .nw-filter-label {
