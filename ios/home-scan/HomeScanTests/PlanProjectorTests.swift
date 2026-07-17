@@ -383,8 +383,10 @@ final class PlanProjectorTests: XCTestCase {
                     canonRef("中柜", cxM: 1.5, wM: 0.8),
                     canonRef("右柜", cxM: 2.4, wM: 0.8)]
         var warns: [String] = []
-        let out = PlanProjector.unmergeByCanonical([big], refs: refs, warnings: &warns)
+        var diag: [String: Int] = [:]
+        let out = PlanProjector.unmergeByCanonical([big], refs: refs, warnings: &warns, diag: &diag)
         XCTAssertEqual(out.count, 3, "整排巨框拆回 3 件")
+        XCTAssertEqual(diag["unmerge_inbox_peak"], 3, "诊断记下巨框压住 3 件权威")
         XCTAssertEqual(Set(out.map(\.label)), ["左柜", "中柜", "右柜"])
         XCTAssertTrue(out.allSatisfy { $0.colorHex == nil && $0.photos == nil && $0.photoHash == nil },
                       "拆出的件外观留空,不把共享巨框裁剪冒认给某一件")
@@ -395,18 +397,22 @@ final class PlanProjectorTests: XCTestCase {
         // 同样是大框,但权威副本里这位置只有 1 件 → 不拆(可能只是那件扫大了,走正常仲裁)
         let big = blob("cabinet", "柜", cxM: 1.5, cyM: 0.3, wM: 3.0, dM: 0.5)
         var warns: [String] = []
-        let out = PlanProjector.unmergeByCanonical([big], refs: [canonRef("独柜", cxM: 1.5, wM: 0.8)], warnings: &warns)
+        var diag: [String: Int] = [:]
+        let out = PlanProjector.unmergeByCanonical([big], refs: [canonRef("独柜", cxM: 1.5, wM: 0.8)], warnings: &warns, diag: &diag)
         XCTAssertEqual(out.count, 1, "只 1 件权威命中不拆")
         XCTAssertEqual(out[0].colorHex, "#CCCCCC", "不拆的原样保留")
+        XCTAssertEqual(diag["unmerge_inbox_peak"], 1, "诊断记下只压住 1 件(<2 故不拆,闸正确)")
     }
 
     func testUnmergeSkipsNormalSizedItem() {
         // 正常大小的柜(0.8m < splitSuspectPx 1.0m)即便周围有多件权威也不试拆
         let normal = blob("cabinet", "柜", cxM: 1.5, cyM: 0.3, wM: 0.8, dM: 0.5)
         var warns: [String] = []
+        var diag: [String: Int] = [:]
         let out = PlanProjector.unmergeByCanonical(
-            [normal], refs: [canonRef("a", cxM: 1.3, wM: 0.4), canonRef("b", cxM: 1.7, wM: 0.4)], warnings: &warns)
+            [normal], refs: [canonRef("a", cxM: 1.3, wM: 0.4), canonRef("b", cxM: 1.7, wM: 0.4)], warnings: &warns, diag: &diag)
         XCTAssertEqual(out.count, 1, "没大到可疑就不拆")
+        XCTAssertNil(diag["unmerge_suspect"], "没过尺寸闸就不进诊断")
     }
 
     func testDedupPrefersHigherConfidence() {

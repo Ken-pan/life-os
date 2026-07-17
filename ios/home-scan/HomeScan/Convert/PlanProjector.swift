@@ -208,9 +208,17 @@ enum PlanProjector {
         )
         // 权威副本把 RoomPlan 并成一件的整排柜拆回 N 件(见 unmergeByCanonical),
         // 再过认亲/纠正。ScanLog 记拆了几件,真机 QA 看它是否如期触发。
-        let unmerged = unmergeByCanonical(deduped, refs: identityRefs, warnings: &warnings)
+        var unmergeDiag: [String: Int] = [:]
+        let unmerged = unmergeByCanonical(deduped, refs: identityRefs, warnings: &warnings, diag: &unmergeDiag)
         if unmerged.count > deduped.count {
             ScanLog.shared.counter { $0.add("unmerge_split_added", Double(unmerged.count - deduped.count)) }
+        }
+        // 没拆成时也留证据:巨框是否压住 ≥2 件权威。inbox_peak<2 = 残缺扫描只压住半排
+        // (闸正确按住);≥2 却没拆才是几何 bug 要查。
+        if !unmergeDiag.isEmpty {
+            ScanLog.shared.counter { c in
+                for (k, v) in unmergeDiag { c.add(k, Double(v)) }
+            }
         }
         let mapped = reconcileWithCanonical(unmerged, refs: identityRefs, warnings: &warnings)
 
@@ -650,17 +658,26 @@ enum PlanProjector {
     /// **外观留空** —— 共享巨框裁剪不能可信地归给某一件(网页端认亲会接回权威照片,几何
     /// 以权威为准,重扫再补拍)。dedup 之后跑:拆出的件在各自权威位置,不会被再合并。纯函数。
     static func unmergeByCanonical(
-        _ items: [MappedItem], refs: [CanonicalRef], warnings: inout [String]
+        _ items: [MappedItem], refs: [CanonicalRef], warnings: inout [String],
+        diag: inout [String: Int]
     ) -> [MappedItem] {
         guard !refs.isEmpty else { return items }
         var out: [MappedItem] = []
         for item in items {
             guard max(item.widthPx, item.depthPx) > splitSuspectPx else { out.append(item); continue }
+            // 到这 = 通过尺寸可疑闸(长边 >100cm)。诊断:同族权威件几何上够不够拆
+            // —— inFamily(同 kind/族的权威件数)vs inBox(其中心落进这只巨框的件数,
+            // 要 ≥2 才拆)。真机看它:inBox<2 = 巨框只压住 <2 件权威(多半残缺扫描只扫到
+            // 半排,拆不得,闸正确);inBox≥2 却没拆才是 bug。
             let box = BoxPx(
                 x: item.center.x - item.widthPx / 2, y: item.center.y - item.depthPx / 2,
                 w: item.widthPx, h: item.depthPx
             )
-            let hits = refs.filter { sameKindOrFamily(item.kind, $0.kind) && box.contains($0.box.cx, $0.box.cy) }
+            let inFamily = refs.filter { sameKindOrFamily(item.kind, $0.kind) }
+            let hits = inFamily.filter { box.contains($0.box.cx, $0.box.cy) }
+            diag["unmerge_suspect", default: 0] += 1
+            diag["unmerge_infamily_peak"] = max(diag["unmerge_infamily_peak", default: 0], inFamily.count)
+            diag["unmerge_inbox_peak"] = max(diag["unmerge_inbox_peak", default: 0], hits.count)
             guard hits.count >= 2 else { out.append(item); continue }
             warnings.append("用权威副本把「\(item.label)」拆回 \(hits.count) 件(RoomPlan 把整排并成了一件)")
             for r in hits {
