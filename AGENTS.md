@@ -117,13 +117,22 @@ Non-obvious caveats:
   `5173`. The `5188` port in Quickstart is the PWA **preview** (production build) port
   from `scripts/pwa/apps.config.mjs`, not the `vite dev` port.
 - **Apps are local-first.** They run without any Supabase credentials; `.env` is
-  optional. Each production app ships public defaults in `apps/<app>/.env.example`
-  (copy to `.env` only if you want cloud sync wired up locally). Task creation and
-  other core flows work purely against local storage.
-- **Playwright browsers are not installed by the update script.** For the e2e / PWA /
-  design-catalog suites (`npm run test:pwa`, `npm run test:design-catalog`,
-  `apps/planner npm run test:e2e`) run `npx playwright install chromium` first
-  (CI uses `--with-deps`, which needs root for OS libs).
+  optional. Each production app ships public defaults in `apps/<app>/.env.example`.
+  **Do NOT copy `.env` for e2e:** the planner desktop e2e suite (and CI) assume
+  local-first — a live Supabase `.env` puts Planner into cloud-sync mode and breaks
+  the localStorage/task-lifecycle specs. Core flows (task create/complete/persist)
+  work purely against local storage.
+- **Playwright browsers are not installed by the update script.** Run
+  `npx playwright install` (all browsers) before the e2e / PWA / design-catalog
+  suites — **WebKit is required**, not just Chromium: `catalog-mobile` and the PWA
+  `tests/pwa/*` suites emulate `iPhone 13` (WebKit). CI uses `--with-deps` (needs
+  root for OS libs). Suites: `npm run test:pwa`, `npm run test:design-catalog`,
+  `apps/planner npm run test:e2e -- --project=desktop`.
+- **`npm run test:pwa` known gaps (not env issues, not in CI):** `aios` cannot start
+  its preview because `scripts/pwa/preview-app.sh` has no `aios` case; the `knowledge`
+  `library` route fails one standalone shell-guard assertion (`mainOverflowY hidden`
+  vs `auto`). The six production/near-production apps (planner, fitness, finance,
+  music, portal, health) pass. Filter with `PWA_APP=<id>`.
 - **`packages/contracts` `npm test` is broken standalone** — its script runs `node`
   directly on a `.ts` file (`ERR_UNKNOWN_FILE_EXTENSION`) and is not wired into CI.
   Validate contracts via `npm run check` / `npm run check:lifeos-boundaries` instead.
