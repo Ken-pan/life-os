@@ -8,6 +8,11 @@
  *   raw-motion          transition 里写 20–380ms 字面量时长（应走 --dur-*；≥400ms 视为功能性时长豁免）
  *   svelte-custom-media .svelte 组件样式里出现 @custom-media 断点（postcss 不处理组件样式，
  *                       会原样进产物被浏览器忽略——必须写字面量断点）
+ *   reserved-ds-class   app 组件在自己 scoped <style> 里重定义设计系统保留组件类
+ *                       （.steps/.chip/.stat/.tabs…，清单从 theme/components.css 自动派生）。
+ *                       Svelte 只提升 scope 特异性、不覆盖你没写的属性，于是全局那份组件样式
+ *                       的 display/flex 等会漏进来——.steps 竖清单被压成横排 3 列即此（2026-07）。
+ *                       页面自有元素请换个不占用保留名的类名（如 .task-steps）。
  *
  * 棘轮：存量违规记录在 scripts/lifeos-styles-baseline.json。
  *   当前计数 > 基线 → 失败（阻止新增劣化）
@@ -48,6 +53,22 @@ const EXCLUDE_DIR_NAMES = new Set([
   '.netlify', 'coverage', 'test-results',
 ])
 
+/**
+ * 设计系统保留组件类：从 theme/components.css 顶层选择器派生（取 BEM 基名），零漂移。
+ * app 组件在 scoped <style> 里重定义这些 = reserved-ds-class 违规。
+ */
+function loadReservedDsClasses() {
+  const css = readFileSync(join(ROOT, 'packages/theme/src/components.css'), 'utf8')
+  const set = new Set()
+  for (const m of css.matchAll(/^\.([a-z][a-zA-Z0-9_-]*)/gm)) {
+    set.add(m[1].replace(/(__|--).*/, ''))
+  }
+  return set
+}
+const RESERVED_DS = loadReservedDsClasses()
+/** 拥有/演示设计系统的目录，不受 reserved-ds-class 约束 */
+const DS_OWNER_PREFIXES = ['packages/theme/', 'packages/platform-web/', 'apps/design-catalog/']
+
 /** 收集文件 */
 const files = []
 function walk(dir) {
@@ -73,6 +94,7 @@ function scanFile(file) {
   const noComments = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
   const lines = noComments.split('\n')
   const isSvelte = file.endsWith('.svelte')
+  const isDsOwner = DS_OWNER_PREFIXES.some((p) => rel.startsWith(p))
 
   lines.forEach((line, i) => {
     const t = line.trim()
@@ -109,6 +131,18 @@ function scanFile(file) {
     // svelte-custom-media：组件样式里的 @custom-media 断点静默失效
     if (isSvelte && /@media\s*\(\s*--life-os-|@custom-media/.test(t)) {
       out.push({ rule: 'svelte-custom-media', ...loc })
+    }
+
+    // reserved-ds-class：app 组件 scoped <style> 里**裸重定义**设计系统保留组件类。
+    // 只抓 `.steps {` / `.chip,` 这种整条选择器就是一个保留裸类的规则头 ——
+    // 这正是 .steps 竖清单被全局 display:flex 压横的形状。刻意放过带伪类/复合/后代的
+    // 写法(.icon-btn:hover / .field.qty / .empty .btn-go)：那是给 DS 组件实例加
+    // scoped 微调，全局基样式本就是想要的，不是冲突。模板 class="..." 不以 . 开头也天然排除。
+    if (isSvelte && !isDsOwner) {
+      const m = t.match(/^\.([a-z][a-zA-Z0-9]*(?:-[a-zA-Z0-9]+)*)\s*[,{]/)
+      if (m && RESERVED_DS.has(m[1])) {
+        out.push({ rule: 'reserved-ds-class', ...loc })
+      }
     }
   })
   return out

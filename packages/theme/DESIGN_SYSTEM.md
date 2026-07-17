@@ -84,6 +84,14 @@
 | 组件  | `components.css`                      | 按钮、Sheet、Toast（`--toast-*` token）、Banner、状态原语（`.skeleton` / `.spinner` / `.badge` / `.empty-*`）、`.life-os-popover` 面板基座（行为组件：platform-web `svelte/menu`）、进度条 `.progress`（含 `--indeterminate`）、选择控件 `.checkbox` / `.radio` / `.option-row` / `.slider` / `.stepper`、页签 `.tabs` / `.tab`（行为：platform-web `svelte/tabs`）、搜索框 `.field-search`、图标按钮 `.icon-btn`、KPI 瓦片 `.stat`、chip 交互态 `button.chip` / `.chip__remove` / `.chip-row`、头像 `.avatar`（组叠 `.avatar-group`）、数据表 `.table` / `.table-wrap`、列表 `.list` / `.list-item`、手风琴 `.accordion`、时间线 `.timeline`、面包屑 `.breadcrumbs`、星级 `.rating`、悬停提示 `[data-life-os-tooltip]`、向导步骤 `.steps`、页码 `.pagination`、拖放区 `.dropzone`、键帽 `.kbd`、分隔线 `.divider` |
 | 品牌  | 各 app `:root`                        | 色板、图表色、Finance `--primary` / Fitness `--text-hero` 等 |
 
+> **⚠️ 保留类名不可占用。** 上表 `components.css` 里的组件裸类名（`.steps` / `.card`… 见清单，
+> 其中 `.steps` / `.chip` / `.stat` / `.list` / `.field` / `.badge` / `.divider` 这些通用单词最扎手）
+> 是全局加载的。app 组件**别在自己 scoped `<style>` 里重定义**它们做别的用途：Svelte 只提升
+> scope 特异性、不覆盖你没写的属性，于是全局那份组件样式的 `display:flex` 等会漏进来 ——
+> `.steps` 竖清单被压成横排 3 列即此（2026-07）。自有元素请换个不占保留名的类名（如 `.task-steps`）。
+> **护栏**：`scripts/check-lifeos-styles.mjs` 的 `reserved-ds-class` 规则（棘轮，CI）自动拦新增，
+> 保留清单从本文件所述的 `components.css` 顶层选择器派生。
+
 ### 圆角阶梯（2026-07-15 起）
 
 | 层级    | Token                                  | 值    | 用途                          |

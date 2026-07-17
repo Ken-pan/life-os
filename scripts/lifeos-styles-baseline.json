@@ -18,5 +18,8 @@
   "packages/theme/src|raw-hex": 3,
   "packages/platform-web/src|raw-hex": 37,
   "packages/platform-web/src|raw-font-size": 14,
-  "packages/platform-web/src|raw-motion": 9
+  "packages/platform-web/src|raw-motion": 9,
+  "apps/home/src|reserved-ds-class": 14,
+  "apps/aios/src|reserved-ds-class": 6,
+  "apps/planner/src|reserved-ds-class": 5
 }
