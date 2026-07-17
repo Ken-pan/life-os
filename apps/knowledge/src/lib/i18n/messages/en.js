@@ -217,6 +217,13 @@ export default {
     slNumbered: 'Numbered list',
     slQuote: 'Quote',
     slCode: 'Code',
+    slTable: 'Table',
+    slTableD: 'An editable table',
+    tableCol: 'Col',
+    tableAddRow: 'Add row',
+    tableAddCol: 'Add column',
+    tableDelRow: 'Delete row',
+    tableDelCol: 'Delete column',
     slDivider: 'Divider',
   },
   recall: {

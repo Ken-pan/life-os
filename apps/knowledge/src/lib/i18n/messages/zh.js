@@ -221,6 +221,13 @@ export default {
     slCalloutTip: '提示',
     slCalloutWarn: '警告',
     slCalloutDanger: '危险',
+    slTable: '表格',
+    slTableD: '可编辑的行列表格',
+    tableCol: '列',
+    tableAddRow: '加一行',
+    tableAddCol: '加一列',
+    tableDelRow: '删除本行',
+    tableDelCol: '删除本列',
     slDivider: '分隔线',
   },
   recall: {

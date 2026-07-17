@@ -41,6 +41,30 @@ function calloutType(raw) {
   return CALLOUT_TYPES.has(t) ? t : 'note'
 }
 
+/** 拆一行 GFM 表格为单元格数组（去外围竖线、按未转义 | 分列、还原 \| ）。 */
+function splitTableRow(line) {
+  const inner = line.trim().replace(/^\|/, '').replace(/\|$/, '')
+  return inner
+    .split(/(?<!\\)\|/)
+    .map((c) => c.trim().replace(/\\\|/g, '|'))
+}
+/** 分隔行 → 每列对齐（:--=left, :-:=center, --:=right, 其余 null）。 */
+function parseTableAlign(sep) {
+  return splitTableRow(sep).map((c) => {
+    const s = c.trim()
+    const l = s.startsWith(':')
+    const r = s.endsWith(':')
+    if (l && r) return 'center'
+    if (r) return 'right'
+    if (l) return 'left'
+    return null
+  })
+}
+/** 是否为 GFM 表格分隔行（含 - 且只由 |:- 空白组成）。 */
+function isTableSeparator(line) {
+  return /-/.test(line) && /^\s*\|?[\s:|-]+\|?\s*$/.test(line) && /\|/.test(line)
+}
+
 /** 前导空白 → 缩进层级（tab 记 2 空格；向下取整）。 */
 function leadingDepth(prefix) {
   const spaces = prefix.replace(/\t/g, '  ').length
@@ -71,6 +95,31 @@ export function markdownToBlocks(src) {
       }
       i += 1 // 跳过收尾 fence
       blocks.push(makeBlock('code', body.join('\n'), { meta: { lang: fence[2] || '' } }))
+      continue
+    }
+
+    // GFM 表格：当前行是 |…| 且下一行是分隔行
+    if (
+      /^\s*\|.*\|\s*$/.test(line) &&
+      i + 1 < lines.length &&
+      isTableSeparator(lines[i + 1])
+    ) {
+      const header = splitTableRow(line)
+      const align = parseTableAlign(lines[i + 1])
+      const rows = [header]
+      i += 2
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
+        rows.push(splitTableRow(lines[i]))
+        i += 1
+      }
+      const cols = header.length
+      const norm = rows.map((r) => {
+        const c = r.slice(0, cols)
+        while (c.length < cols) c.push('')
+        return c
+      })
+      const alignN = Array.from({ length: cols }, (_, c) => align[c] ?? null)
+      blocks.push(makeBlock('table', '', { meta: { rows: norm, align: alignN } }))
       continue
     }
 
@@ -208,7 +257,8 @@ function isBlockStart(line) {
     /^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line) ||
     /^>\s?/.test(line) ||
     /^(\s*)[-*+]\s+/.test(line) ||
-    /^(\s*)\d+[.)]\s+/.test(line)
+    /^(\s*)\d+[.)]\s+/.test(line) ||
+    /^\s*\|.*\|\s*$/.test(line)
   )
 }
 
@@ -232,9 +282,34 @@ export function blockToMarkdown(b) {
       return `${pad}${b.meta?.start ?? 1}. ${b.text}`
     case 'code':
       return '```' + (b.meta?.lang || '') + '\n' + b.text + '\n```'
+    case 'table':
+      return tableToMarkdown(b)
     default:
       return b.text
   }
+}
+
+/** 表格块 → GFM。行补齐到表头列数；对齐写回分隔行；单元格内 | 转义。 */
+function tableToMarkdown(b) {
+  const rows = b.meta?.rows || []
+  if (rows.length === 0 || rows[0].length === 0) return ''
+  const cols = rows[0].length
+  const align = b.meta?.align || []
+  const esc = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ')
+  const pad = (r) => {
+    const c = r.slice(0, cols)
+    while (c.length < cols) c.push('')
+    return c
+  }
+  const rowMd = (r) => `| ${pad(r).map(esc).join(' | ')} |`
+  const sep =
+    '| ' +
+    Array.from({ length: cols }, (_, c) => {
+      const a = align[c]
+      return a === 'center' ? ':---:' : a === 'right' ? '---:' : a === 'left' ? ':---' : '---'
+    }).join(' | ') +
+    ' |'
+  return [rowMd(rows[0]), sep, ...rows.slice(1).map(rowMd)].join('\n')
 }
 
 function clampLevel(l) {

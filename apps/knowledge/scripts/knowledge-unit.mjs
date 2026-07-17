@@ -430,6 +430,37 @@ function includes(name, haystack, needle) {
     ok('duph1-empty-blocks', firstHeadingMatchesTitle([], '我的笔记') === false)
   }
 
+  // GFM 表格：解析 + 往返 + 对齐 + 转义 + 规整
+  {
+    const tmd = [
+      '| 名称 | 数量 | 备注 |',
+      '| :--- | ---: | :---: |',
+      '| 苹果 | 3 | 甜 |',
+      '| 香蕉 | 12 | 有点软 |',
+    ].join('\n')
+    const tb = markdownToBlocks(tmd)
+    ok('table-parse-type', tb[0].type === 'table')
+    ok('table-parse-rows', tb[0].meta.rows.length === 3 && tb[0].meta.rows[0].length === 3)
+    ok('table-parse-header', tb[0].meta.rows[0][0] === '名称' && tb[0].meta.rows[1][1] === '3')
+    ok('table-parse-align', JSON.stringify(tb[0].meta.align) === JSON.stringify(['left', 'right', 'center']))
+    const trt1 = blocksToMarkdown(markdownToBlocks(tmd))
+    const trt2 = blocksToMarkdown(markdownToBlocks(trt1))
+    ok('table-roundtrip-stable', trt1 === trt2, '往返漂移')
+    ok('table-roundtrip-keeps-align', /:---/.test(trt1) && /---:/.test(trt1) && /:---:/.test(trt1))
+    // 转义竖线
+    const esc = markdownToBlocks('| a | b |\n| --- | --- |\n| x \\| y | z |')
+    ok('table-escaped-pipe', esc[0].meta.rows[1][0] === 'x | y')
+    ok('table-escaped-pipe-rt', blocksToMarkdown(esc).includes('x \\| y'))
+    // 参差行补齐到表头列数
+    const ragged = markdownToBlocks('| a | b | c |\n| --- | --- | --- |\n| 1 | 2 |')
+    ok('table-ragged-pad', ragged[0].meta.rows[1].length === 3 && ragged[0].meta.rows[1][2] === '')
+    // 缺分隔行 → 不是表格（退回段落）
+    ok('table-needs-separator', markdownToBlocks('| a | b |\n普通文字')[0].type !== 'table')
+    // 表格与前后段落间有空行、往返稳定
+    const mixed = '前言\n\n| h |\n| --- |\n| v |\n\n结尾'
+    ok('table-mixed-stable', blocksToMarkdown(markdownToBlocks(mixed)) === blocksToMarkdown(markdownToBlocks(blocksToMarkdown(markdownToBlocks(mixed)))))
+  }
+
   // 行内 md ⇄ 可编辑 HTML 往返（落盘不损坏）
   const inlineCases = [
     '普通文本',
@@ -437,6 +468,8 @@ function includes(name, haystack, needle) {
     '中间 *斜体* 词',
     '`inline code`',
     'a **b** c *d* e ~~f~~ g',
+    '高亮 ==重点== 收尾',
+    'a **b** ==c== ~~d~~ e',
     '[[目标]]',
     '[[目标|显示名]]',
     '[label](https://x.com)',

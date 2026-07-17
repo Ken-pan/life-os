@@ -16,7 +16,7 @@
     Bold, Italic, Code, Strikethrough, Link2, Type, Heading1, Heading2,
     Heading3, List, ListOrdered, CheckSquare, Quote, Minus, GripVertical,
     Plus, FileCode, Eye, Pin, Trash2, Check, MoreHorizontal,
-    Info, Lightbulb, TriangleAlert, OctagonAlert,
+    Info, Lightbulb, TriangleAlert, OctagonAlert, Table,
   } from '@lucide/svelte'
   import {
     markdownToBlocks, blocksToMarkdown, makeBlock, newBlockId, firstHeadingMatchesTitle,
@@ -198,6 +198,84 @@
     const nb = makeBlock(type, text, extra)
     blocks[i] = nb
     return nb
+  }
+
+  /* ============ 表格块（编辑网格）============ */
+  // 单元格 DOM 表：`${blockId}:${r}:${c}` → contenteditable（供 Tab/箭头/结构变动后聚焦）。
+  const cellNodes = new Map()
+  /** 单元格可编辑动作：初次按坐标从模型灌 inline HTML；结构变动整表换 id 重挂载即自然重灌。 */
+  function tableCell(node, params) {
+    let key
+    const apply = (p) => {
+      key = `${p.blockId}:${p.r}:${p.c}`
+      const b = blocks[indexOfBlock(p.blockId)]
+      node.innerHTML = mdInlineToHtml(b?.meta?.rows?.[p.r]?.[p.c] ?? '') || ''
+      cellNodes.set(key, node)
+    }
+    apply(params)
+    return { destroy() { cellNodes.delete(key) } }
+  }
+  function focusCell(blockId, r, c) {
+    const node = cellNodes.get(`${blockId}:${r}:${c}`)
+    if (node) setCaretEnd(node)
+  }
+  function onCellInput(block, r, c, el) {
+    const i = indexOfBlock(block.id)
+    if (i < 0) return
+    blocks[i].meta.rows[r][c] = readBlockMarkdown(el) // 就地写模型，不重灌单元格（保光标）
+    scheduleSave()
+  }
+  function onCellKeydown(block, r, c, e) {
+    const i = indexOfBlock(block.id)
+    if (i < 0) return
+    const rows = blocks[i].meta.rows
+    const R = rows.length
+    const C = rows[0].length
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      let nr = r
+      let nc = c + (e.shiftKey ? -1 : 1)
+      if (nc >= C) { nc = 0; nr = r + 1 }
+      if (nc < 0) { nc = C - 1; nr = r - 1 }
+      if (nr >= R) { addTableRow(block, R); return } // 末格 Tab → 追加一行
+      if (nr < 0) return
+      focusCell(block.id, nr, nc)
+    } else if (e.key === 'Enter') {
+      e.preventDefault() // 单元格不换行：下移，末行则追加
+      if (r + 1 < R) focusCell(block.id, r + 1, c)
+      else addTableRow(block, R)
+    }
+  }
+  /** 改结构：拷贝 rows/align、施加 fn、整表换 id 重挂载（避免按索引 key 的残影）。 */
+  function tableUpdate(block, fn) {
+    const i = indexOfBlock(block.id)
+    if (i < 0) return null
+    const rows = blocks[i].meta.rows.map((r) => [...r])
+    const align = [...(blocks[i].meta.align || [])]
+    fn(rows, align)
+    const nb = makeBlock('table', '', { meta: { rows, align } })
+    blocks[i] = nb
+    scheduleSave()
+    return nb
+  }
+  function addTableRow(block, at) {
+    const cols = block.meta.rows[0].length
+    const idx = at ?? block.meta.rows.length
+    const nb = tableUpdate(block, (rows) => rows.splice(idx, 0, Array(cols).fill('')))
+    if (nb) tick().then(() => focusCell(nb.id, idx, 0))
+  }
+  function addTableCol(block) {
+    const newC = block.meta.rows[0].length
+    const nb = tableUpdate(block, (rows, align) => { rows.forEach((r) => r.push('')); align.push(null) })
+    if (nb) tick().then(() => focusCell(nb.id, 0, newC))
+  }
+  function delTableRow(block, r) {
+    if (block.meta.rows.length <= 1) return // 至少留表头
+    tableUpdate(block, (rows) => rows.splice(r, 1))
+  }
+  function delTableCol(block, c) {
+    if (block.meta.rows[0].length <= 1) return
+    tableUpdate(block, (rows, align) => { rows.forEach((row) => row.splice(c, 1)); align.splice(c, 1) })
   }
 
   /* ——— 块级 input-rule：段首前缀 → 块类型 ——— */
@@ -480,6 +558,7 @@
     { key: 'numbered', icon: ListOrdered, label: () => t('editor.slNumbered'), desc: () => t('editor.slNumberedD'), type: 'numbered', meta: { start: 1 } },
     { key: 'quote', icon: Quote, label: () => t('editor.slQuote'), desc: () => t('editor.slQuoteD'), type: 'quote' },
     { key: 'code', icon: FileCode, label: () => t('editor.slCode'), desc: () => t('editor.slCodeD'), type: 'code', meta: { lang: '' } },
+    { key: 'table', icon: Table, label: () => t('editor.slTable'), desc: () => t('editor.slTableD'), type: 'table' },
     { key: 'c-note', icon: Info, label: () => t('editor.slCalloutNote'), desc: () => t('editor.slCalloutNoteD'), type: 'callout', meta: { callout: 'note' } },
     { key: 'c-tip', icon: Lightbulb, label: () => t('editor.slCalloutTip'), desc: () => t('editor.slCalloutTipD'), type: 'callout', meta: { callout: 'tip' } },
     { key: 'c-warning', icon: TriangleAlert, label: () => t('editor.slCalloutWarn'), desc: () => t('editor.slCalloutWarnD'), type: 'callout', meta: { callout: 'warning' } },
@@ -543,6 +622,12 @@
       const p = makeBlock('paragraph', raw)
       blocks.splice(i + 1, 0, p)
       pendingFocus = { id: p.id, at: 'start' }
+    } else if (sel.key === 'table') {
+      // 起手 3 列 × 3 行（空表头 + 2 空行，表头行加粗+底纹即足够提示），焦点落首格
+      const nb = replaceBlock(i, 'table', '', {
+        meta: { rows: [['', '', ''], ['', '', ''], ['', '', '']], align: [null, null, null] },
+      })
+      tick().then(() => focusCell(nb.id, 0, 0))
     } else {
       replaceBlock(i, sel.type || 'paragraph', raw, { meta: sel.meta ? { ...sel.meta } : {} })
       pendingFocus = { id: blocks[i].id, at: 'end' }
@@ -813,6 +898,49 @@
                         oninput={(e) => onInput(block, e.currentTarget, e)}
                         onkeydown={(e) => onKeydown(block, e.currentTarget, e)}
                       ></div>
+                    </div>
+                  {:else if block.type === 'table'}
+                    {@const rows = block.meta?.rows || []}
+                    {@const cols = rows[0]?.length || 0}
+                    <div class="ed-tablewrap">
+                      <div class="ed-tablescroll">
+                        <table class="ed-table">
+                          <tbody>
+                            {#each rows as row, r (r)}
+                              <tr class="ed-tr">
+                                {#each row as _cell, c (c)}
+                                  <svelte:element this={r === 0 ? 'th' : 'td'} class="ed-td">
+                                    <div
+                                      class="ed-cell"
+                                      contenteditable="true"
+                                      role="textbox" tabindex="0" aria-multiline="false"
+                                      use:tableCell={{ blockId: block.id, r, c }}
+                                      oninput={(e) => onCellInput(block, r, c, e.currentTarget)}
+                                      onkeydown={(e) => onCellKeydown(block, r, c, e)}
+                                    ></div>
+                                    {#if r === 0}
+                                      <button type="button" class="ed-tdel ed-tdel--col" tabindex="-1"
+                                        title={t('editor.tableDelCol')} onmousedown={(e) => { e.preventDefault(); delTableCol(block, c) }}
+                                        aria-label={t('editor.tableDelCol')}><Trash2 size={11} /></button>
+                                    {/if}
+                                    {#if c === 0 && r > 0}
+                                      <button type="button" class="ed-tdel ed-tdel--row" tabindex="-1"
+                                        title={t('editor.tableDelRow')} onmousedown={(e) => { e.preventDefault(); delTableRow(block, r) }}
+                                        aria-label={t('editor.tableDelRow')}><Trash2 size={11} /></button>
+                                    {/if}
+                                  </svelte:element>
+                                {/each}
+                              </tr>
+                            {/each}
+                          </tbody>
+                        </table>
+                      </div>
+                      <button type="button" class="ed-tadd ed-tadd--col" tabindex="-1"
+                        title={t('editor.tableAddCol')} onmousedown={(e) => { e.preventDefault(); addTableCol(block) }}
+                        aria-label={t('editor.tableAddCol')}><Plus size={13} /></button>
+                      <button type="button" class="ed-tadd ed-tadd--row" tabindex="-1"
+                        title={t('editor.tableAddRow')} onmousedown={(e) => { e.preventDefault(); addTableRow(block) }}
+                        aria-label={t('editor.tableAddRow')}><Plus size={13} /></button>
                     </div>
                   {:else}
                     {#if block.type === 'todo'}
@@ -1105,7 +1233,8 @@
   }
   .ed-row:hover > .ed-block { background: var(--wash); }
   .ed-row--divider:hover > .ed-block,
-  .ed-row--code:hover > .ed-block { background: transparent; }
+  .ed-row--code:hover > .ed-block,
+  .ed-row--table:hover > .ed-block { background: transparent; }
 
   .ed-edit {
     flex: 1; min-width: 0; outline: none;
@@ -1208,8 +1337,87 @@
   }
   .ed-callout--danger { --cl: var(--chart-hue-red); }
 
+  /* 表格块（可编辑网格）—— 悬浮才露增删控件，静态干净 */
+  .ed-tablewrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    padding-right: 18px;  /* 右侧「加列」留位 */
+    padding-bottom: 16px; /* 底部「加行」留位 */
+  }
+  .ed-tablescroll { overflow-x: auto; scrollbar-width: thin; border-radius: var(--radius-control, 8px); }
+  .ed-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: var(--text-base, 14px);
+    line-height: 1.5;
+  }
+  .ed-td {
+    position: relative;
+    border: 1px solid var(--border);
+    padding: 0;
+    vertical-align: top;
+    min-width: 84px;
+  }
+  .ed-table th.ed-td {
+    background: color-mix(in srgb, var(--t1, var(--text)) 4%, transparent);
+    font-weight: 650;
+    text-align: start;
+  }
+  .ed-cell {
+    padding: 7px 10px;
+    min-height: 1.5em;
+    outline: none;
+    cursor: text;
+    color: var(--t1, var(--text));
+    word-break: break-word;
+  }
+  .ed-cell:focus { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 3px; }
+  /* 删除行/列的小按钮：悬浮单元格才显 */
+  .ed-tdel {
+    position: absolute;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--wash-strong, var(--bg));
+    color: var(--t3, var(--text-muted));
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+    z-index: 2;
+  }
+  .ed-tdel:hover { color: var(--feedback-danger); border-color: var(--feedback-danger); }
+  .ed-tdel--col { top: -10px; inset-inline-end: 3px; }
+  .ed-tdel--row { top: 50%; inset-inline-start: -10px; transform: translateY(-50%); }
+  .ed-td:hover > .ed-tdel, .ed-cell:focus ~ .ed-tdel { opacity: 1; }
+  /* 加行/加列 */
+  .ed-tadd {
+    position: absolute;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px dashed color-mix(in srgb, var(--t1, var(--text)) 22%, transparent);
+    border-radius: var(--radius-control, 8px);
+    background: transparent;
+    color: var(--t3, var(--text-muted));
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease), background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+  }
+  .ed-tadd:hover { background: var(--wash); color: var(--t1, var(--text)); }
+  .ed-tadd--col { top: 0; bottom: 16px; inset-inline-end: 0; width: 15px; }
+  .ed-tadd--row { inset-inline: 0 18px; bottom: 0; height: 13px; }
+  .ed-tablewrap:hover .ed-tadd { opacity: 1; }
+
   /* 行内格式 */
   .ed-edit :global(strong) { font-weight: 700; }
+  .ed-edit :global(mark), .ed-cell :global(mark) {
+    background: color-mix(in srgb, var(--chart-hue-yellow) 30%, transparent);
+    color: inherit;
+    border-radius: 3px;
+    padding: 0 2px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
   .ed-edit :global(code) {
     font-family: var(--mono); font-size: 0.88em;
     background: color-mix(in srgb, var(--t1, var(--text)) 9%, transparent);
