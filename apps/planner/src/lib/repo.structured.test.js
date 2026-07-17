@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildListSyncRows, buildProjectSyncRows, buildTaskSyncRows } from './repo.js';
+import {
+  buildAttachmentSyncRows,
+  buildListSyncRows,
+  buildProjectSyncRows,
+  buildTaskSyncRows,
+} from './repo.js';
 
 describe('structured sync row builders', () => {
   it('buildTaskSyncRows maps task fields for upsert', () => {
@@ -58,5 +63,33 @@ describe('structured sync row builders', () => {
       { id: 'p1', title: 'Project', updatedAt: 200, deletedAt: 200 }
     ]);
     expect(rows[0].data.deletedAt).toBe(200);
+  });
+
+  it('buildAttachmentSyncRows maps owner fields for upsert', () => {
+    const rows = buildAttachmentSyncRows('user-1', [
+      {
+        id: 'a1',
+        ownerType: 'task',
+        ownerId: 't1',
+        kind: 'file',
+        updatedAt: 1_700_000_000_000,
+      },
+    ]);
+    expect(rows).toEqual([
+      {
+        user_id: 'user-1',
+        id: 'a1',
+        owner_type: 'task',
+        owner_id: 't1',
+        data: {
+          id: 'a1',
+          ownerType: 'task',
+          ownerId: 't1',
+          kind: 'file',
+          updatedAt: 1_700_000_000_000,
+        },
+        updated_at: new Date(1_700_000_000_000).toISOString(),
+      },
+    ]);
   });
 });

@@ -17,11 +17,11 @@ priority_model: 2026-07-12-single-branch
 | **PLAT.CI.0** | 远程 CI 全绿 | 🟡 修复已推；等最新 Actions 全绿 |
 | **FINC.PURCHASE.6.a** | closure QA | 🟡 anon revoke ✅ · Review 过滤拆分 ✅；剩 owner Confirm→Undo + 双 JWT + 视觉 |
 
-**本轮已收割：** `HOME.MCP.13` · `AIOS.STABLE.26` · `KNOW.VAULT.0` · `PLAT.USAGE.0` 首报 · FINC Review 过滤拆分 · Home auto-refine / 横幅 · Knowledge 表格。
+**本轮已收割：** `PLNR.ATTACH.0` · `HOME.MCP.13` · `AIOS.STABLE.26` · `KNOW.VAULT.0` · `PLAT.USAGE.0` 首报 · FINC Review 过滤拆分 · Home auto-refine / 横幅 · Knowledge 表格。
 
 ## Next
 
-`HOME.RECOG.1r` · `PLNR.UIUX.0` · `PLNR.ATTACH.0` · `KNOW.XREF.5` · `PLAT.USAGE.0b`
+`HOME.RECOG.1r` · `PLNR.UIUX.0` · `KNOW.XREF.5` · `PLAT.USAGE.0b`
 
 ## User Gate
 

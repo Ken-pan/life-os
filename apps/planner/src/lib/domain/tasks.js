@@ -2,6 +2,10 @@ import { S, save, uid, todayKey } from '../state.svelte.js';
 import { SYSTEM_LIST_INBOX, normalizeRecurrence } from '../types.js';
 import { nextDueDate, taskTemplateFrom } from './recurrence.js';
 import { syncRemindersToServiceWorker } from '../services/reminders.js';
+import {
+  restoreAttachmentsForOwner,
+  softDeleteAttachmentsForOwner,
+} from '../services/attachmentService.js';
 
 let reminderTimer = null;
 
@@ -114,6 +118,7 @@ export function toggleComplete(id) {
 export function deleteTask(id) {
   const now = Date.now();
   S.tasks = S.tasks.map((t) => (t.id === id ? { ...t, deletedAt: now, updatedAt: now } : t));
+  softDeleteAttachmentsForOwner('task', id);
   afterMutation();
 }
 
@@ -122,7 +127,9 @@ export function deleteTask(id) {
 export function restoreTask(id) {
   const task = S.tasks.find((t) => t.id === id);
   if (!task?.deletedAt) return null;
-  return updateTask(id, { deletedAt: null });
+  const next = updateTask(id, { deletedAt: null });
+  restoreAttachmentsForOwner('task', id);
+  return next;
 }
 
 /** @param {string} id @param {number} direction -1 up, 1 down */

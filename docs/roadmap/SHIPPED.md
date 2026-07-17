@@ -10,7 +10,8 @@
 
 | 主线 | 发货项 / 里程碑 | 证据 |
 | --- | --- | --- |
-| Home | **HOME.MCP.13** `where_is`：`home.storage_snapshots`（生产）+ 防抖同步 · `/api/mcp` · `test:where-is`；AIOS 配 URL+JWT | 本提交 · migration `20260717220000` |
+| Planner | **PLNR.ATTACH.0** 生产 `planner_attachments` + bucket/RLS · retry File 缓存 · bug 上报失败路径 · task/project 软删级联 · unit | 本提交 · `20260709232245` |
+| Home | **HOME.MCP.13** `where_is`：`home.storage_snapshots`（生产）+ 防抖同步 · `/api/mcp` · `test:where-is`；AIOS 配 URL+JWT | `6ee4a26e` · migration `20260717220000` |
 | AIOS | **AIOS.STABLE.26** 核心链路回归：chat wire / 云 LWW·墓碑 / AIOS.20 快照 / AIOS.21 payload / local tools；`npm test -w aios-os` **25/25** | `3648e779` · `*.core.js` |
 | Finance | Review Needed **排除 `unsupported_source`**（`matchesPurchaseStateFilter`） | `3648e779` · finance-core |
 | CI | **PLAT.CI.0 修复推送：** Home 认亲组件 token 化；portal light accent 对比度 ≥3:1 | `c8bdc905` |

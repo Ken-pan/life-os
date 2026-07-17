@@ -1,4 +1,5 @@
 import { S, save, uid } from '../state.svelte.js'
+import { softDeleteAttachmentsForOwner } from '../services/attachmentService.js'
 
 /** @param {string} value */
 function slugify(value) {
@@ -87,6 +88,7 @@ export function deleteProject(id) {
   S.projects = S.projects.map((project) =>
     project.id === id ? { ...project, deletedAt: now, updatedAt: now } : project,
   )
+  softDeleteAttachmentsForOwner('project', id)
   save()
 }
 

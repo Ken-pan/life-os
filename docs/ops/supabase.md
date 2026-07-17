@@ -121,7 +121,7 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 | **PLNR.CORE.5** | 平台 `08200000` fitness trigger | `fitness.workout_logged` | ✅ | ✅ inbox 打卡分支 | ✅ GYMS.EVENTS.1 | **✅ Shipped** |
 | **PLNR.CORE.6** | — | —（客户端 Auth） | N/A | ✅ `@life-os/sync` 单例 | ✅ `supabaseClient.test.mjs` | **✅ Shipped** |
 | **PLNR.CORE.4** | `20260712200000`（tz + tombstone） | `portal_today_summary()` 读 `planner_tasks` | ✅ RPC | ✅ `selectTodayGroups` 与 RPC 谓词对齐 · `selectors.test.js` 9/9 | ✅ 2026-07-13 | **✅ Shipped** |
-| **PLNR.ATTACH.0** | _(未建)_ | Storage + metadata | ❌ | ❌ | ❌ | **❌ Not started** · §Next |
+| **PLNR.ATTACH.0** | `20260709232245` | `planner_attachments` + bucket `planner-attachments` + Storage RLS | ✅ | ✅ | ✅ | **✅ Applied 2026-07-17** · table/bucket/policies 生产已就绪 |
 | **PAPR.DATA.verify** | `10000500_add_paper_device_snapshot_rpc` | `paper_device_config` · `paper_device_snapshot()` | ✅ | ✅ `/api/paper/*` · device `ApiClient` | ✅ PASS 2026-07-11 | **✅ Shipped** |
 | **PAPR.WRITE.5** | `09200000_add_paper_device_actions` | `paper_device_actions` | ❌ **表不存在** | ✅ `paperService.mjs` · `PAPER_ACTIONS_WRITE_ENABLED` 默认 off | ⏳ staging gate 未关 | **🟡 Code ✅ · DB ⏳ BLOCKED** · Hub Deferred |
 | **PAPR.SYNC.6** | _(blocked)_ | — | 🔒 | 🟡 client sync only | 🔒 依赖 PAPR.SYS.2 | **🔒 Blocked** |
@@ -145,7 +145,7 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 
 1. **PAPR.WRITE.5** — apply `09200000` 到 staging → gate → 生产；写开关仍默认 off
 2. **PLNR.CORE.4** — 纯 app/RPC 口径对齐（无 migration）
-3. **PLNR.ATTACH.0** — 新建 migration + Storage policies
+3. ~~**PLNR.ATTACH.0**~~ — `planner_attachments` + `planner-attachments` bucket/RLS ✅ 2026-07-17
 4. **PLNR.CORE.1** — 可选：VAPID + `planner-reminder-push` cron 生产验收
 
 ## App 级 schema（同项目，分 schema / 前缀）

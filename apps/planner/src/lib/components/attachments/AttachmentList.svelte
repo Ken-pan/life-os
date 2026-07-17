@@ -71,7 +71,17 @@
           <!-- Actions -->
           <div class="actions">
             {#if att.status === 'failed'}
-              <button class="icon-btn" onclick={() => retryAttachmentUpload(att.id)} title={t('attachments.retry', 'Retry')}>
+              <button
+                class="icon-btn"
+                onclick={async () => {
+                  try {
+                    await retryAttachmentUpload(att.id)
+                  } catch (err) {
+                    console.warn('retryAttachmentUpload:', err?.message ?? err)
+                  }
+                }}
+                title={t('attachments.retry', 'Retry')}
+              >
                 <Icon name="refresh-cw" size="16" />
               </button>
             {/if}

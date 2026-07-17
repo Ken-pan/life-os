@@ -47,7 +47,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | 1 | **PLAT.CI.0** | 恢复 master 交付可信度 | Platform | **P0** | 🔥 | <0.5d | 样式 + portal 对比度已推；等远程 Actions 全绿证明 |
 | 2 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.5d | anon revoke ✅ · Review 过滤拆分 ✅；剩 **owner Confirm→Undo 真机**、双真实 JWT、视觉基线 |
 
-**已收割（2026-07-17 夜）：** `HOME.MCP.13`（`where_is` + `storage_snapshots`）✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+**已收割（2026-07-17 夜）：** `PLNR.ATTACH.0`（生产表/桶 + retry/cascade）✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
 **User config（不占 Agent 主航道）：** Home 部署后，AIOS 设置 → MCP 加 `https://home.kenos.space/api/mcp` + Life OS access token；Home 登录打开 `/storage` 触发快照同步。
 
@@ -86,9 +86,9 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | **HOME.RECOG.1r** | 认亲残余（窄） | Home | P2 | ◆ | 0.5–1d | 区域级高精度补扫；质量摘要观感签收；可选 group-merge |
 | 2 | **PLNR.UIUX.0** | Planner 定向 UI 收口 | Planner | P2 | ◆ | 1d | 只扫未覆盖页面与现存 warning；不做无边界全站重做 |
-| 3 | **PLNR.ATTACH.0** | 附件 WIP 决策与落地 | Planner | P2 | ◆ | 1d | 补 migration+测试+上传/删除/预览，或移除死入口 |
-| 4 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用试点加深 | Knowledge | P2 | ◆◆ | 1–2d | 在 Planner↔Knowledge 试点上稳定引用契约；不合并业务表 |
-| 5 | **PLAT.USAGE.0b** | 用量审计节奏化 | Platform | P2 | ◆ | 0.5d | 月度复跑 `npm run qa:usage-audit`；补 AIOS/Knowledge/Health 本机探针 |
+| 3 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用试点加深 | Knowledge | P2 | ◆◆ | 1–2d | 在 Planner↔Knowledge 试点上稳定引用契约；不合并业务表 |
+| 4 | **PLAT.USAGE.0b** | 用量审计节奏化 | Platform | P2 | ◆ | 0.5d | 月度复跑 `npm run qa:usage-audit`；补 AIOS/Knowledge/Health 本机探针 |
+| 5 | **PLNR.ATTACH.1** | 图片缩略图 / paste 体验 | Planner | P2 | ◆ | 1d | ATTACH.0 地基已绿后的体验刀 |
 
 **后移：** `HOME.PROJ.7`（无第二真实项目不造多项目）、`KNOW.SYNC.1`（先 watcher）、`MUSC.PIPE.4` / `GYMS.MEDIA.3` / `GYMS.SYNC.4`（维护级）、Portal 硬凑本地优先 app 卡。
 
@@ -108,11 +108,11 @@ Phase 1 — 信任收割（用户 gate 重）
   FINC.PURCHASE.6.a owner Confirm→Undo + 双 JWT + 视觉基线
 
 Phase 2 — 窄残余 / 生产收口（按需）
-  HOME.RECOG.1r → PLNR.UIUX.0 → PLNR.ATTACH.0 → KNOW.XREF.5
+  HOME.RECOG.1r → PLNR.UIUX.0 → KNOW.XREF.5
 
 已完成本轮
-  HOME.MCP.13 · AIOS.STABLE.26 · KNOW.VAULT.0 · PLAT.USAGE.0 首报
-  FINC RPC anon revoke · FINC Review 过滤拆分
+  PLNR.ATTACH.0 · HOME.MCP.13 · AIOS.STABLE.26 · KNOW.VAULT.0
+  PLAT.USAGE.0 首报 · FINC RPC anon revoke · FINC Review 过滤拆分
 
 并行用户 gate
   PLNR.SCHED.10b.ios + PLNR.CAPTURE.0 · HLT-5 · HOME.RECOG.refine · Knowledge 原生 rebuild 验 watcher

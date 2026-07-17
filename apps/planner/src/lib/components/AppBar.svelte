@@ -27,33 +27,31 @@
   const hasTools = $derived(showMobileSettings)
 
   async function handleBugSubmit({ title: bugTitle, notes, severity, screenshot, diagnostics }) {
-    let projectId = null;
+    let projectId = null
     if (pathname.startsWith('/projects/')) {
-      const parts = pathname.split('/');
+      const parts = pathname.split('/')
       if (parts.length > 2 && parts[2]) {
-        projectId = parts[2];
+        projectId = parts[2]
       }
     }
 
-    // Create Bug Task
+    // Create Bug Task (local first). Upload failures must reject so ReportBugButton
+    // shows error instead of a false "submitted successfully" toast.
     const task = createTask({
       title: bugTitle,
       notes,
-      priority: severity === 'high' ? 'P1' : (severity === 'low' ? 'P3' : 'P2'),
+      priority: severity === 'high' ? 'P1' : severity === 'low' ? 'P3' : 'P2',
       projectId,
       tags: ['bug'],
-    });
+    })
 
-    // Create diagnostics log attachment
-    const logContent = JSON.stringify(diagnostics, null, 2);
-    const logBlob = new Blob([logContent], { type: 'application/json' });
-    const logFile = new File([logBlob], 'diagnostics.json', { type: 'application/json' });
+    const logContent = JSON.stringify(diagnostics, null, 2)
+    const logBlob = new Blob([logContent], { type: 'application/json' })
+    const logFile = new File([logBlob], 'diagnostics.json', { type: 'application/json' })
 
-    await uploadAttachment('task', task.id, logFile, 'system');
-
-    // Upload screenshot if provided
+    await uploadAttachment('task', task.id, logFile, 'bug-report')
     if (screenshot) {
-      await uploadAttachment('task', task.id, screenshot, 'bug-report');
+      await uploadAttachment('task', task.id, screenshot, 'bug-report')
     }
   }
 </script>

@@ -36,7 +36,7 @@ P2  HOME.RECOG.1r → PLNR.* → object_ref
 | 1 | **PLAT.CI.0** | P0 | 🔥 | <0.5d | 远程全绿仍是开关 |
 | 2 | **FINC.PURCHASE.6.a closure** | P1 | 🔥 | 0.5d | 信任锚点；过滤拆分已做，剩 owner QA |
 | 3 | **HOME.RECOG.1r** | P2 | ◆ | 0.5–1d | 区域高精度 / 摘要签收 |
-| 4 | **PLNR.UIUX.0 / ATTACH.0** | P2 | ◆ | 1d | 生产收口按需 |
+| 4 | **PLNR.UIUX.0** | P2 | ◆ | 1d | 生产收口按需（ATTACH.0 已收） |
 | 5 | **KNOW.XREF.5** | P2 | ◆◆ | 1–2d | object_ref 试点加深 |
 
 ## 每个 App 未来 7 天只做一件事

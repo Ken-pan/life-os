@@ -30,7 +30,7 @@
 | **PLNR.UIUX.0**      | 定向 UI 收口（未覆盖页 + 静态 warning） | ◆   | Product | 1d | Fable | PageShell/核心页已收敛；只检查未覆盖页面、4 条现存 warning 与 task display，不做全站重构 | §Next |
 | **PLNR.CAPTURE.0**   | iOS/移动端任务捕获统一 | ◆   | Product | gate | Code ✅ · Ken iOS | unit/E2E/截图 ✅；真机 IME + 键盘 gate ⏳ | PLNR.UIUX.0 |
 | ~~**PLNR.CORE.4**~~  | Today 计数与 `portal_today_summary` 对齐   | ◆   | Growth  | —    | Cursor / Codex（快赢） | ✅ 已发货 2026-07-13 — RPC tz+tombstone (`ce475c75`) · `selectTodayGroups` 谓词与 RPC `todayOpen`/`overdue` 逐项一致（Portal 分行展示今日/逾期，与 Planner 分组同口径）· `selectors.test.js` parity 契约 9/9 | ✅ |
-| **PLNR.ATTACH.0**    | 附件 WIP 决策与落地                    | ◆  | Core    | 1d | Codex | 现有 UI/service 已挂 Task/Project，但生产 `planner_attachments` 表和 `planner-attachments` 桶均不存在、无专项测试；补 migration+测试+上传/删除/预览，或移除死入口 | §Next |
+| **PLNR.ATTACH.0**    | 附件 WIP 决策与落地                    | ◆  | Core    | — | Codex | ✅ 生产表/桶/RLS 已 apply · retry 缓存 File · bug 上报上传失败会 reject · 软删随 task/project · unit 覆盖 validate/safeFilename/sync rows | ✅ |
 | **PLNR.ATTACH.1**    | 图片与截图体验                             | ◆   | Product | 1d   | Fable                  | paste / drag-drop / mobile picker / thumbnail / retry                   | —           |
 
 **PaperOS 设备 Shell（`PAPR.*`）排期已迁出独立仓库** — 见 [`paperos.md`](./paperos.md)；本表仅追踪 Planner 侧 provider API。
