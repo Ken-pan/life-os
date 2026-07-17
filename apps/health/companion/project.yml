@@ -1,0 +1,50 @@
+# XcodeGen 规范 —— 一条命令生成 HealthOS Companion.xcodeproj。
+#   brew install xcodegen && cd apps/health/companion && xcodegen
+# 然后 open HealthOSCompanion.xcodeproj,选自己的开发团队(签名)即可 Build 到设备。
+#
+# 无法在本仓库的沙盒里构建/签名/部署 iOS·watchOS(需 Xcode + Apple 开发者账号 + 真机),
+# 故以 XcodeGen 规范交付,而非 hand-write 的 pbxproj。
+name: HealthOSCompanion
+options:
+  bundleIdPrefix: space.kenos.healthos
+  deploymentTarget:
+    iOS: "16.0"
+    watchOS: "9.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: "" # ← 填你的 Apple 开发者 Team ID,或在 Xcode 里选 Team
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  HealthOSCompanion:
+    type: application
+    platform: iOS
+    sources:
+      - path: iOS
+      - path: Shared
+    info:
+      path: iOS/Info.plist
+    entitlements:
+      path: iOS/HealthOSCompanion.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.healthos.companion
+        GENERATE_INFOPLIST_FILE: NO
+    dependencies:
+      - target: HealthOSWatch
+
+  HealthOSWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Watch
+      - path: Shared
+    info:
+      path: Watch/Info.plist
+    entitlements:
+      path: Watch/HealthOSWatch.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.healthos.companion.watchkitapp
+        GENERATE_INFOPLIST_FILE: NO
+        WKCompanionAppBundleIdentifier: space.kenos.healthos.companion

@@ -19,9 +19,12 @@ HealthOS Focus 模块(vibe coding 防沉迷)的检测与干预核心,由 vibegua
 | `GET /sessions` | Build Session 历史(`sessions.jsonl`,净累积 ≥1 分钟起算) |
 | `GET /events` | 干预记录(`events.jsonl`:预警/赎回/休息/暂停…) |
 | `GET /config` | 生效配置 |
-| `GET /health` | Apple Health 导入的近 30 天测量数据(睡眠/静息心率/HRV/步数) |
+| `GET /health` | 近 60 天测量数据(睡眠/静息心率/HRV/步数) |
 | `POST /action` | `{"type":"break"\|"pause30"\|"pause2h"\|"pauseToday"\|"resume"}` |
 | `POST /policy` | HLT-3 自适应窗口:`{limitSeconds, reason}` 设当日覆盖(5–60 分钟钳制,按日过期),`{clear:true}` 清除 |
+| `POST /ingest` | 伴侣 app 投递健康样本:`{days:[{date,sleepHours?,restingHR?,hrv?,steps?}]}`,按 `date` upsert |
+
+另有 **inbox 扫描**(启动时 + 每 30s):读本地 `inbox/` 与 iCloud Drive `iCloud~space~kenos~healthos/Documents/inbox` 里伴侣 app 投递的 `*.json`,摄入后删除。详见 [`../companion/README.md`](../companion/README.md)。
 
 `GET /state` 额外暴露 `limitSeconds`(生效窗口=自适应覆盖优先)、`baseLimitSeconds`(config 基准)、`policyReason`。
 

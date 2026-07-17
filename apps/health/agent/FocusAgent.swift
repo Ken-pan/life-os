@@ -358,6 +358,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         setupStatusItem()
         startTicking()
+        try? FileManager.default.createDirectory(
+            at: dir.appendingPathComponent("inbox"), withIntermediateDirectories: true)
+        scanInbox()
+        // 伴侣 app 经 iCloud/本地 inbox 投递:每 30 秒扫一次
+        let inboxTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            self?.scanInbox()
+        }
+        inboxTimer.tolerance = 5
         server = AgentServer(port: UInt16(config.httpPort)) { [weak self] method, path, body in
             self?.route(method: method, path: path, body: body) ?? (500, Data("{}".utf8))
         }
@@ -369,7 +377,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         wc.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             self?.resetScore(reason: "系统唤醒", kind: "sleep")
         }
-        log("healthos-focus-agent v3.1 启动 (limit=\(config.limitSeconds)s rest=\(config.restSeconds)s warn=\(config.warnSeconds)s http=\(config.httpPort))")
+        log("healthos-focus-agent v3.2 启动 (limit=\(config.limitSeconds)s rest=\(config.restSeconds)s warn=\(config.warnSeconds)s http=\(config.httpPort) inbox=on)")
         logEvent("agent_started", detail: nil)
     }
 
@@ -397,7 +405,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let data = (try? Data(contentsOf: dir.appendingPathComponent("config.json"))) ?? Data("{}".utf8)
             return (200, data)
         case ("GET", "/health"):
-            return (200, json(["days": readJsonl("health.jsonl", limit: 30)]))
+            return (200, json(["days": readJsonl("health.jsonl", limit: 60)]))
+        case ("POST", "/ingest"):
+            // 伴侣 app 投递健康样本:{days:[{date,sleepHours?,restingHR?,hrv?,steps?}]}
+            guard let body,
+                  let obj = try? JSONSerialization.jsonObject(with: body) else { return (400, json(["ok": false])) }
+            let days = (obj as? [String: Any])?["days"] as? [[String: Any]] ?? (obj as? [[String: Any]])
+            guard let days else { return (400, json(["ok": false, "error": "days[] required"])) }
+            let n = ingestHealth(days: days)
+            log("POST /ingest 摄入 \(days.count) 条,现有 \(n) 天")
+            return (200, json(["ok": true, "days": n]))
         case ("POST", "/policy"):
             // HLT-3:State Engine 推来当日专注窗口覆盖 {limitSeconds, reason}。清除传 {clear:true}
             guard let body,
@@ -540,12 +557,67 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return -1
         }
         let rows = delegate.finish()
-        let out = rows.map { (try? JSONSerialization.data(withJSONObject: $0)).flatMap { String(data: $0, encoding: .utf8) } ?? "" }
-            .filter { !$0.isEmpty }
+        return ingestHealth(days: rows)
+    }
+
+    // MARK: 健康数据摄入(伴侣 app / 导入共用)
+    //
+    // 单一 upsert 入口:按 date 合并进 health.jsonl(逐字段覆盖,保留旧字段),
+    // 排序去重,只留最近 60 天。Watch/iPhone 伴侣 app 经 POST /ingest 或 iCloud
+    // inbox 投递,与 --import-health 走同一条落盘路径。返回落盘的天数。
+    @discardableResult
+    func ingestHealth(days newDays: [[String: Any]]) -> Int {
+        var byDate: [String: [String: Any]] = [:]
+        // 读现有
+        for row in readJsonl("health.jsonl", limit: 400) {
+            if let d = row["date"] as? String { byDate[d] = row }
+        }
+        // 合并新数据(逐字段 upsert)
+        for day in newDays {
+            guard let d = day["date"] as? String else { continue }
+            var merged = byDate[d] ?? ["date": d]
+            for (k, v) in day where k != "date" { merged[k] = v }
+            byDate[d] = merged
+        }
+        // 排序、截断最近 60 天
+        let sorted = byDate.keys.sorted().suffix(60).map { byDate[$0]! }
+        let out = sorted
+            .compactMap { (try? JSONSerialization.data(withJSONObject: $0)).flatMap { String(data: $0, encoding: .utf8) } }
             .joined(separator: "\n")
         try? (out + (out.isEmpty ? "" : "\n")).data(using: .utf8)?
             .write(to: dir.appendingPathComponent("health.jsonl"))
-        return rows.count
+        return sorted.count
+    }
+
+    /// 扫描 inbox 里的 *.json 投递(伴侣 app 写入),摄入后删除。
+    /// 两个投递口:本地 inbox/ 与 iCloud Drive(伴侣 app 写 iCloud,同步到 Mac,无需联网)。
+    /// 文件格式:{"days":[{date,sleepHours?,restingHR?,hrv?,steps?}]} 或裸数组。
+    func inboxDirs() -> [URL] {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        return [
+            dir.appendingPathComponent("inbox", isDirectory: true),
+            // iCloud Drive 容器(伴侣 app 的 iCloud.space.kenos.healthos)。裸二进制无需
+            // entitlement 也能读已同步到本地的文件。
+            home.appendingPathComponent(
+                "Library/Mobile Documents/iCloud~space~kenos~healthos/Documents/inbox",
+                isDirectory: true),
+        ]
+    }
+
+    func scanInbox() {
+        var total = 0
+        for inbox in inboxDirs() {
+            guard let files = try? FileManager.default.contentsOfDirectory(
+                at: inbox, includingPropertiesForKeys: nil) else { continue }
+            for f in files where f.pathExtension == "json" {
+                guard let data = try? Data(contentsOf: f) else { continue }
+                let obj = try? JSONSerialization.jsonObject(with: data)
+                let days = (obj as? [String: Any])?["days"] as? [[String: Any]] ?? (obj as? [[String: Any]])
+                if let days { ingestHealth(days: days); total += days.count }
+                try? FileManager.default.removeItem(at: f)
+            }
+        }
+        if total > 0 { log("inbox 摄入 \(total) 条健康样本") }
     }
 
     // MARK: 事件与 session 落盘

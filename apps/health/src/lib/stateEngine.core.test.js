@@ -1,9 +1,8 @@
-// State Engine v0 纯函数测试(零 $lib/$app 依赖,node --test 直接跑)
+// State Engine v1 纯函数测试(信号驱动,零 $lib/$app 依赖,node --test 直接跑)
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   deriveState,
-  latestCheckin,
   recentSleeps,
   healthDaysToSleepObs,
   recommendPolicy,
@@ -11,7 +10,22 @@ import {
 } from './stateEngine.core.js'
 
 const NOW = Date.parse('2026-07-16T14:00:00')
-const HOUR = 3600 * 1000
+
+const day = (n) => {
+  const d = new Date(NOW)
+  d.setDate(d.getDate() - n)
+  const p = (x) => String(x).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+/** N 天历史基线(默认 6 天,足够建基线) */
+const history = ({ hrv = 50, rhr = 56, sleep = 7.5, steps = 8000, n = 6 } = {}) =>
+  Array.from({ length: n }, (_, i) => ({
+    date: day(i + 1),
+    hrv,
+    restingHR: rhr,
+    sleepHours: sleep,
+    steps,
+  }))
 
 const agentIdle = {
   online: true,
@@ -24,141 +38,116 @@ const agentIdle = {
   warnsToday: 0,
 }
 
-test('无任何数据:全 unknown,headline 提示先记录', () => {
-  const { dims, headline } = deriveState({ now: NOW, observations: [], agent: { online: false } })
-  for (const k of DIMENSION_ORDER) {
+test('无任何数据:关键维度 unknown,headline 引导连数据', () => {
+  const { dims, headline } = deriveState({ now: NOW, health: [], agent: { online: false } })
+  for (const k of ['energy', 'stress', 'sleepDebt', 'physical']) {
     assert.equal(dims[k].level, 'unknown', k)
-    assert.ok(dims[k].reasons.length > 0, `${k} 必须解释缺什么`)
+    assert.ok(dims[k].reasons.length > 0, `${k} 要解释缺什么`)
   }
   assert.equal(headline.k, 'state.h_noData')
 })
 
-test('每个维度都必须带 reasons(可解释性合同)', () => {
-  const obs = [
-    { ts: NOW - HOUR, type: 'checkin', energy: 4, stress: 2 },
-    { ts: NOW - 6 * HOUR, type: 'sleep', hours: 7.5 },
-  ]
-  const { dims } = deriveState({ now: NOW, observations: obs, agent: agentIdle })
+test('每个维度都带 reasons(可解释性合同)', () => {
+  const health = [{ date: day(0), hrv: 52, restingHR: 55, sleepHours: 7.5, steps: 9000 }, ...history()]
+  const { dims } = deriveState({ now: NOW, health, agent: agentIdle })
   for (const k of DIMENSION_ORDER) {
     assert.ok(dims[k].reasons.length > 0, `${k} 缺 reasons`)
     for (const r of dims[k].reasons) assert.match(r.k, /^state\.r_/)
   }
 })
 
-test('良好状态:精力足/压力低/睡眠够 → allGood', () => {
-  const obs = [
-    { ts: NOW - HOUR, type: 'checkin', energy: 4, stress: 2 },
-    { ts: NOW - 6 * HOUR, type: 'sleep', hours: 7.5 },
-  ]
-  const { dims, headline } = deriveState({ now: NOW, observations: obs, agent: agentIdle })
-  assert.equal(dims.energy.level, 'good')
-  assert.equal(dims.stress.level, 'good')
+test('测量良好(睡够/HRV 达基线/静息心率正常)→ allGood,零手动输入', () => {
+  const health = [{ date: day(0), hrv: 52, restingHR: 55, sleepHours: 7.5, steps: 9000 }, ...history()]
+  const { dims, headline } = deriveState({ now: NOW, health, agent: agentIdle })
   assert.equal(dims.sleepDebt.level, 'good')
+  assert.equal(dims.stress.level, 'good')
+  assert.equal(dims.recovery.level, 'good')
+  assert.equal(dims.energy.level, 'good')
   assert.equal(dims.physical.level, 'good')
   assert.equal(headline.k, 'state.h_allGood')
 })
 
-test('高负荷少休息 → recovery watch,并成为 headline', () => {
-  const obs = [
-    { ts: NOW - HOUR, type: 'checkin', energy: 4, stress: 2 },
-    { ts: NOW - 6 * HOUR, type: 'sleep', hours: 7.5 },
-  ]
-  const agent = { ...agentIdle, todayNetMinutes: 130, breaksToday: 0 }
-  const { dims, headline } = deriveState({ now: NOW, observations: obs, agent })
-  assert.equal(dims.recovery.level, 'watch')
-  assert.equal(headline.k, 'state.h_recovery')
-})
-
-test('长负荷会把精力下调一档并解释', () => {
-  const obs = [
-    { ts: NOW - HOUR, type: 'checkin', energy: 4, stress: 2 },
-    { ts: NOW - 6 * HOUR, type: 'sleep', hours: 7.5 },
-  ]
-  const agent = { ...agentIdle, todayNetMinutes: 180, breaksToday: 3 }
-  const { dims } = deriveState({ now: NOW, observations: obs, agent })
-  assert.equal(dims.energy.level, 'ok')
-  assert.ok(dims.energy.reasons.some((r) => r.k === 'state.r_highLoad'))
-})
-
-test('压力反向量表 + 多次预警上调:stress 5 → bad 优先级最高', () => {
-  const obs = [
-    { ts: NOW - HOUR, type: 'checkin', energy: 2, stress: 4 },
-    { ts: NOW - 6 * HOUR, type: 'sleep', hours: 5.5 },
-  ]
-  const agent = { ...agentIdle, warnsToday: 2 }
-  const { dims, headline } = deriveState({ now: NOW, observations: obs, agent })
+test('HRV 显著低于基线 → 压力 bad(HRV 是自主神经压力代理)', () => {
+  const health = [{ date: day(0), hrv: 32, restingHR: 56, sleepHours: 7.5 }, ...history()]
+  const { dims, headline } = deriveState({ now: NOW, health, agent: agentIdle })
   assert.equal(dims.stress.level, 'bad')
-  assert.ok(dims.stress.reasons.some((r) => r.k === 'state.r_warns'))
+  assert.ok(dims.stress.reasons.some((r) => r.k === 'state.r_hrvToday'))
   assert.equal(headline.k, 'state.h_stress')
 })
 
-test('单晚睡够但近几晚均值欠债 → good 降为 ok', () => {
-  const obs = [
-    { ts: NOW - 54 * HOUR, type: 'sleep', hours: 5 },
-    { ts: NOW - 30 * HOUR, type: 'sleep', hours: 5.5 },
-    { ts: NOW - 6 * HOUR, type: 'sleep', hours: 8 },
-  ]
-  const { dims } = deriveState({ now: NOW, observations: obs, agent: agentIdle })
-  assert.equal(dims.sleepDebt.level, 'ok')
-  assert.ok(dims.sleepDebt.reasons.some((r) => r.k === 'state.r_sleepAvg'))
+test('静息心率高于基线 +10 → 恢复 bad,精力被下调', () => {
+  const health = [{ date: day(0), hrv: 50, restingHR: 66, sleepHours: 7.5 }, ...history()]
+  const { dims } = deriveState({ now: NOW, health, agent: agentIdle })
+  assert.equal(dims.recovery.level, 'bad')
+  assert.ok(dims.recovery.reasons.some((r) => r.k === 'state.r_rhrToday'))
+  assert.notEqual(dims.energy.level, 'good') // rhr 升高把精力从 good 压下来
 })
 
-test('只有代理数据、手动维度大面积缺数据 → 不宣称状态不错,引导记录', () => {
-  const { dims, headline } = deriveState({ now: NOW, observations: [], agent: agentIdle })
-  assert.equal(dims.focus.level, 'good')
-  assert.equal(headline.k, 'state.h_noData')
+test('昨晚睡眠不足 → 睡眠债 bad(测量,非手动)', () => {
+  const health = [{ date: day(0), hrv: 50, restingHR: 56, sleepHours: 4.5 }, ...history()]
+  const { dims, headline } = deriveState({ now: NOW, health, agent: agentIdle })
+  assert.equal(dims.sleepDebt.level, 'bad')
+  assert.ok(dims.sleepDebt.reasons.some((r) => r.k === 'state.r_sleepLastMeasured'))
+  assert.equal(headline.k, 'state.h_sleepDebt')
+})
+
+test('有今日 HRV 但历史不足 4 天 → 压力 unknown,提示基线不足', () => {
+  const health = [
+    { date: day(0), hrv: 45 },
+    { date: day(1), hrv: 50 },
+    { date: day(2), hrv: 50 },
+  ]
+  const { dims } = deriveState({ now: NOW, health, agent: agentIdle })
+  assert.equal(dims.stress.level, 'unknown')
+  assert.ok(dims.stress.reasons.some((r) => r.k === 'state.r_needBaseline'))
+})
+
+test('多次逼近强制休息把压力再压一档', () => {
+  const health = [{ date: day(0), hrv: 46, restingHR: 56, sleepHours: 7.5 }, ...history()] // 46/50=0.92 → ok
+  const base = deriveState({ now: NOW, health, agent: agentIdle })
+  assert.equal(base.dims.stress.level, 'ok')
+  const warned = deriveState({ now: NOW, health, agent: { ...agentIdle, warnsToday: 2 } })
+  assert.equal(warned.dims.stress.level, 'watch')
+})
+
+test('无生理信号但代理在线:恢复回落到负荷启发式', () => {
+  const { dims } = deriveState({
+    now: NOW,
+    health: [],
+    agent: { ...agentIdle, todayNetMinutes: 130, breaksToday: 0 },
+  })
+  assert.equal(dims.recovery.level, 'watch')
 })
 
 test('focus 相位:休息中 → ok;接近窗口 → watch', () => {
-  const breaking = deriveState({
-    now: NOW,
-    observations: [],
-    agent: { ...agentIdle, phase: 'breaking' },
-  })
+  const breaking = deriveState({ now: NOW, health: [], agent: { ...agentIdle, phase: 'breaking' } })
   assert.equal(breaking.dims.focus.level, 'ok')
   assert.equal(breaking.headline.k, 'state.h_breaking')
-
-  const near = deriveState({
-    now: NOW,
-    observations: [],
-    agent: { ...agentIdle, score: 1100 },
-  })
+  const near = deriveState({ now: NOW, health: [], agent: { ...agentIdle, score: 1100 } })
   assert.equal(near.dims.focus.level, 'watch')
 })
 
-test('选择器:过期 check-in 不算;睡眠 24h 外不算昨晚', () => {
-  const stale = [{ ts: NOW - 20 * HOUR, type: 'checkin', energy: 5, stress: 1 }]
-  assert.equal(latestCheckin(stale, NOW), null)
+test('recentSleeps:今天/昨天算昨晚,>36h 外不算', () => {
+  const fresh = [{ date: day(2), sleepHours: 5 }, { date: day(1), sleepHours: 5.5 }, { date: day(0), sleepHours: 8 }]
+  const r = recentSleeps(fresh, NOW)
+  assert.equal(r.last.hours, 8)
+  assert.equal(r.recent.length, 3)
 
-  const old = [{ ts: NOW - 30 * HOUR, type: 'sleep', hours: 8 }]
-  assert.equal(recentSleeps(old, NOW).last, null)
-  assert.equal(recentSleeps(old, NOW).recent.length, 1)
+  const stale = [{ date: day(3), sleepHours: 8 }]
+  assert.equal(recentSleeps(stale, NOW).last, null)
 })
 
-test('测量睡眠优先于手动:同一晚 health 覆盖 manual', () => {
-  const night = Date.parse('2026-07-16T08:00:00')
-  const obs = [
-    { ts: night, type: 'sleep', hours: 8, source: undefined }, // 手动高报
-    { ts: night + 60_000, type: 'sleep', hours: 5.5, source: 'health' }, // 测量偏低
-  ]
-  const { last, recent } = recentSleeps(obs, night + 2 * HOUR)
-  assert.equal(recent.length, 1, '同一晚只留一条')
-  assert.equal(last.source, 'health')
-  assert.equal(last.hours, 5.5)
-})
-
-test('healthDaysToSleepObs:只取有 sleepHours 的天,标 source', () => {
+test('healthDaysToSleepObs:只取有 sleepHours 的天', () => {
   const obs = healthDaysToSleepObs([
     { date: '2026-07-15', sleepHours: 6.5, restingHR: 57 },
-    { date: '2026-07-14', restingHR: 58 }, // 无睡眠 → 跳过
+    { date: '2026-07-14', restingHR: 58 },
   ])
   assert.equal(obs.length, 1)
   assert.equal(obs[0].type, 'sleep')
-  assert.equal(obs[0].source, 'health')
   assert.equal(obs[0].hours, 6.5)
 })
 
-test('recommendPolicy:状态好不覆盖;睡眠债 bad → 12 分钟', () => {
+test('recommendPolicy:状态好不覆盖;睡眠债 bad → 12 分钟;watch → 16', () => {
   const good = recommendPolicy(
     { sleepDebt: { level: 'good' }, stress: { level: 'ok' }, recovery: { level: 'good' }, energy: { level: 'good' } },
     20,

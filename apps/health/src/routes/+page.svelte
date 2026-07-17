@@ -2,13 +2,7 @@
   import { onMount } from 'svelte'
   import { t } from '$lib/i18n/index.js'
   import { A, act, pushPolicy, pollState, refreshDetails } from '$lib/agent.svelte.js'
-  import { OBS, logCheckin, logSleep } from '$lib/stateEngine.svelte.js'
-  import {
-    deriveState,
-    healthDaysToSleepObs,
-    recommendPolicy,
-    DIMENSION_ORDER,
-  } from '$lib/stateEngine.core.js'
+  import { deriveState, recommendPolicy, DIMENSION_ORDER } from '$lib/stateEngine.core.js'
 
   let nowMs = $state(Date.now())
 
@@ -60,12 +54,10 @@
     }
   })
 
-  // Observe:手动观察 + Apple Health 测量睡眠(measured 在引擎里按日覆盖 manual)
-  const mergedObs = $derived([...OBS.list, ...healthDaysToSleepObs(A.health)])
-
-  const engine = $derived(
-    deriveState({ now: nowMs, observations: mergedObs, agent: agentInput }),
-  )
+  // Understand:全部从测量数据(A.health)+ 代理负荷推导,零手动输入
+  const engine = $derived(deriveState({ now: nowMs, health: A.health, agent: agentInput }))
+  // 是否已有任何测量数据(睡眠/HRV/心率/步数),没有则显示连表引导而非状态网格
+  const hasMeasured = $derived(A.health.length > 0)
 
   // HLT-3:按当日状态推荐专注窗口,变化时推给代理(driver 决定收紧或回到基准)
   const baseMinutes = $derived(Math.max(1, Math.round((s?.baseLimitSeconds ?? 1200) / 60)))
@@ -89,26 +81,10 @@
   })
 
   const headline = $derived.by(() => {
-    if (!A.online && OBS.list.length === 0) return t('now.stateOffline')
+    if (!A.online && !hasMeasured) return t('now.stateOffline')
     if (paused && engine.headline.k === 'state.h_allGood') return t('now.statePaused')
     return fmt(engine.headline.k, engine.headline.p)
   })
-
-  // —— 状态记录(Raw observation 输入)——
-  let selEnergy = $state(3)
-  let selStress = $state(3)
-  let selSleep = $state(null)
-  let savedAt = $state('')
-  const SLEEP_CHOICES = [5, 6, 6.5, 7, 7.5, 8, 9]
-
-  function saveCheckin() {
-    logCheckin({ energy: selEnergy, stress: selStress })
-    if (selSleep != null) logSleep(selSleep)
-    const d = new Date()
-    savedAt = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-    selSleep = null
-    nowMs = Date.now()
-  }
 
   // —— Focus 负荷条(沿用 HLT-1)——
   const netMinutes = $derived(Math.floor((s?.score ?? 0) / 60))
@@ -128,9 +104,16 @@
     <h2 class="headline">{headline}</h2>
   </header>
 
-  <!-- 六维状态(Understand 层,每格都能解释来源) -->
+  <!-- 六维状态(Understand 层,全部由测量数据被动推导,每格可解释来源) -->
   <section class="card">
-    <h3>{t('now.dims')}</h3>
+    <div class="dims-head">
+      <h3>{t('now.dims')}</h3>
+      {#if hasMeasured}
+        <span class="health-chip" title={t('now.healthConnected')}>
+          <i class="chip-dot"></i>{fmt('now.healthConnected', { n: A.health.length })}
+        </span>
+      {/if}
+    </div>
     <div class="dims">
       {#each DIMENSION_ORDER as key (key)}
         {@const dim = engine.dims[key]}
@@ -149,57 +132,14 @@
     </div>
   </section>
 
-  <!-- 状态记录(Observe 层,手动数据源) -->
-  <section class="card">
-    <div class="checkin-head">
-      <h3>{t('now.checkin')}</h3>
-      <span class="hint">{savedAt ? fmt('now.savedAt', { time: savedAt }) : t('now.checkinHint')}</span>
-    </div>
-    <div class="checkin-rows">
-      <div class="ck-row">
-        <span class="ck-label">{t('now.energy')}</span>
-        <span class="ck-scale">{t('now.scaleLow')}</span>
-        <div class="ck-seg" role="group" aria-label={t('now.energy')}>
-          {#each [1, 2, 3, 4, 5] as v (v)}
-            <button type="button" class:on={selEnergy === v} aria-pressed={selEnergy === v}
-              onclick={() => (selEnergy = v)}>{v}</button>
-          {/each}
-        </div>
-        <span class="ck-scale">{t('now.scaleHigh')}</span>
-      </div>
-      <div class="ck-row">
-        <span class="ck-label">{t('now.stress')}</span>
-        <span class="ck-scale">{t('now.scaleLow')}</span>
-        <div class="ck-seg" role="group" aria-label={t('now.stress')}>
-          {#each [1, 2, 3, 4, 5] as v (v)}
-            <button type="button" class:on={selStress === v} aria-pressed={selStress === v}
-              onclick={() => (selStress = v)}>{v}</button>
-          {/each}
-        </div>
-        <span class="ck-scale">{t('now.scaleHigh')}</span>
-      </div>
-      <div class="ck-row">
-        <span class="ck-label">{t('now.sleepLastNight')}</span>
-        <div class="ck-seg wide" role="group" aria-label={t('now.sleepLastNight')}>
-          <button type="button" class:on={selSleep === null} aria-pressed={selSleep === null}
-            onclick={() => (selSleep = null)}>{t('now.sleepSkip')}</button>
-          {#each SLEEP_CHOICES as h (h)}
-            <button type="button" class:on={selSleep === h} aria-pressed={selSleep === h}
-              onclick={() => (selSleep = h)}>{h}</button>
-          {/each}
-          <span class="ck-scale">{t('now.hoursUnit')}</span>
-        </div>
-      </div>
-    </div>
-    <div class="checkin-foot">
-      <button class="btn primary" onclick={saveCheckin}>{t('now.saveCheckin')}</button>
-      {#if A.health.length > 0}
-        <span class="health-chip" title={t('now.healthConnected')}>
-          <i class="chip-dot"></i>{fmt('now.healthConnected', { n: A.health.length })}
-        </span>
-      {/if}
-    </div>
-  </section>
+  <!-- 无测量数据:引导连 Watch,绝不给手动表单 -->
+  {#if !hasMeasured}
+    <section class="card connect">
+      <h3>{t('now.connectWatch')}</h3>
+      <p class="muted">{t('now.connectWatchHint')}</p>
+      <code class="cmd">{t('now.connectWatchCmd')}</code>
+    </section>
+  {/if}
 
   <!-- Focus 负荷 + 最小行动(Regulate 层) -->
   {#if A.online}
@@ -304,6 +244,12 @@
   }
 
   /* —— 六维状态 —— */
+  .dims-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3, 12px);
+  }
   .dims {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -361,69 +307,7 @@
     overflow-wrap: anywhere;
   }
 
-  /* —— 状态记录 —— */
-  .checkin-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3, 12px);
-  }
-  .hint {
-    font-size: 0.75rem;
-    color: var(--t4);
-  }
-  .checkin-rows {
-    display: grid;
-    gap: var(--space-2, 10px);
-  }
-  .ck-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .ck-label {
-    width: 5em;
-    flex: none;
-    font-size: 0.875rem;
-    color: var(--t2);
-  }
-  .ck-scale {
-    font-size: 0.6875rem;
-    color: var(--t4);
-  }
-  .ck-seg {
-    display: inline-flex;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
-  .ck-seg button {
-    min-width: 34px;
-    padding: 5px 8px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--bg-2);
-    color: var(--t2);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .ck-seg button:hover {
-    background: var(--card-h);
-  }
-  .ck-seg button.on {
-    background: var(--accent-bg);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .ck-seg.wide { align-items: center; }
-
-  .checkin-foot {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3, 12px);
-    flex-wrap: wrap;
-  }
+  /* —— 数据源 —— */
   .health-chip {
     display: inline-flex;
     align-items: center;
