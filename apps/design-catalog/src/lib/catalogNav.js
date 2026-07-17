@@ -197,11 +197,17 @@ export const MATRIX_SHOWCASES = CATALOG_SECTIONS.filter((s) =>
   ].includes(s.id),
 )
 
+// 与 @life-os/design-tokens 的 BRAND_APPS 对齐(全部 9 个品牌)
 export const APPS = /** @type {const} */ ([
   'planner',
   'fitness',
   'finance',
   'music',
+  'home',
+  'aios',
+  'portal',
+  'knowledge',
+  'health',
 ])
 export const MODES = /** @type {const} */ (['light', 'dark'])
 export const VIEWPORTS = /** @type {const} */ (['desktop', 'tablet', 'mobile'])
