@@ -63,6 +63,16 @@
     return w
   }
 
+  // 标签列宽有限:超出用省略号收尾,避免 SVG 左边缘硬裁切(整词读不出)。
+  // 完整标签仍在 hover tooltip 与 aria-label 里保留。
+  function fitLabel(str, maxW) {
+    const s = String(str)
+    if (textW(s) <= maxW) return s
+    const chars = [...s]
+    while (chars.length && textW(chars.join('') + '…') > maxW) chars.pop()
+    return chars.length ? chars.join('') + '…' : '…'
+  }
+
   // 今日快照:untrack 外部传入优先;不传则取渲染时刻(图表随数据重渲,可接受)
   const now = $derived(today ?? Date.now())
 
@@ -182,7 +192,8 @@
           y={y + BAR_H / 2 + 4}
           text-anchor="end"
         >
-          {row.label}
+          <title>{row.label}</title>
+          {fitLabel(row.label, labelW - 14)}
         </text>
         <!-- 轨道(整段淡染)+ 进度填充(实色) -->
         <rect

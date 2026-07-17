@@ -1364,6 +1364,16 @@ body {
   }
 }
 
+/* 840 以下:核心页塌回单栏,覆盖 DS 的 @container life-os-main(640) split。
+   否则宽手机/平板(640–840)会裂两栏,而侧栏此时是 display:none,
+   右侧留下一条幽灵空列(今天/已完成/日历同病)。 */
+@media (--life-os-mobile) {
+  .today-layout.life-os-grid--split,
+  .desktop-split-layout.life-os-grid--split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (--life-os-desktop) {
   .main-col {
     --planner-desktop-span: var(--content-max);
@@ -1401,6 +1411,18 @@ body {
     margin: 0;
     padding-left: 0;
     padding-right: 0;
+  }
+
+  /* 两栏只在真桌面(840)出现,与侧栏/侧边导航同步。
+     显式定义列:不依赖 DS 的 @container life-os-main(640)——桌面有侧栏时
+     主列常 <640,容器查询反而不触发。见下方 mobile 段的单栏塌陷。 */
+  .today-layout.life-os-grid--split,
+  .desktop-split-layout.life-os-grid--split {
+    grid-template-columns: minmax(0, 1fr) var(--grid-split-aside);
+  }
+
+  .desktop-split-layout.life-os-grid--split.life-os-grid--aside-wide {
+    grid-template-columns: minmax(0, 1fr) var(--grid-split-aside-wide);
   }
 
   .calendar-page .day-schedule-panel,

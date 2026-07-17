@@ -422,6 +422,7 @@
   .knowledge-list {
     display: grid;
     gap: var(--space-2);
+    min-width: 0;
   }
   .knowledge-item {
     display: flex;
@@ -433,6 +434,8 @@
     background: var(--card);
     color: inherit;
     text-decoration: none;
+    /* 网格项默认 min-width:auto → 不可断长串(fp: 哈希 / 文件名)会撑宽卡片溢出 */
+    min-width: 0;
   }
   .knowledge-item:hover {
     border-color: var(--accent);
@@ -440,10 +443,18 @@
   .knowledge-item-title {
     font-weight: 600;
     color: var(--t1);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .knowledge-item-crumb {
     font-size: var(--text-xs);
     color: var(--t3, var(--text-muted));
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .knowledge-item-snippet {
     font-size: var(--text-sm);
@@ -452,6 +463,9 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    min-width: 0;
+    /* 长哈希/URL 可在任意处断行,交给 line-clamp 收尾 */
+    overflow-wrap: anywhere;
   }
 
   .project-references {
