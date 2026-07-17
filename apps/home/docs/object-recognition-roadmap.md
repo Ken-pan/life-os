@@ -31,7 +31,7 @@
 | #3 脏乱 VLM 扫后自动识别 | ⚠️ **写了,svelte-check 过,VLM 端到端未验证**(要本地网关+真实拉取) | `state.svelte.js autoDescribeScanScenes` |
 | **Quick Scan 安静模式(默认关补拍引导)** | ✅ **装机验证通过**(真机 fb4a277b:`hint_viewpoint` 8→**0**、hint_evidence/tracking 全 0 = 全程安静;认账 `prior_matched_peak=8/14` 照常流,安静没关掉遥测) | `ScanSessionController.quietScan` + HUD 组装块 |
 | **扫后质量摘要 UI(P1)** | ✅ **编译验证 + 装机**(预览页顶部安心总账「基础扫描已保存 · N 件已记录 · 其中 K 件认出是家里已有的」,技术细节降为下方分区)。真机肉眼观感待用户反馈 | `Views/ReviewView.swift` |
-| 启动屏全屏修复 | ✅ 装机 | `Info.plist UILaunchScreen` |
+| 启动屏全屏修复 | ✅ 装机(2026-07-17 **真源迁移**:此前手改物理 `Info.plist` 加 `UILaunchScreen`,但 `xcodegen generate` 每次都按 `project.yml info.properties` 重写该文件、不在列表里的 key 全部冲掉——上机流程标准步骤第一步就是 `xcodegen generate`,等于自己把这个已验证修复冲了,用户看到 App 退回旧屏幕兼容模式居中缩小。真源已挪进 `project.yml`,扛得住 generate) | `project.yml info.properties.UILaunchScreen` |
 | **P2 matcher 地基(跨扫描认亲)** | ✅ **写库验证**(2026-07-17):3 次设备扫描入 embedding(88 向量);`match_objects.py` 按时间序 populate object_observations + kind 硬门 + best-pair 余弦 + **全局一对一(Hungarian, scipy)**对齐 canonical_object_id + PATCH 回填 embeddings.canonical。真数据:**51 观察→32 canonical、17 个身份被 ≥2 次扫描认回**(冰箱/烤箱/炉边三抽柜/冰箱顶吊柜 0.85-0.96)、2 待复核、2 共享裁剪独立。阈值 HIGH=0.62/MID=0.50。**两处关键修正**:①只跟本扫描**之前**的 canonical 比 + 一对一指派 → 修掉旧贪心把同扫描两把办公椅并成一个(现 5 观察→3 canonical,欠合并是安全向,留 P3);②回填 canonical 从 upsert 改 **PATCH**(纯 UPDATE)—— upsert 的 INSERT 语义拿缺列元组过 NOT NULL 校验必炸 `scan_id`/`embedding`,即便终走 UPDATE。**③契约对齐**:`match` jsonb 已对齐 `types.js ObjectMatchDecision`(state=same/possibly_same/added、candidates={canonicalId,score,breakdown,label}、possibly/added 时 chosenCanonicalId 空、resolver=global-assignment),抽验三态键名/枚举无越界 | `scripts/vision/match_objects.py` · `src/lib/spatial/types.js` |
 | **P1 快速/高精度双模式 UI 开关** | ✅ **已装机**(2026-07-17,真机 build+install 成功,手机上线后完成)—— HomeView 设置区「安静扫描」toggle(默认开)→ `@AppStorage(quietScanKey)` → startScanning 喂 `scanController.quietScan`。待用户肉眼确认开关可见+可切换,以及关掉后高精度补扫的真机观感 | `HomeView` + `ScanSessionController.quietScanKey` + `AppModel+ScanFlow` |
 
@@ -85,6 +85,7 @@ xcrun devicectl device install app --device <UDID> "$DD/Build/Products/Debug-iph
 ```
 装完**手机上划掉 app 重开**(启动屏有缓存)。
 **测试**:`xcodebuild ... -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:HomeScanTests/<Suite> test`。
+⚠️ **`Info.plist` 手改的 key 一律同步进 `project.yml` 的 `info.properties`**:`xcodegen generate`(第一步)每次都按 `properties` 重写物理 `Info.plist`,不在里面的 key 全被冲掉(2026-07-17 吃过一次:启动屏全屏修复被自己的标准装机流程冲没,App 退回旧屏幕居中缩小)。
 
 **拉扫描诊断**(判功能通没通):service_role 从钥匙串 `Supabase CLI` token → Management API `/v1/projects/<ref>/api-keys?reveal=true`(**urllib 要带 User-Agent 否则 Cloudflare 403**);REST 带 `Accept-Profile: home`;诊断在 `payload.homeos.meta.scanDiagnostics`。
 关键遥测键:`prior_count`(权威加载数)/`prior_regOk`(配准在线)/`prior_matched_peak`÷`prior_objects_peak`(原位识别率)/`prior_closeness`(=300−nearest_cm)/`unmerge_split_added`(整排拆几件)/`dom_*`(邻件占幅直方图)/`gate_neighborDominant`(拒拍数)。
