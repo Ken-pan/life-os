@@ -1450,7 +1450,9 @@ body {
     display: none;
   }
 
-  .today-layout--with-recap .today-progress-actions {
+  /* recap 显示时(=两栏 split 时)藏掉主区进度卡内联操作。
+     with-recap 恒等于 split,故直接以 split 为条件,PageShell 无需再发 --with-recap。 */
+  .today-layout.life-os-grid--split .today-progress-actions {
     display: none;
   }
 

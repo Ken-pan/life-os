@@ -1,6 +1,6 @@
 <script>
   import { goto } from '$app/navigation'
-  import AppBar from '$lib/components/AppBar.svelte'
+  import PageShell from '$lib/components/PageShell.svelte'
   import QuickAddBar from '$lib/components/QuickAddBar.svelte'
   import TaskGroup from '$lib/components/TaskGroup.svelte'
   import EmptyState from '$lib/components/EmptyState.svelte'
@@ -65,15 +65,14 @@
   }
 </script>
 
-<div class="life-os-page-workspace">
-  <AppBar title={t('home.title')} subtitle={t('app.tagline')} />
-
-  <div
-    class="life-os-grid today-layout"
-    class:life-os-grid--split={!showClosed}
-    class:today-layout--with-recap={!showClosed}
-  >
-    <div class="life-os-grid__main today-main">
+<PageShell
+  title={t('home.title')}
+  subtitle={t('app.tagline')}
+  layout="split"
+  split={!showClosed}
+  gridClass="today-layout"
+>
+  {#snippet main()}
       <div class="wrap">
         <QuickAddBar dueDate={todayKey()} />
 
@@ -160,8 +159,8 @@
           {/if}
         {/if}
       </div>
-    </div>
-
+  {/snippet}
+  {#snippet aside()}
     {#if !showClosed}
       <TodayRecapPanel
         summary={rhythm}
@@ -176,5 +175,5 @@
         onOpenCalendar={openCalendar}
       />
     {/if}
-  </div>
-</div>
+  {/snippet}
+</PageShell>
