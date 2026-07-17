@@ -47,7 +47,11 @@ const AMBIGUITY_MARGIN = 0.08
 const KIND_FAMILY = [
   ['chair', 'office_chair'],
   ['sofa', 'armchair'],
-  ['table', 'coffee_table'],
+  // 桌族:desk/standing_desk/folding_table 是 table 的精化形态 —— iOS refineKind
+  // (2026-07-16 起)会按尺寸/台面高把 table 细分成 desk 等;canonical 里存的是
+  // 精化前/后任一形态,不同族就一票否决 —— 0716 真扫实测:设备报「书桌 desk」,
+  // canonical 是「升降边桌 table」,不入族直接拆成消失+新增。
+  ['table', 'coffee_table', 'desk', 'standing_desk', 'folding_table'],
   // 储物族:wire_rack/cube_shelf/utility_cart/equipment_rack 都是服务端/用户
   // 精化 kind,RoomPlan 只会给 storage(→cabinet)或 shelf —— 2026-07-16 真扫
   // 实测三件(拉篮架←cabinet、工作八格架←shelf+cabinet)全被跨族一票否决拆散。
@@ -133,19 +137,34 @@ const colorTrust = (a, b) =>
  * 「消失+新增」 —— 但两次扫描里它的照片长得一样,靠这项认回来。
  * 强像加大分;明显不像只轻罚(拍摄方位/光照会抬升汉明距离,不一票否决)。
  */
-function hashBonus(a, b) {
-  const d = hammingHex(a?.attrs?.photoHash, b?.attrs?.photoHash)
+function hashBonus(a, b, ambiguousHashes) {
+  const ha = a?.attrs?.photoHash
+  const hb = b?.attrs?.photoHash
+  // 同一次扫描里多件共享同一 hash(叠放件裁到同一画面:0716 真扫「炉边三抽柜」
+  // 与「冰箱顶吊柜」同 hash 同色)—— 对它们毫无区分度,还会把错对抬进歧义区,中和掉。
+  if (ambiguousHashes && (ambiguousHashes.has(ha) || ambiguousHashes.has(hb))) return 0
+  const d = hammingHex(ha, hb)
   if (d === null) return 0
   if (d <= HASH_SAME_MAX) return 0.2
   if (d >= HASH_DIFF_MIN) return -0.1
   return 0
 }
 
+/** 同一列表内出现 ≥2 次的 photoHash —— 不具区分度(见 {@link hashBonus})。 */
+function duplicatedHashes(list) {
+  const count = new Map()
+  for (const o of list) {
+    const h = o?.attrs?.photoHash
+    if (h) count.set(h, (count.get(h) ?? 0) + 1)
+  }
+  return new Set([...count].filter(([, n]) => n >= 2).map(([h]) => h))
+}
+
 /**
  * 0..1+bonuses;kind 不同但同族(样式精化翻转)可匹配,跨族一票否决。
  * prev 的 scanAliases 命中 next.kind 时视同同 kind(用户纠正 > 扫描惯性误检)。
  */
-function matchScore(prev, next) {
+function matchScore(prev, next, ambiguousHashes) {
   let penalty = 0
   if (prev.kind !== next.kind && !aliasHit(prev, next)) {
     const fam = familyOf(prev.kind)
@@ -172,7 +191,7 @@ function matchScore(prev, next) {
   const cd = colorDist(prev, next)
   if (cd !== null && cd <= 60) bonus += 0.15 * colorTrust(prev, next)
   if (prev.attrs?.styleZh && prev.attrs.styleZh === next.attrs?.styleZh) bonus += 0.1
-  bonus += hashBonus(prev, next)
+  bonus += hashBonus(prev, next, ambiguousHashes)
   bonus += elevScore(prev, next)
   return 0.45 * sizeScore + 0.45 * posScore + bonus - penalty
 }
@@ -192,11 +211,17 @@ function matchScore(prev, next) {
  * @returns {IdentityMatch}
  */
 export function matchScanObjects(prevList, nextList) {
+  // 任一侧列表内重复的 hash 都不作外观证据(prev 侧同样会有:权威副本里
+  // 叠放两件的 web 派生 hash 同样相同)
+  const ambiguousHashes = new Set([
+    ...duplicatedHashes(prevList),
+    ...duplicatedHashes(nextList),
+  ])
   /** @type {Array<{ score: number, pi: number, ni: number }>} */
   const cands = []
   prevList.forEach((p, pi) => {
     nextList.forEach((n, ni) => {
-      const score = matchScore(p, n)
+      const score = matchScore(p, n, ambiguousHashes)
       if (score >= ACCEPT_SCORE) cands.push({ score, pi, ni })
     })
   })

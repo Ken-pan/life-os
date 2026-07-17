@@ -56,13 +56,22 @@ final class KindRefinementTests: XCTestCase {
     }
 
     func testNonTableUsesBaseConfidence() {
-        // 非 table 不细化;low 置信度 → 低 kindConfidence
-        let r = KindMaps.refineKind(
+        // 非 table 不细化。样式背书(L形)的 kind 分类把握保底 0.6:RoomPlan 的
+        // low 是「框抖」不是「类错」,不该把类目标成待复核(0716 真扫校准,
+        // 半张图挂「?」全是 style 明确的柜/椅)。
+        let styled = KindMaps.refineKind(
             kind: "sofa", label: "沙发", styleZh: "L形", confidence: "low",
             longIn: 84, shortIn: 36, heightIn: 32
         )
-        XCTAssertEqual(r.kind, "sofa")
-        XCTAssertLessThan(r.kindConfidence, 0.5)
+        XCTAssertEqual(styled.kind, "sofa")
+        XCTAssertEqual(styled.kindConfidence, 0.6, accuracy: 0.001,
+                       "样式背书 + low 框置信 → 保底 0.6(不进复核档)")
+        // 无样式背书的仍用基线:low → 0.35(真没把握)
+        let bare = KindMaps.refineKind(
+            kind: "sofa", label: "沙发", styleZh: nil, confidence: "low",
+            longIn: 84, shortIn: 36, heightIn: 32
+        )
+        XCTAssertLessThan(bare.kindConfidence, 0.5, "无样式背书的 low 仍是低把握")
     }
 
     func testConfidenceBaselineOrdering() {

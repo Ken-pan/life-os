@@ -72,7 +72,10 @@ enum ScanIdentity {
     static let kindFamily: [[String]] = [
         ["chair", "office_chair"],
         ["sofa", "armchair"],
-        ["table", "coffee_table"],
+        // 桌族:desk/standing_desk/folding_table 是 refineKind 对 table 的精化形态。
+        // 0716 真扫实测:设备报「书桌 desk」,权威是「升降边桌 table」,不入族
+        // 就被跨族一票否决拆成消失+新增(与网页 scan-identity.js 同源,两处同步)。
+        ["table", "coffee_table", "desk", "standing_desk", "folding_table"],
         storageFamily,
     ]
     static let crossKindPenalty = 0.05

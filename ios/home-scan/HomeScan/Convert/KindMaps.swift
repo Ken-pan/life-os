@@ -122,10 +122,13 @@ enum KindMaps {
     ) -> (kind: String, label: String, styleZh: String?, kindConfidence: Double) {
         let base = kindConfidenceBase(confidence)
 
-        // 只细化通用 table;coffee_table/armchair/office_chair/shelf 等已由样式属性定死,
-        // 那些是 RoomPlan 明确属性给的,直接用基线可信度。
+        // 只细化通用 table;coffee_table/armchair/office_chair/shelf 等已由样式属性定死。
+        // 样式背书的 kind **分类把握保底 0.6**:RoomPlan 的 low 是「包围盒抖」不是
+        // 「类目错」——封闭柜就是柜、转椅就是椅,框不准不该把类目标成待复核
+        // (0716 真扫:11 件 style 明确的柜/椅全因 low 框置信被压到 0.35,
+        // 半张图挂「?」全是噪音;真正该复核的是下面几何猜的 desk/分不清 table)。
         guard kind == "table" else {
-            return (kind, label, styleZh, base)
+            return (kind, label, styleZh, styleZh != nil ? max(base, 0.6) : base)
         }
 
         // RoomPlan 已判餐桌(TableType.dining → styleZh 含「餐」)/ 圆桌:不猜工作桌,
@@ -135,8 +138,9 @@ enum KindMaps {
         }
 
         // 升降桌:台面高是最强区分信号(常态坐姿也有 ~38″+,远超餐桌/书桌 29-31″)。
+        // 强几何信号不被低框置信拖没:保底 0.7(高度是实测的,框抖类不抖)。
         if let h = heightIn, h >= 38 {
-            let conf = h >= 40 ? min(0.9, base + 0.05) : 0.7
+            let conf = h >= 40 ? max(0.7, min(0.9, base + 0.05)) : 0.7
             return ("standing_desk", "升降桌", "升降", conf)
         }
 

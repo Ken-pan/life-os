@@ -610,13 +610,7 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
       // 高饱和/发黑回落类型材质色,无类型色再回落扫描。fixtures 用 kind 当 symbol
       // 名(它们没有 symbol 层),多数无 colorHex → 走类型色,与改动前一致。
       const fixtureHex = textured
-        ? resolveFurnitureColor(
-            f.kind,
-            f.kind,
-            f.attrs?.colorHex,
-            f.attrs?.colorConfidence,
-            f.attrs?.colorSpreadE,
-          )
+        ? resolveFurnitureColor(f.kind, f.kind, f.attrs)
         : undefined
       const vars = fixtureHex
         ? furnitureVars(fixtureHex, true)
@@ -663,13 +657,7 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
       // 折叠桌)回落类型材质色;鸟笼/折叠桌/工作桌/电视等「扫描必错」kind 硬锁类型色。
       // 无类型色的手绘件回落扫描色或图纸灰。
       const furnHex = textured
-        ? resolveFurnitureColor(
-            kind,
-            symbol,
-            p.attrs?.colorHex,
-            p.attrs?.colorConfidence,
-            p.attrs?.colorSpreadE,
-          )
+        ? resolveFurnitureColor(kind, symbol, p.attrs)
         : undefined
       const vars = furnHex
         ? furnitureVars(furnHex, true)

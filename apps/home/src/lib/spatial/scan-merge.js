@@ -727,7 +727,9 @@ function carryUserAuthored(prev, n) {
  * 外观类 attrs:锁定件合并与 photos 模式回填唯一允许写入的字段 ——
  * 照片本身 + 由照片派生的特征。几何/种类/名字/储物绑定都不在内。
  */
-const APPEARANCE_ATTR_KEYS = ['photoRef', 'photoPath', 'photos', 'photoHash', 'colorHex', 'colorSpreadE']
+// colorConfidence 与 colorHex 成对(iOS 设备侧信号,2026-07-16):锁定件吸收外观时
+// 一起走,别出现「A 的颜色配 B 的可信度」
+const APPEARANCE_ATTR_KEYS = ['photoRef', 'photoPath', 'photos', 'photoHash', 'colorHex', 'colorSpreadE', 'colorConfidence']
 const pickAppearanceAttrs = (attrs) => {
   /** @type {Record<string, any>} */
   const out = {}
@@ -1088,7 +1090,8 @@ export function backfillAppearanceAttrs(project, mapped) {
     )
     return list.map((o) => {
       const pair = pairByPrev[o.id]
-      const src = pair ? nextById[pair.nextId]?.attrs : null
+      const next = pair ? nextById[pair.nextId] : null
+      const src = next?.attrs
       if (!src) return o
       /** @type {Record<string, any>} */
       const patch = {}
@@ -1097,6 +1100,17 @@ export function backfillAppearanceAttrs(project, mapped) {
       if (src.colorHex && !o.attrs?.colorHex) {
         patch.colorHex = src.colorHex
         if (src.colorSpreadE != null) patch.colorSpreadE = src.colorSpreadE
+        // 设备抓色置信度跟着色走(成对,别错配)
+        if (src.colorConfidence != null) patch.colorConfidence = src.colorConfidence
+      }
+      // 分类把握只在「扫描判的就是这个 kind」时补缺 —— 扫描给的 kc 说的是它自己
+      // 判的 kind,项目件是别的 kind 时这个数字牛头不对马嘴
+      if (
+        src.kindConfidence != null &&
+        next.kind === o.kind &&
+        o.attrs?.kindConfidence == null
+      ) {
+        patch.kindConfidence = src.kindConfidence
       }
       if (!Object.keys(patch).length) return o
       backfilled++

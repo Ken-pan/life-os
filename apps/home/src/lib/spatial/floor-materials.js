@@ -18,6 +18,7 @@
 
 import { pointInPolygon } from './geometry.js'
 import { parseHex, rgbToHsl } from './furniture-tint.js'
+import { KIND_REVIEW_MAX } from './placements.js'
 
 /** @typedef {'wood' | 'carpet' | 'tile' | 'deck' | 'steel'} FloorMaterial */
 
@@ -469,18 +470,28 @@ const SOFT_SCAN_SYMBOLS = new Set(['table', 'shelf', 'coatRack', 'officeChair'])
  * @param {string | undefined} kind placements 的规范 kind 名
  * @param {string | undefined} symbol furniture-symbols 的 symbol 名
  * @param {string | undefined} scanHex 家具 `attrs.colorHex` 的扫描主色
- * @param {number} [colorConfidence] `attrs.colorConfidence` 0..1,喂给第 2 级的可信度判断
- * @param {number} [colorSpreadE] `attrs.colorSpreadE` ΔE76,同上(网页侧色可靠度信号)
+ * @param {{ colorHex?: string, colorConfidence?: number, colorSpreadE?: number,
+ *   kindConfidence?: number, userEdited?: string[] }} [attrs] 这件家具的 attrs ——
+ *   colorHex/colorConfidence/colorSpreadE 喂第 2 级可信度;kindConfidence/userEdited
+ *   守第 1 级硬锁(见下)
  * @returns {string | undefined} 原始 #hex,或 undefined = 无类型色且扫描不可信
  */
-export function resolveFurnitureColor(kind, symbol, scanHex, colorConfidence, colorSpreadE) {
-  if (kind && KIND_HEX[kind]) return KIND_HEX[kind]
+export function resolveFurnitureColor(kind, symbol, attrs = {}) {
+  // 第 1 级硬锁只认「可信的 kind」:用户改过的(userEdited∋'kind')或分类把握够
+  // (kindConfidence 缺省 = 老数据,视为可信)。设备几何猜的低把握 kind(0716 真扫:
+  // 浅木「升降边桌」被猜成 desk@0.55)不配触发硬锁 —— 否则一次猜测就把浅桌涂成
+  // 炭黑;放它落到下面的软兜底/材质默认,可信淡中性扫描色照样能救回真色。
+  const kindTrusted =
+    attrs.userEdited?.includes('kind') ||
+    typeof attrs.kindConfidence !== 'number' ||
+    attrs.kindConfidence >= KIND_REVIEW_MAX
+  if (kind && KIND_HEX[kind] && kindTrusted) return KIND_HEX[kind]
   if (
     symbol &&
     SOFT_SCAN_SYMBOLS.has(symbol) &&
-    isTrustworthyScan(scanHex, colorConfidence, colorSpreadE)
+    isTrustworthyScan(attrs.colorHex, attrs.colorConfidence, attrs.colorSpreadE)
   ) {
-    return scanHex
+    return attrs.colorHex
   }
   return symbol ? SYMBOL_HEX[symbol] : undefined
 }
