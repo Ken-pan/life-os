@@ -105,10 +105,11 @@ export function scanObjectPhotoEntries(payload) {
           // 最佳一张兼容旧消费方:photoPath 对应的就是 photos[0]
           if (attrs.photoPath === ph.path) attrs.photoRef = ref
         },
-        // 最佳那张顺手算感知哈希(attrs.photoHash,加法式)——
-        // 跨扫描身份匹配的外观特征,尺寸抖动的柜子靠它认回来
+        // 感知哈希(attrs.photoHash):设备端现算并上传(与本端 photo-hash.js
+        // 同源),优先用设备的、不覆盖 —— 权威件与新扫描同一重采样器才可比。
+        // 缺失才用最佳那张网页派生(旧数据/旧 App)。跨扫描认亲的外观特征。
         assignHash:
-          attrs.photoPath === ph.path
+          !attrs.photoHash && attrs.photoPath === ph.path
             ? (hash) => {
                 attrs.photoHash = hash
               }
@@ -122,9 +123,12 @@ export function scanObjectPhotoEntries(payload) {
         assign: (ref) => {
           attrs.photoRef = ref
         },
-        assignHash: (hash) => {
-          attrs.photoHash = hash
-        },
+        // 设备已带 dHash 则不覆盖(同上)
+        assignHash: attrs.photoHash
+          ? undefined
+          : (hash) => {
+              attrs.photoHash = hash
+            },
       })
     }
   }

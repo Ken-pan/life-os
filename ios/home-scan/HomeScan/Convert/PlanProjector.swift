@@ -193,6 +193,7 @@ enum PlanProjector {
                     colorHex: item.colorHex,
                     colorConfidence: item.colorConfidence,
                     kindConfidence: refined.kindConfidence,
+                    photoHash: item.photoHash,
                     photos: item.photos.isEmpty ? nil : item.photos,
                     requiredShots: {
                         let side = max(item.widthM, item.depthM)
@@ -245,6 +246,7 @@ enum PlanProjector {
                 colorConfidence: m.colorConfidence.map { ($0 * 100).rounded() / 100 },
                 kindConfidence: m.kindConfidence.map { ($0 * 100).rounded() / 100 },
                 photoPath: nil, // 上传时回填桶内路径
+                photoHash: m.photoHash,
                 yawDeg: abs(yawDev) > 3 ? round1(yawDev) : nil
             )
             if m.isFixture {
@@ -553,6 +555,8 @@ enum PlanProjector {
         var colorConfidence: Double?
         /// kind 识别可信度(0..1)
         var kindConfidence: Double?
+        /// 最佳抓拍图 dHash(与 colorHex/photos 同属最佳一张,合并时随之继承)
+        var photoHash: String?
         var photos: [FlatScene.ObjectPhoto]?
         /// 证据需求(EvidenceGuide 同一套分级:大件 3 / 中件 2 / 小件 1)——
         /// 上传的照片按它裁剪,多余方位不进桶(省流量省空间)
@@ -762,6 +766,8 @@ enum PlanProjector {
             out.colorConfidence = loser.colorConfidence
         }
         out.kindConfidence = out.kindConfidence ?? loser.kindConfidence
+        // photoHash 与 photos 同源(都来自最佳一张):winner 没照片才整对取 loser 的
+        if out.photos == nil { out.photoHash = loser.photoHash }
         out.photos = out.photos ?? loser.photos
         return out
     }

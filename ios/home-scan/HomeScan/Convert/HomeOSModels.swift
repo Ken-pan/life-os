@@ -102,6 +102,10 @@ struct HomeOSProject: Codable {
         var kindConfidence: Double? = nil
         /// 这件家具的实拍裁剪照片(最佳一张),桶内路径 —— 兼容单图消费方
         var photoPath: String? = nil
+        /// 最佳抓拍图的感知哈希(dHash,16 位 hex,2026-07-16 加法式;与网页 photo-hash.js
+        /// 逐位同源)。设备侧现算并上传 —— 网页端优先用它、缺失才自派生,跨扫描外观认亲
+        /// 靠它认回尺寸抖动的柜子(汉明 ≤10 强加分)。
+        var photoHash: String? = nil
         /// 多视角证据包(含最佳那张;分数降序)。上传时回填。
         var photos: [ObjectPhoto]? = nil
 
@@ -120,7 +124,7 @@ struct HomeOSProject: Codable {
             styleKeys == nil && styleZh == nil && heightIn == nil && elevIn == nil
                 && measuredWIn == nil && measuredHIn == nil
                 && confidence == nil && colorHex == nil && colorConfidence == nil
-                && kindConfidence == nil && photoPath == nil
+                && kindConfidence == nil && photoPath == nil && photoHash == nil
                 && photos == nil && yawDeg == nil
         }
     }

@@ -56,6 +56,8 @@ struct FlatScene {
         var colorHex: String? = nil
         /// 主色可信度(0..1):多张抓拍取共识后的稳健度。下游据此区分可信色与猜测色
         var colorConfidence: Double? = nil
+        /// 最佳抓拍图的感知哈希(dHash,16 位 hex;与 photo-hash.js 同源)。跨扫描外观认亲
+        var photoHash: String? = nil
         /// 多视角证据包(分数降序,第一张 = photoFileURL 那张)
         var photos: [ObjectPhoto] = []
     }

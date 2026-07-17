@@ -76,6 +76,8 @@ enum StructureFlattener {
                     photoFileURL: shotList.first?.photoFileURL,
                     colorHex: consensusColor?.hex,
                     colorConfidence: consensusColor.map { ($0.confidence * 100).rounded() / 100 },
+                    // 最佳一张(= photoFileURL 那张)的 dHash,与上传的最佳照片对齐
+                    photoHash: shotList.first?.photoHash,
                     photos: shotList.map {
                         FlatScene.ObjectPhoto(
                             fileURL: $0.photoFileURL,

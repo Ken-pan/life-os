@@ -75,4 +75,37 @@ final class ObjectShotCaptureTests: XCTestCase {
                        "还有一件没满就不能整体短路")
         XCTAssertTrue(ObjectShotCapture.allQuotasFull(binsCovered: [4, 4, 4]))
     }
+
+    // MARK: - dHash 与网页 photo-hash.js 逐位同源(2026-07-16)
+
+    /// 同一 9×8 RGBA 像素向量,dhashBits 必须与网页 dhashFromImageData 输出一字不差。
+    /// 期望值由 photo-hash.js 在 node 上对同一向量算出(furniture 侧单测同源)。
+    func testDhashBitsMatchesWebVector() {
+        // 灰度 v=(x*23 + y*13) & 0xff,R=G=B=v,A=255
+        var pixels = [UInt8](repeating: 0, count: 9 * 8 * 4)
+        for y in 0..<8 {
+            for x in 0..<9 {
+                let o = (y * 9 + x) * 4
+                let v = UInt8((x * 23 + y * 13) & 0xff)
+                pixels[o] = v; pixels[o + 1] = v; pixels[o + 2] = v; pixels[o + 3] = 255
+            }
+        }
+        XCTAssertEqual(ObjectShotCapture.dhashBits(pixels, width: 9, height: 8),
+                       "0000000000000101", "与网页 photo-hash.js 逐位一致")
+
+        // 每行左→右递增 → 全 0(left<right)
+        var inc = [UInt8](repeating: 255, count: 9 * 8 * 4)
+        for y in 0..<8 {
+            for x in 0..<9 {
+                let o = (y * 9 + x) * 4
+                let v = UInt8(x * 20)
+                inc[o] = v; inc[o + 1] = v; inc[o + 2] = v
+            }
+        }
+        XCTAssertEqual(ObjectShotCapture.dhashBits(inc, width: 9, height: 8),
+                       "0000000000000000", "递增行全 0")
+
+        // 尺寸不对 → nil(中立)
+        XCTAssertNil(ObjectShotCapture.dhashBits([UInt8](repeating: 0, count: 8), width: 9, height: 8))
+    }
 }

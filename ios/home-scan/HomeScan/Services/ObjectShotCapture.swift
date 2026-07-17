@@ -32,6 +32,9 @@ final class ObjectShotCapture {
         /// 清晰度(裁剪图灰度拉普拉斯方差;越大越清楚)。
         /// 角速度门控挡不住「手稳但对焦没跟上」的糊图,这个挡。
         var sharpness: Double = 0
+        /// 感知哈希(dHash,16 位 hex;裁剪图 9×8,与 photo-hash.js 同源)。
+        /// 跨扫描外观认亲 —— 尺寸抖动的柜子靠两次照片长得一样认回来。
+        var photoHash: String? = nil
         /// 拍摄方位:物体中心 → 相机的俯视角(度,0..360)。
         /// 多视角证据的核心 —— 一张照片看不出 L 形沙发的另一侧。
         var azimuthDeg: Double
@@ -265,7 +268,7 @@ final class ObjectShotCapture {
 
     /// 编码完成的主线程收尾(视频/高清两条路共用)
     private func finishShot(
-        out: (url: URL, colorHex: String?, colorConfidence: Double, sharpness: Double)?,
+        out: (url: URL, colorHex: String?, colorConfidence: Double, sharpness: Double, photoHash: String?)?,
         objectId: UUID, category: String, center: SIMD2<Double>,
         score: Double, az: Double, bin: Int
     ) {
@@ -303,6 +306,7 @@ final class ObjectShotCapture {
                     colorHex: out.colorHex,
                     colorConfidence: out.colorConfidence,
                     sharpness: out.sharpness,
+                    photoHash: out.photoHash,
                     azimuthDeg: (az * 10).rounded() / 10,
                     bin: bin
                 )
@@ -408,7 +412,7 @@ final class ObjectShotCapture {
         imageHeight: CGFloat,
         objectId: UUID,
         bin: Int
-    ) -> (url: URL, colorHex: String?, colorConfidence: Double, sharpness: Double)? {
+    ) -> (url: URL, colorHex: String?, colorConfidence: Double, sharpness: Double, photoHash: String?)? {
         let ciCrop = CGRect(
             x: crop.origin.x,
             y: imageHeight - crop.origin.y - crop.height,
@@ -418,6 +422,7 @@ final class ObjectShotCapture {
         var image = CIImage(cvPixelBuffer: pixelBuffer).cropped(to: ciCrop)
         let color = dominantColor(of: image)
         let sharpness = laplacianVariance(of: image)
+        let photoHash = dhash(of: image)
 
         // 竖持方向 + 限长边
         image = image.oriented(.right)
@@ -438,10 +443,53 @@ final class ObjectShotCapture {
             .appendingPathComponent("obj-\(objectId.uuidString.lowercased())-b\(bin).jpg")
         do {
             try data.write(to: url, options: .atomic)
-            return (url, color?.hex, color?.confidence ?? 0, sharpness)
+            return (url, color?.hex, color?.confidence ?? 0, sharpness, photoHash)
         } catch {
             return nil
         }
+    }
+
+    /// 家具裁剪图的感知哈希(dHash,16 位 hex)。跨扫描认回尺寸抖动被拆成
+    /// 「消失+新增」的柜子 —— 两次照片长得一样。渲染 9×8 后走 dhashBits。
+    /// 设备与权威件同一重采样器,汉明 ≤10 视同一件(见 ScanIdentity.hashBonus)。
+    private func dhash(of image: CIImage) -> String? {
+        guard image.extent.width >= 2, image.extent.height >= 2 else { return nil }
+        let w = 9, h = 8
+        let small = image.transformed(by: CGAffineTransform(
+            scaleX: CGFloat(w) / image.extent.width,
+            y: CGFloat(h) / image.extent.height))
+        var pixels = [UInt8](repeating: 0, count: w * h * 4)
+        ciContext.render(
+            small, toBitmap: &pixels, rowBytes: w * 4,
+            bounds: CGRect(x: small.extent.origin.x, y: small.extent.origin.y,
+                           width: CGFloat(w), height: CGFloat(h)),
+            format: .RGBA8, colorSpace: CGColorSpace(name: CGColorSpace.sRGB))
+        return Self.dhashBits(pixels, width: w, height: h)
+    }
+
+    /// 纯 bit 逻辑 —— 与网页 `photo-hash.js` 的 dhashFromImageData **逐位同源**
+    /// (9×8 RGBA、行内相邻 luma 0.299/0.587/0.114 比较 left>right 记 1、
+    /// 64 bit 按 y 外 x 内拼、每 4 bit 一个 hex nibble)。单测用同一像素向量锁死。
+    static func dhashBits(_ pixels: [UInt8], width w: Int, height h: Int) -> String? {
+        guard w == 9, h == 8, pixels.count >= w * h * 4 else { return nil }
+        func luma(_ x: Int, _ y: Int) -> Double {
+            let o = (y * w + x) * 4
+            return 0.299 * Double(pixels[o]) + 0.587 * Double(pixels[o + 1])
+                + 0.114 * Double(pixels[o + 2])
+        }
+        var bits = [Int]()
+        bits.reserveCapacity(64)
+        for y in 0..<h {
+            for x in 0..<(w - 1) {
+                bits.append(luma(x, y) > luma(x + 1, y) ? 1 : 0)
+            }
+        }
+        var hex = ""
+        for i in stride(from: 0, to: 64, by: 4) {
+            let nib = bits[i] * 8 + bits[i + 1] * 4 + bits[i + 2] * 2 + bits[i + 3]
+            hex += String(nib, radix: 16)
+        }
+        return hex
     }
 
     /// 清晰度:灰度拉普拉斯方差(长边缩到 96px 再算,糊图纹理被抹平 → 方差小)。
