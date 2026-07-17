@@ -1,5 +1,6 @@
 import Inbox from '@lucide/svelte/icons/inbox'
 import LibraryBig from '@lucide/svelte/icons/library-big'
+import FolderKanban from '@lucide/svelte/icons/folder-kanban'
 import History from '@lucide/svelte/icons/history'
 import Sparkles from '@lucide/svelte/icons/sparkles'
 import Settings from '@lucide/svelte/icons/settings'
@@ -8,6 +9,7 @@ import Settings from '@lucide/svelte/icons/settings'
 export const ICONS = {
   inbox: Inbox,
   library: LibraryBig,
+  projects: FolderKanban,
   timeline: History,
   recall: Sparkles,
   settings: Settings,

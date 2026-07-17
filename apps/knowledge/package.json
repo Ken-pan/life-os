@@ -24,7 +24,9 @@
   },
   "dependencies": {
     "@life-os/platform-web": "*",
+    "@life-os/sync": "*",
     "@life-os/theme": "*",
+    "@supabase/supabase-js": "^2.110.0",
     "@lucide/svelte": "^1.22.0",
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-fs": "^2.4.0"

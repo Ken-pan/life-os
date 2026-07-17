@@ -1,9 +1,18 @@
 <script>
   import { S, save, applyTheme } from '$lib/state.svelte.js'
+  import { CLOUD, signInCloud, signOutCloud } from '$lib/cloud.svelte.js'
   import { t, setLocale } from '$lib/i18n/index.js'
 
   let importInput = $state(null)
   let mergedCount = $state(-1)
+  let cloudEmail = $state('')
+  let cloudPassword = $state('')
+
+  async function handleSignIn(e) {
+    e.preventDefault()
+    const ok = await signInCloud(cloudEmail.trim(), cloudPassword)
+    if (ok) cloudPassword = ''
+  }
 
   function exportJson() {
     const blob = new Blob(
@@ -85,6 +94,48 @@
   </section>
 
   <section class="card">
+    <h2>{t('cloud.title')}</h2>
+    <p class="data-desc">{t('cloud.desc')}</p>
+    {#if CLOUD.user}
+      <p class="data-desc">
+        <span class="badge badge--success">{t('cloud.signedInAs', { email: CLOUD.user.email })}</span>
+      </p>
+      <div class="settings-actions">
+        <button type="button" class="btn-secondary" disabled={CLOUD.busy} onclick={signOutCloud}>
+          {t('cloud.signOut')}
+        </button>
+      </div>
+    {:else}
+      <form class="cloud-form" onsubmit={handleSignIn}>
+        <div class="field">
+          <label for="cloud-email">{t('cloud.email')}</label>
+          <input
+            id="cloud-email"
+            type="email"
+            autocomplete="email"
+            bind:value={cloudEmail}
+          />
+        </div>
+        <div class="field">
+          <label for="cloud-password">{t('cloud.password')}</label>
+          <input
+            id="cloud-password"
+            type="password"
+            autocomplete="current-password"
+            bind:value={cloudPassword}
+          />
+        </div>
+        <button type="submit" class="btn-primary" disabled={CLOUD.busy || !cloudEmail || !cloudPassword}>
+          {t('cloud.signIn')}
+        </button>
+      </form>
+      {#if CLOUD.error}
+        <p class="data-desc"><span class="badge badge--danger">{CLOUD.error}</span></p>
+      {/if}
+    {/if}
+  </section>
+
+  <section class="card">
     <h2>{t('settings.dataTitle')}</h2>
     {#if S.backend === 'vault'}
       <p class="data-desc">
@@ -159,5 +210,10 @@
     display: flex;
     gap: var(--space-2);
     flex-wrap: wrap;
+  }
+  .cloud-form {
+    display: grid;
+    gap: var(--space-2, 8px);
+    max-width: 360px;
   }
 </style>

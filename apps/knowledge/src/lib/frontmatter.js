@@ -105,7 +105,26 @@ export function itemFromFile(relPath, text, statInfo) {
     updatedAt: statInfo?.mtime ? new Date(statInfo.mtime).getTime() : Date.now(),
     _rawFm: raw,
     _folderTag: ft,
+    _meta: meta,
   }
+}
+
+/**
+ * 外科式更新条目的自定义 frontmatter 字段（如 status / last_updated）：
+ * 同步改 _rawFm 与 _meta，保存时随 serializeItem 一并落盘。
+ * 只该用在明确管理这些字段的功能（项目现状），值为 null 删除该键。
+ */
+export function applyMetaPatch(item, updates) {
+  const patched = patchFrontmatter(item._rawFm, updates)
+  item._rawFm = patched.trim() ? patched : null
+  const meta = { ...(item._meta ?? {}) }
+  for (const [key, val] of Object.entries(updates)) {
+    const k = key.toLowerCase()
+    if (val == null) delete meta[k]
+    else meta[k] = String(val)
+  }
+  item._meta = meta
+  return item
 }
 
 /**

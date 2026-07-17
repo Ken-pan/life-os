@@ -130,3 +130,42 @@ export async function deleteItemFile(id) {
   const { remove } = await fs()
   await remove(`${VAULT_ROOT}/${id}`)
 }
+
+/* ===== 项目现状感知（只读工程目录的 git 记录）===== */
+
+const HOME = VAULT_ROOT.replace(/\/「Projects」\/Vault$/, '')
+
+/** 笔记 frontmatter 的 path（"~/「Projects」/X"）→ 绝对路径。 */
+export function resolveProjectPath(p) {
+  return String(p).replace(/^~(?=\/)/, HOME).replace(/\/+$/, '')
+}
+
+/**
+ * 批量读取工程目录的最近 git 活动时间（.git/logs/HEAD 尾行时间戳）。
+ * 权限只开了这个文件的只读 glob（capabilities/default.json），读不到就跳过。
+ * @param {string[]} paths frontmatter 里的 path 原文
+ * @returns {Promise<Map<string, number>>} path 原文 → 时间戳 ms（0 = 无记录）
+ */
+export async function senseGitActivity(paths, parseGitHeadLog) {
+  const { readTextFile, exists } = await fs()
+  const out = new Map()
+  await mapLimit(paths, 8, async (p) => {
+    const headLog = `${resolveProjectPath(p)}/.git/logs/HEAD`
+    try {
+      if (!(await exists(headLog))) {
+        out.set(p, 0)
+        return
+      }
+      out.set(p, parseGitHeadLog(await readTextFile(headLog)))
+    } catch {
+      out.set(p, 0)
+    }
+  })
+  return out
+}
+
+/** 全量覆写 Vault 内一个 KnowledgeOS 全权拥有的 .md（自动现状报告）。 */
+export async function writeVaultFile(rel, content) {
+  const { writeTextFile } = await fs()
+  await writeTextFile(`${VAULT_ROOT}/${rel}`, content)
+}

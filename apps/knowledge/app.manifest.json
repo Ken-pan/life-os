@@ -43,8 +43,16 @@
       "name": "library"
     },
     {
+      "path": "/projects",
+      "name": "projects"
+    },
+    {
       "path": "/timeline",
       "name": "timeline"
+    },
+    {
+      "path": "/recall",
+      "name": "recall"
     },
     {
       "path": "/settings",

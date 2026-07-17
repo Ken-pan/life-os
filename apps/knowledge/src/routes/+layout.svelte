@@ -11,6 +11,7 @@
   import BottomNav from '$lib/components/BottomNav.svelte'
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange, initBackend } from '$lib/state.svelte.js'
+  import { initCloud } from '$lib/cloud.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
@@ -21,6 +22,7 @@
     const p = page.url.pathname
     if (p === '/settings') return t('settings.title')
     if (p.startsWith('/library')) return t('library.title')
+    if (p.startsWith('/projects')) return t('projects.title')
     if (p.startsWith('/timeline')) return t('timeline.title')
     if (p.startsWith('/recall')) return t('nav.recall')
     return t('inbox.title')
@@ -30,6 +32,7 @@
     applyTheme()
     applyLocale()
     initBackend()
+    initCloud()
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
     return () => {

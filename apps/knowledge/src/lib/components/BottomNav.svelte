@@ -11,6 +11,7 @@
     [
       { href: '/', icon: 'inbox', label: t('nav.inbox') },
       { href: '/library', icon: 'library', label: t('nav.library') },
+      { href: '/projects', icon: 'projects', label: t('nav.projects') },
       { href: '/timeline', icon: 'timeline', label: t('nav.timeline') },
       { href: '/recall', icon: 'recall', label: t('nav.recall') },
       { href: '/settings', icon: 'settings', label: t('nav.settings') },

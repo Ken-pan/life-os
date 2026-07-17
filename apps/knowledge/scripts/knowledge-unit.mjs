@@ -13,7 +13,20 @@ import {
   parseFrontmatter,
   patchFrontmatter,
   serializeItem,
+  itemFromFile,
+  applyMetaPatch,
 } from '../src/lib/frontmatter.js'
+import {
+  normalizeStatus,
+  fromPlannerStatus,
+  isProjectItem,
+  projectRecord,
+  matchPlannerProject,
+  plannerTaskStats,
+  parseGitHeadLog,
+  senseProject,
+  buildStatusReport,
+} from '../src/lib/projects.js'
 
 let pass = 0
 let fail = 0
@@ -143,6 +156,137 @@ function includes(name, haystack, needle) {
     pinned: false, createdAt: 0, _rawFm: '', _folderTag: undefined,
   })
   ok('plain-no-fm', !plain.startsWith('---'), plain.slice(0, 20))
+}
+
+/* ===== 项目现状感知 ===== */
+{
+  // status 归一化：手写乱值全部收敛
+  ok('st-active', normalizeStatus('active') === 'active')
+  ok('st-inprogress', normalizeStatus('In Progress') === 'active')
+  ok('st-designqa', normalizeStatus('Design QA') === 'active')
+  ok('st-done', normalizeStatus('Done') === 'completed')
+  ok('st-shipped', normalizeStatus('shipped') === 'completed')
+  ok('st-hold', normalizeStatus('on-hold') === 'paused')
+  ok('st-ref', normalizeStatus('reference') === 'reference')
+  ok('st-unknown', normalizeStatus('whatever') === null)
+  ok('st-empty', normalizeStatus('') === null)
+  ok('planner-shipped', fromPlannerStatus('shipped') === 'completed')
+
+  // 项目笔记判定：fm tags 含 project；索引/看板类排除；目录派生标签不算
+  const projItem = itemFromFile(
+    'Personal Project/NowLyrics.md',
+    '---\ntags: [project, macos-app]\nstatus: active\npath: ~/「Projects」/NowLyrics\n---\n正文',
+    null,
+  )
+  ok('proj-detect', isProjectItem(projItem))
+  const indexItem = itemFromFile(
+    'Personal Project/Projects 索引.md',
+    '---\ntags: [project, index]\ntype: index\nstatus: active\n---\n索引',
+    null,
+  )
+  ok('proj-skip-index', !isProjectItem(indexItem))
+  const folderOnly = itemFromFile('Personal Project/说明.md', '普通笔记', null)
+  ok('proj-skip-foldertag', !isProjectItem(folderOnly))
+
+  const rec = projectRecord(projItem)
+  ok('rec-status', rec.status === 'active')
+  ok('rec-path', rec.path === '~/「Projects」/NowLyrics')
+
+  // planner 匹配：标题归一 / slug / repoRefs 尾段
+  const plannerProjects = [
+    { id: 'p1', title: 'NowLyrics', slug: 'nowlyrics', status: 'shipped', repoRefs: [] },
+    { id: 'p2', title: '照片整理', slug: 'photo-organizer', status: 'active', repoRefs: ['~/「Projects」/Photo Organizor'] },
+  ]
+  ok('match-title', matchPlannerProject({ title: 'NowLyrics', path: '' }, plannerProjects)?.id === 'p1')
+  ok('match-title-norm', matchPlannerProject({ title: 'now lyrics', path: '' }, plannerProjects)?.id === 'p1')
+  ok(
+    'match-reporef',
+    matchPlannerProject({ title: 'Photo-Organizor', path: '~/「Projects」/Photo Organizor' }, plannerProjects)?.id === 'p2',
+  )
+  ok('match-none', matchPlannerProject({ title: '不存在', path: '' }, plannerProjects) === null)
+
+  // 任务聚合：墓碑/无项目排除，近两周完成单算
+  const NOW = Date.parse('2026-07-16T12:00:00Z')
+  const stats = plannerTaskStats(
+    [
+      { projectId: 'p1', completed: false },
+      { projectId: 'p1', completed: true, completedAt: NOW - 3 * 86400000 },
+      { projectId: 'p1', completed: true, completedAt: NOW - 60 * 86400000 },
+      { projectId: 'p1', completed: false, deletedAt: NOW },
+      { projectId: null, completed: false },
+    ],
+    { now: NOW },
+  )
+  const s1 = stats.get('p1')
+  ok('stats-open', s1.open === 1)
+  ok('stats-done', s1.done === 2)
+  ok('stats-recent', s1.doneRecently === 1)
+
+  // git logs/HEAD 解析：取最后一行时间戳
+  const headLog = [
+    '0000 aaaa Ken <k@x.com> 1751000000 -0700\tcommit: init',
+    'aaaa bbbb Ken <k@x.com> 1752600000 -0700\tcommit: latest',
+  ].join('\n')
+  ok('git-parse', parseGitHeadLog(headLog) === 1752600000000)
+  ok('git-parse-empty', parseGitHeadLog('') === 0)
+  ok('git-parse-garbage', parseGitHeadLog('not a log') === 0)
+
+  // 感知：planner 状态优先；git 活跃启发其次；completed 不被 git 空闲降级
+  const senseP = senseProject(
+    { status: 'active', title: 'NowLyrics' },
+    { planner: { status: 'shipped' }, stats: null, lastCommitAt: 0, now: NOW },
+  )
+  ok('sense-planner-wins', senseP.suggested === 'completed' && senseP.drift)
+  const senseGitActive = senseProject(
+    { status: null, title: 'x' },
+    { lastCommitAt: NOW - 5 * 86400000, now: NOW },
+  )
+  ok('sense-git-active', senseGitActive.suggested === 'active')
+  const senseIdle = senseProject(
+    { status: 'active', title: 'x' },
+    { lastCommitAt: NOW - 120 * 86400000, now: NOW },
+  )
+  ok('sense-git-idle', senseIdle.suggested === 'paused')
+  const senseSettled = senseProject(
+    { status: 'completed', title: 'x' },
+    { lastCommitAt: NOW - 5 * 86400000, now: NOW },
+  )
+  ok('sense-completed-stays', senseSettled.suggested === null && !senseSettled.drift)
+  const senseAligned = senseProject(
+    { status: 'active', title: 'x' },
+    { lastCommitAt: NOW - 5 * 86400000, now: NOW },
+  )
+  ok('sense-aligned-nodrift', !senseAligned.drift)
+
+  // applyMetaPatch：写 status/last_updated 不碰未知字段，往返落盘仍完整
+  const item = itemFromFile(
+    'Personal Project/X.md',
+    '---\ntags: [project]\nstatus: active\nsrc-fp: keepme\ntech: [Swift 6]\npath: ~/「Projects」/X\n---\n正文',
+    null,
+  )
+  applyMetaPatch(item, { status: 'paused', last_updated: '2026-07-16' })
+  ok('metapatch-meta', item._meta.status === 'paused' && item._meta.last_updated === '2026-07-16')
+  const written = serializeItem(item)
+  includes('metapatch-status', written, 'status: paused')
+  includes('metapatch-lastupd', written, 'last_updated: 2026-07-16')
+  includes('metapatch-keeps-srcfp', written, 'src-fp: keepme')
+  includes('metapatch-keeps-tech', written, 'tech: [Swift 6]')
+  includes('metapatch-keeps-path', written, 'path: ~/「Projects」/X')
+  ok('metapatch-status-once', (written.match(/^status:/gm) || []).length === 1, written)
+  // 再次解析（模拟下次冷启动）确认无损
+  const reread = itemFromFile('Personal Project/X.md', written, null)
+  ok('metapatch-roundtrip', reread._meta.status === 'paused' && reread._meta['src-fp'] === 'keepme')
+
+  // 报告生成：包含项目行与证据
+  const report = buildStatusReport([
+    {
+      record: { id: 'Personal Project/X.md', title: 'X', status: 'active', rawStatus: 'active' },
+      sense: { suggested: null, reasons: ['3 天前有提交'], drift: false },
+    },
+  ])
+  includes('report-title', report, '# 📡 项目现状（自动）')
+  includes('report-row', report, '| X | 🟢 进行中 | 3 天前有提交 | [[X]] |')
+  includes('report-fm', report, 'generated_by: knowledgeos')
 }
 
 console.log(`knowledge-unit: ${pass} passed, ${fail} failed`)

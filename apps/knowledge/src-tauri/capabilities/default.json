@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "KNOWLEDGE.OS 主窗口权限：核心 + 限定 Vault 目录的文件读写（.md 知识库后端）",
+  "description": "KNOWLEDGE.OS 主窗口权限：核心 + 限定 Vault 目录的文件读写（.md 知识库后端）+ 工程目录 git 记录只读（项目现状感知）",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -14,7 +14,10 @@
     },
     {
       "identifier": "fs:allow-read-text-file",
-      "allow": [{ "path": "$HOME/「Projects」/Vault/**" }]
+      "allow": [
+        { "path": "$HOME/「Projects」/Vault/**" },
+        { "path": "$HOME/「Projects」/*/.git/logs/HEAD" }
+      ]
     },
     {
       "identifier": "fs:allow-write-text-file",
@@ -34,7 +37,10 @@
     },
     {
       "identifier": "fs:allow-exists",
-      "allow": [{ "path": "$HOME/「Projects」/Vault/**" }]
+      "allow": [
+        { "path": "$HOME/「Projects」/Vault/**" },
+        { "path": "$HOME/「Projects」/*/.git/logs/HEAD" }
+      ]
     },
     {
       "identifier": "fs:allow-stat",
