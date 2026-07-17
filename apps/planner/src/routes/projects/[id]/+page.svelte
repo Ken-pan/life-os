@@ -22,6 +22,7 @@
   import { completeTask, editTask } from '$lib/taskUi.js'
   import { t } from '$lib/i18n/index.js'
   import { toast } from '$lib/ui.svelte.js'
+  import { PROJECT_CATEGORIES, categoryOf } from '$lib/domain/projectCategory.js'
 
   const projectId = $derived(page.params.id)
   const project = $derived(getProjectById(projectId))
@@ -40,6 +41,7 @@
   let status = $state('active')
   let progressMode = $state('automatic')
   let manualProgress = $state(0)
+  let area = $state('') // '' = 自动(按名称/备注),否则为手选分类 id → 写 areaId
 
   $effect(() => {
     if (!project) return
@@ -48,7 +50,13 @@
     status = project.status
     progressMode = project.progressMode
     manualProgress = project.manualProgress ?? 0
+    area = project.areaId ?? ''
   })
+
+  // "自动"时鸟瞰图会落到的分类,给 select 的自动项做提示
+  const autoCategory = $derived(
+    project ? PROJECT_CATEGORIES.find((c) => c.id === categoryOf({ ...project, areaId: null })) : null,
+  )
 
   function saveProject() {
     if (!project || !title.trim()) return
@@ -58,6 +66,7 @@
       status,
       progressMode,
       manualProgress: progressMode === 'manual' ? Number(manualProgress) : null,
+      areaId: area || null,
     })
     toast(t('toast.projectSaved'), 'success')
   }
@@ -183,6 +192,17 @@
         <textarea id="project-summary" rows="3" bind:value={summary}></textarea>
       </div>
       <div class="project-editor-grid">
+        <div class="field">
+          <label for="project-category">{t('projects.fieldCategory')}</label>
+          <select id="project-category" bind:value={area}>
+            <option value="">
+              {t('projects.categoryAuto')}{autoCategory ? ` → ${t(autoCategory.labelKey)}` : ''}
+            </option>
+            {#each PROJECT_CATEGORIES as cat (cat.id)}
+              <option value={cat.id}>{t(cat.labelKey)}</option>
+            {/each}
+          </select>
+        </div>
         <div class="field">
           <label for="project-status">{t('projects.fieldStatus')}</label>
           <select id="project-status" bind:value={status}>

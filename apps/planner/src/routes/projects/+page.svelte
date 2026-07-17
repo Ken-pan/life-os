@@ -14,44 +14,30 @@
   import { MindMap } from '@life-os/platform-web/svelte/charts'
   import { buildTaskMetaLine } from '$lib/domain/taskMetaLine.js'
   import { editTask } from '$lib/taskUi.js'
+  import { PROJECT_CATEGORIES, categoryOf } from '$lib/domain/projectCategory.js'
 
   let title = $state('')
   let summary = $state('')
+  let newArea = $state('') // 新建项目时选的分类('' = 自动)
 
   const projects = $derived(visibleProjects())
   const activeProjects = $derived(projects.filter((project) => project.status === 'active'))
 
   // ── 鸟瞰图:全景(分类+项目两层直接展开) → 点项目聚焦看任务 ──
-  // 分类按项目名/备注规则自动派生(零维护),areaId 若有则优先(未来 area UI 用)
-  const CATEGORY_META = [
-    { id: 'lifeos', label: 'Life OS 产品' },
-    { id: 'portfolio', label: '作品集 / 产品' },
-    { id: 'work', label: '工作 · Ingram' },
-    { id: 'tools', label: '工具 / 插件' },
-  ]
-  // 明确归"作品集/产品"的(对外发布过、或作品集展示用的 side project)
-  const PORTFOLIO_NAMES = new Set([
-    'Broadser', 'AI Design Commons', 'SenseTime Hub', 'Landfiner',
-    'CIWEI Job Board', 'Conference Visual', 'Animal Emoji',
-    'NowLyrics', 'Ciwei-Group', 'portfolio2026', 'Context Helper', 'kens-toolbox',
-  ])
-  function categoryOf(p) {
-    if (p.areaId && CATEGORY_META.some((c) => c.id === p.areaId)) return p.areaId
-    if (/^Life OS|^PaperOS/.test(p.title)) return 'lifeos'
-    if (/^Ingram/.test(p.title)) return 'work'
-    if (PORTFOLIO_NAMES.has(p.title)) return 'portfolio'
-    // 备注里有对外产品/作品集信号的,也归作品集
-    if (/作品集|已发布|上架|Product Hunt|users|求职|平台|社区|视觉|动画/.test(p.summary || '')) {
-      return 'portfolio'
-    }
-    return 'tools'
-  }
+  // 分类逻辑抽在 $lib/domain/projectCategory.js(鸟瞰图/详情页/列表共用真源)
 
   // 焦点:聚焦某项目看任务(为空 = 分类全景)
   let focusProjectId = $state(/** @type {string | null} */ (null))
   const focusProject = $derived(
     focusProjectId ? projects.find((p) => p.id === focusProjectId) ?? null : null,
   )
+
+  // context-aware 联动:鸟瞰图聚焦某项目时,下面列表高亮并滚动到它
+  $effect(() => {
+    if (!focusProjectId) return
+    const el = document.querySelector(`[data-project-id="${focusProjectId}"]`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
 
   // 任务节点说明:备注优先,其次(有日期时)排期/截止元信息
   function taskNote(task) {
@@ -83,11 +69,11 @@
   const categoryTree = $derived({
     label: t('projects.title'),
     note: t('projects.mapRootNote', { count: activeProjects.length }),
-    children: CATEGORY_META.map((cat) => {
+    children: PROJECT_CATEGORIES.map((cat) => {
       const ps = activeProjects.filter((p) => categoryOf(p) === cat.id)
       if (!ps.length) return null
       return {
-        label: `${cat.label} · ${ps.length}`,
+        label: `${t(cat.labelKey)} · ${ps.length}`,
         data: { kind: 'category', id: cat.id },
         note: `${ps.length} 个项目`,
         children: ps.map((p) => {
@@ -144,9 +130,10 @@
   function submitProject() {
     const cleanTitle = title.trim()
     if (!cleanTitle) return
-    createProject({ title: cleanTitle, summary: summary.trim() })
+    createProject({ title: cleanTitle, summary: summary.trim(), areaId: newArea || null })
     title = ''
     summary = ''
+    newArea = ''
     toast(t('toast.projectCreated'), 'success')
   }
 
@@ -181,6 +168,16 @@
         placeholder={t('projects.newSummaryPlaceholder')}
         aria-label={t('projects.newSummaryPlaceholder')}
       />
+      <select
+        class="project-create-cat"
+        bind:value={newArea}
+        aria-label={t('projects.fieldCategory')}
+      >
+        <option value="">{t('projects.categoryAuto')}</option>
+        {#each PROJECT_CATEGORIES as cat (cat.id)}
+          <option value={cat.id}>{t(cat.labelKey)}</option>
+        {/each}
+      </select>
     </div>
     <button type="submit" class="btn-primary" disabled={!title.trim()}>
       <Icon name="plus" size={17} strokeWidth={2} />
@@ -205,7 +202,13 @@
   {/if}
 
   {#if projects.length}
-    {@render projectSection(t('projects.active'), activeProjects)}
+    <!-- 列表按分类分组(呼应鸟瞰图);聚焦某项目时该项目高亮并滚动到视图 -->
+    {#each PROJECT_CATEGORIES as cat (cat.id)}
+      {@const catProjects = activeProjects.filter((p) => categoryOf(p) === cat.id)}
+      {#if catProjects.length}
+        {@render projectSection(t(cat.labelKey), catProjects, cat.id)}
+      {/if}
+    {/each}
     {@render projectSection(t('projects.paused'), pausedProjects)}
     {@render projectSection(t('projects.shipped'), shippedProjects)}
   {:else}
@@ -213,13 +216,18 @@
   {/if}
 </div>
 
-{#snippet projectSection(sectionTitle, sectionProjects)}
+{#snippet projectSection(sectionTitle, sectionProjects, catId = null)}
   {#if sectionProjects.length}
-    <section class="project-section">
+    <section class="project-section" id={catId ? `cat-${catId}` : undefined}>
       <h2>{sectionTitle}</h2>
       <div class="project-list">
         {#each sectionProjects as project (project.id)}
-          <a class="project-row" href="/projects/{project.id}">
+          <a
+            class="project-row"
+            class:project-row--focused={project.id === focusProjectId}
+            data-project-id={project.id}
+            href="/projects/{project.id}"
+          >
             <span class="project-status project-status--{project.status}" aria-hidden="true"></span>
             <span class="project-row-main">
               <span class="project-row-title">{project.title}</span>
@@ -255,6 +263,16 @@
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
     gap: var(--space-2);
     min-width: 0;
+  }
+
+  .project-create-cat {
+    grid-column: 1 / -1;
+    height: var(--control-h);
+    border-radius: var(--control-radius);
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 0 var(--btn-pad-x-md);
+    color: var(--t1);
   }
 
   .project-create input {
@@ -325,6 +343,18 @@
   }
 
   .project-row:hover .project-row-title {
+    color: var(--accent);
+  }
+
+  /* 鸟瞰图聚焦某项目时,列表里对应卡片高亮(context-aware 联动) */
+  .project-row--focused {
+    background: var(--accent-bg, color-mix(in srgb, var(--accent) 8%, transparent));
+    border-radius: var(--control-radius, 10px);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+  .project-row--focused .project-row-title {
     color: var(--accent);
   }
 
