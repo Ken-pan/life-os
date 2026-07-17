@@ -10,8 +10,8 @@
 
 | 焦点 | 主题 | 文档 |
 | ---- | ---- | ---- |
-| Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** closure | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
-| Next | RECOG.1r · PLNR · object_ref | [`roadmap/apps/`](./roadmap/apps/README.md) |
+| Now | **PLAT.CI.0**（补 catalog snapshot）· **FINC** closure | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) · [handoff](./qa/agent-handoff-2026-07-17-roi.md) |
+| Next | RECOG.1r · PLNR.UIUX · object_ref | [`roadmap/apps/`](./roadmap/apps/README.md) |
 | User gate | SCHED/CAPTURE · HLT-5 · refine launchd · Knowledge rebuild 验 watcher | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) |
 
 **2026-07-17 夜已收割：** KNOW.VAULT.0 · PLAT.USAGE.0 首报 · CI 修复推送 · Finance RPC anon revoke · Home auto-refine — [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) · [`qa/usage-audit-2026-07.md`](./qa/usage-audit-2026-07.md)

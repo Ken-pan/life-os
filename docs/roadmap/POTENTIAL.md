@@ -7,16 +7,16 @@
 ## 结论（TL;DR）
 
 ```text
-MCP where_is / STABLE.26 / VAULT / USAGE 已收割；下一刀切「CI + 信任 closure」：
+能力刀已收很多；当前唯一 P0 是 catalog visual 基线缺口：
 
-P0  PLAT.CI.0
+P0  PLAT.CI.0 — 补五品牌 snapshot PNG（见 handoff）
 P1  FINC.PURCHASE.6.a closure（用户 gate 重）
-P2  HOME.RECOG.1r → PLNR.* → object_ref
+P2  HOME.RECOG.1r（区域补扫/观感）→ PLNR.UIUX → object_ref
 ```
 
 **刚收割：**  
-`HOME.MCP.13` · `AIOS.STABLE.26` · `KNOW.VAULT.0` · `PLAT.USAGE.0` 首报 · FINC Review 过滤拆分。  
-**用户 gate / config：** Home MCP URL 进 AIOS · `HOME.RECOG.refine` · SCHED/CAPTURE · HLT-5 · Knowledge rebuild。
+`PLNR.ATTACH.0` · `HOME.MCP.13` · `AIOS.STABLE.26` · CI SHA 并发 · Home group-merge。  
+**暂停交接：** [`../qa/agent-handoff-2026-07-17-roi.md`](../qa/agent-handoff-2026-07-17-roi.md)。
 
 ## 复利权重（摘要）
 
@@ -33,7 +33,7 @@ P2  HOME.RECOG.1r → PLNR.* → object_ref
 
 | 顺序 | 项 | 紧急度 | ROI | 投入 | 为什么现在 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | **PLAT.CI.0** | P0 | 🔥 | <0.5d | 远程全绿仍是开关 |
+| 1 | **PLAT.CI.0** | P0 | 🔥 | <0.5d | 缺五品牌 snapshot PNG（290）；非 cancel |
 | 2 | **FINC.PURCHASE.6.a closure** | P1 | 🔥 | 0.5d | 信任锚点；过滤拆分已做，剩 owner QA |
 | 3 | **HOME.RECOG.1r** | P2 | ◆ | 0.5–1d | 区域高精度 / 摘要签收 |
 | 4 | **PLNR.UIUX.0** | P2 | ◆ | 1d | 生产收口按需（ATTACH.0 已收） |

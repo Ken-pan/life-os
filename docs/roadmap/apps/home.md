@@ -147,7 +147,7 @@ AIOS 已有本地 VLM（vlm-fast / vlm-quality）。Google 要 Nest Aware 订阅
 | **HOME.RECOG.2** | 大件 embedding matcher | ✅ | — | — | Hungarian 一对一写库验证；契约对齐 `ObjectMatchDecision` |
 | **HOME.RECOG.3** | 证据式确认 UI + /plan 横幅 | ✅ | — | — | 难例卡片 · `RecognitionBanner` · MAX_REVIEWS=5（`4675dd06`） |
 | **HOME.RECOG.refine** | Mac auto-refine 管线 | ✅ 代码 | — | — | `refine.sh` + launchd plist；**用户 gate** 自装 LaunchAgent |
-| **HOME.RECOG.1r** | 认亲窄残余 | P2 | ◆ | 0.5–1d | 区域级高精度补扫（1–3 区）；摘要观感签收；可选 group-merge / 近 N 次精修 |
+| **HOME.RECOG.1r** | 认亲窄残余 | P2 | ◆ | 0.5–1d | 区域级高精度补扫（1–3 区）；摘要观感签收（group-merge/露总数已收 `ac4d632c`） |
 | **HOME.MCP.13** | `where_is` 接入 AIOS | ✅ | ◆◆ | — | `storage_snapshots` + `/api/mcp`；AIOS 配 `https://home.kenos.space/api/mcp` + JWT（部署后） |
 | **HOME.ONBOARD.9** | 平面编辑首次引导 | P2 | ○ | 0.5–1d | `PlanShortcutsHelp` onboarding |
 | **HOME.SMOKE.10** | `/plan` smoke 扩面 | P2 | ○ | 0.5d | 508 转换 9 门窗 TST-01 |
