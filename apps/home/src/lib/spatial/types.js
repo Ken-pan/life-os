@@ -452,6 +452,13 @@
  * @property {number} [measuredHIn] LiDAR 实测脚印深(英寸)
  * @property {'high'|'medium'|'low'} [confidence] RoomPlan 识别置信度
  * @property {string} [colorHex] 主色 #RRGGBB(设备端抓拍图聚类,或 VLM 识别)
+ * @property {number} [colorConfidence] 设备侧抓色置信度 0..1(iOS ObjectShotCapture:
+ *   主色簇纯度 × 可用像素占比 × 多方位共识度,2026-07-16 加法式)。低 = 罩布/内容物/
+ *   反光把物体搅花了,这条主色别太当真。floor-materials 的 {@link isTrustworthyScan}
+ *   拿它当第二道闸:即便采样色恰好淡中性,置信度 <0.5 也不采信。省略=老扫描,不设闸
+ * @property {number} [kindConfidence] 分类置信度 0..1(iOS KindMaps.refineKind,2026-07-16
+ *   加法式)。低 = kind 是靠几何猜的(如按尺寸把 table 细分 desk),该让用户复核;
+ *   高 = RoomPlan 直接判定或强几何信号(台面高→standing_desk)。省略=老扫描
  * @property {string} [photoRef] 这件家具的实拍裁剪照片(最佳一张;IndexedDB,见 photo-store.js)
  * @property {Array<{ photoRef?: string, azimuthDeg?: number }>} [photos]
  *   多视角证据包(按方位分桶,分数降序,第一张 = photoRef 那张)——

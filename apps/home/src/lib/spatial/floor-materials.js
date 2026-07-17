@@ -391,15 +391,29 @@ const KIND_HEX = {
  */
 const TRUST_SAT_MAX = 0.3
 const TRUST_DARK_MIN = 0.35
+/**
+ * 设备侧抓色置信度下限(`attrs.colorConfidence`,iOS ObjectShotCapture 输出:
+ * 主色簇纯度 × 可用像素占比 × 多方位共识度)。低于此 = 这张主色多半是罩布 /
+ * 内容物 / 反光把物体搅花了,即便采样出来的色恰好淡中性也别信。
+ * 老扫描没有这个字段(undefined)→ 不设闸,退回纯色相判断(向后兼容)。
+ */
+const TRUST_CONF_MIN = 0.5
 
 /**
  * 这条扫描主色是否是「可信的淡中性」—— 亮到、且中性到几乎只可能是家具本体真实
  * 浅色,而非罩布 / 内容物 / 阴影。是否**采用**它还要看 symbol 属不属于软兜底
  * (见 {@link resolveFurnitureColor});这里只判「色本身可不可信」。
+ *
+ * 两道闸:①色相本身淡中性;②设备置信度够(有该字段时)。第 ② 道接住「采样恰好
+ * 淡中性、但其实是罩布/反光」——iOS 已在源头算好 colorConfidence,这里直接用。
  * @param {string | undefined} scanHex `attrs.colorHex`
+ * @param {number} [colorConfidence] `attrs.colorConfidence` 0..1;省略=老扫描,不设闸
  * @returns {boolean}
  */
-export function isTrustworthyScan(scanHex) {
+export function isTrustworthyScan(scanHex, colorConfidence) {
+  if (typeof colorConfidence === 'number' && colorConfidence < TRUST_CONF_MIN) {
+    return false
+  }
   const rgb = parseHex(scanHex ?? '')
   if (!rgb) return false
   const { s, l } = rgbToHsl(rgb)
@@ -443,11 +457,16 @@ const SOFT_SCAN_SYMBOLS = new Set(['table', 'shelf', 'coatRack', 'officeChair'])
  * @param {string | undefined} kind placements 的规范 kind 名
  * @param {string | undefined} symbol furniture-symbols 的 symbol 名
  * @param {string | undefined} scanHex 家具 `attrs.colorHex` 的扫描主色
+ * @param {number} [colorConfidence] `attrs.colorConfidence` 0..1,喂给第 2 级的可信度判断
  * @returns {string | undefined} 原始 #hex,或 undefined = 无类型色且扫描不可信
  */
-export function resolveFurnitureColor(kind, symbol, scanHex) {
+export function resolveFurnitureColor(kind, symbol, scanHex, colorConfidence) {
   if (kind && KIND_HEX[kind]) return KIND_HEX[kind]
-  if (symbol && SOFT_SCAN_SYMBOLS.has(symbol) && isTrustworthyScan(scanHex)) {
+  if (
+    symbol &&
+    SOFT_SCAN_SYMBOLS.has(symbol) &&
+    isTrustworthyScan(scanHex, colorConfidence)
+  ) {
     return scanHex
   }
   return symbol ? SYMBOL_HEX[symbol] : undefined

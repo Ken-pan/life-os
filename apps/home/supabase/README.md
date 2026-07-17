@@ -31,6 +31,8 @@ payload 契约与 iOS 端 `HomeScan/Convert/HomeOSModels.swift`、网页端
 | `attrs.yawDeg` | 真实朝向与 90° 网格的偏角(度,(-45,45],2026-07-16 加法式):`rotation` 只有 0/90/180/270,斜摆家具(转角钢琴/斜置沙发)真朝向 = rotation + yawDeg;贴轴(≤3°)不发。网页端当前忽略,渲染斜置家具时启用 |
 | `attrs.colorHex` | 主色 `#RRGGBB`（设备端抓拍图 k-means；网页端拉取时若有 ≥2 个方位照片会用 **CIELAB 分量中位数聚合**覆盖——单视角白平衡漂移拽不动结果，2026-07-15） |
 | `attrs.colorSpreadE` | 多视角主色离散度（ΔE76，网页端派生）：>12 = 光线不稳，这件的颜色别太当真（能力18 的分维置信度） |
+| `attrs.colorConfidence` | 设备侧抓色置信度 `0..1`（iOS `ObjectShotCapture`，2026-07-16 加法式）：主色簇纯度 × 可用像素占比 × 多方位共识度。低 = 罩布/内容物/反光把物体搅花了。网页端 `floor-materials.isTrustworthyScan` 拿它当第二道闸——采样色恰好淡中性但置信度 `<0.5` 也不采信（区分「可信的白」与「猜的罩布色」） |
+| `attrs.kindConfidence` | 分类置信度 `0..1`（iOS `KindMaps.refineKind`，2026-07-16 加法式）：低 = kind 靠几何猜的（按尺寸细分 `table`→`desk`），该让用户复核；高 = RoomPlan 直接判定或强几何信号（台面高 →`standing_desk`） |
 | `attrs.photoPath` | 家具抓拍图（最佳一张）桶内路径；网页端拉取后换成本地 `attrs.photoRef`（IndexedDB），`photoPath` 不落地 |
 | `attrs.photoHash` | 最佳抓拍图的感知哈希（dHash，16 位 hex；2026-07-15）。**网页端拉取照片时派生**（iPhone 不发），跨扫描身份匹配的外观特征——尺寸抖动的柜子靠它认回来（汉明 ≤10 强加分、≥26 轻罚不否决），见 `spatial/photo-hash.js` |
 | `attrs.photos[]` | 多视角证据包：`{ path, azimuthDeg }`，按方位分 4 桶每桶最佳、分数降序（第一张 = photoPath 那张）；桶内定名 `obj-{id}-{k}.jpg`；网页端逐张换成 `photos[].photoRef` |

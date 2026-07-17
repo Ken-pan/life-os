@@ -31,6 +31,11 @@ const rendered = (kind, symbol, scanHex) => {
   const raw = resolveFurnitureColor(kind, symbol, scanHex)
   return raw == null ? null : tamedColor(raw, { minLight: 0.32, maxLight: 0.93 })
 }
+// 带 colorConfidence 的版本(第 6 节用)
+const rendered2 = (kind, symbol, scanHex, conf) => {
+  const raw = resolveFurnitureColor(kind, symbol, scanHex, conf)
+  return raw == null ? null : tamedColor(raw, { minLight: 0.32, maxLight: 0.93 })
+}
 const isWhitish = (hex) => hslOf(hex).l >= 0.8 && hslOf(hex).s <= 0.12
 const isDark = (hex) => hslOf(hex).l <= 0.4
 // 「木色」= WOOD_MED(#c79d70,饱和度 ≈0.44)那一档暖色;门槛压到 0.28 才算,
@@ -134,5 +139,29 @@ assert.equal(resolveFurnitureColor('mystery_thing', undefined, undefined), undef
   assert.ok(Math.abs(hslOf(main).l - hslOf(sub).l) >= 0.15, `两把办公椅该分色:${main} vs ${sub}`)
   assert.notEqual(main, sub, '同款办公椅不再同色')
 }
+
+// ——————————————————————————————————————————————————————————
+// 6. colorConfidence 闸(iOS 设备侧抓色置信度,加法式;区分「可信的白」与「猜的罩布色」)
+// ——————————————————————————————————————————————————————————
+// 色本身淡中性,但设备置信度低(罩布/反光把物体搅花)→ 不采信。
+assert.equal(isTrustworthyScan('#FFFFFF', 0.9), true, '纯白 + 高置信:采信')
+assert.equal(isTrustworthyScan('#FFFFFF', 0.3), false, '纯白但低置信(疑似罩布/反光):不采信')
+assert.equal(isTrustworthyScan('#FFFFFF', 0.5), true, '恰好 0.5 阈值:采信')
+assert.equal(isTrustworthyScan('#FFFFFF'), true, '无置信字段(老扫描):按纯色相判断,向后兼容')
+assert.equal(isTrustworthyScan('#FFFFFF', undefined), true, 'undefined 置信:同老扫描,不设闸')
+// 发黑色 + 高置信:仍不可信(置信度不能救高饱和/发黑)
+assert.equal(isTrustworthyScan('#330000', 0.99), false, '暗红即便高置信也不可信(色相闸先拦)')
+
+// 落到 resolveFurnitureColor:软兜底 shelf + 纯白扫描,低置信 → 不采信 → 回落浅木默认
+assert.equal(
+  resolveFurnitureColor('shelf', 'shelf', '#FFFFFF', 0.3),
+  resolveFurnitureColor('shelf', 'shelf', undefined),
+  '低置信的白层架扫描 → 回落 shelf 默认(不把罩布反光的假白当真白)',
+)
+// 高置信的白层架照旧救回
+assert.ok(
+  isWhitish(rendered2('shelf', 'shelf', '#FFFFFF', 0.9)),
+  '高置信白层架:仍救回白',
+)
 
 console.log('furniture-color-unit: ok')
