@@ -5,7 +5,7 @@
 > **跨站主线：** [`../INTEGRATION.md`](../INTEGRATION.md) · [`../GROWTH.md`](../GROWTH.md)
 > **E2E 证据：** [`../../qa/e2e-issues.md`](../../qa/e2e-issues.md)
 
-**脑暴日期：** 2026-07-09 · **复核：** 2026-07-17 ROI / 闭环深查（九 app 代码、测试、远程 schema、未提交 WIP、CI）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md)
+**脑暴日期：** 2026-07-09 · **复核：** 2026-07-17 晚（复利框架 + 代码事实对齐）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md) · **复利：** [`../COMPOUND.md`](../COMPOUND.md)
 
 执行顺序以 **hub §推荐执行顺序** 为准；下文不重复 Wave 全文。
 
@@ -73,13 +73,13 @@
 | ------- | ------ | --------------------------------------------------- | ------------------------------------------------------------------------- |
 | Planner | 生产   | 用户 gate：SCHED/CAPTURE 真机；Agent：定向 UI 收口 → 附件 WIP 决策 | [planner.md](./planner.md) |
 | Fitness | 生产   | maintenance；MEDIA.3 / SYNC.4 均 P2 按需 | [fitness.md](./fitness.md) |
-| Finance | 生产   | **FINC.PURCHASE.6.a closure QA**（0.5–1d，最高产品 ROI） | [finance.md](./finance.md) |
+| Finance | 生产   | **FINC.PURCHASE.6.a closure QA** | [finance.md](./finance.md) |
 | Music   | 生产   | paused / maintenance；MUSC.PIPE.4 仅问题触发 | [music.md](./music.md) |
 | Portal  | 启动器 | maintenance；不为凑九 app 扩卡 | [portal.md](./portal.md) |
-| Home    | 实验   | **HOME.RECOG.0** 生产↔git 闭环 → RECOG.1 安静扫描 → RECOG.2 matcher | [home.md](./home.md) |
+| Home    | 实验   | **HOME.RECOG.1r** 残余 → **HOME.MCP.13** | [home.md](./home.md) |
 | AIOS    | 实验/本地优先 | **AIOS.STABLE.26** 核心链路回归护栏 | [aios.md](./aios.md) |
-| KnowledgeOS | 实验/本地优先 | **KNOW.EDITOR.7** WIP 稳定化 → **KNOW.VAULT.0** watcher | [knowledge.md](./knowledge.md) |
-| HealthOS | 实验/本地优先 | **HLT-5** companion checkpoint → 用户真机 gate；其余后移 | [health.md](./health.md) |
+| KnowledgeOS | 实验/本地优先 | **KNOW.VAULT.0** watcher（EDITOR.7 已 checkpoint） | [knowledge.md](./knowledge.md) |
+| HealthOS | 实验/本地优先 | **HLT-5** 用户真机 gate；其余后移 | [health.md](./health.md) |
 | PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |
 
 ## 跨站集成矩阵（只读 / 事件）
@@ -90,17 +90,16 @@
 | **`life_events` 生产**        | —       | ✅ GYMS.EVENTS.1 | ✅      | —        | —                  | 自有 `home.events` 代码（非 `life_events`） | ✅ AIOS.21 | — | — |
 | **`life_events` 消费**        | ✅      | —                | —       | —        | 角标 PORT.GROWTH.2 | —        | —             | — | — |
 | **Portal 摘要 PORT.GROWTH.4** | ✅ 任务 | ✅ 训练          | ✅ 结余 | ✅ Music | ✅ Home            | —        | ❌ 未接入     | ❌ 未接入   | ❌ 未接入 |
-| **业务数据云**                | ✅      | ✅               | ✅      | ✅       | —                  | 🟡 扫描/照片/事件 migration 远程已 apply（07-17 实测）；项目本地真源 | ✅ 本地优先+云只读 | 🟡 Planner 云快照；Vault 未上云 | ❌ 原始健康数据仅本地 |
+| **业务数据云**                | ✅      | ✅               | ✅      | ✅       | —                  | 🟡 扫描/照片/事件/认亲生产；项目本地真源 | ✅ 本地优先+云只读 | 🟡 Planner 云快照；Vault 未上云 | ❌ 原始健康数据仅本地 |
 
 ## 已知阻塞（排期前必读）
 
 | 阻塞                              | 影响项                                     | 解除方式                                                               |
 | --------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
-| Home 可编辑项目仍是本地真源       | 全量跨设备编辑 / 多项目                    | 云扫描/照片/事件已生产；完整 spatial 项目同步仍未实现 |
-| Home object recognition 已进生产但代码未入版本史 | schema 可复现性 / matcher 继续迭代 | 立即完成 HOME.RECOG.0；这是 P0 交付完整性，不是新功能 |
-| Knowledge 块编辑器大 WIP 未入版本史 | 后续 watcher / sync / graph | 先做 KNOW.EDITOR.7 browser smoke + checkpoint |
-| Finance 6.a 文档仍写“UI/RPC 待实现” | 错误估时与重复开发 | 以代码和生产 RPC 为准，只剩 closure QA |
-| `events.ts` 仅 `finance.bill_due` | ~~**INTG.EVENTS.1b** / **GYMS.EVENTS.1**~~ | ✅ 已扩 `fitness.workout_logged`（2026-07-09）                         |
+| master CI 未稳定全绿（design-catalog a11y 等） | 所有交付可信度 | **PLAT.CI.0**；不得只以本地 gate 代替 |
+| Finance 6.a 只剩 closure QA | 错误估时与重复开发 | 以代码和生产 RPC 为准，勿按「UI/RPC 未实现」估天 |
+| Home 可编辑项目仍本地真源 | 全量跨设备编辑 | 不阻塞 RECOG/MCP；PROJ.4 后移 |
+| `events.ts` 仅少量类型 | INTG.EVENTS.2 智能 | 有场景再扩消费端；✅ 已有 `fitness.workout_logged` |
 
 ## 当前排序 · Wave 投入估算
 

@@ -6,6 +6,7 @@
 | ------------------------------------------------ | ------------------------------------------------- |
 | [`NORTH_STAR.md`](./NORTH_STAR.md)               | **愿景** — 终极形态、十 OS 判据、和现在的距离（非排期） |
 | [`SYSTEM_OVERVIEW.md`](./SYSTEM_OVERVIEW.md)     | **体系快照** — app/包清单、不变量、infra；与 hub 冲突时以 hub 为准 |
+| [`../roadmap/COMPOUND.md`](../roadmap/COMPOUND.md) | **复利判据** — 使用 × 开发取舍（排期仍以 hub 为准） |
 | [`contracts.md`](./contracts.md)                 | `@life-os/contracts` export 白名单 + Web 映射     |
 | [`responsive-chrome.md`](./responsive-chrome.md) | 断点 / AppBar / scroll-padding / 壳层契约（六端） |
 | [`events-rfc.md`](./events-rfc.md)               | `life_events` envelope、`finance.bill_due`        |

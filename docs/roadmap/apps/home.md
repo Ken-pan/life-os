@@ -142,17 +142,18 @@ AIOS 已有本地 VLM（vlm-fast / vlm-quality）。Google 要 Nest Aware 订阅
 
 | ID | 主题 | 紧急度 | ROI | 投入 | 验收 |
 | --- | --- | --- | --- | --- | --- |
-| **HOME.RECOG.0** | 生产 schema ↔ git 真源闭环 | **P0** | 🔥 | <0.5d | 已应用生产的 migration、embedding 服务、契约与 iOS 改动进入版本史；重复跑不重复、断点续跑、失败不覆盖正确结果 |
-| **HOME.RECOG.1** | Quick Scan 安静模式 + 扫后质量摘要 | P1 | 🔥 | 0.5–1d | 真机装机；每房间主动提示 ≤2；默认不催逐件补拍；摘要使用产品语言 |
-| **HOME.RECOG.2** | 大件 embedding matcher | P1 | ◆◆ | 1–2d | DINOv2 + kind 硬门 + 全局一对一；低置信不自动合并；回归 benchmark |
-| **HOME.RECOG.3** | 证据式确认 UI | P2 | ◆ | 1–2d | 默认 0–5 难例；新旧图/支持反对证据/暂不确定；反馈沉淀 positive/hard-negative |
+| **HOME.RECOG.0** | 生产 schema ↔ git 真源闭环 | ✅ | — | — | `5a2b7773`+：migration / embed 服务 / 契约入仓 |
+| **HOME.RECOG.1** | Quick Scan 安静模式 + 扫后质量摘要 | ✅ 主航道 | — | — | 真机安静遥测通过；质量摘要已装机，观感待用户签收 |
+| **HOME.RECOG.2** | 大件 embedding matcher | ✅ | — | — | Hungarian 一对一写库验证；契约对齐 `ObjectMatchDecision` |
+| **HOME.RECOG.3** | 证据式确认 UI | ✅ | — | — | 难例卡片 + userDecision 不被 matcher 冲掉 |
+| **HOME.RECOG.1r** | 认亲残余闭环 | **P1** | 🔥 | 0.5–1d | 高精度补扫（指定 1–3 区域）+ 扫完自动 embed/match；摘要观感签收 |
 | **HOME.MCP.13** | `where_is` 接入 AIOS | P2 | ◆◆ | 1–2d | 薄封装 `searchStorageItems()`，经现有 MCP server 暴露；AIOS 无源码耦合 |
 | **HOME.ONBOARD.9** | 平面编辑首次引导 | P2 | ○ | 0.5–1d | `PlanShortcutsHelp` onboarding |
 | **HOME.SMOKE.10** | `/plan` smoke 扩面 | P2 | ○ | 0.5d | 508 转换 9 门窗 TST-01 |
 
-> **`HOME.DEVICE.*` 智能家居线**（2026-07-14 脑暴）研判中、**未进本表** —— 须先过 `HOME.DEVICE.12` 设备摸底，见 [§智能家居 Workstream](#智能家居-workstreamhomedevice--研判中)。
+> 实现细节与遥测 → [`apps/home/docs/object-recognition-roadmap.md`](../../../apps/home/docs/object-recognition-roadmap.md)
 >
-> **`HOME.PROJ.7` 后移：** 当前没有第二个真实可编辑项目需求；先把扫描认亲/安静扫描做稳。未验证需求前不为了“多项目”增加身份与冲突复杂度。
+> **`HOME.DEVICE.*` 智能家居线**研判中、未进本表。**`HOME.PROJ.7` 后移**（无第二真实项目）。
 
 ### 实现锚点
 

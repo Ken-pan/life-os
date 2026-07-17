@@ -57,6 +57,8 @@ Any manual `netlify deploy` **must** include `CI=1` and `--filter <workspace>`
 - `packages/{theme,sync,contracts,platform-web}` — 共享包
 - `docs/README.md` — 文档导航 hub
 - `docs/LIFEOS_ROADMAP.md` — 状态 hub（Now / Next / Shipped）
+- `docs/roadmap/COMPOUND.md` — 复利判据（使用 × 开发取舍）
+- `docs/roadmap/POTENTIAL.md` — 当前 ROI 研判
 - `docs/ops/supabase.md` — 共享 DB 迁移与 `supabase-sql.sh` 运维
 - `docs/ops/canonical.md` — source of truth vs archived repos
 - `docs/ops/netlify.md` — 六站 deploy（含 Portal、Home 实验）

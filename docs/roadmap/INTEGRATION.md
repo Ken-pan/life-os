@@ -105,10 +105,10 @@ RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 | Portal 继续     | ✅   | `touchAppLastOpened` 打开时写入 `last_opened_at`（PORT.GROWTH.1）           |
 | PWA             | ✅   | `static/sw.js` + `bindPwaForegroundResume`                         |
 | 云扫描 / 事件   | ✅   | `home.scans` + 私有照片桶 + `home.events` 三条 migration 均已在远程生产链（2026-07-17 实测） |
-| 物体识别数据层  | 🟡   | migration 已生产注册 + 57 embeddings；代码/服务仍待 `HOME.RECOG.0` 版本史闭环 |
+| 物体识别数据层  | ✅   | migration 生产注册 + git 闭环（`HOME.RECOG.0` · `5a2b7773`）；embedding/matcher/证据 UI 已验 |
 | 项目同步        | 🟡   | 可编辑 `homeos_spatial_v1` 仍是本地真源；完整跨设备编辑未完成      |
 
-### Home 排期（hub §Next / §Parked）
+### Home 排期（hub §Now / §Next / §Parked）
 
 | ID       | 主题                    | ROI | 依赖 | 说明                                |
 | -------- | ----------------------- | --- | ---- | ----------------------------------- |
@@ -116,8 +116,10 @@ RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 | **HOME.SSO.2** | 接 `coreIdentity` + SSO | ✅  | —    | `apps/home/src/lib/auth.svelte.js`  |
 | **HOME.SSO.3** | redirect + DB `app_id`  | ✅  | —    | migration + Supabase Management API |
 | **HOME.SYNC.4** | 扫描 / 照片 / 事件云链路 | ✅  | —    | scans/storage/events 均在生产远程确认 |
-| **HOME.RECOG.0** | 物体识别生产↔git 闭环 | 🔥 | HOME.SYNC.4 | schema 已生产 + 57 embeddings；migration/服务/iOS 契约须进入版本史 |
-| **HOME.RECOG.1–3** | 安静扫描 → matcher → 证据确认 | ◆◆ | HOME.RECOG.0 | 当前 Home 产品主航道 |
+| **HOME.RECOG.0** | 物体识别生产↔git 闭环 | ✅  | HOME.SYNC.4 | `20260717120000` + embed 服务入仓 |
+| **HOME.RECOG.1–3** | 安静扫描 → matcher → 证据确认 | ✅ 主航道 | HOME.RECOG.0 | 真机/写库/UI 已验；见 app 文档 |
+| **HOME.RECOG.1r** | 高精度补扫 + 自动精修残余 | 🔥 | RECOG.1–3 | hub §Now；区域引导 + 扫完自动 embed/match |
+| **HOME.MCP.13** | `where_is` → AIOS | ◆◆ | STORAGE.19 | hub §Next |
 | **HOME.PROJ.4** | 完整 spatial 项目同步    | ⏸️  | HOME.SYNC.4 | 编辑真源跨设备、冲突与多项目身份；仍属大投入 |
 | **HOME.PROJ.5** | 平面双模式（浏览/编辑） | ✅  | —    | 已去掉工坊 gate；无墙图/测距入口    |
 

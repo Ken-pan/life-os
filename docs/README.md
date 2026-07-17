@@ -2,30 +2,25 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后核对：** 2026-07-17 ROI / 闭环深查（九 app 代码 + 测试 + 远程 schema + 未提交 WIP + CI）· 维护约定见 [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后核对：** 2026-07-17 晚 · 复利框架入库 + Now/Next 与代码事实对齐 · [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
-**模型：** 生产/版本史完整性 → 收割已完成代码 → 每日体感 → 防回归 → 窄跨站快赢 — 详见 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §推荐执行顺序
+**模型：** CI 可信 → 信任收割 → 每日真源 → 防回归 → 跨 OS 快赢 — [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §推荐执行顺序 · [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)
 
-| 焦点 | 主题                                                                     | 文档                                                             |
-| ---- | ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| Now  | **PLAT.CI.0** · **HOME.RECOG.0** · **FINC.PURCHASE.6.a closure** · **KNOW.EDITOR.7** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
-| Next | KNOW.VAULT.0 · HOME.RECOG.1 · AIOS.STABLE.26 · HOME.MCP.13 | [`roadmap/apps/`](./roadmap/apps/README.md) |
+| 焦点 | 主题 | 文档 |
+| ---- | ---- | ---- |
+| Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** · **KNOW.VAULT.0** · **HOME.RECOG.1r** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
+| Next | AIOS.STABLE.26 · HOME.MCP.13 · PLNR.UIUX/ATTACH · object_ref | [`roadmap/apps/`](./roadmap/apps/README.md) |
 | User gate | PLNR.SCHED.10b.ios · PLNR.CAPTURE.0 · HLT-5 | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) |
 
-**2026-07-16 / 07-15 已验收：** DS 平台化（品牌 7 站 · Overlay/Form/Nav 骨架 · 像素基线扩容 · Toast 重做）— 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
-**2026-07-16 已落地（代码事实）：** HealthOS HLT-0–4 · KnowledgeOS 项目感知与 Planner 双向引用 · Home 扫描/照片/事件生产链与空间智能 P0 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
-**2026-07-17 已落地：** 图表品牌色板/可读性打磨 · Design Catalog 覆盖九品牌 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-17 已收割：** Home RECOG.0 真源闭环 · 安静扫描/matcher/证据 UI · Knowledge 块编辑器 checkpoint · Health companion 入仓 · 九品牌 Catalog — [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
-> **CI 事实（2026-07-17）：** master 最近 5 次 push 挂在 `integration-smoke` 的 `check:lifeos-styles`（已提交的 Home 提交超样式基线）；`check:app-manifests` 的注册表漂移同期存在。两者已在工作区修复（重生成 `appRegistry.js` + 基线 `--update` 收编），推送后应复绿；细节见 [`roadmap/APP_GENERATOR.md`](./roadmap/APP_GENERATOR.md) 与 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) 代码状态快照。
-**2026-07-14 已验收：** AIOS.20–25 跨 app 打通 · GYMS.VOL.6/6a · GYMS.READY.8/WARMUP.9 · Finance payment_day · Music 推荐闭环 · 全线 DS 走查收敛 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
-**2026-07-13 已验收：** GYMS.SUB.5 收割 · PLNR.SCHED.0 E2E 复绿 · FINC.SYNC.1b · PLNR.CORE.4 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
-**2026-07-09 已验收：** Phase 0–6 批次（PORT.GROWTH.4b-H / HOME.PROJ.6a · Portal UI 走查 P-1–P-12 等）— 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+> **CI（PLAT.CI.0）：** 生成物/样式基线已入仓；远程仍可能因 design-catalog a11y（portal 对比度）等红。以 GitHub Actions 全绿为准。
 
-> **协作模型（2026-07-12 起）：** 单分支，无 agent 专属 worktree — 见 [`AGENTS.md`](../AGENTS.md) §Git policy · 执行分线 [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
+> **协作模型：** 单分支 — [`AGENTS.md`](../AGENTS.md) · 分线 [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
 
-**九 app 分卷（六部署 web + AIOS + KnowledgeOS + HealthOS）：** [`roadmap/apps/`](./roadmap/apps/README.md) · **潜力研判：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) · **愿景：** [`architecture/NORTH_STAR.md`](./architecture/NORTH_STAR.md)
+**九 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **复利：** [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md) · **ROI：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) · **愿景：** [`architecture/NORTH_STAR.md`](./architecture/NORTH_STAR.md)
 
 ## 九 app + 插件（一览）
 
@@ -73,10 +68,11 @@ docs/
 | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
 | 看当前在做什么                     | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §Now · §推荐执行顺序                                |
 | 看 App 一览状态                    | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §App 一览                                           |
+| 判断什么值得做（复利）             | [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md) · [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) |
 | 看北极星愿景                       | [`architecture/NORTH_STAR.md`](./architecture/NORTH_STAR.md)                                   |
 | 看体系架构快照                     | [`architecture/SYSTEM_OVERVIEW.md`](./architecture/SYSTEM_OVERVIEW.md)                         |
 | 看单 app 排期                      | [`roadmap/apps/`](./roadmap/apps/README.md)                                                    |
-| 看 ROI 研判                        | [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)                                               |
+| 看 ROI 研判证据                    | [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md)                                               |
 | 部署 / env / Web surfaces          | [`ops/netlify.md`](./ops/netlify.md)                                                           |
 | Growth 排期与外部对标              | [`roadmap/GROWTH.md`](./roadmap/GROWTH.md)                                                     |
 | 跑远程 SQL / migration             | [`ops/supabase.md`](./ops/supabase.md)                                                         |

@@ -6,14 +6,18 @@
 
 > **PaperOS 证据链接说明（2026-07-12）：** 下方历史条目中的 `qa/paperos/*`、`archive/paperos/*` 证据文件已随 PaperOS 迁出至独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库不再保留。相关行保留为历史记录，链接已去激活。
 
-## 2026-07-17（九品牌图表与 Design Catalog 矩阵）
+## 2026-07-17（交付完整性闭环 · Home 认亲 · Knowledge 编辑器 · 复利文档）
 
 | 主线 | 发货项 / 里程碑 | 证据 |
 | --- | --- | --- |
+| Platform | **HOME.RECOG.0 / KNOW.EDITOR.7 / Health companion / appRegistry+样式基线** 版本史闭环（交付完整性 ship） | `5a2b7773` |
+| Home | **RECOG.1–3 主航道：** 安静扫描真机验证 · DINOv2 matcher（Hungarian）· 证据式确认 UI；快速/高精度双模式开关 | `3f02bd67` · `072b0a33` · [`apps/home/docs/object-recognition-roadmap.md`](../../apps/home/docs/object-recognition-roadmap.md) |
+| Knowledge | 块编辑器 + library 工作台 freeze / QA 批 | `c940103a` · `6c147c62` |
+| Docs | 复利判据 `COMPOUND.md`；hub / POTENTIAL / 分卷与代码事实对齐 | 本提交 |
 | Charts | categorical 色板由各 app 品牌 accent 经 OKLCH 演算；面积图、tooltip、悬浮反馈与树状图层次打磨；树状图按块亮度自动选深/浅墨色 | `9bb72a414` · `fbd690611` · `37b24de6b` · `3feff760d` |
 | DS/Catalog | App 选择器与矩阵补齐到九个产品品牌（含 HealthOS / KnowledgeOS） | `2f05e3fa1` |
 
-代码矩阵（`playwright --list`）：922 smoke / 147 a11y / 524 visual。该数字只表示当前收集规模，实际通过状态以当次 CI 为准。
+代码矩阵（`playwright --list`）：922 smoke / 147 a11y / 524 visual。该数字只表示当前收集规模，实际通过状态以当次 CI 为准。**PLAT.CI.0 仍开**直至远程 Actions 全绿。
 
 ## 2026-07-16（HealthOS · Knowledge↔Planner · Home 空间智能）
 

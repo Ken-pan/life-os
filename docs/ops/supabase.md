@@ -43,11 +43,11 @@
 
 Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **语义吸收**；勿重复 apply 单文件 legacy migration。
 
-### 生产已应用、但仓库尚未提交（P0 漂移）
+### Home object recognition（已闭环）
 
-| Migration | 代码能力 | 远程口径 |
+| Migration | 代码能力 | 口径（2026-07-17 晚） |
 | --- | --- | --- |
-| `apps/home/supabase/migrations/20260717120000_home_object_recognition.sql` | 物体观察 / embedding 数据契约 | **2026-07-17 远程复核已注册并 apply**；`home.object_observations` / `home.object_embeddings` 均存在，embedding 已写 57 行。migration 与服务代码仍未提交，须立即完成 `HOME.RECOG.0` 版本史闭环 |
+| `apps/home/supabase/migrations/20260717120000_home_object_recognition.sql` | 物体观察 / embedding 数据契约 | 远程已 apply + 注册；**git 真源已入仓**（`HOME.RECOG.0` ✅ · `5a2b7773`）；`embed_objects.py` / matcher / 证据 UI 随后续提交落地 |
 
 **新 schema 部署必做**：PostgREST Exposed schemas 追加名字（`GET` 后 `PATCH /v1/projects/<ref>/postgrest` 的 `db_schema` 与 `db_extra_search_path`，勿覆盖现值）。当前列表：`public,graphql_public,music,fitness,aios,home`（2026-07-14）。漏这步 = 该 schema 所有 REST 调用 PGRST106。
 
