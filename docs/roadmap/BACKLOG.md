@@ -131,7 +131,7 @@ Hub §Now/Next 已收录 P0/P1 与高 ROI 项。完整排序 → [`POTENTIAL.md`
 
 | App     | Top IDs          | 分卷                                   |
 | ------- | ---------------- | -------------------------------------- |
-| Planner | PLNR.UIUX.0；PLNR.ATTACH.0 决策；SCHED/CAPTURE 用户 gate | [`apps/planner.md`](./apps/planner.md) |
+| Planner | PLNR.UIUX.0；SCHED/CAPTURE 用户 gate（ATTACH.0 ✅） | [`apps/planner.md`](./apps/planner.md) |
 | Fitness | maintenance；GYMS.MEDIA.3 / GYMS.SYNC.4 按需 | [`apps/fitness.md`](./apps/fitness.md) |
 | Finance | FINC.PURCHASE.6.a closure QA | [`apps/finance.md`](./apps/finance.md) |
 | Music   | paused；MUSC.PIPE.4 问题触发 | [`apps/music.md`](./apps/music.md) |
