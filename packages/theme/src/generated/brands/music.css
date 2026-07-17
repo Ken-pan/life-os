@@ -35,6 +35,14 @@
   --seg-track-radius: var(--radius-pill);
   --seg-active-bg-token: var(--accent);
   --seg-active-fg-token: var(--on-accent);
+  --chart-series-1: var(--chart-hue-blue);
+  --chart-series-2: var(--chart-hue-aqua);
+  --chart-series-3: var(--chart-hue-yellow);
+  --chart-series-4: var(--chart-hue-green);
+  --chart-series-5: var(--chart-hue-violet);
+  --chart-series-6: var(--chart-hue-magenta);
+  --chart-series-7: var(--chart-hue-orange);
+  --chart-series-8: var(--chart-hue-red);
   color-scheme: light;
 }
 
@@ -62,5 +70,13 @@
   --sidebar-primary-foreground: #1a080c;
   --appbar-bg: rgba(16, 10, 12, 0.88);
   --nav-bg: rgba(22, 16, 18, 0.94);
+  --chart-series-1: var(--chart-hue-blue);
+  --chart-series-2: var(--chart-hue-aqua);
+  --chart-series-3: var(--chart-hue-yellow);
+  --chart-series-4: var(--chart-hue-green);
+  --chart-series-5: var(--chart-hue-violet);
+  --chart-series-6: var(--chart-hue-magenta);
+  --chart-series-7: var(--chart-hue-orange);
+  --chart-series-8: var(--chart-hue-red);
   color-scheme: dark;
 }

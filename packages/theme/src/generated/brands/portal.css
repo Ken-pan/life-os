@@ -30,6 +30,14 @@
   --sidebar-primary-foreground: var(--on-accent);
   --sidebar-border: #d4e4f0;
   --appbar-bg: rgba(243, 246, 248, 0.9);
+  --chart-series-1: var(--chart-hue-aqua);
+  --chart-series-2: var(--chart-hue-yellow);
+  --chart-series-3: var(--chart-hue-green);
+  --chart-series-4: var(--chart-hue-violet);
+  --chart-series-5: var(--chart-hue-red);
+  --chart-series-6: var(--chart-hue-magenta);
+  --chart-series-7: var(--chart-hue-orange);
+  --chart-series-8: var(--chart-hue-blue);
   color-scheme: light;
 }
 
@@ -60,5 +68,13 @@
   --sidebar-primary-foreground: var(--on-accent);
   --sidebar-border: rgba(126, 203, 245, 0.12);
   --appbar-bg: rgba(20, 22, 26, 0.9);
+  --chart-series-1: var(--chart-hue-aqua);
+  --chart-series-2: var(--chart-hue-yellow);
+  --chart-series-3: var(--chart-hue-green);
+  --chart-series-4: var(--chart-hue-violet);
+  --chart-series-5: var(--chart-hue-red);
+  --chart-series-6: var(--chart-hue-magenta);
+  --chart-series-7: var(--chart-hue-orange);
+  --chart-series-8: var(--chart-hue-blue);
   color-scheme: dark;
 }

@@ -204,15 +204,25 @@
   --chart-critical: var(--critical);
   --chart-info: var(--info);
 
-  /* Chart categorical 系列色板（固定槽位顺序，已过 CVD 验证） */
-  --chart-series-1: #2a78d6;
-  --chart-series-2: #1baf7a;
-  --chart-series-3: #eda100;
-  --chart-series-4: #008300;
-  --chart-series-5: #4a3aa7;
-  --chart-series-6: #e34948;
-  --chart-series-7: #e87ba4;
-  --chart-series-8: #eb6834;
+  /* Chart 具名色相（CVD 验证过的固定色相族，槽位排列见下） */
+  --chart-hue-blue: #2a78d6;
+  --chart-hue-aqua: #1baf7a;
+  --chart-hue-yellow: #eda100;
+  --chart-hue-green: #008300;
+  --chart-hue-violet: #4a3aa7;
+  --chart-hue-red: #e34948;
+  --chart-hue-magenta: #e87ba4;
+  --chart-hue-orange: #eb6834;
+
+  /* Chart categorical 系列色板（固定槽位顺序，已过 CVD 验证；品牌可在 app 层重排槽位→色相映射） */
+  --chart-series-1: var(--chart-hue-blue);
+  --chart-series-2: var(--chart-hue-aqua);
+  --chart-series-3: var(--chart-hue-yellow);
+  --chart-series-4: var(--chart-hue-green);
+  --chart-series-5: var(--chart-hue-violet);
+  --chart-series-6: var(--chart-hue-red);
+  --chart-series-7: var(--chart-hue-magenta);
+  --chart-series-8: var(--chart-hue-orange);
 }
 
 :root[data-theme='dark'] {
@@ -224,14 +234,22 @@
   --critical-subtle: #4a2028;
   --info: #8db8f4;
   --info-subtle: #1a2d42;
-  --chart-series-1: #3987e5;
-  --chart-series-2: #199e70;
-  --chart-series-3: #c98500;
-  --chart-series-4: #008300;
-  --chart-series-5: #9085e9;
-  --chart-series-6: #e66767;
-  --chart-series-7: #d55181;
-  --chart-series-8: #d95926;
+  --chart-hue-blue: #3987e5;
+  --chart-hue-aqua: #199e70;
+  --chart-hue-yellow: #c98500;
+  --chart-hue-green: #008300;
+  --chart-hue-violet: #9085e9;
+  --chart-hue-red: #e66767;
+  --chart-hue-magenta: #d55181;
+  --chart-hue-orange: #d95926;
+  --chart-series-1: var(--chart-hue-blue);
+  --chart-series-2: var(--chart-hue-aqua);
+  --chart-series-3: var(--chart-hue-yellow);
+  --chart-series-4: var(--chart-hue-green);
+  --chart-series-5: var(--chart-hue-violet);
+  --chart-series-6: var(--chart-hue-red);
+  --chart-series-7: var(--chart-hue-magenta);
+  --chart-series-8: var(--chart-hue-orange);
 }
 
 @supports (padding: max(0px, 1px)) {

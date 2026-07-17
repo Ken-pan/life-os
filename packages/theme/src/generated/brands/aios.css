@@ -68,5 +68,6 @@
   --seg-active-fg: #ececec;
   --sb-thumb: rgba(255, 255, 255, 0.16);
   --sb-thumb-hover: rgba(255, 255, 255, 0.3);
+  --chart-series-4: #1ab01a;
   color-scheme: dark;
 }

@@ -140,7 +140,15 @@
         "seg-active-border-token": {
           "$type": "cssValue",
           "$value": "var(--accent)"
-        }
+        },
+        "chart-series-1": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" },
+        "chart-series-2": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
+        "chart-series-3": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
+        "chart-series-4": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
+        "chart-series-5": { "$type": "cssValue", "$value": "var(--chart-hue-red)" },
+        "chart-series-6": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
+        "chart-series-7": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" },
+        "chart-series-8": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" }
       }
     },
     "dark": {
@@ -237,7 +245,15 @@
         "sidebar-border": {
           "$type": "color",
           "$value": "rgba(255, 255, 255, 0.07)"
-        }
+        },
+        "chart-series-1": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" },
+        "chart-series-2": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
+        "chart-series-3": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
+        "chart-series-4": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
+        "chart-series-5": { "$type": "cssValue", "$value": "var(--chart-hue-red)" },
+        "chart-series-6": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
+        "chart-series-7": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" },
+        "chart-series-8": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" }
       }
     }
   }

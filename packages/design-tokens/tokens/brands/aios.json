@@ -85,7 +85,8 @@
         "sb-thumb-hover": {
           "$type": "color",
           "$value": "rgba(255, 255, 255, 0.3)"
-        }
+        },
+        "chart-series-4": { "$type": "color", "$value": "#1ab01a" }
       }
     }
   }

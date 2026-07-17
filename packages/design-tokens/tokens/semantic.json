@@ -40,27 +40,50 @@
     "critical": { "$type": "cssValue", "$value": "var(--critical)" },
     "info": { "$type": "cssValue", "$value": "var(--info)" }
   },
-  "chartSeries": {
-    "$description": "Categorical 系列色板(多系列图表用,固定槽位顺序即 CVD 安全机制,禁止循环取色)。亮暗各自选定,已用 dataviz 六项检查验证:light on #ffffff worst adjacent ΔE 24.2;dark on #141815 worst 10.3(floor band——组件必须带图例/直接标注/2px 间隙作次级编码)。单系列图表不走槽位,用 --chart-line(品牌 accent)。",
+  "chartHue": {
+    "$description": "8 个具名色相(dataviz 六项检查验证过的固定 CVD 安全色相族),亮暗各自选定:light on #ffffff worst adjacent ΔE 24.2;dark on #141815 worst 10.3(floor band——组件必须带图例/直接标注/2px 间隙作次级编码)。chartSeries 槽位只是这 8 个色相的一种排列;品牌若与某色相撞色(如 finance 撞 green、portal 撞 blue),在 brands/*.json 里重排槽位→色相的映射即可,不需要新色号也不需要重新验证——排列变化只影响相邻对,已在 CHANGELOG 里跑过 validate_palette.js 确认。",
     "light": {
-      "1": { "$type": "color", "$value": "#2a78d6" },
-      "2": { "$type": "color", "$value": "#1baf7a" },
-      "3": { "$type": "color", "$value": "#eda100" },
-      "4": { "$type": "color", "$value": "#008300" },
-      "5": { "$type": "color", "$value": "#4a3aa7" },
-      "6": { "$type": "color", "$value": "#e34948" },
-      "7": { "$type": "color", "$value": "#e87ba4" },
-      "8": { "$type": "color", "$value": "#eb6834" }
+      "blue": { "$type": "color", "$value": "#2a78d6" },
+      "aqua": { "$type": "color", "$value": "#1baf7a" },
+      "yellow": { "$type": "color", "$value": "#eda100" },
+      "green": { "$type": "color", "$value": "#008300" },
+      "violet": { "$type": "color", "$value": "#4a3aa7" },
+      "red": { "$type": "color", "$value": "#e34948" },
+      "magenta": { "$type": "color", "$value": "#e87ba4" },
+      "orange": { "$type": "color", "$value": "#eb6834" }
     },
     "dark": {
-      "1": { "$type": "color", "$value": "#3987e5" },
-      "2": { "$type": "color", "$value": "#199e70" },
-      "3": { "$type": "color", "$value": "#c98500" },
-      "4": { "$type": "color", "$value": "#008300" },
-      "5": { "$type": "color", "$value": "#9085e9" },
-      "6": { "$type": "color", "$value": "#e66767" },
-      "7": { "$type": "color", "$value": "#d55181" },
-      "8": { "$type": "color", "$value": "#d95926" }
+      "blue": { "$type": "color", "$value": "#3987e5" },
+      "aqua": { "$type": "color", "$value": "#199e70" },
+      "yellow": { "$type": "color", "$value": "#c98500" },
+      "green": { "$type": "color", "$value": "#008300" },
+      "violet": { "$type": "color", "$value": "#9085e9" },
+      "red": { "$type": "color", "$value": "#e66767" },
+      "magenta": { "$type": "color", "$value": "#d55181" },
+      "orange": { "$type": "color", "$value": "#d95926" }
+    }
+  },
+  "chartSeries": {
+    "$description": "Categorical 系列色板(多系列图表用,固定槽位顺序即 CVD 安全机制,禁止循环取色)。默认排列 = chartHue 的原始顺序(blue,aqua,yellow,green,violet,red,magenta,orange)。单系列图表不走槽位,用 --chart-line(品牌 accent)。",
+    "light": {
+      "1": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" },
+      "2": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
+      "3": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" },
+      "4": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
+      "5": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
+      "6": { "$type": "cssValue", "$value": "var(--chart-hue-red)" },
+      "7": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
+      "8": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" }
+    },
+    "dark": {
+      "1": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" },
+      "2": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
+      "3": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" },
+      "4": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
+      "5": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
+      "6": { "$type": "cssValue", "$value": "var(--chart-hue-red)" },
+      "7": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
+      "8": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" }
     }
   },
   "contract": {

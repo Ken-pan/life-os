@@ -124,7 +124,15 @@
         "seg-active-fg-token": {
           "$type": "cssValue",
           "$value": "var(--on-accent)"
-        }
+        },
+        "chart-series-1": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" },
+        "chart-series-2": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
+        "chart-series-3": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" },
+        "chart-series-4": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
+        "chart-series-5": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
+        "chart-series-6": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
+        "chart-series-7": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" },
+        "chart-series-8": { "$type": "cssValue", "$value": "var(--chart-hue-red)" }
       }
     },
     "dark": {
@@ -217,7 +225,15 @@
         "nav-bg": {
           "$type": "color",
           "$value": "rgba(22, 16, 18, 0.94)"
-        }
+        },
+        "chart-series-1": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" },
+        "chart-series-2": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
+        "chart-series-3": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" },
+        "chart-series-4": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
+        "chart-series-5": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
+        "chart-series-6": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
+        "chart-series-7": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" },
+        "chart-series-8": { "$type": "cssValue", "$value": "var(--chart-hue-red)" }
       }
     }
   }

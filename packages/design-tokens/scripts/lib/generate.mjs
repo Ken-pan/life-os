@@ -301,9 +301,16 @@ export function tokensCss(primitive, semantic, structural) {
       emitVar(lines, `chart-${key}`, node.$value)
     }
   }
+  if (semantic.chartHue) {
+    lines.push('')
+    lines.push('  /* Chart 具名色相（CVD 验证过的固定色相族，槽位排列见下） */')
+    for (const [key, node] of Object.entries(semantic.chartHue.light)) {
+      emitVar(lines, `chart-hue-${key}`, node.$value)
+    }
+  }
   if (semantic.chartSeries) {
     lines.push('')
-    lines.push('  /* Chart categorical 系列色板（固定槽位顺序，已过 CVD 验证） */')
+    lines.push('  /* Chart categorical 系列色板（固定槽位顺序，已过 CVD 验证；品牌可在 app 层重排槽位→色相映射） */')
     for (const [key, node] of Object.entries(semantic.chartSeries.light)) {
       emitVar(lines, `chart-series-${key}`, node.$value)
     }
@@ -312,6 +319,11 @@ export function tokensCss(primitive, semantic, structural) {
   lines.push(":root[data-theme='dark'] {")
   for (const [key, node] of Object.entries(semantic.status.dark)) {
     emitVar(lines, key, node.$value)
+  }
+  if (semantic.chartHue) {
+    for (const [key, node] of Object.entries(semantic.chartHue.dark)) {
+      emitVar(lines, `chart-hue-${key}`, node.$value)
+    }
   }
   if (semantic.chartSeries) {
     for (const [key, node] of Object.entries(semantic.chartSeries.dark)) {

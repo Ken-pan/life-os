@@ -30,6 +30,14 @@
   --seg-track-bg: color-mix(in srgb, var(--text) 4%, var(--bg-elevated));
   --seg-active-bg-token: var(--lime);
   --seg-active-fg-token: var(--on-lime);
+  --chart-series-1: var(--chart-hue-blue);
+  --chart-series-2: var(--chart-hue-aqua);
+  --chart-series-3: var(--chart-hue-yellow);
+  --chart-series-4: var(--chart-hue-violet);
+  --chart-series-5: var(--chart-hue-red);
+  --chart-series-6: var(--chart-hue-magenta);
+  --chart-series-7: var(--chart-hue-orange);
+  --chart-series-8: var(--chart-hue-green);
   color-scheme: light;
 }
 
@@ -57,5 +65,13 @@
   --sidebar-primary: var(--lime);
   --sidebar-primary-foreground: #161a05;
   --sidebar-border: rgba(255, 255, 255, 0.07);
+  --chart-series-1: var(--chart-hue-blue);
+  --chart-series-2: var(--chart-hue-aqua);
+  --chart-series-3: var(--chart-hue-yellow);
+  --chart-series-4: var(--chart-hue-violet);
+  --chart-series-5: var(--chart-hue-red);
+  --chart-series-6: var(--chart-hue-magenta);
+  --chart-series-7: var(--chart-hue-orange);
+  --chart-series-8: var(--chart-hue-green);
   color-scheme: dark;
 }

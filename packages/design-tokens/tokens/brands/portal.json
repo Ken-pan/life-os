@@ -35,7 +35,15 @@
           "$value": "var(--on-accent)"
         },
         "sidebar-border": { "$type": "color", "$value": "#d4e4f0" },
-        "appbar-bg": { "$type": "color", "$value": "rgba(243, 246, 248, 0.9)" }
+        "appbar-bg": { "$type": "color", "$value": "rgba(243, 246, 248, 0.9)" },
+        "chart-series-1": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
+        "chart-series-2": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" },
+        "chart-series-3": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
+        "chart-series-4": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
+        "chart-series-5": { "$type": "cssValue", "$value": "var(--chart-hue-red)" },
+        "chart-series-6": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
+        "chart-series-7": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" },
+        "chart-series-8": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" }
       }
     },
     "dark": {
@@ -74,7 +82,15 @@
           "$type": "color",
           "$value": "rgba(126, 203, 245, 0.12)"
         },
-        "appbar-bg": { "$type": "color", "$value": "rgba(20, 22, 26, 0.9)" }
+        "appbar-bg": { "$type": "color", "$value": "rgba(20, 22, 26, 0.9)" },
+        "chart-series-1": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
+        "chart-series-2": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" },
+        "chart-series-3": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
+        "chart-series-4": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
+        "chart-series-5": { "$type": "cssValue", "$value": "var(--chart-hue-red)" },
+        "chart-series-6": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
+        "chart-series-7": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" },
+        "chart-series-8": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" }
       }
     }
   }

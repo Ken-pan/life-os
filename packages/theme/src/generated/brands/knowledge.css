@@ -39,6 +39,14 @@
   --seg-active-bg: var(--accent-bg);
   --seg-active-fg: var(--accent);
   --seg-active-border-token: var(--accent);
+  --chart-series-1: var(--chart-hue-blue);
+  --chart-series-2: var(--chart-hue-aqua);
+  --chart-series-3: var(--chart-hue-yellow);
+  --chart-series-4: var(--chart-hue-green);
+  --chart-series-5: var(--chart-hue-red);
+  --chart-series-6: var(--chart-hue-magenta);
+  --chart-series-7: var(--chart-hue-orange);
+  --chart-series-8: var(--chart-hue-violet);
   color-scheme: light;
 }
 
@@ -67,5 +75,13 @@
   --sidebar-primary: var(--accent);
   --sidebar-primary-foreground: var(--on-accent);
   --sidebar-border: rgba(255, 255, 255, 0.08);
+  --chart-series-1: var(--chart-hue-blue);
+  --chart-series-2: var(--chart-hue-aqua);
+  --chart-series-3: var(--chart-hue-yellow);
+  --chart-series-4: var(--chart-hue-green);
+  --chart-series-5: var(--chart-hue-red);
+  --chart-series-6: var(--chart-hue-magenta);
+  --chart-series-7: var(--chart-hue-orange);
+  --chart-series-8: var(--chart-hue-violet);
   color-scheme: dark;
 }
