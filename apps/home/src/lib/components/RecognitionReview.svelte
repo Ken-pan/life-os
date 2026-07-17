@@ -122,7 +122,7 @@
 
     <footer class="rr-foot">
       <span class="rr-hint">「是同一件」把这次的观察并进历史身份;「不是」保持独立;「暂不确定」先放着。</span>
-      <button type="button" class="btn-ghost" disabled={!!busyKey} onclick={onClose}>关闭</button>
+      <button type="button" class="rr-close" disabled={!!busyKey} onclick={onClose}>关闭</button>
     </footer>
   </div>
 </div>
@@ -148,7 +148,7 @@
     border-radius: 16px;
     border: 1px solid var(--border);
     background: var(--card);
-    box-shadow: 0 18px 48px color-mix(in srgb, #000 28%, transparent);
+    box-shadow: 0 18px 48px color-mix(in srgb, black 28%, transparent);
     overflow: hidden;
   }
 
@@ -161,12 +161,12 @@
   }
 
   .rr-head strong {
-    font-size: 14px;
+    font-size: var(--text-base);
     color: var(--t1);
   }
 
   .rr-head span {
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: var(--t2);
   }
 
@@ -184,7 +184,7 @@
     border-radius: 12px;
     padding: 12px;
     background: var(--bg);
-    transition: opacity 0.15s;
+    transition: opacity var(--dur-fast) var(--ease-standard);
   }
 
   .card.dim {
@@ -220,12 +220,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: var(--text-xs);
     color: var(--t2);
   }
 
   .shot figcaption {
-    font-size: 11.5px;
+    font-size: var(--text-xs);
     line-height: 1.3;
     color: var(--t2);
     text-align: center;
@@ -250,14 +250,14 @@
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--graph-accent, #4f7c66) 16%, var(--bg));
+    background: color-mix(in srgb, var(--graph-accent, var(--accent)) 16%, var(--bg));
     color: var(--t1);
     font-weight: 700;
-    font-size: 14px;
+    font-size: var(--text-base);
   }
 
   .vs-score {
-    font-size: 10.5px;
+    font-size: var(--text-mobile-tab);
     color: var(--t2);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -272,7 +272,7 @@
   .actions button {
     flex: 1;
     min-height: 38px;
-    font-size: 13px;
+    font-size: var(--text-md);
     font-weight: 600;
     border-radius: 10px;
     border: 1px solid var(--border);
@@ -280,8 +280,8 @@
   }
 
   .btn-yes {
-    border-color: color-mix(in srgb, var(--graph-accent, #4f7c66) 55%, var(--border));
-    background: color-mix(in srgb, var(--graph-accent, #4f7c66) 20%, var(--bg));
+    border-color: color-mix(in srgb, var(--graph-accent, var(--accent)) 55%, var(--border));
+    background: color-mix(in srgb, var(--graph-accent, var(--accent)) 20%, var(--bg));
     color: var(--t1);
   }
 
@@ -310,15 +310,15 @@
   }
 
   .rr-hint {
-    font-size: 11px;
+    font-size: var(--text-xs);
     color: var(--t2);
     line-height: 1.3;
     min-width: 0;
   }
 
-  .btn-ghost {
+  .rr-close {
     flex-shrink: 0;
-    font-size: 13px;
+    font-size: var(--text-md);
     min-height: 36px;
     padding: 6px 14px;
     border-radius: 10px;
@@ -328,7 +328,7 @@
     cursor: pointer;
   }
 
-  .btn-ghost:disabled {
+  .rr-close:disabled {
     opacity: 0.6;
     cursor: progress;
   }

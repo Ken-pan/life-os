@@ -93,9 +93,9 @@
     flex-wrap: wrap;
     margin-top: 8px;
     padding: 10px 14px;
-    border-radius: 12px;
-    border: 1px solid color-mix(in srgb, var(--graph-accent, #4f7c66) 45%, var(--border));
-    background: color-mix(in srgb, var(--graph-accent, #4f7c66) 8%, var(--card));
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--graph-accent, var(--accent)) 45%, var(--border));
+    background: color-mix(in srgb, var(--graph-accent, var(--accent)) 8%, var(--card));
   }
 
   .recog-copy {
@@ -106,12 +106,12 @@
   }
 
   .recog-copy strong {
-    font-size: 13px;
+    font-size: var(--text-md);
     color: var(--t1);
   }
 
   .recog-copy span {
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: var(--t2);
   }
 
@@ -122,19 +122,19 @@
   }
 
   .recog-cta {
-    font-size: 13px;
+    font-size: var(--text-md);
     font-weight: 650;
     min-height: 36px;
     padding: 6px 14px;
     border-radius: 10px;
-    border: 1px solid color-mix(in srgb, var(--graph-accent, #4f7c66) 55%, var(--border));
-    background: color-mix(in srgb, var(--graph-accent, #4f7c66) 18%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--graph-accent, var(--accent)) 55%, var(--border));
+    background: color-mix(in srgb, var(--graph-accent, var(--accent)) 18%, var(--bg));
     color: var(--t1);
     cursor: pointer;
   }
 
   .recog-dismiss {
-    font-size: 12px;
+    font-size: var(--text-sm);
     min-height: 36px;
     padding: 6px 10px;
     border-radius: 10px;

@@ -18,9 +18,9 @@
   --text: var(--t1);
   --text-secondary: var(--t2);
   --text-muted: var(--t3);
-  --accent: #3d9ed6;
-  --accent-2: #5cb8ea;
-  --accent-bg: rgba(61, 158, 214, 0.12);
+  --accent: #2f8fc7;
+  --accent-2: #4aa3d6;
+  --accent-bg: rgba(47, 143, 199, 0.12);
   --on-accent: #ffffff;
   --sidebar: #fafbfd;
   --sidebar-foreground: #1a2834;
