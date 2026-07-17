@@ -7,17 +7,16 @@
 ## 结论（TL;DR）
 
 ```text
-认亲主航道、VAULT.0、USAGE.0、STABLE.26 已收割；下一刀切「CI + 信任 closure + 跨 OS」：
+MCP where_is / STABLE.26 / VAULT / USAGE 已收割；下一刀切「CI + 信任 closure」：
 
 P0  PLAT.CI.0
 P1  FINC.PURCHASE.6.a closure（用户 gate 重）
-P1  HOME.MCP.13
 P2  HOME.RECOG.1r → PLNR.* → object_ref
 ```
 
 **刚收割：**  
-`AIOS.STABLE.26`（25 测）· `KNOW.VAULT.0` · `PLAT.USAGE.0` 首报 · FINC Review 过滤拆分 · Home auto-refine / 横幅 · Knowledge 表格。  
-**用户 gate：** `HOME.RECOG.refine` · SCHED/CAPTURE · HLT-5 · Knowledge 原生 rebuild。
+`HOME.MCP.13` · `AIOS.STABLE.26` · `KNOW.VAULT.0` · `PLAT.USAGE.0` 首报 · FINC Review 过滤拆分。  
+**用户 gate / config：** Home MCP URL 进 AIOS · `HOME.RECOG.refine` · SCHED/CAPTURE · HLT-5 · Knowledge rebuild。
 
 ## 复利权重（摘要）
 
@@ -36,10 +35,9 @@ P2  HOME.RECOG.1r → PLNR.* → object_ref
 | --- | --- | --- | --- | --- | --- |
 | 1 | **PLAT.CI.0** | P0 | 🔥 | <0.5d | 远程全绿仍是开关 |
 | 2 | **FINC.PURCHASE.6.a closure** | P1 | 🔥 | 0.5d | 信任锚点；过滤拆分已做，剩 owner QA |
-| 3 | **HOME.MCP.13** | P1 | ◆◆ | 1–2d | USAGE：Home 日用；STABLE.26 已护栏 |
-| 4 | **HOME.RECOG.1r** | P2 | ◆ | 0.5–1d | 区域高精度 / 摘要签收 |
-| 5 | **PLNR.UIUX.0 / ATTACH.0** | P2 | ◆ | 1d | 生产收口按需 |
-| 6 | **KNOW.XREF.5** | P2 | ◆◆ | 1–2d | object_ref 试点加深 |
+| 3 | **HOME.RECOG.1r** | P2 | ◆ | 0.5–1d | 区域高精度 / 摘要签收 |
+| 4 | **PLNR.UIUX.0 / ATTACH.0** | P2 | ◆ | 1d | 生产收口按需 |
+| 5 | **KNOW.XREF.5** | P2 | ◆◆ | 1–2d | object_ref 试点加深 |
 
 ## 每个 App 未来 7 天只做一件事
 
@@ -50,8 +48,8 @@ P2  HOME.RECOG.1r → PLNR.* → object_ref
 | Finance | **6.a closure**（真机） | 6b/6c |
 | Music | paused | PIPE.4 |
 | Portal | maintenance | 硬凑卡 |
-| Home | 用户激活 refine；Agent：**MCP.13** | PROJ.7 |
-| AIOS | 接 **HOME.MCP.13** | 堆新功能面 |
+| Home | 用户激活 refine + MCP 配进 AIOS；Agent：**RECOG.1r** | PROJ.7 |
+| AIOS | 用 where_is（配 MCP URL） | 堆新功能面 |
 | KnowledgeOS | 原生 rebuild 验 watcher | SYNC 上云 |
 | HealthOS | HLT-5 真机 gate | Portal/Netlify |
 

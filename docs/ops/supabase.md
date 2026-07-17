@@ -4,7 +4,7 @@
 > **Canonical 迁移目录：** `apps/finance/supabase/`（`schema.sql` + `migrations/`）
 > **路线图：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)
 
-**最后与代码同步：** 2026-07-17（已实测远程 `supabase_migrations.schema_migrations`，链头为 `20260717120000 home_object_recognition`；该 migration 尚未提交）
+**最后与代码同步：** 2026-07-17（链头含 `20260717220000 home_storage_snapshots` · HOME.MCP.13）
 
 ## 执行 SQL（本网络推荐路径）
 

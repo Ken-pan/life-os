@@ -27,6 +27,7 @@
     "test:zone-normalize": "node scripts/zone-normalize-unit.mjs",
     "test:snap": "node scripts/snap-test.mjs",
     "test:storage": "node scripts/storage-items-unit.mjs",
+    "test:where-is": "node scripts/where-is-unit.mjs",
     "test:container-scan": "node scripts/container-scan-unit.mjs",
     "test:layout-solve": "node scripts/layout-solve-unit.mjs",
     "test:layout-audit": "node scripts/layout-audit-unit.mjs",
@@ -67,6 +68,7 @@
   },
   "dependencies": {
     "@life-os/contracts": "*",
+    "@life-os/mcp-server": "*",
     "@life-os/platform-web": "*",
     "@life-os/sync": "*",
     "@life-os/theme": "*",

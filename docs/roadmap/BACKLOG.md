@@ -136,7 +136,7 @@ Hub §Now/Next 已收录 P0/P1 与高 ROI 项。完整排序 → [`POTENTIAL.md`
 | Finance | FINC.PURCHASE.6.a closure QA | [`apps/finance.md`](./apps/finance.md) |
 | Music   | paused；MUSC.PIPE.4 问题触发 | [`apps/music.md`](./apps/music.md) |
 | Portal  | maintenance；无新增卡片目标 | [`apps/portal.md`](./apps/portal.md) |
-| Home    | HOME.MCP.13；HOME.RECOG.1r 窄残余 | [`apps/home.md`](./apps/home.md) |
-| AIOS / Home | HOME.MCP.13 | [`apps/aios.md`](./apps/aios.md) · [`apps/home.md`](./apps/home.md) |
+| Home    | HOME.RECOG.1r 窄残余 | [`apps/home.md`](./apps/home.md) |
+| AIOS    | MCP 消费面（where_is 已接） | [`apps/aios.md`](./apps/aios.md) |
 | KnowledgeOS | KNOW.VAULT.0 → XREF/object_ref | [`apps/knowledge.md`](./apps/knowledge.md) |
 | HealthOS | HLT-5 用户真机 gate | [`apps/health.md`](./apps/health.md) |

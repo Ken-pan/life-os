@@ -7,6 +7,7 @@ import {
 } from '@life-os/theme'
 import { SAMPLE_508 } from './spatial/sample-508.js'
 import { scheduleHomePortalMetadataSync } from './homePortalMetadata.js'
+import { scheduleStorageSnapshotSync } from './storage-snapshot-sync.js'
 import { deserializeProject, hydrateProject } from './spatial/model.js'
 import {
   default508Config,
@@ -2614,6 +2615,7 @@ export function setActiveProject(project) {
   S.activeProjectId = project.meta.id
   persist()
   scheduleHomePortalMetadataSync(project.storageZones?.length ?? 0)
+  scheduleStorageSnapshotSync(project.meta.id, project.storageZones)
 }
 
 export function applyTheme() {

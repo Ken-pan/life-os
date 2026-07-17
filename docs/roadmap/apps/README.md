@@ -77,7 +77,7 @@
 | Music   | 生产   | paused / maintenance；MUSC.PIPE.4 仅问题触发 | [music.md](./music.md) |
 | Portal  | 启动器 | maintenance；不为凑九 app 扩卡 | [portal.md](./portal.md) |
 | Home    | 实验   | 用户激活 refine · **MCP.13** 优先 · 1r 窄残余 | [home.md](./home.md) |
-| AIOS    | 实验/本地优先 | STABLE.26 ✅ · 接 **HOME.MCP.13** | [aios.md](./aios.md) |
+| AIOS    | 实验/本地优先 | STABLE.26 ✅ · where_is 经 Home MCP | [aios.md](./aios.md) |
 | KnowledgeOS | 实验/本地优先 | **KNOW.VAULT.0** watcher（编辑器含表格/高亮） | [knowledge.md](./knowledge.md) |
 | HealthOS | 实验/本地优先 | **HLT-5** 用户真机 gate；其余后移 | [health.md](./health.md) |
 | PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |

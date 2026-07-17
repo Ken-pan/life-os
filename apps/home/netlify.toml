@@ -6,6 +6,12 @@
 [build.environment]
   NODE_VERSION = "22"
 
+[functions]
+  # Git 构建相对 repo 根；CLI --filter home-os 时用 netlify/functions（见 docs/ops/netlify.md）
+  directory = "apps/home/netlify/functions"
+
+# mcp.js 通过 export const config.path 挂载 /api/mcp（HOME.MCP.13），无需 rewrite
+
 [[headers]]
   for = "/sw.js"
   [headers.values]

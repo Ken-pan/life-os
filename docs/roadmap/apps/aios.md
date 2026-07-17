@@ -32,11 +32,11 @@
 
 | ID | 主题 | 桶 | 备注 |
 | --- | --- | --- | --- |
-| **HOME.MCP.13**（跨 OS） | `where_is` → AIOS | Product | 稳定化护栏已落地后，优先接 Home 日用工具面 |
+| （维护） | 用好已接 MCP | Product | Home `where_is`：设置加 `https://home.kenos.space/api/mcp` + JWT |
 
-**AIOS.STABLE.26 ✅（2026-07-17）：** `npm test -w aios-os` **25/25** — 抽出纯 core：`chat-tool-loop`（wire 回放 / 生图误触发）· `cloud-sync`（LWW/墓碑）· `lifeos`（AIOS.20 快照格式化 + AIOS.21 payload）· `local-tools`（calculate / webAccess 过滤）。运行时模块已接线。
+**AIOS.STABLE.26 ✅ · HOME.MCP.13 ✅（2026-07-17）：** aios 测试 **25/25**；Home `/api/mcp` `where_is` + `storage_snapshots`（AIOS 无源码耦合，只配 URL）。
 
-> AIOS 2026-07-13 建站、两天内推进到 AIOS.25。能力面已经足够宽；STABLE.26 把 20–25 关键链路变成可回归验证后，再扩 MCP（如 `HOME.MCP.13`）。
+> AIOS 2026-07-13 建站、两天内推进到 AIOS.25。护栏与第一条跨 OS MCP 消费链已落地；再扩工具面按 USAGE。
 
 ## Parked / 待研判
 

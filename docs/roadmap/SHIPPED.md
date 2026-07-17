@@ -10,8 +10,9 @@
 
 | 主线 | 发货项 / 里程碑 | 证据 |
 | --- | --- | --- |
-| AIOS | **AIOS.STABLE.26** 核心链路回归：chat wire / 云 LWW·墓碑 / AIOS.20 快照 / AIOS.21 payload / local tools；`npm test -w aios-os` **25/25** | 本提交 · `*.core.js` |
-| Finance | Review Needed **排除 `unsupported_source`**（`matchesPurchaseStateFilter`） | 本提交 · finance-core |
+| Home | **HOME.MCP.13** `where_is`：`home.storage_snapshots`（生产）+ 防抖同步 · `/api/mcp` · `test:where-is`；AIOS 配 URL+JWT | 本提交 · migration `20260717220000` |
+| AIOS | **AIOS.STABLE.26** 核心链路回归：chat wire / 云 LWW·墓碑 / AIOS.20 快照 / AIOS.21 payload / local tools；`npm test -w aios-os` **25/25** | `3648e779` · `*.core.js` |
+| Finance | Review Needed **排除 `unsupported_source`**（`matchesPurchaseStateFilter`） | `3648e779` · finance-core |
 | CI | **PLAT.CI.0 修复推送：** Home 认亲组件 token 化；portal light accent 对比度 ≥3:1 | `c8bdc905` |
 | Knowledge | **KNOW.VAULT.0** 固定 Vault fs watcher（debounce 全量重载）· settings 监听状态 · library 打开笔记随重载换对象 | `8c83f85d` · `tauri-plugin-fs` `watch` feature |
 | Platform | **PLAT.USAGE.0** 首份用量审计 + `npm run qa:usage-audit` | [`../qa/usage-audit-2026-07.md`](../qa/usage-audit-2026-07.md) · `scripts/lifeos-usage-audit.mjs` |

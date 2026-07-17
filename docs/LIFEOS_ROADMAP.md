@@ -46,9 +46,10 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | **PLAT.CI.0** | 恢复 master 交付可信度 | Platform | **P0** | 🔥 | <0.5d | 样式 + portal 对比度已推；等远程 Actions 全绿证明 |
 | 2 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.5d | anon revoke ✅ · Review 过滤拆分 ✅；剩 **owner Confirm→Undo 真机**、双真实 JWT、视觉基线 |
-| 3 | **HOME.MCP.13** | `where_is` 接入 AIOS | Home | **P1** | ◆◆ | 1–2d | 薄封装 `searchStorageItems()` + MCP；Home→AIOS 第一条日用跨 OS 链 |
 
-**已收割（2026-07-17 夜）：** `AIOS.STABLE.26`（25 测）✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · Home RECOG + auto-refine · Knowledge 表格 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+**已收割（2026-07-17 夜）：** `HOME.MCP.13`（`where_is` + `storage_snapshots`）✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+
+**User config（不占 Agent 主航道）：** Home 部署后，AIOS 设置 → MCP 加 `https://home.kenos.space/api/mcp` + Life OS access token；Home 登录打开 `/storage` 触发快照同步。
 
 **Agent 分线全文：** [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
 
@@ -106,14 +107,11 @@ Phase 0 — 复利开关
 Phase 1 — 信任收割（用户 gate 重）
   FINC.PURCHASE.6.a owner Confirm→Undo + 双 JWT + 视觉基线
 
-Phase 2 — 跨 OS 快赢（USAGE：Home 日用；STABLE.26 已绿）
-  HOME.MCP.13 where_is → AIOS
-
-Phase 3 — 窄残余 / 生产收口（按需）
+Phase 2 — 窄残余 / 生产收口（按需）
   HOME.RECOG.1r → PLNR.UIUX.0 → PLNR.ATTACH.0 → KNOW.XREF.5
 
 已完成本轮
-  AIOS.STABLE.26 · KNOW.VAULT.0 · PLAT.USAGE.0 首报
+  HOME.MCP.13 · AIOS.STABLE.26 · KNOW.VAULT.0 · PLAT.USAGE.0 首报
   FINC RPC anon revoke · FINC Review 过滤拆分
 
 并行用户 gate
@@ -240,7 +238,7 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → `[roadmap/BA
 | Music   | 生产  | [music.kenos.space](https://music.kenos.space) | `music-os` | ✅ | ✅ | paused / maintenance |
 | Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space) | `portal` | ✅ | — | maintenance；不为凑 app 数扩卡 |
 | Home    | 实验  | [home.kenos.space](https://home.kenos.space) | `home-os` | ✅ | ✅ | 用户激活 refine · **1r 窄残余** → MCP.13 |
-| AIOS    | 实验/本地优先 | [aios-kenos.netlify.app](https://aios-kenos.netlify.app)（云端只读） | `aios-os` | ✅ | ❌ 待研判 | STABLE.26 ✅ · 下一刀 **HOME.MCP.13** |
+| AIOS    | 实验/本地优先 | [aios-kenos.netlify.app](https://aios-kenos.netlify.app)（云端只读） | `aios-os` | ✅ | ❌ 待研判 | STABLE.26 ✅ · where_is MCP 已接 |
 | KnowledgeOS | 实验/本地优先 | [knowledgeos-ken.netlify.app](https://knowledgeos-ken.netlify.app)（云端 localStorage 模式） | `knowledge-os` | ✅ | ❌ 待研判 | **KNOW.VAULT.0** watcher |
 | HealthOS | 实验/本地优先 | 未部署（manifest `production: false`） | `health-os` | 本地 | ❌ | **HLT-5** 用户真机 gate |
 
