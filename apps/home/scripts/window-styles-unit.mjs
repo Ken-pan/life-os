@@ -13,7 +13,9 @@ import {
   toggleGraphOpeningType,
 } from '../src/lib/spatial/graph-openings.js'
 import {
+  canonicalPlacementKind,
   createPlacement,
+  isFence,
   isStorable,
   PLACEMENT_KINDS,
   placementKindsByGroup,
@@ -304,6 +306,35 @@ for (const container of ['cabinet', 'wardrobe', 'wireRack', 'cubeShelf', 'basket
     `${container}: containers are solid — only a barrier around real floor is hollow`,
   )
 }
+
+// Bird cage and dog crate: catalogued as their own kinds so they stop rendering
+// as the featureless square you get when a kind has no symbol. Both are
+// CONTAINERS with their own base — solid, never hollow (see the container test
+// above; `hollow`'s doc names "a bird cage" as the canonical thing NOT to hollow)
+// — and both must carry the grid barring that is the whole point of the shape.
+for (const [kind, sym] of [
+  ['pet_crate', 'petCrate'],
+  ['bird_cage', 'birdCage'],
+]) {
+  const spec = PLACEMENT_KINDS[kind]
+  assert.ok(spec, `${kind}: missing from the catalogue — renders as a blank square`)
+  assert.ok(spec.symbol === sym, `${kind}: not wired to its own symbol`)
+  assert.ok(!isFence(kind), `${kind}: a container is not a fence — no hollow floor inside`)
+  assert.ok(!isStorable(kind), `${kind}: a live-animal enclosure is not a storage zone`)
+  const { body, detail } = furnitureSymbol(sym, boxed)
+  assert.ok(body.length > 0, `${kind}: empty body falls back to the blank square this fixes`)
+  assert.ok(
+    !body.includes('furn-body-hollow'),
+    `${kind}: a crate/cage is solid — only a barrier around real floor is hollow`,
+  )
+  // The barring is what separates it from a plain box: several grid strokes.
+  assert.ok((detail.match(/<line/g) ?? []).length >= 4, `${kind}: lost its grid barring`)
+}
+// The alias table catches the variant kinds cloud/VLM import coins, same as
+// pet_fence → pet_pen, so they resolve instead of degrading to a blank square.
+assert.equal(canonicalPlacementKind('dog_crate'), 'pet_crate')
+assert.equal(canonicalPlacementKind('kennel'), 'pet_crate')
+assert.equal(canonicalPlacementKind('birdcage'), 'bird_cage')
 
 // End-to-end: the hollow marker has to survive into the rendered plan, and the
 // stylesheet has to actually unfill it. Either half alone is worthless.
