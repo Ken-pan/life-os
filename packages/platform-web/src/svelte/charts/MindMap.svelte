@@ -151,7 +151,7 @@
 
   // ── tooltip 状态 ──
   let hover = $state(/** @type {{ label: string, note: string } | null} */ (null))
-  let tipXY = $state({ x: 0, y: 0 })
+  let tipXY = $state({ cx: 0, top: 0, bottom: 0 })
   let tipEl = $state(null)
   let tipW = $state(160)
   let tipH = $state(40)
@@ -247,19 +247,22 @@
     }
     hover = tip
     if (!wrapEl) return
-    const r = wrapEl.getBoundingClientRect()
-    tipXY = { x: e.clientX - r.left, y: e.clientY - r.top }
+    // 锚定到节点(不跟鼠标):固定在节点下方居中,鼠标在节点内移动它不动
+    const wrap = wrapEl.getBoundingClientRect()
+    const r = e.currentTarget.getBoundingClientRect()
+    tipXY = {
+      cx: r.left - wrap.left + r.width / 2,
+      top: r.top - wrap.top,
+      bottom: r.bottom - wrap.top,
+    }
   }
 
-  const TIP_OFF = 14
-  const tipLeft = $derived(
-    tipXY.x + TIP_OFF + tipW > vw
-      ? Math.max(4, tipXY.x - TIP_OFF - tipW)
-      : tipXY.x + TIP_OFF,
-  )
-  const tipTop = $derived(
-    tipXY.y - tipH - TIP_OFF < 0 ? tipXY.y + TIP_OFF : tipXY.y - tipH - TIP_OFF,
-  )
+  const TIP_GAP = 8
+  const tipLeft = $derived(Math.max(4, Math.min(tipXY.cx - tipW / 2, vw - tipW - 4)))
+  const tipTop = $derived.by(() => {
+    const below = tipXY.bottom + TIP_GAP
+    return below + tipH > height ? Math.max(4, tipXY.top - tipH - TIP_GAP) : below
+  })
 </script>
 
 <div
