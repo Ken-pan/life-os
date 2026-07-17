@@ -90,8 +90,16 @@ struct HomeOSProject: Codable {
         var measuredHIn: Double? = nil
         /// RoomPlan 识别置信度 high | medium | low
         var confidence: String? = nil
-        /// 自动抓拍图提出的主色 #RRGGBB
+        /// 自动抓拍图提出的主色 #RRGGBB(多视角共识)
         var colorHex: String? = nil
+        /// 主色可信度(0..1,2 位小数,2026-07 加法式):多视角共识后的稳健度。
+        /// 下游据此区分「可信的白」(高)与「猜的红/罩布色」(低),低可信时可弱化上色、
+        /// 提示用户复核。缺省 = 旧数据没这个信号。
+        var colorConfidence: Double? = nil
+        /// kind 识别可信度(0..1,2 位小数,2026-07 加法式):RoomPlan 置信度 + 细分把握。
+        /// 尺寸/高度清楚区分出的(升降桌按台面高)偏高;几何猜的(书桌 vs 折叠桌)偏低,
+        /// 下游可对低可信 kind 标「待复核」。缺省 = 旧数据没这个信号。
+        var kindConfidence: Double? = nil
         /// 这件家具的实拍裁剪照片(最佳一张),桶内路径 —— 兼容单图消费方
         var photoPath: String? = nil
         /// 多视角证据包(含最佳那张;分数降序)。上传时回填。
@@ -111,7 +119,8 @@ struct HomeOSProject: Codable {
         var isEmpty: Bool {
             styleKeys == nil && styleZh == nil && heightIn == nil && elevIn == nil
                 && measuredWIn == nil && measuredHIn == nil
-                && confidence == nil && colorHex == nil && photoPath == nil
+                && confidence == nil && colorHex == nil && colorConfidence == nil
+                && kindConfidence == nil && photoPath == nil
                 && photos == nil && yawDeg == nil
         }
     }

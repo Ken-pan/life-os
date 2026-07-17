@@ -90,6 +90,69 @@ enum KindMaps {
         return (kind, label, styleZh)
     }
 
+    /// RoomPlan 置信度 → kind 可信度基线(0..1)。nil(mock/未标)排 low 之上、medium 之下。
+    static func kindConfidenceBase(_ confidence: String?) -> Double {
+        switch confidence {
+        case "high": return 0.9
+        case "medium": return 0.72
+        case nil: return 0.6
+        default: return 0.35 // low
+        }
+    }
+
+    /// applyStyle 之后的**二次细化 + kindConfidence**。
+    ///
+    /// RoomPlan 只有一个 `table` 类目:升降桌 / 书桌 / 折叠桌 / 餐桌全塌进去,下游
+    /// 拿不回「这是工作桌」。这里靠尺寸/高度把能分的分出来 —— 细分 kind 都在下游
+    /// PLACEMENT_KINDS 里(standing_desk 升降桌 / desk 书桌 / folding_table 折叠桌 /
+    /// table 餐桌),不会造出下游没有的图形。分不清的**保留 table 但压低 kindConfidence**,
+    /// 让网页端标「待复核」而不是硬塞一个错 kind。
+    ///
+    /// kindConfidence 语义:高 = 有清楚证据(升降桌按台面高、RoomPlan 已判餐桌);
+    /// 低 = 纯几何猜(书桌 vs 折叠桌本就难分)。尺寸单位英寸,long/short 为轴对齐
+    /// 脚印长短边,heightIn 为台面高(RoomPlan 实测,nil = 没测到)。
+    static func refineKind(
+        kind: String,
+        label: String,
+        styleZh: String?,
+        confidence: String?,
+        longIn: Double?,
+        shortIn: Double?,
+        heightIn: Double?
+    ) -> (kind: String, label: String, styleZh: String?, kindConfidence: Double) {
+        let base = kindConfidenceBase(confidence)
+
+        // 只细化通用 table;coffee_table/armchair/office_chair/shelf 等已由样式属性定死,
+        // 那些是 RoomPlan 明确属性给的,直接用基线可信度。
+        guard kind == "table" else {
+            return (kind, label, styleZh, base)
+        }
+
+        // RoomPlan 已判餐桌(TableType.dining → styleZh 含「餐」)/ 圆桌:不猜工作桌,
+        // 下游 table 本就是餐桌,给较高可信度。
+        if let s = styleZh, s.contains("餐") || s.contains("圆") {
+            return (kind, label, styleZh, max(base, 0.8))
+        }
+
+        // 升降桌:台面高是最强区分信号(常态坐姿也有 ~38″+,远超餐桌/书桌 29-31″)。
+        if let h = heightIn, h >= 38 {
+            let conf = h >= 40 ? min(0.9, base + 0.05) : 0.7
+            return ("standing_desk", "升降桌", "升降", conf)
+        }
+
+        let lowTop = (heightIn ?? 0) < 34 // 台面不高(排除吧台/升降态)
+        // 折叠桌:又长又窄又不高(4-6ft × 18-30in,长宽比大)。
+        if let l = longIn, let s = shortIn, l >= 46, s <= 30, l / s >= 2.2, lowTop {
+            return ("folding_table", "折叠桌", "折叠", 0.6)
+        }
+        // 书桌:进深浅、不宽大、不高 —— 但与折叠桌/窄餐桌边界模糊,给低可信度让用户复核。
+        if let s = shortIn, s <= 30, (longIn ?? 0) <= 72, lowTop {
+            return ("desk", "书桌", styleZh, 0.55)
+        }
+        // 分不清:保留餐桌,可信度压到复核档(可能是书桌/工作桌)。
+        return (kind, label, styleZh, min(base, 0.5))
+    }
+
     /// 没有对应符号的类目 —— 跳过并记 scanWarnings
     static let skippedCategories: Set<String> = ["fireplace", "stairs"]
 

@@ -60,11 +60,32 @@ final class ScanLog {
         }
     }
 
+    /// 严重级别。旧事件没有 lvl 字段 → 解码为 nil,一律按 info 对待(向后兼容)。
+    /// 复核界面/导出按它过滤:只看 warn 以上就能一眼找到扫描现场的坑。
+    enum Level: String, Codable, CaseIterable, Comparable {
+        case debug, info, warn, error
+        var rank: Int {
+            switch self {
+            case .debug: return 0
+            case .info: return 1
+            case .warn: return 2
+            case .error: return 3
+            }
+        }
+        static func < (a: Level, b: Level) -> Bool { a.rank < b.rank }
+    }
+
     struct Event: Codable {
         var t: Int64            // Unix 毫秒
         var cat: String         // scan / convert / upload / perf / ux / app / error
         var name: String
         var attrs: [String: Value]
+        /// 严重级别(2026-07 加法式)。nil = 旧数据/普通 info。缺省不写进 JSON
+        /// (optional 走 encodeIfPresent),旧 encodeLine 契约不变。
+        var lvl: Level? = nil
+
+        /// 缺省视为 info —— 过滤/渲染统一走这个,别各处 `?? .info`
+        var level: Level { lvl ?? .info }
     }
 
     // MARK: - 纯函数核(单测覆盖)
@@ -77,12 +98,40 @@ final class ScanLog {
         return String(data: d, encoding: .utf8)
     }
 
-    /// 事件 → 控制台一行(人眼扫得动)。
+    /// 事件 → 控制台一行(人眼扫得动)。warn/error/debug 在类目后带级别标;
+    /// info(缺省)不带 —— 常规行保持简洁,异常行一眼跳出来。
     static func renderLine(_ e: Event) -> String {
         let kv = e.attrs.sorted { $0.key < $1.key }
             .map { "\($0.key)=\($0.value.display)" }
             .joined(separator: " ")
-        return "◆ [\(e.cat)] \(e.name)\(kv.isEmpty ? "" : " · " + kv)"
+        let lvlTag = (e.lvl != nil && e.lvl != .info) ? "/\(e.lvl!.rawValue)" : ""
+        return "◆ [\(e.cat)\(lvlTag)] \(e.name)\(kv.isEmpty ? "" : " · " + kv)"
+    }
+
+    /// JSONL 一行 → Event(损坏行返回 nil,跳过不炸)。复核界面/导出回读用。
+    static func decodeLine(_ line: String) -> Event? {
+        let s = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !s.isEmpty, let d = s.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(Event.self, from: d)
+    }
+
+    /// 整份 JSONL 文本 → 事件序列(逐行,坏行丢弃)。
+    static func parse(_ jsonl: String) -> [Event] {
+        jsonl.split(separator: "\n", omittingEmptySubsequences: true)
+            .compactMap { decodeLine(String($0)) }
+    }
+
+    /// 按级别与类目过滤(复核界面的两个筛选轴)。
+    /// - minLevel:只留 ≥ 此级别的(缺省 debug = 全留)
+    /// - categories:nil = 不限类目;否则只留命中集合的
+    static func filter(
+        _ events: [Event],
+        minLevel: Level = .debug,
+        categories: Set<String>? = nil
+    ) -> [Event] {
+        events.filter { e in
+            e.level >= minLevel && (categories?.contains(e.cat) ?? true)
+        }
     }
 
     /// 日志目录该留哪些文件(按名字倒序 = 按时间倒序,保留最新 keep 个)。
@@ -164,9 +213,21 @@ final class ScanLog {
         }
     }
 
-    func log(_ cat: String, _ name: String, _ attrs: [String: Value] = [:]) {
-        let e = Event(t: Self.nowMs(), cat: cat, name: name, attrs: attrs)
+    /// 记一条事件。level 缺省 nil = info(不写进 JSON,旧契约不变);
+    /// warn/error/debug 用下面的便捷方法或显式传 level。
+    func log(_ cat: String, _ name: String, _ attrs: [String: Value] = [:], level: Level? = nil) {
+        let e = Event(t: Self.nowMs(), cat: cat, name: name, attrs: attrs, lvl: level)
         queue.async { [self] in write(e) }
+    }
+
+    /// 调试细节(默认级别之下,过滤时可折叠)。
+    func debug(_ cat: String, _ name: String, _ attrs: [String: Value] = [:]) {
+        log(cat, name, attrs, level: .debug)
+    }
+
+    /// 该注意但没崩(降级、跳过、门控命中偏多…):现场复核第一优先看这一档。
+    func warn(_ cat: String, _ name: String, _ attrs: [String: Value] = [:]) {
+        log(cat, name, attrs, level: .warn)
     }
 
     /// 错误必须有上下文:哪一步、带着什么参数。所有 catch 都该过这里。
@@ -174,7 +235,7 @@ final class ScanLog {
         var a = attrs
         a["error"] = .string(String(describing: error))
         a["localized"] = .string(error.localizedDescription)
-        log(cat, name, a)
+        log(cat, name, a, level: .error)
         counter { $0.count("errors") }
     }
 

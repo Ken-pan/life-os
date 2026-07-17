@@ -52,8 +52,10 @@ struct FlatScene {
         var styleKeys: [String] = []
         /// 扫描中自动抓拍的这件家具的照片(最佳视角裁剪;无则 nil)
         var photoFileURL: URL? = nil
-        /// 从抓拍图提出的主色(#RRGGBB)
+        /// 从抓拍图提出的主色(#RRGGBB),多视角共识
         var colorHex: String? = nil
+        /// 主色可信度(0..1):多张抓拍取共识后的稳健度。下游据此区分可信色与猜测色
+        var colorConfidence: Double? = nil
         /// 多视角证据包(分数降序,第一张 = photoFileURL 那张)
         var photos: [ObjectPhoto] = []
     }

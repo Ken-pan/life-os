@@ -164,9 +164,20 @@ enum PlanProjector {
                     baseLabel: m.label,
                     styleKeys: item.styleKeys
                 )
-                return MappedItem(
+                // 尺寸/高度二次细化:table → 升降桌/书桌/折叠桌/餐桌 + kindConfidence
+                let inPerM = 39.3700787
+                let refined = KindMaps.refineKind(
                     kind: styled.kind,
                     label: styled.label,
+                    styleZh: styled.styleZh,
+                    confidence: item.confidence,
+                    longIn: max(item.widthM, item.depthM) * inPerM,
+                    shortIn: min(item.widthM, item.depthM) * inPerM,
+                    heightIn: item.heightM > 0 ? item.heightM * inPerM : nil
+                )
+                return MappedItem(
+                    kind: refined.kind,
+                    label: refined.label,
                     isFixture: isFixture,
                     center: c,
                     axisDeg: item.axisDeg + phi * 180 / .pi,
@@ -178,8 +189,10 @@ enum PlanProjector {
                     elevIn: item.elevM >= 0.05 ? round1(item.elevM * 39.3700787) : nil,
                     confidence: item.confidence,
                     styleKeys: item.styleKeys.isEmpty ? nil : item.styleKeys,
-                    styleZh: styled.styleZh,
+                    styleZh: refined.styleZh,
                     colorHex: item.colorHex,
+                    colorConfidence: item.colorConfidence,
+                    kindConfidence: refined.kindConfidence,
                     photos: item.photos.isEmpty ? nil : item.photos,
                     requiredShots: {
                         let side = max(item.widthM, item.depthM)
@@ -229,6 +242,8 @@ enum PlanProjector {
                 measuredHIn: round1(fh / gridPx),
                 confidence: m.confidence,
                 colorHex: m.colorHex,
+                colorConfidence: m.colorConfidence.map { ($0 * 100).rounded() / 100 },
+                kindConfidence: m.kindConfidence.map { ($0 * 100).rounded() / 100 },
                 photoPath: nil, // 上传时回填桶内路径
                 yawDeg: abs(yawDev) > 3 ? round1(yawDev) : nil
             )
@@ -534,6 +549,10 @@ enum PlanProjector {
         var styleKeys: [String]?
         var styleZh: String?
         var colorHex: String?
+        /// 主色可信度(0..1);与 colorHex 配对,合并时同进同出
+        var colorConfidence: Double?
+        /// kind 识别可信度(0..1)
+        var kindConfidence: Double?
         var photos: [FlatScene.ObjectPhoto]?
         /// 证据需求(EvidenceGuide 同一套分级:大件 3 / 中件 2 / 小件 1)——
         /// 上传的照片按它裁剪,多余方位不进桶(省流量省空间)
@@ -737,7 +756,12 @@ enum PlanProjector {
         out.confidence = out.confidence ?? loser.confidence
         out.styleKeys = out.styleKeys ?? loser.styleKeys
         out.styleZh = out.styleZh ?? loser.styleZh
-        out.colorHex = out.colorHex ?? loser.colorHex
+        // colorHex 与 colorConfidence 是一对:winner 没颜色才整对取 loser 的,不混搭
+        if out.colorHex == nil {
+            out.colorHex = loser.colorHex
+            out.colorConfidence = loser.colorConfidence
+        }
+        out.kindConfidence = out.kindConfidence ?? loser.kindConfidence
         out.photos = out.photos ?? loser.photos
         return out
     }

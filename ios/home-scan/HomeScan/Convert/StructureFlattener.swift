@@ -60,6 +60,8 @@ enum StructureFlattener {
                 category: category,
                 center: center
             )
+            // 主色取多视角共识(单张易被罩布/桌上杂物骗;共识剔离群)+ 可信度
+            let consensusColor = ObjectShotCapture.consensusColor(shotList)
             scene.items.append(
                 FlatScene.Item(
                     category: category,
@@ -72,7 +74,8 @@ enum StructureFlattener {
                     confidence: confidenceName(object.confidence),
                     styleKeys: styleKeys(of: object),
                     photoFileURL: shotList.first?.photoFileURL,
-                    colorHex: shotList.first?.colorHex,
+                    colorHex: consensusColor?.hex,
+                    colorConfidence: consensusColor.map { ($0.confidence * 100).rounded() / 100 },
                     photos: shotList.map {
                         FlatScene.ObjectPhoto(
                             fileURL: $0.photoFileURL,

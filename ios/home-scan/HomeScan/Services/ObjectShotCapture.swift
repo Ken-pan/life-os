@@ -26,6 +26,9 @@ final class ObjectShotCapture {
         var score: Double
         var photoFileURL: URL
         var colorHex: String?
+        /// 主色可信度(0..1):这一张裁剪图里主色簇占了多少、有没有被反光/内容物冲淡。
+        /// 下游据此区分「可信的白」(高)与「猜的红」(低,如罩布遮住鸟笼本体)。
+        var colorConfidence: Double = 0
         /// 清晰度(裁剪图灰度拉普拉斯方差;越大越清楚)。
         /// 角速度门控挡不住「手稳但对焦没跟上」的糊图,这个挡。
         var sharpness: Double = 0
@@ -51,6 +54,11 @@ final class ObjectShotCapture {
     static let minSharpness = 15.0
     /// 方位桶数(每 90° 一桶,0-3)
     static let binCount = 4
+    /// 主色「同色」判定的 RGB 欧氏距离阈值(0..441)。单张里落在主色簇这个半径内的
+    /// 像素占比 = colorConfidence 的主项;多视角共识里离群色也用它甄别。
+    static let colorInlierThreshold = 60.0
+    /// 多视角共识:某一张的主色离共识色超过它就当离群丢掉(罩布/桌上杂物只糊住一两个方位)
+    static let colorOutlierThreshold = 75.0
 
     /// 这件家具的证据配额满了吗(4 桶各有一张)—— 满了就跳过打分。
     /// 代价是放弃「更好一张」的顶位;换来的是主线程不再为它空转
@@ -257,7 +265,7 @@ final class ObjectShotCapture {
 
     /// 编码完成的主线程收尾(视频/高清两条路共用)
     private func finishShot(
-        out: (url: URL, colorHex: String?, sharpness: Double)?,
+        out: (url: URL, colorHex: String?, colorConfidence: Double, sharpness: Double)?,
         objectId: UUID, category: String, center: SIMD2<Double>,
         score: Double, az: Double, bin: Int
     ) {
@@ -293,6 +301,7 @@ final class ObjectShotCapture {
                     score: score,
                     photoFileURL: out.url,
                     colorHex: out.colorHex,
+                    colorConfidence: out.colorConfidence,
                     sharpness: out.sharpness,
                     azimuthDeg: (az * 10).rounded() / 10,
                     bin: bin
@@ -399,7 +408,7 @@ final class ObjectShotCapture {
         imageHeight: CGFloat,
         objectId: UUID,
         bin: Int
-    ) -> (url: URL, colorHex: String?, sharpness: Double)? {
+    ) -> (url: URL, colorHex: String?, colorConfidence: Double, sharpness: Double)? {
         let ciCrop = CGRect(
             x: crop.origin.x,
             y: imageHeight - crop.origin.y - crop.height,
@@ -407,7 +416,7 @@ final class ObjectShotCapture {
             height: crop.height
         )
         var image = CIImage(cvPixelBuffer: pixelBuffer).cropped(to: ciCrop)
-        let colorHex = dominantColorHex(of: image)
+        let color = dominantColor(of: image)
         let sharpness = laplacianVariance(of: image)
 
         // 竖持方向 + 限长边
@@ -429,7 +438,7 @@ final class ObjectShotCapture {
             .appendingPathComponent("obj-\(objectId.uuidString.lowercased())-b\(bin).jpg")
         do {
             try data.write(to: url, options: .atomic)
-            return (url, colorHex, sharpness)
+            return (url, color?.hex, color?.confidence ?? 0, sharpness)
         } catch {
             return nil
         }
@@ -478,11 +487,16 @@ final class ObjectShotCapture {
         return sum2 / Double(n) - mean * mean
     }
 
-    /// 主色:只采样**中央 72% 区域**(裁剪框带 12% 外扩,中央基本是物体本体),
+    /// 主色 + 可信度:只采样**中央 72% 区域**(裁剪框带 12% 外扩,中央基本是物体本体),
     /// 过滤过曝/欠曝像素(反光高光和阴影都不是家具的颜色),
     /// 再做 k-means(k=3,最远点确定性初始化 —— k-means++ 思路)取最大簇。
     /// 平均色会把棕沙发+白墙混成脏灰,聚类 + 采样收紧才拿得到「这件家具的颜色」。
-    func dominantColorHex(of image: CIImage) -> String? {
+    ///
+    /// confidence(0..1):主色簇越干净、可用像素越多 → 越高。
+    /// - 罩布/桌上杂物/内容物把物体本体搅成杂色 → 主色簇占比低 → confidence 低,
+    ///   下游据此把「猜的红」降权,而不是当成和「实测的白」一样可信。
+    /// - 反光/逆光让大量像素过曝欠曝被滤掉(usable 占比低)→ 再打个折。
+    func dominantColor(of image: CIImage) -> (hex: String, confidence: Double)? {
         let inset = 0.14 // 每边收 14% ≈ 中央 72%
         let inner = image.extent.insetBy(
             dx: image.extent.width * inset,
@@ -518,7 +532,8 @@ final class ObjectShotCapture {
             let luma = 0.299 * p.x + 0.587 * p.y + 0.114 * p.z
             return luma > 16 && luma < 240
         }
-        let samples = usable.count >= all.count * 3 / 10 ? usable : all
+        let clipped = usable.count < all.count * 3 / 10
+        let samples = clipped ? all : usable
 
         // 最远点初始化(确定性):c0=首样本,c1=离 c0 最远,c2=离 {c0,c1} 最远
         var centers = [samples[0]]
@@ -560,9 +575,80 @@ final class ObjectShotCapture {
         for a in assign { counts[a] += 1 }
         let biggest = counts.firstIndex(of: counts.max()!)!
         let c = centers[biggest]
-        return String(
+
+        // 可信度:多少可用像素真的落在主色半径内(纯度),再按可用像素占比打折。
+        // firstIndex+max 只数了「被分到最大簇」的像素,但一件多色物体的三个簇可能都
+        // 各占三成 —— 用距离阈值重新统计「和主色一致」的像素,才是诚实的纯度。
+        let inliers = samples.filter { simd_length_squared($0 - c) <= Self.colorInlierThreshold * Self.colorInlierThreshold }
+        let purity = Double(inliers.count) / Double(samples.count)
+        let usableFrac = Double(usable.count) / Double(all.count)
+        let confidence = min(1, max(0, purity * (0.55 + 0.45 * usableFrac)))
+
+        let hex = String(
             format: "#%02X%02X%02X",
             Int(c.x.rounded()), Int(c.y.rounded()), Int(c.z.rounded())
         )
+        return (hex, confidence)
+    }
+
+    // MARK: - 多视角共识色(纯函数,单测覆盖)
+
+    /// #RRGGBB → RGB(0..255);非法返回 nil
+    static func rgb(fromHex s: String) -> SIMD3<Double>? {
+        guard s.count == 7 else { return nil }
+        let h = Array(s)
+        var out: [Double] = []
+        for i in [1, 3, 5] {
+            guard let v = UInt8(String(h[i...i + 1]), radix: 16) else { return nil }
+            out.append(Double(v))
+        }
+        return SIMD3(out[0], out[1], out[2])
+    }
+
+    private static func hex(fromRGB c: SIMD3<Double>) -> String {
+        String(format: "#%02X%02X%02X",
+                Int(c.x.rounded()), Int(c.y.rounded()), Int(c.z.rounded()))
+    }
+
+    /// 一件家具多张抓拍(不同方位)的**共识主色 + 可信度**。
+    ///
+    /// 单张能被罩布/桌上杂物骗到,多张不会一起被骗:取各张主色的**逐通道中位数**当共识,
+    /// 把离共识太远的那一两张(罩布只糊住一个方位)当离群丢掉,再在剩下的里复算中位数。
+    /// 可信度 = 存活张的可信度均值 × 一致性因子(彼此越接近越高);单张时原样返回但略降
+    /// (没有第二视角互证)。空 / 全无颜色 → nil,下游据此完全不显示颜色。
+    static func consensusColor(_ shots: [Shot]) -> (hex: String, confidence: Double)? {
+        let parsed: [(rgb: SIMD3<Double>, conf: Double)] = shots.compactMap { s in
+            guard let hex = s.colorHex, let v = rgb(fromHex: hex) else { return nil }
+            return (v, max(0, min(1, s.colorConfidence)))
+        }
+        guard !parsed.isEmpty else { return nil }
+        if parsed.count == 1 {
+            return (hex(fromRGB: parsed[0].rgb), min(parsed[0].conf, 0.9))
+        }
+
+        func median(_ vals: [SIMD3<Double>]) -> SIMD3<Double> {
+            func mid(_ xs: [Double]) -> Double {
+                let s = xs.sorted()
+                return s.count % 2 == 1 ? s[s.count / 2]
+                    : (s[s.count / 2 - 1] + s[s.count / 2]) / 2
+            }
+            return SIMD3(mid(vals.map(\.x)), mid(vals.map(\.y)), mid(vals.map(\.z)))
+        }
+
+        let med0 = median(parsed.map(\.rgb))
+        let inliers = parsed.filter {
+            simd_length($0.rgb - med0) <= colorOutlierThreshold
+        }
+        let kept = inliers.isEmpty ? parsed : inliers
+        let center = median(kept.map(\.rgb))
+
+        // 一致性:存活张离共识色的平均距离,越小越一致
+        let spread = kept.map { simd_length($0.rgb - center) }.reduce(0, +) / Double(kept.count)
+        let agreement = max(0.4, min(1, 1 - spread / 120))
+        let meanConf = kept.map(\.conf).reduce(0, +) / Double(kept.count)
+        // 多张互证的小额加成(封顶 1.1),存活越多越敢信
+        let corroboration = min(1.1, 1 + 0.05 * Double(kept.count - 1))
+        let confidence = min(1, max(0, meanConf * agreement * corroboration))
+        return (hex(fromRGB: center), confidence)
     }
 }

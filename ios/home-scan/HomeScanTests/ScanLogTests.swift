@@ -41,6 +41,50 @@ final class ScanLogTests: XCTestCase {
         XCTAssertEqual(ScanLog.renderLine(p), "◆ [perf] m · ms=1234")
     }
 
+    // MARK: 级别(加法式,向后兼容)
+
+    func testEncodeLineOmitsLevelWhenNilKeepsInfoWhenSet() {
+        // nil 级别不写进 JSON —— 旧 encodeLine 契约(见上面确定性测试)不变
+        let info = ScanLog.Event(t: 1, cat: "scan", name: "x", attrs: [:])
+        XCTAssertFalse(ScanLog.encodeLine(info)!.contains("lvl"))
+        // warn 显式落 lvl
+        let warn = ScanLog.Event(t: 1, cat: "scan", name: "x", attrs: [:], lvl: .warn)
+        XCTAssertTrue(ScanLog.encodeLine(warn)!.contains(#""lvl":"warn""#))
+    }
+
+    func testRenderLineShowsLevelTagOnlyForNonInfo() {
+        let warn = ScanLog.Event(t: 0, cat: "scan", name: "degraded", attrs: ["n": 2], lvl: .warn)
+        XCTAssertEqual(ScanLog.renderLine(warn), "◆ [scan/warn] degraded · n=2")
+        // info 不带标 —— 常规行保持简洁
+        let info = ScanLog.Event(t: 0, cat: "scan", name: "ok", attrs: [:], lvl: .info)
+        XCTAssertEqual(ScanLog.renderLine(info), "◆ [scan] ok")
+    }
+
+    func testFilterByLevelAndCategory() {
+        let evs = [
+            ScanLog.Event(t: 1, cat: "scan", name: "a", attrs: [:]),                 // info
+            ScanLog.Event(t: 2, cat: "scan", name: "b", attrs: [:], lvl: .warn),
+            ScanLog.Event(t: 3, cat: "upload", name: "c", attrs: [:], lvl: .error),
+            ScanLog.Event(t: 4, cat: "scan", name: "d", attrs: [:], lvl: .debug),
+        ]
+        XCTAssertEqual(ScanLog.filter(evs, minLevel: .warn).map(\.name), ["b", "c"])
+        XCTAssertEqual(
+            ScanLog.filter(evs, minLevel: .debug, categories: ["scan"]).map(\.name),
+            ["a", "b", "d"]
+        )
+    }
+
+    func testParseSkipsBadLinesAndLegacyDefaultsToInfo() {
+        let warn = ScanLog.encodeLine(
+            ScanLog.Event(t: 5, cat: "scan", name: "w", attrs: [:], lvl: .warn))!
+        let legacy = #"{"attrs":{},"cat":"scan","name":"old","t":9}"# // 无 lvl 的旧行
+        let evs = ScanLog.parse(warn + "\n{ broken \n" + legacy)
+        XCTAssertEqual(evs.map(\.name), ["w", "old"], "坏行跳过")
+        XCTAssertEqual(evs[0].level, .warn)
+        XCTAssertNil(evs[1].lvl)
+        XCTAssertEqual(evs[1].level, .info, "旧行缺省 info")
+    }
+
     // MARK: 轮换
 
     func testFilesToPruneKeepsNewestAndIgnoresForeignFiles() {
