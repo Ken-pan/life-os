@@ -31,6 +31,7 @@
 
 | 文档 | 用途 |
 | --- | --- |
+| [`agent-handoff-2026-07-17-roi.md`](./agent-handoff-2026-07-17-roi.md) | ROI 执行暂停交接 + 下一任 Prompt（PLAT.CI.0 snapshot） |
 | [`e2e-issues.md`](./e2e-issues.md) | 四站 E2E 跑批问题记录 |
 | [`input-ime.md`](./input-ime.md) | CJK IME guard |
 | [`portal-screenshot-audit.md`](./portal-screenshot-audit.md) | Portal UI 截图走查 |
