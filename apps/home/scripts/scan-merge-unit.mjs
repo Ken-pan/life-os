@@ -1076,6 +1076,39 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
     JSON.stringify({ kind: desk2?.kind, locked: desk2?.locked, c: desk2?.attrs?.colorHex }))
 }
 
+// ---- 优化:kindConfidence 感知的 kind 保全(高置信旧分类不被低置信新扫描翻掉) ----
+// 只在同族翻转(cabinet↔shelf…,RoomPlan 常抖)且两侧都有置信度时干预。
+{
+  const prev = {
+    ...SAMPLE_508,
+    placements: [
+      { id: 'kc-1', kind: 'cabinet', label: '柜', x: 700, y: 300, w: 78, h: 159, rotation: 0,
+        attrs: { kindConfidence: 0.9, measuredWIn: 26, measuredHIn: 53 } },
+    ],
+    fixtures: [], viewpoints: [],
+  }
+  const rescan = (kind, kc) => ({
+    placements: [
+      { id: 'kc-new', kind, label: '架', x: 701, y: 301, w: 78, h: 159, rotation: 0,
+        attrs: kc == null ? { measuredWIn: 26 } : { kindConfidence: kc, measuredWIn: 26 } },
+    ],
+    fixtures: [], viewpoints: [],
+  })
+  const pick = (proj) => proj.placements.find((p) => p.id === 'kc-1')
+  // 低置信新分类(shelf 0.4)→ 保住高置信旧分类 cabinet,且带上旧 0.9(不误标待复核)
+  const low = pick(mergeFurnitureWithIdentity(prev, rescan('shelf', 0.4)).project)
+  ok('优化:低置信新分类不翻掉高置信旧分类(cabinet 不变 shelf)',
+    low?.kind === 'cabinet', low?.kind)
+  ok('优化:保住旧分类时旧 kindConfidence 一并带上',
+    low?.attrs?.kindConfidence === 0.9, low?.attrs?.kindConfidence)
+  // 高置信新分类(shelf 0.85)→ 照常更新(更准的检测/真换了家具)
+  const high = pick(mergeFurnitureWithIdentity(prev, rescan('shelf', 0.85)).project)
+  ok('优化:高置信新分类照常更新(shelf 0.85 翻正)', high?.kind === 'shelf', high?.kind)
+  // 无 kindConfidence(老数据)→ 退回「新扫描赢」,向后兼容
+  const noConf = pick(mergeFurnitureWithIdentity(prev, rescan('shelf', null)).project)
+  ok('优化:无 kindConfidence 退回新扫描赢(向后兼容)', noConf?.kind === 'shelf', noConf?.kind)
+}
+
 // ---- carryCanonicalScan:replace 整包路径的户型级保全(北向/地板/不透光) ----
 {
   // 极简墙图:一条南墙,上面一扇门。prev 与 next 几何相同但 openings id 全新

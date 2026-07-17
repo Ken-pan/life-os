@@ -398,20 +398,32 @@ const TRUST_DARK_MIN = 0.35
  * 老扫描没有这个字段(undefined)→ 不设闸,退回纯色相判断(向后兼容)。
  */
 const TRUST_CONF_MIN = 0.5
+/**
+ * 多视角主色离散度上限(`attrs.colorSpreadE`,ΔE76,网页端从 ≥2 方位照片派生)。
+ * 高于此 = 光线不稳/这件的颜色跨视角漂,别太当真(与 README 的 >12 一致)。
+ * colorConfidence 是设备侧信号、colorSpreadE 是网页侧信号 —— 两个都查,谁说不可信
+ * 就不可信;老数据可能只有其中一个,各自缺省则那道闸不设(向后兼容)。
+ */
+const TRUST_SPREAD_MAX = 12
 
 /**
  * 这条扫描主色是否是「可信的淡中性」—— 亮到、且中性到几乎只可能是家具本体真实
  * 浅色,而非罩布 / 内容物 / 阴影。是否**采用**它还要看 symbol 属不属于软兜底
  * (见 {@link resolveFurnitureColor});这里只判「色本身可不可信」。
  *
- * 两道闸:①色相本身淡中性;②设备置信度够(有该字段时)。第 ② 道接住「采样恰好
- * 淡中性、但其实是罩布/反光」——iOS 已在源头算好 colorConfidence,这里直接用。
+ * 三道闸:①色相本身淡中性;②设备抓色置信度够(colorConfidence);③多视角色不散
+ * (colorSpreadE)。② 接住「采样恰好淡中性、但其实是罩布/反光」;③ 接住老数据里
+ * 没有设备置信度、但网页派生出「跨视角色乱跳」的。任一道判不可信即不可信。
  * @param {string | undefined} scanHex `attrs.colorHex`
- * @param {number} [colorConfidence] `attrs.colorConfidence` 0..1;省略=老扫描,不设闸
+ * @param {number} [colorConfidence] `attrs.colorConfidence` 0..1;省略=老扫描,不设该闸
+ * @param {number} [colorSpreadE] `attrs.colorSpreadE` ΔE76;省略=单视角/老数据,不设该闸
  * @returns {boolean}
  */
-export function isTrustworthyScan(scanHex, colorConfidence) {
+export function isTrustworthyScan(scanHex, colorConfidence, colorSpreadE) {
   if (typeof colorConfidence === 'number' && colorConfidence < TRUST_CONF_MIN) {
+    return false
+  }
+  if (typeof colorSpreadE === 'number' && colorSpreadE > TRUST_SPREAD_MAX) {
     return false
   }
   const rgb = parseHex(scanHex ?? '')
@@ -458,14 +470,15 @@ const SOFT_SCAN_SYMBOLS = new Set(['table', 'shelf', 'coatRack', 'officeChair'])
  * @param {string | undefined} symbol furniture-symbols 的 symbol 名
  * @param {string | undefined} scanHex 家具 `attrs.colorHex` 的扫描主色
  * @param {number} [colorConfidence] `attrs.colorConfidence` 0..1,喂给第 2 级的可信度判断
+ * @param {number} [colorSpreadE] `attrs.colorSpreadE` ΔE76,同上(网页侧色可靠度信号)
  * @returns {string | undefined} 原始 #hex,或 undefined = 无类型色且扫描不可信
  */
-export function resolveFurnitureColor(kind, symbol, scanHex, colorConfidence) {
+export function resolveFurnitureColor(kind, symbol, scanHex, colorConfidence, colorSpreadE) {
   if (kind && KIND_HEX[kind]) return KIND_HEX[kind]
   if (
     symbol &&
     SOFT_SCAN_SYMBOLS.has(symbol) &&
-    isTrustworthyScan(scanHex, colorConfidence)
+    isTrustworthyScan(scanHex, colorConfidence, colorSpreadE)
   ) {
     return scanHex
   }

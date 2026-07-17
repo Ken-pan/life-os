@@ -35,6 +35,7 @@ import {
   wallAnchorSegments,
 } from './wall-anchor.js'
 import { graphOpeningBounds } from './graph-openings.js'
+import { KIND_REVIEW_MAX } from './placements.js'
 
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
@@ -665,11 +666,31 @@ const wasUserEdited = (o, field) =>
   Array.isArray(o?.attrs?.userEdited) && o.attrs.userEdited.includes(field)
 
 /**
+ * 重扫时这件家具该用哪个 kind。默认取新扫描(样式精化本就该更新分类),两个例外:
+ *   1. 用户改过(attrs.userEdited∋'kind')→ 永远保留 prev.kind(table→standing_desk 不打回);
+ *   2. **低置信新分类不许翻掉高置信旧分类** —— 一次几何瞎猜(把 standing_desk 重检成
+ *      通用 table、kindConfidence<0.6)不该把上次高置信的分类冲掉。用户真换了家具,
+ *      再扫一次高置信就翻正,或手动改(盖章走例外 1)。仅在两侧都有置信度、新的确实
+ *      更没把握时才干预 —— 没有信号就退回「新扫描赢」(向后兼容,老数据行为不变)。
+ * @param {any} prev @param {any} n @returns {string}
+ */
+function resolveScanKind(prev, n) {
+  if (wasUserEdited(prev, 'kind')) return prev.kind
+  if (prev.kind === n.kind) return n.kind
+  const nc = n.attrs?.kindConfidence
+  const pc = prev.attrs?.kindConfidence
+  if (typeof nc === 'number' && nc < KIND_REVIEW_MAX && typeof pc === 'number' && pc > nc) {
+    return prev.kind
+  }
+  return n.kind
+}
+
+/**
  * 匹配上的扫描件 → 新几何 + 保全用户意图。几何/朝向/zoneId 取新扫描(易变、
  * 扫描更准);但下面这些**跟着永久身份走、扫描无权碰**,否则重扫一次就丢:
  * - id:永久身份,重扫不换(调用方已预先占位)
- * - kind:仅当 attrs.userEdited 标了「用户改过」才压过扫描原值(table→standing_desk
- *   不被打回);没标的沿用扫描分类(样式精化本就该更新)
+ * - kind:见 {@link resolveScanKind} —— 用户改过的保留;没改的默认取新扫描,但
+ *   低置信新分类不许翻掉高置信旧分类(保住旧分类时旧 kindConfidence 一并带上)
  * - label:名字跟着身份走(prev.label 优先,自定义名不被通用名冲掉)
  * - attrs.colorHex:用户改过的主色不被单轮扫描覆盖;没改过的取扫描新值
  * - locked / relations:布局锁与家规是用户在这件上的设定,扫描 payload 根本不含
@@ -684,10 +705,16 @@ function carryUserAuthored(prev, n) {
   if (wasUserEdited(prev, 'colorHex') && prev.attrs?.colorHex != null) {
     attrs.colorHex = prev.attrs.colorHex
   }
+  const kind = resolveScanKind(prev, n)
+  // 保住了旧分类(用户改过 or 高置信压低置信)时,旧的 kindConfidence 也带上 ——
+  // 否则「高置信 kind + 新扫描的低置信标」会矛盾地误标「待复核」
+  if (kind === prev.kind && kind !== n.kind && prev.attrs?.kindConfidence != null) {
+    attrs.kindConfidence = prev.attrs.kindConfidence
+  }
   const out = {
     ...n,
     id: prev.id,
-    kind: wasUserEdited(prev, 'kind') ? prev.kind : n.kind,
+    kind,
     label: prev.label ?? n.label,
     attrs,
   }

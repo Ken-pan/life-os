@@ -164,4 +164,10 @@ assert.ok(
   '高置信白层架:仍救回白',
 )
 
+// colorSpreadE 闸(网页派生的多视角色离散度 ΔE76;>12 = 光线不稳,色别当真)
+assert.equal(isTrustworthyScan('#FFFFFF', undefined, 5), true, '纯白 + 低离散(色稳):采信')
+assert.equal(isTrustworthyScan('#FFFFFF', undefined, 20), false, '纯白但高离散(跨视角色乱跳):不采信')
+assert.equal(isTrustworthyScan('#FFFFFF', 0.9, 20), false, '置信高但离散高:任一道判不可信即不可信')
+assert.equal(isTrustworthyScan('#FFFFFF', undefined, undefined), true, '两信号都缺:退回纯色相,向后兼容')
+
 console.log('furniture-color-unit: ok')

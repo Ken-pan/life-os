@@ -615,6 +615,7 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
             f.kind,
             f.attrs?.colorHex,
             f.attrs?.colorConfidence,
+            f.attrs?.colorSpreadE,
           )
         : undefined
       const vars = fixtureHex
@@ -667,6 +668,7 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
             symbol,
             p.attrs?.colorHex,
             p.attrs?.colorConfidence,
+            p.attrs?.colorSpreadE,
           )
         : undefined
       const vars = furnHex
