@@ -36,9 +36,15 @@ const MAX_REVIEWS = 5
  */
 
 /**
- * 拉全部 `possibly_same` 难例,组装成证据卡片(含签名裁剪 URL)。
- * 只读,不写任何东西。未登录 / RLS 拦下 / 无难例 → 空数组。
- * @returns {Promise<RecognitionReview[]>}
+ * @typedef {object} RecognitionReviewBatch
+ * @property {RecognitionReview[]} items 本批交给用户的卡片(≤ MAX_REVIEWS,按相似度降序)
+ * @property {number} total 全部待确认难例数(可能远多于本批 —— 横幅露总数用)
+ */
+
+/**
+ * 拉 `possibly_same` 难例,组装成证据卡片(含签名裁剪 URL)。本批只给前 MAX_REVIEWS 张,
+ * 但同时返回总数 total(横幅显示「本批 5 · 共 21」用)。只读。未登录 / RLS 拦下 / 无难例 → 空批。
+ * @returns {Promise<RecognitionReviewBatch>}
  */
 export async function loadRecognitionReviews() {
   // 1) 难例行(possibly_same)。新→旧,让最近扫描的难例排前面。
@@ -50,7 +56,7 @@ export async function loadRecognitionReviews() {
     .order('observed_at', { ascending: false })
   if (error) throw new Error(`拉取认亲难例失败:${error.message}`)
   const rows = pending ?? []
-  if (!rows.length) return []
+  if (!rows.length) return { items: [], total: 0 }
 
   // 2) 候选历史身份 → 代表旧图:按 canonical_object_id 取**最早**一次带裁剪的观察
   //    (最早那次通常是播种该身份的扫描,图最干净)。
@@ -103,7 +109,7 @@ export async function loadRecognitionReviews() {
     }
   })
   cards.sort((a, b) => (b.candidate.score ?? 0) - (a.candidate.score ?? 0))
-  return cards.slice(0, MAX_REVIEWS)
+  return { items: cards.slice(0, MAX_REVIEWS), total: cards.length }
 }
 
 /** @param {any} row object_observations 行 → 分最高的候选(matcher 已按分降序) */
@@ -155,11 +161,12 @@ export async function resolveRecognition(review, decision) {
     .single()
   if (readErr) throw new Error(`读取难例失败:${readErr.message}`)
 
+  const oldCanonical = cur?.canonical_object_id
+  const candId = review.candidate?.canonicalId
   const match = { ...(cur?.match ?? {}) }
   match.userDecision = decision // ← matcher 见此字段即原样保留,不再重算这行
   match.decidedAt = Date.now()
-  let canonicalObjectId = cur?.canonical_object_id
-  const candId = review.candidate?.canonicalId
+  let canonicalObjectId = oldCanonical
 
   if (decision === 'same' && candId) {
     match.state = 'same'
@@ -180,4 +187,45 @@ export async function resolveRecognition(review, decision) {
     .eq('scan_id', review.scanId)
     .eq('observation_id', review.observationId)
   if (error) throw new Error(`保存裁决失败:${error.message}`)
+
+  // group-merge:确认「是同一件」时,把**原身份下的其它历史观察**一起并进候选身份。
+  // 这件难例可能是某 canonical 的种子、底下还挂着别的扫描的观察(它们被 matcher
+  // 自动认作同一件);只搬这一行会把一条身份线劈成两半、留碎片。整组一起搬才干净。
+  if (decision === 'same' && candId && oldCanonical && oldCanonical !== candId) {
+    await mergeCanonicalSiblings(oldCanonical, candId, review)
+  }
+}
+
+/**
+ * 把 `fromCanonical` 名下(除已确认那行外)的其它观察全部改指 `toCanonical`。
+ * 兄弟行随主确认一起打 userDecision 锁(标 `viaGroupMerge` 溯源),免得下次
+ * matcher `--apply` 把它们重算回旧身份。它们与被确认行本就被 matcher 认作同一件
+ * (共享 fromCanonical),用户确认其一即确认整组,传递成立。
+ * @param {string} fromCanonical
+ * @param {string} toCanonical
+ * @param {RecognitionReview} confirmed
+ */
+async function mergeCanonicalSiblings(fromCanonical, toCanonical, confirmed) {
+  const { data: sibs, error } = await supabase
+    .schema('home')
+    .from('object_observations')
+    .select('scan_id, observation_id, match')
+    .eq('canonical_object_id', fromCanonical)
+  if (error || !sibs?.length) return
+  const now = Date.now()
+  for (const s of sibs) {
+    if (s.scan_id === confirmed.scanId && s.observation_id === confirmed.observationId) continue
+    const m = { ...(s.match ?? {}) }
+    m.state = 'same'
+    m.chosenCanonicalId = toCanonical
+    m.userDecision = 'same'
+    m.viaGroupMerge = fromCanonical // 溯源:随身份合并带过来,非逐个人工看过
+    m.decidedAt = now
+    await supabase
+      .schema('home')
+      .from('object_observations')
+      .update({ canonical_object_id: toCanonical, match: m })
+      .eq('scan_id', s.scan_id)
+      .eq('observation_id', s.observation_id)
+  }
 }

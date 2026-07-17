@@ -10,6 +10,8 @@
 
   /** @type {import('$lib/recognition-review.js').RecognitionReview[]} */
   let reviews = $state([])
+  /** 全部待确认总数(reviews 只是本批 ≤5) */
+  let total = $state(0)
   let open = $state(false)
   let dismissed = $state(false)
 
@@ -19,16 +21,18 @@
   $effect(() => {
     if (!auth.user) {
       reviews = []
+      total = 0
       return
     }
     let alive = true
     loadRecognitionReviews()
-      .then((rows) => {
+      .then((batch) => {
         if (!alive) return
-        reviews = rows
-        // 当前难例全都忽略过 → 不再冒泡(下次 Mac 精修出新 key 会重新出现)
+        reviews = batch.items
+        total = batch.total
+        // 本批难例全都忽略过 → 不再冒泡(下次 Mac 精修出新 key 会重新出现)
         const seen = seenSet()
-        dismissed = rows.length > 0 && rows.every((r) => seen.has(keyOf(r)))
+        dismissed = batch.items.length > 0 && batch.items.every((r) => seen.has(keyOf(r)))
       })
       .catch(() => {}) // 网络/权限问题不打扰画图
     return () => {
@@ -55,7 +59,10 @@
 
   function reload() {
     loadRecognitionReviews()
-      .then((r) => (reviews = r))
+      .then((batch) => {
+        reviews = batch.items
+        total = batch.total
+      })
       .catch(() => {})
   }
 </script>
@@ -67,8 +74,8 @@
 {#if reviews.length && !dismissed}
   <div class="recog-banner" role="note">
     <div class="recog-copy">
-      <strong>{reviews.length} 件待认亲确认</strong>
-      <span>Mac 精修认出这几件像以前扫过的某件 —— 看图确认一下，拿不准可以「暂不确定」。</span>
+      <strong>{reviews.length} 件待认亲确认{total > reviews.length ? `（共 ${total} 处）` : ''}</strong>
+      <span>Mac 精修认出这些像以前扫过的某件 —— 先给你最像的几件，确认完自动浮出下一批；拿不准可以「暂不确定」。</span>
     </div>
     <div class="recog-actions">
       <button type="button" class="recog-cta" onclick={() => (open = true)}>看看</button>

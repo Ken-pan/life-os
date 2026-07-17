@@ -85,24 +85,33 @@
   let authBusy = $state(false)
   let authError = $state('')
 
-  /** 跨扫描认亲待确认难例(Mac 精修产出的 possibly_same;登录后加载) */
+  /** 跨扫描认亲待确认难例(Mac 精修产出的 possibly_same;登录后加载,本批 ≤5) */
   let recognitionReviews = $state(/** @type {any[]} */ ([]))
+  /** 全部待确认总数(recognitionReviews 只是本批) */
+  let recognitionTotal = $state(0)
   let showRecognition = $state(false)
 
-  // 登录后拉难例;登出清空。RLS/无数据 → 空数组(条目自然隐藏)。
+  // 登录后拉难例;登出清空。RLS/无数据 → 空批(条目自然隐藏)。
   $effect(() => {
     if (!auth.user) {
       recognitionReviews = []
+      recognitionTotal = 0
       return
     }
     loadRecognitionReviews()
-      .then((r) => (recognitionReviews = r))
+      .then((batch) => {
+        recognitionReviews = batch.items
+        recognitionTotal = batch.total
+      })
       .catch(() => {})
   })
 
   function refreshRecognition() {
     loadRecognitionReviews()
-      .then((r) => (recognitionReviews = r))
+      .then((batch) => {
+        recognitionReviews = batch.items
+        recognitionTotal = batch.total
+      })
       .catch(() => {})
   }
 
@@ -368,7 +377,9 @@
     {#if recognitionReviews.length}
       <SettingsActionRow
         label="认亲确认"
-        desc={`Mac 精修认出 ${recognitionReviews.length} 件可能和以前扫过的是同一件，看图确认一下`}
+        desc={recognitionTotal > recognitionReviews.length
+          ? `Mac 精修认出可能和以前扫过重复的,共 ${recognitionTotal} 处待确认;先看最像的 ${recognitionReviews.length} 件,确认完自动浮下一批`
+          : `Mac 精修认出 ${recognitionReviews.length} 件可能和以前扫过的是同一件，看图确认一下`}
         buttonLabel={`确认 ${recognitionReviews.length} 件`}
         onclick={() => (showRecognition = true)}
       />

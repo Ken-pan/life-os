@@ -37,7 +37,15 @@ cd "$DIR"
     echo "✗ 找不到 venv python:$PY —— 先按 README 建 ~/.local-ai/vision-venv"
     exit 1
   fi
-  "$PY" embed_objects.py --all-iphone --apply
-  "$PY" match_objects.py --all-iphone --apply
+  EMBED_OUT="$("$PY" embed_objects.py --all-iphone --apply)"
+  printf '%s\n' "$EMBED_OUT"
+  # 没有新增 embedding(所有扫描都续跑跳过)→ 身份图不会变 → 跳过 matcher 的全表重写,
+  # 省掉每 15 分钟对 ~300 行 object_observations 的无谓 upsert。用户 P3 裁决由网页即时
+  # 写入、不靠这轮 matcher;真有新扫描时(入库 >0)才重算认亲。
+  if printf '%s' "$EMBED_OUT" | grep -qE "总摘要: 入库 0 "; then
+    echo "无新增 embedding → 跳过 matcher(身份图无变化)"
+  else
+    "$PY" match_objects.py --all-iphone --apply
+  fi
   echo "===== done $(date '+%F %T') ====="
 } >> "$LOG" 2>&1
