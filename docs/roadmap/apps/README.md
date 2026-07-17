@@ -56,7 +56,7 @@
 | **PAPR.SYS.2**       | `P-MOVE.SYS.2` · `P-MOVE-SYS-2`           | [paperos.md](./paperos.md)    | 🔒 not started                                                         |
 | **PAPR.UI**          | `P-MOVE.UI` · `P-MOVE-UI`                 | [paperos.md](./paperos.md)    | 🔴 PR #27/#28 device gate BLOCKED · 已迁出独立仓库                     |
 | **GYMS.SUB.5**       | `FT-P5`                                   | [fitness.md](./fitness.md)                      | ✅ 2026-07-13 收割 · #19 `67e72b81`                                    |
-| **FINC.PURCHASE.6**  | `F-P6`                                    | [finance.md](./finance.md)                      | 🟡 6.a engine/RPC/matcher/UI 均完成；仅剩 owner live + 双 JWT RLS + 视觉 closure |
+| **FINC.PURCHASE.6**  | `F-P6`                                    | [finance.md](./finance.md)                      | 🟡 6.a code/RPC/过滤拆分完成；仅剩 owner live + 双 JWT RLS + 视觉 closure |
 | **FINC.SYNC.1b**     | —                                         | [finance.md](./finance.md)                      | ✅ 2026-07-13 · popup last sync + retry · 18/18                       |
 | **PLNR.CORE.4**      | —                                         | [planner.md](./planner.md) · [portal.md](./portal.md) | ✅ 2026-07-13 · Today↔Portal 计数对齐 · parity 9/9              |
 | **HLT-0–4**          | —                                         | [health.md](./health.md)                      | ✅ 2026-07-16 · App/Focus/State Engine/自适应/趋势；companion 真机 gate 待用户 |
@@ -77,7 +77,7 @@
 | Music   | 生产   | paused / maintenance；MUSC.PIPE.4 仅问题触发 | [music.md](./music.md) |
 | Portal  | 启动器 | maintenance；不为凑九 app 扩卡 | [portal.md](./portal.md) |
 | Home    | 实验   | 用户激活 refine · **MCP.13** 优先 · 1r 窄残余 | [home.md](./home.md) |
-| AIOS    | 实验/本地优先 | **AIOS.STABLE.26** 核心链路回归护栏 | [aios.md](./aios.md) |
+| AIOS    | 实验/本地优先 | STABLE.26 ✅ · 接 **HOME.MCP.13** | [aios.md](./aios.md) |
 | KnowledgeOS | 实验/本地优先 | **KNOW.VAULT.0** watcher（编辑器含表格/高亮） | [knowledge.md](./knowledge.md) |
 | HealthOS | 实验/本地优先 | **HLT-5** 用户真机 gate；其余后移 | [health.md](./health.md) |
 | PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |

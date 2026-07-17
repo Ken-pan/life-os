@@ -36,7 +36,7 @@
 
 | ID              | 主题                                | ROI | 桶      | 投入   | Agent                    | 验收                                     | Hub   |
 | --------------- | ----------------------------------- | --- | ------- | ------ | ------------------------ | ---------------------------------------- | ----- |
-| **FINC.PURCHASE.6.a**  | **支出审核 closure QA**（Confirm/Reject/Undo） | 🔥  | Product | 0.5–1d | Codex + Ken 登录态 | 代码/RPC/matcher 已完成；owner History Confirm→Undo · 双 JWT RLS 拒绝 · desktop/mobile 基线 | §Now |
+| **FINC.PURCHASE.6.a**  | **支出审核 closure QA**（Confirm/Reject/Undo） | 🔥  | Product | 0.5d | Codex + Ken 登录态 | anon revoke ✅ · Review 过滤拆分 ✅；剩 owner Confirm→Undo · 双 JWT · 视觉基线 | §Now |
 | ~~**FINC.SYNC.1b**~~ | ~~扩展 popup last sync + 重试~~ ✅ 已发货 2026-07-13 | ◆ | Growth | — | Codex | popup timestamp + 失败原因 + retry；`extensionSyncHealth.test.js` 18/18 | ✅ |
 | **FINC.GROWTH.4**    | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | Codex                    | pending 与 UI 一致                       | —     |
 | **FINC.IMPORT.5**    | History CSV 最小导入                | ○   | Product | 3–5d   | Codex                    | `/review/import` 可上传                  | —     |
@@ -50,7 +50,7 @@
 | 子项      | 范围                                                                     | 验收                                                |
 | --------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
 | **FINC.PURCHASE.6**  | Discovery：产品语义 · 数据审计 · QA 静态准备                               | ✅ PASS |
-| **FINC.PURCHASE.6.a** | Data foundation + History 确认/驳回/Undo UI                              | 🟡 Code complete — engine 14/14 · migration/RPC 生产 ✅ · matcher 18/18 · UI ✅；仅剩 owner live eyeball、双 JWT RLS、视觉基线 |
+| **FINC.PURCHASE.6.a** | Data foundation + History 确认/驳回/Undo UI                              | 🟡 Code complete — engine/RPC/matcher/UI ✅ · anon revoke ✅ · Review=`matched_review` only ✅；剩 owner live、双 JWT、视觉 |
 | **FINC.PURCHASE.6b** | 后续处理：`returnInfo` · 关联退款 txn · 用户备注/处理状态                | 退货订单显示关联负向交易                            |
 | **FINC.PURCHASE.6c** | Amazon/BBY 策展批次（读 `review_queue_v1_1`，**非** broad apply）        | handoff v1.2/v1.3 增量 clean 行进 DB                |
 

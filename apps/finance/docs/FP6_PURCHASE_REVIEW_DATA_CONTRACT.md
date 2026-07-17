@@ -132,7 +132,7 @@ From [resolveDisplayState()](../../../packages/finance-enrichment-contract/src/c
 unsupported_source ≠ actionable purchase review
 ```
 
-**Current UI gap:** [HistoryLedger.svelte](../src/lib/components/HistoryLedger.svelte) includes `unsupported_source` in the `purchase:review` filter alongside `matched_review`. **No filter change has been implemented yet.**
+**Filter split (shipped):** Review Needed (`purchase:review`) is **`matched_review` only** via `matchesPurchaseStateFilter` in `@life-os/finance-core`. `unsupported_source` is excluded from actionable review.
 
 ### Target split
 

@@ -105,7 +105,7 @@ Industry peers (Ramp, Spendesk, Brex, Monzo, etc.) automate high-confidence matc
 2. **No decision history or versions** — Undo, timeout reconciliation, and stale-tab safety impossible on JSONB alone.
 3. **No rejected-candidate memory** — Reject by clearing JSON allows silent rematch.
 4. **No manual-decision precedence** — `link-purchase-orders.mjs` and generic transaction updates can overwrite review state.
-5. **Filter conflation** — Review Needed currently includes `unsupported_source` ([HistoryLedger.svelte](../../src/lib/components/HistoryLedger.svelte) L32); not yet split.
+5. **Filter conflation** — ~~Review Needed included `unsupported_source`~~ **fixed:** Review Needed = `matched_review` only (`matchesPurchaseStateFilter`).
 6. **No isolated QA runtime** — visual baseline and browser acceptance blocked.
 
 ---

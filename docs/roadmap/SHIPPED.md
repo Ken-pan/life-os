@@ -10,8 +10,10 @@
 
 | 主线 | 发货项 / 里程碑 | 证据 |
 | --- | --- | --- |
+| AIOS | **AIOS.STABLE.26** 核心链路回归：chat wire / 云 LWW·墓碑 / AIOS.20 快照 / AIOS.21 payload / local tools；`npm test -w aios-os` **25/25** | 本提交 · `*.core.js` |
+| Finance | Review Needed **排除 `unsupported_source`**（`matchesPurchaseStateFilter`） | 本提交 · finance-core |
 | CI | **PLAT.CI.0 修复推送：** Home 认亲组件 token 化；portal light accent 对比度 ≥3:1 | `c8bdc905` |
-| Knowledge | **KNOW.VAULT.0** 固定 Vault fs watcher（debounce 全量重载）· settings 监听状态 · library 打开笔记随重载换对象 | 本提交 · `tauri-plugin-fs` `watch` feature |
+| Knowledge | **KNOW.VAULT.0** 固定 Vault fs watcher（debounce 全量重载）· settings 监听状态 · library 打开笔记随重载换对象 | `8c83f85d` · `tauri-plugin-fs` `watch` feature |
 | Platform | **PLAT.USAGE.0** 首份用量审计 + `npm run qa:usage-audit` | [`../qa/usage-audit-2026-07.md`](../qa/usage-audit-2026-07.md) · `scripts/lifeos-usage-audit.mjs` |
 | Finance | purchase review RPC **revoke anon EXECUTE**（生产已 apply） | `20260717210000_purchase_review_rpc_revoke_anon` |
 | Home | **/plan 认亲横幅 + Mac auto-refine：** `RecognitionBanner`（≤5 难例）· `refine.sh` embed+match 幂等管线 · launchd plist（15 分钟；用户手动激活）· 端到端 286 观察/218 认回 | `4675dd06` · [`apps/home/scripts/vision/README.md`](../../apps/home/scripts/vision/README.md) |

@@ -10,7 +10,7 @@
 
 | 焦点 | 主题 | 文档 |
 | ---- | ---- | ---- |
-| Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** closure · **AIOS.STABLE.26** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
+| Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** closure · **HOME.MCP.13** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
 | Next | HOME.MCP.13 · RECOG.1r · PLNR · object_ref | [`roadmap/apps/`](./roadmap/apps/README.md) |
 | User gate | SCHED/CAPTURE · HLT-5 · refine launchd · Knowledge rebuild 验 watcher | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) |
 

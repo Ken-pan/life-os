@@ -32,9 +32,11 @@
 
 | ID | 主题 | 桶 | 备注 |
 | --- | --- | --- | --- |
-| **AIOS.STABLE.26** | 核心链路回归护栏 | Infra/Product | **高 ROI，1d**：当前 `npm test -w aios-os` 仅 4 个 profile migration 测试；补 chat/tool-loop、云 LWW/墓碑、AIOS.20 读快照、AIOS.21 写 Planner smoke |
+| **HOME.MCP.13**（跨 OS） | `where_is` → AIOS | Product | 稳定化护栏已落地后，优先接 Home 日用工具面 |
 
-> AIOS 2026-07-13 建站、两天内推进到 AIOS.25。能力面已经足够宽，下一步不是 AIOS.26 新功能，而是把 20–25 的关键链路变成可回归验证；稳定化后再恢复高速迭代。
+**AIOS.STABLE.26 ✅（2026-07-17）：** `npm test -w aios-os` **25/25** — 抽出纯 core：`chat-tool-loop`（wire 回放 / 生图误触发）· `cloud-sync`（LWW/墓碑）· `lifeos`（AIOS.20 快照格式化 + AIOS.21 payload）· `local-tools`（calculate / webAccess 过滤）。运行时模块已接线。
+
+> AIOS 2026-07-13 建站、两天内推进到 AIOS.25。能力面已经足够宽；STABLE.26 把 20–25 关键链路变成可回归验证后，再扩 MCP（如 `HOME.MCP.13`）。
 
 ## Parked / 待研判
 

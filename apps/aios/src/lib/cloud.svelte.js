@@ -6,6 +6,11 @@ import { supabase as sb, isSupabaseConfigured } from '$lib/supabase.js'
 import { C, persist as persistChats } from '$lib/chat.svelte.js'
 import { M, mergeRemoteMemories } from '$lib/memory.svelte.js'
 import { onDataChanged } from '$lib/syncBus.js'
+import {
+  planConversationSync,
+  planMemorySync,
+  planSettingsLww,
+} from '$lib/cloud-sync.core.js'
 
 /**
  * 云端同步:Life OS 统一 Supabase 账户,登录即用,零配置。
@@ -204,11 +209,10 @@ async function syncUserState() {
   if (error) throw error
 
   const remoteAt = Number(remote?.updated_at ?? 0)
-  if (remote && remoteAt > localAt) {
-    // 云端更新:落地到本地(静默,不回推)
+  const action = planSettingsLww(localAt, remoteAt, !!remote)
+  if (action === 'pull') {
     applyCloudSettings(remote.settings ?? {}, remoteAt)
-  } else if (localAt > remoteAt) {
-    // 本地更新(或云端还没有):推上去
+  } else if (action === 'push') {
     const { error: e } = await sb
       .from('user_state')
       .upsert(
@@ -225,32 +229,11 @@ async function syncConversations(snap) {
     .select('id, updated_at, deleted')
   if (error) throw error
 
-  const remoteById = new Map(remote.map((r) => [r.id, r]))
-  const localById = new Map(C.conversations.map((c) => [c.id, c]))
-
-  const toPush = [] // 本地更新(含新建/复活)
-  const toTombstone = [] // 本地已删,推墓碑
-  const toPull = [] // 云端更新,拉 payload
-  const dropLocal = new Set() // 云端墓碑,删本地
-
-  for (const c of C.conversations) {
-    const r = remoteById.get(c.id)
-    if (!r) {
-      toPush.push(c)
-    } else if (r.deleted) {
-      if (c.updatedAt > r.updated_at) toPush.push(c)
-      else dropLocal.add(c.id)
-    } else if (c.updatedAt > r.updated_at) {
-      toPush.push(c)
-    } else if (r.updated_at > c.updatedAt) {
-      toPull.push(c.id)
-    }
-  }
-  for (const r of remote) {
-    if (localById.has(r.id) || r.deleted) continue
-    if (snap.convs[r.id] !== undefined) toTombstone.push(r.id)
-    else toPull.push(r.id)
-  }
+  const { toPush, toTombstone, toPull, dropLocal } = planConversationSync(
+    C.conversations,
+    remote,
+    snap.convs,
+  )
 
   if (toPush.length) {
     const rows = toPush.map((c) => ({
@@ -309,25 +292,11 @@ async function syncMemories(snap) {
     .select('id, text, created_at, deleted')
   if (error) throw error
 
-  const remoteById = new Map(remote.map((r) => [r.id, r]))
-  const localIds = new Set(M.items.map((m) => m.id))
-  const snapIds = new Set(snap.mems)
-
-  const toPush = []
-  const toTombstone = []
-  const toAdd = []
-  const dropLocal = new Set()
-
-  for (const m of M.items) {
-    const r = remoteById.get(m.id)
-    if (!r) toPush.push(m)
-    else if (r.deleted) dropLocal.add(m.id)
-  }
-  for (const r of remote) {
-    if (localIds.has(r.id) || r.deleted) continue
-    if (snapIds.has(r.id)) toTombstone.push(r.id)
-    else toAdd.push({ id: r.id, text: r.text ?? '', vector: null, createdAt: r.created_at })
-  }
+  const { toPush, toTombstone, toAdd, dropLocal } = planMemorySync(
+    M.items,
+    remote,
+    snap.mems,
+  )
 
   if (toPush.length) {
     const rows = toPush.map((m) => ({

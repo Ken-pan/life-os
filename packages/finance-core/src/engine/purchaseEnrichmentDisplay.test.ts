@@ -11,6 +11,7 @@ import {
   buildPurchaseDisplayContext,
   classifyPurchaseDisplayState,
   computePurchaseCoverage,
+  matchesPurchaseStateFilter,
   rankCoverageSources,
   type PurchaseCoverageStats,
 } from './purchaseEnrichmentDisplay'
@@ -258,5 +259,34 @@ describe('rankCoverageSources', () => {
     expect(
       rankCoverageSources(stats({ amazon: 7, target: 7, bestbuy: 7 })),
     ).toEqual(['target', 'amazon', 'bestbuy'])
+  })
+})
+
+describe('matchesPurchaseStateFilter', () => {
+  it('Review Needed excludes unsupported_source (not actionable)', () => {
+    const review = txn({
+      id: 'r1',
+      amount: 20,
+      account: 'Unknown Card',
+      purchaseEnrichment: {
+        source: 'amazon',
+        orderId: 'o-review',
+        orderTotal: 20,
+        status: 'Shipped',
+        matchConfidence: 'low',
+        lineItems: [{ title: 'Widget', quantity: 1 }],
+      },
+    })
+    const unsupported = txn({
+      id: 'u1',
+      merchant: 'Random Shop',
+      amount: 9,
+      purchaseEnrichment: undefined,
+    })
+    // merchant_only when no enrichment source — still not matched_review
+    const ctx = buildPurchaseDisplayContext([review, unsupported])
+    expect(classifyPurchaseDisplayState(review, ctx).state).toBe('matched_review')
+    expect(matchesPurchaseStateFilter(review, 'review', 'all', ctx)).toBe(true)
+    expect(matchesPurchaseStateFilter(unsupported, 'review', 'all', ctx)).toBe(false)
   })
 })

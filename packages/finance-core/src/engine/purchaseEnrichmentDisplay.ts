@@ -147,6 +147,27 @@ export function classifyCleanReasonsForTxn(
   return classifyCleanReasons(order, dupMaps) as PurchaseReviewReason[]
 }
 
+/**
+ * History ledger purchase-state filter (FINC.PURCHASE.6.a).
+ * `unsupported_source` is not actionable review — exclude from Review Needed.
+ */
+export function matchesPurchaseStateFilter(
+  t: Txn,
+  filter: 'all' | 'clean' | 'review' | 'return',
+  sourceFilter: 'all' | PurchaseEnrichmentSource,
+  context: PurchaseDisplayContext | EnrichmentDuplicateMaps,
+): boolean {
+  const { state } = classifyPurchaseDisplayState(t, context)
+  if (sourceFilter !== 'all') {
+    return state === 'clean_enriched' && t.purchaseEnrichment?.source === sourceFilter
+  }
+  if (filter === 'all') return true
+  if (filter === 'clean') return state === 'clean_enriched'
+  if (filter === 'review') return state === 'matched_review'
+  if (filter === 'return') return state === 'return_refund'
+  return true
+}
+
 export function classifyPurchaseDisplayState(
   t: Txn,
   context: PurchaseDisplayContext | EnrichmentDuplicateMaps,

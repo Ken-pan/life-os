@@ -12,24 +12,15 @@ import { recallRelevant, autoExtractMemories, M as MEM } from '$lib/memory.svelt
 import { isNative } from '$lib/native.js'
 import { dataChanged } from '$lib/syncBus.js'
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
+import {
+  MAX_TOOL_ROUNDS,
+  PARALLEL_SAFE_TOOLS,
+  buildWireMessages,
+  isBuildCodeAsk,
+} from '$lib/chat-tool-loop.core.js'
 
 const STORAGE_KEY = 'aios_chats_v1'
 const MAX_CONVERSATIONS = 200
-const MAX_TOOL_ROUNDS = 10
-const HISTORY_CHAR_BUDGET = 28000
-
-/**
- * 同一轮里可安全并发执行的工具:纯本地计算或独立的公网抓取,
- * 既不经过本地网关(避免 llama-swap 模型抖动),也不共享浏览器标签页/GUI 焦点。
- * 不在此集合的工具(生图/笔记 RAG/记忆检索/所有 browser_* 与原生 GUI 工具)保持串行。
- */
-const PARALLEL_SAFE_TOOLS = new Set([
-  'get_time',
-  'calculate',
-  'run_javascript',
-  'fetch_url',
-  'web_search',
-])
 
 /**
  * 记忆召回缓存:regenerate / continueGenerating 用同一条用户消息重建 system prompt 时命中,
@@ -456,83 +447,6 @@ async function buildSystemPrompt(conversation) {
   return lines.join('\n\n')
 }
 
-/** 存储消息 → OpenAI wire 消息(含 tool_calls 回放与图片),带字符预算截断 */
-function buildWireMessages(conversation, systemPrompt) {
-  const wire = []
-  // 已摘要的旧消息不再回放原文(摘要在 system prompt 里)
-  const startIdx = Math.min(
-    conversation.summarizedUpTo ?? 0,
-    conversation.messages.length,
-  )
-  for (const m of conversation.messages.slice(startIdx)) {
-    if (m.role === 'user') {
-      // 附件文件内容以围栏块内联(单文件截 12k 字符)
-      const fileBlocks = (m.files ?? [])
-        .map(
-          (f) =>
-            `【附件文件:${f.name}】\n\`\`\`\n${f.text.slice(0, 12000)}${f.text.length > 12000 ? '\n…(已截断)' : ''}\n\`\`\``,
-        )
-        .join('\n\n')
-      const userText = fileBlocks ? `${fileBlocks}\n\n${m.content}`.trim() : m.content
-      if (m.images?.length) {
-        wire.push({
-          role: 'user',
-          content: [
-            ...m.images.map((url) => ({ type: 'image_url', image_url: { url } })),
-            { type: 'text', text: userText || '描述这张图片。' },
-          ],
-        })
-      } else {
-        wire.push({ role: 'user', content: userText })
-      }
-      continue
-    }
-    // assistant
-    if (m.error && !m.content && !m.toolCalls?.length) continue
-    if (m.toolCalls?.length) {
-      wire.push({
-        role: 'assistant',
-        content: m.content || null,
-        tool_calls: m.toolCalls.map((tc) => ({
-          id: tc.id,
-          type: 'function',
-          function: { name: tc.name, arguments: tc.arguments },
-        })),
-      })
-      for (const tc of m.toolCalls) {
-        wire.push({
-          role: 'tool',
-          tool_call_id: tc.id,
-          content: tc.result ?? '(无结果)',
-        })
-      }
-    } else {
-      wire.push({ role: 'assistant', content: m.content })
-    }
-  }
-
-  // 从尾部往前保留,直到超出预算(system 永远保留)
-  const kept = []
-  let budget = HISTORY_CHAR_BUDGET
-  for (let i = wire.length - 1; i >= 0; i--) {
-    const msg = wire[i]
-    const size =
-      typeof msg.content === 'string'
-        ? msg.content.length
-        : (msg.content ?? []).reduce((n, p) => n + (p.text?.length ?? 200), 0)
-    budget -= size + 50
-    if (budget < 0 && kept.length) break
-    kept.unshift(msg)
-  }
-  // 不能以 tool 消息开头(会缺 assistant tool_calls 上文)
-  while (kept.length && kept[0].role === 'tool') kept.shift()
-  // 多轮工具的长结果会把用户问题挤出预算:没有问题模型会输出空。
-  // 最近一条 user 消息永远在场(它在时间上先于所有保留的尾部消息)。
-  const lastUser = [...wire].reverse().find((m) => m.role === 'user')
-  if (lastUser && !kept.includes(lastUser)) kept.unshift(lastUser)
-  return [{ role: 'system', content: systemPrompt }, ...kept]
-}
-
 function conversationHasImages(conversation) {
   return conversation.messages.some((m) => m.images?.length)
 }
@@ -730,18 +644,6 @@ export async function continueGenerating() {
     touch(conversation)
     persist()
   }
-}
-
-// 生图误触发兜底:小模型常把"写一个贪吃蛇小游戏 / 做个网页 / 对比语言给张表"这类
-// 文字/代码需求错调 generate_image(生图慢,且用户要的是文字或可运行代码,不是一张图)。
-// 命中"构建/技术类名词 + 无明确图片意图"时,agent loop 拦下这次生图、提示模型直接用文字回答。
-// 刻意保守:凡出现画图/照片/插画/头像/图标/立绘/角色等图片意图词,一律放行,不误伤真·生图。
-const CODE_BUILD_RE =
-  /游戏|小游戏|网页|网站|页面|应用|程序|代码|脚本|表格|对比|图表|柱状图|条形图|饼图|折线图|曲线图|散点图|直方图|甘特图|流程图|思维导图|数据可视化|可视化|贪吃蛇|计算器|俄罗斯方块|井字棋|扫雷|2048|待办|todo|html|css|canvas/i
-const IMAGE_INTENT_RE =
-  /画一|画个|画张|画幅|生成图片|生成一[张幅]|来[张幅]|照片|摄影|插画|海报|头像|壁纸|图标|logo|封面|配图|立绘|原画|概念图|角色|人物|形象|肖像|表情|贴纸|图片/i
-function isBuildCodeAsk(text) {
-  return !!text && CODE_BUILD_RE.test(text) && !IMAGE_INTENT_RE.test(text)
 }
 
 /** agent loop:流式回复,遇到 tool_calls 就执行并继续,最多 MAX_TOOL_ROUNDS 轮 */

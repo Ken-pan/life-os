@@ -4,6 +4,11 @@ import { startImageProgress, stopImageProgress } from '$lib/imageProgress.svelte
 import { isNative, NATIVE_DEFS, isNativeTool, executeNativeTool } from '$lib/native.js'
 import { lifeOsToday, financeSummary, plannerTasks, plannerAddTask } from '$lib/lifeos.js'
 import { mcpToolDefinitions, isMcpTool, executeMcpTool } from '$lib/mcp.js'
+import {
+  filterBuiltinToolEntries,
+  formatCalculateResult,
+  safeCalculate,
+} from '$lib/local-tools.core.js'
 
 /**
  * 内置工具(OpenAI function calling 格式)。
@@ -543,7 +548,7 @@ const DEFS = [
 
 /** @param {{ webAccess?: boolean }} opts */
 export function toolDefinitions({ webAccess = true } = {}) {
-  const defs = DEFS.filter((t) => (t.web ? webAccess : true))
+  const defs = filterBuiltinToolEntries(DEFS, { webAccess })
   // 原生壳(Tauri)里追加 Mac 专属工具;浏览器里 isNative=false 自动不注册
   const builtin = (isNative ? [...defs, ...NATIVE_DEFS] : defs).map((t) => t.def)
   // 外部 MCP server 发现的工具(已在 mcp.js 缓存;未配置则为空)
@@ -556,30 +561,7 @@ export function toolIcon(name) {
 }
 
 /* —— 执行器 —— */
-
-function safeCalculate(expression) {
-  const expr = String(expression).trim().slice(0, 500)
-  // 白名单:数字、运算符、括号、Math.xxx
-  const stripped = expr.replaceAll(/Math\.[a-zA-Z]+/g, '')
-  if (!/^[\d\s+\-*/%().,eE]*$/.test(stripped)) {
-    throw new Error('表达式包含不允许的字符')
-  }
-  // 纯整数加减乘 → BigInt 精确计算,避免 float64 大数取整
-  if (/^[\d\s+\-*()]+$/.test(expr)) {
-    try {
-      const bigExpr = expr.replaceAll(/\d+/g, (n) => `${n}n`)
-      const value = new Function(`"use strict"; return (${bigExpr})`)()
-      if (typeof value === 'bigint') return value
-    } catch {
-      /* 溢出/语法问题时退回 float */
-    }
-  }
-  const value = new Function('Math', `"use strict"; return (${expr})`)(Math)
-  if (typeof value !== 'number' && typeof value !== 'bigint') {
-    throw new Error('结果不是数字')
-  }
-  return value
-}
+// safeCalculate → local-tools.core.js（STABLE.26）
 
 /** Web Worker 沙盒执行 JS,捕获 console 输出与返回值 */
 function runInSandbox(code, timeoutMs = 8000) {
@@ -1418,7 +1400,7 @@ export async function executeTool(name, argsJson) {
       }
       case 'calculate': {
         const value = safeCalculate(args.expression)
-        return `${args.expression} = ${value}`
+        return formatCalculateResult(args.expression, value)
       }
       case 'run_javascript': {
         const out = await runInSandbox(args.code)

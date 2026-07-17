@@ -3,6 +3,9 @@ import { isNative, notify } from '$lib/native.js'
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 import { lifeOsTodayRaw } from '$lib/lifeos.js'
 import { S } from '$lib/state.svelte.js'
+import { buildBriefText } from '$lib/lifeos.core.js'
+
+export { buildBriefText }
 
 /**
  * 主动性:早晨今日简报。
@@ -44,32 +47,6 @@ function markShown(date) {
   } catch {
     /* 存不下不影响本次 */
   }
-}
-
-/** 把今日快照拼成一句摘要(标题 + 正文),无有效数据返回 null */
-export function buildBriefText(data) {
-  if (!data) return null
-  const bits = []
-  if (data.planner) {
-    const { todayOpen = 0, overdue = 0 } = data.planner
-    if (todayOpen || overdue) {
-      bits.push(
-        `${todayOpen} 项今日待办` + (overdue ? `、${overdue} 项逾期` : ''),
-      )
-    } else {
-      bits.push('今天暂无到期待办')
-    }
-  }
-  if (data.finance) {
-    bits.push(`本月支出 ¥${data.finance.monthExpense ?? 0}`)
-  }
-  if (data.fitness) {
-    bits.push(data.fitness.workedOutToday ? '今天已训练' : '今天还没训练')
-  }
-  if (!bits.length) return null
-  const now = new Date()
-  const title = `今日简报 · ${now.getMonth() + 1}月${now.getDate()}日`
-  return { title, body: bits.join(' · ') }
 }
 
 let running = false

@@ -3,7 +3,7 @@
   import { t } from '$lib/i18n.svelte.js'
   import { moneyPrecise } from '$lib/format.js'
   import { isMoneyMovement, outflowOf, searchTxns } from '../../engine/transactions.js'
-  import { classifyPurchaseDisplayState } from '../../engine/purchaseEnrichmentDisplay.js'
+  import { matchesPurchaseStateFilter } from '../../engine/purchaseEnrichmentDisplay.js'
   import HistoryLedgerRow from './HistoryLedgerRow.svelte'
 
   const PAGE_SIZE = 40
@@ -19,19 +19,6 @@
       { id: 'refund_or_reversal', label: tl('history.flowRefund') },
       { id: 'reconcile_adjustment', label: tl('history.flowReconcile') },
     ]
-  }
-
-  /** @param {import('../../engine/transactions.js').Txn} txn @param {'all' | 'clean' | 'review' | 'return'} filter @param {'all' | import('../../engine/purchaseEnrichment.js').PurchaseEnrichmentSource} sourceFilter @param {import('../../engine/purchaseEnrichmentDisplay.js').PurchaseDisplayContext} ctx */
-  function matchesPurchaseStateFilter(txn, filter, sourceFilter, ctx) {
-    const { state } = classifyPurchaseDisplayState(txn, ctx)
-    if (sourceFilter !== 'all') {
-      return state === 'clean_enriched' && txn.purchaseEnrichment?.source === sourceFilter
-    }
-    if (filter === 'all') return true
-    if (filter === 'clean') return state === 'clean_enriched'
-    if (filter === 'review') return state === 'matched_review' || state === 'unsupported_source'
-    if (filter === 'return') return state === 'return_refund'
-    return true
   }
 
   /** @type {{

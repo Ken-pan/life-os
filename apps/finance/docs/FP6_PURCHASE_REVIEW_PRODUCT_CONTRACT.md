@@ -208,7 +208,7 @@ Should include only items with:
 
 ### Current gap (not yet implemented)
 
-Today `purchase:review` includes both `matched_review` **and** `unsupported_source` in [HistoryLedger.svelte](../src/lib/components/HistoryLedger.svelte). **`unsupported_source` ≠ actionable purchase review.** Filter split is documented in the data contract; **no filter change has shipped.**
+`purchase:review` is **`matched_review` only** (`matchesPurchaseStateFilter` in `@life-os/finance-core`). **`unsupported_source` ≠ actionable purchase review** and is excluded from Review Needed.
 
 ### Future split
 
