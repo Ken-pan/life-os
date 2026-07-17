@@ -127,6 +127,7 @@ export default {
     cat_tools: 'Tools / Plugins',
     fieldCategory: 'Category',
     categoryAuto: 'Auto (by name/notes)',
+    knowledgeTitle: 'Related knowledge',
     cardMeta: '{count} open tasks',
     cardMetaWithNext: '{count} open · Next: {title}',
     status_active: 'Active',

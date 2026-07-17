@@ -127,6 +127,7 @@ export default {
     cat_tools: '工具 / 插件',
     fieldCategory: '分类',
     categoryAuto: '自动(按名称/备注推断)',
+    knowledgeTitle: '相关知识',
     cardMeta: '{count} 个未完成任务',
     cardMetaWithNext: '{count} 个未完成 · 下一步：{title}',
     status_active: '进行中',

@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import AppBar from '$lib/components/AppBar.svelte'
@@ -23,6 +24,7 @@
   import { t } from '$lib/i18n/index.js'
   import { toast } from '$lib/ui.svelte.js'
   import { PROJECT_CATEGORIES, categoryOf } from '$lib/domain/projectCategory.js'
+  import { searchProjectKnowledge } from '$lib/services/knowledgeClient.js'
 
   const projectId = $derived(page.params.id)
   const project = $derived(getProjectById(projectId))
@@ -57,6 +59,29 @@
   const autoCategory = $derived(
     project ? PROJECT_CATEGORIES.find((c) => c.id === categoryOf({ ...project, areaId: null })) : null,
   )
+
+  // ── KnowledgeOS 联通:按项目名语义检索 Vault,拉该项目相关知识笔记 ──
+  // 依赖 projectId + S.projects.length(hydrate/加载信号),用 knForId 去重:
+  // 只在切换项目或数据首次就绪时检索一次,云同步频繁重建 S.projects 不重复触发。
+  let knowledgeItems = $state(/** @type {any[]} */ ([]))
+  let knForId = ''
+  $effect(() => {
+    const id = projectId
+    const ready = S.projects.length // 数据就绪信号
+    if (!id || !ready || id === knForId) return
+    const p = untrack(() => getProjectById(id))
+    if (!p) return
+    knForId = id
+    let cancelled = false
+    knowledgeItems = []
+    const query = [p.title, p.summary].filter(Boolean).join(' ')
+    searchProjectKnowledge(query, { k: 4 }).then((items) => {
+      if (!cancelled) knowledgeItems = items
+    })
+    return () => {
+      cancelled = true
+    }
+  })
 
   function saveProject() {
     if (!project || !title.trim()) return
@@ -264,6 +289,34 @@
       </div>
     </form>
 
+    <div data-kn-debug={knowledgeItems.length} style="display:none"></div>
+    {#if knowledgeItems.length}
+      <section class="project-knowledge">
+        <div class="project-knowledge-head">
+          <h2>{t('projects.knowledgeTitle')}</h2>
+          <span class="tag">KnowledgeOS</span>
+        </div>
+        <div class="knowledge-list">
+          {#each knowledgeItems as item (item.path)}
+            <a
+              class="knowledge-item"
+              href={item.obsidianUrl || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="knowledge-item-title">{item.title}</span>
+              {#if item.breadcrumb}
+                <span class="knowledge-item-crumb">{item.breadcrumb}</span>
+              {/if}
+              {#if item.snippet}
+                <span class="knowledge-item-snippet">{item.snippet}</span>
+              {/if}
+            </a>
+          {/each}
+        </div>
+      </section>
+    {/if}
+
     <div class="project-task-add">
       <QuickAddBar
         projectId={project.id}
@@ -353,6 +406,60 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
+  }
+
+  /* KnowledgeOS 联通:项目相关的 Vault 知识笔记 */
+  .project-knowledge {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .project-knowledge-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .project-knowledge-head h2 {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--t2);
+  }
+  .knowledge-list {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .knowledge-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius, 12px);
+    background: var(--card);
+    color: inherit;
+    text-decoration: none;
+  }
+  .knowledge-item:hover {
+    border-color: var(--accent);
+  }
+  .knowledge-item-title {
+    font-weight: 600;
+    color: var(--t1);
+  }
+  .knowledge-item-crumb {
+    font-size: var(--text-xs);
+    color: var(--t3, var(--text-muted));
+  }
+  .knowledge-item-snippet {
+    font-size: var(--text-sm);
+    color: var(--t2);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .project-references {
