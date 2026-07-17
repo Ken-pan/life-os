@@ -74,8 +74,11 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     /// **Quick Scan 安静模式(默认开)**:扫描只管轻松扫完,逐件补拍引导(还差角度/
     /// 请移动/请靠近)与机位站位提示**默认不打断你** —— 证据缺口留到扫描后处理,
     /// ObjectShotCapture 仍静默收好帧。只保留严重打断(跟踪丢失 + 离开房间前的机位提醒)。
-    /// 关掉它 = 「高精度补扫」逐件引导(未来 UI 开关;现在默认安静)。
+    /// 关掉它 = 「高精度补扫」逐件引导。UI 开关在 HomeView 设置区,持久化偏好
+    /// startScanning 时喂进来(见 quietScanKey)。
     var quietScan = true
+    /// 安静扫描偏好的持久化钥匙(@AppStorage / UserDefaults 同用一把)。
+    static let quietScanKey = "homescan.quietScan"
     private var canonicalHome: CanonicalHome?
     private var canonicalSegments: [HomeFrame.Segment] = []
     /// 权威副本家具预算成户型米坐标(认账家的记忆:活体对回后免催拍)。

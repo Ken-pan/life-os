@@ -17,6 +17,9 @@ extension AppModel {
         // 实测「取消后再扫,取景一直黑屏」就是它。
         scanController.reset()
         scanController = ScanSessionController()
+        // 安静/高精度偏好(HomeView 设置区,默认安静):每次扫描按当前偏好喂进去
+        scanController.quietScan =
+            UserDefaults.standard.object(forKey: ScanSessionController.quietScanKey) as? Bool ?? true
         // 新控制器要重新喂永久户型(内存丢了就读本地缓存,不等网络)
         scanController.setCanonicalHome(canonicalHome ?? CanonicalHomeCache.load())
         // 自动机位拍照:拍到就并进 poses;「视角新不新」与全部已有机位比

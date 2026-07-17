@@ -20,6 +20,8 @@ struct HomeView: View {
     @State private var showFindItem = false
     /// 扫描语音引导开关(与 VoiceGuide.enabledKey 同一把钥匙)
     @AppStorage(VoiceGuide.enabledKey) private var voiceGuide = true
+    /// 安静扫描偏好(默认开):关掉 = 高精度补扫逐件引导。startScanning 时读它
+    @AppStorage(ScanSessionController.quietScanKey) private var quietScan = true
     /// 待确认删除的扫描
     @State private var pendingDelete: SupabaseService.ScanRow?
     /// 正在改名的扫描
@@ -355,6 +357,18 @@ struct HomeView: View {
 
     private var settingsSection: some View {
         Section {
+            Toggle(isOn: $quietScan) {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("安静扫描")
+                        Text("默认开:轻松扫完,不逐件催「还差角度 / 请靠近」。关掉 = 高精度补扫,逐件引导")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "wind")
+                }
+            }
             Toggle(isOn: $voiceGuide) {
                 Label("扫描语音引导", systemImage: "speaker.wave.2")
             }
