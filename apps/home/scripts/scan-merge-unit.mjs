@@ -13,6 +13,7 @@ import {
   mergeFurnitureAndViewpoints,
   mergeFurnitureWithIdentity,
   describeReplacements,
+  carryCanonicalScan,
 } from '../src/lib/spatial/scan-merge.js'
 
 let pass = 0
@@ -1010,6 +1011,117 @@ ok('映射件带 scan- 前缀', mapped.placements.every((p) => p.id.startsWith('
     !m.report.conflicts.some((c) => c.label === '浴缸'), JSON.stringify(m.report.conflicts))
   ok('fixture 静音:家具冲突照报(床 13px)',
     m.report.conflicts.some((c) => c.label === '床'), JSON.stringify(m.report.conflicts))
+}
+
+// ---- 重新扫描契约:用户改过的 kind/颜色/锁/家规 重扫不被打回 ----
+// (types.js 顶部「重新扫描契约」表的可执行版:provenance 章 attrs.userEdited
+//  分清「用户设的」和「扫描猜的」,只保全前者)
+{
+  // A. 用户把 table 改成 standing_desk(不在任何 kind 族)。重扫仍报 table,
+  //    但旧 kind 已入 scanAliases → 认得出同一件;userEdited∋'kind' → 保住新 kind
+  const prevProject = {
+    ...SAMPLE_508,
+    placements: [
+      { id: 'scan-pl-1', kind: 'standing_desk', label: '升降桌', x: 400, y: 300, w: 120, h: 60,
+        rotation: 0, locked: true,
+        relations: [{ type: 'far_from', targetId: 'scan-pl-2', zh: '远离「柜」' }],
+        attrs: { colorHex: '#334455', userEdited: ['kind', 'colorHex'], scanAliases: ['table'],
+          measuredWIn: 47 } },
+      { id: 'scan-pl-2', kind: 'cabinet', label: '柜', x: 700, y: 300, w: 78, h: 159, rotation: 0,
+        attrs: { colorHex: '#EEEEEE' } },
+    ],
+    fixtures: [], viewpoints: [],
+  }
+  // 新扫描:同位置报回 table(通用分类)、量出一个新主色、给了新实测宽
+  const incoming = {
+    placements: [
+      { id: 'scan-new-1', kind: 'table', label: '桌', x: 402, y: 301, w: 122, h: 60, rotation: 0,
+        attrs: { colorHex: '#8899AA', measuredWIn: 47.5 } },
+      { id: 'scan-new-2', kind: 'cabinet', label: '柜', x: 700, y: 300, w: 78, h: 159, rotation: 0,
+        attrs: { colorHex: '#F0F0F0' } },
+    ],
+    fixtures: [], viewpoints: [],
+  }
+  const { project: p2, identity } = mergeFurnitureWithIdentity(prevProject, incoming)
+  const desk = p2.placements.find((p) => p.id === 'scan-pl-1')
+  ok('契约:用户改过的 kind 重扫不被打回(standing_desk 不变回 table)',
+    desk?.kind === 'standing_desk', desk?.kind)
+  ok('契约:改过 kind 的件仍靠 scanAlias 认出同一件(不判消失+新增)',
+    !!desk && identity.removed.length === 0 && identity.added === 0, JSON.stringify(identity))
+  ok('契约:用户改过的 colorHex 不被单轮扫描覆盖',
+    desk?.attrs?.colorHex === '#334455', desk?.attrs?.colorHex)
+  ok('契约:布局锁(locked)重扫保全', desk?.locked === true, JSON.stringify(desk?.locked))
+  ok('契约:家规关系(relations)重扫保全',
+    desk?.relations?.length === 1 && desk.relations[0].type === 'far_from',
+    JSON.stringify(desk?.relations))
+  ok('契约:几何/实测尺寸仍随新扫描更新',
+    Math.abs(desk?.x - 402) < 0.5 && desk?.attrs?.measuredWIn === 47.5,
+    JSON.stringify({ x: desk?.x, mW: desk?.attrs?.measuredWIn }))
+  ok('契约:provenance 章跟着身份传下去(下轮仍受保护)',
+    Array.isArray(desk?.attrs?.userEdited) && desk.attrs.userEdited.includes('kind'),
+    JSON.stringify(desk?.attrs?.userEdited))
+
+  // B. 对照:没盖 userEdited 章的件,kind/colorHex 该随扫描更新(扫描猜的白该更新)
+  const cab = p2.placements.find((p) => p.id === 'scan-pl-2')
+  ok('契约(对照):未标记的 kind 取扫描新值', cab?.kind === 'cabinet')
+  ok('契约(对照):未标记的 colorHex 随扫描更新(扫描猜的白该更新)',
+    cab?.attrs?.colorHex === '#F0F0F0', cab?.attrs?.colorHex)
+
+  // C. 幂等:同一份数据再合并一次,受保护字段稳定不漂
+  const twice = mergeFurnitureWithIdentity(p2, incoming).project
+  const desk2 = twice.placements.find((p) => p.id === 'scan-pl-1')
+  ok('契约:重扫两轮受保护字段仍稳定',
+    desk2?.kind === 'standing_desk' && desk2?.locked === true &&
+      desk2?.attrs?.colorHex === '#334455' && desk2?.relations?.length === 1,
+    JSON.stringify({ kind: desk2?.kind, locked: desk2?.locked, c: desk2?.attrs?.colorHex }))
+}
+
+// ---- carryCanonicalScan:replace 整包路径的户型级保全(北向/地板/不透光) ----
+{
+  // 极简墙图:一条南墙,上面一扇门。prev 与 next 几何相同但 openings id 全新
+  const wallGraph = {
+    pxPerFt: 36, margin: { x: 0, y: 0 },
+    vertices: [{ id: 'a', x: 0, y: 0 }, { id: 'b', x: 400, y: 0 }],
+    edges: [{ id: 'e1', a: 'a', b: 'b' }],
+  }
+  const prev = {
+    meta: { planNorthDeg: 137 },
+    zones: [
+      { id: 'z-old-1', nameZh: '卫生间', polygon: [], floor: 'wood' },
+      { id: 'z-old-2', nameZh: '客厅', polygon: [] },
+    ],
+    wallGraph,
+    graphOpenings: [
+      { id: 'op-old', edgeId: 'e1', offsetIn: 100, spanIn: 40, type: 'door', opaque: true },
+    ],
+  }
+  // next = 全新扫描:id 全变、没北向、地板空、门也没标不透光,但几何一致
+  const next = {
+    meta: { planNorthDeg: null },
+    zones: [
+      { id: 'z-new-1', nameZh: '卫生间', polygon: [] },
+      { id: 'z-new-2', nameZh: '客厅', polygon: [] },
+    ],
+    wallGraph,
+    graphOpenings: [
+      { id: 'op-new', edgeId: 'e1', offsetIn: 100, spanIn: 40, type: 'door' },
+    ],
+  }
+  const out = carryCanonicalScan(prev, next)
+  ok('carry:北向按旧图兜回', out.meta.planNorthDeg === 137, `${out.meta.planNorthDeg}`)
+  ok('carry:分区地板按名字认亲(卫生间木地板跟着走)',
+    out.zones.find((z) => z.nameZh === '卫生间')?.floor === 'wood',
+    JSON.stringify(out.zones.map((z) => [z.nameZh, z.floor])))
+  ok('carry:没设过地板的分区不无中生有', out.zones.find((z) => z.nameZh === '客厅')?.floor == null)
+  ok('carry:门窗不透光按中点认亲(新 id 也认得出同一扇门)',
+    out.graphOpenings.find((o) => o.id === 'op-new')?.opaque === true,
+    JSON.stringify(out.graphOpenings))
+  // 新扫描已带北向时不覆盖(用户手校 > 旧值的语义:carry 只兜「新没带、旧有」)
+  const next2 = { ...next, meta: { planNorthDeg: 90 },
+    zones: next.zones.map((z) => ({ ...z })), graphOpenings: next.graphOpenings.map((o) => ({ ...o })) }
+  const out2 = carryCanonicalScan(prev, next2)
+  ok('carry:新扫描带了北向就不被旧值覆盖', out2.meta.planNorthDeg === 90, `${out2.meta.planNorthDeg}`)
+  ok('carry:prev 为空安全返回', carryCanonicalScan(null, next2) === next2)
 }
 
 if (fails.length) {

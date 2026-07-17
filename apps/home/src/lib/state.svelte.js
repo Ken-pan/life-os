@@ -37,7 +37,6 @@ import {
   filterOpeningsForEdge,
   flipGraphOpeningSwing,
   fitGraphOpeningOnEdge,
-  graphOpeningBounds,
   previewGraphOpeningEdit,
   pruneOrphanOpenings,
   remapOpeningsAfterSplit,
@@ -98,6 +97,8 @@ import {
   syncStorageItemIdSeq,
 } from './spatial/storage-items.js'
 import { planInventoryImport } from './spatial/inventory-import.js'
+import { recordUserFunction } from './spatial/function-truth.js'
+import { carryCanonicalScan } from './spatial/scan-merge.js'
 import { toast } from './ui.svelte.js'
 
 /** @typedef {import('./spatial/types.js').SpatialProject} SpatialProject */
@@ -527,19 +528,64 @@ function unstagePlacement(p) {
 }
 
 /**
+ * 用户可手动改写、且扫描无权在重扫时覆盖的**权威字段**。改这些字段要盖
+ * provenance 章(attrs.userEdited),重扫合并才认得出「这是用户设的、别打回」——
+ * 见 spatial/scan-merge.js 的 carryUserAuthored 与 types.js「重新扫描契约」表。
+ * colorHex 住 attrs 里,kind/label 是顶层字段;标记只记字段名,不管住哪。
+ */
+const USER_AUTHORED_FIELDS = ['kind', 'label']
+const USER_AUTHORED_ATTR_FIELDS = ['colorHex']
+
+/**
+ * 盖 provenance 章:把本次用户改动的权威字段名并进 attrs.userEdited。
+ * 改 kind 时额外把**旧 kind 记进 attrs.scanAliases** —— 用户把 table 改成
+ * standing_desk 后,下次扫描仍报 table,靠 alias 认出是同一件才轮得到
+ * carryUserAuthored 保住新 kind(否则直接判「消失+新增」,连身份都丢)。
+ * @param {import('./spatial/types.js').SpatialPlacement} prev 改前的件
+ * @param {Partial<import('./spatial/types.js').SpatialPlacement>} patch
+ * @param {import('./spatial/types.js').PlacementAttrs} [nextAttrs] 合并后的 attrs(patch 带 attrs 时)
+ */
+function stampUserEdited(prev, patch, nextAttrs) {
+  const edited = new Set(prev.attrs?.userEdited ?? [])
+  for (const f of USER_AUTHORED_FIELDS) {
+    if (f in patch && patch[f] !== prev[f]) edited.add(f)
+  }
+  const patchAttrs = patch.attrs
+  for (const f of USER_AUTHORED_ATTR_FIELDS) {
+    if (patchAttrs && f in patchAttrs && patchAttrs[f] !== prev.attrs?.[f]) edited.add(f)
+  }
+  const attrs = { ...(nextAttrs ?? prev.attrs) }
+  if ('kind' in patch && patch.kind !== prev.kind && prev.kind != null) {
+    const aliases = new Set(attrs.scanAliases ?? [])
+    aliases.add(prev.kind)
+    attrs.scanAliases = [...aliases]
+  }
+  attrs.userEdited = [...edited]
+  return attrs
+}
+
+/**
  * @param {string} placementId
  * @param {Partial<import('./spatial/types.js').SpatialPlacement>} patch
+ * @param {{ userEdit?: boolean }} [opts] userEdit=true:这是用户手动改写权威字段
+ *   (kind/label/颜色),盖 provenance 章使其在重扫时不被扫描打回。VLM「识别外观」
+ *   等**扫描派生**写入不传此项 —— 那是「扫描猜的」,本就该随新扫描更新
  */
-export function updatePlacement(placementId, patch) {
+export function updatePlacement(placementId, patch, opts = {}) {
   if (
     PLACEMENT_GEOM_KEYS.some((k) => k in patch) &&
     blockPinned(placementId, '改')
   )
     return
   const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
-  const placements = (raw.placements ?? []).map((p) =>
-    p.id === placementId ? { ...p, ...patch } : p,
-  )
+  const placements = (raw.placements ?? []).map((p) => {
+    if (p.id !== placementId) return p
+    const next = { ...p, ...patch }
+    if (opts.userEdit) {
+      next.attrs = stampUserEdited(p, patch, patch.attrs ? { ...p.attrs, ...patch.attrs } : p.attrs)
+    }
+    return next
+  })
   applyEditSource({ placements }, { silent: true })
 }
 
@@ -604,6 +650,24 @@ export function removePlacementRelation(placementId, index) {
     p.id === placementId ? { ...p, relations: relations.length ? relations : undefined } : p,
   )
   applyEditSource({ placements }, { silent: true })
+}
+
+/**
+ * 用户确认一件家具/表面的**真实用途**(规范 §1.1, 评审 B1)。写成最高真源
+ * (source=user),旧 effective 压入历史。这会让储物归位与布局建议照此重新校对
+ * —— 而不是继续沿用按 kind 的猜测。照片观察不走这条路,只产生 drift 提示。
+ * @param {string} placementId
+ * @param {import('./spatial/types.js').FunctionKey} key
+ */
+export function recordPlacementFunction(placementId, key) {
+  const raw = S.projects[S.activeProjectId] ?? SAMPLE_508
+  const list = raw.placements ?? []
+  const pl = list.find((p) => p.id === placementId)
+  if (!pl) return
+  const attrs = recordUserFunction(pl, key, Date.now())
+  const placements = list.map((p) => (p.id === placementId ? { ...p, attrs } : p))
+  applyEditSource({ placements }, { silent: true })
+  toast(`已确认「${pl.label}」的用途 —— 相关归位与布局建议会照此重新校对`)
 }
 
 /** @param {string} placementId */
@@ -2688,46 +2752,11 @@ let cloudScanReplacedProject = null
 export function applyCloudScan(project) {
   const prev = S.projects[S.activeProjectId] ?? null
   cloudScanReplacedProject = prev
-  // 双向保全:整包替换不该抹掉「用户在网页端补的、扫描测不出的」那层 ——
-  // 北向校准和分区地板材质都是人工判断,新扫描里没有对应数据源。
-  if (prev) {
-    // 北向:用户手工校准 > 本次扫描罗盘初值 > 旧值。扫描的 geo.planNorthDeg
-    // 已在 buildProjectFromScan 提为 meta.planNorthDeg,这里只兜「新扫描
-    // 没带、旧图有」的情况
-    if (project.meta.planNorthDeg == null && prev.meta?.planNorthDeg != null) {
-      project.meta.planNorthDeg = prev.meta.planNorthDeg
-    }
-    // 分区地板材质按名字认亲:「卫生间」还是那个卫生间,木地板设置跟着走
-    const prevFloor = new Map(
-      (prev.zones ?? [])
-        .filter((z) => z.floor)
-        .map((z) => [z.nameZh, z.floor]),
-    )
-    for (const z of project.zones ?? []) {
-      if (!z.floor && prevFloor.has(z.nameZh)) z.floor = prevFloor.get(z.nameZh)
-    }
-    // 门窗「不透光」标记按中点认亲:新扫描的开口 id 全新,几何位置才是
-    // 身份(扫描已过全局配准,同一扇门中点漂移在英寸级)。容差 1ft
-    if (prev.wallGraph && project.wallGraph) {
-      const prevOpaque = (prev.graphOpenings ?? [])
-        .filter((o) => o.opaque)
-        .map((o) => graphOpeningBounds(prev.wallGraph, o))
-        .filter(Boolean)
-        .map((b) => ({ x: (b.p0.x + b.p1.x) / 2, y: (b.p0.y + b.p1.y) / 2 }))
-      if (prevOpaque.length) {
-        for (const o of project.graphOpenings ?? []) {
-          if (o.opaque) continue
-          const b = graphOpeningBounds(project.wallGraph, o)
-          if (!b) continue
-          const cx = (b.p0.x + b.p1.x) / 2
-          const cy = (b.p0.y + b.p1.y) / 2
-          if (prevOpaque.some((p) => Math.hypot(p.x - cx, p.y - cy) < 36)) {
-            o.opaque = true
-          }
-        }
-      }
-    }
-  }
+  // 户型级用户意图保全:整包替换不该抹掉「用户在网页端补的、扫描测不出的」
+  // 那层(北向校准 / 分区地板材质 / 门窗不透光)—— 规则收敛在 scan-merge.js 的
+  // carryCanonicalScan(纯函数、可单测),就地改 project。家具 kind·颜色·锁·家规
+  // 与 storageZones 不走这条路(见该函数注释与 types.js「重新扫描契约」表)。
+  carryCanonicalScan(prev, project)
   layoutUndoStack = []
   layoutRedoStack = []
   graphUndoStack = []

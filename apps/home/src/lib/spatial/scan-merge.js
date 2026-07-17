@@ -34,6 +34,7 @@ import {
   diffWallAnchors,
   wallAnchorSegments,
 } from './wall-anchor.js'
+import { graphOpeningBounds } from './graph-openings.js'
 
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
@@ -653,6 +654,49 @@ const scanBorn = (o) =>
 const isIdentityLocked = (o) => o?.attrs?.identityLocked === true
 
 /**
+ * 用户在这件家具上手动改过、扫描无权覆盖的**权威字段名**(住 attrs.userEdited)。
+ * 标记只记字段名,不管字段住哪:kind/label 是顶层字段,colorHex 在 attrs 里 ——
+ * 有了它,merge 才分得清「用户设的白」和「扫描猜的白」,只保全前者。
+ * 由 state.svelte.js 的 updatePlacement({...}, { userEdit: true }) 在用户改动时盖章;
+ * VLM「识别外观」写的 colorHex 不盖章(那是扫描猜的,该随新扫描更新)。见
+ * types.js 顶部「重新扫描契约」表。
+ */
+const wasUserEdited = (o, field) =>
+  Array.isArray(o?.attrs?.userEdited) && o.attrs.userEdited.includes(field)
+
+/**
+ * 匹配上的扫描件 → 新几何 + 保全用户意图。几何/朝向/zoneId 取新扫描(易变、
+ * 扫描更准);但下面这些**跟着永久身份走、扫描无权碰**,否则重扫一次就丢:
+ * - id:永久身份,重扫不换(调用方已预先占位)
+ * - kind:仅当 attrs.userEdited 标了「用户改过」才压过扫描原值(table→standing_desk
+ *   不被打回);没标的沿用扫描分类(样式精化本就该更新)
+ * - label:名字跟着身份走(prev.label 优先,自定义名不被通用名冲掉)
+ * - attrs.colorHex:用户改过的主色不被单轮扫描覆盖;没改过的取扫描新值
+ * - locked / relations:布局锁与家规是用户在这件上的设定,扫描 payload 根本不含
+ *   这两字段 —— 不显式 carry,`...n` 一铺就没了
+ * - 其余 attrs(VLM 材质/describedAt/userEdited/scanAliases…):旧成果打底、新实测
+ *   覆盖同名键。userEdited/scanAliases 因扫描侧没有同名键,自然随 prev 传下去
+ * @param {any} prev 上次的项目件(权威)
+ * @param {any} n 这次扫描映射后的件
+ */
+function carryUserAuthored(prev, n) {
+  const attrs = { ...prev.attrs, ...n.attrs }
+  if (wasUserEdited(prev, 'colorHex') && prev.attrs?.colorHex != null) {
+    attrs.colorHex = prev.attrs.colorHex
+  }
+  const out = {
+    ...n,
+    id: prev.id,
+    kind: wasUserEdited(prev, 'kind') ? prev.kind : n.kind,
+    label: prev.label ?? n.label,
+    attrs,
+  }
+  if (prev.locked != null) out.locked = prev.locked
+  if (prev.relations != null) out.relations = prev.relations
+  return out
+}
+
+/**
  * 外观类 attrs:锁定件合并与 photos 模式回填唯一允许写入的字段 ——
  * 照片本身 + 由照片派生的特征。几何/种类/名字/储物绑定都不在内。
  */
@@ -810,14 +854,9 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         if (wall) entry.wall = wall
         identity.moved.push(entry)
       }
-      return {
-        ...n,
-        id: prev.id, // 永久身份:重扫不换 id(已预先占位)
-        // 名字跟着身份走:用户/服务端起的名(「洗手台下柜」)不被新扫描的
-        // 通用名(「柜」)冲掉 —— 扫描认得出这是同一件,就没资格给它改名
-        label: prev.label ?? n.label,
-        attrs: { ...prev.attrs, ...n.attrs },
-      }
+      // 几何/朝向取新扫描,但永久身份 + 用户意图(kind/label/colorHex/locked/
+      // relations)跟着 prev 走 —— 见 carryUserAuthored 的契约
+      return carryUserAuthored(prev, n)
     })
     // 拒绝的新增已置 null,收尾前清掉
     const kept = out.filter(Boolean)
@@ -927,6 +966,68 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
 /** 兼容旧调用:只要合并结果 */
 export function mergeFurnitureAndViewpoints(project, mapped, opts = {}) {
   return mergeFurnitureWithIdentity(project, mapped, opts).project
+}
+
+/** 门窗中点认亲的容差(px;36px=1ft)—— 配准后同一扇门中点漂移在英寸级 */
+const OPAQUE_CARRY_TOL_PX = 36
+
+/**
+ * 「整包替换」路径(replace 模式 / 服务端优化副本自动跟进)的**户型级用户意图保全**。
+ *
+ * buildProjectFromScan 组出的是一份全新 SpatialProject:zones/openings/北向 的 id
+ * 全是新的,而用户在网页端补的、扫描测不出的那层(北向校准、分区地板材质、门窗
+ * 不透光标记)在新扫描里没有数据源 —— 不显式认亲搬过去就凭空消失。
+ *
+ * 这条路**不做家具身份配对**(家具由服务端优化副本自身携带,不是本地积累),
+ * 所以只保全**户型级**的用户覆盖层,不碰 placements/fixtures。认亲规则,收敛成
+ * 一处、可测(此前内联在 state.svelte.js 的 applyCloudScan,无法单测):
+ * - planNorthDeg:用户手校 > 本次扫描罗盘初值 > 旧值。只兜「新扫描没带、旧图有」
+ * - zone.floor:按**分区名**认亲(「卫生间」还是那个卫生间,木地板设置跟着走)
+ * - graphOpening.opaque:按开口**中点就近**认亲(新扫描开口 id 全新,几何位置才是
+ *   身份;扫描已过全局配准,同一扇门中点漂移在英寸级,容差 1ft)
+ *
+ * ⚠️ storageZones / relations(家规)/ 家具 kind·颜色 走的是 furniture 合并路径
+ * ({@link mergeFurnitureWithIdentity},从 ...current 起手天然保全);replace 路径
+ * 按设计整包覆盖它们(UI 有二次确认 + 一步撤销)。详见 types.js「重新扫描契约」表。
+ *
+ * 就地改 next(调用方随后 setActiveProject),返回 next 便于链式/测试。
+ * @param {SpatialProject|null} prev 替换前的项目
+ * @param {SpatialProject} next buildProjectFromScan 的产物
+ * @returns {SpatialProject}
+ */
+export function carryCanonicalScan(prev, next) {
+  if (!prev || !next) return next
+  if (next.meta && next.meta.planNorthDeg == null && prev.meta?.planNorthDeg != null) {
+    next.meta.planNorthDeg = prev.meta.planNorthDeg
+  }
+  const prevFloor = new Map(
+    (prev.zones ?? []).filter((z) => z.floor).map((z) => [z.nameZh, z.floor]),
+  )
+  if (prevFloor.size) {
+    for (const z of next.zones ?? []) {
+      if (!z.floor && prevFloor.has(z.nameZh)) z.floor = prevFloor.get(z.nameZh)
+    }
+  }
+  if (prev.wallGraph && next.wallGraph) {
+    const prevOpaque = (prev.graphOpenings ?? [])
+      .filter((o) => o.opaque)
+      .map((o) => graphOpeningBounds(prev.wallGraph, o))
+      .filter(Boolean)
+      .map((b) => ({ x: (b.p0.x + b.p1.x) / 2, y: (b.p0.y + b.p1.y) / 2 }))
+    if (prevOpaque.length) {
+      for (const o of next.graphOpenings ?? []) {
+        if (o.opaque) continue
+        const b = graphOpeningBounds(next.wallGraph, o)
+        if (!b) continue
+        const cx = (b.p0.x + b.p1.x) / 2
+        const cy = (b.p0.y + b.p1.y) / 2
+        if (prevOpaque.some((p) => Math.hypot(p.x - cx, p.y - cy) < OPAQUE_CARRY_TOL_PX)) {
+          o.opaque = true
+        }
+      }
+    }
+  }
+  return next
 }
 
 /**

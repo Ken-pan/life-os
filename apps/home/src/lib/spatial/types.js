@@ -4,6 +4,48 @@
  * Future 3D: extrude walls via {@link toExtrusionHints} without changing this schema.
  */
 
+/* ============================================================================
+ * 重新扫描契约(RE-SCAN CONTRACT)—— 单一权威定义
+ *
+ * 「再扫一次」到底动了什么?每个字段只属于两类之一。用户反复纠正的东西
+ * (kind/颜色/地板/锁/朝向/透光)绝不因重扫被冲掉;而扫描更强的东西
+ * (墙几何/新检测件/未锁件位置/面积)该随新扫描更新。判据:**这个值是用户
+ * 的意图/判断,还是扫描的观察?** 前者保全,后者更新。
+ *
+ * 两条重扫路径,保全机制不同(见 lib/cloud-scan.js pullScan):
+ *   • furniture 合并路径 —— mapScanIntoLayout + mergeFurnitureWithIdentity。
+ *     从 ...current 起手,做**家具身份配对**(scan-identity.js),逐件保全。
+ *   • replace 整包路径 —— buildProjectFromScan → applyCloudScan。全新 SpatialProject,
+ *     只保全**户型级**用户覆盖层(scan-merge.js carryCanonicalScan);家具/储物由
+ *     服务端优化副本自身携带,按设计整包覆盖(UI 有二次确认 + 一步撤销)。
+ *
+ * ┌─ 权威 / 用户意图(重扫**不覆盖**)──────────── 保全者 ────────────────────┐
+ * │ placement.kind(用户改过的)   attrs.userEdited∋'kind' → carryUserAuthored │
+ * │ attrs.colorHex(用户改过的)   attrs.userEdited∋'colorHex' → 同上          │
+ * │ placement.label(自定义名)     prev.label ?? n.label(名字跟身份走)        │
+ * │ placement.locked(布局锁)       carryUserAuthored 显式 carry(扫描不含此字段)│
+ * │ placement.relations(家规)      同上                                        │
+ * │ attrs.identityLocked 的整件     reconcile 锁定件分支:kind/label/几何全冻结  │
+ * │ placement/fixture.fixed 的整件  reconcile 钉死件分支:几何以本地为准        │
+ * │ zone.floor(分区地板)           carryCanonicalScan 按分区名认亲            │
+ * │ meta.planNorthDeg(朝向校准)    carryCanonicalScan(手校 > 罗盘初值 > 旧值)│
+ * │ graphOpening.opaque(不透光)    carryCanonicalScan 按开口中点就近认亲      │
+ * │ storageZones / items(储物)     furniture 路径从 ...current 起手天然保全    │
+ * └────────────────────────────────────────────────────────────────────────────┘
+ * ┌─ 扫描派生 / 易变(重扫**更新**)────────────────────────────────────────────┐
+ * │ 墙体几何 wallGraph / walls        扫描/优化副本重建(508 手录户型仍以本地为准)│
+ * │ 新检测到的家具/设施               reconcile 判「新增」进项目                 │
+ * │ 未锁件的位置 x/y/rotation         身份配对后取新扫描几何(锁定/钉死件除外)   │
+ * │ 家具实测尺寸 w/h、attrs.measured* LiDAR 实测,随新扫描更新                   │
+ * │ 面积 / 分区多边形                 随扫描/优化副本更新                        │
+ * │ kind/colorHex(**未**被用户改过)  取扫描新值(样式精化本就该更新分类/主色)  │
+ * └────────────────────────────────────────────────────────────────────────────┘
+ *
+ * 关键区分:merge 靠 attrs.userEdited(provenance 章)分清「用户设的白」和
+ * 「扫描猜的白」—— 只保全前者。盖章在 updatePlacement({...},{userEdit:true}),
+ * 保全在 scan-merge.js。改这张表要同步改那两处的实现与单测(scan-merge-unit.mjs)。
+ * ========================================================================== */
+
 /** @typedef {'wall' | 'gap' | 'threshold'} WallKind */
 
 /**
@@ -153,6 +195,22 @@
  */
 
 /**
+ * 物品生命周期(规范 §2.4)。比单纯的「物品类别」更重要 —— 决定放哪、催不催清退。
+ * @typedef {'daily' | 'current-project' | 'replenish' | 'low-freq' | 'collection' | 'return-pending' | 'sell' | 'donate' | 'trash'} LifecycleState
+ */
+
+/**
+ * 使用频率(规范 §3.5–3.6)。喂 storage-plan 的 REACH 取物高度带。
+ * @typedef {'daily' | 'weekly' | 'monthly' | 'seasonal' | 'rare'} UseFrequency
+ */
+
+/**
+ * 宠物风险类型(规范 §4.2)。一件物品可同时属于多种(如药物既 meds 又 toxic),
+ * 所以 {@link SpatialStorageItem.petRisks} 是数组。判定见 spatial/pet-safety.js。
+ * @typedef {'toxic' | 'cord' | 'chew' | 'small-parts' | 'food' | 'plastic-bag' | 'meds'} PetRisk
+ */
+
+/**
  * One physical thing stored in a zone. Schema v3 held bare strings; v4 promotes
  * them to entities so they can be edited, moved and searched.
  * @typedef {object} SpatialStorageItem
@@ -166,6 +224,20 @@
  * @property {number} [level] 在柜内哪一层(0 = 最下层)。柜内实测
  *   ({@link ContainerScanInfo})同步后才有意义,但字段独立存在 ——
  *   没实测过也可以手填「第 2 层」
+ * @property {LifecycleState} [lifecycleState] 生命周期(规范 §2.4):比物品类别更重要,
+ *   决定取物摩擦与清退路由
+ * @property {UseFrequency} [useFrequency] 使用频率:喂 REACH 取物高度带
+ * @property {'light'|'medium'|'heavy'} [weight] 轻重:过肩放重物是腰伤第一来源
+ * @property {PetRisk[]} [petRisks] 自动检测的宠物风险(可多种);见 spatial/pet-safety.js。
+ *   用户覆写走 {@link SpatialStorageItem.petRiskOverride},二者分离
+ * @property {{ mode: 'explicit-safe'|'custom', risks?: PetRisk[], reason?: string, at: string }} [petRiskOverride]
+ *   用户对风险的覆写。explicit-safe = 用户显式判安全;custom = 自定风险集。
+ *   单独存,不用 petRisks=null,免得一点就把自动检出的药品风险清零
+ * @property {Array<'heat'|'humidity'|'light'|'freeze'>} [envSensitive] 环境敏感:别把食品囤在灶台上方
+ * @property {boolean} [dailyCopy] 一类一归属里的「每日使用份」标记(vs 库存份)
+ * @property {{ w?: number, d?: number, h?: number }} [sizeIn] 物品几何(英寸);容量数值化
+ *   ({@link SpatialStorageZone.capacityState} 的 fillPct)只在区内尺寸够全时才出
+ * @property {boolean} [stackable] 可堆叠 —— 容量估算用
  */
 
 /**
@@ -206,6 +278,33 @@
  */
 
 /**
+ * 储物区容量的**定性**态(规范 §6.3, 评审 B4)。几何容量 ≠ 可用容量:
+ * 一个箱子即使还能塞 10%,若已无法正常取物,应视为 `functional-full`。
+ * 数值 fillPct 只在区内物品尺寸够全时才另外给(见 spatial/capacity.js),
+ * 数据不足则 `unknown` —— 不臆造精度。
+ * @typedef {'unknown' | 'available' | 'near-full' | 'functional-full'} CapacityState
+ */
+
+/**
+ * 满载判定的证据(规范 §9.2:不确定就标记来源,不自信猜)。
+ * @typedef {object} CapacityEvidence
+ * @property {'user' | 'photo' | 'geometry'} source
+ * @property {string} at ISO 时间
+ * @property {'overflow' | 'blocked-access' | 'cannot-close' | 'requires-unstacking' | 'volume-estimate'} reason
+ */
+
+/**
+ * 储物区的**可达性**(规范 §4.2, 评审 B5)。宠物危险判定必须消费它 ——
+ * 50cm 高但在带门防护柜内 ≠ 放在开放篮里。可由柜内扫描或用户填。
+ * @typedef {object} ZoneAccess
+ * @property {boolean} open 开放式(无门无盖)
+ * @property {boolean} closable 有门/盖可关
+ * @property {boolean} petProof 宠物打不开
+ * @property {boolean} lockable 可锁扣
+ * @property {number} heightCm 取物口离地高度
+ */
+
+/**
  * @typedef {object} SpatialStorageZone
  * @property {string} id
  * @property {string} code
@@ -220,6 +319,13 @@
  * @property {string} [placementId]
  * @property {ContainerScanInfo} [container] 柜内实测(同步来的;items[].level 以它的层为准)
  * @property {StorageZoneSpec} [spec] 柜体数量、尺寸与收纳动线规划
+ * @property {CapacityState} [capacityState] 定性容量态(规范 §6.3)。省略视为 unknown
+ * @property {CapacityEvidence} [capacityEvidence] 满载判定的来源与理由
+ * @property {ZoneAccess} [zoneAccess] 可达性,宠物危险判定用(规范 §4.2)
+ * @property {boolean} [inbox] 是否是全屋**唯一**待处理箱(规范 §6.5)。写时经
+ *   capacity.js 的 enforceSingleInbox 强制唯一
+ * @property {number} [fillPct] 数值填充率 —— **仅**当区内物品尺寸够全时由 capacity.js 计算;
+ *   否则不存(不伪造精度)
  */
 
 /**
@@ -248,6 +354,11 @@
  *   扫描现场地理上下文(iOS 采集,2026-07 加法式):GPS + 罗盘北向初值。
  *   阳光模拟的太阳角与窗户朝向靠它免手填;planNorthDeg 在
  *   buildProjectFromScan 里提为正式北向(仅当未校准),原始值留档
+ * @property {{ reachInCm: number, canJumpToCounter: boolean, chews: boolean, opensCabinets: boolean }} [petSafety]
+ *   宠物能力(规范 §4.1):**用户可配,非品种默认**。宠物危险判定的可触带靠它。
+ *   缺省 → pet-safety.js 用保守默认
+ * @property {string} [truthPatchApplied] 已应用的功能真源补丁 id(规范 §10, 评审 B3)。
+ *   项目级幂等标记 —— 不用全局 schemaVersion 代替项目级迁移记录。见 lib/home-truth-patch.js
  */
 
 /**
@@ -291,6 +402,46 @@
  */
 
 /**
+ * 家具/表面的**真实用途**键。规范 §1.1 的核心:HomeOS 不能只凭 kind 推断用途。
+ * 词表在 spatial/function-truth.js 的 FUNCTIONS 注册表(单一权威),这里只标类型。
+ * @typedef {string} FunctionKey
+ */
+
+/**
+ * 用途证据的来源,即优先链的档位。**无歧义**:不再同时有 `user` 和 `confirmed`。
+ * `user` = UI 里用户亲手确认;`user-session-import` = 种子补丁写入、待用户确认;
+ * `document`/`scan` = 旧规划/扫描线索;`guess` = 按 kind 的兜底(今天的唯一行为)。
+ * 注意:**照片不在这条链里** —— 照片只产生 functionDrift 提示,永不进 effective。
+ * @typedef {'user' | 'user-session-import' | 'document' | 'scan' | 'guess'} FunctionSource
+ */
+
+/**
+ * 一件家具/表面的**分源用途证据**(规范 §1.1, 评审 B1)。意图与观察分离:
+ * `byUser`/`bySessionImport`/`byDocument`/`byScan` 参与 effective 解析;
+ * `observedByPhoto` 只用于生成「柜里出现非本职用品」提示,**绝不重定义职责**。
+ * effective = byUser ?? bySessionImport ?? byDocument ?? byScan ?? guess(见 function-truth.js)。
+ * @typedef {object} PlacementFunctionEvidence
+ * @property {{ key: FunctionKey, at: string }} [byUser] 仅 UI 确认可写
+ * @property {{ key: FunctionKey, at: string }} [bySessionImport] 种子补丁写、待确认(见 lib/home-truth-patch.js)
+ * @property {{ key: FunctionKey }} [byDocument] 旧规划文档线索
+ * @property {{ key: FunctionKey }} [byScan] 扫描类目线索(网页侧派生)
+ * @property {{ key: FunctionKey, at: string, confidence: number }} [observedByPhoto] VLM 观察,永不进 effective
+ * @property {Array<{ key: FunctionKey, source: FunctionSource, at: string }>} [history] 纠正历史(带来源+时间),取代裸 string[]
+ */
+
+/**
+ * 表面**策略**(规范 §1.3, 评审 B2)。四种 mode 的整理行为完全不同 —— 尤其
+ * `prohibited-storage`(炉灶/围栏顶/通风口)是「发现任何物品即高优清空」,与
+ * `fixed-equipment`(保留批准设备)相反,不能混为一谈。覆写用;默认由
+ * function-truth.js 的 surfaceTypeOf() 按用途+kind 派生。
+ * @typedef {object} SurfacePolicy
+ * @property {'core-operation' | 'fixed-equipment' | 'temporary-activity' | 'prohibited-storage'} mode
+ * @property {string[]} [allowedCategories] fixed-equipment:批准长期放的类目(微波炉/InstantPot/蛋白粉)
+ * @property {number} [minFreePct] core-operation:使用后要恢复的最低可操作面积占比
+ * @property {number} [maxTemporaryHours] temporary-activity:临时占用的截止小时数
+ */
+
+/**
  * 家具外观/实测补充信息 —— iOS HomeScan 扫描带来(2026-07 契约加法式扩展),
  * 网页端 VLM「识别外观」也可以补写。全部可选:手摆的家具一个都没有。
  * @typedef {object} PlacementAttrs
@@ -313,6 +464,22 @@
  *   动线/占地分析和归位建议都跳过它;用户拖到位(commitPlacementMove)时摘掉
  * @property {number} [clearanceIn] 使用净空覆写(英寸):实测过「这台洗衣机门要 26in」
  *   就以实测为准,布局求解不再用词表默认值
+ * @property {PlacementFunctionEvidence} [function] 分源用途证据(规范 §1.1)。
+ *   意图 vs 观察分离,effective 解析见 spatial/function-truth.js。手摆/未确认件为空
+ * @property {SurfacePolicy} [surfacePolicy] 表面策略覆写(规范 §1.3)。省略则由
+ *   function-truth.js 的 surfaceTypeOf() 按用途+kind 派生默认
+ * @property {string[]} [userEdited] **provenance 章**:用户手动改过、扫描无权在
+ *   重扫时覆盖的权威字段名(见文件顶部「重新扫描契约」)。取值 `'kind'`/`'label'`/
+ *   `'colorHex'` —— 字段名不管它住顶层还是 attrs。由 state.svelte.js 的
+ *   updatePlacement({...}, { userEdit: true }) 在用户改动时盖章;VLM「识别外观」
+ *   写 colorHex **不盖**(那是扫描猜的,该随新扫描更新)。merge 据此只保全前者
+ * @property {string[]} [scanAliases] 用户纠正的一等数据:「扫描惯把这件误检成哪些
+ *   kind」(与 iOS 端字段名一致)。scan kind ∈ 本表时视同同 kind 参与身份配对 ——
+ *   不吃跨族否决、不吃罚分。用户改 kind 时旧 kind 自动入表(见 updatePlacement),
+ *   使 table→standing_desk 后重扫仍认得出是同一件。判定见 scan-identity.js
+ * @property {boolean} [identityLocked] 用户逐件校对过身份(与 iOS 端字段名一致):
+ *   kind/label/几何以本地为准,扫描无权改、扫不到也不消失,只允许吸收照片等外观
+ *   attrs。比 userEdited 更强:userEdited 只保全被标的字段,identityLocked 冻结整件
  */
 
 /**
