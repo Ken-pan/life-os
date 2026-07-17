@@ -6,9 +6,11 @@ on:
   push:
     branches: [master, main]
 
+# master 上 design-catalog snapshots ≈15–20min；多 Agent 连推若 cancel-in-progress
+# 会把即将全绿的 run 掐掉（PLAT.CI.0 根因）。PR 仍取消旧 run；master 允许跑完。
 concurrency:
   group: life-os-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
