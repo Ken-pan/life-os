@@ -8,11 +8,12 @@
 ## 结论（TL;DR）
 
 ```text
-底座真源已大半闭环；下一刀切「信任收割 + 每日体感 + CI 可信」：
+底座真源已大半闭环；下一刀切「信任收割 + 每日体感 + CI 可信 + 用量审计」：
 
 P0  PLAT.CI.0（远程 CI 证明绿；不得只以本地 gate 代替）
 P1  FINC.PURCHASE.6.a closure QA
 P1  KNOW.VAULT.0 → HOME.RECOG 残余（高精度补扫 / 自动精修）
+P1  PLAT.USAGE.0 第一方用量 / 功能利用率审计（决策复利）
 P1  AIOS.STABLE.26
 P2  HOME.MCP.13 → PLNR.UIUX.0 → PLNR.ATTACH.0 决策
 ```
@@ -29,6 +30,7 @@ P2  HOME.MCP.13 → PLNR.UIUX.0 → PLNR.ATTACH.0 决策
 | --- | --- | --- |
 | 交付完整性 / CI | 最高 | 远程红 = 所有复利打折 |
 | 日用触点 | 高 | Vault watcher、Finance 审核收割、扫描安静可信 |
+| 决策复利 / 用量 | 高 | 不知利用率 = 在死功能上堆债；先盘点已有信号 |
 | 跨站放大 | 高 | MCP `where_is`、object_ref、life_events 消费端 |
 | 防回归护栏 | 高 | AIOS 高速面几乎无自动测试 |
 | 新 app / 大同步 | 低 | 无第二项目、无 Portal 日用价值则不做 |
@@ -41,8 +43,9 @@ P2  HOME.MCP.13 → PLNR.UIUX.0 → PLNR.ATTACH.0 决策
 | 2 | **FINC.PURCHASE.6.a closure** | P1 | 🔥 | 0.5–1d | UI/RPC/matcher 已完成；极少 QA 即可把「代码完成」变成可信发货；信任数字是平台锚点 |
 | 3 | **KNOW.VAULT.0 watcher** | P1 | 🔥 | 0.5–1d | EDITOR.7 已入仓；curator/Obsidian 写回仍需重启才可见——直接打日用复利 |
 | 4 | **HOME.RECOG 残余** | P1 | 🔥 | 0.5–1d | 安静模式/matcher/证据卡已验；缺高精度补扫区域引导 + 扫完自动 embed/match「15 分钟精修」 |
-| 5 | **AIOS.STABLE.26** | P1 | ◆◆ | 1d | AIOS.1–25 铺开快，自动测试过薄；先护栏再扩 MCP 工具 |
-| 6 | **HOME.MCP.13** | P2 | ◆◆ | 1–2d | `searchStorageItems()` + MCP 底座已齐；最短路径形成 Home→AIOS 真实消费 |
+| 5 | **PLAT.USAGE.0** | P1 | 🔥 | 0.5–1d | 决策复利：盘点 last_opened / play_events / Home 诊断等，产出利用率表并驱动删减或抬升；见 [`USAGE_AUDIT.md`](./USAGE_AUDIT.md) |
+| 6 | **AIOS.STABLE.26** | P1 | ◆◆ | 1d | AIOS.1–25 铺开快，自动测试过薄；先护栏再扩 MCP 工具 |
+| 7 | **HOME.MCP.13** | P2 | ◆◆ | 1–2d | `searchStorageItems()` + MCP 底座已齐；最短路径形成 Home→AIOS 真实消费 |
 
 ## 每个 App 未来 7 天只做一件事
 

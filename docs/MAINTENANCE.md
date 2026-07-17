@@ -11,6 +11,8 @@
 | `roadmap/GROWTH.md`    | 同上                  | Growth 跨站项状态变化时        |
 | `roadmap/POTENTIAL.md` | 同上                  | ROI 研判、二次代码检索后       |
 | `roadmap/COMPOUND.md`  | 同上                  | 复利框架重估时（月度即可）     |
+| `roadmap/USAGE_AUDIT.md` | 同上                | 月度用量审计 / `PLAT.USAGE.0`  |
+| `qa/usage-audit-*.md`  | QA / 产品             | 每次跑完利用率盘点后追加       |
 | `roadmap/apps/*`       | 同上                  | 单 app 排期；与 hub §Next 同步 |
 | `ops/*`                | 运维                  | 部署/infra 变更时              |
 | `architecture/*`       | 架构师                | 契约/边界变更时                |
@@ -25,15 +27,16 @@
 3. **阶段细节** → 对应 `roadmap/INTEGRATION|PLATFORM|DESIGN|GROWTH.md` 或 `roadmap/apps/{app}.md`
 4. **新共享提取想法** → 先写 `roadmap/BACKLOG.md`，未评估不得进 Now
 5. **运维变更**（新 Netlify site、migration）→ `ops/` 对应文件 + 必要时 Supabase 表
-6. **月度** → 跑 hub 验收命令；`npm run verify:ticket-naming`；更新 `LIFEOS_ROADMAP.md` frontmatter `last_verified`；必要时重读 [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)
+6. **月度** → 跑 hub 验收命令；`npm run verify:ticket-naming`；更新 `LIFEOS_ROADMAP.md` frontmatter `last_verified`；重读 [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)；跑 [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md) 盘点并落 `qa/usage-audit-YYYY-MM.md`
 
-### 入 Now 前（复利三问）
+### 入 Now 前（复利四问）
 
 详见 [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)。简表：
 
 1. 完成后哪个**每日触点**变好？
 2. 下一次同类工作是否**更便宜 / 更安全**？
 3. 是否存在 **CI / 远程 / git 漂移**？有则先闭环真源。
+4. 相关功能**最近是否真被用过**？未知或争议大 → 先跑用量审计再开干。
 
 ### 状态证据口径
 
@@ -63,7 +66,8 @@
 | 已完成阶段史                  | `roadmap/SHIPPED.md` 或 `archive/`       |
 | Growth、外部对标、Portal 体感 | `roadmap/GROWTH.md`                      |
 | ROI 研判、执行顺序依据        | `roadmap/POTENTIAL.md`                   |
-| 复利判据（使用 × 开发）       | `roadmap/COMPOUND.md`                    |
+| 复利判据（使用 × 开发 × 决策） | `roadmap/COMPOUND.md`                   |
+| 用量 / 功能利用率              | `roadmap/USAGE_AUDIT.md` · `qa/usage-audit-*.md` |
 | 单 app 产品排期、脑暴         | `roadmap/apps/`                          |
 | 不确定归属                    | 先在 `roadmap/BACKLOG.md` 开一行，再归类 |
 
@@ -73,7 +77,8 @@ PaperOS 已于 2026-07-12 迁出至独立仓库（`/Users/kenpan/「Projects」/
 
 1. `docs/LIFEOS_ROADMAP.md` — scope、优先级、§App 一览
 2. `docs/roadmap/COMPOUND.md` — 复利判据（取舍透镜，非排期表）
-3. `docs/roadmap/POTENTIAL.md` — 当前 ROI 与代码证据（改优先级前必读）
+3. `docs/roadmap/USAGE_AUDIT.md` — 用量 / 利用率（决策复利；重大排期前）
+4. `docs/roadmap/POTENTIAL.md` — 当前 ROI 与代码证据（改优先级前必读）
 4. `docs/architecture/NORTH_STAR.md` — 愿景与和现在的距离（非排期）
 5. `docs/architecture/SYSTEM_OVERVIEW.md` — 体系架构快照（与 hub 冲突时以 hub 为准）
 6. `docs/roadmap/TICKET_NAMING.md` — Hub / Agent **canonical ID**（legacy 仅别名）

@@ -24,7 +24,7 @@ priority_model: 2026-07-12-single-branch
 
 Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——Planner / Fitness / Finance / Music 四生产站、Portal 启动器、Home 实验站，以及本地优先的 AIOS、KnowledgeOS、HealthOS。六个 canonical web surface 部署在 Netlify；AIOS / KnowledgeOS 另有实验云端 surface，HealthOS 当前只做本地 Mac + Watch/iPhone companion。PaperOS 是北极星中的第十个 OS，但设备 Shell 已迁出独立仓库。
 
-**取舍一句话：** 复利不在再做一个 app，而在让已有 OS **共享身份 / 事件 / 对象引用 / AIOS 工具面**，并保持 **CI 与真源完整**（详见 [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)）。
+**取舍一句话：** 复利不在再做一个 app，而在让已有 OS **共享身份 / 事件 / 对象引用 / AIOS 工具面**，保持 **CI 与真源完整**，并用 **真实用量 / 功能利用率** 决定加码还是砍面（详见 [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md) · [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md)）。
 
 **代码状态快照（2026-07-17 晚）：**
 
@@ -84,11 +84,12 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 顺序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 触发 / 最小范围 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **AIOS.STABLE.26** | 核心链路回归护栏 | AIOS | P1 | ◆◆ | 1d | 补 chat/tool loop、云 LWW/墓碑、AIOS.20/21 读写 smoke；停止只靠高速手测 |
-| 2 | **HOME.MCP.13** | `where_is` 接入 AIOS | Home | P2 | ◆◆ | 1–2d | 薄封装 `searchStorageItems()` + 现成 MCP；Home 第一条真实跨 OS 消费链 |
-| 3 | **PLNR.UIUX.0** | Planner 定向 UI 收口 | Planner | P2 | ◆ | 1d | 只扫未覆盖页面与现存 warning；不做无边界全站重做 |
-| 4 | **PLNR.ATTACH.0** | 附件 WIP 决策与落地 | Planner | P2 | ◆ | 1d | 补 migration+测试+上传/删除/预览，或移除死入口 |
-| 5 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用试点加深 | Knowledge | P2 | ◆◆ | 1–2d | 在 Planner↔Knowledge 试点上稳定引用契约；不合并业务表 |
+| 1 | **PLAT.USAGE.0** | 用量与功能利用率审计 | Platform | P1 | 🔥 | 0.5–1d | 盘点已有信号 → 首份利用率表 → 至少一项删减/冻结或抬升日用缺口；见 [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md) |
+| 2 | **AIOS.STABLE.26** | 核心链路回归护栏 | AIOS | P1 | ◆◆ | 1d | 补 chat/tool loop、云 LWW/墓碑、AIOS.20/21 读写 smoke；停止只靠高速手测 |
+| 3 | **HOME.MCP.13** | `where_is` 接入 AIOS | Home | P2 | ◆◆ | 1–2d | 薄封装 `searchStorageItems()` + 现成 MCP；Home 第一条真实跨 OS 消费链 |
+| 4 | **PLNR.UIUX.0** | Planner 定向 UI 收口 | Planner | P2 | ◆ | 1d | 只扫未覆盖页面与现存 warning；不做无边界全站重做 |
+| 5 | **PLNR.ATTACH.0** | 附件 WIP 决策与落地 | Planner | P2 | ◆ | 1d | 补 migration+测试+上传/删除/预览，或移除死入口 |
+| 6 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用试点加深 | Knowledge | P2 | ◆◆ | 1–2d | 在 Planner↔Knowledge 试点上稳定引用契约；不合并业务表 |
 
 **后移：** `HOME.PROJ.7`（无第二真实项目不造多项目）、`KNOW.SYNC.1`（先 watcher）、`MUSC.PIPE.4` / `GYMS.MEDIA.3` / `GYMS.SYNC.4`（维护级）、Portal 硬凑本地优先 app 卡。
 
@@ -107,13 +108,16 @@ Phase 0 — 复利开关（串行）
 Phase 1 — 信任收割 + 每日真源（1–2d）
   FINC.PURCHASE.6.a closure → KNOW.VAULT.0 → HOME.RECOG.1r 残余
 
-Phase 2 — 防高速回归（1d）
+Phase 2 — 决策复利（0.5–1d，可与 Phase 1 尾并行）
+  PLAT.USAGE.0 第一方用量 / 功能利用率审计
+
+Phase 3 — 防高速回归（1d）
   AIOS.STABLE.26
 
-Phase 3 — 跨 OS 快赢（1–2d）
+Phase 4 — 跨 OS 快赢（1–2d）
   HOME.MCP.13 where_is → AIOS
 
-Phase 4 — 生产定向收口 / 对象引用（按需）
+Phase 5 — 生产定向收口 / 对象引用（按需；受 USAGE 表约束）
   PLNR.UIUX.0 → PLNR.ATTACH.0 决策 → KNOW.XREF.5 / object_ref
 
 并行用户 gate（不阻塞上述 Phase）
@@ -181,6 +185,7 @@ Phase 4 — 生产定向收口 / 对象引用（按需）
 | 产品       | Home 升四站同级（默认 Launcher、直接写共享 `life_events`）                         | Home 仍是实验 tier；现有云链路是自有 `home` schema，不等于完整平台晋升 |
 | 产品       | INTG.EVENTS.2 智能推荐；无场景的 `life_events` 扩展                              | INTG.EVENTS.2 无消费者（假复利）                            |
 | 产品       | 再造第 10/11 个产品 app；Portal 硬凑本地优先卡                                      | 底座复利未吃满前表面积↑、日用触点不涨                         |
+| 分析       | Mixpanel / PostHog / 全路由埋点 / 远程 feature flag 中台                            | 单用户过度设计；决策复利用第一方盘点（`PLAT.USAGE.0`）       |
 | 产品       | 全模块 AI Life OS；第三方 SaaS 聚合（Todoist/Notion/Chase）；自动打电话 Agent          | 对标 FluxOS/PAI/Iddu；单人不可维护                           |
 | 页面       | production web surfaces 页面级 token 迁移 / 全量 a11y audit                  | D 线只做共享 primitive + catalog                         |
 | Platform | ~~Finance `ui-react` / nav mirror / i18n 统一~~ Finance SvelteKit 迁移已完成 | 见 Finance SvelteKit 分支 ✓                            |

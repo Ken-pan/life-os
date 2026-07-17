@@ -250,6 +250,7 @@ PAPR.DATA.verify ✅
 | **PLAT.SHELL.2**     | `PLAT-P0-2`      |
 | **PLAT.SHELL.3**     | `PLAT-P0-3`      |
 | **PLAT.CI.0**        | —                | master CI / 生成物 / 交付完整性恢复 |
+| **PLAT.USAGE.0**     | —                | 第一方用量 / 功能利用率审计（决策复利） |
 
 ### DSGN — Design（已发货简史 · legacy `D-*`）
 

@@ -37,6 +37,7 @@ priority_model: 2026-07-12-single-branch
 
 | Hub ID | 主题 |
 | --- | --- |
+| **PLAT.USAGE.0** | 第一方用量 / 功能利用率审计（决策复利）→ [`USAGE_AUDIT.md`](./USAGE_AUDIT.md) |
 | **AIOS.STABLE.26** | chat/tool/cloud/Life OS 核心链路回归 |
 | **HOME.MCP.13** | `where_is` 经 MCP 接 AIOS |
 | **PLNR.UIUX.0** | 定向 UI 收口 |

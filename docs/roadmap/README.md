@@ -11,7 +11,8 @@
 | [`BACKLOG.md`](./BACKLOG.md)         | 提取候选、决策矩阵、do-not-abstract        | 评估新共享提取时            |
 | [`SHIPPED.md`](./SHIPPED.md)         | 发货日志（日期 · 摘要 · commit）           | 每次从 Now 移入 Shipped 时  |
 | [`apps/`](./apps/README.md)          | **九 app 产品排期**（六部署 web + AIOS + KnowledgeOS + HealthOS） | 单 app 优先级或脑暴更新时   |
-| [`COMPOUND.md`](./COMPOUND.md)       | **复利判据**（使用 × 开发取舍透镜）         | 战略重估 / 入 Now 前                  |
+| [`COMPOUND.md`](./COMPOUND.md)       | **复利判据**（使用 × 开发 × 决策）          | 战略重估 / 入 Now 前                  |
+| [`USAGE_AUDIT.md`](./USAGE_AUDIT.md) | **用量 / 功能利用率审计**（`PLAT.USAGE.0`） | 月度或重大排期前                      |
 | [`POTENTIAL.md`](./POTENTIAL.md)     | **当前潜力研判 / ROI 与闭环排序**           | 代码检索、生产状态或优先级重估时 |
 | [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) | **执行分线与当前焦点** | 优先级重排时  |
 | [`apps/paperos.md`](./apps/paperos.md) | **PaperOS 独立仓库指针** | 极少变化（已迁出） |

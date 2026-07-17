@@ -90,7 +90,7 @@ home / portal dev 实测,appbar DOM 结构与修饰类(`appbar--back/--tools/
 | **复杂 SW 收编** | fitness(215)/ planner(230)/ music(384)各有领域缓存策略 | 评估能否「basic 模板 + 策略插槽」;需逐 app 离线 QA |
 | **app 侧 persisted-state 反向对齐** | fitness/music/home 的 load/save 头部 | 顺手活,随下次触碰各 state 文件时做 |
 | **全局错误捕获**(业界标配缺口)| 各 app 无 `unhandledrejection`/`window.onerror` 统一处理(仅 music player 内部有)| 可选:platform-web `bindGlobalErrorReporting`(console + toast);对单用户 QA 有用,无痛点证据前不强推 |
-| 不做:analytics / feature flags | 业界多 app 平台标配,但单用户场景过度设计 | — |
+| 不做:第三方 analytics / 远程 feature flags | 业界多 app 平台标配,单用户过度设计 | 决策复利改走第一方盘点 → [`../roadmap/USAGE_AUDIT.md`](../roadmap/USAGE_AUDIT.md) `PLAT.USAGE.0` |
 
 **不建议提取:** `nav.js` IA 内容、settings 页面编排、`ui.svelte.js` 领域
 弹层状态(285 行 diff,纯 app 域)——它们的"形状"已由 contracts/设计系统约束,

@@ -11,7 +11,7 @@
 | 焦点 | 主题 | 文档 |
 | ---- | ---- | ---- |
 | Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** · **KNOW.VAULT.0** · **HOME.RECOG.1r** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
-| Next | AIOS.STABLE.26 · HOME.MCP.13 · PLNR.UIUX/ATTACH · object_ref | [`roadmap/apps/`](./roadmap/apps/README.md) |
+| Next | **PLAT.USAGE.0** · AIOS.STABLE.26 · HOME.MCP.13 · PLNR · object_ref | [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md) · [`roadmap/apps/`](./roadmap/apps/README.md) |
 | User gate | PLNR.SCHED.10b.ios · PLNR.CAPTURE.0 · HLT-5 | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) |
 
 **2026-07-17 已收割：** Home RECOG.0 真源闭环 · 安静扫描/matcher/证据 UI · Knowledge 块编辑器 checkpoint · Health companion 入仓 · 九品牌 Catalog — [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
@@ -69,6 +69,7 @@ docs/
 | 看当前在做什么                     | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §Now · §推荐执行顺序                                |
 | 看 App 一览状态                    | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §App 一览                                           |
 | 判断什么值得做（复利）             | [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md) · [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) |
+| 看用量 / 功能是否真被用            | [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md)                                               |
 | 看北极星愿景                       | [`architecture/NORTH_STAR.md`](./architecture/NORTH_STAR.md)                                   |
 | 看体系架构快照                     | [`architecture/SYSTEM_OVERVIEW.md`](./architecture/SYSTEM_OVERVIEW.md)                         |
 | 看单 app 排期                      | [`roadmap/apps/`](./roadmap/apps/README.md)                                                    |
