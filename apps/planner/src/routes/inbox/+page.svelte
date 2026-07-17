@@ -1,5 +1,5 @@
 <script>
-  import AppBar from '$lib/components/AppBar.svelte';
+  import PageShell from '$lib/components/PageShell.svelte';
   import QuickAddBar from '$lib/components/QuickAddBar.svelte';
   import TaskGroup from '$lib/components/TaskGroup.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
@@ -14,38 +14,38 @@
   const tasks = $derived(sortTasks(selectInboxTasks(taskIndex(), SYSTEM_LIST_INBOX)));
 </script>
 
-<AppBar title={t('inbox.title')} />
-
-<div class="wrap">
-  <QuickAddBar
-    listId={SYSTEM_LIST_INBOX}
-    dueDate={null}
-    showOnMobile
-    placeholder={t('inbox.quickAdd')}
-    toastOnAdd={t('toast.inboxAdded')}
-  />
-  {#if tasks.length}
-    <TaskGroup
-      title={t('inbox.pendingTitle', { count: tasks.length })}
-      hideCount
-      {tasks}
-      compactRows
-      showScheduleAction
-      onToggle={completeTask}
-      onEdit={editTask}
+<PageShell title={t('inbox.title')}>
+  {#snippet main()}
+    <QuickAddBar
+      listId={SYSTEM_LIST_INBOX}
+      dueDate={null}
+      showOnMobile
+      placeholder={t('inbox.quickAdd')}
+      toastOnAdd={t('toast.inboxAdded')}
     />
-    <p class="page-hint">{t('inbox.sparseHint', { count: tasks.length })}</p>
-  {:else}
-    <EmptyState message={t('inbox.emptyTitle')} hint={t('inbox.emptyHint')} />
-    <button
-      type="button"
-      class="btn-secondary inbox-empty-action"
-      onclick={() => openTaskEditor(null, { listId: SYSTEM_LIST_INBOX })}
-    >
-      {t('inbox.emptyAction')}
-    </button>
-  {/if}
-</div>
+    {#if tasks.length}
+      <TaskGroup
+        title={t('inbox.pendingTitle', { count: tasks.length })}
+        hideCount
+        {tasks}
+        compactRows
+        showScheduleAction
+        onToggle={completeTask}
+        onEdit={editTask}
+      />
+      <p class="page-hint">{t('inbox.sparseHint', { count: tasks.length })}</p>
+    {:else}
+      <EmptyState message={t('inbox.emptyTitle')} hint={t('inbox.emptyHint')} />
+      <button
+        type="button"
+        class="btn-secondary inbox-empty-action"
+        onclick={() => openTaskEditor(null, { listId: SYSTEM_LIST_INBOX })}
+      >
+        {t('inbox.emptyAction')}
+      </button>
+    {/if}
+  {/snippet}
+</PageShell>
 
 <style>
   .inbox-empty-action {

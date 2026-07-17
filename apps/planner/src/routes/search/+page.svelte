@@ -1,6 +1,6 @@
 <script>
   import { afterNavigate } from '$app/navigation'
-  import AppBar from '$lib/components/AppBar.svelte'
+  import PageShell from '$lib/components/PageShell.svelte'
   import TaskGroup from '$lib/components/TaskGroup.svelte'
   import { taskIndex } from '$lib/taskIndex.svelte.js'
   import { selectSearch, selectAllTags } from '$lib/domain/selectors.js'
@@ -36,9 +36,8 @@
   })
 </script>
 
-<AppBar title={t('search.title')} />
-
-<div class="wrap search-field">
+<PageShell title={t('search.title')} mainClass="search-field">
+  {#snippet main()}
   <div class="field">
     <input
       bind:this={searchInput}
@@ -96,4 +95,5 @@
     onToggle={completeTask}
     onEdit={editTask}
   />
-</div>
+  {/snippet}
+</PageShell>

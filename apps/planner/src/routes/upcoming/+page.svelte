@@ -1,5 +1,5 @@
 <script>
-  import AppBar from '$lib/components/AppBar.svelte';
+  import PageShell from '$lib/components/PageShell.svelte';
   import TaskGroup from '$lib/components/TaskGroup.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import { taskIndex } from '$lib/taskIndex.svelte.js';
@@ -14,13 +14,12 @@
   const isEmpty = $derived(totalCount === 0);
 </script>
 
-<AppBar title={t('upcoming.title')} />
-
-<div class="wrap">
-  {#if isEmpty}
-    <EmptyState message={t('upcoming.emptyTitle')} hint={t('upcoming.emptyHint')} />
-  {:else}
-    {#if groups.tomorrow.length}
+<PageShell title={t('upcoming.title')}>
+  {#snippet main()}
+    {#if isEmpty}
+      <EmptyState message={t('upcoming.emptyTitle')} hint={t('upcoming.emptyHint')} />
+    {:else}
+      {#if groups.tomorrow.length}
       <TaskGroup
         title={`${t('upcoming.tomorrow')} ${groups.tomorrow.length}`}
         hideCount
@@ -54,5 +53,6 @@
         onEdit={editTask}
       />
     {/if}
-  {/if}
-</div>
+    {/if}
+  {/snippet}
+</PageShell>

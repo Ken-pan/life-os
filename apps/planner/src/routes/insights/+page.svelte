@@ -1,7 +1,7 @@
 <script>
   // 洞察页 — 项目规划与完成回顾。全部从 S.tasks / S.projects 实时派生:
   // 新建项目、给任务标 dueDate、完成任务,图表即时更新,零手工维护。
-  import AppBar from '$lib/components/AppBar.svelte'
+  import PageShell from '$lib/components/PageShell.svelte'
   import { S } from '$lib/state.svelte.js'
   import { taskIndex } from '$lib/taskIndex.svelte.js'
   import { selectDoneLogGroups } from '$lib/domain/selectors.js'
@@ -152,9 +152,9 @@
   })
 </script>
 
-<AppBar title={t('insights.title')} subtitle={t('insights.subtitle')} />
-
-<div class="wrap insights-page">
+<PageShell title={t('insights.title')} subtitle={t('insights.subtitle')}>
+  {#snippet main()}
+  <div class="insights-page">
   <div class="life-os-grid life-os-grid--kpi insights-kpi">
     <div class="settings-block stat">
       <span class="stat__label">{t('insights.kpiActiveProjects')}</span>
@@ -219,7 +219,9 @@
       {/if}
     </div>
   </section>
-</div>
+  </div>
+  {/snippet}
+</PageShell>
 
 <style>
   .insights-page {
