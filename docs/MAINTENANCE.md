@@ -79,11 +79,11 @@ PaperOS 已于 2026-07-12 迁出至独立仓库（`/Users/kenpan/「Projects」/
 2. `docs/roadmap/COMPOUND.md` — 复利判据（取舍透镜，非排期表）
 3. `docs/roadmap/USAGE_AUDIT.md` — 用量 / 利用率（决策复利；重大排期前）
 4. `docs/roadmap/POTENTIAL.md` — 当前 ROI 与代码证据（改优先级前必读）
-4. `docs/architecture/NORTH_STAR.md` — 愿景与和现在的距离（非排期）
-5. `docs/architecture/SYSTEM_OVERVIEW.md` — 体系架构快照（与 hub 冲突时以 hub 为准）
-6. `docs/roadmap/TICKET_NAMING.md` — Hub / Agent **canonical ID**（legacy 仅别名）
-7. `docs/ops/canonical.md` — 别改错仓库
-8. 任务相关分卷（`roadmap/*`、`roadmap/apps/*`、`architecture/*`、`ops/*`）
-9. `packages/*/README.md` — 实现细节
+5. `docs/architecture/NORTH_STAR.md` — 愿景与和现在的距离（非排期）
+6. `docs/architecture/SYSTEM_OVERVIEW.md` — 体系架构快照（与 hub 冲突时以 hub 为准）
+7. `docs/roadmap/TICKET_NAMING.md` — Hub / Agent **canonical ID**（legacy 仅别名）
+8. `docs/ops/canonical.md` — 别改错仓库
+9. 任务相关分卷（`roadmap/*`、`roadmap/apps/*`、`architecture/*`、`ops/*`）
+10. `packages/*/README.md` — 实现细节
 
 `AGENTS.md`（repo 根）指向本 hub；不必在每次会话重复粘贴长篇阶段史。
