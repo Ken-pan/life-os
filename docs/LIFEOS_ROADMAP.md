@@ -44,7 +44,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 闭环验收 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **PLAT.CI.0** | 恢复 master 交付可信度 | Platform | **P0** | 🔥 | <0.5d | 样式 + portal 对比度已推；等远程 Actions 全绿证明 |
+| 1 | **PLAT.CI.0** | 恢复 master 交付可信度 | Platform | **P0** | 🔥 | <0.5d | 样式/对比度已修；master 不再 `cancel-in-progress`（`2f0054b6`）；等下一轮 Actions 全绿证明 |
 | 2 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.5d | anon revoke ✅ · Review 过滤拆分 ✅；剩 **owner Confirm→Undo 真机**、双真实 JWT、视觉基线 |
 
 **已收割（2026-07-17 夜）：** `PLNR.ATTACH.0`（生产表/桶 + retry/cascade）✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
