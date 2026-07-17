@@ -21,7 +21,7 @@
 | **Wave A/B/C** | ✅ | UI/UX 审核 UX-01–22 主项 + A11Y-01/03 — 见 [uiux-audit](../../qa/home-spatial-uiux-audit-2026-07-08.md) |
 | **HOME.SPATIAL.3–W5** | ✅ | 分区 · 家具/储藏 · 文档/CI |
 
-**当前后续（2026-07-17 重评）：** 本分卷已发货；产品主航道转到 `HOME.RECOG.0–3`。HOME.ONBOARD.9 仍可按需；HOME.PROJ.7 / HOME.PROJ.4 均后移，见 [home.md](./home.md)。
+**当前后续（2026-07-17 晚）：** 本分卷已发货；RECOG.0–3 主航道已验，残余见 `HOME.RECOG.1r` / MCP.13。HOME.ONBOARD.9 按需；HOME.PROJ.7 / HOME.PROJ.4 后移，见 [home.md](./home.md)。
 
 ---
 

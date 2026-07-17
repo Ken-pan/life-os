@@ -1,7 +1,7 @@
 ---
 title: Life OS 体系架构总览
 owner: kenpan
-last_verified: 2026-07-17
+last_verified: 2026-07-17-compound-docs
 doc_role: architecture-snapshot
 ---
 
@@ -23,7 +23,7 @@ Life OS 是个人生活平台：仓库注册表共有**九个产品 app**——*
 | **fitness** | 训练计划与记录 | 动作示范生成管线（Qwen-Edit 姿势迁移 + 公有领域参考图）；替换动作 UI 已发货 |
 | **finance** | 记账/消费决策 | 浏览器扩展抓单（Robinhood/RocketMoney）+ 购买标注闭环 + 支出审核决策引擎（乐观版本+幂等+Undo） |
 | **music** | 播放与同步 | Capacitor iOS 壳接入 |
-| **home** | 户型/家具实验站 | 可编辑项目仍以 `localStorage` 为真源；RoomPlan 扫描/私有照片/追加事件及 object recognition schema 已在远程生产（57 embeddings；相关代码待版本史闭环）；布局/整理智能、跨扫描身份与权威副本工作流已落地 |
+| **home** | 户型/家具实验站 | 可编辑项目仍以 `localStorage` 为真源；扫描/照片/事件 + object recognition 生产且 git 闭环；安静扫描/matcher/证据 UI 已验；布局/整理智能已落地 |
 | **knowledge** | 长期记忆层，Mac 原生壳（Tauri v2），取代 Obsidian | Vault `.md` 即数据库；语义 RAG、项目现状感知、Planner 只读快照与 Planner 项目详情反向检索 Knowledge 已落地；Vault 正文未上云 |
 | **health** | Status（Health + Focus），Mac 原生壳 + companion | HLT-0–4：Focus agent、六维纯信号状态引擎、自适应专注、健康趋势；iOS/watchOS companion 源码已交付并验证模拟器工程，真机签名/持续交付仍是 gate |
 | **design-catalog** | 设计系统展示台 | 组件/主题/图标/状态矩阵展示 |
@@ -63,13 +63,15 @@ Life OS 是个人生活平台：仓库注册表共有**九个产品 app**——*
 
 - **PaperOS** 设备 Shell 已迁出独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库仅保留 Planner 侧 `/api/paper/*` provider API 状态追踪。
 - **local-ai gateway**：llama-swap 托管 `web-state-bridge` 按需拉起，网关是 nohup 进程，CORS 由上游服务自行处理（不属于 monorepo Netlify 部署范畴，独立于本图）。
-- **Home 数据双层**：云端已确认扫描事实与照片；追加事件已有 migration/同步代码但远程状态需单独复核；当前可编辑 spatial 项目仍是本地真源。不要写成“完全无云”，也不要反向宣称“全量项目云同步完成”。
+- **Home 数据双层**：云端已确认扫描事实、照片、追加事件与 object recognition；当前可编辑 spatial 项目仍是本地真源。不要写成“完全无云”，也不要反向宣称“全量项目云同步完成”。
 - **Health 隐私边界**：HealthKit 只在 iOS/watchOS；Mac 通过 companion 或 XML 导入接收，原始健康数据留在本机。
 - **共享 worktree 并发风险**：多会话共享同一工作树时，并发 `git stash/reset`、`git add -A` 可能互相冲刷改动，需要外科式提交手法（见记忆 `shared-worktree-concurrent-sessions`）。
+- **复利取舍**：底座（SSO / events / contracts / AppManifest / CI）已过临界点；优先跨 OS 消费与日用真源，而非新 app — [`../roadmap/COMPOUND.md`](../roadmap/COMPOUND.md)。
 
 ## 6. 延伸阅读
 
 - **北极星愿景（终极形态 + 和现在的距离）：** [`architecture/NORTH_STAR.md`](./NORTH_STAR.md)
+- **复利判据：** [`../roadmap/COMPOUND.md`](../roadmap/COMPOUND.md)
 - 状态与优先级：[`docs/LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)
 - 契约白名单细节：[`docs/architecture/contracts.md`](./contracts.md)
 - 响应式壳层契约（六端）：[`docs/architecture/responsive-chrome.md`](./responsive-chrome.md)

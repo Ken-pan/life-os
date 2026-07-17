@@ -108,7 +108,7 @@ Hub §Next 已排期。细节与外部对标 → [`GROWTH.md`](./GROWTH.md)。
 | PORT.GROWTH.4    | 今日摘要卡片                      | ✅  | —      | migration `20260708190000` |
 | INTG.EVENTS.1b | Fitness → Planner 事件            | ○   | 3–5d   | 产品规则                   |
 
-Tier B 历史项中，**HOME.SYNC.4** 的扫描/照片/追加事件已在生产；仍未完成的是 **HOME.PROJ.4 完整可编辑 spatial 项目同步**。object recognition 生产↔git 漂移另由 **HOME.RECOG.0** 紧急闭环。其余排序以 hub 为准。
+Tier B 历史项中，**HOME.SYNC.4** 与 **HOME.RECOG.0** 已闭环；仍未完成的是 **HOME.PROJ.4 完整可编辑 spatial 项目同步**（后移）。排序以 hub + [`COMPOUND.md`](./COMPOUND.md) 为准。
 
 ---
 
@@ -136,7 +136,7 @@ Hub §Now/Next 已收录 P0/P1 与高 ROI 项。完整排序 → [`POTENTIAL.md`
 | Finance | FINC.PURCHASE.6.a closure QA | [`apps/finance.md`](./apps/finance.md) |
 | Music   | paused；MUSC.PIPE.4 问题触发 | [`apps/music.md`](./apps/music.md) |
 | Portal  | maintenance；无新增卡片目标 | [`apps/portal.md`](./apps/portal.md) |
-| Home    | HOME.RECOG.0–3；HOME.MCP.13 | [`apps/home.md`](./apps/home.md) |
+| Home    | HOME.RECOG.1r；HOME.MCP.13 | [`apps/home.md`](./apps/home.md) |
 | AIOS    | AIOS.STABLE.26 | [`apps/aios.md`](./apps/aios.md) |
-| KnowledgeOS | KNOW.EDITOR.7 → KNOW.VAULT.0 | [`apps/knowledge.md`](./apps/knowledge.md) |
-| HealthOS | HLT-5 checkpoint + 用户真机 gate | [`apps/health.md`](./apps/health.md) |
+| KnowledgeOS | KNOW.VAULT.0 → XREF/object_ref | [`apps/knowledge.md`](./apps/knowledge.md) |
+| HealthOS | HLT-5 用户真机 gate | [`apps/health.md`](./apps/health.md) |

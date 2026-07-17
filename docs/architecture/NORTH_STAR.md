@@ -1,7 +1,7 @@
 ---
 title: Life OS 北极星愿景
 owner: kenpan
-last_verified: 2026-07-17
+last_verified: 2026-07-17-compound-docs
 doc_role: vision / north-star
 review_cadence: quarterly
 ---
@@ -61,9 +61,9 @@ Life OS 最理想的样子，不是十几个各管各的 App，而是**一套围
 
 诚实地讲：**管子已经通了，只是各 app 还各过各的。**
 
-**好消息（已在生产跑）：** 五个生产站（Planner / Fitness / Finance / Music / Portal）已经共享同一个账号（跨子域 SSO）、一条事件总线（`life_events`）、一份只读的今日快照（`core_*`）。它们不是孤岛。AIOS 也已经能读跨 app 快照、经事件往 Planner 写待办；Home 的扫描事实/照片/追加事件已有生产云链路，object recognition schema 也已生产（代码仍待版本史闭环）；Planner 项目能反向检索 KnowledgeOS 的本地 Vault。
+**好消息（已在生产跑）：** 五个生产站（Planner / Fitness / Finance / Music / Portal）已经共享同一个账号（跨子域 SSO）、一条事件总线（`life_events`）、一份只读的今日快照（`core_*`）。它们不是孤岛。AIOS 能读跨 app 快照、经事件往 Planner 写待办；Home 扫描/照片/事件与 object recognition 已生产且 git 闭环，认亲主航道（安静扫描 / matcher / 证据 UI）已验；Planner 项目能反向检索 KnowledgeOS 本地 Vault。
 
-**真正的距离（更深一层）：** 今天的连接是**联邦制**——每个 app 守着自己的数据，靠事件互相「打个招呼」（「我练完了」「账单到期了」）。愿景要的是**联合制**——同一件事只存一次，十个 OS 从不同角度看同一个对象。
+**真正的距离（更深一层）：** 今天的连接是**联邦制**——每个 app 守着自己的数据，靠事件互相「打个招呼」。愿景要的是**联合制**——同一件事只存一次，十个 OS 从不同角度看同一个对象。
 
 | 底座能力 | 现状 | 差距 |
 |---|---|---|
@@ -72,7 +72,9 @@ Life OS 最理想的样子，不是十几个各管各的 App，而是**一套围
 | 事件总线（`life_events`） | 🟡 通了 | 事件种类少、消费端少 |
 | 本地优先 | 🟡 AIOS / KnowledgeOS / HealthOS 已是 | 尚未成为全系统默认 |
 | 全局搜索 | 🔴 各搜各的 | 未跨库 |
-| **统一对象图谱 + 通用时间线** | 🔴 几乎白纸 | **愿景的关键前沿** |
+| **统一对象图谱 + 通用时间线** | 🔴 几乎白纸（仅有 Knowledge↔Planner 引用试点） | **愿景的关键前沿** |
+
+取舍透镜（什么算复利、什么是假复利）→ [`../roadmap/COMPOUND.md`](../roadmap/COMPOUND.md)。
 
 **各 app 今天真实的成色：**
 
@@ -87,13 +89,13 @@ Life OS 最理想的样子，不是十几个各管各的 App，而是**一套围
 
 需要正面回答的架构决定：今天的「严格边界」（app 间不互引、各守各的表）当初是刻意选的、也确实防住了很多耦合坑。要不要为「统一对象」松动它、以什么方式松动（例如引入一层对象/时间线服务，而非合并业务表），是这份愿景能否落地的关键岔路。
 
-候选方向（未排期，进 hub §Next 前先评 ROI）：
+候选方向（进 hub 前先过 [`COMPOUND.md`](../roadmap/COMPOUND.md) + [`POTENTIAL.md`](../roadmap/POTENTIAL.md)）：
 
-- 在 `contracts` / `core_*` 之上定义一层**对象引用**（`object_ref`：类型 + id + 来源 OS），让笔记、任务、交易能指向同一个实体。
-- 扩 `life_events` 消费端，把「打招呼」升级成可回溯的**通用时间线**。
-- 把 KnowledgeOS 的 `KNOW.XREF.5`（跨 OS 引用）当作对象图谱的第一个真实试点。
-- 把 AIOS 从「一个很强的 app」推向「系统的推理内核」——先解决它还没进 Portal 的问题。
-- 为 HealthOS 定义最小状态契约：跨 OS 只暴露解释后的 capacity/readiness，不暴露原始健康明细。
+- 在 `contracts` / `core_*` 之上定义 **`object_ref`**（类型 + id + 来源 OS）——hub §Next 已挂 `KNOW.XREF.5` 加深试点。
+- 扩 `life_events` **有场景的**消费端，把「打招呼」升级成可回溯时间线（无消费者则不做 INTG.EVENTS.2）。
+- 把 AIOS 推向**推理内核**：先 `AIOS.STABLE.26` 护栏，再扩 MCP 工具（如 `HOME.MCP.13`）；Portal 接入按日用价值另评。
+- HealthOS 最小状态契约：只暴露 capacity/readiness，不上传原始健康明细（等 HLT-5）。
+- **不做：** 再造第 11 个 app；无第二项目时的 Home 多项目云同步；Vault 原文上云抢在 watcher 之前。
 
 ## 产品原则（防止方向漂移）
 

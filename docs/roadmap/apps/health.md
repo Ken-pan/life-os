@@ -17,7 +17,7 @@ Life OS 的状态调节中枢：把专注负荷、睡眠、HRV、静息心率与
 | **HLT-2** | State Engine v0 | ✅ 六维状态（energy/focus/recovery/stress/sleepDebt/physical）与可解释 reasons |
 | **HLT-3** | 自适应专注 | ✅ 纯信号驱动状态引擎；按当天状态把 5–60 分钟窗口策略推回 Focus agent |
 | **HLT-4** | 健康趋势 | ✅ 睡眠 / HRV / 静息心率 / 步数跨日趋势 + 个人基线 |
-| **HLT-5** | HealthKit companion 交付 | 🟡 iOS + watchOS 源码、iCloud Drive / LAN 两条链路与模拟器工程已有；Xcode 工程/配置仍有未提交部分，需先 checkpoint，再做真机签名与持续同步用户 gate |
+| **HLT-5** | HealthKit companion 交付 | 🟡 源码与 Xcode 工程已入仓（`5a2b7773`）；剩真机签名 + HealthKit/iCloud/LAN 连续交付用户 gate |
 | — | Apple Health 导入 | ✅ macOS agent 流式解析 `export.xml`，作为 companion 未部署时的离线回退 |
 
 ## 数据边界
@@ -38,7 +38,7 @@ Focus agent + health.jsonl ──► HealthOS State Engine ──► Now / Focus
 
 | 项 | 状态 |
 | --- | --- |
-| companion 源码/Xcode 工程进入版本史 | **P1 交付完整性，<0.5d**；在用户 gate 前完成 |
+| companion 源码/Xcode 工程进入版本史 | ✅ `5a2b7773` |
 | companion 真机签名、HealthKit 授权、iCloud/LAN 持续交付 | ⏳ 用户设备 gate；不阻塞其他 app Agent 工作 |
 | Calendar / Screen Time 等连接器 | 待研判；受 TCC / Full Disk Access 约束 |
 | Portal / `core_*` / `life_events` 接入 | 待明确消费者与最小隐私契约后再排期 |

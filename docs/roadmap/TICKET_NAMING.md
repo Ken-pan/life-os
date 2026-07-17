@@ -209,10 +209,11 @@ PAPR.DATA.verify ✅
 | **HOME.ONBOARD.9**       | `H-P9`        | —   |
 | **HOME.SMOKE.10**        | `H-P10`       | —   |
 | **HOME.STORAGE.11**      | `H-P11`       | —   |
-| **HOME.RECOG.0**         | —             | 生产 schema / git 真源闭环 |
-| **HOME.RECOG.1**         | —             | Quick Scan 安静模式 + 质量摘要 |
-| **HOME.RECOG.2**         | —             | embedding matcher + 全局一对一 |
-| **HOME.RECOG.3**         | —             | 证据式确认 UI |
+| **HOME.RECOG.0**         | —             | 生产 schema / git 真源闭环（✅ 2026-07-17） |
+| **HOME.RECOG.1**         | —             | Quick Scan 安静模式 + 质量摘要（主航道✅） |
+| **HOME.RECOG.1r**        | —             | 认亲残余：高精度补扫 + 自动精修 |
+| **HOME.RECOG.2**         | —             | embedding matcher + 全局一对一（✅） |
+| **HOME.RECOG.3**         | —             | 证据式确认 UI（✅） |
 | **HOME.MCP.13**          | —             | `where_is` MCP → AIOS |
 | **HOME.SPATIAL.0**…**5** | `H-W0`…`H-W5` |
 | **INTG.EVENTS.1b**       | `I-P1.5b`     |
