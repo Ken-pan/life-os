@@ -35,7 +35,7 @@ open HealthOSCompanion.xcodeproj
 ```
 
 > Info.plist / *.entitlements 由 `project.yml` 的 properties **生成**(唯一源)——别手改生成物,
-> 改 `project.yml` 再 `xcodegen`。生成的 .xcodeproj / plist / entitlements 都在 `.gitignore` 里。
+> 改 `project.yml` 再 `xcodegen`。`.xcodeproj` 在 `.gitignore`;plist/entitlements 内容确定,提交进仓库便于 review。
 
 在 Xcode 里:
 1. 选中两个 target → Signing & Capabilities → 选你的 **Team**(自动签名)。
