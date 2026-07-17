@@ -28,14 +28,14 @@
   --sidebar-primary: var(--accent);
   --sidebar-primary-foreground: var(--on-accent);
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --chart-series-1: var(--chart-hue-blue);
-  --chart-series-2: var(--chart-hue-aqua);
-  --chart-series-3: var(--chart-hue-yellow);
-  --chart-series-4: var(--chart-hue-green);
-  --chart-series-5: var(--chart-hue-red);
-  --chart-series-6: var(--chart-hue-magenta);
-  --chart-series-7: var(--chart-hue-orange);
-  --chart-series-8: var(--chart-hue-violet);
+  --chart-series-1: #6d7ed7;
+  --chart-series-2: #3ba13f;
+  --chart-series-3: #0594c7;
+  --chart-series-4: #049d9c;
+  --chart-series-5: #d45f05;
+  --chart-series-6: #b96385;
+  --chart-series-7: #997f00;
+  --chart-series-8: #ad62cf;
   color-scheme: dark;
 }
 
@@ -75,13 +75,13 @@
   --seg-active-bg: var(--accent-bg);
   --seg-active-fg: var(--accent);
   --seg-active-border-token: var(--accent);
-  --chart-series-1: var(--chart-hue-blue);
-  --chart-series-2: var(--chart-hue-aqua);
-  --chart-series-3: var(--chart-hue-yellow);
-  --chart-series-4: var(--chart-hue-green);
-  --chart-series-5: var(--chart-hue-red);
-  --chart-series-6: var(--chart-hue-magenta);
-  --chart-series-7: var(--chart-hue-orange);
-  --chart-series-8: var(--chart-hue-violet);
+  --chart-series-1: #5465df;
+  --chart-series-2: #537802;
+  --chart-series-3: #029283;
+  --chart-series-4: #7d4fa9;
+  --chart-series-5: #aa597c;
+  --chart-series-6: #9a7802;
+  --chart-series-7: #0682a0;
+  --chart-series-8: #a64d2b;
   color-scheme: light;
 }

@@ -34,6 +34,14 @@
   --seg-active-fg: #0d0d0d;
   --sb-thumb: rgba(0, 0, 0, 0.18);
   --sb-thumb-hover: rgba(0, 0, 0, 0.32);
+  --chart-series-1: #3475c4;
+  --chart-series-2: #688327;
+  --chart-series-3: #008f7b;
+  --chart-series-4: #8a58a3;
+  --chart-series-5: #b6544e;
+  --chart-series-6: #0590b2;
+  --chart-series-7: #aa4986;
+  --chart-series-8: #916900;
   color-scheme: light;
 }
 
@@ -68,6 +76,13 @@
   --seg-active-fg: #ececec;
   --sb-thumb: rgba(255, 255, 255, 0.16);
   --sb-thumb-hover: rgba(255, 255, 255, 0.3);
-  --chart-series-4: #1ab01a;
+  --chart-series-1: #4687d8;
+  --chart-series-2: #058f9a;
+  --chart-series-3: #6b9341;
+  --chart-series-4: #069871;
+  --chart-series-5: #d3565d;
+  --chart-series-6: #bf648a;
+  --chart-series-7: #b66a00;
+  --chart-series-8: #935ecd;
   color-scheme: dark;
 }

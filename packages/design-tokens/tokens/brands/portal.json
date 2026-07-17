@@ -36,14 +36,14 @@
         },
         "sidebar-border": { "$type": "color", "$value": "#d4e4f0" },
         "appbar-bg": { "$type": "color", "$value": "rgba(243, 246, 248, 0.9)" },
-        "chart-series-1": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
-        "chart-series-2": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" },
-        "chart-series-3": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
-        "chart-series-4": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
-        "chart-series-5": { "$type": "cssValue", "$value": "var(--chart-hue-red)" },
-        "chart-series-6": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
-        "chart-series-7": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" },
-        "chart-series-8": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" }
+        "chart-series-1": { "$type": "color", "$value": "#0a7db3" },
+        "chart-series-2": { "$type": "color", "$value": "#029c91" },
+        "chart-series-3": { "$type": "color", "$value": "#c0631e" },
+        "chart-series-4": { "$type": "color", "$value": "#c6536b" },
+        "chart-series-5": { "$type": "color", "$value": "#8672d9" },
+        "chart-series-6": { "$type": "color", "$value": "#3f8f4d" },
+        "chart-series-7": { "$type": "color", "$value": "#908b00" },
+        "chart-series-8": { "$type": "color", "$value": "#b35596" }
       }
     },
     "dark": {
@@ -83,14 +83,14 @@
           "$value": "rgba(126, 203, 245, 0.12)"
         },
         "appbar-bg": { "$type": "color", "$value": "rgba(20, 22, 26, 0.9)" },
-        "chart-series-1": { "$type": "cssValue", "$value": "var(--chart-hue-aqua)" },
-        "chart-series-2": { "$type": "cssValue", "$value": "var(--chart-hue-yellow)" },
-        "chart-series-3": { "$type": "cssValue", "$value": "var(--chart-hue-green)" },
-        "chart-series-4": { "$type": "cssValue", "$value": "var(--chart-hue-violet)" },
-        "chart-series-5": { "$type": "cssValue", "$value": "var(--chart-hue-red)" },
-        "chart-series-6": { "$type": "cssValue", "$value": "var(--chart-hue-magenta)" },
-        "chart-series-7": { "$type": "cssValue", "$value": "var(--chart-hue-orange)" },
-        "chart-series-8": { "$type": "cssValue", "$value": "var(--chart-hue-blue)" }
+        "chart-series-1": { "$type": "color", "$value": "#3090c0" },
+        "chart-series-2": { "$type": "color", "$value": "#d9527a" },
+        "chart-series-3": { "$type": "color", "$value": "#ad67b9" },
+        "chart-series-4": { "$type": "color", "$value": "#5da055" },
+        "chart-series-5": { "$type": "color", "$value": "#bf7b25" },
+        "chart-series-6": { "$type": "color", "$value": "#7c82d2" },
+        "chart-series-7": { "$type": "color", "$value": "#0099a3" },
+        "chart-series-8": { "$type": "color", "$value": "#98930e" }
       }
     }
   }

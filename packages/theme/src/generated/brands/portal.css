@@ -30,14 +30,14 @@
   --sidebar-primary-foreground: var(--on-accent);
   --sidebar-border: #d4e4f0;
   --appbar-bg: rgba(243, 246, 248, 0.9);
-  --chart-series-1: var(--chart-hue-aqua);
-  --chart-series-2: var(--chart-hue-yellow);
-  --chart-series-3: var(--chart-hue-green);
-  --chart-series-4: var(--chart-hue-violet);
-  --chart-series-5: var(--chart-hue-red);
-  --chart-series-6: var(--chart-hue-magenta);
-  --chart-series-7: var(--chart-hue-orange);
-  --chart-series-8: var(--chart-hue-blue);
+  --chart-series-1: #0a7db3;
+  --chart-series-2: #029c91;
+  --chart-series-3: #c0631e;
+  --chart-series-4: #c6536b;
+  --chart-series-5: #8672d9;
+  --chart-series-6: #3f8f4d;
+  --chart-series-7: #908b00;
+  --chart-series-8: #b35596;
   color-scheme: light;
 }
 
@@ -68,13 +68,13 @@
   --sidebar-primary-foreground: var(--on-accent);
   --sidebar-border: rgba(126, 203, 245, 0.12);
   --appbar-bg: rgba(20, 22, 26, 0.9);
-  --chart-series-1: var(--chart-hue-aqua);
-  --chart-series-2: var(--chart-hue-yellow);
-  --chart-series-3: var(--chart-hue-green);
-  --chart-series-4: var(--chart-hue-violet);
-  --chart-series-5: var(--chart-hue-red);
-  --chart-series-6: var(--chart-hue-magenta);
-  --chart-series-7: var(--chart-hue-orange);
-  --chart-series-8: var(--chart-hue-blue);
+  --chart-series-1: #3090c0;
+  --chart-series-2: #d9527a;
+  --chart-series-3: #ad67b9;
+  --chart-series-4: #5da055;
+  --chart-series-5: #bf7b25;
+  --chart-series-6: #7c82d2;
+  --chart-series-7: #0099a3;
+  --chart-series-8: #98930e;
   color-scheme: dark;
 }

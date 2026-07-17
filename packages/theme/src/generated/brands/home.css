@@ -39,6 +39,14 @@
   --seg-active-bg: var(--accent-bg);
   --seg-active-fg: var(--accent);
   --seg-active-border-token: var(--accent);
+  --chart-series-1: #3679b1;
+  --chart-series-2: #06919a;
+  --chart-series-3: #b04c48;
+  --chart-series-4: #b66302;
+  --chart-series-5: #23936c;
+  --chart-series-6: #ab659d;
+  --chart-series-7: #848003;
+  --chart-series-8: #8d68ce;
   color-scheme: light;
 }
 
@@ -67,5 +75,13 @@
   --sidebar-primary: var(--accent);
   --sidebar-primary-foreground: var(--on-accent);
   --sidebar-border: rgba(255, 255, 255, 0.08);
+  --chart-series-1: #4a8bc5;
+  --chart-series-2: #01a16a;
+  --chart-series-3: #c76e00;
+  --chart-series-4: #c15aaa;
+  --chart-series-5: #8d73cd;
+  --chart-series-6: #0095a2;
+  --chart-series-7: #c96a76;
+  --chart-series-8: #8a9317;
   color-scheme: dark;
 }
