@@ -22,6 +22,7 @@
 | `H-P*`           | Home    | Integration `H-P1–H-P5` 见 INTEGRATION                                                     |
 | `H-W*`           | Home    | 空间编辑主线（墙图三步编辑器）≠ `H-P*`；[home-spatial-editor.md](./home-spatial-editor.md) |
 | `AIOS.*`         | AIOS    | 本地优先 AI 助手（原生 Mac app）；[aios.md](./aios.md)                                     |
+| `KNOW.*`         | KnowledgeOS | 长期记忆层（原生 Mac app，取代 Obsidian）；[knowledge.md](./knowledge.md)               |
 
 | APP3     | App                    | Workspace             | Legacy v1（勿在新 ticket 使用）               |
 | -------- | ---------------------- | --------------------- | --------------------------------------------- |
@@ -33,6 +34,7 @@
 | **PORT** | Portal / Growth        | `portal`              | `G-*`                                         |
 | **HOME** | Home                   | `home-os`             | `H-P*` · `H-W*` → `HOME.SPATIAL.*`            |
 | **AIOS** | AIOS 本地 AI 助手      | `aios-os`             | —（2026-07-13 新建，无 legacy）               |
+| **KNOW** | KnowledgeOS 长期记忆层 | `knowledge-os`        | —（2026-07-16 新建，无 legacy）               |
 | **INTG** | Integration            | —                     | `I-*`                                         |
 
 **E2E 问题码：** Fitness 端口冲突 **`QA-GYMS-0`**（legacy `F-0` · ~~`QA-FITN-0`~~；≠ Finance `FINC.*`）。
@@ -70,6 +72,7 @@
 | Portal  | 启动器 | 维护 · UI 走查 P-1–P-12 ✅（走查序号，非 hub ticket） | [portal.md](./portal.md)                                                  |
 | Home    | 实验   | **HOME.PROJ.7** 多项目切换 · HOME.SPATIAL.0–5 ✅    | [home.md](./home.md)                                                      |
 | AIOS    | 实验/本地优先 | 高速迭代中（AIOS.1–25）· Portal 接入待研判       | [aios.md](./aios.md)                                                      |
+| KnowledgeOS | 实验/本地优先 | **KNOW.VAULT.0** Vault 路径可配置 + 文件监听 · KNOW.SYNC.1 云同步 | [knowledge.md](./knowledge.md)                                            |
 | PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |
 
 ## 跨站集成矩阵（只读 / 事件）
