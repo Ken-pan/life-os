@@ -10,10 +10,12 @@
 
 | 主线 | 发货项 / 里程碑 | 证据 |
 | --- | --- | --- |
-| Platform | **HOME.RECOG.0 / KNOW.EDITOR.7 / Health companion / appRegistry+样式基线** 版本史闭环（交付完整性 ship） | `5a2b7773` |
-| Home | **RECOG.1–3 主航道：** 安静扫描真机验证 · DINOv2 matcher（Hungarian）· 证据式确认 UI；快速/高精度双模式开关 | `3f02bd67` · `072b0a33` · [`apps/home/docs/object-recognition-roadmap.md`](../../apps/home/docs/object-recognition-roadmap.md) |
+| Home | **/plan 认亲横幅 + Mac auto-refine：** `RecognitionBanner`（≤5 难例）· `refine.sh` embed+match 幂等管线 · launchd plist（15 分钟；用户手动激活）· 端到端 286 观察/218 认回 | `4675dd06` · [`apps/home/scripts/vision/README.md`](../../apps/home/scripts/vision/README.md) |
+| Knowledge | 编辑器 **GFM 表格块** + 行内高亮 `==text==`；unit 180 + 表格交互 QA 9/9 | `bbfd7fb2` |
+| Docs | 复利判据 `COMPOUND.md` · 决策复利 `USAGE_AUDIT.md` / `PLAT.USAGE.0`；hub 与代码事实对齐 | `745783f1` · `821ed95f` |
+| Platform | **HOME.RECOG.0 / KNOW.EDITOR.7 / Health companion / appRegistry+样式基线** 版本史闭环 | `5a2b7773` |
+| Home | **RECOG.1–3 主航道：** 安静扫描真机 · DINOv2 matcher（Hungarian）· 证据式确认 UI；快速/高精度双模式开关 | `3f02bd67` · `072b0a33` · [`apps/home/docs/object-recognition-roadmap.md`](../../apps/home/docs/object-recognition-roadmap.md) |
 | Knowledge | 块编辑器 + library 工作台 freeze / QA 批 | `c940103a` · `6c147c62` |
-| Docs | 复利判据 `COMPOUND.md`；hub / POTENTIAL / 分卷与代码事实对齐 | 本提交 |
 | Charts | categorical 色板由各 app 品牌 accent 经 OKLCH 演算；面积图、tooltip、悬浮反馈与树状图层次打磨；树状图按块亮度自动选深/浅墨色 | `9bb72a414` · `fbd690611` · `37b24de6b` · `3feff760d` |
 | DS/Catalog | App 选择器与矩阵补齐到九个产品品牌（含 HealthOS / KnowledgeOS） | `2f05e3fa1` |
 

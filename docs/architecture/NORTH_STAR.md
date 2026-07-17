@@ -61,7 +61,7 @@ Life OS 最理想的样子，不是十几个各管各的 App，而是**一套围
 
 诚实地讲：**管子已经通了，只是各 app 还各过各的。**
 
-**好消息（已在生产跑）：** 五个生产站（Planner / Fitness / Finance / Music / Portal）已经共享同一个账号（跨子域 SSO）、一条事件总线（`life_events`）、一份只读的今日快照（`core_*`）。它们不是孤岛。AIOS 能读跨 app 快照、经事件往 Planner 写待办；Home 扫描/照片/事件与 object recognition 已生产且 git 闭环，认亲主航道（安静扫描 / matcher / 证据 UI）已验；Planner 项目能反向检索 KnowledgeOS 本地 Vault。
+**好消息（已在生产跑）：** 五个生产站（Planner / Fitness / Finance / Music / Portal）已经共享同一个账号（跨子域 SSO）、一条事件总线（`life_events`）、一份只读的今日快照（`core_*`）。它们不是孤岛。AIOS 能读跨 app 快照、经事件往 Planner 写待办；Home 扫描/照片/事件与认亲（安静扫描 / matcher / 证据 UI / /plan 横幅 / Mac auto-refine）已生产且 git 闭环；Planner 项目能反向检索 KnowledgeOS 本地 Vault（编辑器已含表格与高亮）。
 
 **真正的距离（更深一层）：** 今天的连接是**联邦制**——每个 app 守着自己的数据，靠事件互相「打个招呼」。愿景要的是**联合制**——同一件事只存一次，十个 OS 从不同角度看同一个对象。
 

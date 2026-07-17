@@ -5,7 +5,7 @@
 > **跨站主线：** [`../INTEGRATION.md`](../INTEGRATION.md) · [`../GROWTH.md`](../GROWTH.md)
 > **E2E 证据：** [`../../qa/e2e-issues.md`](../../qa/e2e-issues.md)
 
-**脑暴日期：** 2026-07-09 · **复核：** 2026-07-17 晚（复利框架 + 代码事实对齐）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md) · **复利：** [`../COMPOUND.md`](../COMPOUND.md)
+**脑暴日期：** 2026-07-09 · **复核：** 2026-07-17 夜（auto-refine + 表格块 + 复利/USAGE）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md) · **复利：** [`../COMPOUND.md`](../COMPOUND.md)
 
 执行顺序以 **hub §推荐执行顺序** 为准；下文不重复 Wave 全文。
 
@@ -76,9 +76,9 @@
 | Finance | 生产   | **FINC.PURCHASE.6.a closure QA** | [finance.md](./finance.md) |
 | Music   | 生产   | paused / maintenance；MUSC.PIPE.4 仅问题触发 | [music.md](./music.md) |
 | Portal  | 启动器 | maintenance；不为凑九 app 扩卡 | [portal.md](./portal.md) |
-| Home    | 实验   | **HOME.RECOG.1r** 残余 → **HOME.MCP.13** | [home.md](./home.md) |
+| Home    | 实验   | 用户激活 refine · **MCP.13** 优先 · 1r 窄残余 | [home.md](./home.md) |
 | AIOS    | 实验/本地优先 | **AIOS.STABLE.26** 核心链路回归护栏 | [aios.md](./aios.md) |
-| KnowledgeOS | 实验/本地优先 | **KNOW.VAULT.0** watcher（EDITOR.7 已 checkpoint） | [knowledge.md](./knowledge.md) |
+| KnowledgeOS | 实验/本地优先 | **KNOW.VAULT.0** watcher（编辑器含表格/高亮） | [knowledge.md](./knowledge.md) |
 | HealthOS | 实验/本地优先 | **HLT-5** 用户真机 gate；其余后移 | [health.md](./health.md) |
 | PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |
 

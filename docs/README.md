@@ -2,19 +2,19 @@
 
 > **导航 hub** — 按「时间层 + 职责」组织。状态与优先级只看 [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md)。
 
-**最后核对：** 2026-07-17 晚 · 复利框架入库 + Now/Next 与代码事实对齐 · [`MAINTENANCE.md`](./MAINTENANCE.md)
+**最后核对：** 2026-07-17 夜 · auto-refine + 表格块入仓后重排 Now · [`MAINTENANCE.md`](./MAINTENANCE.md)
 
 ## 当前优先级（摘要）
 
-**模型：** CI 可信 → 信任收割 → 每日真源 → 防回归 → 跨 OS 快赢 — [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) §推荐执行顺序 · [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)
+**模型：** CI → 信任收割 → Vault watcher → 用量审计 → 防回归 → 跨 OS — [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) · [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)
 
 | 焦点 | 主题 | 文档 |
 | ---- | ---- | ---- |
-| Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** · **KNOW.VAULT.0** · **HOME.RECOG.1r** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
-| Next | **PLAT.USAGE.0** · AIOS.STABLE.26 · HOME.MCP.13 · PLNR · object_ref | [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md) · [`roadmap/apps/`](./roadmap/apps/README.md) |
-| User gate | PLNR.SCHED.10b.ios · PLNR.CAPTURE.0 · HLT-5 | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) |
+| Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** · **KNOW.VAULT.0** · **PLAT.USAGE.0** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
+| Next | HOME.RECOG.1r 窄残余 · AIOS.STABLE.26 · HOME.MCP.13 · PLNR · object_ref | [`roadmap/apps/`](./roadmap/apps/README.md) |
+| User gate | SCHED/CAPTURE · HLT-5 · **HOME.RECOG.refine**（launchd） | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) |
 
-**2026-07-17 已收割：** Home RECOG.0 真源闭环 · 安静扫描/matcher/证据 UI · Knowledge 块编辑器 checkpoint · Health companion 入仓 · 九品牌 Catalog — [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-17 已收割：** Home RECOG.0–3 · **/plan 横幅 + auto-refine** · Knowledge 编辑器/表格/高亮 · Health companion · 复利/USAGE 文档 — [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
 
 > **CI（PLAT.CI.0）：** 生成物/样式基线已入仓；远程仍可能因 design-catalog a11y（portal 对比度）等红。以 GitHub Actions 全绿为准。
 

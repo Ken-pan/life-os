@@ -1,8 +1,7 @@
 ---
 title: Life OS Roadmap
 owner: kenpan
-last_verified: 2026-07-17-compound-docs
-review_cadence: weekly
+last_verified: 2026-07-17-recog-refinereview_cadence: weekly
 doc_role: status-hub
 priority_model: 2026-07-12-single-branch
 ---
@@ -29,8 +28,8 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 **代码状态快照（2026-07-17 晚）：**
 
 - **HealthOS 第九 app：** HLT-0–4 已提交；companion Xcode 工程已入仓（`5a2b7773`）；真机签名 / HealthKit / iCloud / LAN 连续交付仍待用户 gate（HLT-5）。
-- **Home 云链路 + 认亲主航道已入仓：** 扫描 / 照片 / 事件 migration 在生产；`20260717120000` object recognition 生产注册且 git 真源已闭环（`HOME.RECOG.0` ✅）；embedding 服务、安静扫描、matcher、证据 UI 均已提交并有装机/写库验证。可编辑 spatial 项目仍以本地为真源。残余：高精度补扫区域引导、扫完自动精修管线。
-- **Knowledge 块编辑器已 checkpoint：** 编辑器 / library 重构已入版本史；unit + check 绿。下一刀日用复利是 **KNOW.VAULT.0** watcher。Vault 正文仍不上云。
+- **Home 云链路 + 认亲主航道已入仓：** 扫描 / 照片 / 事件 + object recognition 生产且 git 闭环；安静扫描、matcher、证据 UI、**/plan 横幅**、**Mac auto-refine 管线**（`4675dd06`）均已提交并验证。可编辑 spatial 项目仍本地真源。残余（`HOME.RECOG.1r`）：区域级高精度补扫、质量摘要观感签收、用户激活 launchd。
+- **Knowledge 块编辑器已 checkpoint 并扩面：** 编辑器 / library 入仓；另加 GFM 表格块 + 行内高亮（`bbfd7fb2`，unit 180）。下一刀日用复利是 **KNOW.VAULT.0** watcher。Vault 正文仍不上云。
 - **Knowledge↔Planner 跨 OS 引用试点仍在：** 双向语义检索；`object_ref` 稳定化未做。
 - **Design Catalog 九品牌：** 收集规模约 922 smoke / 147 a11y / 524 visual（以当次 CI 为准）。
 - **master CI（PLAT.CI.0 仍开）：** `appRegistry` + 样式基线已提交；`integration-smoke` 曾绿。近期仍见 `design-catalog` a11y 红（portal `btn-primary` 对比度）与偶发 job 失败——**不得只以本地 gate 代替远程全绿**。
@@ -48,9 +47,9 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | 1 | **PLAT.CI.0** | 恢复 master 交付可信度 | Platform | **P0** | 🔥 | <0.5–1d | 远程 CI 全绿（含 design-catalog a11y）；portal `btn-primary` 对比度等已修或基线有据；不得只以本地 gate 代替 |
 | 2 | **FINC.PURCHASE.6.a** | 支出审核最后一公里 | Finance | **P1** | 🔥 | 0.5–1d | owner 登录 Confirm→Undo、双 JWT RLS 拒绝证明、desktop/mobile 基线；随后从 Now 收割 |
 | 3 | **KNOW.VAULT.0** | 外部文件变更监听 | KnowledgeOS | **P1** | 🔥 | 0.5–1d | curator/Obsidian 写回无需重启即出现；先固定 Vault watcher，路径可配置后置 |
-| 4 | **HOME.RECOG.1r** | 认亲残余闭环 | Home | **P1** | 🔥 | 0.5–1d | 高精度补扫（指定 1–3 区域）+ 扫完自动 embed/match 精修；质量摘要用户观感签收 |
+| 4 | **PLAT.USAGE.0** | 用量与功能利用率审计 | Platform | **P1** | 🔥 | 0.5–1d | 盘点已有信号 → 首份利用率表 → 至少一项删减/冻结或抬升日用缺口；见 [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md) |
 
-**已收割（2026-07-17，勿再估为未提交）：** `HOME.RECOG.0` ✅ · `KNOW.EDITOR.7` checkpoint ✅ · Health companion 工程入仓 ✅ — 见 §Shipped / [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+**已收割（2026-07-17，勿再估为缺口）：** `HOME.RECOG.0` ✅ · RECOG.1–3 主航道 ✅ · **/plan 横幅 + auto-refine 管线** ✅（`4675dd06`）· `KNOW.EDITOR.7` + 表格/高亮 ✅ · Health companion 入仓 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
 **Agent 分线全文：** [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
 
@@ -61,6 +60,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | **PLNR.SCHED.10b.ios** | 真机 iPhone Home Screen standalone 签收 | 代码/E2E/PWA 已绿，待 Ken | 通过即关闭 PLNR.SCHED.0；失败只修复已复现问题 |
 | **PLNR.CAPTURE.0** | 真机 IME + 键盘 | 代码/unit/E2E/截图已绿，待 Ken | 与 SCHED 真机验收同批执行 |
 | **HLT-5** | companion 真机签名 + HealthKit/iCloud/LAN 连续交付 | 源码/Xcode 已入仓；待用户设备 | 通过后再研判状态摘要跨 OS 契约；不上传健康明细 |
+| **HOME.RECOG.refine** | Mac `launchctl` 激活 auto-refine LaunchAgent | 管线/plist 已入仓；安全审批须用户自装 | 激活后每 15 分钟 embed+match；难例进 /plan 横幅 |
 
 **PLNR.SCHED.0 进度：** Antigravity baseline ✅ · migrate ✅ · Planner build/check/unit ✅ · desktop + mobile E2E ✅ · `schedule-usability` 4/4 ✅。唯一剩余为 `PLNR.SCHED.10b.ios` 用户 gate，因此不再阻塞 Finance 或 Planner 的 agent 工作。
 
@@ -84,7 +84,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 顺序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 触发 / 最小范围 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **PLAT.USAGE.0** | 用量与功能利用率审计 | Platform | P1 | 🔥 | 0.5–1d | 盘点已有信号 → 首份利用率表 → 至少一项删减/冻结或抬升日用缺口；见 [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md) |
+| 1 | **HOME.RECOG.1r** | 认亲残余（窄） | Home | P2 | ◆ | 0.5–1d | 区域级高精度补扫（指定 1–3 区）；质量摘要观感签收；group-merge / 近 N 次扫描精修可选 |
 | 2 | **AIOS.STABLE.26** | 核心链路回归护栏 | AIOS | P1 | ◆◆ | 1d | 补 chat/tool loop、云 LWW/墓碑、AIOS.20/21 读写 smoke；停止只靠高速手测 |
 | 3 | **HOME.MCP.13** | `where_is` 接入 AIOS | Home | P2 | ◆◆ | 1–2d | 薄封装 `searchStorageItems()` + 现成 MCP；Home 第一条真实跨 OS 消费链 |
 | 4 | **PLNR.UIUX.0** | Planner 定向 UI 收口 | Planner | P2 | ◆ | 1d | 只扫未覆盖页面与现存 warning；不做无边界全站重做 |
@@ -105,23 +105,20 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 Phase 0 — 复利开关（串行）
   PLAT.CI.0 远程全绿
 
-Phase 1 — 信任收割 + 每日真源（1–2d）
-  FINC.PURCHASE.6.a closure → KNOW.VAULT.0 → HOME.RECOG.1r 残余
+Phase 1 — 信任收割 + 每日真源 + 决策复利（1–2d）
+  FINC.PURCHASE.6.a closure → KNOW.VAULT.0 → PLAT.USAGE.0
 
-Phase 2 — 决策复利（0.5–1d，可与 Phase 1 尾并行）
-  PLAT.USAGE.0 第一方用量 / 功能利用率审计
-
-Phase 3 — 防高速回归（1d）
+Phase 2 — 防高速回归（1d）
   AIOS.STABLE.26
 
-Phase 4 — 跨 OS 快赢（1–2d）
+Phase 3 — 跨 OS 快赢（1–2d）
   HOME.MCP.13 where_is → AIOS
 
-Phase 5 — 生产定向收口 / 对象引用（按需；受 USAGE 表约束）
-  PLNR.UIUX.0 → PLNR.ATTACH.0 决策 → KNOW.XREF.5 / object_ref
+Phase 4 — Home 认亲窄残余 / 生产定向收口（按需；受 USAGE 表约束）
+  HOME.RECOG.1r（区域高精度等）→ PLNR.UIUX.0 → PLNR.ATTACH.0 → KNOW.XREF.5
 
 并行用户 gate（不阻塞上述 Phase）
-  PLNR.SCHED.10b.ios + PLNR.CAPTURE.0 · HLT-5
+  PLNR.SCHED.10b.ios + PLNR.CAPTURE.0 · HLT-5 · HOME.RECOG.refine（launchd）
 ```
 
 历史 Wave / Phase 完成表不在 hub 展开 → [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
@@ -132,8 +129,8 @@ Phase 5 — 生产定向收口 / 对象引用（按需；受 USAGE 表约束）
 | 主线          | 摘要                                                                                 | 详情                                                                     |
 | ----------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | HealthOS    | **HLT-0–4** 第九 app：Focus agent · 六维 State Engine · 自适应专注 · 健康趋势 · Watch/iPhone companion 源码 | `[roadmap/SHIPPED.md](./roadmap/SHIPPED.md)` 2026-07-16 · `[apps/health.md](./roadmap/apps/health.md)` |
-| Knowledge   | Vault 原生 / RAG / 项目感知 / Planner 双向引用；**块编辑器 checkpoint 入仓** | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-16–17 |
-| Home        | RECOG.0 真源闭环 + 安静扫描/matcher/证据 UI；扫描/照片/事件生产链；项目仍本地真源 | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-17 |
+| Knowledge   | Vault/RAG/Planner 双向引用；块编辑器 + **GFM 表格 + 行内高亮** | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-16–17 |
+| Home        | RECOG.0–3 + /plan 横幅 + Mac auto-refine 管线；扫描/照片/事件生产链；项目仍本地真源 | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-17 |
 | Design      | 九品牌 categorical 色板与树状图可读性；Catalog 覆盖九品牌 | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-17 |
 | Design      | **07-15/07-16 DS 平台化**：品牌 7 站 · Overlay/Form/Nav/Status 骨架 · Toast 重做 · 像素基线扩容 · `qa:prod-a11y` | `[roadmap/SHIPPED.md](./roadmap/SHIPPED.md)` 2026-07-15 · 2026-07-16 |
 | AIOS        | **AIOS.20–25** 第七 app 接入 Life OS：读 `core_*` · 经 `life_events` 写 Planner · 早晨简报 · MCP 客户端 · 可编辑 Canvas · 自动记忆萃取 | `[roadmap/SHIPPED.md](./roadmap/SHIPPED.md)` 2026-07-14 · `[apps/aios.md](./roadmap/apps/aios.md)` |
@@ -226,7 +223,7 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → `[roadmap/BA
 | **INTG.EVENTS.1** Portal | ✅ 已上线；Growth PORT.GROWTH.1–PORT.GROWTH.5 已接              | `[roadmap/INTEGRATION.md](./roadmap/INTEGRATION.md#i-p1)`                      |
 | **INTG.EVENTS.1.5** 事件中心 | ✅ 管道通；**INTG.EVENTS.1b** Fitness 完练打卡 ✅（2026-07-09） | `[roadmap/INTEGRATION.md](./roadmap/INTEGRATION.md#i-p15)`                     |
 | **PORT.GROWTH.1–5** Growth | ✅ 生产验收完成（含 FINC.GROWTH.1/PORT.GROWTH.2）              | `[roadmap/GROWTH.md](./roadmap/GROWTH.md)`                                     |
-| **HOME.EXPER.0** Home 实验 | 🟡 已部署；扫描/照片/事件 + object recognition 生产且 git 闭环；RECOG.1–3 主航道已验；完整项目同步未完成 | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0) |
+| **HOME.EXPER.0** Home 实验 | 🟡 已部署；RECOG.0–3 + /plan 横幅 + auto-refine 管线已验；完整项目同步未完成；launchd 待用户激活 | [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0) |
 | **HOME.SPATIAL** 空间编辑 | ✅ **HOME.SPATIAL.0–5** · Wave A/B/C UX · `test:plan-edit` 13 checks | `[roadmap/apps/home-spatial-editor.md](./roadmap/apps/home-spatial-editor.md)` |
 | **HLT-0–4** HealthOS | ✅ 本地 app / Focus / State Engine / 自适应 / 趋势；companion 真机 gate 待用户 | `[roadmap/apps/health.md](./roadmap/apps/health.md)` |
 | **PLAT.CORE.2+** 平台扩容 | 🟡 Finance 部分接入；低优先                                     | `[roadmap/PLATFORM.md](./roadmap/PLATFORM.md)`                                 |
@@ -243,7 +240,7 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → `[roadmap/BA
 | Finance | 生产  | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅ | ✅ | **FINC.PURCHASE.6.a closure QA** |
 | Music   | 生产  | [music.kenos.space](https://music.kenos.space) | `music-os` | ✅ | ✅ | paused / maintenance |
 | Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space) | `portal` | ✅ | — | maintenance；不为凑 app 数扩卡 |
-| Home    | 实验  | [home.kenos.space](https://home.kenos.space) | `home-os` | ✅ | ✅ | **RECOG.1r 残余 → MCP.13** |
+| Home    | 实验  | [home.kenos.space](https://home.kenos.space) | `home-os` | ✅ | ✅ | 用户激活 refine · **1r 窄残余** → MCP.13 |
 | AIOS    | 实验/本地优先 | [aios-kenos.netlify.app](https://aios-kenos.netlify.app)（云端只读） | `aios-os` | ✅ | ❌ 待研判 | **AIOS.STABLE.26** 回归护栏 |
 | KnowledgeOS | 实验/本地优先 | [knowledgeos-ken.netlify.app](https://knowledgeos-ken.netlify.app)（云端 localStorage 模式） | `knowledge-os` | ✅ | ❌ 待研判 | **KNOW.VAULT.0** watcher |
 | HealthOS | 实验/本地优先 | 未部署（manifest `production: false`） | `health-os` | 本地 | ❌ | **HLT-5** 用户真机 gate |

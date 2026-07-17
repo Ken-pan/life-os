@@ -117,8 +117,9 @@ RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 | **HOME.SSO.3** | redirect + DB `app_id`  | ✅  | —    | migration + Supabase Management API |
 | **HOME.SYNC.4** | 扫描 / 照片 / 事件云链路 | ✅  | —    | scans/storage/events 均在生产远程确认 |
 | **HOME.RECOG.0** | 物体识别生产↔git 闭环 | ✅  | HOME.SYNC.4 | `20260717120000` + embed 服务入仓 |
-| **HOME.RECOG.1–3** | 安静扫描 → matcher → 证据确认 | ✅ 主航道 | HOME.RECOG.0 | 真机/写库/UI 已验；见 app 文档 |
-| **HOME.RECOG.1r** | 高精度补扫 + 自动精修残余 | 🔥 | RECOG.1–3 | hub §Now；区域引导 + 扫完自动 embed/match |
+| **HOME.RECOG.1–3** | 安静扫描 → matcher → 证据确认 + /plan 横幅 | ✅ 主航道 | HOME.RECOG.0 | `4675dd06` 横幅；见 app 文档 |
+| **HOME.RECOG.refine** | Mac auto-refine（embed+match 15min） | ✅ 代码 / ⏳ 用户 gate | RECOG.2 | `refine.sh` + launchd；用户自装 |
+| **HOME.RECOG.1r** | 认亲窄残余 | ◆ | RECOG.1–3 | hub §Next；区域高精度 + 摘要签收 |
 | **HOME.MCP.13** | `where_is` → AIOS | ◆◆ | STORAGE.19 | hub §Next |
 | **HOME.PROJ.4** | 完整 spatial 项目同步    | ⏸️  | HOME.SYNC.4 | 编辑真源跨设备、冲突与多项目身份；仍属大投入 |
 | **HOME.PROJ.5** | 平面双模式（浏览/编辑） | ✅  | —    | 已去掉工坊 gate；无墙图/测距入口    |

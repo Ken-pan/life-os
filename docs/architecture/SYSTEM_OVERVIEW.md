@@ -23,8 +23,8 @@ Life OS 是个人生活平台：仓库注册表共有**九个产品 app**——*
 | **fitness** | 训练计划与记录 | 动作示范生成管线（Qwen-Edit 姿势迁移 + 公有领域参考图）；替换动作 UI 已发货 |
 | **finance** | 记账/消费决策 | 浏览器扩展抓单（Robinhood/RocketMoney）+ 购买标注闭环 + 支出审核决策引擎（乐观版本+幂等+Undo） |
 | **music** | 播放与同步 | Capacitor iOS 壳接入 |
-| **home** | 户型/家具实验站 | 可编辑项目仍以 `localStorage` 为真源；扫描/照片/事件 + object recognition 生产且 git 闭环；安静扫描/matcher/证据 UI 已验；布局/整理智能已落地 |
-| **knowledge** | 长期记忆层，Mac 原生壳（Tauri v2），取代 Obsidian | Vault `.md` 即数据库；语义 RAG、项目现状感知、Planner 只读快照与 Planner 项目详情反向检索 Knowledge 已落地；Vault 正文未上云 |
+| **home** | 户型/家具实验站 | 可编辑项目仍本地真源；扫描/照片/事件 + 认亲生产闭环；安静扫描/matcher/证据 UI//plan 横幅/Mac auto-refine 已验 |
+| **knowledge** | 长期记忆层，Mac 原生壳（Tauri v2），取代 Obsidian | Vault `.md` 即数据库；块编辑器（含 GFM 表格/高亮）；语义 RAG、项目感知、Planner 双向检索；Vault 正文未上云 |
 | **health** | Status（Health + Focus），Mac 原生壳 + companion | HLT-0–4：Focus agent、六维纯信号状态引擎、自适应专注、健康趋势；iOS/watchOS companion 源码已交付并验证模拟器工程，真机签名/持续交付仍是 gate |
 | **design-catalog** | 设计系统展示台 | 组件/主题/图标/状态矩阵展示 |
 | **starter** | 新 app 脚手架 | 一键复制启动新站 |

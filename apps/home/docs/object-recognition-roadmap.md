@@ -70,7 +70,8 @@ Track B 上生产前**先把地基做牢**:migration 可安全应用+回滚;embe
 
 `ScanSessionController` HUD 组装(约 226 行)优先级本是:跟踪异常 > 机位走位(exitNudge) > **补拍引导(evidenceHint)** > 机位站位(viewpoint hint)。
 改动:加 `var quietScan = true`;安静模式下 **evidenceHint 仍调用**(设 evidenceTarget 给抓拍定优先级 + 记缺口 + 认账遥测),但**不弹进 hudHint**;机位站位也不弹。只留**跟踪异常 + exitNudge**。VoiceGuide 因此只念这两类,不念逐件补拍。
-**待接（= hub `HOME.RECOG.1r`）：** ①质量摘要观感用户签收；②「高精度补扫」只对指定 1–3 区域引导；③扫完自动 embed+match「15 分钟精修」。`HOME.RECOG.0` 版本史与 matcher/证据 UI 已闭环，勿再当未提交 P0。
+**已闭环（勿再估）：** `HOME.RECOG.0` 版本史 · matcher/证据 UI · **/plan 横幅** · **auto-refine 管线**（`refine.sh` + launchd plist；激活待用户）。  
+**仍属 `HOME.RECOG.1r` 残余：** ①质量摘要观感用户签收；②「高精度补扫」只对指定 1–3 区域引导（现仅有全局安静 toggle）；③用户手动 `launchctl bootstrap` 常驻精修。
 
 ## 4. 运维(命令 + 遥测键)
 

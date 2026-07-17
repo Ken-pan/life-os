@@ -145,8 +145,9 @@ AIOS 已有本地 VLM（vlm-fast / vlm-quality）。Google 要 Nest Aware 订阅
 | **HOME.RECOG.0** | 生产 schema ↔ git 真源闭环 | ✅ | — | — | `5a2b7773`+：migration / embed 服务 / 契约入仓 |
 | **HOME.RECOG.1** | Quick Scan 安静模式 + 扫后质量摘要 | ✅ 主航道 | — | — | 真机安静遥测通过；质量摘要已装机，观感待用户签收 |
 | **HOME.RECOG.2** | 大件 embedding matcher | ✅ | — | — | Hungarian 一对一写库验证；契约对齐 `ObjectMatchDecision` |
-| **HOME.RECOG.3** | 证据式确认 UI | ✅ | — | — | 难例卡片 + userDecision 不被 matcher 冲掉 |
-| **HOME.RECOG.1r** | 认亲残余闭环 | **P1** | 🔥 | 0.5–1d | 高精度补扫（指定 1–3 区域）+ 扫完自动 embed/match；摘要观感签收 |
+| **HOME.RECOG.3** | 证据式确认 UI + /plan 横幅 | ✅ | — | — | 难例卡片 · `RecognitionBanner` · MAX_REVIEWS=5（`4675dd06`） |
+| **HOME.RECOG.refine** | Mac auto-refine 管线 | ✅ 代码 | — | — | `refine.sh` + launchd plist；**用户 gate** 自装 LaunchAgent |
+| **HOME.RECOG.1r** | 认亲窄残余 | P2 | ◆ | 0.5–1d | 区域级高精度补扫（1–3 区）；摘要观感签收；可选 group-merge / 近 N 次精修 |
 | **HOME.MCP.13** | `where_is` 接入 AIOS | P2 | ◆◆ | 1–2d | 薄封装 `searchStorageItems()`，经现有 MCP server 暴露；AIOS 无源码耦合 |
 | **HOME.ONBOARD.9** | 平面编辑首次引导 | P2 | ○ | 0.5–1d | `PlanShortcutsHelp` onboarding |
 | **HOME.SMOKE.10** | `/plan` smoke 扩面 | P2 | ○ | 0.5d | 508 转换 9 门窗 TST-01 |
