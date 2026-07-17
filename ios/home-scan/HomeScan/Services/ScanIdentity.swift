@@ -22,6 +22,16 @@ enum ScanIdentity {
         /// 权威侧 attrs.identityLocked(用户手工校对过的一等身份)。
         /// 只对 prev 有意义:锁定件跳过尺寸一票否决(见 matchScore)
         var identityLocked: Bool = false
+        /// 用户纠正的一等数据 attrs.scanAliases:「扫描惯把这件误检成哪些 kind」。
+        /// 只对 prev(权威件)有意义 —— next.kind ∈ prev.scanAliases 时视同同 kind,
+        /// 不吃跨族否决、不吃 crossKindPenalty(用户纠正 > RoomPlan 惯性误检)。
+        var scanAliases: [String] = []
+        /// 最佳抓拍图的感知哈希 attrs.photoHash(dHash,16 位 hex)。外观特征:
+        /// 尺寸抖动被拆成「消失+新增」的柜子,靠两次照片长得一样认回来(见 hashBonus)
+        var photoHash: String? = nil
+        /// 设备侧抓色置信度 attrs.colorConfidence 0..1。给 colorDist 的加分做权重:
+        /// 罩布/反光把色搅花时(置信度低),别让不可靠的颜色抬高匹配分(见 colorTrust)
+        var colorConfidence: Double? = nil
     }
 
     enum State {
@@ -76,6 +86,12 @@ enum ScanIdentity {
     static let elevSameBonus = 0.1
     static let elevDiffMinIn = 18.0
     static let elevDiffPenalty = 0.15
+    /// 外观项(照片 dHash,与网页 photo-hash.js 同源:HASH_SAME_MAX/HASH_DIFF_MIN)。
+    /// 强像加大分、明显不像轻罚(拍摄方位/光照抬升汉明距离,不一票否决)。
+    static let hashSameMax = 10
+    static let hashDiffMin = 26
+    static let hashSameBonus = 0.2
+    static let hashDiffPenalty = 0.1
 
     private static func center(_ o: Object) -> (x: Double, y: Double) {
         (o.x + o.w / 2, o.y + o.h / 2)
@@ -106,10 +122,44 @@ enum ScanIdentity {
             + (va[2] - vb[2]) * (va[2] - vb[2])).squareRoot()
     }
 
+    /// next.kind 落在 prev(权威件)的 scanAliases 里 —— 用户纠正的误检别名,视同同 kind。
+    private static func aliasHit(_ prev: Object, _ next: Object) -> Bool {
+        prev.scanAliases.contains(next.kind)
+    }
+
+    /// colorDist 加分的权重:两侧抓色置信度取小,任一低(罩布/反光)就少信颜色。
+    /// 缺省视为 1(老扫描无 colorConfidence)—— 与改动前行为一致。
+    private static func colorTrust(_ a: Object, _ b: Object) -> Double {
+        min(a.colorConfidence ?? 1, b.colorConfidence ?? 1)
+    }
+
+    /// 两个 16 位 hex dHash 的汉明距离(与网页 photo-hash.js hammingHex 同源)。
+    /// 任一缺失/格式不对返回 nil(中立,不参与打分)。
+    static func hammingHex(_ a: String?, _ b: String?) -> Int? {
+        guard let a, let b, a.count == 16, b.count == 16 else { return nil }
+        let ca = Array(a), cb = Array(b)
+        var dist = 0
+        for i in 0..<16 {
+            guard let xa = UInt8(String(ca[i]), radix: 16),
+                  let xb = UInt8(String(cb[i]), radix: 16) else { return nil }
+            dist += (xa ^ xb).nonzeroBitCount
+        }
+        return dist
+    }
+
+    /// 外观项:强像 +0.2、明显不像 -0.1、中间/缺失 0。见 hashSameMax/hashDiffMin。
+    private static func hashBonus(_ a: Object, _ b: Object) -> Double {
+        guard let d = hammingHex(a.photoHash, b.photoHash) else { return 0 }
+        if d <= hashSameMax { return hashSameBonus }
+        if d >= hashDiffMin { return -hashDiffPenalty }
+        return 0
+    }
+
     /// 0..1+bonuses;kind 不同但同族(样式精化翻转)可匹配,跨族一票否决
     static func matchScore(_ prev: Object, _ next: Object) -> Double {
         var penalty = 0.0
-        if prev.kind != next.kind {
+        // 用户纠正的别名命中 → 视同同 kind,不否决不罚分(用户纠正 > 惯性误检)
+        if prev.kind != next.kind, !aliasHit(prev, next) {
             guard let fam = kindFamily.first(where: { $0.contains(prev.kind) }),
                   fam.contains(next.kind) else { return 0 }
             penalty = crossKindPenalty
@@ -128,8 +178,11 @@ enum ScanIdentity {
         let d = ((ca.x - cb.x) * (ca.x - cb.x) + (ca.y - cb.y) * (ca.y - cb.y)).squareRoot()
         let posScore = max(0, 1 - d / distNormPx)
         var bonus = 0.0
-        if let cd = colorDist(prev, next), cd <= 60 { bonus += 0.15 }
+        // 颜色加分按置信度打权:罩布/反光把色搅花时(置信度低)少信颜色
+        if let cd = colorDist(prev, next), cd <= 60 { bonus += 0.15 * colorTrust(prev, next) }
         if let s = prev.styleZh, s == next.styleZh { bonus += 0.1 }
+        // 外观项(dHash):尺寸抖动被拆成消失+新增的柜子,靠照片认回来
+        bonus += hashBonus(prev, next)
         // elev 项:加分只认双方实测;罚分把缺省当 0(落地);都缺 → 0(常数见上)
         if let pe = prev.elevIn, let ne = next.elevIn, abs(pe - ne) <= elevSameMaxIn {
             bonus += elevSameBonus

@@ -57,7 +57,9 @@ enum RealityCheck {
                 confidence: pl.attrs?.confidence,
                 colorHex: pl.attrs?.colorHex,
                 styleZh: pl.attrs?.styleZh,
-                elevIn: pl.attrs?.elevIn
+                elevIn: pl.attrs?.elevIn,
+                // 抓色置信度:给颜色加分打权,罩布/反光把色搅花时少信颜色
+                colorConfidence: pl.attrs?.colorConfidence
             )
         }
         let prev = home.placements.map { pl in
@@ -71,7 +73,10 @@ enum RealityCheck {
                 styleZh: pl.attrs?.styleZh,
                 elevIn: pl.attrs?.elevIn,
                 // 锁定件跳过尺寸一票否决(折叠桌展开态也要认得回来)
-                identityLocked: home.identityHints?[pl.id]?.identityLocked ?? false
+                identityLocked: home.identityHints?[pl.id]?.identityLocked ?? false,
+                // 用户纠正的误检别名:鸟笼被认成冰箱/电视也能认回是同一件
+                scanAliases: home.identityHints?[pl.id]?.scanAliases ?? [],
+                colorConfidence: pl.attrs?.colorConfidence
             )
         }
 

@@ -473,4 +473,63 @@ final class CanonicalIdentityTests: XCTestCase {
         XCTAssertNil(home.identityHints)
         XCTAssertNil(home.storageZones)
     }
+
+    // MARK: - matchScore 补齐网页同源特性(2026-07-16):scanAliases / colorConfidence / 外观项
+
+    /// 用户纠正的别名进 matchScore:权威鸟笼带 scanAliases=["fridge"],扫描认成 fridge
+    /// → 视同同 kind、不跨族否决(与网页 scan-identity.js aliasHit 同源)。只看 prev。
+    func testScanAliasInMatchScore() {
+        let cage = ScanIdentity.Object(
+            id: "pl-26", kind: "bird_cage", label: "鸟笼",
+            x: 100, y: 100, w: 110, h: 110,
+            confidence: nil, colorHex: nil, styleZh: nil,
+            scanAliases: ["fridge"]
+        )
+        var fridge = cage
+        fridge.id = "s-1"; fridge.kind = "fridge"; fridge.scanAliases = []
+        XCTAssertEqual(ScanIdentity.matchScore(cage, fridge), 0.9, accuracy: 0.001,
+                       "别名命中 → 视同同 kind,同位同尺寸得 0.9")
+        var cageNoAlias = cage; cageNoAlias.scanAliases = []
+        XCTAssertEqual(ScanIdentity.matchScore(cageNoAlias, fridge), 0,
+                       "prev 无别名 → 鸟笼 vs 冰箱跨族仍一票否决")
+    }
+
+    /// colorConfidence 给颜色加分打权(与网页同源):同色匹配,置信度低就少加分,
+    /// 避免罩布/反光把不可靠的颜色当成同一件的证据。
+    func testColorConfidenceWeightsColorBonus() {
+        func obj(_ conf: Double?) -> ScanIdentity.Object {
+            .init(id: "o", kind: "cabinet", label: "柜",
+                  x: 100, y: 100, w: 120, h: 60,
+                  confidence: nil, colorHex: "#804020", styleZh: nil,
+                  colorConfidence: conf)
+        }
+        XCTAssertEqual(ScanIdentity.matchScore(obj(nil), obj(nil)), 1.05, accuracy: 0.001,
+                       "无置信字段 → 满权颜色加分 0.15(向后兼容)")
+        XCTAssertEqual(ScanIdentity.matchScore(obj(0.4), obj(0.4)), 0.96, accuracy: 0.001,
+                       "双方置信 0.4 → 0.15×0.4=0.06")
+        XCTAssertEqual(ScanIdentity.matchScore(obj(nil), obj(0.4)), 0.96, accuracy: 0.001,
+                       "取两侧较小:min(1,0.4)=0.4")
+    }
+
+    /// 外观项 hammingHex + hashBonus(与网页 photo-hash.js 同源:同像 +0.2、明显不像 -0.1)。
+    /// 尺寸抖动被拆成消失+新增的柜子,靠照片长得一样认回来。
+    func testHashAppearanceTerm() {
+        XCTAssertEqual(ScanIdentity.hammingHex("0000000000000000", "0000000000000000"), 0)
+        XCTAssertEqual(ScanIdentity.hammingHex("ffffffffffffffff", "0000000000000000"), 64)
+        XCTAssertNil(ScanIdentity.hammingHex(nil, "0000000000000000"), "缺一侧 → nil 中立")
+        XCTAssertNil(ScanIdentity.hammingHex("abc", "0000000000000000"), "长度不对 → nil")
+
+        func obj(_ hash: String?) -> ScanIdentity.Object {
+            .init(id: "o", kind: "cabinet", label: "柜",
+                  x: 100, y: 100, w: 120, h: 60,
+                  confidence: nil, colorHex: nil, styleZh: nil,
+                  photoHash: hash)
+        }
+        XCTAssertEqual(ScanIdentity.matchScore(obj("0000000000000000"), obj("0000000000000000")),
+                       1.1, accuracy: 0.001, "照片一样 → +0.2")
+        XCTAssertEqual(ScanIdentity.matchScore(obj("ffffffffffffffff"), obj("0000000000000000")),
+                       0.8, accuracy: 0.001, "照片明显不同 → -0.1(不一票否决)")
+        XCTAssertEqual(ScanIdentity.matchScore(obj(nil), obj("0000000000000000")),
+                       0.9, accuracy: 0.001, "缺照片哈希 → 不加不罚")
+    }
 }

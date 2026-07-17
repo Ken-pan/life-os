@@ -121,6 +121,13 @@ function colorDist(a, b) {
 }
 
 /**
+ * 颜色加分的置信度权重(attrs.colorConfidence,与 iOS 端字段名一致):两侧取小,
+ * 任一低(罩布/反光把色搅花)就少信颜色。缺省视为 1(老扫描)—— 与改动前一致。
+ */
+const colorTrust = (a, b) =>
+  Math.min(a?.attrs?.colorConfidence ?? 1, b?.attrs?.colorConfidence ?? 1)
+
+/**
  * 外观项(照片 dHash,attrs.photoHash,网页端拉取时算好):
  * RoomPlan 对扫不全的柜子包围盒抖 7-28in,尺寸+位置分把同一件拆成
  * 「消失+新增」 —— 但两次扫描里它的照片长得一样,靠这项认回来。
@@ -163,7 +170,7 @@ function matchScore(prev, next) {
   const posScore = Math.max(0, 1 - d / DIST_NORM_PX)
   let bonus = 0
   const cd = colorDist(prev, next)
-  if (cd !== null && cd <= 60) bonus += 0.15
+  if (cd !== null && cd <= 60) bonus += 0.15 * colorTrust(prev, next)
   if (prev.attrs?.styleZh && prev.attrs.styleZh === next.attrs?.styleZh) bonus += 0.1
   bonus += hashBonus(prev, next)
   bonus += elevScore(prev, next)
