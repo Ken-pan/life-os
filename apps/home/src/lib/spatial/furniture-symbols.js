@@ -962,6 +962,106 @@ function petPen({ x, y, w, h }) {
 }
 
 /**
+ * Pet crate — a wire/wood crate with barred sides and a door on the front.
+ *
+ * **Solid, not hollow — and that is the whole reason it exists separately from
+ * `petPen`.** A pen is panels standing around a patch of *your* floor, so it is
+ * hollow. A crate is a container with its own tray: you look down at the crate's
+ * floor, not the room's, and it sits on the floor the way a cabinet does. Drawing
+ * it hollow would claim the room's floor runs through it and lie to the clutter
+ * score — the exact line `hollow`'s doc warns never to cross for "a cage".
+ *
+ * What makes it read as a crate rather than a plain box is the barring: vertical
+ * stiles and horizontal rails across the top (denser than a shelf), plus the door
+ * framed on the near (+y) side with its latch — the one edge you actually open.
+ * @param {Box} b
+ * @returns {Symbol}
+ */
+function petCrate({ x, y, w, h }) {
+  const cols = Math.min(9, Math.max(3, Math.round((w / Math.max(h, 1)) * 3)))
+  const rows = Math.min(5, Math.max(2, Math.round((h / Math.max(w, 1)) * 3)))
+  const bars = []
+  for (let i = 1; i < cols; i++) bars.push(line(x + (w / cols) * i, y, x + (w / cols) * i, y + h))
+  for (let j = 1; j < rows; j++) bars.push(line(x, y + (h / rows) * j, x + w, y + (h / rows) * j))
+  // Door on the front (+y): a framed panel with a latch, so the crate reads as
+  // something you open rather than a solid mesh block.
+  const dw = w * 0.46
+  const dh = h * 0.34
+  const dx = x + (w - dw) / 2
+  const dy = y + h - dh - h * 0.06
+  const door = [
+    rect(dx, dy, dw, dh, Math.min(dw, dh) * 0.12),
+    circle(dx + dw - Math.min(dw, dh) * 0.18, dy + dh / 2, Math.min(w, h) * 0.05),
+  ]
+  return { body: bRect(x, y, w, h, soft(w, h, 0.08)), detail: [...bars, ...door].join('') }
+}
+
+/**
+ * Bird cage — round cage seen from above: solid disc with bars radiating from a
+ * central hanging hub to the rim, ringed once inside.
+ *
+ * Solid for the same reason as `petCrate`: the cage has its own base, so what is
+ * under it is the cage's tray, not room floor. Round because that is a bird
+ * cage's plan — a filled circle with a radial grid says "cage" where a barred
+ * rectangle would just read as another crate.
+ * @param {Box} b
+ * @returns {Symbol}
+ */
+function birdCage({ x, y, w, h }) {
+  const cx = x + w / 2
+  const cy = y + h / 2
+  const rad = Math.min(w, h) / 2
+  const bars = 12
+  const spokes = []
+  for (let i = 0; i < bars; i++) {
+    const a = (i * 2 * Math.PI) / bars
+    spokes.push(
+      line(cx + Math.cos(a) * rad * 0.2, cy + Math.sin(a) * rad * 0.2, cx + Math.cos(a) * rad * 0.94, cy + Math.sin(a) * rad * 0.94),
+    )
+  }
+  return {
+    body: bCircle(cx, cy, rad * 0.98),
+    // Inner ring reads as the mid-height band; the hub is the hanging point.
+    detail: [circle(cx, cy, rad * 0.6), ...spokes, circle(cx, cy, rad * 0.12)].join(''),
+  }
+}
+
+/**
+ * Flat-panel TV — a thin wide screen on a pedestal, seen from above.
+ *
+ * The point is that it is **not a cabinet**. `tv` used to borrow the cabinet
+ * glyph, which drew this as a deep filled box with a drawer face — i.e. storage.
+ * A television in plan is the opposite: a thin panel that faces down (+y) with
+ * its glass on the front edge, standing on a small pedestal foot whose depth is
+ * most of the footprint. The panel across the back, the pedestal at the front,
+ * and the neck between them are what read as "a screen on a stand" rather than a
+ * cupboard.
+ * @param {Box} b
+ * @returns {Symbol}
+ */
+function screen({ x, y, w, h }) {
+  const panelY = y + h * 0.08
+  const panelH = h * 0.3
+  const baseW = w * 0.26
+  const baseH = h * 0.22
+  const baseX = x + (w - baseW) / 2
+  const baseY = y + h - baseH
+  const inset = Math.min(w, panelH) * 0.14
+  return {
+    body: [
+      bRect(x, panelY, w, panelH, panelH * 0.18),
+      bRect(baseX, baseY, baseW, baseH, baseH * 0.3),
+    ].join(''),
+    detail: [
+      // Glass on the front (+y) face of the panel.
+      rect(x + inset, panelY + inset, w - inset * 2, panelH - inset * 2, 1),
+      // Neck: pedestal foot up to the panel, so the two read as one stand.
+      line(x + w / 2, panelY + panelH, x + w / 2, baseY),
+    ].join(''),
+  }
+}
+
+/**
  * Onyx and Sard — the two shibas, drawn by hand and reproduced as-is.
  *
  * They live in the furniture catalogue because they belong in the plan: they take
@@ -1035,6 +1135,9 @@ const BUILDERS = {
   scooter,
   tubShower,
   petPen,
+  petCrate,
+  birdCage,
+  screen,
 }
 
 /** Nothing to draw — the caller falls back to its plain rect. */

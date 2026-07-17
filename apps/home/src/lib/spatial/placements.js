@@ -137,14 +137,15 @@ export const PLACEMENT_KINDS = {
     symbol: 'table',
     tall: 18,
   },
+  // 照片里这台近黑的是电视本体,不是收纳柜:平面里它是一块薄屏 + 底座,
+  // 不是有抽屉面的深柜(cabinet 会画成柜子并读作储物)。symbol 走 screen。
   tv: {
-    label: '电视柜',
+    label: '电视',
     w: 60,
     h: 16,
     group: '客厅',
-    symbol: 'cabinet',
+    symbol: 'screen',
     tall: 20,
-    storable: true,
   },
   desk: { label: '书桌', w: 60, h: 30, group: '客厅', symbol: 'table', tall: 30, clearUnder: 26 },
   table: { label: '餐桌', w: 60, h: 36, group: '客厅', symbol: 'table', tall: 30, clearUnder: 26 },
@@ -176,6 +177,27 @@ export const PLACEMENT_KINDS = {
     symbol: 'petPen',
     tall: 24,
     fence: true,
+  },
+  // 狗窝木笼 —— 和 pet_pen 是两回事:围栏圈的是地板(fence/hollow),木笼是有自己
+  // 底盘的容器(实心,占地同柜子)。54″ 大型犬笼是屋里那只的实测,不是 storable:
+  // 那是狗睡的地方,不是收纳区。栅格 + 前门的形状由 petCrate 画。
+  pet_crate: {
+    label: '狗狗木笼',
+    w: 54,
+    h: 35,
+    group: '客厅',
+    symbol: 'petCrate',
+    tall: 45,
+    clearance: 24,
+  },
+  // 鸟笼 —— 落地带架,俯视是个圆,靠 birdCage 的辐射栅格认出来。同样是容器不是围栏。
+  bird_cage: {
+    label: '鸟笼',
+    w: 20,
+    h: 20,
+    group: '客厅',
+    symbol: 'birdCage',
+    tall: 58,
   },
 
   // 两条柴犬。它们占地、会挪窝,而一张没有它们的平面图画的是别人家。
@@ -560,7 +582,12 @@ export const PLACEMENT_KINDS = {
  * 解析一次到位 —— 所有按 kind 认家具的地方都要过 {@link canonicalPlacementKind}。
  * @type {Record<string, string>}
  */
-export const PLACEMENT_KIND_ALIASES = { pet_fence: 'pet_pen' }
+export const PLACEMENT_KIND_ALIASES = {
+  pet_fence: 'pet_pen',
+  dog_crate: 'pet_crate',
+  kennel: 'pet_crate',
+  birdcage: 'bird_cage',
+}
 
 /** @param {string} kind @returns {string} 目录键(没有别名时原样返回) */
 export function canonicalPlacementKind(kind) {
