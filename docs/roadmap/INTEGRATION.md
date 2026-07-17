@@ -120,7 +120,7 @@ RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 | **HOME.RECOG.1–3** | 安静扫描 → matcher → 证据确认 + /plan 横幅 | ✅ 主航道 | HOME.RECOG.0 | `4675dd06` 横幅；见 app 文档 |
 | **HOME.RECOG.refine** | Mac auto-refine（embed+match 15min） | ✅ 代码 / ⏳ 用户 gate | RECOG.2 | `refine.sh` + launchd；用户自装 |
 | **HOME.RECOG.1r** | 认亲窄残余 | ◆ | RECOG.1–3 | hub §Next；区域高精度 + 摘要签收 |
-| **HOME.MCP.13** | `where_is` → AIOS | ◆◆ | STORAGE.19 | hub §Next |
+| **HOME.MCP.13** | `where_is` → AIOS | ✅ | STORAGE.19 | `storage_snapshots` + `/api/mcp`；AIOS 配 URL |
 | **HOME.PROJ.4** | 完整 spatial 项目同步    | ⏸️  | HOME.SYNC.4 | 编辑真源跨设备、冲突与多项目身份；仍属大投入 |
 | **HOME.PROJ.5** | 平面双模式（浏览/编辑） | ✅  | —    | 已去掉工坊 gate；无墙图/测距入口    |
 
