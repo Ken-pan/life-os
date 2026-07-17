@@ -61,7 +61,8 @@
     "build:tokens": "node packages/design-tokens/scripts/build-css.mjs",
     "validate:tokens": "node packages/design-tokens/scripts/validate-tokens.mjs",
     "ios:add": "node scripts/ios/add-ios.mjs",
-    "ios:device": "node scripts/ios/deploy-device.mjs"
+    "ios:device": "node scripts/ios/deploy-device.mjs",
+    "app:knowledge": "bash scripts/knowledge/build-app.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

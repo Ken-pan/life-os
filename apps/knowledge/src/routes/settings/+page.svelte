@@ -86,7 +86,31 @@
 
   <section class="card">
     <h2>{t('settings.dataTitle')}</h2>
-    <p class="data-desc">{t('settings.dataDesc')}</p>
+    {#if S.backend === 'vault'}
+      <p class="data-desc">
+        <span class="badge badge--accent">Vault</span>
+        {t('settings.vaultDesc')}
+      </p>
+      <ul class="list">
+        <li class="list-item">
+          <span class="list-item__body">
+            <span class="list-item__title">{t('settings.vaultPath')}</span>
+            <span class="list-item__desc">{S.vaultRoot}</span>
+          </span>
+          <span class="list-item__trailing">
+            {#if S.vaultError}
+              <span class="badge badge--danger">error</span>
+            {:else if S.vaultReady}
+              <span class="badge badge--success">{S.items.length}</span>
+            {:else}
+              <span class="spinner" aria-label="loading"></span>
+            {/if}
+          </span>
+        </li>
+      </ul>
+    {:else}
+      <p class="data-desc">{t('settings.dataDesc')}</p>
+    {/if}
     <div class="settings-actions">
       <button type="button" class="btn-secondary" onclick={exportJson}>
         {t('settings.exportButton')}

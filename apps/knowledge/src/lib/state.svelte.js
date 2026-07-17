@@ -5,12 +5,22 @@ import {
   resolveTheme,
 } from '@life-os/theme'
 import { createSettingsPersistence } from '@life-os/platform-web/persisted-state'
+import {
+  isTauri,
+  VAULT_ROOT,
+  loadVaultItems,
+  createItemFile,
+  writeItemFile,
+  deleteItemFile,
+} from '$lib/vault.js'
 
 /**
- * KnowledgeOS 本地优先存储 v1。
+ * KnowledgeOS 存储双后端：
+ * - 原生 Mac app（Tauri）：Vault 目录的 .md 文件即数据库（取代 Obsidian），
+ *   localStorage 只存 settings；
+ * - 网页/云端：条目随 settings 一起存 localStorage（云同步后续接 @life-os/sync）。
  * 条目（KItem）：{ id, type: 'note'|'link'|'clip', title, body, url, tags: string[],
- *   pinned, createdAt, updatedAt }。全部存 localStorage；云同步是后续阶段
- *（接 @life-os/sync 统一 Supabase，LWW + 墓碑，同 aios 模式）。
+ *   pinned, createdAt, updatedAt }
  */
 
 const persistence = createSettingsPersistence({
@@ -22,17 +32,40 @@ const persistence = createSettingsPersistence({
     },
     items: [],
   },
-  serialize: (state) => ({ settings: state.settings, items: state.items }),
+  // 原生模式下条目在文件系统里，绝不进 localStorage（437+ 篇会爆配额）
+  serialize: (state) =>
+    state.backend === 'vault'
+      ? { settings: state.settings }
+      : { settings: state.settings, items: state.items },
 })
 
-export const S = $state(persistence.load())
+export const S = $state({
+  ...persistence.load(),
+  backend: 'local', // 'local' | 'vault'
+  vaultReady: false,
+  vaultError: '',
+  vaultRoot: VAULT_ROOT,
+})
 
 export function save() {
   if (!browser) return
   persistence.save(S)
 }
 
-/* ===== 条目 CRUD ===== */
+/** 原生模式启动：从 Vault 加载全部 .md（+layout onMount 调用）。 */
+export async function initBackend() {
+  if (!isTauri()) return
+  S.backend = 'vault'
+  try {
+    S.items = await loadVaultItems()
+    S.vaultReady = true
+  } catch (e) {
+    console.error('[vault] 加载失败', e)
+    S.vaultError = String(e)
+  }
+}
+
+/* ===== 条目 CRUD（按后端分流）===== */
 
 const URL_RE = /^https?:\/\/\S+$/i
 const TAG_RE = /#([\p{L}\p{N}_-]+)/gu
@@ -44,6 +77,19 @@ function newId() {
 /** 从正文里抽 #tag（去重、去 #）。 */
 export function extractTags(text) {
   return [...new Set([...text.matchAll(TAG_RE)].map((m) => m[1]))]
+}
+
+function persistNew(item) {
+  S.items.unshift(item)
+  if (S.backend === 'vault') {
+    createItemFile(item)
+      .then((rel) => {
+        item.id = rel
+      })
+      .catch((e) => console.error('[vault] 写入失败', e))
+  } else {
+    save()
+  }
 }
 
 /**
@@ -61,15 +107,14 @@ export function captureText(raw) {
     id: newId(),
     type: isLink ? 'link' : 'note',
     title: isLink ? first.replace(/^https?:\/\//i, '').slice(0, 80) : first.slice(0, 120),
-    body: (isLink ? lines.slice(1).join('\n') : lines.slice(1).join('\n')).trim(),
+    body: lines.slice(1).join('\n').trim(),
     url: isLink ? first : '',
     tags: extractTags(text),
     pinned: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   }
-  S.items.unshift(item)
-  save()
+  persistNew(item)
   return item.id
 }
 
@@ -86,22 +131,36 @@ export function captureFile(name, content) {
     createdAt: Date.now(),
     updatedAt: Date.now(),
   }
-  S.items.unshift(item)
-  save()
+  persistNew(item)
   return item.id
+}
+
+function persistChange(item) {
+  if (S.backend === 'vault') {
+    writeItemFile(item)
+      .then((rel) => {
+        item.id = rel
+      })
+      .catch((e) => console.error('[vault] 保存失败', e))
+  } else {
+    save()
+  }
 }
 
 export function updateItem(id, patch) {
   const item = S.items.find((i) => i.id === id)
   if (!item) return
   Object.assign(item, patch, { updatedAt: Date.now() })
-  save()
+  persistChange(item)
 }
 
 export function deleteItem(id) {
   const idx = S.items.findIndex((i) => i.id === id)
-  if (idx >= 0) {
-    S.items.splice(idx, 1)
+  if (idx < 0) return
+  S.items.splice(idx, 1)
+  if (S.backend === 'vault') {
+    deleteItemFile(id).catch((e) => console.error('[vault] 删除失败', e))
+  } else {
     save()
   }
 }
@@ -111,7 +170,7 @@ export function togglePin(id) {
   if (!item) return
   item.pinned = !item.pinned
   item.updatedAt = Date.now()
-  save()
+  persistChange(item)
 }
 
 /** 全部标签（按使用次数降序）。 */

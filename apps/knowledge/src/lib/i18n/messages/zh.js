@@ -64,6 +64,8 @@ export default {
     themeDark: '深色',
     themeAuto: '跟随系统',
     language: '语言',
+    vaultDesc: '原生模式：条目即 Vault 目录里的 .md 文件，编辑实时写回磁盘。',
+    vaultPath: 'Vault 目录',
     dataTitle: '数据',
     dataDesc: '全部条目都在本机（localStorage）。导出 JSON 备份，或导入合并。',
     exportButton: '导出 JSON',

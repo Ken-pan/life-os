@@ -4,6 +4,22 @@
 > `create-life-os-app` + `promote-life-os-app` 管线搭出。端口 5879，
 > workspace `knowledge-os`，品牌 indigo（`design-tokens/tokens/brands/knowledge.json`）。
 
+## 原生 Mac app（主形态，取代 Obsidian）
+
+Tauri v2 壳（同 AIOS 模式）：`npm run app:knowledge` 构建并装入
+`/Applications/KnowledgeOS.app`。**Vault 目录的 .md 文件即数据库**
+（`~/「Projects」/Vault`，fs 能力严格限定在该目录）：
+
+- 启动全量加载（437 篇实测秒开）；frontmatter（type/url/tags/pinned/created）+
+  顶层目录名 → 标签（`030_Frameworks` → `frameworks`），`.obsidian/` 等目录跳过
+- 收集 → 写 `010_Inbox/<标题>.md`（同名自动加序号，`#` 等字符从文件名清洗）；
+  编辑写回原文件，改题即重命名；删除即删文件
+- 网页/云端（knowledgeos-ken.netlify.app）自动退回 localStorage 模式；
+  同一套 UI，`state.svelte.js` 按 `isTauri()` 分流后端
+- localStorage 在原生模式只存 settings（437 篇 4.3MB 会爆配额，绝不入内）
+
+Obsidian 可直接停用：文件原样保留、路径不变，KnowledgeOS 读写同一批 .md。
+
 ## v1 已实现（本地优先，零后端）
 
 | 视图 | 能力 | 用到的设计系统件 |
@@ -18,7 +34,10 @@ localStorage key `knowledgeos_v1`（`createSettingsPersistence`）。
 
 ## 路线图（KnowledgeOS 愿景 → 阶段化）
 
-1. **云同步**：接 `@life-os/sync` 统一 Supabase（LWW + 墓碑，同 aios 模式），登录即用。
+0. **Obsidian 收尾**：`[[wikilink]]` 渲染与跳转、目录树浏览视图、
+   Vault 路径可配置（设置页）、文件外部变更监听（watch）。
+1. **云同步**：接 `@life-os/sync` 统一 Supabase（LWW + 墓碑，同 aios 模式），
+   原生端为真源、网页端只读镜像起步。
 2. **Understand**：接本地 AI 网关（llama-swap）做自动摘要 / 自动标签 / embedding。
 3. **Recall / Knowledge Chat**：语义检索 + 「问自己的知识库」（引用溯源）。
 4. **Graph**：实体-关系图（catalog 已有 charts/mindmap 可视件可复用）。

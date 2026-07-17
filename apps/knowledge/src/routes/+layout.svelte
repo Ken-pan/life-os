@@ -10,7 +10,7 @@
   import SideNav from '$lib/components/SideNav.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
   import { ICONS } from '$lib/iconRegistry.js'
-  import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
+  import { S, applyTheme, bindAppThemeSystemChange, initBackend } from '$lib/state.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
   let { children } = $props()
@@ -28,6 +28,7 @@
   onMount(() => {
     applyTheme()
     applyLocale()
+    initBackend()
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
     return () => {
