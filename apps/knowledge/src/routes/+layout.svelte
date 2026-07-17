@@ -22,6 +22,7 @@
     if (p === '/settings') return t('settings.title')
     if (p.startsWith('/library')) return t('library.title')
     if (p.startsWith('/timeline')) return t('timeline.title')
+    if (p.startsWith('/recall')) return t('nav.recall')
     return t('inbox.title')
   })
 

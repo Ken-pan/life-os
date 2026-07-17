@@ -3,7 +3,8 @@
   // LifeOsSheet 承载（桌面居中/移动底弹）；「编辑」切到 ItemEditorSheet。
   import { LifeOsSheet } from '@life-os/platform-web/svelte/overlay'
   import { renderMarkdown } from '$lib/markdown.js'
-  import { resolveWikilink, backlinksOf } from '$lib/state.svelte.js'
+  import { resolveWikilink, backlinksOf, itemById } from '$lib/state.svelte.js'
+  import { vaultSearch } from '$lib/knowledgeService.js'
   import { t } from '$lib/i18n/index.js'
 
   /**
@@ -14,6 +15,30 @@
 
   const rendered = $derived(item ? renderMarkdown(item.body) : '')
   const backlinks = $derived(item ? backlinksOf(item) : [])
+
+  // 语义相关笔记（服务端混合检索；用标题+正文头作 query，排除自身与已双链的）。
+  let related = $state([])
+  $effect(() => {
+    const cur = item
+    related = []
+    if (!cur) return
+    const linked = new Set(
+      [...cur.body.matchAll(/\[\[([^\]]+)\]\]/g)].map((m) =>
+        m[1].split('|')[0].split('#')[0].trim().toLowerCase(),
+      ),
+    )
+    vaultSearch(`${cur.title}\n${cur.body.slice(0, 400)}`, { k: 6 })
+      .then((hits) => {
+        if (item?.id !== cur.id) return // 期间切了条目
+        related = hits
+          .map((h) => itemById(h.path))
+          .filter(
+            (it) => it && it.id !== cur.id && !linked.has(it.title.toLowerCase()),
+          )
+          .slice(0, 4)
+      })
+      .catch(() => {}) // 服务未起时静默，退回纯双链体验
+  })
 
   const TYPE_LABEL = {
     note: () => t('library.typeNote'),
@@ -70,6 +95,24 @@
               <button type="button" class="list-item" onclick={() => onOpen(bl)}>
                 <span class="list-item__body">
                   <span class="list-item__title">{bl.title}</span>
+                </span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+
+    {#if related.length}
+      <div class="note-backlinks">
+        <div class="divider">✦ {t('reader.related')} · {related.length}</div>
+        <ul class="list">
+          {#each related as rel (rel.id)}
+            <li style="display: contents">
+              <button type="button" class="list-item" onclick={() => onOpen(rel)}>
+                <span class="list-item__body">
+                  <span class="list-item__title">{rel.title}</span>
+                  <span class="list-item__desc">{rel.body.replace(/\s+/g, ' ').slice(0, 80)}</span>
                 </span>
               </button>
             </li>

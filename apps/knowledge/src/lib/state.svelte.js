@@ -195,6 +195,11 @@ export function allTags(items = S.items) {
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([tag]) => tag)
 }
 
+/** 按 id（vault 相对路径）取条目；检索结果 path 回链本地条目用。 */
+export function itemById(id) {
+  return S.items.find((i) => i.id === id) ?? null
+}
+
 /** 按标题 resolve wikilink 目标 → 条目（大小写不敏感）；找不到返回 null。 */
 export function resolveWikilink(target) {
   const t = target.trim().toLowerCase()
