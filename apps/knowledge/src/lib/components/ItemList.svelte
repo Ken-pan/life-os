@@ -1,6 +1,7 @@
 <script>
   // 条目列表：theme .list 原语；点击行 → 编辑。
   import { t } from '$lib/i18n/index.js'
+  import { plainExcerpt } from '$lib/editor/blocks.js'
 
   /** @type {{ items: any[], onOpen: (item: any) => void }} */
   let { items, onOpen } = $props()
@@ -11,9 +12,10 @@
     clip: () => t('library.typeClip'),
   }
 
+  /** 预览摘要：正文剥掉 markdown 符号；无正文的纯链接条目退回显示 URL。 */
   function excerpt(item) {
-    const src = item.body || item.url
-    return src.replace(/\s+/g, ' ').slice(0, 90)
+    if (item.body) return plainExcerpt(item.body, 90)
+    return item.url
   }
 
   function timeLabel(ts) {

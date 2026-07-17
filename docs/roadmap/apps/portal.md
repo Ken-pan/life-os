@@ -21,11 +21,13 @@
 
 ## Next（按 ROI）
 
-_当前无阻塞 Growth 项。_
+_当前无阻塞 Growth 项，保持 maintenance。AIOS / KnowledgeOS / HealthOS 不因“九 app”自动加卡；只有出现每日启动需求或可消费摘要时才扩 Portal。_
 
 **近期已发货：** **GYMS.PORTAL.2** ✅（2026-07-10）— `portal_today_summary` 扩 `workedOutToday` / `todayCompleted` · Portal 卡文案 · migration `20260710203000` **远程已应用** · `verify-ft-p2-prod.mjs`。
 
-_后续跨站摘要增量见 hub §Next（**PLNR.CORE.4**）。_
+_**PLNR.CORE.4** 已于 2026-07-13 发货（Planner Today ↔ Portal 计数口径对齐）。AIOS / KnowledgeOS / HealthOS 尚未进入 Portal，是否增加入口需先明确 Portal 信息密度与消费者价值。_
+
+**运维教训（2026-07-14）：** Portal 生产曾静默停更两天——publish 路径被两个消费者互相覆盖 + Netlify ignore 规则漏掉共享包依赖；已修（`901bfee93` · `750a3b7f2`），共享包改动现在会正确触发六站重建。
 
 ## UI 走查（2026-07-09 · 第五轮 · P-1–P-12 ✅）
 

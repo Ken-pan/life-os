@@ -80,9 +80,10 @@ tidy-plan.js  storage-plan.js  container-scan.js  event-derive.js  photo-coverag
 
 | 契约 | 两端位置 |
 |---|---|
-| payload(formatVersion 1) | iOS `Convert/HomeOSModels.swift` ↔ `spatial/scan-payload.js` ↔ supabase/README.md |
+| payload(formatVersion 1;含 per-object `colorConfidence`/`kindConfidence`/`photoHash`) | iOS `Convert/HomeOSModels.swift` ↔ `spatial/scan-payload.js` ↔ supabase/README.md |
 | 配准数学(含点到线精修) | iOS `Services/HomeFrame.swift` ↔ `spatial/scan-register.js` |
-| 身份匹配(kind 族 / elevIn 阈值 6″/18″、加分 +0.1 罚分 -0.15、缺省视为 0 / `attrs.scanAliases`+`attrs.identityLocked` 字段名) | iOS `Services/ScanIdentity.swift` ↔ `spatial/scan-identity.js` |
+| 身份匹配(kind 族含**桌族** table/desk/standing_desk/folding_table 与储物族 / elevIn 阈值 6″/18″ / color 按 `colorConfidence` 打权 / **dHash 只正向**汉明≤10 +0.2、≥26 不罚、同列表重复 hash 中和 / `attrs.scanAliases`+`attrs.identityLocked` 字段名 / `kindCompatible` 导出给替换闸) | iOS `Services/ScanIdentity.swift` ↔ `spatial/scan-identity.js` |
+| dHash 算法(9×8 灰度、行内 left>right、64bit→16hex) | iOS `ObjectShotCapture.dhashBits` ↔ `spatial/photo-hash.js`(同一像素向量单测锁死) |
 | 柜内 JSON | iOS `Services/ContainerGeometry.swift` ↔ `spatial/container-scan.js` |
 | 事件形状 | `spatial/event-derive.js` ↔ home.events 表(supabase/README.md) |
 
@@ -95,6 +96,11 @@ tidy-plan.js  storage-plan.js  container-scan.js  event-derive.js  photo-coverag
 - 改 scan-identity:加跑 `node scripts/scan-identity-unit.mjs`(真实 payload
   锚点:吊柜认亲/巨柜拉开/鸟笼 aliases),并检查 iOS `ScanIdentity.swift`
   是否需要同步镜像(上表同源点)。
+- 改 scan-merge 的重扫语义(kindConfidence 保 kind / 「没扫到」保护闸
+  RECOGNITION_KEEP_MIN 0.7 + MIN_MISS_TO_PROTECT 3 / replaceNearby 三道闸
+  freshIds+kindCompatible+3ft):`test:scan-merge` 有 W1/W3 专项锚点。
+- 改家具定色(resolveFurnitureColor 收 attrs:colorConfidence/colorSpreadE 双闸 +
+  kindConfidence 守硬锁):`node scripts/furniture-color-unit.mjs`。
 - 改储物:`test:storage test:storage-ui test:storage-undo test:container-scan`。
 - 浏览器验证走**用户真实路径**(浏览模式/真实页面),编辑模式和离线 SVG
   都绕过了渲染主线 —— 曾因此漏过「两套户型混渲染」。

@@ -1,6 +1,6 @@
 # Roadmap 分卷索引
 
-`LIFEOS_ROADMAP.md` 是 **状态 hub**（Now / Next / Shipped / Not doing · **§六 app 一览**）。本目录放 **深度参考**，供实现或复盘时查阅。
+`LIFEOS_ROADMAP.md` 是 **状态 hub**（Now / Next / Shipped / Not doing · **§App 一览**）。本目录放 **深度参考**，供实现或复盘时查阅。
 
 | 文件                                 | 用途                                       | 何时更新                    |
 | ------------------------------------ | ------------------------------------------ | --------------------------- |
@@ -10,8 +10,8 @@
 | [`GROWTH.md`](./GROWTH.md)           | PORT.GROWTH.\* / MUSC.CORE.1 / FINC.GROWTH.1 / HOME.PORTAL.1–HOME.SSO.3 · 外部对标 | Growth 项状态或调研更新时   |
 | [`BACKLOG.md`](./BACKLOG.md)         | 提取候选、决策矩阵、do-not-abstract        | 评估新共享提取时            |
 | [`SHIPPED.md`](./SHIPPED.md)         | 发货日志（日期 · 摘要 · commit）           | 每次从 Now 移入 Shipped 时  |
-| [`apps/`](./apps/README.md)          | **六 app 产品排期**（Planner…Home）        | 单 app 优先级或脑暴更新时   |
-| [`POTENTIAL.md`](./POTENTIAL.md)     | **潜力研判 / ROI 证据**                    | 代码检索或优先级重估时      |
+| [`apps/`](./apps/README.md)          | **九 app 产品排期**（六部署 web + AIOS + KnowledgeOS + HealthOS） | 单 app 优先级或脑暴更新时   |
+| [`POTENTIAL.md`](./POTENTIAL.md)     | **当前潜力研判 / ROI 与闭环排序**           | 代码检索、生产状态或优先级重估时 |
 | [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md) | **执行分线与当前焦点** | 优先级重排时  |
 | [`apps/paperos.md`](./apps/paperos.md) | **PaperOS 独立仓库指针** | 极少变化（已迁出） |
 

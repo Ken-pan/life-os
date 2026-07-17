@@ -4,9 +4,9 @@
 
 ## 一句话
 
-户型 spatial 浏览/编辑 + 储藏清单；SSO ✅；**唯一无云业务数据**的 Life OS app（`homeos_spatial_v1` localStorage）。
+户型 spatial 浏览/编辑 + 储藏/整理智能。可编辑项目仍以 `homeos_spatial_v1`（localStorage）为真源；RoomPlan 扫描、私有照片与追加事件已进入 Supabase `home` schema。
 
-## 当前能力（生产 / 本地）
+## 当前能力（生产 / 本地优先）
 
 | 域           | 状态 | 要点                                       |
 | ------------ | ---- | ------------------------------------------ |
@@ -15,7 +15,9 @@
 | `/storage`   | ✅   | 储藏区卡片 · `?zone=` 深链 · **HOME.STORAGE.12 物品实体化 + 搜索定位 + CRUD** |
 | SSO / Portal | ✅   | HOME.PORTAL.1–HOME.SSO.3 · HOME.PROJ.6 储藏卡                    |
 | 文档         | ✅   | [`apps/home/README.md`](../../../apps/home/README.md) |
-| 云同步       | ❌   | HOME.PROJ.4 搁置                                  |
+| 云扫描 / 事件 | ✅   | `home.scans` + 私有 `home-scan-photos` + append-only `home.events` 三条 migration 均已在远程生产链（2026-07-17 实测，链头 `home_events`） |
+| 项目云同步   | 🟡   | 完整可编辑 spatial 项目仍本地；不能表述为已完成全量跨设备同步 |
+| 空间智能     | ✅   | RoomPlan 回灌、身份/权威副本、布局/整理建议、固定件与宠物安全规则 |
 
 ## 空间编辑 Workstream（H-W，主线）
 
@@ -54,7 +56,7 @@ Home 独有、买不到的是**几何**：墙图 + `zones[]` + `placements[]`（
 
 > **给设备一个坐标，墙图就从一张画变成一张活地图。**
 
-六 app 分管时间（Planner）/ 身体（Fitness）/ 钱（Finance）/ 声音（Music）/ 大脑（AIOS）；**Home 管空间**——这一维目前是空的，且是唯一能给其他 app 提供物理世界上下文的地方。
+Life OS 各 app 分管时间、身体、钱、声音、知识与状态；**Home 管空间**——这是唯一能给其他 app 提供物理世界上下文的地方。
 
 ### 设备接入：只写一个适配器
 
@@ -112,7 +114,7 @@ AIOS 已有本地 VLM（vlm-fast / vlm-quality）。Google 要 Nest Aware 订阅
 
 | 项           | 判断                                                                                                                                                                                                  |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **云同步**   | Home 现为唯一无云业务数据 app，`HOME.PROJ.4` park 判断**维持**。折中：**不同步墙图，只同步「设备 ↔ zone 映射」**——设备实时状态真源在 HA，Home 不该存；映射是 Home 独有的那一小份语义，量小，同步它 ≠ 做掉 `HOME.PROJ.4` |
+| **云同步**   | 扫描事实/照片/追加事件已在生产；object recognition migration `20260717120000` 也已注册，embedding 57 行（07-17 远程实测）。可编辑墙图/布局项目仍是本地真源；`HOME.PROJ.4` 仅保留“完整项目跨设备编辑”这一未完成范围 |
 | **控制面板** | 不做（见 §定位）                                                                                                                                                                                      |
 | **杂牌设备** | 不做（见 §取舍规则）                                                                                                                                                                                  |
 
@@ -138,13 +140,19 @@ AIOS 已有本地 VLM（vlm-fast / vlm-quality）。Google 要 Nest Aware 订阅
 
 ## Next（按 ROI）
 
-| ID        | 主题                                            | ROI | 桶      | 投入   | 验收                                        |
-| --------- | ----------------------------------------------- | --- | ------- | ------ | ------------------------------------------- |
-| **HOME.PROJ.7**  | 多项目 localStorage 切换                        | ◆   | Product | 1–2d   | **建议 HOME.SPATIAL.5 后**                            |
-| **HOME.ONBOARD.9**  | 平面编辑首次引导                                | ○   | Product | 0.5–1d | `PlanShortcutsHelp`  onboarding             |
-| **HOME.SMOKE.10** | `/plan` smoke 扩面（508 转换 9 门窗 TST-01）    | ○   | Infra   | 0.5d   | `test:plan-edit` 或独立脚本                 |
+| ID | 主题 | 紧急度 | ROI | 投入 | 验收 |
+| --- | --- | --- | --- | --- | --- |
+| **HOME.RECOG.0** | 生产 schema ↔ git 真源闭环 | **P0** | 🔥 | <0.5d | 已应用生产的 migration、embedding 服务、契约与 iOS 改动进入版本史；重复跑不重复、断点续跑、失败不覆盖正确结果 |
+| **HOME.RECOG.1** | Quick Scan 安静模式 + 扫后质量摘要 | P1 | 🔥 | 0.5–1d | 真机装机；每房间主动提示 ≤2；默认不催逐件补拍；摘要使用产品语言 |
+| **HOME.RECOG.2** | 大件 embedding matcher | P1 | ◆◆ | 1–2d | DINOv2 + kind 硬门 + 全局一对一；低置信不自动合并；回归 benchmark |
+| **HOME.RECOG.3** | 证据式确认 UI | P2 | ◆ | 1–2d | 默认 0–5 难例；新旧图/支持反对证据/暂不确定；反馈沉淀 positive/hard-negative |
+| **HOME.MCP.13** | `where_is` 接入 AIOS | P2 | ◆◆ | 1–2d | 薄封装 `searchStorageItems()`，经现有 MCP server 暴露；AIOS 无源码耦合 |
+| **HOME.ONBOARD.9** | 平面编辑首次引导 | P2 | ○ | 0.5–1d | `PlanShortcutsHelp` onboarding |
+| **HOME.SMOKE.10** | `/plan` smoke 扩面 | P2 | ○ | 0.5d | 508 转换 9 门窗 TST-01 |
 
 > **`HOME.DEVICE.*` 智能家居线**（2026-07-14 脑暴）研判中、**未进本表** —— 须先过 `HOME.DEVICE.12` 设备摸底，见 [§智能家居 Workstream](#智能家居-workstreamhomedevice--研判中)。
+>
+> **`HOME.PROJ.7` 后移：** 当前没有第二个真实可编辑项目需求；先把扫描认亲/安静扫描做稳。未验证需求前不为了“多项目”增加身份与冲突复杂度。
 
 ### 实现锚点
 
@@ -169,14 +177,16 @@ node scripts/qa-ui-screenshots.mjs   # UI/UX 截图（可选）
 
 | ID        | 说明                                                |
 | --------- | --------------------------------------------------- |
-| **HOME.PROJ.4**  | 全量 Supabase spatial 同步 —— park **维持**；若走 `HOME.DEVICE.14`，只同步「设备 ↔ zone 映射」这一小份，不等于解 park（见 §风险 / 边界） |
+| **HOME.PROJ.4**  | 完整可编辑 spatial 项目跨设备同步 —— 未完成；`home.scans` / 照片 / `home.events` 已在远程生产链（2026-07-17 实测），差的只是可编辑项目本体 |
 | **HOME.STORAGE.11** | life_events 储藏盘点 —— park 主因是**录入成本**；`HOME.VISION.15` 若成立则由 `HOME.STORAGE.18`（VLM 盘点）消掉该成本，届时值得重评 |
 
 ## 集成
 
 ```text
 Portal 实验卡 (HOME.PORTAL.1) ──► home.kenos.space
-localStorage ──► 平面/储藏真源（暂）
+localStorage ──► 可编辑平面/储藏项目真源
+HomeScan iOS ──► home.scans + 私有照片桶 ──► Web 拉取/合并
+本地 IndexedDB events ──► home.events（append-only 云镜像）
 
 研判中（HOME.DEVICE.* · 未开工）：
 Home Assistant ──► Home OS ──/api/mcp──► AIOS

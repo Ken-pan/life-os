@@ -2749,6 +2749,28 @@ let cloudScanReplacedProject = null
  * (那条路会丢 zones/placements/fixtures/viewpoints)。
  * @param {SpatialProject} project
  */
+/**
+ * 扫完自动认脏乱 —— 你要的「拍有意义的地方,机器自己告诉我哪儿脏乱」。
+ * 设备扫描时 AutoViewpointCapture 已自动拍了各房间的机位照片;这里对拉取回来的、
+ * **还没描述过**的机位逐张跑 VLM(describeViewpoint,复用手动导入那条已验证的路径),
+ * 填 viewpoint.state(杂乱/堆满)+ observations → buildTidyPlan 自动出整理建议。
+ * 幂等(describedAt 跳过)、VLM 就绪才跑、静默串行(省网关);网关不可达(生产)静默 no-op。
+ * fire-and-forget:不阻塞扫描应用。位移「有意义的东西」那半边由设备端认账免催天然覆盖。
+ * @returns {Promise<number>} 认出「杂乱/堆满」的机位数
+ */
+export async function autoDescribeScanScenes() {
+  const raw = S.projects[S.activeProjectId]
+  const pending = (raw?.viewpoints ?? []).filter((v) => v.photoRef && !v.describedAt)
+  if (!pending.length || !(await probeVlm())) return 0
+  let messy = 0
+  for (const vp of pending) {
+    const res = await describeViewpoint(vp.id, { silent: true, skipSolve: true })
+    if (res && (res.state === '堆满' || res.state === '杂乱')) messy++
+  }
+  if (messy > 0) toast(`扫描已识别 ${messy} 处可整理的地方 —— 见整理计划`, 'success', { duration: 6000 })
+  return messy
+}
+
 export function applyCloudScan(project) {
   const prev = S.projects[S.activeProjectId] ?? null
   cloudScanReplacedProject = prev
@@ -2780,6 +2802,8 @@ export function applyCloudScan(project) {
     geoNote += ',北向已按罗盘初校(可在平面图重校)'
   }
   toast(`云端扫描已应用${geoNote}`)
+  // 扫完自动认脏乱(fire-and-forget,VLM 不可达时静默跳过,不阻塞应用扫描)
+  void autoDescribeScanScenes()
 }
 
 export function canUndoCloudScan() {

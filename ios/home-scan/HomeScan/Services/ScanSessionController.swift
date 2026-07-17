@@ -71,8 +71,16 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
 
     // ---- Home Frame 重定位(设备端) ----
     /// 永久户型(优化副本);nil = 云端还没有(第一次建家),扫描照常
+    /// **Quick Scan 安静模式(默认开)**:扫描只管轻松扫完,逐件补拍引导(还差角度/
+    /// 请移动/请靠近)与机位站位提示**默认不打断你** —— 证据缺口留到扫描后处理,
+    /// ObjectShotCapture 仍静默收好帧。只保留严重打断(跟踪丢失 + 离开房间前的机位提醒)。
+    /// 关掉它 = 「高精度补扫」逐件引导(未来 UI 开关;现在默认安静)。
+    var quietScan = true
     private var canonicalHome: CanonicalHome?
     private var canonicalSegments: [HomeFrame.Segment] = []
+    /// 权威副本家具预算成户型米坐标(认账家的记忆:活体对回后免催拍)。
+    /// setCanonicalHome 时算一次;活体中心经 homeFrame.toHome 转到同一坐标系比对。
+    private var canonicalPriors: [EvidenceGuide.Prior] = []
     /// 最近一次配准结果(HUD 徽标 + 预览页;nil = 墙还不够/没有户型基准)
     private(set) var homeFrame: HomeFrame.Registration?
     /// 配准成功后对照户型分区算出的「还没扫到的房间」
@@ -82,6 +90,26 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     func setCanonicalHome(_ home: CanonicalHome?) {
         canonicalHome = home
         canonicalSegments = home.map { HomeFrame.segments(fromWallGraph: $0.wallGraph) } ?? []
+        canonicalPriors = home.map(Self.priors(from:)) ?? []
+    }
+
+    /// 权威副本家具 → 户型米坐标的 priors(中心 + kind)。plan-px → 米:除以
+    /// pxPerM(pxPerFt / 0.3048)。只要位置 —— 认账靠原位识别,与照片无关
+    /// (优化副本本就不携带每件照片,真机 v23:37 件 placements 零张 attrs.photos)。
+    private static func priors(from home: CanonicalHome) -> [EvidenceGuide.Prior] {
+        let pxPerM = home.wallGraph.pxPerFt / 0.3048
+        guard pxPerM > 0 else { return [] }
+        var out: [EvidenceGuide.Prior] = []
+        for pl in home.placements {
+            out.append(EvidenceGuide.Prior(
+                center: SIMD2((pl.x + pl.w / 2) / pxPerM, (pl.y + pl.h / 2) / pxPerM), kind: pl.kind))
+        }
+        for fx in home.fixtures ?? [] {
+            let b = fx.bounds
+            out.append(EvidenceGuide.Prior(
+                center: SIMD2((b.x + b.w / 2) / pxPerM, (b.y + b.h / 2) / pxPerM), kind: fx.kind))
+        }
+        return out
     }
 
     /// RoomPlan 实时快照里的物体(didUpdate 喂进来,抓拍定时器消费)
@@ -207,12 +235,17 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
                 self.hudHint = (tracking, .tracking)
             } else if let nudge = self.autoViewpoint.exitNudge {
                 self.hudHint = (nudge, .evidence)
-            } else if let guide = self.evidenceHint(frame) {
-                self.hudHint = (guide, .evidence)
-            } else if let hint = self.autoViewpoint.hint {
-                self.hudHint = (hint, .viewpoint)
             } else {
-                self.hudHint = nil
+                // 补拍引导仍在后台算:设 evidenceTarget(给抓拍定优先级)+ 记证据缺口 +
+                // 认账遥测。安静模式(默认)**不弹给你**;高精度补扫模式才逐件引导/机位站位。
+                let guide = self.evidenceHint(frame)
+                if !self.quietScan, let guide {
+                    self.hudHint = (guide, .evidence)
+                } else if !self.quietScan, let hint = self.autoViewpoint.hint {
+                    self.hudHint = (hint, .viewpoint)
+                } else {
+                    self.hudHint = nil
+                }
             }
             // 引导提示的每次**变化**都留档:用户被什么提示轰炸、跟踪坏了多久,
             // 是调门槛常数(EvidenceGuide/ViewpointGate)最缺的现场数据
@@ -343,22 +376,50 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
             }
             guard now - (firstSeen[object.identifier] ?? now) > Self.evidenceGraceS else { continue }
             let t = object.transform.columns.3
+            let center = SIMD2(Double(t.x), Double(t.z))
+            // 认账家的记忆:配准成功时把活体中心转到户型米坐标,对回**原位**权威件 ——
+            // 权威已有足够方位 → 不再催拍(见 EvidenceGuide.deficits)。配准还没成 /
+            // 没有权威副本 / 挪走了对不回原位 → priors 空,当新件照旧催(安全兜底)。
+            var recognized = false
+            if let reg = homeFrame, reg.ok, !canonicalPriors.isEmpty {
+                let hc = HomeFrame.toHome(center, reg)
+                recognized = EvidenceGuide.matchPrior(homeCenter: hc, priors: canonicalPriors)
+                // 诊断:这件离最近权威件多远。closeness = max(0, 300 − nearest_cm),
+                // peak 取最大 → 最近任何一件曾贴到多近。判读:nearest_cm = 300 − peak。
+                if let nm = EvidenceGuide.nearestPriorDist(homeCenter: hc, priors: canonicalPriors) {
+                    ScanLog.shared.counter { $0.peak("prior_closeness", max(0, 300 - nm * 100)) }
+                }
+            }
             furnitures.append(
                 EvidenceGuide.Furniture(
                     id: object.identifier,
                     category: String(describing: object.category),
-                    center: SIMD2(Double(t.x), Double(t.z)),
+                    center: center,
                     widthM: Double(object.dimensions.x),
                     depthM: Double(object.dimensions.z),
                     binsCovered: Set((shotCapture.shots[object.identifier] ?? [:]).keys),
                     heightM: Double(object.dimensions.y),
-                    elevM: max(0, Double(t.y) - Double(object.dimensions.y) / 2 - liveFloorY)
+                    elevM: max(0, Double(t.y) - Double(object.dimensions.y) / 2 - liveFloorY),
+                    recognizedFromPrior: recognized
                 )
             )
         }
         guard !furnitures.isEmpty else {
             clearEvidenceTarget()
             return nil
+        }
+
+        // 认账家的记忆 QA 遥测:峰值时多少件被先验认出(priorBinsCovered 非空)/ 共几件 /
+        // 配准是否在线 / 加载了几件权威 prior。判读:prior_count=0 → 没加载权威副本;
+        // prior_regOk=0 → 扫描中配准没成(matchPrior 永远兜底催拍);matched≈0 而
+        // objects 高 → 坐标没对上(配准/换算问题);matched≈objects → 认账在工作。
+        // 一次扫描即可定位,不必再盲装。
+        let matched = furnitures.filter { $0.recognizedFromPrior }.count
+        ScanLog.shared.counter {
+            $0.peak("prior_objects_peak", Double(furnitures.count))
+            $0.peak("prior_matched_peak", Double(matched))
+            $0.peak("prior_regOk", (self.homeFrame?.ok == true) ? 1 : 0)
+            $0.peak("prior_count", Double(self.canonicalPriors.count))
         }
 
         let cam = frame.camera.transform

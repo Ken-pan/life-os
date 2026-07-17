@@ -22,6 +22,13 @@ enum EvidenceGuide {
         var heightM: Double = 0
         /// 底面离地(米)—— 吊柜/挂墙件 >0
         var elevM: Double = 0
+        /// **认账家的记忆**:这件在权威副本里原位识别到了(位置对得上一件权威家具)。
+        /// = 「我认得它、它没挪」→ 不再催拍(与权威有没有照片无关 —— 优化副本根本不存
+        /// 每件照片;你要的是"没动就别催我",纯位置识别就够)。扫描中由 ScanSessionController
+        /// 用配准把活体对回原位权威件后置 true(见 matchPrior)。挪走/新增的件对不回原位 →
+        /// false → 照旧催拍(「拍有意义的地方」自然落出)。默认 false = 与旧版逐字一致。
+        /// ObjectShotCapture 仍会顺手被动抓拍,免催只是不再把你支使到处走。
+        var recognizedFromPrior: Bool = false
     }
 
     struct Wall {
@@ -146,10 +153,16 @@ enum EvidenceGuide {
         }
     }
 
-    /// 全部家具的证据缺口(covered ≥ required 的不出现在结果里)
+    /// 全部家具的证据缺口(covered ≥ required 的不出现在结果里)。
+    ///
+    /// **认账家的记忆**:原位识别到的件(recognizedFromPrior)直接不催 —— 「我认得它、
+    /// 它没挪」。挪走/新增的对不回原位 → false → 照旧按方位覆盖催拍(「拍有意义的地方」
+    /// 自然落出)。recognizedFromPrior 为 false 时(没权威副本 / 新件 / 挪动)行为与旧版逐字一致。
     static func deficits(furnitures: [Furniture], walls: [Wall]) -> [Deficit] {
         var out: [Deficit] = []
         for f in furnitures {
+            // 原位没挪、认得出 → 不催(ObjectShotCapture 仍会顺手拍,只是不支使你走位)
+            if f.recognizedFromPrior { continue }
             let host = hiddenHost(f, among: furnitures)
             var missing: [(bin: Int, standpoint: SIMD2<Double>)] = []
             var reachableBins: Set<Int> = []
@@ -178,6 +191,37 @@ enum EvidenceGuide {
             )
         }
         return out
+    }
+
+    // MARK: - 认账家的记忆:活体对回权威副本(纯函数,单测覆盖)
+
+    /// 权威副本里一件家具(已转到户型米坐标),供活体匹配。
+    struct Prior {
+        var center: SIMD2<Double>   // 户型米坐标俯视中心
+        var kind: String
+    }
+
+    /// 一件活体家具在权威副本里原位识别到了吗 —— **纯位置**(你的洞察:东西基本不动,
+    /// 原位=同一件;认得它就别催我,与有没有照片无关 —— 优化副本本就不存每件照片)。
+    /// sameSpotM 内有任一权威件即识别到。
+    ///
+    /// 为什么不按 kind:活体是 RoomPlan 原始类目(storage/table)、权威是精化 kind
+    /// (cabinet/standing_desk),精确匹配会大面积失配。半径本身当护栏 —— **1.2m** 不是
+    /// 拍脑袋:活体配准(残缺墙面算的)残差有几十 cm,ScanIdentity 位置尺度 ~1.8m,0.5m
+    /// 太紧一件都对不上(真机 e09f7d6f:0/6;放到 1.2m 后 2baa9447 最近件 4cm 就对上了)。
+    /// **保守**:半径外无候选 → false,当新件照旧催;挪走的件对不回原位 → false → 自动照旧催。
+    static func matchPrior(
+        homeCenter: SIMD2<Double>,
+        priors: [Prior],
+        sameSpotM: Double = 1.2
+    ) -> Bool {
+        priors.contains { simd_length(homeCenter - $0.center) <= sameSpotM }
+    }
+
+    /// 一件活体家具离最近权威件的距离(米,无视半径)—— QA 诊断专用。
+    /// 全 miss 时看它:~0.5-1m = 半径调松就好;≥3m = 配准/坐标系偏了(另查)。
+    static func nearestPriorDist(homeCenter: SIMD2<Double>, priors: [Prior]) -> Double? {
+        priors.map { simd_length(homeCenter - $0.center) }.min()
     }
 
     // MARK: - 扫描中 HUD 引导

@@ -108,7 +108,7 @@ Hub §Next 已排期。细节与外部对标 → [`GROWTH.md`](./GROWTH.md)。
 | PORT.GROWTH.4    | 今日摘要卡片                      | ✅  | —      | migration `20260708190000` |
 | INTG.EVENTS.1b | Fitness → Planner 事件            | ○   | 3–5d   | 产品规则                   |
 
-Tier B（未进 hub §Next）：PORT.GROWTH.6、FINC.CORE.2、MUSC.PIPE.3、PLNR.CORE.1、**HOME.PROJ.4** spatial 云同步。（**HOME.PROJ.5** 平面浏览/编辑 ✅ 2026-07-08）
+Tier B 历史项中，**HOME.SYNC.4** 的扫描/照片/追加事件已在生产；仍未完成的是 **HOME.PROJ.4 完整可编辑 spatial 项目同步**。object recognition 生产↔git 漂移另由 **HOME.RECOG.0** 紧急闭环。其余排序以 hub 为准。
 
 ---
 
@@ -125,15 +125,18 @@ Tier B（未进 hub §Next）：PORT.GROWTH.6、FINC.CORE.2、MUSC.PIPE.3、PLNR
 
 **2026-07-09 已完成：** FINC.CORE.0 · PLNR.CORE.2 · INTG.IDENTITY.0 · PORT.GROWTH.4 · HOME.PORTAL.1/HOME.SSO.2/HOME.SSO.3 · FINC.GROWTH.1 · PORT.GROWTH.2 · MUSC.CORE.1 · AppBrandSwitcher — 见 [`SHIPPED.md`](./SHIPPED.md)。
 
-## 六 app 产品候选（2026-07-09 脑暴入库）
+## 产品候选（2026-07-17 ROI / 闭环复核）
 
-Hub §Next 已收录 🔥/◆ 项。完整表 → [`apps/README.md`](./apps/README.md)。
+Hub §Now/Next 已收录 P0/P1 与高 ROI 项。完整排序 → [`POTENTIAL.md`](./POTENTIAL.md) · [`apps/README.md`](./apps/README.md)。
 
 | App     | Top IDs          | 分卷                                   |
 | ------- | ---------------- | -------------------------------------- |
-| Planner | PLNR.CORE.2, PLNR.CORE.3       | [`apps/planner.md`](./apps/planner.md) |
-| Fitness | GYMS.CORE.0, GYMS.EVENTS.1     | [`apps/fitness.md`](./apps/fitness.md) |
-| Finance | FINC.CORE.3, FINC.SYNC.1b      | [`apps/finance.md`](./apps/finance.md) |
-| Music   | MUSC.UI.2, MUSC.PIPE.4, MUSC.PIPE.5 | [`apps/music.md`](./apps/music.md)     |
-| Portal  | PORT.GROWTH.4b, PORT.GROWTH.6      | [`apps/portal.md`](./apps/portal.md)   |
-| Home    | HOME.PROJ.6a, HOME.PROJ.7      | [`apps/home.md`](./apps/home.md)       |
+| Planner | PLNR.UIUX.0；PLNR.ATTACH.0 决策；SCHED/CAPTURE 用户 gate | [`apps/planner.md`](./apps/planner.md) |
+| Fitness | maintenance；GYMS.MEDIA.3 / GYMS.SYNC.4 按需 | [`apps/fitness.md`](./apps/fitness.md) |
+| Finance | FINC.PURCHASE.6.a closure QA | [`apps/finance.md`](./apps/finance.md) |
+| Music   | paused；MUSC.PIPE.4 问题触发 | [`apps/music.md`](./apps/music.md) |
+| Portal  | maintenance；无新增卡片目标 | [`apps/portal.md`](./apps/portal.md) |
+| Home    | HOME.RECOG.0–3；HOME.MCP.13 | [`apps/home.md`](./apps/home.md) |
+| AIOS    | AIOS.STABLE.26 | [`apps/aios.md`](./apps/aios.md) |
+| KnowledgeOS | KNOW.EDITOR.7 → KNOW.VAULT.0 | [`apps/knowledge.md`](./apps/knowledge.md) |
+| HealthOS | HLT-5 checkpoint + 用户真机 gate | [`apps/health.md`](./apps/health.md) |

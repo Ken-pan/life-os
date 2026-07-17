@@ -489,6 +489,74 @@
  *   attrs。比 userEdited 更强:userEdited 只保全被标的字段,identityLocked 冻结整件
  */
 
+/* ============================================================================
+ * 物体识别层(OBJECT RECOGNITION LAYER)—— 服务端表,非 payload
+ *
+ * 这两个 typedef 描述 Supabase `home.object_observations` / `home.object_embeddings`
+ * 两张表的行(migration 20260717120000),**不是**扫描 payload 的一部分,也不进
+ * SpatialPlacement。它们是「跨扫描认亲 + 视觉 embedding」的独立载体:
+ *   • payload/attrs 只到「这次扫描的这件观察」;
+ *   • ObjectObservation 把历次观察按永久身份(canonicalObjectId)串起来累积;
+ *   • ObjectEmbedding 给每张裁剪存版本化的视觉向量(DINOv2 实例特征)。
+ * 采集端不变:裁剪 JPEG 早已在 home-scan-photos 桶(obj-{observationId}-{k}.jpg)。
+ * 契约与 supabase/migrations/20260717120000_home_object_recognition.sql +
+ * supabase/README.md 同源,改一处三处同步。
+ * ========================================================================== */
+
+/**
+ * `home.object_observations` 的一行:某次扫描里的某个物体观察。
+ * scans.payload 里 per-object 数据的规范化投影 + 跨扫描永久身份 + 匹配证据。
+ * 事实字段(dims/colorHex/dhash/photoPaths)一次扫描定死;可回写的只有
+ * canonicalObjectId 与 match(模型/规则升级后重算认亲)。
+ * @typedef {object} ObjectObservation
+ * @property {string} scanId 这次扫描的 id(→ home.scans.id)
+ * @property {string} observationId 那次扫描的 pl-N / fx-N(payload 内 id)
+ * @property {string} [canonicalObjectId] 跨扫描永久身份;承接 scan-merge
+ *   carryUserAuthored 的 id 延续语义。同一件家具的历次观察共享它;未认亲前为空
+ * @property {string} [kind]
+ * @property {string} [label]
+ * @property {{ wIn?: number, hIn?: number, heightIn?: number, elevIn?: number }} dims LiDAR 实测
+ * @property {string} [colorHex]
+ * @property {number} [colorConfidence]
+ * @property {number} [kindConfidence]
+ * @property {string} [dhash] 最佳裁剪感知哈希(16 hex,与 photo-hash.js 同源)
+ * @property {string[]} photoPaths 多角度裁剪桶内路径(obj-{observationId}-{k}.jpg)
+ * @property {number[]} [azimuths] 与 photoPaths 同序的方位角(度)
+ * @property {number} observedAt 客户端毫秒(= scan updatedAt / capturedAt)
+ * @property {ObjectMatchDecision} [match] 匹配器对这次观察的判定 + 候选打分 + 证据
+ */
+
+/**
+ * 匹配器对一次观察的认亲决定(存进 ObjectObservation.match)。
+ * 「保存所有候选分数和最终决定」的落点 —— 升级规则/模型后可回放对比,防倒退。
+ * @typedef {object} ObjectMatchDecision
+ * @property {'same_unchanged'|'same_moved'|'possibly_same'|'added'|'removed'} state
+ * @property {string} [chosenCanonicalId] 最终认定的永久身份(added 时为空)
+ * @property {Array<{ canonicalId: string, score: number, breakdown: Record<string, number> }>} candidates
+ *   全体候选及其融合分与分项(size/pos/color/dhash/vision/…),按分降序
+ * @property {string} [resolver] 判定路径('global-assignment'/'geometry-only'/…)
+ * @property {string} [modelVersion] 参与本次判定的视觉模型版本
+ * @property {string} [calibrationVersion] 参与本次判定的权重校准版本
+ */
+
+/**
+ * `home.object_embeddings` 的一行:某张裁剪在某个模型版本下的视觉向量。
+ * 版本化存储(不裸存 Float 当永久格式);不引 pgvector —— 家具量小,匹配时
+ * 拉候选向量暴力余弦即可。dim 显式存不写死;模型升级换 modelVersion 追加新行。
+ * @typedef {object} ObjectEmbedding
+ * @property {string} photoPath 对应裁剪(桶内路径,全库唯一含 scanId)
+ * @property {string} modelVersion 版本化模型标识,如 'dinov2-vitb14@2026-07'
+ * @property {string} scanId
+ * @property {string} observationId
+ * @property {string} [canonicalObjectId] 冗余一份便于按家具聚向量;认亲后回填
+ * @property {number} dim 向量维数(随模型变,不写死)
+ * @property {number[]} embedding L2 归一化后的向量;余弦=点积
+ * @property {string} [calibrationVersion] 这批向量面向的匹配器校准版本
+ * @property {string} [source] 产出来源('mac-dinov2'/Vision revision…),排查用
+ * @property {string} [cropRecipeVersion] 裁剪配方版本;变了要重算,勿与旧向量混比
+ * @property {number} createdAt 客户端/服务端毫秒
+ */
+
 /**
  * 一个轴上的墙锚:家具哪一侧、贴的哪面墙、离多远、在墙上什么位置。
  * @typedef {object} WallAnchorAxis

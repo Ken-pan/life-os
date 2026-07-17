@@ -18,7 +18,7 @@
 | Integration     | ✅   | SSO · outbox · Portal PORT.GROWTH.4                                                          |
 | FINC.GROWTH.1   | ✅   | 主站 toast；**FINC.SYNC.1b** popup last sync + retry ✅（2026-07-13, 18/18）                  |
 | E2E             | ✅   | `qa:ia-nav` 31/31 · `qa:ia-routes` 22/22 ✅（FINC.CORE.0）                                   |
-| 订单 enrichment | 🟡   | `purchase_enrichment` 三商家；History 可展示 line items；**168 笔待审核**（read model v1.1） |
+| 订单 enrichment | 🟡   | `purchase_enrichment` 三商家；History 可展示 line items；**168 笔待审核**（read model v1.1）；新购买检测→定向抓单→匹配标注一键脚本（`55749137c`，2026-07-16） |
 
 ### 订单 enrichment 现状（2026-07-07 handoff）
 
@@ -36,7 +36,7 @@
 
 | ID              | 主题                                | ROI | 桶      | 投入   | Agent                    | 验收                                     | Hub   |
 | --------------- | ----------------------------------- | --- | ------- | ------ | ------------------------ | ---------------------------------------- | ----- |
-| **FINC.PURCHASE.6**  | **支出审核**（商品明细 + 后续处理） | 🔥  | Product | 3–5d   | **Claude Fable** · Codex | 审核队列可操作；商品级主路径；退货链可见；**6.a 数据地基 slice 1 已落地（引擎 14/14 + 迁移成文，2026-07-13）** | §Now  |
+| **FINC.PURCHASE.6.a**  | **支出审核 closure QA**（Confirm/Reject/Undo） | 🔥  | Product | 0.5–1d | Codex + Ken 登录态 | 代码/RPC/matcher 已完成；owner History Confirm→Undo · 双 JWT RLS 拒绝 · desktop/mobile 基线 | §Now |
 | ~~**FINC.SYNC.1b**~~ | ~~扩展 popup last sync + 重试~~ ✅ 已发货 2026-07-13 | ◆ | Growth | — | Codex | popup timestamp + 失败原因 + retry；`extensionSyncHealth.test.js` 18/18 | ✅ |
 | **FINC.GROWTH.4**    | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | Codex                    | pending 与 UI 一致                       | —     |
 | **FINC.IMPORT.5**    | History CSV 最小导入                | ○   | Product | 3–5d   | Codex                    | `/review/import` 可上传                  | —     |
@@ -45,16 +45,16 @@
 
 **产品问题：** 信用卡只显示商家名（如 `AMAZON MARKETPLACE`），用户需要知道**买了什么**、**订单是否匹配正确**、**退货/退款后如何处理**。
 
-**Discovery 收口（2026-07-11）：** 产品合同 **PASS** · 数据层 **BLOCKED** · section **CONDITIONAL PASS** — 详见 [`FP6_PURCHASE_REVIEW.md`](../../../apps/finance/docs/FP6_PURCHASE_REVIEW.md)。**不得在现有 `purchase_enrichment` JSONB 上直接实现 Confirm/Reject/Undo。**
+**2026-07-17 复核：** 产品合同已 PASS；数据层不再 BLOCKED——association/decision migration 已部署生产、3 RPC 已往返验证、matcher precedence 与 UI Confirm/Reject/Undo 均已提交。仍禁止直接修改 `purchase_enrichment` JSONB；开放范围只剩登录态/RLS/视觉 closure QA。详见 [`FP6_PURCHASE_REVIEW.md`](../../../apps/finance/docs/FP6_PURCHASE_REVIEW.md)。
 
 | 子项      | 范围                                                                     | 验收                                                |
 | --------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
-| **FINC.PURCHASE.6**  | Discovery：产品语义 · 数据审计 · QA 静态准备                               | **CONDITIONAL PASS** — 实现未授权                    |
-| **FINC.PURCHASE.6.a** | Data foundation + History 确认/驳回/Undo UI                              | **BLOCKED** — 需 association/decision migration 先行 |
+| **FINC.PURCHASE.6**  | Discovery：产品语义 · 数据审计 · QA 静态准备                               | ✅ PASS |
+| **FINC.PURCHASE.6.a** | Data foundation + History 确认/驳回/Undo UI                              | 🟡 Code complete — engine 14/14 · migration/RPC 生产 ✅ · matcher 18/18 · UI ✅；仅剩 owner live eyeball、双 JWT RLS、视觉基线 |
 | **FINC.PURCHASE.6b** | 后续处理：`returnInfo` · 关联退款 txn · 用户备注/处理状态                | 退货订单显示关联负向交易                            |
 | **FINC.PURCHASE.6c** | Amazon/BBY 策展批次（读 `review_queue_v1_1`，**非** broad apply）        | handoff v1.2/v1.3 增量 clean 行进 DB                |
 
-**已完成：** FINC.CORE.3 STS / reserve / Spend 口径统一，`outlook.test.ts` 40 pass · FINC.PURCHASE.6 产品合同与数据 blocker 文档化。
+**已完成：** FINC.CORE.3 STS / reserve / Spend 口径统一 · FINC.PURCHASE.6 产品合同 · 6.a 数据地基 / matcher / UI 实现。Finance app 当前单测 **117/117**（2026-07-17）；purchase decision engine 在共享 `finance-core` 有独立 14/14。
 
 ### 实现锚点
 

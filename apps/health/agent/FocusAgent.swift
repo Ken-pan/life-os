@@ -83,23 +83,23 @@ struct Config: Codable {
     }
 }
 
-// MARK: - 调色板(与 HealthOS 品牌 tokens 同源:indigo 夜空系)
+// MARK: - 调色板(health 品牌 dark tokens 1:1;源:packages/design-tokens/tokens/brands/health.json)
 
 enum P {
     static func rgb(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ a: CGFloat = 1) -> NSColor {
         NSColor(calibratedRed: r / 255, green: g / 255, blue: b / 255, alpha: a)
     }
-    static let bg = rgb(5, 7, 13)
-    static let heroText = rgb(240, 243, 250)
-    static let dimText = rgb(153, 161, 182)
-    static let footText = rgb(69, 76, 96)
-    static let accent = rgb(143, 163, 255)
-    static let teal = rgb(94, 234, 212)
-    static let indigo = rgb(91, 108, 255)
-    static let violet = rgb(124, 91, 240)
-    static let auroraBlue = rgb(84, 98, 255)
-    static let auroraTeal = rgb(45, 212, 191)
-    static let auroraViolet = rgb(139, 92, 246)
+    static let bg = rgb(11, 14, 20)              // --bg #0b0e14
+    static let card = rgb(22, 26, 36)            // --card #161a24
+    static let border = rgb(255, 255, 255, 0.08) // --border
+    static let borderL = rgb(255, 255, 255, 0.12) // --border-l
+    static let t1 = rgb(238, 241, 244)           // --t1
+    static let t2 = rgb(166, 175, 185)           // --t2
+    static let t3 = rgb(113, 123, 133)           // --t3
+    static let t4 = rgb(238, 241, 244, 0.38)     // --t4
+    static let accent = rgb(143, 163, 255)       // --accent #8fa3ff
+    static let accent2 = rgb(170, 185, 255)      // --accent-2 #aab9ff
+    static let onAccent = rgb(11, 14, 20)        // --on-accent
 }
 
 // MARK: - 可成为 key 的无边框窗
@@ -670,21 +670,72 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
-        setStatus(symbol: "figure.mind.and.body", fallback: "🧘", text: "")
+        setStatus(progress: 0, glyph: .none, text: "")
     }
 
-    func setStatus(symbol: String, fallback: String, text: String) {
-        guard let btn = statusItem?.button else { return }
-        if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: "HealthOS Focus")?
-            .withSymbolConfiguration(.init(pointSize: 12.5, weight: .medium)) {
-            img.isTemplate = true
-            btn.image = img
-            btn.imagePosition = text.isEmpty ? .imageOnly : .imageLeading
-            btn.title = text.isEmpty ? "" : " " + text
-        } else {
-            btn.image = nil
-            btn.title = fallback + (text.isEmpty ? "" : " " + text)
+    /// 菜单栏图标中心符号
+    enum StatusGlyph { case none, pause, moon, alert }
+
+    /// 自绘环形进度图标(模板渲染,自动适配深浅菜单栏):
+    /// 环 = 净累积 / 生效窗口;预警满环带点;休息时环随剩余时间倒退,中心月牙。
+    func ringIcon(progress: CGFloat, glyph: StatusGlyph) -> NSImage {
+        let side: CGFloat = 17
+        let img = NSImage(size: NSSize(width: side, height: side), flipped: false) { _ in
+            guard let c = NSGraphicsContext.current?.cgContext else { return false }
+            let center = CGPoint(x: side / 2, y: side / 2)
+            let r: CGFloat = 6.6
+            let lw: CGFloat = 1.7
+            c.setLineWidth(lw)
+            c.setLineCap(.round)
+
+            c.setStrokeColor(NSColor.black.withAlphaComponent(glyph == .pause ? 0.18 : 0.3).cgColor)
+            c.addArc(center: center, radius: r, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
+            c.strokePath()
+
+            let p = min(1, max(0, progress))
+            if p > 0.015 {
+                c.setStrokeColor(NSColor.black.cgColor)
+                let start = CGFloat.pi / 2
+                c.addArc(center: center, radius: r, startAngle: start,
+                         endAngle: start - 2 * .pi * p, clockwise: true)
+                c.strokePath()
+            }
+
+            switch glyph {
+            case .none:
+                // 环 + 中心点 = 靶心/专注;空载时也立得住,不像失效图标
+                c.setFillColor(NSColor.black.cgColor)
+                c.fillEllipse(in: CGRect(x: center.x - 1.4, y: center.y - 1.4, width: 2.8, height: 2.8))
+            case .alert:
+                c.setFillColor(NSColor.black.cgColor)
+                c.fillEllipse(in: CGRect(x: center.x - 1.6, y: center.y - 1.6, width: 3.2, height: 3.2))
+            case .pause:
+                c.setFillColor(NSColor.black.cgColor)
+                for dx: CGFloat in [-2.1, 0.9] {
+                    let bar = NSBezierPath(roundedRect: NSRect(x: center.x + dx, y: center.y - 2.4,
+                                                               width: 1.2, height: 4.8),
+                                           xRadius: 0.6, yRadius: 0.6)
+                    bar.fill()
+                }
+            case .moon:
+                c.setFillColor(NSColor.black.cgColor)
+                c.fillEllipse(in: CGRect(x: center.x - 2.9, y: center.y - 2.9, width: 5.8, height: 5.8))
+                c.setBlendMode(.clear)
+                c.fillEllipse(in: CGRect(x: center.x - 1.3, y: center.y - 0.9, width: 5.4, height: 5.4))
+                c.setBlendMode(.normal)
+            }
+            return true
         }
+        img.isTemplate = true
+        return img
+    }
+
+    func setStatus(progress: CGFloat, glyph: StatusGlyph, text: String) {
+        guard let btn = statusItem?.button else { return }
+        btn.image = ringIcon(progress: progress, glyph: glyph)
+        btn.imagePosition = text.isEmpty ? .imageOnly : .imageLeading
+        btn.title = text.isEmpty ? "" : " " + text
+        btn.font = .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
@@ -694,6 +745,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             item.isEnabled = false
             menu.addItem(item)
         }
+        func action(_ title: String, _ symbol: String, _ sel: Selector) {
+            let item = NSMenuItem(title: title, action: sel, keyEquivalent: "")
+            item.target = self
+            if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 13, weight: .regular)) {
+                item.image = img
+            }
+            menu.addItem(item)
+        }
         info(statusText())
         info("此刻:\(lastSampleNote)")
         info("今天已休息 \(breaksToday) 次")
@@ -701,19 +761,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         if let until = pausedUntil, until > Date() {
             let fmt = DateFormatter(); fmt.dateFormat = "HH:mm"
-            menu.addItem(withTitle: "▶️ 恢复计时(暂停至 \(fmt.string(from: until)))", action: #selector(resumeNow), keyEquivalent: "").target = self
+            action("恢复计时(暂停至 \(fmt.string(from: until)))", "play.circle", #selector(resumeNow))
         } else {
-            menu.addItem(withTitle: "🌙 现在就休息", action: #selector(breakNow), keyEquivalent: "").target = self
-            menu.addItem(withTitle: "⏸ 暂停 30 分钟", action: #selector(pause30), keyEquivalent: "").target = self
-            menu.addItem(withTitle: "⏸ 暂停 2 小时", action: #selector(pause2h), keyEquivalent: "").target = self
-            menu.addItem(withTitle: "💤 今天不再打扰", action: #selector(pauseToday), keyEquivalent: "").target = self
+            action("现在就休息", "moon.fill", #selector(breakNow))
+            action("暂停 30 分钟", "pause.circle", #selector(pause30))
+            action("暂停 2 小时", "pause.circle", #selector(pause2h))
+            action("今天不再打扰", "bell.slash", #selector(pauseToday))
         }
         menu.addItem(.separator())
-        menu.addItem(withTitle: "🩺 打开 HealthOS", action: #selector(openHealthOS), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "📄 打开日志", action: #selector(openLog), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "⚙️ 编辑配置", action: #selector(openConfig), keyEquivalent: "").target = self
+        action("打开 HealthOS", "heart.text.square", #selector(openHealthOS))
+        action("打开日志", "doc.text", #selector(openLog))
+        action("编辑配置", "gearshape", #selector(openConfig))
         menu.addItem(.separator())
-        menu.addItem(withTitle: "退出 Focus 代理", action: #selector(quit), keyEquivalent: "").target = self
+        action("退出 Focus 代理", "power", #selector(quit))
     }
 
     func statusText() -> String {
@@ -723,29 +783,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let suffix = policyReason != nil && policyDate == todayStr() ? " · 自适应" : ""
             return "vibe coding 净累积 \(m) / \(lim) 分钟\(suffix)"
         case .warning(let t):
-            return "⚠️ \(max(0, Int(t.timeIntervalSinceNow))) 秒后休息(停手 \(config.warnCancelSeconds) 秒可取消)"
+            return "\(max(0, Int(t.timeIntervalSinceNow))) 秒后休息(停手 \(config.warnCancelSeconds) 秒可取消)"
         case .breaking(let t):
-            return "🌙 休息中,还剩 \(max(0, Int(t.timeIntervalSinceNow))) 秒"
+            return "休息中,还剩 \(max(0, Int(t.timeIntervalSinceNow))) 秒"
         }
     }
 
     func updateStatusTitle() {
         guard statusItem != nil else { return }
         if let until = pausedUntil, until > Date() {
-            setStatus(symbol: "pause.circle", fallback: "⏸", text: "")
+            setStatus(progress: 0, glyph: .pause, text: "")
             return
         }
         switch phase {
         case .normal:
-            let remain = max(0.0, Double(effectiveLimit()) - score)
-            setStatus(symbol: "figure.mind.and.body", fallback: "🧘",
+            let limit = Double(effectiveLimit())
+            let remain = max(0.0, limit - score)
+            setStatus(progress: limit > 0 ? score / limit : 0, glyph: .none,
                       text: score < 60 ? "" : "\(Int(ceil(remain / 60)))m")
         case .warning(let t):
-            setStatus(symbol: "hourglass", fallback: "⚠️",
+            setStatus(progress: 1, glyph: .alert,
                       text: "\(max(0, Int(t.timeIntervalSinceNow)))s")
         case .breaking(let t):
             let s = max(0, Int(t.timeIntervalSinceNow))
-            setStatus(symbol: "moon.zzz.fill", fallback: "🌙",
+            setStatus(progress: breakDuration > 0 ? CGFloat(t.timeIntervalSinceNow / breakDuration) : 0,
+                      glyph: .moon,
                       text: String(format: "%d:%02d", s / 60, s % 60))
         }
     }
@@ -956,10 +1018,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         blur.material = .hudWindow
         blur.state = .active
         blur.wantsLayer = true
-        blur.layer?.cornerRadius = 22
+        blur.layer?.cornerRadius = 18
+        blur.layer?.cornerCurve = .continuous
         blur.layer?.masksToBounds = true
         blur.layer?.borderWidth = 1
-        blur.layer?.borderColor = NSColor(calibratedWhite: 1, alpha: 0.08).cgColor
+        blur.layer?.borderColor = P.border.cgColor
 
         let ringBox = NSView(frame: NSRect(x: 18, y: size.height - 16 - 46, width: 46, height: 46))
         ringBox.wantsLayer = true
@@ -969,7 +1032,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let track = CAShapeLayer()
         track.path = ringPath
         track.fillColor = NSColor.clear.cgColor
-        track.strokeColor = NSColor(calibratedWhite: 1, alpha: 0.09).cgColor
+        track.strokeColor = P.border.cgColor
         track.lineWidth = 2.5
         ringBox.layer?.addSublayer(track)
         let fill = CAShapeLayer()
@@ -982,8 +1045,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         ringBox.layer?.addSublayer(fill)
         warnRing = fill
         let num = NSTextField(labelWithString: "\(config.warnSeconds)")
-        num.font = .monospacedDigitSystemFont(ofSize: 14, weight: .medium)
-        num.textColor = P.rgb(223, 228, 255)
+        num.font = roundedFont(size: 14, weight: .medium)
+        num.textColor = P.t1
         num.alignment = .center
         num.frame = NSRect(x: 0, y: 14, width: 46, height: 18)
         ringBox.addSubview(num)
@@ -992,34 +1055,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let title = NSTextField(labelWithString: "该收尾了 · 快满 \(effectiveLimit() / 60) 分钟")
         title.font = .systemFont(ofSize: 13.5, weight: .semibold)
-        title.textColor = P.rgb(240, 242, 248)
+        title.textColor = P.t1
         title.lineBreakMode = .byTruncatingTail
         title.frame = NSRect(x: 78, y: size.height - 16 - 20, width: size.width - 78 - 18, height: 20)
         blur.addSubview(title)
 
         let sub = NSTextField(labelWithString: "停手 \(config.warnCancelSeconds) 秒自动取消 · 到点休息 \(config.restSeconds / 60) 分钟")
         sub.font = .systemFont(ofSize: 11.5, weight: .regular)
-        sub.textColor = P.rgb(152, 160, 182)
+        sub.textColor = P.t2
         sub.lineBreakMode = .byTruncatingTail
         sub.frame = NSRect(x: 78, y: size.height - 16 - 20 - 19, width: size.width - 78 - 18, height: 16)
         blur.addSubview(sub)
 
         let pill = NSView(frame: NSRect(x: 78, y: 13, width: 100, height: 28))
         pill.wantsLayer = true
-        let pillGrad = CAGradientLayer()
-        pillGrad.frame = pill.bounds
-        pillGrad.colors = [P.indigo.cgColor, P.violet.cgColor]
-        pillGrad.startPoint = CGPoint(x: 0, y: 1)
-        pillGrad.endPoint = CGPoint(x: 1, y: 0)
-        pillGrad.cornerRadius = 14
-        pill.layer?.addSublayer(pillGrad)
-        pill.layer?.shadowColor = P.indigo.cgColor
-        pill.layer?.shadowOpacity = 0.35
-        pill.layer?.shadowRadius = 7
-        pill.layer?.shadowOffset = CGSize(width: 0, height: -2)
+        pill.layer?.backgroundColor = P.accent.cgColor
+        pill.layer?.cornerRadius = 14
+        pill.layer?.cornerCurve = .continuous
         let pillLabel = NSTextField(labelWithString: "现在就休息")
         pillLabel.font = .systemFont(ofSize: 12, weight: .semibold)
-        pillLabel.textColor = .white
+        pillLabel.textColor = P.onAccent
         pillLabel.alignment = .center
         pillLabel.frame = NSRect(x: 0, y: 6, width: 100, height: 16)
         pill.addSubview(pillLabel)
@@ -1028,7 +1083,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let ghost = NSTextField(labelWithString: "保存工作,喘口气")
         ghost.font = .systemFont(ofSize: 11.5, weight: .regular)
-        ghost.textColor = P.rgb(109, 116, 136)
+        ghost.textColor = P.t3
         ghost.frame = NSRect(x: 190, y: 19, width: size.width - 190 - 18, height: 16)
         blur.addSubview(ghost)
 
@@ -1067,7 +1122,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         warnRing = nil
     }
 
-    // MARK: 休息屏(夜空极光 + 呼吸表盘)
+    // MARK: 休息屏(品牌夜空 + 呼吸表盘;单 accent 视觉,与设计系统同源)
 
     func startBreak(duration: TimeInterval, force: Bool) {
         closeWarnPanel()
@@ -1124,11 +1179,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 g.add(drift, forKey: "drift")
                 root.layer?.addSublayer(g)
             }
-            aurora(P.auroraBlue, alpha: 0.26, w: sw * 0.64, h: sw * 0.46,
+            aurora(P.accent, alpha: 0.14, w: sw * 0.64, h: sw * 0.46,
                    cx: sw * 0.36, cy: sh * 0.60, dx: sw * 0.06, dy: sh * 0.06, secs: 26)
-            aurora(P.auroraTeal, alpha: 0.15, w: sw * 0.52, h: sw * 0.38,
+            aurora(P.accent2, alpha: 0.08, w: sw * 0.52, h: sw * 0.38,
                    cx: sw * 0.78, cy: sh * 0.36, dx: -sw * 0.05, dy: -sh * 0.05, secs: 34)
-            aurora(P.auroraViolet, alpha: 0.14, w: sw * 0.44, h: sw * 0.32,
+            aurora(P.accent, alpha: 0.06, w: sw * 0.44, h: sw * 0.32,
                    cx: sw * 0.52, cy: sh * 0.10, dx: sw * 0.05, dy: sh * 0.05, secs: 42)
 
             let vignette = CAGradientLayer()
@@ -1154,9 +1209,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
             let halo = CAGradientLayer()
             halo.type = .radial
-            halo.colors = [P.rgb(99, 112, 255, 0.20).cgColor,
-                           P.rgb(99, 112, 255, 0.05).cgColor,
-                           P.rgb(99, 112, 255, 0).cgColor]
+            halo.colors = [P.accent.withAlphaComponent(0.16).cgColor,
+                           P.accent.withAlphaComponent(0.05).cgColor,
+                           P.accent.withAlphaComponent(0).cgColor]
             halo.locations = [0, 0.55, 0.74]
             halo.startPoint = CGPoint(x: 0.5, y: 0.5)
             halo.endPoint = CGPoint(x: 1, y: 1)
@@ -1168,7 +1223,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let halo2 = CAShapeLayer()
             halo2.path = CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 300, height: 300), transform: nil)
             halo2.fillColor = NSColor.clear.cgColor
-            halo2.strokeColor = P.rgb(160, 175, 255, 0.14).cgColor
+            halo2.strokeColor = P.accent.withAlphaComponent(0.14).cgColor
             halo2.lineWidth = 1
             halo2.bounds = CGRect(x: 0, y: 0, width: 300, height: 300)
             halo2.position = CGPoint(x: cx, y: cyc)
@@ -1183,7 +1238,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let dialTrack = CAShapeLayer()
             dialTrack.path = arcPath
             dialTrack.fillColor = NSColor.clear.cgColor
-            dialTrack.strokeColor = NSColor(calibratedWhite: 1, alpha: 0.07).cgColor
+            dialTrack.strokeColor = P.border.cgColor
             dialTrack.lineWidth = 1.5
             dialTrack.bounds = CGRect(x: 0, y: 0, width: dialD, height: dialD)
             dialTrack.position = CGPoint(x: cx, y: cyc)
@@ -1192,7 +1247,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let glow = CAShapeLayer()
             glow.path = arcPath
             glow.fillColor = NSColor.clear.cgColor
-            glow.strokeColor = P.rgb(120, 140, 255, 0.25).cgColor
+            glow.strokeColor = P.accent.withAlphaComponent(0.25).cgColor
             glow.lineWidth = 9
             glow.lineCap = .round
             glow.strokeEnd = 0
@@ -1210,7 +1265,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             arcMask.strokeEnd = 0
             arcMask.frame = CGRect(x: 0, y: 0, width: dialD, height: dialD)
             let arcGrad = CAGradientLayer()
-            arcGrad.colors = [P.indigo.cgColor, P.teal.cgColor]
+            arcGrad.colors = [P.accent.cgColor, P.accent2.cgColor]
             arcGrad.startPoint = CGPoint(x: 0, y: 1)
             arcGrad.endPoint = CGPoint(x: 1, y: 0)
             arcGrad.bounds = CGRect(x: 0, y: 0, width: dialD, height: dialD)
@@ -1230,16 +1285,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
             _ = addLabel(kerned("该休息了", kern: 6.5,
                                 font: .systemFont(ofSize: 13, weight: .medium),
-                                color: P.dimText),
+                                color: P.t2),
                          centerY: cyc + 96, h: 20)
 
             let countdown = NSTextField(labelWithString: "")
-            countdown.font = .monospacedDigitSystemFont(ofSize: 118, weight: .thin)
-            countdown.textColor = P.heroText
+            countdown.font = roundedFont(size: 118, weight: .light)
+            countdown.textColor = P.t1
             countdown.alignment = .center
             countdown.frame = NSRect(x: 0, y: cyc - 62, width: sw, height: 128)
             let heroShadow = NSShadow()
-            heroShadow.shadowColor = P.rgb(120, 140, 255, 0.25)
+            heroShadow.shadowColor = P.accent.withAlphaComponent(0.25)
             heroShadow.shadowBlurRadius = 40
             heroShadow.shadowOffset = .zero
             countdown.shadow = heroShadow
@@ -1266,21 +1321,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
             let tip = addLabel(kerned(tips[0], kern: 2,
                                       font: .systemFont(ofSize: 15.5, weight: .light),
-                                      color: P.dimText),
+                                      color: P.t2),
                                centerY: cyc - dialD / 2 - 52, h: 24)
             tipLabels.append(tip)
 
             let brand = NSTextField(labelWithString: "")
             brand.attributedStringValue = kerned("HEALTH.OS · FOCUS", kern: 5,
                                                  font: .systemFont(ofSize: 10, weight: .medium),
-                                                 color: P.footText)
+                                                 color: P.t4, align: .left)
             brand.frame = NSRect(x: 28, y: 20, width: 280, height: 14)
             root.addSubview(brand)
 
             let count = NSTextField(labelWithString: "")
             count.attributedStringValue = kerned("今日第 \(breaksToday) 次休息", kern: 5,
                                                  font: .systemFont(ofSize: 10, weight: .medium),
-                                                 color: P.footText)
+                                                 color: P.t4, align: .right)
             count.alignment = .right
             count.frame = NSRect(x: sw - 268, y: 20, width: 240, height: 14)
             root.addSubview(count)
@@ -1305,8 +1360,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if testMode || tickTimer == nil { startTicking() }
     }
 
-    func kerned(_ s: String, kern: CGFloat, font: NSFont, color: NSColor) -> NSAttributedString {
-        NSAttributedString(string: s, attributes: [.font: font, .foregroundColor: color, .kern: kern])
+    /// NSTextField 的 alignment 对 attributedStringValue 不生效,对齐必须内嵌段落样式;
+    /// kern 只加到倒数第二个字符,否则末尾字距把整行推离视觉中心。
+    func kerned(_ s: String, kern: CGFloat, font: NSFont, color: NSColor,
+                align: NSTextAlignment = .center) -> NSAttributedString {
+        let para = NSMutableParagraphStyle()
+        para.alignment = align
+        let attr = NSMutableAttributedString(
+            string: s,
+            attributes: [.font: font, .foregroundColor: color, .paragraphStyle: para])
+        if attr.length > 1 {
+            attr.addAttribute(.kern, value: kern, range: NSRange(location: 0, length: attr.length - 1))
+        }
+        return attr
+    }
+
+    /// SF Rounded(缺字重时回退系统字体)——健康语境的数字排版
+    func roundedFont(size: CGFloat, weight: NSFont.Weight) -> NSFont {
+        let base = NSFont.monospacedDigitSystemFont(ofSize: size, weight: weight)
+        let desc = base.fontDescriptor.withDesign(.rounded)
+        return desc.flatMap { NSFont(descriptor: $0, size: size) } ?? base
     }
 
     func updateBreakUI(remaining: TimeInterval) {
@@ -1327,7 +1400,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             lastTipIndex = tipIndex
             let attr = kerned(tips[tipIndex], kern: 2,
                               font: .systemFont(ofSize: 15.5, weight: .light),
-                              color: P.dimText)
+                              color: P.t2)
             for l in tipLabels {
                 l.attributedStringValue = attr
                 l.alphaValue = 0

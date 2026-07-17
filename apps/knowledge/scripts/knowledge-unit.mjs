@@ -28,7 +28,17 @@ import {
   senseProject,
   buildStatusReport,
 } from '../src/lib/projects.js'
-import { markdownToBlocks, blocksToMarkdown } from '../src/lib/editor/blocks.js'
+import {
+  typeBreakdown,
+  topTags,
+  growthSeries,
+  weeklyCounts,
+  activityHeatmap,
+  snapshot,
+  groupNotes,
+} from '../src/lib/analytics.js'
+import { tagHueVar } from '../src/lib/tagColor.js'
+import { markdownToBlocks, blocksToMarkdown, plainExcerpt, firstHeadingMatchesTitle } from '../src/lib/editor/blocks.js'
 import {
   mdInlineToHtml,
   htmlInlineToMd,
@@ -373,6 +383,53 @@ function includes(name, haystack, needle) {
   ok('blocks-divider', blocks.some((b) => b.type === 'divider'))
   ok('blocks-empty-fallback', markdownToBlocks('').length === 1)
 
+  // Callout 高亮块（Obsidian 语法 > [!type]）：解析 + 往返 + 类型归一化
+  {
+    const cmd = [
+      '> [!note] 这是一条信息',
+      '',
+      '> [!tip] 小贴士',
+      '',
+      '> [!warning] 注意',
+      '',
+      '> [!danger] 危险',
+    ].join('\n')
+    const cb = markdownToBlocks(cmd)
+    ok('callout-parse-count', cb.filter((b) => b.type === 'callout').length === 4)
+    ok('callout-note-type', cb[0].type === 'callout' && cb[0].meta.callout === 'note' && cb[0].text === '这是一条信息')
+    ok('callout-tip-type', cb.some((b) => b.type === 'callout' && b.meta.callout === 'tip'))
+    ok('callout-warning-type', cb.some((b) => b.type === 'callout' && b.meta.callout === 'warning'))
+    ok('callout-danger-type', cb.some((b) => b.type === 'callout' && b.meta.callout === 'danger'))
+    const crt1 = blocksToMarkdown(markdownToBlocks(cmd))
+    const crt2 = blocksToMarkdown(markdownToBlocks(crt1))
+    ok('callout-roundtrip-stable', crt1 === crt2, '往返漂移')
+    // 别名归一化：success→tip、important→note、caution→warning、error→danger、未知→note
+    ok('callout-alias-success', markdownToBlocks('> [!success] 好')[0].meta.callout === 'tip')
+    ok('callout-alias-important', markdownToBlocks('> [!important] 重')[0].meta.callout === 'note')
+    ok('callout-alias-caution', markdownToBlocks('> [!caution] 慎')[0].meta.callout === 'warning')
+    ok('callout-alias-error', markdownToBlocks('> [!error] 错')[0].meta.callout === 'danger')
+    ok('callout-alias-unknown', markdownToBlocks('> [!zzz] 未知')[0].meta.callout === 'note')
+    // 多行正文并入一行；普通引用不被误判为 callout
+    const multi = markdownToBlocks('> [!info] 第一行\n> 第二行')
+    ok('callout-multiline-merge', multi[0].type === 'callout' && multi[0].text === '第一行 第二行')
+    ok('callout-plain-quote-untouched', markdownToBlocks('> 普通引用')[0].type === 'quote')
+  }
+
+  // 首个 H1 与标题重复 → 渲染层去重判定（vault: title 来自文件名、正文仍留 # 标题）
+  {
+    const hit = markdownToBlocks('# 我的笔记\n\n正文')
+    ok('duph1-match', firstHeadingMatchesTitle(hit, '我的笔记') === true)
+    ok('duph1-match-trim', firstHeadingMatchesTitle(hit, '  我的笔记 ') === true)
+    ok('duph1-diff-title', firstHeadingMatchesTitle(hit, '别的标题') === false)
+    ok('duph1-empty-title', firstHeadingMatchesTitle(hit, '') === false)
+    // 行内标记：H1 文本剥标记后再比（**我的**笔记 → 我的笔记）
+    ok('duph1-inline-strip', firstHeadingMatchesTitle(markdownToBlocks('# **我的**笔记'), '我的笔记') === true)
+    // H2 不算、非标题首块不算、无块不算
+    ok('duph1-h2-no', firstHeadingMatchesTitle(markdownToBlocks('## 我的笔记'), '我的笔记') === false)
+    ok('duph1-para-no', firstHeadingMatchesTitle(markdownToBlocks('我的笔记'), '我的笔记') === false)
+    ok('duph1-empty-blocks', firstHeadingMatchesTitle([], '我的笔记') === false)
+  }
+
   // 行内 md ⇄ 可编辑 HTML 往返（落盘不损坏）
   const inlineCases = [
     '普通文本',
@@ -401,6 +458,71 @@ function includes(name, haystack, needle) {
 
   // 纯文本抽取（搜索/摘要）
   ok('plain-strip', inlineToPlainText('**粗** [[A|别名]] `c`') === '粗 别名 c')
+
+  // 列表预览摘要：块级 + 行内标记全剥（列表/时间线/相关笔记复用，不许露裸 markdown）
+  const excerptSrc = '# 标题\n\n正文 **加粗** 和 *斜体*，[[双链]]。\n\n- 项目一\n- 项目二\n\n> 引用一句'
+  const ex = plainExcerpt(excerptSrc, 200)
+  ok('excerpt-no-heading-hash', !ex.includes('#'))
+  ok('excerpt-no-bold-marks', !ex.includes('**'))
+  ok('excerpt-no-list-dash', !ex.includes('- 项目'))
+  ok('excerpt-no-wikilink-brackets', !ex.includes('[['))
+  ok('excerpt-keeps-text', ex.includes('标题') && ex.includes('加粗') && ex.includes('双链'))
+  ok('excerpt-truncates', plainExcerpt('字'.repeat(500), 50).length === 50)
+  ok('excerpt-skips-code-block', !plainExcerpt('正文\n\n```js\nconst x=1\n```', 200).includes('const x'))
+}
+
+/* ===== analytics：条目 → 图表数据（确定性时间分桶）===== */
+{
+  const DAY = 86400000
+  const WEEK = 7 * DAY
+  const now = new Date('2026-07-16T12:00:00').getTime()
+  const items = [
+    { type: 'note', tags: ['a', 'b'], createdAt: now - 1 * DAY },
+    { type: 'note', tags: ['a'], createdAt: now - 2 * DAY },
+    { type: 'link', tags: ['a', 'c'], createdAt: now - 10 * DAY },
+    { type: 'clip', tags: [], createdAt: now - 40 * DAY },
+    { type: 'note', tags: ['b'], createdAt: now - 3 * WEEK - 2 * DAY },
+  ]
+
+  const tb = typeBreakdown(items)
+  ok('analytics-type', tb.note === 3 && tb.link === 1 && tb.clip === 1)
+
+  const tags = topTags(items, 3)
+  ok('analytics-toptags-order', tags[0].label === 'a' && tags[0].value === 3)
+  ok('analytics-toptags-cap', topTags(items, 2).length === 2)
+
+  const g = growthSeries(items, { now, weeks: 6 })
+  ok('analytics-growth-len', g.labels.length === 6 && g.values.length === 6)
+  ok('analytics-growth-cumulative', g.values[5] === 5 && g.values[0] <= g.values[5])
+
+  const wc = weeklyCounts(items, { now, weeks: 6 })
+  ok('analytics-weekly-thisweek', wc[wc.length - 1] === 2)
+
+  const heat = activityHeatmap(items, { now, weeks: 8 })
+  ok('analytics-heat-shape', heat.values.length === 7 && heat.values[0].length === 8)
+  ok('analytics-heat-future-null', heat.values.some((row) => row.includes(null)))
+
+  const snap = snapshot(items, { now })
+  ok('analytics-snapshot', snap.total === 5 && snap.week === 2 && snap.tags === 3)
+  ok('analytics-empty', snapshot([], { now }).total === 0 && typeBreakdown([]).note === 0)
+
+  // 列表分组：置顶 / 今天 / 昨天 / 本周 / 更早
+  const gItems = [
+    { pinned: true, updatedAt: now - 40 * DAY },
+    { pinned: false, updatedAt: now - 1 * 3600000 }, // 今天
+    { pinned: false, updatedAt: now - 1 * DAY - 1 * 3600000 }, // 昨天
+    { pinned: false, updatedAt: now - 3 * DAY }, // 本周
+    { pinned: false, updatedAt: now - 20 * DAY }, // 更早
+  ]
+  const groups = groupNotes(gItems, { now })
+  ok('group-keys-order', groups.map((g) => g.key).join(',') === 'pinned,today,yesterday,week,older')
+  ok('group-pinned-first', groups[0].key === 'pinned' && groups[0].items.length === 1)
+  ok('group-skips-empty', groupNotes([{ pinned: false, updatedAt: now }], { now }).length === 1)
+  ok('group-empty', groupNotes([], { now }).length === 0)
+
+  // 标签色：稳定、返回 hue var
+  ok('tagcolor-stable', tagHueVar('工作') === tagHueVar('工作'))
+  ok('tagcolor-var', /^var\(--chart-hue-\w+\)$/.test(tagHueVar('读书')))
 }
 
 console.log(`knowledge-unit: ${pass} passed, ${fail} failed`)

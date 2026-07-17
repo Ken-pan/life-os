@@ -9,15 +9,17 @@
    * - 行内真·所见即所得走 input-rule（打 **粗** 空格即变真粗体、标记消失）。
    * - 双模：所见即所得 ⇄ 源码 一键切换。
    */
-  import { tick } from 'svelte'
+  import { tick, onMount, onDestroy } from 'svelte'
   import { LifeOsSheet } from '@life-os/platform-web/svelte/overlay'
+  import Menu from '@life-os/platform-web/svelte/menu'
   import {
     Bold, Italic, Code, Strikethrough, Link2, Type, Heading1, Heading2,
     Heading3, List, ListOrdered, CheckSquare, Quote, Minus, GripVertical,
-    Plus, FileCode, Eye, Pin, Trash2, Check,
+    Plus, FileCode, Eye, Pin, Trash2, Check, MoreHorizontal,
+    Info, Lightbulb, TriangleAlert, OctagonAlert,
   } from '@lucide/svelte'
   import {
-    markdownToBlocks, blocksToMarkdown, makeBlock, newBlockId,
+    markdownToBlocks, blocksToMarkdown, makeBlock, newBlockId, firstHeadingMatchesTitle,
   } from '$lib/editor/blocks.js'
   import {
     mdInlineToHtml, matchInlineRule, inlineToPlainText, escapeHtml,
@@ -28,22 +30,44 @@
     replaceBeforeCaret, wrapSelection, insertHtmlAtCaret, selectionRect,
     caretRect, selectionCollapsed,
   } from '$lib/editor/caret.js'
+  import { S, resolveWikilink } from '$lib/state.svelte.js'
+  import { metaWhen } from '$lib/format.js'
+  import CategoryChip from '$lib/components/CategoryChip.svelte'
   import { t } from '$lib/i18n/index.js'
 
   /**
    * @type {{
    *   item: any | null,
    *   titles?: string[],
-   *   onClose: () => void,
-   *   onSave: (patch: { title: string, body: string }) => void,
-   *   onDelete: () => void,
-   *   onTogglePin: () => void,
+   *   inline?: boolean,
+   *   onClose?: () => void,
+   *   onSave: (patch: { title: string, body: string }, item: any) => void,
+   *   onDelete: (item: any) => void,
+   *   onTogglePin: (item: any) => void,
+   *   onOpenNote?: (item: any) => void,
    * }}
+   * inline=true 时渲染为内联文档面板（master-detail 工作台），否则弹窗（LifeOsSheet）。
+   * onSave/onDelete/onTogglePin 都带 item —— 内联切换笔记时要把「上一条」落到正确对象。
+   * onOpenNote：正文内 [[双链]] 点击→解析→跳到目标笔记（工作台切换选中）。
    */
-  let { item, titles = [], onClose, onSave, onDelete, onTogglePin } = $props()
+  let { item, titles = [], inline = false, onClose, onSave, onDelete, onTogglePin, onOpenNote, footer } = $props()
+
+  /** 正文 [[wikilink]] 点击委托（内联工作台用）：resolve 后交给工作台切换选中。 */
+  function onBodyClick(e) {
+    if (!onOpenNote) return
+    const a = e.target.closest('a.wikilink')
+    if (!a) return
+    e.preventDefault()
+    const found = resolveWikilink(a.dataset.target || a.dataset.wikilink || a.textContent)
+    if (found) onOpenNote(found)
+  }
 
   let title = $state('')
   let blocks = $state([makeBlock('paragraph', '')])
+  // 首个 H1 与标题重复时，渲染层隐藏它（title 输入框才是唯一标题；markdown 不动）。
+  const dupHeadingId = $derived(
+    firstHeadingMatchesTitle(blocks, title) ? blocks[0].id : null,
+  )
   let mode = $state('wysiwyg') // 'wysiwyg' | 'source'
   let sourceText = $state('')
   let confirmDelete = $state(false)
@@ -57,17 +81,70 @@
   // 用对象身份而非 id 守卫：vault 保存会重命名文件、就地改 item.id（同一对象），
   // 那不是切换笔记，绝不能借此把正在编辑的内容打回。
   let loadedRef = null
+  let loadedTitle = '' // 载入时快照（判脏，避免只看不改也 bump updatedAt）
+  let loadedBody = ''
+  let titleEl = $state(null)
   $effect(() => {
     const cur = item
-    if (!cur || cur === loadedRef) return
+    if (cur === loadedRef) return
+    // 内联：切走前先把「上一条」落盘（防抖可能还没触发）或弃空草稿
+    if (inline && loadedRef) commitTo(loadedRef)
     loadedRef = cur
+    if (!cur) return
     title = cur.title || ''
     blocks = markdownToBlocks(cur.body || '')
+    loadedTitle = title
+    loadedBody = blocksToMarkdown(blocks) // 归一化后的基准（往返稳定）
     mode = 'wysiwyg'
     sourceText = ''
     confirmDelete = false
     closeMenus()
+    // 内联无焦点陷阱：显式聚焦（空笔记→标题；否则→首块）
+    if (inline) {
+      const isBlank = !cur.title && !(cur.body || '').trim()
+      // 首块是被隐藏的重复 H1 时，焦点落到下一个可见块
+      const skip = firstHeadingMatchesTitle(blocks, title) ? 1 : 0
+      const focusTarget = blocks[skip] || blocks[0]
+      tick().then(() => {
+        if (isBlank) titleEl?.focus()
+        else if (focusTarget) focusBlock(focusTarget.id, 'start')
+      })
+    }
   })
+
+  // 内联卸载时落盘最后一条（防抖窗口内的编辑不丢）
+  onDestroy(() => {
+    if (inline && loadedRef) commitTo(loadedRef)
+  })
+
+  // 硬刷新 / 关标签 / 切到后台：onDestroy 不触发，防抖窗口内的编辑会丢。
+  // 用 pagehide + visibilitychange(hidden) 同步落盘待写内容（只 flush 不弃空）。
+  onMount(() => {
+    const flush = () => { if (saveState === 'saving') flushSave() }
+    const onVis = () => { if (document.visibilityState === 'hidden') flush() }
+    window.addEventListener('pagehide', flush)
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  })
+
+  /** 把当前编辑内容提交到 target：全空→弃（onDelete）；无改动→跳过（不 bump updatedAt）；否则保存。 */
+  function commitTo(target) {
+    if (!target) return
+    clearTimeout(saveTimer)
+    const body = currentBody()
+    if (!title.trim() && !body.trim()) { onDelete(target); return }
+    if (title === loadedTitle && body === loadedBody) return // 只看没改，不动
+    onSave({ title: title.trim() || t('library.typeNote'), body }, target)
+  }
+
+  /** 保存失败后点「重试」：立即把当前内容重推一次（持久层会重置 S.saveError）。 */
+  function retrySave() {
+    if (!item) return
+    onSave({ title: title.trim() || t('library.typeNote'), body: currentBody() }, item)
+  }
 
   /* ============ 保存（防抖）+ 状态指示 ============ */
   let saveTimer = null
@@ -84,7 +161,7 @@
   function flushSave() {
     clearTimeout(saveTimer)
     if (!item) return
-    onSave({ title: title.trim() || t('library.typeNote'), body: currentBody() })
+    onSave({ title: title.trim() || t('library.typeNote'), body: currentBody() }, item)
     saveState = 'saved'
     clearTimeout(savedTimer)
     savedTimer = setTimeout(() => { if (saveState === 'saved') saveState = 'idle' }, 2200)
@@ -403,6 +480,10 @@
     { key: 'numbered', icon: ListOrdered, label: () => t('editor.slNumbered'), desc: () => t('editor.slNumberedD'), type: 'numbered', meta: { start: 1 } },
     { key: 'quote', icon: Quote, label: () => t('editor.slQuote'), desc: () => t('editor.slQuoteD'), type: 'quote' },
     { key: 'code', icon: FileCode, label: () => t('editor.slCode'), desc: () => t('editor.slCodeD'), type: 'code', meta: { lang: '' } },
+    { key: 'c-note', icon: Info, label: () => t('editor.slCalloutNote'), desc: () => t('editor.slCalloutNoteD'), type: 'callout', meta: { callout: 'note' } },
+    { key: 'c-tip', icon: Lightbulb, label: () => t('editor.slCalloutTip'), desc: () => t('editor.slCalloutTipD'), type: 'callout', meta: { callout: 'tip' } },
+    { key: 'c-warning', icon: TriangleAlert, label: () => t('editor.slCalloutWarn'), desc: () => t('editor.slCalloutWarnD'), type: 'callout', meta: { callout: 'warning' } },
+    { key: 'c-danger', icon: OctagonAlert, label: () => t('editor.slCalloutDanger'), desc: () => t('editor.slCalloutDangerD'), type: 'callout', meta: { callout: 'danger' } },
     { key: 'divider', icon: Minus, label: () => t('editor.slDivider'), desc: () => t('editor.slDividerD'), type: 'divider' },
   ]
   let slash = $state({ open: false, x: 0, y: 0, query: '', index: 0, blockId: null })
@@ -543,15 +624,33 @@
     scheduleSave()
   }
 
-  /* ============ 关闭前落盘 ============ */
+  /* ============ 关闭前落盘（弹窗模式）============ */
   function close() {
+    // 标题正文都空 → 视为放弃草稿，静默丢弃（不留 Untitled 空文件），对齐 Apple Notes/Bear 惯例。
+    if (!title.trim() && !currentBody().trim()) {
+      clearTimeout(saveTimer)
+      onDelete(item)
+      return
+    }
     flushSave()
-    onClose()
+    onClose?.()
   }
   function remove() {
     if (!confirmDelete) { confirmDelete = true; return }
     clearTimeout(saveTimer)
-    onDelete()
+    onDelete(item)
+  }
+
+  /* ============ 顶栏「···」菜单 ============ */
+  const menuItems = $derived([
+    { id: 'source', label: mode === 'source' ? t('editor.wysiwyg') : t('editor.source') },
+    { id: 'pin', label: item?.pinned ? t('common.unpin') : t('common.pin') },
+    { id: 'delete', label: t('common.delete'), danger: true },
+  ])
+  function onMenuSelect(id) {
+    if (id === 'source') toggleMode()
+    else if (id === 'pin') onTogglePin(item)
+    else if (id === 'delete') confirmDelete = true
   }
 
   // 全局选区监听（工具条）
@@ -561,6 +660,8 @@
     document.addEventListener('selectionchange', handler)
     return () => document.removeEventListener('selectionchange', handler)
   })
+
+  const CALLOUT_ICON = { note: Info, info: Info, tip: Lightbulb, warning: TriangleAlert, danger: OctagonAlert }
 
   const HEADING_EM = { 1: '1.875em', 2: '1.5em', 3: '1.25em', 4: '1.1em', 5: '1em', 6: '0.9em' }
   /** 编辑元素样式：标题按级号定字号（列表缩进走 .ed-block 的 --depth）。 */
@@ -580,52 +681,71 @@
   }
 </script>
 
-<LifeOsSheet
-  open={Boolean(item)}
-  onClose={close}
-  ariaLabel={title}
-  sheetClass="note-editor"
-  closeOnBackdrop={false}
->
-  {#snippet header()}
-    <div class="ed-topbar">
-      <button type="button" class="ed-tool" onclick={toggleMode} aria-pressed={mode === 'source'} title={t('editor.toggleMode')}>
-        {#if mode === 'source'}<Eye size={15} />{:else}<FileCode size={15} />{/if}
-        <span>{mode === 'source' ? t('editor.wysiwyg') : t('editor.source')}</span>
-      </button>
-      <div class="ed-spacer"></div>
-      {#if saveState !== 'idle'}
-        <span class="ed-save" class:is-saved={saveState === 'saved'} aria-live="polite">
-          <span class="ed-save-dot"></span>
-          {saveState === 'saving' ? t('editor.saving') : t('editor.saved')}
+{#snippet topbarUi()}
+  <div class="ed-topbar">
+    <div class="ed-topbar__inner">
+      {#if S.saveError}
+        <button type="button" class="ed-save is-error" onclick={retrySave} aria-live="polite">
+          <TriangleAlert size={13} strokeWidth={2.2} />
+          {t('editor.saveFailed')}
+        </button>
+      {:else}
+        <span class="ed-save" class:is-saving={saveState === 'saving'} aria-live="polite">
+          {#if saveState === 'saving'}
+            <span class="ed-save-dot"></span>{t('editor.saving')}
+          {:else}
+            <Check class="ed-save-ic" size={13} strokeWidth={2.6} />{t('editor.saved')}
+          {/if}
         </span>
       {/if}
-      <button type="button" class="ed-icon" onclick={onTogglePin} aria-pressed={item?.pinned} title={item?.pinned ? t('common.unpin') : t('common.pin')}>
-        <Pin size={16} fill={item?.pinned ? 'currentColor' : 'none'} />
-      </button>
-      <button type="button" class="ed-icon ed-icon--danger" onclick={remove} title={t('common.delete')}>
-        <Trash2 size={16} />
-        {#if confirmDelete}<span class="ed-icon-label">{t('editor.confirmDelete')}</span>{/if}
-      </button>
+      <div class="ed-spacer"></div>
+      {#if item?.pinned}
+        <span class="ed-pinned" title={t('common.unpin')}><Pin size={13} fill="currentColor" /></span>
+      {/if}
+      <Menu items={menuItems} onselect={onMenuSelect} align="end" ariaLabel={t('editor.more')}>
+        {#snippet trigger({ open, toggle })}
+          <button type="button" class="ed-icon" onclick={toggle} aria-expanded={open} title={t('editor.more')}>
+            <MoreHorizontal size={18} />
+          </button>
+        {/snippet}
+      </Menu>
     </div>
-  {/snippet}
+  </div>
+  {#if confirmDelete}
+    <div class="ed-confirm" role="alertdialog">
+      <span>{t('editor.confirmDeleteQ')}</span>
+      <button type="button" class="ed-confirm__cancel" onclick={() => (confirmDelete = false)}>{t('common.cancel')}</button>
+      <button type="button" class="ed-confirm__go" onclick={() => onDelete(item)}>{t('common.delete')}</button>
+    </div>
+  {/if}
+{/snippet}
 
+{#snippet bodyUi()}
   {#if item}
     <div class="ed-scroll">
       <div class="ed-canvas">
         <input
           class="ed-title"
+          bind:this={titleEl}
           bind:value={title}
           oninput={scheduleSave}
           placeholder={t('editor.titlePlaceholder')}
           aria-label={t('library.fieldTitle')}
         />
+        {#if item.updatedAt || item.tags?.length}
+          <div class="ed-meta">
+            {#if item.updatedAt}<span class="ed-meta__time">{metaWhen(item.updatedAt)}</span>{/if}
+            {#each (item.tags || []).slice(0, 6) as tag (tag)}<CategoryChip {tag} />{/each}
+          </div>
+        {/if}
 
         {#if mode === 'source'}
           <textarea class="ed-source" value={sourceText} oninput={onSourceInput} spellcheck="false" aria-label={t('editor.source')}></textarea>
         {:else}
-          <div class="ed-blocks">
+          <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+          <div class="ed-blocks" onclick={onBodyClick}>
             {#each blocks as block, i (block.id)}
+              {#if block.id !== dupHeadingId}
               <div
                 class="ed-row ed-row--{block.type}"
                 class:is-drop={dropId === block.id}
@@ -657,6 +777,20 @@
                         use:autoGrowInit
                       ></textarea>
                     </div>
+                  {:else if block.type === 'callout'}
+                    {@const CalloutIcon = CALLOUT_ICON[block.meta?.callout || 'note']}
+                    <div class="ed-callout ed-callout--{block.meta?.callout || 'note'}">
+                      <span class="ed-callout__icon" aria-hidden="true"><CalloutIcon size={17} /></span>
+                      <div
+                        class="ed-edit ed-edit--callout"
+                        contenteditable="true"
+                        role="textbox" tabindex="0" aria-multiline="false"
+                        data-ph={t('editor.blockPlaceholder')}
+                        use:editable={block}
+                        oninput={(e) => onInput(block, e.currentTarget, e)}
+                        onkeydown={(e) => onKeydown(block, e.currentTarget, e)}
+                      ></div>
+                    </div>
                   {:else}
                     {#if block.type === 'todo'}
                       <button type="button" class="ed-check" class:is-done={block.meta?.checked} onclick={() => toggleTodo(block)} aria-label={t('editor.slTodo')} tabindex="-1">
@@ -682,17 +816,36 @@
                   {/if}
                 </div>
               </div>
+              {/if}
             {/each}
           </div>
         {/if}
+        {@render footer?.()}
       </div>
     </div>
   {/if}
+{/snippet}
 
-  {#snippet actions()}
-    <button type="button" class="btn-primary" onclick={close}>{t('common.save')}</button>
-  {/snippet}
-</LifeOsSheet>
+{#if inline}
+  <div class="ed-pane">
+    {@render topbarUi()}
+    {@render bodyUi()}
+  </div>
+{:else}
+  <LifeOsSheet
+    open={Boolean(item)}
+    onClose={close}
+    ariaLabel={title}
+    sheetClass="note-editor"
+    closeOnBackdrop={false}
+  >
+    {#snippet header()}{@render topbarUi()}{/snippet}
+    {@render bodyUi()}
+    {#snippet actions()}
+      <button type="button" class="btn-primary" onclick={close}>{t('common.save')}</button>
+    {/snippet}
+  </LifeOsSheet>
+{/if}
 
 <!-- 选区格式工具条（气泡菜单） -->
 {#if toolbar.open}
@@ -751,60 +904,120 @@
       0 4px 12px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.18);
   }
 
+  /* 内联文档面板（master-detail 工作台）：复刻弹窗的满高 flex-column + 设计 token */
+  .ed-pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    --wash: color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
+    --wash-strong: color-mix(in srgb, var(--t1, var(--text)) 10%, transparent);
+    --pop-shadow: 0 0 0 1px color-mix(in srgb, var(--t1, var(--text)) 6%, transparent),
+      0 4px 12px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.18);
+  }
+  /* 内联顶栏：左右 padding 与写作画布同源（64px），内容再收进 720 测量列 →
+     「已保存」贴文档左缘、置顶/··· 贴文档右缘，不再是横跨 viewport 的两座孤岛 */
+  .ed-pane .ed-topbar {
+    padding: var(--space-3, 12px) 64px var(--space-1, 4px);
+    border-bottom: 1px solid var(--border);
+  }
+  .ed-pane .ed-topbar__inner {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  /* 标题下的元信息行（更新日期 · 标签）——与标题近、与正文远 */
+  .ed-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1-5, 6px);
+    margin-bottom: 30px;
+  }
+  .ed-meta__time {
+    font-size: var(--text-sm, 12px);
+    color: var(--t3, var(--text-muted));
+  }
+  .ed-meta__time::after {
+    content: '·';
+    margin-inline-start: var(--space-1-5, 6px);
+    color: color-mix(in srgb, var(--t3, var(--text-muted)) 60%, transparent);
+  }
+  .ed-meta__time:only-child::after { content: none; }
+
   /* ——— 顶栏 ——— */
   .ed-topbar {
+    padding-bottom: var(--space-1);
+  }
+  .ed-topbar__inner {
     display: flex;
     align-items: center;
     gap: var(--space-1);
-    padding-bottom: var(--space-1);
+    width: 100%;
   }
   .ed-spacer { flex: 1; }
-  .ed-tool {
-    display: inline-flex; align-items: center; gap: 6px;
-    height: 28px; padding: 0 10px;
-    border-radius: var(--radius-pill, 999px);
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--t2, var(--text-secondary));
-    font-size: var(--text-sm); cursor: pointer;
-    transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease);
-  }
-  .ed-tool:hover { background: var(--wash); color: var(--t1, var(--text)); }
-  .ed-tool[aria-pressed='true'] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
   .ed-icon {
-    display: inline-flex; align-items: center; gap: 6px;
-    height: 28px; padding: 0 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
     border: none; background: transparent;
     color: var(--t3, var(--text-muted)); border-radius: var(--radius-control, 8px);
     cursor: pointer; transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
   }
   .ed-icon:hover { background: var(--wash); color: var(--t1, var(--text)); }
-  .ed-icon[aria-pressed='true'] { color: var(--accent); }
-  .ed-icon--danger:hover { color: var(--feedback-danger); background: var(--feedback-danger-bg); }
-  .ed-icon-label { font-size: var(--text-sm); }
+  /* 保存状态：常显（✓已保存 / 正在保存… / 保存失败·重试），左侧指示这是编辑器 */
   .ed-save {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: var(--text-xs); color: var(--t3, var(--text-muted));
-    padding-inline-end: var(--space-1);
-    animation: ed-fade 0.2s ease-out;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: var(--text-xs); font-weight: 500;
+    color: var(--t2, var(--text-secondary));
+    border: none; background: transparent; padding: 0; font-family: inherit;
   }
+  .ed-save :global(.ed-save-ic) { color: var(--feedback-success); }
   .ed-save-dot {
     width: 6px; height: 6px; border-radius: 50%;
-    background: var(--t3, var(--text-muted));
+    background: var(--accent);
+  }
+  .ed-save.is-saving { color: var(--t2, var(--text-secondary)); }
+  .ed-save.is-saving .ed-save-dot {
     animation: ed-pulse 1s ease-in-out infinite;
   }
-  .ed-save.is-saved { color: var(--feedback-success, var(--accent)); }
-  .ed-save.is-saved .ed-save-dot { background: currentColor; animation: none; }
+  .ed-save.is-error {
+    color: var(--feedback-danger);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ed-save.is-error:hover { filter: brightness(1.1); }
+  .ed-save.is-error:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-control); }
+  .ed-pinned { display: inline-flex; align-items: center; color: var(--accent); padding-inline: 2px; }
 
-  /* ——— 滚动区 + 居中测量列 ——— */
+  /* 删除确认条 */
+  .ed-confirm {
+    display: flex; align-items: center; gap: var(--space-2);
+    margin: var(--space-2) var(--space-5) 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-control, 8px);
+    background: var(--feedback-danger-bg);
+    color: var(--t1, var(--text)); font-size: var(--text-sm);
+  }
+  .ed-confirm span { flex: 1; }
+  .ed-confirm button {
+    border: none; border-radius: var(--radius-control, 8px);
+    padding: 4px 12px; font-size: var(--text-sm); cursor: pointer;
+  }
+  .ed-confirm__cancel { background: transparent; color: var(--t2, var(--text-secondary)); }
+  .ed-confirm__go { background: var(--feedback-danger); color: white; font-weight: 600; }
+
+  /* ——— 滚动区 + 居中测量列（写作画布）——— */
   .ed-scroll {
     flex: 1;
     overflow-y: auto;
     overflow-x: clip;
-    padding: var(--space-2) 56px 34vh;
+    padding: var(--space-5, 20px) 64px 34vh;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--t1, var(--text)) 16%, transparent) transparent;
   }
   .ed-canvas {
-    max-width: 680px;
+    max-width: 720px;
     margin-inline: auto;
   }
 
@@ -812,10 +1025,10 @@
     width: 100%;
     border: none; background: transparent; outline: none;
     font-family: inherit;
-    font-size: 1.95rem; font-weight: 750; line-height: 1.25;
+    font-size: 2.15rem; font-weight: 750; line-height: 1.25;
     letter-spacing: -0.01em;
     color: var(--t1, var(--text));
-    padding: var(--space-2) 0 var(--space-1);
+    padding: 0 0 var(--space-3, 12px);
   }
   .ed-title::placeholder { color: var(--t3, var(--text-muted)); }
 
@@ -828,7 +1041,7 @@
   }
 
   /* ——— 块列表 ——— */
-  .ed-blocks { font-size: var(--text-xl, 16px); line-height: 1.55; caret-color: var(--accent); }
+  .ed-blocks { font-size: var(--text-xl, 16px); line-height: 1.72; caret-color: var(--accent); }
   .ed-blocks :global(::selection) { background: color-mix(in srgb, var(--accent) 26%, transparent); }
 
   .ed-row { position: relative; }
@@ -875,6 +1088,7 @@
     flex: 1; min-width: 0; outline: none;
     color: var(--t1, var(--text));
     white-space: pre-wrap; word-break: break-word;
+    cursor: text; /* 始终可编辑：文本光标 + 悬浮块底纹（.ed-block）明示「点即改」 */
   }
   .ed-edit:empty::before { content: ''; }
   .ed-edit--heading:empty::before,
@@ -943,6 +1157,33 @@
     tab-size: 2;
   }
   .ed-code:focus { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+
+  /* Callout 高亮块：背景更淡（8%），辨识主要靠左边框 + 图标，避免连续堆叠像 alert 面板 */
+  .ed-callout {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-control, 8px);
+    border-inline-start: 3px solid var(--cl-line, var(--cl));
+    background: color-mix(in srgb, var(--cl) 8%, transparent);
+  }
+  .ed-callout__icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    color: var(--cl-line, var(--cl));
+    margin-top: 2px;
+  }
+  .ed-callout .ed-edit { flex: 1; min-width: 0; }
+  .ed-callout--note, .ed-callout--info { --cl: var(--chart-hue-blue); }
+  .ed-callout--tip { --cl: var(--chart-hue-green); }
+  /* 黄色在米白底上对比最弱：边框/图标向文字色加深一档（背景仍浅） */
+  .ed-callout--warning {
+    --cl: var(--chart-hue-yellow);
+    --cl-line: color-mix(in srgb, var(--chart-hue-yellow) 68%, var(--t1, var(--text)));
+  }
+  .ed-callout--danger { --cl: var(--chart-hue-red); }
 
   /* 行内格式 */
   .ed-edit :global(strong) { font-weight: 700; }

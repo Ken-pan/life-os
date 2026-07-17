@@ -26,6 +26,14 @@
 5. **运维变更**（新 Netlify site、migration）→ `ops/` 对应文件 + 必要时 Supabase 表
 6. **月度** → 跑 hub 验收命令；`npm run verify:ticket-naming`；更新 `LIFEOS_ROADMAP.md` frontmatter `last_verified`
 
+### 状态证据口径
+
+- **App 数量真源：** `apps/*/app.manifest.json` 经生成注册表收录的产品 app；`starter` / `design-catalog` 不计，已迁出的 PaperOS 单列。
+- **代码已提交 ≠ 已部署：** commit / migration 文件只能证明仓库能力；生产状态必须有 deploy、远程 migration 或线上探针证据。
+- **远程领先仓库 = P0 漂移：** migration/schema/data 已在生产、但对应文件仍未提交时，立即进入 hub Now；先恢复可复现/可回滚真源，再继续功能迭代。
+- **未提交 WIP 不进 Shipped：** 可在 app-owned 文档标注实验，但不得写成 hub 已发货能力。
+- **生成物必须过 gate：** 改 manifest 后运行 `npm run build:app-registry`，再以 `npm run check:app-manifests` 验收。
+
 ## 不要做的事
 
 - 不要把 Wave 完成表、commit 列表堆回 `LIFEOS_ROADMAP.md`（放 `SHIPPED.md` 或分卷）
@@ -53,11 +61,13 @@ PaperOS 已于 2026-07-12 迁出至独立仓库（`/Users/kenpan/「Projects」/
 
 ## AI / Agent 读取顺序
 
-1. `docs/LIFEOS_ROADMAP.md` — scope、优先级、§六 app 一览
-2. `docs/roadmap/TICKET_NAMING.md` — Hub / Agent **canonical ID**（legacy 仅别名）
-3. `docs/roadmap/POTENTIAL.md` — ROI 排序与代码证据（改优先级前必读）
-4. `docs/ops/canonical.md` — 别改错仓库
-5. 任务相关分卷（`roadmap/*`、`roadmap/apps/*`、`architecture/*`、`ops/*`）
-6. `packages/*/README.md` — 实现细节
+1. `docs/LIFEOS_ROADMAP.md` — scope、优先级、§App 一览
+2. `docs/architecture/NORTH_STAR.md` — 愿景与和现在的距离（非排期）
+3. `docs/architecture/SYSTEM_OVERVIEW.md` — 体系架构快照（与 hub 冲突时以 hub 为准）
+4. `docs/roadmap/TICKET_NAMING.md` — Hub / Agent **canonical ID**（legacy 仅别名）
+5. `docs/roadmap/POTENTIAL.md` — ROI 排序与代码证据（改优先级前必读）
+6. `docs/ops/canonical.md` — 别改错仓库
+7. 任务相关分卷（`roadmap/*`、`roadmap/apps/*`、`architecture/*`、`ops/*`）
+8. `packages/*/README.md` — 实现细节
 
 `AGENTS.md`（repo 根）指向本 hub；不必在每次会话重复粘贴长篇阶段史。

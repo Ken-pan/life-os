@@ -1,8 +1,8 @@
 # Home OS（实验）
 
-**URL：** [home.kenos.space](https://home.kenos.space) · **Workspace：** `home-os` · **数据：** `localStorage` key `homeos_spatial_v1`（暂无云同步）
+**URL：** [home.kenos.space](https://home.kenos.space) · **Workspace：** `home-os` · **项目真源：** `localStorage` key `homeos_spatial_v1`
 
-居家空间 **平面浏览/编辑** + **储藏清单**（S1–S8）。Life OS SSO ✅；Portal 实验卡 ✅。
+居家空间 **平面浏览/编辑** + **储藏/整理智能**。Life OS SSO ✅；Portal 实验卡 ✅。云端已有 RoomPlan 扫描与私有照片桶的生产记录；append-only `home.events` migration/同步代码已提交（远程状态需单独复核）。这不等于完整可编辑项目已跨设备同步。
 
 ## 快速开始
 

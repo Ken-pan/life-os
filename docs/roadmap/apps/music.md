@@ -24,6 +24,8 @@
 
 **已完成：** MUSC.UI.2 UI E2E · MUSC.PIPE.5 行为分 6/6 · MUSC.PORTAL.7 Portal 最近播放 · MUSC.PLAY.8 播放加载 Phase A–D。
 
+**2026-07-17 ROI 复核：** 维持 paused / maintenance；PIPE.4 只有出现推荐误判或需要看全量候选时才触发。标签 25 partial 不值得单独开主线，先让真实播放反馈继续积累。
+
 ### MUSC.PLAY.8 播放加载 Phase D（个人私有）
 
 **已落地：** playMetrics（本机环形缓冲）· Settings 调试读数 · SW/IDB 去重 · IDB idle hydrate · signed URL 静默续期 · Quick Picks `visibleWarm` · 离线未缓存提示。

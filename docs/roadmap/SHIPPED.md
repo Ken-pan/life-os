@@ -6,6 +6,28 @@
 
 > **PaperOS 证据链接说明（2026-07-12）：** 下方历史条目中的 `qa/paperos/*`、`archive/paperos/*` 证据文件已随 PaperOS 迁出至独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库不再保留。相关行保留为历史记录，链接已去激活。
 
+## 2026-07-17（九品牌图表与 Design Catalog 矩阵）
+
+| 主线 | 发货项 / 里程碑 | 证据 |
+| --- | --- | --- |
+| Charts | categorical 色板由各 app 品牌 accent 经 OKLCH 演算；面积图、tooltip、悬浮反馈与树状图层次打磨；树状图按块亮度自动选深/浅墨色 | `9bb72a414` · `fbd690611` · `37b24de6b` · `3feff760d` |
+| DS/Catalog | App 选择器与矩阵补齐到九个产品品牌（含 HealthOS / KnowledgeOS） | `2f05e3fa1` |
+
+代码矩阵（`playwright --list`）：922 smoke / 147 a11y / 524 visual。该数字只表示当前收集规模，实际通过状态以当次 CI 为准。
+
+## 2026-07-16（HealthOS · Knowledge↔Planner · Home 空间智能）
+
+| 主线 | 发货项 / 里程碑 | 证据 |
+| --- | --- | --- |
+| HealthOS | **HLT-0–4**：第九 app 注册与 Tauri 壳、Focus agent、六维 State Engine、纯信号自适应专注、睡眠/HRV/静息心率/步数趋势；Watch/iPhone companion 源码与模拟器工程已交付，真机签名/持续交付仍待用户 gate | `6c529a5f6` · `77d5fb659` · `ba9a1ea5f` · `22a4716fe` · `3f345566a` · `3f93084bc` |
+| KnowledgeOS | Vault 原生后端、RAG 问答、项目视图与 Planner 云快照已落地；Vault 正文仍不上传 | `0a73b56b1` · `87748d6ba` · `d4a3ac3ee` · `9bfa8f1e5` |
+| Planner↔Knowledge | Planner 项目详情可关联并语义检索 KnowledgeOS 笔记，形成首条跨 OS 引用试点 | `40af13b6b` · `460451325` |
+| Home | RoomPlan 扫描回灌、身份/证据链、布局与整理智能持续推进；云端已有扫描/照片/追加事件，但可编辑项目仍以本地为真源 | `d901fb5b5` · `deace5ee8` · `95f0e0375` · `7260c52da` · `c1d31394b` |
+| Planner | **PageShell 页面外壳收敛**：核心页（list / split / today / calendar / completed）迁至统一外壳原语，两栏响应式对齐 + 溢出治理；运行时布局不变量护栏进 CI | `e83bf7777` · `96b58dfa3` · `0591f5b7a` · `97c8f7b9e` · `6e997329c` |
+| Finance | 新购买检测 → 定向抓单 → 匹配标注一键脚本（enrichment 运营链路缩短） | `55749137c` |
+| Fitness | 云同步错误横幅在后续成功后自动消失（此前会一直挂着） | `c43bb1190` |
+| Ops | Netlify ignore 规则按 package.json 依赖对齐（修共享包改动静默不部署，07-14）；Portal 生产停更两天根因修复（publish 路径两个消费者互相打架，07-14）；home/aios 补接 Netlify Git CD（07-15） | `750a3b7f2` · `901bfee93` · `2c21ee582` |
+
 ## 2026-07-16（DS 平台化批量推进：品牌 7 站 · 行为组件三族 · 护栏/基线扩容）
 
 | 主线       | 发货项 / 里程碑 | 证据 |

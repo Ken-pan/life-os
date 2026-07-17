@@ -1,11 +1,14 @@
 <script>
   // 时间线：按天分组，theme .timeline 原语；节点色区分类型。
+  // 「笔记」模块——纯浏览/编年，不放图表（数据洞察集中在「记忆库·概览」，见 /overview）。
+  import { goto } from '$app/navigation'
   import { EmptyState } from '@life-os/platform-web/svelte/status'
   import { S } from '$lib/state.svelte.js'
-  import ItemViewer from '$lib/components/ItemViewer.svelte'
+  import { plainExcerpt } from '$lib/editor/blocks.js'
   import { t } from '$lib/i18n/index.js'
 
-  let reading = $state(null)
+  /** 统一：打开笔记 = 跳到工作台并选中。 */
+  const openNote = (item) => item && goto(`/library?note=${encodeURIComponent(item.id)}`)
 
   const TYPE_CLASS = {
     note: '',
@@ -31,10 +34,8 @@
   }
 
   function timeOf(ts) {
-    return new Date(ts).toLocaleTimeString(undefined, {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    const d = new Date(ts)
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   }
 
   const groups = $derived.by(() => {
@@ -62,11 +63,11 @@
           {#each items as item (item.id)}
             <li class="timeline__item {TYPE_CLASS[item.type]}">
               <span class="timeline__time">{timeOf(item.createdAt)}</span>
-              <button type="button" class="timeline-open" onclick={() => (reading = item)}>
+              <button type="button" class="timeline-open" onclick={() => openNote(item)}>
                 <span class="timeline__title">{item.title}</span>
               </button>
               {#if item.body}
-                <span class="timeline__desc">{item.body.replace(/\s+/g, ' ').slice(0, 120)}</span>
+                <span class="timeline__desc">{plainExcerpt(item.body, 120)}</span>
               {/if}
               {#if item.tags.length}
                 <span class="chip-row timeline-tags">
@@ -82,8 +83,6 @@
     {/each}
   {/if}
 </div>
-
-<ItemViewer bind:open={reading} />
 
 <style>
   .day {

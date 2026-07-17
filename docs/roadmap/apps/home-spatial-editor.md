@@ -21,7 +21,7 @@
 | **Wave A/B/C** | ✅ | UI/UX 审核 UX-01–22 主项 + A11Y-01/03 — 见 [uiux-audit](../../qa/home-spatial-uiux-audit-2026-07-08.md) |
 | **HOME.SPATIAL.3–W5** | ✅ | 分区 · 家具/储藏 · 文档/CI |
 
-**下一步：** HOME.PROJ.7 多项目 / HOME.ONBOARD.9 引导 / 云同步 HOME.PROJ.4
+**当前后续（2026-07-17 重评）：** 本分卷已发货；产品主航道转到 `HOME.RECOG.0–3`。HOME.ONBOARD.9 仍可按需；HOME.PROJ.7 / HOME.PROJ.4 均后移，见 [home.md](./home.md)。
 
 ---
 
@@ -441,7 +441,7 @@ Week 2   HOME.SPATIAL.2               门窗挂边 + 508 门窗一次性转换
 Week 3   HOME.SPATIAL.3               手绘分区（可与 HOME.SPATIAL.2 部分并行）
 Week 4   HOME.SPATIAL.4               家具 + 储藏指派
 Week 5   HOME.SPATIAL.5               迁移、smoke 全量、文档、生产走查
-之后     HOME.PROJ.4（搁置中）      云同步 Supabase；HOME.PROJ.7 多项目切换建议排在 H-W 全程之后
+之后     （历史建议）HOME.PROJ.4 / HOME.PROJ.7；2026-07-17 已因无第二项目需求后移，当前转 HOME.RECOG.0–3
 ```
 
 依赖链：`HOME.SPATIAL.0 → HOME.SPATIAL.1 → HOME.SPATIAL.2 → HOME.SPATIAL.4`；`HOME.SPATIAL.1 → HOME.SPATIAL.3 → HOME.SPATIAL.4`；`HOME.SPATIAL.4 → HOME.SPATIAL.5`。

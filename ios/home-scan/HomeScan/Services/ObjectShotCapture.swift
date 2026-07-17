@@ -74,6 +74,44 @@ final class ObjectShotCapture {
         !binsCovered.isEmpty && binsCovered.allSatisfy { quotaFull(binsCovered: $0) }
     }
 
+    /// 一张 crop 里被**别的家具**投影框占据的最大面积占比(0..1)。叠放/紧邻件
+    /// (吊柜叠落地柜)的 3D 包围盒投影会重合到同一画面 —— 占比越高,这张裁剪的
+    /// 主体越可能根本不是目标件。两道门(见 consider):
+    ///   • ≥ ambiguousHashFrac(0.55):主体尚在但混进了别件 → 仍存(有总比没有强),
+    ///     但不出 photoHash,免得跨扫描外观认亲和那件撞;
+    ///   • ≥ rejectShotFrac(0.80):主体基本是别人 → 直接拒拍。真扫教训:两件不同的柜子
+    ///     (炉边三抽柜 / 冰箱顶吊柜)拿到**逐字节相同**的裁剪,同色同哈希、还骗过视觉
+    ///     embedding(cos=1.0),存了纯属毒化认亲;拒了等一个能单独看到它的机位。
+    /// 纯几何,单测锁。
+    static let ambiguousHashFrac = 0.55
+    static let rejectShotFrac = 0.80
+    static func neighborDominance(
+        crop: CGRect, objFrames: [(id: UUID, rect: CGRect)], excluding selfId: UUID
+    ) -> Double {
+        let area = Double(crop.width * crop.height)
+        guard area > 0 else { return 0 }
+        var maxFrac = 0.0
+        for f in objFrames where f.id != selfId {
+            let o = f.rect.intersection(crop)
+            guard !o.isNull else { continue }
+            maxFrac = max(maxFrac, Double(o.width * o.height) / area)
+        }
+        return maxFrac
+    }
+
+    /// 邻件占幅直方图的桶键(真机 QA 用)。**固定桶**(不随阈值走),这样一次真实
+    /// 扫描就能看出 rejectShotFrac(0.80)是否落在自然间隙、升/降阈会波及多少件 ——
+    /// 不必装一版调一次。桶随 meta.scanDiagnostics 上传。纯函数,单测锁。
+    static func dominanceBucketKey(_ d: Double) -> String {
+        switch d {
+        case ..<0.55: return "dom_lt55"      // 干净:照常出哈希
+        case ..<0.70: return "dom_55_70"     // 混入别件:skipHash,仍存
+        case ..<0.80: return "dom_70_80"     // 近拒线:skipHash,仍存
+        case ..<0.90: return "dom_80_90"     // 拒拍
+        default: return "dom_90_100"         // 近乎全被邻件占:拒拍
+        }
+    }
+
     /// 只在主线程读写:objectId → (方位桶 → 该桶最佳一张)
     private(set) var shots: [UUID: [Int: Shot]] = [:]
 
@@ -219,16 +257,27 @@ final class ObjectShotCapture {
             .integral
         guard crop.width >= 64, crop.height >= 64 else { return }
 
-        // dHash 去歧义:别的物体的投影框占了这张 crop 面积的 ≥55% —— 裁进来的
-        // 主体其实是那件(叠放/紧邻),哈希会和它撞。这种不出 photoHash(nil),
-        // 认亲交给尺寸/位置/颜色,免得给一串错的外观证据。
-        let cropArea = Double(crop.width * crop.height)
-        let hashAmbiguous = cropArea > 0 && objFrames.contains { f in
-            f.id != pick.object.identifier && {
-                let o = f.rect.intersection(crop)
-                return !o.isNull && Double(o.width * o.height) / cropArea >= 0.55
-            }()
+        // 邻件占幅:这张 crop 里被别的家具投影框占了多少(叠放/紧邻件投影重合)。
+        let dominance = Self.neighborDominance(
+            crop: crop, objFrames: objFrames, excluding: pick.object.identifier
+        )
+        // QA 直方图:每张到裁剪期的候选都记一桶(含被拒的),随 scanDiagnostics 上传。
+        // 一次真机扫描就能看出 0.80 阈值是否合适 —— 不必装一版调一次。
+        ScanLog.shared.counter { $0.count(Self.dominanceBucketKey(dominance)) }
+        // ≥80% 是别人 → 主体根本不是它,拒拍等更干净的机位(真扫两件不同柜子拿到
+        // 逐字节相同裁剪的教训:存了同色同哈希还骗过视觉 embedding,纯毒化认亲)。
+        // 编码槽还没占,直接返回;拒了哪件、占幅多少都进 JSONL,现场眼验对错。
+        guard dominance < Self.rejectShotFrac else {
+            ScanLog.shared.counter { $0.count("gate_neighborDominant") }
+            ScanLog.shared.log("scan", "shot_rejected_neighbor", [
+                "category": .string(String(describing: pick.object.category)),
+                "dominance": .num((dominance * 100).rounded() / 100),
+            ])
+            return
         }
+        // ≥55%:主体尚在但混进了别件 → 仍存(有总比没有强),但不出 photoHash,
+        // 免得跨扫描外观认亲和那件撞;认亲交给尺寸/位置/颜色。
+        let hashAmbiguous = dominance >= Self.ambiguousHashFrac
 
         encodeBusy = true
         let objectId = pick.object.identifier

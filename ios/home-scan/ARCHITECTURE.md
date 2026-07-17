@@ -69,9 +69,9 @@ Convert(纯管线,CapturedStructure → HomeOS plan px)
 
 | iOS | 对应 | 说明 |
 |---|---|---|
-| `Convert/HomeOSModels.swift` | web `spatial/scan-payload.js` + `apps/home/supabase/README.md` | payload 契约,formatVersion 1,只加可选字段 |
+| `Convert/HomeOSModels.swift` | web `spatial/scan-payload.js` + `apps/home/supabase/README.md` | payload 契约,formatVersion 1,只加可选字段。**per-object 置信度/外观(2026-07-16)**:`colorConfidence`(ObjectShotCapture 主色簇纯度×可用像素×多方位共识)、`kindConfidence`(KindMaps.refineKind:样式背书保底 0.6、升降桌高度信号保底 0.7、几何猜的 desk≈0.55)、`photoHash`(dHash,`ObjectShotCapture.dhashBits` 与 web `photo-hash.js` **逐位同源**,testDhashBitsMatchesWebVector 锁死;叠放件 skipHash 不出) |
 | `Services/HomeFrame.swift` | web `spatial/scan-register.js` | 墙体配准:常数/验收门/精修逐行对应(单位 米 vs px) |
-| `Services/ScanIdentity.swift` | web `spatial/scan-identity.js` | 跨扫描身份:打分/同族(储物族 storageFamily:cabinet/shelf/wall_cabinet/wire_rack/cube_shelf/utility_cart/equipment_rack,pet_crate 不入族)/权威侧 identityLocked 跳过尺寸一票否决/elev 项(双方实测且差 ≤6″ 才 +0.1;差 >18″ −0.15,一方缺省视为 0 落地;都缺 → 0)/歧义边距逐行对应 |
+| `Services/ScanIdentity.swift` | web `spatial/scan-identity.js` | 跨扫描身份打分,逐行对应。**族**:储物族(cabinet/shelf/wall_cabinet/wire_rack/cube_shelf/utility_cart/equipment_rack,pet_crate 不入族)+ **桌族**(table/coffee_table/**desk/standing_desk/folding_table** —— refineKind 的精化形态,2026-07-16 加,否则「书桌」认不回「升降边桌」)+ 椅族/沙发族。**加分项**:size 0.45 + pos 0.45;color(colorDist ≤60,按 `colorTrust`=两侧 colorConfidence 取小打权)+0.15;styleZh +0.1;**外观 dHash `hashBonus` 只正向**(汉明 ≤10 +0.2,**≥26 不再罚分** —— 跨扫描换角度汉明也会 >26,罚的是换拍法不是换家具);同列表重复 hash 中和(叠放件裁到同一画面)。**权威侧** identityLocked 跳过尺寸一票否决、scanAliases `aliasHit` 视同同 kind。elev 项(双方实测且差 ≤6″ 才 +0.1;差 >18″ −0.15,一方缺省视为 0 落地;都缺 → 0)。`kindCompatible`(同 kind/同族)导出给 scan-merge 的替换闸用 |
 | `attrs.scanAliases` / `attrs.identityLocked`(权威件) | web 优化副本同名字段 | 检测陷阱契约(用户纠正一等数据),三端同名不许改;iOS 侧 CanonicalHomeStore 透传 → PlanProjector 认亲/压制 |
 | `Services/ContainerGeometry.swift` 的 Payload | `apps/home/supabase/README.md` 柜内节 | 桶内 JSON 契约 |
 | `Services/CoverageDiff.swift` 的 claimMaxDistPx | web `spatial/scan-merge.js` 的 CLAIM_MAX_DIST_PX | 分区就近认领半径(400 plan px) |

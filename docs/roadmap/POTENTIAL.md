@@ -1,6 +1,6 @@
-# 潜力研判（2026-07-09 历史快照）
+# 潜力研判（2026-07-17 ROI / 闭环复核）
 
-> **状态：已归档研判。** 本文保留当时的 ROI 证据与决策过程，不再代表当前排序。当前 Now / Next 只看 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)；**2026-07-10 复核**后产品优先级为 **P-SCHED-0 → P-MOVE-BLOCK/UI → FT-P5**；Agent 路由见 [`AGENT_WORKSTREAMS.md`](./AGENT_WORKSTREAMS.md)。
+> **状态：当前研判。** 排序真源仍是 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)；本文解释为什么。旧 2026-07-09 研判保留在下方「历史证据」，不得用于当前排期。
 
 > **用途：** 回答「如果只做一两件事，哪里 ROI 最高？」
 > **Hub 排期真源：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) §Now · §Next · §推荐执行顺序
@@ -9,14 +9,55 @@
 ## 结论（TL;DR）
 
 ```text
-① ~~PORT.GROWTH.4b-H~~        ✅ 2026-07-09
+先恢复可交付，再收割已完成代码，再做每日体感：
+
+P0  PLAT.CI.0 → HOME.RECOG.0
+P1  FINC.PURCHASE.6.a closure → KNOW.EDITOR.7
+P1  KNOW.VAULT.0 → HOME.RECOG.1 → AIOS.STABLE.26
+P2  HOME.MCP.13 → PLNR.UIUX.0 → PLNR.ATTACH.0 决策
 ```
 
-**已完成（2026-07-09 Phase 6）：** HOME.PROJ.6a · PORT.GROWTH.4b-H — 见 [`SHIPPED.md`](./SHIPPED.md)
+## 当前 Top ROI（代码与远程状态复核）
 
-**已完成（早前 2026-07-09）：** FINC.CORE.0 route smoke 22/22 · MUSC.UI.2 qa-ui-flow 15/15 · PLNR.CORE.2 → PLNR.CORE.2 22/22
+| 顺序 | 项 | 紧急度 | ROI | 投入 | 为什么现在 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | **PLAT.CI.0** | P0 | 🔥 | <0.5d | master 最近 5 次 push 的 `integration-smoke` 红；本地修复不能替代远程绿 |
+| 2 | **HOME.RECOG.0** | P0 | 🔥 | <0.5d | 生产已有 migration + 57 embeddings，git 却没有对应真源；这是灾备/复现风险 |
+| 3 | **FINC.PURCHASE.6.a closure** | P1 | 🔥 | 0.5–1d | UI/RPC/matcher 已完成；极少 QA 即可把“代码完成”变成可信发货 |
+| 4 | **KNOW.EDITOR.7** | P1 | ◆◆ | 0.5–1d | 20 文件大 WIP 已通过 unit/check，继续叠功能只会放大丢失与回归风险 |
+| 5 | **KNOW.VAULT.0 watcher** | P1 | 🔥 | 0.5–1d | curator/Obsidian 每日写入当前需重启才能看到；直接影响 KnowledgeOS 核心承诺 |
+| 6 | **HOME.RECOG.1** | P1 | 🔥 | 0.5–1d | 用户已明确“扫描安静、稳、可信”为最高产品方向；代码已接近装机验收 |
+| 7 | **AIOS.STABLE.26** | P1 | ◆◆ | 1d | AIOS.1–25 两天铺开，但现有自动测试只有 4 个 profile case，回归暴露面过大 |
+| 8 | **HOME.MCP.13** | P2 | ◆◆ | 1–2d | 现有 storage 搜索 + MCP 底座已齐；最短路径形成 Home→AIOS 实际消费 |
 
-**不建议现在投入：** Home HOME.PROJ.4 全量云同步 · PORT.GROWTH.4b-H（需 HOME.PROJ.6a）· MUSC.PIPE.4 单独做（优先 **MUSC.PIPE.5**）
+## 每个 App 未来 7 天只做一件事
+
+| App | 首选目标 | 不做 / 后移 |
+| --- | --- | --- |
+| Planner | 用户同批签收 SCHED/CAPTURE；Agent 只做定向 UI 收口 | 不再让用户 gate 阻塞 Finance；附件先确认远程表/桶 |
+| Fitness | maintenance，真实训练回归才修 | MEDIA.3 / SYNC.4 不抢主线 |
+| Finance | 6.a closure QA 并收割 | 6b/6c 在 6.a 未正式关闭前不开 |
+| Music | paused / maintenance | PIPE.4、25 条 partial 标签按需 |
+| Portal | maintenance | 不为凑九 app 扩卡 |
+| Home | RECOG.0 → RECOG.1 | PROJ.7 多项目、完整项目云同步、智能家居后移 |
+| AIOS | STABLE.26 回归护栏 | 暂停新增 AIOS.26 功能面 |
+| KnowledgeOS | EDITOR.7 → VAULT.0 | SYNC/GRAPH/XREF 扩面后移 |
+| HealthOS | HLT-5 checkpoint + 用户真机 gate | Portal/Netlify/新连接器后移 |
+
+## 不建议现在投入
+
+- `HOME.PROJ.4` 完整项目云同步、`HOME.PROJ.7` 多项目：没有第二个真实项目需求，且会放大身份/冲突复杂度。
+- `KNOW.SYNC.1` Vault 原文上云：隐私与冲突模型未闭环；先解决 watcher。
+- Portal 第七/八/九卡：本地优先 app 尚无每日 Portal 消费价值。
+- Music / Fitness 普通增量、共享图表告警大扫除：均低于当前交付完整性和高 ROI closure。
+
+---
+
+## 2026-07-09 历史研判（仅保留证据）
+
+**当时已完成（Phase 6）：** HOME.PROJ.6a · PORT.GROWTH.4b-H — 见 [`SHIPPED.md`](./SHIPPED.md)
+
+**当时已完成：** FINC.CORE.0 route smoke 22/22 · MUSC.UI.2 qa-ui-flow 15/15 · PLNR.CORE.2 22/22
 
 ---
 

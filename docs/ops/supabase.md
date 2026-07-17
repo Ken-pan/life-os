@@ -1,10 +1,10 @@
 # Life OS Supabase
 
-> **项目 ref：** `iueozzuctstwvzbcxcyh`（四站 + Portal 共用）
+> **项目 ref：** `iueozzuctstwvzbcxcyh`（Life OS web apps + AIOS / KnowledgeOS 云桥共用；HealthOS 原始数据不接入）
 > **Canonical 迁移目录：** `apps/finance/supabase/`（`schema.sql` + `migrations/`）
 > **路线图：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)
 
-**最后与代码同步：** 2026-07-12（`origin/master` + 生产 MCP · migration / 代码 / gate 三层复核）
+**最后与代码同步：** 2026-07-17（已实测远程 `supabase_migrations.schema_migrations`，链头为 `20260717120000 home_object_recognition`；该 migration 尚未提交）
 
 ## 执行 SQL（本网络推荐路径）
 
@@ -25,9 +25,9 @@
 
 **不要**依赖 `supabase migration up --linked` 作为唯一路径（AGENTS.md 记载在此网络会失败）。
 
-## 生产 migration 登记（2026-07-12）
+## 生产 migration 登记（2026-07-17 远程实测）
 
-`supabase_migrations.schema_migrations`（生产 `iueozzuctstwvzbcxcyh`）当前登记：
+以下均已出现在远程 `supabase_migrations.schema_migrations`（2026-07-17 通过 `supabase-sql.sh` 查询确认）：
 
 | Version          | Name                                   | 说明                                      |
 | ---------------- | -------------------------------------- | ----------------------------------------- |
@@ -36,11 +36,18 @@
 | `20260710203000` | `portal_today_summary_fitness_today` | **GYMS.PORTAL.2** · Portal Fitness 卡字段 |
 | `20260712200000` | `portal_today_summary_timezone_and_tombstones` | **PLNR.CORE.4** · tz + tombstone 对齐 |
 | `20260713120000` | `purchase_review_associations`         | **FINC.PURCHASE.6.a** · `purchase_associations`+`purchase_decisions`+RLS+3 RPC；273 回填 proposed（2026-07-13 部署 + 生产 RPC 往返验证） |
-
 | `20260714201817` | `home_scan_sync`                       | **HOME.SYNC.4** · `home` schema + `home.scans`（iOS RoomPlan 扫描同步；2026-07-14 部署 + REST 探针验证） |
 | `20260714201818` | `home_scan_storage`                    | **HOME.SYNC.4** · 私有桶 `home-scan-photos`（机位照片 + structure.json） |
+| `20260715090000` | `home_scan_model_mime`                 | **HOME.SYNC.4** · 3D model MIME / Storage 支持（2026-07-17 远程查询确认已 apply） |
+| `20260715210000` | `home_events`                          | **HOME.EVENTS** · append-only `home.events` 云镜像（2026-07-17 远程查询确认已 apply，为当前链头） |
 
 Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **语义吸收**；勿重复 apply 单文件 legacy migration。
+
+### 生产已应用、但仓库尚未提交（P0 漂移）
+
+| Migration | 代码能力 | 远程口径 |
+| --- | --- | --- |
+| `apps/home/supabase/migrations/20260717120000_home_object_recognition.sql` | 物体观察 / embedding 数据契约 | **2026-07-17 远程复核已注册并 apply**；`home.object_observations` / `home.object_embeddings` 均存在，embedding 已写 57 行。migration 与服务代码仍未提交，须立即完成 `HOME.RECOG.0` 版本史闭环 |
 
 **新 schema 部署必做**：PostgREST Exposed schemas 追加名字（`GET` 后 `PATCH /v1/projects/<ref>/postgrest` 的 `db_schema` 与 `db_extra_search_path`，勿覆盖现值）。当前列表：`public,graphql_public,music,fitness,aios,home`（2026-07-14）。漏这步 = 该 schema 所有 REST 调用 PGRST106。
 
@@ -113,7 +120,7 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 | **PLNR.CORE.3** | 平台 `08000000` life_events | `life_events` 消费 | ✅ | ✅ `lifeEventsInbox.js` | ✅ inbox tests | **✅ Shipped** |
 | **PLNR.CORE.5** | 平台 `08200000` fitness trigger | `fitness.workout_logged` | ✅ | ✅ inbox 打卡分支 | ✅ GYMS.EVENTS.1 | **✅ Shipped** |
 | **PLNR.CORE.6** | — | —（客户端 Auth） | N/A | ✅ `@life-os/sync` 单例 | ✅ `supabaseClient.test.mjs` | **✅ Shipped** |
-| **PLNR.CORE.4** | — | `portal_today_summary()` 已读 `planner_tasks` | ✅ RPC | ⏳ Planner `remaining`（逾期+今日）≠ Portal `todayOpen`（仅今日） | ⏳ 未对齐 | **⏳ Open** · 快赢副线 · 无 migration |
+| **PLNR.CORE.4** | `20260712200000`（tz + tombstone） | `portal_today_summary()` 读 `planner_tasks` | ✅ RPC | ✅ `selectTodayGroups` 与 RPC 谓词对齐 · `selectors.test.js` 9/9 | ✅ 2026-07-13 | **✅ Shipped** |
 | **PLNR.ATTACH.0** | _(未建)_ | Storage + metadata | ❌ | ❌ | ❌ | **❌ Not started** · §Next |
 | **PAPR.DATA.verify** | `10000500_add_paper_device_snapshot_rpc` | `paper_device_config` · `paper_device_snapshot()` | ✅ | ✅ `/api/paper/*` · device `ApiClient` | ✅ PASS 2026-07-11 | **✅ Shipped** |
 | **PAPR.WRITE.5** | `09200000_add_paper_device_actions` | `paper_device_actions` | ❌ **表不存在** | ✅ `paperService.mjs` · `PAPER_ACTIONS_WRITE_ENABLED` 默认 off | ⏳ staging gate 未关 | **🟡 Code ✅ · DB ⏳ BLOCKED** · Hub Deferred |
@@ -124,7 +131,7 @@ Legacy 链（`20260530171417` … `20260709201500`，43 版）已被 baseline **
 | Hub Ticket | Supabase | 代码 | Gate | **Hub 状态** |
 | ---------- | -------- | ---- | ---- | ------------ |
 | **PLNR.SCHED.0.migrate** | — | ✅ `migrate.js` `tags: []` · **#15** `5c66d51e` | ✅ `migrate.integration.test.js` 23/23 | **✅ Shipped** |
-| **PLNR.SCHED.0**（父） | — | 🟡 10.pwa 代码 ✅ #18 | ⏳ **10b.ios** 待 Ken | **⏳ Open**（migrate 子项已关） |
+| **PLNR.SCHED.0**（父） | — | ✅ 10.pwa #18 · E2E 全绿 2026-07-13 | ⏳ **10b.ios** 待 Ken | **🟡 Open**（剩真机签收） |
 
 ### 生产对象快照（2026-07-12 MCP）
 

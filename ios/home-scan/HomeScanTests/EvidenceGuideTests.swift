@@ -53,6 +53,57 @@ final class EvidenceGuideTests: XCTestCase {
         XCTAssertNil(EvidenceGuide.hiddenHost(cab, among: [desk, cab]), "高度未知不瞎猜")
     }
 
+    // MARK: - 认账家的记忆(prior 免催,2026-07-17)
+
+    func testMatchPriorRecognizesWithinRadius() {
+        let priors = [
+            EvidenceGuide.Prior(center: SIMD2(0, 0), kind: "cabinet"),
+            EvidenceGuide.Prior(center: SIMD2(5, 5), kind: "chair"),
+        ]
+        // 活体在 (0.2, 0.1) —— 离第一个 0.22m,在 1.2m 内 → 原位识别到
+        XCTAssertTrue(EvidenceGuide.matchPrior(homeCenter: SIMD2(0.2, 0.1), priors: priors))
+        // 活体在 (3, 3) —— 离任何 prior 都 >1.2m → 没识别到(新件/挪动),照旧催拍
+        XCTAssertFalse(EvidenceGuide.matchPrior(homeCenter: SIMD2(3, 3), priors: priors))
+    }
+
+    func testMatchPriorRadiusBoundary() {
+        let priors = [EvidenceGuide.Prior(center: .zero, kind: "cabinet")]
+        XCTAssertTrue(EvidenceGuide.matchPrior(homeCenter: SIMD2(1.0, 0), priors: priors), "1.0m 内认(配准残差容得下)")
+        XCTAssertFalse(EvidenceGuide.matchPrior(homeCenter: SIMD2(1.5, 0), priors: priors), "1.5m 外不认")
+    }
+
+    func testNearestPriorDistForDiagnostics() {
+        let priors = [
+            EvidenceGuide.Prior(center: SIMD2(0, 0), kind: "a"),
+            EvidenceGuide.Prior(center: SIMD2(10, 0), kind: "b"),
+        ]
+        XCTAssertEqual(EvidenceGuide.nearestPriorDist(homeCenter: SIMD2(2, 0), priors: priors)!, 2.0, accuracy: 1e-9)
+        XCTAssertNil(EvidenceGuide.nearestPriorDist(homeCenter: .zero, priors: []))
+    }
+
+    func testMatchPriorFalseWhenNoPriors() {
+        XCTAssertFalse(EvidenceGuide.matchPrior(homeCenter: .zero, priors: []))
+    }
+
+    func testRecognizedObjectSuppressesNagging() {
+        // 大件沙发(需 3 桶),这次一张没拍,但原位识别到了 → 不该进缺口(与照片无关)
+        var sofa = furniture(category: "sofa", center: SIMD2(0, 0), w: 2.0, d: 0.9, bins: [])
+        sofa.recognizedFromPrior = true
+        XCTAssertTrue(
+            EvidenceGuide.deficits(furnitures: [sofa], walls: []).isEmpty,
+            "原位没挪、认得出 → 不催拍(ObjectShotCapture 仍会顺手拍)"
+        )
+    }
+
+    func testUnrecognizedObjectStillNagged() {
+        // 挪走/新增的件对不回原位 → recognizedFromPrior=false → 照旧催拍
+        let moved = furniture(category: "sofa", center: SIMD2(0, 0), w: 2.0, d: 0.9, bins: [])
+        XCTAssertFalse(
+            EvidenceGuide.deficits(furnitures: [moved], walls: []).isEmpty,
+            "没识别到(挪动/新增)→ 照旧催拍(拍有意义的地方)"
+        )
+    }
+
     // MARK: - 视角要求分级
 
     func testRequiredBinsBySize() {

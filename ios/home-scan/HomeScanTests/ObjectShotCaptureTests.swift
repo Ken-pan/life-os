@@ -76,6 +76,74 @@ final class ObjectShotCaptureTests: XCTestCase {
         XCTAssertTrue(ObjectShotCapture.allQuotasFull(binsCovered: [4, 4, 4]))
     }
 
+    // MARK: - 邻件占幅(叠放/紧邻件裁剪去歧义,2026-07-17)
+
+    private func frame(_ id: UUID, _ r: CGRect) -> (id: UUID, rect: CGRect) { (id, r) }
+
+    func testNeighborDominanceCleanCrop() {
+        let me = UUID(), other = UUID()
+        let crop = CGRect(x: 0, y: 0, width: 100, height: 100)
+        // 邻件只压到角上一小块 → 占幅低,正常拍、出哈希
+        let d = ObjectShotCapture.neighborDominance(
+            crop: crop,
+            objFrames: [frame(me, crop), frame(other, CGRect(x: 90, y: 90, width: 20, height: 20))],
+            excluding: me
+        )
+        XCTAssertEqual(d, 0.01, accuracy: 0.001)
+        XCTAssertLessThan(d, ObjectShotCapture.ambiguousHashFrac, "干净 crop:照常出哈希")
+    }
+
+    func testNeighborDominanceAmbiguousSkipsHash() {
+        let me = UUID(), other = UUID()
+        let crop = CGRect(x: 0, y: 0, width: 100, height: 100)
+        // 邻件压掉 60% → 混进别件:仍存但不出哈希,不到拒拍线
+        let d = ObjectShotCapture.neighborDominance(
+            crop: crop,
+            objFrames: [frame(me, crop), frame(other, CGRect(x: 0, y: 0, width: 100, height: 60))],
+            excluding: me
+        )
+        XCTAssertEqual(d, 0.60, accuracy: 0.001)
+        XCTAssertGreaterThanOrEqual(d, ObjectShotCapture.ambiguousHashFrac, "≥55%:skipHash")
+        XCTAssertLessThan(d, ObjectShotCapture.rejectShotFrac, "<80%:仍拍,不拒")
+    }
+
+    func testNeighborDominanceRejectsWhenNeighborOwnsCrop() {
+        let me = UUID(), other = UUID()
+        let crop = CGRect(x: 0, y: 0, width: 100, height: 100)
+        // 邻件几乎占满 crop(叠放件投影重合:两件不同柜子拿到同一裁剪的根因)→ 拒拍
+        let d = ObjectShotCapture.neighborDominance(
+            crop: crop,
+            objFrames: [frame(me, crop), frame(other, CGRect(x: 0, y: 0, width: 100, height: 95))],
+            excluding: me
+        )
+        XCTAssertGreaterThanOrEqual(d, ObjectShotCapture.rejectShotFrac, "≥80% 是别人 → 拒拍")
+    }
+
+    func testNeighborDominanceIgnoresSelfAndDisjoint() {
+        let me = UUID()
+        let crop = CGRect(x: 0, y: 0, width: 100, height: 100)
+        // 只有自己 + 完全不相交的邻件 → 0(自己不算、不相交不算)
+        let d = ObjectShotCapture.neighborDominance(
+            crop: crop,
+            objFrames: [frame(me, crop), frame(UUID(), CGRect(x: 200, y: 200, width: 50, height: 50))],
+            excluding: me
+        )
+        XCTAssertEqual(d, 0, "自己不占、不相交的邻件不占")
+    }
+
+    func testDominanceBucketKeys() {
+        // 固定桶(不随阈值走):QA 一扫看分布,升/降阈才有依据
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(0.0), "dom_lt55")
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(0.54), "dom_lt55")
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(0.55), "dom_55_70")
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(0.69), "dom_55_70")
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(0.70), "dom_70_80")
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(0.79), "dom_70_80")
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(0.80), "dom_80_90", "拒拍线:落进拒拍桶")
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(0.95), "dom_90_100")
+        XCTAssertEqual(ObjectShotCapture.dominanceBucketKey(1.0), "dom_90_100")
+    }
+
     // MARK: - dHash 与网页 photo-hash.js 逐位同源(2026-07-16)
 
     /// 同一 9×8 RGBA 像素向量,dhashBits 必须与网页 dhashFromImageData 输出一字不差。

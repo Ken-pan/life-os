@@ -3,11 +3,14 @@
 PLAT.SHELL.1–6 之后的 generator 深化路线。Hub 状态见
 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)；前置：[`PLATFORM.md`](./PLATFORM.md) §PLAT.SHELL。
 
-**现状（2026-07-14）：** `create-life-os-app.mjs` 生成 app + AppManifest；
+**现状（2026-07-17）：** `create-life-os-app.mjs` 生成 app + AppManifest；
 `promote-life-os-app.mjs` 按 manifest 幂等接线 11 个注册点（GEN.4 后注册表六步
 收敛为一次 build）；`add-capability.mjs` 接 day-2 能力（auth / supabase-table /
 portal-card / mcp-server，GEN.5+6）。**剩余手动：** DNS、品牌配色、Portal 卡的
 RPC+渲染、`/api/mcp` 重定向、登录 UI、模板演进不回灌旧 app（GEN.3）。
+当前 manifest 真源含九个产品 app；`starter` 仅作模板不进注册表。**漂移记录：**
+2026-07-17 发现生成的 `appRegistry.js` 落后 manifest 导致 `check:app-manifests` 红，
+已运行 `npm run build:app-registry` 重生成（1 行 diff）并复验 `--check` 绿（9 app）。
 
 **业界对标（2026-07 调研）：** Nx sync generators 的 `sync:check` CI 漂移守卫；
 Copier/Cruft 的模板版本戳 + `update` 三方合并回灌；Backstage golden path 的
@@ -21,7 +24,7 @@ single source of truth。来源见文末。
 单人仓库,ROI 优先:先守护已有投资(GEN.1 防漂移),再消灭最大剩余手工
 (GEN.2 部署 / GEN.5 auth),结构性反转(GEN.4)在守卫到位后做,模板回灌
 (GEN.3)按痛感触发。**不引入 Nx / Backstage / Copier 本体** — 工具运维成本
-超过 6-app 仓库的收益,只借用它们的模式。
+超过单人九-app 仓库的收益,只借用它们的模式。
 
 ---
 
@@ -32,7 +35,7 @@ single source of truth。来源见文末。
 | **PLAT.GEN.1** | Manifest schema 校验 + `promote --check` 漂移守卫接 CI               | Nx `sync:check`    | ✅ 2026-07-12 |
 | **PLAT.GEN.2** | Day-2 部署自动化:Netlify site 创建/env/DNS 清单 + 图标生成参数化    | Backstage day-2    | ✅ 2026-07-12 |
 | **PLAT.GEN.3** | 模板版本戳 + `update-life-os-app`(starter 演进回灌旧 app)           | Copier/Cruft       | ⬜   |
-| **PLAT.GEN.4** | 注册表反转:六 app 注册信息迁入各自 manifest,注册表变生成物         | spec-driven SSOT   | ✅ 2026-07-12 |
+| **PLAT.GEN.4** | 注册表反转：当时六 app 注册信息迁入 manifest，现已扩到九 app；注册表为生成物 | spec-driven SSOT | ✅ 2026-07-12 |
 | **PLAT.GEN.5** | Day-2 能力模块:`add-capability` auth/supabase-table/portal-card 可组合接入 | Backstage golden path | ✅ 2026-07-14 |
 | **PLAT.GEN.6** | `mcp-server` 能力 + `@life-os/mcp-server`:新 app 从 day-1 被 AIOS 发现 | MCP / 编排层 | ✅ 2026-07-14 |
 

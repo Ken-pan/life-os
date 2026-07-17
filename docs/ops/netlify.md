@@ -1,12 +1,12 @@
 # Netlify 部署说明
 
-**最后与代码同步：** 2026-07-15
+**最后与代码同步：** 2026-07-17
 
 **Planner Paper API：** 函数目录在 repo 根 `netlify.toml` → `apps/planner/netlify/functions`（非 `apps/planner/netlify.toml` 内的相对路径 alone）。生产 `GET /api/paper/today` 无 token → **401**（2026-07-10）。
 
 ## 当前模式（推荐）：`Ken-pan/life-os` Monorepo + Deploy Key
 
-**六站**（四生产 + Portal 启动器 + Home 实验）均已指向 **同一 monorepo**，通过 **Deploy Key** 拉取代码（无需 GitHub App 单独授权 `life-os`）：
+**六个 canonical web surface**（四生产 + Portal 启动器 + Home 实验）均指向同一 monorepo；另有 KnowledgeOS 实验 site 与 AIOS 只读 viewer。下表记录代码侧已知接线；DNS / 实际 deploy 状态若未在本次远程复核，不从 manifest 推断。
 
 | Site          | Package directory | Build                         | Publish              | Production URL              | 备注     |
 | ------------- | ----------------- | ----------------------------- | -------------------- | --------------------------- | -------- |
@@ -52,7 +52,7 @@ cd life-os && npm install && npm run build
 | Workflow                                         | 作用                                                                                               |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | `.github/workflows/ci.yml` → `build`             | PR / push：`validate:tokens` + Turbo `npm run build`                                               |
-| `.github/workflows/ci.yml` → `design-catalog`    | smoke（172）+ a11y + snapshots（80 pixel baselines）                                               |
+| `.github/workflows/ci.yml` → `design-catalog`    | 当前代码收集 smoke **922** + a11y **147** + snapshots **524**（`--list`，2026-07-17）；实际通过状态看当次 CI |
 | `.github/workflows/ci.yml` → `integration-smoke` | `check:lifeos-boundaries` + outbox 结构；有 `SUPABASE_ACCESS_TOKEN` 时跑远程 identity/outbox smoke |
 | `.github/workflows/deploy-netlify.yml`           | **手动** CLI 上传兜底（需 `NETLIFY_AUTH_TOKEN` secret）                                            |
 
@@ -107,14 +107,14 @@ CI=1 npx netlify deploy --prod --no-build --filter portal --dir=apps/portal/buil
 | Netlify site | `homeos-ken`（`69d4c072-d153-499c-90a8-57909df461a4`）                                   |
 | 生产 URL     | https://home.kenos.space                                                                 |
 | Portal       | ✅ Launcher 实验区（HOME.PORTAL.1 · 2026-07-09）                                                  |
-| Integration  | ✅ SSO + redirect（HOME.SSO.2/HOME.SSO.3）；spatial 数据仍 localStorage only                         |
+| Integration  | ✅ SSO + redirect；云端已有 `home.scans` / 私有照片桶 / `home.events`；可编辑 spatial 项目仍本地真源 |
 
 ```bash
 npm run build:home
 CI=1 npx netlify deploy --prod --no-build --filter home-os --dir=apps/home/build --site=69d4c072-d153-499c-90a8-57909df461a4
 ```
 
-`./scripts/deploy-all-netlify.sh` 已含第六站。
+`./scripts/deploy-all-netlify.sh` 已含 Home；HealthOS 当前 `production: false`，未列为 Netlify 生产 surface。
 
 其他：
 

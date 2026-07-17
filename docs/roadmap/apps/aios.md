@@ -2,7 +2,7 @@
 
 **云端只读版：** [aios-kenos.netlify.app](https://aios-kenos.netlify.app) · **Workspace：** `aios-os` · **Dev 端口：** 5197 · **ID 前缀：** `AIOS`
 
-> **层级：实验 / 本地优先。** 与其他五个 web 站不同：AIOS 是**原生 Mac app**(Tauri v2 壳，装在 `/Applications`)，推理全部走本机 LocalAI 网关(`127.0.0.1:18888`，llama-swap · OpenAI 兼容)+ 本地生图，数据不出设备。Netlify 上的 `aios-kenos.netlify.app` 只是**登录后查看已同步对话/记忆/图片的只读查看器**(`VITE_AIOS_CLOUD=1`)——生成新回复需连回运行本地网关的机器。
+> **层级：实验 / 本地优先。** 与六个 canonical web 站不同：AIOS 是**原生 Mac app**(Tauri v2 壳，装在 `/Applications`)，推理全部走本机 LocalAI 网关(`127.0.0.1:18888`，llama-swap · OpenAI 兼容)+ 本地生图，数据不出设备。Netlify 上的 `aios-kenos.netlify.app` 只是**登录后查看已同步对话/记忆/图片的只读查看器**(`VITE_AIOS_CLOUD=1`)——生成新回复需连回运行本地网关的机器。
 
 ## 一句话
 
@@ -32,9 +32,9 @@
 
 | ID | 主题 | 桶 | 备注 |
 | --- | --- | --- | --- |
-| — | 高速迭代中，暂无固化 Next | — | 新想法先落 §Parked，评估 ROI 后再进 hub §Next |
+| **AIOS.STABLE.26** | 核心链路回归护栏 | Infra/Product | **高 ROI，1d**：当前 `npm test -w aios-os` 仅 4 个 profile migration 测试；补 chat/tool-loop、云 LWW/墓碑、AIOS.20 读快照、AIOS.21 写 Planner smoke |
 
-> AIOS 2026-07-13 建站、两天内推进到 AIOS.25，尚在高速迭代期；固化排期前不写死 Next。
+> AIOS 2026-07-13 建站、两天内推进到 AIOS.25。能力面已经足够宽，下一步不是 AIOS.26 新功能，而是把 20–25 的关键链路变成可回归验证；稳定化后再恢复高速迭代。
 
 ## Parked / 待研判
 

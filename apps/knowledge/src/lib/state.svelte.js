@@ -45,6 +45,7 @@ export const S = $state({
   vaultReady: false,
   vaultError: '',
   vaultRoot: VAULT_ROOT,
+  saveError: false, // 最近一次持久化是否失败（编辑器保存状态指示读它）
 })
 
 export function save() {
@@ -135,15 +136,45 @@ export function captureFile(name, content) {
   return item.id
 }
 
+/**
+ * 新建空白笔记（全局「+ 新建」用）：立即持久化一条空条目，直接交给块状编辑器书写。
+ * @returns {object} 新条目（同一对象引用，供编辑器 item prop 直接绑定）
+ */
+export function createNote() {
+  const item = {
+    id: newId(),
+    type: 'note',
+    title: '',
+    body: '',
+    url: '',
+    tags: [],
+    pinned: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }
+  persistNew(item)
+  return item
+}
+
 function persistChange(item) {
   if (S.backend === 'vault') {
     writeItemFile(item)
       .then((rel) => {
         item.id = rel
+        S.saveError = false
       })
-      .catch((e) => console.error('[vault] 保存失败', e))
+      .catch((e) => {
+        console.error('[vault] 保存失败', e)
+        S.saveError = true
+      })
   } else {
-    save()
+    try {
+      save()
+      S.saveError = false
+    } catch (e) {
+      console.error('[local] 保存失败', e)
+      S.saveError = true
+    }
   }
 }
 

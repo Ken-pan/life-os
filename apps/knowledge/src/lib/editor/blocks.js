@@ -14,6 +14,7 @@
  * 设计约束：markdownToBlocks(blocksToMarkdown(x)) 结构稳定（往返不漂移），
  * 这是数据完整性护栏，被 knowledge-unit.mjs 锁死。
  */
+import { inlineToPlainText } from './inline.js'
 
 let _seq = 0
 /** 生成块 id（仅运行期用于 keyed each / 光标定位；往返比对不看 id）。 */
@@ -28,6 +29,17 @@ export function makeBlock(type = 'paragraph', text = '', extra = {}) {
 }
 
 const INDENT_UNIT = 2 // 每级列表缩进的空格数（序列化用）
+
+const CALLOUT_TYPES = new Set(['note', 'info', 'tip', 'warning', 'danger'])
+/** 归一化 callout 类型（未知 → note）。 */
+function calloutType(raw) {
+  const t = String(raw).toLowerCase()
+  if (t === 'success' || t === 'check') return 'tip'
+  if (t === 'important' || t === 'hint') return 'note'
+  if (t === 'caution' || t === 'attention') return 'warning'
+  if (t === 'error' || t === 'failure' || t === 'bug') return 'danger'
+  return CALLOUT_TYPES.has(t) ? t : 'note'
+}
 
 /** 前导空白 → 缩进层级（tab 记 2 空格；向下取整）。 */
 function leadingDepth(prefix) {
@@ -74,6 +86,20 @@ export function markdownToBlocks(src) {
     if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) {
       blocks.push(makeBlock('divider', ''))
       i += 1
+      continue
+    }
+
+    // Callout 高亮块（Obsidian 语法 > [!type] …）—— 必须先于普通引用判定。
+    // 后续连续的 > 行（非新 callout）并入其正文；编辑器里按单行处理，多行导入合成一行。
+    const callout = line.match(/^\s*>\s*\[!(\w+)\][+-]?\s?(.*)$/)
+    if (callout) {
+      const body = callout[2] ? [callout[2]] : []
+      i += 1
+      while (i < lines.length && /^\s*>\s?/.test(lines[i]) && !/^\s*>\s*\[!/.test(lines[i])) {
+        body.push(lines[i].replace(/^\s*>\s?/, ''))
+        i += 1
+      }
+      blocks.push(makeBlock('callout', body.join(' ').trim(), { meta: { callout: calloutType(callout[1]) } }))
       continue
     }
 
@@ -143,6 +169,37 @@ export function markdownToBlocks(src) {
   return blocks
 }
 
+/**
+ * 正文 Markdown → 纯文本摘要（去块级 # / - / > 等前缀 + 去行内 ** ` [[]] 等标记）。
+ * 列表预览 / 相关笔记摘要专用：绝不能让用户看见裸 markdown 符号。
+ * @param {string} markdown
+ * @param {number} len 摘要最大字符数
+ */
+export function plainExcerpt(markdown, len = 140) {
+  const text = markdownToBlocks(markdown)
+    .filter((b) => b.type !== 'code' && b.type !== 'divider')
+    .map((b) => inlineToPlainText(b.text))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return text.slice(0, len)
+}
+
+/**
+ * 首个块是否为「与笔记标题重复的 H1」。渲染层去重用（vault 里 title 来自文件名、
+ * 正文仍可保留 `# 标题` 首行，Obsidian 互通不动 markdown）——只在 UI 隐藏，不改数据。
+ * @param {Array} blocks
+ * @param {string} title
+ * @returns {boolean}
+ */
+export function firstHeadingMatchesTitle(blocks, title) {
+  const b = blocks?.[0]
+  if (!b || b.type !== 'heading' || (b.meta?.level || 1) !== 1) return false
+  const tt = String(title ?? '').trim()
+  if (!tt) return false
+  return inlineToPlainText(b.text).trim() === tt
+}
+
 /** 该行是否开启一个新块（段落聚合时用来断行）。 */
 function isBlockStart(line) {
   return (
@@ -165,6 +222,8 @@ export function blockToMarkdown(b) {
       return '---'
     case 'quote':
       return `> ${b.text}`
+    case 'callout':
+      return `> [!${b.meta?.callout || 'note'}] ${b.text}`
     case 'todo':
       return `${pad}- [${b.meta?.checked ? 'x' : ' '}] ${b.text}`
     case 'bullet':

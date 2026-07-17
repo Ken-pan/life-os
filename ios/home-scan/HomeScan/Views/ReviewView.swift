@@ -43,6 +43,28 @@ struct ReviewView: View {
                 }
 
                 if let p = model.convertedProject {
+                    // 扫后质量摘要(P1 降打扰):安静扫完,先给一句让人安心的总账 ——
+                    // 不把「N 件证据不足」堆你脸上。技术细节(现实核对/提醒)留在下面
+                    // 给想看的人。战略核心是别把系统的不确定性转嫁给用户。
+                    Section {
+                        VStack(alignment: .leading, spacing: HS.Space.tight) {
+                            Label("基础扫描已保存", systemImage: "checkmark.circle.fill")
+                                .foregroundStyle(HS.accent)
+                                .font(.headline)
+                            Text("\(p.placements.count + p.fixtures.count) 件家具 · \(p.zones.count) 个分区已记录")
+                                .font(.subheadline)
+                            if let rc = model.realityCheck, !rc.recognized.isEmpty {
+                                Text("其中 \(rc.recognized.count) 件认出是家里已有的")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.vertical, HS.Space.tight)
+                        .accessibilityElement(children: .combine)
+                    } footer: {
+                        Text("名字或类别认错了?长按下面那一行改。现在直接上传就行。")
+                    }
+
                     Section {
                         PlanPreview(project: p)
                             // 高度跟着户型的实际比例走,不写死。写死 300 的话,

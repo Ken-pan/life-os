@@ -48,6 +48,8 @@ Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。**Canonical ID：
 
 Wave 逐表证据 → [`SHIPPED.md`](./SHIPPED.md) §Platform
 
+> **现状（2026-07-17）：** 切换器 app 列表已由 PLAT.GEN.4 生成注册表派生，当前含**八个可切换 app**（九产品 app 中 Portal 作为 hub 不列入）；上表「六 app」为 2026-07-08 历史事实。
+
 ---
 
 ## PLAT.SHELL — AppShell → App Generator 主线

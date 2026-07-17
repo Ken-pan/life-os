@@ -107,9 +107,13 @@ extension AppModel {
     /// FlatScene → HomeOSProject(mock 与真扫共用的汇合点)
     func applyScene(_ scene: FlatScene) {
         // 证据完备度把关:哪些家具的多视角照片没凑够,进预览页「提醒」区
-        // (跟着 scanWarnings 一起上传 —— 网页端也能看到这次扫描的证据短板)
+        // (跟着 scanWarnings 一起上传 —— 网页端也能看到这次扫描的证据短板)。
+        // **认账家的记忆**:成功对齐已知户型的重扫,权威副本已有照片,不必逐件重拍 ——
+        // 这条只会把没重拍的件误报成「N 件证据不足」的噪声,压掉。只在建家/没对齐时提示。
         var scene = scene
-        scene.warnings += EvidenceGuide.sceneWarnings(scene)
+        if lastHomeFrame?.ok != true {
+            scene.warnings += EvidenceGuide.sceneWarnings(scene)
+        }
         // 现场没对齐永久户型 → 提醒但不拦(网页端拉取时的全局配准是最终把关)
         if let reg = lastHomeFrame, !reg.ok, let reason = reg.reason {
             scene.warnings.append("现场未对齐永久户型(\(reason))—— 不影响上传,网页端配准会再把关")

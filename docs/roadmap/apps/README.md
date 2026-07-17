@@ -1,11 +1,11 @@
-# 七 App Roadmap 分卷
+# 九 App Roadmap 分卷
 
 > **Hub 真源：** [`../../LIFEOS_ROADMAP.md`](../../LIFEOS_ROADMAP.md) §Now / §Next / §推荐执行顺序
 > **本目录：** 各 app **产品向**排期细节（能力表 · 实现锚点 · 验收命令）
 > **跨站主线：** [`../INTEGRATION.md`](../INTEGRATION.md) · [`../GROWTH.md`](../GROWTH.md)
 > **E2E 证据：** [`../../qa/e2e-issues.md`](../../qa/e2e-issues.md)
 
-**脑暴日期：** 2026-07-09 · **复核：** 2026-07-14（新增 AIOS 第七分卷）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md)
+**脑暴日期：** 2026-07-09 · **复核：** 2026-07-17 ROI / 闭环深查（九 app 代码、测试、远程 schema、未提交 WIP、CI）· **执行分线：** [`../AGENT_WORKSTREAMS.md`](../AGENT_WORKSTREAMS.md)
 
 执行顺序以 **hub §推荐执行顺序** 为准；下文不重复 Wave 全文。
 
@@ -23,6 +23,7 @@
 | `H-W*`           | Home    | 空间编辑主线（墙图三步编辑器）≠ `H-P*`；[home-spatial-editor.md](./home-spatial-editor.md) |
 | `AIOS.*`         | AIOS    | 本地优先 AI 助手（原生 Mac app）；[aios.md](./aios.md)                                     |
 | `KNOW.*`         | KnowledgeOS | 长期记忆层（原生 Mac app，取代 Obsidian）；[knowledge.md](./knowledge.md)               |
+| `HLT-*`          | HealthOS | 状态调节中枢（Mac + Watch/iPhone companion）；[health.md](./health.md)                  |
 
 | APP3     | App                    | Workspace             | Legacy v1（勿在新 ticket 使用）               |
 | -------- | ---------------------- | --------------------- | --------------------------------------------- |
@@ -35,6 +36,7 @@
 | **HOME** | Home                   | `home-os`             | `H-P*` · `H-W*` → `HOME.SPATIAL.*`            |
 | **AIOS** | AIOS 本地 AI 助手      | `aios-os`             | —（2026-07-13 新建，无 legacy）               |
 | **KNOW** | KnowledgeOS 长期记忆层 | `knowledge-os`        | —（2026-07-16 新建，无 legacy）               |
+| **HLT**  | HealthOS 状态调节中枢  | `health-os`           | —（2026-07-16 从模板晋升）                    |
 | **INTG** | Integration            | —                     | `I-*`                                         |
 
 **E2E 问题码：** Fitness 端口冲突 **`QA-GYMS-0`**（legacy `F-0` · ~~`QA-FITN-0`~~；≠ Finance `FINC.*`）。
@@ -45,51 +47,59 @@
 
 | Canonical ID (v2)    | Legacy v1                                 | App 分卷                                        | 状态 / 锚点                                                            |
 | -------------------- | ----------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
-| **PLNR.SCHED.0**     | `P-SCHED.0` · `P-SCHED-0`                 | [planner.md](./planner.md)                      | 🟡 migrate ✅ #15 · 10.pwa ✅ #18 · **10b.ios** 待 Ken |
+| **PLNR.SCHED.0**     | `P-SCHED.0` · `P-SCHED-0`                 | [planner.md](./planner.md)                      | 🟡 仅剩 **10b.ios** 用户 gate；不再阻塞 Agent 主航道 |
 | **PAPR.DATA.verify** | `P-MOVE.verify` · `P-MOVE-VERIFY`         | [paperos.md](./paperos.md)    | ✅ PASS 2026-07-11                                                     |
 | **PAPR.SYS.0**       | `P-MOVE.SYS.0` · `P-MOVE-SYS-0`           | [paperos.md](./paperos.md)    | ✅ CONDITIONAL PASS accepted                                           |
 | **PAPR.SYS.1b.fs**   | `P-MOVE.SYS.1b.fs` · `P-MOVE-SYS-1B-FS`   | [paperos.md](./paperos.md)    | ❌ BLOCKED / CLOSED                                                    |
 | **PAPR.SYS.1b.jrn**  | `P-MOVE.SYS.1b.jrn` · `P-MOVE-SYS-1B-JRN` | [paperos.md](./paperos.md)    | 🟡 CONDITIONAL PASS accepted                                           |
-| **PAPR.SYS.1**       | `P-MOVE.SYS.1` · `P-MOVE-SYS-1`           | [paperos.md](./paperos.md)    | 🟡 PRIMARY LANE — Ken + Codex 主航道                                       |
+| **PAPR.SYS.1**       | `P-MOVE.SYS.1` · `P-MOVE-SYS-1`           | [paperos.md](./paperos.md)    | 🟡 PRIMARY LANE — Ken + Codex 主航道（独立仓库）                           |
 | **PAPR.SYS.2**       | `P-MOVE.SYS.2` · `P-MOVE-SYS-2`           | [paperos.md](./paperos.md)    | 🔒 not started                                                         |
-| **PAPR.UI**          | `P-MOVE.UI` · `P-MOVE-UI`                 | [paperos.md](./paperos.md)    | 🔴 PR #27/#28 device gate BLOCKED · locale + stylus + Slice 2 visual   |
-| **GYMS.SUB.5**       | `FT-P5`                                   | [fitness.md](./fitness.md)                      | 🟡 工程 PASS · 产品 BLOCKED                                            |
-| **FINC.PURCHASE.6**  | `F-P6`                                    | [finance.md](./finance.md)                      | ⏳ `FINC.PURCHASE.6.r0` · `FINC.PURCHASE.6.a`                          |
+| **PAPR.UI**          | `P-MOVE.UI` · `P-MOVE-UI`                 | [paperos.md](./paperos.md)    | 🔴 PR #27/#28 device gate BLOCKED · 已迁出独立仓库                     |
+| **GYMS.SUB.5**       | `FT-P5`                                   | [fitness.md](./fitness.md)                      | ✅ 2026-07-13 收割 · #19 `67e72b81`                                    |
+| **FINC.PURCHASE.6**  | `F-P6`                                    | [finance.md](./finance.md)                      | 🟡 6.a engine/RPC/matcher/UI 均完成；仅剩 owner live + 双 JWT RLS + 视觉 closure |
+| **FINC.SYNC.1b**     | —                                         | [finance.md](./finance.md)                      | ✅ 2026-07-13 · popup last sync + retry · 18/18                       |
+| **PLNR.CORE.4**      | —                                         | [planner.md](./planner.md) · [portal.md](./portal.md) | ✅ 2026-07-13 · Today↔Portal 计数对齐 · parity 9/9              |
+| **HLT-0–4**          | —                                         | [health.md](./health.md)                      | ✅ 2026-07-16 · App/Focus/State Engine/自适应/趋势；companion 真机 gate 待用户 |
 | **PLNR.PROJ.3**      | `P-PROJ-3`                                | [planner.md](./planner.md)                      | ✅ Roadmap refs UI（2026-07-10）                                       |
 | **PAPR.WRITE.5**     | `P-MOVE.5` · `P-MOVE-5`                   | [paperos.md](./paperos.md)    | 🟡 Code ✅ · DB `paper_device_actions` ❌ · Hub Deferred                |
 | **PORT.GROWTH.4b-H** | `G-P4b-H`                                 | [portal.md](./portal.md) · [home.md](./home.md) | ✅ 2026-07-09 · `HOME.PROJ.6a`                                         |
 
+**已发货（2026-07-13+）：** `GYMS.SUB.5` · `FINC.SYNC.1b` · `PLNR.CORE.4` · AIOS.20–25 · HLT-0–4 · Home 云扫描/照片/事件生产链 · DS 07-15–17 — [`../SHIPPED.md`](../SHIPPED.md)
 **已发货（2026-07-09）：** `PORT.GROWTH.8` · `PORT.GROWTH.9` · `PORT.GROWTH.4b-H` · Phase 0–6 — [`../SHIPPED.md`](../SHIPPED.md)
 
 ## 一览（Top Next）
 
 | App     | 层级   | Top Next                                            | 分卷                                                                      |
 | ------- | ------ | --------------------------------------------------- | ------------------------------------------------------------------------- |
-| Planner | 生产   | **PLNR.SCHED.0** · Paper 数据 provider 维护          | [planner.md](./planner.md)                                                |
-| Fitness | 生产   | **GYMS.SUB.5** 替代动作 · GYMS.PORTAL.2             | [fitness.md](./fitness.md)                                                |
-| Finance | 生产   | **FINC.PURCHASE.6** 支出审核 · FINC.SYNC.1b         | [finance.md](./finance.md)                                                |
-| Music   | 生产   | MUSC.PIPE.5 ✅ · 维护 · MUSC.PIPE.4 按需            | [music.md](./music.md)                                                    |
-| Portal  | 启动器 | 维护 · UI 走查 P-1–P-12 ✅（走查序号，非 hub ticket） | [portal.md](./portal.md)                                                  |
-| Home    | 实验   | **HOME.PROJ.7** 多项目切换 · HOME.SPATIAL.0–5 ✅    | [home.md](./home.md)                                                      |
-| AIOS    | 实验/本地优先 | 高速迭代中（AIOS.1–25）· Portal 接入待研判       | [aios.md](./aios.md)                                                      |
-| KnowledgeOS | 实验/本地优先 | **KNOW.VAULT.0** Vault 路径可配置 + 文件监听 · KNOW.SYNC.1 云同步 | [knowledge.md](./knowledge.md)                                            |
+| Planner | 生产   | 用户 gate：SCHED/CAPTURE 真机；Agent：定向 UI 收口 → 附件 WIP 决策 | [planner.md](./planner.md) |
+| Fitness | 生产   | maintenance；MEDIA.3 / SYNC.4 均 P2 按需 | [fitness.md](./fitness.md) |
+| Finance | 生产   | **FINC.PURCHASE.6.a closure QA**（0.5–1d，最高产品 ROI） | [finance.md](./finance.md) |
+| Music   | 生产   | paused / maintenance；MUSC.PIPE.4 仅问题触发 | [music.md](./music.md) |
+| Portal  | 启动器 | maintenance；不为凑九 app 扩卡 | [portal.md](./portal.md) |
+| Home    | 实验   | **HOME.RECOG.0** 生产↔git 闭环 → RECOG.1 安静扫描 → RECOG.2 matcher | [home.md](./home.md) |
+| AIOS    | 实验/本地优先 | **AIOS.STABLE.26** 核心链路回归护栏 | [aios.md](./aios.md) |
+| KnowledgeOS | 实验/本地优先 | **KNOW.EDITOR.7** WIP 稳定化 → **KNOW.VAULT.0** watcher | [knowledge.md](./knowledge.md) |
+| HealthOS | 实验/本地优先 | **HLT-5** companion checkpoint → 用户真机 gate；其余后移 | [health.md](./health.md) |
 | PaperOS | 独立仓库 | 设备 Shell，已迁出 → [paperos.md](./paperos.md)   | [paperos.md](./paperos.md)                                                |
 
 ## 跨站集成矩阵（只读 / 事件）
 
-|                               | Planner | Fitness          | Finance | Music    | Portal             | Home     | AIOS          |
-| ----------------------------- | ------- | ---------------- | ------- | -------- | ------------------ | -------- | ------------- |
-| **读 `core_*`**               | ✅      | ✅               | ✅      | ✅       | ✅                 | ✅       | ✅ AIOS.20    |
-| **`life_events` 生产**        | —       | ✅ GYMS.EVENTS.1 | ✅      | —        | —                  | —        | ✅ AIOS.21    |
-| **`life_events` 消费**        | ✅      | —                | —       | —        | 角标 PORT.GROWTH.2 | —        | —             |
-| **Portal 摘要 PORT.GROWTH.4** | ✅ 任务 | ✅ 训练          | ✅ 结余 | ✅ Music | ✅ Home            | —        | ❌ 未接入     |
-| **业务数据云**                | ✅      | ✅               | ✅      | ✅       | —                  | ❌ local | ✅ 本地优先+云只读 |
+|                               | Planner | Fitness          | Finance | Music    | Portal             | Home     | AIOS          | KnowledgeOS | HealthOS |
+| ----------------------------- | ------- | ---------------- | ------- | -------- | ------------------ | -------- | ------------- | ----------- | -------- |
+| **读 `core_*`**               | ✅      | ✅               | ✅      | ✅       | ✅                 | ✅       | ✅ AIOS.20    | ✅ Planner 只读快照 | — |
+| **`life_events` 生产**        | —       | ✅ GYMS.EVENTS.1 | ✅      | —        | —                  | 自有 `home.events` 代码（非 `life_events`） | ✅ AIOS.21 | — | — |
+| **`life_events` 消费**        | ✅      | —                | —       | —        | 角标 PORT.GROWTH.2 | —        | —             | — | — |
+| **Portal 摘要 PORT.GROWTH.4** | ✅ 任务 | ✅ 训练          | ✅ 结余 | ✅ Music | ✅ Home            | —        | ❌ 未接入     | ❌ 未接入   | ❌ 未接入 |
+| **业务数据云**                | ✅      | ✅               | ✅      | ✅       | —                  | 🟡 扫描/照片/事件 migration 远程已 apply（07-17 实测）；项目本地真源 | ✅ 本地优先+云只读 | 🟡 Planner 云快照；Vault 未上云 | ❌ 原始健康数据仅本地 |
 
 ## 已知阻塞（排期前必读）
 
 | 阻塞                              | 影响项                                     | 解除方式                                                               |
 | --------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
-| Home 仅 localStorage              | ~~**PORT.GROWTH.4b** Home 卡~~             | ✅ **HOME.PROJ.6a** 元数据 + **PORT.GROWTH.4b-H** 第五卡（2026-07-09） |
+| Home 可编辑项目仍是本地真源       | 全量跨设备编辑 / 多项目                    | 云扫描/照片/事件已生产；完整 spatial 项目同步仍未实现 |
+| Home object recognition 已进生产但代码未入版本史 | schema 可复现性 / matcher 继续迭代 | 立即完成 HOME.RECOG.0；这是 P0 交付完整性，不是新功能 |
+| Knowledge 块编辑器大 WIP 未入版本史 | 后续 watcher / sync / graph | 先做 KNOW.EDITOR.7 browser smoke + checkpoint |
+| Finance 6.a 文档仍写“UI/RPC 待实现” | 错误估时与重复开发 | 以代码和生产 RPC 为准，只剩 closure QA |
 | `events.ts` 仅 `finance.bill_due` | ~~**INTG.EVENTS.1b** / **GYMS.EVENTS.1**~~ | ✅ 已扩 `fitness.workout_logged`（2026-07-09）                         |
 
 ## 当前排序 · Wave 投入估算
@@ -98,7 +108,7 @@
 
 **已完成 Wave（2026-07-09）：** Phase 0–6 + Portal UI 走查 P-1–P-12 — 见 [`../SHIPPED.md`](../SHIPPED.md)
 
-**Phase 7：** **PLNR.PROJ.3** → **PAPR.WRITE.5**；Home HOME.SPATIAL.0–5 已完成，不再作为下一档。
+**历史 Phase 7：** PLNR.PROJ.3 已完成；PAPR.WRITE.5 已随 PaperOS 迁出。当前开放顺序只看 hub §Now / §Next。
 
 ## 何时更新
 

@@ -2,12 +2,12 @@
   // 回忆：直连 local-ai 的 vault 检索服务（混合 RAG，服务端做检索/重排/生成）。
   // KnowledgeOS 相对 Obsidian 的核心差异——问自己的整个知识库，带引用溯源。
   import { onMount } from 'svelte'
+  import { goto } from '$app/navigation'
   import { SearchField } from '@life-os/platform-web/svelte/form'
   import { EmptyState } from '@life-os/platform-web/svelte/status'
   import { S, itemById } from '$lib/state.svelte.js'
   import { vaultHealth, vaultSearch, vaultAsk } from '$lib/knowledgeService.js'
   import { renderMarkdown } from '$lib/markdown.js'
-  import ItemViewer from '$lib/components/ItemViewer.svelte'
   import { t } from '$lib/i18n/index.js'
 
   let query = $state('')
@@ -17,16 +17,15 @@
   let searchHits = $state([])
   let busy = $state('') // '' | 'ask' | 'search'
   let error = $state('')
-  let reading = $state(null)
 
   onMount(async () => {
     health = await vaultHealth()
   })
 
-  /** 检索结果的 path 回链本地条目（同一 Vault，path === item.id）。 */
+  /** 检索命中 → 跳到工作台并选中该笔记（同一 Vault，path === item.id）。 */
   function openHit(hit) {
     const item = hit.path ? itemById(hit.path) : null
-    if (item) reading = item
+    if (item) goto(`/library?note=${encodeURIComponent(item.id)}`)
   }
 
   async function ask() {
@@ -147,8 +146,6 @@
     {/if}
   {/if}
 </div>
-
-<ItemViewer bind:open={reading} />
 
 <style>
   .index-status {

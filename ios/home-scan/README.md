@@ -30,13 +30,14 @@ open HomeScan.xcodeproj    # 或 xcodebuild -scheme HomeScan -destination 'platf
 | `HomeScan/Services/ScanSessionController.swift` | 共享 ARSession + 逐房 RoomCaptureSession + StructureBuilder 合并 |
 | `HomeScan/Services/ViewpointCapture.swift` | 扫描中拍照：ARFrame 位姿 + JPEG（≤2048px） |
 | `HomeScan/Services/AutoViewpointCapture.swift` | 机位自动拍照：视角稳/看得全/够新颖就自己拍（每间 ≤4 张），拍不上给站位引导 —— 扫描无脑化 |
-| `HomeScan/Services/ObjectShotCapture.swift` | 家具自动抓拍：2Hz 给每件家具的当前视角打分（全身入画/占幅/居中/不甩动），按 90° 方位桶每桶留最佳帧（裁图 + k-means 主色 + 拉普拉斯清晰度门控——糊图不许顶掉清楚图） |
+| `HomeScan/Services/ObjectShotCapture.swift` | 家具自动抓拍：2Hz 给每件家具的当前视角打分（全身入画/占幅/居中/不甩动），按 90° 方位桶每桶留最佳帧（裁图 + 拉普拉斯清晰度门控——糊图不许顶掉清楚图）。**外观特征（2026-07-16）**：多方位**共识主色** + `colorConfidence`（簇纯度×可用像素×共识度）、**dHash `photoHash`**（与 web `photo-hash.js` 逐位同源，跨扫描认亲）——叠放件裁到同一画面时 `skipHash` 不出哈希免撞车 |
 | `HomeScan/Services/EvidenceGuide.swift` | 证据完备度（纯几何，单测全覆盖）：大件家具要 ≥3 个方位的照片、中件 2、小件 1；实时墙体剔掉「靠墙拍不到」的方位（站位半径从理想值往里退着找）；产出具体走位引导与扫后汇总警告 |
 | `HomeScan/Services/ContainerGeometry.swift` | 柜内扫描几何（纯数学，单测全覆盖）：六个引导点拟合内腔盒子、层板 y 合并去重、切「层」、payload 契约（英寸） |
 | `HomeScan/Services/ContainerScanController.swift` | 柜内扫描 AR 会话：raycast 打点 + 可视标记 + 水平面锚点自动识层板 + 证据照；与主扫描不同世界系，只取相对尺寸 |
 | `HomeScan/Services/ContainerUploader.swift` | 柜内数据上云：`container-{placementId}.json` + 证据照进 `home-scan-photos` 桶（与扫描同前缀，幂等定名） |
 | `HomeScan/Views/ContainerScanView.swift` | 柜内扫描 UI：挑柜子（从已上传扫描的 placements 里筛柜/架/衣柜）→ AR 引导 → 确认尺寸/层数 → 上传 |
-| `HomeScan/Convert/` | CapturedStructure → HomeOS plan-px（契约见 `apps/home/supabase/README.md`）；iOS 17 样式属性 → 细分 kind/attrs |
+| `HomeScan/Convert/` | CapturedStructure → HomeOS plan-px（契约见 `apps/home/supabase/README.md`）；iOS 17 样式属性 → 细分 kind/attrs。`KindMaps.refineKind` 再按尺寸/台面高把通用 `table` 细分 `standing_desk`/`desk`/`folding_table` 并给 `kindConfidence`（样式背书保底 0.6、升降桌高度信号保底 0.7、纯几何猜的低） |
+| `HomeScan/Services/ScanIdentity.swift` · `RealityCheck.swift` | 跨扫描身份匹配（与 web `spatial/scan-identity.js` **同源移植**，改动两处同步）：kind 族 + 尺寸/位置/颜色（按 colorConfidence 打权）/dHash（只正向）/elev 打分；`RealityCheck` 现场对照权威副本，认出换真名、漏检 ≥3 件且认出率<0.7 写 scanWarnings 提醒 |
 | `HomeScan/Views/` | 登录 / 主页 / 扫描 / 预览 / 上传 |
 | `HomeScan/Mock/` | 模拟器 mock 扫描（fixture 走全链路） |
 
@@ -99,3 +100,11 @@ HomeOS 网页 设置 → 云端扫描 → 拉取(照片落 IndexedDB,重铸 phot
      应提示「这个角度和拍过的太像 —— 换个角落站」；对着墙角 → 「看不到家具」。
      任何一间**最多 40 秒**内必定拍到第一张（哪怕偏暗/偏重复），不该出现
      「按提示站好了却永远没反应」
+9. 置信度/认亲（2026-07-16 起，需权威副本在设备缓存里）：
+   - 预览页每件应带**类型把握**：几何猜的（书桌 vs 折叠桌）标低、样式明确的
+     （封闭柜/转椅）不该误标待复核；上传后网页端低把握件左上角有琥珀「?」
+   - **重扫认回**：同一件家具再扫一次应认回原身份（原位/挪过带 ft），
+     不该拆成「消失 + 新增」；把 table 改成升降桌后重扫仍认得出是同一件
+   - **快扫不删件**:只扫回一部分家具时(认出率<70% 且漏 ≥3 件),预览页应提示
+     「还没扫到 X 件」;上传合并后没扫到的件**应保留**(网页端「没扫到」保护闸),
+     不该把上次扫到的家具删掉

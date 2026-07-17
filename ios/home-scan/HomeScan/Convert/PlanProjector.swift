@@ -206,7 +206,13 @@ enum PlanProjector {
             refs: identityRefs,
             warnings: &warnings
         )
-        let mapped = reconcileWithCanonical(deduped, refs: identityRefs, warnings: &warnings)
+        // 权威副本把 RoomPlan 并成一件的整排柜拆回 N 件(见 unmergeByCanonical),
+        // 再过认亲/纠正。ScanLog 记拆了几件,真机 QA 看它是否如期触发。
+        let unmerged = unmergeByCanonical(deduped, refs: identityRefs, warnings: &warnings)
+        if unmerged.count > deduped.count {
+            ScanLog.shared.counter { $0.add("unmerge_split_added", Double(unmerged.count - deduped.count)) }
+        }
+        let mapped = reconcileWithCanonical(unmerged, refs: identityRefs, warnings: &warnings)
 
         // 7) RoomPlan 认不出功能的区(unidentified),按区内家具反推名字;同名加序号
         let zones = namedZones(drafts: zoneDrafts, items: mapped)
@@ -634,6 +640,41 @@ enum PlanProjector {
         }
         if dropped > 0 { warnings.append("合并 \(dropped) 件重复识别的物体(同位重合/扫描重叠区)") }
         return kept
+    }
+
+    /// **prior-informed un-merge**:RoomPlan 把整排柜检成一个巨框时,用权威副本拆回原来的
+    /// N 件。dedupMapped 的 >100cm 分支只会二选一挑更可信的一次测量 —— 从不拆分,一排三件
+    /// 柜子最终还是一件。这里补上:一件扫描件的脚印**框住**了 ≥2 件同 kind/同族权威件
+    /// (权威中心落进扫描框)且扫描件大到可疑(长边 > splitSuspectPx)→ 用那 N 件权威的
+    /// 位置/尺寸/名字替换这一巨框。保守:命中 <2 原样留(单件走正常 reconcile);拆出的件
+    /// **外观留空** —— 共享巨框裁剪不能可信地归给某一件(网页端认亲会接回权威照片,几何
+    /// 以权威为准,重扫再补拍)。dedup 之后跑:拆出的件在各自权威位置,不会被再合并。纯函数。
+    static func unmergeByCanonical(
+        _ items: [MappedItem], refs: [CanonicalRef], warnings: inout [String]
+    ) -> [MappedItem] {
+        guard !refs.isEmpty else { return items }
+        var out: [MappedItem] = []
+        for item in items {
+            guard max(item.widthPx, item.depthPx) > splitSuspectPx else { out.append(item); continue }
+            let box = BoxPx(
+                x: item.center.x - item.widthPx / 2, y: item.center.y - item.depthPx / 2,
+                w: item.widthPx, h: item.depthPx
+            )
+            let hits = refs.filter { sameKindOrFamily(item.kind, $0.kind) && box.contains($0.box.cx, $0.box.cy) }
+            guard hits.count >= 2 else { out.append(item); continue }
+            warnings.append("用权威副本把「\(item.label)」拆回 \(hits.count) 件(RoomPlan 把整排并成了一件)")
+            for r in hits {
+                out.append(MappedItem(
+                    kind: r.kind, label: r.label, isFixture: r.isFixture,
+                    center: SIMD2(r.box.cx, r.box.cy), axisDeg: item.axisDeg,
+                    widthPx: r.box.w, depthPx: r.box.h, draftIdx: item.draftIdx,
+                    heightIn: nil, elevIn: r.elevIn, confidence: item.confidence,
+                    styleKeys: nil, styleZh: nil, colorHex: nil, colorConfidence: nil,
+                    kindConfidence: nil, photoHash: nil, photos: nil, requiredShots: 1
+                ))
+            }
+        }
+        return out
     }
 
     /// >100cm 仲裁用的权威参照:同 kind/同族、且与任一次测量几何吻合;

@@ -204,11 +204,16 @@ PAPR.DATA.verify ✅
 | **HOME.PORTAL.1**        | `H-P1`        | —   |
 | **HOME.SSO.2**           | `H-P2`        | —   |
 | **HOME.SSO.3**           | `H-P3`        | —   |
-| **HOME.SYNC.4**          | `H-P4`        | Home 云同步（spatial 项目 Supabase 持久化）；搁置 |
+| **HOME.SYNC.4**          | `H-P4`        | 扫描/照片/追加事件云链路已发货；完整可编辑 spatial 项目同步仍未完成 |
 | **HOME.UIUX.5**          | `H-P5`        | Home 平面 UX 打磨；已发货 |
 | **HOME.ONBOARD.9**       | `H-P9`        | —   |
 | **HOME.SMOKE.10**        | `H-P10`       | —   |
 | **HOME.STORAGE.11**      | `H-P11`       | —   |
+| **HOME.RECOG.0**         | —             | 生产 schema / git 真源闭环 |
+| **HOME.RECOG.1**         | —             | Quick Scan 安静模式 + 质量摘要 |
+| **HOME.RECOG.2**         | —             | embedding matcher + 全局一对一 |
+| **HOME.RECOG.3**         | —             | 证据式确认 UI |
+| **HOME.MCP.13**          | —             | `where_is` MCP → AIOS |
 | **HOME.SPATIAL.0**…**5** | `H-W0`…`H-W5` |
 | **INTG.EVENTS.1b**       | `I-P1.5b`     |
 | **INTG.IDENTITY.0**      | `I-P0`        |
@@ -217,6 +222,21 @@ PAPR.DATA.verify ✅
 | **MUSC.PIPE.3**          | `M-P3`        | —   |
 | **MUSC.PORTAL.7**        | `M-P7`        | —   |
 | **MUSC.PLAY.8**          | `M-P8`        | —   |
+
+### AIOS / KNOW / HLT（本地优先 app）
+
+| Canonical | 说明 |
+| --- | --- |
+| **AIOS.\*** | AIOS 本地 AI 助手 |
+| **AIOS.STABLE.26** | AIOS 核心链路回归护栏 |
+| **KNOW.\*** | KnowledgeOS 长期记忆层 |
+| **KNOW.EDITOR.7** | KnowledgeOS 块编辑器 WIP 稳定化 |
+| **HLT-0** | HealthOS app 基建 |
+| **HLT-1** | Focus 防沉迷 agent |
+| **HLT-2** | 六维 State Engine |
+| **HLT-3** | 自适应专注策略 |
+| **HLT-4** | HealthKit / 跨日趋势 |
+| **HLT-5** | companion 真机签名与持续交付 gate |
 
 ### PLAT — Platform（已发货简史 · legacy `C-*`）
 
@@ -228,6 +248,7 @@ PAPR.DATA.verify ✅
 | **PLAT.SHELL.1**     | `PLAT-P0-1`      |
 | **PLAT.SHELL.2**     | `PLAT-P0-2`      |
 | **PLAT.SHELL.3**     | `PLAT-P0-3`      |
+| **PLAT.CI.0**        | —                | master CI / 生成物 / 交付完整性恢复 |
 
 ### DSGN — Design（已发货简史 · legacy `D-*`）
 
@@ -248,7 +269,7 @@ PAPR.DATA.verify ✅
 | Canonical ID      | App         | Title                             | Status           |
 | ----------------- | ----------- | --------------------------------- | ---------------- |
 | `PAPR.SYS.1`      | **PaperOS** | Device launcher — journal watcher | PAUSED BY OWNER  |
-| `FINC.PURCHASE.6` | Finance     | Expense purchase review           | CONDITIONAL PASS |
+| `FINC.PURCHASE.6` | Finance     | Expense purchase review           | 6.a CODE COMPLETE · CLOSURE QA |
 
 ## Agent prompt 模板
 

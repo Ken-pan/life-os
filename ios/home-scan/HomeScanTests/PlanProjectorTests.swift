@@ -357,6 +357,58 @@ final class PlanProjectorTests: XCTestCase {
 
     /// 去重取谁的尺寸:置信度高的赢(哪怕更小)—— RoomPlan 扫不全时
     /// 会给偏小包围盒+低置信度,盲取更大的会把误检大框当真。
+    // MARK: - prior-informed un-merge(整排柜拆回,2026-07-17)
+
+    private func blob(_ kind: String, _ label: String, cxM: Double, cyM: Double, wM: Double, dM: Double) -> PlanProjector.MappedItem {
+        PlanProjector.MappedItem(
+            kind: kind, label: label, isFixture: false,
+            center: SIMD2(cxM * Self.pxPerM, cyM * Self.pxPerM), axisDeg: 0,
+            widthPx: wM * Self.pxPerM, depthPx: dM * Self.pxPerM, draftIdx: nil,
+            heightIn: nil, elevIn: nil, confidence: "low",
+            styleKeys: nil, styleZh: nil, colorHex: "#CCCCCC", colorConfidence: 0.8,
+            kindConfidence: 0.3, photoHash: "abc", photos: nil
+        )
+    }
+    private func canonRef(_ label: String, cxM: Double, wM: Double, kind: String = "cabinet") -> PlanProjector.CanonicalRef {
+        .init(id: label, kind: kind, label: label,
+              box: PlanProjector.BoxPx(x: (cxM - wM / 2) * Self.pxPerM, y: 0.05 * Self.pxPerM,
+                                       w: wM * Self.pxPerM, h: 0.5 * Self.pxPerM),
+              elevIn: nil, isFixture: false, scanAliases: [], identityLocked: false)
+    }
+
+    func testUnmergeSplitsRowIntoKnownPieces() {
+        // RoomPlan 把整排检成一个 3m 巨框「柜」;权威副本记得这排本是 3 件
+        let big = blob("cabinet", "柜", cxM: 1.5, cyM: 0.3, wM: 3.0, dM: 0.5)
+        let refs = [canonRef("左柜", cxM: 0.6, wM: 0.8),
+                    canonRef("中柜", cxM: 1.5, wM: 0.8),
+                    canonRef("右柜", cxM: 2.4, wM: 0.8)]
+        var warns: [String] = []
+        let out = PlanProjector.unmergeByCanonical([big], refs: refs, warnings: &warns)
+        XCTAssertEqual(out.count, 3, "整排巨框拆回 3 件")
+        XCTAssertEqual(Set(out.map(\.label)), ["左柜", "中柜", "右柜"])
+        XCTAssertTrue(out.allSatisfy { $0.colorHex == nil && $0.photos == nil && $0.photoHash == nil },
+                      "拆出的件外观留空,不把共享巨框裁剪冒认给某一件")
+        XCTAssertTrue(warns.contains { $0.contains("拆回 3 件") }, warns.joined(separator: " / "))
+    }
+
+    func testUnmergeNeedsAtLeastTwoRefs() {
+        // 同样是大框,但权威副本里这位置只有 1 件 → 不拆(可能只是那件扫大了,走正常仲裁)
+        let big = blob("cabinet", "柜", cxM: 1.5, cyM: 0.3, wM: 3.0, dM: 0.5)
+        var warns: [String] = []
+        let out = PlanProjector.unmergeByCanonical([big], refs: [canonRef("独柜", cxM: 1.5, wM: 0.8)], warnings: &warns)
+        XCTAssertEqual(out.count, 1, "只 1 件权威命中不拆")
+        XCTAssertEqual(out[0].colorHex, "#CCCCCC", "不拆的原样保留")
+    }
+
+    func testUnmergeSkipsNormalSizedItem() {
+        // 正常大小的柜(0.8m < splitSuspectPx 1.0m)即便周围有多件权威也不试拆
+        let normal = blob("cabinet", "柜", cxM: 1.5, cyM: 0.3, wM: 0.8, dM: 0.5)
+        var warns: [String] = []
+        let out = PlanProjector.unmergeByCanonical(
+            [normal], refs: [canonRef("a", cxM: 1.3, wM: 0.4), canonRef("b", cxM: 1.7, wM: 0.4)], warnings: &warns)
+        XCTAssertEqual(out.count, 1, "没大到可疑就不拆")
+    }
+
     func testDedupPrefersHigherConfidence() {
         var s = baseScene()
         s.items = [

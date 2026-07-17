@@ -1,6 +1,6 @@
 # Integration 主线（I-_ / H-_）
 
-Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。**六 app 产品排期** → [`apps/README.md`](./apps/README.md)。
+Hub 状态见 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。**App 产品排期** → [`apps/README.md`](./apps/README.md)。
 
 ---
 
@@ -104,7 +104,9 @@ RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 | SSO / redirect  | ✅   | `home.kenos.space/**` + `20260708180000` constraint（HOME.SSO.3）        |
 | Portal 继续     | ✅   | `touchAppLastOpened` 打开时写入 `last_opened_at`（PORT.GROWTH.1）           |
 | PWA             | ✅   | `static/sw.js` + `bindPwaForegroundResume`                         |
-| 云同步          | ❌   | `homeos_spatial_v1` localStorage only                              |
+| 云扫描 / 事件   | ✅   | `home.scans` + 私有照片桶 + `home.events` 三条 migration 均已在远程生产链（2026-07-17 实测） |
+| 物体识别数据层  | 🟡   | migration 已生产注册 + 57 embeddings；代码/服务仍待 `HOME.RECOG.0` 版本史闭环 |
+| 项目同步        | 🟡   | 可编辑 `homeos_spatial_v1` 仍是本地真源；完整跨设备编辑未完成      |
 
 ### Home 排期（hub §Next / §Parked）
 
@@ -113,7 +115,10 @@ RFC：[`../architecture/events-rfc.md`](../architecture/events-rfc.md)
 | **HOME.PORTAL.1** | Portal Launcher 实验卡  | ✅  | —    | `portal.kenos.space` 实验区         |
 | **HOME.SSO.2** | 接 `coreIdentity` + SSO | ✅  | —    | `apps/home/src/lib/auth.svelte.js`  |
 | **HOME.SSO.3** | redirect + DB `app_id`  | ✅  | —    | migration + Supabase Management API |
-| **HOME.PROJ.4** | spatial 云同步          | ⏸️  | —    | Supabase 表 + `sync.js`；大投入     |
+| **HOME.SYNC.4** | 扫描 / 照片 / 事件云链路 | ✅  | —    | scans/storage/events 均在生产远程确认 |
+| **HOME.RECOG.0** | 物体识别生产↔git 闭环 | 🔥 | HOME.SYNC.4 | schema 已生产 + 57 embeddings；migration/服务/iOS 契约须进入版本史 |
+| **HOME.RECOG.1–3** | 安静扫描 → matcher → 证据确认 | ◆◆ | HOME.RECOG.0 | 当前 Home 产品主航道 |
+| **HOME.PROJ.4** | 完整 spatial 项目同步    | ⏸️  | HOME.SYNC.4 | 编辑真源跨设备、冲突与多项目身份；仍属大投入 |
 | **HOME.PROJ.5** | 平面双模式（浏览/编辑） | ✅  | —    | 已去掉工坊 gate；无墙图/测距入口    |
 
 **提交纪律：** 勿将 `apps/home/**` 与 platform/catalog 变更混 PR（除非明确做 Home）。

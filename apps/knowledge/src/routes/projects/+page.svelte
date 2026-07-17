@@ -1,7 +1,9 @@
 <script>
   // 项目视图：自动感知所有项目笔记的现状（git 活动 + Planner 联动），
   // 漂移一键写回 frontmatter，可生成自动现状报告笔记。
+  import { goto } from '$app/navigation'
   import { EmptyState } from '@life-os/platform-web/svelte/status'
+  import { DonutChart } from '@life-os/platform-web/svelte/charts'
   import { getLifeOsAppOrigin } from '@life-os/theme'
   import { S, updateItem, itemById } from '$lib/state.svelte.js'
   import { applyMetaPatch, itemFromFile } from '$lib/frontmatter.js'
@@ -9,17 +11,21 @@
   import { CLOUD, fetchPlannerSnapshot } from '$lib/cloud.svelte.js'
   import {
     PROJECT_STATUSES,
+    AI_REPORT_GENERATOR,
     isProjectItem,
     projectRecord,
     matchPlannerProject,
     plannerTaskStats,
+    parseAiSuggestions,
     parseGitHeadLog,
     senseProject,
     todayYmd,
     buildStatusReport,
   } from '$lib/projects.js'
-  import ItemViewer from '$lib/components/ItemViewer.svelte'
   import { t } from '$lib/i18n/index.js'
+
+  /** 打开项目笔记 = 跳到工作台并选中。 */
+  const openNote = (id) => { const it = itemById(id); if (it) goto(`/library?note=${encodeURIComponent(it.id)}`) }
 
   const REPORT_REL = 'Personal Project/📡 项目现状（自动）.md'
   const now = Date.now()
@@ -28,7 +34,6 @@
   let gitSensing = $state(false)
   let planner = $state(null)
   let plannerErr = $state('')
-  let reading = $state(null)
   let appliedMsg = $state('')
   let reportMsg = $state('')
 
@@ -61,6 +66,11 @@
     S.items.filter(isProjectItem).map(projectRecord),
   )
   const taskStats = $derived(planner ? plannerTaskStats(planner.tasks, { now }) : null)
+  // AI 巡检建议队列（local-ai 每晚 nightly 写的笔记，见 project_status.py）
+  const aiSuggestions = $derived.by(() => {
+    const report = S.items.find((i) => i._meta?.generated_by === AI_REPORT_GENERATOR)
+    return report ? parseAiSuggestions(report.body) : new Map()
+  })
   const rows = $derived(
     records.map((record) => {
       const plannerProject = planner
@@ -73,6 +83,7 @@
       const sense = senseProject(record, {
         planner: plannerProject,
         stats,
+        ai: aiSuggestions.get(record.title) ?? null,
         lastCommitAt: gitMap.get(record.path) ?? 0,
         now,
       })
@@ -107,6 +118,10 @@
       rows: buckets.get(s),
     }))
   })
+  // 状态分布环（项目 > 1 时点缀在工具栏旁）
+  const statusDonut = $derived(
+    columns.map((c) => ({ label: statusLabel(c.status), value: c.rows.length })),
+  )
 
   function gitLabel(ts) {
     if (!ts) return t('projects.gitNone')
@@ -188,6 +203,19 @@
       {/if}
     </section>
 
+    {#if rows.length > 1}
+      <section class="card proj-summary">
+        <h2 class="section-title">{t('projects.statusTitle')}</h2>
+        <DonutChart
+          items={statusDonut}
+          size={148}
+          centerValue={String(rows.length)}
+          centerLabel={t('projects.statusCenter')}
+          ariaLabel={t('projects.statusTitle')}
+        />
+      </section>
+    {/if}
+
     {#each columns as col (col.status)}
       <section class="proj-col">
         <h2 class="proj-col__title">
@@ -200,7 +228,7 @@
               <button
                 type="button"
                 class="proj-card__title"
-                onclick={() => (reading = itemById(row.record.id))}
+                onclick={() => openNote(row.record.id)}
                 title={t('projects.openNote')}
               >
                 {row.record.title}
@@ -251,8 +279,6 @@
     {/each}
   {/if}
 </div>
-
-<ItemViewer bind:open={reading} />
 
 <style>
   .proj-toolbar {

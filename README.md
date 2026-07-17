@@ -1,6 +1,6 @@
 # Life OS Monorepo
 
-**六 app 个人生活平台** —— Planner / Fitness / Finance / Music 四生产站 + Portal 启动器 + Home 实验站，共享 `@life-os/theme` / `@life-os/sync` / `@life-os/contracts`。另含 **AIOS**（本地 AI 原生 Mac app，`apps/aios`）与 `design-catalog` / `starter` 脚手架。
+**九 app 个人生活平台** —— Planner / Fitness / Finance / Music 四生产站 + Portal 启动器 + Home 实验站 + 本地优先的 AIOS / KnowledgeOS / HealthOS，共享 `@life-os/theme` / `@life-os/sync` / `@life-os/contracts`。`design-catalog` / `starter` 是平台工具；PaperOS 设备 Shell 已迁出独立仓库。
 
 > 文档入口一律走 [docs/README.md](docs/README.md)；状态与优先级只看 [docs/LIFEOS_ROADMAP.md](docs/LIFEOS_ROADMAP.md)。
 
@@ -8,9 +8,11 @@
 
 ```bash
 npm install
-npm run build:planner   # build:fitness / build:finance / build:music / build:portal / build:home / build:aios
+npm run build:planner   # 亦有 build:fitness / finance / music / portal / home / aios / knowledge / health
 npm run build           # turbo 并行构建全部 app
 npm run app:aios        # 打包 AIOS 原生 Mac app（Tauri 壳）
+npm run app:knowledge   # 打包 KnowledgeOS 原生 Mac app
+npm run app:health      # 打包 HealthOS 原生 Mac app
 ```
 
 在单个 app 目录开发（与原先相同）：

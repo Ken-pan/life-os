@@ -1,7 +1,7 @@
 {
   "name": "health-os",
   "version": "0.1.0",
-  "description": "HEALTH.OS — Life OS 新 app 模板（PLAT.SHELL.5）：AppShell + theme + i18n + PWA 骨架",
+  "description": "HEALTH.OS — 本地优先的健康状态与专注调节中枢",
   "private": true,
   "type": "module",
   "scripts": {

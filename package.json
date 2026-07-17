@@ -1,7 +1,7 @@
 {
   "name": "life-os",
   "private": true,
-  "description": "Life OS monorepo — Planner, Fitness, Finance, Music + shared theme/sync",
+  "description": "Life OS monorepo — nine product apps plus shared platform, contracts, sync, and design system",
   "workspaces": [
     "apps/*",
     "packages/*"

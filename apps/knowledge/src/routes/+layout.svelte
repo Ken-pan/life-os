@@ -18,10 +18,22 @@
 
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
+  // 笔记工作台（/library）走 locked：路由自拥有满高双列、各列独立滚动；其余页维持内容滚动。
+  const scrollMode = $derived(page.url.pathname.startsWith('/library') ? 'locked' : 'content')
+
+  // 窄屏（单列）+ 已打开某条笔记时，顶栏「全部笔记」与文档区「← 全部笔记」返回键重复。
+  // 单列发生在 life-os-main < 840，即 viewport < 840 + 侧栏 228 ≈ 1067；此时隐藏顶栏，交给文档区自己的返回。
+  let narrowLayout = $state(false)
+  const libraryDetail = $derived(
+    page.url.pathname.startsWith('/library') && page.url.searchParams.has('note'),
+  )
+  const hideHeader = $derived(libraryDetail && narrowLayout)
+
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
     if (p === '/settings') return t('settings.title')
-    if (p.startsWith('/library')) return t('library.title')
+    if (p.startsWith('/overview')) return t('overview.title')
+    if (p.startsWith('/library')) return t('nav.allNotes')
     if (p.startsWith('/projects')) return t('projects.title')
     if (p.startsWith('/timeline')) return t('timeline.title')
     if (p.startsWith('/recall')) return t('nav.recall')
@@ -35,9 +47,14 @@
     initCloud()
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
+    const mq = window.matchMedia('(max-width: 1067px)')
+    const syncNarrow = () => { narrowLayout = mq.matches }
+    syncNarrow()
+    mq.addEventListener('change', syncNarrow)
     return () => {
       cleanupTheme()
       cleanupViewport()
+      mq.removeEventListener('change', syncNarrow)
     }
   })
 
@@ -59,6 +76,7 @@
 <LifeOsAppShell
   navigationKey={page.url.pathname}
   focusOnNavigate="main"
+  {scrollMode}
   skipLinkLabel={t('common.skipToContent')}
   testIdPrefix="knowledge-shell"
 >
@@ -71,7 +89,7 @@
   {/snippet}
 
   {#snippet header()}
-    <AppBar title={pageTitle} />
+    <AppBar title={pageTitle} hidden={hideHeader} />
   {/snippet}
 
   {#snippet main()}

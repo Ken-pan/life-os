@@ -147,13 +147,35 @@ export function parseGitHeadLog(text) {
 
 const DAY = 86400000
 
+/** AI 建议队列笔记的 generated_by 标识（local-ai 的 project_status.py 每晚生成）。 */
+export const AI_REPORT_GENERATOR = 'local-ai-project-status'
+
+/**
+ * 解析「🔍 AI 项目状态建议」笔记正文的表格 → Map(项目名 → {status, confidence, reasoning})。
+ * 行格式：| 项目 | 当前 | AI 建议 | 置信度 | 理由 |（project_status.py 的 render_note 对齐）。
+ */
+export function parseAiSuggestions(body) {
+  const out = new Map()
+  for (const line of String(body ?? '').split('\n')) {
+    if (!line.startsWith('|')) continue
+    const cols = line.split('|').map((s) => s.trim())
+    // ['', 项目, 当前, 建议, 置信度, 理由, ''] → 7 列
+    if (cols.length < 7) continue
+    const [, project, , suggested, confidence, reasoning] = cols
+    if (!PROJECT_STATUSES.includes(suggested)) continue
+    out.set(project, { status: suggested, confidence, reasoning })
+  }
+  return out
+}
+
 /**
  * 现状感知：三路证据 → 建议状态 + 理由。
- * 优先级：Planner 状态 > git 活跃度启发（30 天内有提交=active，90 天无提交的 active=建议 paused）。
+ * 优先级：Planner 状态 > AI 巡检建议（已消化 git+README 内容）> git 活跃度启发
+ * （30 天内有提交=active，90 天无提交的 active=建议 paused）。
  * completed/archived/reference 只在 Planner 明确复活（active）时才建议改回。
  * @returns {{ suggested: string|null, reasons: string[], lastCommitAt: number, planner: object|null, stats: object|null }}
  */
-export function senseProject(record, { planner = null, stats = null, lastCommitAt = 0, now = Date.now() } = {}) {
+export function senseProject(record, { planner = null, stats = null, ai = null, lastCommitAt = 0, now = Date.now() } = {}) {
   const reasons = []
   let suggested = null
 
@@ -166,6 +188,11 @@ export function senseProject(record, { planner = null, stats = null, lastCommitA
     if (stats && (stats.open > 0 || stats.doneRecently > 0) && suggested === 'active') {
       reasons.push(`任务 ${stats.open} 开放 / 近两周完成 ${stats.doneRecently}`)
     }
+  }
+
+  if (!suggested && ai) {
+    suggested = ai.status
+    reasons.push(`AI（置信度${ai.confidence}）:${ai.reasoning}`)
   }
 
   if (!suggested && lastCommitAt > 0) {
