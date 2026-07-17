@@ -261,6 +261,13 @@ a.btn-danger {
 .settings-block {
   padding: var(--control-section-padding, var(--card-padding));
   margin-bottom: var(--card-stack-gap);
+  /*
+    设置行的横排/竖排由**卡片自身宽度**决定，而非视口宽度。
+    桌面多栏布局(如 planner 设置双栏)会把卡片压到 ~289px，此时非 toggle 行里
+    的多按钮 seg(如每日目标 1–7，固有 311px)因 .pref-control{flex-shrink:0}
+    拒绝收缩而溢出，把 .pref-copy 挤成 0 宽 → 中文描述逐字竖排。见下方 @container。
+  */
+  container: settings-block / inline-size;
 }
 
 .settings-block.set-group {
@@ -341,6 +348,43 @@ a.btn-danger {
 
 .pref-copy { min-width: 0; flex: 1; }
 .pref-control { flex-shrink: 0; }
+
+/*
+  窄卡片(容器 ≤459px)里，非 toggle 行竖向堆叠、控件占满整行 —— 与移动端
+  (@media --life-os-mobile)同款处理，但按**容器宽度**触发，覆盖「视口宽但卡片窄」
+  的桌面多栏夹缝(媒体查询照不到)。toggle 行(标签左/开关右)保持横排不受影响。
+  放在 components layer：flex-direction 无竞争声明可直接生效，align-items:stretch
+  需压过本文件 .settings-row{align-items:center}(settings layer 的同规则会被它覆盖)。
+*/
+@container settings-block (max-width: 459px) {
+  .set-row.settings-row:not(.settings-row--toggle):not(:has(.settings-toggle)) {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: start;
+  }
+
+  .set-row.settings-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .pref-control,
+  .set-row.settings-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .seg {
+    width: 100%;
+  }
+
+  .set-row.settings-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .pref-control > .seg {
+    display: flex;
+    margin-top: var(--space-2);
+  }
+
+  /* 2–3 项普通 seg 等分填满整行 */
+  .set-row.settings-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .pref-control > .seg:not(.seg--wrap) button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* seg--wrap 长标签：随内容宽、均分剩余、放不下整体折行(标签不逐字断) */
+  .set-row.settings-row:not(.settings-row--toggle):not(:has(.settings-toggle)) .pref-control > .seg--wrap button {
+    flex: 1 1 auto;
+    white-space: nowrap;
+  }
+}
 
 .settings-row .pref-control > .btn-secondary,
 .settings-row .pref-control > .file-input-btn,

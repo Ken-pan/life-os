@@ -15,5 +15,8 @@
   "apps/aios/src|raw-font-size": 21,
   "apps/aios/src|raw-hex": 13,
   "apps/aios/src|raw-motion": 11,
-  "packages/theme/src|raw-hex": 3
+  "packages/theme/src|raw-hex": 3,
+  "packages/platform-web/src|raw-hex": 37,
+  "packages/platform-web/src|raw-font-size": 14,
+  "packages/platform-web/src|raw-motion": 9
 }
