@@ -20,6 +20,7 @@
     "test:doors": "node scripts/door-styles-unit.mjs",
     "test:windows": "node scripts/window-styles-unit.mjs",
     "test:furniture-tint": "node scripts/furniture-tint-unit.mjs",
+    "test:furniture-color": "node scripts/furniture-color-unit.mjs",
     "test:inventory-import": "node scripts/inventory-import-unit.mjs",
     "test:photo-coverage": "node scripts/photo-coverage-unit.mjs",
     "test:rooms": "node scripts/rooms-detect-test.mjs",

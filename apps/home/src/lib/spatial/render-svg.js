@@ -3,6 +3,7 @@ import { formatFtIn } from './dimensions.js'
 import { detectRooms } from './rooms-from-graph.js'
 import { graphOpeningBounds, graphOpeningHitRect } from './graph-openings.js'
 import { polygonPointsAttr, zoneCentroid } from './zones.js'
+import { pointInPolygon } from './geometry.js'
 import { viewpointConePath, viewpointHandlePoint } from './viewpoints.js'
 import { wallStrokePx } from './wall-standards.js'
 import { furnitureSymbol } from './furniture-symbols.js'
@@ -31,7 +32,7 @@ import {
   floorFillForRoom,
   floorFillForZone,
   floorPatternDefs,
-  texturedFurnitureHex,
+  resolveFurnitureColor,
   wetFixturePoints,
 } from './floor-materials.js'
 import { sunLightPools, sunLightPlanDir } from './sun.js'
@@ -382,10 +383,18 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
     })
     if (faces.length) {
       const wetPts = wetFixturePoints(project.fixtures)
+      // 带显式 floor 的分区赢过湿区推断:面基层先看自己落在哪个分区里,
+      // 那个分区设了 floor 就照它铺(卫生间设成 wood 就不会被洁具推断硬铺砖)。
+      const floorZones = spatialZones.filter((z) => z.floor && z.polygon)
       parts.push('<g class="floor-base" aria-hidden="true">')
       for (const f of faces) {
+        let explicitMat
+        if (floorZones.length) {
+          const c = zoneCentroid(f.polygon)
+          explicitMat = floorZones.find((z) => pointInPolygon(c, z.polygon))?.floor
+        }
         parts.push(
-          `<polygon points="${polygonPointsAttr(f.polygon)}" fill="${floorFillForFace(f, wetPts, floorHorizontal)}"/>`,
+          `<polygon points="${polygonPointsAttr(f.polygon)}" fill="${floorFillForFace(f, wetPts, floorHorizontal, explicitMat)}"/>`,
         )
       }
       parts.push('</g>')
@@ -595,11 +604,15 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
         h: turned ? f.bounds.w : f.bounds.h,
       }
       const { body, detail } = furnitureSymbol(f.kind, box)
-      // 贴图模式:没有扫描主色的设施按类型兜底(灶台金属、洁具瓷白),
-      // 仍走驯化管线,标签可读性不受影响。
-      const vars = furnitureVars(
-        f.attrs?.colorHex ?? (textured ? texturedFurnitureHex(f.kind) : undefined),
-      )
+      // 贴图模式:按扫描可信度分级(见 resolveFurnitureColor)。淡中性扫描信它,
+      // 高饱和/发黑回落类型材质色,无类型色再回落扫描。fixtures 用 kind 当 symbol
+      // 名(它们没有 symbol 层),多数无 colorHex → 走类型色,与改动前一致。
+      const fixtureHex = textured
+        ? resolveFurnitureColor(f.kind, f.kind, f.attrs?.colorHex)
+        : undefined
+      const vars = fixtureHex
+        ? furnitureVars(fixtureHex, true)
+        : furnitureVars(f.attrs?.colorHex)
       parts.push(
         `<g transform="rotate(${rot} ${cx} ${cy})">`,
         `<g class="fixture-item"${vars ? ` style="${vars}"` : ''}>`,
@@ -634,13 +647,19 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
       }
       // 过别名再查:云端优化会自造 kind(pet_fence),直接查表会把
       // 狗狗围栏画成「未知家具」的实心方块
-      const symbol = PLACEMENT_KINDS[canonicalPlacementKind(p.kind)]?.symbol
+      const kind = canonicalPlacementKind(p.kind)
+      const symbol = PLACEMENT_KINDS[kind]?.symbol
       const { body, detail } = furnitureSymbol(symbol, box)
-      // 贴图模式:没有扫描主色的家具按类型兜底(木桌木色、沙发织物色),
-      // 见 floor-materials 的 TEXTURED_FURN_HEX。
-      const vars = furnitureVars(
-        p.attrs?.colorHex ?? (textured ? texturedFurnitureHex(symbol) : undefined),
-      )
+      // 贴图模式:按扫描可信度分级(见 resolveFurnitureColor)。淡中性扫描(白层架
+      // #FFFFFF、近白小架 #CFC4B7、浅木边桌)信它;高饱和/发黑(红鸟笼、espresso
+      // 折叠桌)回落类型材质色;鸟笼/折叠桌/工作桌/电视等「扫描必错」kind 硬锁类型色。
+      // 无类型色的手绘件回落扫描色或图纸灰。
+      const furnHex = textured
+        ? resolveFurnitureColor(kind, symbol, p.attrs?.colorHex)
+        : undefined
+      const vars = furnHex
+        ? furnitureVars(furnHex, true)
+        : furnitureVars(p.attrs?.colorHex)
       // Hand-drawn pieces take their label *under* the footprint. Everything else
       // is a flat glyph a name can sit on top of; stamping "Onyx" across a drawn
       // face is just defacing it.

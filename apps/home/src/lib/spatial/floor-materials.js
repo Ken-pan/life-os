@@ -2,7 +2,7 @@
  * 真实地板贴图 —— 程序化生成的 SVG pattern,不用位图素材。
  *
  * 参照专业平面图软件(RoomSketcher / Floorplanner)的「2D 彩色贴图」惯例:
- *   1. 材质按房间类型给默认值:干区木地板、湿区瓷砖、卧室地毯、阳台户外板;
+ *   1. 材质按房间类型给默认值:干区木地板、湿区瓷砖、卧室地毯、阳台钢架;
  *   2. 纹理按真实尺度画:板宽 5 英寸、瓷砖 12 英寸,由 pxPerFt 换算,
  *      放大后看到的仍是「5 英寸的板」而不是一坨噪点;
  *   3. 低对比:纹理只是底色 ±3% 的明度差,房间名/家具压上去仍然可读——
@@ -17,6 +17,7 @@
  */
 
 import { pointInPolygon } from './geometry.js'
+import { parseHex, rgbToHsl } from './furniture-tint.js'
 
 /** @typedef {'wood' | 'carpet' | 'tile' | 'deck' | 'steel'} FloorMaterial */
 
@@ -41,7 +42,8 @@ const MATERIAL_RULES = [
   { re: /浴|卫生|盥洗|bath|toilet|wc|shower/i, mat: 'tile' },
   { re: /洗衣|laundry/i, mat: 'tile' },
   { re: /玄关|门厅|entry|foyer|mud/i, mat: 'tile' },
-  { re: /阳台|露台|balcony|patio|deck|terrace/i, mat: 'deck' },
+  { re: /阳台|露台|balcony|patio|terrace/i, mat: 'steel' },
+  { re: /deck|木平台/i, mat: 'deck' },
   { re: /卧|bed/i, mat: 'carpet' },
   { re: /壁橱|衣帽|储物|closet|linen|wardrobe|storage/i, mat: 'carpet' },
 ]
@@ -116,9 +118,13 @@ export function wetFixturePoints(fixtures) {
  * @param {{ polygon: { x: number, y: number }[], areaSqFt: number }} face
  * @param {{ x: number, y: number }[]} wetPoints 来自 {@link wetFixturePoints}
  * @param {boolean} horizontal 整图板材方向,见 {@link patternRef}
+ * @param {FloorMaterial} [explicitMat] 该面所属分区/房间显式设的材质。
+ *   有就直接用 —— **显式意图赢过湿区推断**。用户家的卫生间是与外连续的木地板,
+ *   洁具推断会硬铺砖盖不掉,就靠这个口子让分区的 floor 字段说了算。
  * @returns {string} fill 属性值
  */
-export function floorFillForFace(face, wetPoints, horizontal) {
+export function floorFillForFace(face, wetPoints, horizontal, explicitMat) {
+  if (explicitMat) return patternRef(explicitMat, horizontal)
   const wet =
     face.areaSqFt < WET_FACE_MAX_SQFT &&
     wetPoints.some((p) => pointInPolygon(p, face.polygon))
@@ -251,72 +257,200 @@ function carpetPattern(inch) {
   )
 }
 
-// ---- 家具默认材质色(贴图模式) --------------------------------------
-// 扫描来的家具带真实主色(attrs.colorHex),走 furniture-tint 的驯化管线;
-// 手摆的没有颜色,线稿里回落图纸灰没问题,贴图模式里灰块压在木地板上就
-// 出戏了。这里按家具类型给一个"材质常识色",喂进**同一条**驯化管线 ——
-// 饱和度/明度夹取、主题混色、标签可读性全部照旧。
-const T_WOOD = '#9c7b52' // 木质:桌/柜/架
-const T_FABRIC = '#b3a184' // 织物:床/沙发/地毯
-const T_METAL = '#78838c' // 金属架/器材
-const T_PORCELAIN = '#eef2f2' // 洁具瓷白
-const T_APPLIANCE = '#dbe1e5' // 家电亮金属
+// ---- 家具俯视材质色(贴图模式) --------------------------------------
+// 按真实户型逐件核过的顶视主色。三条定色原则:
+//   1. 以俯视看到的主色为准,不是侧面色;
+//   2. 以家具本体色为准 —— 开放/透明收纳取柜体/容器色,不取内容物;
+//   3. 材质色分「软兜底」与「硬身份」两类,对扫描的态度不同(见
+//      {@link resolveFurnitureColor}):
+//      · **软兜底**(木色系的架/桌 + 通用软包办公椅,{@link SOFT_SCAN_SYMBOLS}):
+//        WOOD_MED/FABRIC_OFFICE 只是「不确定时的安全猜测」。早先「一律用材质色、
+//        完全忽略扫描」把用户家白色的开放层架一刀切成木色 —— 现在这些 symbol 让位
+//        给可信的淡中性扫描(白/浅灰):浴室层架、电视边小架变白,主/副办公椅各用
+//        自己的扫描色自然分色。
+//      · **硬身份**(白柜、银架、瓷洁具、黑电子……):材质是确定的,扫描抓错就抓错,
+//        一律用策展色、不采信扫描 —— 这正是「银架不发黄、白柜不发灰、鸟笼不发红」
+//        的保证。扫描必错的具体 kind(鸟笼/折叠桌/电视/工作桌)再在 {@link KIND_HEX}
+//        里硬锁一层。
+//      软装(沙发/床/地毯)的采信策略见 render-svg 调用处。
+// 这些色都进 furniture-tint 的 **trusted** 驯化管线(比扫描色更宽的明度区间),
+// 好让黑工作桌真的深、白柜真的白;标签可读性靠贴图模式的描边光晕兜底。
+//
+// 六个「材质系统」,和整张图的视觉语言对齐:
+//   白色系 · 浅木系 · 黑/深电子系 · 银/金属系 · 家电钢系 · 石瓷系 · 灰软装系
+const WHITE_CABINET = '#f4f4f2' // 白柜体:柜/衣柜/吊柜/浴室柜/净化器/吊扇/体重秤
+const WHITE_CUBE = '#f3f3f1' // 格子柜 / 白色滚轮小推车
+const WHITE_WIRE = '#f7f7f5' // 白线框:洗衣篮
+const WHITE_CAGE = '#f5f5f3' // 白金属围栏 / 鸟笼
+const WOOD_MED = '#c79d70' // 中浅暖木:餐桌/书架/挂衣架
+const BEDDING = '#f3f1ec' // 床品暖白(床面俯视)
+const DESK_BLACK = '#1f2124' // 黑工作桌面
+const ELEC_BLACK = '#2e3135' // 黑电子:显示器/摄影灯/滑板车
+const SCREEN_GRAY = '#8e8f92' // 中性灰:隔音隔断屏风
+const METAL_CHROME = '#b9bec5' // 镀铬金属:置物架/落地灯/挂杆
+const METAL_TRASH = '#b6bcc2' // 拉丝不锈钢:垃圾桶
+const MIRROR = '#d9dee3' // 镜面银灰:全身镜
+const STEEL_APPLIANCE = '#b8bdc3' // 不锈钢家电:冰箱/洗碗机/油烟机/微波炉/灶台
+const STEEL_LAUNDRY = '#c7ccd1' // 洗衣机 / 烘干机浅灰
+const STONE_COUNTER = '#c9c7c2' // 石台面:台面下柜/中岛
+const PORCELAIN = '#f7f7f5' // 洁具瓷白:马桶/浴缸/水槽
+const GLASS_SHOWER = '#eef2f4' // 淋浴玻璃浅
+const FABRIC_SOFA = '#bcb4a8' // 中性织物:沙发系
+const FABRIC_DINING = '#9ea8b2' // 浅灰蓝:餐椅/单椅
+const FABRIC_OFFICE = '#c9cdd2' // 浅灰软包:办公椅
+const CARPET_RUG = '#d8d0c6' // 地毯 / 瑜伽垫
 
-/** @type {Record<string, string>} 键 = furniture-symbols 的 symbol 名 */
-const TEXTURED_FURN_HEX = {
-  cabinet: T_WOOD,
-  chair: T_WOOD,
-  coatRack: T_WOOD,
-  counter: T_WOOD,
-  cubeShelf: T_WOOD,
-  divider: T_WOOD,
-  island: T_WOOD,
-  shelf: T_WOOD,
-  table: T_WOOD,
-  wallCabinet: T_WOOD,
-  wardrobe: T_WOOD,
-  armchair: T_FABRIC,
-  bed: T_FABRIC,
-  loveseat: T_FABRIC,
-  mat: T_FABRIC,
-  rug: T_FABRIC,
-  sofa: T_FABRIC,
-  basket: T_METAL,
-  bathScale: T_METAL,
-  floorLamp: T_METAL,
-  monitor: T_METAL,
-  officeChair: T_METAL,
-  petPen: T_METAL,
-  scooter: T_METAL,
-  studioLight: T_METAL,
-  trash: T_METAL,
-  utilityCart: T_METAL,
-  wireRack: T_METAL,
-  kitchenSink: T_PORCELAIN,
-  mirror: T_PORCELAIN,
-  shower: T_PORCELAIN,
-  toilet: T_PORCELAIN,
-  tub: T_PORCELAIN,
-  tubShower: T_PORCELAIN,
-  vanity: T_PORCELAIN,
-  appliance: T_APPLIANCE,
-  ceilingFan: T_APPLIANCE,
-  dishwasher: T_APPLIANCE,
-  fridge: T_APPLIANCE,
-  microwave: T_APPLIANCE,
-  purifier: T_APPLIANCE,
-  rangeHood: T_APPLIANCE,
-  stove: T_APPLIANCE,
+/** @type {Record<string, string>} 键 = furniture-symbols 的 symbol 名 —— 材质默认色 */
+const SYMBOL_HEX = {
+  // 白色系
+  cabinet: WHITE_CABINET,
+  wardrobe: WHITE_CABINET,
+  wallCabinet: WHITE_CABINET,
+  vanity: WHITE_CABINET,
+  purifier: WHITE_CABINET,
+  ceilingFan: WHITE_CABINET,
+  bathScale: WHITE_CABINET,
+  cubeShelf: WHITE_CUBE,
+  utilityCart: WHITE_CUBE,
+  basket: WHITE_WIRE,
+  petPen: WHITE_CAGE,
+  // 浅木系
+  table: WOOD_MED,
+  shelf: WOOD_MED,
+  coatRack: WOOD_MED,
+  bed: BEDDING,
+  // 黑 / 深电子系
+  monitor: ELEC_BLACK,
+  studioLight: ELEC_BLACK,
+  scooter: ELEC_BLACK,
+  divider: SCREEN_GRAY,
+  // 银 / 金属系
+  wireRack: METAL_CHROME,
+  floorLamp: METAL_CHROME,
+  rod: METAL_CHROME,
+  trash: METAL_TRASH,
+  mirror: MIRROR,
+  // 家电钢系
+  fridge: STEEL_APPLIANCE,
+  dishwasher: STEEL_APPLIANCE,
+  rangeHood: STEEL_APPLIANCE,
+  microwave: STEEL_APPLIANCE,
+  stove: STEEL_APPLIANCE,
+  appliance: STEEL_LAUNDRY,
+  // 石 / 瓷系
+  counter: STONE_COUNTER,
+  island: STONE_COUNTER,
+  kitchenSink: PORCELAIN,
+  toilet: PORCELAIN,
+  tub: PORCELAIN,
+  tubShower: PORCELAIN,
+  shower: GLASS_SHOWER,
+  // 灰软装系
+  sofa: FABRIC_SOFA,
+  loveseat: FABRIC_SOFA,
+  armchair: FABRIC_SOFA,
+  chair: FABRIC_DINING,
+  officeChair: FABRIC_OFFICE,
+  rug: CARPET_RUG,
+  mat: CARPET_RUG,
 }
 
 /**
- * 贴图模式下这类家具的兜底材质色;没有常识色(手绘狗狗等)返回 undefined,
- * 调用方回落图纸灰。
- * @param {string | undefined} symbol furniture-symbols 的 symbol 名
- * @returns {string | undefined}
+ * kind 级硬锁:这些 kind 的扫描主色**已知会误导**,永远用这里的材质色 ——
+ * 连淡中性扫描也不让它翻(见 {@link resolveFurnitureColor} 第 1 级)。两类:
+ *   · 共用 symbol 需分色:书桌/升降桌/餐桌/折叠桌都是 `table` symbol,但工作面
+ *     该黑、折叠桌奶白、餐桌木色;
+ *   · 扫描必错:鸟笼被罩布染红、狗笼同理、电视被当白柜、工作桌被灯光/反光洗亮。
+ * 查表时 kind 优先于 symbol。
+ * @type {Record<string, string>}
  */
-export function texturedFurnitureHex(symbol) {
-  return symbol ? TEXTURED_FURN_HEX[symbol] : undefined
+const KIND_HEX = {
+  desk: DESK_BLACK, // 书桌 / 工作桌:黑面
+  standing_desk: DESK_BLACK, // 升降桌:黑面
+  folding_table: '#ece7db', // 折叠桌:奶白面
+  tv: ELEC_BLACK, // 电视:黑屏(否则走 cabinet symbol 默认白,像白柜)
+  // 无专属 symbol、会回落成素方块的 kind —— 显式给材质色,别让它落到扫描杂物色。
+  bird_cage: WHITE_CAGE, // 鸟笼:白(扫描惯把罩布/内容物聚成红)
+  pet_crate: WHITE_CAGE, // 狗狗木笼:白围栏系
+}
+
+/**
+ * 扫描主色可信度门槛。iOS HomeScan 的 dominantColorHex 抓错主要两类:
+ *   1. 高饱和 —— 罩布 / 内容物 / 花色被聚成主色(红鸟笼、紫折叠桌);
+ *   2. 发黑   —— 阴影 / 深腔把整件压成一坨暗斑(鸟笼 #330000、espresso 折叠桌)。
+ * 反过来「淡中性」(低饱和 + 够亮)几乎只可能是家具本体的真实浅色 —— 白层架
+ * #FFFFFF、近白电视边小架 #D7CBBC、浅木升降边桌 #928372 都落在这里。
+ * 所以判据:低饱和 **且** 不发黑 → 可信。
+ *
+ * 阈值以真实 scan-ce72b155 校准(S=HSL 饱和度, L=明度, 均 0..1):
+ *   #FFFFFF S=0.00 L=1.00 · #D7CBBC S=0.25 L=0.79 · #928372 S=0.13 L=0.51  → 全过
+ *   #3A2E24 S=0.23 L=0.18(espresso 折叠桌)· #330000 S=1.00 L=0.10(鸟笼)  → 全拦
+ * SAT_MAX=0.30:接住 #D7CBBC 这类 S≈0.25 的暖近白,又远低于真木(WOOD_MED
+ * #c79d70 S≈0.44)和任何有色罩布,免得把真木架也当成「淡中性」放行;
+ * DARK_MIN=0.35:拦住 espresso / 阴影黑斑,同时放过任何真实浅色件。
+ */
+const TRUST_SAT_MAX = 0.3
+const TRUST_DARK_MIN = 0.35
+
+/**
+ * 这条扫描主色是否是「可信的淡中性」—— 亮到、且中性到几乎只可能是家具本体真实
+ * 浅色,而非罩布 / 内容物 / 阴影。是否**采用**它还要看 symbol 属不属于软兜底
+ * (见 {@link resolveFurnitureColor});这里只判「色本身可不可信」。
+ * @param {string | undefined} scanHex `attrs.colorHex`
+ * @returns {boolean}
+ */
+export function isTrustworthyScan(scanHex) {
+  const rgb = parseHex(scanHex ?? '')
+  if (!rgb) return false
+  const { s, l } = rgbToHsl(rgb)
+  return s <= TRUST_SAT_MAX && l >= TRUST_DARK_MIN
+}
+
+/**
+ * 「软兜底」symbol —— 这些的材质默认色只是**不确定时的安全猜测**,遇到可信的
+ * 淡中性扫描就该让位:
+ *   · table / shelf / coatRack:默认 WOOD_MED。木色是对「开放结构件」的通用猜测,
+ *     但现代开放架 / 浅色桌常是白 / 浅灰;扫描说浅就信扫描。
+ *     (shelf 默认仍留木不改白:它也是 `bookshelf` 书架的 symbol,真木书架该木;
+ *      真白层架自带可信白扫描,已被这条接住,不必动默认。)
+ *   · officeChair:默认 FABRIC_OFFICE 通用软包灰。同款多件(主 / 副办公椅)靠各自
+ *     扫描色自然分色,正是任务要的。
+ * 其余 symbol 是**硬身份**(白柜确定白、银架确定金属、瓷洁具确定瓷白、黑电子确定
+ * 深)—— 扫描抓错也不采信,一律用策展色。这条边界就是「银架不发黄 / 白柜不发灰」
+ * 的护栏(扫描常把它们抓成暖灰,若一并采信就会整屋走色)。
+ * @type {Set<string>}
+ */
+const SOFT_SCAN_SYMBOLS = new Set(['table', 'shelf', 'coatRack', 'officeChair'])
+
+/**
+ * 贴图模式下这件家具最终采用的**原始**色(未驯化,交给 furniture-tint 的
+ * trusted 宽档去混主题底色)。按可信度分三级,从「最不信扫描」到「最信」:
+ *
+ *   1. kind 硬锁({@link KIND_HEX}):扫描已知必错的 kind —— 鸟笼(罩布染红)、
+ *      折叠桌(espresso 面)、工作桌(要保持炭黑)、电视(要黑屏)。永远用材质色,
+ *      连淡中性也不让它翻(否则一束灯光就能把黑桌洗白)。
+ *   2. 软兜底 symbol({@link SOFT_SCAN_SYMBOLS})+ 扫描可信({@link isTrustworthyScan})
+ *      → 采用扫描本体色。这一级把白层架 / 近白小架 / 浅色桌从「一刀切木色」里救回来,
+ *      也让主 / 副办公椅各用自己的扫描色分色。**硬身份 symbol 不进这一级** —— 白柜、
+ *      银架、瓷洁具即便扫描是淡中性,也保持策展色不动(红线:不受影响)。
+ *   3. 否则回落 symbol 材质默认色({@link SYMBOL_HEX});无默认色的手绘件返回
+ *      undefined,调用方回落扫描色 / 图纸灰(与改动前一致)。
+ *
+ * 注:kind=table 的「工作大桌」若扫描是淡中性,会走第 2 级用扫描色(浅)而非炭黑。
+ * 要它保持深炭黑,得让它的 kind 是 desk / standing_desk(→ 第 1 级硬锁 DESK_BLACK),
+ * 那是扫描 / 建模侧的事,不在本函数。
+ *
+ * @param {string | undefined} kind placements 的规范 kind 名
+ * @param {string | undefined} symbol furniture-symbols 的 symbol 名
+ * @param {string | undefined} scanHex 家具 `attrs.colorHex` 的扫描主色
+ * @returns {string | undefined} 原始 #hex,或 undefined = 无类型色且扫描不可信
+ */
+export function resolveFurnitureColor(kind, symbol, scanHex) {
+  if (kind && KIND_HEX[kind]) return KIND_HEX[kind]
+  if (symbol && SOFT_SCAN_SYMBOLS.has(symbol) && isTrustworthyScan(scanHex)) {
+    return scanHex
+  }
+  return symbol ? SYMBOL_HEX[symbol] : undefined
 }
 
 /**

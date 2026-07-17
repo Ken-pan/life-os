@@ -48,11 +48,26 @@ const STROKE_LIGHT = 0.32
 const STROKE_MIX_PCT = 55
 
 /**
+ * 「可信色」的宽驯化档。扫描主色噪、饱和、常抓错(罩布/内容物),所以默认档
+ * 把它夹得很死;但贴图模式的类型材质色是**人工核过的一小组策展色**,可信,
+ * 不必陪着扫描色一起被压平。于是给它更宽的明度区间(黑工作桌能真的深、白柜
+ * 能真的白)和更高的混入比(色更足)。可读性不靠压亮,靠贴图模式的标签光晕。
+ */
+const TRUSTED = {
+  minLight: 0.32,
+  maxLight: 0.93,
+  mixPct: 64,
+  strokeLight: 0.3,
+  strokeMixPct: 58,
+}
+
+/**
  * #RGB / #RRGGBB → {r,g,b} 0..1,认不出返回 null。
+ * 导出给 floor-materials 的扫描可信度判定复用(别再抄一份 hex 解析)。
  * @param {string} hex
  * @returns {{ r: number, g: number, b: number } | null}
  */
-function parseHex(hex) {
+export function parseHex(hex) {
   if (typeof hex !== 'string') return null
   const s = hex.trim().replace(/^#/, '')
   const full = s.length === 3 ? s.replace(/./g, (c) => c + c) : s
@@ -64,8 +79,11 @@ function parseHex(hex) {
   }
 }
 
-/** @returns {{ h: number, s: number, l: number }} h 0..360,s/l 0..1 */
-function rgbToHsl({ r, g, b }) {
+/**
+ * @returns {{ h: number, s: number, l: number }} h 0..360,s/l 0..1
+ * 导出同 {@link parseHex} —— 扫描可信度判定要读饱和度/明度。
+ */
+export function rgbToHsl({ r, g, b }) {
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   const l = (max + min) / 2
@@ -110,16 +128,17 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
  * 驯化后的真实色(还没混主题底色)。导出给测试与"颜色是否可用"的判断,
  * 渲染请用 {@link furnitureFill}。
  * @param {string | undefined} colorHex
+ * @param {{ minLight?: number, maxLight?: number }} [opts] 见 {@link TRUSTED}
  * @returns {string | null} #RRGGBB,或 null = 这件家具没有可用的颜色
  */
-export function tamedColor(colorHex) {
+export function tamedColor(colorHex, opts = {}) {
   const rgb = parseHex(colorHex ?? '')
   if (!rgb) return null
   const hsl = rgbToHsl(rgb)
   return hslToHex({
     h: hsl.h,
     s: clamp(hsl.s, 0, MAX_SAT),
-    l: clamp(hsl.l, MIN_LIGHT, MAX_LIGHT),
+    l: clamp(hsl.l, opts.minLight ?? MIN_LIGHT, opts.maxLight ?? MAX_LIGHT),
   })
 }
 
@@ -130,26 +149,32 @@ export function tamedColor(colorHex) {
  * 没颜色(手摆的家具、旧扫描)返回 null,调用方回落到主题底色,视觉上与改动前一致。
  *
  * @param {string | undefined} colorHex `attrs.colorHex`
+ * @param {{ minLight?: number, maxLight?: number, mixPct?: number }} [opts] 见 {@link TRUSTED}
  * @returns {string | null} 可直接写进 SVG fill 的值
  */
-export function furnitureFill(colorHex) {
-  const tamed = tamedColor(colorHex)
+export function furnitureFill(colorHex, opts = {}) {
+  const tamed = tamedColor(colorHex, opts)
   if (!tamed) return null
-  return `color-mix(in srgb, ${tamed} ${MIX_PCT}%, var(--plan-furn, #c5ced8))`
+  return `color-mix(in srgb, ${tamed} ${opts.mixPct ?? MIX_PCT}%, var(--plan-furn, #c5ced8))`
 }
 
 /**
  * 配套的描边色 —— 同色相、压暗,保证内部细节在染色的面上仍读得出来。见
  * {@link STROKE_LIGHT}。同样混进主题的描边色,这样深色纸下也不会翻车。
  * @param {string | undefined} colorHex
+ * @param {{ strokeLight?: number, strokeMixPct?: number }} [opts] 见 {@link TRUSTED}
  * @returns {string | null}
  */
-export function furnitureStroke(colorHex) {
+export function furnitureStroke(colorHex, opts = {}) {
   const rgb = parseHex(colorHex ?? '')
   if (!rgb) return null
   const hsl = rgbToHsl(rgb)
-  const ink = hslToHex({ h: hsl.h, s: clamp(hsl.s, 0, MAX_SAT), l: STROKE_LIGHT })
-  return `color-mix(in srgb, ${ink} ${STROKE_MIX_PCT}%, var(--plan-furn-stroke, #8a929c))`
+  const ink = hslToHex({
+    h: hsl.h,
+    s: clamp(hsl.s, 0, MAX_SAT),
+    l: opts.strokeLight ?? STROKE_LIGHT,
+  })
+  return `color-mix(in srgb, ${ink} ${opts.strokeMixPct ?? STROKE_MIX_PCT}%, var(--plan-furn-stroke, #8a929c))`
 }
 
 /**
@@ -161,10 +186,13 @@ export function furnitureStroke(colorHex) {
  * 类规则照常按层叠顺序覆盖,选中和冲突态一个都不丢。
  *
  * @param {string | undefined} colorHex `attrs.colorHex`
+ * @param {boolean} [trusted] 策展类型色走宽驯化档(见 {@link TRUSTED});
+ *   扫描主色不传,继续走默认的收紧档。
  * @returns {string} style 属性的值;没颜色时为空串(调用方回落主题底色)
  */
-export function furnitureVars(colorHex) {
-  const fill = furnitureFill(colorHex)
+export function furnitureVars(colorHex, trusted = false) {
+  const opts = trusted ? TRUSTED : {}
+  const fill = furnitureFill(colorHex, opts)
   if (!fill) return ''
-  return `--furn-fill:${fill};--furn-stroke:${furnitureStroke(colorHex)}`
+  return `--furn-fill:${fill};--furn-stroke:${furnitureStroke(colorHex, opts)}`
 }
