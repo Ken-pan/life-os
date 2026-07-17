@@ -37,6 +37,13 @@ targets:
         UIRequiredDeviceCapabilities: [arkit]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        # 全屏启动修复(别再从 Info.plist 手改!):xcodegen 每次 generate 都按这份
+        # properties 重写 HomeScan/Info.plist 物理文件,不在这里列的 key 会被冲掉 ——
+        # 上一版直接手改物理文件加的 UILaunchScreen,装机一跑 xcodegen generate 就被
+        # 抹了,App 退回旧屏幕兼容模式(居中缩小、四周黑边)。真源必须在这。
+        # （build settings 里的 INFOPLIST_KEY_UILaunchScreen_Generation 对显式 info.path
+        # 不生效，勿再指望它。）
+        UILaunchScreen: {}
   HomeScanTests:
     type: bundle.unit-test
     platform: iOS
