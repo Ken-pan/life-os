@@ -2,6 +2,7 @@
   import {
     addPlacementRelation,
     getActiveProject,
+    recordPlacementFunction,
     removePlacement,
     removePlacementRelation,
     rotatePlacementById,
@@ -9,6 +10,13 @@
     updatePlacement,
   } from '$lib/state.svelte.js'
   import { inchesToPx, pxToInches } from '$lib/spatial/placements.js'
+  import {
+    resolveFunction,
+    observedDrift,
+    isUserConfirmed,
+    FUNCTION_KEYS,
+  } from '$lib/spatial/function-truth.js'
+  import { FUNCTION_LABELS_ZH, FUNCTION_SOURCE_LABELS_ZH } from '$lib/function-labels.js'
   import { getPhotoBlob, getPhotoUrl } from '$lib/photo-store.js'
   import { probeVlm, describeFurniture } from '$lib/vlm.js'
 
@@ -46,6 +54,19 @@
   let relOpen = $state(false)
   let relType = $state(/** @type {'near'|'far_from'} */ ('far_from'))
   let relTargetId = $state('')
+
+  // 真实用途(规范 §1.1)。effective 只由用户/文档/扫描/猜测解析,**照片不参与**。
+  const fnResolved = $derived(resolveFunction(placement))
+  const fnConfirmed = $derived(isUserConfirmed(placement))
+  const fnDrift = $derived(observedDrift(placement))
+  let fnOpen = $state(false)
+  let fnDraft = $state('')
+  function commitFunction() {
+    if (!fnDraft) return
+    recordPlacementFunction(placement.id, fnDraft)
+    fnOpen = false
+    fnDraft = ''
+  }
 
   function commitRelation() {
     if (!relTargetId) return
@@ -269,6 +290,47 @@
   {/if}
 
   {#if !compact || detailsOpen}
+    <!-- 真实用途(规范 §1.1):用户确认是最高真源,归位/布局照此校对。照片只提示不重定义 -->
+    <div class="rel-block">
+      <div class="rel-head">
+        <span class="rel-title">用途</span>
+        <span class="fn-chip" class:fn-chip-confirmed={fnConfirmed}>
+          {FUNCTION_LABELS_ZH[fnResolved.key] ?? fnResolved.key}
+          <span class="fn-src">· {FUNCTION_SOURCE_LABELS_ZH[fnResolved.source] ?? fnResolved.source}</span>
+        </span>
+      </div>
+      {#if fnDrift.drift}
+        <p class="fn-drift">
+          照片里看到的更像「{FUNCTION_LABELS_ZH[fnDrift.params.observedKey] ?? fnDrift.params.observedKey}」——
+          只是提示,不会改动你确认的用途。
+        </p>
+      {/if}
+      {#if fnOpen}
+        <div class="rel-add">
+          <select class="rel-select rel-target" bind:value={fnDraft} aria-label="真实用途">
+            <option value="" disabled>选一个用途…</option>
+            {#each FUNCTION_KEYS as k (k)}
+              <option value={k}>{FUNCTION_LABELS_ZH[k] ?? k}</option>
+            {/each}
+          </select>
+          <button
+            type="button"
+            class="graph-sel-btn graph-sel-accent"
+            disabled={!fnDraft}
+            onclick={commitFunction}
+          >确认</button>
+          <button type="button" class="graph-sel-btn" onclick={() => (fnOpen = false)}>取消</button>
+        </div>
+      {:else}
+        <button
+          type="button"
+          class="rel-add-btn"
+          title="确认这件家具/表面实际做什么 —— 归位与布局建议会照此校对"
+          onclick={() => { fnDraft = fnResolved.key; fnOpen = true }}
+        >{fnConfirmed ? '改用途' : '确认用途'}</button>
+      {/if}
+    </div>
+
     <!-- 家规关系:布局求解照此优化。词表猜不出「鸟笼远离床」这类家规,只能用户说 -->
     <div class="rel-block">
       <div class="rel-head">
@@ -576,6 +638,37 @@
     font-size: var(--text-base);
     line-height: 1;
     cursor: pointer;
+  }
+
+  .fn-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: var(--text-xs);
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    color: var(--warning);
+    border: 1px solid color-mix(in srgb, var(--warning) 30%, var(--border));
+  }
+
+  /* 已确认 = 稳态,用 accent(不是警示色) */
+  .fn-chip-confirmed {
+    background: color-mix(in srgb, var(--graph-accent) 12%, transparent);
+    color: var(--graph-accent);
+    border-color: color-mix(in srgb, var(--graph-accent) 30%, var(--border));
+  }
+
+  .fn-src {
+    font-size: var(--text-xs);
+    opacity: 0.75;
+  }
+
+  .fn-drift {
+    margin: 4px 0 0;
+    font-size: var(--text-xs);
+    color: var(--t2);
+    line-height: 1.4;
   }
 
   .rel-add {

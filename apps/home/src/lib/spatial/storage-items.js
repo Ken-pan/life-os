@@ -99,6 +99,107 @@ export function normalizeLevel(raw) {
   return Math.min(n, MAX_LEVEL)
 }
 
+// ---- P0A 新增物品字段的枚举白名单与归一/判脏(规范 §2.4, §4.2, §6.3)----
+// 每个字段都必须**成对**出现在三处:normalizer(下)、toStorageItem(重建)、
+// isNormalizedItem(快路径判脏)。漏了判脏那一处,一件脏邻居触发整区重建时会把
+// 该字段跨整区静默抹掉 —— level/purchase 都踩过,单测锁死。
+
+const LIFECYCLE_STATES = new Set(['daily', 'current-project', 'replenish', 'low-freq', 'collection', 'return-pending', 'sell', 'donate', 'trash'])
+const USE_FREQUENCIES = new Set(['daily', 'weekly', 'monthly', 'seasonal', 'rare'])
+const WEIGHTS = new Set(['light', 'medium', 'heavy'])
+const PET_RISKS = new Set(['toxic', 'cord', 'chew', 'small-parts', 'food', 'plastic-bag', 'meds'])
+const ENV_SENS = new Set(['heat', 'humidity', 'light', 'freeze'])
+
+/** @param {unknown} raw @param {Set<string>} set */
+const normalizeEnum = (raw, set) => (typeof raw === 'string' && set.has(raw) ? raw : undefined)
+
+/** @param {unknown} raw @param {Set<string>} set 去重 + 过滤非法元素;空 → undefined */
+function normalizeEnumArray(raw, set) {
+  if (!Array.isArray(raw)) return undefined
+  const out = raw
+    .filter((v) => typeof v === 'string' && set.has(v))
+    .filter((v, i, a) => a.indexOf(v) === i)
+  return out.length ? out : undefined
+}
+
+/** 只存 true —— false/缺省都视为「没这回事」,免得脏值撑大存档 */
+const normalizeBool = (raw) => (raw === true ? true : undefined)
+
+/** @param {unknown} raw 物品几何(英寸),只收正数 w/d/h;全空 → undefined */
+function normalizeSizeIn(raw) {
+  if (!raw || typeof raw !== 'object') return undefined
+  const src = /** @type {Record<string, unknown>} */ (raw)
+  /** @type {Record<string, number>} */
+  const out = {}
+  for (const k of ['w', 'd', 'h']) {
+    const n = Number(src[k])
+    if (Number.isFinite(n) && n > 0) out[k] = n
+  }
+  return Object.keys(out).length ? out : undefined
+}
+
+/** @param {unknown} raw 宠物风险覆写:mode 必须合法,custom 才带 risks */
+function normalizePetRiskOverride(raw) {
+  if (!raw || typeof raw !== 'object') return undefined
+  const src = /** @type {Record<string, unknown>} */ (raw)
+  if (src.mode !== 'explicit-safe' && src.mode !== 'custom') return undefined
+  /** @type {Record<string, unknown>} */
+  const out = { mode: src.mode, at: typeof src.at === 'string' ? src.at : '' }
+  if (src.mode === 'custom') {
+    const risks = normalizeEnumArray(src.risks, PET_RISKS)
+    if (risks) out.risks = risks
+  }
+  if (typeof src.reason === 'string' && src.reason.trim()) out.reason = src.reason.trim()
+  return out
+}
+
+const isEnum = (v, set) => v === undefined || (typeof v === 'string' && set.has(v))
+const isBool = (v) => v === undefined || v === true
+
+/** @param {unknown} v @param {Set<string>} set */
+function isEnumArray(v, set) {
+  if (v === undefined) return true
+  if (!Array.isArray(v) || !v.length) return false
+  const seen = new Set()
+  for (const x of v) {
+    if (typeof x !== 'string' || !set.has(x) || seen.has(x)) return false
+    seen.add(x)
+  }
+  return true
+}
+
+/** @param {unknown} v */
+function isSizeIn(v) {
+  if (v === undefined) return true
+  if (!v || typeof v !== 'object') return false
+  const src = /** @type {Record<string, unknown>} */ (v)
+  const keys = Object.keys(src)
+  if (!keys.length) return false
+  for (const k of keys) {
+    if (k !== 'w' && k !== 'd' && k !== 'h') return false
+    const n = src[k]
+    if (typeof n !== 'number' || !Number.isFinite(n) || n <= 0) return false
+  }
+  return true
+}
+
+/** @param {unknown} v */
+function isPetRiskOverride(v) {
+  if (v === undefined) return true
+  if (!v || typeof v !== 'object') return false
+  const src = /** @type {Record<string, unknown>} */ (v)
+  if (src.mode !== 'explicit-safe' && src.mode !== 'custom') return false
+  if (typeof src.at !== 'string') return false
+  for (const k of Object.keys(src)) {
+    if (k !== 'mode' && k !== 'at' && k !== 'risks' && k !== 'reason') return false
+  }
+  if ('risks' in src) {
+    if (src.mode !== 'custom' || !isEnumArray(src.risks, PET_RISKS) || src.risks === undefined) return false
+  }
+  if ('reason' in src && (typeof src.reason !== 'string' || !src.reason || src.reason !== src.reason.trim())) return false
+  return true
+}
+
 /** {@link PurchaseInfo} 的字段,逐个白名单 —— 见 normalizePurchase。 */
 const PURCHASE_STR_KEYS = ['orderId', 'src', 'date', 'title', 'imageUrl', 'productUrl', 'tier', 'disp']
 
@@ -198,6 +299,17 @@ function isNormalizedItem(raw) {
   // what decides whether the array passes through untouched. Miss it and a
   // half-normalized purchase would be declared clean and never repaired.
   if (!isNormalizedPurchase(i.purchase)) return false
+  // P0A 新字段 —— 同 level/purchase:每个都必须在这里判脏,否则一件脏数据触发
+  // 整区重建时会被 toStorageItem 静默抹掉(单测锁死)。
+  if (!isEnum(i.lifecycleState, LIFECYCLE_STATES)) return false
+  if (!isEnum(i.useFrequency, USE_FREQUENCIES)) return false
+  if (!isEnum(i.weight, WEIGHTS)) return false
+  if (!isEnumArray(i.petRisks, PET_RISKS)) return false
+  if (!isPetRiskOverride(i.petRiskOverride)) return false
+  if (!isEnumArray(i.envSensitive, ENV_SENS)) return false
+  if (!isBool(i.dailyCopy)) return false
+  if (!isBool(i.stackable)) return false
+  if (!isSizeIn(i.sizeIn)) return false
   return true
 }
 
@@ -233,6 +345,16 @@ function toStorageItem(raw, zoneId, index) {
     // rebuild the whole array, so forgetting this line would silently erase the
     // purchase history of every item in the zone the first time one went stale.
     purchase: normalizePurchase(src.purchase),
+    // P0A 新字段 —— 同上,每个都必须在这里重建,否则整区重建时被抹掉。
+    lifecycleState: normalizeEnum(src.lifecycleState, LIFECYCLE_STATES),
+    useFrequency: normalizeEnum(src.useFrequency, USE_FREQUENCIES),
+    weight: normalizeEnum(src.weight, WEIGHTS),
+    petRisks: normalizeEnumArray(src.petRisks, PET_RISKS),
+    petRiskOverride: normalizePetRiskOverride(src.petRiskOverride),
+    envSensitive: normalizeEnumArray(src.envSensitive, ENV_SENS),
+    dailyCopy: normalizeBool(src.dailyCopy),
+    sizeIn: normalizeSizeIn(src.sizeIn),
+    stackable: normalizeBool(src.stackable),
   }
 }
 
@@ -297,7 +419,7 @@ export function normalizeZoneItems(zones) {
 
 /**
  * @param {string} name
- * @param {{ qty?: number, tags?: string[], note?: string, level?: number, purchase?: import('./types.js').PurchaseInfo }} [fields]
+ * @param {Partial<SpatialStorageItem>} [fields]
  * @param {number} [now] epoch ms — injected so callers control the clock
  * @returns {SpatialStorageItem | null}
  */
@@ -314,6 +436,15 @@ export function createStorageItem(name, fields = {}, now = Date.now()) {
     level: normalizeLevel(fields.level),
     updatedAt: now,
     purchase: normalizePurchase(fields.purchase),
+    lifecycleState: normalizeEnum(fields.lifecycleState, LIFECYCLE_STATES),
+    useFrequency: normalizeEnum(fields.useFrequency, USE_FREQUENCIES),
+    weight: normalizeEnum(fields.weight, WEIGHTS),
+    petRisks: normalizeEnumArray(fields.petRisks, PET_RISKS),
+    petRiskOverride: normalizePetRiskOverride(fields.petRiskOverride),
+    envSensitive: normalizeEnumArray(fields.envSensitive, ENV_SENS),
+    dailyCopy: normalizeBool(fields.dailyCopy),
+    sizeIn: normalizeSizeIn(fields.sizeIn),
+    stackable: normalizeBool(fields.stackable),
   }
 }
 
@@ -327,6 +458,7 @@ export function createStorageItem(name, fields = {}, now = Date.now()) {
 export function patchStorageItem(item, patch, now = Date.now()) {
   const name = patch.name === undefined ? item.name : String(patch.name).trim()
   const note = patch.note === undefined ? item.note : String(patch.note).trim()
+  const p = /** @type {Partial<SpatialStorageItem>} */ (patch)
   return {
     ...item,
     name: name || item.name,
@@ -334,6 +466,16 @@ export function patchStorageItem(item, patch, now = Date.now()) {
     tags: patch.tags === undefined ? item.tags : normalizeTags(patch.tags),
     note: note || undefined,
     level: patch.level === undefined ? item.level : normalizeLevel(patch.level),
+    // 新字段:patch 未提及则保留(...item 已带),提及则归一(非法/清空 → undefined)
+    lifecycleState: p.lifecycleState === undefined ? item.lifecycleState : normalizeEnum(p.lifecycleState, LIFECYCLE_STATES),
+    useFrequency: p.useFrequency === undefined ? item.useFrequency : normalizeEnum(p.useFrequency, USE_FREQUENCIES),
+    weight: p.weight === undefined ? item.weight : normalizeEnum(p.weight, WEIGHTS),
+    petRisks: p.petRisks === undefined ? item.petRisks : normalizeEnumArray(p.petRisks, PET_RISKS),
+    petRiskOverride: p.petRiskOverride === undefined ? item.petRiskOverride : normalizePetRiskOverride(p.petRiskOverride),
+    envSensitive: p.envSensitive === undefined ? item.envSensitive : normalizeEnumArray(p.envSensitive, ENV_SENS),
+    dailyCopy: p.dailyCopy === undefined ? item.dailyCopy : normalizeBool(p.dailyCopy),
+    sizeIn: p.sizeIn === undefined ? item.sizeIn : normalizeSizeIn(p.sizeIn),
+    stackable: p.stackable === undefined ? item.stackable : normalizeBool(p.stackable),
     updatedAt: now,
   }
 }

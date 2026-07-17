@@ -336,4 +336,27 @@ function home(over = {}) {
   assert.ok(!plan.zones.some((z) => z.code === 'S9'))
 }
 
+// —— 容量门:功能性满载区不被当搬入目的地(规范 §6.3, 评审 B4)——
+{
+  const p = home()
+  // 灶边柜 S1 是灶台最近的柜;把一口锅错放到远处宠物架 S3
+  p.storageZones[2].items = [{ id: 'si-pot', name: 'Lodge 铸铁炒锅' }]
+  // 基线:锅该被建议搬到 S1
+  const base = planStorageZones(p)
+  const baseMove = base.misplaced.find((m) => m.itemId === 'si-pot')
+  assert.equal(baseMove?.toCode, 'S1', '基线:锅该归灶边柜')
+  // 每个区都带结构化容量(默认 unknown,不伪造)
+  assert.equal(base.zones.find((z) => z.code === 'S1').capacity.state, 'unknown')
+
+  // 把 S1 标为用户确认的功能性满载 → 锅不再被塞进 S1(仍报 S1 为灶台归属)
+  p.storageZones[0].capacityState = 'functional-full'
+  p.storageZones[0].capacityEvidence = { source: 'user', at: '2026-07-16T00:00:00Z', reason: 'blocked-access' }
+  const gated = planStorageZones(p)
+  const move = gated.misplaced.find((m) => m.itemId === 'si-pot')
+  if (move) assert.notEqual(move.toCode, 'S1', '满载区不该被当搬入目的地')
+  assert.equal(gated.zones.find((z) => z.code === 'S1').capacity.state, 'functional-full')
+  // S1 仍是灶台的归属(满载只是没空间,不改归属)
+  assert.ok(gated.zones.find((z) => z.code === 'S1').ownedAnchors.includes('stove'))
+}
+
 console.log('storage-plan-unit: ok')

@@ -46,7 +46,10 @@
     "test:fuzz": "node scripts/plan-edit-fuzz.mjs",
     "test:storage-undo": "node scripts/storage-undo-smoke.mjs",
     "test:508-drag": "node scripts/plan-508-drag-fuzz.mjs",
-    "test:reload": "node scripts/plan-edit-reload-fuzz.mjs"
+    "test:reload": "node scripts/plan-edit-reload-fuzz.mjs",
+    "test:function-truth": "node scripts/function-truth-unit.mjs",
+    "test:capacity": "node scripts/capacity-unit.mjs",
+    "test:tidy-plan": "node scripts/tidy-plan-unit.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",

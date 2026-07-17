@@ -296,4 +296,63 @@ assert.equal(fresh.id, 'si-8', 'counter resumes past the highest saved id')
   assert.equal(found.total, 1, '搜不到商家标题')
 }
 
+/* ---- P0A 新字段:静默抹除锁(规范 §2.4, 评审要求用例)---- */
+{
+  // 载荷:一件脏物(未修剪名)触发整区重建,同区干净物带着新字段。重建后新字段**必须还在**。
+  // 这正是 level/purchase 曾经回归的坑 —— 判脏漏字段 → 整区重建 → 字段跨区静默消失。
+  const rich = {
+    id: 'r1',
+    name: '蛋白粉',
+    updatedAt: 5,
+    lifecycleState: 'daily',
+    useFrequency: 'daily',
+    weight: 'heavy',
+    petRisks: ['toxic', 'food'],
+    petRiskOverride: { mode: 'custom', risks: ['meds'], reason: '实为处方药', at: '2026-07-16T00:00:00Z' },
+    envSensitive: ['humidity'],
+    dailyCopy: true,
+    sizeIn: { w: 6, d: 6, h: 9 },
+    stackable: true,
+  }
+  const dirty = { id: 'd1', name: '  未修剪  ', updatedAt: 0 }
+  const out = normalizeStorageItems([rich, dirty], 'sR')
+  const got = out.find((i) => i.id === 'r1')
+  assert.equal(got.lifecycleState, 'daily', 'lifecycleState 被抹掉了')
+  assert.equal(got.useFrequency, 'daily')
+  assert.equal(got.weight, 'heavy')
+  assert.deepEqual(got.petRisks, ['toxic', 'food'], 'petRisks 被抹掉了')
+  assert.deepEqual(got.petRiskOverride, { mode: 'custom', risks: ['meds'], reason: '实为处方药', at: '2026-07-16T00:00:00Z' })
+  assert.deepEqual(got.envSensitive, ['humidity'])
+  assert.equal(got.dailyCopy, true)
+  assert.deepEqual(got.sizeIn, { w: 6, d: 6, h: 9 })
+  assert.equal(got.stackable, true)
+
+  // 幂等:干净的富字段物走快路径,原样返回(引用相等)
+  const cleanRich = normalizeStorageItems([rich], 'sR')
+  assert.equal(normalizeStorageItems(cleanRich, 'sR'), cleanRich, '富字段干净数组未原样返回')
+  assert.equal(normalizeStorageItems(cleanRich, 'sR')[0], cleanRich[0], '富字段物被无谓重建')
+
+  // 数组字段:非法元素被**过滤**而非整件丢弃;去重
+  const filtered = normalizeStorageItems(
+    [{ id: 'f1', name: 'x', updatedAt: 0, petRisks: ['toxic', 'bogus', 'toxic', 'cord'], envSensitive: ['nope'] }],
+    'sF',
+  )[0]
+  assert.deepEqual(filtered.petRisks, ['toxic', 'cord'], '非法/重复风险未被清洗')
+  assert.equal(filtered.envSensitive, undefined, '全非法数组应 → undefined')
+
+  // petRiskOverride:explicit-safe 不带 risks;非法 mode 整个丢弃
+  const safe = createStorageItem('y', { petRiskOverride: { mode: 'explicit-safe', at: 't' } })
+  assert.deepEqual(safe.petRiskOverride, { mode: 'explicit-safe', at: 't' })
+  assert.equal(createStorageItem('y', { petRiskOverride: { mode: 'bogus' } }).petRiskOverride, undefined)
+
+  // sizeIn:负/零维被剔除;全空 → undefined
+  assert.deepEqual(createStorageItem('y', { sizeIn: { w: 5, d: -1, h: 0 } }).sizeIn, { w: 5 })
+  assert.equal(createStorageItem('y', { sizeIn: { w: 0 } }).sizeIn, undefined)
+
+  // patch 保留未提及的新字段(...item 承载),提及则改
+  const patched = patchStorageItem(got, { lifecycleState: 'replenish' })
+  assert.equal(patched.lifecycleState, 'replenish')
+  assert.deepEqual(patched.petRisks, ['toxic', 'food'], 'patch 不该动未提及字段')
+}
+
 console.log('storage-items unit: all assertions passed')

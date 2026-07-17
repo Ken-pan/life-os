@@ -10,7 +10,10 @@
   //   5. 更多洞察(默认折叠)—— 利用率/完整杂乱榜/动线/布局方案/长期观察
   // 之前 1–5 全是同级卡片平铺:页面在汇报「系统有什么」,不是「你现在干什么」。
   // 所有指标一个没删,只是把「凭什么」收进了折叠区 —— 想核对依据的人展开就在。
-  import { applyLayoutProposal, getActiveProject, isTidyTaskDone, setTidyTaskDone, isTidyStepDone, setTidyStepDone, clearTidyProgress, togglePlacementLocked } from '$lib/state.svelte.js'
+  import { applyLayoutProposal, getActiveProject, isTidyTaskDone, setTidyTaskDone, isTidyStepDone, setTidyStepDone, clearTidyProgress, togglePlacementLocked, recordPlacementFunction } from '$lib/state.svelte.js'
+  import { resolveFunction, isUserConfirmed, FUNCTION_KEYS } from '$lib/spatial/function-truth.js'
+  import { FUNCTION_LABELS_ZH } from '$lib/function-labels.js'
+  import { SvelteSet } from 'svelte/reactivity'
   import { analyzeCirculation, CLEARANCE } from '$lib/spatial/circulation.js'
   import { computeTaskRoutes } from '$lib/spatial/task-routes.js'
   import { renderFloorPlanSvg } from '$lib/spatial/render-svg.js'
@@ -63,6 +66,30 @@
   const plan = $derived(
     buildTidyPlan(project, circ, { minutes: budgetMin, effort: effortCap }),
   )
+  // —— 功能确认(规范 §1.1, 评审 B6)——
+  // 非阻塞地列出「未确认用途」的大件:确认后归位/布局照此校对。不做全屋硬门禁,
+  // 用户可确认、可「稍后」(仅本次会话隐藏)。它是一张卡,不拦着其它整理。
+  const CONFIRMABLE_KINDS = new Set([
+    'folding_table', 'table', 'desk', 'standing_desk', 'cabinet', 'base_cabinet',
+    'wall_cabinet', 'shelf', 'bookshelf', 'cube_shelf', 'wire_rack', 'equipment_rack',
+    'wardrobe', 'dresser', 'shoe_cabinet', 'island', 'pet_pen',
+    'bed', 'bed_twin', 'bed_full', 'bed_king', 'bed_queen', 'stove',
+  ])
+  const fnDismissed = new SvelteSet()
+  let fnDrafts = $state(/** @type {Record<string, string>} */ ({}))
+  const unconfirmed = $derived(
+    (project.placements ?? []).filter(
+      (p) => !p.attrs?.staged && !isUserConfirmed(p) && CONFIRMABLE_KINDS.has(p.kind) && !fnDismissed.has(p.id),
+    ),
+  )
+  function confirmFn(p) {
+    recordPlacementFunction(p.id, fnDrafts[p.id] || resolveFunction(p).key)
+  }
+  function acceptAllFn() {
+    // 一键接受:把每件的当前建议(resolve 出来的 key)确认为用户真源
+    for (const p of unconfirmed) recordPlacementFunction(p.id, fnDrafts[p.id] || resolveFunction(p).key)
+  }
+
   const doneCount = $derived(plan.tasks.filter((t) => isTidyTaskDone(t.id)).length)
   const remainMinutes = $derived(
     plan.tasks.filter((t) => !isTidyTaskDone(t.id)).reduce((s, t) => s + t.estMinutes, 0),
@@ -459,6 +486,39 @@
       </a>
     {/if}
   </section>
+
+  <!-- 功能确认(规范 §1.1, 评审 B6):非阻塞。系统先理解每件家具真实做什么,
+       归位/布局才不会照 kind 瞎猜。可确认、可稍后,不拦着其它整理。 -->
+  {#if unconfirmed.length}
+    <section class="fnc">
+      <div class="fnc-head">
+        <div>
+          <h2 class="sec-title">先确认用途</h2>
+          <p class="fnc-sub">{unconfirmed.length} 件大件还没确认实际用途 —— 确认后归位和布局建议会照此校对,而不是按类型猜。</p>
+        </div>
+        <button type="button" class="fnc-accept" onclick={acceptAllFn}>一键接受建议</button>
+      </div>
+      <ul class="fnc-list">
+        {#each unconfirmed as p (p.id)}
+          <li class="fnc-row">
+            <span class="fnc-label">{p.label}</span>
+            <select
+              class="fnc-select"
+              value={fnDrafts[p.id] ?? resolveFunction(p).key}
+              onchange={(e) => (fnDrafts = { ...fnDrafts, [p.id]: e.currentTarget.value })}
+              aria-label={`「${p.label}」的用途`}
+            >
+              {#each FUNCTION_KEYS as k (k)}
+                <option value={k}>{FUNCTION_LABELS_ZH[k] ?? k}</option>
+              {/each}
+            </select>
+            <button type="button" class="fnc-ok" onclick={() => confirmFn(p)}>确认</button>
+            <button type="button" class="fnc-later" onclick={() => fnDismissed.add(p.id)}>稍后</button>
+          </li>
+        {/each}
+      </ul>
+    </section>
+  {/if}
 
   <!-- ② 房屋热点:前三名,理由前置、分数退后 —— 分数只是佐证,不是主角 -->
   {#if hotspots.length}
@@ -1224,6 +1284,91 @@
     font-size: 11px;
     font-weight: 600;
     color: var(--accent);
+  }
+
+  /* ---------- 功能确认(非阻塞) ---------- */
+  .fnc {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid color-mix(in srgb, var(--warning) 30%, var(--border));
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--warning) 6%, var(--card, transparent));
+  }
+  .fnc-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .fnc-sub {
+    margin: 4px 0 0;
+    font-size: var(--text-sm);
+    color: var(--t2);
+    line-height: 1.5;
+  }
+  .fnc-accept {
+    flex-shrink: 0;
+    font-size: var(--text-sm);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .fnc-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .fnc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .fnc-label {
+    flex: 1 1 120px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--t1);
+  }
+  .fnc-select {
+    min-height: 36px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t1);
+    font-size: var(--text-sm);
+  }
+  .fnc-ok {
+    min-height: 36px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .fnc-later {
+    min-height: 36px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--t2);
+    cursor: pointer;
+  }
+  @media (max-width: 599px) {
+    .fnc-select,
+    .fnc-ok,
+    .fnc-later {
+      min-height: 44px;
+    }
   }
 
   /* ---------- ② 房屋热点 ---------- */

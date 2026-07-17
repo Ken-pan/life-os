@@ -25,6 +25,7 @@
 import { PX_PER_FT } from './dimensions.js'
 import { pointInPolygon } from './geometry.js'
 import { canonicalPlacementKind, verticalBlockRangeIn } from './placements.js'
+import { zoneCapacity, isFull } from './capacity.js'
 
 /**
  * 取物高度带(英寸,离地)。人体工学通用标准:黄金区 = 膝到肩,厨房日用 20–50″;
@@ -420,7 +421,9 @@ export function planStorageZones(project) {
       }
       if (reach) spec.ergonomicsZh = ergonomicsTextOf(reach.lo, reach.hi)
 
-      return { code: z.code, spec, reach, ownedAnchors: mine, nearest }
+      // 容量:结构化输出(state/evidence/fillPct),中文由 UI 按 state 出。
+      // 满载区仍**报为归属**(ownedAnchors 不变),只是不再当新增候选(见下面 misplaced)。
+      return { code: z.code, spec, reach, ownedAnchors: mine, nearest, capacity: zoneCapacity(z) }
     })
 
   // 归位校对:东西在这个区,但它属于的作业点由另一个区拿着,且那个区明显更近
@@ -460,6 +463,9 @@ export function planStorageZones(project) {
         if (code === z.code) return false
         const r = reaches.get(code)
         if (heavy && r && r.lo >= REACH.golden) return false
+        // 功能性满载/接近满的区绝不当搬入目的地(规范 §6.3:满载不再建议塞进去)。
+        // 它仍是自己类目的归属,只是没有空间接新东西。
+        if (isFull(byCode[code])) return false
         return true
       })
       if (!target) continue

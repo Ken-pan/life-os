@@ -13,6 +13,29 @@
 /** @typedef {import('./types.js').SpatialProject} SpatialProject */
 
 import { canonicalPlacementKind } from './placements.js'
+import { surfaceTypeOf } from './function-truth.js'
+
+/**
+ * 一个区里各表面的策略(规范 §1.3, 评审 B2)。台面整理任务据此**不一刀切要求清空**:
+ * 固定设备站(带微波炉/InstantPot/蛋白粉的折叠桌)保留设备、只清无关外溢物;
+ * 禁止储物面(炉灶/围栏顶)则一件不留。
+ * @param {import('./types.js').SpatialProject} project
+ * @param {string} zoneId
+ * @returns {{ fixed: string[], prohibited: string[] }}
+ */
+function surfacesInZone(project, zoneId) {
+  /** @type {string[]} */
+  const fixed = []
+  /** @type {string[]} */
+  const prohibited = []
+  for (const p of project.placements ?? []) {
+    if (p.zoneId !== zoneId) continue
+    const mode = surfaceTypeOf(p).mode
+    if (mode === 'fixed-equipment') fixed.push(p.label)
+    else if (mode === 'prohibited-storage') prohibited.push(p.label)
+  }
+  return { fixed, prohibited }
+}
 
 /**
  * 任务优先级:数越小越先做。
@@ -388,24 +411,36 @@ export function buildTidyPlan(project, circ, opts = {}) {
           return h ? `${it} → ${h.zh}` : null
         })
         .filter(Boolean)
+      // B2:固定设备站保留、禁止储物面清空 —— 不再一刀切要求清空台面。
+      const { fixed, prohibited } = surfacesInZone(project, zoneId)
+      const fixedZh = fixed.length ? `「${fixed.join('、')}」` : ''
+      const prohibitedZh = prohibited.length ? `「${prohibited.join('、')}」` : ''
       tasks.push({
         id: `surfaces-${zoneId}`,
         kind: 'surfaces',
-        title: `清空${zoneName}的台面`,
+        title: fixed.length ? `整理${zoneName}的台面(保留设备站)` : `清空${zoneName}的台面`,
         priority: P.surfaces,
         estMinutes: 10 + lvl('surfaces') * 5,
         zoneId,
         zoneName: zone?.nameZh ?? null,
-        reason: `照片显示桌面/台面堆积${LEVEL_ZH[lvl('surfaces')]}${info.items.length ? `,主要是:${info.items.join('、')}` : ''}`,
+        reason:
+          `照片显示桌面/台面堆积${LEVEL_ZH[lvl('surfaces')]}${info.items.length ? `,主要是:${info.items.join('、')}` : ''}` +
+          (fixed.length ? `。${fixedZh}是固定设备站,保留设备本身,只清无关外溢物` : ''),
         steps: [
-          '把台面上的东西按类堆到一起(先分类,别急着放)',
+          fixed.length
+            ? `把台面上除${fixedZh}以外的东西按类堆到一起(先分类,别急着放)`
+            : '把台面上的东西按类堆到一起(先分类,别急着放)',
           ...(homes.length ? homes.map((h) => `归位:${h}`) : ['有固定位置的东西按类送回各自的柜子']),
+          ...(fixed.length ? [`保留${fixedZh}及其日用配件不动,清掉压在旁边的无关物`, '给设备留出开门、操作与散热空间'] : []),
           '拿不准归属的进「临时箱」,别卡在这',
           '台面空了再擦 —— 从高到低,灰尘往下掉',
         ],
         doneWhen: [
-          '台面至少 70% 是空的 —— 站远一点看,空的地方要明显多过占着的',
+          fixed.length
+            ? `${fixedZh}及其日用品保留,门/操作/散热空间不被压;设备站之外的台面至少 70% 空`
+            : '台面至少 70% 是空的 —— 站远一点看,空的地方要明显多过占着的',
           '留在台面上的,只有每天都要用的东西',
+          ...(prohibited.length ? [`${prohibitedZh}是禁放面,上面一件不留(炉灶要能烹饪、围栏顶不放坠物)`] : []),
           '没有「等会儿再收」的东西 —— 那就是它会留一个月的意思',
         ],
         items: info.items,
