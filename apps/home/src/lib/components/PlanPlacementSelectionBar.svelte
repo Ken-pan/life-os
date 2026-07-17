@@ -14,6 +14,7 @@
     pxToInches,
     PLACEMENT_KINDS,
     canonicalPlacementKind,
+    KIND_REVIEW_MAX,
   } from '$lib/spatial/placements.js'
   import {
     resolveFunction,
@@ -186,6 +187,12 @@
 
   // 纠正扫描误检的类型。canonicalPlacementKind 过别名拿当前规范 kind。
   const curKind = $derived(canonicalPlacementKind(placement.kind))
+  // 扫描对类型没把握(几何猜的)且用户还没确认过 → 提示复核。改过 kind 就不提示。
+  const lowKind = $derived(
+    typeof attrs?.kindConfidence === 'number' &&
+      attrs.kindConfidence < KIND_REVIEW_MAX &&
+      !attrs?.userEdited?.includes('kind'),
+  )
   /** 按 group 分组的 kind 选项 */
   const kindGroups = $derived.by(() => {
     /** @type {Map<string, Array<{ value: string, label: string }>>} */
@@ -336,6 +343,11 @@
           </optgroup>
         {/each}
       </select>
+      {#if lowKind}
+        <span class="kind-review" title="扫描对类型没把握,确认对了就无需动;不对就在左边改">
+          ? 待复核
+        </span>
+      {/if}
     </label>
   {/if}
 
@@ -604,6 +616,13 @@
     color: var(--t1);
     font-size: 12px;
     max-width: 160px;
+  }
+
+  .kind-review {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--plan-warn, #c8811f);
+    white-space: nowrap;
   }
 
   .graph-sel-actions {

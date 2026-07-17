@@ -14,6 +14,7 @@ import {
   FENCE_BAND_IN,
   fenceBandRects,
   isFence,
+  KIND_REVIEW_MAX,
   PLACEMENT_KINDS,
 } from './placements.js'
 import {
@@ -316,6 +317,7 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
  .placement-clash{fill:var(--plan-danger-fill,#e9c4bc);stroke:var(--plan-danger,#a3341f);stroke-width:2}
  .placement-label{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);fill:var(--plan-text-soft,#4a515a);pointer-events:none}
  .placement-lock-badge{font:${compact ? 8 : 10}px var(--sans,system-ui,sans-serif);pointer-events:none;opacity:.85}
+ .placement-review-badge{font:700 ${compact ? 9 : 11}px var(--sans,system-ui,sans-serif);fill:var(--plan-warn,#c8811f);pointer-events:none}
  .move-ghost{fill:rgba(232,89,12,.08);stroke:#e8590c;stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
  .move-to{fill:none;stroke:#e8590c;stroke-width:2.5;pointer-events:none}
  .move-arrow{stroke:#e8590c;stroke-width:3;stroke-linecap:round;pointer-events:none}
@@ -690,6 +692,18 @@ ${textured ? floorPatternDefs(pxPerFt) : ''}
       if (p.locked) {
         parts.push(
           `<text x="${p.x + p.w - 3}" y="${p.y + 10}" text-anchor="end" class="placement-lock-badge">🔒</text>`,
+        )
+      }
+      // 低置信度类型(扫描按几何猜的,如 table 分不清餐桌/书桌)且用户还没确认过 →
+      // 左上角一枚「?」待复核。用户改过 kind(userEdited∋'kind')就消失。
+      const kindConf = p.attrs?.kindConfidence
+      if (
+        typeof kindConf === 'number' &&
+        kindConf < KIND_REVIEW_MAX &&
+        !p.attrs?.userEdited?.includes('kind')
+      ) {
+        parts.push(
+          `<text x="${p.x + 3}" y="${p.y + 11}" class="placement-review-badge" data-plan-tip="${esc('扫描对类型没把握,点开确认或改类型')}">?</text>`,
         )
       }
     }

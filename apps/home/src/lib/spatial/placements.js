@@ -589,6 +589,13 @@ export const PLACEMENT_KIND_ALIASES = {
   birdcage: 'bird_cage',
 }
 
+/**
+ * `attrs.kindConfidence` 低于此 = 扫描按几何猜的类型(如 table 分不清餐桌/书桌),
+ * 平面图标「待复核」、选择栏提示确认。单一来源,render-svg 与选择栏共用。
+ * 门槛 0.6:接住 iOS refineKind 的几何猜档(desk 0.55 / 分不清 ≤0.5),放过强信号档。
+ */
+export const KIND_REVIEW_MAX = 0.6
+
 /** @param {string} kind @returns {string} 目录键(没有别名时原样返回) */
 export function canonicalPlacementKind(kind) {
   return PLACEMENT_KIND_ALIASES[kind] ?? kind
