@@ -38,11 +38,15 @@
   let tagPanelOpen = $state(false)
   let tagPanelPos = $state({ x: 0, y: 0 })
   let tagPanelQuery = $state('')
-  const panelTags = $derived(
-    tagPanelQuery
-      ? tags.filter((tg) => tg.toLowerCase().includes(tagPanelQuery.toLowerCase()))
-      : tags,
-  )
+  const TAG_SEARCH_THRESHOLD = 12 // 标签超过这个数才显示搜索框
+  const showTagSearch = $derived(tags.length > TAG_SEARCH_THRESHOLD)
+  const q = $derived(tagPanelQuery.trim().toLowerCase())
+  // 搜索时走扁平过滤；否则分三组：已选 / 最近 / 全部
+  const panelMatch = $derived(q ? tags.filter((tg) => tg.toLowerCase().includes(q)) : tags)
+  const panelSelected = $derived([...activeTags].filter((tg) => tags.includes(tg)))
+  const panelUnselected = $derived(tags.filter((tg) => !activeTags.has(tg)))
+  const panelRecent = $derived(panelUnselected.slice(0, 4))
+  const panelRest = $derived(panelUnselected.slice(4))
   function openTagPanel(e) {
     const r = e.currentTarget.getBoundingClientRect()
     tagPanelPos = { x: Math.min(r.left, window.innerWidth - 320), y: r.bottom + 6 }
@@ -50,6 +54,7 @@
     tagPanelOpen = true
   }
   function portal(node) { document.body.appendChild(node); return { destroy() { node.remove() } } }
+  function autofocus(node) { requestAnimationFrame(() => node.focus()) }
   const results = $derived.by(() => {
     S.items.length // 触响应式
     let matched = searchItems(query, activeTags)
@@ -242,8 +247,13 @@
         </NoteEditor>
       {:else}
         <div class="nw-empty">
-          <EmptyState title={t('workspace.emptyDocTitle')} description={t('workspace.emptyDocDesc')} />
-          <button type="button" class="btn-primary" onclick={startNote}>{t('common.newNote')}</button>
+          {#if S.items.length === 0}
+            <!-- 空库：正文区只解释用途，创建入口交给顶栏「＋新建」与列表 onboarding，不做第三个主按钮 -->
+            <EmptyState title={t('workspace.emptyDocFirstTitle')} description={t('workspace.emptyDocFirstDesc')} />
+          {:else}
+            <EmptyState title={t('workspace.emptyDocTitle')} description={t('workspace.emptyDocDesc')} />
+            <button type="button" class="btn-primary" onclick={startNote}>{t('common.newNote')}</button>
+          {/if}
         </div>
       {/if}
     </section>
@@ -271,18 +281,49 @@
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div class="nw-tagpop__backdrop" use:portal onclick={() => (tagPanelOpen = false)}></div>
   <div class="nw-tagpop" use:portal style="left:{tagPanelPos.x}px; top:{tagPanelPos.y}px" role="dialog" aria-label={t('library.filterAria')}>
-    <input
-      class="nw-tagpop__search"
-      type="search"
-      placeholder={t('library.tagSearch')}
-      bind:value={tagPanelQuery}
-    />
-    <div class="nw-tagpop__list">
-      {#each panelTags as tag (tag)}
-        <button type="button" class="chip" aria-pressed={activeTags.has(tag)} onclick={() => toggleTag(tag)}>{tag}</button>
-      {/each}
-      {#if panelTags.length === 0}
-        <p class="nw-tagpop__empty">{t('library.noTagMatch')}</p>
+    {#if showTagSearch}
+      <input
+        class="nw-tagpop__search"
+        type="search"
+        placeholder={t('library.tagSearch')}
+        bind:value={tagPanelQuery}
+        use:autofocus
+      />
+    {/if}
+    <div class="nw-tagpop__scroll">
+      {#if q}
+        <!-- 搜索态：扁平结果 -->
+        <div class="nw-tagpop__list">
+          {#each panelMatch as tag (tag)}
+            <button type="button" class="chip" aria-pressed={activeTags.has(tag)} onclick={() => toggleTag(tag)}>{tag}</button>
+          {/each}
+          {#if panelMatch.length === 0}<p class="nw-tagpop__empty">{t('library.noTagMatch')}</p>{/if}
+        </div>
+      {:else}
+        {#if panelSelected.length > 0}
+          <p class="nw-tagpop__grp">{t('library.tagGroupSelected')}</p>
+          <div class="nw-tagpop__list">
+            {#each panelSelected as tag (tag)}
+              <button type="button" class="chip" aria-pressed="true" onclick={() => toggleTag(tag)}>{tag} ✕</button>
+            {/each}
+          </div>
+        {/if}
+        {#if panelRecent.length > 0}
+          <p class="nw-tagpop__grp">{t('library.tagGroupRecent')}</p>
+          <div class="nw-tagpop__list">
+            {#each panelRecent as tag (tag)}
+              <button type="button" class="chip" onclick={() => toggleTag(tag)}>{tag}</button>
+            {/each}
+          </div>
+        {/if}
+        {#if panelRest.length > 0}
+          <p class="nw-tagpop__grp">{t('library.tagGroupAll')}</p>
+          <div class="nw-tagpop__list">
+            {#each panelRest as tag (tag)}
+              <button type="button" class="chip" onclick={() => toggleTag(tag)}>{tag}</button>
+            {/each}
+          </div>
+        {/if}
       {/if}
     </div>
     {#if activeTags.size > 0}
@@ -467,13 +508,27 @@
     outline: none;
   }
   :global(.nw-tagpop__search:focus) { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  :global(.nw-tagpop__scroll) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1, 4px);
+    max-height: 360px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  :global(.nw-tagpop__grp) {
+    margin: var(--space-1, 4px) 0 0;
+    font-size: var(--text-2xs, 10px);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--t3, var(--text-muted));
+  }
+  :global(.nw-tagpop__grp:first-child) { margin-top: 0; }
   :global(.nw-tagpop__list) {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-1-5, 6px);
-    max-height: 260px;
-    overflow-y: auto;
-    scrollbar-width: thin;
   }
   :global(.nw-tagpop__empty) {
     margin: 0;

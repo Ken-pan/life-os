@@ -112,7 +112,7 @@
     font-size: var(--text-sm, 12px);
     line-height: 1.5;
     /* 摘要对比度提一档（secondary-muted，t2↔t3 之间）：亮屏/日光下扫描更快，但仍不压过标题 */
-    color: color-mix(in srgb, var(--t2, var(--text-secondary)) 55%, var(--t3, var(--text-muted)));
+    color: color-mix(in srgb, var(--t2, var(--text-secondary)) 68%, var(--t3, var(--text-muted)));
     /* 最多两行：笔记多起来后两行摘要能明显提高扫描准确率 */
     display: -webkit-box;
     -webkit-box-orient: vertical;

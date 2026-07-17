@@ -80,6 +80,9 @@ export default {
     filterMore: '更多',
     tagSearch: '搜索标签',
     noTagMatch: '无匹配标签',
+    tagGroupSelected: '已选择',
+    tagGroupRecent: '最近使用',
+    tagGroupAll: '所有标签',
     resizeAria: '拖动调整列表宽度（双击复位）',
     notInFilter: '此笔记不在当前筛选结果中',
     emptyTitle: '没有匹配的条目',
@@ -154,6 +157,8 @@ export default {
     backlinks: '反向链接',
   },
   workspace: {
+    emptyDocFirstTitle: '你的笔记会显示在这里',
+    emptyDocFirstDesc: '在左侧写下第一篇，就会出现在这里就地编辑。',
     emptyDocTitle: '选一条笔记，或写新的',
     emptyDocDesc: '左侧点开任意一条，就在这里就地编辑；或新建一篇开始写。',
   },

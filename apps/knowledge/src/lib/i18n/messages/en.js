@@ -80,6 +80,9 @@ export default {
     filterMore: 'More',
     tagSearch: 'Search tags',
     noTagMatch: 'No matching tags',
+    tagGroupSelected: 'Selected',
+    tagGroupRecent: 'Recent',
+    tagGroupAll: 'All tags',
     resizeAria: 'Drag to resize list column (double-click to reset)',
     notInFilter: 'This note is not in the current filter',
     emptyTitle: 'No matching items',
@@ -154,6 +157,8 @@ export default {
     backlinks: 'Backlinks',
   },
   workspace: {
+    emptyDocFirstTitle: 'Your notes will show up here',
+    emptyDocFirstDesc: 'Write your first one on the left and it opens here to edit inline.',
     emptyDocTitle: 'Pick a note, or start a new one',
     emptyDocDesc: 'Open any note on the left to edit it right here, or create one to start writing.',
   },
