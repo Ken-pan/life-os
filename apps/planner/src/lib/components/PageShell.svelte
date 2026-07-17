@@ -23,6 +23,7 @@
    *   layout?: 'list' | 'split',
    *   split?: boolean,
    *   asideWide?: boolean,
+   *   gridClass?: string,
    *   mainClass?: string,
    *   main: import('svelte').Snippet,
    *   aside?: import('svelte').Snippet,
@@ -37,6 +38,7 @@
     layout = 'list',
     split = true,
     asideWide = false,
+    gridClass = '',
     mainClass = '',
     main,
     aside,
@@ -48,7 +50,7 @@
 
   {#if layout === 'split'}
     <div
-      class="life-os-grid desktop-split-layout"
+      class="life-os-grid desktop-split-layout {gridClass}"
       class:life-os-grid--split={split}
       class:life-os-grid--aside-wide={asideWide}
     >

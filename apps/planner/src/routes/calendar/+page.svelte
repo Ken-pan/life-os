@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/state'
   import { goto } from '$app/navigation'
-  import AppBar from '$lib/components/AppBar.svelte'
+  import PageShell from '$lib/components/PageShell.svelte'
   import TaskGroup from '$lib/components/TaskGroup.svelte'
   import CalendarContextPanel from '$lib/components/CalendarContextPanel.svelte'
   import DaySchedulePanel from '$lib/components/schedule/DaySchedulePanel.svelte'
@@ -95,11 +95,8 @@
   }
 </script>
 
-<AppBar title={t('calendar.title')} />
-
-<div class="life-os-page-workspace">
-  <div class="life-os-grid life-os-grid--split desktop-split-layout calendar-page">
-    <div class="life-os-grid__main desktop-split-main">
+<PageShell title={t('calendar.title')} layout="split" gridClass="calendar-page">
+  {#snippet main()}
       <div class="wrap">
         <div class="calendar-week-nav">
           <button
@@ -163,8 +160,8 @@
           onDateChange={setSelected}
         />
       </div>
-    </div>
-
+  {/snippet}
+  {#snippet aside()}
     <CalendarContextPanel {selected} {countOn} />
-  </div>
-</div>
+  {/snippet}
+</PageShell>

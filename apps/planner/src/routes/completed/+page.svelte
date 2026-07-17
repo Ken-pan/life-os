@@ -1,5 +1,5 @@
 <script>
-  import AppBar from '$lib/components/AppBar.svelte'
+  import PageShell from '$lib/components/PageShell.svelte'
   import DoneLogView from '$lib/components/DoneLogView.svelte'
   import CompletedContextPanel from '$lib/components/CompletedContextPanel.svelte'
   import RhythmSummaryCard from '$lib/components/RhythmSummaryCard.svelte'
@@ -39,11 +39,8 @@
   })
 </script>
 
-<AppBar title={t('completed.title')} />
-
-<div class="life-os-page-workspace">
-  <div class="life-os-grid life-os-grid--split life-os-grid--aside-wide desktop-split-layout desktop-split-layout--log">
-    <div class="life-os-grid__main desktop-split-main">
+<PageShell title={t('completed.title')} layout="split" asideWide>
+  {#snippet main()}
       <div class="wrap completed-page">
         <section class="completed-rhythm completed-rhythm--inline">
           <h2 class="completed-section-title">{t('rhythm.title')}</h2>
@@ -81,15 +78,15 @@
           {/if}
         </section>
       </div>
-    </div>
-
+  {/snippet}
+  {#snippet aside()}
     <CompletedContextPanel
       summary={rhythm}
       {progress}
       doneToday={progress.doneToday}
     />
-  </div>
-</div>
+  {/snippet}
+</PageShell>
 
 <style>
   .completed-trend-card {
