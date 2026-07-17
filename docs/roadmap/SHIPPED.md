@@ -16,6 +16,7 @@
 | AIOS | **AIOS.STABLE.26** 核心链路回归：chat wire / 云 LWW·墓碑 / AIOS.20 快照 / AIOS.21 payload / local tools；`npm test -w aios-os` **25/25** | `3648e779` · `*.core.js` |
 | Finance | Review Needed **排除 `unsupported_source`**（`matchesPurchaseStateFilter`） | `3648e779` · finance-core |
 | CI | **PLAT.CI.0 修复推送：** Home 认亲组件 token 化；portal light accent 对比度 ≥3:1 | `c8bdc905` |
+| CI | **PLAT.CI.0 收口 ✅：** 补齐 `home/aios/portal/knowledge/health` design-catalog visual 基线（290 张，CI 同镜像 `playwright:v1.61.1-noble` 生成，四生产站 234 张零漂移）→ 远程 Actions **7/7 全绿** | `b2304bee` · run [`29618672879`](https://github.com/Ken-pan/life-os/actions/runs/29618672879) |
 | Knowledge | **KNOW.VAULT.0** 固定 Vault fs watcher（debounce 全量重载）· settings 监听状态 · library 打开笔记随重载换对象 | `8c83f85d` · `tauri-plugin-fs` `watch` feature |
 | Platform | **PLAT.USAGE.0** 首份用量审计 + `npm run qa:usage-audit` | [`../qa/usage-audit-2026-07.md`](../qa/usage-audit-2026-07.md) · `scripts/lifeos-usage-audit.mjs` |
 | Finance | purchase review RPC **revoke anon EXECUTE**（生产已 apply） | `20260717210000_purchase_review_rpc_revoke_anon` |
@@ -28,7 +29,7 @@
 | Charts | categorical 色板由各 app 品牌 accent 经 OKLCH 演算；面积图、tooltip、悬浮反馈与树状图层次打磨；树状图按块亮度自动选深/浅墨色 | `9bb72a414` · `fbd690611` · `37b24de6b` · `3feff760d` |
 | DS/Catalog | App 选择器与矩阵补齐到九个产品品牌（含 HealthOS / KnowledgeOS） | `2f05e3fa1` |
 
-代码矩阵（`playwright --list`）：922 smoke / 147 a11y / 524 visual。该数字只表示当前收集规模，实际通过状态以当次 CI 为准。**PLAT.CI.0 仍开**直至远程 Actions 全绿。
+代码矩阵（`playwright --list`）：922 smoke / 147 a11y / 524 visual。该数字只表示当前收集规模，实际通过状态以当次 CI 为准。**PLAT.CI.0 已收口 ✅**（run [`29618672879`](https://github.com/Ken-pan/life-os/actions/runs/29618672879) 全绿；524 visual 基线九品牌齐）。
 
 ## 2026-07-16（HealthOS · Knowledge↔Planner · Home 空间智能）
 

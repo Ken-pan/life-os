@@ -32,7 +32,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 - **Knowledge 块编辑器已 checkpoint 并扩面：** 编辑器 / library 入仓；另加 GFM 表格块 + 行内高亮（`bbfd7fb2`，unit 180）。下一刀日用复利是 **KNOW.VAULT.0** watcher。Vault 正文仍不上云。
 - **Knowledge↔Planner 跨 OS 引用试点仍在：** 双向语义检索；`object_ref` 稳定化未做。
 - **Design Catalog 九品牌：** 收集规模约 922 smoke / 147 a11y / 524 visual（以当次 CI 为准）。
-- **master CI（PLAT.CI.0 仍开）：** 样式 / portal 对比度 / a11y 已绿；concurrency 已按 SHA 分桶（`4931c68f`）。**当前真阻塞：** design-catalog 缺 `home/aios/portal/knowledge/health` 的 visual PNG 基线（run `29615899245`：290 missing / 234 已有）。交接 → [`qa/agent-handoff-2026-07-17-roi.md`](./qa/agent-handoff-2026-07-17-roi.md)。
+- **master CI（PLAT.CI.0 ✅ 已收口）：** 样式 / portal 对比度 / a11y 已绿；concurrency 已按 SHA 分桶（`4931c68f`）；design-catalog `home/aios/portal/knowledge/health` visual 基线已补齐（290 张，CI 同镜像生成，四生产站 234 张零漂移）。远程 Actions **7/7 全绿**（run [`29618672879`](https://github.com/Ken-pan/life-os/actions/runs/29618672879)，`b2304bee`）。
 
 ## 状态面板（每周扫一眼）
 
@@ -44,10 +44,9 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 闭环验收 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **PLAT.CI.0** | 恢复 master 交付可信度 | Platform | **P0** | 🔥 | <0.5d | **下一刀：** 补齐五品牌 catalog snapshot PNG → 远程全绿；交接 [`qa/agent-handoff-2026-07-17-roi.md`](./qa/agent-handoff-2026-07-17-roi.md) |
-| 2 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.5d | anon revoke ✅ · Review 过滤拆分 ✅；剩 **owner Confirm→Undo 真机**、双真实 JWT、视觉基线 |
+| 1 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.5d | anon revoke ✅ · Review 过滤拆分 ✅；剩 **owner Confirm→Undo 真机**、双真实 JWT、视觉基线 |
 
-**已收割（2026-07-17 夜）：** `PLNR.ATTACH.0` ✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · CI concurrency SHA 分桶 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。**暂停交接** → [`qa/agent-handoff-2026-07-17-roi.md`](./qa/agent-handoff-2026-07-17-roi.md)。
+**已收割（2026-07-17 夜）：** `PLAT.CI.0` ✅（补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` ✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · CI concurrency SHA 分桶 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
 **User config（不占 Agent 主航道）：** Home 部署后，AIOS 设置 → MCP 加 `https://home.kenos.space/api/mcp` + Life OS access token；Home 登录打开 `/storage` 触发快照同步。
 
@@ -101,9 +100,8 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 研判 → [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) · 透镜 → [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)
 
 ```text
-Phase 0 — 复利开关（暂停点）
-  PLAT.CI.0 补五品牌 catalog snapshot 基线 → 远程全绿
-  交接 docs/qa/agent-handoff-2026-07-17-roi.md
+Phase 0 — 复利开关 ✅ 已完成
+  PLAT.CI.0 补五品牌 catalog snapshot 基线 → 远程全绿（run 29618672879）
 
 Phase 1 — 信任收割（用户 gate 重）
   FINC.PURCHASE.6.a owner Confirm→Undo + 双 JWT + 视觉基线

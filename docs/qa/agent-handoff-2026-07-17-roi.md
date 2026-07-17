@@ -25,9 +25,13 @@ doc_role: handoff
 
 ## 卡住点（下一刀必须先做）
 
-### PLAT.CI.0 — design-catalog **缺 snapshot 基线**（真失败，不是 cancel）
+### PLAT.CI.0 — design-catalog **缺 snapshot 基线** ✅ 已收口（2026-07-17-22）
 
-远程 run：[`29615899245`](https://github.com/Ken-pan/life-os/actions/runs/29615899245)
+**已解决：** 补齐 `home/aios/portal/knowledge/health` visual 基线 290 张（CI 同镜像
+`playwright:v1.61.1-noble` 生成，四生产站 234 张零漂移），commit `b2304bee`，远程
+Actions **7/7 全绿** run [`29618672879`](https://github.com/Ken-pan/life-os/actions/runs/29618672879)。下方为原始诊断，保留作历史。
+
+原始失败 run：[`29615899245`](https://github.com/Ken-pan/life-os/actions/runs/29615899245)
 
 - 其它 job（build / integration-smoke / planner-e2e / portal / finance / music）**全绿**
 - `test:design-catalog:a11y` **全绿**

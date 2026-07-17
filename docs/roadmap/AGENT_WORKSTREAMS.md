@@ -15,10 +15,9 @@ priority_model: 2026-07-12-single-branch
 
 | Hub ID | 主题 | 状态 |
 | --- | --- | --- |
-| **PLAT.CI.0** | 远程 CI 全绿 | 🔴 **下一刀：** 补 `home/aios/portal/knowledge/health` catalog snapshot PNG（run `29615899245`：290 missing）；SHA 并发已修 `4931c68f` |
 | **FINC.PURCHASE.6.a** | closure QA | 🟡 代码侧已尽；剩 owner 真机 Confirm→Undo + 双 JWT + 视觉 |
 
-**本轮已收割：** `PLNR.ATTACH.0` · `HOME.MCP.13` · `AIOS.STABLE.26` · `KNOW.VAULT.0` · `PLAT.USAGE.0` 首报 · FINC Review 过滤 · CI concurrency · Home group-merge/露总数（并行）。
+**本轮已收割：** `PLAT.CI.0`（✅ 补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` · `HOME.MCP.13` · `AIOS.STABLE.26` · `KNOW.VAULT.0` · `PLAT.USAGE.0` 首报 · FINC Review 过滤 · CI concurrency · Home group-merge/露总数（并行）。
 
 ## Next（CI 全绿后）
 
