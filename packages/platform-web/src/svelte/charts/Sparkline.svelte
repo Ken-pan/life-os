@@ -29,6 +29,7 @@
     ariaLabel = '',
   } = $props()
 
+  const uid = $props.id()
   const PAD = 4
   const clean = $derived(values.filter((v) => v != null))
   const min = $derived(clean.length ? Math.min(...clean) : 0)
@@ -70,13 +71,20 @@
 </script>
 
 <svg {width} {height} role="img" aria-label={ariaLabel || '趋势迷你图'} class="sparkline">
+  {#if area}
+    <defs>
+      <linearGradient id={`spark-area-${uid}`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color={color} stop-opacity="0.2" />
+        <stop offset="100%" stop-color={color} stop-opacity="0" />
+      </linearGradient>
+    </defs>
+  {/if}
   {#each segments as pts, pi (pi)}
     {#if pts.length > 1}
       {#if area}
         <path
           d={`${pathOf(pts)}L${px(pts[pts.length - 1].x)},${height - 1}L${px(pts[0].x)},${height - 1}Z`}
-          fill={color}
-          opacity="0.1"
+          fill={`url(#spark-area-${uid})`}
         />
       {/if}
       <path class="sparkline__line" d={pathOf(pts)} stroke={color} />

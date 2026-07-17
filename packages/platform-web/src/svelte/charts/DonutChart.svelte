@@ -100,6 +100,7 @@
         <path
           class="donut-chart__slice"
           class:donut-chart__slice--dim={dim}
+          class:donut-chart__slice--lifted={lifted}
           d={donutArcPath(
             cx + (lifted ? 3 * Math.sin(arc.mid) : 0),
             cy - (lifted ? 3 * Math.cos(arc.mid) : 0),
@@ -186,11 +187,17 @@
     display: block;
   }
   .donut-chart__slice {
-    transition: opacity 120ms ease;
+    transition:
+      opacity 120ms ease,
+      transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      filter 160ms ease;
     cursor: default;
   }
   .donut-chart__slice--dim {
     opacity: 0.35;
+  }
+  .donut-chart__slice--lifted {
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.18));
   }
   .donut-chart__center {
     position: absolute;

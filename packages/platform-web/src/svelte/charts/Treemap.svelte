@@ -28,6 +28,7 @@
     ariaLabel = '',
   } = $props()
 
+  const uid = $props.id()
   const MAX_TILES = 8
   const tiles = $derived.by(() => {
     const positive = items.filter((d) => d.value > 0)
@@ -98,14 +99,24 @@
     aria-label={computedAria}
     onpointerleave={() => (hover = null)}
   >
+    <defs>
+      {#each tiles as tile, i (tile.label + i)}
+        {@const color = seriesColor(i, tiles.length > 1 ? tiles.length : 2, tile.color)}
+        <linearGradient id={`tm-fill-${uid}-${i}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color={`color-mix(in srgb, ${color} 82%, white)`} />
+          <stop offset="100%" stop-color={color} />
+        </linearGradient>
+      {/each}
+    </defs>
     {#each tiles as tile, i (tile.label + i)}
       {@const r = rects[i]}
-      {@const color = seriesColor(i, tiles.length > 1 ? tiles.length : 2, tile.color)}
-      {@const dim = hover != null && hover !== i}
+      {@const lifted = hover === i}
+      {@const dim = hover != null && !lifted}
       {#if r.w > 1 && r.h > 1}
         <g
           class="treemap__tile"
           class:treemap__tile--dim={dim}
+          class:treemap__tile--lifted={lifted}
           class:treemap__tile--clickable={!!onSelect}
           onpointermove={(e) => onTilePointer(e, i)}
           onclick={() => onSelect?.(tile, i)}
@@ -119,13 +130,13 @@
           tabindex={onSelect ? 0 : undefined}
         >
           <rect
+            class="treemap__rect"
             x={px(r.x)}
             y={px(r.y)}
             width={px(r.w)}
             height={px(r.h)}
             rx="3"
-            fill={color}
-            opacity="0.9"
+            fill={`url(#tm-fill-${uid}-${i})`}
           />
           {#if fitsLabel(tile, r)}
             <text
@@ -180,11 +191,19 @@
     display: block;
   }
   .treemap__tile {
-    transition: opacity 120ms ease;
+    transition:
+      opacity 120ms ease,
+      filter 160ms ease;
     outline: none;
   }
   .treemap__tile--dim {
     opacity: 0.4;
+  }
+  .treemap__tile--lifted {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.22));
+  }
+  .treemap__tile--lifted .treemap__rect {
+    transform: scale(1.015);
   }
   .treemap__tile--clickable {
     cursor: pointer;
@@ -192,6 +211,21 @@
   .treemap__tile:focus-visible rect {
     stroke: var(--t1, var(--text, #0b0b0b));
     stroke-width: 1.5;
+  }
+  .treemap__rect {
+    transition:
+      x 200ms ease,
+      y 200ms ease,
+      width 200ms ease,
+      height 200ms ease,
+      transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .treemap__rect {
+      transition: none;
+    }
   }
   /* 内嵌标签是"彩色填充内的文字"例外:按填充亮度选白/墨在组件外不可知,
      统一用白字 + 轻描边保证在 8 个槽位色上都可读 */

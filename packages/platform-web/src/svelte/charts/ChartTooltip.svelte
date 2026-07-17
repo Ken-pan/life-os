@@ -64,14 +64,24 @@
     max-width: 240px;
     padding: 8px 10px;
     border-radius: 10px;
-    background: var(--chart-tooltip-bg, var(--card, #fff));
+    background: color-mix(in srgb, var(--chart-tooltip-bg, var(--card, #fff)) 92%, transparent);
     border: 1px solid var(--chart-tooltip-border, var(--border, rgba(0, 0, 0, 0.1)));
     box-shadow:
-      0 2px 6px rgba(0, 0, 0, 0.06),
-      0 8px 24px rgba(0, 0, 0, 0.1);
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 6px 16px rgba(0, 0, 0, 0.07),
+      0 16px 32px rgba(0, 0, 0, 0.06);
     font-size: var(--text-xs, 11px);
     line-height: 1.5;
     will-change: transform;
+    transition:
+      transform 90ms ease-out,
+      opacity 90ms ease-out;
+  }
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .chart-tooltip {
+      backdrop-filter: blur(10px) saturate(1.5);
+      -webkit-backdrop-filter: blur(10px) saturate(1.5);
+    }
   }
   .chart-tooltip__title {
     color: var(--t3, var(--text-muted, #898781));

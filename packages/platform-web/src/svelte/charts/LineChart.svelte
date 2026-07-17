@@ -49,6 +49,7 @@
     ariaLabel = '',
   } = $props()
 
+  const uid = $props.id()
   const drawn = $derived(series.slice(0, MAX_SERIES))
   const showLegend = $derived(legend === 'auto' ? drawn.length >= 2 : legend)
   const showEndLabels = $derived(
@@ -240,7 +241,17 @@
         {/if}
       {/each}
 
-      <!-- 面积洗色(10%)+ 折线 2px -->
+      <!-- 面积渐隐(顶部 22% → 基线 0)+ 折线 2px -->
+      {#if area}
+        <defs>
+          {#each drawn as s, si (s.label + si)}
+            <linearGradient id={`lc-area-${uid}-${si}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color={seriesColor(si, drawn.length, s.color)} stop-opacity="0.22" />
+              <stop offset="100%" stop-color={seriesColor(si, drawn.length, s.color)} stop-opacity="0" />
+            </linearGradient>
+          {/each}
+        </defs>
+      {/if}
       {#each drawn as s, si (s.label + si)}
         {@const color = seriesColor(si, drawn.length, s.color)}
         {@const dim = legendHover != null && legendHover !== si}
@@ -250,8 +261,7 @@
               {#if pts.length > 1}
                 <path
                   d={`${pathOf(pts)}L${px(pts[pts.length - 1].x)},${px(baseY)}L${px(pts[0].x)},${px(baseY)}Z`}
-                  fill={color}
-                  opacity="0.1"
+                  fill={`url(#lc-area-${uid}-${si})`}
                 />
               {/if}
             {/each}
@@ -277,12 +287,14 @@
         />
         {#each drawn as s, si (s.label + si)}
           {#if s.values[hoverIndex] != null}
+            {@const hc = seriesColor(si, drawn.length, s.color)}
             <circle
-              class="line-chart__dot"
+              class="line-chart__dot line-chart__dot--active"
               cx={px(xAt(hoverIndex))}
               cy={px(yScale(s.values[hoverIndex]))}
               r="4.5"
-              fill={seriesColor(si, drawn.length, s.color)}
+              fill={hc}
+              style={`filter: drop-shadow(0 0 4px color-mix(in srgb, ${hc} 65%, transparent))`}
             />
           {/if}
         {/each}
@@ -372,6 +384,26 @@
   .line-chart__dot {
     stroke: var(--chart-surface, var(--card, #fff));
     stroke-width: 2;
+  }
+  .line-chart__dot--active {
+    animation: line-chart-dot-in 140ms ease-out;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  @keyframes line-chart-dot-in {
+    from {
+      transform: scale(0.5);
+      opacity: 0.6;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .line-chart__dot--active {
+      animation: none;
+    }
   }
   .line-chart__end-label {
     fill: var(--t2, var(--text-secondary, #52514e));
