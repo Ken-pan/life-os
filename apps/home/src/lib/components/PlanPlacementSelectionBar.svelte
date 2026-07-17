@@ -9,7 +9,12 @@
     togglePlacementLocked,
     updatePlacement,
   } from '$lib/state.svelte.js'
-  import { inchesToPx, pxToInches } from '$lib/spatial/placements.js'
+  import {
+    inchesToPx,
+    pxToInches,
+    PLACEMENT_KINDS,
+    canonicalPlacementKind,
+  } from '$lib/spatial/placements.js'
   import {
     resolveFunction,
     observedDrift,
@@ -178,6 +183,30 @@
       h: inchesToPx(hInNext, pxPerFt),
     })
   }
+
+  // 纠正扫描误检的类型。canonicalPlacementKind 过别名拿当前规范 kind。
+  const curKind = $derived(canonicalPlacementKind(placement.kind))
+  /** 按 group 分组的 kind 选项 */
+  const kindGroups = $derived.by(() => {
+    /** @type {Map<string, Array<{ value: string, label: string }>>} */
+    const groups = new Map()
+    for (const [value, spec] of Object.entries(PLACEMENT_KINDS)) {
+      const g = spec.group ?? '其它'
+      if (!groups.has(g)) groups.set(g, [])
+      groups.get(g).push({ value, label: spec.label })
+    }
+    return [...groups]
+  })
+  /**
+   * 用户改类型 → updatePlacement 带 userEdit:盖 provenance 章(重扫不打回)
+   * 并把旧 kind 记进 scanAliases(下次扫描仍报旧 kind 时靠 alias 认回是同一件)。
+   * @param {Event & { currentTarget: HTMLSelectElement }} e
+   */
+  function commitKind(e) {
+    const next = e.currentTarget.value
+    if (!next || next === curKind) return
+    updatePlacement(placement.id, { kind: next }, { userEdit: true })
+  }
 </script>
 
 <div
@@ -287,6 +316,27 @@
         />
       </label>
     </div>
+  {/if}
+
+  {#if !compact || detailsOpen}
+    <!-- 纠正扫描误检的类型:用户改是权威,盖 provenance 章、重扫不被打回 -->
+    <label class="kind-field">
+      <span class="size-label">类型</span>
+      <select
+        class="kind-select"
+        value={curKind}
+        onchange={commitKind}
+        aria-label="家具类型(纠正扫描误检)"
+      >
+        {#each kindGroups as [group, opts] (group)}
+          <optgroup label={group}>
+            {#each opts as o (o.value)}
+              <option value={o.value}>{o.label}</option>
+            {/each}
+          </optgroup>
+        {/each}
+      </select>
+    </label>
   {/if}
 
   {#if !compact || detailsOpen}
@@ -535,6 +585,25 @@
     color: var(--t1);
     font-family: var(--mono);
     font-size: 12px;
+  }
+
+  .kind-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--t2);
+  }
+
+  .kind-select {
+    min-height: 36px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--t1);
+    font-size: 12px;
+    max-width: 160px;
   }
 
   .graph-sel-actions {
