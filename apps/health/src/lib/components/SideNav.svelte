@@ -12,6 +12,7 @@
       items: [
         { href: '/', icon: 'now', label: t('nav.now') },
         { href: '/focus', icon: 'focus', label: t('nav.focus') },
+        { href: '/trends', icon: 'trends', label: t('nav.trends') },
       ].map((item) => ({
         ...item,
         active: isActive(item.href),

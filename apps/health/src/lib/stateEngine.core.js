@@ -78,6 +78,58 @@ export function recentSleeps(days, now, n = 3) {
   return { last, recent }
 }
 
+// ---------- HLT-4 跨日趋势 ----------
+
+/**
+ * 把某指标对齐到最近 days 个连续日历日(含今天),缺的天填 null。
+ * 返回 { labels:['7-10',…], iso:['2026-07-10',…], values:[7.2,null,…] } 供图表用。
+ * @param {Array} health [{date, [key]:number}]
+ * @param {string} key   'sleepHours' | 'hrv' | 'restingHR' | 'steps'
+ * @param {number} days
+ * @param {number} now   epoch ms(锚定“今天”)
+ */
+export function metricSeries(health, key, days, now) {
+  const byDate = new Map()
+  for (const d of health ?? []) {
+    if (d?.date && typeof d[key] === 'number') byDate.set(d.date, d[key])
+  }
+  const labels = []
+  const iso = []
+  const values = []
+  const base = new Date(now)
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(base)
+    d.setDate(d.getDate() - i)
+    const p = (n) => String(n).padStart(2, '0')
+    const key2 = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+    iso.push(key2)
+    labels.push(`${d.getMonth() + 1}-${d.getDate()}`)
+    values.push(byDate.has(key2) ? byDate.get(key2) : null)
+  }
+  return { labels, iso, values }
+}
+
+const avg = (nums) => {
+  const v = nums.filter((n) => typeof n === 'number')
+  return v.length ? v.reduce((s, n) => s + n, 0) / v.length : null
+}
+
+/**
+ * 近 window 天均值 + 相对前 window 天的变化方向。
+ * @returns { recent:number|null, prior:number|null, delta:number|null, dir:'up'|'down'|'flat'|'na', n:number }
+ */
+export function trendSummary(values, window = 7) {
+  const recent = avg(values.slice(-window))
+  const prior = avg(values.slice(-2 * window, -window))
+  if (recent == null) return { recent: null, prior, delta: null, dir: 'na', n: 0 }
+  const n = values.slice(-window).filter((v) => typeof v === 'number').length
+  if (prior == null) return { recent, prior: null, delta: null, dir: 'na', n }
+  const delta = recent - prior
+  const rel = Math.abs(delta) / (Math.abs(prior) || 1)
+  const dir = rel < 0.03 ? 'flat' : delta > 0 ? 'up' : 'down'
+  return { recent, prior, delta, dir, n }
+}
+
 /**
  * HLT-3 自适应专注窗口:睡眠债/压力/恢复/精力越差,窗口越紧。
  * @param {Record<string,{level:string}>} dims

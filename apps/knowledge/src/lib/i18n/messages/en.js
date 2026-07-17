@@ -37,6 +37,9 @@ export default {
     title: 'Library',
     searchPlaceholder: 'Search titles, body, links, tags…',
     clearSearch: 'Clear search',
+    folderAria: 'Filter by folder',
+    tagsLess: 'Less',
+    allFolders: 'All',
     filterAria: 'Filter by tag',
     emptyTitle: 'No matching items',
     emptyDesc: 'Try another keyword, or clear the tag filters.',
@@ -56,6 +59,10 @@ export default {
     yesterday: 'Yesterday',
     emptyTitle: 'Timeline is empty',
     emptyDesc: 'Everything you capture lands here in time order — watch your thinking grow.',
+  },
+  reader: {
+    edit: 'Edit',
+    backlinks: 'Backlinks',
   },
   settings: {
     title: 'Settings',

@@ -2,10 +2,10 @@
   // 时间线：按天分组，theme .timeline 原语；节点色区分类型。
   import { EmptyState } from '@life-os/platform-web/svelte/status'
   import { S } from '$lib/state.svelte.js'
-  import ItemEditorSheet from '$lib/components/ItemEditorSheet.svelte'
+  import ItemViewer from '$lib/components/ItemViewer.svelte'
   import { t } from '$lib/i18n/index.js'
 
-  let editing = $state(null)
+  let reading = $state(null)
 
   const TYPE_CLASS = {
     note: '',
@@ -62,7 +62,7 @@
           {#each items as item (item.id)}
             <li class="timeline__item {TYPE_CLASS[item.type]}">
               <span class="timeline__time">{timeOf(item.createdAt)}</span>
-              <button type="button" class="timeline-open" onclick={() => (editing = item)}>
+              <button type="button" class="timeline-open" onclick={() => (reading = item)}>
                 <span class="timeline__title">{item.title}</span>
               </button>
               {#if item.body}
@@ -83,7 +83,7 @@
   {/if}
 </div>
 
-<ItemEditorSheet item={editing} onClose={() => (editing = null)} />
+<ItemViewer bind:open={reading} />
 
 <style>
   .day {

@@ -6,6 +6,8 @@ import {
   recentSleeps,
   healthDaysToSleepObs,
   recommendPolicy,
+  metricSeries,
+  trendSummary,
   DIMENSION_ORDER,
 } from './stateEngine.core.js'
 
@@ -168,6 +170,35 @@ test('recommendPolicy:状态好不覆盖;睡眠债 bad → 12 分钟;watch → 1
   )
   assert.equal(watch.driver, 'stress')
   assert.equal(watch.limitMinutes, 16)
+})
+
+test('metricSeries:对齐连续日期,缺的天填 null', () => {
+  const health = [
+    { date: day(2), hrv: 48 },
+    { date: day(0), hrv: 52 },
+  ] // 缺 day(1)
+  const s = metricSeries(health, 'hrv', 3, NOW)
+  assert.equal(s.values.length, 3)
+  assert.deepEqual(s.values, [48, null, 52]) // 旧→新,中间缺 null
+  assert.equal(s.iso.length, 3)
+  assert.equal(s.iso[2], day(0))
+})
+
+test('trendSummary:近 7 天均值 + 相对前 7 天方向', () => {
+  // 前 7 天均值 5,后 7 天均值 7 → 上升
+  const values = [...Array(7).fill(5), ...Array(7).fill(7)]
+  const t = trendSummary(values, 7)
+  assert.equal(t.recent, 7)
+  assert.equal(t.prior, 5)
+  assert.equal(t.dir, 'up')
+  assert.equal(t.n, 7)
+
+  // 无前段 → dir na
+  assert.equal(trendSummary([7, 7, 7], 7).dir, 'na')
+  // 全空 → na
+  assert.equal(trendSummary([null, null], 7).dir, 'na')
+  // 变化 <3% → flat
+  assert.equal(trendSummary([...Array(7).fill(7), ...Array(7).fill(7.1)], 7).dir, 'flat')
 })
 
 test('recommendPolicy:unknown 不触发收紧', () => {

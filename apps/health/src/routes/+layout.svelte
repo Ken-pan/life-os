@@ -21,6 +21,7 @@
     const p = page.url.pathname
     if (p === '/settings') return t('settings.title')
     if (p.startsWith('/focus')) return t('focus.title')
+    if (p.startsWith('/trends')) return t('trends.title')
     return t('now.title')
   })
 

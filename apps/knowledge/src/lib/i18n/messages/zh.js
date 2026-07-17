@@ -37,6 +37,9 @@ export default {
     title: '知识库',
     searchPlaceholder: '搜索标题、正文、链接、标签…',
     clearSearch: '清除搜索',
+    folderAria: '按文件夹过滤',
+    tagsLess: '收起',
+    allFolders: '全部',
     filterAria: '按标签过滤',
     emptyTitle: '没有匹配的条目',
     emptyDesc: '换个关键词，或清掉标签过滤再试。',
@@ -56,6 +59,10 @@ export default {
     yesterday: '昨天',
     emptyTitle: '时间线是空的',
     emptyDesc: '收集的每一条知识都会按时间落在这里，回看思想的生长轨迹。',
+  },
+  reader: {
+    edit: '编辑',
+    backlinks: '反向链接',
   },
   settings: {
     title: '设置',

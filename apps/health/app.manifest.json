@@ -43,6 +43,10 @@
       "name": "focus"
     },
     {
+      "path": "/trends",
+      "name": "trends"
+    },
+    {
       "path": "/settings",
       "name": "settings"
     }

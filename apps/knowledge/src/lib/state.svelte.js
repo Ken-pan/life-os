@@ -173,12 +173,50 @@ export function togglePin(id) {
   persistChange(item)
 }
 
+/** 顶层文件夹（vault 模式从 id 路径前缀派生；按条目数降序）。本地模式返回空。 */
+export function allFolders(items = S.items) {
+  const counts = new Map()
+  for (const item of items) {
+    const slash = item.id.indexOf('/')
+    if (slash < 0) continue // 根目录或本地模式 id（k_xxx）
+    const folder = item.id.slice(0, slash)
+    counts.set(folder, (counts.get(folder) ?? 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([path, count]) => ({ path, count }))
+}
+
 /** 全部标签（按使用次数降序）。 */
 export function allTags(items = S.items) {
   const counts = new Map()
   for (const item of items)
     for (const tag of item.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1)
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([tag]) => tag)
+}
+
+/** 按标题 resolve wikilink 目标 → 条目（大小写不敏感）；找不到返回 null。 */
+export function resolveWikilink(target) {
+  const t = target.trim().toLowerCase()
+  return (
+    S.items.find((i) => i.title.toLowerCase() === t) ??
+    S.items.find((i) => i.title.toLowerCase().startsWith(t)) ??
+    null
+  )
+}
+
+/** 反向链接：正文里用 [[本条标题]] 指向 item 的其它条目。 */
+export function backlinksOf(item) {
+  const title = item.title.trim().toLowerCase()
+  return S.items.filter((other) => {
+    if (other.id === item.id) return false
+    const links = other.body.matchAll(/\[\[([^\]]+)\]\]/g)
+    for (const m of links) {
+      const target = m[1].split('|')[0].split('#')[0].trim().toLowerCase()
+      if (target === title || title.startsWith(target)) return true
+    }
+    return false
+  })
 }
 
 /** 关键词 + 标签过滤（大小写不敏感，题/正文/URL/标签全匹配）。 */

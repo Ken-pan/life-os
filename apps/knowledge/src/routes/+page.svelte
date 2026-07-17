@@ -3,14 +3,14 @@
   import { EmptyState } from '@life-os/platform-web/svelte/status'
   import { S, captureText, captureFile, allTags } from '$lib/state.svelte.js'
   import ItemList from '$lib/components/ItemList.svelte'
-  import ItemEditorSheet from '$lib/components/ItemEditorSheet.svelte'
+  import ItemViewer from '$lib/components/ItemViewer.svelte'
   import { t } from '$lib/i18n/index.js'
 
   let draft = $state('')
   let dragOver = $state(false)
   let fileInput = $state(null)
   let importedCount = $state(0)
-  let editing = $state(null)
+  let reading = $state(null)
 
   const weekAgo = () => Date.now() - 7 * 24 * 3600 * 1000
   const weekCount = $derived(S.items.filter((i) => i.createdAt > weekAgo()).length)
@@ -124,12 +124,12 @@
         <EmptyState title={t('inbox.emptyTitle')} description={t('inbox.emptyDesc')} />
       </div>
     {:else}
-      <ItemList items={recent} onOpen={(item) => (editing = item)} />
+      <ItemList items={recent} onOpen={(item) => (reading = item)} />
     {/if}
   </section>
 </div>
 
-<ItemEditorSheet item={editing} onClose={() => (editing = null)} />
+<ItemViewer bind:open={reading} />
 
 <style>
   .inbox-stats {
