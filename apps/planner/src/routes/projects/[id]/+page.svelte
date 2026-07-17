@@ -61,26 +61,17 @@
   )
 
   // ── KnowledgeOS 联通:按项目名语义检索 Vault,拉该项目相关知识笔记 ──
-  // 依赖 projectId + S.projects.length(hydrate/加载信号),用 knForId 去重:
-  // 只在切换项目或数据首次就绪时检索一次,云同步频繁重建 S.projects 不重复触发。
-  let knowledgeItems = $state(/** @type {any[]} */ ([]))
-  let knForId = ''
-  $effect(() => {
+  // 用 $derived.by 返回检索 promise + 模板 {#await} 渲染,避开 $effect+$state
+  // 异步赋值的时序坑。依赖 projectId + S.projects.length(数据就绪信号);
+  // untrack 读项目,避免云同步频繁重建 S.projects 触发重复检索。
+  const knowledgePromise = $derived.by(() => {
     const id = projectId
-    const ready = S.projects.length // 数据就绪信号
-    if (!id || !ready || id === knForId) return
+    const ready = S.projects.length
+    if (!id || !ready) return Promise.resolve([])
     const p = untrack(() => getProjectById(id))
-    if (!p) return
-    knForId = id
-    let cancelled = false
-    knowledgeItems = []
+    if (!p) return Promise.resolve([])
     const query = [p.title, p.summary].filter(Boolean).join(' ')
-    searchProjectKnowledge(query, { k: 4 }).then((items) => {
-      if (!cancelled) knowledgeItems = items
-    })
-    return () => {
-      cancelled = true
-    }
+    return searchProjectKnowledge(query, { k: 4 })
   })
 
   function saveProject() {
@@ -289,33 +280,34 @@
       </div>
     </form>
 
-    <div data-kn-debug={knowledgeItems.length} style="display:none"></div>
-    {#if knowledgeItems.length}
-      <section class="project-knowledge">
-        <div class="project-knowledge-head">
-          <h2>{t('projects.knowledgeTitle')}</h2>
-          <span class="tag">KnowledgeOS</span>
-        </div>
-        <div class="knowledge-list">
-          {#each knowledgeItems as item (item.path)}
-            <a
-              class="knowledge-item"
-              href={item.obsidianUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span class="knowledge-item-title">{item.title}</span>
-              {#if item.breadcrumb}
-                <span class="knowledge-item-crumb">{item.breadcrumb}</span>
-              {/if}
-              {#if item.snippet}
-                <span class="knowledge-item-snippet">{item.snippet}</span>
-              {/if}
-            </a>
-          {/each}
-        </div>
-      </section>
-    {/if}
+    {#await knowledgePromise then knowledgeItems}
+      {#if knowledgeItems.length}
+        <section class="project-knowledge">
+          <div class="project-knowledge-head">
+            <h2>{t('projects.knowledgeTitle')}</h2>
+            <span class="tag">KnowledgeOS</span>
+          </div>
+          <div class="knowledge-list">
+            {#each knowledgeItems as item, i (item.path + i)}
+              <a
+                class="knowledge-item"
+                href={item.obsidianUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="knowledge-item-title">{item.title}</span>
+                {#if item.breadcrumb}
+                  <span class="knowledge-item-crumb">{item.breadcrumb}</span>
+                {/if}
+                {#if item.snippet}
+                  <span class="knowledge-item-snippet">{item.snippet}</span>
+                {/if}
+              </a>
+            {/each}
+          </div>
+        </section>
+      {/if}
+    {/await}
 
     <div class="project-task-add">
       <QuickAddBar
