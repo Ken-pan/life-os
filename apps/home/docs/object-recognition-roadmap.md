@@ -32,6 +32,8 @@
 | **Quick Scan 安静模式(默认关补拍引导)** | ✅ **装机验证通过**(真机 fb4a277b:`hint_viewpoint` 8→**0**、hint_evidence/tracking 全 0 = 全程安静;认账 `prior_matched_peak=8/14` 照常流,安静没关掉遥测) | `ScanSessionController.quietScan` + HUD 组装块 |
 | **扫后质量摘要 UI(P1)** | ✅ **编译验证 + 装机**(预览页顶部安心总账「基础扫描已保存 · N 件已记录 · 其中 K 件认出是家里已有的」,技术细节降为下方分区)。真机肉眼观感待用户反馈 | `Views/ReviewView.swift` |
 | 启动屏全屏修复 | ✅ 装机 | `Info.plist UILaunchScreen` |
+| **P2 matcher 地基(跨扫描认亲)** | ✅ **写库验证**(2026-07-17):3 次设备扫描入 embedding(88 向量);`match_objects.py` 按时间序 populate object_observations + kind 硬门 + best-pair 余弦 + **全局一对一(Hungarian, scipy)**对齐 canonical_object_id + PATCH 回填 embeddings.canonical。真数据:**51 观察→32 canonical、17 个身份被 ≥2 次扫描认回**(冰箱/烤箱/炉边三抽柜/冰箱顶吊柜 0.85-0.96)、2 待复核、2 共享裁剪独立。阈值 HIGH=0.62/MID=0.50。**两处关键修正**:①只跟本扫描**之前**的 canonical 比 + 一对一指派 → 修掉旧贪心把同扫描两把办公椅并成一个(现 5 观察→3 canonical,欠合并是安全向,留 P3);②回填 canonical 从 upsert 改 **PATCH**(纯 UPDATE)—— upsert 的 INSERT 语义拿缺列元组过 NOT NULL 校验必炸 `scan_id`/`embedding`,即便终走 UPDATE。**③契约对齐**:`match` jsonb 已对齐 `types.js ObjectMatchDecision`(state=same/possibly_same/added、candidates={canonicalId,score,breakdown,label}、possibly/added 时 chosenCanonicalId 空、resolver=global-assignment),抽验三态键名/枚举无越界 | `scripts/vision/match_objects.py` · `src/lib/spatial/types.js` |
+| **P1 快速/高精度双模式 UI 开关** | ✅ **编译验证**(模拟器 build 过);⏳ 装机待真机上线(离线中)—— HomeView 设置区「安静扫描」toggle(默认开)→ `@AppStorage(quietScanKey)` → startScanning 喂 `scanController.quietScan` | `HomeView` + `ScanSessionController.quietScanKey` + `AppModel+ScanFlow` |
 
 **quietScan 验证进度(2026-07-17)**:✅ 三套测试全绿(EvidenceGuide 23/ObjectShotCapture 14/PlanProjector 29 = 66);✅ device build/签名/装机与真扫遥测通过（`hint_viewpoint` 8→0，evidence/tracking hint 为 0，`prior_matched_peak=8/14`）；剩余是用户对质量摘要观感反馈，以及高精度补扫模式。
 
@@ -50,8 +52,15 @@ Track B 上生产前**先把地基做牢**:migration 可安全应用+回滚;embe
 应用 embedding migration → 给已有裁剪写 embedding → matcher 消费视觉信号 + 尺寸/位置/类别/邻接 → **全局一对一(Hungarian)分配** → 低置信不自动合并 → 产出证据卡片所需 evidence。
 **第一轮不自动做**:不自动删漏扫件、不自动合并低置信、不因位置变化就新建对象、不让 VLM 单独定身份。
 
-### P3 · 证据式确认 UI
+### P3 · 证据式确认 UI ✅ 已建 + 端到端验证(2026-07-17)
 默认确认 0–5 件;新旧图 + 支持/反对证据 + 选其他历史候选 + **「暂时不确定」**;确认后沉淀成训练数据(positive/hard-negative)。
+**已落地**(浏览器实测真机生产数据 2 件难例,4 张裁剪签名图全加载,截图为证):
+- `src/lib/recognition-review.js`:`loadRecognitionReviews()` 拉 `object_observations` 筛 `match->>state=possibly_same` + 按 `candidates[0].canonicalId` 配代表旧图 + 批量 `createSignedUrls` 签名裁剪;`resolveRecognition(review, decision)` 回写 `match`+`canonical_object_id`。
+- `src/lib/components/RecognitionReview.svelte`:模态证据卡片(新裁剪 vs 候选旧裁剪 + 相似度 + 「是同一件/不是/暂不确定」),仿 `ScanMergeReview` 设计与 token。
+- `src/routes/settings/+page.svelte`:「云端扫描」区加「认亲确认」入口(登录后 `$effect` 加载,有难例才显示,badge 带件数)。
+- **决策持久化闭环**:裁决落 `match.userDecision`(same/different/unsure)+ state(same/added/deferred),`match_objects.py` 的 `locked_decisions()` 让 `--apply` 对带 userDecision 的行**原样保留**——Mac 每次精修不会冲掉用户裁决(P3 要求的 positive/hard-negative 沉淀)。契约 `types.js` 加了 `deferred` state + `userDecision`/`decidedAt` 字段。
+- **结构现实**:权威副本零照片→零 embedding,故这套认亲是**设备扫描之间**的身份图,不走 `scan-identity.js`(那条是 scan-vs-权威、纯几何);两条并行,P3 卡片消费的是 matcher 这条。
+- **待做(follow-up)**:①入口现在只在 /settings,可仿 `NewScanBanner` 加 /plan 顶部横幅更主动;②「是同一件」目前只 relink 被确认的**单行**观察,不牵动同 canonical 的兄弟观察(group-merge 留后续);③自动触发(扫完自动跑 embed+match「15 分钟精修」)未接,现仍 Mac 手动批处理。
 
 ### P4 · 小物件专项(等 L1/L2 稳)
 区域照片识别 / 架柜内容摘要 / 小物件库存 / 收藏品(泡泡玛特)/ 器材档案 / 收纳容器–内容关系。**独立能力,不塞进房间主扫描。**

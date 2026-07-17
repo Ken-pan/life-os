@@ -530,10 +530,15 @@
  * 匹配器对一次观察的认亲决定(存进 ObjectObservation.match)。
  * 「保存所有候选分数和最终决定」的落点 —— 升级规则/模型后可回放对比,防倒退。
  * @typedef {object} ObjectMatchDecision
- * @property {'same_unchanged'|'same_moved'|'possibly_same'|'added'|'removed'} state
- * @property {string} [chosenCanonicalId] 最终认定的永久身份(added 时为空)
- * @property {Array<{ canonicalId: string, score: number, breakdown: Record<string, number> }>} candidates
- *   全体候选及其融合分与分项(size/pos/color/dhash/vision/…),按分降序
+ * @property {'same'|'same_unchanged'|'same_moved'|'possibly_same'|'added'|'removed'|'deferred'} state
+ *   same_unchanged/same_moved 来自几何 resolver(评估了位移);'same' 来自纯视觉的
+ *   global-assignment resolver —— 认定同一件但**不评估位移**(matcher 无位置项);
+ *   'deferred' = 用户在证据卡片上选了「暂不确定」,移出复核队列、候选证据留档
+ * @property {'same'|'different'|'unsure'} [userDecision] 用户在 P3 证据卡片上的裁决(存在即锁定,matcher 不再重算此行)
+ * @property {number} [decidedAt] userDecision 的时间戳(毫秒)
+ * @property {string} [chosenCanonicalId] 最终认定的永久身份(added/possibly 时为空)
+ * @property {Array<{ canonicalId: string, score: number, breakdown: Record<string, number>, label?: string }>} candidates
+ *   全体候选及其融合分与分项(size/pos/color/dhash/vision/…),按分降序;label 可选(证据卡片展示)
  * @property {string} [resolver] 判定路径('global-assignment'/'geometry-only'/…)
  * @property {string} [modelVersion] 参与本次判定的视觉模型版本
  * @property {string} [calibrationVersion] 参与本次判定的权重校准版本

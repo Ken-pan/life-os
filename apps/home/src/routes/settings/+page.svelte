@@ -32,6 +32,8 @@
   import { toast } from '$lib/ui.svelte.js'
   import CloudScanPicker from '$lib/components/CloudScanPicker.svelte'
   import InventoryImport from '$lib/components/InventoryImport.svelte'
+  import RecognitionReview from '$lib/components/RecognitionReview.svelte'
+  import { loadRecognitionReviews } from '$lib/recognition-review.js'
 
   const themeOptions = [
     { value: 'auto', label: '跟随系统' },
@@ -82,6 +84,27 @@
   let password = $state('')
   let authBusy = $state(false)
   let authError = $state('')
+
+  /** 跨扫描认亲待确认难例(Mac 精修产出的 possibly_same;登录后加载) */
+  let recognitionReviews = $state(/** @type {any[]} */ ([]))
+  let showRecognition = $state(false)
+
+  // 登录后拉难例;登出清空。RLS/无数据 → 空数组(条目自然隐藏)。
+  $effect(() => {
+    if (!auth.user) {
+      recognitionReviews = []
+      return
+    }
+    loadRecognitionReviews()
+      .then((r) => (recognitionReviews = r))
+      .catch(() => {})
+  })
+
+  function refreshRecognition() {
+    loadRecognitionReviews()
+      .then((r) => (recognitionReviews = r))
+      .catch(() => {})
+  }
 
   /** @param {import('@life-os/contracts/appearance').ColorSchemePreference} value */
   function onTheme(value) {
@@ -342,6 +365,14 @@
       用 iPhone 上的 HomeScan(RoomPlan)扫描全屋后在这里拉取。日常用「摆家具」：
       墙体不动,只更新家具位置尺寸与照片。也可以直接在平面图顶部的「新扫描」横幅一键摆入。
     </p>
+    {#if recognitionReviews.length}
+      <SettingsActionRow
+        label="认亲确认"
+        desc={`Mac 精修认出 ${recognitionReviews.length} 件可能和以前扫过的是同一件，看图确认一下`}
+        buttonLabel={`确认 ${recognitionReviews.length} 件`}
+        onclick={() => (showRecognition = true)}
+      />
+    {/if}
   {/if}
   <!-- 从储藏页搬过来的。它原先钉在「东西放哪」的第一屏,而那一屏该回答的是
        「我的压力锅放哪了」—— 结果开头是一个要你先去别处搬数据的按钮:0 件物品,
@@ -365,6 +396,14 @@
     />
   {/if}
 </SettingsSection>
+
+{#if showRecognition}
+  <RecognitionReview
+    reviews={recognitionReviews}
+    onClose={() => (showRecognition = false)}
+    onResolved={refreshRecognition}
+  />
+{/if}
 
 <style>
   .settings-value {
