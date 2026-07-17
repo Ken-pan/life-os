@@ -134,6 +134,11 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     private var evidenceTargetSince: TimeInterval?
     /// 这次扫描里已经放弃引导的目标:拍不到的就别一直喊同一句
     private var parkedTargets: Set<UUID> = []
+    /// 高精度补扫锁定的「重点区域」(系统指出的缺口最大的前 N 件)。nil = 还没选定;
+    /// 选定后引导只在这几件里走,补完即止 —— 不重扫整个家(战略 P1)。安静模式不用它。
+    private var highPrecisionFocus: Set<UUID>?
+    /// 重点区域已补齐,已经播过一次「补扫完成」——只报一次,别每帧刷
+    private var highPrecisionDone = false
     /// 跟踪质量恶化的起点(去抖:持续 >1.5s 才上 HUD)
     private var limitedSince: TimeInterval?
     private var shotTimer: Timer?
@@ -160,6 +165,9 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
     /// 就是「我照着做了,它还是卡着」。这是最后一道兜底 —— 宁可少一个侧面,
     /// 不可把人锁在原地。
     static let evidenceTargetTimeoutS: TimeInterval = 30
+
+    /// 高精度补扫一次最多引导几个「重点区域」——战略要求「1–3 个区域,不是重扫整个家」。
+    static let highPrecisionLimit = 3
 
     var roomCount: Int { capturedRooms.count }
 
@@ -428,9 +436,30 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         let cam = frame.camera.transform
         let pos = SIMD2(Double(cam.columns.3.x), Double(cam.columns.3.z))
         let fwd = SIMD2(-Double(cam.columns.2.x), -Double(cam.columns.2.z))
+        var deficits = EvidenceGuide.deficits(furnitures: furnitures, walls: liveWalls)
+            .filter { !parkedTargets.contains($0.furniture.id) }
+        // 高精度补扫:锁定系统指出的重点区域(缺口最大的前 N 件),引导只在这几件里走,
+        // 补完即止,不重扫整个家(战略 P1)。安静模式不介入(quietScan 时 evidenceHint 返回值
+        // 本就不弹 HUD,只作被动抓拍优先级 + 遥测)。只在配准在线后选,避免早期半张图定错重点。
+        if !quietScan, homeFrame?.ok == true {
+            if highPrecisionFocus == nil, !deficits.isEmpty {
+                highPrecisionFocus = EvidenceGuide.focusTargets(
+                    deficits: deficits, limit: Self.highPrecisionLimit)
+                ScanLog.shared.counter { $0.add("highprec_focus", Double(self.highPrecisionFocus?.count ?? 0)) }
+            }
+            if let focus = highPrecisionFocus {
+                deficits = deficits.filter { focus.contains($0.furniture.id) }
+                // 重点区域全补齐 → 报一次「补扫完成」,别再支使人满屋跑
+                if deficits.isEmpty, !highPrecisionDone {
+                    highPrecisionDone = true
+                    clearEvidenceTarget()
+                    ScanLog.shared.counter { $0.count("highprec_done") }
+                    return "重点区域已补齐 ✓ 可以结束扫描了"
+                }
+            }
+        }
         let guide = EvidenceGuide.guidance(
-            deficits: EvidenceGuide.deficits(furnitures: furnitures, walls: liveWalls)
-                .filter { !parkedTargets.contains($0.furniture.id) },
+            deficits: deficits,
             cameraPos: pos,
             cameraForwardDeg: atan2(fwd.y, fwd.x) * 180 / .pi,
             holdTarget: evidenceTarget
@@ -544,6 +573,8 @@ final class ScanSessionController: NSObject, RoomCaptureSessionDelegate {
         firstSeen = [:]
         clearEvidenceTarget()
         parkedTargets = []
+        highPrecisionFocus = nil
+        highPrecisionDone = false
         guideMarker = nil
         limitedSince = nil
         shotCapture.reset()

@@ -193,6 +193,19 @@ enum EvidenceGuide {
         return out
     }
 
+    /// 高精度补扫的「重点区域」:从全部缺口里挑**最该补的前 limit 件**(缺口 required−covered
+    /// 最大优先,平手用 id 确定式排序)。控制器把高精度引导**限定在这几件** —— 系统指出重点、
+    /// 补完即止,不重扫整个家(战略 P1:高精度补扫只对指定 1–3 区域)。纯函数,单测覆盖。
+    static func focusTargets(deficits: [Deficit], limit: Int = 3) -> Set<UUID> {
+        let ranked = deficits.sorted { a, b in
+            let ga = a.required - a.covered
+            let gb = b.required - b.covered
+            if ga != gb { return ga > gb }
+            return a.furniture.id.uuidString < b.furniture.id.uuidString // 确定式平手
+        }
+        return Set(ranked.prefix(max(0, limit)).map { $0.furniture.id })
+    }
+
     // MARK: - 认账家的记忆:活体对回权威副本(纯函数,单测覆盖)
 
     /// 权威副本里一件家具(已转到户型米坐标),供活体匹配。

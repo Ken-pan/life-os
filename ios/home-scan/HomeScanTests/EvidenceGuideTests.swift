@@ -205,6 +205,30 @@ final class EvidenceGuideTests: XCTestCase {
         XCTAssertTrue(EvidenceGuide.deficits(furnitures: [small], walls: []).isEmpty)
     }
 
+    // MARK: - 高精度补扫:重点区域(前 N 缺口)
+
+    func testFocusTargetsPicksBiggestGaps() {
+        // 三件都够大(需 3 桶),无墙全可达;覆盖度不同 → 缺口 3 / 2 / 1。
+        // focus 取前 2 = 缺口最大的两件,最小的落选(不重扫整个家的关键)。
+        let gap3 = furniture(center: SIMD2(0, 0), w: 2.0, d: 1.0, bins: [])
+        let gap1 = furniture(center: SIMD2(6, 0), w: 2.0, d: 1.0, bins: [0, 1])
+        let gap2 = furniture(center: SIMD2(12, 0), w: 2.0, d: 1.0, bins: [0])
+        let defs = EvidenceGuide.deficits(furnitures: [gap3, gap1, gap2], walls: [])
+        let focus = EvidenceGuide.focusTargets(deficits: defs, limit: 2)
+        XCTAssertEqual(focus.count, 2)
+        XCTAssertTrue(focus.contains(gap3.id), "缺口最大(3)必入")
+        XCTAssertTrue(focus.contains(gap2.id), "缺口次大(2)必入")
+        XCTAssertFalse(focus.contains(gap1.id), "缺口最小(1)不进前 2")
+    }
+
+    func testFocusTargetsLimitAndEmpty() {
+        let f = furniture(w: 2.0, d: 1.0, bins: [])
+        let defs = EvidenceGuide.deficits(furnitures: [f], walls: [])
+        XCTAssertTrue(EvidenceGuide.focusTargets(deficits: defs, limit: 0).isEmpty, "limit 0 = 空集")
+        XCTAssertEqual(EvidenceGuide.focusTargets(deficits: defs, limit: 3).count, 1, "不足 N 就全取")
+        XCTAssertTrue(EvidenceGuide.focusTargets(deficits: [], limit: 3).isEmpty, "无缺口 = 空集")
+    }
+
     // MARK: - 引导文案与目标锁定
 
     func testGuidancePicksNearestMissingBinAndNamesDirection() {
