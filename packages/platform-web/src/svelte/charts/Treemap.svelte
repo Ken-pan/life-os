@@ -86,12 +86,59 @@
     pointerXY = { x: e.clientX - rect.left, y: e.clientY - rect.top }
   }
 
+  // ── 亮度自适应墨色:块色浅用深字、深用浅字,各带同调轻描边兜底 ──
+  // 块色是 var(--chart-series-N),运行时才知道真值;用探针元素让 CSS 解析成 rgb() 再算亮度。
+  const parseRGB = (s) => (s.match(/[\d.]+/g) || []).slice(0, 3).map(Number)
+  function relLum([r, g, b]) {
+    const f = (c) => {
+      c /= 255
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    }
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+  }
+  function inkFor(colorStr) {
+    // +0.05 补偿顶部渐变提亮(标签就落在偏亮的顶部)
+    const light = relLum(parseRGB(colorStr)) + 0.05 > 0.5
+    return light
+      ? { fill: '#17181c', halo: 'rgba(255,255,255,0.35)' }
+      : { fill: '#ffffff', halo: 'rgba(0,0,0,0.32)' }
+  }
+
+  let rootEl = $state(/** @type {HTMLElement | null} */ (null))
+  let themeV = $state(0)
+  let inks = $state(/** @type {{fill:string,halo:string}[]} */ ([]))
+
+  $effect(() => {
+    if (typeof MutationObserver === 'undefined') return
+    const obs = new MutationObserver(() => themeV++)
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-mode', 'class', 'style'],
+    })
+    return () => obs.disconnect()
+  })
+
+  $effect(() => {
+    void themeV
+    void tiles
+    if (!rootEl || typeof document === 'undefined') return
+    const probe = document.createElement('span')
+    probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none'
+    rootEl.appendChild(probe)
+    inks = tiles.map((t, i) => {
+      probe.style.color =
+        t.color || `var(--chart-series-${Math.min(i, 7) + 1}, var(--chart-line, var(--accent)))`
+      return inkFor(getComputedStyle(probe).color)
+    })
+    probe.remove()
+  })
+
   const computedAria = $derived(
     ariaLabel || `矩形树图:${tiles.map((d) => d.label).join('、')}`,
   )
 </script>
 
-<div class="treemap" bind:clientWidth={wrapW}>
+<div class="treemap" bind:clientWidth={wrapW} bind:this={rootEl}>
   <svg
     width={chartW}
     {height}
@@ -139,10 +186,13 @@
             fill={`url(#tm-fill-${uid}-${i})`}
           />
           {#if fitsLabel(tile, r)}
+            {@const ink = inks[i] ?? { fill: '#fff', halo: 'rgba(0,0,0,0.32)' }}
             <text
               class="treemap__label"
               x={px(r.x) + 7}
               y={px(r.y) + 16}
+              style:fill={ink.fill}
+              style:stroke={ink.halo}
             >
               {tile.label}
             </text>
@@ -151,6 +201,8 @@
                 class="treemap__value"
                 x={px(r.x) + 7}
                 y={px(r.y) + 31}
+                style:fill={ink.fill}
+                style:stroke={ink.halo}
               >
                 {format(tile.value)}
               </text>
@@ -227,13 +279,11 @@
       transition: none;
     }
   }
-  /* 内嵌标签是"彩色填充内的文字"例外:按填充亮度选白/墨在组件外不可知,
-     统一用白字 + 轻描边保证在 8 个槽位色上都可读 */
+  /* 内嵌标签是"彩色填充内的文字":fill/stroke 由 inks[] 按块色亮度运行时决定
+     (浅块深字、深块浅字),同调轻描边兜底渐变顶部;此处只管排版。 */
   .treemap__label,
   .treemap__value {
-    fill: #fff;
     paint-order: stroke;
-    stroke: rgba(0, 0, 0, 0.28);
     stroke-width: 1.6;
     font-size: 11.5px;
     font-weight: 600;
