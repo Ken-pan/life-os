@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  HomeOS 认亲事后精修 · launchd LaunchAgent(每 15 分钟 + 登录即跑一次)。
+  安装:cp 到 ~/Library/LaunchAgents/ 再 launchctl bootstrap gui/$(id -u) <plist>
+  卸载:launchctl bootout gui/$(id -u)/com.homeos.vision-refine
+  见 scripts/vision/README「auto-refine」。ProgramArguments 里是仓库内 refine.sh 的绝对路径,
+  仓库若移动位置要同步改这里(或改用软链)。
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.homeos.vision-refine</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/kenpan/「Projects」/life-os/apps/home/scripts/vision/refine.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>900</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>StandardOutPath</key>
+  <string>/Users/kenpan/.local-ai/logs/vision-refine.launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/kenpan/.local-ai/logs/vision-refine.launchd.log</string>
+</dict>
+</plist>

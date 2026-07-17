@@ -75,6 +75,7 @@
   import PlanZoneSelectionBar from '$lib/components/PlanZoneSelectionBar.svelte'
   import PlanPlacementSelectionBar from '$lib/components/PlanPlacementSelectionBar.svelte'
   import NewScanBanner from '$lib/components/NewScanBanner.svelte'
+  import RecognitionBanner from '$lib/components/RecognitionBanner.svelte'
   import PlanViewpointSelectionBar from '$lib/components/PlanViewpointSelectionBar.svelte'
   import PlanNorthCalibrator from '$lib/components/PlanNorthCalibrator.svelte'
   import { headingFromPoint } from '$lib/spatial/viewpoints.js'
@@ -1401,6 +1402,7 @@
     {/if}
 
     <NewScanBanner />
+    <RecognitionBanner />
 
     {#if shootMode}
       <div class="shoot-banner" role="note">

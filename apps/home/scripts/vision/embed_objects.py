@@ -174,31 +174,27 @@ def upsert(sr, rows):
         return r.status
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--scan")
-    ap.add_argument("--latest-iphone", action="store_true")
-    ap.add_argument("--apply", action="store_true", help="写库(否则 dry-run)")
-    ap.add_argument("--force", action="store_true", help="重算已入库的(默认断点续跑跳过)")
-    ap.add_argument("--out", default="object_embeddings.ndjson")
-    args = ap.parse_args()
-    if not args.scan and not args.latest_iphone:
-        ap.error("需 --scan <id> 或 --latest-iphone")
+def iphone_scan_ids(sr):
+    """所有 iPhone 扫描 id(时间升序)—— auto-refine 覆盖全部而非只最新。"""
+    rows = rest(sr, "scans?select=id,device,updated_at&deleted=eq.false"
+                    "&order=updated_at.asc&limit=50")
+    return [r["id"] for r in rows if "iPhone" in (r.get("device") or "")]
 
-    sr = service_role_key()
-    scan_id = pick_scan(sr, args)
+
+def embed_scan(sr, scan_id, apply, force, out):
+    """给单次扫描的裁剪算 embedding(断点续跑 + 逐张容错)。返回运行摘要 dict。"""
     objs = scan_objects(sr, scan_id)
     path2obs = {p: o["observation_id"] for o in objs for p in o["paths"]}
     all_paths = [p for o in objs for p in o["paths"]]
     print(f"scan {scan_id}: {len(objs)} 物体, {len(all_paths)} 裁剪")
 
     # 断点续跑:已入库的(同 model_version)跳过 —— 同批重跑不重算、中途杀了可续、
-    # 输出一致(--force 强制重算)。表未应用则 already_embedded 返回空集,照旧全算。
-    done = set() if args.force else already_embedded(sr, scan_id)
+    # 输出一致(force 强制重算)。表未应用则 already_embedded 返回空集,照旧全算。
+    done = set() if force else already_embedded(sr, scan_id)
     todo = [p for p in all_paths if p not in done]
     if done:
         print(f"续跑:已入库 {len(done)} 张,本次算 {len(todo)} 张"
-              + ("(--force 全重算)" if args.force else ""))
+              + ("(--force 全重算)" if force else ""))
 
     # 逐张容错下载:桶里丢一张不该毁整次任务
     failed = {}
@@ -231,16 +227,16 @@ def main():
         })
 
     shared = sum(1 for r in rows if r["_shared_crop"])
-    if args.apply:
+    if apply:
         # 只有成功算出向量的才写库 —— 失败任务绝不覆盖已有正确结果(P0 红线)
         payload = [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]
         status = with_retry(lambda: upsert(sr, payload), what="upsert") if payload else "跳过"
         print(f"✔ 已写 object_embeddings: {len(payload)} 行 (HTTP {status})")
     else:
-        with open(args.out, "w") as f:
+        with open(out, "w") as f:
             for r in rows:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
-        print(f"dry-run: {len(rows)} 行 → {args.out}  (dim={DIM}, 共享裁剪标记={shared})")
+        print(f"dry-run: {len(rows)} 行 → {out}  (dim={DIM}, 共享裁剪标记={shared})")
         print("  写库加 --apply(需先应用 migration 20260717120000_home_object_recognition.sql)")
 
     # 运行摘要(一次任务的健康档:续跑跳过/失败/共享裁剪)——诊断包与调阈都看它
@@ -249,6 +245,34 @@ def main():
         print("  失败明细(不影响其余,可重跑续上):")
         for p, why in list(failed.items())[:10]:
             print(f"    {why}  {p}")
+    return {"embedded": len(rows), "skipped": len(done), "failed": len(failed)}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--scan")
+    ap.add_argument("--latest-iphone", action="store_true")
+    ap.add_argument("--all-iphone", action="store_true",
+                    help="所有 iPhone 扫描(断点续跑;auto-refine 用)")
+    ap.add_argument("--apply", action="store_true", help="写库(否则 dry-run)")
+    ap.add_argument("--force", action="store_true", help="重算已入库的(默认断点续跑跳过)")
+    ap.add_argument("--out", default="object_embeddings.ndjson")
+    args = ap.parse_args()
+    if not args.scan and not args.latest_iphone and not args.all_iphone:
+        ap.error("需 --scan <id> / --latest-iphone / --all-iphone")
+
+    sr = service_role_key()
+    if args.all_iphone:
+        ids = iphone_scan_ids(sr)
+        print(f"all-iphone: {len(ids)} 次 iPhone 扫描")
+        agg = {"embedded": 0, "skipped": 0, "failed": 0}
+        for sid in ids:
+            s = embed_scan(sr, sid, args.apply, args.force, args.out)
+            for k in agg:
+                agg[k] += s[k]
+        print(f"\n总摘要: 入库 {agg['embedded']} · 续跑跳过 {agg['skipped']} · 失败 {agg['failed']}")
+        return
+    embed_scan(sr, pick_scan(sr, args), args.apply, args.force, args.out)
 
 
 if __name__ == "__main__":

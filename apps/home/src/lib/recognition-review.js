@@ -17,6 +17,12 @@ import { supabase } from './supabase.js'
 
 const BUCKET = 'home-scan-photos'
 const SIGNED_URL_TTL_S = 3600
+/**
+ * 一次最多交给用户几张证据卡片。战略:「只把 ≤3–5 个有充分证据的难例交给用户」——
+ * 别把整个历史里的所有歧义一次性倒给人。按候选相似度降序取前 N(最像的 = 最可能真同一件
+ * = 一个「是」就收编,最值得先确认);其余留库,这批处理完 reload 会浮出下一批。
+ */
+const MAX_REVIEWS = 5
 
 /**
  * @typedef {object} RecognitionReview 一张待确认的证据卡片
@@ -77,8 +83,8 @@ export async function loadRecognitionReviews() {
   }
   const signed = await signPaths([...paths])
 
-  // 4) 组装卡片
-  return rows.map((r) => {
+  // 4) 组装卡片 → 按候选相似度降序 → 只取前 MAX_REVIEWS(见常量注释)
+  const cards = rows.map((r) => {
     const c0 = topCandidate(r) ?? {}
     const rep = c0.canonicalId ? repByCanon.get(c0.canonicalId) : null
     return {
@@ -96,6 +102,8 @@ export async function loadRecognitionReviews() {
       },
     }
   })
+  cards.sort((a, b) => (b.candidate.score ?? 0) - (a.candidate.score ?? 0))
+  return cards.slice(0, MAX_REVIEWS)
 }
 
 /** @param {any} row object_observations 行 → 分最高的候选(matcher 已按分降序) */
