@@ -12,6 +12,7 @@ import {
   createItemFile,
   writeItemFile,
   deleteItemFile,
+  watchVaultChanges,
 } from '$lib/vault.js'
 
 /**
@@ -45,6 +46,8 @@ export const S = $state({
   vaultReady: false,
   vaultError: '',
   vaultRoot: VAULT_ROOT,
+  vaultWatching: false,
+  vaultLastReloadAt: 0,
   saveError: false, // 最近一次持久化是否失败（编辑器保存状态指示读它）
 })
 
@@ -53,17 +56,64 @@ export function save() {
   persistence.save(S)
 }
 
+/** 从 Vault 全量重载条目（启动 + 外部文件变更共用）。 */
+export async function reloadVaultItems() {
+  if (!isTauri()) return
+  S.vaultError = ''
+  try {
+    S.items = await loadVaultItems()
+    S.vaultReady = true
+    S.vaultLastReloadAt = Date.now()
+  } catch (e) {
+    console.error('[vault] 刷新失败', e)
+    S.vaultError = String(e)
+  }
+}
+
 /** 原生模式启动：从 Vault 加载全部 .md（+layout onMount 调用）。 */
 export async function initBackend() {
   if (!isTauri()) return
   S.backend = 'vault'
+  await reloadVaultItems()
+}
+
+/* ===== KNOW.VAULT.0：外部文件变更监听 ===== */
+
+let unwatchVault = null
+let reloadTimer = null
+
+/** 启动固定 Vault watcher；返回 stop。网页端 no-op。 */
+export async function startVaultWatcher() {
+  if (!isTauri()) return () => {}
+  if (unwatchVault) return stopVaultWatcher
   try {
-    S.items = await loadVaultItems()
-    S.vaultReady = true
+    unwatchVault = await watchVaultChanges(() => {
+      clearTimeout(reloadTimer)
+      reloadTimer = setTimeout(() => {
+        reloadVaultItems()
+      }, 750)
+    })
+    S.vaultWatching = true
   } catch (e) {
-    console.error('[vault] 加载失败', e)
+    console.error('[vault] watcher 启动失败', e)
     S.vaultError = String(e)
+    S.vaultWatching = false
   }
+  return stopVaultWatcher
+}
+
+export function stopVaultWatcher() {
+  clearTimeout(reloadTimer)
+  reloadTimer = null
+  if (typeof unwatchVault === 'function') {
+    try {
+      unwatchVault()
+    } catch {
+      /* ignore */
+    }
+  }
+  unwatchVault = null
+  S.vaultWatching = false
 }
 
 /* ===== 条目 CRUD（按后端分流）===== */

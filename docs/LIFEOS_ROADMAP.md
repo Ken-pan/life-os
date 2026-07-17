@@ -44,12 +44,11 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 闭环验收 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **PLAT.CI.0** | 恢复 master 交付可信度 | Platform | **P0** | 🔥 | <0.5–1d | 远程 CI 全绿（含 design-catalog a11y）；portal `btn-primary` 对比度等已修或基线有据；不得只以本地 gate 代替 |
-| 2 | **FINC.PURCHASE.6.a** | 支出审核最后一公里 | Finance | **P1** | 🔥 | 0.5–1d | owner 登录 Confirm→Undo、双 JWT RLS 拒绝证明、desktop/mobile 基线；随后从 Now 收割 |
-| 3 | **KNOW.VAULT.0** | 外部文件变更监听 | KnowledgeOS | **P1** | 🔥 | 0.5–1d | curator/Obsidian 写回无需重启即出现；先固定 Vault watcher，路径可配置后置 |
-| 4 | **PLAT.USAGE.0** | 用量与功能利用率审计 | Platform | **P1** | 🔥 | 0.5–1d | 盘点已有信号 → 首份利用率表 → 至少一项删减/冻结或抬升日用缺口；见 [`roadmap/USAGE_AUDIT.md`](./roadmap/USAGE_AUDIT.md) |
+| 1 | **PLAT.CI.0** | 恢复 master 交付可信度 | Platform | **P0** | 🔥 | <0.5d | 样式 + portal 对比度已推（`c8bdc905`）；等远程 Actions 全绿证明 |
+| 2 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.5d | RPC anon EXECUTE 已 revoke（生产）；剩 **owner Confirm→Undo 真机**、双真实 JWT、视觉基线 |
+| 3 | **AIOS.STABLE.26** | 核心链路回归护栏 | AIOS | **P1** | ◆◆ | 1d | chat/tool/cloud/Life OS 读写 smoke；停只靠手测 |
 
-**已收割（2026-07-17，勿再估为缺口）：** `HOME.RECOG.0` ✅ · RECOG.1–3 主航道 ✅ · **/plan 横幅 + auto-refine 管线** ✅（`4675dd06`）· `KNOW.EDITOR.7` + 表格/高亮 ✅ · Health companion 入仓 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+**已收割（2026-07-17 夜）：** `KNOW.VAULT.0` 固定 Vault watcher ✅ · `PLAT.USAGE.0` 首份审计报告 ✅（[`qa/usage-audit-2026-07.md`](./qa/usage-audit-2026-07.md)）· Home RECOG 主航道 + auto-refine · Knowledge 编辑器/表格 — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
 **Agent 分线全文：** [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
 
@@ -84,12 +83,12 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 顺序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 触发 / 最小范围 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **HOME.RECOG.1r** | 认亲残余（窄） | Home | P2 | ◆ | 0.5–1d | 区域级高精度补扫（指定 1–3 区）；质量摘要观感签收；group-merge / 近 N 次扫描精修可选 |
-| 2 | **AIOS.STABLE.26** | 核心链路回归护栏 | AIOS | P1 | ◆◆ | 1d | 补 chat/tool loop、云 LWW/墓碑、AIOS.20/21 读写 smoke；停止只靠高速手测 |
-| 3 | **HOME.MCP.13** | `where_is` 接入 AIOS | Home | P2 | ◆◆ | 1–2d | 薄封装 `searchStorageItems()` + 现成 MCP；Home 第一条真实跨 OS 消费链 |
-| 4 | **PLNR.UIUX.0** | Planner 定向 UI 收口 | Planner | P2 | ◆ | 1d | 只扫未覆盖页面与现存 warning；不做无边界全站重做 |
-| 5 | **PLNR.ATTACH.0** | 附件 WIP 决策与落地 | Planner | P2 | ◆ | 1d | 补 migration+测试+上传/删除/预览，或移除死入口 |
-| 6 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用试点加深 | Knowledge | P2 | ◆◆ | 1–2d | 在 Planner↔Knowledge 试点上稳定引用契约；不合并业务表 |
+| 1 | **HOME.MCP.13** | `where_is` 接入 AIOS | Home | P2 | ◆◆ | 1–2d | 薄封装 `searchStorageItems()` + 现成 MCP；Home 第一条真实跨 OS 消费链 |
+| 2 | **HOME.RECOG.1r** | 认亲残余（窄） | Home | P2 | ◆ | 0.5–1d | 区域级高精度补扫；质量摘要观感签收；可选 group-merge |
+| 3 | **PLNR.UIUX.0** | Planner 定向 UI 收口 | Planner | P2 | ◆ | 1d | 只扫未覆盖页面与现存 warning；不做无边界全站重做 |
+| 4 | **PLNR.ATTACH.0** | 附件 WIP 决策与落地 | Planner | P2 | ◆ | 1d | 补 migration+测试+上传/删除/预览，或移除死入口 |
+| 5 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用试点加深 | Knowledge | P2 | ◆◆ | 1–2d | 在 Planner↔Knowledge 试点上稳定引用契约；不合并业务表 |
+| 6 | **PLAT.USAGE.0b** | 用量审计节奏化 | Platform | P2 | ◆ | 0.5d | 月度复跑 `npm run qa:usage-audit`；补 AIOS/Knowledge/Health 本机探针 |
 
 **后移：** `HOME.PROJ.7`（无第二真实项目不造多项目）、`KNOW.SYNC.1`（先 watcher）、`MUSC.PIPE.4` / `GYMS.MEDIA.3` / `GYMS.SYNC.4`（维护级）、Portal 硬凑本地优先 app 卡。
 
@@ -102,23 +101,26 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 研判 → [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) · 透镜 → [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)
 
 ```text
-Phase 0 — 复利开关（串行）
-  PLAT.CI.0 远程全绿
+Phase 0 — 复利开关
+  PLAT.CI.0 远程全绿（修复已推，等 Actions）
 
-Phase 1 — 信任收割 + 每日真源 + 决策复利（1–2d）
-  FINC.PURCHASE.6.a closure → KNOW.VAULT.0 → PLAT.USAGE.0
+Phase 1 — 信任收割（用户 gate 重）
+  FINC.PURCHASE.6.a owner Confirm→Undo + 双 JWT + 视觉基线
 
-Phase 2 — 防高速回归（1d）
+Phase 2 — 防高速回归
   AIOS.STABLE.26
 
-Phase 3 — 跨 OS 快赢（1–2d）
+Phase 3 — 跨 OS 快赢（USAGE 表支持：Home 日用）
   HOME.MCP.13 where_is → AIOS
 
-Phase 4 — Home 认亲窄残余 / 生产定向收口（按需；受 USAGE 表约束）
-  HOME.RECOG.1r（区域高精度等）→ PLNR.UIUX.0 → PLNR.ATTACH.0 → KNOW.XREF.5
+Phase 4 — 窄残余 / 生产收口（按需）
+  HOME.RECOG.1r → PLNR.UIUX.0 → PLNR.ATTACH.0 → KNOW.XREF.5
 
-并行用户 gate（不阻塞上述 Phase）
-  PLNR.SCHED.10b.ios + PLNR.CAPTURE.0 · HLT-5 · HOME.RECOG.refine（launchd）
+已完成本轮
+  KNOW.VAULT.0 · PLAT.USAGE.0 首报 · FINC RPC anon revoke
+
+并行用户 gate
+  PLNR.SCHED.10b.ios + PLNR.CAPTURE.0 · HLT-5 · HOME.RECOG.refine · Knowledge 原生 rebuild 验 watcher
 ```
 
 历史 Wave / Phase 完成表不在 hub 展开 → [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。

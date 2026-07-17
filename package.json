@@ -32,6 +32,7 @@
     "build:app-registry": "node scripts/build-app-registry.mjs",
     "add:capability": "node scripts/add-capability.mjs",
     "verify:ticket-naming": "node scripts/verify-ticket-naming.mjs",
+    "qa:usage-audit": "node scripts/lifeos-usage-audit.mjs",
     "generate:brand-icons": "python3 scripts/generate-life-os-brand-icons.py",
     "verify:identity-p0": "./scripts/verify-life-os-identity-p0.sh",
     "verify:outbox": "./scripts/test-outbox-trigger.sh --smoke",

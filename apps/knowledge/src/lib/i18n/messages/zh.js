@@ -255,6 +255,8 @@ export default {
     language: '语言',
     vaultDesc: '原生模式：条目即 Vault 目录里的 .md 文件，编辑实时写回磁盘。',
     vaultPath: 'Vault 目录',
+    vaultWatch: '外部变更监听',
+    vaultWatchDesc: 'Obsidian / curator 写回 .md 后自动刷新，无需重启。',
     dataTitle: '数据',
     dataDesc: '全部条目都在本机（localStorage）。导出 JSON 备份，或导入合并。',
     exportButton: '导出 JSON',

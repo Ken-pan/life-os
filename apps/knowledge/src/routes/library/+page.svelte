@@ -78,12 +78,17 @@
 
   /* ——— 选中：URL ↔ 对象引用 ——— */
   let selected = $state(null)
-  // URL → selected（外部导航 / 前进后退 / 首次进入）
+  // URL → selected（外部导航 / 前进后退 / 首次进入 / Vault watcher 重载后换对象）
   $effect(() => {
+    S.items.length
     const id = page.url.searchParams.get('note')
-    if (!id) { selected = null; return }
-    if (selected?.id === id) return
-    selected = itemById(id)
+    if (!id) {
+      selected = null
+      return
+    }
+    const next = itemById(id)
+    if (next && selected !== next) selected = next
+    else if (!next) selected = null
   })
   // selected.id 漂移（vault 保存重命名文件）→ 同步 URL（replace，不进历史）
   $effect(() => {

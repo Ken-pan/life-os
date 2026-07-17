@@ -169,3 +169,22 @@ export async function writeVaultFile(rel, content) {
   const { writeTextFile } = await fs()
   await writeTextFile(`${VAULT_ROOT}/${rel}`, content)
 }
+
+/**
+ * KNOW.VAULT.0：监听 Vault 外部写入（Obsidian / curator）。
+ * 仅关注 `.md`；`delayMs` 合并连写；返回 unwatch。
+ * @param {(event: unknown) => void} onChange
+ * @returns {Promise<() => void>}
+ */
+export async function watchVaultChanges(onChange) {
+  const { watch } = await fs()
+  return watch(
+    VAULT_ROOT,
+    (event) => {
+      const paths = event?.paths ?? []
+      if (!paths.some((p) => typeof p === 'string' && /\.md$/i.test(p))) return
+      onChange(event)
+    },
+    { recursive: true, delayMs: 500 },
+  )
+}

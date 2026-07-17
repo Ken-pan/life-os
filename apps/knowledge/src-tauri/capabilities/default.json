@@ -45,6 +45,20 @@
     {
       "identifier": "fs:allow-stat",
       "allow": [{ "path": "$HOME/「Projects」/Vault/**" }]
+    },
+    {
+      "identifier": "fs:allow-watch",
+      "allow": [
+        { "path": "$HOME/「Projects」/Vault" },
+        { "path": "$HOME/「Projects」/Vault/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-unwatch",
+      "allow": [
+        { "path": "$HOME/「Projects」/Vault" },
+        { "path": "$HOME/「Projects」/Vault/**" }
+      ]
     }
   ]
 }

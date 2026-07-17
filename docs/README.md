@@ -10,11 +10,11 @@
 
 | 焦点 | 主题 | 文档 |
 | ---- | ---- | ---- |
-| Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** · **KNOW.VAULT.0** · **PLAT.USAGE.0** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
-| Next | HOME.RECOG.1r 窄残余 · AIOS.STABLE.26 · HOME.MCP.13 · PLNR · object_ref | [`roadmap/apps/`](./roadmap/apps/README.md) |
-| User gate | SCHED/CAPTURE · HLT-5 · **HOME.RECOG.refine**（launchd） | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) |
+| Now | **PLAT.CI.0** · **FINC.PURCHASE.6.a** closure · **AIOS.STABLE.26** | [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md) |
+| Next | HOME.MCP.13 · RECOG.1r · PLNR · object_ref | [`roadmap/apps/`](./roadmap/apps/README.md) |
+| User gate | SCHED/CAPTURE · HLT-5 · refine launchd · Knowledge rebuild 验 watcher | [`LIFEOS_ROADMAP.md`](./LIFEOS_ROADMAP.md) |
 
-**2026-07-17 已收割：** Home RECOG.0–3 · **/plan 横幅 + auto-refine** · Knowledge 编辑器/表格/高亮 · Health companion · 复利/USAGE 文档 — [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)
+**2026-07-17 夜已收割：** KNOW.VAULT.0 · PLAT.USAGE.0 首报 · CI 修复推送 · Finance RPC anon revoke · Home auto-refine — [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) · [`qa/usage-audit-2026-07.md`](./qa/usage-audit-2026-07.md)
 
 > **CI（PLAT.CI.0）：** 生成物/样式基线已入仓；远程仍可能因 design-catalog a11y（portal 对比度）等红。以 GitHub Actions 全绿为准。
 

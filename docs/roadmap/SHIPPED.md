@@ -10,6 +10,10 @@
 
 | 主线 | 发货项 / 里程碑 | 证据 |
 | --- | --- | --- |
+| CI | **PLAT.CI.0 修复推送：** Home 认亲组件 token 化；portal light accent 对比度 ≥3:1 | `c8bdc905` |
+| Knowledge | **KNOW.VAULT.0** 固定 Vault fs watcher（debounce 全量重载）· settings 监听状态 · library 打开笔记随重载换对象 | 本提交 · `tauri-plugin-fs` `watch` feature |
+| Platform | **PLAT.USAGE.0** 首份用量审计 + `npm run qa:usage-audit` | [`../qa/usage-audit-2026-07.md`](../qa/usage-audit-2026-07.md) · `scripts/lifeos-usage-audit.mjs` |
+| Finance | purchase review RPC **revoke anon EXECUTE**（生产已 apply） | `20260717210000_purchase_review_rpc_revoke_anon` |
 | Home | **/plan 认亲横幅 + Mac auto-refine：** `RecognitionBanner`（≤5 难例）· `refine.sh` embed+match 幂等管线 · launchd plist（15 分钟；用户手动激活）· 端到端 286 观察/218 认回 | `4675dd06` · [`apps/home/scripts/vision/README.md`](../../apps/home/scripts/vision/README.md) |
 | Knowledge | 编辑器 **GFM 表格块** + 行内高亮 `==text==`；unit 180 + 表格交互 QA 9/9 | `bbfd7fb2` |
 | Docs | 复利判据 `COMPOUND.md` · 决策复利 `USAGE_AUDIT.md` / `PLAT.USAGE.0`；hub 与代码事实对齐 | `745783f1` · `821ed95f` |

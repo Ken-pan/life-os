@@ -10,7 +10,14 @@
   import SideNav from '$lib/components/SideNav.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
   import { ICONS } from '$lib/iconRegistry.js'
-  import { S, applyTheme, bindAppThemeSystemChange, initBackend } from '$lib/state.svelte.js'
+  import {
+    S,
+    applyTheme,
+    bindAppThemeSystemChange,
+    initBackend,
+    startVaultWatcher,
+    stopVaultWatcher,
+  } from '$lib/state.svelte.js'
   import { initCloud } from '$lib/cloud.svelte.js'
   import { t, applyLocale } from '$lib/i18n/index.js'
 
@@ -43,7 +50,7 @@
   onMount(() => {
     applyTheme()
     applyLocale()
-    initBackend()
+    initBackend().then(() => startVaultWatcher())
     initCloud()
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
@@ -55,6 +62,7 @@
       cleanupTheme()
       cleanupViewport()
       mq.removeEventListener('change', syncNarrow)
+      stopVaultWatcher()
     }
   })
 

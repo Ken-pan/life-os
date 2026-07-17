@@ -158,6 +158,19 @@
             {/if}
           </span>
         </li>
+        <li class="list-item">
+          <span class="list-item__body">
+            <span class="list-item__title">{t('settings.vaultWatch')}</span>
+            <span class="list-item__desc">{t('settings.vaultWatchDesc')}</span>
+          </span>
+          <span class="list-item__trailing">
+            {#if S.vaultWatching}
+              <span class="badge badge--success">on</span>
+            {:else}
+              <span class="badge">off</span>
+            {/if}
+          </span>
+        </li>
       </ul>
     {:else}
       <p class="data-desc">{t('settings.dataDesc')}</p>

@@ -251,6 +251,8 @@ export default {
     language: 'Language',
     vaultDesc: 'Native mode: items are .md files in your Vault directory, edits write straight to disk.',
     vaultPath: 'Vault directory',
+    vaultWatch: 'External change watch',
+    vaultWatchDesc: 'Auto-refresh when Obsidian / curator writes .md — no restart.',
     dataTitle: 'Data',
     dataDesc: 'Everything lives on this device (localStorage). Export JSON to back up, or import to merge.',
     exportButton: 'Export JSON',
