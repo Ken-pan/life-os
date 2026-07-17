@@ -1,6 +1,6 @@
 <script>
   // 阅读视图：渲染 markdown + [[wikilink]] 跳转 + 反向链接，取代 Obsidian 阅读态。
-  // LifeOsSheet 承载（桌面居中/移动底弹）；「编辑」切到 ItemEditorSheet。
+  // LifeOsSheet 承载（桌面居中/移动底弹）；「编辑」切到 NoteEditor（块状所见即所得）。
   import { LifeOsSheet } from '@life-os/platform-web/svelte/overlay'
   import { renderMarkdown } from '$lib/markdown.js'
   import { resolveWikilink, backlinksOf, itemById } from '$lib/state.svelte.js'

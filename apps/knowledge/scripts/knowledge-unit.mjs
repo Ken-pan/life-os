@@ -23,10 +23,18 @@ import {
   projectRecord,
   matchPlannerProject,
   plannerTaskStats,
+  parseAiSuggestions,
   parseGitHeadLog,
   senseProject,
   buildStatusReport,
 } from '../src/lib/projects.js'
+import { markdownToBlocks, blocksToMarkdown } from '../src/lib/editor/blocks.js'
+import {
+  mdInlineToHtml,
+  htmlInlineToMd,
+  matchInlineRule,
+  inlineToPlainText,
+} from '../src/lib/editor/inline.js'
 
 let pass = 0
 let fail = 0
@@ -277,6 +285,41 @@ function includes(name, haystack, needle) {
   const reread = itemFromFile('Personal Project/X.md', written, null)
   ok('metapatch-roundtrip', reread._meta.status === 'paused' && reread._meta['src-fp'] === 'keepme')
 
+  // AI 建议队列解析（与 local-ai project_status.py 的 render_note 表格对齐）
+  const aiBody = [
+    '# 🔍 AI 项目状态建议',
+    '',
+    '| 项目 | 当前 | AI 建议 | 置信度 | 理由 |',
+    '|------|------|---------|--------|------|',
+    '| Side_TEMPO | active | paused | 高 | 无提交，仅 README 有改动 |',
+    '| README | active | reference | 高 | 仅作为文档存在 |',
+    '| 坏行 | active | notastatus | 高 | 建议值非法应跳过 |',
+  ].join('\n')
+  const ai = parseAiSuggestions(aiBody)
+  ok('ai-parse-size', ai.size === 2)
+  ok('ai-parse-row', ai.get('Side_TEMPO')?.status === 'paused' && ai.get('Side_TEMPO')?.confidence === '高')
+  ok('ai-parse-skip-header', !ai.has('项目'))
+  ok('ai-parse-skip-invalid', !ai.has('坏行'))
+  ok('ai-parse-empty', parseAiSuggestions('').size === 0)
+
+  // 证据优先级：Planner > AI > git 启发
+  const aiSug = { status: 'paused', confidence: '高', reasoning: '停滞' }
+  const senseAi = senseProject({ status: 'active', title: 'x' }, { ai: aiSug, now: NOW })
+  ok('sense-ai-used', senseAi.suggested === 'paused' && senseAi.drift)
+  ok('sense-ai-reason', senseAi.reasons[0].includes('AI'))
+  const sensePlannerOverAi = senseProject(
+    { status: 'paused', title: 'x' },
+    { planner: { status: 'active' }, ai: aiSug, now: NOW },
+  )
+  ok('sense-planner-over-ai', sensePlannerOverAi.suggested === 'active')
+  const senseAiOverGit = senseProject(
+    { status: null, title: 'x' },
+    { ai: aiSug, lastCommitAt: NOW - 5 * 86400000, now: NOW },
+  )
+  ok('sense-ai-over-git', senseAiOverGit.suggested === 'paused')
+  const senseAiAligned = senseProject({ status: 'paused', title: 'x' }, { ai: aiSug, now: NOW })
+  ok('sense-ai-aligned-nodrift', !senseAiAligned.drift)
+
   // 报告生成：包含项目行与证据
   const report = buildStatusReport([
     {
@@ -287,6 +330,77 @@ function includes(name, haystack, needle) {
   includes('report-title', report, '# 📡 项目现状（自动）')
   includes('report-row', report, '| X | 🟢 进行中 | 3 天前有提交 | [[X]] |')
   includes('report-fm', report, 'generated_by: knowledgeos')
+}
+
+/* ===== 块状编辑器：markdown ⇄ 块 往返 + 行内可逆（数据完整性护栏）===== */
+{
+  const md = [
+    '# 标题一',
+    '',
+    '这是一段**加粗**和 *斜体* 还有 `code` 的正文，含 [[双链|显示]]。',
+    '',
+    '- 项目 A',
+    '- 项目 B',
+    '  - 子项',
+    '',
+    '- [ ] 待办未完成',
+    '- [x] 待办完成',
+    '',
+    '1. 第一',
+    '2. 第二',
+    '',
+    '> 一句引用',
+    '',
+    '```js',
+    'const x = 1',
+    '```',
+    '',
+    '---',
+    '',
+    '结尾 https://example.com',
+  ].join('\n')
+
+  const rt1 = blocksToMarkdown(markdownToBlocks(md))
+  const rt2 = blocksToMarkdown(markdownToBlocks(rt1))
+  ok('blocks-roundtrip-stable', rt1 === rt2, '往返漂移')
+
+  const blocks = markdownToBlocks(md)
+  ok('blocks-heading', blocks[0].type === 'heading' && blocks[0].meta.level === 1)
+  ok('blocks-todo-checked', blocks.some((b) => b.type === 'todo' && b.meta.checked === true))
+  ok('blocks-todo-unchecked', blocks.some((b) => b.type === 'todo' && b.meta.checked === false))
+  ok('blocks-nested-depth', blocks.some((b) => b.type === 'bullet' && b.depth === 1))
+  ok('blocks-code-lang', blocks.some((b) => b.type === 'code' && b.meta.lang === 'js'))
+  ok('blocks-divider', blocks.some((b) => b.type === 'divider'))
+  ok('blocks-empty-fallback', markdownToBlocks('').length === 1)
+
+  // 行内 md ⇄ 可编辑 HTML 往返（落盘不损坏）
+  const inlineCases = [
+    '普通文本',
+    '**加粗**收尾',
+    '中间 *斜体* 词',
+    '`inline code`',
+    'a **b** c *d* e ~~f~~ g',
+    '[[目标]]',
+    '[[目标|显示名]]',
+    '[label](https://x.com)',
+    '裸链 https://a.b/c 结束',
+    '嵌套 **粗里 *斜* 混** 尾',
+    '特殊 < > & " 字符',
+  ]
+  for (const c of inlineCases) {
+    ok(`inline-roundtrip: ${c}`, htmlInlineToMd(mdInlineToHtml(c)) === c)
+  }
+
+  // 行内 XSS：脚本被转义、不放行原始 HTML
+  ok('inline-xss', !mdInlineToHtml('<img src=x onerror=alert(1)>').includes('<img'))
+
+  // input-rule 即时转换
+  ok('rule-bold', matchInlineRule('打 **粗**')?.html === '<strong>粗</strong>')
+  ok('rule-code', matchInlineRule('x `y`')?.html === '<code>y</code>')
+  ok('rule-none', matchInlineRule('没有标记') === null)
+
+  // 纯文本抽取（搜索/摘要）
+  ok('plain-strip', inlineToPlainText('**粗** [[A|别名]] `c`') === '粗 别名 c')
 }
 
 console.log(`knowledge-unit: ${pass} passed, ${fail} failed`)
