@@ -21,10 +21,32 @@
   const projects = $derived(visibleProjects())
   const activeProjects = $derived(projects.filter((project) => project.status === 'active'))
 
-  // ── 鸟瞰图联动:全景 ↔ 单项目聚焦 ──
-  let focusId = $state(/** @type {string | null} */ (null))
+  // ── 鸟瞰图三级下钻:分类 → 项目 → 任务(渐进式披露,应对大量项目)──
+  // 分类按项目名规则自动派生(零维护);项目有 areaId 则优先(未来 area UI 用)
+  const CATEGORY_META = [
+    { id: 'lifeos', label: 'Life OS 产品' },
+    { id: 'tools', label: '独立 app / 工具' },
+    { id: 'work', label: '工作 · Ingram' },
+    { id: 'portfolio', label: '作品集 / Side' },
+    { id: 'other', label: '其他' },
+  ]
+  const PORTFOLIO_NAMES = new Set([
+    'Broadser', 'AI Design Commons', 'SenseTime Hub', 'Landfiner',
+    'CIWEI Job Board', 'Conference Visual', 'Animal Emoji',
+  ])
+  function categoryOf(p) {
+    if (p.areaId && CATEGORY_META.some((c) => c.id === p.areaId)) return p.areaId
+    if (/^Life OS|^PaperOS/.test(p.title)) return 'lifeos'
+    if (/^Ingram/.test(p.title)) return 'work'
+    if (PORTFOLIO_NAMES.has(p.title)) return 'portfolio'
+    return 'tools'
+  }
+
+  // 两级焦点:分类 / 项目(都为空 = 分类全景)
+  let focusAreaId = $state(/** @type {string | null} */ (null))
+  let focusProjectId = $state(/** @type {string | null} */ (null))
   const focusProject = $derived(
-    focusId ? projects.find((p) => p.id === focusId) ?? null : null,
+    focusProjectId ? projects.find((p) => p.id === focusProjectId) ?? null : null,
   )
 
   // 鸟瞰图任务节点的说明:备注优先,其次(有日期时)排期/截止元信息
@@ -34,9 +56,7 @@
     return [notes, meta].filter(Boolean).join('\n') || undefined
   }
 
-  // 从任务备注/标题智能推断推进状态图标。
-  // ACTIVE(自身在推进)优先于 BLOCKED——备注常以自身状态开头,
-  // 提到某依赖 blocked 不代表这条任务本身受阻。
+  // 任务级状态图标(ACTIVE 优先于 BLOCKED——备注常以自身状态开头)
   function taskStatusIcon(task) {
     if (task.completed) return '✅'
     const n = `${task.notes || ''} ${task.title || ''}`.toUpperCase()
@@ -46,36 +66,54 @@
     return '⚪'
   }
 
-  // 全景:活跃项目 → 前 5 个未完成任务预览(点项目节点聚焦进去)
-  const MAP_TASK_LIMIT = 5
-  const overviewTree = $derived({
+  // 项目级状态图标:已发布/受阻/待完善/进行中
+  function projectStatusIcon(p) {
+    if (p.status === 'shipped') return '✅'
+    const s = `${p.summary || ''}`.toUpperCase()
+    if (/BLOCKED|阻塞|受阻/.test(s)) return '🔴'
+    if (/待完善|待整理|PENDING|BACKLOG/.test(s)) return '🟡'
+    return '🟢'
+  }
+
+  // Lv1 全景:根 → 分类(只有此层,干净好扫)
+  const categoryTree = $derived({
     label: t('projects.title'),
     note: t('projects.mapRootNote', { count: activeProjects.length }),
-    children: activeProjects.map((project) => {
-      const open = projectOpenTasks(project)
-      const children = open.slice(0, MAP_TASK_LIMIT).map((task) => ({
-        label: task.title,
-        data: { kind: 'task', id: task.id },
-        note: taskNote(task),
-      }))
-      if (open.length > MAP_TASK_LIMIT) {
-        const rest = open.slice(MAP_TASK_LIMIT)
-        children.push({
-          label: `… +${rest.length}`,
-          note: rest.map((task) => `· ${task.title}`).join('\n'),
-        })
-      }
+    children: CATEGORY_META.map((cat) => {
+      const ps = activeProjects.filter((p) => categoryOf(p) === cat.id)
+      if (!ps.length) return null
       return {
-        label: project.title,
-        data: { kind: 'project', id: project.id },
-        note: project.summary?.trim() || undefined,
-        children,
+        label: `${cat.label} · ${ps.length}`,
+        data: { kind: 'category', id: cat.id },
+        note: ps.map((p) => p.title).join('、'),
       }
-    }),
+    }).filter(Boolean),
   })
 
-  // 聚焦:单项目 → 全部任务(带状态图标),未完成在前、已完成在后
-  const focusTree = $derived.by(() => {
+  // Lv2 分类聚焦:分类 → 该类项目(带项目状态图标)
+  const areaTree = $derived.by(() => {
+    if (!focusAreaId) return null
+    const cat = CATEGORY_META.find((c) => c.id === focusAreaId)
+    const ps = activeProjects.filter((p) => categoryOf(p) === focusAreaId)
+    return {
+      label: `← ${cat?.label ?? t('projects.title')}`,
+      data: { kind: 'back-categories' },
+      note: t('projects.mapBackHint'),
+      children: ps.map((p) => {
+        const open = projectOpenTasks(p)
+        return {
+          label: `${projectStatusIcon(p)} ${p.title}`,
+          data: { kind: 'project', id: p.id },
+          note: [p.summary?.trim(), open.length ? `${open.length} 个待办` : '暂无待办']
+            .filter(Boolean)
+            .join('\n'),
+        }
+      }),
+    }
+  })
+
+  // Lv3 项目聚焦:项目 → 全部任务(带任务状态图标),未完成在前
+  const projectTree = $derived.by(() => {
     const p = focusProject
     if (!p) return null
     const all = S.tasks.filter((tk) => tk.projectId === p.id && !tk.deletedAt)
@@ -83,7 +121,7 @@
     const done = all.filter((tk) => tk.completed)
     return {
       label: `← ${p.title}`,
-      data: { kind: 'back' },
+      data: { kind: 'back-area' },
       note: p.summary?.trim() || t('projects.mapBackHint'),
       children: [...open, ...done].map((task) => ({
         label: `${taskStatusIcon(task)} ${task.title}`,
@@ -93,15 +131,21 @@
     }
   })
 
-  const mapTree = $derived(focusProject ? focusTree : overviewTree)
+  const mapTree = $derived(
+    focusProject ? projectTree : focusAreaId ? areaTree : categoryTree,
+  )
 
   function onMapSelect(node) {
     const d = node.data
     if (!d) return
-    if (d.kind === 'project') {
-      focusId = d.id
-    } else if (d.kind === 'back') {
-      focusId = null
+    if (d.kind === 'category') {
+      focusAreaId = d.id
+    } else if (d.kind === 'back-categories') {
+      focusAreaId = null
+    } else if (d.kind === 'project') {
+      focusProjectId = d.id
+    } else if (d.kind === 'back-area') {
+      focusProjectId = null // 回到分类(focusAreaId 仍在)
     } else if (d.kind === 'task') {
       const task = S.tasks.find((tk) => tk.id === d.id)
       if (task) editTask(task)
@@ -165,7 +209,7 @@
           root={mapTree}
           height={480}
           collapsible={false}
-          fitKey={focusId ?? '__root__'}
+          fitKey={`${focusAreaId ?? ''}/${focusProjectId ?? ''}`}
           onSelect={onMapSelect}
           ariaLabel={t('projects.mapTitle')}
         />
