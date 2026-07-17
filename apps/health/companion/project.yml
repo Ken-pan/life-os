@@ -2,8 +2,8 @@
 #   brew install xcodegen && cd apps/health/companion && xcodegen
 # 然后 open HealthOSCompanion.xcodeproj,选自己的开发团队(签名)即可 Build 到设备。
 #
-# 无法在本仓库的沙盒里构建/签名/部署 iOS·watchOS(需 Xcode + Apple 开发者账号 + 真机),
-# 故以 XcodeGen 规范交付,而非 hand-write 的 pbxproj。
+# ⚠️ Info.plist 与 *.entitlements 由本文件的 properties 生成(唯一源)——别手改生成物,
+# 改这里再 xcodegen。生成的 .xcodeproj / Info.plist / *.entitlements 都是构建产物(gitignore)。
 name: HealthOSCompanion
 options:
   bundleIdPrefix: space.kenos.healthos
@@ -14,6 +14,8 @@ settings:
   base:
     DEVELOPMENT_TEAM: "" # ← 填你的 Apple 开发者 Team ID,或在 Xcode 里选 Team
     CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
 
 targets:
   HealthOSCompanion:
@@ -22,14 +24,25 @@ targets:
     sources:
       - path: iOS
       - path: Shared
-    info:
-      path: iOS/Info.plist
-    entitlements:
-      path: iOS/HealthOSCompanion.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.healthos.companion
-        GENERATE_INFOPLIST_FILE: NO
+    info:
+      path: iOS/Info.plist
+      properties:
+        CFBundleDisplayName: HealthOS
+        UILaunchScreen: {}
+        NSHealthShareUsageDescription: "HealthOS 读取你的睡眠、心率、HRV 和活动量,自动推导当前状态,无需手动记录。数据只在你的设备与 Mac 之间同步。"
+        UIBackgroundModes: [fetch, processing]
+        BGTaskSchedulerPermittedIdentifiers: [space.kenos.healthos.sync]
+    entitlements:
+      path: iOS/HealthOSCompanion.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+        com.apple.developer.icloud-container-identifiers: [iCloud.space.kenos.healthos]
+        com.apple.developer.icloud-services: [CloudDocuments]
+        com.apple.developer.ubiquity-container-identifiers: [iCloud.space.kenos.healthos]
     dependencies:
       - target: HealthOSWatch
 
@@ -39,12 +52,21 @@ targets:
     sources:
       - path: Watch
       - path: Shared
-    info:
-      path: Watch/Info.plist
-    entitlements:
-      path: Watch/HealthOSWatch.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.healthos.companion.watchkitapp
-        GENERATE_INFOPLIST_FILE: NO
+    info:
+      path: Watch/Info.plist
+      properties:
+        CFBundleDisplayName: HealthOS
+        WKApplication: true
         WKCompanionAppBundleIdentifier: space.kenos.healthos.companion
+        NSHealthShareUsageDescription: "HealthOS 读取你的睡眠、心率、HRV 和活动量,自动推导当前状态。"
+    entitlements:
+      path: Watch/HealthOSWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+        com.apple.developer.icloud-container-identifiers: [iCloud.space.kenos.healthos]
+        com.apple.developer.icloud-services: [CloudDocuments]
+        com.apple.developer.ubiquity-container-identifiers: [iCloud.space.kenos.healthos]

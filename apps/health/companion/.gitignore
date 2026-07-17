@@ -1,0 +1,12 @@
+# XcodeGen 生成物 —— 源在 project.yml,别提交生成结果
+HealthOSCompanion.xcodeproj/
+iOS/Info.plist
+iOS/HealthOSCompanion.entitlements
+Watch/Info.plist
+Watch/HealthOSWatch.entitlements
+
+# Xcode 构建产物
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/

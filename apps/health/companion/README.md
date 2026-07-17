@@ -34,11 +34,35 @@ xcodegen                       # 生成 HealthOSCompanion.xcodeproj
 open HealthOSCompanion.xcodeproj
 ```
 
+> Info.plist / *.entitlements 由 `project.yml` 的 properties **生成**(唯一源)——别手改生成物,
+> 改 `project.yml` 再 `xcodegen`。生成的 .xcodeproj / plist / entitlements 都在 `.gitignore` 里。
+
 在 Xcode 里:
 1. 选中两个 target → Signing & Capabilities → 选你的 **Team**(自动签名)。
 2. 确认 **HealthKit** 与 **iCloud › CloudDocuments**(容器 `iCloud.space.kenos.healthos`)已开。
 3. 把 iPhone 连上,Build & Run 到手机;watchOS app 会随之装到配对的手表。
 4. 首次打开授权读取健康数据 → app 自动同步,并注册后台刷新(每 ~2 小时)。
+
+## 在模拟器上调试(已验证可跑)
+
+无需签名即可在模拟器编译 + 运行,验证 UI 与代码路径(HealthKit 无数据是正常的,真机才有):
+
+```bash
+xcodegen
+SIM=$(xcrun simctl list devices available | grep -m1 'iPhone' | grep -oE '\([0-9A-F-]{36}\)' | tr -d '()')
+xcrun simctl boot "$SIM"
+xcodebuild -project HealthOSCompanion.xcodeproj -scheme HealthOSCompanion \
+  -destination "id=$SIM" -derivedDataPath /tmp/dd CODE_SIGNING_ALLOWED=NO build
+xcrun simctl install "$SIM" "$(find /tmp/dd/Build/Products -name 'HealthOSCompanion.app' | head -1)"
+xcrun simctl launch "$SIM" space.kenos.healthos.companion
+xcrun simctl io "$SIM" screenshot /tmp/shot.png   # 看 UI
+```
+watchOS 同理,scheme 换 `HealthOSWatch`、destination 换 Apple Watch 模拟器、bundle id
+`space.kenos.healthos.companion.watchkitapp`。
+
+> 已验证:iOS + watchOS 两个 target 在 Xcode 26 / iOS·watchOS 26 模拟器上 **BUILD SUCCEEDED**、
+> 安装启动、UI 正确、HealthKit 读取链路执行(空数据时状态显示「近 14 天无数据」)。
+> 真机上有健康数据即会自动交付。
 
 ## 交付方式二选一(可都开)
 
@@ -61,6 +85,7 @@ open HealthOSCompanion.xcodeproj
 | `Shared/HealthDay.swift` | 按天聚合模型 + 日期口径(与代理同源) |
 | `Shared/HealthKitReader.swift` | HealthKit 授权 + 查询 + 按天聚合 |
 | `Shared/Delivery.swift` | iCloud Drive 写入 + LAN POST |
-| `iOS/…` | iPhone app(SwiftUI + 后台刷新 BGTask) |
-| `Watch/…` | watchOS app(腕上一瞥 + 手动同步) |
+| `iOS/*.swift` | iPhone app(SwiftUI + 后台刷新 BGTask) |
+| `Watch/WatchApp.swift` | watchOS app(腕上一瞥 + 手动同步) |
+| `project.yml` | XcodeGen 规范 = Info.plist/entitlements/工程的**唯一源** |
 | `project.yml` | XcodeGen 工程规范 |
