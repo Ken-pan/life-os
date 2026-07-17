@@ -61,7 +61,8 @@ Track B 上生产前**先把地基做牢**:migration 可安全应用+回滚;embe
 - **决策持久化闭环**:裁决落 `match.userDecision`(same/different/unsure)+ state(same/added/deferred),`match_objects.py` 的 `locked_decisions()` 让 `--apply` 对带 userDecision 的行**原样保留**——Mac 每次精修不会冲掉用户裁决(P3 要求的 positive/hard-negative 沉淀)。契约 `types.js` 加了 `deferred` state + `userDecision`/`decidedAt` 字段。
 - **结构现实**:权威副本零照片→零 embedding,故这套认亲是**设备扫描之间**的身份图,不走 `scan-identity.js`(那条是 scan-vs-权威、纯几何);两条并行,P3 卡片消费的是 matcher 这条。
 - **已补(2026-07-17 续)**:①**/plan 认亲横幅** `RecognitionBanner.svelte`(浏览器实测:横幅「N 件待认亲确认 · 看看/忽略」→ 开同一模态,忽略按 pending key 集合压下、出新难例再冒泡);②**上限 5 张**:auto-refine embed 全部 17 次历史扫描后 possibly_same 涨到 **21**,违反「≤3-5 件」→ `recognition-review.js MAX_REVIEWS=5` 按候选相似度降序取前 5(浏览器实测横幅 21→5);③**auto-refine 管线** `refine.sh`(embed --all-iphone --apply + match --all-iphone --apply,幂等+原子锁+日志)+ launchd plist(每 15 分钟,= 战略「Mac 15 分钟精修」)——脚本/venv/pipeline 端到端验证过(手动跑写 286 观察/218 认回/68 canonical),**launchd 激活需用户手动**(安全审批不许 agent 装常驻任务;命令见 `scripts/vision/README` auto-refine 节)。
-- **待做(follow-up)**:①「是同一件」目前只 relink 被确认的**单行**观察,不牵动同 canonical 的兄弟观察(group-merge 留后续);②横幅/入口显示的是「本批 ≤5」不是总待确认数(21),要不要露总数待定;③auto-refine 现覆盖全部历史扫描,可改成只跑近 N 次减负。
+- **已补(2026-07-17 三修)**:①**group-merge** ✅——确认「是同一件」把原身份下的兄弟观察一起并过去(`mergeCanonicalSiblings`,兄弟打 userDecision 锁+viaGroupMerge 溯源),不再劈成半拉子;②**露总数** ✅——`loadRecognitionReviews` 返 `{items,total}`,横幅/设置显示「本批 5 · 共 21 处」(浏览器实测);③**auto-refine 空转跳过** ✅——`refine.sh` embed 入库 0 时跳过 matcher 全表重写,idle tick 不 churn;④**un-merge 诊断遥测** ✅装机——`unmerge_suspect/infamily_peak/inbox_peak`,下次扫描判定巨柜没拆是残缺扫描(inbox<2 闸正确)还是 bug(≥2 没拆),不靠瞎猜改阈值。
+- **待做(follow-up)**:①整排柜 un-merge 在**残缺扫描**下按住(巨框只压 <2 件权威)——真机 d444d3ac 已知一例,等下次全屋扫描看 `unmerge_inbox_peak` 定性;②5 件低置信 kind 靠网页 `?` badge 复核(inherent,RoomPlan 检测);③auto-refine 覆盖全历史,可改只跑近 N 次。
 
 ### P4 · 小物件专项(等 L1/L2 稳)
 区域照片识别 / 架柜内容摘要 / 小物件库存 / 收藏品(泡泡玛特)/ 器材档案 / 收纳容器–内容关系。**独立能力,不塞进房间主扫描。**
