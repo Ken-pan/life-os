@@ -1397,12 +1397,14 @@ body {
 
   .today-layout,
   .desktop-split-layout {
-    /* Columns from .life-os-grid--split + @container life-os-main */
+    /* Columns from .life-os-grid--split(显式定义见下方) */
     gap: var(--space-6);
     width: 100%;
-    max-width: var(--planner-desktop-span);
-    margin: 0 auto;
-    padding: 0;
+    /* 与 appbar / .wrap 用同一 content-inline-pad:标题与正文左右对齐,
+       宽屏同样居中到 content-max。此前 padding:0 + max-width+margin 是另一套
+       居中机制,导致正文顶边、比 appbar 标题少 32px gutter(左缘错位)。 */
+    padding-inline: var(--content-inline-pad);
+    padding-block: 0;
   }
 
   .today-layout .wrap,
