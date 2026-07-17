@@ -166,6 +166,9 @@ final class ObjectShotCapture {
         )
 
         var skippedFull = 0
+        // 这一帧每个可见物体的投影框 —— 裁剪后判「crop 里是不是混进了别的家具」,
+        // 叠放件(吊柜叠落地柜)会裁到同一画面 → dHash 撞车,这种就不出哈希。
+        var objFrames: [(id: UUID, rect: CGRect)] = []
         var best: (object: CapturedRoom.Object, rect: CGRect, score: Double, gain: Double, az: Double, bin: Int)?
         /// 引导锁定的那件这一帧能不能拍 —— 能就无条件用它顶掉增益冠军
         var priority: (object: CapturedRoom.Object, rect: CGRect, score: Double, gain: Double, az: Double, bin: Int)?
@@ -180,6 +183,7 @@ final class ObjectShotCapture {
             // 没法人工复核) —— 不再跳过,只抬高取景门槛防误检刷屏
             let minScore = object.confidence == .low ? 0.18 : 0.05
             guard let framing = framing(of: object, in: frame) else { continue }
+            objFrames.append((object.identifier, framing.rect))
 
             // 拍摄方位 → 90° 一桶;每桶独立竞争,凑齐多视角
             let center = topCenter(object)
@@ -215,6 +219,17 @@ final class ObjectShotCapture {
             .integral
         guard crop.width >= 64, crop.height >= 64 else { return }
 
+        // dHash 去歧义:别的物体的投影框占了这张 crop 面积的 ≥55% —— 裁进来的
+        // 主体其实是那件(叠放/紧邻),哈希会和它撞。这种不出 photoHash(nil),
+        // 认亲交给尺寸/位置/颜色,免得给一串错的外观证据。
+        let cropArea = Double(crop.width * crop.height)
+        let hashAmbiguous = cropArea > 0 && objFrames.contains { f in
+            f.id != pick.object.identifier && {
+                let o = f.rect.intersection(crop)
+                return !o.isNull && Double(o.width * o.height) / cropArea >= 0.55
+            }()
+        }
+
         encodeBusy = true
         let objectId = pick.object.identifier
         let category = String(describing: pick.object.category)
@@ -234,7 +249,8 @@ final class ObjectShotCapture {
                     cropTopLeftOrigin: cropRect,
                     imageHeight: imageH,
                     objectId: objectId,
-                    bin: bin
+                    bin: bin,
+                    skipHash: hashAmbiguous
                 )
                 // 内存大头取证(真扫 mem_peak_mb=1642 偏高):照片编码队列侧峰值,
                 // 与 RoomPlan 逐房构建侧(mem_peak_roombuild_mb)对照定位
@@ -411,7 +427,8 @@ final class ObjectShotCapture {
         cropTopLeftOrigin crop: CGRect,
         imageHeight: CGFloat,
         objectId: UUID,
-        bin: Int
+        bin: Int,
+        skipHash: Bool = false
     ) -> (url: URL, colorHex: String?, colorConfidence: Double, sharpness: Double, photoHash: String?)? {
         let ciCrop = CGRect(
             x: crop.origin.x,
@@ -422,7 +439,8 @@ final class ObjectShotCapture {
         var image = CIImage(cvPixelBuffer: pixelBuffer).cropped(to: ciCrop)
         let color = dominantColor(of: image)
         let sharpness = laplacianVariance(of: image)
-        let photoHash = dhash(of: image)
+        // 裁进了别的家具(叠放/紧邻)→ 不出哈希,免得和那件撞(见 consider 的判定)
+        let photoHash = skipHash ? nil : dhash(of: image)
 
         // 竖持方向 + 限长边
         image = image.oriented(.right)

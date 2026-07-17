@@ -1162,4 +1162,89 @@ if (fails.length) {
   for (const f of fails) console.error('  ✗', f)
   process.exit(1)
 }
+
+// ---- W1:「没扫到」保护闸(快扫漏检不删件)+ W3:替换收紧(kind 相容) ----
+{
+  const scanBornAttrs = { measuredWIn: 40, confidence: 'high' }
+  const at = (kind, id, x, y) => ({
+    id, kind, label: kind, x, y, w: 60, h: 60, rotation: 0,
+    attrs: { ...scanBornAttrs },
+  })
+  // 权威 6 件扫描件;快扫只回来 2 件(在原位),4 件没扫到 → 认出率 2/6=33%
+  const prev = {
+    ...SAMPLE_508,
+    placements: [
+      at('cabinet', 'scan-a', 100, 100),
+      at('shelf', 'scan-b', 300, 100),
+      at('table', 'scan-c', 500, 100),
+      at('bed', 'scan-d', 100, 300),
+      at('sofa', 'scan-e', 300, 300),
+      at('chair', 'scan-f', 500, 300),
+    ],
+    fixtures: [], viewpoints: [],
+  }
+  const quick = {
+    placements: [at('cabinet', 'q-a', 101, 101), at('shelf', 'q-b', 301, 101)],
+    fixtures: [], viewpoints: [],
+  }
+  const { project: p, identity } = mergeFurnitureWithIdentity(prev, quick)
+  ok('W1:低认出率(33%)标记 lowRecognition', identity.lowRecognition === true, JSON.stringify(identity.lowRecognition))
+  ok('W1:快扫漏检的 4 件默认全保留(不删)', p.placements.length === 6, `got=${p.placements.length}`)
+  ok('W1:removedItems 带 id + kept 标记', identity.removedItems.length === 4 && identity.removedItems.every((r) => r.kept), JSON.stringify(identity.removedItems.map((r) => [r.label, r.kept])))
+  // decisions.removals 逐件覆盖:确认删掉 table
+  const forced = mergeFurnitureWithIdentity(prev, quick, { decisions: { removals: { 'scan-c': true } } })
+  ok('W1:decisions.removals 逐件确认可删', !forced.project.placements.some((x) => x.id === 'scan-c') && forced.project.placements.length === 5, `got=${forced.project.placements.length}`)
+
+  // 正常全量:6 件里 5 件认回、1 件真搬走 → 认出率 83%,不保护,那件删掉
+  const full = {
+    placements: [
+      at('cabinet', 'f-a', 101, 101), at('shelf', 'f-b', 301, 101),
+      at('table', 'f-c', 501, 101), at('bed', 'f-d', 101, 301),
+      at('sofa', 'f-e', 301, 301),
+    ],
+    fixtures: [], viewpoints: [],
+  }
+  const { project: pf, identity: idf } = mergeFurnitureWithIdentity(prev, full)
+  ok('W1:高认出率(83%)不保护,搬走的 chair 删掉', pf.placements.length === 5 && !pf.placements.some((x) => x.kind === 'chair'), `got=${pf.placements.length}`)
+  ok('W1:高认出率 lowRecognition=false', idf.lowRecognition === false)
+
+  // W3:手录围挡(divider)+ 3ft 内的实测转椅(office_chair)—— 跨语义不许替换
+  const withManual = {
+    ...SAMPLE_508,
+    placements: [
+      { id: 'm-fence', kind: 'divider', label: '围挡', x: 200, y: 500, w: 40, h: 40, rotation: 0 },
+      at('cabinet', 'scan-x', 700, 700),
+    ],
+    fixtures: [], viewpoints: [],
+  }
+  const scanChairNear = {
+    placements: [
+      { id: 's-chair', kind: 'office_chair', label: '转椅', x: 210, y: 505, w: 60, h: 60, rotation: 0, attrs: { ...scanBornAttrs } },
+      at('cabinet', 'scan-x2', 701, 701),
+    ],
+    fixtures: [], viewpoints: [],
+  }
+  const wm = mergeFurnitureWithIdentity(withManual, scanChairNear).project
+  ok('W3:手录围挡不被 3ft 内的转椅替换(kind 不相容)', wm.placements.some((x) => x.id === 'm-fence'), JSON.stringify(wm.placements.map((x) => x.id)))
+
+  // W3 对照:手录「桌」被 3ft 内实测「桌」替换(同 kind 相容),名字跟身份走
+  const withManualTable = {
+    ...SAMPLE_508,
+    placements: [{ id: 'm-desk', kind: 'table', label: '我的书桌', x: 200, y: 500, w: 60, h: 30, rotation: 0 }],
+    fixtures: [], viewpoints: [],
+  }
+  const scanTableNear = {
+    placements: [{ id: 's-table', kind: 'table', label: '桌', x: 205, y: 505, w: 62, h: 31, rotation: 0, attrs: { ...scanBornAttrs } }],
+    fixtures: [], viewpoints: [],
+  }
+  const wmt = mergeFurnitureWithIdentity(withManualTable, scanTableNear).project
+  ok('W3:同 kind 替换成立(手录桌让位实测桌)', !wmt.placements.some((x) => x.id === 'm-desk'), JSON.stringify(wmt.placements.map((x) => x.id)))
+  ok('W3:替换后名字跟用户标注走(不丢「我的书桌」)', wmt.placements.some((x) => x.label === '我的书桌'), JSON.stringify(wmt.placements.map((x) => x.label)))
+}
+
+if (fails.length) {
+  console.error(`FAIL ${fails.length} (pass ${pass})`)
+  for (const f of fails) console.error('  ✗', f)
+  process.exit(1)
+}
 console.log(`PASS ${pass} checks`)

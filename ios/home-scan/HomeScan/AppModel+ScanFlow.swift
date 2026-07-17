@@ -160,6 +160,17 @@ extension AppModel {
               let home = canonicalHome ?? CanonicalHomeCache.load(),
               let rc = RealityCheck.run(scan: project, home: home) else { return }
         RealityCheck.adoptLabels(into: &project, result: rc)
+        // 漏检警告随 payload 上传(网页端合并靠它降级成「外观增强」不删件):认出
+        // 率低 + 漏检 ≥3 件才提醒(单件搬走是常态,一打集体没扫到才是覆盖问题)。
+        let seen = rc.recognized.count + rc.missing.count
+        if rc.missing.count >= 3, seen > 0, Double(rc.recognized.count) / Double(seen) < 0.7 {
+            let names = rc.missing.prefix(5).joined(separator: "、")
+            let more = rc.missing.count > 5 ? " 等 \(rc.missing.count) 件" : ""
+            let warn = "这次只认出 \(rc.recognized.count)/\(seen) 件,还没扫到:\(names)\(more) —— 贴近补扫,或上传后网页端会保留没扫到的件(不删)"
+            if !project.meta.scanWarnings.contains(warn) {
+                project.meta.scanWarnings.append(warn)
+            }
+        }
         convertedProject = project
         realityCheck = rc
         // 认亲成绩单:识别率(认出/新件/没扫到/不敢认)是 ScanIdentity 打分

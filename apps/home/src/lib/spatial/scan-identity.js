@@ -13,7 +13,7 @@
  * - possibly_same   证据不足以裁决(第二候选太接近)—— 保守当新件,但报出来
  * - new / removed   新增 / 消失
  */
-import { hammingHex, HASH_SAME_MAX, HASH_DIFF_MIN } from './photo-hash.js'
+import { hammingHex, HASH_SAME_MAX } from './photo-hash.js'
 
 /** 尺寸差在 4″ 或 15% 以内才可能是同一件(LiDAR 重复测量的正常抖动) */
 const SIZE_TOL_PX = 12
@@ -60,6 +60,19 @@ const KIND_FAMILY = [
 ]
 const familyOf = (kind) => KIND_FAMILY.find((f) => f.includes(kind))
 const CROSS_KIND_PENALTY = 0.05
+
+/**
+ * 两个 kind 是否语义相容(同 kind 或同族)。scan-merge 的手录件替换用它把关:
+ * 「附近有个实测件」不等于「这就是那件手录家具的实测版」—— 0716 真扫,
+ * 手录围挡(divider)被 3ft 内的转椅(office_chair)顶掉,纯距离判定闯的祸。
+ * @param {string | undefined} a @param {string | undefined} b
+ */
+export function kindCompatible(a, b) {
+  if (!a || !b) return false
+  if (a === b) return true
+  const fam = familyOf(a)
+  return !!fam && fam.includes(b)
+}
 
 /**
  * 高度带(attrs.elevIn,离地安装高度,英寸;平面 px 换算 36px/ft=3px/in):
@@ -146,7 +159,10 @@ function hashBonus(a, b, ambiguousHashes) {
   const d = hammingHex(ha, hb)
   if (d === null) return 0
   if (d <= HASH_SAME_MAX) return 0.2
-  if (d >= HASH_DIFF_MIN) return -0.1
+  // 「明显不像」不再罚分(2026-07-16 真扫回灌):跨扫描照片是不同次拍的,
+  // 角度/光照一变,同一件家具的汉明距离也常 >26 —— 罚分惩罚的是「换了拍法」
+  // 而不是「换了家具」,反而压制正确认亲(主办公椅这次就没认回)。外观项
+  // 只作正向证据:像了加分,不像交给尺寸/位置/颜色去裁决。
   return 0
 }
 

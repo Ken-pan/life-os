@@ -28,7 +28,7 @@ import {
   roomBoundsSegments,
   transformSegments,
 } from './scan-register.js'
-import { matchScanObjects } from './scan-identity.js'
+import { kindCompatible, matchScanObjects } from './scan-identity.js'
 import {
   computeWallAnchor,
   diffWallAnchors,
@@ -600,6 +600,15 @@ export function mergeViewpointsOnly(project, mappedViewpoints) {
 
 /** 同一件东西的两份记录:实测件落在手录件这么近以内,就认为是同一个 */
 const REPLACE_DIST_PX = 108 // 3ft
+/**
+ * 「没扫到」保护闸(2026-07-16 真扫回灌):快扫漏检是常态(0716 晚间快扫 30 件
+ * 只认出 16),此时「没扫到」≠「不在了」,未匹配的扫描件默认**保留**。触发要
+ * 两个条件同时成立,防小样本误伤:①一次消失 ≥3 件(单件搬走是常态,一打家具
+ * 集体蒸发才是扫描覆盖问题);②认出率 <0.7。都不满足则维持原语义(没扫到=搬走)。
+ * decisions.removals 逐件覆盖。
+ */
+const RECOGNITION_KEEP_MIN = 0.7
+const MIN_MISS_TO_PROTECT = 3
 
 const boxCenter = (o) => {
   const b = o.bounds ?? o
@@ -764,6 +773,8 @@ function strongOverlap(a, b) {
  * @property {Record<string, boolean>} [moves] 键=旧件 id:拒绝时几何/名字保持本地,只收编外观
  * @property {Record<string, boolean>} [adds] 键=映射件 id(scan-*):拒绝时该扫描件不进项目
  * @property {Record<string, boolean>} [replaces] 键=手录件 id:拒绝时手录件保留不让位
+ * @property {Record<string, boolean>} [removals] 键=「没扫到」的扫描件 id:true=确认
+ *   移除(哪怕低认出率被保护),false=保留;缺省按认出率(见 RECOGNITION_KEEP_MIN)
  */
 export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const replaceNearby = opts.replaceNearby !== false
@@ -783,6 +794,14 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
     replaced: [],
     /** 被逐项确认拒绝的变更计数 */
     rejected: 0,
+    /**
+     * 「没扫到」逐件明细(逐项确认 UI 用;kept=true 表示被保护闸/用户保留)。
+     * identity.removed 只有标签,这里带 id 才能喂 decisions.removals。
+     * @type {Array<{ id: string, label: string, kind: string, kept: boolean }>}
+     */
+    removedItems: [],
+    /** 认出率低于 RECOGNITION_KEEP_MIN,「没扫到」默认保留(快扫漏检保护) */
+    lowRecognition: false,
   }
   /** 本轮判为「新增」的 id(压制检查只看它们:匹配上的不是误检) */
   const addedIds = new Set()
@@ -808,8 +827,8 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
     return d.verdict === 'unknown' ? null : d
   }
 
-  /** 上次扫描件 → 身份匹配 → 新几何 + 旧 id/旧成果 */
-  const reconcile = (prevAll, incoming) => {
+  /** 上次扫描件 → 身份匹配 → 新几何 + 旧 id/旧成果;freshIds 回收「真来自这轮扫描」的 id */
+  const reconcile = (prevAll, incoming, freshIds) => {
     // 钉死的/锁定的(即使是手录、没实测 attrs)也进配对池:新扫描扫到
     // 同一台洗衣机时应该被旧身份吸收(照片/attrs 并进来),而不是长出第二台
     const prevScan = (prevAll ?? []).filter((o) => scanBorn(o) || o.fixed || isIdentityLocked(o))
@@ -889,17 +908,38 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
     })
     // 拒绝的新增已置 null,收尾前清掉
     const kept = out.filter(Boolean)
+    // 这轮真正来自扫描的 id(匹配收编 + 新增)—— keepLocal 的手录件替换候选
+    // 只认它们:被原样保留的旧权威件不是「实测件」,凭什么顶手录件
+    // (0716 真扫:围挡4 被原样保留的鸟笼「顶掉」,就是没这道闸)
+    if (freshIds) for (const o of kept) freshIds.add(o.id)
     // 钉死的/锁定的没扫到也不消失:公寓固定件不会自己走掉,用户纠正过
     // 身份的更不会 —— 只可能是这次没扫到或又被误检成了别的
     const outIds = new Set(kept.map((o) => o.id))
     kept.push(
       ...prevScan.filter((o) => (o.fixed || isIdentityLocked(o)) && !outIds.has(o.id)),
     )
-    identity.removed.push(
-      ...droppedPrevIds
-        .filter((id) => !prevById[id]?.fixed && !isIdentityLocked(prevById[id]))
-        .map((id) => prevById[id]?.label ?? id),
-    )
+    // —— 「没扫到」保护闸(见 RECOGNITION_KEEP_MIN)——
+    const removable = droppedPrevIds
+      .map((id) => prevById[id])
+      .filter((p) => p && !p.fixed && !isIdentityLocked(p))
+    const matchedCount = m.pairs.filter((p) => p.state !== 'possibly_same').length
+    const seen = matchedCount + removable.length
+    const lowRecognition =
+      removable.length >= MIN_MISS_TO_PROTECT &&
+      matchedCount / seen < RECOGNITION_KEEP_MIN
+    if (lowRecognition) identity.lowRecognition = true
+    for (const p of removable) {
+      // 逐件覆盖:true=确认移除(哪怕低认出率),false=保留;缺省看认出率
+      const remove = decisions.removals?.[p.id] ?? !lowRecognition
+      if (!remove) kept.push(p)
+      identity.removedItems.push({
+        id: p.id,
+        label: p.label ?? p.kind,
+        kind: p.kind,
+        kept: !remove,
+      })
+    }
+    identity.removed.push(...removable.map((p) => p.label ?? p.id))
     return kept
   }
 
@@ -914,8 +954,10 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
   const sp = split(project.placements)
   const sf = split(project.fixtures)
 
-  let nextPlacements = reconcile(sp.inside, mapped.placements)
-  let nextFixtures = reconcile(sf.inside, mapped.fixtures)
+  const freshPlacementIds = new Set()
+  const freshFixtureIds = new Set()
+  let nextPlacements = reconcile(sp.inside, mapped.placements, freshPlacementIds)
+  let nextFixtures = reconcile(sf.inside, mapped.fixtures, freshFixtureIds)
 
   // 锁定件压制惯性误检:扫描把鸟笼认成冰箱这类错误每轮都重犯(RoomPlan
   // 的分类惯性),用户在权威副本里纠正过一次就够了 —— 没匹配上任何旧件的
@@ -945,8 +987,14 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
     nextFixtures = dropMisdetect(nextFixtures)
   }
 
-  /** 丢掉上次扫描的;手录的按是否被实测件顶掉决定;钉死的/锁定的谁也顶不掉 */
-  const keepLocal = (arr, incoming) => {
+  /**
+   * 丢掉上次扫描的;手录的按是否被实测件顶掉决定;钉死的/锁定的谁也顶不掉。
+   * 替换三道闸(2026-07-16 真扫收紧):①候选必须真来自这轮扫描(freshIds,
+   * 原样保留的旧权威件不算实测件);②kind 语义相容(同 kind/同族 —— 围挡不许
+   * 被转椅「顶」);③3ft 内。替换成立时手录件的名字跟着身份走(实测件多半叫
+   * 「柜」,顶掉「桌下文件柜」再叫回通用名等于丢用户标注)。
+   */
+  const keepLocal = (arr, incoming, freshIds) => {
     const nextIds = new Set((incoming ?? []).map((m) => m.id))
     return (arr ?? []).filter((o) => {
       // 已被 reconcile 以同 id 收编(钉死件必然如此)—— 别留两份
@@ -956,6 +1004,8 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
       if (!replaceNearby) return true
       const c = boxCenter(o)
       const by = incoming.find((m) => {
+        if (!freshIds?.has(m.id)) return false
+        if (!kindCompatible(o.kind, m.kind)) return false
         const mc = boxCenter(m)
         return Math.hypot(mc.x - c.x, mc.y - c.y) < REPLACE_DIST_PX
       })
@@ -969,16 +1019,26 @@ export function mergeFurnitureWithIdentity(project, mapped, opts = {}) {
         id: o.id,
         label: o.label ?? o.kind,
         byId: by.id,
-        byLabel: by.label ?? by.kind,
+        byLabel: by.label ?? by.kind, // 报告里记实测件原名,改名在后
       })
+      // 手录件的名字是用户标注 —— 实测件收编几何,名字跟身份走
+      if (o.label) by.label = o.label
       return false
     })
   }
 
   const next = {
     ...project,
-    placements: [...sp.outside, ...keepLocal(sp.inside, nextPlacements), ...nextPlacements],
-    fixtures: [...sf.outside, ...keepLocal(sf.inside, nextFixtures), ...nextFixtures],
+    placements: [
+      ...sp.outside,
+      ...keepLocal(sp.inside, nextPlacements, freshPlacementIds),
+      ...nextPlacements,
+    ],
+    fixtures: [
+      ...sf.outside,
+      ...keepLocal(sf.inside, nextFixtures, freshFixtureIds),
+      ...nextFixtures,
+    ],
     viewpoints: [
       // partial 时片外的旧扫描机位也留着 —— 房间更新不该抹掉别处的照片
       ...(project.viewpoints ?? []).filter(
@@ -1137,11 +1197,13 @@ export function describeReplacements(project, mapped) {
   const out = []
   const scan = (locals, incoming) => {
     for (const local of locals ?? []) {
-      if (scanBorn(local) || local.fixed) continue
+      if (scanBorn(local) || local.fixed || isIdentityLocked(local)) continue
       const c = boxCenter(local)
       let best = null
       let bestD = Infinity
       for (const m of incoming) {
+        // 与 keepLocal 同判据:kind 语义相容才算「替换」—— 转椅不「顶」围挡
+        if (!kindCompatible(local.kind, m.kind)) continue
         const mc = boxCenter(m)
         const d = Math.hypot(mc.x - c.x, mc.y - c.y)
         if (d < bestD) {
