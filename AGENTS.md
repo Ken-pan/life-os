@@ -103,3 +103,32 @@ Rules for every agent session:
 PaperOS was extracted to `/Users/kenpan/「Projects」/paperos` (own repo, full
 history). The Planner-side provider API (`apps/planner/netlify/functions/paper-*`,
 `paperService.mjs`, Supabase paper migrations) stays here.
+
+## Cursor Cloud specific instructions
+
+Environment: Node 22 + npm workspaces. `npm install` at the repo root installs all
+`apps/*` and `packages/*` (it is the startup update script). Standard commands live
+in `README.md` / this file's Quickstart table / root `package.json` — reference those
+rather than duplicating.
+
+Non-obvious caveats:
+
+- **Running an app in dev:** `cd apps/<app> && npm run dev` serves on Vite's default
+  `5173`. The `5188` port in Quickstart is the PWA **preview** (production build) port
+  from `scripts/pwa/apps.config.mjs`, not the `vite dev` port.
+- **Apps are local-first.** They run without any Supabase credentials; `.env` is
+  optional. Each production app ships public defaults in `apps/<app>/.env.example`
+  (copy to `.env` only if you want cloud sync wired up locally). Task creation and
+  other core flows work purely against local storage.
+- **Playwright browsers are not installed by the update script.** For the e2e / PWA /
+  design-catalog suites (`npm run test:pwa`, `npm run test:design-catalog`,
+  `apps/planner npm run test:e2e`) run `npx playwright install chromium` first
+  (CI uses `--with-deps`, which needs root for OS libs).
+- **`packages/contracts` `npm test` is broken standalone** — its script runs `node`
+  directly on a `.ts` file (`ERR_UNKNOWN_FILE_EXTENSION`) and is not wired into CI.
+  Validate contracts via `npm run check` / `npm run check:lifeos-boundaries` instead.
+- **Fast dependency-free checks** (all green, mirror CI `build` + `integration-smoke`):
+  `npm run build`, `npm run check`, `npm run validate:tokens`,
+  `npm run check:lifeos-boundaries`, `npm run check:lifeos-styles`,
+  `npm run check:app-manifests`. Per-workspace unit tests: `npm run test -w <workspace>`
+  (e.g. `planner-os`, `finance-os`, `@life-os/platform-web`).
