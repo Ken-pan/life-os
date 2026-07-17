@@ -78,6 +78,7 @@ export default {
     filterLabel: 'Filter',
     filterClear: 'Clear',
     resizeAria: 'Drag to resize list column (double-click to reset)',
+    notInFilter: 'This note is not in the current filter',
     emptyTitle: 'No matching items',
     emptyDesc: 'Try another keyword, or clear the tag filters.',
     welcomeTitle: 'No notes yet',
