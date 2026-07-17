@@ -64,19 +64,69 @@ function renderInline(raw) {
   return text.replace(/\x00(\d+)\x00/g, (_, i) => stash[Number(i)])
 }
 
-/** 块级：逐行状态机，处理代码块 / 标题 / 列表 / 引用 / 分隔线 / 段落。 */
+/** 拆表格行为单元格（去首尾空管、转义在 renderInline 里做）。 */
+function splitRow(line) {
+  return line
+    .replace(/^\s*\|/, '')
+    .replace(/\|\s*$/, '')
+    .split('|')
+    .map((c) => c.trim())
+}
+
+function renderTable(header, rows) {
+  const th = header.map((c) => `<th>${renderInline(c)}</th>`).join('')
+  const body = rows
+    .map(
+      (r) =>
+        `<tr>${header
+          .map((_, j) => `<td>${renderInline(r[j] ?? '')}</td>`)
+          .join('')}</tr>`,
+    )
+    .join('')
+  return `<div class="md-table-wrap"><table class="md-table"><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div>`
+}
+
+/** 单个列表项内容：任务框 - [ ] / - [x] → 只读 checkbox，其余走 renderInline。 */
+function renderItemContent(text) {
+  const task = text.match(/^\[([ xX])\]\s+(.*)$/)
+  if (task) {
+    const checked = task[1] !== ' ' ? ' checked' : ''
+    return `<label class="md-task"><input type="checkbox" disabled${checked} />${renderInline(task[2])}</label>`
+  }
+  return renderInline(text)
+}
+
+/** 嵌套列表：按缩进深度用栈开合 ul/ol。 */
+function renderList(blockLines) {
+  const items = blockLines.map((raw) => {
+    const m = raw.match(/^(\s*)([-*+]|\d+\.)\s+(.*)$/)
+    return {
+      indent: m[1].replace(/\t/g, '  ').length,
+      ordered: /\d/.test(m[2]),
+      text: m[3],
+    }
+  })
+  const out = []
+  const stack = [] // { indent, ordered }
+  for (const it of items) {
+    while (stack.length && it.indent < stack[stack.length - 1].indent) {
+      out.push(`</${stack.pop().ordered ? 'ol' : 'ul'}>`)
+    }
+    if (!stack.length || it.indent > stack[stack.length - 1].indent) {
+      out.push(`<${it.ordered ? 'ol' : 'ul'}>`)
+      stack.push({ indent: it.indent, ordered: it.ordered })
+    }
+    out.push(`<li>${renderItemContent(it.text)}</li>`)
+  }
+  while (stack.length) out.push(`</${stack.pop().ordered ? 'ol' : 'ul'}>`)
+  return out.join('')
+}
+
+/** 块级：逐行状态机，处理代码块 / 标题 / 表格 / 列表 / 引用 / 分隔线 / 段落。 */
 export function renderMarkdown(src) {
   const lines = String(src ?? '').replace(/\r\n?/g, '\n').split('\n')
   const html = []
   let i = 0
-  let listType = null // 'ul' | 'ol' | null
-
-  const closeList = () => {
-    if (listType) {
-      html.push(`</${listType}>`)
-      listType = null
-    }
-  }
 
   while (i < lines.length) {
     const line = lines[i]
@@ -84,7 +134,6 @@ export function renderMarkdown(src) {
     // 代码块 ```lang
     const fence = line.match(/^```(\w*)\s*$/)
     if (fence) {
-      closeList()
       const body = []
       i += 1
       while (i < lines.length && !/^```\s*$/.test(lines[i])) {
@@ -99,7 +148,6 @@ export function renderMarkdown(src) {
     // 标题
     const heading = line.match(/^(#{1,6})\s+(.*)$/)
     if (heading) {
-      closeList()
       const level = heading[1].length
       html.push(`<h${level}>${renderInline(heading[2])}</h${level}>`)
       i += 1
@@ -108,7 +156,6 @@ export function renderMarkdown(src) {
 
     // 分隔线
     if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) {
-      closeList()
       html.push('<hr />')
       i += 1
       continue
@@ -116,7 +163,6 @@ export function renderMarkdown(src) {
 
     // 引用
     if (/^>\s?/.test(line)) {
-      closeList()
       const quote = []
       while (i < lines.length && /^>\s?/.test(lines[i])) {
         quote.push(lines[i].replace(/^>\s?/, ''))
@@ -126,30 +172,41 @@ export function renderMarkdown(src) {
       continue
     }
 
-    // 无序 / 有序列表
-    const ul = line.match(/^[-*+]\s+(.*)$/)
-    const ol = line.match(/^\d+\.\s+(.*)$/)
-    if (ul || ol) {
-      const want = ul ? 'ul' : 'ol'
-      if (listType !== want) {
-        closeList()
-        html.push(`<${want}>`)
-        listType = want
+    // 表格：当前行含 | 且下一行是分隔行 |---|:--|
+    if (
+      /\|/.test(line) &&
+      i + 1 < lines.length &&
+      /^\s*\|?[\s:|-]*-[\s:|-]*\|[\s:|-]*$/.test(lines[i + 1])
+    ) {
+      const header = splitRow(line)
+      i += 2 // 跳过表头 + 分隔行
+      const rows = []
+      while (i < lines.length && /\|/.test(lines[i]) && lines[i].trim() !== '') {
+        rows.push(splitRow(lines[i]))
+        i += 1
       }
-      html.push(`<li>${renderInline((ul ?? ol)[1])}</li>`)
-      i += 1
+      html.push(renderTable(header, rows))
+      continue
+    }
+
+    // 列表（含嵌套缩进 + 任务框 - [ ] / - [x]）
+    if (/^(\s*)([-*+]|\d+\.)\s+/.test(line)) {
+      const block = []
+      while (i < lines.length && /^(\s*)([-*+]|\d+\.)\s+/.test(lines[i])) {
+        block.push(lines[i])
+        i += 1
+      }
+      html.push(renderList(block))
       continue
     }
 
     // 空行
     if (line.trim() === '') {
-      closeList()
       i += 1
       continue
     }
 
     // 段落（合并连续非空非块级行）
-    closeList()
     const para = [line]
     i += 1
     while (
@@ -162,7 +219,5 @@ export function renderMarkdown(src) {
     }
     html.push(`<p>${renderInline(para.join(' '))}</p>`)
   }
-
-  closeList()
   return html.join('\n')
 }

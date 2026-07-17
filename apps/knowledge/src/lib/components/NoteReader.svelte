@@ -17,6 +17,7 @@
   const backlinks = $derived(item ? backlinksOf(item) : [])
 
   // 语义相关笔记（服务端混合检索；用标题+正文头作 query，排除自身与已双链的）。
+  // 切条目即中止上一请求，避免快速翻阅时堆积在途 fetch。
   let related = $state([])
   $effect(() => {
     const cur = item
@@ -27,17 +28,16 @@
         m[1].split('|')[0].split('#')[0].trim().toLowerCase(),
       ),
     )
-    vaultSearch(`${cur.title}\n${cur.body.slice(0, 400)}`, { k: 6 })
+    const ctrl = new AbortController()
+    vaultSearch(`${cur.title}\n${cur.body.slice(0, 400)}`, { k: 6, signal: ctrl.signal })
       .then((hits) => {
-        if (item?.id !== cur.id) return // 期间切了条目
         related = hits
           .map((h) => itemById(h.path))
-          .filter(
-            (it) => it && it.id !== cur.id && !linked.has(it.title.toLowerCase()),
-          )
+          .filter((it) => it && it.id !== cur.id && !linked.has(it.title.toLowerCase()))
           .slice(0, 4)
       })
-      .catch(() => {}) // 服务未起时静默，退回纯双链体验
+      .catch(() => {}) // 中止 / 服务未起：静默，退回纯双链体验
+    return () => ctrl.abort()
   })
 
   const TYPE_LABEL = {
@@ -208,6 +208,32 @@
     margin: var(--space-4) 0;
     border: none;
     border-top: 1px solid var(--border);
+  }
+  .note-body :global(.md-task) {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-1-5);
+  }
+  .note-body :global(.md-task input) {
+    accent-color: var(--accent);
+  }
+  .note-body :global(.md-table-wrap) {
+    overflow-x: auto;
+    margin: var(--space-3) 0;
+  }
+  .note-body :global(.md-table) {
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+  .note-body :global(.md-table th),
+  .note-body :global(.md-table td) {
+    padding: var(--space-1-5) var(--space-2-5);
+    border: 1px solid var(--border);
+    text-align: start;
+  }
+  .note-body :global(.md-table th) {
+    background: color-mix(in srgb, var(--t1, var(--text)) 4%, transparent);
+    font-weight: 600;
   }
   .note-backlinks {
     margin-top: var(--space-4);

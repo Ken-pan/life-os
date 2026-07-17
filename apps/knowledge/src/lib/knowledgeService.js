@@ -47,12 +47,15 @@ export async function vaultHealth() {
  * 混合语义检索。默认限定主 Vault（vault="vault"），path 直接对应 KnowledgeOS item.id。
  * @returns {Promise<Array<{ vault, path, title, breadcrumb, snippet, obsidianUrl }>>}
  */
-export async function vaultSearch(query, { k = 8, vault = 'vault' } = {}) {
+export async function vaultSearch(query, { k = 8, vault = 'vault', signal } = {}) {
+  // 调用方传 signal（切条目中止）时与 60s 超时二者取先到者。
+  const timeout = AbortSignal.timeout(60000)
+  const combined = signal ? AbortSignal.any([signal, timeout]) : timeout
   const res = await fetch(`${getGateway()}${BASE}/search`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, k, vault }),
-    signal: AbortSignal.timeout(60000),
+    signal: combined,
   })
   if (!res.ok) throw new Error(`search ${res.status}`)
   const json = await res.json()

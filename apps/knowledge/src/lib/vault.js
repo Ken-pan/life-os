@@ -1,10 +1,23 @@
 import { browser } from '$app/environment'
+import {
+  itemFromFile,
+  serializeItem,
+  sanitizeTitle,
+} from '$lib/frontmatter.js'
+
+// 纯 frontmatter 函数从 $lib/frontmatter.js（零依赖、node 可测）导入并转出。
+export {
+  parseFrontmatter,
+  patchFrontmatter,
+  serializeItem,
+} from '$lib/frontmatter.js'
 
 /**
  * Vault 文件后端（Tauri 原生模式）：.md 文件即数据库，取代 Obsidian。
  * - 每条 KItem ↔ 一个 .md 文件；元数据存 YAML frontmatter（type/url/tags/pinned/created）
  * - 顶层目录名 → 标签（去掉 "030_" 类数字前缀，小写）
  * - 新收集写入 010_Inbox/；改题重命名文件；删除即删文件
+ * - 编辑写回只改 KnowledgeOS 管的字段，未知 frontmatter（src-fp/aliases/自定义 type）保留
  * 网页端（无 Tauri）自动退回 localStorage 模式，见 state.svelte.js。
  */
 
@@ -20,134 +33,62 @@ function fs() {
   return fsPromise
 }
 
-/* ===== frontmatter ===== */
-
-const FM_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
-
-/** 极简 YAML 子集解析：k: v 标量、tags 的 [a, b] 与逐行 "- x" 两种形态。 */
-export function parseFrontmatter(text) {
-  const m = text.match(FM_RE)
-  if (!m) return { meta: {}, body: text }
-  const meta = {}
-  let lastKey = null
-  for (const rawLine of m[1].split(/\r?\n/)) {
-    const listItem = rawLine.match(/^\s*-\s+(.+)$/)
-    if (listItem && lastKey) {
-      if (!Array.isArray(meta[lastKey])) meta[lastKey] = meta[lastKey] ? [meta[lastKey]] : []
-      meta[lastKey].push(stripQuotes(listItem[1]))
-      continue
-    }
-    const kv = rawLine.match(/^([A-Za-z][\w-]*)\s*:\s*(.*)$/)
-    if (!kv) continue
-    lastKey = kv[1].toLowerCase()
-    const raw = kv[2].trim()
-    if (raw === '') {
-      meta[lastKey] = ''
-    } else if (raw.startsWith('[') && raw.endsWith(']')) {
-      meta[lastKey] = raw
-        .slice(1, -1)
-        .split(',')
-        .map((s) => stripQuotes(s.trim()))
-        .filter(Boolean)
-    } else {
-      meta[lastKey] = stripQuotes(raw)
-    }
-  }
-  return { meta, body: text.slice(m[0].length) }
-}
-
-function stripQuotes(s) {
-  return s.replace(/^["']|["']$/g, '')
-}
-
-function metaTags(meta) {
-  const t = meta.tags
-  if (!t) return []
-  const arr = Array.isArray(t) ? t : String(t).split(/[,，]/)
-  return arr.map((s) => String(s).trim().replace(/^#/, '')).filter(Boolean)
-}
-
-/** 目录段 → 标签："030_Frameworks" → "frameworks"；根目录不产标签。 */
-function folderTag(relPath) {
-  const seg = relPath.split('/')[0]
-  if (!seg || seg.endsWith('.md')) return null
-  return seg.replace(/^\d+[_-]?/, '').trim().toLowerCase().replace(/\s+/g, '-') || null
-}
-
-/* ===== item ↔ file ===== */
-
-function itemFromFile(relPath, text, statInfo) {
-  const { meta, body } = parseFrontmatter(text)
-  const tags = new Set(metaTags(meta))
-  const ft = folderTag(relPath)
-  if (ft) tags.add(ft)
-  const created = meta.created ? Date.parse(meta.created) : NaN
-  return {
-    id: relPath,
-    type: meta.type === 'link' || meta.type === 'clip' ? meta.type : 'note',
-    title: relPath.split('/').pop().replace(/\.md$/i, ''),
-    body,
-    url: meta.url ?? '',
-    tags: [...tags],
-    pinned: meta.pinned === true || meta.pinned === 'true',
-    createdAt: Number.isFinite(created)
-      ? created
-      : (statInfo?.birthtime ? new Date(statInfo.birthtime).getTime() : Date.now()),
-    updatedAt: statInfo?.mtime ? new Date(statInfo.mtime).getTime() : Date.now(),
-  }
-}
-
-export function serializeItem(item) {
-  const lines = ['---']
-  if (item.type !== 'note') lines.push(`type: ${item.type}`)
-  if (item.url) lines.push(`url: ${item.url}`)
-  if (item.tags.length) lines.push(`tags: [${item.tags.join(', ')}]`)
-  if (item.pinned) lines.push('pinned: true')
-  lines.push(`created: ${new Date(item.createdAt).toISOString()}`)
-  lines.push('---', '')
-  return lines.join('\n') + item.body
-}
-
 /* ===== fs 操作 ===== */
 
 const SKIP_DIRS = new Set(['.obsidian', '.git', 'node_modules', '.trash'])
 
+/** 有界并发 map：对 437+ 文件读取限流，避免一次性打爆 Tauri IPC。 */
+async function mapLimit(list, limit, fn) {
+  const out = new Array(list.length)
+  let i = 0
+  async function worker() {
+    while (i < list.length) {
+      const idx = i++
+      out[idx] = await fn(list[idx], idx)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, list.length) }, worker))
+  return out
+}
+
 export async function loadVaultItems() {
   const { readDir, readTextFile, stat } = await fs()
-  const items = []
 
+  // 1) 先快速遍历目录收集全部 .md 路径（目录读取本身很轻）。
+  const paths = []
   async function walk(rel) {
     const abs = rel ? `${VAULT_ROOT}/${rel}` : VAULT_ROOT
     const entries = await readDir(abs)
+    const subdirs = []
     for (const entry of entries) {
       if (entry.name.startsWith('.') || SKIP_DIRS.has(entry.name)) continue
       const childRel = rel ? `${rel}/${entry.name}` : entry.name
-      if (entry.isDirectory) {
-        await walk(childRel)
-      } else if (/\.md$/i.test(entry.name)) {
-        try {
-          const [text, statInfo] = await Promise.all([
-            readTextFile(`${VAULT_ROOT}/${childRel}`),
-            stat(`${VAULT_ROOT}/${childRel}`).catch(() => null),
-          ])
-          items.push(itemFromFile(childRel, text, statInfo))
-        } catch (e) {
-          console.warn('[vault] 读取失败，跳过', childRel, e)
-        }
-      }
+      if (entry.isDirectory) subdirs.push(childRel)
+      else if (/\.md$/i.test(entry.name)) paths.push(childRel)
     }
+    // 子目录并发下钻
+    await Promise.all(subdirs.map(walk))
   }
-
   await walk('')
+
+  // 2) 有界并发读文件（并行化冷启动：437 串行 → ~并发批）。
+  const items = (
+    await mapLimit(paths, 24, async (rel) => {
+      try {
+        const [text, statInfo] = await Promise.all([
+          readTextFile(`${VAULT_ROOT}/${rel}`),
+          stat(`${VAULT_ROOT}/${rel}`).catch(() => null),
+        ])
+        return itemFromFile(rel, text, statInfo)
+      } catch (e) {
+        console.warn('[vault] 读取失败，跳过', rel, e)
+        return null
+      }
+    })
+  ).filter(Boolean)
+
   items.sort((a, b) => b.createdAt - a.createdAt)
   return items
-}
-
-function sanitizeTitle(title) {
-  return (
-    title.replace(/[/\\:*?"<>|#^[\]]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) ||
-    'Untitled'
-  )
 }
 
 /** 新建：写入 010_Inbox/，同名自动加序号；返回 id（相对路径）。 */
@@ -162,7 +103,8 @@ export async function createItemFile(item) {
     rel = `010_Inbox/${base} ${n}.md`
     n += 1
   }
-  await writeTextFile(`${VAULT_ROOT}/${rel}`, serializeItem(item))
+  // 新建路径：显式 seed created 到 frontmatter（编辑既有笔记不会平白加 fm）。
+  await writeTextFile(`${VAULT_ROOT}/${rel}`, serializeItem({ ...item, _seedCreated: true }))
   return rel
 }
 
