@@ -359,4 +359,21 @@ function home(over = {}) {
   assert.ok(gated.zones.find((z) => z.code === 'S1').ownedAnchors.includes('stove'))
 }
 
+// —— 宠物危险门:可触开放区里的危险物给出最近安全去处(规范 §4, 评审 B5)——
+{
+  const p = home()
+  // S3(宠物架)设为开放可触;放一件药(危险)。灶边柜 S1 设为带门防护(安全去处)。
+  p.storageZones[2].zoneAccess = { open: true, closable: false, petProof: false, lockable: false, heightCm: 20 }
+  p.storageZones[2].items = [{ id: 'si-med', name: '布洛芬止痛药' }]
+  p.storageZones[0].zoneAccess = { open: false, closable: true, petProof: true, lockable: true, heightCm: 20 }
+  p.meta = { petSafety: { reachInCm: 90, canJumpToCounter: false, chews: true, opensCabinets: false } }
+  const plan = planStorageZones(p)
+  assert.ok(Array.isArray(plan.petHazards), '应有 petHazards')
+  const hz = plan.petHazards.find((h) => h.itemId === 'si-med')
+  assert.ok(hz, '可触区的药应报危险')
+  assert.ok(hz.risks.includes('meds') && hz.risks.includes('toxic'), '药应多风险')
+  assert.equal(hz.certainty, 'confirmed')
+  assert.equal(hz.toCode, 'S1', '应指向最近的宠物安全区(带门防护柜)')
+}
+
 console.log('storage-plan-unit: ok')

@@ -603,4 +603,19 @@ for (const s of slots) {
   assert.deepEqual(cres.provisionalReasons, [])
 }
 
+// —— comfort 包络软惩罚(评审 B7):椅子旋转+滚动区被侵入要罚 ——
+{
+  const zone = { id: 'z', nameZh: '房', polygon: [{ x: 0, y: 0 }, { x: 720, y: 0 }, { x: 720, y: 720 }, { x: 0, y: 720 }] }
+  const chair = { id: 'oc', kind: 'office_chair', label: '办公椅', x: 300, y: 300, w: 60, h: 60, rotation: 0 }
+  // 侵入者:压在椅子旋转+滚动包络(四周 18in=54px)里
+  const intruder = { id: 'box', kind: 'cabinet', label: '柜', x: 300, y: 220, w: 60, h: 60, rotation: 0 }
+  const far = { id: 'box', kind: 'cabinet', label: '柜', x: 300, y: 20, w: 60, h: 60, rotation: 0 }
+  const project = { placements: [chair], fixtures: [], wallGraph: null }
+  const ctx = buildDesignContext(project, [chair, intruder], [zone])
+  const mk = (b) => new Map([[chair.id, { x: chair.x, y: chair.y, w: chair.w, h: chair.h }], [b.id, { x: b.x, y: b.y, w: b.w, h: b.h }]])
+  const near = designPenaltyIn(ctx, mk(intruder))
+  const away = designPenaltyIn(ctx, mk(far))
+  assert.ok(near > away, 'comfort 包络被侵入应比空旷时罚分更高')
+}
+
 console.log('layout-solve-unit: all assertions passed')

@@ -14,6 +14,9 @@
 
 import { canonicalPlacementKind } from './placements.js'
 import { surfaceTypeOf } from './function-truth.js'
+import { petHazards as computePetHazards } from './pet-safety.js'
+import { analyzeAccessConflicts } from './access-conflicts.js'
+import { analyzeSafety } from './safety-rules.js'
 
 /**
  * 一个区里各表面的策略(规范 §1.3, 评审 B2)。台面整理任务据此**不一刀切要求清空**:
@@ -51,6 +54,7 @@ function surfacesInZone(project, zoneId) {
  * - 复扫(9)收尾。
  */
 const P = {
+  safety: -2, // 宠物危险/倾倒/上下床受阻 —— 安全永远第一,排在备料之前(规范 §1.2)
   prep: -1, // 备好箱子和垃圾袋 —— 空手进屋就会开始「拿着一件东西满屋找地方放」
   blockedDoor: 0,
   bottleneck: 1,
@@ -196,6 +200,77 @@ export function buildTidyPlan(project, circ, opts = {}) {
   )
   const viewpoints = project.viewpoints ?? []
   const stats = circ?.zoneStats ?? []
+  const zoneNameByCode = Object.fromEntries(
+    (project.storageZones ?? []).map((z) => [z.code, z.nameZh]),
+  )
+
+  // 0) 安全第一(规范 §1.2, 评审 B5/B7/§3):宠物危险、上下床/出口受阻、高柜倾倒。
+  // 这些排在通行之前,priority P.safety 最小。纯几何/规则算出,不靠照片。
+
+  // 0a) 宠物可触区里的危险物 —— 聚成一条任务(逐件列出去处),别刷屏。
+  const petHz = computePetHazards(project).filter((h) => h.certainty === 'confirmed')
+  if (petHz.length) {
+    const lines = petHz.map((h) => {
+      const where = h.zoneCode + (zoneNameByCode[h.zoneCode] ? ` ${zoneNameByCode[h.zoneCode]}` : '')
+      return `「${h.name}」（${where}）—— 挪进带门/够不着的收纳`
+    })
+    tasks.push({
+      id: 'pet-safety',
+      kind: 'safety',
+      title: '把危险物移出宠物可触区',
+      priority: P.safety,
+      estMinutes: 10 + petHz.length * 2,
+      zoneId: null,
+      zoneName: null,
+      reason: `${petHz.length} 件危险物(药/线材/小零件/食品袋等)在宠物够得着的开放收纳里 —— 误食/触电风险,先处理`,
+      steps: [...lines, '没有带门/够不着的地方就先集中锁进一个箱,别继续敞放'],
+      doneWhen: [
+        '宠物可触的开放区里没有药物/清洁剂/补剂/线材/电池/小零件/食品袋/塑料袋',
+        '这些东西都进了带门柜、够不着的高处或锁扣箱',
+      ],
+      items: petHz.map((h) => h.name),
+      photoRef: null,
+      focus: null,
+    })
+  }
+
+  // 0b) 上下床/出口被家具挡住(egress 硬)——逐条列。
+  for (const c of analyzeAccessConflicts(project).filter((x) => x.envelopeType === 'egress')) {
+    tasks.push({
+      id: `egress-${c.actorId}-${c.blockedById}`,
+      kind: 'safety',
+      title: `疏通「${c.actorLabel}」的上下/出口空间`,
+      priority: P.safety,
+      estMinutes: 10,
+      zoneId: null,
+      zoneName: null,
+      reason: `「${c.blockedByLabel}」压进了「${c.actorLabel}」的上下床/出口空间(约 ${c.overlapDepthIn}″)—— 紧急时出不去`,
+      steps: [`把「${c.blockedByLabel}」挪开,给「${c.actorLabel}」让出至少一侧连续通道`],
+      doneWhen: [`「${c.actorLabel}」至少一侧能顺畅上下/进出,不用侧身跨越`],
+      items: [],
+      photoRef: null,
+      focus: null,
+    })
+  }
+
+  // 0c) 高柜倾倒(未贴墙)——逐条列。
+  for (const h of analyzeSafety(project).hazards.filter((x) => x.kind === 'tip-risk')) {
+    tasks.push({
+      id: `tip-${h.subjectId}`,
+      kind: 'safety',
+      title: `固定「${h.subjectLabel}」防倾倒`,
+      priority: P.safety,
+      estMinutes: 15,
+      zoneId: null,
+      zoneName: null,
+      reason: `「${h.subjectLabel}」约 ${h.params.heightIn}″ 高且未贴墙 —— 攀爬或碰撞可能整个倒下(有宠物/人时是伤人风险)`,
+      steps: ['靠墙摆放,并用防倒带/L 型支架固定到墙面', '重物往下层放,降低重心'],
+      doneWhen: ['柜体固定到墙面,晃动不倒', '上层不再放重物'],
+      items: [],
+      photoRef: null,
+      focus: null,
+    })
+  }
 
   // 1) 堵死的门 —— 安全与通行第一。
   // 必须点名是哪道门、被什么挡住(circulation 已经查好了):「疏通被挡住的门」

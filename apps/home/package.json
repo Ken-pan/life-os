@@ -49,7 +49,11 @@
     "test:reload": "node scripts/plan-edit-reload-fuzz.mjs",
     "test:function-truth": "node scripts/function-truth-unit.mjs",
     "test:capacity": "node scripts/capacity-unit.mjs",
-    "test:tidy-plan": "node scripts/tidy-plan-unit.mjs"
+    "test:tidy-plan": "node scripts/tidy-plan-unit.mjs",
+    "test:pet-safety": "node scripts/pet-safety-unit.mjs",
+    "test:envelopes": "node scripts/envelopes-unit.mjs",
+    "test:access-conflicts": "node scripts/access-conflicts-unit.mjs",
+    "test:safety-rules": "node scripts/safety-rules-unit.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",

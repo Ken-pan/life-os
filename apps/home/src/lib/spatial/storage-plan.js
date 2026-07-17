@@ -26,6 +26,7 @@ import { PX_PER_FT } from './dimensions.js'
 import { pointInPolygon } from './geometry.js'
 import { canonicalPlacementKind, verticalBlockRangeIn } from './placements.js'
 import { zoneCapacity, isFull } from './capacity.js'
+import { petHazards as computePetHazards, zoneReachable } from './pet-safety.js'
 
 /**
  * 取物高度带(英寸,离地)。人体工学通用标准:黄金区 = 膝到肩,厨房日用 20–50″;
@@ -508,7 +509,29 @@ export function planStorageZones(project) {
     return (b.savedFt ?? 0) - (a.savedFt ?? 0)
   })
 
-  return { zones: out, misplaced, floorBound, unbound }
+  // 宠物危险(规范 §4, 评审 B5):可触开放区里的危险物,给出最近的**宠物安全**去处
+  // (petProof/带门/够不着)。这是硬安全,严重度高于「放错柜子」;toCode 为 null =
+  // 没有现成安全区,需新增封闭收纳。
+  const petSafety = project.meta?.petSafety
+  const safeZones = zones.filter((z) => center(z) && zoneReachable(z, petSafety) === false)
+  const petHazards = computePetHazards(project).map((hz) => {
+    const fromZone = byCode[hz.zoneCode]
+    const fc = fromZone && center(fromZone)
+    let toCode = null
+    let best = Infinity
+    for (const sz of safeZones) {
+      if (sz.code === hz.zoneCode) continue
+      const c = center(sz)
+      const d = fc ? Math.hypot(c.x - fc.x, c.y - fc.y) : 0
+      if (d < best) {
+        best = d
+        toCode = sz.code
+      }
+    }
+    return { ...hz, toCode }
+  })
+
+  return { zones: out, misplaced, floorBound, unbound, petHazards }
 }
 
 /**

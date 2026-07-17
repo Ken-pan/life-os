@@ -56,4 +56,31 @@ const surfacesTask = (p) => buildTidyPlan(p, CIRC).tasks.find((t) => t.kind === 
   assert.ok(t.doneWhen.some((d) => /禁放面.*一件不留/.test(d)), '炉灶应有禁放面硬约束')
 }
 
+// —— 安全任务排在最前(规范 §1.2, 评审 B5/B7/§3)——
+{
+  const project = {
+    meta: { petSafety: { reachInCm: 90, canJumpToCounter: false, chews: true, opensCabinets: false } },
+    zones: [{ id: 'z1', nameZh: '卧室', polygon: [{ x: 0, y: 0 }, { x: 600, y: 0 }, { x: 600, y: 600 }, { x: 0, y: 600 }] }],
+    placements: [
+      // 高而未贴墙的钢架 → 倾倒
+      { id: 'rack', kind: 'wire_rack', label: '钢架', x: 300, y: 300, w: 108, h: 54, rotation: 0, zoneId: 'z1' },
+    ],
+    storageZones: [
+      { code: 'S1', nameZh: '开放矮架', bounds: { x: 0, y: 0, w: 100, h: 100 }, marker: { x: 50, y: 50 },
+        zoneAccess: { open: true, closable: false, petProof: false, lockable: false, heightCm: 20 },
+        items: [{ id: 'm', name: '布洛芬' }] },
+    ],
+    viewpoints: [],
+  }
+  const plan = buildTidyPlan(project, CIRC)
+  const kinds = plan.tasks.map((t) => t.kind)
+  assert.ok(kinds.includes('safety'), '应有安全任务')
+  // 安全任务优先级最小 → 排最前
+  assert.equal(plan.tasks[0].kind, 'safety', '安全任务应排最前')
+  assert.ok(plan.tasks.some((t) => t.id === 'pet-safety'), '应有宠物安全任务')
+  assert.ok(plan.tasks.some((t) => t.id === 'tip-rack'), '应有防倾倒任务')
+  const pet = plan.tasks.find((t) => t.id === 'pet-safety')
+  assert.ok(pet.items.includes('布洛芬'))
+}
+
 console.log('tidy-plan-unit: ok')

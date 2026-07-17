@@ -27,6 +27,7 @@ import { auditLayout } from './layout-audit.js'
 import { computeTaskRoutes } from './task-routes.js'
 import { assessRelationReadiness } from './plan-readiness.js'
 import { isFence, placementSpec } from './placements.js'
+import { comfortEnvelopeRects } from './envelopes.js'
 import { wallAnchorSegments } from './wall-anchor.js'
 import { PX_PER_FT, PX_PER_IN } from './dimensions.js'
 import { boxesOverlap, pointToRectDistance } from './geometry.js'
@@ -341,14 +342,30 @@ export function buildDesignContext(project, placements, zones) {
   )
   const sightPairs = pairs.filter((p) => p.zh === '电视与沙发观看距离')
 
+  // comfort 包络(评审 B7):椅子旋转+滚动、桌前操作余量 —— 词表 clearance=0 没管,
+  // 这是包络填的真空。位置随求解变,只在这里存 id/kind/rotation,罚分时按当前盒子现算。
+  const comfortActors = placements
+    .filter((pl) => !pl.fixed && comfortEnvelopeRects(pl).length > 0)
+    .map((pl) => ({ id: pl.id, kind: pl.kind, rotation: pl.rotation, clearanceIn: pl.attrs?.clearanceIn }))
+
   /** 静态障碍(评估里不变):固定设施 */
   const fixtureBoxes = (project.fixtures ?? []).map((f) => f.bounds).filter(Boolean)
   /** 高家具表(挡视线/挡窗判定用) */
   const tallOf = new Map(
     placements.map((pl) => [pl.id, placementSpec(pl.kind)?.tall ?? 30]),
   )
-  return { segs, pairs, farPairs, huggers, access, windows, doors, sightPairs, fixtureBoxes, tallOf }
+  return { segs, pairs, farPairs, huggers, access, windows, doors, sightPairs, fixtureBoxes, tallOf, comfortActors }
 }
+
+/** 两个盒子的侵入深度(英寸)= 较小的重叠边;不重叠为 0。 */
+function boxIntrusionIn(a, b) {
+  const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)
+  const oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)
+  return Math.max(0, Math.min(ox, oy)) / PX_PER_IN
+}
+
+/** comfort 包络被侵入的每次罚分封顶(英寸):软约束,别盖过真瓶颈。 */
+const COMFORT_CAP = 18
 
 /**
  * 一个布局的**设计规范总偏差**(英寸,越低越专业):
@@ -438,6 +455,27 @@ export function designPenaltyIn(ctx, boxById) {
     // 不是斜对角。沙发的前向 = 背离最近的墙(沙发是贴墙件,front 可推);
     // 电视偏离前向超过 30° 按度数罚 —— 斜 60° 看电视脖子最清楚。
     total += viewingAnglePenaltyIn(b, a, ctx.segs)
+  }
+
+  // 5) comfort 包络(评审 B7,软):椅子旋转+滚动 / 桌前操作余量被别的家具或固定设施
+  // 侵入,按侵入深度罚(每次封顶)。词表 clearance=0 管不到椅子,这里补上。
+  for (const actor of ctx.comfortActors ?? []) {
+    const box = boxById.get(actor.id)
+    if (!box) continue
+    const pseudo = {
+      id: actor.id, kind: actor.kind, rotation: actor.rotation,
+      x: box.x, y: box.y, w: box.w, h: box.h,
+      attrs: actor.clearanceIn != null ? { clearanceIn: actor.clearanceIn } : undefined,
+    }
+    for (const env of comfortEnvelopeRects(pseudo)) {
+      for (const [id, b] of boxById) {
+        if (id === actor.id) continue
+        total += Math.min(boxIntrusionIn(env, b), COMFORT_CAP)
+      }
+      for (const fb of ctx.fixtureBoxes) {
+        total += Math.min(boxIntrusionIn(env, fb), COMFORT_CAP)
+      }
+    }
   }
   return total
 }
