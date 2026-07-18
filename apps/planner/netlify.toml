@@ -1,7 +1,7 @@
 [build]
   command = "npm run build -w planner-os"
   publish = "apps/planner/build"
-  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/planner packages/contracts packages/platform-web packages/sync packages/theme"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/planner packages/contracts packages/mcp-server packages/platform-web packages/sync packages/theme"
 
 [build.environment]
   NODE_VERSION = "22"
