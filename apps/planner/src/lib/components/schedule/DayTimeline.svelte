@@ -74,8 +74,17 @@
   /** @type {CreateGesture | null} */
   let createGesture = $state(null);
 
-  /* 可见时间窗随当日块动态外扩（SCH：窗口外块不可丢） */
-  const dayBounds = $derived(dayBoundsForTasks(tasks));
+  /* 可见时间窗随当日块动态外扩（SCH：窗口外块不可丢）。今天再额外把窗口撑到包含
+     「现在」这一刻 —— 否则深夜/清晨（默认窗 8–23 外）看不到 now-line、也无法自动滚到
+     当前时间（Apple/Google 日历日视图标配：打开即定位到现在）。 */
+  const dayBounds = $derived.by(() => {
+    if (!isTodayDate(dateKey, todayKey())) return dayBoundsForTasks(tasks);
+    const nowHour = new Date(nowMs).getHours();
+    return dayBoundsForTasks(tasks, {
+      dayStart: Math.min(8, nowHour),
+      dayEnd: Math.max(23, nowHour + 1),
+    });
+  });
   const dayStart = $derived(dayBounds.dayStart);
   const dayEnd = $derived(dayBounds.dayEnd);
   const hours = $derived(

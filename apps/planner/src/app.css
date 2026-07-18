@@ -596,14 +596,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 .calendar-week-nav-btn {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
@@ -3027,10 +3027,14 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     font-size: var(--text-sm);
   }
 
+  /* 参考 Apple/Google 日历：移动端时间轴自成有界滚动面（日期条钉在上方不跟着滚），
+     这样 DayTimeline 的自动锚定逻辑（ownsScroll 判定）在移动端也生效 → 打开即滚到
+     当前时间。高度 = 可视视口减去 上方（appbar+日期条+待排程）与底部导航的预留。 */
   .calendar-page .day-timeline-scroll {
-    max-height: none;
-    padding-bottom: 0;
-    overflow: visible;
+    max-height: calc(var(--app-vh, 100dvh) - 21rem);
+    overflow-y: auto;
+    padding-bottom: var(--space-4);
+    overscroll-behavior: contain;
   }
 
   .unscheduled-panel {

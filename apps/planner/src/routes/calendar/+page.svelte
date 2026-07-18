@@ -137,6 +137,7 @@
         {#if tasks.length}
           <TaskGroup
             title={sectionTitle(selected)}
+            hideHeader
             hideCount
             {tasks}
             compactRows
