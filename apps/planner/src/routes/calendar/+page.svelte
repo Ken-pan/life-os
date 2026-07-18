@@ -145,9 +145,11 @@
               onclick={() => shiftWeek(1)}
               aria-label={t('calendar.nextWeek')}>›</button
             >
-            <button type="button" class="cal-strip-today" onclick={jumpToday}
-              >{t('home.today')}</button
-            >
+            {#if selected !== todayKey()}
+              <button type="button" class="cal-strip-today" onclick={jumpToday}
+                >{t('home.today')}</button
+              >
+            {/if}
           </div>
           <div class="cal-dow-row" aria-hidden="true">
             {#each WEEKDAY_LABELS as w (w)}<span>{w}</span>{/each}
@@ -174,9 +176,7 @@
              空态纯属冗余占屏。（参考 Apple 日历：日期条下直接是时间轴。） -->
         {#if tasks.length}
           <TaskGroup
-            title={sectionTitle(selected)}
-            hideHeader
-            hideCount
+            title={t('schedule.unscheduled')}
             {tasks}
             compactRows
             showScheduleAction
