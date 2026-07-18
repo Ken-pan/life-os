@@ -3129,6 +3129,12 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     overscroll-behavior: contain;
   }
 
+  /* 时间轴成开放画布后，底部「回到当前时间」也去掉卡片外框保持一致。 */
+  .calendar-page .day-timeline-foot {
+    border: none;
+    background: transparent;
+  }
+
   .unscheduled-panel {
     padding: var(--space-2) var(--space-2-5);
     background: var(--card);

@@ -224,7 +224,7 @@ export default {
     title: '日历排程',
     unscheduled: '待排程',
     unscheduledEmpty: '今天的任务都已安排时间',
-    timelineEmpty: '从左侧选择任务，安排到今天的时间轴',
+    timelineEmpty: '点空白时段即可安排任务',
     slotTitle: '安排这个时间',
     slotSubtitle: '{start} 开始',
     createAtSlot: '在这个时间创建或安排任务',

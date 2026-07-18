@@ -224,7 +224,7 @@ export default {
     title: 'Day schedule',
     unscheduled: 'Unscheduled',
     unscheduledEmpty: 'All tasks are on the timeline',
-    timelineEmpty: 'Pick a task on the left to place it on today’s timeline',
+    timelineEmpty: 'Tap an empty slot to schedule a task',
     slotTitle: 'Schedule this slot',
     slotSubtitle: 'Starts at {start}',
     createAtSlot: 'Create or schedule a task at this time',
