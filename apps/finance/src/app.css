@@ -2918,7 +2918,7 @@ div.input {
   justify-content: center;
   border-radius: var(--radius-pill, 999px);
   background: var(--accent);
-  color: var(--accent-foreground, #14310a);
+  color: var(--accent-foreground);
   font-weight: 700;
   font-size: var(--text-sm);
 }
@@ -3851,8 +3851,8 @@ div.input {
   margin: 0 0 var(--space-2);
   padding: var(--space-2);
   border-radius: var(--radius-2, 8px);
-  background: color-mix(in srgb, var(--positive, #15803d) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--positive, #15803d) 22%, transparent);
+  background: color-mix(in srgb, var(--positive) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--positive) 22%, transparent);
 }
 
 .purchase-refund-links-title {
@@ -3879,18 +3879,18 @@ div.input {
 
 .purchase-refund-link-amt {
   font-weight: 600;
-  color: var(--positive, #15803d);
+  color: var(--positive);
   font-variant-numeric: tabular-nums;
 }
 
 .purchase-refund-link[data-present='false'] {
-  background: color-mix(in srgb, var(--warning, #b45309) 8%, transparent);
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
   border-radius: var(--radius-1, 4px);
   padding: 0 var(--space-1, 4px);
 }
 
 .purchase-refund-link[data-present='false'] .purchase-refund-link-amt {
-  color: var(--warning, #b45309);
+  color: var(--warning);
 }
 
 .purchase-enrichment-meta {
@@ -4044,7 +4044,7 @@ div.input {
 }
 
 .purchase-note[data-handled='true'] {
-  border-color: color-mix(in srgb, var(--positive, #15803d) 30%, transparent);
+  border-color: color-mix(in srgb, var(--positive) 30%, transparent);
 }
 
 .purchase-note-head {
@@ -4071,8 +4071,8 @@ div.input {
 }
 
 .purchase-note-handled-btn:hover:not(:disabled) {
-  border-color: var(--positive, #15803d);
-  color: var(--positive, #15803d);
+  border-color: var(--positive);
+  color: var(--positive);
 }
 
 .purchase-note-handled-btn:disabled {
@@ -4081,9 +4081,9 @@ div.input {
 }
 
 .purchase-note-handled-btn.is-handled {
-  border-color: color-mix(in srgb, var(--positive, #15803d) 50%, var(--border));
-  background: var(--positive-subtle, color-mix(in srgb, var(--positive, #15803d) 10%, transparent));
-  color: var(--positive, #15803d);
+  border-color: color-mix(in srgb, var(--positive) 50%, var(--border));
+  background: var(--positive-subtle);
+  color: var(--positive);
 }
 
 .purchase-note-input {
@@ -4161,7 +4161,7 @@ div.input {
   padding: 0;
   border: none;
   background: none;
-  color: var(--warning, #b45309);
+  color: var(--warning);
   font: inherit;
   font-size: var(--text-sm);
   cursor: pointer;
