@@ -6,10 +6,11 @@
  *
  * Block: { id, type, text, depth, meta }
  *   type   'paragraph' | 'heading' | 'bullet' | 'numbered' | 'todo'
- *          | 'quote' | 'code' | 'divider'
- *   text   块内的「行内 Markdown」原文（code 块为原始代码，可多行）
+ *          | 'quote' | 'code' | 'divider' | 'callout' | 'table' | 'image'
+ *   text   块内的「行内 Markdown」原文（code 块为原始代码，可多行；image→alt 文本）
  *   depth  列表缩进层级（0 起），仅 bullet/numbered/todo 有意义
  *   meta   heading→{level:1..6}；todo→{checked};  code→{lang}; numbered→{start}
+ *          callout→{callout}; table→{rows,align}; image→{src}
  *
  * 设计约束：markdownToBlocks(blocksToMarkdown(x)) 结构稳定（往返不漂移），
  * 这是数据完整性护栏，被 knowledge-unit.mjs 锁死。
@@ -138,6 +139,14 @@ export function markdownToBlocks(src) {
       continue
     }
 
+    // 独占一行的图片 ![alt](src) —— 成块；行内图片仍留在段落里当普通文本
+    const image = line.match(/^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/)
+    if (image) {
+      blocks.push(makeBlock('image', image[1].trim(), { meta: { src: image[2].trim() } }))
+      i += 1
+      continue
+    }
+
     // Callout 高亮块（Obsidian 语法 > [!type] …）—— 必须先于普通引用判定。
     // 后续连续的 > 行（非新 callout）并入其正文；编辑器里按单行处理，多行导入合成一行。
     const callout = line.match(/^\s*>\s*\[!(\w+)\][+-]?\s?(.*)$/)
@@ -258,7 +267,8 @@ function isBlockStart(line) {
     /^>\s?/.test(line) ||
     /^(\s*)[-*+]\s+/.test(line) ||
     /^(\s*)\d+[.)]\s+/.test(line) ||
-    /^\s*\|.*\|\s*$/.test(line)
+    /^\s*\|.*\|\s*$/.test(line) ||
+    /^\s*!\[[^\]]*\]\([^)\s]+\)\s*$/.test(line)
   )
 }
 
@@ -282,6 +292,8 @@ export function blockToMarkdown(b) {
       return `${pad}${b.meta?.start ?? 1}. ${b.text}`
     case 'code':
       return '```' + (b.meta?.lang || '') + '\n' + b.text + '\n```'
+    case 'image':
+      return `![${b.text || ''}](${b.meta?.src || ''})`
     case 'table':
       return tableToMarkdown(b)
     default:

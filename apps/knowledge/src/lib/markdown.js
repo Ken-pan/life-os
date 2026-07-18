@@ -26,13 +26,31 @@ export function extractWikilinks(text) {
   return [...new Set(out)]
 }
 
-/** 行内语法：先保护 code span，再抽 wikilink / 链接，最后转义 + 加粗斜体。 */
+/** 图片地址白名单：仅 http(s) 与相对路径，挡掉 javascript: 等危险 scheme。 */
+function safeImageSrc(url) {
+  const u = String(url).trim()
+  if (/^https?:\/\//i.test(u)) return u
+  // 带 scheme 但非 http(s) → 拒绝；否则视为相对路径放行
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return ''
+  return u
+}
+
+/** 行内语法：先保护 code span，再抽图片 / wikilink / 链接，最后转义 + 加粗斜体。 */
 function renderInline(raw) {
   const stash = []
   const put = (html) => `\x00${stash.push(html) - 1}\x00`
 
   // 1. 行内 code（保护内部字符不被后续规则啃）
   let text = raw.replace(/`([^`]+)`/g, (_, code) => put(`<code>${escapeHtml(code)}</code>`))
+
+  // 1.5 图片 ![alt](src) —— 必须在链接规则之前（否则 [alt](src) 先被吃成链接）
+  text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, alt, src) => {
+    const safe = safeImageSrc(src)
+    if (!safe) return put(escapeHtml(alt))
+    return put(
+      `<img class="md-img" src="${escapeHtml(safe)}" alt="${escapeHtml(alt)}" loading="lazy" />`,
+    )
+  })
 
   // 2. wikilink [[目标|显示]] —— 在转义前抽走，data 属性存原始目标
   text = text.replace(/\[\[([^\]]+)\]\]/g, (_, inner) => {

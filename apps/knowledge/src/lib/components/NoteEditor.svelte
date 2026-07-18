@@ -16,7 +16,8 @@
     Bold, Italic, Code, Strikethrough, Link2, Type, Heading1, Heading2,
     Heading3, List, ListOrdered, CheckSquare, Quote, Minus, GripVertical,
     Plus, FileCode, Eye, Pin, Trash2, Check, MoreHorizontal,
-    Info, Lightbulb, TriangleAlert, OctagonAlert, Table,
+    Info, Lightbulb, TriangleAlert, OctagonAlert, Table, Columns3,
+    Image as ImageIcon, ChevronRight, TextAlignStart, TextAlignCenter, TextAlignEnd,
   } from '@lucide/svelte'
   import {
     markdownToBlocks, blocksToMarkdown, makeBlock, newBlockId, firstHeadingMatchesTitle,
@@ -68,6 +69,44 @@
   const dupHeadingId = $derived(
     firstHeadingMatchesTitle(blocks, title) ? blocks[0].id : null,
   )
+
+  /* ——— 标题折叠（Notion 式 toggle heading / Obsidian 按标题折叠）———
+     纯 UI 态：折叠一个标题 → 隐藏其后所有块，直到遇到同级或更高级标题。
+     不改 markdown（数据不动、Obsidian 互通不破），换笔记时清空。 */
+  let collapsed = $state(new Set()) // 折叠中的标题 block id
+  const headingLevel = (b) => (b?.type === 'heading' ? (b.meta?.level || 1) : 0)
+  /** 某标题块下辖的块数（到下一个同级/更高级标题为止）——决定是否显示折叠箭头。 */
+  function foldableCount(i) {
+    const lv = headingLevel(blocks[i])
+    if (!lv) return 0
+    let n = 0
+    for (let j = i + 1; j < blocks.length; j += 1) {
+      const hl = headingLevel(blocks[j])
+      if (hl && hl <= lv) break
+      n += 1
+    }
+    return n
+  }
+  /** 被折叠标题隐藏的块 id 集合。 */
+  const hiddenIds = $derived.by(() => {
+    const hidden = new Set()
+    for (let i = 0; i < blocks.length; i += 1) {
+      const lv = headingLevel(blocks[i])
+      if (!lv || !collapsed.has(blocks[i].id)) continue
+      for (let j = i + 1; j < blocks.length; j += 1) {
+        if (headingLevel(blocks[j]) && headingLevel(blocks[j]) <= lv) break
+        hidden.add(blocks[j].id)
+      }
+    }
+    return hidden
+  })
+  function toggleCollapse(id) {
+    const next = new Set(collapsed)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    collapsed = next
+  }
+
   let mode = $state('wysiwyg') // 'wysiwyg' | 'source'
   let sourceText = $state('')
   let confirmDelete = $state(false)
@@ -98,6 +137,7 @@
     mode = 'wysiwyg'
     sourceText = ''
     confirmDelete = false
+    collapsed = new Set()
     closeMenus()
     // 内联无焦点陷阱：显式聚焦（空笔记→标题；否则→首块）
     if (inline) {
@@ -276,6 +316,76 @@
   function delTableCol(block, c) {
     if (block.meta.rows[0].length <= 1) return
     tableUpdate(block, (rows, align) => { rows.forEach((row) => row.splice(c, 1)); align.splice(c, 1) })
+  }
+  const ALIGN_CYCLE = ['left', 'center', 'right']
+  /** 循环某列对齐（left→center→right→left）。就地改 align、不重挂载（保光标）。 */
+  function cycleColAlign(block, c) {
+    const i = indexOfBlock(block.id)
+    if (i < 0) return
+    if (!Array.isArray(blocks[i].meta.align)) blocks[i].meta.align = []
+    const cur = blocks[i].meta.align[c]
+    blocks[i].meta.align[c] = ALIGN_CYCLE[(ALIGN_CYCLE.indexOf(cur ?? 'left') + 1) % ALIGN_CYCLE.length]
+    blocks = blocks
+    scheduleSave()
+  }
+  /** 对齐值 → CSS text-align（GFM 对齐是物理方向；null 视作 left）。 */
+  const alignCss = (a) => (a === 'center' ? 'center' : a === 'right' ? 'right' : 'left')
+  const ALIGN_ICON = { left: TextAlignStart, center: TextAlignCenter, right: TextAlignEnd }
+
+  /** 表格模板：按 key 返回 { rows, align }（首行为表头）。空白表头不塞占位文字。 */
+  function buildTable(key) {
+    if (key === 'table-compare') {
+      const rows = [
+        [t('editor.tplCompareDim'), t('editor.tplCompareA'), t('editor.tplCompareB')],
+        ['', '', ''],
+        ['', '', ''],
+      ]
+      return { rows, align: [null, null, null] }
+    }
+    if (key === 'table-check') {
+      const rows = [
+        [t('editor.tplCheckTask'), t('editor.tplCheckOwner'), t('editor.tplCheckStatus')],
+        ['', '', ''],
+        ['', '', ''],
+      ]
+      return { rows, align: [null, null, null] }
+    }
+    // 空白 3×3
+    return { rows: [['', '', ''], ['', '', ''], ['', '', '']], align: [null, null, null] }
+  }
+
+  /* ============ 图片块 ============ */
+  /** 在第 i 块位置插入/替换成图片块（src 为图片地址）。 */
+  function insertImage(i, src, alt = '') {
+    if (i < 0 || !src) return
+    const nb = replaceBlock(i, 'image', alt, { meta: { src } })
+    // 图片后补一个空段落，便于继续写
+    const p = makeBlock('paragraph', '')
+    blocks.splice(i + 1, 0, p)
+    pendingFocus = { id: p.id, at: 'start' }
+    scheduleSave()
+  }
+  function onImageCaptionInput(block, el) {
+    const i = indexOfBlock(block.id)
+    if (i < 0) return
+    blocks[i].text = readBlockMarkdown(el)
+    scheduleSave()
+  }
+  function onImageCaptionKeydown(block, el, e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      const i = indexOfBlock(block.id)
+      const p = makeBlock('paragraph', '')
+      blocks.splice(i + 1, 0, p)
+      pendingFocus = { id: p.id, at: 'start' }
+      scheduleSave()
+    } else if (e.key === 'Backspace' && (el.textContent || '') === '' && selectionCollapsed()) {
+      e.preventDefault()
+      const i = indexOfBlock(block.id)
+      replaceBlock(i, 'paragraph', '')
+      pendingFocus = { id: blocks[i].id, at: 'start' }
+      scheduleSave()
+    }
   }
 
   /* ——— 块级 input-rule：段首前缀 → 块类型 ——— */
@@ -558,7 +668,10 @@
     { key: 'numbered', icon: ListOrdered, label: () => t('editor.slNumbered'), desc: () => t('editor.slNumberedD'), type: 'numbered', meta: { start: 1 } },
     { key: 'quote', icon: Quote, label: () => t('editor.slQuote'), desc: () => t('editor.slQuoteD'), type: 'quote' },
     { key: 'code', icon: FileCode, label: () => t('editor.slCode'), desc: () => t('editor.slCodeD'), type: 'code', meta: { lang: '' } },
+    { key: 'image', icon: ImageIcon, label: () => t('editor.slImage'), desc: () => t('editor.slImageD'), type: 'image' },
     { key: 'table', icon: Table, label: () => t('editor.slTable'), desc: () => t('editor.slTableD'), type: 'table' },
+    { key: 'table-compare', icon: Columns3, label: () => t('editor.slTableCompare'), desc: () => t('editor.slTableCompareD'), type: 'table' },
+    { key: 'table-check', icon: Table, label: () => t('editor.slTableCheck'), desc: () => t('editor.slTableCheckD'), type: 'table' },
     { key: 'c-note', icon: Info, label: () => t('editor.slCalloutNote'), desc: () => t('editor.slCalloutNoteD'), type: 'callout', meta: { callout: 'note' } },
     { key: 'c-tip', icon: Lightbulb, label: () => t('editor.slCalloutTip'), desc: () => t('editor.slCalloutTipD'), type: 'callout', meta: { callout: 'tip' } },
     { key: 'c-warning', icon: TriangleAlert, label: () => t('editor.slCalloutWarn'), desc: () => t('editor.slCalloutWarnD'), type: 'callout', meta: { callout: 'warning' } },
@@ -622,11 +735,15 @@
       const p = makeBlock('paragraph', raw)
       blocks.splice(i + 1, 0, p)
       pendingFocus = { id: p.id, at: 'start' }
-    } else if (sel.key === 'table') {
-      // 起手 3 列 × 3 行（空表头 + 2 空行，表头行加粗+底纹即足够提示），焦点落首格
-      const nb = replaceBlock(i, 'table', '', {
-        meta: { rows: [['', '', ''], ['', '', ''], ['', '', '']], align: [null, null, null] },
-      })
+    } else if (sel.type === 'image') {
+      // 图片：弹窗要地址（禁止把凭据/文件系统交给自动流程；纯 URL）
+      const url = (prompt(t('editor.imagePrompt')) || '').trim()
+      if (url) insertImage(i, url, raw) // 已输入的文字留作图注，不丢
+      else { pendingFocus = { id: blocks[i].id, at: 'end' } }
+    } else if (sel.type === 'table') {
+      // 起手表格（空白 3×3 或模板）；空白表头靠 th 加粗+底纹提示，焦点落首格
+      const { rows, align } = buildTable(sel.key)
+      const nb = replaceBlock(i, 'table', '', { meta: { rows, align } })
       tick().then(() => focusCell(nb.id, 0, 0))
     } else {
       replaceBlock(i, sel.type || 'paragraph', raw, { meta: sel.meta ? { ...sel.meta } : {} })
@@ -853,7 +970,7 @@
           <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
           <div class="ed-blocks" onclick={onBodyClick}>
             {#each blocks as block, i (block.id)}
-              {#if block.id !== dupHeadingId}
+              {#if block.id !== dupHeadingId && !hiddenIds.has(block.id)}
               <div
                 class="ed-row ed-row--{block.type}"
                 class:is-drop={dropId === block.id}
@@ -899,6 +1016,22 @@
                         onkeydown={(e) => onKeydown(block, e.currentTarget, e)}
                       ></div>
                     </div>
+                  {:else if block.type === 'image'}
+                    <figure class="ed-figure">
+                      {#if block.meta?.src}
+                        <img class="ed-img" src={block.meta.src} alt={block.text} draggable="false" />
+                      {:else}
+                        <span class="ed-img-missing">{t('editor.imageMissing')}</span>
+                      {/if}
+                      <figcaption
+                        class="ed-edit ed-figcap"
+                        contenteditable="true" role="textbox" tabindex="0" aria-multiline="false"
+                        data-ph={t('editor.imageCaption')}
+                        use:editable={block}
+                        oninput={(e) => onImageCaptionInput(block, e.currentTarget)}
+                        onkeydown={(e) => onImageCaptionKeydown(block, e.currentTarget, e)}
+                      ></figcaption>
+                    </figure>
                   {:else if block.type === 'table'}
                     {@const rows = block.meta?.rows || []}
                     {@const cols = rows[0]?.length || 0}
@@ -909,16 +1042,22 @@
                             {#each rows as row, r (r)}
                               <tr class="ed-tr">
                                 {#each row as _cell, c (c)}
+                                  {@const colAlign = block.meta?.align?.[c] ?? 'left'}
                                   <svelte:element this={r === 0 ? 'th' : 'td'} class="ed-td">
                                     <div
                                       class="ed-cell"
                                       contenteditable="true"
                                       role="textbox" tabindex="0" aria-multiline="false"
+                                      style="text-align:{alignCss(colAlign)}"
                                       use:tableCell={{ blockId: block.id, r, c }}
                                       oninput={(e) => onCellInput(block, r, c, e.currentTarget)}
                                       onkeydown={(e) => onCellKeydown(block, r, c, e)}
                                     ></div>
                                     {#if r === 0}
+                                      {@const AlignIcon = ALIGN_ICON[colAlign]}
+                                      <button type="button" class="ed-talign" tabindex="-1"
+                                        title={t('editor.tableAlign')} onmousedown={(e) => { e.preventDefault(); cycleColAlign(block, c) }}
+                                        aria-label={t('editor.tableAlign')}><AlignIcon size={12} /></button>
                                       <button type="button" class="ed-tdel ed-tdel--col" tabindex="-1"
                                         title={t('editor.tableDelCol')} onmousedown={(e) => { e.preventDefault(); delTableCol(block, c) }}
                                         aria-label={t('editor.tableDelCol')}><Trash2 size={11} /></button>
@@ -943,6 +1082,15 @@
                         aria-label={t('editor.tableAddRow')}><Plus size={13} /></button>
                     </div>
                   {:else}
+                    {#if block.type === 'heading' && foldableCount(i) > 0}
+                      <button
+                        type="button" class="ed-fold" class:is-collapsed={collapsed.has(block.id)}
+                        onclick={() => toggleCollapse(block.id)} tabindex="-1"
+                        aria-expanded={!collapsed.has(block.id)}
+                        title={collapsed.has(block.id) ? t('editor.headingExpand') : t('editor.headingCollapse')}
+                        aria-label={collapsed.has(block.id) ? t('editor.headingExpand') : t('editor.headingCollapse')}
+                      ><ChevronRight size={16} /></button>
+                    {/if}
                     {#if block.type === 'todo'}
                       <button type="button" class="ed-check" class:is-done={block.meta?.checked} onclick={() => toggleTodo(block)} aria-label={t('editor.slTodo')} tabindex="-1">
                         {#if block.meta?.checked}<Check size={13} strokeWidth={3} />{/if}
@@ -964,6 +1112,10 @@
                       oninput={(e) => onInput(block, e.currentTarget, e)}
                       onkeydown={(e) => onKeydown(block, e.currentTarget, e)}
                     ></div>
+                    {#if block.type === 'heading' && collapsed.has(block.id)}
+                      <button type="button" class="ed-fold-count" onclick={() => toggleCollapse(block.id)} tabindex="-1"
+                        title={t('editor.headingExpand')}>{t('editor.foldedCount', { n: foldableCount(i) })}</button>
+                    {/if}
                   {/if}
                 </div>
               </div>
@@ -1234,6 +1386,7 @@
   .ed-row:hover > .ed-block { background: var(--wash); }
   .ed-row--divider:hover > .ed-block,
   .ed-row--code:hover > .ed-block,
+  .ed-row--image:hover > .ed-block,
   .ed-row--table:hover > .ed-block { background: transparent; }
 
   .ed-edit {
@@ -1407,6 +1560,59 @@
   .ed-tadd--col { top: 0; bottom: 16px; inset-inline-end: 0; width: 15px; }
   .ed-tadd--row { inset-inline: 0 18px; bottom: 0; height: 13px; }
   .ed-tablewrap:hover .ed-tadd { opacity: 1; }
+  /* 列对齐切换：悬浮表头单元格才露，点一下循环 left→center→right */
+  .ed-talign {
+    position: absolute; top: -10px; inset-inline-start: 3px;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    border: 1px solid var(--border); border-radius: 5px;
+    background: var(--wash-strong, var(--bg));
+    color: var(--t3, var(--text-muted));
+    cursor: pointer; opacity: 0; z-index: 2;
+    transition: opacity var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+  }
+  .ed-talign:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .ed-td:hover > .ed-talign, .ed-cell:focus ~ .ed-talign { opacity: 1; }
+
+  /* 标题折叠箭头：悬浮/折叠态才显，折叠时旋到 90° */
+  .ed-fold {
+    flex: 0 0 auto; margin-top: 0.15em; margin-inline-start: -22px;
+    width: 18px; height: 18px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; background: transparent; border-radius: 4px;
+    color: var(--t3, var(--text-muted)); cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease), background var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease);
+  }
+  .ed-row--heading:hover .ed-fold, .ed-fold.is-collapsed { opacity: 1; }
+  .ed-fold:hover { background: var(--wash-strong); color: var(--t1, var(--text)); }
+  .ed-fold.is-collapsed { transform: rotate(90deg); }
+  .ed-fold-count {
+    align-self: center; margin-inline-start: 8px;
+    padding: 1px 8px; border: none; border-radius: var(--radius-pill, 10px);
+    background: var(--wash); color: var(--t3, var(--text-muted));
+    font-size: var(--text-xs); font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: background var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease);
+  }
+  .ed-fold-count:hover { background: var(--wash-strong); color: var(--t1, var(--text)); }
+
+  /* 图片块：图 + 可编辑说明文字 */
+  .ed-figure { flex: 1; min-width: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .ed-img {
+    max-width: 100%; height: auto; border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border); display: block;
+  }
+  .ed-img-missing {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 88px; padding: 20px;
+    border: 1px dashed color-mix(in srgb, var(--t1, var(--text)) 22%, transparent);
+    border-radius: var(--radius-lg, 12px);
+    color: var(--t3, var(--text-muted)); font-size: var(--text-sm);
+  }
+  .ed-figcap {
+    font-size: var(--text-sm); color: var(--t3, var(--text-muted));
+    text-align: center; line-height: 1.5;
+  }
 
   /* 行内格式 */
   .ed-edit :global(strong) { font-weight: 700; }

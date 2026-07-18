@@ -186,6 +186,10 @@
   }
   .answer-body :global(p) { margin: var(--space-2) 0; }
   .answer-body :global(strong) { color: var(--accent); }
+  .answer-body :global(.md-img) {
+    max-width: 100%; height: auto;
+    border-radius: var(--radius-control, 8px); border: 1px solid var(--border);
+  }
   .src-num {
     display: inline-flex;
     align-items: center;

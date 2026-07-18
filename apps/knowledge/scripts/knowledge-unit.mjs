@@ -98,6 +98,15 @@ function includes(name, haystack, needle) {
   includes('codeblock', renderMarkdown('```\ncode\n```'), '<pre><code>code</code></pre>')
   includes('hr', renderMarkdown('---'), '<hr />')
 
+  // 图片：http(s) 放行、危险 scheme 拦截、不被链接规则先吃
+  const img = renderMarkdown('![猫](https://ex.com/c.png)')
+  includes('img-render', img, '<img class="md-img" src="https://ex.com/c.png" alt="猫"')
+  ok('img-no-anchor', !/<a[^>]*c\.png/.test(img), img)
+  const imgBad = renderMarkdown('![x](javascript:alert(1))')
+  ok('img-scheme-blocked', !imgBad.includes('<img') && !imgBad.includes('javascript:'), imgBad)
+  const imgRel = renderMarkdown('![y](./a/b.png)')
+  includes('img-relative-ok', imgRel, 'src="./a/b.png"')
+
   // 边界不抛
   for (const c of ['', '   ', '#', '```', '| a |', '- ', '[[', '**x']) {
     let threw = false
@@ -459,6 +468,24 @@ function includes(name, haystack, needle) {
     // 表格与前后段落间有空行、往返稳定
     const mixed = '前言\n\n| h |\n| --- |\n| v |\n\n结尾'
     ok('table-mixed-stable', blocksToMarkdown(markdownToBlocks(mixed)) === blocksToMarkdown(markdownToBlocks(blocksToMarkdown(markdownToBlocks(mixed)))))
+  }
+
+  // 图片块：独占一行 ![alt](src) 成块 + 往返稳定
+  {
+    const ib = markdownToBlocks('![猫](https://ex.com/c.png)')
+    ok('image-parse-type', ib[0].type === 'image')
+    ok('image-parse-alt', ib[0].text === '猫')
+    ok('image-parse-src', ib[0].meta.src === 'https://ex.com/c.png')
+    const irt1 = blocksToMarkdown(markdownToBlocks('![猫](https://ex.com/c.png)'))
+    const irt2 = blocksToMarkdown(markdownToBlocks(irt1))
+    ok('image-roundtrip-stable', irt1 === irt2 && irt1 === '![猫](https://ex.com/c.png)', irt1)
+    // 空 alt 也往返
+    ok('image-empty-alt', blocksToMarkdown(markdownToBlocks('![](https://ex.com/x.png)')) === '![](https://ex.com/x.png)')
+    // 行内图片（非独占行）不成块，留在段落里
+    ok('image-inline-not-block', markdownToBlocks('看这张 ![x](https://a/b.png) 图')[0].type === 'paragraph')
+    // 图片与前后段落往返稳定
+    const imix = '前言\n\n![图](https://a/b.png)\n\n结尾'
+    ok('image-mixed-stable', blocksToMarkdown(markdownToBlocks(imix)) === blocksToMarkdown(markdownToBlocks(blocksToMarkdown(markdownToBlocks(imix)))))
   }
 
   // 行内 md ⇄ 可编辑 HTML 往返（落盘不损坏）
