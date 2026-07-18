@@ -4,6 +4,7 @@
   import { moneyPrecise } from '$lib/format.js'
   import { isMoneyMovement, outflowOf, searchTxns } from '../../engine/transactions.js'
   import { matchesPurchaseStateFilter } from '../../engine/purchaseEnrichmentDisplay.js'
+  import { buildRefundLinkIndex } from '../../engine/refundLinks.js'
   import HistoryLedgerRow from './HistoryLedgerRow.svelte'
 
   const PAGE_SIZE = 40
@@ -57,6 +58,11 @@
   } = $props()
 
   const flowOpts = $derived(flowOptions(t))
+
+  // FINC.PURCHASE.6b — pair returned/refunded purchases with their real negative
+  // refund txns. Built from the full ledger (not the paged/filtered view) so a
+  // refund on another page still resolves.
+  const refundIndex = $derived(buildRefundLinkIndex(txns))
 
   let search = $state('')
   let category = $state('')
@@ -227,6 +233,7 @@
         {privacy}
         {purchaseDisplayContext}
         {purchaseDebugMode}
+        refundLinks={txn.id ? (refundIndex.get(txn.id) ?? []) : []}
         editing={editingId === txn.id}
         busy={busyId === txn.id}
         onStartEdit={() => (editingId = txn.id ?? null)}

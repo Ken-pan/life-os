@@ -41,6 +41,7 @@
    *   privacy: boolean,
    *   purchaseDisplayContext: import('../../engine/purchaseEnrichmentDisplay.js').PurchaseDisplayContext,
    *   purchaseDebugMode: boolean,
+   *   refundLinks?: import('../../engine/refundLinks.js').RefundLink[],
    *   editing: boolean,
    *   busy: boolean,
    *   onStartEdit: () => void,
@@ -53,6 +54,7 @@
     privacy,
     purchaseDisplayContext,
     purchaseDebugMode,
+    refundLinks = [],
     editing,
     busy,
     onStartEdit,
@@ -108,7 +110,9 @@
   )
   const showEnrichmentBlock = $derived(
     showsProducts ||
-      (purchaseDebugMode && Boolean(txn.purchaseEnrichment)),
+      (purchaseDebugMode && Boolean(txn.purchaseEnrichment)) ||
+      // FINC.PURCHASE.6b — a linked refund is worth surfacing even with no line items.
+      (refundLinks.length > 0 && Boolean(txn.purchaseEnrichment)),
   )
   const showEnrichmentUi = $derived(showProductStrip || showStateBadge || showEnrichmentBlock)
   const stateBadgeLabel = $derived(t(`history.purchaseState.${purchaseState}`))
@@ -202,6 +206,7 @@
             debugMode={purchaseDebugMode}
             transactionId={txn.id}
             reviewEnabled={purchaseState === 'matched_review'}
+            {refundLinks}
             onOpenChange={(v) => (enrichmentOpen = v)}
           />
         {/if}

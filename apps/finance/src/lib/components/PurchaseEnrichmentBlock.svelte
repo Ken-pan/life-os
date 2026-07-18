@@ -30,6 +30,9 @@
     // Confirm / Reject / Undo for the transaction↔order association.
     transactionId = null,
     reviewEnabled = false,
+    // FINC.PURCHASE.6b — real negative refund txns linked to this purchase.
+    /** @type {import('../../engine/refundLinks.js').RefundLink[]} */
+    refundLinks = [],
   } = $props()
 
   // 评审态(matched_review):这正是最需要证据的地方,反而是原来把商品明细藏了的地方。
@@ -274,6 +277,27 @@
           </div>
         {/if}
       </dl>
+      {#if refundLinks.length > 0}
+        <div class="purchase-refund-links">
+          <span class="purchase-refund-links-title text-sm">{t('history.refundLinkedTitle')}</span>
+          <ul class="purchase-refund-links-list">
+            {#each refundLinks as link (link.txnId)}
+              <li class="purchase-refund-link" data-present={link.present}>
+                <span class="purchase-refund-link-amt">
+                  {link.present ? '−' : ''}{moneyPrecise(link.amount, privacy)}
+                </span>
+                <span class="purchase-refund-link-meta text-sm text-muted">
+                  {#if link.present}
+                    {t('history.refundLinked')}{link.date ? ` · ${link.date}` : ''}
+                  {:else}
+                    {t('history.refundExpected')}
+                  {/if}
+                </span>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
       {#if items.length > 0}
         {#if allowLineItems}
           {#if !hasItemPrices}
