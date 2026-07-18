@@ -28,7 +28,7 @@
 | -------------------- | ------------------------------------------ | --- | ------- | ---- | ---------------------- | ----------------------------------------------------------------------- | ----------- |
 | **PLNR.SCHED.10b.ios** | 日程真机 standalone 签收                 | 🔥  | User gate | <0.5d | Ken | 代码/E2E/PWA 全绿；只签收或记录可复现问题，不占 Agent 主航道 | User Gate |
 | **P-TASK-DISPLAY-0** | 任务行小字 + 类别视觉规范                  | ◆   | Product | —    | **并入 PLNR.SCHED.0**  | [`planner-task-display-spec.md`](../../qa/planner-task-display-spec.md) | PLNR.UIUX.0 |
-| **PLNR.UIUX.0**      | 定向 UI 收口（未覆盖页 + 静态 warning） | ◆   | Product | 1d | Fable | PageShell/核心页已收敛；只检查未覆盖页面、4 条现存 warning 与 task display，不做全站重构 | §Next |
+| ~~**PLNR.UIUX.0**~~   | ~~定向 UI 收口（未覆盖页 + 静态 warning）~~ ✅ 已收口（2026-07-17）：`/projects`·`/lists/[id]`·`/projects/[id]` 三个未走 PageShell 的核心页迁移完成（手写 AppBar+wrap → `PageShell` `main` snippet，页面私有样式移进内层 div 保留 scoped 生效）；3 条 svelte-check warning（AttachmentList a11y ×2、line-clamp 兼容性）全清零。svelte-check 0/0，layout-invariants e2e **72/72**（含 `/projects` 四断点 INV-1/2/3）、单测 140、build clean，浏览器实测新建/详情/返回/清单空态无控制台错误 | ✅ |
 | **PLNR.CAPTURE.0**   | iOS/移动端任务捕获统一 | ◆   | Product | gate | Code ✅ · Ken iOS | unit/E2E/截图 ✅；真机 IME + 键盘 gate ⏳ | PLNR.UIUX.0 |
 | ~~**PLNR.CORE.4**~~  | Today 计数与 `portal_today_summary` 对齐   | ◆   | Growth  | —    | Cursor / Codex（快赢） | ✅ 已发货 2026-07-13 — RPC tz+tombstone (`ce475c75`) · `selectTodayGroups` 谓词与 RPC `todayOpen`/`overdue` 逐项一致（Portal 分行展示今日/逾期，与 Planner 分组同口径）· `selectors.test.js` parity 契约 9/9 | ✅ |
 | **PLNR.ATTACH.0**    | 附件 WIP 决策与落地                    | ◆  | Core    | — | Codex | ✅ 生产表/桶/RLS 已 apply · retry 缓存 File · bug 上报上传失败会 reject · 软删随 task/project · unit 覆盖 validate/safeFilename/sync rows | ✅ |

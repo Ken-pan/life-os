@@ -1,5 +1,5 @@
 <script>
-  import AppBar from '$lib/components/AppBar.svelte'
+  import PageShell from '$lib/components/PageShell.svelte'
   import EmptyState from '$lib/components/EmptyState.svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
   import { S } from '$lib/state.svelte.js'
@@ -147,74 +147,76 @@
   }
 </script>
 
-<AppBar title={t('projects.title')} subtitle={t('projects.subtitle')} />
-
-<div class="wrap projects-page">
-  <form
-    class="project-create"
-    onsubmit={(e) => {
-      e.preventDefault()
-      submitProject()
-    }}
-  >
-    <div class="project-create-fields">
-      <input
-        bind:value={title}
-        placeholder={t('projects.newTitlePlaceholder')}
-        aria-label={t('projects.newTitlePlaceholder')}
-      />
-      <input
-        bind:value={summary}
-        placeholder={t('projects.newSummaryPlaceholder')}
-        aria-label={t('projects.newSummaryPlaceholder')}
-      />
-      <select
-        class="project-create-cat"
-        bind:value={newArea}
-        aria-label={t('projects.fieldCategory')}
+<PageShell title={t('projects.title')} subtitle={t('projects.subtitle')}>
+  {#snippet main()}
+    <div class="projects-page">
+      <form
+        class="project-create"
+        onsubmit={(e) => {
+          e.preventDefault()
+          submitProject()
+        }}
       >
-        <option value="">{t('projects.categoryAuto')}</option>
-        {#each PROJECT_CATEGORIES as cat (cat.id)}
-          <option value={cat.id}>{t(cat.labelKey)}</option>
-        {/each}
-      </select>
-    </div>
-    <button type="submit" class="btn-primary" disabled={!title.trim()}>
-      <Icon name="plus" size={17} strokeWidth={2} />
-      <span>{t('projects.create')}</span>
-    </button>
-  </form>
+        <div class="project-create-fields">
+          <input
+            bind:value={title}
+            placeholder={t('projects.newTitlePlaceholder')}
+            aria-label={t('projects.newTitlePlaceholder')}
+          />
+          <input
+            bind:value={summary}
+            placeholder={t('projects.newSummaryPlaceholder')}
+            aria-label={t('projects.newSummaryPlaceholder')}
+          />
+          <select
+            class="project-create-cat"
+            bind:value={newArea}
+            aria-label={t('projects.fieldCategory')}
+          >
+            <option value="">{t('projects.categoryAuto')}</option>
+            {#each PROJECT_CATEGORIES as cat (cat.id)}
+              <option value={cat.id}>{t(cat.labelKey)}</option>
+            {/each}
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" disabled={!title.trim()}>
+          <Icon name="plus" size={17} strokeWidth={2} />
+          <span>{t('projects.create')}</span>
+        </button>
+      </form>
 
-  {#if activeProjects.length}
-    <section class="project-section project-map">
-      <h2>{t('projects.mapTitle')}</h2>
-      <div class="project-map-card">
-        <MindMap
-          root={mapTree}
-          height={520}
-          collapsible={true}
-          fitKey={focusProjectId ?? '__root__'}
-          onSelect={onMapSelect}
-          ariaLabel={t('projects.mapTitle')}
-        />
-      </div>
-    </section>
-  {/if}
-
-  {#if projects.length}
-    <!-- 列表按分类分组(呼应鸟瞰图);聚焦某项目时该项目高亮并滚动到视图 -->
-    {#each PROJECT_CATEGORIES as cat (cat.id)}
-      {@const catProjects = activeProjects.filter((p) => categoryOf(p) === cat.id)}
-      {#if catProjects.length}
-        {@render projectSection(t(cat.labelKey), catProjects, cat.id)}
+      {#if activeProjects.length}
+        <section class="project-section project-map">
+          <h2>{t('projects.mapTitle')}</h2>
+          <div class="project-map-card">
+            <MindMap
+              root={mapTree}
+              height={520}
+              collapsible={true}
+              fitKey={focusProjectId ?? '__root__'}
+              onSelect={onMapSelect}
+              ariaLabel={t('projects.mapTitle')}
+            />
+          </div>
+        </section>
       {/if}
-    {/each}
-    {@render projectSection(t('projects.paused'), pausedProjects)}
-    {@render projectSection(t('projects.shipped'), shippedProjects)}
-  {:else}
-    <EmptyState message={t('projects.emptyTitle')} hint={t('projects.emptyHint')} />
-  {/if}
-</div>
+
+      {#if projects.length}
+        <!-- 列表按分类分组(呼应鸟瞰图);聚焦某项目时该项目高亮并滚动到视图 -->
+        {#each PROJECT_CATEGORIES as cat (cat.id)}
+          {@const catProjects = activeProjects.filter((p) => categoryOf(p) === cat.id)}
+          {#if catProjects.length}
+            {@render projectSection(t(cat.labelKey), catProjects, cat.id)}
+          {/if}
+        {/each}
+        {@render projectSection(t('projects.paused'), pausedProjects)}
+        {@render projectSection(t('projects.shipped'), shippedProjects)}
+      {:else}
+        <EmptyState message={t('projects.emptyTitle')} hint={t('projects.emptyHint')} />
+      {/if}
+    </div>
+  {/snippet}
+</PageShell>
 
 {#snippet projectSection(sectionTitle, sectionProjects, catId = null)}
   {#if sectionProjects.length}

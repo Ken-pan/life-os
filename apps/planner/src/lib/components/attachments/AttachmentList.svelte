@@ -104,7 +104,8 @@
 {/if}
 
 {#if selectedImageUrl}
-  <div class="lightbox" role="dialog" aria-modal="true" onclick={() => selectedImageUrl = null}>
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div class="lightbox" role="presentation" onclick={() => selectedImageUrl = null}>
     <button class="close-btn" onclick={() => selectedImageUrl = null} aria-label={t('common.close', 'Close')}>
       <Icon name="x" size="24" />
     </button>

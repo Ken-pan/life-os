@@ -1,5 +1,5 @@
 <script>
-  import AppBar from '$lib/components/AppBar.svelte'
+  import PageShell from '$lib/components/PageShell.svelte'
   import QuickAddBar from '$lib/components/QuickAddBar.svelte'
   import TaskGroup from '$lib/components/TaskGroup.svelte'
   import { page } from '$app/state'
@@ -15,22 +15,22 @@
   const tasks = $derived(sortTasks(selectByList(taskIndex(), listId)))
 </script>
 
-<AppBar title={list ? listLabel(list) : t('nav.lists')} />
-
-<div class="wrap">
-  {#if list}
-    <QuickAddBar
-      listId={list.id}
-      dueDate={null}
-      placeholder={t('home.quickAdd')}
-    />
-    <TaskGroup
-      title={listLabel(list)}
-      {tasks}
-      hideHeader
-      empty={t('common.empty')}
-      onToggle={completeTask}
-      onEdit={editTask}
-    />
-  {/if}
-</div>
+<PageShell title={list ? listLabel(list) : t('nav.lists')}>
+  {#snippet main()}
+    {#if list}
+      <QuickAddBar
+        listId={list.id}
+        dueDate={null}
+        placeholder={t('home.quickAdd')}
+      />
+      <TaskGroup
+        title={listLabel(list)}
+        {tasks}
+        hideHeader
+        empty={t('common.empty')}
+        onToggle={completeTask}
+        onEdit={editTask}
+      />
+    {/if}
+  {/snippet}
+</PageShell>

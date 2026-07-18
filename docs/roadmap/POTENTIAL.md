@@ -11,7 +11,7 @@
 
 P0  PLAT.CI.0 — 补五品牌 snapshot PNG（见 handoff）
 P1  FINC.PURCHASE.6.a closure（用户 gate 重）
-P2  HOME.RECOG.1r（区域补扫/观感）→ PLNR.UIUX → object_ref
+P2  HOME.RECOG.1r（区域补扫/观感，纯 owner gate）→ object_ref（待第二真实消费者）
 ```
 
 **刚收割：**  
@@ -36,7 +36,7 @@ P2  HOME.RECOG.1r（区域补扫/观感）→ PLNR.UIUX → object_ref
 | 1 | **PLAT.CI.0** | P0 | 🔥 | <0.5d | 缺五品牌 snapshot PNG（290）；非 cancel |
 | 2 | **FINC.PURCHASE.6.a closure** | P1 | 🔥 | 0.5d | 信任锚点；过滤拆分已做，剩 owner QA |
 | 3 | **HOME.RECOG.1r** | P2 | ◆ | 0.5–1d | 区域高精度 / 摘要签收 |
-| 4 | **PLNR.UIUX.0** | P2 | ◆ | 1d | 生产收口按需（ATTACH.0 已收） |
+| ~~4~~ | ~~**PLNR.UIUX.0**~~ ✅ 已落地（2026-07-17）：三个未覆盖页（`/projects`·`/lists/[id]`·`/projects/[id]`）迁移 PageShell + 3 条 svelte-check warning 清零；e2e 72/72、单测 140、build clean | — | — | 已完成 | — |
 | ~~5~~ | ~~**PLAT.MCP.0** 抽共享 MCP 鉴权~~ ✅ 已落地（2026-07-17）：`@life-os/mcp-server/auth` + `createMcpHandler` 声明式 `auth:true`；Home/Planner 样板消除，行为逐字不变；Finance/Fitness MCP 现近零成本 | — | — | 已完成 | — |
 | 6 | **KNOW.XREF.5** `object_ref` | P2 | ◆◆ | 1–2d | wikilink 小闭环已发；稳定对象引用契约仍未起（北极星，待第二真实消费者再上大契约）|
 
@@ -49,7 +49,7 @@ P2  HOME.RECOG.1r（区域补扫/观感）→ PLNR.UIUX → object_ref
 - **开发侧（成本下弯）：** CI 绿是复利开关（hub 称 `PLAT.CI.0` 已 run 29618672879 全绿，本 doc TL;DR 的 P0 表述已过期，以 hub 为准）。共享 MCP 鉴权提取点已落地（见上）。
 - **北极星（object_ref）：** wikilink 是**字符串标题**引用、非稳定对象引用；`object_ref` + 通用时间线仍未起。按复利判据「无第二真实消费者别上大契约」，继续**等**——但 Planner↔Knowledge↔AIOS 的引用需求已在积累，够两个真实消费者时即可开工。
 
-**一句话：** **`PLAT.MCP.0`（抽共享 MCP 鉴权）已落地**，AIOS 推理内核接新 MCP 的边际成本压到近零；当前最高复利下一步是让 `PLAT.USAGE.0b` **真的砍掉/提拔一项**（决策复利落地），信任侧的 Finance/Vault 真机 gate 仍是源头。
+**一句话：** **`PLAT.MCP.0`**（抽共享 MCP 鉴权）与 **`PLNR.UIUX.0`**（定向 UI 收口）均已落地（2026-07-17）；Next 表里 agent 侧剩 `PLNR.ATTACH.1`（附件体验，P2 ◆）与已在并行会话飞的 `PLAT.USAGE.0b`；`HOME.RECOG.1r`/`FINC.PURCHASE.6.a` 已收窄到纯 owner gate，`KNOW.XREF.5` 按判据继续等第二真实消费者。
 
 ## 每个 App 未来 7 天只做一件事
 

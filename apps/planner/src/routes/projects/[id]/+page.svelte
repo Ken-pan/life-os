@@ -2,7 +2,7 @@
   import { untrack } from 'svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
-  import AppBar from '$lib/components/AppBar.svelte'
+  import PageShell from '$lib/components/PageShell.svelte'
   import EmptyState from '$lib/components/EmptyState.svelte'
   import TaskGroup from '$lib/components/TaskGroup.svelte'
   import QuickAddBar from '$lib/components/QuickAddBar.svelte'
@@ -104,13 +104,13 @@
   }
 </script>
 
-<AppBar
+<PageShell
   title={project?.title ?? t('projects.title')}
   subtitle={project ? t(`projects.status_${project.status}`) : ''}
   backHref="/projects"
-/>
-
-<div class="wrap project-detail-page">
+>
+  {#snippet main()}
+    <div class="project-detail-page">
   {#if project}
     <section class="project-summary">
       <div>
@@ -341,7 +341,9 @@
   {:else}
     <EmptyState message={t('projects.notFound')} />
   {/if}
-</div>
+    </div>
+  {/snippet}
+</PageShell>
 
 <style>
   .project-detail-page {
@@ -461,6 +463,7 @@
     color: var(--t2);
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     min-width: 0;

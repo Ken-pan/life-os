@@ -46,7 +46,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.2d（仅 owner） | anon revoke ✅ · Review 过滤拆分 ✅ · **agent 侧 closure 护栏 ✅**（stale/timeout 反馈修复 · Confirm→Undo 边界 10/10 · 单测 127）；**剩纯 owner gate**：真机 Confirm→Undo、双真实 JWT、视觉基线 |
 
-**已收割（2026-07-17 夜）：** `PLAT.CI.0` ✅（补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` ✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · CI concurrency SHA 分桶 ✅ · **`KNOW.XREF.5` wikilink 小闭环** ✅（Planner 备注引用 Knowledge 笔记 + 共享 `@life-os/platform-web/wikilinks`）· **`PLNR.MCP.0` Planner MCP 面** ✅ 代码（AIOS 经 `/api/mcp` 读/建/完成任务；真实 JWT 读写属用户 gate）— 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+**已收割（2026-07-17 夜）：** `PLAT.CI.0` ✅（补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` ✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · CI concurrency SHA 分桶 ✅ · **`KNOW.XREF.5` wikilink 小闭环** ✅（Planner 备注引用 Knowledge 笔记 + 共享 `@life-os/platform-web/wikilinks`）· **`PLNR.MCP.0` Planner MCP 面** ✅ 代码（AIOS 经 `/api/mcp` 读/建/完成任务；真实 JWT 读写属用户 gate）· **`FINC.PURCHASE.6b`** ✅（用户备注 + 已处理状态，剩 owner 部署 migration）· **`PLAT.MCP.0`** ✅（`@life-os/mcp-server/auth` 共享 JWT/RLS 鉴权，Home/Planner 样板消除，Finance/Fitness MCP 近零成本）· **`PLNR.UIUX.0`** ✅（三个未覆盖页迁移 PageShell + 3 条 warning 清零）— 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
 **User config（不占 Agent 主航道）：** Home 部署后，AIOS 设置 → MCP 加 `https://home.kenos.space/api/mcp` + Life OS access token；Home 登录打开 `/storage` 触发快照同步。
 
@@ -84,7 +84,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | 顺序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 触发 / 最小范围 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | **HOME.RECOG.1r** | 认亲残余（窄） | Home | P2 | ◆ | 0.5–1d | 区域级高精度补扫；质量摘要观感签收（group-merge / 露总数已由并行 Agent 收） |
-| 2 | **PLNR.UIUX.0** | Planner 定向 UI 收口 | Planner | P2 | ◆ | 1d | 只扫未覆盖页面与现存 warning；不做无边界全站重做 |
+| ~~2~~ | ~~**PLNR.UIUX.0**~~ ✅ | Planner 定向 UI 收口 | Planner | — | — | 已完成 | 三个未覆盖页迁移 PageShell + 3 条 warning 清零（2026-07-17）；e2e 72/72、单测 140、build clean |
 | 3 | **PLAT.MCP.0** | 抽共享 MCP 鉴权（JWT/RLS）| Platform | P2 | ◆◆ | 0.5d | Home/Planner 两个 MCP 函数已重复鉴权样板；抽进 `@life-os/mcp-server`，Finance/Fitness MCP 近零成本（开发复利，2 消费者达门槛）|
 | 4 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用契约 | Knowledge | P2 | ◆◆ | 1–2d | wikilink 小闭环已发；稳定 `object_ref` 契约仍未起，待第二真实消费者再上，不合并业务表 |
 | 5 | **PLAT.USAGE.0b** | 用量审计节奏化 | Platform | P2 | ◆ | 0.5d | 月度复跑 `npm run qa:usage-audit`；补 AIOS/Knowledge/Health 本机探针 |
@@ -109,7 +109,7 @@ Phase 1 — 信任收割（用户 gate 重）
 
 Phase 2 — 跨站复利 / 窄残余（按需）
   PLAT.MCP.0（抽共享 MCP 鉴权，AIOS 推理内核边际成本压近零）
-  → HOME.RECOG.1r（区域补扫/观感）→ PLNR.UIUX.0 → KNOW.XREF.5/object_ref
+  → HOME.RECOG.1r（区域补扫/观感，纯 owner gate）→ KNOW.XREF.5/object_ref（待第二真实消费者）
 
 已完成本轮
   PLNR.ATTACH.0 · HOME.MCP.13 · AIOS.STABLE.26 · KNOW.VAULT.0
