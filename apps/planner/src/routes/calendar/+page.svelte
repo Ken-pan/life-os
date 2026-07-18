@@ -46,6 +46,30 @@
   const days = $derived(weekDates(weekStart))
   const tasks = $derived(selectByDate(taskIndex(), selected))
 
+  // Apple 日历式周条：星期表头（周一起始）+ 日期行，今天高亮圈。
+  const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日']
+
+  const monthLabel = $derived(
+    new Intl.DateTimeFormat(localeTag(), { month: 'long' }).format(toLocalDate(selected)),
+  )
+
+  /** @param {string} day @returns {string} 日期号 */
+  function dayNum(day) {
+    return String(Number(day.slice(8, 10)))
+  }
+
+  // 左右滑动周条翻周（去掉大导航行后的翻周手势，对齐 Apple/Google 日历）。
+  let touchStartX = 0
+  /** @param {TouchEvent} e */
+  function onStripTouchStart(e) {
+    touchStartX = e.changedTouches[0]?.clientX ?? 0
+  }
+  /** @param {TouchEvent} e */
+  function onStripTouchEnd(e) {
+    const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX
+    if (Math.abs(dx) > 48) shiftWeek(dx < 0 ? 1 : -1)
+  }
+
   function countOn(day) {
     return (taskIndex().byDueDate.get(day) ?? []).length
   }
@@ -98,42 +122,56 @@
 <PageShell title={t('calendar.title')} layout="split" gridClass="calendar-page">
   {#snippet main()}
       <div class="wrap">
-        <div class="calendar-week-nav">
-          <button
-            type="button"
-            class="calendar-week-nav-btn"
-            onclick={() => shiftWeek(-1)}
-            aria-label={t('calendar.prevWeek')}>‹</button
-          >
-          <button
-            type="button"
-            class="calendar-week-nav-today"
-            onclick={jumpToday}>{t('home.today')}</button
-          >
-          <button
-            type="button"
-            class="calendar-week-nav-btn"
-            onclick={() => shiftWeek(1)}
-            aria-label={t('calendar.nextWeek')}>›</button
-          >
-        </div>
-
-        <div class="calendar-grid">
-          {#each days as day (day)}
+        <!-- Apple 日历式周条：月份 + 今天按钮 · 星期表头 · 日期行（今天高亮圈、左右滑翻周）。
+             取代原来的大「‹ 今天 ›」导航行 + 方块日期格。 -->
+        <div
+          class="cal-weekstrip"
+          role="group"
+          aria-label={t('calendar.title')}
+          ontouchstart={onStripTouchStart}
+          ontouchend={onStripTouchEnd}
+        >
+          <div class="cal-weekstrip-head">
             <button
               type="button"
-              class="cal-day"
-              class:on={day === selected}
-              class:has-tasks={countOn(day) > 0}
-              onclick={() => setSelected(day)}
+              class="cal-strip-nav"
+              onclick={() => shiftWeek(-1)}
+              aria-label={t('calendar.prevWeek')}>‹</button
             >
-              {chipLabel(day)}
-            </button>
-          {/each}
+            <span class="cal-strip-month">{monthLabel}</span>
+            <button
+              type="button"
+              class="cal-strip-nav"
+              onclick={() => shiftWeek(1)}
+              aria-label={t('calendar.nextWeek')}>›</button
+            >
+            <button type="button" class="cal-strip-today" onclick={jumpToday}
+              >{t('home.today')}</button
+            >
+          </div>
+          <div class="cal-dow-row" aria-hidden="true">
+            {#each WEEKDAY_LABELS as w (w)}<span>{w}</span>{/each}
+          </div>
+          <div class="cal-date-row" role="tablist" aria-label={t('calendar.title')}>
+            {#each days as day (day)}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={day === selected}
+                class="cal-date"
+                class:cal-date--today={day === todayKey()}
+                class:cal-date--sel={day === selected}
+                onclick={() => setSelected(day)}
+              >
+                <span class="cal-date-num">{dayNum(day)}</span>
+                {#if countOn(day) > 0}<span class="cal-date-dot" aria-hidden="true"></span>{/if}
+              </button>
+            {/each}
+          </div>
         </div>
 
-        <!-- 空日子不渲染这块：下面 DaySchedulePanel（时间轴 + 待排程）已给足结构，
-             再叠一个大太阳空态纯属冗余占屏。（参考 Apple 日历：日期条下直接是时间轴。） -->
+        <!-- 空日子不渲染这块：下面 DaySchedulePanel（时间轴）已给足结构，再叠一个大太阳
+             空态纯属冗余占屏。（参考 Apple 日历：日期条下直接是时间轴。） -->
         {#if tasks.length}
           <TaskGroup
             title={sectionTitle(selected)}

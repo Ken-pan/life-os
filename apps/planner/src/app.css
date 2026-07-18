@@ -592,40 +592,119 @@ body {
   line-height: 1.45;
 }
 
-.calendar-week-nav {
+/* Apple 日历式周条（页眉）：月份 + 今天 · 星期表头 · 日期行（今天高亮圈、点选环、任务圆点） */
+.cal-weekstrip {
+  margin-bottom: var(--space-3);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.cal-weekstrip-head {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   margin-bottom: var(--space-2);
 }
 
-.calendar-week-nav-btn {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--card) 96%, transparent);
-  color: var(--t2);
-  font-size: 18px;
-  line-height: 1;
+.cal-strip-month {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--t1);
+  text-transform: capitalize;
 }
 
-:root[data-theme='light'] .calendar-week-nav-btn {
-  border-color: #e8e2d8;
-  background: #fefdfc;
-}
-
-.calendar-week-nav-today {
-  min-width: 72px;
-  padding: var(--space-1-5) var(--space-3);
+.cal-strip-nav {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
   border: none;
   background: transparent;
-  color: var(--t1);
+  color: var(--t2);
+  font-size: 20px;
+  line-height: 1;
+  border-radius: var(--radius-control);
+}
+
+.cal-strip-nav:hover {
+  background: color-mix(in srgb, var(--t3) 14%, transparent);
+}
+
+.cal-strip-today {
+  margin-left: auto;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: transparent;
+  color: var(--accent);
   font-size: var(--text-sm);
   font-weight: 600;
+}
+
+.cal-dow-row,
+.cal-date-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.cal-dow-row {
+  margin-bottom: var(--space-1);
+}
+
+.cal-dow-row span {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--t3);
+}
+
+.cal-date-row {
+  gap: 2px;
+}
+
+.cal-date {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  padding: 4px 0 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cal-date-num {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.cal-date--sel .cal-date-num {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  color: var(--accent);
+}
+
+.cal-date--today .cal-date-num,
+.cal-date--today.cal-date--sel .cal-date-num {
+  background: var(--accent);
+  color: var(--on-accent, #14310a);
+  box-shadow: none;
+  font-weight: 700;
+}
+
+.cal-date-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.cal-date--today .cal-date-dot {
+  background: var(--accent);
 }
 
 .desktop-split-main {
@@ -3027,11 +3106,15 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     font-size: var(--text-sm);
   }
 
-  /* 参考 Apple/Google 日历：移动端时间轴自成有界滚动面（日期条钉在上方不跟着滚），
-     这样 DayTimeline 的自动锚定逻辑（ownsScroll 判定）在移动端也生效 → 打开即滚到
-     当前时间。高度 = 可视视口减去 上方（appbar+日期条+待排程）与底部导航的预留。 */
+  /* 参考 Apple 日历：移动端日视图去掉「待排程」，只留时间轴当主角。 */
+  .calendar-page .unscheduled-panel {
+    display: none;
+  }
+
+  /* 时间轴自成有界滚动面（周条钉在上方不跟着滚），DayTimeline 的自动锚定在移动端也
+     生效 → 打开即滚到当前时间。高度 = 可视视口减去 上方（appbar + 周条）与底部导航。 */
   .calendar-page .day-timeline-scroll {
-    max-height: calc(var(--app-vh, 100dvh) - 21rem);
+    max-height: calc(var(--app-vh, 100dvh) - 18rem);
     overflow-y: auto;
     padding-bottom: var(--space-4);
     overscroll-behavior: contain;
