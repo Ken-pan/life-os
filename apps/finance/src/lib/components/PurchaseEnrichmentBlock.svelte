@@ -8,6 +8,11 @@
     returnStatusLabelKey,
   } from '$lib/engine/purchaseReturnStatus'
   import { supabase, isSupabaseConfigured } from '$lib/supabase.js'
+  import {
+    loadReviewState,
+    resolveDecide,
+    resolveUndo,
+  } from '$lib/purchaseReviewClient.js'
   import { ReviewActions } from '@life-os/platform-web/svelte/review-card'
 
   let {
@@ -99,102 +104,56 @@
     }, 10_000)
   }
 
-  function applyReviewResult(payload) {
-    if (payload?.association) association = payload.association
-    if (payload?.decision?.id) lastDecisionId = payload.decision.id
-  }
+  // supabase.rpc bound so the pure client helpers stay Supabase-shaped + testable.
+  const callRpc = (name, params) => supabase.rpc(name, params)
 
   async function loadReview() {
     if (!canReview || reviewLoaded) return
     reviewLoaded = true
     reviewStatus = 'loading'
-    try {
-      const { data, error } = await supabase.rpc('purchase_review_get', {
-        p_transaction_id: transactionId,
-      })
-      if (error) throw error
-      if (data?.ok && data.association) {
-        association = data.association
-        const decided = (data.decisions ?? [])
-          .filter((d) => d.action_type !== 'undo')
-          .at(-1)
-        lastDecisionId = decided?.id ?? null
-      }
-      reviewStatus = 'idle'
-    } catch {
-      // Missing association / table, or offline: leave review UI hidden.
-      association = null
-      reviewStatus = 'idle'
-    }
+    const state = await loadReviewState(callRpc, transactionId)
+    association = state.association
+    lastDecisionId = state.lastDecisionId
+    reviewStatus = 'idle'
   }
 
   async function decide(actionType) {
     if (!association || association.state !== 'proposed' || reviewStatus === 'saving')
       return
     const prev = association
-    // Optimistic echo.
+    // Optimistic echo — the helper reconciles to server truth (or stale/unknown).
     association = { ...association, state: actionType === 'confirm' ? 'confirmed' : 'rejected' }
     reviewStatus = 'saving'
-    try {
-      const { data, error } = await supabase.rpc('purchase_review_decide', {
-        p_association_id: prev.id,
-        p_action_type: actionType,
-        p_expected_version: prev.association_version,
-        p_action_key: crypto.randomUUID(),
-      })
-      if (error) throw error
-      if (data?.ok) {
-        applyReviewResult(data)
-        reviewStatus = 'idle'
-        openUndoWindow()
-      } else if (data?.status === 409) {
-        association = prev
-        reviewStatus = 'stale'
-        reviewLoaded = false
-        await loadReview()
-      } else {
-        association = data?.association ?? prev
-        reviewStatus = 'idle'
-      }
-    } catch {
-      // Unknown result — reconcile from server rather than assume failure.
-      association = prev
-      reviewStatus = 'unknown'
-      reviewLoaded = false
-      await loadReview()
-    }
+    const patch = await resolveDecide(callRpc, {
+      prev,
+      actionType,
+      actionKey: crypto.randomUUID(),
+      transactionId,
+    })
+    association = patch.association
+    lastDecisionId = patch.lastDecisionId
+    reviewStatus = patch.status
+    reviewLoaded = true
+    if (patch.openUndo) openUndoWindow()
   }
 
   async function undo() {
     if (!association || !lastDecisionId || reviewStatus === 'saving') return
     const prev = association
     reviewStatus = 'saving'
-    try {
-      const { data, error } = await supabase.rpc('purchase_review_undo', {
-        p_association_id: prev.id,
-        p_target_decision_id: lastDecisionId,
-        p_expected_version: prev.association_version,
-        p_action_key: crypto.randomUUID(),
-      })
-      if (error) throw error
-      if (data?.ok) {
-        applyReviewResult(data)
-        lastDecisionId = null
-        undoVisible = false
-        clearUndoTimer()
-        reviewStatus = 'idle'
-      } else if (data?.status === 409) {
-        reviewStatus = 'stale'
-        reviewLoaded = false
-        await loadReview()
-      } else {
-        reviewStatus = 'idle'
-      }
-    } catch {
-      association = prev
-      reviewStatus = 'unknown'
-      reviewLoaded = false
-      await loadReview()
+    const patch = await resolveUndo(callRpc, {
+      prev,
+      lastDecisionId,
+      actionKey: crypto.randomUUID(),
+      transactionId,
+    })
+    association = patch.association
+    lastDecisionId = patch.lastDecisionId
+    reviewStatus = patch.status
+    reviewLoaded = true
+    if (patch.closeUndo) {
+      undoVisible = false
+      clearUndoTimer()
     }
   }
 

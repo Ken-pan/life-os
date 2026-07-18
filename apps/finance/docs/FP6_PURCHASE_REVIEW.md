@@ -13,6 +13,11 @@
 > - ✅ **(A) Matcher precedence wired** `link-purchase-orders.mjs` — `purchaseReviewAutomationGate` skips identity writes to `confirmed` transactions and refuses resurfacing `rejected` candidates; `fetchReviewPrecedence` degrades gracefully pre-migration. Engine gate unit-tested (18/18); precedence query validated on prod.
 > - ✅ **(B) UI Confirm/Reject/Undo** `PurchaseEnrichmentBlock.svelte` — lazy `purchase_review_get` on expand (404 self-hides), Confirm/Reject on `proposed`, decided state + 10s Undo affordance, optimistic echo + reconcile, explicit saving/stale(409)/unknown(timeout) outcomes. svelte-check 0 errors; app loads clean.
 > - ⏳ **Still open:** RLS **cross-user denial** runtime proof (needs two real authenticated JWT sessions — superuser API bypasses RLS); Antigravity visual baseline; **live UI eyeball** (needs owner login — Confirm→Undo on a real enriched History row).
+>
+> **2026-07-17 — closure QA 收尾（[FP6_CLOSURE_QA_2026-07-17.md](./FP6_CLOSURE_QA_2026-07-17.md)）:**
+> - ✅ Owner Confirm→Undo 编排从 `PurchaseEnrichmentBlock.svelte` 抽到纯模块 `src/lib/purchaseReviewClient.js`；全链路 + 边界（空结果 / 重复标注 / 撤销后回滚 / 版本冲突 / 超时 / undo superseded）**10/10** 钉进 App CI。Finance 单测 117→**127**。
+> - ✅ **修复**：409 stale / catch unknown 反馈原被 reconcile-reload 覆写为 idle、**从不渲染**——现 reconcile 与 status 解耦，冲突/超时告警可见；顺带修 `undo()` 错误分支不 reconcile / 不关 Undo 按钮的不一致。
+> - ⏳ 未动：真实 owner 浏览器往返、双 JWT RLS 拒绝、视觉基线（均需 Ken 登录态 / 隔离 QA project）。
 
 ---
 
