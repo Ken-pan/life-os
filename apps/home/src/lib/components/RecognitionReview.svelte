@@ -5,6 +5,7 @@
   // 战略:不把不确定性用文字甩给用户,给证据 + 「暂不确定」出口。
   import { resolveRecognition } from '$lib/recognition-review.js'
   import { toast } from '$lib/ui.svelte.js'
+  import { ReviewCard } from '@life-os/platform-web/svelte/review-card'
 
   /**
    * @type {{
@@ -14,6 +15,13 @@
    * }}
    */
   let { reviews, onClose, onResolved } = $props()
+
+  /** 三态裁决(证据卡片外壳的决定条配置)。文案在这、外壳只管展示。 */
+  const DECISIONS = [
+    { key: 'same', label: '是同一件', tone: 'confirm' },
+    { key: 'different', label: '不是', tone: 'reject' },
+    { key: 'unsure', label: '暂不确定', tone: 'neutral' },
+  ]
 
   /** @param {import('$lib/recognition-review.js').RecognitionReview} r */
   const keyOf = (r) => `${r.scanId}:${r.observationId}`
@@ -62,61 +70,41 @@
 
     <div class="rr-body">
       {#each items as r (keyOf(r))}
-        <article class="card" class:dim={busyKey === keyOf(r)}>
-          <div class="pair">
-            <figure class="shot">
-              {#if r.newCropUrl}
-                <img src={r.newCropUrl} alt="这次扫到的 {r.label ?? r.kind ?? '物体'}" />
-              {:else}
-                <div class="noimg">无缩略图</div>
-              {/if}
-              <figcaption>这次扫到<br /><b>{r.label ?? r.kind ?? '未命名'}</b></figcaption>
-            </figure>
+        <ReviewCard
+          decisions={DECISIONS}
+          onDecide={(key) => decide(r, key)}
+          busy={!!busyKey}
+          dim={busyKey === keyOf(r)}
+        >
+          {#snippet evidence()}
+            <div class="pair">
+              <figure class="shot">
+                {#if r.newCropUrl}
+                  <img src={r.newCropUrl} alt="这次扫到的 {r.label ?? r.kind ?? '物体'}" />
+                {:else}
+                  <div class="noimg">无缩略图</div>
+                {/if}
+                <figcaption>这次扫到<br /><b>{r.label ?? r.kind ?? '未命名'}</b></figcaption>
+              </figure>
 
-            <div class="vs">
-              <span class="vs-q">?</span>
-              {#if r.candidate.score != null}
-                <span class="vs-score">{pct(r.candidate.score)}</span>
-              {/if}
+              <div class="vs">
+                <span class="vs-q">?</span>
+                {#if r.candidate.score != null}
+                  <span class="vs-score">{pct(r.candidate.score)}</span>
+                {/if}
+              </div>
+
+              <figure class="shot">
+                {#if r.candidate.oldCropUrl}
+                  <img src={r.candidate.oldCropUrl} alt="以前的 {r.candidate.label ?? '物体'}" />
+                {:else}
+                  <div class="noimg">无历史图</div>
+                {/if}
+                <figcaption>以前的<br /><b>{r.candidate.label ?? '历史身份'}</b></figcaption>
+              </figure>
             </div>
-
-            <figure class="shot">
-              {#if r.candidate.oldCropUrl}
-                <img src={r.candidate.oldCropUrl} alt="以前的 {r.candidate.label ?? '物体'}" />
-              {:else}
-                <div class="noimg">无历史图</div>
-              {/if}
-              <figcaption>以前的<br /><b>{r.candidate.label ?? '历史身份'}</b></figcaption>
-            </figure>
-          </div>
-
-          <div class="actions">
-            <button
-              type="button"
-              class="btn-yes"
-              disabled={!!busyKey}
-              onclick={() => decide(r, 'same')}
-            >
-              是同一件
-            </button>
-            <button
-              type="button"
-              class="btn-no"
-              disabled={!!busyKey}
-              onclick={() => decide(r, 'different')}
-            >
-              不是
-            </button>
-            <button
-              type="button"
-              class="btn-maybe"
-              disabled={!!busyKey}
-              onclick={() => decide(r, 'unsure')}
-            >
-              暂不确定
-            </button>
-          </div>
-        </article>
+          {/snippet}
+        </ReviewCard>
       {/each}
     </div>
 
@@ -179,18 +167,8 @@
     gap: 14px;
   }
 
-  .card {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
-    background: var(--bg);
-    transition: opacity var(--dur-fast) var(--ease-standard);
-  }
-
-  .card.dim {
-    opacity: 0.5;
-  }
-
+  /* 卡片外壳 + 决定条移到共享 ReviewCard(@life-os/platform-web/svelte/review-card);
+     这里只留证据(新旧图对比)自己的样式。 */
   .pair {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -261,43 +239,6 @@
     color: var(--t2);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
-  }
-
-  .actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .actions button {
-    flex: 1;
-    min-height: 38px;
-    font-size: var(--text-md);
-    font-weight: 600;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-  }
-
-  .btn-yes {
-    border-color: color-mix(in srgb, var(--graph-accent, var(--accent)) 55%, var(--border));
-    background: color-mix(in srgb, var(--graph-accent, var(--accent)) 20%, var(--bg));
-    color: var(--t1);
-  }
-
-  .btn-no {
-    background: var(--bg);
-    color: var(--t1);
-  }
-
-  .btn-maybe {
-    background: var(--bg);
-    color: var(--t2);
-  }
-
-  .actions button:disabled {
-    opacity: 0.55;
-    cursor: progress;
   }
 
   .rr-foot {

@@ -1,0 +1,125 @@
+/* Life OS ReviewCard — 证据式确认卡片外壳。全部走 @life-os/theme 语义 token,无裸色。 */
+
+.review-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius, 12px);
+  background: var(--card-bg, var(--surface-2));
+  color: var(--text);
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.review-card--dim {
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-card {
+    transition: none;
+  }
+}
+
+.review-card__title {
+  font-size: var(--text-sm, 13px);
+  font-weight: 650;
+  color: var(--text-title, var(--text));
+}
+
+.review-card__evidence {
+  min-width: 0;
+}
+
+.review-card__q {
+  margin: 0;
+  font-size: var(--text-sm, 13px);
+  color: var(--text-secondary, var(--text-muted));
+}
+
+/* ── 决定条 ─────────────────────────────────────────────────────────────── */
+.review-card__actions {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+.review-card__btn {
+  flex: 1;
+  min-height: 38px;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  font-size: var(--text-sm, 13px);
+  font-weight: 600;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid var(--border);
+  background: var(--bg, var(--surface-2));
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.review-card__btn:hover:not(:disabled) {
+  border-color: var(--border-strong, var(--border));
+}
+
+.review-card__btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+/* confirm = 强调色主动作;reject / neutral = 中性;undo = 幽灵 */
+.review-card__btn--confirm {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: var(--accent-subtle, color-mix(in srgb, var(--accent) 16%, var(--bg)));
+  color: var(--text-title, var(--text));
+}
+
+.review-card__btn--confirm:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 26%, var(--bg));
+}
+
+.review-card__btn--reject,
+.review-card__btn--neutral {
+  background: var(--bg, var(--surface-2));
+  color: var(--text-secondary, var(--text));
+}
+
+.review-card__btn--undo {
+  flex: 0 0 auto;
+  min-height: 34px;
+  color: var(--text-secondary, var(--text-muted));
+}
+
+/* ── 已决态 ─────────────────────────────────────────────────────────────── */
+.review-card__decided {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.review-card__badge {
+  font-size: var(--text-sm, 13px);
+  font-weight: 650;
+  padding: var(--space-1, 4px) var(--space-2, 8px);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface-2, var(--bg-2));
+  color: var(--text-secondary, var(--text));
+}
+
+.review-card__badge[data-tone='confirm'] {
+  background: var(--accent-subtle, color-mix(in srgb, var(--accent) 16%, var(--bg)));
+  color: var(--text-title, var(--text));
+}
+
+/* ── 状态注记 ───────────────────────────────────────────────────────────── */
+.review-card__note {
+  margin: 0;
+  font-size: var(--text-xs, 12px);
+  color: var(--text-muted);
+}
+
+.review-card__note[data-tone='warn'] {
+  color: var(--warning, var(--text-muted));
+}

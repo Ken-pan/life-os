@@ -8,6 +8,7 @@
     returnStatusLabelKey,
   } from '$lib/engine/purchaseReturnStatus'
   import { supabase, isSupabaseConfigured } from '$lib/supabase.js'
+  import { ReviewActions } from '@life-os/platform-web/svelte/review-card'
 
   let {
     enrichment,
@@ -358,46 +359,35 @@
 
       {#if canReview && association}
         <div class="purchase-review" data-review-state={association.state}>
-          {#if association.state === 'proposed'}
-            <p class="purchase-review-q text-sm">{t('history.reviewQuestion')}</p>
-            <div class="purchase-review-actions">
-              <button
-                type="button"
-                class="purchase-review-btn purchase-review-btn--confirm"
-                disabled={reviewStatus === 'saving'}
-                onclick={() => decide('confirm')}
-              >{t('history.reviewConfirm')}</button>
-              <button
-                type="button"
-                class="purchase-review-btn purchase-review-btn--reject"
-                disabled={reviewStatus === 'saving'}
-                onclick={() => decide('reject')}
-              >{t('history.reviewReject')}</button>
-            </div>
-          {:else}
-            <div class="purchase-review-decided">
-              <span class="purchase-review-badge purchase-review-badge--{association.state}">
-                {association.state === 'confirmed'
-                  ? t('history.reviewConfirmed')
-                  : t('history.reviewRejected')}
-              </span>
-              {#if undoVisible}
-                <button
-                  type="button"
-                  class="purchase-review-btn purchase-review-btn--undo"
-                  disabled={reviewStatus === 'saving'}
-                  onclick={undo}
-                >{t('history.reviewUndo')}</button>
-              {/if}
-            </div>
-          {/if}
-          {#if reviewStatus === 'saving'}
-            <span class="purchase-review-note text-sm text-muted">{t('history.reviewSaving')}</span>
-          {:else if reviewStatus === 'stale'}
-            <span class="purchase-review-note purchase-review-note--warn text-sm" role="status">{t('history.reviewStale')}</span>
-          {:else if reviewStatus === 'unknown'}
-            <span class="purchase-review-note purchase-review-note--warn text-sm" role="status">{t('history.reviewUnknown')}</span>
-          {/if}
+          <ReviewActions
+            question={association.state === 'proposed' ? t('history.reviewQuestion') : null}
+            decisions={association.state === 'proposed'
+              ? [
+                  { key: 'confirm', label: t('history.reviewConfirm'), tone: 'confirm' },
+                  { key: 'reject', label: t('history.reviewReject'), tone: 'reject' },
+                ]
+              : []}
+            onDecide={decide}
+            decided={association.state === 'proposed'
+              ? null
+              : {
+                  label:
+                    association.state === 'confirmed'
+                      ? t('history.reviewConfirmed')
+                      : t('history.reviewRejected'),
+                  tone: association.state === 'confirmed' ? 'confirm' : 'reject',
+                }}
+            undoLabel={undoVisible ? t('history.reviewUndo') : null}
+            onUndo={undo}
+            note={reviewStatus === 'saving'
+              ? { text: t('history.reviewSaving'), tone: 'muted' }
+              : reviewStatus === 'stale'
+                ? { text: t('history.reviewStale'), tone: 'warn' }
+                : reviewStatus === 'unknown'
+                  ? { text: t('history.reviewUnknown'), tone: 'warn' }
+                  : null}
+            busy={reviewStatus === 'saving'}
+          />
         </div>
       {/if}
     </div>
