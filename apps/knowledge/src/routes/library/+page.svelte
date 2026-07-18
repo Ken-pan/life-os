@@ -9,7 +9,7 @@
   import Plus from '@lucide/svelte/icons/plus'
   import ArrowLeft from '@lucide/svelte/icons/arrow-left'
   import {
-    S, allTags, allFolders, searchItems, itemById, updateItem, deleteItem, togglePin,
+    S, allTags, allFolders, searchItems, itemById, updateItem, deleteItem, togglePin, resolveWikilink,
   } from '$lib/state.svelte.js'
   import { groupNotes } from '$lib/analytics.js'
   import { startNote } from '$lib/compose.svelte.js'
@@ -78,6 +78,17 @@
 
   /* ——— 选中：URL ↔ 对象引用 ——— */
   let selected = $state(null)
+  // 跨 OS 深链：?title=<标题>（如 Planner 任务备注的 [[wikilink]]）→ 按标题 resolve 后
+  // 改写成规范的 ?note=<id>（前进后退/漂移逻辑仍走 id 那套）。resolve 不到就留在列表。
+  $effect(() => {
+    S.items.length
+    const titleParam = page.url.searchParams.get('title')
+    if (!titleParam || page.url.searchParams.get('note')) return
+    const hit = resolveWikilink(titleParam)
+    goto(hit ? `/library?note=${encodeURIComponent(hit.id)}` : '/library', {
+      replaceState: true, keepFocus: true, noScroll: true,
+    })
+  })
   // URL → selected（外部导航 / 前进后退 / 首次进入 / Vault watcher 重载后换对象）
   $effect(() => {
     S.items.length

@@ -457,6 +457,8 @@ export default {
     copyPaperLink: 'Copy ref',
     paperLinkCopied: 'PaperOS page reference copied',
     paperLinkCopyFailed: 'Could not copy the PaperOS page reference',
+    noteLinks: 'Referenced knowledge notes',
+    openInKnowledge: 'Open “{title}” in KnowledgeOS',
   },
   recurrence: {
     none: 'Never',

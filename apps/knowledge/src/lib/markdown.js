@@ -8,22 +8,16 @@
  * 由消费方（NoteReader）委托点击后 resolve 到同名条目并跳转。
  */
 
+// wikilink 解析已提到共享包（跨 OS 引用底座：KnowledgeOS 正文 + Planner 备注同源）。
+// 保留本处 re-export，历史消费方（含 knowledge-unit 单测）import 路径不变。
+export { extractWikilinks } from '@life-os/platform-web/wikilinks'
+
 function escapeHtml(s) {
   return s
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
-}
-
-/** 抽出所有 [[wikilink]] 目标（去 |显示名、去 #锚点），用于反向链接索引。 */
-export function extractWikilinks(text) {
-  const out = []
-  for (const m of text.matchAll(/\[\[([^\]]+)\]\]/g)) {
-    const target = m[1].split('|')[0].split('#')[0].trim()
-    if (target) out.push(target)
-  }
-  return [...new Set(out)]
 }
 
 /** 图片地址白名单：仅 http(s) 与相对路径，挡掉 javascript: 等危险 scheme。 */

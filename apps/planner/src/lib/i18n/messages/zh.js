@@ -453,6 +453,8 @@ export default {
     copyPaperLink: '复制引用',
     paperLinkCopied: '已复制 PaperOS 页面引用',
     paperLinkCopyFailed: '无法复制 PaperOS 页面引用',
+    noteLinks: '引用的知识笔记',
+    openInKnowledge: '在 KnowledgeOS 打开「{title}」',
   },
   recurrence: {
     none: '不重复',

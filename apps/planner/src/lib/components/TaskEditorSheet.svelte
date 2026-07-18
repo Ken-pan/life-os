@@ -14,7 +14,8 @@
   } from '$lib/domain/taskCapture.js';
   import { SCHEDULE_DURATIONS, formatDurationLabel } from '$lib/domain/schedule.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
-  import { activateFocusTrap, createImeGuard } from '@life-os/theme';
+  import { activateFocusTrap, createImeGuard, LIFE_OS_APP_ORIGINS } from '@life-os/theme';
+  import { parseWikilinks, knowledgeNoteUrl } from '@life-os/platform-web/wikilinks';
   import { paperLinksForTask } from '$lib/paperLinks.js';
   import DateField from './DateField.svelte';
   import TimeField from './TimeField.svelte';
@@ -45,6 +46,9 @@
   const projects = $derived(selectableProjects());
   const canSave = $derived(Boolean(draft?.title?.trim()));
   const paperLinks = $derived(paperLinksForTask(draft));
+  // 跨 OS 引用：备注里的 [[wikilink]] → KnowledgeOS 笔记（一处写、多处引用同一条笔记）。
+  const noteLinks = $derived(parseWikilinks(draft?.notes));
+  const knowledgeOrigin = LIFE_OS_APP_ORIGINS.knowledge.production;
   const isDirty = $derived(
     Boolean(draft && taskEditor.initialDraft) &&
       JSON.stringify(draft) !== JSON.stringify(taskEditor.initialDraft)
@@ -501,6 +505,22 @@
           <div class="field">
             <label for="task-notes">{t('task.notes')}</label>
             <textarea id="task-notes" bind:value={draft.notes} rows="3"></textarea>
+            {#if noteLinks.length}
+              <div class="note-links" aria-label={t('task.noteLinks')}>
+                {#each noteLinks as link (link.target)}
+                  <a
+                    class="note-link"
+                    href={knowledgeNoteUrl(link.target, knowledgeOrigin)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={t('task.openInKnowledge', { title: link.target })}
+                  >
+                    <Icon name="link" size={13} strokeWidth={1.8} />
+                    <span>{link.label}</span>
+                  </a>
+                {/each}
+              </div>
+            {/if}
           </div>
 
           <div class="field">
@@ -850,6 +870,33 @@
     color: var(--accent);
     font-size: var(--text-sm);
     font-weight: 600;
+  }
+  /* 备注里的 [[wikilink]] → KnowledgeOS 笔记引用 chip */
+  .note-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .note-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill, 999px);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: color-mix(in srgb, var(--accent) 82%, var(--t1));
+    font-size: var(--text-xs);
+    font-weight: 500;
+    text-decoration: none;
+    transition: background var(--motion-fast) var(--ease);
+  }
+  .note-link:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+  .note-link span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .ai-split-btn {
     width: 100%;
