@@ -72,7 +72,13 @@ Track B 上生产前**先把地基做牢**:migration 可安全应用+回滚;embe
 `ScanSessionController` HUD 组装(约 226 行)优先级本是:跟踪异常 > 机位走位(exitNudge) > **补拍引导(evidenceHint)** > 机位站位(viewpoint hint)。
 改动:加 `var quietScan = true`;安静模式下 **evidenceHint 仍调用**(设 evidenceTarget 给抓拍定优先级 + 记缺口 + 认账遥测),但**不弹进 hudHint**;机位站位也不弹。只留**跟踪异常 + exitNudge**。VoiceGuide 因此只念这两类,不念逐件补拍。
 **已闭环（勿再估）：** `HOME.RECOG.0` 版本史 · matcher/证据 UI · **/plan 横幅** · **auto-refine 管线**（`refine.sh` + launchd plist；激活待用户）。  
-**`HOME.RECOG.1r` 进展：** ②「高精度补扫只对指定 1–3 区域引导」✅ **已做**（`EvidenceGuide.focusTargets` 前 N 缺口 + `ScanSessionController.highPrecisionFocus` 锁定重点、补齐报「已补齐」；EvidenceGuideTests +2 绿、模拟器编译过；装机待真机上线);③`launchctl bootstrap` ✅ 用户已激活(runs=3)。**残余：** ①质量摘要观感用户签收;②的真机观感(关安静→只引导 1-3 处、补完提示)待用户扫一次验。
+**`HOME.RECOG.1r` ✅ 真机收口(2026-07-17 夜)：** iPhone 17 Pro 装机后 Ken 连扫两遍(安静 21:56 / 高精度 21:58),遥测坐实——
+①**双模式开关真起作用**:安静遍 `hint_viewpoint=0 hint_evidence=0`(全程 0 引导),关掉后 `hint_evidence=25 hint_viewpoint=1`(引导启动);
+②**高精度只引导重点**:Ken 观感「只圈了几处、没满屋催」✅(`EvidenceGuide.focusTargets` + `highPrecisionFocus` 生效);
+③**认账/坐标准**:高精度遍 `prior_regOk=1`、`prior_matched_peak=6/9` 原位认回、`prior_closeness=296`≈3.7cm(对齐历史 4cm);
+④**un-merge 健康**:`unmerge_inbox_peak≥2` 触发 `split_added`(4/1),非卡住 case;
+⑤`launchctl bootstrap` 用户已激活(runs=3)。
+**①质量摘要——用量驱动删除**:Ken 反馈扫后那张「基础扫描已保存·N 件·K 件认出」安心总账「反正我都不会看」。一个说「一切正常」的被动横幅没人读=死表面,已从 `ReviewView` 删除,改「只在有事时弹」(上传失败/覆盖提醒/现实核对含难例三个 Section 本就按需出,没事直接户型图+上传)。呼应本文档「只把 ≤3–5 个难例交给用户」。别再加回被动摘要。
 
 ## 4. 运维(命令 + 遥测键)
 

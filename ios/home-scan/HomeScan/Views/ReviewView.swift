@@ -43,28 +43,13 @@ struct ReviewView: View {
                 }
 
                 if let p = model.convertedProject {
-                    // 扫后质量摘要(P1 降打扰):安静扫完,先给一句让人安心的总账 ——
-                    // 不把「N 件证据不足」堆你脸上。技术细节(现实核对/提醒)留在下面
-                    // 给想看的人。战略核心是别把系统的不确定性转嫁给用户。
-                    Section {
-                        VStack(alignment: .leading, spacing: HS.Space.tight) {
-                            Label("基础扫描已保存", systemImage: "checkmark.circle.fill")
-                                .foregroundStyle(HS.accent)
-                                .font(.headline)
-                            Text("\(p.placements.count + p.fixtures.count) 件家具 · \(p.zones.count) 个分区已记录")
-                                .font(.subheadline)
-                            if let rc = model.realityCheck, !rc.recognized.isEmpty {
-                                Text("其中 \(rc.recognized.count) 件认出是家里已有的")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(.vertical, HS.Space.tight)
-                        .accessibilityElement(children: .combine)
-                    } footer: {
-                        Text("名字或类别认错了?长按下面那一行改。现在直接上传就行。")
-                    }
-
+                    // 「只在有事时弹」(RECOG.1r 真机反馈,2026-07-17):这里原本有一张
+                    // 永远显示的「基础扫描已保存 · N 件家具 · K 件认出」安心总账。真实
+                    // 用户反馈「反正我都不会看」——一个说「一切正常」的被动横幅没人读,
+                    // 只是死表面。已删。页面现在天然遵循「只在有事时弹」:上传失败、覆盖
+                    // 提醒(scanWarnings)、现实核对(含 possiblySame 难例)三个 Section
+                    // 本就是有内容才出;没事就直接是户型图 + 上传,不再拿假总账占顶。
+                    // 呼应战略文档「最后只把 ≤3–5 个难例交给用户」。别再加回被动摘要。
                     Section {
                         PlanPreview(project: p)
                             // 高度跟着户型的实际比例走,不写死。写死 300 的话,

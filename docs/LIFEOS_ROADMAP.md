@@ -28,7 +28,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 **代码状态快照（2026-07-17 晚）：**
 
 - **HealthOS 第九 app：** HLT-0–4 已提交；companion Xcode 工程已入仓（`5a2b7773`）；真机签名 / HealthKit / iCloud / LAN 连续交付仍待用户 gate（HLT-5）。
-- **Home 云链路 + 认亲主航道已入仓：** 扫描 / 照片 / 事件 + object recognition 生产且 git 闭环；安静扫描、matcher、证据 UI、**/plan 横幅**、**Mac auto-refine 管线**（`4675dd06`）均已提交并验证。可编辑 spatial 项目仍本地真源。残余（`HOME.RECOG.1r`）：区域级高精度补扫、质量摘要观感签收、用户激活 launchd。
+- **Home 云链路 + 认亲主航道已入仓：** 扫描 / 照片 / 事件 + object recognition 生产且 git 闭环；安静扫描、matcher、证据 UI、**/plan 横幅**、**Mac auto-refine 管线**（`4675dd06`）均已提交并验证。可编辑 spatial 项目仍本地真源。`HOME.RECOG.1r` ✅ 真机收口（2026-07-17 夜：区域高精度补扫 + 双模式开关遥测坐实；质量摘要按用户「不看」删除改「只在有事时弹」）；`HOME.RECOG.refine` launchd 已用户激活（runs=3）。
 - **Knowledge 块编辑器已 checkpoint 并扩面：** 编辑器 / library 入仓；另加 GFM 表格块 + 行内高亮（`bbfd7fb2`，unit 180）。下一刀日用复利是 **KNOW.VAULT.0** watcher。Vault 正文仍不上云。
 - **Knowledge↔Planner 跨 OS 引用试点仍在：** 双向语义检索；`object_ref` 稳定化未做。
 - **Design Catalog 九品牌：** 收集规模约 922 smoke / 147 a11y / 524 visual（以当次 CI 为准）。
@@ -83,7 +83,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 顺序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 触发 / 最小范围 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **HOME.RECOG.1r** | 认亲残余（窄） | Home | P2 | ◆ | 0.5–1d | 区域级高精度补扫；质量摘要观感签收（group-merge / 露总数已由并行 Agent 收） |
+| ~~1~~ | ~~**HOME.RECOG.1r**~~ ✅ | 认亲残余（窄） | Home | — | — | 真机收口 2026-07-17 | iPhone 17 Pro 连扫两遍遥测坐实（双模式开关 · 高精度 1-3 区 · 认回 6/9 · 3.7cm）；质量摘要按用户「不看」删除改「只在有事时弹」 |
 | ~~2~~ | ~~**PLNR.UIUX.0**~~ ✅ | Planner 定向 UI 收口 | Planner | — | — | 已完成 | 三个未覆盖页迁移 PageShell + 3 条 warning 清零（2026-07-17）；e2e 72/72、单测 140、build clean |
 | 3 | **PLAT.MCP.0** | 抽共享 MCP 鉴权（JWT/RLS）| Platform | P2 | ◆◆ | 0.5d | Home/Planner 两个 MCP 函数已重复鉴权样板；抽进 `@life-os/mcp-server`，Finance/Fitness MCP 近零成本（开发复利，2 消费者达门槛）|
 | 4 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用契约 | Knowledge | P2 | ◆◆ | 1–2d | wikilink 小闭环已发；稳定 `object_ref` 契约仍未起，待第二真实消费者再上，不合并业务表 |
@@ -109,7 +109,7 @@ Phase 1 — 信任收割（用户 gate 重）
 
 Phase 2 — 跨站复利 / 窄残余（按需）
   PLAT.MCP.0（抽共享 MCP 鉴权，AIOS 推理内核边际成本压近零）
-  → HOME.RECOG.1r（区域补扫/观感，纯 owner gate）→ KNOW.XREF.5/object_ref（待第二真实消费者）
+  → KNOW.XREF.5/object_ref（待第二真实消费者）  ※ HOME.RECOG.1r 已真机收口
 
 已完成本轮
   PLNR.ATTACH.0 · HOME.MCP.13 · AIOS.STABLE.26 · KNOW.VAULT.0
