@@ -13,6 +13,8 @@
     enrichment,
     privacy,
     chargeDate,
+    // 这笔银行扣款的金额 —— 评审时和订单总额并排比,给用户判断依据(FINC.PURCHASE.6.a closure)
+    chargeAmount = null,
     compact = false,
     showLineItemsInBody = true,
     displayState = 'clean_enriched',
@@ -24,6 +26,16 @@
     reviewEnabled = false,
   } = $props()
 
+  // 评审态(matched_review):这正是最需要证据的地方,反而是原来把商品明细藏了的地方。
+  // 评审时强制展示明细 + 一条「银行扣款 vs 订单总额」并排对比,让用户有据可判。
+  const reviewMode = $derived(displayState === 'matched_review')
+  const chargeCents = $derived(chargeAmount != null ? Math.round(Math.abs(chargeAmount) * 100) : null)
+  const orderCents = $derived(enrichment.orderTotal != null ? Math.round(Math.abs(enrichment.orderTotal) * 100) : null)
+  const amountDiffCents = $derived(
+    chargeCents != null && orderCents != null ? orderCents - chargeCents : null,
+  )
+  const amountMatch = $derived(amountDiffCents != null && Math.abs(amountDiffCents) <= 1)
+
   let open = $state(!compact)
 
   $effect(() => {
@@ -34,8 +46,10 @@
   const hasItemPrices = $derived(items.some((li) => li.price != null))
   const returnInfo = $derived(enrichment.returnInfo)
   const showReturnBadge = $derived(isReturnLikeEnrichment(returnInfo) || returnInfo?.isRefundCredit)
-  const allowLineItems = $derived(displayState === 'clean_enriched' && showLineItemsInBody)
-  const showItemCount = $derived(items.length > 0 && (displayState === 'clean_enriched' || debugMode))
+  const allowLineItems = $derived(
+    reviewMode || (displayState === 'clean_enriched' && showLineItemsInBody),
+  )
+  const showItemCount = $derived(items.length > 0 && (displayState === 'clean_enriched' || reviewMode || debugMode))
   const noItemsMessage = $derived(
     displayState === 'matched_review'
       ? t('history.purchaseStateReviewHint')
@@ -269,10 +283,34 @@
             <dd>{enrichment.orderId}</dd>
           </div>
         {/if}
+        {#if chargeAmount != null}
+          <div class="purchase-enrichment-meta-row">
+            <dt>{t('history.reviewChargeAmount')}</dt>
+            <dd>{moneyPrecise(chargeAmount, privacy)}</dd>
+          </div>
+        {/if}
         {#if enrichment.orderTotal != null}
           <div class="purchase-enrichment-meta-row">
             <dt>{t('history.purchaseOrderTotal')}</dt>
             <dd>{moneyPrecise(enrichment.orderTotal, privacy)}</dd>
+          </div>
+        {/if}
+        {#if reviewMode && amountDiffCents != null}
+          <div class="purchase-enrichment-meta-row" data-amount-match={amountMatch}>
+            <dt>{t('history.reviewChargeAmount')} ↔ {t('history.purchaseOrderTotal')}</dt>
+            <dd>
+              {amountMatch
+                ? '✓ ' + t('history.reviewAmountMatch')
+                : t('history.reviewAmountDiff', {
+                    amount: moneyPrecise(Math.abs(amountDiffCents) / 100, privacy),
+                  })}
+            </dd>
+          </div>
+        {/if}
+        {#if reviewMode && enrichment.matchConfidence}
+          <div class="purchase-enrichment-meta-row">
+            <dt>{t('history.reviewConfidence')}</dt>
+            <dd>{enrichment.matchConfidence}</dd>
           </div>
         {/if}
       </dl>

@@ -195,6 +195,7 @@
             enrichment={txn.purchaseEnrichment}
             {privacy}
             chargeDate={txn.date}
+            chargeAmount={txn.amount}
             compact
             displayState={purchaseState}
             showLineItemsInBody={false}
