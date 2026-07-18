@@ -130,3 +130,31 @@ PROPOSED
 - 超过计划 expiry 的兼容层自动升级为 P0 debt。
 - `RETIRED` 只有在旧代码、部署、权限、任务和文档都删除后使用。
 - `COMPAT_REMOVED` 才是迁移真正完成。
+
+## MIGRATION: KR-P1-001 Plan create task Action/Outbox vertical slice
+
+- Status: `PROPOSED_OWNER_PENDING` — Phase 0 definition only; no SQL, RLS, app runtime, deploy, or production write performed.
+- Owner: Plan / Planner remains the only task data Owner.
+- Scope / non-scope: Scope is one reversible `plan.create_task` Action path, idempotency key, activity record, and outbox publication. Non-scope: task schema migration, Portal redirect, Planner UI rewrite, schedule/complete/reschedule, Work connector writes, Apple clients.
+- Current source of truth: Planner local-first task state with optional Supabase sync; exact table/store names must be verified in the implementation slice before code changes.
+- Target source of truth: Same Plan task truth; Action/Outbox is a write envelope, not a new task store.
+- Current writers: Planner UI and any existing Planner provider/API paths; Paper provider functions stay Planner-side per AGENTS. MCP/tool writers are `UNKNOWN` until implementation inventory.
+- Target single writer: Plan domain executor validates and writes the task; Assistant/Today/MCP/native clients may submit `ActionRequest` only.
+- Readers / consumers: Planner UI remains canonical reader; Assistant/Activity reads task `EntityRef` and result metadata only.
+- Security domain / classification: Personal + `personal` by default. If request source is Work/Health/Money/Home sensitive data, source classification is preserved and Activity is redacted.
+- Risk level: R1 for standalone task creation; R2 if request also schedules, moves, edits existing plan state, or uses sensitive source text. R3/R4 are fail-closed.
+- Compatibility read: Existing Planner reads continue unchanged during the slice; Action result returns `EntityRef` and current task projection.
+- Backfill query/script: None for Phase 1 first slice because no historical task migration is planned. If an Activity table is introduced later, backfill is not required for old tasks unless owner signs a separate ledger row.
+- Reconciliation query: For a fixture/user, count accepted create-task idempotency keys equals number of new Plan tasks plus documented rejected/duplicate requests. Duplicate requests with same idempotency key must resolve to one task.
+- Cutover trigger: After local fixture tests prove Policy → Executor → task write → outbox/activity is atomic and Planner existing tests still pass.
+- Cutover date: `OWNER_PENDING`.
+- Rollback deadline and steps: Before old direct non-UI writers are disabled. Rollback by routing new entry points back to existing Planner writer and leaving any created tasks as normal Plan tasks; no destructive down migration.
+- Old read-only date: `OWNER_PENDING`; only applies to non-Plan direct writers after parity evidence.
+- Redirect date: N/A.
+- Observation window: Minimum one stable release or owner-defined real-use window for create-task only.
+- Retirement date: `OWNER_PENDING`; old direct non-UI create-task writer retirement requires evidence that no callers bypass Action.
+- Compatibility removal date: `OWNER_PENDING`.
+- Validation commands: `node scripts/check-kenos-phase0.mjs`; `npm run check:lifeos-boundaries`; `npm run check:app-manifests`; targeted Planner tests to be named in implementation slice.
+- Remote/deploy evidence: None; remote/deploy explicitly prohibited for Phase 0 preparation.
+- Real-use evidence: Not applicable until Phase 1 implementation; Phase 0 evidence is repository-only.
+- Remaining unknowns: Exact Planner task store/table symbols, current MCP create-task path, existing outbox schema fields, Activity storage target, and RLS/idempotency enforcement location.
