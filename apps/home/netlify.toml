@@ -1,7 +1,7 @@
 [build]
   command = "npm run build -w home-os"
   publish = "apps/home/build"
-  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/home packages/contracts packages/platform-web packages/sync packages/theme"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/home packages/contracts packages/mcp-server packages/platform-web packages/sync packages/theme"
 
 [build.environment]
   NODE_VERSION = "22"

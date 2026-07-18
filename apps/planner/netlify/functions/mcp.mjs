@@ -1,6 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
 import { createMcpHandler } from '@life-os/mcp-server';
-import { LIFE_OS_SUPABASE_URL, LIFE_OS_SUPABASE_PUBLISHABLE_KEY } from '@life-os/sync';
+import { userIdOf, needLogin } from '@life-os/mcp-server/auth';
 import {
   buildTask,
   selectTasks,
@@ -19,33 +18,15 @@ import {
  * 让 AIOS（推理内核）能看/建/完成你的任务。写的是你自己的 `planner_tasks`
  * （经你的 JWT + RLS），行形状与客户端 LWW 同步一致 → 就像另一台设备的改动，
  * Planner 下次同步自然合并（见 apps/planner/src/lib/repo.js buildTaskSyncRows）。
+ *
+ * 鉴权样板（取 JWT / 造 RLS 客户端 / 未登录提示）由 @life-os/mcp-server 的 auth 面
+ * 统一处理（PLAT.MCP.0）：工具打 `auth: true`，ctx.supabase 即已作用于用户 JWT。
  */
-
-const NEED_LOGIN =
-  '需要登录：请在 AIOS 设置 → MCP 为 Planner server 配置 Life OS access token。';
-
-function jwtFromRequest(request) {
-  const auth = request.headers.get('authorization') || '';
-  return auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-}
-
-function plannerClient(jwt) {
-  return createClient(LIFE_OS_SUPABASE_URL, LIFE_OS_SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${jwt}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 async function loadTasks(sb) {
   const { data, error } = await sb.from('planner_tasks').select('data');
   if (error) throw new Error(error.message);
   return (data ?? []).map((r) => r.data).filter(Boolean);
-}
-
-async function userIdOf(sb) {
-  const { data, error } = await sb.auth.getUser();
-  if (error) throw new Error(error.message);
-  return data?.user?.id || '';
 }
 
 /** UTC 今天（YYYY-MM-DD）——AIOS 可用 `today` 入参覆盖为本地日期以校正时区边界。 */
@@ -70,6 +51,7 @@ async function upsertTask(sb, userId, task) {
 
 export default createMcpHandler({
   name: 'planner',
+  auth: { appLabel: 'Planner' },
   tools: [
     {
       name: 'ping',
@@ -83,6 +65,7 @@ export default createMcpHandler({
       name: 'today_agenda',
       description:
         '列出今天该做的任务（已逾期 / 今天截止 / 今天排程，未完成）。用户问「我今天要做什么」「今天有什么安排」时使用。',
+      auth: true,
       inputSchema: {
         type: 'object',
         properties: {
@@ -92,13 +75,11 @@ export default createMcpHandler({
           },
         },
       },
-      async handler(args, { request }) {
-        const jwt = jwtFromRequest(request);
-        if (!jwt) return NEED_LOGIN;
+      async handler(args, { supabase }) {
         const today = isIsoDate(args?.today) ? args.today : utcToday();
         let tasks;
         try {
-          tasks = await loadTasks(plannerClient(jwt));
+          tasks = await loadTasks(supabase);
         } catch (err) {
           return `读取任务失败：${err?.message ?? err}`;
         }
@@ -110,6 +91,7 @@ export default createMcpHandler({
       name: 'list_tasks',
       description:
         '列出任务，可按范围与关键词过滤。scope: open=未完成(默认) / all=全部 / today=今天该做。',
+      auth: true,
       inputSchema: {
         type: 'object',
         properties: {
@@ -118,12 +100,10 @@ export default createMcpHandler({
           today: { type: 'string', description: 'scope=today 时的本地今天 YYYY-MM-DD（可选）' },
         },
       },
-      async handler(args, { request }) {
-        const jwt = jwtFromRequest(request);
-        if (!jwt) return NEED_LOGIN;
+      async handler(args, { supabase }) {
         let tasks;
         try {
-          tasks = await loadTasks(plannerClient(jwt));
+          tasks = await loadTasks(supabase);
         } catch (err) {
           return `读取任务失败：${err?.message ?? err}`;
         }
@@ -140,6 +120,7 @@ export default createMcpHandler({
       name: 'add_task',
       description:
         '新建一条任务。用户说「提醒我 XX」「加个任务 XX」「记一下 XX」时使用。默认进收件箱。',
+      auth: true,
       inputSchema: {
         type: 'object',
         properties: {
@@ -150,22 +131,19 @@ export default createMcpHandler({
         },
         required: ['title'],
       },
-      async handler(args, { request }) {
-        const jwt = jwtFromRequest(request);
-        if (!jwt) return NEED_LOGIN;
+      async handler(args, { supabase }) {
         const title = String(args?.title ?? '').trim();
         if (!title) return '任务标题不能为空。';
-        const sb = plannerClient(jwt);
         let userId;
         try {
-          userId = await userIdOf(sb);
+          userId = await userIdOf(supabase);
         } catch (err) {
           return `无法确认身份：${err?.message ?? err}`;
         }
-        if (!userId) return NEED_LOGIN;
+        if (!userId) return needLogin('Planner');
         const task = buildTask({ ...args, title }, { id: newTaskId(), now: Date.now() });
         try {
-          await upsertTask(sb, userId, task);
+          await upsertTask(supabase, userId, task);
         } catch (err) {
           return `创建任务失败：${err?.message ?? err}`;
         }
@@ -176,6 +154,7 @@ export default createMcpHandler({
       name: 'complete_task',
       description:
         '把一条任务标记为完成。传 id 精确定位，或传 title 按标题匹配（未完成任务里精确优先、其次包含）。',
+      auth: true,
       inputSchema: {
         type: 'object',
         properties: {
@@ -183,14 +162,11 @@ export default createMcpHandler({
           title: { type: 'string', description: '任务标题或关键词（可选）' },
         },
       },
-      async handler(args, { request }) {
-        const jwt = jwtFromRequest(request);
-        if (!jwt) return NEED_LOGIN;
+      async handler(args, { supabase }) {
         if (!args?.id && !String(args?.title ?? '').trim()) return '请提供 id 或 title 指定要完成的任务。';
-        const sb = plannerClient(jwt);
         let tasks;
         try {
-          tasks = await loadTasks(sb);
+          tasks = await loadTasks(supabase);
         } catch (err) {
           return `读取任务失败：${err?.message ?? err}`;
         }
@@ -199,8 +175,8 @@ export default createMcpHandler({
         const done = completeTask(target, Date.now());
         let userId;
         try {
-          userId = await userIdOf(sb);
-          await upsertTask(sb, userId, done);
+          userId = await userIdOf(supabase);
+          await upsertTask(supabase, userId, done);
         } catch (err) {
           return `更新任务失败：${err?.message ?? err}`;
         }

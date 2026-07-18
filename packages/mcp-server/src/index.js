@@ -17,14 +17,28 @@
  *     }],
  *   })
  *
- * 安全模型：数据工具应从 request 的 `Authorization: Bearer <jwt>` 取用户 JWT 转发给
- * Supabase，由 RLS 做逐用户鉴权。本 helper 只管协议，不碰鉴权——handler 自己负责。
+ * 安全模型（PLAT.MCP.0）：数据工具从 `Authorization: Bearer <jwt>` 取用户 JWT，转发
+ * 给 Supabase 由 RLS 逐用户鉴权。声明式接法——顶层给 `auth: { appLabel, schema }`，
+ * 给工具打 `auth: true`，本 helper 就在调用前取 JWT、无则回统一「未登录」提示、有则把
+ * 一个作用于该 JWT 的 Supabase 客户端注入 ctx：
+ *   createMcpHandler({
+ *     name: 'planner',
+ *     auth: { appLabel: 'Planner' },        // schema 可选（如 Home 用 'home'）
+ *     tools: [
+ *       { name: 'ping', handler() { return 'ok' } },              // 公共工具，免鉴权
+ *       { name: 'add_task', auth: true, async handler(args, { supabase, jwt }) { ... } },
+ *     ],
+ *   })
+ * 鉴权样板抽在 ./auth.js，且只在某个 auth 工具真被调用时才动态加载——纯协议消费者
+ * （及协议单测）保持零 supabase 依赖。需要 user_id 的工具可 `import { userIdOf } from
+ * '@life-os/mcp-server/auth'`。
  */
 
 const PROTOCOL_VERSION = '2025-06-18'
 
-/** @typedef {(args: any, ctx: { request: Request }) => (string | object | Promise<string | object>)} McpToolHandler */
-/** @typedef {{ name: string, description?: string, inputSchema?: object, handler: McpToolHandler }} McpTool */
+/** @typedef {(args: any, ctx: { request: Request, jwt?: string, supabase?: any }) => (string | object | Promise<string | object>)} McpToolHandler */
+/** @typedef {{ name: string, description?: string, inputSchema?: object, auth?: boolean, handler: McpToolHandler }} McpTool */
+/** @typedef {{ appLabel?: string, schema?: string }} McpAuthOptions */
 
 function corsHeaders(origin) {
   return {
@@ -43,11 +57,11 @@ const toolText = (out) => ({
 const toolError = (message) => ({ content: [{ type: 'text', text: String(message) }], isError: true })
 
 /**
- * @param {{ name?: string, version?: string, tools?: McpTool[] }} options
+ * @param {{ name?: string, version?: string, tools?: McpTool[], auth?: McpAuthOptions }} options
  * @returns {(request: Request) => Promise<Response>}
  */
 export function createMcpHandler(options) {
-  const { name = 'life-os-app', version = '1.0.0', tools = [] } = options || {}
+  const { name = 'life-os-app', version = '1.0.0', tools = [], auth } = options || {}
   const byName = new Map(tools.map((t) => [t.name, t]))
 
   return async function handler(request) {
@@ -96,8 +110,16 @@ export function createMcpHandler(options) {
       if (method === 'tools/call') {
         const tool = byName.get(params?.name)
         if (!tool) return json(rpcResult(id, toolError(`未知工具 ${params?.name}`)))
+        let ctx = { request }
+        if (tool.auth) {
+          // Lazy-load the auth helpers so pure-protocol consumers never pull supabase.
+          const { jwtFromRequest, lifeOsClient, needLogin } = await import('./auth.js')
+          const jwt = jwtFromRequest(request)
+          if (!jwt) return json(rpcResult(id, toolText(needLogin(auth?.appLabel))))
+          ctx = { request, jwt, supabase: lifeOsClient(jwt, { schema: auth?.schema }) }
+        }
         try {
-          const out = await tool.handler(params?.arguments || {}, { request })
+          const out = await tool.handler(params?.arguments || {}, ctx)
           return json(rpcResult(id, toolText(out)))
         } catch (err) {
           return json(rpcResult(id, toolError(err?.message || err)))

@@ -49,12 +49,12 @@
 | 序 | 事项 | 复利依据 | 归属 |
 | -- | ---- | -------- | ---- |
 | **1** | **FINC.PURCHASE.6.a owner 真机 closure**（Confirm→Undo · 双 JWT · 视觉） | 使用复利最高：解锁 finance 作为可信跨 OS 源头。**agent 增量已封顶**（逻辑+护栏落地），剩下**只有 Ken 能做**的 0.2d 真机 gate | **Ken** |
-| **2** | **PLAT.MCP.0** 抽共享 MCP 鉴权 | 开发复利满分：Home/Planner 两消费者已达提取门槛，抽完 Finance/Fitness MCP 近零成本。**全局最高复利下一步**（见 hub POTENTIAL） | 跨 app（非本卷；共享包） |
+| ~~**2**~~ | ~~**PLAT.MCP.0** 抽共享 MCP 鉴权~~ ✅ 已落地（2026-07-17）：`@life-os/mcp-server/auth` + `createMcpHandler` 声明式 `auth:true`；Home/Planner 样板消除、行为逐字不变。Finance/Fitness MCP 现近零成本 | 跨 app（共享包） |
 | **3** | **FINC.PURCHASE.6b** 退款闭环 | 使用复利：让「退货/退款后怎么处理」在账本闭环；纯 finance 域，**agent 可推进的最高 ROI finance 工作** | Codex |
 | **4** | **FINC.GROWTH.4** Portal 角标一致 | 使用复利：Portal 是每日放大器，角标一致强化「信任数字一致」信号；依赖 Planner↔Portal 接线 | Codex |
 | 后移 | FINC.IMPORT.5（加表面积、日用触点弱）· FINC.PURCHASE.6c（review 负担已降 71%，边际递减） | 线性/边际递减 | — |
 
-**一句话：** ROI 最高的 6.a 已只剩 **Ken 的真机 gate**（agent 做不了）；**agent 侧下一刀 = FINC.PURCHASE.6b 退款闭环**；全局最高复利仍是 **PLAT.MCP.0**（跨 app）。
+**一句话：** ROI 最高的 6.a 已只剩 **Ken 的真机 gate**（agent 做不了）；**6b 退款闭环 agent 侧已收口**（含用户备注/处理状态）；**PLAT.MCP.0 已落地**（共享 MCP 鉴权抽出，Finance MCP 现近零成本）——finance 若接 MCP「查结余/本月支出」只需业务工具 + `auth:true`。
 
 ### FINC.PURCHASE.6 — 支出审核（分阶段）
 

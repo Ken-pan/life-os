@@ -15,6 +15,7 @@ test-results
 !**/.cursor/rules/**
 !**/.cursor/mcp.json
 **/.playwright-mcp
+.playwright-cli
 **/*.log
 **/*.zip
 **/docs/ui-qa-screenshots

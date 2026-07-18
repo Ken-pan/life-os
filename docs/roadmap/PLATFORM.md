@@ -82,13 +82,15 @@ now-playing)的真机运行 QA 待导入曲库后人工验收一次。
 
 ---
 
-## PLAT.MCP.0 — 抽共享 MCP 鉴权（跨站复利）
+## PLAT.MCP.0 — 抽共享 MCP 鉴权（跨站复利）✅（2026-07-17）
 
 **触发（2026-07-17）：** Home（`where_is`）与 Planner（任务 CRUD）两个 MCP 面已上线，`apps/home/netlify/functions/mcp.js` 与 `apps/planner/netlify/functions/mcp.mjs` **重复了同一套鉴权样板**：`jwtFromRequest` + `createClient(..,{global.headers.Authorization})` + `auth.getUser()` 取 user_id。达到「≥2 消费者才提取」的复利门槛。
 
-**范围：** 把「从 Bearer 取 JWT → 造 RLS 作用域 Supabase 客户端 → 拿 user_id」抽成 `@life-os/mcp-server`（或 `@life-os/sync`）的一个 helper；Home/Planner 两处改为消费它。之后 Finance「查结余/本月支出」、Fitness「记一组/看 readiness」、（若上服务端）Knowledge「vault_ask」的 MCP 都近零成本。
+**已落地：** 鉴权样板抽进 `@life-os/mcp-server/auth`（`jwtFromRequest` / `lifeOsClient(jwt,{schema})` / `userIdOf` / `needLogin`），并给 `createMcpHandler` 加**声明式鉴权**——顶层 `auth: { appLabel, schema }` + 工具打 `auth: true`，helper 就在调用前取 JWT、无则回统一「未登录」文本、有则注入 `ctx.supabase`（作用于该 JWT 的 RLS 客户端）+ `ctx.jwt`。auth 面只在某个 auth 工具真被调用时**动态加载**，纯协议消费者（及协议单测）保持零 supabase 依赖。Home/Planner 两处删除全部重复样板（`jwtFromRequest`/客户端工厂/`userIdOf`/`NEED_LOGIN` 门），行为逐字不变（协议本地驱动验证：tools/list、ping、无 JWT gate 消息完全一致）。**新增 `packages/mcp-server` 到 Home `netlify.toml` watch**（原缺失，改共享包会静默跳过 Home 部署——见 [[netlify-shared-package-watch-gap]]）。
 
-**边界：** 只抽鉴权/客户端样板，不抽业务工具；不新造无真实用途的 MCP 工具（防表面积爆炸，见 [`COMPOUND.md`](./COMPOUND.md)）。投入 ~0.5d。**验收：** Home/Planner MCP 行为不变（协议本地验 + 现有 gate），新 helper 有单测，两处样板消除。
+**之后近零成本：** Finance「查结余/本月支出」、Fitness「记一组/看 readiness」、（若上服务端）Knowledge「vault_ask」的 MCP —— 只写业务工具 + `auth: true`。
+
+**边界（已遵守）：** 只抽鉴权/客户端样板，不抽业务工具；不新造无真实用途的 MCP 工具（防表面积爆炸，见 [`COMPOUND.md`](./COMPOUND.md)）。**验收 ✅：** 行为不变（协议本地验 + 现有 gate）· `auth.test.mjs`（jwt 提取 / needLogin / userIdOf / 声明式门 4 支）+ 协议 `mcpHandler.test.mjs` 全绿 · Home/Planner 样板消除。
 
 ## C-P2 P2+ 候选
 

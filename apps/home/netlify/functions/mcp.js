@@ -1,32 +1,17 @@
-import { createClient } from '@supabase/supabase-js'
 import { createMcpHandler } from '@life-os/mcp-server'
-import {
-  LIFE_OS_SUPABASE_URL,
-  LIFE_OS_SUPABASE_PUBLISHABLE_KEY,
-} from '@life-os/sync'
 import { whereIs } from '../../src/lib/spatial/where-is.js'
 
 /**
  * Home MCP — AIOS 设置 → MCP → URL `https://home.kenos.space/api/mcp`
  * + Bearer = 用户 Life OS Supabase access_token（与云同步同 JWT）。
+ *
+ * 鉴权样板（取 JWT / 造 RLS 客户端 / 未登录提示）由 @life-os/mcp-server 的 auth 面
+ * 统一处理（PLAT.MCP.0）：顶层 `auth: { appLabel, schema }` + 工具打 `auth: true`，
+ * ctx.supabase 即已作用于用户 JWT、默认 schema 定到 'home'。
  */
 
-function jwtFromRequest(request) {
-  const auth = request.headers.get('authorization') || ''
-  return auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
-}
-
-function homeClient(jwt) {
-  return createClient(LIFE_OS_SUPABASE_URL, LIFE_OS_SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${jwt}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  })
-}
-
-async function loadStorageZones(jwt) {
-  const sb = homeClient(jwt)
-  const { data, error } = await sb
-    .schema('home')
+async function loadStorageZones(supabase) {
+  const { data, error } = await supabase
     .from('storage_snapshots')
     .select('storage_zones, project_id, updated_at')
     .maybeSingle()
@@ -36,6 +21,7 @@ async function loadStorageZones(jwt) {
 
 export default createMcpHandler({
   name: 'home',
+  auth: { appLabel: 'Home', schema: 'home' },
   tools: [
     {
       name: 'ping',
@@ -49,6 +35,7 @@ export default createMcpHandler({
       name: 'where_is',
       description:
         '在家居储藏清单中查找物品所在储藏区（按名称/标签/备注/购买标题匹配）。用户问「XX 在哪」「登山包放哪了」时使用。',
+      auth: true,
       inputSchema: {
         type: 'object',
         properties: {
@@ -59,16 +46,12 @@ export default createMcpHandler({
         },
         required: ['query'],
       },
-      async handler(args, { request }) {
-        const jwt = jwtFromRequest(request)
-        if (!jwt) {
-          return '需要登录：请在 AIOS 设置 → MCP 为 Home server 配置 Life OS access token。'
-        }
+      async handler(args, { supabase }) {
         const query = String(args?.query ?? '').trim()
         if (!query) return whereIs([], '')
         let row
         try {
-          row = await loadStorageZones(jwt)
+          row = await loadStorageZones(supabase)
         } catch (err) {
           return `读取储藏快照失败：${err?.message ?? err}`
         }
