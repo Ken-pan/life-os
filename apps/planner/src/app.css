@@ -654,7 +654,7 @@ body {
 .cal-dow-row span {
   text-align: center;
   font-size: var(--text-xs);
-  color: var(--t3);
+  color: var(--t2);
 }
 
 .cal-date-row {
