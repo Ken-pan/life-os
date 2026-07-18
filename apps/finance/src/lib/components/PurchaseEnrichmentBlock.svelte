@@ -13,6 +13,7 @@
     resolveDecide,
     resolveUndo,
   } from '$lib/purchaseReviewClient.js'
+  import { loadNote, saveNote } from '$lib/purchaseNoteClient.js'
   import { ReviewActions } from '@life-os/platform-web/svelte/review-card'
 
   let {
@@ -33,6 +34,8 @@
     // FINC.PURCHASE.6b — real negative refund txns linked to this purchase.
     /** @type {import('../../engine/refundLinks.js').RefundLink[]} */
     refundLinks = [],
+    // FINC.PURCHASE.6b — private per-transaction note + handled ("已处理") flag.
+    noteEnabled = false,
   } = $props()
 
   // 评审态(matched_review):这正是最需要证据的地方,反而是原来把商品明细藏了的地方。
@@ -164,6 +167,84 @@
     if (open && canReview && !reviewLoaded) loadReview()
   })
   $effect(() => () => clearUndoTimer())
+
+  // ── FINC.PURCHASE.6b — note + handled ("已处理") ───────────────────────────
+  // Lazy: only load on expand. Self-hides when the annotation RPC is unreachable
+  // (e.g. the migration isn't deployed in this environment). Note edits debounce;
+  // the handled toggle saves immediately. Server RPCs are authoritative.
+  const canAnnotate = $derived(
+    noteEnabled && !!transactionId && isSupabaseConfigured,
+  )
+  let noteLoaded = $state(false)
+  let noteAvailable = $state(false)
+  let noteText = $state('')
+  let noteHandled = $state(false)
+  let noteHandledAt = $state(null)
+  let noteStatus = $state('idle') // idle | saving | saved | error
+  let noteDirty = $state(false)
+  let noteSaveTimer = null
+
+  function clearNoteTimer() {
+    if (noteSaveTimer) {
+      clearTimeout(noteSaveTimer)
+      noteSaveTimer = null
+    }
+  }
+
+  async function loadNoteState() {
+    if (!canAnnotate || noteLoaded) return
+    noteLoaded = true
+    const state = await loadNote(callRpc, transactionId)
+    noteAvailable = state.available
+    if (state.available) {
+      noteText = state.note
+      noteHandled = state.handled
+      noteHandledAt = state.handledAt
+    }
+  }
+
+  async function persistNote(handled = noteHandled) {
+    if (!canAnnotate) return
+    clearNoteTimer()
+    noteDirty = false
+    noteStatus = 'saving'
+    const patch = await saveNote(callRpc, {
+      transactionId,
+      note: noteText,
+      handled,
+    })
+    noteStatus = patch.status
+    if (patch.status === 'saved') {
+      noteHandled = patch.handled
+      noteHandledAt = patch.handledAt
+    }
+  }
+
+  function onNoteInput() {
+    noteDirty = true
+    noteStatus = 'idle'
+    clearNoteTimer()
+    // 800ms debounce — save the trailing edit once typing settles.
+    noteSaveTimer = setTimeout(() => {
+      noteSaveTimer = null
+      void persistNote()
+    }, 800)
+  }
+
+  function onNoteBlur() {
+    if (noteDirty) void persistNote()
+  }
+
+  function toggleHandled() {
+    // Optimistic flip; persistNote reconciles to server truth (or 'error').
+    noteHandled = !noteHandled
+    void persistNote(noteHandled)
+  }
+
+  $effect(() => {
+    if (open && canAnnotate && !noteLoaded) loadNoteState()
+  })
+  $effect(() => () => clearNoteTimer())
 </script>
 
 <div class="purchase-enrichment">
@@ -371,6 +452,49 @@
                   : null}
             busy={reviewStatus === 'saving'}
           />
+        </div>
+      {/if}
+
+      {#if canAnnotate && noteAvailable}
+        <div class="purchase-note" data-handled={noteHandled}>
+          <div class="purchase-note-head">
+            <span class="purchase-note-title text-sm">{t('history.purchaseNoteTitle')}</span>
+            <button
+              type="button"
+              class="purchase-note-handled-btn{noteHandled ? ' is-handled' : ''}"
+              onclick={toggleHandled}
+              disabled={noteStatus === 'saving'}
+              aria-pressed={noteHandled}
+            >
+              {noteHandled ? '✓ ' + t('history.purchaseHandled') : t('history.purchaseMarkHandled')}
+            </button>
+          </div>
+          <textarea
+            class="purchase-note-input"
+            rows="2"
+            bind:value={noteText}
+            oninput={onNoteInput}
+            onblur={onNoteBlur}
+            placeholder={t('history.purchaseNotePlaceholder')}
+          ></textarea>
+          <div class="purchase-note-foot text-sm text-muted">
+            {#if noteStatus === 'saving'}
+              <span>{t('history.reviewSaving')}</span>
+            {:else if noteStatus === 'error'}
+              <button type="button" class="purchase-note-retry" onclick={() => void persistNote()}>
+                {t('history.purchaseNoteError')}
+              </button>
+            {:else if noteStatus === 'saved'}
+              <span>{t('history.purchaseNoteSaved')}</span>
+            {:else if noteHandled && noteHandledAt}
+              <span>{t('history.purchaseHandledOn', { date: noteHandledAt.slice(0, 10) })}</span>
+            {/if}
+            {#if noteHandled}
+              <button type="button" class="purchase-note-unmark" onclick={toggleHandled} disabled={noteStatus === 'saving'}>
+                {t('history.purchaseUnmarkHandled')}
+              </button>
+            {/if}
+          </div>
         </div>
       {/if}
     </div>

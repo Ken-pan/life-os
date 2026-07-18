@@ -207,6 +207,7 @@
             transactionId={txn.id}
             reviewEnabled={purchaseState === 'matched_review'}
             {refundLinks}
+            noteEnabled
             onOpenChange={(v) => (enrichmentOpen = v)}
           />
         {/if}

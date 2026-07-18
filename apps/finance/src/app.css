@@ -3971,6 +3971,112 @@ div.input {
   color: var(--warning, #b45309);
 }
 
+/* FINC.PURCHASE.6b — private note + handled ("已处理") */
+.purchase-note {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  display: grid;
+  gap: var(--space-1-5);
+}
+
+.purchase-note[data-handled='true'] {
+  border-color: color-mix(in srgb, var(--positive, #15803d) 30%, transparent);
+}
+
+.purchase-note-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.purchase-note-title {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.purchase-note-handled-btn {
+  flex: 0 0 auto;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-1, 4px);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.purchase-note-handled-btn:hover:not(:disabled) {
+  border-color: var(--positive, #15803d);
+  color: var(--positive, #15803d);
+}
+
+.purchase-note-handled-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.purchase-note-handled-btn.is-handled {
+  border-color: color-mix(in srgb, var(--positive, #15803d) 50%, var(--border));
+  background: var(--positive-subtle, color-mix(in srgb, var(--positive, #15803d) 10%, transparent));
+  color: var(--positive, #15803d);
+}
+
+.purchase-note-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 2.4rem;
+  padding: var(--space-1-5) var(--space-2);
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.purchase-note-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.purchase-note-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 1.2em;
+}
+
+.purchase-note-retry {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--warning, #b45309);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.purchase-note-unmark {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.purchase-note-unmark:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 @media (max-width: 720px) {
   .lr-amt--inline {
     display: block;

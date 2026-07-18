@@ -37,7 +37,7 @@
 | ID              | 主题                                | ROI | 桶      | 投入   | Agent                    | 验收                                     | Hub   |
 | --------------- | ----------------------------------- | --- | ------- | ------ | ------------------------ | ---------------------------------------- | ----- |
 | **FINC.PURCHASE.6.a**  | **支出审核 closure QA**（Confirm/Reject/Undo） | 🔥  | Product | 0.2d（仅 owner） | **Ken 登录态** | anon revoke ✅ · Review 过滤拆分 ✅ · **agent 侧 closure 护栏 ✅**（stale/timeout 反馈修复 + Confirm→Undo 边界 10/10 · 单测 **127**）；**剩纯 owner gate**：真机 Confirm→Undo · 双 JWT RLS 拒绝 · 视觉基线 | §Now |
-| **FINC.PURCHASE.6b** | 退款闭环：`returnInfo` · 关联负向 txn · 处理状态 | ◆ | Product | 1–2d | Codex | **关联退款交易展示 ✅**（`refundLinks` 引擎 8/8 · 退货行显示已入账退款/闭环缺口）；剩用户备注/处理状态 | — |
+| **FINC.PURCHASE.6b** | 退款闭环：`returnInfo` · 关联负向 txn · 处理状态 | ◆ | Product | 1–2d | Codex | **关联退款交易展示 ✅**（`refundLinks` 引擎 8/8）· **用户备注 + 处理状态(已处理) ✅**（`purchase_notes` 表 + get/set RPC · `purchaseNoteClient` 10/10）；**剩 owner gate**：migration 部署 + 真机渲染 | — |
 | ~~**FINC.SYNC.1b**~~ | ~~扩展 popup last sync + 重试~~ ✅ 已发货 2026-07-13 | ◆ | Growth | — | Codex | popup timestamp + 失败原因 + retry；`extensionSyncHealth.test.js` 18/18 | ✅ |
 | **FINC.GROWTH.4**    | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | Codex                    | pending 与 UI 一致                       | —     |
 | **FINC.IMPORT.5**    | History CSV 最小导入                | ○   | Product | 3–5d   | Codex                    | `/review/import` 可上传                  | —     |
@@ -66,10 +66,10 @@
 | --------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
 | **FINC.PURCHASE.6**  | Discovery：产品语义 · 数据审计 · QA 静态准备                               | ✅ PASS |
 | **FINC.PURCHASE.6.a** | Data foundation + History 确认/驳回/Undo UI                              | 🟡 engine/RPC/matcher/UI ✅ · anon revoke ✅ · Review=`matched_review` only ✅ · **closure 护栏 ✅**（stale/timeout 反馈修复 + owner Confirm→Undo 边界 10/10）；剩 owner 真机、双 JWT、视觉 |
-| **FINC.PURCHASE.6b** | 后续处理：`returnInfo` · 关联退款 txn · 用户备注/处理状态                | 🟡 退货订单显示关联负向交易 ✅（`refundLinks.ts` · History 行内展示）；剩用户备注/处理状态 |
+| **FINC.PURCHASE.6b** | 后续处理：`returnInfo` · 关联退款 txn · 用户备注/处理状态                | 🟢 退货订单显示关联负向交易 ✅（`refundLinks.ts`）· 私有备注 + 已处理标记 ✅（`purchase_notes` 表/RPC · UI 内嵌 enrichment 块）；剩 owner：部署 migration + 真机验收 |
 | **FINC.PURCHASE.6c** | Amazon/BBY 策展批次（读 `review_queue_v1_1`，**非** broad apply）        | handoff v1.2/v1.3 增量 clean 行进 DB                |
 
-**已完成：** FINC.CORE.3 STS / reserve / Spend 口径统一 · FINC.PURCHASE.6 产品合同 · 6.a 数据地基 / matcher / UI 实现 · **6.a closure 护栏**（2026-07-17：修复 409 stale / 超时反馈从不渲染的缺陷，把 owner Confirm→Undo 编排抽进可测的 `purchaseReviewClient`，边界测试 10/10 —— [`FP6_CLOSURE_QA_2026-07-17.md`](../../../apps/finance/docs/FP6_CLOSURE_QA_2026-07-17.md)）。Finance app 当前单测 **135/135**（含 `refundLinks` 8/8）；purchase decision engine 在共享 `finance-core` 有独立 18/18。**6b 退款闭环首刀**（2026-07-17）：新增 app-local `refundLinks.ts` 把退货/退款采购与账本里真实的负向退款交易配对（txn/order 双锚点 + 「账本未见」缺口提示），History 退货行内展示「已入账退款 −$X · 日期」；i18n 三键。
+**已完成：** FINC.CORE.3 STS / reserve / Spend 口径统一 · FINC.PURCHASE.6 产品合同 · 6.a 数据地基 / matcher / UI 实现 · **6.a closure 护栏**（2026-07-17：修复 409 stale / 超时反馈从不渲染的缺陷，把 owner Confirm→Undo 编排抽进可测的 `purchaseReviewClient`，边界测试 10/10 —— [`FP6_CLOSURE_QA_2026-07-17.md`](../../../apps/finance/docs/FP6_CLOSURE_QA_2026-07-17.md)）。Finance app 当前单测 **135/135**（含 `refundLinks` 8/8）；purchase decision engine 在共享 `finance-core` 有独立 18/18。**6b 退款闭环首刀**（2026-07-17）：新增 app-local `refundLinks.ts` 把退货/退款采购与账本里真实的负向退款交易配对（txn/order 双锚点 + 「账本未见」缺口提示），History 退货行内展示「已入账退款 −$X · 日期」；i18n 三键。**6b 收尾刀**（2026-07-17）：**用户备注 + 处理状态(已处理)** —— 新增小型 owner-scoped `purchase_notes` 表（PK `(user_id, transaction_id)`，RLS owner+finance）+ security-invoker `purchase_note_get/_set` RPC（`handled_at` 服务端戳、`user_id` 服务端定，`purchase_enrichment` JSONB 不变）；app-local 纯 `purchaseNoteClient.js`（load/save，RPC 不可达即自隐——迁移未部署环境优雅降级）10/10；PurchaseEnrichmentBlock 内嵌「备注与处理」区（懒加载、备注 800ms 防抖存、已处理即时切换 + 撤销），i18n 八键 × 2 locale。Finance app 单测 **135→145**。**剩 owner gate**（与 6.a 同）：把 `20260717230000_finance_purchase_notes.sql` 部署到生产 + Ken 登录态下真机验收备注/已处理渲染。
 
 ### 实现锚点
 
