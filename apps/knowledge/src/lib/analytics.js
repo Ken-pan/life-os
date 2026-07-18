@@ -128,3 +128,62 @@ export function snapshot(items, { now } = { now: 0 }) {
     ...types,
   }
 }
+
+const WIKILINK_RE = /\[\[[^\]]+\]\]/
+
+/** 是否像「轻捕获」：短、无双链，优先需要整理。 */
+export function looksUnprocessed(item) {
+  if (!item) return false
+  const body = String(item.body || '')
+  if (WIKILINK_RE.test(body)) return false
+  const meta = item._meta ?? {}
+  const fmTags = Array.isArray(meta.tags) ? meta.tags : meta.tags ? [meta.tags] : []
+  if (fmTags.map((x) => String(x).toLowerCase()).includes('project')) return false
+  if (item.type === 'link') return true
+  return body.length < 420
+}
+
+/**
+ * 行动型首页信号（纯函数，可测）。
+ * @returns {{ pending: any[], staleProjects: any[], orphans: any[], continueItems: any[], revisit: any[] }}
+ */
+export function actionSignals(items, { now = 0, isProject = () => false } = {}) {
+  const weekAgo = now - WEEK
+  const staleCut = now - 7 * DAY
+  const sorted = [...items].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt))
+
+  const pending = sorted
+    .filter((it) => it.createdAt > weekAgo && looksUnprocessed(it))
+    .slice(0, 8)
+
+  const staleProjects = sorted
+    .filter((it) => {
+      if (!isProject(it)) return false
+      const status = String(it._meta?.status || '').toLowerCase()
+      if (['completed', 'archived', 'done', 'shipped'].includes(status)) return false
+      return (it.updatedAt || it.createdAt) < staleCut
+    })
+    .slice(0, 6)
+
+  const orphans = sorted
+    .filter((it) => {
+      if (isProject(it)) return false
+      if (it.createdAt < weekAgo) return false
+      return !WIKILINK_RE.test(String(it.body || ''))
+    })
+    .slice(0, 6)
+
+  const continueItems = sorted
+    .filter((it) => (it.updatedAt || 0) > weekAgo && (it.updatedAt || 0) !== (it.createdAt || 0))
+    .slice(0, 5)
+
+  const threeMonths = now - 90 * DAY
+  const revisit = sorted
+    .filter((it) => {
+      const ts = it.updatedAt || it.createdAt
+      return ts < threeMonths && (it.pinned || (it.tags || []).length >= 2)
+    })
+    .slice(0, 4)
+
+  return { pending, staleProjects, orphans, continueItems, revisit }
+}

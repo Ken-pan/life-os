@@ -1,56 +1,55 @@
 <script>
-  // 移动端底栏：真·tab 切「笔记 / 知识」置于图标行之上，图标行只显当前模式的项 + 设置。
+  // 移动端底栏：4 主入口 +「更多」（时间线 / 概览 / 设置）；无模式切换。
   import { page } from '$app/state'
-  import { goto } from '$app/navigation'
   import LifeOsBottomNav from '@life-os/platform-web/svelte/navigation/bottom-nav'
-  import { LifeOsTabs } from '@life-os/platform-web/svelte/tabs'
-  import { modeForPath, navItems, homeForMode } from '$lib/nav.js'
+  import MobileMoreSheet from '@life-os/platform-web/svelte/navigation/MobileMoreSheet'
+  import { primaryNavItems, moreNavGroups, isMoreNavActive } from '$lib/nav.js'
   import { t } from '$lib/i18n/index.js'
 
+  let moreOpen = $state(false)
+
+  const pathname = $derived(page.url.pathname)
+  const moreActive = $derived(isMoreNavActive(pathname))
+
   const isActive = (href) =>
-    href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href)
+    href === '/' ? pathname === '/' : pathname.startsWith(href)
 
-  const mode = $derived(modeForPath(page.url.pathname))
-
-  const tabs = $derived([
-    { id: 'note', label: t('nav.modeNote') },
-    { id: 'knowledge', label: t('nav.modeKnowledge') },
-  ])
   const items = $derived(
-    [
-      ...navItems(mode, t),
-      { href: '/settings', icon: 'settings', label: t('nav.settings') },
-    ].map((item) => ({ ...item, active: isActive(item.href) })),
+    primaryNavItems(t).map((item) => ({
+      ...item,
+      active: isActive(item.href) && !moreActive,
+    })),
   )
+  const moreGroups = $derived(moreNavGroups(t))
 
-  function switchMode(next) {
-    if (next !== mode) goto(homeForMode(next))
-  }
+  $effect(() => {
+    pathname
+    moreOpen = false
+  })
 </script>
 
-<div class="bnav-wrap">
-  <div class="bnav-tabs">
-    <LifeOsTabs
-      items={tabs}
-      activeId={mode}
-      onChange={switchMode}
-      ariaLabel={t('nav.modeAria')}
-    />
-  </div>
-  <LifeOsBottomNav {items} ariaLabel={t('nav.mainAria')} navClass="bottom-nav" />
-</div>
+<LifeOsBottomNav
+  {items}
+  ariaLabel={t('nav.mainAria')}
+  navClass="bottom-nav"
+  backgrounded={moreOpen}
+  more={{
+    label: t('nav.more'),
+    active: moreActive,
+    open: moreOpen,
+    onToggle: () => {
+      moreOpen = !moreOpen
+    },
+  }}
+/>
 
-<style>
-  .bnav-tabs {
-    padding: var(--space-1, 4px) var(--space-4, 16px) 0;
-  }
-  .bnav-tabs :global(.tabs) {
-    display: flex;
-    width: 100%;
-    gap: 0;
-  }
-  .bnav-tabs :global(.tab) {
-    flex: 1;
-    text-align: center;
-  }
-</style>
+<MobileMoreSheet
+  open={moreOpen}
+  title={t('nav.more')}
+  groups={moreGroups}
+  {pathname}
+  closeLabel={t('common.cancel')}
+  onClose={() => {
+    moreOpen = false
+  }}
+/>

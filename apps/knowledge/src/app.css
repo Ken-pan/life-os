@@ -1,3 +1,46 @@
 @import '@life-os/theme/design-system.css';
 
 @import '@life-os/theme/brands/knowledge.css';
+
+/*
+  KnowledgeOS UIUX.1 — 本地排版与暗色表面层级。
+  不改共享 design tokens；只在本 app 抬可读性、拉开分区。
+*/
+
+[data-app='knowledge'] {
+  /* 阅读与列表：比全局默认略大一档 */
+  --kn-body-size: 15px;
+  --kn-body-leading: 1.65;
+  --kn-list-title: 14px;
+  --kn-list-excerpt: 13px;
+  --kn-meta: 12px;
+  --kn-section: 17px;
+  --kn-reader-title: clamp(1.5rem, 1.35rem + 0.6vw, 1.85rem);
+}
+
+/* 暗色：Canvas 最深 → Sidebar 略亮 → Surface(card) → Elevated(card-h) */
+[data-app='knowledge'][data-mode='dark'],
+[data-app='knowledge'][data-theme='dark'] {
+  --bg: #0c0c12;
+  --bg-2: #101018;
+  --sidebar: #12121a;
+  --sidebar-accent: #1a1a24;
+  --card: #1a1a26;
+  --card-h: #242432;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-l: rgba(255, 255, 255, 0.16);
+  --t2: #b0aec2;
+  --t3: #8a889c;
+}
+
+[data-app='knowledge'] .section-title {
+  font-size: var(--kn-section);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+[data-app='knowledge'] .btn-primary {
+  min-height: 36px;
+  padding-inline: 16px;
+  font-weight: 600;
+}

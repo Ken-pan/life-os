@@ -67,13 +67,16 @@
                 <span class="timeline__title">{item.title}</span>
               </button>
               {#if item.body}
-                <span class="timeline__desc">{plainExcerpt(item.body, 120)}</span>
+                <span class="timeline__desc">{plainExcerpt(item.body, 90)}</span>
               {/if}
               {#if item.tags.length}
                 <span class="chip-row timeline-tags">
-                  {#each item.tags as tag (tag)}
+                  {#each item.tags.slice(0, 2) as tag (tag)}
                     <span class="chip tag">{tag}</span>
                   {/each}
+                  {#if item.tags.length > 2}
+                    <span class="chip tag">+{item.tags.length - 2}</span>
+                  {/if}
                 </span>
               {/if}
             </li>
@@ -90,6 +93,25 @@
   }
   .timeline-empty {
     margin-block: var(--space-4, 16px);
+  }
+  .day :global(.divider) {
+    font-size: var(--kn-section, 17px);
+    font-weight: 650;
+    color: var(--t1);
+    border-color: var(--border-l, var(--border));
+  }
+  .day :global(.timeline__title) {
+    font-size: var(--kn-list-title, 14px);
+    font-weight: 600;
+  }
+  .day :global(.timeline__desc) {
+    font-size: var(--kn-list-excerpt, 13px);
+    color: var(--t2);
+    line-height: 1.45;
+  }
+  .day :global(.timeline__time) {
+    font-size: var(--kn-meta, 12px);
+    color: var(--t3);
   }
   .timeline-open {
     display: block;

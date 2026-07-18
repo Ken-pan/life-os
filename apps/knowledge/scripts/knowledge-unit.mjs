@@ -36,6 +36,8 @@ import {
   activityHeatmap,
   snapshot,
   groupNotes,
+  looksUnprocessed,
+  actionSignals,
 } from '../src/lib/analytics.js'
 import { tagHueVar } from '../src/lib/tagColor.js'
 import { markdownToBlocks, blocksToMarkdown, plainExcerpt, firstHeadingMatchesTitle } from '../src/lib/editor/blocks.js'
@@ -579,6 +581,27 @@ function includes(name, haystack, needle) {
   ok('group-pinned-first', groups[0].key === 'pinned' && groups[0].items.length === 1)
   ok('group-skips-empty', groupNotes([{ pinned: false, updatedAt: now }], { now }).length === 1)
   ok('group-empty', groupNotes([], { now }).length === 0)
+
+  ok('looks-unprocessed-short', looksUnprocessed({ body: '短想法', type: 'note', _meta: {} }) === true)
+  ok('looks-processed-link', looksUnprocessed({ body: '见 [[某笔记]]', type: 'note', _meta: {} }) === false)
+  const signals = actionSignals(
+    [
+      { id: '1', title: '闪念', body: '短', type: 'note', tags: [], createdAt: now - 1000, updatedAt: now - 1000, _meta: {} },
+      {
+        id: '2',
+        title: '项目 A',
+        body: '长文',
+        type: 'note',
+        tags: ['project'],
+        createdAt: now - 30 * 86400000,
+        updatedAt: now - 14 * 86400000,
+        _meta: { tags: ['project'], status: 'active' },
+      },
+    ],
+    { now, isProject: (it) => (it._meta?.tags || []).includes('project') },
+  )
+  ok('action-pending', signals.pending.length === 1 && signals.pending[0].id === '1')
+  ok('action-stale', signals.staleProjects.length === 1 && signals.staleProjects[0].id === '2')
 
   // 标签色：稳定、返回 hue var
   ok('tagcolor-stable', tagHueVar('工作') === tagHueVar('工作'))

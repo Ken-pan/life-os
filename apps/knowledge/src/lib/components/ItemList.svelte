@@ -53,6 +53,9 @@
           {#each item.tags.slice(0, 2) as tag (tag)}
             <span class="chip tag">{tag}</span>
           {/each}
+          {#if item.tags.length > 2}
+            <span class="chip tag">+{item.tags.length - 2}</span>
+          {/if}
           <span>{timeLabel(item.createdAt)}</span>
         </span>
       </button>

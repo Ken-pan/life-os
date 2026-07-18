@@ -101,6 +101,12 @@
     if (next && selected !== next) selected = next
     else if (!next) selected = null
   })
+  // 概览等高频标签深链：?tag=foo → 写入筛选
+  $effect(() => {
+    const tagParam = page.url.searchParams.get('tag')
+    if (!tagParam) return
+    if (!activeTags.has(tagParam)) activeTags = new Set([tagParam])
+  })
   // selected.id 漂移（vault 保存重命名文件）→ 同步 URL（replace，不进历史）
   $effect(() => {
     const id = selected?.id
@@ -134,9 +140,9 @@
 
   /* ——— 列表列可拖拽调宽（clamp[320,520]，localStorage 记忆，双击复位）——— */
   const LIST_W_KEY = 'kn_list_w'
-  const LIST_W_DEFAULT = 400
+  const LIST_W_DEFAULT = 360
   const LIST_W_MIN = 320
-  const LIST_W_MAX = 520
+  const LIST_W_MAX = 480
   let listW = $state(LIST_W_DEFAULT)
   let resizing = $state(false)
   const clampW = (w) => Math.round(Math.max(LIST_W_MIN, Math.min(LIST_W_MAX, w)))
@@ -477,11 +483,11 @@
   }
   .nw-group + .nw-group { margin-top: var(--space-4, 16px); }
   .nw-group__label {
-    font-size: var(--text-2xs, 10px);
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    font-size: var(--kn-meta, 12px);
+    font-weight: 650;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--t3, var(--text-muted));
+    color: var(--t2, var(--text-secondary));
     margin-bottom: var(--space-2, 8px);
     padding-inline: var(--space-1, 4px);
   }

@@ -1,6 +1,6 @@
 <script>
-  // 笔记列表：密集行（非大卡片），高频扫描友好。标题+时间一行、单行摘要、彩色分类标签。
-  // 选中态 = 左侧 3px 强调线 + 轻背景（不再整圈紫描边）。
+  // 笔记列表：密集行。标题+时间一行、摘要最多两行、最多 2 个中性标签 + overflow。
+  // 选中态 = 2px 品牌 rail + 8% 品牌底 + 标题提亮。
   import Pin from '@lucide/svelte/icons/pin'
   import { plainExcerpt } from '$lib/editor/blocks.js'
   import { shortTime } from '$lib/format.js'
@@ -17,7 +17,7 @@
   }
 
   function excerpt(item) {
-    if (item.body) return plainExcerpt(item.body, 180)
+    if (item.body) return plainExcerpt(item.body, 140)
     return item.url || ''
   }
 </script>
@@ -37,9 +37,12 @@
         {#if item.type === 'link' || item.tags.length}
           <span class="note-row__foot">
             {#if item.type === 'link'}<span class="note-row__type">{TYPE_LABEL.link()}</span>{/if}
-            {#each item.tags.slice(0, 3) as tag (tag)}
+            {#each item.tags.slice(0, 2) as tag (tag)}
               <CategoryChip {tag} />
             {/each}
+            {#if item.tags.length > 2}
+              <span class="note-row__more">{t('reader.tagsMore', { count: item.tags.length - 2 })}</span>
+            {/if}
           </span>
         {/if}
       </button>
@@ -54,17 +57,17 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
   }
   .note-row {
     display: grid;
-    gap: 4px;
+    gap: 5px;
     width: 100%;
     text-align: start;
-    padding: 10px 12px 11px;
+    padding: 12px 14px 13px;
     border: none;
-    border-inline-start: 3px solid transparent;
-    border-radius: 7px;
+    border-inline-start: 2px solid transparent;
+    border-radius: 8px;
     background: transparent;
     cursor: pointer;
     transition: background var(--motion-fast) var(--ease);
@@ -73,18 +76,25 @@
     background: color-mix(in srgb, var(--t1, var(--text)) 5%, transparent);
   }
   .note-row.is-active {
-    /* 饱和度降档：靠左侧强调线标识选中，背景只需极淡一层，让标题/摘要更突出 */
     background: color-mix(in srgb, var(--accent) 8%, transparent);
     border-inline-start-color: var(--accent);
+    border-inline-start-width: 2px;
     border-start-start-radius: 0;
     border-end-start-radius: 0;
+  }
+  .note-row.is-active .note-row__title {
+    color: var(--t1, var(--text));
+  }
+  .note-row.is-active .note-row__excerpt,
+  .note-row.is-active .note-row__time {
+    color: var(--t3, var(--text-muted));
   }
   .note-row:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
   .note-row__head {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
   }
   .note-row :global(.note-row__pin) {
@@ -95,7 +105,7 @@
   .note-row__title {
     flex: 1;
     min-width: 0;
-    font-size: var(--text-base, 14px);
+    font-size: var(--kn-list-title, var(--text-base, 14px));
     font-weight: 600;
     color: var(--t1, var(--text));
     white-space: nowrap;
@@ -104,16 +114,14 @@
   }
   .note-row__time {
     flex: 0 0 auto;
-    font-size: var(--text-xs, 11px);
+    font-size: var(--kn-meta, var(--text-xs, 12px));
     color: var(--t3, var(--text-muted));
     font-variant-numeric: tabular-nums;
   }
   .note-row__excerpt {
-    font-size: var(--text-sm, 12px);
-    line-height: 1.5;
-    /* 摘要对比度提一档（secondary-muted，t2↔t3 之间）：亮屏/日光下扫描更快，但仍不压过标题 */
-    color: color-mix(in srgb, var(--t2, var(--text-secondary)) 68%, var(--t3, var(--text-muted)));
-    /* 最多两行：笔记多起来后两行摘要能明显提高扫描准确率 */
+    font-size: var(--kn-list-excerpt, var(--text-sm, 13px));
+    line-height: 1.45;
+    color: var(--t2, var(--text-secondary));
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -128,10 +136,14 @@
     margin-top: 1px;
   }
   .note-row__type {
-    font-size: var(--text-2xs, 10px);
+    font-size: var(--kn-meta, 12px);
     font-weight: 600;
     color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
+  }
+  .note-row__more {
+    font-size: var(--kn-meta, 12px);
+    color: var(--t3, var(--text-muted));
+    font-weight: 500;
   }
 </style>

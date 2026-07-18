@@ -3,7 +3,6 @@
   // 漂移一键写回 frontmatter，可生成自动现状报告笔记。
   import { goto } from '$app/navigation'
   import { EmptyState } from '@life-os/platform-web/svelte/status'
-  import { DonutChart } from '@life-os/platform-web/svelte/charts'
   import { getLifeOsAppOrigin } from '@life-os/theme'
   import { S, updateItem, itemById } from '$lib/state.svelte.js'
   import { applyMetaPatch, itemFromFile } from '$lib/frontmatter.js'
@@ -204,27 +203,25 @@
     </section>
 
     {#if rows.length > 1}
-      <section class="card proj-summary">
-        <h2 class="section-title">{t('projects.statusTitle')}</h2>
-        <DonutChart
-          items={statusDonut}
-          size={148}
-          centerValue={String(rows.length)}
-          centerLabel={t('projects.statusCenter')}
-          ariaLabel={t('projects.statusTitle')}
-        />
-      </section>
+      <div class="proj-status-strip" aria-label={t('projects.statusTitle')}>
+        {#each statusDonut as s (s.label)}
+          <span class="proj-status-pill">
+            <strong>{s.value}</strong> {s.label}
+          </span>
+        {/each}
+      </div>
     {/if}
 
     {#each columns as col (col.status)}
       <section class="proj-col">
         <h2 class="proj-col__title">
+          <span class="proj-col__dot" data-status={col.status}></span>
           {statusLabel(col.status)}
           <span class="proj-col__count">{col.rows.length}</span>
         </h2>
         <div class="proj-grid">
           {#each col.rows as row (row.record.id)}
-            <article class="proj-card">
+            <article class="proj-card" data-status={col.status}>
               <button
                 type="button"
                 class="proj-card__title"
@@ -234,6 +231,12 @@
                 {row.record.title}
               </button>
               <div class="proj-card__meta">
+                <span class="proj-status-label">{statusLabel(col.status)}</span>
+                {#if row.stats}
+                  <span class="proj-fact">
+                    {t('projects.plannerTasks', { open: row.stats.open, done: row.stats.done })}
+                  </span>
+                {/if}
                 {#if row.record.path && S.backend === 'vault'}
                   <span class="proj-fact">{gitLabel(row.sense.lastCommitAt)}</span>
                 {/if}
@@ -241,11 +244,6 @@
                   <span class="proj-fact">
                     {t('projects.plannerStatus', { status: row.plannerProject.status })}
                   </span>
-                  {#if row.stats}
-                    <span class="proj-fact">
-                      {t('projects.plannerTasks', { open: row.stats.open, done: row.stats.done })}
-                    </span>
-                  {/if}
                   <a
                     class="proj-link"
                     href={`${plannerOrigin}/projects/${row.plannerProject.id}`}
@@ -256,8 +254,11 @@
                   </a>
                 {/if}
                 {#if row.record.lastUpdated}
-                  <span class="proj-fact proj-muted">last_updated: {row.record.lastUpdated}</span>
+                  <span class="proj-fact proj-muted">{t('projects.lastUpdated', { date: row.record.lastUpdated })}</span>
                 {/if}
+                <span class="proj-fact proj-next">
+                  {row.sense.reasons?.[0] || t('projects.nextHint')}
+                </span>
               </div>
               {#if row.sense.drift}
                 <div class="proj-suggest">
@@ -309,24 +310,54 @@
     color: var(--t3, var(--text-muted));
     font-size: var(--text-sm);
   }
+  .proj-status-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-block-end: var(--space-3, 12px);
+  }
+  .proj-status-pill {
+    font-size: var(--kn-meta, 12px);
+    color: var(--t2);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill, 999px);
+    padding: 4px 10px;
+  }
+  .proj-status-pill strong {
+    color: var(--t1);
+    font-variant-numeric: tabular-nums;
+  }
   .proj-col {
     margin-block-end: var(--space-5, 20px);
   }
   .proj-col__title {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: var(--space-2, 8px);
-    font-size: var(--text-md, 1rem);
+    font-size: var(--kn-section, 17px);
     margin-block: var(--space-3, 12px);
   }
+  .proj-col__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--t3);
+    flex: 0 0 auto;
+  }
+  .proj-col__dot[data-status='active'] { background: var(--chart-series-3, #248e4c); }
+  .proj-col__dot[data-status='paused'] { background: var(--chart-series-4, #8f6b00); }
+  .proj-col__dot[data-status='completed'] { background: var(--chart-series-1, #5a65d9); }
+  .proj-col__dot[data-status='archived'],
+  .proj-col__dot[data-status='reference'] { background: var(--t4); }
   .proj-col__count {
     color: var(--t3, var(--text-muted));
     font-family: var(--mono);
-    font-size: var(--text-sm);
+    font-size: var(--kn-meta, 12px);
   }
   .proj-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: var(--space-3, 12px);
   }
   .proj-card {
@@ -336,12 +367,17 @@
     padding: var(--space-4, 16px);
     background: var(--card);
     border: 1px solid var(--border);
+    border-inline-start: 3px solid var(--border-l, var(--border));
     border-radius: var(--radius-lg, 16px);
   }
+  .proj-card[data-status='active'] { border-inline-start-color: var(--chart-series-3, #248e4c); }
+  .proj-card[data-status='paused'] { border-inline-start-color: var(--chart-series-4, #8f6b00); }
+  .proj-card[data-status='completed'] { border-inline-start-color: var(--chart-series-1, #5a65d9); }
   .proj-card__title {
     all: unset;
     cursor: pointer;
     font-weight: 600;
+    font-size: var(--kn-list-title, 14px);
     color: var(--t1, var(--text-primary));
   }
   .proj-card__title:hover {
@@ -351,8 +387,17 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-1, 4px);
-    font-size: var(--text-sm);
+    font-size: var(--kn-list-excerpt, 13px);
     color: var(--t2, var(--text-secondary));
+  }
+  .proj-status-label {
+    font-size: var(--kn-meta, 12px);
+    font-weight: 600;
+    color: var(--t1);
+  }
+  .proj-next {
+    color: var(--t1);
+    font-weight: 500;
   }
   .proj-fact {
     min-width: 0;

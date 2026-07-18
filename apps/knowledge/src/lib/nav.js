@@ -1,45 +1,97 @@
 /**
- * 导航模式（笔记 / 知识）—— 侧栏与底栏同源。
- * 「笔记模式」：写与整理（全部笔记 / 收集箱 / 时间线）。
- * 「知识模式」：看与回忆（概览 / 回忆 / 项目）。
- * mode 由当前路由派生（URL 即真相），切换模式即导航到该模式首页。
+ * KnowledgeOS 导航 IA — 单套稳定侧栏（取消「笔记 / 知识」双模式）。
+ *
+ * 桌面：分组侧栏（收集 / 知识库 / 工作空间）+ 脚部设置
+ * 移动：底栏 4 主入口 +「更多」收纳时间线 / 概览 / 设置
  */
 
-export const NOTE_HOME = '/library'
-export const KNOWLEDGE_HOME = '/overview'
+/** @typedef {{ href: string, icon: string, label: string, key?: string }} NavItem */
+/** @typedef {{ label?: string, items: NavItem[] }} NavGroup */
 
-const KNOWLEDGE_ROUTES = ['/overview', '/recall', '/projects']
+export const APP_HOME = '/library'
 
-/** 路径 → 模式；概览/回忆/项目属知识模式，其余（含收集箱/时间线/设置）默认笔记模式。 */
-export function modeForPath(pathname) {
-  return KNOWLEDGE_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'))
-    ? 'knowledge'
-    : 'note'
-}
-
-/** 该模式的导航项（label 走传入的 t，避免耦合 i18n 实例）。 */
-export function navItems(mode, t) {
-  return mode === 'knowledge'
-    ? [
-        { href: '/overview', icon: 'overview', label: t('nav.overview') },
-        { href: '/recall', icon: 'recall', label: t('nav.recall') },
-        { href: '/projects', icon: 'projects', label: t('nav.projects') },
-      ]
-    : [
-        { href: '/library', icon: 'notes', label: t('nav.allNotes') },
-        { href: '/', icon: 'inbox', label: t('nav.inbox') },
-        { href: '/timeline', icon: 'timeline', label: t('nav.timeline') },
-      ]
-}
-
-/** 分段控件选项（笔记 | 知识）。 */
-export function modeOptions(t) {
+/** 桌面侧栏分组（顺序即产品心智：捕获 → 库 → 工作）。 */
+export function navGroups(t) {
   return [
-    { value: 'note', label: t('nav.modeNote') },
-    { value: 'knowledge', label: t('nav.modeKnowledge') },
+    {
+      label: t('nav.groupCapture'),
+      items: [{ href: '/', icon: 'inbox', label: t('nav.inbox'), key: 'inbox' }],
+    },
+    {
+      label: t('nav.groupLibrary'),
+      items: [
+        { href: '/library', icon: 'notes', label: t('nav.allNotes'), key: 'library' },
+        { href: '/timeline', icon: 'timeline', label: t('nav.timeline'), key: 'timeline' },
+      ],
+    },
+    {
+      label: t('nav.groupWorkspace'),
+      items: [
+        { href: '/projects', icon: 'projects', label: t('nav.projects'), key: 'projects' },
+        { href: '/recall', icon: 'recall', label: t('nav.recall'), key: 'recall' },
+        { href: '/overview', icon: 'overview', label: t('nav.overview'), key: 'overview' },
+      ],
+    },
   ]
 }
 
-export function homeForMode(mode) {
-  return mode === 'knowledge' ? KNOWLEDGE_HOME : NOTE_HOME
+/** 扁平列表（测试 / 兼容旧调用）。 */
+export function navItems(t) {
+  return navGroups(t).flatMap((g) => g.items)
+}
+
+/** 移动底栏主入口（不含「更多」内项）。 */
+export function primaryNavItems(t) {
+  return [
+    { href: '/', icon: 'inbox', label: t('nav.inbox'), key: 'inbox' },
+    { href: '/library', icon: 'notes', label: t('nav.allNotes'), key: 'library' },
+    { href: '/projects', icon: 'projects', label: t('nav.projects'), key: 'projects' },
+    { href: '/recall', icon: 'recall', label: t('nav.recall'), key: 'recall' },
+  ]
+}
+
+/** 「更多」sheet 内的次级入口（WebNavGroup 形状）。 */
+export function moreNavGroups(t) {
+  return [
+    {
+      label: t('nav.groupLibrary'),
+      items: [
+        {
+          tab: 'timeline',
+          href: '/timeline',
+          icon: 'timeline',
+          label: t('nav.timeline'),
+          match: (p) => p.startsWith('/timeline'),
+        },
+      ],
+    },
+    {
+      label: t('nav.groupWorkspace'),
+      items: [
+        {
+          tab: 'overview',
+          href: '/overview',
+          icon: 'overview',
+          label: t('nav.overview'),
+          match: (p) => p.startsWith('/overview'),
+        },
+        {
+          tab: 'settings',
+          href: '/settings',
+          icon: 'settings',
+          label: t('nav.settings'),
+          match: (p) => p.startsWith('/settings'),
+        },
+      ],
+    },
+  ]
+}
+
+/** 当前路径是否落在「更多」内的路由上。 */
+export function isMoreNavActive(pathname) {
+  return (
+    pathname.startsWith('/timeline') ||
+    pathname.startsWith('/overview') ||
+    pathname.startsWith('/settings')
+  )
 }

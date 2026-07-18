@@ -960,7 +960,10 @@
         {#if item.updatedAt || item.tags?.length}
           <div class="ed-meta">
             {#if item.updatedAt}<span class="ed-meta__time">{metaWhen(item.updatedAt)}</span>{/if}
-            {#each (item.tags || []).slice(0, 6) as tag (tag)}<CategoryChip {tag} />{/each}
+            {#each (item.tags || []).slice(0, 2) as tag (tag)}<CategoryChip {tag} />{/each}
+            {#if (item.tags || []).length > 2}
+              <span class="ed-meta__more">{t('reader.tagsMore', { count: item.tags.length - 2 })}</span>
+            {/if}
           </div>
         {/if}
 
@@ -1238,8 +1241,8 @@
     margin-bottom: 30px;
   }
   .ed-meta__time {
-    font-size: var(--text-sm, 12px);
-    color: var(--t3, var(--text-muted));
+    font-size: var(--kn-meta, var(--text-sm, 12px));
+    color: var(--t2, var(--text-secondary));
   }
   .ed-meta__time::after {
     content: '·';
@@ -1247,6 +1250,11 @@
     color: color-mix(in srgb, var(--t3, var(--text-muted)) 60%, transparent);
   }
   .ed-meta__time:only-child::after { content: none; }
+  .ed-meta__more {
+    font-size: var(--kn-meta, 12px);
+    color: var(--t3);
+    font-weight: 500;
+  }
 
   /* ——— 顶栏 ——— */
   .ed-topbar {
@@ -1344,7 +1352,11 @@
   }
 
   /* ——— 块列表 ——— */
-  .ed-blocks { font-size: var(--text-xl, 16px); line-height: 1.72; caret-color: var(--accent); }
+  .ed-blocks {
+    font-size: var(--kn-body-size, var(--text-xl, 16px));
+    line-height: var(--kn-body-leading, 1.65);
+    caret-color: var(--accent);
+  }
   .ed-blocks :global(::selection) { background: color-mix(in srgb, var(--accent) 26%, transparent); }
 
   .ed-row { position: relative; }

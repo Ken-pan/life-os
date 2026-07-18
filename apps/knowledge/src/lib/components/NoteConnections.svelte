@@ -1,18 +1,26 @@
 <script>
-  // 笔记连接区：反向链接 + 语义相关笔记（抽自旧 NoteReader）。渲染在内联文档下方；
-  // 点击任一条 → onOpen(目标笔记)，由工作台切换选中。
+  // 关联上下文：反向链接 + 语义相关；可折叠，空态也提示（把双链体验抬到核心）。
   import { backlinksOf, itemById } from '$lib/state.svelte.js'
+  import { isProjectItem } from '$lib/projects.js'
   import { vaultSearch } from '$lib/knowledgeService.js'
   import { plainExcerpt } from '$lib/editor/blocks.js'
   import { t } from '$lib/i18n/index.js'
 
-  /** @type {{ item: any | null, onOpen: (item: any) => void }} */
-  let { item, onOpen } = $props()
+  /** @type {{ item: any | null, onOpen: (item: any) => void, defaultOpen?: boolean }} */
+  let { item, onOpen, defaultOpen = true } = $props()
+
+  let open = $state(true)
+  $effect(() => {
+    item?.id
+    open = defaultOpen
+  })
 
   const backlinks = $derived(item ? backlinksOf(item) : [])
+  const isProject = $derived(item ? isProjectItem(item) : false)
 
-  // 语义相关（服务端混合检索）；切条目即中止上一请求。
   let related = $state([])
+  const total = $derived(backlinks.length + related.length + (isProject ? 1 : 0))
+
   $effect(() => {
     const cur = item
     related = []
@@ -30,60 +38,130 @@
           .filter((it) => it && it.id !== cur.id && !linked.has(it.title.toLowerCase()))
           .slice(0, 4)
       })
-      .catch(() => {}) // 中止 / 服务未起：静默
+      .catch(() => {})
     return () => ctrl.abort()
   })
 </script>
 
-{#if backlinks.length || related.length}
-  <div class="nc">
-    {#if backlinks.length}
-      <div class="nc-group">
-        <div class="nc-divider">{t('reader.backlinks')} · {backlinks.length}</div>
-        <ul class="nc-list">
-          {#each backlinks as bl (bl.id)}
-            <li>
-              <button type="button" class="nc-item" onclick={() => onOpen(bl)}>
-                <span class="nc-item__title">{bl.title}</span>
-              </button>
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
+<div class="nc" class:is-open={open}>
+  <button
+    type="button"
+    class="nc-toggle"
+    aria-expanded={open}
+    onclick={() => (open = !open)}
+  >
+    <span class="nc-toggle__label">
+      {t('reader.context')}
+      {#if total > 0}<span class="nc-toggle__count">{total}</span>{/if}
+    </span>
+    <span class="nc-toggle__hint">{open ? t('reader.contextClose') : t('reader.contextOpen')}</span>
+  </button>
 
-    {#if related.length}
-      <div class="nc-group">
-        <div class="nc-divider">✦ {t('reader.related')} · {related.length}</div>
-        <ul class="nc-list">
-          {#each related as rel (rel.id)}
-            <li>
-              <button type="button" class="nc-item" onclick={() => onOpen(rel)}>
-                <span class="nc-item__title">{rel.title}</span>
-                <span class="nc-item__desc">{plainExcerpt(rel.body, 80)}</span>
-              </button>
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-  </div>
-{/if}
+  {#if open}
+    <div class="nc-body">
+      {#if isProject}
+        <div class="nc-group">
+          <div class="nc-divider">{t('reader.projectNote')}</div>
+          <p class="nc-empty">{t('projects.nextHint')}</p>
+        </div>
+      {/if}
+
+      {#if backlinks.length}
+        <div class="nc-group">
+          <div class="nc-divider">{t('reader.backlinks')} · {backlinks.length}</div>
+          <ul class="nc-list">
+            {#each backlinks as bl (bl.id)}
+              <li>
+                <button type="button" class="nc-item" onclick={() => onOpen(bl)}>
+                  <span class="nc-item__title">{bl.title}</span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+
+      {#if related.length}
+        <div class="nc-group">
+          <div class="nc-divider">{t('reader.related')} · {related.length}</div>
+          <ul class="nc-list">
+            {#each related as rel (rel.id)}
+              <li>
+                <button type="button" class="nc-item" onclick={() => onOpen(rel)}>
+                  <span class="nc-item__title">{rel.title}</span>
+                  <span class="nc-item__desc">{plainExcerpt(rel.body, 80)}</span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+
+      {#if !backlinks.length && !related.length && !isProject}
+        <p class="nc-empty">{t('reader.contextEmpty')}</p>
+      {/if}
+    </div>
+  {/if}
+</div>
 
 <style>
   .nc {
     display: grid;
-    gap: var(--space-4, 16px);
+    gap: var(--space-3, 12px);
     margin-top: var(--space-5, 20px);
-    padding-top: var(--space-4, 16px);
+    padding: var(--space-3, 12px) var(--space-4, 16px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg, 16px);
+  }
+  .nc-toggle {
+    all: unset;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .nc-toggle:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 6px;
+  }
+  .nc-toggle__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--kn-list-title, 14px);
+    font-weight: 650;
+    color: var(--t1);
+  }
+  .nc-toggle__count {
+    font-size: var(--kn-meta, 12px);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    background: var(--accent-bg);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill, 999px);
+  }
+  .nc-toggle__hint {
+    font-size: var(--kn-meta, 12px);
+    color: var(--t3);
+  }
+  .nc-body {
+    display: grid;
+    gap: var(--space-4, 16px);
+    padding-top: var(--space-2, 8px);
     border-top: 1px solid var(--border);
   }
   .nc-divider {
-    font-size: var(--text-2xs, 10px);
+    font-size: var(--kn-meta, 12px);
     font-weight: 600;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--t3, var(--text-muted));
+    color: var(--t2, var(--text-secondary));
     margin-bottom: var(--space-2, 8px);
   }
   .nc-list {
@@ -101,23 +179,29 @@
     padding: var(--space-2, 8px) var(--space-2-5, 10px);
     border: none;
     border-radius: var(--radius-control, 8px);
-    background: transparent;
+    background: color-mix(in srgb, var(--t1, var(--text)) 3%, transparent);
     color: var(--t1, var(--text));
     cursor: pointer;
     transition: background var(--motion-fast) var(--ease);
   }
   .nc-item:hover {
-    background: color-mix(in srgb, var(--t1, var(--text)) 6%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
   }
   .nc-item__title {
-    font-size: var(--text-base, 14px);
+    font-size: var(--kn-list-title, 14px);
     font-weight: 550;
   }
   .nc-item__desc {
-    font-size: var(--text-sm, 12px);
+    font-size: var(--kn-list-excerpt, 13px);
     color: var(--t3, var(--text-muted));
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .nc-empty {
+    margin: 0;
+    font-size: var(--kn-list-excerpt, 13px);
+    color: var(--t3);
+    line-height: 1.5;
   }
 </style>

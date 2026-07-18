@@ -1,9 +1,9 @@
 <script>
-  // 收集箱：快速收集 + 文件导入 + 概览 stat + 最近条目。
-  // 「笔记」模块——专注捕捉，不放图表（数据洞察集中在「记忆库·概览」，见 /overview）。
+  // 收集箱：快速输入优先 + 待整理队列；统计下沉为一句摘要。
   import { goto } from '$app/navigation'
   import { EmptyState } from '@life-os/platform-web/svelte/status'
-  import { S, captureText, captureFile, allTags } from '$lib/state.svelte.js'
+  import { S, captureText, captureFile } from '$lib/state.svelte.js'
+  import { looksUnprocessed } from '$lib/analytics.js'
   import ItemList from '$lib/components/ItemList.svelte'
   import { t } from '$lib/i18n/index.js'
 
@@ -12,13 +12,18 @@
   let fileInput = $state(null)
   let importedCount = $state(0)
 
-  /** 统一：打开笔记 = 跳到工作台并选中（/library?note=id）。 */
   const openNote = (item) => item && goto(`/library?note=${encodeURIComponent(item.id)}`)
 
   const weekAgo = () => Date.now() - 7 * 24 * 3600 * 1000
   const weekCount = $derived(S.items.filter((i) => i.createdAt > weekAgo()).length)
-  const tagCount = $derived(allTags().length)
-  const recent = $derived(S.items.slice(0, 10))
+  const pending = $derived(
+    [...S.items]
+      .filter((i) => i.createdAt > weekAgo() && looksUnprocessed(i))
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 12),
+  )
+  const recentFallback = $derived(S.items.slice(0, 10))
+  const queue = $derived(pending.length ? pending : recentFallback)
 
   function submit() {
     if (captureText(draft)) draft = ''
@@ -49,43 +54,40 @@
 </script>
 
 <div class="wrap">
-  <div class="life-os-grid life-os-grid--kpi inbox-stats">
-    <div class="settings-block stat stat--compact">
-      <span class="stat__label">{t('inbox.statTotal')}</span>
-      <span class="stat__value">{S.items.length}</span>
-    </div>
-    <div class="settings-block stat stat--compact">
-      <span class="stat__label">{t('inbox.statWeek')}</span>
-      <span class="stat__value">{weekCount}</span>
-    </div>
-    <div class="settings-block stat stat--compact">
-      <span class="stat__label">{t('inbox.statTags')}</span>
-      <span class="stat__value">{tagCount}</span>
-    </div>
-  </div>
+  {#if pending.length}
+    <p class="inbox-badge-line">
+      <span class="inbox-badge">{t('inbox.pendingCount', { count: pending.length })}</span>
+    </p>
+  {/if}
 
-  <section class="card">
+  <section class="card capture">
     <div class="field" style="margin-bottom: 0">
       <label for="capture-input">{t('inbox.captureLabel')}</label>
       <textarea
         id="capture-input"
-        rows="3"
+        rows="4"
         placeholder={t('inbox.placeholder')}
         bind:value={draft}
         onkeydown={onKeydown}
       ></textarea>
     </div>
     <div class="capture-actions">
-      <span class="capture-hint">
-        <span class="kbd">⌘</span><span class="kbd">↵</span>
-        {t('inbox.captureHint')}
-      </span>
+      <button
+        type="button"
+        class="btn-secondary"
+        onclick={() => fileInput?.click()}
+      >
+        {t('inbox.addFile')}
+      </button>
       <button type="button" class="btn-primary" onclick={submit} disabled={!draft.trim()}>
         {t('inbox.captureButton')}
       </button>
     </div>
-
-    <div class="divider">{t('inbox.importLabel').split('，')[0]}</div>
+    <p class="capture-hint">
+      <span class="kbd">⌘</span><span class="kbd">↵</span>
+      {t('inbox.captureHint')}
+    </p>
+    <p class="auto-hint">{t('inbox.autoHint')}</p>
 
     <button
       type="button"
@@ -120,50 +122,77 @@
     {/if}
   </section>
 
-  <section class="recent">
-    <h2 class="section-title">{t('inbox.recent')}</h2>
-    {#if recent.length === 0}
+  <section class="pending">
+    <h2 class="section-title">{pending.length ? t('inbox.pending') : t('inbox.recent')}</h2>
+    {#if queue.length === 0}
       <div class="settings-block">
         <EmptyState title={t('inbox.emptyTitle')} description={t('inbox.emptyDesc')} />
       </div>
     {:else}
-      <ItemList items={recent} onOpen={openNote} />
+      <ItemList items={queue} onOpen={openNote} />
     {/if}
   </section>
+
+  {#if S.items.length > 0}
+    <p class="week-summary">{t('inbox.weekSummary', { week: weekCount, total: S.items.length })}</p>
+  {/if}
 </div>
 
 <style>
-  .inbox-stats {
+  .wrap {
+    display: grid;
+    gap: var(--space-4, 16px);
     margin-block: var(--space-4, 16px);
+  }
+  .inbox-badge-line {
+    margin: 0;
+  }
+  .inbox-badge {
+    display: inline-flex;
+    font-size: var(--kn-meta, 12px);
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-bg);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill, 999px);
   }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg, 16px);
     padding: var(--space-5, 20px);
-    margin-block: var(--space-4, 16px);
     display: grid;
     gap: var(--space-3, 12px);
+  }
+  .capture :global(textarea) {
+    font-size: var(--kn-body-size, 15px);
+    line-height: var(--kn-body-leading, 1.65);
+    min-height: 96px;
   }
   .capture-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
+    justify-content: flex-end;
+    gap: var(--space-2, 8px);
     flex-wrap: wrap;
   }
   .capture-hint {
+    margin: 0;
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    font-size: var(--text-xs);
+    font-size: var(--kn-meta, 12px);
     color: var(--t3, var(--text-muted));
   }
-  .section-title {
-    margin: 0 0 var(--space-2-5);
-    font-size: var(--text-lg);
+  .auto-hint {
+    margin: 0;
+    font-size: var(--kn-meta, 12px);
+    color: var(--t3, var(--text-muted));
   }
-  .recent {
-    margin-block: var(--space-5, 20px);
+  .week-summary {
+    margin: 0;
+    font-size: var(--kn-meta, 12px);
+    color: var(--t3, var(--text-muted));
+    text-align: center;
   }
 </style>
