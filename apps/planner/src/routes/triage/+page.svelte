@@ -678,7 +678,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .progress-track span,
     .selector-btn,
     .action-btn {
       transition: none;

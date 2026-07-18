@@ -2,8 +2,10 @@
   import { afterNavigate } from '$app/navigation'
   import PageShell from '$lib/components/PageShell.svelte'
   import TaskGroup from '$lib/components/TaskGroup.svelte'
+  import EmptyState from '$lib/components/EmptyState.svelte'
   import { taskIndex } from '$lib/taskIndex.svelte.js'
   import { selectSearch, selectAllTags } from '$lib/domain/selectors.js'
+  import { searchEmptyState } from '$lib/domain/searchEmptyState.js'
   import { completeTask, editTask } from '$lib/taskUi.js'
   import { t } from '$lib/i18n/index.js'
   import { sortTasks } from '$lib/engine/prioritizer.js'
@@ -87,13 +89,20 @@
       </div>
     </div>
   {/if}
-  <TaskGroup
-    title={t('search.title')}
-    {tasks}
-    hideHeader
-    empty={t('common.empty')}
-    onToggle={completeTask}
-    onEdit={editTask}
-  />
+  {#if tasks.length}
+    <TaskGroup
+      title={t('search.title')}
+      {tasks}
+      hideHeader
+      onToggle={completeTask}
+      onEdit={editTask}
+    />
+  {:else}
+    {@const empty = searchEmptyState({ query, tag, projectId })}
+    <EmptyState
+      message={t(empty.messageKey, empty.params)}
+      hint={empty.hintKey ? t(empty.hintKey) : ''}
+    />
+  {/if}
   {/snippet}
 </PageShell>

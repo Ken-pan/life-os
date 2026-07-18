@@ -317,6 +317,10 @@ export default {
     placeholder: 'Search tasks, tags…',
     all: 'All',
     moreTags: '{count} more tags',
+    noMatch: 'No results for “{query}”',
+    noFilterMatch: 'No tasks match this filter',
+    noMatchHint: 'Try another keyword, or clear the tag / project filter',
+    emptyHint: 'Add tasks in Inbox or Today to search them here',
   },
   settings: {
     title: 'Settings',

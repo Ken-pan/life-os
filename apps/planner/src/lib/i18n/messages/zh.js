@@ -316,6 +316,10 @@ export default {
     placeholder: '搜索任务、标签…',
     all: '全部',
     moreTags: '还有 {count} 个标签',
+    noMatch: '没有匹配「{query}」的结果',
+    noFilterMatch: '当前筛选下没有任务',
+    noMatchHint: '换个关键词，或清除标签 / 项目筛选',
+    emptyHint: '在收件箱或今日添加任务后，可在此搜索',
   },
   settings: {
     title: '设置',
