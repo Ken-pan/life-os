@@ -180,6 +180,7 @@
             {tasks}
             compactRows
             showScheduleAction
+            hideQuickActions
             scheduleDate={selected}
             contextDate={selected}
             onToggle={completeTask}

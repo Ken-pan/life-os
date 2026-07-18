@@ -30,6 +30,7 @@
     metaMinimal = false,
     ritualComplete = false,
     showScheduleAction = false,
+    hideQuickActions = false,
     scheduleDate,
     contextDate,
     onToggle,
@@ -521,7 +522,7 @@
             {/if}
           </div>
         {/if}
-        {#if overdue && !showAsCompleted}
+        {#if overdue && !showAsCompleted && !hideQuickActions}
           <div
             class="task-overdue-actions"
             role="presentation"

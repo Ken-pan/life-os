@@ -33,6 +33,7 @@
     compactRows = false,
     ritualComplete = false,
     showScheduleAction = false,
+    hideQuickActions = false,
     scheduleDate,
     contextDate,
     sectionId,
@@ -80,6 +81,7 @@
             metaMinimal={sectionId === 'done-today'}
             {ritualComplete}
             {showScheduleAction}
+            {hideQuickActions}
             scheduleDate={scheduleDate}
             {contextDate}
             {onToggle}
