@@ -45,7 +45,7 @@
 | 路径                                                                                                                   | 说明                                                                  |
 | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | [`screenshot-output.md`](./screenshot-output.md)                                                                       | **截图输出规范**（路径 SSOT · `scripts/qa/screenshot-output.mjs`）    |
-| [`../ui-qa-screenshots/`](../ui-qa-screenshots/)                                                                       | 各 app QA 脚本输出的截图与 `manifest.json`（`{app}/{suite}/latest/`；gitignore，本地生成） |
+| `docs/ui-qa-screenshots/`（见 [`screenshot-output.md`](./screenshot-output.md)）                                               | 各 app QA 脚本输出的截图与 `manifest.json`（`{app}/{suite}/latest/`；gitignore，本地生成，不在干净 checkout 中要求存在） |
 | [`evidence/planner-schedule/2026-07-10/`](./evidence/planner-schedule/2026-07-10/)                                     | PLNR.SCHED.0 Antigravity 截图 + Playwright traces                     |
 | `apps/*/docs/`                                                                                                         | App 专属 IA、audit export                                             |
 
