@@ -82,6 +82,14 @@ now-playing)的真机运行 QA 待导入曲库后人工验收一次。
 
 ---
 
+## PLAT.MCP.0 — 抽共享 MCP 鉴权（跨站复利）
+
+**触发（2026-07-17）：** Home（`where_is`）与 Planner（任务 CRUD）两个 MCP 面已上线，`apps/home/netlify/functions/mcp.js` 与 `apps/planner/netlify/functions/mcp.mjs` **重复了同一套鉴权样板**：`jwtFromRequest` + `createClient(..,{global.headers.Authorization})` + `auth.getUser()` 取 user_id。达到「≥2 消费者才提取」的复利门槛。
+
+**范围：** 把「从 Bearer 取 JWT → 造 RLS 作用域 Supabase 客户端 → 拿 user_id」抽成 `@life-os/mcp-server`（或 `@life-os/sync`）的一个 helper；Home/Planner 两处改为消费它。之后 Finance「查结余/本月支出」、Fitness「记一组/看 readiness」、（若上服务端）Knowledge「vault_ask」的 MCP 都近零成本。
+
+**边界：** 只抽鉴权/客户端样板，不抽业务工具；不新造无真实用途的 MCP 工具（防表面积爆炸，见 [`COMPOUND.md`](./COMPOUND.md)）。投入 ~0.5d。**验收：** Home/Planner MCP 行为不变（协议本地验 + 现有 gate），新 helper 有单测，两处样板消除。
+
 ## C-P2 P2+ 候选
 
 见 [`BACKLOG.md`](./BACKLOG.md) §Platform 提取候选。

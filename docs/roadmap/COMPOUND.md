@@ -36,6 +36,7 @@ review_cadence: monthly
 | `life_events` outbox | 每多一种事件 + 一个消费端，跨 OS 价值指数涨 |
 | `core_*` / Portal 今日摘要 | 一次写入、多处只读；Portal 是每日放大器 |
 | AppManifest / `create`+`promote` / 生成注册表 | 新 app 接线幂等；Health / Knowledge / AIOS 已吃红利 |
+| `@life-os/mcp-server` + MCP 面 | Home `where_is` + Planner 任务 CRUD 两个消费者；AIOS 当推理内核的跨站入口。**已达提取门槛**：抽共享 JWT/RLS 鉴权后 Finance/Fitness MCP 近零成本（`PLAT.MCP.0`）|
 | Design tokens + Catalog | 九品牌一致性 + 像素回归 |
 | CI 绿 | **复利开关**——红了之后所有后续交付都在打折 |
 | **用量信号（分散但已存在）** | `last_opened_at` · `play_events` · Home diagnostics / events · Finance/Planner 业务表 —— 先盘点再补埋点 |

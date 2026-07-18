@@ -46,7 +46,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.5d | anon revoke ✅ · Review 过滤拆分 ✅；剩 **owner Confirm→Undo 真机**、双真实 JWT、视觉基线 |
 
-**已收割（2026-07-17 夜）：** `PLAT.CI.0` ✅（补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` ✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · CI concurrency SHA 分桶 ✅ — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+**已收割（2026-07-17 夜）：** `PLAT.CI.0` ✅（补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` ✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · CI concurrency SHA 分桶 ✅ · **`KNOW.XREF.5` wikilink 小闭环** ✅（Planner 备注引用 Knowledge 笔记 + 共享 `@life-os/platform-web/wikilinks`）· **`PLNR.MCP.0` Planner MCP 面** ✅ 代码（AIOS 经 `/api/mcp` 读/建/完成任务；真实 JWT 读写属用户 gate）— 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
 **User config（不占 Agent 主航道）：** Home 部署后，AIOS 设置 → MCP 加 `https://home.kenos.space/api/mcp` + Life OS access token；Home 登录打开 `/storage` 触发快照同步。
 
@@ -85,9 +85,10 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | **HOME.RECOG.1r** | 认亲残余（窄） | Home | P2 | ◆ | 0.5–1d | 区域级高精度补扫；质量摘要观感签收（group-merge / 露总数已由并行 Agent 收） |
 | 2 | **PLNR.UIUX.0** | Planner 定向 UI 收口 | Planner | P2 | ◆ | 1d | 只扫未覆盖页面与现存 warning；不做无边界全站重做 |
-| 3 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用试点加深 | Knowledge | P2 | ◆◆ | 1–2d | 在 Planner↔Knowledge 试点上稳定引用契约；不合并业务表 |
-| 4 | **PLAT.USAGE.0b** | 用量审计节奏化 | Platform | P2 | ◆ | 0.5d | 月度复跑 `npm run qa:usage-audit`；补 AIOS/Knowledge/Health 本机探针 |
-| 5 | **PLNR.ATTACH.1** | 图片缩略图 / paste 体验 | Planner | P2 | ◆ | 1d | ATTACH.0 地基已绿后的体验刀 |
+| 3 | **PLAT.MCP.0** | 抽共享 MCP 鉴权（JWT/RLS）| Platform | P2 | ◆◆ | 0.5d | Home/Planner 两个 MCP 函数已重复鉴权样板；抽进 `@life-os/mcp-server`，Finance/Fitness MCP 近零成本（开发复利，2 消费者达门槛）|
+| 4 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用契约 | Knowledge | P2 | ◆◆ | 1–2d | wikilink 小闭环已发；稳定 `object_ref` 契约仍未起，待第二真实消费者再上，不合并业务表 |
+| 5 | **PLAT.USAGE.0b** | 用量审计节奏化 | Platform | P2 | ◆ | 0.5d | 月度复跑 `npm run qa:usage-audit`；补 AIOS/Knowledge/Health 本机探针 |
+| 6 | **PLNR.ATTACH.1** | 图片缩略图 / paste 体验 | Planner | P2 | ◆ | 1d | ATTACH.0 地基已绿后的体验刀 |
 
 **后移：** `HOME.PROJ.7`（无第二真实项目不造多项目）、`KNOW.SYNC.1`（先 watcher）、`MUSC.PIPE.4` / `GYMS.MEDIA.3` / `GYMS.SYNC.4`（维护级）、Portal 硬凑本地优先 app 卡。
 
@@ -106,16 +107,19 @@ Phase 0 — 复利开关 ✅ 已完成
 Phase 1 — 信任收割（用户 gate 重）
   FINC.PURCHASE.6.a owner Confirm→Undo + 双 JWT + 视觉基线
 
-Phase 2 — 窄残余 / 生产收口（按需）
-  HOME.RECOG.1r（区域补扫/观感）→ PLNR.UIUX.0 → KNOW.XREF.5
+Phase 2 — 跨站复利 / 窄残余（按需）
+  PLAT.MCP.0（抽共享 MCP 鉴权，AIOS 推理内核边际成本压近零）
+  → HOME.RECOG.1r（区域补扫/观感）→ PLNR.UIUX.0 → KNOW.XREF.5/object_ref
 
 已完成本轮
   PLNR.ATTACH.0 · HOME.MCP.13 · AIOS.STABLE.26 · KNOW.VAULT.0
   PLAT.USAGE.0 首报 · FINC RPC anon revoke · FINC Review 过滤拆分
   CI concurrency SHA 分桶 · Home group-merge/露总数（并行）
+  KNOW.XREF.5 wikilink 小闭环 · PLNR.MCP.0 Planner MCP 面（代码）
 
 并行用户 gate
   PLNR.SCHED.10b.ios + PLNR.CAPTURE.0 · HLT-5 · HOME.RECOG.refine · Knowledge 原生 rebuild 验 watcher
+  PLNR.MCP.0 / HOME.MCP.13 配进 AIOS 验真实读写（加 MCP URL + Life OS token）
 ```
 
 历史 Wave / Phase 完成表不在 hub 展开 → [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
@@ -126,7 +130,8 @@ Phase 2 — 窄残余 / 生产收口（按需）
 | 主线          | 摘要                                                                                 | 详情                                                                     |
 | ----------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | HealthOS    | **HLT-0–4** 第九 app：Focus agent · 六维 State Engine · 自适应专注 · 健康趋势 · Watch/iPhone companion 源码 | `[roadmap/SHIPPED.md](./roadmap/SHIPPED.md)` 2026-07-16 · `[apps/health.md](./roadmap/apps/health.md)` |
-| Knowledge   | Vault/RAG/Planner 双向引用；块编辑器 + **GFM 表格 + 行内高亮** | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-16–17 |
+| Knowledge   | Vault/RAG/Planner 双向引用；块编辑器 + **GFM 表格 + 行内高亮 + 折叠标题/图片/列对齐/表格模板**；**KNOW.XREF.5 wikilink 小闭环**（共享 `wikilinks` 包 + Planner 备注引用） | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-16–17 |
+| Integration | **PLNR.MCP.0** Planner MCP 面（`/api/mcp` ping/today/list/add/complete，JWT+RLS，行形与 LWW 同源）；MCP 从 Home 单点扩成小舰队 → AIOS 推理内核 | [`roadmap/apps/planner.md`](./roadmap/apps/planner.md) |
 | Home        | RECOG.0–3 + /plan 横幅 + Mac auto-refine 管线；扫描/照片/事件生产链；项目仍本地真源 | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-17 |
 | Design      | 九品牌 categorical 色板与树状图可读性；Catalog 覆盖九品牌 | [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md) 2026-07-17 |
 | Design      | **07-15/07-16 DS 平台化**：品牌 7 站 · Overlay/Form/Nav/Status 骨架 · Toast 重做 · 像素基线扩容 · `qa:prod-a11y` | `[roadmap/SHIPPED.md](./roadmap/SHIPPED.md)` 2026-07-15 · 2026-07-16 |
