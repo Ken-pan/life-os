@@ -14,7 +14,7 @@
  * @returns {number}
  */
 export function countPortalActionBadge(pendingRows, taskRows) {
-  const pending = Array.isArray(pendingRows) ? pendingRows.filter(Boolean) : []
+  const pending = Array.isArray(pendingRows) ? pendingRows.filter((row) => row != null) : []
   let nonFinancePending = 0
   let financePending = 0
   for (const row of pending) {
