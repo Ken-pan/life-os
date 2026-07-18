@@ -132,17 +132,8 @@
           {/each}
         </div>
 
-        {#if tasks.length <= 3}
-          <p class="page-hint">
-            {t('calendar.sparseHint', {
-              count: tasks.length,
-              label: sectionTitle(selected),
-            })}
-          </p>
-        {/if}
-
         <!-- 空日子不渲染这块：下面 DaySchedulePanel（时间轴 + 待排程）已给足结构，
-             顶部 page-hint 也已说「有 0 个安排」——再叠一个大太阳空态纯属冗余占屏。 -->
+             再叠一个大太阳空态纯属冗余占屏。（参考 Apple 日历：日期条下直接是时间轴。） -->
         {#if tasks.length}
           <TaskGroup
             title={sectionTitle(selected)}

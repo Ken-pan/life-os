@@ -3017,9 +3017,10 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     grid-template-columns: 1fr;
   }
 
-  .calendar-page .schedule-summary {
-    margin-bottom: var(--space-2);
-    padding: var(--space-2) var(--space-2-5);
+  /* 参考 Apple 日历日视图：移动端顶部只留日期条 + 时间轴当主角，藏掉统计卡
+     （0/0/0 那张最占顶部；待排程数在其折叠头里已有）。桌面走侧栏 context panel 不受影响。 */
+  .calendar-page .day-schedule-panel .schedule-summary {
+    display: none;
   }
 
   .calendar-page .schedule-summary-value {

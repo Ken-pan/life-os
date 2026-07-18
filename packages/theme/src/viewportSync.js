@@ -78,6 +78,21 @@ export function resolveAppVhCSSValue() {
 }
 
 /**
+ * On-screen keyboard height (px). = layout viewport − visual viewport − offsetTop.
+ * Closed keyboard / URL-bar jitter reads ~0; a real keyboard is always well over the
+ * 80px floor, so small deltas don't nudge sheets. Used by .sheet-bg padding to lift
+ * bottom sheets exactly onto the keyboard (no gap), immune to iOS focus-scroll offset.
+ * @returns {number}
+ */
+export function resolveKeyboardInset() {
+  if (typeof window === 'undefined') return 0
+  const vv = window.visualViewport
+  if (!vv) return 0
+  const inset = window.innerHeight - vv.height - vv.offsetTop
+  return inset > 80 ? Math.round(inset) : 0
+}
+
+/**
  * Bottom fixed chrome height (tab bar + visible mini player).
  * Prefers CSS `--bottom-chrome-h`, then live bottom-shell box height.
  * @returns {number}
@@ -143,6 +158,16 @@ function syncViewportHeight(force = false) {
   document.documentElement.style.setProperty('--app-vh', appVh)
 }
 
+/** @type {number | null} */
+let lastSyncedKbInset = null
+
+function syncKeyboardInset(force = false) {
+  const inset = resolveKeyboardInset()
+  if (!force && lastSyncedKbInset === inset) return
+  lastSyncedKbInset = inset
+  document.documentElement.style.setProperty('--keyboard-inset', `${inset}px`)
+}
+
 function syncStandaloneClass() {
   document.documentElement.classList.toggle('standalone-pwa', isStandalonePwa())
 }
@@ -188,6 +213,7 @@ export function bindViewportHeight() {
   if (typeof window === 'undefined') return () => {}
 
   syncViewportHeight(true)
+  syncKeyboardInset(true)
   syncStandaloneClass()
   syncSafeTopEffective()
 
@@ -197,6 +223,7 @@ export function bindViewportHeight() {
   const flush = () => {
     rafId = null
     syncViewportHeight()
+    syncKeyboardInset()
     syncStandaloneClass()
     syncSafeTopEffective()
   }
