@@ -6,6 +6,7 @@
 | ------------------------------------------------ | ------------------------------------------------- |
 | [`NORTH_STAR.md`](./NORTH_STAR.md)               | **愿景** — 终极形态、十 OS 判据、和现在的距离（非排期） |
 | [`SYSTEM_OVERVIEW.md`](./SYSTEM_OVERVIEW.md)     | **体系快照** — app/包清单、不变量、infra；与 hub 冲突时以 hub 为准 |
+| [`KENOS_REFACTOR.md`](./KENOS_REFACTOR.md)       | **Kenos 重构导航** — Constitution、目标架构、Apple 三端、迁移与验收（目标已确认，实施待激活） |
 | [`../roadmap/COMPOUND.md`](../roadmap/COMPOUND.md) | **复利判据** — 使用 × 开发取舍（排期仍以 hub 为准） |
 | [`contracts.md`](./contracts.md)                 | `@life-os/contracts` export 白名单 + Web 映射     |
 | [`responsive-chrome.md`](./responsive-chrome.md) | 断点 / AppBar / scroll-padding / 壳层契约（六端） |
@@ -17,3 +18,5 @@
 **边界与提取规则：** [`../roadmap/BACKLOG.md`](../roadmap/BACKLOG.md)
 
 **阶段进度：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)
+
+> Kenos 重构文档描述目标与操作方法；在 `LIFEOS_ROADMAP.md` 正式激活前，不代表 Portal、命名、数据 Owner 或原生客户端已经切换。

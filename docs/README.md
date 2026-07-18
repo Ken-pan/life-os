@@ -22,6 +22,8 @@
 
 **九 app 分卷：** [`roadmap/apps/`](./roadmap/apps/README.md) · **复利：** [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md) · **ROI：** [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) · **愿景：** [`architecture/NORTH_STAR.md`](./architecture/NORTH_STAR.md)
 
+**Kenos 重构目标与操作手册（尚未进入 Now）：** [`architecture/KENOS_REFACTOR.md`](./architecture/KENOS_REFACTOR.md)
+
 ## 九 app + 插件（一览）
 
 | App / 插件                          | 层级                  | 文档                                                                       |

@@ -9,6 +9,7 @@
 | [`supabase.md`](./supabase.md)         | 共享 DB migration、`supabase-sql.sh`、Auth redirect          |
 | [`legacy-local.md`](./legacy-local.md) | 已删除的本地 sibling 克隆路径                                |
 | [`scheduled-jobs.md`](./scheduled-jobs.md) | 本机 launchd 定时任务（镜像去重）、装法、排障            |
+| [`kenos-migration-runbook.md`](./kenos-migration-runbook.md) | Kenos 重构 preflight、数据迁移、cutover、rollback、Portal/命名/原生壳退役 |
 
 > PaperOS 设备运维已随 PaperOS 于 2026-07-12 迁出至独立仓库 → [`../roadmap/apps/paperos.md`](../roadmap/apps/paperos.md)。
 > HealthOS 当前是本地 Mac + Watch/iPhone companion，manifest `production: false`，不在 Netlify 生产面。

@@ -7,6 +7,7 @@
 | 主题 | Hub |
 | --- | --- |
 | **PaperOS**（独立仓库） | [`../roadmap/apps/paperos.md`](../roadmap/apps/paperos.md) |
+| **Kenos 重构 gates** | [`kenos-refactor-gates.md`](./kenos-refactor-gates.md) |
 | PWA / iOS | 下文 §PWA |
 | Planner 日程 / 捕获 | 下文 §Planner 日程 / 捕获 |
 
