@@ -9,6 +9,7 @@ const t = (key, params = {}) => {
   const map = {
     'task.unscheduledLine': '今天 · 未排程',
     'task.unscheduledOnly': '未排程',
+    'task.overdueDue': '已逾期 · 截止 {date}',
     'task.kindFocus': '关键',
     'task.priority_P0': '高',
     'task.p1': '高',
@@ -71,7 +72,7 @@ describe('buildTaskMetaLine', () => {
       t,
       { contextDate: '2026-07-06', overdue: true },
     )
-    expect(line).toBe('7月3日 · 已安排 09:00–09:30')
+    expect(line).toBe('已逾期 · 截止 7月3日 · 已安排 09:00–09:30')
   })
 
   it('hides recurrence text on context-day views but keeps it in date-less lists', () => {

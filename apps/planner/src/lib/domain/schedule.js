@@ -4,7 +4,7 @@ import { getTaskKind } from './taskKind.js'
 
 export const DAY_START_HOUR = 8
 export const DAY_END_HOUR = 23
-export const HOUR_HEIGHT_PX = 104
+export const HOUR_HEIGHT_PX = 80
 export const MIN_BLOCK_HEIGHT_PX = 48
 
 export const SCHEDULE_START_TIMES = [

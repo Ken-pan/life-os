@@ -45,8 +45,8 @@ describe('schedule', () => {
   it('calculates block layout from start and duration', () => {
     const layout = blockLayout('09:30', 60)
     expect(layout).not.toBeNull()
-    expect(layout?.top).toBe(156)
-    expect(layout?.height).toBe(104)
+    expect(layout?.top).toBe(120)
+    expect(layout?.height).toBe(80)
   })
 
   it('returns null for blocks outside the visible day window', () => {

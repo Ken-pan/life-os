@@ -39,7 +39,8 @@ export function buildTaskMetaLine(task, t, opts = {}) {
   const parts = []
 
   if (overdue && task.dueDate) {
-    parts.push(formatDateShort(task.dueDate))
+    // 逾期显式说出来，别只靠粉红色让用户猜（审查 P0-4）。
+    parts.push(t('task.overdueDue', { date: formatDateShort(task.dueDate) }))
     if (task.scheduledStart) {
       const startMinutes = parseTimeToMinutes(task.scheduledStart)
       parts.push(

@@ -2222,11 +2222,26 @@ body {
 }
 
 .day-timeline-grid-line {
-  border-top: 1px solid rgba(255, 255, 255, 0.045);
+  position: relative;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* 半小时分割线（更淡）——让精确排 30/45 分钟任务有参照（审查 #94）。 */
+.day-timeline-grid-line::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.03);
 }
 
 :root[data-theme='light'] .day-timeline-grid-line {
-  border-top-color: rgba(31, 28, 24, 0.06);
+  border-top-color: rgba(31, 28, 24, 0.08);
+}
+
+:root[data-theme='light'] .day-timeline-grid-line::after {
+  border-top-color: rgba(31, 28, 24, 0.045);
 }
 
 .day-timeline-now {
@@ -3127,6 +3142,13 @@ html.planner-schedule-modal-open .day-timeline-jump-now {
     border-radius: 0;
     padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
     overscroll-behavior: contain;
+    /* 日历 App 模式：只有时间轴滚动、隐藏原生滚动条，消除"页面里套小滚动窗"的观感
+       （审查 P0-2）。周条钉在上方，时间轴占满剩余高度独立滚。 */
+    scrollbar-width: none;
+  }
+
+  .calendar-page .day-timeline-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   /* 时间轴成开放画布后，底部「回到当前时间」也去掉卡片外框保持一致。 */
