@@ -37,6 +37,21 @@
   const pct = (s) => (s == null ? '' : `${Math.round(s * 100)}% 像`)
 
   /**
+   * 这张卡片的证据完整度 → 一句提醒。照片缺失时别让用户盲判,把「暂不确定」抬成合理出口。
+   * @param {import('$lib/recognition-review.js').RecognitionReview} r
+   * @returns {{ text: string, tone: 'warn' | 'muted' } | null}
+   */
+  function evidenceNote(r) {
+    const hasNew = !!r.newCropUrl
+    const hasOld = !!r.candidate.oldCropUrl
+    if (!hasNew && !hasOld)
+      return { text: '两侧都没有可比对的照片 —— 拿不准就选「暂不确定」。', tone: 'warn' }
+    if (!hasNew || !hasOld)
+      return { text: '只有一侧有照片，对比有限，可结合名称与相似度判断。', tone: 'muted' }
+    return null
+  }
+
+  /**
    * @param {import('$lib/recognition-review.js').RecognitionReview} review
    * @param {import('$lib/recognition-review.js').RecognitionDecision} decision
    */
@@ -64,17 +79,30 @@
 >
   <div class="rr-panel" role="dialog" aria-modal="true" aria-label="确认跨扫描认亲">
     <header class="rr-head">
-      <strong>这几件可能是家里已有的</strong>
-      <span>Mac 精修认出下面 {items.length} 件像以前扫过的某件 —— 看图确认，拿不准可以「暂不确定」</span>
+      {#if items.length}
+        <strong>这几件可能是家里已有的</strong>
+        <span>Mac 精修认出下面 {items.length} 件像以前扫过的某件 —— 看图确认，拿不准可以「暂不确定」</span>
+      {:else}
+        <strong>这批都确认完了</strong>
+        <span>没有更多待认亲的重复件了。</span>
+      {/if}
     </header>
 
     <div class="rr-body">
+      {#if !items.length}
+        <div class="rr-empty" role="status">
+          <span class="rr-empty-mark" aria-hidden="true">✓</span>
+          <p class="rr-empty-title">这批没有更多了</p>
+          <span class="rr-empty-sub">Mac 下次精修再认出新的重复件，会重新提醒你。</span>
+        </div>
+      {/if}
       {#each items as r (keyOf(r))}
         <ReviewCard
           decisions={DECISIONS}
           onDecide={(key) => decide(r, key)}
           busy={!!busyKey}
           dim={busyKey === keyOf(r)}
+          note={evidenceNote(r)}
         >
           {#snippet evidence()}
             <div class="pair">
@@ -89,9 +117,9 @@
 
               <div class="vs">
                 <span class="vs-q">?</span>
-                {#if r.candidate.score != null}
-                  <span class="vs-score">{pct(r.candidate.score)}</span>
-                {/if}
+                <span class="vs-score" class:vs-score--unknown={r.candidate.score == null}>
+                  {r.candidate.score != null ? pct(r.candidate.score) : '相似度未知'}
+                </span>
               </div>
 
               <figure class="shot">
@@ -109,7 +137,11 @@
     </div>
 
     <footer class="rr-foot">
-      <span class="rr-hint">「是同一件」把这次的观察并进历史身份;「不是」保持独立;「暂不确定」先放着。</span>
+      <span class="rr-hint">
+        {items.length
+          ? '「是同一件」把这次的观察并进历史身份;「不是」保持独立;「暂不确定」先放着。'
+          : ''}
+      </span>
       <button type="button" class="rr-close" disabled={!!busyKey} onclick={onClose}>关闭</button>
     </footer>
   </div>
@@ -239,6 +271,48 @@
     color: var(--t2);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+    text-align: center;
+  }
+
+  .vs-score--unknown {
+    font-style: italic;
+    opacity: 0.85;
+  }
+
+  .rr-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 28px 16px 24px;
+    text-align: center;
+  }
+
+  .rr-empty-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--graph-accent, var(--accent)) 16%, var(--bg));
+    color: var(--graph-accent, var(--accent));
+    font-size: var(--text-base);
+    font-weight: 700;
+  }
+
+  .rr-empty-title {
+    margin: 2px 0 0;
+    font-size: var(--text-md);
+    font-weight: 650;
+    color: var(--t1);
+  }
+
+  .rr-empty-sub {
+    font-size: var(--text-sm);
+    color: var(--t2);
+    line-height: 1.4;
+    max-width: 34ch;
   }
 
   .rr-foot {
