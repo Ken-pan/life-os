@@ -47,6 +47,14 @@ select
   (select count(*) from home.object_observations where (match->>'state') = 'possibly_same') as pending_recog,
   (select count(*) from home.events where to_timestamp(ts/1000.0) > now() - interval '30 days') as events_30d;
 `.trim(),
+  aios: `
+select
+  (select count(*) from aios.conversations where deleted is not true
+     and to_timestamp(updated_at/1000.0) > now() - interval '7 days') as conv_7d,
+  (select count(*) from aios.conversations where deleted is not true
+     and to_timestamp(updated_at/1000.0) > now() - interval '30 days') as conv_30d,
+  (select count(*) from aios.memories where deleted is not true) as memories;
+`.trim(),
   finance_life: `
 select
   (select count(*) from public.purchase_associations where state = 'proposed') as proposed,
@@ -125,6 +133,7 @@ function featureTable() {
   const m = data.music?.[0] || {}
   const h = data.home?.[0] || {}
   const f = data.finance_life?.[0] || {}
+  const a = data.aios?.[0] || {}
   // Finance 审核缺口判据:积压 proposed 多而近 30d 决策少 = closure 摩擦
   const financeGap = Number(f.proposed) > 50 && Number(f.decisions_30d) < 20
   return [
@@ -134,7 +143,8 @@ function featureTable() {
     `| Fitness↔Planner | \`fitness.workout_logged\` | ${f.workout_30d} / 30d | ${Number(f.workout_30d) >= 8 ? '偶发→日用边缘' : '偶发'} | 事件链有效;勿扩无消费者事件 |`,
     `| Finance bills | \`finance.bill_due\` | ${f.bill_30d} / 30d | 偶发 | 管道健康 |`,
     `| life_events(总) | outbox 30d | ${f.life_events_30d} / 30d | — | 跨 OS 消费活跃度底数 |`,
-    `| Knowledge / AIOS / Health | 本地优先 | — | 未知 | 本机另查;VAULT.0 用几天后再审计 |`,
+    `| AIOS | 对话 / 记忆(云端 aios schema) | ${a.conv_7d} conv 7d · ${a.conv_30d} 30d · ${a.memories} mem | **${useVerdict(a.conv_7d, a.conv_30d)}** | 云同步在用;推理内核方向可投 |`,
+    `| Knowledge / Health | 本地优先 | — | 未知 | 本机另查;VAULT.0 用几天后再审计 |`,
   ].join('\n')
 }
 
@@ -168,10 +178,13 @@ ${featureTable()}
 
 ## 建议动作(人工层 —— 复跑数字后需据实复核)
 
-1. **加码：** FINC.PURCHASE.6.a closure（proposed 积压是最高摩擦)· KNOW.VAULT.0 用几天验证日用。
-2. **维持：** Music 推荐环 · Home 认亲 / refine（launchd 已激活)。
-3. **冻结 / 勿扩：** Portal 硬凑本地优先卡 · INTG.EVENTS.2 无消费者智能 · Home 多项目云同步。
-4. **补信号：** AIOS / Knowledge / Health 的最小本机用量探针（可选，下月）。
+1. **已收割：** FINC.PURCHASE.6.a closure ✅——干净关联批量确认(proposed 267→93、decisions→180),
+   队列从"日用缺口"回落到"日用·在消化";采购评审已给足证据(明细+金额对比)。剩 owner 真机 QA。
+2. **加码：** KNOW.VAULT.0 用几天验证日用(下次审计看 Vault watcher 是否日用)。当前**无紧急加码**——
+   所有日用 app 健康,是**防表面积爆炸**的好时机,别硬塞新面。
+3. **维持：** Music 推荐环 · Home 认亲 / refine(launchd 已激活)。
+4. **冻结 / 勿扩：** Portal 硬凑本地优先卡 · INTG.EVENTS.2 无消费者智能 · Home 多项目云同步。
+5. **补信号(可选):** AIOS(云端 aios schema 可直查)/ Health(本机)的最小用量探针,填 "未知" 盲区。
 
 _验收:审计要产生决策而非仪表盘。数字实时化后,每月复跑即可据实调 hub ROI。_
 ${errors.length ? `\n> ⚠️ 部分查询失败(表回退占位):\n${errors.map((e) => `> - ${e}`).join('\n')}\n` : ''}
