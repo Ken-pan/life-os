@@ -90,3 +90,62 @@ status: phase-0-freeze-package-delivered-with-baseline-blocker
 - Out-of-scope follow-ups: exact Planner task store/writer inventory, Activity storage target, RLS/idempotency design, Portal key/RPC inventory, Work connector policy approval, native shell retirement inventories.
 - Adversarial review: package avoids dual Owner by not moving stores; avoids越权 by keeping OPEN decisions pending and R3/R4 fail-closed; avoids data loss by no destructive ops/backfill; remains rollbackable because first slice is envelope-only; does not falsely claim implementation.
 - Phase 0 preparation definition of done: `PARTIAL_PASS_WITH_BASELINE_BLOCKER` — safe executable freeze-package work is complete, but branch mismatch and unrelated ticket-naming baseline require owner attention before formal sign-off.
+
+## Phase 0 closeout / KR-P1-001 readiness update (2026-07-18)
+
+### Cloud governance correction
+
+- Governance docs now use one Cloud provenance model: `origin/master` is the only input baseline and final formal source of truth; the platform may create one temporary work branch for review; checkpoint commits and PR metadata are allowed on that temporary branch; Cloud must not push/merge to `origin/master`; no additional branch/worktree/stash/parallel task may be created; every phase stops for human review before the next phase.
+- Updated files: `AGENTS.md`, `docs/ops/kenos-codex-cloud.md`, `docs/ops/kenos-codex-cloud-prompt.md`, and this execution state.
+- Current run remains on platform branch `work`; it is still only a review artifact, not a new source of truth.
+
+### Phase 0 commit provenance audit
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Commit audited | PASS | `d6a846df266292c422b6d2e28a13584daecee2ca` |
+| Parent | PASS_WITH_LOCAL_REF_LIMITATION | Parent is `bced19f41fe01b324f583d6a2976e5817fd44181`; no `origin/master` ref is present in this checkout (`git rev-parse origin/master` fails), so the audit can prove parent but cannot locally dereference remote tracking state |
+| Branch | INFO | `git show -s --format='%H %P %D' d6a846d...` reports `HEAD -> work`; this is consistent with platform temporary branch model |
+| Diff allowlist | PASS | `git diff-tree --no-commit-id --name-only -r d6a846d...` lists only `docs/architecture/kenos-domain-ownership-inventory.md`, `docs/architecture/kenos-policy-matrices.md`, `docs/roadmap/KENOS_MIGRATION_LEDGER.md`, `docs/roadmap/KENOS_REFACTOR_EXECUTION_STATE.md`, `scripts/check-kenos-phase0.mjs`, `scripts/verify-kenos-refactor.sh` |
+| Runtime/schema/prod config | PASS | Commit contains no `apps/**`, `packages/**`, Supabase migration, Netlify, DNS, production script, or app runtime path |
+| Local WIP carried into commit | PASS | Commit file list is Kenos Phase 0 docs/guard only; post-commit `git status --short --branch` was clean on `## work` |
+| Test weakening/faking | PASS | Added guard validates Phase 0 invariants and was inserted before existing repo gates; no test was deleted, skipped, or marked pass despite baseline failure |
+| `make_pr` artifact | METADATA_ONLY | The available tool recorded title/body and returned JSON metadata; no remote configured in this checkout and no push/merge command was run, so this task has evidence of PR metadata only, not a verified remote PR |
+
+### Ticket-naming blocker investigation
+
+| Question | Finding | Evidence |
+| --- | --- | --- |
+| Did target content migrate elsewhere? | No committed replacement content directory was found; `docs/ui-qa-screenshots/` is intentionally generated/gitignored, not a committed docs directory | `docs/qa/screenshot-output.md` defines `docs/ui-qa-screenshots/` as temporary QA screenshot output; `scripts/qa/screenshot-output.mjs` uses `docs/ui-qa-screenshots` |
+| Should target content continue to exist? | Yes as a local/generated evidence root, but it should not be required to exist in a clean checkout | README describes screenshot outputs and `manifest.json` as local/generated; scripts create/write under that root |
+| Is the link retired? | No; multiple docs and scripts still reference `docs/ui-qa-screenshots/` as canonical screenshot output | `docs/README.md`, `docs/qa/screenshot-output.md`, and screenshot scripts all point to the same root |
+| Minimal correct fix | Follow-up patch outside Kenos allowlist: change `docs/qa/README.md` evidence-directory link from a checked relative markdown link to inline code `docs/ui-qa-screenshots/` or link to `./screenshot-output.md`; do not create an empty directory just to satisfy the verifier | Current broken link is `docs/qa/README.md` line with `../ui-qa-screenshots/`; target is generated/gitignored |
+| Current task action | NO_CHANGE | `docs/qa/README.md` is outside this Kenos closeout write scope, so no stealth allowlist expansion was performed |
+
+### KR-P1-001 readiness decision summary
+
+- Blocking before GO: Plan Task canonical owner, create-task single writer, Assistant write boundary, Outbox persistence, ID/idempotency, offline retry, action risk/approval, and Activity logging semantics all require Ken to approve the temporary defaults recorded in `docs/architecture/kenos-policy-matrices.md` before runtime coding starts.
+- Can remain PENDING after KR-P1-001 if excluded from scope: OPEN-001, OPEN-003, OPEN-004, OPEN-005, OPEN-006, OPEN-007, and OPEN-008.
+- Conditional blocker: OPEN-002 remains blocking if any Work-sourced payload/body/model processing is included. The recommended KR-P1-001 scope excludes Work bodies and stores only minimal redacted references if Ken explicitly allows Work-sourced task creation.
+- Runtime implementation status: NOT STARTED. No KR-P1-001 runtime code, SQL/RLS/auth, production config, deploy, push, or merge was performed.
+
+### Readiness verification rerun
+
+| Command | Readiness result | Evidence/notes |
+| --- | --- | --- |
+| `node scripts/check-kenos-phase0.mjs` | PASS | Phase 0 guard passed |
+| `npm run check:lifeos-boundaries` | PASS | Dependency boundary guard passed |
+| `npm run check:app-manifests` | PASS | App registry manifest check passed |
+| `npm run verify:ticket-naming` | EXPECTED_BASELINE_FAIL | Still fails on `docs/qa/README.md` -> `../ui-qa-screenshots/`; not fixed because outside Kenos scope |
+| `npm run verify:kenos-refactor` | EXPECTED_BASELINE_FAIL | Phase 0 guard passes, then inherited ticket-naming baseline fails |
+
+### KR-P1-001 READINESS REPORT
+
+1. Phase 0 commit provenance: `d6a846df266292c422b6d2e28a13584daecee2ca` is a scoped checkpoint commit on temporary branch `work`; parent is `bced19f41fe01b324f583d6a2976e5817fd44181`; local checkout has no `origin/master` ref, so parent-to-remote equality cannot be fully dereferenced here.
+2. Allowlist diff conclusion: PASS. The audited Phase 0 commit only changed Kenos Phase 0 docs/guard files and did not include runtime/schema/production config paths.
+3. Cloud branch governance: SELF-CONSISTENT after this update. Temporary branch/checkpoint/PR metadata are review artifacts only; `origin/master` remains final formal truth; no push/merge is allowed by Cloud.
+4. Ticket-naming blocker minimal independent fix: in a separate non-Kenos docs QA patch, replace the `docs/qa/README.md` link to generated `../ui-qa-screenshots/` with inline code or a link to `./screenshot-output.md`; do not create an empty screenshot directory.
+5. KR-P1-001 blocking decisions: Ken must approve temporary defaults for Plan owner, create-task single writer, Assistant boundary, Outbox persistence, idempotency, offline retry, R1/R2/R3/R4 handling, and Activity logging semantics before GO.
+6. Test results: targeted and shared guards pass except expected ticket-naming baseline, which also makes full `verify:kenos-refactor` expected-baseline-fail.
+7. Readiness verdict: `CONDITIONAL_GO` for design/readiness only; `NO_GO` for runtime implementation until Ken approves the blocking temporary defaults and the implementation slice verifies exact Planner task symbols/current writers.
+8. Required before GO: Ken sign-off on blocking temporary decisions; decide whether Work-sourced create-task is excluded or OPEN-002 is approved; run/fix the independent docs QA link follow-up if a green full verify is required; confirm the intended master-derived baseline in an environment with `origin/master` available.

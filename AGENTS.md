@@ -102,26 +102,37 @@ Rules for every agent session:
 
 ### Codex Cloud unattended tasks
 
-Cloud execution is an isolated checkout of `origin/master`, not an exception to
-the single-branch policy. The following rules override the normal local
+Cloud execution uses `origin/master` as the only input baseline and final formal
+source of truth, but the platform may materialize the run on one automatically
+created temporary work branch. That temporary branch is review infrastructure,
+not a new source of truth. The following rules override the normal local
 commit/push instruction for an unattended Cloud task:
 
-1. Start from the existing `master` ref. Do not create a branch, worktree,
-   stash, checkpoint ref, or pull request.
-2. Do not commit, push, merge, deploy, change DNS, or write to a remote database.
-   Leave a reviewable Cloud diff for the owner to apply to `master` later.
-3. Run at most one write-capable Cloud task for this repository at a time. Do
+1. Start from the selected `origin/master` baseline or commit derived from it. Do
+   not create extra branches, worktrees, stashes, checkpoint refs, or parallel
+   write tasks yourself.
+2. A Cloud task may create small, scoped checkpoint commits on the single
+   platform-provided temporary branch and may produce a reviewable diff or PR
+   metadata. It must not push, merge, deploy, change DNS, or write to a remote
+   database.
+3. Never describe the Cloud temporary branch as the formal source of truth.
+   Only reviewed changes merged by the owner into `origin/master` become
+   official.
+4. Run at most one write-capable Cloud task for this repository at a time. Do
    not spawn subagents or parallel tasks that modify `life-os`.
-4. Agent-phase internet access stays off. Do not configure secrets or depend on
+5. Agent-phase internet access stays off. Do not configure secrets or depend on
    production credentials. Setup may install only lockfile-pinned dependencies.
-5. Uncommitted local work is not present in Cloud. Touch only the path allowlist
-   in the task prompt; treat all other paths as read-only.
-6. An unattended task may prepare docs, guards, fixtures, and non-destructive
+6. Uncommitted local work is not present in Cloud. Touch only the path allowlist
+   in the task prompt; treat all other paths as read-only unless the prompt
+   explicitly expands scope.
+7. An unattended task may prepare docs, guards, fixtures, and non-destructive
    tests. It may not approve owner decisions, apply migrations, retire an app,
    delete user data, or weaken tests to obtain a passing result.
-7. Update the task execution-state file before stopping. If facts conflict,
+8. Update the task execution-state file before stopping. If facts conflict,
    production access is needed, or a destructive/irreversible step is next,
    record the blocker and stop that slice.
+9. Each phase must stop for human review/sign-off. Do not automatically proceed
+   from Phase 0 readiness into Phase 1 runtime implementation.
 
 The canonical environment settings and prompt are documented in
 `docs/ops/kenos-codex-cloud.md` and

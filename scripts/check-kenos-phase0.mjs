@@ -54,7 +54,7 @@ const changed = [
   ...execSync('git diff --name-only', { encoding: 'utf8' }).trim().split('\n').filter(Boolean),
   ...execSync('git ls-files --others --exclude-standard', { encoding: 'utf8' }).trim().split('\n').filter(Boolean),
 ]
-const allowed = [/^docs\/architecture\/KENOS_REFACTOR\.md$/, /^docs\/architecture\/kenos-.*\.md$/, /^docs\/roadmap\/KENOS_REFACTOR_.*\.md$/, /^docs\/roadmap\/KENOS_MIGRATION_LEDGER\.md$/, /^docs\/ops\/kenos-.*\.md$/, /^docs\/qa\/kenos-.*\.md$/, /^scripts\/verify-kenos-refactor\.sh$/, /^scripts\/check-kenos-.*\.mjs$/, /^tests\/kenos\//]
+const allowed = [/^AGENTS\.md$/, /^docs\/architecture\/KENOS_REFACTOR\.md$/, /^docs\/architecture\/kenos-.*\.md$/, /^docs\/roadmap\/KENOS_REFACTOR_.*\.md$/, /^docs\/roadmap\/KENOS_MIGRATION_LEDGER\.md$/, /^docs\/ops\/kenos-.*\.md$/, /^docs\/qa\/kenos-.*\.md$/, /^scripts\/verify-kenos-refactor\.sh$/, /^scripts\/check-kenos-.*\.mjs$/, /^tests\/kenos\//]
 for (const path of changed) {
   if (!allowed.some((pattern) => pattern.test(path))) fail(`allowlist violation in diff: ${path}`)
 }
