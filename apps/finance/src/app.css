@@ -2884,6 +2884,69 @@ div.input {
   color: var(--critical);
 }
 
+/* FINC.PURCHASE.6.a —「N 笔待确认」直达 CTA：有待确认才出，一点直达筛选。 */
+.history-review-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  margin-bottom: var(--space-2);
+  padding: var(--space-3) var(--space-3-5, var(--space-3));
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border));
+  border-radius: var(--radius-md, 10px);
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+
+.history-review-cta:hover {
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+.history-review-cta-badge {
+  flex: 0 0 auto;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--accent);
+  color: var(--accent-foreground, #14310a);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.history-review-cta-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.history-review-cta-title {
+  font-weight: 650;
+  font-size: var(--text-md, var(--text-sm));
+}
+
+.history-review-cta-sub {
+  font-size: var(--text-sm);
+  color: var(--text-secondary, var(--text-muted));
+}
+
+.history-review-cta-arrow {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: var(--text-lg);
+}
+
 .history-coverage-summary {
   cursor: pointer;
   font-size: var(--text-sm);

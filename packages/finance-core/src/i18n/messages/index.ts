@@ -789,6 +789,8 @@ export const zhCN: MessageTree = {
       '另有 {review} 笔订单匹配待确认，{returns} 笔退货/退款已单独排除。',
     coverageStatClean: '已识别商品明细',
     coverageStatReview: '待确认',
+    reviewNeededCta: '{count} 笔采购待你确认',
+    reviewNeededSub: '订单匹配不太确定，点这里逐笔确认或驳回',
     coverageStatReturn: '退货/退款',
     coverageViewCleanBills: '查看有商品明细的账单',
     coverageSourceAll: '全部',
@@ -813,10 +815,10 @@ export const zhCN: MessageTree = {
       unsupported_source: '暂不支持商品明细',
     },
     merchantOnlyNoDetail: '暂无商品明细',
-    catalogMaintenanceTitle: '数据维护：{count} 个商户订单尚未匹配到账单',
+    catalogMaintenanceTitle: '另有 {count} 笔商户订单没对上账本扣款',
     catalogMaintenanceHint:
-      '这些订单来自商户账户采集，尚未对应账本中的单笔扣款。',
-    catalogMaintenanceAction: '查看待处理订单',
+      '多因月结、其他付款方式或退货，通常不用管——想核对可展开看看。',
+    catalogMaintenanceAction: '展开看看',
     catalogTargetHint:
       '这些订单来自 Target 账户，但当前账本没有对应的单笔扣款；可能与 RedCard 月结、其他支付方式或匹配规则有关。',
     catalogBestbuyHint:
@@ -2467,6 +2469,8 @@ export const enUS: MessageTree = {
       '{review} bills need match review; {returns} return/refund rows excluded.',
     coverageStatClean: 'With item detail',
     coverageStatReview: 'Pending review',
+    reviewNeededCta: '{count} purchases need your review',
+    reviewNeededSub: 'Uncertain order matches — tap to confirm or reject each',
     coverageStatReturn: 'Return/refund',
     coverageViewCleanBills: 'View bills with item detail',
     coverageSourceAll: 'All',
@@ -2493,10 +2497,10 @@ export const enUS: MessageTree = {
     },
     merchantOnlyNoDetail: 'No item detail yet',
     catalogMaintenanceTitle:
-      'Data maintenance: {count} merchant orders not matched',
+      '{count} more merchant orders without a matching charge',
     catalogMaintenanceHint:
-      'Harvested from merchant accounts but not linked to a ledger charge yet.',
-    catalogMaintenanceAction: 'View pending orders',
+      'Usually statement billing, another payment method, or returns — safe to ignore. Expand to cross-check.',
+    catalogMaintenanceAction: 'Take a look',
     catalogTargetHint:
       'These Target orders have no matching single charge in your ledger yet; may be RedCard statement billing or another payment method.',
     catalogBestbuyHint:

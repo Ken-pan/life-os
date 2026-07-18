@@ -493,6 +493,31 @@
       {/if}
     </div>
 
+    <!-- 「只在有事时弹」：待确认是唯一需要用户动作的采购态。以前它埋在下面折叠的
+         「已识别 N 个商品」摘要里（纯"一切正常"文案），有待确认也不冒头 → 用户
+         根本找不到复核入口（2026-07-17 真机反馈）。现在有待确认才在账本正上方给一个
+         一眼可见、一点直达筛选的 CTA；一笔都没有就整块不出，不占地方。 -->
+    {#if (purchaseCoverage.matchedReview ?? 0) > 0}
+      <button
+        type="button"
+        class="history-review-cta"
+        onclick={() => {
+          purchaseStateFilter = 'review'
+          purchaseSourceFilter = 'all'
+          scrollToLedger()
+        }}
+      >
+        <span class="history-review-cta-badge">{purchaseCoverage.matchedReview}</span>
+        <span class="history-review-cta-body">
+          <span class="history-review-cta-title"
+            >{t('history.reviewNeededCta', { count: purchaseCoverage.matchedReview })}</span
+          >
+          <span class="history-review-cta-sub">{t('history.reviewNeededSub')}</span>
+        </span>
+        <span class="history-review-cta-arrow" aria-hidden="true">→</span>
+      </button>
+    {/if}
+
     <!-- Purchase coverage is a ledger FILTER (its actions all scroll to the
          ledger), not an insight, so it does not earn a full card in the main
          flow. Collapsed by default and parked directly above the ledger it
