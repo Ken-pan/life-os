@@ -1,10 +1,16 @@
 [build]
   command = "npm run build -w fitness-os"
   publish = "apps/fitness/build"
-  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/fitness packages/contracts packages/platform-web packages/sync packages/theme"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/fitness packages/contracts packages/mcp-server packages/platform-web packages/sync packages/theme"
 
 [build.environment]
   NODE_VERSION = "22"
+
+[functions]
+  # Git 构建相对 repo 根（见 docs/ops/netlify.md）
+  directory = "apps/fitness/netlify/functions"
+
+# mcp.mjs 通过 export const config.path 挂载 /api/mcp（GYMS.MCP.1）
 
 [[redirects]]
   from = "/*"

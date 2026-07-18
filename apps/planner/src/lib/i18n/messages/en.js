@@ -463,6 +463,9 @@ export default {
     paperLinkCopyFailed: 'Could not copy the PaperOS page reference',
     noteLinks: 'Referenced knowledge notes',
     openInKnowledge: 'Open “{title}” in KnowledgeOS',
+    openInKnowledgeNative: 'Open “{title}” in native KnowledgeOS (app required)',
+    openInKnowledgeWeb: 'Open “{title}” in KnowledgeOS on the web',
+    knowledgeWeb: 'Web',
   },
   recurrence: {
     none: 'Never',

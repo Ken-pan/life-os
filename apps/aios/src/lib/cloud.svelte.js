@@ -81,6 +81,23 @@ function saveSnapshot(snap) {
 
 /* —— 会话与登录 —— */
 
+/**
+ * 登录后自动并入 Life OS MCP 四站 + 刷新 Bearer。
+ * 失败静默：MCP 是增强能力，不应拖垮云同步启动。
+ * @param {string | undefined | null} accessToken
+ */
+async function syncLifeOsMcpFleet(accessToken) {
+  const token = String(accessToken || '').trim()
+  if (!token) return
+  try {
+    const { loadServers, saveServers, ensureLifeOsMcpFleet } = await import('$lib/mcp.js')
+    const { servers, added, updated } = ensureLifeOsMcpFleet(loadServers(), token)
+    if (added.length > 0 || updated > 0) saveServers(servers)
+  } catch {
+    /* MCP 配置损坏或 localStorage 不可用时忽略 */
+  }
+}
+
 /** app 启动时调用:恢复共享登录态、订阅变更、拉一次云端 */
 export async function initCloud() {
   if (!browser || !CLOUD.configured) {
@@ -90,14 +107,28 @@ export async function initCloud() {
   sb.auth.onAuthStateChange((_event, session) => {
     const u = session?.user
     CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null
+    // INITIAL_SESSION / SIGNED_IN / TOKEN_REFRESHED：补齐舰队 + 刷新 JWT
+    void syncLifeOsMcpFleet(session?.access_token)
   })
   const { data } = await sb.auth.getSession()
   const u = data?.session?.user
   CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null
   CLOUD.ready = true
+  await syncLifeOsMcpFleet(data?.session?.access_token)
   if (unsubscribeBus) unsubscribeBus()
   unsubscribeBus = onDataChanged(schedulePush)
   if (CLOUD.user) syncNow()
+}
+
+/** 当前 Life OS access_token（给 MCP Bearer 用）；未登录返回空串。 */
+export async function getCloudAccessToken() {
+  if (!browser || !CLOUD.configured) return ''
+  try {
+    const { data } = await sb.auth.getSession()
+    return data?.session?.access_token || ''
+  } catch {
+    return ''
+  }
 }
 
 function schedulePush() {

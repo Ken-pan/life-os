@@ -4,6 +4,8 @@ import { computeMeta } from '../engine/transactions.js'
 import { deleteTxn, insertTxn, insertTxns, loadTransactions, updateTxn } from './repo.js'
 import { CACHE_SCOPES, peekSessionUserId, readCache, writeCache } from './localCache.js'
 import { TRANSACTIONS_CONTEXT_KEY as KEY } from './context.js'
+import { isDemoMode } from './demoMode'
+import { buildDemoTransactions } from './demoData'
 
 function sortDesc(list) {
   return [...list].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
@@ -29,6 +31,13 @@ export class TransactionsStore {
   }
 
   constructor() {
+    // 本地演示模式：直接注入模拟流水，不触云端（见 demoMode.ts）。
+    if (isDemoMode()) {
+      this.txns = sortDesc(buildDemoTransactions())
+      this.loading = false
+      this.syncReady = true
+      return
+    }
     const cached = readCachedTxns()
     this.txns = cached ?? []
     // 已有缓存时不显示 loading：先渲染缓存，后台静默刷新。
@@ -52,6 +61,11 @@ export class TransactionsStore {
   /** 重新从云端拉取。 */
   async reload() {
     this.error = null
+    if (isDemoMode()) {
+      this.txns = sortDesc(buildDemoTransactions())
+      this.loading = false
+      return
+    }
     const userId = peekSessionUserId()
     // 无缓存时才进入显式 loading 态，避免覆盖已渲染的缓存内容造成闪烁。
     if (!readCache(CACHE_SCOPES.txns, userId ?? '')) this.loading = true

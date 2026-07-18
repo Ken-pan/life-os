@@ -1,0 +1,28 @@
+# Netlify 文件式响应头（CLI --dir 部署也生效，比 netlify.toml 更可靠）。
+# AI 友好：广播机器可读资源 + 全开 CORS，便于浏览器内 AI agent 跨源 fetch。
+/*
+  Link: </manifest.json>; rel="alternate"; type="application/json"; title="machine-readable manifest"
+  Link: </llms.txt>; rel="alternate"; type="text/markdown"; title="AI guide"
+  Link: </sitemap.xml>; rel="sitemap"; type="application/xml"
+  Access-Control-Allow-Origin: *
+
+/manifest.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: no-cache, must-revalidate
+  Access-Control-Allow-Origin: *
+
+/llms.txt
+  Content-Type: text/markdown; charset=utf-8
+  Cache-Control: no-cache, must-revalidate
+  Access-Control-Allow-Origin: *
+
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+  Access-Control-Allow-Origin: *
+
+/shots/*
+  Cache-Control: public, max-age=604800
+  Access-Control-Allow-Origin: *
+
+/index.html
+  Cache-Control: no-cache, must-revalidate

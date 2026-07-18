@@ -1,10 +1,16 @@
 [build]
   command = "npm run build -w finance-os"
   publish = "apps/finance/build"
-  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/finance packages/contracts packages/finance-core packages/finance-enrichment-contract packages/platform-web packages/sync packages/theme"
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/finance packages/contracts packages/finance-core packages/finance-enrichment-contract packages/mcp-server packages/platform-web packages/sync packages/theme"
 
 [build.environment]
   NODE_VERSION = "22"
+
+[functions]
+  # Git 构建相对 repo 根；CLI --filter finance-os 时用 netlify/functions（见 docs/ops/netlify.md）
+  directory = "apps/finance/netlify/functions"
+
+# mcp.mjs / ai-brief.mts 通过 export const config.path 挂载 /api/*，无需 rewrite
 
 [[headers]]
   for = "/sw.js"

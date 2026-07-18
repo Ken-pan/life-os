@@ -1,8 +1,15 @@
 <script>
+  import { onDestroy } from 'svelte'
+  import { SvelteSet } from 'svelte/reactivity'
   import { S } from '$lib/state.svelte.js'
   import { t } from '$lib/i18n/index.js'
   import Icon from '@life-os/platform-web/svelte/icon'
-  import { deleteAttachment, retryAttachmentUpload, getAttachmentUrl } from '$lib/services/attachmentService.js'
+  import {
+    deleteAttachment,
+    retryAttachmentUpload,
+    getAttachmentUrl,
+    getPendingFile,
+  } from '$lib/services/attachmentService.js'
 
   /** @type {{ ownerType: import('$lib/types.js').AttachmentOwnerType, ownerId: string }} */
   let { ownerType, ownerId } = $props()
@@ -11,9 +18,63 @@
     S.attachments.filter(a => a.ownerType === ownerType && a.ownerId === ownerId && !a.deletedAt)
   )
 
-  let selectedImageUrl = $state(null)
-  
+  let selectedImageUrl = $state(/** @type {string | null} */ (null))
+  /** @type {Record<string, string>} */
+  let thumbById = $state({})
+  /** @type {SvelteSet<string>} */
+  const loadingIds = new SvelteSet()
+  /** @type {string[]} */
+  let objectUrls = []
+
+  $effect(() => {
+    const list = attachments
+    let cancelled = false
+    /** @type {Record<string, string>} */
+    const patch = {}
+
+    for (const att of list) {
+      if (att.kind !== 'image') continue
+      if (thumbById[att.id] || loadingIds.has(att.id)) continue
+
+      const pending = getPendingFile(att.id)
+      if (pending) {
+        const u = URL.createObjectURL(pending)
+        objectUrls.push(u)
+        patch[att.id] = u
+        continue
+      }
+
+      if (att.status === 'ready') {
+        loadingIds.add(att.id)
+        void getAttachmentUrl(att).then((url) => {
+          loadingIds.delete(att.id)
+          if (cancelled || !url) return
+          thumbById = { ...thumbById, [att.id]: url }
+        })
+      }
+    }
+
+    if (Object.keys(patch).length) {
+      thumbById = { ...thumbById, ...patch }
+    }
+
+    return () => {
+      cancelled = true
+    }
+  })
+
+  onDestroy(() => {
+    for (const u of objectUrls) URL.revokeObjectURL(u)
+    objectUrls = []
+  })
+
   async function handleImageClick(att) {
+    if (att.kind !== 'image') return
+    const cached = thumbById[att.id]
+    if (cached) {
+      selectedImageUrl = cached
+      return
+    }
     if (att.status !== 'ready') return
     const url = await getAttachmentUrl(att)
     if (url) selectedImageUrl = url
@@ -31,18 +92,24 @@
   <div class="planner-attachments-list">
     <div class="heading">{t('attachments.title', 'Attachments')}</div>
     <div class="grid">
-      {#each attachments as att}
+      {#each attachments as att (att.id)}
         <div class="attachment-item">
-          <!-- Preview/Icon -->
-          <button class="preview" onclick={() => att.kind === 'image' && handleImageClick(att)}>
-            {#if att.kind === 'image'}
+          <button
+            type="button"
+            class="preview"
+            onclick={() => handleImageClick(att)}
+            aria-label={att.name}
+          >
+            {#if att.kind === 'image' && thumbById[att.id]}
+              <img class="thumb" src={thumbById[att.id]} alt="" />
+            {:else if att.kind === 'image'}
               <Icon name="image" size="24" />
             {:else if att.kind === 'link'}
               <Icon name="link" size="24" />
             {:else}
               <Icon name="file" size="24" />
             {/if}
-            
+
             {#if att.status === 'uploading'}
               <div class="status-overlay">
                 <Icon name="loader" class="life-os-spin" />
@@ -53,8 +120,7 @@
               </div>
             {/if}
           </button>
-          
-          <!-- Metadata -->
+
           <div class="meta">
             <div class="name" title={att.name}>{att.name}</div>
             <div class="size">
@@ -67,11 +133,11 @@
               {/if}
             </div>
           </div>
-          
-          <!-- Actions -->
+
           <div class="actions">
             {#if att.status === 'failed'}
               <button
+                type="button"
                 class="icon-btn"
                 onclick={async () => {
                   try {
@@ -86,14 +152,24 @@
               </button>
             {/if}
             {#if att.status === 'ready'}
-              <button class="icon-btn" onclick={async () => {
-                const url = await getAttachmentUrl(att);
-                if (url) window.open(url, '_blank');
-              }} title={t('attachments.open', 'Open')}>
+              <button
+                type="button"
+                class="icon-btn"
+                onclick={async () => {
+                  const url = await getAttachmentUrl(att)
+                  if (url) window.open(url, '_blank')
+                }}
+                title={t('attachments.open', 'Open')}
+              >
                 <Icon name="external-link" size="16" />
               </button>
             {/if}
-            <button class="icon-btn danger" onclick={() => deleteAttachment(att.id)} title={t('attachments.delete', 'Delete')}>
+            <button
+              type="button"
+              class="icon-btn danger"
+              onclick={() => deleteAttachment(att.id)}
+              title={t('attachments.delete', 'Delete')}
+            >
               <Icon name="trash-2" size="16" />
             </button>
           </div>
@@ -105,8 +181,13 @@
 
 {#if selectedImageUrl}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="lightbox" role="presentation" onclick={() => selectedImageUrl = null}>
-    <button class="close-btn" onclick={() => selectedImageUrl = null} aria-label={t('common.close', 'Close')}>
+  <div class="lightbox" role="presentation" onclick={() => (selectedImageUrl = null)}>
+    <button
+      type="button"
+      class="close-btn"
+      onclick={() => (selectedImageUrl = null)}
+      aria-label={t('common.close', 'Close')}
+    >
       <Icon name="x" size="24" />
     </button>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -144,8 +225,8 @@
   }
   .preview {
     position: relative;
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 6px;
     background: var(--surface-1);
     display: flex;
@@ -154,14 +235,23 @@
     color: var(--text-secondary);
     border: none;
     cursor: pointer;
+    overflow: hidden;
+    flex-shrink: 0;
+    padding: 0;
   }
   .preview:hover {
     background: var(--surface-3);
   }
+  .thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
   .status-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -213,12 +303,12 @@
     background: var(--danger-surface);
     color: var(--danger-color);
   }
-  
+
   .lightbox {
     position: fixed;
     inset: 0;
     z-index: 10000;
-    background: rgba(0,0,0,0.9);
+    background: rgba(0, 0, 0, 0.9);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -229,7 +319,6 @@
     max-height: 100%;
     object-fit: contain;
     border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   }
   .close-btn {
     position: absolute;
@@ -238,7 +327,7 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     color: white;
     border: none;
     cursor: pointer;
@@ -247,7 +336,6 @@
     justify-content: center;
   }
   .close-btn:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
   }
-  /* 加载自旋走 @life-os/theme 的 .life-os-spin */
 </style>

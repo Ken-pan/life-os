@@ -218,6 +218,13 @@ export default {
     briefPreviewUnavailable: 'Notifications unavailable here (Mac app only).',
     mcp: 'MCP tools',
     mcpDesc: 'Connect external MCP servers (HTTP): add a URL and its tools show up in chat automatically — one hookup, a batch of new capabilities. Config stays on this device, not synced.',
+    mcpLifeOsHint:
+      'On sign-in, Home / Planner / Finance / Fitness MCP are added automatically (current JWT). Use the button to refresh tools. All four /api/mcp endpoints are live.',
+    mcpFleetAdd: 'Refresh Life OS MCP fleet',
+    mcpFleetAdding: 'Adding Life OS MCP…',
+    mcpFleetAdded: 'Added {names}; {n} tools total. Use Test per server.',
+    mcpFleetUpToDate: 'All four Life OS servers already listed; refreshed token. {n} tools.',
+    mcpNeedLogin: 'Sign in to Life OS cloud sync first — that session becomes the MCP Bearer token.',
     mcpToolCount: '{n} tools',
     mcpName: 'Name',
     mcpNamePlaceholder: 'Name (e.g. GitHub)',

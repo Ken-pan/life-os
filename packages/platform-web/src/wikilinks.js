@@ -61,3 +61,39 @@ export function knowledgeNoteUrl(target, origin) {
   const base = String(origin || '').replace(/\/$/, '')
   return `${base}/library?title=${encodeURIComponent(String(target ?? '').trim())}`
 }
+
+/** 原生 KnowledgeOS（Tauri）自定义 URL scheme；需安装/重建壳后系统才会登记。 */
+export const KNOWLEDGE_NATIVE_SCHEME = 'knowledgeos'
+
+/**
+ * 原生深链：`knowledgeos://open?title=<编码目标>`。
+ * 与 web `/library?title=` 语义对齐；壳内解析后 `goto` 同一路由。
+ * @param {string} target 笔记标题
+ * @returns {string}
+ */
+export function knowledgeNativeNoteUrl(target) {
+  return `${KNOWLEDGE_NATIVE_SCHEME}://open?title=${encodeURIComponent(String(target ?? '').trim())}`
+}
+
+/**
+ * 把 `knowledgeos://…` 深链转成 Knowledge 前端路径（`/library?…`）。
+ * 无法识别时返回 null。
+ * @param {string} raw
+ * @returns {string | null}
+ */
+export function knowledgePathFromNativeUrl(raw) {
+  let u
+  try {
+    u = new URL(String(raw || ''))
+  } catch {
+    return null
+  }
+  if (u.protocol !== `${KNOWLEDGE_NATIVE_SCHEME}:`) return null
+  const title = u.searchParams.get('title')
+  if (title) return `/library?title=${encodeURIComponent(title)}`
+  const note = u.searchParams.get('note')
+  if (note) return `/library?note=${encodeURIComponent(note)}`
+  const host = (u.hostname || '').toLowerCase()
+  if (host === 'library' || host === 'open') return '/library'
+  return '/library'
+}

@@ -36,25 +36,23 @@
 
 | ID              | 主题                                | ROI | 桶      | 投入   | Agent                    | 验收                                     | Hub   |
 | --------------- | ----------------------------------- | --- | ------- | ------ | ------------------------ | ---------------------------------------- | ----- |
-| **FINC.PURCHASE.6.a**  | **支出审核 closure QA**（Confirm/Reject/Undo） | 🔥  | Product | 0.2d（仅 owner） | **Ken 登录态** | anon revoke ✅ · Review 过滤拆分 ✅ · **agent 侧 closure 护栏 ✅**（stale/timeout 反馈修复 + Confirm→Undo 边界 10/10 · 单测 **127**）；**剩纯 owner gate**：真机 Confirm→Undo · 双 JWT RLS 拒绝 · 视觉基线 | §Now |
-| **FINC.PURCHASE.6b** | 退款闭环：`returnInfo` · 关联负向 txn · 处理状态 | ◆ | Product | 1–2d | Codex | **关联退款交易展示 ✅**（`refundLinks` 引擎 8/8）· **用户备注 + 处理状态(已处理) ✅**（`purchase_notes` 表 + get/set RPC · `purchaseNoteClient` 10/10）；**剩 owner gate**：migration 部署 + 真机渲染 | — |
-| ~~**FINC.SYNC.1b**~~ | ~~扩展 popup last sync + 重试~~ ✅ 已发货 2026-07-13 | ◆ | Growth | — | Codex | popup timestamp + 失败原因 + retry；`extensionSyncHealth.test.js` 18/18 | ✅ |
-| **FINC.GROWTH.4**    | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | Codex                    | pending 与 UI 一致                       | —     |
+| ~~**FINC.MCP.1**~~  | ~~Finance MCP~~ ✅ 2026-07-18 | — | — | — | — | `/api/mcp` month_summary · liquid_cash | ✅ |
+| ~~**FINC.GROWTH.4**~~    | ~~Portal 角标~~ ✅ | — | — | — | — | pending + 未完成账单任务 | ✅ |
+| ~~**FINC.PURCHASE.6.a**~~  | ~~支出审核 closure QA~~ ✅ | — | — | — | — | owner 签收 | ✅ |
+| ~~**FINC.PURCHASE.6b**~~ | ~~退款闭环 / 备注 / 已处理~~ ✅ | — | — | — | — | refundLinks · purchase_notes | ✅ |
 | **FINC.IMPORT.5**    | History CSV 最小导入                | ○   | Product | 3–5d   | Codex                    | `/review/import` 可上传                  | —     |
 
-### 复利视角 · 接下来 ROI 排序（2026-07-17）
+### 复利视角 · 接下来 ROI 排序（2026-07-18）
 
-> 透镜：[`../COMPOUND.md`](../COMPOUND.md)（使用 × 开发 × 决策）。Finance 在框架里是**使用侧「信任数字」曲线的起点**，也是 finance 跨 OS 消费（MCP「查结余/本月支出」）的**源头可信度**。
+> 透镜：[`../COMPOUND.md`](../COMPOUND.md)。Finance 信任审核已闭环；下一刀是**跨站消费**（MCP）与 Portal **信任数字一致**（角标）。
 
 | 序 | 事项 | 复利依据 | 归属 |
 | -- | ---- | -------- | ---- |
-| **1** | **FINC.PURCHASE.6.a owner 真机 closure**（Confirm→Undo · 双 JWT · 视觉） | 使用复利最高：解锁 finance 作为可信跨 OS 源头。**agent 增量已封顶**（逻辑+护栏落地），剩下**只有 Ken 能做**的 0.2d 真机 gate | **Ken** |
-| ~~**2**~~ | ~~**PLAT.MCP.0** 抽共享 MCP 鉴权~~ ✅ 已落地（2026-07-17）：`@life-os/mcp-server/auth` + `createMcpHandler` 声明式 `auth:true`；Home/Planner 样板消除、行为逐字不变。Finance/Fitness MCP 现近零成本 | 跨 app（共享包） |
-| **3** | **FINC.PURCHASE.6b** 退款闭环 | 使用复利：让「退货/退款后怎么处理」在账本闭环；纯 finance 域，**agent 可推进的最高 ROI finance 工作** | Codex |
-| **4** | **FINC.GROWTH.4** Portal 角标一致 | 使用复利：Portal 是每日放大器，角标一致强化「信任数字一致」信号；依赖 Planner↔Portal 接线 | Codex |
-| 后移 | FINC.IMPORT.5（加表面积、日用触点弱）· FINC.PURCHASE.6c（review 负担已降 71%，边际递减） | 线性/边际递减 | — |
+| **1** | **FINC.MCP.1** 本月汇总 + 流动现金 | 使用+开发：第三 MCP 消费者；鉴权已抽 | Codex |
+| **2** | **FINC.GROWTH.4** Portal 角标一致 | 使用：Portal 每日放大器 | Codex |
+| 后移 | FINC.IMPORT.5 · FINC.PURCHASE.6c | 线性/边际递减 | — |
 
-**一句话：** ROI 最高的 6.a 已只剩 **Ken 的真机 gate**（agent 做不了）；**6b 退款闭环 agent 侧已收口**（含用户备注/处理状态）；**PLAT.MCP.0 已落地**（共享 MCP 鉴权抽出，Finance MCP 现近零成本）——finance 若接 MCP「查结余/本月支出」只需业务工具 + `auth:true`。
+**一句话：** 6.a/6b ✅；**MCP.1** 让 AIOS 经 JWT 查结余/支出；**GROWTH.4** 让角标跟「任务做完」对齐。
 
 ### FINC.PURCHASE.6 — 支出审核（分阶段）
 

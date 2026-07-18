@@ -15,7 +15,7 @@
       toast(t('attachments.error.noOwner', 'Please save first before uploading attachments'), 'error')
       return
     }
-    
+
     for (const file of Array.from(files)) {
       try {
         await uploadAttachment(ownerType, ownerId, file, 'upload')
@@ -57,8 +57,8 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div 
-  class="planner-attachment-uploader" 
+<div
+  class="planner-attachment-uploader"
   class:dragging={isDragging}
   ondragover={onDragOver}
   ondragleave={onDragLeave}
@@ -68,13 +68,14 @@
     <Icon name="upload" size="16" />
     <span>{t('attachments.add', 'Add files')}</span>
   </button>
-  
-  <input 
-    type="file" 
-    bind:this={fileInput} 
-    onchange={onFileChange} 
-    multiple 
-    style="display: none" 
+
+  <input
+    type="file"
+    accept="image/*,application/pdf,text/plain,.md,.csv,.json"
+    bind:this={fileInput}
+    onchange={onFileChange}
+    multiple
+    style="display: none"
   />
 </div>
 

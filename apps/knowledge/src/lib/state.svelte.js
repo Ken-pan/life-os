@@ -14,6 +14,8 @@ import {
   deleteItemFile,
   watchVaultChanges,
 } from '$lib/vault.js'
+import { shouldSeedDemo } from '$lib/demoMode.js'
+import { buildDemoItems } from '$lib/demoData.js'
 
 /**
  * KnowledgeOS 存储双后端：
@@ -40,8 +42,15 @@ const persistence = createSettingsPersistence({
       : { settings: state.settings, items: state.items },
 })
 
+const loaded = persistence.load()
+// 本地演示模式：仅 localhost 网页（非 Tauri/Vault）且库为空时，灌入 demo 笔记，
+// 全面点亮各页；真实数据（localStorage 已存）永不覆盖。shouldSeedDemo 内含 !isTauri 门。
+if (browser && (loaded.items?.length ?? 0) === 0 && shouldSeedDemo()) {
+  loaded.items = buildDemoItems()
+}
+
 export const S = $state({
-  ...persistence.load(),
+  ...loaded,
   backend: 'local', // 'local' | 'vault'
   vaultReady: false,
   vaultError: '',

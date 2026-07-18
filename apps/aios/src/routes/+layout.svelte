@@ -48,7 +48,12 @@
     refreshGateway()
     seedDefaultMemories()
     backfillVectors()
-    initCloud() // 云同步:恢复登录态并汇合云端数据(未配置时静默跳过)
+    // 云同步恢复后：自动写入 Life OS MCP 舰队，再发现工具
+    initCloud().then(() =>
+      import('$lib/mcp.js')
+        .then((m) => m.refreshMcpTools())
+        .catch(() => {}),
+    )
     // 记忆 dreaming:启动稳定后空闲整理(内部限 24h 一次)
     const dreamTimer = setTimeout(() => dreamMemories(), 30000)
     const cleanupTheme = bindAppThemeSystemChange()
@@ -57,14 +62,12 @@
     const cleanupVisibility = bindVisibilitySync(
       () => {
         syncNow()
-        maybeSendDailyBrief() // 追让:当天首次切回时补送今日简报
+        maybeSendDailyBrief() // 追赶:当天首次切回时补送今日简报
       },
       { when: () => !!CLOUD.user },
     )
     // 早晨今日简报:运行时轮询 + 挂载即查(原生壳且开启才实际发通知)
     startDailyBriefScheduler()
-    // 外部 MCP server 工具发现(配置了才有;失败静默,不阻塞启动)
-    import('$lib/mcp.js').then((m) => m.refreshMcpTools()).catch(() => {})
     return () => {
       clearTimeout(dreamTimer)
       cleanupTheme()

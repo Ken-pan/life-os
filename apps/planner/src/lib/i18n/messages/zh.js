@@ -459,6 +459,9 @@ export default {
     paperLinkCopyFailed: '无法复制 PaperOS 页面引用',
     noteLinks: '引用的知识笔记',
     openInKnowledge: '在 KnowledgeOS 打开「{title}」',
+    openInKnowledgeNative: '在原生 KnowledgeOS 打开「{title}」（需已安装）',
+    openInKnowledgeWeb: '在网页 KnowledgeOS 打开「{title}」',
+    knowledgeWeb: '网页',
   },
   recurrence: {
     none: '不重复',

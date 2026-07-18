@@ -1,0 +1,880 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-18T17:07:19.126Z",
+  "git": {
+    "sha": "69243b01b",
+    "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+    "branch": "master"
+  },
+  "baselineGit": "69243b01b",
+  "sharedImpact": {
+    "changed": false,
+    "packages": []
+  },
+  "site": "https://kenos-uiux-review.netlify.app",
+  "imageUrlPattern": "shots/{app}-{theme}-{viewport}.jpg",
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "viewports": [
+    "desktop",
+    "mobile"
+  ],
+  "count": 8,
+  "apps": [
+    {
+      "id": "planner",
+      "variants": {
+        "light-desktop": {
+          "file": "shots/planner-light-desktop.jpg",
+          "generatedAt": "2026-07-18T17:01:18.779Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-desktop": {
+          "file": "shots/planner-dark-desktop.jpg",
+          "generatedAt": "2026-07-18T17:02:56.889Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "light-mobile": {
+          "file": "shots/planner-light-mobile.jpg",
+          "generatedAt": "2026-07-18T17:04:31.266Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-mobile": {
+          "file": "shots/planner-dark-mobile.jpg",
+          "generatedAt": "2026-07-18T17:06:00.620Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        }
+      },
+      "name": "PLANNER.OS",
+      "description": "阳光感任务清单 · 轻松规划每一天",
+      "screens": 7,
+      "pages": [
+        {
+          "path": "/",
+          "title": "今日"
+        },
+        {
+          "path": "/calendar",
+          "title": "日历"
+        },
+        {
+          "path": "/upcoming",
+          "title": "接下来"
+        },
+        {
+          "path": "/projects",
+          "title": "项目"
+        },
+        {
+          "path": "/insights",
+          "title": "洞察"
+        },
+        {
+          "path": "/completed",
+          "title": "已完成"
+        },
+        {
+          "path": "/triage",
+          "title": "整理收集箱"
+        }
+      ],
+      "git": {
+        "sha": "69243b01b",
+        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "branch": "master"
+      },
+      "metrics": {
+        "styleDebt": {
+          "total": 66,
+          "byRule": {
+            "raw-motion": 3,
+            "raw-hex": 36,
+            "raw-font-size": 22,
+            "reserved-ds-class": 5
+          },
+          "topRule": "raw-hex",
+          "triage": "硬编码色值 → 收敛到 Design Token"
+        },
+        "sharedAdoption": {
+          "pct": 80,
+          "shared": 67,
+          "local": 17
+        },
+        "codeImpact": {
+          "since": "64f531c34",
+          "files": 1,
+          "areas": []
+        },
+        "a11y": {
+          "checked": 253,
+          "pass": 253,
+          "issues": {
+            "noAlt": 0,
+            "noName": 0,
+            "noLabel": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "finance",
+      "variants": {
+        "light-desktop": {
+          "file": "shots/finance-light-desktop.jpg",
+          "generatedAt": "2026-07-18T17:01:27.765Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-desktop": {
+          "file": "shots/finance-dark-desktop.jpg",
+          "generatedAt": "2026-07-18T17:03:06.182Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "light-mobile": {
+          "file": "shots/finance-light-mobile.jpg",
+          "generatedAt": "2026-07-18T17:04:39.973Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-mobile": {
+          "file": "shots/finance-dark-mobile.jpg",
+          "generatedAt": "2026-07-18T17:06:09.337Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        }
+      },
+      "name": "FINANCE.OS",
+      "description": "个人财务驾驶舱 · 现金流、资产与长期规划",
+      "screens": 7,
+      "pages": [
+        {
+          "path": "/home/today",
+          "title": "概览"
+        },
+        {
+          "path": "/accounts",
+          "title": "账户"
+        },
+        {
+          "path": "/stocks",
+          "title": "持仓"
+        },
+        {
+          "path": "/forecast/scenarios",
+          "title": "预测"
+        },
+        {
+          "path": "/history/insights",
+          "title": "流水洞察"
+        },
+        {
+          "path": "/review/queue",
+          "title": "审查队列"
+        },
+        {
+          "path": "/decision/log",
+          "title": "决策日志"
+        }
+      ],
+      "git": {
+        "sha": "69243b01b",
+        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "branch": "master"
+      },
+      "metrics": {
+        "styleDebt": {
+          "total": 22,
+          "byRule": {
+            "raw-hex": 22
+          },
+          "topRule": "raw-hex",
+          "triage": "硬编码色值 → 收敛到 Design Token"
+        },
+        "sharedAdoption": {
+          "pct": 27,
+          "shared": 42,
+          "local": 112
+        },
+        "a11y": {
+          "checked": 349,
+          "pass": 345,
+          "issues": {
+            "noAlt": 0,
+            "noName": 0,
+            "noLabel": 4
+          }
+        },
+        "codeImpact": {
+          "since": "64f531c34",
+          "files": 0,
+          "areas": []
+        }
+      }
+    },
+    {
+      "id": "fitness",
+      "variants": {
+        "light-desktop": {
+          "file": "shots/fitness-light-desktop.jpg",
+          "generatedAt": "2026-07-18T17:01:37.204Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-desktop": {
+          "file": "shots/fitness-dark-desktop.jpg",
+          "generatedAt": "2026-07-18T17:03:15.566Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "light-mobile": {
+          "file": "shots/fitness-light-mobile.jpg",
+          "generatedAt": "2026-07-18T17:04:49.070Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-mobile": {
+          "file": "shots/fitness-dark-mobile.jpg",
+          "generatedAt": "2026-07-18T17:06:18.429Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        }
+      },
+      "name": "FITNESS.OS",
+      "description": "胸 · 背 · 腿 · 臂 四日循环保练 · 手臂围优先",
+      "screens": 7,
+      "pages": [
+        {
+          "path": "/",
+          "title": "今日训练"
+        },
+        {
+          "path": "/program",
+          "title": "训练计划"
+        },
+        {
+          "path": "/day/chest",
+          "title": "训练日详情"
+        },
+        {
+          "path": "/day/chest/focus",
+          "title": "专注计时"
+        },
+        {
+          "path": "/discover/stats",
+          "title": "统计分析"
+        },
+        {
+          "path": "/discover/records",
+          "title": "训练记录"
+        },
+        {
+          "path": "/library",
+          "title": "动作库"
+        }
+      ],
+      "git": {
+        "sha": "69243b01b",
+        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "branch": "master"
+      },
+      "metrics": {
+        "styleDebt": {
+          "total": 59,
+          "byRule": {
+            "raw-hex": 31,
+            "raw-font-size": 25,
+            "raw-motion": 3
+          },
+          "topRule": "raw-hex",
+          "triage": "硬编码色值 → 收敛到 Design Token"
+        },
+        "sharedAdoption": {
+          "pct": 98,
+          "shared": 61,
+          "local": 1
+        },
+        "codeImpact": {
+          "since": "64f531c34",
+          "files": 0,
+          "areas": []
+        },
+        "a11y": {
+          "checked": 176,
+          "pass": 176,
+          "issues": {
+            "noAlt": 0,
+            "noName": 0,
+            "noLabel": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "music",
+      "variants": {
+        "light-desktop": {
+          "file": "shots/music-light-desktop.jpg",
+          "generatedAt": "2026-07-18T17:01:47.675Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-desktop": {
+          "file": "shots/music-dark-desktop.jpg",
+          "generatedAt": "2026-07-18T17:03:24.925Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "light-mobile": {
+          "file": "shots/music-light-mobile.jpg",
+          "generatedAt": "2026-07-18T17:04:58.946Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-mobile": {
+          "file": "shots/music-dark-mobile.jpg",
+          "generatedAt": "2026-07-18T17:06:27.936Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        }
+      },
+      "name": "MUSIC.OS",
+      "description": "本地音乐，留在心里 · 离线播放与歌单",
+      "screens": 7,
+      "pages": [
+        {
+          "path": "/",
+          "title": "首页"
+        },
+        {
+          "path": "/library",
+          "title": "资料库"
+        },
+        {
+          "path": "/browse",
+          "title": "浏览 · 专辑"
+        },
+        {
+          "path": "/browse",
+          "title": "浏览 · 艺术家"
+        },
+        {
+          "path": "/search",
+          "title": "搜索"
+        },
+        {
+          "path": "/playlists",
+          "title": "歌单"
+        },
+        {
+          "path": "/liked",
+          "title": "喜欢"
+        }
+      ],
+      "git": {
+        "sha": "69243b01b",
+        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "branch": "master"
+      },
+      "metrics": {
+        "styleDebt": {
+          "total": 70,
+          "byRule": {
+            "raw-hex": 53,
+            "raw-font-size": 14,
+            "raw-motion": 3
+          },
+          "topRule": "raw-hex",
+          "triage": "硬编码色值 → 收敛到 Design Token"
+        },
+        "sharedAdoption": {
+          "pct": 69,
+          "shared": 54,
+          "local": 24
+        },
+        "codeImpact": {
+          "since": "64f531c34",
+          "files": 0,
+          "areas": []
+        },
+        "a11y": {
+          "checked": 389,
+          "pass": 382,
+          "issues": {
+            "noAlt": 0,
+            "noName": 7,
+            "noLabel": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "home",
+      "variants": {
+        "light-desktop": {
+          "file": "shots/home-light-desktop.jpg",
+          "generatedAt": "2026-07-18T17:01:56.221Z",
+          "screens": 6,
+          "capture": {
+            "ok": 6,
+            "total": 6
+          }
+        },
+        "dark-desktop": {
+          "file": "shots/home-dark-desktop.jpg",
+          "generatedAt": "2026-07-18T17:03:33.508Z",
+          "screens": 6,
+          "capture": {
+            "ok": 6,
+            "total": 6
+          }
+        },
+        "light-mobile": {
+          "file": "shots/home-light-mobile.jpg",
+          "generatedAt": "2026-07-18T17:05:03.979Z",
+          "screens": 4,
+          "capture": {
+            "ok": 4,
+            "total": 4
+          }
+        },
+        "dark-mobile": {
+          "file": "shots/home-dark-mobile.jpg",
+          "generatedAt": "2026-07-18T17:06:33.012Z",
+          "screens": 4,
+          "capture": {
+            "ok": 4,
+            "total": 4
+          }
+        }
+      },
+      "name": "HOME.OS",
+      "description": "居家空间规划 · 平面审计与储藏区管理",
+      "screens": 6,
+      "pages": [
+        {
+          "path": "/plan",
+          "title": "平面图 · 浏览"
+        },
+        {
+          "path": "/plan",
+          "title": "平面图 · 编辑"
+        },
+        {
+          "path": "/storage",
+          "title": "储物 · 空间"
+        },
+        {
+          "path": "/storage",
+          "title": "储物 · 清单"
+        },
+        {
+          "path": "/tidy",
+          "title": "整理建议"
+        },
+        {
+          "path": "/tidy/go",
+          "title": "整理执行"
+        }
+      ],
+      "git": {
+        "sha": "69243b01b",
+        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "branch": "master"
+      },
+      "metrics": {
+        "styleDebt": {
+          "total": 442,
+          "byRule": {
+            "raw-hex": 181,
+            "raw-font-size": 235,
+            "raw-motion": 11,
+            "reserved-ds-class": 15
+          },
+          "topRule": "raw-font-size",
+          "triage": "硬编码字号 → 收敛到 Design Token"
+        },
+        "sharedAdoption": {
+          "pct": 90,
+          "shared": 26,
+          "local": 3
+        },
+        "codeImpact": {
+          "since": "64f531c34",
+          "files": 0,
+          "areas": []
+        },
+        "a11y": {
+          "checked": 179,
+          "pass": 179,
+          "issues": {
+            "noAlt": 0,
+            "noName": 0,
+            "noLabel": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "knowledge",
+      "variants": {
+        "light-desktop": {
+          "file": "shots/knowledge-light-desktop.jpg",
+          "generatedAt": "2026-07-18T17:02:25.138Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-desktop": {
+          "file": "shots/knowledge-dark-desktop.jpg",
+          "generatedAt": "2026-07-18T17:04:02.559Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "light-mobile": {
+          "file": "shots/knowledge-light-mobile.jpg",
+          "generatedAt": "2026-07-18T17:05:32.559Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-mobile": {
+          "file": "shots/knowledge-dark-mobile.jpg",
+          "generatedAt": "2026-07-18T17:07:01.485Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        }
+      },
+      "name": "KNOWLEDGE.OS",
+      "description": "第二大脑 · 收集 / 连接 / 回忆，Life OS 的长期记忆层",
+      "screens": 7,
+      "pages": [
+        {
+          "path": "/",
+          "title": "收集箱"
+        },
+        {
+          "path": "/library?note=k-demo-1",
+          "title": "笔记 · 方法论（双链+反链）"
+        },
+        {
+          "path": "/library?note=k-demo-27",
+          "title": "笔记 · 技术（代码/列表块）"
+        },
+        {
+          "path": "/library?note=k-demo-11",
+          "title": "笔记 · 项目文档"
+        },
+        {
+          "path": "/overview",
+          "title": "仪表盘"
+        },
+        {
+          "path": "/projects",
+          "title": "项目看板"
+        },
+        {
+          "path": "/timeline",
+          "title": "时间线"
+        }
+      ],
+      "git": {
+        "sha": "69243b01b",
+        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "branch": "master"
+      },
+      "metrics": {
+        "styleDebt": {
+          "total": 0,
+          "byRule": {},
+          "topRule": null,
+          "triage": "无已知样式债务"
+        },
+        "sharedAdoption": {
+          "pct": 100,
+          "shared": 24,
+          "local": 0
+        },
+        "codeImpact": {
+          "since": "64f531c34",
+          "files": 0,
+          "areas": []
+        },
+        "a11y": {
+          "checked": 341,
+          "pass": 340,
+          "issues": {
+            "noAlt": 0,
+            "noName": 1,
+            "noLabel": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "health",
+      "variants": {
+        "light-desktop": {
+          "file": "shots/health-light-desktop.jpg",
+          "generatedAt": "2026-07-18T17:02:29.669Z",
+          "screens": 3,
+          "capture": {
+            "ok": 3,
+            "total": 3
+          }
+        },
+        "dark-desktop": {
+          "file": "shots/health-dark-desktop.jpg",
+          "generatedAt": "2026-07-18T17:04:07.063Z",
+          "screens": 3,
+          "capture": {
+            "ok": 3,
+            "total": 3
+          }
+        },
+        "light-mobile": {
+          "file": "shots/health-light-mobile.jpg",
+          "generatedAt": "2026-07-18T17:05:37.028Z",
+          "screens": 3,
+          "capture": {
+            "ok": 3,
+            "total": 3
+          }
+        },
+        "dark-mobile": {
+          "file": "shots/health-dark-mobile.jpg",
+          "generatedAt": "2026-07-18T17:07:05.902Z",
+          "screens": 3,
+          "capture": {
+            "ok": 3,
+            "total": 3
+          }
+        }
+      },
+      "name": "HEALTH.OS",
+      "description": "个人健康与状态调节中枢 · Focus 防沉迷 · 本地优先",
+      "screens": 3,
+      "pages": [
+        {
+          "path": "/?demo=1",
+          "title": "此刻状态"
+        },
+        {
+          "path": "/focus?demo=1",
+          "title": "专注防沉迷"
+        },
+        {
+          "path": "/trends?demo=1",
+          "title": "健康趋势"
+        }
+      ],
+      "git": {
+        "sha": "69243b01b",
+        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "branch": "master"
+      },
+      "metrics": {
+        "styleDebt": {
+          "total": 0,
+          "byRule": {},
+          "topRule": null,
+          "triage": "无已知样式债务"
+        },
+        "sharedAdoption": {
+          "pct": 100,
+          "shared": 10,
+          "local": 0
+        },
+        "codeImpact": {
+          "since": "64f531c34",
+          "files": 0,
+          "areas": []
+        },
+        "a11y": {
+          "checked": 18,
+          "pass": 18,
+          "issues": {
+            "noAlt": 0,
+            "noName": 0,
+            "noLabel": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "aios",
+      "variants": {
+        "light-desktop": {
+          "file": "shots/aios-light-desktop.jpg",
+          "generatedAt": "2026-07-18T17:02:41.588Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-desktop": {
+          "file": "shots/aios-dark-desktop.jpg",
+          "generatedAt": "2026-07-18T17:04:18.865Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "light-mobile": {
+          "file": "shots/aios-light-mobile.jpg",
+          "generatedAt": "2026-07-18T17:05:48.487Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        },
+        "dark-mobile": {
+          "file": "shots/aios-dark-mobile.jpg",
+          "generatedAt": "2026-07-18T17:07:18.862Z",
+          "screens": 7,
+          "capture": {
+            "ok": 7,
+            "total": 7
+          }
+        }
+      },
+      "name": "AI.OS",
+      "description": "本地 AI 对话 · LocalAI 网关驱动的私有 LLM 聊天",
+      "screens": 7,
+      "pages": [
+        {
+          "path": "/",
+          "title": "对话 · 代码调试"
+        },
+        {
+          "path": "/?chat=demo-chat-runes",
+          "title": "对话 · 联网检索+思考"
+        },
+        {
+          "path": "/?chat=demo-chat-image",
+          "title": "对话 · 图片生成"
+        },
+        {
+          "path": "/?chat=demo-chat-clock",
+          "title": "对话 · HTML 产物预览"
+        },
+        {
+          "path": "/?chat=demo-chat-sales",
+          "title": "对话 · 数据分析"
+        },
+        {
+          "path": "/?chat=demo-chat-translate",
+          "title": "对话 · 中英翻译"
+        },
+        {
+          "path": "/history",
+          "title": "历史会话"
+        }
+      ],
+      "git": {
+        "sha": "69243b01b",
+        "subject": "fix(planner): 日历周条星期标签对比度（审查 #34：--t3→--t2）",
+        "branch": "master"
+      },
+      "metrics": {
+        "a11y": {
+          "checked": 264,
+          "pass": 264,
+          "issues": {
+            "noAlt": 0,
+            "noName": 0,
+            "noLabel": 0
+          }
+        },
+        "styleDebt": {
+          "total": 51,
+          "byRule": {
+            "raw-font-size": 21,
+            "reserved-ds-class": 6,
+            "raw-hex": 13,
+            "raw-motion": 11
+          },
+          "topRule": "raw-font-size",
+          "triage": "硬编码字号 → 收敛到 Design Token"
+        },
+        "sharedAdoption": {
+          "pct": 100,
+          "shared": 17,
+          "local": 0
+        },
+        "codeImpact": {
+          "since": "64f531c34",
+          "files": 0,
+          "areas": []
+        }
+      }
+    }
+  ]
+}

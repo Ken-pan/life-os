@@ -92,6 +92,32 @@ now-playing)的真机运行 QA 待导入曲库后人工验收一次。
 
 **边界（已遵守）：** 只抽鉴权/客户端样板，不抽业务工具；不新造无真实用途的 MCP 工具（防表面积爆炸，见 [`COMPOUND.md`](./COMPOUND.md)）。**验收 ✅：** 行为不变（协议本地验 + 现有 gate）· `auth.test.mjs`（jwt 提取 / needLogin / userIdOf / 声明式门 4 支）+ 协议 `mcpHandler.test.mjs` 全绿 · Home/Planner 样板消除。
 
+## PLAT.DEMO.0 — 跨 app 本地演示模式（合同收口）✅（2026-07-18）
+
+**问题：** UI/UX 走查与空库截图需要「打开即有数据」，但不能污染生产。
+
+**合同（八 app 已就位，app-local，不抽共享包——语义分岔：Finance 跟登录态，Planner 跟空库）：**
+
+| 规则 | 要点 |
+| --- | --- |
+| 生产安全 | 非 localhost / 127.0.0.1 / `*.localhost` → **永不**激活 |
+| URL | `?demo=1` 强制开 · `?demo=0` 强制关（写 localStorage） |
+| 默认 | localhost 未登录或空库 → 灌 demo；已有真数据不覆盖 |
+| 消费方 | `npm run qa:uiux-review` / gallery 经 localStorage flag 强制演示 |
+
+**文件：** `apps/{planner,finance,fitness,music,home,aios,knowledge,health}/src/lib/demoMode.*` + 各 `demoData.*`
+**画廊：** `apps/uiux-review-gallery` · `docs/ops/netlify.md` site `kenos-uiux-review`
+**不做：** 抽进 `packages/*`（仅 1 套完全同构 envelope 才提取）；生产远程 feature flag。
+
+## PLAT.USAGE.0b — 用量审计节奏化 ✅（2026-07-18 代码侧）
+
+| 项 | 状态 |
+| --- | --- |
+| `npm run qa:usage-audit` / `--apply` | ✅ 可复跑写 `docs/qa/usage-audit-YYYY-MM.md` |
+| AIOS 云端探针（conversations/memories） | ✅ |
+| Knowledge / Health 本机探针 | ○ 可选（本地优先；脚本注明「本机另查」） |
+| 节奏 | 每月或重大排期前；审计须产生删减/加码决策 |
+
 ## C-P2 P2+ 候选
 
 见 [`BACKLOG.md`](./BACKLOG.md) §Platform 提取候选。

@@ -1,28 +1,35 @@
 ---
 title: Agent Workstreams
 owner: kenpan
-last_verified: 2026-07-17-handoff
+last_verified: 2026-07-18-phase6
 doc_role: execution-routing
 priority_model: 2026-07-12-single-branch
 ---
 
 # Agent 执行分线（单分支）
 
-> **Hub：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) · **复利：** [`COMPOUND.md`](./COMPOUND.md) · **用量：** [`USAGE_AUDIT.md`](./USAGE_AUDIT.md) / [`../qa/usage-audit-2026-07.md`](../qa/usage-audit-2026-07.md)  
-> **暂停交接（含下一任 Prompt）：** [`../qa/agent-handoff-2026-07-17-roi.md`](../qa/agent-handoff-2026-07-17-roi.md)
+> **Hub：** [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) · **ROI：** [`POTENTIAL.md`](./POTENTIAL.md)
 
 ## 当前焦点（§Now）
 
-| Hub ID | 主题 | 状态 |
-| --- | --- | --- |
-| **FINC.PURCHASE.6.a** | closure QA | 🟡 代码侧已尽；剩 owner 真机 Confirm→Undo + 双 JWT + 视觉 |
+**Agent 主航道暂空。** 工程复利刀（MCP / 深链 / 部署 / 壳重装）已收完。
 
-**本轮已收割：** `PLAT.CI.0`（✅ 补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` · `HOME.MCP.13` · `AIOS.STABLE.26` · `KNOW.VAULT.0` · `PLAT.USAGE.0` 首报 · FINC Review 过滤 · CI concurrency · Home group-merge/露总数（并行）。
+下一刀只有：
 
-## Next（CI 全绿后）
+1. Ken 打开 AIOS / Portal **验收**（30s）
+2. Ken 真机 gate（SCHED / CAPTURE / HLT-5）
+3. Ken 装 HA → 再开 `HOME.DEVICE.12` spike
+4. （可选）`object_ref` 稳定契约
 
-`HOME.RECOG.1r`（区域补扫/观感；group-merge 已做）· `PLNR.UIUX.0` · `KNOW.XREF.5` · `PLAT.USAGE.0b`
+## 本轮已落地（Phase 6）
 
-## User Gate
+- `npm run app:aios` → `/Applications/AIOS.app`（登录自动 MCP 舰队）
+- Portal 角标生产部署（`portal.kenos.space`）
+- DEVICE.12 预检：本机无 HA
 
-`PLNR.SCHED.10b.ios` · `PLNR.CAPTURE.0` · `HLT-5` · `HOME.RECOG.refine` · Knowledge 原生 rebuild 验 watcher · AIOS 配 Home MCP URL
+## User Gate / Config
+
+1. ✅ MCP 舰队 4/4 · KnowledgeOS.app · AIOS.app · Portal 角标
+2. 打开 AIOS 试「本月结余」「今天练什么」「登山包在哪」
+3. 真机：`PLNR.SCHED.10b.ios` · `CAPTURE.0` · `HLT-5`
+4. （可选）装 Home Assistant → DEVICE.12

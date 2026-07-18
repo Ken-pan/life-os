@@ -1,0 +1,50 @@
+# UI/UX 审核画廊自动更新（行业惯例：像 Chromatic/Percy 一样在 CI 里重生成截图并发布）。
+# 触发：push 到 master 且触及 app/包/审核脚本时 · 每晚定时 · 手动。
+# 需要仓库 Secret：NETLIFY_AUTH_TOKEN（Netlify → User settings → Applications → Personal access token）。
+name: UIUX Gallery
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'scripts/qa/uiux-review*.mjs'
+      - 'apps/uiux-review-gallery/**'
+      - '.github/workflows/uiux-gallery.yml'
+  schedule:
+    - cron: '0 18 * * *' # 每天一次，保持新鲜
+  workflow_dispatch: {}
+
+concurrency:
+  group: uiux-gallery
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    # 与 design-catalog 一致：用官方 Playwright 镜像（chromium + 系统依赖已装）。
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+      options: --ipc=host
+    steps:
+      # fetch-depth: 0 → 完整历史，codeImpact 才能 diff 到上一代生成的 sha。
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: npm ci
+      # 构建各 app（preview 服务的是构建产物），再生成 4 变体（浅/深 × 桌面/移动）。
+      - run: npm run build
+      - run: npm run qa:uiux-gallery:all
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          if [ -z "${NETLIFY_AUTH_TOKEN}" ]; then
+            echo "::warning::缺少 NETLIFY_AUTH_TOKEN secret，跳过部署（仅生成，未发布）。"
+            exit 0
+          fi
+          npx netlify deploy --prod --no-build \
+            --site=cadccd64-e40a-439d-865d-5be5b3741ff3 \
+            --dir=apps/uiux-review-gallery/public \
+            --message "auto: ${GITHUB_SHA::9} @ $(date -u +%Y-%m-%dT%H:%MZ)"

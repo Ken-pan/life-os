@@ -1,0 +1,45 @@
+# 纯静态站点：发布 public/（index.html + manifest.json + shots/*.jpg）。
+# 内容由仓库根的 `npm run qa:uiux-gallery` 生成并提交；本站无需真正构建。
+# 路径均相对仓库根（与其它 app 一致，见 apps/planner/netlify.toml 注释）。
+[build]
+  command = "npm run build -w @life-os/uiux-review-gallery"
+  publish = "apps/uiux-review-gallery/public"
+  # 仅当画廊自身内容变化时才重建。
+  ignore = "bash ./scripts/netlify-ignore-if-changed.sh apps/uiux-review-gallery"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# AI 友好：所有页面广播机器可读资源（HTTP Link 头，agent 不解析 HTML 也能发现），
+# 并允许跨源 fetch（浏览器内的 AI agent 可直接取 manifest/llms/图片）。
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Link = "</manifest.json>; rel=\"alternate\"; type=\"application/json\"; title=\"machine-readable manifest\", </llms.txt>; rel=\"alternate\"; type=\"text/markdown\"; title=\"AI guide\", </sitemap.xml>; rel=\"sitemap\"; type=\"application/xml\""
+    Access-Control-Allow-Origin = "*"
+
+# 图片可长缓存；HTML / 机器可读入口不缓存，保证发布后即时刷新。
+[[headers]]
+  for = "/shots/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+    Content-Type = "application/json; charset=utf-8"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/llms.txt"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+    Content-Type = "text/markdown; charset=utf-8"
+    Access-Control-Allow-Origin = "*"

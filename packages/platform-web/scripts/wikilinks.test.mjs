@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 
-import { extractWikilinks, parseWikilinks, knowledgeNoteUrl } from '../src/wikilinks.js'
+import {
+  extractWikilinks,
+  parseWikilinks,
+  knowledgeNoteUrl,
+  knowledgeNativeNoteUrl,
+  knowledgePathFromNativeUrl,
+  KNOWLEDGE_NATIVE_SCHEME,
+} from '../src/wikilinks.js'
 
 // extractWikilinks：去 |显示名、去 #锚点、去重、保序
 assert.deepEqual(extractWikilinks('见 [[目标A|显示]] 和 [[目标B#锚]] 再 [[目标A]]'), ['目标A', '目标B'])
@@ -23,5 +30,18 @@ assert.equal(
   'https://knowledge.kenos.space/library?title=%E5%BA%8A%E5%9E%AB%E7%A0%94%E7%A9%B6',
 )
 assert.equal(knowledgeNoteUrl('A B', 'https://k.example/'), 'https://k.example/library?title=A%20B')
+
+assert.equal(KNOWLEDGE_NATIVE_SCHEME, 'knowledgeos')
+assert.equal(
+  knowledgeNativeNoteUrl('床垫研究'),
+  'knowledgeos://open?title=%E5%BA%8A%E5%9E%AB%E7%A0%94%E7%A9%B6',
+)
+assert.equal(
+  knowledgePathFromNativeUrl('knowledgeos://open?title=%E5%BA%8A%E5%9E%AB%E7%A0%94%E7%A9%B6'),
+  '/library?title=%E5%BA%8A%E5%9E%AB%E7%A0%94%E7%A9%B6',
+)
+assert.equal(knowledgePathFromNativeUrl('knowledgeos://open?note=abc'), '/library?note=abc')
+assert.equal(knowledgePathFromNativeUrl('knowledgeos://library'), '/library')
+assert.equal(knowledgePathFromNativeUrl('https://evil.example/'), null)
 
 console.log('wikilinks.test.mjs: ok')

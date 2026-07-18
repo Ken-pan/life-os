@@ -16,6 +16,7 @@
     hydratePortalFromCore,
     portalPreferences,
     redirectToDefaultApp,
+    refreshPendingBadge,
     shouldAutoRedirect,
   } from '$lib/portalPreferences.svelte.js'
   import { initPortalTheme } from '$lib/theme.svelte.js'
@@ -89,12 +90,23 @@
     const cleanupRecent = initRecentApp()
     const cleanupSw = registerServiceWorker()
     void requestPersistentStorage()
+
+    /** FINC.GROWTH.4：从 Planner 回来时刷新角标 */
+    const onVis = () => {
+      const uid = auth.session?.user?.id
+      if (document.visibilityState === 'visible' && uid) {
+        void refreshPendingBadge(uid)
+      }
+    }
+    document.addEventListener('visibilitychange', onVis)
+
     return () => {
       cleanupAuth()
       cleanupViewport()
       cleanupTheme()
       cleanupRecent()
       cleanupSw()
+      document.removeEventListener('visibilitychange', onVis)
     }
   })
 </script>

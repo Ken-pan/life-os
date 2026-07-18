@@ -188,8 +188,8 @@
             const file = item.getAsFile()
             if (file) {
               e.preventDefault()
-              import('$lib/services/attachmentService.js').then(({ uploadAttachment }) => {
-                uploadAttachment('project', project.id, file, 'paste').catch((err) => {
+              import('$lib/services/attachmentService.js').then(({ uploadAttachment, namePastedImageFile }) => {
+                uploadAttachment('project', project.id, namePastedImageFile(file), 'paste').catch((err) => {
                   toast(err.message, 'error')
                 })
               })

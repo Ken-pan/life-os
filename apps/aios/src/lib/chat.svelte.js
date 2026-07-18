@@ -12,6 +12,8 @@ import { recallRelevant, autoExtractMemories, M as MEM } from '$lib/memory.svelt
 import { isNative } from '$lib/native.js'
 import { dataChanged } from '$lib/syncBus.js'
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
+import { shouldSeedDemo } from '$lib/demoMode.js'
+import { buildDemoConversations } from '$lib/demoData.js'
 import {
   MAX_TOOL_ROUNDS,
   PARALLEL_SAFE_TOOLS,
@@ -60,13 +62,26 @@ let recallCache = { key: '', memories: /** @type {string[]} */ ([]) }
  * }} Conversation
  */
 
+// 本地演示对话:仅 localhost 且库为空时按需构造。纯内存,绝不写回 localStorage、
+// 绝不触发 persist()/dataChanged(),因此永不同步到云端、不污染真实历史。
+let seededDemo = false
+function seedOrEmpty() {
+  if (shouldSeedDemo()) {
+    const demo = buildDemoConversations()
+    seededDemo = demo.length > 0
+    return demo
+  }
+  return []
+}
+
 function loadConversations() {
   if (!browser) return []
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
+    if (!raw) return seedOrEmpty()
     const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
+    if (!Array.isArray(parsed)) return seedOrEmpty()
+    if (parsed.length === 0) return seedOrEmpty()
     // 页面刷新可能打断生成:清掉悬挂的 running 状态,并在被打断的尾消息上
     // 标记错误,让现有的「重试」按钮成为恢复入口
     for (const c of parsed) {
@@ -113,13 +128,36 @@ function restoreActive(conversations) {
   }
 }
 
+/**
+ * 仅在 demo 灌库时,允许用 ?chat=<id> 直开指定演示对话(截图工具用来逐一展示各能力面)。
+ * 纯客户端读取、纯内存效果:不落 sessionStorage、不落 localStorage、不同步。
+ * 命中不到(id 非法或非演示库)返回 null,交由 restoreActive / conversations[0] 兜底。
+ */
+function demoChatFromQuery(conversations) {
+  if (!browser || !seededDemo) return null
+  try {
+    const wanted = new URLSearchParams(window.location.search).get('chat')
+    return wanted && conversations.some((c) => c.id === wanted) ? wanted : null
+  } catch {
+    return null
+  }
+}
+
 const initialConversations = loadConversations()
+
+// demo 灌库时,默认打开第一条演示对话(而非新对话欢迎页),让聊天页一进来就有内容;
+// 真实用户 restoreActive 为 null 时仍保持「新对话」欢迎态不变。
+// 优先级:显式 ?chat=(仅 demo,合法才生效)> restoreActive(sessionStorage)> demo 兜底首条。
+const initialActive =
+  demoChatFromQuery(initialConversations) ??
+  restoreActive(initialConversations) ??
+  (seededDemo ? (initialConversations[0]?.id ?? null) : null)
 
 export const C = $state({
   /** @type {Conversation[]} 按 updatedAt 倒序 */
   conversations: initialConversations,
   /** @type {string | null} */
-  activeId: restoreActive(initialConversations),
+  activeId: initialActive,
   streaming: false,
   /** @type {boolean | null} null = 未检查 */
   gatewayOk: null,

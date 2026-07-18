@@ -17,6 +17,7 @@
   import SelectField from './fields/SelectField.svelte'
   import TextField from './fields/TextField.svelte'
   import * as repo from '$lib/repo.js'
+  import { isDemoMode } from '$lib/demoMode'
   import {
     LifeOsTabs as HorizontalTabs,
     LifeOsTabPanel as TabPanel,
@@ -142,6 +143,11 @@
   })
 
   $effect(() => {
+    // 演示模式：决策记录随 FinanceData 一并注入，直接读 store（云端无会话会返回空）。
+    if (isDemoMode()) {
+      records = store.data.decisionRecords ?? []
+      return
+    }
     void repo
       .loadDecisionRecords()
       .then((rows) => {

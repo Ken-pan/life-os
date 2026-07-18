@@ -17,6 +17,8 @@ import {
   recommendEquipMode,
 } from './tools/calculators.js'
 import { t } from './i18n/index.js'
+import { shouldSeedDemo } from './demoMode.js'
+import { buildDemoSeed } from './demoData.js'
 
 /** @typedef {import('@life-os/contracts/appearance').ColorSchemePreference} ColorSchemePreference */
 /** @typedef {import('@life-os/contracts/appearance').ThemePreferenceModel} ThemePreferenceModel */
@@ -185,6 +187,8 @@ function load() {
   try {
     const r = JSON.parse(localStorage.getItem(SKEY) ?? 'null')
     if (r && r.settings) return migrate(r)
+    // localhost 空库 → 灌入演示数据全面点亮核心页面（生产/有数据时不触发）。
+    if (shouldSeedDemo()) return migrate(buildDemoSeed())
   } catch (e) {
     /* corrupted data → fall back to defaults */
   }

@@ -1,70 +1,26 @@
-# 潜力研判（2026-07-17 夜 · STABLE.26 后）
+# 潜力研判（2026-07-18 · Phase 6）
 
-> **状态：当前研判。** 排序真源仍是 [`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)。  
-> **复利：** [`COMPOUND.md`](./COMPOUND.md) · **用量：** [`USAGE_AUDIT.md`](./USAGE_AUDIT.md)  
-> **分卷：** [`apps/`](./apps/README.md)
+> 排序真源：[`../LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md)
 
-## 结论（TL;DR）
+## 结论
 
 ```text
-能力刀已收很多；当前唯一 P0 是 catalog visual 基线缺口：
-
-P0  PLAT.CI.0 — 补五品牌 snapshot PNG（见 handoff）
-P1  FINC.PURCHASE.6.a closure（用户 gate 重）
-P2  HOME.RECOG.1r（区域补扫/观感，纯 owner gate）→ object_ref（待第二真实消费者）
+MCP 舰队日用闭环已齐：生产 4/4 · AIOS.app 已装（登录自动接入）· Portal 角标已部署。
+wikilink：Planner + Finance → KnowledgeOS.app（knowledgeos:// 已登记）。
+Agent 主航道暂空。
 ```
 
-**刚收割：**  
-`PLNR.ATTACH.0` · `HOME.MCP.13` · `AIOS.STABLE.26` · CI SHA 并发 · Home group-merge · **`KNOW.XREF.5` wikilink 小闭环** · **`PLNR.MCP.0` Planner MCP 面**。  
-**暂停交接：** [`../qa/agent-handoff-2026-07-17-roi.md`](../qa/agent-handoff-2026-07-17-roi.md)。
+## 下一刀 ROI（仅剩可选项 / gate）
 
-## 复利权重（摘要）
-
-| 维度 | 权重 | 本轮含义 |
-| --- | --- | --- |
-| 交付完整性 / CI | 最高 | 远程红 = 复利打折 |
-| 日用触点 | 高 | Finance closure、Vault 真机验 |
-| 决策复利 / 用量 | 高 | 已有首报；节奏化见 USAGE.0b |
-| 跨站放大 | 高 | MCP 面已成小舰队（Home `where_is` + Planner 任务 CRUD）→ AIOS 推理内核逐步坐实；下一刀是**抽共享 MCP 鉴权**（2 消费者已够）而非再单造 |
-| Home 认亲窄残余 | 中 | 主航道已通；区域高精度不抢主线 |
-| 新 app / 大同步 | 低 | 假复利 |
-
-## 当前 Top ROI
-
-| 顺序 | 项 | 紧急度 | ROI | 投入 | 为什么现在 |
-| --- | --- | --- | --- | --- | --- |
-| 1 | **PLAT.CI.0** | P0 | 🔥 | <0.5d | 缺五品牌 snapshot PNG（290）；非 cancel |
-| 2 | **FINC.PURCHASE.6.a closure** | P1 | 🔥 | 0.5d | 信任锚点；过滤拆分已做，剩 owner QA |
-| 3 | **HOME.RECOG.1r** | P2 | ◆ | 0.5–1d | 区域高精度 / 摘要签收 |
-| ~~4~~ | ~~**PLNR.UIUX.0**~~ ✅ 已落地（2026-07-17）：三个未覆盖页（`/projects`·`/lists/[id]`·`/projects/[id]`）迁移 PageShell + 3 条 svelte-check warning 清零；e2e 72/72、单测 140、build clean | — | — | 已完成 | — |
-| ~~5~~ | ~~**PLAT.MCP.0** 抽共享 MCP 鉴权~~ ✅ 已落地（2026-07-17）：`@life-os/mcp-server/auth` + `createMcpHandler` 声明式 `auth:true`；Home/Planner 样板消除，行为逐字不变；Finance/Fitness MCP 现近零成本 | — | — | 已完成 | — |
-| 6 | **KNOW.XREF.5** `object_ref` | P2 | ◆◆ | 1–2d | wikilink 小闭环已发；稳定对象引用契约仍未起（北极星，待第二真实消费者再上大契约）|
-
-## 复利复核续（2026-07-17 夜续 · 以复利透镜再扫一遍）
-
-本会话落地 `KNOW.XREF.5` wikilink 小闭环 + `PLNR.MCP.0` 后，从三层复利看**还需要推进什么**：
-
-- **使用侧（跨 OS 消费）：** MCP 从单点（Home `where_is`）变成小舰队（+ Planner 任务 CRUD）。AIOS 作为推理内核的价值第一次「能查家里东西 + 能管当天任务」。**`PLAT.MCP.0` 抽共享鉴权已落地**（2026-07-17，见 Top ROI #5）——Finance「查结余/本月支出」、Fitness「记一组/看 readiness」的 MCP 现只需业务工具 + `auth:true`，近零成本。**真源仍是每日触点**：Finance closure、Vault watcher 真机验（用户 gate）未过前，跨站消费的「源头可信度」就有缺口。
-- **决策侧（用量）：** `PLAT.USAGE.0` 首报已出、`PLAT.USAGE.0b` 节奏化在飞（并行会话）。复利判据要求**审计产生决策**——首报后应至少冻结/删一项低利用表面，或把一项日用缺口提进 Now；否则审计沦为仪表盘。AIOS/Knowledge/Health 本机探针仍缺。
-- **开发侧（成本下弯）：** CI 绿是复利开关（hub 称 `PLAT.CI.0` 已 run 29618672879 全绿，本 doc TL;DR 的 P0 表述已过期，以 hub 为准）。共享 MCP 鉴权提取点已落地（见上）。
-- **北极星（object_ref）：** wikilink 是**字符串标题**引用、非稳定对象引用；`object_ref` + 通用时间线仍未起。按复利判据「无第二真实消费者别上大契约」，继续**等**——但 Planner↔Knowledge↔AIOS 的引用需求已在积累，够两个真实消费者时即可开工。
-
-**一句话：** **`PLAT.MCP.0`**（抽共享 MCP 鉴权）与 **`PLNR.UIUX.0`**（定向 UI 收口）均已落地（2026-07-17）；Next 表里 agent 侧剩 `PLNR.ATTACH.1`（附件体验，P2 ◆）与已在并行会话飞的 `PLAT.USAGE.0b`；`HOME.RECOG.1r`/`FINC.PURCHASE.6.a` 已收窄到纯 owner gate，`KNOW.XREF.5` 按判据继续等第二真实消费者。
-
-## 每个 App 未来 7 天只做一件事
-
-| App | 首选目标 | 不做 / 后移 |
-| --- | --- | --- |
-| Planner | MCP 配进 AIOS 验真实读写（PLNR.MCP.0 用户 gate）；用户签收 SCHED/CAPTURE | 附件先确认远程 |
-| Fitness | maintenance | MEDIA.3 / SYNC.4 |
-| Finance | **6.a closure**（真机） | 6b/6c |
-| Music | paused | PIPE.4 |
-| Portal | maintenance | 硬凑卡 |
-| Home | 用户激活 refine + MCP 配进 AIOS；Agent：**RECOG.1r** | PROJ.7 |
-| AIOS | 配 Home + Planner 两个 MCP URL，当跨 OS 推理内核用 | 堆新功能面 |
-| KnowledgeOS | 原生 rebuild 验 watcher | SYNC 上云 |
-| HealthOS | HLT-5 真机 gate | Portal/Netlify |
+| # | 项 | 复利 | 谁 | 状态 |
+| --- | --- | --- | --- | --- |
+| 1 | 打开 AIOS 试「本月结余 / 今天练什么 / 东西在哪」 | 使用验收 | Ken | 壳已装，待点一次 |
+| 2 | Portal 看 Finance 角标是否随账单任务消减 | 使用验收 | Ken | 已部署 portal.kenos.space |
+| 3 | `HOME.DEVICE.12` 装 HA 后半天摸底 | 使用(条件) | Ken→Agent | 预检：本机无 HA |
+| 4 | 真机 SCHED / CAPTURE / HLT-5 | 使用闭环 | Ken | User Gate |
+| 5 | `object_ref` 稳定契约 | 北极星 | Agent | 可选；wikilink 已够日用 |
+| ✗ | 新 OS / IMPORT.5 / 多项目云同步 / INTG.EVENTS.2 | 负或低 | — | 不做 |
 
 ## 不建议现在投入
 
-新 OS / 大同步 / Portal 硬凑本地优先 app 卡 / Home 多项目（无第二真实项目）。
+新 OS / 大同步 / Portal 硬凑卡 / Home 多项目 / Vault 抢先上云 / INTG.EVENTS.2 / MEDIA.3 / 无 HA 时开 DEVICE.14·VISION.15。

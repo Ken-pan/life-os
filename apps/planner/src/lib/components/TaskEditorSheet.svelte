@@ -15,7 +15,7 @@
   import { SCHEDULE_DURATIONS, formatDurationLabel } from '$lib/domain/schedule.js';
   import { lockScroll, unlockScroll } from '$lib/scrollLock.js';
   import { activateFocusTrap, createImeGuard, LIFE_OS_APP_ORIGINS } from '@life-os/theme';
-  import { parseWikilinks, knowledgeNoteUrl } from '@life-os/platform-web/wikilinks';
+  import { parseWikilinks, knowledgeNoteUrl, knowledgeNativeNoteUrl } from '@life-os/platform-web/wikilinks';
   import { paperLinksForTask } from '$lib/paperLinks.js';
   import DateField from './DateField.svelte';
   import TimeField from './TimeField.svelte';
@@ -329,14 +329,14 @@
     if (!draft || isNew) return
     const items = e.clipboardData?.items
     if (!items) return
-    
+
     for (const item of items) {
       if (item.type.startsWith('image/')) {
         const file = item.getAsFile()
         if (file) {
           e.preventDefault()
-          import('$lib/services/attachmentService.js').then(({ uploadAttachment }) => {
-            uploadAttachment('task', draft.id, file, 'paste').catch((err) => {
+          import('$lib/services/attachmentService.js').then(({ uploadAttachment, namePastedImageFile }) => {
+            uploadAttachment('task', draft.id, namePastedImageFile(file), 'paste').catch((err) => {
               toast(err.message, 'error')
             })
           })
@@ -361,10 +361,10 @@
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div class="sheet-bg" role="presentation" onclick={(e) => e.target === e.currentTarget && closeTaskEditor()}>
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <div 
-      class="sheet task-editor-sheet" 
-      role="dialog" 
-      aria-modal="true" 
+    <div
+      class="sheet task-editor-sheet"
+      role="dialog"
+      aria-modal="true"
       aria-labelledby="task-editor-title"
       onpaste={handleGlobalPaste}
     >
@@ -508,16 +508,25 @@
             {#if noteLinks.length}
               <div class="note-links" aria-label={t('task.noteLinks')}>
                 {#each noteLinks as link (link.target)}
-                  <a
-                    class="note-link"
-                    href={knowledgeNoteUrl(link.target, knowledgeOrigin)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={t('task.openInKnowledge', { title: link.target })}
-                  >
-                    <Icon name="link" size={13} strokeWidth={1.8} />
-                    <span>{link.label}</span>
-                  </a>
+                  <span class="note-link-group">
+                    <a
+                      class="note-link"
+                      href={knowledgeNativeNoteUrl(link.target)}
+                      title={t('task.openInKnowledgeNative', { title: link.target })}
+                    >
+                      <Icon name="link" size={13} strokeWidth={1.8} />
+                      <span>{link.label}</span>
+                    </a>
+                    <a
+                      class="note-link note-link--web"
+                      href={knowledgeNoteUrl(link.target, knowledgeOrigin)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={t('task.openInKnowledgeWeb', { title: link.target })}
+                    >
+                      {t('task.knowledgeWeb')}
+                    </a>
+                  </span>
                 {/each}
               </div>
             {/if}
@@ -739,7 +748,7 @@
           <button type="button" class="btn-secondary ai-split-btn" disabled={aiBusy || !draft.title?.trim()} onclick={aiSplit}>
             {aiBusy ? t('task.aiSplitting') : t('task.aiSplit')}
           </button>
-          
+
           {#if !isNew}
             <div class="field">
               <span class="field-label">{t('attachments.title', 'Attachments')}</span>
@@ -878,6 +887,12 @@
     gap: 6px;
     margin-top: 8px;
   }
+  .note-link-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 100%;
+  }
   .note-link {
     display: inline-flex;
     align-items: center;
@@ -897,6 +912,16 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .note-link--web {
+    padding: 3px 7px;
+    background: transparent;
+    color: var(--t3);
+    font-weight: 500;
+  }
+  .note-link--web:hover {
+    background: color-mix(in srgb, var(--t3) 12%, transparent);
+    color: var(--t2);
   }
   .ai-split-btn {
     width: 100%;

@@ -44,16 +44,24 @@
   import { t, locale, setLocale } from '$lib/i18n.svelte.js'
   import AppBrand from '@life-os/platform-web/svelte/brand'
   import FinanceProviders from './FinanceProviders.svelte'
+  import { isDemoMode } from '$lib/demoMode'
+  import { buildDemoFinanceData } from '$lib/demoData'
 
   /** @type {{ children?: import('svelte').Snippet }} */
   let { children } = $props()
 
-  const bootUserId = isSupabaseConfigured ? peekSessionUserId() : null
+  // 本地演示模式：跳过登录/Supabase，直接注入模拟数据（仅 localhost，见 demoMode.ts）。
+  const demo = isDemoMode()
+  const demoData = demo ? buildDemoFinanceData() : null
+
+  const bootUserId = !demo && isSupabaseConfigured ? peekSessionUserId() : null
   const bootData = bootUserId ? readCache(CACHE_SCOPES.finance, bootUserId) : null
 
   /** @type {'loading' | 'config-missing' | 'signed-out' | 'device-limit' | 'ready'} */
-  let phase = $state(!isSupabaseConfigured ? 'config-missing' : bootData ? 'ready' : 'loading')
-  let initialData = $state(bootData)
+  let phase = $state(
+    demo ? 'ready' : !isSupabaseConfigured ? 'config-missing' : bootData ? 'ready' : 'loading',
+  )
+  let initialData = $state(demo ? demoData : bootData)
   let dataEpoch = $state(0)
   let error = $state(null)
 
@@ -157,6 +165,9 @@
   })
 
   onMount(() => {
+    // 演示模式：不接 Supabase auth / 网络续期，数据已静态注入。
+    if (demo) return
+
     const handleLocaleEvent = (e) => {
       const nextLocale = e.detail
       if (!nextLocale || phase !== 'ready') return

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { safeFilename, validateAttachmentFile } from './attachmentService.js'
+import {
+  namePastedImageFile,
+  safeFilename,
+  validateAttachmentFile,
+} from './attachmentService.js'
 
 function fakeFile(name, size, type = 'text/plain') {
   return { name, size, type }
@@ -36,5 +40,23 @@ describe('safeFilename', () => {
 
   it('falls back when empty after sanitize', () => {
     expect(safeFilename('')).toBe('file')
+  })
+})
+
+describe('namePastedImageFile (PLNR.ATTACH.1)', () => {
+  it('renames generic clipboard image.png', () => {
+    const blob = new File([new Uint8Array([1, 2, 3])], 'image.png', {
+      type: 'image/png',
+    })
+    const named = namePastedImageFile(blob, Date.UTC(2026, 6, 18, 16, 30, 5))
+    expect(named.name).toMatch(/^paste-\d{8}-\d{6}\.png$/)
+    expect(named.type).toBe('image/png')
+  })
+
+  it('keeps explicit filenames', () => {
+    const blob = new File([new Uint8Array([1])], 'receipt.jpg', {
+      type: 'image/jpeg',
+    })
+    expect(namePastedImageFile(blob).name).toBe('receipt.jpg')
   })
 })

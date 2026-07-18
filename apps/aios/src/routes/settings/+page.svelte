@@ -6,7 +6,7 @@
   import { CLOUD_BUILD } from '$lib/env.js'
   import { C, refreshGateway, clearAllConversations } from '$lib/chat.svelte.js'
   import { M, deleteMemory, clearMemories, addMemory } from '$lib/memory.svelte.js'
-  import { CLOUD, signInCloud, signOutCloud, syncNow } from '$lib/cloud.svelte.js'
+  import { CLOUD, signInCloud, signOutCloud, syncNow, getCloudAccessToken } from '$lib/cloud.svelte.js'
   import { isNative } from '$lib/native.js'
   import {
     loadServers,
@@ -15,6 +15,7 @@
     refreshMcpTools,
     testServer,
     mcpToolCount,
+    ensureLifeOsMcpFleet,
   } from '$lib/mcp.js'
   import {
     PERMS,
@@ -74,6 +75,15 @@
   let mcpDraft = $state({ name: '', url: '', token: '' })
   let mcpStatus = $state('')
   let mcpBusy = $state(false)
+  let mcpUiSynced = false
+
+  // 登录后 cloud 会自动 ensure 舰队；进设置时对齐一次 UI（只跑一次）
+  $effect(() => {
+    if (mcpUiSynced || !CLOUD.ready) return
+    mcpUiSynced = true
+    mcpServers = loadServers()
+    mcpToolN = mcpToolCount()
+  })
 
   function persistMcp() {
     saveServers($state.snapshot(mcpServers))
@@ -136,6 +146,30 @@
     mcpStatus = r.ok
       ? t('settings.mcpTestOk', { name: server.name, n: r.tools.length, tools: r.tools.slice(0, 12).join(', ') })
       : t('settings.mcpTestFail', { name: server.name, error: r.error })
+  }
+
+  /** 一键接入 Home/Planner/Finance/Fitness 四个 MCP（用当前登录 JWT） */
+  async function addLifeOsMcpFleet() {
+    if (!CLOUD.user) {
+      mcpStatus = t('settings.mcpNeedLogin')
+      return
+    }
+    mcpBusy = true
+    mcpStatus = t('settings.mcpFleetAdding')
+    const token = await getCloudAccessToken()
+    if (!token) {
+      mcpBusy = false
+      mcpStatus = t('settings.mcpNeedLogin')
+      return
+    }
+    const { servers, added } = ensureLifeOsMcpFleet(mcpServers, token)
+    mcpServers = servers
+    persistMcp()
+    await refreshMcp()
+    mcpBusy = false
+    mcpStatus = added.length
+      ? t('settings.mcpFleetAdded', { names: added.join('、'), n: mcpToolN })
+      : t('settings.mcpFleetUpToDate', { n: mcpToolN })
   }
 
   let briefPreview = $state('')
@@ -468,6 +502,17 @@
       {#if mcpToolN}<span class="count">{t('settings.mcpToolCount', { n: mcpToolN })}</span>{/if}
     </h2>
     <p class="note">{t('settings.mcpDesc')}</p>
+    <p class="note">{t('settings.mcpLifeOsHint')}</p>
+    <div class="mcp-actions" style="margin-bottom: 12px">
+      <button
+        type="button"
+        class="mini-btn primary"
+        disabled={mcpBusy || !CLOUD.user}
+        onclick={addLifeOsMcpFleet}
+      >
+        {t('settings.mcpFleetAdd')}
+      </button>
+    </div>
 
     {#each mcpServers as server (server.id)}
       <div class="mcp-row">

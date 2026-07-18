@@ -54,6 +54,12 @@
     initCloud()
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
+    let cleanupDeepLink = () => {}
+    void import('$lib/deepLink.js').then((m) =>
+      m.bindKnowledgeDeepLinks().then((unsub) => {
+        cleanupDeepLink = unsub
+      }),
+    )
     const mq = window.matchMedia('(max-width: 1067px)')
     const syncNarrow = () => { narrowLayout = mq.matches }
     syncNarrow()
@@ -61,6 +67,7 @@
     return () => {
       cleanupTheme()
       cleanupViewport()
+      cleanupDeepLink()
       mq.removeEventListener('change', syncNarrow)
       stopVaultWatcher()
     }

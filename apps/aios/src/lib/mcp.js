@@ -1,4 +1,19 @@
 import { browser } from '$app/environment'
+import {
+  LIFE_OS_MCP_PRESETS,
+  isLifeOsMcpUrl,
+  mergeLifeOsMcpPresets,
+  refreshLifeOsMcpTokens,
+  ensureLifeOsMcpFleet,
+} from './mcp.presets.js'
+
+export {
+  LIFE_OS_MCP_PRESETS,
+  isLifeOsMcpUrl,
+  mergeLifeOsMcpPresets,
+  refreshLifeOsMcpTokens,
+  ensureLifeOsMcpFleet,
+}
 
 /**
  * MCP 客户端(HTTP / Streamable HTTP 传输)。

@@ -47,6 +47,18 @@ export async function hydratePortalFromCore(userId) {
 }
 
 /**
+ * 刷新 Portal 角标（从 Planner 返回时调用，避免陈旧计数）。
+ * @param {string} userId
+ */
+export async function refreshPendingBadge(userId) {
+  try {
+    portalPreferences.pendingEvents = await fetchPendingLifeEventsCount(userId)
+  } catch {
+    /* keep prior */
+  }
+}
+
+/**
  * @param {string} userId
  * @param {LauncherAppId | null} appId
  */

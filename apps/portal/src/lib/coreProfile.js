@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js'
 import { PORTAL_APPS, PORTAL_PRODUCTION_APPS } from './apps.js'
+import { countPortalActionBadge } from './portalActionBadge.js'
 
 /** @typedef {import('./apps.js').LauncherAppId} LauncherAppId */
 
@@ -112,16 +113,23 @@ export async function updateSkipAutoRedirect(userId, skipAutoRedirect) {
 }
 
 /**
+ * Portal 顶栏「待处理」角标（FINC.GROWTH.4）。
+ * 含：pending life_events + 已消费但未完成的 finance 账单任务。
  * @param {string} userId
  * @returns {Promise<number>}
  */
 export async function fetchPendingLifeEventsCount(userId) {
-  const { count, error } = await supabase
-    .from('life_events')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('status', 'pending')
+  const [pendingRes, tasksRes] = await Promise.all([
+    supabase
+      .from('life_events')
+      .select('id, type')
+      .eq('user_id', userId)
+      .eq('status', 'pending'),
+    supabase.from('planner_tasks').select('data').eq('user_id', userId),
+  ])
 
-  if (error) throw error
-  return count ?? 0
+  if (pendingRes.error) throw pendingRes.error
+  if (tasksRes.error) throw tasksRes.error
+
+  return countPortalActionBadge(pendingRes.data, tasksRes.data)
 }

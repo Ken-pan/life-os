@@ -6,6 +6,31 @@
 
 > **PaperOS 证据链接说明（2026-07-12）：** 下方历史条目中的 `qa/paperos/*`、`archive/paperos/*` 证据文件已随 PaperOS 迁出至独立仓库（`/Users/kenpan/「Projects」/paperos`），本仓库不再保留。相关行保留为历史记录，链接已去激活。
 
+## 2026-07-18（FINC.6 收口 · Finance MCP · 文档真源对齐）
+
+| 主线 | 发货项 / 里程碑 | 证据 |
+| --- | --- | --- |
+| Finance | **FINC.PURCHASE.6.a/6b** owner 标注完成（closure QA + 备注/已处理） | owner gate ✅ |
+| Finance | **FINC.MCP.1** `/api/mcp`：`ping` · `month_summary`（Portal 同源）· `liquid_cash`；`@life-os/mcp-server` auth | `apps/finance/netlify/functions/mcp.mjs` · `server/mcpFinance.mjs` |
+| Portal | **FINC.GROWTH.4** 角标 = pending events + 未完成 finance 账单任务；visibility 刷新 | `portalActionBadge.js` · `coreProfile.js` |
+| Platform | **PLAT.DEMO.0** 八 app demoMode 合同收口（localhost-only · `?demo=`） | `PLATFORM.md` · 各 `demoMode.*` |
+| Platform | **PLAT.USAGE.0b** 审计 `--apply` + AIOS 云探针；节奏写入 PLATFORM | `scripts/lifeos-usage-audit.mjs` |
+| Planner | **PLNR.ATTACH.1** 图片缩略图（signed URL / object URL）+ paste 命名 `paste-YYYYMMDD-HHMMSS` + file accept | `AttachmentList.svelte` · `attachmentService.js` |
+| Fitness | **GYMS.MCP.1** `/api/mcp`：`today_training` · `recent_sessions` · `readiness_hint` | `apps/fitness/netlify/functions/mcp.mjs` |
+| AIOS | **一键接入 Life OS MCP 舰队**（Home/Planner/Finance/Fitness + 当前 JWT） | `mcp.presets.js` · settings |
+| AIOS | **MCP JWT 自动续期**：`onAuthStateChange` / `getSession` → `refreshLifeOsMcpTokens` 写回 localStorage | `cloud.svelte.js` · `mcp.presets.js` |
+| Knowledge | **KNOW.XREF.5n** `knowledgeos://open?title=` deep-link + Planner 主链原生 / 旁路网页 | `deepLink.js` · `tauri-plugin-deep-link` · `wikilinks.js` |
+| Platform | **PLAT.DEPLOY.MCP** CLI `deploy-all` 为 finance/fitness 传 `--functions`（修生产 `/api/mcp` 404） | `scripts/deploy-all-netlify.sh` · `docs/ops/netlify.md` |
+| Platform | **qa:mcp-fleet** + 根 `test:mcp`（协议/财务/健身/任务/AIOS presets） | `scripts/qa/mcp-fleet-smoke.mjs` · `package.json` |
+| Finance | **备注 [[wikilink]] → Knowledge**（第二消费者；主链原生 / 旁路网页） | `PurchaseEnrichmentBlock.svelte` |
+| AIOS | **登录自动 ensure MCP 舰队**（merge 四站 + JWT；布局在 initCloud 后再 refreshTools） | `ensureLifeOsMcpFleet` · `cloud.svelte.js` · `+layout.svelte` |
+| AIOS | **AIOS.app 重装**（自动舰队进日用壳） | `npm run app:aios` → `/Applications/AIOS.app` |
+| Knowledge | **KnowledgeOS.app 重装**（deep-link `knowledgeos://` 登记） | `npm run app:knowledge` → `/Applications/KnowledgeOS.app` |
+| Portal | **FINC.GROWTH.4 角标生产部署** | `portal.kenos.space` CLI deploy |
+| Home | **HOME.DEVICE.12 预检**：本机无 HA → spike 未开 | [`qa/home-device-12-preflight-2026-07-18.md`](../qa/home-device-12-preflight-2026-07-18.md) |
+| Platform | **PLAT.DOCS.1** hub/POTENTIAL/AGENT/SHIPPED 划掉已发 Next | 本段 |
+| Platform | **PLAT.MCP.0** / **PLNR.MCP.0** / **KNOW.XREF.5 wikilink** / **PLNR.UIUX.0** 补记 | commits `28ca49c98` · `b490755a5` · `c5151dcfa` · `acff09b12` |
+
 ## 2026-07-17（交付完整性闭环 · Home 认亲 · Knowledge 编辑器 · 复利文档）
 
 | 主线 | 发货项 / 里程碑 | 证据 |

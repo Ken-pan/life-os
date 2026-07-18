@@ -40,6 +40,39 @@ export function safeFilename(originalName) {
 }
 
 /**
+ * Paste 截图常带空名或 `image.png`——换成可辨识文件名（PLNR.ATTACH.1）。
+ * @param {File} file
+ * @param {number} [now]
+ * @returns {File}
+ */
+export function namePastedImageFile(file, now = Date.now()) {
+  const raw = String(file?.name ?? '').trim()
+  const generic = !raw || /^image\.(png|jpe?g|gif|webp)$/i.test(raw) || raw === 'image'
+  if (!generic) return file
+  const d = new Date(now)
+  const pad = (n) => String(n).padStart(2, '0')
+  const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
+  const mime = String(file?.type || '')
+  const ext =
+    mime.includes('jpeg') || mime.includes('jpg')
+      ? 'jpg'
+      : mime.includes('webp')
+        ? 'webp'
+        : mime.includes('gif')
+          ? 'gif'
+          : 'png'
+  return new File([file], `paste-${stamp}.${ext}`, {
+    type: file.type || `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+    lastModified: file.lastModified || now,
+  })
+}
+
+/** @param {string} id */
+export function getPendingFile(id) {
+  return pendingFiles.get(id) ?? null
+}
+
+/**
  * Soft-delete all attachments for an owner (task/project tombstone cascade).
  * @param {AttachmentOwnerType} ownerType
  * @param {string} ownerId

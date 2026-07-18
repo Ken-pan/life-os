@@ -6,6 +6,8 @@ import {
   resolveTheme,
 } from '@life-os/theme'
 import { SAMPLE_508 } from './spatial/sample-508.js'
+import { shouldSeedDemo } from './demoMode.js'
+import { demoGraphPatch } from './demoData.js'
 import { scheduleHomePortalMetadataSync } from './homePortalMetadata.js'
 import { scheduleStorageSnapshotSync } from './storage-snapshot-sync.js'
 import { deserializeProject, hydrateProject } from './spatial/model.js'
@@ -2018,11 +2020,33 @@ const defaultState = () => ({
   },
 })
 
+/**
+ * 本地演示模式（localhost）：活动项目还没画过墙图、也没布置过家具时，
+ * 把 demoGraphPatch() 合到它上面，点亮 /plan 墙图编辑与 /tidy 整理计划。
+ * 严格只在 localhost 生效（shouldSeedDemo），且只在图层为空时灌 ——
+ * 用户一旦画了墙/摆了家具就永不覆盖；只补 graph/tidy 层，rooms/walls/
+ * furniture/storageZones 全走 hydrate 原样保留（/storage 不受影响）。
+ * @template {ReturnType<typeof defaultState>} T
+ * @param {T} state
+ * @returns {T}
+ */
+function seedDemoOntoState(state) {
+  if (!browser || !shouldSeedDemo()) return state
+  const pid = state.activeProjectId
+  const proj = state.projects?.[pid]
+  if (!proj) return state
+  const hasGraph = proj.layoutMode === 'wallGraph' && Boolean(proj.wallGraph)
+  const hasPlacements = (proj.placements?.length ?? 0) > 0
+  if (hasGraph || hasPlacements) return state // 真实数据在，绝不覆盖
+  const patched = hydrateProject({ ...proj, ...demoGraphPatch() })
+  return { ...state, projects: { ...state.projects, [pid]: patched } }
+}
+
 function load() {
   if (!browser) return defaultState()
   try {
     const raw = localStorage.getItem(SKEY)
-    if (!raw) return defaultState()
+    if (!raw) return seedDemoOntoState(defaultState())
     const data = JSON.parse(raw)
     if (!data.projects || !data.projects[SAMPLE_508.meta.id]) {
       data.projects = { ...defaultState().projects, ...(data.projects || {}) }
@@ -2060,9 +2084,13 @@ function load() {
     })
     const base = defaultState()
     // settings 要逐字段并，不能整体覆盖——否则存量用户拿不到新增字段的默认值
-    return { ...base, ...data, settings: { ...base.settings, ...data.settings } }
+    return seedDemoOntoState({
+      ...base,
+      ...data,
+      settings: { ...base.settings, ...data.settings },
+    })
   } catch {
-    return defaultState()
+    return seedDemoOntoState(defaultState())
   }
 }
 

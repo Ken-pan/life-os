@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LifeOS · UI/UX 审核画廊</title>
+    <meta name="description" content="LifeOS 各 app 核心页面的 UI/UX 审核截图，浅色/深色 × 桌面/移动，随每次发布更新。机器可读入口见 manifest.json 与 llms.txt。" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🖼️%3C/text%3E%3C/svg%3E" />
+    <link rel="alternate" type="application/json" href="manifest.json" title="机器可读清单" />
+    <link rel="alternate" type="text/markdown" href="llms.txt" title="AI 使用指南" />
+    <link rel="sitemap" type="application/xml" href="sitemap.xml" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "LifeOS · UI/UX 审核画廊",
+        "description": "LifeOS 8 个 app 核心页面的 UI/UX 审核截图集（每 app 一张 6~8 屏联系表，浅/深 × 桌面/移动 4 变体），供人工与 AI 走查。",
+        "url": "https://kenos-uiux-review.netlify.app",
+        "keywords": ["UI/UX review", "screenshot gallery", "LifeOS", "AI agent readable"],
+        "distribution": [
+          { "@type": "DataDownload", "name": "manifest.json", "encodingFormat": "application/json", "contentUrl": "https://kenos-uiux-review.netlify.app/manifest.json" },
+          { "@type": "DataDownload", "name": "llms.txt", "encodingFormat": "text/markdown", "contentUrl": "https://kenos-uiux-review.netlify.app/llms.txt" }
+        ]
+      }
+    </script>
+    <style>
+      :root {
+        --bg: #f4f5f7; --surface: #ffffff; --ink: #16181c; --sub: #697079;
+        --faint: #9aa0a8; --border: #e2e5ea; --accent: #3d9ed6; --seg: #eceef1;
+        --shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 30px rgba(0,0,0,.05);
+      }
+      :root[data-theme='dark'] { --bg: #0a0b0d; --surface: #16171b; --ink: #eceef1; --sub: #8b9098; --faint: #6a6f77; --border: #2b2e34; --accent: #5cb8ea; --seg: #101114; --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.3); }
+
+      * { box-sizing: border-box; margin: 0; }
+      html { color-scheme: light dark; }
+      body { background: var(--bg); color: var(--ink);
+        font: 15px/1.5 -apple-system, "PingFang SC", "Noto Sans CJK SC", "Segoe UI", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased; }
+      a { color: inherit; }
+
+      header { max-width: 1360px; margin: 0 auto; padding: 40px 24px 6px;
+        display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+      .title { display: flex; align-items: center; gap: 12px; }
+      .tick { width: 7px; height: 34px; border-radius: 4px; background: var(--accent); }
+      h1 { font-size: 26px; font-weight: 800; letter-spacing: .2px; }
+      h1 small { display: block; font-size: 13px; font-weight: 500; color: var(--sub); letter-spacing: 0; margin-top: 3px; }
+      .spacer { flex: 1; }
+      .meta { text-align: right; color: var(--sub); font-size: 13px; line-height: 1.7; }
+      .meta .sha { font-family: ui-monospace, SFMono-Regular, monospace; color: var(--ink); font-weight: 700; }
+
+      .controls { max-width: 1360px; margin: 12px auto 0; padding: 0 24px;
+        display: flex; gap: 22px; flex-wrap: wrap; align-items: center; }
+      .ctl { display: flex; align-items: center; gap: 8px; }
+      .ctl-label { font-size: 12.5px; color: var(--faint); }
+      .seg { display: inline-flex; background: var(--seg); border: 1px solid var(--border);
+        border-radius: 999px; padding: 3px; }
+      .seg button { border: 0; background: transparent; color: var(--sub); cursor: pointer;
+        font: inherit; font-size: 13px; font-weight: 600; padding: 6px 15px; border-radius: 999px; }
+      .seg button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+
+      .note { max-width: 1360px; margin: 10px auto 0; padding: 0 24px; color: var(--faint); font-size: 12.5px; }
+
+      main { max-width: 1360px; margin: 0 auto; padding: 22px 24px 8px;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
+      main.mobile { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+        overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+      .thumb { display: block; position: relative; height: 300px; overflow: hidden; background: var(--bg);
+        border-bottom: 1px solid var(--border); }
+      .card.mobile .thumb { height: 340px; }
+      .thumb img { width: 100%; display: block; }
+      .thumb .zoom { position: absolute; right: 10px; top: 10px; background: rgba(0,0,0,.55); color: #fff;
+        font-size: 11px; padding: 4px 9px; border-radius: 999px; opacity: 0; transition: opacity .15s; }
+      .thumb:hover .zoom { opacity: 1; }
+      .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+      .row { display: flex; align-items: center; gap: 10px; }
+      .name { font-size: 17px; font-weight: 800; letter-spacing: .01em; }
+      .badge { font-size: 11px; font-weight: 700; color: #fff; background: var(--accent);
+        border-radius: 6px; padding: 2px 8px; }
+      .desc { color: var(--ink); font-size: 13px; }
+      .pages { color: var(--sub); font-size: 12px; line-height: 1.5; }
+      .sub { color: var(--faint); font-size: 12px; margin-top: 2px; }
+
+      /* Design Governance 指标行 */
+      .metrics { display: flex; flex-direction: column; gap: 4px;
+        margin: 6px 0 2px; padding-top: 8px; border-top: 1px dashed var(--border); }
+      .m { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; line-height: 1.45; align-items: baseline; }
+      .m .k { color: var(--faint); white-space: nowrap; }
+      .m .v { text-align: right; font-weight: 700; }
+      .m .v .mut { color: var(--faint); font-weight: 500; }
+      .m.ok .v { color: #2ea36a; }
+      .m.warn .v { color: #cf9026; }
+      .m.bad .v { color: #e0584c; }
+      .m.muted .v { color: var(--sub); font-weight: 700; }
+      .sub .mono { font-family: ui-monospace, SFMono-Regular, monospace; }
+      .actions { display: flex; gap: 8px; margin-top: 4px; }
+      .btn { flex: 1; text-align: center; text-decoration: none; border: 1px solid var(--border);
+        border-radius: 9px; padding: 8px 10px; font-size: 13px; font-weight: 600; color: var(--ink); background: transparent; }
+      .btn:hover { border-color: var(--accent); }
+      .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+      .state { max-width: 1360px; margin: 40px auto; padding: 0 24px; color: var(--sub); }
+      footer { max-width: 1360px; margin: 16px auto 48px; padding: 0 24px; color: var(--faint); font-size: 12px; line-height: 1.9; }
+      footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+      footer a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="title">
+        <span class="tick"></span>
+        <h1>LifeOS · UI/UX 审核画廊<small>各 app 核心页面走查图 · 浅色/深色 × 桌面/移动 · 随每次发布更新</small></h1>
+      </div>
+      <span class="spacer"></span>
+      <div class="meta" id="meta"></div>
+    </header>
+    <div class="controls">
+      <div class="ctl"><span class="ctl-label">主题</span>
+        <div class="seg" id="segTheme">
+          <button data-v="light" aria-pressed="true">浅色</button>
+          <button data-v="dark" aria-pressed="false">深色</button>
+        </div>
+      </div>
+      <div class="ctl"><span class="ctl-label">视图</span>
+        <div class="seg" id="segViewport">
+          <button data-v="desktop" aria-pressed="true">桌面</button>
+          <button data-v="mobile" aria-pressed="false">移动</button>
+        </div>
+      </div>
+    </div>
+    <p class="note" id="note"></p>
+    <main id="grid"></main>
+    <div class="state" id="state">加载中…</div>
+    <footer>
+      截图为本地演示 / 种子数据，非真实账户内容。图片为压缩 JPEG，点「下载」保存。<br />
+      <strong>机器可读 / AI 入口：</strong>
+      <a href="manifest.json">manifest.json</a>（结构化数据：每 app 的描述 · 页面清单 · 4 变体 URL）·
+      <a href="llms.txt">llms.txt</a>（AI 使用指南）
+    </footer>
+
+    <script>
+      const esc = (s) =>
+        String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+      const fmt = (iso) => {
+        if (!iso) return '—'
+        try {
+          return new Date(iso).toLocaleString('zh-CN', {
+            year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+          })
+        } catch { return iso }
+      }
+
+      const root = document.documentElement
+      const state = {
+        theme: localStorage.getItem('gallery_theme') || 'light',
+        viewport: localStorage.getItem('gallery_viewport') || 'desktop',
+        data: null,
+      }
+      // 主题联动页面 chrome
+      const applyPageTheme = () => root.setAttribute('data-theme', state.theme)
+
+      function wireSeg(id, keyName, onChange) {
+        const seg = document.getElementById(id)
+        seg.querySelectorAll('button').forEach((b) => {
+          b.setAttribute('aria-pressed', String(b.dataset.v === state[keyName]))
+          b.addEventListener('click', () => {
+            state[keyName] = b.dataset.v
+            localStorage.setItem('gallery_' + keyName, b.dataset.v)
+            seg.querySelectorAll('button').forEach((x) =>
+              x.setAttribute('aria-pressed', String(x.dataset.v === state[keyName])))
+            onChange()
+          })
+        })
+      }
+
+      // 治理指标行（真实数据；缺失则不显示，绝不臆造）
+      function mrow(k, val, cls) {
+        return '<div class="m ' + cls + '"><span class="k">' + k + '</span><span class="v">' + val + '</span></div>'
+      }
+      function metricsHtml(a, v) {
+        const m = a.metrics || {}
+        const vpZh = state.viewport === 'mobile' ? '移动' : '桌面'
+        const thZh = state.theme === 'dark' ? '深色' : '浅色'
+        const rows = []
+        // 捕获覆盖（桌面 + 移动，主题无关，取任一主题的该视图变体）
+        const dcap = (a.variants['light-desktop'] || a.variants['dark-desktop'] || {}).capture
+        const mcap = (a.variants['light-mobile'] || a.variants['dark-mobile'] || {}).capture
+        if (dcap || mcap) {
+          const cov = []
+          if (dcap) cov.push('桌面 ' + dcap.ok + '/' + dcap.total)
+          if (mcap) cov.push('移动 ' + mcap.ok + '/' + mcap.total)
+          const allOk = (!dcap || dcap.ok === dcap.total) && (!mcap || mcap.ok === mcap.total)
+          rows.push(mrow('捕获覆盖', cov.join(' · '), allOk ? 'ok' : 'warn'))
+        }
+        // 无障碍（浅色桌面审计：图无 alt / 控件无名 / 输入无标注）
+        if (m.a11y) {
+          const { checked, pass, issues } = m.a11y
+          const cls = pass === checked ? 'ok' : checked - pass >= 3 ? 'bad' : 'warn'
+          const iss = []
+          if (issues.noAlt) iss.push('无 alt ' + issues.noAlt)
+          if (issues.noName) iss.push('无名 ' + issues.noName)
+          if (issues.noLabel) iss.push('无标注 ' + issues.noLabel)
+          rows.push(mrow('无障碍', pass + '/' + checked + ' 通过' + (iss.length ? '（' + iss.join(' · ') + '）' : ''), cls))
+        }
+        // 共享 UI 采用（import 占比代理，中性色不评判）
+        if (m.sharedAdoption && m.sharedAdoption.pct != null) {
+          rows.push(mrow('共享 UI 采用', m.sharedAdoption.pct + '% <span class="mut">(' + m.sharedAdoption.shared + '/' + (m.sharedAdoption.shared + m.sharedAdoption.local) + ' import)</span>', 'muted'))
+        }
+        // 样式债务（棘轮基线 · 附整改方向）
+        if (m.styleDebt) {
+          const d = m.styleDebt
+          const cls = d.total === 0 ? 'ok' : d.total >= 100 ? 'bad' : 'warn'
+          rows.push(mrow('样式债务', d.total + ' 项' + (d.total ? ' <span class="mut">· ' + esc(d.triage) + '</span>' : ''), cls))
+        }
+        // 代码变更影响（git：自上一代生成 sha 到 HEAD，本 app 变更文件 → 影响区域）
+        if (m.codeImpact) {
+          const ci = m.codeImpact
+          let detail, cls = 'muted'
+          if (ci.files == null) detail = '未知（历史不可达）'
+          else if (!ci.since || ci.files === 0) detail = '自上次无变更'
+          else {
+            detail = ci.files + ' 文件' + (ci.areas.length ? '：' + ci.areas.map(esc).join(' / ') : '')
+            cls = 'warn'
+          }
+          rows.push(mrow('代码变更影响', detail, cls))
+        }
+        return rows.length ? '<div class="metrics">' + rows.join('') + '</div>' : ''
+      }
+
+      function render() {
+        applyPageTheme()
+        if (!state.data) return
+        const apps = state.data.apps || []
+        const vkey = state.theme + '-' + state.viewport
+        const vpZh = state.viewport === 'mobile' ? '移动' : '桌面'
+        const thZh = state.theme === 'dark' ? '深色' : '浅色'
+
+        const grid = document.getElementById('grid')
+        grid.className = state.viewport === 'mobile' ? 'mobile' : ''
+        grid.innerHTML = apps
+          .map((a) => {
+            // 选当前变体；缺则回退同视图/任意变体
+            const variants = a.variants || {}
+            const v =
+              variants[vkey] ||
+              variants['light-' + state.viewport] ||
+              variants[Object.keys(variants)[0]]
+            if (!v) return ''
+            const pages = (a.pages || []).map((p) => esc(p.title)).join(' · ')
+            const dl = 'lifeos-uiux-' + esc(a.id) + '-' + esc(state.theme) + '-' + esc(state.viewport) + '.jpg'
+            const mob = state.viewport === 'mobile' ? ' mobile' : ''
+            // 富 alt：含 app 名 + 变体 + 页面清单，供无障碍读屏器与走无障碍树的 AI agent 理解
+            const alt =
+              esc(a.name) + ' UI/UX 审核联系表（' + vpZh + '·' + thZh + '）：' +
+              (a.pages || []).map((p) => esc(p.title)).join('、')
+            return (
+              '<figure class="card' + mob + '">' +
+              '<a class="thumb" href="' + esc(v.file) + '" target="_blank" rel="noopener" aria-label="查看 ' + esc(a.name) + ' 大图">' +
+              '<span class="zoom">查看大图 ↗</span>' +
+              '<img loading="lazy" src="' + esc(v.file) + '" width="' + (state.viewport === 'mobile' ? 1170 : 1402) + '" alt="' + alt + '" /></a>' +
+              '<figcaption class="body">' +
+              '<div class="row"><h2 class="name">' + esc(a.name) + '</h2>' +
+              '<span class="badge">' + (v.screens ?? a.screens ?? '?') + ' 屏</span></div>' +
+              (a.description ? '<p class="desc">' + esc(a.description) + '</p>' : '') +
+              (pages ? '<p class="pages">' + pages + '</p>' : '') +
+              metricsHtml(a, v) +
+              '<p class="sub">' + vpZh + ' · ' + thZh + ' · 生成于 ' + esc(fmt(v.generatedAt)) +
+              (a.git?.sha ? ' · <span class="mono">' + esc(a.git.sha) + '</span>' : '') + '</p>' +
+              '<div class="actions">' +
+              '<a class="btn" href="' + esc(v.file) + '" target="_blank" rel="noopener">查看大图</a>' +
+              '<a class="btn primary" href="' + esc(v.file) + '" download="' + dl + '">下载</a>' +
+              '</div></figcaption></figure>'
+            )
+          })
+          .join('')
+      }
+
+      async function load() {
+        applyPageTheme()
+        wireSeg('segTheme', 'theme', render)
+        wireSeg('segViewport', 'viewport', render)
+        let data
+        try {
+          const res = await fetch('manifest.json?' + Date.now())
+          if (!res.ok) throw new Error('HTTP ' + res.status)
+          data = await res.json()
+        } catch (e) {
+          document.getElementById('state').textContent =
+            '暂无数据（manifest.json 未找到）。在仓库根运行 npm run qa:uiux-gallery:all 生成后再发布。'
+          return
+        }
+        state.data = data
+        const ids = [...new Set((data.apps || []).map((a) => a.id))]
+        document.getElementById('state').style.display = 'none'
+        document.getElementById('meta').innerHTML =
+          '最近更新 ' + esc(fmt(data.generatedAt)) +
+          (data.git?.sha ? ' · <span class="sha">' + esc(data.git.sha) + '</span>' : '') +
+          '<br>' + ids.length + ' 个 app · 浅/深 × 桌面/移动'
+        document.getElementById('note').textContent =
+          '本页由仓库内的审核脚本生成并发布到 Netlify，随 LifeOS 每次发布刷新。切换上方主题 / 视图查看不同变体。'
+        render()
+      }
+      load()
+    </script>
+  </body>
+</html>

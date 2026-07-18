@@ -2,6 +2,8 @@ import { browser } from '$app/environment';
 import { readSyncMeta as readAppSyncMeta, writeSyncMeta as writeAppSyncMeta } from '@life-os/sync';
 import { STORAGE_KEY } from './localDataKeys.js';
 import { defaultState, migrate } from './migrate.js';
+import { shouldSeedDemo } from '../demoMode.js';
+import { buildDemoState } from './demoData.js';
 
 const APP_ID = 'planner';
 
@@ -20,6 +22,8 @@ export function loadState() {
   if (!ls) return defaultState();
   try {
     const raw = JSON.parse(ls.getItem(STORAGE_KEY) || 'null');
+    // localhost 空库 → 灌入演示数据全面展示核心功能（生产/有数据时不触发）。
+    if (!raw && shouldSeedDemo()) return migrate(buildDemoState());
     return migrate(raw);
   } catch {
     return defaultState();

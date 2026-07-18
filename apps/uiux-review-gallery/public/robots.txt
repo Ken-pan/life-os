@@ -1,0 +1,25 @@
+# LifeOS UI/UX 审核画廊 —— 欢迎 AI agent / 爬虫。
+# 机器可读入口见 /llms.txt 与 /manifest.json。
+
+User-agent: *
+Allow: /
+
+# 明确欢迎常见 AI 抓取器
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://kenos-uiux-review.netlify.app/sitemap.xml

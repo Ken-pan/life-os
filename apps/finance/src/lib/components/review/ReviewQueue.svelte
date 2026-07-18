@@ -6,6 +6,8 @@
     updateReviewItemStatus,
   } from '$lib/repo.js'
   import { reviewFilters, matchReviewFilter, truncate } from './reviewUtils.js'
+  import { isDemoMode } from '$lib/demoMode'
+  import { buildDemoReviewItems } from '$lib/demoData'
 
   /** @typedef {import('./reviewUtils.js').ReviewFilterId} ReviewFilterId */
 
@@ -26,7 +28,12 @@
     error = null
     try {
       const status = filter === 'resolved' ? 'resolved' : 'open'
-      const data = await loadReviewItems(status)
+      // 演示模式：云端无会话，直接注入模拟审查项（见 demoData.ts）。
+      const data = isDemoMode()
+        ? buildDemoReviewItems().filter((r) =>
+            status === 'resolved' ? r.status !== 'open' : r.status === 'open',
+          )
+        : await loadReviewItems(status)
       rows = data
       onOpenCountChange(data.filter((r) => r.status === 'open').length)
     } catch (e) {
@@ -45,6 +52,12 @@
 
   /** @param {import('$lib/repo.js').ReviewItemRecord} row @param {'resolved' | 'ignored'} status */
   async function applyStatus(row, status) {
+    // 演示模式：不触云端，仅在本地把该行移出「待审查」。
+    if (isDemoMode()) {
+      rows = rows.filter((r) => r.id !== row.id)
+      onOpenCountChange(rows.filter((r) => r.status === 'open').length)
+      return
+    }
     await updateReviewItemStatus(
       row.id,
       status,

@@ -21,10 +21,10 @@
 
 ## 空间编辑 Workstream（H-W，主线）
 
-编辑器：**一个工具面板**（选择 / 建墙 / 门窗 / 画区 / 家具 / 标储藏 / 视角），按工作流分组。墙图为 SSOT，门窗挂墙边（`graphOpenings`）。  
-> **2026-07-14 UI 重构：** 原「① 墙体 → ② 划分 → ③ 布置」步骤段已移除 —— 它与浮动面板是同一份状态的两个控件，且 ② 的「删区 / 自动识别房间」在桌面端根本点不到。现由 `activeTool` 单一真源驱动，步骤语义降为内部 `$derived`。详见 [`apps/home/README.md` §工具面板](../../../apps/home/README.md)。  
-执行方案 → **[home-spatial-editor.md](./home-spatial-editor.md)**  
-功能验收 → **[home-spatial-editor-audit-2026-07-08.md](../../qa/home-spatial-editor-audit-2026-07-08.md)**  
+编辑器：**一个工具面板**（选择 / 建墙 / 门窗 / 画区 / 家具 / 标储藏 / 视角），按工作流分组。墙图为 SSOT，门窗挂墙边（`graphOpenings`）。
+> **2026-07-14 UI 重构：** 原「① 墙体 → ② 划分 → ③ 布置」步骤段已移除 —— 它与浮动面板是同一份状态的两个控件，且 ② 的「删区 / 自动识别房间」在桌面端根本点不到。现由 `activeTool` 单一真源驱动，步骤语义降为内部 `$derived`。详见 [`apps/home/README.md` §工具面板](../../../apps/home/README.md)。
+执行方案 → **[home-spatial-editor.md](./home-spatial-editor.md)**
+功能验收 → **[home-spatial-editor-audit-2026-07-08.md](../../qa/home-spatial-editor-audit-2026-07-08.md)**
 UI/UX 验收 → **[home-spatial-uiux-audit-2026-07-08.md](../../qa/home-spatial-uiux-audit-2026-07-08.md)**
 
 | ID        | 主题                                | 状态 | 依赖        |
@@ -47,6 +47,8 @@ UI/UX 验收 → **[home-spatial-uiux-audit-2026-07-08.md](../../qa/home-spatial
 
 **脑暴日期：** 2026-07-14 · **状态：** Discovery，**全部未开工，未进 hub §Next**（按 [`MAINTENANCE.md`](../../MAINTENANCE.md) §更新流程 4：未评估不得进 Now）。
 **前置 gate：** `HOME.DEVICE.12` — 它的结果决定下面还剩几项可做；在它之前排期都是空想。
+
+**预检 2026-07-18：** 本机无 HA（`:8123` / docker / CLI 均空）→ spike **未开始**，见 [`../../qa/home-device-12-preflight-2026-07-18.md`](../../qa/home-device-12-preflight-2026-07-18.md)。等 Ken 装起 HA 后再跑半天摸底。
 
 ### 定位（先划线）
 

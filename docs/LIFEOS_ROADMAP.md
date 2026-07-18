@@ -1,7 +1,7 @@
 ---
 title: Life OS Roadmap
 owner: kenpan
-last_verified: 2026-07-17-recog-refinereview_cadence: weekly
+last_verified: 2026-07-18-roi-push
 doc_role: status-hub
 priority_model: 2026-07-12-single-branch
 ---
@@ -44,11 +44,11 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 闭环验收 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.2d（仅 owner） | anon revoke ✅ · Review 过滤拆分 ✅ · **agent 侧 closure 护栏 ✅**（stale/timeout 反馈修复 · Confirm→Undo 边界 10/10 · 单测 127）；**剩纯 owner gate**：真机 Confirm→Undo、双真实 JWT、视觉基线 |
+| — | — | **Agent 主航道暂空** | — | — | — | — | 按需：`object_ref` 稳定契约（wikilink 已有 Planner+Finance） |
 
-**已收割（2026-07-17 夜）：** `PLAT.CI.0` ✅（补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` ✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · CI concurrency SHA 分桶 ✅ · **`KNOW.XREF.5` wikilink 小闭环** ✅（Planner 备注引用 Knowledge 笔记 + 共享 `@life-os/platform-web/wikilinks`）· **`PLNR.MCP.0` Planner MCP 面** ✅ 代码（AIOS 经 `/api/mcp` 读/建/完成任务；真实 JWT 读写属用户 gate）· **`FINC.PURCHASE.6b`** ✅（用户备注 + 已处理状态，剩 owner 部署 migration）· **`PLAT.MCP.0`** ✅（`@life-os/mcp-server/auth` 共享 JWT/RLS 鉴权，Home/Planner 样板消除，Finance/Fitness MCP 近零成本）· **`PLNR.UIUX.0`** ✅（三个未覆盖页迁移 PageShell + 3 条 warning 清零）— 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
+**已收割（至 2026-07-18）：** … · **PLAT.DEPLOY.MCP** · **qa:mcp-fleet** · **Finance 备注 wikilink** · AIOS MCP JWT 续期 · KNOW.XREF.5n · GYMS.MCP.1 · FINC.MCP.1 · … — 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
-**User config（不占 Agent 主航道）：** Home 部署后，AIOS 设置 → MCP 加 `https://home.kenos.space/api/mcp` + Life OS access token；Home 登录打开 `/storage` 触发快照同步。
+**User config：** MCP 四站 ✅ · KnowledgeOS.app ✅ · **AIOS.app 已重装（登录自动舰队）** ✅ · **Portal 角标已部署** ✅。打开 AIOS 试问一句即可验收。真机：SCHED / CAPTURE / HLT-5。HA 未装 → DEVICE.12 仍 gated（见预检）。
 
 **Agent 分线全文：** [`roadmap/AGENT_WORKSTREAMS.md`](./roadmap/AGENT_WORKSTREAMS.md)
 
@@ -83,12 +83,11 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 顺序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 触发 / 最小范围 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ~~1~~ | ~~**HOME.RECOG.1r**~~ ✅ | 认亲残余（窄） | Home | — | — | 真机收口 2026-07-17 | iPhone 17 Pro 连扫两遍遥测坐实（双模式开关 · 高精度 1-3 区 · 认回 6/9 · 3.7cm）；质量摘要按用户「不看」删除改「只在有事时弹」 |
-| ~~2~~ | ~~**PLNR.UIUX.0**~~ ✅ | Planner 定向 UI 收口 | Planner | — | — | 已完成 | 三个未覆盖页迁移 PageShell + 3 条 warning 清零（2026-07-17）；e2e 72/72、单测 140、build clean |
-| 3 | **PLAT.MCP.0** | 抽共享 MCP 鉴权（JWT/RLS）| Platform | P2 | ◆◆ | 0.5d | Home/Planner 两个 MCP 函数已重复鉴权样板；抽进 `@life-os/mcp-server`，Finance/Fitness MCP 近零成本（开发复利，2 消费者达门槛）|
-| 4 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用契约 | Knowledge | P2 | ◆◆ | 1–2d | wikilink 小闭环已发；稳定 `object_ref` 契约仍未起，待第二真实消费者再上，不合并业务表 |
-| 5 | **PLAT.USAGE.0b** | 用量审计节奏化 | Platform | P2 | ◆ | 0.5d | 月度复跑 `npm run qa:usage-audit`；补 AIOS/Knowledge/Health 本机探针 |
-| 6 | **PLNR.ATTACH.1** | 图片缩略图 / paste 体验 | Planner | P2 | ◆ | 1d | ATTACH.0 地基已绿后的体验刀 |
+| ~~1–3~~ | ~~RECOG.1r / UIUX.0 / MCP.0~~ ✅ | — | — | — | — | 2026-07-17 | — |
+| ~~4~~ | ~~**PLAT.DEMO.0**~~ ✅ | 跨 app demoMode 合同 | Platform | — | — | 2026-07-18 | 八 app + uiux-review；不抽共享包 |
+| ~~5~~ | ~~**PLAT.USAGE.0b**~~ ✅ | 用量审计节奏化 | Platform | — | — | 2026-07-18 | `--apply` + AIOS 探针；Knowledge/Health 本机可选 |
+| 6 | **KNOW.XREF.5** / `object_ref` | 跨 OS 对象引用契约 | Knowledge | P2 | ◆◆ | 1–2d | wikilink 已有 Planner+Finance；稳定契约仍按需 |
+| ~~7~~ | ~~**GYMS.MCP.1**~~ ✅ | Fitness MCP | Fitness | — | — | 2026-07-18 | today_training · recent_sessions · readiness_hint |
 
 **后移：** `HOME.PROJ.7`（无第二真实项目不造多项目）、`KNOW.SYNC.1`（先 watcher）、`MUSC.PIPE.4` / `GYMS.MEDIA.3` / `GYMS.SYNC.4`（维护级）、Portal 硬凑本地优先 app 卡。
 
@@ -96,30 +95,21 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 分 app 细节 → [`roadmap/apps/`](./roadmap/apps/README.md) · Growth / Home → [`roadmap/GROWTH.md`](./roadmap/GROWTH.md) · [`roadmap/INTEGRATION.md`](./roadmap/INTEGRATION.md#h-p0)
 
-### 推荐执行顺序（2026-07-17 晚 · 复利复核 · 单人）
-
-研判 → [`roadmap/POTENTIAL.md`](./roadmap/POTENTIAL.md) · 透镜 → [`roadmap/COMPOUND.md`](./roadmap/COMPOUND.md)
+### 推荐执行顺序（2026-07-18 · 复利推进中）
 
 ```text
-Phase 0 — 复利开关 ✅ 已完成
-  PLAT.CI.0 补五品牌 catalog snapshot 基线 → 远程全绿（run 29618672879）
-
-Phase 1 — 信任收割（用户 gate 重）
-  FINC.PURCHASE.6.a owner Confirm→Undo + 双 JWT + 视觉基线
-
-Phase 2 — 跨站复利 / 窄残余（按需）
-  PLAT.MCP.0（抽共享 MCP 鉴权，AIOS 推理内核边际成本压近零）
-  → KNOW.XREF.5/object_ref（待第二真实消费者）  ※ HOME.RECOG.1r 已真机收口
-
-已完成本轮
-  PLNR.ATTACH.0 · HOME.MCP.13 · AIOS.STABLE.26 · KNOW.VAULT.0
-  PLAT.USAGE.0 首报 · FINC RPC anon revoke · FINC Review 过滤拆分
-  CI concurrency SHA 分桶 · Home group-merge/露总数（并行）
-  KNOW.XREF.5 wikilink 小闭环 · PLNR.MCP.0 Planner MCP 面（代码）
+Phase 1 ✅ FINC.MCP.1 · FINC.GROWTH.4 · PLAT.DEMO.0 · PLAT.USAGE.0b · PLNR.ATTACH.1
+Phase 2 ✅ GYMS.MCP.1 · AIOS 一键 MCP 舰队
+Phase 3 ✅ AIOS MCP JWT 自动续期 · KNOW.XREF.5n 原生 deep-link
+Phase 4 ✅ PLAT.DEPLOY.MCP · qa:mcp-fleet · Finance 备注 wikilink
+Phase 5 ✅ AIOS 登录自动 ensure 舰队 · KnowledgeOS.app 安装
+Phase 6 ✅ AIOS.app 重装（自动舰队进日用）· Portal 角标生产部署 · DEVICE.12 预检（本机无 HA）
+按需      object_ref · HOME.DEVICE.12（Ken 装 HA 后）
 
 并行用户 gate
-  PLNR.SCHED.10b.ios + PLNR.CAPTURE.0 · HLT-5 · HOME.RECOG.refine · Knowledge 原生 rebuild 验 watcher
-  PLNR.MCP.0 / HOME.MCP.13 配进 AIOS 验真实读写（加 MCP URL + Life OS token）
+  ✅ MCP 舰队 / KnowledgeOS / AIOS.app / Portal 角标
+  打开 AIOS 试对话 · Portal 看角标
+  PLNR.SCHED.10b.ios + PLNR.CAPTURE.0 · HLT-5 ·（可选）装 HA
 ```
 
 历史 Wave / Phase 完成表不在 hub 展开 → [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
@@ -238,8 +228,8 @@ Package 依赖表、提取决策矩阵、do-not-abstract 全表 → `[roadmap/BA
 | App     | 层级  | URL                                                | Workspace    | SSO | Portal | Top Next（→ 分卷）                               |
 | ------- | --- | -------------------------------------------------- | ------------ | --- | ------ | -------------------------------------------- |
 | Planner | 生产  | [planner.kenos.space](https://planner.kenos.space) | `planner-os` | ✅ | ✅ | 用户 gate：SCHED/CAPTURE；Agent：定向 UI → 附件决策 |
-| Fitness | 生产  | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅ | ✅ | maintenance；MEDIA.3 / SYNC.4 均 P2 |
-| Finance | 生产  | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅ | ✅ | **FINC.PURCHASE.6.a closure QA** |
+| Fitness | 生产  | [fitness.kenos.space](https://fitness.kenos.space) | `fitness-os` | ✅ | ✅ | MCP 已发；维护 MEDIA.3/SYNC.4 按需 |
+| Finance | 生产  | [finance.kenos.space](https://finance.kenos.space) | `finance-os` | ✅ | ✅ | MCP 已发；维护 / GROWTH 已收 |
 | Music   | 生产  | [music.kenos.space](https://music.kenos.space) | `music-os` | ✅ | ✅ | paused / maintenance |
 | Portal  | 启动器 | [portal.kenos.space](https://portal.kenos.space) | `portal` | ✅ | — | maintenance；不为凑 app 数扩卡 |
 | Home    | 实验  | [home.kenos.space](https://home.kenos.space) | `home-os` | ✅ | ✅ | 用户激活 refine · **1r 窄残余** → MCP.13 |
