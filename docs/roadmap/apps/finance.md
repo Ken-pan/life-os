@@ -36,10 +36,25 @@
 
 | ID              | 主题                                | ROI | 桶      | 投入   | Agent                    | 验收                                     | Hub   |
 | --------------- | ----------------------------------- | --- | ------- | ------ | ------------------------ | ---------------------------------------- | ----- |
-| **FINC.PURCHASE.6.a**  | **支出审核 closure QA**（Confirm/Reject/Undo） | 🔥  | Product | 0.5d | Codex + Ken 登录态 | anon revoke ✅ · Review 过滤拆分 ✅；剩 owner Confirm→Undo · 双 JWT · 视觉基线 | §Now |
+| **FINC.PURCHASE.6.a**  | **支出审核 closure QA**（Confirm/Reject/Undo） | 🔥  | Product | 0.2d（仅 owner） | **Ken 登录态** | anon revoke ✅ · Review 过滤拆分 ✅ · **agent 侧 closure 护栏 ✅**（stale/timeout 反馈修复 + Confirm→Undo 边界 10/10 · 单测 **127**）；**剩纯 owner gate**：真机 Confirm→Undo · 双 JWT RLS 拒绝 · 视觉基线 | §Now |
+| **FINC.PURCHASE.6b** | 退款闭环：`returnInfo` · 关联负向 txn · 处理状态 | ◆ | Product | 1–2d | Codex | 退货订单显示关联退款交易；纯 finance 域，6.a 之后加深每日账本真源 | — |
 | ~~**FINC.SYNC.1b**~~ | ~~扩展 popup last sync + 重试~~ ✅ 已发货 2026-07-13 | ◆ | Growth | — | Codex | popup timestamp + 失败原因 + retry；`extensionSyncHealth.test.js` 18/18 | ✅ |
 | **FINC.GROWTH.4**    | 账单任务处理后 Portal 角标消减      | ◆   | Growth  | 1d     | Codex                    | pending 与 UI 一致                       | —     |
 | **FINC.IMPORT.5**    | History CSV 最小导入                | ○   | Product | 3–5d   | Codex                    | `/review/import` 可上传                  | —     |
+
+### 复利视角 · 接下来 ROI 排序（2026-07-17）
+
+> 透镜：[`../COMPOUND.md`](../COMPOUND.md)（使用 × 开发 × 决策）。Finance 在框架里是**使用侧「信任数字」曲线的起点**，也是 finance 跨 OS 消费（MCP「查结余/本月支出」）的**源头可信度**。
+
+| 序 | 事项 | 复利依据 | 归属 |
+| -- | ---- | -------- | ---- |
+| **1** | **FINC.PURCHASE.6.a owner 真机 closure**（Confirm→Undo · 双 JWT · 视觉） | 使用复利最高：解锁 finance 作为可信跨 OS 源头。**agent 增量已封顶**（逻辑+护栏落地），剩下**只有 Ken 能做**的 0.2d 真机 gate | **Ken** |
+| **2** | **PLAT.MCP.0** 抽共享 MCP 鉴权 | 开发复利满分：Home/Planner 两消费者已达提取门槛，抽完 Finance/Fitness MCP 近零成本。**全局最高复利下一步**（见 hub POTENTIAL） | 跨 app（非本卷；共享包） |
+| **3** | **FINC.PURCHASE.6b** 退款闭环 | 使用复利：让「退货/退款后怎么处理」在账本闭环；纯 finance 域，**agent 可推进的最高 ROI finance 工作** | Codex |
+| **4** | **FINC.GROWTH.4** Portal 角标一致 | 使用复利：Portal 是每日放大器，角标一致强化「信任数字一致」信号；依赖 Planner↔Portal 接线 | Codex |
+| 后移 | FINC.IMPORT.5（加表面积、日用触点弱）· FINC.PURCHASE.6c（review 负担已降 71%，边际递减） | 线性/边际递减 | — |
+
+**一句话：** ROI 最高的 6.a 已只剩 **Ken 的真机 gate**（agent 做不了）；**agent 侧下一刀 = FINC.PURCHASE.6b 退款闭环**；全局最高复利仍是 **PLAT.MCP.0**（跨 app）。
 
 ### FINC.PURCHASE.6 — 支出审核（分阶段）
 
@@ -50,11 +65,11 @@
 | 子项      | 范围                                                                     | 验收                                                |
 | --------- | ------------------------------------------------------------------------ | --------------------------------------------------- |
 | **FINC.PURCHASE.6**  | Discovery：产品语义 · 数据审计 · QA 静态准备                               | ✅ PASS |
-| **FINC.PURCHASE.6.a** | Data foundation + History 确认/驳回/Undo UI                              | 🟡 Code complete — engine/RPC/matcher/UI ✅ · anon revoke ✅ · Review=`matched_review` only ✅；剩 owner live、双 JWT、视觉 |
+| **FINC.PURCHASE.6.a** | Data foundation + History 确认/驳回/Undo UI                              | 🟡 engine/RPC/matcher/UI ✅ · anon revoke ✅ · Review=`matched_review` only ✅ · **closure 护栏 ✅**（stale/timeout 反馈修复 + owner Confirm→Undo 边界 10/10）；剩 owner 真机、双 JWT、视觉 |
 | **FINC.PURCHASE.6b** | 后续处理：`returnInfo` · 关联退款 txn · 用户备注/处理状态                | 退货订单显示关联负向交易                            |
 | **FINC.PURCHASE.6c** | Amazon/BBY 策展批次（读 `review_queue_v1_1`，**非** broad apply）        | handoff v1.2/v1.3 增量 clean 行进 DB                |
 
-**已完成：** FINC.CORE.3 STS / reserve / Spend 口径统一 · FINC.PURCHASE.6 产品合同 · 6.a 数据地基 / matcher / UI 实现。Finance app 当前单测 **117/117**（2026-07-17）；purchase decision engine 在共享 `finance-core` 有独立 14/14。
+**已完成：** FINC.CORE.3 STS / reserve / Spend 口径统一 · FINC.PURCHASE.6 产品合同 · 6.a 数据地基 / matcher / UI 实现 · **6.a closure 护栏**（2026-07-17：修复 409 stale / 超时反馈从不渲染的缺陷，把 owner Confirm→Undo 编排抽进可测的 `purchaseReviewClient`，边界测试 10/10 —— [`FP6_CLOSURE_QA_2026-07-17.md`](../../../apps/finance/docs/FP6_CLOSURE_QA_2026-07-17.md)）。Finance app 当前单测 **127/127**；purchase decision engine 在共享 `finance-core` 有独立 18/18。
 
 ### 实现锚点
 

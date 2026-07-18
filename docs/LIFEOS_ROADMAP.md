@@ -44,7 +44,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 | 序 | ID | 主题 | App | 紧急度 | ROI | 投入 | 闭环验收 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.5d | anon revoke ✅ · Review 过滤拆分 ✅；剩 **owner Confirm→Undo 真机**、双真实 JWT、视觉基线 |
+| 1 | **FINC.PURCHASE.6.a** | 支出审核 closure QA | Finance | **P1** | 🔥 | 0.2d（仅 owner） | anon revoke ✅ · Review 过滤拆分 ✅ · **agent 侧 closure 护栏 ✅**（stale/timeout 反馈修复 · Confirm→Undo 边界 10/10 · 单测 127）；**剩纯 owner gate**：真机 Confirm→Undo、双真实 JWT、视觉基线 |
 
 **已收割（2026-07-17 夜）：** `PLAT.CI.0` ✅（补齐五品牌 catalog visual 基线 290 张 → 远程 7/7 全绿，run `29618672879`）· `PLNR.ATTACH.0` ✅ · `HOME.MCP.13` ✅ · `AIOS.STABLE.26` ✅ · `KNOW.VAULT.0` ✅ · `PLAT.USAGE.0` 首报 ✅ · FINC Review 过滤拆分 ✅ · CI concurrency SHA 分桶 ✅ · **`KNOW.XREF.5` wikilink 小闭环** ✅（Planner 备注引用 Knowledge 笔记 + 共享 `@life-os/platform-web/wikilinks`）· **`PLNR.MCP.0` Planner MCP 面** ✅ 代码（AIOS 经 `/api/mcp` 读/建/完成任务；真实 JWT 读写属用户 gate）— 见 [`roadmap/SHIPPED.md`](./roadmap/SHIPPED.md)。
 
@@ -73,7 +73,7 @@ Life OS 是 **个人生活平台**：仓库注册表共有九个产品 app——
 
 **FINC.PURCHASE.6.a matching 质量优化（2026-07-13）：** 诊断发现不确定匹配主因是 `non_clean_status`（87/100）—— Amazon 导出常无 status（99 笔 null→字面量 'unknown' 被误判非 clean）+ "Picked Up"(空格) 漏配 `picked_up`。修 `isCleanPurchaseStatus`（SSOT，UI+read-model 共用）：unknown/缺失视为中性 clean、放宽履约措辞、退款仍非 clean。实测 **clean 105→176 · matched_review 100→29 · refund 68 不变**（71 笔升为可信 clean，审核负担降 71%）。纯客户端分类，无需重跑 matcher/改 DB。`classify.mjs`；`isCleanPurchaseStatus` 3 组断言。剩 29 笔 review 主因 low_confidence(20)/unknown_account(8)，属合理审核，边际递减。
 
-**FINC.PURCHASE.6.a（2026-07-17 再核）：** 决策引擎 14/14、生产 migration + 3 RPC、273 笔回填、RPC 往返、matcher precedence **18/18**、UI Confirm/Reject/Undo **均已完成**（`0913a4daa` · `10886a8ae`）。**仅剩 closure QA：** 双真实 JWT 的 RLS 跨用户拒绝证明、owner 登录 History 实测 Confirm→Undo、desktop/mobile 视觉基线。不要再按「UI/RPC 未实现」估 3–5 天。
+**FINC.PURCHASE.6.a（2026-07-17 再核）：** 决策引擎 14/14、生产 migration + 3 RPC、273 笔回填、RPC 往返、matcher precedence **18/18**、UI Confirm/Reject/Undo **均已完成**（`0913a4daa` · `10886a8ae`）。**2026-07-17 agent 侧 closure 护栏（`3203e648a`）：** 修复 409 stale / 超时反馈被 reconcile-reload 覆写、从不渲染的缺陷；owner Confirm→Undo 编排抽进可测 `purchaseReviewClient`，边界护栏 10/10（空结果 / 重复标注 / 撤销回滚 / 版本冲突 / 超时 / superseded），Finance 单测 117→**127**、engine 18/18。**仅剩纯 owner gate（0.2d，agent 做不了）：** 双真实 JWT 的 RLS 跨用户拒绝证明、owner 登录 History 实测 Confirm→Undo、desktop/mobile 视觉基线。不要再按「UI/RPC 未实现」估 3–5 天。
 
 **PaperOS：** 设备 Shell、数据面 verify、系统生命周期、UI device gate 全部迁出独立仓库 — 详情见 [`roadmap/apps/paperos.md`](./roadmap/apps/paperos.md)；Hub 只保留 Planner 侧 provider API 状态。
 
