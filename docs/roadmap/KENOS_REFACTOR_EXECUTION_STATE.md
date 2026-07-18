@@ -3,7 +3,7 @@ title: Kenos Phase 0 Cloud 执行状态
 owner: kenpan
 last_verified: 2026-07-18
 doc_role: cloud-task-execution-state
-status: ready-not-started
+status: environment-ready-not-started
 ---
 
 # Kenos Phase 0 Cloud 执行状态
@@ -27,7 +27,8 @@ status: ready-not-started
 - Current slice: `S0 — preflight and baseline`
 - Last known safe revision: resolve with `git rev-parse HEAD` at task start
 - Last passing verification: not run by Cloud task
-- Blocker: Cloud environment must first be granted access to `Ken-pan/life-os`
+- Cloud environment: `life-os — Kenos Phase 0`（created and verified）
+- Launch blocker: none
 
 ## Slices
 
@@ -66,7 +67,7 @@ None. Record reversible implementation choices here; do not mark owner decisions
 
 | ID | Slice | Evidence | Attempts | Safe next step | Status |
 | --- | --- | --- | --- | --- | --- |
-| CLOUD-001 | Launch | Cloud repository list does not yet include `Ken-pan/life-os` | Environment settings inspected | Grant this repository only, then create the environment | OPEN |
+| CLOUD-001 | Launch | `Ken-pan/life-os` is visible and environment `life-os — Kenos Phase 0` was created | GitHub authorization and environment details verified | Start one Cloud task from the latest `master` | RESOLVED |
 
 ## Final delivery report
 
