@@ -133,28 +133,29 @@ PROPOSED
 
 ## MIGRATION: KR-P1-001 Plan create task Action/Outbox vertical slice
 
-- Status: `PROPOSED_OWNER_PENDING` — Phase 0 definition only; no SQL, RLS, app runtime, deploy, or production write performed.
+- Status: `TEMPORARY_APPROVED_FOR_KR-P1-001` — temporary governance defaults approved by Ken on 2026-07-18 for this slice only; no production SQL/RLS/auth, deploy, writer cutover, push, or merge has been performed.
 - Owner: Plan / Planner remains the only task data Owner.
-- Scope / non-scope: Scope is one reversible `plan.create_task` Action path, idempotency key, activity record, and outbox publication. Non-scope: task schema migration, Portal redirect, Planner UI rewrite, schedule/complete/reschedule, Work connector writes, Apple clients.
+- Scope / non-scope: Scope is one reversible `plan.create_task` Action path for direct Plan UI task creation and explicit user-requested Assistant `CreateTaskAction`; includes single `Plan Task Command Handler`, validation/risk policy, stable `idempotency_key`, `correlation_id`, durable local queue/offline retry, Task + durable Outbox atomicity, Activity semantics, compatibility adapters, rollback plan, and tests. Non-scope: Work-sourced payload, email-to-task, meeting-to-task, browser Connector capture, bulk import, proactive inferred task creation, automatic cross-domain task creation, production migration apply, writer cutover, deleting old production paths, Portal redirect, schedule/complete/reschedule, Apple clients, push/merge/deploy.
 - Current source of truth: Planner local-first task state with optional Supabase sync; exact table/store names must be verified in the implementation slice before code changes.
 - Target source of truth: Same Plan task truth; Action/Outbox is a write envelope, not a new task store.
 - Current writers: Planner UI and any existing Planner provider/API paths; Paper provider functions stay Planner-side per AGENTS. MCP/tool writers are `UNKNOWN` until implementation inventory.
-- Target single writer: Plan domain executor validates and writes the task; Assistant/Today/MCP/native clients may submit `ActionRequest` only.
+- Target single writer: `Plan Task Command Handler` validates and writes the canonical Task; Planner UI and explicit user-requested Assistant CreateTask Action must call this single writer directly or through compatibility adapter; Assistant is Action producer only and must not insert/update Task storage.
 - Readers / consumers: Planner UI remains canonical reader; Assistant/Activity reads task `EntityRef` and result metadata only.
 - Security domain / classification: Personal + `personal` by default. If request source is Work/Health/Money/Home sensitive data, source classification is preserved and Activity is redacted.
-- Risk level: R1 for standalone task creation; R2 if request also schedules, moves, edits existing plan state, or uses sensitive source text. R3/R4 are fail-closed.
+- Risk level: R1 for user-explicit single reversible local-domain Task creation; Assistant proactive inferred task creation is R2 and excluded from this slice; R3 external/bulk/sensitive-permission changes and R4 production/irreversible/core-data operations are fail-closed and excluded.
 - Compatibility read: Existing Planner reads continue unchanged during the slice; Action result returns `EntityRef` and current task projection.
 - Backfill query/script: None for Phase 1 first slice because no historical task migration is planned. If an Activity table is introduced later, backfill is not required for old tasks unless owner signs a separate ledger row.
 - Reconciliation query: For a fixture/user, count accepted create-task idempotency keys equals number of new Plan tasks plus documented rejected/duplicate requests. Duplicate requests with same idempotency key must resolve to one task.
 - Cutover trigger: After local fixture tests prove Policy → Executor → task write → outbox/activity is atomic and Planner existing tests still pass.
-- Cutover date: `OWNER_PENDING`.
+- Cutover date: `NOT_ALLOWED_IN_KR-P1-001`; writer cutover requires separate owner approval after acceptance evidence.
 - Rollback deadline and steps: Before old direct non-UI writers are disabled. Rollback by routing new entry points back to existing Planner writer and leaving any created tasks as normal Plan tasks; no destructive down migration.
-- Old read-only date: `OWNER_PENDING`; only applies to non-Plan direct writers after parity evidence.
+- Old read-only date: `NOT_ALLOWED_IN_KR-P1-001`; unsafe old paths may be recorded and adapted, not deleted or forcibly retired in this slice.
 - Redirect date: N/A.
 - Observation window: Minimum one stable release or owner-defined real-use window for create-task only.
-- Retirement date: `OWNER_PENDING`; old direct non-UI create-task writer retirement requires evidence that no callers bypass Action.
-- Compatibility removal date: `OWNER_PENDING`.
-- Validation commands: `node scripts/check-kenos-phase0.mjs`; `npm run check:lifeos-boundaries`; `npm run check:app-manifests`; targeted Planner tests to be named in implementation slice.
+- Retirement date: `OWNER_PENDING_AFTER_KR-P1-001_ACCEPTANCE`; old direct non-UI create-task writer retirement requires evidence that no callers bypass Action and a separate owner-approved slice.
+- Compatibility removal date: `OWNER_PENDING_AFTER_KR-P1-001_ACCEPTANCE`; must be reviewed before KR-P1-002 starts.
+- Validation commands: `node scripts/check-kenos-phase0.mjs`; `npm run verify:ticket-naming`; `npm run verify:kenos-refactor`; `npm run check:lifeos-boundaries`; `npm run check:app-manifests`; targeted Planner/Action/Outbox/offline/idempotency/Activity tests to be named in implementation slice.
 - Remote/deploy evidence: None; remote/deploy explicitly prohibited for Phase 0 preparation.
 - Real-use evidence: Not applicable until Phase 1 implementation; Phase 0 evidence is repository-only.
-- Remaining unknowns: Exact Planner task store/table symbols, current MCP create-task path, existing outbox schema fields, Activity storage target, and RLS/idempotency enforcement location.
+- Temporary approval metadata: approved owner Ken; approval date 2026-07-18; expiration/review condition is mandatory review after KR-P1-001 acceptance and before KR-P1-002 starts.
+- Remaining unknowns: Exact Planner task store/table symbols, current MCP create-task path, existing outbox schema fields, Activity storage target, and RLS/idempotency enforcement location must be verified before runtime changes.

@@ -17,6 +17,7 @@ status: active-for-phase-0
 - `CURRENT_INVARIANT`: 当前仓库已强制的规则。
 - `IMPLEMENTED`: 已有代码、测试和必要远程证据。
 - `RETIRED`: 不再适用且已删除兼容层。
+- `TEMPORARY_APPROVED_FOR_KR-P1-001`: 仅限 `KR-P1-001 Plan create task Action/Outbox vertical slice` 的临时批准；KR-P1-001 验收完成后、KR-P1-002 开始前必须复审，不是 Kenos 永久架构决定。
 
 ## P0 决策
 
@@ -45,6 +46,26 @@ status: active-for-phase-0
 | APPLE-004 | Web 保留深度管理与快速演进，WebView 只是过渡 | TARGET_APPROVED | 对每个 Space 做 native-value 矩阵 |
 | APPLE-005 | App Intents 是 Apple 系统入口的 adapter，核心 Action Contract 不以 Swift 为唯一真源 | TARGET_APPROVED | 先实现 CreateTask/CompleteTask/CaptureContent 三个端到端契约 |
 | APPLE-006 | 三端各有本地缓存与 Outbox，不新建领域真源 | TARGET_APPROVED | 冻结 SQLite、冲突策略和密钥保存方式 |
+
+
+## KR-P1-001 临时批准决策
+
+Approved owner: Ken  
+Approval date: 2026-07-18  
+Scope: `KR-P1-001 Plan create task Action/Outbox vertical slice` only.  
+Expiration/review condition: KR-P1-001 验收完成后、KR-P1-002 开始前必须复审；不得扩展为 Kenos 永久架构决定。
+
+| ID | Decision | Status | Scope / non-scope | Expiration / review |
+| --- | --- | --- | --- | --- |
+| KR-P1-001-TEMP-001 | Plan domain 是 canonical Task entity 和 Task lifecycle 的唯一 Owner；其他 domain 可提交 Action、引用 Task ID、消费 projection，但不得直接创建/修改 canonical Task 或维护第二份 canonical Task 真源 | TEMPORARY_APPROVED_FOR_KR-P1-001 | 仅限 create-task vertical slice；不批准 schedule/complete/workflow owner 迁移 | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
+| KR-P1-001-TEMP-002 | 所有任务创建经过唯一 `Plan Task Command Handler`；Planner UI、Assistant、Work、Connector 或其他入口不得直接写 canonical Task storage；现有入口可通过 adapter 调用 single writer；无法安全退休的旧路径暂时保留并记录 | TEMPORARY_APPROVED_FOR_KR-P1-001 | 仅限 create-task；不执行 writer cutover 或删除旧生产路径 | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
+| KR-P1-001-TEMP-003 | Assistant 是 Action producer，不是 Task domain writer；只能根据用户明确指令创建并提交 `CreateTaskAction`；不得绕过 validation、policy、approval、command handler 或直接 insert/update Task storage | TEMPORARY_APPROVED_FOR_KR-P1-001 | 仅限 explicit user-requested Assistant CreateTask Action；排除 proactive inference | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
+| KR-P1-001-TEMP-004 | Task mutation 与 durable Outbox record 必须在同一事务或等价原子提交边界内完成；只允许同时成功或同时回滚；禁止孤立 Task 或孤立 Outbox event；可生成和测试 migration artifact，但不得 apply 生产 migration | TEMPORARY_APPROVED_FOR_KR-P1-001 | 仅限 local/test migration artifact 与 non-production verification | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
+| KR-P1-001-TEMP-005 | 优先保留当前稳定 Task ID 格式；每个 CreateTask Action 必须包含稳定 `idempotency_key` 和 `correlation_id`；通过数据库唯一约束或等价 durable constraint 保证幂等；相同 key 重试返回第一次创建的同一 Task；不得用标题或模糊内容匹配做幂等 | TEMPORARY_APPROVED_FOR_KR-P1-001 | 仅限 create-task idempotency | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
+| KR-P1-001-TEMP-006 | Offline retry 使用 durable local queue、at-least-once delivery、幂等 server/handler、网络恢复自动重试、exponential backoff with jitter、用户可见 pending/failed/retry；禁止静默丢弃；永久 validation/permission error 不得无限重试 | TEMPORARY_APPROVED_FOR_KR-P1-001 | 仅限 create-task retry queue | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
+| KR-P1-001-TEMP-007 | Risk defaults: R0 read-only no approval；R1 用户明确请求的单个可逆本地域写入可自动执行、必须 Activity 且支持 Undo/等价回滚；R2 Assistant 推断或跨域可逆写入需预览确认，除非已有有效授权；R3 显式批准；R4 fail closed，不得无人值守执行。KR-P1-001 中 explicit single Task create 为 R1；Assistant proactive inferred create 为 R2 且排除；批量、生产、外部 Connector 自动创建排除 | TEMPORARY_APPROVED_FOR_KR-P1-001 | 仅限 direct Plan UI task creation 与 explicit user-requested Assistant CreateTask Action | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
+| KR-P1-001-TEMP-008 | Activity 记录 Action ID、correlation ID、actor type、source、action type、policy result、approval state、execution result、resulting Task ID、timestamps、error category、undo/rollback state；不得默认复制 secret/token/auth data/完整 Connector payload/不必要完整对话/Task canonical content 第二长期副本；可保存 redacted summary 和 entity reference | TEMPORARY_APPROVED_FOR_KR-P1-001 | 仅限 create-task Activity semantics | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
+| KR-P1-001-TEMP-009 | Work-sourced create-task 完全排除在 KR-P1-001 外；OPEN-002 保持 PENDING；本 slice 仅覆盖 direct Plan UI task creation 与 explicit user-requested Assistant CreateTask Action | TEMPORARY_APPROVED_FOR_KR-P1-001 | 明确排除 Work payload、email-to-task、meeting-to-task、browser Connector capture、bulk import、proactive inferred task、automatic cross-domain task creation | KR-P1-001 验收完成后、KR-P1-002 开始前复审 |
 
 ## 仍需冻结的业务决策
 

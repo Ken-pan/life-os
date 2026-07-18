@@ -149,3 +149,57 @@ status: phase-0-freeze-package-delivered-with-baseline-blocker
 6. Test results: targeted and shared guards pass except expected ticket-naming baseline, which also makes full `verify:kenos-refactor` expected-baseline-fail.
 7. Readiness verdict: `CONDITIONAL_GO` for design/readiness only; `NO_GO` for runtime implementation until Ken approves the blocking temporary defaults and the implementation slice verifies exact Planner task symbols/current writers.
 8. Required before GO: Ken sign-off on blocking temporary decisions; decide whether Work-sourced create-task is excluded or OPEN-002 is approved; run/fix the independent docs QA link follow-up if a green full verify is required; confirm the intended master-derived baseline in an environment with `origin/master` available.
+
+## KR-P1-001 temporary approval and runtime preflight stop (2026-07-18)
+
+### Temporary governance approvals recorded
+
+- Approved owner: Ken.
+- Approval date: 2026-07-18.
+- Status written to register/policy/ledger: `TEMPORARY_APPROVED_FOR_KR-P1-001`.
+- Scope: `KR-P1-001 Plan create task Action/Outbox vertical slice` only.
+- Expiration/review condition: mandatory review after KR-P1-001 acceptance and before KR-P1-002 starts; not a permanent Kenos architecture decision.
+- Runtime implementation started: NO.
+
+Approved temporary defaults now on file:
+
+1. Plan domain is canonical Task entity and Task lifecycle Owner; no second canonical Task truth.
+2. All task creation goes through one `Plan Task Command Handler`; legacy unsafe paths may be recorded/adapted, not deleted without proof.
+3. Assistant is an Action producer only and cannot directly insert/update Task storage.
+4. Task mutation and durable Outbox record must commit atomically or roll back together; production migration apply remains prohibited.
+5. CreateTask Action requires stable `idempotency_key` and `correlation_id`; durable constraint required; no fuzzy-title idempotency.
+6. Offline retry requires durable local queue, at-least-once delivery, idempotent handler, exponential backoff with jitter, visible pending/failed/retry, no silent drop, and no infinite retry for permanent validation/permission errors.
+7. Risk defaults for KR-P1-001: explicit single Task create is R1; proactive inferred Assistant task creation is R2 and excluded; R3/R4 excluded/fail-closed.
+8. Activity records action/correlation/actor/source/action/policy/approval/result/task/timestamps/error/undo state and may store redacted summary/entity ref, but not secrets/tokens/auth data/full connector payload/unnecessary full conversation/second long-lived canonical Task content.
+9. Work-sourced create-task is excluded; OPEN-002 remains `PENDING`.
+
+### QA baseline link fix
+
+- Fixed `docs/qa/README.md` by replacing the checked link to generated/gitignored `../ui-qa-screenshots/` with inline `docs/ui-qa-screenshots/` plus a link to `screenshot-output.md`.
+- Did not create an empty screenshot directory.
+- Confirmed by `npm run verify:ticket-naming` passing after the change.
+
+### Cloud checkpoint / origin-master handling
+
+| Requirement | Result | Evidence / next step |
+| --- | --- | --- |
+| Confirm latest `origin/master` includes Phase 0 package, readiness governance, temporary approvals, and QA fix | BLOCKED_LOCAL_REMOTE_ABSENT | `git remote -v` prints no remotes and `git rev-parse origin/master` fails in this checkout. Cannot verify or update `origin/master` here. |
+| Choose exactly one path: PR merge or local cherry-pick + push | NOT_PERFORMED | No push/merge performed. Review artifact is current temporary branch commit stack. |
+| Authorized Git operation | NOT_AVAILABLE | Prompt says not to push/merge unless explicitly authorized for that operation; no remote is configured. |
+| Precise owner commands if using local cherry-pick path | READY | In an owner checkout with remotes: `git fetch origin`; `git switch master`; `git pull --ff-only origin master`; `git cherry-pick bced19f41fe01b324f583d6a2976e5817fd44181..HEAD`; run validations; `git push origin master`. If using PR path, merge exactly one reviewed PR containing these commits and do not also cherry-pick. |
+
+### Runtime start gate evaluation
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Latest baseline comes from updated `origin/master` | BLOCKED | No remote/origin ref in checkout; cannot prove latest `origin/master` contains approvals and QA fix |
+| Working tree clean | PASS_AFTER_CHECKPOINT | Closeout changes were committed on the current review branch after `8a6ff4e`; final `git status --short --branch` is clean on `## work` |
+| `npm run verify:ticket-naming` | PASS | `verify:ticket-naming — PASS (0 issues)` |
+| `npm run verify:kenos-refactor` | BLOCKED_EXISTING_STYLE_BASELINE | Phase 0 guard and ticket naming pass, then `npm run check:lifeos-styles` fails on `apps/finance/src [raw-hex]: 35 > 基线 22`; this task did not modify `apps/finance/**` and cannot fix runtime/app style baseline within scope |
+| Temporary decisions on file | PASS | Decision register, policy matrix, and ledger updated |
+| No other Agent parallel modifying repo | UNKNOWN | No local evidence of another writer; cannot prove external Cloud concurrency from this checkout |
+| No production secret/db/deploy needed | PASS_FOR_DOCS | No production operations attempted; runtime implementation would need separate preflight |
+
+### Final stop reason
+
+`NO_GO` for KR-P1-001 runtime in this task. The ticket-naming blocker is fixed, but runtime start conditions are not all satisfied because `origin/master` cannot be verified in this checkout and full `npm run verify:kenos-refactor` is blocked by the newly surfaced existing `check:lifeos-styles` raw-hex baseline in `apps/finance/src`. No KR-P1-001 runtime code, SQL/RLS/auth, production migration apply, writer cutover, old-path deletion, push, merge, or deploy was performed.
