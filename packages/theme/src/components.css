@@ -644,6 +644,20 @@ input[type='number'].no-spin::-webkit-inner-spin-button {
   .sheet { border-radius: var(--radius-overlay); max-height: 85dvh; }
 }
 
+/* iOS 键盘感知：底部锚定的 sheet 默认相对布局视口（inset:0），键盘不缩布局视口只是
+   盖上去 → sheet 底部（含 sticky 操作栏）被键盘盖住。改为高度跟 --app-vh（viewportSync
+   随可视视口维护，键盘弹出即收缩），top 锚定 → sheet 底边升到键盘上方，操作栏始终露出。
+   --app-vh 缺省回退 100dvh，与原 inset:0 等价，不影响未维护该变量的场景。 */
+@media (--life-os-mobile) {
+  .sheet-bg {
+    bottom: auto;
+    height: var(--app-vh, 100dvh);
+  }
+  .sheet {
+    max-height: min(90dvh, var(--app-vh, 100dvh));
+  }
+}
+
 .sheet-handle {
   width: 36px;
   height: 4px;
