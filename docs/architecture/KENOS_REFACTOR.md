@@ -42,6 +42,8 @@ Kenos 将从“多个互相打通的 OS App”渐进收敛为: **用户感受到
 | 7 | [`../roadmap/KENOS_MIGRATION_LEDGER.md`](../roadmap/KENOS_MIGRATION_LEDGER.md) | 每一项迁移的 Owner、单一写入端、cutover 和退役日期是什么？ |
 | 8 | [`../ops/kenos-migration-runbook.md`](../ops/kenos-migration-runbook.md) | 具体怎么操作、对账、切换、回滚和删除旧实现？ |
 | 9 | [`../qa/kenos-refactor-gates.md`](../qa/kenos-refactor-gates.md) | 怎样证明不只是“代码完成”？ |
+| 10 | [`../ops/kenos-codex-cloud.md`](../ops/kenos-codex-cloud.md) | 怎样安全配置和启动无人值守 Cloud 任务？ |
+| 11 | [`../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md`](../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md) | Cloud 任务当前推进到哪里、最后一次验证是什么？ |
 
 ## 权威和状态优先级
 

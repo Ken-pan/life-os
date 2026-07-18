@@ -100,6 +100,33 @@ Rules for every agent session:
    lane — like PaperOS did), extract it into a sibling standalone repo with
    `git filter-repo` instead of giving it branches here.
 
+### Codex Cloud unattended tasks
+
+Cloud execution is an isolated checkout of `origin/master`, not an exception to
+the single-branch policy. The following rules override the normal local
+commit/push instruction for an unattended Cloud task:
+
+1. Start from the existing `master` ref. Do not create a branch, worktree,
+   stash, checkpoint ref, or pull request.
+2. Do not commit, push, merge, deploy, change DNS, or write to a remote database.
+   Leave a reviewable Cloud diff for the owner to apply to `master` later.
+3. Run at most one write-capable Cloud task for this repository at a time. Do
+   not spawn subagents or parallel tasks that modify `life-os`.
+4. Agent-phase internet access stays off. Do not configure secrets or depend on
+   production credentials. Setup may install only lockfile-pinned dependencies.
+5. Uncommitted local work is not present in Cloud. Touch only the path allowlist
+   in the task prompt; treat all other paths as read-only.
+6. An unattended task may prepare docs, guards, fixtures, and non-destructive
+   tests. It may not approve owner decisions, apply migrations, retire an app,
+   delete user data, or weaken tests to obtain a passing result.
+7. Update the task execution-state file before stopping. If facts conflict,
+   production access is needed, or a destructive/irreversible step is next,
+   record the blocker and stop that slice.
+
+The canonical environment settings and prompt are documented in
+`docs/ops/kenos-codex-cloud.md` and
+`docs/ops/kenos-codex-cloud-prompt.md`.
+
 PaperOS was extracted to `/Users/kenpan/「Projects」/paperos` (own repo, full
 history). The Planner-side provider API (`apps/planner/netlify/functions/paper-*`,
 `paperService.mjs`, Supabase paper migrations) stays here.

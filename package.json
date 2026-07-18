@@ -38,6 +38,7 @@
     "build:app-registry": "node scripts/build-app-registry.mjs",
     "add:capability": "node scripts/add-capability.mjs",
     "verify:ticket-naming": "node scripts/verify-ticket-naming.mjs",
+    "verify:kenos-refactor": "bash scripts/verify-kenos-refactor.sh",
     "qa:usage-audit": "node scripts/lifeos-usage-audit.mjs",
     "test:mcp": "node packages/mcp-server/scripts/mcpHandler.test.mjs && node apps/finance/server/mcpFinance.test.mjs && node apps/fitness/server/mcpFitness.test.mjs && node apps/planner/server/mcpTasks.test.mjs && node apps/aios/scripts/mcp.presets.test.mjs",
     "qa:mcp-fleet": "node scripts/qa/mcp-fleet-smoke.mjs",
