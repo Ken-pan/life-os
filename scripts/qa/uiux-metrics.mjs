@@ -77,3 +77,87 @@ export function computeSharedAdoption(repoRoot, appId) {
   const pct = denom > 0 ? Math.round((shared / denom) * 100) : null
   return { pct, shared, local }
 }
+
+/** 分数 → 字母等级（设计系统成熟度惯例）。 */
+export function grade(score) {
+  if (score == null) return '—'
+  if (score >= 90) return 'A'
+  if (score >= 80) return 'B'
+  if (score >= 70) return 'C'
+  if (score >= 60) return 'D'
+  return 'F'
+}
+
+/**
+ * 综合健康分（0-100）+ 等级 —— 设计系统成熟度四维加权：无障碍 / Token 卫生 / 共享采用 / 捕获覆盖。
+ * 缺某维（null）则按剩余权重归一，不臆造。
+ * @param {{ a11yPass?: number, a11yChecked?: number, debt?: number, adoptionPct?: number|null, coveragePct?: number|null }} i
+ */
+export function computeHealth(i) {
+  const dims = {
+    a11y: i.a11yChecked ? Math.round((100 * i.a11yPass) / i.a11yChecked) : null,
+    // Token 卫生：raw-* 硬编码越多越低（饱和曲线，不至于把高债务 app 直接归零）。
+    token: i.debt == null ? null : Math.round(100 * (1 - i.debt / (i.debt + 150))),
+    adoption: i.adoptionPct ?? null,
+    coverage: i.coveragePct ?? null,
+  }
+  const W = { a11y: 0.35, token: 0.3, adoption: 0.2, coverage: 0.15 }
+  let sum = 0
+  let wsum = 0
+  for (const k of Object.keys(W)) {
+    if (dims[k] == null) continue
+    sum += dims[k] * W[k]
+    wsum += W[k]
+  }
+  const score = wsum > 0 ? Math.round(sum / wsum) : null
+  return { score, grade: grade(score), dims }
+}
+
+const ALTITUDE = {
+  'raw-hex': { altitude: 'token', advice: '补齐色板 Design Token，替换硬编码 hex' },
+  'raw-font-size': { altitude: 'token', advice: '补齐字号 Token（type scale）' },
+  'raw-motion': { altitude: 'token', advice: '补齐动效 Token（duration/easing）' },
+  'reserved-ds-class': { altitude: 'shared/local', advice: '局部改名，或把该模式收敛为共享组件' },
+}
+
+/**
+ * 组合治理发现（跨全部 app 分析样式债务基线）：哪些规则是系统性（多 app）该动 Token/共享，
+ * 哪些是局部（少数 app）该局部修 —— 直接回答「改 Token / 共享组件 / 局部页面」。
+ * @param {string} repoRoot
+ * @param {number} systemicThreshold ≥ 多少个 app 视为系统性
+ */
+export function systemicFindings(repoRoot, systemicThreshold = 4) {
+  /** @type {Record<string, number>} */
+  let baseline = {}
+  try {
+    baseline = JSON.parse(readFileSync(join(repoRoot, 'scripts/lifeos-styles-baseline.json'), 'utf8'))
+  } catch {
+    return []
+  }
+  /** @type {Record<string, { total: number, apps: Set<string> }>} */
+  const byRule = {}
+  for (const [key, n] of Object.entries(baseline)) {
+    const m = key.match(/^apps\/([^/]+)\/src\|(.+)$/)
+    if (!m) continue
+    const [, appId, rule] = m
+    byRule[rule] = byRule[rule] ?? { total: 0, apps: new Set() }
+    byRule[rule].total += Number(n)
+    byRule[rule].apps.add(appId)
+  }
+  return Object.entries(byRule)
+    .map(([rule, { total, apps }]) => {
+      const scope = apps.size >= systemicThreshold ? 'systemic' : 'local'
+      const meta = ALTITUDE[rule] ?? { altitude: 'local', advice: '局部修正' }
+      return {
+        rule,
+        label: RULE_LABEL[rule] ?? rule,
+        appCount: apps.size,
+        apps: [...apps],
+        total,
+        scope,
+        altitude: scope === 'systemic' && meta.altitude.includes('token') ? 'token' : meta.altitude,
+        advice: meta.advice,
+      }
+    })
+    .sort((a, b) => b.total - a.total)
+}

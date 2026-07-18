@@ -131,6 +131,27 @@
             "noName": 0,
             "noLabel": 0
           }
+        },
+        "health": {
+          "score": 87,
+          "grade": "B",
+          "dims": {
+            "a11y": 100,
+            "token": 69,
+            "adoption": 80,
+            "coverage": 100
+          }
+        },
+        "coverage": {
+          "ok": 28,
+          "total": 28,
+          "pct": 100
+        },
+        "trend": {
+          "score": null,
+          "debt": null,
+          "a11yFails": null,
+          "since": null
         }
       }
     },
@@ -239,6 +260,27 @@
           "since": "64f531c34",
           "files": 0,
           "areas": []
+        },
+        "health": {
+          "score": 81,
+          "grade": "B",
+          "dims": {
+            "a11y": 99,
+            "token": 87,
+            "adoption": 27,
+            "coverage": 100
+          }
+        },
+        "coverage": {
+          "ok": 28,
+          "total": 28,
+          "pct": 100
+        },
+        "trend": {
+          "score": null,
+          "debt": null,
+          "a11yFails": null,
+          "since": null
         }
       }
     },
@@ -349,6 +391,27 @@
             "noName": 0,
             "noLabel": 0
           }
+        },
+        "health": {
+          "score": 91,
+          "grade": "A",
+          "dims": {
+            "a11y": 100,
+            "token": 72,
+            "adoption": 98,
+            "coverage": 100
+          }
+        },
+        "coverage": {
+          "ok": 28,
+          "total": 28,
+          "pct": 100
+        },
+        "trend": {
+          "score": null,
+          "debt": null,
+          "a11yFails": null,
+          "since": null
         }
       }
     },
@@ -459,6 +522,27 @@
             "noName": 7,
             "noLabel": 0
           }
+        },
+        "health": {
+          "score": 84,
+          "grade": "B",
+          "dims": {
+            "a11y": 98,
+            "token": 68,
+            "adoption": 69,
+            "coverage": 100
+          }
+        },
+        "coverage": {
+          "ok": 28,
+          "total": 28,
+          "pct": 100
+        },
+        "trend": {
+          "score": null,
+          "debt": null,
+          "a11yFails": null,
+          "since": null
         }
       }
     },
@@ -566,6 +650,27 @@
             "noName": 0,
             "noLabel": 0
           }
+        },
+        "health": {
+          "score": 76,
+          "grade": "C",
+          "dims": {
+            "a11y": 100,
+            "token": 25,
+            "adoption": 90,
+            "coverage": 100
+          }
+        },
+        "coverage": {
+          "ok": 20,
+          "total": 20,
+          "pct": 100
+        },
+        "trend": {
+          "score": null,
+          "debt": null,
+          "a11yFails": null,
+          "since": null
         }
       }
     },
@@ -672,6 +777,27 @@
             "noName": 1,
             "noLabel": 0
           }
+        },
+        "health": {
+          "score": 100,
+          "grade": "A",
+          "dims": {
+            "a11y": 100,
+            "token": 100,
+            "adoption": 100,
+            "coverage": 100
+          }
+        },
+        "coverage": {
+          "ok": 28,
+          "total": 28,
+          "pct": 100
+        },
+        "trend": {
+          "score": null,
+          "debt": null,
+          "a11yFails": null,
+          "since": null
         }
       }
     },
@@ -762,6 +888,27 @@
             "noName": 0,
             "noLabel": 0
           }
+        },
+        "health": {
+          "score": 100,
+          "grade": "A",
+          "dims": {
+            "a11y": 100,
+            "token": 100,
+            "adoption": 100,
+            "coverage": 100
+          }
+        },
+        "coverage": {
+          "ok": 12,
+          "total": 12,
+          "pct": 100
+        },
+        "trend": {
+          "score": null,
+          "debt": null,
+          "a11yFails": null,
+          "since": null
         }
       }
     },
@@ -873,8 +1020,155 @@
           "since": "64f531c34",
           "files": 0,
           "areas": []
+        },
+        "health": {
+          "score": 93,
+          "grade": "A",
+          "dims": {
+            "a11y": 100,
+            "token": 75,
+            "adoption": 100,
+            "coverage": 100
+          }
+        },
+        "coverage": {
+          "ok": 28,
+          "total": 28,
+          "pct": 100
+        },
+        "trend": {
+          "score": null,
+          "debt": null,
+          "a11yFails": null,
+          "since": null
         }
       }
     }
-  ]
+  ],
+  "portfolio": {
+    "overall": {
+      "score": 89,
+      "grade": "B"
+    },
+    "totals": {
+      "styleDebt": 710,
+      "a11yFails": 12,
+      "a11yChecked": 1969,
+      "appsAudited": 8
+    },
+    "averages": {
+      "adoption": 83,
+      "coverage": 100
+    },
+    "worst": [
+      {
+        "id": "home",
+        "name": "HOME.OS",
+        "score": 76,
+        "grade": "C"
+      },
+      {
+        "id": "finance",
+        "name": "FINANCE.OS",
+        "score": 81,
+        "grade": "B"
+      },
+      {
+        "id": "music",
+        "name": "MUSIC.OS",
+        "score": 84,
+        "grade": "B"
+      }
+    ],
+    "atRisk": [
+      "finance",
+      "music",
+      "knowledge"
+    ],
+    "budgets": [
+      {
+        "name": "无障碍",
+        "target": "100% 通过",
+        "status": "fail",
+        "detail": "12 项失败"
+      },
+      {
+        "name": "捕获覆盖",
+        "target": "全部页面截到",
+        "status": "pass"
+      },
+      {
+        "name": "样式债务趋势",
+        "target": "不新增",
+        "status": "n/a",
+        "detail": "无基线"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "rule": "raw-hex",
+      "label": "硬编码色值",
+      "appCount": 6,
+      "apps": [
+        "planner",
+        "fitness",
+        "finance",
+        "music",
+        "home",
+        "aios"
+      ],
+      "total": 336,
+      "scope": "systemic",
+      "altitude": "token",
+      "advice": "补齐色板 Design Token，替换硬编码 hex"
+    },
+    {
+      "rule": "raw-font-size",
+      "label": "硬编码字号",
+      "appCount": 5,
+      "apps": [
+        "planner",
+        "fitness",
+        "music",
+        "home",
+        "aios"
+      ],
+      "total": 317,
+      "scope": "systemic",
+      "altitude": "token",
+      "advice": "补齐字号 Token（type scale）"
+    },
+    {
+      "rule": "raw-motion",
+      "label": "硬编码动效",
+      "appCount": 5,
+      "apps": [
+        "planner",
+        "fitness",
+        "music",
+        "home",
+        "aios"
+      ],
+      "total": 31,
+      "scope": "systemic",
+      "altitude": "token",
+      "advice": "补齐动效 Token（duration/easing）"
+    },
+    {
+      "rule": "reserved-ds-class",
+      "label": "占用设计系统保留类名",
+      "appCount": 3,
+      "apps": [
+        "planner",
+        "home",
+        "aios"
+      ],
+      "total": 26,
+      "scope": "local",
+      "altitude": "shared/local",
+      "advice": "局部改名，或把该模式收敛为共享组件"
+    }
+  ],
+  "trendSince": null
 }

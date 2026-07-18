@@ -30,7 +30,13 @@ import {
   resolveRepoRoot,
   writeManifest,
 } from './screenshot-output.mjs'
-import { computeStyleDebt, computeSharedAdoption } from './uiux-metrics.mjs'
+import {
+  computeStyleDebt,
+  computeSharedAdoption,
+  computeHealth,
+  systemicFindings,
+  grade,
+} from './uiux-metrics.mjs'
 
 // ── CLI ──────────────────────────────────────────────────────────────────
 const argv = process.argv.slice(2)
@@ -798,6 +804,7 @@ function writeGalleryManifest(results) {
     count: list.length,
     apps: list,
   }
+  computeGovernance(manifest) // 健康分 + portfolio + findings + 趋势
   mkdirSync(GALLERY_DIR, { recursive: true })
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
   writeFileSync(join(GALLERY_DIR, 'llms.txt'), buildLlmsTxt(manifest))
@@ -832,6 +839,119 @@ function codeImpact(appId, baseSha) {
   } catch {
     // 上一代 sha 不可达（如 CI 浅克隆）→ 返回未知，UI 不臆造。
     return { since: baseSha.slice(0, 9), files: null, areas: [] }
+  }
+}
+
+// ── Design Governance：健康分 + 组合视图 + 趋势（行业惯例：单一健康信号 + 轨迹 + 可路由整改） ──
+const HISTORY_PATH = join(REPO_ROOT, 'apps/uiux-review-gallery/history.json')
+
+/** 一个 app 的覆盖率（跨 4 变体 ok/total）。 */
+function coverageOf(/** @type {any} */ a) {
+  let ok = 0
+  let total = 0
+  for (const v of Object.values(a.variants ?? {})) {
+    if (v.capture) {
+      ok += v.capture.ok
+      total += v.capture.total
+    }
+  }
+  return { ok, total, pct: total > 0 ? Math.round((100 * ok) / total) : null }
+}
+
+/** 一个 app 的治理快照（存历史/算趋势用）。 */
+function snapshotApp(/** @type {any} */ a) {
+  const m = a.metrics ?? {}
+  return {
+    score: m.health?.score ?? null,
+    debt: m.styleDebt?.total ?? 0,
+    a11yFails: m.a11y ? m.a11y.checked - m.a11y.pass : 0,
+    adoption: m.sharedAdoption?.pct ?? null,
+    coverage: coverageOf(a).pct,
+  }
+}
+
+/**
+ * 给已算好 per-app 基础指标（a11y/debt/adoption/capture）的 manifest 补：
+ * 每 app 健康分+等级+趋势，顶层 portfolio 组合视图 + systemic findings。可离线复算（不重抓）。
+ * @param {any} manifest
+ */
+function computeGovernance(manifest) {
+  // 1) 每 app 健康分
+  for (const a of manifest.apps) {
+    const m = (a.metrics = a.metrics ?? {})
+    const cov = coverageOf(a)
+    m.health = computeHealth({
+      a11yPass: m.a11y?.pass,
+      a11yChecked: m.a11y?.checked,
+      debt: m.styleDebt?.total,
+      adoptionPct: m.sharedAdoption?.pct,
+      coveragePct: cov.pct,
+    })
+    m.coverage = cov
+  }
+  // 2) 趋势（vs 上一代生成快照；同轮 4 进程按 sha 去重只 append 一次）
+  const curSha = manifest.git?.sha ?? null
+  /** @type {any[]} */
+  let hist = []
+  try {
+    hist = JSON.parse(readFileSync(HISTORY_PATH, 'utf8'))
+  } catch {
+    /* 首次 */
+  }
+  const prevEntry = [...hist].reverse().find((e) => e.sha !== curSha) ?? null
+  for (const a of manifest.apps) {
+    const cur = snapshotApp(a)
+    const prev = prevEntry?.apps?.[a.id]
+    a.metrics.trend =
+      prev && cur.score != null && prev.score != null
+        ? {
+            score: cur.score - prev.score,
+            debt: cur.debt - prev.debt,
+            a11yFails: cur.a11yFails - prev.a11yFails,
+            since: prevEntry.sha?.slice(0, 9) ?? null,
+            sinceAt: prevEntry.ts ?? null,
+          }
+        : { score: null, debt: null, a11yFails: null, since: null }
+  }
+  // 3) 组合视图
+  const apps = manifest.apps
+  const scores = apps.map((/** @type {any} */ a) => a.metrics.health?.score).filter((s) => s != null)
+  const overallScore = scores.length ? Math.round(scores.reduce((x, y) => x + y, 0) / scores.length) : null
+  const totalDebt = apps.reduce((/** @type {number} */ s, /** @type {any} */ a) => s + (a.metrics.styleDebt?.total ?? 0), 0)
+  const a11yFails = apps.reduce((/** @type {number} */ s, /** @type {any} */ a) => s + (a.metrics.a11y ? a.metrics.a11y.checked - a.metrics.a11y.pass : 0), 0)
+  const a11yChecked = apps.reduce((/** @type {number} */ s, /** @type {any} */ a) => s + (a.metrics.a11y?.checked ?? 0), 0)
+  const adoptions = apps.map((/** @type {any} */ a) => a.metrics.sharedAdoption?.pct).filter((p) => p != null)
+  const coverages = apps.map((/** @type {any} */ a) => a.metrics.coverage?.pct).filter((p) => p != null)
+  const avg = (/** @type {number[]} */ arr) => (arr.length ? Math.round(arr.reduce((x, y) => x + y, 0) / arr.length) : null)
+  const ranked = [...apps].sort((a, b) => (a.metrics.health?.score ?? 999) - (b.metrics.health?.score ?? 999))
+  const atRisk = apps
+    .filter((/** @type {any} */ a) => (a.metrics.health?.score ?? 100) < 70 || (a.metrics.a11y && a.metrics.a11y.pass < a.metrics.a11y.checked) || (a.metrics.coverage?.pct ?? 100) < 100)
+    .map((/** @type {any} */ a) => a.id)
+  manifest.portfolio = {
+    overall: { score: overallScore, grade: grade(overallScore) },
+    totals: { styleDebt: totalDebt, a11yFails, a11yChecked, appsAudited: apps.length },
+    averages: { adoption: avg(adoptions), coverage: avg(coverages) },
+    worst: ranked.slice(0, 3).map((/** @type {any} */ a) => ({ id: a.id, name: a.name, score: a.metrics.health?.score, grade: a.metrics.health?.grade })),
+    atRisk,
+    // 预算/门禁：把治理目标写清楚（行业惯例：metric 要对齐目标）。
+    budgets: [
+      { name: '无障碍', target: '100% 通过', status: a11yFails === 0 ? 'pass' : 'fail', detail: a11yFails === 0 ? '全通过' : `${a11yFails} 项失败` },
+      { name: '捕获覆盖', target: '全部页面截到', status: coverages.every((c) => c === 100) ? 'pass' : 'fail' },
+      { name: '样式债务趋势', target: '不新增', status: prevEntry ? (totalDebt <= (prevEntry.portfolio?.debt ?? totalDebt) ? 'pass' : 'fail') : 'n/a', detail: prevEntry ? `${totalDebt - (prevEntry.portfolio?.debt ?? totalDebt) >= 0 ? '+' : ''}${totalDebt - (prevEntry.portfolio?.debt ?? totalDebt)}` : '无基线' },
+    ],
+  }
+  manifest.findings = systemicFindings(REPO_ROOT)
+  manifest.trendSince = prevEntry?.sha?.slice(0, 9) ?? null
+
+  // 4) 追加历史快照（按 sha 去重，只每代一次）
+  if (curSha && !hist.some((e) => e.sha === curSha)) {
+    hist.push({
+      ts: manifest.generatedAt,
+      sha: curSha,
+      apps: Object.fromEntries(apps.map((/** @type {any} */ a) => [a.id, snapshotApp(a)])),
+      portfolio: { score: overallScore, debt: totalDebt, a11yFails },
+    })
+    writeFileSync(HISTORY_PATH, `${JSON.stringify(hist.slice(-40), null, 2)}\n`)
   }
 }
 
@@ -962,8 +1082,8 @@ async function main() {
   console.log(`\n完成: ${results.length} 个 app, ${totalOk}/${total} 屏成功。`)
 }
 
-// 直接执行才跑抓图 main()；被 import（如元数据重建工具）时只暴露 buildLlmsTxt/buildSitemap。
-export { buildLlmsTxt, buildSitemap }
+// 直接执行才跑抓图 main()；被 import（如元数据/治理重建工具）时只暴露纯函数。
+export { buildLlmsTxt, buildSitemap, computeGovernance }
 
 const invokedDirectly =
   process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href

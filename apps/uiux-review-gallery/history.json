@@ -1,0 +1,69 @@
+[
+  {
+    "ts": "2026-07-18T17:07:19.126Z",
+    "sha": "69243b01b",
+    "apps": {
+      "planner": {
+        "score": 87,
+        "debt": 66,
+        "a11yFails": 0,
+        "adoption": 80,
+        "coverage": 100
+      },
+      "finance": {
+        "score": 81,
+        "debt": 22,
+        "a11yFails": 4,
+        "adoption": 27,
+        "coverage": 100
+      },
+      "fitness": {
+        "score": 91,
+        "debt": 59,
+        "a11yFails": 0,
+        "adoption": 98,
+        "coverage": 100
+      },
+      "music": {
+        "score": 84,
+        "debt": 70,
+        "a11yFails": 7,
+        "adoption": 69,
+        "coverage": 100
+      },
+      "home": {
+        "score": 76,
+        "debt": 442,
+        "a11yFails": 0,
+        "adoption": 90,
+        "coverage": 100
+      },
+      "knowledge": {
+        "score": 100,
+        "debt": 0,
+        "a11yFails": 1,
+        "adoption": 100,
+        "coverage": 100
+      },
+      "health": {
+        "score": 100,
+        "debt": 0,
+        "a11yFails": 0,
+        "adoption": 100,
+        "coverage": 100
+      },
+      "aios": {
+        "score": 93,
+        "debt": 51,
+        "a11yFails": 0,
+        "adoption": 100,
+        "coverage": 100
+      }
+    },
+    "portfolio": {
+      "score": 89,
+      "debt": 710,
+      "a11yFails": 12
+    }
+  }
+]

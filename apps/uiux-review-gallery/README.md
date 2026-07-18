@@ -47,7 +47,21 @@ npm run qa:uiux-gallery:changed    # 只刷新本次改动触及的 app（增量
 - 手动一键：`npm run qa:uiux-gallery:publish`（仓库根，重生成 4 变体 + prod 部署）。
 - 也已加进 `scripts/deploy-all-netlify.sh`（发版随其它站一起 CLI 部署已提交内容）。
 
-## Design Governance Dashboard（每 app 卡片的治理指标，全真实数据）
+## Design Governance Dashboard（行业成熟度惯例：单一健康信号 + 轨迹 + 可路由整改）
+
+顶部**组合视图（cockpit）**（`manifest.json` 的 `portfolio` / `findings`）：
+
+- **组合健康分 + 等级**（A–F）——四维加权（无障碍 .35 · Token 卫生 .30 · 共享采用 .20 · 覆盖 .15），
+  每 app 也有独立健康分徽章。见 `uiux-metrics.mjs` 的 `computeHealth`。
+- **预算/门禁**（对齐目标）：无障碍 100% 通过 · 捕获覆盖全截到 · 样式债务不新增 → pass/fail chip。
+- **最需关注**：健康分最低的 3 个 app。
+- **整改路由（systemic vs local）**：跨全部 app 分析样式债务基线 → 系统性规则（多 app）建议动 **Token**，
+  局部规则建议 **shared/local**。直接回答「改 Token / 共享组件 / 局部页面」。见 `systemicFindings`。
+- **趋势**：每代生成写一份快照到 `history.json`（按 git.sha 去重），卡片上 `▲/▼` 显示健康分/债务/a11y 相对上一代的变化
+  （回归=红）。首次无基线时诚实显示「无基线」。
+- **排序**：默认 / 健康分 / 样式债务 / 无障碍 —— 让最差的浮到前面。
+
+### 每 app 卡片的治理指标（全真实数据）
 
 每张卡片除截图外展示 5 类可回答治理问题的指标（`manifest.json` 的 `apps[].metrics` / `variants[].capture`）：
 

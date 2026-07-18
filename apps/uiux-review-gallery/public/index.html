@@ -60,6 +60,67 @@
 
       .note { max-width: 1360px; margin: 10px auto 0; padding: 0 24px; color: var(--faint); font-size: 12.5px; }
 
+      .legend { max-width: 1360px; margin: 12px auto 0; padding: 0 24px; }
+      .legend > summary { cursor: pointer; display: inline-block; font-size: 13px; font-weight: 600;
+        color: var(--sub); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; list-style: none; }
+      .legend > summary::-webkit-details-marker { display: none; }
+      .legend > summary::before { content: '① '; }
+      .legend[open] > summary { color: var(--ink); }
+      .legend-body { margin-top: 12px; background: var(--surface); border: 1px solid var(--border);
+        border-radius: 14px; padding: 16px 20px; font-size: 13px; line-height: 1.7; color: var(--ink); }
+      .legend-body ul { margin: 8px 0 0; padding-left: 18px; }
+      .legend-body li { margin: 4px 0; color: var(--sub); }
+      .legend-body li b { color: var(--ink); }
+      .legend-body code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px;
+        background: var(--seg); padding: 1px 5px; border-radius: 4px; }
+      .lg { display: inline-flex; width: 16px; height: 16px; border-radius: 50%; color: #fff;
+        align-items: center; justify-content: center; font-size: 10px; font-weight: 800; vertical-align: middle; }
+      .lg.A { background: #2ea36a; } .lg.B { background: #4b9fd6; } .lg.C { background: #cf9026; }
+      .lg.D { background: #e07b39; } .lg.F { background: #e0584c; }
+      .lg-machine { margin-top: 10px; color: var(--faint); }
+      .lg-machine a { color: var(--accent); font-weight: 600; text-decoration: none; }
+
+      /* ── Governance 组合视图（cockpit） ── */
+      .overview { max-width: 1360px; margin: 14px auto 0; padding: 18px 24px; }
+      .ov-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+        box-shadow: var(--shadow); padding: 18px 20px; }
+      .ov-top { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+      .ov-grade { display: flex; align-items: center; gap: 12px; }
+      .ov-grade .letter { font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+      .ov-grade .meta { font-size: 12.5px; color: var(--sub); }
+      .ov-grade .meta b { color: var(--ink); font-size: 15px; }
+      .ov-stats { display: flex; gap: 22px; flex-wrap: wrap; margin-left: auto; }
+      .ov-stat { text-align: right; }
+      .ov-stat .n { font-size: 20px; font-weight: 800; }
+      .ov-stat .l { font-size: 11.5px; color: var(--faint); }
+      .ov-budgets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+      .chip { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 11px; border: 1px solid var(--border); }
+      .chip.pass { color: #2ea36a; border-color: #2ea36a55; background: #2ea36a12; }
+      .chip.fail { color: #e0584c; border-color: #e0584c55; background: #e0584c12; }
+      .chip.na { color: var(--faint); }
+      .ov-worst { margin-top: 12px; font-size: 12.5px; color: var(--sub); }
+      .ov-worst b { color: var(--ink); }
+      .findings { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 7px; }
+      .findings h3 { font-size: 12px; color: var(--faint); font-weight: 700; letter-spacing: .04em; }
+      .finding { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; line-height: 1.5; }
+      .finding .tag { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 1px 7px; white-space: nowrap; }
+      .finding .tag.systemic { color: #fff; background: #cf9026; }
+      .finding .tag.local { color: var(--sub); border: 1px solid var(--border); }
+      .finding .rt { color: var(--ink); font-weight: 600; }
+      .finding .adv { color: var(--sub); }
+      .finding .alt { margin-left: auto; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; color: var(--accent); white-space: nowrap; }
+
+      /* 健康分徽章（卡片） */
+      .health { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+        padding: 2px 4px 2px 4px; font-weight: 800; }
+      .health .g { width: 22px; height: 22px; border-radius: 50%; color: #fff; display: inline-flex;
+        align-items: center; justify-content: center; font-size: 12px; }
+      .health .s { font-size: 12px; color: var(--sub); font-weight: 700; padding-right: 6px; }
+      .g.A { background: #2ea36a; } .g.B { background: #4b9fd6; } .g.C { background: #cf9026; }
+      .g.D { background: #e07b39; } .g.F { background: #e0584c; }
+      .trend { font-size: 11px; font-weight: 700; margin-left: 6px; }
+      .trend.up { color: #e0584c; } .trend.down { color: #2ea36a; } .trend.flat { color: var(--faint); }
+
       main { max-width: 1360px; margin: 0 auto; padding: 22px 24px 8px;
         display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
       main.mobile { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
@@ -88,6 +149,8 @@
       .m .k { color: var(--faint); white-space: nowrap; }
       .m .v { text-align: right; font-weight: 700; }
       .m .v .mut { color: var(--faint); font-weight: 500; }
+      .m[title] { cursor: help; }
+      .ov-grade .mut2 { color: var(--faint); font-size: 11px; font-weight: 500; }
       .m.ok .v { color: #2ea36a; }
       .m.warn .v { color: #cf9026; }
       .m.bad .v { color: #e0584c; }
@@ -127,7 +190,33 @@
           <button data-v="mobile" aria-pressed="false">移动</button>
         </div>
       </div>
+      <div class="ctl"><span class="ctl-label">排序</span>
+        <div class="seg" id="segSort">
+          <button data-v="default" aria-pressed="true">默认</button>
+          <button data-v="health" aria-pressed="false">健康分</button>
+          <button data-v="debt" aria-pressed="false">样式债务</button>
+          <button data-v="a11y" aria-pressed="false">无障碍</button>
+        </div>
+      </div>
     </div>
+    <section class="overview" id="overview" aria-label="设计治理组合视图"></section>
+    <details class="legend">
+      <summary>怎么读这个看板？</summary>
+      <div class="legend-body">
+        <p>每个 app 一张<b>联系表</b>（6~8 个核心页面拼成一张，带序号·标题·路由标注）+ 该 app 的<b>设计治理指标</b>。切换上方主题/视图看不同变体。</p>
+        <ul>
+          <li><b>健康分 A–F（0–100）</b>：单一质量信号 = 无障碍 35% · Token 卫生 30% · 共享组件采用 20% · 页面覆盖 15% 加权。<span class="lg A">A</span>≥90 <span class="lg B">B</span>≥80 <span class="lg C">C</span>≥70 <span class="lg D">D</span>≥60 <span class="lg F">F</span>&lt;60。</li>
+          <li><b>捕获覆盖</b>：配置的页面截到了几张（缺=没截到，需排查）。</li>
+          <li><b>无障碍</b>：页内自动查「图无 alt / 控件无可访问名 / 输入无标注」的通过率。</li>
+          <li><b>共享组件采用</b>：源码里 <code>@life-os/*</code> 共享 UI import 占「共享+本地组件 import」的比例（越高越少造轮子）。</li>
+          <li><b>样式债务</b>：硬编码色值/字号/动效等应改成 Design Token 的存量数（越低越好），附整改方向。</li>
+          <li><b>代码变更影响</b>：自上一次生成到现在，这个 app 改了哪些文件/页面。</li>
+          <li><b>整改路由</b>：同类问题跨<b>多个 app = 系统性</b>，该在 <code>Token/共享</code> 层修；只在<b>少数 app = 局部</b>，局部改即可。</li>
+          <li><b>▲/▼</b>：相对上一代生成的变化（回归=红）。数据全部由脚本从真实源码/截图计算，缺失即不显示。</li>
+        </ul>
+        <p class="lg-machine">机器可读：<a href="manifest.json">manifest.json</a> · <a href="llms.txt">llms.txt</a>（AI agent 可直接读，无需 OCR 截图）。</p>
+      </div>
+    </details>
     <p class="note" id="note"></p>
     <main id="grid"></main>
     <div class="state" id="state">加载中…</div>
@@ -154,6 +243,7 @@
       const state = {
         theme: localStorage.getItem('gallery_theme') || 'light',
         viewport: localStorage.getItem('gallery_viewport') || 'desktop',
+        sort: localStorage.getItem('gallery_sort') || 'default',
         data: null,
       }
       // 主题联动页面 chrome
@@ -174,8 +264,8 @@
       }
 
       // 治理指标行（真实数据；缺失则不显示，绝不臆造）
-      function mrow(k, val, cls) {
-        return '<div class="m ' + cls + '"><span class="k">' + k + '</span><span class="v">' + val + '</span></div>'
+      function mrow(k, val, cls, title) {
+        return '<div class="m ' + cls + '"' + (title ? ' title="' + title + '"' : '') + '><span class="k">' + k + '</span><span class="v">' + val + '</span></div>'
       }
       function metricsHtml(a, v) {
         const m = a.metrics || {}
@@ -190,7 +280,7 @@
           if (dcap) cov.push('桌面 ' + dcap.ok + '/' + dcap.total)
           if (mcap) cov.push('移动 ' + mcap.ok + '/' + mcap.total)
           const allOk = (!dcap || dcap.ok === dcap.total) && (!mcap || mcap.ok === mcap.total)
-          rows.push(mrow('捕获覆盖', cov.join(' · '), allOk ? 'ok' : 'warn'))
+          rows.push(mrow('捕获覆盖', cov.join(' · '), allOk ? 'ok' : 'warn', '配置的核心页面截到了几张（缺=没截到，需排查）'))
         }
         // 无障碍（浅色桌面审计：图无 alt / 控件无名 / 输入无标注）
         if (m.a11y) {
@@ -200,17 +290,17 @@
           if (issues.noAlt) iss.push('无 alt ' + issues.noAlt)
           if (issues.noName) iss.push('无名 ' + issues.noName)
           if (issues.noLabel) iss.push('无标注 ' + issues.noLabel)
-          rows.push(mrow('无障碍', pass + '/' + checked + ' 通过' + (iss.length ? '（' + iss.join(' · ') + '）' : ''), cls))
+          rows.push(mrow('无障碍', pass + '/' + checked + ' 通过' + (iss.length ? '（' + iss.join(' · ') + '）' : '') + trendTag((m.trend || {}).a11yFails, true), cls, '页内自动查：图无 alt / 控件无可访问名 / 输入无标注'))
         }
-        // 共享 UI 采用（import 占比代理，中性色不评判）
+        // 共享组件采用（import 占比代理，中性色不评判）
         if (m.sharedAdoption && m.sharedAdoption.pct != null) {
-          rows.push(mrow('共享 UI 采用', m.sharedAdoption.pct + '% <span class="mut">(' + m.sharedAdoption.shared + '/' + (m.sharedAdoption.shared + m.sharedAdoption.local) + ' import)</span>', 'muted'))
+          rows.push(mrow('共享组件采用', m.sharedAdoption.pct + '% <span class="mut">(' + m.sharedAdoption.shared + '/' + (m.sharedAdoption.shared + m.sharedAdoption.local) + ' import)</span>', 'muted', '@life-os/* 共享 UI import 占「共享+本地组件 import」比例；越高越少造轮子'))
         }
         // 样式债务（棘轮基线 · 附整改方向）
         if (m.styleDebt) {
           const d = m.styleDebt
           const cls = d.total === 0 ? 'ok' : d.total >= 100 ? 'bad' : 'warn'
-          rows.push(mrow('样式债务', d.total + ' 项' + (d.total ? ' <span class="mut">· ' + esc(d.triage) + '</span>' : ''), cls))
+          rows.push(mrow('样式债务', d.total + ' 项' + trendTag((m.trend || {}).debt, true) + (d.total ? ' <span class="mut">· ' + esc(d.triage) + '</span>' : ''), cls, '硬编码色值/字号/动效等应改成 Design Token 的存量数；越低越好'))
         }
         // 代码变更影响（git：自上一代生成 sha 到 HEAD，本 app 变更文件 → 影响区域）
         if (m.codeImpact) {
@@ -222,15 +312,72 @@
             detail = ci.files + ' 文件' + (ci.areas.length ? '：' + ci.areas.map(esc).join(' / ') : '')
             cls = 'warn'
           }
-          rows.push(mrow('代码变更影响', detail, cls))
+          rows.push(mrow('代码变更', detail, cls, '自上一次生成到现在，这个 app 改了哪些文件/页面（git diff）'))
         }
         return rows.length ? '<div class="metrics">' + rows.join('') + '</div>' : ''
       }
 
+      function healthBadge(a) {
+        const h = (a.metrics || {}).health
+        if (!h || h.score == null) return ''
+        const t = (a.metrics.trend || {}).score
+        let tr = ''
+        if (t != null && t !== 0) tr = '<span class="trend ' + (t > 0 ? 'down' : 'up') + '">' + (t > 0 ? '▲' : '▼') + Math.abs(t) + '</span>'
+        return '<span class="health" title="设计系统健康分（无障碍/Token卫生/共享采用/覆盖 加权）"><span class="g ' + h.grade + '">' + h.grade + '</span><span class="s">' + h.score + tr + '</span></span>'
+      }
+
+      function trendTag(delta, goodDown) {
+        if (delta == null || delta === 0) return ''
+        const worse = goodDown ? delta > 0 : delta < 0
+        const arrow = delta > 0 ? '▲' : '▼'
+        return ' <span class="trend ' + (worse ? 'up' : 'down') + '">' + arrow + Math.abs(delta) + '</span>'
+      }
+
+      function renderOverview() {
+        const el = document.getElementById('overview')
+        const p = state.data && state.data.portfolio
+        if (!p) { el.innerHTML = ''; return }
+        const f = state.data.findings || []
+        const budgets = (p.budgets || [])
+          .map((b) => '<span class="chip ' + (b.status === 'pass' ? 'pass' : b.status === 'fail' ? 'fail' : 'na') + '">' + esc(b.name) + '：' + (b.status === 'pass' ? '达标' : b.status === 'fail' ? '未达标' : '—') + (b.detail ? ' ' + esc(b.detail) : '') + '</span>')
+          .join('')
+        const worst = (p.worst || []).map((w) => '<b>' + esc(w.name) + '</b> ' + esc(w.grade) + '(' + w.score + ')').join(' · ')
+        const findings = f.length
+          ? '<div class="findings"><h3>整改路由 — 同类问题跨多 app＝系统性(修 Token/共享)，少数 app＝局部(局部改)</h3>' +
+            f.map((x) =>
+              '<div class="finding"><span class="tag ' + (x.scope === 'systemic' ? 'systemic' : 'local') + '">' + (x.scope === 'systemic' ? '系统性' : '局部') + '</span>' +
+              '<span class="rt">' + esc(x.label) + '</span>' +
+              '<span class="adv">' + x.appCount + ' app · ' + x.total + ' 处 — ' + esc(x.advice) + '</span>' +
+              '<span class="alt">' + esc(x.altitude) + '</span></div>'
+            ).join('') + '</div>'
+          : ''
+        const gc = { A: '#2ea36a', B: '#4b9fd6', C: '#cf9026', D: '#e07b39', F: '#e0584c' }[p.overall.grade] || 'var(--ink)'
+        el.innerHTML =
+          '<div class="ov-card"><div class="ov-top">' +
+          '<div class="ov-grade"><span class="letter" style="color:' + gc + '" title="A≥90 B≥80 C≥70 D≥60 F<60">' + esc(p.overall.grade || '—') + '</span>' +
+          '<span class="meta">组合健康分 <b>' + (p.overall.score ?? '—') + '</b> / 100 · ' + p.totals.appsAudited + ' app<br><span class="mut2">= 无障碍·Token卫生·共享采用·覆盖 加权</span></span></div>' +
+          '<div class="ov-stats">' +
+          stat(p.totals.styleDebt, '组合样式债务') +
+          stat(p.totals.a11yFails + '/' + p.totals.a11yChecked, '无障碍失败/检查') +
+          stat((p.averages.adoption ?? '—') + '%', '平均共享采用') +
+          stat((p.averages.coverage ?? '—') + '%', '平均捕获覆盖') +
+          '</div></div>' +
+          '<div class="ov-budgets">' + budgets + '</div>' +
+          (worst ? '<div class="ov-worst">最需关注：' + worst + (state.data.trendSince ? ' · 趋势基线 ' + esc(state.data.trendSince) : '') + '</div>' : '') +
+          findings +
+          '</div>'
+      }
+      function stat(n, l) { return '<div class="ov-stat"><div class="n">' + n + '</div><div class="l">' + esc(l) + '</div></div>' }
+
       function render() {
         applyPageTheme()
         if (!state.data) return
-        const apps = state.data.apps || []
+        renderOverview()
+        let apps = (state.data.apps || []).slice()
+        // 排序（默认=注册顺序；其余按治理指标，最需关注在前）
+        if (state.sort === 'health') apps.sort((a, b) => (a.metrics?.health?.score ?? 999) - (b.metrics?.health?.score ?? 999))
+        else if (state.sort === 'debt') apps.sort((a, b) => (b.metrics?.styleDebt?.total ?? 0) - (a.metrics?.styleDebt?.total ?? 0))
+        else if (state.sort === 'a11y') apps.sort((a, b) => ((b.metrics?.a11y ? b.metrics.a11y.checked - b.metrics.a11y.pass : 0) - (a.metrics?.a11y ? a.metrics.a11y.checked - a.metrics.a11y.pass : 0)))
         const vkey = state.theme + '-' + state.viewport
         const vpZh = state.viewport === 'mobile' ? '移动' : '桌面'
         const thZh = state.theme === 'dark' ? '深色' : '浅色'
@@ -260,6 +407,7 @@
               '<img loading="lazy" src="' + esc(v.file) + '" width="' + (state.viewport === 'mobile' ? 1170 : 1402) + '" alt="' + alt + '" /></a>' +
               '<figcaption class="body">' +
               '<div class="row"><h2 class="name">' + esc(a.name) + '</h2>' +
+              healthBadge(a) +
               '<span class="badge">' + (v.screens ?? a.screens ?? '?') + ' 屏</span></div>' +
               (a.description ? '<p class="desc">' + esc(a.description) + '</p>' : '') +
               (pages ? '<p class="pages">' + pages + '</p>' : '') +
@@ -279,6 +427,7 @@
         applyPageTheme()
         wireSeg('segTheme', 'theme', render)
         wireSeg('segViewport', 'viewport', render)
+        wireSeg('segSort', 'sort', render)
         let data
         try {
           const res = await fetch('manifest.json?' + Date.now())
