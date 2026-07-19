@@ -2,16 +2,18 @@
 title: Kenos production read client deployment plan
 owner: kenpan
 last_verified: 2026-07-19
-status: prepared-not-executed
+status: prepared-blocked-pending-live-netlify-revalidation
 ---
 
 # Read client vs writer deployment (separated approvals)
 
 Do **not** use one broad phrase for read + write + cutover.
 
+**Current gate:** Netlify pause is `NETLIFY_PAUSE_STATE_INHERITED_NOT_LIVE_REVALIDATED`. Phase A canary and any further push stay blocked until `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`. Do not act on `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY` under inherited-only evidence.
+
 | Phase | Scope | Phrase | Writes production? |
 | ----- | ----- | ------ | ------------------ |
-| A | Preview / paused-build read-path canary (Today/Inbox/Focus/Work reads, flags opt-in) | `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY` | **No** |
+| A | Preview / paused-build read-path canary (Today/Inbox/Focus/Work reads, flags opt-in) | `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY` | **No** — also requires live pause revalidation first |
 | B | Broader production domain client publish while writers still legacy | `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY` | **No** (reads only; Plan command / Approval decision / Focus·Work write remain Off) |
 | C | Authenticated Plan command canary creating real Tasks | `APPROVE_KENOS_PRODUCTION_WRITER_CANARY` | **Yes** (scoped) |
 

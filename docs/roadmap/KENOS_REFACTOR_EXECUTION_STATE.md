@@ -411,8 +411,12 @@ Approved temporary defaults now on file:
 
 ## Phase 6 Production read path integration (2026-07-19)
 
-- Status: `KENOS PRODUCTION READ PATHS — SHADOW_VERIFIED_AND_CLIENT_CANARY_READY`.
+- Implementation: ready (feature `3899727fe…`; tests/build/RPC smoke/shadow).
+- Overall report status: `KENOS PRODUCTION READ PATHS — IMPLEMENTATION_READY_CANARY_BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION`.
+- Netlify: **`NETLIFY_PAUSE_STATE_INHERITED_NOT_LIVE_REVALIDATED`** — last live pause proof is `docs/qa/kenos-authoritative-push-report.md`; this session’s Netlify API recheck aborted (no auth). Inherited evidence ≠ current live verification.
+- Push readiness: **`BLOCKED_PENDING_NETLIFY_AUTH`** (no further push until live revalidation).
+- Read client canary: **`BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION`**.
 - Report: `docs/qa/kenos-production-read-path-integration-report.md`.
-- Deploy plan (separated approvals): `docs/ops/kenos-production-read-client-deploy-plan.md`.
+- Deploy plan: `docs/ops/kenos-production-read-client-deploy-plan.md`.
 - Defaults: Focus/Work/Today overlay read flags **Off**; Approvals RPC On; no production writes from UI.
-- Next phrase: `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY` (then separately writer canary / full client deploy).
+- Upgrade path: local Netlify auth → live verify 7× `stop_builds=true` + Gallery `disabled_manually` + no unexpected deploy → `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED` → then consider `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`.

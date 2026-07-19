@@ -2,23 +2,55 @@
 title: KENOS PRODUCTION READ PATH INTEGRATION REPORT
 owner: kenpan
 last_verified: 2026-07-19
-status: SHADOW_VERIFIED_AND_CLIENT_CANARY_READY
+status: IMPLEMENTATION_READY_CANARY_BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION
 ---
 
 # KENOS PRODUCTION READ PATH INTEGRATION REPORT
 
-**Status: `KENOS PRODUCTION READ PATHS — SHADOW_VERIFIED_AND_CLIENT_CANARY_READY`**
+**Overall: `KENOS PRODUCTION READ PATHS — IMPLEMENTATION_READY_CANARY_BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION`**
+
+| Readiness gate | Status |
+| -------------- | ------ |
+| Read-path implementation | **Ready** (local tests/build/RPC smoke/shadow; flags default Off) |
+| Netlify pause evidence | **`NETLIFY_PAUSE_STATE_INHERITED_NOT_LIVE_REVALIDATED`** |
+| Further `git push` | **`BLOCKED_PENDING_NETLIFY_AUTH`** |
+| Production read client canary | **`BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION`** |
+| Full client deploy (`APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`) | **Blocked** — not in scope; requires live revalidation first |
+
+Do **not** treat inherited Netlify evidence as current live verification. Upgrade to `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED` only after local Netlify auth + live checks below succeed.
+
+## 0. Netlify pause evidence boundary
+
+**Label: `NETLIFY_PAUSE_STATE_INHERITED_NOT_LIVE_REVALIDATED`**
+
+Facts:
+
+- Last live verification of seven sites `stop_builds=true` and UIUX Gallery `disabled_manually` is recorded in `docs/qa/kenos-authoritative-push-report.md` (`PRODUCTION_CLIENT_AUTOBUILDS_PAUSED`).
+- This read-path task did **not** restore builds, enable workflows, manual-deploy, or change hosting config.
+- This machine currently lacks Netlify auth; a live `sites:list` / API recheck **aborted** (interactive prompt / no auth). Therefore this task **cannot** prove remote pause state was not changed externally since that report.
+- Inherited evidence must **not** be described as current live verification.
+
+Live upgrade checklist (after secure local Netlify login or local secret env — **never** paste tokens in chat):
+
+1. planner / fitness / finance / music / portal / home / aios → `stop_builds=true`
+2. UIUX Gallery → `disabled_manually`
+3. No unexpected deploy since the last authoritative push report
+4. On success only → `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`
+
+Until then: no further push, no production client canary, no Netlify deploy, no restore `stop_builds`, no restore Gallery, no `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY` work.
 
 ## 1. Starting / final SHA
 
 - Start (authoritative freeze): `bb9a0e283bfc0ae6179c277862de59f17cefc0ce`
 - Feature commit: `3899727fe6f8d34d307a907bcb9d8fa764aa1fba`
-- Docs tip after report stamps: `756d1c7f96e8e403796785b5ae66098ebad76cf2` (and any subsequent docs-only tip on `origin/master`)
+- Docs tip after earlier stamps (already on `origin/master` before this correction): `f81fc88d5b7be4643c955c5ec33a0c316283ce47`
+- This correction commit: local only until Netlify live revalidation unblocks push
 
 ## 2. Commits
 
 - `3899727fe` — feat(aios): wire production Kenos read paths behind flags
-- `e93b9223f` / `756d1c7f9` — docs(kenos): read-path integration report SHA stamps
+- `e93b9223f` / `756d1c7f9` / `f81fc88d5` — docs stamps (pushed before this Netlify-auth gate clarification)
+- Pending local docs: Netlify inherited-not-live + readiness blockers (this file + execution state)
 
 Unrelated WIP left unstaged.
 
@@ -57,27 +89,27 @@ Unavailable is never rendered as zero counts.
 
 ## 5. Today integration
 
-- Work cards retain `owner={card.ownerDomain}` (Phase 3 contract).  
-- Capability-aware unavailable vs empty copy.  
-- Production Work cards only when Today overlay flag On **and** Work read ready.  
+- Work cards retain `owner={card.ownerDomain}` (Phase 3 contract).
+- Capability-aware unavailable vs empty copy.
+- Production Work cards only when Today overlay flag On **and** Work read ready.
 - Default source remains `portal_today_summary` + local Work foundation.
 
 ## 6. Inbox integration
 
-- Captured / Needs Review: legacy `life_events` + `planner_tasks` (honest partial).  
-- Approvals: canonical RPC; decision actions demo-only.  
-- Activity: legacy `life_events`.  
+- Captured / Needs Review: legacy `life_events` + `planner_tasks` (honest partial).
+- Approvals: canonical RPC; decision actions demo-only.
+- Activity: legacy `life_events`.
 - Unavailable ≠ empty via `ReadSourceState` + capability registry.
 
 ## 7. Focus integration
 
-- Production read behind flag; local session labeled as device-local.  
-- Empty production ≠ error; unsupported ≠ zero.  
+- Production read behind flag; local session labeled as device-local.
+- Empty production ≠ error; unsupported ≠ zero.
 - No automatic Focus write.
 
 ## 8. Work integration
 
-- Remains under Spaces; EntityRef on cards; no Work body into Plan (OPEN-002).  
+- Remains under Spaces; EntityRef on cards; no Work body into Plan (OPEN-002).
 - Empty production → onboarding copy; flag Off → unavailable (not zero).
 
 ## 9. Unavailable / empty / error
@@ -86,18 +118,7 @@ Unavailable is never rendered as zero counts.
 
 ## 10–11. Shadow sources / results
 
-Independent fixtures in `shadowLegacyFixtures.js`:
-
-| Compare | Legacy | Kenos |
-| ------- | ------ | ----- |
-| Today | portal summary fixture path | assistant today projection |
-| Inbox | legacy portal pending fixture | inbox projection |
-| Activity | life_events fixture | activity projection |
-| Approvals | inbox shadow (unsupported legacy) vs canonical | RPC shadowItems |
-| Focus (flag On) | local focus fixture | RPC contexts |
-| Work (flag On) | local work fixture | RPC projects |
-
-Self-compare forbidden. Metrics redacted via `readObservability.core.js`.
+Independent fixtures in `shadowLegacyFixtures.js`. Self-compare forbidden. Metrics redacted via `readObservability.core.js`.
 
 ## 12. Observability
 
@@ -105,23 +126,21 @@ Correlation IDs, latency, status counters, shadow blocking/warning counts; conso
 
 ## 13. Preview / staging environment
 
-Use Vite env flags on preview builds; production Netlify sites remain `stop_builds=true`. No production domain publish in this task.
+Isolated Vite preview / staging clients allowed. Do **not** claim production Netlify pause from live API this session — only inherited pause evidence (see §0). No production domain publish.
 
 ## 14. Two-user validation
 
-Production RLS: list RPCs owner-scoped (Wave 1 verified). Client tests mock dual identities; live dual-user RPC smoke deferred to read-client canary with disposable accounts.
+Production RLS: list RPCs owner-scoped (Wave 1 verified). Client tests mock dual identities; live dual-user RPC smoke deferred until canary is unblocked.
 
 ## 15. UI/UX validation
 
-Nav remains Today · Assistant · Spaces · Inbox. Focus is state; Capture is action; Work in Spaces; Approvals in Inbox. No mock/migration jargon in normal copy.
+Nav remains Today · Assistant · Spaces · Inbox. Focus is state; Capture is action; Work in Spaces; Approvals in Inbox.
 
 ## 16. Tests and CI
 
-- `apps/aios` unit: `prodReadPath.test.js` + existing Kenos suites  
-- Phase 1–6 guards  
-- `check:lifeos-styles`  
-- Contract parity  
-Targeted Planner E2E not required for AIOS-only slice unless CI flags regressions.
+- `apps/aios` unit: `prodReadPath.test.js` + existing Kenos suites
+- Phase 1–6 guards; `check:lifeos-styles`; contract parity
+- Targeted Planner E2E not re-run for AIOS-only slice
 
 ## 17. Migration checksum confirmation
 
@@ -133,7 +152,9 @@ No DDL/DML from this integration slice. Tip and counts remain Wave 1 post-apply 
 
 ## 19. Client production status
 
-Builds paused; no production deploy; flags default Off for Focus/Work overlay.
+- **No** production client deploy performed in this task.
+- Pause state: **inherited, not live-revalidated** (`NETLIFY_PAUSE_STATE_INHERITED_NOT_LIVE_REVALIDATED`).
+- Flags default Off for Focus/Work overlay.
 
 ## 20. Writer status
 
@@ -143,19 +164,22 @@ Legacy Planner writers active; Kenos command/decision/Focus·Work write unavaila
 
 | Gate | Level |
 | ---- | ----- |
-| Read client canary phrase | next |
-| Full client deploy | Yellow |
+| Netlify live pause revalidation | **Red** — blocks push + canary |
+| Read client canary phrase | Blocked until live pause verified |
+| Full client deploy | Red / separate phrase |
 | Writer canary | Red until phrase |
 | Focus TRUNCATE grant residual | Yellow (staging parity) |
 | OPEN-002 | tracked Yellow |
 
 ## 22. Readiness for read-only client canary
 
-**Ready** under `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY` with Focus/Work flags opt-in on preview.
+**`BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION`**
+
+Implementation is ready for a future canary **after** `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`. Do not issue or act on `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY` until then.
 
 ## 23. Readiness for full client deployment
 
-**Not yet** — requires separate `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY` after canary.
+**Not yet** — separate `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`; also blocked on live pause verification.
 
 ## 24. Readiness for writer canary
 
@@ -165,6 +189,8 @@ Schema ready; **not** started. Phrase: `APPROVE_KENOS_PRODUCTION_WRITER_CANARY`.
 
 See `docs/ops/kenos-production-read-client-deploy-plan.md`.
 
-## 26. Exact next approval phrase
+## 26. Exact next steps (ordered)
 
-`APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`
+1. Restore Netlify auth on this machine via secure local login / local secret env (not chat).
+2. Live-verify pause → `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`.
+3. Then (and only then) unstick push / consider `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`.
