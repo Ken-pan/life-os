@@ -420,6 +420,13 @@ Approved temporary defaults now on file:
   - Freeze baseline: `b47c6dcbe…` + fail-closed hardening commit(s)
   - URL: https://aios-kenos-read-canary.netlify.app (`8557bb44-6063-4720-ac03-b4e3ed12bbc2`)
   - Report: `docs/qa/kenos-production-read-client-canary-report.md`
+- AIOS production read-only deploy: **`KENOS AIOS PRODUCTION READ-ONLY CLIENT — DEPLOYED_AND_VERIFIED`** (2026-07-19).
+  - Phrase: `APPROVE_KENOS_AIOS_PRODUCTION_READ_ONLY_DEPLOY`
+  - SHA: `f07944c9210f08d40c8483e3a598b29f3c714bb8`
+  - URL: https://aios-kenos.netlify.app · deploy `6a5d3b8813e70ad66ebf2561`
+  - Rollback target: `6a5c617ee8396b00089a6d2e`
+  - Report: `docs/qa/kenos-aios-production-read-only-deploy-report.md`
+  - AIOS `stop_builds` remains true; other six sites unchanged.
 - Report (read paths): `docs/qa/kenos-production-read-path-integration-report.md`.
 - Deploy plan: `docs/ops/kenos-production-read-client-deploy-plan.md`.
 - Defaults on non-canary builds: Focus/Work/Today overlay Off; Approvals On; writes fail-closed.
