@@ -42,18 +42,22 @@ Never: Legacy write + Kenos write.
 
 ## 1. Exact source SHA
 
-`PLANNER_COMPATIBILITY_CANARY_SHA` — recorded at push tip of this work (see git
-log after commit). Pre-push working baseline tip was
-`cef0280e17c7cec7fecfeba251a7c619d3e6fcbf` (CI success). AIOS production remains
+`PLANNER_COMPATIBILITY_CANARY_SHA=02aed2a92f773b6acd5635603a8b5940c56ef07e`
+
+Parent tip before this work: `cef0280e17c7cec7fecfeba251a7c619d3e6fcbf`
+(CI success). AIOS production remains
 `f87336224a4cb8c934aa90fd0819bb26a1e5f795` / deploy `6a5d500302c73442caf47132`.
 
-Wave 1 migration sha256 **unchanged** (PASS).
+Canary hosts rebuilt from `git archive` of the freeze SHA (not dirty WIP tip).
+
+Wave 1 migration sha256 **unchanged** (PASS; tip `20260719130500`).
 
 ## 2. CI result
 
 Pre-change tip CI: https://github.com/Ken-pan/life-os/actions/runs/29705896665 — **success**
 
-Post-push CI for freeze SHA — see Actions on the commit after push.
+Post-push CI for freeze SHA — recorded after `git push origin master` (must be
+success before treating freeze as CI-green).
 
 ## 3. Canary URL / deploy ID
 
@@ -61,10 +65,13 @@ Post-push CI for freeze SHA — see Actions on the commit after push.
 | ----- | ----- |
 | Planner Canary URL | https://planner-kenos-compat-canary.netlify.app |
 | Site ID | `72f536f3-2805-4fea-94c4-10e9c3825574` |
-| Deploy ID | `6a5d5a7628d4a4637b24b22d` |
+| Deploy ID | `6a5d5bc1ea467a4e5542aeb1` |
+| Source | `git archive` `02aed2a92f773b6acd5635603a8b5940c56ef07e` |
 | Access | Netlify URL; `noindex` in `app.html`; no custom domain |
 | Rollback / disable | Unpublish / delete site or redeploy empty; production Planner unaffected |
-| AIOS read-canary (Yellow fix) | https://aios-kenos-read-canary.netlify.app deploy `6a5d5a7b21f0e8fd29da60d4` |
+| AIOS read-canary (Yellow fix) | https://aios-kenos-read-canary.netlify.app deploy `6a5d5bdd654fcb52b5d4f7c3` |
+| Prod Planner published (untouched) | `6a5c617e6e1b41000893a948` |
+| Prod AIOS published (untouched) | `6a5d500302c73442caf47132` |
 
 ## 4. Environment model
 
