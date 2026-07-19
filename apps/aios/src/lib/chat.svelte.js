@@ -20,8 +20,12 @@ import {
   buildWireMessages,
   isBuildCodeAsk,
 } from '$lib/chat-tool-loop.core.js'
+import {
+  CONVERSATION_STORAGE_KEY,
+  isConversationPersistenceBlocked,
+} from '$lib/kenos/conversationPersist.core.js'
 
-const STORAGE_KEY = 'aios_chats_v1'
+const STORAGE_KEY = CONVERSATION_STORAGE_KEY
 const MAX_CONVERSATIONS = 200
 
 /**
@@ -214,6 +218,8 @@ export function requestEditLastUser() {
 let saveTimer = null
 export function persist() {
   if (!browser) return
+  // Read-only / canary: keep the turn in memory only — no LS, no cloud push bus.
+  if (isConversationPersistenceBlocked()) return
   dataChanged() // 云同步(若已登录)防抖跟进
   clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
@@ -245,6 +251,20 @@ export function persist() {
       }
     }
   }, 300)
+}
+
+/** Clear in-memory (+ local when allowed) conversation state — used on logout. */
+export function clearConversationClientState() {
+  C.conversations = []
+  C.activeId = null
+  if (!browser) return
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem('aios_active_chat_v1')
+    sessionStorage.removeItem('aios_drafts_v1')
+  } catch {
+    /* ignore */
+  }
 }
 
 export function activeConversation() {

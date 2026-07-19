@@ -3,7 +3,7 @@ import { mapAuthErrorMessage, LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync
 import { t } from '$lib/i18n/index.js'
 import { S, applyCloudSettings } from '$lib/state.svelte.js'
 import { supabase as sb, isSupabaseConfigured } from '$lib/supabase.js'
-import { C, persist as persistChats } from '$lib/chat.svelte.js'
+import { C, clearConversationClientState, persist as persistChats } from '$lib/chat.svelte.js'
 import { M, mergeRemoteMemories } from '$lib/memory.svelte.js'
 import { onDataChanged } from '$lib/syncBus.js'
 import {
@@ -11,6 +11,7 @@ import {
   planMemorySync,
   planSettingsLww,
 } from '$lib/cloud-sync.core.js'
+import { isConversationPersistenceBlocked } from '$lib/kenos/conversationPersist.core.js'
 
 /**
  * 云端同步:Life OS 统一 Supabase 账户,登录即用,零配置。
@@ -176,6 +177,8 @@ export async function signOutCloud() {
     } catch {
       /* 忽略 */
     }
+    // Always drop client conversation copies on logout (cache isolation).
+    clearConversationClientState()
   }
 }
 
@@ -244,6 +247,7 @@ async function syncUserState() {
   if (action === 'pull') {
     applyCloudSettings(remote.settings ?? {}, remoteAt)
   } else if (action === 'push') {
+    if (isConversationPersistenceBlocked()) return
     const { error: e } = await sb
       .from('user_state')
       .upsert(
@@ -266,7 +270,8 @@ async function syncConversations(snap) {
     snap.convs,
   )
 
-  if (toPush.length) {
+  // Read-only: pull is ok; never upsert / tombstone conversations.
+  if (!isConversationPersistenceBlocked() && toPush.length) {
     const rows = toPush.map((c) => ({
       id: c.id,
       updated_at: c.updatedAt,
@@ -278,7 +283,7 @@ async function syncConversations(snap) {
       .upsert(rows, { onConflict: 'user_id,id' })
     if (e) throw e
   }
-  if (toTombstone.length) {
+  if (!isConversationPersistenceBlocked() && toTombstone.length) {
     const rows = toTombstone.map((id) => ({
       id,
       updated_at: Date.now(),
@@ -329,7 +334,7 @@ async function syncMemories(snap) {
     snap.mems,
   )
 
-  if (toPush.length) {
+  if (!isConversationPersistenceBlocked() && toPush.length) {
     const rows = toPush.map((m) => ({
       id: m.id,
       text: m.text,
@@ -341,7 +346,7 @@ async function syncMemories(snap) {
       .upsert(rows, { onConflict: 'user_id,id' })
     if (e) throw e
   }
-  if (toTombstone.length) {
+  if (!isConversationPersistenceBlocked() && toTombstone.length) {
     const rows = toTombstone.map((id) => ({ id, deleted: true }))
     const { error: e } = await sb
       .from('memories')
@@ -375,6 +380,9 @@ async function dataUrlToBlob(dataUrl) {
  * @returns {Promise<string>} 云端对象路径
  */
 export async function uploadConversationImage(conversationId, tcId, index, dataUrl) {
+  if (isConversationPersistenceBlocked()) {
+    throw new Error('Image upload blocked (read canary / writes fail-closed)')
+  }
   if (!CLOUD.user) throw new Error(t('settings.cloudNeedSignIn'))
   const conv = C.conversations.find((c) => c.id === conversationId)
   const tc = conv?.messages

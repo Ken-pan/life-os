@@ -64,6 +64,29 @@ test('read canary opts reads On while writes stay fail-closed', async () => {
   assert.equal(rpcCalled, false)
   const mut = await client.from('life_events').insert({})
   assert.equal(mut.error.code, 'KENOS_WRITE_BLOCKED')
+  const conv = await client.from('conversations').upsert({})
+  assert.equal(conv.error.code, 'KENOS_WRITE_BLOCKED')
+})
+
+test('aios sync tables stay writable on local-first env', async () => {
+  const { guardReadOnlyClient } = await import('./prodWriteGuard.core.js')
+  let upsertCalled = false
+  const client = guardReadOnlyClient(
+    {
+      from() {
+        return {
+          upsert: async () => {
+            upsertCalled = true
+            return { data: null, error: null }
+          },
+        }
+      },
+    },
+    {},
+  )
+  const res = await client.from('conversations').upsert({})
+  assert.equal(res.error, null)
+  assert.equal(upsertCalled, true)
 })
 
 test('capability registry never treats unavailable as empty zero', () => {

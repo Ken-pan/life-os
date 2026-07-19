@@ -26,7 +26,56 @@ export const KENOS_WRITE_TABLE_DENYLIST = Object.freeze([
   'planner_tasks',
   'planner_projects',
   'life_events',
+  // AIOS cloud sync — conversation / memory / settings persistence
+  'conversations',
+  'memories',
+  'user_state',
 ])
+
+/**
+ * Classify a network/storage write for mutation audit (redacted kinds only).
+ * @param {{ kind?: string, table?: string, rpc?: string, tool?: string, storageKey?: string }} input
+ * @returns {'model_read'|'conversation_persistence'|'domain_mutation'|'analytics_logging'|'local_only_storage'|'unknown'}
+ */
+export function classifyMutationKind(input = {}) {
+  const kind = String(input.kind || '').toLowerCase()
+  if (kind === 'model_read' || kind === 'read' || kind === 'rpc_read') return 'model_read'
+  if (kind === 'analytics' || kind === 'logging') return 'analytics_logging'
+  if (kind === 'local' || kind === 'local_only') return 'local_only_storage'
+
+  const table = String(input.table || '')
+  const storageKey = String(input.storageKey || '')
+  if (
+    table === 'conversations' ||
+    storageKey === 'aios_chats_v1' ||
+    storageKey === 'aios_active_chat_v1' ||
+    storageKey === 'aios_drafts_v1'
+  ) {
+    return 'conversation_persistence'
+  }
+  if (table === 'memories' || table === 'user_state') return 'conversation_persistence'
+
+  const rpc = String(input.rpc || '')
+  const tool = String(input.tool || '')
+  if (
+    KENOS_WRITE_TABLE_DENYLIST.includes(table) ||
+    KENOS_WRITE_RPC_DENYLIST.includes(rpc) ||
+    [
+      'planner_add_task',
+      'plannerAddTask',
+      'create_plan_task',
+      'kenos_create_plan_task_action',
+      'approve_action',
+      'reject_action',
+      'focus_write',
+      'work_write',
+      'executor_run',
+    ].includes(tool)
+  ) {
+    return 'domain_mutation'
+  }
+  return 'unknown'
+}
 
 /**
  * Read Client Canary mode: production reads opt-in; all production writes fail closed.
@@ -70,12 +119,23 @@ export function assertKenosWriteRpcAllowed(rpcName, env = import.meta.env) {
  * @param {string} method
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
+/** AIOS schema sync tables — fail-closed only on cloud / read-canary builds. */
+const AIOS_CLOUD_SYNC_TABLES = Object.freeze(['conversations', 'memories', 'user_state'])
+
 export function assertTableMutationAllowed(table, method, env = import.meta.env) {
   if (!areProductionWritesBlocked(env)) return { ok: true }
   const t = String(table || '')
   const m = String(method || '').toLowerCase()
   if (!KENOS_WRITE_TABLE_DENYLIST.includes(t)) return { ok: true }
   if (!['insert', 'update', 'upsert', 'delete'].includes(m)) return { ok: true }
+  // Local-first AIOS (Tauri / vite) may still sync aios.* — Kenos domain tables stay blocked.
+  if (
+    AIOS_CLOUD_SYNC_TABLES.includes(t) &&
+    env?.VITE_AIOS_CLOUD !== '1' &&
+    env?.VITE_KENOS_READ_CANARY !== '1'
+  ) {
+    return { ok: true }
+  }
   return {
     ok: false,
     error: {
@@ -98,16 +158,22 @@ export function guardReadOnlyClient(client, env = import.meta.env) {
     return new Proxy(builder, {
       get(target, prop, receiver) {
         const value = Reflect.get(target, prop, receiver)
-        if (typeof value !== 'function') return value
         if (['insert', 'update', 'upsert', 'delete'].includes(String(prop))) {
           return (...args) => {
             const denied = assertTableMutationAllowed(table, String(prop), env)
             if (!denied.ok) {
               return Promise.resolve({ data: null, error: denied.error })
             }
+            if (typeof value !== 'function') {
+              return Promise.resolve({
+                data: null,
+                error: { message: `${String(prop)} unavailable`, code: 'KENOS_WRITE_UNAVAILABLE' },
+              })
+            }
             return value.apply(target, args)
           }
         }
+        if (typeof value !== 'function') return value
         return (...args) => {
           const result = value.apply(target, args)
           // Chainable query builders
