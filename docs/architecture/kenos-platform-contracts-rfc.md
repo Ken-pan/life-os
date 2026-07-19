@@ -3,8 +3,8 @@ title: Kenos Core Platform Contracts RFC
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: architecture-rfc
-status: phase-1-candidate-implemented-review-required
-rfc_version: 0.2.0
+status: V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW
+rfc_version: 1.0.0
 ---
 
 # Kenos Core Platform Contracts RFC
@@ -13,7 +13,7 @@ rfc_version: 0.2.0
 
 定义 Web Spaces、Apple 客户端、Paper、Web Lens、Figma/Jira Connectors、Assistant 和后台 worker 之间的最小稳定语义。共享契约只描述“是什么”和“允许做什么”，不包含 UI、CSS、Svelte store、路由或某个 app 的内部表结构。
 
-这是已经在 `packages/contracts/src/kenos.ts` 实现并由共享 fixture 验证的 Phase 1 candidate，源码仍是运行时真源。它尚未通过跨 Web/SQL/Swift 的完整 Phase 1 exit gate，因此不得标为永久冻结或生产 cutover 契约。
+这是 Phase 1 已冻结的 v1 production-review contract。运行时真源是 `packages/contracts/src/kenos.ts`，机器可读的版本、枚举、必填字段、Outbox 转移和 fixture 目录是 `packages/contracts/fixtures/kenos/v1/manifest.json`。同一 corpus 已在 TypeScript、Planner browser/server、disposable SQL 和 Swift Codable 中验证。此冻结只授权生产安全/迁移评审，不表示生产 migration、writer cutover、deploy 或 Phase 2 已批准。
 
 ## 2. 现有基础与增量策略
 
@@ -475,6 +475,14 @@ export interface AssetRef {
 `locator` 是 opaque locator，不允许 iPhone 把 Mac 裸路径当作可访问 URL。界面显示“Vault 未连接”而不是“文件丢失”。
 
 ## 13. 版本与兼容策略
+
+### 13.0 v1 freeze 证据
+
+- 所有 runtime envelope 使用 JSON string major `'1'`；numeric `1` candidate 作为 pre-freeze 不兼容输入 fail closed。
+- 同一 major 允许新增可选字段；consumer 接受并忽略未知附加字段。未知版本、枚举和必需语义拒绝。
+- UUID、UTC ISO-8601 timestamp、`ownerId`、`dataClassification`、risk 和 Outbox status 在 manifest、Zod、Swift 和 SQL command boundary 中对齐。
+- 破坏性变更必须新 major、migration/compatibility policy 和 Decision Register 记录；不得静默改写 v1。
+- `clients/apple/Packages/KenosContracts` 是契约 package/test target，不是 Phase 4 Apple app/workspace；未来 targets 应依赖它而不复制 models。
 
 ### 13.1 规则
 

@@ -3,7 +3,7 @@ title: Kenos 重构执行状态
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: cloud-task-execution-state
-status: phase-1-partial-pass-v1-candidate-aligned
+status: phase-1-ready-for-production-review-no-cutover
 ---
 
 # Kenos Phase 0 Cloud 执行状态
@@ -257,3 +257,18 @@ Approved temporary defaults now on file:
 - Action identity is user-scoped and unique in both server and review DB boundaries: reusing one Action UUID with a different idempotency key fails as `action_id_reused` and cannot create a second Task.
 - Scoped disposable reset, review SQL, dual-user test, and Supabase security advisor completed. Advisor output contains only pre-existing warnings for `planner_touch_updated_at` mutable search path and the unrelated `paper_device_actions_service_insert` permissive policy; no Kenos object warning was reported.
 - Remaining contract exit gap: no approved Apple workspace exists, so Swift Codable parity cannot yet be executed. This does not authorize creating one before OPEN-006/native boundary approval.
+
+## Phase 1 local contract freeze and production-review readiness (2026-07-19)
+
+- Starting local revision: `8c2fb358b846f4d3206538d60423118ff4a07a9e`; branch `master`; one worktree. Required predecessor commits `990cc57f0`, `0b67b7a70`, and `8c2fb358b` were present. No pull, push, branch, worktree, stash, PR, deploy, production database, production migration, or writer cutover was used.
+- Current verdict: `KENOS PHASE 1 — READY_FOR_PRODUCTION_REVIEW`. Contract state is `V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW`, not production approved/applied/launched.
+- Canonical truth: `packages/contracts/fixtures/kenos/v1/manifest.json` defines string major `1`, enum raw values, required fields, unknown-field policy (`ignore`), Outbox transitions, and fixture coverage. `corpus.json` contains 19 valid and 11 invalid/scenario cases; no language-specific fixture copies exist.
+- TypeScript/browser/server: Zod, Planner browser command, and server command emit/validate the frozen Entity/Action/Decision/Result/Approval/Activity/Mutation/Outbox/Capture/error vocabulary. Numeric candidate version, malformed UUID/timestamp, invalid risk, Work/proactive creation, raw Activity token, invalid transition, and conflicting replay fail closed at their contract or command boundary.
+- Swift: `clients/apple/Packages/KenosContracts` is a minimal shared contract package/test target, not an Apple app/workspace or Phase 4 start. Real `swift test` decodes/encodes the canonical corpus, validates enums/timestamps/UUIDs/optionals/unknown fields, and emits JSON that the TypeScript guard revalidates.
+- SQL/RLS/privileges: review-only SQL remains outside migrations. Disposable Supabase Postgres proves atomic Task/idempotency/Outbox/Activity, duplicate replay, actor binding, two-user isolation, client direct-write denial, private-executor denial, anon denial, user-readable/non-writable Activity/Outbox, hidden idempotency, and worker-only compare-and-set Outbox transitions. The public command wrapper and private executor use fixed empty search paths and require human security review because they are definers.
+- Writer cutover: local-only default-Off simulator proves unauthorized/client flags resolve Off, shadow does not double-write, duplicate replay remains single, normalized mismatch is observable, new-path failure falls back, and rollback deletes zero Tasks. Production flag/caller wiring does not exist and no cutover date was selected.
+- Attachment reset blocker: `storage.objects` is owned by `supabase_storage_admin` and already has RLS enabled before project migrations. Removing the redundant unauthorized `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` preserves bucket/policy semantics and makes full `supabase db reset --local --workdir apps/planner` pass through all migrations. No user attachment or remote Storage object was touched.
+- Supabase validation: full local reset PASS; canonical disposable transaction/RLS/privilege runner PASS; local `supabase db lint` PASS with the initial unused-variable warning corrected. Remote security/performance advisors were not run because no advisor tool is available locally and production access is prohibited; they remain a production-review preflight.
+- Unrelated WIP: baseline `check-kenos-phase0` and aggregate verifier remain `BLOCKED_BY_UNRELATED_USER_WIP`, first at `apps/finance/src/app.css`; untracked `packages/platform-web/src/svelte/wikilinks/` also affects style baseline. Those paths were not modified, staged, or committed by this slice.
+- Production approvals still required: migration/function owners, definer threat review, worker login/membership, hosted RLS/advisors, backup/change window, server caller, flag authority, shadow sample/thresholds, new-writer activation, deploy, observation, and old-writer retirement. Each is a separate Red/Yellow gate.
+- Phase 2 readiness: `NOT_STARTED_NOT_AUTHORIZED`. Phase 1 production review/cutover/real-use must complete first.

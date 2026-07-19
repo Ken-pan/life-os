@@ -3,7 +3,7 @@ title: Kenos 平台重构计划 - 导航与执行边界
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: refactor-program-hub
-status: phase-1-partial-pass-active
+status: phase-1-production-review-ready-no-cutover
 review_cadence: every-migration-slice
 ---
 
@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **目标方向已确认，Phase 1 已进入可审核的非生产实现。** `KR-P1-001` 本地 create-task command 与 `KR-P1-001A` v1 contract candidate/server/outbox review artifacts 已落地，并通过 scoped disposable DB 验证；永久 contract freeze、生产 RPC/RLS、writer cutover 和 Phase 2 均未获准。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准；本文档集不得用来证明 review artifact 已上线。
+> **Phase 1 本地 contract freeze 已完成，可进入生产人工评审。** `KR-P1-001` 本地 command、v1 canonical corpus、Swift Codable package、cross-language guard、disposable transaction/RLS/privilege proof 和 writer cutover simulation 已落地。状态为 `V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW`；尚未生产批准、apply migration、切 writer、deploy 或启动 Phase 2。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
 
 ## 一句话
 
@@ -44,6 +44,8 @@ Kenos 将从“多个互相打通的 OS App”渐进收敛为: **用户感受到
 | 9 | [`../qa/kenos-refactor-gates.md`](../qa/kenos-refactor-gates.md) | 怎样证明不只是“代码完成”？ |
 | 10 | [`../ops/kenos-codex-cloud.md`](../ops/kenos-codex-cloud.md) | 怎样安全配置和启动无人值守 Cloud 任务？ |
 | 11 | [`../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md`](../roadmap/KENOS_REFACTOR_EXECUTION_STATE.md) | Cloud 任务当前推进到哪里、最后一次验证是什么？ |
+| 12 | [`../ops/kenos-phase1-privilege-model.md`](../ops/kenos-phase1-privilege-model.md) | 生产评审中 client/worker/function owner/RLS 权限如何收紧？ |
+| 13 | [`../ops/kenos-phase1-writer-cutover.md`](../ops/kenos-phase1-writer-cutover.md) | writer 盘点、shadow、阈值、abort 和回滚如何审批？ |
 
 ## 权威和状态优先级
 

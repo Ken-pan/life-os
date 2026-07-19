@@ -1,9 +1,9 @@
 ---
 title: Kenos Migration Ledger
 owner: kenpan
-last_verified: 2026-07-18
+last_verified: 2026-07-19
 doc_role: migration-status-ledger
-status: initialized-no-active-cutovers
+status: phase-1-contract-review-ready-no-active-cutovers
 ---
 
 # Kenos Migration Ledger
@@ -46,12 +46,12 @@ PROPOSED
 
 | Slice | 旧机制 | 新机制 | 状态 | 首批 producer | 首批 consumer | 兼容删除条件 |
 | --- | --- | --- | --- | --- | --- | --- |
-| EntityRef v1 | wikilink/URL/私有 ID | stable ref + owner/security/classification | PROPOSED | Plan | Work/Assistant | 所有试点不再解析私有 URL |
-| ActionRequest v1 | MCP/前端直接调用各自写入 | Policy → domain executor | PROPOSED | Assistant | Plan | 旧直接写工具无调用 |
-| Activity v1 | 分散 toast/log | 用户可读 Activity + audit | PROPOSED | Plan executor | Assistant/System | 关键动作 100% 有 Activity |
-| Approval v1 | 各 UI 自有确认 | payload-bound approval | PROPOSED | Assistant | Executor | R3/R4 旧确认流无调用 |
-| Capture v1 | app/插件各自保存 | durable capture inbox + routing | PROPOSED | Web Lens/iPhone | Library/Plan | 旧 capture 无写入 |
-| Mutation/Outbox v1 | `life_events` 现有 envelope | version/idempotency/correlation/dead-letter | PROPOSED | Plan | Activity/Assistant | 老 envelope 消费者升级 |
+| EntityRef v1 | wikilink/URL/私有 ID | stable ref + owner/security/classification | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan | Work/Assistant | 所有试点不再解析私有 URL |
+| ActionRequest v1 | MCP/前端直接调用各自写入 | Policy → domain executor | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Assistant | Plan | 旧直接写工具无调用 |
+| Activity v1 | 分散 toast/log | 用户可读 Activity + audit | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan executor | Assistant/System | 关键动作 100% 有 Activity |
+| Approval v1 | 各 UI 自有确认 | payload-bound approval | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Assistant | Executor | R3/R4 旧确认流无调用 |
+| Capture v1 | app/插件各自保存 | durable capture inbox + routing | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Web Lens/iPhone | Library/Plan | 旧 capture 无写入 |
+| Mutation/Outbox v1 | `life_events` 现有 envelope | version/idempotency/correlation/dead-letter | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan | Activity/Assistant | 老 envelope 消费者升级 |
 | Connector v1 | MCP 配置/错误分散 | lifecycle/scopes/domain/health | PROPOSED | MCP fleet | System | 旧 health 配置无读取 |
 
 ## 4. Web platform convergence ledger
@@ -162,12 +162,12 @@ PROPOSED
 
 ## MIGRATION: KR-P1-001A Durable server Action / Outbox hardening draft
 
-- Status: `PARTIAL_PASS_V1_CANDIDATE_ALIGNED` — non-production contracts, server command handler, review-only SQL artifact, and tests are implemented; the shared v1 fixture and SQL/auth/RLS/idempotency path pass scoped tests. Production DB apply, caller cutover, deploy, and old-path deletion were not performed.
+- Status: `V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW` — non-production contracts, browser/server command handlers, review-only SQL/privilege artifacts, canonical corpus, Swift Codable package, parity guard, disposable DB proof, and writer cutover simulation are locally verified. Production DB apply, caller cutover, deploy, and old-path deletion were not performed.
 - Owner: Plan / Planner remains the only Task lifecycle Owner. The new server command boundary is an execution envelope for `plan.create_task`, not a new task source of truth.
 - Scope: `Assistant or remote CreateTaskAction -> server command boundary -> atomic Task + Outbox + Activity persistence draft -> durable idempotency -> Outbox delivery lifecycle -> retry/backoff/terminal failure classification` for non-production review.
-- Implemented artifacts: `packages/contracts/src/kenos.ts` defines the Phase 1 v1 candidate for Entity/Action/Approval/Activity/Mutation/Outbox/Capture with strict UUID/timestamp validation and string major version; one create-task JSON fixture is consumed by contracts and server tests. `apps/planner/server/kenos/createTaskCommand.mjs` validates that shared contract and emits schema-valid Activity/Outbox records. `apps/planner/supabase/review/20260719010000_kenos_plan_create_task_command.sql` remains outside the auto-applied migration chain and parses the same canonical field vocabulary against the real `planner_tasks(user_id,id,data,updated_at)` shape; its disposable DB test mirrors the shared fixture and `scripts/check-kenos-phase1.mjs` guards parity.
+- Implemented artifacts: `packages/contracts/fixtures/kenos/v1/manifest.json` and `corpus.json` are the only fixture truth for Entity/Action/Decision/Result/Approval/Activity/Mutation/Outbox/Capture/error envelopes. Zod, Planner browser/server, SQL injection runner, and `clients/apple/Packages/KenosContracts` consume it; `scripts/check-kenos-contract-parity.mjs` sends Swift-encoded output back through Zod. Review SQL targets the real `planner_tasks(user_id,id,data,updated_at)` shape; the separate privilege artifact and tests enforce client/worker boundaries.
 - Acceptance covered: duplicate idempotency key returns the first Task; one Action UUID cannot be rebound to a different idempotency key; transaction failure rolls back Task/Outbox/Activity together in the test boundary; disposable SQL proves one canonical Task/Outbox/Activity result plus dual-user RLS/auth isolation and direct-write denial; schema-version/UUID/security/version/expiry failures are fail-closed; Outbox lifecycle covers pending/processing/published/retry/dead-letter; retry uses capped exponential backoff with jitter; permanent errors become dead-letter with a visible reason; Activity redacts sensitive fields.
-- Deferred production gate: repository/ops evidence confirms structured `planner_tasks(user_id,id,data,updated_at)` is the current canonical cloud Task table, with `planner_user_state` retained for settings/legacy backup. The review RPC now targets that real shape, but production apply remains blocked until owner approves the v1 candidate, private-definer/public-invoker privilege model, RLS evidence, server caller integration, and writer cutover. Swift Codable parity remains required before the cross-Web/native Phase 1 contract exit can pass.
+- Deferred production gate: structured `planner_tasks(user_id,id,data,updated_at)` remains the canonical cloud Task table, with `planner_user_state` retained for settings/legacy backup. Contract v1 is frozen for review, but production apply remains blocked until owner/security/database/runtime reviewers approve the fixed-search-path definer model, function owners, worker identity, RLS/advisors, server caller integration, thresholds, and writer cutover. Cutover and old-writer retirement require separate approvals.
 - Rollback: remove/disable the feature-flagged server command path and keep Planner UI on the existing KR-P1-001 local command adapter. Do not drop user tasks; any non-production rows created during local testing can be discarded with the disposable database.
 - Cutover trigger: owner-approved production migration design, passing disposable-database dry-run against the actual Planner schema, RLS/privilege review, dual-user authorization tests, and explicit approval to route Assistant/remote create-task traffic to the server RPC.
 - Validation commands: `npm test -w @life-os/contracts`; `node apps/planner/server/kenos/createTaskCommand.test.mjs`; `node scripts/check-kenos-phase1.mjs`; `npm run test -w planner-os -- --run src/lib/domain/planTaskCommand.test.js`; milestone repository gates before PR.

@@ -391,6 +391,16 @@ source objects
 - 共享 contracts 两个不同消费者。
 - Web convergence 有 migrate/keep 证据。
 
+#### Phase 1 contract production-review evidence (2026-07-19)
+
+- Contract status: `V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW`; unknown additive fields are ignored, unknown major/enum/required semantics fail closed.
+- Canonical corpus: 19 valid and 11 invalid/scenario cases in one repository-owned JSON corpus, consumed by Zod, Planner browser/server, SQL injection runner, and Swift Codable.
+- Cross-language: `node scripts/check-kenos-contract-parity.mjs` runs real Swift tests, captures Swift encoding, and validates that output with TypeScript schemas.
+- Database/security: `node scripts/test-kenos-phase1-db.mjs` uses disposable Supabase Postgres for atomicity, idempotency, two-user RLS, privilege escalation, client/worker grants, and Outbox transition tests.
+- Cutover preparation: `node apps/planner/server/kenos/writerCutoverSimulation.test.mjs` proves default-Off, shadow parity/mismatch, fallback, and non-destructive rollback only. It does not authorize production cutover.
+- Full local migration: `npx supabase db reset --local --workdir apps/planner` passes after removal of a redundant owner-invalid `storage.objects` RLS alteration; Storage policy semantics are unchanged.
+- Production review still must run hosted security/performance advisors, real caller/auth tests, approved shadow observation, and real-use/recovery gates. Review readiness is not Phase 1 production completion.
+
 ### Phase 2
 
 - Assistant/Today 真实使用。
