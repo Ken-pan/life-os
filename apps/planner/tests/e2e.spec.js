@@ -256,10 +256,10 @@ test.describe('PlannerOS E2E', () => {
   test('日历页切换日期', async ({ page }) => {
     await page.goto('/calendar')
     await expect(page.locator('h1.page-title')).toHaveText('日历')
-    const days = page.locator('.cal-day')
+    const days = page.locator('.cal-date')
     await expect(days).toHaveCount(7)
     await days.nth(2).click()
-    await expect(days.nth(2)).toHaveClass(/on/)
+    await expect(days.nth(2)).toHaveClass(/cal-date--sel/)
   })
 
   test('搜索任务与标签过滤', async ({ page }, testInfo) => {

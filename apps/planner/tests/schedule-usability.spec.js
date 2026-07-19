@@ -3,7 +3,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const STORAGE_KEY = 'planos_v1'
-const HOUR_HEIGHT = 72
+/** Must match `HOUR_HEIGHT_PX` in `src/lib/domain/schedule.js`. */
+const HOUR_HEIGHT = 80
 const EVIDENCE_DIR = path.resolve(
   process.cwd(),
   '../../docs/qa/evidence/planner-schedule/2026-07-10',
@@ -76,9 +77,12 @@ function state(tasks) {
 }
 
 async function seed(page, tasks, { path = '/calendar' } = {}) {
-  await page.goto('/')
+  await page.goto('/?demo=0')
   await page.evaluate(
-    ({ key, value }) => localStorage.setItem(key, JSON.stringify(value)),
+    ({ key, value }) => {
+      localStorage.setItem('planos_demo', '0')
+      localStorage.setItem(key, JSON.stringify(value))
+    },
     { key: STORAGE_KEY, value: state(tasks) },
   )
   await page.goto(path)
@@ -102,9 +106,10 @@ async function dragBy(page, locator, dy) {
   expect(box).not.toBeNull()
   const x = box.x + box.width / 2
   const y = box.y + box.height / 2
+  // TimeBlock listens for pointer* — drive the same path for stable resize/move.
   await page.mouse.move(x, y)
   await page.mouse.down()
-  await page.mouse.move(x, y + dy, { steps: 8 })
+  await page.mouse.move(x, y + dy, { steps: 12 })
   await page.mouse.up()
 }
 
@@ -199,7 +204,8 @@ test.describe('P-SCHED-0 scheduling usability', () => {
       (element, top) => element.scrollTo({ top: Math.max(0, top - 100) }),
       movedTop,
     )
-    await dragBy(page, movable.locator('.time-block-handle--bottom'), HOUR_HEIGHT * 0.75)
+    // +30 min at 15-min snap → 60 → 90（0.5h * HOUR_HEIGHT_PX）
+    await dragBy(page, movable.locator('.time-block-handle--bottom'), HOUR_HEIGHT * 0.5)
     await expect.poll(async () => (await storedTask(page, 'movable'))?.durationMinutes).toBe(90)
     const resized = await storedTask(page, 'movable')
     expect(resized.scheduledStart).toBe(moved.scheduledStart)

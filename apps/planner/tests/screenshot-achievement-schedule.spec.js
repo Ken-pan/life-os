@@ -275,9 +275,12 @@ function featureSeedState(opts = {}) {
 }
 
 async function seedState(page, state) {
-  await page.goto('/')
+  await page.goto('/?demo=0')
   await page.evaluate(
-    ({ key, data }) => localStorage.setItem(key, JSON.stringify(data)),
+    ({ key, data }) => {
+      localStorage.setItem('planos_demo', '0')
+      localStorage.setItem(key, JSON.stringify(data))
+    },
     { key: STORAGE_KEY, data: state },
   )
   await page.reload()
@@ -316,7 +319,7 @@ test.describe('成就感 + 日程截图', () => {
     }
 
     await page.goto('/calendar')
-    await page.waitForSelector('.calendar-grid', { timeout: 5000 })
+    await page.waitForSelector('.cal-weekstrip, .cal-date-row', { timeout: 5000 })
     await page.waitForSelector('.schedule-summary:visible', { timeout: 10_000 })
     await snap(page, '03-calendar-schedule')
 

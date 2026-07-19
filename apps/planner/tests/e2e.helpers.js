@@ -27,8 +27,13 @@ export async function waitForPlannerReady(page, projectName = 'mobile') {
  * @param {'mobile' | 'desktop'} [projectName]
  */
 export async function clearAppState(page, projectName = 'mobile') {
-  await page.goto('/')
-  await page.evaluate((key) => localStorage.removeItem(key), STORAGE_KEY)
+  // localhost 空库默认灌 demo（demoMode.js）；E2E 必须显式关闭，否则庆祝态/
+  // 进度断言会被演示任务污染。
+  await page.goto('/?demo=0')
+  await page.evaluate((key) => {
+    localStorage.removeItem(key)
+    localStorage.setItem('planos_demo', '0')
+  }, STORAGE_KEY)
   await page.reload()
   await waitForPlannerReady(page, projectName)
 }
