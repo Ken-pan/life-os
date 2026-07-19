@@ -56,8 +56,10 @@ Wave 1 migration sha256 **unchanged** (PASS; tip `20260719130500`).
 
 Pre-change tip CI: https://github.com/Ken-pan/life-os/actions/runs/29705896665 — **success**
 
-Post-push CI for freeze SHA — recorded after `git push origin master` (must be
-success before treating freeze as CI-green).
+Post-push tip (includes freeze code `02aed2a92` + this report):
+https://github.com/Ken-pan/life-os/actions/runs/29707792872 — **success**
+(`headSha=6ae5ed466290c34ade701c2b10161a4c68fb9c14`; jobs: build, planner-e2e-desktop,
+integration-smoke, design-catalog, … all success).
 
 ## 3. Canary URL / deploy ID
 
