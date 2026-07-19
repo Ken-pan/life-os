@@ -1,33 +1,9 @@
 <script>
   import Icon from '@life-os/platform-web/svelte/icon'
-  import { KENOS_SPACES } from '$lib/kenos/controlCenter.core.js'
+  import { buildSpacesList } from '$lib/kenos/spacesList.core.js'
   import { t } from '$lib/i18n/index.js'
 
-  const hosted = [
-    {
-      id: 'training',
-      label: 'Training',
-      detail: '训练 Focus：隐藏全局导航，延期跨域打扰',
-      href: '/spaces/training',
-      external: false,
-    },
-    {
-      id: 'work-focus',
-      label: 'Work · Deep Work',
-      detail: '进入当前项目专注；也可打开完整 Work hub',
-      href: '/spaces/work',
-      external: false,
-    },
-    {
-      id: 'work',
-      label: 'Work hub',
-      detail: '项目、交付、会议与决定',
-      href: '/work',
-      external: false,
-    },
-  ]
-
-  const spaces = [...hosted, ...KENOS_SPACES.map((s) => ({ ...s, external: true }))]
+  const spaces = buildSpacesList()
 </script>
 
 <div class="spaces-page">
@@ -38,7 +14,7 @@
   </header>
 
   <nav class="space-grid" aria-label={t('nav.spaces')}>
-    {#each spaces as space (space.id)}
+    {#each spaces as space (space.listKey)}
       {#if space.external}
         <a class="space-card" href={space.href} target="_blank" rel="noopener noreferrer">
           <strong>{space.label}</strong>
