@@ -27,6 +27,12 @@
   import { CLOUD_BUILD } from '$lib/env.js'
   import CloudGate from '$lib/components/CloudGate.svelte'
   import { t, applyLocale } from '$lib/i18n/index.js'
+  import { refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
+  import {
+    canRetryReconnect,
+    reconnectDelayMs,
+    shouldReconnectAfterOnline,
+  } from '$lib/kenos/networkStatus.core.js'
 
   let { children } = $props()
 
@@ -61,6 +67,10 @@
   const showReturnBanner = $derived(focusFlags().showReturnBanner)
 
   let captureOpen = $state(false)
+  let online = $state(typeof navigator !== 'undefined' ? navigator.onLine : true)
+  let wasOffline = $state(false)
+  let reconnectAttempts = $state(0)
+  let reconnectTimer = null
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
@@ -91,6 +101,51 @@
     }
   }
 
+  function clearReconnectTimer() {
+    if (reconnectTimer != null) {
+      clearTimeout(reconnectTimer)
+      reconnectTimer = null
+    }
+  }
+
+  async function attemptReconnect(attempt = 0) {
+    if (!canRetryReconnect(attempt, 5)) return
+    const delay = reconnectDelayMs(attempt)
+    const run = async () => {
+      try {
+        await refreshControlCenter({ force: true })
+        if (CLOUD.user) await syncNow()
+        wasOffline = false
+        reconnectAttempts = 0
+      } catch {
+        reconnectAttempts = attempt + 1
+        void attemptReconnect(attempt + 1)
+      }
+    }
+    if (delay <= 0) {
+      await run()
+      return
+    }
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null
+      void run()
+    }, delay)
+  }
+
+  function onWindowOffline() {
+    online = false
+    wasOffline = true
+    clearReconnectTimer()
+  }
+
+  function onWindowOnline() {
+    online = true
+    if (shouldReconnectAfterOnline({ online: true, wasOffline })) {
+      reconnectAttempts = 0
+      void attemptReconnect(0)
+    }
+  }
+
   onMount(() => {
     hydrateFocusStore()
     applyTheme()
@@ -118,12 +173,23 @@
     )
     // 早晨今日简报:运行时轮询 + 挂载即查(原生壳且开启才实际发通知)
     startDailyBriefScheduler()
+
+    online = typeof navigator !== 'undefined' ? navigator.onLine : true
+    window.addEventListener('offline', onWindowOffline)
+    window.addEventListener('online', onWindowOnline)
+    if (typeof navigator !== 'undefined') {
+      navigator.serviceWorker?.register('/service-worker.js').catch(() => {})
+    }
+
     return () => {
       clearTimeout(dreamTimer)
+      clearReconnectTimer()
       cleanupTheme()
       cleanupViewport()
       cleanupVisibility()
       stopDailyBriefScheduler()
+      window.removeEventListener('offline', onWindowOffline)
+      window.removeEventListener('online', onWindowOnline)
     }
   })
 
@@ -146,6 +212,11 @@
 {#if gated}
   <CloudGate />
 {:else}
+  {#if !online}
+    <div class="offline-banner" data-testid="aios-offline-banner" role="status">
+      当前离线 · 显示已缓存内容；恢复网络后将自动重试
+    </div>
+  {/if}
   <CaptureQuick bind:open={captureOpen} />
   {#if showReturnBanner && page.url.pathname !== '/focus'}
     <FocusSessionShell />
@@ -180,3 +251,17 @@
     {/snippet}
   </LifeOsAppShell>
 {/if}
+
+<style>
+  .offline-banner {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 8px 16px;
+    text-align: center;
+    font-size: var(--text-sm, 13px);
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning-subtle, var(--warning)) 55%, var(--bg));
+    border-bottom: 1px solid color-mix(in srgb, var(--warning) 35%, var(--border));
+  }
+</style>
