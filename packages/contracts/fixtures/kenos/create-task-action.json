@@ -1,16 +1,24 @@
 {
-  "schemaVersion": 1,
-  "actionId": "act_plan_create_task_001",
+  "schemaVersion": "1",
+  "id": "10000000-0000-4000-8000-000000000001",
   "actionType": "plan.create_task",
   "producer": "assistant",
   "targetDomain": "plan",
-  "actor": { "type": "assistant", "userId": "user_fixture_001" },
-  "idempotencyKey": "fixture-create-task-001",
-  "correlationId": "corr-create-task-001",
+  "actor": {
+    "type": "assistant",
+    "id": "20000000-0000-4000-8000-000000000001"
+  },
+  "deviceId": "30000000-0000-4000-8000-000000000001",
   "securityDomain": "personal",
-  "classification": "personal",
-  "risk": "R1",
-  "approval": { "state": "not_required" },
-  "payload": { "title": "Fixture task", "notes": "redacted before activity" },
-  "createdAt": "2026-07-19T00:00:00.000Z"
+  "dataClassification": "personal",
+  "requestedRisk": "R1",
+  "payload": {
+    "title": "Fixture task",
+    "notes": "redacted before activity"
+  },
+  "reason": "Explicit user-requested task creation",
+  "idempotencyKey": "fixture-create-task-001",
+  "requestedAt": "2026-07-19T00:00:00.000Z",
+  "expiresAt": "2026-07-19T00:05:00.000Z",
+  "correlationId": "40000000-0000-4000-8000-000000000001"
 }

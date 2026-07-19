@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **目标方向已确认，Phase 1 已进入可审核的非生产实现。** `KR-P1-001` 本地 create-task command 与 `KR-P1-001A` contracts/server/outbox review artifacts 已落地，但生产 RPC、RLS、writer cutover 和 Phase 2 均未获准。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准；本文档集不得用来证明 review artifact 已上线。
+> **目标方向已确认，Phase 1 已进入可审核的非生产实现。** `KR-P1-001` 本地 create-task command 与 `KR-P1-001A` v1 contract candidate/server/outbox review artifacts 已落地，并通过 scoped disposable DB 验证；永久 contract freeze、生产 RPC/RLS、writer cutover 和 Phase 2 均未获准。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准；本文档集不得用来证明 review artifact 已上线。
 
 ## 一句话
 

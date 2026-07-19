@@ -12,20 +12,21 @@ select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001
 do $$
 declare
   v_action jsonb := jsonb_build_object(
-    'schemaVersion', 1,
-    'actionId', 'act_db_001',
+    'schemaVersion', '1',
+    'id', '10000000-0000-4000-8000-000000000001',
     'actionType', 'plan.create_task',
     'producer', 'assistant',
     'targetDomain', 'plan',
-    'actor', jsonb_build_object('type', 'assistant', 'userId', '00000000-0000-4000-8000-000000000001'),
+    'actor', jsonb_build_object('type', 'assistant', 'id', '00000000-0000-4000-8000-000000000001'),
+    'deviceId', '30000000-0000-4000-8000-000000000001',
     'idempotencyKey', 'idem_db_001',
-    'correlationId', 'corr_db_001',
+    'correlationId', '40000000-0000-4000-8000-000000000001',
     'securityDomain', 'personal',
-    'classification', 'personal',
-    'risk', 'R1',
-    'approval', jsonb_build_object('state', 'not_required'),
+    'dataClassification', 'personal',
+    'requestedRisk', 'R1',
     'payload', jsonb_build_object('title', 'Disposable DB task', 'notes', 'private note'),
-    'createdAt', '2026-07-19T00:00:00.000Z',
+    'reason', 'Explicit user-requested task creation',
+    'requestedAt', '2026-07-19T00:00:00.000Z',
     'expiresAt', '2099-07-19T00:00:00.000Z'
   );
   v_first jsonb;
@@ -33,7 +34,10 @@ declare
   v_count bigint;
 begin
   select public.kenos_create_plan_task_action(v_action) into v_first;
-  select public.kenos_create_plan_task_action(v_action || jsonb_build_object('actionId', 'act_db_002', 'correlationId', 'corr_db_002')) into v_duplicate;
+  select public.kenos_create_plan_task_action(v_action || jsonb_build_object(
+    'id', '10000000-0000-4000-8000-000000000002',
+    'correlationId', '40000000-0000-4000-8000-000000000002'
+  )) into v_duplicate;
 
   if coalesce((v_first ->> 'duplicate')::boolean, true) then
     raise exception 'first request was not created';
@@ -61,6 +65,18 @@ begin
   if v_count <> 1 then
     raise exception 'expected exactly one user-visible activity record';
   end if;
+
+  begin
+    perform public.kenos_create_plan_task_action(v_action || jsonb_build_object(
+      'idempotencyKey', 'idem_db_reused_action',
+      'correlationId', '40000000-0000-4000-8000-000000000003'
+    ));
+    raise exception 'expected action_id_reused';
+  exception when others then
+    if sqlerrm not like '%action_id_reused%' then
+      raise;
+    end if;
+  end;
 
   perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000002', true);
   select count(*) into v_count from public.kenos_plan_outbox;
@@ -92,10 +108,32 @@ begin
   end;
 
   begin
-    perform public.kenos_create_plan_task_action(v_action || jsonb_build_object('expiresAt', '2020-01-01T00:00:00.000Z', 'idempotencyKey', 'idem_db_expired'));
+    perform public.kenos_create_plan_task_action(v_action || jsonb_build_object('producer', 'integration', 'idempotencyKey', 'idem_db_integration'));
+    raise exception 'expected producer_not_allowed';
+  exception when others then
+    if sqlerrm not like '%producer_not_allowed%' then
+      raise;
+    end if;
+  end;
+
+  begin
+    perform public.kenos_create_plan_task_action(v_action || jsonb_build_object(
+      'requestedAt', '2020-01-01T00:00:00.000Z',
+      'expiresAt', '2020-01-01T01:00:00.000Z',
+      'idempotencyKey', 'idem_db_expired'
+    ));
     raise exception 'expected action_expired';
   exception when others then
     if sqlerrm not like '%action_expired%' then
+      raise;
+    end if;
+  end;
+
+  begin
+    perform public.kenos_create_plan_task_action(v_action || jsonb_build_object('schemaVersion', 1, 'idempotencyKey', 'idem_db_bad_version'));
+    raise exception 'expected schema_version_not_supported';
+  exception when others then
+    if sqlerrm not like '%schema_version_not_supported%' then
       raise;
     end if;
   end;

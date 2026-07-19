@@ -1,10 +1,10 @@
 ---
 title: Kenos Core Platform Contracts RFC
 owner: kenpan
-last_verified: 2026-07-18
+last_verified: 2026-07-19
 doc_role: architecture-rfc
-status: draft-for-phase-1
-rfc_version: 0.1.0
+status: phase-1-candidate-implemented-review-required
+rfc_version: 0.2.0
 ---
 
 # Kenos Core Platform Contracts RFC
@@ -13,7 +13,7 @@ rfc_version: 0.1.0
 
 定义 Web Spaces、Apple 客户端、Paper、Web Lens、Figma/Jira Connectors、Assistant 和后台 worker 之间的最小稳定语义。共享契约只描述“是什么”和“允许做什么”，不包含 UI、CSS、Svelte store、路由或某个 app 的内部表结构。
 
-这是设计草案，不是已经存在的 export。当前源码真源仍是 `packages/contracts/src/`；本 RFC 通过 Phase 1 gate 后才逐项实现。
+这是已经在 `packages/contracts/src/kenos.ts` 实现并由共享 fixture 验证的 Phase 1 candidate，源码仍是运行时真源。它尚未通过跨 Web/SQL/Swift 的完整 Phase 1 exit gate，因此不得标为永久冻结或生产 cutover 契约。
 
 ## 2. 现有基础与增量策略
 
@@ -152,9 +152,13 @@ export interface ActionRequest<TPayload = unknown> {
   schemaVersion: '1'
   id: UUID
   actionType: string
+  producer: KenosDomainId
   targetDomain: KenosDomainId
   target?: EntityRef
-  actorId: UUID
+  actor: {
+    type: 'user' | 'assistant' | 'automation' | 'connector' | 'system'
+    id: UUID
+  }
   deviceId: UUID
   securityDomain: SecurityDomain
   dataClassification: DataClassification
@@ -170,6 +174,8 @@ export interface ActionRequest<TPayload = unknown> {
   causationId?: UUID
 }
 ```
+
+`producer` 与结构化 `actor` 是 0.2 相对原草案的明确补强：前者记录动作入口所属域，后者同时保存 actor 类型与稳定 ID，以满足 Activity provenance 和服务端身份绑定；两者都不授予权限，Executor 仍必须把 actor ID 绑定到 auth context。
 
 `actionType` 用意图命名，不用低级字段更新命名:
 
@@ -331,7 +337,10 @@ export interface ActivityRecord {
   summary: string
   reason?: string
   result: 'succeeded' | 'failed' | 'queued' | 'undone' | 'cancelled'
+  policy?: ActionDecision
   changes?: Array<{ path: string; before?: unknown; after?: unknown; redacted?: boolean }>
+  redactedPayload?: Record<string, unknown>
+  undo?: { supported: boolean; actionType?: string }
   undoUntil?: ISODateTime
   correlationId: UUID
   causationId?: UUID
@@ -362,14 +371,19 @@ export interface OutboxRecord<TPayload = unknown> {
   topic: string
   aggregate: EntityRef
   payload: TPayload
-  schemaVersion: string
+  schemaVersion: '1'
+  actionRequestId?: UUID
   idempotencyKey: string
   correlationId: UUID
   causationId?: UUID
   occurredAt: ISODateTime
   availableAt: ISODateTime
   attempts: number
-  status: 'pending' | 'processing' | 'published' | 'failed' | 'dead_letter'
+  maxAttempts?: number
+  status: 'pending' | 'processing' | 'published' | 'retry' | 'dead_letter'
+  lastErrorClass?: 'transient' | 'permanent'
+  failureReason?: string
+  updatedAt?: ISODateTime
 }
 ```
 

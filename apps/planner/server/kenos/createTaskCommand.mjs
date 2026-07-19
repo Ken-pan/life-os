@@ -1,12 +1,11 @@
+import { randomUUID } from 'node:crypto'
+
 const ACTION_TYPE = 'plan.create_task'
 const MAX_ATTEMPTS = 5
 const BASE_BACKOFF_MS = 1000
 const MAX_BACKOFF_MS = 5 * 60 * 1000
 const SENSITIVE_KEYS = ['token', 'secret', 'password', 'authorization', 'cookie', 'rawConversation', 'connectorPayload', 'notes']
-
-function id(prefix) {
-  return `${prefix}_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`
-}
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function iso(now = Date.now()) {
   return new Date(now).toISOString()
@@ -27,17 +26,29 @@ function permanent(code, message) {
 
 function validateAction(action, { authUserId, now = Date.now() } = {}) {
   if (!action || typeof action !== 'object') return permanent('bad_request', 'Action request is required.')
+  if (action.schemaVersion !== '1') return permanent('schema_version_not_supported', 'Only Kenos Action schema version 1 is supported.')
+  if (!action.id) return permanent('action_id_required', 'CreateTaskAction requires an action request id.')
   if (action.actionType !== ACTION_TYPE) return permanent('unsupported_action', 'Only plan.create_task is supported by this server command boundary.')
   if (action.targetDomain !== 'plan') return permanent('wrong_owner', 'Plan is the only canonical owner for Task creation.')
+  if (!action.deviceId) return permanent('device_id_required', 'CreateTaskAction requires a device id.')
   if (!action.idempotencyKey) return permanent('idempotency_key_required', 'CreateTaskAction requires an idempotency key.')
   if (!action.correlationId) return permanent('correlation_id_required', 'CreateTaskAction requires a correlation id.')
+  if (![action.id, action.actor?.id, action.deviceId, action.correlationId].every((value) => UUID_PATTERN.test(value || ''))) {
+    return permanent('invalid_action_contract', 'Action, actor, device, and correlation identifiers must be UUIDs.')
+  }
+  if (!action.requestedAt || !Number.isFinite(Date.parse(action.requestedAt))) return permanent('invalid_action_contract', 'CreateTaskAction requires a valid requestedAt timestamp.')
   if (action.producer === 'work' || action.payload?.workSource) return permanent('work_source_excluded', 'Work-sourced task creation is excluded from Phase 1.')
+  if (!['assistant', 'plan'].includes(action.producer)) return permanent('producer_not_allowed', 'KR-P1-001A accepts only Assistant or Plan producers.')
   if (action.producer === 'assistant' && action.actor?.type !== 'assistant') return permanent('assistant_actor_required', 'Assistant producer must use assistant actor metadata.')
-  if (authUserId && action.actor?.userId && action.actor.userId !== authUserId) return permanent('actor_user_mismatch', 'Action actor must match the authenticated user.')
-  if (action.securityDomain !== 'personal' || action.classification !== 'personal') return permanent('security_domain_not_allowed', 'KR-P1-001A accepts personal Plan actions only.')
-  if (action.risk !== 'R1') return permanent('risk_not_allowed', 'Only explicit R1 create-task actions are executable in KR-P1-001A.')
-  if (action.approval?.state !== 'not_required') return permanent('approval_state_not_allowed', 'KR-P1-001A executes only R1 actions with no explicit approval requirement.')
+  if (action.producer === 'plan' && action.actor?.type !== 'user') return permanent('plan_actor_required', 'Plan producer must use user actor metadata.')
+  if (!action.payload || typeof action.payload !== 'object' || Array.isArray(action.payload)) return permanent('invalid_action_contract', 'Action payload must be an object.')
+  if (authUserId && action.actor?.id && action.actor.id !== authUserId) return permanent('actor_user_mismatch', 'Action actor must match the authenticated user.')
+  if (action.securityDomain !== 'personal' || action.dataClassification !== 'personal') return permanent('security_domain_not_allowed', 'KR-P1-001A accepts personal Plan actions only.')
+  if (action.requestedRisk !== 'R1') return permanent('risk_not_allowed', 'Only explicit R1 create-task actions are executable in KR-P1-001A.')
   if (action.expectedVersion != null) return permanent('version_conflict', 'Create-task actions must not carry an existing entity version.')
+  if (action.expiresAt && (!Number.isFinite(Date.parse(action.expiresAt)) || Date.parse(action.expiresAt) <= Date.parse(action.requestedAt))) {
+    return permanent('invalid_action_contract', 'Action expiry must be a valid timestamp after requestedAt.')
+  }
   if (action.expiresAt && Date.parse(action.expiresAt) <= now) return permanent('action_expired', 'Action request has expired.')
   const title = String(action.payload?.title || '').trim()
   if (!title) return permanent('title_required', 'Task title is required.')
@@ -76,6 +87,10 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
   if (!validation.ok) return validation
 
   return db.transaction((tx) => {
+    const existingAction = tx.outbox.find((item) => item.actionRequestId === action.id)
+    if (existingAction && existingAction.idempotencyKey !== action.idempotencyKey) {
+      return permanent('action_id_reused', 'Action request id is already bound to a different idempotency key.')
+    }
     const existingTaskId = tx.idempotency.get(action.idempotencyKey)
     if (existingTaskId) {
       const task = tx.tasks.find((item) => item.id === existingTaskId)
@@ -86,8 +101,8 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
     }
 
     const task = {
-      id: id('task'),
-      userId: action.actor?.userId || 'local-user',
+      id: randomUUID(),
+      userId: action.actor?.id || 'local-user',
       title: validation.title,
       notes: action.payload?.notes || '',
       completed: false,
@@ -95,44 +110,51 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
       updatedAt: iso(now),
     }
     const entityRef = {
-      domain: 'plan',
-      type: 'task',
       id: task.id,
+      type: 'plan.task',
       ownerDomain: 'plan',
+      ownerId: task.id,
       version: 1,
-      securityDomain: action.securityDomain || 'personal',
-      classification: action.classification || 'personal',
     }
     const outbox = {
-      schemaVersion: 1,
-      id: id('outbox'),
-      actionId: action.actionId,
-      actionType: ACTION_TYPE,
+      schemaVersion: '1',
+      id: randomUUID(),
+      topic: ACTION_TYPE,
+      actionRequestId: action.id,
       idempotencyKey: action.idempotencyKey,
       correlationId: action.correlationId,
-      entityRef,
+      aggregate: entityRef,
       status: 'pending',
       payload: { taskId: task.id, title: task.title },
       attempts: 0,
       maxAttempts: MAX_ATTEMPTS,
-      nextAttemptAt: iso(now),
-      createdAt: iso(now),
+      availableAt: iso(now),
+      occurredAt: iso(now),
       updatedAt: iso(now),
     }
     const activity = {
-      schemaVersion: 1,
-      id: id('activity'),
-      actionId: action.actionId,
-      actionType: ACTION_TYPE,
+      schemaVersion: '1',
+      id: randomUUID(),
+      eventType: 'plan.task_created',
+      actionRequestId: action.id,
       correlationId: action.correlationId,
-      actorType: action.actor?.type || 'user',
-      source: action.producer,
-      policy: { allowed: true, risk: 'R1', approvalState: 'not_required', reason: 'explicit create-task command', decidedAt: iso(now) },
-      entityRef,
+      actor: action.actor,
+      targetRefs: [entityRef],
+      securityDomain: action.securityDomain,
       summary: `Created Plan task: ${task.title}`,
+      reason: action.reason || 'explicit create-task command',
+      result: 'succeeded',
+      policy: {
+        requestId: action.id,
+        outcome: 'allow',
+        evaluatedRisk: 'R1',
+        policyVersion: 'kenos-phase1-2026-07-19',
+        reasons: ['explicit create-task command'],
+        decidedAt: iso(now),
+      },
       redactedPayload: redactValue(action.payload || {}),
       undo: { supported: true, actionType: 'plan.delete_task' },
-      createdAt: iso(now),
+      occurredAt: iso(now),
     }
 
     tx.tasks.push(task)
@@ -164,10 +186,10 @@ export function applyOutboxDeliveryFailure(record, error, now = Date.now()) {
   if (errorClass === 'permanent' || attempts >= (record.maxAttempts || MAX_ATTEMPTS)) {
     return {
       ...record,
-      status: 'terminal',
       attempts,
       lastErrorClass: errorClass,
-      terminalReason: error?.message || error?.code || 'delivery failed',
+      status: 'dead_letter',
+      failureReason: error?.message || error?.code || 'delivery failed',
       updatedAt: iso(now),
     }
   }
@@ -176,7 +198,7 @@ export function applyOutboxDeliveryFailure(record, error, now = Date.now()) {
     status: 'retry',
     attempts,
     lastErrorClass: errorClass,
-    nextAttemptAt: iso(now + nextBackoffMs(attempts, now)),
+    availableAt: iso(now + nextBackoffMs(attempts, now)),
     updatedAt: iso(now),
   }
 }
@@ -185,6 +207,6 @@ export function markOutboxProcessing(record, now = Date.now()) {
   return { ...record, status: 'processing', updatedAt: iso(now) }
 }
 
-export function markOutboxDelivered(record, now = Date.now()) {
-  return { ...record, status: 'delivered', updatedAt: iso(now) }
+export function markOutboxPublished(record, now = Date.now()) {
+  return { ...record, status: 'published', updatedAt: iso(now) }
 }
