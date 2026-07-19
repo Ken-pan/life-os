@@ -10,6 +10,40 @@ export const SHADOW_SOURCE = {
   kenosActivityProjection: 'kenos.assistant_activity_projection',
   legacyPortalToday: 'legacy.portal_today_summary',
   kenosTodayProjection: 'kenos.assistant_today_projection',
+  legacyLocalFocus: 'legacy.local_focus_session_fixture',
+  kenosFocusContexts: 'kenos.focus_contexts_rpc',
+  legacyLocalWork: 'legacy.local_work_projection_fixture',
+  kenosWorkProjects: 'kenos.work_projects_rpc',
+}
+
+/** Independent empty Focus fixture (device-local semantics — not RPC output). */
+export function legacyLocalFocusShadowFixture() {
+  return [
+    {
+      id: 'legacy-local-focus-none',
+      ownerDomain: 'focus',
+      status: 'none',
+      freshness: 'fresh',
+      deepLink: '/focus',
+      classification: 'personal',
+      sourceIdentity: SHADOW_SOURCE.legacyLocalFocus,
+    },
+  ]
+}
+
+/** Independent empty Work fixture (local foundation — not RPC output). */
+export function legacyLocalWorkShadowFixture() {
+  return [
+    {
+      id: 'legacy-local-work-none',
+      ownerDomain: 'work',
+      status: 'empty',
+      freshness: 'fresh',
+      deepLink: '/work',
+      classification: 'work_confidential',
+      sourceIdentity: SHADOW_SOURCE.legacyLocalWork,
+    },
+  ]
 }
 
 /** Stable independent legacy Inbox sample (not derived from CONTROL.inbox). */

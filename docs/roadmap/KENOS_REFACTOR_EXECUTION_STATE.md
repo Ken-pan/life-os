@@ -402,9 +402,17 @@ Approved temporary defaults now on file:
 - Starting revision: `4f17d7b978eae72155ead4c40eee6826bf192414`; branch `master`; one worktree.
 - Authoritative Wave 1 baseline: `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19` (on `origin/master`).
 - Authoritative push (first paused): `c4819e9d38a441106985d589709dfbc049ad2016`; current `origin/master` tip after READY docs: `ed7a41c3a932a9b8e0146c0296169ee0b0964b93` — see `docs/qa/kenos-authoritative-push-report.md`.
-- Verdict after paused push: was `READY_FOR_OWNER_APPROVAL`; Owner issued `APPROVE_KENOS_PRODUCTION_WAVE_1`.
-- Apply attempt **stopped** at preflight: `PRODUCTION_WAVE1_PREFLIGHT_MISMATCH` — CI on tip `ea559982…` / prior push SHAs **failure** (aios `check:lifeos-styles` + planner e2e). See `docs/qa/kenos-production-wave1-apply-report.md`.
-- Production DB **unchanged** (tip `20260717220000`, no `kenos_*`).
+- Packet verdict before apply: `READY_FOR_OWNER_APPROVAL` (FINAL APPROVAL packet).
+- CI remediation tip: `bb9a0e283bfc0ae6179c277862de59f17cefc0ce` — CI run 29699072443 **success**.
+- Owner re-approved `APPROVE_KENOS_PRODUCTION_WAVE_1` against frozen SHA `bb9a0e283…`.
+- Production Wave 1 **applied** 2026-07-19T19:18:55Z–19:19:11Z UTC; tip now `20260719130500`; status `KENOS PRODUCTION WAVE 1 — APPLIED_AND_VERIFIED`. See `docs/qa/kenos-production-wave1-apply-report.md`.
 - Production client auto-builds: still **paused**. Re-enable only under `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`.
-- Staging `prrytaemdsksblwmufei` evidence remains valid.
-- Stop: Owner must get CI PASS (or waive) before re-approving production apply.
+- Staging `prrytaemdsksblwmufei` evidence remains valid; public Kenos RPC defs md5-match production.
+
+## Phase 6 Production read path integration (2026-07-19)
+
+- Status: `KENOS PRODUCTION READ PATHS — SHADOW_VERIFIED_AND_CLIENT_CANARY_READY`.
+- Report: `docs/qa/kenos-production-read-path-integration-report.md`.
+- Deploy plan (separated approvals): `docs/ops/kenos-production-read-client-deploy-plan.md`.
+- Defaults: Focus/Work/Today overlay read flags **Off**; Approvals RPC On; no production writes from UI.
+- Next phrase: `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY` (then separately writer canary / full client deploy).

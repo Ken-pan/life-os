@@ -11,11 +11,22 @@
     formatQueueCount,
   } from '$lib/kenos/controlCenter.core.js'
   import { WORK, refreshWorkSurface } from '$lib/kenos/workStore.svelte.js'
+  import { capabilityEmptyCopy } from '$lib/kenos/capabilityRegistry.core.js'
+  import { isProdTodayKenosOverlayEnabled } from '$lib/kenos/prodReadFlags.core.js'
 
   const today = $derived(buildTodayReadModel(CONTROL.summary))
   const queue = $derived(summarizeControlQueue(CONTROL))
   const recentActivity = $derived(sortActivityNewestFirst(CONTROL.activities).slice(0, 3))
-  const workCards = $derived((WORK.projection?.cards || []).slice(0, 6))
+  const workCapability = $derived(CONTROL.capabilities?.byId?.['work.read'])
+  const workCapabilityCopy = $derived(capabilityEmptyCopy(workCapability))
+  const useProdWorkCards = $derived(
+    isProdTodayKenosOverlayEnabled(import.meta.env) &&
+      (CONTROL.sources?.work?.status === 'ready' || CONTROL.sources?.work?.status === 'partial') &&
+      (CONTROL.workCards?.length ?? 0) > 0,
+  )
+  const workCards = $derived(
+    (useProdWorkCards ? CONTROL.workCards : WORK.projection?.cards || []).slice(0, 6),
+  )
   const dateLabel = new Intl.DateTimeFormat('zh-CN', {
     month: 'long',
     day: 'numeric',
@@ -23,6 +34,8 @@
   }).format(new Date())
   const workKindLabel = {
     active_project: '进行中项目',
+    project: '项目',
+    proposal: '待转 Task 提案',
     deliverable_due_soon: '即将到期交付',
     blocked_deliverable: '阻塞交付',
     recent_meeting: '最近会议',
@@ -153,12 +166,24 @@
           <Icon name="chevron-right" size={15} strokeWidth={1.75} />
         </a>
       </div>
-      {#if WORK.status === 'unsupported'}
-        <p class="empty-copy">Work 投影尚未开启。可从 Spaces 进入，或稍后再试。</p>
+      {#if workCapabilityCopy.kind === 'unavailable' || workCapabilityCopy.kind === 'unauthorized' || workCapabilityCopy.kind === 'error'}
+        <p class="empty-copy" role="status">
+          {workCapabilityCopy.title}
+          {#if workCapabilityCopy.body}
+            <span class="empty-copy-detail">{workCapabilityCopy.body}</span>
+          {/if}
+        </p>
+      {:else if WORK.status === 'unsupported' && !useProdWorkCards}
+        <p class="empty-copy" role="status">Work 尚未接入。可从 Spaces 进入了解，不会显示为零条。</p>
       {:else if workCards.length}
         <div class="signal-list">
           {#each workCards as card (card.id)}
-            <a href={card.deepLink || '/work'} class="signal-row">
+            <a
+              href={card.deepLink || '/work'}
+              class="signal-row"
+              owner={card.ownerDomain}
+              data-owner-domain={card.ownerDomain}
+            >
               <span class="signal-label">{workKindLabel[card.kind] || card.kind}</span>
               <strong>{card.title}</strong>
               <span>{card.summary}</span>
@@ -392,6 +417,12 @@
   .empty-block {
     color: var(--t3);
     font-size: var(--text-md);
+  }
+  .empty-copy-detail {
+    display: block;
+    margin-top: 4px;
+    color: var(--t3);
+    font-size: var(--text-sm);
   }
   .row-eyebrow {
     color: var(--t2);

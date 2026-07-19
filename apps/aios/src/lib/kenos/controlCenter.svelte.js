@@ -16,8 +16,15 @@ import {
   SHADOW_SOURCE,
   attachSourceIdentity,
   legacyLifeEventsActivityShadowFixture,
+  legacyLocalFocusShadowFixture,
+  legacyLocalWorkShadowFixture,
   legacyPortalPendingShadowFixture,
 } from './shadowLegacyFixtures.js'
+import { buildCapabilityRegistry } from './capabilityRegistry.core.js'
+import { isProdFocusReadEnabled, isProdShadowCompareEnabled, isProdWorkReadEnabled, prodReadFlagSnapshot } from './prodReadFlags.core.js'
+import { recordShadowObservation } from './readObservability.core.js'
+import { isWorkFoundationEnabled } from './workCommand.core.js'
+import { FOCUS } from './focusStore.svelte.js'
 
 const DEMO_STATE_KEY = 'kenos_phase2_control_demo_v1'
 
@@ -168,6 +175,9 @@ export const CONTROL = $state({
   inbox: [],
   approvals: [],
   activities: [],
+  focusContexts: [],
+  workProjects: [],
+  workCards: [],
   demo: false,
   refreshedAt: 0,
   sources: {
@@ -175,9 +185,13 @@ export const CONTROL = $state({
     inbox: sourceState('loading', { source: 'public.life_events + public.planner_tasks' }),
     approvals: sourceState('loading', { source: 'public.kenos_list_action_approvals' }),
     activity: sourceState('loading', { source: 'public.life_events' }),
+    focus: sourceState('loading', { source: 'public.kenos_list_focus_contexts' }),
+    work: sourceState('loading', { source: 'public.kenos_list_work_projects' }),
   },
+  capabilities: buildCapabilityRegistry(),
   shadowMismatches: [],
   shadowSummary: { blocking: 0, warning: 0, expected: 0 },
+  flags: prodReadFlagSnapshot(),
 })
 
 let inflight = null
@@ -188,14 +202,25 @@ function applySourceResult(key, value) {
   if (key === 'today') {
     if (value.summary) CONTROL.summary = value.summary
     else if (!CONTROL.summary) CONTROL.summary = null
+  } else if (key === 'focus') {
+    if (value.contexts?.length || !failed || !CONTROL.focusContexts?.length) {
+      CONTROL.focusContexts = value.contexts ?? []
+    }
+  } else if (key === 'work') {
+    if (value.projects?.length || value.cards?.length || !failed || !CONTROL.workProjects?.length) {
+      CONTROL.workProjects = value.projects ?? []
+      CONTROL.workCards = value.cards ?? []
+    }
   } else {
     const field = key === 'activity' ? 'activities' : key
     if (value.items?.length || !failed || !CONTROL[field]?.length) CONTROL[field] = value.items ?? []
   }
-  CONTROL.sources[key] = failed && (
+  const retained =
     (key === 'today' && CONTROL.summary) ||
-    (key !== 'today' && CONTROL[key === 'activity' ? 'activities' : key]?.length)
-  )
+    (key === 'focus' && CONTROL.focusContexts?.length) ||
+    (key === 'work' && (CONTROL.workProjects?.length || CONTROL.workCards?.length)) ||
+    (key !== 'today' && key !== 'focus' && key !== 'work' && CONTROL[key === 'activity' ? 'activities' : key]?.length)
+  CONTROL.sources[key] = failed && retained
     ? {
         ...value.state,
         status: 'stale',
@@ -255,6 +280,8 @@ export async function refreshControlCenter({ force = false } = {}) {
                     : '',
             }),
             activity: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.activities.length }),
+            focus: sourceState('unsupported', { source: 'local opt-in rehearsal' }),
+            work: sourceState('unsupported', { source: 'local opt-in rehearsal' }),
           }
         : CONTROL.sources
       const todayModel = buildTodayReadModel(CONTROL.summary)
@@ -266,7 +293,8 @@ export async function refreshControlCenter({ force = false } = {}) {
         deepLink: item.deepLink,
         classification: item.classification,
       })
-      CONTROL.shadowMismatches = demo
+      const shadowEnabled = !demo && isProdShadowCompareEnabled(import.meta.env)
+      CONTROL.shadowMismatches = !shadowEnabled
         ? []
         : [
             ...compareProjectionSets({
@@ -306,12 +334,52 @@ export async function refreshControlCenter({ force = false } = {}) {
               ),
             }),
             ...compareApprovalProjectionSets({
-              canonicalItems: sources.approvals.shadowItems ?? [],
-              legacyItems: sources.inbox.shadowItems ?? [],
+              canonicalItems: sources?.approvals?.shadowItems ?? [],
+              legacyItems: sources?.inbox?.shadowItems ?? [],
               legacySourceSupported: false,
             }),
+            ...(isProdFocusReadEnabled(import.meta.env)
+              ? compareProjectionSets({
+                  comparisonType: 'local_focus_vs_kenos_focus',
+                  ownerDomain: 'focus',
+                  oldSourceId: SHADOW_SOURCE.legacyLocalFocus,
+                  newSourceId: SHADOW_SOURCE.kenosFocusContexts,
+                  oldItems: legacyLocalFocusShadowFixture(),
+                  newItems: attachSourceIdentity(
+                    (sources?.focus?.shadowItems ?? []).map(toShadowShape),
+                    SHADOW_SOURCE.kenosFocusContexts,
+                  ),
+                })
+              : []),
+            ...(isProdWorkReadEnabled(import.meta.env)
+              ? compareProjectionSets({
+                  comparisonType: 'local_work_vs_kenos_work',
+                  ownerDomain: 'work',
+                  oldSourceId: SHADOW_SOURCE.legacyLocalWork,
+                  newSourceId: SHADOW_SOURCE.kenosWorkProjects,
+                  oldItems: legacyLocalWorkShadowFixture(),
+                  newItems: attachSourceIdentity(
+                    (sources?.work?.shadowItems ?? []).map(toShadowShape),
+                    SHADOW_SOURCE.kenosWorkProjects,
+                  ),
+                })
+              : []),
           ]
       CONTROL.shadowSummary = summarizeShadowMismatches(CONTROL.shadowMismatches)
+      if (shadowEnabled) {
+        recordShadowObservation({
+          domain: 'control',
+          blocking: CONTROL.shadowSummary.blocking,
+          warning: CONTROL.shadowSummary.warning,
+        })
+      }
+      CONTROL.flags = prodReadFlagSnapshot(import.meta.env)
+      CONTROL.capabilities = buildCapabilityRegistry({
+        flags: CONTROL.flags,
+        sources: CONTROL.sources,
+        workFoundationEnabled: isWorkFoundationEnabled(import.meta.env),
+        focusLocalActive: Boolean(FOCUS?.focus?.status && FOCUS.focus.status !== 'idle'),
+      })
       CONTROL.refreshedAt = Date.now()
     } catch (error) {
       CONTROL.error = error instanceof Error ? error.message : 'Today 暂时无法刷新'

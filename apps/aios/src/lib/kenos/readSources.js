@@ -1,6 +1,8 @@
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 import { lifeOsReadClient } from '$lib/lifeos.js'
 import { readCanonicalApprovalSource } from './approvalReadSource.core.js'
+import { readCanonicalFocusSource } from './focusReadSource.core.js'
+import { readCanonicalWorkSource } from './workReadSource.core.js'
 import {
   classifyReadError,
   freshnessState,
@@ -11,12 +13,15 @@ import {
   sourceState,
   settleReadSources,
 } from './readProjections.core.js'
+import { newCorrelationId, recordReadObservation } from './readObservability.core.js'
 
 const SOURCE = Object.freeze({
   today: 'public.portal_today_summary',
   inbox: 'public.life_events:pending',
   approvals: 'public.kenos_list_action_approvals',
   activity: 'public.life_events',
+  focus: 'public.kenos_list_focus_contexts',
+  work: 'public.kenos_list_work_projects',
 })
 
 function online() {
@@ -38,8 +43,29 @@ function result(itemsKey, items, state, extra = {}) {
 }
 
 export async function readTodaySource({ client = lifeOsReadClient(), now = Date.now() } = {}) {
-  if (!isCloudAuthorized()) return result('summary', null, unavailableWithoutAuth(SOURCE.today))
-  if (!online()) return result('summary', null, unavailableWithoutAuth(SOURCE.today))
+  const correlationId = newCorrelationId('today')
+  const started = Date.now()
+  const observe = (state) => {
+    recordReadObservation({
+      domain: 'plan',
+      source: SOURCE.today,
+      status: state.status,
+      latencyMs: Date.now() - started,
+      correlationId,
+      flagOn: true,
+      sourceOfTruth: SOURCE.today,
+    })
+  }
+  if (!isCloudAuthorized()) {
+    const state = unavailableWithoutAuth(SOURCE.today)
+    observe(state)
+    return result('summary', null, state, { correlationId })
+  }
+  if (!online()) {
+    const state = unavailableWithoutAuth(SOURCE.today)
+    observe(state)
+    return result('summary', null, state, { correlationId })
+  }
   try {
     let timezone = 'America/Los_Angeles'
     try {
@@ -50,30 +76,28 @@ export async function readTodaySource({ client = lifeOsReadClient(), now = Date.
     const { data, error } = await client.rpc('portal_today_summary', { p_timezone: timezone })
     if (error) throw error
     if (!data || typeof data !== 'object' || data.ok === false) {
-      return result(
-        'summary',
-        null,
-        sourceState('empty', {
-          source: SOURCE.today,
-          message: '摘要来源可用，但今天没有可展示的领域摘要。',
-        }),
-      )
+      const state = sourceState('empty', {
+        source: SOURCE.today,
+        message: '摘要来源可用，但今天没有可展示的领域摘要。',
+      })
+      observe(state)
+      return result('summary', null, state, { correlationId })
     }
     const freshness = freshnessState(data.asOf, { now })
-    return result(
-      'summary',
-      data,
-      sourceState(freshness.stale ? 'stale' : 'ready', {
-        source: SOURCE.today,
-        message: freshness.stale ? '摘要已超过 freshness 阈值；领域链接仍可安全打开。' : '',
-        lastUpdated: freshness.lastUpdated,
-        stale: freshness.stale,
-        retryable: true,
-        availableCount: 1,
-      }),
-    )
+    const state = sourceState(freshness.stale ? 'stale' : 'ready', {
+      source: SOURCE.today,
+      message: freshness.stale ? '摘要已超过 freshness 阈值；领域链接仍可安全打开。' : '',
+      lastUpdated: freshness.lastUpdated,
+      stale: freshness.stale,
+      retryable: true,
+      availableCount: 1,
+    })
+    observe(state)
+    return result('summary', data, state, { correlationId })
   } catch (error) {
-    return result('summary', null, classifyReadError(error, { online: online(), source: SOURCE.today }))
+    const state = classifyReadError(error, { online: online(), source: SOURCE.today })
+    observe(state)
+    return result('summary', null, state, { correlationId })
   }
 }
 
@@ -148,6 +172,24 @@ export async function readApprovalSource({ client = lifeOsReadClient(), now = Da
   })
 }
 
+export async function readFocusSource({ client = lifeOsReadClient(), now = Date.now() } = {}) {
+  return readCanonicalFocusSource({
+    client,
+    authorized: isCloudAuthorized(),
+    online: online(),
+    now,
+  })
+}
+
+export async function readWorkSource({ client = lifeOsReadClient(), now = Date.now() } = {}) {
+  return readCanonicalWorkSource({
+    client,
+    authorized: isCloudAuthorized(),
+    online: online(),
+    now,
+  })
+}
+
 export async function readActivitySource({ client = lifeOsReadClient() } = {}) {
   if (!isCloudAuthorized()) return result('items', [], unavailableWithoutAuth(SOURCE.activity))
   if (!online()) return result('items', [], unavailableWithoutAuth(SOURCE.activity))
@@ -201,6 +243,8 @@ export async function readAllControlSources(readers = {}, { onSettled = () => {}
     inbox: readers.inbox ?? readInboxSource,
     approvals: readers.approvals ?? readApprovalSource,
     activity: readers.activity ?? readActivitySource,
+    focus: readers.focus ?? readFocusSource,
+    work: readers.work ?? readWorkSource,
   }
   return settleReadSources(
     Object.fromEntries(
@@ -210,9 +254,11 @@ export async function readAllControlSources(readers = {}, { onSettled = () => {}
           try {
             return await reader()
           } catch (error) {
+            const emptyKey = key === 'today' ? 'summary' : key === 'focus' ? 'contexts' : key === 'work' ? 'projects' : 'items'
+            const emptyVal = key === 'today' ? null : []
             return result(
-              key === 'today' ? 'summary' : 'items',
-              key === 'today' ? null : [],
+              emptyKey,
+              emptyVal,
               classifyReadError(error, { online: online(), source: SOURCE[key] }),
             )
           }

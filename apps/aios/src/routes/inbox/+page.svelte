@@ -39,9 +39,9 @@
     onRetry={() => refreshControlCenter({ force: true })}
   />
 
-  <section id="capture" class="control-page-section" aria-labelledby="inbox-open-title">
-    <h2 id="inbox-open-title" aria-label={queue.inboxAvailable ? `待分类 ${openItems.length}` : '待分类数量暂不可用'}>
-      {t('nav.inboxNeedsReview')} · {openCountLabel}
+  <section id="capture" class="control-page-section" aria-labelledby="inbox-capture-title">
+    <h2 id="inbox-capture-title" aria-label={queue.inboxAvailable ? `已捕获 ${openItems.length}` : '已捕获数量暂不可用'}>
+      {t('nav.inboxCaptured')} · {openCountLabel}
     </h2>
     {#if !queue.inboxAvailable}
       <p class="control-notice" role="status">Inbox 暂时无法更新；不会用空数量冒充「没有事项」。</p>
@@ -78,13 +78,20 @@
       </div>
     {:else}
       <div class="control-empty">
-        <strong>Inbox 已清空</strong>
-        当前没有待归位事项。
+        <strong>暂无已捕获事项</strong>
+        当前没有待归位内容。
       </div>
     {/if}
   </section>
 
-  <section id="review" class="control-page-section inbox-crosslinks" aria-label="Related inbox queues">
+  <section id="review" class="control-page-section" aria-labelledby="inbox-review-title">
+    <h2 id="inbox-review-title">{t('nav.inboxNeedsReview')}</h2>
+    <p class="control-notice" role="status">
+      需要你确认的事项在 Approvals；系统活动在 Updates。数量不可用时显示为「—」，不是零。
+    </p>
+  </section>
+
+  <section class="control-page-section inbox-crosslinks" aria-label="Related inbox queues">
     <a class="queue-link" href="/approvals">
       <span>{t('nav.approvals')}</span>
       <strong>{formatQueueCount(queue.approvalsOpen)}</strong>

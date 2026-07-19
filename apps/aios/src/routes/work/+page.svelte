@@ -1,6 +1,9 @@
 <script>
   import { onMount } from 'svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
+  import ReadSourceState from '$lib/components/ReadSourceState.svelte'
+  import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
+  import { capabilityEmptyCopy } from '$lib/kenos/capabilityRegistry.core.js'
   import {
     WORK,
     convertProposal,
@@ -22,9 +25,14 @@
   )
   const blocked = $derived(deliverables.filter((row) => row.status === 'blocked'))
   const pendingProposals = $derived(proposals.filter((row) => ['draft', 'proposed', 'accepted'].includes(row.status)))
+  const workCapability = $derived(CONTROL.capabilities?.byId?.['work.read'])
+  const workCapabilityCopy = $derived(capabilityEmptyCopy(workCapability))
+  const prodProjects = $derived(CONTROL.workProjects || [])
+  const prodReady = $derived(['ready', 'empty', 'partial', 'stale'].includes(CONTROL.sources.work?.status))
 
   onMount(() => {
     refreshWorkSurface({ force: true })
+    void refreshControlCenter()
   })
 </script>
 
@@ -37,34 +45,67 @@
     </div>
     <div class="header-actions">
       <a class="quiet" href="/spaces">全部 Spaces</a>
-      <button type="button" class="quiet" onclick={() => refreshWorkSurface({ force: true })}>
+      <button type="button" class="quiet" onclick={() => { refreshWorkSurface({ force: true }); void refreshControlCenter({ force: true }) }}>
         <Icon name="refresh" size={16} strokeWidth={1.75} />
         刷新
       </button>
     </div>
   </header>
 
-  {#if WORK.status === 'unsupported'}
+  <ReadSourceState
+    state={CONTROL.sources.work}
+    onRetry={() => refreshControlCenter({ force: true })}
+  />
+
+  {#if workCapabilityCopy.kind === 'unavailable' || workCapabilityCopy.kind === 'unauthorized'}
+    <section class="state-panel" aria-live="polite">
+      <h2>{workCapabilityCopy.title}</h2>
+      <p>{workCapabilityCopy.body}</p>
+      <p class="muted">OPEN-002：Work 正文不会镜像进 Plan。写入生产尚未开启。</p>
+      <a href="/spaces">返回 Spaces</a>
+    </section>
+  {:else if prodReady && CONTROL.sources.work.status === 'empty' && WORK.status !== 'ready'}
+    <section class="state-panel">
+      <h2>还没有 Work 记录</h2>
+      <p>可以从 Spaces 开始整理项目与交付；这里不是错误面板。</p>
+      <a href="/spaces">返回 Spaces</a>
+    </section>
+  {:else if WORK.status === 'unsupported' && !prodProjects.length}
     <section class="state-panel" aria-live="polite">
       <h2>Work 暂不可用</h2>
       <p>此 Space 尚未开启。可返回 Spaces，或稍后再试。</p>
       <a href="/spaces">返回 Spaces</a>
     </section>
-  {:else if WORK.status === 'empty'}
+  {:else if WORK.status === 'empty' && !prodProjects.length}
     <section class="state-panel">
       <h2>还没有 Work 记录</h2>
-      <p>创建 Project / Deliverable / Meeting / Decision，或用演示参数加载样例。</p>
+      <p>创建项目、交付、会议或决定，开始整理这个 Space。</p>
     </section>
   {:else}
     {#if WORK.lastMessage}
       <p class="status-line" role="status">{WORK.lastMessage}</p>
     {/if}
 
+    {#if prodProjects.length}
+      <section aria-labelledby="work-prod-title">
+        <p class="kicker">已同步的项目</p>
+        <h2 id="work-prod-title">来自你的 Work Space</h2>
+        <ul class="plain-list">
+          {#each prodProjects as row (row.id)}
+            <li>
+              <strong>{row.title}</strong>
+              <span>{row.safeSummary}</span>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+
     <section class="hero-grid" aria-labelledby="work-focus-title">
       <div>
         <p class="kicker">当前目标</p>
-        <h2 id="work-focus-title">{projects[0]?.title || '未命名项目'}</h2>
-        <p>{projects[0]?.safeSummary || '暂无摘要'}</p>
+        <h2 id="work-focus-title">{projects[0]?.title || prodProjects[0]?.title || '未命名项目'}</h2>
+        <p>{projects[0]?.safeSummary || prodProjects[0]?.safeSummary || '暂无摘要'}</p>
       </div>
       <div>
         <p class="kicker">下一个交付</p>
@@ -106,8 +147,8 @@
     </section>
 
     <section aria-labelledby="work-proposals-title">
-      <h2 id="work-proposals-title">待转为 Plan Task 的提案</h2>
-      <p class="muted">WorkActionProposal 不是 Task。转换需明确点击，且仅本地 simulation（conversion flag Off）。</p>
+      <h2 id="work-proposals-title">待转为任务的提案</h2>
+      <p class="muted">WorkActionProposal 不是 Task。转换需明确点击；conversion flag Off 时仅本机演练，不会写入生产 Plan。</p>
       {#if pendingProposals.length}
         <ul class="proposal-list">
           {#each pendingProposals as row (row.id)}
@@ -159,17 +200,16 @@
             <li>
               <strong>{ref.safeTitle || 'Library entity'}</strong>
               <span>
-                {ref.sourceAvailable === false ? 'unavailable/stale' : 'available'}
-                · {ref.dataClassification || 'classified'}
+                {ref.sourceAvailable === false ? '来源暂不可用' : '可打开'}
               </span>
               {#if ref.deepLink}
-                <a href={ref.deepLink} target="_blank" rel="noopener noreferrer">打开 Library</a>
+                <a href={ref.deepLink} target="_blank" rel="noopener noreferrer">打开资料</a>
               {/if}
             </li>
           {/each}
         </ul>
       {:else}
-        <p class="muted">没有 Library EntityRef。</p>
+        <p class="muted">暂无关联资料。</p>
       {/if}
     </section>
   {/if}

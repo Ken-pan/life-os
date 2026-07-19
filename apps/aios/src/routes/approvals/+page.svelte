@@ -38,8 +38,8 @@
     onRetry={() => refreshControlCenter({ force: true })}
   />
 
-  <p class="control-notice">
-    审批操作尚未全面启用时，这里只展示待确认事项，不会悄悄执行写入。
+  <p class="control-notice" role="status">
+    生产审批决定与 Executor 尚未批准。此处只读；确认/拒绝按钮仅在本地演练模式可用，不会写入生产。
   </p>
 
   <section class="control-page-section" aria-labelledby="approvals-pending-title">
@@ -65,8 +65,8 @@
               {/if}
               <p class="control-row-detail">原因：{item.whyApprovalNeeded ?? '本地 UI 演练'}</p>
               {#if item.expiresAt}<p class="control-row-detail">有效期至：<time datetime={item.expiresAt}>{new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.expiresAt))}</time></p>{/if}
-              {#if item.entityReferences?.length}<p class="control-row-detail">影响 {item.entityReferences.length} 个 canonical EntityRef；未复制业务 payload。</p>{/if}
-              <p class="control-row-detail">Executor：{item.executorAvailable ? '可用' : '不可用'}</p>
+              {#if item.entityReferences?.length}<p class="control-row-detail">关联 {item.entityReferences.length} 个对象。</p>{/if}
+              {#if item.executorAvailable === false}<p class="control-row-detail">自动执行尚未开启；此处不会改动生产数据。</p>{/if}
             </div>
             {#if CONTROL.demo}
               <div class="control-row-actions">
@@ -93,8 +93,8 @@
       <div class="control-empty">
         <strong>没有待批准动作</strong>
         {['offline', 'unavailable', 'permission_denied'].includes(CONTROL.sources.approvals.status)
-          ? 'Canonical source 当前不可读，因此不显示虚假 0；R2–R4 继续 fail closed。'
-          : '当前 canonical source 没有待批准动作。R2–R4 继续 fail closed。'}
+          ? '暂时无法读取审批列表；不会用空数量冒充「没有待办」。'
+          : '当前没有等待你确认的请求。'}
       </div>
     {/if}
   </section>
