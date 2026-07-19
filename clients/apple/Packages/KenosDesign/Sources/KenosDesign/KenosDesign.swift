@@ -122,7 +122,9 @@ public struct KenosRow: View {
 public enum KenosA11y {
     @MainActor
     public static var reduceMotionPreferred: Bool {
-        #if canImport(UIKit)
+        #if os(watchOS)
+        return false
+        #elseif canImport(UIKit)
         return UIAccessibility.isReduceMotionEnabled
         #elseif canImport(AppKit)
         return NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
