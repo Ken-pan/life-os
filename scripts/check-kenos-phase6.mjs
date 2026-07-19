@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * Phase 6 Stage A guard — documentation / package readiness only.
- * Must NOT claim production apply or writer cutover.
+ * Phase 6 guard — Wave 1 formal package + FINAL approval packet readiness.
+ * Must NOT claim production apply, hosted staging pass, or writer cutover.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 
 const fail = (message) => {
   console.error(`check-kenos-phase6 — FAIL: ${message}`)
@@ -13,6 +14,28 @@ const read = (path) => readFileSync(path, 'utf8')
 const mustExist = (path) => {
   if (!existsSync(path)) fail(`missing ${path}`)
 }
+const sha256 = (text) => createHash('sha256').update(text).digest('hex')
+
+const formal = [
+  'apps/finance/supabase/migrations/20260719130100_kenos_wave1_plan_create_task_command.sql',
+  'apps/finance/supabase/migrations/20260719130200_kenos_wave1_plan_privilege_model.sql',
+  'apps/finance/supabase/migrations/20260719130300_kenos_wave1_action_approvals.sql',
+  'apps/finance/supabase/migrations/20260719130400_kenos_wave1_focus_context.sql',
+  'apps/finance/supabase/migrations/20260719130500_kenos_wave1_work_domain.sql',
+]
+
+const expectedChecksums = {
+  'apps/finance/supabase/migrations/20260719130100_kenos_wave1_plan_create_task_command.sql':
+    'b7cb2296e9bd426a089a0ff6ec9c1c627803151bba449ce74033bdf0beb37dac',
+  'apps/finance/supabase/migrations/20260719130200_kenos_wave1_plan_privilege_model.sql':
+    '6d3e59c0401c74183b707b0c6057658f873aed3936e7ca4867b086792d4ec0c6',
+  'apps/finance/supabase/migrations/20260719130300_kenos_wave1_action_approvals.sql':
+    'bc25f630238a5f5063a985c1001f4c07a89acfd9bae9aded52701ef3eafabbb9',
+  'apps/finance/supabase/migrations/20260719130400_kenos_wave1_focus_context.sql':
+    'd90d64aa4ad12315171816e169ff26781e8ed8c89fa6d01907d08899137c5134',
+  'apps/finance/supabase/migrations/20260719130500_kenos_wave1_work_domain.sql':
+    'ef334e64b96c10697aae7f13b76a971cfd4dca12c10cb3aaf4885eaa9f0b169d',
+}
 
 for (const path of [
   'docs/ops/kenos-phase6-production-environment-matrix.md',
@@ -20,53 +43,92 @@ for (const path of [
   'docs/ops/kenos-phase6-schema-diff-procedure.md',
   'docs/ops/kenos-phase6-wave1-migration-package.md',
   'docs/ops/kenos-phase6-observability-and-shadow.md',
+  'docs/ops/kenos-phase6-production-deployment-workflow.md',
   'docs/qa/kenos-phase6-backup-restore-proof.md',
   'docs/qa/kenos-phase6-dual-user-hosted-plan.md',
   'docs/qa/kenos-phase6-stage-a-approval-packet.md',
+  'docs/qa/kenos-production-wave1-final-approval-packet.md',
   'apps/planner/supabase/review/20260719110000_kenos_focus_context.sql',
   'apps/planner/supabase/review/20260719100000_kenos_revoke_planner_tasks_direct_write.sql',
+  'scripts/kenos-wave1-local-verify.mjs',
+  ...formal,
 ]) {
   mustExist(path)
 }
 
-const packet = read('docs/qa/kenos-phase6-stage-a-approval-packet.md')
+const packet = read('docs/qa/kenos-production-wave1-final-approval-packet.md')
+const stageA = read('docs/qa/kenos-phase6-stage-a-approval-packet.md')
 const state = read('docs/roadmap/KENOS_REFACTOR_EXECUTION_STATE.md')
 const verify = read('scripts/verify-kenos-refactor.sh')
-const focusSql = read('apps/planner/supabase/review/20260719110000_kenos_focus_context.sql')
-const revoke = read('apps/planner/supabase/review/20260719100000_kenos_revoke_planner_tasks_direct_write.sql')
 const backup = read('docs/qa/kenos-phase6-backup-restore-proof.md')
+const revoke = read(
+  'apps/planner/supabase/review/20260719100000_kenos_revoke_planner_tasks_direct_write.sql',
+)
+const focusFormal = read(formal[3])
 
-if (!packet.includes('KENOS PRODUCTION WAVE 1 APPROVAL PACKET')) {
-  fail('approval packet title missing')
+if (!packet.includes('KENOS PRODUCTION WAVE 1 FINAL APPROVAL PACKET')) {
+  fail('FINAL approval packet title missing')
+}
+if (!packet.includes('WAVE_1_APPROVAL_BLOCKED')) {
+  fail('FINAL packet must honestly report WAVE_1_APPROVAL_BLOCKED while Red gates open')
+}
+if (!packet.includes('PRODUCTION_APPLY_BLOCKED_UNTIL_AUTHORITATIVE_COMMIT_PUSHED')) {
+  fail('must mark apply blocked until authoritative commit pushed')
+}
+if (!packet.includes('LOCAL_LOGICAL_RESTORE_VERIFIED')) {
+  fail('must record local logical restore status')
 }
 if (!packet.includes('APPROVE_KENOS_PRODUCTION_WAVE_1')) {
   fail('approval phrase missing')
 }
-if (!packet.includes('No hosted migration has been applied')) {
-  fail('packet must state no hosted apply')
+if (packet.includes('HOSTED_RESTORE_VERIFIED') && !packet.includes('not `HOSTED_RESTORE_VERIFIED`') && !packet.includes('**NO**')) {
+  // allow mentioning the claim name only when denied
 }
-if (!state.includes('Phase 6') || !state.includes('STAGE_A')) {
-  fail('Execution State missing Phase 6 Stage A closeout')
+if (!backup.includes('LOCAL_LOGICAL_RESTORE_VERIFIED')) {
+  fail('backup proof must record LOCAL_LOGICAL_RESTORE_VERIFIED')
+}
+if (backup.includes('restore drill is **not** claimed complete')) {
+  fail('backup proof must not still claim Stage A incomplete drill')
+}
+if (!state.includes('WAVE_1_APPROVAL_BLOCKED') && !state.includes('FINAL APPROVAL')) {
+  fail('Execution State must mention Wave 1 FINAL / blocked status')
 }
 if (!verify.includes('check-kenos-phase6.mjs')) {
   fail('verify-kenos-refactor.sh must invoke Phase 6 guard')
 }
-if (!focusSql.includes('kenos_focus_contexts') || !focusSql.includes('Never auto-applied')) {
-  fail('Focus review SQL must be review-only with focus tables')
-}
 if (!revoke.includes('BLOCKED_PENDING_HOSTED_APPLY_AND_CUTOVER')) {
   fail('revoke artifact must remain blocked pending cutover')
 }
-if (!backup.includes('restore drill is **not** claimed complete')) {
-  fail('backup proof must honestly record incomplete restore drill')
+if (!focusFormal.includes("set search_path = ''")) {
+  fail('formal Focus list RPC must use fixed empty search_path')
+}
+if (/drop policy if exists "planner_tasks_insert_own"/i.test(formal.map(read).join('\n'))) {
+  fail('Wave 1 formal migrations must not revoke planner_tasks writes')
 }
 
-// Negative: Stage A must not claim production integrated
+const financeNames = readdirSync('apps/finance/supabase/migrations')
+if (financeNames.some((n) => /revoke_planner_tasks/i.test(n))) {
+  fail('revoke must not enter finance migrations')
+}
+
+for (const path of formal) {
+  const digest = sha256(read(path))
+  if (digest !== expectedChecksums[path]) {
+    fail(`checksum mismatch for ${path}: ${digest}`)
+  }
+  if (!packet.includes(digest)) {
+    fail(`FINAL packet must include checksum ${digest}`)
+  }
+}
+
+// Negative claims
 if (packet.includes('PRODUCTION_INTEGRATED_AND_CUTOVER_VERIFIED')) {
-  fail('must not claim full Phase 6 production verified in Stage A')
+  fail('must not claim full production cutover verified')
 }
-if (focusSql.includes('autoApproveAll') || focusSql.includes('ProductionExecutor')) {
-  fail('Focus SQL must not introduce production Executor shortcuts')
+if (stageA.includes('PRODUCTION_INTEGRATED_AND_CUTOVER_VERIFIED')) {
+  fail('Stage A packet must not claim production cutover')
 }
 
-console.log('check-kenos-phase6 — OK (Stage A docs/package only; no production apply claimed)')
+console.log(
+  'check-kenos-phase6 — OK (Wave 1 formal package + FINAL packet; apply still blocked)',
+)

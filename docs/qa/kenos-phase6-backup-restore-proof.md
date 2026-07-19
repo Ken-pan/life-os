@@ -1,46 +1,72 @@
 ---
-title: Kenos Phase 6 — Backup / restore proof template
+title: Kenos Phase 6 — Backup / restore proof
 owner: kenpan
 last_verified: 2026-07-19
-status: stage-a-template-incomplete-drill
+status: LOCAL_LOGICAL_RESTORE_VERIFIED
 ---
 
-# Backup / restore proof template
+# Backup / restore proof
 
-## Gate
+## Gate status
 
-Wave 1 hosted apply is **blocked** until this checklist is filled with real evidence (not “Supabase has backups”).
-
-## Required coverage
-
-| Asset | Snapshot method | Checksum / count | Restore target | Restored OK? | Operator | Timestamp |
-| --- | --- | --- | --- | --- | --- | --- |
-| schema (public Kenos + planner critical) | `pg_dump --schema-only` or Management export | | disposable/staging | ☐ | | |
-| `planner_tasks` | logical export / count 1664 @ Stage A | | disposable | ☐ | | |
-| `planner_projects` | export / count 50 | | disposable | ☐ | | |
-| `planner_user_state` | export / count 1 | | disposable | ☐ | | |
-| `life_events` | export / count 21 | | disposable | ☐ | | |
-| auth.users mapping (IDs only) | count + sample non-PII | | disposable | ☐ | | |
-| PITR capability | dashboard confirmation | RPO/RTO noted | N/A | ☐ | | |
-
-## Rollback artifacts (prepared in repo)
-
-| Artifact | Path |
+| Claim | Status |
 | --- | --- |
-| Plan command review SQL | `apps/planner/supabase/review/20260719010000_kenos_plan_create_task_command.sql` |
-| Privilege model | `…/20260719020000_kenos_plan_privilege_model.sql` |
-| Approval | `…/20260719030000_kenos_action_approvals.sql` |
-| Work | `…/20260719040000_kenos_work_domain.sql` |
-| Revoke + commented restore policies | `…/20260719100000_kenos_revoke_planner_tasks_direct_write.sql` |
-| Focus Wave 1A draft | `…/20260719110000_kenos_focus_context.sql` |
-| Feature-flag rollback | Portal/Kenos Vite flags Off; Apple FakeExecutor remains |
+| `LOCAL_LOGICAL_RESTORE_VERIFIED` | **YES** — disposable Docker restore + Wave 1 apply |
+| `HOSTED_RESTORE_VERIFIED` | **NO** — isolated hosted staging unavailable |
 
-## Stage A status
+Wave 1 production apply remains blocked until hosted restore/staging Red gates close (see FINAL approval packet).
 
-- [x] Inventory of critical tables + approximate counts recorded
-- [ ] Disposable/staging **restore drill executed**
-- [ ] PITR window documented
-- [ ] Worker shutdown procedure dry-run
-- [ ] DNS/host rollback N/A for Wave 1 schema
+## Production snapshot
 
-**Honesty:** restore drill is **not** claimed complete in Stage A.
+| Field | Value |
+| --- | --- |
+| Project | `iueozzuctstwvzbcxcyh` |
+| Inventory time | `2026-07-19T15:57:30.774617Z` |
+| `planner_tasks` | 1664 |
+| `planner_projects` | 50 |
+| `life_events` | 21 |
+| `planner_user_state` | 1 |
+
+## Drill executed (local logical)
+
+1. Read-only `supabase db dump --linked` schema → `/tmp/kenos-wave1-restore-drill/prod-schema.sql`
+2. Read-only filtered data dump → `prod-data-critical.sql`
+3. Restore into disposable Docker DB `kenos_restore_drill` (not production)
+4. Verify counts; sample task checksum `4b7321390c659606717421b7efe5b817`
+5. Apply formal Wave 1 migrations; counts unchanged
+6. Dual-user checks on separate disposable bootstrap DB via `scripts/kenos-wave1-local-verify.mjs`
+
+| Metric | Before Wave 1 | After Wave 1 |
+| --- | --- | --- |
+| planner_tasks | 1664 | 1664 |
+| planner_projects | 50 | 50 |
+| life_events | 21 | 21 |
+| planner_user_state | 1 | 1 |
+
+Restore duration (script window): ~965 ms.
+RTO observation (local logical): sub-minute for critical tables on disposable host.
+RPO observation: point-in-time of dump ≈ inventory timestamp; PITR Dashboard confirmation still required before production apply.
+
+## Storage limitation
+
+DB dump does **not** restore Storage object bytes. Bucket object counts recorded at inventory time (finance-purchase-images 619, home-scan-photos 777, music 269, music-covers 266, planner-attachments 0).
+
+## Exact restore runbook (local)
+
+```bash
+# 1) dumps (read-only, linked to production — never restore back to production)
+cd apps/finance
+supabase db dump --linked -f /tmp/kenos-wave1-restore-drill/prod-schema.sql \
+  --schema public,home,aios,music,fitness,storage,auth
+supabase db dump --linked --data-only -f /tmp/kenos-wave1-restore-drill/prod-data-critical.sql -s public \
+  -x public.finance_transactions # …additional -x excludes as needed
+
+# 2) verify + restore drill
+cd ../..
+node scripts/kenos-wave1-local-verify.mjs
+```
+
+## Rollback artifacts
+
+Formal migrations under `apps/finance/supabase/migrations/2026071913*.sql`.
+Revoke remains review-only under `apps/planner/supabase/review/20260719100000_*`.

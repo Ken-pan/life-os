@@ -1,11 +1,15 @@
 ---
-title: KENOS PRODUCTION WAVE 1 APPROVAL PACKET
+title: KENOS PRODUCTION WAVE 1 APPROVAL PACKET (Stage A historical)
 owner: kenpan
 last_verified: 2026-07-19
-status: awaiting-owner-approval
+status: superseded-by-final-packet
 ---
 
 # KENOS PRODUCTION WAVE 1 APPROVAL PACKET
+
+> **Superseded for approval decisions** by
+> [`docs/qa/kenos-production-wave1-final-approval-packet.md`](./kenos-production-wave1-final-approval-packet.md)
+> (`WAVE_1_APPROVAL_BLOCKED`). Keep this file as Stage A evidence.
 
 Stage A complete. **No hosted migration has been applied. No writer cutover. No push performed by this Stage A task.**
 
@@ -13,9 +17,10 @@ Stage A complete. **No hosted migration has been applied. No writer cutover. No 
 
 `8e2c406dbf59a657679714537b4d537368658552` (Phase 5 tip at Stage A start)
 
-## 2. Final local HEAD
+## 2. Final local HEAD (Stage A tip — historical)
 
 `e13e245665ca7a6713bbd51bcf5670ee4630026a`
+(Followed by tip-sync `4f17d7b978eae72155ead4c40eee6826bf192414`; both are ancestors of the FINAL packet tip.)
 
 ## 3. Commits
 
@@ -43,24 +48,24 @@ Conclusion: Wave 1 is additive. Direct `planner_tasks_*_own` write policies stil
 
 `docs/ops/kenos-phase6-wave1-migration-package.md`
 
-Order: Plan command → privileges → Approvals → Focus → Work.  
+Order: Plan command → privileges → Approvals → Focus → Work.
 **Revoke direct Task write is NOT Wave 1 apply** (writer canary/cutover).
 
 ## 8. Exact SQL / RLS / grant changes (to apply after approval)
 
-| File | Change class |
-| --- | --- |
-| `apps/planner/supabase/review/20260719010000_kenos_plan_create_task_command.sql` | create tables + SECURITY DEFINER command |
-| `…/20260719020000_kenos_plan_privilege_model.sql` | worker role / grants |
-| `…/20260719030000_kenos_action_approvals.sql` | Approval table + select policies + list RPC |
-| `…/20260719110000_kenos_focus_context.sql` | Focus/Deferred/Suggestion + select-only authenticated |
-| `…/20260719040000_kenos_work_domain.sql` | Work domain tables |
+| File                                                                             | Change class                                          |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `apps/planner/supabase/review/20260719010000_kenos_plan_create_task_command.sql` | create tables + SECURITY DEFINER command              |
+| `…/20260719020000_kenos_plan_privilege_model.sql`                                | worker role / grants                                  |
+| `…/20260719030000_kenos_action_approvals.sql`                                    | Approval table + select policies + list RPC           |
+| `…/20260719110000_kenos_focus_context.sql`                                       | Focus/Deferred/Suggestion + select-only authenticated |
+| `…/20260719040000_kenos_work_domain.sql`                                         | Work domain tables                                    |
 
 Revoke artifact (later wave): `…/20260719100000_kenos_revoke_planner_tasks_direct_write.sql`
 
 ## 9. Affected tables / functions
 
-New: `kenos_plan_*`, `kenos_action_approvals`, `kenos_focus_*`, `kenos_deferred_items`, `kenos_proactive_suggestions`, Work review tables, `kenos_create_plan_task_action`, `kenos_list_*` RPCs.  
+New: `kenos_plan_*`, `kenos_action_approvals`, `kenos_focus_*`, `kenos_deferred_items`, `kenos_proactive_suggestions`, Work review tables, `kenos_create_plan_task_action`, `kenos_list_*` RPCs.
 Unchanged in Wave 1: existing `planner_tasks` write policies.
 
 ## 10. Worker identity
@@ -115,11 +120,11 @@ None until clients deliberately switch read/write paths (later waves).
 
 ## 20. Unresolved decisions / Yellow
 
-1. **Backup restore drill** not completed — required before apply.  
-2. **OPEN-002** Work body mirroring still PENDING if Work payloads expand.  
-3. **Focus hosted write RPC** not opened in 1A (select/list only) — deliberate.  
-4. **complete_task** legacy upsert (P2-008) remains until writer canary.  
-5. Unrelated local WIP dirty; must not be included in push.  
+1. **Backup restore drill** not completed — required before apply.
+2. **OPEN-002** Work body mirroring still PENDING if Work payloads expand.
+3. **Focus hosted write RPC** not opened in 1A (select/list only) — deliberate.
+4. **complete_task** legacy upsert (P2-008) remains until writer canary.
+5. Unrelated local WIP dirty; must not be included in push.
 6. Local Kenos commits **ahead of origin/master** — push needs separate user authorization.
 
 ## 21. Exact approval phrase

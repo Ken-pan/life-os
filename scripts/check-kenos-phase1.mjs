@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { KenosActionResultSchema, KenosActivityRecordSchema, KenosOutboxRecordSchema } from '../packages/contracts/src/kenos.ts'
 import { createMemoryCreateTaskDatabase, executeServerCreateTaskAction } from '../apps/planner/server/kenos/createTaskCommand.mjs'
@@ -86,8 +86,23 @@ assert.ok(remediationDoc.includes('BLOCKED_PENDING_HOSTED_APPLY_AND_CUTOVER'), '
 assert.ok(revokeArtifact.includes('drop policy if exists "planner_tasks_insert_own"'), 'revoke review SQL must target insert policy')
 assert.ok(
   !readdirSync(join(process.cwd(), 'apps/planner/supabase/migrations')).some((name) => /kenos/i.test(name)),
-  'Kenos SQL must not enter auto-apply migrations/',
+  'Kenos SQL must not enter planner auto-apply migrations/ (canonical Wave 1 lives under apps/finance)',
 )
+assert.ok(
+  !readdirSync(join(process.cwd(), 'apps/finance/supabase/migrations')).some((name) =>
+    /revoke_planner_tasks/i.test(name),
+  ),
+  'planner_tasks revoke must remain review-only (not finance migrations)',
+)
+for (const name of [
+  '20260719130100_kenos_wave1_plan_create_task_command.sql',
+  '20260719130200_kenos_wave1_plan_privilege_model.sql',
+]) {
+  assert.ok(
+    existsSync(join(process.cwd(), 'apps/finance/supabase/migrations', name)),
+    `Wave 1 formal migration missing: ${name}`,
+  )
+}
 
 {
   const understated = classifyCreateTaskPolicy({

@@ -131,8 +131,18 @@ if (!/approvals:\s*Object\.freeze\(\['system'\]\)/.test(readProjections)) {
 for (const token of ['expired', 'superseded', 'Executor', '只读']) {
   if (!approvalsPage.includes(token)) fail(`Approvals UI missing read-only state token ${token}`)
 }
-if ((!todayPage.includes('approvalCountAvailable') && !todayPage.includes('approvalsAvailable')) || !todayPage.includes('href="/approvals"')) {
-  fail('Today must derive the canonical Approval count and deep-link to /approvals')
+if (
+  (!todayPage.includes('approvalCountAvailable') &&
+    !todayPage.includes('approvalsAvailable') &&
+    !todayPage.includes('approvalsOpen')) ||
+  !(
+    todayPage.includes('href="/approvals"') ||
+    todayPage.includes('href="/inbox"')
+  )
+) {
+  fail(
+    'Today must derive the canonical Approval count and deep-link to /approvals or Nav IA /inbox',
+  )
 }
 if (!todayPage.includes('formatQueueCount')) {
   fail('Today must use availability-aware formatQueueCount for queue badges')

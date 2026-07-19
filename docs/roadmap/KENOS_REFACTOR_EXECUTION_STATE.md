@@ -394,11 +394,18 @@ Approved temporary defaults now on file:
 ## Phase 6 Stage A — production Wave 1 approval packet (2026-07-19)
 
 - Starting revision: `8e2c406dbf59a657679714537b4d537368658552`; branch `master`; one worktree.
-- Final local HEAD: `e13e245665ca7a6713bbd51bcf5670ee4630026a`
-- Verdict: `KENOS PHASE 6 — STAGE_A_APPROVAL_PACKET_READY` (awaiting `APPROVE_KENOS_PRODUCTION_WAVE_1`).
-- Hosted read-only inventory (`iueozzuctstwvzbcxcyh`): no `kenos_*` tables/functions; `planner_tasks` still has authenticated insert/update/delete/select_own; tip migration `20260717220000`; counts tasks≈1664 / life_events≈21.
-- Artifacts: environment matrix, writer matrix, schema diff procedure, Wave 1 migration package index, Focus review SQL `20260719110000_kenos_focus_context.sql`, backup/restore template (drill incomplete), dual-user plan, observability/shadow/canary doc, approval packet.
-- Guard: `scripts/check-kenos-phase6.mjs` wired into `verify-kenos-refactor.sh`.
-- Explicitly **not** done: hosted apply, revoke/cutover, Portal switch, Apple distribution, deploy, push, restore drill.
+- Stage A tip (historical): `e13e245665ca7a6713bbd51bcf5670ee4630026a` → tip-sync `4f17d7b978eae72155ead4c40eee6826bf192414` (linear; not conflicting baselines).
+- Verdict then: `KENOS PHASE 6 — STAGE_A_APPROVAL_PACKET_READY`.
+
+## Phase 6 Wave 1 FINAL approval packet (2026-07-19)
+
+- Starting revision: `4f17d7b978eae72155ead4c40eee6826bf192414`; branch `master`; one worktree.
+- Final local HEAD: `AUTHORITATIVE_SHA_PLACEHOLDER` (tip-sync after formal migrations).
+- Verdict: `WAVE_1_APPROVAL_BLOCKED` — see `docs/qa/kenos-production-wave1-final-approval-packet.md`.
+- Marker: `PRODUCTION_APPLY_BLOCKED_UNTIL_AUTHORITATIVE_COMMIT_PUSHED`.
+- Formal migrations (canonical): `apps/finance/supabase/migrations/20260719130100` … `20260719130500` (after remote tip `20260717220000`).
+- Local: finance `db reset` PASS; disposable dual-user + `LOCAL_LOGICAL_RESTORE_VERIFIED` via `scripts/kenos-wave1-local-verify.mjs`.
+- Hosted staging (`dsiloxzjnsvjnhbruibl`) **removed** → hosted apply / dual-user / Advisors / `HOSTED_RESTORE_VERIFIED` not available.
+- Explicitly **not** done: production apply, revoke/cutover, Portal switch, Apple distribution, deploy, push.
 - Unrelated WIP left unstaged (Finance/Planner/UI gallery/roadmap/usage-audit/wikilinks/phase2).
-- Stop: await Owner phrase `APPROVE_KENOS_PRODUCTION_WAVE_1`.
+- Stop: close Red gates before Owner phrase `APPROVE_KENOS_PRODUCTION_WAVE_1`.

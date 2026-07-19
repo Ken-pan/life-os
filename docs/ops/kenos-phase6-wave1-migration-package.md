@@ -2,63 +2,50 @@
 title: Kenos Phase 6 — Wave 1 migration package index
 owner: kenpan
 last_verified: 2026-07-19
-status: stage-a-package-not-applied
+status: formal-migrations-ready-apply-blocked
 ---
 
 # Wave 1 migration package index
 
-**Status:** prepared artifacts only. Apply requires `APPROVE_KENOS_PRODUCTION_WAVE_1`.
+**Apply source of truth:** `apps/finance/supabase/migrations/20260719130100` … `20260719130500`
 
-All files live under `apps/planner/supabase/review/` (outside auto `migrations/`).
+**Historical review evidence:** `apps/planner/supabase/review/` (not for production apply)
 
-## Apply order (proposed)
+**Status:** formalized; production apply blocked until FINAL packet Red gates close + `APPROVE_KENOS_PRODUCTION_WAVE_1`.
 
-### Wave 1A — Platform records (additive)
+All formal timestamps are **after** remote tip `20260717220000`.
 
-| Order | File | Objects |
+## Apply order
+
+| Order | Formal file | Objects |
 | --- | --- | --- |
-| 1 | `20260719010000_kenos_plan_create_task_command.sql` | idempotency, Activity, Outbox, `kenos_create_plan_task_action` |
-| 2 | `20260719020000_kenos_plan_privilege_model.sql` | worker role / transition helpers |
-| 3 | `20260719030000_kenos_action_approvals.sql` | Approval read model (+ writer role stub) |
-| 4 | `20260719110000_kenos_focus_context.sql` | FocusContext, DeferredItem, ProactiveSuggestion, list RPC |
+| 1 | `20260719130100_kenos_wave1_plan_create_task_command.sql` | idempotency, Activity, Outbox, `kenos_create_plan_task_action` |
+| 2 | `20260719130200_kenos_wave1_plan_privilege_model.sql` | `kenos_outbox_worker` / transition helper |
+| 3 | `20260719130300_kenos_wave1_action_approvals.sql` | Approval read model + list RPC |
+| 4 | `20260719130400_kenos_wave1_focus_context.sql` | Focus / Deferred / Suggestion + list RPC |
+| 5 | `20260719130500_kenos_wave1_work_domain.sql` | Work domain tables + list RPCs |
 
-### Wave 1B — Work domain (additive, parallel-reviewable)
-
-| Order | File | Objects |
-| --- | --- | --- |
-| 5 | `20260719040000_kenos_work_domain.sql` | Work Project/Deliverable/Meeting/Decision/Proposal |
-
-### Wave 1C — Read RPCs / verification
-
-- Existing list/read RPCs inside the above files
-- Hosted advisors (security + performance)
-- Dual-user isolation tests (`docs/qa/kenos-phase6-dual-user-hosted-plan.md`)
-- Post-apply checksums: table exists, RLS on, anon denied, authenticated select own only
-
-### Wave 1D — **NOT in Wave 1 apply** (separate approval)
+## Explicitly NOT in Wave 1
 
 | File | Gate |
 | --- | --- |
-| `20260719100000_kenos_revoke_planner_tasks_direct_write.sql` | Requires `APPROVE_KENOS_PRODUCTION_WRITER_CANARY` / cutover — **after** RPC live |
+| `apps/planner/supabase/review/20260719100000_kenos_revoke_planner_tasks_direct_write.sql` | Writer canary/cutover — separate approval |
 
-## Compatibility
+## Compatibility / safety properties
 
-- Old Planner clients keep working while direct-write policies remain
-- Kenos tables additive; no drops
-- Focus mutations not opened to authenticated clients in 1A (select + list only)
+- Additive, retry-safe (`IF NOT EXISTS` / `CREATE OR REPLACE` / `DROP POLICY IF EXISTS`)
+- Backward compatible: legacy `planner_tasks` authenticated writes remain
+- No destructive DROP of user data
+- Fixed `search_path = ''` on security-sensitive functions (Focus list RPC corrected in formal file)
+- Precise grants; no broad `PUBLIC` execute on command RPC
+- Owner from `auth.uid()` context (not spoofable payload owner)
+
+## Checksums
+
+See `docs/qa/kenos-production-wave1-final-approval-packet.md` §7 (bound to authoritative SHA).
 
 ## Rollback
 
-1. Feature flags / clients remain on legacy paths
-2. Drop new Kenos objects only if empty and owner-approved (prefer leave additive tables)
-3. Revoke SQL includes commented policy restore for emergency
-4. Do **not** delete user Task rows to “undo”
-
-## Verification SQL (post-apply sketch)
-
-```sql
-select to_regclass('public.kenos_plan_action_idempotency') is not null as has_idempotency;
-select to_regclass('public.kenos_focus_contexts') is not null as has_focus;
-select count(*) = 0 from pg_proc where proname = 'kenos_create_plan_task_action' and prosecdef = false;
--- adjust: expect SECURITY DEFINER where designed
-```
+1. Revoke execute on new RPCs; keep tables
+2. Clients remain on legacy paths
+3. Do not delete Task rows to “undo”

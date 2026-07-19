@@ -24,6 +24,13 @@ import {
   KenosWorkActionProposalSchema,
   KenosConnectorRegistryEntrySchema,
 } from '../packages/contracts/src/kenos.ts'
+import {
+  KenosDeferredItemSchema,
+  KenosFocusContextSchema,
+  KenosInterruptionCandidateSchema,
+  KenosProactiveSuggestionSchema,
+  KenosSessionSummarySchema,
+} from '../packages/contracts/src/kenos-focus.ts'
 
 const root = process.cwd()
 const fixtureRoot = join(root, 'packages/contracts/fixtures/kenos/v1')
@@ -48,6 +55,11 @@ const schemaByContract = {
   workDecision: KenosWorkDecisionSchema,
   workActionProposal: KenosWorkActionProposalSchema,
   connectorRegistryEntry: KenosConnectorRegistryEntrySchema,
+  focusContext: KenosFocusContextSchema,
+  deferredItem: KenosDeferredItemSchema,
+  interruptionCandidate: KenosInterruptionCandidateSchema,
+  proactiveSuggestion: KenosProactiveSuggestionSchema,
+  sessionSummary: KenosSessionSummarySchema,
 }
 
 assert.equal(manifest.contractVersion, '1')
