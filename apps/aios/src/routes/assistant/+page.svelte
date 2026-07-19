@@ -17,10 +17,33 @@
   import { openArtifact } from '$lib/panel.svelte.js'
   import { CLOUD_BUILD } from '$lib/env.js'
   import { generateDailySuggestions } from '$lib/dailySuggestions.js'
+  import { page } from '$app/state'
   import { FOCUS } from '$lib/kenos/focusStore.svelte.js'
   import { resolveAssistantScopeLabel } from '$lib/kenos/assistantScopeLabel.core.js'
+  import {
+    ASSISTANT_CTX,
+    enterWorkAssistantContext,
+  } from '$lib/kenos/assistantContext.svelte.js'
 
-  const scopeUi = $derived(resolveAssistantScopeLabel({ focus: FOCUS.focus }))
+  // Soft Work context (ASSISTANT_CTX / ?scope=work) — not Focus/prod writes.
+  // Global nav clears ASSISTANT_CTX; staying on /assistant with work ctx keeps Scope: Work.
+  const scopeUi = $derived(
+    resolveAssistantScopeLabel({
+      focus: FOCUS.focus,
+      workContext: ASSISTANT_CTX.work
+        ? { title: ASSISTANT_CTX.work.title || '' }
+        : page.url.searchParams.get('scope') === 'work'
+          ? { title: page.url.searchParams.get('entity') || '' }
+          : null,
+    }),
+  )
+
+  $effect(() => {
+    if (page.url.searchParams.get('scope') !== 'work') return
+    enterWorkAssistantContext({
+      title: page.url.searchParams.get('entity') || '',
+    })
+  })
 
   const conversation = $derived(
     C.conversations.find((c) => c.id === C.activeId) ?? null,

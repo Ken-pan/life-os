@@ -1,9 +1,16 @@
 import { browser } from '$app/environment'
-import { mapAuthErrorMessage, LIFE_OS_PERSONAL_OWNER_EMAIL } from '@life-os/sync'
+import {
+  mapAuthErrorMessage,
+  LIFE_OS_PERSONAL_OWNER_EMAIL,
+} from '@life-os/sync'
 import { t } from '$lib/i18n/index.js'
 import { S, applyCloudSettings } from '$lib/state.svelte.js'
 import { supabase as sb, isSupabaseConfigured } from '$lib/supabase.js'
-import { C, clearConversationClientState, persist as persistChats } from '$lib/chat.svelte.js'
+import {
+  C,
+  clearConversationClientState,
+  persist as persistChats,
+} from '$lib/chat.svelte.js'
 import { M, mergeRemoteMemories } from '$lib/memory.svelte.js'
 import { onDataChanged } from '$lib/syncBus.js'
 import {
@@ -12,6 +19,7 @@ import {
   planSettingsLww,
 } from '$lib/cloud-sync.core.js'
 import { isConversationPersistenceBlocked } from '$lib/kenos/conversationPersist.core.js'
+import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
 
 /**
  * 云端同步:Life OS 统一 Supabase 账户,登录即用,零配置。
@@ -50,7 +58,8 @@ export const CLOUD = $state({
 export function isCloudAuthorized() {
   return (
     !!CLOUD.user &&
-    CLOUD.user.email.toLowerCase() === LIFE_OS_PERSONAL_OWNER_EMAIL.toLowerCase()
+    CLOUD.user.email.toLowerCase() ===
+      LIFE_OS_PERSONAL_OWNER_EMAIL.toLowerCase()
   )
 }
 
@@ -91,8 +100,12 @@ async function syncLifeOsMcpFleet(accessToken) {
   const token = String(accessToken || '').trim()
   if (!token) return
   try {
-    const { loadServers, saveServers, ensureLifeOsMcpFleet } = await import('$lib/mcp.js')
-    const { servers, added, updated } = ensureLifeOsMcpFleet(loadServers(), token)
+    const { loadServers, saveServers, ensureLifeOsMcpFleet } =
+      await import('$lib/mcp.js')
+    const { servers, added, updated } = ensureLifeOsMcpFleet(
+      loadServers(),
+      token,
+    )
     if (added.length > 0 || updated > 0) saveServers(servers)
   } catch {
     /* MCP 配置损坏或 localStorage 不可用时忽略 */
@@ -179,6 +192,7 @@ export async function signOutCloud() {
     }
     // Always drop client conversation copies on logout (cache isolation).
     clearConversationClientState()
+    clearAssistantContext()
   }
 }
 
@@ -319,7 +333,9 @@ async function syncConversations(snap) {
     persistChats()
   }
 
-  snap.convs = Object.fromEntries(C.conversations.map((c) => [c.id, c.updatedAt]))
+  snap.convs = Object.fromEntries(
+    C.conversations.map((c) => [c.id, c.updatedAt]),
+  )
 }
 
 async function syncMemories(snap) {
@@ -379,7 +395,12 @@ async function dataUrlToBlob(dataUrl) {
  * 把某条工具调用里第 index 张生成图上传到云端,路径写回 tc.imagePaths[index]。
  * @returns {Promise<string>} 云端对象路径
  */
-export async function uploadConversationImage(conversationId, tcId, index, dataUrl) {
+export async function uploadConversationImage(
+  conversationId,
+  tcId,
+  index,
+  dataUrl,
+) {
   if (isConversationPersistenceBlocked()) {
     throw new Error('Image upload blocked (read canary / writes fail-closed)')
   }
@@ -412,8 +433,13 @@ export async function imageUrlFromPath(path) {
   if (!sb || !path) return null
   const cached = signedUrlCache.get(path)
   if (cached && cached.exp > Date.now() + 30000) return cached.url
-  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(path, 3600)
+  const { data, error } = await sb.storage
+    .from(BUCKET)
+    .createSignedUrl(path, 3600)
   if (error || !data?.signedUrl) return null
-  signedUrlCache.set(path, { url: data.signedUrl, exp: Date.now() + 3600 * 1000 })
+  signedUrlCache.set(path, {
+    url: data.signedUrl,
+    exp: Date.now() + 3600 * 1000,
+  })
   return data.signedUrl
 }

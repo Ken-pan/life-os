@@ -5,8 +5,9 @@
   import { t } from '$lib/i18n/index.js'
   import { C, startNewChat, selectConversation, deleteConversation } from '$lib/chat.svelte.js'
   import { AG, openAgent, closeAgent } from '$lib/agents.svelte.js'
-  import { isSystemNavActive, systemNavItems } from '$lib/kenos/systemNav.js'
+  import { isSystemNavActive, systemNavItems, SYSTEM_NAV_HREFS } from '$lib/kenos/systemNav.js'
   import { KENOS_SPACES } from '$lib/kenos/controlCenter.core.js'
+  import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
 
   let { onCapture = undefined } = $props()
 
@@ -40,6 +41,11 @@
   function openAgentThread(key) {
     openAgent(key)
     if (!onChatRoute) goto('/assistant')
+  }
+
+  /** Global Assistant nav entry — leave soft Work context. */
+  function onSystemNavClick(href) {
+    if (href === SYSTEM_NAV_HREFS.assistant) clearAssistantContext()
   }
 </script>
 
@@ -81,6 +87,7 @@
         class:active={isSystemNavActive(page.url.pathname, item.href)}
         href={item.href}
         aria-current={isSystemNavActive(page.url.pathname, item.href) ? 'page' : undefined}
+        onclick={() => onSystemNavClick(item.href)}
       >
         <Icon name={item.icon} size={17} strokeWidth={1.75} />
         <span>{item.label}</span>

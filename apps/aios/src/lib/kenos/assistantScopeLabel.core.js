@@ -20,18 +20,25 @@ export function resolveAssistantScopeLabel(input = {}) {
   const focus = input.focus
   const foreground =
     focus &&
-    (focus.status === 'active' || focus.status === 'paused' || focus.status === 'temporarily_left')
+    (focus.status === 'active' ||
+      focus.status === 'paused' ||
+      focus.status === 'temporarily_left')
 
   if (foreground) {
-    const space = String(focus.activeSpace || focus.mode || 'Focus').trim() || 'Focus'
-    const entity =
-      String(
-        focus.activeSessionRef?.title ||
-          focus.title ||
-          input.workContext?.title ||
-          '',
-      ).trim()
-    const spaceLabel = space === 'deep_work' ? 'Work' : space === 'training' ? 'Training' : capitalize(space)
+    const space =
+      String(focus.activeSpace || focus.mode || 'Focus').trim() || 'Focus'
+    const entity = String(
+      focus.activeSessionRef?.title ||
+        focus.title ||
+        input.workContext?.title ||
+        '',
+    ).trim()
+    const spaceLabel =
+      space === 'deep_work'
+        ? 'Work'
+        : space === 'training'
+          ? 'Training'
+          : capitalize(space)
     if (entity && entity.toLowerCase() !== spaceLabel.toLowerCase()) {
       return {
         kind: 'context',
@@ -48,8 +55,8 @@ export function resolveAssistantScopeLabel(input = {}) {
     }
   }
 
-  if (input.workContext?.title) {
-    const entity = String(input.workContext.title).trim()
+  if (input.workContext != null) {
+    const entity = String(input.workContext.title || '').trim()
     return {
       kind: 'context',
       label: entity ? `Scope: Work · ${entity}` : 'Scope: Work',

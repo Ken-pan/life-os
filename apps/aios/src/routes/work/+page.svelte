@@ -15,6 +15,7 @@
     refreshWorkSurface,
   } from '$lib/kenos/workStore.svelte.js'
   import { resolveAssistantScopeLabel } from '$lib/kenos/assistantScopeLabel.core.js'
+  import { enterWorkAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
 
   const projects = $derived(listWorkProjects())
   const deliverables = $derived(listWorkDeliverables())
@@ -33,9 +34,15 @@
   const workContextTitle = $derived(prodProjects[0]?.title || projects[0]?.title || '')
   const scopeUi = $derived(
     resolveAssistantScopeLabel({
-      workContext: workContextTitle ? { title: workContextTitle } : null,
+      workContext: { title: workContextTitle },
     }),
   )
+
+  function openWorkContextAssistant() {
+    enterWorkAssistantContext({
+      title: workContextTitle || projects[0]?.title || prodProjects[0]?.title || '',
+    })
+  }
 
   onMount(() => {
     refreshWorkSurface({ force: true })
@@ -52,12 +59,17 @@
     </div>
     <div class="header-actions">
       <a class="quiet" href="/spaces">全部 Spaces</a>
-      <a class="quiet" href="/assistant" data-testid="work-context-assistant-entry">Context Assistant</a>
-      {#if workContextTitle}
-        <span class="scope-hint" data-testid="assistant-scope-chip" data-scope-kind={scopeUi.kind} title={scopeUi.label}>
-          {scopeUi.label}
-        </span>
-      {/if}
+      <a
+        class="quiet"
+        href="/assistant?scope=work"
+        data-testid="work-context-assistant-entry"
+        onclick={openWorkContextAssistant}
+      >
+        Context Assistant
+      </a>
+      <span class="scope-hint" data-testid="assistant-scope-chip" data-scope-kind={scopeUi.kind} title={scopeUi.label}>
+        {scopeUi.label}
+      </span>
       <button type="button" class="quiet" onclick={() => { refreshWorkSurface({ force: true }); void refreshControlCenter({ force: true }) }}>
         <Icon name="refresh" size={16} strokeWidth={1.75} />
         刷新

@@ -30,6 +30,14 @@ describe('assistantScopeLabel.core', () => {
     assert.equal(scope.label, 'Scope: Work · Alpha')
   })
 
+  it('labels Work hub context without project title', () => {
+    const scope = resolveAssistantScopeLabel({
+      workContext: { title: '' },
+    })
+    assert.equal(scope.kind, 'context')
+    assert.equal(scope.label, 'Scope: Work')
+  })
+
   it('does not fabricate Work context when empty', () => {
     const scope = resolveAssistantScopeLabel({ workContext: null, focus: null })
     assert.equal(scope.kind, 'global')
