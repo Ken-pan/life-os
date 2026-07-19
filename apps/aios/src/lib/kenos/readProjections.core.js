@@ -597,8 +597,30 @@ export function compareProjectionSets({
   correlationId = null,
   timestamp: comparedAt = new Date().toISOString(),
   unsupported = false,
+  oldSourceId = null,
+  newSourceId = null,
 } = {}) {
   const mismatches = []
+  const resolvedOldSource = text(oldSourceId || oldItems[0]?.sourceIdentity, 'unknown_old')
+  const resolvedNewSource = text(newSourceId || newItems[0]?.sourceIdentity, 'unknown_new')
+
+  if (resolvedOldSource && resolvedNewSource && resolvedOldSource === resolvedNewSource) {
+    return [{
+      comparisonType: text(comparisonType, 'unknown'),
+      ownerDomain: text(ownerDomain, 'system'),
+      oldValueFingerprint: fingerprint({ source: resolvedOldSource, count: oldItems.length }),
+      newValueFingerprint: fingerprint({ source: resolvedNewSource, count: newItems.length }),
+      category: 'same_source_self_compare_invalid_evidence',
+      timestamp: timestamp(comparedAt),
+      sourceFreshness: 'unknown',
+      severity: 'expected',
+      correlationId,
+      oldSourceId: resolvedOldSource,
+      newSourceId: resolvedNewSource,
+      redactedDiagnosticSummary: 'Old/new shadow inputs share the same source identity; self-compare is not cutover evidence.',
+    }]
+  }
+
   const oldById = new Map(oldItems.map((item) => [text(item.id), item]))
   const newById = new Map(newItems.map((item) => [text(item.id), item]))
 
@@ -613,6 +635,8 @@ export function compareProjectionSets({
       sourceFreshness: 'unknown',
       severity: 'expected',
       correlationId,
+      oldSourceId: resolvedOldSource,
+      newSourceId: resolvedNewSource,
       redactedDiagnosticSummary: '目标 read source 尚不存在；未创建替代存储。',
     })
     return mismatches
@@ -631,6 +655,8 @@ export function compareProjectionSets({
         sourceFreshness: text(oldItem.freshness, 'unknown'),
         severity: 'blocking',
         correlationId: text(oldItem.correlationId) || correlationId,
+        oldSourceId: resolvedOldSource,
+        newSourceId: resolvedNewSource,
         redactedDiagnosticSummary: `来源项 ${stableHash(id)} 未出现在新 projection。`,
       })
       continue
@@ -653,6 +679,8 @@ export function compareProjectionSets({
           sourceFreshness: text(next.freshness, 'unknown'),
           severity,
           correlationId: text(next.correlationId) || correlationId,
+          oldSourceId: resolvedOldSource,
+          newSourceId: resolvedNewSource,
           redactedDiagnosticSummary: `${stableHash(id)} 的 ${field} projection 不一致。`,
         })
       }
@@ -671,9 +699,12 @@ export function compareProjectionSets({
       sourceFreshness: text(next.freshness, 'unknown'),
       severity: 'warning',
       correlationId: text(next.correlationId) || correlationId,
-      redactedDiagnosticSummary: `新 projection 多出来源项 ${stableHash(id)}。`,
+      oldSourceId: resolvedOldSource,
+      newSourceId: resolvedNewSource,
+      redactedDiagnosticSummary: `新 projection ${stableHash(id)} 在 legacy 样本中不存在。`,
     })
   }
+
   return mismatches
 }
 

@@ -1,12 +1,20 @@
 /**
  * Life OS MCP 预设（纯逻辑，无 SvelteKit 依赖）。
+ *
+ * P2-008 / P1-002: Planner MCP create-task no longer direct-writes; hosted RPC is required.
+ * Presets remain for read tools. `writeToolsBlockedUntilHostedRpc` marks unsafe automation.
  */
 
-/** @typedef {{ id:string, name:string, url:string, enabled:boolean, token?:string }} McpServer */
+/** @typedef {{ id:string, name:string, url:string, enabled:boolean, token?:string, writeToolsBlockedUntilHostedRpc?:boolean }} McpServer */
 
 export const LIFE_OS_MCP_PRESETS = [
   { id: 'lifeos_home', name: 'Life OS Home', url: 'https://home.kenos.space/api/mcp' },
-  { id: 'lifeos_planner', name: 'Life OS Planner', url: 'https://planner.kenos.space/api/mcp' },
+  {
+    id: 'lifeos_planner',
+    name: 'Life OS Planner',
+    url: 'https://planner.kenos.space/api/mcp',
+    writeToolsBlockedUntilHostedRpc: true,
+  },
   { id: 'lifeos_finance', name: 'Life OS Finance', url: 'https://finance.kenos.space/api/mcp' },
   { id: 'lifeos_fitness', name: 'Life OS Fitness', url: 'https://fitness.kenos.space/api/mcp' },
 ]

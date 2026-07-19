@@ -8,12 +8,12 @@
     KENOS_SPACES,
     sortActivityNewestFirst,
     summarizeControlQueue,
+    formatQueueCount,
   } from '$lib/kenos/controlCenter.core.js'
   import { WORK, refreshWorkSurface } from '$lib/kenos/workStore.svelte.js'
 
   const today = $derived(buildTodayReadModel(CONTROL.summary))
   const queue = $derived(summarizeControlQueue(CONTROL))
-  const approvalCountAvailable = $derived(['ready', 'empty', 'partial', 'stale'].includes(CONTROL.sources.approvals.status))
   const recentActivity = $derived(sortActivityNewestFirst(CONTROL.activities).slice(0, 3))
   const workCards = $derived((WORK.projection?.cards || []).slice(0, 6))
   const dateLabel = new Intl.DateTimeFormat('zh-CN', {
@@ -137,21 +137,28 @@
       <div class="queue-list">
         <a href="/inbox" class="queue-row">
           <span>Inbox</span>
-          <strong>{queue.inboxOpen}</strong>
+          <strong aria-label={queue.inboxAvailable ? `${queue.inboxOpen} 条待分类` : 'Inbox 数量暂不可用'}>
+            {formatQueueCount(queue.inboxOpen)}
+          </strong>
           <small>Capture 与待分类输入 · {sourceStatusLabel[CONTROL.sources.inbox.status] ?? '未知'}</small>
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>
         <a href="/approvals" class="queue-row">
           <span>Approvals</span>
-          <strong aria-label={approvalCountAvailable ? `${queue.approvalsOpen} 条待批准` : 'Approval 数量暂不可用'}>
-            {approvalCountAvailable ? queue.approvalsOpen : '—'}
+          <strong aria-label={queue.approvalsAvailable ? `${queue.approvalsOpen} 条待批准` : 'Approval 数量暂不可用'}>
+            {formatQueueCount(queue.approvalsOpen)}
           </strong>
           <small>需要确认范围与影响 · {sourceStatusLabel[CONTROL.sources.approvals.status] ?? '未知'}</small>
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>
         <a href="/activity" class="queue-row">
           <span>Activity</span>
-          <strong class:count-alert={queue.activityFailures > 0}>{queue.activityFailures}</strong>
+          <strong
+            class:count-alert={queue.activityAvailable && queue.activityFailures > 0}
+            aria-label={queue.activityAvailable ? `${queue.activityFailures} 条失败动作` : 'Activity 数量暂不可用'}
+          >
+            {formatQueueCount(queue.activityFailures)}
+          </strong>
           <small>失败或需要恢复的动作 · {sourceStatusLabel[CONTROL.sources.activity.status] ?? '未知'}</small>
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>

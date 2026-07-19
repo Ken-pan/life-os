@@ -2,8 +2,11 @@
   import { onMount } from 'svelte'
   import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
+  import { formatQueueCount, summarizeControlQueue } from '$lib/kenos/controlCenter.core.js'
 
   const openItems = $derived(CONTROL.inbox.filter((item) => item.status === 'open'))
+  const queue = $derived(summarizeControlQueue(CONTROL))
+  const openCountLabel = $derived(queue.inboxAvailable ? String(openItems.length) : '—')
 
   onMount(() => {
     void refreshControlCenter()
@@ -32,8 +35,12 @@
   </p>
 
   <section class="control-page-section" aria-labelledby="inbox-open-title">
-    <h2 id="inbox-open-title">待分类 · {openItems.length}</h2>
-    {#if openItems.length}
+    <h2 id="inbox-open-title" aria-label={queue.inboxAvailable ? `待分类 ${openItems.length}` : '待分类数量暂不可用'}>
+      待分类 · {openCountLabel}
+    </h2>
+    {#if !queue.inboxAvailable}
+      <p class="control-notice" role="status">Inbox 来源不可用；未将数量显示为 0。</p>
+    {:else if openItems.length}
       <div class="control-list">
         {#each openItems as item (item.id)}
           <article class="control-row">

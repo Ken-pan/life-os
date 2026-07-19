@@ -162,12 +162,35 @@ export function buildTodayReadModel(summary, { now = Date.now() } = {}) {
   }
 }
 
-export function summarizeControlQueue({ inbox = [], approvals = [], activities = [] } = {}) {
+const UNAVAILABLE_SOURCE_STATUSES = new Set(['unavailable', 'offline', 'permission_denied', 'loading', 'unsupported'])
+
+function sourceCountAvailable(source) {
+  return source && !UNAVAILABLE_SOURCE_STATUSES.has(source.status)
+}
+
+/**
+ * Queue counts for Today / badges.
+ * Returns `null` when the source is unavailable so UI can render "—" instead of a fake 0.
+ */
+export function summarizeControlQueue({ inbox = [], approvals = [], activities = [], sources = {} } = {}) {
   return {
-    inboxOpen: inbox.filter((item) => item.status === 'open').length,
-    approvalsOpen: approvals.filter((item) => item.status === 'pending').length,
-    activityFailures: activities.filter((item) => item.status === 'failed').length,
+    inboxOpen: sourceCountAvailable(sources.inbox)
+      ? inbox.filter((item) => item.status === 'open').length
+      : null,
+    approvalsOpen: sourceCountAvailable(sources.approvals)
+      ? approvals.filter((item) => item.status === 'pending').length
+      : null,
+    activityFailures: sourceCountAvailable(sources.activity)
+      ? activities.filter((item) => item.status === 'failed').length
+      : null,
+    inboxAvailable: sourceCountAvailable(sources.inbox),
+    approvalsAvailable: sourceCountAvailable(sources.approvals),
+    activityAvailable: sourceCountAvailable(sources.activity),
   }
+}
+
+export function formatQueueCount(value) {
+  return value == null ? '—' : String(value)
 }
 
 export function sortActivityNewestFirst(records = []) {

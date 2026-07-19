@@ -57,8 +57,43 @@ describe('Kenos Phase 2 control center read model', () => {
         inbox: [{ status: 'open' }, { status: 'classified' }],
         approvals: [{ status: 'pending' }, { status: 'approved' }],
         activities: [{ status: 'failed' }, { status: 'succeeded' }],
+        sources: {
+          inbox: { status: 'ready' },
+          approvals: { status: 'ready' },
+          activity: { status: 'ready' },
+        },
       }),
-      { inboxOpen: 1, approvalsOpen: 1, activityFailures: 1 },
+      {
+        inboxOpen: 1,
+        approvalsOpen: 1,
+        activityFailures: 1,
+        inboxAvailable: true,
+        approvalsAvailable: true,
+        activityAvailable: true,
+      },
+    )
+  })
+
+  it('returns null counts when sources are unavailable instead of fake zeros', () => {
+    assert.deepEqual(
+      summarizeControlQueue({
+        inbox: [],
+        approvals: [],
+        activities: [],
+        sources: {
+          inbox: { status: 'unavailable' },
+          approvals: { status: 'permission_denied' },
+          activity: { status: 'offline' },
+        },
+      }),
+      {
+        inboxOpen: null,
+        approvalsOpen: null,
+        activityFailures: null,
+        inboxAvailable: false,
+        approvalsAvailable: false,
+        activityAvailable: false,
+      },
     )
   })
 

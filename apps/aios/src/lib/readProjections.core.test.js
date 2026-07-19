@@ -192,6 +192,8 @@ describe('Kenos freshness and redacted shadow diagnostics', () => {
       comparisonType: 'inbox',
       ownerDomain: 'system',
       timestamp: '2026-07-19T12:00:00Z',
+      oldSourceId: 'legacy.fixture',
+      newSourceId: 'kenos.projection',
       oldItems: [
         { id: 'a', ownerDomain: 'plan', status: 'open', deepLink: '/old', classification: 'personal' },
         { id: 'missing', ownerDomain: 'plan', status: 'open' },
@@ -211,6 +213,20 @@ describe('Kenos freshness and redacted shadow diagnostics', () => {
     ]))
     assert.doesNotMatch(JSON.stringify(mismatches), /private|token|secret/)
     assert.deepEqual(summarizeShadowMismatches(mismatches), { blocking: 4, warning: 2, expected: 0 })
+  })
+
+  it('rejects same-source self-compare as invalid cutover evidence', () => {
+    const items = [{ id: 'a', ownerDomain: 'plan', status: 'open', sourceIdentity: 'same.source' }]
+    const mismatches = compareProjectionSets({
+      comparisonType: 'inbox',
+      oldItems: items,
+      newItems: items,
+      oldSourceId: 'same.source',
+      newSourceId: 'same.source',
+    })
+    assert.equal(mismatches.length, 1)
+    assert.equal(mismatches[0].category, 'same_source_self_compare_invalid_evidence')
+    assert.equal(mismatches[0].severity, 'expected')
   })
 
   it('records an expected unsupported mismatch without inventing a store', () => {

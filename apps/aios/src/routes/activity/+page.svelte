@@ -5,10 +5,12 @@
     refreshControlCenter,
     retryDemoActivity,
   } from '$lib/kenos/controlCenter.svelte.js'
-  import { sortActivityNewestFirst } from '$lib/kenos/controlCenter.core.js'
+  import { sortActivityNewestFirst, summarizeControlQueue, formatQueueCount } from '$lib/kenos/controlCenter.core.js'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
 
   const activities = $derived(sortActivityNewestFirst(CONTROL.activities))
+  const queue = $derived(summarizeControlQueue(CONTROL))
+  const failureCountLabel = $derived(formatQueueCount(queue.activityFailures))
 
   onMount(() => {
     void refreshControlCenter()
@@ -44,8 +46,15 @@
   </p>
 
   <section class="control-page-section" aria-labelledby="activity-recent-title">
-    <h2 id="activity-recent-title">最近记录</h2>
-    {#if activities.length}
+    <h2
+      id="activity-recent-title"
+      aria-label={queue.activityAvailable ? `最近记录，失败 ${queue.activityFailures ?? 0}` : 'Activity 数量暂不可用'}
+    >
+      最近记录 · 失败 {failureCountLabel}
+    </h2>
+    {#if !queue.activityAvailable}
+      <p class="control-notice" role="status">Activity 来源不可用；未将失败数显示为 0。</p>
+    {:else if activities.length}
       <div class="control-list">
         {#each activities as item (item.id)}
           <article class="control-row">

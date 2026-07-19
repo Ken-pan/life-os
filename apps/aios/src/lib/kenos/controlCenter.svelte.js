@@ -12,6 +12,12 @@ import {
   sourceState,
   summarizeShadowMismatches,
 } from './readProjections.core.js'
+import {
+  SHADOW_SOURCE,
+  attachSourceIdentity,
+  legacyLifeEventsActivityShadowFixture,
+  legacyPortalPendingShadowFixture,
+} from './shadowLegacyFixtures.js'
 
 const DEMO_STATE_KEY = 'kenos_phase2_control_demo_v1'
 
@@ -266,20 +272,38 @@ export async function refreshControlCenter({ force = false } = {}) {
             ...compareProjectionSets({
               comparisonType: 'portal_today_vs_assistant_today',
               ownerDomain: 'system',
-              oldItems: buildLegacyTodayShadowProjection(CONTROL.summary),
-              newItems: buildTodayShadowProjection(todayModel),
+              oldSourceId: SHADOW_SOURCE.legacyPortalToday,
+              newSourceId: SHADOW_SOURCE.kenosTodayProjection,
+              oldItems: attachSourceIdentity(
+                buildLegacyTodayShadowProjection(CONTROL.summary),
+                SHADOW_SOURCE.legacyPortalToday,
+              ),
+              newItems: attachSourceIdentity(
+                buildTodayShadowProjection(todayModel),
+                SHADOW_SOURCE.kenosTodayProjection,
+              ),
             }),
             ...compareProjectionSets({
               comparisonType: 'portal_pending_vs_assistant_inbox',
               ownerDomain: 'system',
-              oldItems: sources.inbox.shadowItems ?? [],
-              newItems: CONTROL.inbox.map(toShadowShape),
+              oldSourceId: SHADOW_SOURCE.legacyPortalPending,
+              newSourceId: SHADOW_SOURCE.kenosInboxProjection,
+              oldItems: legacyPortalPendingShadowFixture(),
+              newItems: attachSourceIdentity(
+                CONTROL.inbox.map(toShadowShape),
+                SHADOW_SOURCE.kenosInboxProjection,
+              ),
             }),
             ...compareProjectionSets({
               comparisonType: 'life_events_vs_assistant_activity',
               ownerDomain: 'system',
-              oldItems: sources.activity.shadowItems ?? [],
-              newItems: CONTROL.activities.map(toShadowShape),
+              oldSourceId: SHADOW_SOURCE.legacyLifeEventsActivity,
+              newSourceId: SHADOW_SOURCE.kenosActivityProjection,
+              oldItems: legacyLifeEventsActivityShadowFixture(),
+              newItems: attachSourceIdentity(
+                CONTROL.activities.map(toShadowShape),
+                SHADOW_SOURCE.kenosActivityProjection,
+              ),
             }),
             ...compareApprovalProjectionSets({
               canonicalItems: sources.approvals.shadowItems ?? [],
