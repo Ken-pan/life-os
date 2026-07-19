@@ -164,8 +164,8 @@ for (const token of [
   if (!workSqlTest.includes(token)) fail(`Work SQL test missing ${token}`)
 }
 
-if (!ledger.includes('WORK_LOOP_FOUNDATION_READY') && !state.includes('WORK_LOOP_FOUNDATION_READY')) {
-  fail('Ledger/Execution State must record WORK_LOOP_FOUNDATION_READY')
+if (!ledger.includes('LOCAL_SIMULATION_AND_CONTRACT_READY') && !state.includes('LOCAL_SIMULATION_AND_CONTRACT_READY')) {
+  fail('Ledger/Execution State must record LOCAL_SIMULATION_AND_CONTRACT_READY')
 }
 if (state.includes('PHASE 4') && /start Phase 4|begin Phase 4|Phase 4 Apple/.test(state) && state.includes('STARTED Phase 4')) {
   fail('Phase 3 closeout must not start Phase 4')

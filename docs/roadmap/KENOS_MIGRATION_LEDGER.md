@@ -33,11 +33,12 @@ PROPOSED
 | Migration | 当前真源/入口 | 目标真源/入口 | 状态 | 前置 | 单一 writer 切换 | 回滚 | Retirement gate |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Life OS 品牌 | 多处 Life OS/Kenos 混用 | 用户可见 Kenos，稳定内部 ID | PROPOSED | 命名表冻结 | 不涉及数据 writer | 恢复文案/redirect | 旧文案/域名无必要引用 |
-| Portal 默认入口 | `apps/portal` | Assistant/Today | READ_ONLY_INTEGRATION_READY | Today/Inbox/Approval/Activity 本地证据齐备；生产审批未开 | Portal 写入先冻结，再切入口 | 默认入口回 Portal | 两稳定周期 + 无旧写入 |
+| Portal 默认入口 | `apps/portal` | Assistant/Today | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | Today/Inbox/Approval/Activity 本地证据齐备；生产审批未开 | Portal 写入先冻结，再切入口 | 默认入口回 Portal | 两稳定周期 + 无旧写入 |
+| Assistant chat | AIOS | Assistant Space | LOCAL_SIMULATION_AND_CONTRACT_READY | 本地只读 + Work 仿真；MCP create 经 command boundary | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
+| AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | Action/Policy/Activity/Approval 本地只读证据 | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
+| Work productivity loop | 分散 Plan/Library/Vault/digests；无 Work Space | Work-owned Project/Deliverable/Meeting/Decision + WorkActionProposal→Plan | LOCAL_SIMULATION_AND_CONTRACT_READY | temporary ownership + contracts + review-only SQL + AIOS `/work` + Today projections | Work 不拥有 Task；conversion simulation only；Connector read-only | 禁用 flag / 移除 `/work`；无需生产数据回滚 | hosted RLS/apply、Executor、auto Connector write、真实项目 Real-use 另审 |
+| Apple native daily loop | 无 Kenos iOS/macOS 产品；仅 KenosContracts + 领域 companion | 单一 Kenos iOS/iPadOS + macOS daily client（shared contracts/client/store/actions/design） | PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES | Phase 1–3 contracts；inventory；mock auth；offline queue；simulator QA | Apple 不拥有 Task/Approval/Work/Activity 真源；canonical writes 仍走 Action boundary | 移除 Apps/新 packages；Contracts 可保留 | production signing/OAuth/push/universal links；watchOS 产品；Executor；App Store |
 | Planner → Plan | Planner UI/表/本地缓存 | `plan` 领域语义 | PROPOSED | owner inventory | 先保持原表 writer，仅更改 API/名称 | 路由/文案回退 | 旧名称兼容到 deep links 稳定 |
-| AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | READ_ONLY_INTEGRATION_READY | Action/Policy/Activity/Approval 本地只读证据 | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
-| Work productivity loop | 分散 Plan/Library/Vault/digests；无 Work Space | Work-owned Project/Deliverable/Meeting/Decision + WorkActionProposal→Plan | WORK_LOOP_FOUNDATION_READY | temporary ownership + contracts + review-only SQL + AIOS `/work` + Today projections | Work 不拥有 Task；conversion simulation only；Connector read-only | 禁用 flag / 移除 `/work`；无需生产数据回滚 | hosted RLS/apply、Executor、auto Connector write、真实项目 Real-use 另审 |
-| Apple native daily loop | 无 Kenos iOS/macOS 产品；仅 KenosContracts + 领域 companion | 单一 Kenos iOS/iPadOS + macOS daily client（shared contracts/client/store/actions/design） | APPLE_NATIVE_DAILY_LOOP_READY | Phase 1–3 contracts；inventory；mock auth；offline queue；simulator QA | Apple 不拥有 Task/Approval/Work/Activity 真源；canonical writes 仍走 Action boundary | 移除 Apps/新 packages；Contracts 可保留 | production signing/OAuth/push/universal links；watchOS 产品；Executor；App Store |
 | Apple cross-device daily loop | Phase 4A iPhone/macOS foundation；无 Kenos Watch companion | watchOS companion + notification contracts + handoff/Capture transfer + widget foundation | CROSS_DEVICE_DAILY_LOOP_READY | Phase 4A ready；KenosNotifications/Handoff；simulator Watch build | Watch 不拥有 canonical truth；Approvals read-only；mock APNs only | 移除 Watch/Widget/新 packages | production Team/App Group/APNs；Executor；Phase 5；App Store |
 | Knowledge → Library | Vault + KnowledgeOS | Library Space/API | PROPOSED | Library/Memory 边界 | Vault 仍唯一正文 writer | 旧壳继续 | 新客户端能编辑/恢复/深链 |
 | Fitness → Training | Fitness app/schema | Training Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 行为与历史数据 parity |
@@ -52,7 +53,7 @@ PROPOSED
 | EntityRef v1 | wikilink/URL/私有 ID | stable ref + owner/security/classification | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan | Work/Assistant | 所有试点不再解析私有 URL |
 | ActionRequest v1 | MCP/前端直接调用各自写入 | Policy → domain executor | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Assistant | Plan | 旧直接写工具无调用 |
 | Activity v1 | 分散 toast/log | 用户可读 Activity + audit | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan executor | Assistant/System | 关键动作 100% 有 Activity |
-| Approval v1 | 各 UI 自有确认 | Platform/System-owned payload-bound Approval record | READ_ONLY_INTEGRATION_READY | Assistant read adapter | 未接入的未来 Executor | review-only SQL 通过 production review、读流量观察、R3/R4 旧确认流无调用 |
+| Approval v1 | 各 UI 自有确认 | Platform/System-owned payload-bound Approval record | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | Assistant read adapter | 未接入的未来 Executor | review-only SQL 通过 production review、读流量观察、R3/R4 旧确认流无调用 |
 | Capture v1 | app/插件各自保存 | durable capture inbox + routing | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Web Lens/iPhone | Library/Plan | 旧 capture 无写入 |
 | Mutation/Outbox v1 | `life_events` 现有 envelope | version/idempotency/correlation/dead-letter | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan | Activity/Assistant | 老 envelope 消费者升级 |
 | Connector v1 | MCP 配置/错误分散 | lifecycle/scopes/domain/health | PROPOSED | MCP fleet | System | 旧 health 配置无读取 |
@@ -72,12 +73,12 @@ PROPOSED
 
 | Capability | Portal 当前实现 | 目标 Owner/UI | 状态 | 验收 |
 | --- | --- | --- | --- | --- |
-| Today summary | Portal RPC/cards | Assistant Today read model | READ_ONLY_INTEGRATION_READY_COMPAT_SOURCE | 复用现有只读 `portal_today_summary`；保留 Owner/source/freshness/deep link |
+| Today summary | Portal RPC/cards | Assistant Today read model | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | 复用现有只读 `portal_today_summary`；保留 Owner/source/freshness/deep link |
 | App launcher | Portal cards/switcher | Kenos Spaces/global nav | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Assistant 可达所有现役 Space；Portal 仅增加默认 Off 的实验入口 |
 | Default app | Portal setting | Kenos default intent/route | PROPOSED | 登录/深链/通知入口一致 |
-| Badges/events | Portal cards | Today/Inbox | READ_ONLY_INTEGRATION_READY_COMPAT_SOURCE | Inbox 只读 `life_events` pending 与 `planner_tasks` EntityRef projection；无写入 |
-| Approval queue | review-only `kenos_action_approvals` + RPC artifact（未生产 apply） | Assistant Approvals | READ_ONLY_INTEGRATION_READY | canonical v1/corpus/Swift + disposable dual-user RLS/privilege + real RPC read adapter；无 Executor/写入 |
-| Activity feed | `life_events` 兼容 event 来源 | Assistant Activity | READ_ONLY_INTEGRATION_READY_COMPAT_SOURCE | 只读、去重、截断、敏感字段 redaction；不宣称是 Phase 1 canonical Activity table |
+| Badges/events | Portal cards | Today/Inbox | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | Inbox 只读 `life_events` pending 与 `planner_tasks` EntityRef projection；无写入 |
+| Approval queue | review-only `kenos_action_approvals` + RPC artifact（未生产 apply） | Assistant Approvals | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | canonical v1/corpus/Swift + disposable dual-user RLS/privilege + real RPC read adapter；无 Executor/写入 |
+| Activity feed | `life_events` 兼容 event 来源 | Assistant Activity | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | 只读、去重、截断、敏感字段 redaction；不宣称是 Phase 1 canonical Activity table |
 | Settings | Portal embedded settings | System/Appearance | PROPOSED | 用户偏好迁移、旧写入冻结 |
 | PWA install | Portal flow | Kenos native/Web install strategy | PROPOSED | 决定保留/取消 |
 | `portal.kenos.space` | live domain | Assistant Today redirect | PROPOSED | TLS、auth、deep link、analytics/traffic observation |
@@ -179,7 +180,7 @@ PROPOSED
 
 ## MIGRATION: KR-P2-001 Assistant / Today read-only strangler
 
-- Status: `READ_ONLY_INTEGRATION_READY`; all local read-only gates pass under `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`. This does not approve production apply, Executor or entry cutover.
+- Status: `LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY` (historical alias `READ_ONLY_INTEGRATION_READY`); all local read-only gates pass under `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`. This does not approve production apply, Executor or entry cutover.
 - Owner: Assistant owns projection/orchestration UI only. Platform/System policy layer owns canonical Approval lifecycle; requesting domains own their Action/business object. Plan, Money, Training, Music, Home and System retain their existing data ownership.
 - Scope / non-scope: read-only adapters, canonical Approval v1/corpus/parity, review-only persistence/RLS/privilege proof, source-state UX, redacted shadow diagnostics, legacy route compatibility, Portal default-Off experiment and local browser evidence. No real approve/reject, Executor, command mutation, production migration/RLS, writer cutover, Portal default change/redirect, deploy, data deletion or Phase 3.
 - Current source of truth: `public.portal_today_summary` for Today compatibility summary; `public.life_events` pending plus `public.planner_tasks` references for Inbox; `public.life_events` for Activity compatibility; review-only `public.kenos_action_approvals` and `public.kenos_list_action_approvals` define the canonical Approval read source pending production review/apply.
@@ -197,7 +198,7 @@ PROPOSED
 
 ## MIGRATION: KR-P3-001 Work productivity loop foundation
 
-- Status: `WORK_LOOP_FOUNDATION_READY` under `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION`. Local/disposable only; no production apply, Executor, Connector auto-write, or Plan Task owner change.
+- Status: `LOCAL_SIMULATION_AND_CONTRACT_READY` (historical alias `WORK_LOOP_FOUNDATION_READY`) under `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION`. Local/disposable only; no production apply, Executor, Connector auto-write, or Plan Task owner change.
 - Owner: Work owns Project/Deliverable/Meeting/Decision/context/status/source refs. Plan remains sole Task owner. Library remains Document owner. Assistant reads/submits Actions only. Connector emits CaptureEnvelope/source refs only.
 - Scope: inventory, additive Work contracts/fixtures/Swift parity, review-only SQL/RLS, AIOS `/work` UI, WorkActionProposal→Plan simulation, Library EntityRef projections, Today Work section, Activity recording in local store, Connector registry proposal, shadow diagnostics, Phase 3 guard.
 - Non-scope: production migration/RLS/auth apply, Executor, silent conversion, automatic Gmail/Figma/browser→canonical Work writes, Phase 4 Apple UI, Phase 5 proactive intelligence, Portal retirement, push/deploy.
@@ -207,7 +208,7 @@ PROPOSED
 
 ## MIGRATION: KR-P4A-001 Apple native daily loop foundation
 
-- Status: `APPLE_NATIVE_DAILY_LOOP_READY` with distribution qualifier `PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` under `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`. Local/simulator only.
+- Status: `PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` (historical alias `APPLE_NATIVE_DAILY_LOOP_READY`) under `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`. Local/simulator only.
 - Owner boundary: Apple clients consume Phase 1–3 shared contracts; no Apple-owned Task/Approval/Work/Activity truth. Canonical writes remain Action/command-bound; Approvals read-only; FakeActionExecutor only.
 - Scope: inventory; packages KenosContracts/Client/Store/Actions/Design; Keychain session abstraction + mock auth; projection cache; offline R1 queue; iOS/iPadOS + macOS shells; Today/Assistant/Inbox/Approvals/Activity/Work vertical slice/Quick Capture/deep links; Phase 4 guard; simulator/XCTest evidence.
 - Non-scope: watchOS product; production Team/signing/OAuth/push/universal links; App Store/TestFlight/notarization; production Executor; Phase 5 proactive automation; production DB/migration/deploy/push.

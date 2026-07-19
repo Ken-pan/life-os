@@ -30,8 +30,8 @@ status: temporary-approved-for-phase-4b-cross-device-daily-loop
 | ID | 决策 | 状态 | 实施前最后一步 | 证据/约束 |
 | --- | --- | --- | --- | --- |
 | KENOS-001 | 产品品牌为 Kenos，内部领域 ID 与用户文案分离 | TARGET_APPROVED | 冻结 ID 表和旧路由保留期 | 不做超级 rename |
-| KENOS-002 | Assistant / Today 成为唯一默认协调入口 | READ_ONLY_INTEGRATION_READY | 生产 security/caller review、hosted shadow 与真实使用后再评审默认入口 | Today/Inbox/Activity 兼容只读 adapter + canonical Approval RPC projection 已在本地通过；无 Executor；Portal 仍是生产入口 |
-| KENOS-003 | Portal 是待退役迁移源，不是长期 Space | READ_ONLY_INTEGRATION_READY | owner-approved hosted shadow、默认切换与观察 gate | Today/Inbox/Approval/Activity 本地读模型齐备；Portal flag 仍默认 Off，未 freeze、redirect 或删除 |
+| KENOS-002 | Assistant / Today 成为唯一默认协调入口 | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | 生产 security/caller review、hosted shadow 与真实使用后再评审默认入口 | Today/Inbox/Activity 兼容只读 adapter + canonical Approval RPC projection 已在本地通过；无 Executor；Portal 仍是生产入口 |
+| KENOS-003 | Portal 是待退役迁移源，不是长期 Space | LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY | owner-approved hosted shadow、默认切换与观察 gate | Today/Inbox/Approval/Activity 本地读模型齐备；Portal flag 仍默认 Off，未 freeze、redirect 或删除 |
 | KENOS-004 | 模块化单体 + 清晰领域边界 + 一个 Supabase 项目 | TARGET_APPROVED | 冻结 schema/package 边界和依赖方向 | 不过早拆微服务/多 DB |
 | KENOS-005 | 每类数据一个写入 Owner，其他域只引用/投影 | TARGET_APPROVED | 对存量表和本地真源做 ownership inventory | 不允许长期双写 |
 | KENOS-006 | 安全域为 Personal / Work / Household / System | TARGET_APPROVED | 冻结跨域默认值、Work 保留和 cloud AI 政策 | 缺失分类按更严格处理 |

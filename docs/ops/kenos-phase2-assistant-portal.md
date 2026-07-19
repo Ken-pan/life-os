@@ -24,7 +24,7 @@ status: read-only-integration-ready-no-production-cutover
 | Activity `/activity` | 只读现有 `public.life_events` 兼容 event 来源 | 去重、截断、未知类型降级、敏感字段 redaction；不声称它是 Phase 1 canonical Activity table |
 | Portal | 默认 Off 的实验 launcher + command-palette deep links | 本地 `?kenos=1` 可验证；production-like host 仅接受显式 build flag；不改默认 app、设置、RPC、auth、redirect 或写入 |
 
-Verdict: `READ_ONLY_INTEGRATION_READY`。Today、Inbox、Approval 和 Activity 的本地只读边界已齐备。这是 repository/disposable-environment readiness，不是“已部署生产 Approval”；review-only SQL 不在 migration 目录，生产 apply/RLS/caller review 仍锁定。
+Verdict: `LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY`（历史别名 `READ_ONLY_INTEGRATION_READY` 仅表示本地/disposable）。Today、Inbox、Approval 和 Activity 的本地只读边界已齐备。这是 repository/disposable-environment readiness，不是“已部署生产 Approval”；review-only SQL 不在 migration 目录，生产 apply/RLS/caller review 仍锁定。
 
 ## 状态与降级
 

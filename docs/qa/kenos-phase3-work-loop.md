@@ -9,7 +9,7 @@ status: work-loop-foundation-ready
 
 ## Verdict target
 
-`WORK_LOOP_FOUNDATION_READY` under `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`.
+`LOCAL_SIMULATION_AND_CONTRACT_READY`（historical local alias: `WORK_LOOP_FOUNDATION_READY`) under `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`.
 
 ## Desktop / mobile checklist
 

@@ -131,8 +131,11 @@ if (!/approvals:\s*Object\.freeze\(\['system'\]\)/.test(readProjections)) {
 for (const token of ['expired', 'superseded', 'Executor', '只读']) {
   if (!approvalsPage.includes(token)) fail(`Approvals UI missing read-only state token ${token}`)
 }
-if (!todayPage.includes('approvalCountAvailable') || !todayPage.includes("href=\"/approvals\"")) {
+if ((!todayPage.includes('approvalCountAvailable') && !todayPage.includes('approvalsAvailable')) || !todayPage.includes('href="/approvals"')) {
   fail('Today must derive the canonical Approval count and deep-link to /approvals')
+}
+if (!todayPage.includes('formatQueueCount')) {
+  fail('Today must use availability-aware formatQueueCount for queue badges')
 }
 
 for (const token of [
@@ -233,12 +236,33 @@ if (!state.includes('LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER')) {
   fail('execution state must record the local-beta/no-cutover boundary')
 }
 for (const document of [runbook, ledger, state]) {
-  if (!document.includes('READ_ONLY_INTEGRATION_READY')) {
-    fail('runbook, ledger, and execution state must agree on the Phase 2 read-only-ready verdict')
+  if (!document.includes('LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY')) {
+    fail('runbook, ledger, and execution state must use honest LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY primary label')
   }
   if (!document.includes('TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL')) {
-    fail('Phase 2 docs must preserve the temporary Approval owner decision')
+    fail('Phase 2 temporary approval token missing from status docs')
   }
+}
+
+const controlCore = read('apps/aios/src/lib/kenos/controlCenter.core.js')
+const shadowFixtures = read('apps/aios/src/lib/kenos/shadowLegacyFixtures.js')
+const todayPageSrc = read('apps/aios/src/routes/+page.svelte')
+if (!controlCore.includes('formatQueueCount') || !controlCore.includes('inboxAvailable')) {
+  fail('control queue must expose availability-aware counts (unavailable ≠ 0)')
+}
+if (!todayPageSrc.includes('formatQueueCount(queue.inboxOpen)')) {
+  fail('Today must render unavailable Inbox counts as — via formatQueueCount')
+}
+if (!readProjections.includes('same_source_self_compare_invalid_evidence')) {
+  fail('shadow compare must reject same-source self-compare')
+}
+if (!shadowFixtures.includes('legacyPortalPendingShadowFixture') || !controlCenter.includes('legacyPortalPendingShadowFixture')) {
+  fail('Inbox/Activity shadow must use independent legacy fixtures')
+}
+if (!read('apps/aios/src/lib/mcp.presets.js').includes('writeToolsBlockedUntilHostedRpc')) {
+  fail('AIOS Planner MCP preset must mark write tools blocked until hosted RPC')
+}
+for (const document of [runbook, ledger, state]) {
   for (const lock of ['Executor', 'production', 'cutover']) {
     if (!document.includes(lock)) fail(`Phase 2 docs must preserve ${lock} as a locked gate`)
   }

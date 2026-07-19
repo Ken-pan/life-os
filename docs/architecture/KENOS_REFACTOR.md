@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 本地切片已达 `READ_ONLY_INTEGRATION_READY`；Phase 3 本地切片已达 `WORK_LOOP_FOUNDATION_READY`；Phase 4A 本地切片已达 `APPLE_NATIVE_DAILY_LOOP_READY`；Phase 4B 本地切片已达 `CROSS_DEVICE_DAILY_LOOP_READY`（分发门仍开：`PARTIAL_PASS_CROSS_DEVICE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES`）。** watchOS companion、通知契约、handoff/Capture transfer、widget foundation 与 Phase 4B guard 已齐备。无生产 APNs/App Group/Team、无 Executor、无 Phase 5。`TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP` 在分发/Executor 前必须复审。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
+> **诚实状态词汇（审计整改后）：** Phase 1 = `LOCAL_CONTRACT_AND_REVIEW_SQL_READY`（历史 owner 标签 `PASS — READY_FOR_PRODUCTION_REVIEW` 仅表示可开始生产评审文档，**不可** cutover）；Phase 2 = `LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY`（历史 `READ_ONLY_INTEGRATION_READY` 仅=本地/disposable）；Phase 3 = `LOCAL_SIMULATION_AND_CONTRACT_READY`（历史 `WORK_LOOP_FOUNDATION_READY` 仅=本地仿真）；Phase 4A = `PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES`（历史 `APPLE_NATIVE_DAILY_LOOP_READY` 仅=本地 mock foundation）；Phase 4B = `CROSS_DEVICE_DAILY_LOOP_READY` + `PARTIAL_PASS_CROSS_DEVICE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES`。无生产 APNs/App Group/Team、无 Executor、无 Phase 5。P1-001 生产直写仍为 `BLOCKED_PENDING_HOSTED_APPLY_AND_CUTOVER`。当前生产事实、Now/Next 仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
 
 ## 一句话
 

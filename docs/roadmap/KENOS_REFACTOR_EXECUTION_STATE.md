@@ -305,7 +305,7 @@ Approved temporary defaults now on file:
 ## Phase 2 canonical Approval read-model closeout (2026-07-19)
 
 - Starting revision: `4f1a1142be1b72e0f88ce1cdae0ebab9f05dc7c2`; branch `master`; one worktree. Unrelated Finance, Planner, UI gallery, roadmap/usage-audit, platform-web and Wikilinks WIP remained unstaged and untouched by this slice.
-- Verdict: `READ_ONLY_INTEGRATION_READY` under `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER` and `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`. This replaces the preceding Approval blocker for local/review-only evidence only; it does not claim hosted production apply or cutover.
+- Verdict: `LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY` (historical local alias `READ_ONLY_INTEGRATION_READY`) under `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER` and `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`. This replaces the preceding Approval blocker for local/review-only evidence only; it does not claim hosted production apply or cutover.
 - Owner/single-writer boundary: Platform/System policy layer owns canonical Approval lifecycle. Requesting domains retain Action and business-object ownership. Assistant is RPC-read-only; Activity/Outbox may reference an Approval but cannot create its truth. No public approve/reject command and no Executor exist in this slice.
 - Contract/parity: additive `ApprovalRecord` v1 freezes six statuses and pending-to-terminal transitions without breaking Phase 1 request/decision envelopes. Nine valid and eleven invalid/server/transition fixtures live in the single canonical corpus. Zod, server context validation, Swift Codable/transition tests and Swift-to-Zod round-trip consume the same corpus.
 - Persistence/security: review-only `public.kenos_action_approvals` and `public.kenos_list_action_approvals` are outside production migrations. The disposable Supabase runner proves scratch apply/reset, explicit authenticated read grant, owner A/B RLS, anonymous/client-write denial, generic service-role denial, fixed-search-path function boundaries, effective expiry/supersession and rollback.
@@ -322,7 +322,7 @@ Approved temporary defaults now on file:
 
 - Starting revision: `bc419205b545cb233b3fcee0f86b962d1cd63c14`; branch `master`; one worktree. Unrelated Finance, Planner, UI gallery, roadmap/usage-audit, platform-web and Wikilinks WIP remained unstaged and untouched.
 - Final local HEAD: `0ec71dcee` (includes Work store reactivity fix `c1a1da97a`).
-- Verdict: `KENOS PHASE 3 — WORK_LOOP_FOUNDATION_READY` under `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION` and `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`.
+- Verdict: `KENOS PHASE 3 — LOCAL_SIMULATION_AND_CONTRACT_READY` (historical local alias `WORK_LOOP_FOUNDATION_READY`) under `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION` and `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`.
 - Ownership: Work owns Project/Deliverable/Meeting/Decision/context/status/source refs; Plan owns Task lifecycle; Library owns documents; Assistant/Connector are non-owners. Plan projects remain distinct from Work Projects. OPEN-002 still blocks body mirroring.
 - Contracts/parity: additive Work schemas + connector registry entry; canonical fixtures; TypeScript + Swift Codable + Swift→Zod round-trip path via existing parity script.
 - Persistence: review-only `kenos_work_*` tables/RPCs outside migrations; disposable dual-user RLS/privilege proof via `scripts/check-kenos-phase3-work-db.mjs`.
@@ -336,7 +336,7 @@ Approved temporary defaults now on file:
 
 - Starting revision: `be6f2612d3f374ac322c58813528b4bf8f98eeac`; branch `master`; one worktree. Unrelated Finance, Planner, UI gallery, roadmap/usage-audit, platform-web and Wikilinks WIP remained unstaged and untouched.
 - Final local HEAD: `0cefe0e87cb7782b5b1ff3883841cb532f826bbe`.
-- Verdict: `KENOS PHASE 4A — APPLE_NATIVE_DAILY_LOOP_READY` with qualifier `PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` under `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`.
+- Verdict: `KENOS PHASE 4A — PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` (historical local alias `APPLE_NATIVE_DAILY_LOOP_READY`) under `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`.
 - Inventory: canonical foundation `clients/apple`; companions (HomeScan/Health/Music Capacitor/Tauri) retained separate; OPEN-006 temporary path freeze recorded.
 - Packages: KenosContracts (existing) + KenosClient/Store/Actions/Design; mock API + fixture decode; Keychain session abstraction; projection cache; offline R1 queue + FakeActionExecutor; design/a11y primitives; deep-link router.
 - Apps: XcodeGen KenosIOS (iPhone + iPad split) and KenosMac (sidebar, commands, MenuBarExtra capture); surfaces Today/Assistant/Inbox/Approvals(read-only)/Activity/Work vertical slice/Capture/System.
@@ -357,3 +357,14 @@ Approved temporary defaults now on file:
 - Guards/docs: `check-kenos-phase4b.mjs` wired; role/ops/qa/ledger/refactor hub updated. Phase 4 guard now allows Watch when Phase 4B docs exist.
 - Production locks: no APNs/OAuth/Team/App Group cutover, no Executor, no Phase 5, no deploy/push.
 - Next safe step: user-reviewed push. Phase 5 remains Off.
+
+## Audit high-priority remediation closeout (2026-07-19)
+
+- Starting revision: `f26c22654391264e97cd6a777ce863e5024db401` (post Phase 4B tip); audit fixed baseline `1896250e27a96dd4112211502615b08cfea5f08a`.
+- Final local HEAD: `PLACEHOLDER_TIP`.
+- Verdict: `KENOS AUDIT HIGH-PRIORITY REMEDIATION — LOCAL_PASS`.
+- Fixed locally: P1-002/003/004, P2-002/005, P2-001/P3-001/P4A docs honesty, P4A-005/007, MCP create boundary, policy risk, auth binding, availability semantics, independent shadow.
+- Production deferred: P1-001 → `PRODUCTION_REMEDIATION_ARTIFACT_READY` + `BLOCKED_PENDING_HOSTED_APPLY_AND_CUTOVER`; P3-006 OPEN-002 PENDING; P4A-004 SecItem Keychain distribution gate; P2-008 complete_task still legacy upsert.
+- Artifacts: `docs/ops/kenos-p1-direct-write-remediation.md`, `apps/planner/supabase/review/20260719100000_kenos_revoke_planner_tasks_direct_write.sql`, `docs/qa/kenos-audit-remediation-2026-07-19.md`.
+- Production locks unchanged: no hosted apply, no writer/Portal cutover, no Executor, no Phase 5, no deploy/push.
+- Next safe step: user-reviewed push of remediation commits. Hosted P1-001 apply remains owner-gated.

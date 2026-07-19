@@ -9,7 +9,7 @@ status: read-only-integration-ready-no-production-cutover
 
 ## Verdict
 
-`READ_ONLY_INTEGRATION_READY`.
+`LOCAL_READ_ONLY_READY_NO_HOSTED_APPLY`（historical local alias: `READ_ONLY_INTEGRATION_READY`).
 
 Today, Inbox and Activity retain repository-backed compatibility read sources. Approval now has an additive canonical v1 record, one canonical corpus shared by TypeScript/server/Swift, a review-only persistence/RPC artifact, disposable dual-user RLS/privilege proof and a real RPC-only Assistant adapter. Platform/System owns Approval lifecycle under `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`; Assistant only displays a projection. This verdict does not claim production apply, a public decision command or an Executor.
 

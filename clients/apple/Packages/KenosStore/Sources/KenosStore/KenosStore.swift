@@ -103,7 +103,7 @@ public final class FileProjectionStore: KenosProjectionStoring, @unchecked Senda
     public func save(_ snapshot: KenosProjectionSnapshot) throws {
         lock.lock(); defer { lock.unlock() }
         if !snapshot.meta.classification.allowsDiskProjectionCache {
-            // Fail closed for elevated classifications at store boundary.
+            // Fail closed for elevated classifications (sensitive / workConfidential / restrictedLocalOnly).
             throw KenosClientError.permissionDenied
         }
         var copy = snapshot
