@@ -3,7 +3,7 @@ title: Kenos Migration Ledger
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: migration-status-ledger
-status: phase-2-partial-read-only-integration-no-production-cutover
+status: phase-2-read-only-integration-ready-no-production-cutover
 ---
 
 # Kenos Migration Ledger
@@ -33,9 +33,9 @@ PROPOSED
 | Migration | 当前真源/入口 | 目标真源/入口 | 状态 | 前置 | 单一 writer 切换 | 回滚 | Retirement gate |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Life OS 品牌 | 多处 Life OS/Kenos 混用 | 用户可见 Kenos，稳定内部 ID | PROPOSED | 命名表冻结 | 不涉及数据 writer | 恢复文案/redirect | 旧文案/域名无必要引用 |
-| Portal 默认入口 | `apps/portal` | Assistant/Today | PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS | Today/Inbox/Approval/Activity | Portal 写入先冻结，再切入口 | 默认入口回 Portal | 两稳定周期 + 无旧写入 |
+| Portal 默认入口 | `apps/portal` | Assistant/Today | READ_ONLY_INTEGRATION_READY | Today/Inbox/Approval/Activity 本地证据齐备；生产审批未开 | Portal 写入先冻结，再切入口 | 默认入口回 Portal | 两稳定周期 + 无旧写入 |
 | Planner → Plan | Planner UI/表/本地缓存 | `plan` 领域语义 | PROPOSED | owner inventory | 先保持原表 writer，仅更改 API/名称 | 路由/文案回退 | 旧名称兼容到 deep links 稳定 |
-| AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS | Action/Policy/Activity | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | canonical Approval read model + 新 Assistant 真实使用通过 |
+| AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | READ_ONLY_INTEGRATION_READY | Action/Policy/Activity/Approval 本地只读证据 | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
 | Knowledge → Library | Vault + KnowledgeOS | Library Space/API | PROPOSED | Library/Memory 边界 | Vault 仍唯一正文 writer | 旧壳继续 | 新客户端能编辑/恢复/深链 |
 | Fitness → Training | Fitness app/schema | Training Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 行为与历史数据 parity |
 | Finance → Money | Finance app/schema | Money Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 报表/导入/购买历史 parity |
@@ -49,7 +49,7 @@ PROPOSED
 | EntityRef v1 | wikilink/URL/私有 ID | stable ref + owner/security/classification | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan | Work/Assistant | 所有试点不再解析私有 URL |
 | ActionRequest v1 | MCP/前端直接调用各自写入 | Policy → domain executor | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Assistant | Plan | 旧直接写工具无调用 |
 | Activity v1 | 分散 toast/log | 用户可读 Activity + audit | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan executor | Assistant/System | 关键动作 100% 有 Activity |
-| Approval v1 | 各 UI 自有确认 | payload-bound approval | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Assistant | Executor | R3/R4 旧确认流无调用 |
+| Approval v1 | 各 UI 自有确认 | Platform/System-owned payload-bound Approval record | READ_ONLY_INTEGRATION_READY | Assistant read adapter | 未接入的未来 Executor | review-only SQL 通过 production review、读流量观察、R3/R4 旧确认流无调用 |
 | Capture v1 | app/插件各自保存 | durable capture inbox + routing | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Web Lens/iPhone | Library/Plan | 旧 capture 无写入 |
 | Mutation/Outbox v1 | `life_events` 现有 envelope | version/idempotency/correlation/dead-letter | V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW | Plan | Activity/Assistant | 老 envelope 消费者升级 |
 | Connector v1 | MCP 配置/错误分散 | lifecycle/scopes/domain/health | PROPOSED | MCP fleet | System | 旧 health 配置无读取 |
@@ -73,7 +73,7 @@ PROPOSED
 | App launcher | Portal cards/switcher | Kenos Spaces/global nav | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Assistant 可达所有现役 Space；Portal 仅增加默认 Off 的实验入口 |
 | Default app | Portal setting | Kenos default intent/route | PROPOSED | 登录/深链/通知入口一致 |
 | Badges/events | Portal cards | Today/Inbox | READ_ONLY_INTEGRATION_READY_COMPAT_SOURCE | Inbox 只读 `life_events` pending 与 `planner_tasks` EntityRef projection；无写入 |
-| Approval queue | 无 canonical 生产队列 | Assistant Approvals | PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS | 仓库没有已部署 canonical Approval read model；UI fail closed 并明示 unsupported |
+| Approval queue | review-only `kenos_action_approvals` + RPC artifact（未生产 apply） | Assistant Approvals | READ_ONLY_INTEGRATION_READY | canonical v1/corpus/Swift + disposable dual-user RLS/privilege + real RPC read adapter；无 Executor/写入 |
 | Activity feed | `life_events` 兼容 event 来源 | Assistant Activity | READ_ONLY_INTEGRATION_READY_COMPAT_SOURCE | 只读、去重、截断、敏感字段 redaction；不宣称是 Phase 1 canonical Activity table |
 | Settings | Portal embedded settings | System/Appearance | PROPOSED | 用户偏好迁移、旧写入冻结 |
 | PWA install | Portal flow | Kenos native/Web install strategy | PROPOSED | 决定保留/取消 |
@@ -176,18 +176,18 @@ PROPOSED
 
 ## MIGRATION: KR-P2-001 Assistant / Today read-only strangler
 
-- Status: `PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS`; local Green integration is complete for Today, Inbox and Activity, while canonical Approval remains unavailable.
-- Owner: Assistant owns projection/orchestration UI only. Plan, Money, Training, Music, Home and System remain data Owners.
-- Scope / non-scope: read-only adapters, source-state UX, redacted shadow diagnostics, legacy route compatibility, Portal default-Off experiment and local browser evidence. No Executor, command mutation, production migration, writer cutover, Portal default change/redirect, deploy, data deletion or Phase 3.
-- Current source of truth: `public.portal_today_summary` for Today compatibility summary; `public.life_events` pending plus `public.planner_tasks` references for Inbox; `public.life_events` for Activity compatibility. There is no deployed canonical Approval read model.
-- Target source of truth: domain-owned read projections consumed by Assistant. Assistant does not become a second domain store. Approval requires a separately approved canonical source.
+- Status: `READ_ONLY_INTEGRATION_READY`; all local read-only gates pass under `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`. This does not approve production apply, Executor or entry cutover.
+- Owner: Assistant owns projection/orchestration UI only. Platform/System policy layer owns canonical Approval lifecycle; requesting domains own their Action/business object. Plan, Money, Training, Music, Home and System retain their existing data ownership.
+- Scope / non-scope: read-only adapters, canonical Approval v1/corpus/parity, review-only persistence/RLS/privilege proof, source-state UX, redacted shadow diagnostics, legacy route compatibility, Portal default-Off experiment and local browser evidence. No real approve/reject, Executor, command mutation, production migration/RLS, writer cutover, Portal default change/redirect, deploy, data deletion or Phase 3.
+- Current source of truth: `public.portal_today_summary` for Today compatibility summary; `public.life_events` pending plus `public.planner_tasks` references for Inbox; `public.life_events` for Activity compatibility; review-only `public.kenos_action_approvals` and `public.kenos_list_action_approvals` define the canonical Approval read source pending production review/apply.
+- Target source of truth: domain-owned read projections consumed by Assistant. Assistant does not become a second domain store. Approval record is Platform/System-owned and binds one Action by ID/correlation without copying its payload.
 - Current/target writers: unchanged. This slice adds no writer and read adapters statically reject direct mutation/command-handler references.
 - Compatibility read: Portal remains the production entry. `/chat` redirects locally to `/assistant` preserving query/hash; unknown routes fail safely.
 - Reconciliation: deterministic projection tests cover multi-source sorting/dedupe, empty/malformed/unknown/stale/error states, redaction and mismatch categories. Shadow records redacted fingerprints only.
-- Cutover trigger/date: `NOT_ALLOWED`; real Approval read source plus owner-approved parity/security/observation gates are required before any production entry review.
+- Cutover trigger/date: `NOT_ALLOWED`; owner-approved production security/caller review, hosted RLS/advisors, backup/change window, shadow thresholds and observation gates are required before any production entry review.
 - Rollback deadline and steps: while the experiment remains default Off, remove the Portal experimental launcher/deep links and restore prior AIOS root chat. No data rollback.
 - Observation/retirement/compatibility removal: `NOT_STARTED`; Portal retirement is explicitly prohibited.
 - Validation commands: `npm run test -w aios-os`; `npm run check -w aios-os`; `npm run build -w aios-os`; `npm run test:kenos-routing -w portal`; `npm run check -w portal`; `npm run build -w portal`; `node scripts/check-kenos-phase2.mjs`; repository milestone gates.
 - Remote/deploy evidence: none; intentionally local-only.
-- Real-use evidence: local desktop/mobile browser QA for unauthenticated, explicit demo, offline, compatibility and fallback states. Authenticated hosted parity remains a production-review prerequisite.
-- Remaining unknowns: canonical Approval persistence/query shape, authorization and expiry enforcement, production shadow sample/threshold/owner, and hosted caller/RLS review.
+- Real-use evidence: local desktop/mobile browser QA covers canonical empty/permission states plus explicit no-write rehearsal for pending/expired/superseded/stale/partial/long-summary and offline/fallback behavior. Authenticated hosted parity remains a production-review prerequisite.
+- Remaining unknowns: production function ownership/caller identity, hosted RLS/advisors, backup/change window, production shadow sample/threshold/owner, observation duration, real approve/reject command design, Executor revalidation and rollback authority.

@@ -3,7 +3,7 @@ title: Kenos 平台重构计划 - 导航与执行边界
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: refactor-program-hub
-status: phase-2-local-beta-in-progress-no-production-cutover
+status: phase-2-read-only-integration-ready-no-production-cutover
 review_cadence: every-migration-slice
 ---
 
@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 当前为 `PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS`。** `apps/aios` 以 Today 为默认本地入口，保留现有对话于 `/assistant`；Today 读现有 `portal_today_summary`，Inbox 读 `life_events` 与 Plan task projection，Activity 读现有 event 来源。仓库中仍没有已部署的 canonical Approval read model，所以 Approvals 必须明示 unsupported，不得伪造数据。Portal 只有默认 Off 的实验入口/deep links。生产 migration、writer cutover、Portal 默认域切换、redirect、deploy 与旧路径删除仍为锁定 Gate。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
+> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 本地切片已达 `READ_ONLY_INTEGRATION_READY`。** `apps/aios` 以 Today 为默认本地入口，保留现有对话于 `/assistant`；Today、Inbox 与 Activity 保留兼容只读来源，Approvals 通过 `public.kenos_list_action_approvals` 读取 Platform/System-owned canonical projection。Approval v1、canonical corpus、Swift parity、review-only SQL 与 disposable dual-user RLS/privilege proof 已齐备；Assistant 仍无写入权和 Executor。Portal 只有默认 Off 的实验入口/deep links 与脱敏 count shadow helper。`TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL` 在真实 Executor integration 前必须复审。生产 migration/RLS、writer cutover、Portal 默认域切换、redirect、deploy 与旧路径删除仍为锁定 Gate。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
 
 ## 一句话
 

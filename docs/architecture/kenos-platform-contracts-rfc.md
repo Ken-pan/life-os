@@ -259,12 +259,46 @@ export interface ApprovalDecision {
 }
 ```
 
+Phase 2 以 additive v1 方式冻结 canonical lifecycle record，不改变上述 request/decision envelope：
+
+```ts
+export interface ApprovalRecord {
+  id: UUID
+  version: '1'
+  ownerId: UUID
+  actionId: UUID
+  correlationId: UUID
+  requestingActor: ActorRef
+  requestingDomain: KenosDomainId
+  actionType: string
+  risk: ActionRisk
+  status: 'pending' | 'approved' | 'rejected' | 'expired' | 'cancelled' | 'superseded'
+  reasonCode: string
+  safeSummary: string
+  dataClassification: DataClassification
+  requestedAt: ISODateTime
+  expiresAt: ISODateTime
+  decidedAt?: ISODateTime
+  decidedBy?: UUID
+  decisionReason?: string
+  supersedesApprovalId?: UUID
+  entityRefs: EntityRef[]
+  createdAt: ISODateTime
+  updatedAt: ISODateTime
+}
+```
+
+`packages/contracts/fixtures/kenos/v1/manifest.json` 与 `corpus.json` 是状态、转移、字段与正反 fixtures 的唯一机器可读真源。Canonical Approval lifecycle 由 Platform/System policy layer 拥有；requesting domain 继续拥有 Action 与业务对象，Assistant、Activity 和 Outbox 都不是 Approval 真源。该 owner 决定状态为 `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`，真实 Executor integration 前必须复审。
+
 约束:
 
 - Approval 绑定精确的 action request hash/version；修改 payload 后旧批准失效。
 - R4 默认需要强确认和备份证据。
 - 批量操作的摘要必须包含对象数、范围和不可逆影响。
 - 审批不是执行；Executor 仍需重新验证 auth、version 和 idempotency。
+- 只有 `pending -> approved | rejected | expired | cancelled | superseded` 合法；terminal state 不可在 v1 中再转移。
+- owner 来自认证上下文；unknown major/enum 必须 fail closed。Expired/superseded 不得当作 approved，approved 也不表示 Action 已执行。
+- `safeSummary` 必须脱敏，`entityRefs` 仅引用 canonical objects，record 不复制完整 Action payload 或业务对象。
 
 ## 7. Capture Contract
 
