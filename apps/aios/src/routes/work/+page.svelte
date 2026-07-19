@@ -107,7 +107,7 @@
 
     <section aria-labelledby="work-proposals-title">
       <h2 id="work-proposals-title">待转为 Plan Task 的提案</h2>
-      <p class="muted">WorkActionProposal 不是 Task。转换需明确点击，且仅本地 simulation。</p>
+      <p class="muted">WorkActionProposal 不是 Task。转换需明确点击，且仅本地 simulation（conversion flag Off）。</p>
       {#if pendingProposals.length}
         <ul class="proposal-list">
           {#each pendingProposals as row (row.id)}
@@ -193,13 +193,13 @@
     font-size: 0.75rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--life-os-fg-muted, #666);
+    color: var(--t3);
   }
   h1, h2, h3 {
     margin: 0.25rem 0;
   }
   .intro, .muted, .status-line {
-    color: var(--life-os-fg-muted, #666);
+    color: var(--t3);
   }
   .header-actions {
     display: flex;
@@ -207,28 +207,28 @@
     gap: 0.5rem;
     align-items: center;
   }
-  .badge {
-    border: 1px solid var(--life-os-border, #ddd);
+  .work-badge {
+    border: 1px solid var(--border);
     border-radius: 999px;
     padding: 0.2rem 0.6rem;
     font-size: 0.75rem;
   }
-  .badge--warn {
-    border-color: #c47b2c;
+  .work-badge--warn {
+    border-color: var(--warning);
   }
   .quiet, .primary {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    border: 1px solid var(--life-os-border, #ddd);
+    border: 1px solid var(--border);
     background: transparent;
     border-radius: 0.5rem;
     padding: 0.4rem 0.7rem;
     cursor: pointer;
   }
   .primary {
-    background: var(--life-os-fg, #111);
-    color: var(--life-os-bg, #fff);
+    background: var(--t1);
+    color: var(--bg);
   }
   .hero-grid, .meta-grid {
     display: grid;
@@ -236,7 +236,7 @@
     grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   }
   .hero-grid > div, .meta-grid > div, .state-panel {
-    border-top: 1px solid var(--life-os-border, #ddd);
+    border-top: 1px solid var(--border);
     padding-top: 0.75rem;
   }
   .plain-list, .proposal-list {
@@ -257,7 +257,7 @@
   }
   .proposal-list small {
     display: block;
-    color: var(--life-os-fg-muted, #666);
+    color: var(--t3);
   }
   @media (max-width: 420px) {
     .work-header {

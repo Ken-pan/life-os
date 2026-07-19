@@ -231,7 +231,7 @@
       <Composer autofocus />
       <div class="suggestions">
         {#each suggestions as item (item.text)}
-          <button type="button" class="chip" onclick={() => sendMessage(item.text)}>
+          <button type="button" class="assistant-chip" onclick={() => sendMessage(item.text)}>
             <Icon name={item.icon} size={14} strokeWidth={1.75} />
             {item.text}
           </button>
@@ -347,7 +347,7 @@
     justify-content: center;
     gap: 8px;
   }
-  .chip {
+  .assistant-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -360,7 +360,7 @@
     cursor: pointer;
     transition: all var(--dur-fast, 120ms) var(--ease, ease);
   }
-  .chip:hover {
+  .assistant-chip:hover {
     background: var(--card);
     color: var(--t1);
     border-color: var(--border-l);

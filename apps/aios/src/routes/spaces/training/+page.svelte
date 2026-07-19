@@ -74,7 +74,7 @@
     border-radius: 10px;
     border: 1px solid var(--border-l);
     background: var(--t1);
-    color: var(--bg, #fff);
+    color: var(--bg);
     text-decoration: none;
     font: inherit;
     cursor: pointer;

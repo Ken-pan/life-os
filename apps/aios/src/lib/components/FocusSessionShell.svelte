@@ -184,7 +184,7 @@
     align-items: center;
   }
   button.danger {
-    border-color: color-mix(in srgb, #b42318 40%, var(--border-l));
+    border-color: color-mix(in srgb, var(--critical) 40%, var(--border-l));
   }
   button.ghost {
     opacity: 0.85;
@@ -219,16 +219,16 @@
     gap: 8px;
     padding: 16px;
     border-radius: 14px;
-    background: var(--bg, #fff);
+    background: var(--bg);
     border: 1px solid var(--border);
-    box-shadow: 0 18px 48px color-mix(in srgb, #000 22%, transparent);
+    box-shadow: 0 18px 48px color-mix(in srgb, var(--t1) 22%, transparent);
   }
   .return-banner {
     position: sticky;
     top: 0;
     z-index: 40;
     padding: 10px 16px;
-    background: color-mix(in srgb, var(--t1) 6%, var(--bg, #fff));
+    background: color-mix(in srgb, var(--t1) 6%, var(--bg));
     border-bottom: 1px solid var(--border);
   }
   .summary {

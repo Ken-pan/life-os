@@ -54,7 +54,7 @@
   >
     <header class="capture-head">
       <h2 id="capture-quick-title">{t('nav.capture')}</h2>
-      <button type="button" class="icon-btn" aria-label={t('chat.cancel')} onclick={close}>
+      <button type="button" class="capture-icon-btn" aria-label={t('chat.cancel')} onclick={close}>
         <Icon name="x" size={18} strokeWidth={1.75} />
       </button>
     </header>
@@ -78,7 +78,7 @@
     position: fixed;
     inset: 0;
     z-index: 80;
-    background: color-mix(in srgb, #000 35%, transparent);
+    background: color-mix(in srgb, var(--t1) 35%, transparent);
   }
   .capture-sheet {
     position: fixed;
@@ -91,9 +91,9 @@
     gap: 12px;
     padding: 18px;
     border-radius: 16px;
-    background: var(--bg, #fff);
+    background: var(--bg);
     color: var(--t1);
-    box-shadow: 0 24px 64px color-mix(in srgb, #000 28%, transparent);
+    box-shadow: 0 24px 64px color-mix(in srgb, var(--t1) 28%, transparent);
   }
   .capture-head {
     display: flex;
@@ -142,9 +142,9 @@
   .capture-actions .primary {
     border-color: transparent;
     background: var(--t1);
-    color: var(--bg, #fff);
+    color: var(--bg);
   }
-  .icon-btn {
+  .capture-icon-btn {
     display: grid;
     place-items: center;
     width: 32px;

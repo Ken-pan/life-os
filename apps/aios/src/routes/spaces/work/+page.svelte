@@ -72,7 +72,7 @@
     border-radius: 10px;
     border: none;
     background: var(--t1);
-    color: var(--bg, #fff);
+    color: var(--bg);
     font: inherit;
     cursor: pointer;
   }

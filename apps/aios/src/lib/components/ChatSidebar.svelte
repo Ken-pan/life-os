@@ -294,7 +294,7 @@
   .recent-label {
     margin: 0;
     padding: 2px 10px 4px;
-    font-size: 11px;
+    font-size: var(--text-xs);
     letter-spacing: 0.05em;
     color: var(--sidebar-muted);
   }

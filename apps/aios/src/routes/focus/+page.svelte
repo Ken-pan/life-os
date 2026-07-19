@@ -15,14 +15,14 @@
 {#if FOCUS.focus}
   <FocusSessionShell />
 {:else}
-  <div class="empty">
+  <div class="focus-empty">
     <p>当前没有 Focus Session。</p>
     <a href="/spaces">前往 Spaces</a>
   </div>
 {/if}
 
 <style>
-  .empty {
+  .focus-empty {
     width: min(100% - 32px, 640px);
     margin: 48px auto;
   }
