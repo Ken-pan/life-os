@@ -376,3 +376,14 @@ Approved temporary defaults now on file:
 - Capture = global action (Web ⌘K + sidebar; Apple toolbar/menu/⌘N). Work→Spaces; Approvals/Activity→Inbox. Legacy routes/deep links kept via mapping.
 - Out of scope: FocusContext / Session, notification policy, full Space-local IA, production cutover, visual redesign.
 - Verify: `npm run check -w aios-os` + `npm run test -w aios-os`; `xcodebuild` KenosIOS / KenosMac Debug `CODE_SIGNING_ALLOWED=NO` succeeded.
+
+## Phase 5 Focus / contextual intelligence closeout (2026-07-19)
+
+- Temporary status: `TEMPORARY_APPROVED_FOR_PHASE_5_FOCUS_FOUNDATION` (`docs/architecture/kenos-phase5-focus-foundation.md`).
+- Verdict: `KENOS PHASE 5 — CONTEXTUAL_INTELLIGENCE_LOCAL_READY` with qualifier `PARTIAL_PASS_CONTEXTUAL_INTELLIGENCE_READY_WITH_PRODUCTION_GATES`.
+- Contracts: FocusContext / DeferredItem / Interruption / ProactiveSuggestion / InterventionBudget / SessionSummary + fail-closed runtime tests.
+- Web: Space-local Training/Deep Work entry, `/focus` session shell, hide global nav, scoped Assistant prompt, deferred queue without anxiety badges.
+- Apple: KenosFocusStore + FocusSessionView; Mac menu Start/End; Watch Focus-active glance (no Work/Money/Home counts).
+- Guards: `scripts/check-kenos-phase5.mjs` wired into `verify-kenos-refactor.sh`; QA `docs/qa/kenos-phase5-contextual-intelligence.md`.
+- Production locks: no Executor, no production notifications/APNs, no Apple Focus entitlement cutover, no writer/Portal cutover, no deploy/push.
+- Next safe step: user-reviewed push. Production integration remains owner-gated.

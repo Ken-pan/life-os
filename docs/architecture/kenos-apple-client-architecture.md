@@ -100,7 +100,7 @@ Today · Assistant · Spaces · Inbox
 
 - **Work** 归 Spaces（非顶层 Tab）；旧 deep link `kenos://work*` 映射到 Spaces → Work。
 - **Approvals / Activity / Capture 目的地** 归 Inbox；Capture **不是** Tab，而是全局动作（Toolbar / ⌘N / Command Menu）。
-- 本刀边界：只改壳层入口语义；不做 FocusContext / Focus Session、Watch 导航、完整 Space 局部 IA、生产 cutover。
+- Nav IA 第一刀边界曾排除 FocusContext；Phase 5 本地 foundation 已在 System 层补齐 Focus Session（见 `kenos-phase5-focus-foundation.md`），仍不做生产 APNs/Executor/cutover。
 
 #### Today
 
