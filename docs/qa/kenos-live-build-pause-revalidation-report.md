@@ -17,6 +17,8 @@ status: PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED
 
 - Pre-push local HEAD: `d2d2b68338517fce882a807bf9c01f3302845c39`
 - Pre-push origin/master: `f81fc88d5b7be4643c955c5ec33a0c316283ce47` (ahead 1 docs commit)
+- Post-push tip: `b1b3bcad4631ac55392e6bcfbd754ad9ff270eb3` (`local == origin/master`)
+- Contains `d2d2b6833`: **yes** (ancestor)
 - Auth source category: **Netlify CLI logged-in user session** (no token printed)
 
 ## 2. Netlify auth source category
@@ -48,24 +50,37 @@ status: PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED
 - Deploy Netlify (manual): `workflow_dispatch` only; last run 2026-07-14; **not** auto-triggered by recent pushes
 - Recent GitHub runs for pause-era pushes: **CI only** (no Gallery, no Deploy Netlify)
 
-## 6–7. Push + post-push deploy check
+## 6. Push result
 
-Filled after `git push origin master` / re-poll.
+1. `git push origin master` → `f81fc88d5..d2d2b6833` (inherited-pause clarification docs)
+2. Follow-up docs commit `b1b3bcad4` recording this live revalidation → pushed
+3. `git fetch origin` → `HEAD == origin/master == b1b3bcad4…`
+4. GitHub: **CI** started for both SHAs (allowed). **UIUX Gallery** did not run. **Deploy Netlify** did not run.
+
+## 7. Post-push deploy check
+
+Re-polled all seven sites after push:
+
+- `stop_builds` still **true**
+- published commit still `be6f2612d3f3…`
+- **zero** deploys with `commit_ref` matching `d2d2b6833` or `b1b3bcad4`
 
 ## 8. Dirty WIP
 
-Unrelated Finance / Planner / UI gallery / roadmap WIP remains unstaged and unchanged by this push.
+Unrelated Finance / Planner / UI gallery / roadmap / scripts WIP remains unstaged. Scoped docs for this revalidation were committed; other dirty paths were not staged.
 
 ## 9. Production DB
 
-Pre-check: tip `20260719130500`; counts `planner_tasks=1664`, `planner_projects=50`, `life_events=21`. Push is docs-only — no migrations.
+Unchanged: tip `20260719130500`; counts `1664 / 50 / 21`. Docs-only push; no migrations.
 
 ## 10–12. Readiness
 
 | Gate | Status |
 | ---- | ------ |
-| Read-path push | Ready → complete after push |
-| Read client canary | **Ready for owner approval** (`APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`) |
+| Read-path push | **`READ_PATH_PUSH_COMPLETE`** |
+| Read client canary | **`PRODUCTION_READ_CLIENT_CANARY_READY_FOR_OWNER_APPROVAL`** |
 | Full client deploy | Still separate / not approved |
 | Writer canary | Not approved |
 | Builds / Gallery restore | **Not** performed |
+
+**Next phrase (owner only):** `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`
