@@ -43,6 +43,20 @@ import {
   KenosWorkMeetingSchema,
   KenosConnectorRegistryEntrySchema,
 } from '../src/kenos.ts'
+import {
+  KenosDeferredItemSchema,
+  KenosDeferredItemStatusValues,
+  KenosFocusContextSchema,
+  KenosFocusModeValues,
+  KenosFocusStatusTransitions,
+  KenosFocusStatusTransitionSchema,
+  KenosFocusStatusValues,
+  KenosInterruptionCandidateSchema,
+  KenosInterruptionHandlingValues,
+  KenosProactiveSuggestionSchema,
+  KenosProactiveSuggestionStatusValues,
+  KenosSessionSummarySchema,
+} from '../src/kenos-focus.ts'
 
 const manifest = JSON.parse(readFileSync(new URL('../fixtures/kenos/v1/manifest.json', import.meta.url), 'utf8'))
 const corpus = JSON.parse(readFileSync(new URL('../fixtures/kenos/v1/corpus.json', import.meta.url), 'utf8'))
@@ -67,6 +81,11 @@ const schemaByContract = {
   workDecision: KenosWorkDecisionSchema,
   workActionProposal: KenosWorkActionProposalSchema,
   connectorRegistryEntry: KenosConnectorRegistryEntrySchema,
+  focusContext: KenosFocusContextSchema,
+  deferredItem: KenosDeferredItemSchema,
+  interruptionCandidate: KenosInterruptionCandidateSchema,
+  proactiveSuggestion: KenosProactiveSuggestionSchema,
+  sessionSummary: KenosSessionSummarySchema,
 }
 
 function materialize(fixture) {
@@ -103,6 +122,13 @@ assert.deepEqual([...KenosWorkDecisionStatusValues], manifest.workDecisionStatus
 assert.deepEqual([...KenosWorkActionProposalStatusValues], manifest.workActionProposalStatuses, 'manifest drift: work action proposal statuses')
 assert.deepEqual([...KenosWorkPriorityValues], manifest.workPriorities, 'manifest drift: work priorities')
 assert.deepEqual(KenosWorkActionProposalTransitions, manifest.workActionProposalTransitions, 'manifest drift: work proposal transitions')
+assert.deepEqual([...KenosFocusModeValues], manifest.focusModes, 'manifest drift: focus modes')
+assert.deepEqual([...KenosFocusStatusValues], manifest.focusStatuses, 'manifest drift: focus statuses')
+assert.deepEqual(KenosFocusStatusTransitions, manifest.focusStatusTransitions, 'manifest drift: focus transitions')
+assert.deepEqual([...KenosDeferredItemStatusValues], manifest.deferredItemStatuses, 'manifest drift: deferred statuses')
+assert.deepEqual([...KenosProactiveSuggestionStatusValues], manifest.proactiveSuggestionStatuses, 'manifest drift: suggestion statuses')
+assert.deepEqual([...KenosInterruptionHandlingValues], manifest.interruptionHandlings, 'manifest drift: interruption handlings')
+assert.equal(manifest.phase5OwnershipStatus, 'TEMPORARY_APPROVED_FOR_PHASE_5_FOCUS_FOUNDATION')
 assert.deepEqual(corpus.valid.map(({ id }) => id), manifest.validFixtureIds, 'valid fixture coverage drift')
 assert.deepEqual(corpus.invalid.map(({ id }) => id), manifest.invalidFixtureIds, 'invalid fixture coverage drift')
 
@@ -126,6 +152,8 @@ for (const fixture of corpus.invalid) {
       ? KenosApprovalTransitionSchema
     : fixture.contract === 'workActionProposalTransition'
       ? KenosWorkActionProposalTransitionSchema
+    : fixture.contract === 'focusStatusTransition'
+      ? KenosFocusStatusTransitionSchema
     : schemaByContract[fixture.contract]
   assert.ok(schema, `no TypeScript schema for invalid fixture ${fixture.id}`)
   assert.equal(schema.safeParse(value).success, false, `${fixture.id} should fail TypeScript validation`)

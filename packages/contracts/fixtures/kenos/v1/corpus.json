@@ -1230,6 +1230,271 @@
         "owner": "integration",
         "failureState": "none"
       }
+    },
+    {
+      "id": "focus-context-training-active",
+      "contract": "focusContext",
+      "value": {
+        "id": "80000000-0000-4000-8000-000000000001",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "mode": "training",
+        "activeSpace": "training",
+        "activeSessionRef": {
+          "id": "60000000-0000-4000-8000-000000000001",
+          "type": "training.workout_session",
+          "ownerDomain": "training",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "startedAt": "2026-07-19T10:00:00.000Z",
+        "expectedEndAt": "2026-07-19T11:00:00.000Z",
+        "pausedAt": null,
+        "endedAt": null,
+        "status": "active",
+        "visibleDomains": [
+          "training",
+          "health",
+          "system"
+        ],
+        "hiddenDomains": [
+          "work",
+          "money",
+          "home",
+          "library",
+          "plan",
+          "music"
+        ],
+        "allowedInterruptionCategories": [
+          "workout_timer",
+          "training_guidance",
+          "health_safety",
+          "whitelisted_contact",
+          "system_critical"
+        ],
+        "assistantScope": {
+          "mode": "training",
+          "allowedDomains": [
+            "training",
+            "health",
+            "music"
+          ],
+          "allowExplicitCrossDomain": true,
+          "proactiveCrossDomain": false,
+          "toolsAllowlist": [
+            "training.next_exercise",
+            "training.rest_timer"
+          ]
+        },
+        "notificationPolicyRef": "focus.training.v1",
+        "deferredQueueRef": "80000000-0000-4000-8000-0000000000aa",
+        "returnDestination": {
+          "kind": "space",
+          "space": "training",
+          "label": "Return to training"
+        },
+        "source": "user",
+        "classification": "personal",
+        "title": "Push Day",
+        "safeSummary": "Training focus for push day",
+        "correlationId": "40000000-0000-4000-8000-0000000000f1",
+        "createdAt": "2026-07-19T09:59:00.000Z",
+        "updatedAt": "2026-07-19T10:00:00.000Z"
+      }
+    },
+    {
+      "id": "focus-context-deep-work-active",
+      "contract": "focusContext",
+      "value": {
+        "id": "80000000-0000-4000-8000-000000000002",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "mode": "deep_work",
+        "activeSpace": "work",
+        "activeSessionRef": {
+          "id": "70000000-0000-4000-8000-000000000001",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "startedAt": "2026-07-19T14:00:00.000Z",
+        "expectedEndAt": "2026-07-19T15:30:00.000Z",
+        "pausedAt": null,
+        "endedAt": null,
+        "status": "active",
+        "visibleDomains": [
+          "work",
+          "plan",
+          "library",
+          "system"
+        ],
+        "hiddenDomains": [
+          "training",
+          "money",
+          "home",
+          "health",
+          "music"
+        ],
+        "allowedInterruptionCategories": [
+          "current_work_context",
+          "active_meeting",
+          "user_selected_communication",
+          "system_critical"
+        ],
+        "assistantScope": {
+          "mode": "deep_work",
+          "allowedDomains": [
+            "work",
+            "plan",
+            "library"
+          ],
+          "allowExplicitCrossDomain": true,
+          "proactiveCrossDomain": false,
+          "toolsAllowlist": [
+            "work.current_project",
+            "plan.current_task"
+          ]
+        },
+        "notificationPolicyRef": "focus.deep_work.v1",
+        "deferredQueueRef": "80000000-0000-4000-8000-0000000000bb",
+        "returnDestination": {
+          "kind": "space",
+          "space": "work",
+          "label": "Return to Work"
+        },
+        "source": "user",
+        "classification": "work_confidential",
+        "title": "Kenos IA",
+        "safeSummary": "Deep Work on Kenos navigation",
+        "correlationId": "40000000-0000-4000-8000-0000000000f2",
+        "createdAt": "2026-07-19T13:59:00.000Z",
+        "updatedAt": "2026-07-19T14:00:00.000Z"
+      }
+    },
+    {
+      "id": "deferred-item-pending",
+      "contract": "deferredItem",
+      "value": {
+        "id": "81000000-0000-4000-8000-000000000001",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "focusContextId": "80000000-0000-4000-8000-000000000001",
+        "sourceDomain": "work",
+        "sourceEntityRef": {
+          "id": "70000000-0000-4000-8000-000000000002",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "category": "inbox_update",
+        "safeSummary": "Work project update",
+        "classification": "work_confidential",
+        "originalCreatedAt": "2026-07-19T10:05:00.000Z",
+        "deferredAt": "2026-07-19T10:05:01.000Z",
+        "releaseAt": null,
+        "expiry": null,
+        "urgency": "normal",
+        "status": "pending",
+        "reason": "Deferred: work hidden in training",
+        "correlationId": "40000000-0000-4000-8000-0000000000f1"
+      }
+    },
+    {
+      "id": "interruption-candidate-work",
+      "contract": "interruptionCandidate",
+      "value": {
+        "id": "82000000-0000-4000-8000-000000000001",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "focusContextId": "80000000-0000-4000-8000-000000000001",
+        "sourceDomain": "work",
+        "category": "inbox_update",
+        "urgency": "normal",
+        "risk": "R1",
+        "classification": "work_confidential",
+        "createdAt": "2026-07-19T10:05:00.000Z",
+        "expiry": null,
+        "relatedEntityRef": null,
+        "recommendedHandling": "defer",
+        "explanation": "Non-urgent Work update during Training",
+        "safeSummary": "Work project update"
+      }
+    },
+    {
+      "id": "proactive-suggestion-r0",
+      "contract": "proactiveSuggestion",
+      "value": {
+        "id": "83000000-0000-4000-8000-000000000001",
+        "version": "1",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "source": "rule",
+        "targetDomain": "training",
+        "focusContextId": "80000000-0000-4000-8000-000000000001",
+        "suggestionType": "training.next_exercise",
+        "title": "Next: Overhead press",
+        "safeSummary": "Suggested next exercise from session plan",
+        "rationale": "Deterministic next-step rule from workout order",
+        "evidenceRefs": [
+          {
+            "id": "60000000-0000-4000-8000-000000000001",
+            "type": "training.workout_session",
+            "ownerDomain": "training",
+            "ownerId": "20000000-0000-4000-8000-000000000001"
+          }
+        ],
+        "confidence": 0.9,
+        "risk": "R0",
+        "proposedAction": {
+          "actionType": null,
+          "writes": false,
+          "requiresApproval": false,
+          "reversibleHint": "No write"
+        },
+        "approvalRequirement": "none",
+        "createdAt": "2026-07-19T10:12:00.000Z",
+        "expiresAt": null,
+        "status": "generated",
+        "dismissalReason": null,
+        "feedback": null,
+        "classification": "personal",
+        "correlationId": "40000000-0000-4000-8000-0000000000f3",
+        "whyNow": "Rest timer completed",
+        "signalsUsed": [
+          "workout_order",
+          "rest_timer"
+        ],
+        "impactSummary": "No write; guidance only"
+      }
+    },
+    {
+      "id": "session-summary-training",
+      "contract": "sessionSummary",
+      "value": {
+        "id": "84000000-0000-4000-8000-000000000001",
+        "focusContextId": "80000000-0000-4000-8000-000000000001",
+        "ownerId": "20000000-0000-4000-8000-000000000001",
+        "mode": "training",
+        "activeSpace": "training",
+        "activeSessionRef": {
+          "id": "60000000-0000-4000-8000-000000000001",
+          "type": "training.workout_session",
+          "ownerDomain": "training",
+          "ownerId": "20000000-0000-4000-8000-000000000001"
+        },
+        "durationSeconds": 3120,
+        "completedActions": [
+          "4 exercises",
+          "16 sets"
+        ],
+        "progress": "4 exercises · 16 sets · 1 body note",
+        "notes": null,
+        "deferredItemCounts": {
+          "work": 1,
+          "inbox": 2
+        },
+        "releasedUrgentCount": 0,
+        "errors": [],
+        "nextRecommendedStep": "Review deferred Inbox items when ready",
+        "activityRefs": [],
+        "createdAt": "2026-07-19T11:00:00.000Z"
+      }
     }
   ],
   "invalid": [
@@ -1598,6 +1863,65 @@
         "to": "draft"
       },
       "expectedError": "illegal_transition"
+    },
+    {
+      "id": "focus-unknown-mode",
+      "contract": "focusContext",
+      "valueFrom": "focus-context-training-active",
+      "patch": {
+        "mode": "unknown_mode"
+      }
+    },
+    {
+      "id": "focus-unknown-status",
+      "contract": "focusContext",
+      "valueFrom": "focus-context-training-active",
+      "patch": {
+        "status": "flying"
+      }
+    },
+    {
+      "id": "focus-illegal-transition",
+      "contract": "focusStatusTransition",
+      "value": {
+        "from": "completed",
+        "to": "active"
+      }
+    },
+    {
+      "id": "focus-active-without-startedAt",
+      "contract": "focusContext",
+      "valueFrom": "focus-context-training-active",
+      "patch": {
+        "startedAt": null
+      }
+    },
+    {
+      "id": "suggestion-r4-without-fail-closed",
+      "contract": "proactiveSuggestion",
+      "valueFrom": "proactive-suggestion-r0",
+      "patch": {
+        "risk": "R4",
+        "approvalRequirement": "none",
+        "proposedAction": {
+          "actionType": "system.policy_change",
+          "writes": true,
+          "requiresApproval": false
+        }
+      }
+    },
+    {
+      "id": "deferred-owner-mismatch",
+      "contract": "deferredItem",
+      "valueFrom": "deferred-item-pending",
+      "patch": {
+        "sourceEntityRef": {
+          "id": "70000000-0000-4000-8000-000000000099",
+          "type": "work.project",
+          "ownerDomain": "work",
+          "ownerId": "20000000-0000-4000-8000-000000000099"
+        }
+      }
     }
   ]
 }

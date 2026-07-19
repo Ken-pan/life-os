@@ -331,6 +331,89 @@
       "supportedCaptureTypes",
       "owner",
       "failureState"
+    ],
+    "focusContext": [
+      "id",
+      "version",
+      "ownerId",
+      "mode",
+      "activeSpace",
+      "status",
+      "visibleDomains",
+      "hiddenDomains",
+      "allowedInterruptionCategories",
+      "assistantScope",
+      "notificationPolicyRef",
+      "deferredQueueRef",
+      "returnDestination",
+      "source",
+      "classification",
+      "title",
+      "safeSummary",
+      "correlationId",
+      "createdAt",
+      "updatedAt"
+    ],
+    "deferredItem": [
+      "id",
+      "ownerId",
+      "focusContextId",
+      "sourceDomain",
+      "category",
+      "safeSummary",
+      "classification",
+      "originalCreatedAt",
+      "deferredAt",
+      "urgency",
+      "status",
+      "reason",
+      "correlationId"
+    ],
+    "proactiveSuggestion": [
+      "id",
+      "version",
+      "ownerId",
+      "source",
+      "targetDomain",
+      "suggestionType",
+      "title",
+      "safeSummary",
+      "rationale",
+      "confidence",
+      "risk",
+      "proposedAction",
+      "approvalRequirement",
+      "createdAt",
+      "status",
+      "classification",
+      "correlationId",
+      "whyNow",
+      "signalsUsed",
+      "impactSummary"
+    ],
+    "interruptionCandidate": [
+      "id",
+      "ownerId",
+      "sourceDomain",
+      "category",
+      "urgency",
+      "risk",
+      "classification",
+      "createdAt",
+      "recommendedHandling",
+      "explanation",
+      "safeSummary"
+    ],
+    "sessionSummary": [
+      "id",
+      "focusContextId",
+      "ownerId",
+      "mode",
+      "activeSpace",
+      "durationSeconds",
+      "progress",
+      "nextRecommendedStep",
+      "createdAt"
     ]
   },
   "validFixtureIds": [
@@ -376,7 +459,13 @@
     "work-project-redacted-source-refs",
     "work-project-library-refs",
     "work-cross-domain-entity-refs",
-    "work-connector-registry-read-only"
+    "work-connector-registry-read-only",
+    "focus-context-training-active",
+    "focus-context-deep-work-active",
+    "deferred-item-pending",
+    "interruption-candidate-work",
+    "proactive-suggestion-r0",
+    "session-summary-training"
   ],
   "invalidFixtureIds": [
     "malformed-uuid",
@@ -413,7 +502,13 @@
     "work-writing-canonical-task",
     "work-library-document-copied",
     "work-conflicting-idempotency-replay",
-    "work-illegal-proposal-transition"
+    "work-illegal-proposal-transition",
+    "focus-unknown-mode",
+    "focus-unknown-status",
+    "focus-illegal-transition",
+    "focus-active-without-startedAt",
+    "suggestion-r4-without-fail-closed",
+    "deferred-owner-mismatch"
   ],
   "workProjectStatuses": [
     "active",
@@ -471,5 +566,82 @@
     "converted": [],
     "cancelled": []
   },
-  "phase3OwnershipStatus": "TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION"
+  "phase3OwnershipStatus": "TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION",
+  "focusModes": [
+    "training",
+    "deep_work",
+    "meeting",
+    "reading",
+    "home_organizing",
+    "finance_review",
+    "wind_down",
+    "custom"
+  ],
+  "focusStatuses": [
+    "inactive",
+    "starting",
+    "active",
+    "temporarily_left",
+    "paused",
+    "ending",
+    "completed",
+    "cancelled"
+  ],
+  "focusStatusTransitions": {
+    "inactive": [
+      "starting"
+    ],
+    "starting": [
+      "active",
+      "cancelled"
+    ],
+    "active": [
+      "paused",
+      "temporarily_left",
+      "ending",
+      "cancelled"
+    ],
+    "temporarily_left": [
+      "active",
+      "ending",
+      "cancelled"
+    ],
+    "paused": [
+      "active",
+      "ending",
+      "cancelled"
+    ],
+    "ending": [
+      "completed",
+      "cancelled"
+    ],
+    "completed": [],
+    "cancelled": []
+  },
+  "deferredItemStatuses": [
+    "pending",
+    "released",
+    "dismissed",
+    "expired",
+    "superseded"
+  ],
+  "proactiveSuggestionStatuses": [
+    "generated",
+    "shown",
+    "accepted",
+    "dismissed",
+    "expired",
+    "superseded",
+    "converted_to_action",
+    "failed"
+  ],
+  "interruptionHandlings": [
+    "show_now",
+    "quiet_indicator",
+    "defer",
+    "suppress_until_end",
+    "require_user_override",
+    "always_allow"
+  ],
+  "phase5OwnershipStatus": "TEMPORARY_APPROVED_FOR_PHASE_5_FOCUS_FOUNDATION"
 }
