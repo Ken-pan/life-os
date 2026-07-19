@@ -7,6 +7,7 @@ import {
   buildTodayShadowProjection,
 } from './controlCenter.core.js'
 import {
+  compareApprovalProjectionSets,
   compareProjectionSets,
   sourceState,
   summarizeShadowMismatches,
@@ -129,7 +130,7 @@ export const CONTROL = $state({
   sources: {
     today: sourceState('loading', { source: 'public.portal_today_summary' }),
     inbox: sourceState('loading', { source: 'public.life_events + public.planner_tasks' }),
-    approvals: sourceState('loading', { source: 'canonical approval read model' }),
+    approvals: sourceState('loading', { source: 'public.kenos_list_action_approvals' }),
     activity: sourceState('loading', { source: 'public.life_events' }),
   },
   shadowMismatches: [],
@@ -228,12 +229,10 @@ export async function refreshControlCenter({ force = false } = {}) {
               oldItems: sources.activity.shadowItems ?? [],
               newItems: CONTROL.activities.map(toShadowShape),
             }),
-            ...compareProjectionSets({
-              comparisonType: 'approval_projection',
-              ownerDomain: 'assistant',
-              oldItems: [],
-              newItems: [],
-              unsupported: CONTROL.sources.approvals.status === 'unsupported',
+            ...compareApprovalProjectionSets({
+              canonicalItems: sources.approvals.shadowItems ?? [],
+              legacyItems: sources.inbox.shadowItems ?? [],
+              legacySourceSupported: false,
             }),
           ]
       CONTROL.shadowSummary = summarizeShadowMismatches(CONTROL.shadowMismatches)

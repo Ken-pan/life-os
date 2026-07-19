@@ -44,3 +44,29 @@ export function isOpenFinanceBillTask(task) {
   if (!ref || typeof ref !== 'object') return false
   return /** @type {Record<string, unknown>} */ (ref).domain === 'finance'
 }
+
+/**
+ * Portal's legacy action badge is broader than canonical Approval. This helper
+ * compares only redacted counts and never converts a pending event into an Approval.
+ *
+ * @param {{
+ *   legacyActionCount?: number,
+ *   canonicalApprovals?: Array<{ status?: string } | null | undefined>,
+ *   canonicalAvailable?: boolean,
+ * }} [options]
+ */
+export function shadowPortalActionBadgeWithCanonicalApprovals({
+  legacyActionCount = 0,
+  canonicalApprovals = [],
+  canonicalAvailable = false,
+} = {}) {
+  const canonicalPendingCount = canonicalAvailable
+    ? canonicalApprovals.filter((item) => item?.status === 'pending').length
+    : null
+  return {
+    legacyActionCount: Number.isFinite(legacyActionCount) ? legacyActionCount : 0,
+    canonicalPendingCount,
+    matches: canonicalPendingCount == null ? null : legacyActionCount === canonicalPendingCount,
+    category: canonicalAvailable ? 'count_comparison_only' : 'unsupported_legacy_source',
+  }
+}

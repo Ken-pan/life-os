@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   classifyReadError,
+  compareApprovalProjectionSets,
   compareProjectionSets,
   freshnessState,
   mergeInboxProjections,
@@ -130,8 +131,10 @@ describe('Kenos Approval and Activity read projections', () => {
       },
     ], { now: NOW })
     assert.equal(projected.approvals[0].executorAvailable, false)
-    assert.equal(projected.approvals[0].ownerDomain, 'plan')
-    assert.equal(projected.approvals[0].deepLink, 'https://planner.kenos.space/inbox')
+    assert.equal(projected.approvals[0].ownerDomain, 'system')
+    assert.equal(projected.approvals[0].requestingDomain, 'plan')
+    assert.equal(projected.approvals[0].ownerDeepLink, 'https://planner.kenos.space/inbox')
+    assert.equal(projected.approvals[0].deepLink, '/approvals#approval-approval-1')
   })
 
   it('fails unknown Approval risk closed and expires old requests', () => {
@@ -213,6 +216,34 @@ describe('Kenos freshness and redacted shadow diagnostics', () => {
   it('records an expected unsupported mismatch without inventing a store', () => {
     const mismatches = compareProjectionSets({ comparisonType: 'approvals', unsupported: true })
     assert.equal(mismatches[0].category, 'unsupported_source')
+    assert.equal(mismatches[0].severity, 'expected')
+  })
+
+  it('classifies canonical Approval shadow mismatches without payloads', () => {
+    const legacy = [{
+      id: 'approval-1', actionId: 'action-old', correlationId: 'correlation-old', ownerDomain: 'assistant',
+      risk: 'R2', status: 'pending', expiresAt: '2026-07-19T13:00:00Z', classification: 'personal', deepLink: '/legacy',
+      rawPayload: { token: 'never-log' },
+    }, { id: 'missing', actionId: 'action-missing' }]
+    const canonical = [{
+      id: 'approval-1', actionId: 'action-new', correlationId: 'correlation-new', ownerDomain: 'system',
+      risk: 'R3', status: 'expired', expiresAt: '2026-07-19T14:00:00Z', classification: 'sensitive', deepLink: '/approvals',
+    }, { id: 'extra', actionId: 'action-extra' }]
+    const mismatches = compareApprovalProjectionSets({ legacyItems: legacy, canonicalItems: canonical })
+    assert.deepEqual(new Set(mismatches.map((item) => item.category)), new Set([
+      'action_mismatch', 'correlation_mismatch', 'owner_mismatch', 'risk_mismatch', 'status_mismatch',
+      'expiry_mismatch', 'redaction_mismatch', 'deep_link_mismatch', 'missing_in_canonical', 'extra_in_canonical',
+    ]))
+    assert.doesNotMatch(JSON.stringify(mismatches), /never-log/)
+  })
+
+  it('labels the Portal action badge as an unsupported legacy Approval source', () => {
+    const mismatches = compareApprovalProjectionSets({
+      legacyItems: [{ id: 'generic-action' }],
+      canonicalItems: [{ id: 'approval-1', status: 'pending' }],
+      legacySourceSupported: false,
+    })
+    assert.equal(mismatches[0].category, 'unsupported_legacy_source')
     assert.equal(mismatches[0].severity, 'expected')
   })
 

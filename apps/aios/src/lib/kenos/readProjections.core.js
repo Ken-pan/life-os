@@ -29,6 +29,11 @@ const DOMAIN_META = Object.freeze({
     href: 'https://music.kenos.space',
     classification: 'personal',
   },
+  assistant: {
+    label: 'Assistant',
+    href: '/',
+    classification: 'personal',
+  },
   system: {
     label: 'System',
     href: null,
@@ -418,7 +423,7 @@ export function projectApprovalRows(rows = [], { now = Date.now() } = {}) {
 
   for (const row of rows) {
     const id = text(row?.id)
-    const actionId = text(row?.action_request_id ?? row?.actionRequestId)
+    const actionId = text(row?.action_id ?? row?.actionId ?? row?.action_request_id ?? row?.actionRequestId)
     if (!id || !actionId) {
       malformedCount += 1
       continue
@@ -429,31 +434,136 @@ export function projectApprovalRows(rows = [], { now = Date.now() } = {}) {
     }
     seen.add(id)
     const expiresAt = timestamp(row.expires_at ?? row.expiresAt)
-    const requestedAt = timestamp(row.created_at ?? row.requestedAt)
+    const requestedAt = timestamp(row.requested_at ?? row.requestedAt ?? row.created_at)
+    const updatedAt = timestamp(row.updated_at ?? row.updatedAt ?? row.created_at)
     const expired = expiresAt ? Date.parse(expiresAt) <= now : false
-    const ownerDomain = DOMAIN_META[row.owner_domain] ? row.owner_domain : 'system'
-    const meta = DOMAIN_META[ownerDomain]
+    const allowedStatuses = ['pending', 'approved', 'rejected', 'expired', 'cancelled', 'superseded']
+    const rawStatus = text(row.status, 'pending')
+    const status = expired && rawStatus === 'pending'
+      ? 'expired'
+      : allowedStatuses.includes(rawStatus)
+        ? rawStatus
+        : 'unknown'
+    if (!text(row.status) || !allowedStatuses.includes(rawStatus) || !requestedAt || !expiresAt || !updatedAt) malformedCount += 1
+    const rawRequestingDomain = row.requesting_domain ?? row.requestingDomain ?? row.owner_domain ?? row.ownerDomain
+    const requestingDomain = DOMAIN_META[rawRequestingDomain]
+      ? rawRequestingDomain
+      : 'system'
+    const meta = DOMAIN_META[requestingDomain] ?? DOMAIN_META.system
+    const actor = row.requesting_actor ?? row.requestingActor
+    const requestingActor = actor && typeof actor === 'object' && !Array.isArray(actor)
+      ? { type: text(actor.type, 'unknown'), id: text(actor.id) || null }
+      : { type: text(actor, 'unknown'), id: null }
+    const entityRefs = Array.isArray(row.entity_refs ?? row.entityRefs)
+      ? (row.entity_refs ?? row.entityRefs).map((ref) => ({
+          id: text(ref?.id),
+          type: text(ref?.type, 'unknown.entity'),
+          ownerDomain: DOMAIN_META[ref?.ownerDomain] ? ref.ownerDomain : 'system',
+          ownerId: text(ref?.ownerId),
+        })).filter((ref) => ref.id && ref.ownerId)
+      : []
+    const freshness = freshnessState(updatedAt, { now })
     approvals.push({
       id,
       actionId,
       correlationId: text(row.correlation_id ?? row.correlationId) || null,
-      requestingActor: text(row.requesting_actor ?? row.requestingActor, 'unknown'),
-      ownerDomain,
+      requestingActor,
+      ownerDomain: 'system',
+      requestingDomain,
       risk: ['R0', 'R1', 'R2', 'R3', 'R4'].includes(row.risk) ? row.risk : 'R4',
       requestedOperation: text(row.action_type ?? row.requestedOperation, 'unknown.action'),
       safeImpactSummary: text(row.safe_summary ?? row.safeImpactSummary, '影响摘要不可用'),
       requestedAt,
       expiresAt,
-      status: expired ? 'expired' : text(row.status, 'pending'),
-      whyApprovalNeeded: text(row.reason ?? row.whyApprovalNeeded, '策略要求人工确认'),
-      deepLink: meta.href,
+      status,
+      reasonCode: text(row.reason_code ?? row.reasonCode, 'policy_confirmation_required'),
+      whyApprovalNeeded: text(row.reason_code ?? row.reasonCode ?? row.reason ?? row.whyApprovalNeeded, '策略要求人工确认'),
+      decisionReason: text(row.decision_reason ?? row.decisionReason) || null,
+      entityReferences: entityRefs,
+      deepLink: `/approvals#approval-${encodeURIComponent(id)}`,
+      ownerDeepLink: meta.href,
       executorAvailable: false,
       classification: text(row.data_classification ?? row.classification, meta.classification),
+      source: 'public.kenos_list_action_approvals',
+      sourceFreshness: freshness.freshness,
+      lastUpdated: freshness.lastUpdated,
+      stale: freshness.stale,
     })
   }
 
   approvals.sort((a, b) => (Date.parse(b.requestedAt ?? '') || 0) - (Date.parse(a.requestedAt ?? '') || 0))
   return { approvals, malformedCount, duplicateCount }
+}
+
+export function compareApprovalProjectionSets({
+  canonicalItems = [],
+  legacyItems = [],
+  legacySourceSupported = true,
+  comparedAt = new Date().toISOString(),
+} = {}) {
+  if (!legacySourceSupported) {
+    return [{
+      comparisonType: 'portal_badge_vs_canonical_approval_count',
+      ownerDomain: 'system',
+      oldValueFingerprint: fingerprint({ count: legacyItems.length }),
+      newValueFingerprint: fingerprint({ count: canonicalItems.filter((item) => item.status === 'pending').length }),
+      category: 'unsupported_legacy_source',
+      timestamp: timestamp(comparedAt),
+      sourceFreshness: canonicalItems.some((item) => item.stale) ? 'stale' : 'fresh',
+      severity: 'expected',
+      correlationId: null,
+      redactedDiagnosticSummary: 'Portal action badge 不是 Approval 真源；仅比较脱敏计数，不自动迁移。',
+    }]
+  }
+
+  const mismatches = []
+  const canonicalById = new Map(canonicalItems.map((item) => [text(item.id), item]))
+  const legacyById = new Map(legacyItems.map((item) => [text(item.id), item]))
+  for (const [id, legacy] of legacyById) {
+    const canonical = canonicalById.get(id)
+    if (!canonical) {
+      mismatches.push({
+        comparisonType: 'approval_projection', ownerDomain: 'system',
+        oldValueFingerprint: fingerprint(legacy), newValueFingerprint: 'none',
+        category: 'missing_in_canonical', timestamp: timestamp(comparedAt), sourceFreshness: text(legacy.sourceFreshness, 'unknown'),
+        severity: 'blocking', correlationId: text(legacy.correlationId) || null,
+        redactedDiagnosticSummary: `Legacy Approval ${stableHash(id)} 未出现在 canonical projection。`,
+      })
+      continue
+    }
+    for (const [field, category, severity] of [
+      ['actionId', 'action_mismatch', 'blocking'],
+      ['correlationId', 'correlation_mismatch', 'blocking'],
+      ['ownerDomain', 'owner_mismatch', 'blocking'],
+      ['risk', 'risk_mismatch', 'blocking'],
+      ['status', 'status_mismatch', 'blocking'],
+      ['expiresAt', 'expiry_mismatch', 'warning'],
+      ['classification', 'redaction_mismatch', 'blocking'],
+      ['deepLink', 'deep_link_mismatch', 'warning'],
+    ]) {
+      if ((legacy[field] ?? null) !== (canonical[field] ?? null)) {
+        mismatches.push({
+          comparisonType: 'approval_projection', ownerDomain: 'system',
+          oldValueFingerprint: fingerprint({ [field]: legacy[field] }),
+          newValueFingerprint: fingerprint({ [field]: canonical[field] }),
+          category, timestamp: timestamp(comparedAt), sourceFreshness: text(canonical.sourceFreshness, 'unknown'),
+          severity, correlationId: text(canonical.correlationId) || null,
+          redactedDiagnosticSummary: `${stableHash(id)} 的 Approval ${field} projection 不一致。`,
+        })
+      }
+    }
+  }
+  for (const [id, canonical] of canonicalById) {
+    if (legacyById.has(id)) continue
+    mismatches.push({
+      comparisonType: 'approval_projection', ownerDomain: 'system',
+      oldValueFingerprint: 'none', newValueFingerprint: fingerprint(canonical),
+      category: 'extra_in_canonical', timestamp: timestamp(comparedAt), sourceFreshness: text(canonical.sourceFreshness, 'unknown'),
+      severity: 'warning', correlationId: text(canonical.correlationId) || null,
+      redactedDiagnosticSummary: `Canonical Approval ${stableHash(id)} 没有可比较的 legacy candidate。`,
+    })
+  }
+  return mismatches
 }
 
 export function freshnessState(lastUpdated, { now = Date.now(), staleAfterMs = DEFAULT_STALE_AFTER_MS } = {}) {
@@ -582,7 +692,7 @@ export function summarizeShadowMismatches(mismatches = []) {
 export const KENOS_READ_SOURCE_OWNERS = Object.freeze({
   today: Object.freeze(['plan', 'money', 'training', 'music', 'home']),
   inbox: Object.freeze(['plan', 'money', 'training', 'system']),
-  approvals: Object.freeze(['assistant', 'system']),
+  approvals: Object.freeze(['system']),
   activity: Object.freeze(['plan', 'money', 'training', 'system']),
 })
 

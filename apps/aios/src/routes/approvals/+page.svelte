@@ -8,6 +8,7 @@
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
 
   const pending = $derived(CONTROL.approvals.filter((item) => item.status === 'pending'))
+  const resolved = $derived(CONTROL.approvals.filter((item) => item.status !== 'pending'))
 
   onMount(() => {
     void refreshControlCenter()
@@ -32,7 +33,7 @@
   />
 
   <p class="control-notice">
-    Approval 契约已经冻结，但仓库没有已部署的 canonical Approval reader。Executor 保持关闭；仅在显式本地演练模式显示按钮。
+    Canonical Approval 由 Platform / System policy layer 拥有，此页只读。批准不代表 Action 已执行；Executor 保持关闭，仅在显式本地演练模式显示无写入按钮。
   </p>
 
   <section class="control-page-section" aria-labelledby="approvals-pending-title">
@@ -40,15 +41,15 @@
     {#if pending.length}
       <div class="control-list">
         {#each pending as item (item.id)}
-          <article class="control-row">
+          <article class="control-row" id="approval-{item.id}" aria-labelledby="approval-title-{item.id}">
             <div class="control-row-main">
               <div class="control-row-meta">
                 <span class="control-badge control-badge--critical">{item.risk}</span>
                 <span>{item.requestedOperation ?? item.actionType}</span>
-                <span>{item.ownerDomain ?? item.source}</span>
-                <span>{item.requestedAt}</span>
+                <span>{item.requestingDomain ?? item.ownerDomain ?? item.source} → System</span>
+                {#if item.requestedAt}<time datetime={item.requestedAt}>{new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.requestedAt))}</time>{/if}
               </div>
-              <h3>{item.safeImpactSummary ?? item.summary}</h3>
+              <h3 id="approval-title-{item.id}">{item.safeImpactSummary ?? item.summary}</h3>
               {#if item.impact}
                 <ul class="impact-list">
                   {#each item.impact as impact}
@@ -57,6 +58,8 @@
                 </ul>
               {/if}
               <p class="control-row-detail">原因：{item.whyApprovalNeeded ?? '本地 UI 演练'}</p>
+              {#if item.expiresAt}<p class="control-row-detail">有效期至：<time datetime={item.expiresAt}>{new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.expiresAt))}</time></p>{/if}
+              {#if item.entityReferences?.length}<p class="control-row-detail">影响 {item.entityReferences.length} 个 canonical EntityRef；未复制业务 payload。</p>{/if}
               <p class="control-row-detail">Executor：{item.executorAvailable ? '可用' : '不可用'}</p>
             </div>
             {#if CONTROL.demo}
@@ -72,9 +75,9 @@
                   onclick={() => resolveDemoApproval(item.id, 'approved')}
                 >确认演练</button>
               </div>
-            {:else if item.deepLink}
+            {:else if item.ownerDeepLink}
               <div class="control-row-actions">
-                <a class="control-button control-button--link" href={item.deepLink}>查看 Owner</a>
+                <a class="control-button control-button--link" href={item.ownerDeepLink}>查看请求 Domain</a>
               </div>
             {/if}
           </article>
@@ -83,12 +86,33 @@
     {:else}
       <div class="control-empty">
         <strong>没有待批准动作</strong>
-        {CONTROL.sources.approvals.status === 'unsupported'
-          ? '没有 canonical read source，因此不推断、复制或伪造 Approval。R2–R4 继续 fail closed。'
-          : '当前来源没有待批准动作。R2–R4 继续 fail closed。'}
+        {['offline', 'unavailable', 'permission_denied'].includes(CONTROL.sources.approvals.status)
+          ? 'Canonical source 当前不可读，因此不显示虚假 0；R2–R4 继续 fail closed。'
+          : '当前 canonical source 没有待批准动作。R2–R4 继续 fail closed。'}
       </div>
     {/if}
   </section>
+
+  {#if resolved.length}
+    <section class="control-page-section" aria-labelledby="approvals-history-title">
+      <h2 id="approvals-history-title">已结束或已失效 · {resolved.length}</h2>
+      <div class="control-list">
+        {#each resolved as item (item.id)}
+          <article class="control-row" id="approval-{item.id}">
+            <div class="control-row-main">
+              <div class="control-row-meta">
+                <span class="control-badge">{item.status}</span>
+                <span>{item.risk}</span>
+                <span>{item.requestedOperation}</span>
+              </div>
+              <h3>{item.safeImpactSummary}</h3>
+              <p class="control-row-detail">{item.decisionReason ?? (item.status === 'expired' ? '已过期，不可当作已批准。' : item.status === 'superseded' ? '已被新的 payload-bound Approval 取代。' : '状态只读；Action 执行状态不在此推断。')}</p>
+            </div>
+          </article>
+        {/each}
+      </div>
+    </section>
+  {/if}
 </div>
 
 <style>
@@ -98,5 +122,9 @@
     color: var(--t2);
     font-size: var(--text-md);
     line-height: 1.65;
+  }
+  .control-row h3,
+  .control-row-detail {
+    overflow-wrap: anywhere;
   }
 </style>

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   countPortalActionBadge,
   isOpenFinanceBillTask,
+  shadowPortalActionBadgeWithCanonicalApprovals,
 } from '../src/lib/portalActionBadge.js'
 
 assert.equal(
@@ -80,6 +81,19 @@ assert.equal(
     ],
   ),
   0,
+)
+
+assert.deepEqual(
+  shadowPortalActionBadgeWithCanonicalApprovals({ legacyActionCount: 4, canonicalAvailable: false }),
+  { legacyActionCount: 4, canonicalPendingCount: null, matches: null, category: 'unsupported_legacy_source' },
+)
+assert.deepEqual(
+  shadowPortalActionBadgeWithCanonicalApprovals({
+    legacyActionCount: 2,
+    canonicalAvailable: true,
+    canonicalApprovals: [{ status: 'pending' }, { status: 'pending' }, { status: 'expired' }],
+  }),
+  { legacyActionCount: 2, canonicalPendingCount: 2, matches: true, category: 'count_comparison_only' },
 )
 
 console.log('portalActionBadge.test.mjs: ok')

@@ -1,5 +1,6 @@
 import { isCloudAuthorized } from '$lib/cloud.svelte.js'
 import { lifeOsReadClient } from '$lib/lifeos.js'
+import { readCanonicalApprovalSource } from './approvalReadSource.core.js'
 import {
   classifyReadError,
   freshnessState,
@@ -14,7 +15,7 @@ import {
 const SOURCE = Object.freeze({
   today: 'public.portal_today_summary',
   inbox: 'public.life_events:pending',
-  approvals: 'canonical approval read model',
+  approvals: 'public.kenos_list_action_approvals',
   activity: 'public.life_events',
 })
 
@@ -138,17 +139,13 @@ export async function readInboxSource({ client = lifeOsReadClient(), now = Date.
   }
 }
 
-export async function readApprovalSource() {
-  return result(
-    'items',
-    [],
-    sourceState('unsupported', {
-      source: SOURCE.approvals,
-      message:
-        '仓库没有已部署的 canonical Approval read model；Phase 1 Approval 目前只有冻结契约与 review-only SQL。',
-      retryable: false,
-    }),
-  )
+export async function readApprovalSource({ client = lifeOsReadClient(), now = Date.now() } = {}) {
+  return readCanonicalApprovalSource({
+    client,
+    authorized: isCloudAuthorized(),
+    online: online(),
+    now,
+  })
 }
 
 export async function readActivitySource({ client = lifeOsReadClient() } = {}) {

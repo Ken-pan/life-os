@@ -12,6 +12,7 @@
 
   const today = $derived(buildTodayReadModel(CONTROL.summary))
   const queue = $derived(summarizeControlQueue(CONTROL))
+  const approvalCountAvailable = $derived(['ready', 'empty', 'partial', 'stale'].includes(CONTROL.sources.approvals.status))
   const recentActivity = $derived(sortActivityNewestFirst(CONTROL.activities).slice(0, 3))
   const dateLabel = new Intl.DateTimeFormat('zh-CN', {
     month: 'long',
@@ -130,7 +131,9 @@
         </a>
         <a href="/approvals" class="queue-row">
           <span>Approvals</span>
-          <strong>{queue.approvalsOpen}</strong>
+          <strong aria-label={approvalCountAvailable ? `${queue.approvalsOpen} 条待批准` : 'Approval 数量暂不可用'}>
+            {approvalCountAvailable ? queue.approvalsOpen : '—'}
+          </strong>
           <small>需要确认范围与影响 · {sourceStatusLabel[CONTROL.sources.approvals.status] ?? '未知'}</small>
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>
