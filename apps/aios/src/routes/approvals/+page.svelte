@@ -9,6 +9,7 @@
 
   const pending = $derived(CONTROL.approvals.filter((item) => item.status === 'pending'))
   const resolved = $derived(CONTROL.approvals.filter((item) => item.status !== 'pending'))
+  const countAvailable = $derived(['ready', 'empty', 'partial', 'stale'].includes(CONTROL.sources.approvals.status))
 
   onMount(() => {
     void refreshControlCenter()
@@ -37,7 +38,7 @@
   </p>
 
   <section class="control-page-section" aria-labelledby="approvals-pending-title">
-    <h2 id="approvals-pending-title">等待你的决定 · {pending.length}</h2>
+    <h2 id="approvals-pending-title">等待你的决定 · {countAvailable ? pending.length : '—'}</h2>
     {#if pending.length}
       <div class="control-list">
         {#each pending as item (item.id)}

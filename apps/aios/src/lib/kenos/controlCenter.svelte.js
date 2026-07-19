@@ -49,11 +49,39 @@ const DEMO_APPROVALS = Object.freeze([
     id: 'approval-demo-1',
     status: 'pending',
     risk: 'R2',
-    actionType: 'plan.reschedule_task',
-    summary: '把「完成 Phase 2 review」移动到明天下午',
+    requestedOperation: 'plan.reschedule_task',
+    safeImpactSummary: '把「完成 Phase 2 review」移动到明天下午',
     impact: ['修改 1 个 Plan 任务', '保留原时间作为 Activity 记录', '可撤销'],
-    source: 'Assistant suggestion',
-    requestedAt: '今天 10:08',
+    requestingDomain: 'assistant',
+    whyApprovalNeeded: 'R2 跨域可逆写入需要明确预览',
+    requestedAt: '2026-07-19T17:08:00.000Z',
+    expiresAt: '2026-07-19T19:08:00.000Z',
+    executorAvailable: false,
+    entityReferences: [{ id: 'task-demo-1', type: 'plan.task', ownerDomain: 'plan', ownerId: 'task-demo-1' }],
+  },
+  {
+    id: 'approval-demo-expired',
+    status: 'expired',
+    risk: 'R3',
+    requestedOperation: 'money.export_report',
+    safeImpactSummary: '一项已过期的敏感报表导出请求',
+    requestingDomain: 'money',
+    decisionReason: '已过期，不可当作已批准。',
+    requestedAt: '2026-07-19T14:00:00.000Z',
+    expiresAt: '2026-07-19T15:00:00.000Z',
+    executorAvailable: false,
+  },
+  {
+    id: 'approval-demo-superseded',
+    status: 'superseded',
+    risk: 'R2',
+    requestedOperation: 'plan.reschedule_task',
+    safeImpactSummary: `已被新 payload-bound Approval 取代的长摘要：${'这段内容用于验证窄屏换行、聚焦顺序与脱敏边界。'.repeat(9)}`,
+    requestingDomain: 'assistant',
+    decisionReason: '已被新的 payload-bound Approval 取代。',
+    requestedAt: '2026-07-19T13:00:00.000Z',
+    expiresAt: '2026-07-19T18:00:00.000Z',
+    executorAvailable: false,
   },
 ])
 
@@ -87,6 +115,15 @@ function clone(items) {
     ...item,
     impact: item.impact ? [...item.impact] : undefined,
   }))
+}
+
+function approvalDemoSourceState() {
+  try {
+    const requested = new URLSearchParams(location.search).get('kenosApprovalState')
+    return ['ready', 'empty', 'partial', 'stale', 'offline'].includes(requested) ? requested : 'ready'
+  } catch {
+    return 'ready'
+  }
 }
 
 function loadDemoControlState() {
@@ -188,14 +225,29 @@ export async function refreshControlCenter({ force = false } = {}) {
       CONTROL.demo = demo
       if (demo) {
         CONTROL.inbox = clone(savedDemo?.inbox ?? DEMO_INBOX)
-        CONTROL.approvals = clone(savedDemo?.approvals ?? DEMO_APPROVALS)
+        const approvalState = approvalDemoSourceState()
+        CONTROL.approvals = approvalState === 'empty' ? [] : clone(savedDemo?.approvals ?? DEMO_APPROVALS)
         CONTROL.activities = clone(savedDemo?.activities ?? DEMO_ACTIVITY)
       }
+      const demoApprovalState = demo ? approvalDemoSourceState() : null
       CONTROL.sources = demo
         ? {
             today: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: 1 }),
             inbox: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.inbox.length }),
-            approvals: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.approvals.length }),
+            approvals: sourceState(demoApprovalState, {
+              source: 'local opt-in rehearsal',
+              availableCount: CONTROL.approvals.length,
+              malformedCount: demoApprovalState === 'partial' ? 1 : 0,
+              stale: demoApprovalState === 'stale',
+              retryable: ['partial', 'stale', 'offline'].includes(demoApprovalState),
+              message: demoApprovalState === 'partial'
+                ? '一项 QA fixture 被安全降级；其余 projection 仍只读。'
+                : demoApprovalState === 'stale'
+                  ? 'QA projection 已超过 freshness 阈值；未执行任何动作。'
+                  : demoApprovalState === 'offline'
+                    ? '设备离线；仅显示上一次 QA projection。'
+                    : '',
+            }),
             activity: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.activities.length }),
           }
         : CONTROL.sources
@@ -258,8 +310,8 @@ export function resolveDemoApproval(id, decision) {
     {
       id: `activity-${id}-${decision}`,
       status: decision === 'approved' ? 'succeeded' : 'cancelled',
-      actionType: approval.actionType,
-      summary: approval.summary,
+      actionType: approval.requestedOperation ?? approval.actionType,
+      summary: approval.safeImpactSummary ?? approval.summary,
       result:
         decision === 'approved'
           ? '本地 UI 演练已确认；未调用 Executor'
