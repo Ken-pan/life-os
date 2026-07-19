@@ -9,11 +9,13 @@
     sortActivityNewestFirst,
     summarizeControlQueue,
   } from '$lib/kenos/controlCenter.core.js'
+  import { WORK, refreshWorkSurface } from '$lib/kenos/workStore.svelte.js'
 
   const today = $derived(buildTodayReadModel(CONTROL.summary))
   const queue = $derived(summarizeControlQueue(CONTROL))
   const approvalCountAvailable = $derived(['ready', 'empty', 'partial', 'stale'].includes(CONTROL.sources.approvals.status))
   const recentActivity = $derived(sortActivityNewestFirst(CONTROL.activities).slice(0, 3))
+  const workCards = $derived((WORK.projection?.cards || []).slice(0, 6))
   const dateLabel = new Intl.DateTimeFormat('zh-CN', {
     month: 'long',
     day: 'numeric',
@@ -30,9 +32,19 @@
     permission_denied: '需登录',
     unsupported: '缺少来源',
   }
+  const workKindLabel = {
+    active_project: '进行中项目',
+    deliverable_due_soon: '即将到期交付',
+    blocked_deliverable: '阻塞交付',
+    recent_meeting: '最近会议',
+    unresolved_decision: '未决决定',
+    pending_action_proposal: '待转 Task 提案',
+    stale_source_warning: '陈旧来源',
+  }
 
   onMount(() => {
     void refreshControlCenter()
+    refreshWorkSurface()
   })
 </script>
 
@@ -144,6 +156,40 @@
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>
       </div>
+    </section>
+
+    <section aria-labelledby="today-work-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Work</p>
+          <h2 id="today-work-title">工作投影</h2>
+        </div>
+        <a href="/work" class="text-action">
+          打开 Work
+          <Icon name="chevron-right" size={15} strokeWidth={1.75} />
+        </a>
+      </div>
+      {#if WORK.status === 'unsupported'}
+        <p class="empty-copy">Work foundation 默认 Off。本地可用 <code>?kenosDemo=1</code> 预览投影。</p>
+      {:else if workCards.length}
+        <div class="signal-list">
+          {#each workCards as card (card.id)}
+            <a href={card.deepLink || '/work'} class="signal-row">
+              <span class="signal-label">{workKindLabel[card.kind] || card.kind}</span>
+              <strong>{card.title}</strong>
+              <span>
+                {card.summary}
+                · owner={card.ownerDomain}
+                · {card.freshness}
+                · {card.dataClassification}
+              </span>
+              <Icon name="chevron-right" size={14} strokeWidth={1.75} />
+            </a>
+          {/each}
+        </div>
+      {:else}
+        <p class="empty-copy">暂无 Work 投影卡片。</p>
+      {/if}
     </section>
 
     {#if today.signals.length}

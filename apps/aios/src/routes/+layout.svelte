@@ -34,9 +34,9 @@
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   const isAssistant = $derived(page.url.pathname === '/assistant')
-  const knownRoutes = new Set(['/', '/assistant', '/chat', '/inbox', '/approvals', '/activity', '/history', '/settings'])
+  const knownRoutes = new Set(['/', '/assistant', '/chat', '/inbox', '/approvals', '/activity', '/work', '/history', '/settings'])
   const hasCustomHeader = $derived(
-    ['/', '/inbox', '/approvals', '/activity'].includes(page.url.pathname) ||
+    ['/', '/inbox', '/approvals', '/activity', '/work'].includes(page.url.pathname) ||
       !knownRoutes.has(page.url.pathname),
   )
 
@@ -47,6 +47,7 @@
     if (p === '/inbox') return t('nav.inbox')
     if (p === '/approvals') return t('nav.approvals')
     if (p === '/activity') return t('nav.activity')
+    if (p === '/work') return 'Work'
     if (p === '/') return t('nav.today')
     if (p === '/assistant' || p === '/chat') return t('chat.title')
     return '页面未找到'
