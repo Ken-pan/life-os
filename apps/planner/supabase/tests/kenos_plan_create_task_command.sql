@@ -1,34 +1,28 @@
+\if :{?kenos_action_json}
+\else
+  \echo 'kenos_action_json psql variable is required; use scripts/test-kenos-phase1-db.mjs'
+  \quit 3
+\endif
+
 begin;
+
+create temporary table kenos_contract_fixture (action_request jsonb not null) on commit drop;
+insert into kenos_contract_fixture (action_request) values (:'kenos_action_json'::jsonb);
+grant select on kenos_contract_fixture to authenticated;
 
 insert into auth.users (id, email)
 values
-  ('00000000-0000-4000-8000-000000000001', 'kenos-a@example.test'),
+  (((select action_request from kenos_contract_fixture limit 1) #>> '{actor,id}')::uuid, 'kenos-a@example.test'),
   ('00000000-0000-4000-8000-000000000002', 'kenos-b@example.test')
 on conflict (id) do nothing;
 
 set local role authenticated;
-select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
+select set_config('request.jwt.claim.sub', (select action_request #>> '{actor,id}' from kenos_contract_fixture limit 1), true);
 
 do $$
 declare
-  v_action jsonb := jsonb_build_object(
-    'schemaVersion', '1',
-    'id', '10000000-0000-4000-8000-000000000001',
-    'actionType', 'plan.create_task',
-    'producer', 'assistant',
-    'targetDomain', 'plan',
-    'actor', jsonb_build_object('type', 'assistant', 'id', '00000000-0000-4000-8000-000000000001'),
-    'deviceId', '30000000-0000-4000-8000-000000000001',
-    'idempotencyKey', 'idem_db_001',
-    'correlationId', '40000000-0000-4000-8000-000000000001',
-    'securityDomain', 'personal',
-    'dataClassification', 'personal',
-    'requestedRisk', 'R1',
-    'payload', jsonb_build_object('title', 'Disposable DB task', 'notes', 'private note'),
-    'reason', 'Explicit user-requested task creation',
-    'requestedAt', '2026-07-19T00:00:00.000Z',
-    'expiresAt', '2099-07-19T00:00:00.000Z'
-  );
+  v_action jsonb := (select action_request from kenos_contract_fixture limit 1);
+  v_user_id uuid := ((select action_request from kenos_contract_fixture limit 1) #>> '{actor,id}')::uuid;
   v_first jsonb;
   v_duplicate jsonb;
   v_count bigint;
@@ -47,6 +41,12 @@ begin
   end if;
   if v_first ->> 'taskId' <> v_duplicate ->> 'taskId' then
     raise exception 'duplicate request returned a different task';
+  end if;
+  if v_first ->> 'status' <> 'succeeded'
+     or jsonb_array_length(v_first -> 'affectedEntities') <> 1
+     or nullif(v_first ->> 'activityId', '') is null
+     or nullif(v_first ->> 'completedAt', '') is null then
+    raise exception 'RPC result does not match the frozen ActionResult fields';
   end if;
 
   select count(*) into v_count
@@ -97,7 +97,7 @@ begin
     end if;
   end;
 
-  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
+  perform set_config('request.jwt.claim.sub', v_user_id::text, true);
   begin
     perform public.kenos_create_plan_task_action(v_action || jsonb_build_object('producer', 'work', 'idempotencyKey', 'idem_db_work'));
     raise exception 'expected work_source_excluded';
@@ -136,6 +136,20 @@ begin
     if sqlerrm not like '%schema_version_not_supported%' then
       raise;
     end if;
+  end;
+
+  begin
+    perform public.kenos_create_plan_task_action(v_action || jsonb_build_object('requestedRisk', 'R9', 'idempotencyKey', 'idem_db_bad_risk'));
+    raise exception 'expected invalid_action_contract';
+  exception when others then
+    if sqlerrm not like '%invalid_action_contract%' then raise; end if;
+  end;
+
+  begin
+    perform public.kenos_create_plan_task_action(v_action || jsonb_build_object('requestedAt', 'yesterday', 'idempotencyKey', 'idem_db_bad_time'));
+    raise exception 'expected requested_at_required';
+  exception when others then
+    if sqlerrm not like '%requested_at_required%' then raise; end if;
   end;
 
   begin

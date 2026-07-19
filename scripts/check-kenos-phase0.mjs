@@ -68,12 +68,17 @@ const phase1Allowed = ledger.includes('MIGRATION: KR-P1-001A Durable server Acti
   ? [
       /^apps\/planner\/server\/kenos\//,
       /^apps\/planner\/supabase\/review\/20260719010000_kenos_plan_create_task_command\.sql$/,
+      /^apps\/planner\/supabase\/review\/20260719020000_kenos_plan_privilege_model\.sql$/,
       /^apps\/planner\/supabase\/tests\/kenos_plan_create_task_command\.sql$/,
+      /^apps\/planner\/supabase\/tests\/kenos_plan_privileges\.sql$/,
+      /^apps\/planner\/supabase\/migrations\/20260709232245_planner_attachments\.sql$/,
       /^packages\/contracts\/package\.json$/,
       /^packages\/contracts\/src\/index\.d\.ts$/,
       /^packages\/contracts\/src\/kenos\.ts$/,
       /^packages\/contracts\/fixtures\/kenos\//,
       /^packages\/contracts\/scripts\/kenos\.test\.mjs$/,
+      /^clients\/apple\/Packages\/KenosContracts\//,
+      /^apps\/planner\/server\/kenos\/writerCutoverSimulation(\.test)?\.mjs$/,
     ]
   : []
 for (const path of changed) {

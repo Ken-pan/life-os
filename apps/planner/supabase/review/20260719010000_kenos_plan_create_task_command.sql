@@ -92,7 +92,6 @@ create policy "kenos_plan_outbox_select_own"
 revoke all on public.kenos_plan_action_idempotency from public, anon, authenticated;
 revoke all on public.kenos_plan_activity from public, anon, authenticated;
 revoke all on public.kenos_plan_outbox from public, anon, authenticated;
-grant select on public.kenos_plan_action_idempotency to authenticated;
 grant select on public.kenos_plan_activity to authenticated;
 grant select on public.kenos_plan_outbox to authenticated;
 -- The canonical Planner task table already has per-user SELECT RLS. Keep this
@@ -109,7 +108,6 @@ as $$
 declare
   v_user_id uuid := auth.uid();
   v_actor_user_id uuid;
-  v_device_id uuid;
   v_action_id text := action_request ->> 'id';
   v_action_type text := action_request ->> 'actionType';
   v_idempotency_key text := action_request ->> 'idempotencyKey';
@@ -142,7 +140,7 @@ begin
   if nullif(action_request ->> 'deviceId', '') is null then
     raise exception 'device_id_required';
   end if;
-  v_device_id := (action_request ->> 'deviceId')::uuid;
+  perform (action_request ->> 'deviceId')::uuid;
   if v_action_type <> 'plan.create_task' then
     raise exception 'unsupported_action';
   end if;
@@ -170,16 +168,24 @@ begin
      or coalesce(action_request ->> 'dataClassification', '') <> 'personal' then
     raise exception 'security_domain_not_allowed';
   end if;
-  if coalesce(action_request ->> 'requestedRisk', '') <> 'R1' then
+  if coalesce(action_request ->> 'requestedRisk', '') not in ('R0', 'R1', 'R2', 'R3', 'R4') then
+    raise exception 'invalid_action_contract';
+  end if;
+  if action_request ->> 'requestedRisk' <> 'R1' then
     raise exception 'risk_not_allowed';
   end if;
   if action_request ? 'expectedVersion' then
     raise exception 'version_conflict';
   end if;
-  if nullif(action_request ->> 'requestedAt', '') is null then
+  if nullif(action_request ->> 'requestedAt', '') is null
+     or action_request ->> 'requestedAt' !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$' then
     raise exception 'requested_at_required';
   end if;
   v_requested_at := (action_request ->> 'requestedAt')::timestamptz;
+  if nullif(action_request ->> 'expiresAt', '') is not null
+     and action_request ->> 'expiresAt' !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$' then
+    raise exception 'invalid_expiry';
+  end if;
   if nullif(action_request ->> 'expiresAt', '') is not null
      and (action_request ->> 'expiresAt')::timestamptz <= v_requested_at then
     raise exception 'invalid_expiry';
@@ -239,10 +245,20 @@ begin
     return jsonb_build_object(
       'ok', true,
       'duplicate', true,
+      'status', 'succeeded',
       'taskId', v_existing.task_id,
       'requestId', v_existing.action_id,
       'activityId', v_activity_id,
       'outboxId', v_outbox_id,
+      'result', jsonb_build_object('taskId', v_existing.task_id, 'outboxId', v_outbox_id, 'duplicate', true),
+      'affectedEntities', jsonb_build_array(jsonb_build_object(
+        'id', v_existing.task_id,
+        'type', 'plan.task',
+        'ownerDomain', 'plan',
+        'ownerId', v_existing.task_id,
+        'version', 1
+      )),
+      'completedAt', to_char(v_now at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
       'idempotencyKey', v_idempotency_key,
       'correlationId', v_existing.correlation_id
     );
@@ -344,28 +360,31 @@ begin
   return jsonb_build_object(
     'ok', true,
     'duplicate', false,
+    'status', 'succeeded',
     'taskId', v_task_id,
     'requestId', v_action_id,
     'activityId', v_activity_id,
     'outboxId', v_outbox_id,
+    'result', jsonb_build_object('taskId', v_task_id, 'outboxId', v_outbox_id, 'duplicate', false),
+    'affectedEntities', jsonb_build_array(v_entity_ref),
+    'completedAt', to_char(v_now at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
     'idempotencyKey', v_idempotency_key,
     'correlationId', v_correlation_id
   );
 end;
 $$;
 
-revoke all on function private.kenos_create_plan_task_action(jsonb) from public, anon;
-grant usage on schema private to authenticated;
-grant execute on function private.kenos_create_plan_task_action(jsonb) to authenticated;
+revoke all on function private.kenos_create_plan_task_action(jsonb) from public, anon, authenticated;
+revoke usage on schema private from authenticated;
 
 create or replace function public.kenos_create_plan_task_action(action_request jsonb)
 returns jsonb
 language sql
-security invoker
+security definer
 set search_path = ''
 as $$
   select private.kenos_create_plan_task_action(action_request);
 $$;
 
-revoke all on function public.kenos_create_plan_task_action(jsonb) from public, anon;
+revoke all on function public.kenos_create_plan_task_action(jsonb) from public, anon, authenticated;
 grant execute on function public.kenos_create_plan_task_action(jsonb) to authenticated;

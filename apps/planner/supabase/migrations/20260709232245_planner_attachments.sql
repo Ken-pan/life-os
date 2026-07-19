@@ -45,8 +45,9 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('planner-attachments', 'planner-attachments', false, 26214400, '{"image/*", "application/pdf", "text/plain", "text/markdown", "application/json", "text/csv"}')
 on conflict (id) do nothing;
 
--- Storage objects RLS
-alter table storage.objects enable row level security;
+-- Supabase owns `storage.objects` as `supabase_storage_admin` and creates it
+-- with RLS already enabled. The migration role may create scoped policies but
+-- must not try to take ownership or alter the extension-managed table.
 
 drop policy if exists "planner_attachments_object_select" on storage.objects;
 create policy "planner_attachments_object_select"
