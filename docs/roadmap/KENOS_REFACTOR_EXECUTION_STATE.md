@@ -361,7 +361,7 @@ Approved temporary defaults now on file:
 ## Audit high-priority remediation closeout (2026-07-19)
 
 - Starting revision: `f26c22654391264e97cd6a777ce863e5024db401` (post Phase 4B tip); audit fixed baseline `1896250e27a96dd4112211502615b08cfea5f08a`.
-- Final local HEAD: `81bcc497e7590d3df79db5ee2d129ce07445e7c2`.
+- Final local HEAD: `15c028ea7d0f2e67ffb125a04eece2085c8bfa92`.
 - Verdict: `KENOS AUDIT HIGH-PRIORITY REMEDIATION — LOCAL_PASS`.
 - Fixed locally: P1-002/003/004, P2-002/005, P2-001/P3-001/P4A docs honesty, P4A-005/007, MCP create boundary, policy risk, auth binding, availability semantics, independent shadow.
 - Production deferred: P1-001 → `PRODUCTION_REMEDIATION_ARTIFACT_READY` + `BLOCKED_PENDING_HOSTED_APPLY_AND_CUTOVER`; P3-006 OPEN-002 PENDING; P4A-004 SecItem Keychain distribution gate; P2-008 complete_task still legacy upsert.
