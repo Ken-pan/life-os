@@ -79,7 +79,37 @@ public enum KenosDomain: String, Codable, CaseIterable, Sendable {
     case core, assistant, work, plan, library, memory, training, money, health, home, music, paper, system, automation, notifications, integration
 }
 public enum KenosSecurityDomain: String, Codable, CaseIterable, Sendable { case personal, work, household, system }
-public enum KenosDataClassification: String, Codable, CaseIterable, Sendable { case `public`, personal, sensitive, workConfidential = "work_confidential", restrictedLocalOnly = "restricted_local_only", ephemeral }
+public enum KenosDataClassification: String, Codable, CaseIterable, Sendable {
+    case `public`, personal, sensitive, workConfidential = "work_confidential", restrictedLocalOnly = "restricted_local_only", ephemeral
+
+    /// Higher is more restricted. Unknown raw values must fail closed (caller), never default to `.personal`.
+    public var restrictionRank: Int {
+        switch self {
+        case .public: return 0
+        case .personal: return 1
+        case .ephemeral: return 2
+        case .sensitive: return 3
+        case .workConfidential: return 4
+        case .restrictedLocalOnly: return 5
+        }
+    }
+
+    public var allowsDiskProjectionCache: Bool {
+        switch self {
+        case .public, .personal, .ephemeral: return true
+        case .sensitive, .workConfidential, .restrictedLocalOnly: return false
+        }
+    }
+
+    public static func parseFailClosed(_ raw: String?) -> KenosDataClassification? {
+        guard let raw, let value = KenosDataClassification(rawValue: raw) else { return nil }
+        return value
+    }
+
+    public static func dominant(_ values: [KenosDataClassification]) -> KenosDataClassification? {
+        values.max(by: { $0.restrictionRank < $1.restrictionRank })
+    }
+}
 public enum KenosRisk: String, Codable, CaseIterable, Sendable { case r0 = "R0", r1 = "R1", r2 = "R2", r3 = "R3", r4 = "R4" }
 public enum KenosActorType: String, Codable, CaseIterable, Sendable { case user, assistant, automation, connector, system }
 public enum KenosActionType: String, Codable, CaseIterable, Sendable { case planCreateTask = "plan.create_task" }

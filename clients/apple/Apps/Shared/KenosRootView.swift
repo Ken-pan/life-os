@@ -486,14 +486,12 @@ struct MoreView: View {
                 .navigationTitle("Library")
             case .settings:
                 Form {
-                    Text("Mock auth · tokens in Keychain abstraction only")
+                    Text("Mock auth · InMemorySecureStore only (SecItem Keychain is a distribution gate)")
                     Text("Approvals actions: \(model.approvalsActionsEnabled ? "ON" : "OFF")")
-                    Button("Simulate session expiry") {
-                        Task {
-                            await model.session.markExpired()
-                            await model.repository.logoutClear()
-                        }
+                    Button("Simulate logout") {
+                        Task { await model.logout() }
                     }
+                    .accessibilityIdentifier("kenos.settings.logout")
                 }
                 .navigationTitle("Settings")
             }

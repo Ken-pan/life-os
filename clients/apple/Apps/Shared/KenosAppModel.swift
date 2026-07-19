@@ -163,4 +163,18 @@ final class KenosAppModel: ObservableObject {
         moreDestination = .capture
         selectedTab = .more
     }
+
+    /// Unified logout: session store, projection cache, offline queue, handoff, UI drafts.
+    func logout() async {
+        await session.clearSession()
+        try? sessionStore.clear()
+        await repository.logoutClear()
+        try? queue.logoutClear()
+        try? handoff.logoutClear()
+        watchCaptures = []
+        notificationInbox = []
+        lastCapture = nil
+        captureText = ""
+        moreDestination = .settings
+    }
 }

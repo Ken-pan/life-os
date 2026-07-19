@@ -66,6 +66,13 @@ public actor MockSessionProvider: KenosSessionProviding {
 
     public func markExpired() async {
         expired = true
+        token = nil
+    }
+
+    public func clearSession() async {
+        expired = true
+        token = nil
+        owner = nil
     }
 }
 
@@ -76,6 +83,8 @@ public protocol KenosSecureStore: Sendable {
 }
 
 public final class InMemorySecureStore: KenosSecureStore, @unchecked Sendable {
+    /// Local/mock only. Production builds must inject a SecItem-backed store (P4A-004).
+    public static let isProductionCapable = false
     private var values: [String: Data] = [:]
     private let lock = NSLock()
 
@@ -97,7 +106,8 @@ public final class InMemorySecureStore: KenosSecureStore, @unchecked Sendable {
     }
 }
 
-/// Session materials must only live behind `KenosSecureStore` (Keychain in production).
+/// Session materials must only live behind `KenosSecureStore`.
+/// Current apps inject `InMemorySecureStore` (mock). SecItem Keychain is a distribution gate (P4A-004).
 /// Never write tokens into UserDefaults, SwiftData, logs, or crash diagnostics.
 public final class KenosKeychainSessionStore: @unchecked Sendable {
     public static let tokenAccount = "kenos.session.accessToken"

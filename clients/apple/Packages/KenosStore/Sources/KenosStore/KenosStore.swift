@@ -102,8 +102,8 @@ public final class FileProjectionStore: KenosProjectionStoring, @unchecked Senda
 
     public func save(_ snapshot: KenosProjectionSnapshot) throws {
         lock.lock(); defer { lock.unlock() }
-        if snapshot.meta.classification == .restrictedLocalOnly || snapshot.meta.classification == .sensitive {
-            // Fail closed for R3/R4-class persistence at store boundary.
+        if !snapshot.meta.classification.allowsDiskProjectionCache {
+            // Fail closed for elevated classifications at store boundary.
             throw KenosClientError.permissionDenied
         }
         var copy = snapshot
@@ -171,7 +171,7 @@ public final class KenosReadRepository: ObservableObject {
             async let approvals = client.fetchApprovals(context)
             async let activity = client.fetchActivity(context)
             async let work = client.fetchWork(context)
-            let next = KenosProjectionSnapshot(
+            let fetched = KenosProjectionSnapshot(
                 today: try await today,
                 inbox: try await inbox,
                 approvals: try await approvals,
@@ -191,9 +191,16 @@ public final class KenosReadRepository: ObservableObject {
                     classification: .personal
                 )
             )
-            snapshot = next
-            try? store.save(next)
-            state = next.today?.cards.isEmpty == true ? .empty : .ready
+            let prepared = KenosProjectionClassifier.prepareForPersistence(fetched, fallbackOwnerId: owner)
+            snapshot = prepared.display
+            if let disk = prepared.persistable {
+                try? store.save(disk)
+            }
+            if prepared.strippedConfidentialWork {
+                state = .partial
+            } else {
+                state = snapshot.today?.cards.isEmpty == true ? .empty : .ready
+            }
             lastError = nil
         } catch let error as KenosClientError {
             lastError = error
@@ -223,6 +230,8 @@ public final class KenosReadRepository: ObservableObject {
     public func logoutClear() async {
         let owner = try? await session.ownerId()
         try? store.clear(ownerId: owner)
+        // Also clear anonymous / other owner files when session already expired.
+        try? store.clear(ownerId: nil)
         snapshot = KenosProjectionSnapshot()
         state = .sessionExpired
     }
