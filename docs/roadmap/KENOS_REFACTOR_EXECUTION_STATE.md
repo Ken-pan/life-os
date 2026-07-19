@@ -1,9 +1,9 @@
 ---
-title: Kenos Phase 0 Cloud 执行状态
+title: Kenos 重构执行状态
 owner: kenpan
-last_verified: 2026-07-18
+last_verified: 2026-07-19
 doc_role: cloud-task-execution-state
-status: phase-0-freeze-package-delivered-with-baseline-blocker
+status: phase-1-partial-pass-disposable-db-verified
 ---
 
 # Kenos Phase 0 Cloud 执行状态
@@ -229,13 +229,22 @@ Approved temporary defaults now on file:
 - Program status: `PHASE_1_PARTIAL_PASS_REVIEW_REQUIRED`.
 - Authoritative baseline evidence: current Cloud checkout HEAD before changes was `36e287f334a05d04291976894830f25b5b921822` on platform branch `work`; no `origin` remote/tracking ref was available in this container, so latest `origin/master` could not be fetched. Baseline verification used the Cloud-provided checkout, clean worktree, single `git worktree list` entry, and baseline `npm run verify:kenos-refactor` PASS.
 - Completed queue: KR-P1-001 acceptance closeout preserved; KR-P1-001A Green artifacts implemented as non-production contracts/server handler/migration draft/tests; Phase 1 contract foundation for Entity, Action, Capture, Approval, Activity, Outbox, idempotency, command boundary, and compatibility/rollback documentation added.
-- Current slice: KR-P1-001A is `PARTIAL_PASS` because production-grade Task + Outbox + Activity transaction cannot honestly be claimed until the owner approves a canonical server Task table or equivalent `planner_user_state` JSON transaction strategy.
-- READY queue: disposable database dry-run for `20260719010000_kenos_plan_create_task_command.sql`; owner decision on server Task persistence mapping; RLS/dual-user tests after mapping is approved.
+- Current slice: KR-P1-001A is `PARTIAL_PASS_DISPOSABLE_DB_VERIFIED`. Repository evidence confirms `planner_tasks(user_id,id,data,updated_at)` as the canonical cloud Task mapping, and the review RPC transaction has passed a scoped disposable-DB test. Production-grade acceptance still requires owner approval of privileges, caller integration, and writer cutover.
+- READY queue: contract/RFC reconciliation decision; owner review of the private-definer/public-invoker privilege model; production migration design and server caller/writer-cutover review.
 - Blocked queue: production migration apply, production RLS/auth changes, production writer cutover, deploy, and old writer deletion remain Red Gates.
-- Latest checkpoint commit: the commit containing this KR-P1-001A execution update (`feat(kenos): add phase1 action outbox hardening artifacts`).
-- Last full passing verification: post-change milestone gates and `npm run verify:kenos-refactor` PASS on 2026-07-19 after KR-P1-001A artifacts. Targeted post-change checks passed: contracts test, Planner server command test, Phase 1 migration invariant check, Planner workspace tests.
+- Latest checkpoint commit: local `master` checkpoint `990cc57f0` (`feat(kenos): add phase1 action outbox hardening artifacts`); Cloud source artifact was `ea8fbac0649e34d7ca6ea9f8b66e7c5d727cccc9`.
+- Last full passing verification: post-change milestone gates and `npm run verify:kenos-refactor` PASS on 2026-07-19 for the imported KR-P1-001A artifacts. Local hardening targeted checks passed: server command test, Phase 1 static invariant check, and scoped disposable-DB SQL/auth/RLS test. Milestone gates are rerun after this update.
 - Temporary decisions: server command implemented as a transaction adapter with an in-memory test database and a Supabase SQL draft; this avoids creating a second production writer while making the desired atomic/idempotent semantics reviewable.
 - Deferred production gates: canonical Planner server storage mapping; production RLS policies; production migration apply; Assistant/remote writer cutover; old production path retirement.
-- Known limitations: no production database was accessed; Supabase changelog fetch from this agent environment returned HTTP 403 via CONNECT tunnel, so implementation relied on the repository's existing imperative migration pattern plus the local Supabase security checklist from the skill instructions.
+- Known limitations: no production database was accessed. Local review found the initial SQL used the wrong `planner_tasks` column model, lacked RLS/auth binding, and sat in the auto-applied migration directory; the follow-up hardening moved it to `supabase/review`, aligned it to `planner_tasks(user_id,id,data,updated_at)`, added fail-closed auth/security/version/expiry checks and prepared disposable dual-user tests. Supabase changelog and current RLS/function docs were successfully fetched locally on 2026-07-19. The TypeScript contract still differs from the target RFC field set/version representation and is not frozen for a public consumer.
 - Rollback points: revert the KR-P1-001A commit or keep the new server command unreferenced; existing Planner KR-P1-001 local command path remains intact.
-- Next executable action: run full milestone gates, commit, create PR metadata, then stop for human review before any production mapping/cutover.
+- Next executable action: run milestone gates, checkpoint the review-only hardening on local `master`, then stop for owner review of contract reconciliation and production privilege/cutover choices. Do not start KR-P1-002.
+
+## KR-P1-001A local import and hardening verification (2026-07-19)
+
+- Imported the exact 12-file Cloud artifact (`+758/-2`) onto local `master` and checkpointed it as `990cc57f0`; unrelated local WIP remained unstaged.
+- Review found the original SQL draft used non-existent flat `planner_tasks` columns, trusted payload actor identity, had no RLS/auth binding, and lived in the automatically applied migration directory. It was moved to `apps/planner/supabase/review/`, aligned to the real JSON task row shape, and hardened with user-scoped keys/RLS, authenticated-user binding, a private fixed-search-path definer plus public invoker wrapper, and fail-closed security/version/expiry rules.
+- Full `supabase db reset --local` remains blocked by the pre-existing `20260709232245_planner_attachments.sql` ownership error while altering `storage.objects`; no unrelated attachment migration was changed.
+- Scoped reset through `20260709200000`, followed by the review SQL and `apps/planner/supabase/tests/kenos_plan_create_task_command.sql`, passed. Evidence covers first create, duplicate replay to the same Task, one Task/Outbox/Activity result, two-user RLS isolation, authenticated actor binding, Work-source rejection, expiry rejection, and direct Outbox-write privilege denial.
+- Post-hardening verification passed for contracts, Planner server command, Phase 1 static invariants, Planner workspace tests (23 files / 149 tests), ticket naming, dependency boundaries, app manifests, design tokens, MCP smoke, repo typecheck, and production builds. The aggregate Phase 0/full Kenos verifier remains non-actionably blocked by unrelated local WIP: its diff allowlist first sees `apps/finance/src/app.css`, and the style baseline sees the untracked `packages/platform-web/src/svelte/wikilinks/` work.
+- This is disposable local evidence only. No production database, production migration, remote config, deploy, caller cutover, or legacy-path retirement was performed.

@@ -25,7 +25,7 @@ function permanent(code, message) {
   return { ok: false, error: { code, message, class: 'permanent' } }
 }
 
-function validateAction(action) {
+function validateAction(action, { authUserId, now = Date.now() } = {}) {
   if (!action || typeof action !== 'object') return permanent('bad_request', 'Action request is required.')
   if (action.actionType !== ACTION_TYPE) return permanent('unsupported_action', 'Only plan.create_task is supported by this server command boundary.')
   if (action.targetDomain !== 'plan') return permanent('wrong_owner', 'Plan is the only canonical owner for Task creation.')
@@ -33,8 +33,12 @@ function validateAction(action) {
   if (!action.correlationId) return permanent('correlation_id_required', 'CreateTaskAction requires a correlation id.')
   if (action.producer === 'work' || action.payload?.workSource) return permanent('work_source_excluded', 'Work-sourced task creation is excluded from Phase 1.')
   if (action.producer === 'assistant' && action.actor?.type !== 'assistant') return permanent('assistant_actor_required', 'Assistant producer must use assistant actor metadata.')
+  if (authUserId && action.actor?.userId && action.actor.userId !== authUserId) return permanent('actor_user_mismatch', 'Action actor must match the authenticated user.')
+  if (action.securityDomain !== 'personal' || action.classification !== 'personal') return permanent('security_domain_not_allowed', 'KR-P1-001A accepts personal Plan actions only.')
   if (action.risk !== 'R1') return permanent('risk_not_allowed', 'Only explicit R1 create-task actions are executable in KR-P1-001A.')
   if (action.approval?.state !== 'not_required') return permanent('approval_state_not_allowed', 'KR-P1-001A executes only R1 actions with no explicit approval requirement.')
+  if (action.expectedVersion != null) return permanent('version_conflict', 'Create-task actions must not carry an existing entity version.')
+  if (action.expiresAt && Date.parse(action.expiresAt) <= now) return permanent('action_expired', 'Action request has expired.')
   const title = String(action.payload?.title || '').trim()
   if (!title) return permanent('title_required', 'Task title is required.')
   return { ok: true, title }
@@ -67,7 +71,8 @@ export function createMemoryCreateTaskDatabase() {
 }
 
 export function executeServerCreateTaskAction(db, action, options = {}) {
-  const validation = validateAction(action)
+  const now = options.now || Date.now()
+  const validation = validateAction(action, { authUserId: options.authUserId, now })
   if (!validation.ok) return validation
 
   return db.transaction((tx) => {
@@ -75,16 +80,11 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
     if (existingTaskId) {
       const task = tx.tasks.find((item) => item.id === existingTaskId)
       const outbox = tx.outbox.find((item) => item.idempotencyKey === action.idempotencyKey)
-      const activity = tx.activity.find((item) => item.correlationId === action.correlationId)
+      const activity = tx.activity.find((item) => item.correlationId === outbox?.correlationId)
       if (!task || !outbox || !activity) return permanent('idempotency_record_corrupt', 'Durable idempotency record no longer resolves atomically.')
       return { ok: true, task, outbox, activity, duplicate: true }
     }
 
-    if (options.injectFailure === 'afterTaskBeforeOutbox') {
-      throw new Error('injected transaction failure after task insert')
-    }
-
-    const now = options.now || Date.now()
     const task = {
       id: id('task'),
       userId: action.actor?.userId || 'local-user',
@@ -136,6 +136,9 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
     }
 
     tx.tasks.push(task)
+    if (options.injectFailure === 'afterTaskBeforeOutbox') {
+      throw new Error('injected transaction failure after task insert')
+    }
     tx.idempotency.set(action.idempotencyKey, task.id)
     tx.outbox.push(outbox)
     tx.activity.push(activity)
@@ -152,7 +155,7 @@ export function classifyDeliveryError(error) {
 export function nextBackoffMs(attempts, jitterSeed = 0) {
   const exp = Math.min(MAX_BACKOFF_MS, BASE_BACKOFF_MS * 2 ** Math.max(0, attempts - 1))
   const jitter = Math.floor(exp * 0.2 * Math.abs(Math.sin(jitterSeed || attempts)))
-  return exp + jitter
+  return Math.min(MAX_BACKOFF_MS, exp + jitter)
 }
 
 export function applyOutboxDeliveryFailure(record, error, now = Date.now()) {

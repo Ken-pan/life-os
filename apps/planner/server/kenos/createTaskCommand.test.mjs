@@ -5,6 +5,7 @@ import {
   executeServerCreateTaskAction,
   markOutboxDelivered,
   markOutboxProcessing,
+  nextBackoffMs,
 } from './createTaskCommand.mjs'
 
 function action(overrides = {}) {
@@ -47,6 +48,22 @@ function action(overrides = {}) {
 }
 
 {
+  const now = Date.parse('2026-07-19T00:00:00.000Z')
+  for (const [overrides, code] of [
+    [{ actor: { type: 'assistant', userId: 'other-user' } }, 'actor_user_mismatch'],
+    [{ securityDomain: 'work', classification: 'work_confidential' }, 'security_domain_not_allowed'],
+    [{ expectedVersion: 1 }, 'version_conflict'],
+    [{ expiresAt: '2026-07-18T23:59:59.000Z' }, 'action_expired'],
+  ]) {
+    const db = createMemoryCreateTaskDatabase()
+    const result = executeServerCreateTaskAction(db, action(overrides), { authUserId: 'user_001', now })
+    assert.equal(result.ok, false)
+    assert.equal(result.error.code, code)
+    assert.equal(db.state.tasks.length, 0)
+  }
+}
+
+{
   const db = createMemoryCreateTaskDatabase()
   assert.throws(() => executeServerCreateTaskAction(db, action(), { injectFailure: 'afterTaskBeforeOutbox' }))
   assert.equal(db.state.tasks.length, 0)
@@ -69,6 +86,7 @@ function action(overrides = {}) {
   assert.match(terminal.terminalReason, /permission/)
   const delivered = markOutboxDelivered(processing, 4000)
   assert.equal(delivered.status, 'delivered')
+  assert.equal(nextBackoffMs(99, 99), 5 * 60 * 1000)
 }
 
 {

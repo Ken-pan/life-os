@@ -67,7 +67,8 @@ const krP1001RuntimeAllowed = ledger.includes('Status: `TEMPORARY_APPROVED_FOR_K
 const phase1Allowed = ledger.includes('MIGRATION: KR-P1-001A Durable server Action / Outbox hardening draft')
   ? [
       /^apps\/planner\/server\/kenos\//,
-      /^apps\/planner\/supabase\/migrations\/20260719010000_kenos_plan_create_task_command\.sql$/,
+      /^apps\/planner\/supabase\/review\/20260719010000_kenos_plan_create_task_command\.sql$/,
+      /^apps\/planner\/supabase\/tests\/kenos_plan_create_task_command\.sql$/,
       /^packages\/contracts\/package\.json$/,
       /^packages\/contracts\/src\/index\.d\.ts$/,
       /^packages\/contracts\/src\/kenos\.ts$/,
