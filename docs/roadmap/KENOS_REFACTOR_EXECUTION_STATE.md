@@ -379,6 +379,8 @@ Approved temporary defaults now on file:
 
 ## Phase 5 Focus / contextual intelligence closeout (2026-07-19)
 
+- Starting revision: `388a7504cdd9e0f1c65cb4eb4080205150f53c18` (pre Nav IA + Phase 5); one worktree on `master`.
+- Final local HEAD: `b1351b63534108649bb6a3aea1e8b0b33b85b00d`.
 - Temporary status: `TEMPORARY_APPROVED_FOR_PHASE_5_FOCUS_FOUNDATION` (`docs/architecture/kenos-phase5-focus-foundation.md`).
 - Verdict: `KENOS PHASE 5 — CONTEXTUAL_INTELLIGENCE_LOCAL_READY` with qualifier `PARTIAL_PASS_CONTEXTUAL_INTELLIGENCE_READY_WITH_PRODUCTION_GATES`.
 - Contracts: FocusContext / DeferredItem / Interruption / ProactiveSuggestion / InterventionBudget / SessionSummary + fail-closed runtime tests.
@@ -386,4 +388,5 @@ Approved temporary defaults now on file:
 - Apple: KenosFocusStore + FocusSessionView; Mac menu Start/End; Watch Focus-active glance (no Work/Money/Home counts).
 - Guards: `scripts/check-kenos-phase5.mjs` wired into `verify-kenos-refactor.sh`; QA `docs/qa/kenos-phase5-contextual-intelligence.md`.
 - Production locks: no Executor, no production notifications/APNs, no Apple Focus entitlement cutover, no writer/Portal cutover, no deploy/push.
+- Unrelated WIP left unstaged: Finance/Planner/UI gallery/roadmap/usage-audit/platform-web wikilinks/phase2 script.
 - Next safe step: user-reviewed push. Production integration remains owner-gated.
