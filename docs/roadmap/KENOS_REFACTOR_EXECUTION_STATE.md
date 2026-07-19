@@ -380,7 +380,7 @@ Approved temporary defaults now on file:
 ## Phase 5 Focus / contextual intelligence closeout (2026-07-19)
 
 - Starting revision: `388a7504cdd9e0f1c65cb4eb4080205150f53c18` (pre Nav IA + Phase 5); one worktree on `master`.
-- Final local HEAD: `28eb593f4b1281d48d0080b3db709613e3305a18`
+- Final local HEAD: `2ebaac4304de7b33da152e498dd4a8f83bdfdd3b`
 - Temporary status: `TEMPORARY_APPROVED_FOR_PHASE_5_FOCUS_FOUNDATION` (`docs/architecture/kenos-phase5-focus-foundation.md`).
 - Verdict: `KENOS PHASE 5 — CONTEXTUAL_INTELLIGENCE_LOCAL_READY` with qualifier `PARTIAL_PASS_CONTEXTUAL_INTELLIGENCE_READY_WITH_PRODUCTION_GATES`.
 - Contracts: FocusContext / DeferredItem / Interruption / ProactiveSuggestion / InterventionBudget / SessionSummary + fail-closed runtime tests.
