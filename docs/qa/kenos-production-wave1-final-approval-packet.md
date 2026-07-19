@@ -17,7 +17,7 @@ No production apply, writer/Portal cutover, deploy, or push was performed by thi
 
 `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19`
 
-This SHA is the unique approval baseline: it contains the formal Wave 1 migrations, checksums, FINAL packet, and local verify script. Subsequent tip-sync commits may update Execution State HEAD pointers only.
+This SHA is the unique approval baseline: it contains the formal Wave 1 migrations, checksums, FINAL packet, and local verify script. Subsequent tip-sync commits may update Execution State HEAD pointers only. **Sole approval baseline for production apply / checksum binding = this SHA** (not Stage A `e13e24566…` / `4f17d7b97…`, and not later docs tip commits).
 
 **Git fact reconciliation (pre-tip):**
 

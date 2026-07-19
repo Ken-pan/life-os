@@ -401,7 +401,8 @@ Approved temporary defaults now on file:
 
 - Starting revision: `4f17d7b978eae72155ead4c40eee6826bf192414`; branch `master`; one worktree.
 - Authoritative Wave 1 baseline: `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19`
-- Final local HEAD: `f680cd5013b0bb560e9a0e30f0e5da143a1aba0b`
+- Final local HEAD / approval baseline: 
+- Note: later docs-only tip commits may exist on local master; migration checksums bind to this baseline only.`197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19`
 - Verdict: `WAVE_1_APPROVAL_BLOCKED` — see `docs/qa/kenos-production-wave1-final-approval-packet.md`.
 - Marker: `PRODUCTION_APPLY_BLOCKED_UNTIL_AUTHORITATIVE_COMMIT_PUSHED`.
 - Formal migrations (canonical): `apps/finance/supabase/migrations/20260719130100` … `20260719130500` (after remote tip `20260717220000`).
