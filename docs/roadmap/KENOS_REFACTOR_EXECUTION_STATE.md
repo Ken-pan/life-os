@@ -348,7 +348,7 @@ Approved temporary defaults now on file:
 ## Phase 4B cross-device daily loop closeout (2026-07-19)
 
 - Starting revision: `1896250e27a96dd4112211502615b08cfea5f08a`; branch `master`; one worktree. Unrelated Finance/Planner/UI gallery/roadmap/usage-audit/platform-web WIP remained unstaged.
-- Final local HEAD: `f1cf197a24fda0d5be9f5bf41071e2801b70661f`.
+- Final local HEAD: `85d17909ec1d223b8f9d67f282485ae79cf42217`.
 - Verdict: `KENOS PHASE 4B — CROSS_DEVICE_DAILY_LOOP_READY` with qualifier `PARTIAL_PASS_CROSS_DEVICE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` under `TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP`.
 - Watch: `KenosWatch` companion (`space.kenos.app.ios.watch`) with Today/Capture/Inbox/Approvals(read-only)/Activity; SE 3 40mm simulator build+test.
 - Packages: KenosNotifications (mock, redaction, preferences) + KenosHandoff (fake transport, idempotency, owner isolation) + Client glances.
