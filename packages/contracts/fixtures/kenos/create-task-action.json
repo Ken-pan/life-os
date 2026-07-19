@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "actionId": "act_plan_create_task_001",
+  "actionType": "plan.create_task",
+  "producer": "assistant",
+  "targetDomain": "plan",
+  "actor": { "type": "assistant", "userId": "user_fixture_001" },
+  "idempotencyKey": "fixture-create-task-001",
+  "correlationId": "corr-create-task-001",
+  "securityDomain": "personal",
+  "classification": "personal",
+  "risk": "R1",
+  "approval": { "state": "not_required" },
+  "payload": { "title": "Fixture task", "notes": "redacted before activity" },
+  "createdAt": "2026-07-19T00:00:00.000Z"
+}

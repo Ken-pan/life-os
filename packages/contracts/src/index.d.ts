@@ -24,3 +24,19 @@ export type {
 } from './content'
 export type { SyncErrorPresentation, SyncState } from './sync'
 export type { FeedbackMessage, OverlayKind, OverlayState } from './feedback'
+export type {
+  KenosActionDecision,
+  KenosActionRequest,
+  KenosActionResult,
+  KenosActivityRecord,
+  KenosApprovalState,
+  KenosCaptureEnvelope,
+  KenosClassification,
+  KenosDomain,
+  KenosEntityRef,
+  KenosErrorClass,
+  KenosOutboxRecord,
+  KenosOutboxStatus,
+  KenosRiskLevel,
+  KenosSecurityDomain,
+} from './kenos'

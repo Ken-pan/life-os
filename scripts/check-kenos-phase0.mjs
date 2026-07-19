@@ -64,8 +64,19 @@ const krP1001RuntimeAllowed = ledger.includes('Status: `TEMPORARY_APPROVED_FOR_K
       /^apps\/planner\/netlify\/functions\/mcp\.mjs$/,
     ]
   : []
+const phase1Allowed = ledger.includes('MIGRATION: KR-P1-001A Durable server Action / Outbox hardening draft')
+  ? [
+      /^apps\/planner\/server\/kenos\//,
+      /^apps\/planner\/supabase\/migrations\/20260719010000_kenos_plan_create_task_command\.sql$/,
+      /^packages\/contracts\/package\.json$/,
+      /^packages\/contracts\/src\/index\.d\.ts$/,
+      /^packages\/contracts\/src\/kenos\.ts$/,
+      /^packages\/contracts\/fixtures\/kenos\//,
+      /^packages\/contracts\/scripts\/kenos\.test\.mjs$/,
+    ]
+  : []
 for (const path of changed) {
-  if (![...allowed, ...krP1001RuntimeAllowed].some((pattern) => pattern.test(path))) fail(`allowlist violation in diff: ${path}`)
+  if (![...allowed, ...krP1001RuntimeAllowed, ...phase1Allowed].some((pattern) => pattern.test(path))) fail(`allowlist violation in diff: ${path}`)
 }
 
 for (const token of ['Starting revision:', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'Phase 0 preparation definition of done:']) {
