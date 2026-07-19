@@ -3,7 +3,7 @@ title: Kenos 重构决策登记表
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: architecture-decision-register
-status: active-for-phase-3-work-foundation
+status: temporary-approved-for-phase-4a-native-daily-loop
 ---
 
 # Kenos 重构决策登记表
@@ -22,6 +22,7 @@ status: active-for-phase-3-work-foundation
 - `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`: owner 已批准本地产品迁移开发；不得据此 apply 生产 migration、切 writer/default domain、deploy、redirect 或删除旧路径。
 - `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`: 仅批准 Phase 2 canonical Approval 只读模型的兼容契约、review-only persistence/RLS artifact 与本地验证；真实 Executor integration 前必须复审。
 - `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION`: 仅批准 Phase 3 Work 生产力闭环 foundation（contracts、review-only persistence、AIOS Work surface、WorkActionProposal→Plan simulation）；生产 cutover / Executor / 自动 Connector 写入前必须复审；不是永久 Constitution 条款。
+- `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`: 仅批准 Phase 4A Apple 原生日常闭环 foundation（`clients/apple` packages、iOS/macOS app shells、mock auth、offline queue、read projections）；生产 bundle/signing/OAuth/push、watchOS 产品、Executor、App Store/TestFlight 前必须复审。
 
 ## P0 决策
 
@@ -98,6 +99,21 @@ Expiration/review condition: mandatory re-review before production cutover, Exec
 | KR-P3-WORK-TEMP-004 | WorkActionProposal is a Work→Plan request, not a Task; converted requires canonical Plan Task EntityRef; same idempotency key must not duplicate | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | Explicit user review required; default-Off simulation; no silent/auto conversion; no Executor | Before production cutover |
 | KR-P3-WORK-TEMP-005 | Assistant may read Work projections, draft proposals, and display context; must not directly write Project/Deliverable/Meeting/Decision/Task/Document or auto-trigger Connectors | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | Host UI in AIOS strangler; no new OS app required for foundation | Before production cutover |
 | KR-P3-WORK-TEMP-006 | Connector may emit CaptureEnvelope/source refs into user-visible drafts/proposals only; no automatic canonical Work/Plan/Library writes in Phase 3 foundation | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | Registry proposal + fixtures allowed; full connector runtimes not required | Before production cutover |
+
+## Phase 4A Apple native temporary approvals
+
+Approved owner: Ken (task prompt)
+Approval date: 2026-07-19
+Scope: Phase 4A Apple native daily loop foundation under `clients/apple` — inventory, shared packages, mock auth/Keychain abstraction, read cache, offline Action queue, iOS/iPadOS and macOS shells, Today/Assistant/Work/Inbox/Approvals/Activity read surfaces, Quick Capture drafts, deep links, Phase 4 guard. Local/simulator only.
+Expiration/review condition: mandatory re-review before production bundle/signing/OAuth/push, watchOS product, Executor, TestFlight/App Store, or Constitution promotion.
+
+| ID | Decision | Status | Scope / non-scope | Expiration / review |
+| --- | --- | --- | --- | --- |
+| KR-P4A-TEMP-001 | Canonical Apple foundation path is `clients/apple`; one Kenos product with iOS/iPadOS and macOS targets | TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP | Does not retire domain companions; does not create watchOS product | Before distribution |
+| KR-P4A-TEMP-002 | Shared packages are KenosContracts / KenosClient / KenosStore / KenosActions / KenosDesign; Apple must not invent a second contract vocabulary | TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP | No Apple-owned Task/Approval/Work/Activity truth | Before distribution |
+| KR-P4A-TEMP-003 | Session tokens only via Keychain abstraction; mock auth allowed; no production OAuth/config changes | TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP | No hardcoded production secrets | Before production auth |
+| KR-P4A-TEMP-004 | Offline Action queue supports explicit R1 drafts with fake/test executor only; Approvals remain read-only; R3/R4 fail closed offline | TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP | No production Executor | Before Executor review |
+| KR-P4A-TEMP-005 | Local/dev bundle IDs `space.kenos.app.ios` / `space.kenos.app.macos` are placeholders only | TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP | Production Team/App Group/universal links deferred | Before distribution |
 
 ## 仍需冻结的业务决策
 

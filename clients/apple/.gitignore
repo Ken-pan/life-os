@@ -1,0 +1,7 @@
+# Swift / Xcode local artifacts (Phase 4A+)
+clients/apple/**/.build/
+clients/apple/**/DerivedData/
+clients/apple/**/*.xcuserstate
+clients/apple/**/xcuserdata/
+clients/apple/Apps/*.xcodeproj/project.xcworkspace/xcuserdata/
+clients/apple/Apps/*.xcodeproj/xcuserdata/
