@@ -3,7 +3,7 @@ title: Kenos 重构决策登记表
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: architecture-decision-register
-status: active-for-phase-2-local-beta
+status: active-for-phase-3-work-foundation
 ---
 
 # Kenos 重构决策登记表
@@ -21,6 +21,7 @@ status: active-for-phase-2-local-beta
 - `V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW`: 跨 TypeScript/SQL/Swift 的 major v1 语义已冻结；只允许 additive optional 演进，不表示生产 apply/cutover 获批。
 - `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`: owner 已批准本地产品迁移开发；不得据此 apply 生产 migration、切 writer/default domain、deploy、redirect 或删除旧路径。
 - `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`: 仅批准 Phase 2 canonical Approval 只读模型的兼容契约、review-only persistence/RLS artifact 与本地验证；真实 Executor integration 前必须复审。
+- `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION`: 仅批准 Phase 3 Work 生产力闭环 foundation（contracts、review-only persistence、AIOS Work surface、WorkActionProposal→Plan simulation）；生产 cutover / Executor / 自动 Connector 写入前必须复审；不是永久 Constitution 条款。
 
 ## P0 决策
 
@@ -81,6 +82,22 @@ Expiration/review condition: 真实 approve/reject、Executor integration 或生
 | ID | Decision | Status | Scope / non-scope | Expiration / review |
 | --- | --- | --- | --- | --- |
 | KR-P2-APPROVAL-TEMP-001 | Canonical Approval lifecycle 由 Kenos Platform / System policy layer 拥有；Assistant 仅读；请求 domain 继续拥有 Action 与业务对象；Activity/Outbox 可引用但不是 Approval 真源 | TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL | 只允许 additive v1 record、canonical corpus、review-only SQL、disposable DB、只读 adapter/UI；禁止真实 decision、Executor、生产 apply/cutover/deploy | 真实 Executor integration 前复审 |
+
+## Phase 3 Work ownership temporary approvals
+
+Approved owner: Ken (task prompt)
+Approval date: 2026-07-19
+Scope: Phase 3 Work loop foundation only — inventory, additive contracts/fixtures/Swift parity, review-only SQL/RLS, Work command/read boundaries, AIOS Work UI, WorkActionProposal→Plan simulation, Library EntityRef refs, Assistant/Today Work projections, Connector read-only registry proposal, shadow diagnostics, Phase 3 guard.
+Expiration/review condition: mandatory re-review before production cutover, Executor integration, automatic Connector writes, or Constitution promotion.
+
+| ID | Decision | Status | Scope / non-scope | Expiration / review |
+| --- | --- | --- | --- | --- |
+| KR-P3-WORK-TEMP-001 | Work owns Project, Deliverable, Meeting, Decision, Work Context, project/deliverable status, and Work source references | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | Does not own Task, Document, Approval, or Activity truth; Plan projects remain Plan-owned task groups | Before production cutover |
+| KR-P3-WORK-TEMP-002 | Plan remains sole Owner of Task, schedule, due, completion, recurrence, and personal execution queue | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | Work stores Task EntityRef + safe projections only; no second Task writer | Before production cutover |
+| KR-P3-WORK-TEMP-003 | Library remains Owner of Document/note/research/knowledge assets; Work stores EntityRef + safe title/classification/freshness/deep link only | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | No full Library content copy into Work payloads | Before production cutover |
+| KR-P3-WORK-TEMP-004 | WorkActionProposal is a Work→Plan request, not a Task; converted requires canonical Plan Task EntityRef; same idempotency key must not duplicate | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | Explicit user review required; default-Off simulation; no silent/auto conversion; no Executor | Before production cutover |
+| KR-P3-WORK-TEMP-005 | Assistant may read Work projections, draft proposals, and display context; must not directly write Project/Deliverable/Meeting/Decision/Task/Document or auto-trigger Connectors | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | Host UI in AIOS strangler; no new OS app required for foundation | Before production cutover |
+| KR-P3-WORK-TEMP-006 | Connector may emit CaptureEnvelope/source refs into user-visible drafts/proposals only; no automatic canonical Work/Plan/Library writes in Phase 3 foundation | TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION | Registry proposal + fixtures allowed; full connector runtimes not required | Before production cutover |
 
 ## 仍需冻结的业务决策
 
