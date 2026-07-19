@@ -4,39 +4,58 @@
 
 > **层级：实验 / 本地优先。** 与六个 canonical web 站不同：AIOS 是**原生 Mac app**(Tauri v2 壳，装在 `/Applications`)，推理全部走本机 LocalAI 网关(`127.0.0.1:18888`，llama-swap · OpenAI 兼容)+ 本地生图，数据不出设备。Netlify 上的 `aios-kenos.netlify.app` 只是**登录后查看已同步对话/记忆/图片的只读查看器**(`VITE_AIOS_CLOUD=1`)——生成新回复需连回运行本地网关的机器。
 
+## 终局（Done when）
+
+> 回链 [`NORTH_STAR`](../../architecture/NORTH_STAR.md) · 取舍 [`COMPOUND`](../COMPOUND.md)。非排期。
+
+**回答的问题：** 系统怎么理解并帮我做？
+
+**近程成功（日用闭环）：** 问「本月结余 / 今天练什么 / 东西在哪 / 今日待办」即答；早晨简报有用；写回可撤销。
+
+**Done when：**
+
+1. 登录自动 MCP 舰队（Planner/Finance/Fitness/Home）✅；JWT 续期 ✅
+2. 读 `core_*` + 经 `life_events` 写 Planner ✅；默认真源、可解释
+3. STABLE.26 护栏 ✅；工具面按 USAGE 扩，不按愿望清单
+4. 数据默认本机；云端只读查看器不冒充生成面
+
+**故意不做：** 变成云端 ChatGPT 壳；无 USAGE 乱扩 MCP；为「进 Portal」硬凑日卡。
+
+**与底座：** SSO ✅ · events 写回 ✅ · MCP 客户端+舰队 ✅ · object_ref 未做。
+
 ## 一句话
 
-私人 AI 助手(ChatGPT 式)，本机推理零数据外泄；已接 Life OS 统一账户(共享 SSO / `@life-os/sync`)，读跨 app `core_*` 快照、经 `life_events` 收件箱写回 Planner。**当前进度 AIOS.1–AIOS.25。**
+私人 AI 助手(ChatGPT 式)，本机推理零数据外泄；已接 Life OS 统一账户(共享 SSO / `@life-os/sync`)，读跨 app `core_*` 快照、经 `life_events` 收件箱写回 Planner。**当前进度 AIOS.1–AIOS.25 + MCP 舰队。**
 
 ## 当前能力（已落地）
 
-| 域 | 状态 | 要点 |
-| --- | --- | --- |
-| 流式对话 / 思考模式 | ✅ | SSE 增量;快速(Qwen3.6-35B)/深度(Qwen3-Next-80B)切换;`enable_thinking` 折叠展示 |
-| 工具 agent loop | ✅ | 原生 `tool_calls` ≤6 轮:网页搜索/阅读 · 计算器(BigInt) · 代码解释器(Worker 沙盒) · 时间 · 记忆读写 |
-| 长期记忆 | ✅ | 模型主动 `save_memory`;Qwen3-Embedding 语义召回(512 维 Matryoshka);**AIOS.25** 对话后被动萃取稳定事实 |
-| 笔记库检索 | ✅ | Obsidian vault BM25+向量 RRF + qwen3-reranker 重排;`search_notes` / `read_note` 带 Obsidian 深链 |
-| 多模态 / 语音 | ✅ | 图片附件路由 vlm-fast/quality;MediaRecorder→Qwen3-ASR 转写;回复 Kokoro/Qwen3 TTS 流式朗读 |
-| 文件导入 | ✅ | PDF(扫描件转 VLM) · DOCX/PPTX/XLSX/EPUB · 音频转写 · 30+ 文本扩展名 |
-| 侧栏预览面板 | ✅ | Artifacts 沙盒 iframe 实时渲染 · **AIOS.24** 可编辑 Canvas(只读渲染→活文档) · 内建阅读器 |
-| 本地生图 | ✅ | mflux 三档(Z-Image-Turbo/Qwen-Image/Edit-2509)+ 角色/风格一致性 + 批量;经 `/upstream/image` |
-| 今日/时效感知 | ✅ | **AIOS.15–19** 系统提示织入:Obsidian 日报(Teams/Outlook/Jira/RSS) · git pulse · 所在地 · 动态首页建议 |
-| Life OS 跨 app 打通 | ✅ | **AIOS.20** 读今日快照/财务/待办注入系统提示;**AIOS.21** 经 `life_events` 收件箱往 Planner 加待办 |
-| 主动性 | ✅ | **AIOS.22** 早晨今日简报(原生通知) |
-| MCP 客户端 | ✅ | **AIOS.23** HTTP 接外部 MCP server,一次接入一批工具 |
-| 云同步 | ✅ | Life OS 统一 Supabase(aios schema:对话+记忆+画像/设置);本地优先 LWW+墓碑;回前台自动同步;按需图片懒加载 |
-| 云端只读版门禁 | ✅ | **AIOS.13** 无账户/非本人一律挡外;无网关降级 UX |
-| 原生壳 / 权限中心 | ✅ | Tauri v2;自有 Dock 图标;`native.js` 工具(委派 agent/GUI 操控);设置页权限预检/请求/深链 |
+| 域                    | 状态 | 要点                                                                                                                               |
+| --------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 流式对话 / 思考模式   | ✅   | SSE 增量;快速(Qwen3.6-35B)/深度(Qwen3-Next-80B)切换;`enable_thinking` 折叠展示                                                     |
+| 工具 agent loop       | ✅   | 原生 `tool_calls` ≤6 轮:网页搜索/阅读 · 计算器(BigInt) · 代码解释器(Worker 沙盒) · 时间 · 记忆读写                                 |
+| 长期记忆              | ✅   | 模型主动 `save_memory`;Qwen3-Embedding 语义召回(512 维 Matryoshka);**AIOS.25** 对话后被动萃取稳定事实                              |
+| 笔记库检索            | ✅   | Obsidian vault BM25+向量 RRF + qwen3-reranker 重排;`search_notes` / `read_note` 带 Obsidian 深链                                   |
+| 多模态 / 语音         | ✅   | 图片附件路由 vlm-fast/quality;MediaRecorder→Qwen3-ASR 转写;回复 Kokoro/Qwen3 TTS 流式朗读                                          |
+| 文件导入              | ✅   | PDF(扫描件转 VLM) · DOCX/PPTX/XLSX/EPUB · 音频转写 · 30+ 文本扩展名                                                                |
+| 侧栏预览面板          | ✅   | Artifacts 沙盒 iframe 实时渲染 · **AIOS.24** 可编辑 Canvas(只读渲染→活文档) · 内建阅读器                                           |
+| 本地生图              | ✅   | mflux 三档(Z-Image-Turbo/Qwen-Image/Edit-2509)+ 角色/风格一致性 + 批量;经 `/upstream/image`                                        |
+| 今日/时效感知         | ✅   | **AIOS.15–19** 系统提示织入:Obsidian 日报(Teams/Outlook/Jira/RSS) · git pulse · 所在地 · 动态首页建议                              |
+| Life OS 跨 app 打通   | ✅   | **AIOS.20** 读今日快照/财务/待办注入系统提示;**AIOS.21** 经 `life_events` 收件箱往 Planner 加待办                                  |
+| 主动性                | ✅   | **AIOS.22** 早晨今日简报(原生通知)                                                                                                 |
+| MCP 客户端            | ✅   | **AIOS.23** HTTP 接外部 MCP server,一次接入一批工具                                                                                |
+| 云同步                | ✅   | Life OS 统一 Supabase(aios schema:对话+记忆+画像/设置);本地优先 LWW+墓碑;回前台自动同步;按需图片懒加载                             |
+| 云端只读版门禁        | ✅   | **AIOS.13** 无账户/非本人一律挡外;无网关降级 UX                                                                                    |
+| 原生壳 / 权限中心     | ✅   | Tauri v2;自有 Dock 图标;`native.js` 工具(委派 agent/GUI 操控);设置页权限预检/请求/深链                                             |
+| 系统导航 IA（第一刀） | ✅   | 顶层 `Today · Assistant · Spaces · Inbox`；Work→Spaces、Approvals/Activity→Inbox；Capture 为侧栏/⌘K 全局动作（非 Tab）；旧路由保留 |
 
 ## Next（按 ROI）
 
-| ID | 主题 | 桶 | 备注 |
-| --- | --- | --- | --- |
-| （维护） | 用好已接 MCP | Product | Home `where_is`：设置加 `https://home.kenos.space/api/mcp` + JWT |
+| ID           | 主题                 | 桶      | 备注                                          |
+| ------------ | -------------------- | ------- | --------------------------------------------- |
+| （日用验收） | Ken 打开 AIOS 试三问 | Product | 结余 / 今天练什么 / 东西在哪 — 舰队已自动接入 |
+| （维护）     | 工具面按 USAGE       | Product | 无新日用缺口不扩 MCP                          |
 
-**AIOS.STABLE.26 ✅ · HOME.MCP.13 ✅（2026-07-17）：** aios 测试 **25/25**；Home `/api/mcp` `where_is` + `storage_snapshots`（AIOS 无源码耦合，只配 URL）。
-
-> AIOS 2026-07-13 建站、两天内推进到 AIOS.25。护栏与第一条跨 OS MCP 消费链已落地；再扩工具面按 USAGE。
+**AIOS.STABLE.26 ✅ · MCP 舰队 ✅（2026-07-18）：** 登录 `ensureLifeOsMcpFleet`；Home `where_is` + Finance/Fitness/Planner 工具已在预设。再扩工具面按 USAGE。
 
 ## Parked / 待研判
 
@@ -46,15 +65,15 @@
 
 ## 实现锚点
 
-| 域 | 文件 / 位置 |
-| --- | --- |
-| 对话 / 工具 loop | `src/lib/chat.svelte.js` · `src/lib/tools.js` · `src/lib/localai.js` |
-| 记忆 | `src/lib/memory.svelte.js` |
-| 笔记检索 | `src/lib/tools.js` · `local-ai/services/knowledge/vault_server.py` |
-| 预览面板 / Canvas | `src/lib/panel.svelte.js` · `SidePanel.svelte` |
-| 云同步 / SSO | `src/lib/cloud.svelte.js` · `src/lib/supabase.js` · `src/lib/lifeos.js` |
-| 原生壳 | `src-tauri/` · `src/lib/native.js` |
-| 云端只读配置 | `netlify.toml`(`VITE_AIOS_CLOUD=1`) |
+| 域                | 文件 / 位置                                                             |
+| ----------------- | ----------------------------------------------------------------------- |
+| 对话 / 工具 loop  | `src/lib/chat.svelte.js` · `src/lib/tools.js` · `src/lib/localai.js`    |
+| 记忆              | `src/lib/memory.svelte.js`                                              |
+| 笔记检索          | `src/lib/tools.js` · `local-ai/services/knowledge/vault_server.py`      |
+| 预览面板 / Canvas | `src/lib/panel.svelte.js` · `SidePanel.svelte`                          |
+| 云同步 / SSO      | `src/lib/cloud.svelte.js` · `src/lib/supabase.js` · `src/lib/lifeos.js` |
+| 原生壳            | `src-tauri/` · `src/lib/native.js`                                      |
+| 云端只读配置      | `netlify.toml`(`VITE_AIOS_CLOUD=1`)                                     |
 
 ## 验收命令
 

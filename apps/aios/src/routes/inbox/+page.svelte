@@ -1,12 +1,15 @@
 <script>
   import { onMount } from 'svelte'
+  import { page } from '$app/state'
   import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
   import ReadSourceState from '$lib/components/ReadSourceState.svelte'
   import { formatQueueCount, summarizeControlQueue } from '$lib/kenos/controlCenter.core.js'
+  import { t } from '$lib/i18n/index.js'
 
   const openItems = $derived(CONTROL.inbox.filter((item) => item.status === 'open'))
   const queue = $derived(summarizeControlQueue(CONTROL))
   const openCountLabel = $derived(queue.inboxAvailable ? String(openItems.length) : '—')
+  const hash = $derived(page.url.hash.replace('#', ''))
 
   onMount(() => {
     void refreshControlCenter()
@@ -16,30 +19,32 @@
 <div class="control-page">
   <header class="control-page-header">
     <div>
-      <p class="control-page-kicker">Capture control</p>
+      <p class="control-page-kicker">Inbox</p>
       <h1>Inbox</h1>
       <p class="control-page-intro">
-        外部输入先进入这里，再由用户选择归属 Space。Assistant 不替领域 Owner 写入正式对象。
+        尚未归位、尚未决定或等待你处理的事。Capture、审批与系统活动都在这里。
       </p>
     </div>
-    {#if CONTROL.demo}<span class="control-badge">本地演示</span>{/if}
   </header>
+
+  <nav class="inbox-subnav" aria-label="Inbox sections">
+    <a href="/inbox#capture" class:active={hash === 'capture' || hash === ''}>{t('nav.inboxCaptured')}</a>
+    <a href="/inbox#review" class:active={hash === 'review'}>{t('nav.inboxNeedsReview')}</a>
+    <a href="/approvals" class:active={page.url.pathname === '/approvals'}>{t('nav.approvals')}</a>
+    <a href="/activity" class:active={page.url.pathname === '/activity'}>{t('nav.activity')}</a>
+  </nav>
 
   <ReadSourceState
     state={CONTROL.sources.inbox}
     onRetry={() => refreshControlCenter({ force: true })}
   />
 
-  <p class="control-notice">
-    只读来源为 pending life_events 与 Plan 中保留 lifeEventRef 的未完成任务；本页不会消费事件、分类或写回 Owner。
-  </p>
-
-  <section class="control-page-section" aria-labelledby="inbox-open-title">
+  <section id="capture" class="control-page-section" aria-labelledby="inbox-open-title">
     <h2 id="inbox-open-title" aria-label={queue.inboxAvailable ? `待分类 ${openItems.length}` : '待分类数量暂不可用'}>
-      待分类 · {openCountLabel}
+      {t('nav.inboxNeedsReview')} · {openCountLabel}
     </h2>
     {#if !queue.inboxAvailable}
-      <p class="control-notice" role="status">Inbox 来源不可用；未将数量显示为 0。</p>
+      <p class="control-notice" role="status">Inbox 暂时无法更新；不会用空数量冒充「没有事项」。</p>
     {:else if openItems.length}
       <div class="control-list">
         {#each openItems as item (item.id)}
@@ -47,7 +52,6 @@
             <div class="control-row-main">
               <div class="control-row-meta">
                 <span class="control-badge">{item.ownerDomain ?? item.source}</span>
-                <span>{item.sourceType ?? 'local_rehearsal'}</span>
                 {#if item.receivedAt}
                   <time datetime={item.receivedAt}>
                     {Date.parse(item.receivedAt)
@@ -59,17 +63,14 @@
               </div>
               <h3>{item.title}</h3>
               <p class="control-row-detail">{item.safeSummary ?? item.detail}</p>
-              <p class="control-row-detail">Owner：{item.ownerDomain ?? 'local rehearsal'} · 分类：{item.classification ?? 'demo'}</p>
             </div>
             <div class="control-row-actions">
               {#if item.deepLink}
                 <a class="control-button control-button--link" href={item.deepLink} target="_blank" rel="noopener noreferrer">
-                  打开 Owner
+                  打开来源
                 </a>
-              {:else if CONTROL.demo}
-                <button class="control-button" type="button" disabled>本地演练不分类</button>
               {:else}
-                <span class="control-link-unavailable">Deep link 不可用</span>
+                <span class="control-link-unavailable">等待归位</span>
               {/if}
             </div>
           </article>
@@ -78,10 +79,69 @@
     {:else}
       <div class="control-empty">
         <strong>Inbox 已清空</strong>
-        {CONTROL.sources.inbox.status === 'empty'
-          ? '真实来源当前没有待处理项。'
-          : '来源不可用时不会用演示数据冒充真实 Inbox；各领域现有 Inbox 保持不变。'}
+        当前没有待归位事项。
       </div>
     {/if}
   </section>
+
+  <section id="review" class="control-page-section inbox-crosslinks" aria-label="Related inbox queues">
+    <a class="queue-link" href="/approvals">
+      <span>{t('nav.approvals')}</span>
+      <strong>{formatQueueCount(queue.approvalsOpen)}</strong>
+      <small>需要你确认的范围与影响</small>
+    </a>
+    <a class="queue-link" href="/activity">
+      <span>{t('nav.activity')}</span>
+      <strong>{formatQueueCount(queue.activityFailures)}</strong>
+      <small>失败或需要恢复的动作</small>
+    </a>
+  </section>
 </div>
+
+<style>
+  .inbox-subnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0 8px;
+  }
+  .inbox-subnav a {
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-l);
+    color: var(--t2);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-sm);
+  }
+  .inbox-subnav a.active {
+    color: var(--t1);
+    border-color: color-mix(in srgb, var(--t1) 35%, var(--border-l));
+    background: color-mix(in srgb, var(--t1) 6%, transparent);
+  }
+  .inbox-crosslinks {
+    display: grid;
+    gap: 10px;
+  }
+  .queue-link {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .queue-link strong {
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-size: 1.4rem;
+  }
+  .queue-link small {
+    grid-column: 1;
+    color: var(--t3);
+  }
+</style>

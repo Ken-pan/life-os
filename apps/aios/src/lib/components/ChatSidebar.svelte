@@ -5,16 +5,14 @@
   import { t } from '$lib/i18n/index.js'
   import { C, startNewChat, selectConversation, deleteConversation } from '$lib/chat.svelte.js'
   import { AG, openAgent, closeAgent } from '$lib/agents.svelte.js'
+  import { isSystemNavActive, systemNavItems } from '$lib/kenos/systemNav.js'
+  import { KENOS_SPACES } from '$lib/kenos/controlCenter.core.js'
+
+  let { onCapture = undefined } = $props()
 
   const onChatRoute = $derived(page.url.pathname === '/assistant')
-
-  const primaryItems = $derived([
-    { href: '/', icon: 'dashboard', label: t('nav.today') },
-    { href: '/assistant', icon: 'chat', label: t('nav.assistant') },
-    { href: '/inbox', icon: 'list-todo', label: t('nav.inbox') },
-    { href: '/approvals', icon: 'check', label: t('nav.approvals') },
-    { href: '/activity', icon: 'history', label: t('nav.activity') },
-  ])
+  const primaryItems = $derived(systemNavItems(t))
+  const recentSpaces = $derived(KENOS_SPACES.slice(0, 3))
 
   let query = $state('')
   const filtered = $derived.by(() => {
@@ -54,40 +52,51 @@
       </span>
       <span class="brand-word">Kenos</span>
     </span>
-    <button
-      type="button"
-      class="icon-btn"
-      title={t('chat.newChat')}
-      aria-label={t('chat.newChat')}
-      onclick={newChat}
-    >
-      <Icon name="compose" size={18} strokeWidth={1.75} />
-    </button>
+    <div class="sidebar-head-actions">
+      <button
+        type="button"
+        class="icon-btn"
+        title="{t('nav.capture')} (⌘K)"
+        aria-label={t('nav.capture')}
+        onclick={() => onCapture?.()}
+      >
+        <Icon name="plus" size={18} strokeWidth={1.75} />
+      </button>
+      <button
+        type="button"
+        class="icon-btn"
+        title={t('chat.newChat')}
+        aria-label={t('chat.newChat')}
+        onclick={newChat}
+      >
+        <Icon name="compose" size={18} strokeWidth={1.75} />
+      </button>
+    </div>
   </div>
 
-  <nav class="workspace-nav" aria-label="Assistant 工作区">
+  <nav class="workspace-nav" aria-label="Kenos System">
     {#each primaryItems as item (item.href)}
       <a
         class="workspace-nav-item"
-        class:active={
-          item.href === '/'
-            ? page.url.pathname === '/'
-            : page.url.pathname.startsWith(item.href)
-        }
+        class:active={isSystemNavActive(page.url.pathname, item.href)}
         href={item.href}
-        aria-current={
-          (item.href === '/'
-            ? page.url.pathname === '/'
-            : page.url.pathname.startsWith(item.href))
-            ? 'page'
-            : undefined
-        }
+        aria-current={isSystemNavActive(page.url.pathname, item.href) ? 'page' : undefined}
       >
         <Icon name={item.icon} size={17} strokeWidth={1.75} />
         <span>{item.label}</span>
       </a>
     {/each}
   </nav>
+
+  {#if !onChatRoute}
+    <div class="recent-spaces" aria-label="Recent spaces">
+      <p class="recent-label">Recent</p>
+      <a class="recent-link" href="/work">Work</a>
+      {#each recentSpaces as space (space.id)}
+        <a class="recent-link" href={space.href} target="_blank" rel="noopener noreferrer">{space.label}</a>
+      {/each}
+    </div>
+  {/if}
 
   {#if onChatRoute && AG.available.length}
     <div class="agent-section" role="list" aria-label="外部代理">
@@ -195,6 +204,11 @@
     padding: var(--space-3, 12px) var(--space-3, 12px) var(--space-2, 8px);
   }
 
+  .sidebar-head-actions {
+    display: inline-flex;
+    gap: 2px;
+  }
+
   .brand-lockup {
     display: inline-flex;
     align-items: center;
@@ -271,6 +285,31 @@
   .workspace-nav-item.active {
     font-weight: 580;
   }
+
+  .recent-spaces {
+    display: grid;
+    gap: 2px;
+    padding: 8px 8px 4px;
+  }
+  .recent-label {
+    margin: 0;
+    padding: 2px 10px 4px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--sidebar-muted);
+  }
+  .recent-link {
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: var(--sidebar-muted);
+    font-size: var(--text-sm);
+    text-decoration: none;
+  }
+  .recent-link:hover {
+    background: var(--sidebar-accent);
+    color: var(--sidebar-foreground);
+  }
+
   .sidebar-context {
     padding: 16px 18px;
   }

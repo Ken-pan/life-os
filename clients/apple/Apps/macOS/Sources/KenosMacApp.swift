@@ -13,15 +13,18 @@ struct KenosMacApp: App {
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("Quick Capture…") {
-                    model.open(.capture)
-                    model.selectedTab = .more
+                    model.openCapture()
                 }
                 .keyboardShortcut("n", modifiers: [.command])
             }
             CommandMenu("Kenos") {
                 Button("Today") { model.open(.today) }
+                Button("Assistant") { model.open(.assistant) }
+                Button("Spaces") { model.selectedTab = .spaces }
                 Button("Work") { model.open(.work) }
                 Button("Inbox") { model.open(.inbox) }
+                Button("Approvals") { model.open(.approvals) }
+                Button("Capture") { model.openCapture() }
                 Button("System") { model.open(.system) }
             }
         }
@@ -35,9 +38,10 @@ struct KenosMacApp: App {
                     model.captureText = menuBar.draft
                     model.submitCapture()
                     menuBar.draft = ""
+                    model.openCapture()
                 }
                 .disabled(menuBar.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                Text("Mock routing · no canonical write")
+                Text("Local draft only · no Space write")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

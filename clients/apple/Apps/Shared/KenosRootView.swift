@@ -29,21 +29,29 @@ struct KenosRootView: View {
     #if os(iOS)
     private var iPhoneTabs: some View {
         TabView(selection: $model.selectedTab) {
-            NavigationStack { TodayView(model: model) }
-                .tabItem { Label("Today", systemImage: "sun.max") }
-                .tag(KenosAppModel.Tab.today)
-            NavigationStack { AssistantView(model: model) }
-                .tabItem { Label("Assistant", systemImage: "bubble.left.and.bubble.right") }
-                .tag(KenosAppModel.Tab.assistant)
-            NavigationStack { WorkHubView(model: model) }
-                .tabItem { Label("Work", systemImage: "briefcase") }
-                .tag(KenosAppModel.Tab.work)
-            NavigationStack { InboxView(model: model) }
-                .tabItem { Label("Inbox", systemImage: "tray") }
-                .tag(KenosAppModel.Tab.inbox)
-            NavigationStack { MoreView(model: model) }
-                .tabItem { Label("More", systemImage: "ellipsis.circle") }
-                .tag(KenosAppModel.Tab.more)
+            NavigationStack {
+                TodayView(model: model)
+            }
+            .tabItem { Label("Today", systemImage: "sun.max") }
+            .tag(KenosAppModel.Tab.today)
+
+            NavigationStack {
+                AssistantView(model: model)
+            }
+            .tabItem { Label("Assistant", systemImage: "bubble.left.and.bubble.right") }
+            .tag(KenosAppModel.Tab.assistant)
+
+            NavigationStack {
+                SpacesHubView(model: model)
+            }
+            .tabItem { Label("Spaces", systemImage: "square.grid.2x2") }
+            .tag(KenosAppModel.Tab.spaces)
+
+            NavigationStack {
+                InboxView(model: model)
+            }
+            .tabItem { Label("Inbox", systemImage: "tray") }
+            .tag(KenosAppModel.Tab.inbox)
         }
         .accessibilityIdentifier("kenos.tabs")
     }
@@ -58,8 +66,13 @@ struct KenosRootView: View {
             }
             .navigationTitle("Kenos")
             .accessibilityIdentifier("kenos.ipad.sidebar")
+            .toolbar {
+                ToolbarItem {
+                    Button("Capture", systemImage: "plus") { model.openCapture() }
+                }
+            }
         } detail: {
-            detailForSelection
+            NavigationStack { detailForSelection }
         }
     }
     #endif
@@ -77,8 +90,14 @@ struct KenosRootView: View {
             }
             .navigationTitle("Kenos")
             .accessibilityIdentifier("kenos.mac.sidebar")
+            .toolbar {
+                ToolbarItem {
+                    Button("Capture") { model.openCapture() }
+                        .keyboardShortcut("k", modifiers: [.command])
+                }
+            }
         } detail: {
-            detailForSelection
+            NavigationStack { detailForSelection }
         }
         .frame(minWidth: 900, minHeight: 600)
     }
@@ -89,9 +108,8 @@ struct KenosRootView: View {
         switch model.selectedTab {
         case .today: TodayView(model: model)
         case .assistant: AssistantView(model: model)
-        case .work: WorkHubView(model: model)
+        case .spaces: SpacesHubView(model: model)
         case .inbox: InboxView(model: model)
-        case .more: MoreView(model: model)
         }
     }
 }
@@ -103,21 +121,21 @@ struct SurfaceChrome: View {
         Group {
             switch model.repository.state {
             case .loading:
-                KenosStatusBanner(title: "Loading", detail: "Fetching domain projections", tone: .info)
+                KenosStatusBanner(title: "Updating", detail: "Refreshing saved content", tone: .info)
             case .stale:
-                KenosStatusBanner(title: "Stale", detail: "Showing cached projections · network unavailable", tone: .warning)
+                KenosStatusBanner(title: "Showing saved content", detail: "Network unavailable · last sync kept", tone: .warning)
             case .unavailable:
-                KenosStatusBanner(title: "Unavailable", detail: "No cache · source unavailable", tone: .danger)
+                KenosStatusBanner(title: "Temporarily unavailable", detail: "Nothing cached for this surface", tone: .danger)
             case .permissionDenied:
-                KenosStatusBanner(title: "Permission denied", detail: "Owner boundary closed this surface", tone: .danger)
+                KenosStatusBanner(title: "Sign-in required", detail: "This surface is closed until you sign in again", tone: .danger)
             case .sessionExpired:
-                KenosStatusBanner(title: "Session expired", detail: "Sign in again · fail closed", tone: .danger)
+                KenosStatusBanner(title: "Session expired", detail: "Sign in again to continue", tone: .danger)
             case .malformed:
-                KenosStatusBanner(title: "Malformed payload", detail: "Fail closed · not shown as empty", tone: .danger)
+                KenosStatusBanner(title: "Couldn’t load this update", detail: "Kept previous safe content when available", tone: .danger)
             case .partial:
-                KenosStatusBanner(title: "Partial", detail: "Some domains unavailable", tone: .warning)
+                KenosStatusBanner(title: "Some content couldn’t update", detail: "Showing what is available", tone: .warning)
             case .empty:
-                KenosEmptyState(title: "Nothing for Today", detail: "Domains returned an authentic empty set.")
+                KenosEmptyState(title: "Nothing for Today", detail: "No open items from connected Spaces.")
             case .ready:
                 EmptyView()
             }
@@ -131,11 +149,9 @@ struct TodayView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: KenosSpacing.md) {
-                Text("Kenos")
-                    .font(.largeTitle.weight(.bold))
-                    .accessibilityIdentifier("kenos.brand")
-                Text("Today")
-                    .font(KenosTypography.title)
+                Text("Now, next, and what needs you.")
+                    .font(KenosTypography.body)
+                    .foregroundStyle(.secondary)
                 SurfaceChrome(model: model)
                 if let cards = model.repository.snapshot.today?.cards {
                     ForEach(cards) { card in
@@ -158,6 +174,16 @@ struct TodayView: View {
             .padding(KenosSpacing.lg)
         }
         .navigationTitle("Today")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Capture", systemImage: "plus") { model.openCapture() }
+            }
+            ToolbarItem(placement: .automatic) {
+                Button("Settings", systemImage: "gearshape") {
+                    model.presentSettings()
+                }
+            }
+        }
         .refreshable { await model.repository.refresh() }
         .accessibilityIdentifier("kenos.today")
     }
@@ -178,7 +204,7 @@ struct AssistantView: View {
                         )
                     }
                     if model.streaming {
-                        KenosStatusBanner(title: "Streaming", detail: "Mock adapter", tone: .info)
+                        KenosStatusBanner(title: "Thinking", detail: "Preparing a reply", tone: .info)
                     }
                 }
                 .padding(KenosSpacing.md)
@@ -198,7 +224,44 @@ struct AssistantView: View {
             .padding(KenosSpacing.md)
         }
         .navigationTitle("Assistant")
+        .toolbar {
+            ToolbarItem {
+                Button("Capture", systemImage: "plus") { model.openCapture() }
+            }
+        }
         .accessibilityIdentifier("kenos.assistant")
+    }
+}
+
+struct SpacesHubView: View {
+    @ObservedObject var model: KenosAppModel
+
+    var body: some View {
+        List {
+            Section("Spaces") {
+                NavigationLink("Work") {
+                    WorkHubView(model: model)
+                }
+                .accessibilityIdentifier("kenos.spaces.work")
+                KenosRow(title: "Training", subtitle: "Opens Fitness Space", meta: "external")
+                KenosRow(title: "Money", subtitle: "Opens Finance Space", meta: "external")
+                KenosRow(title: "Home", subtitle: "Opens Home Space", meta: "external")
+                KenosRow(title: "Library", subtitle: "Documents and references", meta: "coming soon")
+            }
+        }
+        .navigationTitle("Spaces")
+        .navigationDestination(item: $model.spacesDestination) { destination in
+            switch destination {
+            case .work:
+                WorkHubView(model: model)
+            }
+        }
+        .toolbar {
+            ToolbarItem {
+                Button("Capture", systemImage: "plus") { model.openCapture() }
+            }
+        }
+        .accessibilityIdentifier("kenos.spaces")
     }
 }
 
@@ -208,21 +271,100 @@ struct InboxView: View {
     var body: some View {
         List {
             SurfaceChrome(model: model)
-            ForEach(model.repository.snapshot.inbox) { item in
-                Button {
-                    model.open(urlString: item.deepLink)
-                } label: {
-                    KenosRow(
-                        title: item.title,
-                        subtitle: item.safeSummary,
-                        meta: "\(item.ownerDomain.rawValue) · \(item.source) · \(item.freshness)"
-                    )
+            Section("Queues") {
+                Button("Approvals") { model.inboxDestination = .approvals }
+                Button("Activity") { model.inboxDestination = .activity }
+                Button("Quick Capture") { model.inboxDestination = .capture }
+                Button("Library links") { model.inboxDestination = .library }
+                Button("System status") { model.inboxDestination = .system }
+                Button("Settings") { model.inboxDestination = .settings }
+            }
+            Section("Captured") {
+                ForEach(model.repository.snapshot.inbox) { item in
+                    Button {
+                        model.open(urlString: item.deepLink)
+                    } label: {
+                        KenosRow(
+                            title: item.title,
+                            subtitle: item.safeSummary,
+                            meta: "\(item.ownerDomain.rawValue) · \(item.source) · \(item.freshness)"
+                        )
+                    }
+                    .accessibilityIdentifier("kenos.inbox.item.\(item.id.uuidString)")
                 }
-                .accessibilityIdentifier("kenos.inbox.item.\(item.id.uuidString)")
+            }
+            if !model.watchCaptures.isEmpty {
+                Section("Watch captures") {
+                    ForEach(model.watchCaptures) { draft in
+                        Button {
+                            model.reviewWatchCapture(draft)
+                        } label: {
+                            KenosRow(
+                                title: "From Watch",
+                                subtitle: KenosGlanceMapper.captureGlance(from: draft).safePreview,
+                                meta: draft.queueStatus
+                            )
+                        }
+                        .accessibilityIdentifier("kenos.capture.watch.\(draft.id.uuidString)")
+                    }
+                }
+            }
+            if !model.notificationInbox.isEmpty {
+                Section("Notifications") {
+                    ForEach(model.notificationInbox) { note in
+                        Button {
+                            model.openNotification(note)
+                        } label: {
+                            KenosRow(
+                                title: note.safeTitle,
+                                subtitle: KenosNotificationSafety.lockScreenBody(for: note),
+                                meta: note.type.rawValue
+                            )
+                        }
+                        .accessibilityIdentifier("kenos.notification.\(note.id.uuidString)")
+                    }
+                }
             }
         }
         .navigationTitle("Inbox")
+        .navigationDestination(item: $model.inboxDestination) { destination in
+            inboxDestinationView(destination)
+        }
+        .toolbar {
+            ToolbarItem {
+                Button("Capture", systemImage: "plus") { model.openCapture() }
+            }
+        }
         .accessibilityIdentifier("kenos.inbox")
+    }
+
+    @ViewBuilder
+    private func inboxDestinationView(_ destination: KenosAppModel.InboxDestination) -> some View {
+        switch destination {
+        case .approvals: ApprovalsView(model: model)
+        case .activity: ActivityView(model: model)
+        case .capture: CaptureView(model: model)
+        case .system: SystemStatusView(model: model)
+        case .library:
+            List {
+                if let library = model.repository.snapshot.work?.library {
+                    ForEach(Array(library.enumerated()), id: \.offset) { _, ref in
+                        KenosRow(title: ref.safeTitle ?? "Document", subtitle: ref.libraryRef.id.uuidString)
+                    }
+                }
+            }
+            .navigationTitle("Library")
+        case .settings:
+            Form {
+                Text("Sign-in uses the local secure store on this device.")
+                Text("Approvals actions: \(model.approvalsActionsEnabled ? "ON" : "OFF")")
+                Button("Sign out") {
+                    Task { await model.logout() }
+                }
+                .accessibilityIdentifier("kenos.settings.logout")
+            }
+            .navigationTitle("Settings")
+        }
     }
 }
 
@@ -232,8 +374,8 @@ struct ApprovalsView: View {
     var body: some View {
         List {
             KenosStatusBanner(
-                title: "Approvals are read-only",
-                detail: "Production Executor off · buttons disabled",
+                title: "Approvals not fully enabled",
+                detail: "You can review requests; write actions stay off until enabled.",
                 tone: .warning
             )
             ForEach(model.repository.snapshot.approvals, id: \.id) { approval in
@@ -266,7 +408,7 @@ struct ActivityView: View {
             ForEach(model.repository.snapshot.activity) { item in
                 KenosRow(
                     title: item.safeSummary,
-                    subtitle: "\(item.result) · undo=\(item.undoAvailable ? "metadata" : "none")",
+                    subtitle: "\(item.result) · undo=\(item.undoAvailable ? "available" : "none")",
                     meta: item.correlationId.uuidString
                 )
                 .accessibilityIdentifier("kenos.activity.item.\(item.id.uuidString)")
@@ -282,6 +424,12 @@ struct WorkHubView: View {
 
     var body: some View {
         List {
+            Section {
+                Button("‹ All Spaces") {
+                    model.spacesDestination = nil
+                    model.selectedTab = .spaces
+                }
+            }
             SurfaceChrome(model: model)
             if case let .workProject(id) = model.route,
                let project = model.repository.snapshot.work?.projects.first(where: { $0.id == id }) {
@@ -375,7 +523,7 @@ struct CaptureView: View {
             if let draft = model.lastCapture {
                 Section("Review") {
                     KenosRow(
-                        title: "Local CaptureEnvelope draft",
+                        title: "Local draft",
                         subtitle: draft.text,
                         meta: "\(draft.queueStatus) · \(draft.correlationId.uuidString)"
                     )
@@ -398,7 +546,7 @@ struct SystemStatusView: View {
         List {
             KenosRow(
                 title: "Local services",
-                subtitle: "Mock API · File projection cache · Offline queue",
+                subtitle: "API · projection cache · offline queue",
                 meta: model.repository.snapshot.meta.lastSuccessfulSync
             )
             KenosRow(
@@ -423,78 +571,13 @@ struct SystemStatusView: View {
     }
 }
 
-struct MoreView: View {
-    @ObservedObject var model: KenosAppModel
-
-    var body: some View {
-        List {
-            NavigationLink("Approvals", value: KenosAppModel.MoreDestination.approvals)
-            NavigationLink("Activity", value: KenosAppModel.MoreDestination.activity)
-            NavigationLink("Library links", value: KenosAppModel.MoreDestination.library)
-            NavigationLink("Quick Capture", value: KenosAppModel.MoreDestination.capture)
-            NavigationLink("System status", value: KenosAppModel.MoreDestination.system)
-            NavigationLink("Settings", value: KenosAppModel.MoreDestination.settings)
-            if !model.watchCaptures.isEmpty {
-                Section("Watch captures") {
-                    ForEach(model.watchCaptures) { draft in
-                        Button {
-                            model.reviewWatchCapture(draft)
-                        } label: {
-                            KenosRow(
-                                title: "From Watch",
-                                subtitle: KenosGlanceMapper.captureGlance(from: draft).safePreview,
-                                meta: draft.queueStatus
-                            )
-                        }
-                        .accessibilityIdentifier("kenos.capture.watch.\(draft.id.uuidString)")
-                    }
-                }
-            }
-            if !model.notificationInbox.isEmpty {
-                Section("Notifications (mock)") {
-                    ForEach(model.notificationInbox) { note in
-                        Button {
-                            model.openNotification(note)
-                        } label: {
-                            KenosRow(
-                                title: note.safeTitle,
-                                subtitle: KenosNotificationSafety.lockScreenBody(for: note),
-                                meta: note.type.rawValue
-                            )
-                        }
-                        .accessibilityIdentifier("kenos.notification.\(note.id.uuidString)")
-                    }
-                }
-            }
-        }
-        .navigationTitle("More")
-        .accessibilityIdentifier("kenos.more")
-        .navigationDestination(item: $model.moreDestination) { destination in
-            switch destination {
-            case .approvals: ApprovalsView(model: model)
-            case .activity: ActivityView(model: model)
-            case .capture: CaptureView(model: model)
-            case .system: SystemStatusView(model: model)
-            case .library:
-                List {
-                    if let library = model.repository.snapshot.work?.library {
-                        ForEach(Array(library.enumerated()), id: \.offset) { _, ref in
-                            KenosRow(title: ref.safeTitle ?? "Document", subtitle: ref.libraryRef.id.uuidString)
-                        }
-                    }
-                }
-                .navigationTitle("Library")
-            case .settings:
-                Form {
-                    Text("Mock auth · InMemorySecureStore only (SecItem Keychain is a distribution gate)")
-                    Text("Approvals actions: \(model.approvalsActionsEnabled ? "ON" : "OFF")")
-                    Button("Simulate logout") {
-                        Task { await model.logout() }
-                    }
-                    .accessibilityIdentifier("kenos.settings.logout")
-                }
-                .navigationTitle("Settings")
-            }
+extension KenosAppModel {
+    func presentSettings() {
+        inboxDestination = nil
+        selectedTab = .inbox
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            inboxDestination = .settings
         }
     }
 }

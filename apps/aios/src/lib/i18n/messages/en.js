@@ -15,9 +15,18 @@ export default {
     mainAria: 'Main navigation',
     today: 'Today',
     assistant: 'Assistant',
+    spaces: 'Spaces',
     inbox: 'Inbox',
     approvals: 'Approvals',
     activity: 'Activity',
+    capture: 'Quick Capture',
+    captureIntro:
+      'Note something to route later. Nothing is written to a Space automatically.',
+    capturePlaceholder: 'What do you want to capture?',
+    captureToInbox: 'Open Inbox',
+    captureToAssistant: 'Send to Assistant',
+    inboxCaptured: 'Captured',
+    inboxNeedsReview: 'Needs review',
     chat: 'Chat',
     history: 'History',
     settings: 'Settings',
@@ -57,7 +66,8 @@ export default {
     downloadImage: 'Download image',
     viewImage: 'View full size',
     imgLoading: 'Waking the image model…',
-    imgLoadingSlow: 'Loading the image model — first run or high-quality tier takes a bit…',
+    imgLoadingSlow:
+      'Loading the image model — first run or high-quality tier takes a bit…',
     imgGenerating: 'Painting — step {step}/{steps}',
     imgSaving: 'Saving…',
     removeImage: 'Remove image',
@@ -189,47 +199,60 @@ export default {
     gatewayCheck: 'Check',
     gatewayUrl: 'Gateway URL',
     gatewayApply: 'Apply',
-    gatewayUrlNote: 'Local AI gateway URL (this device only, not synced). Default 127.0.0.1:18888 — only change for a different port/machine.',
-    gatewayUrlCloudNote: 'Enter your publicly-exposed local AI gateway URL (HTTPS) so the cloud version connects directly to your local AI for full functionality. Stored in this browser only, not synced.',
+    gatewayUrlNote:
+      'Local AI gateway URL (this device only, not synced). Default 127.0.0.1:18888 — only change for a different port/machine.',
+    gatewayUrlCloudNote:
+      'Enter your publicly-exposed local AI gateway URL (HTTPS) so the cloud version connects directly to your local AI for full functionality. Stored in this browser only, not synced.',
     gatewayNote:
       'All inference runs on the local LocalAI gateway (127.0.0.1:18888); models load on demand.',
     defaultModel: 'Default model',
     ttsVoice: 'Read-aloud voice',
     ttsRate: 'Read-aloud speed',
     permissions: 'Permissions',
-    permissionsDesc: 'AIOS needs these system permissions to control your Mac, see the screen, and hand tasks to other apps. Click Grant for the native prompt, or Open Settings to jump to the pane; the dot turns green automatically once granted.',
+    permissionsDesc:
+      'AIOS needs these system permissions to control your Mac, see the screen, and hand tasks to other apps. Click Grant for the native prompt, or Open Settings to jump to the pane; the dot turns green automatically once granted.',
     intelligence: 'Intelligence',
     tools: 'Tool use',
-    toolsDesc: 'Calculator, code interpreter, time, memory read/write, local image generation (all local)',
+    toolsDesc:
+      'Calculator, code interpreter, time, memory read/write, local image generation (all local)',
     webAccess: 'Web reading',
     webAccessDesc:
       'Allow the fetch_url tool to read webpages, falling back to a public CORS proxy (these requests leave this device)',
     memory: 'Long-term memory',
-    memoryDesc: 'Semantically recall relevant memories into context (local embeddings)',
+    memoryDesc:
+      'Semantically recall relevant memories into context (local embeddings)',
     temperature: 'Temperature',
     temperatureDesc: 'Low = precise and stable, high = divergent and creative',
     customPrompt: 'Custom instructions',
     customPromptHint: 'Tell AI.OS how to respond — tone, format, who you are…',
     proactive: 'Proactive',
-    proactiveDesc: 'Let AI.OS reach out instead of waiting to be asked. Fires a native notification at your set time while the app is open; if it was closed then, it catches up the first time you open it that day.',
+    proactiveDesc:
+      'Let AI.OS reach out instead of waiting to be asked. Fires a native notification at your set time while the app is open; if it was closed then, it catches up the first time you open it that day.',
     dailyBrief: 'Morning brief',
-    dailyBriefDesc: "One a day: today's tasks, this month's cash flow, whether you should train",
+    dailyBriefDesc:
+      "One a day: today's tasks, this month's cash flow, whether you should train",
     briefTime: 'Delivery time',
-    briefTimeDesc: 'Fires once after this time, the first time conditions are met that day (requires sign-in)',
+    briefTimeDesc:
+      'Fires once after this time, the first time conditions are met that day (requires sign-in)',
     briefPreview: 'Preview one now',
     briefPreviewing: 'Generating…',
-    briefPreviewSent: 'Sent a notification — check the top-right of your screen.',
-    briefPreviewNoData: 'Nothing to report yet (not signed in, or no content today).',
+    briefPreviewSent:
+      'Sent a notification — check the top-right of your screen.',
+    briefPreviewNoData:
+      'Nothing to report yet (not signed in, or no content today).',
     briefPreviewUnavailable: 'Notifications unavailable here (Mac app only).',
     mcp: 'MCP tools',
-    mcpDesc: 'Connect external MCP servers (HTTP): add a URL and its tools show up in chat automatically — one hookup, a batch of new capabilities. Config stays on this device, not synced.',
+    mcpDesc:
+      'Connect external MCP servers (HTTP): add a URL and its tools show up in chat automatically — one hookup, a batch of new capabilities. Config stays on this device, not synced.',
     mcpLifeOsHint:
       'On sign-in, Home / Planner / Finance / Fitness MCP are added automatically (current JWT). Use the button to refresh tools. All four /api/mcp endpoints are live.',
     mcpFleetAdd: 'Refresh Life OS MCP fleet',
     mcpFleetAdding: 'Adding Life OS MCP…',
     mcpFleetAdded: 'Added {names}; {n} tools total. Use Test per server.',
-    mcpFleetUpToDate: 'All four Life OS servers already listed; refreshed token. {n} tools.',
-    mcpNeedLogin: 'Sign in to Life OS cloud sync first — that session becomes the MCP Bearer token.',
+    mcpFleetUpToDate:
+      'All four Life OS servers already listed; refreshed token. {n} tools.',
+    mcpNeedLogin:
+      'Sign in to Life OS cloud sync first — that session becomes the MCP Bearer token.',
     mcpToolCount: '{n} tools',
     mcpName: 'Name',
     mcpNamePlaceholder: 'Name (e.g. GitHub)',
@@ -251,7 +274,8 @@ export default {
     memoriesEmpty: 'No memories yet. Say "remember…" in a chat to save one.',
     location: 'Location',
     locationHint: 'e.g. Seattle, USA (leave blank to skip)',
-    locationDesc: 'Always injected — used for weather / local / timezone questions. Update when you move; syncs with your account.',
+    locationDesc:
+      'Always injected — used for weather / local / timezone questions. Update when you move; syncs with your account.',
     profile: 'User profile',
     profileHint: 'Stable facts about you, one per line…',
     profileDesc:
@@ -266,7 +290,8 @@ export default {
     themeAuto: 'System',
     language: 'Language',
     cloud: 'Cloud sync',
-    cloudDesc: 'Sign in with your Life OS account to sync chats and long-term memories across devices. Without signing in, everything stays on this device.',
+    cloudDesc:
+      'Sign in with your Life OS account to sync chats and long-term memories across devices. Without signing in, everything stays on this device.',
     cloudEmail: 'Email',
     cloudPassword: 'Password',
     cloudSignIn: 'Sign in',
@@ -277,7 +302,8 @@ export default {
     cloudSyncing: 'Syncing…',
     cloudLastSync: 'Last sync',
     cloudNever: 'Never synced',
-    cloudPrivacyNote: 'Text (chats, memories) is uploaded to your Supabase project; images and file attachments stay on this device.',
+    cloudPrivacyNote:
+      'Text (chats, memories) is uploaded to your Supabase project; images and file attachments stay on this device.',
     data: 'Data',
     clearChats: 'Delete all chats',
     clearChatsConfirm: 'Delete all conversations? This cannot be undone.',

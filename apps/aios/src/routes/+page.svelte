@@ -21,17 +21,6 @@
     day: 'numeric',
     weekday: 'long',
   }).format(new Date())
-  const sourceStatusLabel = {
-    loading: '读取中',
-    ready: '已连接',
-    empty: '为空',
-    partial: '部分可用',
-    stale: '陈旧',
-    offline: '离线',
-    unavailable: '不可用',
-    permission_denied: '需登录',
-    unsupported: '缺少来源',
-  }
   const workKindLabel = {
     active_project: '进行中项目',
     deliverable_due_soon: '即将到期交付',
@@ -56,9 +45,7 @@
       <p class="today-intro">状态、下一步和需要你决定的事。</p>
     </div>
     <div class="today-actions">
-      {#if CONTROL.demo}
-        <span class="beta-label">本地演示 · 不执行动作</span>
-      {/if}
+      <a href="/inbox#capture" class="quiet-button">Capture</a>
       <button
         type="button"
         class="quiet-button"
@@ -74,12 +61,14 @@
 
   {#if CONTROL.error}
     <p class="status-line status-line--error" role="status">
-      {CONTROL.error}。没有执行任何写入。
+      部分内容暂时无法更新。{CONTROL.error}
     </p>
   {:else if CONTROL.loading}
-    <p class="status-line" aria-live="polite">正在汇总各 Space 的只读状态…</p>
+    <p class="status-line" aria-live="polite">正在汇总各 Space 状态…</p>
   {:else if today.asOf}
-    <p class="status-line">读模型更新时间：{today.asOf}</p>
+    <p class="status-line">
+      上次更新于 {new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(today.asOf))}
+    </p>
   {/if}
 
   <ReadSourceState
@@ -130,9 +119,13 @@
     <section aria-labelledby="today-decisions-title">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">控制面</p>
+          <p class="section-kicker">需要你</p>
           <h2 id="today-decisions-title">等待处理</h2>
         </div>
+        <a href="/inbox" class="text-action">
+          打开 Inbox
+          <Icon name="chevron-right" size={15} strokeWidth={1.75} />
+        </a>
       </div>
       <div class="queue-list">
         <a href="/inbox" class="queue-row">
@@ -140,26 +133,10 @@
           <strong aria-label={queue.inboxAvailable ? `${queue.inboxOpen} 条待分类` : 'Inbox 数量暂不可用'}>
             {formatQueueCount(queue.inboxOpen)}
           </strong>
-          <small>Capture 与待分类输入 · {sourceStatusLabel[CONTROL.sources.inbox.status] ?? '未知'}</small>
-          <Icon name="chevron-right" size={16} strokeWidth={1.75} />
-        </a>
-        <a href="/approvals" class="queue-row">
-          <span>Approvals</span>
-          <strong aria-label={queue.approvalsAvailable ? `${queue.approvalsOpen} 条待批准` : 'Approval 数量暂不可用'}>
-            {formatQueueCount(queue.approvalsOpen)}
-          </strong>
-          <small>需要确认范围与影响 · {sourceStatusLabel[CONTROL.sources.approvals.status] ?? '未知'}</small>
-          <Icon name="chevron-right" size={16} strokeWidth={1.75} />
-        </a>
-        <a href="/activity" class="queue-row">
-          <span>Activity</span>
-          <strong
-            class:count-alert={queue.activityAvailable && queue.activityFailures > 0}
-            aria-label={queue.activityAvailable ? `${queue.activityFailures} 条失败动作` : 'Activity 数量暂不可用'}
-          >
-            {formatQueueCount(queue.activityFailures)}
-          </strong>
-          <small>失败或需要恢复的动作 · {sourceStatusLabel[CONTROL.sources.activity.status] ?? '未知'}</small>
+          <small>
+            待归位 {formatQueueCount(queue.inboxOpen)} · 待批准 {formatQueueCount(queue.approvalsOpen)}
+            · 需关注 {formatQueueCount(queue.activityFailures)}
+          </small>
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>
       </div>
@@ -168,34 +145,29 @@
     <section aria-labelledby="today-work-title">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">Work</p>
-          <h2 id="today-work-title">工作投影</h2>
+          <p class="section-kicker">Spaces</p>
+          <h2 id="today-work-title">Work</h2>
         </div>
-        <a href="/work" class="text-action">
-          打开 Work
+        <a href="/spaces" class="text-action">
+          全部 Spaces
           <Icon name="chevron-right" size={15} strokeWidth={1.75} />
         </a>
       </div>
       {#if WORK.status === 'unsupported'}
-        <p class="empty-copy">Work foundation 默认 Off。本地可用 <code>?kenosDemo=1</code> 预览投影。</p>
+        <p class="empty-copy">Work 投影尚未开启。可从 Spaces 进入，或稍后再试。</p>
       {:else if workCards.length}
         <div class="signal-list">
           {#each workCards as card (card.id)}
             <a href={card.deepLink || '/work'} class="signal-row">
               <span class="signal-label">{workKindLabel[card.kind] || card.kind}</span>
               <strong>{card.title}</strong>
-              <span>
-                {card.summary}
-                · owner={card.ownerDomain}
-                · {card.freshness}
-                · {card.dataClassification}
-              </span>
+              <span>{card.summary}</span>
               <Icon name="chevron-right" size={14} strokeWidth={1.75} />
             </a>
           {/each}
         </div>
       {:else}
-        <p class="empty-copy">暂无 Work 投影卡片。</p>
+        <p class="empty-copy">暂无 Work 卡片。</p>
       {/if}
     </section>
 
@@ -226,7 +198,7 @@
           <p class="section-kicker">可追溯</p>
           <h2 id="today-activity-title">系统已处理</h2>
         </div>
-        <a href="/activity" class="text-action">查看全部</a>
+        <a href="/inbox#activity" class="text-action">查看全部</a>
       </div>
       {#if recentActivity.length}
         <div class="activity-list">
@@ -244,18 +216,23 @@
           {/each}
         </div>
       {:else}
-        <p class="empty-copy">这个客户端还没有可显示的 Activity。</p>
+        <p class="empty-copy">最近没有需要展示的系统处理记录。</p>
       {/if}
     </section>
 
     <section aria-labelledby="today-spaces-title">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">深入工作</p>
+          <p class="section-kicker">进入领域</p>
           <h2 id="today-spaces-title">Spaces</h2>
         </div>
+        <a href="/spaces" class="text-action">全部</a>
       </div>
       <nav class="space-list" aria-label="Kenos Spaces">
+        <a href="/work">
+          <strong>Work</strong>
+          <span>项目与交付</span>
+        </a>
         {#each KENOS_SPACES as space (space.id)}
           <a href={space.href} target="_blank" rel="noopener noreferrer">
             <strong>{space.label}</strong>
@@ -263,28 +240,6 @@
           </a>
         {/each}
       </nav>
-    </section>
-
-    <section class="shadow-section" aria-labelledby="today-shadow-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">本地诊断</p>
-          <h2 id="today-shadow-title">Read-model parity</h2>
-        </div>
-      </div>
-      <p>
-        Blocking {CONTROL.shadowSummary.blocking} · Warning {CONTROL.shadowSummary.warning} · Expected unsupported {CONTROL.shadowSummary.expected}
-      </p>
-      {#if CONTROL.shadowMismatches.length}
-        <details>
-          <summary>查看脱敏 mismatch</summary>
-          <ul>
-            {#each CONTROL.shadowMismatches as mismatch}
-              <li>{mismatch.category} · {mismatch.redactedDiagnosticSummary}</li>
-            {/each}
-          </ul>
-        </details>
-      {/if}
     </section>
   </main>
 </div>

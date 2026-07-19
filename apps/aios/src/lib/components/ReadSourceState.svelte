@@ -3,16 +3,16 @@
   let { state, onRetry = undefined } = $props()
 
   const label = $derived({
-    loading: '读取中',
-    ready: '已连接',
-    empty: '来源为空',
-    partial: '部分可用',
-    stale: '数据陈旧',
-    offline: '设备离线',
-    unavailable: '来源不可用',
-    permission_denied: '权限不足',
-    unsupported: '尚无 canonical 来源',
-  }[state?.status] ?? '来源状态未知')
+    loading: '正在更新',
+    ready: '已更新',
+    empty: '暂无内容',
+    partial: '部分内容暂时无法更新',
+    stale: '显示的是已保存内容',
+    offline: '当前离线，正在显示已保存内容',
+    unavailable: '暂时无法更新',
+    permission_denied: '需要重新登录后才能更新',
+    unsupported: '此来源尚未接入',
+  }[state?.status] ?? '状态未知')
 </script>
 
 <div
@@ -22,23 +22,15 @@
 >
   <div>
     <span class="read-source-state__label">{label}</span>
-    <span class="read-source-state__source">{state?.source ?? 'unknown source'}</span>
     {#if state?.lastUpdated}
       <time datetime={state.lastUpdated}>
-        {new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(state.lastUpdated))}
+        上次更新于 {new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(state.lastUpdated))}
       </time>
     {/if}
   </div>
   {#if state?.message}<p>{state.message}</p>{/if}
-  {#if state?.malformedCount || state?.duplicateCount}
-    <p>
-      {#if state.malformedCount}{state.malformedCount} 项格式降级{/if}
-      {#if state.malformedCount && state.duplicateCount} · {/if}
-      {#if state.duplicateCount}{state.duplicateCount} 项重复引用已合并{/if}
-    </p>
-  {/if}
   {#if state?.retryable && onRetry}
-    <button type="button" onclick={onRetry}>安全重试读取</button>
+    <button type="button" onclick={onRetry}>重试</button>
   {/if}
 </div>
 
@@ -77,7 +69,6 @@
     color: var(--t1);
     font-weight: 650;
   }
-  .read-source-state__source,
   .read-source-state time {
     font-variant-numeric: tabular-nums;
   }

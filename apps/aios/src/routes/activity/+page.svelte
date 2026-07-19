@@ -27,23 +27,26 @@
 <div class="control-page">
   <header class="control-page-header">
     <div>
-      <p class="control-page-kicker">Audit and recovery</p>
+      <p class="control-page-kicker">Inbox</p>
       <h1>Activity</h1>
       <p class="control-page-intro">
-        系统做过什么、为什么失败、数据是否安全，以及下一步如何恢复。
+        系统做过什么、哪里失败了，以及下一步如何恢复。
       </p>
     </div>
-    {#if CONTROL.demo}<span class="control-badge">本地演示</span>{/if}
   </header>
+
+  <nav class="inbox-subnav" aria-label="Inbox sections">
+    <a href="/inbox">Captured</a>
+    <a href="/approvals">Approvals</a>
+    <a href="/activity" aria-current="page">Activity</a>
+  </nav>
 
   <ReadSourceState
     state={CONTROL.sources.activity}
     onRetry={() => refreshControlCenter({ force: true })}
   />
 
-  <p class="control-notice">
-    当前真实来源是现役 life_events 兼容读模型；它不是 Phase 1 review-only kenos_plan_activity。这里只保存安全摘要和引用，不复制 payload。
-  </p>
+  <p class="control-notice">只显示安全摘要，不会复制敏感内容。</p>
 
   <section class="control-page-section" aria-labelledby="activity-recent-title">
     <h2

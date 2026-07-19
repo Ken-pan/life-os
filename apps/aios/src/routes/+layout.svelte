@@ -11,6 +11,7 @@
   import { bindVisibilitySync } from '@life-os/sync'
   import ChatSidebar from '$lib/components/ChatSidebar.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
+  import CaptureQuick from '$lib/components/CaptureQuick.svelte'
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
@@ -34,11 +35,24 @@
   setContext(ICON_REGISTRY_CONTEXT_KEY, ICONS)
 
   const isAssistant = $derived(page.url.pathname === '/assistant')
-  const knownRoutes = new Set(['/', '/assistant', '/chat', '/inbox', '/approvals', '/activity', '/work', '/history', '/settings'])
+  const knownRoutes = new Set([
+    '/',
+    '/assistant',
+    '/chat',
+    '/spaces',
+    '/inbox',
+    '/approvals',
+    '/activity',
+    '/work',
+    '/history',
+    '/settings',
+  ])
   const hasCustomHeader = $derived(
-    ['/', '/inbox', '/approvals', '/activity', '/work'].includes(page.url.pathname) ||
+    ['/', '/spaces', '/inbox', '/approvals', '/activity', '/work'].includes(page.url.pathname) ||
       !knownRoutes.has(page.url.pathname),
   )
+
+  let captureOpen = $state(false)
 
   const pageTitle = $derived.by(() => {
     const p = page.url.pathname
@@ -47,11 +61,24 @@
     if (p === '/inbox') return t('nav.inbox')
     if (p === '/approvals') return t('nav.approvals')
     if (p === '/activity') return t('nav.activity')
+    if (p === '/spaces') return t('nav.spaces')
     if (p === '/work') return 'Work'
     if (p === '/') return t('nav.today')
     if (p === '/assistant' || p === '/chat') return t('chat.title')
     return '页面未找到'
   })
+
+  function onGlobalKeydown(event) {
+    if (gated) return
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      const tag = /** @type {HTMLElement | null} */ (event.target)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || /** @type {HTMLElement} */ (event.target)?.isContentEditable) {
+        return
+      }
+      event.preventDefault()
+      captureOpen = true
+    }
+  }
 
   onMount(() => {
     applyTheme()
@@ -102,9 +129,12 @@
   <title>{pageTitle} · {t('app.name')}</title>
 </svelte:head>
 
+<svelte:window onkeydown={onGlobalKeydown} />
+
 {#if gated}
   <CloudGate />
 {:else}
+  <CaptureQuick bind:open={captureOpen} />
   <LifeOsAppShell
     navigationKey={page.url.pathname}
     focusOnNavigate="main"
@@ -114,7 +144,7 @@
   >
     {#snippet navigation(projection)}
       {#if projection === 'desktop'}
-        <ChatSidebar />
+        <ChatSidebar onCapture={() => (captureOpen = true)} />
       {:else}
         <BottomNav />
       {/if}

@@ -19,14 +19,19 @@
 <div class="control-page">
   <header class="control-page-header">
     <div>
-      <p class="control-page-kicker">Policy gate</p>
+      <p class="control-page-kicker">Inbox</p>
       <h1>Approvals</h1>
       <p class="control-page-intro">
-        先看风险、范围和影响，再确认。批准只授权当前请求，不给 Assistant 永久写权限。
+        先看风险、范围和影响，再确认。批准只针对当前请求。
       </p>
     </div>
-    {#if CONTROL.demo}<span class="control-badge">本地演练 · 无写入</span>{/if}
   </header>
+
+  <nav class="inbox-subnav" aria-label="Inbox sections">
+    <a href="/inbox">Captured</a>
+    <a href="/approvals" aria-current="page">Approvals</a>
+    <a href="/activity">Activity</a>
+  </nav>
 
   <ReadSourceState
     state={CONTROL.sources.approvals}
@@ -34,7 +39,7 @@
   />
 
   <p class="control-notice">
-    Canonical Approval 由 Platform / System policy layer 拥有，此页只读。批准不代表 Action 已执行；Executor 保持关闭，仅在显式本地演练模式显示无写入按钮。
+    审批操作尚未全面启用时，这里只展示待确认事项，不会悄悄执行写入。
   </p>
 
   <section class="control-page-section" aria-labelledby="approvals-pending-title">

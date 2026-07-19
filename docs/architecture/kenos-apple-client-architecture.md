@@ -13,11 +13,11 @@ review_cadence: before-each-native-phase
 
 用户在 Apple 生态只安装一个产品名为 **Kenos** 的 App:
 
-| 平台 | 产品角色 | 不是什么 |
-| --- | --- | --- |
+| 平台          | 产品角色                                 | 不是什么                |
+| ------------- | ---------------------------------------- | ----------------------- |
 | iPhone / iPad | 随身管家、捕获、提醒、现实感知、移动执行 | 全部 Web 管理页的缩小版 |
-| macOS | 深度工作中心、本地 AI 控制台、全局工作台 | 只把网页装进窗口的壳 |
-| watchOS | 即时状态、快速输入、提醒、训练与微操作 | 缩小版 Kenos 主应用 |
+| macOS         | 深度工作中心、本地 AI 控制台、全局工作台 | 只把网页装进窗口的壳    |
+| watchOS       | 即时状态、快速输入、提醒、训练与微操作   | 缩小版 Kenos 主应用     |
 
 Assistant、Work、Plan、Library、Health、Training、Money、Home、Music、System 是同一 App 内的 Spaces，不是十个要单独安装的产品。
 
@@ -25,14 +25,14 @@ Assistant、Work、Plan、Library、Health、Training、Money、Home、Music、S
 
 这些资产在统一客户端可替代前不能删除:
 
-| 现有资产 | 位置 | 当前价值 | 目标处理 |
-| --- | --- | --- | --- |
-| AIOS Tauri | `apps/aios/src-tauri` | 本地 AI 与现有 Mac 壳 | 提炼 Runtime/Assistant 能力，逐步迁到 Kenos Mac |
-| KnowledgeOS Tauri | `apps/knowledge/src-tauri` | Vault/RAG/本地文件 | 先保持工作，抽 Library API 和文件契约 |
-| HealthOS Tauri | `apps/health/src-tauri` | Mac Health/Focus | 保持到 Kenos Mac Health/System 能替代 |
-| Health companion | `apps/health/companion/HealthOSCompanion.xcodeproj` | iOS/watchOS HealthKit 与 companion 原型 | 作为 Apple Foundation 取证来源，不直接 wholesale merge |
-| Music Capacitor iOS | `apps/music/ios/App/App.xcodeproj` | Music iOS 壳和 now-playing 集成 | Music 控制能力迁移后再退役 |
-| PaperOS | 独立仓库 `/Users/kenpan/「Projects」/paperos` | 专用设备体验 | 保持独立设备仓库，通过 contracts/API 接入 |
+| 现有资产            | 位置                                                | 当前价值                                | 目标处理                                               |
+| ------------------- | --------------------------------------------------- | --------------------------------------- | ------------------------------------------------------ |
+| AIOS Tauri          | `apps/aios/src-tauri`                               | 本地 AI 与现有 Mac 壳                   | 提炼 Runtime/Assistant 能力，逐步迁到 Kenos Mac        |
+| KnowledgeOS Tauri   | `apps/knowledge/src-tauri`                          | Vault/RAG/本地文件                      | 先保持工作，抽 Library API 和文件契约                  |
+| HealthOS Tauri      | `apps/health/src-tauri`                             | Mac Health/Focus                        | 保持到 Kenos Mac Health/System 能替代                  |
+| Health companion    | `apps/health/companion/HealthOSCompanion.xcodeproj` | iOS/watchOS HealthKit 与 companion 原型 | 作为 Apple Foundation 取证来源，不直接 wholesale merge |
+| Music Capacitor iOS | `apps/music/ios/App/App.xcodeproj`                  | Music iOS 壳和 now-playing 集成         | Music 控制能力迁移后再退役                             |
+| PaperOS             | 独立仓库 `/Users/kenpan/「Projects」/paperos`       | 专用设备体验                            | 保持独立设备仓库，通过 contracts/API 接入              |
 
 统一不是立即删除旧壳。每个旧壳都必须在 Migration Ledger 中证明功能、数据、deep link、权限和恢复入口被替代后才退役。
 
@@ -92,11 +92,15 @@ KenosModels <- KenosCore <- KenosAPI/KenosSync/KenosSecurity
 
 ### 4.1 iPhone / iPad
 
-首层导航:
+首层导航（Nav IA 第一刀，Web AIOS 同构）:
 
 ```text
-Today · Assistant · Capture · Spaces
+Today · Assistant · Spaces · Inbox
 ```
+
+- **Work** 归 Spaces（非顶层 Tab）；旧 deep link `kenos://work*` 映射到 Spaces → Work。
+- **Approvals / Activity / Capture 目的地** 归 Inbox；Capture **不是** Tab，而是全局动作（Toolbar / ⌘N / Command Menu）。
+- 本刀边界：只改壳层入口语义；不做 FocusContext / Focus Session、Watch 导航、完整 Space 局部 IA、生产 cutover。
 
 #### Today
 
@@ -114,13 +118,17 @@ Today · Assistant · Capture · Spaces
 
 支持文本、语音、图片、文件和当前分享上下文。所有写入走 Action Request；回答可展开来源、置信度和安全域。
 
-#### Capture
-
-统一接收相机、文档扫描、照片、录音、文件、网页分享、截图、收据、房间扫描、物品和状态 check-in。先本地安全持久化，再分类/路由。
-
 #### Spaces
 
 进入 Work、Plan、Library、Health、Training、Money、Home、Music 的专业轻量界面。复杂低频操作可打开对应 Web Space。
+
+#### Inbox
+
+收纳尚未归位或等待处理的事：Capture 目的地、Needs review、Approvals、Activity；Settings / System 可挂在 Inbox 或 Today 工具栏。
+
+#### Capture（全局动作，非首层 Tab）
+
+统一接收相机、文档扫描、照片、录音、文件、网页分享、截图、收据、房间扫描、物品和状态 check-in。先本地安全持久化，再分类/路由到 Inbox。
 
 #### 原生优先能力
 
@@ -183,18 +191,18 @@ Watch 不假设 iPhone 实时可达，必须有小型本地缓存、pending queu
 
 ## 5. 跨平台能力矩阵
 
-| 能力 | iPhone/iPad | Mac | Watch |
-| --- | --- | --- | --- |
-| Assistant | 完整对话、多模态 | 完整 + 多上下文 + Runtime | 简短语音/回答 |
-| Work | 查看、捕获、轻编辑 | 完整深度工作 | 下一步/提醒 |
-| Plan | 日常使用 | 完整规划 | 完成/延后 |
-| Library | 阅读、保存 | 完整研究与文件管理 | 默认不展示 |
-| Health | 状态、趋势、HealthKit | 分析、规则、诊断 | 实时记录/check-in |
-| Training | 训练执行 | 计划和分析 | 核心执行端 |
-| Money | 查看、决策 | 完整分析 | 仅安全提醒 |
-| Home | 扫描、执行 | 布局、资产管理 | 小提醒 |
-| Music | 播放/场景 | 曲库管理 | 播放控制 |
-| System | 连接摘要 | 完整控制面 | 极简阻塞状态 |
+| 能力      | iPhone/iPad           | Mac                       | Watch             |
+| --------- | --------------------- | ------------------------- | ----------------- |
+| Assistant | 完整对话、多模态      | 完整 + 多上下文 + Runtime | 简短语音/回答     |
+| Work      | 查看、捕获、轻编辑    | 完整深度工作              | 下一步/提醒       |
+| Plan      | 日常使用              | 完整规划                  | 完成/延后         |
+| Library   | 阅读、保存            | 完整研究与文件管理        | 默认不展示        |
+| Health    | 状态、趋势、HealthKit | 分析、规则、诊断          | 实时记录/check-in |
+| Training  | 训练执行              | 计划和分析                | 核心执行端        |
+| Money     | 查看、决策            | 完整分析                  | 仅安全提醒        |
+| Home      | 扫描、执行            | 布局、资产管理            | 小提醒            |
+| Music     | 播放/场景             | 曲库管理                  | 播放控制          |
+| System    | 连接摘要              | 完整控制面                | 极简阻塞状态      |
 
 ## 6. Action 与 App Intents
 
@@ -222,11 +230,11 @@ work.open_project
 
 ### 7.1 每端只保存缓存和待同步操作
 
-| 端 | 本地内容 |
-| --- | --- |
+| 端          | 本地内容                                                |
+| ----------- | ------------------------------------------------------- |
 | iPhone/iPad | Today/近期实体缓存、Capture inbox、Outbox、搜索索引子集 |
-| Mac | 完整缓存、Library/Vault 索引、Outbox、Runtime jobs |
-| Watch | Today/Training 最小快照、pending actions |
+| Mac         | 完整缓存、Library/Vault 索引、Outbox、Runtime jobs      |
+| Watch       | Today/Training 最小快照、pending actions                |
 
 ### 7.2 操作路径
 
@@ -335,7 +343,7 @@ Mac 离线时，根据 capability 显示:
 
 ### A1 iPhone Companion
 
-交付 Today、Assistant、Capture、Inbox、Reminders、Approvals、Spaces、Share Extension、Widget 和通知。先不重写 Money/Home/Work 全页。
+交付 Today、Assistant、Spaces、Inbox（含 Approvals/Activity/Capture 目的地）、Reminders、Share Extension、Widget 和通知。Capture 为全局动作而非首层 Tab。先不重写 Money/Home/Work 全页。
 
 ### A2 Mac Command Center
 
@@ -351,15 +359,15 @@ Mac 离线时，根据 capability 显示:
 
 ## 13. Foundation 验收矩阵
 
-| 场景 | iPhone | Mac | Watch | 预期 |
-| --- | --- | --- | --- | --- |
-| 在线创建任务 | 发起 | 可观察 | 可读取 | 仅一个 Plan task，Activity 一条 |
-| 离线完成任务 | 排队 | 暂未见 | 发起 | 恢复后一次生效，不重复 |
-| 版本冲突 | 可展示 | 可裁决 | 保守失败 | 不静默覆盖 |
-| token 失效 | 重新认证 | 重新认证 | 提示需 iPhone | 队列不丢 |
-| 跨域拒绝 | 拒绝 | 拒绝并解释 | 不展示 | Activity/Audit 有记录 |
-| Mac Runtime 离线 | queued/fallback | 明确 unavailable | 不适用 | 不显示假成功 |
-| 删除/高风险 | 强确认 | 强确认 | 不允许 | 备份、影响、审批齐备 |
+| 场景             | iPhone          | Mac              | Watch         | 预期                            |
+| ---------------- | --------------- | ---------------- | ------------- | ------------------------------- |
+| 在线创建任务     | 发起            | 可观察           | 可读取        | 仅一个 Plan task，Activity 一条 |
+| 离线完成任务     | 排队            | 暂未见           | 发起          | 恢复后一次生效，不重复          |
+| 版本冲突         | 可展示          | 可裁决           | 保守失败      | 不静默覆盖                      |
+| token 失效       | 重新认证        | 重新认证         | 提示需 iPhone | 队列不丢                        |
+| 跨域拒绝         | 拒绝            | 拒绝并解释       | 不展示        | Activity/Audit 有记录           |
+| Mac Runtime 离线 | queued/fallback | 明确 unavailable | 不适用        | 不显示假成功                    |
+| 删除/高风险      | 强确认          | 强确认           | 不允许        | 备份、影响、审批齐备            |
 
 ## 14. 明确不做
 

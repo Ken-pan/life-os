@@ -9,34 +9,47 @@ import KenosStore
 
 @MainActor
 final class KenosAppModel: ObservableObject {
+    /// System top-level IA: Today · Assistant · Spaces · Inbox
     enum Tab: String, CaseIterable, Identifiable {
-        case today, assistant, work, inbox, more
+        case today, assistant, spaces, inbox
         var id: String { rawValue }
         var title: String {
             switch self {
             case .today: return "Today"
             case .assistant: return "Assistant"
-            case .work: return "Work"
+            case .spaces: return "Spaces"
             case .inbox: return "Inbox"
-            case .more: return "More"
             }
         }
     }
 
     @Published var selectedTab: Tab = .today
     @Published var route: KenosDeepLink = .today
-    @Published var moreDestination: MoreDestination?
+    /// Nested under Inbox (was MoreDestination).
+    @Published var inboxDestination: InboxDestination?
+    @Published var spacesDestination: SpacesDestination?
     @Published var captureText = ""
     @Published var lastCapture: CaptureDraft?
     @Published var watchCaptures: [CaptureDraft] = []
     @Published var notificationInbox: [KenosNotificationRecord] = []
     @Published var assistantMessages: [AssistantMessage] = [
-        AssistantMessage(role: .assistant, text: "Kenos Assistant shell · mock streaming · no domain writes."),
+        AssistantMessage(role: .assistant, text: "Ask Kenos anything. Writes still go through Approvals when needed."),
     ]
     @Published var streaming = false
 
-    enum MoreDestination: String, Hashable {
+    enum InboxDestination: String, Hashable {
         case approvals, activity, capture, system, settings, library
+    }
+
+    enum SpacesDestination: String, Hashable {
+        case work
+    }
+
+    /// Compatibility alias for older call sites / handoff reviews.
+    typealias MoreDestination = InboxDestination
+    var moreDestination: InboxDestination? {
+        get { inboxDestination }
+        set { inboxDestination = newValue }
     }
 
     let repository: KenosReadRepository
@@ -96,27 +109,44 @@ final class KenosAppModel: ObservableObject {
     func open(_ link: KenosDeepLink) {
         route = link
         switch link {
-        case .today: selectedTab = .today
-        case .assistant: selectedTab = .assistant
-        case .work, .workProject, .deliverable, .meeting, .decision, .planTask, .library:
-            selectedTab = .work
-            if case .library = link { moreDestination = .library; selectedTab = .more }
-        case .inbox, .inboxItem: selectedTab = .inbox
+        case .today:
+            selectedTab = .today
+        case .assistant:
+            selectedTab = .assistant
+        case .work, .workProject, .deliverable, .meeting, .decision, .planTask:
+            selectedTab = .spaces
+            presentSpacesDestination(.work)
+        case .library:
+            presentInboxDestination(.library)
+        case .inbox, .inboxItem:
+            selectedTab = .inbox
+            inboxDestination = nil
         case .approvals, .approval:
-            selectedTab = .more
-            moreDestination = .approvals
+            presentInboxDestination(.approvals)
         case .activity, .activityItem:
-            selectedTab = .more
-            moreDestination = .activity
+            presentInboxDestination(.activity)
         case .capture:
-            selectedTab = .more
-            moreDestination = .capture
-        case .system:
-            selectedTab = .more
-            moreDestination = .system
-        case .unknown:
-            selectedTab = .more
-            moreDestination = .system
+            presentInboxDestination(.capture)
+        case .system, .unknown:
+            presentInboxDestination(.system)
+        }
+    }
+
+    private func presentInboxDestination(_ destination: InboxDestination) {
+        inboxDestination = nil
+        selectedTab = .inbox
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            inboxDestination = destination
+        }
+    }
+
+    private func presentSpacesDestination(_ destination: SpacesDestination) {
+        spacesDestination = nil
+        selectedTab = .spaces
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            spacesDestination = destination
         }
     }
 
@@ -131,6 +161,10 @@ final class KenosAppModel: ObservableObject {
         open(urlString: record.deepLink)
     }
 
+    func openCapture() {
+        presentInboxDestination(.capture)
+    }
+
     func sendAssistant(_ text: String) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
@@ -141,7 +175,7 @@ final class KenosAppModel: ObservableObject {
         assistantMessages.append(
             AssistantMessage(
                 role: .assistant,
-                text: "Proposal card (mock): consider a WorkActionProposal draft. Approval remains read-only. productionWrite=false."
+                text: "Noted. If this needs a write, it will wait in Approvals first."
             )
         )
     }
@@ -160,8 +194,7 @@ final class KenosAppModel: ObservableObject {
 
     func reviewWatchCapture(_ draft: CaptureDraft) {
         lastCapture = draft
-        moreDestination = .capture
-        selectedTab = .more
+        presentInboxDestination(.capture)
     }
 
     /// Unified logout: session store, projection cache, offline queue, handoff, UI drafts.
@@ -175,6 +208,7 @@ final class KenosAppModel: ObservableObject {
         notificationInbox = []
         lastCapture = nil
         captureText = ""
-        moreDestination = .settings
+        inboxDestination = .settings
+        selectedTab = .inbox
     }
 }

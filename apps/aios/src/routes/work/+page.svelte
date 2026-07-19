@@ -31,19 +31,12 @@
 <div class="work-page">
   <header class="work-header">
     <div>
-      <p class="kicker">Work · owner domain</p>
-      <h1>工作闭环</h1>
-      <p class="intro">当前目标、下一个交付、阻塞、决定，以及需要转为 Plan Task 的提案。</p>
+      <p class="kicker"><a href="/spaces">Spaces</a> · Work</p>
+      <h1>Work</h1>
+      <p class="intro">当前目标、下一个交付、阻塞、决定，以及需要转为任务的提案。</p>
     </div>
     <div class="header-actions">
-      {#if WORK.demo}
-        <span class="badge">本地演示 · 非生产写入</span>
-      {/if}
-      {#if WORK.conversionEnabled || WORK.demo}
-        <span class="badge badge--warn">Task conversion simulation</span>
-      {:else}
-        <span class="badge">conversion flag Off</span>
-      {/if}
+      <a class="quiet" href="/spaces">全部 Spaces</a>
       <button type="button" class="quiet" onclick={() => refreshWorkSurface({ force: true })}>
         <Icon name="refresh" size={16} strokeWidth={1.75} />
         刷新
@@ -53,9 +46,9 @@
 
   {#if WORK.status === 'unsupported'}
     <section class="state-panel" aria-live="polite">
-      <h2>Work foundation 未启用</h2>
-      <p>默认 Off。本地可用 <code>?kenosDemo=1</code> 或开发态预览；生产 feature flag 保持关闭。</p>
-      <a href="/">返回 Today</a>
+      <h2>Work 暂不可用</h2>
+      <p>此 Space 尚未开启。可返回 Spaces，或稍后再试。</p>
+      <a href="/spaces">返回 Spaces</a>
     </section>
   {:else if WORK.status === 'empty'}
     <section class="state-panel">

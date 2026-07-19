@@ -1,20 +1,14 @@
 <script>
-  // 薄封装：共享 LifeOsBottomNav 骨架 + aios 的 IA/active 判定。
   import { page } from '$app/state'
   import LifeOsBottomNav from '@life-os/platform-web/svelte/navigation/bottom-nav'
   import { t } from '$lib/i18n/index.js'
-
-  const isActive = (href) =>
-    href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href)
+  import { isSystemNavActive, systemNavItems } from '$lib/kenos/systemNav.js'
 
   const items = $derived(
-    [
-      { href: '/', icon: 'dashboard', label: t('nav.today') },
-      { href: '/assistant', icon: 'chat', label: t('nav.assistant') },
-      { href: '/inbox', icon: 'list-todo', label: t('nav.inbox') },
-      { href: '/approvals', icon: 'check', label: t('nav.approvals') },
-      { href: '/activity', icon: 'history', label: t('nav.activity') },
-    ].map((item) => ({ ...item, active: isActive(item.href) })),
+    systemNavItems(t).map((item) => ({
+      ...item,
+      active: isSystemNavActive(page.url.pathname, item.href),
+    })),
   )
 </script>
 

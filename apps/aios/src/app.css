@@ -90,6 +90,28 @@
   font-size: var(--text-title);
   font-weight: 600;
 }
+.inbox-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 8px;
+}
+.inbox-subnav a {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-l);
+  color: var(--t2);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-sm);
+}
+.inbox-subnav a.active {
+  color: var(--t1);
+  border-color: color-mix(in srgb, var(--t1) 35%, var(--border-l));
+  background: color-mix(in srgb, var(--t1) 6%, transparent);
+}
 .control-list {
   border-top: 1px solid var(--border);
 }
