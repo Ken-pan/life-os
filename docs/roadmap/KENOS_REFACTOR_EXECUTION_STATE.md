@@ -331,3 +331,15 @@ Approved temporary defaults now on file:
 - Production locks: no production apply, writer cutover, Connector auto-write, deploy, push, Phase 4, or Phase 5.
 - Aggregate verifier blockers caused only by pre-existing unrelated WIP remain `BLOCKED_BY_UNRELATED_USER_WIP`.
 - Next safe step: user reviews local Phase 3 commits and chooses whether to push. Phase 4 Apple UI and Phase 5 remain Off.
+
+## Phase 4A Apple native daily loop closeout (2026-07-19)
+
+- Starting revision: `be6f2612d3f374ac322c58813528b4bf8f98eeac`; branch `master`; one worktree. Unrelated Finance, Planner, UI gallery, roadmap/usage-audit, platform-web and Wikilinks WIP remained unstaged and untouched.
+- Verdict: `KENOS PHASE 4A — APPLE_NATIVE_DAILY_LOOP_READY` with qualifier `PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` under `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`.
+- Inventory: canonical foundation `clients/apple`; companions (HomeScan/Health/Music Capacitor/Tauri) retained separate; OPEN-006 temporary path freeze recorded.
+- Packages: KenosContracts (existing) + KenosClient/Store/Actions/Design; mock API + fixture decode; Keychain session abstraction; projection cache; offline R1 queue + FakeActionExecutor; design/a11y primitives; deep-link router.
+- Apps: XcodeGen KenosIOS (iPhone + iPad split) and KenosMac (sidebar, commands, MenuBarExtra capture); surfaces Today/Assistant/Inbox/Approvals(read-only)/Activity/Work vertical slice/Capture/System.
+- Guards/docs: `scripts/check-kenos-phase4.mjs` wired into `verify-kenos-refactor.sh`; inventory/ops/qa/ledger/refactor hub updated.
+- Production locks: no production auth/signing/OAuth/push/universal links, no Executor, no App Store/TestFlight/notarization, no watchOS product, no Phase 5, no deploy/push/DB.
+- Aggregate verifier blockers caused only by pre-existing unrelated WIP remain `BLOCKED_BY_UNRELATED_USER_WIP`.
+- Next safe step: user reviews local Phase 4A commits and chooses whether to push. Phase 4B watchOS and Phase 5 remain Off until separately authorized.

@@ -3,7 +3,7 @@ title: Kenos Migration Ledger
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: migration-status-ledger
-status: phase-3-work-loop-foundation-ready-no-production-cutover
+status: phase-4a-native-daily-loop-ready-distribution-gates-open
 ---
 
 # Kenos Migration Ledger
@@ -37,6 +37,7 @@ PROPOSED
 | Planner → Plan | Planner UI/表/本地缓存 | `plan` 领域语义 | PROPOSED | owner inventory | 先保持原表 writer，仅更改 API/名称 | 路由/文案回退 | 旧名称兼容到 deep links 稳定 |
 | AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | READ_ONLY_INTEGRATION_READY | Action/Policy/Activity/Approval 本地只读证据 | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
 | Work productivity loop | 分散 Plan/Library/Vault/digests；无 Work Space | Work-owned Project/Deliverable/Meeting/Decision + WorkActionProposal→Plan | WORK_LOOP_FOUNDATION_READY | temporary ownership + contracts + review-only SQL + AIOS `/work` + Today projections | Work 不拥有 Task；conversion simulation only；Connector read-only | 禁用 flag / 移除 `/work`；无需生产数据回滚 | hosted RLS/apply、Executor、auto Connector write、真实项目 Real-use 另审 |
+| Apple native daily loop | 无 Kenos iOS/macOS 产品；仅 KenosContracts + 领域 companion | 单一 Kenos iOS/iPadOS + macOS daily client（shared contracts/client/store/actions/design） | APPLE_NATIVE_DAILY_LOOP_READY | Phase 1–3 contracts；inventory；mock auth；offline queue；simulator QA | Apple 不拥有 Task/Approval/Work/Activity 真源；canonical writes 仍走 Action boundary | 移除 Apps/新 packages；Contracts 可保留 | production signing/OAuth/push/universal links；watchOS 产品；Executor；App Store |
 | Knowledge → Library | Vault + KnowledgeOS | Library Space/API | PROPOSED | Library/Memory 边界 | Vault 仍唯一正文 writer | 旧壳继续 | 新客户端能编辑/恢复/深链 |
 | Fitness → Training | Fitness app/schema | Training Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 行为与历史数据 parity |
 | Finance → Money | Finance app/schema | Money Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 报表/导入/购买历史 parity |
@@ -202,3 +203,13 @@ PROPOSED
 - Compatibility: Plan `planner_projects` remain Plan-owned task groups and are not Work Projects. OPEN-002 still blocks Work body mirroring into personal cloud/models.
 - Rollback: disable `VITE_KENOS_PHASE3_WORK` / demo query and remove `/work` entry; review SQL was never production-applied.
 - Validation: `node packages/contracts/scripts/kenos.test.mjs`; Swift KenosContracts tests; `node --test apps/aios/src/lib/workCommand.core.test.js`; `node scripts/check-kenos-phase3-work-db.mjs`; `node scripts/check-kenos-phase3.mjs`; AIOS test/check/build; Phase 1/2 guards.
+
+## MIGRATION: KR-P4A-001 Apple native daily loop foundation
+
+- Status: `APPLE_NATIVE_DAILY_LOOP_READY` with distribution qualifier `PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` under `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`. Local/simulator only.
+- Owner boundary: Apple clients consume Phase 1–3 shared contracts; no Apple-owned Task/Approval/Work/Activity truth. Canonical writes remain Action/command-bound; Approvals read-only; FakeActionExecutor only.
+- Scope: inventory; packages KenosContracts/Client/Store/Actions/Design; Keychain session abstraction + mock auth; projection cache; offline R1 queue; iOS/iPadOS + macOS shells; Today/Assistant/Inbox/Approvals/Activity/Work vertical slice/Quick Capture/deep links; Phase 4 guard; simulator/XCTest evidence.
+- Non-scope: watchOS product; production Team/signing/OAuth/push/universal links; App Store/TestFlight/notarization; production Executor; Phase 5 proactive automation; production DB/migration/deploy/push.
+- Compatibility: HomeScan, Health companion, Music Capacitor, Tauri shells retained as domain/experimental assets — not a second Kenos product.
+- Rollback: remove `clients/apple/Apps` and new packages; retain KenosContracts for parity. No production data rollback.
+- Validation: Swift package tests; `xcodegen` + `xcodebuild` iPhone/iPad/macOS build+test; `node scripts/check-kenos-phase4.mjs`; Phase 1–3 guards; `git diff --check` on Kenos paths.
