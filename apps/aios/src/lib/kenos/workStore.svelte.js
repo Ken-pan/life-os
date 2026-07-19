@@ -189,12 +189,26 @@ export function convertProposal(proposalId) {
   WORK.lastMessage = result.ok
     ? `已转换为 Plan Task（simulation · productionWrite=${result.productionWrite}）`
     : result.error.message
+  snapshotWorkStore()
   refreshWorkSurface()
   return result
 }
 
 export function updateDeliverable(id, status) {
   const result = updateWorkDeliverableStatus(WORK.store, { id, ownerId: DEMO_OWNER, status })
+  snapshotWorkStore()
   refreshWorkSurface()
   return result
+}
+
+function snapshotWorkStore() {
+  WORK.store = createWorkMemoryStore({
+    projects: [...WORK.store.projects.values()],
+    deliverables: [...WORK.store.deliverables.values()],
+    meetings: [...WORK.store.meetings.values()],
+    decisions: [...WORK.store.decisions.values()],
+    proposals: [...WORK.store.proposals.values()],
+    activities: [...WORK.store.activities],
+    planTasks: [...WORK.store.planTasks.values()],
+  })
 }
