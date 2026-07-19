@@ -4,6 +4,10 @@
  */
 
 import { prodReadFlagSnapshot } from './prodReadFlags.core.js'
+import {
+  focusDeferredCapability,
+  focusSuggestionsCapability,
+} from './focusSideReads.core.js'
 
 /** @typedef {'available'|'unavailable'|'empty'|'loading'|'degraded'|'unauthorized'|'error'|'legacy-backed'|'kenos-backed'|'shadow-only'} CapabilitySurface */
 
@@ -223,6 +227,34 @@ export function buildCapabilityRegistry(options = {}) {
   focusRead.id = 'focus.read'
   focusRead.domain = 'focus'
 
+  const focusDeferred = focusDeferredCapability()
+  const focusSuggestions = focusSuggestionsCapability()
+  // Live side-read outcomes override static flag surfaces when provided.
+  const deferredLive = sources.focusDeferred?.status
+  if (deferredLive === 'error') {
+    focusDeferred.surface = 'error'
+    focusDeferred.userSafeLabel = '延期事项读取异常'
+    focusDeferred.userSafeDetail = '不会显示为空列表。'
+  } else if (deferredLive === 'empty' && focusDeferred.surface === 'available') {
+    focusDeferred.surface = 'empty'
+    focusDeferred.userSafeLabel = '暂无延期事项'
+  } else if (deferredLive === 'ready' && focusDeferred.surface === 'available') {
+    focusDeferred.surface = 'kenos-backed'
+    focusDeferred.productionReady = true
+  }
+  const suggestionsLive = sources.focusSuggestions?.status
+  if (suggestionsLive === 'error') {
+    focusSuggestions.surface = 'error'
+    focusSuggestions.userSafeLabel = '建议读取异常'
+    focusSuggestions.userSafeDetail = '不会显示为空列表。'
+  } else if (suggestionsLive === 'empty' && focusSuggestions.surface === 'available') {
+    focusSuggestions.surface = 'empty'
+    focusSuggestions.userSafeLabel = '暂无建议'
+  } else if (suggestionsLive === 'ready' && focusSuggestions.surface === 'available') {
+    focusSuggestions.surface = 'kenos-backed'
+    focusSuggestions.productionReady = true
+  }
+
   const workRead = flags.work
     ? readSurface('work', {
         kenosWhen: true,
@@ -277,6 +309,8 @@ export function buildCapabilityRegistry(options = {}) {
       writesProduction: true,
     }),
     focusRead,
+    focusDeferred,
+    focusSuggestions,
     entry({
       id: 'focus.write',
       domain: 'focus',
@@ -355,23 +389,30 @@ export function buildCapabilityRegistry(options = {}) {
 export function capabilityEmptyCopy(capability) {
   if (!capability) return { kind: 'unavailable', title: '暂时无法读取', body: '这不是空列表。' }
   if (capability.surface === 'empty') {
-    return { kind: 'empty', title: '暂无内容', body: '当前没有可展示的项目。' }
+    return { kind: 'empty', title: '暂无内容', body: '数据源正常，当前没有可展示的内容。' }
   }
   if (capability.surface === 'unavailable' || capability.surface === 'shadow-only') {
     return {
       kind: 'unavailable',
-      title: capability.userSafeLabel || '尚未接入',
-      body: capability.userSafeDetail || '不会用空数量冒充「没有事项」。',
+      title: capability.userSafeLabel || '尚未开启',
+      body: capability.userSafeDetail || '当前能力尚未开启；不会用空数量冒充「没有事项」。',
     }
   }
   if (capability.surface === 'unauthorized') {
-    return { kind: 'unauthorized', title: '需要登录', body: capability.userSafeDetail || '登录后才能读取。' }
+    return { kind: 'unauthorized', title: '需要登录', body: capability.userSafeDetail || '登录或权限失效后才能继续读取。' }
   }
-  if (capability.surface === 'error' || capability.surface === 'degraded') {
+  if (capability.surface === 'error') {
     return {
       kind: 'error',
-      title: capability.userSafeLabel || '读取异常',
+      title: capability.userSafeLabel || '读取失败',
       body: capability.userSafeDetail || '请稍后重试；不会伪造数据。',
+    }
+  }
+  if (capability.surface === 'degraded') {
+    return {
+      kind: 'degraded',
+      title: capability.userSafeLabel || '部分来源异常',
+      body: capability.userSafeDetail || '仍可查看已成功加载的部分；不会把异常显示成空列表。',
     }
   }
   if (capability.surface === 'loading') {

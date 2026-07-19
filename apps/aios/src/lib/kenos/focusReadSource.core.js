@@ -5,10 +5,16 @@ import {
 } from './readProjections.core.js'
 import { newCorrelationId, recordReadObservation } from './readObservability.core.js'
 import { isProdFocusReadEnabled } from './prodReadFlags.core.js'
+import {
+  FOCUS_DEFERRED_SELECT,
+  FOCUS_DEFERRED_SOURCE,
+  FOCUS_SUGGESTION_SOURCE,
+  FOCUS_SUGGESTIONS_SELECT,
+  isFocusSideReadAvailable,
+} from './focusSideReads.core.js'
 
 export const CANONICAL_FOCUS_READ_SOURCE = 'public.kenos_list_focus_contexts'
-export const FOCUS_DEFERRED_SOURCE = 'public.kenos_deferred_items'
-export const FOCUS_SUGGESTION_SOURCE = 'public.kenos_proactive_suggestions'
+export { FOCUS_DEFERRED_SOURCE, FOCUS_SUGGESTION_SOURCE }
 
 function text(value, fallback = '') {
   if (typeof value !== 'string') return fallback
@@ -140,35 +146,62 @@ export async function readCanonicalFocusSource({
     if (error) throw error
     const projected = projectFocusRows(Array.isArray(data) ? data : [], { now })
 
+    const deferredAvailable = isFocusSideReadAvailable('deferred', env)
+    const suggestionsAvailable = isFocusSideReadAvailable('suggestions', env)
     let deferred = []
     let suggestions = []
-    let sidePartial = false
-    try {
-      const [deferredRes, suggestionRes] = await Promise.all([
+    /** @type {'unavailable'|'empty'|'ready'|'error'} */
+    let deferredCap = deferredAvailable ? 'empty' : 'unavailable'
+    /** @type {'unavailable'|'empty'|'ready'|'error'} */
+    let suggestionsCap = suggestionsAvailable ? 'empty' : 'unavailable'
+    let sideDegraded = false
+
+    const sideJobs = []
+    if (deferredAvailable) {
+      sideJobs.push(
         client
           .from('kenos_deferred_items')
-          .select('id,owner_id,focus_context_id,status,safe_summary,title,created_at,updated_at')
+          .select(FOCUS_DEFERRED_SELECT)
           .order('deferred_at', { ascending: false })
-          .limit(50),
+          .limit(50)
+          .then((res) => {
+            if (res.error) {
+              deferredCap = 'error'
+              sideDegraded = true
+              return
+            }
+            deferred = projectSideRows(res.data ?? [], 'deferred')
+            deferredCap = deferred.length ? 'ready' : 'empty'
+          }),
+      )
+    }
+    if (suggestionsAvailable) {
+      sideJobs.push(
         client
           .from('kenos_proactive_suggestions')
-          .select('id,owner_id,focus_context_id,status,safe_summary,title,created_at,updated_at')
+          .select(FOCUS_SUGGESTIONS_SELECT)
           .order('created_at', { ascending: false })
-          .limit(50),
-      ])
-      if (!deferredRes.error) deferred = projectSideRows(deferredRes.data ?? [], 'deferred')
-      else sidePartial = true
-      if (!suggestionRes.error) suggestions = projectSideRows(suggestionRes.data ?? [], 'suggestion')
-      else sidePartial = true
-    } catch {
-      sidePartial = true
+          .limit(50)
+          .then((res) => {
+            if (res.error) {
+              suggestionsCap = 'error'
+              sideDegraded = true
+              return
+            }
+            suggestions = projectSideRows(res.data ?? [], 'suggestion')
+            suggestionsCap = suggestions.length ? 'ready' : 'empty'
+          }),
+      )
+    }
+    if (sideJobs.length) {
+      await Promise.all(sideJobs)
     }
 
     const active = projected.contexts.filter((item) =>
       ['active', 'paused', 'temporarily_left'].includes(item.status),
     )
     const stale = projected.contexts.some((item) => item.stale)
-    const status = projected.malformedCount || sidePartial
+    const status = projected.malformedCount || sideDegraded
       ? 'partial'
       : stale
         ? 'stale'
@@ -181,13 +214,17 @@ export async function readCanonicalFocusSource({
       activeContexts: active,
       deferred,
       suggestions,
+      sideCapabilities: {
+        deferred: deferredCap,
+        suggestions: suggestionsCap,
+      },
       state: sourceState(status, {
         source: CANONICAL_FOCUS_READ_SOURCE,
         message: projected.contexts.length
-          ? sidePartial
-            ? 'Focus 会话已读取；部分延期/建议投影暂不可用。'
+          ? sideDegraded
+            ? 'Focus 会话已更新；部分相关来源异常，主会话仍可用。'
             : ''
-          : '没有生产 Focus 会话；本机会话不会被算作跨设备同步。',
+          : '当前没有 Focus 会话。',
         lastUpdated: projected.contexts.map((c) => c.lastUpdated).filter(Boolean).sort().at(-1) ?? null,
         stale,
         retryable: true,

@@ -186,6 +186,8 @@ export const CONTROL = $state({
     approvals: sourceState('loading', { source: 'public.kenos_list_action_approvals' }),
     activity: sourceState('loading', { source: 'public.life_events' }),
     focus: sourceState('loading', { source: 'public.kenos_list_focus_contexts' }),
+    focusDeferred: sourceState('unsupported', { source: 'public.kenos_deferred_items' }),
+    focusSuggestions: sourceState('unsupported', { source: 'public.kenos_proactive_suggestions' }),
     work: sourceState('loading', { source: 'public.kenos_list_work_projects' }),
   },
   capabilities: buildCapabilityRegistry(),
@@ -206,6 +208,16 @@ function applySourceResult(key, value) {
     if (value.contexts?.length || !failed || !CONTROL.focusContexts?.length) {
       CONTROL.focusContexts = value.contexts ?? []
     }
+    const side = value.sideCapabilities || {}
+    const mapSide = (cap, source) => {
+      if (cap === 'unavailable') return sourceState('unsupported', { source })
+      if (cap === 'error') return sourceState('unavailable', { source, message: '读取失败', retryable: true })
+      if (cap === 'empty') return sourceState('empty', { source, availableCount: 0 })
+      if (cap === 'ready') return sourceState('ready', { source, availableCount: 1 })
+      return sourceState('unsupported', { source })
+    }
+    CONTROL.sources.focusDeferred = mapSide(side.deferred, 'public.kenos_deferred_items')
+    CONTROL.sources.focusSuggestions = mapSide(side.suggestions, 'public.kenos_proactive_suggestions')
   } else if (key === 'work') {
     if (value.projects?.length || value.cards?.length || !failed || !CONTROL.workProjects?.length) {
       CONTROL.workProjects = value.projects ?? []

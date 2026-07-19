@@ -6,12 +6,13 @@
     loading: '正在更新',
     ready: '已更新',
     empty: '暂无内容',
-    partial: '部分内容暂时无法更新',
+    partial: '部分来源异常',
     stale: '显示的是已保存内容',
-    offline: '当前离线，正在显示已保存内容',
-    unavailable: '暂时无法更新',
-    permission_denied: '需要重新登录后才能更新',
-    unsupported: '此来源尚未接入',
+    offline: '当前离线',
+    unavailable: '当前能力尚未开启',
+    permission_denied: '登录或权限失效',
+    unsupported: '当前能力尚未开启',
+    error: '读取失败',
   }[state?.status] ?? '状态未知')
 </script>
 
@@ -56,7 +57,8 @@
   .read-source-state--offline,
   .read-source-state--unavailable,
   .read-source-state--permission_denied,
-  .read-source-state--unsupported {
+  .read-source-state--unsupported,
+  .read-source-state--error {
     border-left-color: var(--critical);
   }
   .read-source-state > div {

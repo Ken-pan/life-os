@@ -27,6 +27,24 @@ export function isProdFocusReadEnabled(env = import.meta.env) {
 }
 
 /**
+ * Optional Focus side reads. Default follows Focus read flag.
+ * Explicit `=0` marks capability unavailable and suppresses network requests.
+ * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
+ */
+export function isProdFocusDeferredReadEnabled(env = import.meta.env) {
+  if (!isProdFocusReadEnabled(env)) return false
+  return env?.VITE_KENOS_PROD_READ_FOCUS_DEFERRED !== '0'
+}
+
+/**
+ * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
+ */
+export function isProdFocusSuggestionsReadEnabled(env = import.meta.env) {
+  if (!isProdFocusReadEnabled(env)) return false
+  return env?.VITE_KENOS_PROD_READ_FOCUS_SUGGESTIONS !== '0'
+}
+
+/**
  * @param {ImportMetaEnv | Record<string, string | undefined> | undefined} env
  */
 export function isProdWorkReadEnabled(env = import.meta.env) {
@@ -61,6 +79,8 @@ export function prodReadFlagSnapshot(env = import.meta.env) {
     readCanary: isProdReadCanaryMode(env),
     approvals: isProdApprovalReadEnabled(env),
     focus: isProdFocusReadEnabled(env),
+    focusDeferred: isProdFocusDeferredReadEnabled(env),
+    focusSuggestions: isProdFocusSuggestionsReadEnabled(env),
     work: isProdWorkReadEnabled(env),
     todayOverlay: isProdTodayKenosOverlayEnabled(env),
     shadow: isProdShadowCompareEnabled(env),
