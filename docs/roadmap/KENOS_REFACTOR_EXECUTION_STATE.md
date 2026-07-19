@@ -321,7 +321,7 @@ Approved temporary defaults now on file:
 ## Phase 3 Work loop foundation closeout (2026-07-19)
 
 - Starting revision: `bc419205b545cb233b3fcee0f86b962d1cd63c14`; branch `master`; one worktree. Unrelated Finance, Planner, UI gallery, roadmap/usage-audit, platform-web and Wikilinks WIP remained unstaged and untouched.
-- Final local HEAD: `0ec71dcee` (includes Work store reactivity fix `c1a1da97a`).
+- Final local HEAD: `2ccb9bb635c197bb6d133dc5806ac7d9f01871a8` (includes Work store reactivity fix `c1a1da97a`).
 - Verdict: `KENOS PHASE 3 — LOCAL_SIMULATION_AND_CONTRACT_READY` (historical local alias `WORK_LOOP_FOUNDATION_READY`) under `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION` and `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`.
 - Ownership: Work owns Project/Deliverable/Meeting/Decision/context/status/source refs; Plan owns Task lifecycle; Library owns documents; Assistant/Connector are non-owners. Plan projects remain distinct from Work Projects. OPEN-002 still blocks body mirroring.
 - Contracts/parity: additive Work schemas + connector registry entry; canonical fixtures; TypeScript + Swift Codable + Swift→Zod round-trip path via existing parity script.
@@ -335,7 +335,7 @@ Approved temporary defaults now on file:
 ## Phase 4A Apple native daily loop closeout (2026-07-19)
 
 - Starting revision: `be6f2612d3f374ac322c58813528b4bf8f98eeac`; branch `master`; one worktree. Unrelated Finance, Planner, UI gallery, roadmap/usage-audit, platform-web and Wikilinks WIP remained unstaged and untouched.
-- Final local HEAD: `0cefe0e87cb7782b5b1ff3883841cb532f826bbe`.
+- Final local HEAD: `2ccb9bb635c197bb6d133dc5806ac7d9f01871a8`.
 - Verdict: `KENOS PHASE 4A — PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` (historical local alias `APPLE_NATIVE_DAILY_LOOP_READY`) under `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`.
 - Inventory: canonical foundation `clients/apple`; companions (HomeScan/Health/Music Capacitor/Tauri) retained separate; OPEN-006 temporary path freeze recorded.
 - Packages: KenosContracts (existing) + KenosClient/Store/Actions/Design; mock API + fixture decode; Keychain session abstraction; projection cache; offline R1 queue + FakeActionExecutor; design/a11y primitives; deep-link router.
@@ -348,7 +348,7 @@ Approved temporary defaults now on file:
 ## Phase 4B cross-device daily loop closeout (2026-07-19)
 
 - Starting revision: `1896250e27a96dd4112211502615b08cfea5f08a`; branch `master`; one worktree. Unrelated Finance/Planner/UI gallery/roadmap/usage-audit/platform-web WIP remained unstaged.
-- Final local HEAD: `4e91de074cf1caa1e3ca8ec8d1031e58c6b6020b`.
+- Final local HEAD: `2ccb9bb635c197bb6d133dc5806ac7d9f01871a8`.
 - Verdict: `KENOS PHASE 4B — CROSS_DEVICE_DAILY_LOOP_READY` with qualifier `PARTIAL_PASS_CROSS_DEVICE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` under `TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP`.
 - Watch: `KenosWatch` companion (`space.kenos.app.ios.watch`) with Today/Capture/Inbox/Approvals(read-only)/Activity; SE 3 40mm simulator build+test.
 - Packages: KenosNotifications (mock, redaction, preferences) + KenosHandoff (fake transport, idempotency, owner isolation) + Client glances.
@@ -361,7 +361,7 @@ Approved temporary defaults now on file:
 ## Audit high-priority remediation closeout (2026-07-19)
 
 - Starting revision: `f26c22654391264e97cd6a777ce863e5024db401` (post Phase 4B tip); audit fixed baseline `1896250e27a96dd4112211502615b08cfea5f08a`.
-- Final local HEAD: `15c028ea7d0f2e67ffb125a04eece2085c8bfa92`.
+- Final local HEAD: `2ccb9bb635c197bb6d133dc5806ac7d9f01871a8`.
 - Verdict: `KENOS AUDIT HIGH-PRIORITY REMEDIATION — LOCAL_PASS`.
 - Fixed locally: P1-002/003/004, P2-002/005, P2-001/P3-001/P4A docs honesty, P4A-005/007, MCP create boundary, policy risk, auth binding, availability semantics, independent shadow.
 - Production deferred: P1-001 → `PRODUCTION_REMEDIATION_ARTIFACT_READY` + `BLOCKED_PENDING_HOSTED_APPLY_AND_CUTOVER`; P3-006 OPEN-002 PENDING; P4A-004 SecItem Keychain distribution gate; P2-008 complete_task still legacy upsert.
@@ -380,7 +380,7 @@ Approved temporary defaults now on file:
 ## Phase 5 Focus / contextual intelligence closeout (2026-07-19)
 
 - Starting revision: `388a7504cdd9e0f1c65cb4eb4080205150f53c18` (pre Nav IA + Phase 5); one worktree on `master`.
-- Final local HEAD: `680817114f360a4a8544ee5be90e2442ada4021a`.
+- Final local HEAD: `2ccb9bb635c197bb6d133dc5806ac7d9f01871a8`.
 - Temporary status: `TEMPORARY_APPROVED_FOR_PHASE_5_FOCUS_FOUNDATION` (`docs/architecture/kenos-phase5-focus-foundation.md`).
 - Verdict: `KENOS PHASE 5 — CONTEXTUAL_INTELLIGENCE_LOCAL_READY` with qualifier `PARTIAL_PASS_CONTEXTUAL_INTELLIGENCE_READY_WITH_PRODUCTION_GATES`.
 - Contracts: FocusContext / DeferredItem / Interruption / ProactiveSuggestion / InterventionBudget / SessionSummary + fail-closed runtime tests.
