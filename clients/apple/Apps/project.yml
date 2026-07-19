@@ -1,12 +1,13 @@
-# XcodeGen — Kenos Phase 4A native daily loop (local/dev only).
+# XcodeGen — Kenos Phase 4A/4B native daily loop (local/dev only).
 #   brew install xcodegen && cd clients/apple/Apps && xcodegen
-# Bundle IDs are placeholders (KR-P4A-TEMP-005). No App Store / TestFlight / notarization.
+# Bundle IDs are placeholders (KR-P4A-TEMP-005 / KR-P4B-TEMP-005). No App Store / TestFlight / APNs.
 name: Kenos
 options:
   bundleIdPrefix: space.kenos.app
   deploymentTarget:
     iOS: "17.0"
     macOS: "14.0"
+    watchOS: "10.0"
   createIntermediateGroups: true
 settings:
   base:
@@ -24,6 +25,10 @@ packages:
     path: ../Packages/KenosActions
   KenosDesign:
     path: ../Packages/KenosDesign
+  KenosNotifications:
+    path: ../Packages/KenosNotifications
+  KenosHandoff:
+    path: ../Packages/KenosHandoff
 targets:
   KenosIOS:
     type: application
@@ -46,6 +51,11 @@ targets:
       - package: KenosStore
       - package: KenosActions
       - package: KenosDesign
+      - package: KenosNotifications
+      - package: KenosHandoff
+      - target: KenosWatch
+        embed: true
+      # KenosWidget builds standalone; App Group/signing gate defers host embedding for simulator install
     scheme:
       testTargets:
         - KenosIOSTests
@@ -70,18 +80,85 @@ targets:
       - package: KenosStore
       - package: KenosActions
       - package: KenosDesign
+      - package: KenosNotifications
+      - package: KenosHandoff
     scheme:
       testTargets:
         - KenosMacTests
+
+  KenosWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: watchOS/Sources
+    info:
+      path: watchOS/Info.plist
+      properties:
+        CFBundleDisplayName: Kenos
+        CFBundleShortVersionString: "0.4.1"
+        CFBundleVersion: "1"
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: space.kenos.app.ios
+        CFBundleURLTypes:
+          - CFBundleURLName: space.kenos.app
+            CFBundleURLSchemes:
+              - kenos
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.watch
+        PRODUCT_NAME: KenosWatch
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: KenosContracts
+      - package: KenosClient
+      - package: KenosStore
+      - package: KenosActions
+      - package: KenosNotifications
+      - package: KenosHandoff
+    scheme:
+      testTargets:
+        - KenosWatchTests
+
+  KenosWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Extensions/Widget/Sources
+    info:
+      path: Extensions/Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Kenos
+        CFBundleShortVersionString: "0.4.1"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.widget
+        PRODUCT_NAME: KenosWidget
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGNING_ALLOWED: "NO"
+        # App Group placeholder only — production group deferred (KR-P4B-TEMP-005)
+        # PRODUCT_APP_GROUP = group.space.kenos.app
+    dependencies:
+      - package: KenosClient
+      - package: KenosNotifications
 
   KenosIOSTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - path: Tests
+        excludes:
+          - KenosWatchGlanceTests.swift
     dependencies:
       - target: KenosIOS
+      - package: KenosContracts
       - package: KenosClient
+      - package: KenosHandoff
+      - package: KenosNotifications
+      - package: KenosActions
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.tests
@@ -92,6 +169,9 @@ targets:
     platform: macOS
     sources:
       - path: Tests
+        excludes:
+          - KenosWatchGlanceTests.swift
+          - KenosCrossDeviceConsistencyTests.swift
     dependencies:
       - target: KenosMac
       - package: KenosClient
@@ -99,11 +179,30 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.macos.tests
         GENERATE_INFOPLIST_FILE: YES
+
+  KenosWatchTests:
+    type: bundle.unit-test
+    platform: watchOS
+    sources:
+      - path: Tests/KenosWatchGlanceTests.swift
+      - path: Tests/KenosAppRouteTests.swift
+    dependencies:
+      - target: KenosWatch
+      - package: KenosContracts
+      - package: KenosClient
+      - package: KenosHandoff
+      - package: KenosActions
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.watch.tests
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   KenosIOS:
     build:
       targets:
         KenosIOS: all
+        KenosWatch: all
+        KenosWidget: [build]
         KenosIOSTests: [test]
     test:
       targets:
@@ -116,3 +215,11 @@ schemes:
     test:
       targets:
         - KenosMacTests
+  KenosWatch:
+    build:
+      targets:
+        KenosWatch: all
+        KenosWatchTests: [test]
+    test:
+      targets:
+        - KenosWatchTests
