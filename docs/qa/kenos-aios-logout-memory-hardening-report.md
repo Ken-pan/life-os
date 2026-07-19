@@ -17,11 +17,11 @@ Production AIOS was **not** redeployed. Canary-only.
 
 ## 1. Starting / final SHA
 
-| | SHA |
-| - | --- |
-| Start tip | `c84544463` (Owner Smoke complete docs) |
+|                  | SHA                                                                      |
+| ---------------- | ------------------------------------------------------------------------ |
+| Start tip        | `c84544463` (Owner Smoke complete docs)                                  |
 | Hardening commit | `f87336224` — `fix(aios): clear user memory and reset auth-wall context` |
-| Final tip | `f87336224` |
+| Final tip        | `f87336224`                                                              |
 
 ## 2. Commits
 
@@ -30,30 +30,30 @@ Production AIOS was **not** redeployed. Canary-only.
 
 ## 3. `aios_memory_*` inventory
 
-| Key | Create | Read | Write | Shape (redacted) |
-| --- | ------ | ---- | ----- | ---------------- |
-| `aios_memory_v1` | `memory.svelte.js` persist/seed/dream/merge | `load` / hydrate / settings UI | `persist`, dream, cloud merge | `[{ id, text, vector?, createdAt }]` |
-| `aios_memory_seeded_v1` | `seedDefaultMemories` | seed guard | set `'1'` once | flag string |
-| `aios_memory_dreamed_at_v1` | `dreamMemories` | interval guard | timestamp ms string | number-as-string |
-| `aios_memory_backup_v1` | `dreamMemories` before rewrite | (recovery unused) | full items JSON | same as `aios_memory_v1` |
+| Key                         | Create                                      | Read                           | Write                         | Shape (redacted)                     |
+| --------------------------- | ------------------------------------------- | ------------------------------ | ----------------------------- | ------------------------------------ |
+| `aios_memory_v1`            | `memory.svelte.js` persist/seed/dream/merge | `load` / hydrate / settings UI | `persist`, dream, cloud merge | `[{ id, text, vector?, createdAt }]` |
+| `aios_memory_seeded_v1`     | `seedDefaultMemories`                       | seed guard                     | set `'1'` once                | flag string                          |
+| `aios_memory_dreamed_at_v1` | `dreamMemories`                             | interval guard                 | timestamp ms string           | number-as-string                     |
+| `aios_memory_backup_v1`     | `dreamMemories` before rewrite              | (recovery unused)              | full items JSON               | same as `aios_memory_v1`             |
 
 **Observed pre-logout sample (redacted):** `{ count: 18, fields: [id,text,vector,createdAt], textLen: 82 }` — no user id field in rows; content is free-text user facts.
 
 ## 4. Classification
 
-| Key | Class |
-| --- | ----- |
-| `aios_memory_v1` | **USER_SCOPED_MEMORY** |
-| `aios_memory_seeded_v1` | **USER_SCOPED_MEMORY** |
-| `aios_memory_dreamed_at_v1` | **USER_SCOPED_CACHE** |
-| `aios_memory_backup_v1` | **USER_SCOPED_MEMORY** |
-| `aios_chats_v1` / drafts / active | USER_SCOPED_* (already cleared) |
-| `aios_daily_suggestions_v1` | USER_SCOPED_CACHE |
-| `aios_mcp_servers_v1` | AUTH_SESSION_DERIVED |
-| `kenos.focus.v1` | USER_SCOPED_CACHE |
-| `aios_gateway_url_v1` | **DEVICE_GENERIC_SETTING** |
-| `aios_demo` | DEVICE_GENERIC_SETTING |
-| `aiosos_v1` | mixed — strip user fields on logout |
+| Key                               | Class                               |
+| --------------------------------- | ----------------------------------- |
+| `aios_memory_v1`                  | **USER_SCOPED_MEMORY**              |
+| `aios_memory_seeded_v1`           | **USER_SCOPED_MEMORY**              |
+| `aios_memory_dreamed_at_v1`       | **USER_SCOPED_CACHE**               |
+| `aios_memory_backup_v1`           | **USER_SCOPED_MEMORY**              |
+| `aios_chats_v1` / drafts / active | USER*SCOPED*\* (already cleared)    |
+| `aios_daily_suggestions_v1`       | USER_SCOPED_CACHE                   |
+| `aios_mcp_servers_v1`             | AUTH_SESSION_DERIVED                |
+| `kenos.focus.v1`                  | USER_SCOPED_CACHE                   |
+| `aios_gateway_url_v1`             | **DEVICE_GENERIC_SETTING**          |
+| `aios_demo`                       | DEVICE_GENERIC_SETTING              |
+| `aiosos_v1`                       | mixed — strip user fields on logout |
 
 No `UNKNOWN` keys retained.
 
@@ -104,39 +104,39 @@ On logout / account switch / auth-wall boot:
 
 ## 11. Canary deploy
 
-| Item | Value |
-| ---- | ----- |
-| URL | https://aios-kenos-read-canary.netlify.app |
-| Deploy ID | `6a5d4bf71702873dee82b865` |
-| Source SHA | `f87336224` |
-| Mode | `VITE_AIOS_CLOUD=1` + `VITE_KENOS_READ_CANARY=1` + read flags |
-| noindex | retained |
+| Item       | Value                                                         |
+| ---------- | ------------------------------------------------------------- |
+| URL        | https://aios-kenos-read-canary.netlify.app                    |
+| Deploy ID  | `6a5d4bf71702873dee82b865`                                    |
+| Source SHA | `f87336224`                                                   |
+| Mode       | `VITE_AIOS_CLOUD=1` + `VITE_KENOS_READ_CANARY=1` + read flags |
+| noindex    | retained                                                      |
 
 ## 12. Owner smoke (this canary)
 
-| # | Check | Result |
-| - | ----- | ------ |
-| 1 | Login | PASS (existing session) |
-| 2 | Today | PASS |
-| 3 | Global Assistant | **Scope: All Kenos** |
-| 4 | Work Context Assistant | **Scope: Work** |
-| 5 | `aios_memory_*` present while authed | PASS (4 keys; shape redacted) |
-| 6 | Logout | PASS |
-| 7 | user memory cleared | PASS (`[]`) |
-| 8 | device setting retained | PASS (gateway + theme) |
-| 9 | title = Kenos — Sign in | PASS |
-| 10 | Back | PASS (title + wall, no leak) |
-| 11 | Refresh / direct `/work` | PASS (title Sign in) |
-| 12–13 | Login again / no residue | **Owner to confirm after re-login** (wall left unlocked) |
-| 14 | conversations count | **13** unchanged (`max` unchanged) |
-| 15 | Kenos domain writes | focus=0 work=0 |
+| #     | Check                                | Result                                                   |
+| ----- | ------------------------------------ | -------------------------------------------------------- |
+| 1     | Login                                | PASS (existing session)                                  |
+| 2     | Today                                | PASS                                                     |
+| 3     | Global Assistant                     | **Scope: All Kenos**                                     |
+| 4     | Work Context Assistant               | **Scope: Work**                                          |
+| 5     | `aios_memory_*` present while authed | PASS (4 keys; shape redacted)                            |
+| 6     | Logout                               | PASS                                                     |
+| 7     | user memory cleared                  | PASS (`[]`)                                              |
+| 8     | device setting retained              | PASS (gateway + theme)                                   |
+| 9     | title = Kenos — Sign in              | PASS                                                     |
+| 10    | Back                                 | PASS (title + wall, no leak)                             |
+| 11    | Refresh / direct `/work`             | PASS (title Sign in)                                     |
+| 12–13 | Login again / no residue             | **Owner to confirm after re-login** (wall left unlocked) |
+| 14    | conversations count                  | **13** unchanged (`max` unchanged)                       |
+| 15    | Kenos domain writes                  | focus=0 work=0                                           |
 
 ## 13. Conversation row count
 
-| | Value |
-| - | ----- |
+|        | Value                    |
+| ------ | ------------------------ |
 | Before | 13 / max `1784495383529` |
-| After | 13 / max `1784495383529` |
+| After  | 13 / max `1784495383529` |
 
 OWNER SMOKE row **not deleted**.
 
@@ -156,12 +156,12 @@ All seven `stop_builds=true`. AIOS prod published still `6a5c617ee8396b00089a6d2
 
 ## 17. Remaining gates
 
-| Gate | State |
-| ---- | ----- |
-| AIOS production redeploy | Red — needs phrase below |
-| Other six clients | Red — paused |
-| Writer canary | Red |
-| Live dual-account A→B | Yellow |
+| Gate                             | State                           |
+| -------------------------------- | ------------------------------- |
+| AIOS production redeploy         | Red — needs phrase below        |
+| Other six clients                | Red — paused                    |
+| Writer canary                    | Red                             |
+| Live dual-account A→B            | Yellow                          |
 | OWNER SMOKE conversation cleanup | Yellow — awaits separate phrase |
 
 ## 18. Readiness for AIOS production redeploy
