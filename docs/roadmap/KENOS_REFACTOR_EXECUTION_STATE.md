@@ -335,7 +335,7 @@ Approved temporary defaults now on file:
 ## Phase 4A Apple native daily loop closeout (2026-07-19)
 
 - Starting revision: `be6f2612d3f374ac322c58813528b4bf8f98eeac`; branch `master`; one worktree. Unrelated Finance, Planner, UI gallery, roadmap/usage-audit, platform-web and Wikilinks WIP remained unstaged and untouched.
-- Final local HEAD: `eb71a861665dd8bae4364e6dbd8f9c58a580daae` (includes `.build` untrack cleanup).
+- Final local HEAD: `0cefe0e87cb7782b5b1ff3883841cb532f826bbe`.
 - Verdict: `KENOS PHASE 4A — APPLE_NATIVE_DAILY_LOOP_READY` with qualifier `PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` under `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`.
 - Inventory: canonical foundation `clients/apple`; companions (HomeScan/Health/Music Capacitor/Tauri) retained separate; OPEN-006 temporary path freeze recorded.
 - Packages: KenosContracts (existing) + KenosClient/Store/Actions/Design; mock API + fixture decode; Keychain session abstraction; projection cache; offline R1 queue + FakeActionExecutor; design/a11y primitives; deep-link router.
