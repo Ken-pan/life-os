@@ -3,7 +3,7 @@ title: Kenos 平台重构计划 - 导航与执行边界
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: refactor-program-hub
-status: phase-4a-native-daily-loop-ready-distribution-gates-open
+status: phase-4b-cross-device-daily-loop-ready-distribution-gates-open
 review_cadence: every-migration-slice
 ---
 
@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 本地切片已达 `READ_ONLY_INTEGRATION_READY`；Phase 3 本地切片已达 `WORK_LOOP_FOUNDATION_READY`；Phase 4A 本地切片已达 `APPLE_NATIVE_DAILY_LOOP_READY`（分发门仍开：`PARTIAL_PASS_NATIVE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES`）。** Apple 单一产品 foundation 位于 `clients/apple`：shared packages、mock auth/Keychain、read cache、offline Action queue、iOS/iPadOS + macOS shells、Today/Assistant/Work/Inbox/Approvals/Activity、Quick Capture、deep links 与 Phase 4 guard。无生产 auth/signing/push、无 Executor、无 watchOS 产品、无 Phase 5。`TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP` 在分发/Executor 前必须复审。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
+> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 本地切片已达 `READ_ONLY_INTEGRATION_READY`；Phase 3 本地切片已达 `WORK_LOOP_FOUNDATION_READY`；Phase 4A 本地切片已达 `APPLE_NATIVE_DAILY_LOOP_READY`；Phase 4B 本地切片已达 `CROSS_DEVICE_DAILY_LOOP_READY`（分发门仍开：`PARTIAL_PASS_CROSS_DEVICE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES`）。** watchOS companion、通知契约、handoff/Capture transfer、widget foundation 与 Phase 4B guard 已齐备。无生产 APNs/App Group/Team、无 Executor、无 Phase 5。`TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP` 在分发/Executor 前必须复审。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
 
 ## 一句话
 

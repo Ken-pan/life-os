@@ -3,7 +3,7 @@ title: Kenos Migration Ledger
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: migration-status-ledger
-status: phase-4a-native-daily-loop-ready-distribution-gates-open
+status: phase-4b-cross-device-daily-loop-ready-distribution-gates-open
 ---
 
 # Kenos Migration Ledger
@@ -38,6 +38,7 @@ PROPOSED
 | AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | READ_ONLY_INTEGRATION_READY | Action/Policy/Activity/Approval 本地只读证据 | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
 | Work productivity loop | 分散 Plan/Library/Vault/digests；无 Work Space | Work-owned Project/Deliverable/Meeting/Decision + WorkActionProposal→Plan | WORK_LOOP_FOUNDATION_READY | temporary ownership + contracts + review-only SQL + AIOS `/work` + Today projections | Work 不拥有 Task；conversion simulation only；Connector read-only | 禁用 flag / 移除 `/work`；无需生产数据回滚 | hosted RLS/apply、Executor、auto Connector write、真实项目 Real-use 另审 |
 | Apple native daily loop | 无 Kenos iOS/macOS 产品；仅 KenosContracts + 领域 companion | 单一 Kenos iOS/iPadOS + macOS daily client（shared contracts/client/store/actions/design） | APPLE_NATIVE_DAILY_LOOP_READY | Phase 1–3 contracts；inventory；mock auth；offline queue；simulator QA | Apple 不拥有 Task/Approval/Work/Activity 真源；canonical writes 仍走 Action boundary | 移除 Apps/新 packages；Contracts 可保留 | production signing/OAuth/push/universal links；watchOS 产品；Executor；App Store |
+| Apple cross-device daily loop | Phase 4A iPhone/macOS foundation；无 Kenos Watch companion | watchOS companion + notification contracts + handoff/Capture transfer + widget foundation | CROSS_DEVICE_DAILY_LOOP_READY | Phase 4A ready；KenosNotifications/Handoff；simulator Watch build | Watch 不拥有 canonical truth；Approvals read-only；mock APNs only | 移除 Watch/Widget/新 packages | production Team/App Group/APNs；Executor；Phase 5；App Store |
 | Knowledge → Library | Vault + KnowledgeOS | Library Space/API | PROPOSED | Library/Memory 边界 | Vault 仍唯一正文 writer | 旧壳继续 | 新客户端能编辑/恢复/深链 |
 | Fitness → Training | Fitness app/schema | Training Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 行为与历史数据 parity |
 | Finance → Money | Finance app/schema | Money Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 报表/导入/购买历史 parity |
@@ -213,3 +214,13 @@ PROPOSED
 - Compatibility: HomeScan, Health companion, Music Capacitor, Tauri shells retained as domain/experimental assets — not a second Kenos product.
 - Rollback: remove `clients/apple/Apps` and new packages; retain KenosContracts for parity. No production data rollback.
 - Validation: Swift package tests; `xcodegen` + `xcodebuild` iPhone/iPad/macOS build+test; `node scripts/check-kenos-phase4.mjs`; Phase 1–3 guards; `git diff --check` on Kenos paths.
+
+## MIGRATION: KR-P4B-001 Apple cross-device daily loop foundation
+
+- Status: `CROSS_DEVICE_DAILY_LOOP_READY` with distribution qualifier `PARTIAL_PASS_CROSS_DEVICE_FOUNDATION_READY_WITH_DISTRIBUTION_GATES` under `TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP`. Local/simulator only.
+- Owner boundary: Watch/iPhone share Phase 1–3 contracts; glances are display mappings only. Approvals remain read-only. Capture uses CaptureEnvelope + idempotent fake companion transport. Notifications use mock provider (no APNs).
+- Scope: watch role doc; KenosNotifications + KenosHandoff; Today/Capture/Inbox/Approvals/Activity Watch surfaces; iPhone handoff/notification destinations; WidgetKit source + complication helpers; Phase 4B guard; SE 3 40mm simulator tests.
+- Non-scope: production Team/App Group/APNs, WatchConnectivity production entitlements, Approval decisions, Executor, Phase 5, App Store/TestFlight, Widget host-embed signing cutover.
+- Compatibility: Health companion watch remains separate. Widget may build without host embed while App Group/signing gates remain open.
+- Rollback: remove Watch/Widget targets and new packages; retain Phase 4A. No production data rollback.
+- Validation: Swift Notifications/Handoff tests; `xcodebuild` KenosWatch/KenosIOS/KenosMac tests; `node scripts/check-kenos-phase4b.mjs`; Phase 1–4 guards.
