@@ -9,7 +9,7 @@ status: PASS
 
 **Phrase:** `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`  
 **Approved freeze baseline:** `b47c6dcbefbc85c1353a76e86e0b7e1b1c69f8bb`  
-**Canary deploy tip (baseline + mandatory write fail-closed hardening):** see git after canary commits  
+**Canary deploy tip (baseline + fail-closed):** `de4eecd7a369a8a0e68c145405d577d20ebe970b`
 **Canary URL:** https://aios-kenos-read-canary.netlify.app  
 **Site id:** `8557bb44-6063-4720-ac03-b4e3ed12bbc2`  
 **Domain:** `*.netlify.app` only — **no** `kenos.space` change
