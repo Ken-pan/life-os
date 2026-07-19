@@ -394,7 +394,7 @@ Approved temporary defaults now on file:
 ## Phase 6 Stage A — production Wave 1 approval packet (2026-07-19)
 
 - Starting revision: `8e2c406dbf59a657679714537b4d537368658552`; branch `master`; one worktree.
-- Final local HEAD: `71b4d4038684de828a5f207deae3c436639622fa`
+- Final local HEAD: `e13e245665ca7a6713bbd51bcf5670ee4630026a`
 - Verdict: `KENOS PHASE 6 — STAGE_A_APPROVAL_PACKET_READY` (awaiting `APPROVE_KENOS_PRODUCTION_WAVE_1`).
 - Hosted read-only inventory (`iueozzuctstwvzbcxcyh`): no `kenos_*` tables/functions; `planner_tasks` still has authenticated insert/update/delete/select_own; tip migration `20260717220000`; counts tasks≈1664 / life_events≈21.
 - Artifacts: environment matrix, writer matrix, schema diff procedure, Wave 1 migration package index, Focus review SQL `20260719110000_kenos_focus_context.sql`, backup/restore template (drill incomplete), dual-user plan, observability/shadow/canary doc, approval packet.

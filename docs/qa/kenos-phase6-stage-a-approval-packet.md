@@ -15,7 +15,7 @@ Stage A complete. **No hosted migration has been applied. No writer cutover. No 
 
 ## 2. Final local HEAD
 
-`71b4d4038684de828a5f207deae3c436639622fa`
+`e13e245665ca7a6713bbd51bcf5670ee4630026a`
 
 ## 3. Commits
 
