@@ -3,7 +3,7 @@ title: Kenos 重构决策登记表
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: architecture-decision-register
-status: temporary-approved-for-phase-4a-native-daily-loop
+status: temporary-approved-for-phase-4b-cross-device-daily-loop
 ---
 
 # Kenos 重构决策登记表
@@ -23,6 +23,7 @@ status: temporary-approved-for-phase-4a-native-daily-loop
 - `TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL`: 仅批准 Phase 2 canonical Approval 只读模型的兼容契约、review-only persistence/RLS artifact 与本地验证；真实 Executor integration 前必须复审。
 - `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION`: 仅批准 Phase 3 Work 生产力闭环 foundation（contracts、review-only persistence、AIOS Work surface、WorkActionProposal→Plan simulation）；生产 cutover / Executor / 自动 Connector 写入前必须复审；不是永久 Constitution 条款。
 - `TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP`: 仅批准 Phase 4A Apple 原生日常闭环 foundation（`clients/apple` packages、iOS/macOS app shells、mock auth、offline queue、read projections）；生产 bundle/signing/OAuth/push、watchOS 产品、Executor、App Store/TestFlight 前必须复审。
+- `TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP`: 仅批准 Phase 4B watchOS companion、通知契约、跨设备 handoff/Capture transfer foundation；生产 APNs/App Group/Team、Executor、Approval decision、Phase 5、App Store/TestFlight 前必须复审。
 
 ## P0 决策
 
@@ -114,6 +115,21 @@ Expiration/review condition: mandatory re-review before production bundle/signin
 | KR-P4A-TEMP-003 | Session tokens only via Keychain abstraction; mock auth allowed; no production OAuth/config changes | TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP | No hardcoded production secrets | Before production auth |
 | KR-P4A-TEMP-004 | Offline Action queue supports explicit R1 drafts with fake/test executor only; Approvals remain read-only; R3/R4 fail closed offline | TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP | No production Executor | Before Executor review |
 | KR-P4A-TEMP-005 | Local/dev bundle IDs `space.kenos.app.ios` / `space.kenos.app.macos` are placeholders only | TEMPORARY_APPROVED_FOR_PHASE_4A_NATIVE_DAILY_LOOP | Production Team/App Group/universal links deferred | Before distribution |
+
+## Phase 4B cross-device temporary approvals
+
+Approved owner: Ken (task prompt)
+Approval date: 2026-07-19
+Scope: Phase 4B watchOS companion + notification contracts + handoff/Capture transfer under `clients/apple` — glances, read-only Approvals, mock notifications, fake companion transport, widget/complication foundation, Phase 4B guard. Local/simulator only.
+Expiration/review condition: mandatory re-review before production APNs/App Group/Team, Approval decisions, Executor, Phase 5, or Constitution promotion.
+
+| ID | Decision | Status | Scope / non-scope | Expiration / review |
+| --- | --- | --- | --- | --- |
+| KR-P4B-TEMP-001 | watchOS is a companion target of the single Kenos product; Health companion watch remains separate | TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP | No second Kenos brand; no Watch canonical store | Before distribution |
+| KR-P4B-TEMP-002 | Shared packages add KenosNotifications + KenosHandoff; glances map from Phase 1–3 records only | TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP | No WatchContracts vocabulary | Before distribution |
+| KR-P4B-TEMP-003 | Notifications use fixture/mock provider only; Lock Screen redacts sensitive bodies; no production APNs | TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP | Critical alerts disabled/not requested | Before APNs review |
+| KR-P4B-TEMP-004 | Capture uses CaptureEnvelope + idempotent companion transfer; Approvals remain read-only on Watch | TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP | No production Executor / approve-reject | Before Executor review |
+| KR-P4B-TEMP-005 | Placeholder bundle IDs `space.kenos.app.ios.watch` (+ `space.kenos.app.ios.widget`) and App Group `group.space.kenos.app` are local only | TEMPORARY_APPROVED_FOR_PHASE_4B_CROSS_DEVICE_DAILY_LOOP | Production Team/App Group deferred | Before distribution |
 
 ## 仍需冻结的业务决策
 
