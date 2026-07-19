@@ -12,13 +12,14 @@
   } from '$lib/kenos/controlCenter.core.js'
   import { WORK, refreshWorkSurface } from '$lib/kenos/workStore.svelte.js'
   import { capabilityEmptyCopy } from '$lib/kenos/capabilityRegistry.core.js'
-  import { isProdTodayKenosOverlayEnabled } from '$lib/kenos/prodReadFlags.core.js'
+  import { isProdTodayKenosOverlayEnabled, isProdWorkReadEnabled } from '$lib/kenos/prodReadFlags.core.js'
 
   const today = $derived(buildTodayReadModel(CONTROL.summary))
   const queue = $derived(summarizeControlQueue(CONTROL))
   const recentActivity = $derived(sortActivityNewestFirst(CONTROL.activities).slice(0, 3))
   const workCapability = $derived(CONTROL.capabilities?.byId?.['work.read'])
   const workCapabilityCopy = $derived(capabilityEmptyCopy(workCapability))
+  const prodWorkReadOn = $derived(isProdWorkReadEnabled(import.meta.env) || isProdTodayKenosOverlayEnabled(import.meta.env))
   const useProdWorkCards = $derived(
     isProdTodayKenosOverlayEnabled(import.meta.env) &&
       (CONTROL.sources?.work?.status === 'ready' || CONTROL.sources?.work?.status === 'partial') &&
@@ -173,8 +174,15 @@
             <span class="empty-copy-detail">{workCapabilityCopy.body}</span>
           {/if}
         </p>
-      {:else if WORK.status === 'unsupported' && !useProdWorkCards}
-        <p class="empty-copy" role="status">Work 尚未接入。可从 Spaces 进入了解，不会显示为零条。</p>
+      {:else if workCapabilityCopy.kind === 'empty' || (prodWorkReadOn && ['empty', 'ready', 'partial', 'stale'].includes(CONTROL.sources?.work?.status) && !workCards.length)}
+        <p class="empty-copy" role="status">
+          {workCapabilityCopy.kind === 'empty' ? workCapabilityCopy.title : '暂无 Work 卡片'}
+          {#if workCapabilityCopy.kind === 'empty' && workCapabilityCopy.body}
+            <span class="empty-copy-detail">{workCapabilityCopy.body}</span>
+          {:else}
+            <span class="empty-copy-detail">可从 Spaces 进入整理；这是空列表，不是读取失败。</span>
+          {/if}
+        </p>
       {:else if workCards.length}
         <div class="signal-list">
           {#each workCards as card (card.id)}
@@ -191,6 +199,8 @@
             </a>
           {/each}
         </div>
+      {:else if WORK.status === 'unsupported' && !prodWorkReadOn}
+        <p class="empty-copy" role="status">Work 尚未接入。可从 Spaces 进入了解，不会显示为零条。</p>
       {:else}
         <p class="empty-copy">暂无 Work 卡片。</p>
       {/if}

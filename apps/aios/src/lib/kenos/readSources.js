@@ -86,7 +86,7 @@ export async function readTodaySource({ client = lifeOsReadClient(), now = Date.
     const freshness = freshnessState(data.asOf, { now })
     const state = sourceState(freshness.stale ? 'stale' : 'ready', {
       source: SOURCE.today,
-      message: freshness.stale ? '摘要已超过 freshness 阈值；领域链接仍可安全打开。' : '',
+      message: freshness.stale ? '摘要可能不是最新的；各领域入口仍可打开。' : '',
       lastUpdated: freshness.lastUpdated,
       stale: freshness.stale,
       retryable: true,
