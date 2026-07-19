@@ -15,7 +15,7 @@ Stage A complete. **No hosted migration has been applied. No writer cutover. No 
 
 ## 2. Final local HEAD
 
-*(filled at Stage A commit tip — see Execution State Phase 6 Stage A closeout)*
+`71b4d4038684de828a5f207deae3c436639622fa`
 
 ## 3. Commits
 
