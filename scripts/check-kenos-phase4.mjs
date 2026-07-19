@@ -129,8 +129,9 @@ if (!macApp.includes('MenuBarExtra') || !macApp.includes('Quick Capture')) {
 if (!projectYml.includes('space.kenos.app.ios') || !projectYml.includes('space.kenos.app.macos')) {
   fail('project.yml must declare local/dev placeholder bundle IDs')
 }
-if (projectYml.includes('watchOS:') || projectYml.match(/platform:\s*watchOS/)) {
-  fail('Phase 4A must not add a watchOS product target')
+// Phase 4B may add a watchOS companion target under the same Kenos product.
+if (projectYml.match(/platform:\s*watchOS/) && !existsSync('docs/architecture/kenos-phase4b-watch-role.md')) {
+  fail('watchOS target requires Phase 4B watch role doc')
 }
 
 const forbiddenSecretPatterns = [
@@ -171,10 +172,10 @@ if (client.includes('UserDefaults') && client.includes('tokenAccount')) {
   if (!client.includes('secureStore.writeSecret')) fail('session save must write via secure store')
 }
 
-const proactiveMarkers = ['proactiveAutonomy', 'Phase5Proactive', 'autoApproveAll', 'watchOS product']
+const proactiveMarkers = ['proactiveAutonomy', 'Phase5Proactive', 'autoApproveAll']
 for (const marker of proactiveMarkers) {
   if (rootView.includes(marker) || appModel.includes(marker) || actions.includes(marker)) {
-    fail(`Phase 5 / watchOS product creep marker found: ${marker}`)
+    fail(`Phase 5 creep marker found: ${marker}`)
   }
 }
 
