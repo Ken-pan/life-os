@@ -1,0 +1,118 @@
+# XcodeGen — Kenos Phase 4A native daily loop (local/dev only).
+#   brew install xcodegen && cd clients/apple/Apps && xcodegen
+# Bundle IDs are placeholders (KR-P4A-TEMP-005). No App Store / TestFlight / notarization.
+name: Kenos
+options:
+  bundleIdPrefix: space.kenos.app
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+packages:
+  KenosContracts:
+    path: ../Packages/KenosContracts
+  KenosClient:
+    path: ../Packages/KenosClient
+  KenosStore:
+    path: ../Packages/KenosStore
+  KenosActions:
+    path: ../Packages/KenosActions
+  KenosDesign:
+    path: ../Packages/KenosDesign
+targets:
+  KenosIOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: iOS/Sources
+      - path: Shared
+    info:
+      path: iOS/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios
+        PRODUCT_NAME: KenosIOS
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: NO
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+    dependencies:
+      - package: KenosContracts
+      - package: KenosClient
+      - package: KenosStore
+      - package: KenosActions
+      - package: KenosDesign
+    scheme:
+      testTargets:
+        - KenosIOSTests
+
+  KenosMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: macOS/Sources
+      - path: Shared
+    info:
+      path: macOS/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.macos
+        PRODUCT_NAME: KenosMac
+        GENERATE_INFOPLIST_FILE: NO
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+    dependencies:
+      - package: KenosContracts
+      - package: KenosClient
+      - package: KenosStore
+      - package: KenosActions
+      - package: KenosDesign
+    scheme:
+      testTargets:
+        - KenosMacTests
+
+  KenosIOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: KenosIOS
+      - package: KenosClient
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  KenosMacTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: KenosMac
+      - package: KenosClient
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: space.kenos.app.macos.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  KenosIOS:
+    build:
+      targets:
+        KenosIOS: all
+        KenosIOSTests: [test]
+    test:
+      targets:
+        - KenosIOSTests
+  KenosMac:
+    build:
+      targets:
+        KenosMac: all
+        KenosMacTests: [test]
+    test:
+      targets:
+        - KenosMacTests
