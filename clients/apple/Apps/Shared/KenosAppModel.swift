@@ -3,6 +3,8 @@ import SwiftUI
 import KenosActions
 import KenosClient
 import KenosDesign
+import KenosHandoff
+import KenosNotifications
 import KenosStore
 
 @MainActor
@@ -26,6 +28,8 @@ final class KenosAppModel: ObservableObject {
     @Published var moreDestination: MoreDestination?
     @Published var captureText = ""
     @Published var lastCapture: CaptureDraft?
+    @Published var watchCaptures: [CaptureDraft] = []
+    @Published var notificationInbox: [KenosNotificationRecord] = []
     @Published var assistantMessages: [AssistantMessage] = [
         AssistantMessage(role: .assistant, text: "Kenos Assistant shell · mock streaming · no domain writes."),
     ]
@@ -39,7 +43,10 @@ final class KenosAppModel: ObservableObject {
     let queue: KenosOfflineActionQueue
     let sessionStore: KenosKeychainSessionStore
     let session: MockSessionProvider
+    let handoff: KenosHandoffSession
+    let notifications: MockNotificationProvider
     let approvalsActionsEnabled = false
+    private let ownerId = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
 
     struct AssistantMessage: Identifiable, Equatable {
         enum Role { case user, assistant, system }
@@ -53,11 +60,11 @@ final class KenosAppModel: ObservableObject {
         cacheDirectory: URL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("kenos-phase4a")
     ) {
-        let session = MockSessionProvider()
+        let session = MockSessionProvider(owner: ownerId)
         self.session = session
         let secure = InMemorySecureStore()
         self.sessionStore = KenosKeychainSessionStore(secureStore: secure)
-        try? sessionStore.save(token: "mock-session-token", ownerId: UUID(uuidString: "20000000-0000-4000-8000-000000000001")!)
+        try? sessionStore.save(token: "mock-session-token", ownerId: ownerId)
         self.repository = KenosReadRepository(
             client: client,
             store: FileProjectionStore(directory: cacheDirectory.appendingPathComponent("projections")),
@@ -66,10 +73,24 @@ final class KenosAppModel: ObservableObject {
         self.queue = KenosOfflineActionQueue(
             store: FileActionQueueStore(directory: cacheDirectory.appendingPathComponent("queue"))
         )
+        self.handoff = KenosHandoffSession(
+            transport: FakeCompanionTransport(),
+            ownerId: ownerId,
+            persistDirectory: cacheDirectory.appendingPathComponent("handoff")
+        )
+        self.notifications = MockNotificationProvider()
     }
 
     func bootstrap() async {
         await repository.bootstrap()
+        try? await notifications.schedule(KenosNotificationFixtures.planReminder())
+        try? await notifications.schedule(KenosNotificationFixtures.approvalRequested())
+        notificationInbox = await notifications.pending()
+        try? await handoff.drainIncoming()
+        watchCaptures = handoff.receivedCaptures
+        if let link = handoff.lastReceivedDeepLink {
+            open(urlString: link)
+        }
     }
 
     func open(_ link: KenosDeepLink) {
@@ -103,6 +124,13 @@ final class KenosAppModel: ObservableObject {
         open(KenosDeepLinkRouter.parse(urlString))
     }
 
+    func openNotification(_ record: KenosNotificationRecord) {
+        if KenosNotificationSafety.isExpired(record, now: ISO8601DateFormatter().string(from: Date())) {
+            return
+        }
+        open(urlString: record.deepLink)
+    }
+
     func sendAssistant(_ text: String) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
@@ -128,5 +156,11 @@ final class KenosAppModel: ObservableObject {
             idempotencyKey: "capture-\(draft.id.uuidString)",
             correlationId: draft.correlationId
         )
+    }
+
+    func reviewWatchCapture(_ draft: CaptureDraft) {
+        lastCapture = draft
+        moreDestination = .capture
+        selectedTab = .more
     }
 }

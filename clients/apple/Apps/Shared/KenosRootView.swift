@@ -2,6 +2,7 @@ import SwiftUI
 import KenosClient
 import KenosContracts
 import KenosDesign
+import KenosNotifications
 import KenosStore
 
 struct KenosRootView: View {
@@ -433,6 +434,38 @@ struct MoreView: View {
             NavigationLink("Quick Capture", value: KenosAppModel.MoreDestination.capture)
             NavigationLink("System status", value: KenosAppModel.MoreDestination.system)
             NavigationLink("Settings", value: KenosAppModel.MoreDestination.settings)
+            if !model.watchCaptures.isEmpty {
+                Section("Watch captures") {
+                    ForEach(model.watchCaptures) { draft in
+                        Button {
+                            model.reviewWatchCapture(draft)
+                        } label: {
+                            KenosRow(
+                                title: "From Watch",
+                                subtitle: KenosGlanceMapper.captureGlance(from: draft).safePreview,
+                                meta: draft.queueStatus
+                            )
+                        }
+                        .accessibilityIdentifier("kenos.capture.watch.\(draft.id.uuidString)")
+                    }
+                }
+            }
+            if !model.notificationInbox.isEmpty {
+                Section("Notifications (mock)") {
+                    ForEach(model.notificationInbox) { note in
+                        Button {
+                            model.openNotification(note)
+                        } label: {
+                            KenosRow(
+                                title: note.safeTitle,
+                                subtitle: KenosNotificationSafety.lockScreenBody(for: note),
+                                meta: note.type.rawValue
+                            )
+                        }
+                        .accessibilityIdentifier("kenos.notification.\(note.id.uuidString)")
+                    }
+                }
+            }
         }
         .navigationTitle("More")
         .accessibilityIdentifier("kenos.more")
