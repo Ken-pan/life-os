@@ -402,9 +402,9 @@ Approved temporary defaults now on file:
 - Starting revision: `4f17d7b978eae72155ead4c40eee6826bf192414`; branch `master`; one worktree.
 - Authoritative Wave 1 baseline: `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19` (on `origin/master`).
 - Authoritative push (first paused): `c4819e9d38a441106985d589709dfbc049ad2016`; current `origin/master` tip after READY docs: `ed7a41c3a932a9b8e0146c0296169ee0b0964b93` — see `docs/qa/kenos-authoritative-push-report.md`.
-- Verdict: `KENOS PRODUCTION WAVE 1 — READY_FOR_OWNER_APPROVAL`.
-- Production client auto-builds: **paused** (`stop_builds=true` on 7 sites; UIUX Gallery disabled). Re-enable only under `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`.
-- Staging `prrytaemdsksblwmufei`: `HOSTED_RESTORE_VERIFIED` + Wave 1 applied + `HOSTED_DUAL_USER_SECURITY_PASS`.
-- Explicitly **not** done: production DB apply, revoke/cutover, Portal switch, Apple distribution, client publish of this tip.
-- Unrelated WIP left unstaged.
-- Stop: await `APPROVE_KENOS_PRODUCTION_WAVE_1` for DB apply only.
+- Verdict after paused push: was `READY_FOR_OWNER_APPROVAL`; Owner issued `APPROVE_KENOS_PRODUCTION_WAVE_1`.
+- Apply attempt **stopped** at preflight: `PRODUCTION_WAVE1_PREFLIGHT_MISMATCH` — CI on tip `ea559982…` / prior push SHAs **failure** (aios `check:lifeos-styles` + planner e2e). See `docs/qa/kenos-production-wave1-apply-report.md`.
+- Production DB **unchanged** (tip `20260717220000`, no `kenos_*`).
+- Production client auto-builds: still **paused**. Re-enable only under `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`.
+- Staging `prrytaemdsksblwmufei` evidence remains valid.
+- Stop: Owner must get CI PASS (or waive) before re-approving production apply.
