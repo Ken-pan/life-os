@@ -17,6 +17,7 @@ run_gate "phase3 Work loop foundation" node scripts/check-kenos-phase3.mjs
 run_gate "phase4 Apple native daily loop" node scripts/check-kenos-phase4.mjs
 run_gate "phase4b cross-device daily loop" node scripts/check-kenos-phase4b.mjs
 run_gate "phase5 contextual intelligence" node scripts/check-kenos-phase5.mjs
+run_gate "phase6 stage-a production packet" node scripts/check-kenos-phase6.mjs
 run_gate "ticket naming" npm run verify:ticket-naming
 run_gate "dependency boundaries" npm run check:lifeos-boundaries
 run_gate "style boundaries" npm run check:lifeos-styles

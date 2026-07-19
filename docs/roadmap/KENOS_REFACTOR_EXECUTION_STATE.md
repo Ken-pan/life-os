@@ -390,3 +390,14 @@ Approved temporary defaults now on file:
 - Production locks: no Executor, no production notifications/APNs, no Apple Focus entitlement cutover, no writer/Portal cutover, no deploy/push.
 - Unrelated WIP left unstaged: Finance/Planner/UI gallery/roadmap/usage-audit/platform-web wikilinks/phase2 script.
 - Next safe step: user-reviewed push. Production integration remains owner-gated.
+
+## Phase 6 Stage A — production Wave 1 approval packet (2026-07-19)
+
+- Starting revision: `8e2c406dbf59a657679714537b4d537368658552`; branch `master`; one worktree.
+- Verdict: `KENOS PHASE 6 — STAGE_A_APPROVAL_PACKET_READY` (awaiting `APPROVE_KENOS_PRODUCTION_WAVE_1`).
+- Hosted read-only inventory (`iueozzuctstwvzbcxcyh`): no `kenos_*` tables/functions; `planner_tasks` still has authenticated insert/update/delete/select_own; tip migration `20260717220000`; counts tasks≈1664 / life_events≈21.
+- Artifacts: environment matrix, writer matrix, schema diff procedure, Wave 1 migration package index, Focus review SQL `20260719110000_kenos_focus_context.sql`, backup/restore template (drill incomplete), dual-user plan, observability/shadow/canary doc, approval packet.
+- Guard: `scripts/check-kenos-phase6.mjs` wired into `verify-kenos-refactor.sh`.
+- Explicitly **not** done: hosted apply, revoke/cutover, Portal switch, Apple distribution, deploy, push, restore drill.
+- Unrelated WIP left unstaged (Finance/Planner/UI gallery/roadmap/usage-audit/wikilinks/phase2).
+- Stop: await Owner phrase `APPROVE_KENOS_PRODUCTION_WAVE_1`.
