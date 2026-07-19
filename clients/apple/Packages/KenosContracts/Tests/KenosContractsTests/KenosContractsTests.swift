@@ -113,6 +113,22 @@ private func decodeAndValidate(_ contract: String, value: JSONValue, createTaskB
         return try encoder.encode(decoded)
     case "connectorRegistryEntry":
         return try encoder.encode(decoder.decode(ConnectorRegistryEntry.self, from: input))
+    case "focusContext":
+        let decoded = try decoder.decode(KenosFocusContext.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "deferredItem":
+        let decoded = try decoder.decode(KenosDeferredItem.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "interruptionCandidate":
+        return try encoder.encode(decoder.decode(KenosInterruptionCandidate.self, from: input))
+    case "proactiveSuggestion":
+        let decoded = try decoder.decode(KenosProactiveSuggestion.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "sessionSummary":
+        return try encoder.encode(decoder.decode(KenosSessionSummary.self, from: input))
     default: throw CocoaError(.coderInvalidValue)
     }
 }
@@ -176,6 +192,18 @@ func invalidCanonicalFixturesFailClosed() throws {
             }
             continue
         }
+        if fixture.contract == "focusStatusTransition" {
+            guard case let .object(transition) = try materialize(fixture, validById: validById),
+                  case let .string(from)? = transition["from"],
+                  case let .string(to)? = transition["to"],
+                  let fromStatus = KenosFocusStatus(rawValue: from),
+                  let toStatus = KenosFocusStatus(rawValue: to)
+            else { Issue.record("Malformed focus transition fixture \(fixture.id)"); continue }
+            #expect(throws: KenosContractError.invalidFocusTransition) {
+                try KenosFocusStatusTransitions.validateTransition(from: fromStatus, to: toStatus)
+            }
+            continue
+        }
 
         let value = try materialize(fixture, validById: validById)
         do {
@@ -185,6 +213,49 @@ func invalidCanonicalFixturesFailClosed() throws {
             // Expected: invalid canonical fixtures must be rejected.
         }
     }
+}
+
+@Test("Focus status transitions match the Phase 5 graph")
+func focusStatusTransitions() throws {
+    try KenosFocusStatusTransitions.validateTransition(from: .inactive, to: .starting)
+    try KenosFocusStatusTransitions.validateTransition(from: .starting, to: .active)
+    try KenosFocusStatusTransitions.validateTransition(from: .active, to: .paused)
+    try KenosFocusStatusTransitions.validateTransition(from: .active, to: .temporarilyLeft)
+    try KenosFocusStatusTransitions.validateTransition(from: .paused, to: .active)
+    try KenosFocusStatusTransitions.validateTransition(from: .ending, to: .completed)
+    #expect(throws: KenosContractError.invalidFocusTransition) {
+        try KenosFocusStatusTransitions.validateTransition(from: .completed, to: .active)
+    }
+    #expect(throws: KenosContractError.invalidFocusTransition) {
+        try KenosFocusStatusTransitions.validateTransition(from: .inactive, to: .active)
+    }
+    #expect(KenosFocusRuntime.canTransitionFocusStatus(from: .active, to: .ending))
+    #expect(!KenosFocusRuntime.canTransitionFocusStatus(from: .cancelled, to: .active))
+}
+
+@Test("Unknown Focus mode fails closed")
+func unknownFocusModeFailClosed() {
+    let parsed = KenosFocusRuntime.parseFocusModeFailClosed("not_a_real_mode")
+    #expect(!parsed.isOk)
+    #expect(parsed.errorMessage?.contains("fail-closed") == true)
+    #expect(KenosFocusRuntime.parseFocusModeFailClosed("training").isOk)
+    #expect(KenosFocusRuntime.parseFocusModeFailClosed("deep_work").value == .deepWork)
+}
+
+@Test("Focus start hides global navigation only while active")
+func focusHidesGlobalNavigation() throws {
+    let owner = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
+    let started = KenosFocusRuntime.startFocusSession(
+        existingForeground: nil,
+        ownerId: owner,
+        mode: .training,
+        title: "Push Day",
+        safeSummary: "Local Training Focus simulation"
+    )
+    let focus = try #require(started.value)
+    #expect(KenosFocusRuntime.hidesGlobalNavigation(focus))
+    let paused = try #require(KenosFocusRuntime.transitionFocus(focus, to: .paused).value)
+    #expect(!KenosFocusRuntime.hidesGlobalNavigation(paused))
 }
 
 @Test("Swift enums and transition graph match the machine-readable manifest")
@@ -211,4 +282,10 @@ func manifestParity() throws {
     #expect(manifest["workDecisionStatuses"] as? [String] == KenosWorkDecisionStatus.allCases.map(\.rawValue))
     #expect(manifest["workActionProposalStatuses"] as? [String] == KenosWorkActionProposalStatus.allCases.map(\.rawValue))
     #expect(manifest["workPriorities"] as? [String] == KenosWorkPriority.allCases.map(\.rawValue))
+    if let focusModes = manifest["focusModes"] as? [String] {
+        #expect(focusModes == KenosFocusMode.allCases.map(\.rawValue))
+    }
+    if let focusStatuses = manifest["focusStatuses"] as? [String] {
+        #expect(focusStatuses == KenosFocusStatus.allCases.map(\.rawValue))
+    }
 }

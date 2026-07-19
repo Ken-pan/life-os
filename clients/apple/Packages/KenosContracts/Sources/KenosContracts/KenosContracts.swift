@@ -13,6 +13,9 @@ public enum KenosContractError: Error, Equatable, Sendable {
     case approvalActionMismatch
     case unredactedSensitivePayload
     case unsupportedCreateTaskBoundary
+    case invalidFocusState
+    case invalidFocusTransition
+    case unknownFocusMode(String)
 }
 
 public enum JSONValue: Codable, Equatable, Sendable {
@@ -131,6 +134,14 @@ public struct EntityRef: Codable, Equatable, Sendable {
     public let ownerDomain: KenosDomain
     public let ownerId: UUID
     public let version: Int?
+
+    public init(id: UUID, type: String, ownerDomain: KenosDomain, ownerId: UUID, version: Int? = nil) {
+        self.id = id
+        self.type = type
+        self.ownerDomain = ownerDomain
+        self.ownerId = ownerId
+        self.version = version
+    }
 
     public func validate() throws {
         guard type.range(of: #"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$"#, options: .regularExpression) != nil else {

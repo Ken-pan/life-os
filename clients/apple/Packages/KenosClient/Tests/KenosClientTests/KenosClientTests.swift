@@ -70,3 +70,26 @@ func mockSessionExpired() async throws {
         _ = try await session.accessToken()
     }
 }
+
+@Test("Focus store seeds deferred Work/Money/Home and R0 suggestions")
+@MainActor
+func focusStoreTrainingSeed() throws {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("kenos-focus-test-\(UUID().uuidString)")
+    let store = KenosFocusStore(directory: dir)
+    store.startTrainingFocus()
+    #expect(store.focus?.mode == .training)
+    #expect(store.hidesGlobalNavigation)
+    #expect(store.deferred.filter { $0.status == .pending }.count >= 2)
+    let domains = Set(store.deferred.map(\.sourceDomain))
+    #expect(domains.contains(.work))
+    #expect(domains.contains(.money))
+    #expect(domains.contains(.home))
+    #expect(store.suggestions.contains { $0.risk == .r0 && $0.status == .shown })
+    #expect(store.budget.shownNonUrgentCount <= store.budget.maxSuggestionsPerSession)
+    store.end()
+    #expect(store.focus?.status == .completed)
+    #expect(store.summary != nil)
+    store.logoutClear()
+    #expect(store.focus == nil)
+    try? FileManager.default.removeItem(at: dir)
+}

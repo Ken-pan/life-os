@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 import KenosActions
 import KenosClient
+import KenosContracts
 import KenosHandoff
 import KenosStore
 
@@ -44,8 +45,10 @@ final class KenosWatchModel: ObservableObject {
 
     let repository: KenosReadRepository
     let handoff: KenosHandoffSession
+    let focusStore: KenosFocusStore
     let approvalsActionsEnabled = false
     private let ownerId = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         let cache = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -61,12 +64,30 @@ final class KenosWatchModel: ObservableObject {
             ownerId: ownerId,
             persistDirectory: cache.appendingPathComponent("handoff")
         )
+        let focusStore = KenosFocusStore(
+            ownerId: ownerId,
+            directory: cache.appendingPathComponent("focus")
+        )
+        self.focusStore = focusStore
+        focusStore.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     func bootstrap() async {
         await repository.bootstrap()
         refreshGlances()
     }
+
+    func startTrainingFocus() {
+        focusStore.startTrainingFocus(title: "Watch Training", safeSummary: "Local Focus glance")
+    }
+
+    func pauseFocus() { focusStore.pause() }
+    func resumeFocus() { focusStore.resume() }
+    func endFocus() { focusStore.end() }
+    func dismissFocusSummary() { focusStore.dismissCompletedSummary() }
 
     func refreshGlances() {
         let snap = repository.snapshot
@@ -130,6 +151,7 @@ struct KenosWatchRootView: View {
     @ObservedObject var model: KenosWatchModel
 
     var body: some View {
+        // Keep existing vertical-page IA; Focus only replaces Today content when active.
         TabView(selection: $model.tab) {
             WatchTodayView(model: model).tag(KenosWatchModel.Tab.today)
             WatchCaptureView(model: model).tag(KenosWatchModel.Tab.capture)
@@ -147,45 +169,109 @@ struct WatchTodayView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Kenos")
-                    .font(.headline)
-                    .accessibilityIdentifier("kenos.watch.brand")
-                Text(model.glance.state.uppercased())
-                    .font(.caption2)
-                    .accessibilityIdentifier("kenos.watch.today.state")
-                if let plan = model.glance.nextPlanTitle {
-                    Text(plan)
-                        .font(.title3.weight(.semibold))
-                        .accessibilityIdentifier("kenos.watch.today.plan")
-                }
-                if let deliverable = model.glance.activeDeliverableTitle {
-                    Text(deliverable)
-                        .font(.body)
-                        .accessibilityIdentifier("kenos.watch.today.work")
-                }
-                Text(inboxApprovalLine)
-                    .font(.caption)
-                    .accessibilityIdentifier("kenos.watch.today.counts")
-                if let sync = model.glance.lastSync {
-                    Text("Synced \(sync)")
-                        .font(.caption2)
-                }
-                Button("Open on iPhone") {
-                    model.openOnPhone(model.glance.nextPlanDeepLink ?? "kenos://today")
-                }
-                .accessibilityIdentifier("kenos.watch.today.handoff")
+            if model.focusStore.showCompletedSummary {
+                WatchFocusSummaryView(model: model)
+            } else if model.focusStore.isForeground || model.focusStore.hidesGlobalNavigation {
+                WatchFocusSessionView(model: model)
+            } else {
+                watchTodayIdle
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .navigationTitle("Today")
         .accessibilityIdentifier("kenos.watch.today")
+    }
+
+    private var watchTodayIdle: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Kenos")
+                .font(.headline)
+                .accessibilityIdentifier("kenos.watch.brand")
+            Text(model.glance.state.uppercased())
+                .font(.caption2)
+                .accessibilityIdentifier("kenos.watch.today.state")
+            if let plan = model.glance.nextPlanTitle {
+                Text(plan)
+                    .font(.title3.weight(.semibold))
+                    .accessibilityIdentifier("kenos.watch.today.plan")
+            }
+            if let deliverable = model.glance.activeDeliverableTitle {
+                Text(deliverable)
+                    .font(.body)
+                    .accessibilityIdentifier("kenos.watch.today.work")
+            }
+            Text(inboxApprovalLine)
+                .font(.caption)
+                .accessibilityIdentifier("kenos.watch.today.counts")
+            if let sync = model.glance.lastSync {
+                Text("Synced \(sync)")
+                    .font(.caption2)
+            }
+            Button("Training Focus") {
+                model.startTrainingFocus()
+            }
+            .accessibilityIdentifier("kenos.watch.focus.startTraining")
+            Button("Open on iPhone") {
+                model.openOnPhone(model.glance.nextPlanDeepLink ?? "kenos://today")
+            }
+            .accessibilityIdentifier("kenos.watch.today.handoff")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var inboxApprovalLine: String {
         let inbox = model.glance.pendingInboxCount.map(String.init) ?? "—"
         let approvals = model.glance.pendingApprovalCount.map(String.init) ?? "—"
         return "Inbox \(inbox) · Approvals \(approvals)"
+    }
+}
+
+struct WatchFocusSessionView: View {
+    @ObservedObject var model: KenosWatchModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(model.focusStore.focus?.title ?? "Focus")
+                .font(.headline)
+                .accessibilityIdentifier("kenos.watch.focus.title")
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Text(KenosFocusStore.formatDuration(model.focusStore.elapsedSeconds(at: context.date)))
+                    .font(.title2.monospacedDigit())
+                    .accessibilityIdentifier("kenos.watch.focus.timer")
+            }
+            // Intentionally omit Work / Money / Home counts while Focus is active.
+            Text(model.focusStore.isPaused ? "Paused" : "Active")
+                .font(.caption2)
+            HStack {
+                if model.focusStore.isPaused {
+                    Button("Resume") { model.resumeFocus() }
+                } else {
+                    Button("Pause") { model.pauseFocus() }
+                }
+                Button("End") { model.endFocus() }
+            }
+            .accessibilityIdentifier("kenos.watch.focus.controls")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier("kenos.watch.focus.session")
+    }
+}
+
+struct WatchFocusSummaryView: View {
+    @ObservedObject var model: KenosWatchModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Done")
+                .font(.headline)
+            if let summary = model.focusStore.summary {
+                Text(summary.progress)
+                    .font(.caption)
+                Text(KenosFocusStore.formatDuration(summary.durationSeconds))
+                    .font(.caption2)
+            }
+            Button("OK") { model.dismissFocusSummary() }
+        }
+        .accessibilityIdentifier("kenos.watch.focus.summary")
     }
 }
 

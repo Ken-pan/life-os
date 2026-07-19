@@ -36,6 +36,9 @@ final class KenosAppModel: ObservableObject {
         AssistantMessage(role: .assistant, text: "Ask Kenos anything. Writes still go through Approvals when needed."),
     ]
     @Published var streaming = false
+    /// Capture sheet while Focus hides TabView/Sidebar.
+    @Published var showCaptureSheet = false
+    let focusStore: KenosFocusStore
 
     enum InboxDestination: String, Hashable {
         case approvals, activity, capture, system, settings, library
@@ -60,6 +63,7 @@ final class KenosAppModel: ObservableObject {
     let notifications: MockNotificationProvider
     let approvalsActionsEnabled = false
     private let ownerId = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
+    private var cancellables = Set<AnyCancellable>()
 
     struct AssistantMessage: Identifiable, Equatable {
         enum Role { case user, assistant, system }
@@ -92,6 +96,15 @@ final class KenosAppModel: ObservableObject {
             persistDirectory: cacheDirectory.appendingPathComponent("handoff")
         )
         self.notifications = MockNotificationProvider()
+        let focusStore = KenosFocusStore(
+            ownerId: ownerId,
+            directory: cacheDirectory.appendingPathComponent("focus")
+        )
+        self.focusStore = focusStore
+        focusStore.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     func bootstrap() async {
@@ -105,6 +118,23 @@ final class KenosAppModel: ObservableObject {
             open(urlString: link)
         }
     }
+
+    var hideGlobalNavForFocus: Bool { focusStore.hidesGlobalNavigation }
+
+    func startTrainingFocus() {
+        focusStore.startTrainingFocus()
+    }
+
+    func startDeepWorkFocus() {
+        focusStore.startDeepWorkFocus()
+    }
+
+    func pauseFocus() { focusStore.pause() }
+    func resumeFocus() { focusStore.resume() }
+    func temporarilyLeaveFocus() { focusStore.temporarilyLeave() }
+    func returnToFocus() { focusStore.returnToFocus() }
+    func endFocus() { focusStore.end() }
+    func dismissFocusSummary() { focusStore.dismissCompletedSummary() }
 
     func open(_ link: KenosDeepLink) {
         route = link
@@ -162,6 +192,10 @@ final class KenosAppModel: ObservableObject {
     }
 
     func openCapture() {
+        if hideGlobalNavForFocus || focusStore.isPaused || focusStore.showCompletedSummary {
+            showCaptureSheet = true
+            return
+        }
         presentInboxDestination(.capture)
     }
 
@@ -197,13 +231,14 @@ final class KenosAppModel: ObservableObject {
         presentInboxDestination(.capture)
     }
 
-    /// Unified logout: session store, projection cache, offline queue, handoff, UI drafts.
+    /// Unified logout: session store, projection cache, offline queue, handoff, focus, UI drafts.
     func logout() async {
         await session.clearSession()
         try? sessionStore.clear()
         await repository.logoutClear()
         try? queue.logoutClear()
         try? handoff.logoutClear()
+        focusStore.logoutClear()
         watchCaptures = []
         notificationInbox = []
         lastCapture = nil

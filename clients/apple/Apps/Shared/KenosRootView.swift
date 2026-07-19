@@ -10,15 +10,41 @@ struct KenosRootView: View {
 
     var body: some View {
         Group {
-            #if os(iOS)
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                iPadSplit
+            if model.focusStore.showCompletedSummary {
+                NavigationStack {
+                    FocusSummaryView(model: model)
+                }
+            } else if model.hideGlobalNavForFocus || model.focusStore.isPaused {
+                // Active hides global nav; paused keeps session chrome so Resume stays reachable.
+                NavigationStack {
+                    FocusSessionView(model: model)
+                }
             } else {
-                iPhoneTabs
+                #if os(iOS)
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    iPadSplit
+                } else {
+                    iPhoneTabs
+                }
+                #else
+                macSidebar
+                #endif
             }
-            #else
-            macSidebar
-            #endif
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if model.focusStore.showReturnBanner {
+                FocusReturnBanner(model: model)
+            }
+        }
+        .sheet(isPresented: $model.showCaptureSheet) {
+            NavigationStack {
+                CaptureView(model: model)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close") { model.showCaptureSheet = false }
+                        }
+                    }
+            }
         }
         .task { await model.bootstrap() }
         .onOpenURL { url in
@@ -111,6 +137,139 @@ struct KenosRootView: View {
         case .spaces: SpacesHubView(model: model)
         case .inbox: InboxView(model: model)
         }
+    }
+}
+
+struct FocusReturnBanner: View {
+    @ObservedObject var model: KenosAppModel
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Focus paused outside session")
+                    .font(KenosTypography.caption.weight(.semibold))
+                if let title = model.focusStore.focus?.title {
+                    Text(title)
+                        .font(KenosTypography.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Button("Return") { model.returnToFocus() }
+                .accessibilityIdentifier("kenos.focus.return")
+            Button("End") { model.endFocus() }
+                .accessibilityIdentifier("kenos.focus.banner.end")
+        }
+        .padding(.horizontal, KenosSpacing.md)
+        .padding(.vertical, KenosSpacing.sm)
+        .background(.ultraThinMaterial)
+        .accessibilityIdentifier("kenos.focus.returnBanner")
+    }
+}
+
+struct FocusSessionView: View {
+    @ObservedObject var model: KenosAppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: KenosSpacing.lg) {
+            if let focus = model.focusStore.focus {
+                Text(focus.title)
+                    .font(KenosTypography.title)
+                    .accessibilityIdentifier("kenos.focus.title")
+                Text(focus.safeSummary)
+                    .font(KenosTypography.body)
+                    .foregroundStyle(.secondary)
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    Text(KenosFocusStore.formatDuration(model.focusStore.elapsedSeconds(at: context.date)))
+                        .font(.system(size: 44, weight: .medium, design: .rounded))
+                        .monospacedDigit()
+                        .accessibilityIdentifier("kenos.focus.timer")
+                }
+                Text(statusLabel(focus.status))
+                    .font(KenosTypography.caption)
+                    .foregroundStyle(.secondary)
+                if let suggestion = model.focusStore.suggestions.first(where: { $0.status == .shown }) {
+                    KenosRow(
+                        title: suggestion.title,
+                        subtitle: suggestion.safeSummary,
+                        meta: "\(suggestion.risk.rawValue) · \(suggestion.whyNow)"
+                    )
+                    .accessibilityIdentifier("kenos.focus.suggestion")
+                }
+                HStack(spacing: KenosSpacing.sm) {
+                    if model.focusStore.isPaused {
+                        Button("Resume") { model.resumeFocus() }
+                            .accessibilityIdentifier("kenos.focus.resume")
+                    } else {
+                        Button("Pause") { model.pauseFocus() }
+                            .accessibilityIdentifier("kenos.focus.pause")
+                    }
+                    Button("Leave") { model.temporarilyLeaveFocus() }
+                        .accessibilityIdentifier("kenos.focus.leave")
+                    Button("End", role: .destructive) { model.endFocus() }
+                        .accessibilityIdentifier("kenos.focus.end")
+                }
+                .buttonStyle(.bordered)
+                Spacer()
+                Text("Capture stays available from the system menu / toolbar.")
+                    .font(KenosTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(KenosSpacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .navigationTitle("Focus")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Capture", systemImage: "plus") { model.openCapture() }
+            }
+        }
+        .accessibilityIdentifier("kenos.focus.session")
+    }
+
+    private func statusLabel(_ status: KenosFocusStatus) -> String {
+        switch status {
+        case .active: return "Active"
+        case .paused: return "Paused"
+        case .temporarilyLeft: return "Temporarily left"
+        default: return status.rawValue
+        }
+    }
+}
+
+struct FocusSummaryView: View {
+    @ObservedObject var model: KenosAppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: KenosSpacing.md) {
+            Text("Session complete")
+                .font(KenosTypography.title)
+            if let summary = model.focusStore.summary {
+                Text(summary.progress)
+                    .font(KenosTypography.body)
+                Text(KenosFocusStore.formatDuration(summary.durationSeconds))
+                    .font(KenosTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("kenos.focus.summary.duration")
+                if !summary.completedActions.isEmpty {
+                    ForEach(summary.completedActions, id: \.self) { action in
+                        Text("· \(action)")
+                            .font(KenosTypography.body)
+                    }
+                }
+                Text(summary.nextRecommendedStep)
+                    .font(KenosTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Button("Done") { model.dismissFocusSummary() }
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("kenos.focus.summary.done")
+            Spacer()
+        }
+        .padding(KenosSpacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .navigationTitle("Summary")
+        .accessibilityIdentifier("kenos.focus.summary")
     }
 }
 
@@ -238,6 +397,28 @@ struct SpacesHubView: View {
 
     var body: some View {
         List {
+            Section("Focus") {
+                Button {
+                    model.startTrainingFocus()
+                } label: {
+                    KenosRow(
+                        title: "Start Training Focus",
+                        subtitle: "Hide Work / Money / Home noise",
+                        meta: "local"
+                    )
+                }
+                .accessibilityIdentifier("kenos.spaces.focus.training")
+                Button {
+                    model.startDeepWorkFocus()
+                } label: {
+                    KenosRow(
+                        title: "Start Deep Work Focus",
+                        subtitle: "Stay on Work / Plan / Library",
+                        meta: "local"
+                    )
+                }
+                .accessibilityIdentifier("kenos.spaces.focus.deepWork")
+            }
             Section("Spaces") {
                 NavigationLink("Work") {
                     WorkHubView(model: model)

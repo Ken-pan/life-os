@@ -26,6 +26,11 @@ struct KenosMacApp: App {
                 Button("Approvals") { model.open(.approvals) }
                 Button("Capture") { model.openCapture() }
                 Button("System") { model.open(.system) }
+                Divider()
+                Button("Start Training Focus") { model.startTrainingFocus() }
+                Button("Start Deep Work Focus") { model.startDeepWorkFocus() }
+                Button("End Focus") { model.endFocus() }
+                    .disabled(!model.focusStore.isForeground && !model.focusStore.showCompletedSummary)
             }
         }
 
