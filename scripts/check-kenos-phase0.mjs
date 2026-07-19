@@ -55,8 +55,17 @@ const changed = [
   ...execSync('git ls-files --others --exclude-standard', { encoding: 'utf8' }).trim().split('\n').filter(Boolean),
 ]
 const allowed = [/^AGENTS\.md$/, /^docs\/architecture\/KENOS_REFACTOR\.md$/, /^docs\/architecture\/kenos-.*\.md$/, /^docs\/roadmap\/KENOS_REFACTOR_.*\.md$/, /^docs\/roadmap\/KENOS_MIGRATION_LEDGER\.md$/, /^docs\/ops\/kenos-.*\.md$/, /^docs\/qa\/README\.md$/, /^docs\/qa\/kenos-.*\.md$/, /^scripts\/verify-kenos-refactor\.sh$/, /^scripts\/check-kenos-.*\.mjs$/, /^tests\/kenos\//]
+const krP1001RuntimeAllowed = ledger.includes('Status: `TEMPORARY_APPROVED_FOR_KR-P1-001`')
+  ? [
+      /^apps\/planner\/src\/lib\/domain\/planTaskCommand(\.test)?\.js$/,
+      /^apps\/planner\/src\/lib\/domain\/tasks\.js$/,
+      /^apps\/planner\/src\/lib\/persist\/migrate\.js$/,
+      /^apps\/planner\/server\/mcpTasks(\.test)?\.mjs$/,
+      /^apps\/planner\/netlify\/functions\/mcp\.mjs$/,
+    ]
+  : []
 for (const path of changed) {
-  if (!allowed.some((pattern) => pattern.test(path))) fail(`allowlist violation in diff: ${path}`)
+  if (![...allowed, ...krP1001RuntimeAllowed].some((pattern) => pattern.test(path))) fail(`allowlist violation in diff: ${path}`)
 }
 
 for (const token of ['Starting revision:', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'Phase 0 preparation definition of done:']) {

@@ -2,6 +2,7 @@ import { S, save, uid, todayKey } from '../state.svelte.js';
 import { SYSTEM_LIST_INBOX, normalizeRecurrence } from '../types.js';
 import { nextDueDate, taskTemplateFrom } from './recurrence.js';
 import { syncRemindersToServiceWorker } from '../services/reminders.js';
+import { executeCreateTaskCommand } from './planTaskCommand.js';
 import {
   restoreAttachmentsForOwner,
   softDeleteAttachmentsForOwner,
@@ -22,45 +23,15 @@ function afterMutation() {
  * @returns {import('../types.js').Task}
  */
 export function createTask(input = {}) {
-  const now = Date.now();
-  const maxOrder = S.tasks.reduce((m, t) => Math.max(m, t.sortOrder), 0);
-  const recurrence = normalizeRecurrence(input.recurrence);
-  const task = {
-    id: uid(),
-    title: input.title?.trim() || '',
-    notes: input.notes || '',
-    listId: input.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
-    priority: /** @type {import('../types.js').TaskPriority} */ (input.priority ?? 'P3'),
-    urgency: input.urgency ?? 'normal',
-    size: input.size ?? 'medium',
-    area: input.area ?? 'other',
-    effortMin: input.effortMin ?? null,
-    nextAction: input.nextAction ?? null,
-    aiContext: input.aiContext ?? null,
-    projectId: input.projectId ?? null,
-    dueDate: input.dueDate ?? null,
-    dueTime: input.dueTime ?? null,
-    scheduledDate: input.scheduledDate ?? null,
-    scheduledStart: input.scheduledStart ?? null,
-    durationMinutes: input.durationMinutes ?? null,
-    reminderMinutes: input.reminderMinutes ?? null,
-    recurrence: recurrence
-      ? { ...recurrence, seriesId: recurrence.seriesId || uid() }
-      : null,
-    tags: input.tags ? [...input.tags] : [],
-    subtasks: input.subtasks ? JSON.parse(JSON.stringify(input.subtasks)) : [],
-    completed: false,
-    completedAt: null,
-    createdAt: now,
-    updatedAt: now,
-    deletedAt: null,
-    sortOrder: maxOrder + 1,
-    meta: input.meta ? { kind: 'standard', ...input.meta } : { kind: 'standard' }
-  };
-  S.tasks = [...S.tasks, task];
-  afterMutation();
-  return task;
+  const result = executeCreateTaskCommand({ source: 'plan_ui', ...input });
+  if (!result.ok) throw new Error(result.error.message);
+  clearTimeout(reminderTimer);
+  reminderTimer = setTimeout(() => {
+    syncRemindersToServiceWorker();
+  }, 400);
+  return result.task;
 }
+
 
 /** @param {string} id @param {Partial<import('../types.js').Task>} patch */
 export function updateTask(id, patch) {

@@ -203,3 +203,23 @@ Approved temporary defaults now on file:
 ### Final stop reason
 
 `NO_GO` for KR-P1-001 runtime in this task. The ticket-naming blocker is fixed, but runtime start conditions are not all satisfied because `origin/master` cannot be verified in this checkout and full `npm run verify:kenos-refactor` is blocked by the newly surfaced existing `check:lifeos-styles` raw-hex baseline in `apps/finance/src`. No KR-P1-001 runtime code, SQL/RLS/auth, production migration apply, writer cutover, old-path deletion, push, merge, or deploy was performed.
+
+## KR-P1-001 implementation report (2026-07-18)
+
+- Runtime start gate: GO after corrected baseline `fd7731d44ed10d045c5b6a41fa1e5d5c1330db1e`, clean worktree, single platform `work` checkout, `check-kenos-phase0` PASS, full `npm run verify:kenos-refactor` PASS, and no local evidence of another write-capable agent beyond the active Codex process.
+- Implemented scope: `KR-P1-001 Plan create task Action/Outbox vertical slice` only. Did not start KR-P1-002, did not push/merge/deploy, did not access production DB, did not apply production migrations, did not delete old production paths, and did not implement Work/Connector/bulk/proactive inferred task creation.
+- Single writer: Planner UI compatibility `createTask` now routes through `executeCreateTaskCommand`, the Plan Task Command Handler for task creation.
+- Assistant boundary: Planner MCP `add_task` now builds an explicit `plan.create_task` Assistant Action envelope with R1 policy metadata and redacted Activity projection before persistence; Assistant remains an Action producer and does not own Plan task lifecycle.
+- Atomicity/idempotency/offline retry: local Plan command writes Task + `kenosActionOutbox` + `kenosActivity` in one guarded mutation boundary, rolls back in-memory on failure, requires/derives idempotency/correlation metadata, returns the original Task on repeated idempotency key, and increments pending outbox attempts without creating duplicate Tasks.
+- Activity/security: Activity stores actor/source/policy/entity/correlation/undo metadata and redacts notes/sensitive connector-like payload fields. Work-sourced payloads fail closed with an Activity rejection.
+- Compatibility/rollback: existing Planner reads are unchanged; legacy UI task creation remains available through the compatibility adapter. Rollback is to route `createTask` back to the previous direct writer while leaving already-created Plan tasks as normal tasks and retaining reviewable outbox/activity metadata.
+- Verification run for this implementation: `npm run test -w planner-os -- --run src/lib/domain/planTaskCommand.test.js` PASS (workspace script executes full Planner vitest suite plus reminder and MCP node tests); `node apps/planner/server/mcpTasks.test.mjs` PASS. Post-implementation `npm run verify:kenos-refactor` PASS confirmed deterministic repository gates after the scoped runtime diff.
+- Stop condition: KR-P1-001 implementation slice complete; stop for Ken review/sign-off before any KR-P1-002 or writer cutover work.
+
+## KR-P1-001 review correction (2026-07-19)
+
+- Acceptance status: `IMPLEMENTED — CONDITIONAL_ACCEPTANCE_PENDING_REVIEW`. The Cloud implementation is complete for the scoped local vertical slice, but production cutover semantics are not claimed.
+- Atomicity clarification: KR-P1-001 currently proves Planner local-state atomic projection only. The command mutates Task + `kenosActionOutbox` + `kenosActivity` together and now rolls back the in-memory mutation if browser storage commit fails. It does not claim a Supabase multi-table transaction, because no production migration/RPC was allowed or applied in this slice.
+- Assistant writer clarification: Planner MCP `add_task` now calls the server-side `executeAssistantCreateTaskCommand` wrapper so validation/action-envelope creation is centralized for the MCP path before persistence. This still stops short of a production Supabase command transaction/outbox table; that remains acceptance scope for a follow-up before writer cutover.
+- Offline retry clarification: `retryPendingCreateTaskOutbox()` is retry bookkeeping for the local outbox projection and idempotency proof. It does not publish to a remote queue, compute backoff, mark published/dead-letter, or auto-run on network recovery.
+- Required follow-up before production-grade acceptance/cutover: define `KR-P1-001a` or fold into owner review with a non-production Supabase transaction/RPC or equivalent durable command store that atomically persists Task + Outbox + Activity, implements publish/backoff/dead-letter semantics, and demonstrates Assistant uses that same production command boundary. KR-P1-002 remains prohibited until this review is resolved.

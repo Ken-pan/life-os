@@ -9,6 +9,8 @@ import {
   selectTasks,
   findTaskToComplete,
   isIsoDate,
+  buildCreateTaskAction,
+  executeAssistantCreateTaskCommand,
 } from './mcpTasks.mjs'
 
 /* buildTask：补齐全字段、默认与 createTask 对齐 */
@@ -109,3 +111,45 @@ assert.equal(formatTaskLine({ ...buildTask({ title: 'ok' }), completed: true }),
 }
 
 console.log('mcpTasks.test.mjs: ok')
+
+
+/* KR-P1-001 Assistant add_task is an explicit Action producer envelope. */
+{
+  const command = buildCreateTaskAction(
+    { title: 'Assistant task', notes: 'private body', dueDate: '2026-07-21' },
+    { id: 'task-1', now: 123, correlationId: 'corr-1', idempotencyKey: 'idem-1' },
+  )
+  assert.equal(command.action.source, 'assistant')
+  assert.equal(command.action.userRequested, true)
+  assert.equal(command.action.risk, 'R1')
+  assert.equal(command.task.meta.command.idempotencyKey, 'idem-1')
+  assert.equal(command.outbox.entityRef.id, 'task-1')
+  assert.equal(command.activity.redactedPayload.notes, '[REDACTED_NOTES]')
+  assert.equal(JSON.stringify(command.activity).includes('private body'), false)
+}
+
+
+/* KR-P1-001 remote Assistant command wrapper validates before persistence. */
+{
+  const writes = []
+  const result = await executeAssistantCreateTaskCommand({
+    supabase: { tag: 'sb' },
+    userId: 'user-1',
+    input: { title: 'Remote assistant task' },
+    opts: { id: 'task-remote', now: 456, correlationId: 'corr-remote', idempotencyKey: 'idem-remote' },
+    persistTask: async (supabase, userId, task) => writes.push({ supabase, userId, task }),
+  })
+  assert.equal(result.ok, true)
+  assert.equal(writes.length, 1)
+  assert.equal(writes[0].task.meta.command.correlationId, 'corr-remote')
+
+  const rejected = await executeAssistantCreateTaskCommand({
+    supabase: { tag: 'sb' },
+    userId: 'user-1',
+    input: { title: 'Work body', workSource: { id: 'work-1' } },
+    persistTask: async () => writes.push('should-not-write'),
+  })
+  assert.equal(rejected.ok, false)
+  assert.equal(rejected.error.code, 'work_source_excluded')
+  assert.equal(writes.length, 1)
+}

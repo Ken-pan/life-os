@@ -1,14 +1,13 @@
 import { createMcpHandler } from '@life-os/mcp-server';
 import { userIdOf, needLogin } from '@life-os/mcp-server/auth';
 import {
-  buildTask,
   selectTasks,
   completeTask,
   findTaskToComplete,
   formatTaskLine,
   isToday,
   isIsoDate,
-  newTaskId,
+  executeAssistantCreateTaskCommand,
 } from '../../server/mcpTasks.mjs';
 
 /**
@@ -141,13 +140,14 @@ export default createMcpHandler({
           return `无法确认身份：${err?.message ?? err}`;
         }
         if (!userId) return needLogin('Planner');
-        const task = buildTask({ ...args, title }, { id: newTaskId(), now: Date.now() });
-        try {
-          await upsertTask(supabase, userId, task);
-        } catch (err) {
-          return `创建任务失败：${err?.message ?? err}`;
-        }
-        return `已创建任务：${formatTaskLine(task)}`;
+        const result = await executeAssistantCreateTaskCommand({
+          supabase,
+          userId,
+          input: { ...args, title },
+          persistTask: upsertTask,
+        });
+        if (!result.ok) return `创建任务失败：${result.error.message}`;
+        return `已创建任务：${formatTaskLine(result.task)}`;
       },
     },
     {

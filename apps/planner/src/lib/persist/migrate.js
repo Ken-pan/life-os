@@ -58,6 +58,8 @@ export function defaultState() {
     tasks: [],
     projects: [],
     attachments: [],
+    kenosActionOutbox: [],
+    kenosActivity: [],
     lists: [
       {
         id: SYSTEM_LIST_INBOX,
@@ -350,12 +352,16 @@ export function migrate(raw) {
   const attachments = (
     Array.isArray(r.attachments) ? r.attachments.map(migrateAttachment).filter(Boolean) : []
   ).filter((a) => !isExpiredTombstone(a, now))
+  const kenosActionOutbox = Array.isArray(r.kenosActionOutbox) ? r.kenosActionOutbox : []
+  const kenosActivity = Array.isArray(r.kenosActivity) ? r.kenosActivity : []
   return {
     schemaVersion: SCHEMA_VERSION,
     tasks,
     projects,
     lists,
     attachments,
+    kenosActionOutbox,
+    kenosActivity,
     settings: { ...base.settings, ...(r.settings || {}) },
   }
 }

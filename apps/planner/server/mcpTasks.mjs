@@ -124,3 +124,67 @@ export function findTaskToComplete(tasks, { id = '', title = '' } = {}) {
     null
   )
 }
+
+export function buildCreateTaskAction(input = {}, opts = {}) {
+  const now = opts.now ?? Date.now()
+  const correlationId = opts.correlationId || newTaskId()
+  const idempotencyKey = opts.idempotencyKey || correlationId
+  const task = buildTask(input, { id: opts.id || newTaskId(), now })
+  task.meta = {
+    ...task.meta,
+    source: 'assistant_action',
+    command: { actionType: 'plan.create_task', idempotencyKey, correlationId },
+  }
+  const entityRef = { domain: 'plan', type: 'task', id: task.id }
+  return {
+    action: {
+      type: 'plan.create_task',
+      source: 'assistant',
+      userRequested: true,
+      idempotencyKey,
+      correlationId,
+      risk: 'R1',
+    },
+    task,
+    outbox: {
+      actionType: 'plan.create_task',
+      idempotencyKey,
+      correlationId,
+      entityRef,
+      status: 'pending',
+      payload: { title: task.title, dueDate: task.dueDate, listId: task.listId },
+      createdAt: now,
+      updatedAt: now,
+    },
+    activity: {
+      actionType: 'plan.create_task',
+      correlationId,
+      actor: 'assistant',
+      source: 'assistant',
+      policy: { risk: 'R1', decision: 'allowed', approval: 'not_required' },
+      entityRef,
+      summary: `Created Plan task: ${task.title}`,
+      redactedPayload: { title: task.title, dueDate: task.dueDate, notes: task.notes ? '[REDACTED_NOTES]' : '' },
+      createdAt: now,
+    },
+  }
+}
+
+
+export async function executeAssistantCreateTaskCommand({ supabase, userId, input = {}, persistTask, opts = {} } = {}) {
+  if (!supabase || !userId || typeof persistTask !== 'function') {
+    return { ok: false, error: { code: 'missing_remote_command_dependency', message: 'Remote Plan create-task command requires supabase, userId, and persistTask.' } }
+  }
+  if (input.workSource) {
+    return { ok: false, error: { code: 'work_source_excluded', message: 'Work-sourced task payloads are excluded from KR-P1-001.' } }
+  }
+  const title = String(input.title ?? '').trim()
+  if (!title) return { ok: false, error: { code: 'title_required', message: 'Task title is required.' } }
+  const command = buildCreateTaskAction({ ...input, title }, opts)
+  try {
+    await persistTask(supabase, userId, command.task)
+  } catch (error) {
+    return { ok: false, error: { code: 'remote_task_persist_failed', message: error?.message ?? String(error) }, command }
+  }
+  return { ok: true, ...command }
+}
