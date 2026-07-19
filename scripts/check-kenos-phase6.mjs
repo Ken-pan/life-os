@@ -69,11 +69,29 @@ const focusFormal = read(formal[3])
 if (!packet.includes('KENOS PRODUCTION WAVE 1 FINAL APPROVAL PACKET')) {
   fail('FINAL approval packet title missing')
 }
-if (!packet.includes('WAVE_1_APPROVAL_BLOCKED')) {
-  fail('FINAL packet must honestly report WAVE_1_APPROVAL_BLOCKED while Red gates open')
+const ready = packet.includes('READY_FOR_OWNER_APPROVAL')
+const blocked = packet.includes('WAVE_1_APPROVAL_BLOCKED')
+if (!ready && !blocked) {
+  fail('FINAL packet must report READY_FOR_OWNER_APPROVAL or WAVE_1_APPROVAL_BLOCKED')
 }
-if (!packet.includes('PRODUCTION_APPLY_BLOCKED_UNTIL_AUTHORITATIVE_COMMIT_PUSHED')) {
-  fail('must mark apply blocked until authoritative commit pushed')
+if (ready) {
+  if (!packet.includes('c4819e9d38a441106985d589709dfbc049ad2016') && !packet.includes('origin/master')) {
+    fail('READY packet must identify authoritative origin/master HEAD')
+  }
+  if (!existsSync('docs/qa/kenos-authoritative-push-report.md')) {
+    fail('READY packet requires authoritative push report')
+  }
+  const pushReport = read('docs/qa/kenos-authoritative-push-report.md')
+  if (!pushReport.includes('PRODUCTION_CLIENT_AUTOBUILDS_PAUSED')) {
+    fail('push report must record PRODUCTION_CLIENT_AUTOBUILDS_PAUSED')
+  }
+  if (!pushReport.includes('APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY')) {
+    fail('push report must document separate client-deploy approval phrase')
+  }
+} else if (
+  !packet.includes('PRODUCTION_APPLY_BLOCKED_UNTIL_AUTHORITATIVE_COMMIT_PUSHED')
+) {
+  fail('blocked packet must mark apply blocked until authoritative commit pushed')
 }
 if (!packet.includes('LOCAL_LOGICAL_RESTORE_VERIFIED')) {
   fail('must record local logical restore status')
@@ -81,7 +99,11 @@ if (!packet.includes('LOCAL_LOGICAL_RESTORE_VERIFIED')) {
 if (!packet.includes('APPROVE_KENOS_PRODUCTION_WAVE_1')) {
   fail('approval phrase missing')
 }
-if (packet.includes('HOSTED_RESTORE_VERIFIED') && !packet.includes('not `HOSTED_RESTORE_VERIFIED`') && !packet.includes('**NO**')) {
+if (
+  packet.includes('HOSTED_RESTORE_VERIFIED') &&
+  !packet.includes('not `HOSTED_RESTORE_VERIFIED`') &&
+  !packet.includes('**NO**')
+) {
   // allow mentioning the claim name only when denied
 }
 if (!backup.includes('LOCAL_LOGICAL_RESTORE_VERIFIED')) {
@@ -90,8 +112,12 @@ if (!backup.includes('LOCAL_LOGICAL_RESTORE_VERIFIED')) {
 if (backup.includes('restore drill is **not** claimed complete')) {
   fail('backup proof must not still claim Stage A incomplete drill')
 }
-if (!state.includes('WAVE_1_APPROVAL_BLOCKED') && !state.includes('FINAL APPROVAL')) {
-  fail('Execution State must mention Wave 1 FINAL / blocked status')
+if (
+  !state.includes('WAVE_1_APPROVAL_BLOCKED') &&
+  !state.includes('READY_FOR_OWNER_APPROVAL') &&
+  !state.includes('FINAL APPROVAL')
+) {
+  fail('Execution State must mention Wave 1 FINAL readiness or blocked status')
 }
 if (!verify.includes('check-kenos-phase6.mjs')) {
   fail('verify-kenos-refactor.sh must invoke Phase 6 guard')
@@ -102,7 +128,11 @@ if (!revoke.includes('BLOCKED_PENDING_HOSTED_APPLY_AND_CUTOVER')) {
 if (!focusFormal.includes("set search_path = ''")) {
   fail('formal Focus list RPC must use fixed empty search_path')
 }
-if (/drop policy if exists "planner_tasks_insert_own"/i.test(formal.map(read).join('\n'))) {
+if (
+  /drop policy if exists "planner_tasks_insert_own"/i.test(
+    formal.map(read).join('\n'),
+  )
+) {
   fail('Wave 1 formal migrations must not revoke planner_tasks writes')
 }
 

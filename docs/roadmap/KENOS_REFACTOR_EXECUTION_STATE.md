@@ -400,12 +400,11 @@ Approved temporary defaults now on file:
 ## Phase 6 Wave 1 FINAL approval packet (2026-07-19)
 
 - Starting revision: `4f17d7b978eae72155ead4c40eee6826bf192414`; branch `master`; one worktree.
-- Authoritative Wave 1 baseline: `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19`
-- Verdict: `WAVE_1_APPROVAL_BLOCKED` — see `docs/qa/kenos-production-wave1-final-approval-packet.md`.
-- Push gate: `PUSH_HAS_UNAPPROVED_PRODUCTION_SIDE_EFFECT` (Netlify client redeploy would fire); `PRODUCTION_APPLY_BLOCKED_UNTIL_AUTHORITATIVE_COMMIT_PUSHED`.
-- New isolated staging: `prrytaemdsksblwmufei` (`kenos-wave1-staging-202607`, us-east-2). Secrets in `~/.config/life-os/` only.
-- Hosted: `HOSTED_RESTORE_VERIFIED` + Wave 1 migrations applied on staging + `HOSTED_DUAL_USER_SECURITY_PASS` + Advisors reviewed (intentional Kenos SECURITY DEFINER WARN accepted).
-- Formal migrations unchanged (checksums still bind to `197d69a09…`).
-- Explicitly **not** done: `git push`, production apply, revoke/cutover, Portal switch, Apple distribution, production deploy.
+- Authoritative Wave 1 baseline: `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19` (on `origin/master`).
+- Authoritative push HEAD: `c4819e9d38a441106985d589709dfbc049ad2016` — see `docs/qa/kenos-authoritative-push-report.md`.
+- Verdict: `KENOS PRODUCTION WAVE 1 — READY_FOR_OWNER_APPROVAL`.
+- Production client auto-builds: **paused** (`stop_builds=true` on 7 sites; UIUX Gallery disabled). Re-enable only under `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`.
+- Staging `prrytaemdsksblwmufei`: `HOSTED_RESTORE_VERIFIED` + Wave 1 applied + `HOSTED_DUAL_USER_SECURITY_PASS`.
+- Explicitly **not** done: production DB apply, revoke/cutover, Portal switch, Apple distribution, client publish of this tip.
 - Unrelated WIP left unstaged.
-- Stop: owner override for push side effect, then `APPROVE_KENOS_PRODUCTION_WAVE_1` only after Red gates close.
+- Stop: await `APPROVE_KENOS_PRODUCTION_WAVE_1` for DB apply only.
