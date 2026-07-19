@@ -400,13 +400,12 @@ Approved temporary defaults now on file:
 ## Phase 6 Wave 1 FINAL approval packet (2026-07-19)
 
 - Starting revision: `4f17d7b978eae72155ead4c40eee6826bf192414`; branch `master`; one worktree.
-- Authoritative Wave 1 baseline / Final local HEAD: `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19`
-- Note: later docs-only tip commits may exist on local `master`; migration checksums and production apply preflight bind only to the authoritative baseline above.
+- Authoritative Wave 1 baseline: `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19`
 - Verdict: `WAVE_1_APPROVAL_BLOCKED` — see `docs/qa/kenos-production-wave1-final-approval-packet.md`.
-- Marker: `PRODUCTION_APPLY_BLOCKED_UNTIL_AUTHORITATIVE_COMMIT_PUSHED`.
-- Formal migrations (canonical): `apps/finance/supabase/migrations/20260719130100` … `20260719130500` (after remote tip `20260717220000`).
-- Local: finance `db reset` PASS; disposable dual-user + `LOCAL_LOGICAL_RESTORE_VERIFIED` via `scripts/kenos-wave1-local-verify.mjs`.
-- Hosted staging (`dsiloxzjnsvjnhbruibl`) **removed** → hosted apply / dual-user / Advisors / `HOSTED_RESTORE_VERIFIED` not available.
-- Explicitly **not** done: production apply, revoke/cutover, Portal switch, Apple distribution, deploy, push.
-- Unrelated WIP left unstaged (Finance/Planner/UI gallery/roadmap/usage-audit/wikilinks/phase2).
-- Stop: close Red gates before Owner phrase `APPROVE_KENOS_PRODUCTION_WAVE_1`.
+- Push gate: `PUSH_HAS_UNAPPROVED_PRODUCTION_SIDE_EFFECT` (Netlify client redeploy would fire); `PRODUCTION_APPLY_BLOCKED_UNTIL_AUTHORITATIVE_COMMIT_PUSHED`.
+- New isolated staging: `prrytaemdsksblwmufei` (`kenos-wave1-staging-202607`, us-east-2). Secrets in `~/.config/life-os/` only.
+- Hosted: `HOSTED_RESTORE_VERIFIED` + Wave 1 migrations applied on staging + `HOSTED_DUAL_USER_SECURITY_PASS` + Advisors reviewed (intentional Kenos SECURITY DEFINER WARN accepted).
+- Formal migrations unchanged (checksums still bind to `197d69a09…`).
+- Explicitly **not** done: `git push`, production apply, revoke/cutover, Portal switch, Apple distribution, production deploy.
+- Unrelated WIP left unstaged.
+- Stop: owner override for push side effect, then `APPROVE_KENOS_PRODUCTION_WAVE_1` only after Red gates close.
