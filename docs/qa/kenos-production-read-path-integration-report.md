@@ -12,11 +12,15 @@ status: SHADOW_VERIFIED_AND_CLIENT_CANARY_READY
 ## 1. Starting / final SHA
 
 - Start (authoritative freeze): `bb9a0e283bfc0ae6179c277862de59f17cefc0ce`
-- Final tip: `e93b9223ff5503e0a7b3e1c46a168c9fe9f5b967` (docs stamp; feature commit `3899727fe6f8d34d307a907bcb9d8fa764aa1fba`)
+- Feature commit: `3899727fe6f8d34d307a907bcb9d8fa764aa1fba`
+- Docs tip after report stamps: `756d1c7f96e8e403796785b5ae66098ebad76cf2` (and any subsequent docs-only tip on `origin/master`)
 
 ## 2. Commits
 
-Scoped AIOS/docs only: capability registry, Focus/Work read sources, Today/Inbox/Focus/Work honesty, shadow/observability, deploy plan + this report + execution-state read-path section. Unrelated WIP left unstaged.
+- `3899727fe` — feat(aios): wire production Kenos read paths behind flags
+- `e93b9223f` / `756d1c7f9` — docs(kenos): read-path integration report SHA stamps
+
+Unrelated WIP left unstaged.
 
 ## 3. Production capability matrix
 
