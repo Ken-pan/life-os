@@ -16,7 +16,11 @@ Push report: [`kenos-authoritative-push-report.md`](./kenos-authoritative-push-r
 
 ## 1. Authoritative origin/master HEAD
 
-`c4819e9d38a441106985d589709dfbc049ad2016`
+`origin/master` contains migration baseline `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19`.
+
+Paused-push tip that first closed the Git Red gate: `c4819e9d38a441106985d589709dfbc049ad2016`.
+
+Current tip (includes this READY packet / push report): see `git rev-parse origin/master` and `docs/qa/kenos-authoritative-push-report.md`.
 
 local `master` == `origin/master`
 

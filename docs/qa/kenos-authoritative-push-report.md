@@ -17,7 +17,8 @@ Note: earlier packet cited tip `0c6b79a0a…`; one docs commit `c4819e9d3` was a
 
 ## 2. Pushed origin/master HEAD
 
-`c4819e9d38a441106985d589709dfbc049ad2016`
+First paused push: `c4819e9d38a441106985d589709dfbc049ad2016`  
+READY-docs tip (current): `b49b209ee1ffe3f29d08ac5d231407b60ef6755d`
 
 `git rev-parse master` == `git rev-parse origin/master`
 

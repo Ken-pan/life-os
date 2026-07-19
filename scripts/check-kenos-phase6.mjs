@@ -75,8 +75,11 @@ if (!ready && !blocked) {
   fail('FINAL packet must report READY_FOR_OWNER_APPROVAL or WAVE_1_APPROVAL_BLOCKED')
 }
 if (ready) {
-  if (!packet.includes('c4819e9d38a441106985d589709dfbc049ad2016') && !packet.includes('origin/master')) {
-    fail('READY packet must identify authoritative origin/master HEAD')
+  if (
+    !packet.includes('197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19') ||
+    !packet.includes('c4819e9d38a441106985d589709dfbc049ad2016')
+  ) {
+    fail('READY packet must identify baseline and paused-push tip on origin/master')
   }
   if (!existsSync('docs/qa/kenos-authoritative-push-report.md')) {
     fail('READY packet requires authoritative push report')
