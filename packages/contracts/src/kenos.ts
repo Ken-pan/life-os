@@ -6,7 +6,7 @@ export type KenosSchemaVersion = z.infer<typeof KenosSchemaVersionSchema>
 export const KenosUuidSchema = z.string().uuid()
 export const KenosIsoDateTimeSchema = z.string().datetime()
 
-export const KenosDomainSchema = z.enum([
+export const KenosDomainValues = [
   'core',
   'assistant',
   'work',
@@ -23,36 +23,58 @@ export const KenosDomainSchema = z.enum([
   'automation',
   'notifications',
   'integration',
-])
+] as const
+export const KenosDomainSchema = z.enum(KenosDomainValues)
 export type KenosDomain = z.infer<typeof KenosDomainSchema>
 
-export const KenosSecurityDomainSchema = z.enum(['personal', 'work', 'household', 'system'])
+export const KenosSecurityDomainValues = ['personal', 'work', 'household', 'system'] as const
+export const KenosSecurityDomainSchema = z.enum(KenosSecurityDomainValues)
 export type KenosSecurityDomain = z.infer<typeof KenosSecurityDomainSchema>
 
-export const KenosClassificationSchema = z.enum([
+export const KenosClassificationValues = [
   'public',
   'personal',
   'sensitive',
   'work_confidential',
   'restricted_local_only',
   'ephemeral',
-])
+] as const
+export const KenosClassificationSchema = z.enum(KenosClassificationValues)
 export type KenosClassification = z.infer<typeof KenosClassificationSchema>
 
-export const KenosRiskLevelSchema = z.enum(['R0', 'R1', 'R2', 'R3', 'R4'])
+export const KenosRiskLevelValues = ['R0', 'R1', 'R2', 'R3', 'R4'] as const
+export const KenosRiskLevelSchema = z.enum(KenosRiskLevelValues)
 export type KenosRiskLevel = z.infer<typeof KenosRiskLevelSchema>
 
 export const KenosApprovalStateSchema = z.enum(['not_required', 'preview_required', 'approved', 'rejected', 'expired'])
 export type KenosApprovalState = z.infer<typeof KenosApprovalStateSchema>
 
-export const KenosOutboxStatusSchema = z.enum(['pending', 'processing', 'published', 'retry', 'dead_letter'])
+export const KenosOutboxStatusValues = ['pending', 'processing', 'published', 'retry', 'dead_letter'] as const
+export const KenosOutboxStatusSchema = z.enum(KenosOutboxStatusValues)
 export type KenosOutboxStatus = z.infer<typeof KenosOutboxStatusSchema>
 
-export const KenosErrorClassSchema = z.enum(['transient', 'permanent'])
+export const KenosErrorClassValues = ['transient', 'permanent'] as const
+export const KenosErrorClassSchema = z.enum(KenosErrorClassValues)
 export type KenosErrorClass = z.infer<typeof KenosErrorClassSchema>
 
+export const KenosCommandErrorSchema = z.object({
+  code: z.string().min(1),
+  message: z.string().min(1),
+  class: KenosErrorClassSchema,
+  retryable: z.boolean(),
+  userAction: z.string().min(1).optional(),
+})
+export type KenosCommandError = z.infer<typeof KenosCommandErrorSchema>
+
+export const KenosCommandFailureSchema = z.object({
+  ok: z.literal(false),
+  error: KenosCommandErrorSchema,
+})
+export type KenosCommandFailure = z.infer<typeof KenosCommandFailureSchema>
+
+export const KenosActorTypeValues = ['user', 'assistant', 'automation', 'connector', 'system'] as const
 export const KenosActorSchema = z.object({
-  type: z.enum(['user', 'assistant', 'automation', 'connector', 'system']),
+  type: z.enum(KenosActorTypeValues),
   id: KenosUuidSchema,
 })
 export type KenosActor = z.infer<typeof KenosActorSchema>
@@ -74,6 +96,8 @@ export const KenosEntityMetadataSchema = KenosEntityRefSchema.extend({
   archivedAt: KenosIsoDateTimeSchema.nullable().optional(),
 })
 export type KenosEntityMetadata = z.infer<typeof KenosEntityMetadataSchema>
+
+export const KenosPhase1ActionTypeValues = ['plan.create_task'] as const
 
 export const KenosActionRequestSchema = z.object({
   schemaVersion: KenosSchemaVersionSchema,
@@ -106,9 +130,10 @@ export const KenosActionRequestSchema = z.object({
 })
 export type KenosActionRequest = z.infer<typeof KenosActionRequestSchema>
 
+export const KenosActionDecisionOutcomeValues = ['allow', 'require_approval', 'deny', 'expired'] as const
 export const KenosActionDecisionSchema = z.object({
   requestId: KenosUuidSchema,
-  outcome: z.enum(['allow', 'require_approval', 'deny', 'expired']),
+  outcome: z.enum(KenosActionDecisionOutcomeValues),
   evaluatedRisk: KenosRiskLevelSchema,
   policyVersion: z.string().min(1),
   reasons: z.array(z.string().min(1)).min(1),
@@ -127,9 +152,10 @@ export const KenosActionDecisionSchema = z.object({
 })
 export type KenosActionDecision = z.infer<typeof KenosActionDecisionSchema>
 
+export const KenosActionResultStatusValues = ['succeeded', 'failed', 'queued', 'conflict', 'cancelled'] as const
 export const KenosActionResultSchema = z.object({
   requestId: KenosUuidSchema,
-  status: z.enum(['succeeded', 'failed', 'queued', 'conflict', 'cancelled']),
+  status: z.enum(KenosActionResultStatusValues),
   result: z.unknown().optional(),
   affectedEntities: z.array(KenosEntityRefSchema),
   activityId: KenosUuidSchema,
@@ -174,6 +200,19 @@ export const KenosApprovalDecisionSchema = z.object({
 })
 export type KenosApprovalDecision = z.infer<typeof KenosApprovalDecisionSchema>
 
+const KENOS_SENSITIVE_ACTIVITY_KEYS = ['token', 'secret', 'password', 'authorization', 'cookie', 'rawConversation', 'connectorPayload']
+
+function hasUnredactedSensitiveActivityValue(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasUnredactedSensitiveActivityValue)
+  if (!value || typeof value !== 'object') return false
+  return Object.entries(value).some(([key, nested]) => {
+    const sensitive = KENOS_SENSITIVE_ACTIVITY_KEYS.some((candidate) => key.toLowerCase().includes(candidate.toLowerCase()))
+    if (sensitive && nested !== '[REDACTED]' && nested !== '[REDACTED_NOTES]') return true
+    return hasUnredactedSensitiveActivityValue(nested)
+  })
+}
+
+export const KenosActivityResultValues = ['succeeded', 'failed', 'queued', 'undone', 'cancelled'] as const
 export const KenosActivityRecordSchema = z.object({
   schemaVersion: KenosSchemaVersionSchema,
   id: KenosUuidSchema,
@@ -185,7 +224,7 @@ export const KenosActivityRecordSchema = z.object({
   securityDomain: KenosSecurityDomainSchema,
   summary: z.string().min(1),
   reason: z.string().min(1).optional(),
-  result: z.enum(['succeeded', 'failed', 'queued', 'undone', 'cancelled']),
+  result: z.enum(KenosActivityResultValues),
   policy: KenosActionDecisionSchema.optional(),
   changes: z.array(z.object({
     path: z.string().min(1),
@@ -199,6 +238,10 @@ export const KenosActivityRecordSchema = z.object({
   correlationId: KenosUuidSchema,
   causationId: KenosUuidSchema.optional(),
   occurredAt: KenosIsoDateTimeSchema,
+}).superRefine((activity, ctx) => {
+  if (hasUnredactedSensitiveActivityValue(activity.redactedPayload)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['redactedPayload'], message: 'Activity contains an unredacted sensitive payload value' })
+  }
 })
 export type KenosActivityRecord = z.infer<typeof KenosActivityRecordSchema>
 
@@ -240,6 +283,24 @@ export const KenosOutboxRecordSchema = z.object({
   }
 })
 export type KenosOutboxRecord = z.infer<typeof KenosOutboxRecordSchema>
+
+export const KenosOutboxTransitions: Readonly<Record<KenosOutboxStatus, readonly KenosOutboxStatus[]>> = {
+  pending: ['processing', 'dead_letter'],
+  processing: ['published', 'retry', 'dead_letter'],
+  retry: ['processing', 'dead_letter'],
+  published: [],
+  dead_letter: [],
+}
+
+export const KenosOutboxTransitionSchema = z.object({
+  from: KenosOutboxStatusSchema,
+  to: KenosOutboxStatusSchema,
+}).superRefine((transition, ctx) => {
+  if (!KenosOutboxTransitions[transition.from].includes(transition.to)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['to'], message: `Invalid Outbox transition: ${transition.from} -> ${transition.to}` })
+  }
+})
+export type KenosOutboxTransition = z.infer<typeof KenosOutboxTransitionSchema>
 
 export const KenosCaptureEnvelopeSchema = z.object({
   schemaVersion: KenosSchemaVersionSchema,

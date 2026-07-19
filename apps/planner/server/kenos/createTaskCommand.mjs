@@ -6,6 +6,8 @@ const BASE_BACKOFF_MS = 1000
 const MAX_BACKOFF_MS = 5 * 60 * 1000
 const SENSITIVE_KEYS = ['token', 'secret', 'password', 'authorization', 'cookie', 'rawConversation', 'connectorPayload', 'notes']
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/
+const RISK_VALUES = ['R0', 'R1', 'R2', 'R3', 'R4']
 
 function iso(now = Date.now()) {
   return new Date(now).toISOString()
@@ -21,7 +23,18 @@ function redactValue(value) {
 }
 
 function permanent(code, message) {
-  return { ok: false, error: { code, message, class: 'permanent' } }
+  return { ok: false, error: { code, message, class: 'permanent', retryable: false } }
+}
+
+function actionResult(action, task, outbox, activity, duplicate, now) {
+  return {
+    requestId: action.id,
+    status: 'succeeded',
+    result: { taskId: task.id, outboxId: outbox.id, duplicate },
+    affectedEntities: [outbox.aggregate],
+    activityId: activity.id,
+    completedAt: iso(now),
+  }
 }
 
 function validateAction(action, { authUserId, now = Date.now() } = {}) {
@@ -36,7 +49,7 @@ function validateAction(action, { authUserId, now = Date.now() } = {}) {
   if (![action.id, action.actor?.id, action.deviceId, action.correlationId].every((value) => UUID_PATTERN.test(value || ''))) {
     return permanent('invalid_action_contract', 'Action, actor, device, and correlation identifiers must be UUIDs.')
   }
-  if (!action.requestedAt || !Number.isFinite(Date.parse(action.requestedAt))) return permanent('invalid_action_contract', 'CreateTaskAction requires a valid requestedAt timestamp.')
+  if (!action.requestedAt || !ISO_TIMESTAMP_PATTERN.test(action.requestedAt) || !Number.isFinite(Date.parse(action.requestedAt))) return permanent('invalid_action_contract', 'CreateTaskAction requires a valid ISO-8601 UTC requestedAt timestamp.')
   if (action.producer === 'work' || action.payload?.workSource) return permanent('work_source_excluded', 'Work-sourced task creation is excluded from Phase 1.')
   if (!['assistant', 'plan'].includes(action.producer)) return permanent('producer_not_allowed', 'KR-P1-001A accepts only Assistant or Plan producers.')
   if (action.producer === 'assistant' && action.actor?.type !== 'assistant') return permanent('assistant_actor_required', 'Assistant producer must use assistant actor metadata.')
@@ -44,9 +57,10 @@ function validateAction(action, { authUserId, now = Date.now() } = {}) {
   if (!action.payload || typeof action.payload !== 'object' || Array.isArray(action.payload)) return permanent('invalid_action_contract', 'Action payload must be an object.')
   if (authUserId && action.actor?.id && action.actor.id !== authUserId) return permanent('actor_user_mismatch', 'Action actor must match the authenticated user.')
   if (action.securityDomain !== 'personal' || action.dataClassification !== 'personal') return permanent('security_domain_not_allowed', 'KR-P1-001A accepts personal Plan actions only.')
+  if (!RISK_VALUES.includes(action.requestedRisk)) return permanent('invalid_action_contract', 'CreateTaskAction requestedRisk is not a Kenos v1 risk value.')
   if (action.requestedRisk !== 'R1') return permanent('risk_not_allowed', 'Only explicit R1 create-task actions are executable in KR-P1-001A.')
   if (action.expectedVersion != null) return permanent('version_conflict', 'Create-task actions must not carry an existing entity version.')
-  if (action.expiresAt && (!Number.isFinite(Date.parse(action.expiresAt)) || Date.parse(action.expiresAt) <= Date.parse(action.requestedAt))) {
+  if (action.expiresAt && (!ISO_TIMESTAMP_PATTERN.test(action.expiresAt) || !Number.isFinite(Date.parse(action.expiresAt)) || Date.parse(action.expiresAt) <= Date.parse(action.requestedAt))) {
     return permanent('invalid_action_contract', 'Action expiry must be a valid timestamp after requestedAt.')
   }
   if (action.expiresAt && Date.parse(action.expiresAt) <= now) return permanent('action_expired', 'Action request has expired.')
@@ -97,7 +111,7 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
       const outbox = tx.outbox.find((item) => item.idempotencyKey === action.idempotencyKey)
       const activity = tx.activity.find((item) => item.correlationId === outbox?.correlationId)
       if (!task || !outbox || !activity) return permanent('idempotency_record_corrupt', 'Durable idempotency record no longer resolves atomically.')
-      return { ok: true, task, outbox, activity, duplicate: true }
+      return { ok: true, task, outbox, activity, actionResult: actionResult(action, task, outbox, activity, true, now), duplicate: true }
     }
 
     const task = {
@@ -164,7 +178,7 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
     tx.idempotency.set(action.idempotencyKey, task.id)
     tx.outbox.push(outbox)
     tx.activity.push(activity)
-    return { ok: true, task, outbox, activity, duplicate: false }
+    return { ok: true, task, outbox, activity, actionResult: actionResult(action, task, outbox, activity, false, now), duplicate: false }
   })
 }
 

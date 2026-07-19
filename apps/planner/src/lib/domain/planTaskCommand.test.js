@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { executeCreateTaskCommand, retryPendingCreateTaskOutbox } from './planTaskCommand.js'
 import { createTask } from './tasks.js'
 import { S, flushSave } from '../state.svelte.js'
+import { KenosActionResultSchema, KenosActivityRecordSchema, KenosCommandFailureSchema, KenosOutboxRecordSchema } from '@life-os/contracts/kenos'
+
+const ASSISTANT_CORRELATION_ID = '40000000-0000-4000-8000-000000000010'
 
 vi.mock('../state.svelte.js', () => ({
   S: {
@@ -43,12 +46,12 @@ describe('KR-P1-001 Plan create task command', () => {
       userRequested: true,
       title: 'Assistant requested task',
       idempotencyKey: 'assistant-key-1',
-      correlationId: 'corr-assistant-1',
+      correlationId: ASSISTANT_CORRELATION_ID,
     })
 
     expect(result.ok).toBe(true)
-    expect(result.task.meta.command.correlationId).toBe('corr-assistant-1')
-    expect(result.activity.actor).toBe('assistant')
+    expect(result.task.meta.command.correlationId).toBe(ASSISTANT_CORRELATION_ID)
+    expect(result.activity.actor.type).toBe('assistant')
     expect(S.tasks).toHaveLength(1)
   })
 
@@ -64,8 +67,11 @@ describe('KR-P1-001 Plan create task command', () => {
 
     expect(result.ok).toBe(true)
     expect(S.tasks.map((task) => task.id)).toEqual([result.task.id])
-    expect(S.kenosActionOutbox.map((item) => item.entityRef.id)).toEqual([result.task.id])
-    expect(S.kenosActivity.map((item) => item.entityRef.id)).toEqual([result.task.id])
+    expect(S.kenosActionOutbox.map((item) => item.aggregate.id)).toEqual([result.task.id])
+    expect(S.kenosActivity.flatMap((item) => item.targetRefs.map((ref) => ref.id))).toEqual([result.task.id])
+    expect(KenosOutboxRecordSchema.safeParse(result.outbox).success).toBe(true)
+    expect(KenosActivityRecordSchema.safeParse(result.activity).success).toBe(true)
+    expect(KenosActionResultSchema.safeParse(result.actionResult).success).toBe(true)
   })
 
 
@@ -112,5 +118,15 @@ describe('KR-P1-001 Plan create task command', () => {
     expect(result.activity.redactedPayload.notes).toBe('[REDACTED_NOTES]')
     expect(JSON.stringify(S.kenosActivity)).not.toContain('private note body')
     expect(JSON.stringify(S.kenosActivity)).not.toContain('secret-token')
+  })
+
+  it('uses the frozen command error envelope and fails invalid correlation IDs closed', () => {
+    const result = executeCreateTaskCommand({ title: 'Invalid correlation', correlationId: 'not-a-uuid' })
+
+    expect(result.ok).toBe(false)
+    expect(result.error.code).toBe('invalid_correlation_id')
+    expect(KenosCommandFailureSchema.safeParse(result).success).toBe(true)
+    expect(KenosActivityRecordSchema.safeParse(S.kenosActivity[0]).success).toBe(true)
+    expect(S.tasks).toHaveLength(0)
   })
 })

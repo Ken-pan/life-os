@@ -1,162 +1,98 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import {
+  KenosActionDecisionOutcomeValues,
   KenosActionDecisionSchema,
   KenosActionRequestSchema,
   KenosActionResultSchema,
+  KenosActionResultStatusValues,
   KenosActivityRecordSchema,
+  KenosActivityResultValues,
+  KenosActorTypeValues,
+  KenosApprovalDecisionSchema,
   KenosApprovalRequestSchema,
   KenosCaptureEnvelopeSchema,
-  KenosEntityMetadataSchema,
+  KenosClassificationValues,
+  KenosDomainValues,
+  KenosEntityRefSchema,
+  KenosErrorClassValues,
+  KenosCommandFailureSchema,
   KenosMutationEnvelopeSchema,
   KenosOutboxRecordSchema,
+  KenosOutboxStatusValues,
+  KenosOutboxTransitionSchema,
+  KenosOutboxTransitions,
+  KenosPhase1ActionTypeValues,
+  KenosRiskLevelValues,
+  KenosSecurityDomainValues,
 } from '../src/kenos.ts'
 
-const fixture = JSON.parse(readFileSync(new URL('../fixtures/kenos/create-task-action.json', import.meta.url), 'utf8'))
-assert.equal(KenosActionRequestSchema.safeParse(fixture).success, true)
+const manifest = JSON.parse(readFileSync(new URL('../fixtures/kenos/v1/manifest.json', import.meta.url), 'utf8'))
+const corpus = JSON.parse(readFileSync(new URL('../fixtures/kenos/v1/corpus.json', import.meta.url), 'utf8'))
+const validById = new Map(corpus.valid.map((fixture) => [fixture.id, fixture.value]))
 
-for (const invalid of [
-  { ...fixture, schemaVersion: 1 },
-  { ...fixture, id: 'act_plan_create_task_001' },
-  { ...fixture, targetDomain: 'unknown' },
-  { ...fixture, dataClassification: 'unknown' },
-  { ...fixture, expiresAt: fixture.requestedAt },
+const schemaByContract = {
+  entityRef: KenosEntityRefSchema,
+  actionRequest: KenosActionRequestSchema,
+  actionDecision: KenosActionDecisionSchema,
+  actionResult: KenosActionResultSchema,
+  approvalRequest: KenosApprovalRequestSchema,
+  approvalDecision: KenosApprovalDecisionSchema,
+  activityRecord: KenosActivityRecordSchema,
+  mutationEnvelope: KenosMutationEnvelopeSchema,
+  outboxRecord: KenosOutboxRecordSchema,
+  captureEnvelope: KenosCaptureEnvelopeSchema,
+  commandFailure: KenosCommandFailureSchema,
+}
+
+function materialize(fixture) {
+  if (fixture.value) return structuredClone(fixture.value)
+  const base = structuredClone(validById.get(fixture.valueFrom))
+  assert.ok(base, `unknown fixture base: ${fixture.valueFrom}`)
+  return { ...base, ...fixture.patch }
+}
+
+assert.equal(manifest.contractVersion, '1')
+assert.equal(manifest.freezeStatus, 'V1_FROZEN_FOR_PHASE_1_PRODUCTION_REVIEW')
+assert.equal(manifest.unknownFields, 'ignore')
+for (const [actual, expected, label] of [
+  [KenosPhase1ActionTypeValues, manifest.actionTypes, 'action types'],
+  [KenosDomainValues, manifest.domains, 'domains'],
+  [KenosSecurityDomainValues, manifest.securityDomains, 'security domains'],
+  [KenosClassificationValues, manifest.dataClassifications, 'classifications'],
+  [KenosRiskLevelValues, manifest.riskValues, 'risk values'],
+  [KenosActorTypeValues, manifest.actorTypes, 'actor types'],
+  [KenosActionDecisionOutcomeValues, manifest.actionDecisionOutcomes, 'decision outcomes'],
+  [KenosActionResultStatusValues, manifest.actionResultStatuses, 'action result statuses'],
+  [KenosActivityResultValues, manifest.activityResults, 'activity results'],
+  [KenosOutboxStatusValues, manifest.outboxStatuses, 'outbox statuses'],
+  [KenosErrorClassValues, manifest.errorClasses, 'error classes'],
 ]) {
-  assert.equal(KenosActionRequestSchema.safeParse(invalid).success, false)
+  assert.deepEqual([...actual], expected, `manifest drift: ${label}`)
+}
+assert.deepEqual(KenosOutboxTransitions, manifest.outboxTransitions, 'manifest drift: Outbox transitions')
+assert.deepEqual(corpus.valid.map(({ id }) => id), manifest.validFixtureIds, 'valid fixture coverage drift')
+assert.deepEqual(corpus.invalid.map(({ id }) => id), manifest.invalidFixtureIds, 'invalid fixture coverage drift')
+
+for (const fixture of corpus.valid) {
+  const schema = schemaByContract[fixture.contract]
+  assert.ok(schema, `no TypeScript schema for valid fixture ${fixture.id}`)
+  const parsed = schema.safeParse(fixture.value)
+  assert.equal(parsed.success, true, `${fixture.id} should pass TypeScript validation: ${parsed.error || ''}`)
 }
 
-const entityRef = {
-  id: '50000000-0000-4000-8000-000000000001',
-  type: 'plan.task',
-  ownerDomain: 'plan',
-  ownerId: '50000000-0000-4000-8000-000000000001',
-  version: 1,
+const unknownFieldFixture = corpus.valid.find(({ id }) => id === 'action-create-task-unknown-optional')
+const unknownFieldResult = KenosActionRequestSchema.parse(unknownFieldFixture.value)
+assert.equal('futureOptionalField' in unknownFieldResult, false, 'unknown additive fields must be accepted and ignored')
+
+for (const fixture of corpus.invalid) {
+  if (fixture.contract === 'serverAction' || fixture.contract === 'serverScenario') continue
+  const value = materialize(fixture)
+  const schema = fixture.contract === 'outboxTransition'
+    ? KenosOutboxTransitionSchema
+    : schemaByContract[fixture.contract]
+  assert.ok(schema, `no TypeScript schema for invalid fixture ${fixture.id}`)
+  assert.equal(schema.safeParse(value).success, false, `${fixture.id} should fail TypeScript validation`)
 }
 
-assert.equal(KenosEntityMetadataSchema.safeParse({
-  ...entityRef,
-  securityDomain: 'personal',
-  dataClassification: 'personal',
-  createdAt: '2026-07-19T00:00:00.000Z',
-  updatedAt: '2026-07-19T00:00:00.000Z',
-}).success, true)
-
-const policy = {
-  requestId: fixture.id,
-  outcome: 'allow',
-  evaluatedRisk: 'R1',
-  policyVersion: 'kenos-phase1-2026-07-19',
-  reasons: ['explicit user request'],
-  decidedAt: '2026-07-19T00:00:00.000Z',
-}
-assert.equal(KenosActionDecisionSchema.safeParse(policy).success, true)
-
-assert.equal(KenosActionResultSchema.safeParse({
-  requestId: fixture.id,
-  status: 'succeeded',
-  result: { taskId: entityRef.id },
-  affectedEntities: [entityRef],
-  activityId: '70000000-0000-4000-8000-000000000001',
-  completedAt: '2026-07-19T00:00:01.000Z',
-}).success, true)
-assert.equal(KenosActionResultSchema.safeParse({
-  requestId: fixture.id,
-  status: 'failed',
-  affectedEntities: [],
-  activityId: '70000000-0000-4000-8000-000000000001',
-}).success, false)
-
-assert.equal(KenosOutboxRecordSchema.safeParse({
-  schemaVersion: '1',
-  id: '60000000-0000-4000-8000-000000000001',
-  topic: fixture.actionType,
-  actionRequestId: fixture.id,
-  idempotencyKey: fixture.idempotencyKey,
-  correlationId: fixture.correlationId,
-  aggregate: entityRef,
-  status: 'retry',
-  payload: { taskId: entityRef.id },
-  attempts: 2,
-  maxAttempts: 5,
-  availableAt: '2026-07-19T00:01:00.000Z',
-  occurredAt: '2026-07-19T00:00:00.000Z',
-  lastErrorClass: 'transient',
-  updatedAt: '2026-07-19T00:00:30.000Z',
-}).success, true)
-assert.equal(KenosOutboxRecordSchema.safeParse({
-  schemaVersion: '1',
-  id: '60000000-0000-4000-8000-000000000002',
-  topic: fixture.actionType,
-  idempotencyKey: 'dead-letter-without-reason',
-  correlationId: fixture.correlationId,
-  aggregate: entityRef,
-  status: 'dead_letter',
-  payload: {},
-  attempts: 5,
-  availableAt: '2026-07-19T00:01:00.000Z',
-  occurredAt: '2026-07-19T00:00:00.000Z',
-}).success, false)
-
-const activity = {
-  schemaVersion: '1',
-  id: '70000000-0000-4000-8000-000000000001',
-  eventType: 'plan.task_created',
-  actionRequestId: fixture.id,
-  correlationId: fixture.correlationId,
-  actor: fixture.actor,
-  targetRefs: [entityRef],
-  securityDomain: 'personal',
-  summary: 'Created Plan task',
-  reason: fixture.reason,
-  result: 'succeeded',
-  policy,
-  redactedPayload: { title: 'Fixture task', notes: '[REDACTED]' },
-  undo: { supported: true, actionType: 'plan.delete_task' },
-  occurredAt: '2026-07-19T00:00:00.000Z',
-}
-assert.equal(KenosActivityRecordSchema.safeParse(activity).success, true)
-assert.equal(JSON.stringify(activity).includes('redacted before activity'), false)
-
-assert.equal(KenosApprovalRequestSchema.safeParse({
-  id: '80000000-0000-4000-8000-000000000001',
-  actionRequestId: fixture.id,
-  risk: 'R3',
-  summary: 'Confirm high-risk action',
-  impact: ['One Plan task will be changed'],
-  sensitiveFieldsRedacted: true,
-  reversible: true,
-  expiresAt: '2026-07-19T00:05:00.000Z',
-  createdAt: '2026-07-19T00:00:00.000Z',
-}).success, true)
-
-assert.equal(KenosMutationEnvelopeSchema.safeParse({
-  schemaVersion: '1',
-  mutationId: '90000000-0000-4000-8000-000000000001',
-  idempotencyKey: 'fixture-mutation-001',
-  entity: entityRef,
-  actorId: fixture.actor.id,
-  deviceId: fixture.deviceId,
-  baseVersion: 1,
-  operation: 'plan.rename_task',
-  payload: { title: 'Updated fixture task' },
-  occurredAt: '2026-07-19T00:02:00.000Z',
-}).success, true)
-
-assert.equal(KenosCaptureEnvelopeSchema.safeParse({
-  schemaVersion: '1',
-  id: 'a0000000-0000-4000-8000-000000000001',
-  kind: 'url',
-  source: {
-    client: 'kenos-web',
-    deviceId: fixture.deviceId,
-    externalUrl: 'https://example.com/read',
-  },
-  actorId: fixture.actor.id,
-  securityDomain: 'personal',
-  dataClassification: 'personal',
-  capturedAt: '2026-07-19T00:00:00.000Z',
-  idempotencyKey: 'fixture-capture-001',
-  payload: { title: 'Read later' },
-}).success, true)
-
-console.log('kenos contracts: ok')
+console.log('kenos contracts: canonical v1 corpus ok')

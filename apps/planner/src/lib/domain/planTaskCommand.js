@@ -4,6 +4,24 @@ import { SYSTEM_LIST_INBOX, normalizeRecurrence } from '../types.js'
 const ACTION_TYPE = 'plan.create_task'
 const SUPPORTED_SOURCES = ['plan_ui', 'assistant']
 const SENSITIVE_KEYS = ['token', 'secret', 'password', 'authorization', 'cookie', 'rawConversation', 'connectorPayload']
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+let localActorId = null
+let localDeviceId = null
+
+function contractUuid() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16)
+    const value = character === 'x' ? random : (random & 0x3) | 0x8
+    return value.toString(16)
+  })
+}
+
+function localContractIdentity() {
+  localActorId ||= contractUuid()
+  localDeviceId ||= contractUuid()
+  return { actorId: localActorId, deviceId: localDeviceId }
+}
 
 function ensureRuntimeLogs() {
   if (!Array.isArray(S.kenosActionOutbox)) S.kenosActionOutbox = []
@@ -25,22 +43,29 @@ function redactValue(value) {
 }
 
 function reject(reason, message, input) {
-  const error = { code: reason, message }
+  const error = { code: reason, message, class: 'permanent', retryable: false }
   ensureRuntimeLogs()
+  const now = new Date().toISOString()
+  const identity = localContractIdentity()
+  const correlationId = UUID_PATTERN.test(input.correlationId || '') ? input.correlationId : contractUuid()
+  const actionRequestId = UUID_PATTERN.test(input.actionRequestId || '') ? input.actionRequestId : contractUuid()
   S.kenosActivity = [
     ...S.kenosActivity,
     {
-      id: uid(),
-      type: 'activity.action_rejected',
-      actionType: ACTION_TYPE,
-      correlationId: input.correlationId || uid(),
-      actor: input.source === 'assistant' ? 'assistant' : 'user',
-      source: input.source || 'unknown',
-      policy: { risk: 'R1', decision: 'rejected', reason },
+      schemaVersion: '1',
+      id: contractUuid(),
+      eventType: 'plan.create_task_rejected',
+      actionRequestId,
+      correlationId,
+      actor: { type: input.source === 'assistant' ? 'assistant' : 'user', id: identity.actorId },
+      targetRefs: [],
+      securityDomain: 'personal',
+      policy: { requestId: actionRequestId, outcome: 'deny', evaluatedRisk: 'R1', policyVersion: 'kenos-phase1-v1', reasons: [reason], decidedAt: now },
       summary: message,
+      reason,
+      result: 'failed',
       redactedPayload: redactValue(input),
-      createdAt: Date.now(),
-      error,
+      occurredAt: now,
     },
   ]
   commitLocalCreateTaskProjection()
@@ -67,22 +92,38 @@ export function executeCreateTaskCommand(input = {}) {
   const title = String(input.title || '').trim()
   if (!title) return reject('title_required', 'Task title is required.', input)
 
+  if (input.correlationId && !UUID_PATTERN.test(input.correlationId)) {
+    return reject('invalid_correlation_id', 'CreateTask correlationId must be a UUID.', input)
+  }
+
   const idempotencyKey = String(input.idempotencyKey || input.correlationId || `${uid()}:${S.tasks.length}:${S.kenosActionOutbox.length}`)
-  const existing = S.kenosActionOutbox.find((item) => item.actionType === ACTION_TYPE && item.idempotencyKey === idempotencyKey)
+  const existing = S.kenosActionOutbox.find((item) => item.topic === ACTION_TYPE && item.idempotencyKey === idempotencyKey)
   if (existing) {
-    const task = S.tasks.find((item) => item.id === existing.entityRef?.id)
+    const task = S.tasks.find((item) => item.id === existing.aggregate?.id)
     if (task) {
-      return { ok: true, task, outbox: existing, activity: S.kenosActivity.find((item) => item.correlationId === existing.correlationId) || null, duplicate: true }
+      const activity = S.kenosActivity.find((item) => item.correlationId === existing.correlationId) || null
+      const actionResult = activity ? {
+        requestId: existing.actionRequestId,
+        status: 'succeeded',
+        result: { taskId: task.id, outboxId: existing.id, duplicate: true },
+        affectedEntities: [existing.aggregate],
+        activityId: activity.id,
+        completedAt: activity.occurredAt,
+      } : null
+      return { ok: true, task, outbox: existing, activity, actionResult, duplicate: true }
     }
     return reject('idempotency_target_missing', 'Existing idempotency key no longer resolves to a task.', input)
   }
 
   const now = Date.now()
+  const nowIso = new Date(now).toISOString()
   const maxOrder = S.tasks.reduce((m, task) => Math.max(m, task.sortOrder || 0), 0)
   const recurrence = normalizeRecurrence(input.recurrence)
-  const correlationId = String(input.correlationId || uid())
+  const correlationId = String(input.correlationId || contractUuid())
+  const actionRequestId = UUID_PATTERN.test(input.actionRequestId || '') ? input.actionRequestId : contractUuid()
+  const identity = localContractIdentity()
   const task = {
-    id: uid(),
+    id: contractUuid(),
     title,
     notes: input.notes || '',
     listId: input.listId || S.settings.defaultListId || SYSTEM_LIST_INBOX,
@@ -109,35 +150,41 @@ export function executeCreateTaskCommand(input = {}) {
     updatedAt: now,
     deletedAt: null,
     sortOrder: maxOrder + 1,
-    meta: { kind: 'standard', ...(input.meta || {}), command: { actionType: ACTION_TYPE, idempotencyKey, correlationId } },
+    meta: { kind: 'standard', ...(input.meta || {}), command: { schemaVersion: '1', actionRequestId, actionType: ACTION_TYPE, idempotencyKey, correlationId } },
   }
-  const entityRef = { domain: 'plan', type: 'task', id: task.id }
+  const entityRef = { id: task.id, type: 'plan.task', ownerDomain: 'plan', ownerId: task.id, version: 1 }
   const outbox = {
-    id: uid(),
+    schemaVersion: '1',
+    id: contractUuid(),
+    topic: ACTION_TYPE,
+    actionRequestId,
     status: 'pending',
-    actionType: ACTION_TYPE,
     idempotencyKey,
     correlationId,
-    entityRef,
+    aggregate: entityRef,
     payload: { title: task.title, dueDate: task.dueDate, listId: task.listId, projectId: task.projectId },
     attempts: 0,
-    nextAttemptAt: now,
-    createdAt: now,
-    updatedAt: now,
+    maxAttempts: 5,
+    availableAt: nowIso,
+    occurredAt: nowIso,
+    updatedAt: nowIso,
   }
   const activity = {
-    id: uid(),
-    type: 'activity.action_completed',
-    actionType: ACTION_TYPE,
+    schemaVersion: '1',
+    id: contractUuid(),
+    eventType: 'plan.task_created',
+    actionRequestId,
     correlationId,
-    actor: input.source === 'assistant' ? 'assistant' : 'user',
-    source: input.source || 'plan_ui',
-    policy: { risk: 'R1', decision: 'allowed', approval: 'not_required' },
-    entityRef,
+    actor: { type: input.source === 'assistant' ? 'assistant' : 'user', id: identity.actorId },
+    targetRefs: [entityRef],
+    securityDomain: 'personal',
+    policy: { requestId: actionRequestId, outcome: 'allow', evaluatedRisk: 'R1', policyVersion: 'kenos-phase1-v1', reasons: ['explicit create-task command'], decidedAt: nowIso },
     summary: `Created Plan task: ${task.title}`,
+    reason: 'explicit create-task command',
+    result: 'succeeded',
     redactedPayload: redactValue({ title: task.title, dueDate: task.dueDate, notes: task.notes ? '[REDACTED_NOTES]' : '' }),
-    createdAt: now,
-    undo: { supported: true, action: 'delete_task', taskId: task.id },
+    occurredAt: nowIso,
+    undo: { supported: true, actionType: 'plan.delete_task' },
   }
 
   const before = { tasks: S.tasks, outbox: S.kenosActionOutbox, activity: S.kenosActivity }
@@ -151,19 +198,27 @@ export function executeCreateTaskCommand(input = {}) {
     S.kenosActivity = before.activity
     return { ok: false, error: committed.error }
   }
-  return { ok: true, task, outbox, activity, duplicate: false }
+  const actionResult = {
+    requestId: actionRequestId,
+    status: 'succeeded',
+    result: { taskId: task.id, outboxId: outbox.id, duplicate: false },
+    affectedEntities: [entityRef],
+    activityId: activity.id,
+    completedAt: nowIso,
+  }
+  return { ok: true, task, outbox, activity, actionResult, duplicate: false }
 }
 
 export function retryPendingCreateTaskOutbox() {
   ensureRuntimeLogs()
   const now = Date.now()
   S.kenosActionOutbox = S.kenosActionOutbox.map((item) =>
-    item.actionType === ACTION_TYPE && item.status === 'pending'
-      ? { ...item, attempts: (item.attempts || 0) + 1, updatedAt: now }
+    item.topic === ACTION_TYPE && item.status === 'pending'
+      ? { ...item, attempts: (item.attempts || 0) + 1, updatedAt: new Date(now).toISOString() }
       : item,
   )
   save()
-  return S.kenosActionOutbox.filter((item) => item.actionType === ACTION_TYPE)
+  return S.kenosActionOutbox.filter((item) => item.topic === ACTION_TYPE)
 }
 
 function hasBrowserStorage() {

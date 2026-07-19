@@ -1,0 +1,100 @@
+{
+  "valid": [
+    {
+      "id": "entity-ref-minimal",
+      "contract": "entityRef",
+      "value": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }
+    },
+    {
+      "id": "entity-ref-full",
+      "contract": "entityRef",
+      "value": { "id": "50000000-0000-4000-8000-000000000002", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000002", "version": 1 }
+    },
+    {
+      "id": "action-create-task-r1",
+      "contract": "actionRequest",
+      "value": {
+        "schemaVersion": "1", "id": "10000000-0000-4000-8000-000000000001", "actionType": "plan.create_task", "producer": "assistant", "targetDomain": "plan",
+        "actor": { "type": "assistant", "id": "20000000-0000-4000-8000-000000000001" }, "deviceId": "30000000-0000-4000-8000-000000000001",
+        "securityDomain": "personal", "dataClassification": "personal", "requestedRisk": "R1",
+        "payload": { "title": "Fixture task", "notes": "redacted before activity" }, "reason": "Explicit user-requested task creation",
+        "idempotencyKey": "fixture-create-task-001", "requestedAt": "2026-07-19T00:00:00.000Z", "expiresAt": "2099-07-19T00:05:00.000Z", "correlationId": "40000000-0000-4000-8000-000000000001"
+      }
+    },
+    {
+      "id": "action-create-task-unknown-optional",
+      "contract": "actionRequest",
+      "value": {
+        "schemaVersion": "1", "id": "10000000-0000-4000-8000-000000000002", "actionType": "plan.create_task", "producer": "plan", "targetDomain": "plan",
+        "actor": { "type": "user", "id": "20000000-0000-4000-8000-000000000001" }, "deviceId": "30000000-0000-4000-8000-000000000001",
+        "securityDomain": "personal", "dataClassification": "personal", "requestedRisk": "R1", "payload": { "title": "Forward-compatible task" },
+        "idempotencyKey": "fixture-create-task-unknown-001", "requestedAt": "2026-07-19T00:00:00.000Z", "correlationId": "40000000-0000-4000-8000-000000000002",
+        "futureOptionalField": { "consumerMayIgnore": true }
+      }
+    },
+    {
+      "id": "action-decision-accepted", "contract": "actionDecision",
+      "value": { "requestId": "10000000-0000-4000-8000-000000000001", "outcome": "allow", "evaluatedRisk": "R1", "policyVersion": "kenos-phase1-v1", "reasons": ["explicit user request"], "decidedAt": "2026-07-19T00:00:00.000Z" }
+    },
+    {
+      "id": "action-result-success", "contract": "actionResult",
+      "value": { "requestId": "10000000-0000-4000-8000-000000000001", "status": "succeeded", "result": { "taskId": "50000000-0000-4000-8000-000000000001" }, "affectedEntities": [{ "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001", "version": 1 }], "activityId": "70000000-0000-4000-8000-000000000001", "completedAt": "2026-07-19T00:00:01.000Z" }
+    },
+    {
+      "id": "approval-request", "contract": "approvalRequest",
+      "value": { "id": "80000000-0000-4000-8000-000000000001", "actionRequestId": "10000000-0000-4000-8000-000000000001", "risk": "R3", "summary": "Confirm sensitive action", "impact": ["One Plan task will be changed"], "sensitiveFieldsRedacted": true, "reversible": true, "expiresAt": "2026-07-19T00:05:00.000Z", "createdAt": "2026-07-19T00:00:00.000Z" }
+    },
+    {
+      "id": "approval-decision", "contract": "approvalDecision",
+      "value": { "approvalId": "80000000-0000-4000-8000-000000000001", "decision": "approved", "decidedBy": "20000000-0000-4000-8000-000000000001", "authStrength": "reauthenticated", "constraints": { "singleActionOnly": true }, "decidedAt": "2026-07-19T00:01:00.000Z" }
+    },
+    {
+      "id": "mutation-envelope", "contract": "mutationEnvelope",
+      "value": { "schemaVersion": "1", "mutationId": "90000000-0000-4000-8000-000000000001", "idempotencyKey": "fixture-mutation-001", "entity": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001", "version": 1 }, "actorId": "20000000-0000-4000-8000-000000000001", "deviceId": "30000000-0000-4000-8000-000000000001", "baseVersion": 1, "operation": "plan.rename_task", "payload": { "title": "Updated fixture task" }, "occurredAt": "2026-07-19T00:02:00.000Z" }
+    },
+    {
+      "id": "command-failure", "contract": "commandFailure",
+      "value": { "ok": false, "error": { "code": "permission_denied", "message": "The command is not allowed.", "class": "permanent", "retryable": false, "userAction": "Review permissions." } }
+    },
+    {
+      "id": "activity-success", "contract": "activityRecord",
+      "value": { "schemaVersion": "1", "id": "70000000-0000-4000-8000-000000000001", "eventType": "plan.task_created", "actor": { "type": "assistant", "id": "20000000-0000-4000-8000-000000000001" }, "actionRequestId": "10000000-0000-4000-8000-000000000001", "targetRefs": [{ "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001", "version": 1 }], "securityDomain": "personal", "summary": "Created Plan task", "result": "succeeded", "correlationId": "40000000-0000-4000-8000-000000000001", "occurredAt": "2026-07-19T00:00:00.000Z" }
+    },
+    {
+      "id": "activity-rejection", "contract": "activityRecord",
+      "value": { "schemaVersion": "1", "id": "70000000-0000-4000-8000-000000000002", "eventType": "plan.create_task_rejected", "actor": { "type": "assistant", "id": "20000000-0000-4000-8000-000000000001" }, "actionRequestId": "10000000-0000-4000-8000-000000000001", "targetRefs": [], "securityDomain": "personal", "summary": "Create task request was rejected", "reason": "Work-sourced task creation is excluded", "result": "failed", "correlationId": "40000000-0000-4000-8000-000000000001", "occurredAt": "2026-07-19T00:00:00.000Z" }
+    },
+    {
+      "id": "activity-redacted-sensitive", "contract": "activityRecord",
+      "value": { "schemaVersion": "1", "id": "70000000-0000-4000-8000-000000000003", "eventType": "plan.task_created", "actor": { "type": "assistant", "id": "20000000-0000-4000-8000-000000000001" }, "targetRefs": [], "securityDomain": "personal", "summary": "Created a redacted Plan task", "result": "succeeded", "redactedPayload": { "title": "Fixture task", "notes": "[REDACTED]", "token": "[REDACTED]" }, "correlationId": "40000000-0000-4000-8000-000000000003", "occurredAt": "2026-07-19T00:00:00.000Z" }
+    },
+    { "id": "outbox-pending", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000001", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001", "version": 1 }, "payload": { "taskId": "50000000-0000-4000-8000-000000000001" }, "schemaVersion": "1", "actionRequestId": "10000000-0000-4000-8000-000000000001", "idempotencyKey": "fixture-create-task-001", "correlationId": "40000000-0000-4000-8000-000000000001", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:00:00.000Z", "attempts": 0, "maxAttempts": 5, "status": "pending" } },
+    { "id": "outbox-processing", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000002", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, "payload": {}, "schemaVersion": "1", "idempotencyKey": "fixture-processing", "correlationId": "40000000-0000-4000-8000-000000000002", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:00:00.000Z", "attempts": 1, "status": "processing" } },
+    { "id": "outbox-published", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000003", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, "payload": {}, "schemaVersion": "1", "idempotencyKey": "fixture-published", "correlationId": "40000000-0000-4000-8000-000000000003", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:00:00.000Z", "attempts": 1, "status": "published" } },
+    { "id": "outbox-retry", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000004", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, "payload": {}, "schemaVersion": "1", "idempotencyKey": "fixture-retry", "correlationId": "40000000-0000-4000-8000-000000000004", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:01:00.000Z", "attempts": 2, "maxAttempts": 5, "status": "retry", "lastErrorClass": "transient", "failureReason": "Network unavailable" } },
+    { "id": "outbox-dead-letter", "contract": "outboxRecord", "value": { "id": "60000000-0000-4000-8000-000000000005", "topic": "plan.create_task", "aggregate": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan", "ownerId": "50000000-0000-4000-8000-000000000001" }, "payload": {}, "schemaVersion": "1", "idempotencyKey": "fixture-dead-letter", "correlationId": "40000000-0000-4000-8000-000000000005", "occurredAt": "2026-07-19T00:00:00.000Z", "availableAt": "2026-07-19T00:01:00.000Z", "attempts": 5, "maxAttempts": 5, "status": "dead_letter", "lastErrorClass": "permanent", "failureReason": "Permission denied" } },
+    {
+      "id": "capture-envelope", "contract": "captureEnvelope",
+      "value": { "schemaVersion": "1", "id": "a0000000-0000-4000-8000-000000000001", "kind": "url", "payload": { "title": "Read later" }, "source": { "client": "kenos-web", "deviceId": "30000000-0000-4000-8000-000000000001", "externalUrl": "https://example.com/read" }, "actorId": "20000000-0000-4000-8000-000000000001", "securityDomain": "personal", "dataClassification": "personal", "suggestedDomains": ["library"], "capturedAt": "2026-07-19T00:00:00.000Z", "idempotencyKey": "fixture-capture-001" }
+    }
+  ],
+  "invalid": [
+    { "id": "malformed-uuid", "contract": "actionRequest", "expectedError": "invalid_action_contract", "valueFrom": "action-create-task-r1", "patch": { "id": "not-a-uuid" } },
+    { "id": "invalid-timestamp", "contract": "actionRequest", "expectedError": "invalid_action_contract", "valueFrom": "action-create-task-r1", "patch": { "requestedAt": "yesterday" } },
+    { "id": "missing-owner-id", "contract": "entityRef", "expectedError": "invalid_contract", "value": { "id": "50000000-0000-4000-8000-000000000001", "type": "plan.task", "ownerDomain": "plan" } },
+    { "id": "wrong-contract-version", "contract": "actionRequest", "expectedError": "schema_version_not_supported", "valueFrom": "action-create-task-r1", "patch": { "schemaVersion": 1 } },
+    { "id": "unknown-action-type", "contract": "serverAction", "expectedError": "unsupported_action", "valueFrom": "action-create-task-r1", "patch": { "actionType": "plan.unknown_action" } },
+    { "id": "invalid-risk", "contract": "actionRequest", "expectedError": "invalid_action_contract", "valueFrom": "action-create-task-r1", "patch": { "requestedRisk": "R9" } },
+    { "id": "work-sourced-create-task", "contract": "serverAction", "expectedError": "work_source_excluded", "valueFrom": "action-create-task-r1", "patch": { "producer": "work", "payload": { "title": "Work task", "workSource": { "externalId": "WORK-1" } } } },
+    { "id": "proactive-assistant-create-task", "contract": "serverAction", "expectedError": "risk_not_allowed", "valueFrom": "action-create-task-r1", "patch": { "requestedRisk": "R2", "reason": "Proactive inferred task creation" } },
+    { "id": "invalid-outbox-transition", "contract": "outboxTransition", "expectedError": "invalid_outbox_transition", "value": { "from": "published", "to": "retry" } },
+    { "id": "activity-secret-token", "contract": "activityRecord", "expectedError": "unredacted_sensitive_payload", "valueFrom": "activity-redacted-sensitive", "patch": { "redactedPayload": { "token": "live-secret-token" } } },
+    {
+      "id": "conflicting-idempotency-replay", "contract": "serverScenario", "expectedError": "action_id_reused",
+      "value": {
+        "firstFrom": "action-create-task-r1",
+        "replayPatch": { "idempotencyKey": "fixture-conflicting-replay", "correlationId": "40000000-0000-4000-8000-000000000099" }
+      }
+    }
+  ]
+}
