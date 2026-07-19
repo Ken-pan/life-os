@@ -32,6 +32,14 @@ function schemaClient(schema) {
   return supabase
 }
 
+/**
+ * Kenos Phase 2 read adapters share the authenticated public-schema client.
+ * Callers must remain read-only; production writes continue through domain Owners.
+ */
+export function lifeOsReadClient() {
+  return schemaClient('public')
+}
+
 function todayYmd() {
   return ymd(new Date())
 }

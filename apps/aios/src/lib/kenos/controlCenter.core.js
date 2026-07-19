@@ -1,3 +1,5 @@
+import { freshnessState } from './readProjections.core.js'
+
 const SPACE_URLS = Object.freeze({
   plan: 'https://planner.kenos.space',
   money: 'https://finance.kenos.space',
@@ -31,18 +33,30 @@ function formatCurrency(value) {
  * Portal today RPC -> Assistant Today read model.
  * This stays read-only: every action points back to its domain owner.
  */
-export function buildTodayReadModel(summary) {
+export function buildTodayReadModel(summary, { now = Date.now() } = {}) {
   if (!summary || summary.ok === false) {
     return {
       asOf: null,
       priorities: [],
       signals: [],
       emptyReason: '今日读模型尚未连接。各 Space 仍可独立使用。',
+      source: 'public.portal_today_summary',
+      status: 'unavailable',
     }
   }
 
   const priorities = []
   const signals = []
+  const freshness = freshnessState(summary.asOf, { now })
+  const projectionMeta = (ownerDomain, source) => ({
+    ownerDomain,
+    source,
+    freshness: freshness.freshness,
+    lastUpdated: freshness.lastUpdated,
+    available: true,
+    stale: freshness.stale,
+    futureActionAllowed: false,
+  })
   const planner = summary.planner ?? null
   const overdue = finiteNumber(planner?.overdue)
   const todayOpen = finiteNumber(planner?.todayOpen)
@@ -56,6 +70,7 @@ export function buildTodayReadModel(summary) {
       detail: todayOpen > 0 ? `另有 ${todayOpen} 项今天到期` : '先确认仍然有效的任务',
       href: `${SPACE_URLS.plan}/upcoming`,
       actionLabel: '打开 Plan',
+      ...projectionMeta('plan', 'portal_today_summary.planner'),
     })
   } else if (todayOpen > 0) {
     priorities.push({
@@ -66,6 +81,7 @@ export function buildTodayReadModel(summary) {
       detail: '从最重要的一项开始',
       href: SPACE_URLS.plan,
       actionLabel: '查看今天',
+      ...projectionMeta('plan', 'portal_today_summary.planner'),
     })
   }
 
@@ -83,6 +99,7 @@ export function buildTodayReadModel(summary) {
           ? `上次 ${summary.fitness.lastSessionDate}`
           : '暂无近期训练记录',
       href: SPACE_URLS.training,
+      ...projectionMeta('training', 'portal_today_summary.fitness'),
     })
   }
 
@@ -93,6 +110,7 @@ export function buildTodayReadModel(summary) {
       value: `${formatCurrency(summary.finance.monthSurplus)} 本月结余`,
       detail: `收入 ${formatCurrency(summary.finance.monthIncome)} · 支出 ${formatCurrency(summary.finance.monthExpense)}`,
       href: SPACE_URLS.money,
+      ...projectionMeta('money', 'portal_today_summary.finance'),
     })
   }
 
@@ -105,6 +123,7 @@ export function buildTodayReadModel(summary) {
       value: title || '最近没有播放记录',
       detail: artist || '打开 Music 继续播放',
       href: SPACE_URLS.music,
+      ...projectionMeta('music', 'portal_today_summary.music'),
     })
   }
 
@@ -116,6 +135,7 @@ export function buildTodayReadModel(summary) {
       value: `${count} 个收纳分区`,
       detail: summary.home.reportedAt ? '空间清单已同步' : '等待最近一次同步',
       href: `${SPACE_URLS.home}/storage`,
+      ...projectionMeta('home', 'portal_today_summary.home'),
     })
   }
 
@@ -128,6 +148,7 @@ export function buildTodayReadModel(summary) {
       detail: '可以从 Inbox 或 Assistant 开始',
       href: `${SPACE_URLS.plan}/inbox`,
       actionLabel: '查看 Inbox',
+      ...projectionMeta('plan', 'portal_today_summary.planner'),
     })
   }
 
@@ -136,6 +157,8 @@ export function buildTodayReadModel(summary) {
     priorities,
     signals,
     emptyReason: null,
+    source: 'public.portal_today_summary',
+    status: freshness.stale ? 'stale' : 'ready',
   }
 }
 
@@ -153,4 +176,59 @@ export function sortActivityNewestFirst(records = []) {
     const right = Date.parse(b.occurredAt ?? '') || 0
     return right - left
   })
+}
+
+function domainClassification(ownerDomain) {
+  return ownerDomain === 'money' ? 'sensitive' : 'personal'
+}
+
+export function buildLegacyTodayShadowProjection(summary, { now = Date.now() } = {}) {
+  if (!summary || summary.ok === false) return []
+  const freshness = freshnessState(summary.asOf, { now }).freshness
+  const rows = []
+  const add = (id, ownerDomain, deepLink) => rows.push({
+    id,
+    ownerDomain,
+    status: 'ready',
+    freshness,
+    deepLink,
+    classification: domainClassification(ownerDomain),
+  })
+  if (summary.planner) {
+    const overdue = finiteNumber(summary.planner.overdue)
+    const todayOpen = finiteNumber(summary.planner.todayOpen)
+    add(
+      'plan',
+      'plan',
+      overdue > 0
+        ? `${SPACE_URLS.plan}/upcoming`
+        : todayOpen > 0
+          ? SPACE_URLS.plan
+          : `${SPACE_URLS.plan}/inbox`,
+    )
+  }
+  if (summary.fitness) add('training', 'training', SPACE_URLS.training)
+  if (summary.finance) add('money', 'money', SPACE_URLS.money)
+  if (summary.music) add('music', 'music', SPACE_URLS.music)
+  if (summary.home?.storageZoneCount != null) add('home', 'home', `${SPACE_URLS.home}/storage`)
+  return rows
+}
+
+export function buildTodayShadowProjection(model) {
+  const rows = []
+  const seen = new Set()
+  for (const item of [...(model?.priorities ?? []), ...(model?.signals ?? [])]) {
+    const ownerDomain = item.ownerDomain
+    if (!ownerDomain || seen.has(ownerDomain)) continue
+    seen.add(ownerDomain)
+    rows.push({
+      id: ownerDomain,
+      ownerDomain,
+      status: item.available === false ? 'unavailable' : 'ready',
+      freshness: item.freshness,
+      deepLink: item.href,
+      classification: domainClassification(ownerDomain),
+    })
+  }
+  return rows
 }

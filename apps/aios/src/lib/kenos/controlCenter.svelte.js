@@ -1,6 +1,16 @@
 import { browser } from '$app/environment'
-import { lifeOsTodayRaw } from '$lib/lifeos.js'
-import { shouldSeedDemo } from '$lib/demoMode.js'
+import { shouldSeedControlDemo } from '$lib/demoMode.js'
+import { readAllControlSources } from './readSources.js'
+import {
+  buildLegacyTodayShadowProjection,
+  buildTodayReadModel,
+  buildTodayShadowProjection,
+} from './controlCenter.core.js'
+import {
+  compareProjectionSets,
+  sourceState,
+  summarizeShadowMismatches,
+} from './readProjections.core.js'
 
 const DEMO_STATE_KEY = 'kenos_phase2_control_demo_v1'
 
@@ -116,9 +126,40 @@ export const CONTROL = $state({
   activities: [],
   demo: false,
   refreshedAt: 0,
+  sources: {
+    today: sourceState('loading', { source: 'public.portal_today_summary' }),
+    inbox: sourceState('loading', { source: 'public.life_events + public.planner_tasks' }),
+    approvals: sourceState('loading', { source: 'canonical approval read model' }),
+    activity: sourceState('loading', { source: 'public.life_events' }),
+  },
+  shadowMismatches: [],
+  shadowSummary: { blocking: 0, warning: 0, expected: 0 },
 })
 
 let inflight = null
+
+function applySourceResult(key, value) {
+  if (!value?.state) return
+  const failed = ['offline', 'unavailable', 'permission_denied'].includes(value.state.status)
+  if (key === 'today') {
+    if (value.summary) CONTROL.summary = value.summary
+    else if (!CONTROL.summary) CONTROL.summary = null
+  } else {
+    const field = key === 'activity' ? 'activities' : key
+    if (value.items?.length || !failed || !CONTROL[field]?.length) CONTROL[field] = value.items ?? []
+  }
+  CONTROL.sources[key] = failed && (
+    (key === 'today' && CONTROL.summary) ||
+    (key !== 'today' && CONTROL[key === 'activity' ? 'activities' : key]?.length)
+  )
+    ? {
+        ...value.state,
+        status: 'stale',
+        stale: true,
+        message: `${value.state.message} 正在显示上一次只读 projection。`,
+      }
+    : value.state
+}
 
 export async function refreshControlCenter({ force = false } = {}) {
   if (!browser) return
@@ -129,14 +170,73 @@ export async function refreshControlCenter({ force = false } = {}) {
     CONTROL.loading = true
     CONTROL.error = ''
     try {
-      const summary = await lifeOsTodayRaw()
-      const demo = !summary && shouldSeedDemo()
+      const demo = shouldSeedControlDemo()
+      if (!demo) {
+        CONTROL.sources = Object.fromEntries(
+          Object.entries(CONTROL.sources).map(([key, state]) => [
+            key,
+            sourceState('loading', { source: state.source, lastUpdated: state.lastUpdated }),
+          ]),
+        )
+      }
+      const sources = demo
+        ? null
+        : await readAllControlSources({}, { onSettled: applySourceResult })
       const savedDemo = demo ? loadDemoControlState() : null
-      CONTROL.summary = summary ?? (demo ? DEMO_SUMMARY : null)
+      if (demo) CONTROL.summary = DEMO_SUMMARY
       CONTROL.demo = demo
-      CONTROL.inbox = demo ? clone(savedDemo?.inbox ?? DEMO_INBOX) : []
-      CONTROL.approvals = demo ? clone(savedDemo?.approvals ?? DEMO_APPROVALS) : []
-      CONTROL.activities = demo ? clone(savedDemo?.activities ?? DEMO_ACTIVITY) : []
+      if (demo) {
+        CONTROL.inbox = clone(savedDemo?.inbox ?? DEMO_INBOX)
+        CONTROL.approvals = clone(savedDemo?.approvals ?? DEMO_APPROVALS)
+        CONTROL.activities = clone(savedDemo?.activities ?? DEMO_ACTIVITY)
+      }
+      CONTROL.sources = demo
+        ? {
+            today: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: 1 }),
+            inbox: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.inbox.length }),
+            approvals: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.approvals.length }),
+            activity: sourceState('ready', { source: 'local opt-in rehearsal', availableCount: CONTROL.activities.length }),
+          }
+        : CONTROL.sources
+      const todayModel = buildTodayReadModel(CONTROL.summary)
+      const toShadowShape = (item) => ({
+        id: item.id,
+        ownerDomain: item.ownerDomain,
+        status: item.status,
+        freshness: item.stale ? 'stale' : 'fresh',
+        deepLink: item.deepLink,
+        classification: item.classification,
+      })
+      CONTROL.shadowMismatches = demo
+        ? []
+        : [
+            ...compareProjectionSets({
+              comparisonType: 'portal_today_vs_assistant_today',
+              ownerDomain: 'system',
+              oldItems: buildLegacyTodayShadowProjection(CONTROL.summary),
+              newItems: buildTodayShadowProjection(todayModel),
+            }),
+            ...compareProjectionSets({
+              comparisonType: 'portal_pending_vs_assistant_inbox',
+              ownerDomain: 'system',
+              oldItems: sources.inbox.shadowItems ?? [],
+              newItems: CONTROL.inbox.map(toShadowShape),
+            }),
+            ...compareProjectionSets({
+              comparisonType: 'life_events_vs_assistant_activity',
+              ownerDomain: 'system',
+              oldItems: sources.activity.shadowItems ?? [],
+              newItems: CONTROL.activities.map(toShadowShape),
+            }),
+            ...compareProjectionSets({
+              comparisonType: 'approval_projection',
+              ownerDomain: 'assistant',
+              oldItems: [],
+              newItems: [],
+              unsupported: CONTROL.sources.approvals.status === 'unsupported',
+            }),
+          ]
+      CONTROL.shadowSummary = summarizeShadowMismatches(CONTROL.shadowMismatches)
       CONTROL.refreshedAt = Date.now()
     } catch (error) {
       CONTROL.error = error instanceof Error ? error.message : 'Today 暂时无法刷新'

@@ -2,19 +2,24 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   buildTodayReadModel,
+  buildLegacyTodayShadowProjection,
+  buildTodayShadowProjection,
   sortActivityNewestFirst,
   summarizeControlQueue,
 } from './kenos/controlCenter.core.js'
 
 describe('Kenos Phase 2 control center read model', () => {
   it('turns the existing Portal summary into domain-owned next actions', () => {
-    const model = buildTodayReadModel({
-      ok: true,
-      asOf: '2026-07-19T12:00:00Z',
-      planner: { todayOpen: 3, overdue: 2 },
-      finance: { monthSurplus: 500, monthIncome: 900, monthExpense: 400 },
-      fitness: { workedOutToday: false, lastSessionDate: '2026-07-18' },
-    })
+    const model = buildTodayReadModel(
+      {
+        ok: true,
+        asOf: '2026-07-19T12:00:00Z',
+        planner: { todayOpen: 3, overdue: 2 },
+        finance: { monthSurplus: 500, monthIncome: 900, monthExpense: 400 },
+        fitness: { workedOutToday: false, lastSessionDate: '2026-07-18' },
+      },
+      { now: Date.parse('2026-07-19T12:05:00Z') },
+    )
 
     assert.deepEqual(
       {
@@ -29,6 +34,10 @@ describe('Kenos Phase 2 control center read model', () => {
       },
     )
     assert.deepEqual(model.signals.map((signal) => signal.id), ['training', 'money'])
+    assert.equal(model.priorities[0].ownerDomain, 'plan')
+    assert.equal(model.signals[1].source, 'portal_today_summary.finance')
+    assert.equal(model.signals[1].futureActionAllowed, false)
+    assert.equal(model.status, 'ready')
   })
 
   it('fails soft when the legacy read model is unavailable', () => {
@@ -37,6 +46,8 @@ describe('Kenos Phase 2 control center read model', () => {
       priorities: [],
       signals: [],
       emptyReason: '今日读模型尚未连接。各 Space 仍可独立使用。',
+      source: 'public.portal_today_summary',
+      status: 'unavailable',
     })
   })
 
@@ -58,5 +69,19 @@ describe('Kenos Phase 2 control center read model', () => {
     ]
     assert.deepEqual(sortActivityNewestFirst(records).map((item) => item.id), ['new', 'old'])
     assert.deepEqual(records.map((item) => item.id), ['old', 'new'])
+  })
+
+  it('normalizes legacy and Today cards to the same shadow comparison shape', () => {
+    const summary = {
+      ok: true,
+      asOf: '2026-07-19T12:00:00Z',
+      planner: { todayOpen: 1, overdue: 0 },
+      finance: { monthSurplus: 1, monthIncome: 2, monthExpense: 1 },
+    }
+    const options = { now: Date.parse('2026-07-19T12:05:00Z') }
+    assert.deepEqual(
+      buildTodayShadowProjection(buildTodayReadModel(summary, options)),
+      buildLegacyTodayShadowProjection(summary, options),
+    )
   })
 })

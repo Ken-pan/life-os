@@ -174,6 +174,15 @@
   opacity: 0.88;
   background: var(--t1);
 }
+.control-button--link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.control-link-unavailable {
+  color: var(--t3);
+  font-size: var(--text-sm);
+}
 .control-notice,
 .control-empty {
   margin: 24px 0 0;

@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
+  import ReadSourceState from '$lib/components/ReadSourceState.svelte'
 
   const openItems = $derived(CONTROL.inbox.filter((item) => item.status === 'open'))
 
@@ -21,8 +22,13 @@
     {#if CONTROL.demo}<span class="control-badge">本地演示</span>{/if}
   </header>
 
+  <ReadSourceState
+    state={CONTROL.sources.inbox}
+    onRetry={() => refreshControlCenter({ force: true })}
+  />
+
   <p class="control-notice">
-    Production capture adapter 保持关闭；本页当前只展示本地 beta 数据，不消费或确认生产事件。
+    只读来源为 pending life_events 与 Plan 中保留 lifeEventRef 的未完成任务；本页不会消费事件、分类或写回 Owner。
   </p>
 
   <section class="control-page-section" aria-labelledby="inbox-open-title">
@@ -33,17 +39,31 @@
           <article class="control-row">
             <div class="control-row-main">
               <div class="control-row-meta">
-                <span class="control-badge">{item.source}</span>
-                <span>{item.receivedAt}</span>
+                <span class="control-badge">{item.ownerDomain ?? item.source}</span>
+                <span>{item.sourceType ?? 'local_rehearsal'}</span>
+                {#if item.receivedAt}
+                  <time datetime={item.receivedAt}>
+                    {Date.parse(item.receivedAt)
+                      ? new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.receivedAt))
+                      : item.receivedAt}
+                  </time>
+                {/if}
+                {#if item.stale}<span class="control-badge control-badge--critical">陈旧</span>{/if}
               </div>
               <h3>{item.title}</h3>
-              <p class="control-row-detail">{item.detail}</p>
+              <p class="control-row-detail">{item.safeSummary ?? item.detail}</p>
+              <p class="control-row-detail">Owner：{item.ownerDomain ?? 'local rehearsal'} · 分类：{item.classification ?? 'demo'}</p>
             </div>
             <div class="control-row-actions">
-              <button class="control-button" type="button" disabled={!CONTROL.demo}>稍后</button>
-              <button class="control-button control-button--primary" type="button" disabled={!CONTROL.demo}>
-                选择 Space
-              </button>
+              {#if item.deepLink}
+                <a class="control-button control-button--link" href={item.deepLink} target="_blank" rel="noopener noreferrer">
+                  打开 Owner
+                </a>
+              {:else if CONTROL.demo}
+                <button class="control-button" type="button" disabled>本地演练不分类</button>
+              {:else}
+                <span class="control-link-unavailable">Deep link 不可用</span>
+              {/if}
             </div>
           </article>
         {/each}
@@ -51,7 +71,9 @@
     {:else}
       <div class="control-empty">
         <strong>Inbox 已清空</strong>
-        Capture 生产读取尚未接线；各领域现有 Inbox 保持不变。
+        {CONTROL.sources.inbox.status === 'empty'
+          ? '真实来源当前没有待处理项。'
+          : '来源不可用时不会用演示数据冒充真实 Inbox；各领域现有 Inbox 保持不变。'}
       </div>
     {/if}
   </section>

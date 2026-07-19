@@ -9,6 +9,7 @@ import { browser } from '$app/environment'
 import { CLOUD_BUILD } from '$lib/env.js'
 
 const FLAG_KEY = 'aios_demo'
+const CONTROL_FLAG_KEY = 'kenos_phase2_demo'
 
 function isLocalHost() {
   if (!browser) return false
@@ -38,4 +39,23 @@ export function shouldSeedDemo() {
     /* localStorage 不可用 → 按默认(灌)处理 */
   }
   return true
+}
+
+/**
+ * Phase 2 control-surface rehearsal is opt-in, unlike the legacy chat demo.
+ * Use ?kenosDemo=1 locally; ?kenosDemo=0 clears the persisted local choice.
+ */
+export function shouldSeedControlDemo() {
+  if (CLOUD_BUILD || !isLocalHost()) return false
+  try {
+    const params = new URLSearchParams(location.search)
+    if (params.has('kenosDemo')) {
+      const enabled = params.get('kenosDemo') === '1'
+      localStorage.setItem(CONTROL_FLAG_KEY, enabled ? '1' : '0')
+      return enabled
+    }
+    return localStorage.getItem(CONTROL_FLAG_KEY) === '1'
+  } catch {
+    return false
+  }
 }

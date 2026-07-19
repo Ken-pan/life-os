@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import Icon from '@life-os/platform-web/svelte/icon'
+  import ReadSourceState from '$lib/components/ReadSourceState.svelte'
   import { CONTROL, refreshControlCenter } from '$lib/kenos/controlCenter.svelte.js'
   import {
     buildTodayReadModel,
@@ -17,6 +18,17 @@
     day: 'numeric',
     weekday: 'long',
   }).format(new Date())
+  const sourceStatusLabel = {
+    loading: '读取中',
+    ready: '已连接',
+    empty: '为空',
+    partial: '部分可用',
+    stale: '陈旧',
+    offline: '离线',
+    unavailable: '不可用',
+    permission_denied: '需登录',
+    unsupported: '缺少来源',
+  }
 
   onMount(() => {
     void refreshControlCenter()
@@ -56,6 +68,11 @@
   {:else if today.asOf}
     <p class="status-line">读模型更新时间：{today.asOf}</p>
   {/if}
+
+  <ReadSourceState
+    state={CONTROL.sources.today}
+    onRetry={() => refreshControlCenter({ force: true })}
+  />
 
   <main class="today-workspace">
     <section class="focus-section" aria-labelledby="today-focus-title">
@@ -108,19 +125,19 @@
         <a href="/inbox" class="queue-row">
           <span>Inbox</span>
           <strong>{queue.inboxOpen}</strong>
-          <small>Capture 与待分类输入</small>
+          <small>Capture 与待分类输入 · {sourceStatusLabel[CONTROL.sources.inbox.status] ?? '未知'}</small>
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>
         <a href="/approvals" class="queue-row">
           <span>Approvals</span>
           <strong>{queue.approvalsOpen}</strong>
-          <small>需要确认范围与影响</small>
+          <small>需要确认范围与影响 · {sourceStatusLabel[CONTROL.sources.approvals.status] ?? '未知'}</small>
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>
         <a href="/activity" class="queue-row">
           <span>Activity</span>
           <strong class:count-alert={queue.activityFailures > 0}>{queue.activityFailures}</strong>
-          <small>失败或需要恢复的动作</small>
+          <small>失败或需要恢复的动作 · {sourceStatusLabel[CONTROL.sources.activity.status] ?? '未知'}</small>
           <Icon name="chevron-right" size={16} strokeWidth={1.75} />
         </a>
       </div>
@@ -139,7 +156,7 @@
             <a href={signal.href} target="_blank" rel="noopener noreferrer" class="signal-row">
               <span class="signal-label">{signal.label}</span>
               <strong>{signal.value}</strong>
-              <span>{signal.detail}</span>
+              <span>{signal.detail}{signal.stale ? ' · 数据陈旧' : ''}</span>
               <Icon name="external" size={14} strokeWidth={1.75} />
             </a>
           {/each}
@@ -161,10 +178,12 @@
             <div class="activity-row">
               <span class="activity-state activity-state--{item.status}"></span>
               <div>
-                <strong>{item.summary}</strong>
-                <span>{item.result}</span>
+                <strong>{item.safeSummary ?? item.summary}</strong>
+                <span>{item.resultDetail ?? item.result}</span>
               </div>
-              <time>{item.occurredLabel}</time>
+              <time datetime={item.occurredAt}>{item.occurredAt
+                ? new Intl.DateTimeFormat('zh-CN', { timeStyle: 'short' }).format(new Date(item.occurredAt))
+                : item.occurredLabel}</time>
             </div>
           {/each}
         </div>
@@ -188,6 +207,28 @@
           </a>
         {/each}
       </nav>
+    </section>
+
+    <section class="shadow-section" aria-labelledby="today-shadow-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">本地诊断</p>
+          <h2 id="today-shadow-title">Read-model parity</h2>
+        </div>
+      </div>
+      <p>
+        Blocking {CONTROL.shadowSummary.blocking} · Warning {CONTROL.shadowSummary.warning} · Expected unsupported {CONTROL.shadowSummary.expected}
+      </p>
+      {#if CONTROL.shadowMismatches.length}
+        <details>
+          <summary>查看脱敏 mismatch</summary>
+          <ul>
+            {#each CONTROL.shadowMismatches as mismatch}
+              <li>{mismatch.category} · {mismatch.redactedDiagnosticSummary}</li>
+            {/each}
+          </ul>
+        </details>
+      {/if}
     </section>
   </main>
 </div>
@@ -459,6 +500,27 @@
   }
   .empty-block a {
     color: var(--t1);
+  }
+  .shadow-section {
+    padding-top: 4px;
+    border-top: 1px solid var(--border);
+    color: var(--t3);
+    font-size: var(--text-sm);
+  }
+  .shadow-section p {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .shadow-section details {
+    margin-top: 12px;
+  }
+  .shadow-section summary {
+    cursor: pointer;
+    color: var(--t2);
+  }
+  .shadow-section ul {
+    margin: 10px 0 0;
+    padding-left: 18px;
   }
   @media (max-width: 720px) {
     .today-page {

@@ -6,6 +6,7 @@
     retryDemoActivity,
   } from '$lib/kenos/controlCenter.svelte.js'
   import { sortActivityNewestFirst } from '$lib/kenos/controlCenter.core.js'
+  import ReadSourceState from '$lib/components/ReadSourceState.svelte'
 
   const activities = $derived(sortActivityNewestFirst(CONTROL.activities))
 
@@ -33,8 +34,13 @@
     {#if CONTROL.demo}<span class="control-badge">本地演示</span>{/if}
   </header>
 
+  <ReadSourceState
+    state={CONTROL.sources.activity}
+    onRetry={() => refreshControlCenter({ force: true })}
+  />
+
   <p class="control-notice">
-    Production Activity reader 尚未批准接线；敏感 payload 不在此处复制展示。
+    当前真实来源是现役 life_events 兼容读模型；它不是 Phase 1 review-only kenos_plan_activity。这里只保存安全摘要和引用，不复制 payload。
   </p>
 
   <section class="control-page-section" aria-labelledby="activity-recent-title">
@@ -51,13 +57,16 @@
                   class:control-badge--success={item.status === 'succeeded'}
                 >{statusLabel[item.status] ?? item.status}</span>
                 <span>{item.actionType}</span>
-                <span>{item.occurredLabel}</span>
+                <span>{item.ownerDomain ?? item.source}</span>
+                <span>{item.occurredAt
+                  ? new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.occurredAt))
+                  : item.occurredLabel}</span>
               </div>
-              <h3>{item.summary}</h3>
-              <p class="control-row-detail">{item.result}</p>
-              <p class="control-row-detail">执行者：{item.source}</p>
+              <h3>{item.safeSummary ?? item.summary}</h3>
+              <p class="control-row-detail">{item.resultDetail ?? item.result}</p>
+              <p class="control-row-detail">执行者：{item.actor?.type ?? item.source} · 分类：{item.classification ?? 'demo'}</p>
             </div>
-            {#if item.status === 'failed' && item.retryable}
+            {#if CONTROL.demo && item.status === 'failed' && item.retryable}
               <div class="control-row-actions">
                 <button
                   class="control-button"
@@ -72,7 +81,9 @@
     {:else}
       <div class="control-empty">
         <strong>暂无 Activity</strong>
-        生产 Activity 仍留在原有执行边界，直到读取权限和 UI redaction 完成人工评审。
+        {CONTROL.sources.activity.status === 'empty'
+          ? '真实来源当前没有 Activity。'
+          : '来源不可用时不会显示硬编码 Activity；原执行边界保持不变。'}
       </div>
     {/if}
   </section>
