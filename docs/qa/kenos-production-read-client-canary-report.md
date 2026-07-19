@@ -25,7 +25,7 @@ status: PASS
 | No production writes from canary UI/tools | **Pass** — three-layer fail-closed |
 | No service-role in client | **Pass** — publishable key / productionFallback only |
 | No Portal switch / writer / Executor / Apple | **Pass** — not performed |
-| Production DB | **Pass** — tip `20260719130500`; counts `1664 / 50 / 21` |
+| Production DB | **Pass** — tip `20260719130500`; tasks/projects `1664 / 50`. `life_events` moved `21 → 22` during the window via concurrent owner `fitness.workout_logged` (not canary; canary never authenticated). |
 
 ## Freeze note
 
