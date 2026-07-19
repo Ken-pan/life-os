@@ -1,0 +1,57 @@
+{
+  "id": "a1000000-0000-4000-8000-000000000001",
+  "version": "1",
+  "ownerId": "20000000-0000-4000-8000-000000000001",
+  "title": "Kenos Phase 3",
+  "safeSummary": "Establish Work loop foundation without production cutover",
+  "status": "active",
+  "priority": "high",
+  "startAt": "2026-07-19T00:00:00.000Z",
+  "targetAt": "2026-08-01T00:00:00.000Z",
+  "completedAt": null,
+  "dataClassification": "work_confidential",
+  "sourceRefs": [
+    {
+      "sourceType": "jira",
+      "connectorId": "jira-read-only",
+      "externalId": "PROJ-12",
+      "deepLink": "https://example.atlassian.net/browse/PROJ-12",
+      "safeLabel": "Jira PROJ-12",
+      "dataClassification": "work_confidential",
+      "freshness": "2026-07-19T00:00:00.000Z",
+      "available": true
+    }
+  ],
+  "libraryRefs": [
+    {
+      "libraryRef": {
+        "id": "b1000000-0000-4000-8000-000000000001",
+        "type": "library.document",
+        "ownerDomain": "library",
+        "ownerId": "20000000-0000-4000-8000-000000000001"
+      },
+      "safeTitle": "Phase 3 brief",
+      "dataClassification": "work_confidential",
+      "freshness": "2026-07-19T00:00:00.000Z",
+      "deepLink": "https://knowledge.kenos.space/library/b1000000-0000-4000-8000-000000000001",
+      "sourceAvailable": true
+    }
+  ],
+  "planTaskRefs": [
+    {
+      "taskRef": {
+        "id": "50000000-0000-4000-8000-000000000001",
+        "type": "plan.task",
+        "ownerDomain": "plan",
+        "ownerId": "20000000-0000-4000-8000-000000000001"
+      },
+      "correlationId": "40000000-0000-4000-8000-000000000001",
+      "safeTitle": "Ship Work foundation docs",
+      "completionProjection": "open",
+      "freshness": "2026-07-19T01:00:00.000Z",
+      "deepLink": "https://planner.kenos.space/tasks/50000000-0000-4000-8000-000000000001"
+    }
+  ],
+  "createdAt": "2026-07-19T00:00:00.000Z",
+  "updatedAt": "2026-07-19T01:00:00.000Z"
+}

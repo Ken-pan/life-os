@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/primary.swiftdeps"
+  },
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Tests/KenosStoreTests/KenosStoreTests.swift": {
+    "dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests.d",
+    "object": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests.swift.o",
+    "swiftmodule": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests.swiftdeps",
+    "diagnostics": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests.dia"
+  }
+}

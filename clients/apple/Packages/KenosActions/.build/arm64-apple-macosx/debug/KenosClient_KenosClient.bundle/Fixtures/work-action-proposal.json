@@ -1,0 +1,26 @@
+{
+  "id": "a5000000-0000-4000-8000-000000000001",
+  "version": "1",
+  "ownerId": "20000000-0000-4000-8000-000000000001",
+  "workEntityRef": {
+    "id": "a1000000-0000-4000-8000-000000000001",
+    "type": "work.project",
+    "ownerDomain": "work",
+    "ownerId": "20000000-0000-4000-8000-000000000001"
+  },
+  "proposedTaskTitle": "Draft follow-up for deliverable review",
+  "safeContext": "User-visible draft; not a Plan Task yet",
+  "suggestedDueAt": "2026-07-21T00:00:00.000Z",
+  "suggestedPriority": "normal",
+  "risk": "R2",
+  "status": "draft",
+  "planActionId": null,
+  "planTaskRef": null,
+  "dataClassification": "work_confidential",
+  "requestedAt": "2026-07-19T00:00:00.000Z",
+  "resolvedAt": null,
+  "correlationId": "40000000-0000-4000-8000-000000000001",
+  "idempotencyKey": "work-proposal-draft-001",
+  "createdAt": "2026-07-19T00:00:00.000Z",
+  "updatedAt": "2026-07-19T00:00:00.000Z"
+}

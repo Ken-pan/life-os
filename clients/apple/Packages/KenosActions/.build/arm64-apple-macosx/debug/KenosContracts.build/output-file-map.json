@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosContracts.build/primary.swiftdeps"
+  },
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosContracts/Sources/KenosContracts/KenosContracts.swift": {
+    "dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts.d",
+    "object": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts.swift.o",
+    "swiftmodule": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts~partial.swiftmodule",
+    "swift-dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts.swiftdeps",
+    "diagnostics": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts.dia"
+  }
+}

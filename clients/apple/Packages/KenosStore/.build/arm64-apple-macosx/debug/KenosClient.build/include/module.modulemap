@@ -1,0 +1,3 @@
+module KenosClient {
+    header "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/include/KenosClient-Swift.h"
+}

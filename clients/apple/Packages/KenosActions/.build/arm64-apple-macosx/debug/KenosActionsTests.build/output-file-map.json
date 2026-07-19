@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosActionsTests.build/primary.swiftdeps"
+  },
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/Tests/KenosActionsTests/KenosActionsTests.swift": {
+    "dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosActionsTests.build/KenosActionsTests.d",
+    "object": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosActionsTests.build/KenosActionsTests.swift.o",
+    "swiftmodule": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosActionsTests.build/KenosActionsTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosActionsTests.build/KenosActionsTests.swiftdeps",
+    "diagnostics": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosActions/.build/arm64-apple-macosx/debug/KenosActionsTests.build/KenosActionsTests.dia"
+  }
+}

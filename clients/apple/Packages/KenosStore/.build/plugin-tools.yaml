@@ -1,0 +1,161 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "KenosClient-arm64-apple-macosx-debug.module": ["<KenosClient-arm64-apple-macosx-debug.module>"]
+  "KenosContracts-arm64-apple-macosx-debug.module": ["<KenosContracts-arm64-apple-macosx-debug.module>"]
+  "KenosStore-arm64-apple-macosx-debug.module": ["<KenosStore-arm64-apple-macosx-debug.module>"]
+  "KenosStorePackageTests-arm64-apple-macosx-debug.module": ["<KenosStorePackageTests-arm64-apple-macosx-debug.module>"]
+  "KenosStorePackageTests-arm64-apple-macosx-debug.test": ["<KenosStorePackageTests-arm64-apple-macosx-debug.test>"]
+  "KenosStoreTests-arm64-apple-macosx-debug.module": ["<KenosStoreTests-arm64-apple-macosx-debug.module>"]
+  "PackageStructure": ["<PackageStructure>"]
+  "main": ["<KenosStore-arm64-apple-macosx-debug.module>"]
+  "test": ["<KenosStore-arm64-apple-macosx-debug.module>","<KenosStorePackageTests-arm64-apple-macosx-debug.test>","<KenosStoreTests-arm64-apple-macosx-debug.module>"]
+default: "main"
+nodes:
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Sources/KenosStore/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Tests/KenosStoreTests/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+commands:
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/Sources/KenosClient/KenosClient.swift","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/DerivedSources/resource_bundle_accessor.swift"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/sources"]
+    description: "Write auxiliary file /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/sources"
+
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient_KenosClient.bundle/Fixtures":
+    tool: copy-tool
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/Sources/KenosClient/Fixtures/"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient_KenosClient.bundle/Fixtures/"]
+    description: "Copying /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/Sources/KenosClient/Fixtures"
+
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosContracts/Sources/KenosContracts/KenosContracts.swift"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/sources"]
+    description: "Write auxiliary file /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/sources"
+
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Sources/KenosStore/KenosStore.swift"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/sources"]
+    description: "Write auxiliary file /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/sources"
+
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.derived/runner.swift"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/sources"]
+    description: "Write auxiliary file /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/sources"
+
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.derived/runner.swift":
+    tool: test-entry-point-tool
+    inputs: []
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.derived/runner.swift"]
+
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/KenosClient.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/resource_bundle_accessor.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/KenosStore.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/runner.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests.swift.o"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.product/Objects.LinkFileList"
+
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Tests/KenosStoreTests/KenosStoreTests.swift"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/sources"]
+    description: "Write auxiliary file /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/sources"
+
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+
+  "<KenosClient-arm64-apple-macosx-debug.module>":
+    tool: phony
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/KenosClient.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/resource_bundle_accessor.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosClient.swiftmodule"]
+    outputs: ["<KenosClient-arm64-apple-macosx-debug.module>"]
+
+  "<KenosContracts-arm64-apple-macosx-debug.module>":
+    tool: phony
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosContracts.swiftmodule"]
+    outputs: ["<KenosContracts-arm64-apple-macosx-debug.module>"]
+
+  "<KenosStore-arm64-apple-macosx-debug.module>":
+    tool: phony
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/KenosStore.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStore.swiftmodule"]
+    outputs: ["<KenosStore-arm64-apple-macosx-debug.module>"]
+
+  "<KenosStorePackageTests-arm64-apple-macosx-debug.module>":
+    tool: phony
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/runner.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStorePackageTests.swiftmodule"]
+    outputs: ["<KenosStorePackageTests-arm64-apple-macosx-debug.module>"]
+
+  "<KenosStorePackageTests-arm64-apple-macosx-debug.test>":
+    tool: phony
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.xctest/Contents/MacOS/KenosStorePackageTests"]
+    outputs: ["<KenosStorePackageTests-arm64-apple-macosx-debug.test>"]
+
+  "<KenosStoreTests-arm64-apple-macosx-debug.module>":
+    tool: phony
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStoreTests.swiftmodule"]
+    outputs: ["<KenosStoreTests-arm64-apple-macosx-debug.module>"]
+
+  "C.KenosClient-arm64-apple-macosx-debug.module":
+    tool: shell
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/Sources/KenosClient/KenosClient.swift","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/DerivedSources/resource_bundle_accessor.swift","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","<KenosClient-arm64-apple-macosx-debug.module-resources>","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosContracts.swiftmodule","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/sources"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/KenosClient.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/resource_bundle_accessor.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosClient.swiftmodule"]
+    description: "Compiling Swift Module 'KenosClient' (2 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","KenosClient","-emit-dependencies","-emit-module","-emit-module-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosClient.swiftmodule","-output-file-map","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/sources","-I","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx14.0","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-j18","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE","-module-cache-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/include/KenosClient-Swift.h","-swift-version","6","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","kenosclient"]
+
+  "C.KenosContracts-arm64-apple-macosx-debug.module":
+    tool: shell
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosContracts/Sources/KenosContracts/KenosContracts.swift","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/sources"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosContracts.swiftmodule"]
+    description: "Compiling Swift Module 'KenosContracts' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","KenosContracts","-emit-dependencies","-emit-module","-emit-module-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosContracts.swiftmodule","-output-file-map","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/sources","-I","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx14.0","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-j18","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/include/KenosContracts-Swift.h","-swift-version","6","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","kenoscontracts"]
+
+  "C.KenosStore-arm64-apple-macosx-debug.module":
+    tool: shell
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Sources/KenosStore/KenosStore.swift","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosContracts.swiftmodule","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosClient.swiftmodule","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/sources"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/KenosStore.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStore.swiftmodule"]
+    description: "Compiling Swift Module 'KenosStore' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","KenosStore","-emit-dependencies","-emit-module","-emit-module-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStore.swiftmodule","-output-file-map","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/sources","-I","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx14.0","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-j18","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/include/KenosStore-Swift.h","-swift-version","6","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","kenosstore"]
+
+  "C.KenosStorePackageTests-arm64-apple-macosx-debug.module":
+    tool: shell
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.derived/runner.swift","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStoreTests.swiftmodule","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/sources"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/runner.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStorePackageTests.swiftmodule"]
+    description: "Compiling Swift Module 'KenosStorePackageTests' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","KenosStorePackageTests","-emit-dependencies","-emit-module","-emit-module-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStorePackageTests.swiftmodule","-output-file-map","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/sources","-I","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx14.0","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-Xfrontend","-enable-cross-import-overlays","-j18","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/include/KenosStorePackageTests-Swift.h","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","kenosstore"]
+
+  "C.KenosStorePackageTests-arm64-apple-macosx-debug.test":
+    tool: shell
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/KenosClient.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient.build/resource_bundle_accessor.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosContracts.build/KenosContracts.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStore.build/KenosStore.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.build/runner.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.product/Objects.LinkFileList"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.xctest/Contents/MacOS/KenosStorePackageTests"]
+    description: "Linking ./.build/arm64-apple-macosx/debug/KenosStorePackageTests.xctest/Contents/MacOS/KenosStorePackageTests"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-L","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug","-o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.xctest/Contents/MacOS/KenosStorePackageTests","-module-name","KenosStorePackageTests","-Xlinker","-no_warn_duplicate_libraries","-Xlinker","-bundle","-Xlinker","-rpath","-Xlinker","@loader_path/../../../","@/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStorePackageTests.product/Objects.LinkFileList","-Xlinker","-rpath","-Xlinker","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-6.2/macosx","-target","arm64-apple-macosx14.0","-Xlinker","-add_ast_path","-Xlinker","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosClient.swiftmodule","-Xlinker","-add_ast_path","-Xlinker","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosContracts.swiftmodule","-Xlinker","-add_ast_path","-Xlinker","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStore.swiftmodule","-Xlinker","-add_ast_path","-Xlinker","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStorePackageTests.swiftmodule","-Xlinker","-add_ast_path","-Xlinker","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStoreTests.swiftmodule","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g"]
+
+  "C.KenosStoreTests-arm64-apple-macosx-debug.module":
+    tool: shell
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Tests/KenosStoreTests/KenosStoreTests.swift","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStore.swiftmodule","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosClient.swiftmodule","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosContracts.swiftmodule","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/sources"]
+    outputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/KenosStoreTests.swift.o","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStoreTests.swiftmodule"]
+    description: "Compiling Swift Module 'KenosStoreTests' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","KenosStoreTests","-emit-dependencies","-emit-module","-emit-module-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules/KenosStoreTests.swiftmodule","-output-file-map","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/output-file-map.json","-parse-as-library","-incremental","-c","@/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosStoreTests.build/sources","-I","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx14.0","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-Xfrontend","-enable-cross-import-overlays","-j18","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-swift-version","6","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","kenosstore"]
+
+  "KenosClient-arm64-apple-macosx-debug.module-resources":
+    tool: phony
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/.build/arm64-apple-macosx/debug/KenosClient_KenosClient.bundle/Fixtures/"]
+    outputs: ["<KenosClient-arm64-apple-macosx-debug.module-resources>"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Sources/KenosStore/","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Tests/KenosStoreTests/","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Package.swift","/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosStore/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+

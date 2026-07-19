@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/.build/arm64-apple-macosx/debug/KenosClientTests.build/primary.swiftdeps"
+  },
+  "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/Tests/KenosClientTests/KenosClientTests.swift": {
+    "dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/.build/arm64-apple-macosx/debug/KenosClientTests.build/KenosClientTests.d",
+    "object": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/.build/arm64-apple-macosx/debug/KenosClientTests.build/KenosClientTests.swift.o",
+    "swiftmodule": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/.build/arm64-apple-macosx/debug/KenosClientTests.build/KenosClientTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/.build/arm64-apple-macosx/debug/KenosClientTests.build/KenosClientTests.swiftdeps",
+    "diagnostics": "/Users/kenpan/「Projects」/life-os/clients/apple/Packages/KenosClient/.build/arm64-apple-macosx/debug/KenosClientTests.build/KenosClientTests.dia"
+  }
+}

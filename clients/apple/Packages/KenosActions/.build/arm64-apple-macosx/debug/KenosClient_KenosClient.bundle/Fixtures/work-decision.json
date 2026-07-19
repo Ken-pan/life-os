@@ -1,0 +1,41 @@
+{
+  "id": "a4000000-0000-4000-8000-000000000001",
+  "version": "1",
+  "projectRef": {
+    "id": "a1000000-0000-4000-8000-000000000001",
+    "type": "work.project",
+    "ownerDomain": "work",
+    "ownerId": "20000000-0000-4000-8000-000000000001"
+  },
+  "meetingRef": {
+    "id": "a3000000-0000-4000-8000-000000000001",
+    "type": "work.meeting",
+    "ownerDomain": "work",
+    "ownerId": "20000000-0000-4000-8000-000000000001"
+  },
+  "ownerId": "20000000-0000-4000-8000-000000000001",
+  "title": "Use AIOS as Work host",
+  "safeSummary": "Host Work UI in AIOS strangler; do not create a new OS app",
+  "status": "decided",
+  "decidedAt": "2026-07-19T01:00:00.000Z",
+  "decidedBy": {
+    "safeLabel": "Ken"
+  },
+  "supersedesDecisionRef": {
+    "id": "a4000000-0000-4000-8000-000000000002",
+    "type": "work.decision",
+    "ownerDomain": "work",
+    "ownerId": "20000000-0000-4000-8000-000000000001"
+  },
+  "dataClassification": "work_confidential",
+  "entityRefs": [
+    {
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "type": "work.project",
+      "ownerDomain": "work",
+      "ownerId": "20000000-0000-4000-8000-000000000001"
+    }
+  ],
+  "createdAt": "2026-07-19T00:00:00.000Z",
+  "updatedAt": "2026-07-19T01:00:00.000Z"
+}
