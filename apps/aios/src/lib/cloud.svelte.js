@@ -4,14 +4,19 @@ import {
   LIFE_OS_PERSONAL_OWNER_EMAIL,
 } from '@life-os/sync'
 import { t } from '$lib/i18n/index.js'
-import { S, applyCloudSettings } from '$lib/state.svelte.js'
+import { S, applyCloudSettings, applyDeviceOnlySettings } from '$lib/state.svelte.js'
 import { supabase as sb, isSupabaseConfigured } from '$lib/supabase.js'
 import {
   C,
   clearConversationClientState,
   persist as persistChats,
 } from '$lib/chat.svelte.js'
-import { M, mergeRemoteMemories } from '$lib/memory.svelte.js'
+import {
+  M,
+  hydrateMemoryFromLocalStorage,
+  mergeRemoteMemories,
+  resetMemoryClientState,
+} from '$lib/memory.svelte.js'
 import { onDataChanged } from '$lib/syncBus.js'
 import {
   planConversationSync,
@@ -20,7 +25,12 @@ import {
 } from '$lib/cloud-sync.core.js'
 import { isConversationPersistenceBlocked } from '$lib/kenos/conversationPersist.core.js'
 import { clearAssistantContext } from '$lib/kenos/assistantContext.svelte.js'
-
+import {
+  clearUserScopedClientStorage,
+  stripUserFieldsFromSettings,
+} from '$lib/kenos/clientSessionCleanup.core.js'
+import { resetFocusStore } from '$lib/kenos/focusStore.svelte.js'
+import { CLOUD_BUILD } from '$lib/env.js'
 /**
  * 云端同步:Life OS 统一 Supabase 账户,登录即用,零配置。
  * - 登录:邮箱 + 密码(与 home/portal/music 同一账户体系,共享登录态);
@@ -37,6 +47,9 @@ const SNAP_KEY = 'aios_cloud_snapshot_v1'
 const PUSH_DEBOUNCE_MS = 8000
 const PULL_CHUNK = 50
 
+/** @type {string | null} */
+let lastAuthUserId = null
+
 export const CLOUD = $state({
   configured: isSupabaseConfigured,
   /** 登录态是否已从 Supabase 恢复完毕(避免刷新瞬间误判未登录、闪现登录门禁) */
@@ -50,6 +63,32 @@ export const CLOUD = $state({
   lastSyncAt: 0,
   error: '',
 })
+
+/**
+ * Clear user-scoped client state (memory/chats/focus/context/caches).
+ * Fail-closed: in-memory stores cleared even if storage throws.
+ */
+export function clearUserScopedSessionState() {
+  clearConversationClientState()
+  clearAssistantContext()
+  resetMemoryClientState()
+  try {
+    resetFocusStore()
+  } catch {
+    /* ignore */
+  }
+  const result = clearUserScopedClientStorage({
+    localStorage: browser ? localStorage : undefined,
+    sessionStorage: browser ? sessionStorage : undefined,
+    stripAiososUserFields: stripUserFieldsFromSettings,
+  })
+  try {
+    applyDeviceOnlySettings(stripUserFieldsFromSettings(S.settings))
+  } catch {
+    /* ignore */
+  }
+  return result
+}
 
 /**
  * 云端版访问门禁:AIOS 是个人工具(含私人对话/记忆/画像),云端只对本人开放。
@@ -116,18 +155,36 @@ async function syncLifeOsMcpFleet(accessToken) {
 export async function initCloud() {
   if (!browser || !CLOUD.configured) {
     CLOUD.ready = true
+    if (!CLOUD_BUILD) hydrateMemoryFromLocalStorage()
     return
   }
-  sb.auth.onAuthStateChange((_event, session) => {
+  sb.auth.onAuthStateChange((event, session) => {
     const u = session?.user
+    const nextId = u?.id ?? null
+    const prevId = lastAuthUserId
+    // Sign-out or account switch: drop prior user local state fail-closed.
+    if (event === 'SIGNED_OUT' || (prevId && !nextId) || (prevId && nextId && prevId !== nextId)) {
+      clearUserScopedSessionState()
+    }
+    lastAuthUserId = nextId
     CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null
     // INITIAL_SESSION / SIGNED_IN / TOKEN_REFRESHED：补齐舰队 + 刷新 JWT
     void syncLifeOsMcpFleet(session?.access_token)
+    if (nextId && isCloudAuthorized()) {
+      hydrateMemoryFromLocalStorage()
+    }
   })
   const { data } = await sb.auth.getSession()
   const u = data?.session?.user
+  lastAuthUserId = u?.id ?? null
   CLOUD.user = u ? { id: u.id, email: u.email ?? '' } : null
   CLOUD.ready = true
+  if (!CLOUD.user && CLOUD_BUILD) {
+    // Auth wall: ensure prior user memory never sits in memory/storage before login.
+    clearUserScopedSessionState()
+  } else if (CLOUD.user && isCloudAuthorized()) {
+    hydrateMemoryFromLocalStorage()
+  }
   await syncLifeOsMcpFleet(data?.session?.access_token)
   if (unsubscribeBus) unsubscribeBus()
   unsubscribeBus = onDataChanged(schedulePush)
@@ -157,6 +214,16 @@ export async function signInCloud(email, password) {
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password })
     if (error) throw error
+    if (isCloudAuthorized()) {
+      hydrateMemoryFromLocalStorage()
+      try {
+        const { seedDefaultMemories, backfillVectors } = await import('$lib/memory.svelte.js')
+        seedDefaultMemories()
+        void backfillVectors()
+      } catch {
+        /* ignore */
+      }
+    }
     // 登录即同步:把这台设备的数据和云端汇合
     syncNow()
     return true
@@ -184,15 +251,14 @@ export async function signOutCloud() {
   } finally {
     CLOUD.busy = false
     CLOUD.user = null
+    lastAuthUserId = null
     // 快照属于这个账号的同步历史,登出即作废
     try {
       localStorage.removeItem(SNAP_KEY)
     } catch {
       /* 忽略 */
     }
-    // Always drop client conversation copies on logout (cache isolation).
-    clearConversationClientState()
-    clearAssistantContext()
+    clearUserScopedSessionState()
   }
 }
 

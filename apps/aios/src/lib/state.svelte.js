@@ -104,6 +104,22 @@ export function applyCloudSettings(remoteSettings, remoteUpdatedAt) {
   applyTheme() // 主题即时生效;locale 由 layout 的 $effect 监听 S.settings.locale 自动应用
 }
 
+/**
+ * After logout / account switch: keep device prefs, drop identity fields in memory + disk.
+ * @param {Record<string, unknown>} nextSettings from stripUserFieldsFromSettings
+ */
+export function applyDeviceOnlySettings(nextSettings) {
+  if (!browser || !nextSettings || typeof nextSettings !== 'object') return
+  Object.assign(S.settings, nextSettings, {
+    customPrompt: '',
+    location: '',
+    userProfile: '',
+    settingsUpdatedAt: 0,
+  })
+  persistence.save(S)
+  applyTheme()
+}
+
 const THEME_APPLY_OPTIONS = {
   themeColorFallback: { light: '#ffffff', dark: '#212121' },
 }

@@ -17,7 +17,12 @@
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
-  import { backfillVectors, seedDefaultMemories, dreamMemories } from '$lib/memory.svelte.js'
+  import {
+    backfillVectors,
+    dreamMemories,
+    hydrateMemoryFromLocalStorage,
+    seedDefaultMemories,
+  } from '$lib/memory.svelte.js'
   import { initCloud, syncNow, CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
   import {
     startDailyBriefScheduler,
@@ -33,6 +38,7 @@
     reconnectDelayMs,
     shouldReconnectAfterOnline,
   } from '$lib/kenos/networkStatus.core.js'
+  import { AUTH_WALL_DOCUMENT_TITLE } from '$lib/kenos/clientSessionCleanup.core.js'
 
   let { children } = $props()
 
@@ -88,6 +94,11 @@
     if (p === '/assistant' || p === '/chat') return t('chat.title')
     return '页面未找到'
   })
+
+  // Auth wall must never leak prior route/entity titles (Work/Focus/Inbox…).
+  const documentTitle = $derived(
+    gated ? AUTH_WALL_DOCUMENT_TITLE : `${pageTitle} · ${t('app.name')}`,
+  )
 
   function onGlobalKeydown(event) {
     if (gated) return
@@ -151,16 +162,24 @@
     applyTheme()
     applyLocale()
     refreshGateway()
-    seedDefaultMemories()
-    backfillVectors()
     // 云同步恢复后：自动写入 Life OS MCP 舰队，再发现工具
-    initCloud().then(() =>
-      import('$lib/mcp.js')
+    initCloud().then(() => {
+      if (CLOUD_BUILD && !isCloudAuthorized()) {
+        // Auth wall: do not seed/hydrate prior-user memory
+        return
+      }
+      if (!CLOUD_BUILD) hydrateMemoryFromLocalStorage()
+      seedDefaultMemories()
+      backfillVectors()
+      return import('$lib/mcp.js')
         .then((m) => m.refreshMcpTools())
-        .catch(() => {}),
-    )
+        .catch(() => {})
+    })
     // 记忆 dreaming:启动稳定后空闲整理(内部限 24h 一次)
-    const dreamTimer = setTimeout(() => dreamMemories(), 30000)
+    const dreamTimer = setTimeout(() => {
+      if (CLOUD_BUILD && !isCloudAuthorized()) return
+      dreamMemories()
+    }, 30000)
     const cleanupTheme = bindAppThemeSystemChange()
     const cleanupViewport = bindViewportHeight()
     // 回到前台时拉一次云端:让别的设备的改动无需手动/刷新就收敛过来
@@ -204,7 +223,7 @@
 </script>
 
 <svelte:head>
-  <title>{pageTitle} · {t('app.name')}</title>
+  <title>{documentTitle}</title>
 </svelte:head>
 
 <svelte:window onkeydown={onGlobalKeydown} />

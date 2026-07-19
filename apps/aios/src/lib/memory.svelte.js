@@ -14,13 +14,16 @@ import { S } from '$lib/state.svelte.js'
 
 const STORAGE_KEY = 'aios_memory_v1'
 const SEED_FLAG_KEY = 'aios_memory_seeded_v1'
+const DREAM_AT_KEY = 'aios_memory_dreamed_at_v1'
+const DREAM_BACKUP_KEY = 'aios_memory_backup_v1'
 const MAX_MEMORIES = 200
 /** 新记忆与旧记忆余弦相似度达到该值视为同一事实的新版本,替换而非并存 */
 const DUP_THRESHOLD = 0.92
+const CLOUD_BUILD = import.meta.env.VITE_AIOS_CLOUD === '1'
 
 /** @typedef {{ id: string, text: string, vector: number[] | null, createdAt: number }} MemoryItem */
 
-function load() {
+function loadFromStorage() {
   if (!browser) return []
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')
@@ -30,10 +33,37 @@ function load() {
   }
 }
 
+function load() {
+  // Cloud builds must not hydrate prior-user memory before auth.
+  if (CLOUD_BUILD) return []
+  return loadFromStorage()
+}
+
 export const M = $state({
   /** @type {MemoryItem[]} */
   items: load(),
 })
+
+/** After authorized cloud login (or local-first boot), hydrate from disk. */
+export function hydrateMemoryFromLocalStorage() {
+  if (!browser) return
+  M.items = loadFromStorage()
+}
+
+/** Drop in-memory + local memory keys without cloud push bus. */
+export function resetMemoryClientState() {
+  M.items = []
+  if (!browser) return
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(SEED_FLAG_KEY)
+    localStorage.removeItem(DREAM_AT_KEY)
+    localStorage.removeItem(DREAM_BACKUP_KEY)
+  } catch {
+    /* fail closed: leave empty in-memory even if storage throws */
+    M.items = []
+  }
+}
 
 function persist() {
   if (!browser) return
@@ -121,8 +151,6 @@ export async function backfillVectors() {
 
 /* —— 记忆 dreaming(ChatGPT memory dreaming 风格) —— */
 
-const DREAM_AT_KEY = 'aios_memory_dreamed_at_v1'
-const DREAM_BACKUP_KEY = 'aios_memory_backup_v1'
 const DREAM_INTERVAL_MS = 24 * 3600 * 1000
 const DREAM_MIN_ITEMS = 8
 

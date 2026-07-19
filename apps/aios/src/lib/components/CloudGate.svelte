@@ -6,6 +6,7 @@
    */
   import { t } from '$lib/i18n/index.js'
   import { CLOUD, signInCloud, signOutCloud, isCloudAuthorized } from '$lib/cloud.svelte.js'
+  import { AUTH_WALL_DOCUMENT_TITLE } from '$lib/kenos/clientSessionCleanup.core.js'
 
   let email = $state('')
   let password = $state('')
@@ -15,6 +16,10 @@
     if (await signInCloud(email.trim(), password)) password = ''
   }
 </script>
+
+<svelte:head>
+  <title>{AUTH_WALL_DOCUMENT_TITLE}</title>
+</svelte:head>
 
 <div class="gate">
   <div class="card">
