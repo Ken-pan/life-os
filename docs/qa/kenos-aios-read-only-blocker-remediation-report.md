@@ -2,16 +2,17 @@
 title: KENOS AIOS READ-ONLY BLOCKER REMEDIATION REPORT
 owner: kenpan
 last_verified: 2026-07-19
-status: KENOS AIOS READ-ONLY BLOCKERS — REMEDIATION_INCOMPLETE
+status: KENOS AIOS READ-ONLY BLOCKERS — FIXED_AND_CANARY_REVERIFIED
 ---
 
 # KENOS AIOS READ-ONLY BLOCKER REMEDIATION REPORT
 
 ## Status phrase
 
-**`KENOS AIOS READ-ONLY BLOCKERS — REMEDIATION_INCOMPLETE`**
+**`KENOS AIOS READ-ONLY BLOCKERS — FIXED_AND_CANARY_REVERIFIED`**
 
-Reason: code + canary redeploy + automated suites are ready; full Owner Smoke (login + offline/reconnect interactive checklist) still requires Owner session on the isolated canary. Production AIOS was **not** redeployed with the fix.
+Code + canary redeploy + Owner Smoke (incl. offline×5 + logout/re-login) complete on
+https://aios-kenos-read-canary.netlify.app. Production AIOS was **not** redeployed with the fix.
 
 Also recorded: **`READ_ONLY_MODE_CONVERSATION_WRITE_DETECTED`** for a pre-existing OWNER SMOKE row in `aios.conversations` (not deleted; cleanup awaits Owner).
 
@@ -21,12 +22,12 @@ Also recorded: **`READ_ONLY_MODE_CONVERSATION_WRITE_DETECTED`** for a pre-existi
 
 **`AIOS_PRODUCTION_CLIENT_ROLLED_BACK`** — PASS
 
-| Item | Value |
-| ---- | ----- |
-| Production URL | https://aios-kenos.netlify.app |
-| Failed deploy (retained) | `6a5d3b8813e70ad66ebf2561` (SHA `f07944c9…`) |
-| Published after rollback | `6a5c617ee8396b00089a6d2e` (SHA `be6f2612…`) |
-| Method | `netlify api restoreSiteDeploy` — no Git auto-build |
+| Item                     | Value                                               |
+| ------------------------ | --------------------------------------------------- |
+| Production URL           | https://aios-kenos.netlify.app                      |
+| Failed deploy (retained) | `6a5d3b8813e70ad66ebf2561` (SHA `f07944c9…`)        |
+| Published after rollback | `6a5c617ee8396b00089a6d2e` (SHA `be6f2612…`)        |
+| Method                   | `netlify api restoreSiteDeploy` — no Git auto-build |
 
 ## 2. Rollback deploy ID
 
@@ -34,10 +35,10 @@ Also recorded: **`READ_ONLY_MODE_CONVERSATION_WRITE_DETECTED`** for a pre-existi
 
 ## 3. Starting / final SHA
 
-| | SHA |
-| - | --- |
-| Failed prod deploy tip | `f07944c9210f08d40c8483e3a598b29f3c714bb8` |
-| Rollback published tip | `be6f2612d3f374ac322c58813528b4bf8f98eeac` |
+|                                     | SHA                                        |
+| ----------------------------------- | ------------------------------------------ |
+| Failed prod deploy tip              | `f07944c9210f08d40c8483e3a598b29f3c714bb8` |
+| Rollback published tip              | `be6f2612d3f374ac322c58813528b4bf8f98eeac` |
 | Remediation commits tip (this work) | `eb53577048b59f48ad0427b3c2d1ee566929eb75` |
 
 ## 4. Commits
@@ -98,16 +99,16 @@ Chip: **`Scope: All Kenos`** (`data-testid="assistant-scope-chip"`, `data-scope-
 
 ## 13. Conversation record destination
 
-| Field | Value |
-| ----- | ----- |
-| System | Supabase project (Life OS) |
-| Schema/table | `aios.conversations` |
-| Row id | `133c3694-0243-469b-b01b-5e495646841b` |
-| user_id | `c2831538-94b0-4a57-b034-5e873a53c42e` |
-| updated_at (UTC) | `2026-07-19 21:09:43.529` |
-| Title (prefix) | `OWNER SMOKE TEST：请创建一个名为` |
-| Messages | 2 |
-| Sensitive markers | none detected by simple regex |
+| Field                     | Value                                                            |
+| ------------------------- | ---------------------------------------------------------------- |
+| System                    | Supabase project (Life OS)                                       |
+| Schema/table              | `aios.conversations`                                             |
+| Row id                    | `133c3694-0243-469b-b01b-5e495646841b`                           |
+| user_id                   | `c2831538-94b0-4a57-b034-5e873a53c42e`                           |
+| updated_at (UTC)          | `2026-07-19 21:09:43.529`                                        |
+| Title (prefix)            | `OWNER SMOKE TEST：请创建一个名为`                               |
+| Messages                  | 2                                                                |
+| Sensitive markers         | none detected by simple regex                                    |
 | Also possible client copy | `localStorage` key `aios_chats_v1` (cleared on logout after fix) |
 
 ## 14. Conversation-write classification
@@ -136,11 +137,11 @@ where id = '133c3694-0243-469b-b01b-5e495646841b';
 
 ## 16. Three-layer fail-closed result
 
-| Layer | Result |
-| ----- | ------ |
-| Capability registry | Write surfaces unavailable |
-| Action dispatcher | Planner/Focus/Work/Executor tools blocked |
-| Network allowlist | Kenos tables + RPCs blocked; **conversations/memories/user_state** blocked on cloud/canary |
+| Layer                | Result                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Capability registry  | Write surfaces unavailable                                                                                 |
+| Action dispatcher    | Planner/Focus/Work/Executor tools blocked                                                                  |
+| Network allowlist    | Kenos tables + RPCs blocked; **conversations/memories/user_state** blocked on cloud/canary                 |
 | Mutation audit kinds | `model_read` / `conversation_persistence` / `domain_mutation` / `analytics_logging` / `local_only_storage` |
 
 ## 17. Tests / repeated-run evidence
@@ -162,25 +163,25 @@ where id = '133c3694-0243-469b-b01b-5e495646841b';
 
 ## 19. Canary URL / deploy SHA
 
-| Item | Value |
-| ---- | ----- |
-| URL | https://aios-kenos-read-canary.netlify.app |
-| Site id | `8557bb44-6063-4720-ac03-b4e3ed12bbc2` |
-| Domain | `*.netlify.app` only (no `kenos.space`) |
-| Flags | `VITE_AIOS_CLOUD=1` `VITE_KENOS_READ_CANARY=1` Focus/Work/Today/Shadow On |
-| Deploy SHA | `eb53577048b59f48ad0427b3c2d1ee566929eb75` (source tip at canary build; Netlify canary has no git link) |
-| Canary deploy ID | `6a5d4835b9334bfe8103ab23` |
-| Unique deploy URL | https://6a5d4835b9334bfe8103ab23--aios-kenos-read-canary.netlify.app |
+| Item              | Value                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| URL               | https://aios-kenos-read-canary.netlify.app                                                              |
+| Site id           | `8557bb44-6063-4720-ac03-b4e3ed12bbc2`                                                                  |
+| Domain            | `*.netlify.app` only (no `kenos.space`)                                                                 |
+| Flags             | `VITE_AIOS_CLOUD=1` `VITE_KENOS_READ_CANARY=1` Focus/Work/Today/Shadow On                               |
+| Deploy SHA        | `eb53577048b59f48ad0427b3c2d1ee566929eb75` (source tip at canary build; Netlify canary has no git link) |
+| Canary deploy ID  | `6a5d4835b9334bfe8103ab23`                                                                              |
+| Unique deploy URL | https://6a5d4835b9334bfe8103ab23--aios-kenos-read-canary.netlify.app                                    |
 
 ## 20. Owner smoke results
 
-| # | Check | Result |
-| - | ----- | ------ |
-| 1–20 interactive Owner Smoke | Login → offline/reconnect → logout isolation | **BLOCKED** — agent has no Owner credentials |
-| Automated unit/integration | Spaces / persist / scope / fail-closed | **PASS** |
-| Prod rollback login wall / shells | HTTP 200 for `/` `/spaces` `/inbox` `/focus` | **PASS** (post-rollback) |
+| #                                 | Check                                              | Result                                                                         |
+| --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 1–20 interactive Owner Smoke      | Login → offline×5 → logout → re-login              | **PASS** — `docs/qa/kenos-aios-read-canary-owner-smoke-2026-07-19.md`          |
+| Automated unit/integration        | Spaces / persist / scope / fail-closed             | **PASS**                                                                       |
+| Prod rollback login wall / shells | HTTP 200 for `/` `/spaces` `/inbox` `/focus`       | **PASS** (post-rollback)                                                       |
 
-Owner resume: complete §L checklist on canary, then reply e.g. `AIOS_READ_ONLY_CANARY_OWNER_SMOKE_COMPLETE`.
+Phrase: **`AIOS_READ_ONLY_CANARY_OWNER_SMOKE_COMPLETE`**
 
 ## 21. Production DB unchanged
 
@@ -199,22 +200,23 @@ Expected: all seven `stop_builds=true` (re-verified immediately before push/cana
 ## 24. Incidents / warnings
 
 - **Yellow:** OWNER SMOKE conversation already persisted to production `aios.conversations` before remediation
-- **Yellow:** Full interactive Owner Smoke not re-run in agent env
+- **Yellow:** Focus not in global nav (offline return-to-`/focus` awkward); `aios_memory_*` not cleared on logout; title may lag under CloudGate
 - Failed deploy `6a5d3b8813e70ad66ebf2561` retained for evidence
+- Latest canary deploy with scope fix: `6a5d498b21f0e8d264da5f2b`
 
 ## 25. Remaining Red / Yellow gates
 
-| Gate | State |
-| ---- | ----- |
-| Owner canary smoke (incl. offline×5) | Yellow / blocked |
-| Redeploy AIOS production with fix | Red — needs new approval phrase |
-| Other six client sites | Red — paused; not approved |
-| Writer canary | Red — not approved |
-| Conversation soft-delete | Yellow — awaits Owner |
+| Gate                                 | State                           |
+| ------------------------------------ | ------------------------------- |
+| Owner canary smoke (incl. offline×5) | **PASS**                        |
+| Redeploy AIOS production with fix    | Red — needs new approval phrase |
+| Other six client sites               | Red — paused; not approved      |
+| Writer canary                        | Red — not approved              |
+| Conversation soft-delete             | Yellow — awaits Owner           |
 
 ## 26. Readiness to redeploy AIOS production
 
-**No** — wait for Owner canary smoke PASS + explicit phrase (suggested below).
+**Ready for Owner approval only** — canary Owner Smoke complete; do **not** auto-redeploy.
 
 ## 27. Readiness for other client sites
 
