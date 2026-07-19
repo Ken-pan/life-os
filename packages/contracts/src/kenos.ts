@@ -49,6 +49,10 @@ export type KenosRiskLevel = z.infer<typeof KenosRiskLevelSchema>
 export const KenosApprovalStateSchema = z.enum(['not_required', 'preview_required', 'approved', 'rejected', 'expired'])
 export type KenosApprovalState = z.infer<typeof KenosApprovalStateSchema>
 
+export const KenosApprovalStatusValues = ['pending', 'approved', 'rejected', 'expired', 'cancelled', 'superseded'] as const
+export const KenosApprovalStatusSchema = z.enum(KenosApprovalStatusValues)
+export type KenosApprovalStatus = z.infer<typeof KenosApprovalStatusSchema>
+
 export const KenosOutboxStatusValues = ['pending', 'processing', 'published', 'retry', 'dead_letter'] as const
 export const KenosOutboxStatusSchema = z.enum(KenosOutboxStatusValues)
 export type KenosOutboxStatus = z.infer<typeof KenosOutboxStatusSchema>
@@ -199,6 +203,74 @@ export const KenosApprovalDecisionSchema = z.object({
   decidedAt: KenosIsoDateTimeSchema,
 })
 export type KenosApprovalDecision = z.infer<typeof KenosApprovalDecisionSchema>
+
+const KENOS_SENSITIVE_SUMMARY_PATTERN = /\b(token|secret|password|authorization|cookie|bearer)\b/i
+
+export const KenosApprovalRecordSchema = z.object({
+  id: KenosUuidSchema,
+  version: KenosSchemaVersionSchema,
+  ownerId: KenosUuidSchema,
+  actionId: KenosUuidSchema,
+  correlationId: KenosUuidSchema,
+  requestingActor: KenosActorSchema,
+  requestingDomain: KenosDomainSchema,
+  actionType: z.string().regex(/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/),
+  risk: KenosRiskLevelSchema,
+  status: KenosApprovalStatusSchema,
+  reasonCode: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  safeSummary: z.string().min(1).max(500),
+  dataClassification: KenosClassificationSchema,
+  requestedAt: KenosIsoDateTimeSchema,
+  expiresAt: KenosIsoDateTimeSchema,
+  decidedAt: KenosIsoDateTimeSchema.nullable().optional(),
+  decidedBy: KenosUuidSchema.nullable().optional(),
+  decisionReason: z.string().min(1).max(500).nullable().optional(),
+  supersedesApprovalId: KenosUuidSchema.nullable().optional(),
+  entityRefs: z.array(KenosEntityRefSchema),
+  createdAt: KenosIsoDateTimeSchema,
+  updatedAt: KenosIsoDateTimeSchema,
+}).superRefine((record, ctx) => {
+  if (Date.parse(record.expiresAt) <= Date.parse(record.requestedAt)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['expiresAt'], message: 'expiresAt must be later than requestedAt' })
+  }
+  if (Date.parse(record.updatedAt) < Date.parse(record.createdAt)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['updatedAt'], message: 'updatedAt must not be earlier than createdAt' })
+  }
+  const hasDecisionMetadata = Boolean(record.decidedAt || record.decidedBy || record.decisionReason)
+  const hasCompleteDecisionMetadata = Boolean(record.decidedAt && record.decidedBy && record.decisionReason)
+  if (record.status === 'pending' && hasDecisionMetadata) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['status'], message: 'pending approvals cannot contain decision metadata' })
+  }
+  if (record.status !== 'pending' && !hasCompleteDecisionMetadata) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['status'], message: 'terminal approvals require complete decision metadata' })
+  }
+  if (record.supersedesApprovalId === record.id) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['supersedesApprovalId'], message: 'approval cannot supersede itself' })
+  }
+  if (KENOS_SENSITIVE_SUMMARY_PATTERN.test(record.safeSummary)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['safeSummary'], message: 'safeSummary contains a sensitive credential marker' })
+  }
+})
+export type KenosApprovalRecord = z.infer<typeof KenosApprovalRecordSchema>
+
+export const KenosApprovalTransitions: Readonly<Record<KenosApprovalStatus, readonly KenosApprovalStatus[]>> = {
+  pending: ['approved', 'rejected', 'expired', 'cancelled', 'superseded'],
+  approved: [],
+  rejected: [],
+  expired: [],
+  cancelled: [],
+  superseded: [],
+}
+
+export const KenosApprovalTransitionSchema = z.object({
+  from: KenosApprovalStatusSchema,
+  to: KenosApprovalStatusSchema,
+}).superRefine((transition, ctx) => {
+  if (!KenosApprovalTransitions[transition.from].includes(transition.to)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['to'], message: `Invalid Approval transition: ${transition.from} -> ${transition.to}` })
+  }
+})
+export type KenosApprovalTransition = z.infer<typeof KenosApprovalTransitionSchema>
 
 const KENOS_SENSITIVE_ACTIVITY_KEYS = ['token', 'secret', 'password', 'authorization', 'cookie', 'rawConversation', 'connectorPayload']
 

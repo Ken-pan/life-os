@@ -3,12 +3,17 @@ import Testing
 @testable import KenosContracts
 
 private struct FixtureCase: Decodable {
+    struct ValidationContext: Decodable {
+        let authOwnerId: String?
+        let expectedActionId: String?
+    }
     let id: String
     let contract: String
     let value: JSONValue?
     let valueFrom: String?
     let patch: JSONValue?
     let expectedError: String?
+    let validationContext: ValidationContext?
 }
 
 private struct Corpus: Decodable {
@@ -43,7 +48,7 @@ private func materialize(_ fixture: FixtureCase, validById: [String: JSONValue])
     return .object(base.merging(patch) { _, replacement in replacement })
 }
 
-private func decodeAndValidate(_ contract: String, value: JSONValue, createTaskBoundary: Bool = false) throws -> Data {
+private func decodeAndValidate(_ contract: String, value: JSONValue, createTaskBoundary: Bool = false, validationContext: FixtureCase.ValidationContext? = nil) throws -> Data {
     let input = try data(for: value)
     let decoder = JSONDecoder()
     let encoder = JSONEncoder()
@@ -61,6 +66,20 @@ private func decodeAndValidate(_ contract: String, value: JSONValue, createTaskB
     case "actionResult": return try encoder.encode(decoder.decode(ActionResult.self, from: input))
     case "approvalRequest": return try encoder.encode(decoder.decode(ApprovalRequest.self, from: input))
     case "approvalDecision": return try encoder.encode(decoder.decode(ApprovalDecision.self, from: input))
+    case "approvalRecord":
+        let decoded = try decoder.decode(ApprovalRecord.self, from: input)
+        try decoded.validate()
+        return try encoder.encode(decoded)
+    case "serverApproval":
+        let decoded = try decoder.decode(ApprovalRecord.self, from: input)
+        try decoded.validate()
+        if let expected = validationContext?.authOwnerId.flatMap(UUID.init(uuidString:)), decoded.ownerId != expected {
+            throw KenosContractError.approvalOwnerMismatch
+        }
+        if let expected = validationContext?.expectedActionId.flatMap(UUID.init(uuidString:)), decoded.actionId != expected {
+            throw KenosContractError.approvalActionMismatch
+        }
+        return try encoder.encode(decoded)
     case "mutationEnvelope": return try encoder.encode(decoder.decode(MutationEnvelope.self, from: input))
     case "commandFailure": return try encoder.encode(decoder.decode(CommandFailure.self, from: input))
     case "activityRecord":
@@ -111,10 +130,22 @@ func invalidCanonicalFixturesFailClosed() throws {
             }
             continue
         }
+        if fixture.contract == "approvalTransition" {
+            guard case let .object(transition) = try materialize(fixture, validById: validById),
+                  case let .string(from)? = transition["from"],
+                  case let .string(to)? = transition["to"],
+                  let fromStatus = KenosApprovalStatus(rawValue: from),
+                  let toStatus = KenosApprovalStatus(rawValue: to)
+            else { Issue.record("Malformed approval transition fixture \(fixture.id)"); continue }
+            #expect(throws: KenosContractError.invalidApprovalTransition) {
+                try ApprovalRecord.validateTransition(from: fromStatus, to: toStatus)
+            }
+            continue
+        }
 
         let value = try materialize(fixture, validById: validById)
         do {
-            _ = try decodeAndValidate(fixture.contract, value: value, createTaskBoundary: fixture.contract == "serverAction")
+            _ = try decodeAndValidate(fixture.contract, value: value, createTaskBoundary: fixture.contract == "serverAction", validationContext: fixture.validationContext)
             Issue.record("\(fixture.id) must fail closed")
         } catch {
             // Expected: invalid canonical fixtures must be rejected.
@@ -138,6 +169,7 @@ func manifestParity() throws {
     #expect(manifest["actionDecisionOutcomes"] as? [String] == KenosActionDecisionOutcome.allCases.map(\.rawValue))
     #expect(manifest["actionResultStatuses"] as? [String] == KenosActionResultStatus.allCases.map(\.rawValue))
     #expect(manifest["activityResults"] as? [String] == KenosActivityResult.allCases.map(\.rawValue))
+    #expect(manifest["approvalStatuses"] as? [String] == KenosApprovalStatus.allCases.map(\.rawValue))
     #expect(manifest["outboxStatuses"] as? [String] == KenosOutboxStatus.allCases.map(\.rawValue))
     #expect(manifest["errorClasses"] as? [String] == KenosErrorClass.allCases.map(\.rawValue))
 }

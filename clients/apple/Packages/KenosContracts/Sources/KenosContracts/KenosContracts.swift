@@ -7,6 +7,10 @@ public enum KenosContractError: Error, Equatable, Sendable {
     case invalidExpiry
     case invalidOutboxState
     case invalidOutboxTransition
+    case invalidApprovalState
+    case invalidApprovalTransition
+    case approvalOwnerMismatch
+    case approvalActionMismatch
     case unredactedSensitivePayload
     case unsupportedCreateTaskBoundary
 }
@@ -82,6 +86,7 @@ public enum KenosActionType: String, Codable, CaseIterable, Sendable { case plan
 public enum KenosActionDecisionOutcome: String, Codable, CaseIterable, Sendable { case allow, requireApproval = "require_approval", deny, expired }
 public enum KenosActionResultStatus: String, Codable, CaseIterable, Sendable { case succeeded, failed, queued, conflict, cancelled }
 public enum KenosActivityResult: String, Codable, CaseIterable, Sendable { case succeeded, failed, queued, undone, cancelled }
+public enum KenosApprovalStatus: String, Codable, CaseIterable, Sendable { case pending, approved, rejected, expired, cancelled, superseded }
 public enum KenosOutboxStatus: String, Codable, CaseIterable, Sendable { case pending, processing, published, retry, deadLetter = "dead_letter" }
 public enum KenosErrorClass: String, Codable, CaseIterable, Sendable { case transient, permanent }
 
@@ -200,6 +205,61 @@ public struct ApprovalDecision: Codable, Equatable, Sendable {
     public let authStrength: AuthStrength
     public let constraints: [String: JSONValue]?
     public let decidedAt: KenosTimestamp
+}
+
+public struct ApprovalRecord: Codable, Equatable, Sendable {
+    public let id: UUID
+    public let version: KenosSchemaVersion
+    public let ownerId: UUID
+    public let actionId: UUID
+    public let correlationId: UUID
+    public let requestingActor: KenosActor
+    public let requestingDomain: KenosDomain
+    public let actionType: String
+    public let risk: KenosRisk
+    public let status: KenosApprovalStatus
+    public let reasonCode: String
+    public let safeSummary: String
+    public let dataClassification: KenosDataClassification
+    public let requestedAt: KenosTimestamp
+    public let expiresAt: KenosTimestamp
+    public let decidedAt: KenosTimestamp?
+    public let decidedBy: UUID?
+    public let decisionReason: String?
+    public let supersedesApprovalId: UUID?
+    public let entityRefs: [EntityRef]
+    public let createdAt: KenosTimestamp
+    public let updatedAt: KenosTimestamp
+
+    public func validate() throws {
+        guard actionType.range(of: #"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$"#, options: .regularExpression) != nil,
+              reasonCode.range(of: #"^[a-z][a-z0-9_]*$"#, options: .regularExpression) != nil,
+              !safeSummary.isEmpty,
+              safeSummary.count <= 500,
+              expiresAt.rawValue > requestedAt.rawValue,
+              updatedAt.rawValue >= createdAt.rawValue,
+              supersedesApprovalId != id
+        else { throw KenosContractError.invalidApprovalState }
+        for entity in entityRefs { try entity.validate() }
+        let completeDecision = decidedAt != nil && decidedBy != nil && decisionReason?.isEmpty == false
+        let anyDecision = decidedAt != nil || decidedBy != nil || decisionReason != nil
+        if status == .pending, anyDecision { throw KenosContractError.invalidApprovalState }
+        if status != .pending, !completeDecision { throw KenosContractError.invalidApprovalState }
+        let lowered = safeSummary.lowercased()
+        for marker in ["token", "secret", "password", "authorization", "cookie", "bearer"] {
+            if lowered.range(of: #"\b"# + marker + #"\b"#, options: .regularExpression) != nil {
+                throw KenosContractError.unredactedSensitivePayload
+            }
+        }
+    }
+
+    public static func validateTransition(from: KenosApprovalStatus, to: KenosApprovalStatus) throws {
+        let allowed: [KenosApprovalStatus: Set<KenosApprovalStatus>] = [
+            .pending: [.approved, .rejected, .expired, .cancelled, .superseded],
+            .approved: [], .rejected: [], .expired: [], .cancelled: [], .superseded: [],
+        ]
+        guard allowed[from]?.contains(to) == true else { throw KenosContractError.invalidApprovalTransition }
+    }
 }
 
 public struct MutationEnvelope: Codable, Equatable, Sendable {
