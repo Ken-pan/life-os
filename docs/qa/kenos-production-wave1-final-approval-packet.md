@@ -27,7 +27,7 @@ This SHA is the unique approval baseline: it contains the formal Wave 1 migratio
 | `e13e245665ca7a6713bbd51bcf5670ee4630026a` | Stage A content pin — **ancestor of** `4f17d7b97…` |
 | Relationship | `e13e24566` → `4f17d7b97` (docs tip sync only). Not contradictory tips; linear history. |
 
-Approval baseline for Wave 1 migrations = the single tip SHA above (not either Stage A SHA alone).
+Approval baseline for Wave 1 migrations = `197d69a09dc04bd2f60e63be11ac0b0e3e8c3b19` (not either Stage A SHA alone).
 
 ## 2. origin/master status
 
