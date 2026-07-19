@@ -12,7 +12,7 @@ status: SHADOW_VERIFIED_AND_CLIENT_CANARY_READY
 ## 1. Starting / final SHA
 
 - Start (authoritative freeze): `bb9a0e283bfc0ae6179c277862de59f17cefc0ce`
-- Final tip: recorded after scoped push (descendant of freeze; Wave 1 migrations untouched)
+- Final tip: `3899727fe6f8d34d307a907bcb9d8fa764aa1fba`
 
 ## 2. Commits
 
