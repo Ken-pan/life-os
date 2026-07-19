@@ -16,7 +16,7 @@ const DEMO_STATE_KEY = 'kenos_phase2_control_demo_v1'
 
 const DEMO_SUMMARY = Object.freeze({
   ok: true,
-  asOf: '本地演示',
+  asOf: new Date().toISOString(),
   planner: { todayOpen: 4, overdue: 1 },
   finance: { monthSurplus: 1840, monthIncome: 7800, monthExpense: 5960 },
   fitness: { workedOutToday: false, lastSessionDate: '昨天', lastDayId: 'B' },

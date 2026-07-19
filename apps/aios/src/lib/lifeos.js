@@ -1,6 +1,7 @@
 import { createLifeOsSupabaseClient } from '@life-os/sync'
 import { createClient } from '@supabase/supabase-js'
 import { CLOUD, isCloudAuthorized } from '$lib/cloud.svelte.js'
+import { supabase as aiosSupabase } from '$lib/supabase.js'
 import {
   expenseAmt,
   formatLifeOsToday,
@@ -37,7 +38,7 @@ function schemaClient(schema) {
  * Callers must remain read-only; production writes continue through domain Owners.
  */
 export function lifeOsReadClient() {
-  return schemaClient('public')
+  return aiosSupabase.schema('public')
 }
 
 function todayYmd() {

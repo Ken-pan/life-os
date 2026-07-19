@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 本地 beta 已启动。** `apps/aios` 现在以 Today 为默认本地入口，保留现有对话于 `/assistant`，并提供 Inbox、Approvals、Activity 的只读/本地演练控制面；Portal 只增加实验入口和 deep links。生产 migration、writer cutover、Portal 默认域切换、redirect、deploy 与旧路径删除仍为锁定 Gate。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
+> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 当前为 `PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS`。** `apps/aios` 以 Today 为默认本地入口，保留现有对话于 `/assistant`；Today 读现有 `portal_today_summary`，Inbox 读 `life_events` 与 Plan task projection，Activity 读现有 event 来源。仓库中仍没有已部署的 canonical Approval read model，所以 Approvals 必须明示 unsupported，不得伪造数据。Portal 只有默认 Off 的实验入口/deep links。生产 migration、writer cutover、Portal 默认域切换、redirect、deploy 与旧路径删除仍为锁定 Gate。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
 
 ## 一句话
 

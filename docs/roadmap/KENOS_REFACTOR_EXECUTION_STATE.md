@@ -3,7 +3,7 @@ title: Kenos 重构执行状态
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: cloud-task-execution-state
-status: phase-1-ready-for-production-review-no-cutover
+status: phase-2-partial-read-only-integration-no-production-cutover
 ---
 
 # Kenos Phase 0 Cloud 执行状态
@@ -283,3 +283,20 @@ Approved temporary defaults now on file:
 - Validation: AIOS Node tests include four control-center read-model cases; AIOS and Portal Svelte checks pass with zero diagnostics; AIOS/Portal builds pass; Portal today/command-palette/action-badge tests pass; app-manifest and dependency-boundary guards pass. Playwright browser QA covered desktop/mobile Today plus Approval → Activity local rehearsal.
 - Rollback: restore the prior AIOS root chat route and remove the experimental Portal entry/deep links. No data migration or production rollback is required because this slice creates no production writer, table, RPC, redirect, or deployment.
 - Next local slice: replace demo-only Inbox/Approval/Activity adapters with read-only, fixture-backed integration boundaries and add route/strangler tests. Production integration remains blocked on the separate Phase 1 security/caller review.
+
+## Phase 2 read-only integration checkpoint (2026-07-19)
+
+- Starting revision: `dabb4b7ff875035275e10fbc347b91c9aa690bd3`; branch `master`; one worktree. The task preserved unrelated Finance, Planner, UI gallery, roadmap, usage-audit, platform-web and Wikilinks WIP and staged only Kenos-owned paths.
+- Verdict: `PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS`. This is not `READ_ONLY_INTEGRATION_READY` because the repository has no deployed canonical Approval read model. No event/Outbox source was relabelled as Approval to manufacture a pass.
+- Completed Green scope: Today reads `public.portal_today_summary`; Inbox merges read-only pending `public.life_events` and `public.planner_tasks` EntityRef projections; Activity reads the existing `public.life_events` compatibility source. Each record preserves Owner/source/freshness/classification/deep link and cannot invoke an Executor.
+- Approval blocker: Phase 1 provides frozen Approval contracts and review-only SQL, not a deployed Approval queue/read model. Approvals therefore returns `unsupported`, zero production rows, no retry promise, and fail-closed local rehearsal only. Resolving this requires an owner-approved canonical persistence/read contract and remains outside this local Green slice.
+- Read behavior: source states cover loading, ready, empty, partial, stale, offline, unavailable, permission denied and unsupported. Sources settle independently; malformed/unknown rows degrade safely; projections dedupe, sort and truncate; sensitive payload keys are redacted; demo data is explicit-only through local `?kenosDemo=1`.
+- Shadow diagnostics: compare redacted fingerprints only and classify missing/extra/owner/status/freshness/deep-link/redaction/unsupported mismatches as blocking, warning or expected. Diagnostics do not persist source payloads.
+- Portal strangler: flag defaults Off. Local QA may use `?kenos=1`; a production-like host requires explicit `VITE_KENOS_PHASE2_ENTRY=1`. The flag only filters an already-authorized launcher and cannot bypass Portal membership. Portal remains the default production entry.
+- Compatibility: `/chat` replaces history with `/assistant` while preserving query/hash; unknown AIOS paths render a safe fallback; browser back/forward and refresh remain usable. Portal route tests cover Off/On, legacy Assistant, deep links, invalid fallback and PWA start URL.
+- Browser evidence: unauthenticated Today/Inbox/Activity show permission-denied rather than fake rows; Approval shows unsupported; explicit demo, offline retry state, session-only approval rehearsal, desktop/mobile layout, legacy redirect, unknown-route fallback and Portal unauthenticated flag paths were exercised. The final rebuilt Today page reported zero console errors and zero warnings.
+- No-execution evidence: read adapters contain no insert/upsert/update/delete, command-handler call or `kenos_create_plan_task_action` reference. Approval rehearsal changed session state only. Browser request inspection found no Supabase/Executor mutation caused by the rehearsal.
+- Checkpoints: `4ada5f70d` adds canonical read-only projections and `2826aa8d0` adds Portal strangler routing tests. A final scoped guard/docs checkpoint follows this report; no push, PR, deploy or production operation is authorized.
+- Rollback: disable/remove the default-Off Portal experiment and return AIOS root to the previous chat surface; preserve `/assistant` compatibility as needed. No schema/data rollback is required because this slice performs no write migration, default switch or deployment.
+- Production locks: migration/RPC apply, RLS/auth changes, writer cutover, default entry switch, Portal redirect/retirement, deploy, DNS, legacy deletion and Phase 3 remain prohibited.
+- Next safe step: owner/product/security review defines the canonical Approval read model and its authorization/expiry/redaction semantics. After that source exists, connect it read-only, run the same fixtures/shadow/browser gates, and only then reconsider `READ_ONLY_INTEGRATION_READY`. Production cutover stays Off.

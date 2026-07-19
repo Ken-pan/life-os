@@ -26,8 +26,8 @@ status: active-for-phase-2-local-beta
 | ID | 决策 | 状态 | 实施前最后一步 | 证据/约束 |
 | --- | --- | --- | --- | --- |
 | KENOS-001 | 产品品牌为 Kenos，内部领域 ID 与用户文案分离 | TARGET_APPROVED | 冻结 ID 表和旧路由保留期 | 不做超级 rename |
-| KENOS-002 | Assistant / Today 成为唯一默认协调入口 | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | 完成真实使用、读模型 parity 与生产入口评审 | `apps/aios` 本地根路由为 Today；Portal 仍是生产入口 |
-| KENOS-003 | Portal 是待退役迁移源，不是长期 Space | LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER | Today/Inbox/Approval/Activity 真实数据与观察 gate | Portal 仅增加 Assistant beta launcher/deep links；未 freeze、redirect 或删除 |
+| KENOS-002 | Assistant / Today 成为唯一默认协调入口 | PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS | 已部署 canonical Approval read model，再完成真实使用、读模型 parity 与生产入口评审 | Today/Inbox/Activity 已有真实只读 adapter；Approval 明示 unsupported；Portal 仍是生产入口 |
+| KENOS-003 | Portal 是待退役迁移源，不是长期 Space | PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS | Today/Inbox/Approval/Activity 全部真实读模型与观察 gate | Portal 只增加默认 Off 的 Assistant launcher/deep links；未 freeze、redirect 或删除 |
 | KENOS-004 | 模块化单体 + 清晰领域边界 + 一个 Supabase 项目 | TARGET_APPROVED | 冻结 schema/package 边界和依赖方向 | 不过早拆微服务/多 DB |
 | KENOS-005 | 每类数据一个写入 Owner，其他域只引用/投影 | TARGET_APPROVED | 对存量表和本地真源做 ownership inventory | 不允许长期双写 |
 | KENOS-006 | 安全域为 Personal / Work / Household / System | TARGET_APPROVED | 冻结跨域默认值、Work 保留和 cloud AI 政策 | 缺失分类按更严格处理 |

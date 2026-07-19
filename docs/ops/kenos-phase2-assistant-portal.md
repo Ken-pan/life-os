@@ -2,7 +2,7 @@
 title: Kenos Phase 2 Assistant / Today 与 Portal Strangler Runbook
 owner: kenpan
 last_verified: 2026-07-19
-status: local-beta-in-progress-no-production-cutover
+status: partial-pass-with-explicit-read-model-blockers
 ---
 
 # Kenos Phase 2 Assistant / Today 与 Portal Strangler Runbook
@@ -11,16 +11,24 @@ status: local-beta-in-progress-no-production-cutover
 
 允许本地开发、测试和提交 Assistant / Today 产品迁移；不允许生产 migration、writer cutover、Portal 默认域切换或 redirect、deploy、DNS、旧路径删除和数据回填。
 
-## 第一切片
+## 只读集成现状
 
 | Surface | 本地实现 | 数据/动作边界 |
 | --- | --- | --- |
-| Today `/` | 现有 Portal summary 的只读 read model；状态、下一步、待决定、Activity、Spaces | 不成为领域真源；行动回到对应 Space |
+| Today `/` | `public.portal_today_summary` 只读 RPC；状态、下一步、待决定、Activity、Spaces | 不成为领域真源；保留 Owner/source/freshness/deep link；行动回到对应 Space |
 | Assistant `/assistant` | 原 AIOS chat 原样保留 | LLM 仍只能产出建议/Action；生产 executor 未接线 |
-| Inbox `/inbox` | Capture/待分类操作面 | 当前 production adapter 为空；本地 demo 不持久化到领域 |
-| Approvals `/approvals` | 显示 risk、action type、影响与来源 | 本地按钮只改 session demo 状态，不调用 command handler |
-| Activity `/activity` | 显示成功、失败、数据安全说明与 retry affordance | production reader/worker 未接线；不复制敏感 payload |
-| Portal | 实验 launcher + command-palette deep links | 不改默认 app、设置、RPC、auth、redirect 或写入 |
+| Inbox `/inbox` | 只读 `public.life_events` pending 与 `public.planner_tasks` EntityRef projection；多源排序、去重、截断 | 不提供 Executor；部分源失败显示 partial；本地 demo 只有 `?kenosDemo=1` 显式开启 |
+| Approvals `/approvals` | 未部署 canonical Approval read model，显示 unsupported | fail closed；不用 `life_events`/Outbox 冒充 Approval；本地按钮只改 session rehearsal，不调用 command handler |
+| Activity `/activity` | 只读现有 `public.life_events` 兼容 event 来源 | 去重、截断、未知类型降级、敏感字段 redaction；不声称它是 Phase 1 canonical Activity table |
+| Portal | 默认 Off 的实验 launcher + command-palette deep links | 本地 `?kenos=1` 可验证；production-like host 仅接受显式 build flag；不改默认 app、设置、RPC、auth、redirect 或写入 |
+
+Verdict: `PARTIAL_PASS_WITH_EXPLICIT_READ_MODEL_BLOCKERS`。Today、Inbox 和 Activity 的 Green 只读工作已完成；真实 Approval 源是唯一明确 read-model blocker，不得为了变绿而伪造。
+
+## 状态与降级
+
+Read adapters 统一显示 `loading / ready / empty / partial / stale / offline / unavailable / permission_denied / unsupported`。各源独立 settle，慢源不阻塞已就绪源；离线和权限失败不会回退到伪生产数据。缓存只用于已读取投影的安全 stale 降级。
+
+Shadow diagnostics 仅比较 redacted fingerprint，分类 `missing_in_new / extra_in_new / owner_mismatch / status_mismatch / freshness_mismatch / deep_link_mismatch / redaction_mismatch / unsupported_source`；输出 blocking/warning/expected，不记录原 payload。
 
 ## Strangler 顺序
 

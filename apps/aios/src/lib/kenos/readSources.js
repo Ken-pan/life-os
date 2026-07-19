@@ -95,13 +95,15 @@ export async function readInboxSource({ client = lifeOsReadClient(), now = Date.
       ? { items: [], malformedCount: 0 }
       : projectPlannerInboxTasks(tasksResult.data ?? [], { now })
     const projected = mergeInboxProjections(eventProjection, taskProjection)
-    const status = projected.items.length
-      ? tasksResult.error || projected.malformedCount || projected.truncatedCount
+    const status = tasksResult.error
+      ? 'partial'
+      : projected.items.length
+        ? projected.malformedCount || projected.truncatedCount
         ? 'partial'
         : projected.items.some((item) => item.stale)
           ? 'stale'
           : 'ready'
-      : 'empty'
+        : 'empty'
     return result(
       'items',
       projected.items,
