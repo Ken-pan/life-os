@@ -17,6 +17,10 @@
   import { openArtifact } from '$lib/panel.svelte.js'
   import { CLOUD_BUILD } from '$lib/env.js'
   import { generateDailySuggestions } from '$lib/dailySuggestions.js'
+  import { FOCUS } from '$lib/kenos/focusStore.svelte.js'
+  import { resolveAssistantScopeLabel } from '$lib/kenos/assistantScopeLabel.core.js'
+
+  const scopeUi = $derived(resolveAssistantScopeLabel({ focus: FOCUS.focus }))
 
   const conversation = $derived(
     C.conversations.find((c) => c.id === C.activeId) ?? null,
@@ -200,28 +204,40 @@
     <AgentThread />
   {:else}
   <div class="chat-top">
-    <ModelPicker />
-    <div class="chat-top-actions">
-      {#if !isEmpty}
+    <div class="chat-top-left">
+      <span
+        class="scope-chip"
+        data-testid="assistant-scope-chip"
+        data-scope-kind={scopeUi.kind}
+        title={scopeUi.label}
+      >
+        {scopeUi.label}
+      </span>
+    </div>
+    <div class="chat-top-right">
+      <ModelPicker />
+      <div class="chat-top-actions">
+        {#if !isEmpty}
+          <button
+            type="button"
+            class="top-btn"
+            title={exported ? t('chat.exported') : t('chat.export')}
+            aria-label={exported ? t('chat.exported') : t('chat.export')}
+            onclick={exportConversation}
+          >
+            <Icon name={exported ? 'check' : 'download'} size={18} strokeWidth={1.75} />
+          </button>
+        {/if}
         <button
           type="button"
           class="top-btn"
-          title={exported ? t('chat.exported') : t('chat.export')}
-          aria-label={exported ? t('chat.exported') : t('chat.export')}
-          onclick={exportConversation}
+          title={t('chat.newChat')}
+          aria-label={t('chat.newChat')}
+          onclick={startNewChat}
         >
-          <Icon name={exported ? 'check' : 'download'} size={18} strokeWidth={1.75} />
+          <Icon name="compose" size={19} strokeWidth={1.75} />
         </button>
-      {/if}
-      <button
-        type="button"
-        class="top-btn"
-        title={t('chat.newChat')}
-        aria-label={t('chat.newChat')}
-        onclick={startNewChat}
-      >
-        <Icon name="compose" size={19} strokeWidth={1.75} />
-      </button>
+      </div>
     </div>
   </div>
 
@@ -319,6 +335,32 @@
   }
   .chat-top > :global(*) {
     pointer-events: auto;
+  }
+  .chat-top-left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+  .chat-top-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+  }
+  .scope-chip {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    max-width: min(52vw, 280px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    color: var(--t2);
+    font-size: var(--text-sm, 13px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
   }
   .chat-top-actions {
     display: flex;

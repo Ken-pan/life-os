@@ -14,6 +14,7 @@
     listWorkProposals,
     refreshWorkSurface,
   } from '$lib/kenos/workStore.svelte.js'
+  import { resolveAssistantScopeLabel } from '$lib/kenos/assistantScopeLabel.core.js'
 
   const projects = $derived(listWorkProjects())
   const deliverables = $derived(listWorkDeliverables())
@@ -29,6 +30,12 @@
   const workCapabilityCopy = $derived(capabilityEmptyCopy(workCapability))
   const prodProjects = $derived(CONTROL.workProjects || [])
   const prodReady = $derived(['ready', 'empty', 'partial', 'stale'].includes(CONTROL.sources.work?.status))
+  const workContextTitle = $derived(prodProjects[0]?.title || projects[0]?.title || '')
+  const scopeUi = $derived(
+    resolveAssistantScopeLabel({
+      workContext: workContextTitle ? { title: workContextTitle } : null,
+    }),
+  )
 
   onMount(() => {
     refreshWorkSurface({ force: true })
@@ -45,6 +52,12 @@
     </div>
     <div class="header-actions">
       <a class="quiet" href="/spaces">全部 Spaces</a>
+      <a class="quiet" href="/assistant" data-testid="work-context-assistant-entry">Context Assistant</a>
+      {#if workContextTitle}
+        <span class="scope-hint" data-testid="assistant-scope-chip" data-scope-kind={scopeUi.kind} title={scopeUi.label}>
+          {scopeUi.label}
+        </span>
+      {/if}
       <button type="button" class="quiet" onclick={() => { refreshWorkSurface({ force: true }); void refreshControlCenter({ force: true }) }}>
         <Icon name="refresh" size={16} strokeWidth={1.75} />
         刷新
@@ -265,6 +278,19 @@
     border-radius: 0.5rem;
     padding: 0.4rem 0.7rem;
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  .scope-hint {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+    color: var(--t2);
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .primary {
     background: var(--t1);

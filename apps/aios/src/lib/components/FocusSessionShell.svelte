@@ -14,6 +14,7 @@
     resumeSession,
     returnSession,
   } from '$lib/kenos/focusStore.svelte.js'
+  import { resolveAssistantScopeLabel } from '$lib/kenos/assistantScopeLabel.core.js'
 
   let now = $state(Date.now())
   $effect(() => {
@@ -47,6 +48,7 @@
 </script>
 
 {#if focus && (focus.status === 'active' || focus.status === 'paused' || focus.status === 'ending')}
+  {@const scopeUi = resolveAssistantScopeLabel({ focus })}
   <div class="focus-shell" data-testid="focus-session-shell">
     <header class="session-bar">
       <div>
@@ -65,7 +67,8 @@
       </div>
     </header>
 
-    <p class="scope">Assistant 限定在当前 Session · 跨域内容已延期（不显示数量角标）</p>
+    <p class="scope" data-testid="assistant-scope-chip" data-scope-kind={scopeUi.kind}>{scopeUi.label}</p>
+    <p class="scope-actions"><a href="/assistant" data-testid="context-assistant-entry">Context Assistant</a></p>
 
     <section class="panel">
       <h2>当前内容</h2>
@@ -194,6 +197,18 @@
   .why {
     color: var(--t3);
     font-size: var(--text-sm);
+  }
+  .scope-actions {
+    margin: 4px 0 0;
+    font-size: var(--text-sm);
+  }
+  .scope-actions a {
+    min-height: auto;
+    padding: 0;
+    border: none;
+    color: var(--t2);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
   .panel {
     margin-top: 28px;
