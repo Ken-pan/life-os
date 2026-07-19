@@ -2,42 +2,26 @@
 title: KENOS PRODUCTION READ PATH INTEGRATION REPORT
 owner: kenpan
 last_verified: 2026-07-19
-status: IMPLEMENTATION_READY_CANARY_BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION
+status: SHADOW_VERIFIED_AND_CLIENT_CANARY_READY_FOR_OWNER_APPROVAL
 ---
 
 # KENOS PRODUCTION READ PATH INTEGRATION REPORT
 
-**Overall: `KENOS PRODUCTION READ PATHS — IMPLEMENTATION_READY_CANARY_BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION`**
+**Overall: `KENOS PRODUCTION READ PATHS — SHADOW_VERIFIED_AND_CLIENT_CANARY_READY_FOR_OWNER_APPROVAL`**
 
 | Readiness gate | Status |
 | -------------- | ------ |
-| Read-path implementation | **Ready** (local tests/build/RPC smoke/shadow; flags default Off) |
-| Netlify pause evidence | **`NETLIFY_PAUSE_STATE_INHERITED_NOT_LIVE_REVALIDATED`** |
-| Further `git push` | **`BLOCKED_PENDING_NETLIFY_AUTH`** |
-| Production read client canary | **`BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION`** |
-| Full client deploy (`APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`) | **Blocked** — not in scope; requires live revalidation first |
-
-Do **not** treat inherited Netlify evidence as current live verification. Upgrade to `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED` only after local Netlify auth + live checks below succeed.
+| Read-path implementation | **Ready** |
+| Netlify pause evidence | **`PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`** — see `docs/qa/kenos-live-build-pause-revalidation-report.md` |
+| Read-path docs push (`d2d2b6833`) | Complete after live revalidation |
+| Production read client canary | **`PRODUCTION_READ_CLIENT_CANARY_READY_FOR_OWNER_APPROVAL`** |
+| Full client deploy (`APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`) | **Not approved** — separate phrase; builds remain paused |
 
 ## 0. Netlify pause evidence boundary
 
-**Label: `NETLIFY_PAUSE_STATE_INHERITED_NOT_LIVE_REVALIDATED`**
+**Current label: `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`** (supersedes interim `NETLIFY_PAUSE_STATE_INHERITED_NOT_LIVE_REVALIDATED`).
 
-Facts:
-
-- Last live verification of seven sites `stop_builds=true` and UIUX Gallery `disabled_manually` is recorded in `docs/qa/kenos-authoritative-push-report.md` (`PRODUCTION_CLIENT_AUTOBUILDS_PAUSED`).
-- This read-path task did **not** restore builds, enable workflows, manual-deploy, or change hosting config.
-- This machine currently lacks Netlify auth; a live `sites:list` / API recheck **aborted** (interactive prompt / no auth). Therefore this task **cannot** prove remote pause state was not changed externally since that report.
-- Inherited evidence must **not** be described as current live verification.
-
-Live upgrade checklist (after secure local Netlify login or local secret env — **never** paste tokens in chat):
-
-1. planner / fitness / finance / music / portal / home / aios → `stop_builds=true`
-2. UIUX Gallery → `disabled_manually`
-3. No unexpected deploy since the last authoritative push report
-4. On success only → `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`
-
-Until then: no further push, no production client canary, no Netlify deploy, no restore `stop_builds`, no restore Gallery, no `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY` work.
+Live checks (Netlify CLI user session + `gh` API, 2026-07-19): seven sites `stop_builds=true`; Gallery `disabled_manually`; published tip `be6f2612…`; zero build hooks; no running builds; no ready deploy of post-pause Kenos SHAs. Builds / Gallery were **not** restored.
 
 ## 1. Starting / final SHA
 
@@ -58,34 +42,34 @@ Unrelated WIP left unstaged.
 
 Runtime: `buildCapabilityRegistry()` in `apps/aios/src/lib/kenos/capabilityRegistry.core.js`.
 
-| Capability | Default surface |
-| ---------- | --------------- |
-| Plan read | legacy-backed (`portal_today_summary`) |
-| Plan command | unavailable (no write) |
-| Approval read | kenos-backed / empty |
-| Approval decision | unavailable |
-| Focus read | shadow-only / local until `VITE_KENOS_PROD_READ_FOCUS=1` |
-| Focus write | unavailable |
-| Work read | unavailable or legacy local foundation until `VITE_KENOS_PROD_READ_WORK=1` |
-| Work write | unavailable (OPEN-002) |
-| Activity read | legacy-backed (`life_events`) |
-| Outbox delivery | unavailable |
-| Assistant Action | unavailable |
-| production Executor | unavailable |
+| Capability          | Default surface                                                            |
+| ------------------- | -------------------------------------------------------------------------- |
+| Plan read           | legacy-backed (`portal_today_summary`)                                     |
+| Plan command        | unavailable (no write)                                                     |
+| Approval read       | kenos-backed / empty                                                       |
+| Approval decision   | unavailable                                                                |
+| Focus read          | shadow-only / local until `VITE_KENOS_PROD_READ_FOCUS=1`                   |
+| Focus write         | unavailable                                                                |
+| Work read           | unavailable or legacy local foundation until `VITE_KENOS_PROD_READ_WORK=1` |
+| Work write          | unavailable (OPEN-002)                                                     |
+| Activity read       | legacy-backed (`life_events`)                                              |
+| Outbox delivery     | unavailable                                                                |
+| Assistant Action    | unavailable                                                                |
+| production Executor | unavailable                                                                |
 
 Unavailable is never rendered as zero counts.
 
 ## 4. Read RPC inventory (production)
 
-| RPC / source | Args | Client wiring |
-| ------------ | ---- | ------------- |
-| `kenos_list_action_approvals` | `p_limit int, p_before timestamptz` | Always (unless Approvals=`0`) |
-| `kenos_list_focus_contexts` | — | Flag `VITE_KENOS_PROD_READ_FOCUS=1` |
-| `kenos_deferred_items` SELECT | RLS own | With Focus flag |
-| `kenos_proactive_suggestions` SELECT | RLS own | With Focus flag |
-| `kenos_list_work_projects` | `p_limit, p_before` | Flag `VITE_KENOS_PROD_READ_WORK=1` |
-| `kenos_list_work_action_proposals` | `p_limit, p_status` | With Work flag |
-| `kenos_create_plan_task_action` | jsonb | **Not called** (writer canary only) |
+| RPC / source                         | Args                                | Client wiring                       |
+| ------------------------------------ | ----------------------------------- | ----------------------------------- |
+| `kenos_list_action_approvals`        | `p_limit int, p_before timestamptz` | Always (unless Approvals=`0`)       |
+| `kenos_list_focus_contexts`          | —                                   | Flag `VITE_KENOS_PROD_READ_FOCUS=1` |
+| `kenos_deferred_items` SELECT        | RLS own                             | With Focus flag                     |
+| `kenos_proactive_suggestions` SELECT | RLS own                             | With Focus flag                     |
+| `kenos_list_work_projects`           | `p_limit, p_before`                 | Flag `VITE_KENOS_PROD_READ_WORK=1`  |
+| `kenos_list_work_action_proposals`   | `p_limit, p_status`                 | With Work flag                      |
+| `kenos_create_plan_task_action`      | jsonb                               | **Not called** (writer canary only) |
 
 ## 5. Today integration
 
@@ -162,24 +146,24 @@ Legacy Planner writers active; Kenos command/decision/Focus·Work write unavaila
 
 ## 21. Remaining Red / Yellow
 
-| Gate | Level |
-| ---- | ----- |
-| Netlify live pause revalidation | **Red** — blocks push + canary |
-| Read client canary phrase | Blocked until live pause verified |
-| Full client deploy | Red / separate phrase |
-| Writer canary | Red until phrase |
-| Focus TRUNCATE grant residual | Yellow (staging parity) |
-| OPEN-002 | tracked Yellow |
+| Gate                            | Level                             |
+| ------------------------------- | --------------------------------- |
+| Netlify live pause revalidation | **Red** — blocks push + canary    |
+| Read client canary phrase       | Blocked until live pause verified |
+| Full client deploy              | Red / separate phrase             |
+| Writer canary                   | Red until phrase                  |
+| Focus TRUNCATE grant residual   | Yellow (staging parity)           |
+| OPEN-002                        | tracked Yellow                    |
 
 ## 22. Readiness for read-only client canary
 
-**`BLOCKED_PENDING_LIVE_BUILD_PAUSE_VERIFICATION`**
+**`PRODUCTION_READ_CLIENT_CANARY_READY_FOR_OWNER_APPROVAL`**
 
-Implementation is ready for a future canary **after** `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`. Do not issue or act on `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY` until then.
+Awaiting owner phrase `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`. Not started.
 
 ## 23. Readiness for full client deployment
 
-**Not yet** — separate `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`; also blocked on live pause verification.
+**Not yet** — separate `APPROVE_KENOS_PRODUCTION_CLIENT_DEPLOY`. Builds remain paused.
 
 ## 24. Readiness for writer canary
 
@@ -189,8 +173,6 @@ Schema ready; **not** started. Phrase: `APPROVE_KENOS_PRODUCTION_WRITER_CANARY`.
 
 See `docs/ops/kenos-production-read-client-deploy-plan.md`.
 
-## 26. Exact next steps (ordered)
+## 26. Exact next approval phrase
 
-1. Restore Netlify auth on this machine via secure local login / local secret env (not chat).
-2. Live-verify pause → `PRODUCTION_CLIENT_AUTOBUILDS_LIVE_REVALIDATED`.
-3. Then (and only then) unstick push / consider `APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`.
+`APPROVE_KENOS_PRODUCTION_READ_CLIENT_CANARY`
