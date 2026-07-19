@@ -3,7 +3,7 @@ title: Kenos 平台重构计划 - 导航与执行边界
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: refactor-program-hub
-status: phase-2-read-only-integration-ready-no-production-cutover
+status: phase-3-work-loop-foundation-ready-no-production-cutover
 review_cadence: every-migration-slice
 ---
 
@@ -11,7 +11,7 @@ review_cadence: every-migration-slice
 
 > 这是本次 Life OS → Kenos 重构的专用导航页。它把最新平台审核中的产品、数据、AI、原生客户端和治理决策转成可执行文档。
 >
-> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 本地切片已达 `READ_ONLY_INTEGRATION_READY`。** `apps/aios` 以 Today 为默认本地入口，保留现有对话于 `/assistant`；Today、Inbox 与 Activity 保留兼容只读来源，Approvals 通过 `public.kenos_list_action_approvals` 读取 Platform/System-owned canonical projection。Approval v1、canonical corpus、Swift parity、review-only SQL 与 disposable dual-user RLS/privilege proof 已齐备；Assistant 仍无写入权和 Executor。Portal 只有默认 Off 的实验入口/deep links 与脱敏 count shadow helper。`TEMPORARY_APPROVED_FOR_PHASE_2_APPROVAL_READ_MODEL` 在真实 Executor integration 前必须复审。生产 migration/RLS、writer cutover、Portal 默认域切换、redirect、deploy 与旧路径删除仍为锁定 Gate。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
+> **Phase 1 已由 owner 验收为 `PASS — READY_FOR_PRODUCTION_REVIEW`；Phase 2 本地切片已达 `READ_ONLY_INTEGRATION_READY`；Phase 3 本地切片已达 `WORK_LOOP_FOUNDATION_READY`。** Work 临时 ownership、additive contracts/fixtures/Swift parity、review-only persistence/RLS、AIOS `/work`、WorkActionProposal→Plan simulation、Today Work projections 与 Phase 3 guard 已齐备。Plan 仍是 Task 唯一 Owner；Connector 保持只读边界；无 Executor、无生产 apply/cutover。`TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION` 在生产 cutover 前必须复审，不是永久 Constitution 条款。Phase 4 Apple UI 与 Phase 5 主动智能未开始。当前生产事实、Now/Next 和已发货状态仍以 [`LIFEOS_ROADMAP.md`](../LIFEOS_ROADMAP.md) 为准。
 
 ## 一句话
 
@@ -47,6 +47,9 @@ Kenos 将从“多个互相打通的 OS App”渐进收敛为: **用户感受到
 | 12 | [`../ops/kenos-phase1-privilege-model.md`](../ops/kenos-phase1-privilege-model.md) | 生产评审中 client/worker/function owner/RLS 权限如何收紧？ |
 | 13 | [`../ops/kenos-phase1-writer-cutover.md`](../ops/kenos-phase1-writer-cutover.md) | writer 盘点、shadow、阈值、abort 和回滚如何审批？ |
 | 14 | [`../ops/kenos-phase2-assistant-portal.md`](../ops/kenos-phase2-assistant-portal.md) | Assistant/Today 本地 beta、Portal strangler 和生产锁如何推进？ |
+| 15 | [`../ops/kenos-phase3-work-loop.md`](../ops/kenos-phase3-work-loop.md) | Work 生产力闭环 foundation、ownership 与 simulation 边界 |
+| 16 | [`../qa/kenos-phase3-work-loop.md`](../qa/kenos-phase3-work-loop.md) | Phase 3 Work desktop/mobile QA 与非声明 |
+| 17 | [`./kenos-phase3-work-domain-inventory.md`](./kenos-phase3-work-domain-inventory.md) | Work 域现有来源盘点与命名冲突 |
 
 ## 权威和状态优先级
 

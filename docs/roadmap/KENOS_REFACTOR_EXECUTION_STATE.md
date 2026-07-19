@@ -317,3 +317,16 @@ Approved temporary defaults now on file:
 - Production/Executor locks: owner/security review of hosted migration, function owners, worker identity, advisors/RLS, backup/change window, decision command/auth strength, Action payload/version rebinding, Executor idempotency/revalidation, shadow threshold, cutover, observation, deploy and retirement all remain separate approval gates. Phase 3 is not started.
 - Final validation: canonical contract/server/Swift parity, disposable DB/RLS/privilege, AIOS/Portal tests/check/build, Phase 1/2 guards, manifests, boundaries, token/style/ticket gates, root check/build, browser QA and `git diff --check` are recorded in the final local closeout report. Aggregate Phase 0/verifier blockers caused only by pre-existing unrelated WIP remain `BLOCKED_BY_UNRELATED_USER_WIP` and were not repaired by this slice.
 - Next safe step: user reviews the local commits and chooses whether to push. After that, production review may begin as a separate authorized task. Real approve/reject, Executor integration, production apply/cutover/deploy, Portal retirement and Phase 3 remain Off.
+
+## Phase 3 Work loop foundation closeout (2026-07-19)
+
+- Starting revision: `bc419205b545cb233b3fcee0f86b962d1cd63c14`; branch `master`; one worktree. Unrelated Finance, Planner, UI gallery, roadmap/usage-audit, platform-web and Wikilinks WIP remained unstaged and untouched.
+- Verdict: `KENOS PHASE 3 — WORK_LOOP_FOUNDATION_READY` under `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION` and `LOCAL_BETA_IN_PROGRESS_NO_PRODUCTION_CUTOVER`.
+- Ownership: Work owns Project/Deliverable/Meeting/Decision/context/status/source refs; Plan owns Task lifecycle; Library owns documents; Assistant/Connector are non-owners. Plan projects remain distinct from Work Projects. OPEN-002 still blocks body mirroring.
+- Contracts/parity: additive Work schemas + connector registry entry; canonical fixtures; TypeScript + Swift Codable + Swift→Zod round-trip path via existing parity script.
+- Persistence: review-only `kenos_work_*` tables/RPCs outside migrations; disposable dual-user RLS/privilege proof via `scripts/check-kenos-phase3-work-db.mjs`.
+- Product: AIOS `/work` surface + Today Work projections; WorkActionProposal→Plan create_task simulation with default-Off flag; Library EntityRef projections; Activity recorded in local store; no Executor.
+- Guards/docs: `scripts/check-kenos-phase3.mjs` wired into `verify-kenos-refactor.sh`; inventory/ops/qa/ledger/refactor hub updated.
+- Production locks: no production apply, writer cutover, Connector auto-write, deploy, push, Phase 4, or Phase 5.
+- Aggregate verifier blockers caused only by pre-existing unrelated WIP remain `BLOCKED_BY_UNRELATED_USER_WIP`.
+- Next safe step: user reviews local Phase 3 commits and chooses whether to push. Phase 4 Apple UI and Phase 5 remain Off.

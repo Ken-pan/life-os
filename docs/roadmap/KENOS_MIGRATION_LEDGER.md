@@ -3,7 +3,7 @@ title: Kenos Migration Ledger
 owner: kenpan
 last_verified: 2026-07-19
 doc_role: migration-status-ledger
-status: phase-2-read-only-integration-ready-no-production-cutover
+status: phase-3-work-loop-foundation-ready-no-production-cutover
 ---
 
 # Kenos Migration Ledger
@@ -36,6 +36,7 @@ PROPOSED
 | Portal 默认入口 | `apps/portal` | Assistant/Today | READ_ONLY_INTEGRATION_READY | Today/Inbox/Approval/Activity 本地证据齐备；生产审批未开 | Portal 写入先冻结，再切入口 | 默认入口回 Portal | 两稳定周期 + 无旧写入 |
 | Planner → Plan | Planner UI/表/本地缓存 | `plan` 领域语义 | PROPOSED | owner inventory | 先保持原表 writer，仅更改 API/名称 | 路由/文案回退 | 旧名称兼容到 deep links 稳定 |
 | AIOS → Assistant | AIOS Tauri/Web | Assistant Space + Kenos Mac | READ_ONLY_INTEGRATION_READY | Action/Policy/Activity/Approval 本地只读证据 | 领域数据仍归原 Owner | 旧 AIOS chat 保留于 `/assistant` | hosted Approval/RLS/shadow + 新 Assistant 真实使用通过 |
+| Work productivity loop | 分散 Plan/Library/Vault/digests；无 Work Space | Work-owned Project/Deliverable/Meeting/Decision + WorkActionProposal→Plan | WORK_LOOP_FOUNDATION_READY | temporary ownership + contracts + review-only SQL + AIOS `/work` + Today projections | Work 不拥有 Task；conversion simulation only；Connector read-only | 禁用 flag / 移除 `/work`；无需生产数据回滚 | hosted RLS/apply、Executor、auto Connector write、真实项目 Real-use 另审 |
 | Knowledge → Library | Vault + KnowledgeOS | Library Space/API | PROPOSED | Library/Memory 边界 | Vault 仍唯一正文 writer | 旧壳继续 | 新客户端能编辑/恢复/深链 |
 | Fitness → Training | Fitness app/schema | Training Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 行为与历史数据 parity |
 | Finance → Money | Finance app/schema | Money Space/domain | PROPOSED | domain ID freeze | 不先改存储 | 文案回退 | 报表/导入/购买历史 parity |
@@ -191,3 +192,13 @@ PROPOSED
 - Remote/deploy evidence: none; intentionally local-only.
 - Real-use evidence: local desktop/mobile browser QA covers canonical empty/permission states plus explicit no-write rehearsal for pending/expired/superseded/stale/partial/long-summary and offline/fallback behavior. Authenticated hosted parity remains a production-review prerequisite.
 - Remaining unknowns: production function ownership/caller identity, hosted RLS/advisors, backup/change window, production shadow sample/threshold/owner, observation duration, real approve/reject command design, Executor revalidation and rollback authority.
+
+## MIGRATION: KR-P3-001 Work productivity loop foundation
+
+- Status: `WORK_LOOP_FOUNDATION_READY` under `TEMPORARY_APPROVED_FOR_PHASE_3_WORK_FOUNDATION`. Local/disposable only; no production apply, Executor, Connector auto-write, or Plan Task owner change.
+- Owner: Work owns Project/Deliverable/Meeting/Decision/context/status/source refs. Plan remains sole Task owner. Library remains Document owner. Assistant reads/submits Actions only. Connector emits CaptureEnvelope/source refs only.
+- Scope: inventory, additive Work contracts/fixtures/Swift parity, review-only SQL/RLS, AIOS `/work` UI, WorkActionProposal→Plan simulation, Library EntityRef projections, Today Work section, Activity recording in local store, Connector registry proposal, shadow diagnostics, Phase 3 guard.
+- Non-scope: production migration/RLS/auth apply, Executor, silent conversion, automatic Gmail/Figma/browser→canonical Work writes, Phase 4 Apple UI, Phase 5 proactive intelligence, Portal retirement, push/deploy.
+- Compatibility: Plan `planner_projects` remain Plan-owned task groups and are not Work Projects. OPEN-002 still blocks Work body mirroring into personal cloud/models.
+- Rollback: disable `VITE_KENOS_PHASE3_WORK` / demo query and remove `/work` entry; review SQL was never production-applied.
+- Validation: `node packages/contracts/scripts/kenos.test.mjs`; Swift KenosContracts tests; `node --test apps/aios/src/lib/workCommand.core.test.js`; `node scripts/check-kenos-phase3-work-db.mjs`; `node scripts/check-kenos-phase3.mjs`; AIOS test/check/build; Phase 1/2 guards.
