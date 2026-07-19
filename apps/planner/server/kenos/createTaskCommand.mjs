@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { classifyCreateTaskPolicy } from './policyRisk.mjs'
 
 const ACTION_TYPE = 'plan.create_task'
 const MAX_ATTEMPTS = 5
@@ -37,7 +38,7 @@ function actionResult(action, task, outbox, activity, duplicate, now) {
   }
 }
 
-function validateAction(action, { authUserId, now = Date.now() } = {}) {
+function validateAction(action, { authUserId, now = Date.now(), mode = 'authenticated' } = {}) {
   if (!action || typeof action !== 'object') return permanent('bad_request', 'Action request is required.')
   if (action.schemaVersion !== '1') return permanent('schema_version_not_supported', 'Only Kenos Action schema version 1 is supported.')
   if (!action.id) return permanent('action_id_required', 'CreateTaskAction requires an action request id.')
@@ -55,10 +56,22 @@ function validateAction(action, { authUserId, now = Date.now() } = {}) {
   if (action.producer === 'assistant' && action.actor?.type !== 'assistant') return permanent('assistant_actor_required', 'Assistant producer must use assistant actor metadata.')
   if (action.producer === 'plan' && action.actor?.type !== 'user') return permanent('plan_actor_required', 'Plan producer must use user actor metadata.')
   if (!action.payload || typeof action.payload !== 'object' || Array.isArray(action.payload)) return permanent('invalid_action_contract', 'Action payload must be an object.')
-  if (authUserId && action.actor?.id && action.actor.id !== authUserId) return permanent('actor_user_mismatch', 'Action actor must match the authenticated user.')
+  if (mode !== 'local_simulation') {
+    if (!authUserId || !UUID_PATTERN.test(authUserId)) {
+      return permanent('auth_required', 'Authenticated identity is required; payload actor is not trusted without auth context.')
+    }
+    if (!action.actor?.id || action.actor.id !== authUserId) {
+      return permanent('actor_user_mismatch', 'Action actor must match the authenticated user.')
+    }
+  } else if (!authUserId) {
+    return permanent('local_simulation_owner_required', 'local_simulation mode still requires an explicit owner id; it must never enter a production adapter.')
+  }
   if (action.securityDomain !== 'personal' || action.dataClassification !== 'personal') return permanent('security_domain_not_allowed', 'KR-P1-001A accepts personal Plan actions only.')
-  if (!RISK_VALUES.includes(action.requestedRisk)) return permanent('invalid_action_contract', 'CreateTaskAction requestedRisk is not a Kenos v1 risk value.')
-  if (action.requestedRisk !== 'R1') return permanent('risk_not_allowed', 'Only explicit R1 create-task actions are executable in KR-P1-001A.')
+  if (action.requestedRisk != null && !RISK_VALUES.includes(action.requestedRisk)) {
+    return permanent('invalid_action_contract', 'CreateTaskAction requestedRisk is not a Kenos v1 risk value.')
+  }
+  const policy = classifyCreateTaskPolicy(action)
+  if (!policy.ok) return { ok: false, error: policy.error, policy }
   if (action.expectedVersion != null) return permanent('version_conflict', 'Create-task actions must not carry an existing entity version.')
   if (action.expiresAt && (!ISO_TIMESTAMP_PATTERN.test(action.expiresAt) || !Number.isFinite(Date.parse(action.expiresAt)) || Date.parse(action.expiresAt) <= Date.parse(action.requestedAt))) {
     return permanent('invalid_action_contract', 'Action expiry must be a valid timestamp after requestedAt.')
@@ -66,7 +79,7 @@ function validateAction(action, { authUserId, now = Date.now() } = {}) {
   if (action.expiresAt && Date.parse(action.expiresAt) <= now) return permanent('action_expired', 'Action request has expired.')
   const title = String(action.payload?.title || '').trim()
   if (!title) return permanent('title_required', 'Task title is required.')
-  return { ok: true, title }
+  return { ok: true, title, policy }
 }
 
 export function createMemoryCreateTaskDatabase() {
@@ -97,8 +110,15 @@ export function createMemoryCreateTaskDatabase() {
 
 export function executeServerCreateTaskAction(db, action, options = {}) {
   const now = options.now || Date.now()
-  const validation = validateAction(action, { authUserId: options.authUserId, now })
+  const mode = options.mode === 'local_simulation' ? 'local_simulation' : 'authenticated'
+  if (mode === 'authenticated' && options.allowUnauthenticated === true) {
+    return permanent('auth_required', 'Production adapters must not set allowUnauthenticated.')
+  }
+  const validation = validateAction(action, { authUserId: options.authUserId, now, mode })
   if (!validation.ok) return validation
+
+  const ownerId = options.authUserId
+  const boundActor = { ...action.actor, id: ownerId }
 
   return db.transaction((tx) => {
     const existingAction = tx.outbox.find((item) => item.actionRequestId === action.id)
@@ -111,12 +131,13 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
       const outbox = tx.outbox.find((item) => item.idempotencyKey === action.idempotencyKey)
       const activity = tx.activity.find((item) => item.correlationId === outbox?.correlationId)
       if (!task || !outbox || !activity) return permanent('idempotency_record_corrupt', 'Durable idempotency record no longer resolves atomically.')
-      return { ok: true, task, outbox, activity, actionResult: actionResult(action, task, outbox, activity, true, now), duplicate: true }
+      if (task.userId !== ownerId) return permanent('owner_isolation_violation', 'Idempotent replay resolved to a different owner.')
+      return { ok: true, task, outbox, activity, actionResult: actionResult(action, task, outbox, activity, true, now), duplicate: true, policy: validation.policy }
     }
 
     const task = {
       id: randomUUID(),
-      userId: action.actor?.id || 'local-user',
+      userId: ownerId,
       title: validation.title,
       notes: action.payload?.notes || '',
       completed: false,
@@ -152,7 +173,7 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
       eventType: 'plan.task_created',
       actionRequestId: action.id,
       correlationId: action.correlationId,
-      actor: action.actor,
+      actor: boundActor,
       targetRefs: [entityRef],
       securityDomain: action.securityDomain,
       summary: `Created Plan task: ${task.title}`,
@@ -160,10 +181,11 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
       result: 'succeeded',
       policy: {
         requestId: action.id,
-        outcome: 'allow',
-        evaluatedRisk: 'R1',
-        policyVersion: 'kenos-phase1-2026-07-19',
-        reasons: ['explicit create-task command'],
+        outcome: validation.policy.outcome,
+        evaluatedRisk: validation.policy.evaluatedRisk,
+        policyVersion: validation.policy.policyVersion,
+        reasons: validation.policy.reasons,
+        requestedRiskHint: action.requestedRisk ?? null,
         decidedAt: iso(now),
       },
       redactedPayload: redactValue(action.payload || {}),
@@ -178,7 +200,7 @@ export function executeServerCreateTaskAction(db, action, options = {}) {
     tx.idempotency.set(action.idempotencyKey, task.id)
     tx.outbox.push(outbox)
     tx.activity.push(activity)
-    return { ok: true, task, outbox, activity, actionResult: actionResult(action, task, outbox, activity, false, now), duplicate: false }
+    return { ok: true, task, outbox, activity, actionResult: actionResult(action, task, outbox, activity, false, now), duplicate: false, policy: validation.policy }
   })
 }
 

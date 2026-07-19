@@ -38,6 +38,10 @@ function renderList(tasks, empty) {
   return tasks.map((t) => `• ${formatTaskLine(t)}`).join('\n');
 }
 
+/**
+ * complete_task still uses legacy upsert until a Kenos complete-task command exists.
+ * add_task MUST NOT call this — create path is command-boundary only (P1-002 remediation).
+ */
 async function upsertTask(sb, userId, task) {
   const { error } = await sb.from('planner_tasks').upsert({
     user_id: userId,
@@ -46,6 +50,26 @@ async function upsertTask(sb, userId, task) {
     updated_at: new Date(task.updatedAt).toISOString(),
   });
   if (error) throw new Error(error.message);
+}
+
+async function invokeCreateTaskRpc(sb, action) {
+  const { data, error } = await sb.rpc('kenos_create_plan_task_action', { action_request: action });
+  if (error) {
+    const missing = /could not find|PGRST202|42883|function .* does not exist/i.test(error.message || '');
+    if (missing) {
+      return {
+        ok: false,
+        error: {
+          code: 'hosted_rpc_required',
+          message: 'Hosted kenos_create_plan_task_action is not applied; MCP will not fall back to planner_tasks upsert.',
+          class: 'permanent',
+          retryable: false,
+        },
+      };
+    }
+    return { ok: false, error: { code: 'remote_rpc_failed', message: error.message, class: 'permanent', retryable: false } };
+  }
+  return data;
 }
 
 export default createMcpHandler({
@@ -141,12 +165,13 @@ export default createMcpHandler({
         }
         if (!userId) return needLogin('Planner');
         const result = await executeAssistantCreateTaskCommand({
-          supabase,
-          userId,
+          authUserId: userId,
           input: { ...args, title },
-          persistTask: upsertTask,
+          remoteRpc: (action) => invokeCreateTaskRpc(supabase, action),
         });
-        if (!result.ok) return `创建任务失败：${result.error.message}`;
+        if (!result.ok) {
+          return `创建任务失败：${result.error?.message ?? 'command boundary rejected'}（persistence=${result.persistence || 'none'}）`;
+        }
         return `已创建任务：${formatTaskLine(result.task)}`;
       },
     },

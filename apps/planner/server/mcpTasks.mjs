@@ -1,19 +1,30 @@
 /**
  * Planner MCP 侧的纯任务逻辑（无浏览器/无 $lib 依赖，node 可直测）。
  *
- * 任务对象形状与 `src/lib/domain/tasks.js` 的 createTask 对齐 —— MCP add_task 写进
- * `planner_tasks.data` 的行必须能被客户端 LWW 同步逐字消费（就像另一台设备加的任务）。
- * 这里不碰 Supabase / 不碰 AppState，只做「构建 / 过滤 / 完成 / 格式化」。
+ * 读路径仍直接查询 `planner_tasks`。
+ * 写路径（add_task）必须走 Kenos v1 Action + server command boundary；
+ * 不得再经 upsert 旁路 canonical Task writer。
  */
+
+import { randomUUID } from 'node:crypto'
+import {
+  createMemoryCreateTaskDatabase,
+  executeServerCreateTaskAction,
+} from './kenos/createTaskCommand.mjs'
 
 const PRIORITIES = ['P0', 'P1', 'P2', 'P3']
 const SYSTEM_LIST_INBOX = 'inbox'
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 /** 生成任务 id（与 planner `uid()` 同源：优先 crypto.randomUUID）。 */
 export function newTaskId() {
   return typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
-    : `id_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+    : randomUUID()
+}
+
+function asUuid(value, fallback = () => randomUUID()) {
+  return UUID_PATTERN.test(value || '') ? value : fallback()
 }
 
 /** YYYY-MM-DD 校验（add_task 的 dueDate / today_agenda 的 today）。 */
@@ -125,66 +136,228 @@ export function findTaskToComplete(tasks, { id = '', title = '' } = {}) {
   )
 }
 
+/**
+ * Build a frozen Kenos v1 CreateTaskAction from Assistant MCP input.
+ * `requestedRisk` is a client hint only — server policy reclassifies.
+ */
 export function buildCreateTaskAction(input = {}, opts = {}) {
   const now = opts.now ?? Date.now()
-  const correlationId = opts.correlationId || newTaskId()
-  const idempotencyKey = opts.idempotencyKey || correlationId
-  const task = buildTask(input, { id: opts.id || newTaskId(), now })
-  task.meta = {
-    ...task.meta,
-    source: 'assistant_action',
-    command: { actionType: 'plan.create_task', idempotencyKey, correlationId },
+  const authUserId = opts.authUserId
+  if (!authUserId || !UUID_PATTERN.test(authUserId)) {
+    throw new Error('buildCreateTaskAction requires authenticated authUserId UUID')
   }
-  const entityRef = { domain: 'plan', type: 'task', id: task.id }
-  return {
-    action: {
-      type: 'plan.create_task',
-      source: 'assistant',
-      userRequested: true,
-      idempotencyKey,
-      correlationId,
-      risk: 'R1',
+  const correlationId = asUuid(opts.correlationId)
+  const actionId = asUuid(opts.actionId)
+  const deviceId = asUuid(opts.deviceId)
+  const idempotencyKey = String(opts.idempotencyKey || `mcp:${correlationId}`)
+  const title = String(input.title ?? '').trim()
+  const notes = String(input.notes ?? '')
+  const dueDate = isIsoDate(input.dueDate) ? input.dueDate : null
+
+  const action = {
+    schemaVersion: '1',
+    id: actionId,
+    actionType: 'plan.create_task',
+    producer: 'assistant',
+    targetDomain: 'plan',
+    actor: { type: 'assistant', id: authUserId },
+    deviceId,
+    securityDomain: 'personal',
+    dataClassification: 'personal',
+    requestedRisk: opts.requestedRiskHint || 'R1',
+    payload: {
+      title,
+      notes,
+      ...(dueDate ? { dueDate } : {}),
+      ...(input.listId ? { listId: input.listId } : {}),
+      ...(input.priority ? { priority: input.priority } : {}),
+      ...(input.workSource ? { workSource: input.workSource } : {}),
+      ...(input.bulk != null ? { bulk: input.bulk } : {}),
+      ...(input.externalSideEffect != null ? { externalSideEffect: input.externalSideEffect } : {}),
+      ...(input.productionScope != null ? { productionScope: input.productionScope } : {}),
+      ...(input.reversible != null ? { reversible: input.reversible } : {}),
     },
-    task,
-    outbox: {
-      actionType: 'plan.create_task',
-      idempotencyKey,
-      correlationId,
-      entityRef,
-      status: 'pending',
-      payload: { title: task.title, dueDate: task.dueDate, listId: task.listId },
-      createdAt: now,
-      updatedAt: now,
-    },
-    activity: {
-      actionType: 'plan.create_task',
-      correlationId,
-      actor: 'assistant',
-      source: 'assistant',
-      policy: { risk: 'R1', decision: 'allowed', approval: 'not_required' },
-      entityRef,
-      summary: `Created Plan task: ${task.title}`,
-      redactedPayload: { title: task.title, dueDate: task.dueDate, notes: task.notes ? '[REDACTED_NOTES]' : '' },
-      createdAt: now,
-    },
+    reason: 'Explicit user-requested Assistant MCP create-task',
+    idempotencyKey,
+    requestedAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + 5 * 60 * 1000).toISOString(),
+    correlationId,
   }
+
+  return { action }
 }
 
+/**
+ * Map command-boundary task into Planner client LWW shape for display only.
+ * Does not write storage.
+ */
+export function materializePlannerTaskView(commandTask, input = {}, opts = {}) {
+  const now = opts.now ?? Date.now()
+  const view = buildTask(
+    {
+      title: commandTask.title,
+      notes: commandTask.notes || input.notes || '',
+      dueDate: input.dueDate,
+      priority: input.priority,
+      listId: input.listId,
+    },
+    { id: commandTask.id, now },
+  )
+  view.meta = {
+    ...view.meta,
+    source: 'assistant_action',
+    command: {
+      actionType: 'plan.create_task',
+      idempotencyKey: opts.idempotencyKey,
+      correlationId: opts.correlationId,
+    },
+  }
+  view.createdAt = Date.parse(commandTask.createdAt) || now
+  view.updatedAt = Date.parse(commandTask.updatedAt) || now
+  return view
+}
 
-export async function executeAssistantCreateTaskCommand({ supabase, userId, input = {}, persistTask, opts = {} } = {}) {
-  if (!supabase || !userId || typeof persistTask !== 'function') {
-    return { ok: false, error: { code: 'missing_remote_command_dependency', message: 'Remote Plan create-task command requires supabase, userId, and persistTask.' } }
+/**
+ * Assistant MCP create-task — always via Kenos server command boundary.
+ *
+ * Remote production persistence requires hosted `kenos_create_plan_task_action` RPC.
+ * Direct `planner_tasks` upsert is intentionally unreachable from this path.
+ */
+export async function executeAssistantCreateTaskCommand({
+  authUserId,
+  input = {},
+  opts = {},
+  db,
+  remoteRpc,
+  mode = 'authenticated',
+  // Legacy parameter — rejected so old direct-write call sites fail closed.
+  persistTask,
+  supabase,
+  userId,
+} = {}) {
+  if (typeof persistTask === 'function') {
+    return {
+      ok: false,
+      error: {
+        code: 'direct_task_write_forbidden',
+        message: 'MCP create-task must not receive persistTask/upsert adapters; use the Plan command boundary or hosted RPC.',
+        class: 'permanent',
+        retryable: false,
+      },
+    }
+  }
+  const ownerId = authUserId || userId
+  if (!ownerId || !UUID_PATTERN.test(ownerId)) {
+    return {
+      ok: false,
+      error: {
+        code: 'auth_required',
+        message: 'Authenticated identity is required for Assistant create-task.',
+        class: 'permanent',
+        retryable: false,
+      },
+    }
   }
   if (input.workSource) {
-    return { ok: false, error: { code: 'work_source_excluded', message: 'Work-sourced task payloads are excluded from KR-P1-001.' } }
+    return {
+      ok: false,
+      error: {
+        code: 'work_source_excluded',
+        message: 'Work-sourced task payloads are excluded from KR-P1-001.',
+        class: 'permanent',
+        retryable: false,
+      },
+    }
   }
   const title = String(input.title ?? '').trim()
-  if (!title) return { ok: false, error: { code: 'title_required', message: 'Task title is required.' } }
-  const command = buildCreateTaskAction({ ...input, title }, opts)
-  try {
-    await persistTask(supabase, userId, command.task)
-  } catch (error) {
-    return { ok: false, error: { code: 'remote_task_persist_failed', message: error?.message ?? String(error) }, command }
+  if (!title) {
+    return {
+      ok: false,
+      error: { code: 'title_required', message: 'Task title is required.', class: 'permanent', retryable: false },
+    }
   }
-  return { ok: true, ...command }
+
+  let actionEnvelope
+  try {
+    actionEnvelope = buildCreateTaskAction({ ...input, title }, { ...opts, authUserId: ownerId })
+  } catch (error) {
+    return {
+      ok: false,
+      error: { code: 'invalid_action_contract', message: error?.message ?? String(error), class: 'permanent', retryable: false },
+    }
+  }
+
+  if (typeof remoteRpc === 'function') {
+    try {
+      const remote = await remoteRpc(actionEnvelope.action)
+      if (!remote?.ok) {
+        return {
+          ok: false,
+          error: remote?.error || { code: 'remote_rpc_failed', message: 'Hosted create-task RPC failed.', class: 'permanent', retryable: false },
+          action: actionEnvelope.action,
+        }
+      }
+      const taskView = materializePlannerTaskView(remote.task, { ...input, title }, {
+        now: opts.now,
+        idempotencyKey: actionEnvelope.action.idempotencyKey,
+        correlationId: actionEnvelope.action.correlationId,
+      })
+      return {
+        ok: true,
+        action: actionEnvelope.action,
+        task: taskView,
+        outbox: remote.outbox,
+        activity: remote.activity,
+        duplicate: Boolean(remote.duplicate),
+        policy: remote.policy,
+        persistence: 'hosted_rpc',
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        error: { code: 'remote_rpc_failed', message: error?.message ?? String(error), class: 'transient', retryable: true },
+        action: actionEnvelope.action,
+      }
+    }
+  }
+
+  // Local command-boundary adapter (memory). Used for tests and until hosted RPC is applied.
+  // Explicitly not a production planner_tasks writer.
+  if (supabase && !db) {
+    return {
+      ok: false,
+      error: {
+        code: 'hosted_rpc_required',
+        message: 'Production MCP create-task requires hosted kenos_create_plan_task_action; direct planner_tasks upsert is disabled.',
+        class: 'permanent',
+        retryable: false,
+      },
+      action: actionEnvelope.action,
+      persistence: 'blocked_pending_hosted_rpc',
+    }
+  }
+
+  const database = db || createMemoryCreateTaskDatabase()
+  const result = executeServerCreateTaskAction(database, actionEnvelope.action, {
+    authUserId: ownerId,
+    now: opts.now || Date.now(),
+    mode,
+  })
+  if (!result.ok) return { ...result, action: actionEnvelope.action }
+
+  const taskView = materializePlannerTaskView(result.task, { ...input, title }, {
+    now: opts.now,
+    idempotencyKey: actionEnvelope.action.idempotencyKey,
+    correlationId: actionEnvelope.action.correlationId,
+  })
+  return {
+    ok: true,
+    action: actionEnvelope.action,
+    task: taskView,
+    outbox: result.outbox,
+    activity: result.activity,
+    duplicate: result.duplicate,
+    policy: result.policy,
+    persistence: 'local_command_boundary',
+  }
 }

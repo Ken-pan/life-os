@@ -113,43 +113,83 @@ assert.equal(formatTaskLine({ ...buildTask({ title: 'ok' }), completed: true }),
 console.log('mcpTasks.test.mjs: ok')
 
 
-/* KR-P1-001 Assistant add_task is an explicit Action producer envelope. */
+const AUTH = '20000000-0000-4000-8000-000000000001'
+
+/* Audit remediation: Assistant MCP builds frozen v1 Action envelope. */
 {
   const command = buildCreateTaskAction(
     { title: 'Assistant task', notes: 'private body', dueDate: '2026-07-21' },
-    { id: 'task-1', now: 123, correlationId: 'corr-1', idempotencyKey: 'idem-1' },
+    {
+      authUserId: AUTH,
+      now: Date.parse('2026-07-19T00:00:00.000Z'),
+      correlationId: '40000000-0000-4000-8000-000000000001',
+      actionId: '10000000-0000-4000-8000-000000000001',
+      deviceId: '30000000-0000-4000-8000-000000000001',
+      idempotencyKey: 'idem-1',
+    },
   )
-  assert.equal(command.action.source, 'assistant')
-  assert.equal(command.action.userRequested, true)
-  assert.equal(command.action.risk, 'R1')
-  assert.equal(command.task.meta.command.idempotencyKey, 'idem-1')
-  assert.equal(command.outbox.entityRef.id, 'task-1')
-  assert.equal(command.activity.redactedPayload.notes, '[REDACTED_NOTES]')
-  assert.equal(JSON.stringify(command.activity).includes('private body'), false)
+  assert.equal(command.action.schemaVersion, '1')
+  assert.equal(command.action.actionType, 'plan.create_task')
+  assert.equal(command.action.producer, 'assistant')
+  assert.equal(command.action.requestedRisk, 'R1')
+  assert.equal(command.action.actor.id, AUTH)
+  assert.equal(command.action.idempotencyKey, 'idem-1')
+  assert.equal(command.task, undefined)
 }
 
-
-/* KR-P1-001 remote Assistant command wrapper validates before persistence. */
+/* Command boundary succeeds locally; legacy persistTask is unreachable. */
 {
-  const writes = []
   const result = await executeAssistantCreateTaskCommand({
-    supabase: { tag: 'sb' },
-    userId: 'user-1',
+    authUserId: AUTH,
     input: { title: 'Remote assistant task' },
-    opts: { id: 'task-remote', now: 456, correlationId: 'corr-remote', idempotencyKey: 'idem-remote' },
-    persistTask: async (supabase, userId, task) => writes.push({ supabase, userId, task }),
+    opts: {
+      now: Date.parse('2026-07-19T00:00:00.000Z'),
+      correlationId: '40000000-0000-4000-8000-000000000011',
+      actionId: '10000000-0000-4000-8000-000000000011',
+      deviceId: '30000000-0000-4000-8000-000000000011',
+      idempotencyKey: 'idem-remote',
+    },
   })
   assert.equal(result.ok, true)
-  assert.equal(writes.length, 1)
-  assert.equal(writes[0].task.meta.command.correlationId, 'corr-remote')
+  assert.equal(result.persistence, 'local_command_boundary')
+  assert.equal(result.task.meta.command.correlationId, '40000000-0000-4000-8000-000000000011')
+  assert.equal(result.activity.policy.evaluatedRisk, 'R1')
+  assert.equal(result.outbox.topic, 'plan.create_task')
+
+  const blockedDirect = await executeAssistantCreateTaskCommand({
+    authUserId: AUTH,
+    input: { title: 'should not write' },
+    persistTask: async () => {
+      throw new Error('direct write should be unreachable')
+    },
+  })
+  assert.equal(blockedDirect.ok, false)
+  assert.equal(blockedDirect.error.code, 'direct_task_write_forbidden')
 
   const rejected = await executeAssistantCreateTaskCommand({
-    supabase: { tag: 'sb' },
-    userId: 'user-1',
+    authUserId: AUTH,
     input: { title: 'Work body', workSource: { id: 'work-1' } },
-    persistTask: async () => writes.push('should-not-write'),
   })
   assert.equal(rejected.ok, false)
   assert.equal(rejected.error.code, 'work_source_excluded')
-  assert.equal(writes.length, 1)
+
+  const noAuth = await executeAssistantCreateTaskCommand({
+    input: { title: 'no auth' },
+  })
+  assert.equal(noAuth.ok, false)
+  assert.equal(noAuth.error.code, 'auth_required')
+
+  const hostedBlocked = await executeAssistantCreateTaskCommand({
+    authUserId: AUTH,
+    supabase: { tag: 'sb' },
+    input: { title: 'needs rpc' },
+    opts: {
+      now: Date.parse('2026-07-19T00:00:00.000Z'),
+      correlationId: '40000000-0000-4000-8000-000000000012',
+      actionId: '10000000-0000-4000-8000-000000000012',
+      deviceId: '30000000-0000-4000-8000-000000000012',
+    },
+  })
+  assert.equal(hostedBlocked.ok, false)
+  assert.equal(hostedBlocked.error.code, 'hosted_rpc_required')
 }

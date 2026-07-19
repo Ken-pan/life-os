@@ -95,4 +95,26 @@ for (const invalid of corpus.invalid.filter(({ contract }) => contract === 'acti
   assert.equal(nextBackoffMs(99, 99), 5 * 60 * 1000)
 }
 
+{
+  const db = createMemoryCreateTaskDatabase()
+  const missingAuth = executeServerCreateTaskAction(db, action(), { now: Date.parse(fixture.requestedAt) })
+  assert.equal(missingAuth.ok, false)
+  assert.equal(missingAuth.error.code, 'auth_required')
+
+  const mismatch = executeServerCreateTaskAction(db, action(), {
+    authUserId: '20000000-0000-4000-8000-000000000099',
+    now: Date.parse(fixture.requestedAt),
+  })
+  assert.equal(mismatch.ok, false)
+  assert.equal(mismatch.error.code, 'actor_user_mismatch')
+
+  const understated = executeServerCreateTaskAction(
+    db,
+    action({ requestedRisk: 'R1', payload: { title: 'bulk', bulk: true, items: [1, 2] } }),
+    { authUserId: USER_ID, now: Date.parse(fixture.requestedAt) },
+  )
+  assert.equal(understated.ok, false)
+  assert.equal(understated.error.code, 'risk_understated')
+}
+
 console.log('planner server create-task command: canonical v1 corpus ok')
