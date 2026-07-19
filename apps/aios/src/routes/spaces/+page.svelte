@@ -5,8 +5,22 @@
 
   const hosted = [
     {
+      id: 'training',
+      label: 'Training',
+      detail: '训练 Focus：隐藏全局导航，延期跨域打扰',
+      href: '/spaces/training',
+      external: false,
+    },
+    {
+      id: 'work-focus',
+      label: 'Work · Deep Work',
+      detail: '进入当前项目专注；也可打开完整 Work hub',
+      href: '/spaces/work',
+      external: false,
+    },
+    {
       id: 'work',
-      label: 'Work',
+      label: 'Work hub',
       detail: '项目、交付、会议与决定',
       href: '/work',
       external: false,

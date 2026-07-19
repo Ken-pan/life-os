@@ -12,6 +12,8 @@
   import ChatSidebar from '$lib/components/ChatSidebar.svelte'
   import BottomNav from '$lib/components/BottomNav.svelte'
   import CaptureQuick from '$lib/components/CaptureQuick.svelte'
+  import FocusSessionShell from '$lib/components/FocusSessionShell.svelte'
+  import { FOCUS, focusFlags, hydrateFocusStore } from '$lib/kenos/focusStore.svelte.js'
   import { ICONS } from '$lib/iconRegistry.js'
   import { S, applyTheme, bindAppThemeSystemChange } from '$lib/state.svelte.js'
   import { refreshGateway } from '$lib/chat.svelte.js'
@@ -40,6 +42,9 @@
     '/assistant',
     '/chat',
     '/spaces',
+    '/spaces/training',
+    '/spaces/work',
+    '/focus',
     '/inbox',
     '/approvals',
     '/activity',
@@ -48,9 +53,12 @@
     '/settings',
   ])
   const hasCustomHeader = $derived(
-    ['/', '/spaces', '/inbox', '/approvals', '/activity', '/work'].includes(page.url.pathname) ||
-      !knownRoutes.has(page.url.pathname),
+    ['/', '/spaces', '/spaces/training', '/spaces/work', '/focus', '/inbox', '/approvals', '/activity', '/work'].includes(
+      page.url.pathname,
+    ) || !knownRoutes.has(page.url.pathname),
   )
+  const hideGlobalNav = $derived(focusFlags().hideGlobalNav && page.url.pathname === '/focus')
+  const showReturnBanner = $derived(focusFlags().showReturnBanner)
 
   let captureOpen = $state(false)
 
@@ -62,6 +70,9 @@
     if (p === '/approvals') return t('nav.approvals')
     if (p === '/activity') return t('nav.activity')
     if (p === '/spaces') return t('nav.spaces')
+    if (p === '/spaces/training') return 'Training'
+    if (p === '/spaces/work') return 'Deep Work'
+    if (p === '/focus') return FOCUS.focus?.title || 'Focus'
     if (p === '/work') return 'Work'
     if (p === '/') return t('nav.today')
     if (p === '/assistant' || p === '/chat') return t('chat.title')
@@ -81,6 +92,7 @@
   }
 
   onMount(() => {
+    hydrateFocusStore()
     applyTheme()
     applyLocale()
     refreshGateway()
@@ -135,6 +147,9 @@
   <CloudGate />
 {:else}
   <CaptureQuick bind:open={captureOpen} />
+  {#if showReturnBanner && page.url.pathname !== '/focus'}
+    <FocusSessionShell />
+  {/if}
   <LifeOsAppShell
     navigationKey={page.url.pathname}
     focusOnNavigate="main"
@@ -143,7 +158,9 @@
     testIdPrefix="aios-shell"
   >
     {#snippet navigation(projection)}
-      {#if projection === 'desktop'}
+      {#if hideGlobalNav}
+        <!-- Focus Session: hide global Tab/Sidebar entirely -->
+      {:else if projection === 'desktop'}
         <ChatSidebar onCapture={() => (captureOpen = true)} />
       {:else}
         <BottomNav />
@@ -151,7 +168,7 @@
     {/snippet}
 
     {#snippet header()}
-      <LifeOsAppBar title={pageTitle} hidden={isAssistant || hasCustomHeader}>
+      <LifeOsAppBar title={pageTitle} hidden={isAssistant || hasCustomHeader || hideGlobalNav}>
         {#snippet leading()}
           <span class="page-title">{t('app.name')}</span>
         {/snippet}

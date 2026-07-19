@@ -452,6 +452,22 @@ async function buildSystemPrompt(conversation) {
   const custom = S.settings.customPrompt?.trim()
   if (custom) lines.push(`用户的自定义指令:\n${custom}`)
 
+  try {
+    const { FOCUS } = await import('./kenos/focusStore.svelte.js')
+    const focus = FOCUS.focus
+    if (focus && ['active', 'paused', 'temporarily_left', 'ending'].includes(focus.status)) {
+      const domains = focus.assistantScope?.allowedDomains?.join('、') || focus.activeSpace
+      lines.push(
+        `当前 Focus Session：「${focus.title}」(mode=${focus.mode}, status=${focus.status})。` +
+          `默认只处理这些域：${domains}。禁止主动提起被隐藏域的待办/角标/审批数量。` +
+          `若用户明确问跨域问题：可以回答，并清楚标明“暂时跨出当前 Focus”，不要自动结束或切换 Focus，回答后提醒可返回当前 Session。` +
+          `不要把 raw FocusContext JSON 或凭证写进回复。主动建议必须可解释（为什么现在、信号、影响、是否写入、可否忽略）。`,
+      )
+    }
+  } catch {
+    /* Focus store optional during early boot */
+  }
+
   // 长对话压缩:更早的消息已由小模型摘要,注入摘要保住"长期剧情"
   if (conversation.summary) {
     lines.push(`本对话较早部分的摘要(原文已省略):\n${conversation.summary}`)
